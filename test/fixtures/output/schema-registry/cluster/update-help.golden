@@ -4,15 +4,17 @@ Usage:
   confluent schema-registry cluster update [flags]
 
 Examples:
-Update top level compatibility or mode of Schema Registry.
+Update top-level compatibility of Schema Registry.
 
-  $ confluent schema-registry cluster update --compatibility=BACKWARD
+  $ confluent schema-registry cluster update --compatibility backward
 
-  $ confluent schema-registry cluster update --mode=READWRITE
+Update top-level mode of Schema Registry.
+
+  $ confluent schema-registry cluster update --mode readwrite
 
 Flags:
-      --compatibility string   Can be BACKWARD, BACKWARD_TRANSITIVE, FORWARD, FORWARD_TRANSITIVE, FULL, FULL_TRANSITIVE, or NONE.
-      --mode string            Can be READWRITE, READONLY, OR IMPORT.
+      --compatibility string   Can be "backward", "backward_transitive", "forward", "forward_transitive", "full", "full_transitive", or "none".
+      --mode string            Can be "readwrite", "readonly", or "import".
       --api-key string         API key.
       --api-secret string      API key secret.
       --context string         CLI context name.

@@ -5,7 +5,6 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -16,16 +15,10 @@ type topicOut struct {
 
 func (c *authenticatedTopicCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "list",
-		Short: "List Kafka topics.",
-		Args:  cobra.NoArgs,
-		RunE:  c.list,
-		Example: examples.BuildExampleString(
-			examples.Example{
-				Text: "List all topics.",
-				Code: "confluent kafka topic list",
-			},
-		),
+		Use:         "list",
+		Short:       "List Kafka topics.",
+		Args:        cobra.NoArgs,
+		RunE:        c.list,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 

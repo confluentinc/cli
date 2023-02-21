@@ -99,13 +99,13 @@ func (c *Command) runConnectConnectorConfigCommand(command *cobra.Command, args 
 		return err
 	}
 
-	var config map[string]interface{}
+	var config map[string]any
 	if isJSON(data) {
 		if err := json.Unmarshal(data, &config); err != nil {
 			return err
 		}
 		if inner, ok := config["config"]; ok {
-			config = inner.(map[string]interface{})
+			config = inner.(map[string]any)
 		}
 	} else {
 		config = local.ExtractConfig(data)
@@ -241,7 +241,7 @@ func (c *Command) runConnectConnectorLoadCommand(command *cobra.Command, args []
 		config := local.ExtractConfig(data)
 		delete(config, "name")
 
-		full := map[string]interface{}{
+		full := map[string]any{
 			"name":   connector,
 			"config": config,
 		}
@@ -348,7 +348,7 @@ func (c *Command) runConnectPluginListCommand(command *cobra.Command, _ []string
 }
 
 func isJSON(data []byte) bool {
-	var out map[string]interface{}
+	var out map[string]any
 	return json.Unmarshal(data, &out) == nil
 }
 

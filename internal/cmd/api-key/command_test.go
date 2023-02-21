@@ -263,7 +263,7 @@ func (suite *APITestSuite) SetupTest() {
 					Id:          myServiceAccountId,
 					ResourceId:  myUserResourceId,
 					ServiceName: myAccountName,
-					Email:       "csreesangkom@confluent.io",
+					Email:       "cli-mock-email@confluent.io",
 				},
 				{
 					Id:         auditLogServiceAccountId,
@@ -389,7 +389,7 @@ func (suite *APITestSuite) TestListEmails() {
 	req.True(suite.apiKeysMock.ListIamV2ApiKeysExecuteCalled())
 	req.Contains(out, "<auditlog service account>")
 	req.Contains(out, "<service account>")
-	req.Contains(out, "csreesangkom@confluent.io")
+	req.Contains(out, "cli-mock-email@confluent.io")
 }
 
 func (suite *APITestSuite) TestStoreApiKeyForce() {
@@ -415,7 +415,7 @@ func (suite *APITestSuite) TestStoreApiKeyPipe() {
 	req := require.New(suite.T())
 	suite.isPromptPipe = true
 	cmd := suite.newCmd()
-	// no need to force for new api keys
+	// no need to force for new API keys
 	cmd.SetArgs([]string{"store", anotherApiKeyVal, "-", "--resource", kafkaClusterID})
 	err := cmd.Execute()
 	req.NoError(err)

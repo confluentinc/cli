@@ -32,8 +32,8 @@ def job = {
                             "gradle.properties", "GRADLE_PROPERTIES_FILE"]) {
                             sh '''#!/usr/bin/env bash
                                 export HASH=$(git rev-parse --short=7 HEAD)
-                                wget "https://golang.org/dl/go1.19.5.linux-amd64.tar.gz" --quiet --output-document go1.19.5.tar.gz
-                                tar -C $(pwd) -xzf go1.19.5.tar.gz
+                                wget "https://golang.org/dl/go1.20.linux-amd64.tar.gz" --quiet --output-document go1.20.tar.gz
+                                tar -C $(pwd) -xzf go1.20.tar.gz
                                 export GOROOT=$(pwd)/go
                                 export GOPATH=$(pwd)/go/path
                                 export GOBIN=$(pwd)/go/bin
@@ -42,7 +42,6 @@ def job = {
                                 mkdir -p $GOROOT/bin
                                 export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
                                 echo "machine github.com\n\tlogin $GIT_USER\n\tpassword $GIT_TOKEN" > ~/.netrc
-                                go install github.com/goreleaser/goreleaser@v1.14.1
                                 make build || exit 1
                                 cd dist
                                 dir=confluent_SNAPSHOT-${HASH}_linux_amd64

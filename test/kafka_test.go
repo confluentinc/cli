@@ -87,15 +87,16 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka acl list --cluster lkc-acls -o json", fixture: "kafka/acl/list-json-cloud.golden"},
 		{args: "kafka acl list --cluster lkc-acls -o yaml", fixture: "kafka/acl/list-yaml-cloud.golden"},
 		{args: "kafka acl list --principal User:12345", fixture: "kafka/acl/err-numeric-id.golden", wantErrCode: 1},
-		{args: "kafka acl create --cluster lkc-acls --allow --service-account 7272 --operations READ,DESCRIBED --topic test-topic", fixture: "kafka/acl/invalid-operation.golden", wantErrCode: 1},
-		{args: "kafka acl create --cluster lkc-acls --allow --service-account sa-12345 --operations READ,DESCRIBE --topic test-topic", fixture: "kafka/acl/create-service-account.golden"},
-		{args: "kafka acl create --cluster lkc-acls --allow --principal User:sa-12345 --operations WRITE,ALTER --topic test-topic", fixture: "kafka/acl/create-principal.golden"},
-		{args: "kafka acl create --cluster lkc-acls --allow --service-account sa-54321 --operations READ,DESCRIBE --topic test-topic", fixture: "kafka/acl/invalid-service-account.golden", wantErrCode: 1},
-		{args: "kafka acl create --principal User:12345 --operations WRITE", fixture: "kafka/acl/err-numeric-id.golden", wantErrCode: 1},
-		{args: "kafka acl delete --cluster lkc-acls --allow --service-account sa-12345 --operations READ,DESCRIBE --topic test-topic --force", fixture: "kafka/acl/delete-cloud.golden"},
-		{args: "kafka acl delete --cluster lkc-acls --allow --service-account sa-12345 --operations READ,DESCRIBE --topic test-topic", preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("y\n"))}, fixture: "kafka/acl/delete-cloud-prompt.golden"},
-		{args: "kafka acl delete --cluster lkc-acls --allow --principal User:sa-12345 --operations WRITE,ALTER --topic test-topic --force", fixture: "kafka/acl/delete-cloud.golden"},
-		{args: "kafka acl delete --principal User:12345 --operations WRITE", fixture: "kafka/acl/err-numeric-id.golden", wantErrCode: 1},
+		{args: "kafka acl create -h", fixture: "kafka/acl/create-help.golden"},
+		{args: "kafka acl create --cluster lkc-acls --allow --service-account 7272 --operations read,described --topic test-topic", fixture: "kafka/acl/invalid-operation.golden", wantErrCode: 1},
+		{args: "kafka acl create --cluster lkc-acls --allow --service-account sa-12345 --operations read,describe --topic test-topic", fixture: "kafka/acl/create-service-account.golden"},
+		{args: "kafka acl create --cluster lkc-acls --allow --principal User:sa-12345 --operations write,alter --topic test-topic", fixture: "kafka/acl/create-principal.golden"},
+		{args: "kafka acl create --cluster lkc-acls --allow --service-account sa-54321 --operations read,describe --topic test-topic", fixture: "kafka/acl/invalid-service-account.golden", wantErrCode: 1},
+		{args: "kafka acl create --principal User:12345 --operations write", fixture: "kafka/acl/err-numeric-id.golden", wantErrCode: 1},
+		{args: "kafka acl delete --cluster lkc-acls --allow --service-account sa-12345 --operations read,describe --topic test-topic --force", fixture: "kafka/acl/delete-cloud.golden"},
+		{args: "kafka acl delete --cluster lkc-acls --allow --service-account sa-12345 --operations read,describe --topic test-topic", preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("y\n"))}, fixture: "kafka/acl/delete-cloud-prompt.golden"},
+		{args: "kafka acl delete --cluster lkc-acls --allow --principal User:sa-12345 --operations write,alter --topic test-topic --force", fixture: "kafka/acl/delete-cloud.golden"},
+		{args: "kafka acl delete --principal User:12345 --operations write", fixture: "kafka/acl/err-numeric-id.golden", wantErrCode: 1},
 
 		{args: "kafka topic list --cluster lkc-kafka-api-topics", login: "cloud", fixture: "kafka/topic/list-cloud.golden"},
 		{args: "kafka topic list --cluster lkc-topics", fixture: "kafka/topic/list-cloud.golden"},
@@ -154,6 +155,18 @@ func (s *CLITestSuite) TestKafka() {
 	for _, tt := range tests {
 		tt.login = "cloud"
 		tt.workflow = true
+		s.runIntegrationTest(tt)
+	}
+
+	tests = []CLITest{
+		{args: "kafka acl create -h", fixture: "kafka/acl/onprem-create-help.golden"},
+		{args: "kafka acl list -h", fixture: "kafka/acl/onprem-list-help.golden"},
+	}
+
+	resetConfiguration(s.T(), false)
+
+	for _, tt := range tests {
+		tt.login = "platform"
 		s.runIntegrationTest(tt)
 	}
 }
@@ -473,7 +486,7 @@ func (s *CLITestSuite) TestKafkaTopicDescribe() {
 	}
 }
 
-func (s *CLITestSuite) TestKafkaACL() {
+func (s *CLITestSuite) TestKafkaAcl() {
 	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
 	tests := []CLITest{
 		// error case: bad operation, specified more than one resource type
@@ -493,10 +506,10 @@ func (s *CLITestSuite) TestKafkaACL() {
 		// error case: bad operation, specified more than one resource type, allow/deny not set
 		{args: fmt.Sprintf("kafka acl delete --principal User:Alice --host '*' --operation fake --topic Test --consumer-group Group:Test --url %s --no-authentication", kafkaRestURL), name: "bad operation, conflicting resource type, no allow/deny specified errors", fixture: "kafka/acl/delete-errors.golden", wantErrCode: 1},
 		// success cases
-		{args: fmt.Sprintf("kafka acl delete --cluster-scope --principal User:Alice --host '*' --operation READ --principal User:Alice --allow --url %s --no-authentication --force", kafkaRestURL), name: "acl delete output human", fixture: "kafka/acl/delete.golden"},
-		{args: fmt.Sprintf("kafka acl delete --cluster-scope --principal User:Alice --host '*' --operation READ --principal User:Alice --allow --url %s --no-authentication", kafkaRestURL), preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("y\n"))}, name: "acl delete output human", fixture: "kafka/acl/delete-prompt.golden"},
-		{args: fmt.Sprintf("kafka acl delete --cluster-scope --principal User:Alice --host '*' --operation READ --principal User:Alice --allow -o json --url %s --no-authentication --force", kafkaRestURL), name: "acl delete output json", fixture: "kafka/acl/delete-json.golden"},
-		{args: fmt.Sprintf("kafka acl delete --cluster-scope --principal User:Alice --host '*' --operation READ --principal User:Alice --allow -o yaml --url %s --no-authentication --force", kafkaRestURL), name: "acl delete output yaml", fixture: "kafka/acl/delete-yaml.golden"},
+		{args: fmt.Sprintf("kafka acl delete --cluster-scope --principal User:Alice --host '*' --operation read --principal User:Alice --allow --url %s --no-authentication --force", kafkaRestURL), name: "acl delete output human", fixture: "kafka/acl/delete.golden"},
+		{args: fmt.Sprintf("kafka acl delete --cluster-scope --principal User:Alice --host '*' --operation read --principal User:Alice --allow --url %s --no-authentication", kafkaRestURL), preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("y\n"))}, name: "acl delete output human", fixture: "kafka/acl/delete-prompt.golden"},
+		{args: fmt.Sprintf("kafka acl delete --cluster-scope --principal User:Alice --host '*' --operation read --principal User:Alice --allow -o json --url %s --no-authentication --force", kafkaRestURL), name: "acl delete output json", fixture: "kafka/acl/delete-json.golden"},
+		{args: fmt.Sprintf("kafka acl delete --cluster-scope --principal User:Alice --host '*' --operation read --principal User:Alice --allow -o yaml --url %s --no-authentication --force", kafkaRestURL), name: "acl delete output yaml", fixture: "kafka/acl/delete-yaml.golden"},
 	}
 
 	for _, clitest := range tests {

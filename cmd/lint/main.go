@@ -45,19 +45,14 @@ var commandRules = []linter.CommandRule{
 
 var flagRules = []linter.FlagRule{
 	// Hard Requirements
-	linter.FlagFilter(
-		linter.RequireFlagKebabCase,
-		linter.ExcludeFlag(
-			"producer.config",
-			"consumer.config",
-		),
-	),
+	linter.FlagFilter(linter.RequireFlagKebabCase, linter.ExcludeFlag("producer.config", "consumer.config")),
 	linter.RequireFlagRealWords('-'),
 	linter.FlagFilter(linter.RequireFlagCharacters('-'), linter.ExcludeFlag("consumer.config", "producer.config")),
+	linter.FlagFilter(linter.RequireStringSlicePrefix, linter.ExcludeFlag("property")),
 
 	linter.FlagFilter(linter.RequireFlagUsageMessage, linter.ExcludeFlag("key-deserializer", "value-deserializer")),
 	linter.RequireFlagUsageRealWords,
-	linter.RequireFlagUsageStartWithCapital(properNouns),
+	linter.RequireFlagUsageCapitalized(properNouns),
 	linter.FlagFilter(
 		linter.RequireFlagUsageEndWithPunctuation,
 		linter.ExcludeFlag(

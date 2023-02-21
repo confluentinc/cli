@@ -228,9 +228,9 @@ func (c *Context) GetAuthRefreshToken() string {
 	return ""
 }
 
-func (c *Context) GetLDFlags(client LaunchDarklyClient) map[string]interface{} {
+func (c *Context) GetLDFlags(client LaunchDarklyClient) map[string]any {
 	if c.FeatureFlags == nil {
-		return map[string]interface{}{}
+		return map[string]any{}
 	}
 
 	switch client {
@@ -239,6 +239,13 @@ func (c *Context) GetLDFlags(client LaunchDarklyClient) map[string]interface{} {
 	default:
 		return c.FeatureFlags.Values
 	}
+}
+
+func (c *Context) GetNetrcMachineName() string {
+	if c != nil {
+		return c.NetrcMachineName
+	}
+	return ""
 }
 
 func printApiKeysDictErrorMessage(missingKey, mismatchKey, missingSecret bool, cluster *KafkaClusterConfig, contextName string) {

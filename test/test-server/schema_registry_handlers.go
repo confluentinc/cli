@@ -15,7 +15,7 @@ import (
 func (s *SRRouter) HandleSRGet(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		err := json.NewEncoder(w).Encode(map[string]interface{}{})
+		err := json.NewEncoder(w).Encode(map[string]any{})
 		require.NoError(t, err)
 	}
 }

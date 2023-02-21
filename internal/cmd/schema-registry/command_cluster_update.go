@@ -22,11 +22,12 @@ func (c *clusterCommand) newUpdateCommand(cfg *v1.Config) *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Update top level compatibility or mode of Schema Registry.",
-				Code: "confluent schema-registry cluster update --compatibility=BACKWARD",
+				Text: "Update top-level compatibility of Schema Registry.",
+				Code: "confluent schema-registry cluster update --compatibility backward",
 			},
 			examples.Example{
-				Code: "confluent schema-registry cluster update --mode=READWRITE",
+				Text: "Update top-level mode of Schema Registry.",
+				Code: "confluent schema-registry cluster update --mode readwrite",
 			},
 		),
 	}

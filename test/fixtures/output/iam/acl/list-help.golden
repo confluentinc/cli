@@ -8,7 +8,7 @@ List all the ACLs for the specified Kafka cluster:
 
   $ confluent iam acl list --kafka-cluster <kafka-cluster-id>
 
-List all the ACLs for the specified cluster that include allow permissions for the user Jane:
+List all the ACLs for the specified cluster that include "allow" permissions for the user Jane:
 
   $ confluent iam acl list --kafka-cluster <kafka-cluster-id> --allow --principal User:Jane
 

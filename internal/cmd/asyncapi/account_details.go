@@ -23,12 +23,12 @@ type channelDetails struct {
 	currentSubject          string
 	contentType             string
 	schema                  *schemaregistry.Schema
-	unmarshalledSchema      map[string]interface{}
-	mapOfMessageCompat      map[string]interface{}
+	unmarshalledSchema      map[string]any
+	mapOfMessageCompat      map[string]any
 	topicLevelTags          []spec.Tag
 	schemaLevelTags         []spec.Tag
 	bindings                *bindings
-	example                 interface{}
+	example                 any
 }
 
 type accountDetails struct {
@@ -74,7 +74,7 @@ func (d *accountDetails) getSchemaDetails() error {
 	if err != nil {
 		return err
 	}
-	var unmarshalledSchema map[string]interface{}
+	var unmarshalledSchema map[string]any
 	if schema.SchemaType == "" {
 		d.channelDetails.contentType = "application/avro"
 	} else if schema.SchemaType == "JSON" {
@@ -130,7 +130,9 @@ func (d *accountDetails) buildMessageEntity() *spec.MessageEntity {
 	if d.channelDetails.example != nil {
 		(*spec.MessageEntity).WithExamples(entityProducer, spec.MessageOneOf1OneOf1ExamplesItems{Payload: &d.channelDetails.example})
 	}
-	(*spec.MessageEntity).WithBindings(entityProducer, d.channelDetails.bindings.messageBinding)
+	if d.channelDetails.bindings != nil {
+		(*spec.MessageEntity).WithBindings(entityProducer, d.channelDetails.bindings.messageBinding)
+	}
 	(*spec.MessageEntity).WithPayload(entityProducer, d.channelDetails.unmarshalledSchema)
 	return entityProducer
 }

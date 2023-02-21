@@ -1,0 +1,109 @@
+{
+  "version": "1.0.0",
+  "disable_update_check": false,
+  "disable_updates": false,
+  "disable_plugins": false,
+  "disable_feature_flags": false,
+  "no_browser": false,
+  "platforms": {
+    "http://127.0.0.1:1024": {
+      "name": "http://127.0.0.1:1024",
+      "server": "http://test"
+    }
+  },
+  "credentials": {
+    "api-key-abc-key-123": {
+      "name": "api-key-abc-key-123",
+      "username": "",
+      "password": "",
+      "api_key_pair": {
+        "api_key": "abc-key-123",
+        "api_secret": "def-secret-456"
+      },
+      "credential_type": 1
+    },
+    "username-test-user": {
+      "name": "username-test-user",
+      "username": "test-user",
+      "password": "",
+      "api_key_pair": null,
+      "credential_type": 0
+    }
+  },
+  "contexts": {
+    "my-context": {
+      "name": "my-context",
+      "netrc_machine_name": "",
+      "platform": "http://127.0.0.1:1024",
+      "credential": "username-test-user",
+      "kafka_cluster_context": {
+        "environment_context": true,
+        "kafka_environment_contexts": {
+          "acc-123": {
+            "active_kafka": "anonymous-id",
+            "kafka_cluster_infos": {
+              "anonymous-id": {
+                "id": "anonymous-id",
+                "name": "anonymous-cluster",
+                "bootstrap_servers": "http://test",
+                "api_keys": {
+                  "abc-key-123": {
+                    "api_key": "abc-key-123",
+                    "api_secret": "def-secret-456"
+                  }
+                },
+                "api_key": "abc-key-123",
+                "last_update": "0001-01-01T00:00:00Z"
+              }
+            }
+          }
+        }
+      },
+      "schema_registry_clusters": {
+        "acc-123": {
+          "id": "lsrc-123",
+          "schema_registry_endpoint": "http://some-lsrc-endpoint",
+          "schema_registry_credentials": null
+        }
+      },
+      "last_org_id": ""
+    }
+  },
+  "context_states": {
+    "my-context": {
+      "auth": {
+        "user": {
+          "id": 123,
+          "email": "test-user@email"
+        },
+        "account": {
+          "id": "acc-123",
+          "name": "test-env"
+        },
+        "accounts": [
+          {
+            "id": "acc-123",
+            "name": "test-env"
+          }
+        ],
+        "organization": {
+          "id": 321,
+          "name": "test-org"
+        }
+      },
+      "auth_token": "AUTH_TOKEN_PLACEHOLDER",
+      "auth_refresh_token": "AUTH_REFRESH_TOKEN_PLACEHOLDER",
+      "salt": "SALT_PLACEHOLDER",
+      "nonce": "NONCE_PLACEHOLDER"
+    }
+  },
+  "current_context": "my-context",
+  "saved_credentials": {
+    "my-context": {
+      "is_cloud": true,
+      "url": "",
+      "username": "test-user",
+      "encrypted_password": "encrypted-password"
+    }
+  }
+}

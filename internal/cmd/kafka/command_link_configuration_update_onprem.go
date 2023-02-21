@@ -21,7 +21,7 @@ func (c *linkCommand) newConfigurationUpdateCommandOnPrem() *cobra.Command {
 		RunE:  c.configurationUpdateOnPrem,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Update configuration values for the cluster link `my-link`.",
+				Text: `Update configuration values for the cluster link "my-link".`,
 				Code: "confluent kafka link configuration update my-link --config-file my-config.txt",
 			},
 		),

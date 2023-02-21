@@ -21,7 +21,7 @@ type Table struct {
 	isList  bool
 	writer  io.Writer
 	format  Format
-	objects []interface{}
+	objects []any
 	filter  []string
 	sort    bool
 }
@@ -42,11 +42,11 @@ func NewList(cmd *cobra.Command) *Table {
 	return table
 }
 
-func (t *Table) Add(i interface{}) {
+func (t *Table) Add(i any) {
 	if t.isList {
 		t.objects = append(t.objects, i)
 	} else {
-		t.objects = []interface{}{i}
+		t.objects = []any{i}
 	}
 }
 
@@ -99,11 +99,11 @@ func (t *Table) PrintWithAutoWrap(auto bool) error {
 	}
 
 	if t.format.IsSerialized() {
-		var v interface{}
+		var v any
 		if t.isList {
 			v = t.objects
 			if len(t.objects) == 0 {
-				v = []interface{}{}
+				v = []any{}
 			}
 		} else {
 			v = t.objects[0]

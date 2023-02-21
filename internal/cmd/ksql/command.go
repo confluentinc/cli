@@ -90,7 +90,7 @@ func (c *ksqlCommand) checkProvisioningFailed(clusterId, endpoint string) (bool,
 	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: bearerToken})
 
 	slingClient := sling.New().Client(oauth2.NewClient(context.Background(), ts)).Base(endpoint)
-	var failure map[string]interface{}
+	var failure map[string]any
 	response, err := slingClient.New().Get("/info").Receive(nil, &failure)
 	if err != nil || response == nil {
 		return false, err

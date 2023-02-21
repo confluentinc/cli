@@ -174,7 +174,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 			return err
 		}
 		if clusterType != skuDedicated {
-			return errors.New(errors.CKUOnlyForDedicatedErrorMsg)
+			return errors.NewErrorWithSuggestions("the `--cku` flag can only be used when creating a dedicated Kafka cluster", "Specify a dedicated cluster with `--type`.")
 		}
 		if cku <= 0 {
 			return errors.New(errors.CKUMoreThanZeroErrorMsg)

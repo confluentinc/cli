@@ -10,25 +10,25 @@ func NewLeveledLogger(unsafeTrace bool) *LeveledLogger {
 	return &LeveledLogger{unsafeTrace}
 }
 
-func (l LeveledLogger) Error(msg string, args ...interface{}) {
+func (l LeveledLogger) Error(msg string, args ...any) {
 	if l.unsafeTrace {
 		CliLogger.Errorf(msg, args...)
 	}
 }
 
-func (l LeveledLogger) Info(msg string, args ...interface{}) {
+func (l LeveledLogger) Info(msg string, args ...any) {
 	if l.unsafeTrace {
 		CliLogger.Infof(msg, args...)
 	}
 }
 
-func (l LeveledLogger) Debug(msg string, args ...interface{}) {
+func (l LeveledLogger) Debug(msg string, args ...any) {
 	if l.unsafeTrace {
 		CliLogger.Debugf(msg, args...)
 	}
 }
 
-func (l LeveledLogger) Warn(msg string, args ...interface{}) {
+func (l LeveledLogger) Warn(msg string, args ...any) {
 	if l.unsafeTrace {
 		CliLogger.Warnf(msg, args...)
 	}

@@ -23,7 +23,7 @@ var (
 		"topic":     "Topic to which the ACL is being applied to. The corresponding subjects would be topic-key and topic-value. Only applicable for SUBJECT operations. Use * to apply to all subjects.",
 	}
 
-	defaultValues = map[string]interface{}{
+	defaultValues = map[string]any{
 		"add":    defaultBool,
 		"list":   defaultBool,
 		"remove": defaultBool,

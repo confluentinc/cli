@@ -1,5 +1,7 @@
-SHELL           := /bin/bash
-ALL_SRC         := $(shell find . -name "*.go" | grep -v -e vendor)
+SHELL              := /bin/bash
+ALL_SRC            := $(shell find . -name "*.go" | grep -v -e vendor)
+GORELEASER_VERSION := v1.15.2
+
 GIT_REMOTE_NAME ?= origin
 MAIN_BRANCH     ?= main
 RELEASE_BRANCH  ?= main
@@ -38,7 +40,8 @@ endif
 
 .PHONY: cli-builder
 cli-builder:
-	@TAGS=$(TAGS) CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) VERSION=$(VERSION) goreleaser build -f .goreleaser-build.yml --rm-dist --single-target --snapshot
+	go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
+	TAGS=$(TAGS) CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) VERSION=$(VERSION) GOEXPERIMENT=boringcrypto goreleaser build -f .goreleaser-build.yml --clean --single-target --snapshot
 
 include ./mk-files/dockerhub.mk
 include ./mk-files/semver.mk
@@ -63,13 +66,6 @@ clean:
 	@for dir in bin dist docs legal release-notes; do \
 		[ -d $$dir ] && rm -r $$dir || true ; \
 	done
-
-.PHONY: deps
-deps:
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.50.1 && \
-	go install github.com/google/go-licenses@v1.5.0 && \
-	go install github.com/goreleaser/goreleaser@v1.14.1 && \
-	go install gotest.tools/gotestsum@v1.8.2
 
 show-args:
 	@echo "VERSION: $(VERSION)"
@@ -127,12 +123,13 @@ lint:
 
 .PHONY: lint-go
 lint-go:
-	@golangci-lint run --timeout=10m
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.51.1 && \
+	golangci-lint run --timeout=10m
 	@echo "✅  golangci-lint"
 
 .PHONY: lint-cli
 lint-cli: cmd/lint/en_US.aff cmd/lint/en_US.dic
-	@go run cmd/lint/main.go -aff-file $(word 1,$^) -dic-file $(word 2,$^) $(ARGS)
+	go run cmd/lint/main.go -aff-file $(word 1,$^) -dic-file $(word 2,$^) $(ARGS)
 	@echo "✅  cmd/lint/main.go"
 
 cmd/lint/en_US.aff:
@@ -141,13 +138,10 @@ cmd/lint/en_US.aff:
 cmd/lint/en_US.dic:
 	curl -s "https://chromium.googlesource.com/chromium/deps/hunspell_dictionaries/+/master/en_US.dic?format=TEXT" | base64 -D > $@
 
-.PHONY: lint-licenses
-lint-licenses:
-	go-licenses check ./...
-
 .PHONY: unit-test
 unit-test:
 ifdef CI
+	go install gotest.tools/gotestsum@v1.8.2 && \
 	gotestsum --junitfile unit-test-report.xml -- -v -race $$(go list ./... | grep -v test)
 else
 	go test -v -race $$(go list ./... | grep -v test) $(UNIT_TEST_ARGS)
@@ -156,8 +150,8 @@ endif
 .PHONY: int-test
 int-test:
 ifdef CI
+	go install gotest.tools/gotestsum@v1.8.2 && \
 	gotestsum --junitfile integration-test-report.xml -- -v -race $$(go list ./... | grep test)
-	cat integration-test-report.xml
 else
 	go test -v -race $$(go list ./... | grep test) $(INT_TEST_ARGS)
 endif

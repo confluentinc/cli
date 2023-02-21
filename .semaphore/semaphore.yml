@@ -8,7 +8,7 @@ agent:
 
 auto_cancel:
   running:
-    when: "true"
+    when: "branch != 'main'"
 
 execution_time_limit:
   hours: 1
@@ -30,9 +30,7 @@ blocks:
             # Run tests
             - make generate-packaging-patch
             - diff -w -u <(git cat-file --filters HEAD:debian/patches/standard_build_layout.patch | awk "{if (NR>3) {print}}") <(cat debian/patches/standard_build_layout.patch | awk "{if (NR>3) {print}}")
-            - go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.50.1
             - make lint
-            - go install gotest.tools/gotestsum@v1.8.2
             - make test
             - make test-installer
 
@@ -61,7 +59,6 @@ blocks:
             - export PATH=$PATH:$(go env GOPATH)/bin
 
             # Run tests
-            - go install gotest.tools/gotestsum@v1.8.2
             - make test
 
 after_pipeline:

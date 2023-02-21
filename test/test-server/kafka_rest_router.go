@@ -118,7 +118,7 @@ func handleKafkaRPACLs(t *testing.T) http.HandlerFunc {
 			},
 		}
 
-		var res interface{}
+		var res any
 
 		switch r.Method {
 		case http.MethodGet:

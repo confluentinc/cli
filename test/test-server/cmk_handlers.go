@@ -243,7 +243,10 @@ func handleCmkKafkaDedicatedClusterExpansion(t *testing.T) http.HandlerFunc {
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
 			req.Id = cmkv2.PtrString("lkc-update-dedicated-expand")
-			cluster := getCmkDedicatedDescribeCluster(*req.Id, *req.Spec.DisplayName, req.Spec.Config.CmkV2Dedicated.Cku)
+			if req.Spec.GetDisplayName() == "" { // keep the name unchanged when not specified in request
+				req.Spec.SetDisplayName("lkc-update-dedicated-expand")
+			}
+			cluster := getCmkDedicatedDescribeCluster(req.GetId(), req.Spec.GetDisplayName(), req.Spec.Config.CmkV2Dedicated.Cku)
 			cluster.Status.Cku = cmkv2.PtrInt32(1)
 			err = json.NewEncoder(w).Encode(cluster)
 			require.NoError(t, err)
@@ -266,7 +269,10 @@ func handleCmkKafkaDedicatedClusterShrink(t *testing.T) http.HandlerFunc {
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
 			req.Id = cmkv2.PtrString("lkc-update-dedicated-shrink")
-			cluster := getCmkDedicatedDescribeCluster(*req.Id, *req.Spec.DisplayName, req.Spec.Config.CmkV2Dedicated.Cku)
+			if req.Spec.GetDisplayName() == "" { // keep the name unchanged when not specified in request
+				req.Spec.SetDisplayName("lkc-update-dedicated-shrink")
+			}
+			cluster := getCmkDedicatedDescribeCluster(req.GetId(), req.Spec.GetDisplayName(), req.Spec.Config.CmkV2Dedicated.Cku)
 			cluster.Status.Cku = cmkv2.PtrInt32(2)
 			err = json.NewEncoder(w).Encode(cluster)
 			require.NoError(t, err)

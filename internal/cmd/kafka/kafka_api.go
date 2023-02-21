@@ -23,47 +23,10 @@ type ACLConfiguration struct {
 func NewACLConfig() *ACLConfiguration {
 	return &ACLConfiguration{
 		ACLBinding: &ccstructs.ACLBinding{
-			Entry: &ccstructs.AccessControlEntryConfig{
-				Host: "*",
-			},
+			Entry:   &ccstructs.AccessControlEntryConfig{Host: "*"},
 			Pattern: &ccstructs.ResourcePatternConfig{},
 		},
 	}
-}
-
-// aclConfigFlags returns a flag set which can be parsed to create an ACLConfiguration object.
-func aclConfigFlags() *pflag.FlagSet {
-	flgSet := aclEntryFlags()
-	flgSet.AddFlagSet(resourceFlags())
-	return flgSet
-}
-
-// aclEntryFlags returns a flag set which can be parsed to create an AccessControlEntry object.
-func aclEntryFlags() *pflag.FlagSet {
-	flgSet := pflag.NewFlagSet("acl-entry", pflag.ExitOnError)
-	flgSet.StringSlice("operations", []string{""}, fmt.Sprintf("A comma-separated list of ACL operations: (%s).", listEnum(ccstructs.ACLOperations_ACLOperation_name, []string{"ANY", "UNKNOWN"})))
-	flgSet.String("principal", "", `Principal for this operation, prefixed with "User:".`)
-	flgSet.String("service-account", "", "The service account ID.")
-	flgSet.Bool("allow", false, "Access to the resource is allowed.")
-	flgSet.Bool("deny", false, "Access to the resource is denied.")
-	flgSet.SortFlags = false
-
-	_ = cobra.MarkFlagRequired(flgSet, "operations")
-
-	return flgSet
-}
-
-// resourceFlags returns a flag set which can be parsed to create a ResourcePattern object.
-func resourceFlags() *pflag.FlagSet {
-	flgSet := pflag.NewFlagSet("acl-resource", pflag.ExitOnError)
-	flgSet.Bool("cluster-scope", false, `Modify ACLs for the cluster.`)
-	flgSet.String("topic", "", `Modify ACLs for the specified topic resource.`)
-	flgSet.String("consumer-group", "", "Modify ACLs for the specified consumer group resource.")
-	flgSet.String("transactional-id", "", "Modify ACLs for the specified TransactionalID resource.")
-	flgSet.Bool("prefix", false, `When this flag is set, the specified resource name is interpreted as
-a prefix.`)
-
-	return flgSet
 }
 
 // parse returns ACLConfiguration from the contents of cmd

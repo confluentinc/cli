@@ -23,11 +23,22 @@ func (c *aclCommand) newDeleteCommand() *cobra.Command {
 		RunE:  c.delete,
 	}
 
-	cmd.Flags().AddFlagSet(aclConfigFlags())
+	cmd.Flags().StringSlice("operations", []string{""}, fmt.Sprintf("A comma-separated list of ACL operations: (%s).", listEnum(ccstructs.ACLOperations_ACLOperation_name, []string{"ANY", "UNKNOWN"})))
+	cmd.Flags().String("principal", "", `Principal for this operation, prefixed with "User:".`)
+	cmd.Flags().String("service-account", "", "The service account ID.")
+	cmd.Flags().Bool("allow", false, "Access to the resource is allowed.")
+	cmd.Flags().Bool("deny", false, "Access to the resource is denied.")
+	cmd.Flags().Bool("cluster-scope", false, "Modify ACLs for the cluster.")
+	cmd.Flags().String("topic", "", "Modify ACLs for the specified topic resource.")
+	cmd.Flags().String("consumer-group", "", "Modify ACLs for the specified consumer group resource.")
+	cmd.Flags().String("transactional-id", "", "Modify ACLs for the specified TransactionalID resource.")
+	cmd.Flags().Bool("prefix", false, "When this flag is set, the specified resource name is interpreted as a prefix.")
 	pcmd.AddForceFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+
+	_ = cmd.MarkFlagRequired("operations")
 
 	return cmd
 }
@@ -95,7 +106,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		deleteResp, httpResp, err := kafkaREST.CloudClient.DeleteKafkaAcls(kafkaClusterConfig.ID, filter)
 		if err != nil {
 			if i > 0 {
-				printAclsDeleted(cmd, count)
+				utils.ErrPrintln(cmd, printAclsDeleted(count))
 			}
 			return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 		}
@@ -103,14 +114,17 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		count += len(deleteResp.Data)
 	}
 
-	printAclsDeleted(cmd, count)
+	utils.ErrPrintln(cmd, printAclsDeleted(count))
 	return nil
 }
 
-func printAclsDeleted(cmd *cobra.Command, count int) {
-	if count == 0 {
-		utils.ErrPrintf(cmd, errors.ACLsNotFoundMsg)
-	} else {
-		utils.ErrPrintf(cmd, fmt.Sprintf(errors.DeletedACLsCountMsg, count))
+func printAclsDeleted(count int) string {
+	switch count {
+	case 0:
+		return "ACL not found. ACL may have been misspelled or already deleted."
+	case 1:
+		return "Deleted 1 ACL."
+	default:
+		return fmt.Sprintf("Deleted %d ACLs.", count)
 	}
 }

@@ -89,9 +89,13 @@ func (c *command) getAllUsers() ([]*ccloudv1.User, error) {
 	if auditLog := v1.GetAuditLog(c.Context.Context); auditLog != nil {
 		serviceAccount, err := c.Client.User.GetServiceAccount(context.Background(), auditLog.GetServiceAccountId())
 		if err != nil {
-			return nil, err
+			// ignore 403s so we can still get other users
+			if !strings.Contains(err.Error(), "Forbidden Access") {
+				return nil, err
+			}
+		} else {
+			users = append(users, serviceAccount)
 		}
-		users = append(users, serviceAccount)
 	}
 
 	adminUsers, err := c.Client.User.List(context.Background())
@@ -99,6 +103,9 @@ func (c *command) getAllUsers() ([]*ccloudv1.User, error) {
 		return nil, err
 	}
 	users = append(users, adminUsers...)
+
+	currentUser := c.State.Auth.User
+	users = append(users, currentUser)
 
 	return users, nil
 }

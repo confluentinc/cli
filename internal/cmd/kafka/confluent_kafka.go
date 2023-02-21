@@ -234,7 +234,7 @@ func consumeMessage(e *ckafka.Message, h *GroupHandler) error {
 	}
 
 	if e.Headers != nil {
-		var headers interface{} = e.Headers
+		var headers any = e.Headers
 		if h.Properties.FullHeader {
 			headers = getFullHeaders(e.Headers)
 		}

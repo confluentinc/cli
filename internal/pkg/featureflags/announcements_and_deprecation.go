@@ -31,17 +31,17 @@ func NewMessages() *Messages {
 	}
 }
 
-func GetAnnouncementsOrDeprecation(resp interface{}) map[string]*Messages {
+func GetAnnouncementsOrDeprecation(resp any) map[string]*Messages {
 	commandToMessages := make(map[string]*Messages)
 
-	list, ok := resp.([]interface{})
+	list, ok := resp.([]any)
 	if !ok {
 		fmt.Println("A")
 		return commandToMessages
 	}
 
 	for _, data := range list {
-		pair, ok := data.(map[string]interface{})
+		pair, ok := data.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -111,7 +111,7 @@ func DeprecateFlags(cmd *cobra.Command, flags []string) {
 }
 
 func PrintAnnouncements(featureFlag string, ctx *dynamicconfig.DynamicContext, cmd *cobra.Command) {
-	flagResponse := Manager.JsonVariation(featureFlag, ctx, v1.CliLaunchDarklyClient, true, []interface{}{})
+	flagResponse := Manager.JsonVariation(featureFlag, ctx, v1.CliLaunchDarklyClient, true, []any{})
 	cmdToFlagsAndMsg := GetAnnouncementsOrDeprecation(flagResponse)
 	for name, flagsAndMsg := range cmdToFlagsAndMsg {
 		if strings.HasPrefix(cmd.CommandPath(), "confluent "+name) {

@@ -70,8 +70,8 @@ const (
 	// iam acl & kafka acl commands
 	UnableToPerformAclErrorMsg    = "unable to %s ACLs: %s"
 	UnableToPerformAclSuggestions = "Ensure that you're running against MDS with CP 5.4+."
-	MustSetAllowOrDenyErrorMsg    = "--allow or --deny must be set when adding or deleting an ACL"
-	OnlySetAllowOrDenyErrorMsg    = "only --allow or --deny may be set when adding or deleting an ACL"
+	MustSetAllowOrDenyErrorMsg    = "`--allow` or `--deny` must be set when adding or deleting an ACL"
+	OnlySetAllowOrDenyErrorMsg    = "only `--allow` or `--deny` may be set when adding or deleting an ACL"
 	MustSetResourceTypeErrorMsg   = "exactly one resource type (%v) must be set"
 	InvalidOperationValueErrorMsg = "invalid operation value: %s"
 	ExactlyOneSetErrorMsg         = "exactly one of %v must be set"
@@ -144,7 +144,7 @@ const (
 	CloudRegionNotAvailableSuggestions            = "To view a list of available regions for \"%s\", use `confluent kafka region list --cloud %s`."
 	CloudProviderNotAvailableErrorMsg             = `"%s" is not an available cloud provider`
 	CloudProviderNotAvailableSuggestions          = "To view a list of available cloud providers and regions, use `confluent kafka region list`."
-	TopicDoesNotExistOrMissingACLsErrorMsg        = `topic "%s" does not exist or your api key does not have the ACLs required to describe it`
+	TopicDoesNotExistOrMissingACLsErrorMsg        = `topic "%s" does not exist or your API key does not have the ACLs required to describe it`
 	TopicDoesNotExistOrMissingACLsSuggestions     = "To list topics for the cluster \"%s\", use `confluent kafka topic list --cluster %s`.\nTo list ACLs use `confluent kafka acl list --cluster %s`."
 	InvalidAvailableFlagErrorMsg                  = "invalid value \"%s\" for `--availability` flag"
 	InvalidAvailableFlagSuggestions               = "Allowed values for `--availability` flag are: %s, %s."
@@ -265,6 +265,7 @@ const (
 	NoCredentialsFoundErrorMsg       = "no credentials found"
 	NoURLEnvVarErrorMsg              = "no URL env var"
 	InvalidInputFormatErrorMsg       = `"%s" is not of valid format for field "%s"`
+	ParseKeychainCredentialsErrorMsg = "unable to parse credentials in keychain access"
 
 	// cmd package
 	InvalidAPIKeyErrorMsg    = `invalid API key "%s" for resource "%s"`
@@ -299,6 +300,9 @@ const (
 	CredentialNotFoundErrorMsg         = `credential "%s" not found`
 	PlatformNotFoundErrorMsg           = `platform "%s" not found`
 	NoNameCredentialErrorMsg           = "credential must have a name"
+	SavedCredentialNoContextErrorMsg   = "saved credential must match a context"
+	KeychainNotAvailableErrorMsg       = "keychain not available on platforms other than darwin"
+	NoValidKeychainCredentialErrorMsg  = "no matching credentials found in keychain"
 	NoNamePlatformErrorMsg             = "platform must have a name"
 	UnspecifiedPlatformErrorMsg        = `context "%s" has corrupted platform`
 	UnspecifiedCredentialErrorMsg      = `context "%s" has corrupted credentials`

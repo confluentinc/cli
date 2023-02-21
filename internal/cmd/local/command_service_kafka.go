@@ -45,7 +45,7 @@ var (
 		"value-deserializer":    "",
 		"whitelist":             "Regular expression specifying whitelist of topics to include for consumption.",
 	}
-	kafkaConsumeDefaultValues = map[string]interface{}{
+	kafkaConsumeDefaultValues = map[string]any{
 		"bootstrap-server":      defaultString,
 		"consumer-property":     defaultString,
 		"consumer.config":       defaultString,
@@ -85,7 +85,7 @@ var (
 		"sync":                       "If set, message send requests to brokers arrive synchronously.",
 		"timeout":                    "If set and the producer is running in asynchronous mode, this gives the maximum amount of time a message will queue awaiting sufficient batch size. The value is given in ms. (default 1000)",
 	}
-	kafkaProduceDefaultValues = map[string]interface{}{
+	kafkaProduceDefaultValues = map[string]any{
 		"batch-size":                 defaultInt,
 		"bootstrap-server":           defaultString,
 		"compression-codec":          defaultString,
@@ -200,7 +200,7 @@ func (c *Command) initFlags(mode string) {
 	}
 }
 
-func (c *Command) runKafkaCommand(command *cobra.Command, args []string, mode string, kafkaFlagTypes map[string]interface{}) error {
+func (c *Command) runKafkaCommand(command *cobra.Command, args []string, mode string, kafkaFlagTypes map[string]any) error {
 	cloud, err := command.Flags().GetBool("cloud")
 	if err != nil {
 		return err

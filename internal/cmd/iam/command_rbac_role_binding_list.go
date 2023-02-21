@@ -37,7 +37,7 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 	if c.cfg.IsCloudLogin() {
 		cmd.Example = examples.BuildExampleString(
 			examples.Example{
-				Text: "List the role bindings for current user:",
+				Text: "List the role bindings for the current user:",
 				Code: "confluent iam rbac role-binding list --current-user",
 			},
 			examples.Example{
@@ -51,6 +51,14 @@ func (c *roleBindingCommand) newListCommand() *cobra.Command {
 			examples.Example{
 				Text: `List the role bindings for user "u-123456" with role "CloudClusterAdmin":`,
 				Code: "confluent iam rbac role-binding list --principal User:u-123456 --role CloudClusterAdmin --environment env-12345 --cloud-cluster lkc-123456",
+			},
+			examples.Example{
+				Text: `List the role bindings for user "u-123456" for all scopes:`,
+				Code: "confluent iam rbac role-binding list --principal User:u-123456 --inclusive",
+			},
+			examples.Example{
+				Text: "List the role bindings for the current user at the environment scope and its nested scopes:",
+				Code: "confluent iam rbac role-binding list --current-user --environment env-12345 --inclusive",
 			},
 		)
 	} else {

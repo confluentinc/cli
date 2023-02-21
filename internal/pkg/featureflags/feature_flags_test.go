@@ -29,7 +29,7 @@ func (suite *LaunchDarklyTestSuite) SetupTest() {
 
 	ld := launchDarklyManager{}
 	suite.ctx.FeatureFlags = &v1.FeatureFlags{
-		Values:         map[string]interface{}{"testJson": kv{key: "key", val: "val"}, "testBool": true, "testInt": 3, "testString": "value"},
+		Values:         map[string]any{"testJson": kv{key: "key", val: "val"}, "testBool": true, "testInt": 3, "testString": "value"},
 		LastUpdateTime: time.Now().Unix(),
 		User:           ld.contextToLDUser(suite.ctx),
 	}
@@ -55,7 +55,7 @@ func (suite *LaunchDarklyTestSuite) TestFlags() {
 	req.Equal(1, intFlag)
 
 	jsonFlag := ld.JsonVariation("testJson", ctx, v1.CliLaunchDarklyClient, true, map[string]string{})
-	req.Equal(map[string]interface{}{"key": "val"}, jsonFlag)
+	req.Equal(map[string]any{"key": "val"}, jsonFlag)
 }
 
 // Flag variation tests using cached flag values
