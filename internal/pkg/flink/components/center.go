@@ -5,6 +5,7 @@ import "github.com/rivo/tview"
 // Center returns a new primitive which shows the provided primitive in its
 // center, given the provided primitive's size.
 func Center(width, height int, p tview.Primitive) tview.Primitive {
+
 	return tview.NewFlex().
 		AddItem(nil, 0, 1, false).
 		AddItem(tview.NewFlex().

@@ -12,8 +12,10 @@ require (
 
 require (
 	github.com/c-bata/go-prompt v0.2.6 // indirect
+	github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway v0.0.0-00010101000000-000000000000 // indirect
 	github.com/confluentinc/flink-sql-client/autocomplete v0.0.0-20230209110725-873ad040e7d4 // indirect
 	github.com/gdamore/encoding v1.0.0 // indirect
+	github.com/golang/protobuf v1.4.2 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/mattn/go-colorable v0.1.7 // indirect
 	github.com/mattn/go-isatty v0.0.12 // indirect
@@ -21,11 +23,17 @@ require (
 	github.com/mattn/go-tty v0.0.3 // indirect
 	github.com/pkg/term v1.2.0-beta.2 // indirect
 	github.com/rivo/uniseg v0.4.2 // indirect
+	golang.org/x/net v0.0.0-20220722155237-a158d28d115b // indirect
+	golang.org/x/oauth2 v0.0.0-20210218202405-ba52d332ba99 // indirect
 	golang.org/x/sys v0.4.0 // indirect
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	golang.org/x/text v0.5.0 // indirect
+	google.golang.org/appengine v1.6.6 // indirect
+	google.golang.org/protobuf v1.25.0 // indirect
 )
 
 replace github.com/confluentinc/flink-sql-client/components => ./components
+
+replace github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway => ./pkg/sdk
 
 replace github.com/c-bata/go-prompt => github.com/guttz/go-prompt v0.2.7
