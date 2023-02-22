@@ -8,17 +8,16 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/spf13/cobra"
 
 	byokv1 "github.com/confluentinc/ccloud-sdk-go-v2/byok/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-
-	"github.com/aws/aws-sdk-go/aws/arn"
 )
 
-var encryptionKeyPolicyAWS = template.Must(template.New("encryptionKeyPolicyAWS").Parse(`{
+var encryptionKeyPolicyAws = template.Must(template.New("encryptionKeyPolicyAws").Parse(`{
 	"Sid" : "Allow Confluent accounts to use the key",
 	"Effect" : "Allow",
 	"Principal" : {
@@ -73,11 +72,11 @@ func (c *command) newCreateCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) createAwsKeyRequest(cmd *cobra.Command, keyString string) (*byokv1.ByokV1Key, error) {
+func (c *command) createAwsKeyRequest(cmd *cobra.Command, keyArn string) (*byokv1.ByokV1Key, error) {
 	keyReq := byokv1.ByokV1Key{
 		Key: &byokv1.ByokV1KeyKeyOneOf{
 			ByokV1AwsKey: &byokv1.ByokV1AwsKey{
-				KeyArn: keyString,
+				KeyArn: keyArn,
 				Kind:   "AwsKey",
 			},
 		},
@@ -87,11 +86,11 @@ func (c *command) createAwsKeyRequest(cmd *cobra.Command, keyString string) (*by
 }
 
 func (c *command) createAzureKeyRequest(cmd *cobra.Command, keyString string) (*byokv1.ByokV1Key, error) {
-	keyVaultID, err := cmd.Flags().GetString("key-vault")
+	keyVault, err := cmd.Flags().GetString("key-vault")
 	if err != nil {
 		return nil, err
 	}
-	tenantID, err := cmd.Flags().GetString("tenant")
+	tenant, err := cmd.Flags().GetString("tenant")
 	if err != nil {
 		return nil, err
 	}
@@ -100,14 +99,14 @@ func (c *command) createAzureKeyRequest(cmd *cobra.Command, keyString string) (*
 		Key: &byokv1.ByokV1KeyKeyOneOf{
 			ByokV1AzureKey: &byokv1.ByokV1AzureKey{
 				KeyId:      keyString,
-				KeyVaultId: keyVaultID,
-				TenantId:   tenantID,
+				KeyVaultId: keyVault,
+				TenantId:   tenant,
 				Kind:       "AzureKey",
 			},
 		},
 	}
 
-	return &keyReq, err
+	return &keyReq, nil
 }
 
 func (c *command) create(cmd *cobra.Command, args []string) error {
@@ -151,7 +150,7 @@ func isAWSKey(key string) bool {
 func getPolicyCommand(key *byokv1.ByokV1Key) (string, error) {
 	switch {
 	case key.Key.ByokV1AwsKey != nil:
-		return renderAWSEncryptionPolicy(*key.Key.ByokV1AwsKey.Roles)
+		return renderAWSEncryptionPolicy(key.Key.ByokV1AwsKey.GetRoles())
 	case key.Key.ByokV1AzureKey != nil:
 		return renderAzureEncryptionPolicy(key)
 	default:
@@ -161,7 +160,7 @@ func getPolicyCommand(key *byokv1.ByokV1Key) (string, error) {
 
 func renderAWSEncryptionPolicy(roles []string) (string, error) {
 	buf := new(bytes.Buffer)
-	if err := encryptionKeyPolicyAWS.Execute(buf, roles); err != nil {
+	if err := encryptionKeyPolicyAws.Execute(buf, roles); err != nil {
 		return "", errors.New(errors.FailedToRenderKeyPolicyErrorMsg)
 	}
 	return buf.String(), nil

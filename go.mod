@@ -12,6 +12,7 @@ require (
 	github.com/confluentinc/bincover v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20230117212759-138da0e5aa56
 	github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0
+	github.com/confluentinc/ccloud-sdk-go-v2/byok v0.0.1
 	github.com/confluentinc/ccloud-sdk-go-v2/cdx v0.0.5
 	github.com/confluentinc/ccloud-sdk-go-v2/cli v0.1.0
 	github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.7.0
@@ -82,7 +83,6 @@ require (
 	github.com/c-bata/go-prompt v0.2.6 // indirect
 	github.com/chromedp/cdproto v0.0.0-20230120182703-ecee3ffd2a24 // indirect
 	github.com/chromedp/sysutil v1.0.0 // indirect
-	github.com/confluentinc/ccloud-sdk-go-v2/byok v0.0.1
 	github.com/confluentinc/proto-go-setter v0.3.0 // indirect
 	github.com/envoyproxy/protoc-gen-validate v0.9.1 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect

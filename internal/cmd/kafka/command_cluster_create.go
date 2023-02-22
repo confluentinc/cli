@@ -134,7 +134,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 			return err
 		}
 
-		if err := c.validateGCPEncryptionKey(cmd, prompt, cloud, c.EnvironmentId()); err != nil {
+		if err := c.validateGcpEncryptionKey(cmd, prompt, cloud, c.EnvironmentId()); err != nil {
 			return err
 		}
 	}
@@ -216,7 +216,7 @@ func checkCloudAndRegion(cloudId string, regionId string, clouds []*ccloudv1.Clo
 		errors.CloudProviderNotAvailableSuggestions)
 }
 
-func (c *clusterCommand) validateGCPEncryptionKey(cmd *cobra.Command, prompt form.Prompt, cloud string, accountID string) error {
+func (c *clusterCommand) validateGcpEncryptionKey(cmd *cobra.Command, prompt form.Prompt, cloud string, accountID string) error {
 	ctx := context.Background()
 	// The call is idempotent so repeated create commands return the same ID for the same account.
 	externalID, err := c.Client.ExternalIdentity.CreateExternalIdentity(ctx, cloud, accountID)
