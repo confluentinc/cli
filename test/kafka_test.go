@@ -171,6 +171,16 @@ func (s *CLITestSuite) TestKafka() {
 	}
 }
 
+func (s *CLITestSuite) TestKafkaClusterCreateByok() {
+	test := CLITest{
+		login:   "cloud",
+		args:    "kafka cluster create cck-byok-test --cloud aws --region us-east-1 --type dedicated --cku 1 --byok cck-001",
+		fixture: "kafka/cluster/cck-byok.golden",
+	}
+
+	s.runIntegrationTest(test)
+}
+
 func (s *CLITestSuite) TestKafkaClusterCreate_GcpByok() {
 	test := CLITest{
 		login:       "cloud",
