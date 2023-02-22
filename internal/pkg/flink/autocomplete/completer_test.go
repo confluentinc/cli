@@ -52,7 +52,7 @@ func TestAutoCompletionWithHistory(t *testing.T) {
 	buffer.InsertText(input, false, true)
 
 	expected := prompt.Suggest{Text: "SELECT * FROM YESTERDAY;", Description: "History entry"}
-	completerWithHistory := CompleterWithHistory([]string{"SELECT * FROM YESTERDAY;"}, mockGetSmartCompletion)
+	completerWithHistory := CompleterWithHistoryAndDocs([]string{"SELECT * FROM YESTERDAY;"}, mockGetSmartCompletion)
 	actual := completerWithHistory(*buffer.Document())
 
 	if !containsSuggestion(actual, expected) {
@@ -66,7 +66,7 @@ func TestFailingAutoCompletionWithHistory(t *testing.T) {
 	buffer.InsertText(input, false, true)
 
 	expected := prompt.Suggest{Text: "SELECT * FROM YESTERDAY;", Description: "History entry"}
-	completerWithHistory := CompleterWithHistory([]string{"SELECT * FROM YESTERDAY;"}, mockGetSmartCompletion)
+	completerWithHistory := CompleterWithHistoryAndDocs([]string{"SELECT * FROM YESTERDAY;"}, mockGetSmartCompletion)
 	actual := completerWithHistory(*buffer.Document())
 
 	if containsSuggestion(actual, expected) {

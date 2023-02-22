@@ -46,14 +46,14 @@ func isInputClosingSelect(input string) bool {
 }
 
 func promptInput(value string, history []string, getSmartCompletion func() bool, toggleSmartCompletion func(), toggleOutputMode func(), exitApplication func()) (string, []string) {
-	completerWithHistory := autocomplete.CompleterWithHistory(history, getSmartCompletion)
+	completerWithHistoryAndDocs := autocomplete.CompleterWithHistoryAndDocs(history, getSmartCompletion)
 
 	// We need to disable the live prefix, in case we just submited a statement
 	LivePrefixState.IsEnable = false
 
 	p := prompt.New(
 		executor,
-		completerWithHistory,
+		completerWithHistoryAndDocs,
 		prompt.OptionTitle("sql-prompt"),
 		prompt.OptionInitialBufferText(value),
 		prompt.OptionHistory(history),

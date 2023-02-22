@@ -19,9 +19,10 @@ func combineCompleters(getSmartCompletion func() bool, completers ...prompt.Comp
 	}
 }
 
-func CompleterWithHistory(history []string, getSmartCompletion func() bool) prompt.Completer {
+func CompleterWithHistoryAndDocs(history []string, getSmartCompletion func() bool) prompt.Completer {
 	HISTORYCompleter := generateHISTORYCompleter(history)
-	return combineCompleters(getSmartCompletion, Completer, HISTORYCompleter)
+	docsCompleter := generateDocsCompleter()
+	return combineCompleters(getSmartCompletion, Completer, HISTORYCompleter, docsCompleter)
 }
 
 // Since we combine completers twice, we just need to control this properly once using "getSmartCompletion". Maybe
