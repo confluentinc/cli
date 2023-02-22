@@ -1,19 +1,19 @@
-module flink-sql-client
+module github.com/confluentinc/flink-sql-client
 
 go 1.19
 
 require (
 	github.com/atotto/clipboard v0.1.4
-	github.com/confluentinc/flink-sql-client/components v0.0.0-00010101000000-000000000000
 	github.com/gdamore/tcell/v2 v2.5.4
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/rivo/tview v0.0.0-20230104153304-892d1a2eb0da
 )
 
 require (
+	github.com/bradleyjkemp/cupaloy v2.3.0+incompatible // indirect
 	github.com/c-bata/go-prompt v0.2.6 // indirect
 	github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway v0.0.0-00010101000000-000000000000 // indirect
-	github.com/confluentinc/flink-sql-client/autocomplete v0.0.0-20230209110725-873ad040e7d4 // indirect
+	github.com/davecgh/go-spew v1.1.0 // indirect
 	github.com/gdamore/encoding v1.0.0 // indirect
 	github.com/golang/protobuf v1.4.2 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
@@ -22,6 +22,7 @@ require (
 	github.com/mattn/go-runewidth v0.0.14 // indirect
 	github.com/mattn/go-tty v0.0.3 // indirect
 	github.com/pkg/term v1.2.0-beta.2 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rivo/uniseg v0.4.2 // indirect
 	golang.org/x/net v0.0.0-20220722155237-a158d28d115b // indirect
 	golang.org/x/oauth2 v0.0.0-20210218202405-ba52d332ba99 // indirect
@@ -31,8 +32,6 @@ require (
 	google.golang.org/appengine v1.6.6 // indirect
 	google.golang.org/protobuf v1.25.0 // indirect
 )
-
-replace github.com/confluentinc/flink-sql-client/components => ./components
 
 replace github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway => ./pkg/sdk
 

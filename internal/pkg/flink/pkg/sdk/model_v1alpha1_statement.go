@@ -40,7 +40,7 @@ type V1alpha1Statement struct {
 	// Kind defines the object this REST resource represents.
 	Kind *string `json:"kind,omitempty"`
 	// ID of the SQL statement
-	Id *string `json:"id,omitempty"`
+	Id       *string     `json:"id,omitempty"`
 	Metadata *ObjectMeta `json:"metadata,omitempty"`
 	// Request/client properties.
 	Properties *V1alphaProperties `json:"properties,omitempty"`
@@ -49,8 +49,8 @@ type V1alpha1Statement struct {
 	// SQL statement executed.
 	Statement *string `json:"statement,omitempty"`
 	// Type of the SQL statement as identified.
-	StatementKind *string `json:"statement_kind,omitempty"`
-	Status *V1alpha1StatementStatus `json:"status,omitempty"`
+	StatementKind *string                  `json:"statement_kind,omitempty"`
+	Status        *V1alpha1StatementStatus `json:"status,omitempty"`
 }
 
 // NewV1alpha1Statement instantiates a new V1alpha1Statement object
@@ -360,45 +360,45 @@ func (o *V1alpha1Statement) SetStatus(v V1alpha1StatementStatus) {
 
 // Redact resets all sensitive fields to their zero value.
 func (o *V1alpha1Statement) Redact() {
-    o.recurseRedact(o.ApiVersion)
-    o.recurseRedact(o.Kind)
-    o.recurseRedact(o.Id)
-    o.recurseRedact(o.Metadata)
-    o.recurseRedact(o.Properties)
-    o.recurseRedact(o.ComputePoolId)
-    o.recurseRedact(o.Statement)
-    o.recurseRedact(o.StatementKind)
-    o.recurseRedact(o.Status)
+	o.recurseRedact(o.ApiVersion)
+	o.recurseRedact(o.Kind)
+	o.recurseRedact(o.Id)
+	o.recurseRedact(o.Metadata)
+	o.recurseRedact(o.Properties)
+	o.recurseRedact(o.ComputePoolId)
+	o.recurseRedact(o.Statement)
+	o.recurseRedact(o.StatementKind)
+	o.recurseRedact(o.Status)
 }
 
 func (o *V1alpha1Statement) recurseRedact(v interface{}) {
-    type redactor interface {
-        Redact()
-    }
-    if r, ok := v.(redactor); ok {
-        r.Redact()
-    } else {
-        val := reflect.ValueOf(v)
-        if val.Kind() == reflect.Ptr {
-            val = val.Elem()
-        }
-        switch val.Kind() {
-        case reflect.Slice, reflect.Array:
-            for i := 0; i < val.Len(); i++ {
-                // support data types declared without pointers
-                o.recurseRedact(val.Index(i).Interface())
-                // ... and data types that were declared without but need pointers (for Redact)
-                if val.Index(i).CanAddr() {
-                    o.recurseRedact(val.Index(i).Addr().Interface())
-                }
-            }
-        }
-    }
+	type redactor interface {
+		Redact()
+	}
+	if r, ok := v.(redactor); ok {
+		r.Redact()
+	} else {
+		val := reflect.ValueOf(v)
+		if val.Kind() == reflect.Ptr {
+			val = val.Elem()
+		}
+		switch val.Kind() {
+		case reflect.Slice, reflect.Array:
+			for i := 0; i < val.Len(); i++ {
+				// support data types declared without pointers
+				o.recurseRedact(val.Index(i).Interface())
+				// ... and data types that were declared without but need pointers (for Redact)
+				if val.Index(i).CanAddr() {
+					o.recurseRedact(val.Index(i).Addr().Interface())
+				}
+			}
+		}
+	}
 }
 
 func (o V1alpha1Statement) zeroField(v interface{}) {
-    p := reflect.ValueOf(v).Elem()
-    p.Set(reflect.Zero(p.Type()))
+	p := reflect.ValueOf(v).Elem()
+	p.Set(reflect.Zero(p.Type()))
 }
 
 func (o V1alpha1Statement) MarshalJSON() ([]byte, error) {
@@ -468,5 +468,3 @@ func (v *NullableV1alpha1Statement) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-
