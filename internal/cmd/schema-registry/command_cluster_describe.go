@@ -113,9 +113,8 @@ func (c *clusterCommand) describe(cmd *cobra.Command, _ []string) error {
 
 	freeSchemasLimit := int(cluster.MaxSchemas)
 	if cluster.Package == essentialsPackageInternal {
-		org := &ccloudv1.Organization{Id: c.State.Auth.Organization.Id}
+		org := &ccloudv1.Organization{Id: c.Context.GetOrganization().GetId()}
 		prices, err := c.Client.Billing.GetPriceTable(context.Background(), org, streamGovernancePriceTableProductName)
-
 		if err == nil {
 			priceKey := getMaxSchemaLimitPriceKey(cluster.Package, cluster.ServiceProvider, cluster.ServiceProviderRegion)
 			freeSchemasLimit = int(prices.GetPriceTable()[schemaRegistryPriceTableName].Prices[priceKey])
