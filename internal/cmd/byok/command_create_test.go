@@ -2,10 +2,11 @@ package byok
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestRemoveKeyVersionFromAzureKeyId(t *testing.T) {
-
 	tests := []struct {
 		name     string
 		input    string
@@ -36,9 +37,7 @@ func TestRemoveKeyVersionFromAzureKeyId(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			actual := removeKeyVersionFromAzureKeyId(test.input)
-			if actual != test.expected {
-				t.Errorf("%s: Expected %s, got %s", test.name, test.expected, actual)
-			}
+			require.Equal(t, test.expected, actual)
 		})
 	}
 }

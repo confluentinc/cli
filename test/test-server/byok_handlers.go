@@ -36,8 +36,8 @@ func handleByokKeyGet(t *testing.T, keyStr string, byokStoreV1 map[string]*byokv
 			require.NoError(t, err)
 			return
 		}
-		byokkey := byokStoreV1[keyStr]
-		err := json.NewEncoder(w).Encode(byokkey)
+		byokKey := byokStoreV1[keyStr]
+		err := json.NewEncoder(w).Encode(byokKey)
 		require.NoError(t, err)
 	}
 }
@@ -94,7 +94,6 @@ func handleByokKeysCreate(t *testing.T, byokStoreV1 map[string]*byokv1.ByokV1Key
 				},
 			}
 			byokKey.Provider = byokv1.PtrString("AWS")
-
 		case req.Key.ByokV1AzureKey != nil:
 			byokKey.Key = &byokv1.ByokV1KeyKeyOneOf{
 				ByokV1AzureKey: &byokv1.ByokV1AzureKey{
@@ -129,7 +128,7 @@ func byokKeysFilterV1(url *url.URL, byokStoreV1 map[string]*byokv1.ByokV1Key) *b
 	state := q.Get("state")
 
 	for _, key := range byokStoreV1 {
-		providerFilter := (provider == "") || (provider == *key.Provider)
+		providerFilter := provider == "" || provider == key.GetProvider()
 		stateFilter := (state == "") || state == *key.State
 		if providerFilter && stateFilter {
 			byokKeyList.Data = append(byokKeyList.Data, *key)

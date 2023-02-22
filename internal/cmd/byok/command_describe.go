@@ -5,6 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	byokv1 "github.com/confluentinc/ccloud-sdk-go-v2/byok/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	errorMsg "github.com/confluentinc/cli/internal/pkg/errors"
@@ -44,8 +45,37 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		return errors.CatchByokKeyNotFoundError(err, httpResp)
 	}
 
+	return c.outputByokKeyDescription(cmd, &key)
+}
+
+func (c *command) outputByokKeyDescription(cmd *cobra.Command, key *byokv1.ByokV1Key) error {
+	postCreationStepInstructions, err := getPolicyCommand(key)
+	if err != nil {
+		return err
+	}
+
+	out, err := c.convertByokKeyToDescribeStruct(key)
+	if err != nil {
+		return err
+	}
+
+	table := output.NewTable(cmd)
+	table.Add(out)
+	table.Filter([]string{"Id", "Key", "Roles", "Provider", "State", "CreatedAt"})
+	table.Print()
+
+	if output.GetFormat(cmd) == output.Human {
+		utils.ErrPrintln(cmd, fmt.Sprintf("\n%s\n", getPostCreateStepInstruction(key)))
+		utils.Println(cmd, postCreationStepInstructions)
+	}
+
+	return nil
+}
+
+func (c *command) convertByokKeyToDescribeStruct(key *byokv1.ByokV1Key) (*describeStruct, error) {
 	var keyString string
 	var roles []string
+
 	switch {
 	case key.Key.ByokV1AwsKey != nil:
 		keyString = key.Key.ByokV1AwsKey.KeyArn
@@ -54,7 +84,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		keyString = key.Key.ByokV1AzureKey.KeyId
 		roles = append(roles, key.Key.ByokV1AzureKey.GetApplicationId())
 	default:
-		return errors.New(errorMsg.ByokUnknownKeyTypeErrorMsg)
+		return nil, errors.New(errorMsg.ByokUnknownKeyTypeErrorMsg)
 	}
 
 	updatedAt := ""
@@ -65,11 +95,6 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	deletedAt := ""
 	if !key.Metadata.GetDeletedAt().IsZero() {
 		deletedAt = key.Metadata.GetDeletedAt().String()
-	}
-
-	postCreationStepInstructions, err := getPolicyCommand(&key)
-	if err != nil {
-		return err
 	}
 
 	describeKey := &describeStruct{
@@ -83,17 +108,5 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		DeletedAt: deletedAt,
 	}
 
-	if output.GetFormat(cmd) == output.Human {
-		table := output.NewTable(cmd)
-		table.Add(describeKey)
-		table.Filter([]string{"Id", "Key", "Roles", "Provider", "State", "CreatedAt"})
-		table.Print()
-		utils.ErrPrintln(cmd, fmt.Sprintf("\n%s\n", getPostCreateStepInstruction(&key)))
-		utils.Println(cmd, postCreationStepInstructions)
-
-	} else {
-		output.SerializedOutput(cmd, describeKey)
-	}
-
-	return nil
+	return describeKey, nil
 }

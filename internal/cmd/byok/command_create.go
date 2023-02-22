@@ -14,9 +14,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 
 	"github.com/aws/aws-sdk-go/aws/arn"
 )
@@ -43,8 +40,10 @@ var encryptionKeyPolicyAWS = template.Must(template.New("encryptionKeyPolicyAWS"
 	"Resource" : "*"
 }`))
 
-const keyVaultCryptoServiceEncryptionUser = "e147488a-f6f5-4113-8e2d-b22465e65bf6"
-const keyVaultReader = "21090545-7ca7-4776-b22c-e363652d74d2"
+const (
+	keyVaultCryptoServiceEncryptionUser = "e147488a-f6f5-4113-8e2d-b22465e65bf6"
+	keyVaultReader                      = "21090545-7ca7-4776-b22c-e363652d74d2"
+)
 
 func (c *command) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -137,20 +136,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return errors.CatchCCloudV2Error(err, httpResp)
 	}
 
-	policyCommand, err := getPolicyCommand(&key)
-	if err != nil {
-		return err
-	}
-
-	if output.GetFormat(cmd) == output.Human {
-		utils.ErrPrintf(cmd, errors.CreatedResourceMsg, resource.ByokKey, key.GetId())
-		utils.ErrPrintln(cmd, fmt.Sprintf("\n%s\n", getPostCreateStepInstruction(&key)))
-		utils.Println(cmd, policyCommand)
-	} else {
-		output.SerializedOutput(cmd, &key)
-	}
-
-	return nil
+	return c.outputByokKeyDescription(cmd, &key)
 }
 
 func isAWSKey(key string) bool {
@@ -165,7 +151,7 @@ func isAWSKey(key string) bool {
 func getPolicyCommand(key *byokv1.ByokV1Key) (string, error) {
 	switch {
 	case key.Key.ByokV1AwsKey != nil:
-		return renderAWSEncryptionPolicy(*key.Key.ByokV1AwsKey..Roles)
+		return renderAWSEncryptionPolicy(*key.Key.ByokV1AwsKey.Roles)
 	case key.Key.ByokV1AzureKey != nil:
 		return renderAzureEncryptionPolicy(key)
 	default:
@@ -186,7 +172,12 @@ func renderAzureEncryptionPolicy(key *byokv1.ByokV1Key) (string, error) {
 	objectId := fmt.Sprintf(`$(az ad sp show --id "%s" --query id --out tsv 2>/dev/null || az ad sp create --id "%s" --query id --out tsv)`, *key.Key.ByokV1AzureKey.ApplicationId, *key.Key.ByokV1AzureKey.ApplicationId)
 
 	regex := regexp.MustCompile(`^https://([^/.]+).vault.azure.net`)
-	vaultName := regex.FindStringSubmatch(key.Key.ByokV1AzureKey.KeyId)[1]
+	matches := regex.FindStringSubmatch(key.Key.ByokV1AzureKey.KeyId)
+	if matches == nil {
+		return "", errors.New(errors.FailedToRenderKeyPolicyErrorMsg)
+	}
+
+	vaultName := matches[1]
 
 	az := []string{
 		"az role assignment create \\",

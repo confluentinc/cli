@@ -69,7 +69,7 @@ func (c *clusterCommand) newCreateCommand(cfg *v1.Config) *cobra.Command {
 	pcmd.AddAvailabilityFlag(cmd)
 	pcmd.AddTypeFlag(cmd)
 	cmd.Flags().Int("cku", 0, `Number of Confluent Kafka Units (non-negative). Required for Kafka clusters of type "dedicated".`)
-	cmd.Flags().String("encryption-key", "", `Resource ID of the Cloud KMS key (GCP only).`)
+	cmd.Flags().String("encryption-key", "", "Resource ID of the Cloud Key Management Service key (GCP only).")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
 		pcmd.AddByokKeyFlag(cmd, c.AuthenticatedCLICommand)
@@ -123,17 +123,16 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 		return err
 	}
 
-	var encryptionPtr *string
+	var encryptionKey string
 	if cmd.Flags().Changed("encryption-key") {
 		if cloud != "gcp" {
 			return errors.New(errors.EncryptionKeySupportErrorMsg)
 		}
 
-		encryptionKey, err := cmd.Flags().GetString("encryption-key")
+		encryptionKey, err = cmd.Flags().GetString("encryption-key")
 		if err != nil {
 			return err
 		}
-		encryptionPtr = &encryptionKey
 
 		if err := c.validateGCPEncryptionKey(cmd, prompt, cloud, c.EnvironmentId()); err != nil {
 			return err
@@ -151,9 +150,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 		if err != nil {
 			return errors.CatchByokKeyNotFoundError(err, httpResp)
 		}
-		keyGlobalObjectReference = &cmkv2.GlobalObjectReference{
-			Id: key.GetId(),
-		}
+		keyGlobalObjectReference = &cmkv2.GlobalObjectReference{Id: key.GetId()}
 	}
 
 	createCluster := cmkv2.CmkV2Cluster{
@@ -163,7 +160,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 			Cloud:        cmkv2.PtrString(cloud),
 			Region:       cmkv2.PtrString(region),
 			Availability: cmkv2.PtrString(availability),
-			Config:       setCmkClusterConfig(clusterType, 1, encryptionPtr),
+			Config:       setCmkClusterConfig(clusterType, 1, encryptionKey),
 			Byok:         keyGlobalObjectReference,
 		},
 	}
@@ -276,7 +273,7 @@ func stringToSku(skuType string) (ccstructs.Sku, error) {
 	return sku, nil
 }
 
-func setCmkClusterConfig(typeString string, cku int32, encryptionKeyID *string) *cmkv2.CmkV2ClusterSpecConfigOneOf {
+func setCmkClusterConfig(typeString string, cku int32, encryptionKeyID string) *cmkv2.CmkV2ClusterSpecConfigOneOf {
 	switch typeString {
 	case skuBasic:
 		return &cmkv2.CmkV2ClusterSpecConfigOneOf{
@@ -287,8 +284,13 @@ func setCmkClusterConfig(typeString string, cku int32, encryptionKeyID *string) 
 			CmkV2Standard: &cmkv2.CmkV2Standard{Kind: "Standard"},
 		}
 	case skuDedicated:
+		var encryptionPtr *string
+		if encryptionKeyID != "" {
+			encryptionPtr = &encryptionKeyID
+		}
+
 		return &cmkv2.CmkV2ClusterSpecConfigOneOf{
-			CmkV2Dedicated: &cmkv2.CmkV2Dedicated{Kind: "Dedicated", Cku: cku, EncryptionKey: encryptionKeyID},
+			CmkV2Dedicated: &cmkv2.CmkV2Dedicated{Kind: "Dedicated", Cku: cku, EncryptionKey: encryptionPtr},
 		}
 	default:
 		return &cmkv2.CmkV2ClusterSpecConfigOneOf{

@@ -2,13 +2,9 @@ module github.com/confluentinc/cli
 
 go 1.19
 
-replace (
-	github.com/confluentinc/ccloud-sdk-go-v2/byok => github.com/confluentinc/ccloud-sdk-go-v2-internal/byok v0.0.5
-	github.com/confluentinc/ccloud-sdk-go-v2/cmk => ../ccloud-sdk-go-v2/cmk
-)
-
 require (
 	github.com/antihax/optional v1.0.0
+	github.com/aws/aws-sdk-go v1.44.207
 	github.com/billgraziano/dpapi v0.4.0
 	github.com/brianstrauch/cobra-shell v0.4.0
 	github.com/chromedp/chromedp v0.8.7
@@ -18,7 +14,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/cdx v0.0.5
 	github.com/confluentinc/ccloud-sdk-go-v2/cli v0.1.0
-	github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.6.0
+	github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.7.0
 	github.com/confluentinc/ccloud-sdk-go-v2/connect v0.3.0
 	github.com/confluentinc/ccloud-sdk-go-v2/iam v0.10.0
 	github.com/confluentinc/ccloud-sdk-go-v2/identity-provider v0.2.0
@@ -86,7 +82,7 @@ require (
 	github.com/c-bata/go-prompt v0.2.6 // indirect
 	github.com/chromedp/cdproto v0.0.0-20230120182703-ecee3ffd2a24 // indirect
 	github.com/chromedp/sysutil v1.0.0 // indirect
-	github.com/confluentinc/ccloud-sdk-go-v2/byok v0.0.5
+	github.com/confluentinc/ccloud-sdk-go-v2/byok v0.0.1
 	github.com/confluentinc/proto-go-setter v0.3.0 // indirect
 	github.com/envoyproxy/protoc-gen-validate v0.9.1 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect

@@ -27,7 +27,6 @@ func (c *command) newListCommand() *cobra.Command {
 }
 
 func (c *command) list(cmd *cobra.Command, _ []string) error {
-
 	provider, err := cmd.Flags().GetString("provider")
 	if err != nil {
 		return err
@@ -88,7 +87,6 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			UpdatedAt: updatedAt,
 			DeletedAt: deletedAt,
 		})
-
 	}
 
 	list.Filter([]string{"Id", "Key", "Provider", "State", "CreatedAt"})
