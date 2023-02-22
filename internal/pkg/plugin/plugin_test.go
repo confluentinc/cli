@@ -23,9 +23,11 @@ func TestIsExec_Dir(t *testing.T) {
 
 func TestIsExec_Executable(t *testing.T) {
 	if runtime.GOOS == "windows" {
-		require.True(t, isExecutableWindows("hello.exe"))
+		assert.False(t, isExecutable(&mock.FileInfo{NameVal: "hello.nonexe"}))
+		assert.True(t, isExecutable(&mock.FileInfo{NameVal: "hello.exe"}))
 	} else {
-		require.True(t, isExecutable(&mock.FileInfo{ModeVal: fs.ModePerm}))
+		assert.False(t, isExecutable(&mock.FileInfo{ModeVal: fs.ModeDir}))
+		assert.True(t, isExecutable(&mock.FileInfo{ModeVal: fs.ModePerm}))
 	}
 }
 
