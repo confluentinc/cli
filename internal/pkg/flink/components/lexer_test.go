@@ -72,7 +72,9 @@ func TestWordLexer(t *testing.T) {
 		// then
 		for _, element := range elements {
 
-			_, isKeyWord := SQLKeywords[strings.TrimSpace(element.Text)]
+			element.Text = strings.TrimSpace(element.Text)
+			element.Text = strings.ToUpper(element.Text)
+			_, isKeyWord := SQLKeywords[element.Text]
 
 			if isKeyWord && element.Color != HIGHLIGHT_COLOR {
 				t.Errorf("lexer() = %d, want %d", element.Color, HIGHLIGHT_COLOR)
