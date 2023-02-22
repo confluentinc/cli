@@ -119,11 +119,11 @@ func isClusterResizeInProgress(currentCluster *cmkv2.CmkV2Cluster) error {
 	return nil
 }
 
-func getCmkClusterIngressAndEgress(cluster *cmkv2.CmkV2Cluster) (int32, int32) {
+func getCmkClusterIngressAndEgressMbps(cluster *cmkv2.CmkV2Cluster) (int32, int32) {
 	if isDedicated(cluster) {
-		return 50 * (*cluster.Status.Cku), 150 * (*cluster.Status.Cku)
+		return 50 * cluster.Status.GetCku(), 150 * cluster.Status.GetCku()
 	}
-	return 100, 100
+	return 250, 750
 }
 
 func getCmkClusterType(cluster *cmkv2.CmkV2Cluster) string {
