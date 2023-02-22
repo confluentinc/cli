@@ -164,7 +164,6 @@ func renderAWSEncryptionPolicy(roles []string) (string, error) {
 	if err := encryptionKeyPolicyAWS.Execute(buf, roles); err != nil {
 		return "", errors.New(errors.FailedToRenderKeyPolicyErrorMsg)
 	}
-	buf.WriteString("\n\n")
 	return buf.String(), nil
 }
 

@@ -53,7 +53,7 @@ func AddAvailabilityFlag(cmd *cobra.Command) {
 }
 
 func AddByokKeyFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
-	cmd.Flags().String("byok", "", "Confluent Cloud Key ID of a registered encryption key (AWS and Azure only, use `confluent byok create` to register a key).")
+	cmd.Flags().String("byok", "", `Confluent Cloud Key ID of a registered encryption key (AWS and Azure only, use "confluent byok create" to register a key).`)
 
 	RegisterFlagCompletionFunc(cmd, "byok", func(cmd *cobra.Command, args []string) []string {
 		if err := command.PersistentPreRunE(cmd, args); err != nil {
@@ -310,7 +310,7 @@ func AutocompleteIdentityPools(client *ccloudv2.Client, providerID string) []str
 }
 
 func AddRegionFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
-	cmd.Flags().String("region", "", "Cloud region ID for cluster (use `confluent kafka region list` to see all).")
+	cmd.Flags().String("region", "", `Cloud region ID for cluster (use "confluent kafka region list" to see all).`)
 	RegisterFlagCompletionFunc(cmd, "region", func(cmd *cobra.Command, args []string) []string {
 		if err := command.PersistentPreRunE(cmd, args); err != nil {
 			return nil

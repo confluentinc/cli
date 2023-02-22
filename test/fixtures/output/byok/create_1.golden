@@ -33,5 +33,3 @@ Copy and append these permissions into the key policy "Statements" field of the 
 	"Action" : [ "kms:CreateGrant", "kms:ListGrants", "kms:RevokeGrant" ],
 	"Resource" : "*"
 }
-
-
