@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"sort"
 	"testing"
 	"time"
 
@@ -134,5 +135,10 @@ func byokKeysFilterV1(url *url.URL, byokStoreV1 map[string]*byokv1.ByokV1Key) *b
 			byokKeyList.Data = append(byokKeyList.Data, *key)
 		}
 	}
+
+	sort.Slice(byokKeyList.Data, func(i, j int) bool {
+		return byokKeyList.Data[i].GetMetadata().CreatedAt.After(*byokKeyList.Data[j].GetMetadata().CreatedAt)
+	})
+
 	return &byokKeyList
 }
