@@ -16,7 +16,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
-var basicDescribeFields = []string{"IsCurrent", "Id", "Name", "Type", "NetworkIngress", "NetworkEgress", "Storage", "ServiceProvider", "Availability", "Region", "Status", "Endpoint", "RestEndpoint"}
+var basicDescribeFields = []string{"IsCurrent", "Id", "Name", "Type", "IngressLimit", "EgressLimit", "Storage", "ServiceProvider", "Availability", "Region", "Status", "Endpoint", "RestEndpoint"}
 
 type describeStruct struct {
 	IsCurrent          bool   `human:"Current" serialized:"is_current"`
@@ -25,8 +25,8 @@ type describeStruct struct {
 	Type               string `human:"Type" serialized:"type"`
 	ClusterSize        int32  `human:"Cluster Size" serialized:"cluster_size"`
 	PendingClusterSize int32  `human:"Pending Cluster Size" serialized:"pending_cluster_size"`
-	NetworkIngress     int32  `human:"Ingress" serialized:"ingress"`
-	NetworkEgress      int32  `human:"Egress" serialized:"egress"`
+	IngressLimit       int32  `human:"Ingress Limit (MB/s)" serialized:"ingress"`
+	EgressLimit        int32  `human:"Egress Limit (MB/s)" serialized:"egress"`
 	Storage            string `human:"Storage" serialized:"storage"`
 	ServiceProvider    string `human:"Provider" serialized:"provider"`
 	Region             string `human:"Region" serialized:"region"`
@@ -109,21 +109,21 @@ func (c *clusterCommand) outputKafkaClusterDescription(cmd *cobra.Command, clust
 
 func convertClusterToDescribeStruct(cluster *cmkv2.CmkV2Cluster, ctx *v1.Context) *describeStruct {
 	clusterStorage := getKafkaClusterStorage(cluster)
-	ingress, egress := getCmkClusterIngressAndEgress(cluster)
+	ingress, egress := getCmkClusterIngressAndEgressMbps(cluster)
 
 	return &describeStruct{
-		IsCurrent:          *cluster.Id == ctx.KafkaClusterContext.GetActiveKafkaClusterId(),
-		Id:                 *cluster.Id,
-		Name:               *cluster.Spec.DisplayName,
+		IsCurrent:          cluster.GetId() == ctx.KafkaClusterContext.GetActiveKafkaClusterId(),
+		Id:                 cluster.GetId(),
+		Name:               cluster.Spec.GetDisplayName(),
 		Type:               getCmkClusterType(cluster),
 		ClusterSize:        getCmkClusterSize(cluster),
 		PendingClusterSize: getCmkClusterPendingSize(cluster),
-		NetworkIngress:     ingress,
-		NetworkEgress:      egress,
+		IngressLimit:       ingress,
+		EgressLimit:        egress,
 		Storage:            clusterStorage,
-		ServiceProvider:    strings.ToLower(*cluster.Spec.Cloud),
-		Region:             *cluster.Spec.Region,
-		Availability:       availabilitiesToHuman[*cluster.Spec.Availability],
+		ServiceProvider:    strings.ToLower(cluster.Spec.GetCloud()),
+		Region:             cluster.Spec.GetRegion(),
+		Availability:       availabilitiesToHuman[cluster.Spec.GetAvailability()],
 		Status:             getCmkClusterStatus(cluster),
 		Endpoint:           cluster.Spec.GetKafkaBootstrapEndpoint(),
 		EncryptionKeyId:    getCmkEncryptionKey(cluster),
