@@ -167,7 +167,7 @@ func renderAWSEncryptionPolicy(roles []string) (string, error) {
 }
 
 func renderAzureEncryptionPolicy(key *byokv1.ByokV1Key) (string, error) {
-	objectId := fmt.Sprintf(`$(az ad sp show --id "%s" --query id --out tsv 2>/dev/null || az ad sp create --id "%s" --query id --out tsv)`, *key.Key.ByokV1AzureKey.ApplicationId, *key.Key.ByokV1AzureKey.ApplicationId)
+	objectId := fmt.Sprintf(`$(az ad sp show --id "%s" --query id --out tsv 2>/dev/null || az ad sp create --id "%s" --query id --out tsv)`, key.Key.ByokV1AzureKey.GetApplicationId(), key.Key.ByokV1AzureKey.GetApplicationId())
 
 	regex := regexp.MustCompile(`^https://([^/.]+).vault.azure.net`)
 	matches := regex.FindStringSubmatch(key.Key.ByokV1AzureKey.KeyId)
