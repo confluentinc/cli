@@ -7,7 +7,7 @@
 | Created At | 2022-12-24 00:00:00 +0000 UTC              |
 +------------+--------------------------------------------+
 
-To ensure the key vault has the correct role assignments, please run:
+To ensure the key vault has the correct role assignments, please run the following azure-cli command (certified for azure-cli v2.45):
 
 az role assignment create \
     --role "e147488a-f6f5-4113-8e2d-b22465e65bf6" \
