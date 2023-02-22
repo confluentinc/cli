@@ -15,6 +15,9 @@ func containsSuggestion(suggestions []prompt.Suggest, s prompt.Suggest) bool {
 
 	return false
 }
+func mockGetSmartCompletion() bool {
+	return true
+}
 
 func TestBasicSelectAutoCompletion(t *testing.T) {
 	input := "select"
@@ -49,7 +52,7 @@ func TestAutoCompletionWithHistory(t *testing.T) {
 	buffer.InsertText(input, false, true)
 
 	expected := prompt.Suggest{Text: "SELECT * FROM YESTERDAY;", Description: "History entry"}
-	completerWithHistory := CompleterWithHistory([]string{"SELECT * FROM YESTERDAY;"})
+	completerWithHistory := CompleterWithHistory([]string{"SELECT * FROM YESTERDAY;"}, mockGetSmartCompletion)
 	actual := completerWithHistory(*buffer.Document())
 
 	if !containsSuggestion(actual, expected) {
@@ -63,7 +66,7 @@ func TestFailingAutoCompletionWithHistory(t *testing.T) {
 	buffer.InsertText(input, false, true)
 
 	expected := prompt.Suggest{Text: "SELECT * FROM YESTERDAY;", Description: "History entry"}
-	completerWithHistory := CompleterWithHistory([]string{"SELECT * FROM YESTERDAY;"})
+	completerWithHistory := CompleterWithHistory([]string{"SELECT * FROM YESTERDAY;"}, mockGetSmartCompletion)
 	actual := completerWithHistory(*buffer.Document())
 
 	if containsSuggestion(actual, expected) {
