@@ -31,7 +31,7 @@ func (c *authenticatedTopicCommand) newListCommand() *cobra.Command {
 }
 
 func (c *authenticatedTopicCommand) list(cmd *cobra.Command, _ []string) error {
-	topics, err := c.getTopics()
+	topics, err := c.getTopics(cmd)
 	if err != nil {
 		return err
 	}
@@ -43,13 +43,13 @@ func (c *authenticatedTopicCommand) list(cmd *cobra.Command, _ []string) error {
 	return list.Print()
 }
 
-func (c *authenticatedTopicCommand) getTopics() ([]kafkarestv3.TopicData, error) {
+func (c *authenticatedTopicCommand) getTopics(cmd *cobra.Command) ([]kafkarestv3.TopicData, error) {
 	kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return nil, err
 	}
 
-	if err := c.provisioningClusterCheck(kafkaClusterConfig.ID); err != nil {
+	if err := c.provisioningClusterCheck(cmd, kafkaClusterConfig.ID); err != nil {
 		return nil, err
 	}
 
