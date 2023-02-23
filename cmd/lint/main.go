@@ -33,7 +33,8 @@ var commandRules = []linter.CommandRule{
 		linter.ExcludeCommand("plugin"),
 		linter.ExcludeCommand("completion"),
 		linter.ExcludeCommandContains("kafka client-config create"),
-		linter.ExcludeCommand("local current")),
+		linter.ExcludeCommand("local current"),
+		linter.ExcludeCommand("byok create")),
 	linter.RequireStartWithCapital("Long"),
 
 	linter.RequireListRequiredFlagsFirst(),
@@ -196,6 +197,7 @@ var vocabWords = []string{
 	"avro",
 	"aws",
 	"backoff",
+	"byok",
 	"cku",
 	"cli",
 	"codec",

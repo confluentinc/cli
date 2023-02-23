@@ -8,6 +8,7 @@ Available Commands:
   api-key         Manage API keys.
   asyncapi        Manage AsyncAPI document tooling.
   audit-log       Manage audit log configuration.
+  byok            Manage your keys in Confluent Cloud.
   cloud-signup    Sign up for Confluent Cloud.
   completion      Print shell completion code.
   connect         Manage Kafka Connect.
