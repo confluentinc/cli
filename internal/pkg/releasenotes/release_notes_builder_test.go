@@ -23,7 +23,7 @@ func TestReleaseNotesBuilderTestSuite(t *testing.T) {
 }
 
 func (suite *ReleaseNotesBuilderTestSuite) SetupSuite() {
-	suite.version = "v1.2.3"
+	suite.version = "1.2.3"
 	bugFixList := []string{"bug fixes1", "bug fixes2"}
 	newFeatureList := []string{"new feature1", "new feature2"}
 	suite.newFeatureAndBugFixContent = &ReleaseNotes{
