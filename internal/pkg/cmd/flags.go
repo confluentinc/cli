@@ -201,7 +201,7 @@ func AddKsqlClusterFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 			return nil
 		}
 
-		return autocompleteKSQLClusters(command.EnvironmentId(), command.V2Client)
+		return autocompleteKSQLClusters(command.EnvironmentId(cmd), command.V2Client)
 	})
 }
 
