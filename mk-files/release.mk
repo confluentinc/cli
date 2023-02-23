@@ -46,13 +46,16 @@ endef
 # The glibc container doesn't need to publish to S3 so it doesn't need to $(caasenv-authenticate)
 .PHONY: gorelease-linux-glibc
 gorelease-linux-glibc:
+	go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
 	VERSION=$(VERSION) GOEXPERIMENT=boringcrypto goreleaser release --clean -f .goreleaser-linux-glibc.yml
 
 .PHONY: gorelease-linux-glibc-arm64
 gorelease-linux-glibc-arm64:
 ifneq (,$(findstring x86_64,$(shell uname -m)))
+	go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
 	VERSION=$(VERSION) CGO_ENABLED=1 CC=aarch64-linux-gnu-gcc CXX=aarch64-linux-gnu-g++ GOEXPERIMENT=boringcrypto goreleaser release --clean -f .goreleaser-linux-glibc-arm64.yml
 else
+	go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
 	VERSION=$(VERSION) GOEXPERIMENT=boringcrypto goreleaser release --clean -f .goreleaser-linux-glibc-arm64.yml
 endif
 
@@ -63,6 +66,7 @@ gorelease:
 	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
 	$(aws-authenticate) && \
 	echo "BUILDING FOR DARWIN, WINDOWS, AND ALPINE LINUX" && \
+	go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
 	VERSION=$(VERSION) GITHUB_TOKEN=$(token) S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli GOEXPERIMENT=boringcrypto goreleaser release --clean --timeout 60m -f .goreleaser.yml; \
 	rm -f CLIEVCodeSigningCertificate2.pfx && \
 	echo "BUILDING FOR GLIBC LINUX" && \
@@ -135,6 +139,7 @@ endef
 
 .PHONY: download-licenses
 download-licenses:
+	go install github.com/google/go-licenses@v1.5.0 && \
 	go-licenses save ./... --save_path legal/licenses --force || true
 
 .PHONY: publish-installer

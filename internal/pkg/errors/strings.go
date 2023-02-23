@@ -9,14 +9,15 @@ const (
 	UseAPIKeyMsg    = "Set API Key \"%s\" as the active API key for \"%s\".\n"
 
 	// auth commands
-	LoggedInAsMsg              = "Logged in as \"%s\".\n"
-	LoggedInAsMsgWithOrg       = "Logged in as \"%s\" for organization \"%s\" (\"%s\").\n"
-	LoggedInUsingEnvMsg        = "Using environment \"%s\" (\"%s\").\n"
-	LoggedOutMsg               = "You are now logged out."
-	WroteCredentialsToNetrcMsg = "Wrote credentials to netrc file \"%s\"\n"
-	RemoveNetrcCredentialsMsg  = "Removed credentials for user \"%s\" from netrc file \"%s\"\n"
-	StopNonInteractiveMsg      = "(remove these credentials or use the `--prompt` flag to bypass non-interactive login)"
-	FoundEnvCredMsg            = "Found credentials for user \"%s\" from environment variables \"%s\" and \"%s\" " +
+	LoggedInAsMsg                 = "Logged in as \"%s\".\n"
+	LoggedInAsMsgWithOrg          = "Logged in as \"%s\" for organization \"%s\" (\"%s\").\n"
+	LoggedInUsingEnvMsg           = "Using environment \"%s\" (\"%s\").\n"
+	LoggedOutMsg                  = "You are now logged out."
+	WroteCredentialsToKeychainMsg = "Wrote login credentials to keychain\n"
+	RemoveNetrcCredentialsMsg     = "Removed credentials for user \"%s\" from netrc file \"%s\"\n"
+	RemoveKeychainCredentialsMsg  = "Removed credentials for user \"%s\" from keychain\n"
+	StopNonInteractiveMsg         = "(remove these credentials or use the `--prompt` flag to bypass non-interactive login)"
+	FoundEnvCredMsg               = "Found credentials for user \"%s\" from environment variables \"%s\" and \"%s\" " +
 		StopNonInteractiveMsg + ".\n"
 	FoundNetrcCredMsg = "Found credentials for user \"%s\" from netrc file \"%s\" " +
 		StopNonInteractiveMsg + ".\n"
@@ -40,8 +41,9 @@ const (
 	ThanksForFeedbackMsg = "Thanks for your feedback."
 
 	// kafka cluster commands
-	UseKafkaClusterMsg              = "Set Kafka cluster \"%s\" as the active cluster for environment \"%s\".\n"
-	CopyBYOKAWSPermissionsHeaderMsg = "Copy and append these permissions to the existing \"Statements\" array field in the key policy of your ARN to authorize access for Confluent:"
+	UseKafkaClusterMsg               = "Set Kafka cluster \"%s\" as the active cluster for environment \"%s\".\n"
+	CopyByokAwsPermissionsHeaderMsg  = `Copy and append these permissions into the key policy "Statements" field of the ARN in your AWS key management system to authorize access for your Confluent Cloud cluster.`
+	RunByokAzurePermissionsHeaderMsg = "To ensure the key vault has the correct role assignments, please run the following azure-cli command (certified for azure-cli v2.45):"
 
 	// kafka consumer-group commands
 	RestProxyNotAvailable = "Operation not supported: REST proxy is not available.\n"

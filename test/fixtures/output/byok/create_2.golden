@@ -1,0 +1,21 @@
++------------+--------------------------------------------+
+| ID         | cck-004                                    |
+| Key        | https://a-vault.vault.azure.net/keys/a-key |
+| Roles      | [12345678-1234-1234-1234-123456789012]     |
+| Provider   | AZURE                                      |
+| State      | AVAILABLE                                  |
+| Created At | 2022-12-24 00:00:00 +0000 UTC              |
++------------+--------------------------------------------+
+
+To ensure the key vault has the correct role assignments, please run the following azure-cli command (certified for azure-cli v2.45):
+
+az role assignment create \
+    --role "e147488a-f6f5-4113-8e2d-b22465e65bf6" \
+    --scope "$(az keyvault show --name "a-vault" --query id --output tsv)" \
+    --assignee-object-id "$(az ad sp show --id "12345678-1234-1234-1234-123456789012" --query id --out tsv 2>/dev/null || az ad sp create --id "12345678-1234-1234-1234-123456789012" --query id --out tsv)" \
+    --assignee-principal-type ServicePrincipal && \
+az role assignment create \
+    --role "21090545-7ca7-4776-b22c-e363652d74d2" \
+    --scope "$(az keyvault show --name "a-vault" --query id --output tsv)" \
+    --assignee-object-id "$(az ad sp show --id "12345678-1234-1234-1234-123456789012" --query id --out tsv 2>/dev/null || az ad sp create --id "12345678-1234-1234-1234-123456789012" --query id --out tsv)" \
+    --assignee-principal-type ServicePrincipal
