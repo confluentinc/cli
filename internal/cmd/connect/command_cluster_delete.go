@@ -7,8 +7,8 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
@@ -47,7 +47,7 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	connector, err := c.V2Client.GetConnectorExpansionById(clusterId, c.EnvironmentId(), kafkaCluster.ID)
+	connector, err := c.V2Client.GetConnectorExpansionById(clusterId, c.EnvironmentId(cmd), kafkaCluster.ID)
 	if err != nil {
 		return err
 	}
@@ -57,7 +57,7 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if _, err := c.V2Client.DeleteConnector(connector.Info.GetName(), c.EnvironmentId(), kafkaCluster.ID); err != nil {
+	if _, err := c.V2Client.DeleteConnector(connector.Info.GetName(), c.EnvironmentId(cmd), kafkaCluster.ID); err != nil {
 		return err
 	}
 

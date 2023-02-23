@@ -78,7 +78,7 @@ func (c *quotaCommand) create(cmd *cobra.Command, _ []string) error {
 			Throughput:  throughput,
 			Cluster:     &kafkaquotasv1.EnvScopedObjectReference{Id: cluster.ID},
 			Principals:  principals,
-			Environment: &kafkaquotasv1.GlobalObjectReference{Id: c.EnvironmentId()},
+			Environment: &kafkaquotasv1.GlobalObjectReference{Id: c.EnvironmentId(cmd)},
 		},
 	}
 
