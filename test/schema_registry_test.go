@@ -2,9 +2,6 @@ package test
 
 import (
 	"fmt"
-	"strings"
-
-	"github.com/confluentinc/bincover"
 
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
@@ -36,18 +33,18 @@ func (s *CLITestSuite) TestSchemaRegistry() {
 			wantErrCode: 1,
 		},
 		{
-			preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("y\n"))},
-			args:        fmt.Sprintf(`schema-registry cluster delete --environment %s`, testserver.SRApiEnvId),
-			fixture:     "schema-registry/cluster/delete.golden",
+			args:    fmt.Sprintf(`schema-registry cluster delete --environment %s`, testserver.SRApiEnvId),
+			input:   "y\n",
+			fixture: "schema-registry/cluster/delete.golden",
 		},
 		{
-			preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("n\n"))},
-			args:        fmt.Sprintf(`schema-registry cluster delete --environment %s`, testserver.SRApiEnvId),
-			fixture:     "schema-registry/cluster/delete-terminated.golden",
+			args:    fmt.Sprintf(`schema-registry cluster delete --environment %s`, testserver.SRApiEnvId),
+			input:   "n\n",
+			fixture: "schema-registry/cluster/delete-terminated.golden",
 		},
 		{
-			preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("invalid_confirmation\n"))},
 			args:        fmt.Sprintf(`schema-registry cluster delete --environment %s`, testserver.SRApiEnvId),
+			input:       "invalid_confirmation\n",
 			fixture:     "schema-registry/cluster/delete-invalid-confirmation.golden",
 			wantErrCode: 1,
 		},
@@ -92,9 +89,9 @@ func (s *CLITestSuite) TestSchemaRegistry() {
 			wantErrCode: 1,
 		},
 		{
-			args:        fmt.Sprintf(`schema-registry cluster update --compatibility BACKWARD --environment %s`, testserver.SRApiEnvId),
-			preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("key\nsecret\n"))},
-			fixture:     "schema-registry/cluster/update-compatibility.golden",
+			args:    fmt.Sprintf(`schema-registry cluster update --compatibility BACKWARD --environment %s`, testserver.SRApiEnvId),
+			input:   "key\nsecret\n",
+			fixture: "schema-registry/cluster/update-compatibility.golden",
 		},
 		{
 			args:    fmt.Sprintf(`schema-registry cluster update --mode READWRITE --api-key key --api-secret secret --environment %s`, testserver.SRApiEnvId),
@@ -235,10 +232,10 @@ func (s *CLITestSuite) TestSchemaRegistry() {
 			fixture: "schema-registry/exporter/delete.golden",
 		},
 		{
-			name:        "schema-registry exporter delete prompt",
-			args:        fmt.Sprintf(`schema-registry exporter delete myexporter --api-key key --api-secret secret --environment %s`, testserver.SRApiEnvId),
-			preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("myexporter\n"))},
-			fixture:     "schema-registry/exporter/delete-prompt.golden",
+			name:    "schema-registry exporter delete prompt",
+			args:    fmt.Sprintf(`schema-registry exporter delete myexporter --api-key key --api-secret secret --environment %s`, testserver.SRApiEnvId),
+			input:   "myexporter\n",
+			fixture: "schema-registry/exporter/delete-prompt.golden",
 		},
 		{
 			name:    "schema-registry exporter get-status",
