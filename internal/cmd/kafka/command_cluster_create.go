@@ -151,7 +151,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 		input := validateEncryptionKeyInput{
 			Cloud:          cloud,
 			MetadataClouds: clouds,
-			AccountID:      c.EnvironmentId(),
+			AccountID:      c.EnvironmentId(cmd),
 		}
 		if err := c.validateEncryptionKey(cmd, prompt, input); err != nil {
 			return err
@@ -161,7 +161,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 	createCluster := cmkv2.CmkV2Cluster{
 		Spec: &cmkv2.CmkV2ClusterSpec{
 			Environment: &cmkv2.ObjectReference{
-				Id: c.EnvironmentId(),
+				Id: c.EnvironmentId(cmd),
 			},
 			DisplayName:  cmkv2.PtrString(args[0]),
 			Cloud:        cmkv2.PtrString(cloud),

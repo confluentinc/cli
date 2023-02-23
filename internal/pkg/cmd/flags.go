@@ -23,7 +23,7 @@ func AddApiKeyFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 			return nil
 		}
 
-		return AutocompleteApiKeys(command.EnvironmentId(), command.V2Client)
+		return AutocompleteApiKeys(command.EnvironmentId(cmd), command.V2Client)
 	})
 }
 
@@ -92,7 +92,7 @@ func AddClusterFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 			return nil
 		}
 
-		return AutocompleteClusters(command.EnvironmentId(), command.V2Client)
+		return AutocompleteClusters(command.EnvironmentId(cmd), command.V2Client)
 	})
 }
 
@@ -107,7 +107,7 @@ func AddKsqlClusterFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 			return nil
 		}
 
-		return autocompleteKSQLClusters(command.EnvironmentId(), command.V2Client)
+		return autocompleteKSQLClusters(command.EnvironmentId(cmd), command.V2Client)
 	})
 }
 

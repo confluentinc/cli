@@ -47,7 +47,7 @@ func (c *ksqlCommand) configureACLs(cmd *cobra.Command, args []string) error {
 	ksqlCluster := args[0]
 
 	// Ensure the KSQL cluster talks to the current Kafka Cluster
-	cluster, err := c.V2Client.DescribeKsqlCluster(ksqlCluster, c.EnvironmentId())
+	cluster, err := c.V2Client.DescribeKsqlCluster(ksqlCluster, c.EnvironmentId(cmd))
 	if err != nil {
 		return err
 	}

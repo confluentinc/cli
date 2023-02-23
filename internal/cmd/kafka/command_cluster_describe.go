@@ -66,7 +66,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 	c.Context.Config.SetOverwrittenActiveKafka(ctx.KafkaClusterContext.GetActiveKafkaClusterId())
 	ctx.KafkaClusterContext.SetActiveKafkaCluster(lkc)
 
-	cluster, httpResp, err := c.V2Client.DescribeKafkaCluster(lkc, c.EnvironmentId())
+	cluster, httpResp, err := c.V2Client.DescribeKafkaCluster(lkc, c.EnvironmentId(cmd))
 	if err != nil {
 		return errors.CatchKafkaNotFoundError(err, lkc, httpResp)
 	}

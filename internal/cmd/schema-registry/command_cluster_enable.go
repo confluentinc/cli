@@ -87,7 +87,7 @@ func (c *clusterCommand) enable(cmd *cobra.Command, _ []string) error {
 
 	// Build the SR instance
 	clusterConfig := &ccloudv1.SchemaRegistryClusterConfig{
-		AccountId:       c.EnvironmentId(),
+		AccountId:       c.EnvironmentId(cmd),
 		Location:        location,
 		ServiceProvider: cloud,
 		Package:         packageInternalName,
@@ -101,7 +101,7 @@ func (c *clusterCommand) enable(cmd *cobra.Command, _ []string) error {
 	newCluster, err := c.Client.SchemaRegistry.CreateSchemaRegistryCluster(ctx, clusterConfig)
 	if err != nil {
 		// If it already exists, return the existing one
-		existingCluster, getExistingErr := c.Context.FetchSchemaRegistryByEnvironmentId(ctx, c.EnvironmentId())
+		existingCluster, getExistingErr := c.Context.FetchSchemaRegistryByEnvironmentId(ctx, c.EnvironmentId(cmd))
 		if getExistingErr != nil {
 			// Propagate CreateSchemaRegistryCluster error.
 			return err
