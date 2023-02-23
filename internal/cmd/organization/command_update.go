@@ -17,7 +17,7 @@ func (c *command) newUpdateCommand() *cobra.Command {
 		RunE:  c.update,
 	}
 
-	cmd.Flags().String("name", "", "New name for Confluent Cloud organization.")
+	cmd.Flags().String("name", "", "Name of the Confluent Cloud organization.")
 	_ = cmd.MarkFlagRequired("name")
 
 	return cmd
