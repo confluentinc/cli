@@ -168,7 +168,7 @@ func (c *AuthenticatedCLICommand) AuthToken() string {
 func (c *AuthenticatedCLICommand) EnvironmentId(command *cobra.Command) string {
 	if c.Context.GetEnvironment() == nil {
 		noEnvSuggestions := errors.ComposeSuggestionsMessage("This issue may occur if this user has no valid role bindings. Contact an Organization Admin to create a role binding for this user.")
-		utils.ErrPrint(command, "WARNING: This command requires an environment; no environment selected.\n"+noEnvSuggestions+"\n")
+		utils.ErrPrint(command, errors.EnvNotSetErrorMsg+noEnvSuggestions+"\n")
 	}
 	return c.Context.GetEnvironment().GetId()
 }
@@ -325,11 +325,6 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 		if setContextErr != nil {
 			return setContextErr
 		}
-
-		// if command.Context.GetEnvironment() == nil {
-		// 	noEnvSuggestions := errors.ComposeSuggestionsMessage("This issue may occur if this user has no valid role bindings. Contact an Organization Admin to create a role binding for this user.")
-		// 	utils.ErrPrint(cmd, "WARNING: This command requires an environment; no environments found.\n"+noEnvSuggestions+"\n")
-		// }
 
 		unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
 		if err != nil {
