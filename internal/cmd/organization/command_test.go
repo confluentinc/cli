@@ -107,7 +107,6 @@ func (suite *OrganizationTestSuite) newCmd() *cobra.Command {
 	prerunner := &cliMock.Commander{
 		FlagResolver: resolverMock,
 		Client:       client,
-		MDSClient:    nil,
 		V2Client:     &ccloudv2.Client{OrgClient: orgClient, AuthToken: "auth-token"},
 		Config:       suite.conf,
 	}
