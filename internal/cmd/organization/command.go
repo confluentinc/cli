@@ -14,7 +14,7 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "organization",
 		Aliases:     []string{"org"},
-		Short:       "View Confluent Cloud organizations.",
+		Short:       "Manage your Confluent Cloud organizations.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
