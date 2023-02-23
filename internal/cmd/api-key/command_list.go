@@ -161,7 +161,7 @@ func getUsersMap(users []*ccloudv1.User) map[int32]*ccloudv1.User {
 func mapResourceIdToUserId(users []*ccloudv1.User) map[string]int32 {
 	idMap := make(map[string]int32)
 	for _, user := range users {
-		idMap[user.ResourceId] = user.Id
+		idMap[user.GetResourceId()] = user.GetId()
 	}
 	return idMap
 }
