@@ -62,6 +62,7 @@ const (
 	EnvNotFoundErrorMsg    = `environment "%s" not found`
 	EnvNotFoundSuggestions = "List available environments with `confluent environment list`."
 	EnvSwitchErrorMsg      = "failed to switch environment: failed to save config"
+	UseExistingEnvMsg      = `Switch to an active environment with "confluent environment use"`
 
 	// iam acl & kafka acl commands
 	UnableToPerformAclErrorMsg    = "unable to %s ACLs: %s"

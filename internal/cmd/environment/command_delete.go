@@ -45,5 +45,8 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	utils.ErrPrintf(cmd, errors.DeletedResourceMsg, resource.Environment, id)
+	if id == c.EnvironmentId() {
+		utils.ErrPrintln(cmd, errors.UseExistingEnvMsg)
+	}
 	return nil
 }
