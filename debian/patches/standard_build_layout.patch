@@ -1,6 +1,6 @@
---- cli/Makefile	2023-02-13 17:44:54.000000000 -0800
+--- cli/Makefile	2023-02-22 23:19:50.000000000 -0800
 +++ debian/Makefile	2022-12-12 17:29:13.000000000 -0800
-@@ -1,164 +1,130 @@
+@@ -1,133 +1,130 @@
 -SHELL              := /bin/bash
 -ALL_SRC            := $(shell find . -name "*.go" | grep -v -e vendor)
 -GORELEASER_VERSION := v1.15.2
@@ -58,7 +58,6 @@
 -
 -REF := $(shell [ -d .git ] && git rev-parse --short HEAD || echo "none")
 -DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
--RESOLVED_PATH=github.com/confluentinc/cli/cmd/confluent
 -
 -S3_BUCKET_PATH=s3://confluent.cloud
 -S3_STAG_FOLDER_NAME=cli-release-stag
@@ -91,42 +90,6 @@
 +DESTDIR=$(CURDIR)/BUILD/
 +endif
  
--.PHONY: build-integ-nonrace
--build-integ-nonrace:
--	go test ./cmd/confluent -ldflags="-s -w \
--		-X $(RESOLVED_PATH).commit=$(REF) \
--		-X $(RESOLVED_PATH).date=$(DATE) \
--		-X $(RESOLVED_PATH).version=$(VERSION) \
--		-X $(RESOLVED_PATH).isTest=true" \
--		-tags testrunmain -coverpkg=./... -c -o bin/confluent_test
--
--.PHONY: build-integ-race
--build-integ-race:
--	go test ./cmd/confluent -ldflags="-s -w \
--		-X $(RESOLVED_PATH).commit=$(REF) \
--		-X $(RESOLVED_PATH).date=$(DATE) \
--		-X $(RESOLVED_PATH).version=$(VERSION) \
--		-X $(RESOLVED_PATH).isTest=true" \
--		-tags testrunmain -coverpkg=./... -c -o bin/confluent_test_race -race
--
--.PHONY: build-integ-nonrace-windows
--build-integ-nonrace-windows:
--	go test ./cmd/confluent -ldflags="-s -w \
--		-X $(RESOLVED_PATH).commit=12345678 \
--		-X $(RESOLVED_PATH).date=2000-01-01T00:00:00Z \
--		-X $(RESOLVED_PATH).version=$(VERSION) \
--		-X $(RESOLVED_PATH).isTest=true" \
--		-tags testrunmain -coverpkg=./... -c -o bin/confluent_test.exe
--
--.PHONY: build-integ-race-windows
--build-integ-race-windows:
--	go test ./cmd/confluent -ldflags="-s -w \
--		-X $(RESOLVED_PATH).commit=12345678 \
--		-X $(RESOLVED_PATH).date=2000-01-01T00:00:00Z \
--		-X $(RESOLVED_PATH).version=$(VERSION) \
--		-X $(RESOLVED_PATH).isTest=true" \
--		-tags testrunmain -coverpkg=./... -c -o bin/confluent_test_race.exe -race
--
 -# If you setup your laptop following https://github.com/confluentinc/cc-documentation/blob/master/Operations/Laptop%20Setup.md
 -# then assuming caas.sh lives here should be fine
 -define aws-authenticate
@@ -163,21 +126,26 @@
 -unit-test:
 -ifdef CI
 -	go install gotest.tools/gotestsum@v1.8.2 && \
--	gotestsum --junitfile unit-test-report.xml -- -v -race $$(go list ./... | grep -v test)
+-	gotestsum --junitfile unit-test-report.xml -- -v -race -coverprofile coverage.out $$(go list ./... | grep -v test)
 +ifeq ($(PACKAGE_TYPE),archive)
 +PREFIX=$(PACKAGE_NAME)
 +SYSCONFDIR=$(PREFIX)/etc/$(PACKAGE_TITLE)
  else
--	go test -v -race $$(go list ./... | grep -v test) $(UNIT_TEST_ARGS)
+-	go test -v $$(go list ./... | grep -v test) $(UNIT_TEST_ARGS)
 +PREFIX=/usr
 +SYSCONFDIR=/etc/$(PACKAGE_TITLE)
  endif
  
--.PHONY: int-test
--int-test:
+-.PHONY: integration-test
+-integration-test:
 -ifdef CI
 -	go install gotest.tools/gotestsum@v1.8.2 && \
--	gotestsum --junitfile integration-test-report.xml -- -v -race $$(go list ./... | grep test)
+-	go build -cover -ldflags="-s -w -X main.commit=$(REF) -X main.date=$(DATE) -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent ./cmd/confluent && \
+-	export GOCOVERDIR=test/coverage && \
+-	if [ -d $${GOCOVERDIR} ]; then rm -r $${GOCOVERDIR}; fi && \
+-	mkdir $${GOCOVERDIR} && \
+-	gotestsum --junitfile integration-test-report.xml -- -v -race $$(go list ./... | grep test) && \
+-	go tool covdata textfmt -i $${GOCOVERDIR} -o test/coverage.out
 +all: install
 +
 +archive: install
@@ -245,12 +213,13 @@
 +	RPM_RELEASE_POSTFIX_UNDERSCORE=_$(RPM_RELEASE_POSTFIX)
 +	RPM_RELEASE_ID=0.$(REVISION).$(RPM_RELEASE_POSTFIX)
  else
--	go test -v -race $$(go list ./... | grep test) $(INT_TEST_ARGS)
+-	go build -ldflags="-s -w -X main.commit=$(REF) -X main.date=$(DATE) -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent ./cmd/confluent && \
+-	go test -v $$(go list ./... | grep test) $(INTEGRATION_TEST_ARGS)
 +	RPM_RELEASE_ID=$(REVISION)
  endif
  
 -.PHONY: test
--test: unit-test int-test
+-test: unit-test integration-test
 +rpm: RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz
 +	echo "Building the RPM"
 +	rpmbuild --define="_topdir `pwd`/RPM_BUILDING" -tb $<
