@@ -35,8 +35,8 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 
 	table := output.NewTable(cmd)
 	table.Add(&out{
-		Id:   *organization.GetId(),
-		Name: *organization.GetDisplayName(),
+		Id:   organization.GetId(),
+		Name: organization.GetDisplayName(),
 	})
 	return table.Print()
 }

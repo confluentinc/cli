@@ -64,7 +64,7 @@ func TestOrganizationTestSuite(t *testing.T) {
 func (suite *OrganizationTestSuite) SetupTest() {
 	suite.conf = v1.AuthenticatedCloudConfigMock()
 	suite.accountClientMock = &ccloudv1mock.AccountInterface{
-		CreateFunc: func(arg0 context.Context, arg1 *ccloudv1.Account) (account *ccloudv1.Account, e error) {
+		CreateFunc: func(_ context.Context, _ *ccloudv1.Account) (account *ccloudv1.Account, e error) {
 			return &ccloudv1.Account{
 				Id:   firstOrganizationID,
 				Name: firstOrganizationName,
