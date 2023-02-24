@@ -10,33 +10,22 @@ import (
 	"github.com/rivo/tview"
 )
 
-var table *tview.Table
-
 type TableController struct {
-	table        *tview.Table
-	setData      func(data string)
-	basic        func()
-	separator    func()
-	borders      func()
-	selectRow    func()
-	selectColumn func()
-	selectCell   func()
-	focus        func()
-	onCtrlC      func()
+	table           *tview.Table
+	tableStyle      TableStyle
+	appController   *ApplicationController
+	InputController *InputController
 }
 
 type TableStyle struct {
 	borders bool
 }
 
-func TableControllerInit(tableRef *tview.Table, appControler *ApplicationController) TableController {
-	table = tableRef
-	tableStyle := TableStyle{
-		borders: false,
-	}
+func (t *TableController) setData(newData string) {
+	t.table.Clear()
 
-	// Internal Functions
-	printOutputModeTable := func(newData string) {
+	if t.appController.getView() == "outputMode" {
+		// Print interactive text table
 		for row, line := range strings.Split(newData, "\n") {
 			for column, cell := range strings.Split(line, "|") {
 				color := tcell.ColorWhite
@@ -58,110 +47,88 @@ func TableControllerInit(tableRef *tview.Table, appControler *ApplicationControl
 				if column >= 1 && column <= 3 {
 					tableCell.SetExpansion(1)
 				}
-				table.SetCell(row, column, tableCell)
+				t.table.SetCell(row, column, tableCell)
 			}
 		}
-	}
-
-	printInputModeTable := func(newData string) {
-		table := tablewriter.NewWriter(os.Stdout)
-		table.SetHeader([]string{"OrderDate", "Region", "Rep", "Item", "Units", "UnitCost", "Total"})
+	} else {
+		// Print raw text table
+		rawTable := tablewriter.NewWriter(os.Stdout)
+		rawTable.SetHeader([]string{"OrderDate", "Region", "Rep", "Item", "Units", "UnitCost", "Total"})
 
 		for _, tableRow := range strings.Split(newData, "\n") {
 			row := strings.Split(tableRow, "|")
-			table.Append(row)
+			rawTable.Append(row)
 		}
 
-		table.Render() // Send output
+		rawTable.Render() // Send output
+	}
+}
+
+func (t *TableController) handleCellEvent(event *tcell.EventKey) *tcell.EventKey {
+	if event.Key() == tcell.KeyEscape {
+		t.appController.app.SetFocus(t.InputController.input)
+		return nil
 	}
 
-	// Actions
-	setData := func(newData string) {
-		table.Clear()
+	return event
+}
 
-		if appControler.getView() == "outputMode" {
-			// Print interactive text table
-			printOutputModeTable(newData)
-		} else {
-			// Print raw text table
-			printInputModeTable(newData)
-		}
+func (t *TableController) borders() {
+	t.tableStyle.borders = !t.tableStyle.borders
+	t.table.SetBorders(t.tableStyle.borders)
+}
 
+func (t *TableController) selectRow() {
+	t.table.SetBorders(false).
+		SetSelectable(true, false).
+		SetSeparator(' ')
+}
+
+// TODO: these look unused
+//func (t *TableController) basic() {
+//	t.table.SetBorders(false).
+//		SetSelectable(false, false).
+//		SetSeparator(' ')
+//}
+
+//func (t *TableController) separator() {
+//	t.table.SetBorders(false).
+//		SetSelectable(false, false).
+//		SetSeparator(tview.Borders.Vertical)
+//}
+
+//func (t *TableController) selectColumn() {
+//	t.table.SetBorders(false).
+//		SetSelectable(false, true).
+//		SetSeparator(' ')
+//}
+//
+//func (t *TableController) selectCell() {
+//	t.table.SetBorders(false).
+//		SetSelectable(true, true).
+//		SetSeparator(' ')
+//}
+
+func (t *TableController) focus() {
+	t.selectRow()
+	t.appController.app.SetFocus(t.table)
+}
+
+func (t *TableController) onCtrlC() {
+	rowIndex, _ := t.table.GetSelection()
+	columnCount := t.table.GetColumnCount()
+
+	var row []string
+	for i := 0; i < columnCount; i++ {
+		row = append(row, t.table.GetCell(rowIndex, i).Text)
 	}
+	clipboardValue := strings.Join(row, ", ")
 
-	basic := func() {
-		table.SetBorders(false).
-			SetSelectable(false, false).
-			SetSeparator(' ')
-	}
+	clipboard.WriteAll(clipboardValue)
+}
 
-	separator := func() {
-		table.SetBorders(false).
-			SetSelectable(false, false).
-			SetSeparator(tview.Borders.Vertical)
-	}
-
-	borders := func() {
-		tableStyle.borders = !tableStyle.borders
-		table.SetBorders(tableStyle.borders)
-	}
-
-	selectRow := func() {
-		table.SetBorders(false).
-			SetSelectable(true, false).
-			SetSeparator(' ')
-	}
-
-	selectColumn := func() {
-		table.SetBorders(false).
-			SetSelectable(false, true).
-			SetSeparator(' ')
-	}
-
-	selectCell := func() {
-		table.SetBorders(false).
-			SetSelectable(true, true).
-			SetSeparator(' ')
-	}
-
-	focus := func() {
-		selectRow()
-		app.SetFocus(table)
-	}
-
-	onCtrlC := func() {
-		rowIndex, _ := table.GetSelection()
-		columnCount := table.GetColumnCount()
-
-		var row []string
-		for i := 0; i < columnCount; i++ {
-			row = append(row, table.GetCell(rowIndex, i).Text)
-		}
-		clipboardValue := strings.Join(row, ", ")
-
-		clipboard.WriteAll(clipboardValue)
-	}
-
+func NewTableController(tableRef *tview.Table) (controller TableController) {
+	controller.table = tableRef
 	// Configure table
-	table.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		if event.Key() == tcell.KeyEscape {
-			app.SetFocus(input)
-			return nil
-		}
-
-		return event
-	})
-
-	return TableController{
-		table:        table,
-		setData:      setData,
-		basic:        basic,
-		separator:    separator,
-		borders:      borders,
-		selectRow:    selectRow,
-		selectColumn: selectColumn,
-		selectCell:   selectCell,
-		focus:        focus,
-		onCtrlC:      onCtrlC,
-	}
+	return controller
 }

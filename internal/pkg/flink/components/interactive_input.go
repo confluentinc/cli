@@ -12,7 +12,7 @@ import (
 
 var LivePrefixState struct {
 	LivePrefix string
-	IsEnable   bool
+	IsEnabled  bool
 }
 
 var lastStatement = ""
@@ -21,13 +21,13 @@ var allStatements = ""
 func executor(in string) {
 	if strings.HasSuffix(in, ";") {
 		lastStatement = lastStatement + in
-		LivePrefixState.IsEnable = false
+		LivePrefixState.IsEnabled = false
 		LivePrefixState.LivePrefix = in
 		allStatements = allStatements + lastStatement
 		lastStatement = ""
 
 		if isInputClosingSelect(in) {
-			LivePrefixState.IsEnable = true
+			LivePrefixState.IsEnabled = true
 			LivePrefixState.LivePrefix = ""
 		}
 
@@ -35,11 +35,11 @@ func executor(in string) {
 	}
 	lastStatement = lastStatement + in + " "
 	LivePrefixState.LivePrefix = ""
-	LivePrefixState.IsEnable = true
+	LivePrefixState.IsEnabled = true
 }
 
 func changeLivePrefix() (string, bool) {
-	return LivePrefixState.LivePrefix, LivePrefixState.IsEnable
+	return LivePrefixState.LivePrefix, LivePrefixState.IsEnabled
 }
 func isInputClosingSelect(input string) bool {
 	return strings.HasPrefix(strings.ToUpper(input), "SELECT") && input[len(input)-1] == ';'
@@ -49,7 +49,7 @@ func promptInput(value string, history []string, getSmartCompletion func() bool,
 	completerWithHistoryAndDocs := autocomplete.CompleterWithHistoryAndDocs(history, getSmartCompletion)
 
 	// We need to disable the live prefix, in case we just submited a statement
-	LivePrefixState.IsEnable = false
+	LivePrefixState.IsEnabled = false
 
 	p := prompt.New(
 		executor,
@@ -58,7 +58,7 @@ func promptInput(value string, history []string, getSmartCompletion func() bool,
 		prompt.OptionInitialBufferText(value),
 		prompt.OptionHistory(history),
 		// TODO - Decide if we want to use the emacs keybind mode, or basic, or make it customizable
-		prompt.SwitchKeyBindMode(prompt.CommonKeyBind),
+		prompt.OptionSwitchKeyBindMode(prompt.EmacsKeyBind),
 		prompt.OptionSetExitCheckerOnInput(func(input string, breakline bool) bool {
 			if input == "" {
 				return false
@@ -70,7 +70,7 @@ func promptInput(value string, history []string, getSmartCompletion func() bool,
 		}),
 		prompt.OptionAddASCIICodeBind(),
 		prompt.OptionAddKeyBind(prompt.KeyBind{
-			Key: prompt.ControlC,
+			Key: prompt.ControlD,
 			Fn: func(b *prompt.Buffer) {
 				exitApplication()
 			},
@@ -118,7 +118,7 @@ func promptInput(value string, history []string, getSmartCompletion func() bool,
 	return lastStatement, statements
 }
 
-func printPrefix() {
+func init() {
 	// Print Flink's ASCII Art
 	b, err := os.ReadFile("components/flink_ascii_60_with_text.txt")
 	if err != nil {
@@ -146,8 +146,7 @@ func printPrefix() {
 }
 
 func InteractiveInput(value string, history []string, getSmartCompletion func() bool, toggleSmartCompletion func(), toggleOutputMode func(), exitApplication func()) (string, []string) {
-	printPrefix()
-	var lastStatement, statements = promptInput(value, history, getSmartCompletion, toggleSmartCompletion, toggleOutputMode, exitApplication)
+	_, statements := promptInput(value, history, getSmartCompletion, toggleSmartCompletion, toggleOutputMode, exitApplication)
 
-	return lastStatement, statements
+	return "", statements
 }

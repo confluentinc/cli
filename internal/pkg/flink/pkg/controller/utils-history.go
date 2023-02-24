@@ -2,8 +2,8 @@ package controller
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 )
 
@@ -11,36 +11,46 @@ type History struct {
 	Data []string `json:"data"`
 }
 
-func loadHistory() []string {
-
+func LoadHistory() (history History) {
 	// Opening data
-	jsonFile, err := os.Open(".cache/history.json")
-	if err != nil {
-		fmt.Println(err)
+	jsonFile, err := os.ReadFile(".cache/history.json")
+	if errors.Is(err, os.ErrNotExist) {
+		return History{}
 	}
 
-	defer jsonFile.Close()
-	byteValue, _ := ioutil.ReadAll(jsonFile)
-	var history History
-	json.Unmarshal(byteValue, &history)
+	if err != nil {
+		fmt.Println(err)
+		panic(err)
+	}
+	err = json.Unmarshal(jsonFile, &history)
+	if err != nil {
+		fmt.Println(err)
+		panic(err)
+	}
 
-	return history.Data
+	return history
 }
 
-func SaveHistory(history []string) {
+func (history *History) Save() {
 	// Limit history to 500 entries
-	length := len(history)
-	if length > 500 {
-		history = history[length-500:]
+	if len(history.Data) > 500 {
+		history.Data = history.Data[len(history.Data)-500:]
 	}
 
 	// Convert struct to JSON
-	b, err := json.Marshal(History{history})
+	b, err := json.Marshal(history)
 	if err != nil {
 		panic(err)
 	}
 
+	if err := os.Mkdir(".cache", os.ModePerm); err != nil {
+		if !errors.Is(err, os.ErrExist) {
+			panic(err)
+		}
+	}
+
 	// Write JSON to file
+
 	f, err := os.Create(".cache/history.json")
 	if err != nil {
 		panic(err)
@@ -53,11 +63,9 @@ func SaveHistory(history []string) {
 	}
 }
 
-func appendToHistory(history []string, statements []string) []string {
+func (history *History) Append(statements []string) {
 	formattedStatements := formatStatements(statements)
-
-	history = append(history, formattedStatements...)
-	return history
+	history.Data = append(history.Data, formattedStatements...)
 }
 
 func formatStatements(statements []string) []string {

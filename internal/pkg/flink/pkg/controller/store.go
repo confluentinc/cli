@@ -3,6 +3,7 @@ package controller
 import (
 	"encoding/json"
 	"fmt"
+	v2 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway"
 	"io/ioutil"
 	"os"
 )
@@ -15,7 +16,7 @@ type Store struct {
 	fetchData func() string
 }
 
-func NewStore() Store {
+func NewStore(client *v2.APIClient) Store {
 	i := -1
 
 	// Opening mock data

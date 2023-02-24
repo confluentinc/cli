@@ -9,6 +9,9 @@ import (
 )
 
 type ShortcutsController struct {
+	appController   *ApplicationController
+	tableController *TableController
+	shortcuts       *tview.TextView
 }
 
 type Shortcut struct {
@@ -27,26 +30,20 @@ var appShortcuts = []Shortcut{
 	{Key: tcell.KeyCtrlT, KeyText: "P", Text: "Prev Page"},
 }
 
-var shortcuts *tview.TextView
+func (s *ShortcutsController) shortcutHighlighted(added, removed, remaining []string) {
+	index, _ := strconv.Atoi(added[0])
+	switch appShortcuts[index].Text {
+	case "Toggle Display Mode":
+		s.tableController.borders()
+	case "Quit":
+		s.appController.exitApplication()
+	}
+}
 
-func ShortcutsControllerInit(shortcutsRef *tview.TextView, tableController TableController, appControler *ApplicationController) ShortcutsController {
-	shortcuts = shortcutsRef
-
+func NewShortcutsController(shortcutsRef *tview.TextView) ShortcutsController {
 	for index, shortcut := range appShortcuts {
-		fmt.Fprintf(shortcuts, `[[white]%s] ["%d"][darkcyan]%s[white][""]  `, shortcut.KeyText, index, shortcut.Text)
+		fmt.Fprintf(shortcutsRef, `[[white]%s] ["%d"][darkcyan]%s[white][""]  `, shortcut.KeyText, index, shortcut.Text)
 	}
 
-	shortcutHighlighted := func(added, removed, remaining []string) {
-		index, _ := strconv.Atoi(added[0])
-		switch appShortcuts[index].Text {
-		case "Toggle Display Mode":
-			tableController.borders()
-		case "Quit":
-			appControler.exitApplication()
-		}
-	}
-
-	shortcuts.SetHighlightedFunc(shortcutHighlighted)
-
-	return ShortcutsController{}
+	return ShortcutsController{shortcuts: shortcutsRef}
 }

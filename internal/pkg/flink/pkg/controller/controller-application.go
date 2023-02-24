@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"fmt"
 	"github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway"
 	"github.com/confluentinc/flink-sql-client/components"
 	"github.com/rivo/tview"
@@ -11,126 +10,124 @@ import (
 )
 
 // Tview application.
-var app = tview.NewApplication()
 
 type ApplicationController struct {
-	InitInteractiveOutputMode func()
-	focus                     func(component string)
-	PrintTable                func()
-	fetchDataAndPrintTable    func()
-	suspendOutputMode         func(f func())
-	toggleSmartCompletion     func()
-	toggleOutputMode          func()
-	exitApplication           func()
-	getView                   func() string
-	getSmartCompletion        func() bool
-	getOutputMode             func() string
+	tAppSuspended       bool
+	app                 *tview.Application
+	smartCompletion     bool
+	outputMode          string
+	store               Store
+	inputController     *InputController
+	shortcutsController ShortcutsController
+	tableController     *TableController
 }
 
-func ApplicationControllerInit(store Store, tableController TableController, inputController InputController, shortcutsController ShortcutsController) ApplicationController {
-	var data string
-	tAppSuspended := true
-	smartCompletion := true
-	outputMode := "static" // interactive or static
-
-	// Actions
-	initInteractiveOutputMode := func() {
-		tAppSuspended = false
+func (a *ApplicationController) getView() string {
+	if a.tAppSuspended {
+		return "inputMode"
+	} else {
+		return "outputMode"
 	}
+}
+func (a *ApplicationController) InitInteractiveOutputMode() {
+	a.tAppSuspended = false
+}
 
-	suspendOutputMode := func(f func()) {
-		tAppSuspended = true
-		app.Suspend(f)
-		tAppSuspended = false
+func (a *ApplicationController) suspendOutputMode(cb func()) {
+	a.tAppSuspended = true
+	a.app.Suspend(cb)
+	a.tAppSuspended = false
+}
 
+func (a *ApplicationController) toggleSmartCompletion() {
+	a.smartCompletion = !a.smartCompletion
+}
+
+func (a *ApplicationController) toggleOutputMode() {
+	if a.outputMode == "interactive" {
+		a.outputMode = "static"
+	} else {
+		a.outputMode = "interactive"
 	}
+}
 
-	toggleSmartCompletion := func() {
-		smartCompletion = !smartCompletion
+func (a *ApplicationController) focus(component string) {
+	switch component {
+	case "table":
+		a.tableController.focus()
 	}
+}
 
-	toggleOutputMode := func() {
-		if outputMode == "interactive" {
-			outputMode = "static"
-		} else {
-			outputMode = "interactive"
-		}
-	}
+func (a *ApplicationController) PrintTable(data string) {
+	a.tableController.setData(data)
+}
 
-	focus := func(component string) {
-		switch component {
-		case "table":
-			tableController.focus()
-		}
-	}
+func (a *ApplicationController) fetchDataAndPrintTable() {
+	data := a.store.fetchData()
+	a.PrintTable(data)
+}
 
-	printTable := func() {
-		tableController.setData(data)
-	}
+// This function should be used to proparly stop the application, cache saving, cleanup and so on
+func (a *ApplicationController) exitApplication() {
+	a.inputController.History.Save()
+	a.app.Stop()
+	os.Exit(0)
+}
 
-	fetchDataAndPrintTable := func() {
-		data = store.fetchData()
-		printTable()
-	}
+func (a *ApplicationController) getOutputMode() string {
+	return a.outputMode
+}
 
-	// This function should be used to proparly stop the application, cache saving, cleanup and so on
-	exitApplication := func() {
-		SaveHistory(inputController.getHistory())
-		app.Stop()
-		os.Exit(0)
-	}
+func (a *ApplicationController) getSmartCompletion() bool {
+	return a.smartCompletion
+}
 
-	// Getters
-	getView := func() string {
-		if tAppSuspended {
-			return "inputMode"
-		} else {
-			return "outputMode"
-		}
-	}
-
-	getOutputMode := func() string {
-		return outputMode
-	}
-
-	getSmartCompletion := func() bool {
-		return smartCompletion
-	}
-
-	// Function to handle shortcuts and keybindings for the whole app
-	appInputCapture := func(tableController TableController) func(event *tcell.EventKey) *tcell.EventKey {
-		return func(event *tcell.EventKey) *tcell.EventKey {
-			if event.Key() == tcell.KeyCtrlQ {
-				exitApplication()
-				return nil
-			} else if event.Key() == tcell.KeyCtrlT {
-				tableController.borders()
-				return nil
-				// TODO we have to actually go forward and backwards and not only go to the next mock
-			} else if event.Key() == tcell.KeyCtrlN || event.Key() == tcell.KeyCtrlP {
-				fetchDataAndPrintTable()
-				return nil
-			} else if event.Key() == tcell.KeyCtrlC {
-				if !table.HasFocus() {
-					// TODO move this to appController stop
-					exitApplication()
-				} else {
-					tableController.onCtrlC()
-				}
-				return nil
+// Function to handle shortcuts and keybindings for the whole app
+func (a *ApplicationController) appInputCapture(tableController *TableController) func(event *tcell.EventKey) *tcell.EventKey {
+	return func(event *tcell.EventKey) *tcell.EventKey {
+		if event.Key() == tcell.KeyCtrlQ {
+			a.exitApplication()
+			return nil
+		} else if event.Key() == tcell.KeyCtrlT {
+			tableController.borders()
+			return nil
+			// TODO we have to actually go forward and backwards and not only go to the next mock
+		} else if event.Key() == tcell.KeyCtrlN || event.Key() == tcell.KeyCtrlP {
+			a.fetchDataAndPrintTable()
+			return nil
+		} else if event.Key() == tcell.KeyCtrlC {
+			if !tableController.table.HasFocus() {
+				// TODO move this to appController stop
+				a.exitApplication()
+			} else {
+				tableController.onCtrlC()
 			}
-			return event
+			return nil
 		}
+		return event
 	}
+}
+
+func NewApplicationController(store Store, tableController *TableController, inputController *InputController, shortcutsController ShortcutsController) ApplicationController {
 
 	// Set Input Capture for the whole application
-	app.SetInputCapture(appInputCapture(tableController))
 
-	return ApplicationController{initInteractiveOutputMode, focus, printTable, fetchDataAndPrintTable, suspendOutputMode, toggleSmartCompletion, toggleOutputMode, exitApplication, getView, getSmartCompletion, getOutputMode}
+	controller := ApplicationController{
+		store:               store,
+		inputController:     inputController,
+		shortcutsController: shortcutsController,
+		tableController:     tableController,
+		app:                 tview.NewApplication(),
+		smartCompletion:     true,
+		outputMode:          "static",
+		tAppSuspended:       true,
+	}
+	controller.app.SetInputCapture(controller.appInputCapture(tableController))
+	return controller
 }
 
 func StartApp() {
-	store := NewStore()
+	store := NewStore(v2.NewAPIClient(&v2.Configuration{}))
 
 	// Create Components
 	table := components.CreateTable()
@@ -138,27 +135,34 @@ func StartApp() {
 	shortcuts := components.Shortcuts()
 
 	// Instantiate Component Controllers
-	var appController ApplicationController
-	tableController := TableControllerInit(table, &appController)
-	inputController := InputControllerInit(input, &appController)
-	shortcutsController := ShortcutsControllerInit(shortcuts, tableController, &appController)
+	tableController := NewTableController(table)
+	inputController := NewInputController(input)
+	shortcutsController := NewShortcutsController(shortcuts)
 
 	// Instatiate Application Controller
-	appController = ApplicationControllerInit(store, tableController, inputController, shortcutsController)
+	appController := NewApplicationController(store, &tableController, &inputController, shortcutsController)
+	tableController.appController = &appController
+	inputController.appController = &appController
+	tableController.InputController = &inputController
+	shortcutsController.appController = &appController
+	shortcutsController.tableController = &tableController
+
+	// Event handlers
+	input.SetDoneFunc(inputController.onDone)
+	input.SetInputCapture(inputController.HandleKeyEvent)
+	table.SetInputCapture(tableController.handleCellEvent)
+	shortcuts.SetHighlightedFunc(shortcutsController.shortcutHighlighted)
 
 	// Instantiate interactive components
 	inputController.RunInteractiveInput()
 	appController.InitInteractiveOutputMode()
 	interactiveOutput := components.InteractiveOutput(input, table, shortcuts)
-	appController.PrintTable()
 
 	rootLayout := components.RootLayout(interactiveOutput)
 	// TODO: configure and use
-	gatewayClient := v2.NewAPIClient(&v2.Configuration{})
-	fmt.Printf("gateway client config %T", gatewayClient.GetConfig())
 
 	// Start the application.
-	if err := app.SetRoot(rootLayout, true).EnableMouse(true).Run(); err != nil {
+	if err := appController.app.SetRoot(rootLayout, true).EnableMouse(true).Run(); err != nil {
 		panic(err)
 	}
 }
