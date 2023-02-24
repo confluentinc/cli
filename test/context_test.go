@@ -2,9 +2,7 @@ package test
 
 import (
 	"fmt"
-	"strings"
 
-	"github.com/confluentinc/bincover"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 )
 
@@ -31,7 +29,7 @@ func (s *CLITestSuite) TestContextDelete() {
 		{args: s.contextCreateArgs("0")},
 		{args: s.contextCreateArgs("0-prompt")},
 		{args: "context delete 0 --force", fixture: "context/delete/0.golden"},
-		{args: "context delete 0-prompt", preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("y\n"))}, fixture: "context/delete/0-prompt.golden"},
+		{args: "context delete 0-prompt", input: "y\n", fixture: "context/delete/0-prompt.golden"},
 		{args: "context delete 1 --force", fixture: "context/delete/1.golden", wantErrCode: 1},
 	}
 
@@ -92,7 +90,7 @@ func (s *CLITestSuite) TestContextList_CloudAndOnPrem() {
 	}
 
 	for _, tt := range tests {
-		out := runCommand(s.T(), testBin, env, tt.args, 0)
+		out := runCommand(s.T(), testBin, env, tt.args, 0, "")
 		s.validateTestOutput(tt, s.T(), out)
 	}
 }
