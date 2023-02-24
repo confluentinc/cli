@@ -1,11 +1,5 @@
 package test
 
-import (
-	"strings"
-
-	"github.com/confluentinc/bincover"
-)
-
 func (s *CLITestSuite) TestBYOK() {
 	tests := []CLITest{
 		// Only log in at the beginning so active env is not reset
@@ -21,7 +15,7 @@ func (s *CLITestSuite) TestBYOK() {
 		{args: "byok create https://a-vault.vault.azure.net/keys/a-key/00000000000000000000000000000000 --tenant 00000000-0000-0000-0000-000000000000", fixture: "byok/create_3.golden", wantErrCode: 1},
 		{args: "byok create https://a-vault.vault.azure.net/keys/a-key/00000000000000000000000000000000", fixture: "byok/create_4.golden", wantErrCode: 1},
 		// delete tests
-		{args: "byok delete cck-001", preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("y\n"))}, fixture: "byok/delete_1.golden"},
+		{args: "byok delete cck-001", input:"y\n", fixture: "byok/delete_1.golden"},
 		{args: "byok delete cck-404", fixture: "byok/delete_2.golden", wantErrCode: 1},
 	}
 
