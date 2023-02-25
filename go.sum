@@ -77,6 +77,8 @@ github.com/cncf/udpa/go v0.0.0-20210930031921-04548b0d99d4/go.mod h1:6pvJx4me5XP
 github.com/cncf/xds/go v0.0.0-20210922020428-25de7278fc84/go.mod h1:eXthEFrGJvWHgFFCl3hGmgk+/aYT6PnTQLykKQRLhEs=
 github.com/cncf/xds/go v0.0.0-20211001041855-01bcc9b48dfe/go.mod h1:eXthEFrGJvWHgFFCl3hGmgk+/aYT6PnTQLykKQRLhEs=
 github.com/cncf/xds/go v0.0.0-20211011173535-cb28da3451f1/go.mod h1:eXthEFrGJvWHgFFCl3hGmgk+/aYT6PnTQLykKQRLhEs=
+github.com/confluentinc/bincover v0.2.0 h1:WSS3MqzwJbosCLMOuF3tJ0pMpALzBfrm80Tb+/3gbQs=
+github.com/confluentinc/bincover v0.2.0/go.mod h1:qeI1wx0RxdGTZtrJY0HVlgJ4NqC/X2Z+fHbvy87tgHE=
 github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20230117212759-138da0e5aa56 h1:d3jtqZj617ioF5uNhUV5IDd+b1dRBbDSFSuvhJ5R/pw=
 github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20230117212759-138da0e5aa56/go.mod h1:OM2gcXproU7isl/sSp9v8yiOY7zKrhk9F65j78pz33Y=
 github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0 h1:8fWyLwMuy8ec0MVF5Avd54UvbIxhDFhZzanHBVwgxdw=
