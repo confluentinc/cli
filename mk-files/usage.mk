@@ -41,6 +41,7 @@ update-db:
 		IFS="," read env arn <<< "$$pair"; \
 		eval $$(gimme-aws-creds --output-format export --roles arn:aws:iam::$${arn}:role/administrator); \
 		cctunnel -e $$env -b cli -i read-write; \
+		sleep 3; \
 		make db-migrate-up; \
 		kill -9 $$(lsof -i 4:8432 | awk 'NR > 1 { print $$2 };'); \
 	done && \

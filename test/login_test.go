@@ -9,7 +9,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/confluentinc/bincover"
 	"github.com/stretchr/testify/require"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
@@ -42,7 +41,7 @@ func (s *CLITestSuite) TestLogin_VariousOrgSuspensionStatus() {
 		os.Setenv("IS_ON_FREE_TRIAL", "true")
 		defer unsetFreeTrialEnv()
 
-		output := runCommand(tt, testBin, env, args, 0)
+		output := runCommand(tt, testBin, env, args, 0, "")
 		require.Contains(tt, output, loggedInAsWithOrgOutput)
 		require.Contains(tt, output, loggedInEnvOutput)
 		require.Contains(tt, output, fmt.Sprintf(errors.RemainingFreeCreditMsg, 40.00))
@@ -51,7 +50,7 @@ func (s *CLITestSuite) TestLogin_VariousOrgSuspensionStatus() {
 	s.T().Run("non-free-trial organization login", func(tt *testing.T) {
 		env := []string{fmt.Sprintf("%s=good@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
 
-		output := runCommand(tt, testBin, env, args, 0)
+		output := runCommand(tt, testBin, env, args, 0, "")
 		require.Contains(tt, output, loggedInAsWithOrgOutput)
 		require.Contains(tt, output, loggedInEnvOutput)
 		require.NotContains(tt, output, "Free credits")
@@ -59,14 +58,14 @@ func (s *CLITestSuite) TestLogin_VariousOrgSuspensionStatus() {
 
 	s.T().Run("suspended organization login", func(tt *testing.T) {
 		env := []string{fmt.Sprintf("%s=suspended@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
-		output := runCommand(tt, testBin, env, args, 1)
+		output := runCommand(tt, testBin, env, args, 1, "")
 		require.Contains(tt, output, new(ccloudv1.SuspendedOrganizationError).Error())
 		require.Contains(tt, output, errors.SuspendedOrganizationSuggestions)
 	})
 
 	s.T().Run("end of free trial suspended organization", func(tt *testing.T) {
 		env := []string{fmt.Sprintf("%s=end-of-free-trial-suspended@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
-		output := runCommand(tt, testBin, env, args, 0)
+		output := runCommand(tt, testBin, env, args, 0, "")
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInAsMsgWithOrg, "end-of-free-trial-suspended@user.com", "abc-123", "Confluent"))
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
 		require.Contains(tt, output, fmt.Sprintf(errors.EndOfFreeTrialErrorMsg, "test-org"))
@@ -78,41 +77,41 @@ func (s *CLITestSuite) TestCcloudErrors() {
 
 	s.T().Run("invalid user or pass", func(tt *testing.T) {
 		env := []string{fmt.Sprintf("%s=incorrect@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
-		output := runCommand(tt, testBin, env, args, 1)
+		output := runCommand(tt, testBin, env, args, 1, "")
 		require.Contains(tt, output, errors.InvalidLoginErrorMsg)
 		require.Contains(tt, output, errors.ComposeSuggestionsMessage(errors.InvalidLoginErrorSuggestions))
 	})
 
 	s.T().Run("expired token", func(tt *testing.T) {
 		env := []string{fmt.Sprintf("%s=expired@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
-		output := runCommand(tt, testBin, env, args, 0)
+		output := runCommand(tt, testBin, env, args, 0, "")
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInAsMsgWithOrg, "expired@user.com", "abc-123", "Confluent"))
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
-		output = runCommand(tt, testBin, []string{}, "kafka cluster list", 1)
+		output = runCommand(tt, testBin, []string{}, "kafka cluster list", 1, "")
 		require.Contains(tt, output, errors.TokenExpiredMsg)
 		require.Contains(tt, output, errors.NotLoggedInErrorMsg)
 	})
 
 	s.T().Run("malformed token", func(tt *testing.T) {
 		env := []string{fmt.Sprintf("%s=malformed@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
-		output := runCommand(tt, testBin, env, args, 0)
+		output := runCommand(tt, testBin, env, args, 0, "")
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInAsMsgWithOrg, "malformed@user.com", "abc-123", "Confluent"))
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
 
-		output = runCommand(s.T(), testBin, []string{}, "kafka cluster list", 1)
+		output = runCommand(s.T(), testBin, []string{}, "kafka cluster list", 1, "")
 		require.Contains(tt, output, errors.CorruptedTokenErrorMsg)
 		require.Contains(tt, output, errors.ComposeSuggestionsMessage(errors.CorruptedTokenSuggestions))
 	})
 
 	s.T().Run("invalid jwt", func(tt *testing.T) {
 		env := []string{fmt.Sprintf("%s=invalid@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
-		output := runCommand(tt, testBin, env, "logout", 0)
+		output := runCommand(tt, testBin, env, "logout", 0, "")
 		require.Contains(tt, output, errors.LoggedOutMsg)
-		output = runCommand(tt, testBin, env, args, 0)
+		output = runCommand(tt, testBin, env, args, 0, "")
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInAsMsgWithOrg, "invalid@user.com", "abc-123", "Confluent"))
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
 
-		output = runCommand(s.T(), testBin, []string{}, "kafka cluster list", 1)
+		output = runCommand(s.T(), testBin, []string{}, "kafka cluster list", 1, "")
 		require.Contains(tt, output, errors.CorruptedTokenErrorMsg)
 		require.Contains(tt, output, errors.ComposeSuggestionsMessage(errors.CorruptedTokenSuggestions))
 	})
@@ -144,11 +143,11 @@ func (s *CLITestSuite) TestCcloudLoginUseKafkaAuthKafkaErrors() {
 		{
 			name:        "error if deleting non-existent api-key",
 			args:        "api-key delete UNKNOWN",
+			input:       "y\n",
 			fixture:     "login/delete-unknown-key.golden",
 			wantErrCode: 1,
 			useKafka:    "lkc-abc123",
 			authKafka:   "true",
-			preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("y\n"))},
 		},
 		{
 			name:        "error if using unknown kafka",
@@ -201,7 +200,7 @@ func (s *CLITestSuite) TestSaveUsernamePassword() {
 		}
 
 		// TODO: add save test using stdin input
-		output := runCommand(s.T(), tt.bin, env, "login -vvv --save --url "+tt.loginURL, 0)
+		output := runCommand(s.T(), tt.bin, env, "login -vvv --save --url "+tt.loginURL, 0, "")
 		if tt.isCloud {
 			s.Contains(output, loggedInAsWithOrgOutput)
 			s.Contains(output, loggedInEnvOutput)
@@ -260,7 +259,7 @@ func (s *CLITestSuite) TestUpdateNetrcPassword() {
 		err = json.Unmarshal(old, &oldData)
 		s.NoError(err)
 
-		output := runCommand(s.T(), tt.bin, env, "login -vvv --save --url "+tt.loginURL, 0)
+		output := runCommand(s.T(), tt.bin, env, "login -vvv --save --url "+tt.loginURL, 0, "")
 		if tt.isCloud {
 			s.Contains(output, loggedInAsWithOrgOutput)
 			s.Contains(output, loggedInEnvOutput)
