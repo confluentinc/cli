@@ -4,13 +4,13 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/spf13/cobra"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/featureflags"
+	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
