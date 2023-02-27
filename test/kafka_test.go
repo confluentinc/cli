@@ -189,7 +189,7 @@ func (s *CLITestSuite) TestKafkaClusterCreate_GcpByok() {
 	s.runIntegrationTest(test)
 }
 
-func (s *CLITestSuite) TestClientConfig() {
+func (s *CLITestSuite) TestKafkaClientConfig() {
 	// TODO: add --config flag to all commands or ENVVAR instead of using standard config file location
 	tests := []CLITest{
 		// pass - check flags

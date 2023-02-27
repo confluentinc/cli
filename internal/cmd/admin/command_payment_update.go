@@ -20,10 +20,8 @@ func (c *command) newUpdateCommand() *cobra.Command {
 }
 
 func (c *command) update(cmd *cobra.Command, _ []string) error {
-	return c.updateWithPrompt(cmd, form.NewPrompt(os.Stdin))
-}
+	prompt := form.NewPrompt(os.Stdin)
 
-func (c *command) updateWithPrompt(cmd *cobra.Command, prompt form.Prompt) error {
 	utils.Println(cmd, "Edit credit card")
 
 	f := form.New(
