@@ -41,7 +41,7 @@ func (c *command) describe(cmd *cobra.Command, _ []string) error {
 
 		ldClient, err := v1.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
 		if err != nil {
-			log.CliLogger.Debugf("Skip conditionally advertising Marketplace payment option due to error: %s", err.Error())
+			log.CliLogger.Debugf("Skip conditionally advertising Marketplace payment option due to error: %v", err)
 			return nil
 		}
 
