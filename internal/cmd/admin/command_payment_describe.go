@@ -8,6 +8,9 @@ import (
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/featureflags"
+	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -35,6 +38,17 @@ func (c *command) describe(cmd *cobra.Command, _ []string) error {
 
 	if card == nil {
 		utils.Println(cmd, "No credit card found. Add one using `confluent admin payment update`.")
+
+		ldClient, err := v1.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
+		if err != nil {
+			log.CliLogger.Debugf("Skip conditionally advertising Marketplace payment option due to error: %s", err.Error())
+			return nil
+		}
+
+		if featureflags.Manager.BoolVariation("cloud_growth.marketplace_linking_advertisement_experiment.enable", c.Context, ldClient, true, false) {
+			utils.Println(cmd, "Alternatively, you can also link to AWS, GCP, or Azure Marketplace as your payment option. For more information, visit https://confluent.cloud/add-payment.")
+		}
+
 		return nil
 	}
 
