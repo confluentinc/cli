@@ -63,7 +63,7 @@ require (
 	github.com/sevlyar/retag v0.0.0-20190429052747-c3f10e304082
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/pflag v1.0.5
-	github.com/stretchr/testify v1.8.1
+	github.com/stretchr/testify v1.8.2
 	github.com/stripe/stripe-go v70.15.0+incompatible
 	github.com/swaggest/go-asyncapi v0.8.0
 	github.com/tidwall/gjson v1.14.4
