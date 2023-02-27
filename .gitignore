@@ -1,41 +1,21 @@
-bin/
 dist/
 docs/
 legal/
 release-notes/
-
-.semaphore-cache/
-git-setup-semaphore.sh
-
-# Binaries for programs
-*.exe
-*.dll
-*.so
-*.dylib
 
 # Editor configurations
 *.el
 .idea/
 .vscode/
 
-# Test binary, build with `go test -c`
-*.test
-
-# Output of the go coverage tool, specifically when used with LiteIDE
+# Output of the Go coverage tool
 *.out
+bin/
+coverage/
 
 # Project-local glide cache, RE: https://github.com/Masterminds/glide/issues/736
 vendor/*
 !vendor/vendor.json
 
-# Terraform stuff
-*.tfstate*
-terraform.d
-.terraform/
-.netrc
-
-coverage.txt
-integ_coverage.txt
-unit_coverage.txt
 *.sw*
 **/*.DS_Store

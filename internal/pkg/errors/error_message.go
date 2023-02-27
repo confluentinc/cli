@@ -34,6 +34,10 @@ const (
 	AuditLogsNotEnabledErrorMsg       = "Audit Logs are not enabled for this organization"
 	MalformedConfigErrorMsg           = "bad input file: the audit log configuration for cluster %q uses invalid JSON: %v"
 
+	// byok commands
+	ByokKeyNotFoundSuggestions = "Ensure the self-managed key exists and has not been deleted, or register a new key via `confluent byok register`."
+	ByokUnknownKeyTypeErrorMsg = "unknown byok key type"
+
 	// login command
 	UnneccessaryUrlFlagForCloudLoginErrorMsg         = "there is no need to pass the url flag if you are logging in to Confluent Cloud"
 	UnneccessaryUrlFlagForCloudLoginSuggestions      = "Log in to Confluent Cloud with `confluent login`."
@@ -131,7 +135,8 @@ const (
 	FailedToReadClusterResizeConfirmationErrorMsg = "cluster resize error: failed to read your confirmation"
 	AuthorizeAccountsErrorMsg                     = "BYOK error: please authorize the key for the accounts (%s)x"
 	AuthorizeIdentityErrorMsg                     = "BYOK error: please authorize the key for the identity (%s)"
-	BYOKSupportErrorMsg                           = "BYOK is available on AWS and GCP"
+	CKUOnlyForDedicatedErrorMsg                   = "specifying `--cku` flag is valid only for dedicated Kafka cluster creation"
+	EncryptionKeySupportErrorMsg                  = "BYOK via `--encryption-key` is only available for GCP. Use `confluent byok create` to register AWS and Azure keys."
 	CKUMoreThanZeroErrorMsg                       = "`--cku` value must be greater than 0"
 	CKUMoreThanOneErrorMsg                        = "`--cku` value must be greater than 1 for High Durability"
 	ClusterResizeNotSupportedErrorMsg             = "failed to update kafka cluster: cluster resize is only supported on dedicated clusters"
@@ -263,6 +268,7 @@ const (
 	NoCredentialsFoundErrorMsg       = "no credentials found"
 	NoURLEnvVarErrorMsg              = "no URL env var"
 	InvalidInputFormatErrorMsg       = `"%s" is not of valid format for field "%s"`
+	ParseKeychainCredentialsErrorMsg = "unable to parse credentials in keychain access"
 
 	// cmd package
 	InvalidAPIKeyErrorMsg    = `invalid API key "%s" for resource "%s"`
@@ -297,6 +303,9 @@ const (
 	CredentialNotFoundErrorMsg         = `credential "%s" not found`
 	PlatformNotFoundErrorMsg           = `platform "%s" not found`
 	NoNameCredentialErrorMsg           = "credential must have a name"
+	SavedCredentialNoContextErrorMsg   = "saved credential must match a context"
+	KeychainNotAvailableErrorMsg       = "keychain not available on platforms other than darwin"
+	NoValidKeychainCredentialErrorMsg  = "no matching credentials found in keychain"
 	NoNamePlatformErrorMsg             = "platform must have a name"
 	UnspecifiedPlatformErrorMsg        = `context "%s" has corrupted platform`
 	UnspecifiedCredentialErrorMsg      = `context "%s" has corrupted credentials`

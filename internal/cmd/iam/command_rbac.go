@@ -14,6 +14,7 @@ var (
 	dataGovernanceNamespace = optional.NewString("datagovernance")
 	dataplaneNamespace      = optional.NewString("dataplane")
 	ksqlNamespace           = optional.NewString("ksql")
+	streamCatalogNamespace  = optional.NewString("streamcatalog")
 )
 
 func newRBACCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
