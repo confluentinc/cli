@@ -18,9 +18,11 @@ func (s *CLITestSuite) TestConnect() {
 		{args: "connect cluster update lcc-123 --cluster lkc-123 --config-file test/fixtures/input/connect/config.yaml", fixture: "connect/cluster/update.golden"},
 		{args: "connect event describe", fixture: "connect/event-describe.golden"},
 
-		//Tests based on new config
+		// Tests based on new config
 		{args: "connect cluster create --cluster lkc-123 --config-file test/fixtures/input/connect/config-new-format.json -o json", fixture: "connect/cluster/create-new-config-json.golden"},
 		{args: "connect cluster create --cluster lkc-123 --config-file test/fixtures/input/connect/config-new-format.json -o yaml", fixture: "connect/cluster/create-yaml.golden"},
+		{args: "connect cluster create --cluster lkc-123 --config-file test/fixtures/input/connect/config-malformed-new.json", fixture: "connect/cluster/create-malformed-new.golden", wantErrCode: 1},
+		{args: "connect cluster create --cluster lkc-123 --config-file test/fixtures/input/connect/config-malformed-old.json", fixture: "connect/cluster/create-malformed-old.golden", wantErrCode: 1},
 		{args: "connect cluster update lcc-123 --cluster lkc-123 --config-file test/fixtures/input/connect/config-new-format.json", fixture: "connect/cluster/update.golden"},
 	}
 
@@ -30,7 +32,7 @@ func (s *CLITestSuite) TestConnect() {
 	}
 }
 
-func (s *CLITestSuite) TestConnectPause() {
+func (s *CLITestSuite) TestConnectClusterPause() {
 	tests := []CLITest{
 		{args: "connect cluster pause --help", fixture: "connect/cluster/pause-help.golden"},
 		{args: "connect cluster pause lcc-000000 --cluster lkc-123456", fixture: "connect/cluster/pause-unknown.golden", wantErrCode: 1},
@@ -43,7 +45,7 @@ func (s *CLITestSuite) TestConnectPause() {
 	}
 }
 
-func (s *CLITestSuite) TestConnectResume() {
+func (s *CLITestSuite) TestConnectClusterResume() {
 	tests := []CLITest{
 		{args: "connect cluster resume --help", fixture: "connect/cluster/resume-help.golden"},
 		{args: "connect cluster resume lcc-000000 --cluster lkc-123456", fixture: "connect/cluster/resume-unknown.golden", wantErrCode: 1},
