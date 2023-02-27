@@ -28,7 +28,7 @@ func (c *aclCommand) newDeleteCommandOnPrem() *cobra.Command {
 			},
 			examples.Example{
 				Text: `Delete all "read" access ACLs for the specified user.`,
-				Code: `confluent kafka acl delete --operation read --allow --topic Test --principal User:Jane --host "*"`,
+				Code: `confluent kafka acl delete --operations read --allow --topic Test --principal User:Jane --host "*"`,
 			},
 		),
 	}
