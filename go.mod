@@ -39,7 +39,7 @@ require (
 	github.com/dghubble/sling v1.4.1
 	github.com/fatih/color v1.14.1
 	github.com/go-yaml/yaml v2.1.0+incompatible
-	github.com/gobuffalo/flect v1.0.0
+	github.com/gobuffalo/flect v1.0.2
 	github.com/gogo/protobuf v1.3.2
 	github.com/golang/protobuf v1.5.2
 	github.com/google/uuid v1.3.0
