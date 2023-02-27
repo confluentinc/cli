@@ -18,7 +18,7 @@ func (c *aclCommand) newCreateCommandOnPrem() *cobra.Command {
 		RunE:  c.createOnPrem,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "You can specify only one of the following flags per command invocation: `--cluster-scope`, `--consumer-group`, `--topic`, or `--transactional-id`. For example, for a consumer to read a topic, you need to grant \"read\" and \"describe\" both on the `--consumer-group` and the `--topic` resources, issuing two separate commands:",
+				Text: "You can specify only one of the following flags per command invocation: `--cluster-scope`, `--consumer-group`, `--topic`, or `--transactional-id`. For example, to grant \"read\" on the `--consumer-group` and the `--topic` resources, you must issue two separate commands:",
 				Code: "confluent kafka acl create --allow --principal User:Jane --operation read --consumer-group java_example_group_1",
 			},
 			examples.Example{
