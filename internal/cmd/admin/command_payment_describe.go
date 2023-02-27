@@ -45,7 +45,6 @@ func (c *command) describe(cmd *cobra.Command, _ []string) error {
 			return nil
 		}
 
-		// if experiment for advertising Marketplace payment option is enabled, then add a copy
 		if featureflags.Manager.BoolVariation("cloud_growth.marketplace_linking_advertisement_experiment.enable", c.Context, ldClient, true, false) {
 			utils.Println(cmd, "Alternatively, you can also link to AWS, GCP, or Azure Marketplace as your payment option. For more information, visit https://confluent.cloud/add-payment.")
 		}
