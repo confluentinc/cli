@@ -165,7 +165,11 @@ func (c *AuthenticatedCLICommand) AuthToken() string {
 	return c.Context.GetAuthToken()
 }
 
-func (c *AuthenticatedCLICommand) EnvironmentId() string {
+func (c *AuthenticatedCLICommand) EnvironmentId(command *cobra.Command) string {
+	if c.Context.GetEnvironment() == nil {
+		noEnvSuggestions := errors.ComposeSuggestionsMessage("This issue may occur if this user has no valid role bindings. Contact an Organization Admin to create a role binding for this user.")
+		utils.ErrPrint(command, errors.EnvNotSetErrorMsg+noEnvSuggestions+"\n")
+	}
 	return c.Context.GetEnvironment().GetId()
 }
 
@@ -322,11 +326,6 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 			return setContextErr
 		}
 
-		if command.Context.GetEnvironment() == nil {
-			noEnvSuggestions := errors.ComposeSuggestionsMessage("This issue may occur if this user has no valid role bindings. Contact an Organization Admin to create a role binding for this user.")
-			utils.ErrPrint(cmd, "WARNING: This command requires an environment; no environments found.\n"+noEnvSuggestions+"\n")
-		}
-
 		unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
 		if err != nil {
 			return err
@@ -340,7 +339,7 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 			return err
 		}
 
-		return r.setCCloudClient(command)
+		return r.setCCloudClient(command, cmd)
 	}
 }
 
@@ -432,7 +431,7 @@ func (r *PreRun) getCCloudCredentials(netrcMachineName, url, orgResourceId strin
 	return credentials, nil
 }
 
-func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
+func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand, cmd *cobra.Command) error {
 	ctx := cliCmd.Config.Context()
 
 	ccloudClient, err := r.createCCloudClient(ctx, cliCmd.Version)
@@ -457,7 +456,7 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 		if err != nil {
 			return nil, err
 		}
-		cluster, httpResp, err := cliCmd.V2Client.DescribeKafkaCluster(lkc, cliCmd.EnvironmentId())
+		cluster, httpResp, err := cliCmd.V2Client.DescribeKafkaCluster(lkc, cliCmd.EnvironmentId(cmd))
 		if err != nil {
 			return nil, errors.CatchKafkaNotFoundError(err, lkc, httpResp)
 		}

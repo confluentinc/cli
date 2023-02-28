@@ -40,7 +40,7 @@ func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	connectors, err := c.V2Client.ListConnectorsWithExpansions(c.EnvironmentId(), kafkaCluster.ID, "id,status")
+	connectors, err := c.V2Client.ListConnectorsWithExpansions(c.EnvironmentId(cmd), kafkaCluster.ID, "id,status")
 	if err != nil {
 		return err
 	}
