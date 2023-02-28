@@ -74,18 +74,16 @@ func pluginFromEntry(entry os.DirEntry) string {
 
 func isExecutable(entry fs.DirEntry) bool {
 	if runtime.GOOS == "windows" {
-		return isExecutableWindows(entry.Name())
+		extension := strings.ToUpper(filepath.Ext(entry.Name()))
+		return utils.Contains(filepath.SplitList(os.Getenv("PATHEXT")), extension)
 	}
+
 	fileInfo, err := entry.Info()
 	if err != nil {
 		return false
 	}
-	return !fileInfo.Mode().IsDir() && fileInfo.Mode()&0111 != 0
-}
 
-func isExecutableWindows(name string) bool {
-	ext := strings.ToLower(filepath.Ext(name))
-	return utils.Contains([]string{".bat", ".cmd", ".com", ".exe", ".ps1"}, ext)
+	return !fileInfo.Mode().IsDir() && fileInfo.Mode()&0111 != 0
 }
 
 // FindPlugin determines if the arguments passed in are meant for a plugin

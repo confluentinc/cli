@@ -10,10 +10,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-var (
-	loggedOutOutput = fmt.Sprintf(errors.LoggedOutMsg)
-)
-
 func (s *CLITestSuite) TestRemoveUsernamePassword() {
 	type saveTest struct {
 		isCloud  bool
@@ -55,12 +51,11 @@ func (s *CLITestSuite) TestRemoveUsernamePassword() {
 		s.Require().Contains(utils.NormalizeNewLines(string(got)), "saved_credentials")
 
 		output = runCommand(s.T(), tt.bin, env, "logout -vvvv", 0, "")
-		s.Contains(output, loggedOutOutput)
+		s.Contains(output, errors.LoggedOutMsg)
 
 		got, err = os.ReadFile(configFile)
 		s.NoError(err)
 		s.Require().NotContains(utils.NormalizeNewLines(string(got)), "saved_credentials")
-
 	}
 }
 
@@ -102,7 +97,7 @@ func (s *CLITestSuite) TestRemoveUsernamePasswordFail() {
 		// run login to provide context, then logout command and check output
 		runCommand(s.T(), tt.bin, env, "login --url "+tt.loginURL, 0, "") // without save flag so the netrc file won't be modified
 		output := runCommand(s.T(), tt.bin, env, "logout", 0, "")
-		s.Contains(output, loggedOutOutput)
+		s.Contains(output, errors.LoggedOutMsg)
 
 		got, err = os.ReadFile(configFile)
 		s.NoError(err)

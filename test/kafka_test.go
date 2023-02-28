@@ -80,6 +80,8 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka cluster describe lkc-describe-infinite -o json", fixture: "kafka/42.golden"},
 		{args: "kafka cluster describe lkc-describe-infinite -o yaml", fixture: "kafka/43.golden"},
 
+		{args: "kafka cluster describe lkc-unknown", fixture: "kafka/48.golden", wantErrCode: 1},
+
 		{args: "kafka acl list --cluster lkc-acls", fixture: "kafka/acl/list-cloud.golden"},
 		{args: "kafka acl list --cluster lkc-acls -o json", fixture: "kafka/acl/list-json-cloud.golden"},
 		{args: "kafka acl list --cluster lkc-acls -o yaml", fixture: "kafka/acl/list-yaml-cloud.golden"},
@@ -189,7 +191,7 @@ func (s *CLITestSuite) TestKafkaClusterCreate_GcpByok() {
 	s.runIntegrationTest(test)
 }
 
-func (s *CLITestSuite) TestClientConfig() {
+func (s *CLITestSuite) TestKafkaClientConfig() {
 	// TODO: add --config flag to all commands or ENVVAR instead of using standard config file location
 	tests := []CLITest{
 		// pass - check flags

@@ -66,6 +66,7 @@ const (
 	EnvNotFoundErrorMsg    = `environment "%s" not found`
 	EnvNotFoundSuggestions = "List available environments with `confluent environment list`."
 	EnvSwitchErrorMsg      = "failed to switch environment: failed to save config"
+	EnvNotSetErrorMsg      = "this command requires an environment; no environments found"
 
 	// iam acl & kafka acl commands
 	UnableToPerformAclErrorMsg    = "unable to %s ACLs: %s"
@@ -157,7 +158,10 @@ const (
 	KafkaClusterUpdateFailedSuggestions           = "A cluster can't be updated while still provisioning. If you just created this cluster, retry in a few minutes."
 	KafkaClusterExpandingErrorMsg                 = "your cluster is expanding; please wait for that operation to complete before updating again"
 	KafkaClusterShrinkingErrorMsg                 = "your cluster is shrinking; Please wait for that operation to complete before updating again"
-	KafkaClusterDeletingSuggestions               = ChooseRightEnvironmentSuggestions + "\n" +
+	KafkaClusterInaccessibleErrorMsg              = `Kafka cluster "%s" not found or access forbidden`
+	KafkaClusterInaccessibleSuggestions           = ChooseRightEnvironmentSuggestions + "\n" +
+		"The active Kafka cluster may have been deleted. Set a new active cluster with `confluent kafka cluster use`."
+	KafkaClusterDeletingSuggestions = KafkaClusterInaccessibleSuggestions + "\n" +
 		"Ensure the cluster is not associated with any active Connect clusters."
 	ChooseRightEnvironmentSuggestions = "Ensure the cluster ID you entered is valid.\n" +
 		"Ensure the cluster you are specifying belongs to the currently selected environment with `confluent kafka cluster list`, `confluent environment list`, and `confluent environment use`."

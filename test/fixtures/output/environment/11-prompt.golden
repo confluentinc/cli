@@ -1,2 +1,6 @@
 Are you sure you want to delete environment "not-595"?
 To confirm, type "default". To cancel, press Ctrl-C: Deleted environment "not-595".
+this command requires an environment; no environments found
+Suggestions:
+    This issue may occur if this user has no valid role bindings. Contact an Organization Admin to create a role binding for this user.
+
