@@ -24,9 +24,6 @@ import (
 const (
 	defaultConfigFileFmt = "%s/.confluent/config.json"
 	emptyFieldIndicator  = "EMPTY"
-
-	SaltLength  = 24
-	NonceLength = 12
 )
 
 var (
@@ -253,11 +250,11 @@ func (c *Config) Save() error {
 
 func (c *Config) encryptContextStateTokens(tempAuthToken, tempAuthRefreshToken string) error {
 	if c.Context().GetState().Salt == nil || c.Context().GetState().Nonce == nil {
-		salt, err := secret.GenerateRandomBytes(SaltLength)
+		salt, err := secret.GenerateRandomBytes(secret.SaltLength)
 		if err != nil {
 			return err
 		}
-		nonce, err := secret.GenerateRandomBytes(NonceLength)
+		nonce, err := secret.GenerateRandomBytes(secret.NonceLength)
 		if err != nil {
 			return err
 		}
