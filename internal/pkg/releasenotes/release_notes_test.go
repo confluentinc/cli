@@ -109,8 +109,8 @@ func TestGetBump_ErrorNoUpdates(t *testing.T) {
 }
 
 func TestBumpVersion(t *testing.T) {
-	v := version.Must(version.NewSemver("v1.1.1"))
-	assert.Equal(t, bumpVersion(v, "major"), "v2.0.0")
-	assert.Equal(t, bumpVersion(v, "minor"), "v1.2.0")
-	assert.Equal(t, bumpVersion(v, "patch"), "v1.1.2")
+	v := version.Must(version.NewSemver("1.1.1"))
+	assert.Equal(t, "2.0.0", bumpVersion(v, "major"))
+	assert.Equal(t, "1.2.0", bumpVersion(v, "minor"))
+	assert.Equal(t, "1.1.2", bumpVersion(v, "patch"))
 }
