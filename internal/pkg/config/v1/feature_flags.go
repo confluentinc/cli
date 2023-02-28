@@ -2,8 +2,6 @@ package v1
 
 import (
 	"gopkg.in/launchdarkly/go-sdk-common.v2/lduser"
-
-	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 type LaunchDarklyClient int
@@ -23,15 +21,13 @@ type FeatureFlags struct {
 }
 
 // GetCcloudLaunchDarklyClient resolves to a LaunchDarkly client based on the string platform name that is passed in.
-func GetCcloudLaunchDarklyClient(platformName string) (LaunchDarklyClient, error) {
+func GetCcloudLaunchDarklyClient(platformName string) LaunchDarklyClient {
 	switch platformName {
-	case "confluent.cloud":
-		return CcloudProdLaunchDarklyClient, nil
 	case "stag.cpdev.cloud":
-		return CcloudStagLaunchDarklyClient, nil
+		return CcloudStagLaunchDarklyClient
 	case "devel.cpdev.cloud":
-		return CcloudDevelLaunchDarklyClient, nil
+		return CcloudDevelLaunchDarklyClient
 	default:
-		return -1, errors.New(errors.NonCcloudPlatformNameErrorMsg)
+		return CcloudProdLaunchDarklyClient
 	}
 }
