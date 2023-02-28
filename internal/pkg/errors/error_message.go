@@ -354,6 +354,7 @@ const (
 	InvalidFilePathErrorMsg            = `invalid file path "%s"`
 	UnsupportedFileFormatErrorMsg      = `unsupported file format for file "%s"`
 	InvalidAlgorithmErrorMsg           = `invalid algorithm "%s"`
+	IncorrectNonceLengthErrorMsg       = `incorrect nonce length from ~/.confluent/config.json passed into encryption`
 
 	// sso package
 	StartHTTPServerErrorMsg            = "unable to start HTTP server"
