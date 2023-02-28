@@ -222,6 +222,7 @@ var vocabWords = []string{
 	"jsonschema",
 	"jwks",
 	"kafka",
+	"keychain",
 	"ksql",
 	"ksqldb",
 	"lifecycle",
