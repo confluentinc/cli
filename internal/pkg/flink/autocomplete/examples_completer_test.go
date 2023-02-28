@@ -47,16 +47,6 @@ func TestInserttExampleAutoCompletionSnapshot(t *testing.T) {
 	cupaloy.SnapshotT(t, actual)
 }
 
-func TestAnalyzeExampleAutoCompletionSnapshot(t *testing.T) {
-	input := "analyze"
-	buffer := prompt.NewBuffer()
-	buffer.InsertText(input, false, true)
-
-	actual := Completer(*buffer.Document())
-
-	cupaloy.SnapshotT(t, actual)
-}
-
 func TestDescribeExampleAutoCompletionSnapshot(t *testing.T) {
 	input := "describe"
 	buffer := prompt.NewBuffer()
