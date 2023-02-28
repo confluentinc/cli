@@ -49,7 +49,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	userIdMap, err := c.mapResourceIdToUserId()
+	_, userIdMap, err := c.mapResourceIdToUserId(nil)
 	if err != nil {
 		return err
 	}

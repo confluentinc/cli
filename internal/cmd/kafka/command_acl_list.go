@@ -37,7 +37,7 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	userIdMap, err := c.mapResourceIdToUserId()
+	users, userIdMap, err := c.mapResourceIdToUserId(nil)
 	if err != nil {
 		return err
 	}
@@ -50,7 +50,7 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 		return acl[0].errors
 	}
 
-	resourceIdMap, err := c.mapUserIdToResourceId()
+	_, resourceIdMap, err := c.mapUserIdToResourceId(users)
 	if err != nil {
 		return err
 	}
