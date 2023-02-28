@@ -2,6 +2,8 @@ package schemaregistry
 
 import (
 	"context"
+	"fmt"
+	"sort"
 	"strings"
 
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
@@ -62,4 +64,13 @@ func describeExporter(cmd *cobra.Command, name string, srClient *srsdk.APIClient
 		Config:        convertMapToString(info.Config),
 	})
 	return table.Print()
+}
+
+func convertMapToString(m map[string]string) string {
+	pairs := make([]string, 0, len(m))
+	for key, value := range m {
+		pairs = append(pairs, fmt.Sprintf("%s=\"%s\"", key, value))
+	}
+	sort.Strings(pairs)
+	return strings.Join(pairs, "\n")
 }
