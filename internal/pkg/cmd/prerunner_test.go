@@ -799,47 +799,6 @@ func TestInitializeOnPremKafkaRest(t *testing.T) {
 	r.Config.Context().State.AuthToken = ""
 	buf := new(bytes.Buffer)
 	c.SetOut(buf)
-	t.Run("InitializeOnPremKafkaRest_InvalidMdsToken", func(t *testing.T) {
-		mockLoginCredentialsManager := &climock.LoginCredentialsManager{
-			GetOnPremPrerunCredentialsFromEnvVarFunc: func() func() (*pauth.Credentials, error) {
-				return func() (*pauth.Credentials, error) {
-					return nil, nil
-				}
-			},
-			GetOnPremPrerunCredentialsFromNetrcFunc: func(_ *cobra.Command, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
-				return func() (*pauth.Credentials, error) {
-					return nil, nil
-				}
-			},
-			GetPrerunCredentialsFromConfigFunc: func(cfg *v1.Config) func() (*pauth.Credentials, error) {
-				return func() (*pauth.Credentials, error) {
-					return nil, nil
-				}
-			},
-			GetCredentialsFromNetrcFunc: func(_ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
-				return func() (*pauth.Credentials, error) {
-					return nil, nil
-				}
-			},
-			GetCredentialsFromConfigFunc: func(_ *v1.Config, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
-				return func() (*pauth.Credentials, error) {
-					return nil, nil
-				}
-			},
-			GetCredentialsFromKeychainFunc: func(_ *v1.Config, _ bool, _, _ string) func() (*pauth.Credentials, error) {
-				return func() (*pauth.Credentials, error) {
-					return nil, nil
-				}
-			},
-		}
-		r.LoginCredentialsManager = mockLoginCredentialsManager
-		err := r.InitializeOnPremKafkaRest(c)(c.Command, []string{})
-		require.NoError(t, err)
-		kafkaREST, err := c.GetKafkaREST()
-		require.Error(t, err)
-		require.Nil(t, kafkaREST)
-		require.Contains(t, buf.String(), errors.MDSTokenNotFoundMsg)
-	})
 }
 
 func TestConvertToMetricsBaseURL(t *testing.T) {

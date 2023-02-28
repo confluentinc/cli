@@ -2,7 +2,6 @@ package schemaregistry
 
 import (
 	"fmt"
-	"sort"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -26,15 +25,6 @@ var packageDisplayNameMapping = map[string]string{
 }
 
 var packageDisplayNames = []string{essentialsPackage, advancedPackage}
-
-func convertMapToString(m map[string]string) string {
-	pairs := make([]string, 0, len(m))
-	for key, value := range m {
-		pairs = append(pairs, fmt.Sprintf("%s=\"%s\"", key, value))
-	}
-	sort.Strings(pairs)
-	return strings.Join(pairs, "\n")
-}
 
 func getPackageDisplayName(packageName string) string {
 	return packageDisplayNameMapping[packageName]
