@@ -5,9 +5,6 @@ import (
 	"log"
 	"os"
 	"strings"
-
-	prompt "github.com/c-bata/go-prompt"
-	"github.com/confluentinc/flink-sql-client/autocomplete"
 )
 
 var LivePrefixState struct {
@@ -15,107 +12,34 @@ var LivePrefixState struct {
 	IsEnabled  bool
 }
 
-var lastStatement = ""
-var allStatements = ""
+var LastStatement = ""
+var AllStatements = ""
 
-func executor(in string) {
+func Executor(in string) {
 	if strings.HasSuffix(in, ";") {
-		lastStatement = lastStatement + in
+		LastStatement = LastStatement + in
 		LivePrefixState.IsEnabled = false
 		LivePrefixState.LivePrefix = in
-		allStatements = allStatements + lastStatement
-		lastStatement = ""
+		AllStatements = AllStatements + LastStatement
+		LastStatement = ""
 
-		if isInputClosingSelect(in) {
+		if IsInputClosingSelect(in) {
 			LivePrefixState.IsEnabled = true
 			LivePrefixState.LivePrefix = ""
 		}
 
 		return
 	}
-	lastStatement = lastStatement + in + " "
+	LastStatement = LastStatement + in + " "
 	LivePrefixState.LivePrefix = ""
 	LivePrefixState.IsEnabled = true
 }
 
-func changeLivePrefix() (string, bool) {
+func ChangeLivePrefix() (string, bool) {
 	return LivePrefixState.LivePrefix, LivePrefixState.IsEnabled
 }
-func isInputClosingSelect(input string) bool {
+func IsInputClosingSelect(input string) bool {
 	return strings.HasPrefix(strings.ToUpper(input), "SELECT") && input[len(input)-1] == ';'
-}
-
-func promptInput(value string, history []string, getSmartCompletion func() bool, toggleSmartCompletion func(), toggleOutputMode func(), exitApplication func()) (string, []string) {
-	completerWithHistoryAndDocs := autocomplete.CompleterWithHistoryAndDocs(history, getSmartCompletion)
-
-	// We need to disable the live prefix, in case we just submited a statement
-	LivePrefixState.IsEnabled = false
-
-	p := prompt.New(
-		executor,
-		completerWithHistoryAndDocs,
-		prompt.OptionTitle("sql-prompt"),
-		prompt.OptionInitialBufferText(value),
-		prompt.OptionHistory(history),
-		// TODO - Decide if we want to use the emacs keybind mode, or basic, or make it customizable
-		prompt.OptionSwitchKeyBindMode(prompt.EmacsKeyBind),
-		prompt.OptionSetExitCheckerOnInput(func(input string, breakline bool) bool {
-			if input == "" {
-				return false
-			} else if isInputClosingSelect(input) && breakline {
-				return true
-			} else {
-				return false
-			}
-		}),
-		prompt.OptionAddASCIICodeBind(),
-		prompt.OptionAddKeyBind(prompt.KeyBind{
-			Key: prompt.ControlD,
-			Fn: func(b *prompt.Buffer) {
-				exitApplication()
-			},
-		}),
-		prompt.OptionAddKeyBind(prompt.KeyBind{
-			Key: prompt.ControlQ,
-			Fn: func(b *prompt.Buffer) {
-				exitApplication()
-			},
-		}),
-		prompt.OptionAddKeyBind(prompt.KeyBind{
-			Key: prompt.ControlS,
-			Fn: func(b *prompt.Buffer) {
-				toggleSmartCompletion()
-			},
-		}),
-		prompt.OptionAddKeyBind(prompt.KeyBind{
-			Key: prompt.ControlO,
-			Fn: func(b *prompt.Buffer) {
-				toggleOutputMode()
-			},
-		}),
-		prompt.OptionAddASCIICodeBind(prompt.ASCIICodeBind{
-			ASCIICode: []byte{0x1b, 0x62},
-			Fn:        prompt.GoLeftWord,
-		}),
-		prompt.OptionAddASCIICodeBind(prompt.ASCIICodeBind{
-			ASCIICode: []byte{0x1b, 0x66},
-			Fn:        prompt.GoRightWord,
-		}),
-		prompt.OptionPrefixTextColor(prompt.Yellow),
-		prompt.OptionPreviewSuggestionTextColor(prompt.Blue),
-		prompt.OptionSelectedSuggestionBGColor(prompt.LightGray),
-		prompt.OptionSuggestionBGColor(prompt.DarkGray),
-		prompt.OptionLivePrefix(changeLivePrefix),
-		prompt.OptionSetLexer(lexer),
-	)
-
-	p.Run()
-
-	// We need to remove the trailing empty string from the split
-	var statements = strings.Split(allStatements, ";")
-	statements = statements[:len(statements)-1]
-	lastStatement = statements[len(statements)-1]
-	return lastStatement, statements
 }
 
 func init() {
@@ -143,10 +67,4 @@ func init() {
 	fmt.Fprintf(os.Stdout, "\033[0m%s \033[0;36m%s \033[0m", "[CtrlQ]", "Quit")
 	fmt.Fprintf(os.Stdout, "\033[0m%s \033[0;36m%s \033[0m", "[CtrlS]", "Smart Completion ")
 	fmt.Fprintf(os.Stdout, "\033[0m%s \033[0;36m%s \033[0m \n", "[CtrlO]", "Interactive Output ON/OFF")
-}
-
-func InteractiveInput(value string, history []string, getSmartCompletion func() bool, toggleSmartCompletion func(), toggleOutputMode func(), exitApplication func()) (string, []string) {
-	_, statements := promptInput(value, history, getSmartCompletion, toggleSmartCompletion, toggleOutputMode, exitApplication)
-
-	return "", statements
 }

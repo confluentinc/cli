@@ -250,6 +250,8 @@ func CreateTable() *tview.Table {
 	table := tview.NewTable().
 		SetFixed(1, 1)
 
+	table.SetBackgroundColor(tcell.ColorBlack)
+
 	for row, line := range strings.Split(tableData, "\n") {
 		for column, cell := range strings.Split(line, "|") {
 			color := tcell.ColorWhite
@@ -268,6 +270,7 @@ func CreateTable() *tview.Table {
 				SetTextColor(color).
 				SetAlign(align).
 				SetSelectable(row != 0 && column != 0)
+			tableCell.SetBackgroundColor(tcell.ColorYellow)
 			if column >= 1 && column <= 3 {
 				tableCell.SetExpansion(1)
 			}

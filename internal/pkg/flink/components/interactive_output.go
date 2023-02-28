@@ -4,11 +4,10 @@ import (
 	"github.com/rivo/tview"
 )
 
-func InteractiveOutput(input *tview.InputField, table *tview.Table, shortcuts *tview.TextView) tview.Primitive {
+func InteractiveOutput(table *tview.Table, shortcuts *tview.TextView) tview.Primitive {
 
 	return tview.NewFlex().
 		SetDirection(tview.FlexRow).
-		AddItem(input, 1, 1, true).
 		AddItem(
 			(tview.NewFlex().
 				SetDirection(tview.FlexRow).

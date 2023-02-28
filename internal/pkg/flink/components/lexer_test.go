@@ -12,7 +12,7 @@ func TestLexer(t *testing.T) {
 	line := "SELECT FIELD FROM TABLE;"
 
 	// when
-	elements := lexer(line)
+	elements := Lexer(line)
 
 	// then
 	for i, element := range elements {
@@ -32,7 +32,7 @@ func TestIsLexerCaseInsensitive(t *testing.T) {
 	line := "select field from table;"
 
 	// when
-	elements := lexer(line)
+	elements := Lexer(line)
 
 	// then
 	for i, element := range elements {

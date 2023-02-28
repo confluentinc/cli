@@ -73,7 +73,7 @@ func formatStatements(statements []string) []string {
 
 	for _, statement := range statements {
 		if statement != "" {
-			formattedStatements = append(formattedStatements, statement+";")
+			formattedStatements = append(formattedStatements, statement)
 		}
 	}
 	return formattedStatements

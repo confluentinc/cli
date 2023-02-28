@@ -4,37 +4,27 @@ import (
 	"encoding/json"
 	"fmt"
 	v2 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway"
-	"io/ioutil"
 	"os"
 )
 
-type MockData struct {
-	Data []string `json:"data"`
+type Store struct {
+	Data  []string `json:"data"`
+	index int
 }
 
-type Store struct {
-	fetchData func() string
+func (s *Store) FetchData(query string) string {
+	s.index++
+	return s.Data[s.index%len(s.Data)]
 }
 
 func NewStore(client *v2.APIClient) Store {
-	i := -1
-
+	store := Store{}
 	// Opening mock data
-	jsonFile, err := os.Open("mock-data.json")
+	jsonFile, err := os.ReadFile("mock-data.json")
 	if err != nil {
 		fmt.Println(err)
 	}
+	json.Unmarshal(jsonFile, &store)
 
-	defer jsonFile.Close()
-	byteValue, _ := ioutil.ReadAll(jsonFile)
-	var mockData MockData
-	json.Unmarshal(byteValue, &mockData)
-
-	// Actions
-	fetchData := func() string {
-		i++
-		return mockData.Data[i%len(mockData.Data)]
-	}
-
-	return Store{fetchData}
+	return store
 }

@@ -37,4 +37,4 @@ require (
 
 replace github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway => ./pkg/sdk
 
-replace github.com/c-bata/go-prompt => github.com/guttz/go-prompt v0.2.7
+replace github.com/c-bata/go-prompt => github.com/swist/go-prompt v0.27.0-multiline-statement-terminator

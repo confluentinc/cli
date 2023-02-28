@@ -1,71 +1,139 @@
 package controller
 
 import (
+	"github.com/c-bata/go-prompt"
+	"github.com/confluentinc/flink-sql-client/autocomplete"
 	components "github.com/confluentinc/flink-sql-client/components"
-
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
+	"github.com/olekukonko/tablewriter"
+	"os"
+	"strings"
 )
 
 type InputController struct {
-	lastStatement string
-	statements    []string
-	History       History
-	appController *ApplicationController
-	input         *tview.InputField
+	statements      []string
+	History         History
+	appController   *ApplicationController
+	smartCompletion bool
+	table           *TableController
+}
+
+func (c *InputController) getSmartCompletion() bool {
+	return c.smartCompletion
+}
+
+func (c *InputController) toggleSmartCompletion() {
+	c.smartCompletion = !c.smartCompletion
 }
 
 // Actions
 // This will be run after tview.app gets suspended
 // Upon returning tview.app will be resumed.
 func (c *InputController) RunInteractiveInput() {
-	run := func() {
-		// This prints again the last fetched data as a raw text table to the inputMode
-		if c.lastStatement != "" && c.appController.getOutputMode() == "interactive" {
-			c.appController.fetchDataAndPrintTable()
-		}
 
-		// Executed after tview.app is suspended and before go-prompt takes over
-		c.lastStatement = c.input.GetText()
-
+	for c.appController.getOutputMode() == GoPromptOutput {
 		// Run interactive input and take over terminal
-		c.lastStatement, c.statements = components.InteractiveInput(c.lastStatement, c.History.Data, c.appController.getSmartCompletion, c.appController.toggleSmartCompletion, c.appController.toggleOutputMode, c.appController.exitApplication)
+		input := c.Prompt().Input()
 
-		// Executed still while tview.app is suspended and after go-prompt has finished
-		c.input.SetText(c.lastStatement)
-		c.History.Append(c.statements)
+		c.History.Append([]string{input})
+		if c.appController.getOutputMode() == GoPromptOutput {
+			data := c.table.store.FetchData(input)
+			// Print raw text table
+			printResultToSTDOUT(data)
+		}
 	}
-
 	// Run interactive input, take over terminal and save output to lastStatement and statements
-	run()
-
-	for c.appController.getOutputMode() == "static" {
-		c.appController.fetchDataAndPrintTable()
-		run()
+	if c.appController.outputMode == TViewOutput && c.appController.tAppSuspended {
+		c.table.fetchDataAndPrintTable()
 	}
 }
 
-func (c *InputController) HandleKeyEvent(event *tcell.EventKey) *tcell.EventKey {
-	if event.Key() == tcell.KeyEscape {
-		func() {
-			c.appController.suspendOutputMode(c.RunInteractiveInput)
-			c.appController.fetchDataAndPrintTable()
-		}()
+func printResultToSTDOUT(data string) {
+	rawTable := tablewriter.NewWriter(os.Stdout)
+	rawTable.SetHeader([]string{"OrderDate", "Region", "Rep", "Item", "Units", "UnitCost", "Total"})
 
-		return nil
+	for _, tableRow := range strings.Split(data, "\n") {
+		row := strings.Split(tableRow, "|")
+		rawTable.Append(row)
 	}
 
-	return event
+	rawTable.Render() // Send output
 }
 
-func (c *InputController) onDone(key tcell.Key) {
-	c.appController.focus("table")
+func (c *InputController) Prompt() *prompt.Prompt {
+	completerWithHistoryAndDocs := autocomplete.CompleterWithHistoryAndDocs(c.History.Data, c.getSmartCompletion)
+
+	// We need to disable the live prefix, in case we just submited a statement
+	components.LivePrefixState.IsEnabled = false
+
+	return prompt.New(
+		components.Executor,
+		completerWithHistoryAndDocs,
+		prompt.OptionTitle("sql-prompt"),
+		prompt.OptionHistory(c.History.Data),
+		prompt.OptionSwitchKeyBindMode(prompt.EmacsKeyBind),
+		prompt.OptionSetExitCheckerOnInput(func(input string, breakline bool) bool {
+			if input == "" {
+				return false
+			} else if components.IsInputClosingSelect(input) && breakline {
+				return true
+			} else {
+				return false
+			}
+		}),
+		prompt.OptionAddASCIICodeBind(),
+		prompt.OptionAddKeyBind(prompt.KeyBind{
+			Key: prompt.ControlD,
+			Fn: func(b *prompt.Buffer) {
+				c.appController.exitApplication()
+			},
+		}),
+		prompt.OptionAddKeyBind(prompt.KeyBind{
+			Key: prompt.ControlQ,
+			Fn: func(b *prompt.Buffer) {
+				c.appController.exitApplication()
+			},
+		}),
+		prompt.OptionAddKeyBind(prompt.KeyBind{
+			Key: prompt.ControlS,
+			Fn: func(b *prompt.Buffer) {
+				c.toggleSmartCompletion()
+			},
+		}),
+		prompt.OptionAddKeyBind(prompt.KeyBind{
+			Key: prompt.ControlO,
+			Fn: func(b *prompt.Buffer) {
+				c.appController.toggleOutputMode()
+			},
+		}),
+		prompt.OptionAddASCIICodeBind(prompt.ASCIICodeBind{
+			ASCIICode: []byte{0x1b, 0x62},
+			Fn:        prompt.GoLeftWord,
+		}),
+		prompt.OptionAddASCIICodeBind(prompt.ASCIICodeBind{
+			ASCIICode: []byte{0x1b, 0x66},
+			Fn:        prompt.GoRightWord,
+		}),
+		prompt.OptionPrefixTextColor(prompt.Yellow),
+		prompt.OptionPreviewSuggestionTextColor(prompt.Blue),
+		prompt.OptionSelectedSuggestionBGColor(prompt.LightGray),
+		prompt.OptionSuggestionBGColor(prompt.DarkGray),
+		prompt.OptionLivePrefix(components.ChangeLivePrefix),
+		prompt.OptionSetLexer(components.Lexer),
+		prompt.OptionSetStatementTerminator(func(lastKeyStroke prompt.Key, buffer *prompt.Buffer) bool {
+			text := buffer.Text()
+			if len(text) > 0 && text[len(text)-1] != ';' {
+				return false
+			}
+			return true
+		}),
+	)
 }
 
-func NewInputController(inputRef *tview.InputField) (c InputController) {
-	// Variables
-	c.input = inputRef
+func NewInputController(history History, t *TableController, a *ApplicationController) (c InputController) {
 	// Initialization
-	c.History = LoadHistory()
+	c.History = history
+	c.smartCompletion = true
+	c.table = t
+	c.appController = a
 	return c
 }

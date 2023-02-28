@@ -1,12 +1,10 @@
 package controller
 
 import (
-	"os"
 	"strings"
 
 	clipboard "github.com/atotto/clipboard"
 	"github.com/gdamore/tcell/v2"
-	"github.com/olekukonko/tablewriter"
 	"github.com/rivo/tview"
 )
 
@@ -15,6 +13,7 @@ type TableController struct {
 	tableStyle      TableStyle
 	appController   *ApplicationController
 	InputController *InputController
+	store           Store
 }
 
 type TableStyle struct {
@@ -24,49 +23,38 @@ type TableStyle struct {
 func (t *TableController) setData(newData string) {
 	t.table.Clear()
 
-	if t.appController.getView() == "outputMode" {
-		// Print interactive text table
-		for row, line := range strings.Split(newData, "\n") {
-			for column, cell := range strings.Split(line, "|") {
-				color := tcell.ColorWhite
-				if row == 0 {
-					color = tcell.ColorYellow
-				} else if column == 0 {
-					color = tcell.ColorDarkCyan
-				}
-				align := tview.AlignLeft
-				if row == 0 {
-					align = tview.AlignCenter
-				} else if column == 0 || column >= 4 {
-					align = tview.AlignRight
-				}
-				tableCell := tview.NewTableCell(cell).
-					SetTextColor(color).
-					SetAlign(align).
-					SetSelectable(row != 0 && column != 0)
-				if column >= 1 && column <= 3 {
-					tableCell.SetExpansion(1)
-				}
-				t.table.SetCell(row, column, tableCell)
+	// Print interactive text table
+	for row, line := range strings.Split(newData, "\n") {
+		for column, cell := range strings.Split(line, "|") {
+			color := tcell.ColorWhite
+			if row == 0 {
+				color = tcell.ColorYellow
+			} else if column == 0 {
+				color = tcell.ColorDarkCyan
 			}
+			align := tview.AlignLeft
+			if row == 0 {
+				align = tview.AlignCenter
+			} else if column == 0 || column >= 4 {
+				align = tview.AlignRight
+			}
+			tableCell := tview.NewTableCell(cell).
+				SetTextColor(color).
+				SetAlign(align).
+				SetSelectable(row != 0 && column != 0)
+			if column >= 1 && column <= 3 {
+				tableCell.SetExpansion(1)
+			}
+			t.table.SetCell(row, column, tableCell)
 		}
-	} else {
-		// Print raw text table
-		rawTable := tablewriter.NewWriter(os.Stdout)
-		rawTable.SetHeader([]string{"OrderDate", "Region", "Rep", "Item", "Units", "UnitCost", "Total"})
-
-		for _, tableRow := range strings.Split(newData, "\n") {
-			row := strings.Split(tableRow, "|")
-			rawTable.Append(row)
-		}
-
-		rawTable.Render() // Send output
 	}
 }
 
 func (t *TableController) handleCellEvent(event *tcell.EventKey) *tcell.EventKey {
 	if event.Key() == tcell.KeyEscape {
-		t.appController.app.SetFocus(t.InputController.input)
+		t.appController.toggleOutputMode()
+		t.appController.suspendOutputMode(t.InputController.RunInteractiveInput)
+		t.fetchDataAndPrintTable()
 		return nil
 	}
 
@@ -127,8 +115,39 @@ func (t *TableController) onCtrlC() {
 	clipboard.WriteAll(clipboardValue)
 }
 
-func NewTableController(tableRef *tview.Table) (controller TableController) {
-	controller.table = tableRef
-	// Configure table
+// Function to handle shortcuts and keybindings for the whole app
+func (a *TableController) appInputCapture(event *tcell.EventKey) *tcell.EventKey {
+
+	if event.Key() == tcell.KeyCtrlT {
+		a.borders()
+		return nil
+		// TODO we have to actually go forward and backwards and not only go to the next mock
+	} else if event.Key() == tcell.KeyCtrlN || event.Key() == tcell.KeyCtrlP {
+		data := a.store.FetchData("")
+		a.setData(data)
+		return nil
+	} else if event.Key() == tcell.KeyCtrlC {
+		a.onCtrlC()
+		return nil
+	}
+	return event
+
+}
+
+func (a *TableController) PrintTable(data string) {
+	a.setData(data)
+}
+
+func (a *TableController) fetchDataAndPrintTable() {
+	data := a.store.FetchData("")
+	a.PrintTable(data)
+}
+
+func NewTableController(tableRef *tview.Table, store Store, appController *ApplicationController) *TableController {
+	controller := &TableController{
+		table:         tableRef,
+		store:         store,
+		appController: appController,
+	}
 	return controller
 }

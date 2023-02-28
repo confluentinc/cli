@@ -38,7 +38,7 @@ func wordLexer(line string) []prompt.LexerElement {
 }
 
 /* This outputs words all characters in the line with their respective color */
-func lexer(line string) []prompt.LexerElement {
+func Lexer(line string) []prompt.LexerElement {
 	var lexerElements []prompt.LexerElement
 	lexerWords := wordLexer(line)
 

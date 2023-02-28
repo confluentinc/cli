@@ -40,10 +40,10 @@ func (s *ShortcutsController) shortcutHighlighted(added, removed, remaining []st
 	}
 }
 
-func NewShortcutsController(shortcutsRef *tview.TextView) ShortcutsController {
+func NewShortcutsController(shortcutsRef *tview.TextView, appcontroller *ApplicationController, tableController *TableController) ShortcutsController {
 	for index, shortcut := range appShortcuts {
 		fmt.Fprintf(shortcutsRef, `[[white]%s] ["%d"][darkcyan]%s[white][""]  `, shortcut.KeyText, index, shortcut.Text)
 	}
 
-	return ShortcutsController{shortcuts: shortcutsRef}
+	return ShortcutsController{shortcuts: shortcutsRef, appController: appcontroller, tableController: tableController}
 }
