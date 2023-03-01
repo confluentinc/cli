@@ -68,7 +68,7 @@ func handleOrgEnvironments(t *testing.T) http.HandlerFunc {
 func handleOrgOrganization(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		orgId := vars["id"]
+		id := vars["id"]
 		w.Header().Set("Content-Type", "application/json")
 
 		displayName := "default"
