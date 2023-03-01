@@ -93,7 +93,8 @@ func handleOrgOrganization(t *testing.T) http.HandlerFunc {
 func handleOrgOrganizations(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		if r.Method == http.MethodGet {
+		switch r.Method {
+		case http.MethodGet:
 			organizationList := &orgv2.OrgV2OrganizationList{Data: []orgv2.OrgV2Organization{
 				{Id: orgv2.PtrString("abc-123"), DisplayName: orgv2.PtrString("org1")},
 				{Id: orgv2.PtrString("abc-456"), DisplayName: orgv2.PtrString("org2")},
