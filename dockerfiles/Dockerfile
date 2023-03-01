@@ -17,6 +17,7 @@ RUN adduser \
     "$USER"
 
 RUN apk update --no-cache && \
+    apk add --no-cache jq && \
     apk add --no-cache curl && \
     apk add --no-cache bash && \
     apk add --no-cache bash-completion
