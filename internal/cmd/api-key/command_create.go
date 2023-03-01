@@ -50,7 +50,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 
 	cmd.Flags().String(resourceFlagName, "", `The resource ID. Use "cloud" to create a Cloud API key.`)
 	cmd.Flags().String("description", "", "Description of API key.")
-	cmd.Flags().Bool("use", false, "automatically use this apikey for the provided resource.")
+	cmd.Flags().Bool("use", false, "Use the created apikey for the provided resource.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
@@ -140,7 +140,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	}
 	if use {
 		if resourceType != resource.KafkaCluster {
-			return errors.Wrap(errors.New(errors.NonKafkaNotImplementedErrorMsg), "--use flag ineffective")
+			return errors.Wrap(errors.New(errors.NonKafkaNotImplementedErrorMsg), `"--use" set but ineffective`)
 		}
 		err = c.Context.UseAPIKey(userKey.Key, clusterId)
 		if err != nil {
