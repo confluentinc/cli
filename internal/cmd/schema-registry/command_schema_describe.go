@@ -225,15 +225,18 @@ func printSchema(cmd *cobra.Command, schemaID int64, schema string, sType string
 		utils.Println(cmd, "Type: "+sType)
 	}
 
-	if sType == "PROTOBUF" {
-		utils.Println(cmd, "Schema:\n"+schema)
-	} else {
+	switch sType {
+	case "PROTOBUF":
+		utils.Println(cmd, "Schema:")
+		utils.Println(cmd, schema)
+	default:
 		var jsonBuffer bytes.Buffer
 		if err := json.Indent(&jsonBuffer, []byte(schema), "", "    "); err != nil {
 			return err
 		}
 		schemaString := jsonBuffer.String()
-		utils.Println(cmd, "Schema:\n"+schemaString)
+		utils.Println(cmd, "Schema:")
+		utils.Println(schemaString)
 	}
 
 	if len(refs) > 0 {
