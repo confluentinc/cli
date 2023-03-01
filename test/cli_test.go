@@ -160,13 +160,7 @@ func (s *CLITestSuite) runIntegrationTest(tt CLITest) {
 		}
 
 		if tt.authKafka != "" {
-			output := runCommand(t, testBin, []string{}, "api-key create --resource "+tt.useKafka, 0, "")
-			if *debug {
-				fmt.Println(output)
-			}
-			// HACK: we don't have scriptable output yet so we parse it from the table
-			key := strings.TrimSpace(strings.Split(strings.Split(output, "\n")[3], "|")[2])
-			output = runCommand(t, testBin, []string{}, fmt.Sprintf("api-key use %s --resource %s", key, tt.useKafka), 0, "")
+			output := runCommand(t, testBin, []string{}, "api-key create --use --resource "+tt.useKafka, 0, "")
 			if *debug {
 				fmt.Println(output)
 			}
