@@ -109,6 +109,6 @@ func (c *schemaCommand) create(cmd *cobra.Command, _ []string) error {
 		return output.SerializedOutput(cmd, &outputStruct{response.Id})
 	}
 
-	utils.Printf(cmd, errors.RegisteredSchemaMsg, response.Id)
+	utils.Printf(errors.RegisteredSchemaMsg, response.Id)
 	return nil
 }

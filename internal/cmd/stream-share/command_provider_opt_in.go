@@ -15,12 +15,11 @@ func (c *command) newOptInCommand() *cobra.Command {
 	}
 }
 
-func (c *command) optIn(cmd *cobra.Command, _ []string) error {
-	_, err := c.V2Client.StreamShareOptInOrOut(true)
-	if err != nil {
+func (c *command) optIn(_ *cobra.Command, _ []string) error {
+	if _, err := c.V2Client.StreamShareOptInOrOut(true); err != nil {
 		return err
 	}
 
-	utils.Print(cmd, errors.OptInMsg)
+	utils.Println(errors.OptInMsg)
 	return nil
 }

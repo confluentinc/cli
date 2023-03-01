@@ -112,6 +112,6 @@ func (c *mirrorCommand) create(cmd *cobra.Command, args []string) error {
 		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
-	utils.Printf(cmd, errors.CreatedResourceMsg, resource.MirrorTopic, mirrorTopicName)
+	utils.Printf(errors.CreatedResourceMsg, resource.MirrorTopic, mirrorTopicName)
 	return nil
 }

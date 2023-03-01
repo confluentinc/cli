@@ -73,8 +73,8 @@ type LoginCredentialsManager interface {
 	GetCredentialsFromConfig(cfg *v1.Config, filterParams netrc.NetrcMachineParams) func() (*Credentials, error)
 	GetCredentialsFromKeychain(cfg *v1.Config, isCloud bool, ctxName string, url string) func() (*Credentials, error)
 	GetCredentialsFromNetrc(filterParams netrc.NetrcMachineParams) func() (*Credentials, error)
-	GetCloudCredentialsFromPrompt(cmd *cobra.Command, orgResourceId string) func() (*Credentials, error)
-	GetOnPremCredentialsFromPrompt(cmd *cobra.Command) func() (*Credentials, error)
+	GetCloudCredentialsFromPrompt(orgResourceId string) func() (*Credentials, error)
+	GetOnPremCredentialsFromPrompt() func() (*Credentials, error)
 
 	GetPrerunCredentialsFromConfig(cfg *v1.Config) func() (*Credentials, error)
 	GetOnPremPrerunCredentialsFromEnvVar() func() (*Credentials, error)
@@ -248,41 +248,41 @@ func (h *LoginCredentialsManagerImpl) getNetrcMachine(filterParams netrc.NetrcMa
 	return netrcMachine, err
 }
 
-func (h *LoginCredentialsManagerImpl) GetCloudCredentialsFromPrompt(cmd *cobra.Command, orgResourceId string) func() (*Credentials, error) {
+func (h *LoginCredentialsManagerImpl) GetCloudCredentialsFromPrompt(orgResourceId string) func() (*Credentials, error) {
 	return func() (*Credentials, error) {
-		utils.Println(cmd, "Enter your Confluent Cloud credentials:")
-		email := h.promptForUser(cmd, "Email")
+		utils.Println("Enter your Confluent Cloud credentials:")
+		email := h.promptForUser("Email")
 		if h.isSSOUser(email, orgResourceId) {
 			log.CliLogger.Debug("Entered email belongs to an SSO user.")
 			return &Credentials{Username: email, IsSSO: true}, nil
 		}
-		password := h.promptForPassword(cmd)
+		password := h.promptForPassword()
 		return &Credentials{Username: email, Password: password}, nil
 	}
 }
 
-func (h *LoginCredentialsManagerImpl) GetOnPremCredentialsFromPrompt(cmd *cobra.Command) func() (*Credentials, error) {
+func (h *LoginCredentialsManagerImpl) GetOnPremCredentialsFromPrompt() func() (*Credentials, error) {
 	return func() (*Credentials, error) {
-		utils.Println(cmd, "Enter your Confluent credentials:")
-		username := h.promptForUser(cmd, "Username")
-		password := h.promptForPassword(cmd)
+		utils.Println("Enter your Confluent credentials:")
+		username := h.promptForUser("Username")
+		password := h.promptForPassword()
 		return &Credentials{Username: username, Password: password}, nil
 	}
 }
 
-func (h *LoginCredentialsManagerImpl) promptForUser(cmd *cobra.Command, userField string) string {
+func (h *LoginCredentialsManagerImpl) promptForUser(userField string) string {
 	f := form.New(form.Field{ID: userField, Prompt: userField})
-	if err := f.Prompt(cmd, h.prompt); err != nil {
+	if err := f.Prompt(h.prompt); err != nil {
 		return ""
 	}
 
 	return f.Responses[userField].(string)
 }
 
-func (h *LoginCredentialsManagerImpl) promptForPassword(cmd *cobra.Command) string {
+func (h *LoginCredentialsManagerImpl) promptForPassword() string {
 	passwordField := "Password"
 	f := form.New(form.Field{ID: passwordField, Prompt: passwordField, IsHidden: true})
-	if err := f.Prompt(cmd, h.prompt); err != nil {
+	if err := f.Prompt(h.prompt); err != nil {
 		return ""
 	}
 	return f.Responses[passwordField].(string)

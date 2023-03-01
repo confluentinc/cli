@@ -81,7 +81,7 @@ func (c *clusterCommand) updateCompatibility(cmd *cobra.Command) error {
 		return err
 	}
 
-	utils.Printf(cmd, errors.UpdatedToLevelCompatibilityMsg, updateReq.Compatibility)
+	utils.Printf(errors.UpdatedToLevelCompatibilityMsg, updateReq.Compatibility)
 	return nil
 }
 
@@ -101,6 +101,6 @@ func (c *clusterCommand) updateMode(cmd *cobra.Command) error {
 		return err
 	}
 
-	utils.Printf(cmd, errors.UpdatedTopLevelModeMsg, modeUpdate.Mode)
+	utils.Printf(errors.UpdatedTopLevelModeMsg, modeUpdate.Mode)
 	return nil
 }

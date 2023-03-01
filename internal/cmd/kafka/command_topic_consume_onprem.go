@@ -137,13 +137,12 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 		index:   partition,
 	}
 
-	rebalanceCallback := getRebalanceCallback(cmd, offset, partitionFilter)
-	err = consumer.Subscribe(topicName, rebalanceCallback)
-	if err != nil {
+	rebalanceCallback := getRebalanceCallback(offset, partitionFilter)
+	if err := consumer.Subscribe(topicName, rebalanceCallback); err != nil {
 		return err
 	}
 
-	utils.ErrPrintln(cmd, errors.StartingConsumerMsg)
+	utils.ErrPrintln(errors.StartingConsumerMsg)
 
 	var srClient *srsdk.APIClient
 	var ctx context.Context
@@ -170,7 +169,7 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 		SrClient: srClient,
 		Ctx:      ctx,
 		Format:   valueFormat,
-		Out:      cmd.OutOrStdout(),
+		Out:      cmd.OutOrStdout(), // TODO
 		Properties: ConsumerProperties{
 			PrintKey:   printKey,
 			FullHeader: fullHeader,
@@ -179,5 +178,5 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 			SchemaPath: dir,
 		},
 	}
-	return runConsumer(cmd, consumer, groupHandler)
+	return runConsumer(consumer, groupHandler)
 }

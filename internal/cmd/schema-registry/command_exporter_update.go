@@ -114,10 +114,10 @@ func updateExporter(cmd *cobra.Command, name string, srClient *srsdk.APIClient, 
 		}
 	}
 
-	if _, _, err = srClient.DefaultApi.PutExporter(ctx, name, updateRequest); err != nil {
+	if _, _, err := srClient.DefaultApi.PutExporter(ctx, name, updateRequest); err != nil {
 		return err
 	}
 
-	utils.Printf(cmd, errors.UpdatedResourceMsg, resource.SchemaExporter, name)
+	utils.Printf(errors.UpdatedResourceMsg, resource.SchemaExporter, name)
 	return nil
 }

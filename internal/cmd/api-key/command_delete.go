@@ -40,6 +40,6 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return errors.CatchApiKeyForbiddenAccessError(err, deleteOperation, httpResp)
 	}
 
-	utils.Printf(cmd, errors.DeletedResourceMsg, resource.ApiKey, apiKey)
+	utils.Printf(errors.DeletedResourceMsg, resource.ApiKey, apiKey)
 	return c.keystore.DeleteAPIKey(apiKey)
 }

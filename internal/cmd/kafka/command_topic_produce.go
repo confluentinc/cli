@@ -99,12 +99,11 @@ func (c *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 	}
 	defer adminClient.Close()
 
-	err = c.validateTopic(adminClient, topic, cluster)
-	if err != nil {
+	if err := c.validateTopic(adminClient, topic, cluster); err != nil {
 		return err
 	}
 
-	utils.ErrPrintln(cmd, errors.StartingProducerMsg)
+	utils.ErrPrintln(errors.StartingProducerMsg)
 
 	// Line reader for producer input.
 	scanner := bufio.NewScanner(os.Stdin)
@@ -158,13 +157,13 @@ func (c *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 				close(input)
 				break
 			}
-			utils.ErrPrintf(cmd, errors.FailedToProduceErrorMsg, msg.TopicPartition.Offset, err)
+			utils.ErrPrintf(errors.FailedToProduceErrorMsg, msg.TopicPartition.Offset, err)
 		}
 
 		e := <-deliveryChan                // read a ckafka event from the channel
 		m := e.(*ckafka.Message)           // extract the message from the event
 		if m.TopicPartition.Error != nil { // catch all other errors
-			utils.ErrPrintf(cmd, errors.FailedToProduceErrorMsg, m.TopicPartition.Offset, m.TopicPartition.Error)
+			utils.ErrPrintf(errors.FailedToProduceErrorMsg, m.TopicPartition.Offset, m.TopicPartition.Error)
 		}
 		go scan()
 	}

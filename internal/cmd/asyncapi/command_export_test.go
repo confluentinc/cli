@@ -237,7 +237,7 @@ func TestGetSchemaRegistry(t *testing.T) {
 	require.NoError(t, err)
 	flags := &flags{schemaRegistryApiKey: "ASYNCAPIKEY", schemaRegistryApiSecret: "ASYNCAPISECRET"}
 	err = c.getSchemaRegistry(details, flags)
-	utils.Println(c.Command, "")
+	utils.Println("")
 	require.Error(t, err)
 }
 

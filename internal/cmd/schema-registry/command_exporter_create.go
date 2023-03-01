@@ -104,10 +104,10 @@ func createExporter(cmd *cobra.Command, name string, srClient *srsdk.APIClient, 
 		Config:              configMap,
 	}
 
-	if _, _, err = srClient.DefaultApi.CreateExporter(ctx, req); err != nil {
+	if _, _, err := srClient.DefaultApi.CreateExporter(ctx, req); err != nil {
 		return err
 	}
 
-	utils.Printf(cmd, errors.CreatedResourceMsg, resource.SchemaExporter, name)
+	utils.Printf(errors.CreatedResourceMsg, resource.SchemaExporter, name)
 	return nil
 }

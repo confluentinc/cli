@@ -30,7 +30,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	list := output.NewList(cmd)
 	for _, environment := range environments {
 		list.Add(&out{
-			IsCurrent: environment.GetId() == c.EnvironmentId(cmd),
+			IsCurrent: environment.GetId() == c.EnvironmentId(),
 			Id:        environment.GetId(),
 			Name:      environment.GetDisplayName(),
 		})

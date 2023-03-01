@@ -38,6 +38,6 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return errors.CatchEnvironmentNotFoundError(err, httpResp)
 	}
 
-	utils.ErrPrintf(cmd, errors.UpdateSuccessMsg, "name", "environment", id, name)
+	utils.ErrPrintf(errors.UpdateSuccessMsg, "name", "environment", id, name)
 	return nil
 }

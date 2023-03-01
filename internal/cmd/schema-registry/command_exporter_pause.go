@@ -34,14 +34,14 @@ func (c *exporterCommand) pause(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return pauseExporter(cmd, args[0], srClient, ctx)
+	return pauseExporter(args[0], srClient, ctx)
 }
 
-func pauseExporter(cmd *cobra.Command, name string, srClient *srsdk.APIClient, ctx context.Context) error {
+func pauseExporter(name string, srClient *srsdk.APIClient, ctx context.Context) error {
 	if _, _, err := srClient.DefaultApi.PauseExporter(ctx, name); err != nil {
 		return err
 	}
 
-	utils.Printf(cmd, errors.ExporterActionMsg, "Paused", name)
+	utils.Printf(errors.ExporterActionMsg, "Paused", name)
 	return nil
 }

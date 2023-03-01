@@ -50,22 +50,21 @@ func (c *clusterCommand) upgrade(cmd *cobra.Command, _ []string) error {
 	}
 
 	ctx := context.Background()
-	cluster, err := c.Context.FetchSchemaRegistryByEnvironmentId(ctx, c.EnvironmentId(cmd))
+	cluster, err := c.Context.FetchSchemaRegistryByEnvironmentId(ctx, c.EnvironmentId())
 	if err != nil {
 		return err
 	}
 
 	if packageInternalName == cluster.Package {
-		utils.ErrPrintf(cmd, errors.SRInvalidPackageUpgrade, c.EnvironmentId(cmd), packageDisplayName)
+		utils.ErrPrintf(errors.SRInvalidPackageUpgrade, c.EnvironmentId(), packageDisplayName)
 		return nil
 	}
-
 	cluster.Package = packageInternalName
-	_, err = c.Client.SchemaRegistry.UpdateSchemaRegistryCluster(ctx, cluster)
-	if err != nil {
+
+	if _, err := c.Client.SchemaRegistry.UpdateSchemaRegistryCluster(ctx, cluster); err != nil {
 		return err
 	}
 
-	utils.Printf(cmd, errors.SchemaRegistryClusterUpgradedMsg, c.EnvironmentId(cmd), packageDisplayName)
+	utils.Printf(errors.SchemaRegistryClusterUpgradedMsg, c.EnvironmentId(), packageDisplayName)
 	return nil
 }

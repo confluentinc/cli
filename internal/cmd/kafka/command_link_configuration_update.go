@@ -75,6 +75,6 @@ func (c *linkCommand) configurationUpdate(cmd *cobra.Command, args []string) err
 		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
-	utils.Printf(cmd, errors.UpdatedResourceMsg, resource.ClusterLink, linkName)
+	utils.Printf(errors.UpdatedResourceMsg, resource.ClusterLink, linkName)
 	return nil
 }

@@ -54,6 +54,6 @@ func (c *linkCommand) delete(cmd *cobra.Command, args []string) error {
 		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
-	utils.Printf(cmd, errors.DeletedResourceMsg, resource.ClusterLink, linkName)
+	utils.Printf(errors.DeletedResourceMsg, resource.ClusterLink, linkName)
 	return nil
 }

@@ -49,6 +49,6 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	utils.ErrPrintln(cmd, errors.UpdateSecretFileMsg)
+	utils.ErrPrintln(errors.UpdateSecretFileMsg)
 	return nil
 }

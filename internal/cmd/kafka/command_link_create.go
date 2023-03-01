@@ -160,7 +160,7 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 	if dryRun {
 		msg = "[DRY RUN]: " + msg
 	}
-	utils.Print(cmd, msg)
+	utils.Print(msg)
 
 	return nil
 }

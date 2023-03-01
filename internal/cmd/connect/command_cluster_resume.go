@@ -33,13 +33,13 @@ func (c *clusterCommand) newResumeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *clusterCommand) resume(cmd *cobra.Command, args []string) error {
+func (c *clusterCommand) resume(_ *cobra.Command, args []string) error {
 	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
 
-	connectorsByName, err := c.V2Client.ListConnectorsWithExpansions(c.EnvironmentId(cmd), kafkaCluster.ID, "id,info")
+	connectorsByName, err := c.V2Client.ListConnectorsWithExpansions(c.EnvironmentId(), kafkaCluster.ID, "id,info")
 	if err != nil {
 		return err
 	}
@@ -55,11 +55,11 @@ func (c *clusterCommand) resume(cmd *cobra.Command, args []string) error {
 			return errors.Errorf(errors.UnknownConnectorIdErrorMsg, id)
 		}
 
-		if err := c.V2Client.ResumeConnector(connector.Info.GetName(), c.EnvironmentId(cmd), kafkaCluster.ID); err != nil {
+		if err := c.V2Client.ResumeConnector(connector.Info.GetName(), c.EnvironmentId(), kafkaCluster.ID); err != nil {
 			return err
 		}
 
-		utils.Printf(cmd, errors.ResumedConnectorMsg, id)
+		utils.Printf(errors.ResumedConnectorMsg, id)
 	}
 
 	return nil
