@@ -1,8 +1,7 @@
 package errors
 
 import (
-	"fmt"
-	"os"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 const (
@@ -26,11 +25,9 @@ func NewWarningWithSuggestions(warnMsg string, reasonMsg string, suggestionsMsg 
 
 func (w *WarningWithSuggestions) DisplayWarningWithSuggestions() {
 	if w.warnMsg != "" && w.reasonMsg != "" && w.suggestionsMsg != "" {
-		msg := warningsMessageHeader + w.warnMsg + "\n"
-		msg += "\n" // a new line between warning and reason
-		msg += reasonMessageHeader + w.reasonMsg + "\n"
-		msg += ComposeSuggestionsMessage(w.suggestionsMsg) + "\n"
-
-		_, _ = fmt.Fprint(os.Stderr, msg)
+		utils.ErrPrintln(warningsMessageHeader + w.warnMsg)
+		utils.ErrPrintln()
+		utils.ErrPrintln(reasonMessageHeader + w.reasonMsg)
+		utils.ErrPrintln(ComposeSuggestionsMessage(w.suggestionsMsg))
 	}
 }

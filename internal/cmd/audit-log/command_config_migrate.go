@@ -3,7 +3,6 @@ package auditlog
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 
 	"github.com/spf13/cobra"
 
@@ -79,8 +78,8 @@ func (c *configCommand) migrate(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	for _, warning := range warnings {
-		fmt.Fprintln(os.Stderr, warning)
-		fmt.Println()
+		utils.ErrPrintln(warning)
+		utils.ErrPrintln()
 	}
 
 	enc := json.NewEncoder(c.OutOrStdout())

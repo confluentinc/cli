@@ -3,7 +3,6 @@ package auth
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"runtime"
 	"strings"
@@ -119,10 +118,10 @@ func (h *LoginCredentialsManagerImpl) getCredentialsFromEnvVarFunc(envVars envir
 		if email == "" {
 			email, password = h.getEnvVarCredentials(envVars.deprecatedUsername, envVars.deprecatedPassword)
 			if email != "" {
-				_, _ = fmt.Fprintf(os.Stderr, errors.DeprecatedEnvVarWarningMsg, envVars.deprecatedUsername, envVars.username)
+				utils.ErrPrintf(errors.DeprecatedEnvVarWarningMsg, envVars.deprecatedUsername, envVars.username)
 			}
 			if password != "" {
-				_, _ = fmt.Fprintf(os.Stderr, errors.DeprecatedEnvVarWarningMsg, envVars.deprecatedPassword, envVars.password)
+				utils.ErrPrintf(errors.DeprecatedEnvVarWarningMsg, envVars.deprecatedPassword, envVars.password)
 			}
 		}
 
