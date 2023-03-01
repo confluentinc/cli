@@ -42,8 +42,9 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 
 	table := output.NewTable(cmd)
 	table.Add(&out{
-		Id:   organization.GetId(),
-		Name: organization.GetDisplayName(),
+		IsCurrent: organization.GetId() == c.Context.GetOrganization().GetResourceId(),
+		Id:        organization.GetId(),
+		Name:      organization.GetDisplayName(),
 	})
 	return table.Print()
 }

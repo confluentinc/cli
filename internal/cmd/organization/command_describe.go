@@ -10,6 +10,7 @@ import (
 )
 
 type out struct {
+	IsCurrent bool   `human:"Current" serialized:"is_current"`
 	Id        string `human:"ID" serialized:"id"`
 	Name      string `human:"Name" serialized:"name"`
 }
@@ -35,8 +36,9 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 
 	table := output.NewTable(cmd)
 	table.Add(&out{
-		Id:   organization.GetId(),
-		Name: organization.GetDisplayName(),
+		IsCurrent: organization.GetId() == c.Context.GetOrganization().GetResourceId(),
+		Id:        organization.GetId(),
+		Name:      organization.GetDisplayName(),
 	})
 	return table.Print()
 }

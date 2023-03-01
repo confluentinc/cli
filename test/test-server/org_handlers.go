@@ -81,7 +81,7 @@ func handleOrgOrganization(t *testing.T) http.HandlerFunc {
 		}
 
 		organization := &orgv2.OrgV2Organization{
-			Id:          orgv2.PtrString(orgId),
+			Id:          orgv2.PtrString(id),
 			DisplayName: orgv2.PtrString(displayName),
 		}
 		err := json.NewEncoder(w).Encode(organization)
