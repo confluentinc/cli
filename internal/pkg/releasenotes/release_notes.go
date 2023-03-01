@@ -74,7 +74,7 @@ func NewFromBody(body string) *ReleaseNotes {
 		if strings.HasPrefix(line, "- ") {
 			note := strings.TrimPrefix(line, "- ")
 
-			if note == "<PLACEHOLDER>" {
+			if note == "PLACEHOLDER" {
 				continue
 			}
 
