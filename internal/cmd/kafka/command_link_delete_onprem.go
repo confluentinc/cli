@@ -40,6 +40,6 @@ func (c *linkCommand) deleteOnPrem(cmd *cobra.Command, args []string) error {
 		return handleOpenApiError(httpResp, err, client)
 	}
 
-	utils.Printf(cmd, errors.DeletedResourceMsg, resource.ClusterLink, linkName)
+	utils.Printf(errors.DeletedResourceMsg, resource.ClusterLink, linkName)
 	return nil
 }

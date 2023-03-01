@@ -43,12 +43,11 @@ func RegisterSchemaWithAuth(cmd *cobra.Command, schemaCfg *RegisterSchemaConfigs
 	}
 
 	if output.GetFormat(cmd).IsSerialized() {
-		err = output.SerializedOutput(cmd, &registerSchemaResponse{Id: response.Id})
-		if err != nil {
+		if err := output.SerializedOutput(cmd, &registerSchemaResponse{Id: response.Id}); err != nil {
 			return nil, err
 		}
 	} else {
-		utils.Printf(cmd, errors.RegisteredSchemaMsg, response.Id)
+		utils.Printf(errors.RegisteredSchemaMsg, response.Id)
 	}
 
 	return GetMetaInfoFromSchemaId(response.Id), nil

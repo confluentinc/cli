@@ -42,7 +42,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 			return errors.CatchApiKeyForbiddenAccessError(err, updateOperation, httpResp)
 		}
 
-		utils.ErrPrintf(cmd, errors.UpdateSuccessMsg, "description", "API key", apiKey, description)
+		utils.ErrPrintf(errors.UpdateSuccessMsg, "description", "API key", apiKey, description)
 	}
 
 	return nil

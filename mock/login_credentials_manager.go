@@ -35,10 +35,10 @@ type LoginCredentialsManager struct {
 	GetCredentialsFromNetrcFunc func(filterParams github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
 
 	lockGetCloudCredentialsFromPrompt sync.Mutex
-	GetCloudCredentialsFromPromptFunc func(cmd *github_com_spf13_cobra.Command, orgResourceId string) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
+	GetCloudCredentialsFromPromptFunc func(orgResourceId string) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
 
 	lockGetOnPremCredentialsFromPrompt sync.Mutex
-	GetOnPremCredentialsFromPromptFunc func(cmd *github_com_spf13_cobra.Command) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
+	GetOnPremCredentialsFromPromptFunc func() func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
 
 	lockGetPrerunCredentialsFromConfig sync.Mutex
 	GetPrerunCredentialsFromConfigFunc func(cfg *github_com_confluentinc_cli_internal_pkg_config_v1.Config) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
@@ -75,11 +75,9 @@ type LoginCredentialsManager struct {
 			FilterParams github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams
 		}
 		GetCloudCredentialsFromPrompt []struct {
-			Cmd           *github_com_spf13_cobra.Command
 			OrgResourceId string
 		}
 		GetOnPremCredentialsFromPrompt []struct {
-			Cmd *github_com_spf13_cobra.Command
 		}
 		GetPrerunCredentialsFromConfig []struct {
 			Cfg *github_com_confluentinc_cli_internal_pkg_config_v1.Config
@@ -333,7 +331,7 @@ func (m *LoginCredentialsManager) GetCredentialsFromNetrcCalls() []struct {
 }
 
 // GetCloudCredentialsFromPrompt mocks base method by wrapping the associated func.
-func (m *LoginCredentialsManager) GetCloudCredentialsFromPrompt(cmd *github_com_spf13_cobra.Command, orgResourceId string) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error) {
+func (m *LoginCredentialsManager) GetCloudCredentialsFromPrompt(orgResourceId string) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error) {
 	m.lockGetCloudCredentialsFromPrompt.Lock()
 	defer m.lockGetCloudCredentialsFromPrompt.Unlock()
 
@@ -342,16 +340,14 @@ func (m *LoginCredentialsManager) GetCloudCredentialsFromPrompt(cmd *github_com_
 	}
 
 	call := struct {
-		Cmd           *github_com_spf13_cobra.Command
 		OrgResourceId string
 	}{
-		Cmd:           cmd,
 		OrgResourceId: orgResourceId,
 	}
 
 	m.calls.GetCloudCredentialsFromPrompt = append(m.calls.GetCloudCredentialsFromPrompt, call)
 
-	return m.GetCloudCredentialsFromPromptFunc(cmd, orgResourceId)
+	return m.GetCloudCredentialsFromPromptFunc(orgResourceId)
 }
 
 // GetCloudCredentialsFromPromptCalled returns true if GetCloudCredentialsFromPrompt was called at least once.
@@ -364,7 +360,6 @@ func (m *LoginCredentialsManager) GetCloudCredentialsFromPromptCalled() bool {
 
 // GetCloudCredentialsFromPromptCalls returns the calls made to GetCloudCredentialsFromPrompt.
 func (m *LoginCredentialsManager) GetCloudCredentialsFromPromptCalls() []struct {
-	Cmd           *github_com_spf13_cobra.Command
 	OrgResourceId string
 } {
 	m.lockGetCloudCredentialsFromPrompt.Lock()
@@ -374,7 +369,7 @@ func (m *LoginCredentialsManager) GetCloudCredentialsFromPromptCalls() []struct 
 }
 
 // GetOnPremCredentialsFromPrompt mocks base method by wrapping the associated func.
-func (m *LoginCredentialsManager) GetOnPremCredentialsFromPrompt(cmd *github_com_spf13_cobra.Command) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error) {
+func (m *LoginCredentialsManager) GetOnPremCredentialsFromPrompt() func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error) {
 	m.lockGetOnPremCredentialsFromPrompt.Lock()
 	defer m.lockGetOnPremCredentialsFromPrompt.Unlock()
 
@@ -383,14 +378,11 @@ func (m *LoginCredentialsManager) GetOnPremCredentialsFromPrompt(cmd *github_com
 	}
 
 	call := struct {
-		Cmd *github_com_spf13_cobra.Command
-	}{
-		Cmd: cmd,
-	}
+	}{}
 
 	m.calls.GetOnPremCredentialsFromPrompt = append(m.calls.GetOnPremCredentialsFromPrompt, call)
 
-	return m.GetOnPremCredentialsFromPromptFunc(cmd)
+	return m.GetOnPremCredentialsFromPromptFunc()
 }
 
 // GetOnPremCredentialsFromPromptCalled returns true if GetOnPremCredentialsFromPrompt was called at least once.
@@ -403,7 +395,6 @@ func (m *LoginCredentialsManager) GetOnPremCredentialsFromPromptCalled() bool {
 
 // GetOnPremCredentialsFromPromptCalls returns the calls made to GetOnPremCredentialsFromPrompt.
 func (m *LoginCredentialsManager) GetOnPremCredentialsFromPromptCalls() []struct {
-	Cmd *github_com_spf13_cobra.Command
 } {
 	m.lockGetOnPremCredentialsFromPrompt.Lock()
 	defer m.lockGetOnPremCredentialsFromPrompt.Unlock()

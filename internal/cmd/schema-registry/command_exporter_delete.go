@@ -56,6 +56,6 @@ func deleteExporter(cmd *cobra.Command, name string, srClient *srsdk.APIClient, 
 		return err
 	}
 
-	utils.Printf(cmd, errors.DeletedResourceMsg, resource.SchemaExporter, name)
+	utils.Printf(errors.DeletedResourceMsg, resource.SchemaExporter, name)
 	return nil
 }

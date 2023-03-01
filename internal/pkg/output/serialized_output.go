@@ -18,13 +18,13 @@ func SerializedOutput(cmd *cobra.Command, v any) error {
 		if err != nil {
 			return err
 		}
-		utils.Print(cmd, string(pretty.Pretty(out)))
+		utils.Print(string(pretty.Pretty(out)))
 	case YAML:
 		out, err := yaml.Marshal(v)
 		if err != nil {
 			return err
 		}
-		utils.Print(cmd, string(out))
+		utils.Print(string(out))
 	}
 	return nil
 }

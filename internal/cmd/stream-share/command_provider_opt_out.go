@@ -15,22 +15,20 @@ func (c *command) newOptOutCommand() *cobra.Command {
 	}
 }
 
-func (c *command) optOut(cmd *cobra.Command, _ []string) error {
-	isDeleteConfirmed, err := confirmOptOut(cmd)
+func (c *command) optOut(_ *cobra.Command, _ []string) error {
+	isDeleteConfirmed, err := confirmOptOut()
 	if err != nil {
 		return err
 	}
-
 	if !isDeleteConfirmed {
-		utils.Println(cmd, "Operation terminated.")
+		utils.Println("Operation terminated.")
 		return nil
 	}
 
-	_, err = c.V2Client.StreamShareOptInOrOut(false)
-	if err != nil {
+	if _, err := c.V2Client.StreamShareOptInOrOut(false); err != nil {
 		return err
 	}
 
-	utils.Print(cmd, errors.OptOutMsg)
+	utils.Println(errors.OptOutMsg)
 	return nil
 }

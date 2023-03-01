@@ -181,7 +181,7 @@ func (c *createCommand) create(configId string, srApiAvailable bool) func(cmd *c
 		}
 
 		// print configuration file to stdout
-		utils.Println(cmd, string(configFile))
+		utils.Println(configFile)
 		return nil
 	}
 }

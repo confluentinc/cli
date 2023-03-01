@@ -1,8 +1,6 @@
 package byok
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	byokv1 "github.com/confluentinc/ccloud-sdk-go-v2/byok/v1"
@@ -65,8 +63,8 @@ func (c *command) outputByokKeyDescription(cmd *cobra.Command, key *byokv1.ByokV
 	table.Print()
 
 	if output.GetFormat(cmd) == output.Human {
-		utils.ErrPrintln(cmd, fmt.Sprintf("\n%s\n", getPostCreateStepInstruction(key)))
-		utils.Println(cmd, postCreationStepInstructions)
+		utils.ErrPrintf("\n%s\n\n", getPostCreateStepInstruction(key))
+		utils.Println(postCreationStepInstructions)
 	}
 
 	return nil

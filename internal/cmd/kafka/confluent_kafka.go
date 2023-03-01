@@ -156,29 +156,26 @@ func newOnPremConsumer(cmd *cobra.Command, clientID string, configPath string, c
 }
 
 // example: https://github.com/confluentinc/confluent-kafka-go/blob/e01dd295220b5bf55f3fbfabdf8cc6d3f0ae185f/examples/cooperative_consumer_example/cooperative_consumer_example.go#L121
-func getRebalanceCallback(cmd *cobra.Command, offset ckafka.Offset, partitionFilter partitionFilter) func(*ckafka.Consumer, ckafka.Event) error {
+func getRebalanceCallback(offset ckafka.Offset, partitionFilter partitionFilter) func(*ckafka.Consumer, ckafka.Event) error {
 	return func(consumer *ckafka.Consumer, event ckafka.Event) error {
 		switch ev := event.(type) { // ev is of type ckafka.Event
 		case kafka.AssignedPartitions:
-			partitions := make([]ckafka.TopicPartition,
-				len(ev.Partitions))
+			partitions := make([]ckafka.TopicPartition, len(ev.Partitions))
 			for i, partition := range ev.Partitions {
 				partition.Offset = offset
 				partitions[i] = partition
 			}
 			partitions = getPartitionsByIndex(partitions, partitionFilter)
 
-			err := consumer.IncrementalAssign(partitions)
-			if err != nil {
+			if err := consumer.IncrementalAssign(partitions); err != nil {
 				return err
 			}
 		case kafka.RevokedPartitions:
 			if consumer.AssignmentLost() {
-				utils.ErrPrintln(cmd, "%% Current assignment lost.")
+				utils.ErrPrintln("%% Current assignment lost.")
 			}
 			parts := getPartitionsByIndex(ev.Partitions, partitionFilter)
-			err := consumer.IncrementalUnassign(parts)
-			if err != nil {
+			if err := consumer.IncrementalUnassign(parts); err != nil {
 				return err
 			}
 		}
@@ -247,14 +244,14 @@ func consumeMessage(e *ckafka.Message, h *GroupHandler) error {
 	return nil
 }
 
-func runConsumer(cmd *cobra.Command, consumer *ckafka.Consumer, groupHandler *GroupHandler) error {
+func runConsumer(consumer *ckafka.Consumer, groupHandler *GroupHandler) error {
 	run := true
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, os.Interrupt)
 	for run {
 		select {
 		case <-signals: // Trap SIGINT to trigger a shutdown.
-			utils.ErrPrintln(cmd, errors.StoppingConsumerMsg)
+			utils.ErrPrintln(errors.StoppingConsumerMsg)
 			consumer.Close()
 			run = false
 		default:

@@ -47,12 +47,12 @@ func (c *clusterCommand) newDeleteCommand(cfg *v1.Config) *cobra.Command {
 func (c *clusterCommand) delete(cmd *cobra.Command, _ []string, prompt form.Prompt) error {
 	ctx := context.Background()
 
-	cluster, err := c.Context.FetchSchemaRegistryByEnvironmentId(ctx, c.EnvironmentId(cmd))
+	cluster, err := c.Context.FetchSchemaRegistryByEnvironmentId(ctx, c.EnvironmentId())
 	if err != nil {
 		return err
 	}
 
-	promptMsg := fmt.Sprintf(`Are you sure you want to delete %s "%s" for %s "%s"?`, resource.SchemaRegistryCluster, cluster.Id, resource.Environment, c.EnvironmentId(cmd))
+	promptMsg := fmt.Sprintf(`Are you sure you want to delete %s "%s" for %s "%s"?`, resource.SchemaRegistryCluster, cluster.Id, resource.Environment, c.EnvironmentId())
 	if ok, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil || !ok {
 		return err
 	}
@@ -62,6 +62,6 @@ func (c *clusterCommand) delete(cmd *cobra.Command, _ []string, prompt form.Prom
 		return err
 	}
 
-	utils.Printf(cmd, errors.SchemaRegistryClusterDeletedMsg, c.EnvironmentId(cmd))
+	utils.Printf(errors.SchemaRegistryClusterDeletedMsg, c.EnvironmentId())
 	return nil
 }

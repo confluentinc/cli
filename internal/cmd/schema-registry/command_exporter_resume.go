@@ -42,6 +42,6 @@ func resumeExporter(cmd *cobra.Command, name string, srClient *srsdk.APIClient, 
 		return err
 	}
 
-	utils.Printf(cmd, errors.ExporterActionMsg, "Resumed", name)
+	utils.Printf(errors.ExporterActionMsg, "Resumed", name)
 	return nil
 }

@@ -89,7 +89,7 @@ func (c *authenticatedTopicCommand) onPremUpdate(cmd *cobra.Command, args []stri
 		return output.SerializedOutput(cmd, data)
 	}
 
-	utils.Printf(cmd, errors.UpdateTopicConfigMsg, topicName)
+	utils.Printf(errors.UpdateTopicConfigMsg, topicName)
 
 	list := output.NewList(cmd)
 	for _, config := range data {

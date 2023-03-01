@@ -15,15 +15,15 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-func AddApiKeyFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
+func AddApiKeyFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {
 	cmd.Flags().String("api-key", "", "API key.")
 
 	RegisterFlagCompletionFunc(cmd, "api-key", func(cmd *cobra.Command, args []string) []string {
-		if err := command.PersistentPreRunE(cmd, args); err != nil {
+		if err := c.PersistentPreRunE(cmd, args); err != nil {
 			return nil
 		}
 
-		return AutocompleteApiKeys(command.EnvironmentId(cmd), command.V2Client)
+		return AutocompleteApiKeys(c.EnvironmentId(), c.V2Client)
 	})
 }
 
@@ -98,14 +98,14 @@ func AddCloudFlag(cmd *cobra.Command) {
 	RegisterFlagCompletionFunc(cmd, "cloud", func(_ *cobra.Command, _ []string) []string { return kafka.Clouds })
 }
 
-func AddClusterFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
+func AddClusterFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	RegisterFlagCompletionFunc(cmd, "cluster", func(cmd *cobra.Command, args []string) []string {
-		if err := command.PersistentPreRunE(cmd, args); err != nil {
+		if err := c.PersistentPreRunE(cmd, args); err != nil {
 			return nil
 		}
 
-		return AutocompleteClusters(command.EnvironmentId(cmd), command.V2Client)
+		return AutocompleteClusters(c.EnvironmentId(), c.V2Client)
 	})
 }
 
@@ -194,14 +194,14 @@ func AddForceFlag(cmd *cobra.Command) {
 	cmd.Flags().Bool("force", false, "Skip the deletion confirmation prompt.")
 }
 
-func AddKsqlClusterFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
+func AddKsqlClusterFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {
 	cmd.Flags().String("ksql-cluster", "", "KSQL cluster for the pipeline.")
 	RegisterFlagCompletionFunc(cmd, "ksql-cluster", func(cmd *cobra.Command, args []string) []string {
-		if err := command.PersistentPreRunE(cmd, args); err != nil {
+		if err := c.PersistentPreRunE(cmd, args); err != nil {
 			return nil
 		}
 
-		return autocompleteKSQLClusters(command.EnvironmentId(cmd), command.V2Client)
+		return autocompleteKSQLClusters(c.EnvironmentId(), c.V2Client)
 	})
 }
 

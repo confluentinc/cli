@@ -58,12 +58,12 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	}
 
 	if apiKey {
-		utils.Println(cmd, credential.APIKeyPair.Key)
+		utils.Println(credential.APIKeyPair.Key)
 		return nil
 	}
 
 	if username {
-		utils.Println(cmd, credential.Username)
+		utils.Println(credential.Username)
 		return nil
 	}
 

@@ -117,9 +117,9 @@ func PrintAnnouncements(featureFlag string, ctx *dynamicconfig.DynamicContext, c
 		if strings.HasPrefix(cmd.CommandPath(), "confluent "+name) {
 			if len(flagsAndMsg.Flags) == 0 {
 				if featureFlag == DeprecationNotices {
-					utils.ErrPrintln(cmd, fmt.Sprintf("`confluent %s` is deprecated: %s", name, flagsAndMsg.CommandMessage))
+					utils.ErrPrintf("`confluent %s` is deprecated: %s\n", name, flagsAndMsg.CommandMessage)
 				} else {
-					utils.ErrPrintln(cmd, flagsAndMsg.CommandMessage)
+					utils.ErrPrintln(flagsAndMsg.CommandMessage)
 				}
 			} else {
 				for i, flag := range flagsAndMsg.Flags {
@@ -138,7 +138,7 @@ func PrintAnnouncements(featureFlag string, ctx *dynamicconfig.DynamicContext, c
 					} else {
 						msg = flagsAndMsg.FlagMessages[i]
 					}
-					utils.ErrPrintln(cmd, msg)
+					utils.ErrPrintln(msg)
 				}
 			}
 		}

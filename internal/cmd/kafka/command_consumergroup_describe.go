@@ -64,13 +64,14 @@ func (c *consumerGroupCommand) describe(cmd *cobra.Command, args []string) error
 	}
 
 	if output.GetFormat(cmd) == output.Human {
-		utils.Print(cmd, "\nConsumers\n\n")
+		utils.Println()
+		utils.Println("Consumers")
+		utils.Println()
 
 		list := output.NewList(cmd)
 		for _, consumer := range groupData.Consumers {
 			list.Add(&consumer)
 		}
-
 		return list.Print()
 	}
 

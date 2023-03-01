@@ -132,8 +132,8 @@ func NewKafkaConsumeCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *Command) runKafkaConsumeCommand(command *cobra.Command, args []string) error {
-	return c.runKafkaCommand(command, args, "consume", kafkaConsumeDefaultValues)
+func (c *Command) runKafkaConsumeCommand(cmd *cobra.Command, args []string) error {
+	return c.runKafkaCommand(cmd, args, "consume", kafkaConsumeDefaultValues)
 }
 
 func NewKafkaProduceCommand(prerunner cmd.PreRunner) *cobra.Command {
@@ -161,8 +161,8 @@ func NewKafkaProduceCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *Command) runKafkaProduceCommand(command *cobra.Command, args []string) error {
-	return c.runKafkaCommand(command, args, "produce", kafkaProduceDefaultValues)
+func (c *Command) runKafkaProduceCommand(cmd *cobra.Command, args []string) error {
+	return c.runKafkaCommand(cmd, args, "produce", kafkaProduceDefaultValues)
 }
 
 func (c *Command) initFlags(mode string) {
@@ -200,13 +200,13 @@ func (c *Command) initFlags(mode string) {
 	}
 }
 
-func (c *Command) runKafkaCommand(command *cobra.Command, args []string, mode string, kafkaFlagTypes map[string]any) error {
-	cloud, err := command.Flags().GetBool("cloud")
+func (c *Command) runKafkaCommand(cmd *cobra.Command, args []string, mode string, kafkaFlagTypes map[string]any) error {
+	cloud, err := cmd.Flags().GetBool("cloud")
 	if err != nil {
 		return err
 	}
 
-	bootSet := command.Flags().Changed("bootstrap-server")
+	bootSet := cmd.Flags().Changed("bootstrap-server")
 
 	// Only check if local Kafka is up if we are really connecting to a local Kafka
 	if !(cloud || bootSet) {
@@ -215,11 +215,11 @@ func (c *Command) runKafkaCommand(command *cobra.Command, args []string, mode st
 			return err
 		}
 		if !isUp {
-			return c.printStatus(command, "kafka")
+			return c.printStatus("kafka")
 		}
 	}
 
-	valueFormat, err := command.Flags().GetString("value-format")
+	valueFormat, err := cmd.Flags().GetString("value-format")
 	if err != nil {
 		return err
 	}
@@ -236,7 +236,7 @@ func (c *Command) runKafkaCommand(command *cobra.Command, args []string, mode st
 	var cloudServer string
 
 	if cloud {
-		config, err = command.Flags().GetString("config")
+		config, err = cmd.Flags().GetString("config")
 		if err != nil {
 			return err
 		}
@@ -254,7 +254,7 @@ func (c *Command) runKafkaCommand(command *cobra.Command, args []string, mode st
 		delete(kafkaFlagTypes, "bootstrap-server")
 	}
 
-	kafkaArgs, err := local.CollectFlags(command.Flags(), kafkaFlagTypes)
+	kafkaArgs, err := local.CollectFlags(cmd.Flags(), kafkaFlagTypes)
 	if err != nil {
 		return err
 	}
@@ -276,7 +276,7 @@ func (c *Command) runKafkaCommand(command *cobra.Command, args []string, mode st
 	kafkaCommand.Stderr = os.Stderr
 	if mode == "produce" {
 		kafkaCommand.Stdin = os.Stdin
-		utils.Println(command, "Exit with Ctrl-D")
+		utils.Println("Exit with Ctrl-D")
 	}
 
 	kafkaCommand.Env = []string{

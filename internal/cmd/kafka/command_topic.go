@@ -145,7 +145,7 @@ func (c *authenticatedTopicCommand) getNumPartitions(topicName string) (int, err
 }
 
 func (c *authenticatedTopicCommand) provisioningClusterCheck(cmd *cobra.Command, lkc string) error {
-	cluster, httpResp, err := c.V2Client.DescribeKafkaCluster(lkc, c.EnvironmentId(cmd))
+	cluster, httpResp, err := c.V2Client.DescribeKafkaCluster(lkc, c.EnvironmentId())
 	if err != nil {
 		return errors.CatchKafkaNotFoundError(err, lkc, httpResp)
 	}
