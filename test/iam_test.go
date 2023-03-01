@@ -326,7 +326,7 @@ func (s *CLITestSuite) TestIAMProviderList() {
 
 func (s *CLITestSuite) TestIAMPoolCreate() {
 	tests := []CLITest{
-		{args: "iam pool create testPool --provider op-12345 --description new-description --identity-claim sub --filter claims.iss=\"https://company.provider.com\"", fixture: "iam/identity-pool/create.golden"},
+		{args: `iam pool create testPool --provider op-12345 --description new-description --identity-claim sub --filter "claims.iss=https://company.provider.com"`, fixture: "iam/identity-pool/create.golden"},
 	}
 
 	for _, test := range tests {
@@ -361,7 +361,7 @@ func (s *CLITestSuite) TestIAMPoolDescribe() {
 
 func (s *CLITestSuite) TestIAMPoolUpdate() {
 	tests := []CLITest{
-		{args: "iam pool update pool-12345 --provider op-12345 --name newer-name --description more-descriptive --identity-claim new-sub --filter claims.iss=\"https://new-company.new-provider.com\"", fixture: "iam/identity-pool/update.golden"},
+		{args: `iam pool update pool-12345 --provider op-12345 --name newer-name --description more-descriptive --identity-claim new-sub --filter "claims.iss=https://new-company.new-provider.com"`, fixture: "iam/identity-pool/update.golden"},
 	}
 
 	for _, test := range tests {
