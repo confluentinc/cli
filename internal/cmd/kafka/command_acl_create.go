@@ -1,6 +1,7 @@
 package kafka
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -55,7 +56,19 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	users, userIdMap, err := c.mapResourceIdToUserId(nil)
+	serviceAccounts, err := c.Client.User.GetServiceAccounts(context.Background())
+	if err != nil {
+		return err
+	}
+
+	adminUsers, err := c.Client.User.List(context.Background())
+	if err != nil {
+		return err
+	}
+
+	users := append(serviceAccounts, adminUsers...)
+
+	userIdMap, err := c.mapResourceIdToUserId(users)
 	if err != nil {
 		return err
 	}
@@ -64,7 +77,7 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	_, resourceIdMap, err := c.mapUserIdToResourceId(users)
+	resourceIdMap, err := c.mapUserIdToResourceId(users)
 	if err != nil {
 		return err
 	}
