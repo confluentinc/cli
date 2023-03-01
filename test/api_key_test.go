@@ -72,14 +72,14 @@ func (s *CLITestSuite) TestAPIKey() {
 		{args: "api-key list --resource lkc-other1", fixture: "api-key/28.golden"},
 
 		// store exists already error
-		{args: "api-key store UIAPIKEY101 @test/fixtures/input/api-key/UIAPISECRET101.txt --resource lkc-other1", fixture: "api-key/override-error.golden", wantErrCode: 1},
+		{args: "api-key store UIAPIKEY101 @test/fixtures/input/api-key/UIAPISECRET101.txt --resource lkc-other1", fixture: "api-key/override-error.golden", exitCode: 1},
 
 		// store an API key for ksql cluster (not yet supported)
 		//{args: "api-key store UIAPIKEY103 UIAPISECRET103 --resource lksqlc-ksql1", fixture: "empty.golden"},
 		//{args: "api-key list --resource lksqlc-ksql1", fixture: "api-key/10.golden"},
 		// TODO: change test back once api-key store and use command allows for non kafka clusters
-		{args: "api-key store UIAPIKEY103 UIAPISECRET103 --resource lksqlc-ksql1", fixture: "api-key/29.golden", wantErrCode: 1},
-		{args: "api-key use UIAPIKEY103 --resource lksqlc-ksql1", fixture: "api-key/29.golden", wantErrCode: 1},
+		{args: "api-key store UIAPIKEY103 UIAPISECRET103 --resource lksqlc-ksql1", fixture: "api-key/29.golden", exitCode: 1},
+		{args: "api-key use UIAPIKEY103 --resource lksqlc-ksql1", fixture: "api-key/29.golden", exitCode: 1},
 
 		// list all api-keys
 		{args: "api-key list", fixture: "api-key/30.golden"},
@@ -96,7 +96,7 @@ func (s *CLITestSuite) TestAPIKey() {
 		{args: "api-key list --resource lkc-cool1 --service-account sa-12345", fixture: "api-key/36.golden"},
 		{args: "api-key create --resource lkc-cool1 --service-account sa-12345", fixture: "api-key/37.golden"}, // MYKEY10
 		{args: "api-key list --service-account sa-12345", fixture: "api-key/38.golden"},
-		{name: "error listing API keys for non-existent service account", args: "api-key list --service-account sa-123456", fixture: "api-key/39.golden"},
+		{name: "error listing API keys for non-existent service account", args: "api-key list --service-account sa-123456", fixture: "api-key/39.golden", exitCode: 1},
 
 		// create api-key for audit log
 		{args: "api-key create --resource lkc-cool1 --service-account sa-1337 --description auditlog-key", fixture: "api-key/40.golden"}, // MYKEY11
@@ -110,8 +110,8 @@ func (s *CLITestSuite) TestAPIKey() {
 		{args: "api-key create --description yaml-output --resource lkc-other1 -o yaml", fixture: "api-key/46.golden"},
 
 		// store: error handling
-		{name: "error if storing unknown API key", args: "api-key store UNKNOWN @test/fixtures/input/api-key/UIAPISECRET100.txt --resource lkc-cool1", fixture: "api-key/47.golden"},
-		{name: "error if storing API key with existing secret", args: "api-key store UIAPIKEY100 NEWSECRET --resource lkc-cool1", fixture: "api-key/48.golden"},
+		{name: "error if storing unknown API key", args: "api-key store UNKNOWN @test/fixtures/input/api-key/UIAPISECRET100.txt --resource lkc-cool1", fixture: "api-key/47.golden", exitCode: 1},
+		{name: "error if storing API key with existing secret", args: "api-key store UIAPIKEY100 NEWSECRET --resource lkc-cool1", fixture: "api-key/48.golden", exitCode: 1},
 		{name: "succeed if forced to overwrite existing secret", args: "api-key store -f UIAPIKEY100 NEWSECRET --resource lkc-cool1", fixture: "api-key/49.golden",
 			wantFunc: func(t *testing.T) {
 				cfg := v1.New()
@@ -126,15 +126,15 @@ func (s *CLITestSuite) TestAPIKey() {
 			}},
 
 		// use: error handling
-		{name: "error if using non-existent api-key", args: "api-key use UNKNOWN --resource lkc-cool1", fixture: "api-key/50.golden"},
-		{name: "error if using api-key for wrong cluster", args: "api-key use MYKEY2 --resource lkc-cool1", fixture: "api-key/51.golden"},
-		{name: "error if using api-key without existing secret", args: "api-key use UIAPIKEY103 --resource lkc-cool1", fixture: "api-key/52.golden"},
+		{name: "error if using non-existent api-key", args: "api-key use UNKNOWN --resource lkc-cool1", fixture: "api-key/50.golden", exitCode: 1},
+		{name: "error if using api-key for wrong cluster", args: "api-key use MYKEY2 --resource lkc-cool1", fixture: "api-key/51.golden", exitCode: 1},
+		{name: "error if using api-key without existing secret", args: "api-key use UIAPIKEY103 --resource lkc-cool1", fixture: "api-key/52.golden", exitCode: 1},
 
 		// more errors
-		{args: "api-key use UIAPIKEY103", fixture: "api-key/53.golden", wantErrCode: 1},
-		{args: "api-key create", fixture: "api-key/54.golden", wantErrCode: 1},
-		{args: "api-key use UIAPIKEY103 --resource lkc-unknown", fixture: "api-key/resource-unknown-error.golden", wantErrCode: 1},
-		{args: "api-key create --resource lkc-unknown", fixture: "api-key/resource-unknown-error.golden", wantErrCode: 1},
+		{args: "api-key use UIAPIKEY103", fixture: "api-key/53.golden", exitCode: 1},
+		{args: "api-key create", fixture: "api-key/54.golden", exitCode: 1},
+		{args: "api-key use UIAPIKEY103 --resource lkc-unknown", fixture: "api-key/resource-unknown-error.golden", exitCode: 1},
+		{args: "api-key create --resource lkc-unknown", fixture: "api-key/resource-unknown-error.golden", exitCode: 1},
 
 		// test multicluster keys
 		{name: "listing multicluster API keys", args: "api-key list", login: "cloud", env: []string{fmt.Sprintf("%s=multicluster-key-org", pauth.ConfluentCloudOrganizationId)}, fixture: "api-key/56.golden"},
@@ -167,6 +167,6 @@ func (s *CLITestSuite) TestApiKeyDescribe() {
 }
 
 func (s *CLITestSuite) TestAPIKeyCreate_ServiceAccountNotValid() {
-	tt := CLITest{args: "api-key create --resource lkc-ab123 --service-account sa-123456", login: "cloud", fixture: "api-key/55.golden", wantErrCode: 1}
+	tt := CLITest{args: "api-key create --resource lkc-ab123 --service-account sa-123456", login: "cloud", fixture: "api-key/55.golden", exitCode: 1}
 	s.runIntegrationTest(tt)
 }

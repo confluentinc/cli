@@ -17,7 +17,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	testserver "github.com/confluentinc/cli/test/test-server"
@@ -58,7 +57,7 @@ type CLITest struct {
 	// Fixed string to check that output does not contain
 	notContains string
 	// Expected exit code (e.g., 0 for success or 1 for failure)
-	wantErrCode int
+	exitCode int
 	// If true, don't reset the config/state between tests to enable testing CLI workflows
 	workflow bool
 	// An optional function that allows you to specify other calls
@@ -105,10 +104,6 @@ func (s *CLITestSuite) runIntegrationTest(tt CLITest) {
 		tt.name = tt.args
 	}
 
-	if strings.HasPrefix(tt.name, "error") {
-		tt.wantErrCode = 1
-	}
-
 	s.T().Run(tt.name, func(t *testing.T) {
 		isAuditLogDisabled := os.Getenv("DISABLE_AUDIT_LOG") == "true"
 		if isAuditLogDisabled != tt.disableAuditLog {
@@ -122,38 +117,14 @@ func (s *CLITestSuite) runIntegrationTest(tt CLITest) {
 			resetConfiguration(t, tt.arePluginsEnabled)
 		}
 
-		// Executes login command if test specifies
-		switch tt.login {
-		case "cloud":
-			loginString := fmt.Sprintf("login --url %s", s.getLoginURL(true, tt))
-			env := append([]string{pauth.ConfluentCloudEmail + "=fake@user.com", pauth.ConfluentCloudPassword + "=pass1"}, tt.env...)
-			for _, e := range env {
-				keyVal := strings.Split(e, "=")
-				os.Setenv(keyVal[0], keyVal[1])
-			}
-
-			defer func() {
-				for _, e := range env {
-					keyVal := strings.Split(e, "=")
-					os.Unsetenv(keyVal[0])
-				}
-			}()
-
-			output := runCommand(t, testBin, env, loginString, 0, "")
-			if *debug {
-				fmt.Println(output)
-			}
-		case "platform":
-			loginURL := s.getLoginURL(false, tt)
-			env := []string{pauth.ConfluentPlatformUsername + "=fake@user.com", pauth.ConfluentPlatformPassword + "=pass1"}
-			output := runCommand(t, testBin, env, "login --url "+loginURL, 0, "")
-			if *debug {
-				fmt.Println(output)
-			}
+		url := s.getLoginURL(tt.login == "cloud", tt)
+		output := runCommand(t, testBin, []string{}, fmt.Sprintf("login --url %s", url), 0, "fake@user.com\npass1\n")
+		if *debug {
+			fmt.Println(output)
 		}
 
 		if tt.useKafka != "" {
-			output := runCommand(t, testBin, []string{}, "kafka cluster use "+tt.useKafka, 0, "")
+			output := runCommand(t, testBin, []string{}, fmt.Sprintf("kafka cluster use %s", tt.useKafka), 0, "")
 			if *debug {
 				fmt.Println(output)
 			}
@@ -172,7 +143,7 @@ func (s *CLITestSuite) runIntegrationTest(tt CLITest) {
 			}
 		}
 
-		output := runCommand(t, testBin, tt.env, tt.args, tt.wantErrCode, tt.input)
+		output = runCommand(t, testBin, tt.env, tt.args, tt.exitCode, tt.input)
 		if *debug {
 			fmt.Println(output)
 		}
@@ -220,7 +191,7 @@ func (s *CLITestSuite) validateTestOutput(tt CLITest, t *testing.T, output strin
 	}
 }
 
-func runCommand(t *testing.T, binaryName string, env []string, argString string, wantErrCode int, input string) string {
+func runCommand(t *testing.T, binaryName string, env []string, argString string, exitCode int, input string) string {
 	dir, err := os.Getwd()
 	require.NoError(t, err)
 
@@ -232,8 +203,8 @@ func runCommand(t *testing.T, binaryName string, env []string, argString string,
 	cmd.Stdin = strings.NewReader(input)
 
 	out, err := cmd.CombinedOutput()
-	require.Equal(t, wantErrCode, cmd.ProcessState.ExitCode())
-	if wantErrCode == 0 {
+	require.Equal(t, exitCode, cmd.ProcessState.ExitCode())
+	if exitCode == 0 {
 		require.NoError(t, err)
 	}
 
