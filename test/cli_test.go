@@ -13,6 +13,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/shlex"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -219,11 +220,14 @@ func (s *CLITestSuite) validateTestOutput(tt CLITest, t *testing.T, output strin
 	}
 }
 
-func runCommand(t *testing.T, binaryName string, env []string, args string, wantErrCode int, input string) string {
+func runCommand(t *testing.T, binaryName string, env []string, argString string, wantErrCode int, input string) string {
 	dir, err := os.Getwd()
 	require.NoError(t, err)
 
-	cmd := exec.Command(filepath.Join(dir, binaryName), strings.Split(args, " ")...)
+	args, err := shlex.Split(argString)
+	require.NoError(t, err)
+
+	cmd := exec.Command(filepath.Join(dir, binaryName), args...)
 	cmd.Env = append(os.Environ(), env...)
 	cmd.Stdin = strings.NewReader(input)
 

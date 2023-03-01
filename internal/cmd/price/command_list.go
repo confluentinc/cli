@@ -101,24 +101,7 @@ func (c *command) newListCommand() *cobra.Command {
 		Use:   "list",
 		Short: "Print an organization's price list.",
 		Args:  cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			filterFlags := []string{"cloud", "region", "availability", "cluster-type", "network-type"}
-
-			filters := make([]string, len(filterFlags))
-			for i, flag := range filterFlags {
-				filters[i], _ = cmd.Flags().GetString(flag)
-			}
-
-			metric, _ := cmd.Flags().GetString("metric")
-			legacy, _ := cmd.Flags().GetBool("legacy")
-
-			rows, err := c.list(filters, metric, legacy)
-			if err != nil {
-				return err
-			}
-
-			return printTable(cmd, rows)
-		},
+		RunE:  c.list,
 	}
 
 	pcmd.AddCloudFlag(cmd)
@@ -141,7 +124,42 @@ func (c *command) newListCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) list(filters []string, metric string, legacy bool) ([]row, error) {
+func (c *command) list(cmd *cobra.Command, _ []string) error {
+	filterFlags := []string{"cloud", "region", "availability", "cluster-type", "network-type"}
+
+	filters := make([]string, len(filterFlags))
+	for i, flag := range filterFlags {
+		if cmd.Flags().Changed(flag) {
+			filter, err := cmd.Flags().GetString(flag)
+			if err != nil {
+				return err
+			}
+			if filter == "" {
+				return fmt.Errorf("`--%s` must not be empty", flag)
+			}
+			filters[i] = filter
+		}
+	}
+
+	metric, err := cmd.Flags().GetString("metric")
+	if err != nil {
+		return err
+	}
+
+	legacy, err := cmd.Flags().GetBool("legacy")
+	if err != nil {
+		return err
+	}
+
+	rows, err := c.listRows(filters, metric, legacy)
+	if err != nil {
+		return err
+	}
+
+	return printTable(cmd, rows)
+}
+
+func (c *command) listRows(filters []string, metric string, legacy bool) ([]row, error) {
 	org := &ccloudv1.Organization{Id: c.Context.GetOrganization().GetId()}
 
 	kafkaPricesReply, err := c.Client.Billing.GetPriceTable(context.Background(), org, "kafka")
