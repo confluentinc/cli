@@ -12,10 +12,8 @@ release-notes:
 	if [ "$${bump}" = "patch" ]; then \
 		git checkout $$(echo $${version} | sed $(STAGING_BRANCH_REGEX)) ; \
 	fi && \
-	git checkout -b cli-v$${version}-release-notes
-
-	# CONFLUENT_DOCS_DIR=$(CONFLUENT_DOCS_DIR) make publish-release-notes-to-s3 && \
-	# CONFLUENT_DOCS_DIR=$(CONFLUENT_DOCS_DIR) make publish-release-notes-to-docs-repo && \
+	git checkout -b cli-v$${version}-release-notes && \
+	CONFLUENT_DOCS_DIR=$(CONFLUENT_DOCS_DIR) make publish-release-notes-to-docs-repo
 
 	rm -rf $(TMP_BASE)
 
