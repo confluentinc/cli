@@ -1,6 +1,7 @@
 package schemaregistry
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -15,7 +16,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
@@ -226,16 +226,14 @@ func printSchema(cmd *cobra.Command, schemaID int64, schema string, sType string
 	}
 
 	if sType == "PROTOBUF" {
-		utils.Println(cmd, "Schema: "+schema)
+		utils.Println(cmd, "Schema:\n"+schema)
 	} else {
-		var schemaJson interface{}
-		if err := json.Unmarshal([]byte(schema), &schemaJson); err != nil {
+		var jsonBuffer bytes.Buffer
+		if err := json.Indent(&jsonBuffer, []byte(schema), "", "    "); err != nil {
 			return err
 		}
-		// fmt.Printf("%+v\n", schemaJson)
-		list := output.NewList(cmd)
-		list.Add(schemaJson)
-		list.Print()
+		schemaString := jsonBuffer.String()
+		utils.Println(cmd, "Schema:\n"+schemaString)
 	}
 
 	if len(refs) > 0 {

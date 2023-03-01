@@ -30,7 +30,7 @@ type Table struct {
 func NewTable(cmd *cobra.Command) *Table {
 	return &Table{
 		writer: cmd.OutOrStdout(),
-		format: 1,
+		format: GetFormat(cmd),
 	}
 }
 
