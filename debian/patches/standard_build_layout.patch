@@ -1,6 +1,6 @@
---- cli/Makefile	2023-02-22 23:19:50.000000000 -0800
+--- cli/Makefile	2023-03-01 10:24:20.000000000 -0800
 +++ debian/Makefile	2022-12-12 17:29:13.000000000 -0800
-@@ -1,133 +1,130 @@
+@@ -1,140 +1,130 @@
 -SHELL              := /bin/bash
 -ALL_SRC            := $(shell find . -name "*.go" | grep -v -e vendor)
 -GORELEASER_VERSION := v1.15.2
@@ -136,16 +136,12 @@
 +SYSCONFDIR=/etc/$(PACKAGE_TITLE)
  endif
  
--.PHONY: integration-test
--integration-test:
+-.PHONY: build-for-integration-test
+-build-for-integration-test:
 -ifdef CI
--	go install gotest.tools/gotestsum@v1.8.2 && \
--	go build -cover -ldflags="-s -w -X main.commit=$(REF) -X main.date=$(DATE) -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent ./cmd/confluent && \
--	export GOCOVERDIR=test/coverage && \
--	if [ -d $${GOCOVERDIR} ]; then rm -r $${GOCOVERDIR}; fi && \
--	mkdir $${GOCOVERDIR} && \
--	gotestsum --junitfile integration-test-report.xml -- -v -race $$(go list ./... | grep test) && \
--	go tool covdata textfmt -i $${GOCOVERDIR} -o test/coverage.out
+-	go build -cover -ldflags="-s -w -X main.commit=$(REF) -X main.date=$(DATE) -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
+-else
+-	go build -ldflags="-s -w -X main.commit=$(REF) -X main.date=$(DATE) -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
 +all: install
 +
 +archive: install
@@ -156,8 +152,8 @@
 +ifeq ($(APPLY_PATCHES),yes)
 +	git reset --hard HEAD
 +	cat debian/patches/series | xargs -iPATCH bash -c 'patch -p1 < debian/patches/PATCH'
-+endif
-+
+ endif
+ 
 +BINPATH=$(PREFIX)/bin
 +LIBPATH=$(PREFIX)/libexec/$(PACKAGE_TITLE)
 +DOCPATH=$(PREFIX)/share/doc/$(PACKAGE_TITLE)
@@ -185,7 +181,16 @@
 +
 +	cp LICENSE $(DESTDIR)$(DOCPATH)/COPYRIGHT
 +	$(DESTDIR)$(BINPATH)/confluent --version | awk -F' ' '{ print $3 }' > $(DESTDIR)$(DOCPATH)/version.txt
-+
+ 
+-.PHONY: integration-test
+-integration-test:
+-ifdef CI
+-	go install gotest.tools/gotestsum@v1.8.2 && \
+-	export GOCOVERDIR=test/coverage && \
+-	if [ -d $${GOCOVERDIR} ]; then rm -r $${GOCOVERDIR}; fi && \
+-	mkdir $${GOCOVERDIR} && \
+-	gotestsum --junitfile integration-test-report.xml -- -v -race $$(go list ./... | grep test) && \
+-	go tool covdata textfmt -i $${GOCOVERDIR} -o test/coverage.out
 +	chown -R root:root $(DESTDIR)$(PREFIX)
 +
 +clean:
@@ -213,7 +218,6 @@
 +	RPM_RELEASE_POSTFIX_UNDERSCORE=_$(RPM_RELEASE_POSTFIX)
 +	RPM_RELEASE_ID=0.$(REVISION).$(RPM_RELEASE_POSTFIX)
  else
--	go build -ldflags="-s -w -X main.commit=$(REF) -X main.date=$(DATE) -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent ./cmd/confluent && \
 -	go test -v $$(go list ./... | grep test) $(INTEGRATION_TEST_ARGS)
 +	RPM_RELEASE_ID=$(REVISION)
  endif
