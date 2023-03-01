@@ -15,7 +15,7 @@ const (
 	// api-key commands
 	BadServiceAccountIDErrorMsg         = `failed to parse service account id: ensure service account id begins with "sa-"`
 	UnableToStoreAPIKeyErrorMsg         = "unable to store API key locally"
-	NonKafkaNotImplementedErrorMsg      = "command not yet available for non-Kafka cluster resources"
+	NonKafkaNotImplementedErrorMsg      = "functionality not yet available for non-Kafka cluster resources"
 	RefuseToOverrideSecretErrorMsg      = `refusing to overwrite existing secret for API Key "%s"`
 	RefuseToOverrideSecretSuggestions   = "If you would like to override the existing secret stored for API key \"%s\", use `--force` flag."
 	APIKeyUseFailedErrorMsg             = "unable to set active API key"
