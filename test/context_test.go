@@ -30,7 +30,7 @@ func (s *CLITestSuite) TestContextDelete() {
 		{args: s.contextCreateArgs("0-prompt")},
 		{args: "context delete 0 --force", fixture: "context/delete/0.golden"},
 		{args: "context delete 0-prompt", input: "y\n", fixture: "context/delete/0-prompt.golden"},
-		{args: "context delete 1 --force", fixture: "context/delete/1.golden", wantErrCode: 1},
+		{args: "context delete 1 --force", fixture: "context/delete/1.golden", exitCode: 1},
 	}
 
 	for _, tt := range tests {
@@ -47,8 +47,8 @@ func (s *CLITestSuite) TestDescribe() {
 		{args: "context use 0"},
 		{fixture: "context/describe/0.golden", args: "context describe"},
 		{fixture: "context/describe/1.golden", args: "context describe --api-key"},
-		{fixture: "context/describe/2.golden", args: "context describe --username", wantErrCode: 1},
-		{fixture: "context/describe/3.golden", args: "context describe --api-key", login: "cloud", wantErrCode: 1},
+		{fixture: "context/describe/2.golden", args: "context describe --username", exitCode: 1},
+		{fixture: "context/describe/3.golden", args: "context describe --api-key", login: "cloud", exitCode: 1},
 		{fixture: "context/describe/4.golden", args: "context describe --username", login: "cloud"},
 	}
 
@@ -102,9 +102,9 @@ func (s *CLITestSuite) TestContextUpdate() {
 		{args: s.contextCreateArgs("0")},
 		{fixture: "context/update/0.golden", args: "context update 0 --name 1"},
 		{fixture: "context/update/0.golden", args: "context describe 1"},
-		{fixture: "context/update/1.golden", args: "context update 1", wantErrCode: 1},
+		{fixture: "context/update/1.golden", args: "context update 1", exitCode: 1},
 		{args: s.contextCreateArgs("2")},
-		{fixture: "context/update/2.golden", args: "context update 1 --name 2", wantErrCode: 1},
+		{fixture: "context/update/2.golden", args: "context update 1 --name 2", exitCode: 1},
 	}
 
 	for _, tt := range tests {
@@ -118,7 +118,7 @@ func (s *CLITestSuite) TestContextUse() {
 
 	tests := []CLITest{
 		{args: s.contextCreateArgs("0")},
-		{fixture: "context/use/0.golden", args: "context describe", wantErrCode: 1},
+		{fixture: "context/use/0.golden", args: "context describe", exitCode: 1},
 		{fixture: "context/use/1.golden", args: "context use 0"},
 		{fixture: "context/use/2.golden", args: "context describe"},
 	}

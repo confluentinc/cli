@@ -1,5 +1,12 @@
 ARCHIVE_TYPES=darwin_amd64.tar.gz darwin_arm64.tar.gz linux_amd64.tar.gz linux_arm64.tar.gz alpine_amd64.tar.gz alpine_arm64.tar.gz windows_amd64.zip
 
+# If you set up your laptop following https://github.com/confluentinc/cc-documentation/blob/master/Operations/Laptop%20Setup.md
+# then assuming caas.sh lives here should be fine
+define aws-authenticate
+	source ~/git/go/src/github.com/confluentinc/cc-dotfiles/caas.sh && if ! aws sts get-caller-identity; then eval $$(gimme-aws-creds --output-format export --roles "arn:aws:iam::050879227952:role/administrator"); fi
+endef
+
+
 .PHONY: release
 release: check-branch commit-release tag-release
 	$(call print-boxed-message,"RELEASING TO STAGING FOLDER $(S3_STAG_PATH)")
