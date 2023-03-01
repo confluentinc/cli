@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/antihax/optional v1.0.0
-	github.com/aws/aws-sdk-go v1.44.209
+	github.com/aws/aws-sdk-go v1.44.211
 	github.com/billgraziano/dpapi v0.4.0
 	github.com/brianstrauch/cobra-shell v0.4.0
 	github.com/chromedp/chromedp v0.8.7
