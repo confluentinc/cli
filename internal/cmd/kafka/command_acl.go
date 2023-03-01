@@ -1,6 +1,7 @@
 package kafka
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -139,20 +140,34 @@ func parsePrincipal(principal string) (string, error) {
 	return id, nil
 }
 
-func (c *aclCommand) mapUserIdToResourceId(users []*ccloud.User) (map[int32]string, error) {
+func (c *aclCommand) getAllUsers() ([]*ccloud.User, error) {
+	serviceAccounts, err := c.Client.User.GetServiceAccounts(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
+	adminUsers, err := c.Client.User.List(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
+	return append(serviceAccounts, adminUsers...), nil
+}
+
+func (c *aclCommand) mapUserIdToResourceId(users []*ccloud.User) map[int32]string {
 	idMap := make(map[int32]string)
 	for _, sa := range users {
 		idMap[sa.Id] = sa.ResourceId
 	}
-	return idMap, nil
+	return idMap
 }
 
-func (c *aclCommand) mapResourceIdToUserId(users []*ccloud.User) (map[string]int32, error) {
+func (c *aclCommand) mapResourceIdToUserId(users []*ccloud.User) map[string]int32 {
 	idMap := make(map[string]int32)
 	for _, sa := range users {
 		idMap[sa.ResourceId] = sa.Id
 	}
-	return idMap, nil
+	return idMap
 }
 
 func (c *aclCommand) provisioningClusterCheck(cmd *cobra.Command, lkc string) error {

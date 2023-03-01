@@ -1,8 +1,6 @@
 package kafka
 
 import (
-	"context"
-
 	"github.com/spf13/cobra"
 
 	aclutil "github.com/confluentinc/cli/internal/pkg/acl"
@@ -39,22 +37,12 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	serviceAccounts, err := c.Client.User.GetServiceAccounts(context.Background())
+	users, err := c.getAllUsers()
 	if err != nil {
 		return err
 	}
 
-	adminUsers, err := c.Client.User.List(context.Background())
-	if err != nil {
-		return err
-	}
-
-	users := append(serviceAccounts, adminUsers...)
-
-	userIdMap, err := c.mapResourceIdToUserId(users)
-	if err != nil {
-		return err
-	}
+	userIdMap := c.mapResourceIdToUserId(users)
 
 	if err := c.aclResourceIdToNumericId(acl, userIdMap); err != nil {
 		return err
@@ -64,10 +52,7 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 		return acl[0].errors
 	}
 
-	resourceIdMap, err := c.mapUserIdToResourceId(users)
-	if err != nil {
-		return err
-	}
+	resourceIdMap := c.mapUserIdToResourceId(users)
 
 	kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
