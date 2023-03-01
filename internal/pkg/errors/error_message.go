@@ -146,7 +146,7 @@ const (
 	CloudProviderNotAvailableErrorMsg                = `"%s" is not an available cloud provider`
 	CloudProviderNotAvailableSuggestions             = "To view a list of available cloud providers and regions, use `confluent kafka region list`."
 	TopicDoesNotExistOrMissingPermissionsErrorMsg    = `topic "%s" does not exist or you do not have the ACLs or role bindings required to describe it`
-	TopicDoesNotExistOrMissingPermissionsSuggestions = "To list topics for the cluster \"%s\", use `confluent kafka topic list --cluster %s`.\nTo list ACLs use `confluent kafka acl list --cluster %s`.\nTo list role bindings use `confluent rbac role-binding list`."
+	TopicDoesNotExistOrMissingPermissionsSuggestions = "To list topics for the cluster \"%s\", use `confluent kafka topic list --cluster %s`.\nTo list ACLs use `confluent kafka acl list --cluster %s`.\nTo list role bindings use `confluent iam rbac role-binding list`."
 	InvalidAvailableFlagErrorMsg                     = "invalid value \"%s\" for `--availability` flag"
 	InvalidAvailableFlagSuggestions                  = "Allowed values for `--availability` flag are: %s, %s."
 	InvalidTypeFlagErrorMsg                          = "invalid value \"%s\" for `--type` flag"
