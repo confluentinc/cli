@@ -5,9 +5,11 @@ import (
 	"testing"
 
 	prompt "github.com/c-bata/go-prompt"
+	"github.com/stretchr/testify/require"
+	"pgregory.net/rapid"
 )
 
-func TestLexer(t *testing.T) {
+func TestBasicLexer(t *testing.T) {
 	// given
 	line := "SELECT FIELD FROM TABLE;"
 
@@ -47,7 +49,7 @@ func TestIsLexerCaseInsensitive(t *testing.T) {
 	}
 }
 
-func TestWordLexer(t *testing.T) {
+func TestExamplesWordLexer(t *testing.T) {
 	// given
 	statements := []string{"SELECT FIELD FROM TABLE WHERE FIELD = 2;",
 		"SELECT 'Hello World';",
@@ -67,21 +69,38 @@ func TestWordLexer(t *testing.T) {
 
 	// when
 	for _, statement := range statements {
+
+		//then
 		elements := wordLexer(statement)
 
-		// then
 		for _, element := range elements {
-
 			element.Text = strings.TrimSpace(element.Text)
 			element.Text = strings.ToUpper(element.Text)
 			_, isKeyWord := SQLKeywords[element.Text]
 
-			if isKeyWord && element.Color != HIGHLIGHT_COLOR {
-				t.Errorf("lexer() = %d, want %d", element.Color, HIGHLIGHT_COLOR)
-			} else if !isKeyWord && element.Color != prompt.White {
-				t.Errorf("lexer() = %d, want %d", element.Color, prompt.White)
+			if isKeyWord {
+				require.Equal(t, element.Color, HIGHLIGHT_COLOR)
+			} else {
+				require.Equal(t, element.Color, prompt.White)
 			}
-
 		}
+
 	}
+}
+
+func TestWordLexerForRandomStatements(t *testing.T) {
+	// given
+	statementGenerator := RandomStatementGenerator()
+	rapid.Check(t, func(t *rapid.T) {
+		randomStatement := statementGenerator.Example()
+
+		// when
+		realElements := wordLexer(randomStatement.Text)
+
+		// then
+		require.Equal(t, len(realElements), len(randomStatement.LexerElements))
+		for i, element := range realElements {
+			require.Equal(t, randomStatement.LexerElements[i].Color, element.Color)
+		}
+	})
 }

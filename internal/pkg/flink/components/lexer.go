@@ -10,7 +10,11 @@ var HIGHLIGHT_COLOR = prompt.Cyan
 
 /* This outputs words with their colors according to if they are flink sql keywords or not */
 func wordLexer(line string) []prompt.LexerElement {
-	var lexerWords []prompt.LexerElement
+	lexerWords := []prompt.LexerElement{}
+
+	if line == "" {
+		return lexerWords
+	}
 
 	words := strings.Split(line, " ")
 

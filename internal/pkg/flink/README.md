@@ -12,6 +12,7 @@ Install dependencies
 
 ```
 make deps
+make update-submodules // for gateway-api submodule
 ```
 
 Run prototype

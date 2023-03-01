@@ -10,11 +10,13 @@ require (
 	github.com/gdamore/tcell/v2 v2.5.4
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/rivo/tview v0.0.0-20230104153304-892d1a2eb0da
-	github.com/stretchr/testify v1.4.0
+	github.com/stretchr/testify v1.8.2
+	golang.org/x/exp v0.0.0-20220303212507-bbda1eaf7a17
+	pgregory.net/rapid v0.5.5
 )
 
 require (
-	github.com/davecgh/go-spew v1.1.0 // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/gdamore/encoding v1.0.0 // indirect
 	github.com/golang/protobuf v1.4.2 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
@@ -32,7 +34,7 @@ require (
 	golang.org/x/text v0.5.0 // indirect
 	google.golang.org/appengine v1.6.6 // indirect
 	google.golang.org/protobuf v1.25.0 // indirect
-	gopkg.in/yaml.v2 v2.2.2 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
 replace github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway => ./pkg/sdk
