@@ -2,7 +2,6 @@ package admin
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/spf13/cobra"
 
@@ -30,14 +29,14 @@ func (c *command) describe(cmd *cobra.Command, _ []string) error {
 	}
 
 	if marketplace != nil && marketplace.GetPartner() != ccloudv1.MarketplacePartner_UNKNOWN {
-		utils.Println(cmd, fmt.Sprintf("Organization is currently linked to %s Marketplace account.", marketplace.GetPartner()))
+		utils.Printf("Organization is currently linked to %s Marketplace account.\n", marketplace.GetPartner())
 	}
 
 	if card == nil {
-		utils.Println(cmd, "No credit card found. Add one using `confluent admin payment update`.")
+		utils.Println("No credit card found. Add one using `confluent admin payment update`.")
 		return nil
 	}
 
-	utils.Printf(cmd, "%s ending in %s\n", card.GetBrand(), card.GetLast4())
+	utils.Printf("%s ending in %s\n", card.GetBrand(), card.GetLast4())
 	return nil
 }

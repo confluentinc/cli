@@ -62,6 +62,6 @@ func (c *clusterCommand) delete(cmd *cobra.Command, _ []string, prompt form.Prom
 		return err
 	}
 
-	utils.Printf(cmd, errors.SchemaRegistryClusterDeletedMsg, c.EnvironmentId())
+	utils.Printf(errors.SchemaRegistryClusterDeletedMsg, c.EnvironmentId())
 	return nil
 }

@@ -33,7 +33,7 @@ func (c *clusterCommand) newResumeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *clusterCommand) resume(cmd *cobra.Command, args []string) error {
+func (c *clusterCommand) resume(_ *cobra.Command, args []string) error {
 	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
@@ -59,7 +59,7 @@ func (c *clusterCommand) resume(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		utils.Printf(cmd, errors.ResumedConnectorMsg, id)
+		utils.Printf(errors.ResumedConnectorMsg, id)
 	}
 
 	return nil

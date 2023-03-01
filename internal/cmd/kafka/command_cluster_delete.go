@@ -53,6 +53,6 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	utils.Printf(cmd, errors.DeletedResourceMsg, resource.KafkaCluster, args[0])
+	utils.Printf(errors.DeletedResourceMsg, resource.KafkaCluster, args[0])
 	return nil
 }

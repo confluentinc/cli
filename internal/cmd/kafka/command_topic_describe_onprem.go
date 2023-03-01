@@ -127,9 +127,9 @@ func (c *authenticatedTopicCommand) onPremDescribe(cmd *cobra.Command, args []st
 	}
 
 	// Output partitions info
-	utils.Printf(cmd, "Topic: %s\n", topic.TopicName)
-	utils.Printf(cmd, "PartitionCount: %d\n", topic.PartitionCount)
-	utils.Printf(cmd, "ReplicationFactor: %d\n\n", topic.ReplicationFactor)
+	utils.Printf("Topic: %s\n", topic.TopicName)
+	utils.Printf("PartitionCount: %d\n", topic.PartitionCount)
+	utils.Printf("ReplicationFactor: %d\n\n", topic.ReplicationFactor)
 
 	list := output.NewList(cmd)
 	for _, partition := range topic.Partitions {
@@ -138,9 +138,11 @@ func (c *authenticatedTopicCommand) onPremDescribe(cmd *cobra.Command, args []st
 	if err := list.Print(); err != nil {
 		return err
 	}
+	utils.Println()
 
 	// Output config info
-	utils.Print(cmd, "\nConfiguration\n\n")
+	utils.Println("Configuration")
+	utils.Println()
 	list = output.NewList(cmd)
 	for name, value := range topic.Configs {
 		list.Add(&configOut{

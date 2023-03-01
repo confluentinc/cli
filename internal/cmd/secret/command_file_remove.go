@@ -50,6 +50,6 @@ func (c *command) remove(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	utils.ErrPrintln(cmd, "Deleted configuration values.")
+	utils.ErrPrintln("Deleted configuration values.")
 	return nil
 }

@@ -145,16 +145,15 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 	if err != nil {
 		return err
 	}
-	err = c.countAsyncApiUsage(accountDetails)
-	if err != nil {
+	if err := c.countAsyncApiUsage(accountDetails); err != nil {
 		return err
 	}
-	utils.Printf(cmd, "AsyncAPI specification written to \"%s\".\n", flags.file)
+	utils.Printf("AsyncAPI specification written to \"%s\".\n", flags.file)
 	return os.WriteFile(flags.file, yaml, 0644)
 }
 
 func (c *command) getChannelDetails(details *accountDetails, flags *flags) error {
-	utils.Printf(c.Command, "Adding operation: %s\n", details.channelDetails.currentTopic.GetTopicName())
+	utils.Printf("Adding operation: %s\n", details.channelDetails.currentTopic.GetTopicName())
 	err := details.getSchemaDetails()
 	if details.channelDetails.contentType == "PROTOBUF" {
 		log.CliLogger.Info("Protobuf is not supported.")
@@ -163,8 +162,7 @@ func (c *command) getChannelDetails(details *accountDetails, flags *flags) error
 	if err != nil {
 		return fmt.Errorf("failed to get schema details: %v", err)
 	}
-	err = details.getTags()
-	if err != nil {
+	if err := details.getTags(); err != nil {
 		log.CliLogger.Warnf("failed to get tags: %v", err)
 	}
 	details.channelDetails.example = nil
@@ -178,8 +176,7 @@ func (c *command) getChannelDetails(details *accountDetails, flags *flags) error
 	if err != nil {
 		return fmt.Errorf("bindings not found: %v", err)
 	}
-	err = details.getTopicDescription()
-	if err != nil {
+	if err := details.getTopicDescription(); err != nil {
 		log.CliLogger.Warnf("failed to get topic description: %v", err)
 	}
 	// x-messageCompatibility

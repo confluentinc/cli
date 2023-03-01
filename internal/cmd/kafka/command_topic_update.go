@@ -105,7 +105,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 	}
 
 	if dryRun {
-		utils.Printf(cmd, errors.UpdatedResourceMsg, resource.Topic, topicName)
+		utils.Printf(errors.UpdatedResourceMsg, resource.Topic, topicName)
 		return nil
 	}
 
@@ -141,7 +141,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 
 	// Write current state of relevant config settings
 	if output.GetFormat(cmd) == output.Human {
-		utils.ErrPrintf(cmd, errors.UpdateTopicConfigRestMsg, topicName)
+		utils.ErrPrintf(errors.UpdateTopicConfigRestMsg, topicName)
 	}
 
 	list := output.NewList(cmd)

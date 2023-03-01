@@ -45,6 +45,6 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.NewWrapErrorWithSuggestions(err, errors.APIKeyUseFailedErrorMsg, fmt.Sprintf(errors.APIKeyUseFailedSuggestions, apiKey))
 	}
-	utils.Printf(cmd, errors.UseAPIKeyMsg, apiKey, clusterId)
+	utils.Printf(errors.UseAPIKeyMsg, apiKey, clusterId)
 	return nil
 }

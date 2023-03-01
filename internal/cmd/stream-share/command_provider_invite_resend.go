@@ -28,14 +28,13 @@ func (c *command) newResendEmailInviteCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) resendEmailInvite(cmd *cobra.Command, args []string) error {
+func (c *command) resendEmailInvite(_ *cobra.Command, args []string) error {
 	shareId := args[0]
 
-	err := c.V2Client.ResendInvite(shareId)
-	if err != nil {
+	if err := c.V2Client.ResendInvite(shareId); err != nil {
 		return err
 	}
 
-	utils.Printf(cmd, errors.ResendInviteMsg, shareId)
+	utils.Printf(errors.ResendInviteMsg, shareId)
 	return nil
 }

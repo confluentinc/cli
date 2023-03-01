@@ -56,16 +56,15 @@ func (c *clusterCommand) upgrade(cmd *cobra.Command, _ []string) error {
 	}
 
 	if packageInternalName == cluster.Package {
-		utils.ErrPrintf(cmd, errors.SRInvalidPackageUpgrade, c.EnvironmentId(), packageDisplayName)
+		utils.ErrPrintf(errors.SRInvalidPackageUpgrade, c.EnvironmentId(), packageDisplayName)
 		return nil
 	}
-
 	cluster.Package = packageInternalName
-	_, err = c.Client.SchemaRegistry.UpdateSchemaRegistryCluster(ctx, cluster)
-	if err != nil {
+
+	if _, err := c.Client.SchemaRegistry.UpdateSchemaRegistryCluster(ctx, cluster); err != nil {
 		return err
 	}
 
-	utils.Printf(cmd, errors.SchemaRegistryClusterUpgradedMsg, c.EnvironmentId(), packageDisplayName)
+	utils.Printf(errors.SchemaRegistryClusterUpgradedMsg, c.EnvironmentId(), packageDisplayName)
 	return nil
 }

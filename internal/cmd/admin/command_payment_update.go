@@ -22,7 +22,7 @@ func (c *command) newUpdateCommand() *cobra.Command {
 func (c *command) update(cmd *cobra.Command, _ []string) error {
 	prompt := form.NewPrompt(os.Stdin)
 
-	utils.Println(cmd, "Edit credit card")
+	utils.Println("Edit credit card")
 
 	f := form.New(
 		form.Field{ID: "card number", Prompt: "Card number", Regex: `^(?:\d[ -]*?){13,19}$`},
@@ -31,7 +31,7 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 		form.Field{ID: "name", Prompt: "Cardholder name"},
 	)
 
-	if err := f.Prompt(cmd, prompt); err != nil {
+	if err := f.Prompt(prompt); err != nil {
 		return err
 	}
 
@@ -45,6 +45,6 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	utils.Println(cmd, "Updated.")
+	utils.Println("Updated.")
 	return nil
 }

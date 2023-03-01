@@ -69,7 +69,7 @@ func (c *command) rotate(cmd *cobra.Command, _ []string) error {
 			return err
 		}
 
-		utils.ErrPrintln(cmd, errors.SaveTheMasterKeyMsg)
+		utils.ErrPrintln(errors.SaveTheMasterKeyMsg)
 		table := output.NewTable(cmd)
 		table.Add(&rotateOut{MasterKey: masterKey})
 		return table.Print()

@@ -63,7 +63,7 @@ func (c *ksqlCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	utils.Printf(cmd, errors.DeletedResourceMsg, resource.KsqlCluster, id)
+	utils.Printf(errors.DeletedResourceMsg, resource.KsqlCluster, id)
 	return nil
 }
 

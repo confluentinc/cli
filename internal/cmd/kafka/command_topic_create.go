@@ -129,6 +129,6 @@ func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
-	utils.Printf(cmd, errors.CreatedResourceMsg, resource.Topic, topicName)
+	utils.Printf(errors.CreatedResourceMsg, resource.Topic, topicName)
 	return nil
 }

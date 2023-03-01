@@ -79,12 +79,12 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string) error {
 	}
 	ticker.Stop()
 	if endpoint == "" {
-		utils.ErrPrintln(cmd, errors.EndPointNotPopulatedMsg)
+		utils.ErrPrintln(errors.EndPointNotPopulatedMsg)
 	}
 
 	srCluster, _ := c.Context.FetchSchemaRegistryByEnvironmentId(context.Background(), c.EnvironmentId())
 	if srCluster != nil {
-		utils.ErrPrintln(cmd, errors.SchemaRegistryRoleBindingRequiredForKsqlWarning)
+		utils.ErrPrintln(errors.SchemaRegistryRoleBindingRequiredForKsqlWarning)
 	}
 
 	table := output.NewTable(cmd)

@@ -171,7 +171,7 @@ func describeGraph(cmd *cobra.Command, id string, srClient *srsdk.APIClient, ctx
 	if err != nil {
 		return err
 	}
-	utils.Print(cmd, string(pretty.Pretty(b)))
+	utils.Print(string(pretty.Pretty(b)))
 
 	return nil
 }
@@ -219,15 +219,15 @@ func traverseDAG(srClient *srsdk.APIClient, ctx context.Context, visited map[str
 }
 
 func printSchema(cmd *cobra.Command, schemaID int64, schema string, sType string, refs []srsdk.SchemaReference) error {
-	utils.Printf(cmd, "Schema ID: %d\n", schemaID)
+	utils.Printf("Schema ID: %d\n", schemaID)
 	if sType != "" {
-		utils.Println(cmd, "Type: "+sType)
+		utils.Println("Type: " + sType)
 	}
-	utils.Println(cmd, "Schema: "+schema)
+	utils.Println("Schema: " + schema)
 	if len(refs) > 0 {
-		utils.Println(cmd, "References:")
+		utils.Println("References:")
 		for i := 0; i < len(refs); i++ {
-			utils.Printf(cmd, "\t%s -> %s %d\n", refs[i].Name, refs[i].Subject, refs[i].Version)
+			utils.Printf("\t%s -> %s %d\n", refs[i].Name, refs[i].Subject, refs[i].Version)
 		}
 	}
 	return nil

@@ -73,6 +73,6 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	utils.Printf(cmd, errors.UpdatedResourceMsg, resource.Connector, args[0])
+	utils.Printf(errors.UpdatedResourceMsg, resource.Connector, args[0])
 	return nil
 }

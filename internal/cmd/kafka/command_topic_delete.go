@@ -77,6 +77,6 @@ func (c *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
-	utils.Printf(cmd, errors.DeletedResourceMsg, resource.Topic, topicName)
+	utils.Printf(errors.DeletedResourceMsg, resource.Topic, topicName)
 	return nil
 }

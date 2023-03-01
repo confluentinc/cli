@@ -39,6 +39,6 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 		return errors.Wrap(err, errors.EnvSwitchErrorMsg)
 	}
 
-	utils.Printf(cmd, errors.UsingEnvMsg, id)
+	utils.Printf(errors.UsingEnvMsg, id)
 	return nil
 }

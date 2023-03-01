@@ -7,8 +7,8 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
@@ -44,11 +44,10 @@ func (c *identityProviderCommand) delete(cmd *cobra.Command, args []string) erro
 		return err
 	}
 
-	err = c.V2Client.DeleteIdentityProvider(args[0])
-	if err != nil {
+	if err := c.V2Client.DeleteIdentityProvider(args[0]); err != nil {
 		return err
 	}
 
-	utils.ErrPrintf(cmd, errors.DeletedResourceMsg, resource.IdentityProvider, args[0])
+	utils.ErrPrintf(errors.DeletedResourceMsg, resource.IdentityProvider, args[0])
 	return nil
 }

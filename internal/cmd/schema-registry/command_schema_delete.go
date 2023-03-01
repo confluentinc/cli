@@ -101,7 +101,7 @@ func deleteSchema(cmd *cobra.Command, srClient *srsdk.APIClient, ctx context.Con
 		if err != nil {
 			return errors.CatchSchemaNotFoundError(err, httpResp)
 		}
-		utils.Printf(cmd, errors.DeletedAllSubjectVersionMsg, deleteType, subject)
+		utils.Printf(errors.DeletedAllSubjectVersionMsg, deleteType, subject)
 		versions = v
 	} else {
 		opts := &srsdk.DeleteSchemaVersionOpts{Permanent: optional.NewBool(permanent)}
@@ -109,7 +109,7 @@ func deleteSchema(cmd *cobra.Command, srClient *srsdk.APIClient, ctx context.Con
 		if err != nil {
 			return errors.CatchSchemaNotFoundError(err, httpResp)
 		}
-		utils.Printf(cmd, errors.DeletedSubjectVersionMsg, deleteType, version, subject)
+		utils.Printf(errors.DeletedSubjectVersionMsg, deleteType, version, subject)
 		versions = []int32{v}
 	}
 

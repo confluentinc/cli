@@ -169,9 +169,9 @@ func (c *AuthenticatedCLICommand) EnvironmentId() string {
 	return c.Context.GetEnvironment().GetId()
 }
 
-func (h *HasAPIKeyCLICommand) AddCommand(command *cobra.Command) {
-	command.PersistentPreRunE = h.PersistentPreRunE
-	h.Command.AddCommand(command)
+func (h *HasAPIKeyCLICommand) AddCommand(cmd *cobra.Command) {
+	cmd.PersistentPreRunE = h.PersistentPreRunE
+	h.Command.AddCommand(cmd)
 }
 
 // Anonymous provides PreRun operations for commands that may be run without a logged-in user
@@ -226,7 +226,7 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd 
 				if err := ctx.DeleteUserAuth(); err != nil {
 					return err
 				}
-				utils.ErrPrintln(cmd, errors.TokenExpiredMsg)
+				utils.ErrPrintln(errors.TokenExpiredMsg)
 			}
 		}
 
@@ -324,7 +324,7 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 
 		if command.Context.GetEnvironment() == nil {
 			noEnvSuggestions := errors.ComposeSuggestionsMessage("This issue may occur if this user has no valid role bindings. Contact an Organization Admin to create a role binding for this user.")
-			utils.ErrPrint(cmd, "WARNING: This command requires an environment; no environments found.\n"+noEnvSuggestions+"\n")
+			utils.ErrPrintln("WARNING: This command requires an environment; no environments found.\n" + noEnvSuggestions)
 		}
 
 		unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
@@ -736,13 +736,13 @@ func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) fun
 				restContext = context.WithValue(context.Background(), kafkarestv3.ContextAccessToken, command.AuthToken())
 			} else { // no mds token, then prompt for basic auth creds
 				if !restFlags.prompt {
-					utils.Println(cmd, errors.MDSTokenNotFoundMsg)
+					utils.Println(errors.MDSTokenNotFoundMsg)
 				}
 				f := form.New(
 					form.Field{ID: "username", Prompt: "Username"},
 					form.Field{ID: "password", Prompt: "Password", IsHidden: true},
 				)
-				if err := f.Prompt(command.Command, form.NewPrompt(os.Stdin)); err != nil {
+				if err := f.Prompt(form.NewPrompt(os.Stdin)); err != nil {
 					return nil, err
 				}
 				restContext = context.WithValue(context.Background(), kafkarestv3.ContextBasicAuth, kafkarestv3.BasicAuth{UserName: f.Responses["username"].(string), Password: f.Responses["password"].(string)})
@@ -990,14 +990,14 @@ func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, currentVersion stri
 		if !strings.HasPrefix(latestMajorVersion, "v") {
 			latestMajorVersion = "v" + latestMajorVersion
 		}
-		utils.ErrPrintf(cmd, errors.NotifyMajorUpdateMsg, version.CLIName, currentVersion, latestMajorVersion, version.CLIName)
+		utils.ErrPrintf(errors.NotifyMajorUpdateMsg, version.CLIName, currentVersion, latestMajorVersion, version.CLIName)
 	}
 
 	if latestMinorVersion != "" {
 		if !strings.HasPrefix(latestMinorVersion, "v") {
 			latestMinorVersion = "v" + latestMinorVersion
 		}
-		utils.ErrPrintf(cmd, errors.NotifyMinorUpdateMsg, version.CLIName, currentVersion, latestMinorVersion, version.CLIName)
+		utils.ErrPrintf(errors.NotifyMinorUpdateMsg, version.CLIName, currentVersion, latestMinorVersion, version.CLIName)
 	}
 }
 
@@ -1013,9 +1013,9 @@ func (r *PreRun) shouldCheckForUpdates(cmd *cobra.Command) bool {
 
 func (r *PreRun) warnIfConfluentLocal(cmd *cobra.Command) {
 	if strings.HasPrefix(cmd.CommandPath(), "confluent local") {
-		utils.ErrPrintln(cmd, "The local commands are intended for a single-node development environment only, NOT for production usage. See more: https://docs.confluent.io/current/cli/index.html")
-		utils.ErrPrintln(cmd, "As of Confluent Platform 8.0, Java 8 is no longer supported.")
-		utils.ErrPrintln(cmd)
+		utils.ErrPrintln("The local commands are intended for a single-node development environment only, NOT for production usage. See more: https://docs.confluent.io/current/cli/index.html")
+		utils.ErrPrintln("As of Confluent Platform 8.0, Java 8 is no longer supported.")
+		utils.ErrPrintln()
 	}
 }
 

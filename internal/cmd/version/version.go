@@ -32,7 +32,7 @@ func New(prerunner pcmd.PreRunner, ver *pversion.Version) *cobra.Command {
 	return c.Command
 }
 
-func (c *command) version(cmd *cobra.Command, _ []string) error {
-	utils.Println(cmd, c.ver)
+func (c *command) version(_ *cobra.Command, _ []string) error {
+	utils.Println(c.ver)
 	return nil
 }

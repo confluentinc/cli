@@ -53,7 +53,7 @@ func (c *ksqlCommand) configureACLs(cmd *cobra.Command, args []string) error {
 	}
 
 	if cluster.Spec.KafkaCluster.Id != kafkaCluster.Id {
-		utils.ErrPrintf(cmd, errors.KsqlDBNotBackedByKafkaMsg, ksqlCluster, cluster.Spec.KafkaCluster.Id, kafkaCluster.Id, cluster.Spec.KafkaCluster.Id)
+		utils.ErrPrintf(errors.KsqlDBNotBackedByKafkaMsg, ksqlCluster, cluster.Spec.KafkaCluster.Id, kafkaCluster.Id, cluster.Spec.KafkaCluster.Id)
 	}
 
 	credentialIdentity := cluster.Spec.CredentialIdentity.GetId()
