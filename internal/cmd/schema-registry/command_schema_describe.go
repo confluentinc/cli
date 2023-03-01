@@ -15,6 +15,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
@@ -223,7 +224,20 @@ func printSchema(cmd *cobra.Command, schemaID int64, schema string, sType string
 	if sType != "" {
 		utils.Println(cmd, "Type: "+sType)
 	}
-	utils.Println(cmd, "Schema: "+schema)
+
+	if sType == "PROTOBUF" {
+		utils.Println(cmd, "Schema: "+schema)
+	} else {
+		var schemaJson interface{}
+		if err := json.Unmarshal([]byte(schema), &schemaJson); err != nil {
+			return err
+		}
+		// fmt.Printf("%+v\n", schemaJson)
+		list := output.NewList(cmd)
+		list.Add(schemaJson)
+		list.Print()
+	}
+
 	if len(refs) > 0 {
 		utils.Println(cmd, "References:")
 		for i := 0; i < len(refs); i++ {
