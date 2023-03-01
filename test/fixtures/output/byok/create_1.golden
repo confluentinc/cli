@@ -1,0 +1,35 @@
++------------+-----------------------------------------------------------------------------+
+| ID         | cck-004                                                                     |
+| Key        | arn:aws:kms:us-west-2:037803949979:key/0e2609e3-a0bf-4f39-aedf-8b1f63b16d81 |
+| Roles      | [arn:aws:iam::123456789012:role/role1                                       |
+|            | arn:aws:iam::123456789012:role/role2]                                       |
+| Provider   | AWS                                                                         |
+| State      | AVAILABLE                                                                   |
+| Created At | 2022-12-24 00:00:00 +0000 UTC                                               |
++------------+-----------------------------------------------------------------------------+
+
+Copy and append these permissions into the key policy "Statements" field of the ARN in your AWS key management system to authorize access for your Confluent Cloud cluster.
+
+{
+	"Sid" : "Allow Confluent accounts to use the key",
+	"Effect" : "Allow",
+	"Principal" : {
+		"AWS" : [
+			"arn:aws:iam::123456789012:role/role1",
+			"arn:aws:iam::123456789012:role/role2"
+		]
+	},
+	"Action" : [ "kms:Encrypt", "kms:Decrypt", "kms:ReEncrypt*", "kms:GenerateDataKey*", "kms:DescribeKey" ],
+	"Resource" : "*"
+}, {
+	"Sid" : "Allow Confluent accounts to attach persistent resources",
+	"Effect" : "Allow",
+	"Principal" : {
+		"AWS" : [
+			"arn:aws:iam::123456789012:role/role1",
+			"arn:aws:iam::123456789012:role/role2"
+		]
+	},
+	"Action" : [ "kms:CreateGrant", "kms:ListGrants", "kms:RevokeGrant" ],
+	"Resource" : "*"
+}

@@ -118,7 +118,7 @@ func (c *ksqlCommand) validArgs(cmd *cobra.Command, args []string) []string {
 		return nil
 	}
 
-	return autocompleteClusters(c.EnvironmentId(), c.V2Client)
+	return autocompleteClusters(c.EnvironmentId(cmd), c.V2Client)
 }
 
 func autocompleteClusters(environment string, client *ccloudv2.Client) []string {

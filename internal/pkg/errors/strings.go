@@ -37,12 +37,10 @@ const (
 	// environment commands
 	UsingEnvMsg = "Now using \"%s\" as the default (active) environment.\n"
 
-	// feedback commands
-	ThanksForFeedbackMsg = "Thanks for your feedback."
-
 	// kafka cluster commands
-	UseKafkaClusterMsg              = "Set Kafka cluster \"%s\" as the active cluster for environment \"%s\".\n"
-	CopyBYOKAWSPermissionsHeaderMsg = "Copy and append these permissions to the existing \"Statements\" array field in the key policy of your ARN to authorize access for Confluent:"
+	UseKafkaClusterMsg               = "Set Kafka cluster \"%s\" as the active cluster for environment \"%s\".\n"
+	CopyByokAwsPermissionsHeaderMsg  = `Copy and append these permissions into the key policy "Statements" field of the ARN in your AWS key management system to authorize access for your Confluent Cloud cluster.`
+	RunByokAzurePermissionsHeaderMsg = "To ensure the key vault has the correct role assignments, please run the following azure-cli command (certified for azure-cli v2.45):"
 
 	// kafka consumer-group commands
 	RestProxyNotAvailable = "Operation not supported: REST proxy is not available.\n"
@@ -111,10 +109,6 @@ const (
 	CurrentAPIKeyAutofixMsg = "Current API key \"%s\" of resource \"%s\" under context \"%s\" is not found.\n" +
 		"Removing current API key setting for the resource.\n" +
 		"You can re-add the API key with `confluent api-key store --resource %s'` and then set current API key with `confluent api-key use`.\n"
-
-	// feedback package
-	FeedbackNudgeMsg = "\nDid you know you can use the `confluent feedback` command to send the team feedback?\n" +
-		"Let us know if the CLI is meeting your needs, or what we can do to improve it.\n"
 
 	// sso package
 	NoBrowserSSOInstructionsMsg = "Navigate to the following link in your browser to authenticate:\n" +

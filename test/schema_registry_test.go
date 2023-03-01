@@ -2,9 +2,6 @@ package test
 
 import (
 	"fmt"
-	"strings"
-
-	"github.com/confluentinc/bincover"
 
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
@@ -36,18 +33,18 @@ func (s *CLITestSuite) TestSchemaRegistry() {
 			wantErrCode: 1,
 		},
 		{
-			preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("y\n"))},
-			args:        fmt.Sprintf(`schema-registry cluster delete --environment %s`, testserver.SRApiEnvId),
-			fixture:     "schema-registry/cluster/delete.golden",
+			args:    fmt.Sprintf(`schema-registry cluster delete --environment %s`, testserver.SRApiEnvId),
+			input:   "y\n",
+			fixture: "schema-registry/cluster/delete.golden",
 		},
 		{
-			preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("n\n"))},
-			args:        fmt.Sprintf(`schema-registry cluster delete --environment %s`, testserver.SRApiEnvId),
-			fixture:     "schema-registry/cluster/delete-terminated.golden",
+			args:    fmt.Sprintf(`schema-registry cluster delete --environment %s`, testserver.SRApiEnvId),
+			input:   "n\n",
+			fixture: "schema-registry/cluster/delete-terminated.golden",
 		},
 		{
-			preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("invalid_confirmation\n"))},
 			args:        fmt.Sprintf(`schema-registry cluster delete --environment %s`, testserver.SRApiEnvId),
+			input:       "invalid_confirmation\n",
 			fixture:     "schema-registry/cluster/delete-invalid-confirmation.golden",
 			wantErrCode: 1,
 		},
@@ -92,9 +89,9 @@ func (s *CLITestSuite) TestSchemaRegistry() {
 			wantErrCode: 1,
 		},
 		{
-			args:        fmt.Sprintf(`schema-registry cluster update --compatibility BACKWARD --environment %s`, testserver.SRApiEnvId),
-			preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("key\nsecret\n"))},
-			fixture:     "schema-registry/cluster/update-compatibility.golden",
+			args:    fmt.Sprintf(`schema-registry cluster update --compatibility BACKWARD --environment %s`, testserver.SRApiEnvId),
+			input:   "key\nsecret\n",
+			fixture: "schema-registry/cluster/update-compatibility.golden",
 		},
 		{
 			args:    fmt.Sprintf(`schema-registry cluster update --mode READWRITE --api-key key --api-secret secret --environment %s`, testserver.SRApiEnvId),
@@ -210,63 +207,51 @@ func (s *CLITestSuite) TestSchemaRegistry() {
 		},
 
 		{
-			name:    "schema-registry exporter list",
 			args:    fmt.Sprintf(`schema-registry exporter list --api-key key --api-secret secret --environment %s`, testserver.SRApiEnvId),
 			fixture: "schema-registry/exporter/list.golden",
 		},
 		{
-			name:    "schema-registry exporter create",
 			args:    fmt.Sprintf(`schema-registry exporter create myexporter --subjects foo,bar --context-type AUTO --subject-format my-\\${subject} --config-file %s --api-key key --api-secret secret --environment %s`, exporterConfigPath, testserver.SRApiEnvId),
 			fixture: "schema-registry/exporter/create.golden",
 		},
 		{
-			name:    "schema-registry exporter describe",
 			args:    fmt.Sprintf(`schema-registry exporter describe myexporter --api-key key --api-secret secret --environment %s`, testserver.SRApiEnvId),
 			fixture: "schema-registry/exporter/describe.golden",
 		},
 		{
-			name:    "schema-registry exporter update",
 			args:    fmt.Sprintf(`schema-registry exporter update myexporter --subjects foo,bar,test --subject-format my-\\${subject} --api-key key --api-secret secret --environment %s`, testserver.SRApiEnvId),
 			fixture: "schema-registry/exporter/update.golden",
 		},
 		{
-			name:    "schema-registry exporter delete",
 			args:    fmt.Sprintf(`schema-registry exporter delete myexporter --api-key key --api-secret secret --environment %s --force`, testserver.SRApiEnvId),
 			fixture: "schema-registry/exporter/delete.golden",
 		},
 		{
-			name:        "schema-registry exporter delete prompt",
-			args:        fmt.Sprintf(`schema-registry exporter delete myexporter --api-key key --api-secret secret --environment %s`, testserver.SRApiEnvId),
-			preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("myexporter\n"))},
-			fixture:     "schema-registry/exporter/delete-prompt.golden",
+			args:    fmt.Sprintf(`schema-registry exporter delete myexporter --api-key key --api-secret secret --environment %s`, testserver.SRApiEnvId),
+			input:   "myexporter\n",
+			fixture: "schema-registry/exporter/delete-prompt.golden",
 		},
 		{
-			name:    "schema-registry exporter get-status",
 			args:    fmt.Sprintf(`schema-registry exporter get-status myexporter --api-key key --api-secret secret --environment %s`, testserver.SRApiEnvId),
 			fixture: "schema-registry/exporter/get-status.golden",
 		},
 		{
-			name:    "schema-registry exporter get-config json",
 			args:    fmt.Sprintf(`schema-registry exporter get-config myexporter --output json --api-key key --api-secret secret --environment %s`, testserver.SRApiEnvId),
 			fixture: "schema-registry/exporter/get-config-json.golden",
 		},
 		{
-			name:    "schema-registry exporter get-config yaml",
 			args:    fmt.Sprintf(`schema-registry exporter get-config myexporter --output yaml --api-key key --api-secret secret --environment %s`, testserver.SRApiEnvId),
 			fixture: "schema-registry/exporter/get-config-yaml.golden",
 		},
 		{
-			name:    "schema-registry exporter pause",
 			args:    fmt.Sprintf(`schema-registry exporter pause myexporter --api-key key --api-secret secret --environment %s`, testserver.SRApiEnvId),
 			fixture: "schema-registry/exporter/pause.golden",
 		},
 		{
-			name:    "schema-registry exporter resume",
 			args:    fmt.Sprintf(`schema-registry exporter resume myexporter --api-key key --api-secret secret --environment %s`, testserver.SRApiEnvId),
 			fixture: "schema-registry/exporter/resume.golden",
 		},
 		{
-			name:    "schema-registry exporter reset",
 			args:    fmt.Sprintf(`schema-registry exporter reset myexporter --api-key key --api-secret secret --environment %s`, testserver.SRApiEnvId),
 			fixture: "schema-registry/exporter/reset.golden",
 		},

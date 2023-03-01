@@ -3,8 +3,6 @@ package form
 import (
 	"fmt"
 	"os"
-	"regexp"
-	"strings"
 
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
@@ -37,16 +35,6 @@ type Form struct {
 	Responses map[string]any
 }
 
-type Field struct {
-	ID           string
-	Prompt       string
-	DefaultValue any
-	IsYesOrNo    bool
-	IsHidden     bool
-	Regex        string
-	RequireYes   bool
-}
-
 func New(fields ...Field) *Form {
 	return &Form{
 		Fields:    fields,
@@ -57,14 +45,14 @@ func New(fields ...Field) *Form {
 func (f *Form) Prompt(command *cobra.Command, prompt Prompt) error {
 	for i := 0; i < len(f.Fields); i++ {
 		field := f.Fields[i]
-		show(command, field)
+		utils.Print(command, field.String())
 
-		val, err := read(field, prompt)
+		val, err := field.read(prompt)
 		if err != nil {
 			return err
 		}
 
-		res, err := validate(field, val)
+		res, err := field.validate(val)
 		if err != nil {
 			if fmt.Sprintf(errors.InvalidInputFormatErrorMsg, val, field.ID) == err.Error() {
 				utils.ErrPrintln(command, err)
@@ -125,59 +113,6 @@ func ConfirmEnter(cmd *cobra.Command) error {
 	utils.Print(cmd, "\n")
 
 	return nil
-}
-
-func show(cmd *cobra.Command, field Field) {
-	utils.Print(cmd, field.Prompt)
-	if field.IsYesOrNo {
-		utils.Print(cmd, " (y/n)")
-	}
-	utils.Print(cmd, ": ")
-
-	if field.DefaultValue != nil {
-		utils.Printf(cmd, "(%v) ", field.DefaultValue)
-	}
-}
-
-func read(field Field, prompt Prompt) (string, error) {
-	var val string
-	var err error
-
-	if field.IsHidden {
-		val, err = prompt.ReadLineMasked()
-	} else {
-		val, err = prompt.ReadLine()
-	}
-	if err != nil {
-		return "", err
-	}
-
-	return val, nil
-}
-
-func validate(field Field, val string) (any, error) {
-	if field.IsYesOrNo {
-		switch strings.ToUpper(val) {
-		case "Y", "YES":
-			return true, nil
-		case "N", "NO":
-			return false, nil
-		}
-		return false, fmt.Errorf(errors.InvalidChoiceMsg, val)
-	}
-
-	if val == "" && field.DefaultValue != nil {
-		return field.DefaultValue, nil
-	}
-
-	if field.Regex != "" {
-		re, _ := regexp.Compile(field.Regex)
-		if match := re.MatchString(val); !match {
-			return nil, fmt.Errorf(errors.InvalidInputFormatErrorMsg, val, field.ID)
-		}
-	}
-
-	return val, nil
 }
 
 func checkRequiredYes(cmd *cobra.Command, field Field, res any) bool {

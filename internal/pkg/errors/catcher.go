@@ -221,11 +221,11 @@ func CatchKafkaNotFoundError(err error, clusterId string, r *http.Response) erro
 	}
 
 	if r != nil && r.StatusCode == http.StatusForbidden {
-		suggestions := ChooseRightEnvironmentSuggestions
+		suggestions := KafkaClusterInaccessibleSuggestions
 		if r.Request.Method == http.MethodDelete {
 			suggestions = KafkaClusterDeletingSuggestions
 		}
-		return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), "Kafka cluster not found or access forbidden", suggestions)
+		return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), fmt.Sprintf(KafkaClusterInaccessibleErrorMsg, clusterId), suggestions)
 	}
 
 	return CatchCCloudV2Error(err, r)
@@ -252,6 +252,18 @@ func CatchApiKeyForbiddenAccessError(err error, operation string, r *http.Respon
 	if r != nil && r.StatusCode == http.StatusForbidden || strings.Contains(err.Error(), "Unknown API key") {
 		return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), fmt.Sprintf("error %s API key", operation), APIKeyNotFoundSuggestions)
 	}
+	return CatchCCloudV2Error(err, r)
+}
+
+func CatchByokKeyNotFoundError(err error, r *http.Response) error {
+	if err == nil {
+		return nil
+	}
+
+	if r != nil && r.StatusCode == http.StatusNotFound {
+		return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), "Self-managed key not found or access forbidden", ByokKeyNotFoundSuggestions)
+	}
+
 	return CatchCCloudV2Error(err, r)
 }
 

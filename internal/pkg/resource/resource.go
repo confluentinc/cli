@@ -7,6 +7,7 @@ import (
 const (
 	Unknown               = "unknown"
 	ApiKey                = "API key"
+	ByokKey               = "self-managed key"
 	ClientQuota           = "client quota"
 	Cloud                 = "cloud"
 	ClusterLink           = "cluster link"

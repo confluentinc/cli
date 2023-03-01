@@ -34,6 +34,10 @@ const (
 	AuditLogsNotEnabledErrorMsg       = "Audit Logs are not enabled for this organization"
 	MalformedConfigErrorMsg           = "bad input file: the audit log configuration for cluster %q uses invalid JSON: %v"
 
+	// byok commands
+	ByokKeyNotFoundSuggestions = "Ensure the self-managed key exists and has not been deleted, or register a new key via `confluent byok register`."
+	ByokUnknownKeyTypeErrorMsg = "unknown byok key type"
+
 	// login command
 	UnneccessaryUrlFlagForCloudLoginErrorMsg         = "there is no need to pass the url flag if you are logging in to Confluent Cloud"
 	UnneccessaryUrlFlagForCloudLoginSuggestions      = "Log in to Confluent Cloud with `confluent login`."
@@ -62,6 +66,7 @@ const (
 	EnvNotFoundErrorMsg            = `environment "%s" not found`
 	OrgResourceNotFoundSuggestions = "List available %[1]ss with `confluent %[1]s list`."
 	EnvSwitchErrorMsg              = "failed to switch environment: failed to save config"
+	EnvNotSetErrorMsg              = "this command requires an environment; no environments found"
 
 	// iam acl & kafka acl commands
 	UnableToPerformAclErrorMsg    = "unable to %s ACLs: %s"
@@ -131,7 +136,8 @@ const (
 	FailedToReadClusterResizeConfirmationErrorMsg = "cluster resize error: failed to read your confirmation"
 	AuthorizeAccountsErrorMsg                     = "BYOK error: please authorize the key for the accounts (%s)x"
 	AuthorizeIdentityErrorMsg                     = "BYOK error: please authorize the key for the identity (%s)"
-	BYOKSupportErrorMsg                           = "BYOK is available on AWS and GCP"
+	CKUOnlyForDedicatedErrorMsg                   = "specifying `--cku` flag is valid only for dedicated Kafka cluster creation"
+	EncryptionKeySupportErrorMsg                  = "BYOK via `--encryption-key` is only available for GCP. Use `confluent byok create` to register AWS and Azure keys."
 	CKUMoreThanZeroErrorMsg                       = "`--cku` value must be greater than 0"
 	CKUMoreThanOneErrorMsg                        = "`--cku` value must be greater than 1 for High Durability"
 	ClusterResizeNotSupportedErrorMsg             = "failed to update kafka cluster: cluster resize is only supported on dedicated clusters"
@@ -152,7 +158,10 @@ const (
 	KafkaClusterUpdateFailedSuggestions           = "A cluster can't be updated while still provisioning. If you just created this cluster, retry in a few minutes."
 	KafkaClusterExpandingErrorMsg                 = "your cluster is expanding; please wait for that operation to complete before updating again"
 	KafkaClusterShrinkingErrorMsg                 = "your cluster is shrinking; Please wait for that operation to complete before updating again"
-	KafkaClusterDeletingSuggestions               = ChooseRightEnvironmentSuggestions + "\n" +
+	KafkaClusterInaccessibleErrorMsg              = `Kafka cluster "%s" not found or access forbidden`
+	KafkaClusterInaccessibleSuggestions           = ChooseRightEnvironmentSuggestions + "\n" +
+		"The active Kafka cluster may have been deleted. Set a new active cluster with `confluent kafka cluster use`."
+	KafkaClusterDeletingSuggestions = KafkaClusterInaccessibleSuggestions + "\n" +
 		"Ensure the cluster is not associated with any active Connect clusters."
 	ChooseRightEnvironmentSuggestions = "Ensure the cluster ID you entered is valid.\n" +
 		"Ensure the cluster you are specifying belongs to the currently selected environment with `confluent kafka cluster list`, `confluent environment list`, and `confluent environment use`."
@@ -345,6 +354,7 @@ const (
 	InvalidFilePathErrorMsg            = `invalid file path "%s"`
 	UnsupportedFileFormatErrorMsg      = `unsupported file format for file "%s"`
 	InvalidAlgorithmErrorMsg           = `invalid algorithm "%s"`
+	IncorrectNonceLengthErrorMsg       = `incorrect nonce length from ~/.confluent/config.json passed into encryption`
 
 	// sso package
 	StartHTTPServerErrorMsg            = "unable to start HTTP server"

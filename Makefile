@@ -55,7 +55,6 @@ include ./mk-files/utils.mk
 
 REF := $(shell [ -d .git ] && git rev-parse --short HEAD || echo "none")
 DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
-RESOLVED_PATH=github.com/confluentinc/cli/cmd/confluent
 
 S3_BUCKET_PATH=s3://confluent.cloud
 S3_STAG_FOLDER_NAME=cli-release-stag
@@ -69,42 +68,6 @@ clean:
 
 show-args:
 	@echo "VERSION: $(VERSION)"
-
-.PHONY: build-integ-nonrace
-build-integ-nonrace:
-	go test ./cmd/confluent -ldflags="-s -w \
-		-X $(RESOLVED_PATH).commit=$(REF) \
-		-X $(RESOLVED_PATH).date=$(DATE) \
-		-X $(RESOLVED_PATH).version=$(VERSION) \
-		-X $(RESOLVED_PATH).isTest=true" \
-		-tags testrunmain -coverpkg=./... -c -o bin/confluent_test
-
-.PHONY: build-integ-race
-build-integ-race:
-	go test ./cmd/confluent -ldflags="-s -w \
-		-X $(RESOLVED_PATH).commit=$(REF) \
-		-X $(RESOLVED_PATH).date=$(DATE) \
-		-X $(RESOLVED_PATH).version=$(VERSION) \
-		-X $(RESOLVED_PATH).isTest=true" \
-		-tags testrunmain -coverpkg=./... -c -o bin/confluent_test_race -race
-
-.PHONY: build-integ-nonrace-windows
-build-integ-nonrace-windows:
-	go test ./cmd/confluent -ldflags="-s -w \
-		-X $(RESOLVED_PATH).commit=12345678 \
-		-X $(RESOLVED_PATH).date=2000-01-01T00:00:00Z \
-		-X $(RESOLVED_PATH).version=$(VERSION) \
-		-X $(RESOLVED_PATH).isTest=true" \
-		-tags testrunmain -coverpkg=./... -c -o bin/confluent_test.exe
-
-.PHONY: build-integ-race-windows
-build-integ-race-windows:
-	go test ./cmd/confluent -ldflags="-s -w \
-		-X $(RESOLVED_PATH).commit=12345678 \
-		-X $(RESOLVED_PATH).date=2000-01-01T00:00:00Z \
-		-X $(RESOLVED_PATH).version=$(VERSION) \
-		-X $(RESOLVED_PATH).isTest=true" \
-		-tags testrunmain -coverpkg=./... -c -o bin/confluent_test_race.exe -race
 
 # If you setup your laptop following https://github.com/confluentinc/cc-documentation/blob/master/Operations/Laptop%20Setup.md
 # then assuming caas.sh lives here should be fine
@@ -142,22 +105,28 @@ cmd/lint/en_US.dic:
 unit-test:
 ifdef CI
 	go install gotest.tools/gotestsum@v1.8.2 && \
-	gotestsum --junitfile unit-test-report.xml -- -v -race $$(go list ./... | grep -v test)
+	gotestsum --junitfile unit-test-report.xml -- -v -race -coverprofile coverage.out $$(go list ./... | grep -v test)
 else
-	go test -v -race $$(go list ./... | grep -v test) $(UNIT_TEST_ARGS)
+	go test -v $$(go list ./... | grep -v test) $(UNIT_TEST_ARGS)
 endif
 
-.PHONY: int-test
-int-test:
+.PHONY: integration-test
+integration-test:
 ifdef CI
 	go install gotest.tools/gotestsum@v1.8.2 && \
-	gotestsum --junitfile integration-test-report.xml -- -v -race $$(go list ./... | grep test)
+	go build -cover -ldflags="-s -w -X main.commit=$(REF) -X main.date=$(DATE) -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent ./cmd/confluent && \
+	export GOCOVERDIR=test/coverage && \
+	if [ -d $${GOCOVERDIR} ]; then rm -r $${GOCOVERDIR}; fi && \
+	mkdir $${GOCOVERDIR} && \
+	gotestsum --junitfile integration-test-report.xml -- -v -race $$(go list ./... | grep test) && \
+	go tool covdata textfmt -i $${GOCOVERDIR} -o test/coverage.out
 else
-	go test -v -race $$(go list ./... | grep test) $(INT_TEST_ARGS)
+	go build -ldflags="-s -w -X main.commit=$(REF) -X main.date=$(DATE) -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent ./cmd/confluent && \
+	go test -v $$(go list ./... | grep test) $(INTEGRATION_TEST_ARGS)
 endif
 
 .PHONY: test
-test: unit-test int-test
+test: unit-test integration-test
 
 .PHONY: generate-packaging-patch
 generate-packaging-patch:

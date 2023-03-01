@@ -44,7 +44,7 @@ func (c *command) save(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	pipeline, err := c.V2Client.GetSdPipeline(c.EnvironmentId(), cluster.ID, args[0])
+	pipeline, err := c.V2Client.GetSdPipeline(c.EnvironmentId(cmd), cluster.ID, args[0])
 	if err != nil {
 		return err
 	}
