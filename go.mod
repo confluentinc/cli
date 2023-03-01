@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/antihax/optional v1.0.0
-	github.com/aws/aws-sdk-go v1.44.209
+	github.com/aws/aws-sdk-go v1.44.211
 	github.com/billgraziano/dpapi v0.4.0
 	github.com/brianstrauch/cobra-shell v0.4.0
 	github.com/chromedp/chromedp v0.8.7
@@ -42,6 +42,7 @@ require (
 	github.com/gobuffalo/flect v1.0.2
 	github.com/gogo/protobuf v1.3.2
 	github.com/golang/protobuf v1.5.2
+	github.com/google/go-github/v50 v50.1.0
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
 	github.com/hashicorp/go-hclog v1.4.0
