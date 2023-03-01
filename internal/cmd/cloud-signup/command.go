@@ -23,8 +23,8 @@ func New() *cobra.Command {
 func cloudSignup(cmd *cobra.Command, _ []string) error {
 	signupUrl := "https://www.confluent.io/get-started/"
 
-	utils.Printf(cmd, "You will now be redirected to the Confluent Cloud sign up page in your browser. If you are not redirected, please use the following link: %s\n", signupUrl)
-	err := form.ConfirmEnter(cmd)
+	utils.Printf("You will now be redirected to the Confluent Cloud sign up page in your browser. If you are not redirected, please use the following link: %s\n", signupUrl)
+	err := form.ConfirmEnter()
 	if err != nil {
 		return err
 	}

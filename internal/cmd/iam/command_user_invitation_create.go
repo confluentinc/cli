@@ -1,8 +1,6 @@
 package iam
 
 import (
-	"fmt"
-
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 	"github.com/spf13/cobra"
 
@@ -33,6 +31,6 @@ func (c invitationCommand) createInvitation(cmd *cobra.Command, args []string) e
 		return err
 	}
 
-	utils.Println(cmd, fmt.Sprintf(errors.EmailInviteSentMsg, invitation.GetEmail()))
+	utils.Printf("An email invitation has been sent to \"%s\".\n", invitation.GetEmail())
 	return nil
 }

@@ -137,6 +137,6 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 	if err := c.keystore.StoreAPIKey(&v1.APIKeyPair{Key: key, Secret: secret}, cluster.ID); err != nil {
 		return errors.Wrap(err, errors.UnableToStoreAPIKeyErrorMsg)
 	}
-	utils.ErrPrintf(cmd, errors.StoredAPIKeyMsg, key)
+	utils.ErrPrintf(errors.StoredAPIKeyMsg, key)
 	return nil
 }

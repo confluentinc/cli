@@ -108,7 +108,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		deleteResp, httpResp, err := kafkaREST.CloudClient.DeleteKafkaAcls(kafkaClusterConfig.ID, filter)
 		if err != nil {
 			if i > 0 {
-				utils.ErrPrintln(cmd, printAclsDeleted(count))
+				utils.ErrPrintln(printAclsDeleted(count))
 			}
 			return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 		}
@@ -116,7 +116,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		count += len(deleteResp.Data)
 	}
 
-	utils.ErrPrintln(cmd, printAclsDeleted(count))
+	utils.ErrPrintln(printAclsDeleted(count))
 	return nil
 }
 

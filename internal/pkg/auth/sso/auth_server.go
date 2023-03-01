@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 //go:embed sso_callback.html
@@ -61,7 +61,7 @@ func (s *authServer) startServer() error {
 		// https://go.googlesource.com/go/+/master/src/net/http/server.go#2854
 		// So don't surface that error to the user.
 		if serverErr != nil && serverErr.Error() != "http: Server closed" {
-			fmt.Fprintf(os.Stderr, errors.AuthServerRunningErrorMsg, serverErr.Error())
+			utils.ErrPrintf(errors.AuthServerRunningErrorMsg, serverErr.Error())
 		}
 	}()
 
@@ -82,7 +82,7 @@ func (s *authServer) awaitAuthorizationCode(timeout time.Duration) error {
 	defer func() {
 		serverErr := s.server.Shutdown(context.Background())
 		if serverErr != nil {
-			fmt.Fprintf(os.Stderr, errors.AuthServerShutdownErrorMsg, serverErr.Error())
+			utils.ErrPrintf(errors.AuthServerShutdownErrorMsg, serverErr.Error())
 		}
 	}()
 

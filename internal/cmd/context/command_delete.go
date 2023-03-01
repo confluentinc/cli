@@ -41,6 +41,6 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	utils.Printf(cmd, errors.DeletedResourceMsg, resource.Context, ctx.Name)
+	utils.Printf(errors.DeletedResourceMsg, resource.Context, ctx.Name)
 	return nil
 }

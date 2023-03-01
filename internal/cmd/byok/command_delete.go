@@ -40,6 +40,6 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return errors.CatchByokKeyNotFoundError(err, httpResp)
 	}
 
-	utils.ErrPrintf(cmd, errors.DeletedResourceMsg, resource.ByokKey, id)
+	utils.ErrPrintf(errors.DeletedResourceMsg, resource.ByokKey, id)
 	return nil
 }

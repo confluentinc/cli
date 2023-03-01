@@ -19,7 +19,7 @@ func NewVersionCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *Command) runVersionCommand(command *cobra.Command, _ []string) error {
+func (c *Command) runVersionCommand(_ *cobra.Command, _ []string) error {
 	isCP, err := c.ch.IsConfluentPlatform()
 	if err != nil {
 		return err
@@ -35,6 +35,6 @@ func (c *Command) runVersionCommand(command *cobra.Command, _ []string) error {
 		return err
 	}
 
-	utils.Printf(command, "%s: %s\n", flavor, version)
+	utils.Printf("%s: %s\n", flavor, version)
 	return nil
 }

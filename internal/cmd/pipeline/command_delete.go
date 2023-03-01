@@ -40,7 +40,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	pipeline, err := c.V2Client.GetSdPipeline(c.EnvironmentId(cmd), cluster.ID, args[0])
+	pipeline, err := c.V2Client.GetSdPipeline(c.EnvironmentId(), cluster.ID, args[0])
 	if err != nil {
 		return err
 	}
@@ -50,10 +50,10 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if err := c.V2Client.DeleteSdPipeline(c.EnvironmentId(cmd), cluster.ID, args[0]); err != nil {
+	if err := c.V2Client.DeleteSdPipeline(c.EnvironmentId(), cluster.ID, args[0]); err != nil {
 		return err
 	}
 
-	utils.Printf(cmd, errors.RequestedDeleteResourceMsg, resource.Pipeline, args[0])
+	utils.Printf(errors.RequestedDeleteResourceMsg, resource.Pipeline, args[0])
 	return nil
 }

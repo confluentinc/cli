@@ -181,8 +181,8 @@ func (ld *launchDarklyManager) fetchFlags(user lduser.User, client v1.LaunchDark
 	if err != nil {
 		log.CliLogger.Debug(resp)
 		if !ld.timeoutSuggestionPrinted {
-			timeoutSuggestions := errors.ComposeSuggestionsMessage(`Check connectivity to https://confluent.cloud or set "disable_feature_flags": true in ~/.confluent/config.json.`)
-			_, _ = fmt.Fprint(os.Stderr, "WARNING: Failed to fetch feature flags.\n"+timeoutSuggestions+"\n")
+			utils.ErrPrintln("WARNING: Failed to fetch feature flags.")
+			utils.ErrPrintln(errors.ComposeSuggestionsMessage(`Check connectivity to https://confluent.cloud or set "disable_feature_flags": true in ~/.confluent/config.json.`))
 			ld.timeoutSuggestionPrinted = true
 		}
 

@@ -41,11 +41,10 @@ func (c userCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	err = c.V2Client.DeleteIamUser(resourceId)
-	if err != nil {
+	if err := c.V2Client.DeleteIamUser(resourceId); err != nil {
 		return errors.Errorf(errors.DeleteResourceErrorMsg, resource.User, resourceId, err)
 	}
 
-	utils.Printf(cmd, errors.DeletedResourceMsg, resource.User, resourceId)
+	utils.Printf(errors.DeletedResourceMsg, resource.User, resourceId)
 	return nil
 }

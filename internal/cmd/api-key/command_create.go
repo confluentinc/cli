@@ -108,14 +108,9 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		Secret: v2Key.Spec.GetSecret(),
 	}
 
-	outputFormat, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		return err
-	}
-
-	if outputFormat == output.Human.String() {
-		utils.ErrPrintln(cmd, errors.APIKeyTime)
-		utils.ErrPrintln(cmd, errors.APIKeyNotRetrievableMsg)
+	if output.GetFormat(cmd) == output.Human {
+		utils.ErrPrintln(errors.APIKeyTime)
+		utils.ErrPrintln(errors.APIKeyNotRetrievableMsg)
 	}
 
 	table := output.NewTable(cmd)

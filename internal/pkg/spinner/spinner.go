@@ -1,9 +1,9 @@
 package spinner
 
 import (
-	"fmt"
-	"os"
 	"time"
+
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 var frames = []string{"|", "/", "-", "\\"}
@@ -43,12 +43,12 @@ func (s *Spinner) run() {
 			return
 		case <-ticker.C:
 			clear()
-			fmt.Fprint(os.Stderr, frames[i])
+			utils.ErrPrint(frames[i])
 			i = (i + 1) % len(frames)
 		}
 	}
 }
 
 func clear() {
-	fmt.Fprint(os.Stderr, "\033[1D")
+	utils.ErrPrint("\033[1D")
 }

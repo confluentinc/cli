@@ -7,8 +7,8 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
@@ -36,8 +36,7 @@ func (c *command) newProviderShareDeleteCommand() *cobra.Command {
 func (c *command) deleteProviderShare(cmd *cobra.Command, args []string) error {
 	shareId := args[0]
 
-	_, err := c.V2Client.DescribeProviderShare(shareId)
-	if err != nil {
+	if _, err := c.V2Client.DescribeProviderShare(shareId); err != nil {
 		return err
 	}
 
@@ -46,11 +45,10 @@ func (c *command) deleteProviderShare(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	err = c.V2Client.DeleteProviderShare(shareId)
-	if err != nil {
+	if err := c.V2Client.DeleteProviderShare(shareId); err != nil {
 		return err
 	}
 
-	utils.Printf(cmd, errors.DeletedResourceMsg, resource.ProviderShare, shareId)
+	utils.Printf(errors.DeletedResourceMsg, resource.ProviderShare, shareId)
 	return nil
 }

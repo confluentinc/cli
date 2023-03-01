@@ -124,10 +124,10 @@ func printDescribe(cmd *cobra.Command, meta *ScopedId) error {
 	}
 
 	if meta.ID != "" {
-		utils.Printf(cmd, "Confluent Resource Name: %s\n\n", meta.ID)
+		utils.Printf("Confluent Resource Name: %s\n\n", meta.ID)
 	}
 
-	utils.Println(cmd, "Scope:")
+	utils.Println("Scope:")
 	list := output.NewList(cmd)
 	for _, name := range types {
 		list.Add(&scopeOut{

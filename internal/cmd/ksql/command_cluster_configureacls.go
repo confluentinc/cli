@@ -47,13 +47,13 @@ func (c *ksqlCommand) configureACLs(cmd *cobra.Command, args []string) error {
 	ksqlCluster := args[0]
 
 	// Ensure the KSQL cluster talks to the current Kafka Cluster
-	cluster, err := c.V2Client.DescribeKsqlCluster(ksqlCluster, c.EnvironmentId(cmd))
+	cluster, err := c.V2Client.DescribeKsqlCluster(ksqlCluster, c.EnvironmentId())
 	if err != nil {
 		return err
 	}
 
 	if cluster.Spec.KafkaCluster.Id != kafkaCluster.Id {
-		utils.ErrPrintf(cmd, errors.KsqlDBNotBackedByKafkaMsg, ksqlCluster, cluster.Spec.KafkaCluster.Id, kafkaCluster.Id, cluster.Spec.KafkaCluster.Id)
+		utils.ErrPrintf(errors.KsqlDBNotBackedByKafkaMsg, ksqlCluster, cluster.Spec.KafkaCluster.Id, kafkaCluster.Id, cluster.Spec.KafkaCluster.Id)
 	}
 
 	credentialIdentity := cluster.Spec.CredentialIdentity.GetId()
