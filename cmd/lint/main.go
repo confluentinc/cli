@@ -33,8 +33,7 @@ var commandRules = []linter.CommandRule{
 		linter.ExcludeCommand("plugin"),
 		linter.ExcludeCommand("completion"),
 		linter.ExcludeCommandContains("kafka client-config create"),
-		linter.ExcludeCommand("local current"),
-		linter.ExcludeCommand("byok create")),
+		linter.ExcludeCommand("local current")),
 	linter.RequireStartWithCapital("Long"),
 
 	linter.RequireListRequiredFlagsFirst(),
@@ -160,7 +159,6 @@ var properNouns = []string{
 	"ID",
 	"Kafka",
 	"RBAC",
-	"REST",
 	"Schema Registry",
 	"ZooKeeper™",
 	"ksqlDB Server",

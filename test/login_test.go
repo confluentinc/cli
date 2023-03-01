@@ -120,40 +120,40 @@ func (s *CLITestSuite) TestCcloudErrors() {
 func (s *CLITestSuite) TestCcloudLoginUseKafkaAuthKafkaErrors() {
 	tests := []CLITest{
 		{
-			name:        "error if no active kafka",
-			args:        "kafka topic create integ",
-			fixture:     "login/err-no-kafka.golden",
-			wantErrCode: 1,
+			name:     "error if no active kafka",
+			args:     "kafka topic create integ",
+			fixture:  "login/err-no-kafka.golden",
+			exitCode: 1,
 		},
 		{
-			name:        "error if topic already exists",
-			args:        "kafka topic create topic-exist",
-			fixture:     "login/topic-exists.golden",
-			wantErrCode: 1,
-			useKafka:    "lkc-create-topic",
-			authKafka:   "true",
+			name:      "error if topic already exists",
+			args:      "kafka topic create topic-exist",
+			fixture:   "login/topic-exists.golden",
+			exitCode:  1,
+			useKafka:  "lkc-create-topic",
+			authKafka: "true",
 		},
 		{
-			name:        "error if no API key used",
-			args:        "kafka topic produce integ",
-			fixture:     "login/err-no-api-key.golden",
-			wantErrCode: 1,
-			useKafka:    "lkc-abc123",
+			name:     "error if no API key used",
+			args:     "kafka topic produce integ",
+			fixture:  "login/err-no-api-key.golden",
+			exitCode: 1,
+			useKafka: "lkc-abc123",
 		},
 		{
-			name:        "error if deleting non-existent api-key",
-			args:        "api-key delete UNKNOWN",
-			input:       "y\n",
-			fixture:     "login/delete-unknown-key.golden",
-			wantErrCode: 1,
-			useKafka:    "lkc-abc123",
-			authKafka:   "true",
+			name:      "error if deleting non-existent api-key",
+			args:      "api-key delete UNKNOWN",
+			input:     "y\n",
+			fixture:   "login/delete-unknown-key.golden",
+			exitCode:  1,
+			useKafka:  "lkc-abc123",
+			authKafka: "true",
 		},
 		{
-			name:        "error if using unknown kafka",
-			args:        "kafka cluster use lkc-unknown",
-			fixture:     "login/err-use-unknown-kafka.golden",
-			wantErrCode: 1,
+			name:     "error if using unknown kafka",
+			args:     "kafka cluster use lkc-unknown",
+			fixture:  "login/err-use-unknown-kafka.golden",
+			exitCode: 1,
 		},
 	}
 
@@ -281,10 +281,10 @@ func (s *CLITestSuite) TestUpdateNetrcPassword() {
 func (s *CLITestSuite) TestMDSLoginURL() {
 	tests := []CLITest{
 		{
-			name:        "invalid URL provided",
-			args:        "login --url http:///test",
-			fixture:     "login/invalid-login-url.golden",
-			wantErrCode: 1,
+			name:     "invalid URL provided",
+			args:     "login --url http:///test",
+			fixture:  "login/invalid-login-url.golden",
+			exitCode: 1,
 		},
 	}
 
@@ -319,11 +319,11 @@ func (s *CLITestSuite) TestLogin_SsoCodeInvalidFormat() {
 	resetConfiguration(s.T(), false)
 
 	tt := CLITest{
-		env:         []string{"CONFLUENT_CLOUD_EMAIL=sso@test.com"},
-		args:        fmt.Sprintf("login --url %s --no-browser", s.TestBackend.GetCloudUrl()),
-		fixture:     "login/sso.golden",
-		regex:       true,
-		wantErrCode: 1,
+		env:      []string{"CONFLUENT_CLOUD_EMAIL=sso@test.com"},
+		args:     fmt.Sprintf("login --url %s --no-browser", s.TestBackend.GetCloudUrl()),
+		fixture:  "login/sso.golden",
+		regex:    true,
+		exitCode: 1,
 	}
 
 	// TODO: Accept text input in integration tests

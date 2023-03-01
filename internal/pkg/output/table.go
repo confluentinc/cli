@@ -84,6 +84,11 @@ func (t *Table) PrintWithAutoWrap(auto bool) error {
 	if t.sort {
 		sort.Slice(t.objects, func(i, j int) bool {
 			for k := 0; k < reflect.TypeOf(t.objects[i]).Elem().NumField(); k++ {
+				// Don't sort the IsCurrent column, if it exists.
+				if reflect.TypeOf(t.objects[i]).Elem().Field(k).Name == "IsCurrent" {
+					continue
+				}
+
 				vi := reflect.ValueOf(t.objects[i]).Elem().Field(k)
 				vj := reflect.ValueOf(t.objects[j]).Elem().Field(k)
 
