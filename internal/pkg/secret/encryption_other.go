@@ -11,14 +11,17 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/panta/machineid"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 
+	"github.com/panta/machineid"
 	"golang.org/x/crypto/pbkdf2"
 )
 
 const (
 	iterationNumber = 10000
 	keyLength       = 32
+	SaltLength      = 24
+	NonceLength     = 12
 )
 
 func GenerateRandomBytes(n int) ([]byte, error) {
@@ -56,6 +59,9 @@ func Encrypt(username, password string, salt, nonce []byte) (string, error) {
 		return "", err
 	}
 
+	if len(nonce) != NonceLength {
+		return "", errors.New(errors.IncorrectNonceLengthErrorMsg)
+	}
 	encryptedPassword := aesgcm.Seal(nil, nonce, []byte(password), []byte(username))
 
 	return base64.RawStdEncoding.EncodeToString(encryptedPassword), nil
@@ -82,6 +88,9 @@ func Decrypt(username, encrypted string, salt, nonce []byte) (string, error) {
 		return "", err
 	}
 
+	if len(nonce) != NonceLength {
+		return "", errors.New(errors.IncorrectNonceLengthErrorMsg)
+	}
 	decryptedPassword, err := aesgcm.Open(nil, nonce, cipherText, []byte(username))
 	if err != nil {
 		return "", err

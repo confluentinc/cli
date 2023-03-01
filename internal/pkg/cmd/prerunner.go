@@ -166,6 +166,10 @@ func (c *AuthenticatedCLICommand) AuthToken() string {
 }
 
 func (c *AuthenticatedCLICommand) EnvironmentId() string {
+	if c.Context.GetEnvironment() == nil {
+		noEnvSuggestions := errors.ComposeSuggestionsMessage("This issue may occur if this user has no valid role bindings. Contact an Organization Admin to create a role binding for this user.")
+		utils.ErrPrintln(errors.EnvNotSetErrorMsg + noEnvSuggestions)
+	}
 	return c.Context.GetEnvironment().GetId()
 }
 
@@ -432,32 +436,32 @@ func (r *PreRun) getCCloudCredentials(netrcMachineName, url, orgResourceId strin
 	return credentials, nil
 }
 
-func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
-	ctx := cliCmd.Config.Context()
+func (r *PreRun) setCCloudClient(c *AuthenticatedCLICommand) error {
+	ctx := c.Config.Context()
 
-	ccloudClient, err := r.createCCloudClient(ctx, cliCmd.Version)
+	ccloudClient, err := r.createCCloudClient(ctx, c.Version)
 	if err != nil {
 		return err
 	}
-	cliCmd.Client = ccloudClient
-	cliCmd.Context.Client = ccloudClient
-	cliCmd.Config.Client = ccloudClient
+	c.Client = ccloudClient
+	c.Context.Client = ccloudClient
+	c.Config.Client = ccloudClient
 
-	unsafeTrace, err := cliCmd.Flags().GetBool("unsafe-trace")
+	unsafeTrace, err := c.Flags().GetBool("unsafe-trace")
 	if err != nil {
 		return err
 	}
 
-	cliCmd.MDSv2Client = r.createMDSv2Client(ctx, cliCmd.Version, unsafeTrace)
+	c.MDSv2Client = r.createMDSv2Client(ctx, c.Version, unsafeTrace)
 
 	provider := (KafkaRESTProvider)(func() (*KafkaREST, error) {
-		ctx := cliCmd.Config.Context()
+		ctx := c.Config.Context()
 
 		restEndpoint, lkc, err := getKafkaRestEndpoint(ctx)
 		if err != nil {
 			return nil, err
 		}
-		cluster, httpResp, err := cliCmd.V2Client.DescribeKafkaCluster(lkc, cliCmd.EnvironmentId())
+		cluster, httpResp, err := c.V2Client.DescribeKafkaCluster(lkc, c.EnvironmentId())
 		if err != nil {
 			return nil, errors.CatchKafkaNotFoundError(err, lkc, httpResp)
 		}
@@ -485,7 +489,7 @@ func (r *PreRun) setCCloudClient(cliCmd *AuthenticatedCLICommand) error {
 		}
 		return nil, nil
 	})
-	cliCmd.KafkaRESTProvider = &provider
+	c.KafkaRESTProvider = &provider
 	return nil
 }
 

@@ -6,21 +6,21 @@ Usage:
 Examples:
 You can specify only one of the following flags per command invocation: `--cluster-scope`, `--consumer-group`, `--topic`, or `--transactional-id`. For example, for a consumer to read a topic, you need to grant "read" and "describe" both on the `--consumer-group` and the `--topic` resources, issuing two separate commands:
 
-  $ confluent kafka acl create --allow --principal User:Jane --operation read --operation describe --consumer-group java_example_group_1
+  $ confluent kafka acl create --allow --principal User:Jane --operation read --consumer-group java_example_group_1
 
-  $ confluent kafka acl create --allow --principal User:Jane --operation read --operation describe --topic "*"
+  $ confluent kafka acl create --allow --principal User:Jane --operation read --topic "*"
 
 You can run the previous example without logging in if you provide the embedded Kafka REST Proxy endpoint with the `--url` flag.
 
-  $ confluent kafka acl create --url http://localhost:8090/kafka --allow --principal User:Jane --operation read --operation describe --consumer-group java_example_group_1
+  $ confluent kafka acl create --url http://localhost:8090/kafka --allow --principal User:Jane --operation read --consumer-group java_example_group_1
 
-  $ confluent kafka acl create --url http://localhost:8090/kafka --allow --principal User:Jane --operation read --operation describe --topic "*"
+  $ confluent kafka acl create --url http://localhost:8090/kafka --allow --principal User:Jane --operation read --topic "*"
 
 You can also run the example above without logging in if you provide the Kafka REST proxy endpoint with the `--url` flag.
 
-  $ confluent kafka acl create --url http://localhost:8082 --allow --principal User:Jane --operation read --operation describe --consumer-group java_example_group_1
+  $ confluent kafka acl create --url http://localhost:8082 --allow --principal User:Jane --operation read --consumer-group java_example_group_1
 
-  $ confluent kafka acl create --url http://localhost:8082 --allow --principal User:Jane --operation read --operation describe --topic "*"
+  $ confluent kafka acl create --url http://localhost:8082 --allow --principal User:Jane --operation read --topic "*"
 
 Flags:
       --principal string          REQUIRED: Principal for this operation with User: or Group: prefix.

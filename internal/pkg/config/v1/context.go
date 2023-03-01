@@ -214,6 +214,13 @@ func (c *Context) GetEnvironments() []*ccloudv1.Account {
 	return nil
 }
 
+func (c *Context) SetEnvironments(environments []*ccloudv1.Account) {
+	if c.GetAuth() == nil {
+		c.SetAuth(new(AuthConfig))
+	}
+	c.GetAuth().Accounts = environments
+}
+
 func (c *Context) GetAuthToken() string {
 	if state := c.GetState(); state != nil {
 		return state.AuthToken
