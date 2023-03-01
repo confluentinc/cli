@@ -1,6 +1,7 @@
 package form
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -27,4 +28,7 @@ func TestPrompt(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "user", f.Responses["username"].(string))
 	require.Equal(t, "pass", f.Responses["password"].(string))
+
+	// Format the test report correctly
+	fmt.Println()
 }
