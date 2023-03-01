@@ -1,18 +1,18 @@
 Release Notes
 -------------
 <!--
-If this PR introduces any user-facing changes, please document them below. You may delete or ignore any unused sections.
+If this PR introduces any user-facing changes, please document them below. Please delete any unused section titles and placeholders.
 Please match the style of previous release notes: https://docs.confluent.io/confluent-cli/current/release-notes.html
 -->
 
 Breaking Changes
-- <PLACEHOLDER>
+- PLACEHOLDER
 
 New Features
-- <PLACEHOLDER>
+- PLACEHOLDER
 
 Bug Fixes
-- <PLACEHOLDER>
+- PLACEHOLDER
 
 Checklist
 ---------

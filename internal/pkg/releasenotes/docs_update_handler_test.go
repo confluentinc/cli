@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_Docs_Update_Handler(t *testing.T) {
+func TestDocsUpdateHandler(t *testing.T) {
 	newReleaseNotes := `|confluent-cli| v1.2.0 Release Notes
 ====================================
 
