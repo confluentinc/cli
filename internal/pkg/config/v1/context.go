@@ -14,18 +14,19 @@ import (
 
 // Context represents a specific CLI context.
 type Context struct {
-	Name                   string                            `json:"name" hcl:"name"`
-	NetrcMachineName       string                            `json:"netrc_machine_name" hcl:"netrc_machine_name"`
-	Platform               *Platform                         `json:"-" hcl:"-"`
-	PlatformName           string                            `json:"platform" hcl:"platform"`
-	Credential             *Credential                       `json:"-" hcl:"-"`
-	CredentialName         string                            `json:"credential" hcl:"credential"`
-	KafkaClusterContext    *KafkaClusterContext              `json:"kafka_cluster_context" hcl:"kafka_cluster_config"`
-	SchemaRegistryClusters map[string]*SchemaRegistryCluster `json:"schema_registry_clusters" hcl:"schema_registry_clusters"`
-	State                  *ContextState                     `json:"-" hcl:"-"`
-	Config                 *Config                           `json:"-" hcl:"-"`
-	LastOrgId              string                            `json:"last_org_id" hcl:"last_org_id"`
-	FeatureFlags           *FeatureFlags                     `json:"feature_flags,omitempty" hcl:"feature_flags,omitempty"`
+	Name                   string                            `json:"name"`
+	NetrcMachineName       string                            `json:"netrc_machine_name"`
+	PlatformName           string                            `json:"platform"`
+	CredentialName         string                            `json:"credential"`
+	KafkaClusterContext    *KafkaClusterContext              `json:"kafka_cluster_context"`
+	SchemaRegistryClusters map[string]*SchemaRegistryCluster `json:"schema_registry_clusters"`
+	LastOrgId              string                            `json:"last_org_id"`
+	FeatureFlags           *FeatureFlags                     `json:"feature_flags,omitempty"`
+
+	Platform   *Platform     `json:"-"`
+	Credential *Credential   `json:"-"`
+	State      *ContextState `json:"-"`
+	Config     *Config       `json:"-"`
 }
 
 func newContext(name string, platform *Platform, credential *Credential,

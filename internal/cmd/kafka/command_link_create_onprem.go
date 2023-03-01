@@ -72,9 +72,8 @@ func (c *linkCommand) createOnPrem(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// For on prem deployments, we only support source initiated links.
 	if linkMode != Source {
-		return errors.New("Confluent Platform only supports source initiated links.")
+		return errors.New("only source-initiated links can be created for Confluent Platform from the CLI")
 	}
 
 	if err := c.addSecurityConfigToMap(cmd, linkMode, configMap); err != nil {

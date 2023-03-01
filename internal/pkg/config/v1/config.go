@@ -79,7 +79,7 @@ type Config struct {
 	DisableUpdates      bool                        `json:"disable_updates"`
 	DisablePlugins      bool                        `json:"disable_plugins"`
 	DisableFeatureFlags bool                        `json:"disable_feature_flags"`
-	NoBrowser           bool                        `json:"no_browser" hcl:"no_browser"`
+	NoBrowser           bool                        `json:"no_browser"`
 	Platforms           map[string]*Platform        `json:"platforms,omitempty"`
 	Credentials         map[string]*Credential      `json:"credentials,omitempty"`
 	Contexts            map[string]*Context         `json:"contexts,omitempty"`
