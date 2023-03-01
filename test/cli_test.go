@@ -17,6 +17,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	testserver "github.com/confluentinc/cli/test/test-server"
@@ -117,10 +118,34 @@ func (s *CLITestSuite) runIntegrationTest(tt CLITest) {
 			resetConfiguration(t, tt.arePluginsEnabled)
 		}
 
-		url := s.getLoginURL(tt.login == "cloud", tt)
-		output := runCommand(t, testBin, []string{}, fmt.Sprintf("login --url %s", url), 0, "fake@user.com\npass1\n")
-		if *debug {
-			fmt.Println(output)
+		// Executes login command if test specifies
+		switch tt.login {
+		case "cloud":
+			loginString := fmt.Sprintf("login --url %s", s.getLoginURL(true, tt))
+			env := append([]string{pauth.ConfluentCloudEmail + "=fake@user.com", pauth.ConfluentCloudPassword + "=pass1"}, tt.env...)
+			for _, e := range env {
+				keyVal := strings.Split(e, "=")
+				os.Setenv(keyVal[0], keyVal[1])
+			}
+
+			defer func() {
+				for _, e := range env {
+					keyVal := strings.Split(e, "=")
+					os.Unsetenv(keyVal[0])
+				}
+			}()
+
+			output := runCommand(t, testBin, env, loginString, 0, "")
+			if *debug {
+				fmt.Println(output)
+			}
+		case "platform":
+			loginURL := s.getLoginURL(false, tt)
+			env := []string{pauth.ConfluentPlatformUsername + "=fake@user.com", pauth.ConfluentPlatformPassword + "=pass1"}
+			output := runCommand(t, testBin, env, "login --url "+loginURL, 0, "")
+			if *debug {
+				fmt.Println(output)
+			}
 		}
 
 		if tt.useKafka != "" {
@@ -143,7 +168,7 @@ func (s *CLITestSuite) runIntegrationTest(tt CLITest) {
 			}
 		}
 
-		output = runCommand(t, testBin, tt.env, tt.args, tt.exitCode, tt.input)
+		output := runCommand(t, testBin, tt.env, tt.args, tt.exitCode, tt.input)
 		if *debug {
 			fmt.Println(output)
 		}
