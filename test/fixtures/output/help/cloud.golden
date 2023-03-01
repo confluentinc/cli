@@ -20,7 +20,7 @@ Available Commands:
   local           Manage a local Confluent Platform development environment.
   login           Log in to Confluent Cloud or Confluent Platform.
   logout          Log out of Confluent Cloud.
-  organization    View Confluent Cloud organizations.
+  organization    Manage your Confluent Cloud organizations.
   pipeline        Manage Stream Designer pipelines.
   plugin          Manage Confluent plugins.
   price           See Confluent Cloud pricing information.

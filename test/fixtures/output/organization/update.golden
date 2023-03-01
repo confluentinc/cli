@@ -1,1 +1,4 @@
-Updated the name of organization "abc-123" to "default-updated".
++------+-----------------+
+| ID   | abc-123         |
+| Name | default-updated |
++------+-----------------+

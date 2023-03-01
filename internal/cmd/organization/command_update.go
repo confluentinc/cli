@@ -4,9 +4,10 @@ import (
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 	"github.com/spf13/cobra"
 
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *command) newUpdateCommand() *cobra.Command {
@@ -20,6 +21,8 @@ func (c *command) newUpdateCommand() *cobra.Command {
 	cmd.Flags().String("name", "", "Name of the Confluent Cloud organization.")
 	_ = cmd.MarkFlagRequired("name")
 
+	pcmd.AddOutputFlag(cmd)
+
 	return cmd
 }
 
@@ -32,11 +35,15 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	}
 
 	updateOrganization := orgv2.OrgV2Organization{DisplayName: orgv2.PtrString(name)}
-	_, httpResp, err := c.V2Client.UpdateOrgOrganization(id, updateOrganization)
+	organization, httpResp, err := c.V2Client.UpdateOrgOrganization(id, updateOrganization)
 	if err != nil {
 		return errors.CatchOrgV2ResourceNotFoundError(err, resource.Organization, httpResp)
 	}
 
-	utils.ErrPrintf(cmd, errors.UpdateSuccessMsg, "name", "organization", id, name)
-	return nil
+	table := output.NewTable(cmd)
+	table.Add(&out{
+		Id:   organization.GetId(),
+		Name: organization.GetDisplayName(),
+	})
+	return table.Print()
 }

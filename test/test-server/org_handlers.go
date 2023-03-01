@@ -15,9 +15,6 @@ var (
 	OrgEnvironments = []*orgv2.OrgV2Environment{{Id: orgv2.PtrString("a-595"), DisplayName: orgv2.PtrString("default")},
 		{Id: orgv2.PtrString("not-595"), DisplayName: orgv2.PtrString("other")},
 		{Id: orgv2.PtrString("env-123"), DisplayName: orgv2.PtrString("env123")}, {Id: orgv2.PtrString(SRApiEnvId), DisplayName: orgv2.PtrString("srUpdate")}}
-	OrgOrganizations = []*orgv2.OrgV2Organization{{Id: orgv2.PtrString("abc-123"), DisplayName: orgv2.PtrString("org1")},
-		{Id: orgv2.PtrString("abc-456"), DisplayName: orgv2.PtrString("org2")},
-		{Id: orgv2.PtrString("abc-789"), DisplayName: orgv2.PtrString("org3")}}
 )
 
 // Handler for: "/org/v2/environments/{id}"
@@ -60,7 +57,7 @@ func handleOrgEnvironments(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		if r.Method == http.MethodGet {
-			environmentList := &orgv2.OrgV2EnvironmentList{Data: getOrgResourcesList[orgv2.OrgV2Environment](OrgEnvironments)}
+			environmentList := &orgv2.OrgV2EnvironmentList{Data: getOrgEnvironmentsList(OrgEnvironments)}
 			err := json.NewEncoder(w).Encode(environmentList)
 			require.NoError(t, err)
 		}
@@ -74,18 +71,21 @@ func handleOrgOrganization(t *testing.T) http.HandlerFunc {
 		orgId := vars["id"]
 		w.Header().Set("Content-Type", "application/json")
 
-		if r.Method == http.MethodGet {
-			if orgId == "abc-789" {
-				w.WriteHeader(http.StatusForbidden)
-			} else {
-				organization := &orgv2.OrgV2Organization{
-					Id:          orgv2.PtrString(orgId),
-					DisplayName: orgv2.PtrString("default"),
-				}
-				err := json.NewEncoder(w).Encode(organization)
-				require.NoError(t, err)
-			}
+		displayName := "default"
+		switch r.Method {
+		case http.MethodPatch:
+			req := orgv2.OrgV2Environment{}
+			err := json.NewDecoder(r.Body).Decode(&req)
+			require.NoError(t, err)
+			displayName = *req.DisplayName
 		}
+
+		organization := &orgv2.OrgV2Organization{
+			Id:          orgv2.PtrString(orgId),
+			DisplayName: orgv2.PtrString(displayName),
+		}
+		err := json.NewEncoder(w).Encode(organization)
+		require.NoError(t, err)
 	}
 }
 
@@ -94,17 +94,21 @@ func handleOrgOrganizations(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		if r.Method == http.MethodGet {
-			organizationList := &orgv2.OrgV2OrganizationList{Data: getOrgResourcesList[orgv2.OrgV2Organization](OrgOrganizations)}
+			organizationList := &orgv2.OrgV2OrganizationList{Data: []orgv2.OrgV2Organization{
+				{Id: orgv2.PtrString("abc-123"), DisplayName: orgv2.PtrString("org1")},
+				{Id: orgv2.PtrString("abc-456"), DisplayName: orgv2.PtrString("org2")},
+				{Id: orgv2.PtrString("abc-789"), DisplayName: orgv2.PtrString("org3")},
+			}}
 			err := json.NewEncoder(w).Encode(organizationList)
 			require.NoError(t, err)
 		}
 	}
 }
 
-func getOrgResourcesList[OrgV2Resource orgv2.OrgV2Environment | orgv2.OrgV2Organization] (resources []*OrgV2Resource) []OrgV2Resource {
-	resList := []OrgV2Resource{}
-	for _, res := range resources {
-		resList = append(resList, *res)
+func getOrgEnvironmentsList(envs []*orgv2.OrgV2Environment) []orgv2.OrgV2Environment {
+	envList := []orgv2.OrgV2Environment{}
+	for _, env := range envs {
+		envList = append(envList, *env)
 	}
-	return resList
+	return envList
 }
