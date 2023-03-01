@@ -12,11 +12,11 @@ func (s *CLITestSuite) TestBYOK() {
 		// create tests
 		{args: "byok create arn:aws:kms:us-west-2:037803949979:key/0e2609e3-a0bf-4f39-aedf-8b1f63b16d81", fixture: "byok/create_1.golden"},
 		{args: "byok create https://a-vault.vault.azure.net/keys/a-key/00000000000000000000000000000000 --tenant 00000000-0000-0000-0000-000000000000 --key-vault /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/a-resourcegroups/providers/Microsoft.KeyVault/vaults/a-vault", fixture: "byok/create_2.golden"},
-		{args: "byok create https://a-vault.vault.azure.net/keys/a-key/00000000000000000000000000000000 --tenant 00000000-0000-0000-0000-000000000000", fixture: "byok/create_3.golden", wantErrCode: 1},
-		{args: "byok create https://a-vault.vault.azure.net/keys/a-key/00000000000000000000000000000000", fixture: "byok/create_4.golden", wantErrCode: 1},
+		{args: "byok create https://a-vault.vault.azure.net/keys/a-key/00000000000000000000000000000000 --tenant 00000000-0000-0000-0000-000000000000", fixture: "byok/create_3.golden", exitCode: 1},
+		{args: "byok create https://a-vault.vault.azure.net/keys/a-key/00000000000000000000000000000000", fixture: "byok/create_4.golden", exitCode: 1},
 		// delete tests
-		{args: "byok delete cck-001", input:"y\n", fixture: "byok/delete_1.golden"},
-		{args: "byok delete cck-404", fixture: "byok/delete_2.golden", wantErrCode: 1},
+		{args: "byok delete cck-001", input: "y\n", fixture: "byok/delete_1.golden"},
+		{args: "byok delete cck-404", fixture: "byok/delete_2.golden", exitCode: 1},
 	}
 
 	resetConfiguration(s.T(), false)
