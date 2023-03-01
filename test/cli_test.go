@@ -190,7 +190,7 @@ func (s *CLITestSuite) validateTestOutput(tt CLITest, t *testing.T, output strin
 	}
 }
 
-func runCommand(t *testing.T, binaryName string, env []string, args string, wantErrCode int, input string) string {
+func runCommand(t *testing.T, binaryName string, env []string, args string, exitCode int, input string) string {
 	dir, err := os.Getwd()
 	require.NoError(t, err)
 
@@ -199,8 +199,8 @@ func runCommand(t *testing.T, binaryName string, env []string, args string, want
 	cmd.Stdin = strings.NewReader(input)
 
 	out, err := cmd.CombinedOutput()
-	require.Equal(t, wantErrCode, cmd.ProcessState.ExitCode())
-	if wantErrCode == 0 {
+	require.Equal(t, exitCode, cmd.ProcessState.ExitCode())
+	if exitCode == 0 {
 		require.NoError(t, err)
 	}
 

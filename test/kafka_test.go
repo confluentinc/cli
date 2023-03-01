@@ -290,52 +290,6 @@ func (s *CLITestSuite) TestKafkaBroker() {
 	}
 }
 
-//func (s *CLITestSuite) TestCCloudKafkaConsumerGroup() {
-//	tests := []CLITest{
-//		{args: "kafka consumer-group --help", fixture: "kafka/consumer-group/help.golden"},
-//
-//		{args: "kafka consumer-group list --help", fixture: "kafka/consumer-group/list.golden"},
-//		{args: "kafka consumer-group list", fixture: "kafka/consumer-group/list-no-flag.golden", wantErrCode: 1},
-//		{args: "kafka consumer-group list --cluster lkc-groups", fixture: "kafka/consumer-group/list-success.golden"},
-//		{args: "kafka consumer-group list --cluster lkc-groups -o json", fixture: "kafka/consumer-group/list-success-json.golden"},
-//		{args: "kafka consumer-group list --cluster lkc-groups -o yaml", fixture: "kafka/consumer-group/list-success-yaml.golden"},
-//
-//		{args: "kafka consumer-group describe --help", fixture: "kafka/consumer-group/describe.golden"},
-//		{args: "kafka consumer-group describe", fixture: "kafka/consumer-group/describe-no-args.golden", wantErrCode: 1},
-//		{args: "kafka consumer-group describe --cluster lkc-groups", fixture: "kafka/consumer-group/describe-no-args.golden", wantErrCode: 1},
-//		{args: "kafka consumer-group describe consumer-group-1", fixture: "kafka/consumer-group/describe-no-flag.golden", wantErrCode: 1},
-//		{args: "kafka consumer-group describe consumer-group-1 --cluster lkc-groups", fixture: "kafka/consumer-group/describe-success.golden"},
-//		{args: "kafka consumer-group describe consumer-group-1 --cluster lkc-groups -o json", fixture: "kafka/consumer-group/describe-success-json.golden"},
-//		{args: "kafka consumer-group describe consumer-group-1 --cluster lkc-groups -o yaml", fixture: "kafka/consumer-group/describe-success-yaml.golden"},
-//
-//		{args: "kafka consumer-group lag --help", fixture: "kafka/consumer-group/lag/help.golden"},
-//
-//		{args: "kafka consumer-group lag summarize --help", fixture: "kafka/consumer-group/lag/summarize.golden"},
-//		{args: "kafka consumer-group lag summarize", fixture: "kafka/consumer-group/lag/summarize-no-args.golden", wantErrCode: 1},
-//		{args: "kafka consumer-group lag summarize consumer-group-1 --cluster lkc-groups", fixture: "kafka/consumer-group/lag/summarize-success.golden"},
-//		{args: "kafka consumer-group lag summarize consumer-group-1 --cluster lkc-groups -o json", fixture: "kafka/consumer-group/lag/summarize-success-json.golden"},
-//		{args: "kafka consumer-group lag summarize consumer-group-1 --cluster lkc-groups -o yaml", fixture: "kafka/consumer-group/lag/summarize-success-yaml.golden"},
-//
-//		{args: "kafka consumer-group lag list --help", fixture: "kafka/consumer-group/lag/list.golden"},
-//		{args: "kafka consumer-group lag list", fixture: "kafka/consumer-group/lag/list-no-args.golden", wantErrCode: 1},
-//		{args: "kafka consumer-group lag list consumer-group-1 --cluster lkc-groups", fixture: "kafka/consumer-group/lag/list-success.golden"},
-//		{args: "kafka consumer-group lag list consumer-group-1 --cluster lkc-groups -o json", fixture: "kafka/consumer-group/lag/list-success-json.golden"},
-//		{args: "kafka consumer-group lag list consumer-group-1 --cluster lkc-groups -o yaml", fixture: "kafka/consumer-group/lag/list-success-yaml.golden"},
-//
-//		{args: "kafka consumer-group lag get --help", fixture: "kafka/consumer-group/lag/get.golden"},
-//		{args: "kafka consumer-group lag get", fixture: "kafka/consumer-group/lag/get-no-args.golden", wantErrCode: 1},
-//		{args: "kafka consumer-group lag get consumer-group-1 --cluster lkc-groups --topic topic-1 --partition 1", fixture: "kafka/consumer-group/lag/get-success.golden"},
-//		{args: "kafka consumer-group lag get consumer-group-1 --cluster lkc-groups --topic topic-1 --partition 1 -o json", fixture: "kafka/consumer-group/lag/get-success-json.golden"},
-//		{args: "kafka consumer-group lag get consumer-group-1 --cluster lkc-groups --topic topic-1 --partition 1 -o yaml", fixture: "kafka/consumer-group/lag/get-success-yaml.golden"},
-//	}
-//	resetConfiguration(s.T(), "ccloud")
-//	for _, tt := range tests {
-//		tt.login = "cloud"
-//		tt.workflow = true
-//		s.runIntegrationTest(tt)
-//	}
-//}
-
 func (s *CLITestSuite) TestKafkaPartitions() {
 	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
 	tests := []CLITest{
