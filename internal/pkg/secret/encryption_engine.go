@@ -13,6 +13,11 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
+const (
+	SaltLength  = 24
+	NonceLength = 12
+)
+
 // Encryption Engine performs Encryption, Decryption and Hash operations.
 type EncryptionEngine interface {
 	Encrypt(plainText string, key []byte) (string, string, error)
