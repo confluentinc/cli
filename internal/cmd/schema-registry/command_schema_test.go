@@ -68,10 +68,10 @@ func (suite *SchemaTestSuite) SetupTest() {
 				return srsdk.RegisterSchemaResponse{Id: id}, nil, nil
 			},
 			GetSchemaFunc: func(_ context.Context, _ int32, _ *srsdk.GetSchemaOpts) (srsdk.SchemaString, *http.Response, error) {
-				return srsdk.SchemaString{Schema: "Potatoes"}, nil, nil
+				return srsdk.SchemaString{Schema: `{"Potatoes":1}`}, nil, nil
 			},
 			GetSchemaByVersionFunc: func(_ context.Context, _, _ string, _ *srsdk.GetSchemaByVersionOpts) (srsdk.Schema, *http.Response, error) {
-				return srsdk.Schema{Schema: "Potatoes", Version: versionInt32}, nil, nil
+				return srsdk.Schema{Schema: `{"Potatoes":1}`, Version: versionInt32}, nil, nil
 			},
 			DeleteSchemaVersionFunc: func(_ context.Context, _, _ string, _ *srsdk.DeleteSchemaVersionOpts) (int32, *http.Response, error) {
 				return id, nil, nil
@@ -130,7 +130,7 @@ func (suite *SchemaTestSuite) TestRequestSchemaById() {
 	req.True(apiMock.GetSchemaCalled())
 	content, err := os.ReadFile(tempStorePath)
 	req.Nil(err)
-	req.Equal(string(content), "Potatoes")
+	req.Equal(string(content), `{"Potatoes":1}`)
 	err = os.Remove(tempStorePath)
 	req.Nil(err)
 }
