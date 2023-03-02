@@ -178,6 +178,10 @@ func requireNotTitleCaseHelper(fieldValue string, properNouns []string, field st
 		if i > 0 && strings.HasSuffix(words[i-1], ".") {
 			continue
 		}
+		// Word is an acronym (CLI, REST, etc.)
+		if word == strings.ToUpper(word) {
+			continue
+		}
 		issue := fmt.Errorf("don't title case %s on `%s` - %s", normalizeDesc(field), fullCommand, fieldValue)
 		issues = multierror.Append(issues, issue)
 	}

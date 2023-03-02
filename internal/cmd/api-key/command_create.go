@@ -49,6 +49,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 
 	cmd.Flags().String(resourceFlagName, "", `The resource ID. Use "cloud" to create a Cloud API key.`)
 	cmd.Flags().String("description", "", "Description of API key.")
+	cmd.Flags().Bool("use", false, "Use the created API key for the provided resource.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
@@ -125,6 +126,21 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		if err := c.keystore.StoreAPIKey(userKey, clusterId); err != nil {
 			return errors.Wrap(err, errors.UnableToStoreAPIKeyErrorMsg)
 		}
+	}
+
+	use, err := cmd.Flags().GetBool("use")
+	if err != nil {
+		return err
+	}
+	if use {
+		if resourceType != resource.KafkaCluster {
+			return errors.Wrap(errors.New(errors.NonKafkaNotImplementedErrorMsg), "`--use` set but ineffective")
+		}
+		err = c.Context.UseAPIKey(userKey.Key, clusterId)
+		if err != nil {
+			return errors.NewWrapErrorWithSuggestions(err, errors.APIKeyUseFailedErrorMsg, fmt.Sprintf(errors.APIKeyUseFailedSuggestions, userKey.Key))
+		}
+		utils.Printf(cmd, errors.UseAPIKeyMsg, userKey.Key, clusterId)
 	}
 
 	return nil

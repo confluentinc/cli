@@ -15,7 +15,7 @@ interactive completion of ` + "`confluent`" + ` commands.
 Install Bash completions on macOS:
   #. Install Homebrew (https://brew.sh/).
 
-  #. Install Bash completions using the ` + "`homebrew`" + ` command:
+  #. Install Bash completions using the ` + "`brew`" + ` command:
   
      ::
      

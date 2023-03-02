@@ -115,7 +115,7 @@ func (c *hasAPIKeyTopicCommand) validateTopic(client *ckafka.AdminClient, topic 
 	}
 	if !foundTopic {
 		log.CliLogger.Trace("validateTopic failed due to topic not being found in the client's topic list")
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.TopicDoesNotExistOrMissingACLsErrorMsg, topic), fmt.Sprintf(errors.TopicDoesNotExistOrMissingACLsSuggestions, cluster.ID, cluster.ID, cluster.ID))
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.TopicDoesNotExistOrMissingPermissionsErrorMsg, topic), fmt.Sprintf(errors.TopicDoesNotExistOrMissingPermissionsSuggestions, cluster.ID, cluster.ID, cluster.ID))
 	}
 
 	log.CliLogger.Tracef("validateTopic succeeded")

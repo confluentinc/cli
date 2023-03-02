@@ -39,9 +39,9 @@ func (s *CLITestSuite) TestPlugin() {
 
 func (s *CLITestSuite) TestPluginDisabled() {
 	tests := []CLITest{
-		{args: "plugin1 arg1", fixture: "plugin/plugin1-disabled.golden", wantErrCode: 1},
-		{args: "print args arg1 arg2 --meaningless-flag=true arg3", fixture: "plugin/print-args-disabled.golden", wantErrCode: 1},
-		{args: "plugin list", fixture: "plugin/list-disabled.golden", wantErrCode: 1},
+		{args: "plugin1 arg1", fixture: "plugin/plugin1-disabled.golden", exitCode: 1},
+		{args: "print args arg1 arg2 --meaningless-flag=true arg3", fixture: "plugin/print-args-disabled.golden", exitCode: 1},
+		{args: "plugin list", fixture: "plugin/list-disabled.golden", exitCode: 1},
 	}
 
 	resetConfiguration(s.T(), false) // disable plugins
