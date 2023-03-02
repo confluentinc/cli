@@ -1,5 +1,8 @@
 Schema ID: 10
-Type: record
-Schema: schema
+Type: AVRO
+Schema:
+{
+    "schema": 1
+}
 References:
 	ref -> payment 1
