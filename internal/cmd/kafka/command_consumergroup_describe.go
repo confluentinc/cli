@@ -10,7 +10,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *consumerGroupCommand) newDescribeCommand() *cobra.Command {
@@ -64,13 +63,14 @@ func (c *consumerGroupCommand) describe(cmd *cobra.Command, args []string) error
 	}
 
 	if output.GetFormat(cmd) == output.Human {
-		utils.Print(cmd, "\nConsumers\n\n")
+		output.Println()
+		output.Println("Consumers")
+		output.Println()
 
 		list := output.NewList(cmd)
 		for _, consumer := range groupData.Consumers {
 			list.Add(&consumer)
 		}
-
 		return list.Print()
 	}
 

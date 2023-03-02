@@ -15,8 +15,8 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *ksqlCommand) newDeleteCommand() *cobra.Command {
@@ -40,7 +40,7 @@ func (c *ksqlCommand) delete(cmd *cobra.Command, args []string) error {
 	log.CliLogger.Debugf("Deleting ksqlDB cluster \"%v\".\n", id)
 
 	// Check KSQL exists
-	cluster, err := c.V2Client.DescribeKsqlCluster(id, c.EnvironmentId(cmd))
+	cluster, err := c.V2Client.DescribeKsqlCluster(id, c.EnvironmentId())
 	if err != nil {
 		return errors.CatchKSQLNotFoundError(err, id)
 	}
@@ -59,11 +59,11 @@ func (c *ksqlCommand) delete(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	if err := c.V2Client.DeleteKsqlCluster(id, c.EnvironmentId(cmd)); err != nil {
+	if err := c.V2Client.DeleteKsqlCluster(id, c.EnvironmentId()); err != nil {
 		return err
 	}
 
-	utils.Printf(cmd, errors.DeletedResourceMsg, resource.KsqlCluster, id)
+	output.Printf(errors.DeletedResourceMsg, resource.KsqlCluster, id)
 	return nil
 }
 

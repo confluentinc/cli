@@ -36,7 +36,7 @@ func (c *quotaCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	quotas, err := c.V2Client.ListKafkaQuotas(cluster.ID, c.EnvironmentId(cmd))
+	quotas, err := c.V2Client.ListKafkaQuotas(cluster.ID, c.EnvironmentId())
 	if err != nil {
 		return err
 	}

@@ -12,7 +12,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -109,6 +108,6 @@ func (c *schemaCommand) create(cmd *cobra.Command, _ []string) error {
 		return output.SerializedOutput(cmd, &outputStruct{response.Id})
 	}
 
-	utils.Printf(cmd, errors.RegisteredSchemaMsg, response.Id)
+	output.Printf(errors.RegisteredSchemaMsg, response.Id)
 	return nil
 }

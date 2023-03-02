@@ -8,7 +8,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 func (c *exporterCommand) newResetCommand() *cobra.Command {
@@ -34,14 +34,14 @@ func (c *exporterCommand) reset(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return resetExporter(cmd, args[0], srClient, ctx)
+	return resetExporter(args[0], srClient, ctx)
 }
 
-func resetExporter(cmd *cobra.Command, name string, srClient *srsdk.APIClient, ctx context.Context) error {
+func resetExporter(name string, srClient *srsdk.APIClient, ctx context.Context) error {
 	if _, _, err := srClient.DefaultApi.ResetExporter(ctx, name); err != nil {
 		return err
 	}
 
-	utils.Printf(cmd, errors.ExporterActionMsg, "Reset", name)
+	output.Printf(errors.ExporterActionMsg, "Reset", name)
 	return nil
 }

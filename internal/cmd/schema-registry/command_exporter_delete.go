@@ -10,8 +10,8 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *exporterCommand) newDeleteCommand() *cobra.Command {
@@ -56,6 +56,6 @@ func deleteExporter(cmd *cobra.Command, name string, srClient *srsdk.APIClient, 
 		return err
 	}
 
-	utils.Printf(cmd, errors.DeletedResourceMsg, resource.SchemaExporter, name)
+	output.Printf(errors.DeletedResourceMsg, resource.SchemaExporter, name)
 	return nil
 }

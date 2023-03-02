@@ -7,10 +7,10 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/form"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *command) newConsumerShareDeleteCommand() *cobra.Command {
@@ -45,11 +45,10 @@ func (c *command) deleteConsumerShare(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	err := c.V2Client.DeleteConsumerShare(shareId)
-	if err != nil {
+	if err := c.V2Client.DeleteConsumerShare(shareId); err != nil {
 		return err
 	}
 
-	utils.Printf(cmd, errors.DeletedResourceMsg, resource.ConsumerShare, shareId)
+	output.Printf(errors.DeletedResourceMsg, resource.ConsumerShare, shareId)
 	return nil
 }

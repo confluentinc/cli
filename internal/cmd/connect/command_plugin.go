@@ -60,5 +60,5 @@ func (c *pluginCommand) getPlugins(cmd *cobra.Command) ([]connectv1.InlineRespon
 		return nil, nil, err
 	}
 
-	return c.V2Client.ListConnectorPlugins(c.EnvironmentId(cmd), kafkaCluster.ID)
+	return c.V2Client.ListConnectorPlugins(c.EnvironmentId(), kafkaCluster.ID)
 }
