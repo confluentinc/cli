@@ -10,7 +10,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *ksqlCommand) newCreateCommand() *cobra.Command {
@@ -56,7 +55,7 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	cluster, err := c.V2Client.CreateKsqlCluster(name, c.EnvironmentId(cmd), kafkaCluster.ID, credentialIdentity, csu, !logExcludeRows)
+	cluster, err := c.V2Client.CreateKsqlCluster(name, c.EnvironmentId(), kafkaCluster.ID, credentialIdentity, csu, !logExcludeRows)
 	if err != nil {
 		return err
 	}
@@ -71,7 +70,7 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string) error {
 		if count != 0 {
 			<-ticker.C
 		}
-		res, err := c.V2Client.DescribeKsqlCluster(cluster.GetId(), c.EnvironmentId(cmd))
+		res, err := c.V2Client.DescribeKsqlCluster(cluster.GetId(), c.EnvironmentId())
 		if err != nil {
 			return err
 		}
@@ -79,12 +78,12 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string) error {
 	}
 	ticker.Stop()
 	if endpoint == "" {
-		utils.ErrPrintln(cmd, errors.EndPointNotPopulatedMsg)
+		output.ErrPrintln(errors.EndPointNotPopulatedMsg)
 	}
 
-	srCluster, _ := c.Context.FetchSchemaRegistryByEnvironmentId(context.Background(), c.EnvironmentId(cmd))
+	srCluster, _ := c.Context.FetchSchemaRegistryByEnvironmentId(context.Background(), c.EnvironmentId())
 	if srCluster != nil {
-		utils.ErrPrintln(cmd, errors.SchemaRegistryRoleBindingRequiredForKsqlWarning)
+		output.ErrPrintln(errors.SchemaRegistryRoleBindingRequiredForKsqlWarning)
 	}
 
 	table := output.NewTable(cmd)

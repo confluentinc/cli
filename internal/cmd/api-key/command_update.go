@@ -6,7 +6,7 @@ import (
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 func (c *command) newUpdateCommand() *cobra.Command {
@@ -42,7 +42,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 			return errors.CatchApiKeyForbiddenAccessError(err, updateOperation, httpResp)
 		}
 
-		utils.ErrPrintf(cmd, errors.UpdateSuccessMsg, "description", "API key", apiKey, description)
+		output.ErrPrintf(errors.UpdateSuccessMsg, "description", "API key", apiKey, description)
 	}
 
 	return nil

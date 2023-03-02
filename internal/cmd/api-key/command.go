@@ -77,7 +77,7 @@ func (c *command) validArgs(cmd *cobra.Command, args []string) []string {
 		return nil
 	}
 
-	return pcmd.AutocompleteApiKeys(c.EnvironmentId(cmd), c.V2Client)
+	return pcmd.AutocompleteApiKeys(c.EnvironmentId(), c.V2Client)
 }
 
 func (c *command) getAllUsers() ([]*ccloudv1.User, error) {
@@ -135,7 +135,7 @@ func (c *command) resolveResourceId(cmd *cobra.Command, v2Client *ccloudv2.Clien
 		clusterId = cluster.ID
 		apiKey = cluster.APIKey
 	case presource.KsqlCluster:
-		cluster, err := v2Client.DescribeKsqlCluster(resource, c.EnvironmentId(cmd))
+		cluster, err := v2Client.DescribeKsqlCluster(resource, c.EnvironmentId())
 		if err != nil {
 			return "", "", "", errors.CatchResourceNotFoundError(err, resource)
 		}

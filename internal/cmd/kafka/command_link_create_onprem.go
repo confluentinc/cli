@@ -10,8 +10,8 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *linkCommand) newCreateCommandOnPrem() *cobra.Command {
@@ -125,7 +125,7 @@ func (c *linkCommand) createOnPrem(cmd *cobra.Command, args []string) error {
 	if dryRun {
 		msg = "[DRY RUN]: " + msg
 	}
-	utils.Print(cmd, msg)
+	output.Print(msg)
 
 	return nil
 }

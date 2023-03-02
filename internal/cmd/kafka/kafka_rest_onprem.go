@@ -11,7 +11,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 func initKafkaRest(c *pcmd.AuthenticatedCLICommand, cmd *cobra.Command) (*kafkarestv3.APIClient, context.Context, error) {
@@ -46,7 +46,7 @@ func setServerURL(cmd *cobra.Command, client *kafkarestv3.APIClient, url string)
 			protocolMsg = errors.AssumingHttpProtocol
 		}
 		if i, _ := cmd.Flags().GetCount("verbose"); i > 0 {
-			utils.ErrPrintf(cmd, protocolMsg)
+			output.ErrPrintf(protocolMsg)
 		}
 	}
 	client.ChangeBasePath(strings.Trim(url, "/") + "/v3")

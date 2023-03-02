@@ -10,7 +10,7 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 func (c *clusterCommand) newUpdateCommand(cfg *v1.Config) *cobra.Command {
@@ -81,7 +81,7 @@ func (c *clusterCommand) updateCompatibility(cmd *cobra.Command) error {
 		return err
 	}
 
-	utils.Printf(cmd, errors.UpdatedToLevelCompatibilityMsg, updateReq.Compatibility)
+	output.Printf(errors.UpdatedToLevelCompatibilityMsg, updateReq.Compatibility)
 	return nil
 }
 
@@ -101,6 +101,6 @@ func (c *clusterCommand) updateMode(cmd *cobra.Command) error {
 		return err
 	}
 
-	utils.Printf(cmd, errors.UpdatedTopLevelModeMsg, modeUpdate.Mode)
+	output.Printf(errors.UpdatedTopLevelModeMsg, modeUpdate.Mode)
 	return nil
 }
