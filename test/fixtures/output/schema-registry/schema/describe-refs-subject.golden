@@ -4,7 +4,7 @@
       "subject": "lvl0",
       "version": 1,
       "id": 1001,
-      "schemaType": "record",
+      "schemaType": "AVRO",
       "references": [
         {
           "name": "ref_lvl1_1",
@@ -23,7 +23,7 @@
       "subject": "lvl1-1",
       "version": 1,
       "id": 1002,
-      "schemaType": "record",
+      "schemaType": "AVRO",
       "references": [
         {
           "name": "ref_lvl2",
@@ -37,14 +37,14 @@
       "subject": "lvl2",
       "version": 1,
       "id": 1004,
-      "schemaType": "record",
+      "schemaType": "AVRO",
       "schema": "schema2"
     },
     {
       "subject": "lvl1-2",
       "version": 1,
       "id": 1003,
-      "schemaType": "record",
+      "schemaType": "AVRO",
       "references": [
         {
           "name": "ref_lvl2",
