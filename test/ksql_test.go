@@ -9,7 +9,7 @@ func (s *CLITestSuite) TestKSQL() {
 	clusterTests := []CLITest{
 		{args: "ksql cluster --help", fixture: "ksql/cluster/help.golden"},
 		{args: "ksql cluster create --help", fixture: "ksql/cluster/create-help.golden"},
-		{args: "ksql cluster create test_ksql --cluster lkc-12345", fixture: "ksql/cluster/create-result-missing-credential-identity.golden", wantErrCode: 1},
+		{args: "ksql cluster create test_ksql --cluster lkc-12345", fixture: "ksql/cluster/create-result-missing-credential-identity.golden", exitCode: 1},
 		{args: "ksql cluster create test_ksql --cluster lkc-12345 --credential-identity sa-credential-identity", fixture: "ksql/cluster/create-result.golden"},
 		{args: "ksql cluster create test_ksql_json --cluster lkc-12345 --credential-identity sa-credential-identity -o json", fixture: "ksql/cluster/create-result-json.golden"},
 		{args: "ksql cluster create test_ksql_yaml --cluster lkc-12345 --credential-identity sa-credential-identity -o yaml", fixture: "ksql/cluster/create-result-yaml.golden"},

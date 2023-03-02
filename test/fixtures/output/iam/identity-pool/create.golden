@@ -1,7 +1,7 @@
-+----------------+-------------------------------------------+
-| ID             | pool-55555                                |
-| Name           | testPool                                  |
-| Description    | new-description                           |
-| Identity Claim | sub                                       |
-| Filter         | claims.iss="https://company.provider.com" |
-+----------------+-------------------------------------------+
++----------------+-----------------------------------------+
+| ID             | pool-55555                              |
+| Name           | testPool                                |
+| Description    | new-description                         |
+| Identity Claim | sub                                     |
+| Filter         | claims.iss=https://company.provider.com |
++----------------+-----------------------------------------+

@@ -13,6 +13,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/shlex"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -57,7 +58,7 @@ type CLITest struct {
 	// Fixed string to check that output does not contain
 	notContains string
 	// Expected exit code (e.g., 0 for success or 1 for failure)
-	wantErrCode int
+	exitCode int
 	// If true, don't reset the config/state between tests to enable testing CLI workflows
 	workflow bool
 	// An optional function that allows you to specify other calls
@@ -107,10 +108,6 @@ func (s *CLITestSuite) runIntegrationTest(tt CLITest) {
 		tt.name = tt.args
 	}
 
-	if strings.HasPrefix(tt.name, "error") {
-		tt.wantErrCode = 1
-	}
-
 	s.T().Run(tt.name, func(t *testing.T) {
 		isAuditLogDisabled := os.Getenv("DISABLE_AUDIT_LOG") == "true"
 		if isAuditLogDisabled != tt.disableAuditLog {
@@ -155,26 +152,20 @@ func (s *CLITestSuite) runIntegrationTest(tt CLITest) {
 		}
 
 		if tt.useKafka != "" {
-			output := runCommand(t, testBin, []string{}, "kafka cluster use "+tt.useKafka, 0, "")
+			output := runCommand(t, testBin, []string{}, fmt.Sprintf("kafka cluster use %s", tt.useKafka), 0, "")
 			if *debug {
 				fmt.Println(output)
 			}
 		}
 
 		if tt.authKafka != "" {
-			output := runCommand(t, testBin, []string{}, "api-key create --resource "+tt.useKafka, 0, "")
-			if *debug {
-				fmt.Println(output)
-			}
-			// HACK: we don't have scriptable output yet so we parse it from the table
-			key := strings.TrimSpace(strings.Split(strings.Split(output, "\n")[3], "|")[2])
-			output = runCommand(t, testBin, []string{}, fmt.Sprintf("api-key use %s --resource %s", key, tt.useKafka), 0, "")
+			output := runCommand(t, testBin, []string{}, fmt.Sprintf("api-key create --resource %s --use", tt.useKafka), 0, "")
 			if *debug {
 				fmt.Println(output)
 			}
 		}
 
-		output := runCommand(t, testBin, tt.env, tt.args, tt.wantErrCode, tt.input)
+		output := runCommand(t, testBin, tt.env, tt.args, tt.exitCode, tt.input)
 		if *debug {
 			fmt.Println(output)
 		}
@@ -222,17 +213,20 @@ func (s *CLITestSuite) validateTestOutput(tt CLITest, t *testing.T, output strin
 	}
 }
 
-func runCommand(t *testing.T, binaryName string, env []string, args string, wantErrCode int, input string) string {
+func runCommand(t *testing.T, binaryName string, env []string, argString string, exitCode int, input string) string {
 	dir, err := os.Getwd()
 	require.NoError(t, err)
 
-	cmd := exec.Command(filepath.Join(dir, binaryName), strings.Split(args, " ")...)
+	args, err := shlex.Split(argString)
+	require.NoError(t, err)
+
+	cmd := exec.Command(filepath.Join(dir, binaryName), args...)
 	cmd.Env = append(os.Environ(), env...)
 	cmd.Stdin = strings.NewReader(input)
 
 	out, err := cmd.CombinedOutput()
-	require.Equal(t, wantErrCode, cmd.ProcessState.ExitCode())
-	if wantErrCode == 0 {
+	require.Equal(t, exitCode, cmd.ProcessState.ExitCode())
+	if exitCode == 0 {
 		require.NoError(t, err)
 	}
 

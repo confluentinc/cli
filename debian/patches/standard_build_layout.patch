@@ -1,6 +1,6 @@
---- cli/Makefile	2023-03-01 10:24:20.000000000 -0800
+--- cli/Makefile	2023-03-02 10:53:05.000000000 -0800
 +++ debian/Makefile	2022-12-12 17:29:13.000000000 -0800
-@@ -1,140 +1,130 @@
+@@ -1,130 +1,130 @@
 -SHELL              := /bin/bash
 -ALL_SRC            := $(shell find . -name "*.go" | grep -v -e vendor)
 -GORELEASER_VERSION := v1.15.2
@@ -90,16 +90,6 @@
 +DESTDIR=$(CURDIR)/BUILD/
 +endif
  
--# If you setup your laptop following https://github.com/confluentinc/cc-documentation/blob/master/Operations/Laptop%20Setup.md
--# then assuming caas.sh lives here should be fine
--define aws-authenticate
--	source ~/git/go/src/github.com/confluentinc/cc-dotfiles/caas.sh && if ! aws sts get-caller-identity; then eval $$(gimme-aws-creds --output-format export --roles "arn:aws:iam::050879227952:role/administrator"); fi
--endef
--
--.PHONY: fmt
--fmt:
--	@goimports -e -l -local github.com/confluentinc/cli/ -w $(ALL_SRC)
--
 -.PHONY: lint
 -lint:
 -	make lint-go
