@@ -188,7 +188,7 @@ func (c *command) newDescribeCommand() *cobra.Command {
     }
 }
 
-func (c *command) describe(cmd *cobra.Command, args []string) error {
+func (c *command) describe(_ *cobra.Command, args []string) error {
     filename := c.CLICommand.Config.Config.Filename
     if filename == "" {
         return errors.New("config file not found")
@@ -200,7 +200,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
     }
 
     for i := 0; i < n; i++ {
-        utils.Println(cmd, filename)
+        output.Println(filename)
     }
     return nil
 }

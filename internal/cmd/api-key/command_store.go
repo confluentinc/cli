@@ -9,8 +9,8 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 const longDescription = `Use this command to register an API secret created by another
@@ -137,6 +137,6 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 	if err := c.keystore.StoreAPIKey(&v1.APIKeyPair{Key: key, Secret: secret}, cluster.ID); err != nil {
 		return errors.Wrap(err, errors.UnableToStoreAPIKeyErrorMsg)
 	}
-	utils.ErrPrintf(cmd, errors.StoredAPIKeyMsg, key)
+	output.ErrPrintf(errors.StoredAPIKeyMsg, key)
 	return nil
 }

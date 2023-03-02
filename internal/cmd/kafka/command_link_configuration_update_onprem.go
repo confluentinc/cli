@@ -8,9 +8,9 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/properties"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *linkCommand) newConfigurationUpdateCommandOnPrem() *cobra.Command {
@@ -74,6 +74,6 @@ func (c *linkCommand) configurationUpdateOnPrem(cmd *cobra.Command, args []strin
 		return handleOpenApiError(httpResp, err, client)
 	}
 
-	utils.Printf(cmd, errors.UpdatedResourceMsg, resource.ClusterLink, linkName)
+	output.Printf(errors.UpdatedResourceMsg, resource.ClusterLink, linkName)
 	return nil
 }

@@ -20,7 +20,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 const (
@@ -134,7 +133,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 			return err
 		}
 
-		if err := c.validateGcpEncryptionKey(cmd, prompt, cloud, c.EnvironmentId(cmd)); err != nil {
+		if err := c.validateGcpEncryptionKey(prompt, cloud, c.EnvironmentId()); err != nil {
 			return err
 		}
 	}
@@ -155,7 +154,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 
 	createCluster := cmkv2.CmkV2Cluster{
 		Spec: &cmkv2.CmkV2ClusterSpec{
-			Environment:  &cmkv2.EnvScopedObjectReference{Id: c.EnvironmentId(cmd)},
+			Environment:  &cmkv2.EnvScopedObjectReference{Id: c.EnvironmentId()},
 			DisplayName:  cmkv2.PtrString(args[0]),
 			Cloud:        cmkv2.PtrString(cloud),
 			Region:       cmkv2.PtrString(region),
@@ -184,13 +183,8 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 		return errors.CatchClusterConfigurationNotValidError(err, httpResp)
 	}
 
-	outputFormat, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		return err
-	}
-
-	if outputFormat == output.Human.String() {
-		utils.ErrPrintln(cmd, getKafkaProvisionEstimate(sku))
+	if output.GetFormat(cmd) == output.Human {
+		output.ErrPrintln(getKafkaProvisionEstimate(sku))
 	}
 
 	return c.outputKafkaClusterDescription(cmd, &kafkaCluster, false)
@@ -216,7 +210,7 @@ func checkCloudAndRegion(cloudId string, regionId string, clouds []*ccloudv1.Clo
 		errors.CloudProviderNotAvailableSuggestions)
 }
 
-func (c *clusterCommand) validateGcpEncryptionKey(cmd *cobra.Command, prompt form.Prompt, cloud string, accountId string) error {
+func (c *clusterCommand) validateGcpEncryptionKey(prompt form.Prompt, cloud string, accountId string) error {
 	ctx := context.Background()
 	// The call is idempotent so repeated create commands return the same ID for the same account.
 	externalID, err := c.Client.ExternalIdentity.CreateExternalIdentity(ctx, cloud, accountId)
@@ -233,7 +227,7 @@ func (c *clusterCommand) validateGcpEncryptionKey(cmd *cobra.Command, prompt for
 		return err
 	}
 	buf.WriteString("\n\n")
-	utils.Println(cmd, buf.String())
+	output.Println(buf.String())
 
 	promptMsg := "Please confirm you've authorized the key for this identity: " + externalID
 	f := form.New(
@@ -241,8 +235,8 @@ func (c *clusterCommand) validateGcpEncryptionKey(cmd *cobra.Command, prompt for
 			Prompt:    promptMsg,
 			IsYesOrNo: true})
 	for {
-		if err := f.Prompt(cmd, prompt); err != nil {
-			utils.ErrPrintln(cmd, errors.FailedToReadConfirmationErrorMsg)
+		if err := f.Prompt(prompt); err != nil {
+			output.ErrPrintln(errors.FailedToReadConfirmationErrorMsg)
 			continue
 		}
 		if !f.Responses["authorized"].(bool) {

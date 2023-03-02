@@ -8,7 +8,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 func (c *clusterCommand) newUseCommand(cfg *v1.Config) *cobra.Command {
@@ -40,6 +40,6 @@ func (c *clusterCommand) use(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	utils.ErrPrintf(cmd, errors.UseKafkaClusterMsg, clusterID, c.Context.GetEnvironment().GetId())
+	output.ErrPrintf(errors.UseKafkaClusterMsg, clusterID, c.Context.GetEnvironment().GetId())
 	return nil
 }

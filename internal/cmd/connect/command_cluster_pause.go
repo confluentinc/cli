@@ -7,7 +7,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 func (c *clusterCommand) newPauseCommand() *cobra.Command {
@@ -39,7 +39,7 @@ func (c *clusterCommand) pause(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	connectorsByName, err := c.V2Client.ListConnectorsWithExpansions(c.EnvironmentId(cmd), kafkaCluster.ID, "id,info")
+	connectorsByName, err := c.V2Client.ListConnectorsWithExpansions(c.EnvironmentId(), kafkaCluster.ID, "id,info")
 	if err != nil {
 		return err
 	}
@@ -55,11 +55,11 @@ func (c *clusterCommand) pause(cmd *cobra.Command, args []string) error {
 			return errors.Errorf(errors.UnknownConnectorIdErrorMsg, id)
 		}
 
-		if err := c.V2Client.PauseConnector(connector.Info.GetName(), c.EnvironmentId(cmd), kafkaCluster.ID); err != nil {
+		if err := c.V2Client.PauseConnector(connector.Info.GetName(), c.EnvironmentId(), kafkaCluster.ID); err != nil {
 			return err
 		}
 
-		utils.Printf(cmd, errors.PausedConnectorMsg, id)
+		output.Printf(errors.PausedConnectorMsg, id)
 	}
 
 	return nil

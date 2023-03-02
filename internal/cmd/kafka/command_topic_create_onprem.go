@@ -13,9 +13,9 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/properties"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *authenticatedTopicCommand) newCreateCommandOnPrem() *cobra.Command {
@@ -117,8 +117,7 @@ func (c *authenticatedTopicCommand) onPremCreate(cmd *cobra.Command, args []stri
 		// catch topic exists error
 		if openAPIError, ok := err.(kafkarestv3.GenericOpenAPIError); ok {
 			var decodedError kafkarest.V3Error
-			err2 := json.Unmarshal(openAPIError.Body(), &decodedError)
-			if err2 != nil {
+			if err := json.Unmarshal(openAPIError.Body(), &decodedError); err != nil {
 				return errors.NewErrorWithSuggestions(errors.InternalServerErrorMsg, errors.InternalServerErrorSuggestions)
 			}
 			if decodedError.Message == fmt.Sprintf("Topic '%s' already exists.", topicName) {
@@ -131,6 +130,6 @@ func (c *authenticatedTopicCommand) onPremCreate(cmd *cobra.Command, args []stri
 		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 	}
 
-	utils.Printf(cmd, errors.CreatedResourceMsg, resource.Topic, topicName)
+	output.Printf(errors.CreatedResourceMsg, resource.Topic, topicName)
 	return nil
 }

@@ -1,10 +1,5 @@
 package errors
 
-import (
-	"fmt"
-	"os"
-)
-
 const (
 	warningsMessageHeader = "Warning: "
 	reasonMessageHeader   = "Reason: "
@@ -16,7 +11,7 @@ type WarningWithSuggestions struct {
 	suggestionsMsg string
 }
 
-func NewWarningWithSuggestions(warnMsg string, reasonMsg string, suggestionsMsg string) *WarningWithSuggestions {
+func NewWarningWithSuggestions(warnMsg, reasonMsg, suggestionsMsg string) *WarningWithSuggestions {
 	return &WarningWithSuggestions{
 		warnMsg:        warnMsg,
 		reasonMsg:      reasonMsg,
@@ -24,13 +19,13 @@ func NewWarningWithSuggestions(warnMsg string, reasonMsg string, suggestionsMsg 
 	}
 }
 
-func (w *WarningWithSuggestions) DisplayWarningWithSuggestions() {
+func (w *WarningWithSuggestions) DisplayWarningWithSuggestions() string {
 	if w.warnMsg != "" && w.reasonMsg != "" && w.suggestionsMsg != "" {
-		msg := warningsMessageHeader + w.warnMsg + "\n"
-		msg += "\n" // a new line between warning and reason
-		msg += reasonMessageHeader + w.reasonMsg + "\n"
-		msg += ComposeSuggestionsMessage(w.suggestionsMsg) + "\n"
-
-		_, _ = fmt.Fprint(os.Stderr, msg)
+		lines := warningsMessageHeader + w.warnMsg + "\n"
+		lines += "\n"
+		lines += reasonMessageHeader + w.reasonMsg + "\n"
+		lines += ComposeSuggestionsMessage(w.suggestionsMsg) + "\n"
+		return lines
 	}
+	return ""
 }

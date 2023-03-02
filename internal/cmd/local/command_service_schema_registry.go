@@ -68,13 +68,13 @@ func NewSchemaRegistryACLCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *Command) runSchemaRegistryACLCommand(command *cobra.Command, _ []string) error {
+func (c *Command) runSchemaRegistryACLCommand(cmd *cobra.Command, _ []string) error {
 	isUp, err := c.isRunning("kafka")
 	if err != nil {
 		return err
 	}
 	if !isUp {
-		return c.printStatus(command, "kafka")
+		return c.printStatus("kafka")
 	}
 
 	file, err := c.ch.GetFile("bin", "sr-acl-cli")
@@ -87,7 +87,7 @@ func (c *Command) runSchemaRegistryACLCommand(command *cobra.Command, _ []string
 		return err
 	}
 
-	args, err := local.CollectFlags(command.Flags(), defaultValues)
+	args, err := local.CollectFlags(cmd.Flags(), defaultValues)
 	if err != nil {
 		return err
 	}
