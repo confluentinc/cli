@@ -140,7 +140,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		if err != nil {
 			return errors.NewWrapErrorWithSuggestions(err, errors.APIKeyUseFailedErrorMsg, fmt.Sprintf(errors.APIKeyUseFailedSuggestions, userKey.Key))
 		}
-		utils.Printf(cmd, errors.UseAPIKeyMsg, userKey.Key, clusterId)
+		output.Printf(errors.UseAPIKeyMsg, userKey.Key, clusterId)
 	}
 
 	return nil
