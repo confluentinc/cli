@@ -80,16 +80,19 @@ func TestCLI(t *testing.T) {
 func (s *CLITestSuite) SetupSuite() {
 	req := require.New(s.T())
 
+	// dumb but effective
+	err := os.Chdir("..")
+	req.NoError(err)
+
+	err = exec.Command("make", "build-for-integration-test").Run()
+	req.NoError(err)
+
 	if runtime.GOOS == "windows" {
 		testBin += ".exe"
 	}
 
 	s.TestBackend = testserver.StartTestBackend(s.T(), false) // by default do not disable audit-log
 	os.Setenv("DISABLE_AUDIT_LOG", "false")
-
-	// dumb but effective
-	err := os.Chdir("..")
-	req.NoError(err)
 
 	// Temporarily change $HOME, so the current config file isn't altered.
 	err = os.Setenv("HOME", os.TempDir())
