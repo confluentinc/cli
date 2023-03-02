@@ -225,7 +225,8 @@ func printSchema(cmd *cobra.Command, schemaID int64, schema string, sType string
 		utils.Println(cmd, "Type: "+sType)
 	}
 
-	if sType != "PROTOBUF" { // AVRO schemas could be returned as type ""
+	switch sType {
+	case "JSON", "AVRO", "": // avro schemas can have empty string as schema type
 		var jsonBuffer bytes.Buffer
 		if err := json.Indent(&jsonBuffer, []byte(schema), "", "    "); err != nil {
 			return err
