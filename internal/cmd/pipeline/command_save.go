@@ -8,7 +8,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 func (c *command) newSaveCommand(enableSourceCode bool) *cobra.Command {
@@ -44,7 +44,7 @@ func (c *command) save(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	pipeline, err := c.V2Client.GetSdPipeline(c.EnvironmentId(cmd), cluster.ID, args[0])
+	pipeline, err := c.V2Client.GetSdPipeline(c.EnvironmentId(), cluster.ID, args[0])
 	if err != nil {
 		return err
 	}
@@ -60,7 +60,7 @@ func (c *command) save(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	utils.Printf(cmd, "Saved source code for pipeline \"%s\" at \"%s\".\n", args[0], path)
+	output.Printf("Saved source code for pipeline \"%s\" at \"%s\".\n", args[0], path)
 	return nil
 }
 

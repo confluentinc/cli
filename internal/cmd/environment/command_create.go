@@ -37,7 +37,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 
 	table := output.NewTable(cmd)
 	table.Add(&out{
-		IsCurrent: environment.Id == c.EnvironmentId(cmd),
+		IsCurrent: environment.Id == c.EnvironmentId(),
 		Id:        environment.Id,
 		Name:      environment.Name,
 	})

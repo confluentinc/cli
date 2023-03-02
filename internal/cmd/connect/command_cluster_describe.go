@@ -8,7 +8,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 type serializedDescribeOut struct {
@@ -78,17 +77,12 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	connector, err := c.V2Client.GetConnectorExpansionById(args[0], c.EnvironmentId(cmd), kafkaCluster.ID)
+	connector, err := c.V2Client.GetConnectorExpansionById(args[0], c.EnvironmentId(), kafkaCluster.ID)
 	if err != nil {
 		return err
 	}
 
-	outputOption, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		return err
-	}
-
-	if outputOption == output.Human.String() {
+	if output.GetFormat(cmd) == output.Human {
 		return printHumanDescribe(cmd, connector)
 	}
 
@@ -96,7 +90,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 }
 
 func printHumanDescribe(cmd *cobra.Command, connector *connectv1.ConnectV1ConnectorExpansion) error {
-	utils.Println(cmd, "Connector Details")
+	output.Println("Connector Details")
 	table := output.NewTable(cmd)
 	table.Add(&connectOut{
 		Name:   connector.Status.GetName(),
@@ -108,8 +102,10 @@ func printHumanDescribe(cmd *cobra.Command, connector *connectv1.ConnectV1Connec
 	if err := table.Print(); err != nil {
 		return err
 	}
+	output.Println()
+	output.Println()
 
-	utils.Println(cmd, "\n\nTask Level Details")
+	output.Println("Task Level Details")
 	list := output.NewList(cmd)
 	for _, task := range connector.Status.GetTasks() {
 		list.Add(&taskDescribeOut{
@@ -120,8 +116,10 @@ func printHumanDescribe(cmd *cobra.Command, connector *connectv1.ConnectV1Connec
 	if err := list.Print(); err != nil {
 		return err
 	}
+	output.Println()
+	output.Println()
 
-	utils.Println(cmd, "\n\nConfiguration Details")
+	output.Println("Configuration Details")
 	list = output.NewList(cmd)
 	for name, value := range connector.Info.GetConfig() {
 		list.Add(&configDescribeOut{

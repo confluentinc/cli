@@ -13,10 +13,10 @@ func (s *CLITestSuite) TestAsyncApiExport() {
 		{args: "asyncapi export", exitCode: 1},
 		// No SR Key Set up
 		{args: "asyncapi export", exitCode: 1, useKafka: "lkc-asyncapi", authKafka: "true"},
-		{args: "environment use " + testserver.SRApiEnvId, exitCode: 0, workflow: true},
+		{args: "environment use " + testserver.SRApiEnvId, workflow: true},
 		// Spec Generated
 		{args: "asyncapi export --schema-registry-api-key ASYNCAPIKEY --schema-registry-api-secret ASYNCAPISECRET", fixture: "asyncapi/1.golden", useKafka: "lkc-asyncapi", authKafka: "true", workflow: true},
-		{args: "asyncapi export --schema-registry-api-key ASYNCAPIKEY --schema-registry-api-secret ASYNCAPISECRET --schema-context dev --file=asyncapi-with-context.yaml", useKafka: "lkc-asyncapi", authKafka: "true", workflow: true},
+		{args: "asyncapi export --schema-registry-api-key ASYNCAPIKEY --schema-registry-api-secret ASYNCAPISECRET --schema-context dev --file asyncapi-with-context.yaml", useKafka: "lkc-asyncapi", authKafka: "true", workflow: true},
 	}
 	resetConfiguration(s.T(), false)
 	for _, test := range tests {

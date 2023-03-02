@@ -6,7 +6,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *command) newGenerateFunction() *cobra.Command {
@@ -54,7 +53,7 @@ func (c *command) generate(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	utils.ErrPrintln(cmd, errors.SaveTheMasterKeyMsg)
+	output.ErrPrintln(errors.SaveTheMasterKeyMsg)
 	table := output.NewTable(cmd)
 	table.Add(&rotateOut{MasterKey: masterKey})
 	return table.Print()

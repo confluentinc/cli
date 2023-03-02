@@ -6,8 +6,8 @@ import (
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *userCommand) newUpdateCommand() *cobra.Command {
@@ -35,13 +35,11 @@ func (c *userCommand) update(cmd *cobra.Command, args []string) error {
 		return errors.Errorf(errors.BadResourceIDErrorMsg, "u")
 	}
 
-	update := iamv2.IamV2UserUpdate{FullName: &fullName}
-
-	_, err = c.V2Client.UpdateIamUser(resourceId, update)
-	if err != nil {
+	update := iamv2.IamV2UserUpdate{FullName: iamv2.PtrString(fullName)}
+	if _, err := c.V2Client.UpdateIamUser(resourceId, update); err != nil {
 		return errors.Errorf(errors.UpdateResourceErrorMsg, resource.User, resourceId, err)
 	}
 
-	utils.ErrPrintf(cmd, errors.UpdateSuccessMsg, "full name", "user", resourceId, fullName)
+	output.ErrPrintf(errors.UpdateSuccessMsg, "full name", "user", resourceId, fullName)
 	return nil
 }

@@ -5,7 +5,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 type invitationOut struct {
@@ -36,7 +35,7 @@ func (c invitationCommand) listInvitations(cmd *cobra.Command, _ []string) error
 	}
 
 	if len(invitations) == 0 {
-		utils.Println(cmd, "No invitations found.")
+		output.Println("No invitations found.")
 		return nil
 	}
 

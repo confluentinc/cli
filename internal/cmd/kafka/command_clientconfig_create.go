@@ -18,7 +18,7 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 type createCommand struct {
@@ -181,7 +181,7 @@ func (c *createCommand) create(configId string, srApiAvailable bool) func(cmd *c
 		}
 
 		// print configuration file to stdout
-		utils.Println(cmd, string(configFile))
+		output.Println(configFile)
 		return nil
 	}
 }
@@ -378,12 +378,9 @@ func replaceTemplates(configFile string, m map[string]string) string {
 	return configFile
 }
 
-func commentAndWarnAboutSchemaRegistry(reason string, suggestions string, configFile string) (string, error) {
-	warning := errors.NewWarningWithSuggestions(
-		errors.SRInConfigFileWarning,
-		reason,
-		suggestions+"\n"+errors.SRInConfigFileSuggestions)
-	warning.DisplayWarningWithSuggestions()
+func commentAndWarnAboutSchemaRegistry(reason, suggestions, configFile string) (string, error) {
+	warning := errors.NewWarningWithSuggestions(errors.SRInConfigFileWarning, reason, suggestions+"\n"+errors.SRInConfigFileSuggestions)
+	output.ErrPrint(warning.DisplayWarningWithSuggestions())
 
 	configFile, err := commentSchemaRegistryLines(configFile)
 	if err != nil {

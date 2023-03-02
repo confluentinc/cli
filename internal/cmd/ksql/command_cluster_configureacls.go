@@ -16,8 +16,8 @@ import (
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *ksqlCommand) newConfigureAclsCommand() *cobra.Command {
@@ -47,13 +47,13 @@ func (c *ksqlCommand) configureACLs(cmd *cobra.Command, args []string) error {
 	ksqlCluster := args[0]
 
 	// Ensure the KSQL cluster talks to the current Kafka Cluster
-	cluster, err := c.V2Client.DescribeKsqlCluster(ksqlCluster, c.EnvironmentId(cmd))
+	cluster, err := c.V2Client.DescribeKsqlCluster(ksqlCluster, c.EnvironmentId())
 	if err != nil {
 		return err
 	}
 
 	if cluster.Spec.KafkaCluster.Id != kafkaCluster.Id {
-		utils.ErrPrintf(cmd, errors.KsqlDBNotBackedByKafkaMsg, ksqlCluster, cluster.Spec.KafkaCluster.Id, kafkaCluster.Id, cluster.Spec.KafkaCluster.Id)
+		output.ErrPrintf(errors.KsqlDBNotBackedByKafkaMsg, ksqlCluster, cluster.Spec.KafkaCluster.Id, kafkaCluster.Id, cluster.Spec.KafkaCluster.Id)
 	}
 
 	credentialIdentity := cluster.Spec.CredentialIdentity.GetId()

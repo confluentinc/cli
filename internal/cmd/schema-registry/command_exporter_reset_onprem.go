@@ -1,8 +1,9 @@
 package schemaregistry
 
 import (
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/spf13/cobra"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
 func (c *exporterCommand) newResetCommandOnPrem() *cobra.Command {
@@ -27,5 +28,5 @@ func (c *exporterCommand) onPremReset(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return resetExporter(cmd, args[0], srClient, ctx)
+	return resetExporter(args[0], srClient, ctx)
 }

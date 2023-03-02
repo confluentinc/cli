@@ -11,9 +11,9 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/properties"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -104,10 +104,10 @@ func createExporter(cmd *cobra.Command, name string, srClient *srsdk.APIClient, 
 		Config:              configMap,
 	}
 
-	if _, _, err = srClient.DefaultApi.CreateExporter(ctx, req); err != nil {
+	if _, _, err := srClient.DefaultApi.CreateExporter(ctx, req); err != nil {
 		return err
 	}
 
-	utils.Printf(cmd, errors.CreatedResourceMsg, resource.SchemaExporter, name)
+	output.Printf(errors.CreatedResourceMsg, resource.SchemaExporter, name)
 	return nil
 }
