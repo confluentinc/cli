@@ -98,7 +98,7 @@ func (s *SRRouter) HandleSRSubjectVersion(t *testing.T) http.HandlerFunc {
 					Version:    1,
 					Id:         1,
 					SchemaType: "avro",
-					Schema:     `{"doc":"Sample schema to help you get started.","fields":[{"doc":"The int type is a 32-bit signed integer.","name":"my_field1","type":"int"},{"doc":"The double type is a double precision(64-bit) IEEE754 floating-point number.","name":"my_field2","type":"double"},{"doc":"The string is a unicode character sequence.","name":"my_field3","type":"string"}],"name":"sampleRecord","namespace":"com.mycorp.mynamespace","type":"record"}`,
+					Schema:     `{"doc":"Sample schema to help you get started.","fields":[{"doc":"The int type is a 32-bit signed integer.","name":"my_field1","type":"int"},{"doc":"The double type is a double precision(64-bit) IEEE754 floating-point number.","name":"my_field2","type":"double"},{"doc":"The string is a unicode character sequence.","name":"my_field3","type":"string"}],"name":"sampleRecord","namespace":"com.mycorp.mynamespace","type":"AVRO"}`,
 				})
 				require.NoError(t, err)
 			} else {
@@ -106,7 +106,7 @@ func (s *SRRouter) HandleSRSubjectVersion(t *testing.T) http.HandlerFunc {
 				version64, err := strconv.ParseInt(versionStr, 10, 32)
 				require.NoError(t, err)
 				subject := vars["subject"]
-				schema := srsdk.Schema{Subject: subject, Version: int32(version64), SchemaType: "record"}
+				schema := srsdk.Schema{Subject: subject, Version: int32(version64), SchemaType: "AVRO"}
 				switch subject {
 				case "lvl0":
 					schema.Id = 1001
@@ -205,7 +205,7 @@ func (s *SRRouter) HandleSRById(t *testing.T) http.HandlerFunc {
 		id64, err := strconv.ParseInt(idStr, 10, 32)
 		require.NoError(t, err)
 
-		schema := srsdk.Schema{Subject: subject, Version: 1, SchemaType: "record", Id: int32(id64)}
+		schema := srsdk.Schema{Subject: subject, Version: 1, SchemaType: "AVRO", Id: int32(id64)}
 		switch id64 {
 		case 1001:
 			schema.Schema = "schema0"

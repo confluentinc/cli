@@ -1,5 +1,5 @@
 Schema ID: 10
-Type: record
+Type: AVRO
 Schema:
 {
     "schema": 1
