@@ -1,12 +1,16 @@
 package controller
 
 import (
+	"errors"
+	"log"
+	"os"
+	"reflect"
+	"strings"
+
 	"github.com/c-bata/go-prompt"
 	"github.com/confluentinc/flink-sql-client/autocomplete"
 	components "github.com/confluentinc/flink-sql-client/components"
 	"github.com/olekukonko/tablewriter"
-	"os"
-	"strings"
 )
 
 type InputController struct {
@@ -15,24 +19,39 @@ type InputController struct {
 	appController   *ApplicationController
 	smartCompletion bool
 	table           *TableController
-}
-
-func (c *InputController) getSmartCompletion() bool {
-	return c.smartCompletion
-}
-
-func (c *InputController) toggleSmartCompletion() {
-	c.smartCompletion = !c.smartCompletion
+	p               *prompt.Prompt
 }
 
 // Actions
-// This will be run after tview.app gets suspended
-// Upon returning tview.app will be resumed.
+func (c *InputController) toggleSmartCompletion() {
+	c.smartCompletion = !c.smartCompletion
+
+	maxCol, err := c.GetMaxCol()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	components.PrintSmartCompletionState(c.getSmartCompletion(), maxCol)
+}
+
+func (c *InputController) toggleOutputMode() {
+	c.appController.toggleOutputMode()
+
+	maxCol, err := c.GetMaxCol()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	components.PrintOutputModeState(c.appController.getOutputMode() == TViewOutput, maxCol)
+}
+
 func (c *InputController) RunInteractiveInput() {
 
 	for c.appController.getOutputMode() == GoPromptOutput {
 		// Run interactive input and take over terminal
-		input := c.Prompt().Input()
+		input := c.p.Input()
 
 		c.History.Append([]string{input})
 		if c.appController.getOutputMode() == GoPromptOutput {
@@ -41,7 +60,8 @@ func (c *InputController) RunInteractiveInput() {
 			printResultToSTDOUT(data)
 		}
 	}
-	// Run interactive input, take over terminal and save output to lastStatement and statements
+
+	// If output mode is TViewOutput we display the interactive table
 	if c.appController.outputMode == TViewOutput && c.appController.tAppSuspended {
 		c.table.fetchDataAndPrintTable()
 	}
@@ -102,7 +122,7 @@ func (c *InputController) Prompt() *prompt.Prompt {
 		prompt.OptionAddKeyBind(prompt.KeyBind{
 			Key: prompt.ControlO,
 			Fn: func(b *prompt.Buffer) {
-				c.appController.toggleOutputMode()
+				c.toggleOutputMode()
 			},
 		}),
 		prompt.OptionAddASCIICodeBind(prompt.ASCIICodeBind{
@@ -129,11 +149,45 @@ func (c *InputController) Prompt() *prompt.Prompt {
 	)
 }
 
+// Getters
+func (c *InputController) getSmartCompletion() bool {
+	return c.smartCompletion
+}
+
+// This function fetches the current max column width for the terminal
+// In other words, the amount of characters that can be displayed in one line
+func (c *InputController) GetMaxCol() (int, error) {
+	p := c.p
+	v := reflect.ValueOf(p)
+	if v.Kind() != reflect.Pointer {
+		return -1, errors.New("could not reflect prompt")
+	} else {
+		v = v.Elem()
+	}
+
+	v = v.FieldByName("renderer")
+	if v.Kind() != reflect.Pointer {
+		return -1, errors.New("could not reflect prompt.renderer")
+	} else {
+		v = v.Elem()
+	}
+
+	v = v.FieldByName("col")
+	if v.Kind() != reflect.Uint16 {
+		return -1, errors.New("could not reflect prompt.renderer.col")
+	}
+
+	maxCol := v.Uint()
+
+	return int(maxCol), nil
+}
+
 func NewInputController(history History, t *TableController, a *ApplicationController) (c InputController) {
 	// Initialization
 	c.History = history
 	c.smartCompletion = true
 	c.table = t
 	c.appController = a
+	c.p = c.Prompt()
 	return c
 }

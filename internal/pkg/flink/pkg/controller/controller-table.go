@@ -53,8 +53,15 @@ func (t *TableController) setData(newData string) {
 func (t *TableController) handleCellEvent(event *tcell.EventKey) *tcell.EventKey {
 	if event.Key() == tcell.KeyEscape {
 		t.appController.toggleOutputMode()
+
+		// Here we suspend outpude mode/tview and run the interactive input again
 		t.appController.suspendOutputMode(t.InputController.RunInteractiveInput)
-		t.fetchDataAndPrintTable()
+
+		// After the interactive input is done, we print again the infos in the table
+		if t.appController.getOutputMode() == TViewOutput {
+			t.fetchDataAndPrintTable()
+		}
+
 		return nil
 	}
 
@@ -141,6 +148,7 @@ func (a *TableController) PrintTable(data string) {
 func (a *TableController) fetchDataAndPrintTable() {
 	data := a.store.FetchData("")
 	a.PrintTable(data)
+	a.focus()
 }
 
 func NewTableController(tableRef *tview.Table, store Store, appController *ApplicationController) *TableController {

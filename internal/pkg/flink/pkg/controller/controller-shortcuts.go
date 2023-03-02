@@ -22,9 +22,8 @@ type Shortcut struct {
 
 // Keyboard shortcuts shown at the bottom.
 var appShortcuts = []Shortcut{
+	{Key: tcell.KeyEscape, KeyText: "Esc", Text: "Return to input"},
 	{Key: tcell.KeyCtrlQ, KeyText: "Q", Text: "Quit"},
-	{Key: tcell.KeyCtrlS, KeyText: "S", Text: "Smart Completion"},
-	{Key: tcell.KeyCtrlM, KeyText: "M", Text: "Interactive Output ON/OFF"},
 	{Key: tcell.KeyCtrlT, KeyText: "T", Text: "Toggle Display Mode"},
 	{Key: tcell.KeyCtrlT, KeyText: "N", Text: "Next Page"},
 	{Key: tcell.KeyCtrlT, KeyText: "P", Text: "Prev Page"},
