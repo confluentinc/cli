@@ -10,13 +10,13 @@ func (s *CLITestSuite) TestEnvironment() {
 		{args: "environment list", fixture: "environment/4.golden"},
 		{args: "environment list -o json", fixture: "environment/5.golden"},
 		{args: "environment list -o yaml", fixture: "environment/6.golden"},
-		{args: "environment use non-existent-id", fixture: "environment/7.golden", wantErrCode: 1},
+		{args: "environment use non-existent-id", fixture: "environment/7.golden", exitCode: 1},
 		{args: "environment create saucayyy", fixture: "environment/8.golden"},
 		{args: "environment create saucayyy -o json", fixture: "environment/9.golden"},
 		{args: "environment create saucayyy -o yaml", fixture: "environment/10.golden"},
 		{args: "environment delete not-595 --force", fixture: "environment/11.golden"},
 		{args: "environment delete not-595", input: "default\n", fixture: "environment/11-prompt.golden"},
-		{args: "environment delete env-dne --force", fixture: "environment/12.golden", wantErrCode: 1},
+		{args: "environment delete env-dne --force", fixture: "environment/12.golden", exitCode: 1},
 	}
 
 	resetConfiguration(s.T(), false)

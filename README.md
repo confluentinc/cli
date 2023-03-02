@@ -55,12 +55,12 @@ To build for Darwin/arm64, run the following:
 
     GOARCH=arm64 make cross-build
 
-To build for Linux (glibc or musl), install cross compiler `musl-cross` with homebrew:
+To build for Linux (glibc or musl), install cross compiler `musl-cross` with Homebrew:
 
     brew install FiloSottile/musl-cross/musl-cross
     GOOS=linux make cross-build
 
-To build for Windows/amd64, install `mingw-w64` compilers with homebrew:
+To build for Windows/amd64, install `mingw-w64` compilers with Homebrew:
 
     brew install mingw-w64
     GOOS=windows make cross-build
