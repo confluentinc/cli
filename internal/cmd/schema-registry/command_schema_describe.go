@@ -1,6 +1,7 @@
 package schemaregistry
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -223,7 +224,18 @@ func printSchema(cmd *cobra.Command, schemaID int64, schema string, sType string
 	if sType != "" {
 		utils.Println(cmd, "Type: "+sType)
 	}
-	utils.Println(cmd, "Schema: "+schema)
+
+	if sType != "PROTOBUF" { // AVRO schemas could be returned as type ""
+		var jsonBuffer bytes.Buffer
+		if err := json.Indent(&jsonBuffer, []byte(schema), "", "    "); err != nil {
+			return err
+		}
+		schema = jsonBuffer.String()
+	}
+
+	utils.Println(cmd, "Schema:")
+	utils.Println(cmd, schema)
+
 	if len(refs) > 0 {
 		utils.Println(cmd, "References:")
 		for i := 0; i < len(refs); i++ {

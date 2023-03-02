@@ -149,7 +149,7 @@ func (s *SRRouter) HandleSRSubjectVersion(t *testing.T) http.HandlerFunc {
 					schema.References = []srsdk.SchemaReference{}
 				default:
 					schema.Id = 10
-					schema.Schema = "schema"
+					schema.Schema = `{"schema":1}`
 					schema.References = []srsdk.SchemaReference{{
 						Name:    "ref",
 						Subject: "payment",
@@ -243,7 +243,7 @@ func (s *SRRouter) HandleSRById(t *testing.T) http.HandlerFunc {
 			schema.Schema = "schema2"
 			schema.References = []srsdk.SchemaReference{}
 		default:
-			schema.Schema = "schema"
+			schema.Schema = `{"schema":1}`
 			schema.References = []srsdk.SchemaReference{{
 				Name:    "ref",
 				Subject: "payment",
