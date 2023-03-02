@@ -1,6 +1,7 @@
 package schemaregistry
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -111,7 +112,7 @@ func describeById(cmd *cobra.Command, id string, srClient *srsdk.APIClient, ctx 
 		return err
 	}
 
-	return printSchema(cmd, schemaID, schemaString.Schema, schemaString.SchemaType, schemaString.References)
+	return printSchema(schemaID, schemaString.Schema, schemaString.SchemaType, schemaString.References)
 }
 
 func describeBySubject(cmd *cobra.Command, srClient *srsdk.APIClient, ctx context.Context) error {
@@ -130,7 +131,7 @@ func describeBySubject(cmd *cobra.Command, srClient *srsdk.APIClient, ctx contex
 		return errors.CatchSchemaNotFoundError(err, httpResp)
 	}
 
-	return printSchema(cmd, int64(schema.Id), schema.Schema, schema.SchemaType, schema.References)
+	return printSchema(int64(schema.Id), schema.Schema, schema.SchemaType, schema.References)
 }
 
 func describeGraph(cmd *cobra.Command, id string, srClient *srsdk.APIClient, ctx context.Context) error {
@@ -218,12 +219,26 @@ func traverseDAG(srClient *srsdk.APIClient, ctx context.Context, visited map[str
 	return root, schemaGraph, nil
 }
 
-func printSchema(cmd *cobra.Command, schemaID int64, schema string, sType string, refs []srsdk.SchemaReference) error {
+func printSchema(schemaID int64, schema, schemaType string, refs []srsdk.SchemaReference) error {
 	output.Printf("Schema ID: %d\n", schemaID)
-	if sType != "" {
-		output.Println("Type: " + sType)
+
+	if schemaType != "" {
+		schemaType = "AVRO"
 	}
-	output.Println("Schema: " + schema)
+	output.Println("Type: " + schemaType)
+
+	switch schemaType {
+	case "JSON", "AVRO":
+		var jsonBuffer bytes.Buffer
+		if err := json.Indent(&jsonBuffer, []byte(schema), "", "    "); err != nil {
+			return err
+		}
+		schema = jsonBuffer.String()
+	}
+
+	output.Println("Schema:")
+	output.Println(schema)
+
 	if len(refs) > 0 {
 		output.Println("References:")
 		for i := 0; i < len(refs); i++ {
