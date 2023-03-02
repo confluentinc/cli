@@ -14,7 +14,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 type createOut struct {
@@ -109,14 +108,9 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		Secret: v2Key.Spec.GetSecret(),
 	}
 
-	outputFormat, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		return err
-	}
-
-	if outputFormat == output.Human.String() {
-		utils.ErrPrintln(cmd, errors.APIKeyTime)
-		utils.ErrPrintln(cmd, errors.APIKeyNotRetrievableMsg)
+	if output.GetFormat(cmd) == output.Human {
+		output.ErrPrintln(errors.APIKeyTime)
+		output.ErrPrintln(errors.APIKeyNotRetrievableMsg)
 	}
 
 	table := output.NewTable(cmd)
@@ -146,7 +140,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		if err != nil {
 			return errors.NewWrapErrorWithSuggestions(err, errors.APIKeyUseFailedErrorMsg, fmt.Sprintf(errors.APIKeyUseFailedSuggestions, userKey.Key))
 		}
-		utils.Printf(cmd, errors.UseAPIKeyMsg, userKey.Key, clusterId)
+		output.Printf(errors.UseAPIKeyMsg, userKey.Key, clusterId)
 	}
 
 	return nil

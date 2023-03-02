@@ -45,7 +45,7 @@ func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
 			clusters = append(clusters, clustersOfEnvironment...)
 		}
 	} else {
-		clusters, err = c.V2Client.ListKafkaClusters(c.EnvironmentId(cmd))
+		clusters, err = c.V2Client.ListKafkaClusters(c.EnvironmentId())
 		if err != nil {
 			return err
 		}

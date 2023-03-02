@@ -5,7 +5,6 @@ import (
 	"os"
 
 	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
-	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
@@ -45,7 +44,7 @@ func mapSubdomainsToList(m map[string]string) []string {
 	return subdomains
 }
 
-func confirmOptOut(cmd *cobra.Command) (bool, error) {
+func confirmOptOut() (bool, error) {
 	f := form.New(
 		form.Field{
 			ID: "confirmation",
@@ -54,7 +53,7 @@ func confirmOptOut(cmd *cobra.Command) (bool, error) {
 			IsYesOrNo: true,
 		},
 	)
-	if err := f.Prompt(cmd, form.NewPrompt(os.Stdin)); err != nil {
+	if err := f.Prompt(form.NewPrompt(os.Stdin)); err != nil {
 		return false, errors.New(errors.FailedToReadInputErrorMsg)
 	}
 	return f.Responses["confirmation"].(bool), nil

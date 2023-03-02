@@ -4,7 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 func NewVersionCommand(prerunner pcmd.PreRunner) *cobra.Command {
@@ -19,7 +19,7 @@ func NewVersionCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *Command) runVersionCommand(command *cobra.Command, _ []string) error {
+func (c *Command) runVersionCommand(_ *cobra.Command, _ []string) error {
 	isCP, err := c.ch.IsConfluentPlatform()
 	if err != nil {
 		return err
@@ -35,6 +35,6 @@ func (c *Command) runVersionCommand(command *cobra.Command, _ []string) error {
 		return err
 	}
 
-	utils.Printf(command, "%s: %s\n", flavor, version)
+	output.Printf("%s: %s\n", flavor, version)
 	return nil
 }

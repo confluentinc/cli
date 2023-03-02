@@ -12,7 +12,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 type Command struct {
@@ -61,6 +61,6 @@ func (c *Command) logout(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	utils.Println(cmd, errors.LoggedOutMsg)
+	output.Println(errors.LoggedOutMsg)
 	return nil
 }

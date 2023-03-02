@@ -75,5 +75,5 @@ func (c *clusterCommand) fetchConnectors(cmd *cobra.Command) (map[string]connect
 		return nil, err
 	}
 
-	return c.V2Client.ListConnectorsWithExpansions(c.EnvironmentId(cmd), kafkaCluster.ID, "id,info")
+	return c.V2Client.ListConnectorsWithExpansions(c.EnvironmentId(), kafkaCluster.ID, "id,info")
 }

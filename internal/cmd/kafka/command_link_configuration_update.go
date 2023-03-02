@@ -7,9 +7,9 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/properties"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *linkCommand) newConfigurationUpdateCommand() *cobra.Command {
@@ -75,6 +75,6 @@ func (c *linkCommand) configurationUpdate(cmd *cobra.Command, args []string) err
 		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
-	utils.Printf(cmd, errors.UpdatedResourceMsg, resource.ClusterLink, linkName)
+	output.Printf(errors.UpdatedResourceMsg, resource.ClusterLink, linkName)
 	return nil
 }

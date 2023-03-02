@@ -8,8 +8,8 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *command) newDeleteCommand() *cobra.Command {
@@ -44,8 +44,8 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return errors.CatchEnvironmentNotFoundError(err, httpResp)
 	}
 
-	utils.ErrPrintf(cmd, errors.DeletedResourceMsg, resource.Environment, id)
-	if id == c.EnvironmentId(cmd) {
+	output.ErrPrintf(errors.DeletedResourceMsg, resource.Environment, id)
+	if id == c.EnvironmentId() {
 		c.Context.SetEnvironment(nil)
 
 		if err := c.Config.Save(); err != nil {

@@ -8,7 +8,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 func (c *exporterCommand) newResumeCommand() *cobra.Command {
@@ -42,6 +42,6 @@ func resumeExporter(cmd *cobra.Command, name string, srClient *srsdk.APIClient, 
 		return err
 	}
 
-	utils.Printf(cmd, errors.ExporterActionMsg, "Resumed", name)
+	output.Printf(errors.ExporterActionMsg, "Resumed", name)
 	return nil
 }

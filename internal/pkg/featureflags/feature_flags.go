@@ -20,6 +20,7 @@ import (
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/confluentinc/cli/internal/pkg/version"
 	testserver "github.com/confluentinc/cli/test/test-server"
@@ -181,8 +182,8 @@ func (ld *launchDarklyManager) fetchFlags(user lduser.User, client v1.LaunchDark
 	if err != nil {
 		log.CliLogger.Debug(resp)
 		if !ld.timeoutSuggestionPrinted {
-			timeoutSuggestions := errors.ComposeSuggestionsMessage(`Check connectivity to https://confluent.cloud or set "disable_feature_flags": true in ~/.confluent/config.json.`)
-			_, _ = fmt.Fprint(os.Stderr, "WARNING: Failed to fetch feature flags.\n"+timeoutSuggestions+"\n")
+			output.ErrPrintln("WARNING: Failed to fetch feature flags.")
+			output.ErrPrintln(errors.ComposeSuggestionsMessage(`Check connectivity to https://confluent.cloud or set "disable_feature_flags": true in ~/.confluent/config.json.`))
 			ld.timeoutSuggestionPrinted = true
 		}
 

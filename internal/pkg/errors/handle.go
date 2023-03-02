@@ -1,10 +1,5 @@
 package errors
 
-var (
-	suggestionsMessageHeader = "\nSuggestions:\n"
-	suggestionsLineFormat    = "    %s\n"
-)
-
 func HandleCommon(err error) error {
 	if err == nil {
 		return nil

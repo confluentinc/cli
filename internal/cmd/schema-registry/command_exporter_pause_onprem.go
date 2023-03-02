@@ -27,5 +27,5 @@ func (c *exporterCommand) onPremPause(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return pauseExporter(cmd, args[0], srClient, ctx)
+	return pauseExporter(args[0], srClient, ctx)
 }
