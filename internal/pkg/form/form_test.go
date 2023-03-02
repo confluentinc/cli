@@ -2,6 +2,7 @@ package form
 
 import (
 	"bytes"
+	"fmt"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -32,4 +33,7 @@ func TestPrompt(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "user", f.Responses["username"].(string))
 	require.Equal(t, "pass", f.Responses["password"].(string))
+
+	// Format the test report correctly
+	fmt.Println()
 }
