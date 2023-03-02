@@ -3,7 +3,7 @@ package spinner
 import (
 	"time"
 
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 var frames = []string{"|", "/", "-", "\\"}
@@ -43,12 +43,12 @@ func (s *Spinner) run() {
 			return
 		case <-ticker.C:
 			clear()
-			utils.ErrPrint(frames[i])
+			output.ErrPrint(frames[i])
 			i = (i + 1) % len(frames)
 		}
 	}
 }
 
 func clear() {
-	utils.ErrPrint("\033[1D")
+	output.ErrPrint("\033[1D")
 }

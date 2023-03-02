@@ -10,8 +10,8 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *authenticatedTopicCommand) newDeleteCommandOnPrem() *cobra.Command {
@@ -62,6 +62,6 @@ func (c *authenticatedTopicCommand) onPremDelete(cmd *cobra.Command, args []stri
 		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 	}
 
-	utils.Printf(errors.DeletedResourceMsg, resource.Topic, topicName)
+	output.Printf(errors.DeletedResourceMsg, resource.Topic, topicName)
 	return nil
 }

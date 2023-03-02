@@ -15,7 +15,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -171,7 +171,7 @@ func describeGraph(cmd *cobra.Command, id string, srClient *srsdk.APIClient, ctx
 	if err != nil {
 		return err
 	}
-	utils.Print(string(pretty.Pretty(b)))
+	output.Print(string(pretty.Pretty(b)))
 
 	return nil
 }
@@ -219,15 +219,15 @@ func traverseDAG(srClient *srsdk.APIClient, ctx context.Context, visited map[str
 }
 
 func printSchema(cmd *cobra.Command, schemaID int64, schema string, sType string, refs []srsdk.SchemaReference) error {
-	utils.Printf("Schema ID: %d\n", schemaID)
+	output.Printf("Schema ID: %d\n", schemaID)
 	if sType != "" {
-		utils.Println("Type: " + sType)
+		output.Println("Type: " + sType)
 	}
-	utils.Println("Schema: " + schema)
+	output.Println("Schema: " + schema)
 	if len(refs) > 0 {
-		utils.Println("References:")
+		output.Println("References:")
 		for i := 0; i < len(refs); i++ {
-			utils.Printf("\t%s -> %s %d\n", refs[i].Name, refs[i].Subject, refs[i].Version)
+			output.Printf("\t%s -> %s %d\n", refs[i].Name, refs[i].Subject, refs[i].Version)
 		}
 	}
 	return nil

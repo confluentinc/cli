@@ -8,9 +8,9 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/properties"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *mirrorCommand) newCreateCommand() *cobra.Command {
@@ -112,6 +112,6 @@ func (c *mirrorCommand) create(cmd *cobra.Command, args []string) error {
 		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
-	utils.Printf(errors.CreatedResourceMsg, resource.MirrorTopic, mirrorTopicName)
+	output.Printf(errors.CreatedResourceMsg, resource.MirrorTopic, mirrorTopicName)
 	return nil
 }

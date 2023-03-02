@@ -4,7 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 func (c *command) newOptOutCommand() *cobra.Command {
@@ -21,7 +21,7 @@ func (c *command) optOut(_ *cobra.Command, _ []string) error {
 		return err
 	}
 	if !isDeleteConfirmed {
-		utils.Println("Operation terminated.")
+		output.Println("Operation terminated.")
 		return nil
 	}
 
@@ -29,6 +29,6 @@ func (c *command) optOut(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	utils.Println(errors.OptOutMsg)
+	output.Println(errors.OptOutMsg)
 	return nil
 }

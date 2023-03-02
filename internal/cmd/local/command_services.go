@@ -15,6 +15,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/local"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -174,7 +175,7 @@ func (c *Command) runServicesListCommand(_ *cobra.Command, _ []string) error {
 		serviceNames[i] = writeServiceName(service)
 	}
 
-	utils.Printf(errors.AvailableServicesMsg, local.BuildTabbedList(serviceNames))
+	output.Printf(errors.AvailableServicesMsg, local.BuildTabbedList(serviceNames))
 	return nil
 }
 
@@ -469,6 +470,6 @@ func (c *Command) notifyConfluentCurrent() error {
 		return err
 	}
 
-	utils.Printf(errors.UsingConfluentCurrentMsg, dir)
+	output.Printf(errors.UsingConfluentCurrentMsg, dir)
 	return nil
 }

@@ -13,7 +13,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -101,7 +100,7 @@ func deleteSchema(cmd *cobra.Command, srClient *srsdk.APIClient, ctx context.Con
 		if err != nil {
 			return errors.CatchSchemaNotFoundError(err, httpResp)
 		}
-		utils.Printf(errors.DeletedAllSubjectVersionMsg, deleteType, subject)
+		output.Printf(errors.DeletedAllSubjectVersionMsg, deleteType, subject)
 		versions = v
 	} else {
 		opts := &srsdk.DeleteSchemaVersionOpts{Permanent: optional.NewBool(permanent)}
@@ -109,7 +108,7 @@ func deleteSchema(cmd *cobra.Command, srClient *srsdk.APIClient, ctx context.Con
 		if err != nil {
 			return errors.CatchSchemaNotFoundError(err, httpResp)
 		}
-		utils.Printf(errors.DeletedSubjectVersionMsg, deleteType, version, subject)
+		output.Printf(errors.DeletedSubjectVersionMsg, deleteType, version, subject)
 		versions = []int32{v}
 	}
 

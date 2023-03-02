@@ -21,6 +21,7 @@ import (
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	configv1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/serdes"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
@@ -172,7 +173,7 @@ func getRebalanceCallback(offset ckafka.Offset, partitionFilter partitionFilter)
 			}
 		case kafka.RevokedPartitions:
 			if consumer.AssignmentLost() {
-				utils.ErrPrintln("%% Current assignment lost.")
+				output.ErrPrintln("%% Current assignment lost.")
 			}
 			parts := getPartitionsByIndex(ev.Partitions, partitionFilter)
 			if err := consumer.IncrementalUnassign(parts); err != nil {
@@ -251,7 +252,7 @@ func runConsumer(consumer *ckafka.Consumer, groupHandler *GroupHandler) error {
 	for run {
 		select {
 		case <-signals: // Trap SIGINT to trigger a shutdown.
-			utils.ErrPrintln(errors.StoppingConsumerMsg)
+			output.ErrPrintln(errors.StoppingConsumerMsg)
 			consumer.Close()
 			run = false
 		default:

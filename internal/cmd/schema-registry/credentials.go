@@ -9,6 +9,7 @@ import (
 
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/output"
 
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -111,9 +112,9 @@ func GetSchemaRegistryClientWithApiKey(cmd *cobra.Command, cfg *dynamicconfig.Dy
 				Secret: srAPISecret,
 			}
 		} else if srAPISecret != "" {
-			utils.ErrPrintln("No Schema Registry API key specified.")
+			output.ErrPrintln("No Schema Registry API key specified.")
 		} else if srAPIKey != "" {
-			utils.ErrPrintln("No Schema Registry API key secret specified.")
+			output.ErrPrintln("No Schema Registry API key secret specified.")
 		}
 		srAuth, didPromptUser, err := getSchemaRegistryAuth(cmd, srCluster.SrCredentials, shouldPrompt)
 		if err != nil {
@@ -145,7 +146,7 @@ func GetSchemaRegistryClientWithApiKey(cmd *cobra.Command, cfg *dynamicconfig.Dy
 
 		// Test credentials
 		if _, _, err := srClient.DefaultApi.Get(srCtx); err != nil {
-			utils.ErrPrintln(errors.SRCredsValidationFailedErrorMsg)
+			output.ErrPrintln(errors.SRCredsValidationFailedErrorMsg)
 			// Prompt users to enter new credentials if validation fails.
 			shouldPrompt = true
 			continue

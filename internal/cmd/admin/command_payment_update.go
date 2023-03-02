@@ -6,6 +6,7 @@ import (
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/confluentinc/cli/internal/pkg/form"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/spf13/cobra"
 )
@@ -22,7 +23,7 @@ func (c *command) newUpdateCommand() *cobra.Command {
 func (c *command) update(cmd *cobra.Command, _ []string) error {
 	prompt := form.NewPrompt(os.Stdin)
 
-	utils.Println("Edit credit card")
+	output.Println("Edit credit card")
 
 	f := form.New(
 		form.Field{ID: "card number", Prompt: "Card number", Regex: `^(?:\d[ -]*?){13,19}$`},
@@ -45,6 +46,6 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	utils.Println("Updated.")
+	output.Println("Updated.")
 	return nil
 }

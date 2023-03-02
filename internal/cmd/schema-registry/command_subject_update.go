@@ -11,7 +11,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -81,7 +81,7 @@ func (c *subjectCommand) updateCompatibility(subject, compatibility string, srCl
 		return errors.CatchSchemaNotFoundError(err, httpResp)
 	}
 
-	utils.Printf(errors.UpdatedSubjectLevelCompatibilityMsg, compatibility, subject)
+	output.Printf(errors.UpdatedSubjectLevelCompatibilityMsg, compatibility, subject)
 	return nil
 }
 
@@ -91,6 +91,6 @@ func (c *subjectCommand) updateMode(subject, mode string, srClient *srsdk.APICli
 		return errors.CatchSchemaNotFoundError(err, httpResp)
 	}
 
-	utils.Printf(errors.UpdatedSubjectLevelModeMsg, updatedMode, subject)
+	output.Printf(errors.UpdatedSubjectLevelModeMsg, updatedMode, subject)
 	return nil
 }

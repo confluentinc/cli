@@ -8,7 +8,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 func (c *exporterCommand) newPauseCommand() *cobra.Command {
@@ -42,6 +42,6 @@ func pauseExporter(name string, srClient *srsdk.APIClient, ctx context.Context) 
 		return err
 	}
 
-	utils.Printf(errors.ExporterActionMsg, "Paused", name)
+	output.Printf(errors.ExporterActionMsg, "Paused", name)
 	return nil
 }

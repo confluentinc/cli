@@ -11,6 +11,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/local"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -276,7 +277,7 @@ func (c *Command) runKafkaCommand(cmd *cobra.Command, args []string, mode string
 	kafkaCommand.Stderr = os.Stderr
 	if mode == "produce" {
 		kafkaCommand.Stdin = os.Stdin
-		utils.Println("Exit with Ctrl-D")
+		output.Println("Exit with Ctrl-D")
 	}
 
 	kafkaCommand.Env = []string{

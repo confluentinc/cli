@@ -4,9 +4,8 @@ import (
 	"bytes"
 	"strings"
 
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/spf13/cobra"
-
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 const longDescription = `Use this command to print the shell completion
@@ -86,7 +85,7 @@ func New() *cobra.Command {
 				return err
 			}
 
-			utils.Println(out)
+			output.Println(out)
 			return nil
 		},
 	}

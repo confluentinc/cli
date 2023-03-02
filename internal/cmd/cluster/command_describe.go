@@ -11,7 +11,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 type describeCommand struct {
@@ -124,10 +123,10 @@ func printDescribe(cmd *cobra.Command, meta *ScopedId) error {
 	}
 
 	if meta.ID != "" {
-		utils.Printf("Confluent Resource Name: %s\n\n", meta.ID)
+		output.Printf("Confluent Resource Name: %s\n\n", meta.ID)
 	}
 
-	utils.Println("Scope:")
+	output.Println("Scope:")
 	list := output.NewList(cmd)
 	for _, name := range types {
 		list.Add(&scopeOut{

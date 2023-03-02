@@ -4,9 +4,8 @@ import (
 	"context"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/spf13/cobra"
-
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *command) newAddCommand() *cobra.Command {
@@ -25,6 +24,6 @@ func (c *command) add(_ *cobra.Command, args []string) error {
 		return err
 	}
 
-	utils.Println("Your promo code was successfully added.")
+	output.Println("Your promo code was successfully added.")
 	return nil
 }

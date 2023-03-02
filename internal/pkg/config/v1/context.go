@@ -8,7 +8,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
@@ -267,5 +267,5 @@ func printApiKeysDictErrorMessage(missingKey, mismatchKey, missingSecret bool, c
 		problems = append(problems, errors.APISecretMissingMsg)
 	}
 	problemString := strings.Join(problems, ", ")
-	utils.ErrPrintf(errors.APIKeysMapAutofixMsg, cluster.ID, contextName, problemString, cluster.ID)
+	output.ErrPrintf(errors.APIKeysMapAutofixMsg, cluster.ID, contextName, problemString, cluster.ID)
 }

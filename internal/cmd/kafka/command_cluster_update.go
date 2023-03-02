@@ -12,7 +12,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 func (c *clusterCommand) newUpdateCommand(cfg *v1.Config) *cobra.Command {
@@ -150,7 +150,7 @@ func confirmShrink(prompt form.Prompt, promptMessage string) (bool, error) {
 		return false, errors.New(errors.FailedToReadClusterResizeConfirmationErrorMsg)
 	}
 	if !f.Responses["proceed"].(bool) {
-		utils.Println("Not proceeding with kafka cluster shrink")
+		output.Println("Not proceeding with kafka cluster shrink")
 		return false, nil
 	}
 	return true, nil

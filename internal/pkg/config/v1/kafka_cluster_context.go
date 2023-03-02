@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 type KafkaClusterContext struct {
@@ -186,7 +186,7 @@ func (k *KafkaClusterContext) validateActiveKafka() {
 		"You can set active Kafka cluster with 'ccloud kafka cluster use'.\n"
 	if !k.EnvContext {
 		if _, ok := k.KafkaClusterConfigs[k.ActiveKafkaCluster]; k.ActiveKafkaCluster != "" && !ok {
-			utils.ErrPrintf(errMsg, k.ActiveKafkaCluster, k.Context.Name)
+			output.ErrPrintf(errMsg, k.ActiveKafkaCluster, k.Context.Name)
 			k.ActiveKafkaCluster = ""
 			err := k.Context.Save()
 			if err != nil {
@@ -196,7 +196,7 @@ func (k *KafkaClusterContext) validateActiveKafka() {
 	} else {
 		for env, kafkaEnvContext := range k.KafkaEnvContexts {
 			if _, ok := kafkaEnvContext.KafkaClusterConfigs[kafkaEnvContext.ActiveKafkaCluster]; kafkaEnvContext.ActiveKafkaCluster != "" && !ok {
-				utils.ErrPrintf(errMsg, kafkaEnvContext.ActiveKafkaCluster, k.Context.Name)
+				output.ErrPrintf(errMsg, kafkaEnvContext.ActiveKafkaCluster, k.Context.Name)
 				kafkaEnvContext.ActiveKafkaCluster = ""
 				err := k.Context.Save()
 				if err != nil {
@@ -219,7 +219,7 @@ func (k *KafkaClusterContext) validateKafkaClusterConfig(cluster *KafkaClusterCo
 		}
 	}
 	if _, ok := cluster.APIKeys[cluster.APIKey]; cluster.APIKey != "" && !ok {
-		utils.ErrPrintf(errors.CurrentAPIKeyAutofixMsg, cluster.APIKey, cluster.ID, k.Context.Name, cluster.ID)
+		output.ErrPrintf(errors.CurrentAPIKeyAutofixMsg, cluster.APIKey, cluster.ID, k.Context.Name, cluster.ID)
 		cluster.APIKey = ""
 		err := k.Context.Save()
 		if err != nil {

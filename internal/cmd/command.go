@@ -46,6 +46,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/help"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	pplugin "github.com/confluentinc/cli/internal/pkg/plugin"
 	secrets "github.com/confluentinc/cli/internal/pkg/secret"
 	"github.com/confluentinc/cli/internal/pkg/usage"
@@ -148,7 +149,7 @@ func Execute(cmd *cobra.Command, args []string, cfg *v1.Config) error {
 	}
 
 	err := cmd.Execute()
-	errors.DisplaySuggestionsMessage(err, os.Stderr)
+	output.ErrPrint(errors.DisplaySuggestionsMessage(err))
 	u.Error = cliv1.PtrBool(err != nil)
 
 	if cfg.IsCloudLogin() && u.Command != nil && *(u.Command) != "" {

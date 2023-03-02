@@ -10,7 +10,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/properties"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *brokerCommand) newUpdateCommand() *cobra.Command {
@@ -88,9 +87,9 @@ func (c *brokerCommand) update(cmd *cobra.Command, args []string) error {
 
 	if output.GetFormat(cmd) == output.Human {
 		if all {
-			utils.Printf("Updated the following broker configurations for cluster \"%s\":\n", clusterId)
+			output.Printf("Updated the following broker configurations for cluster \"%s\":\n", clusterId)
 		} else {
-			utils.Printf("Updated the following configurations for broker \"%d\":\n", brokerId)
+			output.Printf("Updated the following configurations for broker \"%d\":\n", brokerId)
 		}
 	}
 

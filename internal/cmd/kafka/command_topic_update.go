@@ -16,7 +16,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/properties"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/set"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 type topicConfigurationOut struct {
@@ -105,7 +104,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 	}
 
 	if dryRun {
-		utils.Printf(errors.UpdatedResourceMsg, resource.Topic, topicName)
+		output.Printf(errors.UpdatedResourceMsg, resource.Topic, topicName)
 		return nil
 	}
 
@@ -141,7 +140,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 
 	// Write current state of relevant config settings
 	if output.GetFormat(cmd) == output.Human {
-		utils.ErrPrintf(errors.UpdateTopicConfigRestMsg, topicName)
+		output.ErrPrintf(errors.UpdateTopicConfigRestMsg, topicName)
 	}
 
 	list := output.NewList(cmd)

@@ -8,7 +8,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 type serializedDescribeOut struct {
@@ -91,7 +90,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 }
 
 func printHumanDescribe(cmd *cobra.Command, connector *connectv1.ConnectV1ConnectorExpansion) error {
-	utils.Println("Connector Details")
+	output.Println("Connector Details")
 	table := output.NewTable(cmd)
 	table.Add(&connectOut{
 		Name:   connector.Status.GetName(),
@@ -103,10 +102,10 @@ func printHumanDescribe(cmd *cobra.Command, connector *connectv1.ConnectV1Connec
 	if err := table.Print(); err != nil {
 		return err
 	}
-	utils.Println()
-	utils.Println()
+	output.Println()
+	output.Println()
 
-	utils.Println("Task Level Details")
+	output.Println("Task Level Details")
 	list := output.NewList(cmd)
 	for _, task := range connector.Status.GetTasks() {
 		list.Add(&taskDescribeOut{
@@ -117,10 +116,10 @@ func printHumanDescribe(cmd *cobra.Command, connector *connectv1.ConnectV1Connec
 	if err := list.Print(); err != nil {
 		return err
 	}
-	utils.Println()
-	utils.Println()
+	output.Println()
+	output.Println()
 
-	utils.Println("Configuration Details")
+	output.Println("Configuration Details")
 	list = output.NewList(cmd)
 	for name, value := range connector.Info.GetConfig() {
 		list.Add(&configDescribeOut{

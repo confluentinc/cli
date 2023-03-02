@@ -9,8 +9,8 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *identityProviderCommand) newDeleteCommand() *cobra.Command {
@@ -48,6 +48,6 @@ func (c *identityProviderCommand) delete(cmd *cobra.Command, args []string) erro
 		return err
 	}
 
-	utils.ErrPrintf(errors.DeletedResourceMsg, resource.IdentityProvider, args[0])
+	output.ErrPrintf(errors.DeletedResourceMsg, resource.IdentityProvider, args[0])
 	return nil
 }

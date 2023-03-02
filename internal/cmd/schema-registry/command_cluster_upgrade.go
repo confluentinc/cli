@@ -9,7 +9,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -56,7 +56,7 @@ func (c *clusterCommand) upgrade(cmd *cobra.Command, _ []string) error {
 	}
 
 	if packageInternalName == cluster.Package {
-		utils.ErrPrintf(errors.SRInvalidPackageUpgrade, c.EnvironmentId(), packageDisplayName)
+		output.ErrPrintf(errors.SRInvalidPackageUpgrade, c.EnvironmentId(), packageDisplayName)
 		return nil
 	}
 	cluster.Package = packageInternalName
@@ -65,6 +65,6 @@ func (c *clusterCommand) upgrade(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	utils.Printf(errors.SchemaRegistryClusterUpgradedMsg, c.EnvironmentId(), packageDisplayName)
+	output.Printf(errors.SchemaRegistryClusterUpgradedMsg, c.EnvironmentId(), packageDisplayName)
 	return nil
 }

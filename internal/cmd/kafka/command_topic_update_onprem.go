@@ -13,7 +13,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/properties"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *authenticatedTopicCommand) newUpdateCommandOnPrem() *cobra.Command {
@@ -89,7 +88,7 @@ func (c *authenticatedTopicCommand) onPremUpdate(cmd *cobra.Command, args []stri
 		return output.SerializedOutput(cmd, data)
 	}
 
-	utils.Printf(errors.UpdateTopicConfigMsg, topicName)
+	output.Printf(errors.UpdateTopicConfigMsg, topicName)
 
 	list := output.NewList(cmd)
 	for _, config := range data {

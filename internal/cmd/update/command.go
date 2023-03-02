@@ -12,9 +12,9 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/update"
 	"github.com/confluentinc/cli/internal/pkg/update/s3"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -90,24 +90,24 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	utils.ErrPrintln(errors.CheckingForUpdatesMsg)
+	output.ErrPrintln(errors.CheckingForUpdatesMsg)
 	latestMajorVersion, latestMinorVersion, err := c.client.CheckForUpdates(pversion.CLIName, c.version.Version, true)
 	if err != nil {
 		return errors.NewUpdateClientWrapError(err, errors.CheckingForUpdateErrorMsg)
 	}
 
 	if latestMajorVersion == "" && latestMinorVersion == "" {
-		utils.Println(errors.UpToDateMsg)
+		output.Println(errors.UpToDateMsg)
 		return nil
 	}
 
 	if latestMajorVersion != "" && latestMinorVersion == "" && !major {
-		utils.Printf(errors.MajorVersionUpdateMsg, pversion.CLIName)
+		output.Printf(errors.MajorVersionUpdateMsg, pversion.CLIName)
 		return nil
 	}
 
 	if latestMajorVersion == "" && major {
-		utils.Print(errors.NoMajorVersionUpdateMsg)
+		output.Print(errors.NoMajorVersionUpdateMsg)
 		return nil
 	}
 

@@ -5,7 +5,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 func NewCurrentCommand(prerunner cmd.PreRunner) *cobra.Command {
@@ -37,6 +37,6 @@ func (c *Command) runCurrentCommand(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	utils.Println(dir)
+	output.Println(dir)
 	return nil
 }

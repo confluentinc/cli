@@ -10,7 +10,7 @@ import (
 	pcluster "github.com/confluentinc/cli/internal/pkg/cluster"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 type unregisterCommand struct {
@@ -63,6 +63,6 @@ func (c *unregisterCommand) unregister(cmd *cobra.Command, _ []string) error {
 		return cluster.HandleClusterError(err, httpResp)
 	}
 
-	utils.Printf(errors.UnregisteredClusterMsg, clusterName)
+	output.Printf(errors.UnregisteredClusterMsg, clusterName)
 	return nil
 }

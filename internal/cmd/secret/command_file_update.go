@@ -4,7 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 func (c *command) newUpdateCommand() *cobra.Command {
@@ -49,6 +49,6 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	utils.ErrPrintln(errors.UpdateSecretFileMsg)
+	output.ErrPrintln(errors.UpdateSecretFileMsg)
 	return nil
 }

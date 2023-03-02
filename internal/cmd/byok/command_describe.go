@@ -6,9 +6,7 @@ import (
 	byokv1 "github.com/confluentinc/ccloud-sdk-go-v2/byok/v1"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	errorMsg "github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 type describeStruct struct {
@@ -63,8 +61,8 @@ func (c *command) outputByokKeyDescription(cmd *cobra.Command, key *byokv1.ByokV
 	table.Print()
 
 	if output.GetFormat(cmd) == output.Human {
-		utils.ErrPrintf("\n%s\n\n", getPostCreateStepInstruction(key))
-		utils.Println(postCreationStepInstructions)
+		output.ErrPrintf("\n%s\n\n", getPostCreateStepInstruction(key))
+		output.Println(postCreationStepInstructions)
 	}
 
 	return nil
@@ -82,7 +80,7 @@ func (c *command) convertByokKeyToDescribeStruct(key *byokv1.ByokV1Key) (*descri
 		keyString = key.Key.ByokV1AzureKey.KeyId
 		roles = append(roles, key.Key.ByokV1AzureKey.GetApplicationId())
 	default:
-		return nil, errors.New(errorMsg.ByokUnknownKeyTypeErrorMsg)
+		return nil, errors.New(errors.ByokUnknownKeyTypeErrorMsg)
 	}
 
 	updatedAt := ""

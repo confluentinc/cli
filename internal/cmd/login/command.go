@@ -3,7 +3,6 @@ package login
 import (
 	"context"
 	"fmt"
-	"os"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -22,7 +21,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/keychain"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 type command struct {
@@ -97,7 +96,7 @@ func (c *command) login(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	if warningMsg != "" {
-		utils.ErrPrintf(errors.UsingLoginURLDefaults, warningMsg)
+		output.ErrPrintf(errors.UsingLoginURLDefaults, warningMsg)
 	}
 
 	if isCCloud {
@@ -151,7 +150,7 @@ func (c *command) loginCCloud(cmd *cobra.Command, url string) error {
 		return err
 	}
 
-	utils.Printf(errors.LoggedInAsMsgWithOrg, credentials.Username, currentOrg.GetResourceId(), currentOrg.GetName())
+	output.Printf(errors.LoggedInAsMsgWithOrg, credentials.Username, currentOrg.GetResourceId(), currentOrg.GetName())
 	if currentEnv != nil {
 		log.CliLogger.Debugf(errors.LoggedInUsingEnvMsg, currentEnv.GetId(), currentEnv.GetName())
 	}
@@ -160,8 +159,8 @@ func (c *command) loginCCloud(cmd *cobra.Command, url string) error {
 	// otherwise, print remaining free credit upon each login.
 	if isEndOfFreeTrialErr {
 		// only print error and do not return it, since end-of-free-trial users should still be able to log in.
-		utils.ErrPrintf("Error: %s", endOfFreeTrialErr.Error())
-		errors.DisplaySuggestionsMessage(endOfFreeTrialErr.UserFacingError(), os.Stderr)
+		output.ErrPrintf("Error: %s", endOfFreeTrialErr.Error())
+		output.ErrPrint(errors.DisplaySuggestionsMessage(endOfFreeTrialErr.UserFacingError()))
 	} else {
 		c.printRemainingFreeCredit(client, currentOrg)
 	}
@@ -193,7 +192,7 @@ func (c *command) printRemainingFreeCredit(client *ccloudv1.Client, currentOrg *
 
 	// only print remaining free credit if there is any unexpired promo code and there is no payment method yet
 	if remainingFreeCredit > 0 {
-		utils.ErrPrintf(errors.RemainingFreeCreditMsg, admin.ConvertToUSD(remainingFreeCredit))
+		output.ErrPrintf(errors.RemainingFreeCreditMsg, admin.ConvertToUSD(remainingFreeCredit))
 	}
 }
 
@@ -362,7 +361,7 @@ func (c *command) getURL(cmd *cobra.Command) (string, error) {
 
 func (c *command) saveLoginToKeychain(isCloud bool, url string, credentials *pauth.Credentials) error {
 	if credentials.IsSSO {
-		utils.ErrPrintln("The `--save` flag was ignored since SSO credentials are not stored locally.")
+		output.ErrPrintln("The `--save` flag was ignored since SSO credentials are not stored locally.")
 		return nil
 	}
 
@@ -371,7 +370,7 @@ func (c *command) saveLoginToKeychain(isCloud bool, url string, credentials *pau
 		return err
 	}
 
-	utils.ErrPrintf(errors.WroteCredentialsToKeychainMsg)
+	output.ErrPrintf(errors.WroteCredentialsToKeychainMsg)
 
 	return nil
 }

@@ -9,7 +9,6 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 type out struct {
@@ -58,12 +57,12 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	}
 
 	if apiKey {
-		utils.Println(credential.APIKeyPair.Key)
+		output.Println(credential.APIKeyPair.Key)
 		return nil
 	}
 
 	if username {
-		utils.Println(credential.Username)
+		output.Println(credential.Username)
 		return nil
 	}
 

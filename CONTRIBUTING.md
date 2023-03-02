@@ -200,7 +200,7 @@ func (c *command) describe(_ *cobra.Command, args []string) error {
     }
 
     for i := 0; i < n; i++ {
-        utils.Println(filename)
+        output.Println(filename)
     }
     return nil
 }

@@ -24,6 +24,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/update"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/confluentinc/cli/internal/pkg/version"
@@ -168,7 +169,7 @@ func (c *AuthenticatedCLICommand) AuthToken() string {
 func (c *AuthenticatedCLICommand) EnvironmentId() string {
 	if c.Context.GetEnvironment() == nil {
 		noEnvSuggestions := errors.ComposeSuggestionsMessage("This issue may occur if this user has no valid role bindings. Contact an Organization Admin to create a role binding for this user.")
-		utils.ErrPrintln(errors.EnvNotSetErrorMsg + noEnvSuggestions)
+		output.ErrPrintln(errors.EnvNotSetErrorMsg + noEnvSuggestions)
 	}
 	return c.Context.GetEnvironment().GetId()
 }
@@ -230,7 +231,7 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd 
 				if err := ctx.DeleteUserAuth(); err != nil {
 					return err
 				}
-				utils.ErrPrintln(errors.TokenExpiredMsg)
+				output.ErrPrintln(errors.TokenExpiredMsg)
 			}
 		}
 
@@ -735,7 +736,7 @@ func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) fun
 				restContext = context.WithValue(context.Background(), kafkarestv3.ContextAccessToken, command.AuthToken())
 			} else { // no mds token, then prompt for basic auth creds
 				if !restFlags.prompt {
-					utils.Println(errors.MDSTokenNotFoundMsg)
+					output.Println(errors.MDSTokenNotFoundMsg)
 				}
 				f := form.New(
 					form.Field{ID: "username", Prompt: "Username"},
@@ -989,14 +990,14 @@ func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, currentVersion stri
 		if !strings.HasPrefix(latestMajorVersion, "v") {
 			latestMajorVersion = "v" + latestMajorVersion
 		}
-		utils.ErrPrintf(errors.NotifyMajorUpdateMsg, version.CLIName, currentVersion, latestMajorVersion, version.CLIName)
+		output.ErrPrintf(errors.NotifyMajorUpdateMsg, version.CLIName, currentVersion, latestMajorVersion, version.CLIName)
 	}
 
 	if latestMinorVersion != "" {
 		if !strings.HasPrefix(latestMinorVersion, "v") {
 			latestMinorVersion = "v" + latestMinorVersion
 		}
-		utils.ErrPrintf(errors.NotifyMinorUpdateMsg, version.CLIName, currentVersion, latestMinorVersion, version.CLIName)
+		output.ErrPrintf(errors.NotifyMinorUpdateMsg, version.CLIName, currentVersion, latestMinorVersion, version.CLIName)
 	}
 }
 
@@ -1012,9 +1013,9 @@ func (r *PreRun) shouldCheckForUpdates(cmd *cobra.Command) bool {
 
 func (r *PreRun) warnIfConfluentLocal(cmd *cobra.Command) {
 	if strings.HasPrefix(cmd.CommandPath(), "confluent local") {
-		utils.ErrPrintln("The local commands are intended for a single-node development environment only, NOT for production usage. See more: https://docs.confluent.io/current/cli/index.html")
-		utils.ErrPrintln("As of Confluent Platform 8.0, Java 8 is no longer supported.")
-		utils.ErrPrintln()
+		output.ErrPrintln("The local commands are intended for a single-node development environment only, NOT for production usage. See more: https://docs.confluent.io/current/cli/index.html")
+		output.ErrPrintln("As of Confluent Platform 8.0, Java 8 is no longer supported.")
+		output.ErrPrintln()
 	}
 }
 

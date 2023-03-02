@@ -14,7 +14,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 type createOut struct {
@@ -109,8 +108,8 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	}
 
 	if output.GetFormat(cmd) == output.Human {
-		utils.ErrPrintln(errors.APIKeyTime)
-		utils.ErrPrintln(errors.APIKeyNotRetrievableMsg)
+		output.ErrPrintln(errors.APIKeyTime)
+		output.ErrPrintln(errors.APIKeyNotRetrievableMsg)
 	}
 
 	table := output.NewTable(cmd)

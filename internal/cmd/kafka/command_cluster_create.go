@@ -20,7 +20,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 const (
@@ -185,7 +184,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 	}
 
 	if output.GetFormat(cmd) == output.Human {
-		utils.ErrPrintln(getKafkaProvisionEstimate(sku))
+		output.ErrPrintln(getKafkaProvisionEstimate(sku))
 	}
 
 	return c.outputKafkaClusterDescription(cmd, &kafkaCluster, false)
@@ -228,7 +227,7 @@ func (c *clusterCommand) validateGcpEncryptionKey(prompt form.Prompt, cloud stri
 		return err
 	}
 	buf.WriteString("\n\n")
-	utils.Println(buf.String())
+	output.Println(buf.String())
 
 	promptMsg := "Please confirm you've authorized the key for this identity: " + externalID
 	f := form.New(
@@ -237,7 +236,7 @@ func (c *clusterCommand) validateGcpEncryptionKey(prompt form.Prompt, cloud stri
 			IsYesOrNo: true})
 	for {
 		if err := f.Prompt(prompt); err != nil {
-			utils.ErrPrintln(errors.FailedToReadConfirmationErrorMsg)
+			output.ErrPrintln(errors.FailedToReadConfirmationErrorMsg)
 			continue
 		}
 		if !f.Responses["authorized"].(bool) {

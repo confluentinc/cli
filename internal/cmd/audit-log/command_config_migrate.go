@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -78,8 +79,8 @@ func (c *configCommand) migrate(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	for _, warning := range warnings {
-		utils.ErrPrintln(warning)
-		utils.ErrPrintln()
+		output.ErrPrintln(warning)
+		output.ErrPrintln()
 	}
 
 	enc := json.NewEncoder(c.OutOrStdout())

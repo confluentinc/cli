@@ -9,8 +9,8 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *clusterCommand) newDeleteCommand() *cobra.Command {
@@ -61,6 +61,6 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	utils.Printf(errors.DeletedResourceMsg, resource.Connector, clusterId)
+	output.Printf(errors.DeletedResourceMsg, resource.Connector, clusterId)
 	return nil
 }

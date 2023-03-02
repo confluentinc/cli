@@ -1,9 +1,5 @@
 package errors
 
-import (
-	"github.com/confluentinc/cli/internal/pkg/utils"
-)
-
 const (
 	warningsMessageHeader = "Warning: "
 	reasonMessageHeader   = "Reason: "
@@ -15,7 +11,7 @@ type WarningWithSuggestions struct {
 	suggestionsMsg string
 }
 
-func NewWarningWithSuggestions(warnMsg string, reasonMsg string, suggestionsMsg string) *WarningWithSuggestions {
+func NewWarningWithSuggestions(warnMsg, reasonMsg, suggestionsMsg string) *WarningWithSuggestions {
 	return &WarningWithSuggestions{
 		warnMsg:        warnMsg,
 		reasonMsg:      reasonMsg,
@@ -23,11 +19,13 @@ func NewWarningWithSuggestions(warnMsg string, reasonMsg string, suggestionsMsg 
 	}
 }
 
-func (w *WarningWithSuggestions) DisplayWarningWithSuggestions() {
+func (w *WarningWithSuggestions) DisplayWarningWithSuggestions() string {
 	if w.warnMsg != "" && w.reasonMsg != "" && w.suggestionsMsg != "" {
-		utils.ErrPrintln(warningsMessageHeader + w.warnMsg)
-		utils.ErrPrintln()
-		utils.ErrPrintln(reasonMessageHeader + w.reasonMsg)
-		utils.ErrPrintln(ComposeSuggestionsMessage(w.suggestionsMsg))
+		lines := warningsMessageHeader + w.warnMsg + "\n"
+		lines += "\n"
+		lines += reasonMessageHeader + w.reasonMsg + "\n"
+		lines += ComposeSuggestionsMessage(w.suggestionsMsg) + "\n"
+		return lines
 	}
+	return ""
 }

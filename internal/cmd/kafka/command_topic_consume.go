@@ -15,7 +15,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/log"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 func newConsumeCommand(prerunner pcmd.PreRunner, clientId string) *cobra.Command {
@@ -155,7 +155,7 @@ func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	utils.ErrPrintln(errors.StartingConsumerMsg)
+	output.ErrPrintln(errors.StartingConsumerMsg)
 
 	var srClient *srsdk.APIClient
 	var ctx context.Context

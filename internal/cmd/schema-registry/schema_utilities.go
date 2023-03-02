@@ -47,7 +47,7 @@ func RegisterSchemaWithAuth(cmd *cobra.Command, schemaCfg *RegisterSchemaConfigs
 			return nil, err
 		}
 	} else {
-		utils.Printf(errors.RegisteredSchemaMsg, response.Id)
+		output.Printf(errors.RegisteredSchemaMsg, response.Id)
 	}
 
 	return GetMetaInfoFromSchemaId(response.Id), nil

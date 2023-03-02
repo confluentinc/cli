@@ -8,7 +8,7 @@ import (
 	"golang.org/x/term"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 /*
@@ -45,7 +45,7 @@ func New(fields ...Field) *Form {
 func (f *Form) Prompt(prompt Prompt) error {
 	for i := 0; i < len(f.Fields); i++ {
 		field := f.Fields[i]
-		utils.Print(field.String())
+		output.Print(field.String())
 
 		val, err := field.read(prompt)
 		if err != nil {
@@ -55,7 +55,7 @@ func (f *Form) Prompt(prompt Prompt) error {
 		res, err := field.validate(val)
 		if err != nil {
 			if fmt.Sprintf(errors.InvalidInputFormatErrorMsg, val, field.ID) == err.Error() {
-				utils.ErrPrintln(err)
+				output.ErrPrintln(err)
 				i-- //re-prompt on invalid regex
 				continue
 			}
@@ -104,20 +104,20 @@ func ConfirmDeletion(cmd *cobra.Command, promptMsg, stringToType string) (bool, 
 func ConfirmEnter() error {
 	// This function prevents echoing of user input instead of displaying text or *'s by using
 	// term.ReadPassword so that the CLI will appear to wait until 'enter' or 'Ctrl-C' are entered.
-	utils.Print("Press enter to continue or Ctrl-C to cancel:")
+	output.Print("Press enter to continue or Ctrl-C to cancel:")
 
 	if _, err := term.ReadPassword(int(os.Stdin.Fd())); err != nil {
 		return err
 	}
 	// Warning: do not remove this print line; it prevents an unexpected interaction with browser.OpenUrl causing pages to open in the background
-	utils.Print("\n")
+	output.Print("\n")
 
 	return nil
 }
 
 func checkRequiredYes(field Field, res any) bool {
 	if field.IsYesOrNo && field.RequireYes && !res.(bool) {
-		utils.Println("You must accept to continue. To abandon flow, use Ctrl-C.")
+		output.Println("You must accept to continue. To abandon flow, use Ctrl-C.")
 		return true
 	}
 	return false

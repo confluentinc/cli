@@ -25,8 +25,8 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/serdes"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 type command struct {
@@ -148,12 +148,12 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 	if err := c.countAsyncApiUsage(accountDetails); err != nil {
 		return err
 	}
-	utils.Printf("AsyncAPI specification written to \"%s\".\n", flags.file)
+	output.Printf("AsyncAPI specification written to \"%s\".\n", flags.file)
 	return os.WriteFile(flags.file, yaml, 0644)
 }
 
 func (c *command) getChannelDetails(details *accountDetails, flags *flags) error {
-	utils.Printf("Adding operation: %s\n", details.channelDetails.currentTopic.GetTopicName())
+	output.Printf("Adding operation: %s\n", details.channelDetails.currentTopic.GetTopicName())
 	err := details.getSchemaDetails()
 	if details.channelDetails.contentType == "PROTOBUF" {
 		log.CliLogger.Info("Protobuf is not supported.")

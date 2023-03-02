@@ -6,7 +6,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 func (c *command) newUpdateCommand() *cobra.Command {
@@ -38,6 +38,6 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return errors.CatchEnvironmentNotFoundError(err, httpResp)
 	}
 
-	utils.ErrPrintf(errors.UpdateSuccessMsg, "name", "environment", id, name)
+	output.ErrPrintf(errors.UpdateSuccessMsg, "name", "environment", id, name)
 	return nil
 }

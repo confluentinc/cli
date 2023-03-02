@@ -9,8 +9,8 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *command) newProviderShareDeleteCommand() *cobra.Command {
@@ -49,6 +49,6 @@ func (c *command) deleteProviderShare(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	utils.Printf(errors.DeletedResourceMsg, resource.ProviderShare, shareId)
+	output.Printf(errors.DeletedResourceMsg, resource.ProviderShare, shareId)
 	return nil
 }

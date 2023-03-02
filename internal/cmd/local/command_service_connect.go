@@ -15,6 +15,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/local"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -89,8 +90,8 @@ func (c *Command) runConnectConnectorConfigCommand(cmd *cobra.Command, args []st
 			return err
 		}
 
-		utils.Printf("Current configuration of %s:\n", connector)
-		utils.Println(out)
+		output.Printf("Current configuration of %s:\n", connector)
+		output.Println(out)
 		return nil
 	}
 
@@ -122,7 +123,7 @@ func (c *Command) runConnectConnectorConfigCommand(cmd *cobra.Command, args []st
 		return err
 	}
 
-	utils.Println(out)
+	output.Println(out)
 	return nil
 }
 
@@ -153,7 +154,7 @@ func (c *Command) runConnectConnectorStatusCommand(_ *cobra.Command, args []stri
 			return err
 		}
 
-		utils.Println(out)
+		output.Println(out)
 		return nil
 	}
 
@@ -163,7 +164,7 @@ func (c *Command) runConnectConnectorStatusCommand(_ *cobra.Command, args []stri
 		return err
 	}
 
-	utils.Println(out)
+	output.Println(out)
 	return nil
 }
 
@@ -181,8 +182,8 @@ func NewConnectConnectorListCommand(prerunner cmd.PreRunner) *cobra.Command {
 }
 
 func (c *Command) runConnectConnectorListCommand(_ *cobra.Command, _ []string) {
-	utils.Println("Bundled Connectors:")
-	utils.Println(local.BuildTabbedList(connectors))
+	output.Println("Bundled Connectors:")
+	output.Println(local.BuildTabbedList(connectors))
 }
 
 func NewConnectConnectorLoadCommand(prerunner cmd.PreRunner) *cobra.Command {
@@ -257,7 +258,7 @@ func (c *Command) runConnectConnectorLoadCommand(cmd *cobra.Command, args []stri
 		return err
 	}
 
-	utils.Println(out)
+	output.Println(out)
 	return nil
 }
 
@@ -295,9 +296,9 @@ func (c *Command) runConnectConnectorUnloadCommand(_ *cobra.Command, args []stri
 	}
 
 	if len(out) > 0 {
-		utils.Println(out)
+		output.Println(out)
 	} else {
-		utils.Println("Success.")
+		output.Println("Success.")
 	}
 	return nil
 }
@@ -343,7 +344,7 @@ func (c *Command) runConnectPluginListCommand(_ *cobra.Command, _ []string) erro
 		return err
 	}
 
-	utils.Printf(errors.AvailableConnectPluginsMsg, out)
+	output.Printf(errors.AvailableConnectPluginsMsg, out)
 	return nil
 }
 

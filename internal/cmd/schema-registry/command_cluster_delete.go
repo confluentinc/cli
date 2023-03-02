@@ -12,8 +12,8 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -62,6 +62,6 @@ func (c *clusterCommand) delete(cmd *cobra.Command, _ []string, prompt form.Prom
 		return err
 	}
 
-	utils.Printf(errors.SchemaRegistryClusterDeletedMsg, c.EnvironmentId())
+	output.Printf(errors.SchemaRegistryClusterDeletedMsg, c.EnvironmentId())
 	return nil
 }

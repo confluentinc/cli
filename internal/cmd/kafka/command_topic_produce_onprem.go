@@ -14,8 +14,8 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/serdes"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *authenticatedTopicCommand) newProduceCommandOnPrem() *cobra.Command {
@@ -132,7 +132,7 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 		return err
 	}
 
-	utils.ErrPrintln(errors.StartingProducerMsg)
+	output.ErrPrintln(errors.StartingProducerMsg)
 
 	// Line reader for producer input.
 	scanner := bufio.NewScanner(os.Stdin)
@@ -178,7 +178,7 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 		}
 		err = producer.Produce(msg, deliveryChan)
 		if err != nil {
-			utils.ErrPrintf(errors.FailedToProduceErrorMsg, msg.TopicPartition.Offset, err)
+			output.ErrPrintf(errors.FailedToProduceErrorMsg, msg.TopicPartition.Offset, err)
 		}
 
 		e := <-deliveryChan                // read a ckafka event from the channel
@@ -190,7 +190,7 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 				close(input)
 				break
 			}
-			utils.ErrPrintf(errors.FailedToProduceErrorMsg, m.TopicPartition.Offset, m.TopicPartition.Error)
+			output.ErrPrintf(errors.FailedToProduceErrorMsg, m.TopicPartition.Offset, m.TopicPartition.Error)
 		}
 		go scan()
 	}

@@ -14,7 +14,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/log"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 func (c *authenticatedTopicCommand) newConsumeCommandOnPrem() *cobra.Command {
@@ -142,7 +142,7 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 		return err
 	}
 
-	utils.ErrPrintln(errors.StartingConsumerMsg)
+	output.ErrPrintln(errors.StartingConsumerMsg)
 
 	var srClient *srsdk.APIClient
 	var ctx context.Context

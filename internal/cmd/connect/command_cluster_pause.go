@@ -7,7 +7,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 func (c *clusterCommand) newPauseCommand() *cobra.Command {
@@ -59,7 +59,7 @@ func (c *clusterCommand) pause(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		utils.Printf(errors.PausedConnectorMsg, id)
+		output.Printf(errors.PausedConnectorMsg, id)
 	}
 
 	return nil

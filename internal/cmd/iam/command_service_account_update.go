@@ -8,8 +8,8 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *serviceAccountCommand) newUpdateCommand() *cobra.Command {
@@ -53,6 +53,6 @@ func (c *serviceAccountCommand) update(cmd *cobra.Command, args []string) error 
 		return errors.CatchServiceAccountNotFoundError(err, r, serviceAccountId)
 	}
 
-	utils.ErrPrintf(errors.UpdateSuccessMsg, "description", "service account", serviceAccountId, description)
+	output.ErrPrintf(errors.UpdateSuccessMsg, "description", "service account", serviceAccountId, description)
 	return nil
 }
