@@ -12,6 +12,7 @@ import (
 )
 
 type out struct {
+	IsCurrent   bool   `human:"Current" serialized:"is_current"`
 	Id          int    `human:"ID" serialized:"id"`
 	Name        string `human:"Name" serialized:"name"`
 	Description string `human:"Description,omitempty" serialized:"description,omitempty"`
@@ -21,6 +22,7 @@ func TestTable(t *testing.T) {
 	tests := map[string][]string{
 		Human.String(): {
 			"+-------------+-----------------+",
+			"| Current     | true            |",
 			"| ID          |               1 |",
 			"| Name        | lkc-123456      |",
 			"| Description | Example Cluster |",
@@ -28,12 +30,14 @@ func TestTable(t *testing.T) {
 		},
 		JSON.String(): {
 			"{",
+			`  "is_current": true,`,
 			`  "id": 1,`,
 			`  "name": "lkc-123456",`,
 			`  "description": "Example Cluster"`,
 			"}",
 		},
 		YAML.String(): {
+			"is_current: true",
 			"id: 1",
 			"name: lkc-123456",
 			"description: Example Cluster",
@@ -48,6 +52,7 @@ func TestTable(t *testing.T) {
 
 		table := NewTable(cmd)
 		table.Add(&out{
+			IsCurrent:   true,
 			Id:          1,
 			Name:        "lkc-123456",
 			Description: "Example Cluster",
@@ -64,6 +69,7 @@ func TestTable_NoAutoWrap(t *testing.T) {
 	tests := map[string][]string{
 		Human.String(): {
 			"+-------------+------------+",
+			"| Current     | true       |",
 			"| ID          |          1 |",
 			"| Name        | lkc-123456 |",
 			"| Description | {          |",
@@ -74,12 +80,14 @@ func TestTable_NoAutoWrap(t *testing.T) {
 		},
 		JSON.String(): {
 			"{",
+			`  "is_current": true,`,
 			`  "id": 1,`,
 			`  "name": "lkc-123456",`,
 			`  "description": "{\n  \"A\": 1,\n  \"B\": 2\n}"`,
 			"}",
 		},
 		YAML.String(): {
+			"is_current: true",
 			"id: 1",
 			"name: lkc-123456",
 			"description: |-",
@@ -107,6 +115,7 @@ func TestTable_NoAutoWrap(t *testing.T) {
 		})
 
 		table.Add(&out{
+			IsCurrent:   true,
 			Id:          1,
 			Name:        "lkc-123456",
 			Description: strings.TrimSpace(string(pretty.Pretty(j))),
@@ -160,21 +169,24 @@ func TestTable_Filter(t *testing.T) {
 	}
 }
 
-func TestTable_OmitEmpty(t *testing.T) {
+func TestTable_Omitempty(t *testing.T) {
 	tests := map[string][]string{
 		Human.String(): {
-			"+------+------------+",
-			"| ID   |          1 |",
-			"| Name | lkc-123456 |",
-			"+------+------------+",
+			"+---------+------------+",
+			"| Current | true       |",
+			"| ID      |          1 |",
+			"| Name    | lkc-123456 |",
+			"+---------+------------+",
 		},
 		JSON.String(): {
 			"{",
+			`  "is_current": true,`,
 			`  "id": 1,`,
 			`  "name": "lkc-123456"`,
 			"}",
 		},
 		YAML.String(): {
+			"is_current: true",
 			"id: 1",
 			"name: lkc-123456",
 		},
@@ -188,8 +200,9 @@ func TestTable_OmitEmpty(t *testing.T) {
 
 		table := NewTable(cmd)
 		table.Add(&out{
-			Id:   1,
-			Name: "lkc-123456",
+			IsCurrent: true,
+			Id:        1,
+			Name:      "lkc-123456",
 		})
 
 		err := table.Print()
@@ -264,19 +277,21 @@ func TestTable_EmptyMap(t *testing.T) {
 func TestList(t *testing.T) {
 	tests := map[string][]string{
 		Human.String(): {
-			"  ID |    Name    | Description  ",
-			"-----+------------+--------------",
-			"   1 | lkc-111111 | Cluster 1    ",
-			"   2 | lkc-222222 | Cluster 2    ",
+			"  Current | ID |    Name    | Description  ",
+			"----------+----+------------+--------------",
+			"  *       |  1 | lkc-111111 | Cluster 1    ",
+			"          |  2 | lkc-222222 | Cluster 2    ",
 		},
 		JSON.String(): {
 			"[",
 			"  {",
+			`    "is_current": true,`,
 			`    "id": 1,`,
 			`    "name": "lkc-111111",`,
 			`    "description": "Cluster 1"`,
 			"  },",
 			"  {",
+			`    "is_current": false,`,
 			`    "id": 2,`,
 			`    "name": "lkc-222222",`,
 			`    "description": "Cluster 2"`,
@@ -284,22 +299,27 @@ func TestList(t *testing.T) {
 			"]",
 		},
 		YAML.String(): {
-			"- id: 1",
+			"- is_current: true",
+			"  id: 1",
 			"  name: lkc-111111",
 			"  description: Cluster 1",
-			"- id: 2",
+			"- is_current: false",
+			"  id: 2",
 			"  name: lkc-222222",
 			"  description: Cluster 2",
 		},
 	}
 
+	// Order is intentionally reversed to test sorting
 	objects := []any{
 		&out{
+			IsCurrent:   false,
 			Id:          2,
 			Name:        "lkc-222222",
 			Description: "Cluster 2",
 		},
 		&out{
+			IsCurrent:   true,
 			Id:          1,
 			Name:        "lkc-111111",
 			Description: "Cluster 1",

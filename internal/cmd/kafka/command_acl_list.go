@@ -37,10 +37,12 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	userIdMap, err := c.mapResourceIdToUserId()
+	users, err := c.getAllUsers()
 	if err != nil {
 		return err
 	}
+
+	userIdMap := c.mapResourceIdToUserId(users)
 
 	if err := c.aclResourceIdToNumericId(acl, userIdMap); err != nil {
 		return err
@@ -50,10 +52,7 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 		return acl[0].errors
 	}
 
-	resourceIdMap, err := c.mapUserIdToResourceId()
-	if err != nil {
-		return err
-	}
+	resourceIdMap := c.mapUserIdToResourceId(users)
 
 	kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {

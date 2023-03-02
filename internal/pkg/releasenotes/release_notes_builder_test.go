@@ -12,10 +12,10 @@ import (
 type ReleaseNotesBuilderTestSuite struct {
 	suite.Suite
 	version                    string
-	newFeatureAndBugFixContent *ReleaseNotesContent
-	noBugFixContent            *ReleaseNotesContent
-	noNewFeatureContent        *ReleaseNotesContent
-	noChangeContent            *ReleaseNotesContent
+	newFeatureAndBugFixContent *ReleaseNotes
+	noBugFixContent            *ReleaseNotes
+	noNewFeatureContent        *ReleaseNotes
+	noChangeContent            *ReleaseNotes
 }
 
 func TestReleaseNotesBuilderTestSuite(t *testing.T) {
@@ -23,24 +23,24 @@ func TestReleaseNotesBuilderTestSuite(t *testing.T) {
 }
 
 func (suite *ReleaseNotesBuilderTestSuite) SetupSuite() {
-	suite.version = "v1.2.3"
+	suite.version = "1.2.3"
 	bugFixList := []string{"bug fixes1", "bug fixes2"}
 	newFeatureList := []string{"new feature1", "new feature2"}
-	suite.newFeatureAndBugFixContent = &ReleaseNotesContent{
-		newFeatures: newFeatureList,
-		bugFixes:    bugFixList,
+	suite.newFeatureAndBugFixContent = &ReleaseNotes{
+		minor: newFeatureList,
+		patch: bugFixList,
 	}
-	suite.noBugFixContent = &ReleaseNotesContent{
-		newFeatures: newFeatureList,
-		bugFixes:    []string{},
+	suite.noBugFixContent = &ReleaseNotes{
+		minor: newFeatureList,
+		patch: []string{},
 	}
-	suite.noNewFeatureContent = &ReleaseNotesContent{
-		newFeatures: []string{},
-		bugFixes:    bugFixList,
+	suite.noNewFeatureContent = &ReleaseNotes{
+		minor: []string{},
+		patch: bugFixList,
 	}
-	suite.noChangeContent = &ReleaseNotesContent{
-		newFeatures: []string{},
-		bugFixes:    []string{},
+	suite.noChangeContent = &ReleaseNotes{
+		minor: []string{},
+		patch: []string{},
 	}
 }
 
@@ -55,7 +55,7 @@ func (suite *ReleaseNotesBuilderTestSuite) TestDocs() {
 func (suite *ReleaseNotesBuilderTestSuite) runTest(testNamePrefix string, releaseNotesBuilderParams *ReleaseNotesBuilderParams) {
 	tests := []struct {
 		name     string
-		content  *ReleaseNotesContent
+		content  *ReleaseNotes
 		wantFile string
 	}{
 		{

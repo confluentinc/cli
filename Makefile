@@ -69,16 +69,6 @@ clean:
 show-args:
 	@echo "VERSION: $(VERSION)"
 
-# If you setup your laptop following https://github.com/confluentinc/cc-documentation/blob/master/Operations/Laptop%20Setup.md
-# then assuming caas.sh lives here should be fine
-define aws-authenticate
-	source ~/git/go/src/github.com/confluentinc/cc-dotfiles/caas.sh && if ! aws sts get-caller-identity; then eval $$(gimme-aws-creds --output-format export --roles "arn:aws:iam::050879227952:role/administrator"); fi
-endef
-
-.PHONY: fmt
-fmt:
-	@goimports -e -l -local github.com/confluentinc/cli/ -w $(ALL_SRC)
-
 .PHONY: lint
 lint:
 	make lint-go
@@ -110,18 +100,25 @@ else
 	go test -v $$(go list ./... | grep -v test) $(UNIT_TEST_ARGS)
 endif
 
+.PHONY: build-for-integration-test
+build-for-integration-test:
+ifdef CI
+	go build -cover -ldflags="-s -w -X main.commit=$(REF) -X main.date=$(DATE) -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
+else
+	go build -ldflags="-s -w -X main.commit=$(REF) -X main.date=$(DATE) -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
+endif
+
+
 .PHONY: integration-test
 integration-test:
 ifdef CI
 	go install gotest.tools/gotestsum@v1.8.2 && \
-	go build -cover -ldflags="-s -w -X main.commit=$(REF) -X main.date=$(DATE) -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent ./cmd/confluent && \
 	export GOCOVERDIR=test/coverage && \
 	if [ -d $${GOCOVERDIR} ]; then rm -r $${GOCOVERDIR}; fi && \
 	mkdir $${GOCOVERDIR} && \
 	gotestsum --junitfile integration-test-report.xml -- -v -race $$(go list ./... | grep test) && \
 	go tool covdata textfmt -i $${GOCOVERDIR} -o test/coverage.out
 else
-	go build -ldflags="-s -w -X main.commit=$(REF) -X main.date=$(DATE) -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent ./cmd/confluent && \
 	go test -v $$(go list ./... | grep test) $(INTEGRATION_TEST_ARGS)
 endif
 

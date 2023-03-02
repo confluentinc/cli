@@ -14,10 +14,10 @@ const (
 )
 
 type FeatureFlags struct {
-	Values         map[string]any `json:"values" hcl:"values"`
-	CcloudValues   map[string]any `json:"ccloud_values" hcl:"ccloud_values"`
-	LastUpdateTime int64          `json:"last_update_time" hcl:"last_update_time"`
-	User           lduser.User    `json:"user" hcl:"user"`
+	Values         map[string]any `json:"values"`
+	CcloudValues   map[string]any `json:"ccloud_values"`
+	LastUpdateTime int64          `json:"last_update_time"`
+	User           lduser.User    `json:"user"`
 }
 
 // GetCcloudLaunchDarklyClient resolves to a LaunchDarkly client based on the string platform name that is passed in.
