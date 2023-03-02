@@ -226,16 +226,16 @@ func printSchema(cmd *cobra.Command, schemaID int64, schema string, sType string
 	}
 
 	switch sType {
-	case "JSON", "AVRO":
+	case "JSON", "AVRO", "":
 		var jsonBuffer bytes.Buffer
 		if err := json.Indent(&jsonBuffer, []byte(schema), "", "    "); err != nil {
 			return err
 		}
 		schema = jsonBuffer.String()
 	}
-	
+
 	utils.Println(cmd, "Schema:")
-	utils.Println(schemaString)
+	utils.Println(cmd, schema)
 
 	if len(refs) > 0 {
 		utils.Println(cmd, "References:")
