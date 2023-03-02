@@ -100,18 +100,25 @@ else
 	go test -v $$(go list ./... | grep -v test) $(UNIT_TEST_ARGS)
 endif
 
+.PHONY: build-for-integration-test
+build-for-integration-test:
+ifdef CI
+	go build -cover -ldflags="-s -w -X main.commit=$(REF) -X main.date=$(DATE) -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
+else
+	go build -ldflags="-s -w -X main.commit=$(REF) -X main.date=$(DATE) -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
+endif
+
+
 .PHONY: integration-test
 integration-test:
 ifdef CI
 	go install gotest.tools/gotestsum@v1.8.2 && \
-	go build -cover -ldflags="-s -w -X main.commit=$(REF) -X main.date=$(DATE) -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent ./cmd/confluent && \
 	export GOCOVERDIR=test/coverage && \
 	if [ -d $${GOCOVERDIR} ]; then rm -r $${GOCOVERDIR}; fi && \
 	mkdir $${GOCOVERDIR} && \
 	gotestsum --junitfile integration-test-report.xml -- -v -race $$(go list ./... | grep test) && \
 	go tool covdata textfmt -i $${GOCOVERDIR} -o test/coverage.out
 else
-	go build -ldflags="-s -w -X main.commit=$(REF) -X main.date=$(DATE) -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent ./cmd/confluent && \
 	go test -v $$(go list ./... | grep test) $(INTEGRATION_TEST_ARGS)
 endif
 
