@@ -222,11 +222,12 @@ func traverseDAG(srClient *srsdk.APIClient, ctx context.Context, visited map[str
 func printSchema(cmd *cobra.Command, schemaID int64, schema string, sType string, refs []srsdk.SchemaReference) error {
 	utils.Printf(cmd, "Schema ID: %d\n", schemaID)
 	if sType != "" {
-		utils.Println(cmd, "Type: "+sType)
+		sType = "AVRO"
 	}
+	utils.Println(cmd, "Type: "+sType)
 
 	switch sType {
-	case "JSON", "AVRO", "": // avro schemas can have empty string as schema type
+	case "JSON", "AVRO":
 		var jsonBuffer bytes.Buffer
 		if err := json.Indent(&jsonBuffer, []byte(schema), "", "    "); err != nil {
 			return err
