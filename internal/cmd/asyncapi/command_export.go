@@ -492,13 +492,15 @@ func addChannel(reflector asyncapi.Reflector, details channelDetails) (asyncapi.
 	channel := asyncapi.ChannelInfo{
 		Name: details.currentTopic.GetTopicName(),
 		BaseChannelItem: &spec.ChannelItem{
-			Description:   details.currentTopicDescription,
-			MapOfAnything: details.mapOfMessageCompat,
+			Description: details.currentTopicDescription,
 			Subscribe: &spec.Operation{
 				ID:   strcase.ToCamel(details.currentTopic.GetTopicName()) + "Subscribe",
 				Tags: details.topicLevelTags,
 			},
 		},
+	}
+	if details.mapOfMessageCompat != nil {
+		channel.BaseChannelItem.MapOfAnything = details.mapOfMessageCompat
 	}
 	if details.unmarshalledSchema != nil {
 		channel.BaseChannelItem.Subscribe.Message = &spec.Message{Reference: &spec.Reference{Ref: "#/components/messages/" + msgName(details.currentTopic.GetTopicName())}}
