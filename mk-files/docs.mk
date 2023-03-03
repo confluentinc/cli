@@ -67,9 +67,10 @@ release-docs: clone-docs-repos cut-docs-branches update-settings-and-conf
 # whether the -post branch exists or not. The `git checkout -B ...` handles this behavior.
 .PHONY: cut-docs-branches
 cut-docs-branches:
+	bump=$$(cat release-notes/bump.txt) && \
 	cd $(CONFLUENT_DOCS_DIR) && \
 	git fetch && \
-	if [[ "$$(cat release-notes/bump.txt)" != "patch" ]]; then \
+	if [[ "$${bump}" != "patch" ]]; then \
 		git checkout master && \
 		git checkout -b $(STAGING_BRANCH) && \
 		git push $(GIT_DRY_RUN_ARGS) -u origin $(STAGING_BRANCH); \
@@ -83,9 +84,10 @@ cut-docs-branches:
 # branches will be pushed at the same time. This ensure there are no errors with pint merge.
 .PHONY: update-settings-and-conf
 update-settings-and-conf:
+	bump=$$(cat release-notes/bump.txt) && \
 	cd $(CONFLUENT_DOCS_DIR) && \
 	git fetch && \
-	if [[ "$$(cat release-notes/bump.txt)" != "patch" ]]; then \
+	if [[ "$${bump}" != "patch" ]]; then \
 		git checkout master && \
 		sed $(SED_OPTION_INPLACE) 's/export RELEASE_VERSION=.*/export RELEASE_VERSION=$(NEXT_MINOR_VERSION)-SNAPSHOT/g' settings.sh && \
 		sed $(SED_OPTION_INPLACE) 's/export PUBLIC_VERSION=.*/export PUBLIC_VERSION=$(SHORT_NEXT_MINOR_VERSION)/g' settings.sh && \
