@@ -52,7 +52,7 @@ if [ ${#arm64_tags[@]} == 0 ]; then
 else
   echo "Found tags \"${arm64_tags[@]}\" for confluentinc/cli-ubuntu-base-arm64"
 fi 
-if [ ${#arm64_tags[@]} != 2 ]; then # check that there are only 2 tags for the image tagged w/ "latest"
+if [ ${#arm64_tags[@]} != 2 ]; then # check that there are only 2 tags for the image tagged w/ "arm64-latest"
   echo "error: there should be exactly two tags for the arm64-latest cli-ubuntu-base-arm64 image. Current tags are: \""${arm64_tags[@]}"\"; check the ECR"
   exit 1
 fi
