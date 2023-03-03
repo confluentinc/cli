@@ -5,12 +5,11 @@ push_instructions="\nTo push these images to the ECR, run the following commands
 amd64_tags=($(aws ecr describe-images --registry-id 050879227952 --repository-name confluentinc/cli-centos-base-amd64 --query 'imageDetails[?imageTags.contains(@, `"latest"`)].imageTags' | jq '.[]' | jq -r '.[]'))
 if [ ${#amd64_tags[@]} == 0 ]; then
   exit 1
-else
-  echo "Found tags \"${amd64_tags[@]}\" for confluentinc/cli-centos-base-amd64"
-fi 
-if [ ${#amd64_tags[@]} != 2 ]; then # check that there are only 2 tags for the image tagged w/ "latest"
+elif [ ${#amd64_tags[@]} != 2 ]; then # check that there are exactly 2 tags for the image tagged w/ "latest"
   echo "error: there should be exactly two tags for the latest cli-centos-base-amd64 image. Current tags are: \""${amd64_tags[@]}"\"; check the ECR"
   exit 1
+else
+  echo "Found tags \"${amd64_tags[@]}\" for confluentinc/cli-centos-base-amd64"
 fi
 
 for tag in ${amd64_tags[@]}; do
@@ -27,12 +26,11 @@ done
 arm64_from_amd64_tags=($(aws ecr describe-images --registry-id 050879227952 --repository-name confluentinc/cli-ubuntu-base-arm64 --query 'imageDetails[?imageTags.contains(@, `"latest"`)].imageTags' | jq '.[]' | jq -r '.[]'))
 if [ ${#arm64_from_amd64_tags[@]} == 0 ]; then
   exit 1
-else
-  echo "Found tags \"${arm64_from_amd64_tags[@]}\" for confluentinc/cli-ubuntu-base-arm64"
-fi 
-if [ ${#arm64_from_amd64_tags[@]} != 2 ]; then # check that there are only 2 tags for the image tagged w/ "latest"
+elif [ ${#arm64_from_amd64_tags[@]} != 2 ]; then # check that there are exactly 2 tags for the image tagged w/ "latest"
   echo "error: there should be exactly two tags for the latest cli-ubuntu-base-arm64 image. Current tags are: \""${arm64_from_amd64_tags[@]}"\"; check the ECR"
   exit 1
+else
+  echo "Found tags \"${arm64_from_amd64_tags[@]}\" for confluentinc/cli-ubuntu-base-arm64"
 fi
 
 for tag in ${arm64_from_amd64_tags[@]}; do
@@ -49,12 +47,11 @@ done
 arm64_tags=($(aws ecr describe-images --registry-id 050879227952 --repository-name confluentinc/cli-ubuntu-base-arm64 --query 'imageDetails[?imageTags.contains(@, `"arm64-latest"`)].imageTags' | jq '.[]' | jq -r '.[]'))
 if [ ${#arm64_tags[@]} == 0 ]; then
   exit 1
-else
-  echo "Found tags \"${arm64_tags[@]}\" for confluentinc/cli-ubuntu-base-arm64"
-fi 
-if [ ${#arm64_tags[@]} != 2 ]; then # check that there are only 2 tags for the image tagged w/ "arm64-latest"
+elif [ ${#arm64_tags[@]} != 2 ]; then # check that there are exactly 2 tags for the image tagged w/ "arm64-latest"
   echo "error: there should be exactly two tags for the arm64-latest cli-ubuntu-base-arm64 image. Current tags are: \""${arm64_tags[@]}"\"; check the ECR"
   exit 1
+else
+  echo "Found tags \"${arm64_tags[@]}\" for confluentinc/cli-ubuntu-base-arm64"
 fi
 
 for tag in ${arm64_tags[@]}; do
