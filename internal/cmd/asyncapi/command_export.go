@@ -174,7 +174,7 @@ func (c *command) getChannelDetails(details *accountDetails, flags *flags) error
 	}
 	details.channelDetails.bindings, err = c.getBindings(details.cluster, details.channelDetails.currentTopic)
 	if err != nil {
-		return fmt.Errorf("bindings not found: %v", err)
+		log.CliLogger.Warnf("bindings not found: %v", err)
 	}
 	if err := details.getTopicDescription(); err != nil {
 		log.CliLogger.Warnf("failed to get topic description: %v", err)
@@ -182,7 +182,7 @@ func (c *command) getChannelDetails(details *accountDetails, flags *flags) error
 	// x-messageCompatibility
 	details.channelDetails.mapOfMessageCompat, err = getMessageCompatibility(details.srClient, details.srContext, details.channelDetails.currentSubject)
 	if err != nil {
-		return fmt.Errorf("failed to get subject's compatibility type")
+		log.CliLogger.Warnf("failed to get subject's compatibility type")
 	}
 	return nil
 }
@@ -492,18 +492,26 @@ func addChannel(reflector asyncapi.Reflector, details channelDetails) (asyncapi.
 	channel := asyncapi.ChannelInfo{
 		Name: details.currentTopic.GetTopicName(),
 		BaseChannelItem: &spec.ChannelItem{
-			Description:   details.currentTopicDescription,
-			MapOfAnything: details.mapOfMessageCompat,
+			Description: details.currentTopicDescription,
 			Subscribe: &spec.Operation{
-				ID:       strcase.ToCamel(details.currentTopic.GetTopicName()) + "Subscribe",
-				Message:  &spec.Message{Reference: &spec.Reference{Ref: "#/components/messages/" + msgName(details.currentTopic.GetTopicName())}},
-				Bindings: &details.bindings.operationBinding,
-				Tags:     details.topicLevelTags,
+				ID:   strcase.ToCamel(details.currentTopic.GetTopicName()) + "Subscribe",
+				Tags: details.topicLevelTags,
 			},
 		},
 	}
-	if details.bindings.channelBindings.Kafka != nil {
-		channel.BaseChannelItem.Bindings = &details.bindings.channelBindings
+	if details.mapOfMessageCompat != nil {
+		channel.BaseChannelItem.MapOfAnything = details.mapOfMessageCompat
+	}
+	if details.unmarshalledSchema != nil {
+		channel.BaseChannelItem.Subscribe.Message = &spec.Message{Reference: &spec.Reference{Ref: "#/components/messages/" + msgName(details.currentTopic.GetTopicName())}}
+	}
+	if details.bindings != nil {
+		if details.bindings.operationBinding.Kafka != nil {
+			channel.BaseChannelItem.Subscribe.Bindings = &details.bindings.operationBinding
+		}
+		if details.bindings.channelBindings.Kafka != nil {
+			channel.BaseChannelItem.Bindings = &details.bindings.channelBindings
+		}
 	}
 	err := reflector.AddChannel(channel)
 	return reflector, err
