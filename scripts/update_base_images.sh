@@ -1,5 +1,8 @@
 #!/bin/bash
 
+eval $(gimme-aws-creds --output-format export --roles "arn:aws:iam::050879227952:role/administrator")
+aws ecr get-login-password --region us-west-1 | docker login --username AWS --password-stdin 050879227952.dkr.ecr.us-west-1.amazonaws.com
+
 push_instructions="\nTo push these images to the ECR, run the following commands:\n"
 
 amd64_tags=($(aws ecr describe-images --registry-id 050879227952 --repository-name confluentinc/cli-centos-base-amd64 --query 'imageDetails[?imageTags.contains(@, `"latest"`)].imageTags' | jq '.[]' | jq -r '.[]'))
@@ -56,7 +59,6 @@ fi
 
 for tag in ${arm64_tags[@]}; do
   if [ $tag != "arm64-latest" ]; then
-    echo $tag && \
     number_part=$(cut -f2 -d'-' <<< $tag) && \
     integer_tag=$(printf "%.0f" $number_part) && \
     incremented_tag="arm64-$(($integer_tag + 1)).0" && \
