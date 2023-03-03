@@ -8,31 +8,27 @@ release-notes:
 	bump=$$(cat release-notes/bump.txt) && \
 	version=$$(cat release-notes/version.txt) && \
 	cd $(CONFLUENT_DOCS_DIR) && \
-	git fetch && \
 	if [ "$${bump}" = "patch" ]; then \
-		git checkout $$(echo $${version} | sed $(STAGING_BRANCH_REGEX)) ; \
+		git checkout $$(echo $${version} | sed $(STAGING_BRANCH_REGEX)); \
 	fi && \
 	git checkout -b cli-v$${version}-release-notes && \
-	CONFLUENT_DOCS_DIR=$(CONFLUENT_DOCS_DIR) make publish-release-notes-to-docs-repo
-
+	cd - && \
+	CONFLUENT_DOCS_DIR=$(CONFLUENT_DOCS_DIR) make publish-release-notes-to-docs-repo && \
 	rm -rf $(TMP_BASE)
 
 .PHONY: publish-release-notes-to-docs-repo
 publish-release-notes-to-docs-repo:
-	bump=$$(cat release-notes/bump.txt); \
-	version=$$(cat release-notes/version.txt); \
-	cp release-notes/release-notes.rst $(CONFLUENT_DOCS_DIR)
-	$(warning SUBMITTING PR to docs repo)
-	cd $(CONFLUENT_DOCS_DIR) || exit 1; \
-	git add . || exit 1; \
-	git diff --cached --exit-code > /dev/null && echo "nothing to update" && exit 0; \
-	git commit -m "New release notes for v$${version}" || exit 1; \
-	git push origin $(RELEASE_NOTES_BRANCH) || exit 1; \
+	bump=$$(cat release-notes/bump.txt) && \
+	version=$$(cat release-notes/version.txt) && \
+	cp release-notes/release-notes.rst $(CONFLUENT_DOCS_DIR) && \
+	cd $(CONFLUENT_DOCS_DIR) && \
+	git commit -am "New release notes for v$${version}" && \
+	git push -u origin cli-v$${version}-release-notes && \
 	base="master" && \
 	if [ "$${bump}" = "patch" ]; then \
-		base=$$(echo $${version} | sed $(STAGING_BRANCH_REGEX))
+		base=$$(echo $${version} | sed $(STAGING_BRANCH_REGEX)); \
 	fi && \
-	gh pr create -B $${base} --title "New release notes for v$${version}" --body "" || exit 1
+	gh pr create -B $${base} --title "New release notes for v$${version}" --body ""
 
 .PHONY: publish-release-notes-to-s3
 publish-release-notes-to-s3:
