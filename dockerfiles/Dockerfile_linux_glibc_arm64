@@ -1,9 +1,13 @@
 FROM --platform=linux/arm64/v8 050879227952.dkr.ecr.us-west-1.amazonaws.com/confluentinc/cli-ubuntu-base-arm64:arm64-latest
 
-COPY . /go/src/github.com/confluentinc/cli/
+COPY . /cli/
 
-RUN cd /go/src/github.com/confluentinc/cli && \
-    make gorelease-linux-glibc-arm64
+RUN export GO_VERSION=$(cat /cli/.go-version) && \
+    wget "https://go.dev/dl/go${GO_VERSION}.linux-arm64.tar.gz" && \
+    sudo tar -C /usr/local -xzf "go${GO_VERSION}.linux-arm64.tar.gz"
 
-RUN cd /go/src/github.com/confluentinc/cli && \
-    rename 's/checksums/checksums_linux_arm64/' dist/*.txt
+ENV PATH=${PATH}:/usr/local/go/bin:/root/go/bin
+
+RUN cd /cli && make gorelease-linux-glibc-arm64
+
+RUN cd /cli && rename 's/checksums/checksums_linux_arm64/' dist/*.txt
