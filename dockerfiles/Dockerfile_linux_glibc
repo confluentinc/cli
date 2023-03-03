@@ -1,9 +1,13 @@
 FROM --platform=linux/amd64 050879227952.dkr.ecr.us-west-1.amazonaws.com/confluentinc/cli-centos-base-amd64:latest
 
-COPY . /go/src/github.com/confluentinc/cli/
+COPY . /cli/
 
-RUN cd /go/src/github.com/confluentinc/cli && \
-    make gorelease-linux-glibc
+RUN export GO_VERSION=$(cat /cli/.go-version) && \
+    wget "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" && \
+    sudo tar -C /usr/local -xzf "go${GO_VERSION}.linux-amd64.tar.gz"
 
-RUN cd /go/src/github.com/confluentinc/cli && \
-    for file in dist/*.txt; do mv -v "$file" "${file/checksums/checksums_linux}"; done;
+ENV PATH=${PATH}:/usr/local/go/bin:/root/go/bin
+
+RUN cd /cli && make gorelease-linux-glibc
+
+RUN cd /cli && for file in dist/*.txt; do mv -v "$file" "${file/checksums/checksums_linux}"; done;
