@@ -1,5 +1,12 @@
 FROM --platform=linux/arm64/v8 050879227952.dkr.ecr.us-west-1.amazonaws.com/confluentinc/cli-ubuntu-base-arm64:arm64-latest
 
+ARG GO_VERSION
+
+RUN wget "https://go.dev/dl/go$GO_VERSION.linux-arm64.tar.gz" && \
+    sudo tar -C /usr/local -xzf "go$GO_VERSION.linux-arm64.tar.gz"
+
+ENV PATH=${PATH}:/usr/local/go/bin:/root/go/bin
+
 COPY . /go/src/github.com/confluentinc/cli/
 
 RUN cd /go/src/github.com/confluentinc/cli && \
