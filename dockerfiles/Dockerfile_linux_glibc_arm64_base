@@ -1,0 +1,9 @@
+FROM --platform=linux/arm64/v8 ubuntu:bionic-20220913
+
+RUN apt update
+
+RUN apt -y install make sudo
+
+RUN sudo apt -y install git wget build-essential rename
+    
+RUN mkdir -p /go/src/github.com/confluentinc/cli
