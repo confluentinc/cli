@@ -74,7 +74,8 @@ func (d *accountDetails) getSchemaDetails() error {
 	if err != nil {
 		return err
 	}
-	var unmarshalledSchema map[string]any
+	d.channelDetails.schema = &schema
+	unmarshalledSchema := make(map[string]any)
 	if schema.SchemaType == "" {
 		d.channelDetails.contentType = "application/avro"
 	} else if schema.SchemaType == "JSON" {
@@ -87,11 +88,18 @@ func (d *accountDetails) getSchemaDetails() error {
 	// JSON or Avro Format
 	err = json.Unmarshal([]byte(schema.Schema), &unmarshalledSchema)
 	if err != nil {
-		return fmt.Errorf("failed to unmarshal schema: %v", err)
-
+		primitiveTypes := []string{"string", "null", "boolean", "int", "long", "float", "double", "bytes"}
+		for _, primitiveType := range primitiveTypes {
+			if schema.Schema == "\""+primitiveType+"\"" {
+				unmarshalledSchema["type"] = primitiveType
+				d.channelDetails.unmarshalledSchema = unmarshalledSchema
+				return nil
+			}
+		}
+		log.CliLogger.Warnf("failed to unmarshal schema: %v", err)
+		unmarshalledSchema = nil
 	}
 	d.channelDetails.unmarshalledSchema = unmarshalledSchema
-	d.channelDetails.schema = &schema
 	return nil
 }
 
@@ -133,7 +141,9 @@ func (d *accountDetails) buildMessageEntity() *spec.MessageEntity {
 	if d.channelDetails.bindings != nil {
 		(*spec.MessageEntity).WithBindings(entityProducer, d.channelDetails.bindings.messageBinding)
 	}
-	(*spec.MessageEntity).WithPayload(entityProducer, d.channelDetails.unmarshalledSchema)
+	if d.channelDetails.unmarshalledSchema != nil {
+		(*spec.MessageEntity).WithPayload(entityProducer, d.channelDetails.unmarshalledSchema)
+	}
 	return entityProducer
 }
 
