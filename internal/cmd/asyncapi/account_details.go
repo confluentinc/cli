@@ -77,10 +77,16 @@ func (d *accountDetails) getSchemaDetails() error {
 	d.channelDetails.schema = &schema
 	unmarshalledSchema := make(map[string]any)
 	if schema.SchemaType == "" {
-		d.channelDetails.contentType = "application/avro"
-	} else if schema.SchemaType == "JSON" {
+		schema.SchemaType = "AVRO"
+	}
+	switch schema.SchemaType {
+	case "JSON":
 		d.channelDetails.contentType = "application/json"
-	} else if schema.SchemaType == "PROTOBUF" {
+		break
+	case "AVRO":
+		d.channelDetails.contentType = "application/avro"
+		break
+	case "PROTOBUF":
 		log.CliLogger.Warn("Protobuf not supported.")
 		d.channelDetails.contentType = "PROTOBUF"
 		return nil
@@ -90,7 +96,7 @@ func (d *accountDetails) getSchemaDetails() error {
 	if err != nil {
 		primitiveTypes := []string{"string", "null", "boolean", "int", "long", "float", "double", "bytes"}
 		for _, primitiveType := range primitiveTypes {
-			if schema.Schema == "\""+primitiveType+"\"" {
+			if schema.Schema == fmt.Sprintf("\"%s\"", primitiveType) {
 				unmarshalledSchema["type"] = primitiveType
 				d.channelDetails.unmarshalledSchema = unmarshalledSchema
 				return nil
