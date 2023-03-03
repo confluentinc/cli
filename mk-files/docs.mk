@@ -67,9 +67,10 @@ release-docs: clone-docs-repos cut-docs-branches update-settings-and-conf
 # whether the -post branch exists or not. The `git checkout -B ...` handles this behavior.
 .PHONY: cut-docs-branches
 cut-docs-branches:
+	bump=$$(cat release-notes/bump.txt) && \
 	cd $(CONFLUENT_DOCS_DIR) && \
 	git fetch && \
-	if [[ "$$(cat release-notes/bump.txt)" != "patch" ]]; then \
+	if [[ "$${bump}" != "patch" ]]; then \
 		git checkout master && \
 		git checkout -b $(STAGING_BRANCH) && \
 		git push $(GIT_DRY_RUN_ARGS) -u origin $(STAGING_BRANCH); \
