@@ -1,13 +1,12 @@
 FROM --platform=linux/amd64 050879227952.dkr.ecr.us-west-1.amazonaws.com/confluentinc/cli-ubuntu-base-arm64:latest
 
-ARG GO_VERSION
+COPY . /go/src/github.com/confluentinc/cli/
 
-RUN wget "https://go.dev/dl/go$GO_VERSION.linux-amd64.tar.gz" && \
-    sudo tar -C /usr/local -xzf "go$GO_VERSION.linux-amd64.tar.gz"
+RUN export GO_VERSION=$(cat /go/src/github.com/confluentinc/cli/.go-version) && \
+    wget "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" && \
+    sudo tar -C /usr/local -xzf "go${GO_VERSION}.linux-amd64.tar.gz"
 
 ENV PATH=${PATH}:/usr/local/go/bin:/root/go/bin
-
-COPY . /go/src/github.com/confluentinc/cli/
 
 RUN cd /go/src/github.com/confluentinc/cli && \
     make gorelease-linux-glibc-arm64
