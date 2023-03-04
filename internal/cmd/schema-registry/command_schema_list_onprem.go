@@ -10,12 +10,12 @@ import (
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
-func (c *schemaCommand) newListCommandOnPrem() *cobra.Command {
+func (c *command) newSchemaListCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "list",
 		Short:       "List schemas for a given subject prefix.",
 		Args:        cobra.NoArgs,
-		RunE:        c.listOnPrem,
+		RunE:        c.schemaListOnPrem,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -41,7 +41,7 @@ func (c *schemaCommand) newListCommandOnPrem() *cobra.Command {
 	return cmd
 }
 
-func (c *schemaCommand) listOnPrem(cmd *cobra.Command, _ []string) error {
+func (c *command) schemaListOnPrem(cmd *cobra.Command, _ []string) error {
 	srClient, ctx, err := GetSrApiClientWithToken(cmd, c.Version, c.AuthToken())
 	if err != nil {
 		return err

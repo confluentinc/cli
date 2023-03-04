@@ -20,13 +20,13 @@ type validateOut struct {
 	IsCompatible bool `human:"Compatible" serialized:"is_compatible"`
 }
 
-func (c *compatibilityCommand) newValidateCommand() *cobra.Command {
+func (c *command) newCompatibilityValidateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "validate",
 		Short: "Validate a schema with a subject version.",
 		Long:  "Validate that a schema is compatible against a given subject version.",
 		Args:  cobra.NoArgs,
-		RunE:  c.validate,
+		RunE:  c.compatibilityValidate,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Validate the compatibility of schema `payments` against the latest version of subject `records`.",
@@ -35,7 +35,7 @@ func (c *compatibilityCommand) newValidateCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("subject", "", SubjectUsage)
+	c.addSubjectFlag(cmd)
 	cmd.Flags().String("version", "", `Version of the schema. Can be a specific version or "latest".`)
 	cmd.Flags().String("schema", "", "The path to the schema file.")
 	pcmd.AddSchemaTypeFlag(cmd)
@@ -49,7 +49,7 @@ func (c *compatibilityCommand) newValidateCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *compatibilityCommand) validate(cmd *cobra.Command, args []string) error {
+func (c *command) compatibilityValidate(cmd *cobra.Command, args []string) error {
 	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
