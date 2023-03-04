@@ -5,12 +5,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func (c *exporterCommand) newResumeCommandOnPrem() *cobra.Command {
+func (c *command) newExporterResumeCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "resume <name>",
 		Short:       "Resume schema exporter.",
 		Args:        cobra.ExactArgs(1),
-		RunE:        c.onPremResume,
+		RunE:        c.exporterResumeOnPrem,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 	}
 
@@ -21,7 +21,7 @@ func (c *exporterCommand) newResumeCommandOnPrem() *cobra.Command {
 	return cmd
 }
 
-func (c *exporterCommand) onPremResume(cmd *cobra.Command, args []string) error {
+func (c *command) exporterResumeOnPrem(cmd *cobra.Command, args []string) error {
 	srClient, ctx, err := GetSrApiClientWithToken(cmd, c.Version, c.AuthToken())
 	if err != nil {
 		return err

@@ -11,12 +11,12 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
-func (c *subjectCommand) newUpdateCommandOnPrem() *cobra.Command {
+func (c *command) newSubjectUpdateCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "update <subject>",
 		Short:       "Update subject compatibility or mode.",
 		Args:        cobra.ExactArgs(1),
-		RunE:        c.onPremUpdate,
+		RunE:        c.subjectUpdateOnPrem,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -38,7 +38,7 @@ func (c *subjectCommand) newUpdateCommandOnPrem() *cobra.Command {
 	return cmd
 }
 
-func (c *subjectCommand) onPremUpdate(cmd *cobra.Command, args []string) error {
+func (c *command) subjectUpdateOnPrem(cmd *cobra.Command, args []string) error {
 	subject := args[0]
 
 	srClient, ctx, err := GetSrApiClientWithToken(cmd, c.Version, c.AuthToken())
