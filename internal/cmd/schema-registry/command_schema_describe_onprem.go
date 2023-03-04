@@ -30,7 +30,7 @@ func (c *command) newSchemaDescribeCommandOnPrem() *cobra.Command {
 		),
 	}
 
-	c.addSubjectFlagOnPrem(cmd)
+	cmd.Flags().String("subject", "", SubjectUsage)
 	cmd.Flags().String("version", "", `Version of the schema. Can be a specific version or "latest".`)
 	cmd.Flags().Bool("show-references", false, "Display the entire schema graph, including references.")
 	cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())

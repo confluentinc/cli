@@ -37,7 +37,7 @@ func (c *command) newConfigDescribeCommand() *cobra.Command {
 		),
 	}
 
-	c.addSubjectFlag(cmd)
+	cmd.Flags().String("subject", "", SubjectUsage)
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddApiSecretFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
