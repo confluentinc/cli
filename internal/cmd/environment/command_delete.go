@@ -31,7 +31,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 
 	environment, httpResp, err := c.V2Client.GetOrgEnvironment(id)
 	if err != nil {
-		return errors.CatchEnvironmentNotFoundError(err, httpResp)
+		return errors.CatchOrgV2ResourceNotFoundError(err, resource.Environment, httpResp)
 	}
 
 	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.Environment, id, *environment.DisplayName)
@@ -41,7 +41,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 
 	httpResp, err = c.V2Client.DeleteOrgEnvironment(id)
 	if err != nil {
-		return errors.CatchEnvironmentNotFoundError(err, httpResp)
+		return errors.CatchOrgV2ResourceNotFoundError(err, resource.Environment, httpResp)
 	}
 
 	output.ErrPrintf(errors.DeletedResourceMsg, resource.Environment, id)

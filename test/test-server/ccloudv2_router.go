@@ -47,6 +47,8 @@ var ccloudV2Handlers = map[string]func(*testing.T) http.HandlerFunc{
 	"/ksqldbcm/v2/clusters/{id}":                                   handleKsqlCluster,
 	"/org/v2/environments":                                         handleOrgEnvironments,
 	"/org/v2/environments/{id}":                                    handleOrgEnvironment,
+	"/org/v2/organizations":                                        handleOrgOrganizations,
+	"/org/v2/organizations/{id}":                                   handleOrgOrganization,
 	"/sd/v1/pipelines":                                             handlePipelines,
 	"/sd/v1/pipelines/{id}":                                        handlePipeline,
 	"/service-quota/v1/applied-quotas":                             handleAppliedQuotas,
