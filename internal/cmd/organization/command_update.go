@@ -42,7 +42,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 
 	table := output.NewTable(cmd)
 	table.Add(&out{
-		IsCurrent: organization.GetId() == c.Context.GetOrganization().GetResourceId(),
+		IsCurrent: organization.GetId() == id,
 		Id:        organization.GetId(),
 		Name:      organization.GetDisplayName(),
 	})
