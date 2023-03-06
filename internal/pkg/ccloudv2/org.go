@@ -70,6 +70,44 @@ func (c *Client) executeListEnvironments(pageToken string) (orgv2.OrgV2Environme
 	return c.OrgClient.EnvironmentsOrgV2Api.ListOrgV2EnvironmentsExecute(req)
 }
 
+func (c *Client) GetOrgOrganization(orgId string) (orgv2.OrgV2Organization, *http.Response, error) {
+	req := c.OrgClient.OrganizationsOrgV2Api.GetOrgV2Organization(c.orgApiContext(), orgId)
+	return c.OrgClient.OrganizationsOrgV2Api.GetOrgV2OrganizationExecute(req)
+}
+
+func (c *Client) UpdateOrgOrganization(orgId string, updateOrganization orgv2.OrgV2Organization) (orgv2.OrgV2Organization, *http.Response, error) {
+	req := c.OrgClient.OrganizationsOrgV2Api.UpdateOrgV2Organization(c.orgApiContext(), orgId).OrgV2Organization(updateOrganization)
+	return c.OrgClient.OrganizationsOrgV2Api.UpdateOrgV2OrganizationExecute(req)
+}
+
+func (c *Client) ListOrgOrganizations() ([]orgv2.OrgV2Organization, error) {
+	var list []orgv2.OrgV2Organization
+
+	done := false
+	pageToken := ""
+	for !done {
+		page, httpResp, err := c.executeListOrganizations(pageToken)
+		if err != nil {
+			return nil, errors.CatchCCloudV2Error(err, httpResp)
+		}
+		list = append(list, page.GetData()...)
+
+		pageToken, done, err = extractOrgNextPageToken(page.GetMetadata().Next)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return list, nil
+}
+
+func (c *Client) executeListOrganizations(pageToken string) (orgv2.OrgV2OrganizationList, *http.Response, error) {
+	req := c.OrgClient.OrganizationsOrgV2Api.ListOrgV2Organizations(c.orgApiContext()).PageSize(ccloudV2ListPageSize)
+	if pageToken != "" {
+		req = req.PageToken(pageToken)
+	}
+	return c.OrgClient.OrganizationsOrgV2Api.ListOrgV2OrganizationsExecute(req)
+}
+
 func extractOrgNextPageToken(nextPageUrlStringNullable orgv2.NullableString) (string, bool, error) {
 	if !nextPageUrlStringNullable.IsSet() {
 		return "", true, nil
