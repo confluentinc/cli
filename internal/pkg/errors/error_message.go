@@ -130,39 +130,43 @@ const (
 	SRCredsValidationFailedSuggestions = "Verify that the correct Schema Registry API credential is passed to `--schema-registry-api-key` and --schema-registry-api-secret`."
 
 	// kafka cluster commands
-	ListTopicSuggestions                             = "To list topics for the cluster \"%s\", use `confluent kafka topic list --cluster %s`."
-	FailedToRenderKeyPolicyErrorMsg                  = "BYOK error: failed to render key policy"
-	FailedToReadConfirmationErrorMsg                 = "BYOK error: failed to read your confirmation"
-	FailedToReadClusterResizeConfirmationErrorMsg    = "cluster resize error: failed to read your confirmation"
-	AuthorizeAccountsErrorMsg                        = "BYOK error: please authorize the key for the accounts (%s)x"
-	AuthorizeIdentityErrorMsg                        = "BYOK error: please authorize the key for the identity (%s)"
+	ListTopicSuggestions                          = "To list topics for the cluster \"%s\", use `confluent kafka topic list --cluster %s`."
+	FailedToRenderKeyPolicyErrorMsg               = "BYOK error: failed to render key policy"
+	FailedToReadConfirmationErrorMsg              = "BYOK error: failed to read your confirmation"
+	FailedToReadClusterResizeConfirmationErrorMsg = "cluster resize error: failed to read your confirmation"
+	AuthorizeAccountsErrorMsg                     = "BYOK error: please authorize the key for the accounts (%s)x"
+	AuthorizeIdentityErrorMsg                     = "BYOK error: please authorize the key for the identity (%s)"
+	BYOKSupportErrorMsg                           = "BYOK is available on AWS and GCP"
+	CKUMoreThanZeroErrorMsg                       = "`--cku` value must be greater than 0"
+	CKUMoreThanOneErrorMsg                        = "`--cku` value must be greater than 1 for High Durability"
+	ClusterResizeNotSupportedErrorMsg             = "failed to update kafka cluster: cluster resize is only supported for dedicated clusters"
+	CloudRegionNotAvailableErrorMsg               = `"%s" is not an available region for "%s"`
+	CloudRegionNotAvailableSuggestions            = "To view a list of available regions for \"%s\", use `confluent kafka region list --cloud %s`."
+	CloudProviderNotAvailableErrorMsg             = `"%s" is not an available cloud provider`
+	CloudProviderNotAvailableSuggestions          = "To view a list of available cloud providers and regions, use `confluent kafka region list`."
+	TopicDoesNotExistOrMissingACLsErrorMsg        = `topic "%s" does not exist or your API key does not have the ACLs required to describe it`
+	TopicDoesNotExistOrMissingACLsSuggestions     = "To list topics for the cluster \"%s\", use `confluent kafka topic list --cluster %s`.\nTo list ACLs use `confluent kafka acl list --cluster %s`."
+	InvalidAvailableFlagErrorMsg                  = "invalid value \"%s\" for `--availability` flag"
+	InvalidAvailableFlagSuggestions               = "Allowed values for `--availability` flag are: %s, %s."
+	InvalidTypeFlagErrorMsg                       = "invalid value \"%s\" for `--type` flag"
+	InvalidTypeFlagSuggestions                    = "Allowed values for `--type` flag are: %s, %s, %s."
+	KafkaClusterNotFoundErrorMsg                  = `Kafka cluster "%s" not found`
+	KafkaClusterProvisioningErrorMsg              = "can not update cluster while it is provisioning"
+	KafkaClusterExpandingErrorMsg                 = "can not update cluster while it is expanding"
+	KafkaClusterShrinkingErrorMsg                 = "can not update cluster while it is shrinking"
+	KafkaClusterDeletingSuggestions               = ChooseRightEnvironmentSuggestions + "\n" +
+		"Ensure the cluster is not associated with any active Connect clusters."
 	CKUOnlyForDedicatedErrorMsg                      = "specifying `--cku` flag is valid only for dedicated Kafka cluster creation"
 	EncryptionKeySupportErrorMsg                     = "BYOK via `--encryption-key` is only available for GCP. Use `confluent byok create` to register AWS and Azure keys."
-	CKUMoreThanZeroErrorMsg                          = "`--cku` value must be greater than 0"
-	CKUMoreThanOneErrorMsg                           = "`--cku` value must be greater than 1 for High Durability"
-	ClusterResizeNotSupportedErrorMsg                = "failed to update kafka cluster: cluster resize is only supported on dedicated clusters"
-	CloudRegionNotAvailableErrorMsg                  = `"%s" is not an available region for "%s"`
-	CloudRegionNotAvailableSuggestions               = "To view a list of available regions for \"%s\", use `confluent kafka region list --cloud %s`."
-	CloudProviderNotAvailableErrorMsg                = `"%s" is not an available cloud provider`
-	CloudProviderNotAvailableSuggestions             = "To view a list of available cloud providers and regions, use `confluent kafka region list`."
 	TopicDoesNotExistOrMissingPermissionsErrorMsg    = `topic "%s" does not exist or user does not have the ACLs or role bindings required to describe it`
 	TopicDoesNotExistOrMissingPermissionsSuggestions = "To list topics for Kafka cluster \"%s\", use `confluent kafka topic list --cluster %s`.\nTo list ACLs use `confluent kafka acl list --cluster %s`.\nTo list role bindings use `confluent iam rbac role-binding list`."
-	InvalidAvailableFlagErrorMsg                     = "invalid value \"%s\" for `--availability` flag"
-	InvalidAvailableFlagSuggestions                  = "Allowed values for `--availability` flag are: %s, %s."
-	InvalidTypeFlagErrorMsg                          = "invalid value \"%s\" for `--type` flag"
-	InvalidTypeFlagSuggestions                       = "Allowed values for `--type` flag are: %s, %s, %s."
 	NameOrCKUFlagErrorMsg                            = "must either specify --name with non-empty value or --cku (for dedicated clusters) with positive integer"
 	NonEmptyNameErrorMsg                             = "`--name` flag value must not be empty"
-	KafkaClusterNotFoundErrorMsg                     = `Kafka cluster "%s" not found`
 	KafkaClusterStillProvisioningErrorMsg            = "your cluster is still provisioning, so it can't be updated yet; please retry in a few minutes"
 	KafkaClusterUpdateFailedSuggestions              = "A cluster can't be updated while still provisioning. If you just created this cluster, retry in a few minutes."
-	KafkaClusterExpandingErrorMsg                    = "your cluster is expanding; please wait for that operation to complete before updating again"
-	KafkaClusterShrinkingErrorMsg                    = "your cluster is shrinking; Please wait for that operation to complete before updating again"
 	KafkaClusterInaccessibleErrorMsg                 = `Kafka cluster "%s" not found or access forbidden`
 	KafkaClusterInaccessibleSuggestions              = ChooseRightEnvironmentSuggestions + "\n" +
 		"The active Kafka cluster may have been deleted. Set a new active cluster with `confluent kafka cluster use`."
-	KafkaClusterDeletingSuggestions = KafkaClusterInaccessibleSuggestions + "\n" +
-		"Ensure the cluster is not associated with any active Connect clusters."
 	ChooseRightEnvironmentSuggestions = "Ensure the cluster ID you entered is valid.\n" +
 		"Ensure the cluster you are specifying belongs to the currently selected environment with `confluent kafka cluster list`, `confluent environment list`, and `confluent environment use`."
 	UnknownTopicErrorMsg              = `unknown topic "%s"`
