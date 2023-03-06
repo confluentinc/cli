@@ -12,6 +12,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/properties"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -76,7 +77,7 @@ func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 		return err
 	}
 
-	if err := c.provisioningClusterCheck(kafkaClusterConfig.ID); err != nil {
+	if err := c.provisioningClusterCheck(cmd, kafkaClusterConfig.ID); err != nil {
 		return err
 	}
 
@@ -129,6 +130,6 @@ func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
-	utils.Printf(cmd, errors.CreatedResourceMsg, resource.Topic, topicName)
+	output.Printf(errors.CreatedResourceMsg, resource.Topic, topicName)
 	return nil
 }

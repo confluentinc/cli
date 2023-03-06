@@ -7,7 +7,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 func (c *clusterCommand) newResumeCommand() *cobra.Command {
@@ -33,7 +33,7 @@ func (c *clusterCommand) newResumeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *clusterCommand) resume(cmd *cobra.Command, args []string) error {
+func (c *clusterCommand) resume(_ *cobra.Command, args []string) error {
 	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
@@ -59,7 +59,7 @@ func (c *clusterCommand) resume(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		utils.Printf(cmd, errors.ResumedConnectorMsg, id)
+		output.Printf(errors.ResumedConnectorMsg, id)
 	}
 
 	return nil

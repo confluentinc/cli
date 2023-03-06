@@ -10,7 +10,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *ksqlCommand) newCreateCommand() *cobra.Command {
@@ -79,12 +78,12 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string) error {
 	}
 	ticker.Stop()
 	if endpoint == "" {
-		utils.ErrPrintln(cmd, errors.EndPointNotPopulatedMsg)
+		output.ErrPrintln(errors.EndPointNotPopulatedMsg)
 	}
 
 	srCluster, _ := c.Context.FetchSchemaRegistryByEnvironmentId(context.Background(), c.EnvironmentId())
 	if srCluster != nil {
-		utils.ErrPrintln(cmd, errors.SchemaRegistryRoleBindingRequiredForKsqlWarning)
+		output.ErrPrintln(errors.SchemaRegistryRoleBindingRequiredForKsqlWarning)
 	}
 
 	table := output.NewTable(cmd)

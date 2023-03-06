@@ -39,7 +39,7 @@ func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, client *cclou
 		}
 
 		// If environment ID is not found in config, make api call and check against those accounts
-		if !d.verifyEnvironmentId(environment, d.State.Auth.Accounts) {
+		if !d.verifyEnvironmentId(environment, d.GetEnvironments()) {
 			if client == nil {
 				return fmt.Errorf(errors.EnvironmentNotFoundErrorMsg, environment, d.Name)
 			}
@@ -50,7 +50,7 @@ func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, client *cclou
 			}
 
 			if d.verifyEnvironmentId(environment, accounts) {
-				d.State.Auth.Accounts = accounts
+				d.SetEnvironments(accounts)
 				_ = d.Save()
 			} else {
 				return fmt.Errorf(errors.EnvironmentNotFoundErrorMsg, environment, d.Name)

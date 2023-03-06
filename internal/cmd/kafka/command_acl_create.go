@@ -55,19 +55,18 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	userIdMap, err := c.mapResourceIdToUserId()
+	users, err := c.getAllUsers()
 	if err != nil {
 		return err
 	}
+
+	userIdMap := c.mapResourceIdToUserId(users)
 
 	if err := c.aclResourceIdToNumericId(acls, userIdMap); err != nil {
 		return err
 	}
 
-	resourceIdMap, err := c.mapUserIdToResourceId()
-	if err != nil {
-		return err
-	}
+	resourceIdMap := c.mapUserIdToResourceId(users)
 
 	var bindings []*ccstructs.ACLBinding
 	for _, acl := range acls {
@@ -83,7 +82,7 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	if err := c.provisioningClusterCheck(kafkaClusterConfig.ID); err != nil {
+	if err := c.provisioningClusterCheck(cmd, kafkaClusterConfig.ID); err != nil {
 		return err
 	}
 

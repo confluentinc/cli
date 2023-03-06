@@ -16,9 +16,9 @@ type Command struct {
 	cc local.ConfluentCurrent
 }
 
-func NewLocalCommand(command *cobra.Command, prerunner pcmd.PreRunner) *Command {
+func NewLocalCommand(cmd *cobra.Command, prerunner pcmd.PreRunner) *Command {
 	return &Command{
-		CLICommand: pcmd.NewAnonymousCLICommand(command, prerunner),
+		CLICommand: pcmd.NewAnonymousCLICommand(cmd, prerunner),
 		ch:         local.NewConfluentHomeManager(),
 		cc:         local.NewConfluentCurrentManager(),
 	}

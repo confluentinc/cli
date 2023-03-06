@@ -25,8 +25,8 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/serdes"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 type command struct {
@@ -118,6 +118,9 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 					currentSubject: subject,
 				}
 				err := c.getChannelDetails(accountDetails, flags)
+				if err != nil && err.Error() == "protobuf" {
+					continue
+				}
 				if err != nil {
 					return err
 				}
@@ -142,26 +145,24 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 	if err != nil {
 		return err
 	}
-	err = c.countAsyncApiUsage(accountDetails)
-	if err != nil {
+	if err := c.countAsyncApiUsage(accountDetails); err != nil {
 		return err
 	}
-	utils.Printf(cmd, "AsyncAPI specification written to \"%s\".\n", flags.file)
+	output.Printf("AsyncAPI specification written to \"%s\".\n", flags.file)
 	return os.WriteFile(flags.file, yaml, 0644)
 }
 
 func (c *command) getChannelDetails(details *accountDetails, flags *flags) error {
-	utils.Printf(c.Command, "Adding operation: %s\n", details.channelDetails.currentTopic.GetTopicName())
+	output.Printf("Adding operation: %s\n", details.channelDetails.currentTopic.GetTopicName())
 	err := details.getSchemaDetails()
 	if details.channelDetails.contentType == "PROTOBUF" {
-		log.CliLogger.Log("Protobuf is not supported.")
-		return nil
+		log.CliLogger.Info("Protobuf is not supported.")
+		return fmt.Errorf("protobuf")
 	}
 	if err != nil {
 		return fmt.Errorf("failed to get schema details: %v", err)
 	}
-	err = details.getTags()
-	if err != nil {
+	if err := details.getTags(); err != nil {
 		log.CliLogger.Warnf("failed to get tags: %v", err)
 	}
 	details.channelDetails.example = nil
@@ -175,8 +176,7 @@ func (c *command) getChannelDetails(details *accountDetails, flags *flags) error
 	if err != nil {
 		return fmt.Errorf("bindings not found: %v", err)
 	}
-	err = details.getTopicDescription()
-	if err != nil {
+	if err := details.getTopicDescription(); err != nil {
 		log.CliLogger.Warnf("failed to get topic description: %v", err)
 	}
 	// x-messageCompatibility

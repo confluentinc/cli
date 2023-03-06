@@ -9,6 +9,7 @@ import (
 
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/output"
 
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -18,12 +19,12 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
-func promptSchemaRegistryCredentials(command *cobra.Command) (string, string, error) {
+func promptSchemaRegistryCredentials(cmd *cobra.Command) (string, string, error) {
 	f := form.New(
 		form.Field{ID: "api-key", Prompt: "Enter your Schema Registry API key"},
 		form.Field{ID: "secret", Prompt: "Enter your Schema Registry API secret", IsHidden: true},
 	)
-	if err := f.Prompt(command, form.NewPrompt(os.Stdin)); err != nil {
+	if err := f.Prompt(form.NewPrompt(os.Stdin)); err != nil {
 		return "", "", err
 	}
 	return f.Responses["api-key"].(string), f.Responses["secret"].(string), nil
@@ -111,9 +112,9 @@ func GetSchemaRegistryClientWithApiKey(cmd *cobra.Command, cfg *dynamicconfig.Dy
 				Secret: srAPISecret,
 			}
 		} else if srAPISecret != "" {
-			utils.ErrPrintln(cmd, "No Schema Registry API key specified.")
+			output.ErrPrintln("No Schema Registry API key specified.")
 		} else if srAPIKey != "" {
-			utils.ErrPrintln(cmd, "No Schema Registry API key secret specified.")
+			output.ErrPrintln("No Schema Registry API key secret specified.")
 		}
 		srAuth, didPromptUser, err := getSchemaRegistryAuth(cmd, srCluster.SrCredentials, shouldPrompt)
 		if err != nil {
@@ -144,8 +145,8 @@ func GetSchemaRegistryClientWithApiKey(cmd *cobra.Command, cfg *dynamicconfig.Dy
 		srClient := srsdk.NewAPIClient(srConfig)
 
 		// Test credentials
-		if _, _, err = srClient.DefaultApi.Get(srCtx); err != nil {
-			utils.ErrPrintln(cmd, errors.SRCredsValidationFailedErrorMsg)
+		if _, _, err := srClient.DefaultApi.Get(srCtx); err != nil {
+			output.ErrPrintln(errors.SRCredsValidationFailedErrorMsg)
 			// Prompt users to enter new credentials if validation fails.
 			shouldPrompt = true
 			continue

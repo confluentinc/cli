@@ -108,5 +108,5 @@ func (s *CLITestSuite) TestAuditConfigMigrate() {
 }
 
 func (s *CLITestSuite) TestAuditLogDisabledDescribe() {
-	s.runIntegrationTest(CLITest{args: "audit-log describe", login: "cloud", fixture: "audit-log/describe-fail.golden", disableAuditLog: true, wantErrCode: 1})
+	s.runIntegrationTest(CLITest{args: "audit-log describe", login: "cloud", fixture: "audit-log/describe-fail.golden", disableAuditLog: true, exitCode: 1})
 }

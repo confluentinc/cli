@@ -11,8 +11,8 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *authenticatedTopicCommand) newDeleteCommand() *cobra.Command {
@@ -47,7 +47,7 @@ func (c *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 		return err
 	}
 
-	if err := c.provisioningClusterCheck(kafkaClusterConfig.ID); err != nil {
+	if err := c.provisioningClusterCheck(cmd, kafkaClusterConfig.ID); err != nil {
 		return err
 	}
 
@@ -77,6 +77,6 @@ func (c *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
-	utils.Printf(cmd, errors.DeletedResourceMsg, resource.Topic, topicName)
+	output.Printf(errors.DeletedResourceMsg, resource.Topic, topicName)
 	return nil
 }

@@ -1,11 +1,5 @@
 package test
 
-import (
-	"strings"
-
-	"github.com/confluentinc/bincover"
-)
-
 func (s *CLITestSuite) TestKSQL() {
 	// TODO: add --config flag to all commands or ENVVAR instead of using standard config file location
 	tests := []CLITest{
@@ -15,7 +9,7 @@ func (s *CLITestSuite) TestKSQL() {
 	clusterTests := []CLITest{
 		{args: "ksql cluster --help", fixture: "ksql/cluster/help.golden"},
 		{args: "ksql cluster create --help", fixture: "ksql/cluster/create-help.golden"},
-		{args: "ksql cluster create test_ksql --cluster lkc-12345", fixture: "ksql/cluster/create-result-missing-credential-identity.golden", wantErrCode: 1},
+		{args: "ksql cluster create test_ksql --cluster lkc-12345", fixture: "ksql/cluster/create-result-missing-credential-identity.golden", exitCode: 1},
 		{args: "ksql cluster create test_ksql --cluster lkc-12345 --credential-identity sa-credential-identity", fixture: "ksql/cluster/create-result.golden"},
 		{args: "ksql cluster create test_ksql_json --cluster lkc-12345 --credential-identity sa-credential-identity -o json", fixture: "ksql/cluster/create-result-json.golden"},
 		{args: "ksql cluster create test_ksql_yaml --cluster lkc-12345 --credential-identity sa-credential-identity -o yaml", fixture: "ksql/cluster/create-result-yaml.golden"},
@@ -24,7 +18,7 @@ func (s *CLITestSuite) TestKSQL() {
 		{args: "ksql cluster create test_ksql_yaml --cluster lkc-processLogFalse --credential-identity sa-credential-identity --log-exclude-rows -o yaml", fixture: "ksql/cluster/create-result-yaml-log-exclude-rows.golden"},
 		{args: "ksql cluster delete --help", fixture: "ksql/cluster/delete-help.golden"},
 		{args: "ksql cluster delete lksqlc-12345 --force", fixture: "ksql/cluster/delete-result.golden"},
-		{args: "ksql cluster delete lksqlc-12345", preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("account ksql\n"))}, fixture: "ksql/cluster/delete-result-prompt.golden"},
+		{args: "ksql cluster delete lksqlc-12345", input: "account ksql\n", fixture: "ksql/cluster/delete-result-prompt.golden"},
 		{args: "ksql cluster describe --help", fixture: "ksql/cluster/describe-help.golden"},
 		{args: "ksql cluster describe lksqlc-12345 -o json", fixture: "ksql/cluster/describe-result-json.golden"},
 		{args: "ksql cluster describe lksqlc-12345 -o yaml", fixture: "ksql/cluster/describe-result-yaml.golden"},

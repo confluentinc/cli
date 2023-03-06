@@ -2,8 +2,12 @@ package errors
 
 import (
 	"fmt"
-	"io"
 	"strings"
+)
+
+var (
+	suggestionsMessageHeader = "\nSuggestions:\n"
+	suggestionsLineFormat    = "    %s\n"
 )
 
 type ErrorWithSuggestions interface {
@@ -38,14 +42,13 @@ func (b *ErrorWithSuggestionsImpl) GetSuggestionsMsg() string {
 	return b.suggestionsMsg
 }
 
-func DisplaySuggestionsMessage(err error, writer io.Writer) {
-	if err == nil {
-		return
+func DisplaySuggestionsMessage(err error) string {
+	if err, ok := err.(ErrorWithSuggestions); ok {
+		if suggestion := err.GetSuggestionsMsg(); suggestion != "" {
+			return ComposeSuggestionsMessage(suggestion)
+		}
 	}
-	cliErr, ok := err.(ErrorWithSuggestions)
-	if ok && cliErr.GetSuggestionsMsg() != "" {
-		_, _ = fmt.Fprint(writer, ComposeSuggestionsMessage(cliErr.GetSuggestionsMsg()))
-	}
+	return ""
 }
 
 func ComposeSuggestionsMessage(msg string) string {

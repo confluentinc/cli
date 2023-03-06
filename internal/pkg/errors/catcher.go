@@ -128,15 +128,11 @@ func catchOpenAPIError(err error) error {
 }
 
 /*
-Error: 1 error occurred:
-  - error creating ACLs: reply error: invalid character 'C' looking for beginning of value
-
-Error: 1 error occurred:
-  - error updating topic ENTERPRISE.LOANALT2-ALTERNATE-LOAN-MASTER-2.DLQ: reply error: invalid character '<' looking for beginning of value
+error creating ACLs: reply error: invalid character 'C' looking for beginning of value
+error updating topic ENTERPRISE.LOANALT2-ALTERNATE-LOAN-MASTER-2.DLQ: reply error: invalid character '<' looking for beginning of value
 */
 func catchCCloudBackendUnmarshallingError(err error) error {
-	backendUnmarshllingErrorRegex := regexp.MustCompile(`reply error: invalid character '.' looking for beginning of value`)
-	if backendUnmarshllingErrorRegex.MatchString(err.Error()) {
+	if regexp.MustCompile(`reply error: invalid character '.' looking for beginning of value`).MatchString(err.Error()) {
 		errorMsg := fmt.Sprintf(prefixFormat, UnexpectedBackendOutputPrefix, BackendUnmarshallingErrorMsg)
 		return NewErrorWithSuggestions(errorMsg, UnexpectedBackendOutputSuggestions)
 	}
@@ -221,11 +217,11 @@ func CatchKafkaNotFoundError(err error, clusterId string, r *http.Response) erro
 	}
 
 	if r != nil && r.StatusCode == http.StatusForbidden {
-		suggestions := ChooseRightEnvironmentSuggestions
+		suggestions := KafkaClusterInaccessibleSuggestions
 		if r.Request.Method == http.MethodDelete {
 			suggestions = KafkaClusterDeletingSuggestions
 		}
-		return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), "Kafka cluster not found or access forbidden", suggestions)
+		return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), fmt.Sprintf(KafkaClusterInaccessibleErrorMsg, clusterId), suggestions)
 	}
 
 	return CatchCCloudV2Error(err, r)
@@ -252,6 +248,18 @@ func CatchApiKeyForbiddenAccessError(err error, operation string, r *http.Respon
 	if r != nil && r.StatusCode == http.StatusForbidden || strings.Contains(err.Error(), "Unknown API key") {
 		return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), fmt.Sprintf("error %s API key", operation), APIKeyNotFoundSuggestions)
 	}
+	return CatchCCloudV2Error(err, r)
+}
+
+func CatchByokKeyNotFoundError(err error, r *http.Response) error {
+	if err == nil {
+		return nil
+	}
+
+	if r != nil && r.StatusCode == http.StatusNotFound {
+		return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), "Self-managed key not found or access forbidden", ByokKeyNotFoundSuggestions)
+	}
+
 	return CatchCCloudV2Error(err, r)
 }
 
@@ -307,8 +315,7 @@ func isResourceNotFoundError(err error) bool {
 }
 
 /*
-Error: 1 error occurred:
-  - error creating topic bob: Topic 'bob' already exists.
+error creating topic bob: Topic 'bob' already exists.
 */
 func CatchTopicExistsError(err error, clusterId string, topicName string, ifNotExistsFlag bool) error {
 	if err == nil {

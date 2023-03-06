@@ -38,11 +38,11 @@ func (c *pluginCommand) validArgs(cmd *cobra.Command, args []string) []string {
 		return nil
 	}
 
-	return c.autocompleteConnectorPlugins()
+	return c.autocompleteConnectorPlugins(cmd)
 }
 
-func (c *pluginCommand) autocompleteConnectorPlugins() []string {
-	plugins, _, err := c.getPlugins()
+func (c *pluginCommand) autocompleteConnectorPlugins(cmd *cobra.Command) []string {
+	plugins, _, err := c.getPlugins(cmd)
 	if err != nil {
 		return nil
 	}
@@ -54,7 +54,7 @@ func (c *pluginCommand) autocompleteConnectorPlugins() []string {
 	return suggestions
 }
 
-func (c *pluginCommand) getPlugins() ([]connectv1.InlineResponse2002, *http.Response, error) {
+func (c *pluginCommand) getPlugins(cmd *cobra.Command) ([]connectv1.InlineResponse2002, *http.Response, error) {
 	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return nil, nil, err

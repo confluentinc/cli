@@ -15,7 +15,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/log"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 func newConsumeCommand(prerunner pcmd.PreRunner, clientId string) *cobra.Command {
@@ -150,13 +150,12 @@ func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		index:   partition,
 	}
 
-	rebalanceCallback := getRebalanceCallback(cmd, offset, partitionFilter)
-	err = consumer.Subscribe(topic, rebalanceCallback)
-	if err != nil {
+	rebalanceCallback := getRebalanceCallback(offset, partitionFilter)
+	if err := consumer.Subscribe(topic, rebalanceCallback); err != nil {
 		return err
 	}
 
-	utils.ErrPrintln(cmd, errors.StartingConsumerMsg)
+	output.ErrPrintln(errors.StartingConsumerMsg)
 
 	var srClient *srsdk.APIClient
 	var ctx context.Context
@@ -201,7 +200,7 @@ func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		SrClient: srClient,
 		Ctx:      ctx,
 		Format:   valueFormat,
-		Out:      cmd.OutOrStdout(),
+		Out:      cmd.OutOrStdout(), // TODO
 		Subject:  subject,
 		Properties: ConsumerProperties{
 			PrintKey:   printKey,
@@ -211,5 +210,5 @@ func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 			SchemaPath: dir,
 		},
 	}
-	return runConsumer(cmd, consumer, groupHandler)
+	return runConsumer(consumer, groupHandler)
 }

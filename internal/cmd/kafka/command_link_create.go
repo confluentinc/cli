@@ -11,9 +11,9 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/properties"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 type linkMode int
@@ -160,7 +160,7 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 	if dryRun {
 		msg = "[DRY RUN]: " + msg
 	}
-	utils.Print(cmd, msg)
+	output.Print(msg)
 
 	return nil
 }

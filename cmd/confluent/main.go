@@ -4,7 +4,6 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/confluentinc/bincover"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/cmd"
@@ -34,10 +33,6 @@ func main() {
 	cmd := pcmd.NewConfluentCommand(cfg)
 
 	if err := pcmd.Execute(cmd, os.Args[1:], cfg); err != nil {
-		if isTest {
-			bincover.ExitCode = 1
-		} else {
-			os.Exit(1)
-		}
+		os.Exit(1)
 	}
 }

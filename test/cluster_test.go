@@ -45,13 +45,13 @@ func (s *CLITestSuite) TestCluster() {
 func (s *CLITestSuite) TestClusterRegistry() {
 	tests := []CLITest{
 		{args: "cluster register --help", fixture: "cluster/register-list-help.golden"},
-		{args: "cluster register --cluster-name theMdsKSQLCluster --kafka-cluster kafka-GUID --ksql-cluster  ksql-name --hosts 10.4.4.4:9004 --protocol PLAIN", fixture: "cluster/register-invalid-protocol.golden", wantErrCode: 1},
-		{args: "cluster register --cluster-name theMdsKSQLCluster --kafka-cluster kafka-GUID --ksql-cluster  ksql-name --protocol SASL_PLAINTEXT", fixture: "cluster/register-missing-hosts.golden", wantErrCode: 1},
+		{args: "cluster register --cluster-name theMdsKSQLCluster --kafka-cluster kafka-GUID --ksql-cluster ksql-name --hosts 10.4.4.4:9004 --protocol PLAIN", fixture: "cluster/register-invalid-protocol.golden", exitCode: 1},
+		{args: "cluster register --cluster-name theMdsKSQLCluster --kafka-cluster kafka-GUID --ksql-cluster ksql-name --protocol SASL_PLAINTEXT", fixture: "cluster/register-missing-hosts.golden", exitCode: 1},
 		{args: "cluster register --cluster-name theMdsKSQLCluster --kafka-cluster kafka-GUID --ksql-cluster ksql-name --hosts 10.4.4.4:9004 --protocol HTTPS"},
-		{args: "cluster register --cluster-name theMdsKSQLCluster --ksql-cluster ksql-name --hosts 10.4.4.4:9004 --protocol SASL_PLAINTEXT", fixture: "cluster/register-missing-kafka-id.golden", wantErrCode: 1},
+		{args: "cluster register --cluster-name theMdsKSQLCluster --ksql-cluster ksql-name --hosts 10.4.4.4:9004 --protocol SASL_PLAINTEXT", fixture: "cluster/register-missing-kafka-id.golden", exitCode: 1},
 		{args: "cluster unregister --help", fixture: "cluster/unregister-list-help.golden"},
 		{args: "cluster unregister --cluster-name theMdsKafkaCluster"},
-		{args: "cluster unregister", fixture: "cluster/unregister-missing-name.golden", wantErrCode: 1},
+		{args: "cluster unregister", fixture: "cluster/unregister-missing-name.golden", exitCode: 1},
 	}
 
 	for _, tt := range tests {
@@ -110,7 +110,7 @@ func (s *CLITestSuite) TestClusterScopedId() {
 		{args: fmt.Sprintf("cluster describe --url %s", cpIdURL2), fixture: "cluster/scoped-id2.golden"},
 		{args: fmt.Sprintf("cluster describe --url %s", cpIdURL3), fixture: "cluster/scoped-id3.golden"},
 		{args: fmt.Sprintf("cluster describe --url %s --ca-cert-path %s", cpIdURL3TLS, caCertPath), fixture: "cluster/scoped-id3.golden"},
-		{args: fmt.Sprintf("cluster describe --url %s", cpIdURL4), fixture: "cluster/scoped-id4.golden", wantErrCode: 1},
+		{args: fmt.Sprintf("cluster describe --url %s", cpIdURL4), fixture: "cluster/scoped-id4.golden", exitCode: 1},
 	}
 	for _, tt := range tests {
 		tt.login = "platform"

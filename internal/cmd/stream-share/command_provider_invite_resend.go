@@ -6,7 +6,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 func (c *command) newResendEmailInviteCommand() *cobra.Command {
@@ -28,14 +28,13 @@ func (c *command) newResendEmailInviteCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) resendEmailInvite(cmd *cobra.Command, args []string) error {
+func (c *command) resendEmailInvite(_ *cobra.Command, args []string) error {
 	shareId := args[0]
 
-	err := c.V2Client.ResendInvite(shareId)
-	if err != nil {
+	if err := c.V2Client.ResendInvite(shareId); err != nil {
 		return err
 	}
 
-	utils.Printf(cmd, errors.ResendInviteMsg, shareId)
+	output.Printf(errors.ResendInviteMsg, shareId)
 	return nil
 }

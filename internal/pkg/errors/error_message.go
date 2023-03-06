@@ -15,7 +15,7 @@ const (
 	// api-key commands
 	BadServiceAccountIDErrorMsg         = `failed to parse service account id: ensure service account id begins with "sa-"`
 	UnableToStoreAPIKeyErrorMsg         = "unable to store API key locally"
-	NonKafkaNotImplementedErrorMsg      = "command not yet available for non-Kafka cluster resources"
+	NonKafkaNotImplementedErrorMsg      = "functionality not yet available for non-Kafka cluster resources"
 	RefuseToOverrideSecretErrorMsg      = `refusing to overwrite existing secret for API Key "%s"`
 	RefuseToOverrideSecretSuggestions   = "If you would like to override the existing secret stored for API key \"%s\", use `--force` flag."
 	APIKeyUseFailedErrorMsg             = "unable to set active API key"
@@ -33,6 +33,10 @@ const (
 	UnableToAccessEndpointSuggestions = EnsureCPSixPlusSuggestions
 	AuditLogsNotEnabledErrorMsg       = "Audit Logs are not enabled for this organization"
 	MalformedConfigErrorMsg           = "bad input file: the audit log configuration for cluster %q uses invalid JSON: %v"
+
+	// byok commands
+	ByokKeyNotFoundSuggestions = "Ensure the self-managed key exists and has not been deleted, or register a new key via `confluent byok register`."
+	ByokUnknownKeyTypeErrorMsg = "unknown byok key type"
 
 	// login command
 	UnneccessaryUrlFlagForCloudLoginErrorMsg         = "there is no need to pass the url flag if you are logging in to Confluent Cloud"
@@ -62,6 +66,7 @@ const (
 	EnvNotFoundErrorMsg    = `environment "%s" not found`
 	EnvNotFoundSuggestions = "List available environments with `confluent environment list`."
 	EnvSwitchErrorMsg      = "failed to switch environment: failed to save config"
+	EnvNotSetErrorMsg      = "this command requires an environment; no environments found"
 
 	// iam acl & kafka acl commands
 	UnableToPerformAclErrorMsg    = "unable to %s ACLs: %s"
@@ -151,6 +156,17 @@ const (
 	KafkaClusterShrinkingErrorMsg                 = "can not update cluster while it is shrinking"
 	KafkaClusterDeletingSuggestions               = ChooseRightEnvironmentSuggestions + "\n" +
 		"Ensure the cluster is not associated with any active Connect clusters."
+	CKUOnlyForDedicatedErrorMsg                      = "specifying `--cku` flag is valid only for dedicated Kafka cluster creation"
+	EncryptionKeySupportErrorMsg                     = "BYOK via `--encryption-key` is only available for GCP. Use `confluent byok create` to register AWS and Azure keys."
+	TopicDoesNotExistOrMissingPermissionsErrorMsg    = `topic "%s" does not exist or user does not have the ACLs or role bindings required to describe it`
+	TopicDoesNotExistOrMissingPermissionsSuggestions = "To list topics for Kafka cluster \"%s\", use `confluent kafka topic list --cluster %s`.\nTo list ACLs use `confluent kafka acl list --cluster %s`.\nTo list role bindings use `confluent iam rbac role-binding list`."
+	NameOrCKUFlagErrorMsg                            = "must either specify --name with non-empty value or --cku (for dedicated clusters) with positive integer"
+	NonEmptyNameErrorMsg                             = "`--name` flag value must not be empty"
+	KafkaClusterStillProvisioningErrorMsg            = "your cluster is still provisioning, so it can't be updated yet; please retry in a few minutes"
+	KafkaClusterUpdateFailedSuggestions              = "A cluster can't be updated while still provisioning. If you just created this cluster, retry in a few minutes."
+	KafkaClusterInaccessibleErrorMsg                 = `Kafka cluster "%s" not found or access forbidden`
+	KafkaClusterInaccessibleSuggestions              = ChooseRightEnvironmentSuggestions + "\n" +
+		"The active Kafka cluster may have been deleted. Set a new active cluster with `confluent kafka cluster use`."
 	ChooseRightEnvironmentSuggestions = "Ensure the cluster ID you entered is valid.\n" +
 		"Ensure the cluster you are specifying belongs to the currently selected environment with `confluent kafka cluster list`, `confluent environment list`, and `confluent environment use`."
 	UnknownTopicErrorMsg              = `unknown topic "%s"`
@@ -257,6 +273,7 @@ const (
 	NoCredentialsFoundErrorMsg       = "no credentials found"
 	NoURLEnvVarErrorMsg              = "no URL env var"
 	InvalidInputFormatErrorMsg       = `"%s" is not of valid format for field "%s"`
+	ParseKeychainCredentialsErrorMsg = "unable to parse credentials in keychain access"
 
 	// cmd package
 	InvalidAPIKeyErrorMsg    = `invalid API key "%s" for resource "%s"`
@@ -291,6 +308,9 @@ const (
 	CredentialNotFoundErrorMsg         = `credential "%s" not found`
 	PlatformNotFoundErrorMsg           = `platform "%s" not found`
 	NoNameCredentialErrorMsg           = "credential must have a name"
+	SavedCredentialNoContextErrorMsg   = "saved credential must match a context"
+	KeychainNotAvailableErrorMsg       = "keychain not available on platforms other than darwin"
+	NoValidKeychainCredentialErrorMsg  = "no matching credentials found in keychain"
 	NoNamePlatformErrorMsg             = "platform must have a name"
 	UnspecifiedPlatformErrorMsg        = `context "%s" has corrupted platform`
 	UnspecifiedCredentialErrorMsg      = `context "%s" has corrupted credentials`
@@ -338,6 +358,7 @@ const (
 	InvalidFilePathErrorMsg            = `invalid file path "%s"`
 	UnsupportedFileFormatErrorMsg      = `unsupported file format for file "%s"`
 	InvalidAlgorithmErrorMsg           = `invalid algorithm "%s"`
+	IncorrectNonceLengthErrorMsg       = `incorrect nonce length from ~/.confluent/config.json passed into encryption`
 
 	// sso package
 	StartHTTPServerErrorMsg            = "unable to start HTTP server"

@@ -2,9 +2,6 @@ package test
 
 import (
 	"os"
-	"strings"
-
-	"github.com/confluentinc/bincover"
 )
 
 func (s *CLITestSuite) TestAdminPaymentDescribe() {
@@ -35,16 +32,17 @@ func (s *CLITestSuite) TestAdminPaymentDescribeMarketplaceOrg() {
 func (s *CLITestSuite) TestAdminPaymentUpdate() {
 	tests := []CLITest{
 		{
-			args:        "admin payment update",
-			preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("4242424242424242\n12/70\n999\nBrian Strauch\n"))},
-			fixture:     "admin/payment/update-success.golden",
+			args:    "admin payment update",
+			input:   "4242424242424242\n12/70\n999\nBrian Strauch\n",
+			fixture: "admin/payment/update.golden",
 		},
 		{
-			args:        "admin payment update", //testing with CVC failing regex check on first attempt
-			preCmdFuncs: []bincover.PreCmdFunc{stdinPipeFunc(strings.NewReader("4242424242424242\n12/70\n99\n999\nBrian Strauch\n"))},
-			fixture:     "admin/payment/update-bad-cvc.golden",
+			args:    "admin payment update",
+			input:   "bad card number\n4242424242424242\nbad expiration\n12/70\nbad cvc\n999\nBrian Strauch\n",
+			fixture: "admin/payment/update-retry.golden",
 		},
 	}
+
 	for _, test := range tests {
 		test.login = "cloud"
 		s.runIntegrationTest(test)

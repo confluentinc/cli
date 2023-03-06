@@ -1,26 +1,12 @@
 package test
 
 import (
-	"os"
+	"fmt"
 	"runtime"
 	"strings"
-
-	"github.com/stretchr/testify/require"
 )
 
 func (s *CLITestSuite) TestPlugin() {
-	path := os.Getenv("PATH")
-	newPath := "bin:test/fixtures/input/plugin:test/fixtures/input/plugin/test"
-	if runtime.GOOS == "windows" {
-		newPath = strings.ReplaceAll(newPath, ":", ";")
-	}
-	err := os.Setenv("PATH", newPath)
-	require.NoError(s.T(), err)
-	defer func() {
-		err := os.Setenv("PATH", path)
-		require.NoError(s.T(), err)
-	}()
-
 	tests := []CLITest{
 		{args: "plugin1 arg1", fixture: "plugin/plugin1.golden"},
 		{args: "print args arg1 arg2 --meaningless-flag=true arg3", fixture: "plugin/print-args.golden"},
@@ -37,38 +23,38 @@ func (s *CLITestSuite) TestPlugin() {
 
 	resetConfiguration(s.T(), true) // enable plugins
 
+	path := "test/bin:test/fixtures/input/plugin:test/fixtures/input/plugin/test"
+	if runtime.GOOS == "windows" {
+		path = strings.ReplaceAll(path, ":", ";")
+	}
+
 	if runtime.GOOS != "windows" {
 		for _, tt := range tests {
 			tt.workflow = true
+			tt.env = []string{fmt.Sprintf("PATH=%s", path)}
 			s.runIntegrationTest(tt)
 		}
 	}
 }
 
 func (s *CLITestSuite) TestPluginDisabled() {
-	path := os.Getenv("PATH")
-	newPath := "bin:test/fixtures/input/plugin:test/fixtures/input/plugin/test"
-	if runtime.GOOS == "windows" {
-		newPath = strings.ReplaceAll(newPath, ":", ";")
-	}
-	err := os.Setenv("PATH", newPath)
-	require.NoError(s.T(), err)
-	defer func() {
-		err := os.Setenv("PATH", path)
-		require.NoError(s.T(), err)
-	}()
-
 	tests := []CLITest{
-		{args: "plugin1 arg1", fixture: "plugin/plugin1-disabled.golden", wantErrCode: 1},
-		{args: "print args arg1 arg2 --meaningless-flag=true arg3", fixture: "plugin/print-args-disabled.golden", wantErrCode: 1},
-		{args: "plugin list", fixture: "plugin/list-disabled.golden", wantErrCode: 1},
+		{args: "plugin1 arg1", fixture: "plugin/plugin1-disabled.golden", exitCode: 1},
+		{args: "print args arg1 arg2 --meaningless-flag=true arg3", fixture: "plugin/print-args-disabled.golden", exitCode: 1},
+		{args: "plugin list", fixture: "plugin/list-disabled.golden", exitCode: 1},
 	}
 
 	resetConfiguration(s.T(), false) // disable plugins
 
+	path := "test/fixtures/input/plugin:test/fixtures/input/plugin/test"
+	if runtime.GOOS == "windows" {
+		path = strings.ReplaceAll(path, ":", ";")
+	}
+
 	if runtime.GOOS != "windows" {
 		for _, tt := range tests {
 			tt.workflow = true
+			tt.env = []string{fmt.Sprintf("PATH=%s", path)}
 			s.runIntegrationTest(tt)
 		}
 	}

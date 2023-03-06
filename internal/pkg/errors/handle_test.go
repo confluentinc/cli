@@ -1,7 +1,6 @@
 package errors
 
 import (
-	"bytes"
 	"fmt"
 	"testing"
 
@@ -65,13 +64,8 @@ func TestHandleError(t *testing.T) {
 	}
 }
 
-func TestSuggestionsMessage(t *testing.T) {
-	errorMessage := "im an error hi"
-	suggestionsMessage := "This is a suggestion"
-	err := NewErrorWithSuggestions(errorMessage, suggestionsMessage)
-	var b bytes.Buffer
-	DisplaySuggestionsMessage(err, &b)
-	out := b.String()
-	wantSuggestionsMsg := fmt.Sprintf(wantSuggestionsMsgFormat, suggestionsMessage)
-	require.Equal(t, wantSuggestionsMsg, out)
+func TestDisplaySuggestionsMessage(t *testing.T) {
+	suggestion := "This is a suggestion"
+	err := NewErrorWithSuggestions("im an error hi", suggestion)
+	require.Equal(t, fmt.Sprintf(wantSuggestionsMsgFormat, suggestion), DisplaySuggestionsMessage(err))
 }

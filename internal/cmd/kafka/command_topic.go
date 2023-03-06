@@ -75,11 +75,11 @@ func (c *authenticatedTopicCommand) validArgs(cmd *cobra.Command, args []string)
 		return nil
 	}
 
-	return c.autocompleteTopics()
+	return c.autocompleteTopics(cmd)
 }
 
-func (c *authenticatedTopicCommand) autocompleteTopics() []string {
-	topics, err := c.getTopics()
+func (c *authenticatedTopicCommand) autocompleteTopics(cmd *cobra.Command) []string {
+	topics, err := c.getTopics(cmd)
 	if err != nil {
 		return nil
 	}
@@ -115,7 +115,7 @@ func (c *hasAPIKeyTopicCommand) validateTopic(client *ckafka.AdminClient, topic 
 	}
 	if !foundTopic {
 		log.CliLogger.Trace("validateTopic failed due to topic not being found in the client's topic list")
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.TopicDoesNotExistOrMissingACLsErrorMsg, topic), fmt.Sprintf(errors.TopicDoesNotExistOrMissingACLsSuggestions, cluster.ID, cluster.ID, cluster.ID))
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.TopicDoesNotExistOrMissingPermissionsErrorMsg, topic), fmt.Sprintf(errors.TopicDoesNotExistOrMissingPermissionsSuggestions, cluster.ID, cluster.ID, cluster.ID))
 	}
 
 	log.CliLogger.Tracef("validateTopic succeeded")
@@ -144,7 +144,7 @@ func (c *authenticatedTopicCommand) getNumPartitions(topicName string) (int, err
 	return len(partitionsResp.Data), nil
 }
 
-func (c *authenticatedTopicCommand) provisioningClusterCheck(lkc string) error {
+func (c *authenticatedTopicCommand) provisioningClusterCheck(cmd *cobra.Command, lkc string) error {
 	cluster, httpResp, err := c.V2Client.DescribeKafkaCluster(lkc, c.EnvironmentId())
 	if err != nil {
 		return errors.CatchKafkaNotFoundError(err, lkc, httpResp)

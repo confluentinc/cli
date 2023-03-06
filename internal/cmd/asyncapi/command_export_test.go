@@ -2,6 +2,7 @@ package asyncapi
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"testing"
 	"time"
@@ -21,7 +22,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/config"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/version"
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
@@ -49,7 +50,16 @@ var details = &accountDetails{
 			ListVersionsFunc: func(_ context.Context, _ string, _ *srsdk.ListVersionsOpts) ([]int32, *http.Response, error) {
 				return []int32{1234, 4567}, nil, nil
 			},
-			GetSchemaByVersionFunc: func(_ context.Context, _ string, _ string, _ *srsdk.GetSchemaByVersionOpts) (srsdk.Schema, *http.Response, error) {
+			GetSchemaByVersionFunc: func(_ context.Context, subject string, _ string, _ *srsdk.GetSchemaByVersionOpts) (srsdk.Schema, *http.Response, error) {
+				if subject == "subject2" {
+					return srsdk.Schema{
+						Subject:    "subject1",
+						Version:    1,
+						Id:         1,
+						SchemaType: "PROTOBUF",
+						Schema:     `syntax = "proto3"; package com.mycorp.mynamespace; message SampleRecord { int32 my_field1 = 1; double my_field2 = 2; string my_field3 = 3;}`,
+					}, nil, nil
+				}
 				return srsdk.Schema{
 					Subject:    "subject1",
 					Version:    1,
@@ -227,7 +237,7 @@ func TestGetSchemaRegistry(t *testing.T) {
 	require.NoError(t, err)
 	flags := &flags{schemaRegistryApiKey: "ASYNCAPIKEY", schemaRegistryApiSecret: "ASYNCAPISECRET"}
 	err = c.getSchemaRegistry(details, flags)
-	utils.Println(c.Command, "")
+	output.Println("")
 	require.Error(t, err)
 }
 
@@ -274,6 +284,14 @@ func TestGetChannelDetails(t *testing.T) {
 	flags := &flags{schemaRegistryApiKey: "ASYNCAPIKEY", schemaRegistryApiSecret: "ASYNCAPISECRET"}
 	err = c.getChannelDetails(details, flags)
 	require.NoError(t, err)
+	//Protobuf Schema
+	details.channelDetails.currentSubject = "subject2"
+	details.channelDetails.currentTopic = details.topics[0]
+	schema, _, _ = details.srClient.DefaultApi.GetSchemaByVersion(*new(context.Context), "subject2", "1", nil)
+	details.channelDetails.schema = &schema
+	err = c.getChannelDetails(details, flags)
+	require.Error(t, err, fmt.Errorf("protobuf"))
+
 }
 
 func TestGetBindings(t *testing.T) {

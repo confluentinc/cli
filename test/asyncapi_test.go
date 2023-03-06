@@ -10,13 +10,13 @@ import (
 func (s *CLITestSuite) TestAsyncApiExport() {
 	tests := []CLITest{
 		// No Kafka
-		{args: "asyncapi export", wantErrCode: 1},
+		{args: "asyncapi export", exitCode: 1},
 		// No SR Key Set up
-		{args: "asyncapi export", wantErrCode: 1, useKafka: "lkc-asyncapi", authKafka: "true"},
-		{args: "environment use " + testserver.SRApiEnvId, wantErrCode: 0, workflow: true},
+		{args: "asyncapi export", exitCode: 1, useKafka: "lkc-asyncapi", authKafka: "true"},
+		{args: "environment use " + testserver.SRApiEnvId, workflow: true},
 		// Spec Generated
 		{args: "asyncapi export --schema-registry-api-key ASYNCAPIKEY --schema-registry-api-secret ASYNCAPISECRET", fixture: "asyncapi/1.golden", useKafka: "lkc-asyncapi", authKafka: "true", workflow: true},
-		{args: "asyncapi export --schema-registry-api-key ASYNCAPIKEY --schema-registry-api-secret ASYNCAPISECRET --schema-context dev --file=asyncapi-with-context.yaml", useKafka: "lkc-asyncapi", authKafka: "true", workflow: true},
+		{args: "asyncapi export --schema-registry-api-key ASYNCAPIKEY --schema-registry-api-secret ASYNCAPISECRET --schema-context dev --file asyncapi-with-context.yaml", useKafka: "lkc-asyncapi", authKafka: "true", workflow: true},
 	}
 	resetConfiguration(s.T(), false)
 	for _, test := range tests {

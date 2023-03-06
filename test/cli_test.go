@@ -3,10 +3,9 @@ package test
 import (
 	"flag"
 	"fmt"
-	"io"
 	"os"
 	"os/exec"
-	"path"
+	"path/filepath"
 	"reflect"
 	"regexp"
 	"runtime"
@@ -14,7 +13,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/confluentinc/bincover"
+	"github.com/google/shlex"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -25,17 +24,9 @@ import (
 )
 
 var (
-	noRebuild    = flag.Bool("no-rebuild", false, "skip rebuilding CLI if it already exists")
-	update       = flag.Bool("update", false, "update golden files")
-	debug        = flag.Bool("debug", true, "enable verbose output")
-	cover        = false
-	testBin      = "bin/confluent_test"
-	covCollector *bincover.CoverageCollector
-)
-
-const (
-	testBinRace            = "bin/confluent_test_race"
-	mergedCoverageFilename = "integ_coverage.txt"
+	update  = flag.Bool("update", false, "update golden files")
+	debug   = flag.Bool("debug", true, "enable verbose output")
+	testBin = "test/bin/confluent"
 )
 
 // CLITest represents a test configuration
@@ -67,15 +58,12 @@ type CLITest struct {
 	// Fixed string to check that output does not contain
 	notContains string
 	// Expected exit code (e.g., 0 for success or 1 for failure)
-	wantErrCode int
+	exitCode int
 	// If true, don't reset the config/state between tests to enable testing CLI workflows
 	workflow bool
 	// An optional function that allows you to specify other calls
 	wantFunc func(t *testing.T)
-	// Optional functions that will be executed directly before the command is run (i.e. overwriting stdin before run)
-	preCmdFuncs []bincover.PreCmdFunc
-	// Optional functions that will be executed directly after the command is run
-	postCmdFuncs []bincover.PostCmdFunc
+	input    string
 }
 
 // CLITestSuite is the CLI integration tests.
@@ -89,66 +77,35 @@ func TestCLI(t *testing.T) {
 	suite.Run(t, new(CLITestSuite))
 }
 
-func init() {
-	cover = os.Getenv("INTEG_COVER") == "on"
+func (s *CLITestSuite) SetupSuite() {
+	req := require.New(s.T())
 
-	if os.Getenv("CI") == "on" {
-		testBin = testBinRace
-	}
+	// dumb but effective
+	err := os.Chdir("..")
+	req.NoError(err)
+
+	err = exec.Command("make", "build-for-integration-test").Run()
+	req.NoError(err)
 
 	if runtime.GOOS == "windows" {
-		testBin = testBin + ".exe"
+		testBin += ".exe"
 	}
-}
 
-// SetupSuite builds the CLI binary to test
-func (s *CLITestSuite) SetupSuite() {
-	covCollector = bincover.NewCoverageCollector(mergedCoverageFilename, cover)
-	req := require.New(s.T())
-	err := covCollector.Setup()
-	req.NoError(err)
 	s.TestBackend = testserver.StartTestBackend(s.T(), false) // by default do not disable audit-log
 	os.Setenv("DISABLE_AUDIT_LOG", "false")
-	// dumb but effective
-	err = os.Chdir("..")
-	req.NoError(err)
 
 	// Temporarily change $HOME, so the current config file isn't altered.
 	err = os.Setenv("HOME", os.TempDir())
 	req.NoError(err)
-
-	if _, err := os.Stat(binaryPath(s.T(), testBin)); os.IsNotExist(err) || !*noRebuild {
-		var makeArgs string
-		if testBin == testBinRace {
-			makeArgs = "build-integ-race"
-		} else {
-			makeArgs = "build-integ-nonrace"
-		}
-		if runtime.GOOS == "windows" {
-			makeArgs += "-windows"
-		}
-		makeCmd := exec.Command("make", makeArgs)
-		output, err := makeCmd.CombinedOutput()
-		if err != nil {
-			s.T().Log(string(output))
-			req.NoError(err)
-		}
-	}
 }
 
 func (s *CLITestSuite) TearDownSuite() {
-	// Merge coverage profiles.
-	_ = covCollector.TearDown()
 	s.TestBackend.Close()
 }
 
 func (s *CLITestSuite) runIntegrationTest(tt CLITest) {
 	if tt.name == "" {
 		tt.name = tt.args
-	}
-
-	if strings.HasPrefix(tt.name, "error") {
-		tt.wantErrCode = 1
 	}
 
 	s.T().Run(tt.name, func(t *testing.T) {
@@ -181,41 +138,34 @@ func (s *CLITestSuite) runIntegrationTest(tt CLITest) {
 				}
 			}()
 
-			output := runCommand(t, testBin, env, loginString, 0)
+			output := runCommand(t, testBin, env, loginString, 0, "")
 			if *debug {
 				fmt.Println(output)
 			}
 		case "platform":
 			loginURL := s.getLoginURL(false, tt)
 			env := []string{pauth.ConfluentPlatformUsername + "=fake@user.com", pauth.ConfluentPlatformPassword + "=pass1"}
-			output := runCommand(t, testBin, env, "login --url "+loginURL, 0)
+			output := runCommand(t, testBin, env, "login --url "+loginURL, 0, "")
 			if *debug {
 				fmt.Println(output)
 			}
 		}
 
 		if tt.useKafka != "" {
-			output := runCommand(t, testBin, []string{}, "kafka cluster use "+tt.useKafka, 0)
+			output := runCommand(t, testBin, []string{}, fmt.Sprintf("kafka cluster use %s", tt.useKafka), 0, "")
 			if *debug {
 				fmt.Println(output)
 			}
 		}
 
 		if tt.authKafka != "" {
-			output := runCommand(t, testBin, []string{}, "api-key create --resource "+tt.useKafka, 0)
-			if *debug {
-				fmt.Println(output)
-			}
-			// HACK: we don't have scriptable output yet so we parse it from the table
-			key := strings.TrimSpace(strings.Split(strings.Split(output, "\n")[3], "|")[2])
-			output = runCommand(t, testBin, []string{}, fmt.Sprintf("api-key use %s --resource %s", key, tt.useKafka), 0)
+			output := runCommand(t, testBin, []string{}, fmt.Sprintf("api-key create --resource %s --use", tt.useKafka), 0, "")
 			if *debug {
 				fmt.Println(output)
 			}
 		}
 
-		covCollectorOptions := parseCmdFuncsToCoverageCollectorOptions(tt.preCmdFuncs, tt.postCmdFuncs)
-		output := runCommand(t, testBin, tt.env, tt.args, tt.wantErrCode, covCollectorOptions...)
+		output := runCommand(t, testBin, tt.env, tt.args, tt.exitCode, tt.input)
 		if *debug {
 			fmt.Println(output)
 		}
@@ -263,52 +213,24 @@ func (s *CLITestSuite) validateTestOutput(tt CLITest, t *testing.T, output strin
 	}
 }
 
-func runCommand(t *testing.T, binaryName string, env []string, args string, wantErrCode int, coverageCollectorOptions ...bincover.CoverageCollectorOption) string {
-	output, exitCode, err := covCollector.RunBinary(binaryPath(t, binaryName), "TestRunMain", env, strings.Split(args, " "), coverageCollectorOptions...)
-	if err != nil && wantErrCode == 0 {
-		require.Failf(t, "unexpected error",
-			"exit %d: %s\n%s", exitCode, args, output)
-	}
-	require.Equal(t, wantErrCode, exitCode, output)
-	return output
-}
+func runCommand(t *testing.T, binaryName string, env []string, argString string, exitCode int, input string) string {
+	dir, err := os.Getwd()
+	require.NoError(t, err)
 
-// Parses pre and post CmdFuncs into CoverageCollectorOptions which can be unsed in covCollector.RunBinary()
-func parseCmdFuncsToCoverageCollectorOptions(preCmdFuncs []bincover.PreCmdFunc, postCmdFuncs []bincover.PostCmdFunc) []bincover.CoverageCollectorOption {
-	if len(preCmdFuncs) == 0 && len(postCmdFuncs) == 0 {
-		return []bincover.CoverageCollectorOption{}
-	}
-	var options []bincover.CoverageCollectorOption
-	return append(options, bincover.PreExec(preCmdFuncs...), bincover.PostExec(postCmdFuncs...))
-}
+	args, err := shlex.Split(argString)
+	require.NoError(t, err)
 
-// Used for tests needing to overwrite StdIn for mock input
-// returns a cmdFunc struct with the StdinPipe functionality and isPreCmdFunc set to true
-// takes an io.Reader with the desired input read into it
-func stdinPipeFunc(stdinInput io.Reader) bincover.PreCmdFunc {
-	return func(cmd *exec.Cmd) error {
-		buf, err := io.ReadAll(stdinInput)
-		fmt.Printf("%s", buf)
-		if err != nil {
-			return err
-		}
-		if len(buf) == 0 {
-			return nil
-		}
-		writer, err := cmd.StdinPipe()
-		if err != nil {
-			return err
-		}
-		_, err = writer.Write(buf)
-		if err != nil {
-			return err
-		}
-		err = writer.Close()
-		if err != nil {
-			return err
-		}
-		return nil
+	cmd := exec.Command(filepath.Join(dir, binaryName), args...)
+	cmd.Env = append(os.Environ(), env...)
+	cmd.Stdin = strings.NewReader(input)
+
+	out, err := cmd.CombinedOutput()
+	require.Equal(t, exitCode, cmd.ProcessState.ExitCode())
+	if exitCode == 0 {
+		require.NoError(t, err)
 	}
+
+	return string(out)
 }
 
 func resetConfiguration(t *testing.T, arePluginsEnabled bool) {
@@ -325,12 +247,6 @@ func writeFixture(t *testing.T, fixture string, content string) {
 	if err != nil {
 		t.Fatal(err)
 	}
-}
-
-func binaryPath(t *testing.T, binaryName string) string {
-	dir, err := os.Getwd()
-	require.NoError(t, err)
-	return path.Join(dir, binaryName)
 }
 
 func unsetFreeTrialEnv() {

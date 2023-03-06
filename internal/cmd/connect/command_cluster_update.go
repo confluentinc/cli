@@ -5,9 +5,9 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/properties"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *clusterCommand) newUpdateCommand() *cobra.Command {
@@ -73,6 +73,6 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	utils.Printf(cmd, errors.UpdatedResourceMsg, resource.Connector, args[0])
+	output.Printf(errors.UpdatedResourceMsg, resource.Connector, args[0])
 	return nil
 }

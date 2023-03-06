@@ -10,7 +10,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 const ValidACLSuggestion = "To check for valid ACLs, use `confluent kafka acl list`"
@@ -49,10 +49,12 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	userIdMap, err := c.mapResourceIdToUserId()
+	users, err := c.getAllUsers()
 	if err != nil {
 		return err
 	}
+
+	userIdMap := c.mapResourceIdToUserId(users)
 
 	if err := c.aclResourceIdToNumericId(acls, userIdMap); err != nil {
 		return err
@@ -72,7 +74,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	if err := c.provisioningClusterCheck(kafkaClusterConfig.ID); err != nil {
+	if err := c.provisioningClusterCheck(cmd, kafkaClusterConfig.ID); err != nil {
 		return err
 	}
 
@@ -106,7 +108,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		deleteResp, httpResp, err := kafkaREST.CloudClient.DeleteKafkaAcls(kafkaClusterConfig.ID, filter)
 		if err != nil {
 			if i > 0 {
-				utils.ErrPrintln(cmd, printAclsDeleted(count))
+				output.ErrPrintln(printAclsDeleted(count))
 			}
 			return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 		}
@@ -114,7 +116,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		count += len(deleteResp.Data)
 	}
 
-	utils.ErrPrintln(cmd, printAclsDeleted(count))
+	output.ErrPrintln(printAclsDeleted(count))
 	return nil
 }
 

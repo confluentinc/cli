@@ -14,7 +14,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 func (c *clusterCommand) newUpdateCommand(cfg *v1.Config) *cobra.Command {
@@ -147,7 +147,7 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string, prompt form.P
 			case skuBasic, skuStandard:
 				return fmt.Errorf(errors.ClusterResizeNotSupportedErrorMsg)
 			case skuDedicated:
-				updatedCku, err := c.validateResize(cmd, int32(cku), &currentCluster, prompt)
+				updatedCku, err := c.validateResize(int32(cku), &currentCluster, prompt)
 				if err != nil {
 					return err
 				}
@@ -168,7 +168,12 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string, prompt form.P
 	return c.outputKafkaClusterDescription(cmd, &updatedCluster, true)
 }
 
-func (c *clusterCommand) validateResize(cmd *cobra.Command, cku int32, currentCluster *cmkv2.CmkV2Cluster, prompt form.Prompt) (int32, error) {
+func (c *clusterCommand) validateResize(cku int32, currentCluster *cmkv2.CmkV2Cluster, prompt form.Prompt) (int32, error) {
+	// Ensure the cluster is a Dedicated Cluster
+	if currentCluster.GetSpec().Config.CmkV2Dedicated == nil {
+		return 0, errors.New(errors.ClusterResizeNotSupportedErrorMsg)
+	}
+	// Durability Checks
 	if currentCluster.Spec.GetAvailability() == highAvailability && cku <= 1 {
 		return 0, errors.New(errors.CKUMoreThanOneErrorMsg)
 	}
@@ -176,7 +181,6 @@ func (c *clusterCommand) validateResize(cmd *cobra.Command, cku int32, currentCl
 	if cku == 0 {
 		return 0, errors.New(errors.CKUMoreThanZeroErrorMsg)
 	}
-
 	if err := isClusterResizeInProgress(currentCluster); err != nil {
 		return 0, err
 	}
@@ -191,7 +195,7 @@ func (c *clusterCommand) validateResize(cmd *cobra.Command, cku int32, currentCl
 			promptMessage += fmt.Sprintf("\n%v\n", err)
 		}
 		if promptMessage != "" {
-			if ok, err := confirmShrink(cmd, prompt, promptMessage); !ok || err != nil {
+			if ok, err := confirmShrink(prompt, promptMessage); !ok || err != nil {
 				return 0, err
 			}
 		}
@@ -213,13 +217,13 @@ func (c *clusterCommand) validateKafkaClusterMetrics(currentCluster *cmkv2.CmkV2
 	return nil
 }
 
-func confirmShrink(cmd *cobra.Command, prompt form.Prompt, promptMessage string) (bool, error) {
+func confirmShrink(prompt form.Prompt, promptMessage string) (bool, error) {
 	f := form.New(form.Field{ID: "proceed", Prompt: fmt.Sprintf("Validated cluster metrics and found that: %s\nDo you want to proceed with shrinking your kafka cluster?", promptMessage), IsYesOrNo: true})
-	if err := f.Prompt(cmd, prompt); err != nil {
+	if err := f.Prompt(prompt); err != nil {
 		return false, errors.New(errors.FailedToReadClusterResizeConfirmationErrorMsg)
 	}
 	if !f.Responses["proceed"].(bool) {
-		utils.Println(cmd, "Not proceeding with kafka cluster shrink")
+		output.Println("Not proceeding with kafka cluster shrink")
 		return false, nil
 	}
 	return true, nil

@@ -12,7 +12,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 type Command struct {
@@ -48,7 +48,7 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner, netrcHandler netrc.NetrcHandl
 
 func (c *Command) logout(cmd *cobra.Command, _ []string) error {
 	if c.Config.Config.Context() != nil {
-		username, err := c.netrcHandler.RemoveNetrcCredentials(c.cfg.IsCloudLogin(), c.Config.Config.Context().NetrcMachineName)
+		username, err := c.netrcHandler.RemoveNetrcCredentials(c.cfg.IsCloudLogin(), c.Config.Config.Context().GetNetrcMachineName())
 		if err == nil {
 			log.CliLogger.Warnf(errors.RemoveNetrcCredentialsMsg, username, c.netrcHandler.GetFileName())
 		} else if !strings.Contains(err.Error(), "login credentials not found") && !strings.Contains(err.Error(), "keyword expected") {
@@ -57,10 +57,10 @@ func (c *Command) logout(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
-	if err := pauth.PersistLogoutToConfig(c.Config.Config); err != nil {
+	if err := pauth.PersistLogout(c.Config.Config); err != nil {
 		return err
 	}
 
-	utils.Println(cmd, errors.LoggedOutMsg)
+	output.Println(errors.LoggedOutMsg)
 	return nil
 }
