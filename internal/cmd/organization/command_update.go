@@ -19,9 +19,9 @@ func (c *command) newUpdateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("name", "", "Name of the Confluent Cloud organization.")
-	_ = cmd.MarkFlagRequired("name")
-
 	pcmd.AddOutputFlag(cmd)
+	
+	_ = cmd.MarkFlagRequired("name")
 
 	return cmd
 }
