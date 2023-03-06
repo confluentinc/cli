@@ -7,7 +7,7 @@ require (
 	github.com/aws/aws-sdk-go v1.44.212
 	github.com/billgraziano/dpapi v0.4.0
 	github.com/brianstrauch/cobra-shell v0.4.0
-	github.com/chromedp/chromedp v0.8.7
+	github.com/chromedp/chromedp v0.8.8
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20230117212759-138da0e5aa56
 	github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0
@@ -83,7 +83,7 @@ require (
 require (
 	github.com/bufbuild/protocompile v0.2.1-0.20230123224550-da57cd758c2f // indirect
 	github.com/c-bata/go-prompt v0.2.6 // indirect
-	github.com/chromedp/cdproto v0.0.0-20230120182703-ecee3ffd2a24 // indirect
+	github.com/chromedp/cdproto v0.0.0-20230220211738-2b1ec77315c9 // indirect
 	github.com/chromedp/sysutil v1.0.0 // indirect
 	github.com/confluentinc/proto-go-setter v0.3.0 // indirect
 	github.com/envoyproxy/protoc-gen-validate v0.9.1 // indirect
@@ -123,7 +123,7 @@ require (
 	golang.org/x/mod v0.7.0 // indirect
 	golang.org/x/net v0.7.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
-	golang.org/x/sys v0.5.0 // indirect
+	golang.org/x/sys v0.6.0 // indirect
 	golang.org/x/tools v0.5.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20230119192704-9d59e20e5cd1 // indirect
