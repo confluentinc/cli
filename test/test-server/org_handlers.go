@@ -64,6 +64,48 @@ func handleOrgEnvironments(t *testing.T) http.HandlerFunc {
 	}
 }
 
+// Handler for: "/org/v2/organizations/{id}"
+func handleOrgOrganization(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		id := vars["id"]
+		w.Header().Set("Content-Type", "application/json")
+
+		displayName := "default"
+		switch r.Method {
+		case http.MethodPatch:
+			req := orgv2.OrgV2Environment{}
+			err := json.NewDecoder(r.Body).Decode(&req)
+			require.NoError(t, err)
+			displayName = *req.DisplayName
+		}
+
+		organization := &orgv2.OrgV2Organization{
+			Id:          orgv2.PtrString(id),
+			DisplayName: orgv2.PtrString(displayName),
+		}
+		err := json.NewEncoder(w).Encode(organization)
+		require.NoError(t, err)
+	}
+}
+
+// Handler for: "/org/v2/organizations"
+func handleOrgOrganizations(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch r.Method {
+		case http.MethodGet:
+			organizationList := &orgv2.OrgV2OrganizationList{Data: []orgv2.OrgV2Organization{
+				{Id: orgv2.PtrString("abc-123"), DisplayName: orgv2.PtrString("org1")},
+				{Id: orgv2.PtrString("abc-456"), DisplayName: orgv2.PtrString("org2")},
+				{Id: orgv2.PtrString("abc-789"), DisplayName: orgv2.PtrString("org3")},
+			}}
+			err := json.NewEncoder(w).Encode(organizationList)
+			require.NoError(t, err)
+		}
+	}
+}
+
 func getOrgEnvironmentsList(envs []*orgv2.OrgV2Environment) []orgv2.OrgV2Environment {
 	envList := []orgv2.OrgV2Environment{}
 	for _, env := range envs {
