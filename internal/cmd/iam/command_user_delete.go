@@ -8,8 +8,8 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c userCommand) newDeleteCommand() *cobra.Command {
@@ -41,11 +41,10 @@ func (c userCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	err = c.V2Client.DeleteIamUser(resourceId)
-	if err != nil {
+	if err := c.V2Client.DeleteIamUser(resourceId); err != nil {
 		return errors.Errorf(errors.DeleteResourceErrorMsg, resource.User, resourceId, err)
 	}
 
-	utils.Printf(cmd, errors.DeletedResourceMsg, resource.User, resourceId)
+	output.Printf(errors.DeletedResourceMsg, resource.User, resourceId)
 	return nil
 }

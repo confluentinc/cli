@@ -1,4 +1,4 @@
   Current |     Key     | Description  |  Owner  |     Owner Email      | Resource Type |  Resource  |       Created         
 ----------+-------------+--------------+---------+----------------------+---------------+------------+-----------------------
-          | UIAPIKEY101 |              | u-22bbb | u-22bbb@confluent.io | kafka         | lkc-other1 | 1999-02-24T00:00:00Z  
   *       | MYKEY5      | my-other-app | u-44ddd | mhe@confluent.io     | kafka         | lkc-other1 | 1999-02-24T00:00:00Z  
+          | UIAPIKEY101 |              | u-22bbb | u-22bbb@confluent.io | kafka         | lkc-other1 | 1999-02-24T00:00:00Z  

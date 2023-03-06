@@ -9,8 +9,8 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *linkCommand) newDeleteCommand() *cobra.Command {
@@ -54,6 +54,6 @@ func (c *linkCommand) delete(cmd *cobra.Command, args []string) error {
 		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
-	utils.Printf(cmd, errors.DeletedResourceMsg, resource.ClusterLink, linkName)
+	output.Printf(errors.DeletedResourceMsg, resource.ClusterLink, linkName)
 	return nil
 }

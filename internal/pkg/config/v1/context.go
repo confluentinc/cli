@@ -2,30 +2,31 @@ package v1
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
 // Context represents a specific CLI context.
 type Context struct {
-	Name                   string                            `json:"name" hcl:"name"`
-	NetrcMachineName       string                            `json:"netrc_machine_name" hcl:"netrc_machine_name"`
-	Platform               *Platform                         `json:"-" hcl:"-"`
-	PlatformName           string                            `json:"platform" hcl:"platform"`
-	Credential             *Credential                       `json:"-" hcl:"-"`
-	CredentialName         string                            `json:"credential" hcl:"credential"`
-	KafkaClusterContext    *KafkaClusterContext              `json:"kafka_cluster_context" hcl:"kafka_cluster_config"`
-	SchemaRegistryClusters map[string]*SchemaRegistryCluster `json:"schema_registry_clusters" hcl:"schema_registry_clusters"`
-	State                  *ContextState                     `json:"-" hcl:"-"`
-	Config                 *Config                           `json:"-" hcl:"-"`
-	LastOrgId              string                            `json:"last_org_id" hcl:"last_org_id"`
-	FeatureFlags           *FeatureFlags                     `json:"feature_flags,omitempty" hcl:"feature_flags,omitempty"`
+	Name                   string                            `json:"name"`
+	NetrcMachineName       string                            `json:"netrc_machine_name"`
+	PlatformName           string                            `json:"platform"`
+	CredentialName         string                            `json:"credential"`
+	KafkaClusterContext    *KafkaClusterContext              `json:"kafka_cluster_context"`
+	SchemaRegistryClusters map[string]*SchemaRegistryCluster `json:"schema_registry_clusters"`
+	LastOrgId              string                            `json:"last_org_id"`
+	FeatureFlags           *FeatureFlags                     `json:"feature_flags,omitempty"`
+
+	Platform   *Platform     `json:"-"`
+	Credential *Credential   `json:"-"`
+	State      *ContextState `json:"-"`
+	Config     *Config       `json:"-"`
 }
 
 func newContext(name string, platform *Platform, credential *Credential,
@@ -267,5 +268,5 @@ func printApiKeysDictErrorMessage(missingKey, mismatchKey, missingSecret bool, c
 		problems = append(problems, errors.APISecretMissingMsg)
 	}
 	problemString := strings.Join(problems, ", ")
-	_, _ = fmt.Fprintf(os.Stderr, errors.APIKeysMapAutofixMsg, cluster.ID, contextName, problemString, cluster.ID)
+	output.ErrPrintf(errors.APIKeysMapAutofixMsg, cluster.ID, contextName, problemString, cluster.ID)
 }

@@ -256,13 +256,13 @@ func (suite *LoginCredentialsManagerTestSuite) TestConfluentGetCredentialsFromNe
 }
 
 func (suite *LoginCredentialsManagerTestSuite) TestGetCCloudCredentialsFromPrompt() {
-	creds, err := suite.loginCredentialsManager.GetCloudCredentialsFromPrompt(&cobra.Command{}, "")()
+	creds, err := suite.loginCredentialsManager.GetCloudCredentialsFromPrompt("")()
 	suite.require.NoError(err)
 	suite.compareCredentials(promptCredentials, creds)
 }
 
 func (suite *LoginCredentialsManagerTestSuite) TestGetConfluentCredentialsFromPrompt() {
-	creds, err := suite.loginCredentialsManager.GetOnPremCredentialsFromPrompt(&cobra.Command{})()
+	creds, err := suite.loginCredentialsManager.GetOnPremCredentialsFromPrompt()()
 	suite.require.NoError(err)
 	suite.compareCredentials(promptCredentials, creds)
 }
@@ -351,7 +351,7 @@ func (suite *LoginCredentialsManagerTestSuite) TestGetCredentialsFunction() {
 	creds, err := GetLoginCredentials(
 		loginCredentialsManager.GetCloudCredentialsFromEnvVar(""),
 		loginCredentialsManager.GetCredentialsFromNetrc(netrc.NetrcMachineParams{IsCloud: true}),
-		loginCredentialsManager.GetCloudCredentialsFromPrompt(&cobra.Command{}, ""),
+		loginCredentialsManager.GetCloudCredentialsFromPrompt(""),
 	)
 	fmt.Println("") // HACK: Newline needed to parse test output
 	suite.require.NoError(err)
@@ -362,7 +362,7 @@ func (suite *LoginCredentialsManagerTestSuite) TestGetCredentialsFunction() {
 	creds, err = GetLoginCredentials(
 		loginCredentialsManager.GetCloudCredentialsFromEnvVar(""),
 		loginCredentialsManager.GetCredentialsFromNetrc(netrc.NetrcMachineParams{IsCloud: true}),
-		loginCredentialsManager.GetCloudCredentialsFromPrompt(&cobra.Command{}, ""),
+		loginCredentialsManager.GetCloudCredentialsFromPrompt(""),
 	)
 	suite.require.NoError(err)
 	suite.compareCredentials(netrcCredentials, creds)
@@ -373,7 +373,7 @@ func (suite *LoginCredentialsManagerTestSuite) TestGetCredentialsFunction() {
 	creds, err = GetLoginCredentials(
 		loginCredentialsManager.GetCloudCredentialsFromEnvVar(""),
 		loginCredentialsManager.GetCredentialsFromNetrc(netrc.NetrcMachineParams{IsCloud: true}),
-		loginCredentialsManager.GetCloudCredentialsFromPrompt(&cobra.Command{}, ""),
+		loginCredentialsManager.GetCloudCredentialsFromPrompt(""),
 	)
 	suite.require.NoError(err)
 	suite.compareCredentials(envCredentials, creds)

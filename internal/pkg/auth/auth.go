@@ -13,6 +13,7 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/keychain"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/secret"
 )
 
@@ -42,7 +43,7 @@ func GetEnvWithFallback(current, deprecated string) string {
 	}
 
 	if val := os.Getenv(deprecated); val != "" {
-		_, _ = fmt.Fprintf(os.Stderr, errors.DeprecatedEnvVarWarningMsg, deprecated, current)
+		output.ErrPrintf(errors.DeprecatedEnvVarWarningMsg, deprecated, current)
 		return val
 	}
 

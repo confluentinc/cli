@@ -8,8 +8,8 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *quotaCommand) newDeleteCommand() *cobra.Command {
@@ -27,8 +27,7 @@ func (c *quotaCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *quotaCommand) delete(cmd *cobra.Command, args []string) error {
-	_, err := c.V2Client.DescribeKafkaQuota(args[0])
-	if err != nil {
+	if _, err := c.V2Client.DescribeKafkaQuota(args[0]); err != nil {
 		return err
 	}
 
@@ -37,10 +36,10 @@ func (c *quotaCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	err = c.V2Client.DeleteKafkaQuota(args[0])
-	if err != nil {
+	if err := c.V2Client.DeleteKafkaQuota(args[0]); err != nil {
 		return err
 	}
-	utils.Printf(cmd, errors.DeletedResourceMsg, resource.ClientQuota, args[0])
+
+	output.Printf(errors.DeletedResourceMsg, resource.ClientQuota, args[0])
 	return nil
 }

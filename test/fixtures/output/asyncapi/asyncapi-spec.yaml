@@ -42,7 +42,7 @@ components:
           type: string
         name: sampleRecord
         namespace: com.mycorp.mynamespace
-        type: record
+        type: AVRO
       name: Topic1Message
       bindings:
         kafka:

@@ -1,9 +1,6 @@
 package errors
 
 const (
-	//admin commands
-	EmailInviteSentMsg = "An email invitation has been sent to %s"
-
 	// api-key command
 	StoredAPIKeyMsg = "Stored API secret for API key \"%s\".\n"
 	UseAPIKeyMsg    = "Set API Key \"%s\" as the active API key for \"%s\".\n"
@@ -137,6 +134,6 @@ const (
 
 	// Stream Sharing commands
 	ResendInviteMsg = "Sent invitation for \"%s\".\n"
-	OptInMsg        = "Successfully opted in to Stream Sharing.\n"
-	OptOutMsg       = "Successfully opted out of Stream Sharing.\n"
+	OptInMsg        = "Successfully opted in to Stream Sharing."
+	OptOutMsg       = "Successfully opted out of Stream Sharing."
 )

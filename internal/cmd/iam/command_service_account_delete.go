@@ -7,10 +7,10 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/form"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *serviceAccountCommand) newDeleteCommand() *cobra.Command {
@@ -55,6 +55,6 @@ func (c *serviceAccountCommand) delete(cmd *cobra.Command, args []string) error 
 		return errors.Errorf(errors.DeleteResourceErrorMsg, resource.ServiceAccount, serviceAccountId, err)
 	}
 
-	utils.ErrPrintf(cmd, errors.DeletedResourceMsg, resource.ServiceAccount, serviceAccountId)
+	output.ErrPrintf(errors.DeletedResourceMsg, resource.ServiceAccount, serviceAccountId)
 	return nil
 }

@@ -4,7 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 func (c *command) newOptInCommand() *cobra.Command {
@@ -15,12 +15,11 @@ func (c *command) newOptInCommand() *cobra.Command {
 	}
 }
 
-func (c *command) optIn(cmd *cobra.Command, _ []string) error {
-	_, err := c.V2Client.StreamShareOptInOrOut(true)
-	if err != nil {
+func (c *command) optIn(_ *cobra.Command, _ []string) error {
+	if _, err := c.V2Client.StreamShareOptInOrOut(true); err != nil {
 		return err
 	}
 
-	utils.Print(cmd, errors.OptInMsg)
+	output.Println(errors.OptInMsg)
 	return nil
 }

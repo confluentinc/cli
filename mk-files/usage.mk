@@ -1,12 +1,3 @@
-define MIGRATEDOWN
-BEGIN;
-
-DELETE FROM whitelist WHERE version = 'v$(shell cat release-notes/version.txt)';
-
-COMMIT;
-endef
-
-export MIGRATEDOWN
 update-whitelist:
 	$(eval CC_CLI_SERVICE=$(shell mktemp -d)/cc-cli-service)
 	
@@ -18,7 +9,7 @@ update-whitelist:
 	git checkout -b cli-v$${version} && \
 	make db-migrate-create NAME=v$${version} && \
 	cd - && \
-	echo "$$MIGRATEDOWN" > $$(find $(CC_CLI_SERVICE)/db/migrations/ -name "*_v$${version}.down.sql") && \
+	echo -e "BEGIN;\n\nDELETE FROM whilelist WHERE version = 'v$${version}';\n\nCOMMIT;\n" > $$(find $(CC_CLI_SERVICE)/db/migrations/ -name "*_v$${version}.down.sql") && \
 	go run -ldflags "-X main.version=v$${version}" cmd/usage/main.go > $$(find $(CC_CLI_SERVICE)/db/migrations/ -name "*_v$${version}.up.sql") && \
 	cd $(CC_CLI_SERVICE) && \
 	git add . && \

@@ -58,7 +58,7 @@ type CLITest struct {
 	// Fixed string to check that output does not contain
 	notContains string
 	// Expected exit code (e.g., 0 for success or 1 for failure)
-	wantErrCode int
+	exitCode int
 	// If true, don't reset the config/state between tests to enable testing CLI workflows
 	workflow bool
 	// An optional function that allows you to specify other calls
@@ -80,16 +80,19 @@ func TestCLI(t *testing.T) {
 func (s *CLITestSuite) SetupSuite() {
 	req := require.New(s.T())
 
+	// dumb but effective
+	err := os.Chdir("..")
+	req.NoError(err)
+
+	err = exec.Command("make", "build-for-integration-test").Run()
+	req.NoError(err)
+
 	if runtime.GOOS == "windows" {
 		testBin += ".exe"
 	}
 
 	s.TestBackend = testserver.StartTestBackend(s.T(), false) // by default do not disable audit-log
 	os.Setenv("DISABLE_AUDIT_LOG", "false")
-
-	// dumb but effective
-	err := os.Chdir("..")
-	req.NoError(err)
 
 	// Temporarily change $HOME, so the current config file isn't altered.
 	err = os.Setenv("HOME", os.TempDir())
@@ -103,10 +106,6 @@ func (s *CLITestSuite) TearDownSuite() {
 func (s *CLITestSuite) runIntegrationTest(tt CLITest) {
 	if tt.name == "" {
 		tt.name = tt.args
-	}
-
-	if strings.HasPrefix(tt.name, "error") {
-		tt.wantErrCode = 1
 	}
 
 	s.T().Run(tt.name, func(t *testing.T) {
@@ -153,26 +152,20 @@ func (s *CLITestSuite) runIntegrationTest(tt CLITest) {
 		}
 
 		if tt.useKafka != "" {
-			output := runCommand(t, testBin, []string{}, "kafka cluster use "+tt.useKafka, 0, "")
+			output := runCommand(t, testBin, []string{}, fmt.Sprintf("kafka cluster use %s", tt.useKafka), 0, "")
 			if *debug {
 				fmt.Println(output)
 			}
 		}
 
 		if tt.authKafka != "" {
-			output := runCommand(t, testBin, []string{}, "api-key create --resource "+tt.useKafka, 0, "")
-			if *debug {
-				fmt.Println(output)
-			}
-			// HACK: we don't have scriptable output yet so we parse it from the table
-			key := strings.TrimSpace(strings.Split(strings.Split(output, "\n")[3], "|")[2])
-			output = runCommand(t, testBin, []string{}, fmt.Sprintf("api-key use %s --resource %s", key, tt.useKafka), 0, "")
+			output := runCommand(t, testBin, []string{}, fmt.Sprintf("api-key create --resource %s --use", tt.useKafka), 0, "")
 			if *debug {
 				fmt.Println(output)
 			}
 		}
 
-		output := runCommand(t, testBin, tt.env, tt.args, tt.wantErrCode, tt.input)
+		output := runCommand(t, testBin, tt.env, tt.args, tt.exitCode, tt.input)
 		if *debug {
 			fmt.Println(output)
 		}
@@ -220,7 +213,7 @@ func (s *CLITestSuite) validateTestOutput(tt CLITest, t *testing.T, output strin
 	}
 }
 
-func runCommand(t *testing.T, binaryName string, env []string, argString string, wantErrCode int, input string) string {
+func runCommand(t *testing.T, binaryName string, env []string, argString string, exitCode int, input string) string {
 	dir, err := os.Getwd()
 	require.NoError(t, err)
 
@@ -232,8 +225,8 @@ func runCommand(t *testing.T, binaryName string, env []string, argString string,
 	cmd.Stdin = strings.NewReader(input)
 
 	out, err := cmd.CombinedOutput()
-	require.Equal(t, wantErrCode, cmd.ProcessState.ExitCode())
-	if wantErrCode == 0 {
+	require.Equal(t, exitCode, cmd.ProcessState.ExitCode())
+	if exitCode == 0 {
 		require.NoError(t, err)
 	}
 

@@ -128,15 +128,11 @@ func catchOpenAPIError(err error) error {
 }
 
 /*
-Error: 1 error occurred:
-  - error creating ACLs: reply error: invalid character 'C' looking for beginning of value
-
-Error: 1 error occurred:
-  - error updating topic ENTERPRISE.LOANALT2-ALTERNATE-LOAN-MASTER-2.DLQ: reply error: invalid character '<' looking for beginning of value
+error creating ACLs: reply error: invalid character 'C' looking for beginning of value
+error updating topic ENTERPRISE.LOANALT2-ALTERNATE-LOAN-MASTER-2.DLQ: reply error: invalid character '<' looking for beginning of value
 */
 func catchCCloudBackendUnmarshallingError(err error) error {
-	backendUnmarshllingErrorRegex := regexp.MustCompile(`reply error: invalid character '.' looking for beginning of value`)
-	if backendUnmarshllingErrorRegex.MatchString(err.Error()) {
+	if regexp.MustCompile(`reply error: invalid character '.' looking for beginning of value`).MatchString(err.Error()) {
 		errorMsg := fmt.Sprintf(prefixFormat, UnexpectedBackendOutputPrefix, BackendUnmarshallingErrorMsg)
 		return NewErrorWithSuggestions(errorMsg, UnexpectedBackendOutputSuggestions)
 	}
@@ -319,8 +315,7 @@ func isResourceNotFoundError(err error) bool {
 }
 
 /*
-Error: 1 error occurred:
-  - error creating topic bob: Topic 'bob' already exists.
+error creating topic bob: Topic 'bob' already exists.
 */
 func CatchTopicExistsError(err error, clusterId string, topicName string, ifNotExistsFlag bool) error {
 	if err == nil {

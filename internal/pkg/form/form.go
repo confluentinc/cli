@@ -8,7 +8,7 @@ import (
 	"golang.org/x/term"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 /*
@@ -42,10 +42,10 @@ func New(fields ...Field) *Form {
 	}
 }
 
-func (f *Form) Prompt(command *cobra.Command, prompt Prompt) error {
+func (f *Form) Prompt(prompt Prompt) error {
 	for i := 0; i < len(f.Fields); i++ {
 		field := f.Fields[i]
-		utils.Print(command, field.String())
+		output.Print(field.String())
 
 		val, err := field.read(prompt)
 		if err != nil {
@@ -55,13 +55,13 @@ func (f *Form) Prompt(command *cobra.Command, prompt Prompt) error {
 		res, err := field.validate(val)
 		if err != nil {
 			if fmt.Sprintf(errors.InvalidInputFormatErrorMsg, val, field.ID) == err.Error() {
-				utils.ErrPrintln(command, err)
+				output.ErrPrintln(err)
 				i-- //re-prompt on invalid regex
 				continue
 			}
 			return err
 		}
-		if checkRequiredYes(command, field, res) {
+		if checkRequiredYes(field, res) {
 			i-- //re-prompt on required yes
 		}
 
@@ -83,7 +83,7 @@ func ConfirmDeletion(cmd *cobra.Command, promptMsg, stringToType string) (bool, 
 	prompt := NewPrompt(os.Stdin)
 	isYesNo := stringToType == ""
 	f := New(Field{ID: "confirm", Prompt: promptMsg, IsYesOrNo: isYesNo})
-	if err := f.Prompt(cmd, prompt); err != nil && isYesNo {
+	if err := f.Prompt(prompt); err != nil && isYesNo {
 		return false, errors.New(errors.FailedToReadInputErrorMsg)
 	} else if err != nil {
 		return false, err
@@ -101,23 +101,23 @@ func ConfirmDeletion(cmd *cobra.Command, promptMsg, stringToType string) (bool, 
 	return false, errors.NewErrorWithSuggestions(fmt.Sprintf(`input does not match "%s"`, stringToType), DeleteResourceConfirmSuggestions)
 }
 
-func ConfirmEnter(cmd *cobra.Command) error {
+func ConfirmEnter() error {
 	// This function prevents echoing of user input instead of displaying text or *'s by using
 	// term.ReadPassword so that the CLI will appear to wait until 'enter' or 'Ctrl-C' are entered.
-	utils.Print(cmd, "Press enter to continue or Ctrl-C to cancel:")
+	output.Print("Press enter to continue or Ctrl-C to cancel:")
 
 	if _, err := term.ReadPassword(int(os.Stdin.Fd())); err != nil {
 		return err
 	}
 	// Warning: do not remove this print line; it prevents an unexpected interaction with browser.OpenUrl causing pages to open in the background
-	utils.Print(cmd, "\n")
+	output.Print("\n")
 
 	return nil
 }
 
-func checkRequiredYes(cmd *cobra.Command, field Field, res any) bool {
+func checkRequiredYes(field Field, res any) bool {
 	if field.IsYesOrNo && field.RequireYes && !res.(bool) {
-		utils.Println(cmd, "You must accept to continue. To abandon flow, use Ctrl-C.")
+		output.Println("You must accept to continue. To abandon flow, use Ctrl-C.")
 		return true
 	}
 	return false
