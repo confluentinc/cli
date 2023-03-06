@@ -38,9 +38,9 @@ func migrateToLatest(cfg config.Config) *v1.Config {
 	switch cfg := cfg.(type) {
 	case *v1.Config:
 		// On Windows, plugin search is prohibitively slow for users with a long $PATH, so plugins should be disabled by default.
-		if runtime.GOOS == "windows" && !cfg.HasDisabledPlugins {
+		if runtime.GOOS == "windows" && !cfg.DisablePluginsOnce {
 			cfg.DisablePlugins = true
-			cfg.HasDisabledPlugins = true
+			cfg.DisablePluginsOnce = true
 			_ = cfg.Save()
 		}
 		return cfg
