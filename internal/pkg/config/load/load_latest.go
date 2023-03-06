@@ -1,6 +1,8 @@
 package load
 
 import (
+	"runtime"
+
 	"github.com/confluentinc/cli/internal/pkg/config"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 )
@@ -35,6 +37,12 @@ func loadLatestNoErr(latestCfg *v1.Config, cfgIndex int) (config.Config, error) 
 func migrateToLatest(cfg config.Config) *v1.Config {
 	switch cfg := cfg.(type) {
 	case *v1.Config:
+		// On Windows, plugin search is prohibitively slow for users with a long $PATH, so plugins should be disabled by default.
+		if runtime.GOOS == "windows" && !cfg.HasDisabledPlugins {
+			cfg.DisablePlugins = true
+			cfg.HasDisabledPlugins = true
+			_ = cfg.Save()
+		}
 		return cfg
 	default:
 		return nil
