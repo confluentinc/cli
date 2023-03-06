@@ -1,5 +1,10 @@
 [
   {
+    "is_current": true,
+    "id": "abc-123",
+    "name": "org1"
+  },
+  {
     "is_current": false,
     "id": "abc-456",
     "name": "org2"
@@ -8,10 +13,5 @@
     "is_current": false,
     "id": "abc-789",
     "name": "org3"
-  },
-  {
-    "is_current": true,
-    "id": "abc-123",
-    "name": "org1"
   }
 ]
