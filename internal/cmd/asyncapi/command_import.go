@@ -113,7 +113,7 @@ func newImportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "import",
 		Short:   "Adds topics, schemas and tags from the yaml file.",
-		Example: "confluent asyncapi reverse-tool spec.yaml",
+		Example: "confluent asyncapi import spec.yaml",
 	}
 	c := &command{AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
 	c.RunE = c.reverse
