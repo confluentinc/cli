@@ -74,10 +74,10 @@ func handleOrgOrganization(t *testing.T) http.HandlerFunc {
 		displayName := "default"
 		switch r.Method {
 		case http.MethodPatch:
-			req := orgv2.OrgV2Environment{}
-			err := json.NewDecoder(r.Body).Decode(&req)
+			req := &orgv2.OrgV2Environment{}
+			err := json.NewDecoder(r.Body).Decode(req)
 			require.NoError(t, err)
-			displayName = *req.DisplayName
+			displayName = req.GetDisplayName()
 		}
 
 		organization := &orgv2.OrgV2Organization{
