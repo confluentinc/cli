@@ -1,4 +1,4 @@
---- cli/Makefile	2023-03-02 10:53:05.000000000 -0800
+--- cli/Makefile	2023-03-06 11:36:24.000000000 -0800
 +++ debian/Makefile	2022-12-12 17:29:13.000000000 -0800
 @@ -1,130 +1,130 @@
 -SHELL              := /bin/bash
@@ -46,6 +46,7 @@
 -	go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
 -	TAGS=$(TAGS) CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) VERSION=$(VERSION) GOEXPERIMENT=boringcrypto goreleaser build -f .goreleaser-build.yml --clean --single-target --snapshot
 -
+-include ./mk-files/cc-cli-service.mk
 -include ./mk-files/dockerhub.mk
 -include ./mk-files/semver.mk
 -include ./mk-files/docs.mk
@@ -53,7 +54,6 @@
 -include ./mk-files/release-test.mk
 -include ./mk-files/release-notes.mk
 -include ./mk-files/unrelease.mk
--include ./mk-files/usage.mk
 -include ./mk-files/utils.mk
 -
 -REF := $(shell [ -d .git ] && git rev-parse --short HEAD || echo "none")
