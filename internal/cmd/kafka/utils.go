@@ -7,7 +7,6 @@ import (
 	cckafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	cpkafkarestv3 "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
-	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -106,19 +105,6 @@ func getKafkaRestProxyAndLkcId(c *pcmd.AuthenticatedStateFlagCommand) (*pcmd.Kaf
 	return kafkaREST, kafkaClusterConfig.ID, nil
 }
 
-func isClusterResizeInProgress(currentCluster *cmkv2.CmkV2Cluster) error {
-	if currentCluster.Status.Phase == ccloudv2.StatusProvisioning {
-		return errors.New(errors.KafkaClusterStillProvisioningErrorMsg)
-	}
-	if isExpanding(currentCluster) {
-		return errors.New(errors.KafkaClusterExpandingErrorMsg)
-	}
-	if isShrinking(currentCluster) {
-		return errors.New(errors.KafkaClusterShrinkingErrorMsg)
-	}
-	return nil
-}
-
 func getCmkClusterIngressAndEgressMbps(cluster *cmkv2.CmkV2Cluster) (int32, int32) {
 	if isDedicated(cluster) {
 		return 50 * cluster.Status.GetCku(), 150 * cluster.Status.GetCku()
@@ -165,23 +151,23 @@ func getCmkEncryptionKey(cluster *cmkv2.CmkV2Cluster) string {
 }
 
 func isBasic(cluster *cmkv2.CmkV2Cluster) bool {
-	return cluster.Spec.Config != nil && cluster.Spec.Config.CmkV2Basic != nil
+	return cluster.Spec.GetConfig().CmkV2Basic != nil
 }
 
 func isStandard(cluster *cmkv2.CmkV2Cluster) bool {
-	return cluster.Spec.Config != nil && cluster.Spec.Config.CmkV2Standard != nil
+	return cluster.Spec.GetConfig().CmkV2Standard != nil
 }
 
 func isDedicated(cluster *cmkv2.CmkV2Cluster) bool {
-	return cluster.Spec.Config != nil && cluster.Spec.Config.CmkV2Dedicated != nil
+	return cluster.Spec.GetConfig().CmkV2Dedicated != nil
 }
 
 func isExpanding(cluster *cmkv2.CmkV2Cluster) bool {
-	return isDedicated(cluster) && cluster.Spec.Config.CmkV2Dedicated.Cku > *cluster.Status.Cku
+	return isDedicated(cluster) && cluster.Spec.Config.CmkV2Dedicated.GetCku() > cluster.Status.GetCku()
 }
 
 func isShrinking(cluster *cmkv2.CmkV2Cluster) bool {
-	return isDedicated(cluster) && cluster.Spec.Config.CmkV2Dedicated.Cku < *cluster.Status.Cku
+	return isDedicated(cluster) && cluster.Spec.Config.CmkV2Dedicated.GetCku() < cluster.Status.GetCku()
 }
 
 func getCmkClusterStatus(cluster *cmkv2.CmkV2Cluster) string {
