@@ -19,6 +19,7 @@ Available Commands:
   ksql            Manage ksqlDB.
   login           Log in to Confluent Cloud or Confluent Platform.
   logout          Log out of Confluent Cloud.
+  organization    Manage your Confluent Cloud organizations.
   pipeline        Manage Stream Designer pipelines.
   plugin          Manage Confluent plugins.
   price           See Confluent Cloud pricing information.
