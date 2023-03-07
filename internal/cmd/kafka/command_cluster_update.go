@@ -77,13 +77,14 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string, prompt form.P
 			return errors.New("`--name` must not be empty")
 		}
 
+		update.Spec.SetDisplayName(name)
+
 		// The backend blocks simultaneous modification of `--name` and `--type`. If both are passed, update the name separately.
 		if cmd.Flags().Changed("type") {
 			if _, err := c.V2Client.UpdateKafkaCluster(clusterId, update); err != nil {
 				return err
 			}
-		} else {
-			update.Spec.SetDisplayName(name)
+			update.Spec.DisplayName = nil
 		}
 	}
 
