@@ -355,6 +355,7 @@ func (c *command) getClusterDetails(details *accountDetails, flags *flags) error
 	}
 
 	details.cluster = cluster
+	details.kafkaRest = kafkaREST
 	details.topics = topics.Data
 	details.clusterCreds = clusterCreds
 	details.broker = kafkaREST.CloudClient.GetUrl()
