@@ -105,16 +105,6 @@ func getKafkaRestProxyAndLkcId(c *pcmd.AuthenticatedStateFlagCommand) (*pcmd.Kaf
 	return kafkaREST, kafkaClusterConfig.ID, nil
 }
 
-func isClusterResizeInProgress(currentCluster *cmkv2.CmkV2Cluster) error {
-	if isExpanding(currentCluster) {
-		return errors.New(errors.KafkaClusterExpandingErrorMsg)
-	}
-	if isShrinking(currentCluster) {
-		return errors.New(errors.KafkaClusterShrinkingErrorMsg)
-	}
-	return nil
-}
-
 func getCmkClusterIngressAndEgressMbps(cluster *cmkv2.CmkV2Cluster) (int32, int32) {
 	if isDedicated(cluster) {
 		return 50 * cluster.Status.GetCku(), 150 * cluster.Status.GetCku()
@@ -161,23 +151,23 @@ func getCmkEncryptionKey(cluster *cmkv2.CmkV2Cluster) string {
 }
 
 func isBasic(cluster *cmkv2.CmkV2Cluster) bool {
-	return cluster.Spec.Config != nil && cluster.Spec.Config.CmkV2Basic != nil
+	return cluster.Spec.GetConfig().CmkV2Basic != nil
 }
 
 func isStandard(cluster *cmkv2.CmkV2Cluster) bool {
-	return cluster.Spec.Config != nil && cluster.Spec.Config.CmkV2Standard != nil
+	return cluster.Spec.GetConfig().CmkV2Standard != nil
 }
 
 func isDedicated(cluster *cmkv2.CmkV2Cluster) bool {
-	return cluster.Spec.Config != nil && cluster.Spec.Config.CmkV2Dedicated != nil
+	return cluster.Spec.GetConfig().CmkV2Dedicated != nil
 }
 
 func isExpanding(cluster *cmkv2.CmkV2Cluster) bool {
-	return isDedicated(cluster) && cluster.Spec.Config.CmkV2Dedicated.Cku > *cluster.Status.Cku
+	return isDedicated(cluster) && cluster.Spec.Config.CmkV2Dedicated.GetCku() > cluster.Status.GetCku()
 }
 
 func isShrinking(cluster *cmkv2.CmkV2Cluster) bool {
-	return isDedicated(cluster) && cluster.Spec.Config.CmkV2Dedicated.Cku < *cluster.Status.Cku
+	return isDedicated(cluster) && cluster.Spec.Config.CmkV2Dedicated.GetCku() < cluster.Status.GetCku()
 }
 
 func getCmkClusterStatus(cluster *cmkv2.CmkV2Cluster) string {

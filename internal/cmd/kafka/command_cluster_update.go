@@ -110,33 +110,16 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string, prompt form.P
 			}
 			updatedClusterType = clusterType
 		}
+
 		switch updatedClusterType {
 		case skuBasic:
-			update.Spec.SetConfig(cmkv2.CmkV2ClusterSpecUpdateConfigOneOf{CmkV2Basic: new(cmkv2.CmkV2Basic)})
+			update.Spec.SetConfig(cmkv2.CmkV2ClusterSpecUpdateConfigOneOf{CmkV2Basic: &cmkv2.CmkV2Basic{Kind: "Basic"}})
 		case skuStandard:
-			update.Spec.SetConfig(cmkv2.CmkV2ClusterSpecUpdateConfigOneOf{CmkV2Standard: new(cmkv2.CmkV2Standard)})
+			update.Spec.SetConfig(cmkv2.CmkV2ClusterSpecUpdateConfigOneOf{CmkV2Standard: &cmkv2.CmkV2Standard{Kind: "Standard"}})
 		case skuDedicated:
-			update.Spec.SetConfig(cmkv2.CmkV2ClusterSpecUpdateConfigOneOf{CmkV2Dedicated: new(cmkv2.CmkV2Dedicated)})
+			update.Spec.SetConfig(cmkv2.CmkV2ClusterSpecUpdateConfigOneOf{CmkV2Dedicated: &cmkv2.CmkV2Dedicated{Kind: "Dedicated"}})
 		default:
 			return fmt.Errorf(`unsupported cluster type "%s"`, updatedClusterType)
-		}
-
-		if cmd.Flags().Changed("type") {
-			clusterType, err := cmd.Flags().GetString("type")
-			if err != nil {
-				return err
-			}
-			if clusterType == "" {
-				return errors.New("`--type` must not be empty")
-			}
-			switch clusterType {
-			case skuBasic:
-				update.Spec.Config.CmkV2Basic.SetKind("Basic")
-			case skuStandard:
-				update.Spec.Config.CmkV2Standard.SetKind("Standard")
-			case skuDedicated:
-				update.Spec.Config.CmkV2Dedicated.SetKind("Dedicated")
-			}
 		}
 
 		if cmd.Flags().Changed("cku") {
@@ -144,15 +127,15 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string, prompt form.P
 			if err != nil {
 				return err
 			}
+			if cku == 0 {
+				return errors.New(errors.CKUMoreThanZeroErrorMsg)
+			}
+			if err := c.validateResize(cku, &currentCluster, prompt); err != nil {
+				return err
+			}
 			switch updatedClusterType {
-			case skuBasic, skuStandard:
-				return fmt.Errorf(errors.ClusterResizeNotSupportedErrorMsg)
 			case skuDedicated:
-				updatedCku, err := c.validateResize(int32(cku), &currentCluster, prompt)
-				if err != nil {
-					return err
-				}
-				update.Spec.Config.CmkV2Dedicated.SetCku(updatedCku)
+				update.Spec.Config.CmkV2Dedicated.SetCku(int32(cku))
 			}
 		}
 	}
@@ -169,25 +152,13 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string, prompt form.P
 	return c.outputKafkaClusterDescription(cmd, &updatedCluster, true)
 }
 
-func (c *clusterCommand) validateResize(cku int32, currentCluster *cmkv2.CmkV2Cluster, prompt form.Prompt) (int32, error) {
-	// Ensure the cluster is a Dedicated Cluster
-	if currentCluster.GetSpec().Config.CmkV2Dedicated == nil {
-		return 0, errors.New(errors.ClusterResizeNotSupportedErrorMsg)
-	}
-	// Durability Checks
-	if currentCluster.Spec.GetAvailability() == highAvailability && cku <= 1 {
-		return 0, errors.New(errors.CKUMoreThanOneErrorMsg)
-	}
-
-	if cku == 0 {
-		return 0, errors.New(errors.CKUMoreThanZeroErrorMsg)
-	}
-	if err := isClusterResizeInProgress(currentCluster); err != nil {
-		return 0, err
+func (c *clusterCommand) validateResize(cku uint32, currentCluster *cmkv2.CmkV2Cluster, prompt form.Prompt) error {
+	if !isDedicated(currentCluster) {
+		return errors.New(errors.ClusterResizeNotSupportedErrorMsg)
 	}
 
 	// If shrink
-	if cku < currentCluster.Spec.GetConfig().CmkV2Dedicated.GetCku() {
+	if int32(cku) < currentCluster.Spec.GetConfig().CmkV2Dedicated.GetCku() {
 		promptMessage := ""
 		if err := c.validateKafkaClusterMetrics(currentCluster, true); err != nil {
 			promptMessage += fmt.Sprintf("\n%v\n", err)
@@ -197,12 +168,12 @@ func (c *clusterCommand) validateResize(cku int32, currentCluster *cmkv2.CmkV2Cl
 		}
 		if promptMessage != "" {
 			if ok, err := confirmShrink(prompt, promptMessage); !ok || err != nil {
-				return 0, err
+				return err
 			}
 		}
 	}
 
-	return cku, nil
+	return nil
 }
 
 func (c *clusterCommand) validateKafkaClusterMetrics(currentCluster *cmkv2.CmkV2Cluster, isLatestMetric bool) error {
@@ -211,7 +182,7 @@ func (c *clusterCommand) validateKafkaClusterMetrics(currentCluster *cmkv2.CmkV2
 		window = "15 min"
 	}
 
-	if err := c.validateClusterLoad(*currentCluster.Id, isLatestMetric); err != nil {
+	if err := c.validateClusterLoad(currentCluster.GetId(), isLatestMetric); err != nil {
 		return errors.Errorf("Looking at metrics in the last %s window:\n%v", window, err)
 	}
 
