@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/cmd"
 	"strconv"
 
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
@@ -33,6 +34,7 @@ type channelDetails struct {
 
 type accountDetails struct {
 	cluster        *ccstructs.KafkaCluster
+	kafkaRest      *cmd.KafkaREST
 	topics         []kafkarestv3.TopicData
 	clusterCreds   *v1.APIKeyPair
 	consumer       *ckgo.Consumer
