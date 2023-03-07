@@ -1,1 +1,1 @@
-Error: must either specify --name with non-empty value or --cku (for dedicated clusters) with positive integer
+Error: must specify one of `--name`, `--availability`, `--type`, or `--cku`
