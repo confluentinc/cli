@@ -168,7 +168,7 @@ func (r *ReleaseNotes) ReadFromGithub() error {
 
 			if len(pullRequests) > 0 {
 				releaseNotes := NewFromBody(pullRequests[0].GetBody())
-				log.Printf("%s: %v\n", commit.GetSHA(), releaseNotes)
+				log.Printf("SHA: %s, Release Notes: %v\n", commit.GetSHA(), releaseNotes)
 				r.Merge(releaseNotes)
 			}
 		}
