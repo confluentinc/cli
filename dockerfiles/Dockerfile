@@ -26,6 +26,7 @@ RUN curl -L --http1.1 https://cnfl.io/cli | sh -s -- -b /bin
 
 RUN chmod +x /bin/confluent
 RUN chown $USER:$USER /bin/confluent
+RUN chown $USER:$USER /etc
 
 # This symbolic link exists for backwards compatibility reasons
 RUN ln -s /bin/confluent /confluent
