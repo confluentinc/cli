@@ -7,6 +7,7 @@ func (s *CLITestSuite) TestOrganization() {
 		{args: "organization list", fixture: "organization/list.golden"},
 		{args: "organization list -o json", fixture: "organization/list-json.golden"},
 		{args: "organization update --name default-updated", fixture: "organization/update.golden"},
+		{args: "organization update --name default-updated -o json", fixture: "organization/update-json.golden"},
 	}
 
 	for _, tt := range tests {
