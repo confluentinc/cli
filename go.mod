@@ -142,6 +142,7 @@ require (
 )
 
 replace (
+	github.com/confluentinc/ccloud-sdk-go-v2/cmk => ../ccloud-sdk-go-v2-internal/cmk
 	github.com/chzyer/logex => github.com/chzyer/logex v1.2.1
 	gopkg.in/retry.v1 => github.com/go-retry/retry v1.0.3
 	k8s.io/kube-openapi => github.com/kubernetes/kube-openapi v0.0.0-20230118215034-64b6bb138190
