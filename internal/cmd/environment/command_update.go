@@ -7,6 +7,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *command) newUpdateCommand() *cobra.Command {
@@ -35,7 +36,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	updateEnvironment := orgv2.OrgV2Environment{DisplayName: orgv2.PtrString(name)}
 	_, httpResp, err := c.V2Client.UpdateOrgEnvironment(id, updateEnvironment)
 	if err != nil {
-		return errors.CatchEnvironmentNotFoundError(err, httpResp)
+		return errors.CatchOrgV2ResourceNotFoundError(err, resource.Environment, httpResp)
 	}
 
 	output.ErrPrintf(errors.UpdateSuccessMsg, "name", "environment", id, name)
