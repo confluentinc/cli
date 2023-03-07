@@ -155,6 +155,7 @@ const (
 	KafkaClusterExpandingErrorMsg                 = "can not update cluster while it is expanding"
 	KafkaClusterShrinkingErrorMsg                 = "can not update cluster while it is shrinking"
 	KafkaClusterDeletingSuggestions               = ChooseRightEnvironmentSuggestions + "\n" +
+		KafkaClusterInaccessibleSuggestions + "\n" +
 		"Ensure the cluster is not associated with any active Connect clusters."
 	CKUOnlyForDedicatedErrorMsg                      = "specifying `--cku` flag is valid only for dedicated Kafka cluster creation"
 	EncryptionKeySupportErrorMsg                     = "BYOK via `--encryption-key` is only available for GCP. Use `confluent byok create` to register AWS and Azure keys."

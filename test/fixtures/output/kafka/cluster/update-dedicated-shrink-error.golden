@@ -1,4 +1,1 @@
-Error: failed to update Kafka cluster: Bad Request: 400 Bad Request
-
-Suggestions:
-    A cluster can't be updated while still provisioning. If you just created this cluster, retry in a few minutes.
+Error: Bad Request: 400 Bad Request
