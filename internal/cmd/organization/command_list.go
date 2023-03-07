@@ -15,7 +15,6 @@ func (c *command) newListCommand() *cobra.Command {
 		RunE:  c.list,
 	}
 
-	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
