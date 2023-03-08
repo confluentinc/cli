@@ -251,13 +251,13 @@ func CatchApiKeyForbiddenAccessError(err error, operation, key string, r *http.R
 	return CatchCCloudV2Error(err, r)
 }
 
-func CatchByokKeyNotFoundError(err error, r *http.Response) error {
+func CatchByokKeyNotFoundError(err error, key string, r *http.Response) error {
 	if err == nil {
 		return nil
 	}
 
 	if r != nil && r.StatusCode == http.StatusNotFound {
-		return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), "Self-managed key not found or access forbidden", ByokKeyNotFoundSuggestions)
+		return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), fmt.Sprintf("Self-managed key %s not found or access forbidden", key), ByokKeyNotFoundSuggestions)
 	}
 
 	return CatchCCloudV2Error(err, r)

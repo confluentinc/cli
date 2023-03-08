@@ -67,25 +67,24 @@ func (c *command) checkExistence(cmd *cobra.Command, args []string) error {
 	if len(args) == 1 {
 		if _, httpResp, err := c.V2Client.GetApiKey(args[0]); err != nil {
 			return perrors.CatchApiKeyForbiddenAccessError(err, getOperation, args[0], httpResp)
-		} else {
-			return nil
 		}
+		return nil
 	}
 
 	// Multiple
-	apiKeyList, err := c.V2Client.ListApiKeys("", "")
+	apiKeys, err := c.V2Client.ListApiKeys("", "")
 	if err != nil {
 		return err
 	}
 
 	apiKeySet := set.New()
-	for _, apiKey := range apiKeyList {
+	for _, apiKey := range apiKeys {
 		apiKeySet.Add(apiKey.GetId())
 	}
 
 	invalidKeys := apiKeySet.Difference(args)
 	if len(invalidKeys) > 0 {
-		return perrors.NewErrorWithSuggestions("unknown API keys: " + utils.ArrayToCommaDelimitedStringWithAnd(invalidKeys), perrors.APIKeyNotFoundSuggestions)
+		return perrors.NewErrorWithSuggestions("API keys not found or access forbidden: " + utils.ArrayToCommaDelimitedStringWithAnd(invalidKeys), perrors.APIKeyNotFoundSuggestions)
 	}
 
 	return nil

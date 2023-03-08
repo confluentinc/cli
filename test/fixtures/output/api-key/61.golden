@@ -1,4 +1,4 @@
-Error: unknown API keys: "MYKEY13" and "MYKEY14"
+Error: API keys not found or access forbidden: "MYKEY13" and "MYKEY14"
 
 Suggestions:
     Ensure the API key exists and has not been deleted, or create a new API key via `confluent api-key create`.

@@ -125,7 +125,7 @@ const (
 	DeletedResourceMsg             = "Deleted %s \"%s\".\n"
 	DeleteResourceConfirmMsg       = "Are you sure you want to delete %s \"%s\"?\nTo confirm, type \"%s\". To cancel, press Ctrl-C"
 	DeleteResourceConfirmYesNoMsg  = `Are you sure you want to delete %s "%s"?`
-	DeleteResourcesConfirmYesNoMsg = "Are you sure you want to delete the following %ss: %s?"
+	DeleteResourcesConfirmYesNoMsg = "Are you sure you want to delete %ss %s?"
 	DeleteACLConfirmMsg            = "Are you sure you want to delete the ACL corresponding to these parameters?"
 	DeleteACLsConfirmMsg           = "Are you sure you want to delete the ACLs corresponding to these parameters?"
 	RequestedDeleteResourceMsg     = "Requested to delete %s \"%s\".\n"
