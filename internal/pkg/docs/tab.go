@@ -13,12 +13,12 @@ type Tab struct {
 }
 
 func printTabbedSection(title string, printSectionFunc func(*cobra.Command) ([]string, bool), tabs []Tab) []string {
-	var sections [][]string
+	sections := make([][]string, len(tabs))
 	isHidden := true
 
-	for _, tab := range tabs {
+	for i, tab := range tabs {
 		section, ok := printSectionFunc(tab.Command)
-		sections = append(sections, section)
+		sections[i] = section
 		if ok {
 			isHidden = false
 		}

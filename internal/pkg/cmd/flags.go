@@ -12,6 +12,7 @@ import (
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/kafka"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/types"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -148,13 +149,7 @@ func AddContextFlag(cmd *cobra.Command, command *CLICommand) {
 }
 
 func AutocompleteContexts(cfg *v1.Config) []string {
-	suggestions := make([]string, len(cfg.Contexts))
-	i := 0
-	for ctx := range cfg.Contexts {
-		suggestions[i] = ctx
-		i++
-	}
-	return suggestions
+	return types.GetKeys(cfg.Contexts)
 }
 
 func AddEnvironmentFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {

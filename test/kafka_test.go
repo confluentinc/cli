@@ -426,7 +426,7 @@ func (s *CLITestSuite) TestKafkaTopicDescribe() {
 	tests := []CLITest{
 		// Topic name errors
 		{args: fmt.Sprintf("kafka topic describe --url %s --no-authentication", kafkaRestURL), contains: "Error: accepts 1 arg(s), received 0", exitCode: 1, name: "<topic> arg missing should lead to error"},
-		{args: fmt.Sprintf("kafka topic describe topic-not-exist --url %s --no-authentication", kafkaRestURL), contains: "Error: REST request failed: This server does not host this topic-partition. (40403)\n", exitCode: 1, name: "describing a non-existant topic should lead to error"},
+		{args: fmt.Sprintf("kafka topic describe topic-not-exist --url %s --no-authentication", kafkaRestURL), contains: "Error: REST request failed: This server does not host this topic-partition. (40403)\n", exitCode: 1, name: "describing a non-existent topic should lead to error"},
 		// Success cases
 		{args: fmt.Sprintf("kafka topic describe topic-exist --url %s --no-authentication", kafkaRestURL), fixture: "kafka/topic/describe-topic-success.golden", name: "topic that exists & correct format arg should lead to success"},
 		{args: fmt.Sprintf("kafka topic describe topic-exist --url %s -o human --no-authentication", kafkaRestURL), fixture: "kafka/topic/describe-topic-success.golden", name: "topic that exist & human arg should lead to success"},

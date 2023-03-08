@@ -241,7 +241,6 @@ func (c *clusterCommand) validateGcpEncryptionKey(prompt form.Prompt, cloud stri
 		}
 		if !f.Responses["authorized"].(bool) {
 			return errors.Errorf(errors.AuthorizeIdentityErrorMsg, externalID)
-
 		}
 		return nil
 	}
