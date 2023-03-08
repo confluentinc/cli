@@ -104,6 +104,10 @@ func (s *CLITestSuite) TestAPIKey() {
 		{args: "api-key create --resource lkc-cool1 --service-account sa-1337 --description auditlog-key", fixture: "api-key/42.golden", disableAuditLog: true}, // MYKEY11
 		{args: "api-key list", fixture: "api-key/43.golden", disableAuditLog: true},
 
+		// delete multiple API keys
+		{args: "api-key delete MYKEY6 MYKEY7 MYKEY13 MYKEY14", fixture: "api-key/61.golden", exitCode: 1},
+		{args: "api-key delete MYKEY6 MYKEY7 MYKEY8", input: "y\n", fixture: "api-key/62.golden"},
+
 		// create json yaml output
 		{args: "api-key create --description human-output --resource lkc-other1", fixture: "api-key/44.golden"},
 		{args: "api-key create --description json-output --resource lkc-other1 -o json", fixture: "api-key/45.golden"},

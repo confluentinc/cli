@@ -244,9 +244,9 @@ func CatchClusterConfigurationNotValidError(err error, r *http.Response) error {
 	return err
 }
 
-func CatchApiKeyForbiddenAccessError(err error, operation string, r *http.Response) error {
+func CatchApiKeyForbiddenAccessError(err error, operation, key string, r *http.Response) error {
 	if r != nil && r.StatusCode == http.StatusForbidden || strings.Contains(err.Error(), "Unknown API key") {
-		return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), fmt.Sprintf("error %s API key", operation), APIKeyNotFoundSuggestions)
+		return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), fmt.Sprintf("error %s API key %s", operation, key), APIKeyNotFoundSuggestions)
 	}
 	return CatchCCloudV2Error(err, r)
 }

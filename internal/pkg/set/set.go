@@ -29,3 +29,15 @@ func (s Set) Slice() []string {
 
 	return l
 }
+
+// Returns the elements of list which are not contained in set s
+func (s Set) Difference(list []string) []string {
+	var remainingElements []string
+	for _, element := range list {
+		if !s.Contains(element) {
+			remainingElements = append(remainingElements, element)
+		}
+	}
+
+	return remainingElements
+}
