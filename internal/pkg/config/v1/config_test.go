@@ -105,7 +105,7 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 		CredentialType: 0,
 	}
 	savedCredentials := map[string]*LoginCredential{
-		contextName: &LoginCredential{
+		contextName: {
 			IsCloud:           isCloud,
 			Username:          "test-user",
 			EncryptedPassword: "encrypted-password",
@@ -399,7 +399,7 @@ func TestConfig_Save(t *testing.T) {
 			tt.config.Filename = configFile.Name()
 			ctx := tt.config.Context()
 			tt.config.SavedCredentials = map[string]*LoginCredential{
-				contextName: &LoginCredential{
+				contextName: {
 					IsCloud:           tt.isCloud,
 					Username:          "test-user",
 					EncryptedPassword: "encrypted-password",
@@ -454,7 +454,7 @@ func TestConfig_SaveWithAccountOverwrite(t *testing.T) {
 			configFile, _ := os.CreateTemp("", "TestConfig_Save.json")
 			tt.config.Filename = configFile.Name()
 			tt.config.SavedCredentials = map[string]*LoginCredential{
-				contextName: &LoginCredential{
+				contextName: {
 					IsCloud:           true,
 					Username:          "test-user",
 					EncryptedPassword: "encrypted-password",

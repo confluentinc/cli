@@ -43,9 +43,9 @@ func (c *Client) CreateKsqlCluster(displayName, environmentId, kafkaClusterId, c
 			DisplayName:              &displayName,
 			UseDetailedProcessingLog: &useDetailedProcessingLog,
 			Csu:                      &csus,
-			KafkaCluster:       &ksqlv2.ObjectReference{Id: kafkaClusterId, Related: "-", ResourceName: "-"},
-			CredentialIdentity: &ksqlv2.ObjectReference{Id: credentialIdentity, Related: "-", ResourceName: "-"},
-			Environment:        &ksqlv2.ObjectReference{Id: environmentId, Related: "-", ResourceName: "-"},
+			KafkaCluster:             &ksqlv2.ObjectReference{Id: kafkaClusterId, Related: "-", ResourceName: "-"},
+			CredentialIdentity:       &ksqlv2.ObjectReference{Id: credentialIdentity, Related: "-", ResourceName: "-"},
+			Environment:              &ksqlv2.ObjectReference{Id: environmentId, Related: "-", ResourceName: "-"},
 		},
 	}
 	created, resp, err := c.KsqlClient.ClustersKsqldbcmV2Api.CreateKsqldbcmV2Cluster(c.ksqlApiContext()).KsqldbcmV2Cluster(cluster).Execute()
