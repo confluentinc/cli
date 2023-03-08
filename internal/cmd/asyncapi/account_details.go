@@ -88,7 +88,6 @@ func (d *accountDetails) getSchemaDetails() error {
 	err = json.Unmarshal([]byte(schema.Schema), &unmarshalledSchema)
 	if err != nil {
 		return fmt.Errorf("failed to unmarshal schema: %v", err)
-
 	}
 	d.channelDetails.unmarshalledSchema = unmarshalledSchema
 	d.channelDetails.schema = &schema

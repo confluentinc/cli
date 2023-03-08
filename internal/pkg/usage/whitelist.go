@@ -4,10 +4,10 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
-	"github.com/confluentinc/cli/internal/pkg/set"
+	"github.com/confluentinc/cli/internal/pkg/types"
 )
 
-func WhitelistCommandsAndFlags(cmd *cobra.Command, whitelist set.Set) {
+func WhitelistCommandsAndFlags(cmd *cobra.Command, whitelist types.Set) {
 	whitelist.Add(cmd.Name())
 	cmd.Flags().VisitAll(func(flag *pflag.Flag) {
 		whitelist.Add(flag.Name)
