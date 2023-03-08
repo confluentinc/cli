@@ -847,7 +847,7 @@ func TestLoginWithExistingContext(t *testing.T) {
 		req.NoError(err)
 		verifyLoggedOutState(t, cfg, ctx.Name)
 
-		// logging back in the the same context
+		// logging back in the same context
 		_, err = pcmd.ExecuteCommand(loginCmd, s.args...)
 		req.NoError(err)
 		verifyLoggedInState(t, cfg, s.isCloud, org1Id)

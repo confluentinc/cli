@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/pflag"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/types"
 )
 
 type CommandRule func(cmd *cobra.Command) error
@@ -232,7 +232,7 @@ func RequireValidExamples() CommandRule {
 			}
 
 			for _, match := range regexp.MustCompile(`--[a-z\-]+`).FindAllString(example, -1) {
-				if !utils.Contains(allFlags, match) {
+				if !types.Contains(allFlags, match) {
 					errs = multierror.Append(errs, fmt.Errorf("%s: unknown flag `%s` found in example %d", cmd.CommandPath(), match, i+1))
 				}
 			}

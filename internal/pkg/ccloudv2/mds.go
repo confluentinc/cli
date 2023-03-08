@@ -54,7 +54,6 @@ func (c *Client) ListIamRoleBindings(crnPattern, principal, roleName string) ([]
 	}
 
 	return list, nil
-
 }
 
 func (c *Client) executeListIamV2RoleBindings(crnPattern, principal, roleName, pageToken string) (mdsv2.IamV2RoleBindingList, *http.Response, error) {

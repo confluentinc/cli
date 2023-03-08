@@ -53,7 +53,6 @@ func (c *Client) GetApiKey(id string) (apikeysv2.IamV2ApiKey, *http.Response, er
 	}
 
 	return apiKey, httpResp, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.APIKeyNotFoundErrorMsg, id), errors.APIKeyNotFoundSuggestions)
-
 }
 
 func (c *Client) UpdateApiKey(id string, iamV2ApiKeyUpdate apikeysv2.IamV2ApiKeyUpdate) (apikeysv2.IamV2ApiKey, *http.Response, error) {

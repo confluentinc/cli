@@ -4,10 +4,10 @@ import (
 	"io"
 	"net/http"
 	"path"
-	"sort"
 	"strings"
 	"testing"
 
+	"github.com/confluentinc/cli/internal/pkg/types"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
 )
@@ -59,16 +59,11 @@ func (m MdsRouter) addRoutesAndReplies(t *testing.T, base string, routesAndRepli
 }
 
 func findAllPublicRolesSorted(rbacRoles map[string]string) []string {
-	var roleNames []string
-	for roleName := range rbacRoles {
-		roleNames = append(roleNames, roleName)
-	}
+	roleNames := types.GetSortedKeys(rbacRoles)
 
-	sort.Strings(roleNames)
-
-	var allRoles []string
-	for _, name := range roleNames {
-		allRoles = append(allRoles, rbacRoles[name])
+	allRoles := make([]string, len(roleNames))
+	for i, name := range roleNames {
+		allRoles[i] = rbacRoles[name]
 	}
 
 	return allRoles

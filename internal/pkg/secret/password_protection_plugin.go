@@ -219,7 +219,6 @@ func (c *PasswordProtectionSuite) DecryptConfigFileSecrets(configFilePath string
 		} else {
 			configProps.Delete(key)
 		}
-
 	}
 
 	// Save the decrypted ciphers to output file.
@@ -296,7 +295,6 @@ func (c *PasswordProtectionSuite) RotateDataKey(masterPassphrase string, localSe
 				return err
 			}
 		}
-
 	}
 
 	// Wrap new DEK with MEK
@@ -534,7 +532,6 @@ func (c *PasswordProtectionSuite) removeJsonConfig(configFilePath string, config
 }
 
 func (c *PasswordProtectionSuite) removePropertiesConfig(configFilePath string, configs []string) error {
-
 	return RemovePropertiesConfig(configs, configFilePath)
 }
 
@@ -653,9 +650,7 @@ func (c *PasswordProtectionSuite) loadMasterKey() (string, error) {
 	return masterKey, nil
 }
 
-func (c *PasswordProtectionSuite) encryptConfigValues(matchProps *properties.Properties, localSecureConfigPath string, configFilePath string,
-	remoteConfigFilePath string) error {
-
+func (c *PasswordProtectionSuite) encryptConfigValues(matchProps *properties.Properties, localSecureConfigPath, configFilePath, remoteConfigFilePath string) error {
 	// Load master Key
 	masterKey, err := c.loadMasterKey()
 	if err != nil {
@@ -703,7 +698,6 @@ func (c *PasswordProtectionSuite) encryptConfigValues(matchProps *properties.Pro
 				return err
 			}
 		}
-
 	}
 
 	err = SaveConfiguration(configFilePath, configProps, true)
