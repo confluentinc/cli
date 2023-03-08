@@ -157,7 +157,7 @@ func (c *command) getChannelDetails(details *accountDetails, flags *flags) error
 	err := details.getSchemaDetails()
 	if err == errors.New("protobuf is not supported") {
 		log.CliLogger.Info("Protobuf is not supported.")
-		return errors.New("protobuf is not supported")
+		return err
 	}
 	if err != nil {
 		return fmt.Errorf("failed to get schema details: %v", err)
