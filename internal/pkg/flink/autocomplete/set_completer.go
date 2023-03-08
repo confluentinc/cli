@@ -11,5 +11,5 @@ func setCompleter(in prompt.Document) []prompt.Suggest {
 		{Text: "SET 'sql-client.execution.result-mode' = 'TABLE';", Description: "Determines how the query result should be displayed"},
 	}
 
-	return prompt.FilterHasPrefix(s, in.TextBeforeCursor(), true)
+	return SuggestFromPrefix(s, in.TextBeforeCursor())
 }

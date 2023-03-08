@@ -19,5 +19,5 @@ func examplesCompleter(in prompt.Document) []prompt.Suggest {
 		{Text: "SELECT * FROM Orders WHERE amount = 2;", Description: "Select data from a database"},
 	}
 
-	return prompt.FilterHasPrefix(s, in.TextBeforeCursor(), true)
+	return SuggestFromPrefix(s, in.TextBeforeCursor())
 }

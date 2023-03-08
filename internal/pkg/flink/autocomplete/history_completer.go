@@ -13,6 +13,6 @@ func generateHISTORYCompleter(history []string) prompt.Completer {
 	}
 
 	return func(in prompt.Document) []prompt.Suggest {
-		return prompt.FilterHasPrefix(historyCompletions, in.TextBeforeCursor(), true)
+		return SuggestFromPrefix(historyCompletions, in.TextBeforeCursor())
 	}
 }

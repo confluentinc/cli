@@ -21,5 +21,5 @@ func showCompleter(in prompt.Document) []prompt.Suggest {
 		{Text: "SHOW CREATE VIEW;", Description: "Displays the CREATE VIEW statement for a view"},
 	}
 
-	return prompt.FilterHasPrefix(s, in.TextBeforeCursor(), true)
+	return SuggestFromPrefix(s, in.TextBeforeCursor())
 }
