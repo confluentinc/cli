@@ -44,9 +44,11 @@ func RemoveDuplicates(s []string) []string {
 	for _, v := range s {
 		check[v] = 0
 	}
-	var noDups []string
+	noDups := make([]string, len(check))
+	i := 0
 	for k := range check {
-		noDups = append(noDups, k)
+		noDups[i] = k
+		i++
 	}
 	return noDups
 }

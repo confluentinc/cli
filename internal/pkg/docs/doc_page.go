@@ -60,9 +60,11 @@ func printSphinxBlock(key, val string, args map[string]string) []string {
 		fmt.Sprintf(".. %s:: %s", key, val),
 	}
 
-	var keys []string
+	keys := make([]string, len(args))
+	i := 0
 	for key := range args {
-		keys = append(keys, key)
+		keys[i] = key
+		i++
 	}
 	sort.Strings(keys)
 
