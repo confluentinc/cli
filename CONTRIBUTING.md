@@ -109,19 +109,19 @@ These CLI integration tests roughly follow this [pattern](http://lucapette.me/wr
 
 To update the golden files from the current output:
 
-    make int-test INT_TEST_ARGS="-update"
+    make integration-test INTEGRATION_TEST_ARGS="-update"
 
 To skip rebuilding the CLI, if it already exists in `dist/`:
 
-    make int-test INT_TEST_ARGS="-no-rebuild"
+    make integration-test INTEGRATION_TEST_ARGS="-no-rebuild"
 
 To run a subset of integration tests, you must specify the suite and optionally the name of a specific test:
 
     # Run a suite of integration tests
-    make int-test INT_TEST_ARGS="-run TestCLI/TestKafka"
+    make integration-test INTEGRATION_TEST_ARGS="-run TestCLI/TestKafka"
 
     # Run a specific integration test within a suite
-    make int-test INT_TEST_ARGS="-run TestCLI/TestKafka/kafka_cluster_--help"
+    make integration-test INTEGRATION_TEST_ARGS="-run TestCLI/TestKafka/kafka_cluster_--help"
 
 ### Example: Adding a New Command to the CLI
 
@@ -245,9 +245,9 @@ We'll also need to add the new golden file, `test/fixtures/output/config/1.golde
 After running the command manually to ensure the output is correct, the content for the golden file can either be:
 
 1. Copied directly from the terminal.
-2. Updated automatically with `make int-test INT_TEST_ARGS="-run TestCLI/TestConfigDescribe -update"` (slow).
+2. Updated automatically with `make integration-test INTEGRATION_TEST_ARGS="-run TestCLI/TestConfigDescribe -update"` (slow).
 
-Now, run `make int-test INT_TEST_ARGS="-run TestCLI/TestConfigDescribe"` and verify that it works!
+Now, run `make integration-test INTEGRATION_TEST_ARGS="-run TestCLI/TestConfigDescribe"` and verify that it works!
 
 ### Opening a PR
 
