@@ -125,7 +125,6 @@ func TestGetMatchingNetrcMachineNameWithContextName(t *testing.T) {
 						t.Errorf("GetMatchingNetrcMachineName mismatch\ngot: %+v \nwant: %+v", machine, tt.want)
 					}
 				}
-
 			}
 		})
 	}
@@ -210,7 +209,6 @@ func TestGetMatchingNetrcMachineNameFromURL(t *testing.T) {
 						t.Errorf("GetMatchingNetrcMachineName mismatch \ngot: %+v \nwant: %+v", machine, tt.want)
 					}
 				}
-
 			}
 		})
 	}

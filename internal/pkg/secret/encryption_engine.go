@@ -48,7 +48,6 @@ func (c *EncryptEngineImpl) generateRandomString(keyLength int) (string, error) 
 }
 
 func (c *EncryptEngineImpl) GenerateRandomDataKey(keyLength int) ([]byte, string, error) {
-
 	// Generate random data key
 	keyString, err := c.generateRandomString(keyLength)
 	if err != nil {
@@ -198,7 +197,7 @@ func (c *EncryptEngineImpl) decrypt(crypt []byte, key []byte, iv []byte, algo st
 
 	var decrypted []byte
 
-	if algo == AesCbc { // Backwards compatability
+	if algo == AesCbc { // Backwards compatibility
 		ecb := cipher.NewCBCDecrypter(block, iv)
 		decrypted = make([]byte, len(crypt))
 		ecb.CryptBlocks(decrypted, crypt)
