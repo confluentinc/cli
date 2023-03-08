@@ -236,7 +236,7 @@ func (c *command) loginMDS(cmd *cobra.Command, url string) error {
 
 	// Current functionality:
 	// empty ca-cert-path is equivalent to not using ca-cert-path flag
-	// if users want to login with ca-cert-path they must explicilty use the flag every time they login
+	// if users want to login with ca-cert-path they must explicitly use the flag every time they login
 	//
 	// For legacy users:
 	// if ca-cert-path flag is not used, then return caCertPath value stored in config for the login context
