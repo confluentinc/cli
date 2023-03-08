@@ -3,7 +3,7 @@ Usage:
   confluent cluster register [flags]
 
 Flags:
-      --hosts strings                    REQUIRED: A comma separated list of hosts.
+      --hosts strings                    REQUIRED: A comma-separated list of hosts.
       --protocol string                  REQUIRED: Security protocol.
       --cluster-name string              REQUIRED: Cluster name.
       --kafka-cluster string             REQUIRED: Kafka cluster ID.
