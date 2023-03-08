@@ -30,7 +30,7 @@ func newRegisterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	c := &registerCommand{AuthenticatedCLICommand: pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)}
 	c.RunE = c.register
 
-	c.Flags().String("hosts", "", "A comma separated list of hosts.")
+	c.Flags().StringSlice("hosts", []string{}, "A comma separated list of hosts.")
 	c.Flags().String("protocol", "", "Security protocol.")
 	c.Flags().String("cluster-name", "", "Cluster name.")
 	c.Flags().String("kafka-cluster", "", "Kafka cluster ID.")
@@ -117,19 +117,22 @@ func (c *registerCommand) resolveClusterScope(cmd *cobra.Command) (*mds.ScopeClu
 }
 
 func (c *registerCommand) parseHosts(cmd *cobra.Command) ([]mds.HostInfo, error) {
-	hosts, err := cmd.Flags().GetString("hosts")
+	hosts, err := cmd.Flags().GetStringSlice("hosts")
 	if err != nil {
 		return nil, err
 	}
 
-	var hostInfos []mds.HostInfo
-	for _, host := range strings.Split(hosts, ",") {
+	hostInfos := make([]mds.HostInfo, len(hosts))
+	for i, host := range hosts {
 		hostInfo := strings.Split(host, ":")
 		port := int64(0)
 		if len(hostInfo) > 1 {
 			port, _ = strconv.ParseInt(hostInfo[1], 10, 32)
 		}
-		hostInfos = append(hostInfos, mds.HostInfo{Host: hostInfo[0], Port: int32(port)})
+		hostInfos[i] = mds.HostInfo{
+			Host: hostInfo[0],
+			Port: int32(port),
+		}
 	}
 	return hostInfos, nil
 }
