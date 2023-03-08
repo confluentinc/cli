@@ -49,7 +49,7 @@ func (c *Client) ListByokKeys(provider string, state string) ([]byokv1.ByokV1Key
 		}
 		list = append(list, page.GetData()...)
 
-		pageToken, done, err = extractByokNextPageToken(page.GetMetadata().Next)
+		pageToken, done, err = extractNextPageToken(page.GetMetadata().Next)
 		if err != nil {
 			return nil, err
 		}
@@ -70,16 +70,4 @@ func (c *Client) executeListByokKeys(pageToken string, provider string, state st
 	}
 	req = req.PageSize(ccloudV2ListPageSize)
 	return c.ByokClient.KeysByokV1Api.ListByokV1KeysExecute(req)
-}
-
-func extractByokNextPageToken(nextPageUrlStringNullable byokv1.NullableString) (string, bool, error) {
-	if !nextPageUrlStringNullable.IsSet() {
-		return "", true, nil
-	}
-	nextPageUrlString := *nextPageUrlStringNullable.Get()
-	if nextPageUrlString == "" {
-		return "", true, nil
-	}
-	pageToken, err := extractPageToken(nextPageUrlString)
-	return pageToken, false, err
 }
