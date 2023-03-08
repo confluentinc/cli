@@ -87,9 +87,7 @@ func (d *accountDetails) getSchemaDetails() error {
 		d.channelDetails.contentType = "application/avro"
 		break
 	case "PROTOBUF":
-		log.CliLogger.Warn("Protobuf not supported.")
-		d.channelDetails.contentType = "PROTOBUF"
-		return nil
+		return fmt.Errorf("protobuf")
 	}
 	// JSON or Avro Format
 	err = json.Unmarshal([]byte(schema.Schema), &unmarshalledSchema)
@@ -131,24 +129,24 @@ func (c *command) countAsyncApiUsage(details *accountDetails) error {
 
 func (d *accountDetails) buildMessageEntity() *spec.MessageEntity {
 	entityProducer := new(spec.MessageEntity)
-	(*spec.MessageEntity).WithContentType(entityProducer, d.channelDetails.contentType)
+	entityProducer.WithContentType(d.channelDetails.contentType)
 	if d.channelDetails.contentType == "application/avro" {
-		(*spec.MessageEntity).WithSchemaFormat(entityProducer, "application/vnd.apache.avro;version=1.9.0")
+		entityProducer.WithSchemaFormat("application/vnd.apache.avro;version=1.9.0")
 	} else if d.channelDetails.contentType == "application/json" {
 		(*spec.MessageEntity).WithSchemaFormat(entityProducer, "application/schema+json;version=draft-07")
 	}
-	(*spec.MessageEntity).WithTags(entityProducer, d.channelDetails.schemaLevelTags...)
+	entityProducer.WithTags(d.channelDetails.schemaLevelTags...)
 	// Name
-	(*spec.MessageEntity).WithName(entityProducer, msgName(d.channelDetails.currentTopic.GetTopicName()))
+	entityProducer.WithName(msgName(d.channelDetails.currentTopic.GetTopicName()))
 	// Example
 	if d.channelDetails.example != nil {
-		(*spec.MessageEntity).WithExamples(entityProducer, spec.MessageOneOf1OneOf1ExamplesItems{Payload: &d.channelDetails.example})
+		entityProducer.WithExamples(spec.MessageOneOf1OneOf1ExamplesItems{Payload: &d.channelDetails.example})
 	}
 	if d.channelDetails.bindings != nil {
-		(*spec.MessageEntity).WithBindings(entityProducer, d.channelDetails.bindings.messageBinding)
+		entityProducer.WithBindings(d.channelDetails.bindings.messageBinding)
 	}
 	if d.channelDetails.unmarshalledSchema != nil {
-		(*spec.MessageEntity).WithPayload(entityProducer, d.channelDetails.unmarshalledSchema)
+		entityProducer.WithPayload(d.channelDetails.unmarshalledSchema)
 	}
 	return entityProducer
 }

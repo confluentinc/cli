@@ -111,7 +111,6 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 				continue
 			} else {
 				// Subject and Topic matches
-				channelCount++
 				// Reset channel details
 				accountDetails.channelDetails = channelDetails{
 					currentTopic:   topic,
@@ -124,6 +123,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 				if err != nil {
 					return err
 				}
+				channelCount++
 				messages[msgName(topic.GetTopicName())] = spec.Message{
 					OneOf1: &spec.MessageOneOf1{MessageEntity: accountDetails.buildMessageEntity()},
 				}
@@ -155,7 +155,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 func (c *command) getChannelDetails(details *accountDetails, flags *flags) error {
 	output.Printf("Adding operation: %s\n", details.channelDetails.currentTopic.GetTopicName())
 	err := details.getSchemaDetails()
-	if details.channelDetails.contentType == "PROTOBUF" {
+	if err.Error() == "protobuf" {
 		log.CliLogger.Info("Protobuf is not supported.")
 		return fmt.Errorf("protobuf")
 	}
