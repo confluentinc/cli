@@ -12,6 +12,7 @@ import (
 	"github.com/swaggest/go-asyncapi/spec-2.4.0"
 
 	"github.com/confluentinc/cli/internal/pkg/ccstructs"
+	"github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -33,6 +34,7 @@ type channelDetails struct {
 
 type accountDetails struct {
 	cluster        *ccstructs.KafkaCluster
+	kafkaRest      *cmd.KafkaREST
 	topics         []kafkarestv3.TopicData
 	clusterCreds   *v1.APIKeyPair
 	consumer       *ckgo.Consumer
