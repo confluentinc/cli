@@ -111,7 +111,7 @@ func (c *ksqlCommand) getServiceAccount(cluster *ksqlv2.KsqldbcmV2Cluster) (stri
 }
 
 func buildACLBindings(serviceAccountId string, cluster *ksqlv2.KsqldbcmV2Cluster, topics []string) []*ccstructs.ACLBinding {
-	bindings := make([]*ccstructs.ACLBinding, 17)
+	var bindings []*ccstructs.ACLBinding
 
 	for _, operation := range []ccstructs.ACLOperations_ACLOperation{
 		ccstructs.ACLOperations_DESCRIBE,
