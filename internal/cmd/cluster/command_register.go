@@ -30,7 +30,7 @@ func newRegisterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	c := &registerCommand{AuthenticatedCLICommand: pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)}
 	c.RunE = c.register
 
-	c.Flags().StringSlice("hosts", []string{}, "A comma separated list of hosts.")
+	c.Flags().StringSlice("hosts", []string{}, "A comma-separated list of hosts.")
 	c.Flags().String("protocol", "", "Security protocol.")
 	c.Flags().String("cluster-name", "", "Cluster name.")
 	c.Flags().String("kafka-cluster", "", "Kafka cluster ID.")
