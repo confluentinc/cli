@@ -307,7 +307,6 @@ func (suite *AuditConfigTestSuite) TestAuditConfigRouteLookup() {
 	err := cmd.Execute()
 	assert.Nil(suite.T(), err)
 	assert.Equal(suite.T(), 0, len(expect))
-
 }
 
 func writeToTempFile(spec mds.AuditLogConfigSpec) (f *os.File, err error) {

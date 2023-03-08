@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/go-retryablehttp"
 
 	plog "github.com/confluentinc/cli/internal/pkg/log"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/types"
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
@@ -51,7 +51,7 @@ func getServerUrl(baseURL string) string {
 		return baseURL
 	}
 
-	if utils.Contains([]string{"confluent.cloud", "devel.cpdev.cloud", "stag.cpdev.cloud"}, u.Host) {
+	if types.Contains([]string{"confluent.cloud", "devel.cpdev.cloud", "stag.cpdev.cloud"}, u.Host) {
 		u.Host = "api." + u.Host
 		u.Path = ""
 	} else {

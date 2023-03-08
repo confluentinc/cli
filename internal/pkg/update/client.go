@@ -122,16 +122,16 @@ func (c *client) GetLatestReleaseNotes(cliName, currentVersion string) (string, 
 	}
 
 	var latestVersion string
-	var allReleaseNotes []string
+	allReleaseNotes := make([]string, len(latestReleaseNotesVersions))
 
-	for _, releaseNotesVersion := range latestReleaseNotesVersions {
+	for i, releaseNotesVersion := range latestReleaseNotesVersions {
 		releaseNotes, err := c.Repository.DownloadReleaseNotes(cliName, releaseNotesVersion.String())
 		if err != nil {
 			return "", nil, err
 		}
 
 		latestVersion = releaseNotesVersion.Original()
-		allReleaseNotes = append(allReleaseNotes, releaseNotes)
+		allReleaseNotes[i] = releaseNotes
 	}
 
 	return latestVersion, allReleaseNotes, nil

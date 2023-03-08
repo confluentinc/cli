@@ -15,7 +15,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/properties"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/set"
+	"github.com/confluentinc/cli/internal/pkg/types"
 )
 
 type topicConfigurationOut struct {
@@ -116,7 +116,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		return errors.NewErrorWithSuggestions(errors.EmptyResponseErrorMsg, errors.InternalServerErrorSuggestions)
 	}
 
-	readOnlyConfigs := set.New()
+	readOnlyConfigs := types.NewSet()
 	configsValues := make(map[string]string)
 	for _, conf := range configsResp.Data {
 		if conf.IsReadOnly {

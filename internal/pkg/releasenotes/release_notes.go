@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/types"
 	"github.com/confluentinc/go-netrc/netrc"
 	"github.com/google/go-github/v50/github"
 	"github.com/hashicorp/go-version"
@@ -70,7 +70,7 @@ func NewFromBody(body string) *ReleaseNotes {
 	for _, line := range strings.Split(body, "\n") {
 		line = strings.TrimSpace(line)
 
-		if utils.Contains(sections, line) {
+		if types.Contains(sections, line) {
 			currentSection = line
 			continue
 		}
