@@ -256,18 +256,22 @@ func filterTable(table map[string]*ccloudv1.UnitPrices, filters []string, metric
 }
 
 func getKeys(m map[string]string) []string {
-	var slice []string
+	slice := make([]string, len(m))
+	i := 0
 	for key := range m {
-		slice = append(slice, key)
+		slice[i] = key
+		i++
 	}
 	sort.Strings(slice)
 	return slice
 }
 
 func getValues(m map[string]string) []string {
-	var slice []string
+	slice := make([]string, len(m))
+	i := 0
 	for _, value := range m {
-		slice = append(slice, value)
+		slice[i] = value
+		i++
 	}
 	sort.Strings(slice)
 	return slice

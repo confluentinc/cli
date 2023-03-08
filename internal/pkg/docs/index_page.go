@@ -125,9 +125,11 @@ func printTableOfContents(tabs []Tab) []string {
 	}
 
 	// Sort names
-	var names []string
+	names := make([]string, len(linksByName))
+	i := 0
 	for name := range linksByName {
-		names = append(names, name)
+		names[i] = name
+		i++
 	}
 	sort.Strings(names)
 

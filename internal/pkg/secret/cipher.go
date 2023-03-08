@@ -10,7 +10,6 @@ type Cipher struct {
 }
 
 func NewCipher() *Cipher {
-
 	return &Cipher{
 		Iterations:     MetadataKeyDefaultIterations,
 		KeyLength:      MetadataKeyDefaultLengthBytes,

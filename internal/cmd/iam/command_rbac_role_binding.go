@@ -301,14 +301,14 @@ func (c *roleBindingCommand) validateRoleAndResourceTypeV1(roleName string, reso
 		}
 	}
 
-	var allResourceTypes []string
+	allResourceTypes := make([]string, len(role.AccessPolicy.AllowedOperations))
 	found := false
-	for _, operation := range role.AccessPolicy.AllowedOperations {
-		allResourceTypes = append(allResourceTypes, operation.ResourceType)
+	for i, operation := range role.AccessPolicy.AllowedOperations {
 		if operation.ResourceType == resourceType {
 			found = true
 			break
 		}
+		allResourceTypes[i] = operation.ResourceType
 	}
 
 	if !found {

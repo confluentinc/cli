@@ -285,7 +285,7 @@ func (h *GroupHandler) RequestSchema(value []byte) (string, map[string]string, e
 	// Retrieve schema from cluster only if schema is specified.
 	schemaID := int32(binary.BigEndian.Uint32(value[1:messageOffset])) // schema id is stored as a part of message meta info
 
-	// Create temporary file to store schema retrieved (also for cache). Retry if get error retriving schema or writing temp schema file
+	// Create temporary file to store schema retrieved (also for cache). Retry if get error retrieving schema or writing temp schema file
 	tempStorePath := filepath.Join(h.Properties.SchemaPath, fmt.Sprintf("%s-%d.txt", h.Subject, schemaID))
 	tempRefStorePath := filepath.Join(h.Properties.SchemaPath, fmt.Sprintf("%s-%d.ref", h.Subject, schemaID))
 	var references []srsdk.SchemaReference
