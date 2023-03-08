@@ -70,9 +70,7 @@ show-args:
 	@echo "VERSION: $(VERSION)"
 
 .PHONY: lint
-lint:
-	make lint-go
-	make lint-cli
+lint: lint-go lint-cli
 
 .PHONY: lint-go
 lint-go:
