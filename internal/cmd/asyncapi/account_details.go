@@ -75,36 +75,36 @@ func (d *accountDetails) getSchemaDetails() error {
 		return err
 	}
 	d.channelDetails.schema = &schema
-	unmarshalledSchema := make(map[string]any)
 	if schema.SchemaType == "" {
 		schema.SchemaType = "AVRO"
 	}
 	switch schema.SchemaType {
 	case "JSON":
 		d.channelDetails.contentType = "application/json"
-		break
 	case "AVRO":
 		d.channelDetails.contentType = "application/avro"
-		break
 	case "PROTOBUF":
-		return fmt.Errorf("protobuf")
+		return errors.New("protobuf is not supported")
 	}
 	// JSON or Avro Format
-	err = json.Unmarshal([]byte(schema.Schema), &unmarshalledSchema)
+	err = json.Unmarshal([]byte(schema.Schema), &d.channelDetails.unmarshalledSchema)
 	if err != nil {
-		primitiveTypes := []string{"string", "null", "boolean", "int", "long", "float", "double", "bytes"}
-		for _, primitiveType := range primitiveTypes {
-			if schema.Schema == fmt.Sprintf("\"%s\"", primitiveType) {
-				unmarshalledSchema["type"] = primitiveType
-				d.channelDetails.unmarshalledSchema = unmarshalledSchema
-				return nil
-			}
-		}
-		log.CliLogger.Warnf("failed to unmarshal schema: %v", err)
-		unmarshalledSchema = nil
+		d.channelDetails.unmarshalledSchema, err = handlePrimitiveSchemas(schema.Schema, err)
+		log.CliLogger.Warn(err)
 	}
-	d.channelDetails.unmarshalledSchema = unmarshalledSchema
 	return nil
+}
+
+func handlePrimitiveSchemas(schema string, err error) (map[string]any, error) {
+	unmarshalledSchema := make(map[string]any)
+	primitiveTypes := []string{"string", "null", "boolean", "int", "long", "float", "double", "bytes"}
+	for _, primitiveType := range primitiveTypes {
+		if schema == fmt.Sprintf("\"%s\"", primitiveType) {
+			unmarshalledSchema["type"] = primitiveType
+			return unmarshalledSchema, nil
+		}
+	}
+	return nil, fmt.Errorf("failed to unmarshal schema: %v", err)
 }
 
 func (d *accountDetails) getTopicDescription() error {
