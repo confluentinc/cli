@@ -2,10 +2,18 @@ package asyncapi
 
 import (
 	"context"
+	"fmt"
+	"net/http"
+	"time"
+
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	kafkarestv3mock "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3/mock"
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+	srMock "github.com/confluentinc/schema-registry-sdk-go/mock"
+	"github.com/spf13/cobra"
+
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -14,11 +22,6 @@ import (
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/version"
 	testserver "github.com/confluentinc/cli/test/test-server"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
-	srMock "github.com/confluentinc/schema-registry-sdk-go/mock"
-	"github.com/spf13/cobra"
-	"net/http"
-	"time"
 )
 
 const BackwardCompatibilityLevel = "BACKWARD"
@@ -39,7 +42,10 @@ var details = &accountDetails{
 				return srsdk.RegisterSchemaResponse{}, nil, nil
 			},
 			UpdateSubjectLevelConfigFunc: func(ctx context.Context, subject string, body srsdk.ConfigUpdateRequest) (srsdk.ConfigUpdateRequest, *http.Response, error) {
-				return srsdk.ConfigUpdateRequest{Compatibility: body.Compatibility}, nil, nil
+				if body.Compatibility == "BACKWARD" {
+					return srsdk.ConfigUpdateRequest{Compatibility: body.Compatibility}, nil, nil
+				}
+				return srsdk.ConfigUpdateRequest{}, nil, fmt.Errorf("invalid compatibility type")
 			},
 			CreateTagDefsFunc: func(ctx context.Context, localVarOptionals *srsdk.CreateTagDefsOpts) ([]srsdk.TagDefResponse, *http.Response, error) {
 				return []srsdk.TagDefResponse{
@@ -86,14 +92,14 @@ var details = &accountDetails{
 				return srsdk.Config{CompatibilityLevel: BackwardCompatibilityLevel}, nil, nil
 			},
 			GetTagsFunc: func(_ context.Context, _, _ string) ([]srsdk.TagResponse, *http.Response, error) {
-				return []srsdk.TagResponse{
-					{
-						TypeName: "Public",
-					},
-				}, nil, nil
+				return []srsdk.TagResponse{{TypeName: "Public"}}, nil, nil
 			},
 			GetTagDefByNameFunc: func(_ context.Context, _ string) (srsdk.TagDef, *http.Response, error) {
-				return srsdk.TagDef{Name: "Public", Description: "Public tag"}, nil, nil
+				tag := srsdk.TagDef{
+					Name:        "Public",
+					Description: "Public tag",
+				}
+				return tag, nil, nil
 			},
 		},
 	},
