@@ -227,11 +227,14 @@ func combineDestinationTopics(specs map[string]*mds.AuditLogConfigSpec, newSpec 
 }
 
 func warnTopicRetentionDiscrepancies(topicRetentionDiscrepancies map[string]int64) []string {
-	var warnings []string
+	warnings := make([]string, len(topicRetentionDiscrepancies))
+
+	i := 0
 	for topicName, maxRetentionTime := range topicRetentionDiscrepancies {
-		newWarning := fmt.Sprintf(warn.RetentionTimeDiscrepancyWarning, topicName, maxRetentionTime)
-		warnings = append(warnings, newWarning)
+		warnings[i] = fmt.Sprintf(warn.RetentionTimeDiscrepancyWarning, topicName, maxRetentionTime)
+		i++
 	}
+
 	return warnings
 }
 

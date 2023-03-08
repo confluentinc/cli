@@ -904,7 +904,7 @@ func TestKafkaClusterContext_SetAndGetActiveKafkaCluster_Env(t *testing.T) {
 	ctx.KafkaClusterContext.SetActiveKafkaCluster(otherKafkaClusterId)
 	activeKafka = ctx.KafkaClusterContext.GetActiveKafkaClusterId()
 	if activeKafka != otherKafkaClusterId {
-		t.Errorf("After settting active kafka in new environment, GetActiveKafkaClusterId() got %s, want %s.", activeKafka, testInputs.activeKafka)
+		t.Errorf("After setting active kafka in new environment, GetActiveKafkaClusterId() got %s, want %s.", activeKafka, testInputs.activeKafka)
 	}
 	require.Equal(t, ctx.KafkaClusterContext.GetActiveKafkaClusterConfig().ID, activeKafka)
 
@@ -950,7 +950,7 @@ func TestKafkaClusterContext_SetAndGetActiveKafkaCluster_NonEnv(t *testing.T) {
 
 	activeKafka = ctx.KafkaClusterContext.GetActiveKafkaClusterId()
 	if activeKafka != otherKafkaClusterId {
-		t.Errorf("After settting active kafka, GetActiveKafkaClusterId() got %s, want %s.", activeKafka, testInputs.activeKafka)
+		t.Errorf("After setting active kafka, GetActiveKafkaClusterId() got %s, want %s.", activeKafka, testInputs.activeKafka)
 	}
 	require.Equal(t, ctx.KafkaClusterContext.GetActiveKafkaClusterConfig().ID, activeKafka)
 	_ = os.Remove(configFile.Name())

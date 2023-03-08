@@ -107,7 +107,7 @@ func handleIamApiKeyDelete(t *testing.T, keyStr string) http.HandlerFunc {
 	}
 }
 
-// Hanlder for: "/iam/v2/api-keys"
+// Handler for: "/iam/v2/api-keys"
 func handleIamApiKeys(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")

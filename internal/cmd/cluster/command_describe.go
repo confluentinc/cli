@@ -11,6 +11,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 type describeCommand struct {
@@ -102,10 +103,7 @@ func getCACertPath(cmd *cobra.Command) (string, error) {
 }
 
 func printDescribe(cmd *cobra.Command, meta *ScopedId) error {
-	var types []string
-	for name := range meta.Scope.Clusters {
-		types = append(types, name)
-	}
+	types := utils.GetKeys(meta.Scope.Clusters)
 	sort.Strings(types) // since we don't have hierarchy info, just display in alphabetical order
 
 	if output.GetFormat(cmd).IsSerialized() {
