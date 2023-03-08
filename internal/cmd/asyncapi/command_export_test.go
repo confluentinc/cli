@@ -22,6 +22,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/config"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/version"
 	testserver "github.com/confluentinc/cli/test/test-server"
@@ -53,11 +54,20 @@ var details = &accountDetails{
 			GetSchemaByVersionFunc: func(_ context.Context, subject string, _ string, _ *srsdk.GetSchemaByVersionOpts) (srsdk.Schema, *http.Response, error) {
 				if subject == "subject2" {
 					return srsdk.Schema{
-						Subject:    "subject1",
+						Subject:    "subject2",
 						Version:    1,
 						Id:         1,
 						SchemaType: "PROTOBUF",
 						Schema:     `syntax = "proto3"; package com.mycorp.mynamespace; message SampleRecord { int32 my_field1 = 1; double my_field2 = 2; string my_field3 = 3;}`,
+					}, nil, nil
+				}
+				if subject == "subject-primitive" {
+					return srsdk.Schema{
+						Subject:    "subject-primitive",
+						Version:    1,
+						Id:         1,
+						SchemaType: "avro",
+						Schema:     "string",
 					}, nil, nil
 				}
 				return srsdk.Schema{
@@ -261,6 +271,9 @@ func TestGetSchemaDetails(t *testing.T) {
 	details.channelDetails.schema = &schema
 	err = details.getSchemaDetails()
 	require.NoError(t, err)
+	details.channelDetails.currentSubject = "subject-primitive"
+	err = details.getSchemaDetails()
+	require.NoError(t, err)
 }
 
 func TestGetChannelDetails(t *testing.T) {
@@ -290,8 +303,15 @@ func TestGetChannelDetails(t *testing.T) {
 	schema, _, _ = details.srClient.DefaultApi.GetSchemaByVersion(*new(context.Context), "subject2", "1", nil)
 	details.channelDetails.schema = &schema
 	err = c.getChannelDetails(details, flags)
-	require.Error(t, err, fmt.Errorf("protobuf"))
+	require.Error(t, err, errors.New("protobuf is not supported"))
+}
 
+func TestHandlePrimitiveSchemas(t *testing.T) {
+	unmarshalledSchema, err := handlePrimitiveSchemas(fmt.Sprintf("\"string\""), fmt.Errorf("unable to unmarshal schema"))
+	require.NoError(t, err)
+	require.Equal(t, unmarshalledSchema, map[string]any{"type": "string"})
+	unmarshalledSchema, err = handlePrimitiveSchemas(fmt.Sprintf("Invalid_schema"), fmt.Errorf("unable to marshal schema"))
+	require.Error(t, err)
 }
 
 func TestGetBindings(t *testing.T) {
