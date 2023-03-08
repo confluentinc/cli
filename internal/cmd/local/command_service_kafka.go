@@ -181,10 +181,7 @@ func (c *Command) initFlags(mode string) {
 		usage = kafkaProduceFlagUsage
 	}
 
-	var flags []string
-	for flag := range defaults {
-		flags = append(flags, flag)
-	}
+	flags := utils.GetKeys(defaults)
 	sort.Strings(flags)
 
 	for _, flag := range flags {

@@ -67,7 +67,6 @@ func WritePropertiesFile(path string, property *properties.Properties, writeComm
 		if err != nil {
 			return err
 		}
-
 	}
 
 	err := WriteFile(path, buf.Bytes())
@@ -167,7 +166,6 @@ func parseJAASProperties(props *properties.Properties) *properties.Properties {
 		if err == nil {
 			props.Merge(jaasProps)
 		}
-
 	}
 	return props
 }
@@ -204,7 +202,6 @@ func convertPropertiesJAAS(props *properties.Properties, originalConfigs *proper
 				props.Delete(key)
 			}
 		}
-
 	}
 
 	parser.SetOriginalConfigKeys(jaasOriginal)
@@ -282,7 +279,6 @@ func writePropertiesConfig(path string, configs *properties.Properties, addSecur
 		if err != nil {
 			return err
 		}
-
 	}
 
 	if addSecureConfig {
@@ -332,7 +328,6 @@ func RemovePropertiesConfig(removeConfigs []string, path string) error {
 		if err != nil {
 			return err
 		}
-
 	}
 
 	err = WritePropertiesFile(path, configProps, true)
