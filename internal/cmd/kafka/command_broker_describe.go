@@ -44,7 +44,7 @@ func (c *brokerCommand) newDescribeCommand() *cobra.Command {
 	}
 
 	cmd.Flags().Bool("all", false, "Get cluster-wide broker configurations (non-default values only).")
-	cmd.Flags().String("config-name", "", "Get a specific configuration value (pair with --all to see a a cluster-wide config.")
+	cmd.Flags().String("config-name", "", "Get a specific configuration value (pair with --all to see a cluster-wide config.")
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	pcmd.AddOutputFlag(cmd)
 
@@ -100,35 +100,33 @@ func (c *brokerCommand) describe(cmd *cobra.Command, args []string) error {
 }
 
 func parseBrokerConfigData(brokerConfig kafkarestv3.BrokerConfigDataList) []*configOut {
-	var configs []*configOut
-	for _, data := range brokerConfig.Data {
-		config := &configOut{
+	configs := make([]*configOut, len(brokerConfig.Data))
+	for i, data := range brokerConfig.Data {
+		configs[i] = &configOut{
 			Name:        data.Name,
 			IsDefault:   data.IsDefault,
 			IsReadOnly:  data.IsReadOnly,
 			IsSensitive: data.IsSensitive,
 		}
 		if data.Value != nil {
-			config.Value = *data.Value
+			configs[i].Value = *data.Value
 		}
-		configs = append(configs, config)
 	}
 	return configs
 }
 
 func parseClusterConfigData(clusterConfig kafkarestv3.ClusterConfigDataList) []*configOut {
-	var configs []*configOut
-	for _, data := range clusterConfig.Data {
-		config := &configOut{
+	configs := make([]*configOut, len(clusterConfig.Data))
+	for i, data := range clusterConfig.Data {
+		configs[i] = &configOut{
 			Name:        data.Name,
 			IsDefault:   data.IsDefault,
 			IsReadOnly:  data.IsReadOnly,
 			IsSensitive: data.IsSensitive,
 		}
 		if data.Value != nil {
-			config.Value = *data.Value
+			configs[i].Value = *data.Value
 		}
-		configs = append(configs, config)
 	}
 	return configs
 }

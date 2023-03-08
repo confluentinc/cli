@@ -12,6 +12,7 @@ import (
 	"github.com/imdario/mergo"
 
 	warn "github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/types"
 
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
@@ -131,7 +132,7 @@ func warnMultipleCRNAuthorities(specs map[string]*mds.AuditLogConfigSpec) []stri
 			foundAuthority := getCRNAuthority(routeName)
 			foundAuthorities = append(foundAuthorities, foundAuthority)
 		}
-		foundAuthorities = utils.RemoveDuplicates(foundAuthorities)
+		foundAuthorities = types.RemoveDuplicates(foundAuthorities)
 
 		if len(foundAuthorities) > 1 {
 			sort.Strings(foundAuthorities)
@@ -227,11 +228,14 @@ func combineDestinationTopics(specs map[string]*mds.AuditLogConfigSpec, newSpec 
 }
 
 func warnTopicRetentionDiscrepancies(topicRetentionDiscrepancies map[string]int64) []string {
-	var warnings []string
+	warnings := make([]string, len(topicRetentionDiscrepancies))
+
+	i := 0
 	for topicName, maxRetentionTime := range topicRetentionDiscrepancies {
-		newWarning := fmt.Sprintf(warn.RetentionTimeDiscrepancyWarning, topicName, maxRetentionTime)
-		warnings = append(warnings, newWarning)
+		warnings[i] = fmt.Sprintf(warn.RetentionTimeDiscrepancyWarning, topicName, maxRetentionTime)
+		i++
 	}
+
 	return warnings
 }
 
@@ -260,7 +264,7 @@ func combineExcludedPrincipals(specs map[string]*mds.AuditLogConfigSpec, newSpec
 		}
 
 		for _, principal := range *excludedPrincipals {
-			if !utils.Contains(newExcludedPrincipals, principal) {
+			if !types.Contains(newExcludedPrincipals, principal) {
 				newExcludedPrincipals = append(newExcludedPrincipals, principal)
 			}
 		}
@@ -455,7 +459,7 @@ func warnNewExcludedPrincipals(specs map[string]*mds.AuditLogConfigSpec, newSpec
 		var differentPrincipals []string
 		newSpecPrincipals := *newSpec.ExcludedPrincipals
 		for _, principal := range newSpecPrincipals {
-			if !utils.Contains(*excludedPrincipals, principal) {
+			if !types.Contains(*excludedPrincipals, principal) {
 				differentPrincipals = append(differentPrincipals, principal)
 			}
 		}

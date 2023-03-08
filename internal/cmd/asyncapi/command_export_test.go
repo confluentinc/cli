@@ -291,7 +291,6 @@ func TestGetChannelDetails(t *testing.T) {
 	details.channelDetails.schema = &schema
 	err = c.getChannelDetails(details, flags)
 	require.Error(t, err, fmt.Errorf("protobuf"))
-
 }
 
 func TestGetBindings(t *testing.T) {

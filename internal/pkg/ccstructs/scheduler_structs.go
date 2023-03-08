@@ -7,7 +7,7 @@ import (
 	types "github.com/gogo/protobuf/types"
 )
 
-// ACLBindng: binds an ACL to to a resource pattern.
+// ACLBindng: binds an ACL to a resource pattern.
 // Apache Kafka reference:
 // https://github.com/apache/kafka/blob/trunk/clients/src/main/java/org/apache/kafka/common/acl/AclBinding.java
 type ACLBinding struct {
@@ -335,7 +335,7 @@ type Deployment struct {
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty" db:"id,omitempty" url:"id,omitempty"`
 	// The time in which this resource was created.
 	Created *time.Time `protobuf:"bytes,2,opt,name=created,proto3,stdtime" json:"created,omitempty" db:"created,omitempty" url:"created,omitempty"`
-	// The time in which this resource was last udpated.
+	// The time in which this resource was last updated.
 	Modified *time.Time `protobuf:"bytes,3,opt,name=modified,proto3,stdtime" json:"modified,omitempty" db:"modified,omitempty" url:"modified,omitempty"`
 	// The time in which this resource was deactivated.
 	Deactivated *time.Time `protobuf:"bytes,4,opt,name=deactivated,proto3,stdtime" json:"deactivated,omitempty" db:"deactivated,omitempty" url:"deactivated,omitempty"`
@@ -396,7 +396,7 @@ type NetworkRegion struct {
 	SniEnabled bool `protobuf:"varint,10,opt,name=sni_enabled,json=sniEnabled,proto3" json:"sni_enabled,omitempty" db:"sni_enabled,omitempty" url:"sni_enabled,omitempty"`
 	// The time in which this resource was created.
 	Created *time.Time `protobuf:"bytes,11,opt,name=created,proto3,stdtime" json:"created,omitempty" db:"created,omitempty" url:"created,omitempty"`
-	// The time in which this resource was last udpated.
+	// The time in which this resource was last updated.
 	Modified *time.Time `protobuf:"bytes,12,opt,name=modified,proto3,stdtime" json:"modified,omitempty" db:"modified,omitempty" url:"modified,omitempty"`
 	// The time in which this resource was deactivated.
 	Deactivated *time.Time `protobuf:"bytes,13,opt,name=deactivated,proto3,stdtime" json:"deactivated,omitempty" db:"deactivated,omitempty" url:"deactivated,omitempty"`
@@ -404,7 +404,7 @@ type NetworkRegion struct {
 	Dedicated bool `protobuf:"varint,14,opt,name=dedicated,proto3" json:"dedicated,omitempty" db:"dedicated,omitempty" url:"dedicated,omitempty"`
 	// This field is present so we can transform v2 -> v1 for ORM manipulations.
 	NetworkConnectionTypes []NetworkType `protobuf:"varint,15,rep,packed,name=network_connection_types,json=networkConnectionTypes,proto3,enum=NetworkType" json:"network_connection_types,omitempty" db:"network_connection_types,omitempty" url:"network_connection_types,omitempty"`
-	// TODO - deprecate domain id after succesful migration to cert id
+	// TODO - deprecate domain id after successful migration to cert id
 	// a unique ID identifying a dynamically-allocated DNS domain that is used for TLS endpoint addresses
 	DomainId string `protobuf:"bytes,16,opt,name=domain_id,json=domainId,proto3" json:"domain_id,omitempty" db:"domain_id,omitempty" url:"domain_id,omitempty"`
 	// a unique ID identifying a dynamically-allocated DNS domain that is used for TLS endpoint addresses
@@ -522,7 +522,7 @@ type Deployment_NetworkAccess_PublicInternet struct {
 }
 
 type Deployment_NetworkAccess_VPCPeering struct {
-	// deprecated; present for backward compatability reasons.
+	// deprecated; present for backward compatibility reasons.
 	Enabled bool `protobuf:"varint,1,opt,name=enabled,proto3" json:"enabled,omitempty" db:"enabled,omitempty" url:"enabled,omitempty"`
 	// The network configs that should be used for this Deployment.
 	// NOTE:  Mutating this field for VPC peering configs are not supported at this time.
@@ -534,7 +534,7 @@ type Deployment_NetworkAccess_VPCPeering struct {
 }
 
 type Deployment_NetworkAccess_PrivateLink struct {
-	// deprecated; present for backward compatability reasons.
+	// deprecated; present for backward compatibility reasons.
 	Enabled bool `protobuf:"varint,1,opt,name=enabled,proto3" json:"enabled,omitempty" db:"enabled,omitempty" url:"enabled,omitempty"`
 	// Whitelisted source vpc endpoints.
 	AllowedVpcEndpoints []string `protobuf:"bytes,2,rep,name=allowed_vpc_endpoints,json=allowedVpcEndpoints,proto3" json:"allowed_vpc_endpoints,omitempty" db:"allowed_vpc_endpoints,omitempty" url:"allowed_vpc_endpoints,omitempty"`
@@ -546,7 +546,7 @@ type Deployment_NetworkAccess_PrivateLink struct {
 }
 
 type Deployment_NetworkAccess_TransitGateway struct {
-	// deprecated; present for backward compatability reasons.
+	// deprecated; present for backward compatibility reasons.
 	Enabled bool `protobuf:"varint,1,opt,name=enabled,proto3" json:"enabled,omitempty" db:"enabled,omitempty" url:"enabled,omitempty"`
 	// The network configs that should be used for this Deployment.
 	NetworkConfigId      string   `protobuf:"bytes,2,opt,name=network_config_id,json=networkConfigId,proto3" json:"network_config_id,omitempty" db:"network_config_id,omitempty" url:"network_config_id,omitempty"`

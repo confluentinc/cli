@@ -84,7 +84,6 @@ func int32ToPtr(i int32) *int32 {
 }
 
 func filterQuotaResults(quotaList []servicequotav1.ServiceQuotaV1AppliedQuota, environment string, network string, kafkaCluster string, quotaCode string) []servicequotav1.ServiceQuotaV1AppliedQuota {
-
 	//filter by environment id
 	filtered := []servicequotav1.ServiceQuotaV1AppliedQuota{}
 	if environment != "" {

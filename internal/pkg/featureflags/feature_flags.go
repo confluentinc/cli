@@ -21,7 +21,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/types"
 	"github.com/confluentinc/cli/internal/pkg/version"
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
@@ -280,7 +280,7 @@ func (ld *launchDarklyManager) contextToLDUser(ctx *dynamicconfig.DynamicContext
 }
 
 func setCustomAttribute(custom ldvalue.ValueMapBuilder, key string, value ldvalue.Value) {
-	if !utils.Contains(attributes, key) {
+	if !types.Contains(attributes, key) {
 		panic(fmt.Sprintf(errors.UnsupportedCustomAttributeErrorMsg, key))
 	}
 	custom.Set(key, value)
