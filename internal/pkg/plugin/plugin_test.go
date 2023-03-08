@@ -93,13 +93,8 @@ func TestSearchPath(t *testing.T) {
 		err = file.Chmod(fs.ModePerm)
 		require.NoError(t, err)
 	}
-	path := os.Getenv("PATH")
-	err = os.Setenv("PATH", root)
-	require.NoError(t, err)
-	defer func() {
-		err := os.Setenv("PATH", path)
-		require.NoError(t, err)
-	}()
+
+	t.Setenv("PATH", root)
 
 	pluginMap := SearchPath(&v1.Config{BaseConfig: new(config.BaseConfig)})
 	pluginPaths, ok := pluginMap[pluginName]
