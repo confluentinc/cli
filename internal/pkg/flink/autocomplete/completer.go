@@ -6,7 +6,7 @@ import (
 
 func combineCompleters(getSmartCompletion func() bool, completers ...prompt.Completer) prompt.Completer {
 	return func(d prompt.Document) []prompt.Suggest {
-		var suggestions []prompt.Suggest
+		suggestions := []prompt.Suggest{}
 
 		if !(getSmartCompletion()) {
 			return suggestions
@@ -19,10 +19,9 @@ func combineCompleters(getSmartCompletion func() bool, completers ...prompt.Comp
 	}
 }
 
-func CompleterWithHistoryAndDocs(history []string, getSmartCompletion func() bool) prompt.Completer {
-	HISTORYCompleter := generateHISTORYCompleter(history)
+func CompleterWithDocsExamples(getSmartCompletion func() bool) prompt.Completer {
 	docsCompleter := generateDocsCompleter()
-	return combineCompleters(getSmartCompletion, Completer, HISTORYCompleter, docsCompleter)
+	return combineCompleters(getSmartCompletion, Completer, docsCompleter)
 }
 
 // Since we combine completers twice, we just need to control this properly once using "getSmartCompletion". Maybe

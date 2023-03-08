@@ -80,14 +80,14 @@ func printResultToSTDOUT(data string) {
 }
 
 func (c *InputController) Prompt() *prompt.Prompt {
-	completerWithHistoryAndDocs := autocomplete.CompleterWithHistoryAndDocs(c.History.Data, c.getSmartCompletion)
+	completerWithDocsExamples := autocomplete.CompleterWithDocsExamples(c.getSmartCompletion)
 
 	// We need to disable the live prefix, in case we just submited a statement
 	components.LivePrefixState.IsEnabled = false
 
 	return prompt.New(
 		components.Executor,
-		completerWithHistoryAndDocs,
+		completerWithDocsExamples,
 		prompt.OptionTitle("sql-prompt"),
 		prompt.OptionHistory(c.History.Data),
 		prompt.OptionSwitchKeyBindMode(prompt.EmacsKeyBind),
