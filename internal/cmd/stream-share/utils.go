@@ -36,11 +36,12 @@ func getPrivateLinkNetworkDetails(network cdxv1.CdxV1Network) *privateLinkNetwor
 }
 
 func mapSubdomainsToList(m map[string]string) []string {
-	var subdomains []string
+	subdomains := make([]string, len(m))
+	i := 0
 	for k, v := range m {
-		subdomains = append(subdomains, fmt.Sprintf(`%s="%s"`, k, v))
+		subdomains[i] = fmt.Sprintf(`%s="%s"`, k, v)
+		i++
 	}
-
 	return subdomains
 }
 

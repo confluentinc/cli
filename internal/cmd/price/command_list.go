@@ -65,10 +65,10 @@ var (
 )
 
 var (
-	metrics        = getKeys(formatMetric)
-	clusterTypes   = getValues(formatClusterTypeSerialized)
-	availabilities = getKeys(formatAvailability)
-	networkTypes   = getKeys(formatNetworkType)
+	metrics        = getSortedKeys(formatMetric)
+	clusterTypes   = getSortedValues(formatClusterTypeSerialized)
+	availabilities = getSortedKeys(formatAvailability)
+	networkTypes   = getSortedKeys(formatNetworkType)
 )
 
 type humanOut struct {
@@ -255,20 +255,14 @@ func filterTable(table map[string]*ccloudv1.UnitPrices, filters []string, metric
 	return filteredTable, nil
 }
 
-func getKeys(m map[string]string) []string {
-	var slice []string
-	for key := range m {
-		slice = append(slice, key)
-	}
+func getSortedKeys(m map[string]string) []string {
+	slice := utils.GetKeys(m)
 	sort.Strings(slice)
 	return slice
 }
 
-func getValues(m map[string]string) []string {
-	var slice []string
-	for _, value := range m {
-		slice = append(slice, value)
-	}
+func getSortedValues(m map[string]string) []string {
+	slice := utils.GetValues(m)
 	sort.Strings(slice)
 	return slice
 }

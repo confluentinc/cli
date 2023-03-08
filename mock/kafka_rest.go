@@ -157,7 +157,6 @@ func (c ConsumerGroup) ListKafkaConsumers(_ context.Context, clusterId string, c
 			},
 		},
 	}, httpResp, nil
-
 }
 
 type GroupMatcher struct {
@@ -217,7 +216,6 @@ func (c ConsumerGroup) GetKafkaConsumerGroupLagSummary(_ context.Context, cluste
 		MaxLagConsumer:    krsdk.Relationship{},
 		MaxLagPartition:   krsdk.Relationship{},
 	}, httpResp, nil
-
 }
 
 func (c ConsumerGroup) ListKafkaConsumerLags(_ context.Context, clusterId string, consumerGroupId string) (krsdk.ConsumerLagDataList, *nethttp.Response, error) {

@@ -115,7 +115,7 @@ func RequestSchemaWithId(schemaId int32, subject string, srClient *srsdk.APIClie
 }
 
 func SetSchemaPathRef(schemaString srsdk.SchemaString, dir string, subject string, schemaId int32, srClient *srsdk.APIClient, ctx context.Context) (string, map[string]string, error) {
-	// Create temporary file to store schema retrieved (also for cache). Retry if get error retriving schema or writing temp schema file
+	// Create temporary file to store schema retrieved (also for cache). Retry if get error retrieving schema or writing temp schema file
 	tempStorePath := filepath.Join(dir, fmt.Sprintf("%s-%d.txt", subject, schemaId))
 	tempRefStorePath := filepath.Join(dir, fmt.Sprintf("%s-%d.ref", subject, schemaId))
 	var references []srsdk.SchemaReference

@@ -31,7 +31,7 @@ func NewMockPublicS3(response, path, query string, req *require.Assertions) *htt
 func NewMockPublicS3Error() *httptest.Server {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(500)
+		w.WriteHeader(http.StatusInternalServerError)
 	})
 	return httptest.NewServer(mux)
 }
