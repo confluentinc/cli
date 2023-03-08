@@ -69,9 +69,9 @@ func (b *ReleaseNotesBuilder) buildSection(sectionTitle string, sectionElements 
 }
 
 func (b *ReleaseNotesBuilder) buildBulletPoints(elements []string) string {
-	var bulletPointList []string
-	for _, element := range elements {
-		bulletPointList = append(bulletPointList, fmt.Sprintf("  - %s", element))
+	bulletPointList := make([]string, len(elements))
+	for i, element := range elements {
+		bulletPointList[i] = fmt.Sprintf("  - %s", element)
 	}
 	return strings.Join(bulletPointList, "\n")
 }
