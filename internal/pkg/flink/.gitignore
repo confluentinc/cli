@@ -1,6 +1,8 @@
 .idea/
 coverage.txt
 .cache/
+# ignore the vendor folder
+vendor/
 
 #
 # BEGIN managed content - any manual changes below this block will be discarded
@@ -42,7 +44,8 @@ go.work
 .LSOverride
 
 # Icon must end with two \r
-Icon
+Icon
+
 
 # Thumbnails
 ._*

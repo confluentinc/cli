@@ -1,4 +1,4 @@
-# V1alphaProperties
+# MultipleSearchFilter
 
 ## Properties
 
@@ -7,20 +7,20 @@ Name | Type | Description | Notes
 
 ## Methods
 
-### NewV1alphaProperties
+### NewMultipleSearchFilter
 
-`func NewV1alphaProperties() *V1alphaProperties`
+`func NewMultipleSearchFilter() *MultipleSearchFilter`
 
-NewV1alphaProperties instantiates a new V1alphaProperties object
+NewMultipleSearchFilter instantiates a new MultipleSearchFilter object
 This constructor will assign default values to properties that have it defined,
 and makes sure properties required by API are set, but the set of arguments
 will change when the set of required properties is changed
 
-### NewV1alphaPropertiesWithDefaults
+### NewMultipleSearchFilterWithDefaults
 
-`func NewV1alphaPropertiesWithDefaults() *V1alphaProperties`
+`func NewMultipleSearchFilterWithDefaults() *MultipleSearchFilter`
 
-NewV1alphaPropertiesWithDefaults instantiates a new V1alphaProperties object
+NewMultipleSearchFilterWithDefaults instantiates a new MultipleSearchFilter object
 This constructor will only assign default values to properties that have it defined,
 but it doesn't guarantee that properties required by API are set
 

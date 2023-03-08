@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway"
+	v2 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway"
 	"github.com/confluentinc/flink-sql-client/components"
 	"github.com/rivo/tview"
 	"os"
@@ -87,7 +87,7 @@ func StartApp() {
 	appController := NewApplicationController(app, history)
 	tableController := NewTableController(table, store, appController)
 
-	inputController := NewInputController(history, tableController, appController)
+	inputController := NewInputController(history, tableController, appController, store)
 	shortcutsController := NewShortcutsController(shortcuts, appController, tableController)
 
 	// Instatiate Application Controller

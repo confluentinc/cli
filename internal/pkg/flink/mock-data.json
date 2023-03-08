@@ -1,7 +1,39 @@
 {
   "data": [
-    "OrderDate|Region|Rep|Item|Units|UnitCost|Total \n 3/15/2017|West|Sorvino|Pencil|56|2.99|167.44 \n 4/1/2017|East|Jones|Binder|60|4.99|299.40  \n 4/18/2017|Central|Andrews|Pencil|75|1.99|149.25 \n 5/5/2017|Central|Jardine|Pencil|90|4.99|449.10 \n 5/22/2017|West|Thompson|Pencil|32|1.99|63.68 \n 6/8/2017|East|Jones|Binder|60|8.99|539.40 \n 6/25/2017|Central|Morgan|Pencil|90|4.99|449.10 \n 7/12/2017|East|Howard|Binder|29|1.99|57.71 \n 7/29/2017|East|Parent|Binder|81|19.99|1,619.19 \n 8/15/2017|East|Jones|Pencil|35|4.99|174.65",
-    "OrderDate|Region|Rep|Item|Units|UnitCost|Total \n 1/6/2017|East|Jones|Pencil|95|1.99|189.05 \n 1/23/2017|Central|Kivell|Binder|50|19.99|999.50 \n 2/9/2017|Central|Jardine|Pencil|36|4.99|179.64",
-    "OrderDate|Region|Rep|Item|Units|UnitCost|Total \n 1/6/2017|West|Jones|Pencil|95|1.99|189.05 \n 1/6/2017|West|Gustavo|Pencil|95|1.99|189.05 \n 1/23/2017|Central|Kivell|Binder|50|19.99|999.50 \n 2/9/2017|Central|Jardine|Pencil|36|4.99|179.64"
+    {
+      "status": "Completed",
+      "columns": ["OrderDate", "Region", "Rep", "Item", "Units", "UnitCost", "Total"],
+      "rows": [
+        ["3/15/2017", "West", "Sorvino", "Pencil", "56", "2.99", "167.44"],
+        ["4/1/2017", "East", "Jones", "Binder", "60", "4.99", "299.40"],
+        ["4/18/2017", "Central", "Andrews", "Pencil", "75", "1.99", "149.25"],
+        ["5/5/2017", "Central", "Jardine", "Pencil", "90", "4.99", "449.10"],
+        ["5/22/2017", "West", "Thompson", "Pencil", "32", "1.99", "63.68"],
+        ["6/8/2017", "East", "Jones", "Binder", "60", "8.99", "539.40"],
+        ["6/25/2017", "Central", "Morgan", "Pencil", "90", "4.99", "449.10"],
+        ["7/12/2017", "East", "Howard", "Binder", "29", "1.99", "57.71"],
+        ["7/29/2017", "East", "Parent", "Binder", "81", "19.99", "1,619.19"],
+        ["8/15/2017", "East", "Jones", "Pencil", "35", "4.99", "174.65"]
+      ]
+    },
+    {
+      "status": "Completed",
+      "columns": ["OrderDate", "Region", "Rep", "Item", "Units", "UnitCost", "Total"],
+      "rows": [
+        ["1/6/2017", "East", "Jones", "Pencil", "95", "1.99", "189.05"],
+        ["1/23/2017", "Central", "Kivell", "Binder", "50", "19.99", "999.50"],
+        ["2/9/2017", "Central", "Jardine", "Pencil", "36", "4.99", "179.64"]
+      ]
+    },
+    {
+      "status": "Completed",
+      "columns": ["OrderDate", "Region", "Rep", "Item", "Units", "UnitCost", "Total"],
+      "rows": [
+        ["1/6/2017", "West", "Jones", "Pencil", "95", "1.99", "189.05"],
+        ["1/6/2017", "West", "Gustavo", "Pencil", "95", "1.99", "189.05"],
+        ["1/23/2017", "Central", "Kivell", "Binder", "50", "19.99", "999.50"],
+        ["2/9/2017", "Central", "Jardine", "Pencil", "36", "4.99", "179.64"]
+      ]
+    }
   ]
 }

@@ -4,38 +4,82 @@ info:
     email: ksql-team@confluent.io
     name: ksqlDB
     url: https://confluent.slack.com/app_redirect?channel=flink-ccloud
+  description: Flink Gateway API is used to submit and execute all Flink DDL/DML SQL
+    statements.
   title: Flink Gateway API
   version: 0.0.1
   x-api-id: a19bfe13-af66-493b-930a-5b7664bf52b7
   x-audience: external-public
-  x-tag-group: Network (%s)
-  x-api-group: fcpm/v2
+  x-tag-group: Flink Gateway (%s)
+  x-api-group: sql/v1alpha1
 servers:
-- description: Confluent Cloud production
-  url: https://api.confluent.cloud
-- description: Confluent Cloud staging
-  url: https://api.stag.cpdev.cloud
-- description: Confluent Cloud development
-  url: https://api.devel.cpdev.cloud
+- description: Flink Compute Pool Endpoint
+  url: https://flink.region.provider.confluent.cloud
 tags:
 - description: |-
-    [![Early Access](https://img.shields.io/badge/Lifecycle%20Stage-Early%20Access-%2345c6e8)](#section/Versioning/API-Lifecycle-Policy) [![Request Access To Flink Gateway Service](https://img.shields.io/badge/-Request%20Access%20To%20Flink%20Gateway%20Service-%23bc8540)](mailto:ccloud-api-access+v1alpha1-early-access@confluent.io?subject=Request%20to%20join%20v1alpha1%20API%20Early%20Access&body=I%E2%80%99d%20like%20to%20join%20the%20Confluent%20Cloud%20API%20Early%20Access%20for%20v1alpha1%20to%20provide%20early%20feedback%21%20My%20Cloud%20Organization%20ID%20is%20%3Cretrieve%20from%20https%3A//confluent.cloud/settings/billing/payment%3E.)
+    [![Early Access](https://img.shields.io/badge/Lifecycle%20Stage-Early%20Access-%2345c6e8)](#section/Versioning/API-Lifecycle-Policy) [![Request Access To Flink Gateway API](https://img.shields.io/badge/-Request%20Access%20To%20Flink%20Gateway%20API-%23bc8540)](mailto:ccloud-api-access+sql-v1alpha1-early-access@confluent.io?subject=Request%20to%20join%20sql/v1alpha1%20API%20Early%20Access&body=I%E2%80%99d%20like%20to%20join%20the%20Confluent%20Cloud%20API%20Early%20Access%20for%20sql/v1alpha1%20to%20provide%20early%20feedback%21%20My%20Cloud%20Organization%20ID%20is%20%3Cretrieve%20from%20https%3A//confluent.cloud/settings/billing/payment%3E.)
 
-    This API is used to submit and execute all Flink DDL/DML SQL statements.
+    `Statement` represents a core resource used to model SQL statements for execution.
+    A statement generalizes DDL, DML, DQL, etc., but doesn’t attempt to handle session
+    management or any higher-level functionality.
+
+    The API allows you to list, create, read, and delete your statements.
 
 
     ## The Statements Model
-    <SchemaDefinition schemaRef="#/components/schemas/v1alpha1.Statement" />
-  name: Statements (v1alpha1)
+    <SchemaDefinition schemaRef="#/components/schemas/sql.v1alpha1.Statement" />
+  name: Statements (sql/v1alpha1)
 paths:
-  /v1alpha1/org/{org_id}/env/{env_id}/statements:
+  /sql/v1alpha1/statements:
     get:
       description: |-
-        [![Early Access](https://img.shields.io/badge/Lifecycle%20Stage-Early%20Access-%2345c6e8)](#section/Versioning/API-Lifecycle-Policy) [![Request Access To Flink Gateway Service](https://img.shields.io/badge/-Request%20Access%20To%20Flink%20Gateway%20Service-%23bc8540)](mailto:ccloud-api-access+v1alpha1-early-access@confluent.io?subject=Request%20to%20join%20v1alpha1%20API%20Early%20Access&body=I%E2%80%99d%20like%20to%20join%20the%20Confluent%20Cloud%20API%20Early%20Access%20for%20v1alpha1%20to%20provide%20early%20feedback%21%20My%20Cloud%20Organization%20ID%20is%20%3Cretrieve%20from%20https%3A//confluent.cloud/settings/billing/payment%3E.)
+        [![Early Access](https://img.shields.io/badge/Lifecycle%20Stage-Early%20Access-%2345c6e8)](#section/Versioning/API-Lifecycle-Policy) [![Request Access To Flink Gateway API](https://img.shields.io/badge/-Request%20Access%20To%20Flink%20Gateway%20API-%23bc8540)](mailto:ccloud-api-access+sql-v1alpha1-early-access@confluent.io?subject=Request%20to%20join%20sql/v1alpha1%20API%20Early%20Access&body=I%E2%80%99d%20like%20to%20join%20the%20Confluent%20Cloud%20API%20Early%20Access%20for%20sql/v1alpha1%20to%20provide%20early%20feedback%21%20My%20Cloud%20Organization%20ID%20is%20%3Cretrieve%20from%20https%3A//confluent.cloud/settings/billing/payment%3E.)
 
         Retrieve a sorted, filtered, paginated list of all statements.
-      operationId: listV1alpha1Statements
+      operationId: listSqlV1alpha1Statements
       parameters:
+      - description: Filter the results by exact match for spec.statement_name. Pass
+          multiple times to see results matching any of the values.
+        example:
+        - sql123
+        - sql456
+        explode: true
+        in: query
+        name: spec.statement_name
+        required: false
+        schema:
+          $ref: '#/components/schemas/MultipleSearchFilter'
+        style: form
+      - description: Filter the results by exact match for status.phase. Pass multiple
+          times to see results matching any of the values.
+        example:
+        - RUNNING
+        - COMPLETED
+        explode: true
+        in: query
+        name: status.phase
+        required: false
+        schema:
+          $ref: '#/components/schemas/MultipleSearchFilter'
+        style: form
+      - description: Filter the results by exact match for environment.
+        example: env-00000
+        explode: true
+        in: query
+        name: environment
+        required: true
+        schema:
+          $ref: '#/components/schemas/SearchFilter'
+        style: form
+      - description: Filter the results by exact match for spec.compute_pool.
+        example: fcp-00000
+        explode: true
+        in: query
+        name: spec.compute_pool
+        required: true
+        schema:
+          $ref: '#/components/schemas/SearchFilter'
+        style: form
       - description: A pagination size for collection requests.
         explode: true
         in: query
@@ -56,29 +100,32 @@ paths:
           maxLength: 255
           type: string
         style: form
-      - description: The Org
-        explode: false
-        in: path
-        name: org_id
-        required: true
-        schema:
-          type: string
-        style: simple
-      - description: The Env
-        explode: false
-        in: path
-        name: env_id
-        required: true
-        schema:
-          type: string
-        style: simple
       responses:
         "200":
           content:
             application/json:
               schema:
                 allOf:
-                - $ref: '#/components/schemas/v1alpha1.StatementList'
+                - $ref: '#/components/schemas/sql.v1alpha1.StatementList'
+                - properties:
+                    data:
+                      items:
+                        properties:
+                          spec:
+                            properties:
+                              environment:
+                                example:
+                                  id: env-00000
+                                  related: https://flink.region.provider.confluent.cloud/v2/environments/env-00000
+                                  resource_name: https://flink.region.provider.confluent.cloud/organization=9bb441c4-edef-46ac-8a41-c49e44a3fd9a/environment=env-00000
+                              compute_pool:
+                                example:
+                                  id: fcp-00000
+                                  related: https://flink.region.provider.confluent.cloud/v2/compute-pools/fcp-00000
+                                  resource_name: https://flink.region.provider.confluent.cloud/organization=9bb441c4-edef-46ac-8a41-c49e44a3fd9a/environment=env-abc123/flink=fcp-00000
+                            type: object
+                      type: array
+                  type: object
           description: Statement.
           headers:
             X-Request-Id:
@@ -194,22 +241,23 @@ paths:
               style: simple
       security:
       - api-key: []
+      - confluent-sts-access-token: []
       summary: List of Statements
       tags:
-      - Statements (v1alpha1)
-      x-request-access-name: Flink Gateway Service
+      - Statements (sql/v1alpha1)
+      x-request-access-name: Flink Gateway API
       x-codeSamples:
       - lang: Shell
         source: |-
           curl --request GET \
-            --url https://api.confluent.cloud/v1alpha1/org/%7Borg_id%7D/env/%7Benv_id%7D/statements \
+            --url 'https://flink.region.provider.confluent.cloud/sql/v1alpha1/statements?spec.statement_name=sql123%2Csql456&status.phase=RUNNING%2CCOMPLETED&environment=env-00000&spec.compute_pool=fcp-00000' \
             --header 'Authorization: Basic REPLACE_BASIC_AUTH'
       - lang: Java
         source: |-
           OkHttpClient client = new OkHttpClient();
 
           Request request = new Request.Builder()
-            .url("https://api.confluent.cloud/v1alpha1/org/%7Borg_id%7D/env/%7Benv_id%7D/statements")
+            .url("https://flink.region.provider.confluent.cloud/sql/v1alpha1/statements?spec.statement_name=sql123%2Csql456&status.phase=RUNNING%2CCOMPLETED&environment=env-00000&spec.compute_pool=fcp-00000")
             .get()
             .addHeader("Authorization", "Basic REPLACE_BASIC_AUTH")
             .build();
@@ -217,7 +265,7 @@ paths:
           Response response = client.newCall(request).execute();
       - lang: Go
         source: "package main\n\nimport (\n\t\"fmt\"\n\t\"net/http\"\n\t\"io/ioutil\"\
-          \n)\n\nfunc main() {\n\n\turl := \"https://api.confluent.cloud/v1alpha1/org/%7Borg_id%7D/env/%7Benv_id%7D/statements\"\
+          \n)\n\nfunc main() {\n\n\turl := \"https://flink.region.provider.confluent.cloud/sql/v1alpha1/statements?spec.statement_name=sql123%2Csql456&status.phase=RUNNING%2CCOMPLETED&environment=env-00000&spec.compute_pool=fcp-00000\"\
           \n\n\treq, _ := http.NewRequest(\"GET\", url, nil)\n\n\treq.Header.Add(\"\
           Authorization\", \"Basic REPLACE_BASIC_AUTH\")\n\n\tres, _ := http.DefaultClient.Do(req)\n\
           \n\tdefer res.Body.Close()\n\tbody, _ := ioutil.ReadAll(res.Body)\n\n\t\
@@ -226,11 +274,11 @@ paths:
         source: |-
           import http.client
 
-          conn = http.client.HTTPSConnection("api.confluent.cloud")
+          conn = http.client.HTTPSConnection("flink.region.provider.confluent.cloud")
 
           headers = { 'Authorization': "Basic REPLACE_BASIC_AUTH" }
 
-          conn.request("GET", "/v1alpha1/org/%7Borg_id%7D/env/%7Benv_id%7D/statements", headers=headers)
+          conn.request("GET", "/sql/v1alpha1/statements?spec.statement_name=sql123%2Csql456&status.phase=RUNNING%2CCOMPLETED&environment=env-00000&spec.compute_pool=fcp-00000", headers=headers)
 
           res = conn.getresponse()
           data = res.read()
@@ -242,9 +290,9 @@ paths:
 
           const options = {
             "method": "GET",
-            "hostname": "api.confluent.cloud",
+            "hostname": "flink.region.provider.confluent.cloud",
             "port": null,
-            "path": "/v1alpha1/org/%7Borg_id%7D/env/%7Benv_id%7D/statements",
+            "path": "/sql/v1alpha1/statements?spec.statement_name=sql123%2Csql456&status.phase=RUNNING%2CCOMPLETED&environment=env-00000&spec.compute_pool=fcp-00000",
             "headers": {
               "Authorization": "Basic REPLACE_BASIC_AUTH"
             }
@@ -269,7 +317,7 @@ paths:
           CURL *hnd = curl_easy_init();
 
           curl_easy_setopt(hnd, CURLOPT_CUSTOMREQUEST, "GET");
-          curl_easy_setopt(hnd, CURLOPT_URL, "https://api.confluent.cloud/v1alpha1/org/%7Borg_id%7D/env/%7Benv_id%7D/statements");
+          curl_easy_setopt(hnd, CURLOPT_URL, "https://flink.region.provider.confluent.cloud/sql/v1alpha1/statements?spec.statement_name=sql123%2Csql456&status.phase=RUNNING%2CCOMPLETED&environment=env-00000&spec.compute_pool=fcp-00000");
 
           struct curl_slist *headers = NULL;
           headers = curl_slist_append(headers, "Authorization: Basic REPLACE_BASIC_AUTH");
@@ -278,60 +326,79 @@ paths:
           CURLcode ret = curl_easy_perform(hnd);
       - lang: C#
         source: |-
-          var client = new RestClient("https://api.confluent.cloud/v1alpha1/org/%7Borg_id%7D/env/%7Benv_id%7D/statements");
+          var client = new RestClient("https://flink.region.provider.confluent.cloud/sql/v1alpha1/statements?spec.statement_name=sql123%2Csql456&status.phase=RUNNING%2CCOMPLETED&environment=env-00000&spec.compute_pool=fcp-00000");
           var request = new RestRequest(Method.GET);
           request.AddHeader("Authorization", "Basic REPLACE_BASIC_AUTH");
           IRestResponse response = client.Execute(request);
     post:
       description: |-
-        [![Early Access](https://img.shields.io/badge/Lifecycle%20Stage-Early%20Access-%2345c6e8)](#section/Versioning/API-Lifecycle-Policy) [![Request Access To Flink Gateway Service](https://img.shields.io/badge/-Request%20Access%20To%20Flink%20Gateway%20Service-%23bc8540)](mailto:ccloud-api-access+v1alpha1-early-access@confluent.io?subject=Request%20to%20join%20v1alpha1%20API%20Early%20Access&body=I%E2%80%99d%20like%20to%20join%20the%20Confluent%20Cloud%20API%20Early%20Access%20for%20v1alpha1%20to%20provide%20early%20feedback%21%20My%20Cloud%20Organization%20ID%20is%20%3Cretrieve%20from%20https%3A//confluent.cloud/settings/billing/payment%3E.)
+        [![Early Access](https://img.shields.io/badge/Lifecycle%20Stage-Early%20Access-%2345c6e8)](#section/Versioning/API-Lifecycle-Policy) [![Request Access To Flink Gateway API](https://img.shields.io/badge/-Request%20Access%20To%20Flink%20Gateway%20API-%23bc8540)](mailto:ccloud-api-access+sql-v1alpha1-early-access@confluent.io?subject=Request%20to%20join%20sql/v1alpha1%20API%20Early%20Access&body=I%E2%80%99d%20like%20to%20join%20the%20Confluent%20Cloud%20API%20Early%20Access%20for%20sql/v1alpha1%20to%20provide%20early%20feedback%21%20My%20Cloud%20Organization%20ID%20is%20%3Cretrieve%20from%20https%3A//confluent.cloud/settings/billing/payment%3E.)
 
         Make a request to create a statement.
-      operationId: createV1alpha1Statement
-      parameters:
-      - description: The Org
-        explode: false
-        in: path
-        name: org_id
-        required: true
-        schema:
-          type: string
-        style: simple
-      - description: The Env
-        explode: false
-        in: path
-        name: env_id
-        required: true
-        schema:
-          type: string
-        style: simple
+      operationId: createSqlV1alpha1Statement
       requestBody:
         content:
           application/json:
             schema:
               allOf:
-              - $ref: '#/components/schemas/v1alpha1.Statement'
-              - required:
-                - compute_pool_id
-                - id
-                - id
-                - statement
+              - $ref: '#/components/schemas/sql.v1alpha1.Statement'
+              - properties:
+                  spec:
+                    required:
+                    - compute_pool
+                    - environment
+                    - statement
+                    - statement_name
+                    type: object
+                required:
+                - spec
+                type: object
+              - properties:
+                  spec:
+                    properties:
+                      environment:
+                        example:
+                          id: env-00000
+                      compute_pool:
+                        example:
+                          id: fcp-00000
+                    type: object
                 type: object
       responses:
-        "201":
+        "202":
           content:
             application/json:
               schema:
                 allOf:
-                - $ref: '#/components/schemas/v1alpha1.Statement'
-                - required:
-                  - compute_pool_id
-                  - id
-                  - id
-                  - statement
+                - $ref: '#/components/schemas/sql.v1alpha1.Statement'
+                - properties:
+                    spec:
+                      required:
+                      - compute_pool
+                      - environment
+                      - statement
+                      - statement_name
+                      type: object
+                  required:
+                  - spec
                   - status
                   type: object
-          description: A Statement was created.
+                - properties:
+                    spec:
+                      properties:
+                        environment:
+                          example:
+                            id: env-00000
+                            related: https://flink.region.provider.confluent.cloud/v2/environments/env-00000
+                            resource_name: https://flink.region.provider.confluent.cloud/organization=9bb441c4-edef-46ac-8a41-c49e44a3fd9a/environment=env-00000
+                        compute_pool:
+                          example:
+                            id: fcp-00000
+                            related: https://flink.region.provider.confluent.cloud/v2/compute-pools/fcp-00000
+                            resource_name: https://flink.region.provider.confluent.cloud/organization=9bb441c4-edef-46ac-8a41-c49e44a3fd9a/environment=env-abc123/flink=fcp-00000
+                      type: object
+                  type: object
+          description: A Statement is being created.
           headers:
             X-Request-Id:
               description: The unique identifier for the API request.
@@ -343,7 +410,7 @@ paths:
               description: Statement resource uri
               explode: false
               schema:
-                example: https://api.confluent.cloud/v1alpha1/org/{org_id}/env/{env_id}/statements/{id}
+                example: https://flink.region.provider.confluent.cloud/sql/v1alpha1/statements/{id}
                 format: uri
                 type: string
               style: simple
@@ -447,7 +514,7 @@ paths:
               description: Resource URI of conflicting resource
               explode: false
               schema:
-                example: https://api.confluent.cloud/{object}/{id}
+                example: https://flink.region.provider.confluent.cloud/{object}/{id}
                 format: uri
                 type: string
               style: simple
@@ -507,26 +574,27 @@ paths:
               style: simple
       security:
       - api-key: []
+      - confluent-sts-access-token: []
       summary: Create a Statement
       tags:
-      - Statements (v1alpha1)
-      x-request-access-name: Flink Gateway Service
+      - Statements (sql/v1alpha1)
+      x-request-access-name: Flink Gateway API
       x-codeSamples:
       - lang: Shell
         source: |-
           curl --request POST \
-            --url https://api.confluent.cloud/v1alpha1/org/%7Borg_id%7D/env/%7Benv_id%7D/statements \
+            --url https://flink.region.provider.confluent.cloud/sql/v1alpha1/statements \
             --header 'Authorization: Basic REPLACE_BASIC_AUTH' \
             --header 'content-type: application/json' \
-            --data '{"id":"sql123","properties":[{"key":"key123","value":"value123"}],"compute_pool_id":123456789,"statement":"SELECT * FROM TABLE WHERE VALUE1 = VALUE2;"}'
+            --data '{"spec":{"statement_name":"sql123","statement":"SELECT * FROM TABLE WHERE VALUE1 = VALUE2;","properties":{"key_1":"value_1","key_2":"value_2"},"environment":{"id":"env-00000"},"compute_pool":{"id":"fcp-00000","environment":"string"}}}'
       - lang: Java
         source: |-
           OkHttpClient client = new OkHttpClient();
 
           MediaType mediaType = MediaType.parse("application/json");
-          RequestBody body = RequestBody.create(mediaType, "{\"id\":\"sql123\",\"properties\":[{\"key\":\"key123\",\"value\":\"value123\"}],\"compute_pool_id\":123456789,\"statement\":\"SELECT * FROM TABLE WHERE VALUE1 = VALUE2;\"}");
+          RequestBody body = RequestBody.create(mediaType, "{\"spec\":{\"statement_name\":\"sql123\",\"statement\":\"SELECT * FROM TABLE WHERE VALUE1 = VALUE2;\",\"properties\":{\"key_1\":\"value_1\",\"key_2\":\"value_2\"},\"environment\":{\"id\":\"env-00000\"},\"compute_pool\":{\"id\":\"fcp-00000\",\"environment\":\"string\"}}}");
           Request request = new Request.Builder()
-            .url("https://api.confluent.cloud/v1alpha1/org/%7Borg_id%7D/env/%7Benv_id%7D/statements")
+            .url("https://flink.region.provider.confluent.cloud/sql/v1alpha1/statements")
             .post(body)
             .addHeader("content-type", "application/json")
             .addHeader("Authorization", "Basic REPLACE_BASIC_AUTH")
@@ -535,29 +603,31 @@ paths:
           Response response = client.newCall(request).execute();
       - lang: Go
         source: "package main\n\nimport (\n\t\"fmt\"\n\t\"strings\"\n\t\"net/http\"\
-          \n\t\"io/ioutil\"\n)\n\nfunc main() {\n\n\turl := \"https://api.confluent.cloud/v1alpha1/org/%7Borg_id%7D/env/%7Benv_id%7D/statements\"\
-          \n\n\tpayload := strings.NewReader(\"{\\\"id\\\":\\\"sql123\\\",\\\"properties\\\
-          \":[{\\\"key\\\":\\\"key123\\\",\\\"value\\\":\\\"value123\\\"}],\\\"compute_pool_id\\\
-          \":123456789,\\\"statement\\\":\\\"SELECT * FROM TABLE WHERE VALUE1 = VALUE2;\\\
-          \"}\")\n\n\treq, _ := http.NewRequest(\"POST\", url, payload)\n\n\treq.Header.Add(\"\
-          content-type\", \"application/json\")\n\treq.Header.Add(\"Authorization\"\
-          , \"Basic REPLACE_BASIC_AUTH\")\n\n\tres, _ := http.DefaultClient.Do(req)\n\
+          \n\t\"io/ioutil\"\n)\n\nfunc main() {\n\n\turl := \"https://flink.region.provider.confluent.cloud/sql/v1alpha1/statements\"\
+          \n\n\tpayload := strings.NewReader(\"{\\\"spec\\\":{\\\"statement_name\\\
+          \":\\\"sql123\\\",\\\"statement\\\":\\\"SELECT * FROM TABLE WHERE VALUE1\
+          \ = VALUE2;\\\",\\\"properties\\\":{\\\"key_1\\\":\\\"value_1\\\",\\\"key_2\\\
+          \":\\\"value_2\\\"},\\\"environment\\\":{\\\"id\\\":\\\"env-00000\\\"},\\\
+          \"compute_pool\\\":{\\\"id\\\":\\\"fcp-00000\\\",\\\"environment\\\":\\\"\
+          string\\\"}}}\")\n\n\treq, _ := http.NewRequest(\"POST\", url, payload)\n\
+          \n\treq.Header.Add(\"content-type\", \"application/json\")\n\treq.Header.Add(\"\
+          Authorization\", \"Basic REPLACE_BASIC_AUTH\")\n\n\tres, _ := http.DefaultClient.Do(req)\n\
           \n\tdefer res.Body.Close()\n\tbody, _ := ioutil.ReadAll(res.Body)\n\n\t\
           fmt.Println(res)\n\tfmt.Println(string(body))\n\n}"
       - lang: Python
         source: |-
           import http.client
 
-          conn = http.client.HTTPSConnection("api.confluent.cloud")
+          conn = http.client.HTTPSConnection("flink.region.provider.confluent.cloud")
 
-          payload = "{\"id\":\"sql123\",\"properties\":[{\"key\":\"key123\",\"value\":\"value123\"}],\"compute_pool_id\":123456789,\"statement\":\"SELECT * FROM TABLE WHERE VALUE1 = VALUE2;\"}"
+          payload = "{\"spec\":{\"statement_name\":\"sql123\",\"statement\":\"SELECT * FROM TABLE WHERE VALUE1 = VALUE2;\",\"properties\":{\"key_1\":\"value_1\",\"key_2\":\"value_2\"},\"environment\":{\"id\":\"env-00000\"},\"compute_pool\":{\"id\":\"fcp-00000\",\"environment\":\"string\"}}}"
 
           headers = {
               'content-type': "application/json",
               'Authorization': "Basic REPLACE_BASIC_AUTH"
               }
 
-          conn.request("POST", "/v1alpha1/org/%7Borg_id%7D/env/%7Benv_id%7D/statements", payload, headers)
+          conn.request("POST", "/sql/v1alpha1/statements", payload, headers)
 
           res = conn.getresponse()
           data = res.read()
@@ -569,9 +639,9 @@ paths:
 
           const options = {
             "method": "POST",
-            "hostname": "api.confluent.cloud",
+            "hostname": "flink.region.provider.confluent.cloud",
             "port": null,
-            "path": "/v1alpha1/org/%7Borg_id%7D/env/%7Benv_id%7D/statements",
+            "path": "/sql/v1alpha1/statements",
             "headers": {
               "content-type": "application/json",
               "Authorization": "Basic REPLACE_BASIC_AUTH"
@@ -592,10 +662,13 @@ paths:
           });
 
           req.write(JSON.stringify({
-            id: 'sql123',
-            properties: [{key: 'key123', value: 'value123'}],
-            compute_pool_id: 123456789,
-            statement: 'SELECT * FROM TABLE WHERE VALUE1 = VALUE2;'
+            spec: {
+              statement_name: 'sql123',
+              statement: 'SELECT * FROM TABLE WHERE VALUE1 = VALUE2;',
+              properties: {key_1: 'value_1', key_2: 'value_2'},
+              environment: {id: 'env-00000'},
+              compute_pool: {id: 'fcp-00000', environment: 'string'}
+            }
           }));
           req.end();
       - lang: C
@@ -603,49 +676,51 @@ paths:
           CURL *hnd = curl_easy_init();
 
           curl_easy_setopt(hnd, CURLOPT_CUSTOMREQUEST, "POST");
-          curl_easy_setopt(hnd, CURLOPT_URL, "https://api.confluent.cloud/v1alpha1/org/%7Borg_id%7D/env/%7Benv_id%7D/statements");
+          curl_easy_setopt(hnd, CURLOPT_URL, "https://flink.region.provider.confluent.cloud/sql/v1alpha1/statements");
 
           struct curl_slist *headers = NULL;
           headers = curl_slist_append(headers, "content-type: application/json");
           headers = curl_slist_append(headers, "Authorization: Basic REPLACE_BASIC_AUTH");
           curl_easy_setopt(hnd, CURLOPT_HTTPHEADER, headers);
 
-          curl_easy_setopt(hnd, CURLOPT_POSTFIELDS, "{\"id\":\"sql123\",\"properties\":[{\"key\":\"key123\",\"value\":\"value123\"}],\"compute_pool_id\":123456789,\"statement\":\"SELECT * FROM TABLE WHERE VALUE1 = VALUE2;\"}");
+          curl_easy_setopt(hnd, CURLOPT_POSTFIELDS, "{\"spec\":{\"statement_name\":\"sql123\",\"statement\":\"SELECT * FROM TABLE WHERE VALUE1 = VALUE2;\",\"properties\":{\"key_1\":\"value_1\",\"key_2\":\"value_2\"},\"environment\":{\"id\":\"env-00000\"},\"compute_pool\":{\"id\":\"fcp-00000\",\"environment\":\"string\"}}}");
 
           CURLcode ret = curl_easy_perform(hnd);
       - lang: C#
         source: |-
-          var client = new RestClient("https://api.confluent.cloud/v1alpha1/org/%7Borg_id%7D/env/%7Benv_id%7D/statements");
+          var client = new RestClient("https://flink.region.provider.confluent.cloud/sql/v1alpha1/statements");
           var request = new RestRequest(Method.POST);
           request.AddHeader("content-type", "application/json");
           request.AddHeader("Authorization", "Basic REPLACE_BASIC_AUTH");
-          request.AddParameter("application/json", "{\"id\":\"sql123\",\"properties\":[{\"key\":\"key123\",\"value\":\"value123\"}],\"compute_pool_id\":123456789,\"statement\":\"SELECT * FROM TABLE WHERE VALUE1 = VALUE2;\"}", ParameterType.RequestBody);
+          request.AddParameter("application/json", "{\"spec\":{\"statement_name\":\"sql123\",\"statement\":\"SELECT * FROM TABLE WHERE VALUE1 = VALUE2;\",\"properties\":{\"key_1\":\"value_1\",\"key_2\":\"value_2\"},\"environment\":{\"id\":\"env-00000\"},\"compute_pool\":{\"id\":\"fcp-00000\",\"environment\":\"string\"}}}", ParameterType.RequestBody);
           IRestResponse response = client.Execute(request);
-    x-request-access-name: Flink Gateway Service
-  /v1alpha1/org/{org_id}/env/{env_id}/statements/{id}:
+    x-request-access-name: Flink Gateway API
+  /sql/v1alpha1/statements/{id}:
     delete:
       description: |-
-        [![Early Access](https://img.shields.io/badge/Lifecycle%20Stage-Early%20Access-%2345c6e8)](#section/Versioning/API-Lifecycle-Policy) [![Request Access To Flink Gateway Service](https://img.shields.io/badge/-Request%20Access%20To%20Flink%20Gateway%20Service-%23bc8540)](mailto:ccloud-api-access+v1alpha1-early-access@confluent.io?subject=Request%20to%20join%20v1alpha1%20API%20Early%20Access&body=I%E2%80%99d%20like%20to%20join%20the%20Confluent%20Cloud%20API%20Early%20Access%20for%20v1alpha1%20to%20provide%20early%20feedback%21%20My%20Cloud%20Organization%20ID%20is%20%3Cretrieve%20from%20https%3A//confluent.cloud/settings/billing/payment%3E.)
+        [![Early Access](https://img.shields.io/badge/Lifecycle%20Stage-Early%20Access-%2345c6e8)](#section/Versioning/API-Lifecycle-Policy) [![Request Access To Flink Gateway API](https://img.shields.io/badge/-Request%20Access%20To%20Flink%20Gateway%20API-%23bc8540)](mailto:ccloud-api-access+sql-v1alpha1-early-access@confluent.io?subject=Request%20to%20join%20sql/v1alpha1%20API%20Early%20Access&body=I%E2%80%99d%20like%20to%20join%20the%20Confluent%20Cloud%20API%20Early%20Access%20for%20sql/v1alpha1%20to%20provide%20early%20feedback%21%20My%20Cloud%20Organization%20ID%20is%20%3Cretrieve%20from%20https%3A//confluent.cloud/settings/billing/payment%3E.)
 
         Make a request to delete a statement.
-      operationId: deleteV1alpha1Statement
+      operationId: deleteSqlV1alpha1Statement
       parameters:
-      - description: The Org
-        explode: false
-        in: path
-        name: org_id
+      - description: Scope the operation to the given environment.
+        example: env-00000
+        explode: true
+        in: query
+        name: environment
         required: true
         schema:
-          type: string
-        style: simple
-      - description: The Env
-        explode: false
-        in: path
-        name: env_id
+          $ref: '#/components/schemas/SearchFilter'
+        style: form
+      - description: Scope the operation to the given spec.compute_pool.
+        example: fcp-00000
+        explode: true
+        in: query
+        name: spec.compute_pool
         required: true
         schema:
-          type: string
-        style: simple
+          $ref: '#/components/schemas/SearchFilter'
+        style: form
       - description: The unique identifier for the statement.
         explode: false
         in: path
@@ -789,22 +864,23 @@ paths:
               style: simple
       security:
       - api-key: []
+      - confluent-sts-access-token: []
       summary: Delete a Statement
       tags:
-      - Statements (v1alpha1)
-      x-request-access-name: Flink Gateway Service
+      - Statements (sql/v1alpha1)
+      x-request-access-name: Flink Gateway API
       x-codeSamples:
       - lang: Shell
         source: |-
           curl --request DELETE \
-            --url https://api.confluent.cloud/v1alpha1/org/%7Borg_id%7D/env/%7Benv_id%7D/statements/%7Bid%7D \
+            --url 'https://flink.region.provider.confluent.cloud/sql/v1alpha1/statements/%7Bid%7D?environment=env-00000&spec.compute_pool=fcp-00000' \
             --header 'Authorization: Basic REPLACE_BASIC_AUTH'
       - lang: Java
         source: |-
           OkHttpClient client = new OkHttpClient();
 
           Request request = new Request.Builder()
-            .url("https://api.confluent.cloud/v1alpha1/org/%7Borg_id%7D/env/%7Benv_id%7D/statements/%7Bid%7D")
+            .url("https://flink.region.provider.confluent.cloud/sql/v1alpha1/statements/%7Bid%7D?environment=env-00000&spec.compute_pool=fcp-00000")
             .delete(null)
             .addHeader("Authorization", "Basic REPLACE_BASIC_AUTH")
             .build();
@@ -812,7 +888,7 @@ paths:
           Response response = client.newCall(request).execute();
       - lang: Go
         source: "package main\n\nimport (\n\t\"fmt\"\n\t\"net/http\"\n\t\"io/ioutil\"\
-          \n)\n\nfunc main() {\n\n\turl := \"https://api.confluent.cloud/v1alpha1/org/%7Borg_id%7D/env/%7Benv_id%7D/statements/%7Bid%7D\"\
+          \n)\n\nfunc main() {\n\n\turl := \"https://flink.region.provider.confluent.cloud/sql/v1alpha1/statements/%7Bid%7D?environment=env-00000&spec.compute_pool=fcp-00000\"\
           \n\n\treq, _ := http.NewRequest(\"DELETE\", url, nil)\n\n\treq.Header.Add(\"\
           Authorization\", \"Basic REPLACE_BASIC_AUTH\")\n\n\tres, _ := http.DefaultClient.Do(req)\n\
           \n\tdefer res.Body.Close()\n\tbody, _ := ioutil.ReadAll(res.Body)\n\n\t\
@@ -821,11 +897,11 @@ paths:
         source: |-
           import http.client
 
-          conn = http.client.HTTPSConnection("api.confluent.cloud")
+          conn = http.client.HTTPSConnection("flink.region.provider.confluent.cloud")
 
           headers = { 'Authorization': "Basic REPLACE_BASIC_AUTH" }
 
-          conn.request("DELETE", "/v1alpha1/org/%7Borg_id%7D/env/%7Benv_id%7D/statements/%7Bid%7D", headers=headers)
+          conn.request("DELETE", "/sql/v1alpha1/statements/%7Bid%7D?environment=env-00000&spec.compute_pool=fcp-00000", headers=headers)
 
           res = conn.getresponse()
           data = res.read()
@@ -837,9 +913,9 @@ paths:
 
           const options = {
             "method": "DELETE",
-            "hostname": "api.confluent.cloud",
+            "hostname": "flink.region.provider.confluent.cloud",
             "port": null,
-            "path": "/v1alpha1/org/%7Borg_id%7D/env/%7Benv_id%7D/statements/%7Bid%7D",
+            "path": "/sql/v1alpha1/statements/%7Bid%7D?environment=env-00000&spec.compute_pool=fcp-00000",
             "headers": {
               "Authorization": "Basic REPLACE_BASIC_AUTH"
             }
@@ -864,7 +940,7 @@ paths:
           CURL *hnd = curl_easy_init();
 
           curl_easy_setopt(hnd, CURLOPT_CUSTOMREQUEST, "DELETE");
-          curl_easy_setopt(hnd, CURLOPT_URL, "https://api.confluent.cloud/v1alpha1/org/%7Borg_id%7D/env/%7Benv_id%7D/statements/%7Bid%7D");
+          curl_easy_setopt(hnd, CURLOPT_URL, "https://flink.region.provider.confluent.cloud/sql/v1alpha1/statements/%7Bid%7D?environment=env-00000&spec.compute_pool=fcp-00000");
 
           struct curl_slist *headers = NULL;
           headers = curl_slist_append(headers, "Authorization: Basic REPLACE_BASIC_AUTH");
@@ -873,33 +949,35 @@ paths:
           CURLcode ret = curl_easy_perform(hnd);
       - lang: C#
         source: |-
-          var client = new RestClient("https://api.confluent.cloud/v1alpha1/org/%7Borg_id%7D/env/%7Benv_id%7D/statements/%7Bid%7D");
+          var client = new RestClient("https://flink.region.provider.confluent.cloud/sql/v1alpha1/statements/%7Bid%7D?environment=env-00000&spec.compute_pool=fcp-00000");
           var request = new RestRequest(Method.DELETE);
           request.AddHeader("Authorization", "Basic REPLACE_BASIC_AUTH");
           IRestResponse response = client.Execute(request);
     get:
       description: |-
-        [![Early Access](https://img.shields.io/badge/Lifecycle%20Stage-Early%20Access-%2345c6e8)](#section/Versioning/API-Lifecycle-Policy) [![Request Access To Flink Gateway Service](https://img.shields.io/badge/-Request%20Access%20To%20Flink%20Gateway%20Service-%23bc8540)](mailto:ccloud-api-access+v1alpha1-early-access@confluent.io?subject=Request%20to%20join%20v1alpha1%20API%20Early%20Access&body=I%E2%80%99d%20like%20to%20join%20the%20Confluent%20Cloud%20API%20Early%20Access%20for%20v1alpha1%20to%20provide%20early%20feedback%21%20My%20Cloud%20Organization%20ID%20is%20%3Cretrieve%20from%20https%3A//confluent.cloud/settings/billing/payment%3E.)
+        [![Early Access](https://img.shields.io/badge/Lifecycle%20Stage-Early%20Access-%2345c6e8)](#section/Versioning/API-Lifecycle-Policy) [![Request Access To Flink Gateway API](https://img.shields.io/badge/-Request%20Access%20To%20Flink%20Gateway%20API-%23bc8540)](mailto:ccloud-api-access+sql-v1alpha1-early-access@confluent.io?subject=Request%20to%20join%20sql/v1alpha1%20API%20Early%20Access&body=I%E2%80%99d%20like%20to%20join%20the%20Confluent%20Cloud%20API%20Early%20Access%20for%20sql/v1alpha1%20to%20provide%20early%20feedback%21%20My%20Cloud%20Organization%20ID%20is%20%3Cretrieve%20from%20https%3A//confluent.cloud/settings/billing/payment%3E.)
 
         Make a request to read a statement.
-      operationId: getV1alpha1Statement
+      operationId: getSqlV1alpha1Statement
       parameters:
-      - description: The Org
-        explode: false
-        in: path
-        name: org_id
+      - description: Scope the operation to the given environment.
+        example: env-00000
+        explode: true
+        in: query
+        name: environment
         required: true
         schema:
-          type: string
-        style: simple
-      - description: The Env
-        explode: false
-        in: path
-        name: env_id
+          $ref: '#/components/schemas/SearchFilter'
+        style: form
+      - description: Scope the operation to the given spec.compute_pool.
+        example: fcp-00000
+        explode: true
+        in: query
+        name: spec.compute_pool
         required: true
         schema:
-          type: string
-        style: simple
+          $ref: '#/components/schemas/SearchFilter'
+        style: form
       - description: The unique identifier for the statement.
         explode: false
         in: path
@@ -914,16 +992,36 @@ paths:
             application/json:
               schema:
                 allOf:
-                - $ref: '#/components/schemas/v1alpha1.Statement'
-                - required:
+                - $ref: '#/components/schemas/sql.v1alpha1.Statement'
+                - properties:
+                    spec:
+                      required:
+                      - compute_pool
+                      - environment
+                      - statement
+                      - statement_name
+                      type: object
+                  required:
                   - api_version
-                  - compute_pool_id
-                  - id
                   - id
                   - kind
-                  - statement
-                  - statement_kind
+                  - spec
                   - status
+                  type: object
+                - properties:
+                    spec:
+                      properties:
+                        environment:
+                          example:
+                            id: env-00000
+                            related: https://flink.region.provider.confluent.cloud/v2/environments/env-00000
+                            resource_name: https://flink.region.provider.confluent.cloud/organization=9bb441c4-edef-46ac-8a41-c49e44a3fd9a/environment=env-00000
+                        compute_pool:
+                          example:
+                            id: fcp-00000
+                            related: https://flink.region.provider.confluent.cloud/v2/compute-pools/fcp-00000
+                            resource_name: https://flink.region.provider.confluent.cloud/organization=9bb441c4-edef-46ac-8a41-c49e44a3fd9a/environment=env-abc123/flink=fcp-00000
+                      type: object
                   type: object
           description: Statement.
           headers:
@@ -1058,22 +1156,23 @@ paths:
               style: simple
       security:
       - api-key: []
+      - confluent-sts-access-token: []
       summary: Read a Statement
       tags:
-      - Statements (v1alpha1)
-      x-request-access-name: Flink Gateway Service
+      - Statements (sql/v1alpha1)
+      x-request-access-name: Flink Gateway API
       x-codeSamples:
       - lang: Shell
         source: |-
           curl --request GET \
-            --url https://api.confluent.cloud/v1alpha1/org/%7Borg_id%7D/env/%7Benv_id%7D/statements/%7Bid%7D \
+            --url 'https://flink.region.provider.confluent.cloud/sql/v1alpha1/statements/%7Bid%7D?environment=env-00000&spec.compute_pool=fcp-00000' \
             --header 'Authorization: Basic REPLACE_BASIC_AUTH'
       - lang: Java
         source: |-
           OkHttpClient client = new OkHttpClient();
 
           Request request = new Request.Builder()
-            .url("https://api.confluent.cloud/v1alpha1/org/%7Borg_id%7D/env/%7Benv_id%7D/statements/%7Bid%7D")
+            .url("https://flink.region.provider.confluent.cloud/sql/v1alpha1/statements/%7Bid%7D?environment=env-00000&spec.compute_pool=fcp-00000")
             .get()
             .addHeader("Authorization", "Basic REPLACE_BASIC_AUTH")
             .build();
@@ -1081,7 +1180,7 @@ paths:
           Response response = client.newCall(request).execute();
       - lang: Go
         source: "package main\n\nimport (\n\t\"fmt\"\n\t\"net/http\"\n\t\"io/ioutil\"\
-          \n)\n\nfunc main() {\n\n\turl := \"https://api.confluent.cloud/v1alpha1/org/%7Borg_id%7D/env/%7Benv_id%7D/statements/%7Bid%7D\"\
+          \n)\n\nfunc main() {\n\n\turl := \"https://flink.region.provider.confluent.cloud/sql/v1alpha1/statements/%7Bid%7D?environment=env-00000&spec.compute_pool=fcp-00000\"\
           \n\n\treq, _ := http.NewRequest(\"GET\", url, nil)\n\n\treq.Header.Add(\"\
           Authorization\", \"Basic REPLACE_BASIC_AUTH\")\n\n\tres, _ := http.DefaultClient.Do(req)\n\
           \n\tdefer res.Body.Close()\n\tbody, _ := ioutil.ReadAll(res.Body)\n\n\t\
@@ -1090,11 +1189,11 @@ paths:
         source: |-
           import http.client
 
-          conn = http.client.HTTPSConnection("api.confluent.cloud")
+          conn = http.client.HTTPSConnection("flink.region.provider.confluent.cloud")
 
           headers = { 'Authorization': "Basic REPLACE_BASIC_AUTH" }
 
-          conn.request("GET", "/v1alpha1/org/%7Borg_id%7D/env/%7Benv_id%7D/statements/%7Bid%7D", headers=headers)
+          conn.request("GET", "/sql/v1alpha1/statements/%7Bid%7D?environment=env-00000&spec.compute_pool=fcp-00000", headers=headers)
 
           res = conn.getresponse()
           data = res.read()
@@ -1106,9 +1205,9 @@ paths:
 
           const options = {
             "method": "GET",
-            "hostname": "api.confluent.cloud",
+            "hostname": "flink.region.provider.confluent.cloud",
             "port": null,
-            "path": "/v1alpha1/org/%7Borg_id%7D/env/%7Benv_id%7D/statements/%7Bid%7D",
+            "path": "/sql/v1alpha1/statements/%7Bid%7D?environment=env-00000&spec.compute_pool=fcp-00000",
             "headers": {
               "Authorization": "Basic REPLACE_BASIC_AUTH"
             }
@@ -1133,7 +1232,7 @@ paths:
           CURL *hnd = curl_easy_init();
 
           curl_easy_setopt(hnd, CURLOPT_CUSTOMREQUEST, "GET");
-          curl_easy_setopt(hnd, CURLOPT_URL, "https://api.confluent.cloud/v1alpha1/org/%7Borg_id%7D/env/%7Benv_id%7D/statements/%7Bid%7D");
+          curl_easy_setopt(hnd, CURLOPT_URL, "https://flink.region.provider.confluent.cloud/sql/v1alpha1/statements/%7Bid%7D?environment=env-00000&spec.compute_pool=fcp-00000");
 
           struct curl_slist *headers = NULL;
           headers = curl_slist_append(headers, "Authorization: Basic REPLACE_BASIC_AUTH");
@@ -1142,11 +1241,11 @@ paths:
           CURLcode ret = curl_easy_perform(hnd);
       - lang: C#
         source: |-
-          var client = new RestClient("https://api.confluent.cloud/v1alpha1/org/%7Borg_id%7D/env/%7Benv_id%7D/statements/%7Bid%7D");
+          var client = new RestClient("https://flink.region.provider.confluent.cloud/sql/v1alpha1/statements/%7Bid%7D?environment=env-00000&spec.compute_pool=fcp-00000");
           var request = new RestRequest(Method.GET);
           request.AddHeader("Authorization", "Basic REPLACE_BASIC_AUTH");
           IRestResponse response = client.Execute(request);
-    x-request-access-name: Flink Gateway Service
+    x-request-access-name: Flink Gateway API
 components:
   responses:
     BadRequestError:
@@ -1267,7 +1366,7 @@ components:
           description: Resource URI of conflicting resource
           explode: false
           schema:
-            example: https://api.confluent.cloud/{object}/{id}
+            example: https://flink.region.provider.confluent.cloud/{object}/{id}
             format: uri
             type: string
           style: simple
@@ -1344,19 +1443,23 @@ components:
             type: string
           style: simple
   schemas:
-    v1alpha1.Statement:
+    sql.v1alpha1.Statement:
       description: |-
-        This API is used to submit and execute all Flink DDL/DML SQL statements.
+        `Statement` represents a core resource used to model SQL statements for execution.
+        A statement generalizes DDL, DML, DQL, etc., but doesn’t attempt to handle session
+        management or any higher-level functionality.
+
+        The API allows you to list, create, read, and delete your statements.
 
 
         ## The Statements Model
-        <SchemaDefinition schemaRef="#/components/schemas/v1alpha1.Statement" />
+        <SchemaDefinition schemaRef="#/components/schemas/sql.v1alpha1.Statement" />
       properties:
         api_version:
           description: APIVersion defines the schema version of this representation
             of a resource.
           enum:
-          - v1alpha1
+          - sql/v1alpha1
           readOnly: true
           type: string
         kind:
@@ -1366,115 +1469,86 @@ components:
           readOnly: true
           type: string
         id:
-          description: ID of the SQL statement
-          example: sql123
+          description: ID is the "natural identifier" for an object within its scope/namespace;
+            it is normally unique across time but not space. That is, you can assume
+            that the ID will not be reclaimed and reused after an object is deleted
+            ("time"); however, it may collide with IDs for other object `kinds` or
+            objects of the same `kind` within a different scope/namespace ("space").
+          example: dlz-f3a90de
+          maxLength: 255
+          readOnly: true
           type: string
-          x-immutable: true
         metadata:
           allOf:
           - $ref: '#/components/schemas/ObjectMeta'
           - properties:
               self:
-                example: https://api.confluent.cloud/v1alpha1/statements/s-12345
+                example: https://flink.region.provider.confluent.cloud/sql/v1alpha1/statements/s-12345
               resource_name:
                 example: crn://confluent.cloud/organization=9bb441c4-edef-46ac-8a41-c49e44a3fd9a/statement=s-12345
-        properties:
-          allOf:
-          - $ref: '#/components/schemas/v1alpha.Properties'
-          description: Request/client properties.
-        compute_pool_id:
-          description: The SQL statement will be executed under the scope of this
-            compute pool id.
-          example: "123456789"
-          type: string
-        statement:
-          description: SQL statement executed.
-          example: SELECT * FROM TABLE WHERE VALUE1 = VALUE2;
-          type: string
-          x-immutable: true
-        statement_kind:
-          description: Type of the SQL statement as identified.
-          readOnly: true
-          type: string
-          x-extensible-enum:
-          - unknown
-          - create_table
-          - create_database
-          - create_view
-          - drop_table
-          - drop_database
-          - drop_view
-          - alter_table
-          - alter_view
-          - show_catalogs
-          - show_current_catalog
-          - show_databases
-          - show_current_database
-          - show_tables
-          - show_create_table
-          - show_views
-          - show_functions
-          - show_modules
-          - show_jars
-          - compiled_plan
-          - error
+        spec:
+          $ref: '#/components/schemas/sql.v1alpha1.StatementSpec'
         status:
-          $ref: '#/components/schemas/v1alpha1.StatementStatus'
+          $ref: '#/components/schemas/sql.v1alpha1.StatementStatus'
       type: object
-    v1alpha1.StatementStatus:
+    sql.v1alpha1.StatementStatus:
       description: The status of the Statement
       properties:
         phase:
-          description: Denotes the current state of the submitted SQL job.
-          example: pending
+          description: |
+            The lifecyle phase of the submitted SQL statement:
+
+            PENDING: SQL statement is pending execution;
+
+            RUNNING: SQL statement execution is in progress;
+
+            COMPLETED: SQL statement is completed;
+
+            DELETING: SQL statement deletion is in progress;
+
+            FAILED: SQL statement execution has failed;
+          example: RUNNING
           readOnly: true
           type: string
           x-extensible-enum:
-          - pending
-          - running
-          - completed
-          - deleting
-          - failed
-        detail:
-          description: Error details if phase is "failed". For other phase states,
-            it will contain human readable description of what each state represents.
-          example: The SQL statement is pending execution.
+          - PENDING
+          - READY
+          - FAILED
+          - DEPROVISIONING
+        error_message:
+          description: Displayable error message if SQL statement is in a failed state
+          example: 'Could not execute a SQL statement: OOM'
+          readOnly: true
           type: string
       readOnly: true
       required:
       - phase
       type: object
-    v1alpha.Properties:
-      description: Request/client properties.
+    MultipleSearchFilter:
+      description: Filter a collection by a string search for one or more values
       items:
-        $ref: '#/components/schemas/v1alpha.Property'
+        type: string
       type: array
-      uniqueItems: true
-    v1alpha.Property:
-      description: Key/value pair.
-      properties:
-        key:
-          description: Property key.
-          example: key123
-          type: string
-        value:
-          description: Property value.
-          example: value123
-          type: string
-      type: object
-    v1alpha1.StatementList:
+    SearchFilter:
+      description: Filter a collection by a string search
+      type: string
+    sql.v1alpha1.StatementList:
       description: |-
-        This API is used to submit and execute all Flink DDL/DML SQL statements.
+        `Statement` represents a core resource used to model SQL statements for execution.
+        A statement generalizes DDL, DML, DQL, etc., but doesn’t attempt to handle session
+        management or any higher-level functionality.
+
+        The API allows you to list, create, read, and delete your statements.
 
 
         ## The Statements Model
-        <SchemaDefinition schemaRef="#/components/schemas/v1alpha1.Statement" />
+        <SchemaDefinition schemaRef="#/components/schemas/sql.v1alpha1.Statement" />
       properties:
         api_version:
           description: APIVersion defines the schema version of this representation
             of a resource.
           enum:
-          - v1alpha1
+          - sql/v1alpha1
           readOnly: true
           type: string
         kind:
@@ -1488,26 +1562,31 @@ components:
           - $ref: '#/components/schemas/ListMeta'
           - properties:
               first:
-                example: https://api.confluent.cloud/v1alpha1/statements
+                example: https://flink.region.provider.confluent.cloud/sql/v1alpha1/statements
               last:
-                example: https://api.confluent.cloud/v1alpha1/statements?page_token=bcAOehAY8F16YD84Z1wT
+                example: https://flink.region.provider.confluent.cloud/sql/v1alpha1/statements?page_token=bcAOehAY8F16YD84Z1wT
               prev:
-                example: https://api.confluent.cloud/v1alpha1/statements?page_token=YIXRY97wWYmwzrax4dld
+                example: https://flink.region.provider.confluent.cloud/sql/v1alpha1/statements?page_token=YIXRY97wWYmwzrax4dld
               next:
-                example: https://api.confluent.cloud/v1alpha1/statements?page_token=UvmDWOB1iwfAIBPj6EYb
+                example: https://flink.region.provider.confluent.cloud/sql/v1alpha1/statements?page_token=UvmDWOB1iwfAIBPj6EYb
         data:
           description: A data property that contains an array of resource items. Each
             entry in the array is a separate resource.
           items:
             allOf:
-            - $ref: '#/components/schemas/v1alpha1.Statement'
-            - required:
-              - compute_pool_id
-              - id
+            - $ref: '#/components/schemas/sql.v1alpha1.Statement'
+            - properties:
+                spec:
+                  required:
+                  - compute_pool
+                  - environment
+                  - statement
+                  - statement_name
+                  type: object
+              required:
               - id
               - metadata
-              - statement
-              - statement_kind
+              - spec
               - status
               type: object
           type: array
@@ -1518,6 +1597,39 @@ components:
       - kind
       - metadata
       type: object
+    sql.v1alpha1.StatementSpec:
+      description: The desired state of the Statement
+      properties:
+        statement_name:
+          description: The name of the SQL statement.
+          example: sql123
+          type: string
+          x-immutable: true
+        statement:
+          description: SQL statement.
+          example: SELECT * FROM TABLE WHERE VALUE1 = VALUE2;
+          type: string
+          x-immutable: true
+        properties:
+          additionalProperties:
+            type: string
+          description: A map of client properties used to execute a SQL statement.
+          example:
+            key_1: value_1
+            key_2: value_2
+          type: object
+        environment:
+          allOf:
+          - $ref: '#/components/schemas/GlobalObjectReference'
+          description: The environment to which this belongs.
+        compute_pool:
+          allOf:
+          - $ref: '#/components/schemas/EnvScopedObjectReference'
+          description: The compute_pool associated with this object.
+      type: object
+      x-enable-id: true
+      x-enable-listmeta: true
+      x-enable-objectmeta: true
     ObjectMeta:
       description: ObjectMeta is metadata that all persisted resources must have,
         which includes all objects users must create.
@@ -1644,6 +1756,63 @@ components:
       - related
       - resource_name
       type: object
+    GlobalObjectReference:
+      description: ObjectReference provides information for you to locate the referred
+        object
+      properties:
+        id:
+          description: ID of the referred resource
+          maxLength: 255
+          minLength: 1
+          type: string
+        related:
+          description: API URL for accessing or modifying the referred object
+          format: uri
+          minLength: 1
+          readOnly: true
+          type: string
+        resource_name:
+          description: CRN reference to the referred resource
+          format: uri
+          minLength: 1
+          readOnly: true
+          type: string
+      required:
+      - id
+      - related
+      - resource_name
+      type: object
+    EnvScopedObjectReference:
+      description: ObjectReference provides information for you to locate the referred
+        object
+      properties:
+        id:
+          description: ID of the referred resource
+          maxLength: 255
+          minLength: 1
+          type: string
+        environment:
+          description: Environment of the referred resource, if env-scoped
+          maxLength: 255
+          minLength: 1
+          type: string
+        related:
+          description: API URL for accessing or modifying the referred object
+          format: uri
+          minLength: 1
+          readOnly: true
+          type: string
+        resource_name:
+          description: CRN reference to the referred resource
+          format: uri
+          minLength: 1
+          readOnly: true
+          type: string
+      required:
+      - id
+      - related
+      - resource_name
+      type: object
     Failure:
       description: Provides information about problems encountered while performing
         an operation.
@@ -1703,3 +1872,11 @@ components:
         Key ID as the username and API Key Secret as the password.
       scheme: basic
       type: http
+    confluent-sts-access-token:
+      description: Authenticate with Confluent API using this credentials (JSON Web
+        Tokens) following OAuth 2.0.
+      flows:
+        clientCredentials:
+          scopes: {}
+          tokenUrl: https://api.confluent.cloud/sts/v1/oauth2/token
+      type: oauth2

@@ -20,32 +20,36 @@ type TableStyle struct {
 	borders bool
 }
 
-func (t *TableController) setData(newData string) {
+func (t *TableController) setData(newData *StatementResult) {
 	t.table.Clear()
 
-	// Print interactive text table
-	for row, line := range strings.Split(newData, "\n") {
-		for column, cell := range strings.Split(line, "|") {
+	// Print header
+	for col, header := range newData.Columns {
+		tableCell := tview.NewTableCell(header).
+			SetTextColor(tcell.ColorYellow).
+			SetAlign(tview.AlignCenter).
+			SetSelectable(false)
+		t.table.SetCell(0, col, tableCell)
+	}
+	// Print content
+	for row, line := range newData.Rows {
+		for column, cell := range line {
 			color := tcell.ColorWhite
-			if row == 0 {
-				color = tcell.ColorYellow
-			} else if column == 0 {
+			if column == 0 {
 				color = tcell.ColorDarkCyan
 			}
 			align := tview.AlignLeft
-			if row == 0 {
-				align = tview.AlignCenter
-			} else if column == 0 || column >= 4 {
+			if column == 0 || column >= 4 {
 				align = tview.AlignRight
 			}
 			tableCell := tview.NewTableCell(cell).
 				SetTextColor(color).
 				SetAlign(align).
-				SetSelectable(row != 0 && column != 0)
+				SetSelectable(column != 0)
 			if column >= 1 && column <= 3 {
 				tableCell.SetExpansion(1)
 			}
-			t.table.SetCell(row, column, tableCell)
+			t.table.SetCell(row+1, column, tableCell)
 		}
 	}
 }
@@ -130,8 +134,10 @@ func (a *TableController) appInputCapture(event *tcell.EventKey) *tcell.EventKey
 		return nil
 		// TODO we have to actually go forward and backwards and not only go to the next mock
 	} else if event.Key() == tcell.KeyCtrlN || event.Key() == tcell.KeyCtrlP {
-		data := a.store.FetchData("")
-		a.setData(data)
+		data, err := a.store.ProcessQuery("")
+		if err == nil {
+			a.setData(data)
+		}
 		return nil
 	} else if event.Key() == tcell.KeyCtrlC {
 		a.onCtrlC()
@@ -141,12 +147,15 @@ func (a *TableController) appInputCapture(event *tcell.EventKey) *tcell.EventKey
 
 }
 
-func (a *TableController) PrintTable(data string) {
+func (a *TableController) PrintTable(data *StatementResult) {
 	a.setData(data)
 }
 
 func (a *TableController) fetchDataAndPrintTable() {
-	data := a.store.FetchData("")
+	data, err := a.store.ProcessQuery("")
+	if err != nil {
+		return
+	}
 	a.PrintTable(data)
 	a.focus()
 }

@@ -8,8 +8,10 @@ require (
 	github.com/c-bata/go-prompt v0.2.6
 	github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway v0.0.0-00010101000000-000000000000
 	github.com/gdamore/tcell/v2 v2.5.4
+	github.com/google/uuid v1.3.0
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/rivo/tview v0.0.0-20230104153304-892d1a2eb0da
+	github.com/samber/lo v1.37.0
 	github.com/stretchr/testify v1.8.2
 	golang.org/x/exp v0.0.0-20220303212507-bbda1eaf7a17
 	pgregory.net/rapid v0.5.5

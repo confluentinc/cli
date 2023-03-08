@@ -2,15 +2,14 @@ package controller
 
 import (
 	"errors"
-	"log"
-	"os"
-	"reflect"
-	"strings"
-
+	"fmt"
 	"github.com/c-bata/go-prompt"
 	"github.com/confluentinc/flink-sql-client/autocomplete"
 	components "github.com/confluentinc/flink-sql-client/components"
 	"github.com/olekukonko/tablewriter"
+	"log"
+	"os"
+	"reflect"
 )
 
 type InputController struct {
@@ -20,6 +19,7 @@ type InputController struct {
 	smartCompletion bool
 	table           *TableController
 	p               *prompt.Prompt
+	store           Store
 }
 
 // Actions
@@ -55,9 +55,13 @@ func (c *InputController) RunInteractiveInput() {
 
 		c.History.Append([]string{input})
 		if c.appController.getOutputMode() == GoPromptOutput {
-			data := c.table.store.FetchData(input)
+			statementResult, err := c.store.ProcessQuery(input)
+			if err != nil {
+				fmt.Println("Unable to process statement. Please check if you're using valid Flink SQL.")
+				continue
+			}
 			// Print raw text table
-			printResultToSTDOUT(data)
+			printResultToSTDOUT(statementResult)
 		}
 	}
 
@@ -67,15 +71,10 @@ func (c *InputController) RunInteractiveInput() {
 	}
 }
 
-func printResultToSTDOUT(data string) {
+func printResultToSTDOUT(data *StatementResult) {
 	rawTable := tablewriter.NewWriter(os.Stdout)
-	rawTable.SetHeader([]string{"OrderDate", "Region", "Rep", "Item", "Units", "UnitCost", "Total"})
-
-	for _, tableRow := range strings.Split(data, "\n") {
-		row := strings.Split(tableRow, "|")
-		rawTable.Append(row)
-	}
-
+	rawTable.SetHeader(data.Columns)
+	rawTable.AppendBulk(data.Rows)
 	rawTable.Render() // Send output
 }
 
@@ -182,12 +181,13 @@ func (c *InputController) GetMaxCol() (int, error) {
 	return int(maxCol), nil
 }
 
-func NewInputController(history History, t *TableController, a *ApplicationController) (c InputController) {
+func NewInputController(history History, t *TableController, a *ApplicationController, store Store) (c InputController) {
 	// Initialization
 	c.History = history
 	c.smartCompletion = true
 	c.table = t
 	c.appController = a
+	c.store = store
 	c.p = c.Prompt()
 	return c
 }
