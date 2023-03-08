@@ -34,7 +34,7 @@ func (c *Client) ListPipelines(envId, clusterId string) ([]streamdesignerv1.SdV1
 		}
 		list = append(list, page.GetData()...)
 
-		pageToken, done, err = extractSdNextPageToken(page.GetMetadata().Next)
+		pageToken, done, err = extractNextPageToken(page.GetMetadata().Next)
 		if err != nil {
 			return nil, err
 		}
@@ -94,13 +94,4 @@ func (c *Client) UpdateSdPipeline(envId, clusterId, id string, update streamdesi
 
 	resp, httpResp, err := c.StreamDesignerClient.PipelinesSdV1Api.UpdateSdV1PipelineExecute(req)
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
-}
-
-func extractSdNextPageToken(nextPageUrlStringNullable streamdesignerv1.NullableString) (string, bool, error) {
-	if !nextPageUrlStringNullable.IsSet() {
-		return "", true, nil
-	}
-	nextPageUrlString := *nextPageUrlStringNullable.Get()
-	pageToken, err := extractPageToken(nextPageUrlString)
-	return pageToken, false, err
 }
