@@ -60,6 +60,15 @@ var details = &accountDetails{
 						Schema:     `syntax = "proto3"; package com.mycorp.mynamespace; message SampleRecord { int32 my_field1 = 1; double my_field2 = 2; string my_field3 = 3;}`,
 					}, nil, nil
 				}
+				if subject == "subject-primitive" {
+					return srsdk.Schema{
+						Subject:    "subject1",
+						Version:    1,
+						Id:         1,
+						SchemaType: "avro",
+						Schema:     "string",
+					}, nil, nil
+				}
 				return srsdk.Schema{
 					Subject:    "subject1",
 					Version:    1,
@@ -259,6 +268,9 @@ func TestGetSchemaDetails(t *testing.T) {
 	details.channelDetails.currentTopic = details.topics[0]
 	schema, _, _ := details.srClient.DefaultApi.GetSchemaByVersion(*new(context.Context), "subject1", "1", nil)
 	details.channelDetails.schema = &schema
+	err = details.getSchemaDetails()
+	require.NoError(t, err)
+	details.channelDetails.currentSubject = "subject-primitive"
 	err = details.getSchemaDetails()
 	require.NoError(t, err)
 }
