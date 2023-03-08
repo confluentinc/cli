@@ -148,13 +148,7 @@ func AddContextFlag(cmd *cobra.Command, command *CLICommand) {
 }
 
 func AutocompleteContexts(cfg *v1.Config) []string {
-	suggestions := make([]string, len(cfg.Contexts))
-	i := 0
-	for ctx := range cfg.Contexts {
-		suggestions[i] = ctx
-		i++
-	}
-	return suggestions
+	return utils.GetKeys(cfg.Contexts)
 }
 
 func AddEnvironmentFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {

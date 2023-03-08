@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/pflag"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 // generateDocPage creates a file which contains the command description, usage, flags, examples, and more.
@@ -60,12 +61,7 @@ func printSphinxBlock(key, val string, args map[string]string) []string {
 		fmt.Sprintf(".. %s:: %s", key, val),
 	}
 
-	keys := make([]string, len(args))
-	i := 0
-	for key := range args {
-		keys[i] = key
-		i++
-	}
+	keys := utils.GetKeys(args)
 	sort.Strings(keys)
 
 	for _, key := range keys {

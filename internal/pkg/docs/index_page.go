@@ -11,6 +11,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 )
@@ -125,12 +126,7 @@ func printTableOfContents(tabs []Tab) []string {
 	}
 
 	// Sort names
-	names := make([]string, len(linksByName))
-	i := 0
-	for name := range linksByName {
-		names[i] = name
-		i++
-	}
+	names := utils.GetKeys(linksByName)
 	sort.Strings(names)
 
 	rows := []string{

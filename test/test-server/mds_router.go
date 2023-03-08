@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
 )
@@ -59,12 +60,7 @@ func (m MdsRouter) addRoutesAndReplies(t *testing.T, base string, routesAndRepli
 }
 
 func findAllPublicRolesSorted(rbacRoles map[string]string) []string {
-	roleNames := make([]string, len(rbacRoles))
-	i := 0
-	for roleName := range rbacRoles {
-		roleNames[i] = roleName
-		i++
-	}
+	roleNames := utils.GetKeys(rbacRoles)
 	sort.Strings(roleNames)
 
 	allRoles := make([]string, len(roleNames))
