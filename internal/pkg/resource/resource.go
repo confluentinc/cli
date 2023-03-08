@@ -15,6 +15,7 @@ const (
 	ConsumerShare         = "consumer share"
 	Context               = "context"
 	Environment           = "environment"
+	FlinkComputePool      = "Flink compute pool"
 	IdentityPool          = "identity pool"
 	IdentityProvider      = "identity provider"
 	KafkaCluster          = "Kafka cluster"
