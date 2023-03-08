@@ -18,10 +18,10 @@ func Remove(haystack []string, needle string) []string {
 	return haystack
 }
 
-func RemoveDuplicates(s []string) []string {
-	check := make(map[string]bool)
-	for _, v := range s {
-		check[v] = true
+func RemoveDuplicates(slice []string) []string {
+	m := make(map[string]bool)
+	for _, value := range slice {
+		m[value] = true
 	}
-	return GetKeys(check)
+	return GetKeys(m)
 }
