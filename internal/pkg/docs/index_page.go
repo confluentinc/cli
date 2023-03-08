@@ -8,10 +8,9 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
-	"sort"
 	"strings"
 
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/types"
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 )
@@ -125,9 +124,7 @@ func printTableOfContents(tabs []Tab) []string {
 		}
 	}
 
-	// Sort names
-	names := utils.GetKeys(linksByName)
-	sort.Strings(names)
+	names := types.GetSortedKeys(linksByName)
 
 	rows := []string{
 		".. toctree::",

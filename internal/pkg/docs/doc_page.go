@@ -4,14 +4,13 @@ import (
 	"bytes"
 	"fmt"
 	"path/filepath"
-	"sort"
 	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/types"
 )
 
 // generateDocPage creates a file which contains the command description, usage, flags, examples, and more.
@@ -61,8 +60,7 @@ func printSphinxBlock(key, val string, args map[string]string) []string {
 		fmt.Sprintf(".. %s:: %s", key, val),
 	}
 
-	keys := utils.GetKeys(args)
-	sort.Strings(keys)
+	keys := types.GetSortedKeys(args)
 
 	for _, key := range keys {
 		rows = append(rows, fmt.Sprintf("  :%s: %s", key, args[key]))

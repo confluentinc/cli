@@ -1,4 +1,4 @@
-package utils
+package types
 
 func Contains(haystack []string, needle string) bool {
 	for _, x := range haystack {
@@ -19,9 +19,6 @@ func Remove(haystack []string, needle string) []string {
 }
 
 func RemoveDuplicates(slice []string) []string {
-	m := make(map[string]bool)
-	for _, value := range slice {
-		m[value] = true
-	}
-	return GetKeys(m)
+	s := NewSet(slice...)
+	return s.Slice()
 }

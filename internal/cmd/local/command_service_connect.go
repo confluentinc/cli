@@ -16,6 +16,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/local"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/types"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -219,7 +220,7 @@ func (c *Command) runConnectConnectorLoadCommand(cmd *cobra.Command, args []stri
 
 	var configFile string
 
-	if utils.Contains(connectors, connector) {
+	if types.Contains(connectors, connector) {
 		configFile, err = c.ch.GetConnectorConfigFile(connector)
 		if err != nil {
 			return err

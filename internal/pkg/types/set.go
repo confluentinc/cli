@@ -1,10 +1,8 @@
-package set
-
-import "github.com/confluentinc/cli/internal/pkg/utils"
+package types
 
 type Set map[string]bool
 
-func New(keys ...string) Set {
+func NewSet(keys ...string) Set {
 	s := make(Set)
 	for _, key := range keys {
 		s.Add(key)
@@ -21,5 +19,5 @@ func (s Set) Contains(key string) bool {
 }
 
 func (s Set) Slice() []string {
-	return utils.GetKeys(s)
+	return GetKeys(s)
 }

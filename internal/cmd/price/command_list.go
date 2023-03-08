@@ -3,7 +3,6 @@ package price
 import (
 	"context"
 	"fmt"
-	"sort"
 	"strings"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
@@ -11,7 +10,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/types"
 )
 
 var (
@@ -65,10 +64,10 @@ var (
 )
 
 var (
-	metrics        = getSortedKeys(formatMetric)
-	clusterTypes   = getSortedValues(formatClusterTypeSerialized)
-	availabilities = getSortedKeys(formatAvailability)
-	networkTypes   = getSortedKeys(formatNetworkType)
+	metrics        = types.GetSortedKeys(formatMetric)
+	clusterTypes   = types.GetSortedValues(formatClusterTypeSerialized)
+	availabilities = types.GetSortedKeys(formatAvailability)
+	networkTypes   = types.GetSortedKeys(formatNetworkType)
 )
 
 type humanOut struct {
@@ -233,7 +232,7 @@ func filterTable(table map[string]*ccloudv1.UnitPrices, filters []string, metric
 			}
 
 			// Hide legacy cluster types unless --legacy flag is enabled
-			if utils.Contains([]string{"standard", "custom"}, fields[3]) && !legacy {
+			if types.Contains([]string{"standard", "custom"}, fields[3]) && !legacy {
 				continue
 			}
 
@@ -253,18 +252,6 @@ func filterTable(table map[string]*ccloudv1.UnitPrices, filters []string, metric
 	}
 
 	return filteredTable, nil
-}
-
-func getSortedKeys(m map[string]string) []string {
-	slice := utils.GetKeys(m)
-	sort.Strings(slice)
-	return slice
-}
-
-func getSortedValues(m map[string]string) []string {
-	slice := utils.GetValues(m)
-	sort.Strings(slice)
-	return slice
 }
 
 func printTable(cmd *cobra.Command, rows []row) error {
