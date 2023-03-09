@@ -19,6 +19,11 @@ const (
 	ccloudV2ListPageSize    = 100
 )
 
+type NullableString interface {
+	Get() *string
+	IsSet() bool
+}
+
 var Hostnames = []string{"confluent.cloud", "cpdev.cloud"}
 
 func IsCCloudURL(url string, isTest bool) bool {
@@ -72,4 +77,16 @@ func extractPageToken(nextPageUrlString string) (string, error) {
 		return "", fmt.Errorf(`could not parse the value for query parameter "%s" from %s`, pageTokenQueryParameter, nextPageUrlString)
 	}
 	return pageToken, nil
+}
+
+func extractNextPageToken(nextPageUrl NullableString) (string, bool, error) {
+	if !nextPageUrl.IsSet() {
+		return "", true, nil
+	}
+	nextPageUrlString := *nextPageUrl.Get()
+	if nextPageUrlString == "" {
+		return "", true, nil
+	}
+	pageToken, err := extractPageToken(nextPageUrlString)
+	return pageToken, false, err
 }

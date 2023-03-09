@@ -34,7 +34,7 @@ func (c *Client) ListServiceQuotas(quotaScope, kafkaCluster, environment, networ
 		}
 		list = append(list, page.GetData()...)
 
-		pageToken, done, err = extractServiceQuotaNextPageToken(page.GetMetadata().Next)
+		pageToken, done, err = extractNextPageToken(page.GetMetadata().Next)
 		if err != nil {
 			return nil, err
 		}
@@ -48,13 +48,4 @@ func (c *Client) executeListAppliedQuotas(pageToken, quotaScope, kafkaCluster, e
 		req = req.PageToken(pageToken)
 	}
 	return c.ServiceQuotaClient.AppliedQuotasServiceQuotaV1Api.ListServiceQuotaV1AppliedQuotasExecute(req)
-}
-
-func extractServiceQuotaNextPageToken(nextPageUrlStringNullable servicequotav1.NullableString) (string, bool, error) {
-	if !nextPageUrlStringNullable.IsSet() {
-		return "", true, nil
-	}
-	nextPageUrlString := *nextPageUrlStringNullable.Get()
-	pageToken, err := extractPageToken(nextPageUrlString)
-	return pageToken, false, err
 }
