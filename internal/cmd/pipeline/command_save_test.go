@@ -12,9 +12,7 @@ func TestGetPath_NoPrefix(t *testing.T) {
 }
 
 func TestGetPath_HomeDir(t *testing.T) {
-	err := os.Setenv("HOME", "home")
-	require.NoError(t, err)
-
+	t.Setenv("HOME", "home")
 	require.Equal(t, "home/pipeline.sql", getPath("~/pipeline.sql"))
 }
 

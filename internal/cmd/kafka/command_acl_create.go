@@ -82,7 +82,7 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	if err := c.provisioningClusterCheck(cmd, kafkaClusterConfig.ID); err != nil {
+	if err := c.provisioningClusterCheck(kafkaClusterConfig.ID); err != nil {
 		return err
 	}
 

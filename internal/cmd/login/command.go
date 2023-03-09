@@ -249,10 +249,7 @@ func (c *command) loginMDS(cmd *cobra.Command, url string) error {
 	}
 	if caCertPath == "" {
 		contextName := pauth.GenerateContextName(credentials.Username, url, "")
-		caCertPath, err = c.checkLegacyContextCACertPath(cmd, contextName)
-		if err != nil {
-			return err
-		}
+		caCertPath = c.checkLegacyContextCACertPath(cmd, contextName)
 		isLegacyContext = caCertPath != ""
 	}
 
@@ -334,17 +331,17 @@ func (c *command) getConfluentCredentials(cmd *cobra.Command, url string) (*paut
 	)
 }
 
-func (c *command) checkLegacyContextCACertPath(cmd *cobra.Command, contextName string) (string, error) {
+func (c *command) checkLegacyContextCACertPath(cmd *cobra.Command, contextName string) string {
 	changed := cmd.Flags().Changed("ca-cert-path")
 	// if flag used but empty string is passed then user intends to reset the ca-cert-path
 	if changed {
-		return "", nil
+		return ""
 	}
 	ctx, ok := c.Config.Contexts[contextName]
 	if !ok {
-		return "", nil
+		return ""
 	}
-	return ctx.Platform.CaCertPath, nil
+	return ctx.Platform.CaCertPath
 }
 
 func (c *command) getURL(cmd *cobra.Command) (string, error) {

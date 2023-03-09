@@ -36,84 +36,83 @@ func (s *CLITestSuite) TestLogin_Help() {
 func (s *CLITestSuite) TestLogin_VariousOrgSuspensionStatus() {
 	args := fmt.Sprintf("login --url %s -vvv", s.TestBackend.GetCloudUrl())
 
-	s.T().Run("free trial organization login", func(tt *testing.T) {
+	s.T().Run("free trial organization login", func(t *testing.T) {
 		env := []string{fmt.Sprintf("%s=good@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
-		os.Setenv("IS_ON_FREE_TRIAL", "true")
-		defer unsetFreeTrialEnv()
+		t.Setenv("IS_ON_FREE_TRIAL", "true")
 
-		output := runCommand(tt, testBin, env, args, 0, "")
-		require.Contains(tt, output, loggedInAsWithOrgOutput)
-		require.Contains(tt, output, loggedInEnvOutput)
-		require.Contains(tt, output, fmt.Sprintf(errors.RemainingFreeCreditMsg, 40.00))
+		output := runCommand(t, testBin, env, args, 0, "")
+		require.Contains(t, output, loggedInAsWithOrgOutput)
+		require.Contains(t, output, loggedInEnvOutput)
+		require.Contains(t, output, fmt.Sprintf(errors.RemainingFreeCreditMsg, 40.00))
 	})
 
-	s.T().Run("non-free-trial organization login", func(tt *testing.T) {
+	s.T().Run("non-free-trial organization login", func(t *testing.T) {
 		env := []string{fmt.Sprintf("%s=good@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
 
-		output := runCommand(tt, testBin, env, args, 0, "")
-		require.Contains(tt, output, loggedInAsWithOrgOutput)
-		require.Contains(tt, output, loggedInEnvOutput)
-		require.NotContains(tt, output, "Free credits")
+		output := runCommand(t, testBin, env, args, 0, "")
+		require.Contains(t, output, loggedInAsWithOrgOutput)
+		require.Contains(t, output, loggedInEnvOutput)
+		require.NotContains(t, output, "Free credits")
 	})
 
-	s.T().Run("suspended organization login", func(tt *testing.T) {
+	s.T().Run("suspended organization login", func(t *testing.T) {
 		env := []string{fmt.Sprintf("%s=suspended@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
-		output := runCommand(tt, testBin, env, args, 1, "")
-		require.Contains(tt, output, new(ccloudv1.SuspendedOrganizationError).Error())
-		require.Contains(tt, output, errors.SuspendedOrganizationSuggestions)
+		output := runCommand(t, testBin, env, args, 1, "")
+		require.Contains(t, output, new(ccloudv1.SuspendedOrganizationError).Error())
+		require.Contains(t, output, errors.SuspendedOrganizationSuggestions)
 	})
 
-	s.T().Run("end of free trial suspended organization", func(tt *testing.T) {
+	s.T().Run("end of free trial suspended organization", func(t *testing.T) {
 		env := []string{fmt.Sprintf("%s=end-of-free-trial-suspended@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
-		output := runCommand(tt, testBin, env, args, 0, "")
-		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInAsMsgWithOrg, "end-of-free-trial-suspended@user.com", "abc-123", "Confluent"))
-		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
-		require.Contains(tt, output, fmt.Sprintf(errors.EndOfFreeTrialErrorMsg, "test-org"))
+		output := runCommand(t, testBin, env, args, 0, "")
+		require.Contains(t, output, fmt.Sprintf(errors.LoggedInAsMsgWithOrg, "end-of-free-trial-suspended@user.com", "abc-123", "Confluent"))
+		require.Contains(t, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
+		require.Contains(t, output, fmt.Sprintf(errors.EndOfFreeTrialErrorMsg, "test-org"))
 	})
 }
 
 func (s *CLITestSuite) TestCcloudErrors() {
 	args := fmt.Sprintf("login --url %s -vvv", s.TestBackend.GetCloudUrl())
 
-	s.T().Run("invalid user or pass", func(tt *testing.T) {
+	s.T().Run("invalid user or pass", func(t *testing.T) {
 		env := []string{fmt.Sprintf("%s=incorrect@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
-		output := runCommand(tt, testBin, env, args, 1, "")
-		require.Contains(tt, output, errors.InvalidLoginErrorMsg)
-		require.Contains(tt, output, errors.ComposeSuggestionsMessage(errors.InvalidLoginErrorSuggestions))
+		output := runCommand(t, testBin, env, args, 1, "")
+		require.Contains(t, output, errors.InvalidLoginErrorMsg)
+		require.Contains(t, output, errors.ComposeSuggestionsMessage(errors.InvalidLoginErrorSuggestions))
 	})
 
-	s.T().Run("expired token", func(tt *testing.T) {
+	s.T().Run("expired token", func(t *testing.T) {
 		env := []string{fmt.Sprintf("%s=expired@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
-		output := runCommand(tt, testBin, env, args, 0, "")
-		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInAsMsgWithOrg, "expired@user.com", "abc-123", "Confluent"))
-		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
-		output = runCommand(tt, testBin, []string{}, "kafka cluster list", 1, "")
-		require.Contains(tt, output, errors.TokenExpiredMsg)
-		require.Contains(tt, output, errors.NotLoggedInErrorMsg)
+		output := runCommand(t, testBin, env, args, 0, "")
+		require.Contains(t, output, fmt.Sprintf(errors.LoggedInAsMsgWithOrg, "expired@user.com", "abc-123", "Confluent"))
+		require.Contains(t, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
+		output = runCommand(t, testBin, []string{}, "kafka cluster list", 1, "")
+		require.Contains(t, output, errors.TokenExpiredMsg)
+		require.Contains(t, output, errors.NotLoggedInErrorMsg)
 	})
 
-	s.T().Run("malformed token", func(tt *testing.T) {
+	s.T().Run("malformed token", func(t *testing.T) {
 		env := []string{fmt.Sprintf("%s=malformed@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
-		output := runCommand(tt, testBin, env, args, 0, "")
-		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInAsMsgWithOrg, "malformed@user.com", "abc-123", "Confluent"))
-		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
+		output := runCommand(t, testBin, env, args, 0, "")
+		require.Contains(t, output, fmt.Sprintf(errors.LoggedInAsMsgWithOrg, "malformed@user.com", "abc-123", "Confluent"))
+		require.Contains(t, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
 
-		output = runCommand(s.T(), testBin, []string{}, "kafka cluster list", 1, "")
-		require.Contains(tt, output, errors.CorruptedTokenErrorMsg)
-		require.Contains(tt, output, errors.ComposeSuggestionsMessage(errors.CorruptedTokenSuggestions))
+		output = runCommand(t, testBin, []string{}, "kafka cluster list", 1, "")
+		require.Contains(t, output, errors.CorruptedTokenErrorMsg)
+		require.Contains(t, output, errors.ComposeSuggestionsMessage(errors.CorruptedTokenSuggestions))
 	})
 
-	s.T().Run("invalid jwt", func(tt *testing.T) {
+	s.T().Run("invalid jwt", func(t *testing.T) {
 		env := []string{fmt.Sprintf("%s=invalid@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
-		output := runCommand(tt, testBin, env, "logout", 0, "")
-		require.Contains(tt, output, errors.LoggedOutMsg)
-		output = runCommand(tt, testBin, env, args, 0, "")
-		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInAsMsgWithOrg, "invalid@user.com", "abc-123", "Confluent"))
-		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
+		output := runCommand(t, testBin, env, "logout", 0, "")
+		require.Contains(t, output, errors.LoggedOutMsg)
+		output = runCommand(t, testBin, env, args, 0, "")
+		require.Contains(t, output, fmt.Sprintf(errors.LoggedInAsMsgWithOrg, "invalid@user.com", "abc-123", "Confluent"))
+		require.Contains(t, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
 
-		output = runCommand(s.T(), testBin, []string{}, "kafka cluster list", 1, "")
-		require.Contains(tt, output, errors.CorruptedTokenErrorMsg)
-		require.Contains(tt, output, errors.ComposeSuggestionsMessage(errors.CorruptedTokenSuggestions))
+		output = runCommand(t, testBin, []string{}, "kafka cluster list", 1, "")
+		require.Contains(t, output, errors.CorruptedTokenErrorMsg)
+		require.Contains(t, output, errors.ComposeSuggestionsMessage(errors.CorruptedTokenSuggestions))
 	})
 }
 

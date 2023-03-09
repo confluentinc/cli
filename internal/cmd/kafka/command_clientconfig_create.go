@@ -224,7 +224,7 @@ func (c *createCommand) setSchemaRegistryCluster(cmd *cobra.Command, configFile 
 		}
 		// if SR not enabled, comment out SR in the configuration file and warn users
 		if srNotEnabledErr, ok := err.(*errors.SRNotEnabledError); ok {
-			return commentAndWarnAboutSchemaRegistry(srNotEnabledErr.ErrorMsg, srNotEnabledErr.SuggestionsMsg, configFile)
+			return commentAndWarnAboutSchemaRegistry(srNotEnabledErr.ErrorMsg, srNotEnabledErr.SuggestionsMsg, configFile), nil
 		}
 		return "", err
 	}
@@ -239,22 +239,13 @@ func (c *createCommand) setSchemaRegistryCluster(cmd *cobra.Command, configFile 
 		// comment out SR and warn users
 		if len(srCluster.SrCredentials.Key) == 0 && len(srCluster.SrCredentials.Secret) == 0 {
 			// both key and secret empty
-			configFile, err = commentAndWarnAboutSchemaRegistry(errors.SRCredsNotSetReason, errors.SRCredsNotSetSuggestions, configFile)
-			if err != nil {
-				return "", err
-			}
+			configFile = commentAndWarnAboutSchemaRegistry(errors.SRCredsNotSetReason, errors.SRCredsNotSetSuggestions, configFile)
 		} else if len(srCluster.SrCredentials.Key) == 0 {
 			// only key empty
-			configFile, err = commentAndWarnAboutSchemaRegistry(errors.SRKeyNotSetReason, errors.SRKeyNotSetSuggestions, configFile)
-			if err != nil {
-				return "", err
-			}
+			configFile = commentAndWarnAboutSchemaRegistry(errors.SRKeyNotSetReason, errors.SRKeyNotSetSuggestions, configFile)
 		} else {
 			// only secret empty
-			configFile, err = commentAndWarnAboutSchemaRegistry(fmt.Sprintf(errors.SRSecretNotSetReason, srCluster.SrCredentials.Key), errors.SRSecretNotSetSuggestions, configFile)
-			if err != nil {
-				return "", err
-			}
+			configFile = commentAndWarnAboutSchemaRegistry(fmt.Sprintf(errors.SRSecretNotSetReason, srCluster.SrCredentials.Key), errors.SRSecretNotSetSuggestions, configFile)
 		}
 
 		return configFile, nil
@@ -378,19 +369,14 @@ func replaceTemplates(configFile string, m map[string]string) string {
 	return configFile
 }
 
-func commentAndWarnAboutSchemaRegistry(reason, suggestions, configFile string) (string, error) {
+func commentAndWarnAboutSchemaRegistry(reason, suggestions, configFile string) string {
 	warning := errors.NewWarningWithSuggestions(errors.SRInConfigFileWarning, reason, suggestions+"\n"+errors.SRInConfigFileSuggestions)
 	output.ErrPrint(warning.DisplayWarningWithSuggestions())
 
-	configFile, err := commentSchemaRegistryLines(configFile)
-	if err != nil {
-		return "", err
-	}
-
-	return configFile, nil
+	return commentSchemaRegistryLines(configFile)
 }
 
-func commentSchemaRegistryLines(configFile string) (string, error) {
+func commentSchemaRegistryLines(configFile string) string {
 	/* Examples:
 	1. Case where SR properties start at the beginning of the line
 	# Required connection configs for Confluent Cloud Schema Registry
@@ -436,5 +422,5 @@ func commentSchemaRegistryLines(configFile string) (string, error) {
 		}
 	}
 
-	return strings.Join(lines, "\n"), nil
+	return strings.Join(lines, "\n")
 }
