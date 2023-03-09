@@ -43,6 +43,7 @@ cli-builder:
 	go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
 	TAGS=$(TAGS) CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) VERSION=$(VERSION) GOEXPERIMENT=boringcrypto goreleaser build -f .goreleaser-build.yml --clean --single-target --snapshot
 
+include ./mk-files/cc-cli-service.mk
 include ./mk-files/dockerhub.mk
 include ./mk-files/semver.mk
 include ./mk-files/docs.mk
@@ -50,7 +51,6 @@ include ./mk-files/release.mk
 include ./mk-files/release-test.mk
 include ./mk-files/release-notes.mk
 include ./mk-files/unrelease.mk
-include ./mk-files/usage.mk
 include ./mk-files/utils.mk
 
 REF := $(shell [ -d .git ] && git rev-parse --short HEAD || echo "none")
@@ -70,14 +70,12 @@ show-args:
 	@echo "VERSION: $(VERSION)"
 
 .PHONY: lint
-lint:
-	make lint-go
-	make lint-cli
+lint: lint-go lint-cli
 
 .PHONY: lint-go
 lint-go:
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.51.1 && \
-	golangci-lint run --timeout=10m
+	golangci-lint run --enable dupword,misspell,prealloc,usestdlibvars,whitespace --timeout=10m
 	@echo "✅  golangci-lint"
 
 .PHONY: lint-cli

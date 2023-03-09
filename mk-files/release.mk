@@ -149,7 +149,8 @@ endef
 .PHONY: download-licenses
 download-licenses:
 	go install github.com/google/go-licenses@v1.5.0 && \
-	go-licenses save ./... --save_path legal/licenses --force || true
+	go-licenses save ./... --save_path legal/licenses/ --force || true && \
+	chmod -R +w legal/licenses/
 
 .PHONY: publish-installer
 ## Publish install scripts to S3. You MUST re-run this if/when you update any install script.

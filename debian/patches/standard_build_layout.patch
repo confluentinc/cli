@@ -1,6 +1,6 @@
---- cli/Makefile	2023-03-02 10:53:05.000000000 -0800
+--- cli/Makefile	2023-03-08 10:19:27.000000000 -0800
 +++ debian/Makefile	2022-12-12 17:29:13.000000000 -0800
-@@ -1,130 +1,130 @@
+@@ -1,128 +1,130 @@
 -SHELL              := /bin/bash
 -ALL_SRC            := $(shell find . -name "*.go" | grep -v -e vendor)
 -GORELEASER_VERSION := v1.15.2
@@ -46,6 +46,7 @@
 -	go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
 -	TAGS=$(TAGS) CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) VERSION=$(VERSION) GOEXPERIMENT=boringcrypto goreleaser build -f .goreleaser-build.yml --clean --single-target --snapshot
 -
+-include ./mk-files/cc-cli-service.mk
 -include ./mk-files/dockerhub.mk
 -include ./mk-files/semver.mk
 -include ./mk-files/docs.mk
@@ -53,7 +54,6 @@
 -include ./mk-files/release-test.mk
 -include ./mk-files/release-notes.mk
 -include ./mk-files/unrelease.mk
--include ./mk-files/usage.mk
 -include ./mk-files/utils.mk
 -
 -REF := $(shell [ -d .git ] && git rev-parse --short HEAD || echo "none")
@@ -69,12 +69,15 @@
 -	@for dir in bin dist docs legal release-notes; do \
 -		[ -d $$dir ] && rm -r $$dir || true ; \
 -	done
+-
+-show-args:
+-	@echo "VERSION: $(VERSION)"
 +ifndef VERSION
 +	VERSION=$(CLI_VERSION)
 +endif
  
--show-args:
--	@echo "VERSION: $(VERSION)"
+-.PHONY: lint
+-lint: lint-go lint-cli
 +export PACKAGE_TITLE=cli
 +export FULL_PACKAGE_TITLE=confluent-$(PACKAGE_TITLE)
 +export PACKAGE_NAME=$(FULL_PACKAGE_TITLE)-$(VERSION)
@@ -90,15 +93,10 @@
 +DESTDIR=$(CURDIR)/BUILD/
 +endif
  
--.PHONY: lint
--lint:
--	make lint-go
--	make lint-cli
--
 -.PHONY: lint-go
 -lint-go:
 -	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.51.1 && \
--	golangci-lint run --timeout=10m
+-	golangci-lint run --enable dupword,misspell,prealloc,usestdlibvars,whitespace --timeout=10m
 -	@echo "✅  golangci-lint"
 -
 -.PHONY: lint-cli
@@ -142,8 +140,8 @@
 +ifeq ($(APPLY_PATCHES),yes)
 +	git reset --hard HEAD
 +	cat debian/patches/series | xargs -iPATCH bash -c 'patch -p1 < debian/patches/PATCH'
- endif
- 
++endif
++
 +BINPATH=$(PREFIX)/bin
 +LIBPATH=$(PREFIX)/libexec/$(PACKAGE_TITLE)
 +DOCPATH=$(PREFIX)/share/doc/$(PACKAGE_TITLE)
@@ -171,16 +169,7 @@
 +
 +	cp LICENSE $(DESTDIR)$(DOCPATH)/COPYRIGHT
 +	$(DESTDIR)$(BINPATH)/confluent --version | awk -F' ' '{ print $3 }' > $(DESTDIR)$(DOCPATH)/version.txt
- 
--.PHONY: integration-test
--integration-test:
--ifdef CI
--	go install gotest.tools/gotestsum@v1.8.2 && \
--	export GOCOVERDIR=test/coverage && \
--	if [ -d $${GOCOVERDIR} ]; then rm -r $${GOCOVERDIR}; fi && \
--	mkdir $${GOCOVERDIR} && \
--	gotestsum --junitfile integration-test-report.xml -- -v -race $$(go list ./... | grep test) && \
--	go tool covdata textfmt -i $${GOCOVERDIR} -o test/coverage.out
++
 +	chown -R root:root $(DESTDIR)$(PREFIX)
 +
 +clean:
@@ -192,10 +181,19 @@
 +ifneq ($(PACKAGE_TYPE),deb)
 +	git reset --hard HEAD
 +	git status --ignored --porcelain | cut -d ' ' -f 2 | xargs rm -rf
-+endif
-+
+ endif
+ 
 +RPM_VERSION=$(shell echo $(VERSION) | sed -e 's/-alpha[0-9]*//' -e 's/-beta[0-9]*//' -e 's/-rc[0-9]*//' -e 's/-SNAPSHOT//' -e 's/-cp[0-9]*//' -e 's/-hotfix[0-9]*//' -e 's/-[0-9]*//')
-+
+ 
+-.PHONY: integration-test
+-integration-test:
+-ifdef CI
+-	go install gotest.tools/gotestsum@v1.8.2 && \
+-	export GOCOVERDIR=test/coverage && \
+-	if [ -d $${GOCOVERDIR} ]; then rm -r $${GOCOVERDIR}; fi && \
+-	mkdir $${GOCOVERDIR} && \
+-	gotestsum --junitfile integration-test-report.xml -- -v -race $$(go list ./... | grep test) && \
+-	go tool covdata textfmt -i $${GOCOVERDIR} -o test/coverage.out
 +# Get any -alpha, -beta (preview), -rc (release candidate), -SNAPSHOT (nightly), -cp (confluent patch), -hotfix piece that we need to put into the Release part of
 +# the version since RPM versions don't support non-numeric
 +# characters. Ultimately, for something like 0.8.2-beta, we want to end up with
