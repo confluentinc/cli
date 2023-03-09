@@ -141,9 +141,3 @@ require (
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect
 )
-
-replace (
-	github.com/chzyer/logex => github.com/chzyer/logex v1.2.1
-	gopkg.in/retry.v1 => github.com/go-retry/retry v1.0.3
-	k8s.io/kube-openapi => github.com/kubernetes/kube-openapi v0.0.0-20230118215034-64b6bb138190
-)

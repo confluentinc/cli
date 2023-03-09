@@ -4,7 +4,6 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/output"
 
 	kafkaquotas "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
@@ -14,7 +13,7 @@ type quotaCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
 }
 
-func newQuotaCommand(config *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
+func newQuotaCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "quota",
 		Short:       "Manage Kafka client quotas.",

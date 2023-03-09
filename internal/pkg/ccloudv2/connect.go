@@ -2,7 +2,6 @@ package ccloudv2
 
 import (
 	"context"
-	"net/http"
 
 	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
 
@@ -89,9 +88,10 @@ func (c *Client) ResumeConnector(connectorName, environmentId, kafkaClusterId st
 	return errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) ListConnectorPlugins(environmentId, kafkaClusterId string) ([]connectv1.InlineResponse2002, *http.Response, error) {
+func (c *Client) ListConnectorPlugins(environmentId, kafkaClusterId string) ([]connectv1.InlineResponse2002, error) {
 	req := c.ConnectClient.PluginsV1Api.ListConnectv1ConnectorPlugins(c.connectApiContext(), environmentId, kafkaClusterId)
-	return c.ConnectClient.PluginsV1Api.ListConnectv1ConnectorPluginsExecute(req)
+	resp, httpResp, err := c.ConnectClient.PluginsV1Api.ListConnectv1ConnectorPluginsExecute(req)
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) ValidateConnectorPlugin(pluginName, environmentId, kafkaClusterId string, configs map[string]string) (connectv1.InlineResponse2003, error) {

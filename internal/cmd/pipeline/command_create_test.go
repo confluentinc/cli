@@ -1,8 +1,9 @@
 package pipeline
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestCreateValidSecretMappings(t *testing.T) {
