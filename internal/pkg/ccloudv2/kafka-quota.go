@@ -36,7 +36,7 @@ func (c *Client) ListKafkaQuotas(clusterId, envId string) ([]kafkaquotasv1.Kafka
 		list = append(list, page.GetData()...)
 
 		// nextPageUrlStringNullable is nil for the last page
-		pageToken, done, err = extractKafkaQuotasNextPagePageToken(page.GetMetadata().Next)
+		pageToken, done, err = extractNextPageToken(page.GetMetadata().Next)
 		if err != nil {
 			return nil, err
 		}
@@ -76,17 +76,4 @@ func (c *Client) DeleteKafkaQuota(quotaId string) error {
 	req := c.KafkaQuotasClient.ClientQuotasKafkaQuotasV1Api.DeleteKafkaQuotasV1ClientQuota(c.quotaContext(), quotaId)
 	httpResp, err := req.Execute()
 	return errors.CatchCCloudV2Error(err, httpResp)
-}
-
-func extractKafkaQuotasNextPagePageToken(nextPageUrlStringNullable kafkaquotasv1.NullableString) (string, bool, error) {
-	if nextPageUrlStringNullable.IsSet() {
-		nextPageUrlString := *nextPageUrlStringNullable.Get()
-		pageToken, err := extractPageToken(nextPageUrlString)
-		if err != nil {
-			return "", true, nil
-		}
-		return pageToken, false, err
-	} else {
-		return "", true, nil
-	}
 }
