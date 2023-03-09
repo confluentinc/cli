@@ -19,6 +19,7 @@ type ReleaseNotesBuilderTestSuite struct {
 }
 
 func TestReleaseNotesBuilderTestSuite(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(ReleaseNotesBuilderTestSuite))
 }
 

@@ -74,6 +74,7 @@ type CLITestSuite struct {
 
 // TestCLI runs the CLI integration test suite.
 func TestCLI(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(CLITestSuite))
 }
 

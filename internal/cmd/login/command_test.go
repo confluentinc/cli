@@ -156,6 +156,8 @@ var (
 )
 
 func TestCredentialsOverride(t *testing.T) {
+	t.Parallel()
+
 	req := require.New(t)
 	auth := &ccloudv1mock.Auth{
 		LoginFunc: func(_ context.Context, _ *ccloudv1.AuthenticateRequest) (*ccloudv1.AuthenticateReply, error) {
@@ -222,6 +224,8 @@ func TestCredentialsOverride(t *testing.T) {
 }
 
 func TestOrgIdOverride(t *testing.T) {
+	t.Parallel()
+
 	req := require.New(t)
 	auth := &ccloudv1mock.Auth{
 		UserFunc: func(ctx context.Context) (*ccloudv1.GetMeReply, error) {
@@ -281,6 +285,8 @@ func TestOrgIdOverride(t *testing.T) {
 }
 
 func TestLoginSuccess(t *testing.T) {
+	t.Parallel()
+
 	req := require.New(t)
 	org2 := false
 	auth := &ccloudv1mock.Auth{
@@ -355,6 +361,8 @@ func TestLoginSuccess(t *testing.T) {
 }
 
 func TestLoginOrderOfPrecedence(t *testing.T) {
+	t.Parallel()
+
 	req := require.New(t)
 	netrcUser := "netrc@confleunt.io"
 	netrcPassword := "netrcpassword"
@@ -412,7 +420,10 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 	}
 
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			loginCredentialsManager := &climock.LoginCredentialsManager{
 				GetCloudCredentialsFromEnvVarFunc: func(_ string) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
@@ -500,6 +511,8 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 }
 
 func TestPromptLoginFlag(t *testing.T) {
+	t.Parallel()
+
 	req := require.New(t)
 	wrongCreds := &pauth.Credentials{
 		Username: "wrong_user",
@@ -514,13 +527,13 @@ func TestPromptLoginFlag(t *testing.T) {
 			name:    "cloud login prompt flag",
 			isCloud: true,
 		},
-		{
-			name: "on-prem login prompt flag",
-		},
+		{name: "on-prem login prompt flag"},
 	}
 
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			mockLoginCredentialsManager := &climock.LoginCredentialsManager{
 				GetCloudCredentialsFromEnvVarFunc: func(_ string) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
@@ -574,6 +587,8 @@ func TestPromptLoginFlag(t *testing.T) {
 }
 
 func TestLoginFail(t *testing.T) {
+	t.Parallel()
+
 	req := require.New(t)
 	mockLoginCredentialsManager := &climock.LoginCredentialsManager{
 		GetCloudCredentialsFromEnvVarFunc: func(_ string) func() (*pauth.Credentials, error) {
@@ -614,7 +629,7 @@ func TestLoginFail(t *testing.T) {
 	req.Equal(new(ccloudv1.InvalidLoginError), err)
 }
 
-func Test_SelfSignedCerts(t *testing.T) {
+func Test_SelfSignedCerts(t *testing.T) { //nolint:paralleltest
 	req := require.New(t)
 	tests := []struct {
 		name                string
@@ -641,7 +656,7 @@ func Test_SelfSignedCerts(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
+	for _, tt := range tests { //nolint:paralleltest
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.setEnv {
 				os.Setenv(pauth.ConfluentPlatformCACertPath, "testcert.pem")
@@ -679,6 +694,8 @@ func Test_SelfSignedCerts(t *testing.T) {
 }
 
 func Test_SelfSignedCertsLegacyContexts(t *testing.T) {
+	t.Parallel()
+
 	originalCaCertPath, _ := filepath.Abs("ogcert.pem")
 
 	req := require.New(t)
@@ -699,7 +716,10 @@ func Test_SelfSignedCertsLegacyContexts(t *testing.T) {
 	}
 
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			legacyContextName := "login-prompt-user@confluent.io-http://localhost:8090"
 			cfg := v1.AuthenticatedConfigMockWithContextName(legacyContextName)
 			cfg.Contexts[legacyContextName].Platform.CaCertPath = originalCaCertPath
@@ -779,7 +799,7 @@ func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *v1.Co
 	return loginCmd
 }
 
-func TestLoginWithExistingContext(t *testing.T) {
+func TestLoginWithExistingContext(t *testing.T) { //nolint:paralleltest
 	req := require.New(t)
 	auth := &ccloudv1mock.Auth{
 		LoginFunc: func(_ context.Context, _ *ccloudv1.AuthenticateRequest) (*ccloudv1.AuthenticateReply, error) {
@@ -859,6 +879,8 @@ func TestLoginWithExistingContext(t *testing.T) {
 }
 
 func TestValidateUrl(t *testing.T) {
+	t.Parallel()
+
 	req := require.New(t)
 	suite := []struct {
 		urlIn      string

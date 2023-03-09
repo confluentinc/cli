@@ -28,9 +28,9 @@ const (
 )
 
 func TestRequireFlags(t *testing.T) {
-	var err error
+	t.Parallel()
 
-	_, err = cmd.ExecuteCommand(mockPriceCommand(nil, exampleMetric, exampleUnit), "list", "--cloud", exampleCloud)
+	_, err := cmd.ExecuteCommand(mockPriceCommand(nil, exampleMetric, exampleUnit), "list", "--cloud", exampleCloud)
 	require.Error(t, err)
 
 	_, err = cmd.ExecuteCommand(mockPriceCommand(nil, exampleMetric, exampleUnit), "list", "--region", exampleRegion)
@@ -38,6 +38,8 @@ func TestRequireFlags(t *testing.T) {
 }
 
 func TestList(t *testing.T) {
+	t.Parallel()
+
 	command := mockSingleRowCommand()
 
 	want := strings.Join([]string{
@@ -52,6 +54,8 @@ func TestList(t *testing.T) {
 }
 
 func TestListLegacyClusterTypes(t *testing.T) {
+	t.Parallel()
+
 	command := mockPriceCommand(map[string]float64{
 		strings.Join([]string{exampleCloud, exampleRegion, exampleAvailability, exampleLegacyClusterType, exampleNetworkType}, ":"): examplePrice,
 	}, exampleMetric, exampleUnit)
@@ -68,6 +72,8 @@ func TestListLegacyClusterTypes(t *testing.T) {
 }
 
 func TestOmitLegacyClusterTypes(t *testing.T) {
+	t.Parallel()
+
 	command := mockPriceCommand(map[string]float64{
 		strings.Join([]string{exampleCloud, exampleRegion, exampleAvailability, exampleLegacyClusterType, exampleNetworkType}, ":"): examplePrice,
 	}, exampleMetric, exampleUnit)
@@ -102,6 +108,8 @@ func mockPriceCommand(prices map[string]float64, metricsName, metricsUnit string
 }
 
 func TestFormatPrice(t *testing.T) {
+	t.Parallel()
+
 	require.Equal(t, "$1.00 USD/GB", formatPrice(1, "GB"))
 	require.Equal(t, "$1.20 USD/GB", formatPrice(1.2, "GB"))
 	require.Equal(t, "$1.23 USD/GB", formatPrice(1.23, "GB"))
@@ -109,6 +117,8 @@ func TestFormatPrice(t *testing.T) {
 }
 
 func TestPrice_ClusterLink(t *testing.T) {
+	t.Parallel()
+
 	command := mockPriceCommand(map[string]float64{
 		strings.Join([]string{exampleCloud, exampleRegion, exampleAvailability, exampleClusterType, exampleNetworkType}, ":"): examplePrice,
 	}, "ClusterLinkingBase", "Hour")

@@ -11,6 +11,8 @@ import (
 )
 
 func TestGetSavedCurrentDir(t *testing.T) {
+	t.Parallel()
+
 	req := require.New(t)
 
 	cc := NewConfluentCurrentManager()
@@ -22,6 +24,8 @@ func TestGetSavedCurrentDir(t *testing.T) {
 }
 
 func TestCreateAndTrackCurrentDir(t *testing.T) {
+	t.Parallel()
+
 	req := require.New(t)
 
 	dir, err := createTestDir()
@@ -44,6 +48,8 @@ func TestCreateAndTrackCurrentDir(t *testing.T) {
 }
 
 func TestGetCurrentDirFromTrackingFile(t *testing.T) {
+	t.Parallel()
+
 	req := require.New(t)
 
 	dir, err := createTestDir()
@@ -62,6 +68,8 @@ func TestGetCurrentDirFromTrackingFile(t *testing.T) {
 }
 
 func TestGetServiceDir(t *testing.T) {
+	t.Parallel()
+
 	req := require.New(t)
 
 	dir, err := createTestDir()
@@ -77,6 +85,8 @@ func TestGetServiceDir(t *testing.T) {
 }
 
 func TestGetDataDir(t *testing.T) {
+	t.Parallel()
+
 	req := require.New(t)
 
 	dir, err := createTestDir()
@@ -95,6 +105,8 @@ func TestGetDataDir(t *testing.T) {
 }
 
 func TestGetDataDirKSQL(t *testing.T) {
+	t.Parallel()
+
 	req := require.New(t)
 
 	dir, err := createTestDir()
@@ -114,6 +126,8 @@ func TestGetDataDirKSQL(t *testing.T) {
 }
 
 func TestGetSavedPidFile(t *testing.T) {
+	t.Parallel()
+
 	req := require.New(t)
 
 	cc := NewConfluentCurrentManager()
@@ -125,6 +139,8 @@ func TestGetSavedPidFile(t *testing.T) {
 }
 
 func TestSetAndGetPid(t *testing.T) {
+	t.Parallel()
+
 	req := require.New(t)
 
 	dir, err := createTestDir()
@@ -141,6 +157,8 @@ func TestSetAndGetPid(t *testing.T) {
 }
 
 func TestGetDefaultRootDir(t *testing.T) {
+	t.Parallel()
+
 	req := require.New(t)
 
 	cc := NewConfluentCurrentManager()
@@ -148,6 +166,8 @@ func TestGetDefaultRootDir(t *testing.T) {
 }
 
 func TestRootDirFromEnv(t *testing.T) {
+	t.Parallel()
+
 	req := require.New(t)
 
 	cc := NewConfluentCurrentManager()
@@ -158,6 +178,8 @@ func TestRootDirFromEnv(t *testing.T) {
 }
 
 func TestGetSavedTrackingFile(t *testing.T) {
+	t.Parallel()
+
 	req := require.New(t)
 
 	cc := NewConfluentCurrentManager()
@@ -166,6 +188,8 @@ func TestGetSavedTrackingFile(t *testing.T) {
 }
 
 func TestGetTrackingFile(t *testing.T) {
+	t.Parallel()
+
 	req := require.New(t)
 
 	cc := NewConfluentCurrentManager()
@@ -177,6 +201,8 @@ func TestGetTrackingFile(t *testing.T) {
 }
 
 func TestGetServiceFile(t *testing.T) {
+	t.Parallel()
+
 	req := require.New(t)
 
 	dir, err := createTestDir()
@@ -192,6 +218,8 @@ func TestGetServiceFile(t *testing.T) {
 }
 
 func TestGetRandomChildDir(t *testing.T) {
+	t.Parallel()
+
 	req := require.New(t)
 
 	parentDir, err := createTestDir()

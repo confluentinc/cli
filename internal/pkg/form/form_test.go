@@ -10,6 +10,8 @@ import (
 )
 
 func TestPrompt(t *testing.T) {
+	t.Parallel()
+
 	f := New(
 		Field{ID: "username", Prompt: "Username"},
 		Field{ID: "password", Prompt: "Password", IsHidden: true},

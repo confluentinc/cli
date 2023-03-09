@@ -271,7 +271,7 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 	return testInputs
 }
 
-func TestConfig_Load(t *testing.T) {
+func TestConfig_Load(t *testing.T) { //nolint:paralleltest,tparallel
 	testConfigsOnPrem := SetupTestInputs(false)
 	testConfigsCloud := SetupTestInputs(true)
 	tests := []struct {
@@ -319,7 +319,10 @@ func TestConfig_Load(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			cfg := New()
 			cfg.Filename = tt.file
 			for _, context := range tt.want.Contexts {
@@ -341,7 +344,7 @@ func TestConfig_Load(t *testing.T) {
 	}
 }
 
-func TestConfig_Save(t *testing.T) {
+func TestConfig_Save(t *testing.T) { //nolint:paralleltest
 	testConfigsOnPrem := SetupTestInputs(false)
 	testConfigsCloud := SetupTestInputs(true)
 	tests := []struct {
@@ -393,7 +396,7 @@ func TestConfig_Save(t *testing.T) {
 			kafkaOverwrite: "lkc-clusterFlag",
 		},
 	}
-	for _, tt := range tests {
+	for _, tt := range tests { //nolint:paralleltest
 		t.Run(tt.name, func(t *testing.T) {
 			configFile, _ := os.CreateTemp("", "TestConfig_Save.json")
 			tt.config.Filename = configFile.Name()
@@ -434,6 +437,8 @@ func TestConfig_Save(t *testing.T) {
 }
 
 func TestConfig_SaveWithAccountOverwrite(t *testing.T) {
+	t.Parallel()
+
 	testConfigsCloud := SetupTestInputs(true)
 	tests := []struct {
 		name             string
@@ -450,7 +455,10 @@ func TestConfig_SaveWithAccountOverwrite(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			configFile, _ := os.CreateTemp("", "TestConfig_Save.json")
 			tt.config.Filename = configFile.Name()
 			tt.config.SavedCredentials = map[string]*LoginCredential{
@@ -497,6 +505,8 @@ func replacePlaceholdersInWant(t *testing.T, got []byte, want []byte) string {
 }
 
 func TestConfig_OverwrittenKafka(t *testing.T) {
+	t.Parallel()
+
 	testConfigsCloud := SetupTestInputs(true)
 
 	tests := []struct {
@@ -545,6 +555,8 @@ func TestConfig_OverwrittenKafka(t *testing.T) {
 }
 
 func TestConfig_OverwrittenContext(t *testing.T) {
+	t.Parallel()
+
 	testConfigsCloud := SetupTestInputs(true)
 
 	tests := []struct {
@@ -584,6 +596,8 @@ func TestConfig_OverwrittenContext(t *testing.T) {
 }
 
 func TestConfig_OverwrittenAccount(t *testing.T) {
+	t.Parallel()
+
 	testConfigsCloud := SetupTestInputs(true)
 
 	tests := []struct {
@@ -631,6 +645,8 @@ func TestConfig_OverwrittenAccount(t *testing.T) {
 }
 
 func TestConfig_getFilename(t *testing.T) {
+	t.Parallel()
+
 	home, err := os.UserHomeDir()
 	require.NoError(t, err)
 	path := filepath.Join(home, ".confluent", "config.json")
@@ -638,6 +654,8 @@ func TestConfig_getFilename(t *testing.T) {
 }
 
 func TestConfig_AddContext(t *testing.T) {
+	t.Parallel()
+
 	filename := "/tmp/TestConfig_AddContext.json"
 	conf := AuthenticatedOnPremConfigMock()
 	conf.Filename = filename
@@ -694,7 +712,10 @@ func TestConfig_AddContext(t *testing.T) {
 		failAddingExistingContextTest,
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			err := tt.config.AddContext(tt.contextName, tt.platformName, tt.credentialName, tt.kafkaClusters, tt.kafka,
 				tt.schemaRegistryClusters, tt.state, MockOrgResourceId)
 			if (err != nil) != tt.wantErr {
@@ -712,6 +733,8 @@ func TestConfig_AddContext(t *testing.T) {
 }
 
 func TestConfig_CreateContext(t *testing.T) {
+	t.Parallel()
+
 	cfg := &Config{
 		BaseConfig:    &config.BaseConfig{Ver: config.Version{Version: version.Must(version.NewVersion("1.0.0"))}},
 		ContextStates: make(map[string]*ContextState),
@@ -731,6 +754,8 @@ func TestConfig_CreateContext(t *testing.T) {
 }
 
 func TestConfig_UseContext(t *testing.T) {
+	t.Parallel()
+
 	cfg := AuthenticatedCloudConfigMock()
 	contextName := cfg.Context().Name
 	cfg.CurrentContext = ""
@@ -764,7 +789,10 @@ func TestConfig_UseContext(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			cfg := tt.fields.Config
 			if err := cfg.UseContext(tt.args.name); (err != nil) != tt.wantErr {
 				t.Errorf("UseContext() error = %v, wantErr %v", err, tt.wantErr)
@@ -777,6 +805,8 @@ func TestConfig_UseContext(t *testing.T) {
 }
 
 func TestConfig_FindContext(t *testing.T) {
+	t.Parallel()
+
 	type fields struct {
 		Contexts map[string]*Context
 	}
@@ -790,21 +820,25 @@ func TestConfig_FindContext(t *testing.T) {
 		want    *Context
 		wantErr bool
 	}{
-		{name: "success finding existing context",
+		{
+			name:    "success finding existing context",
 			fields:  fields{Contexts: map[string]*Context{"test-context": {Name: "test-context"}}},
 			args:    args{name: "test-context"},
 			want:    &Context{Name: "test-context"},
 			wantErr: false,
 		},
-		{name: "error finding nonexistent context",
+		{
+			name:    "error finding nonexistent context",
 			fields:  fields{Contexts: map[string]*Context{}},
 			args:    args{name: "test-context"},
-			want:    nil,
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			cfg := &Config{Contexts: tt.fields.Contexts}
 			got, err := cfg.FindContext(tt.args.name)
 			if (err != nil) != tt.wantErr {
@@ -819,6 +853,8 @@ func TestConfig_FindContext(t *testing.T) {
 }
 
 func TestConfig_Context(t *testing.T) {
+	t.Parallel()
+
 	type fields struct {
 		Contexts       map[string]*Context
 		CurrentContext string
@@ -831,25 +867,22 @@ func TestConfig_Context(t *testing.T) {
 		{
 			name: "succeed getting current context",
 			fields: fields{
-				Contexts: map[string]*Context{"test-context": {
-					Name: "test-context",
-				}},
+				Contexts:       map[string]*Context{"test-context": {Name: "test-context"}},
 				CurrentContext: "test-context",
 			},
-			want: &Context{
-				Name: "test-context",
-			},
+			want: &Context{Name: "test-context"},
 		},
 		{
-			name: "error getting current context when not set",
-			fields: fields{
-				Contexts: map[string]*Context{},
-			},
-			want: nil,
+			name:   "error getting current context when not set",
+			fields: fields{Contexts: map[string]*Context{}},
+			want:   nil,
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			cfg := &Config{
 				Contexts:       tt.fields.Contexts,
 				CurrentContext: tt.fields.CurrentContext,
@@ -863,6 +896,8 @@ func TestConfig_Context(t *testing.T) {
 }
 
 func TestKafkaClusterContext_SetAndGetActiveKafkaCluster_Env(t *testing.T) {
+	t.Parallel()
+
 	testInputs := SetupTestInputs(true)
 	ctx := testInputs.statefulConfig.Context()
 	// temp file so json files in test_json do not get overwritten
@@ -919,6 +954,8 @@ func TestKafkaClusterContext_SetAndGetActiveKafkaCluster_Env(t *testing.T) {
 }
 
 func TestKafkaClusterContext_SetAndGetActiveKafkaCluster_NonEnv(t *testing.T) {
+	t.Parallel()
+
 	testInputs := SetupTestInputs(false)
 	ctx := testInputs.statefulConfig.Context()
 	// temp file so json files in test_json do not get overwritten
@@ -957,6 +994,8 @@ func TestKafkaClusterContext_SetAndGetActiveKafkaCluster_NonEnv(t *testing.T) {
 }
 
 func TestKafkaClusterContext_AddAndGetKafkaClusterConfig(t *testing.T) {
+	t.Parallel()
+
 	clusterID := "lkc-abcdefg"
 
 	kcc := &KafkaClusterConfig{
@@ -980,6 +1019,8 @@ func TestKafkaClusterContext_AddAndGetKafkaClusterConfig(t *testing.T) {
 }
 
 func TestKafkaClusterContext_DeleteAPIKey(t *testing.T) {
+	t.Parallel()
+
 	clusterID := "lkc-abcdefg"
 	apiKey := "akey"
 	kcc := &KafkaClusterConfig{
@@ -1011,6 +1052,8 @@ func TestKafkaClusterContext_DeleteAPIKey(t *testing.T) {
 }
 
 func TestKafkaClusterContext_RemoveKafkaCluster(t *testing.T) {
+	t.Parallel()
+
 	clusterID := "lkc-abcdefg"
 	apiKey := "akey"
 	kcc := &KafkaClusterConfig{
@@ -1040,6 +1083,8 @@ func TestKafkaClusterContext_RemoveKafkaCluster(t *testing.T) {
 }
 
 func TestConfig_IsCloud_True(t *testing.T) {
+	t.Parallel()
+
 	for _, platform := range cloudPlatforms {
 		// test case: org not suspended
 		cfg := &Config{
@@ -1054,6 +1099,8 @@ func TestConfig_IsCloud_True(t *testing.T) {
 }
 
 func TestConfig_IsCloud_False(t *testing.T) {
+	t.Parallel()
+
 	// test case: platform name not cloud
 	configs := []*Config{
 		nil,
@@ -1091,6 +1138,8 @@ func TestConfig_IsCloud_False(t *testing.T) {
 }
 
 func TestConfig_IsCloudLoginAllowFreeTrialEnded_True(t *testing.T) {
+	t.Parallel()
+
 	for _, platform := range cloudPlatforms {
 		// test case: org not suspended
 		cfg := &Config{
@@ -1117,6 +1166,8 @@ func TestConfig_IsCloudLoginAllowFreeTrialEnded_True(t *testing.T) {
 }
 
 func TestConfig_IsCloudLoginAllowFreeTrialEnded_False(t *testing.T) {
+	t.Parallel()
+
 	// test case: platform name not cloud
 	configs := []*Config{
 		nil,
@@ -1146,6 +1197,8 @@ func TestConfig_IsCloudLoginAllowFreeTrialEnded_False(t *testing.T) {
 }
 
 func TestConfig_IsOnPrem_True(t *testing.T) {
+	t.Parallel()
+
 	cfg := &Config{
 		Contexts:       map[string]*Context{"context": {PlatformName: "https://example.com"}},
 		CurrentContext: "context",
@@ -1154,6 +1207,8 @@ func TestConfig_IsOnPrem_True(t *testing.T) {
 }
 
 func TestConfig_IsOnPrem_False(t *testing.T) {
+	t.Parallel()
+
 	configs := []*Config{
 		nil,
 		{

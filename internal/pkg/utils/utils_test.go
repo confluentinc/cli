@@ -17,32 +17,38 @@ const (
 )
 
 func TestContains(t *testing.T) {
+	t.Parallel()
+
 	req := require.New(t)
 	req.True(types.Contains([]string{"a"}, "a"))
 }
 
 func TestDoesNotContain(t *testing.T) {
+	t.Parallel()
+
 	req := require.New(t)
 	req.False(types.Contains([]string{}, "a"))
 }
 
 func TestDoesPathExist(t *testing.T) {
-	t.Run("DoesPathExist: empty path returns false", func(t *testing.T) {
-		req := require.New(t)
-		valid := DoesPathExist("")
-		req.False(valid)
-	})
+	t.Parallel()
+
+	req := require.New(t)
+	valid := DoesPathExist("")
+	req.False(valid)
 }
 
 func TestLoadPropertiesFile(t *testing.T) {
-	t.Run("LoadPropertiesFile: empty path yields error", func(t *testing.T) {
-		req := require.New(t)
-		_, err := LoadPropertiesFile("")
-		req.Error(err)
-	})
+	t.Parallel()
+
+	req := require.New(t)
+	_, err := LoadPropertiesFile("")
+	req.Error(err)
 }
 
 func TestUserInviteEmailRegex(t *testing.T) {
+	t.Parallel()
+
 	type RegexTest struct {
 		email   string
 		matched bool
@@ -83,6 +89,8 @@ func TestUserInviteEmailRegex(t *testing.T) {
 }
 
 func TestIsFlagArg(t *testing.T) {
+	t.Parallel()
+
 	type testCase struct {
 		arg    string
 		isFlag bool
@@ -116,6 +124,8 @@ func TestIsFlagArg(t *testing.T) {
 }
 
 func TestIsFlagWithArg(t *testing.T) {
+	t.Parallel()
+
 	flagMap := getFlagMap()
 	type testCase struct {
 		flag     *pflag.Flag
@@ -151,6 +161,8 @@ func TestIsFlagWithArg(t *testing.T) {
 }
 
 func TestIsShorthandCountFlag(t *testing.T) {
+	t.Parallel()
+
 	flagMap := getFlagMap()
 	type testCase struct {
 		arg      string
@@ -220,6 +232,8 @@ func TestIsShorthandCountFlag(t *testing.T) {
 }
 
 func TestAbbreviate(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		input    string
 		maxLen   int
@@ -265,6 +279,8 @@ func getFlagMap() map[string]*pflag.Flag {
 }
 
 func TestCropString(t *testing.T) {
+	t.Parallel()
+
 	for _, tt := range []struct {
 		s       string
 		n       int
@@ -279,6 +295,8 @@ func TestCropString(t *testing.T) {
 }
 
 func TestArrayToCommaDelimitedString(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		input    []string
 		expected string

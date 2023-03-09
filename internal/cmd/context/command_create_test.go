@@ -14,6 +14,8 @@ import (
 )
 
 func TestParseStringFlag(t *testing.T) {
+	t.Parallel()
+
 	data := "data"
 
 	cmd := &cobra.Command{}
@@ -36,6 +38,8 @@ func TestParseStringFlag(t *testing.T) {
 }
 
 func TestParseStringFlag_ErrEmpty(t *testing.T) {
+	t.Parallel()
+
 	data := "    "
 
 	cmd := &cobra.Command{}

@@ -12,6 +12,8 @@ import (
 )
 
 func TestSerializationProvider(t *testing.T) {
+	t.Parallel()
+
 	req := require.New(t)
 	valueFormats := []string{AVROSCHEMANAME, PROTOBUFSCHEMANAME, JSONSCHEMANAME, RAWSCHEMANAME}
 	schemaNames := []string{AVROSCHEMABACKEND, PROTOBUFSCHEMABACKEND, JSONSCHEMABACKEND, RAWSCHEMANAME}
@@ -28,6 +30,8 @@ func TestSerializationProvider(t *testing.T) {
 }
 
 func TestDeserializationProvider(t *testing.T) {
+	t.Parallel()
+
 	req := require.New(t)
 	valueFormats := []string{AVROSCHEMANAME, PROTOBUFSCHEMANAME, JSONSCHEMANAME, RAWSCHEMANAME}
 	schemaNames := []string{AVROSCHEMABACKEND, PROTOBUFSCHEMABACKEND, JSONSCHEMABACKEND, RAWSCHEMANAME}
@@ -44,6 +48,8 @@ func TestDeserializationProvider(t *testing.T) {
 }
 
 func TestStringSerdes(t *testing.T) {
+	t.Parallel()
+
 	req := require.New(t)
 
 	serializationProvider, _ := GetSerializationProvider(RAWSCHEMANAME)
@@ -60,7 +66,7 @@ func TestStringSerdes(t *testing.T) {
 	req.Equal(str, "somestring")
 }
 
-func TestAvroSerdesValid(t *testing.T) {
+func TestAvroSerdesValid(t *testing.T) { //nolint:paralleltest
 	req := require.New(t)
 
 	dir, err := sr.CreateTempDir()
@@ -94,7 +100,7 @@ func TestAvroSerdesValid(t *testing.T) {
 	req.NoError(os.RemoveAll(dir))
 }
 
-func TestAvroSerdesInvalid(t *testing.T) {
+func TestAvroSerdesInvalid(t *testing.T) { //nolint:paralleltest
 	req := require.New(t)
 
 	dir, err := sr.CreateTempDir()
@@ -129,6 +135,8 @@ func TestAvroSerdesInvalid(t *testing.T) {
 }
 
 func TestJsonSerdesValid(t *testing.T) {
+	t.Parallel()
+
 	req := require.New(t)
 
 	dir, err := sr.CreateTempDir()
@@ -161,7 +169,7 @@ func TestJsonSerdesValid(t *testing.T) {
 	req.NoError(os.RemoveAll(dir))
 }
 
-func TestJsonSerdesReference(t *testing.T) {
+func TestJsonSerdesReference(t *testing.T) { //nolint:paralleltest
 	req := require.New(t)
 
 	dir, err := sr.CreateTempDir()
@@ -198,7 +206,7 @@ func TestJsonSerdesReference(t *testing.T) {
 	req.NoError(os.RemoveAll(dir))
 }
 
-func TestJsonSerdesInvalid(t *testing.T) {
+func TestJsonSerdesInvalid(t *testing.T) { //nolint:paralleltest
 	req := require.New(t)
 
 	dir, err := sr.CreateTempDir()
@@ -238,7 +246,7 @@ func TestJsonSerdesInvalid(t *testing.T) {
 	req.NoError(os.RemoveAll(dir))
 }
 
-func TestProtobufSerdesValid(t *testing.T) {
+func TestProtobufSerdesValid(t *testing.T) { //nolint:paralleltest
 	req := require.New(t)
 
 	dir, err := sr.CreateTempDir()
@@ -277,7 +285,7 @@ func TestProtobufSerdesValid(t *testing.T) {
 	req.NoError(os.RemoveAll(dir))
 }
 
-func TestProtobufSerdesReference(t *testing.T) {
+func TestProtobufSerdesReference(t *testing.T) { //nolint:paralleltest
 	req := require.New(t)
 
 	dir, err := sr.CreateTempDir()
@@ -329,7 +337,7 @@ func TestProtobufSerdesReference(t *testing.T) {
 	req.NoError(os.RemoveAll(dir))
 }
 
-func TestProtobufSerdesInvalid(t *testing.T) {
+func TestProtobufSerdesInvalid(t *testing.T) { //nolint:paralleltest
 	req := require.New(t)
 
 	dir, err := sr.CreateTempDir()
@@ -375,7 +383,7 @@ func TestProtobufSerdesInvalid(t *testing.T) {
 	req.NoError(os.RemoveAll(dir))
 }
 
-func TestProtobufSerdesNestedValid(t *testing.T) {
+func TestProtobufSerdesNestedValid(t *testing.T) { //nolint:paralleltest
 	req := require.New(t)
 
 	dir, err := sr.CreateTempDir()

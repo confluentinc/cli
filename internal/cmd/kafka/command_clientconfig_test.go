@@ -7,6 +7,8 @@ import (
 )
 
 func TestCommentAndWarnAboutSr(t *testing.T) {
+	t.Parallel()
+
 	// comments should be at the beginning of the line
 	original := "# Required connection configs for Confluent Cloud Schema Registry\n" +
 		"schema.registry.url=https://{{ SR_ENDPOINT }}\n" +

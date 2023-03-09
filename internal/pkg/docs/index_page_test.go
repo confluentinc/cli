@@ -10,6 +10,8 @@ import (
 var doNothingFunc = func(_ *cobra.Command, _ []string) {}
 
 func TestPrintIndexPage(t *testing.T) {
+	t.Parallel()
+
 	cmd := &cobra.Command{Use: "command"}
 
 	a1 := &cobra.Command{Use: "a", Short: "Description 1.", Aliases: []string{"alias"}}
@@ -88,6 +90,8 @@ func TestPrintIndexPage(t *testing.T) {
 }
 
 func TestPrintRootIndexPage(t *testing.T) {
+	t.Parallel()
+
 	cmd := &cobra.Command{Use: "command"}
 
 	a1 := &cobra.Command{Use: "a"}
@@ -131,6 +135,8 @@ func TestPrintRootIndexPage(t *testing.T) {
 }
 
 func TestFlatten(t *testing.T) {
+	t.Parallel()
+
 	arrs := [][]string{
 		{"a", "b"},
 		{"c", "d"},
@@ -140,6 +146,8 @@ func TestFlatten(t *testing.T) {
 }
 
 func TestPrintComments(t *testing.T) {
+	t.Parallel()
+
 	expected := []string{
 		"..",
 		"   WARNING: This documentation is auto-generated from the confluentinc/cli repository and should not be manually edited.",
@@ -150,6 +158,8 @@ func TestPrintComments(t *testing.T) {
 }
 
 func TestPrintHeader(t *testing.T) {
+	t.Parallel()
+
 	cmd := &cobra.Command{Use: "command"}
 
 	expected := []string{
@@ -161,6 +171,8 @@ func TestPrintHeader(t *testing.T) {
 }
 
 func TestPrintTitle_Root(t *testing.T) {
+	t.Parallel()
+
 	cmd := &cobra.Command{Use: "command"}
 
 	expected := []string{
@@ -173,6 +185,8 @@ func TestPrintTitle_Root(t *testing.T) {
 }
 
 func TestPrintTitle_NonRoot(t *testing.T) {
+	t.Parallel()
+
 	a := &cobra.Command{Use: "a"}
 	b := &cobra.Command{Use: "b"}
 
@@ -188,6 +202,8 @@ func TestPrintTitle_NonRoot(t *testing.T) {
 }
 
 func TestPrintInlineScript(t *testing.T) {
+	t.Parallel()
+
 	expected := []string{
 		".. raw:: html",
 		"",
@@ -201,6 +217,8 @@ func TestPrintInlineScript(t *testing.T) {
 }
 
 func TestPrintTableOfContents(t *testing.T) {
+	t.Parallel()
+
 	a1 := &cobra.Command{Use: "a"}
 	a2 := &cobra.Command{Use: "a"}
 
@@ -230,6 +248,8 @@ func TestPrintTableOfContents(t *testing.T) {
 }
 
 func TestPrintLink(t *testing.T) {
+	t.Parallel()
+
 	a := &cobra.Command{Use: "a"}
 	b := &cobra.Command{Use: "b"}
 
@@ -240,11 +260,15 @@ func TestPrintLink(t *testing.T) {
 }
 
 func TestPrintAliases_Empty(t *testing.T) {
+	t.Parallel()
+
 	cmd := new(cobra.Command)
 	require.Empty(t, printAliases(cmd))
 }
 
 func TestPrintAliases(t *testing.T) {
+	t.Parallel()
+
 	cmd := &cobra.Command{
 		Use:     "long-command",
 		Aliases: []string{"lc"},
@@ -261,6 +285,8 @@ func TestPrintAliases(t *testing.T) {
 }
 
 func TestPrintDescription_Root(t *testing.T) {
+	t.Parallel()
+
 	cmd := &cobra.Command{Use: "command"}
 
 	expected := []string{
@@ -274,6 +300,8 @@ func TestPrintDescription_Root(t *testing.T) {
 }
 
 func TestPrintDescription(t *testing.T) {
+	t.Parallel()
+
 	a := &cobra.Command{Use: "a"}
 	b := &cobra.Command{Use: "b", Short: "Description."}
 
@@ -290,11 +318,15 @@ func TestPrintDescription(t *testing.T) {
 }
 
 func TestPrintLongestDescription_Short(t *testing.T) {
+	t.Parallel()
+
 	cmd := &cobra.Command{Short: "Description."}
 	require.Equal(t, "Description.", printLongestDescription(cmd))
 }
 
 func TestPrintLongestDescription_Long(t *testing.T) {
+	t.Parallel()
+
 	cmd := &cobra.Command{
 		Short: "Description.",
 		Long:  "Long description.",
@@ -303,14 +335,20 @@ func TestPrintLongestDescription_Long(t *testing.T) {
 }
 
 func TestFormatReST_CodeSnippet(t *testing.T) {
+	t.Parallel()
+
 	require.Equal(t, "Description of ``command``.", formatReST("Description of `command`."))
 }
 
 func TestFormatReST_Target(t *testing.T) {
+	t.Parallel()
+
 	require.Equal(t, `"target\_" "target\_"`, formatReST(`"target_" "target_"`))
 }
 
 func TestPrintSubcommands(t *testing.T) {
+	t.Parallel()
+
 	a := &cobra.Command{Use: "a"}
 	b := &cobra.Command{
 		Use:   "b",
@@ -335,21 +373,29 @@ func TestPrintSubcommands(t *testing.T) {
 }
 
 func TestPrintSphinxRef(t *testing.T) {
+	t.Parallel()
+
 	cmd := &cobra.Command{Use: "command"}
 	require.Equal(t, ":ref:`command-ref`", printSphinxRef(cmd))
 }
 
 func TestPrintRef_Root(t *testing.T) {
+	t.Parallel()
+
 	cmd := &cobra.Command{Use: "command"}
 	require.Equal(t, "command-ref", printRef(cmd, false))
 }
 
 func TestPrintRef_Overview(t *testing.T) {
+	t.Parallel()
+
 	cmd := &cobra.Command{Use: "command"}
 	require.Equal(t, "command-ref-index", printRef(cmd, true))
 }
 
 func TestPrintRef(t *testing.T) {
+	t.Parallel()
+
 	a := &cobra.Command{Use: "a"}
 	b := &cobra.Command{Use: "b"}
 
@@ -359,6 +405,8 @@ func TestPrintRef(t *testing.T) {
 }
 
 func TestDedent(t *testing.T) {
+	t.Parallel()
+
 	arr := []string{
 		" a ",
 		" b ",

@@ -10,6 +10,8 @@ import (
 )
 
 func TestSrAuthFound(t *testing.T) {
+	t.Parallel()
+
 	req := require.New(t)
 
 	cfg := climock.AuthenticatedDynamicConfigMock()

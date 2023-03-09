@@ -9,6 +9,8 @@ import (
 )
 
 func TestCompletion(t *testing.T) {
+	t.Parallel()
+
 	for _, shell := range []string{"bash", "zsh"} {
 		cmd := new(cobra.Command)
 		out, err := completion(cmd, shell)

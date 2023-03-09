@@ -197,6 +197,7 @@ func (suite *ACLTestSuite) newMockIamCmd(expect chan any, message string) *cobra
 }
 
 func TestAclTestSuite(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(ACLTestSuite))
 }
 

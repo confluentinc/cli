@@ -9,11 +9,15 @@ import (
 )
 
 func TestGetKafkaProvisionEstimate_Basic(t *testing.T) {
+	t.Parallel()
+
 	expected := "It may take up to 5 minutes for the Kafka cluster to be ready."
 	require.Equal(t, expected, getKafkaProvisionEstimate(ccstructs.Sku_BASIC))
 }
 
 func TestGetKafkaProvisionEstimate_Dedicated(t *testing.T) {
+	t.Parallel()
+
 	expected := "It may take up to 1 hour for the Kafka cluster to be ready. The organization admin will receive an email once the dedicated cluster is provisioned."
 	require.Equal(t, expected, getKafkaProvisionEstimate(ccstructs.Sku_DEDICATED))
 }

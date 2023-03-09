@@ -11,6 +11,8 @@ import (
 )
 
 func TestServerTimeout(t *testing.T) {
+	t.Parallel()
+
 	state, err := newState("https://devel.cpdev.cloud", false)
 	require.NoError(t, err)
 	server := newServer(state)
@@ -23,7 +25,7 @@ func TestServerTimeout(t *testing.T) {
 	errors.VerifyErrorAndSuggestions(require.New(t), err, errors.BrowserAuthTimedOutErrorMsg, errors.BrowserAuthTimedOutSuggestions)
 }
 
-func TestCallback(t *testing.T) {
+func TestCallback(t *testing.T) { //nolint:paralleltest
 	state, err := newState("https://devel.cpdev.cloud", false)
 	require.NoError(t, err)
 	server := newServer(state)

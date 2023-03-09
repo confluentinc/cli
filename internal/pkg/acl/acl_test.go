@@ -15,6 +15,8 @@ import (
 )
 
 func TestParseAclRequest(t *testing.T) {
+	t.Parallel()
+
 	var suite = []struct {
 		args        []string
 		expectedAcl AclRequestDataWithError
@@ -77,6 +79,8 @@ func TestParseAclRequest(t *testing.T) {
 }
 
 func TestValidateCreateDeleteAclRequestData(t *testing.T) {
+	t.Parallel()
+
 	var suite = []struct {
 		initialAcl  AclRequestDataWithError
 		expectedAcl AclRequestDataWithError
@@ -113,6 +117,8 @@ func TestValidateCreateDeleteAclRequestData(t *testing.T) {
 }
 
 func TestGetPrefixAndResourceIdFromPrincipal_Empty(t *testing.T) {
+	t.Parallel()
+
 	prefix, resourceId, err := getPrefixAndResourceIdFromPrincipal("", nil)
 	require.NoError(t, err)
 	require.Equal(t, "", prefix)
@@ -120,11 +126,15 @@ func TestGetPrefixAndResourceIdFromPrincipal_Empty(t *testing.T) {
 }
 
 func TestGetPrefixAndResourceIdFromPrincipal_UnrecognizedFormat(t *testing.T) {
+	t.Parallel()
+
 	_, _, err := getPrefixAndResourceIdFromPrincipal("string with no colon", nil)
 	require.Error(t, err)
 }
 
 func TestGetPrefixAndResourceIdFromPrincipal_ResourceId(t *testing.T) {
+	t.Parallel()
+
 	prefix, resourceId, err := getPrefixAndResourceIdFromPrincipal("User:sa-123456", nil)
 	require.NoError(t, err)
 	require.Equal(t, "User", prefix)
@@ -132,6 +142,8 @@ func TestGetPrefixAndResourceIdFromPrincipal_ResourceId(t *testing.T) {
 }
 
 func TestGetPrefixAndResourceIdFromPrincipal_NumericId(t *testing.T) {
+	t.Parallel()
+
 	prefix, resourceId, err := getPrefixAndResourceIdFromPrincipal("User:123456", map[int32]string{123456: "sa-123456"})
 	require.NoError(t, err)
 	require.Equal(t, "User", prefix)
@@ -139,6 +151,8 @@ func TestGetPrefixAndResourceIdFromPrincipal_NumericId(t *testing.T) {
 }
 
 func TestGetPrefixAndResourceIdFromPrincipal_UserIdNotValid(t *testing.T) {
+	t.Parallel()
+
 	for _, principal := range []string{"User:123456", "User:abcdef"} {
 		_, _, err := getPrefixAndResourceIdFromPrincipal(principal, nil)
 		require.Error(t, err)
@@ -146,6 +160,8 @@ func TestGetPrefixAndResourceIdFromPrincipal_UserIdNotValid(t *testing.T) {
 }
 
 func TestAclBindingToClustersClusterIdAclsPostOpts(t *testing.T) {
+	t.Parallel()
+
 	req := require.New(t)
 
 	binding := &ccstructs.ACLBinding{

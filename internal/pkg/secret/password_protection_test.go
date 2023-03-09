@@ -17,7 +17,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestPasswordProtectionSuite_CreateMasterKey(t *testing.T) {
+func TestPasswordProtectionSuite_CreateMasterKey(t *testing.T) { //nolint:paralleltest
 	type args struct {
 		masterKeyPassphrase   string
 		localSecureConfigPath string
@@ -92,7 +92,7 @@ func TestPasswordProtectionSuite_CreateMasterKey(t *testing.T) {
 			wantErrMsg: errors.EmptyPassphraseErrorMsg,
 		},
 	}
-	for _, tt := range tests {
+	for _, tt := range tests { //nolint:paralleltest
 		t.Run(tt.name, func(t *testing.T) {
 			req := require.New(t)
 
@@ -118,7 +118,7 @@ func TestPasswordProtectionSuite_CreateMasterKey(t *testing.T) {
 	}
 }
 
-func TestPasswordProtectionSuite_EncryptConfigFileSecrets(t *testing.T) {
+func TestPasswordProtectionSuite_EncryptConfigFileSecrets(t *testing.T) { //nolint:paralleltest
 	type args struct {
 		contents               string
 		masterKeyPassphrase    string
@@ -371,7 +371,7 @@ config.providers.securepass.class = io.confluent.kafka.security.config.provider.
 			wantErrMsg: errors.InvalidJSONFileFormatErrorMsg,
 		},
 	}
-	for _, tt := range tests {
+	for _, tt := range tests { //nolint:paralleltest
 		t.Run(tt.name, func(t *testing.T) {
 			req := require.New(t)
 
@@ -413,7 +413,7 @@ config.providers.securepass.class = io.confluent.kafka.security.config.provider.
 	}
 }
 
-func TestPasswordProtectionSuite_DecryptConfigFileSecrets(t *testing.T) {
+func TestPasswordProtectionSuite_DecryptConfigFileSecrets(t *testing.T) { //nolint:paralleltest
 	type args struct {
 		configFileContent      string
 		secretFileContent      string
@@ -629,7 +629,7 @@ config.properties/testPassword = ENC[AES/GCM/NoPadding,data:VXowRlNy9wP3Weq03Yry
 			wantOutputFile: "testPassword = password\n",
 		},
 	}
-	for _, tt := range tests {
+	for _, tt := range tests { //nolint:paralleltest
 		t.Run(tt.name, func(t *testing.T) {
 			req := require.New(t)
 
@@ -659,7 +659,7 @@ config.properties/testPassword = ENC[AES/GCM/NoPadding,data:VXowRlNy9wP3Weq03Yry
 	}
 }
 
-func TestPasswordProtectionSuite_AddConfigFileSecrets(t *testing.T) {
+func TestPasswordProtectionSuite_AddConfigFileSecrets(t *testing.T) { //nolint:paralleltest
 	type args struct {
 		contents               string
 		masterKeyPassphrase    string
@@ -757,7 +757,7 @@ func TestPasswordProtectionSuite_AddConfigFileSecrets(t *testing.T) {
 			wantSecretsFile: `config.json/credentials.password = ENC[AES/GCM/NoPadding,data:`,
 		},
 	}
-	for _, tt := range tests {
+	for _, tt := range tests { //nolint:paralleltest
 		t.Run(tt.name, func(t *testing.T) {
 			req := require.New(t)
 
@@ -782,7 +782,7 @@ func TestPasswordProtectionSuite_AddConfigFileSecrets(t *testing.T) {
 	}
 }
 
-func TestPasswordProtectionSuite_UpdateConfigFileSecrets(t *testing.T) {
+func TestPasswordProtectionSuite_UpdateConfigFileSecrets(t *testing.T) { //nolint:paralleltest
 	type args struct {
 		contents               string
 		masterKeyPassphrase    string
@@ -853,7 +853,7 @@ func TestPasswordProtectionSuite_UpdateConfigFileSecrets(t *testing.T) {
 			wantErr: false,
 		},
 	}
-	for _, tt := range tests {
+	for _, tt := range tests { //nolint:paralleltest
 		t.Run(tt.name, func(t *testing.T) {
 			req := require.New(t)
 
@@ -878,7 +878,7 @@ func TestPasswordProtectionSuite_UpdateConfigFileSecrets(t *testing.T) {
 	}
 }
 
-func TestPasswordProtectionSuite_RemoveConfigFileSecrets(t *testing.T) {
+func TestPasswordProtectionSuite_RemoveConfigFileSecrets(t *testing.T) { //nolint:paralleltest
 	type args struct {
 		contents               string
 		masterKeyPassphrase    string
@@ -1022,7 +1022,7 @@ func TestPasswordProtectionSuite_RemoveConfigFileSecrets(t *testing.T) {
 			wantErrMsg: fmt.Sprintf(errors.ConfigKeyNotEncryptedErrorMsg, "credentials/location"),
 		},
 	}
-	for _, tt := range tests {
+	for _, tt := range tests { //nolint:paralleltest
 		t.Run(tt.name, func(t *testing.T) {
 			req := require.New(t)
 
@@ -1046,7 +1046,7 @@ func TestPasswordProtectionSuite_RemoveConfigFileSecrets(t *testing.T) {
 	}
 }
 
-func TestPasswordProtectionSuite_RotateDataKey(t *testing.T) {
+func TestPasswordProtectionSuite_RotateDataKey(t *testing.T) { //nolint:paralleltest
 	type args struct {
 		contents               string
 		masterKeyPassphrase    string
@@ -1148,7 +1148,7 @@ func TestPasswordProtectionSuite_RotateDataKey(t *testing.T) {
 			wantErrMsg: errors.IncorrectPassphraseErrorMsg,
 		},
 	}
-	for _, tt := range tests {
+	for _, tt := range tests { //nolint:paralleltest
 		t.Run(tt.name, func(t *testing.T) {
 			req := require.New(t)
 
@@ -1191,7 +1191,7 @@ func TestPasswordProtectionSuite_RotateDataKey(t *testing.T) {
 	}
 }
 
-func TestPasswordProtectionSuite_RotateMasterKey(t *testing.T) {
+func TestPasswordProtectionSuite_RotateMasterKey(t *testing.T) { //nolint:paralleltest
 	type args struct {
 		contents               string
 		masterKeyPassphrase    string
@@ -1307,7 +1307,7 @@ func TestPasswordProtectionSuite_RotateMasterKey(t *testing.T) {
 			wantErrMsg: errors.SamePassphraseErrorMsg,
 		},
 	}
-	for _, tt := range tests {
+	for _, tt := range tests { //nolint:paralleltest
 		t.Run(tt.name, func(t *testing.T) {
 			req := require.New(t)
 

@@ -15,6 +15,8 @@ var (
 )
 
 func TestIsJSON(t *testing.T) {
+	t.Parallel()
+
 	req := require.New(t)
 
 	req.True(isJSON([]byte(exampleJSON)))
@@ -22,6 +24,8 @@ func TestIsJSON(t *testing.T) {
 }
 
 func TestFormatJSONResponse(t *testing.T) {
+	t.Parallel()
+
 	req := require.New(t)
 
 	res := &http.Response{
@@ -34,6 +38,8 @@ func TestFormatJSONResponse(t *testing.T) {
 }
 
 func TestFormatEmptyJSONResponse(t *testing.T) {
+	t.Parallel()
+
 	req := require.New(t)
 
 	res := &http.Response{

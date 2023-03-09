@@ -1,11 +1,14 @@
 package pipeline
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestCreateValidSecretMappings(t *testing.T) {
+	t.Parallel()
+
 	secretMappings, err := createSecretMappings([]string{"name1=value1", "_name2=value2"}, secretMappingWithoutEmptyValue)
 	assert.NoError(t, err)
 	assert.Equal(t, "value1", secretMappings["name1"])
@@ -22,6 +25,8 @@ func TestCreateValidSecretMappings(t *testing.T) {
 }
 
 func TestCreateSecretMappingsWithInvalidName(t *testing.T) {
+	t.Parallel()
+
 	_, err := createSecretMappings([]string{"123invalidName=value"}, secretMappingWithoutEmptyValue)
 	assert.Error(t, err)
 
@@ -30,12 +35,16 @@ func TestCreateSecretMappingsWithInvalidName(t *testing.T) {
 }
 
 func TestCreateSecretMappingsWithLongName(t *testing.T) {
+	t.Parallel()
+
 	secretMappings, err := createSecretMappings([]string{"a_really_really_really_really_really_really_really_really_really_really_really_really_long_secret_name_but_not_exceeding_128_yet=value"}, secretMappingWithoutEmptyValue)
 	assert.NoError(t, err)
 	assert.Equal(t, "value", secretMappings["a_really_really_really_really_really_really_really_really_really_really_really_really_long_secret_name_but_not_exceeding_128_yet"])
 }
 
 func TestCreateSecretMappingsWithEmptyValue(t *testing.T) {
+	t.Parallel()
+
 	// empty secret value is NOT allowed with this regex
 	_, err := createSecretMappings([]string{"name1=value1", "name2="}, secretMappingWithoutEmptyValue)
 	assert.Error(t, err)
@@ -47,6 +56,8 @@ func TestCreateSecretMappingsWithEmptyValue(t *testing.T) {
 }
 
 func TestSecretNamesListWithEmptyInput(t *testing.T) {
+	t.Parallel()
+
 	assert.Equal(t, []string{}, getOrderedSecretNames(nil))
 
 	secretMappings := make(map[string]string)
@@ -54,6 +65,8 @@ func TestSecretNamesListWithEmptyInput(t *testing.T) {
 }
 
 func TestSecretNamesListOrder(t *testing.T) {
+	t.Parallel()
+
 	secretMappings := make(map[string]string)
 
 	secretMappings["name1"] = "value1"

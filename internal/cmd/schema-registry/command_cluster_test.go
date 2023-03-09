@@ -158,5 +158,6 @@ func (suite *ClusterTestSuite) TestUpdateNoArgs() {
 }
 
 func TestClusterTestSuite(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(ClusterTestSuite))
 }

@@ -25,7 +25,7 @@ type ConfluentHomeTestSuite struct {
 	ch *ConfluentHomeManager
 }
 
-func TestConfluentHomeTestSuite(t *testing.T) {
+func TestConfluentHomeTestSuite(t *testing.T) { //nolint:paralleltest
 	suite.Run(t, new(ConfluentHomeTestSuite))
 }
 

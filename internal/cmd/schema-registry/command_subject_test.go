@@ -165,5 +165,6 @@ func (suite *SubjectTestSuite) TestSubjectDescribeDeleted() {
 }
 
 func TestSubjectSuite(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(SubjectTestSuite))
 }

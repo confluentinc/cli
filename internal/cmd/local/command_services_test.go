@@ -15,6 +15,8 @@ const (
 )
 
 func TestGetConnectConfig(t *testing.T) {
+	t.Parallel()
+
 	want := map[string]string{
 		"bootstrap.servers":            "localhost:9092",
 		"plugin.path":                  exampleFile,
@@ -29,13 +31,15 @@ func TestGetConnectConfig(t *testing.T) {
 }
 
 func TestGetControlCenterConfig(t *testing.T) {
-	want := map[string]string{
-		"confluent.controlcenter.data.dir": exampleDir,
-	}
+	t.Parallel()
+
+	want := map[string]string{"confluent.controlcenter.data.dir": exampleDir}
 	testGetConfig(t, "control-center", want)
 }
 
 func TestGetKafkaConfig(t *testing.T) {
+	t.Parallel()
+
 	want := map[string]string{
 		"log.dirs":         exampleDir,
 		"metric.reporters": "io.confluent.metrics.reporter.ConfluentMetricsReporter",
@@ -46,6 +50,8 @@ func TestGetKafkaConfig(t *testing.T) {
 }
 
 func TestGetKafkaRestConfig(t *testing.T) {
+	t.Parallel()
+
 	want := map[string]string{
 		"schema.registry.url":          "http://localhost:8081",
 		"zookeeper.connect":            "localhost:2181",
@@ -56,6 +62,8 @@ func TestGetKafkaRestConfig(t *testing.T) {
 }
 
 func TestGetKsqlServerConfig(t *testing.T) {
+	t.Parallel()
+
 	want := map[string]string{
 		"kafkastore.connection.url":    "localhost:2181",
 		"ksql.schema.registry.url":     "http://localhost:8081",
@@ -67,6 +75,8 @@ func TestGetKsqlServerConfig(t *testing.T) {
 }
 
 func TestGetSchemaRegistryConfig(t *testing.T) {
+	t.Parallel()
+
 	want := map[string]string{
 		"kafkastore.connection.url":    "localhost:2181",
 		"consumer.interceptor.classes": "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor",
@@ -76,9 +86,9 @@ func TestGetSchemaRegistryConfig(t *testing.T) {
 }
 
 func TestGetZookeeperConfig(t *testing.T) {
-	want := map[string]string{
-		"dataDir": exampleDir,
-	}
+	t.Parallel()
+
+	want := map[string]string{"dataDir": exampleDir}
 	testGetConfig(t, "zookeeper", want)
 }
 
@@ -114,6 +124,8 @@ func testGetConfig(t *testing.T, service string, want map[string]string) {
 }
 
 func TestConfluentPlatformAvailableServices(t *testing.T) {
+	t.Parallel()
+
 	req := require.New(t)
 
 	c := &Command{
@@ -140,6 +152,8 @@ func TestConfluentPlatformAvailableServices(t *testing.T) {
 }
 
 func TestConfluentCommunitySoftwareAvailableServices(t *testing.T) {
+	t.Parallel()
+
 	req := require.New(t)
 
 	c := &Command{

@@ -87,5 +87,6 @@ func (suite *ServiceAccountTestSuite) TestDeleteServiceAccountService() {
 }
 
 func TestServiceAccountTestSuite(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(ServiceAccountTestSuite))
 }

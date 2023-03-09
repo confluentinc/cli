@@ -17,6 +17,8 @@ Suggestions:
 )
 
 func TestHandleError(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name    string
 		err     error
@@ -52,7 +54,10 @@ func TestHandleError(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			var err error
 			if err = HandleCommon(tt.err); (err != nil) != tt.wantErr {
 				t.Errorf("HandleCommon()\nerror: %v\nwantErr: %v", err, tt.wantErr)
@@ -65,6 +70,8 @@ func TestHandleError(t *testing.T) {
 }
 
 func TestDisplaySuggestionsMessage(t *testing.T) {
+	t.Parallel()
+
 	suggestion := "This is a suggestion"
 	err := NewErrorWithSuggestions("im an error hi", suggestion)
 	require.Equal(t, fmt.Sprintf(wantSuggestionsMsgFormat, suggestion), DisplaySuggestionsMessage(err))

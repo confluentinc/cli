@@ -8,6 +8,8 @@ import (
 )
 
 func TestParseNetrcMachineName(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name        string
 		machineName string
@@ -45,7 +47,10 @@ func TestParseNetrcMachineName(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := ParseNetrcMachineName(tt.machineName)
 			require.NoError(t, err)
 			compareMachineContextInfo(t, tt.want, got)

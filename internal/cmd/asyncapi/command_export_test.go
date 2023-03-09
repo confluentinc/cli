@@ -204,6 +204,8 @@ func newCmd() (*command, error) {
 }
 
 func TestGetTopicDescription(t *testing.T) {
+	t.Parallel()
+
 	c, err := newCmd()
 	require.NoError(t, err)
 
@@ -225,6 +227,8 @@ func TestGetTopicDescription(t *testing.T) {
 }
 
 func TestGetClusterDetails(t *testing.T) {
+	t.Parallel()
+
 	c, err := newCmd()
 	require.NoError(t, err)
 	flags := &flags{kafkaApiKey: ""}
@@ -233,6 +237,8 @@ func TestGetClusterDetails(t *testing.T) {
 }
 
 func TestGetSchemaRegistry(t *testing.T) {
+	t.Parallel()
+
 	c, err := newCmd()
 	require.NoError(t, err)
 	flags := &flags{schemaRegistryApiKey: "ASYNCAPIKEY", schemaRegistryApiSecret: "ASYNCAPISECRET"}
@@ -242,6 +248,8 @@ func TestGetSchemaRegistry(t *testing.T) {
 }
 
 func TestGetSchemaDetails(t *testing.T) {
+	t.Parallel()
+
 	c, err := newCmd()
 	require.NoError(t, err)
 
@@ -264,6 +272,8 @@ func TestGetSchemaDetails(t *testing.T) {
 }
 
 func TestGetChannelDetails(t *testing.T) {
+	t.Parallel()
+
 	c, err := newCmd()
 	require.NoError(t, err)
 
@@ -294,6 +304,8 @@ func TestGetChannelDetails(t *testing.T) {
 }
 
 func TestGetBindings(t *testing.T) {
+	t.Parallel()
+
 	c, err := newCmd()
 	require.NoError(t, err)
 
@@ -311,6 +323,8 @@ func TestGetBindings(t *testing.T) {
 }
 
 func TestGetTags(t *testing.T) {
+	t.Parallel()
+
 	c, err := newCmd()
 	require.NoError(t, err)
 	schema, _, _ := details.srClient.DefaultApi.GetSchemaByVersion(*new(context.Context), "subject1", "1", nil)
@@ -321,10 +335,14 @@ func TestGetTags(t *testing.T) {
 }
 
 func TestGetMessageCompatibility(t *testing.T) {
+	t.Parallel()
+
 	_, err := getMessageCompatibility(details.srClient, *new(context.Context), "subject1")
 	require.NoError(t, err)
 }
 
 func TestMsgName(t *testing.T) {
+	t.Parallel()
+
 	require.Equal(t, "TopicNameMessage", msgName("topic name"))
 }

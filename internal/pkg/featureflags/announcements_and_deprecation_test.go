@@ -8,10 +8,14 @@ import (
 )
 
 func TestGetAnnouncementsOrDeprecation_BadFormat(t *testing.T) {
+	t.Parallel()
+
 	require.Empty(t, GetAnnouncementsOrDeprecation(""))
 }
 
 func TestGetAnnouncementsOrDeprecation(t *testing.T) {
+	t.Parallel()
+
 	resp := []any{
 		map[string]any{
 			"pattern": "command",
@@ -56,6 +60,8 @@ func TestGetAnnouncementsOrDeprecation(t *testing.T) {
 }
 
 func TestDeprecateCommandTree(t *testing.T) {
+	t.Parallel()
+
 	cmds := dummyCmds()
 	DeprecateCommandTree(cmds[0])
 	for _, cmd := range cmds {
@@ -65,6 +71,8 @@ func TestDeprecateCommandTree(t *testing.T) {
 }
 
 func TestDeprecateFlags(t *testing.T) {
+	t.Parallel()
+
 	cmds := dummyCmds()
 	DeprecateFlags(cmds[0], []string{"flag1", "f"})
 	for _, cmd := range cmds {

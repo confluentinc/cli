@@ -11,6 +11,8 @@ import (
 )
 
 func TestJAASParser_String(t *testing.T) {
+	t.Parallel()
+
 	type args struct {
 		key             string
 		contents        string
@@ -79,7 +81,10 @@ listener.name.sasl_ssl.scram-sha-256.sasl.jaas.config/com.sun.security.auth.modu
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			req := require.New(t)
 			parser := NewJAASParser()
 			props, err := parser.ParseJAASConfigurationEntry(tt.args.contents, tt.args.key)
@@ -96,6 +101,8 @@ listener.name.sasl_ssl.scram-sha-256.sasl.jaas.config/com.sun.security.auth.modu
 }
 
 func TestJAASParser_StringUpdate(t *testing.T) {
+	t.Parallel()
+
 	type args struct {
 		key             string
 		contents        string
@@ -133,7 +140,10 @@ listener.name.sasl_ssl.scram-sha-256.sasl.jaas.config/com.sun.security.auth.modu
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			req := require.New(t)
 			parser := NewJAASParser()
 			_, err := parser.ParseJAASConfigurationEntry(tt.args.originalContent, tt.args.key)

@@ -8,6 +8,8 @@ import (
 )
 
 func TestLogger_Flush(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		level    Level
@@ -25,7 +27,10 @@ func TestLogger_Flush(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			buf := new(bytes.Buffer)
 			l := New(tt.level, buf)
 			l.Debug("hi there")

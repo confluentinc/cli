@@ -7,6 +7,8 @@ import (
 )
 
 func TestVersion(t *testing.T) {
+	t.Parallel()
+
 	req := require.New(t)
 
 	v := NewVersion("1.2.3", "abc1234", "Fri Feb 22 20:55:53 UTC 2019")
@@ -18,6 +20,8 @@ func TestVersion(t *testing.T) {
 }
 
 func TestNewVersion_v0(t *testing.T) {
+	t.Parallel()
+
 	req := require.New(t)
 
 	v := NewVersion("0.0.0", "abc1234", "01/23/45")
@@ -28,6 +32,8 @@ func TestNewVersion_v0(t *testing.T) {
 }
 
 func TestNewVersion_Dirty(t *testing.T) {
+	t.Parallel()
+
 	req := require.New(t)
 
 	v := NewVersion("1.2.3-dirty-timmy", "abc1234", "01/23/45")
@@ -38,6 +44,8 @@ func TestNewVersion_Dirty(t *testing.T) {
 }
 
 func TestNewVersion_Unmerged(t *testing.T) {
+	t.Parallel()
+
 	req := require.New(t)
 
 	v := NewVersion("1.2.3-g16dd476", "abc1234", "01/23/45")

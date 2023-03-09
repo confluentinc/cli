@@ -8,6 +8,8 @@ import (
 )
 
 func TestPrintTabbedSection_Hidden(t *testing.T) {
+	t.Parallel()
+
 	printSection := func(*cobra.Command) ([]string, bool) { return []string{}, false }
 	tabs := make([]Tab, 1)
 
@@ -16,6 +18,8 @@ func TestPrintTabbedSection_Hidden(t *testing.T) {
 }
 
 func TestPrintTabbedSection_Unified(t *testing.T) {
+	t.Parallel()
+
 	printSection := func(*cobra.Command) ([]string, bool) { return []string{"Content"}, true }
 	tabs := make([]Tab, 2)
 
@@ -30,6 +34,8 @@ func TestPrintTabbedSection_Unified(t *testing.T) {
 }
 
 func TestPrintTabbedSection_Tabbed(t *testing.T) {
+	t.Parallel()
+
 	printSection := func(cmd *cobra.Command) ([]string, bool) { return []string{cmd.Short, ""}, true }
 	tabs := []Tab{
 		{
@@ -62,6 +68,8 @@ func TestPrintTabbedSection_Tabbed(t *testing.T) {
 }
 
 func TestPrintSection(t *testing.T) {
+	t.Parallel()
+
 	expected := []string{
 		"Title",
 		"~~~~~",
@@ -74,21 +82,31 @@ func TestPrintSection(t *testing.T) {
 }
 
 func TestAreEqual_DifferentLen(t *testing.T) {
+	t.Parallel()
+
 	require.False(t, areEqual([]string{}, []string{""}))
 }
 
 func TestAreEqual_DifferentElements(t *testing.T) {
+	t.Parallel()
+
 	require.False(t, areEqual([]string{"a"}, []string{"b"}))
 }
 
 func TestAreEqual_True(t *testing.T) {
+	t.Parallel()
+
 	require.True(t, areEqual([]string{"a"}, []string{"a"}))
 }
 
 func TestIndent(t *testing.T) {
+	t.Parallel()
+
 	require.Equal(t, []string{" a", " b"}, indent(" ", []string{"a", "b"}))
 }
 
 func TestIndent_WithNewlines(t *testing.T) {
+	t.Parallel()
+
 	require.Equal(t, []string{" a", " b", " c"}, indent(" ", []string{"a", "b\nc"}))
 }

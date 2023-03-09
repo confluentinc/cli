@@ -8,6 +8,8 @@ import (
 )
 
 func TestIsCCloudURL_True(t *testing.T) {
+	t.Parallel()
+
 	for _, url := range []string{
 		"confluent.cloud",
 		"https://confluent.cloud",
@@ -22,6 +24,8 @@ func TestIsCCloudURL_True(t *testing.T) {
 }
 
 func TestIsCCloudURL_False(t *testing.T) {
+	t.Parallel()
+
 	for _, url := range []string{
 		"example.com",
 		"example.com:8090",
@@ -33,6 +37,8 @@ func TestIsCCloudURL_False(t *testing.T) {
 }
 
 func TestGetServerUrl(t *testing.T) {
+	t.Parallel()
+
 	m := map[string]string{
 		"https://confluent.cloud":                  "https://api.confluent.cloud",
 		"https://devel.cpdev.cloud":                "https://api.devel.cpdev.cloud",
