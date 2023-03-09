@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	prompt "github.com/c-bata/go-prompt"
+	"github.com/confluentinc/flink-sql-client/config"
+	testutils "github.com/confluentinc/flink-sql-client/test/testutils"
 	"github.com/stretchr/testify/require"
 	"pgregory.net/rapid"
 )
@@ -19,8 +21,8 @@ func TestBasicLexer(t *testing.T) {
 	// then
 	for i, element := range elements {
 		if i >= 0 && i < 6 || i > 12 && i < 17 {
-			if element.Color != HIGHLIGHT_COLOR {
-				t.Errorf("lexer() = %d, want %d", element.Color, HIGHLIGHT_COLOR)
+			if element.Color != config.HIGHLIGHT_COLOR {
+				t.Errorf("lexer() = %d, want %d", element.Color, config.HIGHLIGHT_COLOR)
 			}
 		} else if element.Color != prompt.White {
 			t.Errorf("lexer() = %d, want %d", element.Color, prompt.White)
@@ -39,8 +41,8 @@ func TestIsLexerCaseInsensitive(t *testing.T) {
 	// then
 	for i, element := range elements {
 		if i >= 0 && i < 6 || i > 12 && i < 17 {
-			if element.Color != HIGHLIGHT_COLOR {
-				t.Errorf("lexer() = %d, want %d", element.Color, HIGHLIGHT_COLOR)
+			if element.Color != config.HIGHLIGHT_COLOR {
+				t.Errorf("lexer() = %d, want %d", element.Color, config.HIGHLIGHT_COLOR)
 			}
 		} else if element.Color != prompt.White {
 			t.Errorf("lexer() = %d, want %d", element.Color, prompt.White)
@@ -76,10 +78,10 @@ func TestExamplesWordLexer(t *testing.T) {
 		for _, element := range elements {
 			element.Text = strings.TrimSpace(element.Text)
 			element.Text = strings.ToUpper(element.Text)
-			_, isKeyWord := SQLKeywords[element.Text]
+			_, isKeyWord := config.SQLKeywords[element.Text]
 
 			if isKeyWord {
-				require.Equal(t, element.Color, HIGHLIGHT_COLOR)
+				require.Equal(t, element.Color, config.HIGHLIGHT_COLOR)
 			} else {
 				require.Equal(t, element.Color, prompt.White)
 			}
@@ -90,7 +92,7 @@ func TestExamplesWordLexer(t *testing.T) {
 
 func TestWordLexerForRandomStatements(t *testing.T) {
 	// given
-	statementGenerator := RandomStatementGenerator()
+	statementGenerator := testutils.RandomStatementGenerator(15)
 	rapid.Check(t, func(t *rapid.T) {
 		randomStatement := statementGenerator.Example()
 

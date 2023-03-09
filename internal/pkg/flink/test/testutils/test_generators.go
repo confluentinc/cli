@@ -1,9 +1,11 @@
-package components
+package testutils
 
 import (
 	"strings"
 
 	prompt "github.com/c-bata/go-prompt"
+
+	"github.com/confluentinc/flink-sql-client/config"
 	"golang.org/x/exp/maps"
 	"pgregory.net/rapid"
 )
@@ -13,11 +15,12 @@ type RandomStatement struct {
 	LexerElements []prompt.LexerElement
 }
 
-func RandomStatementGenerator() *rapid.Generator[RandomStatement] {
-	sqlKeywordsSlice := maps.Keys(SQLKeywords)
+func RandomStatementGenerator(maxWordsCount int32) *rapid.Generator[RandomStatement] {
+
+	sqlKeywordsSlice := maps.Keys(config.SQLKeywords)
 
 	return rapid.Custom(func(t *rapid.T) RandomStatement {
-		wordsCount := rapid.Int32Max(15).Draw(t, "Words Count")
+		wordsCount := rapid.Int32Max(maxWordsCount).Draw(t, "Words Count")
 		var statement string = ""
 		lexerElements := []prompt.LexerElement{}
 
@@ -32,17 +35,17 @@ func RandomStatementGenerator() *rapid.Generator[RandomStatement] {
 
 			// The random generator can generate SQL keywords or strings with unicode
 			// characters for empty space (i.e. "\u2003") so we just skip this cases for simplicity
-			_, isRandomWordASqlKeyword := SQLKeywords[word]
+			_, isRandomWordASqlKeyword := config.SQLKeywords[word]
 			if isRandomWordASqlKeyword || word == "" {
 				i--
 				continue
 			}
 
 			if addSqlKeyword {
-				keywordIndex := rapid.IntRange(0, len(SQLKeywords)-1).Draw(t, "Keyword Index")
+				keywordIndex := rapid.IntRange(0, len(config.SQLKeywords)-1).Draw(t, "Keyword Index")
 				keyword := sqlKeywordsSlice[keywordIndex]
 				statement += " " + keyword
-				lexerElements = append(lexerElements, prompt.LexerElement{Text: keyword, Color: HIGHLIGHT_COLOR})
+				lexerElements = append(lexerElements, prompt.LexerElement{Text: keyword, Color: config.HIGHLIGHT_COLOR})
 			} else {
 				statement += " " + word
 				lexerElements = append(lexerElements, prompt.LexerElement{Text: word, Color: prompt.White})

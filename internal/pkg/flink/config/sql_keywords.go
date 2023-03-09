@@ -1,4 +1,4 @@
-package components
+package config
 
 // These are all Flink SQL reserved keywords extracted from https://nightlies.apache.org/flink/flink-docs-release-1.16/docs/dev/table/sql/overview/
 var SQLKeywords = map[string]int{

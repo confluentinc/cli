@@ -4,9 +4,8 @@ import (
 	"strings"
 
 	prompt "github.com/c-bata/go-prompt"
+	"github.com/confluentinc/flink-sql-client/config"
 )
-
-var HIGHLIGHT_COLOR = prompt.Cyan
 
 /* This outputs words with their colors according to if they are flink sql keywords or not */
 func wordLexer(line string) []prompt.LexerElement {
@@ -21,9 +20,9 @@ func wordLexer(line string) []prompt.LexerElement {
 	for i, word := range words {
 		element := prompt.LexerElement{}
 
-		_, isKeyword := SQLKeywords[strings.ToUpper(word)]
+		_, isKeyword := config.SQLKeywords[strings.ToUpper(word)]
 		if isKeyword {
-			element.Color = HIGHLIGHT_COLOR
+			element.Color = config.HIGHLIGHT_COLOR
 		} else {
 			element.Color = prompt.White
 		}
