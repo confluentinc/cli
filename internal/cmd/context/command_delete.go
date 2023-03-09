@@ -6,17 +6,19 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
+	perrors "github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
+	"github.com/confluentinc/cli/internal/pkg/set"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *command) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "delete <context>",
-		Short:             "Delete a context.",
-		Args:              cobra.ExactArgs(1),
+		Short:             "Delete contexts.",
+		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.delete,
 	}
@@ -27,20 +29,49 @@ func (c *command) newDeleteCommand() *cobra.Command {
 }
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
-	ctx, err := c.Config.FindContext(args[0])
-	if err != nil {
+	if err := c.checkExistence(cmd, args); err != nil {
 		return err
 	}
 
-	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmYesNoMsg, resource.Context, ctx.Name)
+	promptMsg := fmt.Sprintf(perrors.DeleteResourceConfirmYesNoMsg, resource.Context, args[0])
+	if len(args) > 1 {
+		promptMsg = fmt.Sprintf(perrors.DeleteResourcesConfirmYesNoMsg, resource.Context, utils.ArrayToCommaDelimitedStringWithAnd(args))
+	}
 	if ok, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil || !ok {
 		return err
 	}
 
-	if err := c.Config.DeleteContext(ctx.Name); err != nil {
-		return err
+	var errs error
+	for _, ctxName := range args {
+		if err := c.Config.DeleteContext(ctxName); err != nil {
+			return err
+		} else {
+			output.Printf(perrors.DeletedResourceMsg, resource.Context, ctxName)
+		}
 	}
 
-	output.Printf(errors.DeletedResourceMsg, resource.Context, ctx.Name)
+	return errs
+}
+
+func (c *command) checkExistence(cmd *cobra.Command, args []string) error {
+	// Single
+	if len(args) == 1 {
+		if _, err := c.Config.FindContext(args[0]); err != nil {
+			return err
+		}
+		return nil
+	}
+
+	// Multiple
+	contextSet := set.New()
+	for _, context := range c.Config.Contexts {
+		contextSet.Add(context.Name)
+	}
+
+	invalidContexts := contextSet.Difference(args)
+	if len(invalidContexts) > 0 {
+		return perrors.New("contexts not found: " + utils.ArrayToCommaDelimitedStringWithAnd(invalidContexts))
+	}
+
 	return nil
 }

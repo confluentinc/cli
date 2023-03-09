@@ -80,7 +80,7 @@ func (c *command) checkExistence(cmd *cobra.Command, args []string) error {
 
 	invalidKeys := keySet.Difference(args)
 	if len(invalidKeys) > 0 {
-		return perrors.NewErrorWithSuggestions("Self-managed keys not found or access forbidden: " + utils.ArrayToCommaDelimitedStringWithAnd(invalidKeys), perrors.ByokKeyNotFoundSuggestions)
+		return perrors.NewErrorWithSuggestions("self-managed keys not found or access forbidden: " + utils.ArrayToCommaDelimitedStringWithAnd(invalidKeys), perrors.ByokKeyNotFoundSuggestions)
 	}
 
 	return nil
