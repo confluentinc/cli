@@ -34,7 +34,7 @@ func newClusterCommand(cfg *v1.Config, prerunner pcmd.PreRunner, srClient *srsdk
 		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner)
 	}
 
-	c.AddCommand(c.newDeleteCommand(cfg))
+	c.AddCommand(c.newDeleteCommand())
 	c.AddCommand(c.newDescribeCommand(cfg))
 	c.AddCommand(c.newEnableCommand(cfg))
 	c.AddCommand(c.newListCommandOnPrem())

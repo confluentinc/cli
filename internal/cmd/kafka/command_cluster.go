@@ -45,7 +45,7 @@ func newClusterCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command 
 
 	cmd.AddCommand(c.newCreateCommand(cfg))
 	cmd.AddCommand(c.newDeleteCommand(cfg))
-	cmd.AddCommand(c.newDescribeCommand(cfg))
+	cmd.AddCommand(c.newDescribeCommand())
 	cmd.AddCommand(c.newUpdateCommand(cfg))
 	cmd.AddCommand(c.newUseCommand(cfg))
 

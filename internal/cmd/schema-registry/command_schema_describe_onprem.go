@@ -60,7 +60,7 @@ func (c *schemaCommand) onPremDescribe(cmd *cobra.Command, args []string) error 
 	}
 
 	if id != "" {
-		return describeById(cmd, id, srClient, ctx)
+		return describeById(id, srClient, ctx)
 	}
 	return describeBySubject(cmd, srClient, ctx)
 }
