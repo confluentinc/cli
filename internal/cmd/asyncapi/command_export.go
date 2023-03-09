@@ -118,6 +118,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 				}
 				err := c.getChannelDetails(accountDetails, flags)
 				if err != nil && err == errors.New("protobuf is not supported") {
+					log.CliLogger.Info("Protobuf is not supported.")
 					continue
 				}
 				if err != nil {
@@ -156,7 +157,6 @@ func (c *command) getChannelDetails(details *accountDetails, flags *flags) error
 	output.Printf("Adding operation: %s\n", details.channelDetails.currentTopic.GetTopicName())
 	err := details.getSchemaDetails()
 	if err == errors.New("protobuf is not supported") {
-		log.CliLogger.Info("Protobuf is not supported.")
 		return err
 	}
 	if err != nil {
