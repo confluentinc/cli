@@ -78,6 +78,8 @@ var (
 )
 
 func TestErrIfMissingRunRequirement_NoError(t *testing.T) {
+	t.Parallel()
+
 	for _, test := range []struct {
 		req string
 		cfg *v1.Config
@@ -100,6 +102,8 @@ func TestErrIfMissingRunRequirement_NoError(t *testing.T) {
 }
 
 func TestErrIfMissingRunRequirement_Error(t *testing.T) {
+	t.Parallel()
+
 	for _, test := range []struct {
 		req string
 		cfg *v1.Config
@@ -126,11 +130,15 @@ func TestErrIfMissingRunRequirement_Error(t *testing.T) {
 }
 
 func TestErrIfMissingRunRequirement_Root(t *testing.T) {
+	t.Parallel()
+
 	err := ErrIfMissingRunRequirement(&cobra.Command{}, nil)
 	require.NoError(t, err)
 }
 
 func TestErrIfMissingRunRequirement_Subcommand(t *testing.T) {
+	t.Parallel()
+
 	a := &cobra.Command{Annotations: map[string]string{RunRequirement: RequireCloudLogin}}
 	b := &cobra.Command{}
 	a.AddCommand(b)

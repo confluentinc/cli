@@ -31,6 +31,8 @@ var (
 )
 
 func TestFindKafkaCluster_Unexpired(t *testing.T) {
+	t.Parallel()
+
 	update := time.Now()
 
 	d := &DynamicContext{
@@ -49,6 +51,8 @@ func TestFindKafkaCluster_Unexpired(t *testing.T) {
 }
 
 func TestFindKafkaCluster_Expired(t *testing.T) {
+	t.Parallel()
+
 	update := time.Now().Add(-7 * 24 * time.Hour)
 
 	d := &DynamicContext{
@@ -97,6 +101,8 @@ func stringPtr(s string) *string {
 }
 
 func TestDynamicContext_ParseFlagsIntoContext(t *testing.T) {
+	t.Parallel()
+
 	client := buildCcloudMockClient()
 	tests := []struct {
 		name           string

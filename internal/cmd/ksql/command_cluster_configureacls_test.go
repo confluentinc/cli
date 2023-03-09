@@ -10,6 +10,8 @@ import (
 )
 
 func TestGetCreateAclRequestDataList(t *testing.T) {
+	t.Parallel()
+
 	actual := getCreateAclRequestDataList([]*ccstructs.ACLBinding{{}})
 	expected := kafkarestv3.CreateAclRequestDataList{Data: []kafkarestv3.CreateAclRequestData{{}}}
 	require.Equal(t, expected, actual)

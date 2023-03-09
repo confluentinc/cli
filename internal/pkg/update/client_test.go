@@ -24,6 +24,8 @@ import (
 )
 
 func TestNewClient(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name   string
 		params *ClientParams
@@ -57,7 +59,10 @@ func TestNewClient(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			if got := NewClient(tt.params); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("NewClient() = %#v, want %#v", got, tt.want)
 			}
@@ -65,7 +70,7 @@ func TestNewClient(t *testing.T) {
 	}
 }
 
-func TestCheckForUpdates(t *testing.T) {
+func TestCheckForUpdates(t *testing.T) { //nolint:paralleltest
 	tmpCheckFile1, err := os.CreateTemp("", "cli-test1-")
 	require.NoError(t, err)
 	defer os.Remove(tmpCheckFile1.Name())
@@ -351,10 +356,8 @@ func TestCheckForUpdates(t *testing.T) {
 			wantMinor: "",
 		},
 	}
-	for _, tt := range tests {
-		tt := tt
+	for _, tt := range tests { //nolint:paralleltest
 		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
 			major, minor, err := tt.client.CheckForUpdates(tt.args.name, tt.args.currentVersion, tt.args.forceCheck)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("client.CheckForUpdates() error = %v, wantErr %v", err, tt.wantErr)
@@ -371,6 +374,8 @@ func TestCheckForUpdates(t *testing.T) {
 }
 
 func TestCheckForUpdates_BehaviorOverTime(t *testing.T) {
+	t.Parallel()
+
 	req := require.New(t)
 
 	tmpDir, err := os.MkdirTemp("", "cli-test3-")
@@ -434,6 +439,8 @@ func TestCheckForUpdates_BehaviorOverTime(t *testing.T) {
 }
 
 func TestCheckForUpdates_NoCheckFileGiven(t *testing.T) {
+	t.Parallel()
+
 	req := require.New(t)
 
 	repo := &updateMock.Repository{
@@ -459,6 +466,8 @@ func TestCheckForUpdates_NoCheckFileGiven(t *testing.T) {
 }
 
 func TestVerifyChecksum(t *testing.T) {
+	t.Parallel()
+
 	checksums := test.LoadFixture(t, "update/checksums.golden")
 
 	mockRepository := &updateMock.Repository{
@@ -510,7 +519,10 @@ func TestVerifyChecksum(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			_, err := mockRepository.DownloadChecksums("confluent", tt.version)
 			if tt.wantDownloadErr {
 				require.Error(t, err)
@@ -529,6 +541,8 @@ func TestVerifyChecksum(t *testing.T) {
 }
 
 func TestGetLatestReleaseNotes(t *testing.T) {
+	t.Parallel()
+
 	currentVersion := "0.1.0"
 	releaseNotesVersion := "1.0.0"
 	releaseNotes := "nice release notes"
@@ -588,7 +602,10 @@ func TestGetLatestReleaseNotes(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			gotReleaseNotesVersion, gotReleaseNotes, err := tt.client.GetLatestReleaseNotes("confluent", currentVersion)
 			if tt.wantErr {
 				require.Error(t, err)
@@ -602,20 +619,24 @@ func TestGetLatestReleaseNotes(t *testing.T) {
 	}
 }
 
-func TestUpdateBinary(t *testing.T) {
+func TestUpdateBinary(t *testing.T) { //nolint:paralleltest
 	req := require.New(t)
 
 	binName := "fake_cli"
 
 	installDir, err := os.MkdirTemp("", "cli-test4-")
 	require.NoError(t, err)
-	defer os.Remove(installDir)
+	t.Cleanup(func() {
+		os.Remove(installDir)
+	})
 	installedBin := filepath.FromSlash(fmt.Sprintf("%s/%s", installDir, binName))
 	_ = os.WriteFile(installedBin, []byte("old version"), os.ModePerm)
 
 	downloadDir, err := os.MkdirTemp("", "cli-test5-")
 	require.NoError(t, err)
-	defer os.Remove(downloadDir)
+	t.Cleanup(func() {
+		os.Remove(downloadDir)
+	})
 	downloadedBin := filepath.FromSlash(fmt.Sprintf("%s/%s", downloadDir, binName))
 	_ = os.WriteFile(downloadedBin, []byte("new version"), os.ModePerm)
 
@@ -839,7 +860,7 @@ func TestUpdateBinary(t *testing.T) {
 			wantErr: true,
 		},
 	}
-	for _, tt := range tests {
+	for _, tt := range tests { //nolint:paralleltest
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.client.Out == nil {
 				tt.client.Out = os.Stdout
@@ -851,7 +872,7 @@ func TestUpdateBinary(t *testing.T) {
 	}
 }
 
-func TestPromptToDownload(t *testing.T) {
+func TestPromptToDownload(t *testing.T) { //nolint:paralleltest
 	req := require.New(t)
 
 	clock := clockwork.NewFakeClockAt(time.Now())
@@ -1022,7 +1043,7 @@ func TestPromptToDownload(t *testing.T) {
 			want: true,
 		},
 	}
-	for _, tt := range tests {
+	for _, tt := range tests { //nolint:paralleltest
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.client.Out == nil {
 				tt.client.Out = os.Stdout

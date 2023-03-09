@@ -200,5 +200,6 @@ func (suite *SchemaTestSuite) TestDescribeBySubjectVersion() {
 }
 
 func TestSchemaSuite(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(SchemaTestSuite))
 }

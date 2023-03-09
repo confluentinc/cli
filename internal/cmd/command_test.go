@@ -31,6 +31,8 @@ var (
 )
 
 func TestHelp_NoContext(t *testing.T) {
+	t.Parallel()
+
 	cfg := new(v1.Config)
 
 	out, err := runWithConfig(cfg)
@@ -50,6 +52,8 @@ func TestHelp_NoContext(t *testing.T) {
 }
 
 func TestHelp_CloudSuspendedOrg(t *testing.T) {
+	t.Parallel()
+
 	cfg := &v1.Config{
 		Contexts: map[string]*v1.Context{"cloud": {
 			PlatformName: "confluent.cloud",
@@ -74,6 +78,8 @@ func TestHelp_CloudSuspendedOrg(t *testing.T) {
 }
 
 func TestHelp_CloudEndOfFreeTrialSuspendedOrg(t *testing.T) {
+	t.Parallel()
+
 	cfg := &v1.Config{
 		Contexts: map[string]*v1.Context{"cloud": {
 			PlatformName: "confluent.cloud",
@@ -119,6 +125,8 @@ func TestHelp_CloudEndOfFreeTrialSuspendedOrg(t *testing.T) {
 }
 
 func TestHelp_Cloud(t *testing.T) {
+	t.Parallel()
+
 	cfg := &v1.Config{
 		Contexts: map[string]*v1.Context{"cloud": {
 			PlatformName: "confluent.cloud",
@@ -141,6 +149,8 @@ func TestHelp_Cloud(t *testing.T) {
 }
 
 func TestHelp_CloudWithAPIKey(t *testing.T) {
+	t.Parallel()
+
 	cfg := &v1.Config{
 		Contexts: map[string]*v1.Context{
 			"cloud-with-api-key": {
@@ -166,6 +176,8 @@ func TestHelp_CloudWithAPIKey(t *testing.T) {
 }
 
 func TestHelp_OnPrem(t *testing.T) {
+	t.Parallel()
+
 	cfg := &v1.Config{
 		Contexts:       map[string]*v1.Context{"on-prem": {PlatformName: "https://example.com"}},
 		CurrentContext: "on-prem",

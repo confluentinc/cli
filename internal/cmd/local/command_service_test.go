@@ -8,6 +8,8 @@ import (
 )
 
 func TestInjectConfigs(t *testing.T) {
+	t.Parallel()
+
 	req := require.New(t)
 
 	data := []byte("replace=old\n# replace=commented-duplicate\n# comment=old\n")
@@ -27,6 +29,8 @@ func TestInjectConfigs(t *testing.T) {
 }
 
 func TestInjectConfigsNoNewline(t *testing.T) {
+	t.Parallel()
+
 	req := require.New(t)
 
 	data := []byte("replace=old\n# replace=commented-duplicate\n# comment=old")
@@ -45,6 +49,8 @@ func TestInjectConfigsNoNewline(t *testing.T) {
 }
 
 func TestSetServiceEnvs(t *testing.T) {
+	t.Parallel()
+
 	req := require.New(t)
 
 	req.NoError(os.Setenv("KAFKA_LOG4J_OPTS", "saveme"))
@@ -57,6 +63,8 @@ func TestSetServiceEnvs(t *testing.T) {
 }
 
 func TestIsValidJavaVersion(t *testing.T) {
+	t.Parallel()
+
 	req := require.New(t)
 
 	var isValid bool

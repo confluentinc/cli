@@ -13,6 +13,8 @@ import (
 )
 
 func TestNewError(t *testing.T) {
+	t.Parallel()
+
 	req := require.New(t)
 	url := "http://my-url"
 	neturlMsg := "net-error"

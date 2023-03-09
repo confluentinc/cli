@@ -108,5 +108,6 @@ func (suite *LaunchDarklyTestSuite) TestContextToLDUser() {
 }
 
 func TestLaunchDarklySuite(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(LaunchDarklyTestSuite))
 }

@@ -15,6 +15,8 @@ import (
 )
 
 func TestAuditLogDescribe(t *testing.T) {
+	t.Parallel()
+
 	cmd := mockAuditLogCommand(true)
 
 	_, err := pcmd.ExecuteCommand(cmd, "describe")
@@ -22,6 +24,8 @@ func TestAuditLogDescribe(t *testing.T) {
 }
 
 func TestAuditLogDescribeUnconfigured(t *testing.T) {
+	t.Parallel()
+
 	cmd := mockAuditLogCommand(false)
 
 	_, err := pcmd.ExecuteCommand(cmd, "describe")

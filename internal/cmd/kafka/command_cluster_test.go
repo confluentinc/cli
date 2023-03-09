@@ -217,5 +217,6 @@ func (suite *KafkaClusterTestSuite) TestGetLkcForDescribe() {
 }
 
 func TestKafkaClusterTestSuite(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(KafkaClusterTestSuite))
 }

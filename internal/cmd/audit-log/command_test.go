@@ -200,6 +200,7 @@ func (suite *AuditConfigTestSuite) newMockCmd(expect chan MockCall) *cobra.Comma
 }
 
 func TestAuditConfigTestSuite(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(AuditConfigTestSuite))
 }
 

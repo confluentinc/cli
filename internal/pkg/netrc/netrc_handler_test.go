@@ -51,6 +51,8 @@ var (
 )
 
 func TestGetMatchingNetrcMachineNameWithContextName(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name    string
 		want    *Machine
@@ -105,7 +107,10 @@ func TestGetMatchingNetrcMachineNameWithContextName(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			netrcHandler := NewNetrcHandler(tt.file)
 			var machine *Machine
 			var err error
@@ -137,6 +142,8 @@ func isIdenticalMachine(expect, actual *Machine) bool {
 }
 
 func TestGetMatchingNetrcMachineNameFromURL(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name    string
 		want    *Machine
@@ -189,7 +196,10 @@ func TestGetMatchingNetrcMachineNameFromURL(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			netrcHandler := NewNetrcHandler(tt.file)
 			var machine *Machine
 			var err error
@@ -215,6 +225,8 @@ func TestGetMatchingNetrcMachineNameFromURL(t *testing.T) {
 }
 
 func TestGetMachineNameRegex(t *testing.T) {
+	t.Parallel()
+
 	url := "https://confluent.cloud"
 	ccloudCtxName := "login-csreesangkom@confleunt.io-https://confluent.cloud"
 	confluentCtxName := "login-csreesangkom@confluent.io-http://localhost:8090"
@@ -309,7 +321,10 @@ func TestGetMachineNameRegex(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			regex := getMachineNameRegex(tt.params)
 			for _, machineName := range tt.matchNames {
 				if !regex.Match([]byte(machineName)) {

@@ -175,5 +175,6 @@ func (suite *KSQLTestSuite) TestDeleteKSQL() {
 }
 
 func TestKsqlTestSuite(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(KSQLTestSuite))
 }

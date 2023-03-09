@@ -14,6 +14,8 @@ import (
 )
 
 func TestAuditLogConfigTranslation(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		clusterConfigs   map[string]string
 		bootstrapServers []string
@@ -224,6 +226,8 @@ func TestAuditLogConfigTranslation(t *testing.T) {
 }
 
 func TestAuditLogConfigTranslationMalformedProperties(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		clusterConfigs   map[string]string
 		bootstrapServers []string
@@ -341,6 +345,8 @@ func TestAuditLogConfigTranslationMalformedProperties(t *testing.T) {
 }
 
 func TestAuditLogConfigTranslationNilCase(t *testing.T) {
+	t.Parallel()
+
 	var null mds.AuditLogConfigSpec
 	val, _ := json.Marshal(null)
 	clusterConfig := map[string]string{"abc": string(val)}

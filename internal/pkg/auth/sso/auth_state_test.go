@@ -12,6 +12,8 @@ import (
 )
 
 func TestNewStateDev(t *testing.T) {
+	t.Parallel()
+
 	state, err := newState("https://devel.cpdev.cloud", false)
 	require.NoError(t, err)
 	// randomly generated
@@ -53,6 +55,8 @@ func TestNewStateDev(t *testing.T) {
 }
 
 func TestNewStateDevNoBrowser(t *testing.T) {
+	t.Parallel()
+
 	state, err := newState("https://devel.cpdev.cloud", true)
 	require.NoError(t, err)
 	// randomly generated
@@ -95,6 +99,8 @@ func TestNewStateDevNoBrowser(t *testing.T) {
 }
 
 func TestNewStateProd(t *testing.T) {
+	t.Parallel()
+
 	state, err := newState("https://confluent.cloud", false)
 	require.NoError(t, err)
 	// randomly generated
@@ -115,6 +121,8 @@ func TestNewStateProd(t *testing.T) {
 }
 
 func TestNewStateProdNoBrowser(t *testing.T) {
+	t.Parallel()
+
 	for _, authURL := range []string{"", "https://confluent.cloud"} {
 		state, err := newState(authURL, true)
 		require.NoError(t, err)
@@ -138,6 +146,8 @@ func TestNewStateProdNoBrowser(t *testing.T) {
 }
 
 func TestNewStateInvalidUrl(t *testing.T) {
+	t.Parallel()
+
 	state, err := newState("Invalid url", true)
 	require.Error(t, err)
 	require.Equal(t, err.Error(), "unrecognized auth url: Invalid url")
@@ -145,6 +155,8 @@ func TestNewStateInvalidUrl(t *testing.T) {
 }
 
 func TestGetAuthorizationUrl(t *testing.T) {
+	t.Parallel()
+
 	state, _ := newState("https://devel.cpdev.cloud", false)
 
 	// test get auth code url
@@ -174,6 +186,8 @@ func TestGetAuthorizationUrl(t *testing.T) {
 }
 
 func TestGetOAuthToken(t *testing.T) {
+	t.Parallel()
+
 	mockRefreshToken := "foo"
 
 	state, _ := newState("https://devel.cpdev.cloud", false)
@@ -211,6 +225,8 @@ func TestGetOAuthToken(t *testing.T) {
 }
 
 func TestRefreshOAuthToken(t *testing.T) {
+	t.Parallel()
+
 	mockRefreshToken1 := "foo"
 	mockRefreshToken2 := "bar"
 

@@ -22,6 +22,8 @@ type test struct {
 }
 
 func TestCatchClustersExceedError(t *testing.T) {
+	t.Parallel()
+
 	tt := test{
 		name:     "cluster exceed",
 		err:      New(paymentRequiredErrorMsg),
@@ -39,6 +41,8 @@ func TestCatchClustersExceedError(t *testing.T) {
 }
 
 func TestCatchServiceAccountExceedError(t *testing.T) {
+	t.Parallel()
+
 	tt := test{
 		name:     "service accounts exceed",
 		err:      New(paymentRequiredErrorMsg),

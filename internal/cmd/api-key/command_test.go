@@ -465,5 +465,6 @@ func (suite *APITestSuite) TestStoreApiKeyPromptUserForKeyAndSecret() {
 }
 
 func TestApiTestSuite(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(APITestSuite))
 }

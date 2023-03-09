@@ -24,6 +24,8 @@ func fails(fieldValue string, properNouns []string, t *testing.T) {
 }
 
 func TestRequireNotTitleCase(t *testing.T) {
+	t.Parallel()
+
 	passes("This is fine.", []string{}, t)
 	fails("This Isn't fine.", []string{}, t)
 	passes("This is fine Kafka.", []string{"Kafka"}, t)
@@ -34,9 +36,13 @@ func TestRequireNotTitleCase(t *testing.T) {
 }
 
 func TestFlagKebabCase(t *testing.T) {
+	t.Parallel()
+
 	rule := RequireFlagKebabCase
 
 	t.Run("invalid flag name", func(t *testing.T) {
+		t.Parallel()
+
 		cmd := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
 		cmd.Flags().String("caCertPath", "", "not a valid kebab-case name")
 		err := cmd.Execute()
@@ -46,6 +52,8 @@ func TestFlagKebabCase(t *testing.T) {
 	})
 
 	t.Run("valid flag name", func(t *testing.T) {
+		t.Parallel()
+
 		cmd := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
 		cmd.Flags().String("ca-cert-path", "", "tis a valid kebab-case name")
 		err := cmd.Execute()
@@ -56,6 +64,8 @@ func TestFlagKebabCase(t *testing.T) {
 }
 
 func TestFlagUsageRealWords(t *testing.T) {
+	t.Parallel()
+
 	req := require.New(t)
 	rule := RequireFlagUsageRealWords
 
@@ -74,6 +84,8 @@ snake
 	SetVocab(gs)
 
 	t.Run("gibberish", func(t *testing.T) {
+		t.Parallel()
+
 		cmd := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
 		cmd.Flags().String("elvish", "", "Mae govannen.")
 		err := cmd.Execute()
@@ -83,6 +95,8 @@ snake
 	})
 
 	t.Run("sophisticated prose", func(t *testing.T) {
+		t.Parallel()
+
 		cmd := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
 		cmd.Flags().String("sonnet", "", "Fillet of a fenny snake.")
 		err := cmd.Execute()

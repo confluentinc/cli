@@ -10,6 +10,8 @@ import (
 )
 
 func TestNew(t *testing.T) {
+	t.Parallel()
+
 	r := New()
 	require.Empty(t, r.major)
 	require.Empty(t, r.minor)
@@ -17,6 +19,8 @@ func TestNew(t *testing.T) {
 }
 
 func TestNewFromBody(t *testing.T) {
+	t.Parallel()
+
 	r := NewFromBody(strings.Join([]string{
 		"Release Notes             ",
 		"-------------             ",
@@ -46,6 +50,8 @@ func TestNewFromBody(t *testing.T) {
 }
 
 func TestMerge(t *testing.T) {
+	t.Parallel()
+
 	a := &ReleaseNotes{
 		major: []string{"A"},
 		minor: []string{"A"},
@@ -65,6 +71,8 @@ func TestMerge(t *testing.T) {
 }
 
 func TestGetBump_Major(t *testing.T) {
+	t.Parallel()
+
 	r := &ReleaseNotes{
 		major: []string{""},
 		minor: []string{""},
@@ -76,6 +84,8 @@ func TestGetBump_Major(t *testing.T) {
 }
 
 func TestGetBump_Minor(t *testing.T) {
+	t.Parallel()
+
 	r := &ReleaseNotes{
 		major: []string{},
 		minor: []string{""},
@@ -87,6 +97,8 @@ func TestGetBump_Minor(t *testing.T) {
 }
 
 func TestGetBump_Patch(t *testing.T) {
+	t.Parallel()
+
 	r := &ReleaseNotes{
 		major: []string{},
 		minor: []string{},
@@ -98,6 +110,8 @@ func TestGetBump_Patch(t *testing.T) {
 }
 
 func TestGetBump_ErrorNoUpdates(t *testing.T) {
+	t.Parallel()
+
 	r := &ReleaseNotes{
 		major: []string{},
 		minor: []string{},
@@ -108,6 +122,8 @@ func TestGetBump_ErrorNoUpdates(t *testing.T) {
 }
 
 func TestBumpVersion(t *testing.T) {
+	t.Parallel()
+
 	v := version.Must(version.NewSemver("1.1.1"))
 	assert.Equal(t, "2.0.0", bumpVersion(v, "major"))
 	assert.Equal(t, "1.2.0", bumpVersion(v, "minor"))

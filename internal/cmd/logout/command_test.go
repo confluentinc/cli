@@ -113,6 +113,8 @@ var (
 )
 
 func TestLogout(t *testing.T) {
+	t.Parallel()
+
 	req := require.New(t)
 	clearCCloudDeprecatedEnvVar(req)
 	cfg := v1.AuthenticatedCloudConfigMock()
@@ -127,6 +129,8 @@ func TestLogout(t *testing.T) {
 }
 
 func TestRemoveNetrcCredentials(t *testing.T) {
+	t.Parallel()
+
 	req := require.New(t)
 	clearCCloudDeprecatedEnvVar(req)
 	cfg := v1.AuthenticatedCloudConfigMock()

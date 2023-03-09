@@ -122,7 +122,7 @@ func getPreRunBase() *pcmd.PreRun {
 	}
 }
 
-func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
+func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) { //nolint:paralleltest
 	featureflags.Init(nil, true, false)
 
 	tests := map[string]log.Level{
@@ -149,6 +149,8 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 }
 
 func TestPreRun_HasAPIKey_SetupLoggingAndCheckForUpdates(t *testing.T) {
+	t.Parallel()
+
 	calledAnonymous := false
 
 	r := getPreRunBase()
@@ -177,6 +179,8 @@ func TestPreRun_HasAPIKey_SetupLoggingAndCheckForUpdates(t *testing.T) {
 }
 
 func TestPreRun_TokenExpires(t *testing.T) {
+	t.Parallel()
+
 	cfg := v1.AuthenticatedCloudConfigMock()
 	cfg.Context().State.AuthToken = expiredAuthTokenForDevCloud
 
@@ -198,6 +202,8 @@ func TestPreRun_TokenExpires(t *testing.T) {
 }
 
 func Test_UpdateToken(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name      string
 		isCloud   bool
@@ -241,7 +247,10 @@ func Test_UpdateToken(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			var cfg *v1.Config
 			if tt.isCloud {
 				cfg = v1.AuthenticatedCloudConfigMock()
@@ -293,6 +302,8 @@ func Test_UpdateToken(t *testing.T) {
 }
 
 func TestPrerun_AutoLogin(t *testing.T) {
+	t.Parallel()
+
 	type credentialsFuncReturnValues struct {
 		creds *pauth.Credentials
 		err   error
@@ -407,7 +418,10 @@ func TestPrerun_AutoLogin(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			var cfg *v1.Config
 			if tt.isCloud {
 				cfg = v1.AuthenticatedCloudConfigMock()
@@ -538,6 +552,8 @@ func TestPrerun_AutoLogin(t *testing.T) {
 }
 
 func TestPrerun_ReLoginToLastOrgUsed(t *testing.T) {
+	t.Parallel()
+
 	ccloudCreds := &pauth.Credentials{
 		Username: "username",
 		Password: "password",
@@ -611,6 +627,8 @@ func TestPrerun_ReLoginToLastOrgUsed(t *testing.T) {
 }
 
 func TestPrerun_AutoLoginNotTriggeredIfLoggedIn(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name    string
 		isCloud bool
@@ -624,7 +642,10 @@ func TestPrerun_AutoLoginNotTriggeredIfLoggedIn(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			var cfg *v1.Config
 			if tt.isCloud {
 				cfg = v1.AuthenticatedCloudConfigMock()
@@ -682,6 +703,8 @@ func TestPrerun_AutoLoginNotTriggeredIfLoggedIn(t *testing.T) {
 }
 
 func TestPreRun_HasAPIKeyCommand(t *testing.T) {
+	t.Parallel()
+
 	userNameConfigLoggedIn := v1.AuthenticatedCloudConfigMock()
 	userNameConfigLoggedIn.Context().State.AuthToken = validAuthToken
 
@@ -750,7 +773,10 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			r := getPreRunBase()
 			r.Config = tt.config
 
@@ -779,6 +805,8 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 }
 
 func TestInitializeOnPremKafkaRest(t *testing.T) {
+	t.Parallel()
+
 	cfg := v1.AuthenticatedOnPremConfigMock()
 	cfg.Context().State.AuthToken = validAuthToken
 	r := getPreRunBase()
@@ -787,21 +815,23 @@ func TestInitializeOnPremKafkaRest(t *testing.T) {
 	cobraCmd.Flags().CountP("verbose", "v", "Increase verbosity")
 	cobraCmd.Flags().Bool("unsafe-trace", false, "")
 	c := pcmd.NewAuthenticatedCLICommand(cobraCmd, r)
-	t.Run("InitializeOnPremKafkaRest_ValidMdsToken", func(t *testing.T) {
-		err := r.InitializeOnPremKafkaRest(c)(c.Command, []string{})
-		require.NoError(t, err)
-		kafkaREST, err := c.GetKafkaREST()
-		require.NoError(t, err)
-		auth, ok := kafkaREST.Context.Value(krsdk.ContextAccessToken).(string)
-		require.True(t, ok)
-		require.Equal(t, validAuthToken, auth)
-	})
+
+	err := r.InitializeOnPremKafkaRest(c)(c.Command, []string{})
+	require.NoError(t, err)
+	kafkaREST, err := c.GetKafkaREST()
+	require.NoError(t, err)
+	auth, ok := kafkaREST.Context.Value(krsdk.ContextAccessToken).(string)
+	require.True(t, ok)
+	require.Equal(t, validAuthToken, auth)
+
 	r.Config.Context().State.AuthToken = ""
 	buf := new(bytes.Buffer)
 	c.SetOut(buf)
 }
 
 func TestConvertToMetricsBaseURL(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name        string
 		inputUrl    string
@@ -839,7 +869,10 @@ func TestConvertToMetricsBaseURL(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			got := pcmd.ConvertToMetricsBaseURL(tt.inputUrl)
 			if got != tt.expectedUrl {
 				t.Errorf("got = %v, want %v", got, tt.expectedUrl)

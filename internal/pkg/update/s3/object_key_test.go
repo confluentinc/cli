@@ -75,6 +75,8 @@ func TestNewPrefixedKey(t *testing.T) {
 }
 
 func TestPrefixedKey_ParseVersion(t *testing.T) {
+	t.Parallel()
+
 	req := require.New(t)
 
 	makeVersion := func(v string) *version.Version {
@@ -194,11 +196,9 @@ func TestPrefixedKey_ParseVersion(t *testing.T) {
 			wantVer:   makeVersion("0.23.0"),
 		},
 		{
-			name:   "should support empty prefix",
-			fields: fields{},
-			args: args{
-				key: "fancy_0.23.0_darwin_amd64",
-			},
+			name:      "should support empty prefix",
+			fields:    fields{},
+			args:      args{key: "fancy_0.23.0_darwin_amd64"},
 			wantMatch: true,
 			wantVer:   makeVersion("0.23.0"),
 		},
@@ -210,15 +210,16 @@ func TestPrefixedKey_ParseVersion(t *testing.T) {
 				goos:      "windows",
 				goarch:    "386",
 			},
-			args: args{
-				key: "pre/0.23.0/fancy_0.23.0_windows_386.exe",
-			},
+			args:      args{key: "pre/0.23.0/fancy_0.23.0_windows_386.exe"},
 			wantMatch: true,
 			wantVer:   makeVersion("0.23.0"),
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			if tt.fields.Separator == "" {
 				tt.fields.Separator = "_"
 			}
@@ -249,6 +250,8 @@ func TestPrefixedKey_ParseVersion(t *testing.T) {
 }
 
 func TestPrefixedKey_URLFor(t *testing.T) {
+	t.Parallel()
+
 	req := require.New(t)
 	type fields struct {
 		Prefix          string
@@ -338,7 +341,10 @@ func TestPrefixedKey_URLFor(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			if tt.fields.OS == "" {
 				tt.fields.OS = "darwin"
 				tt.fields.Arch = "amd64"

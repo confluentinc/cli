@@ -11,6 +11,8 @@ import (
 )
 
 func TestPrintDocPage(t *testing.T) {
+	t.Parallel()
+
 	root1 := &cobra.Command{
 		Use:   "a",
 		Short: "Short description.",
@@ -136,11 +138,15 @@ func TestPrintDocPage(t *testing.T) {
 }
 
 func TestPrintWarnings_NoWarnings(t *testing.T) {
+	t.Parallel()
+
 	cmd := &cobra.Command{}
 	require.Empty(t, printWarnings(cmd, 0))
 }
 
 func TestPrintWarnings_ConfluentLocal(t *testing.T) {
+	t.Parallel()
+
 	confluent := &cobra.Command{Use: "confluent"}
 	local := &cobra.Command{Use: "local"}
 	confluent.AddCommand(local)
@@ -156,6 +162,8 @@ func TestPrintWarnings_ConfluentLocal(t *testing.T) {
 }
 
 func TestPrintSphinxBlock_NoArgs(t *testing.T) {
+	t.Parallel()
+
 	expected := []string{
 		".. key:: val",
 		"",
@@ -165,6 +173,8 @@ func TestPrintSphinxBlock_NoArgs(t *testing.T) {
 }
 
 func TestPrintSphinxBlock_Args(t *testing.T) {
+	t.Parallel()
+
 	args := map[string]string{
 		"key-a": "val-a",
 		"key-b": "val-b",
@@ -181,6 +191,8 @@ func TestPrintSphinxBlock_Args(t *testing.T) {
 }
 
 func TestPrintUsageAndDescription(t *testing.T) {
+	t.Parallel()
+
 	cmd := &cobra.Command{
 		Use:  "command",
 		Long: "Description of `command`.",
@@ -201,11 +213,15 @@ func TestPrintUsageAndDescription(t *testing.T) {
 }
 
 func TestPrintNotes_NoNotes(t *testing.T) {
+	t.Parallel()
+
 	cmd := &cobra.Command{}
 	require.Empty(t, printNotes(cmd, 0))
 }
 
 func TestPrintNotes_ConfluentLocal(t *testing.T) {
+	t.Parallel()
+
 	confluent := &cobra.Command{Use: "confluent"}
 	local := &cobra.Command{Use: "local"}
 	confluent.AddCommand(local)
@@ -219,6 +235,8 @@ func TestPrintNotes_ConfluentLocal(t *testing.T) {
 }
 
 func TestPrintNotes_ConfluentIAMRoleBindingCreate(t *testing.T) {
+	t.Parallel()
+
 	confluent := &cobra.Command{Use: "confluent"}
 	iam := &cobra.Command{Use: "iam"}
 	rbac := &cobra.Command{Use: "rbac"}
@@ -239,6 +257,8 @@ func TestPrintNotes_ConfluentIAMRoleBindingCreate(t *testing.T) {
 }
 
 func TestPrintNotes_ConfluentSecret(t *testing.T) {
+	t.Parallel()
+
 	confluent := &cobra.Command{Use: "confluent"}
 	secret := &cobra.Command{Use: "secret"}
 	confluent.AddCommand(secret)
@@ -252,6 +272,8 @@ func TestPrintNotes_ConfluentSecret(t *testing.T) {
 }
 
 func TestPrintFlags(t *testing.T) {
+	t.Parallel()
+
 	cmd := &cobra.Command{}
 	cmd.Flags().String("flag", "", "Flag description.")
 
@@ -267,6 +289,8 @@ func TestPrintFlags(t *testing.T) {
 }
 
 func TestPrintFlags_RequiredFlag(t *testing.T) {
+	t.Parallel()
+
 	cmd := &cobra.Command{}
 	cmd.Flags().String("flag", "", "Flag description.")
 	require.NoError(t, cmd.MarkFlagRequired("flag"))
@@ -283,6 +307,8 @@ func TestPrintFlags_RequiredFlag(t *testing.T) {
 }
 
 func TestPrintGlobalFlags(t *testing.T) {
+	t.Parallel()
+
 	a := &cobra.Command{}
 	a.PersistentFlags().String("global-flag", "", "Global flag description.")
 	b := &cobra.Command{}
@@ -301,12 +327,16 @@ func TestPrintGlobalFlags(t *testing.T) {
 }
 
 func TestPrintFlagSet_NoFlags(t *testing.T) {
+	t.Parallel()
+
 	section, ok := printFlagSet(new(pflag.FlagSet))
 	require.False(t, ok)
 	require.Equal(t, []string{"No flags.", ""}, section)
 }
 
 func TestPrintFlagSet(t *testing.T) {
+	t.Parallel()
+
 	flags := new(pflag.FlagSet)
 	flags.String("flag", "", "Flag description.")
 
@@ -322,6 +352,8 @@ func TestPrintFlagSet(t *testing.T) {
 }
 
 func TestPrintExamplesSection_NoExamples(t *testing.T) {
+	t.Parallel()
+
 	cmd := &cobra.Command{}
 
 	rows, ok := printExamples(cmd)
@@ -330,6 +362,8 @@ func TestPrintExamplesSection_NoExamples(t *testing.T) {
 }
 
 func TestPrintExamplesSection_TextOnly(t *testing.T) {
+	t.Parallel()
+
 	cmd := &cobra.Command{
 		Example: examples.BuildExampleString(
 			examples.Example{Text: "Text-only example."},
@@ -347,6 +381,8 @@ func TestPrintExamplesSection_TextOnly(t *testing.T) {
 }
 
 func TestPrintExamplesSection_CodeOnly(t *testing.T) {
+	t.Parallel()
+
 	cmd := &cobra.Command{
 		Example: examples.BuildExampleString(
 			examples.Example{Code: "command subcommand"},
@@ -366,6 +402,8 @@ func TestPrintExamplesSection_CodeOnly(t *testing.T) {
 }
 
 func TestPrintExamplesSection_DoubleCodeBlock(t *testing.T) {
+	t.Parallel()
+
 	cmd := &cobra.Command{
 		Example: examples.BuildExampleString(
 			examples.Example{Code: "command subcommand"},
@@ -387,6 +425,8 @@ func TestPrintExamplesSection_DoubleCodeBlock(t *testing.T) {
 }
 
 func TestPrintExamplesSection_FullExample(t *testing.T) {
+	t.Parallel()
+
 	cmd := &cobra.Command{
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -411,6 +451,8 @@ func TestPrintExamplesSection_FullExample(t *testing.T) {
 }
 
 func TestPrintExamplesSection_TwoExamples(t *testing.T) {
+	t.Parallel()
+
 	cmd := &cobra.Command{
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -445,6 +487,8 @@ func TestPrintExamplesSection_TwoExamples(t *testing.T) {
 }
 
 func TestPrintSeeAlso(t *testing.T) {
+	t.Parallel()
+
 	a := &cobra.Command{Use: "a", Short: "Description of A."}
 	b := &cobra.Command{Use: "b"}
 

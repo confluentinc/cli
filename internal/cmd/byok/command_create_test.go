@@ -7,6 +7,8 @@ import (
 )
 
 func TestRemoveKeyVersionFromAzureKeyId(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		input    string
@@ -35,7 +37,10 @@ func TestRemoveKeyVersionFromAzureKeyId(t *testing.T) {
 	}
 
 	for _, test := range tests {
+		test := test
 		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
 			actual := removeKeyVersionFromAzureKeyId(test.input)
 			require.Equal(t, test.expected, actual)
 		})

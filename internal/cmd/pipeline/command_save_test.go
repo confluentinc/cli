@@ -8,17 +8,17 @@ import (
 )
 
 func TestGetPath_NoPrefix(t *testing.T) {
+	t.Parallel()
+
 	require.Equal(t, "pipeline.sql", getPath("pipeline.sql"))
 }
 
-func TestGetPath_HomeDir(t *testing.T) {
-	err := os.Setenv("HOME", "home")
-	require.NoError(t, err)
-
+func TestGetPath_HomeDir(t *testing.T) { //nolint:paralleltest
+	t.Setenv("HOME", "home")
 	require.Equal(t, "home/pipeline.sql", getPath("~/pipeline.sql"))
 }
 
-func TestGetPath_HomeDirUnset(t *testing.T) {
+func TestGetPath_HomeDirUnset(t *testing.T) { //nolint:paralleltest
 	err := os.Unsetenv("HOME")
 	require.NoError(t, err)
 

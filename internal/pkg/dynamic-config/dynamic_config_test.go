@@ -13,14 +13,14 @@ import (
 )
 
 func TestDynamicConfig_ParseFlagsIntoConfig(t *testing.T) {
+	t.Parallel()
+
 	config := v1.AuthenticatedCloudConfigMock()
 	dynamicConfigBase := New(config, pmock.NewClientMock(), pmock.NewV2ClientMock())
 
 	config = v1.AuthenticatedCloudConfigMock()
 	dynamicConfigFlag := New(config, pmock.NewClientMock(), pmock.NewV2ClientMock())
-	dynamicConfigFlag.Contexts["test-context"] = &v1.Context{
-		Name: "test-context",
-	}
+	dynamicConfigFlag.Contexts["test-context"] = &v1.Context{Name: "test-context"}
 	tests := []struct {
 		name           string
 		context        string
@@ -45,9 +45,7 @@ func TestDynamicConfig_ParseFlagsIntoConfig(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		cmd := &cobra.Command{
-			Run: func(cmd *cobra.Command, args []string) {},
-		}
+		cmd := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
 		cmd.Flags().String("context", "", "Context name.")
 		err := cmd.ParseFlags([]string{"--context", tt.context})
 		require.NoError(t, err)

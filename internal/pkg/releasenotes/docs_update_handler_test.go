@@ -9,6 +9,8 @@ import (
 )
 
 func TestDocsUpdateHandler(t *testing.T) {
+	t.Parallel()
+
 	newReleaseNotes := `|confluent-cli| v1.2.0 Release Notes
 ====================================
 
@@ -36,7 +38,10 @@ Bug Fixes
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			docsUpdateHandler := NewDocsUpdateHandler(docsPageHeader, tt.docsFile)
 			docs, err := docsUpdateHandler.getUpdatedDocsPage(newReleaseNotes)
 			require.NoError(t, err)

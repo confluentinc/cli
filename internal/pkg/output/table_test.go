@@ -19,6 +19,8 @@ type out struct {
 }
 
 func TestTable(t *testing.T) {
+	t.Parallel()
+
 	tests := map[string][]string{
 		Human.String(): {
 			"+-------------+-----------------+",
@@ -66,6 +68,8 @@ func TestTable(t *testing.T) {
 }
 
 func TestTable_NoAutoWrap(t *testing.T) {
+	t.Parallel()
+
 	tests := map[string][]string{
 		Human.String(): {
 			"+-------------+------------+",
@@ -129,6 +133,8 @@ func TestTable_NoAutoWrap(t *testing.T) {
 }
 
 func TestTable_Filter(t *testing.T) {
+	t.Parallel()
+
 	tests := map[string][]string{
 		Human.String(): {
 			"+-------------+-----------------+",
@@ -170,6 +176,8 @@ func TestTable_Filter(t *testing.T) {
 }
 
 func TestTable_Omitempty(t *testing.T) {
+	t.Parallel()
+
 	tests := map[string][]string{
 		Human.String(): {
 			"+---------+------------+",
@@ -213,6 +221,8 @@ func TestTable_Omitempty(t *testing.T) {
 }
 
 func TestTable_Map(t *testing.T) {
+	t.Parallel()
+
 	tests := map[string][]string{
 		Human.String(): {
 			"+---+-------+",
@@ -246,6 +256,8 @@ func TestTable_Map(t *testing.T) {
 }
 
 func TestTable_EmptyMap(t *testing.T) {
+	t.Parallel()
+
 	tests := map[string][]string{
 		Human.String(): {
 			"None found.",
@@ -275,6 +287,8 @@ func TestTable_EmptyMap(t *testing.T) {
 }
 
 func TestList(t *testing.T) {
+	t.Parallel()
+
 	tests := map[string][]string{
 		Human.String(): {
 			"  Current | ID |    Name    | Description  ",
@@ -332,6 +346,8 @@ func TestList(t *testing.T) {
 }
 
 func TestList_Empty(t *testing.T) {
+	t.Parallel()
+
 	tests := map[string][]string{
 		Human.String(): {
 			"None found.",
