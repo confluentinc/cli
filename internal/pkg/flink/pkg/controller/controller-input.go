@@ -10,6 +10,7 @@ import (
 	"log"
 	"os"
 	"reflect"
+	"strings"
 )
 
 type InputController struct {
@@ -140,7 +141,8 @@ func (c *InputController) Prompt() *prompt.Prompt {
 		prompt.OptionSetLexer(components.Lexer),
 		prompt.OptionSetStatementTerminator(func(lastKeyStroke prompt.Key, buffer *prompt.Buffer) bool {
 			text := buffer.Text()
-			if len(text) > 0 && text[len(text)-1] != ';' {
+			text = strings.TrimSpace(text)
+			if len(text) == 0 || text[len(text)-1] != ';' {
 				return false
 			}
 			return true
