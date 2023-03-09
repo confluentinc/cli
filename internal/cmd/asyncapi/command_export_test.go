@@ -310,7 +310,7 @@ func TestHandlePrimitiveSchemas(t *testing.T) {
 	unmarshalledSchema, err := handlePrimitiveSchemas(`"string"`, fmt.Errorf("unable to unmarshal schema"))
 	require.NoError(t, err)
 	require.Equal(t, unmarshalledSchema, map[string]any{"type": "string"})
-	unmarshalledSchema, err = handlePrimitiveSchemas(fmt.Sprintf("Invalid_schema"), fmt.Errorf("unable to marshal schema"))
+	_, err = handlePrimitiveSchemas("Invalid_schema", fmt.Errorf("unable to marshal schema"))
 	require.Error(t, err)
 }
 
