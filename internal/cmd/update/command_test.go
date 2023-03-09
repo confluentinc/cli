@@ -10,6 +10,8 @@ import (
 )
 
 func TestGetReleaseNotes_MultipleReleaseNotes(t *testing.T) {
+	t.Parallel()
+
 	client := &updatemock.Client{
 		GetLatestReleaseNotesFunc: func(_, _ string) (string, []string, error) {
 			notes := []string{

@@ -204,6 +204,8 @@ func newCmd() (*command, error) {
 }
 
 func TestGetTopicDescription(t *testing.T) {
+	t.Parallel()
+
 	c, err := newCmd()
 	require.NoError(t, err)
 
@@ -242,6 +244,8 @@ func TestGetSchemaRegistry(t *testing.T) {
 }
 
 func TestGetSchemaDetails(t *testing.T) {
+	t.Parallel()
+
 	c, err := newCmd()
 	require.NoError(t, err)
 

@@ -17,11 +17,15 @@ import (
 )
 
 func TestIsExec_Dir(t *testing.T) {
+	t.Parallel()
+
 	f := &mock.FileInfo{ModeVal: fs.ModeDir}
 	require.False(t, isExecutable(f))
 }
 
 func TestIsExec_Executable(t *testing.T) {
+	t.Parallel()
+
 	if runtime.GOOS == "windows" {
 		assert.False(t, isExecutable(&mock.FileInfo{NameVal: "hello.nonexe"}))
 		assert.True(t, isExecutable(&mock.FileInfo{NameVal: "hello.exe"}))
@@ -38,6 +42,8 @@ type pluginWalkInfo struct {
 }
 
 func TestPluginFromEntry(t *testing.T) {
+	t.Parallel()
+
 	if runtime.GOOS == "windows" {
 		tests := []pluginWalkInfo{
 			{"confluent-plugin1.exe", fs.ModePerm, "confluent-plugin1"},
@@ -73,6 +79,8 @@ func TestPluginFromEntry(t *testing.T) {
 }
 
 func TestSearchPath(t *testing.T) {
+	t.Parallel()
+
 	root, err := os.MkdirTemp(os.TempDir(), "plugin_test")
 	require.NoError(t, err)
 	defer func() {

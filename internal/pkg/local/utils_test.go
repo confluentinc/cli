@@ -8,6 +8,8 @@ import (
 )
 
 func TestBuildTabbedList(t *testing.T) {
+	t.Parallel()
+
 	req := require.New(t)
 
 	arr := []string{"a", "b"}
@@ -16,6 +18,8 @@ func TestBuildTabbedList(t *testing.T) {
 }
 
 func TestExtractConfig(t *testing.T) {
+	t.Parallel()
+
 	req := require.New(t)
 
 	in := []byte("key1=val1\nkey2=val2\n#commented=val\n")
@@ -29,6 +33,8 @@ func TestExtractConfig(t *testing.T) {
 }
 
 func TestCollectFlags(t *testing.T) {
+	t.Parallel()
+
 	req := require.New(t)
 
 	flags := pflag.NewFlagSet("", pflag.ExitOnError)

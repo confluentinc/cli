@@ -26,6 +26,7 @@ type ConfluentHomeTestSuite struct {
 }
 
 func TestConfluentHomeTestSuite(t *testing.T) {
+	t.Parallel()
 	suite.Run(t, new(ConfluentHomeTestSuite))
 }
 

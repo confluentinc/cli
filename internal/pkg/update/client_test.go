@@ -352,7 +352,9 @@ func TestCheckForUpdates(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			major, minor, err := tt.client.CheckForUpdates(tt.args.name, tt.args.currentVersion, tt.args.forceCheck)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("client.CheckForUpdates() error = %v, wantErr %v", err, tt.wantErr)

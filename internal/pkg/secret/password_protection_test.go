@@ -1023,7 +1023,10 @@ func TestPasswordProtectionSuite_RemoveConfigFileSecrets(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			req := require.New(t)
 
 			plugin, err := setUpDir(tt.args.masterKeyPassphrase, tt.args.secureDir, tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.contents)
@@ -1047,6 +1050,8 @@ func TestPasswordProtectionSuite_RemoveConfigFileSecrets(t *testing.T) {
 }
 
 func TestPasswordProtectionSuite_RotateDataKey(t *testing.T) {
+	t.Parallel()
+
 	type args struct {
 		contents               string
 		masterKeyPassphrase    string
@@ -1149,7 +1154,10 @@ func TestPasswordProtectionSuite_RotateDataKey(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			req := require.New(t)
 
 			plugin, err := setUpDir(tt.args.masterKeyPassphrase, tt.args.secureDir, tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.contents)

@@ -10,6 +10,8 @@ import (
 )
 
 func TestNewPrefixedKey(t *testing.T) {
+	t.Parallel()
+
 	type args struct {
 		prefix        string
 		sep           string
@@ -56,7 +58,10 @@ func TestNewPrefixedKey(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := NewPrefixedKey(tt.args.prefix, tt.args.sep, tt.args.prefixVersion)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("NewPrefixedKey() error = %v, wantErr %v", err, tt.wantErr)
