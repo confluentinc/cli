@@ -440,7 +440,14 @@ func handleIamIdentityPools(t *testing.T) http.HandlerFunc {
 				IdentityClaim: identityproviderv2.PtrString("sub"),
 				Filter:        identityproviderv2.PtrString(`claims.iss="https://company.provider.com"`),
 			}
-			err := json.NewEncoder(w).Encode(identityproviderv2.IamV2IdentityPoolList{Data: []identityproviderv2.IamV2IdentityPool{identityPool, identityPool}})
+			identityPoolTwo := identityproviderv2.IamV2IdentityPool{
+				Id:            identityproviderv2.PtrString("pool-55555"),
+				DisplayName:   identityproviderv2.PtrString("identity_pool_2"),
+				Description:   identityproviderv2.PtrString("pooling identities."),
+				IdentityClaim: identityproviderv2.PtrString("sub"),
+				Filter:        identityproviderv2.PtrString(`claims.iss="https://company.provider.com"`),
+			}
+			err := json.NewEncoder(w).Encode(identityproviderv2.IamV2IdentityPoolList{Data: []identityproviderv2.IamV2IdentityPool{identityPool, identityPoolTwo}})
 			require.NoError(t, err)
 		case http.MethodPost:
 			var req identityproviderv2.IamV2IdentityPool
