@@ -11,7 +11,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/set"
+	"github.com/confluentinc/cli/internal/pkg/types"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -35,8 +35,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	promptMsg := fmt.Sprintf(perrors.DeleteResourceConfirmMsg, resource.Environment, args[0], displayName)
-	if _, err := form.ConfirmDeletionTemp(cmd, promptMsg, displayName, resource.Environment, args); err != nil {
+	if _, err := form.ConfirmDeletionType(cmd, resource.Environment, displayName, args); err != nil {
 		return err
 	}
 
@@ -78,7 +77,7 @@ func (c *command) checkExistence(cmd *cobra.Command, args []string) (string, err
 		return "", err
 	}
 
-	environmentSet := set.New()
+	environmentSet := types.NewSet()
 	for _, environment := range environments {
 		environmentSet.Add(environment.GetId())
 	}

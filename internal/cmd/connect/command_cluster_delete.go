@@ -2,7 +2,6 @@ package connect
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/spf13/cobra"
 
@@ -12,7 +11,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/set"
+	"github.com/confluentinc/cli/internal/pkg/types"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -54,8 +53,7 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	promptMsg := fmt.Sprintf(perrors.DeleteResourceConfirmMsg, resource.Connector, args[0], connectorNames[0])
-	if _, err := form.ConfirmDeletionTemp(cmd, promptMsg, connectorNames[0], resource.Connector, args); err != nil {
+	if _, err := form.ConfirmDeletionType(cmd, resource.Connector, connectorNames[0], args); err != nil {
 		return err
 	}
 
@@ -87,7 +85,7 @@ func (c *clusterCommand) checkExistence(cmd *cobra.Command, kafkaClusterId strin
 		return nil, err
 	}
 
-	connectorSet := set.New()
+	connectorSet := types.NewSet()
 	connectorNames := make([]string, len(connectors))
 	i := 0
 	for _, connector := range connectors {

@@ -10,7 +10,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/set"
+	"github.com/confluentinc/cli/internal/pkg/types"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -59,7 +59,7 @@ func (c *command) checkExistence(cmd *cobra.Command, args []string) error {
 	}
 
 	// Multiple
-	contextSet := set.New()
+	contextSet := types.NewSet()
 	for _, context := range c.Config.Contexts {
 		contextSet.Add(context.Name)
 	}
