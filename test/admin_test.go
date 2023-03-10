@@ -1,9 +1,5 @@
 package test
 
-import (
-	"os"
-)
-
 func (s *CLITestSuite) TestAdminPaymentDescribe() {
 	tests := []CLITest{
 		{args: "admin payment describe", fixture: "admin/payment/describe.golden"},
@@ -20,8 +16,7 @@ func (s *CLITestSuite) TestAdminPaymentDescribeMarketplaceOrg() {
 		{args: "admin payment describe", fixture: "admin/payment/describe-marketplace-org.golden"},
 	}
 
-	os.Setenv("IS_ORG_ON_MARKETPLACE", "true")
-	defer unsetMarketplaceOrgEnv()
+	s.T().Setenv("IS_ORG_ON_MARKETPLACE", "true")
 
 	for _, test := range tests {
 		test.login = "cloud"

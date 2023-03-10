@@ -13,7 +13,7 @@ import (
 
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/log"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/types"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -75,7 +75,7 @@ func pluginFromEntry(entry os.DirEntry) string {
 func isExecutable(entry fs.DirEntry) bool {
 	if runtime.GOOS == "windows" {
 		extension := strings.ToUpper(filepath.Ext(entry.Name()))
-		return utils.Contains(filepath.SplitList(os.Getenv("PATHEXT")), extension)
+		return types.Contains(filepath.SplitList(os.Getenv("PATHEXT")), extension)
 	}
 
 	fileInfo, err := entry.Info()

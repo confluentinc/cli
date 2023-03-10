@@ -68,13 +68,13 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 
 	resourceIdMap := c.mapUserIdToResourceId(users)
 
-	var bindings []*ccstructs.ACLBinding
-	for _, acl := range acls {
+	bindings := make([]*ccstructs.ACLBinding, len(acls))
+	for i, acl := range acls {
 		validateAddAndDelete(acl)
 		if acl.errors != nil {
 			return acl.errors
 		}
-		bindings = append(bindings, acl.ACLBinding)
+		bindings[i] = acl.ACLBinding
 	}
 
 	kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand()
@@ -82,7 +82,7 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	if err := c.provisioningClusterCheck(cmd, kafkaClusterConfig.ID); err != nil {
+	if err := c.provisioningClusterCheck(kafkaClusterConfig.ID); err != nil {
 		return err
 	}
 

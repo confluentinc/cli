@@ -70,14 +70,12 @@ show-args:
 	@echo "VERSION: $(VERSION)"
 
 .PHONY: lint
-lint:
-	make lint-go
-	make lint-cli
+lint: lint-go lint-cli
 
 .PHONY: lint-go
 lint-go:
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.51.1 && \
-	golangci-lint run --timeout=10m
+	golangci-lint run --enable dupword,gofmt,goimports,gomoddirectives,govet,ineffassign,misspell,nolintlint,prealloc,tenv,unparam,unused,usestdlibvars,whitespace --timeout=10m
 	@echo "✅  golangci-lint"
 
 .PHONY: lint-cli

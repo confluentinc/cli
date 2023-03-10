@@ -60,13 +60,13 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	var filters []*ccstructs.ACLFilter
-	for _, acl := range acls {
+	filters := make([]*ccstructs.ACLFilter, len(acls))
+	for i, acl := range acls {
 		validateAddAndDelete(acl)
 		if acl.errors != nil {
 			return acl.errors
 		}
-		filters = append(filters, convertToFilter(acl.ACLBinding))
+		filters[i] = convertToFilter(acl.ACLBinding)
 	}
 
 	kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand()
@@ -74,7 +74,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	if err := c.provisioningClusterCheck(cmd, kafkaClusterConfig.ID); err != nil {
+	if err := c.provisioningClusterCheck(kafkaClusterConfig.ID); err != nil {
 		return err
 	}
 

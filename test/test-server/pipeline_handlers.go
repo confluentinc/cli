@@ -17,7 +17,7 @@ func handlePipeline(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodDelete:
-			w.WriteHeader(202)
+			w.WriteHeader(http.StatusAccepted)
 
 		case http.MethodGet:
 			pipeline := &streamdesignerv1.SdV1Pipeline{
@@ -42,7 +42,7 @@ func handlePipeline(t *testing.T) http.HandlerFunc {
 			}
 
 			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(202)
+			w.WriteHeader(http.StatusAccepted)
 			err := json.NewEncoder(w).Encode(pipeline)
 			require.NoError(t, err)
 
@@ -107,12 +107,11 @@ func handlePipeline(t *testing.T) http.HandlerFunc {
 			}
 
 			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(202)
+			w.WriteHeader(http.StatusAccepted)
 			err = json.NewEncoder(w).Encode(pipeline)
 			require.NoError(t, err)
 		}
 	}
-
 }
 
 // Handler for: "/sd/v1/pipelines"

@@ -1,8 +1,8 @@
-package set
+package types
 
 type Set map[string]bool
 
-func New(keys ...string) Set {
+func NewSet(keys ...string) Set {
 	s := make(Set)
 	for _, key := range keys {
 		s.Add(key)
@@ -19,15 +19,7 @@ func (s Set) Contains(key string) bool {
 }
 
 func (s Set) Slice() []string {
-	l := make([]string, len(s))
-	i := 0
-
-	for key := range s {
-		l[i] = key
-		i++
-	}
-
-	return l
+	return GetKeys(s)
 }
 
 // Returns the elements of list which are not contained in set s

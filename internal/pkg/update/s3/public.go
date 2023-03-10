@@ -195,17 +195,14 @@ func (r *PublicRepo) GetAvailableReleaseNotesVersions(name string) (version.Coll
 	if err != nil {
 		return nil, err
 	}
-	availableVersions, err := r.getMatchedReleaseNotesVersionsFromListBucketResult(name, listBucketResult)
-	if err != nil {
-		return nil, err
-	}
+	availableVersions := r.getMatchedReleaseNotesVersionsFromListBucketResult(name, listBucketResult)
 	if len(availableVersions) <= 0 {
 		return nil, errors.New(errors.NoVersionsErrorMsg)
 	}
 	return availableVersions, nil
 }
 
-func (r *PublicRepo) getMatchedReleaseNotesVersionsFromListBucketResult(name string, result *ListBucketResult) (version.Collection, error) {
+func (r *PublicRepo) getMatchedReleaseNotesVersionsFromListBucketResult(name string, result *ListBucketResult) version.Collection {
 	var versions version.Collection
 	for _, v := range result.Contents {
 		match, foundVersion := r.parseMatchedReleaseNotesVersion(name, v.Key)
@@ -214,7 +211,7 @@ func (r *PublicRepo) getMatchedReleaseNotesVersionsFromListBucketResult(name str
 		}
 	}
 	sort.Sort(versions)
-	return versions, nil
+	return versions
 }
 
 func (r *PublicRepo) parseMatchedReleaseNotesVersion(name, key string) (match bool, ver *version.Version) {

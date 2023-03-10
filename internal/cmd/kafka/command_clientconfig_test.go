@@ -12,8 +12,7 @@ func TestCommentAndWarnAboutSr(t *testing.T) {
 		"schema.registry.url=https://{{ SR_ENDPOINT }}\n" +
 		"basic.auth.credentials.source=USER_INFO\n" +
 		"basic.auth.user.info={{ SR_API_KEY }}:{{ SR_API_SECRET }}\n"
-	commented, err := commentAndWarnAboutSchemaRegistry("my-reason", "my-suggestions", original)
-	require.NoError(t, err)
+	commented := commentAndWarnAboutSchemaRegistry("my-reason", "my-suggestions", original)
 	require.Equal(t, "# Required connection configs for Confluent Cloud Schema Registry\n"+
 		"#schema.registry.url=https://{{ SR_ENDPOINT }}\n"+
 		"#basic.auth.credentials.source=USER_INFO\n"+
@@ -26,8 +25,7 @@ func TestCommentAndWarnAboutSr(t *testing.T) {
 		"    basic.auth.credentials.source = USER_INFO\n" +
 		"    basic.auth.user.info = \"{{ SR_API_KEY }}:{{ SR_API_SECRET }}\"\n" +
 		"  }"
-	commented, err = commentAndWarnAboutSchemaRegistry("my-reason", "my-suggestions", original)
-	require.NoError(t, err)
+	commented = commentAndWarnAboutSchemaRegistry("my-reason", "my-suggestions", original)
 	require.Equal(t, "  properties {\n"+
 		"    # Required connection configs for Confluent Cloud Schema Registry\n"+
 		"    #schema.registry.url = \"https://{{ SR_ENDPOINT }}\"\n"+

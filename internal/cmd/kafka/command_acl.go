@@ -170,7 +170,7 @@ func (c *aclCommand) mapResourceIdToUserId(users []*ccloud.User) map[string]int3
 	return idMap
 }
 
-func (c *aclCommand) provisioningClusterCheck(cmd *cobra.Command, lkc string) error {
+func (c *aclCommand) provisioningClusterCheck(lkc string) error {
 	cluster, httpResp, err := c.V2Client.DescribeKafkaCluster(lkc, c.EnvironmentId())
 	if err != nil {
 		return errors.CatchKafkaNotFoundError(err, lkc, httpResp)

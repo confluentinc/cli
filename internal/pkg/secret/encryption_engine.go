@@ -40,15 +40,13 @@ func NewEncryptionEngine(suite *Cipher) *EncryptEngineImpl {
 
 func (c *EncryptEngineImpl) generateRandomString(keyLength int) (string, error) {
 	randomBytes := make([]byte, keyLength)
-	_, err := rand.Read(randomBytes)
-	if err != nil {
+	if _, err := rand.Read(randomBytes); err != nil {
 		return "", err
 	}
 	return base64.StdEncoding.EncodeToString(randomBytes), nil
 }
 
 func (c *EncryptEngineImpl) GenerateRandomDataKey(keyLength int) ([]byte, string, error) {
-
 	// Generate random data key
 	keyString, err := c.generateRandomString(keyLength)
 	if err != nil {
@@ -61,10 +59,8 @@ func (c *EncryptEngineImpl) GenerateRandomDataKey(keyLength int) ([]byte, string
 		return []byte(""), "", err
 	}
 
-	key, err := c.generateEncryptionKey(keyString, salt)
-	if err != nil {
-		return []byte(""), "", err
-	}
+	key := c.generateEncryptionKey(keyString, salt)
+
 	return key, salt, nil
 }
 
@@ -78,12 +74,9 @@ func (c *EncryptEngineImpl) GenerateMasterKey(masterKeyPassphrase string, salt s
 		}
 	}
 
-	key, err := c.generateEncryptionKey(masterKeyPassphrase, salt)
-	if err != nil {
-		return "", "", err
-	}
-
+	key := c.generateEncryptionKey(masterKeyPassphrase, salt)
 	encodedKey := base64.StdEncoding.EncodeToString(key)
+
 	return encodedKey, salt, nil
 }
 
@@ -144,9 +137,8 @@ func (c *EncryptEngineImpl) Decrypt(cipher string, iv string, algo string, key [
 	return string(plainText), nil
 }
 
-func (c *EncryptEngineImpl) generateEncryptionKey(keyPhrase string, salt string) ([]byte, error) {
-	key := pbkdf2.Key([]byte(keyPhrase), []byte(salt), c.Cipher.Iterations, c.Cipher.KeyLength, sha512.New)
-	return key, nil
+func (c *EncryptEngineImpl) generateEncryptionKey(keyPhrase string, salt string) []byte {
+	return pbkdf2.Key([]byte(keyPhrase), []byte(salt), c.Cipher.Iterations, c.Cipher.KeyLength, sha512.New)
 }
 
 func (c *EncryptEngineImpl) encrypt(plainText string, key []byte) (string, string, error) {
@@ -198,7 +190,7 @@ func (c *EncryptEngineImpl) decrypt(crypt []byte, key []byte, iv []byte, algo st
 
 	var decrypted []byte
 
-	if algo == AesCbc { // Backwards compatability
+	if algo == AesCbc { // Backwards compatibility
 		ecb := cipher.NewCBCDecrypter(block, iv)
 		decrypted = make([]byte, len(crypt))
 		ecb.CryptBlocks(decrypted, crypt)

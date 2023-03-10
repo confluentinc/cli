@@ -2,7 +2,6 @@ package cluster
 
 import (
 	"fmt"
-	"sort"
 
 	"github.com/spf13/cobra"
 
@@ -11,6 +10,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/types"
 )
 
 type describeCommand struct {
@@ -102,11 +102,7 @@ func getCACertPath(cmd *cobra.Command) (string, error) {
 }
 
 func printDescribe(cmd *cobra.Command, meta *ScopedId) error {
-	var types []string
-	for name := range meta.Scope.Clusters {
-		types = append(types, name)
-	}
-	sort.Strings(types) // since we don't have hierarchy info, just display in alphabetical order
+	types := types.GetSortedKeys(meta.Scope.Clusters)
 
 	if output.GetFormat(cmd).IsSerialized() {
 		out := &out{
