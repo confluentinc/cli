@@ -40,7 +40,6 @@ func (c *command) newCreateCommand(enableSourceCode bool) *cobra.Command {
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 
-	_ = cmd.MarkFlagRequired("ksql-cluster")
 	_ = cmd.MarkFlagRequired("name")
 
 	return cmd
@@ -59,8 +58,10 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	}
 
 	// validate ksql id
-	if _, err := c.V2Client.DescribeKsqlCluster(ksqlCluster, c.EnvironmentId()); err != nil {
-		return err
+	if ksqlCluster != "" {
+		if _, err := c.V2Client.DescribeKsqlCluster(ksqlCluster, c.EnvironmentId()); err != nil {
+			return err
+		}
 	}
 
 	// validate sr id
