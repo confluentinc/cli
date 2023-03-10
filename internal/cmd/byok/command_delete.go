@@ -36,10 +36,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	promptMsg := fmt.Sprintf(perrors.DeleteResourceConfirmYesNoMsg, resource.ByokKey, args[0])
-	if len(args) > 1 {
-		promptMsg = fmt.Sprintf(perrors.DeleteResourcesConfirmYesNoMsg, resource.ByokKey, utils.ArrayToCommaDelimitedStringWithAnd(args))
-	}
-	if ok, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil || !ok {
+	if ok, err := form.ConfirmDeletionTemp(cmd, promptMsg, "", resource.ByokKey, args); err != nil || !ok {
 		return err
 	}
 

@@ -9,6 +9,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 /*
@@ -82,6 +83,41 @@ func ConfirmDeletion(cmd *cobra.Command, promptMsg, stringToType string) (bool, 
 
 	prompt := NewPrompt(os.Stdin)
 	isYesNo := stringToType == ""
+	f := New(Field{ID: "confirm", Prompt: promptMsg, IsYesOrNo: isYesNo})
+	if err := f.Prompt(prompt); err != nil && isYesNo {
+		return false, errors.New(errors.FailedToReadInputErrorMsg)
+	} else if err != nil {
+		return false, err
+	}
+
+	if isYesNo {
+		return f.Responses["confirm"].(bool), nil
+	}
+
+	if f.Responses["confirm"].(string) == stringToType || f.Responses["confirm"].(string) == fmt.Sprintf(`"%s"`, stringToType) {
+		return true, nil
+	}
+
+	DeleteResourceConfirmSuggestions := "Use the `--force` flag to delete without a confirmation prompt."
+	return false, errors.NewErrorWithSuggestions(fmt.Sprintf(`input does not match "%s"`, stringToType), DeleteResourceConfirmSuggestions)
+}
+
+// TODO: this function is becoming unwieldy; split into 2-3 functions for different cases
+func ConfirmDeletionTemp(cmd *cobra.Command, promptMsg, stringToType, resource string, idList []string) (bool, error) {
+	force, err := cmd.Flags().GetBool("force")
+	if err != nil {
+		return false, err
+	}
+	if force {
+		return true, nil
+	}
+
+	if len(idList) > 1 {
+		promptMsg = fmt.Sprintf(errors.DeleteResourcesConfirmYesNoMsg, resource, utils.ArrayToCommaDelimitedStringWithAnd(idList))
+	}
+
+	prompt := NewPrompt(os.Stdin)
+	isYesNo := stringToType == "" || len(idList) > 1
 	f := New(Field{ID: "confirm", Prompt: promptMsg, IsYesOrNo: isYesNo})
 	if err := f.Prompt(prompt); err != nil && isYesNo {
 		return false, errors.New(errors.FailedToReadInputErrorMsg)

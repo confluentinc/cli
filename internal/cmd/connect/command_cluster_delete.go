@@ -54,16 +54,9 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if len(args) > 1 {
-		promptMsg := fmt.Sprintf(perrors.DeleteResourcesConfirmYesNoMsg, resource.Connector, utils.ArrayToCommaDelimitedStringWithAnd(args))
-		if ok, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil || !ok {
-			return err
-		}
-	} else {
-		promptMsg := fmt.Sprintf(perrors.DeleteResourceConfirmMsg, resource.Connector, args[0], connectorNames[0])
-		if _, err := form.ConfirmDeletion(cmd, promptMsg, connectorNames[0]); err != nil {
-			return err
-		}
+	promptMsg := fmt.Sprintf(perrors.DeleteResourceConfirmMsg, resource.Connector, args[0], connectorNames[0])
+	if _, err := form.ConfirmDeletionTemp(cmd, promptMsg, connectorNames[0], resource.Connector, args); err != nil {
+		return err
 	}
 
 	var errs error
