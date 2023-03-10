@@ -1,7 +1,7 @@
 package context
 
 import (
-	"fmt"
+	"errors"
 
 	"github.com/spf13/cobra"
 
@@ -33,15 +33,14 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	promptMsg := fmt.Sprintf(perrors.DeleteResourceConfirmYesNoMsg, resource.Context, args[0])
-	if ok, err := form.ConfirmDeletionTemp(cmd, promptMsg, "", resource.Context, args); err != nil || !ok {
+	if ok, err := form.ConfirmDeletionYesNo(cmd, resource.Context, args); err != nil || !ok {
 		return err
 	}
 
 	var errs error
 	for _, ctxName := range args {
 		if err := c.Config.DeleteContext(ctxName); err != nil {
-			return err
+			errs = errors.Join(errs, err)
 		} else {
 			output.Printf(perrors.DeletedResourceMsg, resource.Context, ctxName)
 		}

@@ -2,7 +2,6 @@ package apikey
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/spf13/cobra"
 
@@ -36,8 +35,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	promptMsg := fmt.Sprintf(perrors.DeleteResourceConfirmYesNoMsg, resource.ApiKey, args[0])
-	if ok, err := form.ConfirmDeletionTemp(cmd, promptMsg, "", resource.ApiKey, args); err != nil || !ok {
+	if ok, err := form.ConfirmDeletionYesNo(cmd, resource.ApiKey, args); err != nil || !ok {
 		return err
 	}
 

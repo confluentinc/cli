@@ -2,7 +2,6 @@ package byok
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/spf13/cobra"
 
@@ -35,8 +34,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	promptMsg := fmt.Sprintf(perrors.DeleteResourceConfirmYesNoMsg, resource.ByokKey, args[0])
-	if ok, err := form.ConfirmDeletionTemp(cmd, promptMsg, "", resource.ByokKey, args); err != nil || !ok {
+	if ok, err := form.ConfirmDeletionYesNo(cmd, resource.ByokKey, args); err != nil || !ok {
 		return err
 	}
 

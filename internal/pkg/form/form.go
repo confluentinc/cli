@@ -102,6 +102,29 @@ func ConfirmDeletion(cmd *cobra.Command, promptMsg, stringToType string) (bool, 
 	return false, errors.NewErrorWithSuggestions(fmt.Sprintf(`input does not match "%s"`, stringToType), DeleteResourceConfirmSuggestions)
 }
 
+func ConfirmDeletionYesNo(cmd *cobra.Command, resourceType string, idList []string) (bool, error) {
+	if force, err := cmd.Flags().GetBool("force"); err != nil {
+		return false, err
+	} else if force {
+		return true, nil
+	}
+
+	prompt := NewPrompt(os.Stdin)
+	var promptMsg string
+	if len(idList) == 1 {
+		promptMsg = fmt.Sprintf(errors.DeleteResourceConfirmYesNoMsg, resourceType, idList[0])
+	} else {
+		promptMsg = fmt.Sprintf(errors.DeleteResourcesConfirmYesNoMsg, resourceType, utils.ArrayToCommaDelimitedStringWithAnd(idList))
+	}
+
+	f := New(Field{ID: "confirm", Prompt: promptMsg, IsYesOrNo: true})
+	if err := f.Prompt(prompt); err != nil {
+		return false, errors.New(errors.FailedToReadInputErrorMsg)
+	}
+
+	return f.Responses["confirm"].(bool), nil
+}
+
 // TODO: this function is becoming unwieldy; split into 2-3 functions for different cases
 func ConfirmDeletionTemp(cmd *cobra.Command, promptMsg, stringToType, resource string, idList []string) (bool, error) {
 	force, err := cmd.Flags().GetBool("force")
