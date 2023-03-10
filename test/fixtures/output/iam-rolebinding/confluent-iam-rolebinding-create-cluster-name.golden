@@ -1,0 +1,9 @@
+In the next major version update, `confluent iam rolebinding` has been renamed to `confluent iam rbac`.
+
++--------------+-----------------+
+| Principal    | User:bob        |
+| Role         | DeveloperRead   |
+| ResourceType | Topic           |
+| Name         | connect-configs |
+| PatternType  | LITERAL         |
++--------------+-----------------+

@@ -1,0 +1,6 @@
+In the next major version update, `confluent iam rolebinding` has been renamed to `confluent iam rbac`.
+
+      Principal     |      Role      | ResourceType |  Name  | PatternType  
+--------------------+----------------+--------------+--------+--------------
+  Group:hobbits     | DeveloperWrite | Topic        | shire- | PREFIXED     
+  Group:ringBearers | DeveloperWrite | Topic        | ring-  | PREFIXED     

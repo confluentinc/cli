@@ -1,17 +1,20 @@
-+----------------------+---------------------------+
-| Current              | true                      |
-| ID                   | lkc-describe-infinite     |
-| Name                 | kafka-cluster             |
-| Type                 | DEDICATED                 |
-| Cluster Size         |                         1 |
-| Ingress Limit (MB/s) |                        50 |
-| Egress Limit (MB/s)  |                       150 |
-| Storage              | Infinite                  |
-| Provider             | aws                       |
-| Region               | us-west-2                 |
-| Availability         | single-zone               |
-| Status               | UP                        |
-| Endpoint             | SASL_SSL://kafka-endpoint |
-| REST Endpoint        | http://127.0.0.1:1025     |
-| Topic Count          |                         2 |
-+----------------------+---------------------------+
+The Confluent Cloud CLI is deprecated and will no longer be supported on May 9, 2022. All `ccloud` features have been moved to the Confluent CLI: https://docs.confluent.io/confluent-cli/current/index.html
+To update to the new CLI, run `ccloud update --major`. See the migration guide for more details: https://docs.confluent.io/ccloud-cli/current/migrate.html
+
+In the next major version update, `ApiEndpoint` has been renamed to `KAPI` and is only visible if the `--all` flag is passed.
+
++--------------+---------------------------+
+| Id           | lkc-describe-infinite     |
+| Name         | kafka-cluster             |
+| Type         | BASIC                     |
+| Ingress      |                       100 |
+| Egress       |                       100 |
+| Storage      | Infinite                  |
+| Provider     | aws                       |
+| Availability | single-zone               |
+| Region       | us-west-2                 |
+| Status       | PROVISIONING              |
+| Endpoint     | SASL_SSL://kafka-endpoint |
+| ApiEndpoint  | http://kafka-api-url      |
+| RestEndpoint | http://kafka-rest-url     |
++--------------+---------------------------+

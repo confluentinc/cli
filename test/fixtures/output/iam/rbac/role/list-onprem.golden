@@ -1,4 +1,6 @@
-       Name      |                   Access Policy                    
+In the next major version update, `confluent iam role` has been renamed to `confluent iam rbac`.
+
+       Name      |                   AccessPolicy                     
 -----------------+----------------------------------------------------
   DeveloperRead  | {                                                  
                  |   "scopeType": "Resource",                         

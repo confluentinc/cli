@@ -1,5 +1,5 @@
-The local commands are intended for a single-node development environment only, NOT for production usage. See more: https://docs.confluent.io/current/cli/index.html
-As of Confluent Platform 8.0, Java 8 is no longer supported.
+The local commands are intended for a single-node development environment only,
+NOT for production usage. Documentation: https://docs.confluent.io/confluent-cli/current/command-reference/local/index.html
 
 Available Services:
   Connect
