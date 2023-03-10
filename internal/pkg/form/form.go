@@ -129,13 +129,6 @@ func ConfirmDeletionType(cmd *cobra.Command, resourceType, stringToType string, 
 }
 
 func ConfirmDeletionYesNo(cmd *cobra.Command, resourceType string, idList []string) (bool, error) {
-	if force, err := cmd.Flags().GetBool("force"); err != nil {
-		return false, err
-	} else if force {
-		return true, nil
-	}
-
-	prompt := NewPrompt(os.Stdin)
 	var promptMsg string
 	if len(idList) == 1 {
 		promptMsg = fmt.Sprintf(errors.DeleteResourceConfirmYesNoMsg, resourceType, idList[0])
@@ -143,6 +136,17 @@ func ConfirmDeletionYesNo(cmd *cobra.Command, resourceType string, idList []stri
 		promptMsg = fmt.Sprintf(errors.DeleteResourcesConfirmYesNoMsg, resourceType, utils.ArrayToCommaDelimitedStringWithAnd(idList))
 	}
 
+	return ConfirmDeletionYesNoCustomPrompt(cmd, promptMsg)
+}
+
+func ConfirmDeletionYesNoCustomPrompt(cmd *cobra.Command, promptMsg string) (bool, error) {
+	if force, err := cmd.Flags().GetBool("force"); err != nil {
+		return false, err
+	} else if force {
+		return true, nil
+	}
+
+	prompt := NewPrompt(os.Stdin)
 	f := New(Field{ID: "confirm", Prompt: promptMsg, IsYesOrNo: true})
 	if err := f.Prompt(prompt); err != nil {
 		return false, errors.New(errors.FailedToReadInputErrorMsg)

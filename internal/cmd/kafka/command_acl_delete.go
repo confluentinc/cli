@@ -99,7 +99,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 	if count > 1 {
 		promptMsg = errors.DeleteACLsConfirmMsg
 	}
-	if ok, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil || !ok {
+	if ok, err := form.ConfirmDeletionYesNoCustomPrompt(cmd, promptMsg); err != nil || !ok {
 		return err
 	}
 
