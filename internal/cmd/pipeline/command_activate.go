@@ -36,7 +36,7 @@ func (c *command) activate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	updatePipeline := streamdesignerv1.SdV1PipelineUpdate{Spec: &streamdesignerv1.SdV1PipelineSpecUpdate{Activated: streamdesignerv1.PtrBool(true)}}
+	updatePipeline := streamdesignerv1.SdV1Pipeline{Spec: &streamdesignerv1.SdV1PipelineSpec{Activated: streamdesignerv1.PtrBool(true)}}
 
 	pipeline, err := c.V2Client.UpdateSdPipeline(c.EnvironmentId(), cluster.ID, args[0], updatePipeline)
 	if err != nil {
