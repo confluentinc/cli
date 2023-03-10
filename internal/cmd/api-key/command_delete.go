@@ -84,7 +84,7 @@ func (c *command) checkExistence(cmd *cobra.Command, args []string) error {
 
 	invalidKeys := apiKeySet.Difference(args)
 	if len(invalidKeys) > 0 {
-		return perrors.NewErrorWithSuggestions("API keys not found or access forbidden: " + utils.ArrayToCommaDelimitedStringWithAnd(invalidKeys), perrors.APIKeyNotFoundSuggestions)
+		return perrors.NewErrorWithSuggestions("API key(s) not found or access forbidden: " + utils.ArrayToCommaDelimitedStringWithAnd(invalidKeys), perrors.APIKeyNotFoundSuggestions)
 	}
 
 	return nil

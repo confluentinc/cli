@@ -16,7 +16,7 @@ import (
 
 func (c *command) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "delete <context>",
+		Use:               "delete <context-1> [context-2] ... [context-N]",
 		Short:             "Delete contexts.",
 		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
@@ -70,7 +70,7 @@ func (c *command) checkExistence(cmd *cobra.Command, args []string) error {
 
 	invalidContexts := contextSet.Difference(args)
 	if len(invalidContexts) > 0 {
-		return perrors.New("contexts not found: " + utils.ArrayToCommaDelimitedStringWithAnd(invalidContexts))
+		return perrors.New("context(s) not found: " + utils.ArrayToCommaDelimitedStringWithAnd(invalidContexts))
 	}
 
 	return nil

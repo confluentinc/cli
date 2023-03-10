@@ -105,7 +105,7 @@ func (c *clusterCommand) checkExistence(cmd *cobra.Command, kafkaClusterId strin
 
 	invalidConnectors := connectorSet.Difference(args)
 	if len(invalidConnectors) > 0 {
-		return nil, perrors.New("unknown connector IDs: " + utils.ArrayToCommaDelimitedStringWithAnd(invalidConnectors))
+		return nil, perrors.New("unknown connector ID(s): " + utils.ArrayToCommaDelimitedStringWithAnd(invalidConnectors))
 	}
 
 	return connectorNames, nil
