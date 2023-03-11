@@ -103,18 +103,22 @@ func ConfirmDeletion(cmd *cobra.Command, promptMsg, stringToType string) (bool, 
 }
 
 func ConfirmDeletionType(cmd *cobra.Command, resourceType, stringToType string, idList []string) (bool, error) {
+	if len(idList) > 1 {
+		return ConfirmDeletionYesNo(cmd, resourceType, idList)
+	}
+
+	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resourceType, idList[0], stringToType)
+	return ConfirmDeletionTypeCustomPrompt(cmd, promptMsg, stringToType)
+}
+
+func ConfirmDeletionTypeCustomPrompt(cmd *cobra.Command, promptMsg, stringToType string) (bool, error) {
 	if force, err := cmd.Flags().GetBool("force"); err != nil {
 		return false, err
 	} else if force {
 		return true, nil
 	}
 
-	if len(idList) > 1 {
-		return ConfirmDeletionYesNo(cmd, resourceType, idList)
-	}
-
 	prompt := NewPrompt(os.Stdin)
-	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resourceType, idList[0], stringToType)
 	f := New(Field{ID: "confirm", Prompt: promptMsg})
 	if err := f.Prompt(prompt); err != nil {
 		return false, err
