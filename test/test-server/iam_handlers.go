@@ -355,7 +355,14 @@ func handleIamIdentityProviders(t *testing.T) http.HandlerFunc {
 				Issuer:      identityproviderv2.PtrString("https://company.provider.com"),
 				JwksUri:     identityproviderv2.PtrString("https://company.provider.com/oauth2/v1/keys"),
 			}
-			err := json.NewEncoder(w).Encode(identityproviderv2.IamV2IdentityProviderList{Data: []identityproviderv2.IamV2IdentityProvider{identityProvider, identityProvider}})
+			identityProviderTwo := identityproviderv2.IamV2IdentityProvider{
+				Id:          identityproviderv2.PtrString("op-67890"),
+				DisplayName: identityproviderv2.PtrString("identity_provider_2"),
+				Description: identityproviderv2.PtrString("providing identities."),
+				Issuer:      identityproviderv2.PtrString("https://company.provider.com"),
+				JwksUri:     identityproviderv2.PtrString("https://company.provider.com/oauth2/v1/keys"),
+			}
+			err := json.NewEncoder(w).Encode(identityproviderv2.IamV2IdentityProviderList{Data: []identityproviderv2.IamV2IdentityProvider{identityProvider, identityProviderTwo}})
 			require.NoError(t, err)
 		case http.MethodPost:
 			var req identityproviderv2.IamV2IdentityProvider

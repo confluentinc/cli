@@ -1,23 +1,25 @@
 package iam
 
 import (
-	"fmt"
+	"errors"
 
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
+	perrors "github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
+	"github.com/confluentinc/cli/internal/pkg/types"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *identityProviderCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "delete <id>",
-		Short:             "Delete an identity provider.",
-		Args:              cobra.ExactArgs(1),
+		Use:               "delete <id-1> [id-2] ... [id-N]",
+		Short:             "Delete identity providers.",
+		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.delete,
 		Example: examples.BuildExampleString(
@@ -34,20 +36,52 @@ func (c *identityProviderCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *identityProviderCommand) delete(cmd *cobra.Command, args []string) error {
-	provider, err := c.V2Client.GetIdentityProvider(args[0])
+	displayName, err := c.checkExistence(cmd, args)
 	if err != nil {
 		return err
 	}
 
-	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.IdentityProvider, args[0], provider.GetDisplayName())
-	if _, err := form.ConfirmDeletion(cmd, promptMsg, provider.GetDisplayName()); err != nil {
+	if _, err := form.ConfirmDeletionType(cmd, resource.IdentityProvider, displayName, args); err != nil {
 		return err
 	}
 
-	if err := c.V2Client.DeleteIdentityProvider(args[0]); err != nil {
-		return err
+	var errs error
+	for _, providerId := range args {
+		if err := c.V2Client.DeleteIdentityProvider(providerId); err != nil {
+			errs = errors.Join(errs, err)
+		} else {
+			output.ErrPrintf(perrors.DeletedResourceMsg, resource.IdentityProvider, providerId)
+		}
 	}
 
-	output.ErrPrintf(errors.DeletedResourceMsg, resource.IdentityProvider, args[0])
-	return nil
+	return errs
+}
+
+func (c *identityProviderCommand) checkExistence(cmd *cobra.Command, args []string) (string, error) {
+	// Single
+	if len(args) == 1 {
+		if provider, err := c.V2Client.GetIdentityProvider(args[0]); err != nil {
+			return "", err
+		} else {
+			return provider.GetDisplayName(), nil
+		}
+	}
+
+	// Multiple
+	identityProviders, err := c.V2Client.ListIdentityProviders()
+	if err != nil {
+		return "", err
+	}
+
+	providerSet := types.NewSet()
+	for _, provider := range identityProviders {
+		providerSet.Add(provider.GetId())
+	}
+
+	invalidProviders := providerSet.Difference(args)
+	if len(invalidProviders) > 0 {
+		return "", perrors.New("provider(s) not found or access forbidden: " + utils.ArrayToCommaDelimitedStringWithAnd(invalidProviders))
+	}
+
+	return "", nil
 }
