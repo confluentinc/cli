@@ -2,6 +2,7 @@ package iam
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/spf13/cobra"
 
@@ -88,7 +89,7 @@ func (c *identityPoolCommand) checkExistence(cmd *cobra.Command, provider string
 
 	invalidPools := poolSet.Difference(args)
 	if len(invalidPools) > 0 {
-		return "", perrors.New("identity pool(s) not found or access forbidden: " + utils.ArrayToCommaDelimitedStringWithAnd(invalidPools))
+		return "", perrors.New(fmt.Sprintf(perrors.AccessForbiddenErrorMsg, resource.IdentityPool, utils.ArrayToCommaDelimitedStringWithAnd(invalidPools)))
 	}
 
 	return "", nil

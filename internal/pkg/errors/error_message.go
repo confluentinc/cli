@@ -470,6 +470,7 @@ const (
 		"To create an API key, use `confluent api-key create --resource %s`.\n" +
 		"To store an existing API key, use `confluent api-key store --resource %s`."
 	FailedToReadInputErrorMsg = "failed to read input"
+	AccessForbiddenErrorMsg   = "%s(s) not found or access forbidden: %s"
 
 	// Flag parsing errors
 	EnvironmentFlagWithApiLoginErrorMsg = `"environment" flag should not be passed for API key context`

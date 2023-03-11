@@ -2,6 +2,7 @@ package apikey
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/spf13/cobra"
 
@@ -79,7 +80,7 @@ func (c *command) checkExistence(cmd *cobra.Command, args []string) error {
 
 	invalidKeys := apiKeySet.Difference(args)
 	if len(invalidKeys) > 0 {
-		return perrors.NewErrorWithSuggestions("API key(s) not found or access forbidden: " + utils.ArrayToCommaDelimitedStringWithAnd(invalidKeys), perrors.APIKeyNotFoundSuggestions)
+		return perrors.NewErrorWithSuggestions(fmt.Sprintf(perrors.AccessForbiddenErrorMsg, resource.ApiKey, utils.ArrayToCommaDelimitedStringWithAnd(invalidKeys)), perrors.APIKeyNotFoundSuggestions)
 	}
 
 	return nil

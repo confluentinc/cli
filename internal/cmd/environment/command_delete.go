@@ -84,7 +84,7 @@ func (c *command) checkExistence(cmd *cobra.Command, args []string) (string, err
 
 	invalidEnvironments := environmentSet.Difference(args)
 	if len(invalidEnvironments) > 0 {
-		return "", perrors.NewErrorWithSuggestions("environment(s) not found or access forbidden: " + utils.ArrayToCommaDelimitedStringWithAnd(invalidEnvironments), fmt.Sprintf(perrors.OrgResourceNotFoundSuggestions, resource.Environment))
+		return "", perrors.NewErrorWithSuggestions(fmt.Sprintf(perrors.AccessForbiddenErrorMsg, resource.Environment, utils.ArrayToCommaDelimitedStringWithAnd(invalidEnvironments)), fmt.Sprintf(perrors.OrgResourceNotFoundSuggestions, resource.Environment))
 	}
 
 	return "", nil

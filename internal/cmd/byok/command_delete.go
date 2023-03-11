@@ -2,6 +2,7 @@ package byok
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/spf13/cobra"
 
@@ -75,7 +76,7 @@ func (c *command) checkExistence(cmd *cobra.Command, args []string) error {
 
 	invalidKeys := keySet.Difference(args)
 	if len(invalidKeys) > 0 {
-		return perrors.NewErrorWithSuggestions("self-managed key(s) not found or access forbidden: " + utils.ArrayToCommaDelimitedStringWithAnd(invalidKeys), perrors.ByokKeyNotFoundSuggestions)
+		return perrors.NewErrorWithSuggestions(fmt.Sprintf(perrors.AccessForbiddenErrorMsg, resource.ByokKey, utils.ArrayToCommaDelimitedStringWithAnd(invalidKeys)), perrors.ByokKeyNotFoundSuggestions)
 	}
 
 	return nil

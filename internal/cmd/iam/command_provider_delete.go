@@ -2,6 +2,7 @@ package iam
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/spf13/cobra"
 
@@ -80,7 +81,7 @@ func (c *identityProviderCommand) checkExistence(cmd *cobra.Command, args []stri
 
 	invalidProviders := providerSet.Difference(args)
 	if len(invalidProviders) > 0 {
-		return "", perrors.New("provider(s) not found or access forbidden: " + utils.ArrayToCommaDelimitedStringWithAnd(invalidProviders))
+		return "", perrors.New(fmt.Sprintf(perrors.AccessForbiddenErrorMsg, resource.IdentityProvider, utils.ArrayToCommaDelimitedStringWithAnd(invalidProviders)))
 	}
 
 	return "", nil
