@@ -70,7 +70,6 @@ func (s *SRRouter) HandleSRSubjectVersions(t *testing.T) http.HandlerFunc {
 			err := json.NewEncoder(w).Encode(versions)
 			require.NoError(t, err)
 		}
-
 	}
 }
 
@@ -102,7 +101,6 @@ func (s *SRRouter) HandleSRSubjectVersion(t *testing.T) http.HandlerFunc {
 				})
 				require.NoError(t, err)
 			} else {
-
 				version64, err := strconv.ParseInt(versionStr, 10, 32)
 				require.NoError(t, err)
 				subject := vars["subject"]
@@ -416,7 +414,7 @@ func (c *SRRouter) HandleSRAsyncApi(t *testing.T) http.HandlerFunc {
 		w.Header().Set("Content-Type", "application/json")
 		switch r.Method {
 		case http.MethodPut:
-			w.WriteHeader(200)
+			w.WriteHeader(http.StatusOK)
 		}
 	}
 }

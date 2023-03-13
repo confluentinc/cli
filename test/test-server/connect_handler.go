@@ -115,70 +115,93 @@ func handlePluginValidate(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		configs := &[]connectv1.InlineResponse2003Configs{
-			connectv1.InlineResponse2003Configs{
+			{
 				Value: &connectv1.InlineResponse2003Value{
 					Name:   connectv1.PtrString("kafka.api.key"),
 					Errors: &[]string{`"kafka.api.key" is required`},
 				},
 				Definition: &connectv1.InlineResponse2003Definition{
 					Documentation: connectv1.PtrString("Kafka API Key"),
-					Required:      connectv1.PtrBool(true)}},
-			connectv1.InlineResponse2003Configs{
+					Required:      connectv1.PtrBool(true),
+				},
+			},
+			{
 				Value: &connectv1.InlineResponse2003Value{
 					Name:   connectv1.PtrString("kafka.api.secret"),
 					Errors: &[]string{`"kafka.api.secret" is required`},
 				},
 				Definition: &connectv1.InlineResponse2003Definition{
 					Documentation: connectv1.PtrString("Kafka API Secret"),
-					Required:      connectv1.PtrBool(true)}},
-			connectv1.InlineResponse2003Configs{
+					Required:      connectv1.PtrBool(true),
+				},
+			},
+			{
 				Value: &connectv1.InlineResponse2003Value{
 					Name:   connectv1.PtrString("topics"),
-					Errors: &[]string{`"topics" is required`}},
+					Errors: &[]string{`"topics" is required`},
+				},
 				Definition: &connectv1.InlineResponse2003Definition{
 					Documentation: connectv1.PtrString("Identifies the topic name."),
-					Required:      connectv1.PtrBool(true)}},
-			connectv1.InlineResponse2003Configs{
+					Required:      connectv1.PtrBool(true),
+				},
+			},
+			{
 				Value: &connectv1.InlineResponse2003Value{
 					Name:   connectv1.PtrString("data.format"),
-					Errors: &[]string{`"data.format" is required, Value "null" doesn't belong to the property's "data.format" enum`}},
+					Errors: &[]string{`"data.format" is required, Value "null" doesn't belong to the property's "data.format" enum`},
+				},
 				Definition: &connectv1.InlineResponse2003Definition{
 					Documentation: connectv1.PtrString("Sets the input value format."),
-					Required:      connectv1.PtrBool(true)}},
-			connectv1.InlineResponse2003Configs{
+					Required:      connectv1.PtrBool(true),
+				},
+			},
+			{
 				Value: &connectv1.InlineResponse2003Value{
 					Name:   connectv1.PtrString("gcs.credentials.config"),
-					Errors: &[]string{`"gcs.credentials.config" is required`}},
+					Errors: &[]string{`"gcs.credentials.config" is required`},
+				},
 				Definition: &connectv1.InlineResponse2003Definition{
 					Documentation: connectv1.PtrString("GCP service account JSON file."),
-					Required:      connectv1.PtrBool(true)}},
-			connectv1.InlineResponse2003Configs{
+					Required:      connectv1.PtrBool(true),
+				},
+			},
+			{
 				Value: &connectv1.InlineResponse2003Value{
 					Name:   connectv1.PtrString("gcs.bucket.name"),
-					Errors: &[]string{`"gcs.bucket.name" is required`}},
+					Errors: &[]string{`"gcs.bucket.name" is required`},
+				},
 				Definition: &connectv1.InlineResponse2003Definition{
 					Documentation: connectv1.PtrString("GCS bucket name."),
-					Required:      connectv1.PtrBool(true)}},
-			connectv1.InlineResponse2003Configs{
+					Required:      connectv1.PtrBool(true),
+				},
+			},
+			{
 				Value: &connectv1.InlineResponse2003Value{
 					Name:   connectv1.PtrString("time.interval"),
-					Errors: &[]string{`"data.format" is required, Value "null" doesn't belong to the property's "time.interval" enum`}},
+					Errors: &[]string{`"data.format" is required, Value "null" doesn't belong to the property's "time.interval" enum`},
+				},
 				Definition: &connectv1.InlineResponse2003Definition{
 					Documentation: connectv1.PtrString("Partitioning interval of data."),
-					Required:      connectv1.PtrBool(true)}},
-			connectv1.InlineResponse2003Configs{
+					Required:      connectv1.PtrBool(true),
+				},
+			},
+			{
 				Value: &connectv1.InlineResponse2003Value{
 					Name:   connectv1.PtrString("tasks.max"),
-					Errors: &[]string{`"tasks.max" is required`}},
+					Errors: &[]string{`"tasks.max" is required`},
+				},
 				Definition: &connectv1.InlineResponse2003Definition{
 					Documentation: connectv1.PtrString("Tasks"),
-					Required:      connectv1.PtrBool(true)}},
-			connectv1.InlineResponse2003Configs{
-				Value: &connectv1.InlineResponse2003Value{
-					Name: connectv1.PtrString("flush.size")},
+					Required:      connectv1.PtrBool(true),
+				},
+			},
+			{
+				Value: &connectv1.InlineResponse2003Value{Name: connectv1.PtrString("flush.size")},
 				Definition: &connectv1.InlineResponse2003Definition{
 					Documentation: connectv1.PtrString("Commit file size."),
-					Required:      connectv1.PtrBool(false)}},
+					Required:      connectv1.PtrBool(false),
+				},
+			},
 		}
 
 		err := json.NewEncoder(w).Encode(connectv1.InlineResponse2003{Configs: configs})

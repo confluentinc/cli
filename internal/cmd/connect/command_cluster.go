@@ -51,11 +51,11 @@ func (c *clusterCommand) validArgs(cmd *cobra.Command, args []string) []string {
 		return nil
 	}
 
-	return c.autocompleteConnectors(cmd)
+	return c.autocompleteConnectors()
 }
 
-func (c *clusterCommand) autocompleteConnectors(cmd *cobra.Command) []string {
-	connectors, err := c.fetchConnectors(cmd)
+func (c *clusterCommand) autocompleteConnectors() []string {
+	connectors, err := c.fetchConnectors()
 	if err != nil {
 		return nil
 	}
@@ -69,7 +69,7 @@ func (c *clusterCommand) autocompleteConnectors(cmd *cobra.Command) []string {
 	return suggestions
 }
 
-func (c *clusterCommand) fetchConnectors(cmd *cobra.Command) (map[string]connectv1.ConnectV1ConnectorExpansion, error) {
+func (c *clusterCommand) fetchConnectors() (map[string]connectv1.ConnectV1ConnectorExpansion, error) {
 	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return nil, err

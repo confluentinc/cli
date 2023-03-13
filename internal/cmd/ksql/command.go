@@ -3,6 +3,7 @@ package ksql
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	"github.com/dghubble/sling"
 	"github.com/spf13/cobra"
@@ -96,7 +97,7 @@ func (c *ksqlCommand) checkProvisioningFailed(clusterId, endpoint string) (bool,
 		return false, err
 	}
 
-	if response.StatusCode == 503 {
+	if response.StatusCode == http.StatusServiceUnavailable {
 		errorCode, ok := failure["error_code"].(float64)
 		if !ok {
 			return false, fmt.Errorf("failed to cast 'error_code' to float64")

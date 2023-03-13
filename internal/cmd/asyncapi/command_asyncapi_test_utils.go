@@ -15,7 +15,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
-	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -26,13 +25,13 @@ import (
 
 const BackwardCompatibilityLevel = "BACKWARD"
 
-var details = &accountDetails{
-	cluster: &ccstructs.KafkaCluster{
-		Id:        "lkc-asyncapi",
-		Name:      "AsyncAPI Cluster",
-		Endpoint:  "http://kafka-endpoint",
-		AccountId: "env-asyncapi",
+var detailsMock = &accountDetails{
+	srCluster: &v1.SchemaRegistryCluster{
+		Id:                     "lsrc-asyncapi",
+		SchemaRegistryEndpoint: "schema-registry-endpoint",
+		SrCredentials:          &v1.APIKeyPair{Key: "ASYNCAPIKEY", Secret: "ASYNCAPISECRET"},
 	},
+	clusterId: "lkc-asyncapi",
 	srClient: &srsdk.APIClient{
 		DefaultApi: &srMock.DefaultApi{
 			RegisterFunc: func(_ context.Context, subject string, _ srsdk.RegisterSchemaRequest) (srsdk.RegisterSchemaResponse, *http.Response, error) {
@@ -173,17 +172,7 @@ func newCmd() (*command, error) {
 			return kafkarestv3.ApiListKafkaTopicConfigsRequest{}
 		},
 		ListKafkaTopicConfigsExecuteFunc: func(_ kafkarestv3.ApiListKafkaTopicConfigsRequest) (kafkarestv3.TopicConfigDataList, *http.Response, error) {
-			configs := []kafkarestv3.TopicConfigData{
-				{
-					Name:  "cleanup.policy",
-					Value: *kafkarestv3.NewNullableString(kafkarestv3.PtrString("delete")),
-				},
-				{
-					Name:  "delete.retention.ms",
-					Value: *kafkarestv3.NewNullableString(kafkarestv3.PtrString("86400000")),
-				},
-			}
-			return kafkarestv3.TopicConfigDataList{Data: configs}, nil, nil
+			return kafkarestv3.TopicConfigDataList{}, nil, nil
 		},
 	}
 	apiClient.TopicV3Api = &kafkarestv3mock.TopicV3Api{
@@ -222,7 +211,7 @@ func newCmd() (*command, error) {
 			},
 		},
 	}
-	details.srCluster = c.Config.Context().SchemaRegistryClusters["lsrc-asyncapi"]
-	details.kafkaRest, _ = c.GetKafkaREST()
+	detailsMock.srCluster = c.Config.Context().SchemaRegistryClusters["lsrc-asyncapi"]
+	detailsMock.kafkaRest, _ = c.GetKafkaREST()
 	return c, err
 }

@@ -78,6 +78,7 @@ type Config struct {
 	DisableUpdateCheck  bool                        `json:"disable_update_check"`
 	DisableUpdates      bool                        `json:"disable_updates"`
 	DisablePlugins      bool                        `json:"disable_plugins"`
+	DisablePluginsOnce  bool                        `json:"disable_plugins_once,omitempty"`
 	DisableFeatureFlags bool                        `json:"disable_feature_flags"`
 	NoBrowser           bool                        `json:"no_browser"`
 	Platforms           map[string]*Platform        `json:"platforms,omitempty"`

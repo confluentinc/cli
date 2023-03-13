@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	ckgo "github.com/confluentinc/confluent-kafka-go/kafka"
 	schemaregistry "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/iancoleman/strcase"
@@ -18,10 +17,8 @@ import (
 
 	"github.com/confluentinc/cli/internal/cmd/kafka"
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
-	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -111,19 +108,20 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 				continue
 			} else {
 				// Subject and Topic matches
-				channelCount++
 				// Reset channel details
 				accountDetails.channelDetails = channelDetails{
 					currentTopic:   topic,
 					currentSubject: subject,
 				}
 				err := c.getChannelDetails(accountDetails, flags)
-				if err != nil && err.Error() == "protobuf" {
+				if err != nil && err.Error() == "protobuf is not supported" {
+					log.CliLogger.Info("Protobuf is not supported.")
 					continue
 				}
 				if err != nil {
 					return err
 				}
+				channelCount++
 				messages[msgName(topic.GetTopicName())] = spec.Message{
 					OneOf1: &spec.MessageOneOf1{MessageEntity: accountDetails.buildMessageEntity()},
 				}
@@ -155,11 +153,10 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 func (c *command) getChannelDetails(details *accountDetails, flags *flags) error {
 	output.Printf("Adding operation: %s\n", details.channelDetails.currentTopic.GetTopicName())
 	err := details.getSchemaDetails()
-	if details.channelDetails.contentType == "PROTOBUF" {
-		log.CliLogger.Info("Protobuf is not supported.")
-		return fmt.Errorf("protobuf")
-	}
 	if err != nil {
+		if err.Error() == ("protobuf is not supported") {
+			return err
+		}
 		return fmt.Errorf("failed to get schema details: %v", err)
 	}
 	if err := details.getTags(); err != nil {
@@ -172,9 +169,9 @@ func (c *command) getChannelDetails(details *accountDetails, flags *flags) error
 			log.CliLogger.Warn(err)
 		}
 	}
-	details.channelDetails.bindings, err = c.getBindings(details.cluster, details.channelDetails.currentTopic)
+	details.channelDetails.bindings, err = c.getBindings(details.kafkaRest, details.clusterId, details.channelDetails.currentTopic.GetTopicName())
 	if err != nil {
-		return fmt.Errorf("bindings not found: %v", err)
+		log.CliLogger.Warnf("bindings not found: %v", err)
 	}
 	if err := details.getTopicDescription(); err != nil {
 		log.CliLogger.Warnf("failed to get topic description: %v", err)
@@ -182,7 +179,7 @@ func (c *command) getChannelDetails(details *accountDetails, flags *flags) error
 	// x-messageCompatibility
 	details.channelDetails.mapOfMessageCompat, err = getMessageCompatibility(details.srClient, details.srContext, details.channelDetails.currentSubject)
 	if err != nil {
-		return fmt.Errorf("failed to get subject's compatibility type")
+		log.CliLogger.Warnf("failed to get subject's compatibility type")
 	}
 	return nil
 }
@@ -278,12 +275,8 @@ func (c command) getMessageExamples(consumer *ckgo.Consumer, topicName, contentT
 	return jsonMessage, nil
 }
 
-func (c *command) getBindings(cluster *ccstructs.KafkaCluster, topicDescription kafkarestv3.TopicData) (*bindings, error) {
-	kafkaREST, err := c.GetKafkaREST()
-	if err != nil {
-		return nil, err
-	}
-	configs, err := kafkaREST.CloudClient.ListKafkaTopicConfigs(cluster.GetId(), topicDescription.GetTopicName())
+func (c *command) getBindings(kafkaREST *pcmd.KafkaREST, clusterId string, topicName string) (*bindings, error) {
+	configs, err := kafkaREST.CloudClient.ListKafkaTopicConfigs(clusterId, topicName)
 	if err != nil {
 		return nil, err
 	}
@@ -323,10 +316,6 @@ func (c *command) getBindings(cluster *ccstructs.KafkaCluster, topicDescription 
 }
 
 func (c *command) getClusterDetails(details *accountDetails, flags *flags) error {
-	cluster, err := dynamicconfig.KafkaCluster(c.Context)
-	if err != nil {
-		return fmt.Errorf(`failed to find Kafka cluster: %v`, err)
-	}
 	clusterConfig, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return fmt.Errorf(`failed to find Kafka cluster: %v`, err)
@@ -349,12 +338,12 @@ func (c *command) getClusterDetails(details *accountDetails, flags *flags) error
 	if err != nil {
 		return err
 	}
-	topics, httpResp, err := kafkaREST.CloudClient.ListKafkaTopics(cluster.GetId())
+	topics, httpResp, err := kafkaREST.CloudClient.ListKafkaTopics(clusterConfig.ID)
 	if err != nil {
 		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
-	details.cluster = cluster
+	details.clusterId = clusterConfig.ID
 	details.kafkaRest = kafkaREST
 	details.topics = topics.Data
 	details.clusterCreds = clusterCreds
@@ -493,18 +482,26 @@ func addChannel(reflector asyncapi.Reflector, details channelDetails) (asyncapi.
 	channel := asyncapi.ChannelInfo{
 		Name: details.currentTopic.GetTopicName(),
 		BaseChannelItem: &spec.ChannelItem{
-			Description:   details.currentTopicDescription,
-			MapOfAnything: details.mapOfMessageCompat,
+			Description: details.currentTopicDescription,
 			Subscribe: &spec.Operation{
-				ID:       strcase.ToCamel(details.currentTopic.GetTopicName()) + "Subscribe",
-				Message:  &spec.Message{Reference: &spec.Reference{Ref: "#/components/messages/" + msgName(details.currentTopic.GetTopicName())}},
-				Bindings: &details.bindings.operationBinding,
-				Tags:     details.topicLevelTags,
+				ID:   strcase.ToCamel(details.currentTopic.GetTopicName()) + "Subscribe",
+				Tags: details.topicLevelTags,
 			},
 		},
 	}
-	if details.bindings.channelBindings.Kafka != nil {
-		channel.BaseChannelItem.Bindings = &details.bindings.channelBindings
+	if details.mapOfMessageCompat != nil {
+		channel.BaseChannelItem.MapOfAnything = details.mapOfMessageCompat
+	}
+	if details.unmarshalledSchema != nil {
+		channel.BaseChannelItem.Subscribe.Message = &spec.Message{Reference: &spec.Reference{Ref: "#/components/messages/" + msgName(details.currentTopic.GetTopicName())}}
+	}
+	if details.bindings != nil {
+		if details.bindings.operationBinding.Kafka != nil {
+			channel.BaseChannelItem.Subscribe.Bindings = &details.bindings.operationBinding
+		}
+		if details.bindings.channelBindings.Kafka != nil {
+			channel.BaseChannelItem.Bindings = &details.bindings.channelBindings
+		}
 	}
 	err := reflector.AddChannel(channel)
 	return reflector, err

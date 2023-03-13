@@ -3,7 +3,6 @@ package price
 import (
 	"context"
 	"fmt"
-	"sort"
 	"strings"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
@@ -11,7 +10,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/types"
 )
 
 var (
@@ -65,10 +64,10 @@ var (
 )
 
 var (
-	metrics        = getKeys(formatMetric)
-	clusterTypes   = getValues(formatClusterTypeSerialized)
-	availabilities = getKeys(formatAvailability)
-	networkTypes   = getKeys(formatNetworkType)
+	metrics        = types.GetSortedKeys(formatMetric)
+	clusterTypes   = types.GetSortedValues(formatClusterTypeSerialized)
+	availabilities = types.GetSortedKeys(formatAvailability)
+	networkTypes   = types.GetSortedKeys(formatNetworkType)
 )
 
 type humanOut struct {
@@ -172,15 +171,8 @@ func (c *command) listRows(filters []string, metric string, legacy bool) ([]row,
 		return nil, err
 	}
 
-	kafkaTable, err := filterTable(kafkaPricesReply.PriceTable, filters, metric, legacy)
-	if err != nil {
-		return nil, err
-	}
-
-	clusterLinkTable, err := filterTable(clusterLinkPricesReply.PriceTable, filters, metric, legacy)
-	if err != nil {
-		return nil, err
-	}
+	kafkaTable := filterTable(kafkaPricesReply.PriceTable, filters, metric, legacy)
+	clusterLinkTable := filterTable(clusterLinkPricesReply.PriceTable, filters, metric, legacy)
 
 	// Merge cluster link price table into kafka table
 	// Kafka metrics and cluster link metrics will not have overlap
@@ -211,7 +203,7 @@ func (c *command) listRows(filters []string, metric string, legacy bool) ([]row,
 	return rows, nil
 }
 
-func filterTable(table map[string]*ccloudv1.UnitPrices, filters []string, metric string, legacy bool) (map[string]*ccloudv1.UnitPrices, error) {
+func filterTable(table map[string]*ccloudv1.UnitPrices, filters []string, metric string, legacy bool) map[string]*ccloudv1.UnitPrices {
 	filteredTable := make(map[string]*ccloudv1.UnitPrices)
 
 	for service, val := range table {
@@ -233,7 +225,7 @@ func filterTable(table map[string]*ccloudv1.UnitPrices, filters []string, metric
 			}
 
 			// Hide legacy cluster types unless --legacy flag is enabled
-			if utils.Contains([]string{"standard", "custom"}, fields[3]) && !legacy {
+			if types.Contains([]string{"standard", "custom"}, fields[3]) && !legacy {
 				continue
 			}
 
@@ -252,25 +244,7 @@ func filterTable(table map[string]*ccloudv1.UnitPrices, filters []string, metric
 		}
 	}
 
-	return filteredTable, nil
-}
-
-func getKeys(m map[string]string) []string {
-	var slice []string
-	for key := range m {
-		slice = append(slice, key)
-	}
-	sort.Strings(slice)
-	return slice
-}
-
-func getValues(m map[string]string) []string {
-	var slice []string
-	for _, value := range m {
-		slice = append(slice, value)
-	}
-	sort.Strings(slice)
-	return slice
+	return filteredTable
 }
 
 func printTable(cmd *cobra.Command, rows []row) error {

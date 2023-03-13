@@ -35,11 +35,7 @@ func PrintClusters(cmd *cobra.Command, clusterInfos []mds.ClusterInfo) error {
 
 	list := output.NewList(cmd)
 	for _, clusterInfo := range clusterInfos {
-		cluster, err := createPrettyCluster(clusterInfo)
-		if err != nil {
-			return err
-		}
-		list.Add(cluster)
+		list.Add(createPrettyCluster(clusterInfo))
 	}
 	return list.Print()
 }
@@ -53,7 +49,7 @@ func createPrettyProtocol(protocol mds.Protocol) string {
 	}
 }
 
-func createPrettyCluster(clusterInfo mds.ClusterInfo) (*prettyCluster, error) {
+func createPrettyCluster(clusterInfo mds.ClusterInfo) *prettyCluster {
 	var t, id, cid, p string
 	switch {
 	case clusterInfo.Scope.Clusters.ConnectCluster != "":
@@ -75,7 +71,7 @@ func createPrettyCluster(clusterInfo mds.ClusterInfo) (*prettyCluster, error) {
 	}
 	hosts := make([]string, len(clusterInfo.Hosts))
 	for i, hostInfo := range clusterInfo.Hosts {
-		hosts[i], _ = createPrettyHost(hostInfo)
+		hosts[i] = createPrettyHost(hostInfo)
 	}
 	p = createPrettyProtocol(clusterInfo.Protocol)
 	return &prettyCluster{
@@ -85,14 +81,14 @@ func createPrettyCluster(clusterInfo mds.ClusterInfo) (*prettyCluster, error) {
 		ComponentId:    cid,
 		Hosts:          strings.Join(hosts, ", "),
 		Protocol:       p,
-	}, nil
+	}
 }
 
-func createPrettyHost(hostInfo mds.HostInfo) (string, error) {
+func createPrettyHost(hostInfo mds.HostInfo) string {
 	if hostInfo.Port > 0 {
-		return fmt.Sprintf("%s:%d", hostInfo.Host, hostInfo.Port), nil
+		return fmt.Sprintf("%s:%d", hostInfo.Host, hostInfo.Port)
 	}
-	return hostInfo.Host, nil
+	return hostInfo.Host
 }
 
 func HandleClusterError(err error, response *http.Response) error {

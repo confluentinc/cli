@@ -302,7 +302,7 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 
 		setContextErr := r.setAuthenticatedContext(command)
 		if setContextErr != nil {
-			if _, ok := setContextErr.(*errors.NotLoggedInError); ok { //nolint:gosimple // false positive
+			if _, ok := setContextErr.(*errors.NotLoggedInError); ok {
 				var netrcMachineName string
 				if ctx := command.Config.Context(); ctx != nil {
 					netrcMachineName = ctx.GetNetrcMachineName()
@@ -568,7 +568,7 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(cmd
 
 		setContextErr := r.setAuthenticatedWithMDSContext(command)
 		if setContextErr != nil {
-			if _, ok := setContextErr.(*errors.NotLoggedInError); ok { //nolint:gosimple // false positive
+			if _, ok := setContextErr.(*errors.NotLoggedInError); ok {
 				var netrcMachineName string
 				if ctx := command.Config.Context(); ctx != nil {
 					netrcMachineName = ctx.GetNetrcMachineName()

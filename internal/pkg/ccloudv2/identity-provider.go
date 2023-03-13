@@ -62,7 +62,7 @@ func (c *Client) ListIdentityProviders() ([]identityproviderv2.IamV2IdentityProv
 		}
 		list = append(list, page.GetData()...)
 
-		pageToken, done, err = extractIdentityProviderNextPageToken(page.GetMetadata().Next)
+		pageToken, done, err = extractNextPageToken(page.GetMetadata().Next)
 		if err != nil {
 			return nil, err
 		}
@@ -114,7 +114,7 @@ func (c *Client) ListIdentityPools(providerId string) ([]identityproviderv2.IamV
 		}
 		list = append(list, page.GetData()...)
 
-		pageToken, done, err = extractIdentityProviderNextPageToken(page.GetMetadata().Next)
+		pageToken, done, err = extractNextPageToken(page.GetMetadata().Next)
 		if err != nil {
 			return nil, err
 		}
@@ -128,13 +128,4 @@ func (c *Client) executeListIdentityPools(providerID string, pageToken string) (
 		req = req.PageToken(pageToken)
 	}
 	return c.IdentityProviderClient.IdentityPoolsIamV2Api.ListIamV2IdentityPoolsExecute(req)
-}
-
-func extractIdentityProviderNextPageToken(nextPageUrlStringNullable identityproviderv2.NullableString) (string, bool, error) {
-	if !nextPageUrlStringNullable.IsSet() {
-		return "", true, nil
-	}
-	nextPageUrlString := *nextPageUrlStringNullable.Get()
-	pageToken, err := extractPageToken(nextPageUrlString)
-	return pageToken, false, err
 }

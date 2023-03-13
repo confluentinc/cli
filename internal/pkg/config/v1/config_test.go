@@ -105,7 +105,7 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 		CredentialType: 0,
 	}
 	savedCredentials := map[string]*LoginCredential{
-		contextName: &LoginCredential{
+		contextName: {
 			IsCloud:           isCloud,
 			Username:          "test-user",
 			EncryptedPassword: "encrypted-password",
@@ -399,7 +399,7 @@ func TestConfig_Save(t *testing.T) {
 			tt.config.Filename = configFile.Name()
 			ctx := tt.config.Context()
 			tt.config.SavedCredentials = map[string]*LoginCredential{
-				contextName: &LoginCredential{
+				contextName: {
 					IsCloud:           tt.isCloud,
 					Username:          "test-user",
 					EncryptedPassword: "encrypted-password",
@@ -454,7 +454,7 @@ func TestConfig_SaveWithAccountOverwrite(t *testing.T) {
 			configFile, _ := os.CreateTemp("", "TestConfig_Save.json")
 			tt.config.Filename = configFile.Name()
 			tt.config.SavedCredentials = map[string]*LoginCredential{
-				contextName: &LoginCredential{
+				contextName: {
 					IsCloud:           true,
 					Username:          "test-user",
 					EncryptedPassword: "encrypted-password",
@@ -904,7 +904,7 @@ func TestKafkaClusterContext_SetAndGetActiveKafkaCluster_Env(t *testing.T) {
 	ctx.KafkaClusterContext.SetActiveKafkaCluster(otherKafkaClusterId)
 	activeKafka = ctx.KafkaClusterContext.GetActiveKafkaClusterId()
 	if activeKafka != otherKafkaClusterId {
-		t.Errorf("After settting active kafka in new environment, GetActiveKafkaClusterId() got %s, want %s.", activeKafka, testInputs.activeKafka)
+		t.Errorf("After setting active kafka in new environment, GetActiveKafkaClusterId() got %s, want %s.", activeKafka, testInputs.activeKafka)
 	}
 	require.Equal(t, ctx.KafkaClusterContext.GetActiveKafkaClusterConfig().ID, activeKafka)
 
@@ -950,7 +950,7 @@ func TestKafkaClusterContext_SetAndGetActiveKafkaCluster_NonEnv(t *testing.T) {
 
 	activeKafka = ctx.KafkaClusterContext.GetActiveKafkaClusterId()
 	if activeKafka != otherKafkaClusterId {
-		t.Errorf("After settting active kafka, GetActiveKafkaClusterId() got %s, want %s.", activeKafka, testInputs.activeKafka)
+		t.Errorf("After setting active kafka, GetActiveKafkaClusterId() got %s, want %s.", activeKafka, testInputs.activeKafka)
 	}
 	require.Equal(t, ctx.KafkaClusterContext.GetActiveKafkaClusterConfig().ID, activeKafka)
 	_ = os.Remove(configFile.Name())

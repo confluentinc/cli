@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/go-retryablehttp"
 
 	plog "github.com/confluentinc/cli/internal/pkg/log"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/types"
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
@@ -18,6 +18,11 @@ const (
 	pageTokenQueryParameter = "page_token"
 	ccloudV2ListPageSize    = 100
 )
+
+type NullableString interface {
+	Get() *string
+	IsSet() bool
+}
 
 var Hostnames = []string{"confluent.cloud", "cpdev.cloud"}
 
@@ -51,7 +56,7 @@ func getServerUrl(baseURL string) string {
 		return baseURL
 	}
 
-	if utils.Contains([]string{"confluent.cloud", "devel.cpdev.cloud", "stag.cpdev.cloud"}, u.Host) {
+	if types.Contains([]string{"confluent.cloud", "devel.cpdev.cloud", "stag.cpdev.cloud"}, u.Host) {
 		u.Host = "api." + u.Host
 		u.Path = ""
 	} else {
@@ -72,4 +77,16 @@ func extractPageToken(nextPageUrlString string) (string, error) {
 		return "", fmt.Errorf(`could not parse the value for query parameter "%s" from %s`, pageTokenQueryParameter, nextPageUrlString)
 	}
 	return pageToken, nil
+}
+
+func extractNextPageToken(nextPageUrl NullableString) (string, bool, error) {
+	if !nextPageUrl.IsSet() {
+		return "", true, nil
+	}
+	nextPageUrlString := *nextPageUrl.Get()
+	if nextPageUrlString == "" {
+		return "", true, nil
+	}
+	pageToken, err := extractPageToken(nextPageUrlString)
+	return pageToken, false, err
 }

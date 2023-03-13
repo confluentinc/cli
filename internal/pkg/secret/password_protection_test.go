@@ -1,7 +1,7 @@
 package secret
 
 import (
-        "crypto/rand"
+	"crypto/rand"
 	"encoding/base32"
 	"fmt"
 	"os"
@@ -1448,7 +1448,6 @@ func validateUsingDecryption(configFilePath string, localSecureConfigPath string
 		if value != originalVal {
 			return fmt.Errorf("config file is empty")
 		}
-
 	}
 
 	return nil

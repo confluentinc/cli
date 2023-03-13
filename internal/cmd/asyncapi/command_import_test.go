@@ -18,11 +18,11 @@ func TestAddTopic(t *testing.T) {
 		},
 	}
 	//If topic does not exist
-	_, err := addTopic(details, "testTopic", kb, false)
+	_, err := addTopic(detailsMock, "testTopic", kb, false)
 	require.NoError(t, err)
 	//If topic exists & overwrite is false
-	details.topics = append(details.topics, v3.TopicData{TopicName: "testTopic"})
-	_, err = addTopic(details, "testTopic", kb, false)
+	detailsMock.topics = append(detailsMock.topics, v3.TopicData{TopicName: "testTopic"})
+	_, err = addTopic(detailsMock, "testTopic", kb, false)
 	require.NoError(t, err)
 }
 
@@ -42,15 +42,15 @@ func TestRegisterSchema(t *testing.T) {
 			},
 		},
 	}
-	id, err := registerSchema(details, "testTopic", components)
+	id, err := registerSchema(detailsMock, "testTopic", components)
 	require.NoError(t, err)
 	require.Equal(t, int32(100001), id)
 }
 
 func TestUpdateSubjectCompatibility(t *testing.T) {
-	err := updateSubjectCompatibility(details, "BACKWARD", "testTopic-value")
+	err := updateSubjectCompatibility(detailsMock, "BACKWARD", "testTopic-value")
 	require.NoError(t, err)
-	err = updateSubjectCompatibility(details, "INVALID", "testTopic-value")
+	err = updateSubjectCompatibility(detailsMock, "INVALID", "testTopic-value")
 	require.Error(t, err)
 }
 
@@ -69,7 +69,7 @@ func TestAddSchemaTags(t *testing.T) {
 			},
 		},
 	}
-	tags, tagDefs, err := addSchemaTags(details, components, "testTopic", int32(100001))
+	tags, tagDefs, err := addSchemaTags(detailsMock, components, "testTopic", int32(100001))
 	require.NoError(t, err)
 	require.Contains(t, tags[0].EntityName, "lsrc-asyncapi:.:100001")
 	require.Contains(t, tags[0].EntityType, "sr_schema")
@@ -88,7 +88,7 @@ func TestAddTopicTags(t *testing.T) {
 				Name: "Tag2",
 			},
 		}}
-	tags, tagDefs, err := addTopicTags(details, subscribe, "testTopic")
+	tags, tagDefs, err := addTopicTags(detailsMock, subscribe, "testTopic")
 	require.NoError(t, err)
 	require.NoError(t, err)
 	require.Contains(t, tags[0].EntityName, "lsrc-asyncapi:lkc-asyncapi:testTopic")

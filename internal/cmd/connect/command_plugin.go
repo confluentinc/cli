@@ -1,8 +1,6 @@
 package connect
 
 import (
-	"net/http"
-
 	"github.com/spf13/cobra"
 
 	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
@@ -38,11 +36,11 @@ func (c *pluginCommand) validArgs(cmd *cobra.Command, args []string) []string {
 		return nil
 	}
 
-	return c.autocompleteConnectorPlugins(cmd)
+	return c.autocompleteConnectorPlugins()
 }
 
-func (c *pluginCommand) autocompleteConnectorPlugins(cmd *cobra.Command) []string {
-	plugins, _, err := c.getPlugins(cmd)
+func (c *pluginCommand) autocompleteConnectorPlugins() []string {
+	plugins, err := c.getPlugins()
 	if err != nil {
 		return nil
 	}
@@ -54,10 +52,10 @@ func (c *pluginCommand) autocompleteConnectorPlugins(cmd *cobra.Command) []strin
 	return suggestions
 }
 
-func (c *pluginCommand) getPlugins(cmd *cobra.Command) ([]connectv1.InlineResponse2002, *http.Response, error) {
+func (c *pluginCommand) getPlugins() ([]connectv1.InlineResponse2002, error) {
 	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	return c.V2Client.ListConnectorPlugins(c.EnvironmentId(), kafkaCluster.ID)

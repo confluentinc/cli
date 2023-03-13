@@ -46,7 +46,7 @@ func TestNewError(t *testing.T) {
 
 	httpResp := http.Response{
 		Status:     "Code: 400",
-		StatusCode: 400,
+		StatusCode: http.StatusBadRequest,
 		Request: &http.Request{
 			Method: http.MethodGet,
 			URL: &neturl.URL{
