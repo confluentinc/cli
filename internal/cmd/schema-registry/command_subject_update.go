@@ -15,12 +15,12 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
-func (c *subjectCommand) newUpdateCommand() *cobra.Command {
+func (c *command) newSubjectUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update <subject>",
 		Short: "Update subject compatibility or mode.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.update,
+		RunE:  c.subjectUpdate,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Update subject-level compatibility of subject "payments".`,
@@ -43,7 +43,7 @@ func (c *subjectCommand) newUpdateCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *subjectCommand) update(cmd *cobra.Command, args []string) error {
+func (c *command) subjectUpdate(cmd *cobra.Command, args []string) error {
 	subject := args[0]
 
 	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
@@ -75,7 +75,7 @@ func (c *subjectCommand) update(cmd *cobra.Command, args []string) error {
 	return errors.New(errors.CompatibilityOrModeErrorMsg)
 }
 
-func (c *subjectCommand) updateCompatibility(subject, compatibility string, srClient *srsdk.APIClient, ctx context.Context) error {
+func (c *command) updateCompatibility(subject, compatibility string, srClient *srsdk.APIClient, ctx context.Context) error {
 	updateReq := srsdk.ConfigUpdateRequest{Compatibility: compatibility}
 	if _, httpResp, err := srClient.DefaultApi.UpdateSubjectLevelConfig(ctx, subject, updateReq); err != nil {
 		return errors.CatchSchemaNotFoundError(err, httpResp)
@@ -85,7 +85,7 @@ func (c *subjectCommand) updateCompatibility(subject, compatibility string, srCl
 	return nil
 }
 
-func (c *subjectCommand) updateMode(subject, mode string, srClient *srsdk.APIClient, ctx context.Context) error {
+func (c *command) updateMode(subject, mode string, srClient *srsdk.APIClient, ctx context.Context) error {
 	updatedMode, httpResp, err := srClient.DefaultApi.UpdateMode(ctx, subject, srsdk.ModeUpdateRequest{Mode: strings.ToUpper(mode)})
 	if err != nil {
 		return errors.CatchSchemaNotFoundError(err, httpResp)

@@ -5,12 +5,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func (c *exporterCommand) newGetStatusCommandOnPrem() *cobra.Command {
+func (c *command) newExporterGetStatusCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "get-status <name>",
 		Short:       "Get the status of the schema exporter.",
 		Args:        cobra.ExactArgs(1),
-		RunE:        c.onPremGetStatus,
+		RunE:        c.exporterGetStatusOnPrem,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 	}
 
@@ -21,7 +21,7 @@ func (c *exporterCommand) newGetStatusCommandOnPrem() *cobra.Command {
 	return cmd
 }
 
-func (c *exporterCommand) onPremGetStatus(cmd *cobra.Command, args []string) error {
+func (c *command) exporterGetStatusOnPrem(cmd *cobra.Command, args []string) error {
 	srClient, ctx, err := GetSrApiClientWithToken(cmd, c.Version, c.AuthToken())
 	if err != nil {
 		return err

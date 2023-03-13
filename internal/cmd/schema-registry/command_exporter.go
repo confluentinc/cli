@@ -1,7 +1,6 @@
 package schemaregistry
 
 import (
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
 
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -9,44 +8,35 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
-type exporterCommand struct {
-	*pcmd.AuthenticatedStateFlagCommand
-	srClient *srsdk.APIClient
-}
-
-func newExporterCommand(cfg *v1.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *cobra.Command {
+func (c *command) newExporterCommand(cfg *v1.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "exporter",
 		Short:       "Manage Schema Registry exporters.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLoginOrOnPremLogin},
 	}
 
-	c := &exporterCommand{srClient: srClient}
-
 	if cfg.IsCloudLogin() {
-		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)
-		cmd.AddCommand(c.newCreateCommand())
-		cmd.AddCommand(c.newDeleteCommand())
-		cmd.AddCommand(c.newDescribeCommand())
-		cmd.AddCommand(c.newGetConfigCommand())
-		cmd.AddCommand(c.newGetStatusCommand())
-		cmd.AddCommand(c.newListCommand())
-		cmd.AddCommand(c.newPauseCommand())
-		cmd.AddCommand(c.newResetCommand())
-		cmd.AddCommand(c.newResumeCommand())
-		cmd.AddCommand(c.newUpdateCommand())
+		cmd.AddCommand(c.newExporterCreateCommand())
+		cmd.AddCommand(c.newExporterDeleteCommand())
+		cmd.AddCommand(c.newExporterDescribeCommand())
+		cmd.AddCommand(c.newExporterGetConfigCommand())
+		cmd.AddCommand(c.newExporterGetStatusCommand())
+		cmd.AddCommand(c.newExporterListCommand())
+		cmd.AddCommand(c.newExporterPauseCommand())
+		cmd.AddCommand(c.newExporterResetCommand())
+		cmd.AddCommand(c.newExporterResumeCommand())
+		cmd.AddCommand(c.newExporterUpdateCommand())
 	} else {
-		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner)
-		cmd.AddCommand(c.newCreateCommandOnPrem())
-		cmd.AddCommand(c.newDeleteCommandOnPrem())
-		cmd.AddCommand(c.newDescribeCommandOnPrem())
-		cmd.AddCommand(c.newGetConfigCommandOnPrem())
-		cmd.AddCommand(c.newGetStatusCommandOnPrem())
-		cmd.AddCommand(c.newListCommandOnPrem())
-		cmd.AddCommand(c.newPauseCommandOnPrem())
-		cmd.AddCommand(c.newResetCommandOnPrem())
-		cmd.AddCommand(c.newResumeCommandOnPrem())
-		cmd.AddCommand(c.newUpdateCommandOnPrem())
+		cmd.AddCommand(c.newExporterCreateCommandOnPrem())
+		cmd.AddCommand(c.newExporterDeleteCommandOnPrem())
+		cmd.AddCommand(c.newExporterDescribeCommandOnPrem())
+		cmd.AddCommand(c.newExporterGetConfigCommandOnPrem())
+		cmd.AddCommand(c.newExporterGetStatusCommandOnPrem())
+		cmd.AddCommand(c.newExporterListCommandOnPrem())
+		cmd.AddCommand(c.newExporterPauseCommandOnPrem())
+		cmd.AddCommand(c.newExporterResetCommandOnPrem())
+		cmd.AddCommand(c.newExporterResumeCommandOnPrem())
+		cmd.AddCommand(c.newExporterUpdateCommandOnPrem())
 	}
 
 	return cmd
