@@ -21,7 +21,7 @@ func (c *authenticatedTopicCommand) newConsumeCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "consume <topic>",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.onPremConsume,
+		RunE:  c.consumeOnPrem,
 		Short: "Consume messages from a Kafka topic.",
 		Long:  "Consume messages from a Kafka topic. Configuration and command guide: https://docs.confluent.io/confluent-cli/current/cp-produce-consume.html.\n\nTruncated message headers will be printed if they exist.",
 		Example: examples.BuildExampleString(
@@ -57,7 +57,7 @@ func (c *authenticatedTopicCommand) newConsumeCommandOnPrem() *cobra.Command {
 	return cmd
 }
 
-func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []string) error {
+func (c *authenticatedTopicCommand) consumeOnPrem(cmd *cobra.Command, args []string) error {
 	printKey, err := cmd.Flags().GetBool("print-key")
 	if err != nil {
 		return err

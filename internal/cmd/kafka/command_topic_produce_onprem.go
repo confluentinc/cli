@@ -22,7 +22,7 @@ func (c *authenticatedTopicCommand) newProduceCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "produce <topic>",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.onPremProduce,
+		RunE:  c.produceOnPrem,
 		Short: "Produce messages to a Kafka topic.",
 		Long:  "Produce messages to a Kafka topic. Configuration and command guide: https://docs.confluent.io/confluent-cli/current/cp-produce-consume.html.\n\nWhen using this command, you cannot modify the message header, and the message header will not be printed out.",
 		Example: examples.BuildExampleString(
@@ -56,7 +56,7 @@ func (c *authenticatedTopicCommand) newProduceCommandOnPrem() *cobra.Command {
 	return cmd
 }
 
-func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []string) error {
+func (c *authenticatedTopicCommand) produceOnPrem(cmd *cobra.Command, args []string) error {
 	if cmd.Flags().Changed("config-file") && cmd.Flags().Changed("config") {
 		return errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "config-file", "config")
 	}
