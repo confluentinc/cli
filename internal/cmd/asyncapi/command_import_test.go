@@ -35,7 +35,7 @@ func TestResolveSchemaType(t *testing.T) {
 func TestRegisterSchema(t *testing.T) {
 	components := Components{
 		Messages: map[string]Message{
-			"TestTopicMessage": Message{
+			"TestTopicMessage": {
 				ContentType:  "application/json",
 				SchemaFormat: "application/schema+json;version=draft-07",
 				Payload:      `{"type": "string"}`,
@@ -57,7 +57,7 @@ func TestUpdateSubjectCompatibility(t *testing.T) {
 func TestAddSchemaTags(t *testing.T) {
 	components := Components{
 		Messages: map[string]Message{
-			"TestTopicMessage": Message{
+			"TestTopicMessage": {
 				Tags: []spec2.Tag{
 					{
 						Name: "Tag1",

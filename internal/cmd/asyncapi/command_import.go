@@ -170,7 +170,7 @@ func (c *command) parse(cmd *cobra.Command, strings []string) error {
 		return err
 	}
 	for topicName, topicDetails := range spec.Channels {
-		err = addChannelToCluster(details, spec, topicName, topicDetails.TopicBinding.Kafka, false, false, flagsImp.overwrite)
+		err = addChannelToCluster(details, spec, topicName, topicDetails.TopicBinding.Kafka, false, flagsImp.overwrite)
 		if err != nil {
 			if err == fmt.Errorf("topic is already present and overwrite flag is false. Moving to the next topic") {
 				log.CliLogger.Info(err)
@@ -196,7 +196,7 @@ func fileToStruct() (*Spec, error) {
 	return spec, nil
 }
 
-func addChannelToCluster(details *accountDetails, spec *Spec, topicName string, kafkaBinding KafkaBinding, topicExists, topicNotCreated, overwrite bool) error {
+func addChannelToCluster(details *accountDetails, spec *Spec, topicName string, kafkaBinding KafkaBinding, topicNotCreated, overwrite bool) error {
 	output.Printf("Importing topic: %s", topicName)
 	topicExists, err := addTopic(details, topicName, kafkaBinding, overwrite)
 	if err != nil {
@@ -263,7 +263,7 @@ func addTopic(details *accountDetails, topicName string, kb KafkaBinding, overwr
 		if topics.TopicName == topicName {
 			//Topic already exists
 			log.CliLogger.Info("Topic is already present.")
-			if overwrite == false {
+			if !overwrite {
 				// Do not overwrite existing topic. Move to the next topic.
 				return true, nil
 			}
@@ -365,21 +365,21 @@ func addSchemaTags(details *accountDetails, components Components, topicName str
 func addTopicTags(details *accountDetails, subscribe Operation, topicName string) ([]srsdk.Tag, []srsdk.TagDef, error) {
 	//Topic level tags
 	//add topic level tags only if topic was created successfully or already exists
-	var tagConfigs []srsdk.Tag
-	var tagDefConfigs []srsdk.TagDef
+	tagConfigs := new([]srsdk.Tag)
+	tagDefConfigs := new([]srsdk.TagDef)
 	for _, tag := range subscribe.TopicTags {
-		tagDefConfigs = append(tagDefConfigs, srsdk.TagDef{
+		*tagDefConfigs = append(*tagDefConfigs, srsdk.TagDef{
 			EntityTypes: []string{"cf_entity"},
 			Name:        tag.Name,
 		})
-		tagConfigs = append(tagConfigs, srsdk.Tag{
+		*tagConfigs = append(*tagConfigs, srsdk.Tag{
 			TypeName:   tag.Name,
 			EntityType: "kafka_topic",
 			EntityName: details.srCluster.Id + ":" + details.clusterId + ":" + topicName,
 		})
 	}
-	err := addTagsUtil(details, tagDefConfigs, tagConfigs)
-	return tagConfigs, tagDefConfigs, err
+	err := addTagsUtil(details, *tagDefConfigs, *tagConfigs)
+	return *tagConfigs, *tagDefConfigs, err
 }
 
 func addTagsUtil(details *accountDetails, tagDefConfigs []srsdk.TagDef, tagConfigs []srsdk.Tag) error {

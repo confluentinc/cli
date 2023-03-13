@@ -60,7 +60,6 @@ func TestGetChannelDetails(t *testing.T) {
 	detailsMock.channelDetails.schema = &schema
 	err = c.getChannelDetails(detailsMock, flags)
 	require.Equal(t, err, fmt.Errorf("protobuf is not supported"))
-
 }
 
 func TestGetBindings(t *testing.T) {
