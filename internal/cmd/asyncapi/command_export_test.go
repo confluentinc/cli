@@ -302,7 +302,7 @@ func TestGetChannelDetails(t *testing.T) {
 	schema, _, _ = details.srClient.DefaultApi.GetSchemaByVersion(*new(context.Context), "subject2", "1", nil)
 	details.channelDetails.schema = &schema
 	err = c.getChannelDetails(details, flags)
-	require.Equal(t, err, fmt.Errorf("protobuf is not supported"))
+	require.Equal(t, err.Error(), protobufErrorMessage)
 }
 
 func TestHandlePrimitiveSchemas(t *testing.T) {

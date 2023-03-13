@@ -84,7 +84,7 @@ func (d *accountDetails) getSchemaDetails() error {
 	case "AVRO":
 		d.channelDetails.contentType = "application/avro"
 	case "PROTOBUF":
-		return fmt.Errorf("protobuf is not supported")
+		return errors.New("protobuf is not supported")
 	}
 	// JSON or Avro Format
 	err = json.Unmarshal([]byte(schema.Schema), &d.channelDetails.unmarshalledSchema)
