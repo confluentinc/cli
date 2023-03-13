@@ -104,6 +104,6 @@ func (c *localCommand) start(cmd *cobra.Command, args []string) error {
 	}
 	log.CliLogger.Tracef("Start confluent-local container success")
 
-	output.Printf("Started Confluent local container %v.\n Continue your experience with Confluent local running `confluent local kafka produce` and `confluent local kafka consume`.\n", createResp.ID[:10])
+	output.Printf("Started Confluent local container %v.\nContinue your experience with Confluent local running `confluent local kafka produce` and `confluent local kafka consume`.\n", createResp.ID[:10])
 	return nil
 }

@@ -52,6 +52,6 @@ func (c *localCommand) stop(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	output.Printf("Thank you for using Confluent local") //refine/
+	output.Printf("Thank you for using Confluent local.\n") //refine/
 	return nil
 }
