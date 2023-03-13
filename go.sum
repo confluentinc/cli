@@ -47,8 +47,8 @@ github.com/actgardner/gogen-avro/v10 v10.2.1/go.mod h1:QUhjeHPchheYmMDni/Nx7VB0R
 github.com/actgardner/gogen-avro/v9 v9.1.0/go.mod h1:nyTj6wPqDJoxM3qdnjcLv+EnMDSDFqE0qDpva2QRmKc=
 github.com/antihax/optional v1.0.0 h1:xK2lYat7ZLaVVcIuj82J8kIro4V6kDe0AUDFboUCwcg=
 github.com/antihax/optional v1.0.0/go.mod h1:uupD/76wgC+ih3iEmQUL+0Ugr19nfwCT1kdvxnR2qWY=
-github.com/aws/aws-sdk-go v1.44.212 h1:IRstlErdeKeQ8qBsCwWt4MG2RihUOcUJVqYwbvqpE28=
-github.com/aws/aws-sdk-go v1.44.212/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
+github.com/aws/aws-sdk-go v1.44.219 h1:YOFxTUQZvdRzgwb6XqLFRwNHxoUdKBuunITC7IFhvbc=
+github.com/aws/aws-sdk-go v1.44.219/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
 github.com/billgraziano/dpapi v0.4.0 h1:t39THI1Ld1hkkLVrhkOX6u5TUxwzRddOffq4jcwh2AE=
 github.com/billgraziano/dpapi v0.4.0/go.mod h1:gi1Lin0jvovT53j0EXITkY6UPb3hTfI92POaZgj9JBA=
 github.com/bool64/dev v0.2.24 h1:xptlKivPh870W3Xc9szPcM7wkFmTMuHT8rc0nu7dITk=
