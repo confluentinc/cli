@@ -11,12 +11,12 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (c *exporterCommand) newResumeCommand() *cobra.Command {
+func (c *command) newExporterResumeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "resume <name>",
 		Short: "Resume schema exporter.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.resume,
+		RunE:  c.exporterResume,
 	}
 
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
@@ -28,7 +28,7 @@ func (c *exporterCommand) newResumeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *exporterCommand) resume(cmd *cobra.Command, args []string) error {
+func (c *command) exporterResume(cmd *cobra.Command, args []string) error {
 	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err

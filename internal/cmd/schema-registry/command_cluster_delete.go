@@ -15,7 +15,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
-func (c *clusterCommand) newDeleteCommand() *cobra.Command {
+func (c *command) newClusterDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "delete",
 		Short:       "Delete the Schema Registry cluster for this environment.",
@@ -40,7 +40,11 @@ func (c *clusterCommand) newDeleteCommand() *cobra.Command {
 	return cmd
 }
 
+<<<<<<< HEAD
+func (c *command) clusterDelete(cmd *cobra.Command, _ []string, prompt form.Prompt) error {
+=======
 func (c *clusterCommand) delete(cmd *cobra.Command, _ []string) error {
+>>>>>>> main
 	ctx := context.Background()
 
 	cluster, err := c.Context.FetchSchemaRegistryByEnvironmentId(ctx, c.EnvironmentId())

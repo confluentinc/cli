@@ -19,12 +19,12 @@ type getStatusOut struct {
 	ErrorTrace string `human:"Error Trace" serialized:"error_trace"`
 }
 
-func (c *exporterCommand) newGetStatusCommand() *cobra.Command {
+func (c *command) newExporterGetStatusCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "get-status <name>",
 		Short: "Get the status of the schema exporter.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.getStatus,
+		RunE:  c.exporterGetStatus,
 	}
 
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
@@ -36,7 +36,7 @@ func (c *exporterCommand) newGetStatusCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *exporterCommand) getStatus(cmd *cobra.Command, args []string) error {
+func (c *command) exporterGetStatus(cmd *cobra.Command, args []string) error {
 	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
