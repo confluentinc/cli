@@ -1,6 +1,6 @@
---- cli/Makefile	2023-03-08 16:17:59.000000000 -0800
-+++ debian/Makefile	2022-12-12 17:29:13.000000000 -0800
-@@ -1,128 +1,130 @@
+--- cli/Makefile	2023-03-13 11:12:50.000000000 -0700
++++ debian/Makefile	2023-03-13 11:24:31.000000000 -0700
+@@ -1,128 +1,132 @@
 -SHELL              := /bin/bash
 -ALL_SRC            := $(shell find . -name "*.go" | grep -v -e vendor)
 -GORELEASER_VERSION := v1.15.2
@@ -63,6 +63,7 @@
 -S3_STAG_FOLDER_NAME=cli-release-stag
 -S3_STAG_PATH=s3://confluent.cloud/$(S3_STAG_FOLDER_NAME)
 +SHELL=/bin/bash
++CLI_VERSION_NO_V=$(shell echo $(VERSION) | sed 's,^v,,' )
  
 -.PHONY: clean
 -clean:
@@ -163,7 +164,8 @@
 +		mkdir -p $${dir} ; \
 +		ext=""; if [[ $${dir} =~ windows_.+ ]]; then ext=".exe"; fi ; \
 +		filepath=$${dir}/confluent$${ext} ; \
-+		curl -f -s https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/binaries/$(CLI_VERSION)/confluent_$(CLI_VERSION)_$${dir}$${ext} -o $${filepath} ; \
++		ver=$(CLI_VERSION_NO_V); if [[ $(CLI_VERSION) =~ v2\..+ ]]; then ver=$(CLI_VERSION); fi; \
++		curl -f -s https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/binaries/$(CLI_VERSION)/confluent_$${ver}_$${dir}$${ext} -o $${filepath} ; \
 +		chmod 755 $${filepath} ; \
 +	done
 +
