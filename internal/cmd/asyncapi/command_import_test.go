@@ -88,6 +88,7 @@ func TestAddTopicTags(t *testing.T) {
 				Name: "Tag2",
 			},
 		}}
+	detailsMock.clusterId = "lkc-asyncapi"
 	tags, tagDefs, err := addTopicTags(detailsMock, subscribe, "testTopic")
 	require.NoError(t, err)
 	require.NoError(t, err)

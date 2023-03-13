@@ -4,11 +4,8 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"time"
 
-	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
-	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
-	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
+	v3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	kafkarestv3mock "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3/mock"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	srMock "github.com/confluentinc/schema-registry-sdk-go/mock"
@@ -16,11 +13,8 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
-	"github.com/confluentinc/cli/internal/pkg/version"
-	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
 const BackwardCompatibilityLevel = "BACKWARD"
@@ -104,114 +98,39 @@ var detailsMock = &accountDetails{
 	},
 }
 
-func newCmd() (*command, error) {
-	cfg := &v1.Config{
-		BaseConfig: &config.BaseConfig{},
-		Contexts: map[string]*v1.Context{
-			"asyncapi": {
-				PlatformName: "confluent.cloud",
-				Credential:   &v1.Credential{CredentialType: v1.Username},
-				State: &v1.ContextState{
-					Auth: &v1.AuthConfig{
-						Organization: testserver.RegularOrg,
-						Account:      &ccloudv1.Account{Id: "env-asyncapi", Name: "asyncapi"},
-					},
-					AuthToken: "env-asyncapi",
-				},
-				SchemaRegistryClusters: map[string]*v1.SchemaRegistryCluster{
-					"lsrc-asyncapi": {
-						Id:                     "lsrc-asyncapi",
-						SchemaRegistryEndpoint: "schema-registry-endpoint",
-						SrCredentials:          &v1.APIKeyPair{Key: "ASYNCAPIKEY", Secret: "ASYNCAPISECRET"},
-					},
-				},
-				KafkaClusterContext: &v1.KafkaClusterContext{
-					EnvContext:         false,
-					ActiveKafkaCluster: "lkc-asyncapi",
-					KafkaClusterConfigs: map[string]*v1.KafkaClusterConfig{
-						"lkc-asyncapi": {
-							ID:           "lkc-asyncapi",
-							Name:         "AsyncAPI Cluster",
-							Bootstrap:    "kafka-endpoint",
-							RestEndpoint: "kafka-endpoint",
-							APIKeys: map[string]*v1.APIKeyPair{
-								"AsyncAPI": {Key: "ASYNCAPIKEY", Secret: "ASYNCAPISECRET"},
-							},
-							APIKey:     "AsyncAPI",
-							LastUpdate: time.Now(),
-						},
-					},
-				},
-			},
-		},
-		CurrentContext: "asyncapi",
-	}
-	prerunner := &pcmd.PreRun{Config: cfg}
+func mockAsyncApiCommand() *command {
 	cmd := new(cobra.Command)
-	c := &command{AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
-	c.Command.Flags().String("resource", "lsrc-asyncapi", "resource flag for SR testing")
-	c.Version = &version.Version{Version: "1", UserAgent: "asyncapi"}
-	c.Command.Flags().String("schema-registry-api-key", "ASYNCAPIKEY", "API Key for schema registry")
-	c.Command.Flags().String("schema-registry-api-secret", "ASYNCAPISECRET", "API Secret for Schema Registry")
-	err := c.Command.Flags().Set("schema-registry-api-key", "ASYNCAPIKEY")
-	if err != nil {
-		return nil, err
-	}
-	err = c.Command.Flags().Set("schema-registry-api-secret", "ASYNCAPISECRET")
-	if err != nil {
-		return nil, err
-	}
-	c.Command.Flags().String("sr-endpoint", "schema-registry-endpoint", "SR endpoint")
-	c.State = cfg.Context().State
+	cfg := v1.AuthenticatedCloudConfigMock()
+	prerunner := &pcmd.PreRun{Config: cfg}
+	c := &command{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
 	c.Config = dynamicconfig.New(cfg, nil, nil)
-	c.Config.CurrentContext = cfg.CurrentContext
 	c.Context = c.Config.Context()
-	apiClient := kafkarestv3.NewAPIClient(kafkarestv3.NewConfiguration())
+	apiClient := v3.NewAPIClient(v3.NewConfiguration())
 	apiClient.ConfigsV3Api = &kafkarestv3mock.ConfigsV3Api{
-		ListKafkaTopicConfigsFunc: func(_ context.Context, _, _ string) kafkarestv3.ApiListKafkaTopicConfigsRequest {
-			return kafkarestv3.ApiListKafkaTopicConfigsRequest{}
+		ListKafkaTopicConfigsFunc: func(_ context.Context, _, _ string) v3.ApiListKafkaTopicConfigsRequest {
+			return v3.ApiListKafkaTopicConfigsRequest{}
 		},
-		ListKafkaTopicConfigsExecuteFunc: func(_ kafkarestv3.ApiListKafkaTopicConfigsRequest) (kafkarestv3.TopicConfigDataList, *http.Response, error) {
-			return kafkarestv3.TopicConfigDataList{}, nil, nil
+		ListKafkaTopicConfigsExecuteFunc: func(_ v3.ApiListKafkaTopicConfigsRequest) (v3.TopicConfigDataList, *http.Response, error) {
+			return v3.TopicConfigDataList{}, nil, nil
 		},
 	}
 	apiClient.TopicV3Api = &kafkarestv3mock.TopicV3Api{
-		ListKafkaTopicsFunc: func(_ context.Context, _ string) kafkarestv3.ApiListKafkaTopicsRequest {
-			return kafkarestv3.ApiListKafkaTopicsRequest{}
+		ListKafkaTopicsFunc: func(_ context.Context, _ string) v3.ApiListKafkaTopicsRequest {
+			return v3.ApiListKafkaTopicsRequest{}
 		},
-		ListKafkaTopicsExecuteFunc: func(_ kafkarestv3.ApiListKafkaTopicsRequest) (kafkarestv3.TopicDataList, *http.Response, error) {
-			return kafkarestv3.TopicDataList{Data: []kafkarestv3.TopicData{{TopicName: "topic1"}}}, nil, nil
+		ListKafkaTopicsExecuteFunc: func(_ v3.ApiListKafkaTopicsRequest) (v3.TopicDataList, *http.Response, error) {
+			return v3.TopicDataList{Data: []v3.TopicData{{TopicName: "topic1"}}}, nil, nil
 		},
-		CreateKafkaTopicFunc: func(_ context.Context, _ string) kafkarestv3.ApiCreateKafkaTopicRequest {
-			return kafkarestv3.ApiCreateKafkaTopicRequest{}
+		CreateKafkaTopicFunc: func(_ context.Context, _ string) v3.ApiCreateKafkaTopicRequest {
+			return v3.ApiCreateKafkaTopicRequest{}
 		},
-		CreateKafkaTopicExecuteFunc: func(request kafkarestv3.ApiCreateKafkaTopicRequest) (kafkarestv3.TopicData, *http.Response, error) {
-			return kafkarestv3.TopicData{}, nil, nil
+		CreateKafkaTopicExecuteFunc: func(request v3.ApiCreateKafkaTopicRequest) (v3.TopicData, *http.Response, error) {
+			return v3.TopicData{}, nil, nil
 		},
 	}
 	kafkaRestProvider := pcmd.KafkaRESTProvider(func() (*pcmd.KafkaREST, error) {
 		return &pcmd.KafkaREST{CloudClient: &ccloudv2.KafkaRestClient{APIClient: apiClient}}, nil
 	})
 	c.KafkaRESTProvider = &kafkaRestProvider
-	c.Client = &ccloudv1.Client{
-		SchemaRegistry: &ccloudv1mock.SchemaRegistry{
-			GetSchemaRegistryClusterFunc: func(_ context.Context, _ *ccloudv1.SchemaRegistryCluster) (*ccloudv1.SchemaRegistryCluster, error) {
-				return nil, nil
-			},
-		},
-		Account: &ccloudv1mock.AccountInterface{
-			CreateFunc: func(context.Context, *ccloudv1.Account) (*ccloudv1.Account, error) {
-				return nil, nil
-			},
-			GetFunc: func(context.Context, *ccloudv1.Account) (*ccloudv1.Account, error) {
-				return nil, nil
-			},
-			ListFunc: func(context.Context, *ccloudv1.Account) ([]*ccloudv1.Account, error) {
-				return nil, nil
-			},
-		},
-	}
-	detailsMock.srCluster = c.Config.Context().SchemaRegistryClusters["lsrc-asyncapi"]
-	detailsMock.kafkaRest, _ = c.GetKafkaREST()
-	return c, err
+	return c
 }
