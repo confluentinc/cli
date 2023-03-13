@@ -11,7 +11,7 @@ import (
 	schemaregistry "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/swaggest/go-asyncapi/spec-2.4.0"
 
-	"github.com/confluentinc/cli/internal/pkg/ccstructs"
+	"github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -32,7 +32,8 @@ type channelDetails struct {
 }
 
 type accountDetails struct {
-	cluster        *ccstructs.KafkaCluster
+	clusterId      string
+	kafkaRest      *cmd.KafkaREST
 	topics         []kafkarestv3.TopicData
 	clusterCreds   *v1.APIKeyPair
 	consumer       *ckgo.Consumer
@@ -49,7 +50,7 @@ const UserAgent = "User-Agent"
 func (d *accountDetails) getTags() error {
 	// Get topic level tags
 	d.channelDetails.topicLevelTags = nil
-	topicLevelTags, _, err := d.srClient.DefaultApi.GetTags(d.srContext, "kafka_topic", d.cluster.Id+":"+d.channelDetails.currentTopic.GetTopicName())
+	topicLevelTags, _, err := d.srClient.DefaultApi.GetTags(d.srContext, "kafka_topic", d.clusterId+":"+d.channelDetails.currentTopic.GetTopicName())
 	if err != nil {
 		return catchOpenAPIError(err)
 	}
@@ -84,7 +85,7 @@ func (d *accountDetails) getSchemaDetails() error {
 	case "AVRO":
 		d.channelDetails.contentType = "application/avro"
 	case "PROTOBUF":
-		return errors.New("protobuf is not supported")
+		return fmt.Errorf("protobuf is not supported")
 	}
 	// JSON or Avro Format
 	err = json.Unmarshal([]byte(schema.Schema), &d.channelDetails.unmarshalledSchema)
@@ -109,7 +110,7 @@ func handlePrimitiveSchemas(schema string, err error) (map[string]any, error) {
 
 func (d *accountDetails) getTopicDescription() error {
 	d.channelDetails.currentTopicDescription = ""
-	atlasEntityWithExtInfo, _, err := d.srClient.DefaultApi.GetByUniqueAttributes(d.srContext, "kafka_topic", d.cluster.Id+":"+d.channelDetails.currentTopic.GetTopicName(), nil)
+	atlasEntityWithExtInfo, _, err := d.srClient.DefaultApi.GetByUniqueAttributes(d.srContext, "kafka_topic", d.clusterId+":"+d.channelDetails.currentTopic.GetTopicName(), nil)
 	if err != nil {
 		return catchOpenAPIError(err)
 	}
