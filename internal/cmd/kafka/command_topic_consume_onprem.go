@@ -49,7 +49,6 @@ func (c *authenticatedTopicCommand) newConsumeCommandOnPrem() *cobra.Command {
 	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the consumer client.`)
 	cmd.Flags().String("config-file", "", "The path to the configuration file (in json or avro format) for the consumer client.")
 	cmd.Flags().String("schema-registry-endpoint", "", "The URL of the Schema Registry cluster.")
-	pcmd.AddOutputFlag(cmd)
 
 	_ = cmd.MarkFlagRequired("bootstrap")
 	_ = cmd.MarkFlagRequired("ca-location")
@@ -178,5 +177,5 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 			SchemaPath: dir,
 		},
 	}
-	return runConsumer(consumer, groupHandler)
+	return RunConsumer(consumer, groupHandler)
 }

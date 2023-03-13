@@ -245,7 +245,7 @@ func consumeMessage(e *ckafka.Message, h *GroupHandler) error {
 	return nil
 }
 
-func runConsumer(consumer *ckafka.Consumer, groupHandler *GroupHandler) error {
+func RunConsumer(consumer *ckafka.Consumer, groupHandler *GroupHandler) error {
 	run := true
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, os.Interrupt)

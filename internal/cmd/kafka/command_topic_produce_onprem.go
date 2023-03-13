@@ -172,7 +172,7 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 			continue
 		}
 
-		msg, err := getProduceMessage(cmd, metaInfo, topicName, data, serializationProvider)
+		msg, err := GetProduceMessage(cmd, metaInfo, topicName, data, serializationProvider)
 		if err != nil {
 			return err
 		}

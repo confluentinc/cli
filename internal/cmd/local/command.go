@@ -10,14 +10,18 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
-type Command struct {
+const imageName = "523370736235.dkr.ecr.us-west-2.amazonaws.com/confluentinc/kafka-local:latest"
+const testTopicName = "jsontest"
+const plaintextHost = ":9092"
+
+type localCommand struct {
 	*pcmd.CLICommand
 	ch local.ConfluentHome
 	cc local.ConfluentCurrent
 }
 
-func NewLocalCommand(cmd *cobra.Command, prerunner pcmd.PreRunner) *Command {
-	return &Command{
+func NewLocalCommand(cmd *cobra.Command, prerunner pcmd.PreRunner) *localCommand {
+	return &localCommand{
 		CLICommand: pcmd.NewAnonymousCLICommand(cmd, prerunner),
 		ch:         local.NewConfluentHomeManager(),
 		cc:         local.NewConfluentCurrentManager(),
@@ -37,10 +41,7 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 		c.Hidden = true
 	}
 
-	c.AddCommand(NewCurrentCommand(prerunner))
-	c.AddCommand(NewDestroyCommand(prerunner))
-	c.AddCommand(NewServicesCommand(prerunner))
-	c.AddCommand(NewVersionCommand(prerunner))
+	c.AddCommand(NewKafkaCommand(prerunner))
 
 	return c.Command
 }

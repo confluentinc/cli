@@ -210,5 +210,5 @@ func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 			SchemaPath: dir,
 		},
 	}
-	return runConsumer(consumer, groupHandler)
+	return RunConsumer(consumer, groupHandler)
 }
