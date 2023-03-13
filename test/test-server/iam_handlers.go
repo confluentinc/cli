@@ -254,7 +254,12 @@ func handleIamServiceAccounts(t *testing.T) http.HandlerFunc {
 				DisplayName: iamv2.PtrString("service_account"),
 				Description: iamv2.PtrString("at your service."),
 			}
-			err := json.NewEncoder(w).Encode(iamv2.IamV2ServiceAccountList{Data: []iamv2.IamV2ServiceAccount{serviceAccount}})
+			serviceAccountTwo := iamv2.IamV2ServiceAccount{
+				Id:          iamv2.PtrString("sa-54321"),
+				DisplayName: iamv2.PtrString("service_account_2"),
+				Description: iamv2.PtrString("at your service."),
+			}
+			err := json.NewEncoder(w).Encode(iamv2.IamV2ServiceAccountList{Data: []iamv2.IamV2ServiceAccount{serviceAccount, serviceAccountTwo}})
 			require.NoError(t, err)
 		case http.MethodPost:
 			var req iamv2.IamV2ServiceAccount
