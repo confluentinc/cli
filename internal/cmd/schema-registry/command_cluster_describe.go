@@ -15,7 +15,6 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -39,27 +38,25 @@ const (
 	schemaRegistryPriceTableName          = "SchemaRegistry"
 )
 
-func (c *clusterCommand) newDescribeCommand(cfg *v1.Config) *cobra.Command {
+func (c *command) newClusterDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "describe",
 		Short:       "Describe the Schema Registry cluster for this environment.",
 		Args:        cobra.NoArgs,
-		RunE:        c.describe,
+		RunE:        c.clusterDescribe,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}
 
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddApiSecretFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
-	if cfg.IsCloudLogin() {
-		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
-	}
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
 
-func (c *clusterCommand) describe(cmd *cobra.Command, _ []string) error {
+func (c *command) clusterDescribe(cmd *cobra.Command, _ []string) error {
 	var compatibility string
 	var mode string
 	var numSchemas string

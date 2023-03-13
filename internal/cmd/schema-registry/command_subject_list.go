@@ -18,12 +18,12 @@ type subjectListOut struct {
 	Subject string `human:"Subject" serialized:"subject"`
 }
 
-func (c *subjectCommand) newListCommand() *cobra.Command {
+func (c *command) newSubjectListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List subjects.",
 		Args:  cobra.NoArgs,
-		RunE:  c.list,
+		RunE:  c.subjectList,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "List all available subjects.",
@@ -43,7 +43,7 @@ func (c *subjectCommand) newListCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *subjectCommand) list(cmd *cobra.Command, _ []string) error {
+func (c *command) subjectList(cmd *cobra.Command, _ []string) error {
 	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err

@@ -14,12 +14,12 @@ type listOut struct {
 	Exporter string `human:"Exporter" serialized:"exporter"`
 }
 
-func (c *exporterCommand) newListCommand() *cobra.Command {
+func (c *command) newExporterListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List all schema exporters.",
 		Args:  cobra.NoArgs,
-		RunE:  c.list,
+		RunE:  c.exporterList,
 	}
 
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
@@ -31,7 +31,7 @@ func (c *exporterCommand) newListCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *exporterCommand) list(cmd *cobra.Command, _ []string) error {
+func (c *command) exporterList(cmd *cobra.Command, _ []string) error {
 	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err

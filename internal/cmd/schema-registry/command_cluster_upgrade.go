@@ -13,12 +13,12 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
-func (c *clusterCommand) newUpgradeCommand() *cobra.Command {
+func (c *command) newClusterUpgradeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "upgrade",
 		Short:       "Upgrade the Schema Registry package for this environment.",
 		Args:        cobra.NoArgs,
-		RunE:        c.upgrade,
+		RunE:        c.clusterUpgrade,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -38,7 +38,7 @@ func (c *clusterCommand) newUpgradeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *clusterCommand) upgrade(cmd *cobra.Command, _ []string) error {
+func (c *command) clusterUpgrade(cmd *cobra.Command, _ []string) error {
 	packageDisplayName, err := cmd.Flags().GetString("package")
 	if err != nil {
 		return err
