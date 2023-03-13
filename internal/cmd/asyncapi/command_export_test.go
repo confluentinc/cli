@@ -12,6 +12,7 @@ import (
 )
 
 func TestGetTopicDescription(t *testing.T) {
+	_, detailsMock := setupAsyncApiSuite()
 	detailsMock.channelDetails.currentTopic.TopicName = "topic1"
 	err := detailsMock.getTopicDescription()
 	require.NoError(t, err)
@@ -19,14 +20,14 @@ func TestGetTopicDescription(t *testing.T) {
 }
 
 func TestGetClusterDetails(t *testing.T) {
-	c := mockAsyncApiCommand()
+	c, detailsMock := setupAsyncApiSuite()
 	flags := &flags{kafkaApiKey: ""}
 	err := c.getClusterDetails(detailsMock, flags)
 	require.NoError(t, err)
 }
 
 func TestGetSchemaRegistry(t *testing.T) {
-	c := mockAsyncApiCommand()
+	c, detailsMock := setupAsyncApiSuite()
 	flags := &flags{schemaRegistryApiKey: "ASYNCAPIKEY", schemaRegistryApiSecret: "ASYNCAPISECRET"}
 	err := c.getSchemaRegistry(detailsMock, flags)
 	output.Println("")
@@ -34,13 +35,14 @@ func TestGetSchemaRegistry(t *testing.T) {
 }
 
 func TestGetSchemaDetails(t *testing.T) {
+	_, detailsMock := setupAsyncApiSuite()
 	detailsMock.channelDetails.currentSubject = "subject1"
 	err := detailsMock.getSchemaDetails()
 	require.NoError(t, err)
 }
 
 func TestGetChannelDetails(t *testing.T) {
-	c := mockAsyncApiCommand()
+	c, detailsMock := setupAsyncApiSuite()
 	topicsData := []v3.TopicData{
 		{TopicName: "topic1"},
 	}
@@ -63,13 +65,14 @@ func TestGetChannelDetails(t *testing.T) {
 }
 
 func TestGetBindings(t *testing.T) {
-	c := mockAsyncApiCommand()
+	c, detailsMock := setupAsyncApiSuite()
 	detailsMock.kafkaRest, _ = c.GetKafkaREST()
 	_, err := c.getBindings(detailsMock.kafkaRest, detailsMock.clusterId, "topic1")
 	require.NoError(t, err)
 }
 
 func TestGetTags(t *testing.T) {
+	_, detailsMock := setupAsyncApiSuite()
 	schema, _, _ := detailsMock.srClient.DefaultApi.GetSchemaByVersion(*new(context.Context), "subject1", "1", nil)
 	detailsMock.channelDetails.schema = &schema
 	err := detailsMock.getTags()
@@ -77,6 +80,7 @@ func TestGetTags(t *testing.T) {
 }
 
 func TestGetMessageCompatibility(t *testing.T) {
+	_, detailsMock := setupAsyncApiSuite()
 	_, err := getMessageCompatibility(detailsMock.srClient, *new(context.Context), "subject1")
 	require.NoError(t, err)
 }

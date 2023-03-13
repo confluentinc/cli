@@ -18,6 +18,7 @@ func TestAddTopic(t *testing.T) {
 		},
 	}
 	//If topic does not exist
+	_, detailsMock := setupAsyncApiSuite()
 	_, err := addTopic(detailsMock, "testTopic", kb, false)
 	require.NoError(t, err)
 	//If topic exists & overwrite is false
@@ -33,6 +34,7 @@ func TestResolveSchemaType(t *testing.T) {
 }
 
 func TestRegisterSchema(t *testing.T) {
+	_, detailsMock := setupAsyncApiSuite()
 	components := Components{
 		Messages: map[string]Message{
 			"TestTopicMessage": {
@@ -48,6 +50,7 @@ func TestRegisterSchema(t *testing.T) {
 }
 
 func TestUpdateSubjectCompatibility(t *testing.T) {
+	_, detailsMock := setupAsyncApiSuite()
 	err := updateSubjectCompatibility(detailsMock, "BACKWARD", "testTopic-value")
 	require.NoError(t, err)
 	err = updateSubjectCompatibility(detailsMock, "INVALID", "testTopic-value")
@@ -55,6 +58,7 @@ func TestUpdateSubjectCompatibility(t *testing.T) {
 }
 
 func TestAddSchemaTags(t *testing.T) {
+	_, detailsMock := setupAsyncApiSuite()
 	components := Components{
 		Messages: map[string]Message{
 			"TestTopicMessage": {
@@ -71,7 +75,7 @@ func TestAddSchemaTags(t *testing.T) {
 	}
 	tags, tagDefs, err := addSchemaTags(detailsMock, components, "testTopic", int32(100001))
 	require.NoError(t, err)
-	require.Contains(t, tags[0].EntityName, "lsrc-asyncapi:.:100001")
+	require.Contains(t, tags[0].EntityName, "lsrc-test:.:100001")
 	require.Contains(t, tags[0].EntityType, "sr_schema")
 	require.Contains(t, tags[0].TypeName, "Tag1")
 	require.Contains(t, tags[1].TypeName, "Tag2")
@@ -79,6 +83,7 @@ func TestAddSchemaTags(t *testing.T) {
 }
 
 func TestAddTopicTags(t *testing.T) {
+	_, detailsMock := setupAsyncApiSuite()
 	subscribe := Operation{
 		TopicTags: []spec2.Tag{
 			{
@@ -92,7 +97,7 @@ func TestAddTopicTags(t *testing.T) {
 	tags, tagDefs, err := addTopicTags(detailsMock, subscribe, "testTopic")
 	require.NoError(t, err)
 	require.NoError(t, err)
-	require.Contains(t, tags[0].EntityName, "lsrc-asyncapi:lkc-asyncapi:testTopic")
+	require.Contains(t, tags[0].EntityName, "lsrc-test:lkc-asyncapi:testTopic")
 	require.Contains(t, tags[0].EntityType, "kafka_topic")
 	require.Contains(t, tags[0].TypeName, "Tag1")
 	require.Contains(t, tags[1].TypeName, "Tag2")
