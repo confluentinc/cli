@@ -1,13 +1,12 @@
 package byok
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	perrors "github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
@@ -42,13 +41,13 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	var errs error
 	for _, id := range args {
 		if httpResp, err := c.V2Client.DeleteByokKey(id); err != nil {
-			errs = errors.Join(errs, perrors.CatchByokKeyNotFoundError(err, id, httpResp))
+			errs = errors.Join(errs, errors.CatchByokKeyNotFoundError(err, id, httpResp))
 		} else {
-			output.ErrPrintf(perrors.DeletedResourceMsg, resource.ByokKey, id)
+			output.ErrPrintf(errors.DeletedResourceMsg, resource.ByokKey, id)
 		}
 	}
 	if errs != nil {
-		errs = perrors.NewErrorWithSuggestions(errs.Error(), perrors.ByokKeyNotFoundSuggestions)
+		errs = errors.NewErrorWithSuggestions(errs.Error(), errors.ByokKeyNotFoundSuggestions)
 	}
 
 	return errs
@@ -58,7 +57,7 @@ func (c *command) checkExistence(cmd *cobra.Command, args []string) error {
 	// Single
 	if len(args) == 1 {
 		if _, httpResp, err := c.V2Client.GetByokKey(args[0]); err != nil {
-			return perrors.CatchByokKeyNotFoundError(err, args[0], httpResp)
+			return errors.CatchByokKeyNotFoundError(err, args[0], httpResp)
 		}
 		return nil
 	}
@@ -76,7 +75,7 @@ func (c *command) checkExistence(cmd *cobra.Command, args []string) error {
 
 	invalidKeys := keySet.Difference(args)
 	if len(invalidKeys) > 0 {
-		return perrors.NewErrorWithSuggestions(fmt.Sprintf(perrors.AccessForbiddenErrorMsg, resource.ByokKey, utils.ArrayToCommaDelimitedStringWithAnd(invalidKeys)), perrors.ByokKeyNotFoundSuggestions)
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.AccessForbiddenErrorMsg, resource.ByokKey, utils.ArrayToCommaDelimitedStringWithAnd(invalidKeys)), errors.ByokKeyNotFoundSuggestions)
 	}
 
 	return nil

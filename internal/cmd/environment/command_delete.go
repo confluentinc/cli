@@ -1,13 +1,12 @@
 package environment
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	perrors "github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
@@ -42,20 +41,20 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	var errs error
 	for _, envId := range args {
 		if httpResp, err := c.V2Client.DeleteOrgEnvironment(envId); err != nil {
-			errs = errors.Join(errs, perrors.CatchOrgV2ResourceNotFoundError(err, resource.Environment, httpResp))
+			errs = errors.Join(errs, errors.CatchOrgV2ResourceNotFoundError(err, resource.Environment, httpResp))
 		} else {
-			output.ErrPrintf(perrors.DeletedResourceMsg, resource.Environment, envId)
+			output.ErrPrintf(errors.DeletedResourceMsg, resource.Environment, envId)
 			if envId == c.EnvironmentId() {
 				c.Context.SetEnvironment(nil)
 
 				if err := c.Config.Save(); err != nil {
-					errs = errors.Join(errs, perrors.Wrap(err, perrors.EnvSwitchErrorMsg))
+					errs = errors.Join(errs, errors.Wrap(err, errors.EnvSwitchErrorMsg))
 				}
 			}
 		}
 	}
 	if errs != nil {
-		errs = perrors.NewErrorWithSuggestions(errs.Error(), fmt.Sprintf(perrors.OrgResourceNotFoundSuggestions, resource.Environment))
+		errs = errors.NewErrorWithSuggestions(errs.Error(), fmt.Sprintf(errors.OrgResourceNotFoundSuggestions, resource.Environment))
 	}
 
 	return errs
@@ -65,7 +64,7 @@ func (c *command) checkExistence(cmd *cobra.Command, args []string) (string, err
 	// Single
 	if len(args) == 1 {
 		if environment, httpResp, err := c.V2Client.GetOrgEnvironment(args[0]); err != nil {
-			return "", perrors.CatchOrgV2ResourceNotFoundError(err, resource.Environment, httpResp)
+			return "", errors.CatchOrgV2ResourceNotFoundError(err, resource.Environment, httpResp)
 		} else {
 			return environment.GetDisplayName(), nil
 		}
@@ -84,7 +83,7 @@ func (c *command) checkExistence(cmd *cobra.Command, args []string) (string, err
 
 	invalidEnvironments := environmentSet.Difference(args)
 	if len(invalidEnvironments) > 0 {
-		return "", perrors.NewErrorWithSuggestions(fmt.Sprintf(perrors.AccessForbiddenErrorMsg, resource.Environment, utils.ArrayToCommaDelimitedStringWithAnd(invalidEnvironments)), fmt.Sprintf(perrors.OrgResourceNotFoundSuggestions, resource.Environment))
+		return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.AccessForbiddenErrorMsg, resource.Environment, utils.ArrayToCommaDelimitedStringWithAnd(invalidEnvironments)), fmt.Sprintf(errors.OrgResourceNotFoundSuggestions, resource.Environment))
 	}
 
 	return "", nil

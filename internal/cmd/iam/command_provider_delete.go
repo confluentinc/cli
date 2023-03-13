@@ -1,13 +1,12 @@
 package iam
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	perrors "github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -51,7 +50,7 @@ func (c *identityProviderCommand) delete(cmd *cobra.Command, args []string) erro
 		if err := c.V2Client.DeleteIdentityProvider(providerId); err != nil {
 			errs = errors.Join(errs, err)
 		} else {
-			output.ErrPrintf(perrors.DeletedResourceMsg, resource.IdentityProvider, providerId)
+			output.ErrPrintf(errors.DeletedResourceMsg, resource.IdentityProvider, providerId)
 		}
 	}
 
@@ -81,7 +80,7 @@ func (c *identityProviderCommand) checkExistence(cmd *cobra.Command, args []stri
 
 	invalidProviders := providerSet.Difference(args)
 	if len(invalidProviders) > 0 {
-		return "", perrors.New(fmt.Sprintf(perrors.AccessForbiddenErrorMsg, resource.IdentityProvider, utils.ArrayToCommaDelimitedStringWithAnd(invalidProviders)))
+		return "", errors.New(fmt.Sprintf(errors.AccessForbiddenErrorMsg, resource.IdentityProvider, utils.ArrayToCommaDelimitedStringWithAnd(invalidProviders)))
 	}
 
 	return "", nil

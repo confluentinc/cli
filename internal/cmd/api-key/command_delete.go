@@ -1,13 +1,12 @@
 package apikey
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	perrors "github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
@@ -43,16 +42,16 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	var errs error
 	for _, id := range args {
 		if httpResp, err := c.V2Client.DeleteApiKey(id); err != nil {
-			errs = errors.Join(errs, perrors.CatchApiKeyForbiddenAccessError(err, deleteOperation, id, httpResp))
+			errs = errors.Join(errs, errors.CatchApiKeyForbiddenAccessError(err, deleteOperation, id, httpResp))
 		} else {
-			output.Printf(perrors.DeletedResourceMsg, resource.ApiKey, id)
+			output.Printf(errors.DeletedResourceMsg, resource.ApiKey, id)
 			if err := c.keystore.DeleteAPIKey(id); err != nil {
 				errs = errors.Join(errs, err)
 			}
 		}
 	}
 	if errs != nil {
-		errs = perrors.NewErrorWithSuggestions(errs.Error(), perrors.APIKeyNotFoundSuggestions)
+		errs = errors.NewErrorWithSuggestions(errs.Error(), errors.APIKeyNotFoundSuggestions)
 	}
 
 	return errs
@@ -62,7 +61,7 @@ func (c *command) checkExistence(cmd *cobra.Command, args []string) error {
 	// Single
 	if len(args) == 1 {
 		if _, httpResp, err := c.V2Client.GetApiKey(args[0]); err != nil {
-			return perrors.CatchApiKeyForbiddenAccessError(err, getOperation, args[0], httpResp)
+			return errors.CatchApiKeyForbiddenAccessError(err, getOperation, args[0], httpResp)
 		}
 		return nil
 	}
@@ -80,7 +79,7 @@ func (c *command) checkExistence(cmd *cobra.Command, args []string) error {
 
 	invalidKeys := apiKeySet.Difference(args)
 	if len(invalidKeys) > 0 {
-		return perrors.NewErrorWithSuggestions(fmt.Sprintf(perrors.AccessForbiddenErrorMsg, resource.ApiKey, utils.ArrayToCommaDelimitedStringWithAnd(invalidKeys)), perrors.APIKeyNotFoundSuggestions)
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.AccessForbiddenErrorMsg, resource.ApiKey, utils.ArrayToCommaDelimitedStringWithAnd(invalidKeys)), errors.APIKeyNotFoundSuggestions)
 	}
 
 	return nil

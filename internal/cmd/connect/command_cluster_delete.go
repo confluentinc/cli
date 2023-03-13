@@ -1,12 +1,10 @@
 package connect
 
 import (
-	"errors"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	perrors "github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -62,7 +60,7 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 		if _, err := c.V2Client.DeleteConnector(connectorName, c.EnvironmentId(), kafkaCluster.ID); err != nil {
 			errs = errors.Join(errs, err)
 		} else {
-			output.Printf(perrors.DeletedResourceMsg, resource.Connector, args[i])
+			output.Printf(errors.DeletedResourceMsg, resource.Connector, args[i])
 		}
 	}
 
@@ -96,7 +94,7 @@ func (c *clusterCommand) checkExistence(cmd *cobra.Command, kafkaClusterId strin
 
 	invalidConnectors := connectorSet.Difference(args)
 	if len(invalidConnectors) > 0 {
-		return nil, perrors.New("unknown connector ID(s): " + utils.ArrayToCommaDelimitedStringWithAnd(invalidConnectors))
+		return nil, errors.New("unknown connector ID(s): " + utils.ArrayToCommaDelimitedStringWithAnd(invalidConnectors))
 	}
 
 	return connectorNames, nil

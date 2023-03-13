@@ -1,13 +1,12 @@
 package iam
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	perrors "github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -40,7 +39,7 @@ func (c *serviceAccountCommand) delete(cmd *cobra.Command, args []string) error 
 	var errs error
 	for _, serviceAccountId := range args {
 		if resource.LookupType(serviceAccountId) != resource.ServiceAccount {
-			errs = errors.Join(errs, perrors.New(perrors.BadServiceAccountIDErrorMsg))
+			errs = errors.Join(errs, errors.New(errors.BadServiceAccountIDErrorMsg))
 		}
 	}
 	if errs != nil {
@@ -59,9 +58,9 @@ func (c *serviceAccountCommand) delete(cmd *cobra.Command, args []string) error 
 	errs = nil
 	for _, serviceAccountId := range args {
 		if err := c.V2Client.DeleteIamServiceAccount(serviceAccountId); err != nil {
-			errs = errors.Join(errs, perrors.Errorf(perrors.DeleteResourceErrorMsg, resource.ServiceAccount, serviceAccountId, err))
+			errs = errors.Join(errs, errors.Errorf(errors.DeleteResourceErrorMsg, resource.ServiceAccount, serviceAccountId, err))
 		} else {
-			output.ErrPrintf(perrors.DeletedResourceMsg, resource.ServiceAccount, serviceAccountId)
+			output.ErrPrintf(errors.DeletedResourceMsg, resource.ServiceAccount, serviceAccountId)
 		}
 	}
 
@@ -72,7 +71,7 @@ func (c *serviceAccountCommand) checkExistence(cmd *cobra.Command, args []string
 	// Single
 	if len(args) == 1 {
 		if serviceAccount, httpResp, err := c.V2Client.GetIamServiceAccount(args[0]); err != nil {
-			return "", perrors.CatchServiceAccountNotFoundError(err, httpResp, args[0])
+			return "", errors.CatchServiceAccountNotFoundError(err, httpResp, args[0])
 		} else {
 			return serviceAccount.GetDisplayName(), nil
 		}
@@ -91,7 +90,7 @@ func (c *serviceAccountCommand) checkExistence(cmd *cobra.Command, args []string
 
 	invalidServiceAccounts := serviceAccountSet.Difference(args)
 	if len(invalidServiceAccounts) > 0 {
-		return "", perrors.NewErrorWithSuggestions(fmt.Sprintf(perrors.AccessForbiddenErrorMsg, resource.ServiceAccount, utils.ArrayToCommaDelimitedStringWithAnd(invalidServiceAccounts)), perrors.ServiceAccountNotFoundSuggestions)
+		return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.AccessForbiddenErrorMsg, resource.ServiceAccount, utils.ArrayToCommaDelimitedStringWithAnd(invalidServiceAccounts)), errors.ServiceAccountNotFoundSuggestions)
 	}
 
 	return "", nil

@@ -1,13 +1,12 @@
 package iam
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	perrors "github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
@@ -32,7 +31,7 @@ func (c *userCommand) delete(cmd *cobra.Command, args []string) error {
 	var errs error
 	for _, resourceId := range args {
 		if resource.LookupType(resourceId) != resource.User {
-			errs = errors.Join(errs, perrors.Errorf(perrors.BadResourceIDErrorMsg, resource.UserPrefix))
+			errs = errors.Join(errs, errors.Errorf(errors.BadResourceIDErrorMsg, resource.UserPrefix))
 		}
 	}
 	if errs != nil {
@@ -51,9 +50,9 @@ func (c *userCommand) delete(cmd *cobra.Command, args []string) error {
 	errs = nil
 	for _, resourceId := range args {
 		if err := c.V2Client.DeleteIamUser(resourceId); err != nil {
-			errs = errors.Join(errs, perrors.Errorf(perrors.DeleteResourceErrorMsg, resource.User, resourceId, err))
+			errs = errors.Join(errs, errors.Errorf(errors.DeleteResourceErrorMsg, resource.User, resourceId, err))
 		} else {
-			output.Printf(perrors.DeletedResourceMsg, resource.User, resourceId)
+			output.Printf(errors.DeletedResourceMsg, resource.User, resourceId)
 		}
 	}
 
@@ -83,7 +82,7 @@ func (c *userCommand) checkExistence(cmd *cobra.Command, args []string) (string,
 
 	invalidUsers := userSet.Difference(args)
 	if len(invalidUsers) > 0 {
-		return "", perrors.New(fmt.Sprintf(perrors.AccessForbiddenErrorMsg, resource.User, utils.ArrayToCommaDelimitedStringWithAnd(invalidUsers)))
+		return "", errors.New(fmt.Sprintf(errors.AccessForbiddenErrorMsg, resource.User, utils.ArrayToCommaDelimitedStringWithAnd(invalidUsers)))
 	}
 
 	return "", nil

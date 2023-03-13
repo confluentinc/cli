@@ -1,13 +1,12 @@
 package iam
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	perrors "github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -59,7 +58,7 @@ func (c *identityPoolCommand) delete(cmd *cobra.Command, args []string) error {
 		if err := c.V2Client.DeleteIdentityPool(poolId, provider); err != nil {
 			errs = errors.Join(errs, err)
 		} else {
-			output.ErrPrintf(perrors.DeletedResourceMsg, resource.IdentityPool, poolId)
+			output.ErrPrintf(errors.DeletedResourceMsg, resource.IdentityPool, poolId)
 		}
 	}
 
@@ -89,7 +88,7 @@ func (c *identityPoolCommand) checkExistence(cmd *cobra.Command, provider string
 
 	invalidPools := poolSet.Difference(args)
 	if len(invalidPools) > 0 {
-		return "", perrors.New(fmt.Sprintf(perrors.AccessForbiddenErrorMsg, resource.IdentityPool, utils.ArrayToCommaDelimitedStringWithAnd(invalidPools)))
+		return "", errors.New(fmt.Sprintf(errors.AccessForbiddenErrorMsg, resource.IdentityPool, utils.ArrayToCommaDelimitedStringWithAnd(invalidPools)))
 	}
 
 	return "", nil

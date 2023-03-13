@@ -1,12 +1,10 @@
 package context
 
 import (
-	"errors"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	perrors "github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
@@ -42,7 +40,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		if err := c.Config.DeleteContext(ctxName); err != nil {
 			errs = errors.Join(errs, err)
 		} else {
-			output.Printf(perrors.DeletedResourceMsg, resource.Context, ctxName)
+			output.Printf(errors.DeletedResourceMsg, resource.Context, ctxName)
 		}
 	}
 
@@ -66,7 +64,7 @@ func (c *command) checkExistence(cmd *cobra.Command, args []string) error {
 
 	invalidContexts := contextSet.Difference(args)
 	if len(invalidContexts) > 0 {
-		return perrors.New("context(s) not found: " + utils.ArrayToCommaDelimitedStringWithAnd(invalidContexts))
+		return errors.New("context(s) not found: " + utils.ArrayToCommaDelimitedStringWithAnd(invalidContexts))
 	}
 
 	return nil
