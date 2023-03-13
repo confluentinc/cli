@@ -25,31 +25,31 @@ func newExporterCommand(cfg *v1.Config, prerunner pcmd.PreRunner, srClient *srsd
 
 	if cfg.IsCloudLogin() {
 		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)
-		c.AddCommand(c.newCreateCommand())
-		c.AddCommand(c.newDeleteCommand())
-		c.AddCommand(c.newDescribeCommand())
-		c.AddCommand(c.newGetConfigCommand())
-		c.AddCommand(c.newGetStatusCommand())
-		c.AddCommand(c.newListCommand())
-		c.AddCommand(c.newPauseCommand())
-		c.AddCommand(c.newResetCommand())
-		c.AddCommand(c.newResumeCommand())
-		c.AddCommand(c.newUpdateCommand())
+		cmd.AddCommand(c.newCreateCommand())
+		cmd.AddCommand(c.newDeleteCommand())
+		cmd.AddCommand(c.newDescribeCommand())
+		cmd.AddCommand(c.newGetConfigCommand())
+		cmd.AddCommand(c.newGetStatusCommand())
+		cmd.AddCommand(c.newListCommand())
+		cmd.AddCommand(c.newPauseCommand())
+		cmd.AddCommand(c.newResetCommand())
+		cmd.AddCommand(c.newResumeCommand())
+		cmd.AddCommand(c.newUpdateCommand())
 	} else {
 		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner)
-		c.AddCommand(c.newCreateCommandOnPrem())
-		c.AddCommand(c.newDeleteCommandOnPrem())
-		c.AddCommand(c.newDescribeCommandOnPrem())
-		c.AddCommand(c.newGetConfigCommandOnPrem())
-		c.AddCommand(c.newGetStatusCommandOnPrem())
-		c.AddCommand(c.newListCommandOnPrem())
-		c.AddCommand(c.newPauseCommandOnPrem())
-		c.AddCommand(c.newResetCommandOnPrem())
-		c.AddCommand(c.newResumeCommandOnPrem())
-		c.AddCommand(c.newUpdateCommandOnPrem())
+		cmd.AddCommand(c.newCreateCommandOnPrem())
+		cmd.AddCommand(c.newDeleteCommandOnPrem())
+		cmd.AddCommand(c.newDescribeCommandOnPrem())
+		cmd.AddCommand(c.newGetConfigCommandOnPrem())
+		cmd.AddCommand(c.newGetStatusCommandOnPrem())
+		cmd.AddCommand(c.newListCommandOnPrem())
+		cmd.AddCommand(c.newPauseCommandOnPrem())
+		cmd.AddCommand(c.newResetCommandOnPrem())
+		cmd.AddCommand(c.newResumeCommandOnPrem())
+		cmd.AddCommand(c.newUpdateCommandOnPrem())
 	}
 
-	return c.Command
+	return cmd
 }
 
 func addContextTypeFlag(cmd *cobra.Command) {

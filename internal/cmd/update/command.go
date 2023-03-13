@@ -50,10 +50,9 @@ func New(prerunner pcmd.PreRunner, version *pversion.Version, client update.Clie
 		version:    version,
 		client:     client,
 	}
+	cmd.RunE = c.update
 
-	c.RunE = c.update
-
-	return c.Command
+	return cmd
 }
 
 // NewClient returns a new update.Client configured for the CLI

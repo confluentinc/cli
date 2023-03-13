@@ -19,15 +19,14 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *c
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLoginOrOnPremLogin},
 	}
 
-	c := pcmd.NewAuthenticatedCLICommand(cmd, prerunner)
+	cmd.AddCommand(newClusterCommand(cfg, prerunner, srClient))
+	cmd.AddCommand(newCompatibilityCommand(cfg, prerunner, srClient))
+	cmd.AddCommand(newConfigCommand(cfg, prerunner, srClient))
+	cmd.AddCommand(newExporterCommand(cfg, prerunner, srClient))
+	cmd.AddCommand(newSchemaCommand(cfg, prerunner, srClient))
+	cmd.AddCommand(newSubjectCommand(cfg, prerunner, srClient))
 
-	c.AddCommand(newClusterCommand(cfg, prerunner, srClient))
-	c.AddCommand(newCompatibilityCommand(cfg, prerunner, srClient))
-	c.AddCommand(newConfigCommand(cfg, prerunner, srClient))
-	c.AddCommand(newExporterCommand(cfg, prerunner, srClient))
-	c.AddCommand(newSchemaCommand(cfg, prerunner, srClient))
-	c.AddCommand(newSubjectCommand(cfg, prerunner, srClient))
-	return c.Command
+	return cmd
 }
 
 func addCompatibilityFlag(cmd *cobra.Command) {
