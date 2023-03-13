@@ -61,7 +61,7 @@ install: apply-patches
 		mkdir -p $${dir} ; \
 		ext=""; if [[ $${dir} =~ windows_.+ ]]; then ext=".exe"; fi ; \
 		filepath=$${dir}/confluent$${ext} ; \
-		ver=$(CLI_VERSION); if [[ $(CLI_VERSION) =~ v3\..+ ]]; then ver=$(CLI_VERSION_NO_V); fi; \
+		ver=$(CLI_VERSION_NO_V); if [[ $(CLI_VERSION) =~ v2\..+ ]]; then ver=$(CLI_VERSION); fi; \
 		curl -f -s https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/binaries/$(CLI_VERSION)/confluent_$${ver}_$${dir}$${ext} -o $${filepath} ; \
 		chmod 755 $${filepath} ; \
 	done
