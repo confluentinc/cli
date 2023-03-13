@@ -11,12 +11,12 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (c *exporterCommand) newPauseCommand() *cobra.Command {
+func (c *command) newExporterPauseCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "pause <name>",
 		Short: "Pause schema exporter.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.pause,
+		RunE:  c.exporterPause,
 	}
 
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
@@ -28,7 +28,7 @@ func (c *exporterCommand) newPauseCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *exporterCommand) pause(cmd *cobra.Command, args []string) error {
+func (c *command) exporterPause(cmd *cobra.Command, args []string) error {
 	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err

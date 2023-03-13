@@ -19,7 +19,7 @@ func (c *clusterCommand) newListCommandOnPrem() *cobra.Command {
 		Args:  cobra.NoArgs,
 		Short: "List registered Kafka clusters.",
 		Long:  "List Kafka clusters that are registered with the MDS cluster registry.",
-		RunE:  c.onPremList,
+		RunE:  c.listOnPrem,
 	}
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -28,7 +28,7 @@ func (c *clusterCommand) newListCommandOnPrem() *cobra.Command {
 	return cmd
 }
 
-func (c *clusterCommand) onPremList(cmd *cobra.Command, _ []string) error {
+func (c *clusterCommand) listOnPrem(cmd *cobra.Command, _ []string) error {
 	clustertype := &mds.ClusterRegistryListOpts{ClusterType: optional.NewString(kafkaClusterTypeName)}
 
 	clusterInfos, response, err := c.MDSClient.ClusterRegistryApi.ClusterRegistryList(c.createContext(), clustertype)

@@ -11,12 +11,12 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (c *exporterCommand) newResetCommand() *cobra.Command {
+func (c *command) newExporterResetCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "reset <name>",
 		Short: "Reset schema exporter.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.reset,
+		RunE:  c.exporterReset,
 	}
 
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
@@ -28,7 +28,7 @@ func (c *exporterCommand) newResetCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *exporterCommand) reset(cmd *cobra.Command, args []string) error {
+func (c *command) exporterReset(cmd *cobra.Command, args []string) error {
 	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
