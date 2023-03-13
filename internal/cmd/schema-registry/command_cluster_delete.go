@@ -20,7 +20,7 @@ func (c *command) newClusterDeleteCommand() *cobra.Command {
 		Use:         "delete",
 		Short:       "Delete the Schema Registry cluster for this environment.",
 		Args:        cobra.NoArgs,
-		RunE:        c.delete,
+		RunE:        c.clusterDelete,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -40,11 +40,7 @@ func (c *command) newClusterDeleteCommand() *cobra.Command {
 	return cmd
 }
 
-<<<<<<< HEAD
-func (c *command) clusterDelete(cmd *cobra.Command, _ []string, prompt form.Prompt) error {
-=======
-func (c *clusterCommand) delete(cmd *cobra.Command, _ []string) error {
->>>>>>> main
+func (c *command) clusterDelete(cmd *cobra.Command, _ []string) error {
 	ctx := context.Background()
 
 	cluster, err := c.Context.FetchSchemaRegistryByEnvironmentId(ctx, c.EnvironmentId())
