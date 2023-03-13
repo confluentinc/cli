@@ -41,7 +41,6 @@ func ParseNetrcMachineName(machineName string) (*MachineContextInfo, error) {
 		URL:            url,
 		CaCertPath:     caCertPath,
 	}, nil
-
 }
 
 func extractCredentialType(nameSubstring string) (credType string, rest string, err error) {

@@ -27,5 +27,5 @@ func (c *command) exporterResumeOnPrem(cmd *cobra.Command, args []string) error 
 		return err
 	}
 
-	return resumeExporter(cmd, args[0], srClient, ctx)
+	return resumeExporter(args[0], srClient, ctx)
 }

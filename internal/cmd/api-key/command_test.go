@@ -227,11 +227,7 @@ func (suite *APITestSuite) SetupTest() {
 			return iamv2.ApiListIamV2ServiceAccountsRequest{}
 		},
 		ListIamV2ServiceAccountsExecuteFunc: func(_ iamv2.ApiListIamV2ServiceAccountsRequest) (iamv2.IamV2ServiceAccountList, *http.Response, error) {
-			list := iamv2.IamV2ServiceAccountList{
-				Data: []iamv2.IamV2ServiceAccount{iamv2.IamV2ServiceAccount{
-					Id: iamv2.PtrString(userResourceId),
-				}},
-			}
+			list := iamv2.IamV2ServiceAccountList{Data: []iamv2.IamV2ServiceAccount{{Id: iamv2.PtrString(userResourceId)}}}
 			return list, nil, nil
 		},
 	}

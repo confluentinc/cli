@@ -96,12 +96,12 @@ func (c *command) schemaDescribe(cmd *cobra.Command, args []string) error {
 	}
 
 	if id != "" {
-		return describeById(cmd, id, srClient, ctx)
+		return describeById(id, srClient, ctx)
 	}
 	return describeBySubject(cmd, srClient, ctx)
 }
 
-func describeById(cmd *cobra.Command, id string, srClient *srsdk.APIClient, ctx context.Context) error {
+func describeById(id string, srClient *srsdk.APIClient, ctx context.Context) error {
 	schemaID, err := strconv.ParseInt(id, 10, 32)
 	if err != nil {
 		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.SchemaIntegerErrorMsg, id), errors.SchemaIntegerSuggestions)

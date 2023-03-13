@@ -75,11 +75,11 @@ func (c *authenticatedTopicCommand) validArgs(cmd *cobra.Command, args []string)
 		return nil
 	}
 
-	return c.autocompleteTopics(cmd)
+	return c.autocompleteTopics()
 }
 
-func (c *authenticatedTopicCommand) autocompleteTopics(cmd *cobra.Command) []string {
-	topics, err := c.getTopics(cmd)
+func (c *authenticatedTopicCommand) autocompleteTopics() []string {
+	topics, err := c.getTopics()
 	if err != nil {
 		return nil
 	}
@@ -144,7 +144,7 @@ func (c *authenticatedTopicCommand) getNumPartitions(topicName string) (int, err
 	return len(partitionsResp.Data), nil
 }
 
-func (c *authenticatedTopicCommand) provisioningClusterCheck(cmd *cobra.Command, lkc string) error {
+func (c *authenticatedTopicCommand) provisioningClusterCheck(lkc string) error {
 	cluster, httpResp, err := c.V2Client.DescribeKafkaCluster(lkc, c.EnvironmentId())
 	if err != nil {
 		return errors.CatchKafkaNotFoundError(err, lkc, httpResp)

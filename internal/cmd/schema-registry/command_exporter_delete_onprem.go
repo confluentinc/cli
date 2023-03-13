@@ -43,5 +43,5 @@ func (c *command) exporterDeleteOnPrem(cmd *cobra.Command, args []string) error 
 		return err
 	}
 
-	return deleteExporter(cmd, args[0], srClient, ctx)
+	return deleteExporter(args[0], srClient, ctx)
 }

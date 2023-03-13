@@ -17,6 +17,8 @@ ifeq ($(CLEAN_VERSION),$(_empty))
 CLEAN_VERSION := 0.0.0
 endif
 
+split_version := $(subst .,$(_space),$(CLEAN_VERSION))
+
 .PHONY: show-version
 ## Show version variables
 show-version:

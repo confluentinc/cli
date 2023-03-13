@@ -176,7 +176,6 @@ func (k *KafkaClusterContext) Validate() {
 				k.validateKafkaClusterConfig(kcc)
 			}
 		}
-
 	}
 }
 

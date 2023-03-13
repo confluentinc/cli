@@ -74,25 +74,37 @@ func (d *accountDetails) getSchemaDetails() error {
 	if err != nil {
 		return err
 	}
-	var unmarshalledSchema map[string]any
+	d.channelDetails.schema = &schema
 	if schema.SchemaType == "" {
-		d.channelDetails.contentType = "application/avro"
-	} else if schema.SchemaType == "JSON" {
+		schema.SchemaType = "AVRO"
+	}
+	switch schema.SchemaType {
+	case "JSON":
 		d.channelDetails.contentType = "application/json"
-	} else if schema.SchemaType == "PROTOBUF" {
-		log.CliLogger.Warn("Protobuf not supported.")
-		d.channelDetails.contentType = "PROTOBUF"
-		return nil
+	case "AVRO":
+		d.channelDetails.contentType = "application/avro"
+	case "PROTOBUF":
+		return errors.New("protobuf is not supported")
 	}
 	// JSON or Avro Format
-	err = json.Unmarshal([]byte(schema.Schema), &unmarshalledSchema)
+	err = json.Unmarshal([]byte(schema.Schema), &d.channelDetails.unmarshalledSchema)
 	if err != nil {
-		return fmt.Errorf("failed to unmarshal schema: %v", err)
-
+		d.channelDetails.unmarshalledSchema, err = handlePrimitiveSchemas(schema.Schema, err)
+		log.CliLogger.Warn(err)
 	}
-	d.channelDetails.unmarshalledSchema = unmarshalledSchema
-	d.channelDetails.schema = &schema
 	return nil
+}
+
+func handlePrimitiveSchemas(schema string, err error) (map[string]any, error) {
+	unmarshalledSchema := make(map[string]any)
+	primitiveTypes := []string{"string", "null", "boolean", "int", "long", "float", "double", "bytes"}
+	for _, primitiveType := range primitiveTypes {
+		if schema == fmt.Sprintf("\"%s\"", primitiveType) {
+			unmarshalledSchema["type"] = primitiveType
+			return unmarshalledSchema, nil
+		}
+	}
+	return nil, fmt.Errorf("failed to unmarshal schema: %v", err)
 }
 
 func (d *accountDetails) getTopicDescription() error {
@@ -117,23 +129,25 @@ func (c *command) countAsyncApiUsage(details *accountDetails) error {
 
 func (d *accountDetails) buildMessageEntity() *spec.MessageEntity {
 	entityProducer := new(spec.MessageEntity)
-	(*spec.MessageEntity).WithContentType(entityProducer, d.channelDetails.contentType)
+	entityProducer.WithContentType(d.channelDetails.contentType)
 	if d.channelDetails.contentType == "application/avro" {
-		(*spec.MessageEntity).WithSchemaFormat(entityProducer, "application/vnd.apache.avro;version=1.9.0")
+		entityProducer.WithSchemaFormat("application/vnd.apache.avro;version=1.9.0")
 	} else if d.channelDetails.contentType == "application/json" {
 		(*spec.MessageEntity).WithSchemaFormat(entityProducer, "application/schema+json;version=draft-07")
 	}
-	(*spec.MessageEntity).WithTags(entityProducer, d.channelDetails.schemaLevelTags...)
+	entityProducer.WithTags(d.channelDetails.schemaLevelTags...)
 	// Name
-	(*spec.MessageEntity).WithName(entityProducer, msgName(d.channelDetails.currentTopic.GetTopicName()))
+	entityProducer.WithName(msgName(d.channelDetails.currentTopic.GetTopicName()))
 	// Example
 	if d.channelDetails.example != nil {
-		(*spec.MessageEntity).WithExamples(entityProducer, spec.MessageOneOf1OneOf1ExamplesItems{Payload: &d.channelDetails.example})
+		entityProducer.WithExamples(spec.MessageOneOf1OneOf1ExamplesItems{Payload: &d.channelDetails.example})
 	}
 	if d.channelDetails.bindings != nil {
-		(*spec.MessageEntity).WithBindings(entityProducer, d.channelDetails.bindings.messageBinding)
+		entityProducer.WithBindings(d.channelDetails.bindings.messageBinding)
 	}
-	(*spec.MessageEntity).WithPayload(entityProducer, d.channelDetails.unmarshalledSchema)
+	if d.channelDetails.unmarshalledSchema != nil {
+		entityProducer.WithPayload(d.channelDetails.unmarshalledSchema)
+	}
 	return entityProducer
 }
 

@@ -34,10 +34,10 @@ func (c *command) exporterResume(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return resumeExporter(cmd, args[0], srClient, ctx)
+	return resumeExporter(args[0], srClient, ctx)
 }
 
-func resumeExporter(cmd *cobra.Command, name string, srClient *srsdk.APIClient, ctx context.Context) error {
+func resumeExporter(name string, srClient *srsdk.APIClient, ctx context.Context) error {
 	if _, _, err := srClient.DefaultApi.ResumeExporter(ctx, name); err != nil {
 		return err
 	}

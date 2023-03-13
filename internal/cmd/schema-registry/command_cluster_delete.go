@@ -3,7 +3,6 @@ package schemaregistry
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/spf13/cobra"
 
@@ -18,12 +17,10 @@ import (
 
 func (c *command) newClusterDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delete",
-		Short: "Delete the Schema Registry cluster for this environment.",
-		Args:  cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return c.clusterDelete(cmd, args, form.NewPrompt(os.Stdin))
-		},
+		Use:         "delete",
+		Short:       "Delete the Schema Registry cluster for this environment.",
+		Args:        cobra.NoArgs,
+		RunE:        c.delete,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -43,7 +40,11 @@ func (c *command) newClusterDeleteCommand() *cobra.Command {
 	return cmd
 }
 
+<<<<<<< HEAD
 func (c *command) clusterDelete(cmd *cobra.Command, _ []string, prompt form.Prompt) error {
+=======
+func (c *clusterCommand) delete(cmd *cobra.Command, _ []string) error {
+>>>>>>> main
 	ctx := context.Background()
 
 	cluster, err := c.Context.FetchSchemaRegistryByEnvironmentId(ctx, c.EnvironmentId())

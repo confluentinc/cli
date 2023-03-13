@@ -53,7 +53,6 @@ func (c *Client) GetApiKey(id string) (apikeysv2.IamV2ApiKey, *http.Response, er
 	}
 
 	return apiKey, httpResp, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.APIKeyNotFoundErrorMsg, id), errors.APIKeyNotFoundSuggestions)
-
 }
 
 func (c *Client) UpdateApiKey(id string, iamV2ApiKeyUpdate apikeysv2.IamV2ApiKeyUpdate) (apikeysv2.IamV2ApiKey, *http.Response, error) {
@@ -73,7 +72,7 @@ func (c *Client) ListApiKeys(owner, resource string) ([]apikeysv2.IamV2ApiKey, e
 		}
 		list = append(list, page.GetData()...)
 
-		pageToken, done, err = extractApiKeysNextPageToken(page.GetMetadata().Next)
+		pageToken, done, err = extractNextPageToken(page.GetMetadata().Next)
 		if err != nil {
 			return nil, err
 		}
@@ -87,13 +86,4 @@ func (c *Client) executeListApiKeys(owner, resource, pageToken string) (apikeysv
 		req = req.PageToken(pageToken)
 	}
 	return c.ApiKeysClient.APIKeysIamV2Api.ListIamV2ApiKeysExecute(req)
-}
-
-func extractApiKeysNextPageToken(nextPageUrlStringNullable apikeysv2.NullableString) (string, bool, error) {
-	if !nextPageUrlStringNullable.IsSet() {
-		return "", true, nil
-	}
-	nextPageUrlString := *nextPageUrlStringNullable.Get()
-	pageToken, err := extractPageToken(nextPageUrlString)
-	return pageToken, false, err
 }

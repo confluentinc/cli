@@ -48,10 +48,10 @@ func (c *command) exporterDelete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return deleteExporter(cmd, args[0], srClient, ctx)
+	return deleteExporter(args[0], srClient, ctx)
 }
 
-func deleteExporter(cmd *cobra.Command, name string, srClient *srsdk.APIClient, ctx context.Context) error {
+func deleteExporter(name string, srClient *srsdk.APIClient, ctx context.Context) error {
 	if _, err := srClient.DefaultApi.DeleteExporter(ctx, name); err != nil {
 		return err
 	}
