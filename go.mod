@@ -4,10 +4,10 @@ go 1.20
 
 require (
 	github.com/antihax/optional v1.0.0
-	github.com/aws/aws-sdk-go v1.44.212
+	github.com/aws/aws-sdk-go v1.44.220
 	github.com/billgraziano/dpapi v0.4.0
 	github.com/brianstrauch/cobra-shell v0.4.0
-	github.com/chromedp/chromedp v0.8.8
+	github.com/chromedp/chromedp v0.9.1
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20230117212759-138da0e5aa56
 	github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0
@@ -37,11 +37,11 @@ require (
 	github.com/confluentinc/schema-registry-sdk-go v0.0.19
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dghubble/sling v1.4.1
-	github.com/fatih/color v1.14.1
+	github.com/fatih/color v1.15.0
 	github.com/go-yaml/yaml v2.1.0+incompatible
 	github.com/gobuffalo/flect v1.0.2
 	github.com/gogo/protobuf v1.3.2
-	github.com/golang/protobuf v1.5.2
+	github.com/golang/protobuf v1.5.3
 	github.com/google/go-github/v50 v50.1.0
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/google/uuid v1.3.0
@@ -74,7 +74,7 @@ require (
 	github.com/xeipuuv/gojsonschema v1.2.0
 	golang.org/x/crypto v0.7.0
 	golang.org/x/exp v0.0.0-20230307190834-24139beb5833
-	golang.org/x/oauth2 v0.5.0
+	golang.org/x/oauth2 v0.6.0
 	golang.org/x/term v0.6.0
 	golang.org/x/text v0.8.0
 	gopkg.in/launchdarkly/go-sdk-common.v2 v2.5.1
