@@ -69,20 +69,23 @@ func newExportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Use:   "export",
 		Short: "Create an AsyncAPI specification for a Kafka cluster.",
 	}
+
 	c := &command{AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
-	c.RunE = c.export
-	c.Flags().String("file", "asyncapi-spec.yaml", "Output file name.")
-	c.Flags().String("group-id", "consumerApplication", "Consumer Group ID for getting messages.")
-	c.Flags().Bool("consume-examples", false, "Consume messages from topics for populating examples.")
-	c.Flags().String("spec-version", "1.0.0", "Version number of the output file.")
-	c.Flags().String("kafka-api-key", "", "Kafka cluster API key.")
-	c.Flags().String("schema-registry-api-key", "", "API key for Schema Registry.")
-	c.Flags().String("schema-registry-api-secret", "", "API secret for Schema Registry.")
-	c.Flags().String("schema-context", "default", "Use a specific schema context.")
+	cmd.RunE = c.export
+
+	cmd.Flags().String("file", "asyncapi-spec.yaml", "Output file name.")
+	cmd.Flags().String("group-id", "consumerApplication", "Consumer Group ID for getting messages.")
+	cmd.Flags().Bool("consume-examples", false, "Consume messages from topics for populating examples.")
+	cmd.Flags().String("spec-version", "1.0.0", "Version number of the output file.")
+	cmd.Flags().String("kafka-api-key", "", "Kafka cluster API key.")
+	cmd.Flags().String("schema-registry-api-key", "", "API key for Schema Registry.")
+	cmd.Flags().String("schema-registry-api-secret", "", "API secret for Schema Registry.")
+	cmd.Flags().String("schema-context", "default", "Use a specific schema context.")
 	pcmd.AddValueFormatFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
-	return c.Command
+
+	return cmd
 }
 
 func (c *command) export(cmd *cobra.Command, _ []string) (err error) {

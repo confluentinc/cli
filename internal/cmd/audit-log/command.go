@@ -12,10 +12,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
-type command struct {
-	*pcmd.CLICommand
-}
-
 func New(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "audit-log",
@@ -25,13 +21,11 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLoginOrOnPremLogin},
 	}
 
-	c := &command{pcmd.NewAnonymousCLICommand(cmd, prerunner)}
+	cmd.AddCommand(newDescribeCommand(prerunner))
+	cmd.AddCommand(newConfigCommand(prerunner))
+	cmd.AddCommand(newRouteCommand(prerunner))
 
-	c.AddCommand(newDescribeCommand(prerunner))
-	c.AddCommand(newConfigCommand(prerunner))
-	c.AddCommand(newRouteCommand(prerunner))
-
-	return c.Command
+	return cmd
 }
 
 type errorMessage struct {

@@ -24,8 +24,8 @@ func New(prerunner pcmd.PreRunner, isTest bool) *cobra.Command {
 		isTest:                  isTest,
 	}
 
-	c.AddCommand(c.newPaymentCommand())
-	c.AddCommand(c.newPromoCommand())
+	cmd.AddCommand(c.newPaymentCommand())
+	cmd.AddCommand(c.newPromoCommand())
 
-	return c.Command
+	return cmd
 }

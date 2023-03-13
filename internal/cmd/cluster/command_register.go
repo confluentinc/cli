@@ -28,23 +28,23 @@ func newRegisterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	}
 
 	c := &registerCommand{AuthenticatedCLICommand: pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)}
-	c.RunE = c.register
+	cmd.RunE = c.register
 
-	c.Flags().StringSlice("hosts", []string{}, "A comma-separated list of hosts.")
-	c.Flags().String("protocol", "", "Security protocol.")
-	c.Flags().String("cluster-name", "", "Cluster name.")
-	c.Flags().String("kafka-cluster", "", "Kafka cluster ID.")
-	c.Flags().String("schema-registry-cluster", "", "Schema Registry cluster ID.")
-	c.Flags().String("ksql-cluster", "", "ksqlDB cluster ID.")
-	c.Flags().String("connect-cluster", "", "Kafka Connect cluster ID.")
+	cmd.Flags().StringSlice("hosts", []string{}, "A comma-separated list of hosts.")
+	cmd.Flags().String("protocol", "", "Security protocol.")
+	cmd.Flags().String("cluster-name", "", "Cluster name.")
+	cmd.Flags().String("kafka-cluster", "", "Kafka cluster ID.")
+	cmd.Flags().String("schema-registry-cluster", "", "Schema Registry cluster ID.")
+	cmd.Flags().String("ksql-cluster", "", "ksqlDB cluster ID.")
+	cmd.Flags().String("connect-cluster", "", "Kafka Connect cluster ID.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
-	_ = c.MarkFlagRequired("cluster-name")
-	_ = c.MarkFlagRequired("kafka-cluster")
-	_ = c.MarkFlagRequired("hosts")
-	_ = c.MarkFlagRequired("protocol")
+	_ = cmd.MarkFlagRequired("cluster-name")
+	_ = cmd.MarkFlagRequired("kafka-cluster")
+	_ = cmd.MarkFlagRequired("hosts")
+	_ = cmd.MarkFlagRequired("protocol")
 
-	return c.Command
+	return cmd
 }
 
 func (c *registerCommand) register(cmd *cobra.Command, _ []string) error {

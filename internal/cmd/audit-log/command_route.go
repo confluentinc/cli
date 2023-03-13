@@ -23,10 +23,10 @@ func newRouteCommand(prerunner pcmd.PreRunner) *cobra.Command {
 
 	c := &routeCommand{pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner)}
 
-	c.AddCommand(c.newListCommand())
-	c.AddCommand(c.newLookupCommand())
+	cmd.AddCommand(c.newListCommand())
+	cmd.AddCommand(c.newLookupCommand())
 
-	return c.Command
+	return cmd
 }
 
 func (c *routeCommand) createContext() context.Context {
