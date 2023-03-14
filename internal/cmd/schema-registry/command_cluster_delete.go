@@ -15,12 +15,12 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
-func (c *clusterCommand) newDeleteCommand() *cobra.Command {
+func (c *command) newClusterDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "delete",
 		Short:       "Delete the Schema Registry cluster for this environment.",
 		Args:        cobra.NoArgs,
-		RunE:        c.delete,
+		RunE:        c.clusterDelete,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -40,7 +40,7 @@ func (c *clusterCommand) newDeleteCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *clusterCommand) delete(cmd *cobra.Command, _ []string) error {
+func (c *command) clusterDelete(cmd *cobra.Command, _ []string) error {
 	ctx := context.Background()
 
 	cluster, err := c.Context.FetchSchemaRegistryByEnvironmentId(ctx, c.EnvironmentId())

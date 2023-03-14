@@ -8,6 +8,12 @@ import (
 	v3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	"github.com/stretchr/testify/require"
 
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
+	"github.com/confluentinc/cli/internal/pkg/ccstructs"
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/config"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -61,7 +67,15 @@ func TestGetChannelDetails(t *testing.T) {
 	schema, _, _ = detailsMock.srClient.DefaultApi.GetSchemaByVersion(*new(context.Context), "subject2", "1", nil)
 	detailsMock.channelDetails.schema = &schema
 	err = c.getChannelDetails(detailsMock, flags)
-	require.Equal(t, err, fmt.Errorf("protobuf is not supported"))
+	require.Equal(t, err.Error(), protobufErrorMessage)
+}
+
+func TestHandlePrimitiveSchemas(t *testing.T) {
+	unmarshalledSchema, err := handlePrimitiveSchemas(`"string"`, fmt.Errorf("unable to unmarshal schema"))
+	require.NoError(t, err)
+	require.Equal(t, unmarshalledSchema, map[string]any{"type": "string"})
+	_, err = handlePrimitiveSchemas("Invalid_schema", fmt.Errorf("unable to marshal schema"))
+	require.Error(t, err)
 }
 
 func TestGetBindings(t *testing.T) {

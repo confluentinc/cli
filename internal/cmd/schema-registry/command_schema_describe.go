@@ -24,13 +24,13 @@ type schemaOut struct {
 	Schemas []srsdk.Schema `json:"schemas"`
 }
 
-func (c *schemaCommand) newDescribeCommand() *cobra.Command {
+func (c *command) newSchemaDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "describe [id]",
 		Short:       "Get schema either by schema ID, or by subject/version.",
 		Args:        cobra.MaximumNArgs(1),
 		PreRunE:     c.preDescribe,
-		RunE:        c.describe,
+		RunE:        c.schemaDescribe,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -55,7 +55,7 @@ func (c *schemaCommand) newDescribeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *schemaCommand) preDescribe(cmd *cobra.Command, args []string) error {
+func (c *command) preDescribe(cmd *cobra.Command, args []string) error {
 	subject, err := cmd.Flags().GetString("subject")
 	if err != nil {
 		return err
@@ -75,7 +75,7 @@ func (c *schemaCommand) preDescribe(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *schemaCommand) describe(cmd *cobra.Command, args []string) error {
+func (c *command) schemaDescribe(cmd *cobra.Command, args []string) error {
 	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err

@@ -23,7 +23,7 @@ func (c *authenticatedTopicCommand) newCreateCommandOnPrem() *cobra.Command {
 		Use:   "create <topic>",
 		Short: "Create a Kafka topic.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.onPremCreate,
+		RunE:  c.createOnPrem,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Create a topic named "my_topic" with default options for the current specified cluster (providing embedded Kafka REST Proxy endpoint).`,
@@ -49,7 +49,7 @@ func (c *authenticatedTopicCommand) newCreateCommandOnPrem() *cobra.Command {
 	return cmd
 }
 
-func (c *authenticatedTopicCommand) onPremCreate(cmd *cobra.Command, args []string) error {
+func (c *authenticatedTopicCommand) createOnPrem(cmd *cobra.Command, args []string) error {
 	topicName := args[0]
 
 	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)

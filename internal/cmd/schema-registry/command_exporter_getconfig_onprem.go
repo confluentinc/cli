@@ -6,12 +6,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func (c *exporterCommand) newGetConfigCommandOnPrem() *cobra.Command {
+func (c *command) newExporterGetConfigCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "get-config <name>",
 		Short:       "Get the configurations of the schema exporter.",
 		Args:        cobra.ExactArgs(1),
-		RunE:        c.onPremGetConfig,
+		RunE:        c.exporterGetConfigOnPrem,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 	}
 
@@ -22,7 +22,7 @@ func (c *exporterCommand) newGetConfigCommandOnPrem() *cobra.Command {
 	return cmd
 }
 
-func (c *exporterCommand) onPremGetConfig(cmd *cobra.Command, args []string) error {
+func (c *command) exporterGetConfigOnPrem(cmd *cobra.Command, args []string) error {
 	srClient, ctx, err := GetSrApiClientWithToken(cmd, c.Version, c.AuthToken())
 	if err != nil {
 		return err

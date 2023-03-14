@@ -11,6 +11,11 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
+type command struct {
+	*pcmd.AuthenticatedStateFlagCommand
+	srClient *srsdk.APIClient
+}
+
 func New(cfg *v1.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "schema-registry",
@@ -19,15 +24,21 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *c
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLoginOrOnPremLogin},
 	}
 
-	c := pcmd.NewAuthenticatedCLICommand(cmd, prerunner)
+	c := &command{srClient: srClient}
+	if cfg.IsCloudLogin() {
+		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)
+	} else {
+		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner)
+	}
 
-	c.AddCommand(newClusterCommand(cfg, prerunner, srClient))
-	c.AddCommand(newCompatibilityCommand(cfg, prerunner, srClient))
-	c.AddCommand(newConfigCommand(cfg, prerunner, srClient))
-	c.AddCommand(newExporterCommand(cfg, prerunner, srClient))
-	c.AddCommand(newSchemaCommand(cfg, prerunner, srClient))
-	c.AddCommand(newSubjectCommand(cfg, prerunner, srClient))
-	return c.Command
+	cmd.AddCommand(c.newClusterCommand(cfg))
+	cmd.AddCommand(c.newCompatibilityCommand(cfg))
+	cmd.AddCommand(c.newConfigCommand(cfg))
+	cmd.AddCommand(c.newExporterCommand(cfg))
+	cmd.AddCommand(c.newSchemaCommand(cfg))
+	cmd.AddCommand(c.newSubjectCommand(cfg))
+
+	return cmd
 }
 
 func addCompatibilityFlag(cmd *cobra.Command) {
