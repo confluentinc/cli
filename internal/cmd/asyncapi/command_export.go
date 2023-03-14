@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	ckgo "github.com/confluentinc/confluent-kafka-go/kafka"
 	schemaregistry "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/iancoleman/strcase"
@@ -18,10 +17,8 @@ import (
 
 	"github.com/confluentinc/cli/internal/cmd/kafka"
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
-	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -173,7 +170,7 @@ func (c *command) getChannelDetails(details *accountDetails, flags *flags) error
 			log.CliLogger.Warn(err)
 		}
 	}
-	details.channelDetails.bindings, err = c.getBindings(details.cluster, details.channelDetails.currentTopic)
+	details.channelDetails.bindings, err = c.getBindings(details.kafkaRest, details.clusterId, details.channelDetails.currentTopic.GetTopicName())
 	if err != nil {
 		log.CliLogger.Warnf("bindings not found: %v", err)
 	}
@@ -279,12 +276,8 @@ func (c command) getMessageExamples(consumer *ckgo.Consumer, topicName, contentT
 	return jsonMessage, nil
 }
 
-func (c *command) getBindings(cluster *ccstructs.KafkaCluster, topicDescription kafkarestv3.TopicData) (*bindings, error) {
-	kafkaREST, err := c.GetKafkaREST()
-	if err != nil {
-		return nil, err
-	}
-	configs, err := kafkaREST.CloudClient.ListKafkaTopicConfigs(cluster.GetId(), topicDescription.GetTopicName())
+func (c *command) getBindings(kafkaREST *pcmd.KafkaREST, clusterId string, topicName string) (*bindings, error) {
+	configs, err := kafkaREST.CloudClient.ListKafkaTopicConfigs(clusterId, topicName)
 	if err != nil {
 		return nil, err
 	}
@@ -324,10 +317,6 @@ func (c *command) getBindings(cluster *ccstructs.KafkaCluster, topicDescription 
 }
 
 func (c *command) getClusterDetails(details *accountDetails, flags *flags) error {
-	cluster, err := dynamicconfig.KafkaCluster(c.Context)
-	if err != nil {
-		return fmt.Errorf(`failed to find Kafka cluster: %v`, err)
-	}
 	clusterConfig, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return fmt.Errorf(`failed to find Kafka cluster: %v`, err)
@@ -350,12 +339,13 @@ func (c *command) getClusterDetails(details *accountDetails, flags *flags) error
 	if err != nil {
 		return err
 	}
-	topics, httpResp, err := kafkaREST.CloudClient.ListKafkaTopics(cluster.GetId())
+	topics, httpResp, err := kafkaREST.CloudClient.ListKafkaTopics(clusterConfig.ID)
 	if err != nil {
 		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
-	details.cluster = cluster
+	details.clusterId = clusterConfig.ID
+	details.kafkaRest = kafkaREST
 	details.topics = topics.Data
 	details.clusterCreds = clusterCreds
 	details.broker = kafkaREST.CloudClient.GetUrl()
