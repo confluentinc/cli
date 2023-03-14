@@ -63,6 +63,7 @@ type flags struct {
 
 // messageOffset is 5, as the schema ID is stored at the [1:5] bytes of a message as meta info (when valid)
 const messageOffset int = 5
+const protobufErrorMessage string = "protobuf is not supported"
 
 func newExportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
@@ -117,11 +118,11 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 					currentSubject: subject,
 				}
 				err := c.getChannelDetails(accountDetails, flags)
-				if err != nil && err == errors.New("protobuf is not supported") {
-					log.CliLogger.Info("Protobuf is not supported.")
-					continue
-				}
 				if err != nil {
+					if err.Error() == protobufErrorMessage {
+						log.CliLogger.Info(err.Error())
+						continue
+					}
 					return err
 				}
 				channelCount++
@@ -156,10 +157,10 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 func (c *command) getChannelDetails(details *accountDetails, flags *flags) error {
 	output.Printf("Adding operation: %s\n", details.channelDetails.currentTopic.GetTopicName())
 	err := details.getSchemaDetails()
-	if err == errors.New("protobuf is not supported") {
-		return err
-	}
 	if err != nil {
+		if err.Error() == protobufErrorMessage {
+			return err
+		}
 		return fmt.Errorf("failed to get schema details: %v", err)
 	}
 	if err := details.getTags(); err != nil {
