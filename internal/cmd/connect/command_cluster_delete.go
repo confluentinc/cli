@@ -11,13 +11,15 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
+	"github.com/confluentinc/cli/internal/pkg/types"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *clusterCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "delete <id>",
-		Short:             "Delete a connector.",
-		Args:              cobra.ExactArgs(1),
+		Use:               "delete <id-1> [id-2] ... [id-n]",
+		Short:             "Delete connectors.",
+		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.delete,
 		Annotations:       map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
@@ -41,26 +43,69 @@ func (c *clusterCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
-	clusterId := args[0]
 	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
 
-	connector, err := c.V2Client.GetConnectorExpansionById(clusterId, c.EnvironmentId(), kafkaCluster.ID)
+	connectorIdToName, err := c.checkExistence(cmd, kafkaCluster.ID, args)
 	if err != nil {
 		return err
 	}
 
-	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.Connector, clusterId, connector.Info.GetName())
-	if _, err := form.ConfirmDeletion(cmd, promptMsg, connector.Info.GetName()); err != nil {
+	if _, err := form.ConfirmDeletionType(cmd, resource.Connector, connectorIdToName[args[0]], args); err != nil {
 		return err
 	}
 
-	if _, err := c.V2Client.DeleteConnector(connector.Info.GetName(), c.EnvironmentId(), kafkaCluster.ID); err != nil {
-		return err
+	var errs error
+	for _, connectorId := range args {
+		if _, err := c.V2Client.DeleteConnector(connectorIdToName[connectorId], c.EnvironmentId(), kafkaCluster.ID); err != nil {
+			errs = errors.Join(errs, err)
+		} else {
+			output.Printf(errors.DeletedResourceMsg, resource.Connector, connectorId)
+		}
 	}
 
-	output.Printf(errors.DeletedResourceMsg, resource.Connector, clusterId)
-	return nil
+	return errs
+}
+
+func (c *clusterCommand) checkExistence(cmd *cobra.Command, kafkaClusterId string, args []string) (map[string]string, error) {
+	// Single
+	if len(args) == 1 {
+		if connector, err := c.V2Client.GetConnectorExpansionById(args[0], c.EnvironmentId(), kafkaClusterId); err != nil {
+			return nil, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, resource.Connector, args[0]), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.Connector))
+		} else {
+			return map[string]string{args[0]: connector.Info.GetName()}, nil
+		}
+	}
+
+	// Multiple
+	connectors, err := c.V2Client.ListConnectorsWithExpansions(c.EnvironmentId(), kafkaClusterId, "id,status")
+	if err != nil {
+		return nil, err
+	}
+
+	set := types.NewSet()
+	connectorIdToName := make(map[string]string)
+	for _, connector := range connectors {
+		set.Add(connector.Id.GetId())
+		connectorIdToName[connector.Id.GetId()] = connector.Info.GetName()
+	}
+
+	validArgs, invalidArgs := set.IntersectionAndDifference(args)
+	if force, err := cmd.Flags().GetBool("force"); err != nil {
+		return nil, err
+	} else if force && len(invalidArgs) > 0 {
+		args = validArgs
+		return connectorIdToName, nil
+	}
+
+	invalidArgsStr := utils.ArrayToCommaDelimitedStringWithAnd(invalidArgs)
+	if len(invalidArgs) == 1 {
+		return nil, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, resource.Connector, invalidArgsStr), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.Connector))
+	} else if len(invalidArgs) > 1 {
+		return nil, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, utils.Plural(resource.Connector), invalidArgsStr), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.Connector))
+	}
+
+	return connectorIdToName, nil
 }

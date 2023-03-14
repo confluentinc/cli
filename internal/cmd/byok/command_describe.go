@@ -38,7 +38,7 @@ func (c *command) newDescribeCommand() *cobra.Command {
 func (c *command) describe(cmd *cobra.Command, args []string) error {
 	key, httpResp, err := c.V2Client.GetByokKey(args[0])
 	if err != nil {
-		return errors.CatchByokKeyNotFoundError(err, httpResp)
+		return errors.CatchByokKeyNotFoundError(err, args[0], httpResp)
 	}
 
 	return c.outputByokKeyDescription(cmd, &key)
