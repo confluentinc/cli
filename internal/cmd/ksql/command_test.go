@@ -110,15 +110,11 @@ func (suite *KSQLTestSuite) SetupTest() {
 		},
 	}
 	suite.userc = &ccloudv1mock.UserInterface{
-		GetServiceAccountsFunc: func(arg0 context.Context) (users []*ccloudv1.User, e error) {
+		GetServiceAccountsFunc: func(_ context.Context) ([]*ccloudv1.User, error) {
 			return []*ccloudv1.User{suite.serviceAcct}, nil
 		},
 	}
-	suite.v2Client = &ccloudv2.Client{
-		KsqlClient: &ksqlv2.APIClient{
-			ClustersKsqldbcmV2Api: suite.ksqlc,
-		},
-	}
+	suite.v2Client = &ccloudv2.Client{KsqlClient: &ksqlv2.APIClient{ClustersKsqldbcmV2Api: suite.ksqlc}}
 }
 
 func (suite *KSQLTestSuite) newCMD() *cobra.Command {

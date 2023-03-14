@@ -85,7 +85,7 @@ func newExportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
+func (c *command) export(cmd *cobra.Command, _ []string) error {
 	flags, err := getFlags(cmd)
 	if err != nil {
 		return err

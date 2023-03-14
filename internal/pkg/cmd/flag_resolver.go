@@ -25,7 +25,7 @@ type FlagResolverImpl struct {
 }
 
 // ValueFrom reads indirect flag values such as "-" for stdin pipe or "@file.txt" @ prefix
-func (r *FlagResolverImpl) ValueFrom(source string, prompt string, secure bool) (value string, err error) {
+func (r *FlagResolverImpl) ValueFrom(source string, prompt string, secure bool) (string, error) {
 	// Interactively prompt
 	if source == "" {
 		if prompt == "" {
@@ -37,11 +37,12 @@ func (r *FlagResolverImpl) ValueFrom(source string, prompt string, secure bool) 
 			return "", ErrUnexpectedStdinPipe
 		}
 
-		_, err = fmt.Fprint(r.Out, prompt)
-		if err != nil {
+		if _, err := fmt.Fprint(r.Out, prompt); err != nil {
 			return "", err
 		}
 
+		var value string
+		var err error
 		if secure {
 			value, err = r.Prompt.ReadLineMasked()
 		} else {
@@ -51,8 +52,7 @@ func (r *FlagResolverImpl) ValueFrom(source string, prompt string, secure bool) 
 			return "", err
 		}
 
-		_, err = fmt.Fprintf(r.Out, "\n")
-		if err != nil {
+		if _, err := fmt.Fprintf(r.Out, "\n"); err != nil {
 			return "", err
 		}
 
@@ -66,7 +66,7 @@ func (r *FlagResolverImpl) ValueFrom(source string, prompt string, secure bool) 
 		} else if !yes {
 			return "", ErrNoPipe
 		}
-		value, err = r.Prompt.ReadLine()
+		value, err := r.Prompt.ReadLine()
 		if err != nil {
 			return "", err
 		}

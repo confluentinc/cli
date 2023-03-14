@@ -12,7 +12,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
-func Login(authURL string, noBrowser bool, auth0ConnectionName string) (idToken string, refreshToken string, err error) {
+func Login(authURL string, noBrowser bool, auth0ConnectionName string) (string, string, error) {
 	state, err := newState(authURL, noBrowser)
 	if err != nil {
 		return "", "", err

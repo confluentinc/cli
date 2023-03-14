@@ -29,7 +29,8 @@ func (s *cryptoSource) Int63() int64 {
 	return int64(s.Uint64() & ^uint64(1<<63))
 }
 
-func (s *cryptoSource) Uint64() (v uint64) {
+func (s *cryptoSource) Uint64() uint64 {
+	var v uint64
 	err := binary.Read(crand.Reader, binary.BigEndian, &v)
 	if err != nil {
 		log.CliLogger.Error(err)

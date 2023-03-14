@@ -140,16 +140,18 @@ var (
 				return "", "", &ccloudv1.Error{Message: "invalid user", Code: http.StatusUnauthorized}
 			}
 		},
-		GetConfluentTokenFunc: func(mdsClient *mds.APIClient, credentials *pauth.Credentials) (s string, e error) {
+		GetConfluentTokenFunc: func(_ *mds.APIClient, _ *pauth.Credentials) (string, error) {
 			return testToken1, nil
 		},
 	}
 	mockNetrcHandler = &pmock.NetrcHandler{
-		GetFileNameFunc: func() string { return netrcFile },
-		RemoveNetrcCredentialsFunc: func(isCloud bool, ctxName string) (string, error) {
+		GetFileNameFunc: func() string {
+			return netrcFile
+		},
+		RemoveNetrcCredentialsFunc: func(_ bool, _ string) (string, error) {
 			return "", nil
 		},
-		CheckCredentialExistFunc: func(isCloud bool, ctxName string) (bool, error) {
+		CheckCredentialExistFunc: func(_ bool, _ string) (bool, error) {
 			return false, nil
 		},
 	}

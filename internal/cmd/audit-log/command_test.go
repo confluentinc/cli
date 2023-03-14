@@ -311,7 +311,7 @@ func (suite *AuditConfigTestSuite) TestAuditConfigRouteLookup() {
 	assert.Equal(suite.T(), 0, len(expect))
 }
 
-func writeToTempFile(spec mds.AuditLogConfigSpec) (f *os.File, err error) {
+func writeToTempFile(spec mds.AuditLogConfigSpec) (*os.File, error) {
 	fileBytes, err := json.Marshal(spec)
 	if err != nil {
 		return nil, err
@@ -320,11 +320,10 @@ func writeToTempFile(spec mds.AuditLogConfigSpec) (f *os.File, err error) {
 	if err != nil {
 		return file, err
 	}
-	_, err = file.Write(fileBytes)
-	if err != nil {
+	if _, err := file.Write(fileBytes); err != nil {
 		return file, err
 	}
-	if err = file.Sync(); err != nil {
+	if err := file.Sync(); err != nil {
 		return file, err
 	}
 	return file, nil

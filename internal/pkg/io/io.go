@@ -72,6 +72,4 @@ func (*RealFileSystem) Copy(dst io.Writer, src io.Reader) (int64, error) { retur
 func (*RealFileSystem) Move(src string, dst string) error                { return os.Rename(src, dst) }
 func (*RealFileSystem) NewBufferedReader(rd io.Reader) Reader            { return bufio.NewReader(rd) }
 func (*RealFileSystem) IsTerminal(fd uintptr) bool                       { return isatty.IsTerminal(fd) }
-func (*RealFileSystem) Glob(pattern string) (matches []string, err error) {
-	return filepath.Glob(pattern)
-}
+func (*RealFileSystem) Glob(pattern string) ([]string, error)            { return filepath.Glob(pattern) }

@@ -212,7 +212,7 @@ func (r *PublicRepo) getMatchedReleaseNotesVersionsFromListBucketResult(name str
 	return versions
 }
 
-func (r *PublicRepo) parseMatchedReleaseNotesVersion(name, key string) (match bool, ver *version.Version) {
+func (r *PublicRepo) parseMatchedReleaseNotesVersion(name, key string) (bool, *version.Version) {
 	if !strings.HasPrefix(key, fmt.Sprintf(r.S3ReleaseNotesPrefixFmt, name)) {
 		return false, nil
 	}
