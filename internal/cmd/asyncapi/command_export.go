@@ -120,7 +120,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 				err := c.getChannelDetails(accountDetails, flags)
 				if err != nil {
 					if err.Error() == protobufErrorMessage {
-						log.CliLogger.Info("Protobuf is not supported.")
+						log.CliLogger.Info(protobufErrorMessage)
 						continue
 					}
 					return err
