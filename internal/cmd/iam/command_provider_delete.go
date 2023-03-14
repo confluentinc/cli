@@ -90,7 +90,7 @@ func (c *identityProviderCommand) checkExistence(cmd *cobra.Command, args []stri
 	if len(invalidArgs) == 1 {
 		return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, resource.IdentityProvider, invalidArgsStr), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.IdentityProvider))
 	} else if len(invalidArgs) > 1 {
-		return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, utils.Plural(resource.IdentityProvider), invalidArgsStr), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.IdentityProvider))
+		return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, resource.Plural(resource.IdentityProvider), invalidArgsStr), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.IdentityProvider))
 	}
 
 	return "", nil

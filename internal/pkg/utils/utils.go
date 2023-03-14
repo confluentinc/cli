@@ -160,10 +160,6 @@ func ArrayToCommaDelimitedStringWithAnd(arr []string) string {
 	return delimitedStr.String()
 }
 
-func Plural(str string) string {
-	return str + "s"
-}
-
 func Int32Ptr(x int32) *int32 {
 	return &x
 }

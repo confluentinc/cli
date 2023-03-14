@@ -85,7 +85,7 @@ func (c *command) checkExistence(cmd *cobra.Command, args []string) error {
 	if len(invalidArgs) == 1 {
 		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, resource.ByokKey, invalidArgsStr), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.ByokKey))
 	} else if len(invalidArgs) > 1 {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, utils.Plural(resource.ByokKey), invalidArgsStr), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.ByokKey))
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, resource.Plural(resource.ByokKey), invalidArgsStr), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.ByokKey))
 	}
 
 	return nil

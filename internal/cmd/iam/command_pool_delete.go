@@ -98,7 +98,7 @@ func (c *identityPoolCommand) checkExistence(cmd *cobra.Command, provider string
 	if len(invalidArgs) == 1 {
 		return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, resource.IdentityPool, invalidArgsStr), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.IdentityPool))
 	} else if len(invalidArgs) > 1 {
-		return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, utils.Plural(resource.IdentityPool), invalidArgsStr), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.IdentityPool))
+		return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, resource.Plural(resource.IdentityPool), invalidArgsStr), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.IdentityPool))
 	}
 
 	return "", nil

@@ -7,6 +7,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/types"
 )
 
@@ -21,7 +22,7 @@ func ValidateArgsForDeletion(cmd *cobra.Command, args []string, resourceType str
 	if len(invalidArgs) == 1 {
 		invalidArgsErrMsg = fmt.Sprintf(errors.NotFoundErrorMsg, resourceType, ArrayToCommaDelimitedStringWithAnd(invalidArgs))
 	} else if len(invalidArgs) > 1 {
-		invalidArgsErrMsg = fmt.Sprintf(errors.NotFoundErrorMsg, Plural(resourceType), ArrayToCommaDelimitedStringWithAnd(invalidArgs))
+		invalidArgsErrMsg = fmt.Sprintf(errors.NotFoundErrorMsg, resource.Plural(resourceType), ArrayToCommaDelimitedStringWithAnd(invalidArgs))
 	}
 
 	if force, err := cmd.Flags().GetBool("force"); err != nil {

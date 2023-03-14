@@ -104,7 +104,7 @@ func (c *clusterCommand) checkExistence(cmd *cobra.Command, kafkaClusterId strin
 	if len(invalidArgs) == 1 {
 		return nil, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, resource.Connector, invalidArgsStr), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.Connector))
 	} else if len(invalidArgs) > 1 {
-		return nil, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, utils.Plural(resource.Connector), invalidArgsStr), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.Connector))
+		return nil, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, resource.Plural(resource.Connector), invalidArgsStr), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.Connector))
 	}
 
 	return connectorIdToName, nil

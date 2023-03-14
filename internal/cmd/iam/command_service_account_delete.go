@@ -100,7 +100,7 @@ func (c *serviceAccountCommand) checkExistence(cmd *cobra.Command, args []string
 	if len(invalidArgs) == 1 {
 		return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, resource.ServiceAccount, invalidArgsStr), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.ServiceAccount))
 	} else if len(invalidArgs) > 1 {
-		return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, utils.Plural(resource.ServiceAccount), invalidArgsStr), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.ServiceAccount))
+		return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, resource.Plural(resource.ServiceAccount), invalidArgsStr), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.ServiceAccount))
 	}
 
 	return "", nil
