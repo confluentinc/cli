@@ -68,3 +68,20 @@ func LookupType(resourceId string) string {
 
 	return Unknown
 }
+
+func Plural(resource string) string {
+	if resource == "" {
+		return ""
+	}
+
+	if last := string(resource[len(resource) - 1]); last == "s" || last == "x" || last == "z" {
+		return resource + "es"
+	}
+	if len(resource) > 1 {
+		if lastTwo := string(resource[len(resource) - 2:]); lastTwo == "ch" || lastTwo == "sh" {
+			return resource + "es"
+		}
+	}
+
+	return resource + "s"
+}
