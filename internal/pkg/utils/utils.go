@@ -140,6 +140,30 @@ func ArrayToCommaDelimitedString(arr []string) string {
 	return delimitedStr.String()
 }
 
+func ArrayToCommaDelimitedStringWithAnd(arr []string) string {
+	size := len(arr)
+	switch size {
+	case 0:
+		return ""
+	case 1:
+		return fmt.Sprintf(`"%s"`, arr[0])
+	case 2:
+		return fmt.Sprintf(`"%s" and "%s"`, arr[0], arr[1])
+	}
+
+	var delimitedStr strings.Builder
+	for _, v := range arr[:size-1] {
+		delimitedStr.WriteString(fmt.Sprintf(`"%s", `, v))
+	}
+	delimitedStr.WriteString(fmt.Sprintf(`and "%s"`, arr[size-1]))
+
+	return delimitedStr.String()
+}
+
+func Plural(str string) string {
+	return str + "s"
+}
+
 func Int32Ptr(x int32) *int32 {
 	return &x
 }
