@@ -8,12 +8,12 @@ import (
 	"sort"
 	"strings"
 
-	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	"github.com/imdario/mergo"
+
+	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
 	warn "github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/types"
-
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 

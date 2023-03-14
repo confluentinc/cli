@@ -6,9 +6,9 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/confluentinc/cli/internal/pkg/errors"
-
 	"github.com/hashicorp/go-version" // This "version" alias is require for go:generate go run github.com/travisjeffery/mocker/cmd/mocker to work
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 // ObjectKey represents an S3 Key for a versioned package
