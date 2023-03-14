@@ -8,12 +8,6 @@ import (
 	v3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	"github.com/stretchr/testify/require"
 
-	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
-	"github.com/confluentinc/cli/internal/pkg/ccstructs"
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 

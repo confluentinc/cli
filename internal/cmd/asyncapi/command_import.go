@@ -119,7 +119,7 @@ func newImportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	}
 	c := &command{AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
 	c.RunE = c.parse
-	c.Flags().Bool("overwrite", false, "overwrite existing topics and schemas")
+	c.Flags().Bool("overwrite", false, "Overwrite existing topics and schemas.")
 	c.Flags().String("kafka-api-key", "", "Kafka cluster API key.")
 	c.Flags().String("schema-registry-api-key", "", "API key for Schema Registry.")
 	c.Flags().String("schema-registry-api-secret", "", "API secret for Schema Registry.")
