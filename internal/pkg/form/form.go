@@ -137,7 +137,7 @@ func ConfirmDeletionYesNo(cmd *cobra.Command, resourceType string, idList []stri
 	if len(idList) == 1 {
 		promptMsg = fmt.Sprintf(errors.DeleteResourceConfirmYesNoMsg, resourceType, idList[0])
 	} else {
-		promptMsg = fmt.Sprintf(errors.DeleteResourcesConfirmYesNoMsg, resourceType, utils.ArrayToCommaDelimitedStringWithAnd(idList))
+		promptMsg = fmt.Sprintf(errors.DeleteResourcesConfirmYesNoMsg, resourceType, utils.ArrayToCommaDelimitedString(idList, "and"))
 	}
 
 	return ConfirmDeletionYesNoCustomPrompt(cmd, promptMsg)

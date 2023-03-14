@@ -100,7 +100,7 @@ func (c *clusterCommand) checkExistence(cmd *cobra.Command, kafkaClusterId strin
 		return connectorIdToName, nil
 	}
 
-	invalidArgsStr := utils.ArrayToCommaDelimitedStringWithAnd(invalidArgs)
+	invalidArgsStr := utils.ArrayToCommaDelimitedString(invalidArgs, "and")
 	if len(invalidArgs) == 1 {
 		return nil, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, resource.Connector, invalidArgsStr), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.Connector))
 	} else if len(invalidArgs) > 1 {

@@ -40,7 +40,7 @@ func (c *clusterCommand) newEnableCommand(cfg *v1.Config) *cobra.Command {
 	}
 
 	pcmd.AddCloudFlag(cmd)
-	cmd.Flags().String("geo", "", fmt.Sprintf("Specify the geo as %s.", utils.ArrayToCommaDelimitedString(availableGeos)))
+	cmd.Flags().String("geo", "", fmt.Sprintf("Specify the geo as %s.", utils.ArrayToCommaDelimitedString(availableGeos, "or")))
 	addPackageFlag(cmd, essentialsPackage)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {

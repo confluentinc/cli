@@ -94,7 +94,7 @@ func (c *identityPoolCommand) checkExistence(cmd *cobra.Command, provider string
 		return "", nil
 	}
 
-	invalidArgsStr := utils.ArrayToCommaDelimitedStringWithAnd(invalidArgs)
+	invalidArgsStr := utils.ArrayToCommaDelimitedString(invalidArgs, "and")
 	if len(invalidArgs) == 1 {
 		return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, resource.IdentityPool, invalidArgsStr), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.IdentityPool))
 	} else if len(invalidArgs) > 1 {

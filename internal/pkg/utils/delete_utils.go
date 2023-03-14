@@ -20,9 +20,9 @@ func ValidateArgsForDeletion(cmd *cobra.Command, args []string, resourceType str
 	validArgs, invalidArgs := set.IntersectionAndDifference(args)
 	var invalidArgsErrMsg string
 	if len(invalidArgs) == 1 {
-		invalidArgsErrMsg = fmt.Sprintf(errors.NotFoundErrorMsg, resourceType, ArrayToCommaDelimitedStringWithAnd(invalidArgs))
+		invalidArgsErrMsg = fmt.Sprintf(errors.NotFoundErrorMsg, resourceType, ArrayToCommaDelimitedString(invalidArgs, "and"))
 	} else if len(invalidArgs) > 1 {
-		invalidArgsErrMsg = fmt.Sprintf(errors.NotFoundErrorMsg, resource.Plural(resourceType), ArrayToCommaDelimitedStringWithAnd(invalidArgs))
+		invalidArgsErrMsg = fmt.Sprintf(errors.NotFoundErrorMsg, resource.Plural(resourceType), ArrayToCommaDelimitedString(invalidArgs, "and"))
 	}
 
 	if force, err := cmd.Flags().GetBool("force"); err != nil {

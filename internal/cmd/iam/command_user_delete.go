@@ -88,7 +88,7 @@ func (c *userCommand) checkExistence(cmd *cobra.Command, args []string) (string,
 		return "", nil
 	}
 
-	invalidArgsStr := utils.ArrayToCommaDelimitedStringWithAnd(invalidArgs)
+	invalidArgsStr := utils.ArrayToCommaDelimitedString(invalidArgs, "and")
 	if len(invalidArgs) == 1 {
 		return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, resource.User, invalidArgsStr), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.User))
 	} else if len(invalidArgs) > 1 {

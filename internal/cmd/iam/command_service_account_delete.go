@@ -96,7 +96,7 @@ func (c *serviceAccountCommand) checkExistence(cmd *cobra.Command, args []string
 		return "", nil
 	}
 
-	invalidArgsStr := utils.ArrayToCommaDelimitedStringWithAnd(invalidArgs)
+	invalidArgsStr := utils.ArrayToCommaDelimitedString(invalidArgs, "and")
 	if len(invalidArgs) == 1 {
 		return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, resource.ServiceAccount, invalidArgsStr), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.ServiceAccount))
 	} else if len(invalidArgs) > 1 {
