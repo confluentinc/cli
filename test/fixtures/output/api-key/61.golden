@@ -1,4 +1,4 @@
-Error: API key(s) not found or access forbidden: "MYKEY13" and "MYKEY14"
+Error: API keys not found: "MYKEY13" and "MYKEY14"
 
 Suggestions:
-    Ensure the API key exists and has not been deleted, or create a new API key via `confluent api-key create`.
+    Use the `--force` flag to suppress this error and delete the remaining API keys entered. This flag will also bypass the confirmation prompt.

@@ -60,8 +60,8 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 func (c *command) checkExistence(cmd *cobra.Command, args []string) error {
 	// Single
 	if len(args) == 1 {
-		if _, httpResp, err := c.V2Client.GetApiKey(args[0]); err != nil {
-			return errors.CatchApiKeyForbiddenAccessError(err, getOperation, args[0], httpResp)
+		if _, _, err := c.V2Client.GetApiKey(args[0]); err != nil {
+			return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, resource.ApiKey, args[0]), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.ApiKey))
 		}
 		return nil
 	}
@@ -72,14 +72,24 @@ func (c *command) checkExistence(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	apiKeySet := types.NewSet()
+	set := types.NewSet()
 	for _, apiKey := range apiKeys {
-		apiKeySet.Add(apiKey.GetId())
+		set.Add(apiKey.GetId())
 	}
 
-	invalidKeys := apiKeySet.Difference(args)
-	if len(invalidKeys) > 0 {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.AccessForbiddenErrorMsg, resource.ApiKey, utils.ArrayToCommaDelimitedStringWithAnd(invalidKeys)), errors.APIKeyNotFoundSuggestions)
+	validArgs, invalidArgs := set.IntersectionAndDifference(args)
+	if force, err := cmd.Flags().GetBool("force"); err != nil {
+		return err
+	} else if force && len(invalidArgs) > 0 {
+		args = validArgs
+		return nil
+	}
+
+	invalidArgsStr := utils.ArrayToCommaDelimitedStringWithAnd(invalidArgs)
+	if len(invalidArgs) == 1 {
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, resource.ApiKey, invalidArgsStr), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.ApiKey))
+	} else if len(invalidArgs) > 1 {
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, utils.Plural(resource.ApiKey), invalidArgsStr), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.ApiKey))
 	}
 
 	return nil

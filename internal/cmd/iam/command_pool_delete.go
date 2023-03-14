@@ -69,7 +69,7 @@ func (c *identityPoolCommand) checkExistence(cmd *cobra.Command, provider string
 	// Single
 	if len(args) == 1 {
 		if pool, err := c.V2Client.GetIdentityPool(args[0], provider); err != nil {
-			return "", err
+			return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, resource.IdentityPool, args[0]), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.IdentityPool))
 		} else {
 			return pool.GetDisplayName(), nil
 		}
@@ -81,14 +81,24 @@ func (c *identityPoolCommand) checkExistence(cmd *cobra.Command, provider string
 		return "", err
 	}
 
-	poolSet := types.NewSet()
+	set := types.NewSet()
 	for _, pool := range identityPools {
-		poolSet.Add(pool.GetId())
+		set.Add(pool.GetId())
 	}
 
-	invalidPools := poolSet.Difference(args)
-	if len(invalidPools) > 0 {
-		return "", errors.New(fmt.Sprintf(errors.AccessForbiddenErrorMsg, resource.IdentityPool, utils.ArrayToCommaDelimitedStringWithAnd(invalidPools)))
+	validArgs, invalidArgs := set.IntersectionAndDifference(args)
+	if force, err := cmd.Flags().GetBool("force"); err != nil {
+		return "", err
+	} else if force && len(invalidArgs) > 0 {
+		args = validArgs
+		return "", nil
+	}
+
+	invalidArgsStr := utils.ArrayToCommaDelimitedStringWithAnd(invalidArgs)
+	if len(invalidArgs) == 1 {
+		return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, resource.IdentityPool, invalidArgsStr), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.IdentityPool))
+	} else if len(invalidArgs) > 1 {
+		return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, utils.Plural(resource.IdentityPool), invalidArgsStr), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.IdentityPool))
 	}
 
 	return "", nil

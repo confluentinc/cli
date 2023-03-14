@@ -1,6 +1,8 @@
 package context
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -51,20 +53,30 @@ func (c *command) checkExistence(cmd *cobra.Command, args []string) error {
 	// Single
 	if len(args) == 1 {
 		if _, err := c.Config.FindContext(args[0]); err != nil {
-			return err
+			return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, resource.Context, args[0]), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.Context))
 		}
 		return nil
 	}
 
 	// Multiple
-	contextSet := types.NewSet()
+	set := types.NewSet()
 	for _, context := range c.Config.Contexts {
-		contextSet.Add(context.Name)
+		set.Add(context.Name)
 	}
 
-	invalidContexts := contextSet.Difference(args)
-	if len(invalidContexts) > 0 {
-		return errors.New("context(s) not found: " + utils.ArrayToCommaDelimitedStringWithAnd(invalidContexts))
+	validArgs, invalidArgs := set.IntersectionAndDifference(args)
+	if force, err := cmd.Flags().GetBool("force"); err != nil {
+		return err
+	} else if force && len(invalidArgs) > 0 {
+		args = validArgs
+		return nil
+	}
+
+	invalidArgsStr := utils.ArrayToCommaDelimitedStringWithAnd(invalidArgs)
+	if len(invalidArgs) == 1 {
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, resource.Context, invalidArgsStr), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.Context))
+	} else if len(invalidArgs) > 1 {
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, utils.Plural(resource.Context), invalidArgsStr), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.Context))
 	}
 
 	return nil

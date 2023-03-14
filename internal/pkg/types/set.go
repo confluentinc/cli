@@ -22,14 +22,16 @@ func (s Set) Slice() []string {
 	return GetKeys(s)
 }
 
-// Returns the elements of list which are not contained in set s
-func (s Set) Difference(list []string) []string {
-	var remainingElements []string
+// Returns the elements of list which are contained in set s (intersection) and which aren't (difference)
+func (s Set) IntersectionAndDifference(list []string) ([]string, []string) {
+	var commonElements, remainingElements []string
 	for _, element := range list {
-		if !s.Contains(element) {
+		if s.Contains(element) {
+			commonElements = append(commonElements, element)
+		} else {
 			remainingElements = append(remainingElements, element)
 		}
 	}
 
-	return remainingElements
+	return commonElements, remainingElements
 }

@@ -56,8 +56,8 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 func (c *command) checkExistence(cmd *cobra.Command, args []string) error {
 	// Single
 	if len(args) == 1 {
-		if _, httpResp, err := c.V2Client.GetByokKey(args[0]); err != nil {
-			return errors.CatchByokKeyNotFoundError(err, args[0], httpResp)
+		if _, _, err := c.V2Client.GetByokKey(args[0]); err != nil {
+			return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, resource.ByokKey, args[0]), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.ByokKey))
 		}
 		return nil
 	}
@@ -68,14 +68,24 @@ func (c *command) checkExistence(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	keySet := types.NewSet()
+	set := types.NewSet()
 	for _, key := range keys {
-		keySet.Add(key.GetId())
+		set.Add(key.GetId())
 	}
 
-	invalidKeys := keySet.Difference(args)
-	if len(invalidKeys) > 0 {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.AccessForbiddenErrorMsg, resource.ByokKey, utils.ArrayToCommaDelimitedStringWithAnd(invalidKeys)), errors.ByokKeyNotFoundSuggestions)
+	validArgs, invalidArgs := set.IntersectionAndDifference(args)
+	if force, err := cmd.Flags().GetBool("force"); err != nil {
+		return err
+	} else if force && len(invalidArgs) > 0 {
+		args = validArgs
+		return nil
+	}
+
+	invalidArgsStr := utils.ArrayToCommaDelimitedStringWithAnd(invalidArgs)
+	if len(invalidArgs) == 1 {
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, resource.ByokKey, invalidArgsStr), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.ByokKey))
+	} else if len(invalidArgs) > 1 {
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, utils.Plural(resource.ByokKey), invalidArgsStr), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.ByokKey))
 	}
 
 	return nil

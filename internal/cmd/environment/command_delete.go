@@ -63,8 +63,8 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 func (c *command) checkExistence(cmd *cobra.Command, args []string) (string, error) {
 	// Single
 	if len(args) == 1 {
-		if environment, httpResp, err := c.V2Client.GetOrgEnvironment(args[0]); err != nil {
-			return "", errors.CatchOrgV2ResourceNotFoundError(err, resource.Environment, httpResp)
+		if environment, _, err := c.V2Client.GetOrgEnvironment(args[0]); err != nil {
+			return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, resource.Environment, args[0]), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.Environment))
 		} else {
 			return environment.GetDisplayName(), nil
 		}
@@ -76,14 +76,24 @@ func (c *command) checkExistence(cmd *cobra.Command, args []string) (string, err
 		return "", err
 	}
 
-	environmentSet := types.NewSet()
+	set := types.NewSet()
 	for _, environment := range environments {
-		environmentSet.Add(environment.GetId())
+		set.Add(environment.GetId())
 	}
 
-	invalidEnvironments := environmentSet.Difference(args)
-	if len(invalidEnvironments) > 0 {
-		return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.AccessForbiddenErrorMsg, resource.Environment, utils.ArrayToCommaDelimitedStringWithAnd(invalidEnvironments)), fmt.Sprintf(errors.OrgResourceNotFoundSuggestions, resource.Environment))
+	validArgs, invalidArgs := set.IntersectionAndDifference(args)
+	if force, err := cmd.Flags().GetBool("force"); err != nil {
+		return "", err
+	} else if force && len(invalidArgs) > 0 {
+		args = validArgs
+		return "", nil
+	}
+
+	invalidArgsStr := utils.ArrayToCommaDelimitedStringWithAnd(invalidArgs)
+	if len(invalidArgs) == 1 {
+		return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, resource.Environment, invalidArgsStr), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.Environment))
+	} else if len(invalidArgs) > 1 {
+		return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, utils.Plural(resource.Environment), invalidArgsStr), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.Environment))
 	}
 
 	return "", nil

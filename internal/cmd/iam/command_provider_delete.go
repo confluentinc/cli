@@ -61,7 +61,7 @@ func (c *identityProviderCommand) checkExistence(cmd *cobra.Command, args []stri
 	// Single
 	if len(args) == 1 {
 		if provider, err := c.V2Client.GetIdentityProvider(args[0]); err != nil {
-			return "", err
+			return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, resource.IdentityProvider, args[0]), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.IdentityProvider))
 		} else {
 			return provider.GetDisplayName(), nil
 		}
@@ -73,14 +73,24 @@ func (c *identityProviderCommand) checkExistence(cmd *cobra.Command, args []stri
 		return "", err
 	}
 
-	providerSet := types.NewSet()
+	set := types.NewSet()
 	for _, provider := range identityProviders {
-		providerSet.Add(provider.GetId())
+		set.Add(provider.GetId())
 	}
 
-	invalidProviders := providerSet.Difference(args)
-	if len(invalidProviders) > 0 {
-		return "", errors.New(fmt.Sprintf(errors.AccessForbiddenErrorMsg, resource.IdentityProvider, utils.ArrayToCommaDelimitedStringWithAnd(invalidProviders)))
+	validArgs, invalidArgs := set.IntersectionAndDifference(args)
+	if force, err := cmd.Flags().GetBool("force"); err != nil {
+		return "", err
+	} else if force && len(invalidArgs) > 0 {
+		args = validArgs
+		return "", nil
+	}
+
+	invalidArgsStr := utils.ArrayToCommaDelimitedStringWithAnd(invalidArgs)
+	if len(invalidArgs) == 1 {
+		return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, resource.IdentityProvider, invalidArgsStr), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.IdentityProvider))
+	} else if len(invalidArgs) > 1 {
+		return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, utils.Plural(resource.IdentityProvider), invalidArgsStr), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.IdentityProvider))
 	}
 
 	return "", nil

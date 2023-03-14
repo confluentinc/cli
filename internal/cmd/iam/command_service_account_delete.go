@@ -70,8 +70,8 @@ func (c *serviceAccountCommand) delete(cmd *cobra.Command, args []string) error 
 func (c *serviceAccountCommand) checkExistence(cmd *cobra.Command, args []string) (string, error) {
 	// Single
 	if len(args) == 1 {
-		if serviceAccount, httpResp, err := c.V2Client.GetIamServiceAccount(args[0]); err != nil {
-			return "", errors.CatchServiceAccountNotFoundError(err, httpResp, args[0])
+		if serviceAccount, _, err := c.V2Client.GetIamServiceAccount(args[0]); err != nil {
+			return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, resource.ServiceAccount, args[0]), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.ServiceAccount))
 		} else {
 			return serviceAccount.GetDisplayName(), nil
 		}
@@ -83,14 +83,24 @@ func (c *serviceAccountCommand) checkExistence(cmd *cobra.Command, args []string
 		return "", err
 	}
 
-	serviceAccountSet := types.NewSet()
+	set := types.NewSet()
 	for _, serviceAccount := range serviceAccounts {
-		serviceAccountSet.Add(serviceAccount.GetId())
+		set.Add(serviceAccount.GetId())
 	}
 
-	invalidServiceAccounts := serviceAccountSet.Difference(args)
-	if len(invalidServiceAccounts) > 0 {
-		return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.AccessForbiddenErrorMsg, resource.ServiceAccount, utils.ArrayToCommaDelimitedStringWithAnd(invalidServiceAccounts)), errors.ServiceAccountNotFoundSuggestions)
+	validArgs, invalidArgs := set.IntersectionAndDifference(args)
+	if force, err := cmd.Flags().GetBool("force"); err != nil {
+		return "", err
+	} else if force && len(invalidArgs) > 0 {
+		args = validArgs
+		return "", nil
+	}
+
+	invalidArgsStr := utils.ArrayToCommaDelimitedStringWithAnd(invalidArgs)
+	if len(invalidArgs) == 1 {
+		return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, resource.ServiceAccount, invalidArgsStr), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.ServiceAccount))
+	} else if len(invalidArgs) > 1 {
+		return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, utils.Plural(resource.ServiceAccount), invalidArgsStr), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.ServiceAccount))
 	}
 
 	return "", nil

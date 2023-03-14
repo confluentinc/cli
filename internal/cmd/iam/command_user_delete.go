@@ -63,7 +63,7 @@ func (c *userCommand) checkExistence(cmd *cobra.Command, args []string) (string,
 	// Single
 	if len(args) == 1 {
 		if user, err := c.V2Client.GetIamUserById(args[0]); err != nil {
-			return "", err
+			return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, resource.User, args[0]), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.User))
 		} else {
 			return user.GetFullName(), nil
 		}
@@ -75,14 +75,24 @@ func (c *userCommand) checkExistence(cmd *cobra.Command, args []string) (string,
 		return "", err
 	}
 
-	userSet := types.NewSet()
+	set := types.NewSet()
 	for _, user := range users {
-		userSet.Add(user.GetId())
+		set.Add(user.GetId())
 	}
 
-	invalidUsers := userSet.Difference(args)
-	if len(invalidUsers) > 0 {
-		return "", errors.New(fmt.Sprintf(errors.AccessForbiddenErrorMsg, resource.User, utils.ArrayToCommaDelimitedStringWithAnd(invalidUsers)))
+	validArgs, invalidArgs := set.IntersectionAndDifference(args)
+	if force, err := cmd.Flags().GetBool("force"); err != nil {
+		return "", err
+	} else if force && len(invalidArgs) > 0 {
+		args = validArgs
+		return "", nil
+	}
+
+	invalidArgsStr := utils.ArrayToCommaDelimitedStringWithAnd(invalidArgs)
+	if len(invalidArgs) == 1 {
+		return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, resource.User, invalidArgsStr), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.User))
+	} else if len(invalidArgs) > 1 {
+		return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, utils.Plural(resource.User), invalidArgsStr), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.User))
 	}
 
 	return "", nil

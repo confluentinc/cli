@@ -1,6 +1,8 @@
 package connect
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -46,34 +48,34 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	connectorNames, err := c.checkExistence(cmd, kafkaCluster.ID, args)
+	connectorIdToName, err := c.checkExistence(cmd, kafkaCluster.ID, args)
 	if err != nil {
 		return err
 	}
 
-	if _, err := form.ConfirmDeletionType(cmd, resource.Connector, connectorNames[0], args); err != nil {
+	if _, err := form.ConfirmDeletionType(cmd, resource.Connector, connectorIdToName[args[0]], args); err != nil {
 		return err
 	}
 
 	var errs error
-	for i, connectorName := range connectorNames {
-		if _, err := c.V2Client.DeleteConnector(connectorName, c.EnvironmentId(), kafkaCluster.ID); err != nil {
+	for _, connectorId := range args {
+		if _, err := c.V2Client.DeleteConnector(connectorIdToName[connectorId], c.EnvironmentId(), kafkaCluster.ID); err != nil {
 			errs = errors.Join(errs, err)
 		} else {
-			output.Printf(errors.DeletedResourceMsg, resource.Connector, args[i])
+			output.Printf(errors.DeletedResourceMsg, resource.Connector, connectorId)
 		}
 	}
 
 	return errs
 }
 
-func (c *clusterCommand) checkExistence(cmd *cobra.Command, kafkaClusterId string, args []string) ([]string, error) {
+func (c *clusterCommand) checkExistence(cmd *cobra.Command, kafkaClusterId string, args []string) (map[string]string, error) {
 	// Single
 	if len(args) == 1 {
 		if connector, err := c.V2Client.GetConnectorExpansionById(args[0], c.EnvironmentId(), kafkaClusterId); err != nil {
-			return nil, err
+			return nil, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, resource.Connector, args[0]), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.Connector))
 		} else {
-			return []string{connector.Info.GetName()}, nil
+			return map[string]string{args[0]: connector.Info.GetName()}, nil
 		}
 	}
 
@@ -83,19 +85,27 @@ func (c *clusterCommand) checkExistence(cmd *cobra.Command, kafkaClusterId strin
 		return nil, err
 	}
 
-	connectorSet := types.NewSet()
-	connectorNames := make([]string, len(connectors))
-	i := 0
+	set := types.NewSet()
+	connectorIdToName := make(map[string]string)
 	for _, connector := range connectors {
-		connectorSet.Add(connector.Id.GetId())
-		connectorNames[i] = connector.Info.GetName()
-		i++
+		set.Add(connector.Id.GetId())
+		connectorIdToName[connector.Id.GetId()] = connector.Info.GetName()
 	}
 
-	invalidConnectors := connectorSet.Difference(args)
-	if len(invalidConnectors) > 0 {
-		return nil, errors.New("unknown connector ID(s): " + utils.ArrayToCommaDelimitedStringWithAnd(invalidConnectors))
+	validArgs, invalidArgs := set.IntersectionAndDifference(args)
+	if force, err := cmd.Flags().GetBool("force"); err != nil {
+		return nil, err
+	} else if force && len(invalidArgs) > 0 {
+		args = validArgs
+		return connectorIdToName, nil
 	}
 
-	return connectorNames, nil
+	invalidArgsStr := utils.ArrayToCommaDelimitedStringWithAnd(invalidArgs)
+	if len(invalidArgs) == 1 {
+		return nil, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, resource.Connector, invalidArgsStr), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.Connector))
+	} else if len(invalidArgs) > 1 {
+		return nil, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, utils.Plural(resource.Connector), invalidArgsStr), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.Connector))
+	}
+
+	return connectorIdToName, nil
 }
