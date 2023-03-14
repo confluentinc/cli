@@ -16,7 +16,7 @@ import (
 
 func (c *userCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delete <id-1> [id-2] ... [id-N]",
+		Use:   "delete <id-1> [id-2] ... [id-n]",
 		Short: "Delete users from your organization.",
 		Args:  cobra.MinimumNArgs(1),
 		RunE:  c.delete,

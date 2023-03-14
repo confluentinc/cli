@@ -17,7 +17,7 @@ import (
 
 func (c *clusterCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "delete <id-1> [id-2] ... [id-N]",
+		Use:               "delete <id-1> [id-2] ... [id-n]",
 		Short:             "Delete connectors.",
 		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
