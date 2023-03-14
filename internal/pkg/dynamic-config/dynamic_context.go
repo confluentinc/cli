@@ -6,6 +6,7 @@ import (
 	"time"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+	srcmv2 "github.com/confluentinc/ccloud-sdk-go-v2/srcm/v2"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
@@ -296,10 +297,10 @@ func missingDetails(cluster *v1.SchemaRegistryCluster) bool {
 	return cluster.SchemaRegistryEndpoint == "" || cluster.Id == ""
 }
 
-func makeSRCluster(cluster *ccloudv1.SchemaRegistryCluster) *v1.SchemaRegistryCluster {
+func makeSRCluster(cluster *srcmv2.SrcmV2Cluster) *v1.SchemaRegistryCluster {
 	return &v1.SchemaRegistryCluster{
 		Id:                     cluster.GetId(),
-		SchemaRegistryEndpoint: cluster.GetEndpoint(),
+		SchemaRegistryEndpoint: cluster.Spec.GetHttpEndpoint(),
 		SrCredentials:          nil, // For now.
 	}
 }

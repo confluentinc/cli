@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+	srcmv2 "github.com/confluentinc/ccloud-sdk-go-v2/srcm/v2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
@@ -52,31 +52,23 @@ func (d *DynamicContext) FetchAPIKeyError(apiKey string, clusterID string) error
 	return &errors.UnconfiguredAPISecretError{APIKey: apiKey, ClusterID: clusterID}
 }
 
-func (d *DynamicContext) FetchSchemaRegistryByEnvironmentId(context context.Context, accountId string) (*ccloudv1.SchemaRegistryCluster, error) {
-	existingClusters, err := d.Client.SchemaRegistry.GetSchemaRegistryClusters(context, &ccloudv1.SchemaRegistryCluster{
-		AccountId: accountId,
-		Name:      "account schema-registry",
-	})
+func (d *DynamicContext) FetchSchemaRegistryByEnvironmentId(context context.Context, accountId string) (*srcmv2.SrcmV2Cluster, error) {
+	existingClusters, err := d.V2Client.ListSchemaRegistryClusters(accountId)
 	if err != nil {
 		return nil, err
 	}
-	if len(existingClusters) > 0 {
-		return existingClusters[0], nil
+	for _, cluster := range existingClusters {
+		if cluster.Spec.GetDisplayName() == "account schema-registry" { // ?
+			return &cluster, nil
+		}
 	}
 	return nil, errors.NewSRNotEnabledError()
 }
 
-func (d *DynamicContext) FetchSchemaRegistryById(context context.Context, id string, accountId string) (*ccloudv1.SchemaRegistryCluster, error) {
-	existingCluster, err := d.Client.SchemaRegistry.GetSchemaRegistryCluster(context, &ccloudv1.SchemaRegistryCluster{
-		Id:        id,
-		AccountId: accountId,
-	})
+func (d *DynamicContext) FetchSchemaRegistryById(context context.Context, id string, accountId string) (*srcmv2.SrcmV2Cluster, error) {
+	existingCluster, httpResp, err := d.V2Client.GetSchemaRegistryCluster(id, accountId)
 	if err != nil {
-		return nil, err
+		return nil, errors.CatchCCloudV2Error(err, httpResp)
 	}
-	if existingCluster == nil {
-		return nil, errors.NewSRNotEnabledError()
-	} else {
-		return existingCluster, nil
-	}
+	return &existingCluster, nil
 }

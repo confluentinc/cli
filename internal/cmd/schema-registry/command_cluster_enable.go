@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+	srcmv2 "github.com/confluentinc/ccloud-sdk-go-v2/srcm/v2"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -77,25 +78,25 @@ func (c *command) clusterEnable(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	packageInternalName, err := getPackageInternalName(packageDisplayName)
-	if err != nil {
-		return err
-	}
-
 	// Build the SR instance
 	clusterConfig := &ccloudv1.SchemaRegistryClusterConfig{
-		AccountId:       c.EnvironmentId(),
-		Location:        location,
-		ServiceProvider: cloud,
-		Package:         packageInternalName,
-		// Name is a special string that everyone expects. Originally, this field was added to support
-		// multiple SR instances, but for now there's a contract between our services that it will be
-		// this hardcoded string constant
-		Name: "account schema-registry",
+		Location:        location, // us
+		ServiceProvider: cloud,    // gcp
+	}
+
+	createCluster := srcmv2.SrcmV2Cluster{
+		Spec: &srcmv2.SrcmV2ClusterSpec{
+			DisplayName: srcmv2.PtrString("account schema-registry"),
+			Environment: &srcmv2.GlobalObjectReference{
+				Id: c.EnvironmentId(),
+			},
+			Package: srcmv2.PtrString(strings.ToUpper(packageDisplayName)),
+		},
 	}
 
 	var out *enableOut
-	newCluster, err := c.Client.SchemaRegistry.CreateSchemaRegistryCluster(ctx, clusterConfig)
+	// newCluster, err := c.Client.SchemaRegistry.CreateSchemaRegistryCluster(ctx, clusterConfig)
+	newCluster, httpResp, err := c.V2Client.CreateSchemaRegistryCluster(createCluster)
 	if err != nil {
 		// If it already exists, return the existing one
 		existingCluster, getExistingErr := c.Context.FetchSchemaRegistryByEnvironmentId(ctx, c.EnvironmentId())
