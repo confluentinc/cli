@@ -77,7 +77,7 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func print(cmd *cobra.Command, pipeline streamdesignerv1.SdV1Pipeline) error {
+func printTable(cmd *cobra.Command, pipeline streamdesignerv1.SdV1Pipeline) error {
 	table := output.NewTable(cmd)
 	secrets := getOrderedSecretNames(pipeline.Spec.Secrets)
 

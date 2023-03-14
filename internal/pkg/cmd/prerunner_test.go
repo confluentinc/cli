@@ -443,7 +443,7 @@ func TestPrerun_AutoLogin(t *testing.T) {
 				GetCCloudTokensFunc: func(_ pauth.CCloudClientFactory, _ string, _ *pauth.Credentials, _ bool, _ string) (string, string, error) {
 					return validAuthToken, "", nil
 				},
-				GetConfluentTokenFunc: func(mdsClient *mds.APIClient, credentials *pauth.Credentials) (s string, e error) {
+				GetConfluentTokenFunc: func(_ *mds.APIClient, _ *pauth.Credentials) (string, error) {
 					return validAuthToken, nil
 				},
 			}
@@ -480,7 +480,7 @@ func TestPrerun_AutoLogin(t *testing.T) {
 					}
 				},
 				GetOnPremPrerunCredentialsFromNetrcFunc: func(_ *cobra.Command, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
-					return func() (credentials *pauth.Credentials, e error) {
+					return func() (*pauth.Credentials, error) {
 						confluentNetrcCalled = true
 						return tt.netrcReturn.creds, tt.netrcReturn.err
 					}
@@ -564,7 +564,7 @@ func TestPrerun_ReLoginToLastOrgUsed(t *testing.T) {
 		},
 	}
 	r.AuthTokenHandler = &climock.AuthTokenHandler{
-		GetCCloudTokensFunc: func(_ pauth.CCloudClientFactory, _ string, _ *pauth.Credentials, _ bool, orgResourceId string) (s string, s2 string, e error) {
+		GetCCloudTokensFunc: func(_ pauth.CCloudClientFactory, _ string, _ *pauth.Credentials, _ bool, orgResourceId string) (string, string, error) {
 			require.Equal(t, "o-555", orgResourceId) // validate correct org id is used
 			return validAuthToken, "", nil
 		},

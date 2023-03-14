@@ -310,7 +310,7 @@ func (c *client) UpdateBinary(cliName, version, path string, noVerify bool) erro
 	return nil
 }
 
-func (c *client) readCheckFile() (shouldCheck bool, err error) {
+func (c *client) readCheckFile() (bool, error) {
 	// If CheckFile is not provided, then we'll always perform the check
 	if c.CheckFile == "" {
 		return true, nil

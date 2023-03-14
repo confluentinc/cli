@@ -11,11 +11,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var (
-	OrgEnvironments = []*orgv2.OrgV2Environment{{Id: orgv2.PtrString("a-595"), DisplayName: orgv2.PtrString("default")},
-		{Id: orgv2.PtrString("not-595"), DisplayName: orgv2.PtrString("other")},
-		{Id: orgv2.PtrString("env-123"), DisplayName: orgv2.PtrString("env123")}, {Id: orgv2.PtrString(SRApiEnvId), DisplayName: orgv2.PtrString("srUpdate")}}
-)
+var OrgEnvironments = []*orgv2.OrgV2Environment{
+	{Id: orgv2.PtrString("a-595"), DisplayName: orgv2.PtrString("default")},
+	{Id: orgv2.PtrString("not-595"), DisplayName: orgv2.PtrString("other")},
+	{Id: orgv2.PtrString("env-123"), DisplayName: orgv2.PtrString("env123")},
+	{Id: orgv2.PtrString(SRApiEnvId), DisplayName: orgv2.PtrString("srUpdate")},
+}
 
 // Handler for: "/org/v2/environments/{id}"
 func handleOrgEnvironment(t *testing.T) http.HandlerFunc {
