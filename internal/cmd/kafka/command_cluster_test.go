@@ -6,16 +6,16 @@ import (
 	"testing"
 	"time"
 
-	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
-	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
-	metricsv2 "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2"
-	metricsmock "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2/mock"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	cmkmock "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2/mock"
+	metricsv2 "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2"
+	metricsmock "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2/mock"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"

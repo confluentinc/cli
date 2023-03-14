@@ -5,9 +5,10 @@ import (
 	"net/http"
 	"testing"
 
-	ksqlv2 "github.com/confluentinc/ccloud-sdk-go-v2/ksql/v2"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
+
+	ksqlv2 "github.com/confluentinc/ccloud-sdk-go-v2/ksql/v2"
 )
 
 func ptrTo(s string) *string {

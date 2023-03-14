@@ -12,13 +12,12 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/confluentinc/cli/internal/pkg/log"
-
 	"github.com/hashicorp/go-version"
 	"github.com/jonboulle/clockwork"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	pio "github.com/confluentinc/cli/internal/pkg/io"
+	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
 // Client lets you check for updated application binaries and install them if desired

@@ -6,8 +6,9 @@ import (
 	"testing"
 	"time"
 
-	streamdesignerv1 "github.com/confluentinc/ccloud-sdk-go-v2/stream-designer/v1"
 	"github.com/stretchr/testify/require"
+
+	streamdesignerv1 "github.com/confluentinc/ccloud-sdk-go-v2/stream-designer/v1"
 )
 
 // Handler for: "/sd/v1/pipelines/{id}"

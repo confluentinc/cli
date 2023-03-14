@@ -6,15 +6,15 @@ import (
 	"math"
 	"strconv"
 
-	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
-	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/spf13/cobra"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	metricsv2 "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
-	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 

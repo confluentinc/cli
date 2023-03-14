@@ -11,10 +11,11 @@ import (
 	"strings"
 	"testing"
 
-	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/hashicorp/go-version"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/utils"
