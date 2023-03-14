@@ -927,9 +927,7 @@ func TestValidateUrl(t *testing.T) {
 	}
 }
 
-func newLoginCmd(auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInterface, isCloud bool, req *require.Assertions, netrcHandler netrc.NetrcHandler,
-	authTokenHandler pauth.AuthTokenHandler, loginCredentialsManager pauth.LoginCredentialsManager,
-	loginOrganizationManager pauth.LoginOrganizationManager) (*cobra.Command, *v1.Config) {
+func newLoginCmd(auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInterface, isCloud bool, req *require.Assertions, netrcHandler netrc.NetrcHandler, authTokenHandler pauth.AuthTokenHandler, loginCredentialsManager pauth.LoginCredentialsManager, loginOrganizationManager pauth.LoginOrganizationManager) (*cobra.Command, *v1.Config) {
 	cfg := v1.New()
 	var mdsClient *mds.APIClient
 	if !isCloud {

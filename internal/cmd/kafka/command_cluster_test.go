@@ -35,8 +35,10 @@ const (
 
 var queryTime = time.Date(2019, 12, 19, 16, 1, 0, 0, time.UTC)
 
-var shouldError bool
-var shouldPrompt bool
+var (
+	shouldError  bool
+	shouldPrompt bool
+)
 
 var cmkByokCluster = cmkv2.CmkV2Cluster{
 	Spec: &cmkv2.CmkV2ClusterSpec{

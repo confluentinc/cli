@@ -19,9 +19,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
-var (
-	S3ReleaseNotesFile = "release-notes.rst"
-)
+var S3ReleaseNotesFile = "release-notes.rst"
 
 type PublicRepo struct {
 	*PublicRepoParams

@@ -375,8 +375,10 @@ func (s *CLITestSuite) TestKafkaTopicCreate() {
 		{args: fmt.Sprintf("kafka topic create topic-X --url %s --config retention.ms=as --no-authentication", kafkaRestURL), contains: "Error: REST request failed: Invalid value as for configuration retention.ms: Not a number of type LONG (40002)\n", exitCode: 1, name: "creating topic with correct key incorrect config value should fail"},
 		// Success
 		{args: fmt.Sprintf("kafka topic create topic-X --url %s --no-authentication", kafkaRestURL), fixture: "kafka/topic/create-topic-success.golden", name: "correct URL with default params (part 6, repl 3, no configs) should create successfully"},
-		{args: fmt.Sprintf("kafka topic create topic-X --url %s --partitions 7 --replication-factor 2 --config retention.ms=100000,compression.type=gzip --no-authentication", kafkaRestURL),
-			fixture: "kafka/topic/create-topic-success.golden", name: "correct URL with valid optional params should create successfully"},
+		{
+			args:    fmt.Sprintf("kafka topic create topic-X --url %s --partitions 7 --replication-factor 2 --config retention.ms=100000,compression.type=gzip --no-authentication", kafkaRestURL),
+			fixture: "kafka/topic/create-topic-success.golden", name: "correct URL with valid optional params should create successfully",
+		},
 		// --ifnotexists
 		{args: fmt.Sprintf("kafka topic create topic-exist --url %s --if-not-exists --no-authentication", kafkaRestURL), fixture: "kafka/topic/create-duplicate-topic-ifnotexists-success.golden", name: "create topic with existing topic name with if-not-exists flag should succeed"},
 	}

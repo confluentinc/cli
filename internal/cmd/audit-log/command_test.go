@@ -259,7 +259,8 @@ func (suite *AuditConfigTestSuite) TestAuditConfigRouteList() {
 	expect <- MockCall{
 		Func: ListRoutes,
 		Input: &mds.ListRoutesOpts{
-			Q: optional.NewString("crn://mds1.example.com/kafka=abcde_FGHIJKL-01234567/connect=qa-test")},
+			Q: optional.NewString("crn://mds1.example.com/kafka=abcde_FGHIJKL-01234567/connect=qa-test"),
+		},
 		Result: mds.AuditLogConfigListRoutesResponse{
 			DefaultTopics: mds.AuditLogConfigDefaultTopics{
 				Allowed: "confluent-audit-log-events",
@@ -290,7 +291,8 @@ func (suite *AuditConfigTestSuite) TestAuditConfigRouteLookup() {
 	expect <- MockCall{
 		Func: ResolveResourceRoute,
 		Input: &mds.ResolveResourceRouteOpts{
-			Crn: optional.NewString("crn://mds1.example.com/kafka=abcde_FGHIJKL-01234567/topic=qa-test")},
+			Crn: optional.NewString("crn://mds1.example.com/kafka=abcde_FGHIJKL-01234567/topic=qa-test"),
+		},
 		Result: mds.AuditLogConfigResolveResourceRouteResponse{
 			Route: "default",
 			Categories: mds.AuditLogConfigRouteCategories{

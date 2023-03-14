@@ -18,11 +18,13 @@ import (
 	"github.com/tidwall/sjson"
 )
 
-var dataRegex = regexp.MustCompile(DataPattern)
-var ivRegex = regexp.MustCompile(IVPattern)
-var algoRegex = regexp.MustCompile(EncPattern)
-var passwordRegex = regexp.MustCompile(PasswordPattern)
-var cipherRegex = regexp.MustCompile(CipherPattern)
+var (
+	dataRegex     = regexp.MustCompile(DataPattern)
+	ivRegex       = regexp.MustCompile(IVPattern)
+	algoRegex     = regexp.MustCompile(EncPattern)
+	passwordRegex = regexp.MustCompile(PasswordPattern)
+	cipherRegex   = regexp.MustCompile(CipherPattern)
+)
 
 func GenerateConfigValue(key string, path string) string {
 	return "${securepass:" + path + ":" + key + "}"
@@ -318,7 +320,6 @@ func RemovePropertiesConfig(removeConfigs []string, path string) error {
 	}
 
 	configs, err := convertPropertiesJAAS(removeJAASConfig, configProps, Delete)
-
 	if err != nil {
 		return err
 	}

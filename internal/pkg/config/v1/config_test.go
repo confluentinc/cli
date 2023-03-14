@@ -790,13 +790,15 @@ func TestConfig_FindContext(t *testing.T) {
 		want    *Context
 		wantErr bool
 	}{
-		{name: "success finding existing context",
+		{
+			name:    "success finding existing context",
 			fields:  fields{Contexts: map[string]*Context{"test-context": {Name: "test-context"}}},
 			args:    args{name: "test-context"},
 			want:    &Context{Name: "test-context"},
 			wantErr: false,
 		},
-		{name: "error finding nonexistent context",
+		{
+			name:    "error finding nonexistent context",
 			fields:  fields{Contexts: map[string]*Context{}},
 			args:    args{name: "test-context"},
 			want:    nil,

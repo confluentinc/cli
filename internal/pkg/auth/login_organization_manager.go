@@ -17,8 +17,7 @@ type LoginOrganizationManager interface {
 	GetDefaultLoginOrganization() func() (string, error)
 }
 
-type LoginOrganizationManagerImpl struct {
-}
+type LoginOrganizationManagerImpl struct{}
 
 func GetLoginOrganization(getOrgFuncs ...func() (string, error)) (string, error) {
 	var multiErr error

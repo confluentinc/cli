@@ -16,8 +16,7 @@ import (
 //
 // Based on https://blog.gopheracademy.com/advent-2017/a-tale-of-two-rands/
 // https://github.com/orion-labs/go-crypto-source - Apache 2.0
-type cryptoSource struct {
-}
+type cryptoSource struct{}
 
 var _ mrand.Source = (*cryptoSource)(nil)
 

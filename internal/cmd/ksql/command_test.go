@@ -102,7 +102,8 @@ func (suite *KSQLTestSuite) SetupTest() {
 		},
 		ListKsqldbcmV2ClustersExecuteFunc: func(_ ksqlv2.ApiListKsqldbcmV2ClustersRequest) (ksqlv2.KsqldbcmV2ClusterList, *http.Response, error) {
 			return ksqlv2.KsqldbcmV2ClusterList{
-				Data: []ksqlv2.KsqldbcmV2Cluster{*suite.ksqlCluster}}, nil, nil
+				Data: []ksqlv2.KsqldbcmV2Cluster{*suite.ksqlCluster},
+			}, nil, nil
 		},
 		DeleteKsqldbcmV2ClusterExecuteFunc: func(_ ksqlv2.ApiDeleteKsqldbcmV2ClusterRequest) (*http.Response, error) {
 			return nil, nil

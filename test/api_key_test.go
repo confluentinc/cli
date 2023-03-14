@@ -111,7 +111,8 @@ func (s *CLITestSuite) TestAPIKey() {
 		// store: error handling
 		{name: "error if storing unknown API key", args: "api-key store UNKNOWN @test/fixtures/input/api-key/UIAPISECRET100.txt --resource lkc-cool1", fixture: "api-key/47.golden", exitCode: 1},
 		{name: "error if storing API key with existing secret", args: "api-key store UIAPIKEY100 NEWSECRET --resource lkc-cool1", fixture: "api-key/48.golden", exitCode: 1},
-		{name: "succeed if forced to overwrite existing secret", args: "api-key store -f UIAPIKEY100 NEWSECRET --resource lkc-cool1", fixture: "api-key/49.golden",
+		{
+			name: "succeed if forced to overwrite existing secret", args: "api-key store -f UIAPIKEY100 NEWSECRET --resource lkc-cool1", fixture: "api-key/49.golden",
 			wantFunc: func(t *testing.T) {
 				cfg := v1.New()
 				cfg, err := load.LoadAndMigrate(cfg)
@@ -122,7 +123,8 @@ func (s *CLITestSuite) TestAPIKey() {
 				pair := kcc.APIKeys["UIAPIKEY100"]
 				require.NotNil(t, pair)
 				require.Equal(t, "NEWSECRET", pair.Secret)
-			}},
+			},
+		},
 
 		// use: error handling
 		{name: "error if using non-existent api-key", args: "api-key use UNKNOWN --resource lkc-cool1", fixture: "api-key/50.golden", exitCode: 1},
