@@ -196,7 +196,7 @@ func (r *PublicRepo) GetAvailableReleaseNotesVersions(name string) (version.Coll
 		return nil, err
 	}
 	availableVersions := r.getMatchedReleaseNotesVersionsFromListBucketResult(name, listBucketResult)
-	if len(availableVersions) <= 0 {
+	if len(availableVersions) == 0 {
 		return nil, errors.New(errors.NoVersionsErrorMsg)
 	}
 	return availableVersions, nil

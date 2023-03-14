@@ -251,8 +251,7 @@ func getMsgKeyAndValue(metaInfo []byte, data, delimiter string, parseKey bool, s
 	if err != nil {
 		return "", "", err
 	}
-	encoded := append(metaInfo, encodedMessage...)
-	value := string(encoded)
+	value := string(append(metaInfo, encodedMessage...))
 	return key, value, nil
 }
 

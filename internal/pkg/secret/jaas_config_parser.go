@@ -48,7 +48,7 @@ func (j *JAASParser) updateJAASConfig(op string, key string, value string, confi
 			}
 			config = pattern.ReplaceAllString(config, del)
 			if strings.HasSuffix(matched, ";") {
-				config = config + ";"
+				config += ";"
 			}
 		} else {
 			keyValuePattern := key + PasswordPattern // check if value is in Secrets format
@@ -67,7 +67,7 @@ func (j *JAASParser) updateJAASConfig(op string, key string, value string, confi
 			matched := pattern.FindString(config)
 			config = pattern.ReplaceAllString(config, replaceVal)
 			if strings.HasSuffix(matched, ";") {
-				config = config + ";"
+				config += ";"
 			}
 		} else {
 			add := Space + key + j.WhitespaceKey + "=" + j.WhitespaceKey + value
@@ -91,7 +91,7 @@ func (j *JAASParser) parseConfig(specialChar rune) (string, int, error) {
 
 	for j.tokenizer.Peek() != scanner.EOF && !unicode.IsSpace(j.tokenizer.Peek()) && j.tokenizer.Peek() != specialChar {
 		j.tokenizer.Scan()
-		configName = configName + j.tokenizer.TokenText()
+		configName += j.tokenizer.TokenText()
 		if offset == -1 {
 			offset = j.tokenizer.Pos().Offset
 		}

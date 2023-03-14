@@ -302,7 +302,7 @@ func RemovePropertiesConfig(removeConfigs []string, path string) error {
 	removeJAASConfig := properties.NewProperties()
 	removeJAASConfig.DisableExpansion = true
 	for _, key := range removeConfigs {
-		//Check if config is present
+		// check if config is present
 		if pattern.MatchString(key) {
 			_, _, err = removeJAASConfig.Set(key, "")
 			if err != nil {

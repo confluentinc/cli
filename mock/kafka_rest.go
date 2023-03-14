@@ -305,7 +305,6 @@ type Partition struct {
 }
 
 func (m *Partition) GetKafkaPartition(ctx context.Context, clusterId string, topicName string, partitionId int32) (krsdk.PartitionData, *nethttp.Response, error) {
-	//TODO implement me
 	panic("implement me")
 }
 
@@ -433,7 +432,6 @@ func (m *Replica) ClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicasG
 type ReplicaStatus struct{}
 
 func (m *ReplicaStatus) ClustersClusterIdTopicsPartitionsReplicaStatusGet(ctx context.Context, clusterId string) (krsdk.ReplicaStatusDataList, *nethttp.Response, error) {
-	//TODO implement me
 	panic("implement me")
 }
 
@@ -486,17 +484,14 @@ type Configs struct {
 }
 
 func (m *Configs) ClustersClusterIdBrokersConfigsGet(ctx context.Context, clusterId string) (krsdk.BrokerConfigDataList, *nethttp.Response, error) {
-	//TODO implement me
 	panic("implement me")
 }
 
 func (m *Configs) ListKafkaAllTopicConfigs(ctx context.Context, clusterId string) (krsdk.TopicConfigDataList, *nethttp.Response, error) {
-	//TODO implement me
 	panic("implement me")
 }
 
 func (m *Configs) ListKafkaDefaultTopicConfigs(ctx context.Context, clusterId string, topicName string) (krsdk.TopicConfigDataList, *nethttp.Response, error) {
-	//TODO implement me
 	panic("implement me")
 }
 

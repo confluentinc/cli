@@ -74,10 +74,6 @@ func (s *CLITestSuite) TestAPIKey() {
 		// store exists already error
 		{args: "api-key store UIAPIKEY101 @test/fixtures/input/api-key/UIAPISECRET101.txt --resource lkc-other1", fixture: "api-key/override-error.golden", exitCode: 1},
 
-		// store an API key for ksql cluster (not yet supported)
-		//{args: "api-key store UIAPIKEY103 UIAPISECRET103 --resource lksqlc-ksql1", fixture: "empty.golden"},
-		//{args: "api-key list --resource lksqlc-ksql1", fixture: "api-key/10.golden"},
-		// TODO: change test back once api-key store and use command allows for non kafka clusters
 		{args: "api-key store UIAPIKEY103 UIAPISECRET103 --resource lksqlc-ksql1", fixture: "api-key/29.golden", exitCode: 1},
 		{args: "api-key use UIAPIKEY103 --resource lksqlc-ksql1", fixture: "api-key/29.golden", exitCode: 1},
 
