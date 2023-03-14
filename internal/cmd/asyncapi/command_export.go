@@ -120,7 +120,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 				err := c.getChannelDetails(accountDetails, flags)
 				if err != nil {
 					if err.Error() == protobufErrorMessage {
-						log.CliLogger.Info(protobufErrorMessage)
+						log.CliLogger.Info(err.Error())
 						continue
 					}
 					return err
