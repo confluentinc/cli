@@ -7,20 +7,20 @@ import (
 	"testing"
 	"time"
 
+	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
+
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	apikeysmock "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2/mock"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	cmkmock "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2/mock"
-
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 	iammock "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2/mock"
 	ksqlmock "github.com/confluentinc/ccloud-sdk-go-v2/ksql/mock"
 	ksqlv2 "github.com/confluentinc/ccloud-sdk-go-v2/ksql/v2"
-	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"

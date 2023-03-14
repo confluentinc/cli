@@ -8,10 +8,10 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/spf13/cobra"
+
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
-
-	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"

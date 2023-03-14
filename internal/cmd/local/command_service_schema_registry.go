@@ -4,11 +4,10 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/confluentinc/cli/internal/pkg/local"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/local"
 )
 
 var (
