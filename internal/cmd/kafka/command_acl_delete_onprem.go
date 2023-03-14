@@ -72,7 +72,7 @@ func (c *aclCommand) deleteOnPrem(cmd *cobra.Command, _ []string) error {
 		return errors.NewErrorWithSuggestions("ACL matching these parameters not found", ValidACLSuggestion)
 	}
 
-	promptMsg := errors.DeleteACLConfirmMsg
+	promptMsg := aclutil.DeleteACLConfirmMsg
 	if ok, err := form.ConfirmDeletionYesNoCustomPrompt(cmd, promptMsg); err != nil || !ok {
 		return err
 	}
