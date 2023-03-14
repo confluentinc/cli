@@ -31,8 +31,10 @@ func (c *command) newDeleteCommand() *cobra.Command {
 func (c *command) delete(cmd *cobra.Command, args []string) error {
 	c.setKeyStoreIfNil()
 
-	if err := c.checkExistence(cmd, args); err != nil {
+	if validArgs, err := c.validateArgs(cmd, args); err != nil {
 		return err
+	} else {
+		args = validArgs
 	}
 
 	if ok, err := form.ConfirmDeletionYesNo(cmd, resource.ApiKey, args); err != nil || !ok {
@@ -57,40 +59,29 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	return errs
 }
 
-func (c *command) checkExistence(cmd *cobra.Command, args []string) error {
+func (c *command) validateArgs(cmd *cobra.Command, args []string) ([]string, error) {
 	// Single
 	if len(args) == 1 {
 		if _, _, err := c.V2Client.GetApiKey(args[0]); err != nil {
-			return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, resource.ApiKey, args[0]), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.ApiKey))
+			return nil, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, resource.ApiKey, args[0]), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.ApiKey))
 		}
-		return nil
+		return args, nil
 	}
 
 	// Multiple
-	apiKeys, err := c.V2Client.ListApiKeys("", "")
-	if err != nil {
-		return err
+	setFunc := func() (types.Set, error) {
+		apiKeys, err := c.V2Client.ListApiKeys("", "")
+		if err != nil {
+			return nil, err
+		}
+
+		set := types.NewSet()
+		for _, apiKey := range apiKeys {
+			set.Add(apiKey.GetId())
+		}
+
+		return set, nil
 	}
 
-	set := types.NewSet()
-	for _, apiKey := range apiKeys {
-		set.Add(apiKey.GetId())
-	}
-
-	validArgs, invalidArgs := set.IntersectionAndDifference(args)
-	if force, err := cmd.Flags().GetBool("force"); err != nil {
-		return err
-	} else if force && len(invalidArgs) > 0 {
-		args = validArgs
-		return nil
-	}
-
-	invalidArgsStr := utils.ArrayToCommaDelimitedStringWithAnd(invalidArgs)
-	if len(invalidArgs) == 1 {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, resource.ApiKey, invalidArgsStr), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.ApiKey))
-	} else if len(invalidArgs) > 1 {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, utils.Plural(resource.ApiKey), invalidArgsStr), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.ApiKey))
-	}
-
-	return nil
+	return utils.ValidateArgsForDeletion(cmd, args, resource.ApiKey, setFunc)
 }
