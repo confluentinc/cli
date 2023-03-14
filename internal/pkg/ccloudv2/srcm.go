@@ -69,3 +69,31 @@ func (c *Client) executeListSchemaRegistryClusters(environment, pageToken string
 	}
 	return c.SchemaRegistryClient.ClustersSrcmV2Api.ListSrcmV2ClustersExecute(req)
 }
+
+func (c *Client) ListSchemaRegistryRegions(environment string) ([]srcmv2.SrcmV2Cluster, error) {
+	var list []srcmv2.SrcmV2Cluster
+
+	done := false
+	pageToken := ""
+	for !done {
+		page, httpResp, err := c.executeListSchemaRegistryClusters(environment, pageToken)
+		if err != nil {
+			return nil, errors.CatchCCloudV2Error(err, httpResp)
+		}
+		list = append(list, page.GetData()...)
+
+		pageToken, done, err = extractNextPageToken(page.GetMetadata().Next)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return list, nil
+}
+
+func (c *Client) executeListSchemaRegistryRegions(environment, pageToken string) (srcmv2.SrcmV2ClusterList, *http.Response, error) {
+	req := c.SchemaRegistryClient.ClustersSrcmV2Api.ListSrcmV2Clusters(c.srcmApiContext()).Environment(environment).PageSize(ccloudV2ListPageSize)
+	if pageToken != "" {
+		req = req.PageToken(pageToken)
+	}
+	return c.SchemaRegistryClient.ClustersSrcmV2Api.ListSrcmV2ClustersExecute(req)
+}

@@ -37,6 +37,7 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *c
 	cmd.AddCommand(c.newExporterCommand(cfg))
 	cmd.AddCommand(c.newSchemaCommand(cfg))
 	cmd.AddCommand(c.newSubjectCommand(cfg))
+	cmd.AddCommand(c.newRegionCommand(cfg))
 
 	return cmd
 }
