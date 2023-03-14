@@ -1,4 +1,4 @@
-      ID     |     Name      |     Description     | Identity Claim |                  Filter                    
--------------+---------------+---------------------+----------------+--------------------------------------------
-  pool-12345 | identity_pool | pooling identities. | sub            | claims.iss="https://company.provider.com"  
-  pool-12345 | identity_pool | pooling identities. | sub            | claims.iss="https://company.provider.com"  
+      ID     |      Name       |     Description     | Identity Claim |                  Filter                    
+-------------+-----------------+---------------------+----------------+--------------------------------------------
+  pool-12345 | identity_pool   | pooling identities. | sub            | claims.iss="https://company.provider.com"  
+  pool-55555 | identity_pool_2 | pooling identities. | sub            | claims.iss="https://company.provider.com"  
