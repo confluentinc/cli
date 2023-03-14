@@ -3,3 +3,5 @@ linters-settings:
     disabled-checks:
       - ifElseChain
       - singleCaseSwitch
+  nakedret:
+    max-func-lines: 0
