@@ -90,7 +90,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	return print(cmd, pipeline)
+	return printTable(cmd, pipeline)
 }
 
 func createSecretMappings(secrets []string, regex string) (map[string]string, error) {

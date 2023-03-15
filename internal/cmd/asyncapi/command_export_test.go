@@ -266,7 +266,7 @@ func TestGetSchemaDetails(t *testing.T) {
 	details.topics = topics.Data
 	details.channelDetails.currentSubject = "subject1"
 	details.channelDetails.currentTopic = details.topics[0]
-	schema, _, _ := details.srClient.DefaultApi.GetSchemaByVersion(*new(context.Context), "subject1", "1", nil)
+	schema, _, _ := details.srClient.DefaultApi.GetSchemaByVersion(context.Context(nil), "subject1", "1", nil)
 	details.channelDetails.schema = &schema
 	err = details.getSchemaDetails()
 	require.NoError(t, err)
@@ -291,15 +291,15 @@ func TestGetChannelDetails(t *testing.T) {
 	details.topics = topics.Data
 	details.channelDetails.currentSubject = "subject1"
 	details.channelDetails.currentTopic = details.topics[0]
-	schema, _, _ := details.srClient.DefaultApi.GetSchemaByVersion(*new(context.Context), "subject1", "1", nil)
+	schema, _, _ := details.srClient.DefaultApi.GetSchemaByVersion(context.Context(nil), "subject1", "1", nil)
 	details.channelDetails.schema = &schema
 	flags := &flags{schemaRegistryApiKey: "ASYNCAPIKEY", schemaRegistryApiSecret: "ASYNCAPISECRET"}
 	err = c.getChannelDetails(details, flags)
 	require.NoError(t, err)
-	//Protobuf Schema
+	// Protobuf Schema
 	details.channelDetails.currentSubject = "subject2"
 	details.channelDetails.currentTopic = details.topics[0]
-	schema, _, _ = details.srClient.DefaultApi.GetSchemaByVersion(*new(context.Context), "subject2", "1", nil)
+	schema, _, _ = details.srClient.DefaultApi.GetSchemaByVersion(context.Context(nil), "subject2", "1", nil)
 	details.channelDetails.schema = &schema
 	err = c.getChannelDetails(details, flags)
 	require.Equal(t, err.Error(), protobufErrorMessage)
@@ -333,7 +333,7 @@ func TestGetBindings(t *testing.T) {
 func TestGetTags(t *testing.T) {
 	c, err := newCmd()
 	require.NoError(t, err)
-	schema, _, _ := details.srClient.DefaultApi.GetSchemaByVersion(*new(context.Context), "subject1", "1", nil)
+	schema, _, _ := details.srClient.DefaultApi.GetSchemaByVersion(context.Context(nil), "subject1", "1", nil)
 	details.srCluster = c.Config.Context().SchemaRegistryClusters["lsrc-asyncapi"]
 	details.channelDetails.schema = &schema
 	err = details.getTags()
@@ -341,7 +341,7 @@ func TestGetTags(t *testing.T) {
 }
 
 func TestGetMessageCompatibility(t *testing.T) {
-	_, err := getMessageCompatibility(details.srClient, *new(context.Context), "subject1")
+	_, err := getMessageCompatibility(details.srClient, context.Context(nil), "subject1")
 	require.NoError(t, err)
 }
 

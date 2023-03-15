@@ -29,10 +29,7 @@ type Context struct {
 	Config     *Config       `json:"-"`
 }
 
-func newContext(name string, platform *Platform, credential *Credential,
-	kafkaClusters map[string]*KafkaClusterConfig, kafka string,
-	schemaRegistryClusters map[string]*SchemaRegistryCluster, state *ContextState, config *Config,
-	orgResourceId string) (*Context, error) {
+func newContext(name string, platform *Platform, credential *Credential, kafkaClusters map[string]*KafkaClusterConfig, kafka string, schemaRegistryClusters map[string]*SchemaRegistryCluster, state *ContextState, config *Config, orgResourceId string) (*Context, error) {
 	ctx := &Context{
 		Name:                   name,
 		NetrcMachineName:       name,

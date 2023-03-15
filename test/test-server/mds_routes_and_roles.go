@@ -37,6 +37,7 @@ var v1RbacRoles = map[string]string{
                               "allowedOperations":[
                                       {"resourceType":"All","operations":["All"]}]}}`,
 }
+
 var v1RoutesAndReplies = map[string]string{
 	"/security/1.0/principals/User:frodo/groups": `[
                        "hobbits",
