@@ -1,8 +1,6 @@
 package apikey
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -10,13 +8,14 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *command) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "delete <api-key>",
-		Short:             "Delete an API key.",
-		Args:              cobra.ExactArgs(1),
+		Use:               "delete <api-key-1> [api-key-2] ... [api-key-n]",
+		Short:             "Delete API keys.",
+		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.delete,
 	}
@@ -28,18 +27,49 @@ func (c *command) newDeleteCommand() *cobra.Command {
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
 	c.setKeyStoreIfNil()
-	apiKey := args[0]
 
-	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmYesNoMsg, resource.ApiKey, apiKey)
-	if ok, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil || !ok {
+	if validArgs, err := c.validateArgs(cmd, args); err != nil {
+		return err
+	} else {
+		args = validArgs
+	}
+
+	if ok, err := form.ConfirmDeletionYesNo(cmd, resource.ApiKey, args); err != nil || !ok {
 		return err
 	}
-	httpResp, err := c.V2Client.DeleteApiKey(apiKey)
 
-	if err != nil {
-		return errors.CatchApiKeyForbiddenAccessError(err, deleteOperation, httpResp)
+	var errs error
+	var successful []string
+	for _, id := range args {
+		if httpResp, err := c.V2Client.DeleteApiKey(id); err != nil {
+			errs = errors.Join(errs, errors.CatchApiKeyForbiddenAccessError(err, deleteOperation, id, httpResp))
+		} else {
+			successful = append(successful, id)
+			if err := c.keystore.DeleteAPIKey(id); err != nil {
+				errs = errors.Join(errs, err)
+			}
+		}
+	}
+	if errs != nil {
+		errs = errors.NewErrorWithSuggestions(errs.Error(), errors.APIKeyNotFoundSuggestions)
 	}
 
-	output.Printf(errors.DeletedResourceMsg, resource.ApiKey, apiKey)
-	return c.keystore.DeleteAPIKey(apiKey)
+	if len(successful) == 1 {
+		output.Printf(errors.DeletedResourceMsg, resource.ApiKey, successful[0])
+	} else if len(successful) > 1 {
+		output.Printf(errors.DeletedResourcesMsg, resource.Plural(resource.ApiKey), utils.ArrayToCommaDelimitedString(successful, "and"))
+	}
+
+	return errs
+}
+
+func (c *command) validateArgs(cmd *cobra.Command, args []string) ([]string, error) {
+	describeFunc := func(arg string) error {
+		if _, _, err := c.V2Client.GetApiKey(arg); err != nil {
+			return err
+		}
+		return nil
+	}
+
+	return utils.ValidateArgsForDeletion(cmd, args, resource.ApiKey, describeFunc)
 }
