@@ -8,16 +8,18 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/types"
 )
 
-func ValidateArgsForDeletion(cmd *cobra.Command, args []string, resourceType string, callListEndpoint func() (types.Set, error)) ([]string, error) {
-	set, err := callListEndpoint()
-	if err != nil {
-		return nil, err
+func ValidateArgsForDeletion(cmd *cobra.Command, args []string, resourceType string, callDescribeEndpoint func(string) error) ([]string, error) {
+	var validArgs, invalidArgs []string
+	for _, arg := range args {
+		if err := callDescribeEndpoint(arg); err != nil {
+			invalidArgs = append(invalidArgs, arg)
+		} else {
+			validArgs = append(validArgs, arg)
+		}
 	}
 
-	validArgs, invalidArgs := set.IntersectionAndDifference(args)
 	var invalidArgsErrMsg string
 	if len(invalidArgs) == 1 {
 		invalidArgsErrMsg = fmt.Sprintf(errors.NotFoundErrorMsg, resourceType, ArrayToCommaDelimitedString(invalidArgs, "and"))
