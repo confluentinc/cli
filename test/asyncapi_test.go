@@ -25,7 +25,7 @@ func (s *CLITestSuite) TestAsyncApiExport() {
 	}
 	fileNames := []string{"asyncapi-spec.yaml", "asyncapi-with-context.yaml"}
 	for _, fileName := range fileNames {
-		defer os.Remove(fileName)
+		//defer os.Remove(fileName)
 		s.FileExistsf("./"+fileName, "Spec file not generated.")
 		file, err := os.ReadFile(fileName)
 		if err != nil {
@@ -40,6 +40,37 @@ func (s *CLITestSuite) TestAsyncApiExport() {
 			s.Error(nil, "spec generated does not match the template output file")
 		}
 	}
+	resetConfiguration(s.T(), false)
+}
 
+func (s *CLITestSuite) TestAsyncApiImport() {
+	tests := []CLITest{
+		{args: "asyncapi import", exitCode: 1, fixture: "asyncapi/err_no_file.golden"},
+		{args: "asyncapi import ./test/fixtures/input/asyncapi/asyncapi-spec.yaml", exitCode: 1, fixture: "asyncapi/no_kafka.golden"},
+		{args: "asyncapi import ./test/fixtures/input/asyncapi/asyncapi-spec.yaml", exitCode: 1, useKafka: "lkc-asyncapi", authKafka: "true", fixture: "asyncapi/no_sr_key.golden"},
+	}
+	resetConfiguration(s.T(), false)
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+	resetConfiguration(s.T(), false)
+}
+
+func (s *CLITestSuite) TestAsyncApiImportWithWorkflow() {
+	tests := []CLITest{
+		{args: "environment use " + testserver.SRApiEnvId, workflow: true},
+		// Overwrite=false
+		{args: "asyncapi import ./test/fixtures/input/asyncapi/asyncapi-spec.yaml --schema-registry-api-key ASYNCAPIKEY --schema-registry-api-secret ASYNCAPISECRET", useKafka: "lkc-asyncapi", authKafka: "true", workflow: true, fixture: "asyncapi/2.golden"},
+		//Overwrite=true
+		{args: "asyncapi import ./test/fixtures/input/asyncapi/asyncapi-spec.yaml --schema-registry-api-key ASYNCAPIKEY --schema-registry-api-secret ASYNCAPISECRET --overwrite -vvv", useKafka: "lkc-asyncapi", authKafka: "true", workflow: true},
+		//input file with 0 channels
+		{args: "asyncapi import ./test/fixtures/input/asyncapi/asyncapi-with-context.yaml --schema-registry-api-key ASYNCAPIKEY --schema-registry-api-secret ASYNCAPISECRET --overwrite -vvv", useKafka: "lkc-asyncapi", authKafka: "true", workflow: true},
+	}
+	resetConfiguration(s.T(), false)
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
 	resetConfiguration(s.T(), false)
 }
