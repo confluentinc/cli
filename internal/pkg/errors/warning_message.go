@@ -8,7 +8,7 @@ const (
 	// secret commands
 	SaveTheMasterKeyMsg = "Save the master key. It cannot be retrieved later."
 
-	//login command
+	// login command
 	UsingLoginURLDefaults      = "Assuming %s.\n"
 	DeprecatedEnvVarWarningMsg = "`%s` has been deprecated and replaced by `%s`.\n"
 
@@ -22,7 +22,7 @@ const (
 	SRCredsNotSetReason       = "no Schema Registry API key or secret specified"
 	SRCredsNotSetSuggestions  = "Pass the `--schema-registry-api-key` and `--schema-registry-api-secret` flags to specify the Schema Registry API key and secret."
 
-	//kafka rest
+	// kafka rest
 	AssumingHttpProtocol  = "Assuming http protocol.\n"
 	AssumingHttpsProtocol = "Assuming https protocol.\n"
 

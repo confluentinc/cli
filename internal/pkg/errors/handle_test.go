@@ -9,12 +9,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var (
-	wantSuggestionsMsgFormat = `
+var wantSuggestionsMsgFormat = `
 Suggestions:
     %s
 `
-)
 
 func TestHandleError(t *testing.T) {
 	tests := []struct {

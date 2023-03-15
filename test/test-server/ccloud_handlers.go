@@ -217,7 +217,7 @@ func (c *CloudRouter) HandleEnvironments(t *testing.T) http.HandlerFunc {
 func (c *CloudRouter) HandlePaymentInfo(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
-		case http.MethodPost: //admin payment update
+		case http.MethodPost: // admin payment update
 			req := &ccloudv1.UpdatePaymentInfoRequest{}
 			err := ccstructs.UnmarshalJSON(r.Body, req)
 			require.NoError(t, err)
