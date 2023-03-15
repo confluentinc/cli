@@ -24,7 +24,8 @@ test-installer:
 # check that the expected binaries are present and have --acl public-read
 .PHONY: verify-binaries
 verify-binaries:
-	$(eval TEMP_DIR=$(shell mktemp -d))
+	$(eval DIR=$(shell mktemp -d))
+
 	@$(aws-authenticate) && \
 	for os in linux alpine darwin windows; do \
 		for arch in arm64 amd64; do \
@@ -37,11 +38,12 @@ verify-binaries:
 			fi ; \
 			FILE=$(VERIFY_BIN_FOLDER)/confluent-cli/binaries/$(CLEAN_VERSION)/confluent_$(CLEAN_VERSION)_$${os}_$${arch}$${suffix}; \
 			echo "Checking binary: $${FILE}"; \
-			aws s3 cp $$FILE $(TEMP_DIR) || { rm -rf $(TEMP_DIR) && exit 1; }; \
+			$(call dry-run,aws s3 cp $$FILE $(DIR)) || { rm -rf $(DIR) && exit 1; }; \
 		done; \
 	done
-	rm -rf $(TEMP_DIR)	
-	@echo "*** BINARIES VERIFICATION PASSED!!! ***"
+
+	rm -rf $(DIR)	
+	@echo BINARIES VERIFICATION PASSED!!! ***"
 
 # Test username/password login and SSO login in production
 .PHONY: smoke-tests

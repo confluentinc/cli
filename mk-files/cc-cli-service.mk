@@ -19,9 +19,15 @@ update-db:
 	a=$$(ls | grep up | tail -n 2 | head -n 1) && \
 	b=$$(ls | grep up | tail -n 1) && \
 	sed -i "" "s/v[0-9]*\.[0-9]*\.[0-9]*/v$${version}/" $$a && \
-	body=$$(echo -e "\`\`\`diff\n$$(diff -u $$a $$b)\n\`\`\`") && \
-	git push origin update-db-v$${version} && \
-	gh pr create -B master --title "Update DB for v$${version}" --body "$${body}"
+	diff=$$(diff -u $$a $$b) && \
+	body=$$(echo -e "\`\`\`diff$${diff}\n\n\`\`\`") && \
+	if [ "$${diff}" = "" ]; then \
+		body="No changes."; \
+	fi && \
+	$(call dry-run,git push origin update-db-v$${version}) && \
+	$(call dry-run,gh pr create -B master --title "Update DB for v$${version}" --body "$${body}")
+
+	rm -rf $(DIR)
 
 promote:
 	$(eval DIR=$(shell mktemp -d))
@@ -38,5 +44,7 @@ promote:
 		sed -i '' "s/installedVersion: \"[0-9]*\"/installedVersion: \"$$(cat $(DIR)/$${env}.txt)\"/" .deployed-versions/$${env}.yaml; \
 	done && \
 	git commit -am "promote devel and prod" && \
-	git push origin promote-$$(cat $(DIR)/stag.txt) && \
-	gh pr create -B master --title "Promote devel and prod" --body ""
+	$(call dry-run,git push origin promote-$$(cat $(DIR)/stag.txt)) && \
+	$(call dry-run,gh pr create -B master --title "Promote devel and prod" --body "")
+
+	rm -rf $(DIR)
