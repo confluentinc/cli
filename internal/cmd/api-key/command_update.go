@@ -38,7 +38,6 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 			Spec: &apikeysv2.IamV2ApiKeySpecUpdate{Description: apikeysv2.PtrString(description)},
 		}
 		_, httpResp, err := c.V2Client.UpdateApiKey(apiKey, apiKeyUpdate)
-
 		if err != nil {
 			return errors.CatchApiKeyForbiddenAccessError(err, updateOperation, httpResp)
 		}

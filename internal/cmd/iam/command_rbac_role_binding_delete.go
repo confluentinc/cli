@@ -86,15 +86,18 @@ func (c *roleBindingCommand) ccloudDelete(cmd *cobra.Command, deleteRoleBinding 
 		return err
 	}
 
-	var roleBindingToDelete *mdsv2.IamV2RoleBinding
+	var roleBindingToDelete mdsv2.IamV2RoleBinding
+	found := false
+
 	for _, roleBinding := range roleBindings {
 		if roleBinding.GetCrnPattern() == deleteRoleBinding.GetCrnPattern() {
-			roleBindingToDelete = &roleBinding
+			roleBindingToDelete = roleBinding
+			found = true
 			break
 		}
 	}
 
-	if roleBindingToDelete == nil {
+	if !found {
 		return errors.NewErrorWithSuggestions(errors.RoleBindingNotFoundErrorMsg, errors.RoleBindingNotFoundSuggestions)
 	}
 

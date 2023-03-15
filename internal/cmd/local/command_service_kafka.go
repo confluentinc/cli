@@ -260,11 +260,9 @@ func (c *Command) runKafkaCommand(cmd *cobra.Command, args []string, mode string
 		configFileFlag := fmt.Sprintf("--%s.config", modeNoun)
 		kafkaArgs = append(kafkaArgs, configFileFlag, config)
 		kafkaArgs = append(kafkaArgs, "--bootstrap-server", cloudServer)
-	} else {
-		if !types.Contains(kafkaArgs, "--bootstrap-server") {
-			defaultBootstrapServer := fmt.Sprintf("localhost:%d", services["kafka"].port)
-			kafkaArgs = append(kafkaArgs, "--bootstrap-server", defaultBootstrapServer)
-		}
+	} else if !types.Contains(kafkaArgs, "--bootstrap-server") {
+		defaultBootstrapServer := fmt.Sprintf("localhost:%d", services["kafka"].port)
+		kafkaArgs = append(kafkaArgs, "--bootstrap-server", defaultBootstrapServer)
 	}
 
 	kafkaCommand := exec.Command(scriptFile, kafkaArgs...)

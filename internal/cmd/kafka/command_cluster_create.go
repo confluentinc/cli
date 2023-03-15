@@ -231,9 +231,11 @@ func (c *clusterCommand) validateGcpEncryptionKey(prompt form.Prompt, cloud stri
 
 	promptMsg := "Please confirm you've authorized the key for this identity: " + externalID
 	f := form.New(
-		form.Field{ID: "authorized",
+		form.Field{
+			ID:        "authorized",
 			Prompt:    promptMsg,
-			IsYesOrNo: true})
+			IsYesOrNo: true,
+		})
 	for {
 		if err := f.Prompt(prompt); err != nil {
 			output.ErrPrintln(errors.FailedToReadConfirmationErrorMsg)

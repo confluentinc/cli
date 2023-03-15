@@ -160,9 +160,7 @@ func TestRemoveNetrcCredentials(t *testing.T) {
 	req.Equal(exist, false)
 }
 
-func newLoginCmd(auth *ccloudv1Mock.Auth, userInterface *ccloudv1Mock.UserInterface, isCloud bool, req *require.Assertions, netrcHandler netrc.NetrcHandler,
-	authTokenHandler pauth.AuthTokenHandler, loginCredentialsManager pauth.LoginCredentialsManager,
-	loginOrganizationManager pauth.LoginOrganizationManager) (*cobra.Command, *v1.Config) {
+func newLoginCmd(auth *ccloudv1Mock.Auth, userInterface *ccloudv1Mock.UserInterface, isCloud bool, req *require.Assertions, netrcHandler netrc.NetrcHandler, authTokenHandler pauth.AuthTokenHandler, loginCredentialsManager pauth.LoginCredentialsManager, loginOrganizationManager pauth.LoginOrganizationManager) (*cobra.Command, *v1.Config) {
 	cfg := v1.New()
 	var mdsClient *mds.APIClient
 	if !isCloud {

@@ -122,7 +122,6 @@ func (c *roleBindingCommand) parseCommon(cmd *cobra.Command) (*roleBindingOption
 	}
 
 	scope, err := c.parseAndValidateScope(cmd)
-
 	if err != nil {
 		return nil, err
 	}
@@ -247,7 +246,7 @@ func (c *roleBindingCommand) validateResourceTypeV2(resourceType string) error {
 		return err
 	}
 
-	var allResourceTypes = make(map[string]bool)
+	allResourceTypes := make(map[string]bool)
 	found := false
 	for _, role := range roles {
 		for _, policies := range role.Policies {
@@ -327,7 +326,7 @@ func (c *roleBindingCommand) validateResourceTypeV1(resourceType string) error {
 		return err
 	}
 
-	var allResourceTypes = make(map[string]bool)
+	allResourceTypes := make(map[string]bool)
 	found := false
 	for _, role := range roles {
 		for _, operation := range role.AccessPolicy.AllowedOperations {

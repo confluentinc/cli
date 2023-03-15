@@ -8,7 +8,7 @@ import (
 
 	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
-	print "github.com/confluentinc/cli/internal/pkg/cluster"
+	"github.com/confluentinc/cli/internal/pkg/cluster"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
@@ -36,8 +36,8 @@ func (c *command) clusterListOnPrem(cmd *cobra.Command, _ []string) error {
 
 	clusterInfos, response, err := c.MDSClient.ClusterRegistryApi.ClusterRegistryList(ctx, opts)
 	if err != nil {
-		return print.HandleClusterError(err, response)
+		return cluster.HandleClusterError(err, response)
 	}
 
-	return print.PrintClusters(cmd, clusterInfos)
+	return cluster.PrintClusters(cmd, clusterInfos)
 }

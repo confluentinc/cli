@@ -19,9 +19,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
-var (
-	S3ReleaseNotesFile = "release-notes.rst"
-)
+var S3ReleaseNotesFile = "release-notes.rst"
 
 type PublicRepo struct {
 	*PublicRepoParams
@@ -196,7 +194,7 @@ func (r *PublicRepo) GetAvailableReleaseNotesVersions(name string) (version.Coll
 		return nil, err
 	}
 	availableVersions := r.getMatchedReleaseNotesVersionsFromListBucketResult(name, listBucketResult)
-	if len(availableVersions) <= 0 {
+	if len(availableVersions) == 0 {
 		return nil, errors.New(errors.NoVersionsErrorMsg)
 	}
 	return availableVersions, nil
@@ -214,7 +212,7 @@ func (r *PublicRepo) getMatchedReleaseNotesVersionsFromListBucketResult(name str
 	return versions
 }
 
-func (r *PublicRepo) parseMatchedReleaseNotesVersion(name, key string) (match bool, ver *version.Version) {
+func (r *PublicRepo) parseMatchedReleaseNotesVersion(name, key string) (bool, *version.Version) {
 	if !strings.HasPrefix(key, fmt.Sprintf(r.S3ReleaseNotesPrefixFmt, name)) {
 		return false, nil
 	}
