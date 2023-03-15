@@ -15,7 +15,6 @@ import (
 // Handler for POST "/cmk/v2/clusters"
 func handleCmkKafkaClusterCreate(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
 		req := new(cmkv2.CmkV2Cluster)
 		err := json.NewDecoder(r.Body).Decode(req)
 		require.NoError(t, err)

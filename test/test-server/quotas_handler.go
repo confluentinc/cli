@@ -13,7 +13,6 @@ import (
 
 func handleAppliedQuotas(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
 		environment := r.URL.Query().Get("environment")
 		kafkaCluster := r.URL.Query().Get("kafka_cluster")
 		network := r.URL.Query().Get("network")

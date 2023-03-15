@@ -70,7 +70,6 @@ var ksqlClusterForDetailedProcessingLogFalse = ksqlv2.KsqldbcmV2Cluster{
 // Handler for "/ksqldbcm/v2/clusters"
 func handleKsqlClusters(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
 		switch r.Method {
 		case http.MethodPost:
 			req := new(ksqlv2.KsqldbcmV2Cluster)
