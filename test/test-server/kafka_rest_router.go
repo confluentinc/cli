@@ -405,19 +405,25 @@ func handleKafkaRPPartitionReplicas(t *testing.T) http.HandlerFunc {
 					replicas []replicaData
 				}{
 					"0": {
-						replicas: []replicaData{{brokerId: 1001, isLeader: true, isInSync: true},
+						replicas: []replicaData{
+							{brokerId: 1001, isLeader: true, isInSync: true},
 							{brokerId: 1002, isLeader: false, isInSync: true},
-							{brokerId: 1003, isLeader: false, isInSync: true}},
+							{brokerId: 1003, isLeader: false, isInSync: true},
+						},
 					},
 					"1": {
-						replicas: []replicaData{{brokerId: 1001, isLeader: false, isInSync: false},
+						replicas: []replicaData{
+							{brokerId: 1001, isLeader: false, isInSync: false},
 							{brokerId: 1002, isLeader: true, isInSync: true},
-							{brokerId: 1003, isLeader: false, isInSync: true}},
+							{brokerId: 1003, isLeader: false, isInSync: true},
+						},
 					},
 					"2": {
-						replicas: []replicaData{{brokerId: 1001, isLeader: false, isInSync: false},
+						replicas: []replicaData{
+							{brokerId: 1001, isLeader: false, isInSync: false},
 							{brokerId: 1002, isLeader: false, isInSync: false},
-							{brokerId: 1003, isLeader: true, isInSync: true}},
+							{brokerId: 1003, isLeader: true, isInSync: true},
+						},
 					},
 				}
 

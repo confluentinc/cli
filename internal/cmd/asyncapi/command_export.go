@@ -8,13 +8,14 @@ import (
 	"strings"
 	"time"
 
-	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
-	ckgo "github.com/confluentinc/confluent-kafka-go/kafka"
-	schemaregistry "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/iancoleman/strcase"
 	"github.com/spf13/cobra"
 	"github.com/swaggest/go-asyncapi/reflector/asyncapi-2.4.0"
 	"github.com/swaggest/go-asyncapi/spec-2.4.0"
+
+	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
+	ckgo "github.com/confluentinc/confluent-kafka-go/kafka"
+	schemaregistry "github.com/confluentinc/schema-registry-sdk-go"
 
 	"github.com/confluentinc/cli/internal/cmd/kafka"
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
@@ -86,7 +87,7 @@ func newExportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
+func (c *command) export(cmd *cobra.Command, _ []string) error {
 	flags, err := getFlags(cmd)
 	if err != nil {
 		return err
@@ -437,6 +438,7 @@ func (c *command) getSchemaRegistry(details *accountDetails, flags *flags) error
 func msgName(s string) string {
 	return strcase.ToCamel(s) + "Message"
 }
+
 func addServer(broker string, schemaCluster *v1.SchemaRegistryCluster, specVersion string) asyncapi.Reflector {
 	return asyncapi.Reflector{
 		Schema: &spec.AsyncAPI{
@@ -519,7 +521,8 @@ func addChannel(reflector asyncapi.Reflector, details channelDetails) (asyncapi.
 }
 
 func addComponents(reflector asyncapi.Reflector, messages map[string]spec.Message) asyncapi.Reflector {
-	reflector.Schema.WithComponents(spec.Components{Messages: messages,
+	reflector.Schema.WithComponents(spec.Components{
+		Messages: messages,
 		SecuritySchemes: &spec.ComponentsSecuritySchemes{
 			MapOfComponentsSecuritySchemesWDValues: map[string]spec.ComponentsSecuritySchemesWD{
 				"confluentSchemaRegistry": {

@@ -5,9 +5,10 @@ import (
 	"net/http"
 	"testing"
 
-	kafkaquotasv1 "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
+
+	kafkaquotasv1 "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
 )
 
 func handleKafkaClientQuota(t *testing.T) http.HandlerFunc {

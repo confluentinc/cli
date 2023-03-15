@@ -35,7 +35,6 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	httpResp, err := c.V2Client.DeleteApiKey(apiKey)
-
 	if err != nil {
 		return errors.CatchApiKeyForbiddenAccessError(err, deleteOperation, httpResp)
 	}

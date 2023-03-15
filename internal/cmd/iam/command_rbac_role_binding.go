@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+
 	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
 	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	"github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1"
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -121,7 +122,6 @@ func (c *roleBindingCommand) parseCommon(cmd *cobra.Command) (*roleBindingOption
 	}
 
 	scope, err := c.parseAndValidateScope(cmd)
-
 	if err != nil {
 		return nil, err
 	}
@@ -246,7 +246,7 @@ func (c *roleBindingCommand) validateResourceTypeV2(resourceType string) error {
 		return err
 	}
 
-	var allResourceTypes = make(map[string]bool)
+	allResourceTypes := make(map[string]bool)
 	found := false
 	for _, role := range roles {
 		for _, policies := range role.Policies {
@@ -326,7 +326,7 @@ func (c *roleBindingCommand) validateResourceTypeV1(resourceType string) error {
 		return err
 	}
 
-	var allResourceTypes = make(map[string]bool)
+	allResourceTypes := make(map[string]bool)
 	found := false
 	for _, role := range roles {
 		for _, operation := range role.AccessPolicy.AllowedOperations {

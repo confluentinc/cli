@@ -6,8 +6,9 @@ import (
 	"net/http"
 	"testing"
 
-	servicequotav1 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v1"
 	"github.com/stretchr/testify/require"
+
+	servicequotav1 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v1"
 )
 
 func handleAppliedQuotas(t *testing.T) http.HandlerFunc {
@@ -83,7 +84,7 @@ func int32ToPtr(i int32) *int32 {
 }
 
 func filterQuotaResults(quotaList []servicequotav1.ServiceQuotaV1AppliedQuota, environment string, network string, kafkaCluster string, quotaCode string) []servicequotav1.ServiceQuotaV1AppliedQuota {
-	//filter by environment id
+	// filter by environment id
 	filtered := []servicequotav1.ServiceQuotaV1AppliedQuota{}
 	if environment != "" {
 		for _, quota := range quotaList {
@@ -94,7 +95,7 @@ func filterQuotaResults(quotaList []servicequotav1.ServiceQuotaV1AppliedQuota, e
 		quotaList = filtered
 	}
 
-	//filter by cluster id
+	// filter by cluster id
 	filtered = []servicequotav1.ServiceQuotaV1AppliedQuota{}
 	if kafkaCluster != "" {
 		for _, quota := range quotaList {
@@ -105,7 +106,7 @@ func filterQuotaResults(quotaList []servicequotav1.ServiceQuotaV1AppliedQuota, e
 		quotaList = filtered
 	}
 
-	//filter by network id
+	// filter by network id
 	filtered = []servicequotav1.ServiceQuotaV1AppliedQuota{}
 	if network != "" {
 		for _, quota := range quotaList {
@@ -116,7 +117,7 @@ func filterQuotaResults(quotaList []servicequotav1.ServiceQuotaV1AppliedQuota, e
 		quotaList = filtered
 	}
 
-	//filter by quota code (id)
+	// filter by quota code (id)
 	filtered = []servicequotav1.ServiceQuotaV1AppliedQuota{}
 	if quotaCode != "" {
 		for _, quota := range quotaList {

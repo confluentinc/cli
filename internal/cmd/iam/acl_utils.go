@@ -5,15 +5,14 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/confluentinc/cli/internal/pkg/acl"
-	"github.com/confluentinc/cli/internal/pkg/utils"
-
 	"github.com/hashicorp/go-multierror"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
 	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
+
+	"github.com/confluentinc/cli/internal/pkg/acl"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 // ACLConfiguration wrapper used for flag parsing and validation

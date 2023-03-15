@@ -214,12 +214,12 @@ func (s *CLITestSuite) TestSaveUsernamePassword() {
 		s.NoError(err)
 		wantBytes, err := os.ReadFile(wantFile)
 		s.NoError(err)
-		want := strings.Replace(string(wantBytes), urlPlaceHolder, tt.loginURL, -1)
+		want := strings.ReplaceAll(string(wantBytes), urlPlaceHolder, tt.loginURL)
 		data := v1.Config{}
 		err = json.Unmarshal(got, &data)
 		s.NoError(err)
-		want = strings.Replace(want, passwordPlaceholder, data.SavedCredentials["login-good@user.com-"+tt.loginURL].EncryptedPassword, -1)
-		require.Contains(s.T(), utils.NormalizeNewLines(string(got)), utils.NormalizeNewLines(string(want)))
+		want = strings.ReplaceAll(want, passwordPlaceholder, data.SavedCredentials["login-good@user.com-"+tt.loginURL].EncryptedPassword)
+		require.Contains(s.T(), utils.NormalizeNewLines(string(got)), utils.NormalizeNewLines(want))
 	}
 	_ = os.Remove(netrc.NetrcIntegrationTestFile)
 }

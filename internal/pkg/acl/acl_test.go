@@ -4,18 +4,19 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
+
+	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	errMsgs "github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 func TestParseAclRequest(t *testing.T) {
-	var suite = []struct {
+	suite := []struct {
 		args        []string
 		expectedAcl AclRequestDataWithError
 	}{
@@ -77,7 +78,7 @@ func TestParseAclRequest(t *testing.T) {
 }
 
 func TestValidateCreateDeleteAclRequestData(t *testing.T) {
-	var suite = []struct {
+	suite := []struct {
 		initialAcl  AclRequestDataWithError
 		expectedAcl AclRequestDataWithError
 	}{

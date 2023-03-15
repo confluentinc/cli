@@ -6,8 +6,9 @@ import (
 	"testing"
 	"time"
 
-	metricsv2 "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2"
 	"github.com/stretchr/testify/require"
+
+	metricsv2 "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2"
 )
 
 var queryTime = time.Date(2019, 12, 19, 16, 1, 0, 0, time.UTC)

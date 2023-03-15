@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/confluentinc/cli/internal/pkg/errors"
-
 	"github.com/stretchr/testify/require"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 func TestServerTimeout(t *testing.T) {

@@ -3,11 +3,12 @@ package schemaregistry
 import (
 	"fmt"
 
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/spf13/cobra"
 )
 
 func (c *command) newExporterDeleteCommandOnPrem() *cobra.Command {

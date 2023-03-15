@@ -25,38 +25,52 @@ var mdsResourcePatterns = []struct {
 }{
 	{
 		args: []string{"--cluster-scope"},
-		pattern: mds.KafkaResourcePattern{ResourceType: mds.ACLRESOURCETYPE_CLUSTER, Name: "kafka-cluster",
-			PatternType: mds.PATTERNTYPE_LITERAL},
+		pattern: mds.KafkaResourcePattern{
+			ResourceType: mds.ACLRESOURCETYPE_CLUSTER, Name: "kafka-cluster",
+			PatternType: mds.PATTERNTYPE_LITERAL,
+		},
 	},
 	{
 		args: []string{"--topic", "test-topic"},
-		pattern: mds.KafkaResourcePattern{ResourceType: mds.ACLRESOURCETYPE_TOPIC, Name: "test-topic",
-			PatternType: mds.PATTERNTYPE_LITERAL},
+		pattern: mds.KafkaResourcePattern{
+			ResourceType: mds.ACLRESOURCETYPE_TOPIC, Name: "test-topic",
+			PatternType: mds.PATTERNTYPE_LITERAL,
+		},
 	},
 	{
 		args: []string{"--topic", "test-topic", "--prefix"},
-		pattern: mds.KafkaResourcePattern{ResourceType: mds.ACLRESOURCETYPE_TOPIC, Name: "test-topic",
-			PatternType: mds.PATTERNTYPE_PREFIXED},
+		pattern: mds.KafkaResourcePattern{
+			ResourceType: mds.ACLRESOURCETYPE_TOPIC, Name: "test-topic",
+			PatternType: mds.PATTERNTYPE_PREFIXED,
+		},
 	},
 	{
 		args: []string{"--consumer-group", "test-group"},
-		pattern: mds.KafkaResourcePattern{ResourceType: mds.ACLRESOURCETYPE_GROUP, Name: "test-group",
-			PatternType: mds.PATTERNTYPE_LITERAL},
+		pattern: mds.KafkaResourcePattern{
+			ResourceType: mds.ACLRESOURCETYPE_GROUP, Name: "test-group",
+			PatternType: mds.PATTERNTYPE_LITERAL,
+		},
 	},
 	{
 		args: []string{"--consumer-group", "test-group", "--prefix"},
-		pattern: mds.KafkaResourcePattern{ResourceType: mds.ACLRESOURCETYPE_GROUP, Name: "test-group",
-			PatternType: mds.PATTERNTYPE_PREFIXED},
+		pattern: mds.KafkaResourcePattern{
+			ResourceType: mds.ACLRESOURCETYPE_GROUP, Name: "test-group",
+			PatternType: mds.PATTERNTYPE_PREFIXED,
+		},
 	},
 	{
 		args: []string{"--transactional-id", "test-transactional-id"},
-		pattern: mds.KafkaResourcePattern{ResourceType: mds.ACLRESOURCETYPE_TRANSACTIONAL_ID, Name: "test-transactional-id",
-			PatternType: mds.PATTERNTYPE_LITERAL},
+		pattern: mds.KafkaResourcePattern{
+			ResourceType: mds.ACLRESOURCETYPE_TRANSACTIONAL_ID, Name: "test-transactional-id",
+			PatternType: mds.PATTERNTYPE_LITERAL,
+		},
 	},
 	{
 		args: []string{"--transactional-id", "test-transactional-id", "--prefix"},
-		pattern: mds.KafkaResourcePattern{ResourceType: mds.ACLRESOURCETYPE_TRANSACTIONAL_ID, Name: "test-transactional-id",
-			PatternType: mds.PATTERNTYPE_PREFIXED},
+		pattern: mds.KafkaResourcePattern{
+			ResourceType: mds.ACLRESOURCETYPE_TRANSACTIONAL_ID, Name: "test-transactional-id",
+			PatternType: mds.PATTERNTYPE_PREFIXED,
+		},
 	},
 }
 
@@ -66,103 +80,143 @@ var mdsACLEntries = []struct {
 }{
 	{
 		args: []string{"--allow", "--principal", "User:42", "--operation", "read"},
-		entry: mds.AccessControlEntry{PermissionType: mds.ACLPERMISSIONTYPE_ALLOW,
-			Principal: "User:42", Operation: mds.ACLOPERATION_READ, Host: "*"},
+		entry: mds.AccessControlEntry{
+			PermissionType: mds.ACLPERMISSIONTYPE_ALLOW,
+			Principal:      "User:42", Operation: mds.ACLOPERATION_READ, Host: "*",
+		},
 	},
 	{
 		args: []string{"--deny", "--principal", "User:42", "--host", "testhost", "--operation", "read"},
-		entry: mds.AccessControlEntry{PermissionType: mds.ACLPERMISSIONTYPE_DENY,
-			Principal: "User:42", Operation: mds.ACLOPERATION_READ, Host: "testhost"},
+		entry: mds.AccessControlEntry{
+			PermissionType: mds.ACLPERMISSIONTYPE_DENY,
+			Principal:      "User:42", Operation: mds.ACLOPERATION_READ, Host: "testhost",
+		},
 	},
 	{
 		args: []string{"--allow", "--principal", "User:42", "--host", "*", "--operation", "write"},
-		entry: mds.AccessControlEntry{PermissionType: mds.ACLPERMISSIONTYPE_ALLOW,
-			Principal: "User:42", Operation: mds.ACLOPERATION_WRITE, Host: "*"},
+		entry: mds.AccessControlEntry{
+			PermissionType: mds.ACLPERMISSIONTYPE_ALLOW,
+			Principal:      "User:42", Operation: mds.ACLOPERATION_WRITE, Host: "*",
+		},
 	},
 	{
 		args: []string{"--deny", "--principal", "User:42", "--operation", "write"},
-		entry: mds.AccessControlEntry{PermissionType: mds.ACLPERMISSIONTYPE_DENY,
-			Principal: "User:42", Operation: mds.ACLOPERATION_WRITE, Host: "*"},
+		entry: mds.AccessControlEntry{
+			PermissionType: mds.ACLPERMISSIONTYPE_DENY,
+			Principal:      "User:42", Operation: mds.ACLOPERATION_WRITE, Host: "*",
+		},
 	},
 	{
 		args: []string{"--allow", "--principal", "User:42", "--operation", "create"},
-		entry: mds.AccessControlEntry{PermissionType: mds.ACLPERMISSIONTYPE_ALLOW,
-			Principal: "User:42", Operation: mds.ACLOPERATION_CREATE, Host: "*"},
+		entry: mds.AccessControlEntry{
+			PermissionType: mds.ACLPERMISSIONTYPE_ALLOW,
+			Principal:      "User:42", Operation: mds.ACLOPERATION_CREATE, Host: "*",
+		},
 	},
 	{
 		args: []string{"--deny", "--principal", "User:42", "--operation", "create"},
-		entry: mds.AccessControlEntry{PermissionType: mds.ACLPERMISSIONTYPE_DENY,
-			Principal: "User:42", Operation: mds.ACLOPERATION_CREATE, Host: "*"},
+		entry: mds.AccessControlEntry{
+			PermissionType: mds.ACLPERMISSIONTYPE_DENY,
+			Principal:      "User:42", Operation: mds.ACLOPERATION_CREATE, Host: "*",
+		},
 	},
 	{
 		args: []string{"--allow", "--principal", "User:42", "--operation", "delete"},
-		entry: mds.AccessControlEntry{PermissionType: mds.ACLPERMISSIONTYPE_ALLOW,
-			Principal: "User:42", Operation: mds.ACLOPERATION_DELETE, Host: "*"},
+		entry: mds.AccessControlEntry{
+			PermissionType: mds.ACLPERMISSIONTYPE_ALLOW,
+			Principal:      "User:42", Operation: mds.ACLOPERATION_DELETE, Host: "*",
+		},
 	},
 	{
 		args: []string{"--deny", "--principal", "User:42", "--operation", "delete"},
-		entry: mds.AccessControlEntry{PermissionType: mds.ACLPERMISSIONTYPE_DENY,
-			Principal: "User:42", Operation: mds.ACLOPERATION_DELETE, Host: "*"},
+		entry: mds.AccessControlEntry{
+			PermissionType: mds.ACLPERMISSIONTYPE_DENY,
+			Principal:      "User:42", Operation: mds.ACLOPERATION_DELETE, Host: "*",
+		},
 	},
 	{
 		args: []string{"--allow", "--principal", "User:42", "--operation", "alter"},
-		entry: mds.AccessControlEntry{PermissionType: mds.ACLPERMISSIONTYPE_ALLOW,
-			Principal: "User:42", Operation: mds.ACLOPERATION_ALTER, Host: "*"},
+		entry: mds.AccessControlEntry{
+			PermissionType: mds.ACLPERMISSIONTYPE_ALLOW,
+			Principal:      "User:42", Operation: mds.ACLOPERATION_ALTER, Host: "*",
+		},
 	},
 	{
 		args: []string{"--deny", "--principal", "User:42", "--operation", "alter"},
-		entry: mds.AccessControlEntry{PermissionType: mds.ACLPERMISSIONTYPE_DENY,
-			Principal: "User:42", Operation: mds.ACLOPERATION_ALTER, Host: "*"},
+		entry: mds.AccessControlEntry{
+			PermissionType: mds.ACLPERMISSIONTYPE_DENY,
+			Principal:      "User:42", Operation: mds.ACLOPERATION_ALTER, Host: "*",
+		},
 	},
 	{
 		args: []string{"--allow", "--principal", "User:42", "--operation", "describe"},
-		entry: mds.AccessControlEntry{PermissionType: mds.ACLPERMISSIONTYPE_ALLOW,
-			Principal: "User:42", Operation: mds.ACLOPERATION_DESCRIBE, Host: "*"},
+		entry: mds.AccessControlEntry{
+			PermissionType: mds.ACLPERMISSIONTYPE_ALLOW,
+			Principal:      "User:42", Operation: mds.ACLOPERATION_DESCRIBE, Host: "*",
+		},
 	},
 	{
 		args: []string{"--deny", "--principal", "User:42", "--operation", "describe"},
-		entry: mds.AccessControlEntry{PermissionType: mds.ACLPERMISSIONTYPE_DENY,
-			Principal: "User:42", Operation: mds.ACLOPERATION_DESCRIBE, Host: "*"},
+		entry: mds.AccessControlEntry{
+			PermissionType: mds.ACLPERMISSIONTYPE_DENY,
+			Principal:      "User:42", Operation: mds.ACLOPERATION_DESCRIBE, Host: "*",
+		},
 	},
 	{
 		args: []string{"--allow", "--principal", "User:42", "--operation", "cluster-action"},
-		entry: mds.AccessControlEntry{PermissionType: mds.ACLPERMISSIONTYPE_ALLOW,
-			Principal: "User:42", Operation: mds.ACLOPERATION_CLUSTER_ACTION, Host: "*"},
+		entry: mds.AccessControlEntry{
+			PermissionType: mds.ACLPERMISSIONTYPE_ALLOW,
+			Principal:      "User:42", Operation: mds.ACLOPERATION_CLUSTER_ACTION, Host: "*",
+		},
 	},
 	{
 		args: []string{"--deny", "--principal", "User:42", "--operation", "cluster-action"},
-		entry: mds.AccessControlEntry{PermissionType: mds.ACLPERMISSIONTYPE_DENY,
-			Principal: "User:42", Operation: mds.ACLOPERATION_CLUSTER_ACTION, Host: "*"},
+		entry: mds.AccessControlEntry{
+			PermissionType: mds.ACLPERMISSIONTYPE_DENY,
+			Principal:      "User:42", Operation: mds.ACLOPERATION_CLUSTER_ACTION, Host: "*",
+		},
 	},
 	{
 		args: []string{"--allow", "--principal", "User:42", "--operation", "describe-configs"},
-		entry: mds.AccessControlEntry{PermissionType: mds.ACLPERMISSIONTYPE_ALLOW,
-			Principal: "User:42", Operation: mds.ACLOPERATION_DESCRIBE_CONFIGS, Host: "*"},
+		entry: mds.AccessControlEntry{
+			PermissionType: mds.ACLPERMISSIONTYPE_ALLOW,
+			Principal:      "User:42", Operation: mds.ACLOPERATION_DESCRIBE_CONFIGS, Host: "*",
+		},
 	},
 	{
 		args: []string{"--deny", "--principal", "User:42", "--operation", "describe-configs"},
-		entry: mds.AccessControlEntry{PermissionType: mds.ACLPERMISSIONTYPE_DENY,
-			Principal: "User:42", Operation: mds.ACLOPERATION_DESCRIBE_CONFIGS, Host: "*"},
+		entry: mds.AccessControlEntry{
+			PermissionType: mds.ACLPERMISSIONTYPE_DENY,
+			Principal:      "User:42", Operation: mds.ACLOPERATION_DESCRIBE_CONFIGS, Host: "*",
+		},
 	},
 	{
 		args: []string{"--allow", "--principal", "User:42", "--operation", "alter-configs"},
-		entry: mds.AccessControlEntry{PermissionType: mds.ACLPERMISSIONTYPE_ALLOW,
-			Principal: "User:42", Operation: mds.ACLOPERATION_ALTER_CONFIGS, Host: "*"},
+		entry: mds.AccessControlEntry{
+			PermissionType: mds.ACLPERMISSIONTYPE_ALLOW,
+			Principal:      "User:42", Operation: mds.ACLOPERATION_ALTER_CONFIGS, Host: "*",
+		},
 	},
 	{
 		args: []string{"--deny", "--principal", "User:42", "--operation", "alter-configs"},
-		entry: mds.AccessControlEntry{PermissionType: mds.ACLPERMISSIONTYPE_DENY,
-			Principal: "User:42", Operation: mds.ACLOPERATION_ALTER_CONFIGS, Host: "*"},
+		entry: mds.AccessControlEntry{
+			PermissionType: mds.ACLPERMISSIONTYPE_DENY,
+			Principal:      "User:42", Operation: mds.ACLOPERATION_ALTER_CONFIGS, Host: "*",
+		},
 	},
 	{
 		args: []string{"--allow", "--principal", "User:42", "--operation", "idempotent-write"},
-		entry: mds.AccessControlEntry{PermissionType: mds.ACLPERMISSIONTYPE_ALLOW,
-			Principal: "User:42", Operation: mds.ACLOPERATION_IDEMPOTENT_WRITE, Host: "*"},
+		entry: mds.AccessControlEntry{
+			PermissionType: mds.ACLPERMISSIONTYPE_ALLOW,
+			Principal:      "User:42", Operation: mds.ACLOPERATION_IDEMPOTENT_WRITE, Host: "*",
+		},
 	},
 	{
 		args: []string{"--deny", "--principal", "User:42", "--operation", "idempotent-write"},
-		entry: mds.AccessControlEntry{PermissionType: mds.ACLPERMISSIONTYPE_DENY,
-			Principal: "User:42", Operation: mds.ACLOPERATION_IDEMPOTENT_WRITE, Host: "*"},
+		entry: mds.AccessControlEntry{
+			PermissionType: mds.ACLPERMISSIONTYPE_DENY,
+			Principal:      "User:42", Operation: mds.ACLOPERATION_IDEMPOTENT_WRITE, Host: "*",
+		},
 	},
 }
 
@@ -357,12 +411,8 @@ func (suite *ACLTestSuite) TestMdsListPrincipalFilterACL() {
 }
 
 func (suite *ACLTestSuite) TestMdsMultipleResourceACL() {
-	args := []string{"acl", "create", "--kafka-cluster", "testcluster",
-		"--allow", "--operation", "read", "--principal", "User:42",
-		"--topic", "resource1", "--consumer-group", "resource2"}
-
 	cmd := suite.newMockIamCmd(nil, "")
-	cmd.SetArgs(args)
+	cmd.SetArgs([]string{"acl", "create", "--kafka-cluster", "testcluster", "--allow", "--operation", "read", "--principal", "User:42", "--topic", "resource1", "--consumer-group", "resource2"})
 
 	err := cmd.Execute()
 	assert.NotNil(suite.T(), err)
@@ -373,9 +423,7 @@ func (suite *ACLTestSuite) TestMdsMultipleResourceACL() {
 func (suite *ACLTestSuite) TestMdsDefaults() {
 	expect := make(chan any)
 	cmd := suite.newMockIamCmd(expect, "Topic PatternType was not set to default value of PatternTypes_LITERAL")
-	cmd.SetArgs([]string{"acl", "create", "--kafka-cluster", "testcluster",
-		"--allow", "--principal", "User:42",
-		"--operation", "read", "--topic", "dan"})
+	cmd.SetArgs([]string{"acl", "create", "--kafka-cluster", "testcluster", "--allow", "--principal", "User:42", "--operation", "read", "--topic", "dan"})
 	go func() {
 		expect <- mds.CreateAclRequest{
 			Scope: mds.KafkaScope{
@@ -403,9 +451,7 @@ func (suite *ACLTestSuite) TestMdsDefaults() {
 	assert.Nil(suite.T(), err)
 	cmd = suite.newMockIamCmd(expect, "Cluster PatternType was not set to default value of PatternTypes_LITERAL")
 
-	cmd.SetArgs([]string{"acl", "create", "--kafka-cluster", "testcluster",
-		"--cluster-scope", "--allow", "--principal", "User:42",
-		"--operation", "read"})
+	cmd.SetArgs([]string{"acl", "create", "--kafka-cluster", "testcluster", "--cluster-scope", "--allow", "--principal", "User:42", "--operation", "read"})
 
 	go func() {
 		expect <- mds.CreateAclRequest{

@@ -6,8 +6,9 @@ import (
 	"net/http"
 	"testing"
 
-	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	"github.com/stretchr/testify/require"
+
+	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 )
 
 // Handler for: "/security/1.0/registry/clusters"

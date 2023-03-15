@@ -6,11 +6,11 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-
-	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	"github.com/spf13/pflag"
 
-	print "github.com/confluentinc/cli/internal/pkg/cluster"
+	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
+
+	"github.com/confluentinc/cli/internal/pkg/cluster"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
@@ -73,11 +73,11 @@ func (c *registerCommand) register(cmd *cobra.Command, _ []string) error {
 
 	response, err := c.MDSClient.ClusterRegistryApi.UpdateClusters(ctx, []mds.ClusterInfo{clusterInfo})
 	if err != nil {
-		return print.HandleClusterError(err, response)
+		return cluster.HandleClusterError(err, response)
 	}
 
 	// On Success display the newly added/updated entry
-	return print.PrintClusters(cmd, []mds.ClusterInfo{clusterInfo})
+	return cluster.PrintClusters(cmd, []mds.ClusterInfo{clusterInfo})
 }
 
 func (c *registerCommand) resolveClusterScope(cmd *cobra.Command) (*mds.ScopeClusters, error) {

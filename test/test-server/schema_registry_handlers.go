@@ -6,9 +6,10 @@ import (
 	"strconv"
 	"testing"
 
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
+
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 )
 
 // Handler for: "/"
