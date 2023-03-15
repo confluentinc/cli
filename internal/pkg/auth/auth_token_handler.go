@@ -20,8 +20,7 @@ type AuthTokenHandler interface {
 	GetConfluentToken(mdsClient *mds.APIClient, credentials *Credentials) (string, error)
 }
 
-type AuthTokenHandlerImpl struct {
-}
+type AuthTokenHandlerImpl struct{}
 
 func NewAuthTokenHandler() AuthTokenHandler {
 	return &AuthTokenHandlerImpl{}

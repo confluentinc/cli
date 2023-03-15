@@ -37,6 +37,7 @@ func (c *mirrorCommand) newPauseCommand() *cobra.Command {
 
 	return cmd
 }
+
 func (c *mirrorCommand) pause(cmd *cobra.Command, args []string) error {
 	linkName, err := cmd.Flags().GetString(linkFlagName)
 	if err != nil {

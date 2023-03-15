@@ -37,24 +37,22 @@ func (suite *KafkaClusterTestSuite) TestBroker_checkAllOrBrokerIdSpecified() {
 	req.Equal(errors.MustSpecifyAllOrBrokerIDErrorMsg, err.Error())
 }
 
-var (
-	expectedConfigData = []configOut{
-		{
-			"testConfig",
-			"testValue",
-			true,
-			true,
-			true,
-		},
-		{
-			"testConfig2",
-			"",
-			true,
-			true,
-			true,
-		},
-	}
-)
+var expectedConfigData = []configOut{
+	{
+		"testConfig",
+		"testValue",
+		true,
+		true,
+		true,
+	},
+	{
+		"testConfig2",
+		"",
+		true,
+		true,
+		true,
+	},
+}
 
 func (suite *KafkaClusterTestSuite) TestBroker_parseClusterConfigData() {
 	req := suite.Require()

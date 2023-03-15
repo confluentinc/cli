@@ -178,7 +178,6 @@ func (c *PasswordProtectionSuite) DecryptConfigFileSecrets(configFilePath string
 	if err != nil {
 		return err
 	}
-	//decryptedSecrets := properties.NewProperties()
 	cipherSuite, err := c.loadCipherSuiteFromLocalFile(localSecureConfigPath)
 	if err != nil {
 		return err

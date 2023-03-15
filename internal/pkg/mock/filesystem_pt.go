@@ -108,7 +108,7 @@ func (c *PassThroughFileSystem) IsTerminal(fd uintptr) bool {
 	return c.FS.IsTerminal(fd)
 }
 
-func (c *PassThroughFileSystem) Glob(pattern string) (matches []string, err error) {
+func (c *PassThroughFileSystem) Glob(pattern string) ([]string, error) {
 	if c.Mock.GlobFunc != nil {
 		return c.Mock.Glob(pattern)
 	}

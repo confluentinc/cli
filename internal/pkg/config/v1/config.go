@@ -27,9 +27,7 @@ const (
 	emptyFieldIndicator  = "EMPTY"
 )
 
-var (
-	ver, _ = version.NewVersion("1.0.0")
-)
+var ver, _ = version.NewVersion("1.0.0")
 
 const signupSuggestion = `If you need a Confluent Cloud account, sign up with "confluent cloud-signup".`
 
