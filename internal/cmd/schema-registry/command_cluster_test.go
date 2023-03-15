@@ -6,15 +6,16 @@ import (
 	"testing"
 	"time"
 
+	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
+
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
 	metricsv2 "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2"
 	metricsmock "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2/mock"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	srMock "github.com/confluentinc/schema-registry-sdk-go/mock"
-	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/ccstructs"

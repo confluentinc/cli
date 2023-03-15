@@ -6,9 +6,10 @@ import (
 	"io"
 	"os"
 
-	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
+
+	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 
 	configv1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"

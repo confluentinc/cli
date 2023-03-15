@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"strings"
 
-	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 const longDescription = `Use this command to print the shell completion

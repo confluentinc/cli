@@ -7,14 +7,15 @@ import (
 	"testing"
 	"time"
 
+	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/require"
+
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	kafkarestv3mock "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3/mock"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	srMock "github.com/confluentinc/schema-registry-sdk-go/mock"
-	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/require"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/ccstructs"

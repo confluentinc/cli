@@ -1,6 +1,5 @@
 package kafka
 
-// TODO: wrap all link / mirror commands with kafka rest error
 import (
 	"github.com/spf13/cobra"
 

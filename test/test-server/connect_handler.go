@@ -5,8 +5,9 @@ import (
 	"net/http"
 	"testing"
 
-	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
 	"github.com/stretchr/testify/require"
+
+	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
 )
 
 // Handler for: "/connect/v1/environments/{env}/clusters/{clusters}/connectors/{connector}"

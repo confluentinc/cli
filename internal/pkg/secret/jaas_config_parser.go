@@ -7,9 +7,9 @@ import (
 	"text/scanner"
 	"unicode"
 
-	"github.com/confluentinc/cli/internal/pkg/errors"
-
 	"github.com/confluentinc/properties"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 type JAASParserInterface interface {

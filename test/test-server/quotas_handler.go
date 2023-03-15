@@ -6,8 +6,9 @@ import (
 	"net/http"
 	"testing"
 
-	servicequotav1 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v1"
 	"github.com/stretchr/testify/require"
+
+	servicequotav1 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v1"
 )
 
 func handleAppliedQuotas(t *testing.T) http.HandlerFunc {
