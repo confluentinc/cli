@@ -16,7 +16,7 @@ import (
 )
 
 func TestParseAclRequest(t *testing.T) {
-	var suite = []struct {
+	suite := []struct {
 		args        []string
 		expectedAcl AclRequestDataWithError
 	}{
@@ -78,7 +78,7 @@ func TestParseAclRequest(t *testing.T) {
 }
 
 func TestValidateCreateDeleteAclRequestData(t *testing.T) {
-	var suite = []struct {
+	suite := []struct {
 		initialAcl  AclRequestDataWithError
 		expectedAcl AclRequestDataWithError
 	}{

@@ -13,8 +13,8 @@ import (
 
 // Handler for: "/sd/v1/pipelines/{id}"
 func handlePipeline(t *testing.T) http.HandlerFunc {
-	CreatedAt := time.Date(2022, 10, 4, 06, 00, 00, 000000000, time.UTC)
-	UpdatedAt := time.Date(2022, 10, 6, 06, 00, 00, 000000000, time.UTC)
+	CreatedAt := time.Date(2022, 10, 4, 6, 0, 0, 0, time.UTC)
+	UpdatedAt := time.Date(2022, 10, 6, 6, 0, 0, 0, time.UTC)
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodDelete:

@@ -81,7 +81,8 @@ var (
 	springBoot = &clientConfig{"Spring Boot", "springboot", springbootSrConfig, true}
 
 	clientConfigurations = []*clientConfig{
-		clojure, cpp, csharp, golang, groovy, java, kotlin, ktor, nodeJS, python, ruby, rust, scala, springBoot, restAPI}
+		clojure, cpp, csharp, golang, groovy, java, kotlin, ktor, nodeJS, python, ruby, rust, scala, springBoot, restAPI,
+	}
 
 	re = regexp.MustCompile(fmt.Sprintf("%s|%s|%s", srEndpointProperty, srCredentialsSourceProperty, srUserInfoProperty))
 )

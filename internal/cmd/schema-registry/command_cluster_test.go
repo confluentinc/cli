@@ -53,16 +53,16 @@ func (suite *ClusterTestSuite) SetupSuite() {
 	}
 	suite.srClientMock = &srsdk.APIClient{
 		DefaultApi: &srMock.DefaultApi{
-			GetTopLevelConfigFunc: func(ctx context.Context) (srsdk.Config, *http.Response, error) {
+			GetTopLevelConfigFunc: func(_ context.Context) (srsdk.Config, *http.Response, error) {
 				return srsdk.Config{CompatibilityLevel: "FULL"}, nil, nil
 			},
-			GetTopLevelModeFunc: func(ctx context.Context) (srsdk.Mode, *http.Response, error) {
+			GetTopLevelModeFunc: func(_ context.Context) (srsdk.Mode, *http.Response, error) {
 				return srsdk.Mode{}, nil, nil
 			},
-			UpdateTopLevelModeFunc: func(ctx context.Context, body srsdk.ModeUpdateRequest) (request srsdk.ModeUpdateRequest, response *http.Response, e error) {
+			UpdateTopLevelModeFunc: func(_ context.Context, body srsdk.ModeUpdateRequest) (srsdk.ModeUpdateRequest, *http.Response, error) {
 				return srsdk.ModeUpdateRequest{Mode: body.Mode}, nil, nil
 			},
-			UpdateTopLevelConfigFunc: func(ctx context.Context, body srsdk.ConfigUpdateRequest) (request srsdk.ConfigUpdateRequest, response *http.Response, e error) {
+			UpdateTopLevelConfigFunc: func(_ context.Context, body srsdk.ConfigUpdateRequest) (srsdk.ConfigUpdateRequest, *http.Response, error) {
 				return srsdk.ConfigUpdateRequest{Compatibility: body.Compatibility}, nil, nil
 			},
 		},

@@ -9,3 +9,9 @@ linters-settings:
       - prefix(github.com/confluentinc)
       - prefix(github.com/confluentinc/cli)
     custom-order: true
+  gocritic:
+    disabled-checks:
+      - ifElseChain
+      - singleCaseSwitch
+  nakedret:
+    max-func-lines: 0

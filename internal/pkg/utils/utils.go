@@ -86,8 +86,8 @@ func NormalizeNewLines(raw string) string {
 }
 
 func NormalizeByteArrayNewLines(raw []byte) []byte {
-	normalized := bytes.Replace(raw, []byte{13, 10}, []byte{10}, -1)
-	normalized = bytes.Replace(normalized, []byte{13}, []byte{10}, -1)
+	normalized := bytes.ReplaceAll(raw, []byte{13, 10}, []byte{10})
+	normalized = bytes.ReplaceAll(normalized, []byte{13}, []byte{10})
 	return normalized
 }
 
