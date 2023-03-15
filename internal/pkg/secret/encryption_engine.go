@@ -105,7 +105,7 @@ func (c *EncryptEngineImpl) UnwrapDataKey(dataKey string, iv string, algo string
 
 func (c *EncryptEngineImpl) Encrypt(plainText string, key []byte) (string, string, error) {
 	defer func() {
-		recover()
+		_ = recover()
 	}()
 
 	return c.encrypt(plainText, key)
@@ -162,7 +162,7 @@ func (c *EncryptEngineImpl) encrypt(plainText string, key []byte) (string, strin
 
 func (c *EncryptEngineImpl) decrypt(crypt []byte, key []byte, iv []byte, algo string) ([]byte, error) {
 	defer func() {
-		recover()
+		_ = recover()
 	}()
 
 	block, err := aes.NewCipher(key)
