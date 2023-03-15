@@ -22,7 +22,6 @@ func handleOrgEnvironment(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		envId := vars["id"]
-		w.Header().Set("Content-Type", "application/json")
 
 		if r.Method == http.MethodGet {
 			environment := &orgv2.OrgV2Environment{
@@ -55,7 +54,6 @@ func handleOrgEnvironment(t *testing.T) http.HandlerFunc {
 // Handler for: "/org/v2/environments"
 func handleOrgEnvironments(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		if r.Method == http.MethodGet {
 			environmentList := &orgv2.OrgV2EnvironmentList{Data: getOrgEnvironmentsList(OrgEnvironments)}
 			err := json.NewEncoder(w).Encode(environmentList)
@@ -69,7 +67,6 @@ func handleOrgOrganization(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		id := vars["id"]
-		w.Header().Set("Content-Type", "application/json")
 
 		displayName := "default"
 		switch r.Method {
@@ -92,7 +89,6 @@ func handleOrgOrganization(t *testing.T) http.HandlerFunc {
 // Handler for: "/org/v2/organizations"
 func handleOrgOrganizations(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		switch r.Method {
 		case http.MethodGet:
 			organizationList := &orgv2.OrgV2OrganizationList{Data: []orgv2.OrgV2Organization{

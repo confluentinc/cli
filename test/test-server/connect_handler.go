@@ -12,7 +12,6 @@ import (
 // Handler for: "/connect/v1/environments/{env}/clusters/{clusters}/connectors/{connector}"
 func handleConnector(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		if r.Method == http.MethodDelete {
 			err := json.NewEncoder(w).Encode(connectv1.InlineResponse200{})
 			require.NoError(t, err)
@@ -25,7 +24,6 @@ func handleConnector(t *testing.T) http.HandlerFunc {
 // Handler for: "/connect/v1/environments/{env}/clusters/{clusters}/connectors/{connector}/config"
 func handleConnectorConfig(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		var request map[string]string
 		err := json.NewDecoder(r.Body).Decode(&request)
 		require.NoError(t, err)
@@ -41,7 +39,6 @@ func handleConnectorConfig(t *testing.T) http.HandlerFunc {
 // Handler for: "/connect/v1/environments/{env}/clusters/{clusters}/connectors/{connector}/pause"
 func handleConnectorPause(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNoContent)
 	}
 }
@@ -49,7 +46,6 @@ func handleConnectorPause(t *testing.T) http.HandlerFunc {
 // Handler for: "/connect/v1/environments/{env}/clusters/{clusters}/connectors/{connector}/resume"
 func handleConnectorResume(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNoContent)
 	}
 }
@@ -57,7 +53,6 @@ func handleConnectorResume(t *testing.T) http.HandlerFunc {
 // Handler for: "/connect/v1/environments/{env}/clusters/{clusters}/connectors"
 func handleConnectors(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		if r.Method == http.MethodGet {
 			connectorExpansion := connectv1.ConnectV1ConnectorExpansion{
 				Id: &connectv1.ConnectV1ConnectorExpansionId{Id: connectv1.PtrString("lcc-123")},
@@ -94,7 +89,6 @@ func handleConnectors(t *testing.T) http.HandlerFunc {
 // Handler for: "/connect/v1/environments/{env}/clusters/{clusters}/connector-plugins"
 func handlePlugins(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		if r.Method == http.MethodGet {
 			connectorPlugin1 := connectv1.InlineResponse2002{
 				Class: "GcsSink",
@@ -113,7 +107,6 @@ func handlePlugins(t *testing.T) http.HandlerFunc {
 // Handler for: "/connect/v1/environments/{env}/clusters/{clusters}/connector-plugins/{plugin}/config/validate"
 func handlePluginValidate(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		configs := &[]connectv1.InlineResponse2003Configs{
 			{
 				Value: &connectv1.InlineResponse2003Value{

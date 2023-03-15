@@ -12,7 +12,6 @@ import (
 
 func (c *CloudRouter) HandleAllRolesRoute(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/json")
 		namespace := r.URL.Query().Get("namespace")
 		namespaces := strings.Split(namespace, ",")
 
