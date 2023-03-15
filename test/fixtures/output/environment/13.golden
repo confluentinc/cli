@@ -1,0 +1,4 @@
+Error: environment(s) not found or access forbidden: "env-dne"
+
+Suggestions:
+    List available environments with `confluent environment list`.
