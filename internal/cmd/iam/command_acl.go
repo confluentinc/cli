@@ -38,11 +38,11 @@ func newACLCommand(prerunner pcmd.PreRunner) *cobra.Command {
 
 	c := &aclCommand{pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner)}
 
-	c.AddCommand(c.newCreateCommand())
-	c.AddCommand(c.newDeleteCommand())
-	c.AddCommand(c.newListCommand())
+	cmd.AddCommand(c.newCreateCommand())
+	cmd.AddCommand(c.newDeleteCommand())
+	cmd.AddCommand(c.newListCommand())
 
-	return c.Command
+	return cmd
 }
 
 func (c *aclCommand) handleACLError(cmd *cobra.Command, err error, response *http.Response) error {

@@ -44,15 +44,15 @@ func New(prerunner pcmd.PreRunner, keystore keystore.KeyStore, resolver pcmd.Fla
 		flagResolver:                  resolver,
 	}
 
-	c.AddCommand(c.newCreateCommand())
-	c.AddCommand(c.newDeleteCommand())
-	c.AddCommand(c.newDescribeCommand())
-	c.AddCommand(c.newListCommand())
-	c.AddCommand(c.newStoreCommand())
-	c.AddCommand(c.newUpdateCommand())
-	c.AddCommand(c.newUseCommand())
+	cmd.AddCommand(c.newCreateCommand())
+	cmd.AddCommand(c.newDeleteCommand())
+	cmd.AddCommand(c.newDescribeCommand())
+	cmd.AddCommand(c.newListCommand())
+	cmd.AddCommand(c.newStoreCommand())
+	cmd.AddCommand(c.newUpdateCommand())
+	cmd.AddCommand(c.newUseCommand())
 
-	return c.Command
+	return cmd
 }
 
 func (c *command) setKeyStoreIfNil() {

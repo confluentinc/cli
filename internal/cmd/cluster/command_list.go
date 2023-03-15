@@ -23,12 +23,12 @@ func newListCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	}
 
 	c := &listCommand{pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)}
-	c.RunE = c.list
+	cmd.RunE = c.list
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
-	pcmd.AddOutputFlag(c.Command)
+	pcmd.AddOutputFlag(cmd)
 
-	return c.Command
+	return cmd
 }
 
 func (c *listCommand) list(cmd *cobra.Command, _ []string) error {

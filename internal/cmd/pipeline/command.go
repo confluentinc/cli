@@ -65,16 +65,16 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	_ = dc.ParseFlagsIntoConfig(cmd)
 	enableSourceCode := launchdarkly.Manager.BoolVariation("cli.stream_designer.source_code.enable", dc.Context(), v1.CliLaunchDarklyClient, true, false)
 
-	c.AddCommand(c.newActivateCommand())
-	c.AddCommand(c.newCreateCommand(enableSourceCode))
-	c.AddCommand(c.newDeactivateCommand())
-	c.AddCommand(c.newDeleteCommand())
-	c.AddCommand(c.newDescribeCommand())
-	c.AddCommand(c.newListCommand())
-	c.AddCommand(c.newSaveCommand(enableSourceCode))
-	c.AddCommand(c.newUpdateCommand(enableSourceCode))
+	cmd.AddCommand(c.newActivateCommand())
+	cmd.AddCommand(c.newCreateCommand(enableSourceCode))
+	cmd.AddCommand(c.newDeactivateCommand())
+	cmd.AddCommand(c.newDeleteCommand())
+	cmd.AddCommand(c.newDescribeCommand())
+	cmd.AddCommand(c.newListCommand())
+	cmd.AddCommand(c.newSaveCommand(enableSourceCode))
+	cmd.AddCommand(c.newUpdateCommand(enableSourceCode))
 
-	return c.Command
+	return cmd
 }
 
 func printTable(cmd *cobra.Command, pipeline streamdesignerv1.SdV1Pipeline) error {

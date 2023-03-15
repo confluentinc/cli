@@ -88,11 +88,11 @@ func newRoleBindingCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Comm
 		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)
 	}
 
-	c.AddCommand(c.newCreateCommand())
-	c.AddCommand(c.newDeleteCommand())
-	c.AddCommand(c.newListCommand())
+	cmd.AddCommand(c.newCreateCommand())
+	cmd.AddCommand(c.newDeleteCommand())
+	cmd.AddCommand(c.newListCommand())
 
-	return c.Command
+	return cmd
 }
 
 func (c *roleBindingCommand) parseCommon(cmd *cobra.Command) (*roleBindingOptions, error) {

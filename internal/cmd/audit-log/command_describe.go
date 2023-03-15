@@ -31,11 +31,11 @@ func newDescribeCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	}
 
 	c := &describeCmd{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
-	c.RunE = c.describe
+	cmd.RunE = c.describe
 
-	pcmd.AddOutputFlag(c.Command)
+	pcmd.AddOutputFlag(cmd)
 
-	return c.Command
+	return cmd
 }
 
 func (c describeCmd) describe(cmd *cobra.Command, _ []string) error {
