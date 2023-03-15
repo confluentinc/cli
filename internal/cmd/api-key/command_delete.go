@@ -68,7 +68,6 @@ func (c *command) validateArgs(cmd *cobra.Command, args []string) ([]string, err
 		if _, _, err := c.V2Client.GetApiKey(arg); err != nil {
 			return err
 		}
-
 		return nil
 	}
 

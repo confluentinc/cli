@@ -1,8 +1,6 @@
 package iam
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -10,7 +8,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/types"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -38,10 +35,11 @@ func (c *userCommand) delete(cmd *cobra.Command, args []string) error {
 		return errs
 	}
 
-	fullName, err := c.checkExistence(cmd, args)
+	fullName, validArgs, err := c.validateArgs(cmd, args)
 	if err != nil {
 		return err
 	}
+	args = validArgs
 
 	if _, err := form.ConfirmDeletionType(cmd, resource.User, fullName, args); err != nil {
 		return err
@@ -59,41 +57,18 @@ func (c *userCommand) delete(cmd *cobra.Command, args []string) error {
 	return errs
 }
 
-func (c *userCommand) checkExistence(cmd *cobra.Command, args []string) (string, error) {
-	// Single
-	if len(args) == 1 {
-		if user, err := c.V2Client.GetIamUserById(args[0]); err != nil {
-			return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, resource.User, args[0]), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.User))
-		} else {
-			return user.GetFullName(), nil
+func (c *userCommand) validateArgs(cmd *cobra.Command, args []string) (string, []string, error) {
+	var fullName string
+	describeFunc := func(arg string) error {
+		if user, err := c.V2Client.GetIamUserById(arg); err != nil {
+			return err
+		} else if arg == args[0] {
+			fullName = user.GetFullName()
 		}
+		return nil
 	}
 
-	// Multiple
-	users, err := c.V2Client.ListIamUsers()
-	if err != nil {
-		return "", err
-	}
+	validArgs, err := utils.ValidateArgsForDeletion(cmd, args, resource.User, describeFunc)
 
-	set := types.NewSet()
-	for _, user := range users {
-		set.Add(user.GetId())
-	}
-
-	validArgs, invalidArgs := set.IntersectionAndDifference(args)
-	if force, err := cmd.Flags().GetBool("force"); err != nil {
-		return "", err
-	} else if force && len(invalidArgs) > 0 {
-		args = validArgs
-		return "", nil
-	}
-
-	invalidArgsStr := utils.ArrayToCommaDelimitedString(invalidArgs, "and")
-	if len(invalidArgs) == 1 {
-		return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, resource.User, invalidArgsStr), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.User))
-	} else if len(invalidArgs) > 1 {
-		return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, resource.Plural(resource.User), invalidArgsStr), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.User))
-	}
-
-	return "", nil
+	return fullName, validArgs, err
 }
