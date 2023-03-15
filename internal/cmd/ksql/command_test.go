@@ -6,14 +6,15 @@ import (
 	"net/http"
 	"testing"
 
-	ksqlmock "github.com/confluentinc/ccloud-sdk-go-v2/ksql/mock"
-	ksqlv2 "github.com/confluentinc/ccloud-sdk-go-v2/ksql/v2"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
+	ksqlmock "github.com/confluentinc/ccloud-sdk-go-v2/ksql/mock"
+	ksqlv2 "github.com/confluentinc/ccloud-sdk-go-v2/ksql/v2"
+
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"

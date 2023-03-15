@@ -6,9 +6,10 @@ import (
 	"net/http"
 	"testing"
 
-	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
+
+	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 )
 
 // Handler for POST "/cmk/v2/clusters"

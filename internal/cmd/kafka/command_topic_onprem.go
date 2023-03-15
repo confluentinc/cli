@@ -1,6 +1,5 @@
 package kafka
 
-// confluent kafka topic <commands>
 import (
 	"context"
 	"fmt"

@@ -6,9 +6,10 @@ import (
 	"net/http"
 	"testing"
 
-	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
+
+	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 )
 
 var OrgEnvironments = []*orgv2.OrgV2Environment{

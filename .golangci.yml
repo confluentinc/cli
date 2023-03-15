@@ -1,4 +1,14 @@
+run:
+  skip-dirs:
+    - mock
 linters-settings:
+  gci:
+    sections:
+      - standard
+      - default
+      - prefix(github.com/confluentinc)
+      - prefix(github.com/confluentinc/cli)
+    custom-order: true
   gocritic:
     disabled-checks:
       - ifElseChain

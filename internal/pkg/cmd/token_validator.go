@@ -5,6 +5,7 @@ import (
 	"gopkg.in/square/go-jose.v2/jwt"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"

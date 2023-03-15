@@ -6,9 +6,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
-
 	"github.com/stretchr/testify/require"
+
+	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
 )
 
 func TestSerializationProvider(t *testing.T) {

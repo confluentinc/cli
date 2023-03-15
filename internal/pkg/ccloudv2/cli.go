@@ -6,6 +6,7 @@ import (
 	"time"
 
 	cliv1 "github.com/confluentinc/ccloud-sdk-go-v2/cli/v1"
+
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
