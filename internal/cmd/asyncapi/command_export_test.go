@@ -22,7 +22,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/config"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/version"
 	testserver "github.com/confluentinc/cli/test/test-server"
@@ -303,7 +302,7 @@ func TestGetChannelDetails(t *testing.T) {
 	schema, _, _ = details.srClient.DefaultApi.GetSchemaByVersion(context.Context(nil), "subject2", "1", nil)
 	details.channelDetails.schema = &schema
 	err = c.getChannelDetails(details, flags)
-	require.Error(t, err, errors.New("protobuf is not supported"))
+	require.Equal(t, err.Error(), protobufErrorMessage)
 }
 
 func TestHandlePrimitiveSchemas(t *testing.T) {
