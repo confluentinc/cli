@@ -122,7 +122,7 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 		return errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "from-beginning", "offset")
 	}
 
-	offset, err := getOffsetWithFallback(cmd)
+	offset, err := GetOffsetWithFallback(cmd)
 	if err != nil {
 		return err
 	}
@@ -131,12 +131,12 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 	if err != nil {
 		return err
 	}
-	partitionFilter := partitionFilter{
-		changed: cmd.Flags().Changed("partition"),
-		index:   partition,
+	partitionFilter := PartitionFilter{
+		Changed: cmd.Flags().Changed("partition"),
+		Index:   partition,
 	}
 
-	rebalanceCallback := getRebalanceCallback(offset, partitionFilter)
+	rebalanceCallback := GetRebalanceCallback(offset, partitionFilter)
 	if err := consumer.Subscribe(topicName, rebalanceCallback); err != nil {
 		return err
 	}

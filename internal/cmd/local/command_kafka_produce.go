@@ -7,7 +7,6 @@ import (
 	"os/signal"
 
 	"github.com/confluentinc/cli/internal/cmd/kafka"
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -26,12 +25,13 @@ func (c *localCommand) newProduceCommand() *cobra.Command {
 
 	cmd.Flags().Bool("parse-key", false, "Parse key from the message.")
 	cmd.Flags().String("delimiter", ":", "The delimiter separating each key and value.")
-	pcmd.AddOutputFlag(cmd)
+	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the producer client.`)
+	cmd.Flags().String("config-file", "", "The path to the configuration file (in json or avro format) for the producer client.")
 	return cmd
 }
 
 func (c *localCommand) produce(cmd *cobra.Command, args []string) error {
-	producer, err := newOnPremProducer(":" + c.Config.LocalPorts.PlaintextPort)
+	producer, err := newOnPremProducer(cmd, ":"+c.Config.LocalPorts.PlaintextPort)
 	if err != nil {
 		return errors.NewErrorWithSuggestions(fmt.Errorf(errors.FailedToCreateProducerErrorMsg, err).Error(), errors.OnPremConfigGuideSuggestions)
 	}
@@ -109,7 +109,7 @@ func (c *localCommand) produce(cmd *cobra.Command, args []string) error {
 	return scanErr
 }
 
-func newOnPremProducer(bootstrap string) (*ckafka.Producer, error) {
+func newOnPremProducer(cmd *cobra.Command, bootstrap string) (*ckafka.Producer, error) {
 	configMap := &ckafka.ConfigMap{
 		"ssl.endpoint.identification.algorithm": "https",
 		"client.id":                             "confluent-local",
@@ -118,16 +118,28 @@ func newOnPremProducer(bootstrap string) (*ckafka.Producer, error) {
 		"request.timeout.ms":                    "10000",
 		"security.protocol":                     "PLAINTEXT",
 	}
-	switch log.CliLogger.Level {
-	case log.DEBUG:
-		if err := configMap.Set("debug=broker, topic, msg, protocol"); err != nil {
-			return nil, err
-		}
-	case log.TRACE:
-		if err := configMap.Set("debug=all"); err != nil {
-			return nil, err
-		}
 
+	if cmd.Flags().Changed("config-file") && cmd.Flags().Changed("config") {
+		return nil, errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "config-file", "config")
 	}
+
+	configFile, err := cmd.Flags().GetString("config-file")
+	if err != nil {
+		return nil, err
+	}
+	config, err := cmd.Flags().GetStringSlice("config")
+	if err != nil {
+		return nil, err
+	}
+
+	err = kafka.OverwriteKafkaClientConfigs(configMap, configFile, config)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := kafka.SetProducerDebugOption(configMap); err != nil {
+		return nil, err
+	}
+
 	return ckafka.NewProducer(configMap)
 }
