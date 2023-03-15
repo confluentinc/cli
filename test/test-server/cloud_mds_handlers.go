@@ -6,8 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1"
 	"github.com/stretchr/testify/require"
+
+	"github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1"
 )
 
 func (c *CloudRouter) HandleAllRolesRoute(t *testing.T) http.HandlerFunc {

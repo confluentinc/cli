@@ -3,8 +3,9 @@ package connect
 import (
 	"fmt"
 
-	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
 	"github.com/spf13/cobra"
+
+	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"

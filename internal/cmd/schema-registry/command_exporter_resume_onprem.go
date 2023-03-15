@@ -1,8 +1,9 @@
 package schemaregistry
 
 import (
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/spf13/cobra"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
 func (c *command) newExporterResumeCommandOnPrem() *cobra.Command {

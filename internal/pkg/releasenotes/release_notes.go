@@ -9,11 +9,13 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/confluentinc/cli/internal/pkg/types"
-	"github.com/confluentinc/go-netrc/netrc"
 	"github.com/google/go-github/v50/github"
 	"github.com/hashicorp/go-version"
 	"golang.org/x/oauth2"
+
+	"github.com/confluentinc/go-netrc/netrc"
+
+	"github.com/confluentinc/cli/internal/pkg/types"
 )
 
 const releaseNotesFilename = "release-notes.rst"

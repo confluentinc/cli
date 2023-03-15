@@ -3,10 +3,11 @@ package utils
 import (
 	"testing"
 
-	"github.com/confluentinc/cli/internal/pkg/types"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/stretchr/testify/require"
+
+	"github.com/confluentinc/cli/internal/pkg/types"
 )
 
 const (

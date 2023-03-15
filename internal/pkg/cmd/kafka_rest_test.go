@@ -1,12 +1,12 @@
 package cmd
 
 import (
-	pauth "github.com/confluentinc/cli/internal/pkg/auth"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-
 	"testing"
 
 	"github.com/stretchr/testify/suite"
+
+	pauth "github.com/confluentinc/cli/internal/pkg/auth"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 )
 
 type KafkaRestTestSuite struct {

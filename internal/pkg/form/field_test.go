@@ -3,9 +3,10 @@ package form
 import (
 	"testing"
 
-	"github.com/confluentinc/cli/internal/pkg/mock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/confluentinc/cli/internal/pkg/mock"
 )
 
 func TestRead(t *testing.T) {

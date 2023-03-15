@@ -4,9 +4,9 @@ import (
 	"testing"
 
 	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/suite"
 
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
-	"github.com/stretchr/testify/suite"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
