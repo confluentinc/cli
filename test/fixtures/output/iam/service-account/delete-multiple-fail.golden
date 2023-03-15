@@ -1,0 +1,4 @@
+Error: service account(s) not found or access forbidden: "sa-67890"
+
+Suggestions:
+    List service accounts with `confluent service-account list`.
