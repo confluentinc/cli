@@ -46,12 +46,19 @@ func (c *userCommand) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	errs = nil
+	var successful []string
 	for _, resourceId := range args {
 		if err := c.V2Client.DeleteIamUser(resourceId); err != nil {
 			errs = errors.Join(errs, errors.Errorf(errors.DeleteResourceErrorMsg, resource.User, resourceId, err))
 		} else {
-			output.Printf(errors.DeletedResourceMsg, resource.User, resourceId)
+			successful = append(successful, resourceId)
 		}
+	}
+
+	if len(successful) == 1 {
+		output.Printf(errors.DeletedResourceMsg, resource.User, successful[0])
+	} else if len(successful) > 1 {
+		output.Printf(errors.DeletedResourcesMsg, resource.Plural(resource.User), utils.ArrayToCommaDelimitedString(successful, "and"))
 	}
 
 	return errs
