@@ -1,12 +1,14 @@
 Error: accepts 1 arg(s), received 0
 Usage:
-  confluent asyncapi import spec.yaml [flags]
+  confluent asyncapi import <spec.yaml> [flags]
 
 Examples:
-confluent asyncapi import spec.yaml
+Import an asyncapi specification file to populate an existing cluster
+
+  $ confluent asyncapi import spec.yaml
 
 Flags:
-      --overwrite                           overwrite existing topics and schemas
+      --overwrite                           Overwrite existing topics and schemas.
       --kafka-api-key string                Kafka cluster API key.
       --schema-registry-api-key string      API key for Schema Registry.
       --schema-registry-api-secret string   API secret for Schema Registry.

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 
@@ -17,6 +16,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/cmd/kafka"
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
+	"github.com/confluentinc/cli/internal/pkg/cmd"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -28,16 +28,11 @@ import (
 
 type command struct {
 	*pcmd.AuthenticatedStateFlagCommand
-}
-
-type Configs struct {
-	CleanupPolicy                  string `json:"cleanup.policy"`
-	DeleteRetentionMs              int    `json:"delete.retention.ms"`
-	ConfluentValueSchemaValidation string `json:"confluent.value.schema.validation"`
+	kafkaRest *cmd.KafkaREST
 }
 
 type confluentBinding struct {
-	Configs Configs `json:"x-configs"`
+	Configs map[string]string `json:"x-configs"`
 }
 
 type bindings struct {
@@ -66,6 +61,7 @@ func newExportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "export",
 		Short: "Create an AsyncAPI specification for a Kafka cluster.",
+		Args:  cobra.NoArgs,
 	}
 	c := &command{AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
 	c.RunE = c.export
@@ -170,7 +166,7 @@ func (c *command) getChannelDetails(details *accountDetails, flags *flags) error
 			log.CliLogger.Warn(err)
 		}
 	}
-	details.channelDetails.bindings, err = c.getBindings(details.kafkaRest, details.clusterId, details.channelDetails.currentTopic.GetTopicName())
+	details.channelDetails.bindings, err = c.getBindings(c.kafkaRest, details.clusterId, details.channelDetails.currentTopic.GetTopicName())
 	if err != nil {
 		log.CliLogger.Warnf("bindings not found: %v", err)
 	}
@@ -281,26 +277,11 @@ func (c *command) getBindings(kafkaREST *pcmd.KafkaREST, clusterId string, topic
 	if err != nil {
 		return nil, err
 	}
-	var cleanupPolicy string
-	deleteRetentionMsValue := -1
+	configsMap := make(map[string]string)
 	for _, config := range configs.Data {
-		if config.Name == "cleanup.policy" {
-			cleanupPolicy = config.GetValue()
-		}
-		if config.Name == "delete.retention.ms" {
-			deleteRetentionMsValue, err = strconv.Atoi(config.GetValue())
-			if err != nil {
-				return nil, err
-			}
-		}
+		configsMap[config.Name] = config.GetValue()
 	}
-	var channelBindings any = confluentBinding{
-		Configs: Configs{
-			CleanupPolicy:                  cleanupPolicy,
-			DeleteRetentionMs:              deleteRetentionMsValue,
-			ConfluentValueSchemaValidation: "true",
-		},
-	}
+	var channelBindings any = confluentBinding{configsMap}
 	messageBindings := spec.MessageBindingsObject{Kafka: &spec.KafkaMessage{Key: &spec.KafkaMessageKey{Schema: map[string]any{"type": "string"}}}}
 	operationBindings := spec.OperationBindingsObject{Kafka: &spec.KafkaOperation{
 		GroupID:  &spec.KafkaOperationGroupID{Schema: map[string]any{"type": "string"}},
@@ -310,9 +291,8 @@ func (c *command) getBindings(kafkaREST *pcmd.KafkaREST, clusterId string, topic
 		messageBinding:   messageBindings,
 		operationBinding: operationBindings,
 	}
-	if deleteRetentionMsValue != -1 && cleanupPolicy != "" {
-		bindings.channelBindings = spec.ChannelBindingsObject{Kafka: &channelBindings}
-	}
+	bindings.channelBindings = spec.ChannelBindingsObject{Kafka: &channelBindings}
+
 	return bindings, nil
 }
 
@@ -345,10 +325,10 @@ func (c *command) getClusterDetails(details *accountDetails, flags *flags) error
 	}
 
 	details.clusterId = clusterConfig.ID
-	details.kafkaRest = kafkaREST
 	details.topics = topics.Data
 	details.clusterCreds = clusterCreds
 	details.broker = kafkaREST.CloudClient.GetUrl()
+	c.kafkaRest = kafkaREST
 	return nil
 }
 

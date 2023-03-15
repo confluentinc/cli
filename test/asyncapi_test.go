@@ -25,7 +25,7 @@ func (s *CLITestSuite) TestAsyncApiExport() {
 	}
 	fileNames := []string{"asyncapi-spec.yaml", "asyncapi-with-context.yaml"}
 	for _, fileName := range fileNames {
-		defer os.Remove(fileName)
+		//defer os.Remove(fileName)
 		s.FileExistsf("./"+fileName, "Spec file not generated.")
 		file, err := os.ReadFile(fileName)
 		if err != nil {

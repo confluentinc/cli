@@ -1,6 +1,7 @@
 package asyncapi
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strconv"
@@ -18,11 +19,13 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
+
+const parseErrorMessage string = "topic is already present and overwrite flag is false. Moving to the next topic"
 
 type flagsImport struct {
 	overwrite               bool
@@ -38,9 +41,7 @@ type BindingsXConfigs struct {
 }
 
 type KafkaBinding struct {
-	XPartitions int              `yaml:"x-partitions"`
-	XReplicas   int              `yaml:"x-replicas"`
-	XConfigs    BindingsXConfigs `yaml:"x-configs"`
+	XConfigs map[string]string `yaml:"x-configs"`
 }
 
 type Message struct {
@@ -65,8 +66,8 @@ type Components struct {
 }
 
 type Security struct {
-	ConfluentBroker         []interface{} `yaml:"confluentBroker"`
-	ConfluentSchemaRegistry []interface{} `yaml:"confluentSchemaRegistry"`
+	ConfluentBroker         []any `yaml:"confluentBroker"`
+	ConfluentSchemaRegistry []any `yaml:"confluentSchemaRegistry"`
 }
 
 type MessageRef struct {
@@ -81,6 +82,7 @@ type Operation struct {
 }
 
 type Topic struct {
+	Description           string        `yaml:"description"`
 	Publish               Operation     `yaml:"publish"`
 	Subscribe             Operation     `yaml:"subscribe"`
 	XMessageCompatibility string        `yaml:"x-messageCompatibility"`
@@ -97,6 +99,7 @@ type ConfluentBrokerXConfigs struct {
 	SaslUsername     string `yaml:"sasl.username"`
 	SecurityProtocol string `yaml:"security.protocol"`
 }
+
 type ConfluentBroker struct {
 	Type     string                  `yaml:"type"`
 	XConfigs ConfluentBrokerXConfigs `yaml:"x-configs"`
@@ -112,18 +115,23 @@ type ConfluentSchemaRegistry struct {
 
 func newImportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "import spec.yaml",
-		Short:   "Adds topics, schemas and tags from the yaml file.",
-		Args:    cobra.ExactArgs(1),
-		Example: "confluent asyncapi import spec.yaml",
+		Use:   "import <spec.yaml>",
+		Short: "Adds topics, schemas and tags from the yaml file.",
+		Args:  cobra.ExactArgs(1),
+		Example: examples.BuildExampleString(
+			examples.Example{Text: "Import an asyncapi specification file to populate an existing cluster",
+				Code: "confluent asyncapi import spec.yaml",
+			},
+		),
 	}
-	c := &command{AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
-	c.RunE = c.parse
-	c.Flags().Bool("overwrite", false, "Overwrite existing topics and schemas.")
-	c.Flags().String("kafka-api-key", "", "Kafka cluster API key.")
-	c.Flags().String("schema-registry-api-key", "", "API key for Schema Registry.")
-	c.Flags().String("schema-registry-api-secret", "", "API secret for Schema Registry.")
-	return c.Command
+	c := &command{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner), nil}
+	cmd.RunE = c.parse
+	cmd.Flags().Bool("overwrite", false, "Overwrite existing topics and schemas.")
+	cmd.Flags().String("kafka-api-key", "", "Kafka cluster API key.")
+	cmd.Flags().String("schema-registry-api-key", "", "API key for Schema Registry.")
+	cmd.Flags().String("schema-registry-api-secret", "", "API secret for Schema Registry.")
+
+	return cmd
 }
 
 func getFlagsImport(cmd *cobra.Command) (*flagsImport, error) {
@@ -153,8 +161,8 @@ func getFlagsImport(cmd *cobra.Command) (*flagsImport, error) {
 	return flags, nil
 }
 
-func (c *command) parse(cmd *cobra.Command, strings []string) error {
-	spec, err := fileToStruct()
+func (c *command) parse(cmd *cobra.Command, args []string) error {
+	spec, err := fileToStruct(args[0])
 	if err != nil {
 		return err
 	}
@@ -163,27 +171,27 @@ func (c *command) parse(cmd *cobra.Command, strings []string) error {
 	if err != nil {
 		return err
 	}
-	//Getting Kafka Cluster & SR
+	// Getting Kafka Cluster & SR
 	flags := createExportFlagsFromImportFlags(flagsImp)
 	details, err := c.getAccountDetails(&flags)
 	if err != nil {
 		return err
 	}
 	for topicName, topicDetails := range spec.Channels {
-		err = addChannelToCluster(details, spec, topicName, topicDetails.TopicBinding.Kafka, false, flagsImp.overwrite)
+		err = c.addChannelToCluster(details, spec, topicName, topicDetails.TopicBinding.Kafka, false, flagsImp.overwrite)
 		if err != nil {
-			if err == fmt.Errorf("topic is already present and overwrite flag is false. Moving to the next topic") {
+			if err.Error() == parseErrorMessage {
 				log.CliLogger.Info(err)
 			} else {
 				log.CliLogger.Warn(err)
 			}
 		}
 	}
+	output.Printf("AsyncAPI specification imported from \"%s\"\n", args[0])
 	return nil
 }
 
-func fileToStruct() (*Spec, error) {
-	fileName := os.Args[3]
+func fileToStruct(fileName string) (*Spec, error) {
 	asyncSpec, err := os.ReadFile(fileName)
 	if err != nil {
 		return nil, err
@@ -196,28 +204,29 @@ func fileToStruct() (*Spec, error) {
 	return spec, nil
 }
 
-func addChannelToCluster(details *accountDetails, spec *Spec, topicName string, kafkaBinding KafkaBinding, topicNotCreated, overwrite bool) error {
-	output.Printf("Importing topic: %s", topicName)
-	topicExists, err := addTopic(details, topicName, kafkaBinding, overwrite)
+func (c *command) addChannelToCluster(details *accountDetails, spec *Spec, topicName string, kafkaBinding KafkaBinding, topicNotCreated, overwrite bool) error {
+	output.Printf("Importing topic: %s\n", topicName)
+	topicExists, err := c.addTopic(details, topicName, spec.Channels[topicName].Description, kafkaBinding, overwrite)
 	if err != nil {
-		//unable to create kafka topic
-		log.CliLogger.Debugf("unable to create kafka topic: %v", err)
+		// unable to create kafka topic
+		log.CliLogger.Warn(err)
 		topicNotCreated = true
 	}
-	//If topic exists and overwrite flag is false, move to the next channel in spec
+	// If topic exists and overwrite flag is false, move to the next channel in spec
 	if topicExists && !overwrite {
-		return fmt.Errorf("topic is already present and overwrite flag is false. Moving to the next topic")
+		return errors.New(parseErrorMessage)
 	}
-	//Register schema
+	// Register schema
 	schemaId, err := registerSchema(details, topicName, spec.Components)
 	if err != nil {
 		return err
 	}
-	//Update subject compatibility
+	// Update subject compatibility
 	if err := updateSubjectCompatibility(details, spec.Channels[topicName].XMessageCompatibility, topicName+"-value"); err != nil {
 		return err
 	}
-	//Add tags
+	// Add tags
+	output.Println("Adding tags at schema level and topic level.")
 	if _, _, err := addSchemaTags(details, spec.Components, topicName, schemaId); err != nil {
 		return err
 	}
@@ -238,45 +247,60 @@ func createExportFlagsFromImportFlags(flagsImp *flagsImport) flags {
 	return flagsExport
 }
 
-func addTopic(details *accountDetails, topicName string, kb KafkaBinding, overwrite bool) (bool, error) {
-	deleteRetentionMs := strconv.FormatInt(int64(kb.XConfigs.DeleteRetentionMs), 10)
-	cleanupPolicy := kb.XConfigs.CleanupPolicy
-	schemaValidation := kb.XConfigs.ConfluentValueSchemaValidation
-	topicConfigs := []kafkarestv3.CreateTopicRequestDataConfigs{
-		{Name: "delete.retention.ms", Value: *kafkarestv3.NewNullableString(&deleteRetentionMs)},
-		{Name: "cleanup.policy", Value: *kafkarestv3.NewNullableString(&cleanupPolicy)},
-		{Name: "confluent.key.schema.validation", Value: *kafkarestv3.NewNullableString(&schemaValidation)},
+func isModifiableConfig(configName string) bool {
+	modifiableConfigs := []string{"delete.retention.ms", "max.compaction.lag.ms", "max.message.bytes", "message.timestamp.difference.max.ms", "message.timestamp.type",
+		"min.compaction.lag.ms", "min.insync.replicas", "retention.bytes", "retention.ms", "segment.bytes", "segment.ms"}
+	for _, config := range modifiableConfigs {
+		if config == configName {
+			return true
+		}
 	}
-	updateConfigs := []kafkarestv3.AlterConfigBatchRequestDataData{
-		{Name: "delete.retention.ms",
-			Value: *kafkarestv3.NewNullableString(&deleteRetentionMs)},
-	}
+	return false
+}
 
-	topicRequestData := kafkarestv3.CreateTopicRequestData{
-		TopicName:         topicName,
-		Configs:           &topicConfigs,
-		PartitionsCount:   utils.Int32Ptr(int32(kb.XPartitions)),
-		ReplicationFactor: utils.Int32Ptr(int32(kb.XReplicas)),
+func (c *command) addTopic(details *accountDetails, topicName string, description string, kb KafkaBinding, overwrite bool) (bool, error) {
+	topicConfigs := []kafkarestv3.CreateTopicRequestDataConfigs{}
+	updateConfigs := []kafkarestv3.AlterConfigBatchRequestDataData{}
+	for configName, configValue := range kb.XConfigs {
+		value := configValue
+		topicConfigs = append(topicConfigs, kafkarestv3.CreateTopicRequestDataConfigs{
+			Name:  configName,
+			Value: *kafkarestv3.NewNullableString(&value),
+		})
+		if isModifiableConfig(configName) {
+			updateConfigs = append(updateConfigs, kafkarestv3.AlterConfigBatchRequestDataData{
+				Name:  configName,
+				Value: *kafkarestv3.NewNullableString(&value),
+			})
+		}
 	}
-	//Check if topic already exists
+	topicRequestData := kafkarestv3.CreateTopicRequestData{
+		TopicName: topicName,
+		Configs:   &topicConfigs,
+	}
+	// Check if topic already exists
 	for _, topics := range details.topics {
 		if topics.TopicName == topicName {
-			//Topic already exists
+			// Topic already exists
 			log.CliLogger.Info("Topic is already present.")
 			if !overwrite {
 				// Do not overwrite existing topic. Move to the next topic.
 				return true, nil
 			}
 			// Overwrite topic configs
-			log.CliLogger.Info("Overwriting topic config delete.retention.ms with value in spec")
-			_, err := details.kafkaRest.CloudClient.UpdateKafkaTopicConfigBatch(details.clusterId, topicName, kafkarestv3.AlterConfigBatchRequestData{Data: updateConfigs})
+			log.CliLogger.Info("Overwriting topic configs")
+			_, err := c.kafkaRest.CloudClient.UpdateKafkaTopicConfigBatch(details.clusterId, topicName, kafkarestv3.AlterConfigBatchRequestData{Data: updateConfigs})
 			if err != nil {
 				return true, fmt.Errorf("unable to update topic config delete.retention.ms: %v", err)
 			}
+			if description != "" {
+				err = addTopicDescription(details.srClient, details.srContext, details.clusterId+":"+topicName, description)
+			}
+			return true, err
 		}
 	}
 	log.CliLogger.Infof("Topic not found. Adding a new topic: %s", topicName)
-	_, httpResp, err := details.kafkaRest.CloudClient.CreateKafkaTopic(details.clusterId, topicRequestData)
+	_, httpResp, err := c.kafkaRest.CloudClient.CreateKafkaTopic(details.clusterId, topicRequestData)
 	if err != nil {
 		restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err)
 		if parseErr == nil && restErr.Code == ccloudv2.BadRequestErrorCode {
@@ -285,10 +309,27 @@ func addTopic(details *accountDetails, topicName string, kb KafkaBinding, overwr
 				return false, errors.NewErrorWithSuggestions(restErr.Message, errors.ExceedPartitionLimitSuggestions)
 			}
 		}
-		return false, kafkarest.NewError(details.kafkaRest.CloudClient.GetUrl(), err, httpResp)
+		return false, kafkarest.NewError(c.kafkaRest.CloudClient.GetUrl(), err, httpResp)
 	}
 	log.CliLogger.Infof("Added topic %s to cluster %s.\n", topicName, details.clusterId)
-	return false, nil
+
+	if description != "" {
+		err = addTopicDescription(details.srClient, details.srContext, details.clusterId+":"+topicName, description)
+	}
+	return false, err
+}
+
+func addTopicDescription(srClient *srsdk.APIClient, srContext context.Context, qualifiedName string, description string) error {
+	atlasEntity := srsdk.AtlasEntityWithExtInfo{
+		ReferredEntities: nil,
+		Entity: srsdk.AtlasEntity{
+			Attributes: map[string]interface{}{"description": description, "qualifiedName": qualifiedName},
+			TypeName:   "kafka_topic",
+		},
+	}
+	_, err := srClient.DefaultApi.PartialUpdateByUniqueAttributes(srContext,
+		&srsdk.PartialUpdateByUniqueAttributesOpts{AtlasEntityWithExtInfo: optional.NewInterface(atlasEntity)})
+	return err
 }
 
 func resolveSchemaType(contentType string) string {
@@ -302,9 +343,10 @@ func resolveSchemaType(contentType string) string {
 }
 
 func registerSchema(details *accountDetails, topicName string, components Components) (int32, error) {
-	//Registering the schema
-	//Subject name follows the TopicNameStrategy
+	// Registering the schema
+	// Subject name follows the TopicNameStrategy
 	subject := topicName + "-value"
+	output.Printf("Registering schema under the subject %s\n", subject)
 	if components.Messages != nil && components.Messages[strcase.ToCamel(topicName)+"Message"].Payload != nil {
 		schema, err := yaml.Marshal(components.Messages[strcase.ToCamel(topicName)+"Message"].Payload)
 		if err != nil {
@@ -329,7 +371,7 @@ func registerSchema(details *accountDetails, topicName string, components Compon
 }
 
 func updateSubjectCompatibility(details *accountDetails, compatibility string, subject string) error {
-	//Updating the subject level compatibility
+	// Updating the subject level compatibility
 	log.CliLogger.Infof("updating the Subject level compatibility to %s.\n", compatibility)
 	updateReq := srsdk.ConfigUpdateRequest{Compatibility: compatibility}
 	config, _, err := details.srClient.DefaultApi.UpdateSubjectLevelConfig(details.srContext, subject, updateReq)
@@ -363,8 +405,8 @@ func addSchemaTags(details *accountDetails, components Components, topicName str
 }
 
 func addTopicTags(details *accountDetails, subscribe Operation, topicName string) ([]srsdk.Tag, []srsdk.TagDef, error) {
-	//Topic level tags
-	//add topic level tags only if topic was created successfully or already exists
+	// Topic level tags
+	// add topic level tags only if topic was created successfully or already exists
 	tagConfigs := new([]srsdk.Tag)
 	tagDefConfigs := new([]srsdk.TagDef)
 	for _, tag := range subscribe.TopicTags {
