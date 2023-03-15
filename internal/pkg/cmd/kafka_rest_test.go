@@ -1,10 +1,10 @@
 package cmd
 
 import (
+	"testing"
+
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-
-	"testing"
 
 	"github.com/stretchr/testify/suite"
 )

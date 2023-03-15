@@ -1,0 +1,7 @@
+linters-settings:
+  gocritic:
+    disabled-checks:
+      - ifElseChain
+      - singleCaseSwitch
+  nakedret:
+    max-func-lines: 0

@@ -16,8 +16,7 @@ import (
 //
 // Based on https://blog.gopheracademy.com/advent-2017/a-tale-of-two-rands/
 // https://github.com/orion-labs/go-crypto-source - Apache 2.0
-type cryptoSource struct {
-}
+type cryptoSource struct{}
 
 var _ mrand.Source = (*cryptoSource)(nil)
 
@@ -30,7 +29,8 @@ func (s *cryptoSource) Int63() int64 {
 	return int64(s.Uint64() & ^uint64(1<<63))
 }
 
-func (s *cryptoSource) Uint64() (v uint64) {
+func (s *cryptoSource) Uint64() uint64 {
+	var v uint64
 	err := binary.Read(crand.Reader, binary.BigEndian, &v)
 	if err != nil {
 		log.CliLogger.Error(err)

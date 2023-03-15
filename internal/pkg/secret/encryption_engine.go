@@ -103,18 +103,9 @@ func (c *EncryptEngineImpl) UnwrapDataKey(dataKey string, iv string, algo string
 	return base64.StdEncoding.DecodeString(dataKeyEnc)
 }
 
-func (c *EncryptEngineImpl) Encrypt(plainText string, key []byte) (data string, ivStr string, err error) {
+func (c *EncryptEngineImpl) Encrypt(plainText string, key []byte) (string, string, error) {
 	defer func() {
-		if r := recover(); r != nil {
-			switch x := r.(type) {
-			case string:
-				err = errors.New(errors.EncryptPlainTextErrorMsg + ": " + x)
-			case error:
-				err = x
-			default:
-				err = errors.New(errors.EncryptPlainTextErrorMsg)
-			}
-		}
+		recover()
 	}()
 
 	return c.encrypt(plainText, key)
@@ -169,18 +160,9 @@ func (c *EncryptEngineImpl) encrypt(plainText string, key []byte) (string, strin
 	return result, ivStr, nil
 }
 
-func (c *EncryptEngineImpl) decrypt(crypt []byte, key []byte, iv []byte, algo string) (plain []byte, err error) {
+func (c *EncryptEngineImpl) decrypt(crypt []byte, key []byte, iv []byte, algo string) ([]byte, error) {
 	defer func() {
-		if r := recover(); r != nil {
-			switch x := r.(type) {
-			case string:
-				err = errors.New(errors.DecryptCypherErrorMsg + ": " + x)
-			case error:
-				err = x
-			default:
-				err = errors.New(errors.DecryptCypherErrorMsg)
-			}
-		}
+		recover()
 	}()
 
 	block, err := aes.NewCipher(key)

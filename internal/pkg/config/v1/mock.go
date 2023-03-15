@@ -176,6 +176,7 @@ func createAPIKeyCredential(credentialName string, apiKeyPair *APIKeyPair) *Cred
 		CredentialType: APIKey,
 	}
 }
+
 func createPlatform(name, server string) *Platform {
 	return &Platform{
 		Name:   name,

@@ -102,22 +102,19 @@ func (suite *KSQLTestSuite) SetupTest() {
 		},
 		ListKsqldbcmV2ClustersExecuteFunc: func(_ ksqlv2.ApiListKsqldbcmV2ClustersRequest) (ksqlv2.KsqldbcmV2ClusterList, *http.Response, error) {
 			return ksqlv2.KsqldbcmV2ClusterList{
-				Data: []ksqlv2.KsqldbcmV2Cluster{*suite.ksqlCluster}}, nil, nil
+				Data: []ksqlv2.KsqldbcmV2Cluster{*suite.ksqlCluster},
+			}, nil, nil
 		},
 		DeleteKsqldbcmV2ClusterExecuteFunc: func(_ ksqlv2.ApiDeleteKsqldbcmV2ClusterRequest) (*http.Response, error) {
 			return nil, nil
 		},
 	}
 	suite.userc = &ccloudv1mock.UserInterface{
-		GetServiceAccountsFunc: func(arg0 context.Context) (users []*ccloudv1.User, e error) {
+		GetServiceAccountsFunc: func(_ context.Context) ([]*ccloudv1.User, error) {
 			return []*ccloudv1.User{suite.serviceAcct}, nil
 		},
 	}
-	suite.v2Client = &ccloudv2.Client{
-		KsqlClient: &ksqlv2.APIClient{
-			ClustersKsqldbcmV2Api: suite.ksqlc,
-		},
-	}
+	suite.v2Client = &ccloudv2.Client{KsqlClient: &ksqlv2.APIClient{ClustersKsqldbcmV2Api: suite.ksqlc}}
 }
 
 func (suite *KSQLTestSuite) newCMD() *cobra.Command {
