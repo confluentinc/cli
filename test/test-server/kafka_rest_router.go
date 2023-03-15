@@ -65,9 +65,12 @@ var kafkaRestRoutes = []route{
 
 func NewKafkaRestProxyRouter(t *testing.T) *mux.Router {
 	router := mux.NewRouter()
+	router.Use(defaultHeaderMiddleware)
+
 	for _, route := range kafkaRestRoutes {
 		router.HandleFunc(route.path, route.handler(t))
 	}
+
 	return router
 }
 
@@ -76,7 +79,6 @@ func handleKafkaRPClusters(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// List Clusters
 		if r.Method == http.MethodGet {
-			w.Header().Set("Content-Type", "application/json")
 			// Response jsons are created by editting examples from the Kafka REST Proxy OpenApi Spec
 			response := `{
 				"kind": "KafkaClusterList",
@@ -104,8 +106,6 @@ func handleKafkaRPClusters(t *testing.T) http.HandlerFunc {
 // Handler for: "/kafka/v3/clusters/{cluster}/acls"
 func handleKafkaRPACLs(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-
 		data := []cckafkarestv3.AclData{
 			{
 				ResourceType: cckafkarestv3.TOPIC,
@@ -138,7 +138,6 @@ func handleKafkaRPACLs(t *testing.T) http.HandlerFunc {
 // Handler for: "/kafka/v3/clusters/{cluster}/acls:batch"
 func handleKafkaRPACLsBatch(_ *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNoContent)
 	}
 }
@@ -148,7 +147,6 @@ func handleKafkaRPTopics(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			w.Header().Set("Content-Type", "application/json")
 			response := `{
 				"kind": "KafkaTopicList",
 				"metadata": {"self": "http://localhost:9391/v3/clusters/cluster-1/topics","next": null},
@@ -212,7 +210,6 @@ func handleKafkaRPTopics(t *testing.T) http.HandlerFunc {
 				// TODO: check for compression.type
 			}
 			// no errors = successfully created
-			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusCreated)
 			response := fmt.Sprintf(`{
 					"kind": "KafkaTopic",
@@ -268,7 +265,6 @@ func handleKafkaRPTopicConfigs(t *testing.T) http.HandlerFunc {
 				}
 				reply, err := json.Marshal(topicConfigList)
 				require.NoError(t, err)
-				w.Header().Set("Content-Type", "application/json")
 				_, err = io.WriteString(w, string(reply))
 				require.NoError(t, err)
 			} else if topicName == "topic-exist-rest" {
@@ -286,7 +282,6 @@ func handleKafkaRPTopicConfigs(t *testing.T) http.HandlerFunc {
 				}
 				reply, err := json.Marshal(topicConfigList)
 				require.NoError(t, err)
-				w.Header().Set("Content-Type", "application/json")
 				_, err = io.WriteString(w, string(reply))
 				require.NoError(t, err)
 			} else if topicName == "topic1" {
@@ -304,7 +299,6 @@ func handleKafkaRPTopicConfigs(t *testing.T) http.HandlerFunc {
 				}
 				reply, err := json.Marshal(topicConfigList)
 				require.NoError(t, err)
-				w.Header().Set("Content-Type", "application/json")
 				_, err = io.WriteString(w, string(reply))
 				require.NoError(t, err)
 			} else { // if topic not exist
@@ -318,15 +312,14 @@ func handleKafkaRPTopicConfigs(t *testing.T) http.HandlerFunc {
 func handleKafkaRPReplicaStatus(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		topicName := vars["topic"]
+		topic := vars["topic"]
 		switch r.Method {
 		case http.MethodGet:
 			// if topic does not exist
-			if topicName != "topic-exist" {
+			if topic != "topic-exist" {
 				require.NoError(t, writeErrorResponse(w, http.StatusNotFound, 40403, "This server does not host this topic-partition."))
 				return
 			}
-			w.Header().Set("Content-Type", "application/json")
 			err := json.NewEncoder(w).Encode(cpkafkarestv3.ReplicaStatusDataList{
 				Kind:     "",
 				Metadata: cpkafkarestv3.ResourceCollectionMetadata{},
@@ -464,7 +457,6 @@ func handleKafkaRPPartitionReplicas(t *testing.T) http.HandlerFunc {
 					]
 				}`, "topic-exist", partitionId, replicaString[0], replicaString[1], replicaString[2])
 
-				w.Header().Set("Content-Type", "application/json")
 				_, err := io.WriteString(w, responseString)
 				require.NoError(t, err)
 			} else { // if topic not exist
@@ -524,7 +516,6 @@ func handleKafkaRPTopic(t *testing.T) http.HandlerFunc {
 			if vars["topic"] == "topic-exist" {
 				// Successfully deleted
 				w.WriteHeader(http.StatusNoContent)
-				w.Header().Set("Content-Type", "application/json")
 			} else {
 				// topic not found
 				require.NoError(t, writeErrorResponse(w, http.StatusNotFound, 40403, "This server does not host this topic-partition."))
@@ -539,12 +530,10 @@ func handleKafkaRPLinks(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodPost:
 			w.WriteHeader(http.StatusNoContent)
-			w.Header().Set("Content-Type", "application/json")
 			var req cpkafkarestv3.CreateKafkaLinkOpts
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
 		case http.MethodGet:
-			w.Header().Set("Content-Type", "application/json")
 			topics := make([]string, 2)
 			topics = append(topics, "link-1-topic-1", "link-1-topic-2")
 			cluster1 := cckafkarestv3.PtrString("cluster-1")
@@ -593,7 +582,6 @@ func handleKafkaRPConsumerGroups(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			w.Header().Set("Content-Type", "application/json")
 			err := json.NewEncoder(w).Encode(cpkafkarestv3.ConsumerGroupDataList{
 				Kind:     "",
 				Metadata: cpkafkarestv3.ResourceCollectionMetadata{},
@@ -634,7 +622,6 @@ func handleKafkaRPLink(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			w.Header().Set("Content-Type", "application/json")
 			err := json.NewEncoder(w).Encode(cpkafkarestv3.ListLinksResponseData{
 				Kind:            "",
 				Metadata:        cpkafkarestv3.ResourceMetadata{},
@@ -646,7 +633,6 @@ func handleKafkaRPLink(t *testing.T) http.HandlerFunc {
 			require.NoError(t, err)
 		case http.MethodDelete:
 			w.WriteHeader(http.StatusNoContent)
-			w.Header().Set("Content-Type", "application/json")
 		}
 	}
 }
@@ -658,7 +644,6 @@ func handleKafkaRPConsumerGroup(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			if vars["consumer_group_id"] == "consumer-group-1" {
-				w.Header().Set("Content-Type", "application/json")
 				err := json.NewEncoder(w).Encode(cpkafkarestv3.ConsumerGroupData{
 					Kind:              "",
 					Metadata:          cpkafkarestv3.ResourceMetadata{},
@@ -686,12 +671,10 @@ func handleKafkaRPAllMirrors(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodPost:
 			w.WriteHeader(http.StatusNoContent)
-			w.Header().Set("Content-Type", "application/json")
 			var req cpkafkarestv3.ListKafkaMirrorTopicsOpts
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
 		case http.MethodGet:
-			w.Header().Set("Content-Type", "application/json")
 			err := json.NewEncoder(w).Encode(cpkafkarestv3.ListMirrorTopicsResponseDataList{Data: []cpkafkarestv3.ListMirrorTopicsResponseData{
 				{
 					Kind:            "",
@@ -755,7 +738,6 @@ func handleKafkaRPConsumers(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			w.Header().Set("Content-Type", "application/json")
 			err := json.NewEncoder(w).Encode(cpkafkarestv3.ConsumerDataList{
 				Kind:     "",
 				Metadata: cpkafkarestv3.ResourceCollectionMetadata{},
@@ -793,12 +775,10 @@ func handleKafkaRPMirrors(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodPost:
 			w.WriteHeader(http.StatusNoContent)
-			w.Header().Set("Content-Type", "application/json")
 			var req cpkafkarestv3.ListKafkaMirrorTopicsUnderLinkOpts
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
 		case http.MethodGet:
-			w.Header().Set("Content-Type", "application/json")
 			err := json.NewEncoder(w).Encode(cpkafkarestv3.ListMirrorTopicsResponseDataList{Data: []cpkafkarestv3.ListMirrorTopicsResponseData{
 				{
 					Kind:            "",
@@ -862,7 +842,6 @@ func handleKafkaRPLagSummary(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			if vars["consumer_group_id"] == "consumer-group-1" {
-				w.Header().Set("Content-Type", "application/json")
 				instance := "instance-1"
 				err := json.NewEncoder(w).Encode(cpkafkarestv3.ConsumerGroupLagSummaryData{
 					Kind:              "",
@@ -895,7 +874,6 @@ func handleKafkaRPMirrorsPromote(t *testing.T) http.HandlerFunc {
 		case http.MethodPost:
 			errorMsg := "Not authorized"
 			var errorCode int32 = 401
-			w.Header().Set("Content-Type", "application/json")
 			err := json.NewEncoder(w).Encode(cpkafkarestv3.AlterMirrorStatusResponseDataList{Data: []cpkafkarestv3.AlterMirrorStatusResponseData{
 				{
 					Kind:            "",
@@ -958,7 +936,6 @@ func handleKafkaRPLags(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			if vars["consumer_group_id"] == "consumer-group-1" {
-				w.Header().Set("Content-Type", "application/json")
 				instance1 := "instance-1"
 				instance2 := "instance-2"
 				err := json.NewEncoder(w).Encode(cpkafkarestv3.ConsumerLagDataList{
@@ -1009,7 +986,6 @@ func handleKafkaRPLinkConfigs(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			w.Header().Set("Content-Type", "application/json")
 			err := json.NewEncoder(w).Encode(cpkafkarestv3.ListLinkConfigsResponseDataList{Data: []cpkafkarestv3.ListLinkConfigsResponseData{
 				{
 					Kind:      "",
@@ -1046,7 +1022,6 @@ func handleKafkaRPMirror(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			w.Header().Set("Content-Type", "application/json")
 			err := json.NewEncoder(w).Encode(cpkafkarestv3.ListMirrorTopicsResponseData{
 				Kind:            "",
 				Metadata:        cpkafkarestv3.ResourceMetadata{},
@@ -1100,7 +1075,6 @@ func handleKafkaRPLag(t *testing.T) http.HandlerFunc {
 				requestedPartition := vars["partition_id"]
 				offsets := partitionOffsetsMap[requestedPartition]
 				if vars["topic_name"] == "topic-1" && offsets != (partitionOffsets{}) {
-					w.Header().Set("Content-Type", "application/json")
 					instance := "instance-1"
 					partitionId, _ := strconv.Atoi(requestedPartition)
 					err := json.NewEncoder(w).Encode(cpkafkarestv3.ConsumerLagData{
@@ -1136,7 +1110,6 @@ func handleKafkaTopicPartitions(t *testing.T) http.HandlerFunc {
 		vars := mux.Vars(r)
 		switch r.Method {
 		case http.MethodGet:
-			w.Header().Set("Content-Type", "application/json")
 			err := json.NewEncoder(w).Encode(cpkafkarestv3.PartitionDataList{
 				Data: []cpkafkarestv3.PartitionData{
 					{
@@ -1173,7 +1146,6 @@ func handleKafkaTopicPartitionId(t *testing.T) http.HandlerFunc {
 		require.NoError(t, err)
 		switch r.Method {
 		case http.MethodGet:
-			w.Header().Set("Content-Type", "application/json")
 			err := json.NewEncoder(w).Encode(cpkafkarestv3.PartitionData{
 				ClusterId:   vars["cluster_id"],
 				PartitionId: int32(partitionId),
@@ -1193,7 +1165,6 @@ func handleKafkaBrokers(t *testing.T) http.HandlerFunc {
 		port1 := int32(1)
 		host2 := "kafka2"
 		port2 := int32(2)
-		w.Header().Set("Content-Type", "application/json")
 		err := json.NewEncoder(w).Encode(cpkafkarestv3.BrokerDataList{
 			Data: []cpkafkarestv3.BrokerData{
 				{
@@ -1219,7 +1190,6 @@ func handleKafkaBrokerConfigsName(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		configValue := "gzip"
-		w.Header().Set("Content-Type", "application/json")
 		err := json.NewEncoder(w).Encode(cpkafkarestv3.ClusterConfigData{
 			Name:        vars["name"],
 			Value:       &configValue,
@@ -1237,7 +1207,6 @@ func handleKafkaBrokerConfigs(t *testing.T) http.HandlerFunc {
 		vars := mux.Vars(r)
 		configValue1 := "gzip"
 		configValue2 := "SASL/PLAIN"
-		w.Header().Set("Content-Type", "application/json")
 		err := json.NewEncoder(w).Encode(cpkafkarestv3.ClusterConfigDataList{
 			Data: []cpkafkarestv3.ClusterConfigData{
 				{
@@ -1267,7 +1236,6 @@ func handleKafkaBrokerIdConfigsName(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		configValue1 := "gzip"
-		w.Header().Set("Content-Type", "application/json")
 		err := json.NewEncoder(w).Encode(cpkafkarestv3.BrokerConfigData{
 			ClusterId:   vars["cluster_id"],
 			Name:        vars["name"],
@@ -1286,7 +1254,6 @@ func handleKafkaBrokerIdConfigs(t *testing.T) http.HandlerFunc {
 		vars := mux.Vars(r)
 		configValue1 := "gzip"
 		configValue2 := "SASL/PLAIN"
-		w.Header().Set("Content-Type", "application/json")
 		err := json.NewEncoder(w).Encode(cpkafkarestv3.BrokerConfigDataList{
 			Data: []cpkafkarestv3.BrokerConfigData{
 				{
@@ -1315,7 +1282,6 @@ func handleKafkaBrokerIdConfigs(t *testing.T) http.HandlerFunc {
 func handleKafkaBrokerConfigsAlter(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusCreated)
-		w.Header().Set("Content-Type", "application/json")
 		var req cpkafkarestv3.UpdateKafkaClusterConfigsOpts
 		err := json.NewDecoder(r.Body).Decode(&req)
 		require.NoError(t, err)
@@ -1326,7 +1292,6 @@ func handleKafkaBrokerConfigsAlter(t *testing.T) http.HandlerFunc {
 func handleKafkaBrokerIdConfigsAlter(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusCreated)
-		w.Header().Set("Content-Type", "application/json")
 		var req cpkafkarestv3.ClustersClusterIdBrokersBrokerIdConfigsalterPostOpts
 		err := json.NewDecoder(r.Body).Decode(&req)
 		require.NoError(t, err)
@@ -1339,7 +1304,6 @@ func handleKafkaBrokersBrokerId(t *testing.T) http.HandlerFunc {
 		vars := mux.Vars(r)
 		switch r.Method {
 		case http.MethodDelete:
-			w.Header().Set("Content-Type", "application/json")
 			var req cpkafkarestv3.ClustersClusterIdBrokersBrokerIdDeleteOpts
 			_ = json.NewDecoder(r.Body).Decode(&req)
 			err := json.NewEncoder(w).Encode(cpkafkarestv3.BrokerRemovalData{
@@ -1363,7 +1327,6 @@ func handleKafkaTopicPartitionIdReassignment(t *testing.T) http.HandlerFunc {
 			if partitionIdStr != "-" && topicName != "-" {
 				partitionId, err := strconv.ParseInt(partitionIdStr, 10, 32)
 				require.NoError(t, err)
-				w.Header().Set("Content-Type", "application/json")
 				err = json.NewEncoder(w).Encode(cpkafkarestv3.ReassignmentData{
 					Kind:             "ReassignmentData",
 					ClusterId:        vars["cluster_id"],
@@ -1374,7 +1337,6 @@ func handleKafkaTopicPartitionIdReassignment(t *testing.T) http.HandlerFunc {
 				})
 				require.NoError(t, err)
 			} else if topicName != "-" {
-				w.Header().Set("Content-Type", "application/json")
 				err := json.NewEncoder(w).Encode(cpkafkarestv3.ReassignmentDataList{
 					Data: []cpkafkarestv3.ReassignmentData{
 						{
@@ -1395,7 +1357,6 @@ func handleKafkaTopicPartitionIdReassignment(t *testing.T) http.HandlerFunc {
 				})
 				require.NoError(t, err)
 			} else if partitionIdStr == "-" && topicName == "-" {
-				w.Header().Set("Content-Type", "application/json")
 				err := json.NewEncoder(w).Encode(cpkafkarestv3.ReassignmentDataList{
 					Data: []cpkafkarestv3.ReassignmentData{
 						{
@@ -1440,7 +1401,6 @@ func handleKafkaClustersClusterIdBrokersTasksTaskTypeGet(t *testing.T) http.Hand
 		vars := mux.Vars(r)
 		errorCode := int32(10014)
 		errorMessage := "error message"
-		w.Header().Set("Content-Type", "application/json")
 		err := json.NewEncoder(w).Encode(cpkafkarestv3.BrokerTaskDataList{
 			Data: []cpkafkarestv3.BrokerTaskData{
 				{
@@ -1475,7 +1435,6 @@ func handleKafkaClustersClusterIdBrokersTasksGet(t *testing.T) http.HandlerFunc 
 		vars := mux.Vars(r)
 		errorCode := int32(10014)
 		errorMessage := "error message"
-		w.Header().Set("Content-Type", "application/json")
 		err := json.NewEncoder(w).Encode(cpkafkarestv3.BrokerTaskDataList{
 			Data: []cpkafkarestv3.BrokerTaskData{
 				{
@@ -1510,7 +1469,6 @@ func handleKafkaClustersClusterIdBrokersBrokerIdTasksTaskTypeGet(t *testing.T) h
 		vars := mux.Vars(r)
 		errorCode := int32(10014)
 		errorMessage := "error message"
-		w.Header().Set("Content-Type", "application/json")
 		err := json.NewEncoder(w).Encode(cpkafkarestv3.BrokerTaskData{
 			ClusterId:       vars["cluster_id"],
 			BrokerId:        1,
@@ -1532,7 +1490,6 @@ func handleKafkaClustersClusterIdBrokersBrokerIdTasksGet(t *testing.T) http.Hand
 		vars := mux.Vars(r)
 		errorCode := int32(10014)
 		errorMessage := "error message"
-		w.Header().Set("Content-Type", "application/json")
 		err := json.NewEncoder(w).Encode(cpkafkarestv3.BrokerTaskDataList{
 			Data: []cpkafkarestv3.BrokerTaskData{
 				{
@@ -1567,7 +1524,6 @@ func handleClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicaStatus(t 
 		vars := mux.Vars(r)
 		partitionId, err := strconv.ParseInt(vars["partition"], 10, 32)
 		require.NoError(t, err)
-		w.Header().Set("Content-Type", "application/json")
 		err = json.NewEncoder(w).Encode(cpkafkarestv3.ReplicaStatusDataList{
 			Data: []cpkafkarestv3.ReplicaStatusData{
 				{
@@ -1609,7 +1565,6 @@ func handleClustersClusterIdTopicsTopicNamePartitionsPartitionIdReplicaStatus(t 
 func handleClustersClusterIdTopicsTopicsNamePartitionsReplicaStatus(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		w.Header().Set("Content-Type", "application/json")
 		err := json.NewEncoder(w).Encode(cpkafkarestv3.ReplicaStatusDataList{
 			Data: []cpkafkarestv3.ReplicaStatusData{
 				{

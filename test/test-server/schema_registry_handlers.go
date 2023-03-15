@@ -12,18 +12,16 @@ import (
 )
 
 // Handler for: "/"
-func (s *SRRouter) HandleSRGet(t *testing.T) http.HandlerFunc {
+func handleSRGet(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		err := json.NewEncoder(w).Encode(map[string]any{})
 		require.NoError(t, err)
 	}
 }
 
 // Handler for: "/config"
-func (s *SRRouter) HandleSRUpdateTopLevelConfig(t *testing.T) http.HandlerFunc {
+func handleSRUpdateTopLevelConfig(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		switch r.Method {
 		case http.MethodPut:
 			var req srsdk.ConfigUpdateRequest
@@ -40,21 +38,19 @@ func (s *SRRouter) HandleSRUpdateTopLevelConfig(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/mode"
-func (s *SRRouter) HandleSRUpdateTopLevelMode(t *testing.T) http.HandlerFunc {
+func handleSRUpdateTopLevelMode(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req srsdk.ModeUpdateRequest
 		err := json.NewDecoder(r.Body).Decode(&req)
 		require.NoError(t, err)
-		w.Header().Set("Content-Type", "application/json")
 		err = json.NewEncoder(w).Encode(srsdk.ModeUpdateRequest{Mode: req.Mode})
 		require.NoError(t, err)
 	}
 }
 
 // Handler for: "/subjects/{subject}/versions"
-func (s *SRRouter) HandleSRSubjectVersions(t *testing.T) http.HandlerFunc {
+func handleSRSubjectVersions(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		switch r.Method {
 		case http.MethodPost:
 			var req srsdk.RegisterSchemaRequest
@@ -74,18 +70,16 @@ func (s *SRRouter) HandleSRSubjectVersions(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/subjects/{subject}"
-func (s *SRRouter) HandleSRSubject(t *testing.T) http.HandlerFunc {
+func handleSRSubject(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		err := json.NewEncoder(w).Encode([]int32{int32(1), int32(2)})
 		require.NoError(t, err)
 	}
 }
 
 // Handler for: "/subjects/{subject}/versions/{version}"
-func (s *SRRouter) HandleSRSubjectVersion(t *testing.T) http.HandlerFunc {
+func handleSRSubjectVersion(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		vars := mux.Vars(r)
 		switch r.Method {
 		case http.MethodGet:
@@ -165,9 +159,8 @@ func (s *SRRouter) HandleSRSubjectVersion(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/schemas"
-func (s *SRRouter) HandleSRSchemas(t *testing.T) http.HandlerFunc {
+func handleSRSchemas(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		subjectPrefix := r.URL.Query().Get("subjectPrefix")
 		schemas := []srsdk.Schema{
 			{
@@ -195,15 +188,14 @@ func (s *SRRouter) HandleSRSchemas(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/schemas/ids/{id}"
-func (s *SRRouter) HandleSRById(t *testing.T) http.HandlerFunc {
+func handleSRById(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		vars := mux.Vars(r)
 		idStr := vars["id"]
 		id64, err := strconv.ParseInt(idStr, 10, 32)
 		require.NoError(t, err)
 
-		schema := srsdk.Schema{Subject: subject, Version: 1, SchemaType: "AVRO", Id: int32(id64)}
+		schema := srsdk.Schema{Subject: "my-subject", Version: 1, SchemaType: "AVRO", Id: int32(id64)}
 		switch id64 {
 		case 1001:
 			schema.Schema = "schema0"
@@ -254,9 +246,8 @@ func (s *SRRouter) HandleSRById(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/subjects"
-func (s *SRRouter) HandleSRSubjects(t *testing.T) http.HandlerFunc {
+func handleSRSubjects(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		subjects := []string{"subject1", "subject2", "subject3", "topic1-value"}
 		err := json.NewEncoder(w).Encode(subjects)
 		require.NoError(t, err)
@@ -264,9 +255,8 @@ func (s *SRRouter) HandleSRSubjects(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/exporters"
-func (s *SRRouter) HandleSRExporters(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func handleSRExporters(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		switch r.Method {
 		case http.MethodGet:
 			exporters := []string{"exporter1", "exporter2"}
@@ -283,9 +273,8 @@ func (s *SRRouter) HandleSRExporters(t *testing.T) func(w http.ResponseWriter, r
 }
 
 // Handler for: "/exporters/{name}"
-func (s *SRRouter) HandleSRExporter(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func handleSRExporter(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		vars := mux.Vars(r)
 		name := vars["name"]
 		switch r.Method {
@@ -308,17 +297,13 @@ func (s *SRRouter) HandleSRExporter(t *testing.T) func(w http.ResponseWriter, r 
 }
 
 // Handler for: "/exporters/{name}/status"
-func (s *SRRouter) HandleSRExporterStatus(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func handleSRExporterStatus(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		vars := mux.Vars(r)
 		name := vars["name"]
 		status := srsdk.ExporterStatus{
-			Name:   name,
-			State:  "RUNNING",
-			Offset: 0,
-			Ts:     0,
-			Trace:  "",
+			Name:  name,
+			State: "RUNNING",
 		}
 		err := json.NewEncoder(w).Encode(status)
 		require.NoError(t, err)
@@ -326,18 +311,16 @@ func (s *SRRouter) HandleSRExporterStatus(t *testing.T) func(w http.ResponseWrit
 }
 
 // Handler for: "/exporters/{name}/config"
-func (s *SRRouter) HandleSRExporterConfig(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func handleSRExporterConfig(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		err := json.NewEncoder(w).Encode(map[string]string{"key1": "value1", "key2": "value2"})
 		require.NoError(t, err)
 	}
 }
 
 // Handler for: "/exporters/{name}/pause"
-func (s *SRRouter) HandleSRExporterPause(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func handleSRExporterPause(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		vars := mux.Vars(r)
 		name := vars["name"]
 		err := json.NewEncoder(w).Encode(srsdk.UpdateExporterResponse{Name: name})
@@ -346,9 +329,8 @@ func (s *SRRouter) HandleSRExporterPause(t *testing.T) func(w http.ResponseWrite
 }
 
 // Handler for: "/exporters/{name}/resume"
-func (s *SRRouter) HandleSRExporterResume(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func handleSRExporterResume(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		vars := mux.Vars(r)
 		name := vars["name"]
 		err := json.NewEncoder(w).Encode(srsdk.UpdateExporterResponse{Name: name})
@@ -357,9 +339,8 @@ func (s *SRRouter) HandleSRExporterResume(t *testing.T) func(w http.ResponseWrit
 }
 
 // Handler for: "/exporters/{name}/reset"
-func (s *SRRouter) HandleSRExporterReset(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
+func handleSRExporterReset(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		vars := mux.Vars(r)
 		name := vars["name"]
 		err := json.NewEncoder(w).Encode(srsdk.UpdateExporterResponse{Name: name})
@@ -368,9 +349,8 @@ func (s *SRRouter) HandleSRExporterReset(t *testing.T) func(w http.ResponseWrite
 }
 
 // Handler for: "/config/{subject}"
-func (s *SRRouter) HandleSRSubjectConfig(t *testing.T) http.HandlerFunc {
+func handleSRSubjectConfig(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		switch r.Method {
 		case http.MethodPut:
 			var req srsdk.ConfigUpdateRequest
@@ -387,9 +367,8 @@ func (s *SRRouter) HandleSRSubjectConfig(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/mode/{subject}"
-func (s *SRRouter) HandleSRSubjectMode(t *testing.T) http.HandlerFunc {
+func handleSRSubjectMode(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		var req srsdk.ModeUpdateRequest
 		err := json.NewDecoder(r.Body).Decode(&req)
 		require.NoError(t, err)
@@ -399,9 +378,8 @@ func (s *SRRouter) HandleSRSubjectMode(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/compatibility"
-func (c *SRRouter) HandleSRCompatibility(t *testing.T) http.HandlerFunc {
+func handleSRCompatibility(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		res := srsdk.CompatibilityCheckResponse{IsCompatible: true}
 		err := json.NewEncoder(w).Encode(res)
 		require.NoError(t, err)
@@ -409,9 +387,8 @@ func (c *SRRouter) HandleSRCompatibility(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/asyncapi"
-func (c *SRRouter) HandleSRAsyncApi(t *testing.T) http.HandlerFunc {
+func handleSRAsyncApi(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		switch r.Method {
 		case http.MethodPut:
 			w.WriteHeader(http.StatusOK)

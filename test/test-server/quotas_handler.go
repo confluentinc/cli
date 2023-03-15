@@ -12,7 +12,6 @@ import (
 
 func handleAppliedQuotas(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 
 		environment := r.URL.Query().Get("environment")
 		kafkaCluster := r.URL.Query().Get("kafka_cluster")

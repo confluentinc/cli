@@ -56,7 +56,7 @@ func (c *CloudRouter) HandleSchemaRegistries(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/api/schema_registries/{id}"
-func (c *CloudRouter) HandleSchemaRegistry(t *testing.T) http.HandlerFunc {
+func handleSchemaRegistry(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		q := r.URL.Query()
 		id := q.Get("id")

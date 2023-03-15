@@ -18,7 +18,6 @@ import (
 func handleByokKey(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		byokStoreV1 := fillByokStoreV1()
-		w.Header().Set("Content-Type", "application/json")
 		vars := mux.Vars(r)
 		keyStr := vars["id"]
 		switch r.Method {
@@ -60,7 +59,6 @@ func handleByokKeyDelete(t *testing.T, keyStr string, byokStoreV1 map[string]*by
 func handleByokKeys(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		byokStoreV1 := fillByokStoreV1()
-		w.Header().Set("Content-Type", "application/json")
 		if r.Method == http.MethodPost {
 			handleByokKeysCreate(t, byokStoreV1)(w, r)
 		} else if r.Method == http.MethodGet {

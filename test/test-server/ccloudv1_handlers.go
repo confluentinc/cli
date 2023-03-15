@@ -14,7 +14,7 @@ import (
 )
 
 // Handler for "/api/organizations/"
-func (c *CloudRouter) HandlePriceTable(t *testing.T) http.HandlerFunc {
+func handlePriceTable(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		prices := map[string]float64{
 			strings.Join([]string{exampleCloud, exampleRegion, exampleAvailability, exampleClusterType, exampleNetworkType}, ":"): examplePrice,
@@ -39,7 +39,7 @@ func (c *CloudRouter) HandlePriceTable(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/api/organizations/{id}/promo_code_claims"
-func (c *CloudRouter) HandlePromoCodeClaims(t *testing.T) http.HandlerFunc {
+func handlePromoCodeClaims(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
@@ -80,7 +80,7 @@ func (c *CloudRouter) HandlePromoCodeClaims(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/api/growth/v1/free-trial-info"
-func (c *CloudRouter) HandleFreeTrialInfo(t *testing.T) http.HandlerFunc {
+func handleFreeTrialInfo(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
