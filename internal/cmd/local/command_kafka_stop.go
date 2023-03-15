@@ -3,6 +3,7 @@ package local
 import (
 	"context"
 
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/docker/docker/api/types"
@@ -52,6 +53,11 @@ func (c *localCommand) stop(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	output.Printf("Thank you for using Confluent local.\n") //refine/
+	c.Config.LocalPorts = nil
+	if err := c.Config.Save(); err != nil {
+		return errors.Wrap(err, errors.RemovePortsFromConfigErrorMsg)
+	}
+
+	output.Printf(errors.ConfluentLocalThankYouMsg)
 	return nil
 }

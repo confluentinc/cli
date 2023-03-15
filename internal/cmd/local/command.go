@@ -12,7 +12,6 @@ import (
 
 const imageName = "523370736235.dkr.ecr.us-west-2.amazonaws.com/confluentinc/kafka-local:latest"
 const testTopicName = "jsontest"
-const plaintextHost = ":9092"
 
 type localCommand struct {
 	*pcmd.CLICommand

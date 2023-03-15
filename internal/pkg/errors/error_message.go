@@ -211,6 +211,8 @@ const (
 	ConfluentLocalStartedErrorMsg    = "Confluent local container has been created"
 	ConfluentLocalStartedSuggestions = "Continue your experience with Confluent local running `confluent local kafka produce` and `confluent local kafka consume`.\n" +
 		"To stop Confluent local container, run `confluent local kafka stop`."
+	SavePortsToConfigErrorMsg     = "failed to save ports to config"
+	RemovePortsFromConfigErrorMsg = "failed to remove ports from conig"
 
 	// schema-registry commands
 	InvalidSchemaRegistryLocationErrorMsg    = "invalid input for flag `--geo`"

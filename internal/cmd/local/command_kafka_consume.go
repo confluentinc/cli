@@ -46,7 +46,7 @@ func (c *localCommand) consume(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	consumer, err := newOnPremConsumer(plaintextHost, fromBeginning)
+	consumer, err := newOnPremConsumer(":"+c.Config.LocalPorts.PlaintextPort, fromBeginning)
 	if err != nil {
 		return errors.NewErrorWithSuggestions(fmt.Errorf(errors.FailedToCreateConsumerErrorMsg, err).Error(), errors.OnPremConfigGuideSuggestions)
 	}

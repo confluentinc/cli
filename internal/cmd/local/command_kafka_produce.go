@@ -31,7 +31,7 @@ func (c *localCommand) newProduceCommand() *cobra.Command {
 }
 
 func (c *localCommand) produce(cmd *cobra.Command, args []string) error {
-	producer, err := newOnPremProducer(plaintextHost)
+	producer, err := newOnPremProducer(":" + c.Config.LocalPorts.PlaintextPort)
 	if err != nil {
 		return errors.NewErrorWithSuggestions(fmt.Errorf(errors.FailedToCreateProducerErrorMsg, err).Error(), errors.OnPremConfigGuideSuggestions)
 	}
