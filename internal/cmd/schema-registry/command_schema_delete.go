@@ -72,18 +72,19 @@ func deleteSchema(cmd *cobra.Command, srClient *srsdk.APIClient, ctx context.Con
 		return err
 	}
 
-	var getOpts *srsdk.GetSchemaByVersionOpts
-	if permanent {
-		getOpts = &srsdk.GetSchemaByVersionOpts{Deleted: optional.NewBool(permanent)}
-	}
-
 	checkVersion := version
 	if version == "all" {
 		// check that at least one version for the input subject exists
 		checkVersion = "latest"
 	}
-	_, httpResp, err := srClient.DefaultApi.GetSchemaByVersion(ctx, subject, checkVersion, getOpts)
-	if err != nil {
+	if permanent {
+		getOpts := &srsdk.GetSchemaByVersionOpts{Deleted: optional.NewBool(true)}
+		if _, httpResp, err := srClient.DefaultApi.GetSchemaByVersion(ctx, subject, checkVersion, getOpts); err != nil {
+			return errors.CatchSchemaNotFoundError(err, httpResp)
+		} else if _, _, err := srClient.DefaultApi.GetSchemaByVersion(ctx, subject, checkVersion, nil); err == nil {
+			return errors.New("you must first soft delete a schema version before you can hard delete it")
+		}
+	} else if _, httpResp, err := srClient.DefaultApi.GetSchemaByVersion(ctx, subject, checkVersion, nil); err != nil {
 		return errors.CatchSchemaNotFoundError(err, httpResp)
 	}
 
