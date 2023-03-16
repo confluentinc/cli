@@ -1,6 +1,6 @@
---- cli/Makefile	2023-03-15 15:40:55.000000000 -0700
-+++ debian/Makefile	2023-03-15 13:03:15.000000000 -0700
-@@ -1,128 +1,130 @@
+--- cli/Makefile	2023-03-16 12:39:29.000000000 -0700
++++ debian/Makefile	2023-03-16 13:01:06.000000000 -0700
+@@ -1,128 +1,134 @@
 -SHELL              := /bin/bash
 -ALL_SRC            := $(shell find . -name "*.go" | grep -v -e vendor)
 -GORELEASER_VERSION := v1.15.2
@@ -214,7 +214,11 @@
 -test: unit-test integration-test
 +rpm: RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz
 +	echo "Building the RPM"
-+	rpmbuild --define="_topdir `pwd`/RPM_BUILDING" --nodebuginfo -tb $<
++	NO_DEBUG_FLAG='--nodebuginfo'
++	if [[ "$(cat /etc/redhat-release | awk -v RS=[0-9]+ '{print RT+0;exit}')" =~ "7.*" ]]; then \
++		NO_DEBUG_FLAG='--define "debug_package %{nil}"'; \
++	fi
++	rpmbuild --define="_topdir `pwd`/RPM_BUILDING" $(NO_DEBUG_FLAG) -tb $<
 +	find RPM_BUILDING/{,S}RPMS/ -type f | xargs -n1 -iXXX mv XXX .
 +	echo
 +	echo "================================================="
