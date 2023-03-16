@@ -7,14 +7,11 @@ import (
 	"strings"
 	"time"
 
-	ckgo "github.com/confluentinc/confluent-kafka-go/kafka"
-	schemaregistry "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/iancoleman/strcase"
 	"github.com/spf13/cobra"
 	"github.com/swaggest/go-asyncapi/reflector/asyncapi-2.4.0"
 	"github.com/swaggest/go-asyncapi/spec-2.4.0"
 
-	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	ckgo "github.com/confluentinc/confluent-kafka-go/kafka"
 	schemaregistry "github.com/confluentinc/schema-registry-sdk-go"
 
