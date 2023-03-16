@@ -838,7 +838,7 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(*cobra.Command, []
 				output.ErrPrintln("WARNING: The `--cluster` flag is ignored when using API key credentials.")
 			}
 			if cmd.Flags().Changed("environment") {
-				output.ErrPrintln("WARNING: The `--environment` flag is not parsed when using API key credentials.")
+				output.ErrPrintln("WARNING: The `--environment` flag is ignored when using API key credentials.")
 			}
 			clusterId = r.getClusterIdForAPIKeyCredential(ctx)
 		case v1.Username:
