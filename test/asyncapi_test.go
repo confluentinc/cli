@@ -25,7 +25,7 @@ func (s *CLITestSuite) TestAsyncApiExport() {
 	}
 	fileNames := []string{"asyncapi-spec.yaml", "asyncapi-with-context.yaml"}
 	for _, fileName := range fileNames {
-		//defer os.Remove(fileName)
+		defer os.Remove(fileName)
 		s.FileExistsf("./"+fileName, "Spec file not generated.")
 		file, err := os.ReadFile(fileName)
 		if err != nil {
@@ -40,7 +40,6 @@ func (s *CLITestSuite) TestAsyncApiExport() {
 			s.Error(nil, "spec generated does not match the template output file")
 		}
 	}
-	resetConfiguration(s.T(), false)
 }
 
 func (s *CLITestSuite) TestAsyncApiImport() {
@@ -54,7 +53,6 @@ func (s *CLITestSuite) TestAsyncApiImport() {
 		test.login = "cloud"
 		s.runIntegrationTest(test)
 	}
-	resetConfiguration(s.T(), false)
 }
 
 func (s *CLITestSuite) TestAsyncApiImportWithWorkflow() {
@@ -62,9 +60,9 @@ func (s *CLITestSuite) TestAsyncApiImportWithWorkflow() {
 		{args: "environment use " + testserver.SRApiEnvId, workflow: true},
 		// Overwrite=false
 		{args: "asyncapi import ./test/fixtures/input/asyncapi/asyncapi-spec.yaml --schema-registry-api-key ASYNCAPIKEY --schema-registry-api-secret ASYNCAPISECRET", useKafka: "lkc-asyncapi", authKafka: "true", workflow: true, fixture: "asyncapi/2.golden"},
-		//Overwrite=true
+		// Overwrite=true
 		{args: "asyncapi import ./test/fixtures/input/asyncapi/asyncapi-spec.yaml --schema-registry-api-key ASYNCAPIKEY --schema-registry-api-secret ASYNCAPISECRET --overwrite -vvv", useKafka: "lkc-asyncapi", authKafka: "true", workflow: true},
-		//input file with 0 channels
+		// input file with 0 channels
 		{args: "asyncapi import ./test/fixtures/input/asyncapi/asyncapi-with-context.yaml --schema-registry-api-key ASYNCAPIKEY --schema-registry-api-secret ASYNCAPISECRET --overwrite -vvv", useKafka: "lkc-asyncapi", authKafka: "true", workflow: true},
 	}
 	resetConfiguration(s.T(), false)
@@ -72,5 +70,4 @@ func (s *CLITestSuite) TestAsyncApiImportWithWorkflow() {
 		test.login = "cloud"
 		s.runIntegrationTest(test)
 	}
-	resetConfiguration(s.T(), false)
 }

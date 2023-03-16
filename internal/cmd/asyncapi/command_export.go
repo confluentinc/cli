@@ -16,7 +16,6 @@ import (
 
 	"github.com/confluentinc/cli/internal/cmd/kafka"
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
-	"github.com/confluentinc/cli/internal/pkg/cmd"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -28,7 +27,6 @@ import (
 
 type command struct {
 	*pcmd.AuthenticatedStateFlagCommand
-	kafkaRest *cmd.KafkaREST
 }
 
 type confluentBinding struct {
@@ -166,7 +164,7 @@ func (c *command) getChannelDetails(details *accountDetails, flags *flags) error
 			log.CliLogger.Warn(err)
 		}
 	}
-	details.channelDetails.bindings, err = c.getBindings(c.kafkaRest, details.clusterId, details.channelDetails.currentTopic.GetTopicName())
+	details.channelDetails.bindings, err = c.getBindings(details.clusterId, details.channelDetails.currentTopic.GetTopicName())
 	if err != nil {
 		log.CliLogger.Warnf("bindings not found: %v", err)
 	}
@@ -272,14 +270,18 @@ func (c command) getMessageExamples(consumer *ckgo.Consumer, topicName, contentT
 	return jsonMessage, nil
 }
 
-func (c *command) getBindings(kafkaREST *pcmd.KafkaREST, clusterId string, topicName string) (*bindings, error) {
+func (c *command) getBindings(clusterId, topicName string) (*bindings, error) {
+	kafkaREST, err := c.GetKafkaREST()
+	if err != nil {
+		return nil, err
+	}
 	configs, err := kafkaREST.CloudClient.ListKafkaTopicConfigs(clusterId, topicName)
 	if err != nil {
 		return nil, err
 	}
 	configsMap := make(map[string]string)
 	for _, config := range configs.Data {
-		configsMap[config.Name] = config.GetValue()
+		configsMap[config.GetName()] = config.GetValue()
 	}
 	var channelBindings any = confluentBinding{configsMap}
 	messageBindings := spec.MessageBindingsObject{Kafka: &spec.KafkaMessage{Key: &spec.KafkaMessageKey{Schema: map[string]any{"type": "string"}}}}
@@ -328,7 +330,6 @@ func (c *command) getClusterDetails(details *accountDetails, flags *flags) error
 	details.topics = topics.Data
 	details.clusterCreds = clusterCreds
 	details.broker = kafkaREST.CloudClient.GetUrl()
-	c.kafkaRest = kafkaREST
 	return nil
 }
 

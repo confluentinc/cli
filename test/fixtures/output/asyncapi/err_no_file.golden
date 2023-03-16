@@ -1,9 +1,9 @@
 Error: accepts 1 arg(s), received 0
 Usage:
-  confluent asyncapi import <spec.yaml> [flags]
+  confluent asyncapi import <input-file-name> [flags]
 
 Examples:
-Import an asyncapi specification file to populate an existing cluster
+Import an AsyncAPI specification file to populate an existing cluster
 
   $ confluent asyncapi import spec.yaml
 
