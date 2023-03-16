@@ -109,7 +109,7 @@ func (d *DynamicContext) GetKafkaClusterForCommand() (*v1.KafkaClusterConfig, er
 	}
 
 	cluster, err := d.FindKafkaCluster(clusterId)
-	if presource.LookupType(clusterId) != presource.KafkaCluster {
+	if presource.LookupType(clusterId) != presource.KafkaCluster && clusterId != "anonymous-id" {
 		return nil, errors.Errorf(errors.KafkaClusterMissingPrefixErrorMsg, clusterId)
 	}
 	return cluster, errors.CatchKafkaNotFoundError(err, clusterId, nil)
