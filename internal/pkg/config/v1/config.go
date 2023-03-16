@@ -8,9 +8,10 @@ import (
 	"reflect"
 	"strings"
 
-	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/google/uuid"
 	"github.com/hashicorp/go-version"
+
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/config"
@@ -26,9 +27,7 @@ const (
 	emptyFieldIndicator  = "EMPTY"
 )
 
-var (
-	ver, _ = version.NewVersion("1.0.0")
-)
+var ver, _ = version.NewVersion("1.0.0")
 
 const signupSuggestion = `If you need a Confluent Cloud account, sign up with "confluent cloud-signup".`
 

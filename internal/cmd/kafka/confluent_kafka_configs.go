@@ -6,9 +6,10 @@ import (
 	"io"
 	"os"
 
-	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
+
+	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 
 	configv1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -263,7 +264,7 @@ func GetOffsetWithFallback(cmd *cobra.Command) (ckafka.Offset, error) {
 func getPartitionsByIndex(partitions []ckafka.TopicPartition, partitionFilter PartitionFilter) []ckafka.TopicPartition {
 	if partitionFilter.Changed {
 		for _, partition := range partitions {
-			if partition.Partition == int32(partitionFilter.Index) {
+			if partition.Partition == partitionFilter.Index {
 				log.CliLogger.Debugf("Consuming from partition: %d", partitionFilter.Index)
 				return []ckafka.TopicPartition{partition}
 			}

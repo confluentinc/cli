@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
+
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 

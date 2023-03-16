@@ -1,16 +1,17 @@
 package schemaregistry
 
 import (
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/spf13/cobra"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
-func (c *exporterCommand) newDescribeCommandOnPrem() *cobra.Command {
+func (c *command) newExporterDescribeCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "describe <name>",
 		Short:       "Describe the schema exporter.",
 		Args:        cobra.ExactArgs(1),
-		RunE:        c.onPremDescribe,
+		RunE:        c.exporterDescribeOnPrem,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 	}
 
@@ -21,7 +22,7 @@ func (c *exporterCommand) newDescribeCommandOnPrem() *cobra.Command {
 	return cmd
 }
 
-func (c *exporterCommand) onPremDescribe(cmd *cobra.Command, args []string) error {
+func (c *command) exporterDescribeOnPrem(cmd *cobra.Command, args []string) error {
 	srClient, ctx, err := GetSrApiClientWithToken(cmd, c.Version, c.AuthToken())
 	if err != nil {
 		return err

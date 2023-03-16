@@ -5,13 +5,12 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/confluentinc/cli/internal/pkg/ccstructs"
-	"github.com/confluentinc/cli/internal/pkg/errors"
-
 	"github.com/hashicorp/go-multierror"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+
+	"github.com/confluentinc/cli/internal/pkg/ccstructs"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 // ACLConfiguration wrapper used for flag parsing and validation

@@ -10,9 +10,10 @@ import (
 	"time"
 	"unicode"
 
+	"github.com/spf13/cobra"
+
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
-	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -23,8 +24,7 @@ import (
 
 type createCommand struct {
 	*pcmd.HasAPIKeyCLICommand
-	prerunner pcmd.PreRunner
-	clientId  string
+	clientId string
 }
 
 type clientConfig struct {
@@ -80,12 +80,13 @@ var (
 	springBoot = &clientConfig{"Spring Boot", "springboot", springbootSrConfig, true}
 
 	clientConfigurations = []*clientConfig{
-		clojure, cpp, csharp, golang, groovy, java, kotlin, ktor, nodeJS, python, ruby, rust, scala, springBoot, restAPI}
+		clojure, cpp, csharp, golang, groovy, java, kotlin, ktor, nodeJS, python, ruby, rust, scala, springBoot, restAPI,
+	}
 
 	re = regexp.MustCompile(fmt.Sprintf("%s|%s|%s", srEndpointProperty, srCredentialsSourceProperty, srUserInfoProperty))
 )
 
-func (c *clientConfigCommand) newCreateCommand() *cobra.Command {
+func (c *clientConfigCommand) newCreateCommand(prerunner pcmd.PreRunner, clientId string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "create",
 		Short:       "Create a Kafka client configuration file.",
@@ -93,9 +94,8 @@ func (c *clientConfigCommand) newCreateCommand() *cobra.Command {
 	}
 
 	cc := &createCommand{
-		HasAPIKeyCLICommand: pcmd.NewHasAPIKeyCLICommand(cmd, c.prerunner),
-		prerunner:           c.prerunner,
-		clientId:            c.clientId,
+		HasAPIKeyCLICommand: pcmd.NewHasAPIKeyCLICommand(cmd, prerunner),
+		clientId:            clientId,
 	}
 
 	for _, language := range clientConfigurations {

@@ -43,5 +43,5 @@ func (c *command) activate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return print(cmd, pipeline)
+	return printTable(cmd, pipeline)
 }

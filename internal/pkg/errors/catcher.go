@@ -9,11 +9,12 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/pkg/errors"
+
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	"github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
-	"github.com/pkg/errors"
 )
 
 /*

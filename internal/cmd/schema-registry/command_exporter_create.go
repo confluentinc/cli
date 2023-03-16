@@ -17,12 +17,12 @@ import (
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
-func (c *exporterCommand) newCreateCommand() *cobra.Command {
+func (c *command) newExporterCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <name>",
 		Short: "Create a new schema exporter.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.create,
+		RunE:  c.exporterCreate,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a new schema exporter.",
@@ -47,7 +47,7 @@ func (c *exporterCommand) newCreateCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *exporterCommand) create(cmd *cobra.Command, args []string) error {
+func (c *command) exporterCreate(cmd *cobra.Command, args []string) error {
 	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err

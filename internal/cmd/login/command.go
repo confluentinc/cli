@@ -8,8 +8,9 @@ import (
 	"runtime"
 	"strings"
 
-	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/spf13/cobra"
+
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
 	"github.com/confluentinc/cli/internal/cmd/admin"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
@@ -387,7 +388,7 @@ func validateURL(url string, isCCloud bool) (string, string, error) {
 		msg = append(msg, "https protocol")
 	}
 	if !isCCloud && !regexp.MustCompile(`:(\d+\/?)`).MatchString(url) {
-		url = url + ":8090"
+		url += ":8090"
 		msg = append(msg, "default MDS port 8090")
 	}
 

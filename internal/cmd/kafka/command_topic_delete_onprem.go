@@ -19,7 +19,7 @@ func (c *authenticatedTopicCommand) newDeleteCommandOnPrem() *cobra.Command {
 		Use:   "delete <topic>",
 		Short: "Delete a Kafka topic.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.onPremDelete,
+		RunE:  c.deleteOnPrem,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Delete the topic "my_topic" for the specified cluster (providing embedded Kafka REST Proxy endpoint). Use this command carefully as data loss can occur.`,
@@ -37,7 +37,7 @@ func (c *authenticatedTopicCommand) newDeleteCommandOnPrem() *cobra.Command {
 	return cmd
 }
 
-func (c *authenticatedTopicCommand) onPremDelete(cmd *cobra.Command, args []string) error {
+func (c *authenticatedTopicCommand) deleteOnPrem(cmd *cobra.Command, args []string) error {
 	// Parse arguments
 	topicName := args[0]
 	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)

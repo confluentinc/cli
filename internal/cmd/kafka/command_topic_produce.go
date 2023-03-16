@@ -8,9 +8,10 @@ import (
 	"os/signal"
 	"strings"
 
+	"github.com/spf13/cobra"
+
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
-	"github.com/spf13/cobra"
 
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -251,8 +252,7 @@ func getMsgKeyAndValue(metaInfo []byte, data, delimiter string, parseKey bool, s
 	if err != nil {
 		return "", "", err
 	}
-	encoded := append(metaInfo, encodedMessage...)
-	value := string(encoded)
+	value := string(append(metaInfo, encodedMessage...))
 	return key, value, nil
 }
 

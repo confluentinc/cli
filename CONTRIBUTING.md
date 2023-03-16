@@ -160,9 +160,9 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 
     c := &command{pcmd.NewAnonymousCLICommand(cmd, prerunner)}
 
-    c.AddCommand(c.newDescribeCommand())
+    cmd.AddCommand(c.newDescribeCommand())
 
-    return c.Command
+    return cmd
 }
 ```
 

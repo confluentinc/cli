@@ -7,16 +7,15 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/confluentinc/cli/internal/pkg/utils"
-
-	"github.com/confluentinc/cli/internal/pkg/errors"
-
-	"github.com/confluentinc/properties"
 	"github.com/jonboulle/clockwork"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 
+	"github.com/confluentinc/properties"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 // Password Protection is a security plugin to securely store and add passwords to a properties file.
@@ -179,7 +178,6 @@ func (c *PasswordProtectionSuite) DecryptConfigFileSecrets(configFilePath string
 	if err != nil {
 		return err
 	}
-	//decryptedSecrets := properties.NewProperties()
 	cipherSuite, err := c.loadCipherSuiteFromLocalFile(localSecureConfigPath)
 	if err != nil {
 		return err
