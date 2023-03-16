@@ -15,7 +15,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (c *localCommand) newConsumeCommand() *cobra.Command {
+func (c *kafkaCommand) newConsumeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "consume",
 		Short: "---",
@@ -36,7 +36,7 @@ func (c *localCommand) newConsumeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *localCommand) consume(cmd *cobra.Command, args []string) error {
+func (c *kafkaCommand) consume(cmd *cobra.Command, args []string) error {
 	ctx := context.Background()
 
 	printKey, err := cmd.Flags().GetBool("print-key")

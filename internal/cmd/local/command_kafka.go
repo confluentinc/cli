@@ -3,21 +3,26 @@ package local
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/cmd"
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
-func NewKafkaCommand(prerunner cmd.PreRunner) *cobra.Command {
-	c := NewLocalCommand(
-		&cobra.Command{
-			Use:   "kafka",
-			Short: "Run Kafka related commands",
-			Long:  `----`,
-			Args:  cobra.NoArgs,
-		}, prerunner)
+type kafkaCommand struct {
+	*pcmd.CLICommand
+}
 
-	c.AddCommand(c.newStartCommand())
-	c.AddCommand(c.newStopCommand())
-	c.AddCommand(c.newProduceCommand())
-	c.AddCommand(c.newConsumeCommand())
-	return c.Command
+func NewKafkaCommand(prerunner pcmd.PreRunner) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "kafka",
+		Short: "Run Kafka related commands",
+		Long:  `----`,
+		Args:  cobra.NoArgs,
+	}
+
+	c := &kafkaCommand{pcmd.NewAnonymousCLICommand(cmd, prerunner)}
+
+	cmd.AddCommand(c.newStartCommand())
+	cmd.AddCommand(c.newStopCommand())
+	cmd.AddCommand(c.newProduceCommand())
+	cmd.AddCommand(c.newConsumeCommand())
+	return cmd
 }

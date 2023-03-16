@@ -19,7 +19,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func (c *localCommand) newStartCommand() *cobra.Command {
+func (c *kafkaCommand) newStartCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "start",
 		Short: "---",
@@ -31,7 +31,7 @@ func (c *localCommand) newStartCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *localCommand) start(cmd *cobra.Command, args []string) error {
+func (c *kafkaCommand) start(cmd *cobra.Command, args []string) error {
 	dockerClient, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		return err
@@ -116,7 +116,7 @@ func (c *localCommand) start(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *localCommand) prepareValidPorts() error {
+func (c *kafkaCommand) prepareValidPorts() error {
 	if c.Config.LocalPorts != nil {
 		return nil
 	}

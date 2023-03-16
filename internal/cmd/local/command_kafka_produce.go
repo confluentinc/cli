@@ -15,7 +15,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func (c *localCommand) newProduceCommand() *cobra.Command {
+func (c *kafkaCommand) newProduceCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "produce",
 		Short: "Produce messages to the test Kafka topic.",
@@ -30,7 +30,7 @@ func (c *localCommand) newProduceCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *localCommand) produce(cmd *cobra.Command, args []string) error {
+func (c *kafkaCommand) produce(cmd *cobra.Command, args []string) error {
 	producer, err := newOnPremProducer(cmd, ":"+c.Config.LocalPorts.PlaintextPort)
 	if err != nil {
 		return errors.NewErrorWithSuggestions(fmt.Errorf(errors.FailedToCreateProducerErrorMsg, err).Error(), errors.OnPremConfigGuideSuggestions)

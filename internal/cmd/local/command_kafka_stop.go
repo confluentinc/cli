@@ -13,7 +13,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (c *localCommand) newStopCommand() *cobra.Command {
+func (c *kafkaCommand) newStopCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "stop",
 		Short: "---",
@@ -25,7 +25,7 @@ func (c *localCommand) newStopCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *localCommand) stop(cmd *cobra.Command, args []string) error {
+func (c *kafkaCommand) stop(cmd *cobra.Command, args []string) error {
 	ctx := context.Background()
 
 	dockerClient, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
