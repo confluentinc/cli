@@ -1,6 +1,7 @@
 package ccloudv2
 
 import (
+	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	byokv1 "github.com/confluentinc/ccloud-sdk-go-v2/byok/v1"
 	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
@@ -31,6 +32,7 @@ type Client struct {
 	CliClient              *cliv1.APIClient
 	CmkClient              *cmkv2.APIClient
 	ConnectClient          *connectv1.APIClient
+	FlinkGatewayClient     *flinkgatewayv1alpha1.APIClient
 	IamClient              *iamv2.APIClient
 	IdentityProviderClient *identityproviderv2.APIClient
 	KsqlClient             *ksql.APIClient
@@ -57,6 +59,7 @@ func NewClient(baseUrl string, isTest bool, authToken, userAgent string, unsafeT
 		CliClient:              newCliClient(url, userAgent, unsafeTrace),
 		CmkClient:              newCmkClient(url, userAgent, unsafeTrace),
 		ConnectClient:          newConnectClient(url, userAgent, unsafeTrace),
+		FlinkGatewayClient:     newFlinkGatewayClient(url, userAgent, unsafeTrace),
 		IamClient:              newIamClient(url, userAgent, unsafeTrace),
 		IdentityProviderClient: newIdentityProviderClient(url, userAgent, unsafeTrace),
 		KsqlClient:             newKsqlClient(url, userAgent, unsafeTrace),
