@@ -146,7 +146,7 @@ func (c *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 			continue
 		}
 
-		msg, err := getProduceMessage(cmd, metaInfo, topic, data, serializationProvider)
+		msg, err := GetProduceMessage(cmd, metaInfo, topic, data, serializationProvider)
 		if err != nil {
 			return err
 		}
@@ -213,7 +213,7 @@ func (c *hasAPIKeyTopicCommand) registerSchema(cmd *cobra.Command, schemaCfg *sr
 	return metaInfo, referencePathMap, nil
 }
 
-func getProduceMessage(cmd *cobra.Command, metaInfo []byte, topicName, data string, serializationProvider serdes.SerializationProvider) (*ckafka.Message, error) {
+func GetProduceMessage(cmd *cobra.Command, metaInfo []byte, topicName, data string, serializationProvider serdes.SerializationProvider) (*ckafka.Message, error) {
 	parseKey, err := cmd.Flags().GetBool("parse-key")
 	if err != nil {
 		return nil, err
