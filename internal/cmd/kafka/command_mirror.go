@@ -41,13 +41,13 @@ func newMirrorCommand(prerunner pcmd.PreRunner) *cobra.Command {
 
 	c := &mirrorCommand{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
 
-	c.AddCommand(c.newCreateCommand())
-	c.AddCommand(c.newDescribeCommand())
-	c.AddCommand(c.newFailoverCommand())
-	c.AddCommand(c.newListCommand())
-	c.AddCommand(c.newPauseCommand())
-	c.AddCommand(c.newPromoteCommand())
-	c.AddCommand(c.newResumeCommand())
+	cmd.AddCommand(c.newCreateCommand())
+	cmd.AddCommand(c.newDescribeCommand())
+	cmd.AddCommand(c.newFailoverCommand())
+	cmd.AddCommand(c.newListCommand())
+	cmd.AddCommand(c.newPauseCommand())
+	cmd.AddCommand(c.newPromoteCommand())
+	cmd.AddCommand(c.newResumeCommand())
 
-	return c.Command
+	return cmd
 }

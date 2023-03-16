@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"net/http"
 
-	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
 	"github.com/spf13/cobra"
+
+	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -85,15 +86,18 @@ func (c *roleBindingCommand) ccloudDelete(cmd *cobra.Command, deleteRoleBinding 
 		return err
 	}
 
-	var roleBindingToDelete *mdsv2.IamV2RoleBinding
+	var roleBindingToDelete mdsv2.IamV2RoleBinding
+	found := false
+
 	for _, roleBinding := range roleBindings {
 		if roleBinding.GetCrnPattern() == deleteRoleBinding.GetCrnPattern() {
-			roleBindingToDelete = &roleBinding
+			roleBindingToDelete = roleBinding
+			found = true
 			break
 		}
 	}
 
-	if roleBindingToDelete == nil {
+	if !found {
 		return errors.NewErrorWithSuggestions(errors.RoleBindingNotFoundErrorMsg, errors.RoleBindingNotFoundSuggestions)
 	}
 

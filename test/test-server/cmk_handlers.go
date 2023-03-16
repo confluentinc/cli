@@ -6,9 +6,10 @@ import (
 	"net/http"
 	"testing"
 
-	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
+
+	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 )
 
 // Handler for POST "/cmk/v2/clusters"
@@ -218,7 +219,7 @@ func handleCmkKafkaClusterUpdateRequest(t *testing.T) http.HandlerFunc {
 			require.NoError(t, err)
 			req.Id = cmkv2.PtrString("lkc-update")
 			if req.Spec.Config != nil && req.Spec.Config.CmkV2Dedicated.Cku > 0 {
-			} else { //update name
+			} else { // update name
 				cluster := getCmkBasicDescribeCluster(*req.Id, *req.Spec.DisplayName)
 				err := json.NewEncoder(w).Encode(cluster)
 				require.NoError(t, err)

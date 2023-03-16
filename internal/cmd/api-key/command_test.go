@@ -7,20 +7,20 @@ import (
 	"testing"
 	"time"
 
+	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
+
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	apikeysmock "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2/mock"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	cmkmock "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2/mock"
-
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 	iammock "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2/mock"
 	ksqlmock "github.com/confluentinc/ccloud-sdk-go-v2/ksql/mock"
 	ksqlv2 "github.com/confluentinc/ccloud-sdk-go-v2/ksql/v2"
-	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -172,13 +172,13 @@ func (suite *APITestSuite) SetupTest() {
 		},
 	}
 	suite.srMothershipMock = &ccloudv1mock.SchemaRegistry{
-		CreateSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *ccloudv1.SchemaRegistryClusterConfig) (*ccloudv1.SchemaRegistryCluster, error) {
+		CreateSchemaRegistryClusterFunc: func(_ context.Context, _ *ccloudv1.SchemaRegistryClusterConfig) (*ccloudv1.SchemaRegistryCluster, error) {
 			return suite.srCluster, nil
 		},
-		GetSchemaRegistryClusterFunc: func(ctx context.Context, cluster *ccloudv1.SchemaRegistryCluster) (*ccloudv1.SchemaRegistryCluster, error) {
+		GetSchemaRegistryClusterFunc: func(_ context.Context, _ *ccloudv1.SchemaRegistryCluster) (*ccloudv1.SchemaRegistryCluster, error) {
 			return suite.srCluster, nil
 		},
-		GetSchemaRegistryClustersFunc: func(ctx context.Context, cluster *ccloudv1.SchemaRegistryCluster) (clusters []*ccloudv1.SchemaRegistryCluster, e error) {
+		GetSchemaRegistryClustersFunc: func(_ context.Context, _ *ccloudv1.SchemaRegistryCluster) ([]*ccloudv1.SchemaRegistryCluster, error) {
 			return []*ccloudv1.SchemaRegistryCluster{suite.srCluster}, nil
 		},
 	}
@@ -212,13 +212,13 @@ func (suite *APITestSuite) SetupTest() {
 		},
 	}
 	suite.keystore = &mock.KeyStore{
-		HasAPIKeyFunc: func(key, clusterId string) (b bool, e error) {
+		HasAPIKeyFunc: func(key, _ string) (bool, error) {
 			return key == apiKeyVal, nil
 		},
-		StoreAPIKeyFunc: func(key *v1.APIKeyPair, clusterId string) error {
+		StoreAPIKeyFunc: func(_ *v1.APIKeyPair, _ string) error {
 			return nil
 		},
-		DeleteAPIKeyFunc: func(key string) error {
+		DeleteAPIKeyFunc: func(_ string) error {
 			return nil
 		},
 	}
@@ -232,14 +232,12 @@ func (suite *APITestSuite) SetupTest() {
 		},
 	}
 	suite.userMock = &ccloudv1mock.UserInterface{
-		GetServiceAccountsFunc: func(arg0 context.Context) (users []*ccloudv1.User, e error) {
-			return []*ccloudv1.User{
-				{
-					Id:          serviceAccountId,
-					ResourceId:  userResourceId,
-					ServiceName: serviceAccountName,
-				},
-			}, nil
+		GetServiceAccountsFunc: func(_ context.Context) ([]*ccloudv1.User, error) {
+			return []*ccloudv1.User{{
+				Id:          serviceAccountId,
+				ResourceId:  userResourceId,
+				ServiceName: serviceAccountName,
+			}}, nil
 		},
 		GetServiceAccountFunc: func(_ context.Context, _ int32) (*ccloudv1.User, error) {
 			return &ccloudv1.User{

@@ -3,11 +3,12 @@ package auditlog
 import (
 	"context"
 
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/spf13/cobra"
 )
 
 type describeCmd struct {
@@ -30,11 +31,11 @@ func newDescribeCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	}
 
 	c := &describeCmd{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
-	c.RunE = c.describe
+	cmd.RunE = c.describe
 
-	pcmd.AddOutputFlag(c.Command)
+	pcmd.AddOutputFlag(cmd)
 
-	return c.Command
+	return cmd
 }
 
 func (c describeCmd) describe(cmd *cobra.Command, _ []string) error {

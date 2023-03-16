@@ -6,10 +6,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
-type command struct {
-	*pcmd.StateFlagCommand
-}
-
 func New(prerunner pcmd.PreRunner, userAgent string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "cluster",
@@ -17,12 +13,10 @@ func New(prerunner pcmd.PreRunner, userAgent string) *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 	}
 
-	c := &command{pcmd.NewAnonymousStateFlagCommand(cmd, prerunner)}
+	cmd.AddCommand(newDescribeCommand(prerunner, userAgent))
+	cmd.AddCommand(newListCommand(prerunner))
+	cmd.AddCommand(newRegisterCommand(prerunner))
+	cmd.AddCommand(newUnregisterCommand(prerunner))
 
-	c.AddCommand(newDescribeCommand(prerunner, userAgent))
-	c.AddCommand(newListCommand(prerunner))
-	c.AddCommand(newRegisterCommand(prerunner))
-	c.AddCommand(newUnregisterCommand(prerunner))
-
-	return c.Command
+	return cmd
 }

@@ -1,9 +1,10 @@
 package kafka
 
 import (
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
+
+	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
@@ -36,24 +37,22 @@ func (suite *KafkaClusterTestSuite) TestBroker_checkAllOrBrokerIdSpecified() {
 	req.Equal(errors.MustSpecifyAllOrBrokerIDErrorMsg, err.Error())
 }
 
-var (
-	expectedConfigData = []configOut{
-		{
-			"testConfig",
-			"testValue",
-			true,
-			true,
-			true,
-		},
-		{
-			"testConfig2",
-			"",
-			true,
-			true,
-			true,
-		},
-	}
-)
+var expectedConfigData = []configOut{
+	{
+		"testConfig",
+		"testValue",
+		true,
+		true,
+		true,
+	},
+	{
+		"testConfig2",
+		"",
+		true,
+		true,
+		true,
+	},
+}
 
 func (suite *KafkaClusterTestSuite) TestBroker_parseClusterConfigData() {
 	req := suite.Require()

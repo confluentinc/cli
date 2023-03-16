@@ -4,10 +4,11 @@ import (
 	"context"
 
 	"github.com/antihax/optional"
-	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	"github.com/spf13/cobra"
 
-	print "github.com/confluentinc/cli/internal/pkg/cluster"
+	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
+
+	"github.com/confluentinc/cli/internal/pkg/cluster"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
@@ -35,8 +36,8 @@ func (c *command) clusterListOnPrem(cmd *cobra.Command, _ []string) error {
 
 	clusterInfos, response, err := c.MDSClient.ClusterRegistryApi.ClusterRegistryList(ctx, opts)
 	if err != nil {
-		return print.HandleClusterError(err, response)
+		return cluster.HandleClusterError(err, response)
 	}
 
-	return print.PrintClusters(cmd, clusterInfos)
+	return cluster.PrintClusters(cmd, clusterInfos)
 }

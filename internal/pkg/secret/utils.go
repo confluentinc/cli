@@ -8,21 +8,23 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/confluentinc/cli/internal/pkg/utils"
-
-	"github.com/confluentinc/cli/internal/pkg/errors"
-
-	"github.com/confluentinc/properties"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/pretty"
 	"github.com/tidwall/sjson"
+
+	"github.com/confluentinc/properties"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-var dataRegex = regexp.MustCompile(DataPattern)
-var ivRegex = regexp.MustCompile(IVPattern)
-var algoRegex = regexp.MustCompile(EncPattern)
-var passwordRegex = regexp.MustCompile(PasswordPattern)
-var cipherRegex = regexp.MustCompile(CipherPattern)
+var (
+	dataRegex     = regexp.MustCompile(DataPattern)
+	ivRegex       = regexp.MustCompile(IVPattern)
+	algoRegex     = regexp.MustCompile(EncPattern)
+	passwordRegex = regexp.MustCompile(PasswordPattern)
+	cipherRegex   = regexp.MustCompile(CipherPattern)
+)
 
 func GenerateConfigValue(key string, path string) string {
 	return "${securepass:" + path + ":" + key + "}"
@@ -302,7 +304,7 @@ func RemovePropertiesConfig(removeConfigs []string, path string) error {
 	removeJAASConfig := properties.NewProperties()
 	removeJAASConfig.DisableExpansion = true
 	for _, key := range removeConfigs {
-		//Check if config is present
+		// check if config is present
 		if pattern.MatchString(key) {
 			_, _, err = removeJAASConfig.Set(key, "")
 			if err != nil {
@@ -318,7 +320,6 @@ func RemovePropertiesConfig(removeConfigs []string, path string) error {
 	}
 
 	configs, err := convertPropertiesJAAS(removeJAASConfig, configProps, Delete)
-
 	if err != nil {
 		return err
 	}

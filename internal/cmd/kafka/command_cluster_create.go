@@ -8,10 +8,10 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/spf13/cobra"
+
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
-
-	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -231,9 +231,11 @@ func (c *clusterCommand) validateGcpEncryptionKey(prompt form.Prompt, cloud stri
 
 	promptMsg := "Please confirm you've authorized the key for this identity: " + externalID
 	f := form.New(
-		form.Field{ID: "authorized",
+		form.Field{
+			ID:        "authorized",
 			Prompt:    promptMsg,
-			IsYesOrNo: true})
+			IsYesOrNo: true,
+		})
 	for {
 		if err := f.Prompt(prompt); err != nil {
 			output.ErrPrintln(errors.FailedToReadConfirmationErrorMsg)

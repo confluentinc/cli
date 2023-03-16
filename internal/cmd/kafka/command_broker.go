@@ -21,15 +21,15 @@ func newBrokerCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	}
 
 	c := &brokerCommand{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
-	c.PersistentPreRunE = prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand)
+	cmd.PersistentPreRunE = prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand)
 
-	c.AddCommand(c.newDeleteCommand())
-	c.AddCommand(c.newDescribeCommand())
-	c.AddCommand(c.newGetTasksCommand())
-	c.AddCommand(c.newListCommand())
-	c.AddCommand(c.newUpdateCommand())
+	cmd.AddCommand(c.newDeleteCommand())
+	cmd.AddCommand(c.newDescribeCommand())
+	cmd.AddCommand(c.newGetTasksCommand())
+	cmd.AddCommand(c.newListCommand())
+	cmd.AddCommand(c.newUpdateCommand())
 
-	return c.Command
+	return cmd
 }
 
 func checkAllOrBrokerIdSpecified(cmd *cobra.Command, args []string) (int32, bool, error) {
