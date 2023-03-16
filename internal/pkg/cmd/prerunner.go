@@ -834,6 +834,12 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(*cobra.Command, []
 		var clusterId string
 		switch ctx.Credential.CredentialType {
 		case v1.APIKey:
+			if cmd.Flags().Changed("cluster") {
+				output.ErrPrintln("WARNING: The `--cluster` flag is not parsed when using API key credentials.")
+			}
+			if cmd.Flags().Changed("environment") {
+				output.ErrPrintln("WARNING: The `--environment` flag is not parsed when using API key credentials.")
+			}
 			clusterId = r.getClusterIdForAPIKeyCredential(ctx)
 		case v1.Username:
 			unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
