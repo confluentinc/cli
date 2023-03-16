@@ -137,7 +137,7 @@ func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		return errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "from-beginning", "offset")
 	}
 
-	offset, err := getOffsetWithFallback(cmd)
+	offset, err := GetOffsetWithFallback(cmd)
 	if err != nil {
 		return err
 	}
@@ -146,12 +146,12 @@ func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	if err != nil {
 		return err
 	}
-	partitionFilter := partitionFilter{
-		changed: cmd.Flags().Changed("partition"),
-		index:   partition,
+	partitionFilter := PartitionFilter{
+		Changed: cmd.Flags().Changed("partition"),
+		Index:   partition,
 	}
 
-	rebalanceCallback := getRebalanceCallback(offset, partitionFilter)
+	rebalanceCallback := GetRebalanceCallback(offset, partitionFilter)
 	if err := consumer.Subscribe(topic, rebalanceCallback); err != nil {
 		return err
 	}
@@ -211,5 +211,5 @@ func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 			SchemaPath: dir,
 		},
 	}
-	return runConsumer(consumer, groupHandler)
+	return RunConsumer(consumer, groupHandler)
 }
