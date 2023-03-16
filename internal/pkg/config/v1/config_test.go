@@ -11,10 +11,11 @@ import (
 	"strings"
 	"testing"
 
-	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/hashicorp/go-version"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -468,7 +469,7 @@ func TestConfig_SaveWithAccountOverwrite(t *testing.T) {
 				t.Errorf("Config.Save() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			got, _ := os.ReadFile(configFile.Name())
-			got = append(got, '\n') //account for extra newline at the end of the json file
+			got = append(got, '\n') // account for extra newline at the end of the json file
 			want, _ := os.ReadFile(tt.wantFile)
 			wantString := replacePlaceholdersInWant(t, got, want)
 			if utils.NormalizeNewLines(string(got)) != utils.NormalizeNewLines(wantString) {
@@ -488,12 +489,12 @@ func replacePlaceholdersInWant(t *testing.T, got []byte, want []byte) string {
 	data := Config{}
 	err := json.Unmarshal(got, &data)
 	require.NoError(t, err)
-	wantString := strings.Replace(string(want), authTokenPlaceholder, data.ContextStates[contextName].AuthToken, -1)
-	wantString = strings.Replace(wantString, authRefreshTokenPlaceholder, data.ContextStates[contextName].AuthRefreshToken, -1)
+	wantString := strings.ReplaceAll(string(want), authTokenPlaceholder, data.ContextStates[contextName].AuthToken)
+	wantString = strings.ReplaceAll(wantString, authRefreshTokenPlaceholder, data.ContextStates[contextName].AuthRefreshToken)
 	saltString := base64.RawStdEncoding.EncodeToString(data.ContextStates[contextName].Salt)
-	wantString = strings.Replace(wantString, saltPlaceholder, saltString, -1)
+	wantString = strings.ReplaceAll(wantString, saltPlaceholder, saltString)
 	nonceString := base64.RawStdEncoding.EncodeToString(data.ContextStates[contextName].Nonce)
-	return strings.Replace(wantString, noncePlaceholder, nonceString, -1)
+	return strings.ReplaceAll(wantString, noncePlaceholder, nonceString)
 }
 
 func TestConfig_OverwrittenKafka(t *testing.T) {
@@ -502,8 +503,8 @@ func TestConfig_OverwrittenKafka(t *testing.T) {
 	tests := []struct {
 		name           string
 		config         *Config
-		overwrittenVal string //simulates initial config value overwritten by a cluster flag value
-		activeKafka    string //simulates the cluster flag value
+		overwrittenVal string // simulates initial config value overwritten by a cluster flag value
+		activeKafka    string // simulates the cluster flag value
 	}{
 		{
 			name:        "test no overwrite value",
@@ -525,7 +526,7 @@ func TestConfig_OverwrittenKafka(t *testing.T) {
 	for _, tt := range tests {
 		ctx := tt.config.Context()
 		tt.config.SetOverwrittenActiveKafka(tt.overwrittenVal)
-		//resolve should reset the active kafka to be the overwritten value and return the flag value to be used in restore
+		// resolve should reset the active kafka to be the overwritten value and return the flag value to be used in restore
 		tempKafka := tt.config.resolveOverwrittenKafka()
 		require.Equal(t, tt.activeKafka, tempKafka)
 		if ctx.KafkaClusterContext.EnvContext && ctx.KafkaClusterContext.GetCurrentKafkaEnvContext() != nil {
@@ -533,7 +534,7 @@ func TestConfig_OverwrittenKafka(t *testing.T) {
 		} else {
 			require.Equal(t, tt.overwrittenVal, ctx.KafkaClusterContext.ActiveKafkaCluster)
 		}
-		//restore should reset the active kafka to be the flag value
+		// restore should reset the active kafka to be the flag value
 		tt.config.restoreOverwrittenKafka(tempKafka)
 		if ctx.KafkaClusterContext.EnvContext && ctx.KafkaClusterContext.GetCurrentKafkaEnvContext() != nil {
 			require.Equal(t, tempKafka, ctx.KafkaClusterContext.GetCurrentKafkaEnvContext().ActiveKafkaCluster)
@@ -550,8 +551,8 @@ func TestConfig_OverwrittenContext(t *testing.T) {
 	tests := []struct {
 		name           string
 		config         *Config
-		overwrittenVal string //simulates initial context value overwritten by a context flag value
-		currContext    string //simulates the context flag value
+		overwrittenVal string // simulates initial context value overwritten by a context flag value
+		currContext    string // simulates the context flag value
 	}{
 		{
 			name:        "test no overwrite value",
@@ -572,11 +573,11 @@ func TestConfig_OverwrittenContext(t *testing.T) {
 	}
 	for _, tt := range tests {
 		tt.config.SetOverwrittenCurrContext(tt.overwrittenVal)
-		//resolve should reset the current context to be the overwritten value and return the flag value to be used in restore
+		// resolve should reset the current context to be the overwritten value and return the flag value to be used in restore
 		tempContext := tt.config.resolveOverwrittenContext()
 		require.Equal(t, tt.overwrittenVal, tt.config.CurrentContext)
 		require.Equal(t, tt.currContext, tempContext)
-		//restore should reset the current context to be the flag value
+		// restore should reset the current context to be the flag value
 		tt.config.restoreOverwrittenContext(tempContext)
 		require.Equal(t, tt.currContext, tt.config.CurrentContext)
 		tt.config.overwrittenCurrContext = ""
@@ -589,8 +590,8 @@ func TestConfig_OverwrittenAccount(t *testing.T) {
 	tests := []struct {
 		name           string
 		config         *Config
-		overwrittenVal *ccloudv1.Account //simulates initial environment (account) value overwritten by a environment flag
-		activeAccount  string            //simulates the environment (account) flag value
+		overwrittenVal *ccloudv1.Account // simulates initial environment (account) value overwritten by a environment flag
+		activeAccount  string            // simulates the environment (account) flag value
 	}{
 		{
 			name:          "test no overwrite value",
@@ -616,13 +617,13 @@ func TestConfig_OverwrittenAccount(t *testing.T) {
 			tt.config.restoreOverwrittenAccount(tempAccount)
 			require.Nil(t, tt.config.Context().State.Auth)
 		} else {
-			//resolve should reset the current context to be the overwritten value and return the flag value to be used in restore
+			// resolve should reset the current context to be the overwritten value and return the flag value to be used in restore
 			tempAccount := tt.config.resolveOverwrittenAccount()
 			if tt.overwrittenVal != nil {
 				require.Equal(t, tt.overwrittenVal, tt.config.Context().GetEnvironment())
 				require.Equal(t, tt.activeAccount, tempAccount.Id)
 			}
-			//restore should reset the current context to be the flag value
+			// restore should reset the current context to be the flag value
 			tt.config.restoreOverwrittenAccount(tempAccount)
 			require.Equal(t, tt.activeAccount, tt.config.Context().GetEnvironment().GetId())
 		}
@@ -790,13 +791,15 @@ func TestConfig_FindContext(t *testing.T) {
 		want    *Context
 		wantErr bool
 	}{
-		{name: "success finding existing context",
+		{
+			name:    "success finding existing context",
 			fields:  fields{Contexts: map[string]*Context{"test-context": {Name: "test-context"}}},
 			args:    args{name: "test-context"},
 			want:    &Context{Name: "test-context"},
 			wantErr: false,
 		},
-		{name: "error finding nonexistent context",
+		{
+			name:    "error finding nonexistent context",
 			fields:  fields{Contexts: map[string]*Context{}},
 			args:    args{name: "test-context"},
 			want:    nil,

@@ -1,8 +1,9 @@
 package kafka
 
 import (
-	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	"github.com/spf13/cobra"
+
+	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
@@ -33,11 +34,11 @@ func newLagCommand(prerunner pcmd.PreRunner) *cobra.Command {
 
 	c := &lagCommand{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
 
-	c.AddCommand(c.newGetCommand())
-	c.AddCommand(c.newListCommand())
-	c.AddCommand(c.newSummarizeCommand())
+	cmd.AddCommand(c.newGetCommand())
+	cmd.AddCommand(c.newListCommand())
+	cmd.AddCommand(c.newSummarizeCommand())
 
-	return c.Command
+	return cmd
 }
 
 func convertLagToStruct(data kafkarestv3.ConsumerLagData) *lagDataStruct {

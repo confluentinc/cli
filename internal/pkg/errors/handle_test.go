@@ -4,17 +4,16 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	"github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1"
-	"github.com/stretchr/testify/require"
 )
 
-var (
-	wantSuggestionsMsgFormat = `
+var wantSuggestionsMsgFormat = `
 Suggestions:
     %s
 `
-)
 
 func TestHandleError(t *testing.T) {
 	tests := []struct {

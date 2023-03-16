@@ -6,9 +6,10 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/spf13/cobra"
+
 	"github.com/confluentinc/go-editor"
 	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
-	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )

@@ -18,8 +18,8 @@ func newInvitationCommand(prerunner pcmd.PreRunner) *cobra.Command {
 
 	c := &invitationCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 
-	c.AddCommand(c.newCreateCommand())
-	c.AddCommand(c.newListCommand())
+	cmd.AddCommand(c.newCreateCommand())
+	cmd.AddCommand(c.newListCommand())
 
-	return c.Command
+	return cmd
 }

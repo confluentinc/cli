@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	testserver "github.com/confluentinc/cli/test/test-server"
 )

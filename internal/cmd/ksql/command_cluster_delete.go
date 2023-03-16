@@ -83,7 +83,7 @@ func (c *ksqlCommand) deleteTopics(clusterId, endpoint string) error {
 	client := sling.New().Client(oauth2.NewClient(context.Background(), ts)).Base(endpoint)
 	request := map[string][]string{"deleteTopicList": {".*"}}
 	response, err := client.Post("/ksql/terminate").BodyJSON(&request).ReceiveSuccess(nil)
-	//this returns a 503
+	// this returns a 503
 	if err != nil {
 		return err
 	}

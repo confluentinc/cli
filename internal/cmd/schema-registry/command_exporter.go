@@ -3,9 +3,8 @@ package schemaregistry
 import (
 	"github.com/spf13/cobra"
 
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 )
 
 func (c *command) newExporterCommand(cfg *v1.Config) *cobra.Command {

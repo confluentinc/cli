@@ -3,8 +3,9 @@ package prompt
 import (
 	"fmt"
 
-	"github.com/confluentinc/go-ps1"
 	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/go-ps1"
 
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/utils"

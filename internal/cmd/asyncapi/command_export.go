@@ -14,6 +14,10 @@ import (
 	"github.com/swaggest/go-asyncapi/reflector/asyncapi-2.4.0"
 	"github.com/swaggest/go-asyncapi/spec-2.4.0"
 
+	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
+	ckgo "github.com/confluentinc/confluent-kafka-go/kafka"
+	schemaregistry "github.com/confluentinc/schema-registry-sdk-go"
+
 	"github.com/confluentinc/cli/internal/cmd/kafka"
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -61,23 +65,26 @@ func newExportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Short: "Create an AsyncAPI specification for a Kafka cluster.",
 		Args:  cobra.NoArgs,
 	}
+
 	c := &command{AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
-	c.RunE = c.export
-	c.Flags().String("file", "asyncapi-spec.yaml", "Output file name.")
-	c.Flags().String("group-id", "consumerApplication", "Consumer Group ID for getting messages.")
-	c.Flags().Bool("consume-examples", false, "Consume messages from topics for populating examples.")
-	c.Flags().String("spec-version", "1.0.0", "Version number of the output file.")
-	c.Flags().String("kafka-api-key", "", "Kafka cluster API key.")
-	c.Flags().String("schema-registry-api-key", "", "API key for Schema Registry.")
-	c.Flags().String("schema-registry-api-secret", "", "API secret for Schema Registry.")
-	c.Flags().String("schema-context", "default", "Use a specific schema context.")
+	cmd.RunE = c.export
+
+	cmd.Flags().String("file", "asyncapi-spec.yaml", "Output file name.")
+	cmd.Flags().String("group-id", "consumerApplication", "Consumer Group ID for getting messages.")
+	cmd.Flags().Bool("consume-examples", false, "Consume messages from topics for populating examples.")
+	cmd.Flags().String("spec-version", "1.0.0", "Version number of the output file.")
+	cmd.Flags().String("kafka-api-key", "", "Kafka cluster API key.")
+	cmd.Flags().String("schema-registry-api-key", "", "API key for Schema Registry.")
+	cmd.Flags().String("schema-registry-api-secret", "", "API secret for Schema Registry.")
+	cmd.Flags().String("schema-context", "default", "Use a specific schema context.")
 	pcmd.AddValueFormatFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
-	return c.Command
+
+	return cmd
 }
 
-func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
+func (c *command) export(cmd *cobra.Command, _ []string) error {
 	flags, err := getFlags(cmd)
 	if err != nil {
 		return err
@@ -408,6 +415,7 @@ func (c *command) getSchemaRegistry(details *accountDetails, flags *flags) error
 func msgName(s string) string {
 	return strcase.ToCamel(s) + "Message"
 }
+
 func addServer(broker string, schemaCluster *v1.SchemaRegistryCluster, specVersion string) asyncapi.Reflector {
 	return asyncapi.Reflector{
 		Schema: &spec.AsyncAPI{
@@ -490,7 +498,8 @@ func addChannel(reflector asyncapi.Reflector, details channelDetails) (asyncapi.
 }
 
 func addComponents(reflector asyncapi.Reflector, messages map[string]spec.Message) asyncapi.Reflector {
-	reflector.Schema.WithComponents(spec.Components{Messages: messages,
+	reflector.Schema.WithComponents(spec.Components{
+		Messages: messages,
 		SecuritySchemes: &spec.ComponentsSecuritySchemes{
 			MapOfComponentsSecuritySchemesWDValues: map[string]spec.ComponentsSecuritySchemesWD{
 				"confluentSchemaRegistry": {

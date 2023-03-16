@@ -32,11 +32,11 @@ func newUserCommand(prerunner pcmd.PreRunner) *cobra.Command {
 
 	c := &userCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 
-	c.AddCommand(c.newDeleteCommand())
-	c.AddCommand(c.newDescribeCommand())
-	c.AddCommand(newInvitationCommand(prerunner))
-	c.AddCommand(c.newListCommand())
-	c.AddCommand(c.newUpdateCommand())
+	cmd.AddCommand(c.newDeleteCommand())
+	cmd.AddCommand(c.newDescribeCommand())
+	cmd.AddCommand(newInvitationCommand(prerunner))
+	cmd.AddCommand(c.newListCommand())
+	cmd.AddCommand(c.newUpdateCommand())
 
-	return c.Command
+	return cmd
 }

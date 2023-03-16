@@ -19,14 +19,15 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 	}
 
 	c := &command{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
-	c.AddCommand(c.newCreateCommand())
-	c.AddCommand(c.newDeleteCommand())
-	c.AddCommand(c.newDescribeCommand())
-	c.AddCommand(c.newListCommand())
-	c.AddCommand(c.newUpdateCommand())
-	c.AddCommand(c.newUseCommand())
 
-	return c.Command
+	cmd.AddCommand(c.newCreateCommand())
+	cmd.AddCommand(c.newDeleteCommand())
+	cmd.AddCommand(c.newDescribeCommand())
+	cmd.AddCommand(c.newListCommand())
+	cmd.AddCommand(c.newUpdateCommand())
+	cmd.AddCommand(c.newUseCommand())
+
+	return cmd
 }
 
 func (c *command) validArgs(cmd *cobra.Command, args []string) []string {

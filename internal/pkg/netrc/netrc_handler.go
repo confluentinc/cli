@@ -107,8 +107,8 @@ func removeCredentials(machineName string, netrcFile *gonetrc.Netrc, filename st
 	if len(stringBuf) > 0 && stringBuf[len(stringBuf)-1] == "\n" { // remove the last newline
 		stringBuf = stringBuf[:len(stringBuf)-1]
 	}
-	joinedString := strings.Join(stringBuf[:], "")
-	joinedString = strings.Replace(joinedString, "\n\n", "\n", -1)
+	joinedString := strings.Join(stringBuf, "")
+	joinedString = strings.ReplaceAll(joinedString, "\n\n", "\n")
 	buf := []byte(joinedString)
 	// get file mode
 	info, err := os.Stat(filename)
