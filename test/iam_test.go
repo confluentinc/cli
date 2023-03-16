@@ -224,7 +224,7 @@ func (s *CLITestSuite) TestIAMUserDelete() {
 		{args: "iam user delete u-11aaa u-11bbb", fixture: "iam/user/delete-multiple-fail.golden", exitCode: 1},
 		{args: "iam user delete u-11aaa u-22bbb", input: "y\n", fixture: "iam/user/delete-multiple-success.golden"},
 		{args: "iam user delete u-2", input: "Bono\n", fixture: "iam/user/delete-prompt.golden"},
-		{args: "iam user delete 0 --force", fixture: "iam/user/bad-resource-id.golden", exitCode: 1},
+		{args: "iam user delete 0 --force", fixture: "iam/user/bad-resource-id-delete.golden", exitCode: 1},
 		{args: "iam user delete u-1 --force", fixture: "iam/user/delete-dne.golden", exitCode: 1},
 	}
 

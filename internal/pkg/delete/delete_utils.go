@@ -1,4 +1,4 @@
-package utils
+package delete
 
 import (
 	"fmt"
@@ -8,6 +8,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func ValidateArgsForDeletion(cmd *cobra.Command, args []string, resourceType string, callDescribeEndpoint func(string) error) ([]string, error) {
@@ -22,9 +23,9 @@ func ValidateArgsForDeletion(cmd *cobra.Command, args []string, resourceType str
 
 	var invalidArgsErrMsg string
 	if len(invalidArgs) == 1 {
-		invalidArgsErrMsg = fmt.Sprintf(errors.NotFoundErrorMsg, resourceType, ArrayToCommaDelimitedString(invalidArgs, "and"))
+		invalidArgsErrMsg = fmt.Sprintf(errors.NotFoundErrorMsg, resourceType, utils.ArrayToCommaDelimitedString(invalidArgs, "and"))
 	} else if len(invalidArgs) > 1 {
-		invalidArgsErrMsg = fmt.Sprintf(errors.NotFoundErrorMsg, resource.Plural(resourceType), ArrayToCommaDelimitedString(invalidArgs, "and"))
+		invalidArgsErrMsg = fmt.Sprintf(errors.NotFoundErrorMsg, resource.Plural(resourceType), utils.ArrayToCommaDelimitedString(invalidArgs, "and"))
 	}
 
 	if len(invalidArgs) != 0 {

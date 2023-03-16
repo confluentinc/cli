@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/delete"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -72,5 +73,5 @@ func (c *command) validateArgs(cmd *cobra.Command, args []string) ([]string, err
 		return nil
 	}
 
-	return utils.ValidateArgsForDeletion(cmd, args, resource.ApiKey, describeFunc)
+	return delete.ValidateArgsForDeletion(cmd, args, resource.ApiKey, describeFunc)
 }

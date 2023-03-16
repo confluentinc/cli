@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/delete"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -26,16 +27,6 @@ func (c *userCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *userCommand) delete(cmd *cobra.Command, args []string) error {
-	var errs error
-	for _, resourceId := range args {
-		if resource.LookupType(resourceId) != resource.User {
-			errs = errors.Join(errs, errors.Errorf(errors.BadResourceIDErrorMsg, resource.UserPrefix))
-		}
-	}
-	if errs != nil {
-		return errs
-	}
-
 	fullName, validArgs, err := c.validateArgs(cmd, args)
 	if err != nil {
 		return err
@@ -46,7 +37,7 @@ func (c *userCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	errs = nil
+	var errs error
 	var successful []string
 	for _, resourceId := range args {
 		if err := c.V2Client.DeleteIamUser(resourceId); err != nil {
@@ -66,6 +57,10 @@ func (c *userCommand) delete(cmd *cobra.Command, args []string) error {
 }
 
 func (c *userCommand) validateArgs(cmd *cobra.Command, args []string) (string, []string, error) {
+	if err := resource.ValidatePrefixes(resource.User, args); err != nil {
+		return "", nil, err
+	}
+
 	var fullName string
 	describeFunc := func(arg string) error {
 		if user, err := c.V2Client.GetIamUserById(arg); err != nil {
@@ -76,7 +71,7 @@ func (c *userCommand) validateArgs(cmd *cobra.Command, args []string) (string, [
 		return nil
 	}
 
-	validArgs, err := utils.ValidateArgsForDeletion(cmd, args, resource.User, describeFunc)
+	validArgs, err := delete.ValidateArgsForDeletion(cmd, args, resource.User, describeFunc)
 
 	return fullName, validArgs, err
 }
