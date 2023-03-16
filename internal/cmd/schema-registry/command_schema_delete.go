@@ -67,12 +67,22 @@ func deleteSchema(cmd *cobra.Command, srClient *srsdk.APIClient, ctx context.Con
 		return err
 	}
 
+	permanent, err := cmd.Flags().GetBool("permanent")
+	if err != nil {
+		return err
+	}
+
+	var getOpts *srsdk.GetSchemaByVersionOpts
+	if permanent {
+		getOpts = &srsdk.GetSchemaByVersionOpts{Deleted: optional.NewBool(permanent)}
+	}
+
 	checkVersion := version
 	if version == "all" {
 		// check that at least one version for the input subject exists
 		checkVersion = "latest"
 	}
-	_, httpResp, err := srClient.DefaultApi.GetSchemaByVersion(ctx, subject, checkVersion, nil)
+	_, httpResp, err := srClient.DefaultApi.GetSchemaByVersion(ctx, subject, checkVersion, getOpts)
 	if err != nil {
 		return errors.CatchSchemaNotFoundError(err, httpResp)
 	}
@@ -80,11 +90,6 @@ func deleteSchema(cmd *cobra.Command, srClient *srsdk.APIClient, ctx context.Con
 	subjectWithVersion := fmt.Sprintf("%s (version %s)", subject, version)
 	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, "schema", subjectWithVersion, subject)
 	if _, err := form.ConfirmDeletion(cmd, promptMsg, subject); err != nil {
-		return err
-	}
-
-	permanent, err := cmd.Flags().GetBool("permanent")
-	if err != nil {
 		return err
 	}
 
