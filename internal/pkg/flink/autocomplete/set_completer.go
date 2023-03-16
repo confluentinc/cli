@@ -1,7 +1,7 @@
 package autocomplete
 
 import (
-	prompt "github.com/c-bata/go-prompt"
+	prompt "github.com/confluentinc/go-prompt"
 )
 
 func setCompleter(in prompt.Document) []prompt.Suggest {

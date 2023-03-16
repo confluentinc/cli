@@ -1,10 +1,10 @@
 package autocomplete
 
 import (
+	"github.com/confluentinc/go-prompt"
 	"strings"
 	"testing"
 
-	"github.com/c-bata/go-prompt"
 	"github.com/confluentinc/flink-sql-client/test/testutils"
 	"github.com/stretchr/testify/require"
 	"pgregory.net/rapid"

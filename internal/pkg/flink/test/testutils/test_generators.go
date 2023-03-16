@@ -3,7 +3,7 @@ package testutils
 import (
 	"strings"
 
-	prompt "github.com/c-bata/go-prompt"
+	prompt "github.com/confluentinc/go-prompt"
 
 	"github.com/confluentinc/flink-sql-client/config"
 	"golang.org/x/exp/maps"

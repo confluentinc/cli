@@ -3,8 +3,8 @@ package components
 import (
 	"strings"
 
-	prompt "github.com/c-bata/go-prompt"
 	"github.com/confluentinc/flink-sql-client/config"
+	prompt "github.com/confluentinc/go-prompt"
 )
 
 /* This outputs words with their colors according to if they are flink sql keywords or not */

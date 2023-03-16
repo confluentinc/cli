@@ -2,7 +2,7 @@ package autocomplete
 
 import (
 	"fmt"
-	"github.com/c-bata/go-prompt"
+	"github.com/confluentinc/go-prompt"
 	"regexp"
 	"strings"
 	"unicode"

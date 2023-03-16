@@ -5,8 +5,8 @@ go 1.19
 require (
 	github.com/atotto/clipboard v0.1.4
 	github.com/bradleyjkemp/cupaloy v2.3.0+incompatible
-	github.com/c-bata/go-prompt v0.2.6
 	github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway v0.0.0-00010101000000-000000000000
+	github.com/confluentinc/go-prompt v0.2.4
 	github.com/gdamore/tcell/v2 v2.5.4
 	github.com/google/uuid v1.3.0
 	github.com/olekukonko/tablewriter v0.0.5
@@ -31,7 +31,7 @@ require (
 	github.com/rivo/uniseg v0.4.2 // indirect
 	golang.org/x/net v0.0.0-20220722155237-a158d28d115b // indirect
 	golang.org/x/oauth2 v0.0.0-20210218202405-ba52d332ba99 // indirect
-	golang.org/x/sys v0.4.0 // indirect
+	golang.org/x/sys v0.6.0 // indirect
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	golang.org/x/text v0.5.0 // indirect
 	google.golang.org/appengine v1.6.6 // indirect
@@ -40,5 +40,3 @@ require (
 )
 
 replace github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway => ./pkg/sdk
-
-replace github.com/c-bata/go-prompt => github.com/swist/go-prompt v0.27.0-multiline-statement-terminator

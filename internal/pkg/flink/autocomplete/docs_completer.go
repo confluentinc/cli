@@ -3,7 +3,7 @@ package autocomplete
 import (
 	_ "embed"
 	"encoding/json"
-	"github.com/c-bata/go-prompt"
+	"github.com/confluentinc/go-prompt"
 	"log"
 	"sort"
 )

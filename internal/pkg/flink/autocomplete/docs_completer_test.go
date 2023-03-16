@@ -2,7 +2,7 @@ package autocomplete
 
 import (
 	"github.com/bradleyjkemp/cupaloy"
-	"github.com/c-bata/go-prompt"
+	"github.com/confluentinc/go-prompt"
 	"github.com/stretchr/testify/suite"
 	"testing"
 )

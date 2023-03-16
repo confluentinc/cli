@@ -3,9 +3,9 @@ package controller
 import (
 	"errors"
 	"fmt"
-	"github.com/c-bata/go-prompt"
 	"github.com/confluentinc/flink-sql-client/autocomplete"
 	components "github.com/confluentinc/flink-sql-client/components"
+	"github.com/confluentinc/go-prompt"
 	"github.com/olekukonko/tablewriter"
 	"log"
 	"os"

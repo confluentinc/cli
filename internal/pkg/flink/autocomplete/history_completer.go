@@ -1,8 +1,6 @@
 package autocomplete
 
-import (
-	"github.com/c-bata/go-prompt"
-)
+import "github.com/confluentinc/go-prompt"
 
 // Currently disabled. History entries are not shown in autocompletion.
 //  If we enable this again in the future, it would be good to filter duplicates in the history.

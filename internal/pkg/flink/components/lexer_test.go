@@ -4,9 +4,9 @@ import (
 	"strings"
 	"testing"
 
-	prompt "github.com/c-bata/go-prompt"
 	"github.com/confluentinc/flink-sql-client/config"
 	testutils "github.com/confluentinc/flink-sql-client/test/testutils"
+	prompt "github.com/confluentinc/go-prompt"
 	"github.com/stretchr/testify/require"
 	"pgregory.net/rapid"
 )
