@@ -101,7 +101,7 @@ rpm: RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz
 	echo "Building the RPM"
 	NO_DEBUG_FLAG='--nodebuginfo'
 	if [[ "$(cat /etc/redhat-release | awk -v RS=[0-9]+ '{print RT+0;exit}')" =~ "7.*" ]]; then \
-		NO_DEBUG_FLAG='--define "debug_package %{nil}"'
+		NO_DEBUG_FLAG='--define "debug_package %{nil}"'; \
 	fi
 	rpmbuild --define="_topdir `pwd`/RPM_BUILDING" $(NO_DEBUG_FLAG) -tb $<
 	find RPM_BUILDING/{,S}RPMS/ -type f | xargs -n1 -iXXX mv XXX .
