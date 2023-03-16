@@ -6,6 +6,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -18,6 +19,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	climock "github.com/confluentinc/cli/mock"
 )
@@ -71,7 +73,14 @@ func (suite *SchemaTestSuite) SetupTest() {
 			GetSchemaFunc: func(_ context.Context, _ int32, _ *srsdk.GetSchemaOpts) (srsdk.SchemaString, *http.Response, error) {
 				return srsdk.SchemaString{Schema: `{"Potatoes":1}`}, nil, nil
 			},
-			GetSchemaByVersionFunc: func(_ context.Context, _, _ string, _ *srsdk.GetSchemaByVersionOpts) (srsdk.Schema, *http.Response, error) {
+			GetSchemaByVersionFunc: func(_ context.Context, subject, _ string, opts *srsdk.GetSchemaByVersionOpts) (srsdk.Schema, *http.Response, error) {
+				if subject == "Subject2" {
+					if opts != nil && opts.Deleted == optional.NewBool(true) {
+						return srsdk.Schema{Schema: `{"Potatoes":1}`, Version: versionInt32}, nil, nil
+					} else {
+						return srsdk.Schema{}, nil, errors.New("soft deleted")
+					}
+				}
 				return srsdk.Schema{Schema: `{"Potatoes":1}`, Version: versionInt32}, nil, nil
 			},
 			DeleteSchemaVersionFunc: func(_ context.Context, _, _ string, _ *srsdk.DeleteSchemaVersionOpts) (int32, *http.Response, error) {
@@ -175,14 +184,14 @@ func (suite *SchemaTestSuite) TestDeleteSchemaVersion() {
 
 func (suite *SchemaTestSuite) TestPermanentDeleteSchemaVersion() {
 	cmd := suite.newCMD()
-	cmd.SetArgs([]string{"schema", "delete", "--subject", subjectName, "--version", versionString, "--permanent", "--force"})
+	cmd.SetArgs([]string{"schema", "delete", "--subject", "Subject2", "--version", versionString, "--permanent", "--force"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
 	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
 	req.True(apiMock.DeleteSchemaVersionCalled())
 	retVal := apiMock.DeleteSchemaVersionCalls()[0]
-	req.Equal(retVal.Subject, subjectName)
+	req.Equal(retVal.Subject, "Subject2")
 	req.Equal(retVal.Version, "12345")
 	req.Equal(retVal.LocalVarOptionals.Permanent.Value(), true)
 }
