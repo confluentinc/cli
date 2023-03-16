@@ -6,8 +6,9 @@ import (
 	"net/http"
 	"os"
 
-	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	"github.com/spf13/cobra"
+
+	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )

@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"strconv"
 
-	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	"github.com/spf13/cobra"
+
+	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -73,7 +74,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		return err
 	}
 
-	if err := c.provisioningClusterCheck(cmd, kafkaClusterConfig.ID); err != nil {
+	if err := c.provisioningClusterCheck(kafkaClusterConfig.ID); err != nil {
 		return err
 	}
 

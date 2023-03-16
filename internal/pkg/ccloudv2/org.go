@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
+
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
@@ -54,7 +55,7 @@ func (c *Client) ListOrgEnvironments() ([]orgv2.OrgV2Environment, error) {
 		}
 		list = append(list, page.GetData()...)
 
-		pageToken, done, err = extractOrgNextPageToken(page.GetMetadata().Next)
+		pageToken, done, err = extractNextPageToken(page.GetMetadata().Next)
 		if err != nil {
 			return nil, err
 		}
@@ -92,7 +93,7 @@ func (c *Client) ListOrgOrganizations() ([]orgv2.OrgV2Organization, error) {
 		}
 		list = append(list, page.GetData()...)
 
-		pageToken, done, err = extractOrgNextPageToken(page.GetMetadata().Next)
+		pageToken, done, err = extractNextPageToken(page.GetMetadata().Next)
 		if err != nil {
 			return nil, err
 		}
@@ -106,13 +107,4 @@ func (c *Client) executeListOrganizations(pageToken string) (orgv2.OrgV2Organiza
 		req = req.PageToken(pageToken)
 	}
 	return c.OrgClient.OrganizationsOrgV2Api.ListOrgV2OrganizationsExecute(req)
-}
-
-func extractOrgNextPageToken(nextPageUrlStringNullable orgv2.NullableString) (string, bool, error) {
-	if !nextPageUrlStringNullable.IsSet() {
-		return "", true, nil
-	}
-	nextPageUrlString := *nextPageUrlStringNullable.Get()
-	pageToken, err := extractPageToken(nextPageUrlString)
-	return pageToken, false, err
 }

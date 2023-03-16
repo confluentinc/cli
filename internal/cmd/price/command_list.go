@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/spf13/cobra"
+
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -171,15 +172,8 @@ func (c *command) listRows(filters []string, metric string, legacy bool) ([]row,
 		return nil, err
 	}
 
-	kafkaTable, err := filterTable(kafkaPricesReply.PriceTable, filters, metric, legacy)
-	if err != nil {
-		return nil, err
-	}
-
-	clusterLinkTable, err := filterTable(clusterLinkPricesReply.PriceTable, filters, metric, legacy)
-	if err != nil {
-		return nil, err
-	}
+	kafkaTable := filterTable(kafkaPricesReply.PriceTable, filters, metric, legacy)
+	clusterLinkTable := filterTable(clusterLinkPricesReply.PriceTable, filters, metric, legacy)
 
 	// Merge cluster link price table into kafka table
 	// Kafka metrics and cluster link metrics will not have overlap
@@ -210,7 +204,7 @@ func (c *command) listRows(filters []string, metric string, legacy bool) ([]row,
 	return rows, nil
 }
 
-func filterTable(table map[string]*ccloudv1.UnitPrices, filters []string, metric string, legacy bool) (map[string]*ccloudv1.UnitPrices, error) {
+func filterTable(table map[string]*ccloudv1.UnitPrices, filters []string, metric string, legacy bool) map[string]*ccloudv1.UnitPrices {
 	filteredTable := make(map[string]*ccloudv1.UnitPrices)
 
 	for service, val := range table {
@@ -251,7 +245,7 @@ func filterTable(table map[string]*ccloudv1.UnitPrices, filters []string, metric
 		}
 	}
 
-	return filteredTable, nil
+	return filteredTable
 }
 
 func printTable(cmd *cobra.Command, rows []row) error {

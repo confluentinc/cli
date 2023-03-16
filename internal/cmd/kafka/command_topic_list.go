@@ -1,8 +1,9 @@
 package kafka
 
 import (
-	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	"github.com/spf13/cobra"
+
+	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
@@ -31,7 +32,7 @@ func (c *authenticatedTopicCommand) newListCommand() *cobra.Command {
 }
 
 func (c *authenticatedTopicCommand) list(cmd *cobra.Command, _ []string) error {
-	topics, err := c.getTopics(cmd)
+	topics, err := c.getTopics()
 	if err != nil {
 		return err
 	}
@@ -43,13 +44,13 @@ func (c *authenticatedTopicCommand) list(cmd *cobra.Command, _ []string) error {
 	return list.Print()
 }
 
-func (c *authenticatedTopicCommand) getTopics(cmd *cobra.Command) ([]kafkarestv3.TopicData, error) {
+func (c *authenticatedTopicCommand) getTopics() ([]kafkarestv3.TopicData, error) {
 	kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return nil, err
 	}
 
-	if err := c.provisioningClusterCheck(cmd, kafkaClusterConfig.ID); err != nil {
+	if err := c.provisioningClusterCheck(kafkaClusterConfig.ID); err != nil {
 		return nil, err
 	}
 

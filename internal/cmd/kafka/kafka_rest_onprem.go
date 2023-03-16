@@ -6,8 +6,9 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -34,7 +35,7 @@ func initKafkaRest(c *pcmd.AuthenticatedCLICommand, cmd *cobra.Command) (*kafkar
 func setServerURL(cmd *cobra.Command, client *kafkarestv3.APIClient, url string) {
 	url = strings.Trim(url, "/")   // localhost:8091/kafka/v3/ --> localhost:8091/kafka/v3
 	url = strings.Trim(url, "/v3") // localhost:8091/kafka/v3 --> localhost:8091/kafka
-	protocolRgx, _ := regexp.Compile(`(\w+)://`)
+	protocolRgx := regexp.MustCompile(`(\w+)://`)
 	protocolMatch := protocolRgx.MatchString(url)
 	if !protocolMatch {
 		var protocolMsg string

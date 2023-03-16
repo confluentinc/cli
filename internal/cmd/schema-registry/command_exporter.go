@@ -1,55 +1,44 @@
 package schemaregistry
 
 import (
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
 
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 )
 
-type exporterCommand struct {
-	*pcmd.AuthenticatedStateFlagCommand
-	srClient *srsdk.APIClient
-}
-
-func newExporterCommand(cfg *v1.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *cobra.Command {
+func (c *command) newExporterCommand(cfg *v1.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "exporter",
 		Short:       "Manage Schema Registry exporters.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLoginOrOnPremLogin},
 	}
 
-	c := &exporterCommand{srClient: srClient}
-
 	if cfg.IsCloudLogin() {
-		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)
-		c.AddCommand(c.newCreateCommand())
-		c.AddCommand(c.newDeleteCommand())
-		c.AddCommand(c.newDescribeCommand())
-		c.AddCommand(c.newGetConfigCommand())
-		c.AddCommand(c.newGetStatusCommand())
-		c.AddCommand(c.newListCommand())
-		c.AddCommand(c.newPauseCommand())
-		c.AddCommand(c.newResetCommand())
-		c.AddCommand(c.newResumeCommand())
-		c.AddCommand(c.newUpdateCommand())
+		cmd.AddCommand(c.newExporterCreateCommand())
+		cmd.AddCommand(c.newExporterDeleteCommand())
+		cmd.AddCommand(c.newExporterDescribeCommand())
+		cmd.AddCommand(c.newExporterGetConfigCommand())
+		cmd.AddCommand(c.newExporterGetStatusCommand())
+		cmd.AddCommand(c.newExporterListCommand())
+		cmd.AddCommand(c.newExporterPauseCommand())
+		cmd.AddCommand(c.newExporterResetCommand())
+		cmd.AddCommand(c.newExporterResumeCommand())
+		cmd.AddCommand(c.newExporterUpdateCommand())
 	} else {
-		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner)
-		c.AddCommand(c.newCreateCommandOnPrem())
-		c.AddCommand(c.newDeleteCommandOnPrem())
-		c.AddCommand(c.newDescribeCommandOnPrem())
-		c.AddCommand(c.newGetConfigCommandOnPrem())
-		c.AddCommand(c.newGetStatusCommandOnPrem())
-		c.AddCommand(c.newListCommandOnPrem())
-		c.AddCommand(c.newPauseCommandOnPrem())
-		c.AddCommand(c.newResetCommandOnPrem())
-		c.AddCommand(c.newResumeCommandOnPrem())
-		c.AddCommand(c.newUpdateCommandOnPrem())
+		cmd.AddCommand(c.newExporterCreateCommandOnPrem())
+		cmd.AddCommand(c.newExporterDeleteCommandOnPrem())
+		cmd.AddCommand(c.newExporterDescribeCommandOnPrem())
+		cmd.AddCommand(c.newExporterGetConfigCommandOnPrem())
+		cmd.AddCommand(c.newExporterGetStatusCommandOnPrem())
+		cmd.AddCommand(c.newExporterListCommandOnPrem())
+		cmd.AddCommand(c.newExporterPauseCommandOnPrem())
+		cmd.AddCommand(c.newExporterResetCommandOnPrem())
+		cmd.AddCommand(c.newExporterResumeCommandOnPrem())
+		cmd.AddCommand(c.newExporterUpdateCommandOnPrem())
 	}
 
-	return c.Command
+	return cmd
 }
 
 func addContextTypeFlag(cmd *cobra.Command) {

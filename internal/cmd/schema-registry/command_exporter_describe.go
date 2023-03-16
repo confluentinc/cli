@@ -6,8 +6,9 @@ import (
 	"sort"
 	"strings"
 
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
+
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -22,12 +23,12 @@ type exporterOut struct {
 	Config        string `human:"Config" serialized:"config"`
 }
 
-func (c *exporterCommand) newDescribeCommand() *cobra.Command {
+func (c *command) newExporterDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe <name>",
 		Short: "Describe the schema exporter.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.describe,
+		RunE:  c.exporterDescribe,
 	}
 
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
@@ -39,7 +40,7 @@ func (c *exporterCommand) newDescribeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *exporterCommand) describe(cmd *cobra.Command, args []string) error {
+func (c *command) exporterDescribe(cmd *cobra.Command, args []string) error {
 	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err

@@ -6,15 +6,16 @@ import (
 	"testing"
 	"time"
 
+	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
+
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
 	metricsv2 "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2"
 	metricsmock "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2/mock"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	srMock "github.com/confluentinc/schema-registry-sdk-go/mock"
-	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/ccstructs"
@@ -52,16 +53,16 @@ func (suite *ClusterTestSuite) SetupSuite() {
 	}
 	suite.srClientMock = &srsdk.APIClient{
 		DefaultApi: &srMock.DefaultApi{
-			GetTopLevelConfigFunc: func(ctx context.Context) (srsdk.Config, *http.Response, error) {
+			GetTopLevelConfigFunc: func(_ context.Context) (srsdk.Config, *http.Response, error) {
 				return srsdk.Config{CompatibilityLevel: "FULL"}, nil, nil
 			},
-			GetTopLevelModeFunc: func(ctx context.Context) (srsdk.Mode, *http.Response, error) {
+			GetTopLevelModeFunc: func(_ context.Context) (srsdk.Mode, *http.Response, error) {
 				return srsdk.Mode{}, nil, nil
 			},
-			UpdateTopLevelModeFunc: func(ctx context.Context, body srsdk.ModeUpdateRequest) (request srsdk.ModeUpdateRequest, response *http.Response, e error) {
+			UpdateTopLevelModeFunc: func(_ context.Context, body srsdk.ModeUpdateRequest) (srsdk.ModeUpdateRequest, *http.Response, error) {
 				return srsdk.ModeUpdateRequest{Mode: body.Mode}, nil, nil
 			},
-			UpdateTopLevelConfigFunc: func(ctx context.Context, body srsdk.ConfigUpdateRequest) (request srsdk.ConfigUpdateRequest, response *http.Response, e error) {
+			UpdateTopLevelConfigFunc: func(_ context.Context, body srsdk.ConfigUpdateRequest) (srsdk.ConfigUpdateRequest, *http.Response, error) {
 				return srsdk.ConfigUpdateRequest{Compatibility: body.Compatibility}, nil, nil
 			},
 		},

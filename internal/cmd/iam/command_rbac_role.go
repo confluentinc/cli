@@ -39,10 +39,10 @@ func newRoleCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)
 	}
 
-	c.AddCommand(c.newDescribeCommand())
-	c.AddCommand(c.newListCommand())
+	cmd.AddCommand(c.newDescribeCommand())
+	cmd.AddCommand(c.newListCommand())
 
-	return c.Command
+	return cmd
 }
 
 func (c *roleCommand) createContext() context.Context {

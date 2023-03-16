@@ -33,7 +33,7 @@ publish-release-notes-to-docs-repo:
 .PHONY: publish-release-notes-to-s3
 publish-release-notes-to-s3:
 	$(aws-authenticate); \
-    aws s3 cp release-notes/latest-release.rst $(S3_BUCKET_PATH)/confluent-cli/release-notes/$(cat release-notes/version.txt)/release-notes.rst --acl public-read
+    aws s3 cp release-notes/latest-release.rst $(S3_BUCKET_PATH)/confluent-cli/release-notes/$$(cat release-notes/version.txt)/release-notes.rst --acl public-read
 
 .PHONY: clean-release-notes
 clean-release-notes:

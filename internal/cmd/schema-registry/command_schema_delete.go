@@ -5,8 +5,9 @@ import (
 	"fmt"
 
 	"github.com/antihax/optional"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
+
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -16,13 +17,13 @@ import (
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
-func (c *schemaCommand) newDeleteCommand() *cobra.Command {
+func (c *command) newSchemaDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "delete",
 		Short:       "Delete one or more schema versions.",
 		Long:        "Delete one or more schema versions. This command should only be used if absolutely necessary.",
 		Args:        cobra.NoArgs,
-		RunE:        c.delete,
+		RunE:        c.schemaDelete,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -47,7 +48,7 @@ func (c *schemaCommand) newDeleteCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *schemaCommand) delete(cmd *cobra.Command, _ []string) error {
+func (c *command) schemaDelete(cmd *cobra.Command, _ []string) error {
 	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err

@@ -8,9 +8,10 @@ import (
 	"testing"
 	"time"
 
-	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/gogo/protobuf/types"
 	"github.com/stretchr/testify/require"
+
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 )
 
 // Handler for "/api/organizations/"

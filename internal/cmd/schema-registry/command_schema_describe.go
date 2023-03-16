@@ -9,9 +9,10 @@ import (
 	"strings"
 
 	"github.com/antihax/optional"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
 	"github.com/tidwall/pretty"
+
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -24,13 +25,13 @@ type schemaOut struct {
 	Schemas []srsdk.Schema `json:"schemas"`
 }
 
-func (c *schemaCommand) newDescribeCommand() *cobra.Command {
+func (c *command) newSchemaDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "describe [id]",
 		Short:       "Get schema either by schema ID, or by subject/version.",
 		Args:        cobra.MaximumNArgs(1),
 		PreRunE:     c.preDescribe,
-		RunE:        c.describe,
+		RunE:        c.schemaDescribe,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -55,7 +56,7 @@ func (c *schemaCommand) newDescribeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *schemaCommand) preDescribe(cmd *cobra.Command, args []string) error {
+func (c *command) preDescribe(cmd *cobra.Command, args []string) error {
 	subject, err := cmd.Flags().GetString("subject")
 	if err != nil {
 		return err
@@ -75,7 +76,7 @@ func (c *schemaCommand) preDescribe(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *schemaCommand) describe(cmd *cobra.Command, args []string) error {
+func (c *command) schemaDescribe(cmd *cobra.Command, args []string) error {
 	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
@@ -96,12 +97,12 @@ func (c *schemaCommand) describe(cmd *cobra.Command, args []string) error {
 	}
 
 	if id != "" {
-		return describeById(cmd, id, srClient, ctx)
+		return describeById(id, srClient, ctx)
 	}
 	return describeBySubject(cmd, srClient, ctx)
 }
 
-func describeById(cmd *cobra.Command, id string, srClient *srsdk.APIClient, ctx context.Context) error {
+func describeById(id string, srClient *srsdk.APIClient, ctx context.Context) error {
 	schemaID, err := strconv.ParseInt(id, 10, 32)
 	if err != nil {
 		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.SchemaIntegerErrorMsg, id), errors.SchemaIntegerSuggestions)

@@ -39,7 +39,7 @@ type describeStruct struct {
 	TopicCount         int    `human:"Topic Count" serialized:"topic_count"`
 }
 
-func (c *clusterCommand) newDescribeCommand(cfg *v1.Config) *cobra.Command {
+func (c *clusterCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "describe [id]",
 		Short:             "Describe a Kafka cluster.",

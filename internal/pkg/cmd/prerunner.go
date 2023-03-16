@@ -302,7 +302,7 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 
 		setContextErr := r.setAuthenticatedContext(command)
 		if setContextErr != nil {
-			if _, ok := setContextErr.(*errors.NotLoggedInError); ok { //nolint:gosimple // false positive
+			if _, ok := setContextErr.(*errors.NotLoggedInError); ok {
 				var netrcMachineName string
 				if ctx := command.Config.Context(); ctx != nil {
 					netrcMachineName = ctx.GetNetrcMachineName()
@@ -568,7 +568,7 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(cmd
 
 		setContextErr := r.setAuthenticatedWithMDSContext(command)
 		if setContextErr != nil {
-			if _, ok := setContextErr.(*errors.NotLoggedInError); ok { //nolint:gosimple // false positive
+			if _, ok := setContextErr.(*errors.NotLoggedInError); ok {
 				var netrcMachineName string
 				if ctx := command.Config.Context(); ctx != nil {
 					netrcMachineName = ctx.GetNetrcMachineName()
@@ -803,7 +803,7 @@ func createOnPremKafkaRestClient(ctx *dynamicconfig.DynamicContext, caCertPath s
 		}
 		return client, nil
 		// use cert path from config if available
-	} else if ctx != nil && ctx.Context != nil && ctx.Context.Platform != nil && ctx.Context.Platform.CaCertPath != "" { //if no cert-path flag is specified, use the cert path from the config
+	} else if ctx != nil && ctx.Context != nil && ctx.Context.Platform != nil && ctx.Context.Platform.CaCertPath != "" { // if no cert-path flag is specified, use the cert path from the config
 		client, err := utils.CustomCAAndClientCertClient(ctx.Context.Platform.CaCertPath, clientCertPath, clientKeyPath)
 		if err != nil {
 			return nil, err

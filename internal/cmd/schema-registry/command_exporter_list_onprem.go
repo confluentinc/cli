@@ -1,16 +1,17 @@
 package schemaregistry
 
 import (
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/spf13/cobra"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
-func (c *exporterCommand) newListCommandOnPrem() *cobra.Command {
+func (c *command) newExporterListCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "list",
 		Short:       "List all schema exporters.",
 		Args:        cobra.NoArgs,
-		RunE:        c.onPremList,
+		RunE:        c.exporterListOnPrem,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 	}
 
@@ -21,7 +22,7 @@ func (c *exporterCommand) newListCommandOnPrem() *cobra.Command {
 	return cmd
 }
 
-func (c *exporterCommand) onPremList(cmd *cobra.Command, _ []string) error {
+func (c *command) exporterListOnPrem(cmd *cobra.Command, _ []string) error {
 	srClient, ctx, err := GetSrApiClientWithToken(cmd, c.Version, c.AuthToken())
 	if err != nil {
 		return err

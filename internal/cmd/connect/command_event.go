@@ -19,7 +19,7 @@ func newEventCommand(prerunner pcmd.PreRunner) *cobra.Command {
 
 	c := &eventCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 
-	c.AddCommand(c.newDescribeCommand())
+	cmd.AddCommand(c.newDescribeCommand())
 
-	return c.Command
+	return cmd
 }

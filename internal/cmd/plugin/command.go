@@ -61,5 +61,5 @@ Naming collisions with existing CLI commands and other plugins:
 
 	cmd.AddCommand(c.newListCommand())
 
-	return c.Command
+	return cmd
 }

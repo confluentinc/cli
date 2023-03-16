@@ -7,16 +7,15 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/confluentinc/cli/internal/pkg/utils"
-
-	"github.com/confluentinc/cli/internal/pkg/errors"
-
-	"github.com/confluentinc/properties"
 	"github.com/jonboulle/clockwork"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 
+	"github.com/confluentinc/properties"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 // Password Protection is a security plugin to securely store and add passwords to a properties file.
@@ -179,7 +178,6 @@ func (c *PasswordProtectionSuite) DecryptConfigFileSecrets(configFilePath string
 	if err != nil {
 		return err
 	}
-	//decryptedSecrets := properties.NewProperties()
 	cipherSuite, err := c.loadCipherSuiteFromLocalFile(localSecureConfigPath)
 	if err != nil {
 		return err
@@ -195,11 +193,7 @@ func (c *PasswordProtectionSuite) DecryptConfigFileSecrets(configFilePath string
 
 	for key, value := range configProps.Map() {
 		// If config value is encrypted, decrypt it with DEK.
-		encryptedPass, err := c.isPasswordEncrypted(value)
-		if err != nil {
-			return err
-		}
-		if encryptedPass {
+		if c.isPasswordEncrypted(value) {
 			pathKey := GenerateConfigKey(configFilePath, key)
 			cipher := secureConfigProps.GetString(pathKey, "")
 			if cipher != "" {
@@ -275,11 +269,7 @@ func (c *PasswordProtectionSuite) RotateDataKey(masterPassphrase string, localSe
 
 	// Re-encrypt the ciphers with new DEK
 	for key, value := range secureConfigProps.Map() {
-		encrypted, err := c.isCipher(value)
-		if err != nil {
-			return err
-		}
-		if encrypted && !strings.HasPrefix(key, MetadataPrefix) {
+		if c.isCipher(value) && !strings.HasPrefix(key, MetadataPrefix) {
 			data, iv, algo := ParseCipherValue(value)
 			plainSecret, err := engine.Decrypt(data, iv, algo, dataKey)
 			if err != nil {
@@ -290,8 +280,7 @@ func (c *PasswordProtectionSuite) RotateDataKey(masterPassphrase string, localSe
 				return err
 			}
 			formattedCipher := c.formatCipherValue(cipher, iv)
-			_, _, err = secureConfigProps.Set(key, formattedCipher)
-			if err != nil {
+			if _, _, err := secureConfigProps.Set(key, formattedCipher); err != nil {
 				return err
 			}
 		}
@@ -567,16 +556,16 @@ func (c *PasswordProtectionSuite) loadCipherSuiteFromSecureProps(secureConfigPro
 	return cipher, nil
 }
 
-func (c *PasswordProtectionSuite) isPasswordEncrypted(config string) (bool, error) {
-	return passwordRegex.MatchString(config), nil
+func (c *PasswordProtectionSuite) isPasswordEncrypted(config string) bool {
+	return passwordRegex.MatchString(config)
 }
 
 func (c *PasswordProtectionSuite) formatCipherValue(cipher string, iv string) string {
 	return fmt.Sprintf("ENC[%s,data:%s,iv:%s,type:str]", MetadataEncAlgorithm, cipher, iv)
 }
 
-func (c *PasswordProtectionSuite) isCipher(config string) (bool, error) {
-	return cipherRegex.MatchString(config), nil
+func (c *PasswordProtectionSuite) isCipher(config string) bool {
+	return cipherRegex.MatchString(config)
 }
 
 func (c *PasswordProtectionSuite) unwrapDataKey(key string, engine EncryptionEngine) ([]byte, error) {
@@ -675,26 +664,19 @@ func (c *PasswordProtectionSuite) encryptConfigValues(matchProps *properties.Pro
 	configProps.DisableExpansion = true
 
 	for key, value := range matchProps.Map() {
-		encryptedPass, err := c.isPasswordEncrypted(value)
-		if err != nil {
-			return err
-		}
-		if !encryptedPass {
+		if !c.isPasswordEncrypted(value) {
 			// Generate tuple ${providerName:[path:]key}
 			pathKey := GenerateConfigKey(configFilePath, key)
 			newConfigVal := GenerateConfigValue(pathKey, remoteConfigFilePath)
-			_, _, err = configProps.Set(key, newConfigVal)
-			if err != nil {
+			if _, _, err := configProps.Set(key, newConfigVal); err != nil {
 				return err
 			}
 			cipher, iv, err := engine.Encrypt(value, dataKey)
-
 			if err != nil {
 				return err
 			}
 			formattedCipher := c.formatCipherValue(cipher, iv)
-			_, _, err = secureConfigProps.Set(pathKey, formattedCipher)
-			if err != nil {
+			if _, _, err := secureConfigProps.Set(pathKey, formattedCipher); err != nil {
 				return err
 			}
 		}

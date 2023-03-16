@@ -1,19 +1,13 @@
 package schemaregistry
 
 import (
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 )
 
-type clusterCommand struct {
-	*pcmd.AuthenticatedStateFlagCommand
-	srClient *srsdk.APIClient
-}
-
-func newClusterCommand(cfg *v1.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *cobra.Command {
+func (c *command) newClusterCommand(cfg *v1.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "cluster",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLoginOrOnPremLogin},
@@ -26,20 +20,12 @@ func newClusterCommand(cfg *v1.Config, prerunner pcmd.PreRunner, srClient *srsdk
 		cmd.Short = "Manage Schema Registry clusters."
 	}
 
-	c := &clusterCommand{srClient: srClient}
+	cmd.AddCommand(c.newClusterDeleteCommand())
+	cmd.AddCommand(c.newClusterDescribeCommand())
+	cmd.AddCommand(c.newClusterEnableCommand())
+	cmd.AddCommand(c.newClusterListCommandOnPrem())
+	cmd.AddCommand(c.newClusterUpdateCommand())
+	cmd.AddCommand(c.newClusterUpgradeCommand())
 
-	if cfg.IsCloudLogin() {
-		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)
-	} else {
-		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner)
-	}
-
-	c.AddCommand(c.newDeleteCommand(cfg))
-	c.AddCommand(c.newDescribeCommand(cfg))
-	c.AddCommand(c.newEnableCommand(cfg))
-	c.AddCommand(c.newListCommandOnPrem())
-	c.AddCommand(c.newUpdateCommand(cfg))
-	c.AddCommand(c.newUpgradeCommand())
-
-	return c.Command
+	return cmd
 }

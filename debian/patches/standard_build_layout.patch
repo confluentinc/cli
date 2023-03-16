@@ -1,5 +1,5 @@
---- cli/Makefile	2023-03-08 10:19:27.000000000 -0800
-+++ debian/Makefile	2022-12-12 17:29:13.000000000 -0800
+--- cli/Makefile	2023-03-16 13:51:16.000000000 -0700
++++ debian/Makefile	2023-03-16 13:57:10.000000000 -0700
 @@ -1,128 +1,130 @@
 -SHELL              := /bin/bash
 -ALL_SRC            := $(shell find . -name "*.go" | grep -v -e vendor)
@@ -96,7 +96,7 @@
 -.PHONY: lint-go
 -lint-go:
 -	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.51.1 && \
--	golangci-lint run --enable dupword,misspell,prealloc,usestdlibvars,whitespace --timeout=10m
+-	golangci-lint run --enable dupword,exportloopref,gci,gocritic,gofmt,goimports,gomoddirectives,govet,ineffassign,misspell,nakedret,nolintlint,nonamedreturns,prealloc,predeclared,tenv,unconvert,unparam,unused,usestdlibvars,whitespace --timeout=10m
 -	@echo "✅  golangci-lint"
 -
 -.PHONY: lint-cli
@@ -214,7 +214,7 @@
 -test: unit-test integration-test
 +rpm: RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz
 +	echo "Building the RPM"
-+	rpmbuild --define="_topdir `pwd`/RPM_BUILDING" -tb $<
++	rpmbuild --define="_topdir `pwd`/RPM_BUILDING" --nodebuginfo -tb $< || rpmbuild --define="_topdir `pwd`/RPM_BUILDING" -tb $<
 +	find RPM_BUILDING/{,S}RPMS/ -type f | xargs -n1 -iXXX mv XXX .
 +	echo
 +	echo "================================================="

@@ -3,18 +3,17 @@ package kafka
 import (
 	"github.com/spf13/cobra"
 
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	"github.com/confluentinc/cli/internal/pkg/output"
-
 	kafkaquotas "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 type quotaCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
 }
 
-func newQuotaCommand(config *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
+func newQuotaCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "quota",
 		Short:       "Manage Kafka client quotas.",
@@ -23,13 +22,13 @@ func newQuotaCommand(config *v1.Config, prerunner pcmd.PreRunner) *cobra.Command
 
 	c := &quotaCommand{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
 
-	c.AddCommand(c.newCreateCommand())
-	c.AddCommand(c.newDeleteCommand())
-	c.AddCommand(c.newDescribeCommand())
-	c.AddCommand(c.newListCommand())
-	c.AddCommand(c.newUpdateCommand())
+	cmd.AddCommand(c.newCreateCommand())
+	cmd.AddCommand(c.newDeleteCommand())
+	cmd.AddCommand(c.newDescribeCommand())
+	cmd.AddCommand(c.newListCommand())
+	cmd.AddCommand(c.newUpdateCommand())
 
-	return c.Command
+	return cmd
 }
 
 type quotaOut struct {

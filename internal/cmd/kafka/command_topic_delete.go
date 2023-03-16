@@ -47,7 +47,7 @@ func (c *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 		return err
 	}
 
-	if err := c.provisioningClusterCheck(cmd, kafkaClusterConfig.ID); err != nil {
+	if err := c.provisioningClusterCheck(kafkaClusterConfig.ID); err != nil {
 		return err
 	}
 
