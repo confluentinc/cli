@@ -1,1 +1,4 @@
-Error: context "1" does not exist
+Error: context not found: 1
+
+Suggestions:
+    Use the `--warn` flag to suppress this error and delete the remaining context entered.

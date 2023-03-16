@@ -159,7 +159,7 @@ func handleIamUser(t *testing.T) http.HandlerFunc {
 		w.Header().Set("Content-Type", "application/json")
 		var user iamv2.IamV2User
 		switch userId {
-		case "u-0", "u-1":
+		case "u-0", "u-1", "u-11bbb":
 			err := writeResourceNotFoundError(w)
 			require.NoError(t, err)
 			return

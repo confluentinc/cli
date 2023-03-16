@@ -1,1 +1,4 @@
-Error: unknown connector ID(s): "lcc-456", "lcc-789", and "lcc-101112"
+Error: connectors not found: "lcc-456", "lcc-789", and "lcc-101112"
+
+Suggestions:
+    Use the `--warn` flag to suppress this error and delete the remaining connector entered.

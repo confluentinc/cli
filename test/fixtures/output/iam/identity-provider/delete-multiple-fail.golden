@@ -1,1 +1,4 @@
-Error: identity provider(s) not found or access forbidden: "op-54321"
+Error: identity provider not found: "op-54321"
+
+Suggestions:
+    Use the `--warn` flag to suppress this error and delete the remaining identity provider entered.

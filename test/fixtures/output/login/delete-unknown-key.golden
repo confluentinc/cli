@@ -1,4 +1,1 @@
-Error: error getting API key UNKNOWN: resource not found: unknown API key UNKNOWN
-
-Suggestions:
-    Ensure the API key exists and has not been deleted, or create a new API key via `confluent api-key create`.
+Error: API key not found: "UNKNOWN"

@@ -21,6 +21,7 @@ func (c *command) newDeleteCommand() *cobra.Command {
 	}
 
 	pcmd.AddForceFlag(cmd)
+	pcmd.AddWarnFlag(cmd)
 
 	return cmd
 }

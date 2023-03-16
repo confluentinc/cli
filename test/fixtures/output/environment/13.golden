@@ -1,4 +1,4 @@
-Error: environment(s) not found or access forbidden: "env-dne"
+Error: environment not found: "env-dne"
 
 Suggestions:
-    List available environments with `confluent environment list`.
+    Use the `--warn` flag to suppress this error and delete the remaining environment entered.

@@ -1,4 +1,4 @@
-Error: self-managed key(s) not found or access forbidden: "cck-006", "cck-007", and "cck-100"
+Error: self-managed keys not found: "cck-006", "cck-007", and "cck-100"
 
 Suggestions:
-    Ensure the self-managed key exists and has not been deleted, or register a new key via `confluent byok register`.
+    Use the `--warn` flag to suppress this error and delete the remaining self-managed key entered.

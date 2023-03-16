@@ -27,13 +27,21 @@ func ValidateArgsForDeletion(cmd *cobra.Command, args []string, resourceType str
 		invalidArgsErrMsg = fmt.Sprintf(errors.NotFoundErrorMsg, resource.Plural(resourceType), ArrayToCommaDelimitedString(invalidArgs, "and"))
 	}
 
-	if force, err := cmd.Flags().GetBool("force"); err != nil {
-		return nil, err
-	} else if force && len(invalidArgs) > 0 {
-		output.ErrPrintln(invalidArgsErrMsg)
-		return validArgs, nil
-	} else if len(invalidArgs) >= 1 {
-		return nil, errors.NewErrorWithSuggestions(invalidArgsErrMsg, fmt.Sprintf(errors.DeleteNotFoundSuggestions, resourceType))
+	if len(invalidArgs) != 0 {
+		if warn, err := cmd.Flags().GetBool("warn"); err != nil {
+			return nil, err
+		} else if warn {
+			output.ErrPrintln(invalidArgsErrMsg)
+			return validArgs, nil
+		}
+
+		if len(validArgs) == 1 {
+			return nil, errors.NewErrorWithSuggestions(invalidArgsErrMsg, fmt.Sprintf(errors.DeleteNotFoundSuggestions, resourceType))
+		} else if len(validArgs) > 1 {
+			return nil, errors.NewErrorWithSuggestions(invalidArgsErrMsg, fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.Plural(resourceType)))
+		} else {
+			return nil, errors.New(invalidArgsErrMsg)
+		}
 	}
 
 	return args, nil

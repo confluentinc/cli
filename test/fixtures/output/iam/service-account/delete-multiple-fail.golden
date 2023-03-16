@@ -1,4 +1,4 @@
-Error: service account(s) not found or access forbidden: "sa-67890"
+Error: service account not found: "sa-67890"
 
 Suggestions:
-    List service accounts with `confluent service-account list`.
+    Use the `--warn` flag to suppress this error and delete the remaining service account entered.

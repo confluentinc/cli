@@ -472,7 +472,7 @@ const (
 	FailedToReadInputErrorMsg = "failed to read input"
 	NotFoundErrorMsg          = "%s not found: %s"
 	AccessForbiddenErrorMsg   = "%s(s) not found or access forbidden: %s"
-	DeleteNotFoundSuggestions = "Use the `--force` flag to suppress this error and delete the remaining %ss entered. This flag will also bypass the confirmation prompt."
+	DeleteNotFoundSuggestions = "Use the `--warn` flag to suppress this error and delete the remaining %s entered."
 
 	// Flag parsing errors
 	EnvironmentFlagWithApiLoginErrorMsg = `"environment" flag should not be passed for API key context`
