@@ -4,13 +4,15 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/google/uuid"
+	"github.com/spf13/cobra"
+
+	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
+
 	"github.com/confluentinc/cli/internal/cmd/kafka"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
-	"github.com/google/uuid"
-	"github.com/spf13/cobra"
 )
 
 func (c *localCommand) newConsumeCommand() *cobra.Command {
