@@ -45,7 +45,7 @@ func (c *mirrorCommand) newCreateCommand() *cobra.Command {
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 
-	_ = cmd.MarkFlagRequired(linkFlagName)
+	cobra.CheckErr(cmd.MarkFlagRequired(linkFlagName))
 
 	return cmd
 }

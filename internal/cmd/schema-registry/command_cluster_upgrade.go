@@ -33,7 +33,7 @@ func (c *command) newClusterUpgradeCommand() *cobra.Command {
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired("package")
+	cobra.CheckErr(cmd.MarkFlagRequired("package"))
 
 	return cmd
 }

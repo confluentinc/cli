@@ -38,7 +38,7 @@ func (c *aclCommand) newDeleteCommand() *cobra.Command {
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 
-	_ = cmd.MarkFlagRequired("operations")
+	cobra.CheckErr(cmd.MarkFlagRequired("operations"))
 
 	return cmd
 }

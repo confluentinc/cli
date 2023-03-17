@@ -26,6 +26,8 @@ func (c *configCommand) newUpdateCommand() *cobra.Command {
 	cmd.Flags().Bool("force", false, "Updates the configuration, overwriting any concurrent modifications.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
+	cobra.CheckErr(cmd.MarkFlagFilename("file", "json"))
+
 	return cmd
 }
 
