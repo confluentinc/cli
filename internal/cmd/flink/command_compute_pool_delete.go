@@ -12,7 +12,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
-func (c *computePoolCommand) newDeleteCommand() *cobra.Command {
+func (c *command) newComputePoolDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:    "delete <id>",
 		Short:  "Delete a Flink compute pool.",
@@ -27,7 +27,7 @@ func (c *computePoolCommand) newDeleteCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *computePoolCommand) delete(cmd *cobra.Command, args []string) error {
+func (c *command) delete(cmd *cobra.Command, args []string) error {
 	id := args[0]
 
 	computePool, err := c.V2Client.DescribeFlinkComputePool(id, c.EnvironmentId())

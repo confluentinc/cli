@@ -58,7 +58,7 @@ func (c *Client) ListFlinkComputePools(specRegion, environment string) ([]flinkv
 		}
 		list = append(list, page.GetData()...)
 
-		pageToken, done, err = extractFlinkNextPageToken(page.GetMetadata().Next)
+		pageToken, done, err = extractNextPageToken(page.GetMetadata().Next)
 		if err != nil {
 			return nil, err
 		}
@@ -74,11 +74,30 @@ func (c *Client) executeListComputePools(specRegion, environment, pageToken stri
 	return c.FlinkClient.ComputePoolsFcpmV2Api.ListFcpmV2ComputePoolsExecute(req)
 }
 
-func extractFlinkNextPageToken(nextPageUrlStringNullable flinkv2.NullableString) (string, bool, error) {
-	if !nextPageUrlStringNullable.IsSet() {
-		return "", true, nil
+func (c *Client) ListFlinkRegions(cloud string) ([]flinkv2.FcpmV2Region, error) {
+	var list []flinkv2.FcpmV2Region
+
+	done := false
+	pageToken := ""
+	for !done {
+		page, r, err := c.executeListRegions(cloud, pageToken)
+		if err != nil {
+			return nil, errors.CatchCCloudV2Error(err, r)
+		}
+		list = append(list, page.GetData()...)
+
+		pageToken, done, err = extractNextPageToken(page.GetMetadata().Next)
+		if err != nil {
+			return nil, err
+		}
 	}
-	nextPageUrlString := *nextPageUrlStringNullable.Get()
-	pageToken, err := extractPageToken(nextPageUrlString)
-	return pageToken, false, err
+	return list, nil
+}
+
+func (c *Client) executeListRegions(cloud, pageToken string) (flinkv2.FcpmV2RegionList, *http.Response, error) {
+	req := c.FlinkClient.RegionsFcpmV2Api.ListFcpmV2Regions(c.flinkApiContext()).Cloud(cloud).PageSize(ccloudV2ListPageSize)
+	if pageToken != "" {
+		req = req.PageToken(pageToken)
+	}
+	return c.FlinkClient.RegionsFcpmV2Api.ListFcpmV2RegionsExecute(req)
 }

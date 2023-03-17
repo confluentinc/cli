@@ -7,7 +7,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (c *computePoolCommand) newDescribeCommand() *cobra.Command {
+func (c *command) newComputePoolDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe <id>",
 		Short: "Describe a Flink compute pool.",
@@ -21,14 +21,14 @@ func (c *computePoolCommand) newDescribeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *computePoolCommand) describe(cmd *cobra.Command, args []string) error {
+func (c *command) describe(cmd *cobra.Command, args []string) error {
 	computePool, err := c.V2Client.DescribeFlinkComputePool(args[0], c.EnvironmentId())
 	if err != nil {
 		return err
 	}
 
 	table := output.NewTable(cmd)
-	table.Add(&out{
+	table.Add(&computePoolOut{
 		Id:   computePool.GetId(),
 		Name: computePool.Spec.GetDisplayName(),
 	})

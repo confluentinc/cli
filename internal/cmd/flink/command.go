@@ -6,6 +6,10 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
+type command struct {
+	*pcmd.AuthenticatedStateFlagCommand
+}
+
 func New(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "flink",
@@ -13,7 +17,32 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
-	cmd.AddCommand(newComputePoolCommand(prerunner))
+	c := &command{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
+
+	cmd.AddCommand(c.newComputePoolCommand(prerunner))
+	cmd.AddCommand(c.newRegionCommand(prerunner))
 
 	return cmd
+}
+
+func (c *command) autocompleteRegions(cmd *cobra.Command, args []string) []string {
+	if err := c.PersistentPreRunE(cmd, args); err != nil {
+		return nil
+	}
+
+	cloud, err := cmd.Flags().GetString("cloud")
+	if err != nil {
+		return nil
+	}
+
+	regions, err := c.V2Client.ListFlinkRegions(cloud)
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(regions))
+	for i, region := range regions {
+		suggestions[i] = region.GetId()
+	}
+	return suggestions
 }

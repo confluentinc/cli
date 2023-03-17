@@ -9,7 +9,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (c *computePoolCommand) newUpdateCommand() *cobra.Command {
+func (c *command) newComputePoolUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:    "update <id>",
 		Short:  "Update a Flink compute pool.",
@@ -23,7 +23,7 @@ func (c *computePoolCommand) newUpdateCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *computePoolCommand) update(cmd *cobra.Command, args []string) error {
+func (c *command) update(cmd *cobra.Command, args []string) error {
 	computePoolUpdate := flinkv2.FcpmV2ComputePoolUpdate{
 		Spec: &flinkv2.FcpmV2ComputePoolSpecUpdate{},
 	}
@@ -34,7 +34,7 @@ func (c *computePoolCommand) update(cmd *cobra.Command, args []string) error {
 	}
 
 	table := output.NewTable(cmd)
-	table.Add(&out{
+	table.Add(&computePoolOut{
 		Id: computePool.GetId(),
 	})
 	return table.Print()

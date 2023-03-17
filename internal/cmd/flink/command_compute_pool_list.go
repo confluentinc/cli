@@ -7,7 +7,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (c *computePoolCommand) newListCommand() *cobra.Command {
+func (c *command) newComputePoolListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List Flink compute pools.",
@@ -19,12 +19,12 @@ func (c *computePoolCommand) newListCommand() *cobra.Command {
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired("region")
+	cobra.CheckErr(cmd.MarkFlagRequired("region"))
 
 	return cmd
 }
 
-func (c *computePoolCommand) list(cmd *cobra.Command, args []string) error {
+func (c *command) list(cmd *cobra.Command, args []string) error {
 	region, err := cmd.Flags().GetString("region")
 	if err != nil {
 		return err
@@ -37,7 +37,7 @@ func (c *computePoolCommand) list(cmd *cobra.Command, args []string) error {
 
 	list := output.NewList(cmd)
 	for _, computePool := range computePools {
-		list.Add(&out{
+		list.Add(&computePoolOut{
 			Id:   computePool.GetId(),
 			Name: computePool.Spec.GetDisplayName(),
 		})
