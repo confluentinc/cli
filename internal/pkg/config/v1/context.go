@@ -160,7 +160,7 @@ func (c *Context) GetState() *ContextState {
 }
 
 func (c *Context) GetAuth() *AuthConfig {
-	if c.State != nil {
+	if c.GetState() != nil {
 		return c.State.Auth
 	}
 	return nil
