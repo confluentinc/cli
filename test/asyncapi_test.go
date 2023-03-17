@@ -9,10 +9,8 @@ import (
 
 func (s *CLITestSuite) TestAsyncApiExport() {
 	tests := []CLITest{
-		// No Kafka
-		{args: "asyncapi export", exitCode: 1},
-		// No SR Key Set up
-		{args: "asyncapi export", exitCode: 1, useKafka: "lkc-asyncapi", authKafka: "true"},
+		{args: "asyncapi export", exitCode: 1, fixture: "asyncapi/export-no-kafka.golden"},
+		{args: "asyncapi export", exitCode: 1, useKafka: "lkc-asyncapi", authKafka: "true", fixture: "asyncapi/export-no-sr-key.golden"},
 		{args: "environment use " + testserver.SRApiEnvId, workflow: true},
 		// Spec Generated
 		{args: "asyncapi export --schema-registry-api-key ASYNCAPIKEY --schema-registry-api-secret ASYNCAPISECRET", fixture: "asyncapi/export-success.golden", useKafka: "lkc-asyncapi", authKafka: "true", workflow: true},
@@ -59,9 +57,7 @@ func (s *CLITestSuite) TestAsyncApiImportWithWorkflow() {
 	tests := []CLITest{
 		{args: "environment use " + testserver.SRApiEnvId, workflow: true},
 		{args: "asyncapi import ./test/fixtures/input/asyncapi/asyncapi-spec.yaml --schema-registry-api-key ASYNCAPIKEY --schema-registry-api-secret ASYNCAPISECRET", useKafka: "lkc-asyncapi", authKafka: "true", workflow: true, fixture: "asyncapi/import-no-overwrite.golden"},
-		// Overwrite=true
 		{args: "asyncapi import ./test/fixtures/input/asyncapi/asyncapi-spec.yaml --schema-registry-api-key ASYNCAPIKEY --schema-registry-api-secret ASYNCAPISECRET --overwrite", useKafka: "lkc-asyncapi", authKafka: "true", workflow: true, fixture: "asyncapi/import-with-overwrite.golden"},
-		// input file with 0 channels
 		{args: "asyncapi import ./test/fixtures/input/asyncapi/asyncapi-with-context.yaml --schema-registry-api-key ASYNCAPIKEY --schema-registry-api-secret ASYNCAPISECRET --overwrite", useKafka: "lkc-asyncapi", authKafka: "true", workflow: true, fixture: "asyncapi/import-no-channels.golden"},
 	}
 	resetConfiguration(s.T(), false)
