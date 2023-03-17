@@ -4,6 +4,8 @@ import (
 	"github.com/spf13/cobra"
 
 	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -22,17 +24,28 @@ func (c *command) newSqlStatementCreateCommand() *cobra.Command {
 		),
 	}
 
+	cmd.Flags().String("compute-pool", "", "Flink compute pool ID.")
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddOutputFlag(cmd)
+
 	return cmd
 }
 
 func (c *command) sqlStatementCreate(cmd *cobra.Command, args []string) error {
+	computePool, err := cmd.Flags().GetString("compute-pool")
+	if err != nil {
+		return err
+	}
+
 	statement := flinkgatewayv1alpha1.SqlV1alpha1Statement{
 		Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
-			Statement: flinkgatewayv1alpha1.PtrString(args[0]),
+			Statement:     flinkgatewayv1alpha1.PtrString(args[0]),
+			ComputePoolId: flinkgatewayv1alpha1.PtrString(computePool),
 		},
 	}
 
-	statement, err := c.V2Client.CreateSqlStatement(c.EnvironmentId(), statement)
+	statement, err = c.V2Client.CreateSqlStatement(c.EnvironmentId(), statement)
 	if err != nil {
 		return err
 	}

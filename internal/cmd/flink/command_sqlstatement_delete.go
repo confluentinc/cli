@@ -5,6 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -12,12 +13,19 @@ import (
 )
 
 func (c *command) newSqlStatementDeleteCommand() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "delete <name>",
 		Short: "Delete a Flink SQL statement.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.sqlStatementCreate,
 	}
+
+	pcmd.AddForceFlag(cmd)
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddOutputFlag(cmd)
+
+	return cmd
 }
 
 func (c *command) sqlStatementDelete(cmd *cobra.Command, args []string) error {

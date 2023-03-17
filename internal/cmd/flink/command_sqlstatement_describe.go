@@ -1,6 +1,7 @@
 package flink
 
 import (
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/spf13/cobra"
 )
@@ -11,6 +12,10 @@ func (c *command) newSqlStatementDescribeCommand() *cobra.Command {
 		Short: "Describe a Flink SQL statement.",
 		RunE:  c.sqlStatementDescribe,
 	}
+
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
