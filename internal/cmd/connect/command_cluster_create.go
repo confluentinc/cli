@@ -40,7 +40,7 @@ func (c *clusterCommand) newCreateCommand() *cobra.Command {
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired("config-file")
+	cobra.CheckErr(cmd.MarkFlagRequired("config-file"))
 
 	return cmd
 }

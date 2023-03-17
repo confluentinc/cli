@@ -30,9 +30,9 @@ func (c *identityPoolCommand) newCreateCommand() *cobra.Command {
 	cmd.Flags().String("description", "", "Description of the identity pool.")
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired("filter")
-	_ = cmd.MarkFlagRequired("identity-claim")
-	_ = cmd.MarkFlagRequired("provider")
+	cobra.CheckErr(cmd.MarkFlagRequired("filter"))
+	cobra.CheckErr(cmd.MarkFlagRequired("identity-claim"))
+	cobra.CheckErr(cmd.MarkFlagRequired("provider"))
 
 	return cmd
 }

@@ -51,8 +51,8 @@ func (c *authenticatedTopicCommand) newProduceCommandOnPrem() *cobra.Command {
 	cmd.Flags().String("schema-registry-endpoint", "", "The URL of the Schema Registry cluster.")
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired("bootstrap")
-	_ = cmd.MarkFlagRequired("ca-location")
+	cobra.CheckErr(cmd.MarkFlagRequired("bootstrap"))
+	cobra.CheckErr(cmd.MarkFlagRequired("ca-location"))
 
 	return cmd
 }

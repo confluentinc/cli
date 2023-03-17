@@ -22,7 +22,7 @@ func (c *command) newUseCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String(resourceFlagName, "", "The resource ID.")
-	_ = cmd.MarkFlagRequired(resourceFlagName)
+	cobra.CheckErr(cmd.MarkFlagRequired(resourceFlagName))
 
 	return cmd
 }
