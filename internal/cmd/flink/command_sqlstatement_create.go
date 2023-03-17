@@ -39,9 +39,11 @@ func (c *command) sqlStatementCreate(cmd *cobra.Command, args []string) error {
 
 	table := output.NewTable(cmd)
 	table.Add(&sqlStatementOut{
-		Name:        statement.Spec.GetStatementName(),
-		Statement:   statement.Spec.GetStatement(),
-		ComputePool: statement.Spec.GetComputePoolId(),
+		Name:         statement.Spec.GetStatementName(),
+		Statement:    statement.Spec.GetStatement(),
+		ComputePool:  statement.Spec.GetComputePoolId(),
+		Status:       statement.Status.GetPhase(),
+		StatusDetail: statement.Status.GetDetail(),
 	})
 	return table.Print()
 }

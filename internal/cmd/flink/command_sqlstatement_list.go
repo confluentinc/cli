@@ -24,9 +24,11 @@ func (c *command) sqlStatementList(cmd *cobra.Command, args []string) error {
 	list := output.NewList(cmd)
 	for _, statement := range statements {
 		list.Add(&sqlStatementOut{
-			Name:        statement.Spec.GetStatementName(),
-			Statement:   statement.Spec.GetStatement(),
-			ComputePool: statement.Spec.GetComputePoolId(),
+			Name:         statement.Spec.GetStatementName(),
+			Statement:    statement.Spec.GetStatement(),
+			ComputePool:  statement.Spec.GetComputePoolId(),
+			Status:       statement.Status.GetPhase(),
+			StatusDetail: statement.Status.GetDetail(),
 		})
 	}
 	return list.Print()
