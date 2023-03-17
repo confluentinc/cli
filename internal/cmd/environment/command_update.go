@@ -21,6 +21,7 @@ func (c *command) newUpdateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("name", "", "New name for Confluent Cloud environment.")
+
 	cobra.CheckErr(cmd.MarkFlagRequired("name"))
 
 	return cmd
