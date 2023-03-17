@@ -3,6 +3,8 @@ package v1
 import (
 	"regexp"
 
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+
 	"github.com/confluentinc/cli/internal/pkg/secret"
 )
 
@@ -17,6 +19,20 @@ type ContextState struct {
 	AuthRefreshToken string      `json:"auth_refresh_token"`
 	Salt             []byte      `json:"salt,omitempty"`
 	Nonce            []byte      `json:"nonce,omitempty"`
+}
+
+func (c *ContextState) GetAuth() *AuthConfig {
+	if c != nil {
+		return c.Auth
+	}
+	return nil
+}
+
+func (c *ContextState) GetUser() *ccloudv1.User {
+	if auth := c.GetAuth(); auth != nil {
+		return auth.User
+	}
+	return nil
 }
 
 func (c *ContextState) DecryptContextStateAuthToken(ctxName string) error {
