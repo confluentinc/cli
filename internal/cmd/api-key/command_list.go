@@ -153,10 +153,9 @@ func getServiceAccountsMap(serviceAccounts []iamv2.IamV2ServiceAccount) map[stri
 func getUsersMap(users []*ccloudv1.User) map[int32]*ccloudv1.User {
 	userMap := make(map[int32]*ccloudv1.User)
 	for _, user := range users {
-		if user == nil {
-			continue
+		if user != nil {
+			userMap[user.GetId()] = user
 		}
-		userMap[user.GetId()] = user
 	}
 	return userMap
 }
