@@ -8,6 +8,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/properties"
 )
 
 func (c *command) newSqlStatementCreateCommand() *cobra.Command {
@@ -25,6 +26,7 @@ func (c *command) newSqlStatementCreateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("compute-pool", "", "Flink compute pool ID.")
+	cmd.Flags().StringSlice("config", []string{}, `A comma-separated list of configuration "key=value" pairs.`)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -38,9 +40,30 @@ func (c *command) sqlStatementCreate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	configs, err := cmd.Flags().GetStringSlice("config")
+	if err != nil {
+		return err
+	}
+
+	configMap, err := properties.ConfigFlagToMap(configs)
+	if err != nil {
+		return err
+	}
+
+	properties := make([]flinkgatewayv1alpha1.SqlV1alpha1Property, len(configMap))
+	i := 0
+	for key, value := range configMap {
+		properties[i] = flinkgatewayv1alpha1.SqlV1alpha1Property{
+			Key:   flinkgatewayv1alpha1.PtrString(key),
+			Value: flinkgatewayv1alpha1.PtrString(value),
+		}
+		i++
+	}
+
 	statement := flinkgatewayv1alpha1.SqlV1alpha1Statement{
 		Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
 			Statement:     flinkgatewayv1alpha1.PtrString(args[0]),
+			Properties:    &properties,
 			ComputePoolId: flinkgatewayv1alpha1.PtrString(computePool),
 		},
 	}
