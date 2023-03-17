@@ -105,7 +105,7 @@ func (c *command) getAllUsers() ([]*ccloudv1.User, error) {
 	}
 	users = append(users, adminUsers...)
 
-	if currentUser := c.State.GetUser(); currentUser != nil {
+	if currentUser := c.Context.GetUser(); currentUser != nil {
 		users = append(users, currentUser)
 	}
 
