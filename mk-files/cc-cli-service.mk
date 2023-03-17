@@ -9,7 +9,7 @@ update-db:
 	git checkout -b update-db-v$${version} && \
 	make db-migrate-create NAME=v$${version} && \
 	cd - && \
-	echo -e "BEGIN;\n\nDELETE FROM whilelist WHERE version = 'v$${version}';\n\nCOMMIT;\n" > $$(find $(CC_CLI_SERVICE)/db/migrations/ -name "*_v$${version}.down.sql") && \
+	echo -e "BEGIN;\n\nDELETE FROM whitelist WHERE version = 'v$${version}';\n\nCOMMIT;\n" > $$(find $(CC_CLI_SERVICE)/db/migrations/ -name "*_v$${version}.down.sql") && \
 	go run -ldflags "-X main.version=v$${version}" cmd/usage/main.go > $$(find $(CC_CLI_SERVICE)/db/migrations/ -name "*_v$${version}.up.sql") && \
 	cd $(CC_CLI_SERVICE) && \
 	make db-migrate-up && \
