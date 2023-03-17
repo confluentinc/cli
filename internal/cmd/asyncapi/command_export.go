@@ -150,7 +150,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *command) getChannelDetails(details *accountDetails, flags *flags) error {
-	output.Printf("Adding operation: %s\n", details.channelDetails.currentTopic.GetTopicName())
+	output.Printf("Adding topic: %s\n", details.channelDetails.currentTopic.GetTopicName())
 	err := details.getSchemaDetails()
 	if err != nil {
 		if err.Error() == protobufErrorMessage {
@@ -159,7 +159,7 @@ func (c *command) getChannelDetails(details *accountDetails, flags *flags) error
 		return fmt.Errorf("failed to get schema details: %v", err)
 	}
 	if err := details.getTags(); err != nil {
-		log.CliLogger.Warnf("failed to get tags: %v", err)
+		log.CliLogger.Warnf("Failed to get tags: %v", err)
 	}
 	details.channelDetails.example = nil
 	if flags.consumeExamples {
@@ -170,15 +170,15 @@ func (c *command) getChannelDetails(details *accountDetails, flags *flags) error
 	}
 	details.channelDetails.bindings, err = c.getBindings(details.clusterId, details.channelDetails.currentTopic.GetTopicName())
 	if err != nil {
-		log.CliLogger.Warnf("bindings not found: %v", err)
+		log.CliLogger.Warnf("Bindings not found: %v", err)
 	}
 	if err := details.getTopicDescription(); err != nil {
-		log.CliLogger.Warnf("failed to get topic description: %v", err)
+		log.CliLogger.Warnf("Failed to get topic description: %v", err)
 	}
 	// x-messageCompatibility
 	details.channelDetails.mapOfMessageCompat, err = getMessageCompatibility(details.srClient, details.srContext, details.channelDetails.currentSubject)
 	if err != nil {
-		log.CliLogger.Warnf("failed to get subject's compatibility type")
+		log.CliLogger.Warnf("Failed to get subject's compatibility type")
 	}
 	return nil
 }
@@ -223,7 +223,7 @@ func getValueFormat(contentType string) string {
 
 func handlePanic() {
 	if err := recover(); err != nil {
-		log.CliLogger.Warn("failed to get message example: ", err)
+		log.CliLogger.Warnf("Failed to get message example: %v", err)
 	}
 }
 
@@ -455,7 +455,7 @@ func getMessageCompatibility(srClient *schemaregistry.APIClient, ctx context.Con
 	mapOfMessageCompat := make(map[string]any)
 	config, _, err := srClient.DefaultApi.GetSubjectLevelConfig(ctx, subject, nil)
 	if err != nil {
-		log.CliLogger.Warnf("failed to get subject level configuration: %v", err)
+		log.CliLogger.Warnf("Failed to get subject level configuration: %v", err)
 		config, _, err = srClient.DefaultApi.GetTopLevelConfig(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get top level configuration: %v", err)

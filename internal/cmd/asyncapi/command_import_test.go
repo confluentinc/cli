@@ -3,11 +3,11 @@ package asyncapi
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestResolveSchemaType(t *testing.T) {
-	require.Equal(t, resolveSchemaType("avro"), "AVRO")
-	require.Equal(t, resolveSchemaType("json"), "JSON")
-	require.Equal(t, resolveSchemaType("proto"), "PROTOBUF")
+	assert.Equal(t, resolveSchemaType("avro"), "AVRO")
+	assert.Equal(t, resolveSchemaType("json"), "JSON")
+	assert.Equal(t, resolveSchemaType("proto"), "PROTOBUF")
 }
