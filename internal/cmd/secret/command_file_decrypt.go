@@ -18,9 +18,13 @@ func (c *command) newDecryptCommand() *cobra.Command {
 	cmd.Flags().String("output-file", "", "Output file path.")
 	cmd.Flags().String("config", "", "List of configuration keys.")
 
-	_ = cmd.MarkFlagRequired("config-file")
-	_ = cmd.MarkFlagRequired("local-secrets-file")
-	_ = cmd.MarkFlagRequired("output-file")
+	cobra.CheckErr(cmd.MarkFlagFilename("config-file"))
+	cobra.CheckErr(cmd.MarkFlagFilename("local-secrets-file"))
+	cobra.CheckErr(cmd.MarkFlagFilename("output-file"))
+
+	cobra.CheckErr(cmd.MarkFlagRequired("config-file"))
+	cobra.CheckErr(cmd.MarkFlagRequired("local-secrets-file"))
+	cobra.CheckErr(cmd.MarkFlagRequired("output-file"))
 
 	return cmd
 }

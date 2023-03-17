@@ -25,6 +25,8 @@ func (c *clusterCommand) newUpdateCommand() *cobra.Command {
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 
+	cobra.CheckErr(cmd.MarkFlagFilename("config-file", "json"))
+
 	return cmd
 }
 

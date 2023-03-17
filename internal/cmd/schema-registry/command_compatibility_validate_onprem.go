@@ -35,6 +35,9 @@ func (c *command) newCompatibilityValidateCommandOnPrem() *cobra.Command {
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
+	cobra.CheckErr(cmd.MarkFlagFilename("schema"))
+	cobra.CheckErr(cmd.MarkFlagFilename("references"))
+
 	return cmd
 }
 

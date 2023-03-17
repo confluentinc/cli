@@ -29,8 +29,8 @@ func (c *identityProviderCommand) newCreateCommand() *cobra.Command {
 	cmd.Flags().String("description", "", "Description of the identity provider.")
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired("issuer-uri")
-	_ = cmd.MarkFlagRequired("jwks-uri")
+	cobra.CheckErr(cmd.MarkFlagRequired("issuer-uri"))
+	cobra.CheckErr(cmd.MarkFlagRequired("jwks-uri"))
 
 	return cmd
 }
