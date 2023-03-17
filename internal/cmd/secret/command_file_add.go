@@ -18,6 +18,10 @@ func (c *command) newAddCommand() *cobra.Command {
 	cmd.Flags().String("remote-secrets-file", "", "Path to the remote encrypted configuration properties file.")
 	cmd.Flags().String("config", "", "List of key/value pairs of configuration properties.")
 
+	cobra.CheckErr(cmd.MarkFlagFilename("config-file"))
+	cobra.CheckErr(cmd.MarkFlagFilename("local-secrets-file"))
+	cobra.CheckErr(cmd.MarkFlagFilename("remote-secrets-file"))
+
 	cobra.CheckErr(cmd.MarkFlagRequired("config-file"))
 	cobra.CheckErr(cmd.MarkFlagRequired("local-secrets-file"))
 	cobra.CheckErr(cmd.MarkFlagRequired("remote-secrets-file"))

@@ -51,6 +51,10 @@ func (c *authenticatedTopicCommand) newProduceCommandOnPrem() *cobra.Command {
 	cmd.Flags().String("schema-registry-endpoint", "", "The URL of the Schema Registry cluster.")
 	pcmd.AddOutputFlag(cmd)
 
+	cobra.CheckErr(cmd.MarkFlagFilename("schema"))
+	cobra.CheckErr(cmd.MarkFlagFilename("references"))
+	cobra.CheckErr(cmd.MarkFlagFilename("config-file", "avro", "json"))
+
 	cobra.CheckErr(cmd.MarkFlagRequired("bootstrap"))
 	cobra.CheckErr(cmd.MarkFlagRequired("ca-location"))
 

@@ -26,6 +26,8 @@ func (c *command) newRotateCommand() *cobra.Command {
 	cmd.Flags().String("passphrase", "", `Master key passphrase. You can use dash ("-") to pipe from stdin or @file.txt to read from file.`)
 	cmd.Flags().String("passphrase-new", "", `New master key passphrase. You can use dash ("-") to pipe from stdin or @file.txt to read from file.`)
 
+	cobra.CheckErr(cmd.MarkFlagFilename("local-secrets-file"))
+
 	cobra.CheckErr(cmd.MarkFlagRequired("local-secrets-file"))
 
 	return cmd
