@@ -3,7 +3,18 @@ info:
   title: API Document for Confluent Cluster
   version: 1.0.0
 servers:
-  confluentSchemaRegistry: []
+  cluster:
+    url: http://127.0.0.1:1025
+    description: Confluent Kafka instance.
+    protocol: kafka
+    security:
+    - confluentBroker: []
+  schema-registry:
+    url: http://127.0.0.1:56078
+    description: Confluent Kafka Schema Registry Server
+    protocol: kafka
+    security:
+    - confluentSchemaRegistry: []
 channels:
   topic1:
     subscribe:
@@ -21,7 +32,8 @@ channels:
       kafka:
         x-configs:
           cleanup.policy: delete
-          delete.retention.ms: "86400000"
+          delete.retention.ms: 8.64e+07
+          confluent.value.schema.validation: "true"
     x-messageCompatibility: FORWARD
 components:
   messages:

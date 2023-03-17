@@ -1,0 +1,376 @@
+asyncapi: 2.4.0
+info:
+  title: API Document for Confluent Cluster
+  version: 1.0.0
+servers:
+  cluster:
+    url: https://pkc-6ojv2.us-west4.gcp.confluent.cloud:443
+    description: Confluent Kafka instance.
+    protocol: kafka
+    security:
+    - confluentBroker: []
+  schema-registry:
+    url: https://psrc-4xgzx.us-east-2.aws.confluent.cloud
+    description: Confluent Kafka Schema Registry Server
+    protocol: kafka
+    security:
+    - confluentSchemaRegistry: []
+channels:
+  customer.info:
+    description: customer information
+    subscribe:
+      tags:
+      - name: Sensitive
+      - name: PII
+      operationId: CustomerInfoSubscribe
+      bindings:
+        kafka:
+          bindingVersion: 0.3.0
+          groupId:
+            type: string
+          clientId:
+            type: string
+      message:
+        $ref: '#/components/messages/CustomerInfoMessage'
+    bindings:
+      kafka:
+        x-configs:
+          cleanup.policy: delete
+          compression.type: producer
+          delete.retention.ms: "86400000"
+          file.delete.delay.ms: "60000"
+          flush.messages: "9223372036854775807"
+          flush.ms: "9223372036854775807"
+          follower.replication.throttled.replicas: ""
+          index.interval.bytes: "4096"
+          leader.replication.throttled.replicas: ""
+          max.compaction.lag.ms: "9223372036854775807"
+          max.message.bytes: "2097164"
+          message.downconversion.enable: "true"
+          message.format.version: 3.0-IV1
+          message.timestamp.difference.max.ms: "9223372036854775807"
+          message.timestamp.type: CreateTime
+          min.cleanable.dirty.ratio: "0.5"
+          min.compaction.lag.ms: "0"
+          min.insync.replicas: "2"
+          preallocate: "false"
+          retention.bytes: "-1"
+          retention.ms: "604800000"
+          segment.bytes: "104857600"
+          segment.index.bytes: "10485760"
+          segment.jitter.ms: "0"
+          segment.ms: "604800000"
+          unclean.leader.election.enable: "false"
+    x-messageCompatibility: BACKWARD
+  customer.new:
+    subscribe:
+      operationId: CustomerNewSubscribe
+      bindings:
+        kafka:
+          bindingVersion: 0.3.0
+          groupId:
+            type: string
+          clientId:
+            type: string
+      message:
+        $ref: '#/components/messages/CustomerNewMessage'
+    bindings:
+      kafka:
+        x-configs:
+          cleanup.policy: delete
+          compression.type: producer
+          delete.retention.ms: "86400000"
+          file.delete.delay.ms: "60000"
+          flush.messages: "9223372036854775807"
+          flush.ms: "9223372036854775807"
+          follower.replication.throttled.replicas: ""
+          index.interval.bytes: "4096"
+          leader.replication.throttled.replicas: ""
+          max.compaction.lag.ms: "9223372036854775807"
+          max.message.bytes: "2097164"
+          message.downconversion.enable: "true"
+          message.format.version: 3.0-IV1
+          message.timestamp.difference.max.ms: "9223372036854775807"
+          message.timestamp.type: CreateTime
+          min.cleanable.dirty.ratio: "0.5"
+          min.compaction.lag.ms: "0"
+          min.insync.replicas: "2"
+          preallocate: "false"
+          retention.bytes: "-1"
+          retention.ms: "604800000"
+          segment.bytes: "104857600"
+          segment.index.bytes: "10485760"
+          segment.jitter.ms: "0"
+          segment.ms: "604800000"
+          unclean.leader.election.enable: "false"
+    x-messageCompatibility: BACKWARD
+  customer.touchpoints:
+    subscribe:
+      operationId: CustomerTouchpointsSubscribe
+      bindings:
+        kafka:
+          bindingVersion: 0.3.0
+          groupId:
+            type: string
+          clientId:
+            type: string
+      message:
+        $ref: '#/components/messages/CustomerTouchpointsMessage'
+    bindings:
+      kafka:
+        x-configs:
+          cleanup.policy: delete
+          compression.type: producer
+          delete.retention.ms: "86400000"
+          file.delete.delay.ms: "60000"
+          flush.messages: "9223372036854775807"
+          flush.ms: "9223372036854775807"
+          follower.replication.throttled.replicas: ""
+          index.interval.bytes: "4096"
+          leader.replication.throttled.replicas: ""
+          max.compaction.lag.ms: "9223372036854775807"
+          max.message.bytes: "2097164"
+          message.downconversion.enable: "true"
+          message.format.version: 3.0-IV1
+          message.timestamp.difference.max.ms: "9223372036854775807"
+          message.timestamp.type: CreateTime
+          min.cleanable.dirty.ratio: "0.5"
+          min.compaction.lag.ms: "0"
+          min.insync.replicas: "2"
+          preallocate: "false"
+          retention.bytes: "-1"
+          retention.ms: "604800000"
+          segment.bytes: "104857600"
+          segment.index.bytes: "10485760"
+          segment.jitter.ms: "0"
+          segment.ms: "604800000"
+          unclean.leader.election.enable: "false"
+    x-messageCompatibility: BACKWARD
+  customer360:
+    subscribe:
+      operationId: Customer360Subscribe
+      bindings:
+        kafka:
+          bindingVersion: 0.3.0
+          groupId:
+            type: string
+          clientId:
+            type: string
+      message:
+        $ref: '#/components/messages/Customer360Message'
+    bindings:
+      kafka:
+        x-configs:
+          cleanup.policy: delete
+          compression.type: producer
+          delete.retention.ms: "86400000"
+          file.delete.delay.ms: "60000"
+          flush.messages: "9223372036854775807"
+          flush.ms: "9223372036854775807"
+          follower.replication.throttled.replicas: ""
+          index.interval.bytes: "4096"
+          leader.replication.throttled.replicas: ""
+          max.compaction.lag.ms: "9223372036854775807"
+          max.message.bytes: "2097164"
+          message.downconversion.enable: "true"
+          message.format.version: 3.0-IV1
+          message.timestamp.difference.max.ms: "9223372036854775807"
+          message.timestamp.type: CreateTime
+          min.cleanable.dirty.ratio: "0.5"
+          min.compaction.lag.ms: "0"
+          min.insync.replicas: "2"
+          preallocate: "false"
+          retention.bytes: "-1"
+          retention.ms: "604800000"
+          segment.bytes: "104857600"
+          segment.index.bytes: "10485760"
+          segment.jitter.ms: "0"
+          segment.ms: "604800000"
+          unclean.leader.election.enable: "false"
+    x-messageCompatibility: BACKWARD
+  pksqlc-3700wTEST:
+    subscribe:
+      operationId: Pksqlc3700WTESTSubscribe
+      bindings:
+        kafka:
+          bindingVersion: 0.3.0
+          groupId:
+            type: string
+          clientId:
+            type: string
+      message:
+        $ref: '#/components/messages/Pksqlc3700WTESTMessage'
+    bindings:
+      kafka:
+        x-configs:
+          cleanup.policy: delete
+          compression.type: producer
+          delete.retention.ms: "86400000"
+          file.delete.delay.ms: "60000"
+          flush.messages: "9223372036854775807"
+          flush.ms: "9223372036854775807"
+          follower.replication.throttled.replicas: ""
+          index.interval.bytes: "4096"
+          leader.replication.throttled.replicas: ""
+          max.compaction.lag.ms: "9223372036854775807"
+          max.message.bytes: "2097164"
+          message.downconversion.enable: "true"
+          message.format.version: 3.0-IV1
+          message.timestamp.difference.max.ms: "9223372036854775807"
+          message.timestamp.type: CreateTime
+          min.cleanable.dirty.ratio: "0.5"
+          min.compaction.lag.ms: "0"
+          min.insync.replicas: "2"
+          preallocate: "false"
+          retention.bytes: "-1"
+          retention.ms: "604800000"
+          segment.bytes: "104857600"
+          segment.index.bytes: "10485760"
+          segment.jitter.ms: "0"
+          segment.ms: "604800000"
+          unclean.leader.election.enable: "false"
+    x-messageCompatibility: BACKWARD
+components:
+  messages:
+    Customer360Message:
+      schemaFormat: application/schema+json;version=draft-07
+      contentType: application/json
+      payload:
+        properties:
+          GENDER:
+            connect.index: 0
+            oneOf:
+            - type: "null"
+            - type: string
+          PRODUCTID:
+            connect.index: 2
+            oneOf:
+            - type: "null"
+            - type: string
+          REGIONID:
+            connect.index: 1
+            oneOf:
+            - type: "null"
+            - type: string
+        type: object
+      name: Customer360Message
+      bindings:
+        kafka:
+          bindingVersion: 0.3.0
+          key:
+            type: string
+    CustomerInfoMessage:
+      schemaFormat: application/schema+json;version=draft-07
+      contentType: application/json
+      payload:
+        properties:
+          gender:
+            connect.index: 3
+            type: string
+          regionid:
+            connect.index: 2
+            type: string
+          registertime:
+            connect.index: 0
+            connect.type: int64
+            type: integer
+          userid:
+            connect.index: 1
+            type: string
+        title: ksql.users
+        type: object
+      tags:
+      - name: PII
+      name: CustomerInfoMessage
+      bindings:
+        kafka:
+          bindingVersion: 0.3.0
+          key:
+            type: string
+    CustomerNewMessage:
+      schemaFormat: application/schema+json;version=draft-07
+      contentType: application/json
+      payload:
+        $id: https://github.com/confluent/demos/blob/productmetrics
+        $schema: http://json-schema.org/draft-07/schema
+        description: Describes the product metrics usage
+        properties:
+          productId:
+            description: Unique ID of the product.
+            type: string
+          productUseTime:
+            description: Date time the product was used.
+            type: string
+          userId:
+            description: Unique ID of the customer.
+            type: string
+        type: object
+      name: CustomerNewMessage
+      bindings:
+        kafka:
+          bindingVersion: 0.3.0
+          key:
+            type: string
+    CustomerTouchpointsMessage:
+      schemaFormat: application/schema+json;version=draft-07
+      contentType: application/json
+      payload:
+        $id: https://github.com/confluent/demos/blob/productmetrics
+        $schema: http://json-schema.org/draft-07/schema
+        description: Describes the product metrics usage
+        properties:
+          productId:
+            description: Unique ID of the product.
+            type: string
+          productUseTime:
+            description: Date time the product was used.
+            type: string
+          userId:
+            description: Unique ID of the customer.
+            type: string
+        type: object
+      name: CustomerTouchpointsMessage
+      bindings:
+        kafka:
+          bindingVersion: 0.3.0
+          key:
+            type: string
+    Pksqlc3700WTESTMessage:
+      schemaFormat: application/schema+json;version=draft-07
+      contentType: application/json
+      payload:
+        properties:
+          GENDER:
+            connect.index: 0
+            oneOf:
+            - type: "null"
+            - type: string
+          PRODUCTID:
+            connect.index: 2
+            oneOf:
+            - type: "null"
+            - type: string
+          REGIONID:
+            connect.index: 1
+            oneOf:
+            - type: "null"
+            - type: string
+        type: object
+      name: Pksqlc3700WTESTMessage
+      bindings:
+        kafka:
+          bindingVersion: 0.3.0
+          key:
+            type: string
+  securitySchemes:
+    confluentBroker:
+      type: userPassword
+      x-configs:
+        sasl.mechanisms: PLAIN
+        sasl.password: '{{CLUSTER_API_SECRET}}'
+        sasl.username: '{{CLUSTER_API_KEY}}'
+        security.protocol: sasl_ssl
+    confluentSchemaRegistry:
+      type: userPassword
+      x-configs:
+        basic.auth.user.info: '{{SCHEMA_REGISTRY_API_KEY}}:{{SCHEMA_REGISTRY_API_SECRET}}'

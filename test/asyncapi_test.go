@@ -15,7 +15,7 @@ func (s *CLITestSuite) TestAsyncApiExport() {
 		{args: "asyncapi export", exitCode: 1, useKafka: "lkc-asyncapi", authKafka: "true"},
 		{args: "environment use " + testserver.SRApiEnvId, workflow: true},
 		// Spec Generated
-		{args: "asyncapi export --schema-registry-api-key ASYNCAPIKEY --schema-registry-api-secret ASYNCAPISECRET", fixture: "asyncapi/1.golden", useKafka: "lkc-asyncapi", authKafka: "true", workflow: true},
+		{args: "asyncapi export --schema-registry-api-key ASYNCAPIKEY --schema-registry-api-secret ASYNCAPISECRET", fixture: "asyncapi/export-success.golden", useKafka: "lkc-asyncapi", authKafka: "true", workflow: true},
 		{args: "asyncapi export --schema-registry-api-key ASYNCAPIKEY --schema-registry-api-secret ASYNCAPISECRET --schema-context dev --file asyncapi-with-context.yaml", useKafka: "lkc-asyncapi", authKafka: "true", workflow: true},
 	}
 	resetConfiguration(s.T(), false)
@@ -40,6 +40,33 @@ func (s *CLITestSuite) TestAsyncApiExport() {
 			s.Error(nil, "spec generated does not match the template output file")
 		}
 	}
+}
 
+func (s *CLITestSuite) TestAsyncApiImport() {
+	tests := []CLITest{
+		{args: "asyncapi import", fixture: "asyncapi/import-err-no-file.golden", exitCode: 1},
+		{args: "asyncapi import ./test/fixtures/input/asyncapi/asyncapi-spec.yaml", exitCode: 1, fixture: "asyncapi/no_kafka.golden"},
+		{args: "asyncapi import ./test/fixtures/input/asyncapi/asyncapi-spec.yaml", exitCode: 1, useKafka: "lkc-asyncapi", authKafka: "true", fixture: "asyncapi/no_sr_key.golden"},
+	}
 	resetConfiguration(s.T(), false)
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestAsyncApiImportWithWorkflow() {
+	tests := []CLITest{
+		{args: "environment use " + testserver.SRApiEnvId, workflow: true},
+		{args: "asyncapi import ./test/fixtures/input/asyncapi/asyncapi-spec.yaml --schema-registry-api-key ASYNCAPIKEY --schema-registry-api-secret ASYNCAPISECRET", useKafka: "lkc-asyncapi", authKafka: "true", workflow: true, fixture: "asyncapi/import-no-overwrite.golden"},
+		// Overwrite=true
+		{args: "asyncapi import ./test/fixtures/input/asyncapi/asyncapi-spec.yaml --schema-registry-api-key ASYNCAPIKEY --schema-registry-api-secret ASYNCAPISECRET --overwrite", useKafka: "lkc-asyncapi", authKafka: "true", workflow: true, fixture: "asyncapi/import-with-overwrite.golden"},
+		// input file with 0 channels
+		{args: "asyncapi import ./test/fixtures/input/asyncapi/asyncapi-with-context.yaml --schema-registry-api-key ASYNCAPIKEY --schema-registry-api-secret ASYNCAPISECRET --overwrite", useKafka: "lkc-asyncapi", authKafka: "true", workflow: true, fixture: "asyncapi/import-no-channels.golden"},
+	}
+	resetConfiguration(s.T(), false)
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
 }
