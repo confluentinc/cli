@@ -275,11 +275,6 @@ func setCustomAttribute(custom ldvalue.ValueMapBuilder, key string, value ldvalu
 	custom.Set(key, value)
 }
 
-func parsePkcFromBootstrap(bootstrap string) string {
-	r := regexp.MustCompile("pkc-([a-z0-9]+)")
-	return r.FindString(bootstrap)
-}
-
 func writeFlagsToConfig(ctx *dynamicconfig.DynamicContext, key string, vals map[string]any, user lduser.User, client v1.LaunchDarklyClient) {
 	if ctx == nil {
 		return
