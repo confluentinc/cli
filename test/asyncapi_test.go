@@ -9,8 +9,8 @@ import (
 
 func (s *CLITestSuite) TestAsyncApiExport() {
 	tests := []CLITest{
-		{args: "asyncapi export", exitCode: 1, fixture: "asyncapi/export-no-kafka.golden"},
-		{args: "asyncapi export", exitCode: 1, useKafka: "lkc-asyncapi", authKafka: "true", fixture: "asyncapi/export-no-sr-key.golden"},
+		{args: "asyncapi export", exitCode: 1, fixture: "asyncapi/no-kafka.golden"},
+		{args: "asyncapi export", exitCode: 1, useKafka: "lkc-asyncapi", authKafka: "true", fixture: "asyncapi/no-sr-key.golden"},
 		{args: "environment use " + testserver.SRApiEnvId, workflow: true},
 		// Spec Generated
 		{args: "asyncapi export --schema-registry-api-key ASYNCAPIKEY --schema-registry-api-secret ASYNCAPISECRET", fixture: "asyncapi/export-success.golden", useKafka: "lkc-asyncapi", authKafka: "true", workflow: true},
@@ -43,8 +43,8 @@ func (s *CLITestSuite) TestAsyncApiExport() {
 func (s *CLITestSuite) TestAsyncApiImport() {
 	tests := []CLITest{
 		{args: "asyncapi import", fixture: "asyncapi/import-err-no-file.golden", exitCode: 1},
-		{args: "asyncapi import ./test/fixtures/input/asyncapi/asyncapi-spec.yaml", exitCode: 1, fixture: "asyncapi/no_kafka.golden"},
-		{args: "asyncapi import ./test/fixtures/input/asyncapi/asyncapi-spec.yaml", exitCode: 1, useKafka: "lkc-asyncapi", authKafka: "true", fixture: "asyncapi/no_sr_key.golden"},
+		{args: "asyncapi import ./test/fixtures/input/asyncapi/asyncapi-spec.yaml", exitCode: 1, fixture: "asyncapi/no-kafka.golden"},
+		{args: "asyncapi import ./test/fixtures/input/asyncapi/asyncapi-spec.yaml", exitCode: 1, useKafka: "lkc-asyncapi", authKafka: "true", fixture: "asyncapi/no-sr-key.golden"},
 	}
 	resetConfiguration(s.T(), false)
 	for _, test := range tests {

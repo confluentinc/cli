@@ -59,7 +59,7 @@ type Spec struct {
 
 type Components struct {
 	Messages        map[string]Message `yaml:"messages"`
-	SecuritySchemes interface{}        `yaml:"securitySchemes"`
+	SecuritySchemes any                `yaml:"securitySchemes"`
 }
 
 type Security struct {
@@ -72,7 +72,7 @@ type MessageRef struct {
 }
 
 type Operation struct {
-	OperationID string                        `yaml:"operationId"`
+	OperationId string                        `yaml:"operationId"`
 	TopicTags   []spec2.Tag                   `yaml:"tags"`
 	OpBindings  spec2.OperationBindingsObject `yaml:"bindings"`
 	Message     MessageRef                    `yaml:"message"`
@@ -94,12 +94,11 @@ func newImportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "import <specification-file>",
 		Short: "Populate cluster using AsyncAPI specification file.",
-		Long: "Add topics, schemas and tags from the AsyncAPI YAML specification file" +
-			" to the active Confluent Cloud cluster.",
-		Args: cobra.ExactArgs(1),
+		Long:  "Add topics, schemas and tags from the AsyncAPI YAML specification file to the active Confluent Cloud cluster.",
+		Args:  cobra.ExactArgs(1),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Import an AsyncAPI specification file to populate an existing cluster",
+				Text: "Import an AsyncAPI specification file to populate an existing Kafka cluster and Schema Registry",
 				Code: "confluent asyncapi import spec.yaml",
 			},
 		),
@@ -191,13 +190,13 @@ func fileToSpec(fileName string) (*Spec, error) {
 }
 
 func (c *command) addChannelToCluster(details *accountDetails, spec *Spec, topicName string, kafkaBinding kafkaBinding, overwrite bool) error {
-	topicExistsAlready, newTopicCreated, err := c.addTopic(details, topicName, spec.Channels[topicName].Description, kafkaBinding, overwrite)
+	topicExistedAlready, newTopicCreated, err := c.addTopic(details, topicName, spec.Channels[topicName].Description, kafkaBinding, overwrite)
 	if err != nil {
 		// unable to create kafka topic
 		log.CliLogger.Warn(err)
 	}
 	// If topic exists and overwrite flag is false, move to the next channel in spec
-	if topicExistsAlready && !overwrite {
+	if topicExistedAlready && !overwrite {
 		return errors.New(parseErrorMessage)
 	}
 	// Register schema
@@ -215,14 +214,14 @@ func (c *command) addChannelToCluster(details *accountDetails, spec *Spec, topic
 	if err := addSchemaTags(details, spec.Components, topicName, schemaId); err != nil {
 		return err
 	}
-	if topicExistsAlready || newTopicCreated {
+	if topicExistedAlready || newTopicCreated {
 		if err := addTopicTags(details, spec.Channels[topicName].Subscribe, topicName); err != nil {
 			return err
 		}
 	}
 	// Add topic description to newly created topic
-	if (topicExistsAlready || newTopicCreated) && spec.Channels[topicName].Description != "" {
-		if err = addTopicDescription(details.srClient, details.srContext, details.clusterId+":"+topicName,
+	if (topicExistedAlready || newTopicCreated) && spec.Channels[topicName].Description != "" {
+		if err := addTopicDescription(details.srClient, details.srContext, fmt.Sprintf("%s:%s", details.clusterId, topicName),
 			spec.Channels[topicName].Description); err != nil {
 			return fmt.Errorf("unable to update topic description: %v", err)
 		}
@@ -230,36 +229,7 @@ func (c *command) addChannelToCluster(details *accountDetails, spec *Spec, topic
 	return nil
 }
 
-func isModifiableConfig(configName string) bool {
-	modifiableConfigs := []string{"delete.retention.ms", "max.compaction.lag.ms", "max.message.bytes", "message.timestamp.difference.max.ms", "message.timestamp.type",
-		"min.compaction.lag.ms", "min.insync.replicas", "retention.bytes", "retention.ms", "segment.bytes", "segment.ms"}
-	return types.Contains(modifiableConfigs, configName)
-}
-
 func (c *command) addTopic(details *accountDetails, topicName string, description string, kafkaBinding kafkaBinding, overwrite bool) (bool, bool, error) {
-	topicConfigs := []kafkarestv3.CreateTopicRequestDataConfigs{}
-	updateConfigs := []kafkarestv3.AlterConfigBatchRequestDataData{}
-	kafkaRest, err := c.GetKafkaREST()
-	if err != nil {
-		return false, false, err
-	}
-	for configName, configValue := range kafkaBinding.XConfigs {
-		value := configValue
-		topicConfigs = append(topicConfigs, kafkarestv3.CreateTopicRequestDataConfigs{
-			Name:  configName,
-			Value: *kafkarestv3.NewNullableString(&value),
-		})
-		if isModifiableConfig(configName) {
-			updateConfigs = append(updateConfigs, kafkarestv3.AlterConfigBatchRequestDataData{
-				Name:  configName,
-				Value: *kafkarestv3.NewNullableString(&value),
-			})
-		}
-	}
-	createTopicRequestData := kafkarestv3.CreateTopicRequestData{
-		TopicName: topicName,
-		Configs:   &topicConfigs,
-	}
 	// Check if topic already exists
 	for _, topics := range details.topics {
 		if topics.TopicName == topicName {
@@ -269,38 +239,90 @@ func (c *command) addTopic(details *accountDetails, topicName string, descriptio
 				// Do not overwrite existing topic. Move to the next topic.
 				return true, false, nil
 			}
-			// Overwrite topic configs
-			log.CliLogger.Info("Overwriting topic configs")
-			if updateConfigs != nil {
-				_, err := kafkaRest.CloudClient.UpdateKafkaTopicConfigBatch(details.clusterId, topicName, kafkarestv3.AlterConfigBatchRequestData{Data: updateConfigs})
-				if err != nil {
-					return true, false, fmt.Errorf("unable to update topic configs: %v", err)
-				}
-			}
-			output.Printf(errors.UpdatedResourceMsg, resource.Topic, topicName)
-			if description != "" {
-				if err = addTopicDescription(details.srClient, details.srContext, details.clusterId+":"+topicName,
-					description); err != nil {
-					return true, false, fmt.Errorf("unable to update topic description: %v", err)
-				}
-			}
-			return true, false, nil
+			// Overwrite existing topic
+			err := c.updateTopic(details, topicName, description, kafkaBinding)
+			return true, false, err
 		}
 	}
+	// Create a new topic
+	newTopicCreated, err := c.createTopic(details, topicName, kafkaBinding)
+	return false, newTopicCreated, err
+}
+
+func (c *command) createTopic(details *accountDetails, topicName string, kafkaBinding kafkaBinding) (bool, error) {
 	log.CliLogger.Infof("Topic not found. Adding a new topic: %s", topicName)
+	topicConfigs := []kafkarestv3.CreateTopicRequestDataConfigs{}
+	for configName, configValue := range kafkaBinding.XConfigs {
+		value := configValue
+		topicConfigs = append(topicConfigs, kafkarestv3.CreateTopicRequestDataConfigs{
+			Name:  configName,
+			Value: *kafkarestv3.NewNullableString(&value),
+		})
+	}
+	createTopicRequestData := kafkarestv3.CreateTopicRequestData{
+		TopicName: topicName,
+		Configs:   &topicConfigs,
+	}
+	kafkaRest, err := c.GetKafkaREST()
+	if err != nil {
+		return false, err
+	}
 	if _, httpResp, err := kafkaRest.CloudClient.CreateKafkaTopic(details.clusterId,
 		createTopicRequestData); err != nil {
 		restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err)
 		if parseErr == nil && restErr.Code == ccloudv2.BadRequestErrorCode {
 			// Print partition limit error w/ suggestion
 			if strings.Contains(restErr.Message, "partitions will exceed") {
-				return false, false, errors.NewErrorWithSuggestions(restErr.Message, errors.ExceedPartitionLimitSuggestions)
+				return false, errors.NewErrorWithSuggestions(restErr.Message, errors.ExceedPartitionLimitSuggestions)
 			}
 		}
-		return false, false, kafkarest.NewError(kafkaRest.CloudClient.GetUrl(), err, httpResp)
+		return false, kafkarest.NewError(kafkaRest.CloudClient.GetUrl(), err, httpResp)
 	}
 	output.Printf(errors.CreatedResourceMsg, resource.Topic, topicName)
-	return false, true, nil
+	return true, nil
+}
+
+func (c *command) updateTopic(details *accountDetails, topicName, description string, kafkaBinding kafkaBinding) error {
+	// Overwrite topic configs
+	updateConfigs := []kafkarestv3.AlterConfigBatchRequestDataData{}
+	modifiableConfigs := []string{}
+	kafkaRest, err := c.GetKafkaREST()
+	if err != nil {
+		return err
+	}
+	configs, err := kafkaRest.CloudClient.ListKafkaTopicConfigs(details.clusterId, topicName)
+	if err != nil {
+		return err
+	}
+	for _, configDetails := range configs.Data {
+		if !configDetails.GetIsReadOnly() {
+			modifiableConfigs = append(modifiableConfigs, configDetails.GetName())
+		}
+	}
+	for configName, configValue := range kafkaBinding.XConfigs {
+		value := configValue
+		if types.Contains(modifiableConfigs, configName) {
+			updateConfigs = append(updateConfigs, kafkarestv3.AlterConfigBatchRequestDataData{
+				Name:  configName,
+				Value: *kafkarestv3.NewNullableString(&value),
+			})
+		}
+	}
+	log.CliLogger.Info("Overwriting topic configs")
+	if updateConfigs != nil {
+		_, err = kafkaRest.CloudClient.UpdateKafkaTopicConfigBatch(details.clusterId, topicName, kafkarestv3.AlterConfigBatchRequestData{Data: updateConfigs})
+		if err != nil {
+			return fmt.Errorf("unable to update topic configs: %v", err)
+		}
+	}
+	output.Printf(errors.UpdatedResourceMsg, resource.Topic, topicName)
+	if description != "" {
+		if err = addTopicDescription(details.srClient, details.srContext, fmt.Sprintf("%s:%s", details.clusterId, topicName),
+			description); err != nil {
+			return fmt.Errorf("unable to update topic description: %v", err)
+		}
+	}
+	return nil
 }
 
 func addTopicDescription(srClient *srsdk.APIClient, srContext context.Context, qualifiedName string, description string) error {
@@ -350,7 +372,7 @@ func registerSchema(details *accountDetails, topicName string, components Compon
 		if err != nil {
 			return 0, fmt.Errorf("unable to register schema: %v", err)
 		}
-		output.Printf("Schema registered under subject %s with ID %d.\n", subject, id.Id)
+		output.Printf("Schema registered under subject \"%s\" with ID \"%d\".\n", subject, id.Id)
 		return id.Id, nil
 	}
 	return 0, fmt.Errorf("schema payload not found in YAML input file")
@@ -392,7 +414,7 @@ func addSchemaTags(details *accountDetails, components Components, topicName str
 		if err != nil {
 			return err
 		}
-		output.Printf("Tags added to schema %s\n", strconv.Itoa(int(schemaId)))
+		output.Printf("Tags added to schema \"%d\".\n", schemaId)
 	}
 	return nil
 }
@@ -414,14 +436,14 @@ func addTopicTags(details *accountDetails, subscribe Operation, topicName string
 		tagConfigs = append(tagConfigs, srsdk.Tag{
 			TypeName:   tag.Name,
 			EntityType: "kafka_topic",
-			EntityName: details.srCluster.Id + ":" + details.clusterId + ":" + topicName,
+			EntityName: fmt.Sprintf("%s:%s:%s", details.srCluster.Id, details.clusterId, topicName),
 		})
 	}
 	err := addTagsUtil(details, tagDefConfigs, tagConfigs)
 	if err != nil {
 		return err
 	}
-	output.Printf("Tags added to Kafka topic %s\n", topicName)
+	output.Printf("Tags added to Kafka topic \"%s\"\n", topicName)
 	return nil
 }
 
@@ -434,7 +456,6 @@ func addTagsUtil(details *accountDetails, tagDefConfigs []srsdk.TagDef, tagConfi
 	log.CliLogger.Debugf("Tag Definitions created: %v", defs)
 	tagOpts := srsdk.CreateTagsOpts{Tag: optional.NewInterface(tagConfigs)}
 	tags, _, err := details.srClient.DefaultApi.CreateTags(details.srContext, &tagOpts)
-	log.CliLogger.Debugf("%v added to resource %s", tags, tagConfigs[0].EntityName)
 	if err != nil {
 		return fmt.Errorf("unable to add tag to resource: %v", err)
 	}

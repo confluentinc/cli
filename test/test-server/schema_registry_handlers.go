@@ -430,3 +430,59 @@ func (c *SRRouter) HandleSRAsyncApi(t *testing.T) http.HandlerFunc {
 		}
 	}
 }
+
+// Handler for "/catalog/v1/types/tagdefs"
+func (c *SRRouter) HandleSRTagDefs(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch r.Method {
+		case http.MethodPost:
+			w.WriteHeader(http.StatusOK)
+			err := json.NewEncoder(w).Encode(
+				[]srsdk.TagDef{
+					{Name: "schema_tag"},
+					{Name: "topic_tag"},
+				})
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for "/catalog/v1/entity/tags"
+func (c *SRRouter) HandleSRCatalogEntity(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch r.Method {
+		case http.MethodPost:
+			w.WriteHeader(http.StatusOK)
+			var req []srsdk.Tag
+			err := json.NewDecoder(r.Body).Decode(&req)
+			require.NoError(t, err)
+			var res []srsdk.TagResponse
+			for _, tag := range req {
+				res = append(res, srsdk.TagResponse{
+					TypeName:   tag.TypeName,
+					EntityType: tag.EntityType,
+					EntityName: tag.EntityName,
+				})
+			}
+			err = json.NewEncoder(w).Encode(res)
+			require.NoError(t, err)
+		case http.MethodGet:
+			res := []srsdk.TagResponse{
+				{
+					TypeName:   "schema_tag",
+					EntityType: "sr_schema",
+					EntityName: "lsrc-1234:.:1",
+				},
+				{
+					TypeName:   "topic_tag",
+					EntityType: "kafka_topic",
+					EntityName: "lsrc-1234:lkc-asyncapi:topic1",
+				},
+			}
+			err := json.NewEncoder(w).Encode(res)
+			require.NoError(t, err)
+		}
+	}
+}

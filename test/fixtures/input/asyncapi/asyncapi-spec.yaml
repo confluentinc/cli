@@ -3,21 +3,12 @@ info:
   title: API Document for Confluent Cluster
   version: 1.0.0
 servers:
-  cluster:
-    url: http://127.0.0.1:1025
-    description: Confluent Kafka instance.
-    protocol: kafka
-    security:
-    - confluentBroker: []
-  schema-registry:
-    url: http://127.0.0.1:56078
-    description: Confluent Kafka Schema Registry Server
-    protocol: kafka
-    security:
-    - confluentSchemaRegistry: []
+  confluentSchemaRegistry: []
 channels:
   topic1:
     subscribe:
+      tags:
+        - name: topic_tag
       operationId: Topic1Subscribe
       bindings:
         kafka:
@@ -32,25 +23,26 @@ channels:
       kafka:
         x-configs:
           cleanup.policy: delete
-          delete.retention.ms: 8.64e+07
-          confluent.value.schema.validation: "true"
+          delete.retention.ms: "86400000"
     x-messageCompatibility: FORWARD
 components:
   messages:
     Topic1Message:
+      tags:
+        - name: schema_tag
       payload:
         doc: Sample schema to help you get started.
         fields:
-        - doc: The int type is a 32-bit signed integer.
-          name: my_field1
-          type: int
-        - doc: The double type is a double precision(64-bit) IEEE754 floating-point
-            number.
-          name: my_field2
-          type: double
-        - doc: The string is a unicode character sequence.
-          name: my_field3
-          type: string
+          - doc: The int type is a 32-bit signed integer.
+            name: my_field1
+            type: int
+          - doc: The double type is a double precision(64-bit) IEEE754 floating-point
+              number.
+            name: my_field2
+            type: double
+          - doc: The string is a unicode character sequence.
+            name: my_field3
+            type: string
         name: sampleRecord
         namespace: com.mycorp.mynamespace
         type: AVRO
