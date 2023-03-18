@@ -261,17 +261,6 @@ func (ld *launchDarklyManager) contextToLDUser(ctx *dynamicconfig.DynamicContext
 	if id := ctx.GetEnvironment().GetId(); id != "" {
 		setCustomAttribute(custom, "environment.id", ldvalue.String(id))
 	}
-	// cluster info
-	cluster, _ := ctx.GetKafkaClusterForCommand()
-	if cluster != nil {
-		if cluster.ID != "" {
-			setCustomAttribute(custom, "cluster.id", ldvalue.String(cluster.ID))
-		}
-		if cluster.Bootstrap != "" {
-			physicalClusterId := parsePkcFromBootstrap(cluster.Bootstrap)
-			setCustomAttribute(custom, "cluster.physicalClusterId", ldvalue.String(physicalClusterId))
-		}
-	}
 	customValueMap := custom.Build()
 	if customValueMap.Count() > 0 {
 		userBuilder.CustomAll(customValueMap)
