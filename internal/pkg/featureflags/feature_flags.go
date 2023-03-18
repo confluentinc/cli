@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"regexp"
 	"time"
 
 	"github.com/dghubble/sling"
