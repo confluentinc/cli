@@ -22,6 +22,9 @@ func (c *command) newComputePoolCreateCommand() *cobra.Command {
 	cmd.Flags().String("region", "", `Cloud region ID (use "confluent flink region list" to see all).`)
 	pcmd.AddOutputFlag(cmd)
 
+	cobra.CheckErr(cmd.MarkFlagRequired("cloud"))
+	cobra.CheckErr(cmd.MarkFlagRequired("region"))
+
 	pcmd.RegisterFlagCompletionFunc(cmd, "region", c.autocompleteRegions)
 
 	return cmd
