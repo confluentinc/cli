@@ -93,14 +93,25 @@ func (s *SRRouter) HandleSRSubjectVersion(t *testing.T) http.HandlerFunc {
 			versionStr := vars["version"]
 			if versionStr == "latest" {
 				subject := vars["subject"]
-				err := json.NewEncoder(w).Encode(srsdk.Schema{
-					Subject:    subject,
-					Version:    1,
-					Id:         1,
-					SchemaType: "avro",
-					Schema:     `{"doc":"Sample schema to help you get started.","fields":[{"doc":"The int type is a 32-bit signed integer.","name":"my_field1","type":"int"},{"doc":"The double type is a double precision(64-bit) IEEE754 floating-point number.","name":"my_field2","type":"double"},{"doc":"The string is a unicode character sequence.","name":"my_field3","type":"string"}],"name":"sampleRecord","namespace":"com.mycorp.mynamespace","type":"AVRO"}`,
-				})
-				require.NoError(t, err)
+				switch subject {
+				case "topic2-value":
+					err := json.NewEncoder(w).Encode(srsdk.Schema{
+						Subject:    subject,
+						Version:    1,
+						Id:         1,
+						SchemaType: "PROTOBUF",
+					})
+					require.NoError(t, err)
+				default:
+					err := json.NewEncoder(w).Encode(srsdk.Schema{
+						Subject:    subject,
+						Version:    1,
+						Id:         1,
+						SchemaType: "avro",
+						Schema:     `{"doc":"Sample schema to help you get started.","fields":[{"doc":"The int type is a 32-bit signed integer.","name":"my_field1","type":"int"},{"doc":"The double type is a double precision(64-bit) IEEE754 floating-point number.","name":"my_field2","type":"double"},{"doc":"The string is a unicode character sequence.","name":"my_field3","type":"string"}],"name":"sampleRecord","namespace":"com.mycorp.mynamespace","type":"AVRO"}`,
+					})
+					require.NoError(t, err)
+				}
 			} else {
 				version64, err := strconv.ParseInt(versionStr, 10, 32)
 				require.NoError(t, err)
@@ -258,7 +269,7 @@ func (s *SRRouter) HandleSRById(t *testing.T) http.HandlerFunc {
 func (s *SRRouter) HandleSRSubjects(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		subjects := []string{"subject1", "subject2", "subject3", "topic1-value"}
+		subjects := []string{"subject1", "subject2", "subject3", "topic1-value", "topic2-value"}
 		err := json.NewEncoder(w).Encode(subjects)
 		require.NoError(t, err)
 	}
@@ -416,6 +427,62 @@ func (c *SRRouter) HandleSRAsyncApi(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodPut:
 			w.WriteHeader(http.StatusOK)
+		}
+	}
+}
+
+// Handler for "/catalog/v1/types/tagdefs"
+func (c *SRRouter) HandleSRTagDefs(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch r.Method {
+		case http.MethodPost:
+			w.WriteHeader(http.StatusOK)
+			err := json.NewEncoder(w).Encode(
+				[]srsdk.TagDef{
+					{Name: "schema_tag"},
+					{Name: "topic_tag"},
+				})
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for "/catalog/v1/entity/tags"
+func (c *SRRouter) HandleSRCatalogEntity(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch r.Method {
+		case http.MethodPost:
+			w.WriteHeader(http.StatusOK)
+			var req []srsdk.Tag
+			err := json.NewDecoder(r.Body).Decode(&req)
+			require.NoError(t, err)
+			var res []srsdk.TagResponse
+			for _, tag := range req {
+				res = append(res, srsdk.TagResponse{
+					TypeName:   tag.TypeName,
+					EntityType: tag.EntityType,
+					EntityName: tag.EntityName,
+				})
+			}
+			err = json.NewEncoder(w).Encode(res)
+			require.NoError(t, err)
+		case http.MethodGet:
+			res := []srsdk.TagResponse{
+				{
+					TypeName:   "schema_tag",
+					EntityType: "sr_schema",
+					EntityName: "lsrc-1234:.:1",
+				},
+				{
+					TypeName:   "topic_tag",
+					EntityType: "kafka_topic",
+					EntityName: "lsrc-1234:lkc-asyncapi:topic1",
+				},
+			}
+			err := json.NewEncoder(w).Encode(res)
+			require.NoError(t, err)
 		}
 	}
 }
