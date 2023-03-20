@@ -15,7 +15,6 @@ import (
 )
 
 type InputController struct {
-	statements      []string
 	History         History
 	appController   *ApplicationController
 	smartCompletion bool
@@ -30,6 +29,7 @@ func (c *InputController) RunInteractiveInput() {
 
 	var statementResult *StatementResult
 	var err error
+	// We check for statement result and rows so we don't leave GoPrompt in case of errors
 	for c.appController.getOutputMode() == GoPromptOutput || statementResult == nil || len(statementResult.Rows) == 0 {
 		// Run interactive input and take over terminal
 		input := c.p.Input()
@@ -50,9 +50,9 @@ func (c *InputController) RunInteractiveInput() {
 		}
 	}
 
-	// If output mode is TViewOutput we display the interactive table
-	if c.appController.outputMode == TViewOutput && c.appController.tAppSuspended {
-		c.table.fetchDataAndPrintTable()
+	// If output mode is TViewOutput we set the data to be displayed in the interactive table
+	if c.appController.outputMode == TViewOutput {
+		c.table.setDataAndFocus(statementResult)
 	}
 }
 

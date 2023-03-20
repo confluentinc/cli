@@ -2,8 +2,10 @@ package controller
 
 import (
 	"os"
+	"sync"
 
 	v1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"
+	"github.com/gdamore/tcell/v2"
 
 	"github.com/confluentinc/flink-sql-client/components"
 	"github.com/rivo/tview"
@@ -26,27 +28,19 @@ var (
 )
 
 type ApplicationController struct {
-	tAppSuspended bool
-	app           *tview.Application
-	outputMode    OutputMode
-	history       History
+	app        *tview.Application
+	outputMode OutputMode
+	history    History
 }
 
-func (a *ApplicationController) getMode() TableMode {
-	if a.tAppSuspended {
-		return PlaintextTable
-	} else {
-		return InteractiveTable
-	}
-}
-func (a *ApplicationController) InitInteractiveOutputMode() {
-	a.tAppSuspended = false
-}
+var once sync.Once
 
 func (a *ApplicationController) suspendOutputMode(cb func()) {
 	a.toggleOutputMode()
 	a.app.Suspend(cb)
-	a.toggleOutputMode()
+	// InteractiveInput has already set the data to be displayed in the table
+	// Now we just need to render it
+	a.app.ForceDraw()
 }
 
 func (a *ApplicationController) toggleOutputMode() {
@@ -70,10 +64,9 @@ func (a *ApplicationController) getOutputMode() OutputMode {
 
 func NewApplicationController(app *tview.Application, history History) *ApplicationController {
 	return &ApplicationController{
-		app:           app,
-		outputMode:    GoPromptOutput,
-		tAppSuspended: true,
-		history:       history,
+		app:        app,
+		outputMode: TViewOutput,
+		history:    history,
 	}
 }
 
@@ -99,14 +92,17 @@ func StartApp() {
 	table.SetInputCapture(tableController.handleCellEvent)
 	app.SetInputCapture(tableController.appInputCapture)
 	shortcuts.SetHighlightedFunc(shortcutsController.shortcutHighlighted)
-
-	// Instantiate interactive components
-	inputController.RunInteractiveInput()
-	appController.InitInteractiveOutputMode()
 	interactiveOutput := components.InteractiveOutput(table, shortcuts)
-
 	rootLayout := components.RootLayout(interactiveOutput)
-	// TODO: configure and use
+
+	// We start tview and then suspend it immediately so we intialize all components
+	app.SetAfterDrawFunc(func(screen tcell.Screen) {
+		if !screen.HasPendingEvent() {
+			once.Do(func() {
+				appController.suspendOutputMode(inputController.RunInteractiveInput)
+			})
+		}
+	})
 
 	// Start the application.
 	if err := appController.app.SetRoot(rootLayout, true).EnableMouse(true).Run(); err != nil {

@@ -56,15 +56,8 @@ func (t *TableController) setData(newData *StatementResult) {
 
 func (t *TableController) handleCellEvent(event *tcell.EventKey) *tcell.EventKey {
 	if event.Key() == tcell.KeyEscape {
-		t.appController.toggleOutputMode()
-
-		// Here we suspend outpude mode/tview and run the interactive input again
+		// Here we suspend outpude mode/tview aand run the interactive input again
 		t.appController.suspendOutputMode(t.InputController.RunInteractiveInput)
-
-		// After the interactive input is done, we print again the infos in the table
-		if t.appController.getOutputMode() == TViewOutput {
-			t.fetchDataAndPrintTable()
-		}
 
 		return nil
 	}
@@ -148,18 +141,9 @@ func (a *TableController) appInputCapture(event *tcell.EventKey) *tcell.EventKey
 
 }
 
-func (a *TableController) PrintTable(data *StatementResult) {
-	a.setData(data)
-}
-
 // This function will be changed when we actually use tview
-func (a *TableController) fetchDataAndPrintTable() {
-	// We send select so we can get the next mock
-	data, err := a.store.ProcessStatement("select ;")
-	if err != nil {
-		return
-	}
-	a.PrintTable(data)
+func (a *TableController) setDataAndFocus(statementResult *StatementResult) {
+	a.setData(statementResult)
 	a.focus()
 }
 
