@@ -99,7 +99,7 @@ func StartApp() {
 	app.SetAfterDrawFunc(func(screen tcell.Screen) {
 		if !screen.HasPendingEvent() {
 			once.Do(func() {
-				appController.suspendOutputMode(inputController.RunInteractiveInput)
+				go appController.suspendOutputMode(inputController.RunInteractiveInput)
 			})
 		}
 	})
