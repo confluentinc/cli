@@ -35,7 +35,7 @@ func (c *command) newClusterDeleteCommand() *cobra.Command {
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired("environment")
+	cobra.CheckErr(cmd.MarkFlagRequired("environment"))
 
 	return cmd
 }

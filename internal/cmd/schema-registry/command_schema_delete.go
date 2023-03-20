@@ -42,8 +42,8 @@ func (c *command) newSchemaDeleteCommand() *cobra.Command {
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 
-	_ = cmd.MarkFlagRequired("subject")
-	_ = cmd.MarkFlagRequired("version")
+	cobra.CheckErr(cmd.MarkFlagRequired("subject"))
+	cobra.CheckErr(cmd.MarkFlagRequired("version"))
 
 	return cmd
 }

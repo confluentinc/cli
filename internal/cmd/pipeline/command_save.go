@@ -35,6 +35,8 @@ func (c *command) newSaveCommand(enableSourceCode bool) *cobra.Command {
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
+	cobra.CheckErr(cmd.MarkFlagFilename("sql-file", "sql"))
+
 	return cmd
 }
 

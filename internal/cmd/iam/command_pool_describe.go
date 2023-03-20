@@ -19,7 +19,8 @@ func (c identityPoolCommand) newDescribeCommand() *cobra.Command {
 	pcmd.AddProviderFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired("provider")
+	cobra.CheckErr(cmd.MarkFlagRequired("provider"))
+
 	return cmd
 }
 

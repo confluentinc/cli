@@ -31,7 +31,7 @@ func (c *linkCommand) newConfigurationUpdateCommand() *cobra.Command {
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
-	_ = cmd.MarkFlagRequired(configFileFlagName)
+	cobra.CheckErr(cmd.MarkFlagRequired(configFileFlagName))
 
 	return cmd
 }

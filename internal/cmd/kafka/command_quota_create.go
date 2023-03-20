@@ -40,7 +40,7 @@ func (c *quotaCommand) newCreateCommand() *cobra.Command {
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired("name")
+	cobra.CheckErr(cmd.MarkFlagRequired("name"))
 
 	return cmd
 }
