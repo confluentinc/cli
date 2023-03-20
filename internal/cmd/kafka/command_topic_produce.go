@@ -55,8 +55,8 @@ func newProduceCommand(prerunner pcmd.PreRunner, clientId string) *cobra.Command
 	cmd.Flags().String("environment", "", "Environment ID.")
 	pcmd.AddOutputFlag(cmd)
 
-	cobra.CheckErr(cmd.MarkFlagFilename("schema"))
-	cobra.CheckErr(cmd.MarkFlagFilename("references"))
+	cobra.CheckErr(cmd.MarkFlagFilename("schema", "avro", "json", "proto"))
+	cobra.CheckErr(cmd.MarkFlagFilename("references", "json"))
 	cobra.CheckErr(cmd.MarkFlagFilename("config-file", "avro", "json"))
 
 	return cmd

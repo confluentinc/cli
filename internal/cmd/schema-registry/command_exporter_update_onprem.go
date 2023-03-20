@@ -38,8 +38,6 @@ func (c *command) newExporterUpdateCommandOnPrem() *cobra.Command {
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	cobra.CheckErr(cmd.MarkFlagFilename("config-file"))
-
 	return cmd
 }
 

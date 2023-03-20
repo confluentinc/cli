@@ -18,9 +18,6 @@ func (c *command) newRemoveCommand() *cobra.Command {
 	cmd.Flags().String("local-secrets-file", "", "Path to the local encrypted configuration properties file.")
 	cmd.Flags().String("config", "", "List of configuration keys.")
 
-	cobra.CheckErr(cmd.MarkFlagFilename("config-file"))
-	cobra.CheckErr(cmd.MarkFlagFilename("local-secrets-file"))
-
 	cobra.CheckErr(cmd.MarkFlagRequired("config-file"))
 	cobra.CheckErr(cmd.MarkFlagRequired("local-secrets-file"))
 	cobra.CheckErr(cmd.MarkFlagRequired("config"))

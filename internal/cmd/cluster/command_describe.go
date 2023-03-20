@@ -56,8 +56,6 @@ func newDescribeCommand(prerunner pcmd.PreRunner, userAgent string) *cobra.Comma
 	cmd.Flags().String("ca-cert-path", "", "Self-signed certificate chain in PEM format.")
 	pcmd.AddOutputFlag(cmd)
 
-	cobra.CheckErr(cmd.MarkFlagFilename("ca-cert-path"))
-
 	return cmd
 }
 

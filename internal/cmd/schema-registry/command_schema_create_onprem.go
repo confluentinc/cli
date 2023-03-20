@@ -36,8 +36,8 @@ func (c *command) newSchemaCreateCommandOnPrem() *cobra.Command {
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	cobra.CheckErr(cmd.MarkFlagFilename("schema"))
-	cobra.CheckErr(cmd.MarkFlagFilename("references"))
+	cobra.CheckErr(cmd.MarkFlagFilename("schema", "avro", "json", "proto"))
+	cobra.CheckErr(cmd.MarkFlagFilename("references", "json"))
 
 	cobra.CheckErr(cmd.MarkFlagRequired("schema"))
 	cobra.CheckErr(cmd.MarkFlagRequired("subject"))
