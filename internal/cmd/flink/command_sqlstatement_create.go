@@ -25,6 +25,7 @@ func (c *command) newSqlStatementCreateCommand() *cobra.Command {
 		),
 	}
 
+	cmd.Flags().String("name", "", "The name of the Flink SQL statement.")
 	cmd.Flags().String("compute-pool", "", "Flink compute pool ID.")
 	cmd.Flags().StringSlice("config", []string{}, `A comma-separated list of configuration "key=value" pairs.`)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -35,6 +36,11 @@ func (c *command) newSqlStatementCreateCommand() *cobra.Command {
 }
 
 func (c *command) sqlStatementCreate(cmd *cobra.Command, args []string) error {
+	name, err := cmd.Flags().GetString("name")
+	if err != nil {
+		return err
+	}
+
 	computePool, err := cmd.Flags().GetString("compute-pool")
 	if err != nil {
 		return err
@@ -62,6 +68,7 @@ func (c *command) sqlStatementCreate(cmd *cobra.Command, args []string) error {
 
 	statement := flinkgatewayv1alpha1.SqlV1alpha1Statement{
 		Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
+			StatementName: flinkgatewayv1alpha1.PtrString(name),
 			Statement:     flinkgatewayv1alpha1.PtrString(args[0]),
 			Properties:    &properties,
 			ComputePoolId: flinkgatewayv1alpha1.PtrString(computePool),
