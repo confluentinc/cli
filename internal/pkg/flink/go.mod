@@ -5,8 +5,8 @@ go 1.19
 require (
 	github.com/atotto/clipboard v0.1.4
 	github.com/bradleyjkemp/cupaloy v2.3.0+incompatible
-	github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway v0.0.0-00010101000000-000000000000
-	github.com/confluentinc/go-prompt v0.2.5
+	github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway v0.0.1
+	github.com/confluentinc/go-prompt v0.2.4
 	github.com/gdamore/tcell/v2 v2.5.4
 	github.com/google/uuid v1.3.0
 	github.com/olekukonko/tablewriter v0.0.5
@@ -38,5 +38,3 @@ require (
 	google.golang.org/protobuf v1.25.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-replace github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway => ./pkg/sdk

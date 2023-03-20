@@ -1,8 +1,29 @@
 {
   "data": [
     {
-      "status": "Completed",
-      "columns": ["OrderDate", "Region", "Rep", "Item", "Units", "UnitCost", "Total"],
+      "message": "Statement successfully created with id \"7434\".",
+      "status": "PENDING",
+      "columns": [],
+      "rows": []
+    },
+    {
+      "message": "Statement with id \"7434\" wasn't created successfully.",
+      "status": "FAILED",
+      "columns": [],
+      "rows": []
+    },
+    {
+      "message": "Statement successfully created with id \"1234\".",
+      "status": "COMPLETED",
+      "columns": [
+        "OrderDate",
+        "Region",
+        "Rep",
+        "Item",
+        "Units",
+        "UnitCost",
+        "Total"
+      ],
       "rows": [
         ["3/15/2017", "West", "Sorvino", "Pencil", "56", "2.99", "167.44"],
         ["4/1/2017", "East", "Jones", "Binder", "60", "4.99", "299.40"],
@@ -17,8 +38,17 @@
       ]
     },
     {
-      "status": "Completed",
-      "columns": ["OrderDate", "Region", "Rep", "Item", "Units", "UnitCost", "Total"],
+      "message": "Statement successfully created with id \"5678\".",
+      "status": "COMPLETED",
+      "columns": [
+        "OrderDate",
+        "Region",
+        "Rep",
+        "Item",
+        "Units",
+        "UnitCost",
+        "Total"
+      ],
       "rows": [
         ["1/6/2017", "East", "Jones", "Pencil", "95", "1.99", "189.05"],
         ["1/23/2017", "Central", "Kivell", "Binder", "50", "19.99", "999.50"],
@@ -26,8 +56,17 @@
       ]
     },
     {
-      "status": "Completed",
-      "columns": ["OrderDate", "Region", "Rep", "Item", "Units", "UnitCost", "Total"],
+      "message": "Statement successfully created with id \"9321\".",
+      "status": "COMPLETED",
+      "columns": [
+        "OrderDate",
+        "Region",
+        "Rep",
+        "Item",
+        "Units",
+        "UnitCost",
+        "Total"
+      ],
       "rows": [
         ["1/6/2017", "West", "Jones", "Pencil", "95", "1.99", "189.05"],
         ["1/6/2017", "West", "Gustavo", "Pencil", "95", "1.99", "189.05"],

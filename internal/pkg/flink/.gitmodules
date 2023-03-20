@@ -1,4 +1,0 @@
-[submodule "minispec"]
-	path = gateway_api
-	url = git@github.com:confluentinc/api.git
-	branch = flink-gateway-rest-api-minispec

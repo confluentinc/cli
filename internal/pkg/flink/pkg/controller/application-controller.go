@@ -1,10 +1,12 @@
 package controller
 
 import (
-	v2 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway"
+	"os"
+
+	v1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"
+
 	"github.com/confluentinc/flink-sql-client/components"
 	"github.com/rivo/tview"
-	"os"
 )
 
 // Tview application.
@@ -76,7 +78,7 @@ func NewApplicationController(app *tview.Application, history History) *Applicat
 }
 
 func StartApp() {
-	store := NewStore(v2.NewAPIClient(&v2.Configuration{}))
+	store := NewStore(v1.NewAPIClient(&v1.Configuration{}))
 	history := LoadHistory()
 	// Create Components
 	table := components.CreateTable()

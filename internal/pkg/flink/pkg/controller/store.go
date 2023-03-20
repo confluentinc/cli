@@ -3,32 +3,30 @@ package controller
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
-	v2 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway"
-	"github.com/google/uuid"
-	"github.com/samber/lo"
 	"net/http"
 	"os"
-	"regexp"
 	"strings"
+
+	v1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"
+	"github.com/google/uuid"
+	"github.com/samber/lo"
 )
 
 const (
 	//ops
-	configOpSet        = "SET"
-	configOpUse        = "USE"
-	configOpUseCatalog = "CATALOG"
+	configOpSet               = "SET"
+	configOpUse               = "USE"
+	configOpReset             = "RESET"
+	configOpUseCatalog        = "CATALOG"
+	configStatementTerminator = ";"
 	//keys
 	configKeyCatalog  = "default_catalog"
 	configKeyDatabase = "default_database"
 )
 
-// custom type for now until we have the SDK for result API
-type StatementResult struct {
-	Status  string     `json:"status"`
-	Columns []string   `json:"columns"`
-	Rows    [][]string `json:"rows"`
+type StoreInterface interface {
+	ProcessStatement(statement string) (*StatementResult, error)
 }
 
 type Store struct {
@@ -36,98 +34,26 @@ type Store struct {
 	index            int
 	Config           map[string]string
 	StatementResults []StatementResult
-	client           *v2.APIClient
+	client           *v1.APIClient
 }
 
-func generateUUID() string {
-	id := uuid.New()
-	return id.String()
-}
-
-// removes semicolon from end if it is present while ignoring whitespaces
-func removeQueryTerminator(query string) string {
-	idxOfSemicolon := strings.LastIndex(query, ";")
-	if idxOfSemicolon != -1 {
-		query = query[:idxOfSemicolon] + query[idxOfSemicolon+1:]
+func (s *Store) submitStatement(ctx context.Context, authToken, envId, orgId, computePoolId, statement string) (v1.SqlV1alpha1Statement, *http.Response, error) {
+	statementName, ok := s.Config["pipeline.name"]
+	if !ok || strings.TrimSpace(statementName) == "" {
+		statementName = uuid.New().String()
 	}
-	return query
-}
-
-// removes spaces, tabs and newlines
-func removeWhiteSpaces(str string) string {
-	replacer := strings.NewReplacer(" ", "", "\t", "", "\n", "")
-	return replacer.Replace(str)
-}
-
-func queryStartsWithOp(query string, op string) bool {
-	pattern := fmt.Sprintf("^%s\\b", op)
-	cleanedQuery := strings.TrimSpace(strings.ToUpper(query))
-	startsWithOp, _ := regexp.MatchString(pattern, cleanedQuery)
-	return startsWithOp
-}
-
-/*
-Expected query: "SET key=value"
-Steps to parse:
-1. Remove the semicolon if present
-2. Extract the substring after SET: "SET key=value" -> "key=value"
-3. Replace all whitespaces from this substring
-4. Then split the substring by the equals sign: "key=value" -> ["key", "value"]
-5. If the resulting array length is not equal to two or the extracted key is empty, return directly
-6. Otherwise, return the extracted key and value (value is allowed to be empty)
-*/
-func parseSETQuery(query string) (string, string) {
-	query = removeQueryTerminator(query)
-
-	indexOfSet := strings.Index(strings.ToUpper(query), configOpSet)
-	if indexOfSet == -1 {
-		return "", ""
-	}
-	startOfStrAfterSet := indexOfSet + len(configOpSet)
-	if startOfStrAfterSet >= len(query) {
-		return "", ""
-	}
-	strAfterSet := query[startOfStrAfterSet:]
-
-	strAfterSet = removeWhiteSpaces(strAfterSet)
-	keyValuePair := strings.Split(strAfterSet, "=")
-	if len(keyValuePair) != 2 || keyValuePair[0] == "" {
-		return "", ""
+	statementObj := v1.SqlV1alpha1Statement{
+		Spec: &v1.SqlV1alpha1StatementSpec{
+			StatementName: &statementName,
+			Statement:     &statement,
+			ComputePoolId: &computePoolId,
+			// Properties: todo - add local config to properties
+		},
 	}
 
-	return keyValuePair[0], keyValuePair[1]
-}
-
-/*
-Expected query: "USE CATALOG catalog_name" or "USE database_name"
-Steps to parse:
-1. Remove semicolon if present
-2. Split into words
-3. If resulting array length is smaller than 2 directly return
-4. If word length is 2, first word is "use" and second word IS NOT "catalog", second word is the database name
-5. If word length is 3, first word is "use" and second word IS "catalog", third word is the catalog name
-6. Otherwise, return empty
-*/
-func parseUSEQuery(query string) (string, string) {
-	query = removeQueryTerminator(query)
-	words := strings.Fields(query)
-	if len(words) < 2 {
-		return "", ""
-	}
-
-	isFirstWordUse := strings.ToUpper(words[0]) == configOpUse
-	isSecondWordCatalog := strings.ToUpper(words[1]) == configOpUseCatalog
-	//handle "USE database_name" query
-	if len(words) == 2 && isFirstWordUse && !isSecondWordCatalog {
-		return configKeyDatabase, words[1]
-	}
-
-	//handle "USE CATALOG catalog_name" query
-	if len(words) == 3 && isFirstWordUse && isSecondWordCatalog {
-		return configKeyCatalog, words[2]
-	}
-
-	return "", ""
+	ctx = context.WithValue(ctx, v1.ContextAccessToken, authToken)
+	createdStatement, resp, err := s.client.StatementsSqlV1alpha1Api.CreateSqlV1alpha1Statement(ctx, envId).SqlV1alpha1Statement(statementObj).Execute()
+	return createdStatement, resp, err
 }
 
 func (s *Store) waitForStatementExecution(envId, statementId string) (*StatementResult, error) {
@@ -139,28 +65,14 @@ func (s *Store) waitForStatementExecution(envId, statementId string) (*Statement
 	}, nil
 }
 
-func (s *Store) submitStatement(ctx context.Context, authToken, envId, computePoolId, query string) (v2.SqlV1alpha1Statement, *http.Response, error) {
-	statementName, ok := s.Config["pipeline.name"]
-	if !ok || strings.TrimSpace(statementName) == "" {
-		statementName = generateUUID()
-	}
-	statement := v2.SqlV1alpha1Statement{
-		Spec: &v2.SqlV1alpha1StatementSpec{
-			StatementName: &statementName,
-			Statement:     &query,
-			Environment:   &v2.GlobalObjectReference{Id: envId},
-			ComputePool:   &v2.EnvScopedObjectReference{Id: computePoolId},
-		},
-	}
-	ctx = context.WithValue(ctx, v2.ContextAccessToken, authToken)
-	createdStatement, resp, err := s.client.StatementsSqlV1alpha1Api.CreateSqlV1alpha1Statement(ctx).SqlV1alpha1Statement(statement).Execute()
-	return createdStatement, resp, err
-}
-
-func (s *Store) ProcessQuery(query string) (*StatementResult, error) {
-	isSETQuery := queryStartsWithOp(query, configOpSet)
-	if isSETQuery {
-		configKey, configVal := parseSETQuery(query)
+func (s *Store) ProcessLocalStatement(statement string) (*StatementResult, error) {
+	statementType := parseStatementType(statement)
+	switch statementType {
+	case SET_STATEMENT:
+		configKey, configVal, err := parseSETStatement(statement)
+		if err != nil {
+			return nil, err
+		}
 		if configKey == "" {
 			//return current config
 			return &StatementResult{
@@ -172,47 +84,70 @@ func (s *Store) ProcessQuery(query string) (*StatementResult, error) {
 		s.Config[configKey] = configVal
 		//return only new config row
 		return &StatementResult{
+			Message: "Config updated successfuly.",
 			Status:  "Completed",
 			Columns: []string{"Key", "Value"},
 			Rows:    [][]string{{configKey, configVal}},
 		}, nil
-	}
-
-	isUSEQuery := queryStartsWithOp(query, configOpUse)
-	if isUSEQuery {
-		configKey, configVal := parseUSEQuery(query)
-		if configKey == "" {
-			return nil, errors.New("Parsing USE query failed")
+	case USE_STATEMENT:
+		configKey, configVal, err := parseUSEStatement(statement)
+		if err != nil {
+			return nil, err
 		}
+
 		s.Config[configKey] = configVal
 		return &StatementResult{
+			Message: "Config updated successfuly.",
 			Status:  "Completed",
 			Columns: []string{"Key", "Value"},
 			Rows:    [][]string{{configKey, configVal}},
 		}, nil
+	default:
+		return nil, nil
+	}
+}
+
+func (s *Store) ProcessStatement(statement string) (*StatementResult, error) {
+	// Process local statements: set, use, reset
+	result, err := s.ProcessLocalStatement(statement)
+	if result != nil || err != nil {
+		return result, err
 	}
 
-	//TODO
+	// This is where we currently mock results, since we don't have a real backend yet
+	// TODO -> we'll receive these from the cli
 	authToken := ""
+	orgId := ""
 	envId := ""
 	computePoolId := ""
 	//return mock data
 	if authToken == "" {
-		s.index++
-		return &s.MockData[s.index%len(s.MockData)], nil
+		if !startsWithValidSQL(statement) {
+			return nil, &StatementError{"Error: Invalid syntax. Please check your statement."}
+		} else {
+			s.index++
+			return &s.MockData[s.index%len(s.MockData)], nil
+		}
 	}
 
-	statement, _, err := s.submitStatement(context.Background(), authToken, envId, computePoolId, query)
+	// Process remote statements
+	statementObj, resp, err := s.submitStatement(context.Background(), authToken, envId, orgId, computePoolId, statement)
+	err = processHttpErrors(resp, err)
 	if err != nil {
-		return nil, errors.New("Could not create statement")
+		return nil, &StatementError{err.Error()}
 	}
-	spec := statement.GetSpec()
-	environment := spec.GetEnvironment()
-	executionResult, err := s.waitForStatementExecution(environment.GetId(), statement.GetId())
-	return executionResult, err
+
+	return &StatementResult{
+		Message: *statementObj.Status.Detail,
+		Status:  PHASE(statementObj.Status.Phase),
+	}, nil
+
+	/* // TODO Result handling
+	executionResult, err := s.waitForStatementExecution(envId, statement.GetId())
+	return executionResult, err */
 }
 
-func NewStore(client *v2.APIClient) Store {
+func NewStore(client *v1.APIClient) StoreInterface {
 	store := Store{
 		Config: map[string]string{},
 		index:  0,
@@ -225,5 +160,5 @@ func NewStore(client *v2.APIClient) Store {
 	}
 	json.Unmarshal(jsonFile, &store)
 
-	return store
+	return &store
 }

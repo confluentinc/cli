@@ -3,14 +3,15 @@ package controller
 import (
 	"errors"
 	"fmt"
-	"github.com/confluentinc/flink-sql-client/autocomplete"
-	components "github.com/confluentinc/flink-sql-client/components"
-	"github.com/confluentinc/go-prompt"
-	"github.com/olekukonko/tablewriter"
 	"log"
 	"os"
 	"reflect"
 	"strings"
+
+	"github.com/confluentinc/flink-sql-client/autocomplete"
+	components "github.com/confluentinc/flink-sql-client/components"
+	"github.com/confluentinc/go-prompt"
+	"github.com/olekukonko/tablewriter"
 )
 
 type InputController struct {
@@ -20,10 +21,41 @@ type InputController struct {
 	smartCompletion bool
 	table           *TableController
 	p               *prompt.Prompt
-	store           Store
+	store           StoreInterface
 }
 
 // Actions
+//  This is the main function/loop for the app
+func (c *InputController) RunInteractiveInput() {
+
+	var statementResult *StatementResult
+	var err error
+	for c.appController.getOutputMode() == GoPromptOutput || statementResult == nil || len(statementResult.Rows) == 0 {
+		// Run interactive input and take over terminal
+		input := c.p.Input()
+		c.History.Append([]string{input})
+		statementResult, err = c.store.ProcessStatement(input)
+
+		if err == nil && statementResult.Message != "" {
+			fmt.Println(statementResult.Message)
+			fmt.Println("Current status: " + statementResult.Status + ".\n")
+		} else {
+			fmt.Println(err.Error() + "\n")
+			continue
+		}
+
+		if c.appController.getOutputMode() == GoPromptOutput {
+			// Print raw text table
+			printResultToSTDOUT(statementResult)
+		}
+	}
+
+	// If output mode is TViewOutput we display the interactive table
+	if c.appController.outputMode == TViewOutput && c.appController.tAppSuspended {
+		c.table.fetchDataAndPrintTable()
+	}
+}
+
 func (c *InputController) toggleSmartCompletion() {
 	c.smartCompletion = !c.smartCompletion
 
@@ -48,31 +80,11 @@ func (c *InputController) toggleOutputMode() {
 	components.PrintOutputModeState(c.appController.getOutputMode() == TViewOutput, maxCol)
 }
 
-func (c *InputController) RunInteractiveInput() {
-
-	for c.appController.getOutputMode() == GoPromptOutput {
-		// Run interactive input and take over terminal
-		input := c.p.Input()
-
-		c.History.Append([]string{input})
-		if c.appController.getOutputMode() == GoPromptOutput {
-			statementResult, err := c.store.ProcessQuery(input)
-			if err != nil {
-				fmt.Println("Unable to process statement. Please check if you're using valid Flink SQL.")
-				continue
-			}
-			// Print raw text table
-			printResultToSTDOUT(statementResult)
-		}
-	}
-
-	// If output mode is TViewOutput we display the interactive table
-	if c.appController.outputMode == TViewOutput && c.appController.tAppSuspended {
-		c.table.fetchDataAndPrintTable()
-	}
-}
-
 func printResultToSTDOUT(data *StatementResult) {
+	if len(data.Rows) == 0 {
+		return
+	}
+
 	rawTable := tablewriter.NewWriter(os.Stdout)
 	rawTable.SetHeader(data.Columns)
 	rawTable.AppendBulk(data.Rows)
@@ -183,7 +195,7 @@ func (c *InputController) GetMaxCol() (int, error) {
 	return int(maxCol), nil
 }
 
-func NewInputController(history History, t *TableController, a *ApplicationController, store Store) (c InputController) {
+func NewInputController(history History, t *TableController, a *ApplicationController, store StoreInterface) (c InputController) {
 	// Initialization
 	c.History = history
 	c.smartCompletion = true

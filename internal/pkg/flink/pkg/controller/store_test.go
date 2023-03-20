@@ -1,143 +1,231 @@
 package controller
 
 import (
+	"bufio"
+	"bytes"
+	"encoding/json"
+	"io"
+	"net/http"
+	"testing"
+
+	v1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-	"testing"
 )
 
 type StoreTestSuite struct {
 	suite.Suite
-	store Store
+	store StoreInterface
 }
 
 func TestStoreTestSuite(t *testing.T) {
 	suite.Run(t, new(StoreTestSuite))
 }
 
-func (s *StoreTestSuite) TestIsSETQuery() {
-	assert.True(s.T(), true, queryStartsWithOp("SET", configOpSet))
-	assert.True(s.T(), true, queryStartsWithOp("SET key", configOpSet))
-	assert.True(s.T(), true, queryStartsWithOp("SET key=value", configOpSet))
-	assert.True(s.T(), true, queryStartsWithOp("    SET key=value", configOpSet))
-	assert.True(s.T(), true, queryStartsWithOp("    SET   ", configOpSet))
-	assert.True(s.T(), true, queryStartsWithOp("    set   ", configOpSet))
-	assert.True(s.T(), true, queryStartsWithOp("    SET key=value", configOpSet))
+func (s *StoreTestSuite) TestIsSETStatement() {
+	assert.True(s.T(), true, statementStartsWithOp("SET", configOpSet))
+	assert.True(s.T(), true, statementStartsWithOp("SET key", configOpSet))
+	assert.True(s.T(), true, statementStartsWithOp("SET key=value", configOpSet))
+	assert.True(s.T(), true, statementStartsWithOp("    SET key=value", configOpSet))
+	assert.True(s.T(), true, statementStartsWithOp("    SET   ", configOpSet))
+	assert.True(s.T(), true, statementStartsWithOp("    set   ", configOpSet))
+	assert.True(s.T(), true, statementStartsWithOp("    SET key=value", configOpSet))
 
-	assert.False(s.T(), false, queryStartsWithOp("SETting", configOpSet))
-	assert.False(s.T(), false, queryStartsWithOp("", configOpSet))
-	assert.False(s.T(), false, queryStartsWithOp("should be false", configOpSet))
-	assert.False(s.T(), false, queryStartsWithOp("USE", configOpSet))
-	assert.False(s.T(), false, queryStartsWithOp("SETTING", configOpSet))
+	assert.False(s.T(), false, statementStartsWithOp("SETting", configOpSet))
+	assert.False(s.T(), false, statementStartsWithOp("", configOpSet))
+	assert.False(s.T(), false, statementStartsWithOp("should be false", configOpSet))
+	assert.False(s.T(), false, statementStartsWithOp("USE", configOpSet))
+	assert.False(s.T(), false, statementStartsWithOp("SETTING", configOpSet))
 }
 
-func (s *StoreTestSuite) TestIsUSEQuery() {
-	assert.True(s.T(), queryStartsWithOp("USE", configOpUse))
-	assert.True(s.T(), queryStartsWithOp("USE catalog", configOpUse))
-	assert.True(s.T(), queryStartsWithOp("USE CATALOG cat", configOpUse))
-	assert.True(s.T(), queryStartsWithOp("    use CATALOG cat", configOpUse))
-	assert.True(s.T(), queryStartsWithOp("    USE   ", configOpUse))
-	assert.True(s.T(), queryStartsWithOp("    use   ", configOpUse))
-	assert.True(s.T(), queryStartsWithOp("    USE CATALOG cat", configOpUse))
+func (s *StoreTestSuite) TestIsUSEStatement() {
+	assert.True(s.T(), statementStartsWithOp("USE", configOpUse))
+	assert.True(s.T(), statementStartsWithOp("USE catalog", configOpUse))
+	assert.True(s.T(), statementStartsWithOp("USE CATALOG cat", configOpUse))
+	assert.True(s.T(), statementStartsWithOp("    use CATALOG cat", configOpUse))
+	assert.True(s.T(), statementStartsWithOp("    USE   ", configOpUse))
+	assert.True(s.T(), statementStartsWithOp("    use   ", configOpUse))
+	assert.True(s.T(), statementStartsWithOp("    USE CATALOG cat", configOpUse))
 
-	assert.False(s.T(), queryStartsWithOp("SET", configOpUse))
-	assert.False(s.T(), queryStartsWithOp("USES", configOpUse))
-	assert.False(s.T(), queryStartsWithOp("", configOpUse))
-	assert.False(s.T(), queryStartsWithOp("should be false", configOpUse))
+	assert.False(s.T(), statementStartsWithOp("SET", configOpUse))
+	assert.False(s.T(), statementStartsWithOp("USES", configOpUse))
+	assert.False(s.T(), statementStartsWithOp("", configOpUse))
+	assert.False(s.T(), statementStartsWithOp("should be false", configOpUse))
 }
 
-func (s *StoreTestSuite) TestParseSETQuery() {
-	key, value := parseSETQuery("SET key=value")
+func (s *StoreTestSuite) TestParseSETStatement() {
+	key, value, _ := parseSETStatement("SET key=value")
 	assert.Equal(s.T(), "key", key)
 	assert.Equal(s.T(), "value", value)
 
-	key, value = parseSETQuery("  SET key=value;")
+	key, value, _ = parseSETStatement("  SET key=value;")
 	assert.Equal(s.T(), "key", key)
 	assert.Equal(s.T(), "value", value)
 
-	key, value = parseSETQuery("  set key=value    ;")
+	key, value, _ = parseSETStatement("  set key=value    ;")
 	assert.Equal(s.T(), "key", key)
 	assert.Equal(s.T(), "value", value)
 
-	key, value = parseSETQuery("  set key = value    ")
+	key, value, _ = parseSETStatement("  set key = value    ")
 	assert.Equal(s.T(), "key", key)
 	assert.Equal(s.T(), "value", value)
 
-	key, value = parseSETQuery("  set key     =    value    ")
+	key, value, _ = parseSETStatement("  set key     =    value    ")
 	assert.Equal(s.T(), "key", key)
 	assert.Equal(s.T(), "value", value)
 
-	key, value = parseSETQuery("  set key= value    ")
+	key, value, _ = parseSETStatement("  set key= value    ")
 	assert.Equal(s.T(), "key", key)
 	assert.Equal(s.T(), "value", value)
 
-	key, value = parseSETQuery("  set key =value    ")
+	key, value, _ = parseSETStatement("  set key =value    ")
 	assert.Equal(s.T(), "key", key)
 	assert.Equal(s.T(), "value", value)
 
-	key, value = parseSETQuery("  set key		 =value    ")
+	key, value, _ = parseSETStatement("  set key		 =value    ")
 	assert.Equal(s.T(), "key", key)
 	assert.Equal(s.T(), "value", value)
 
-	key, value = parseSETQuery("set")
+	key, value, _ = parseSETStatement("set")
 	assert.Equal(s.T(), "", key)
 	assert.Equal(s.T(), "", value)
 
-	key, value = parseSETQuery("SET")
+	key, value, _ = parseSETStatement("SET")
 	assert.Equal(s.T(), "", key)
 	assert.Equal(s.T(), "", value)
 
-	key, value = parseSETQuery(" 		sET 	")
+	key, value, _ = parseSETStatement(" 		sET 	")
 	assert.Equal(s.T(), "", key)
 	assert.Equal(s.T(), "", value)
 
-	key, value = parseSETQuery(" 		sET key	")
+	key, value, _ = parseSETStatement(" 		sET key	")
 	assert.Equal(s.T(), "", key)
 	assert.Equal(s.T(), "", value)
 
-	key, value = parseSETQuery(" 		sET key=")
-	assert.Equal(s.T(), "key", key)
-	assert.Equal(s.T(), "", value)
-
-	key, value = parseSETQuery(" 		sET key= 	")
-	assert.Equal(s.T(), "key", key)
-	assert.Equal(s.T(), "", value)
-
-	key, value = parseSETQuery(" 		sET = value	")
+	key, value, _ = parseSETStatement(" 		sET = value	")
 	assert.Equal(s.T(), "", key)
 	assert.Equal(s.T(), "", value)
 
-	key, value = parseSETQuery(" 		sET key= \nvalue	")
+	key, value, _ = parseSETStatement(" 		sET key= \nvalue	")
 	assert.Equal(s.T(), "key", key)
 	assert.Equal(s.T(), "value", value)
 }
 
-func (s *StoreTestSuite) TestParseUSEQuery() {
-	key, value := parseUSEQuery("USE CATALOG c;")
+func (s *StoreTestSuite) TestParseSETStatementerror() {
+	_, _, err := parseSETStatement("SET key")
+	assert.NotNil(s.T(), err)
+	assert.Equal(s.T(), "Error: missing \"=\". Usage example: SET key=value.", err.Error())
+
+	_, _, err = parseSETStatement("SET =")
+	assert.NotNil(s.T(), err)
+	assert.Equal(s.T(), "Error: Key and value not present. Usage example: SET key=value.", err.Error())
+
+	_, _, err = parseSETStatement("SET key=")
+	assert.NotNil(s.T(), err)
+	assert.Equal(s.T(), "Error: Value for key not present. If you want to reset a key, use \"RESET key\".", err.Error())
+
+	_, _, err = parseSETStatement("SET =value")
+	assert.NotNil(s.T(), err)
+	assert.Equal(s.T(), "Error: Key not present. Usage example: SET key=value.", err.Error())
+
+	_, _, err = parseSETStatement("SET ass=value=as")
+	assert.NotNil(s.T(), err)
+	assert.Equal(s.T(), "Error: \"=\" should only appear once. Usage example: SET key=value.", err.Error())
+}
+
+func (s *StoreTestSuite) TestParseUSEStatement() {
+	key, value, _ := parseUSEStatement("USE CATALOG c;")
 	assert.Equal(s.T(), configKeyCatalog, key)
 	assert.Equal(s.T(), "c", value)
 
-	key, value = parseUSEQuery("  use   catalog   \nc   ")
+	key, value, _ = parseUSEStatement("  use   catalog   \nc   ")
 	assert.Equal(s.T(), configKeyCatalog, key)
 	assert.Equal(s.T(), "c", value)
 
-	key, value = parseUSEQuery("  use   catalog     ")
+	key, value, _ = parseUSEStatement("  use   catalog     ")
 	assert.Equal(s.T(), "", key)
 	assert.Equal(s.T(), "", value)
 
-	key, value = parseUSEQuery("catalog   c")
+	key, value, _ = parseUSEStatement("catalog   c")
 	assert.Equal(s.T(), "", key)
 	assert.Equal(s.T(), "", value)
 
-	key, value = parseUSEQuery("  use     db   ")
+	key, value, _ = parseUSEStatement("  use     db   ")
 	assert.Equal(s.T(), configKeyDatabase, key)
 	assert.Equal(s.T(), "db", value)
 
-	key, value = parseUSEQuery("dAtaBaSe  db   ")
+	key, value, _ = parseUSEStatement("dAtaBaSe  db   ")
 	assert.Equal(s.T(), "", key)
 	assert.Equal(s.T(), "", value)
 
-	key, value = parseUSEQuery("  use     \ndatabase_name   ")
+	key, value, _ = parseUSEStatement("  use     \ndatabase_name   ")
 	assert.Equal(s.T(), configKeyDatabase, key)
 	assert.Equal(s.T(), "database_name", value)
+}
+
+func (s *StoreTestSuite) TestParseUSEStatementError() {
+	_, _, err := parseUSEStatement("USE CATALOG ;")
+	assert.NotNil(s.T(), err)
+	assert.Equal(s.T(), "Error: Missing catalog name: Usage example: USE CATALOG METADATA.", err.Error())
+
+	_, _, err = parseUSEStatement("USE;")
+	assert.NotNil(s.T(), err)
+	assert.Equal(s.T(), "Error: Missing database/catalog name: Usage examples: USE DB1 OR USE CATALOG METADATA.", err.Error())
+
+	_, _, err = parseUSEStatement("USE CATALOG DATABASE DB2;")
+	assert.NotNil(s.T(), err)
+	assert.Equal(s.T(), "Invalid syntax for USE. Usage examples: USE CATALOG my_catalog or USE my_database", err.Error())
+
+}
+
+func (s *StoreTestSuite) TestProccessHttpErrors() {
+	// given
+	res := &http.Response{
+		StatusCode: 401,
+		Body:       generateCloserFromObject(v1.NewError()),
+	}
+
+	// when
+	err := processHttpErrors(res, nil)
+
+	// expect
+	assert.NotNil(s.T(), err)
+	assert.Equal(s.T(), "Error: Unauthorized. Please consider running confluent login again.", err.Error())
+
+	// given
+	title := "Invalid syntax"
+	detail := "you should provide a table for select"
+	statementErr := &v1.Error{Error: &v1.SqlV1alpha1ErrorDetails{Title: &title, Detail: &detail}}
+	res = &http.Response{
+		StatusCode: 400,
+		Body:       generateCloserFromObject(statementErr),
+	}
+
+	// when
+	err = processHttpErrors(res, nil)
+
+	// expect
+	assert.NotNil(s.T(), err)
+	assert.Equal(s.T(), "Invalid syntax: you should provide a table for select", err.Error())
+
+	// given
+	res = &http.Response{
+		StatusCode: 500,
+		Body:       generateCloserFromObject(nil),
+	}
+
+	// when
+	err = processHttpErrors(res, nil)
+
+	// expect
+	assert.NotNil(s.T(), err)
+	assert.Equal(s.T(), "Error: received error with code \"500\" from server but could not parse it. This is not expected. Please contact support.", err.Error())
+
+}
+
+func generateCloserFromObject(obj interface{}) io.ReadCloser {
+	bts, _ := json.Marshal(obj)
+	buf := bytes.NewReader(bts)
+	reader := bufio.NewReader(buf)
+	return io.NopCloser(reader)
 }

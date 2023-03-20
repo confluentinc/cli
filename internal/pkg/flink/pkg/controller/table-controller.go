@@ -13,7 +13,7 @@ type TableController struct {
 	tableStyle      TableStyle
 	appController   *ApplicationController
 	InputController *InputController
-	store           Store
+	store           StoreInterface
 }
 
 type TableStyle struct {
@@ -134,7 +134,8 @@ func (a *TableController) appInputCapture(event *tcell.EventKey) *tcell.EventKey
 		return nil
 		// TODO we have to actually go forward and backwards and not only go to the next mock
 	} else if event.Key() == tcell.KeyCtrlN || event.Key() == tcell.KeyCtrlP {
-		data, err := a.store.ProcessQuery("")
+		// We send select so we can get the next mock
+		data, err := a.store.ProcessStatement("select ;")
 		if err == nil {
 			a.setData(data)
 		}
@@ -151,8 +152,10 @@ func (a *TableController) PrintTable(data *StatementResult) {
 	a.setData(data)
 }
 
+// This function will be changed when we actually use tview
 func (a *TableController) fetchDataAndPrintTable() {
-	data, err := a.store.ProcessQuery("")
+	// We send select so we can get the next mock
+	data, err := a.store.ProcessStatement("select ;")
 	if err != nil {
 		return
 	}
@@ -160,7 +163,7 @@ func (a *TableController) fetchDataAndPrintTable() {
 	a.focus()
 }
 
-func NewTableController(tableRef *tview.Table, store Store, appController *ApplicationController) *TableController {
+func NewTableController(tableRef *tview.Table, store StoreInterface, appController *ApplicationController) *TableController {
 	controller := &TableController{
 		table:         tableRef,
 		store:         store,
