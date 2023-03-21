@@ -167,7 +167,7 @@ func (c *command) asyncapiImport(cmd *cobra.Command, args []string) error {
 		err := c.addChannelToCluster(details, spec, topicName, topicDetails.Bindings.Kafka, flagsImp.overwrite)
 		if err != nil {
 			if err.Error() == parseErrorMessage {
-				output.Printf("\"%s\" %s.\n", topicName, parseErrorMessage)
+				output.Printf("WARNING: \"%s\" %s.\n", topicName, parseErrorMessage)
 			} else {
 				log.CliLogger.Warn(err)
 			}
