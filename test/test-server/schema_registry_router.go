@@ -28,6 +28,10 @@ const (
 	subjectLevelConfig   = "/config/{subject}"
 	modeSubject          = "/mode/{subject}"
 	asyncApi             = "/asyncapi"
+	asyncApiParse        = "/asyncapi/parse"
+	tagDefs              = "/catalog/v1/types/tagdefs"
+	catalogTags          = "/catalog/v1/entity/tags"
+	uniqueAttributes     = "/catalog/v1/entity"
 )
 
 type SRRouter struct {
@@ -67,4 +71,8 @@ func (s *SRRouter) buildSRHandler(t *testing.T) {
 	s.HandleFunc(subjectLevelConfig, s.HandleSRSubjectConfig(t))
 	s.HandleFunc(modeSubject, s.HandleSRSubjectMode(t))
 	s.HandleFunc(asyncApi, s.HandleSRAsyncApi(t))
+	s.HandleFunc(asyncApiParse, s.HandleSRAsyncApi(t))
+	s.HandleFunc(tagDefs, s.HandleSRTagDefs(t))
+	s.HandleFunc(catalogTags, s.HandleSRCatalogEntity(t))
+	s.HandleFunc(uniqueAttributes, s.HandleSRUniqueAttributes(t))
 }
