@@ -24,12 +24,12 @@ func newConfigCommand(prerunner pcmd.PreRunner) *cobra.Command {
 
 	c := &configCommand{pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner)}
 
-	c.AddCommand(c.newDescribeCommand())
-	c.AddCommand(c.newEditCommand())
-	c.AddCommand(c.newMigrateCommand())
-	c.AddCommand(c.newUpdateCommand())
+	cmd.AddCommand(c.newDescribeCommand())
+	cmd.AddCommand(c.newEditCommand())
+	cmd.AddCommand(c.newMigrateCommand())
+	cmd.AddCommand(c.newUpdateCommand())
 
-	return c.Command
+	return cmd
 }
 
 func (c *configCommand) createContext() context.Context {

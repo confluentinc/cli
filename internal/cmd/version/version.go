@@ -26,10 +26,9 @@ func New(prerunner pcmd.PreRunner, ver *pversion.Version) *cobra.Command {
 		CLICommand: pcmd.NewAnonymousCLICommand(cmd, prerunner),
 		ver:        ver,
 	}
+	cmd.RunE = c.version
 
-	c.RunE = c.version
-
-	return c.Command
+	return cmd
 }
 
 func (c *command) version(_ *cobra.Command, _ []string) error {

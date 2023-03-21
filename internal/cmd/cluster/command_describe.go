@@ -50,14 +50,13 @@ func newDescribeCommand(prerunner pcmd.PreRunner, userAgent string) *cobra.Comma
 		CLICommand: pcmd.NewAnonymousCLICommand(cmd, prerunner),
 		client:     newScopedIdService(userAgent),
 	}
+	cmd.RunE = c.describe
 
-	c.RunE = c.describe
+	cmd.Flags().String("url", "", "URL to a Confluent cluster.")
+	cmd.Flags().String("ca-cert-path", "", "Self-signed certificate chain in PEM format.")
+	pcmd.AddOutputFlag(cmd)
 
-	c.Flags().String("url", "", "URL to a Confluent cluster.")
-	c.Flags().String("ca-cert-path", "", "Self-signed certificate chain in PEM format.")
-	pcmd.AddOutputFlag(c.Command)
-
-	return c.Command
+	return cmd
 }
 
 func (c *describeCommand) describe(cmd *cobra.Command, _ []string) error {

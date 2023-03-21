@@ -24,8 +24,7 @@ import (
 
 type createCommand struct {
 	*pcmd.HasAPIKeyCLICommand
-	prerunner pcmd.PreRunner
-	clientId  string
+	clientId string
 }
 
 type clientConfig struct {
@@ -87,7 +86,7 @@ var (
 	re = regexp.MustCompile(fmt.Sprintf("%s|%s|%s", srEndpointProperty, srCredentialsSourceProperty, srUserInfoProperty))
 )
 
-func (c *clientConfigCommand) newCreateCommand() *cobra.Command {
+func (c *clientConfigCommand) newCreateCommand(prerunner pcmd.PreRunner, clientId string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "create",
 		Short:       "Create a Kafka client configuration file.",
@@ -95,9 +94,8 @@ func (c *clientConfigCommand) newCreateCommand() *cobra.Command {
 	}
 
 	cc := &createCommand{
-		HasAPIKeyCLICommand: pcmd.NewHasAPIKeyCLICommand(cmd, c.prerunner),
-		prerunner:           c.prerunner,
-		clientId:            c.clientId,
+		HasAPIKeyCLICommand: pcmd.NewHasAPIKeyCLICommand(cmd, prerunner),
+		clientId:            clientId,
 	}
 
 	for _, language := range clientConfigurations {
