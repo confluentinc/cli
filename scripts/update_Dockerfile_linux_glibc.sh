@@ -1,6 +1,6 @@
 #!/bin/bash
 
-eval $(gimme-aws-creds --output-format export --roles "arn:aws:iam::050879227952:role/administrator")
+export AWS_PROFILE=cc-production-1/prod-administrator
 aws ecr get-login-password --region us-west-1 | docker login --username AWS --password-stdin 050879227952.dkr.ecr.us-west-1.amazonaws.com
 
 new_tags="\nThe following tags ready to be pushed to ECR:\n"
