@@ -41,8 +41,8 @@ func (c *roleBindingCommand) newDeleteCommand() *cobra.Command {
 	cmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern.")
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired("principal")
-	_ = cmd.MarkFlagRequired("role")
+	cobra.CheckErr(cmd.MarkFlagRequired("principal"))
+	cobra.CheckErr(cmd.MarkFlagRequired("role"))
 
 	return cmd
 }

@@ -47,8 +47,8 @@ func (c *aclCommand) newCreateCommandOnPrem() *cobra.Command {
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired("principal")
-	_ = cmd.MarkFlagRequired("operation")
+	cobra.CheckErr(cmd.MarkFlagRequired("principal"))
+	cobra.CheckErr(cmd.MarkFlagRequired("operation"))
 
 	return cmd
 }

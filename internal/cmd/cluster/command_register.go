@@ -39,10 +39,10 @@ func newRegisterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.Flags().String("connect-cluster", "", "Kafka Connect cluster ID.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
-	_ = cmd.MarkFlagRequired("cluster-name")
-	_ = cmd.MarkFlagRequired("kafka-cluster")
-	_ = cmd.MarkFlagRequired("hosts")
-	_ = cmd.MarkFlagRequired("protocol")
+	cobra.CheckErr(cmd.MarkFlagRequired("cluster-name"))
+	cobra.CheckErr(cmd.MarkFlagRequired("kafka-cluster"))
+	cobra.CheckErr(cmd.MarkFlagRequired("hosts"))
+	cobra.CheckErr(cmd.MarkFlagRequired("protocol"))
 
 	return cmd
 }

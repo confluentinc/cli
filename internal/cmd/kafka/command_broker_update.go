@@ -37,7 +37,7 @@ func (c *brokerCommand) newUpdateCommand() *cobra.Command {
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired("config")
+	cobra.CheckErr(cmd.MarkFlagRequired("config"))
 
 	return cmd
 }

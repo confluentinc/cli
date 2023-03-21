@@ -19,7 +19,8 @@ func (c *userCommand) newUpdateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("full-name", "", "The user's full name.")
-	_ = cmd.MarkFlagRequired("full-name")
+
+	cobra.CheckErr(cmd.MarkFlagRequired("full-name"))
 
 	return cmd
 }
