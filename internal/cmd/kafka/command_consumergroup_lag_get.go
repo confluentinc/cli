@@ -33,8 +33,8 @@ func (c *lagCommand) newGetCommand() *cobra.Command {
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired("topic")
-	_ = cmd.MarkFlagRequired("partition")
+	cobra.CheckErr(cmd.MarkFlagRequired("topic"))
+	cobra.CheckErr(cmd.MarkFlagRequired("partition"))
 
 	return cmd
 }

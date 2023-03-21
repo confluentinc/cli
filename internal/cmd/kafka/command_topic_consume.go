@@ -62,6 +62,8 @@ func newConsumeCommand(prerunner pcmd.PreRunner, clientId string) *cobra.Command
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	cmd.Flags().String("environment", "", "Environment ID.")
 
+	cobra.CheckErr(cmd.MarkFlagFilename("config-file", "avro", "json"))
+
 	return cmd
 }
 

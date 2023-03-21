@@ -20,7 +20,7 @@ func (c *command) newGenerateFunction() *cobra.Command {
 	cmd.Flags().String("local-secrets-file", "", "Path to the local encrypted configuration properties file.")
 	cmd.Flags().String("passphrase", "", `The key passphrase. To pipe from stdin use "-", e.g. "--passphrase -". To read from a file use "@<path-to-file>", e.g. "--passphrase @/User/bob/secret.properties".`)
 
-	_ = cmd.MarkFlagRequired("local-secrets-file")
+	cobra.CheckErr(cmd.MarkFlagRequired("local-secrets-file"))
 
 	return cmd
 }

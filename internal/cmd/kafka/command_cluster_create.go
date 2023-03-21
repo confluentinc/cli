@@ -76,8 +76,8 @@ func (c *clusterCommand) newCreateCommand(cfg *v1.Config) *cobra.Command {
 	}
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired("cloud")
-	_ = cmd.MarkFlagRequired("region")
+	cobra.CheckErr(cmd.MarkFlagRequired("cloud"))
+	cobra.CheckErr(cmd.MarkFlagRequired("region"))
 
 	return cmd
 }

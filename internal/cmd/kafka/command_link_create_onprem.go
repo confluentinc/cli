@@ -45,7 +45,7 @@ func (c *linkCommand) newCreateCommandOnPrem() *cobra.Command {
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
-	_ = cmd.MarkFlagRequired(destinationClusterIdFlagName)
+	cobra.CheckErr(cmd.MarkFlagRequired(destinationClusterIdFlagName))
 
 	return cmd
 }
