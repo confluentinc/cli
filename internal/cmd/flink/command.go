@@ -18,7 +18,7 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 
 	c := &command{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
 
-	cmd.AddCommand(c.newSqlStatementCommand())
+	cmd.AddCommand(c.newStatementCommand())
 
 	return cmd
 }

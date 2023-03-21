@@ -3,11 +3,11 @@ package test
 func (s *CLITestSuite) TestFlinkHelp() {
 	tests := []CLITest{
 		{args: "flink -h", fixture: "flink/help.golden"},
-		{args: "flink sql-statement -h", fixture: "flink/sql-statement/help.golden"},
-		{args: "flink sql-statement create -h", fixture: "flink/sql-statement/create-help.golden"},
-		{args: "flink sql-statement delete -h", fixture: "flink/sql-statement/delete-help.golden"},
-		{args: "flink sql-statement describe -h", fixture: "flink/sql-statement/describe-help.golden"},
-		{args: "flink sql-statement list -h", fixture: "flink/sql-statement/list-help.golden"},
+		{args: "flink statement -h", fixture: "flink/statement/help.golden"},
+		{args: "flink statement create -h", fixture: "flink/statement/create-help.golden"},
+		{args: "flink statement delete -h", fixture: "flink/statement/delete-help.golden"},
+		{args: "flink statement describe -h", fixture: "flink/statement/describe-help.golden"},
+		{args: "flink statement list -h", fixture: "flink/statement/list-help.golden"},
 	}
 
 	for _, tt := range tests {
@@ -16,12 +16,12 @@ func (s *CLITestSuite) TestFlinkHelp() {
 	}
 }
 
-func (s *CLITestSuite) TestFlinkSqlStatement() {
+func (s *CLITestSuite) TestFlinkStatement() {
 	tests := []CLITest{
-		{args: "flink sql-statement create", fixture: "flink/sql-statement/create.golden"},
-		{args: "flink sql-statement delete", fixture: "flink/sql-statement/delete.golden"},
-		{args: "flink sql-statement describe", fixture: "flink/sql-statement/describe.golden"},
-		{args: "flink sql-statement list", fixture: "flink/sql-statement/list.golden"},
+		{args: "flink statement create", fixture: "flink/statement/create.golden"},
+		{args: "flink statement delete", fixture: "flink/statement/delete.golden"},
+		{args: "flink statement describe", fixture: "flink/statement/describe.golden"},
+		{args: "flink statement list", fixture: "flink/statement/list.golden"},
 	}
 
 	for _, tt := range tests {
