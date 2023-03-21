@@ -46,8 +46,8 @@ func (c *command) newClusterEnableCommand() *cobra.Command {
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired("cloud")
-	_ = cmd.MarkFlagRequired("geo")
+	cobra.CheckErr(cmd.MarkFlagRequired("cloud"))
+	cobra.CheckErr(cmd.MarkFlagRequired("geo"))
 
 	pcmd.RegisterFlagCompletionFunc(cmd, "geo", func(_ *cobra.Command, _ []string) []string { return availableGeos })
 

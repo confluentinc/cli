@@ -33,8 +33,8 @@ func (c *command) newSchemaDeleteCommandOnPrem() *cobra.Command {
 	pcmd.AddForceFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
-	_ = cmd.MarkFlagRequired("subject")
-	_ = cmd.MarkFlagRequired("version")
+	cobra.CheckErr(cmd.MarkFlagRequired("subject"))
+	cobra.CheckErr(cmd.MarkFlagRequired("version"))
 
 	return cmd
 }

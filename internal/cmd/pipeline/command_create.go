@@ -40,8 +40,12 @@ func (c *command) newCreateCommand(enableSourceCode bool) *cobra.Command {
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 
-	_ = cmd.MarkFlagRequired("ksql-cluster")
-	_ = cmd.MarkFlagRequired("name")
+	if enableSourceCode {
+		cobra.CheckErr(cmd.MarkFlagFilename("sql-file", "sql"))
+	}
+
+	cobra.CheckErr(cmd.MarkFlagRequired("ksql-cluster"))
+	cobra.CheckErr(cmd.MarkFlagRequired("name"))
 
 	return cmd
 }

@@ -32,7 +32,7 @@ func (c *linkCommand) newConfigurationUpdateCommandOnPrem() *cobra.Command {
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
-	_ = cmd.MarkFlagRequired(configFileFlagName)
+	cobra.CheckErr(cmd.MarkFlagRequired(configFileFlagName))
 
 	return cmd
 }
