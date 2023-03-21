@@ -31,6 +31,9 @@ func (c *kafkaCommand) newProduceCommand() *cobra.Command {
 }
 
 func (c *kafkaCommand) produce(cmd *cobra.Command, args []string) error {
+	if c.Config.LocalPorts == nil {
+		return errors.NewErrorWithSuggestions(errors.FailedToReadPortsErrorMsg, errors.FailedToReadPortsSuggestions)
+	}
 	producer, err := newOnPremProducer(cmd, ":"+c.Config.LocalPorts.PlaintextPort)
 	if err != nil {
 		return errors.NewErrorWithSuggestions(fmt.Errorf(errors.FailedToCreateProducerErrorMsg, err).Error(), errors.OnPremConfigGuideSuggestions)

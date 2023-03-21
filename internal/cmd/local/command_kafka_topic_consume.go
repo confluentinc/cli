@@ -18,8 +18,7 @@ import (
 func (c *kafkaCommand) newConsumeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "consume",
-		Short: "---",
-		Long:  "---",
+		Short: "Consume messages from the test Kafka topic.",
 		Args:  cobra.NoArgs,
 		RunE:  c.consume,
 	}
@@ -54,6 +53,9 @@ func (c *kafkaCommand) consume(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	if c.Config.LocalPorts == nil {
+		return errors.NewErrorWithSuggestions(errors.FailedToReadPortsErrorMsg, errors.FailedToReadPortsSuggestions)
+	}
 	consumer, err := newOnPremConsumer(cmd, ":"+c.Config.LocalPorts.PlaintextPort)
 	if err != nil {
 		return errors.NewErrorWithSuggestions(fmt.Errorf(errors.FailedToCreateConsumerErrorMsg, err).Error(), errors.OnPremConfigGuideSuggestions)

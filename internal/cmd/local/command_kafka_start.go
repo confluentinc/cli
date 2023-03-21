@@ -3,6 +3,7 @@ package local
 import (
 	"context"
 	"fmt"
+	"runtime"
 	"strconv"
 
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -22,8 +23,7 @@ import (
 func (c *kafkaCommand) newStartCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "start",
-		Short: "---",
-		Long:  "---",
+		Short: "Start local kafka service",
 		Args:  cobra.NoArgs,
 		RunE:  c.start,
 	}
@@ -43,10 +43,6 @@ func (c *kafkaCommand) start(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	err = c.prepareValidPorts()
-	if err != nil {
-		return err
-	}
 	// pull the image from ecr. it will be public so no creds needed?
 	// out, err := cli.ImagePull(ctx, imageName, types.ImagePullOptions{})
 	// if err != nil {
@@ -56,9 +52,16 @@ func (c *kafkaCommand) start(cmd *cobra.Command, args []string) error {
 	// io.Copy(os.Stdout, out)
 	// log.CliLogger.Tracef("Pull confluent-local image success")
 
-	// create container
+	err = c.prepareValidPorts()
+	if err != nil {
+		return err
+	}
+
+	if c.Config.LocalPorts == nil {
+		return errors.NewErrorWithSuggestions(errors.FailedToReadPortsErrorMsg, errors.FailedToReadPortsSuggestions)
+	}
 	ports := c.Config.LocalPorts
-	platform := &specsv1.Platform{OS: "linux", Architecture: "amd64"}
+	platform := &specsv1.Platform{OS: "linux", Architecture: runtime.GOARCH}
 	config := &container.Config{
 		Image:        imageName,
 		Hostname:     "broker",
@@ -67,7 +70,6 @@ func (c *kafkaCommand) start(cmd *cobra.Command, args []string) error {
 		Env: []string{
 			"KAFKA_BROKER_ID=1",
 			"KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT",
-			// "KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://broker:29092,PLAINTEXT_HOST://localhost:9092", // fix
 			fmt.Sprintf("KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://broker:%s,PLAINTEXT_HOST://localhost:%s", ports.BrokerPort, ports.PlaintextPort),
 			"KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1",
 			"KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS=0",
@@ -75,17 +77,13 @@ func (c *kafkaCommand) start(cmd *cobra.Command, args []string) error {
 			"KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1",
 			"KAFKA_PROCESS_ROLES=broker,controller",
 			"KAFKA_NODE_ID=1",
-			// "KAFKA_CONTROLLER_QUORUM_VOTERS=1@broker:29093", // fix
 			fmt.Sprintf("KAFKA_CONTROLLER_QUORUM_VOTERS=1@broker:%s", ports.ControllerPort),
-			// "KAFKA_LISTENERS=PLAINTEXT://broker:29092,CONTROLLER://broker:29093,PLAINTEXT_HOST://0.0.0.0:9092", // fix
 			fmt.Sprintf("KAFKA_LISTENERS=PLAINTEXT://broker:%s,CONTROLLER://broker:%s,PLAINTEXT_HOST://0.0.0.0:%s", ports.BrokerPort, ports.ControllerPort, ports.PlaintextPort),
 			"KAFKA_INTER_BROKER_LISTENER_NAME=PLAINTEXT",
 			"KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER",
 			"KAFKA_LOG_DIRS=/tmp/kraft-combined-logs",
 			"KAFKA_REST_HOST_NAME=rest-proxy",
-			// "KAFKA_REST_BOOTSTRAP_SERVERS=broker:29092", // fix
 			fmt.Sprintf("KAFKA_REST_BOOTSTRAP_SERVERS=broker:%s", ports.BrokerPort),
-			// "KAFKA_REST_LISTENERS=http://0.0.0.0:8082", // fix
 			fmt.Sprintf("KAFKA_REST_LISTENERS=http://0.0.0.0:%s", ports.RestPort),
 		},
 	}

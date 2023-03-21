@@ -23,7 +23,7 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 		cmd.Hidden = true
 	}
 
-	cmd.AddCommand(NewKafkaCommand(prerunner))
+	cmd.AddCommand(newKafkaCommand(prerunner))
 
 	return cmd
 }
