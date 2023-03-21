@@ -10,6 +10,8 @@ channels:
     subscribe:
       tags:
         - name: topic_tag
+        - name: topic_tag_2
+        - name: topic_tag_3
       operationId: Topic1Subscribe
       bindings:
         kafka:
