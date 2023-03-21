@@ -513,6 +513,8 @@ func handleKafkaRPConfigsAlter(t *testing.T) http.HandlerFunc {
 				}
 				// No error
 				w.WriteHeader(http.StatusNoContent)
+			} else if topicName == "topic1" {
+				w.WriteHeader(http.StatusOK)
 			} else { // topic-not-exist
 				// not found
 				require.NoError(t, writeErrorResponse(w, http.StatusNotFound, 40403, "This server does not host this topic-partition."))

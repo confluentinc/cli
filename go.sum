@@ -137,8 +137,8 @@ github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787 h1:hHiVn9s
 github.com/confluentinc/properties v0.0.0-20190814194548-42c10394a787/go.mod h1:e8oa6xV9gIddL04yTbRjly4s7U3Fn57PAOUMTUPibUA=
 github.com/confluentinc/proto-go-setter v0.3.0 h1:6BhgpDV5rWdEa+6LsnQWGV1udFboCaNtIsOG/G8LKoU=
 github.com/confluentinc/proto-go-setter v0.3.0/go.mod h1:WJkmDZf4f/nxGzjYJ+o3AsXI2hk64gLM5XlZrmlzs1s=
-github.com/confluentinc/schema-registry-sdk-go v0.0.19 h1:aKiPW1M/l7XgcxCvwiU1avrQIeRuy84YsKUFI9+efjs=
-github.com/confluentinc/schema-registry-sdk-go v0.0.19/go.mod h1:wS+qdKbvuAhZYwkAaH3mLV1qGe5WME6Ty7bW/Vpm8P0=
+github.com/confluentinc/schema-registry-sdk-go v0.0.20 h1:fblWwmneHxrZz6me/bEhEHhUEQbPHvg02ABHaBF4lbM=
+github.com/confluentinc/schema-registry-sdk-go v0.0.20/go.mod h1:rz5jgOSmMgeVGCzqsI01SdpmGtkb1nFYtfh67SyzZL4=
 github.com/cpuguy83/go-md2man/v2 v2.0.2/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/davecgh/go-spew v0.0.0-20151105211317-5215b55f46b2/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
@@ -954,3 +954,4 @@ sigs.k8s.io/structured-merge-diff/v4 v4.2.3 h1:PRbqxJClWWYMNV1dhaG4NsibJbArud9kF
 sigs.k8s.io/structured-merge-diff/v4 v4.2.3/go.mod h1:qjx8mGObPmV2aSZepjQjbmb2ihdVs8cGKBraizNC69E=
 sigs.k8s.io/yaml v1.1.0/go.mod h1:UJmg0vDUVViEyp3mgSv9WPwZCDxu4rQW1olrI1uml+o=
 sigs.k8s.io/yaml v1.3.0 h1:a2VclLzOGrwOHDiV8EfBGhvjHvP46CtW5j6POvhYGGo=
+sigs.k8s.io/yaml v1.3.0/go.mod h1:GeOyir5tyXNByN85N/dRIT9es5UQNerPYEKK56eTBm8=
