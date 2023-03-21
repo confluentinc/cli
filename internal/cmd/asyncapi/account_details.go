@@ -127,6 +127,14 @@ func (c *command) countAsyncApiUsage(details *accountDetails) error {
 	return nil
 }
 
+func (c *command) countAsyncApiParseUsage(details *accountDetails) error {
+	_, err := details.srClient.DefaultApi.AsyncapiParsePut(details.srContext)
+	if err != nil {
+		return fmt.Errorf("failed to access AsyncAPI parse metric endpoint: %v\n", err)
+	}
+	return nil
+}
+
 func (d *accountDetails) buildMessageEntity() *spec.MessageEntity {
 	entityProducer := new(spec.MessageEntity)
 	entityProducer.WithContentType(d.channelDetails.contentType)
