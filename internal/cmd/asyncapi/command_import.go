@@ -26,9 +26,10 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/types"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-const parseErrorMessage string = "topic is already present and overwrite flag is false"
+const parseErrorMessage string = "topic is already present and `--overwrite` is not set"
 
 type flagsImport struct {
 	overwrite               bool
@@ -153,12 +154,12 @@ func (c *command) asyncapiImport(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	// Getting Kafka Cluster & SR
-	flagsExport := flags{
+	flagsExport := &flags{
 		kafkaApiKey:             flagsImp.kafkaApiKey,
 		schemaRegistryApiKey:    flagsImp.schemaRegistryApiKey,
 		schemaRegistryApiSecret: flagsImp.schemaRegistryApiSecret,
 	}
-	details, err := c.getAccountDetails(&flagsExport)
+	details, err := c.getAccountDetails(flagsExport)
 	if err != nil {
 		return err
 	}
@@ -236,7 +237,7 @@ func (c *command) addTopic(details *accountDetails, topicName string, kafkaBindi
 	for _, topics := range details.topics {
 		if topics.TopicName == topicName {
 			// Topic already exists
-			log.CliLogger.Infof("Topic \"%s\" is already present.", topicName)
+			log.CliLogger.Warnf("Topic \"%s\" already exists.", topicName)
 			if !overwrite {
 				// Do not overwrite existing topic. Move to the next topic.
 				return true, false, nil
@@ -412,7 +413,7 @@ func addSchemaTags(details *accountDetails, components Components, topicName str
 		if err != nil {
 			return err
 		}
-		output.Printf("Tags %v added to schema \"%d\".\n", tagNames, schemaId)
+		output.Printf("Tags %s added to schema \"%d\".\n", utils.ArrayToCommaDelimitedString(tagNames, "and"), schemaId)
 	}
 	return nil
 }
@@ -443,7 +444,7 @@ func addTopicTags(details *accountDetails, subscribe Operation, topicName string
 	if err != nil {
 		return err
 	}
-	output.Printf("Tags %v added to Kafka topic \"%s\"\n", tagNames, topicName)
+	output.Printf("Tags %s added to Kafka topic \"%s\"\n", utils.ArrayToCommaDelimitedString(tagNames, "and"), topicName)
 	return nil
 }
 

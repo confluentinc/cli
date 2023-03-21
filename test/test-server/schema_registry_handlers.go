@@ -487,6 +487,7 @@ func (c *SRRouter) HandleSRCatalogEntity(t *testing.T) http.HandlerFunc {
 	}
 }
 
+// Handler for "/catalog/v1/entity"
 func (c *SRRouter) HandleSRUniqueAttributes(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
