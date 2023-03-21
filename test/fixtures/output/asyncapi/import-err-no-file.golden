@@ -3,7 +3,7 @@ Usage:
   confluent asyncapi import <specification-file> [flags]
 
 Examples:
-Import an AsyncAPI specification file to populate an existing Kafka cluster and Schema Registry
+Import an AsyncAPI specification file to populate an existing Kafka cluster and Schema Registry.
 
   $ confluent asyncapi import spec.yaml
 

@@ -1,4 +1,5 @@
-Schema registered under subject "topic1-value" with ID "1".
-Tags added to schema "1".
-Tags added to Kafka topic "topic1"
-AsyncAPI specification imported from "./test/fixtures/input/asyncapi/asyncapi-spec.yaml"
+Updated topic "topic1".
+Registered schema under subject "topic1-value".
+Tags [schema_tag] added to schema "1".
+Tags [topic_tag] added to Kafka topic "topic1"
+Added description to topic "topic1".

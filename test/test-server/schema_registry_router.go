@@ -30,6 +30,7 @@ const (
 	asyncApi             = "/asyncapi"
 	tagDefs              = "/catalog/v1/types/tagdefs"
 	catalogTags          = "/catalog/v1/entity/tags"
+	uniqueAttributes     = "/catalog/v1/entity"
 )
 
 type SRRouter struct {
@@ -71,4 +72,5 @@ func (s *SRRouter) buildSRHandler(t *testing.T) {
 	s.HandleFunc(asyncApi, s.HandleSRAsyncApi(t))
 	s.HandleFunc(tagDefs, s.HandleSRTagDefs(t))
 	s.HandleFunc(catalogTags, s.HandleSRCatalogEntity(t))
+	s.HandleFunc(uniqueAttributes, s.HandleSRUniqueAttributes(t))
 }

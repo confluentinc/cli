@@ -486,3 +486,18 @@ func (c *SRRouter) HandleSRCatalogEntity(t *testing.T) http.HandlerFunc {
 		}
 	}
 }
+
+func (c *SRRouter) HandleSRUniqueAttributes(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch r.Method {
+		case http.MethodPut:
+			var req srsdk.AtlasEntityWithExtInfo
+			err := json.NewDecoder(r.Body).Decode(&req)
+			require.NoError(t, err)
+			if req.Entity.Attributes["description"] != nil {
+				w.WriteHeader(http.StatusOK)
+			}
+		}
+	}
+}

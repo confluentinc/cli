@@ -6,6 +6,7 @@ servers:
   confluentSchemaRegistry: []
 channels:
   topic1:
+    description: "topic1 description"
     subscribe:
       tags:
         - name: topic_tag

@@ -94,11 +94,11 @@ func newImportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "import <specification-file>",
 		Short: "Populate cluster using AsyncAPI specification file.",
-		Long:  "Add topics, schemas and tags from the AsyncAPI YAML specification file to the active Confluent Cloud cluster.",
+		Long:  "Add topics, schemas, and tags from the AsyncAPI YAML specification file to the active Confluent Cloud cluster.",
 		Args:  cobra.ExactArgs(1),
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Import an AsyncAPI specification file to populate an existing Kafka cluster and Schema Registry",
+				Text: "Import an AsyncAPI specification file to populate an existing Kafka cluster and Schema Registry.",
 				Code: "confluent asyncapi import spec.yaml",
 			},
 		),
@@ -166,13 +166,12 @@ func (c *command) asyncapiImport(cmd *cobra.Command, args []string) error {
 		err := c.addChannelToCluster(details, spec, topicName, topicDetails.Bindings.Kafka, flagsImp.overwrite)
 		if err != nil {
 			if err.Error() == parseErrorMessage {
-				log.CliLogger.Info(err)
+				output.Printf("\"%s\" %s.\n", topicName, parseErrorMessage)
 			} else {
 				log.CliLogger.Warn(err)
 			}
 		}
 	}
-	output.Printf("AsyncAPI specification imported from \"%s\"\n", args[0])
 	return nil
 }
 
@@ -190,9 +189,8 @@ func fileToSpec(fileName string) (*Spec, error) {
 }
 
 func (c *command) addChannelToCluster(details *accountDetails, spec *Spec, topicName string, kafkaBinding kafkaBinding, overwrite bool) error {
-	topicExistedAlready, newTopicCreated, err := c.addTopic(details, topicName, spec.Channels[topicName].Description, kafkaBinding, overwrite)
+	topicExistedAlready, newTopicCreated, err := c.addTopic(details, topicName, kafkaBinding, overwrite)
 	if err != nil {
-		// unable to create kafka topic
 		log.CliLogger.Warn(err)
 	}
 	// If topic exists and overwrite flag is false, move to the next channel in spec
@@ -207,16 +205,16 @@ func (c *command) addChannelToCluster(details *accountDetails, spec *Spec, topic
 	// Update subject compatibility
 	if spec.Channels[topicName].XMessageCompatibility != "" {
 		if err := updateSubjectCompatibility(details, spec.Channels[topicName].XMessageCompatibility, topicName+"-value"); err != nil {
-			return err
+			log.CliLogger.Warn(err)
 		}
 	}
 	// Add tags
 	if err := addSchemaTags(details, spec.Components, topicName, schemaId); err != nil {
-		return err
+		log.CliLogger.Warn(err)
 	}
 	if topicExistedAlready || newTopicCreated {
 		if err := addTopicTags(details, spec.Channels[topicName].Subscribe, topicName); err != nil {
-			return err
+			log.CliLogger.Warn(err)
 		}
 	}
 	// Add topic description to newly created topic
@@ -225,22 +223,23 @@ func (c *command) addChannelToCluster(details *accountDetails, spec *Spec, topic
 			spec.Channels[topicName].Description); err != nil {
 			return fmt.Errorf("unable to update topic description: %v", err)
 		}
+		output.Printf("Added description to topic \"%s\".\n", topicName)
 	}
 	return nil
 }
 
-func (c *command) addTopic(details *accountDetails, topicName string, description string, kafkaBinding kafkaBinding, overwrite bool) (bool, bool, error) {
+func (c *command) addTopic(details *accountDetails, topicName string, kafkaBinding kafkaBinding, overwrite bool) (bool, bool, error) {
 	// Check if topic already exists
 	for _, topics := range details.topics {
 		if topics.TopicName == topicName {
 			// Topic already exists
-			log.CliLogger.Info("Topic is already present.")
+			log.CliLogger.Infof("Topic \"%s\" is already present.", topicName)
 			if !overwrite {
 				// Do not overwrite existing topic. Move to the next topic.
 				return true, false, nil
 			}
 			// Overwrite existing topic
-			err := c.updateTopic(details, topicName, description, kafkaBinding)
+			err := c.updateTopic(details, topicName, kafkaBinding)
 			return true, false, err
 		}
 	}
@@ -282,7 +281,7 @@ func (c *command) createTopic(details *accountDetails, topicName string, kafkaBi
 	return true, nil
 }
 
-func (c *command) updateTopic(details *accountDetails, topicName, description string, kafkaBinding kafkaBinding) error {
+func (c *command) updateTopic(details *accountDetails, topicName string, kafkaBinding kafkaBinding) error {
 	// Overwrite topic configs
 	updateConfigs := []kafkarestv3.AlterConfigBatchRequestDataData{}
 	modifiableConfigs := []string{}
@@ -316,12 +315,6 @@ func (c *command) updateTopic(details *accountDetails, topicName, description st
 		}
 	}
 	output.Printf(errors.UpdatedResourceMsg, resource.Topic, topicName)
-	if description != "" {
-		if err = addTopicDescription(details.srClient, details.srContext, fmt.Sprintf("%s:%s", details.clusterId, topicName),
-			description); err != nil {
-			return fmt.Errorf("unable to update topic description: %v", err)
-		}
-	}
 	return nil
 }
 
@@ -372,7 +365,7 @@ func registerSchema(details *accountDetails, topicName string, components Compon
 		if err != nil {
 			return 0, fmt.Errorf("unable to register schema: %v", err)
 		}
-		output.Printf("Schema registered under subject \"%s\" with ID \"%d\".\n", subject, id.Id)
+		output.Printf("Registered schema under subject \"%s\".\n", subject)
 		return id.Id, nil
 	}
 	return 0, fmt.Errorf("schema payload not found in YAML input file")
@@ -392,8 +385,9 @@ func updateSubjectCompatibility(details *accountDetails, compatibility string, s
 
 func addSchemaTags(details *accountDetails, components Components, topicName string, schemaId int32) error {
 	// Schema level tags
-	var tagConfigs []srsdk.Tag
-	var tagDefConfigs []srsdk.TagDef
+	tagConfigs := []srsdk.Tag{}
+	tagDefConfigs := []srsdk.TagDef{}
+	tagNames := []string{}
 	if components.Messages != nil {
 		if components.Messages[strcase.ToCamel(topicName)+"Message"].Tags == nil {
 			return nil
@@ -409,12 +403,13 @@ func addSchemaTags(details *accountDetails, components Components, topicName str
 				EntityType: "sr_schema",
 				EntityName: fmt.Sprintf("%s:.:%s", details.srCluster.Id, strconv.Itoa(int(schemaId))),
 			})
+			tagNames = append(tagNames, tag.Name)
 		}
 		err := addTagsUtil(details, tagDefConfigs, tagConfigs)
 		if err != nil {
 			return err
 		}
-		output.Printf("Tags added to schema \"%d\".\n", schemaId)
+		output.Printf("Tags %v added to schema \"%d\".\n", tagNames, schemaId)
 	}
 	return nil
 }
@@ -427,6 +422,7 @@ func addTopicTags(details *accountDetails, subscribe Operation, topicName string
 	}
 	tagConfigs := []srsdk.Tag{}
 	tagDefConfigs := []srsdk.TagDef{}
+	tagNames := []string{}
 	for _, tag := range subscribe.TopicTags {
 		tagDefConfigs = append(tagDefConfigs, srsdk.TagDef{
 			// tag of type cf_entity so that it can be attached at any topic or schema level
@@ -438,12 +434,13 @@ func addTopicTags(details *accountDetails, subscribe Operation, topicName string
 			EntityType: "kafka_topic",
 			EntityName: fmt.Sprintf("%s:%s:%s", details.srCluster.Id, details.clusterId, topicName),
 		})
+		tagNames = append(tagNames, tag.Name)
 	}
 	err := addTagsUtil(details, tagDefConfigs, tagConfigs)
 	if err != nil {
 		return err
 	}
-	output.Printf("Tags added to Kafka topic \"%s\"\n", topicName)
+	output.Printf("Tags %v added to Kafka topic \"%s\"\n", tagNames, topicName)
 	return nil
 }
 

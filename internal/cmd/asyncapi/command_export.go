@@ -179,7 +179,7 @@ func (c *command) getChannelDetails(details *accountDetails, flags *flags) error
 	if err != nil {
 		log.CliLogger.Warnf("Failed to get subject's compatibility type")
 	}
-	output.Printf("Added topic: %s\n", details.channelDetails.currentTopic.GetTopicName())
+	output.Printf("Added topic: \"%s\".\n", details.channelDetails.currentTopic.GetTopicName())
 	return nil
 }
 
