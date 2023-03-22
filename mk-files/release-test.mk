@@ -1,7 +1,7 @@
 .PHONY: verify-stag
 verify-stag:
 	OVERRIDE_S3_FOLDER=$(S3_STAG_FOLDER_NAME) make verify-archive-installer
-	OVERRIDE_S3_FOLDER=$(S3_STAG_FOLDER_NAME) make smoke-tests
+	$(call dry-run,OVERRIDE_S3_FOLDER=$(S3_STAG_FOLDER_NAME) make smoke-tests)
 	VERIFY_BIN_FOLDER=$(S3_STAG_PATH) make verify-binaries
 
 .PHONY: verify-prod
@@ -18,8 +18,7 @@ verify-archive-installer:
 # if ARCHIVES_VERSION is empty, latest folder will be tested
 .PHONY: test-installer
 test-installer:
-	@echo Running packaging/installer tests
-	@bash test-installer.sh $(ARCHIVES_VERSION)
+	$(call dry-run,bash test-installer.sh $(ARCHIVES_VERSION))
 
 # check that the expected binaries are present and have --acl public-read
 .PHONY: verify-binaries
