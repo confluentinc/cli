@@ -22,6 +22,7 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(c.newComputePoolCommand())
 	cmd.AddCommand(c.newRegionCommand())
 	cmd.AddCommand(c.newStatementCommand())
+	cmd.AddCommand(c.newStartFlinkSqlClientCommand())
 
 	return cmd
 }
