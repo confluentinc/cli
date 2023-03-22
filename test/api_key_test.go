@@ -173,6 +173,6 @@ func (s *CLITestSuite) TestAPIKeyCreate_ServiceAccountNotValid() {
 }
 
 func (s *CLITestSuite) TestAPIKey_EnvironmentNotValid() {
-	tt := CLITest{args: "api-key list --resource lkc-dne", login: "cloud", env: []string{fmt.Sprintf("%s=no-environment-user@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}, fixture: "api-key/no-env.golden", exitCode: 1}
+	tt := CLITest{args: "api-key list --resource lkc-dne", login: "cloud", env: []string{fmt.Sprintf("%s=no-environment-user@example.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}, fixture: "api-key/no-env.golden", exitCode: 1}
 	s.runIntegrationTest(tt)
 }

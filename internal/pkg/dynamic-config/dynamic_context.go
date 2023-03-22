@@ -236,7 +236,7 @@ func (d *DynamicContext) AuthenticatedEnvId() (string, error) {
 	if env := d.GetEnvironment(); env != nil {
 		return env.Id, nil
 	} else {
-		return "", errors.NewErrorWithSuggestions(errors.EnvNotSetErrorMsg, errors.EnvNotSetSuggestions)
+		return "", errors.NewErrorWithSuggestions(errors.NoEnvironmentFoundErrorMsg, errors.NoEnvironmentFoundSuggestions)
 	}
 }
 

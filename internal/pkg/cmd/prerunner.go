@@ -168,7 +168,7 @@ func (c *AuthenticatedCLICommand) AuthToken() string {
 
 func (c *AuthenticatedCLICommand) EnvironmentId() string {
 	if c.Context.GetEnvironment() == nil {
-		output.ErrPrintln(errors.EnvNotSetErrorMsg + errors.ComposeSuggestionsMessage(errors.EnvNotSetSuggestions))
+		output.ErrPrintln(errors.NoEnvironmentFoundErrorMsg + errors.ComposeSuggestionsMessage(errors.NoEnvironmentFoundSuggestions))
 	}
 	return c.Context.GetEnvironment().GetId()
 }
