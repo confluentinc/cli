@@ -47,6 +47,7 @@ include ./mk-files/cc-cli-service.mk
 include ./mk-files/dockerhub.mk
 include ./mk-files/semver.mk
 include ./mk-files/docs.mk
+include ./mk-files/dry-run.mk
 include ./mk-files/release.mk
 include ./mk-files/release-test.mk
 include ./mk-files/release-notes.mk
@@ -105,7 +106,6 @@ ifdef CI
 else
 	go build -ldflags="-s -w -X main.commit=$(REF) -X main.date=$(DATE) -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
 endif
-
 
 .PHONY: integration-test
 integration-test:
