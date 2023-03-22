@@ -145,7 +145,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	if err := c.countAsyncApiUsage(accountDetails); err != nil {
-		log.CliLogger.Warn(err)
+		log.CliLogger.Debug(err)
 	}
 	output.Printf("AsyncAPI specification written to \"%s\".\n", flags.file)
 	return os.WriteFile(flags.file, yaml, 0644)
@@ -179,7 +179,7 @@ func (c *command) getChannelDetails(details *accountDetails, flags *flags) error
 	// x-messageCompatibility
 	details.channelDetails.mapOfMessageCompat, err = getMessageCompatibility(details.srClient, details.srContext, details.channelDetails.currentSubject)
 	if err != nil {
-		log.CliLogger.Warnf("Failed to get subject's compatibility type")
+		log.CliLogger.Warnf("Failed to get subject's compatibility type: %v", err)
 	}
 	output.Printf("Added topic \"%s\".\n", details.channelDetails.currentTopic.GetTopicName())
 	return nil

@@ -1,5 +1,6 @@
 Updated topic "topic1".
 Registered schema under subject "topic1-value".
+Subject level compatibility updated to "FORWARD" for subject "topic1-value".
 Tags "schema_tag" added to schema "1".
-Tags "topic_tag", "topic_tag_2", and "topic_tag_3" added to Kafka topic "topic1"
+Tags "topic_tag", "topic_tag_2", and "topic_tag_3" added to Kafka topic "topic1".
 Added description to topic "topic1".

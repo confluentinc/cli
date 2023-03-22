@@ -185,8 +185,7 @@ func fileToSpec(fileName string) (*Spec, error) {
 		return nil, err
 	}
 	spec := new(Spec)
-	err = yaml.Unmarshal(asyncSpec, spec)
-	if err != nil {
+	if err := yaml.Unmarshal(asyncSpec, spec); err != nil {
 		return nil, fmt.Errorf("unable to unmarshal YAML file: %v", err)
 	}
 	return spec, nil
@@ -383,7 +382,7 @@ func updateSubjectCompatibility(details *accountDetails, compatibility string, s
 	if err != nil {
 		return fmt.Errorf("failed to update subject level compatibility: %v", err)
 	}
-	log.CliLogger.Infof("Subject level compatibility updated to %s", config.Compatibility)
+	output.Printf("Subject level compatibility updated to \"%s\" for subject \"%s\".\n", config.Compatibility, subject)
 	return nil
 }
 
@@ -444,7 +443,7 @@ func addTopicTags(details *accountDetails, subscribe Operation, topicName string
 	if err != nil {
 		return err
 	}
-	output.Printf("Tags %s added to Kafka topic \"%s\"\n", utils.ArrayToCommaDelimitedString(tagNames, "and"), topicName)
+	output.Printf("Tags %s added to Kafka topic \"%s\".\n", utils.ArrayToCommaDelimitedString(tagNames, "and"), topicName)
 	return nil
 }
 

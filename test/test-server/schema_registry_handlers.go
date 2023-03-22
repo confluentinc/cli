@@ -437,12 +437,13 @@ func (c *SRRouter) HandleSRTagDefs(t *testing.T) http.HandlerFunc {
 		w.Header().Set("Content-Type", "application/json")
 		switch r.Method {
 		case http.MethodPost:
+			tagDefs := []srsdk.TagDef{
+				{Name: "schema_tag"},
+				{Name: "topic_tag"},
+			}
 			w.WriteHeader(http.StatusOK)
 			err := json.NewEncoder(w).Encode(
-				[]srsdk.TagDef{
-					{Name: "schema_tag"},
-					{Name: "topic_tag"},
-				})
+				tagDefs)
 			require.NoError(t, err)
 		}
 	}
