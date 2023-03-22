@@ -114,7 +114,7 @@ builds:
         - cmd: gon dist/gon_confluent_arm64.hcl
 
 release:
-  disable: {{.Env.DRY_RUN}}
+  disable: "{{.Env.DRY_RUN}}"
 
 archives:
   - id: binary
