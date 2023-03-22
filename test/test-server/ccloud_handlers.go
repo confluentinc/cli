@@ -99,7 +99,7 @@ func (c *CloudRouter) HandleMe(t *testing.T, isAuditLogEnabled bool) http.Handle
 		}
 
 		accounts := environments
-		if os.Getenv("CONFLUENT_CLOUD_EMAIL") == "new@user.com" {
+		if os.Getenv("CONFLUENT_CLOUD_EMAIL") == "no-environment-user@example.com" {
 			accounts = []*ccloudv1.Account{}
 		}
 		b, err := ccloudv1.MarshalJSONToBytes(&ccloudv1.GetMeReply{
