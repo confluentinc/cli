@@ -66,7 +66,7 @@ const (
 	EnvNotFoundErrorMsg            = `environment "%s" not found`
 	OrgResourceNotFoundSuggestions = "List available %[1]ss with `confluent %[1]s list`."
 	EnvSwitchErrorMsg              = "failed to switch environment: failed to save config"
-	EnvNotSetErrorMsg              = "no environment found"
+	NoEnvironmentFoundErrorMsg     = "no environment found"
 	EnvNotSetSuggestions           = "This issue may occur if this user has no valid role bindings. Contact an Organization Admin to create a role binding for this user."
 
 	// iam acl & kafka acl commands
