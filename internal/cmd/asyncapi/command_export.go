@@ -78,6 +78,8 @@ func newExportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 
+	cobra.CheckErr(cmd.MarkFlagFilename("file", "yaml", "yml"))
+
 	return cmd
 }
 

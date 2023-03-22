@@ -28,7 +28,7 @@ func (c *partitionCommand) newListCommand() *cobra.Command {
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired("topic")
+	cobra.CheckErr(cmd.MarkFlagRequired("topic"))
 
 	return cmd
 }

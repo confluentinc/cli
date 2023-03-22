@@ -28,7 +28,7 @@ func (c *ksqlCommand) newCreateCommand() *cobra.Command {
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired("credential-identity")
+	cobra.CheckErr(cmd.MarkFlagRequired("credential-identity"))
 
 	return cmd
 }

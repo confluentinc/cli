@@ -37,9 +37,9 @@ func (c *aclCommand) newCreateCommand() *cobra.Command {
 	cmd.Flags().AddFlagSet(aclFlags())
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
-	_ = cmd.MarkFlagRequired("kafka-cluster")
-	_ = cmd.MarkFlagRequired("principal")
-	_ = cmd.MarkFlagRequired("operation")
+	cobra.CheckErr(cmd.MarkFlagRequired("kafka-cluster"))
+	cobra.CheckErr(cmd.MarkFlagRequired("principal"))
+	cobra.CheckErr(cmd.MarkFlagRequired("operation"))
 
 	return cmd
 }
