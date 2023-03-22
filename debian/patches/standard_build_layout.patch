@@ -1,6 +1,6 @@
---- cli/Makefile	2023-03-22 12:45:03
+--- cli/Makefile	2023-03-22 15:55:54
 +++ debian/Makefile	2023-03-21 10:41:40
-@@ -1,129 +1,130 @@
+@@ -1,128 +1,130 @@
 -SHELL              := /bin/bash
 -ALL_SRC            := $(shell find . -name "*.go" | grep -v -e vendor)
 -GORELEASER_VERSION := v1.15.2
@@ -169,8 +169,20 @@
 -build-for-integration-test:
 -ifdef CI
 -	go build -cover -ldflags="-s -w -X main.commit=$(REF) -X main.date=$(DATE) -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
+-else
+-	go build -ldflags="-s -w -X main.commit=$(REF) -X main.date=$(DATE) -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
+-endif
 +RPM_VERSION=$(shell echo $(VERSION) | sed -e 's/-alpha[0-9]*//' -e 's/-beta[0-9]*//' -e 's/-rc[0-9]*//' -e 's/-SNAPSHOT//' -e 's/-cp[0-9]*//' -e 's/-hotfix[0-9]*//' -e 's/-[0-9]*//')
-+
+ 
+-.PHONY: integration-test
+-integration-test:
+-ifdef CI
+-	go install gotest.tools/gotestsum@v1.8.2 && \
+-	export GOCOVERDIR=test/coverage && \
+-	if [ -d $${GOCOVERDIR} ]; then rm -r $${GOCOVERDIR}; fi && \
+-	mkdir $${GOCOVERDIR} && \
+-	gotestsum --junitfile integration-test-report.xml -- -v -race $$(go list ./... | grep test) && \
+-	go tool covdata textfmt -i $${GOCOVERDIR} -o test/coverage.out
 +# Get any -alpha, -beta (preview), -rc (release candidate), -SNAPSHOT (nightly), -cp (confluent patch), -hotfix piece that we need to put into the Release part of
 +# the version since RPM versions don't support non-numeric
 +# characters. Ultimately, for something like 0.8.2-beta, we want to end up with
@@ -183,10 +195,12 @@
 +	RPM_RELEASE_POSTFIX_UNDERSCORE=_$(RPM_RELEASE_POSTFIX)
 +	RPM_RELEASE_ID=0.$(REVISION).$(RPM_RELEASE_POSTFIX)
  else
--	go build -ldflags="-s -w -X main.commit=$(REF) -X main.date=$(DATE) -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
+-	go test -v $$(go list ./... | grep test) $(INTEGRATION_TEST_ARGS)
 +	RPM_RELEASE_ID=$(REVISION)
  endif
  
+-.PHONY: test
+-test: unit-test integration-test
 +rpm: RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz
 +	echo "Building the RPM"
 +	rpmbuild --define="_topdir `pwd`/RPM_BUILDING" --nodebuginfo -tb $< || rpmbuild --define="_topdir `pwd`/RPM_BUILDING" -tb $<
@@ -197,18 +211,9 @@
 +	@ls -laF $(FULL_PACKAGE_TITLE)*rpm
 +	echo "================================================="
  
--.PHONY: integration-test
--integration-test:
--ifdef CI
--	go install gotest.tools/gotestsum@v1.8.2 && \
--	export GOCOVERDIR=test/coverage && \
--	if [ -d $${GOCOVERDIR} ]; then rm -r $${GOCOVERDIR}; fi && \
--	mkdir $${GOCOVERDIR} && \
--	gotestsum --junitfile integration-test-report.xml -- -v -race $$(go list ./... | grep test) && \
--	go tool covdata textfmt -i $${GOCOVERDIR} -o test/coverage.out
--else
--	go test -v $$(go list ./... | grep test) $(INTEGRATION_TEST_ARGS)
--endif
+-.PHONY: generate-packaging-patch
+-generate-packaging-patch:
+-	diff -u Makefile debian/Makefile | sed "1 s_Makefile_cli/Makefile_" > debian/patches/standard_build_layout.patch
 +# Unfortunately, because of version naming issues and the way rpmbuild expects
 +# the paths in the tar file to be named, we need to rearchive the package. So
 +# instead of depending on archive, this target just uses the unarchived,
@@ -222,14 +227,9 @@
 +	sed "s/##RPMVERSION##/$(RPM_VERSION)/g; s/##RPMRELEASE##/$(RPM_RELEASE_ID)/g" < debian/$(FULL_PACKAGE_TITLE).spec.in > $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)/$(FULL_PACKAGE_TITLE).spec
 +	rm -f $@ && tar -czf $@ $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
 +	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
- 
--.PHONY: test
--test: unit-test integration-test
++
 +rpm-build-area: RPM_BUILDING/BUILD RPM_BUILDING/RPMS RPM_BUILDING/SOURCES RPM_BUILDING/SPECS RPM_BUILDING/SRPMS
- 
--.PHONY: generate-packaging-patch
--generate-packaging-patch:
--	diff -u Makefile debian/Makefile | sed "1 s_Makefile_cli/Makefile_" > debian/patches/standard_build_layout.patch
++
 +RPM_BUILDING/%:
 +	mkdir -p $@
 +
