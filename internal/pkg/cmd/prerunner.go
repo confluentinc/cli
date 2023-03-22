@@ -168,8 +168,7 @@ func (c *AuthenticatedCLICommand) AuthToken() string {
 
 func (c *AuthenticatedCLICommand) EnvironmentId() string {
 	if c.Context.GetEnvironment() == nil {
-		noEnvSuggestions := errors.ComposeSuggestionsMessage("This issue may occur if this user has no valid role bindings. Contact an Organization Admin to create a role binding for this user.")
-		output.ErrPrintln(errors.EnvNotSetErrorMsg + noEnvSuggestions)
+		output.ErrPrintln(errors.NoEnvironmentFoundErrorMsg + errors.ComposeSuggestionsMessage(errors.NoEnvironmentFoundSuggestions))
 	}
 	return c.Context.GetEnvironment().GetId()
 }
