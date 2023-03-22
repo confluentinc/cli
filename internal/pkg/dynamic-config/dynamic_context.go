@@ -229,11 +229,15 @@ func (d *DynamicContext) HasLogin() bool {
 }
 
 func (d *DynamicContext) AuthenticatedEnvId() (string, error) {
-	state, err := d.AuthenticatedState()
-	if err != nil {
+	if _, err := d.AuthenticatedState(); err != nil {
 		return "", err
 	}
-	return state.Auth.Account.Id, nil
+
+	if env := d.GetEnvironment(); env != nil {
+		return env.Id, nil
+	} else {
+		return "", errors.NewErrorWithSuggestions(errors.EnvNotSetErrorMsg, errors.EnvNotSetSuggestions)
+	}
 }
 
 // AuthenticatedState returns the context's state if authenticated, and an error otherwise.
