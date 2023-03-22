@@ -1,0 +1,4 @@
+Error: an environment is required; no environments found
+
+Suggestions:
+    This issue may occur if this user has no valid role bindings. Contact an Organization Admin to create a role binding for this user.
