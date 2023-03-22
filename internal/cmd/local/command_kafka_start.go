@@ -89,6 +89,12 @@ func (c *kafkaCommand) start(cmd *cobra.Command, args []string) error {
 	}
 	hostConfig := &container.HostConfig{
 		PortBindings: nat.PortMap{
+			nat.Port(ports.RestPort + "/tcp"): []nat.PortBinding{
+				{
+					HostIP:   "0.0.0.0",
+					HostPort: ports.RestPort,
+				},
+			},
 			nat.Port(ports.PlaintextPort + "/tcp"): []nat.PortBinding{
 				{
 					HostIP:   "0.0.0.0",

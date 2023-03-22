@@ -17,10 +17,10 @@ import (
 
 func (c *kafkaCommand) newConsumeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "consume",
+		Use:   "consume <topic>",
+		Args:  cobra.ExactArgs(1),
 		Short: "Consume messages from the test Kafka topic.",
-		Args:  cobra.NoArgs,
-		RunE:  c.consume,
+		RunE:  c.topicConsume,
 	}
 
 	cmd.Flags().String("group", "", "Consumer group ID.")
@@ -35,7 +35,7 @@ func (c *kafkaCommand) newConsumeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *kafkaCommand) consume(cmd *cobra.Command, args []string) error {
+func (c *kafkaCommand) topicConsume(cmd *cobra.Command, args []string) error {
 	ctx := context.Background()
 
 	printKey, err := cmd.Flags().GetBool("print-key")
@@ -62,6 +62,18 @@ func (c *kafkaCommand) consume(cmd *cobra.Command, args []string) error {
 	}
 	log.CliLogger.Tracef("Create consumer succeeded")
 
+	adminClient, err := ckafka.NewAdminClientFromConsumer(consumer)
+	if err != nil {
+		return fmt.Errorf(errors.FailedToCreateAdminClientErrorMsg, err)
+	}
+	defer adminClient.Close()
+
+	topicName := args[0]
+	err = kafka.ValidateTopic(adminClient, topicName)
+	if err != nil {
+		return err
+	}
+
 	if cmd.Flags().Changed("from-beginning") && cmd.Flags().Changed("offset") {
 		return errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "from-beginning", "offset")
 	}
@@ -81,7 +93,7 @@ func (c *kafkaCommand) consume(cmd *cobra.Command, args []string) error {
 	}
 
 	rebalanceCallback := kafka.GetRebalanceCallback(offset, partitionFilter)
-	if err := consumer.Subscribe(testTopicName, rebalanceCallback); err != nil {
+	if err := consumer.Subscribe(topicName, rebalanceCallback); err != nil {
 		return err
 	}
 

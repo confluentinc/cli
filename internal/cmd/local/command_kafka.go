@@ -6,6 +6,9 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
+const imageName = "523370736235.dkr.ecr.us-west-2.amazonaws.com/confluentinc/kafka-local:latest"
+const urlPrefix = "http://0.0.0.0:%s"
+
 type kafkaCommand struct {
 	*pcmd.CLICommand
 }
@@ -22,6 +25,6 @@ func newKafkaCommand(prerunner pcmd.PreRunner) *cobra.Command {
 
 	cmd.AddCommand(c.newStartCommand())
 	cmd.AddCommand(c.newStopCommand())
-	cmd.AddCommand(c.newTopicCommand(prerunner))
+	cmd.AddCommand(c.newTopicCommand())
 	return cmd
 }

@@ -94,7 +94,7 @@ func (c *authenticatedTopicCommand) produceOnPrem(cmd *cobra.Command, args []str
 	defer adminClient.Close()
 
 	topicName := args[0]
-	err = c.validateTopic(adminClient, topicName)
+	err = ValidateTopic(adminClient, topicName)
 	if err != nil {
 		return err
 	}

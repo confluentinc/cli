@@ -2,6 +2,7 @@ package kafka
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"regexp"
 	"strings"
@@ -25,14 +26,15 @@ func initKafkaRest(c *pcmd.AuthenticatedCLICommand, cmd *cobra.Command) (*kafkar
 		return nil, nil, err
 	}
 	kafkaRestClient := kafkaREST.Client
-	setServerURL(cmd, kafkaRestClient, url)
+	SetServerURL(cmd, kafkaRestClient, url)
+	fmt.Println("url", url)
 	return kafkaRestClient, kafkaREST.Context, nil
 }
 
 // Used for on-prem KafkaRest commands
 // Embedded KafkaRest uses /kafka/v3 and standalone uses /v3
 // Relying on users to include the /kafka in the url for embedded instances
-func setServerURL(cmd *cobra.Command, client *kafkarestv3.APIClient, url string) {
+func SetServerURL(cmd *cobra.Command, client *kafkarestv3.APIClient, url string) {
 	url = strings.Trim(url, "/")   // localhost:8091/kafka/v3/ --> localhost:8091/kafka/v3
 	url = strings.Trim(url, "/v3") // localhost:8091/kafka/v3 --> localhost:8091/kafka
 	protocolRgx := regexp.MustCompile(`(\w+)://`)

@@ -17,10 +17,10 @@ import (
 
 func (c *kafkaCommand) newProduceCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "produce",
+		Use:   "produce <topic>",
+		Args:  cobra.ExactArgs(1),
 		Short: "Produce messages to the test Kafka topic.",
-		Args:  cobra.NoArgs,
-		RunE:  c.produce,
+		RunE:  c.topicProduce,
 	}
 
 	cmd.Flags().Bool("parse-key", false, "Parse key from the message.")
@@ -30,7 +30,7 @@ func (c *kafkaCommand) newProduceCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *kafkaCommand) produce(cmd *cobra.Command, args []string) error {
+func (c *kafkaCommand) topicProduce(cmd *cobra.Command, args []string) error {
 	if c.Config.LocalPorts == nil {
 		return errors.NewErrorWithSuggestions(errors.FailedToReadPortsErrorMsg, errors.FailedToReadPortsSuggestions)
 	}
@@ -40,6 +40,18 @@ func (c *kafkaCommand) produce(cmd *cobra.Command, args []string) error {
 	}
 	defer producer.Close()
 	log.CliLogger.Tracef("Create producer succeeded")
+
+	adminClient, err := ckafka.NewAdminClientFromProducer(producer)
+	if err != nil {
+		return fmt.Errorf(errors.FailedToCreateAdminClientErrorMsg, err)
+	}
+	defer adminClient.Close()
+
+	topicName := args[0]
+	err = kafka.ValidateTopic(adminClient, topicName)
+	if err != nil {
+		return err
+	}
 
 	serializationProvider, err := serdes.GetSerializationProvider("string")
 	if err != nil {
@@ -86,7 +98,7 @@ func (c *kafkaCommand) produce(cmd *cobra.Command, args []string) error {
 			continue
 		}
 
-		msg, err := kafka.GetProduceMessage(cmd, []byte{0, 0, 0, 0}, testTopicName, data, serializationProvider)
+		msg, err := kafka.GetProduceMessage(cmd, []byte{0, 0, 0, 0}, topicName, data, serializationProvider)
 		if err != nil {
 			return err
 		}
@@ -98,7 +110,7 @@ func (c *kafkaCommand) produce(cmd *cobra.Command, args []string) error {
 		e := <-deliveryChan                // read a ckafka event from the channel
 		m := e.(*ckafka.Message)           // extract the message from the event
 		if m.TopicPartition.Error != nil { // catch all other errors
-			isProduceToCompactedTopicError, err := errors.CatchProduceToCompactedTopicError(err, testTopicName)
+			isProduceToCompactedTopicError, err := errors.CatchProduceToCompactedTopicError(err, topicName)
 			if isProduceToCompactedTopicError {
 				scanErr = err
 				close(input)
