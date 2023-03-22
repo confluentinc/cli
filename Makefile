@@ -47,6 +47,7 @@ include ./mk-files/cc-cli-service.mk
 include ./mk-files/dockerhub.mk
 include ./mk-files/semver.mk
 include ./mk-files/docs.mk
+include ./mk-files/dry-run.mk
 include ./mk-files/release.mk
 include ./mk-files/release-test.mk
 include ./mk-files/release-notes.mk
