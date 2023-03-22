@@ -3,9 +3,10 @@ package autocomplete
 import (
 	_ "embed"
 	"encoding/json"
-	"github.com/confluentinc/go-prompt"
 	"log"
 	"sort"
+
+	"github.com/confluentinc/go-prompt"
 )
 
 //go:embed code_snippets.json

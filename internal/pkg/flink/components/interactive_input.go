@@ -1,11 +1,14 @@
 package components
 
 import (
+	_ "embed"
 	"fmt"
-	"log"
 	"os"
 	"strings"
 )
+
+//go:embed flink_ascii_60_with_text.txt
+var flinkAsciiArt []byte
 
 var LivePrefixState struct {
 	LivePrefix string
@@ -71,22 +74,14 @@ func IsInputClosingSelect(input string) bool {
 }
 
 func init() {
-	// Print Flink's ASCII Art
-	b, err := os.ReadFile("components/flink_ascii_60_with_text.txt")
-	if err != nil {
-		log.Printf("Couldn't read flink's ascii art. Error: %v\n", err)
-	}
-
-	// TODO - After setting up the event loop, we could maybe use tcell to get the
-	// terminal's width so we disable printing the ascii art if the terminal is too small
+	// TODO - check terminal's width so we disable printing the ascii art if the terminal is too small
+	// we can use tview or go-prompt for this. Either GetMaxCol from inputController or use tcell like this:
 	/* screen, _ := tcell.NewScreen()
 	   screen.Init()
 
 	   w, h := screen.Size() */
-	// Right now, go-prompt get's executed first so this isn't possible
-	// But we can always just delete the ascii art - it's just a gimmick
 
-	fmt.Println(string(b))
+	fmt.Println(string(flinkAsciiArt))
 
 	// Print welcome message
 	fmt.Fprintf(os.Stdout, "Welcome! \033[0m%s \033[0;36m%s. \033[0m \n \n", "Flink SQL Client powered", "by Confluent")

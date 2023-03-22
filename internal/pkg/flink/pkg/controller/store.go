@@ -2,16 +2,18 @@ package controller
 
 import (
 	"context"
+	_ "embed"
 	"encoding/json"
-	"fmt"
 	"net/http"
-	"os"
 	"strings"
 
 	v1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"
 	"github.com/google/uuid"
 	"github.com/samber/lo"
 )
+
+//go:embed mock-data.json
+var mockData []byte
 
 const (
 	//ops
@@ -154,11 +156,7 @@ func NewStore(client *v1.APIClient) StoreInterface {
 		client: client,
 	}
 	// Opening mock data
-	jsonFile, err := os.ReadFile("mock-data.json")
-	if err != nil {
-		fmt.Println(err)
-	}
-	json.Unmarshal(jsonFile, &store)
+	json.Unmarshal(mockData, &store)
 
 	return &store
 }
