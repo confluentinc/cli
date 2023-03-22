@@ -302,7 +302,7 @@ func TestArrayToCommaDelimitedString(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		out := ArrayToCommaDelimitedString(tt.input)
+		out := ArrayToCommaDelimitedString(tt.input, "or")
 		require.Equal(t, tt.expected, out)
 	}
 }

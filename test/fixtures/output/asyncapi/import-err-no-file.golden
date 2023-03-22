@@ -1,0 +1,20 @@
+Error: accepts 1 arg(s), received 0
+Usage:
+  confluent asyncapi import <specification-file> [flags]
+
+Examples:
+Import an AsyncAPI specification file to populate an existing Kafka cluster and Schema Registry.
+
+  $ confluent asyncapi import spec.yaml
+
+Flags:
+      --overwrite                           Overwrite existing topics with the same name.
+      --kafka-api-key string                Kafka cluster API key.
+      --schema-registry-api-key string      API key for Schema Registry.
+      --schema-registry-api-secret string   API secret for Schema Registry.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
