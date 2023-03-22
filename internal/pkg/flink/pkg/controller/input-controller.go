@@ -211,5 +211,7 @@ func NewInputController(history History, t *TableController, a *ApplicationContr
 	c.appController = a
 	c.store = store
 	c.p = c.Prompt()
+	components.PrintWelcomeHeader()
+
 	return c
 }

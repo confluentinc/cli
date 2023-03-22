@@ -73,7 +73,8 @@ func IsInputClosingSelect(input string) bool {
 	return strings.HasPrefix(strings.ToUpper(input), "SELECT") && input[len(input)-1] == ';'
 }
 
-func init() {
+// This prints flinks ascii art, welcome message and shortcuts
+func PrintWelcomeHeader() {
 	// TODO - check terminal's width so we disable printing the ascii art if the terminal is too small
 	// we can use tview or go-prompt for this. Either GetMaxCol from inputController or use tcell like this:
 	/* screen, _ := tcell.NewScreen()
