@@ -36,9 +36,17 @@ func (c *InputController) RunInteractiveInput() {
 		c.History.Append([]string{input})
 		statementResult, err = c.store.ProcessStatement(input)
 
-		if err == nil && statementResult.Message != "" {
-			fmt.Println(statementResult.Message)
-			fmt.Println("Current status: " + statementResult.Status + ".\n")
+		if err == nil {
+			if statementResult.Message != "" {
+				fmt.Println(statementResult.Message)
+			}
+			if statementResult.Status != "" {
+				fmt.Println("Current status: " + statementResult.Status + ".")
+			}
+			// We only print a new line if a status or a message are shown
+			if statementResult.Message != "" || statementResult.Status != "" {
+				fmt.Println("")
+			}
 		} else {
 			fmt.Println(err.Error() + "\n")
 			continue

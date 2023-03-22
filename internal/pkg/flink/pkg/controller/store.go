@@ -76,7 +76,7 @@ func (s *Store) ProcessLocalStatement(statement string) (*StatementResult, error
 		if configKey == "" {
 			//return current config
 			return &StatementResult{
-				Status:  "Completed",
+				Message: "Current properties set:",
 				Columns: []string{"Key", "Value"},
 				Rows:    lo.MapToSlice(s.Config, func(key, val string) []string { return []string{key, val} }),
 			}, nil
