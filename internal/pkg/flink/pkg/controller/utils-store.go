@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	v1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"
+	"github.com/samber/lo"
 
 	"github.com/confluentinc/flink-sql-client/config"
 )
@@ -49,6 +50,71 @@ const (
 	OTHER_STATEMENT StatementType = "OTHER"
 )
 
+func processSetStatement(statement string, s *Store) (*StatementResult, error) {
+	configKey, configVal, err := parseSetStatement(statement)
+	if err != nil {
+		return nil, err
+	}
+	if configKey == "" {
+
+		return &StatementResult{
+			Status:  "Completed",
+			Columns: []string{"Key", "Value"},
+			Rows:    lo.MapToSlice(s.Config, func(key, val string) []string { return []string{key, val} }),
+		}, nil
+	}
+	s.Config[configKey] = configVal
+
+	return &StatementResult{
+		Message: "Config updated successfuly.",
+		Status:  "Completed",
+		Columns: []string{"Key", "Value"},
+		Rows:    [][]string{{configKey, configVal}},
+	}, nil
+}
+
+func processResetStatement(statement string, s *Store) (*StatementResult, error) {
+	configKey, err := parseResetStatement(statement)
+	if err != nil {
+		return nil, err
+	}
+	if configKey == "" {
+		s.Config = make(map[string]string)
+		return &StatementResult{
+			Message: "Configuration has been reset successfuly.",
+			Status:  "Completed",
+		}, nil
+	} else {
+		_, keyExists := s.Config[configKey]
+		if !keyExists {
+			return nil, &StatementError{fmt.Sprintf("Error: Config key \"%s\" is currently not set.", configKey)}
+		}
+
+		delete(s.Config, configKey)
+		return &StatementResult{
+			Message: fmt.Sprintf("Config key \"%s\" has been reset successfuly.", configKey),
+			Status:  "Completed",
+			Columns: []string{"Key", "Value"},
+			Rows:    lo.MapToSlice(s.Config, func(key, val string) []string { return []string{key, val} }),
+		}, nil
+	}
+}
+
+func processUseStatement(statement string, s *Store) (*StatementResult, error) {
+	configKey, configVal, err := parseUseStatement(statement)
+	if err != nil {
+		return nil, err
+	}
+
+	s.Config[configKey] = configVal
+	return &StatementResult{
+		Message: "Config updated successfuly.",
+		Status:  "Completed",
+		Columns: []string{"Key", "Value"},
+		Rows:    [][]string{{configKey, configVal}},
+	}, nil
+}
+
 /*
 Expected statement: "SET key=value"
 Steps to parse:
@@ -59,7 +125,7 @@ Steps to parse:
 5. If the resulting array length is not equal to two or the extracted key is empty, return directly
 6. Otherwise, return the extracted key and value (value is allowed to be empty)
 */
-func parseSETStatement(statement string) (string, string, error) {
+func parseSetStatement(statement string) (string, string, error) {
 	statement = removeStatementTerminator(statement)
 
 	indexOfSet := strings.Index(strings.ToUpper(statement), configOpSet)
@@ -115,7 +181,7 @@ Steps to parse:
 5. If word length is 3, first word is "use" and second word IS "catalog", third word is the catalog name
 6. Otherwise, return empty
 */
-func parseUSEStatement(statement string) (string, string, error) {
+func parseUseStatement(statement string) (string, string, error) {
 	statement = removeStatementTerminator(statement)
 	words := strings.Fields(statement)
 	if len(words) < 2 {
@@ -140,6 +206,34 @@ func parseUSEStatement(statement string) (string, string, error) {
 	}
 
 	return "", "", &StatementError{"Invalid syntax for USE. Usage examples: USE CATALOG my_catalog or USE my_database"}
+}
+
+/* Expected statement: "RESET pipeline.name" */
+func parseResetStatement(statement string) (string, error) {
+	statement = removeStatementTerminator(statement)
+	words := strings.Fields(statement)
+	if len(words) == 0 {
+		return "", &StatementError{"Error: Invalid syntax for RESET. Usage example: RESET key."}
+	}
+
+	// This is the case where we reset the entire config (e.g. "RESET")
+	if len(words) == 1 {
+		return "", nil
+	}
+
+	if len(words) == 2 {
+		isFirstWordReset := strings.ToUpper(words[0]) == configOpReset
+		key := strings.ToLower(words[1])
+		if isFirstWordReset {
+			return key, nil
+		}
+	}
+
+	if len(words) > 2 {
+		return "", &StatementError{"Error: too many keys for RESET provided. Usage example: RESET key."}
+	}
+
+	return "", &StatementError{"Error: Invalid syntax for RESET. Usage example: RESET key."}
 }
 
 func processHttpErrors(resp *http.Response, err error) error {
@@ -186,7 +280,7 @@ func startsWithValidSQL(statement string) bool {
 	return exists
 }
 
-// Removes semicolon from end if it is present while ignoring whitespaces
+// Removes leading, trailling spaces, and semicolon from end, if present
 func removeStatementTerminator(s string) string {
 	for strings.HasSuffix(s, configStatementTerminator) {
 		s = strings.TrimSuffix(s, configStatementTerminator)
@@ -201,7 +295,7 @@ func removeTabNewLineAndWhitesSpaces(str string) string {
 }
 
 func statementStartsWithOp(statement string, op string) bool {
-	cleanedStatement := strings.TrimSpace(strings.ToUpper(statement))
+	cleanedStatement := strings.ToUpper(statement)
 	pattern := fmt.Sprintf("^%s\\b", op)
 	startsWithOp, _ := regexp.MatchString(pattern, cleanedStatement)
 	return startsWithOp

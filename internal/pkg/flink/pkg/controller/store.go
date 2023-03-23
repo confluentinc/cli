@@ -9,7 +9,6 @@ import (
 
 	v1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"
 	"github.com/google/uuid"
-	"github.com/samber/lo"
 )
 
 //go:embed mock-data.json
@@ -68,48 +67,22 @@ func (s *Store) waitForStatementExecution(envId, statementId string) (*Statement
 }
 
 func (s *Store) ProcessLocalStatement(statement string) (*StatementResult, error) {
-	statementType := parseStatementType(statement)
-	switch statementType {
+	switch statementType := parseStatementType(statement); statementType {
 	case SET_STATEMENT:
-		configKey, configVal, err := parseSETStatement(statement)
-		if err != nil {
-			return nil, err
-		}
-		if configKey == "" {
-			//return current config
-			return &StatementResult{
-				Message: "Current properties set:",
-				Columns: []string{"Key", "Value"},
-				Rows:    lo.MapToSlice(s.Config, func(key, val string) []string { return []string{key, val} }),
-			}, nil
-		}
-		s.Config[configKey] = configVal
-		//return only new config row
-		return &StatementResult{
-			Message: "Config updated successfuly.",
-			Status:  "Completed",
-			Columns: []string{"Key", "Value"},
-			Rows:    [][]string{{configKey, configVal}},
-		}, nil
+		return processSetStatement(statement, s)
+	case RESET_STATEMENT:
+		return processResetStatement(statement, s)
 	case USE_STATEMENT:
-		configKey, configVal, err := parseUSEStatement(statement)
-		if err != nil {
-			return nil, err
-		}
-
-		s.Config[configKey] = configVal
-		return &StatementResult{
-			Message: "Config updated successfuly.",
-			Status:  "Completed",
-			Columns: []string{"Key", "Value"},
-			Rows:    [][]string{{configKey, configVal}},
-		}, nil
+		return processUseStatement(statement, s)
 	default:
 		return nil, nil
 	}
 }
 
 func (s *Store) ProcessStatement(statement string) (*StatementResult, error) {
+	// We trim the statement here once so we don't have to do it in every function
+	statement = strings.TrimSpace(statement)
+
 	// Process local statements: set, use, reset
 	result, err := s.ProcessLocalStatement(statement)
 	if result != nil || err != nil {

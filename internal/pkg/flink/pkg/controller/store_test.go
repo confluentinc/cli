@@ -42,10 +42,10 @@ func (s *StoreTestSuite) TestIsUSEStatement() {
 	assert.True(s.T(), statementStartsWithOp("USE", configOpUse))
 	assert.True(s.T(), statementStartsWithOp("USE catalog", configOpUse))
 	assert.True(s.T(), statementStartsWithOp("USE CATALOG cat", configOpUse))
-	assert.True(s.T(), statementStartsWithOp("    use CATALOG cat", configOpUse))
-	assert.True(s.T(), statementStartsWithOp("    USE   ", configOpUse))
-	assert.True(s.T(), statementStartsWithOp("    use   ", configOpUse))
-	assert.True(s.T(), statementStartsWithOp("    USE CATALOG cat", configOpUse))
+	assert.True(s.T(), statementStartsWithOp("use CATALOG cat", configOpUse))
+	assert.True(s.T(), statementStartsWithOp("USE   ", configOpUse))
+	assert.True(s.T(), statementStartsWithOp("use   ", configOpUse))
+	assert.True(s.T(), statementStartsWithOp("USE CATALOG cat", configOpUse))
 
 	assert.False(s.T(), statementStartsWithOp("SET", configOpUse))
 	assert.False(s.T(), statementStartsWithOp("USES", configOpUse))
@@ -53,129 +53,222 @@ func (s *StoreTestSuite) TestIsUSEStatement() {
 	assert.False(s.T(), statementStartsWithOp("should be false", configOpUse))
 }
 
+func (s *StoreTestSuite) TestIsResetStatement() {
+	assert.True(s.T(), true, statementStartsWithOp("RESET", configOpReset))
+	assert.True(s.T(), true, statementStartsWithOp("RESET key", configOpReset))
+	assert.True(s.T(), true, statementStartsWithOp("RESET key=value", configOpReset))
+	assert.True(s.T(), true, statementStartsWithOp("RESET key=value", configOpReset))
+	assert.True(s.T(), true, statementStartsWithOp("RESET   ", configOpReset))
+	assert.True(s.T(), true, statementStartsWithOp("reset   ", configOpReset))
+	assert.True(s.T(), true, statementStartsWithOp("RESET key=value", configOpReset))
+
+	assert.False(s.T(), false, statementStartsWithOp("RESETting", configOpReset))
+	assert.False(s.T(), false, statementStartsWithOp("", configOpReset))
+	assert.False(s.T(), false, statementStartsWithOp("should be false", configOpReset))
+	assert.False(s.T(), false, statementStartsWithOp("USE", configOpReset))
+	assert.False(s.T(), false, statementStartsWithOp("RESETTING", configOpReset))
+}
+
 func (s *StoreTestSuite) TestParseSETStatement() {
-	key, value, _ := parseSETStatement("SET key=value")
+	key, value, _ := parseSetStatement("SET key=value")
 	assert.Equal(s.T(), "key", key)
 	assert.Equal(s.T(), "value", value)
 
-	key, value, _ = parseSETStatement("  SET key=value;")
+	key, value, _ = parseSetStatement("SET key=value;")
 	assert.Equal(s.T(), "key", key)
 	assert.Equal(s.T(), "value", value)
 
-	key, value, _ = parseSETStatement("  set key=value    ;")
+	key, value, _ = parseSetStatement("set key=value    ;")
 	assert.Equal(s.T(), "key", key)
 	assert.Equal(s.T(), "value", value)
 
-	key, value, _ = parseSETStatement("  set key = value    ")
+	key, value, _ = parseSetStatement("set key = value    ")
 	assert.Equal(s.T(), "key", key)
 	assert.Equal(s.T(), "value", value)
 
-	key, value, _ = parseSETStatement("  set key     =    value    ")
+	key, value, _ = parseSetStatement("set key     =    value    ")
 	assert.Equal(s.T(), "key", key)
 	assert.Equal(s.T(), "value", value)
 
-	key, value, _ = parseSETStatement("  set key= value    ")
+	key, value, _ = parseSetStatement("set key= value    ")
 	assert.Equal(s.T(), "key", key)
 	assert.Equal(s.T(), "value", value)
 
-	key, value, _ = parseSETStatement("  set key =value    ")
+	key, value, _ = parseSetStatement("set key =value    ")
 	assert.Equal(s.T(), "key", key)
 	assert.Equal(s.T(), "value", value)
 
-	key, value, _ = parseSETStatement("  set key		 =value    ")
+	key, value, _ = parseSetStatement("set key		 =value    ")
 	assert.Equal(s.T(), "key", key)
 	assert.Equal(s.T(), "value", value)
 
-	key, value, _ = parseSETStatement("set")
+	key, value, _ = parseSetStatement("set")
 	assert.Equal(s.T(), "", key)
 	assert.Equal(s.T(), "", value)
 
-	key, value, _ = parseSETStatement("SET")
+	key, value, _ = parseSetStatement("SET")
 	assert.Equal(s.T(), "", key)
 	assert.Equal(s.T(), "", value)
 
-	key, value, _ = parseSETStatement(" 		sET 	")
+	key, value, _ = parseSetStatement("sET 	")
 	assert.Equal(s.T(), "", key)
 	assert.Equal(s.T(), "", value)
 
-	key, value, _ = parseSETStatement(" 		sET key	")
+	key, value, _ = parseSetStatement("sET key	")
 	assert.Equal(s.T(), "", key)
 	assert.Equal(s.T(), "", value)
 
-	key, value, _ = parseSETStatement(" 		sET = value	")
+	key, value, _ = parseSetStatement("sET = value	")
 	assert.Equal(s.T(), "", key)
 	assert.Equal(s.T(), "", value)
 
-	key, value, _ = parseSETStatement(" 		sET key= \nvalue	")
+	key, value, _ = parseSetStatement("sET key= \nvalue	")
 	assert.Equal(s.T(), "key", key)
 	assert.Equal(s.T(), "value", value)
 }
 
 func (s *StoreTestSuite) TestParseSETStatementerror() {
-	_, _, err := parseSETStatement("SET key")
+	_, _, err := parseSetStatement("SET key")
 	assert.NotNil(s.T(), err)
 	assert.Equal(s.T(), "Error: missing \"=\". Usage example: SET key=value.", err.Error())
 
-	_, _, err = parseSETStatement("SET =")
+	_, _, err = parseSetStatement("SET =")
 	assert.NotNil(s.T(), err)
 	assert.Equal(s.T(), "Error: Key and value not present. Usage example: SET key=value.", err.Error())
 
-	_, _, err = parseSETStatement("SET key=")
+	_, _, err = parseSetStatement("SET key=")
 	assert.NotNil(s.T(), err)
 	assert.Equal(s.T(), "Error: Value for key not present. If you want to reset a key, use \"RESET key\".", err.Error())
 
-	_, _, err = parseSETStatement("SET =value")
+	_, _, err = parseSetStatement("SET =value")
 	assert.NotNil(s.T(), err)
 	assert.Equal(s.T(), "Error: Key not present. Usage example: SET key=value.", err.Error())
 
-	_, _, err = parseSETStatement("SET ass=value=as")
+	_, _, err = parseSetStatement("SET ass=value=as")
 	assert.NotNil(s.T(), err)
 	assert.Equal(s.T(), "Error: \"=\" should only appear once. Usage example: SET key=value.", err.Error())
 }
 
 func (s *StoreTestSuite) TestParseUSEStatement() {
-	key, value, _ := parseUSEStatement("USE CATALOG c;")
+	key, value, _ := parseUseStatement("USE CATALOG c;")
 	assert.Equal(s.T(), configKeyCatalog, key)
 	assert.Equal(s.T(), "c", value)
 
-	key, value, _ = parseUSEStatement("  use   catalog   \nc   ")
+	key, value, _ = parseUseStatement("use   catalog   \nc   ")
 	assert.Equal(s.T(), configKeyCatalog, key)
 	assert.Equal(s.T(), "c", value)
 
-	key, value, _ = parseUSEStatement("  use   catalog     ")
+	key, value, _ = parseUseStatement("use   catalog     ")
 	assert.Equal(s.T(), "", key)
 	assert.Equal(s.T(), "", value)
 
-	key, value, _ = parseUSEStatement("catalog   c")
+	key, value, _ = parseUseStatement("catalog   c")
 	assert.Equal(s.T(), "", key)
 	assert.Equal(s.T(), "", value)
 
-	key, value, _ = parseUSEStatement("  use     db   ")
+	key, value, _ = parseUseStatement("use     db   ")
 	assert.Equal(s.T(), configKeyDatabase, key)
 	assert.Equal(s.T(), "db", value)
 
-	key, value, _ = parseUSEStatement("dAtaBaSe  db   ")
+	key, value, _ = parseUseStatement("dAtaBaSe  db   ")
 	assert.Equal(s.T(), "", key)
 	assert.Equal(s.T(), "", value)
 
-	key, value, _ = parseUSEStatement("  use     \ndatabase_name   ")
+	key, value, _ = parseUseStatement("use     \ndatabase_name   ")
 	assert.Equal(s.T(), configKeyDatabase, key)
 	assert.Equal(s.T(), "database_name", value)
 }
 
 func (s *StoreTestSuite) TestParseUSEStatementError() {
-	_, _, err := parseUSEStatement("USE CATALOG ;")
+	_, _, err := parseUseStatement("USE CATALOG ;")
 	assert.NotNil(s.T(), err)
 	assert.Equal(s.T(), "Error: Missing catalog name: Usage example: USE CATALOG METADATA.", err.Error())
 
-	_, _, err = parseUSEStatement("USE;")
+	_, _, err = parseUseStatement("USE;")
 	assert.NotNil(s.T(), err)
 	assert.Equal(s.T(), "Error: Missing database/catalog name: Usage examples: USE DB1 OR USE CATALOG METADATA.", err.Error())
 
-	_, _, err = parseUSEStatement("USE CATALOG DATABASE DB2;")
+	_, _, err = parseUseStatement("USE CATALOG DATABASE DB2;")
 	assert.NotNil(s.T(), err)
 	assert.Equal(s.T(), "Invalid syntax for USE. Usage examples: USE CATALOG my_catalog or USE my_database", err.Error())
 
+}
+
+func (s *StoreTestSuite) TestParseResetStatement() {
+	key, err := parseResetStatement("RESET key")
+	assert.Equal(s.T(), "key", key)
+	assert.Nil(s.T(), err)
+
+	key, _ = parseResetStatement("RESET key.key;")
+	assert.Equal(s.T(), "key.key", key)
+	assert.Nil(s.T(), err)
+
+	key, _ = parseResetStatement("RESET KEY.key;")
+	assert.Equal(s.T(), "key.key", key)
+	assert.Nil(s.T(), err)
+
+	key, _ = parseResetStatement("reset key    ;")
+	assert.Equal(s.T(), "key", key)
+	assert.Nil(s.T(), err)
+
+	key, _ = parseResetStatement("reset key   ")
+	assert.Equal(s.T(), "key", key)
+	assert.Nil(s.T(), err)
+
+	key, _ = parseResetStatement("reset key;;;;")
+	assert.Equal(s.T(), "key", key)
+	assert.Nil(s.T(), err)
+
+	key, _ = parseResetStatement("reset")
+	assert.Equal(s.T(), "", key)
+	assert.Nil(s.T(), err)
+
+	key, _ = parseResetStatement("RESET")
+	assert.Equal(s.T(), "", key)
+	assert.Nil(s.T(), err)
+
+	key, _ = parseResetStatement("reSET 	")
+	assert.Equal(s.T(), "", key)
+	assert.Nil(s.T(), err)
+
+	key, _ = parseResetStatement("reSET key	")
+	assert.Equal(s.T(), "key", key)
+	assert.Nil(s.T(), err)
+
+	key, _ = parseResetStatement("resET KEY ")
+	assert.Equal(s.T(), "key", key)
+	assert.Nil(s.T(), err)
+
+	key, _ = parseResetStatement("resET key;;;")
+	assert.Equal(s.T(), "key", key)
+	assert.Nil(s.T(), err)
+}
+
+func (s *StoreTestSuite) TestParseResetStatementError() {
+	key, err := parseResetStatement(" ")
+	assert.Equal(s.T(), "", key)
+	assert.NotNil(s.T(), err)
+	assert.Equal(s.T(), "Error: Invalid syntax for RESET. Usage example: RESET key.", err.Error())
+
+	key, err = parseResetStatement("RESET key key2")
+	assert.Equal(s.T(), "", key)
+	assert.NotNil(s.T(), err)
+	assert.Equal(s.T(), "Error: too many keys for RESET provided. Usage example: RESET key.", err.Error())
+
+	key, err = parseResetStatement("RESET key key2 key3")
+	assert.Equal(s.T(), "", key)
+	assert.NotNil(s.T(), err)
+	assert.Equal(s.T(), "Error: too many keys for RESET provided. Usage example: RESET key.", err.Error())
+
+	key, err = parseResetStatement("RESET key;; key key3")
+	assert.Equal(s.T(), "", key)
+	assert.NotNil(s.T(), err)
+	assert.Equal(s.T(), "Error: too many keys for RESET provided. Usage example: RESET key.", err.Error())
+
+	key, err = parseResetStatement("RESET key key;;; key3")
+	assert.Equal(s.T(), "", key)
+	assert.NotNil(s.T(), err)
+	assert.Equal(s.T(), "Error: too many keys for RESET provided. Usage example: RESET key.", err.Error())
 }
 
 func (s *StoreTestSuite) TestProccessHttpErrors() {
