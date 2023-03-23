@@ -57,7 +57,6 @@ func init() {
 // Handler for: "/iam/v2/api-keys/{id}"
 func handleIamApiKey(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		vars := mux.Vars(r)
 		keyStr := vars["id"]
 		switch r.Method {
@@ -111,7 +110,6 @@ func handleIamApiKeyDelete(t *testing.T, keyStr string) http.HandlerFunc {
 // Handler for: "/iam/v2/api-keys"
 func handleIamApiKeys(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		if r.Method == http.MethodPost {
 			handleIamApiKeysCreate(t)(w, r)
 		} else if r.Method == http.MethodGet {
@@ -153,7 +151,6 @@ func handleIamUser(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		userId := vars["id"]
-		w.Header().Set("Content-Type", "application/json")
 		var user iamv2.IamV2User
 		switch userId {
 		case "u-0", "u-1":
@@ -204,7 +201,6 @@ func handleIamUsers(t *testing.T) http.HandlerFunc {
 					}
 				}
 			}
-			w.Header().Set("Content-Type", "application/json")
 			err := json.NewEncoder(w).Encode(res)
 			require.NoError(t, err)
 		}
@@ -214,7 +210,6 @@ func handleIamUsers(t *testing.T) http.HandlerFunc {
 // Handler for: "/iam/v2/service_accounts/{id}"
 func handleIamServiceAccount(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		id := mux.Vars(r)["id"]
 		switch r.Method {
 		case http.MethodGet:
@@ -247,7 +242,6 @@ func handleIamServiceAccount(t *testing.T) http.HandlerFunc {
 // Handler for: "/iam/v2/service_accounts"
 func handleIamServiceAccounts(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		switch r.Method {
 		case http.MethodGet:
 			serviceAccount := iamv2.IamV2ServiceAccount{
@@ -275,7 +269,6 @@ func handleIamServiceAccounts(t *testing.T) http.HandlerFunc {
 // Handler for :"/iam/v2/role-bindings"
 func handleIamRoleBindings(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		crnPattern := r.URL.Query().Get("crn_pattern")
 		principal := r.URL.Query().Get("principal")
 		roleName := r.URL.Query().Get("role_name")
@@ -304,7 +297,6 @@ func handleIamRoleBindings(t *testing.T) http.HandlerFunc {
 // Handler for: "/iam/v2/identity-provider/{id}"
 func handleIamIdentityProvider(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		id := mux.Vars(r)["id"]
 		switch r.Method {
 		case http.MethodPatch:
@@ -323,7 +315,6 @@ func handleIamIdentityProvider(t *testing.T) http.HandlerFunc {
 		case http.MethodDelete:
 			switch id {
 			case "op-1":
-				w.Header().Set("Content-Type", "application/json")
 				err := writeResourceNotFoundError(w)
 				require.NoError(t, err)
 			default:
@@ -346,7 +337,6 @@ func handleIamIdentityProvider(t *testing.T) http.HandlerFunc {
 // Handler for: "/iam/v2/identity-providers"
 func handleIamIdentityProviders(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		switch r.Method {
 		case http.MethodGet:
 			identityProvider := identityproviderv2.IamV2IdentityProvider{
@@ -378,7 +368,6 @@ func handleIamIdentityProviders(t *testing.T) http.HandlerFunc {
 // Handler for :"/iam/v2/role-bindings/{id}"
 func handleIamRoleBinding(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		switch r.Method {
 		case http.MethodDelete:
 			w.WriteHeader(http.StatusNoContent)
@@ -389,7 +378,6 @@ func handleIamRoleBinding(t *testing.T) http.HandlerFunc {
 // Handler for: "/iam/v2/identity-providers/{provider_id}/identity-pools/{id}"
 func handleIamIdentityPool(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		id := mux.Vars(r)["id"]
 		switch r.Method {
 		case http.MethodPatch:
@@ -408,7 +396,6 @@ func handleIamIdentityPool(t *testing.T) http.HandlerFunc {
 		case http.MethodDelete:
 			switch id {
 			case "pool-1":
-				w.Header().Set("Content-Type", "application/json")
 				err := writeResourceNotFoundError(w)
 				require.NoError(t, err)
 			default:
@@ -431,7 +418,6 @@ func handleIamIdentityPool(t *testing.T) http.HandlerFunc {
 // Handler for: "/iam/v2/identity-providers/{provider_id}/identity-pools"
 func handleIamIdentityPools(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		switch r.Method {
 		case http.MethodGet:
 			identityPool := identityproviderv2.IamV2IdentityPool{
@@ -463,7 +449,6 @@ func handleIamIdentityPools(t *testing.T) http.HandlerFunc {
 // Handler for "iam/v2/invitations"
 func handleIamInvitations(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		switch r.Method {
 		case http.MethodGet:
 			invitationList := &iamv2.IamV2InvitationList{Data: []iamv2.IamV2Invitation{

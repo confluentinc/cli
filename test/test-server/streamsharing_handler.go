@@ -55,7 +55,6 @@ func getTestProviderShare() cdxv1.CdxV1ProviderShare {
 // Handler for: "/cdx/v1/provider-shares/{id}:resend"
 func handleStreamSharingResendInvite(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNoContent)
 	}
 }
@@ -63,7 +62,6 @@ func handleStreamSharingResendInvite(t *testing.T) http.HandlerFunc {
 // Handler for: "/cdx/v1/provider-shares"
 func handleStreamSharingProviderShares(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		switch r.Method {
 		case http.MethodGet:
 			list := cdxv1.CdxV1ProviderShareList{
@@ -85,7 +83,6 @@ func handleStreamSharingProviderShares(t *testing.T) http.HandlerFunc {
 // Handler for: "/cdx/v1/provider-shares/{id}"
 func handleStreamSharingProviderShare(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		switch r.Method {
 		case http.MethodGet:
 			b, err := json.Marshal(getTestProviderShare())
@@ -101,7 +98,6 @@ func handleStreamSharingProviderShare(t *testing.T) http.HandlerFunc {
 // Handler for: "/cdx/v1/consumer-shares"
 func handleStreamSharingConsumerShares(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		list := cdxv1.CdxV1ConsumerShareList{
 			Data: []cdxv1.CdxV1ConsumerShare{getTestConsumerShare()},
 		}
@@ -115,7 +111,6 @@ func handleStreamSharingConsumerShares(t *testing.T) http.HandlerFunc {
 // Handler for: "/cdx/v1/consumer-shares/{id}"
 func handleStreamSharingConsumerShare(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		switch r.Method {
 		case http.MethodGet:
 			b, err := json.Marshal(getTestConsumerShare())
@@ -131,7 +126,6 @@ func handleStreamSharingConsumerShare(t *testing.T) http.HandlerFunc {
 // Handler for: "/cdx/v1/shared-tokens:redeem"
 func handleStreamSharingRedeemToken(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		response := cdxv1.CdxV1RedeemTokenResponse{
 			Id:                   stringPtr("ss-12345"),
 			ApiKey:               stringPtr("00000000000000000000"),
@@ -165,11 +159,8 @@ func handleStreamSharingRedeemToken(t *testing.T) http.HandlerFunc {
 // Handler for: "/cdx/v1/consumer-shared-resources"
 func handleConsumerSharedResources(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		list := cdxv1.CdxV1ConsumerSharedResourceList{
-			Data: []cdxv1.CdxV1ConsumerSharedResource{getTestConsumerSharedResource()},
-		}
-		b, err := json.Marshal(&list)
+		list := &cdxv1.CdxV1ConsumerSharedResourceList{Data: []cdxv1.CdxV1ConsumerSharedResource{getTestConsumerSharedResource()}}
+		b, err := json.Marshal(list)
 		require.NoError(t, err)
 		_, err = io.WriteString(w, string(b))
 		require.NoError(t, err)
@@ -179,16 +170,11 @@ func handleConsumerSharedResources(t *testing.T) http.HandlerFunc {
 // Handler for: "/cdx/v1/consumer-shared-resources/{id}:network"
 func handlePrivateLinkNetworkConfig(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		network := cdxv1.CdxV1Network{
-			DnsDomain: stringToPtr("abc123.us-west-2.aws.stag.cpdev.cloud"),
-			Zones:     &[]string{"usw2-az1", "usw2-az3", "usw2-az2"},
-			ZonalSubdomains: &map[string]string{
-				"usw2-az2": "usw2-az2.abc123.us-west-2.aws.stag.cpdev.cloud",
-			},
-			Cloud: &cdxv1.CdxV1NetworkCloudOneOf{
-				CdxV1AwsNetwork: getTestAWSNetwork(),
-			},
+			DnsDomain:       stringToPtr("abc123.us-west-2.aws.stag.cpdev.cloud"),
+			Zones:           &[]string{"usw2-az1", "usw2-az3", "usw2-az2"},
+			ZonalSubdomains: &map[string]string{"usw2-az2": "usw2-az2.abc123.us-west-2.aws.stag.cpdev.cloud"},
+			Cloud:           &cdxv1.CdxV1NetworkCloudOneOf{CdxV1AwsNetwork: getTestAWSNetwork()},
 		}
 		b, err := json.Marshal(&network)
 		require.NoError(t, err)
@@ -200,8 +186,6 @@ func handlePrivateLinkNetworkConfig(t *testing.T) http.HandlerFunc {
 // Handler for: "/cdx/v1/opt-in"
 func handleOptInOptOut(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-
 		body, _ := io.ReadAll(r.Body)
 		var reqBody cdxv1.CdxV1OptIn
 		_ = json.Unmarshal(body, &reqBody)

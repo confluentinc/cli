@@ -15,8 +15,6 @@ import (
 // Handler for POST "/cmk/v2/clusters"
 func handleCmkKafkaClusterCreate(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-
 		req := new(cmkv2.CmkV2Cluster)
 		err := json.NewDecoder(r.Body).Decode(req)
 		require.NoError(t, err)
@@ -92,7 +90,6 @@ func handleCmkClusters(t *testing.T) http.HandlerFunc {
 					Phase: "PROVISIONING",
 				},
 			}
-			w.Header().Set("Content-Type", "application/json")
 			clusterList := &cmkv2.CmkV2ClusterList{Data: []cmkv2.CmkV2Cluster{cluster, clusterMultizone}}
 			err := json.NewEncoder(w).Encode(clusterList)
 			require.NoError(t, err)
@@ -133,7 +130,6 @@ func handleCmkCluster(t *testing.T) http.HandlerFunc {
 // Handler for GET "/cmk/v2/clusters/{id}"
 func handleCmkKafkaClusterDescribe(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		vars := mux.Vars(r)
 		id := vars["id"]
 		cluster := getCmkBasicDescribeCluster(id, "kafka-cluster")
@@ -144,7 +140,6 @@ func handleCmkKafkaClusterDescribe(t *testing.T) http.HandlerFunc {
 
 func handleCmkKafkaClusterDescribeDedicated(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		vars := mux.Vars(r)
 		id := vars["id"]
 		cluster := getCmkDedicatedDescribeCluster(id, "kafka-cluster", 1)
@@ -156,7 +151,6 @@ func handleCmkKafkaClusterDescribeDedicated(t *testing.T) http.HandlerFunc {
 // Handler for GET "/cmk/v2/clusters/lkc-describe-dedicated-pending"
 func handleCmkKafkaClusterDescribeDedicatedPending(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		vars := mux.Vars(r)
 		id := vars["id"]
 		cluster := getCmkDedicatedDescribeCluster(id, "kafka-cluster", 2)
@@ -169,7 +163,6 @@ func handleCmkKafkaClusterDescribeDedicatedPending(t *testing.T) http.HandlerFun
 // Handler for GET "/cmk/v2/clusters/lkc-describe-dedicated-with-encryption"
 func handleCmkKafkaClusterDescribeDedicatedWithEncryption(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		vars := mux.Vars(r)
 		id := vars["id"]
 		cluster := getCmkDedicatedDescribeCluster(id, "kafka-cluster", 1)
@@ -187,7 +180,6 @@ func handleCmkKafkaClusterDescribeInfinite(t *testing.T) http.HandlerFunc {
 // Default handler for get, list, delete, describe "/cmk/v2/clusters/{id}"
 func handleCmkKafkaClusterGetListDeleteDescribe(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		vars := mux.Vars(r)
 		id := vars["id"]
 		if r.Method == http.MethodDelete {
@@ -205,7 +197,6 @@ func handleCmkKafkaClusterGetListDeleteDescribe(t *testing.T) http.HandlerFunc {
 // Handler for GET/PUT "/cmk/v2/clusters/lkc-update"
 func handleCmkKafkaClusterUpdateRequest(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		if r.Method == http.MethodGet {
 			cluster := getCmkBasicDescribeCluster("lkc-update", "lkc-update")
 			cluster.Status = &cmkv2.CmkV2ClusterStatus{Phase: "PROVISIONED"}
@@ -232,7 +223,6 @@ func handleCmkKafkaClusterUpdateRequest(t *testing.T) http.HandlerFunc {
 // Handler for GET/PUT "/cmk/v2/clusters/lkc-update-dedicated-expand"
 func handleCmkKafkaDedicatedClusterExpansion(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		if r.Method == http.MethodGet {
 			cluster := getCmkDedicatedDescribeCluster("lkc-update-dedicated-expand", "lkc-update-dedicated-expand", 1)
 			err := json.NewEncoder(w).Encode(cluster)
@@ -258,7 +248,6 @@ func handleCmkKafkaDedicatedClusterExpansion(t *testing.T) http.HandlerFunc {
 // Handler for GET/PUT "/cmk/v2/clusters/lkc-update-dedicated-shrink"
 func handleCmkKafkaDedicatedClusterShrink(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		if r.Method == http.MethodGet {
 			cluster := getCmkDedicatedDescribeCluster("lkc-update-dedicated-shrink", "lkc-update-dedicated-shrink", 2)
 			err := json.NewEncoder(w).Encode(cluster)
@@ -284,7 +273,6 @@ func handleCmkKafkaDedicatedClusterShrink(t *testing.T) http.HandlerFunc {
 // Handler for GET/PATCH "/cmk/v2/clusters/lkc-update-dedicated-shrink-multi"
 func handleCmkKafkaDedicatedClusterShrinkMulti(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		switch r.Method {
 		case http.MethodGet:
 			id := r.URL.Query().Get("id")
