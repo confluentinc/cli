@@ -50,6 +50,10 @@ publish-docs: docs clone-docs-repo
 	fi && \
 	$(call dry-run,gh pr create -B $${base} --title "chore: update CLI docs for $(VERSION)" --body "") || exit 1
 
+.PHONY: clean-docs
+clean-docs:
+	rm -rf docs/
+
 # This should be getting run after a version release has happened.
 # So $(VERSION) is the version that was just released, and $$(cat release-notes/bump.txt)
 # would be the next minor release (something in the future that doesn't exist yet).

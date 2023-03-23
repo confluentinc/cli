@@ -38,7 +38,7 @@ release-to-stag:
 
 .PHONY: release-to-prod
 release-to-prod:
-	@$(aws-authenticate) && \
+	$(aws-authenticate) && \
 	$(call copy-stag-content-to-prod,archives,$(CLEAN_VERSION)); \
 	$(call copy-stag-content-to-prod,binaries,$(CLEAN_VERSION)); \
 	$(call copy-stag-content-to-prod,archives,latest)

@@ -42,7 +42,7 @@ verify-binaries:
 	done
 
 	rm -rf $(DIR)	
-	@echo BINARIES VERIFICATION PASSED!!! ***"
+	@echo "*** BINARIES VERIFICATION PASSED!!! ***"
 
 # Test username/password login and SSO login in production
 .PHONY: smoke-tests
