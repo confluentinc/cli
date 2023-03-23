@@ -17,7 +17,7 @@ func (c *kafkaCommand) newCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Create a topic named "my_topic_2" with specified configuration parameters.`,
-				Code: "confluent kafka topic create my_topic_2 --config cleanup.policy=compact,compression.type=gzip",
+				Code: "confluent local kafka topic create my_topic_2 --config cleanup.policy=compact,compression.type=gzip",
 			},
 		),
 	}
@@ -36,5 +36,5 @@ func (c *kafkaCommand) topicCreate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return kafka.CreateTopicWithRestClient(cmd, restClient, context.Background(), args[0], clusterId)
+	return kafka.CreateTopicWithRESTClient(cmd, restClient, context.Background(), args[0], clusterId)
 }

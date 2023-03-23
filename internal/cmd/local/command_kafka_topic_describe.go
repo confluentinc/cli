@@ -19,7 +19,7 @@ func (c *kafkaCommand) newDescribeCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Describe the "my_topic" topic.`,
-				Code: "confluent kafka topic describe my_topic",
+				Code: "confluent local kafka topic describe my_topic",
 			},
 		),
 	}
@@ -35,7 +35,5 @@ func (c *kafkaCommand) topicDescribe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	topicName := args[0]
-
-	return kafka.DescribeTopicWithRestClient(cmd, restClient, context.Background(), topicName, clusterId)
+	return kafka.DescribeTopicWithRESTClient(cmd, restClient, context.Background(), args[0], clusterId)
 }

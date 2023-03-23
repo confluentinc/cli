@@ -11,6 +11,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/cmd/kafka"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -19,8 +20,15 @@ func (c *kafkaCommand) newConsumeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "consume <topic>",
 		Args:  cobra.ExactArgs(1),
-		Short: "Consume messages from the test Kafka topic.",
 		RunE:  c.topicConsume,
+		Short: "Consume messages from a Kafka topic.",
+		Long:  "Consume messages from a Kafka topic. Configuration and command guide: https://docs.confluent.io/confluent-cli/current/cp-produce-consume.html.\n\nTruncated message headers will be printed if they exist.",
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: `Consume message from topic "my_topic" from the beginning and with keys printed.`,
+				Code: `confluent local kafka topic consume my_topic --from-beginning --print-key`,
+			},
+		),
 	}
 
 	cmd.Flags().String("group", "", "Consumer group ID.")
@@ -36,8 +44,6 @@ func (c *kafkaCommand) newConsumeCommand() *cobra.Command {
 }
 
 func (c *kafkaCommand) topicConsume(cmd *cobra.Command, args []string) error {
-	ctx := context.Background()
-
 	printKey, err := cmd.Flags().GetBool("print-key")
 	if err != nil {
 		return err
@@ -100,7 +106,7 @@ func (c *kafkaCommand) topicConsume(cmd *cobra.Command, args []string) error {
 	output.ErrPrintln(errors.StartingConsumerMsg)
 
 	groupHandler := &kafka.GroupHandler{
-		Ctx:    ctx,
+		Ctx:    context.Background(),
 		Out:    cmd.OutOrStdout(),
 		Format: "string",
 		Properties: kafka.ConsumerProperties{

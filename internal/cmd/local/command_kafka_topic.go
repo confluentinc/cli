@@ -11,10 +11,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-type topicOut struct {
-	Name string `human:"Name" serialized:"name"`
-}
-
 func (c *kafkaCommand) newTopicCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "topic",
@@ -43,6 +39,7 @@ func initKafkaRest(c *pcmd.CLICommand, cmd *cobra.Command) (*kafkarestv3.APIClie
 	if err != nil {
 		return nil, "", err
 	}
+
 	kafkaREST := pcmd.KafkaREST{
 		Context: context.Background(),
 		Client:  pcmd.CreateKafkaRESTClient(url, unsafeTrace),
@@ -56,7 +53,8 @@ func initKafkaRest(c *pcmd.CLICommand, cmd *cobra.Command) (*kafkarestv3.APIClie
 	}
 
 	if len(clusterListData.Data) < 1 {
-		return nil, "", errors.New("failed to obtain cluster information")
+		return nil, "", errors.New("failed to obtain local cluster information")
 	}
+
 	return kafkaRestClient, clusterListData.Data[0].ClusterId, nil
 }

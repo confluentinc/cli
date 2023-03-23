@@ -8,6 +8,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/cmd/kafka"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/serdes"
@@ -19,8 +20,15 @@ func (c *kafkaCommand) newProduceCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "produce <topic>",
 		Args:  cobra.ExactArgs(1),
-		Short: "Produce messages to the test Kafka topic.",
 		RunE:  c.topicProduce,
+		Short: "Produce messages to a Kafka topic.",
+		Long:  "Produce messages to a Kafka topic. Configuration and command guide: https://docs.confluent.io/confluent-cli/current/cp-produce-consume.html.\n\nWhen using this command, you cannot modify the message header, and the message header will not be printed out.",
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: `Produce message to topic "my_topic" providing key.`,
+				Code: `confluent local kafka topic produce my_topic --parse-key`,
+			},
+		),
 	}
 
 	cmd.Flags().Bool("parse-key", false, "Parse key from the message.")

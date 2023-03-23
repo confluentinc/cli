@@ -38,5 +38,5 @@ func (c *kafkaCommand) topicUpdate(cmd *cobra.Command, args []string) error {
 
 	topicName := args[0]
 
-	return kafka.UpdateTopicWithRestClient(cmd, restClient, context.Background(), topicName, clusterId)
+	return kafka.UpdateTopicWithRESTClient(cmd, restClient, context.Background(), topicName, clusterId)
 }

@@ -3,10 +3,9 @@ package local
 import (
 	"context"
 
-	"github.com/confluentinc/cli/internal/pkg/kafkarest"
-	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/internal/cmd/kafka"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
@@ -28,14 +27,5 @@ func (c *kafkaCommand) topicList(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	topicList, resp, err := restClient.TopicV3Api.ListKafkaTopics(context.Background(), clusterId)
-	if err != nil {
-		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
-	}
-
-	list := output.NewList(cmd)
-	for _, topic := range topicList.Data {
-		list.Add(&topicOut{Name: topic.TopicName})
-	}
-	return list.Print()
+	return kafka.ListTopicsWithRESTClient(cmd, restClient, context.Background(), clusterId)
 }

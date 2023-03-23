@@ -5,12 +5,13 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 )
 
 type PartitionData struct {
@@ -66,10 +67,10 @@ func (c *authenticatedTopicCommand) describeOnPrem(cmd *cobra.Command, args []st
 		return err
 	}
 
-	return DescribeTopicWithRestClient(cmd, restClient, restContext, topicName, clusterId)
+	return DescribeTopicWithRESTClient(cmd, restClient, restContext, topicName, clusterId)
 }
 
-func DescribeTopicWithRestClient(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restContext context.Context, topicName, clusterId string) error {
+func DescribeTopicWithRESTClient(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restContext context.Context, topicName, clusterId string) error {
 	// Get partitions
 	partitionsResp, resp, err := restClient.PartitionV3Api.ListKafkaPartitions(restContext, clusterId, topicName)
 	if err != nil {

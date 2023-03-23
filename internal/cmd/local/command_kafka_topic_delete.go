@@ -19,7 +19,7 @@ func (c *kafkaCommand) newDeleteCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Delete the topic "my_topic". Use this command carefully as data loss can occur.`,
-				Code: "confluent kafka topic delete my_topic",
+				Code: "confluent local kafka topic delete my_topic",
 			},
 		),
 	}
@@ -37,5 +37,5 @@ func (c *kafkaCommand) topicDelete(cmd *cobra.Command, args []string) error {
 
 	topicName := args[0]
 
-	return kafka.DeleteTopicWithRestClient(cmd, restClient, context.Background(), topicName, clusterId)
+	return kafka.DeleteTopicWithRESTClient(cmd, restClient, context.Background(), topicName, clusterId)
 }
