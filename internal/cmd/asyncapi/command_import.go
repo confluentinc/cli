@@ -32,6 +32,7 @@ import (
 const parseErrorMessage string = "topic is already present and `--overwrite` is not set"
 
 type flagsImport struct {
+	file                    string
 	overwrite               bool
 	kafkaApiKey             string
 	schemaRegistryApiKey    string
@@ -93,30 +94,34 @@ type TopicBindings struct {
 
 func newImportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "import <specification-file>",
+		Use:   "import",
 		Short: "Populate cluster using AsyncAPI specification file.",
 		Long:  "Add topics, schemas, and tags from the AsyncAPI YAML specification file to the active Confluent Cloud cluster.",
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.NoArgs,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Import an AsyncAPI specification file to populate an existing Kafka cluster and Schema Registry.",
-				Code: "confluent asyncapi import spec.yaml",
+				Code: "confluent asyncapi import --file spec.yaml",
 			},
 		),
 	}
 
 	c := &command{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
 	cmd.RunE = c.asyncapiImport
-
+	cmd.Flags().String("file", "", "Input file name.")
 	cmd.Flags().Bool("overwrite", false, "Overwrite existing topics with the same name.")
 	cmd.Flags().String("kafka-api-key", "", "Kafka cluster API key.")
 	cmd.Flags().String("schema-registry-api-key", "", "API key for Schema Registry.")
 	cmd.Flags().String("schema-registry-api-secret", "", "API secret for Schema Registry.")
-
+	cobra.CheckErr(cmd.MarkFlagRequired("file"))
 	return cmd
 }
 
 func getFlagsImport(cmd *cobra.Command) (*flagsImport, error) {
+	file, err := cmd.Flags().GetString("file")
+	if err != nil {
+		return nil, err
+	}
 	overwrite, err := cmd.Flags().GetBool("overwrite")
 	if err != nil {
 		return nil, err
@@ -135,6 +140,7 @@ func getFlagsImport(cmd *cobra.Command) (*flagsImport, error) {
 	}
 
 	flags := &flagsImport{
+		file:                    file,
 		overwrite:               overwrite,
 		kafkaApiKey:             kafkaApiKey,
 		schemaRegistryApiKey:    schemaRegistryApiKey,
@@ -144,12 +150,12 @@ func getFlagsImport(cmd *cobra.Command) (*flagsImport, error) {
 }
 
 func (c *command) asyncapiImport(cmd *cobra.Command, args []string) error {
-	spec, err := fileToSpec(args[0])
+	// Get flags
+	flagsImp, err := getFlagsImport(cmd)
 	if err != nil {
 		return err
 	}
-	// Get flags
-	flagsImp, err := getFlagsImport(cmd)
+	spec, err := fileToSpec(flagsImp.file)
 	if err != nil {
 		return err
 	}
