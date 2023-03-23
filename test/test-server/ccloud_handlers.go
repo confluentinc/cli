@@ -98,6 +98,10 @@ func (c *CloudRouter) HandleMe(t *testing.T, isAuditLogEnabled bool) http.Handle
 			org.Marketplace = &ccloudv1.Marketplace{Partner: ccloudv1.MarketplacePartner_AWS}
 		}
 
+		environmentList := environments
+		if os.Getenv("CONFLUENT_CLOUD_EMAIL") == "no-environment-user@example.com" {
+			environmentList = []*ccloudv1.Account{}
+		}
 		b, err := ccloudv1.MarshalJSONToBytes(&ccloudv1.GetMeReply{
 			User: &ccloudv1.User{
 				Id:         23,
@@ -105,7 +109,7 @@ func (c *CloudRouter) HandleMe(t *testing.T, isAuditLogEnabled bool) http.Handle
 				FirstName:  "Muwei",
 				ResourceId: "u-44ddd",
 			},
-			Accounts:     environments,
+			Accounts:     environmentList,
 			Organization: org,
 		})
 		require.NoError(t, err)
