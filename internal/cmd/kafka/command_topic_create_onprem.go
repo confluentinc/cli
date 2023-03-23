@@ -1,6 +1,7 @@
 package kafka
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
@@ -62,6 +63,10 @@ func (c *authenticatedTopicCommand) createOnPrem(cmd *cobra.Command, args []stri
 		return err
 	}
 
+	return CreateTopicWithRESTClient(cmd, restClient, restContext, topicName, clusterId)
+}
+
+func CreateTopicWithRESTClient(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restContext context.Context, topicName, clusterId string) error {
 	partitions, err := cmd.Flags().GetUint32("partitions")
 	if err != nil {
 		return err

@@ -1,0 +1,7 @@
+available commands:
+1. start the service with `confluent local kafka start`
+2. create a topic with `confluent local kafka topic create test`
+3. manage topics with `confluent local kafka topic list/update/describe/delete`
+4. produce to the topic with `confluent local kafka topic produce test`, available flags: config, parse-key, delimiter
+5. consume from the topic with `confluent local kafka topic consume test`, available flags: config, print-key, delimiter, offset... (see --help)
+6. destroy the service with `confluent local kafka stop`.
