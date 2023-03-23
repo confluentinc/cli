@@ -26,6 +26,7 @@ func (c *localCommand) newTopicCommand() *cobra.Command {
 	cmd.AddCommand(c.newUpdateCommand())
 	cmd.AddCommand(c.newProduceCommand())
 	cmd.AddCommand(c.newConsumeCommand())
+
 	return cmd
 }
 

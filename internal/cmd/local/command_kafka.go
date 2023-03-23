@@ -5,7 +5,7 @@ import (
 )
 
 const imageName = "523370736235.dkr.ecr.us-west-2.amazonaws.com/confluentinc/kafka-local:latest"
-const localhostPrefix = "http://0.0.0.0:%s"
+const localhostPrefix = "http://localhost:%s"
 
 func (c *localCommand) newKafkaCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -16,5 +16,6 @@ func (c *localCommand) newKafkaCommand() *cobra.Command {
 	cmd.AddCommand(c.newStartCommand())
 	cmd.AddCommand(c.newStopCommand())
 	cmd.AddCommand(c.newTopicCommand())
+
 	return cmd
 }
