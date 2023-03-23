@@ -1,7 +1,11 @@
 package kafka
 
 import (
+	"context"
+
 	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
@@ -45,13 +49,15 @@ func (c *authenticatedTopicCommand) listOnPrem(cmd *cobra.Command, _ []string) e
 		return err
 	}
 
-	// Get Topics
+	return ListTopicsWithRESTClient(cmd, restClient, restContext, clusterId)
+}
+
+func ListTopicsWithRESTClient(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restContext context.Context, clusterId string) error {
 	topicList, resp, err := restClient.TopicV3Api.ListKafkaTopics(restContext, clusterId)
 	if err != nil {
 		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 	}
 
-	// Create and populate output writer
 	list := output.NewList(cmd)
 	for _, topic := range topicList.Data {
 		list.Add(&topicOut{Name: topic.TopicName})
