@@ -17,9 +17,9 @@ reset-tag-and-commit:
 	git pull
 	git diff-index --quiet HEAD # ensures git status is clean
 	git tag -d v$(CLEAN_VERSION) # delete local tag
-	git push --delete origin v$(CLEAN_VERSION) # delete remote tag
-	git reset --hard HEAD~1 # warning: assumes "chore" version bump was last commit
-	git push origin HEAD --force
+	$(call dry-run,git push --delete origin v$(CLEAN_VERSION)) # delete remote tag
+	$(call dry-run,git reset --hard HEAD~1) # warning: assumes "chore" version bump was last commit
+	$(call dry-run,git push origin HEAD --force)
 
 .PHONY: unrelease-warn
 unrelease-warn:
@@ -42,7 +42,7 @@ delete-release-notes:
 	@read line; if [ $$line = "y" ] || [ $$line = "Y" ]; then $(aws-authenticate); $(call delete-release-folder,release-notes); fi
 
 define delete-release-folder
-	aws s3 rm $(S3_BUCKET_PATH)/confluent-cli/$1/$(CLEAN_VERSION) --recursive
+	$(call dry-run,aws s3 rm $(S3_BUCKET_PATH)/confluent-cli/$1/$(CLEAN_VERSION) --recursive)
 endef
 
 .PHONY: restore-latest-archives
@@ -67,4 +67,4 @@ restore-latest-archives-warn:
 .PHONY: clean-staging-folder
 clean-staging-folder:
 	$(aws-authenticate); \
-	aws s3 rm $(S3_STAG_PATH) --recursive
+	$(call dry-run,aws s3 rm $(S3_STAG_PATH) --recursive)

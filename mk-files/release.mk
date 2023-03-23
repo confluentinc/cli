@@ -3,7 +3,7 @@ ARCHIVE_TYPES=darwin_amd64.tar.gz darwin_arm64.tar.gz linux_amd64.tar.gz linux_a
 # If you set up your laptop following https://github.com/confluentinc/cc-documentation/blob/master/Operations/Laptop%20Setup.md
 # then assuming caas.sh lives here should be fine
 define aws-authenticate
-	source ~/git/go/src/github.com/confluentinc/cc-dotfiles/caas.sh && AWS_PROFILE=cc-production-1/prod-administrator aws sts get-caller-identity >/dev/null
+	source ~/git/go/src/github.com/confluentinc/cc-dotfiles/caas.sh && AWS_PROFILE=cc-production-1/prod-administrator aws sts get-caller-identity
 endef
 
 
@@ -16,20 +16,20 @@ release: check-branch commit-release tag-release
 	$(call print-boxed-message,"RELEASING TO PROD FOLDER $(S3_BUCKET_PATH)")
 	make release-to-prod
 	$(call print-boxed-message,"PUBLISHING DOCS")
-	@VERSION=$(VERSION) make publish-docs
+	VERSION=$(VERSION) make publish-docs
 	$(call print-boxed-message,"PUBLISHING NEW DOCKER HUB IMAGES")
 	make publish-dockerhub
 
 .PHONY: check-branch
 check-branch:
-	@if [ $(shell git rev-parse --abbrev-ref HEAD) != $(RELEASE_BRANCH) ] ; then \
+	if [ $(shell git rev-parse --abbrev-ref HEAD) != $(RELEASE_BRANCH) ] ; then \
 		echo -n "WARNING: Current branch \"$(shell git rev-parse --abbrev-ref HEAD)\" is not the default release branch \"$(RELEASE_BRANCH)\"!  Do you want to proceed? (y/n): " ; \
 		read line; if [ $$line != "y" ] && [ $$line != "Y" ]; then echo "Release cancelled."; exit 0; fi ; \
 	fi
 
 .PHONY: release-to-stag
 release-to-stag:
-	@make gorelease
+	make gorelease
 	make goreleaser-patches
 	make copy-stag-archives-to-latest
 	$(call print-boxed-message,"VERIFYING STAGING RELEASE CONTENT")
@@ -49,7 +49,7 @@ release-to-prod:
 define copy-stag-content-to-prod
 	folder_path=confluent-cli/$1/$2; \
 	echo "COPYING: $${folder_path}"; \
-	aws s3 cp $(S3_STAG_PATH)/$${folder_path} $(S3_BUCKET_PATH)/$${folder_path} --recursive --acl public-read || exit 1
+	$(call dry-run,aws s3 cp $(S3_STAG_PATH)/$${folder_path} $(S3_BUCKET_PATH)/$${folder_path} --recursive --acl public-read) || exit 1
 endef
 
 # The glibc container doesn't need to publish to S3 so it doesn't need to $(caasenv-authenticate)
@@ -76,19 +76,19 @@ gorelease:
 	$(aws-authenticate) && \
 	echo "BUILDING FOR DARWIN, WINDOWS, AND ALPINE LINUX" && \
 	go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
-	VERSION=$(VERSION) GITHUB_TOKEN=$(token) S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli GOEXPERIMENT=boringcrypto goreleaser release --clean --timeout 60m -f .goreleaser.yml; \
+	VERSION=$(VERSION) GITHUB_TOKEN=$(token) S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli GOEXPERIMENT=boringcrypto DRY_RUN=$(DRY_RUN) goreleaser release --clean --timeout 60m -f .goreleaser.yml; \
 	rm -f CLIEVCodeSigningCertificate2.pfx && \
 	echo "BUILDING FOR GLIBC LINUX" && \
 	scripts/build_linux_glibc.sh && \
-	aws s3 cp dist/confluent_$(VERSION_NO_V)_linux_amd64.tar.gz $(S3_STAG_PATH)/confluent-cli/archives/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_linux_amd64.tar.gz && \
-	aws s3 cp dist/confluent_$(VERSION_NO_V)_linux_arm64.tar.gz $(S3_STAG_PATH)/confluent-cli/archives/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_linux_arm64.tar.gz && \
+	$(call dry-run,aws s3 cp dist/confluent_$(VERSION_NO_V)_linux_amd64.tar.gz $(S3_STAG_PATH)/confluent-cli/archives/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_linux_amd64.tar.gz) && \
+	$(call dry-run,aws s3 cp dist/confluent_$(VERSION_NO_V)_linux_arm64.tar.gz $(S3_STAG_PATH)/confluent-cli/archives/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_linux_arm64.tar.gz) && \
 	$(aws-authenticate) && \
-	aws s3 cp dist/confluent_linux_amd64_v1/confluent $(S3_STAG_PATH)/confluent-cli/binaries/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_linux_amd64 && \
-	aws s3 cp dist/confluent_linux_arm64/confluent $(S3_STAG_PATH)/confluent-cli/binaries/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_linux_arm64 && \
+	$(call dry-run,aws s3 cp dist/confluent_linux_amd64_v1/confluent $(S3_STAG_PATH)/confluent-cli/binaries/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_linux_amd64) && \
+	$(call dry-run,aws s3 cp dist/confluent_linux_arm64/confluent $(S3_STAG_PATH)/confluent-cli/binaries/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_linux_arm64) && \
 	cat dist/confluent_$(VERSION_NO_V)_checksums_linux.txt >> dist/confluent_$(VERSION_NO_V)_checksums.txt && \
 	cat dist/confluent_$(VERSION_NO_V)_checksums_linux_arm64.txt >> dist/confluent_$(VERSION_NO_V)_checksums.txt && \
-	aws s3 cp dist/confluent_$(VERSION_NO_V)_checksums.txt $(S3_STAG_PATH)/confluent-cli/archives/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_checksums.txt && \
-	aws s3 cp dist/confluent_$(VERSION_NO_V)_checksums.txt $(S3_STAG_PATH)/confluent-cli/binaries/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_checksums.txt && \
+	$(call dry-run,aws s3 cp dist/confluent_$(VERSION_NO_V)_checksums.txt $(S3_STAG_PATH)/confluent-cli/archives/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_checksums.txt) && \
+	$(call dry-run,aws s3 cp dist/confluent_$(VERSION_NO_V)_checksums.txt $(S3_STAG_PATH)/confluent-cli/binaries/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_checksums.txt) && \
 	echo "UPLOADING LINUX BUILDS TO GITHUB" && \
 	make upload-linux-build-to-github
 	
@@ -108,7 +108,7 @@ set-acls:
 	for file_type in binaries archives; do \
 		folder_path=confluent-cli/$${file_type}/$(VERSION_NO_V); \
 		echo "SETTING ACLS: $${folder_path}"; \
-		aws s3 cp $(S3_STAG_PATH)/$${folder_path} $(S3_STAG_PATH)/$${folder_path} --acl public-read --metadata dummy=dummy --recursive || exit 1; \
+		$(call dry-run,aws s3 cp $(S3_STAG_PATH)/$${folder_path} $(S3_STAG_PATH)/$${folder_path} --acl public-read --metadata dummy=dummy --recursive) || exit 1; \
 	done
 
 # Update latest archives folder for staging
@@ -126,7 +126,7 @@ define copy-archives-files-to-latest
 	archives_folder=$1/confluent-cli/archives/$(CLEAN_VERSION); \
 	latest_folder=$2/confluent-cli/archives/latest; \
 	for suffix in $(ARCHIVE_TYPES); do \
-		aws s3 cp $${archives_folder}/confluent_$(CLEAN_VERSION)_$${suffix} $${latest_folder}/confluent_latest_$${suffix} --acl public-read; \
+		$(call dry-run,aws s3 cp $${archives_folder}/confluent_$(CLEAN_VERSION)_$${suffix} $${latest_folder}/confluent_latest_$${suffix} --acl public-read); \
 	done
 endef
 
@@ -135,15 +135,17 @@ endef
 # first argument: S3 folder of archives we want to copy from
 # second argument: S3 folder destination for latest archives
 define copy-archives-checksums-to-latest
-	$(eval TEMP_DIR=$(shell mktemp -d))
+	$(eval DIR=$(shell mktemp -d))
+
 	$(aws-authenticate); \
 	version_checksums=confluent_$(CLEAN_VERSION)_checksums.txt; \
 	latest_checksums=confluent_latest_checksums.txt; \
-	cd $(TEMP_DIR) ; \
-	aws s3 cp $1/confluent-cli/archives/$(CLEAN_VERSION)/$${version_checksums} ./ ; \
-	cat $${version_checksums} | grep "$(CLEAN_VERSION)" | sed 's/$(CLEAN_VERSION)/latest/' > $${latest_checksums} ; \
-	aws s3 cp $${latest_checksums} $2/confluent-cli/archives/latest/$${latest_checksums} --acl public-read
-	rm -rf $(TEMP_DIR)
+	cd $(DIR); \
+	$(call dry-run,aws s3 cp $1/confluent-cli/archives/$(CLEAN_VERSION)/$${version_checksums} ./); \
+	cat $${version_checksums} | grep "$(CLEAN_VERSION)" | sed 's/$(CLEAN_VERSION)/latest/' > $${latest_checksums}; \
+	$(call dry-run,aws s3 cp $${latest_checksums} $2/confluent-cli/archives/latest/$${latest_checksums} --acl public-read)
+
+	rm -rf $(DIR)
 endef
 
 .PHONY: download-licenses
@@ -156,15 +158,15 @@ download-licenses:
 ## Publish install scripts to S3. You MUST re-run this if/when you update any install script.
 publish-installer:
 	$(aws-authenticate) && \
-	aws s3 cp install.sh $(S3_BUCKET_PATH)/confluent-cli/install.sh --acl public-read
+	$(call dry-run,aws s3 cp install.sh $(S3_BUCKET_PATH)/confluent-cli/install.sh --acl public-read)
 
 .PHONY: upload-linux-build-to-github
 ## upload local copy of glibc linux build to github
 upload-linux-build-to-github:
-	gh release upload $(VERSION) dist/confluent_$(VERSION_NO_V)_linux_amd64.tar.gz && \
-	gh release upload $(VERSION) dist/confluent_$(VERSION_NO_V)_linux_arm64.tar.gz && \
+	$(call dry-run,gh release upload $(VERSION) dist/confluent_$(VERSION_NO_V)_linux_amd64.tar.gz) && \
+	$(call dry-run,gh release upload $(VERSION) dist/confluent_$(VERSION_NO_V)_linux_arm64.tar.gz) && \
 	mv dist/confluent_linux_amd64_v1/confluent dist/confluent_linux_amd64_v1/confluent_$(VERSION_NO_V)_linux_amd64 && \
 	mv dist/confluent_linux_arm64/confluent dist/confluent_linux_arm64/confluent_$(VERSION_NO_V)_linux_arm64 && \
-	gh release upload $(VERSION) dist/confluent_linux_amd64_v1/confluent_$(VERSION_NO_V)_linux_amd64 && \
-	gh release upload $(VERSION) dist/confluent_linux_arm64/confluent_$(VERSION_NO_V)_linux_arm64 && \
-	gh release upload $(VERSION) --clobber dist/confluent_$(VERSION_NO_V)_checksums.txt
+	$(call dry-run,gh release upload $(VERSION) dist/confluent_linux_amd64_v1/confluent_$(VERSION_NO_V)_linux_amd64) && \
+	$(call dry-run,gh release upload $(VERSION) dist/confluent_linux_arm64/confluent_$(VERSION_NO_V)_linux_arm64) && \
+	$(call dry-run,gh release upload $(VERSION) --clobber dist/confluent_$(VERSION_NO_V)_checksums.txt)
