@@ -63,12 +63,17 @@ func (c *clusterCommand) create(cmd *cobra.Command, _ []string) error {
 		Config: userConfigs,
 	}
 
-	connectorInfo, err := c.V2Client.CreateConnector(c.EnvironmentId(), kafkaCluster.ID, connectConfig)
+	environmentId, err := c.EnvironmentId()
 	if err != nil {
 		return err
 	}
 
-	connector, err := c.V2Client.GetConnectorExpansionByName(connectorInfo.GetName(), c.EnvironmentId(), kafkaCluster.ID)
+	connectorInfo, err := c.V2Client.CreateConnector(environmentId, kafkaCluster.ID, connectConfig)
+	if err != nil {
+		return err
+	}
+
+	connector, err := c.V2Client.GetConnectorExpansionByName(connectorInfo.GetName(), environmentId, kafkaCluster.ID)
 	if err != nil {
 		return err
 	}

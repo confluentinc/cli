@@ -98,7 +98,12 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		updatePipeline.Spec.SetActivationPrivilege(activationPrivilege)
 	}
 
-	pipeline, err := c.V2Client.UpdateSdPipeline(c.EnvironmentId(), cluster.ID, args[0], updatePipeline)
+	environmentId, err := c.EnvironmentId()
+	if err != nil {
+		return err
+	}
+
+	pipeline, err := c.V2Client.UpdateSdPipeline(environmentId, cluster.ID, args[0], updatePipeline)
 	if err != nil {
 		return err
 	}

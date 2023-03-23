@@ -28,7 +28,12 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	pipelines, err := c.V2Client.ListPipelines(c.EnvironmentId(), cluster.ID)
+	environmentId, err := c.EnvironmentId()
+	if err != nil {
+		return err
+	}
+
+	pipelines, err := c.V2Client.ListPipelines(environmentId, cluster.ID)
 	if err != nil {
 		return err
 	}

@@ -35,9 +35,10 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		return errors.CatchOrgV2ResourceNotFoundError(err, resource.Environment, httpResp)
 	}
 
+	environmentId, _ := c.EnvironmentId()
 	table := output.NewTable(cmd)
 	table.Add(&out{
-		IsCurrent: *environment.Id == c.EnvironmentId(),
+		IsCurrent: *environment.Id == environmentId,
 		Id:        *environment.Id,
 		Name:      *environment.DisplayName,
 	})
