@@ -140,9 +140,11 @@ blobs:
     bucket: confluent.cloud
     region: us-west-2
     folder: "{{.Env.S3FOLDER}}/binaries/{{.Version}}"
+    disable: "{{.Env.DRY_RUN}}" 
   - ids:
     - archive
     provider: s3
     bucket: confluent.cloud
     region: us-west-2
     folder: "{{.Env.S3FOLDER}}/archives/{{.Version}}"
+    disable: "{{.Env.DRY_RUN}}" 
