@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func (c *kafkaCommand) newTopicCommand() *cobra.Command {
+func (c *localCommand) newTopicCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "topic",
 		Short: "Run Kafka topic related commands",
@@ -33,7 +33,7 @@ func initKafkaRest(c *pcmd.CLICommand, cmd *cobra.Command) (*kafkarestv3.APIClie
 	if c.Config.LocalPorts == nil {
 		return nil, "", errors.NewErrorWithSuggestions(errors.FailedToReadPortsErrorMsg, errors.FailedToReadPortsSuggestions)
 	}
-	url := fmt.Sprintf(urlPrefix, c.Config.LocalPorts.RestPort)
+	url := fmt.Sprintf(localhostPrefix, c.Config.LocalPorts.RestPort)
 
 	unsafeTrace, err := c.Flags().GetBool("unsafe-trace")
 	if err != nil {

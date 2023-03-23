@@ -2,7 +2,6 @@ package kafka
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"regexp"
 	"strings"
@@ -27,7 +26,6 @@ func initKafkaRest(c *pcmd.AuthenticatedCLICommand, cmd *cobra.Command) (*kafkar
 	}
 	kafkaRestClient := kafkaREST.Client
 	SetServerURL(cmd, kafkaRestClient, url)
-	fmt.Println("url", url)
 	return kafkaRestClient, kafkaREST.Context, nil
 }
 

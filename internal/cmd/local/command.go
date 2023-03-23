@@ -8,11 +8,15 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
+type localCommand struct {
+	*pcmd.CLICommand
+}
+
 func New(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "local",
 		Short: "Manage a local Confluent Platform development environment.",
-		Long:  "Use the \"confluent local\" commands to try out Confluent Platform by running a single-node instance locally on your machine. Keep in mind, these commands require Java to run.",
+		Long:  `Use the "confluent local" commands to try out Confluent Platform by running a single-node instance locally on your machine. These commands require Docker to run.`,
 		Args:  cobra.NoArgs,
 	}
 
@@ -20,7 +24,9 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 		cmd.Hidden = true
 	}
 
-	cmd.AddCommand(newKafkaCommand(prerunner))
+	c := &localCommand{pcmd.NewAnonymousCLICommand(cmd, prerunner)}
+
+	cmd.AddCommand(c.newKafkaCommand())
 
 	return cmd
 }

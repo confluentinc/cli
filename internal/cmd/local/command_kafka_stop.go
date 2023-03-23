@@ -13,7 +13,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (c *kafkaCommand) newStopCommand() *cobra.Command {
+func (c *localCommand) newStopCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "stop",
 		Short: "Stop the local kafka service",
@@ -24,16 +24,18 @@ func (c *kafkaCommand) newStopCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *kafkaCommand) stop(cmd *cobra.Command, args []string) error {
-	ctx := context.Background()
-
+func (c *localCommand) stop(cmd *cobra.Command, args []string) error {
 	dockerClient, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		return err
 	}
 	defer dockerClient.Close()
 
-	containers, err := dockerClient.ContainerList(ctx, types.ContainerListOptions{})
+	if err := checkIsDockerRunning(dockerClient); err != nil {
+		return err
+	}
+
+	containers, err := dockerClient.ContainerList(context.Background(), types.ContainerListOptions{})
 	if err != nil {
 		return err
 	}
@@ -42,11 +44,11 @@ func (c *kafkaCommand) stop(cmd *cobra.Command, args []string) error {
 		if container.Image == imageName {
 			log.CliLogger.Tracef("Stopping Confluent local container " + container.ID[:10])
 			noWaitTimeout := 0 // to not wait for the container to exit gracefully
-			if err := dockerClient.ContainerStop(ctx, container.ID, containertypes.StopOptions{Timeout: &noWaitTimeout}); err != nil {
+			if err := dockerClient.ContainerStop(context.Background(), container.ID, containertypes.StopOptions{Timeout: &noWaitTimeout}); err != nil {
 				return err
 			}
 			log.CliLogger.Tracef("Confluent local container stopped")
-			if err := dockerClient.ContainerRemove(ctx, container.ID, types.ContainerRemoveOptions{}); err != nil {
+			if err := dockerClient.ContainerRemove(context.Background(), container.ID, types.ContainerRemoveOptions{}); err != nil {
 				return err
 			}
 			log.CliLogger.Tracef("Confluent local container removed")

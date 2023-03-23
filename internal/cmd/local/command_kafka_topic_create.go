@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func (c *kafkaCommand) newCreateCommand() *cobra.Command {
+func (c *localCommand) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <topic>",
 		Short: "Create a Kafka topic.",
@@ -30,11 +30,11 @@ func (c *kafkaCommand) newCreateCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *kafkaCommand) topicCreate(cmd *cobra.Command, args []string) error {
+func (c *localCommand) topicCreate(cmd *cobra.Command, args []string) error {
 	restClient, clusterId, err := initKafkaRest(c.CLICommand, cmd)
 	if err != nil {
 		return err
 	}
 
-	return kafka.CreateTopicWithRESTClient(cmd, restClient, context.Background(), args[0], clusterId)
+	return kafka.CreateTopicWithRestClient(cmd, restClient, context.Background(), args[0], clusterId)
 }

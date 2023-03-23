@@ -6,11 +6,6 @@ import (
 	"runtime"
 	"strconv"
 
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/log"
-	"github.com/confluentinc/cli/internal/pkg/output"
-
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/strslice"
@@ -19,9 +14,14 @@ import (
 	specsv1 "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/phayes/freeport"
 	"github.com/spf13/cobra"
+
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (c *kafkaCommand) newStartCommand() *cobra.Command {
+func (c *localCommand) newStartCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "start",
 		Short: "Start local kafka service",
@@ -32,15 +32,14 @@ func (c *kafkaCommand) newStartCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *kafkaCommand) start(cmd *cobra.Command, args []string) error {
+func (c *localCommand) start(cmd *cobra.Command, args []string) error {
 	dockerClient, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		return err
 	}
 	defer dockerClient.Close()
 
-	_, err = dockerClient.Info(context.Background())
-	if err != nil {
+	if err := checkIsDockerRunning(dockerClient); err != nil {
 		return err
 	}
 
@@ -121,7 +120,7 @@ func (c *kafkaCommand) start(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *kafkaCommand) prepareValidPorts() error {
+func (c *localCommand) prepareValidPorts() error {
 	if c.Config.LocalPorts != nil {
 		return nil
 	}
@@ -157,5 +156,13 @@ func (c *kafkaCommand) prepareValidPorts() error {
 		return errors.Wrap(err, errors.SavePortsToConfigErrorMsg)
 	}
 
+	return nil
+}
+
+func checkIsDockerRunning(dockerClient *client.Client) error {
+	_, err := dockerClient.Info(context.Background())
+	if err != nil {
+		return err
+	}
 	return nil
 }

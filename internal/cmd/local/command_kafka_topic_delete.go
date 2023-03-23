@@ -10,7 +10,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
-func (c *kafkaCommand) newDeleteCommand() *cobra.Command {
+func (c *localCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete <topic>",
 		Short: "Delete a Kafka topic.",
@@ -29,7 +29,7 @@ func (c *kafkaCommand) newDeleteCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *kafkaCommand) topicDelete(cmd *cobra.Command, args []string) error {
+func (c *localCommand) topicDelete(cmd *cobra.Command, args []string) error {
 	restClient, clusterId, err := initKafkaRest(c.CLICommand, cmd)
 	if err != nil {
 		return err
@@ -37,5 +37,5 @@ func (c *kafkaCommand) topicDelete(cmd *cobra.Command, args []string) error {
 
 	topicName := args[0]
 
-	return kafka.DeleteTopicWithRESTClient(cmd, restClient, context.Background(), topicName, clusterId)
+	return kafka.DeleteTopicWithRestClient(cmd, restClient, context.Background(), topicName, clusterId)
 }
