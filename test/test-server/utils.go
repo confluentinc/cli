@@ -188,10 +188,8 @@ func fillByokStoreV1() map[string]*byokv1.ByokV1Key {
 	byokStoreV1 := map[string]*byokv1.ByokV1Key{}
 
 	byokStoreV1["cck-001"] = &byokv1.ByokV1Key{
-		Id: byokv1.PtrString("cck-001"),
-		Metadata: &byokv1.ObjectMeta{
-			CreatedAt: byokv1.PtrTime(time.Date(2022, time.November, 12, 8, 24, 0, 0, time.UTC)),
-		},
+		Id:       byokv1.PtrString("cck-001"),
+		Metadata: &byokv1.ObjectMeta{CreatedAt: byokv1.PtrTime(time.Date(2022, time.November, 12, 8, 24, 0, 0, time.UTC))},
 		Key: &byokv1.ByokV1KeyKeyOneOf{
 			ByokV1AwsKey: &byokv1.ByokV1AwsKey{
 				KeyArn: "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012",
@@ -207,10 +205,8 @@ func fillByokStoreV1() map[string]*byokv1.ByokV1Key {
 	}
 
 	byokStoreV1["cck-002"] = &byokv1.ByokV1Key{
-		Id: byokv1.PtrString("cck-002"),
-		Metadata: &byokv1.ObjectMeta{
-			CreatedAt: byokv1.PtrTime(time.Date(2022, time.November, 7, 5, 30, 0, 0, time.UTC)),
-		},
+		Id:       byokv1.PtrString("cck-002"),
+		Metadata: &byokv1.ObjectMeta{CreatedAt: byokv1.PtrTime(time.Date(2022, time.November, 7, 5, 30, 0, 0, time.UTC))},
 		Key: &byokv1.ByokV1KeyKeyOneOf{
 			ByokV1AwsKey: &byokv1.ByokV1AwsKey{
 				KeyArn: "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012",
@@ -226,10 +222,8 @@ func fillByokStoreV1() map[string]*byokv1.ByokV1Key {
 	}
 
 	byokStoreV1["cck-003"] = &byokv1.ByokV1Key{
-		Id: byokv1.PtrString("cck-003"),
-		Metadata: &byokv1.ObjectMeta{
-			CreatedAt: byokv1.PtrTime(time.Date(2023, time.January, 1, 12, 0, 30, 0, time.UTC)),
-		},
+		Id:       byokv1.PtrString("cck-003"),
+		Metadata: &byokv1.ObjectMeta{CreatedAt: byokv1.PtrTime(time.Date(2023, time.January, 1, 12, 0, 30, 0, time.UTC))},
 		Key: &byokv1.ByokV1KeyKeyOneOf{
 			ByokV1AzureKey: &byokv1.ByokV1AzureKey{
 				ApplicationId: byokv1.PtrString("00000000-0000-0000-0000-000000000000"),
@@ -253,7 +247,6 @@ func writeServiceAccountInvalidError(w http.ResponseWriter) error {
 }
 
 func writeResourceNotFoundError(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusForbidden)
 	_, err := io.WriteString(w, resourceNotFoundErrMsg)
 	return err
@@ -266,7 +259,6 @@ func writeInvalidRoleNameError(w http.ResponseWriter, roleName string) error {
 }
 
 func writeUserConflictError(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusConflict)
 	_, err := io.WriteString(w, userConflictErrMsg)
 	return err
