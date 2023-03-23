@@ -100,6 +100,7 @@ else
 	go build -ldflags="-s -w -X main.commit=$(REF) -X main.date=$(DATE) -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
 endif
 
+
 .PHONY: integration-test
 integration-test:
 ifdef CI
@@ -115,7 +116,6 @@ endif
 
 .PHONY: test
 test: unit-test integration-test
-
 
 .PHONY: generate-packaging-patch
 generate-packaging-patch:
