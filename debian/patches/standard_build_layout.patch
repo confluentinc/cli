@@ -1,6 +1,6 @@
---- cli/Makefile	2023-03-23 10:57:29
+--- cli/Makefile	2023-03-23 12:41:36
 +++ debian/Makefile	2023-03-21 10:41:40
-@@ -1,128 +1,130 @@
+@@ -1,125 +1,130 @@
 -SHELL              := /bin/bash
 -ALL_SRC            := $(shell find . -name "*.go" | grep -v -e vendor)
 -GORELEASER_VERSION := v1.16.3-0.20230323115904-f82a32cd3a59
@@ -108,23 +108,25 @@
 +	rm -rf $(DESTDIR)$(PREFIX)
 +	mkdir -p $(DESTDIR)$(PREFIX)
  
--show-args:
--	@echo "VERSION: $(VERSION)"
+-.PHONY: lint
+-lint: lint-go lint-cli
 +	mkdir -p $(DESTDIR)$(BINPATH)
 +	mkdir -p $(DESTDIR)$(LIBPATH)
 +	mkdir -p $(DESTDIR)$(DOCPATH)
 +	mkdir -p $(DESTDIR)$(SYSCONFDIR)
- 
--.PHONY: lint
--lint: lint-go lint-cli
-+	cp packaging/confluent.sh $(DESTDIR)$(BINPATH)/confluent
-+	chmod 755 $(DESTDIR)$(BINPATH)/confluent
  
 -.PHONY: lint-go
 -lint-go:
 -	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.51.1 && \
 -	golangci-lint run --enable dupword,exportloopref,gci,gocritic,gofmt,goimports,gomoddirectives,govet,ineffassign,misspell,nakedret,nolintlint,nonamedreturns,prealloc,predeclared,tenv,unconvert,unparam,unused,usestdlibvars,whitespace --timeout=10m
 -	@echo "✅  golangci-lint"
++	cp packaging/confluent.sh $(DESTDIR)$(BINPATH)/confluent
++	chmod 755 $(DESTDIR)$(BINPATH)/confluent
+ 
+-.PHONY: lint-cli
+-lint-cli: cmd/lint/en_US.aff cmd/lint/en_US.dic
+-	go run cmd/lint/main.go -aff-file $(word 1,$^) -dic-file $(word 2,$^) $(ARGS)
+-	@echo "✅  cmd/lint/main.go"
 +	cd $(DESTDIR)$(LIBPATH) ; \
 +	for dir in darwin_amd64 darwin_arm64 linux_amd64 windows_amd64; do \
 +		mkdir -p $${dir} ; \
@@ -134,23 +136,14 @@
 +		chmod 755 $${filepath} ; \
 +	done
  
--.PHONY: lint-cli
--lint-cli: cmd/lint/en_US.aff cmd/lint/en_US.dic
--	go run cmd/lint/main.go -aff-file $(word 1,$^) -dic-file $(word 2,$^) $(ARGS)
--	@echo "✅  cmd/lint/main.go"
+-cmd/lint/en_US.aff:
+-	curl -s "https://chromium.googlesource.com/chromium/deps/hunspell_dictionaries/+/master/en_US.aff?format=TEXT" | base64 -D > $@
 +	cp LICENSE $(DESTDIR)$(DOCPATH)/COPYRIGHT
 +	$(DESTDIR)$(BINPATH)/confluent --version | awk -F' ' '{ print $3 }' > $(DESTDIR)$(DOCPATH)/version.txt
  
--cmd/lint/en_US.aff:
--	curl -s "https://chromium.googlesource.com/chromium/deps/hunspell_dictionaries/+/master/en_US.aff?format=TEXT" | base64 -D > $@
-+	chown -R root:root $(DESTDIR)$(PREFIX)
- 
 -cmd/lint/en_US.dic:
 -	curl -s "https://chromium.googlesource.com/chromium/deps/hunspell_dictionaries/+/master/en_US.dic?format=TEXT" | base64 -D > $@
-+clean:
-+	rm -rf $(CURDIR)/$(PACKAGE_NAME)*
-+	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)*rpm
-+	rm -rf RPM_BUILDING
++	chown -R root:root $(DESTDIR)$(PREFIX)
  
 -.PHONY: unit-test
 -unit-test:
@@ -159,11 +152,11 @@
 -	gotestsum --junitfile unit-test-report.xml -- -v -race -coverprofile coverage.out $$(go list ./... | grep -v test)
 -else
 -	go test -v $$(go list ./... | grep -v test) $(UNIT_TEST_ARGS)
-+distclean: clean
-+ifneq ($(PACKAGE_TYPE),deb)
-+	git reset --hard HEAD
-+	git status --ignored --porcelain | cut -d ' ' -f 2 | xargs rm -rf
- endif
+-endif
++clean:
++	rm -rf $(CURDIR)/$(PACKAGE_NAME)*
++	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)*rpm
++	rm -rf RPM_BUILDING
  
 -.PHONY: build-for-integration-test
 -build-for-integration-test:
@@ -171,8 +164,11 @@
 -	go build -cover -ldflags="-s -w -X main.commit=$(REF) -X main.date=$(DATE) -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
 -else
 -	go build -ldflags="-s -w -X main.commit=$(REF) -X main.date=$(DATE) -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
--endif
-+RPM_VERSION=$(shell echo $(VERSION) | sed -e 's/-alpha[0-9]*//' -e 's/-beta[0-9]*//' -e 's/-rc[0-9]*//' -e 's/-SNAPSHOT//' -e 's/-cp[0-9]*//' -e 's/-hotfix[0-9]*//' -e 's/-[0-9]*//')
++distclean: clean
++ifneq ($(PACKAGE_TYPE),deb)
++	git reset --hard HEAD
++	git status --ignored --porcelain | cut -d ' ' -f 2 | xargs rm -rf
+ endif
  
 -.PHONY: integration-test
 -integration-test:
@@ -183,6 +179,8 @@
 -	mkdir $${GOCOVERDIR} && \
 -	gotestsum --junitfile integration-test-report.xml -- -v -race $$(go list ./... | grep test) && \
 -	go tool covdata textfmt -i $${GOCOVERDIR} -o test/coverage.out
++RPM_VERSION=$(shell echo $(VERSION) | sed -e 's/-alpha[0-9]*//' -e 's/-beta[0-9]*//' -e 's/-rc[0-9]*//' -e 's/-SNAPSHOT//' -e 's/-cp[0-9]*//' -e 's/-hotfix[0-9]*//' -e 's/-[0-9]*//')
++
 +# Get any -alpha, -beta (preview), -rc (release candidate), -SNAPSHOT (nightly), -cp (confluent patch), -hotfix piece that we need to put into the Release part of
 +# the version since RPM versions don't support non-numeric
 +# characters. Ultimately, for something like 0.8.2-beta, we want to end up with

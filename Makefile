@@ -67,9 +67,6 @@ clean:
 		[ -d $$dir ] && rm -r $$dir || true ; \
 	done
 
-show-args:
-	@echo "VERSION: $(VERSION)"
-
 .PHONY: lint
 lint: lint-go lint-cli
 
