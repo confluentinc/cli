@@ -380,3 +380,15 @@ func CatchNoSubjectLevelConfigError(err error, r *http.Response, subject string)
 
 	return err
 }
+
+func CatchContainerNameInUseError(err error) error {
+	if err == nil {
+		return nil
+	}
+
+	if strings.Contains(err.Error(), "The container name \"/confluent-local\" is already in use") {
+		return NewErrorWithSuggestions(ConfluentLocalStartedErrorMsg, ConfluentLocalStartedSuggestions)
+	}
+
+	return err
+}
