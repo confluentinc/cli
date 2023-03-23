@@ -158,7 +158,7 @@ func newOnPremConsumer(cmd *cobra.Command, clientID string, configPath string, c
 }
 
 // example: https://github.com/confluentinc/confluent-kafka-go/blob/e01dd295220b5bf55f3fbfabdf8cc6d3f0ae185f/examples/cooperative_consumer_example/cooperative_consumer_example.go#L121
-func getRebalanceCallback(offset ckafka.Offset, partitionFilter partitionFilter) func(*ckafka.Consumer, ckafka.Event) error {
+func GetRebalanceCallback(offset ckafka.Offset, partitionFilter PartitionFilter) func(*ckafka.Consumer, ckafka.Event) error {
 	return func(consumer *ckafka.Consumer, event ckafka.Event) error {
 		switch ev := event.(type) { // ev is of type ckafka.Event
 		case kafka.AssignedPartitions:
@@ -246,7 +246,7 @@ func consumeMessage(e *ckafka.Message, h *GroupHandler) error {
 	return nil
 }
 
-func runConsumer(consumer *ckafka.Consumer, groupHandler *GroupHandler) error {
+func RunConsumer(consumer *ckafka.Consumer, groupHandler *GroupHandler) error {
 	run := true
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, os.Interrupt)
