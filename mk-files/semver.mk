@@ -36,8 +36,8 @@ commit-release:
 tag-release:
 	# Delete tag from the remote in case it already exists
 	git tag -d v$$(cat release-notes/version.txt) || true
-	$(call dry-run,git push -d $(GIT_REMOTE_NAME) v$$(cat release-notes/version.txt)) || true
+	$(call dry-run,git push -d origin v$$(cat release-notes/version.txt)) || true
 
 	# Add tag to the remote
 	git tag v$$(cat release-notes/version.txt)
-	$(call dry-run,git push $(GIT_REMOTE_NAME) v$$(cat release-notes/version.txt))
+	$(call dry-run,git push origin v$$(cat release-notes/version.txt))
