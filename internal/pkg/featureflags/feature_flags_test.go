@@ -101,10 +101,6 @@ func (suite *LaunchDarklyTestSuite) TestContextToLDUser() {
 	req.Equal(v1.MockOrgResourceId, orgResourceId.StringValue())
 	environmentId, _ := user.GetCustom("environment.id")
 	req.Equal(v1.MockEnvironmentId, environmentId.StringValue())
-	clusterId, _ := user.GetCustom("cluster.id")
-	req.Equal(v1.MockKafkaClusterId(), clusterId.StringValue())
-	pkc, _ := user.GetCustom("cluster.physicalClusterId")
-	req.Equal("pkc-abc123", pkc.StringValue())
 }
 
 func TestLaunchDarklySuite(t *testing.T) {

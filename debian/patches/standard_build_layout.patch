@@ -1,13 +1,9 @@
---- cli/Makefile	2023-03-16 13:51:16.000000000 -0700
-+++ debian/Makefile	2023-03-16 13:57:10.000000000 -0700
-@@ -1,128 +1,130 @@
+--- cli/Makefile	2023-03-23 13:29:19.342316125 -0700
++++ debian/Makefile	2023-03-21 10:41:40.431704825 -0700
+@@ -1,121 +1,130 @@
 -SHELL              := /bin/bash
 -ALL_SRC            := $(shell find . -name "*.go" | grep -v -e vendor)
--GORELEASER_VERSION := v1.15.2
--
--GIT_REMOTE_NAME ?= origin
--MAIN_BRANCH     ?= main
--RELEASE_BRANCH  ?= main
+-GORELEASER_VERSION := v1.16.3-0.20230323115904-f82a32cd3a59
 -
 -.PHONY: build # compile natively based on the system
 -build:
@@ -50,6 +46,7 @@
 -include ./mk-files/dockerhub.mk
 -include ./mk-files/semver.mk
 -include ./mk-files/docs.mk
+-include ./mk-files/dry-run.mk
 -include ./mk-files/release.mk
 -include ./mk-files/release-test.mk
 -include ./mk-files/release-notes.mk
@@ -69,9 +66,6 @@
 -	@for dir in bin dist docs legal release-notes; do \
 -		[ -d $$dir ] && rm -r $$dir || true ; \
 -	done
--
--show-args:
--	@echo "VERSION: $(VERSION)"
 +ifndef VERSION
 +	VERSION=$(CLI_VERSION)
 +endif
@@ -183,8 +177,6 @@
 +	git status --ignored --porcelain | cut -d ' ' -f 2 | xargs rm -rf
  endif
  
-+RPM_VERSION=$(shell echo $(VERSION) | sed -e 's/-alpha[0-9]*//' -e 's/-beta[0-9]*//' -e 's/-rc[0-9]*//' -e 's/-SNAPSHOT//' -e 's/-cp[0-9]*//' -e 's/-hotfix[0-9]*//' -e 's/-[0-9]*//')
- 
 -.PHONY: integration-test
 -integration-test:
 -ifdef CI
@@ -194,6 +186,8 @@
 -	mkdir $${GOCOVERDIR} && \
 -	gotestsum --junitfile integration-test-report.xml -- -v -race $$(go list ./... | grep test) && \
 -	go tool covdata textfmt -i $${GOCOVERDIR} -o test/coverage.out
++RPM_VERSION=$(shell echo $(VERSION) | sed -e 's/-alpha[0-9]*//' -e 's/-beta[0-9]*//' -e 's/-rc[0-9]*//' -e 's/-SNAPSHOT//' -e 's/-cp[0-9]*//' -e 's/-hotfix[0-9]*//' -e 's/-[0-9]*//')
++
 +# Get any -alpha, -beta (preview), -rc (release candidate), -SNAPSHOT (nightly), -cp (confluent patch), -hotfix piece that we need to put into the Release part of
 +# the version since RPM versions don't support non-numeric
 +# characters. Ultimately, for something like 0.8.2-beta, we want to end up with
