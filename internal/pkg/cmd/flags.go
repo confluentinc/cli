@@ -50,7 +50,7 @@ func AutocompleteApiKeys(environment string, client *ccloudv2.Client) []string {
 }
 
 func AddAvailabilityFlag(cmd *cobra.Command) {
-	cmd.Flags().String("availability", kafka.Availabilities[0], fmt.Sprintf("Specify the availability of the cluster as %s.", utils.ArrayToCommaDelimitedString(kafka.Availabilities)))
+	cmd.Flags().String("availability", kafka.Availabilities[0], fmt.Sprintf("Specify the availability of the cluster as %s.", utils.ArrayToCommaDelimitedString(kafka.Availabilities, "or")))
 	RegisterFlagCompletionFunc(cmd, output.FlagName, func(_ *cobra.Command, _ []string) []string { return kafka.Availabilities })
 }
 
@@ -80,7 +80,7 @@ func AutocompleteByokKeyIds(client *ccloudv2.Client) []string {
 }
 
 func AddByokProviderFlag(cmd *cobra.Command) {
-	cmd.Flags().String("provider", "", fmt.Sprintf("Specify the provider as %s.", utils.ArrayToCommaDelimitedString([]string{"aws", "azure"})))
+	cmd.Flags().String("provider", "", fmt.Sprintf("Specify the provider as %s.", utils.ArrayToCommaDelimitedString([]string{"aws", "azure"}, "or")))
 
 	RegisterFlagCompletionFunc(cmd, "provider", func(_ *cobra.Command, _ []string) []string {
 		return []string{"aws", "azure"}
@@ -88,7 +88,7 @@ func AddByokProviderFlag(cmd *cobra.Command) {
 }
 
 func AddByokStateFlag(cmd *cobra.Command) {
-	cmd.Flags().String("state", "", fmt.Sprintf("Specify the state as %s.", utils.ArrayToCommaDelimitedString([]string{"in-use", "available"})))
+	cmd.Flags().String("state", "", fmt.Sprintf("Specify the state as %s.", utils.ArrayToCommaDelimitedString([]string{"in-use", "available"}, "or")))
 
 	RegisterFlagCompletionFunc(cmd, "state", func(_ *cobra.Command, _ []string) []string {
 		return []string{"in-use", "available"}
@@ -96,7 +96,7 @@ func AddByokStateFlag(cmd *cobra.Command) {
 }
 
 func AddCloudFlag(cmd *cobra.Command) {
-	cmd.Flags().String("cloud", "", fmt.Sprintf("Specify the cloud provider as %s.", utils.ArrayToCommaDelimitedString(kafka.Clouds)))
+	cmd.Flags().String("cloud", "", fmt.Sprintf("Specify the cloud provider as %s.", utils.ArrayToCommaDelimitedString(kafka.Clouds, "or")))
 	RegisterFlagCompletionFunc(cmd, "cloud", func(_ *cobra.Command, _ []string) []string { return kafka.Clouds })
 }
 
@@ -242,7 +242,7 @@ func AddOutputFlag(cmd *cobra.Command) {
 }
 
 func AddOutputFlagWithDefaultValue(cmd *cobra.Command, defaultValue string) {
-	cmd.Flags().StringP(output.FlagName, "o", defaultValue, fmt.Sprintf("Specify the output format as %s.", utils.ArrayToCommaDelimitedString(output.ValidFlagValues)))
+	cmd.Flags().StringP(output.FlagName, "o", defaultValue, fmt.Sprintf("Specify the output format as %s.", utils.ArrayToCommaDelimitedString(output.ValidFlagValues, "or")))
 
 	RegisterFlagCompletionFunc(cmd, output.FlagName, func(_ *cobra.Command, _ []string) []string {
 		return output.ValidFlagValues
@@ -332,7 +332,7 @@ func autocompleteRegions(client *ccloudv1.Client, cloud string) []string {
 
 func AddSchemaTypeFlag(cmd *cobra.Command) {
 	arr := []string{"avro", "json", "protobuf"}
-	str := utils.ArrayToCommaDelimitedString(arr)
+	str := utils.ArrayToCommaDelimitedString(arr, "or")
 
 	cmd.Flags().String("type", "", fmt.Sprintf("Specify the schema type as %s.", str))
 
@@ -368,13 +368,13 @@ func AutocompleteServiceAccounts(client *ccloudv2.Client) []string {
 }
 
 func AddTypeFlag(cmd *cobra.Command) {
-	cmd.Flags().String("type", kafka.Types[0], fmt.Sprintf("Specify the type of the Kafka cluster as %s.", utils.ArrayToCommaDelimitedString(kafka.Types)))
+	cmd.Flags().String("type", kafka.Types[0], fmt.Sprintf("Specify the type of the Kafka cluster as %s.", utils.ArrayToCommaDelimitedString(kafka.Types, "or")))
 	RegisterFlagCompletionFunc(cmd, output.FlagName, func(_ *cobra.Command, _ []string) []string { return kafka.Types })
 }
 
 func AddValueFormatFlag(cmd *cobra.Command) {
 	arr := []string{"string", "avro", "jsonschema", "protobuf"}
-	str := utils.ArrayToCommaDelimitedString(arr)
+	str := utils.ArrayToCommaDelimitedString(arr, "or")
 
 	cmd.Flags().String("value-format", "string", fmt.Sprintf("Format of message value as %s. Note that schema references are not supported for avro.", str))
 
