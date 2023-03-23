@@ -173,9 +173,6 @@ func (c *command) asyncapiImport(cmd *cobra.Command, args []string) error {
 			}
 		}
 	}
-	if err := c.countAsyncApiParseUsage(details); err != nil {
-		log.CliLogger.Warn(err)
-	}
 	return nil
 }
 

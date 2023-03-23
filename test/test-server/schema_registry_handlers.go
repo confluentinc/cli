@@ -260,7 +260,7 @@ func handleSRById(t *testing.T) http.HandlerFunc {
 // Handler for: "/subjects"
 func handleSRSubjects(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		subjects := []string{"subject1", "subject2", "subject3", "topic1-value"}
+		subjects := []string{"subject1", "subject2", "subject3", "topic1-value", "topic2-value"}
 		err := json.NewEncoder(w).Encode(subjects)
 		require.NoError(t, err)
 	}
