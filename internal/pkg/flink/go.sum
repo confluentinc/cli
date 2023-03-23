@@ -45,10 +45,8 @@ github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDk
 github.com/cncf/udpa/go v0.0.0-20191209042840-269d4d468f6f/go.mod h1:M8M6+tZqaGXZJjfX53e64911xZQV5JYwmTeXPW+k8Sc=
 github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway v0.0.1 h1:hkpoGtF99nVkW4M505FeAVhGx1OCIl3N9l2XCztPPMI=
 github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway v0.0.1/go.mod h1:ajf3w9C+MEMBcGM3cda7ZNR9HM59UdBesec6lhbgKqY=
-github.com/confluentinc/go-prompt v0.2.4 h1:/0ybh2DHSkk3bzeIVFvOkg+OjIsKxL2yTWc7rBfy8nA=
-github.com/confluentinc/go-prompt v0.2.4/go.mod h1:AiyjC0545jhglwKL5TCR01IViZSAMrxepJXoeQ1Xwac=
-github.com/confluentinc/go-prompt v0.2.5 h1:VJJHTUzfQv/KN8m6eBp4CcJir7nTp0gcFmCivSXy8dY=
-github.com/confluentinc/go-prompt v0.2.5/go.mod h1:4/tf63YzhSsiXnsKosCmv1H0ivpXVezZHaMpSVB+DXw=
+github.com/confluentinc/go-prompt v0.2.6 h1:loK/II++s0HCte3q61VGePGskLchwRndGQIAGoxeZEk=
+github.com/confluentinc/go-prompt v0.2.6/go.mod h1:4/tf63YzhSsiXnsKosCmv1H0ivpXVezZHaMpSVB+DXw=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
