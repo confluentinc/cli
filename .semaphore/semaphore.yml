@@ -29,6 +29,7 @@ blocks:
 
             # Run tests
             - make generate-packaging-patch
+            - diff --version
             - diff -w -u <(git cat-file --filters HEAD:debian/patches/standard_build_layout.patch | awk "{if (NR>3) {print}}") <(cat debian/patches/standard_build_layout.patch | awk "{if (NR>3) {print}}")
             - make lint
             - make test
