@@ -2,9 +2,6 @@ SHELL              := /bin/bash
 ALL_SRC            := $(shell find . -name "*.go" | grep -v -e vendor)
 GORELEASER_VERSION := v1.16.3-0.20230323115904-f82a32cd3a59
 
-MAIN_BRANCH     ?= main
-RELEASE_BRANCH  ?= main
-
 .PHONY: build # compile natively based on the system
 build:
 ifneq "" "$(findstring NT,$(shell uname))" # build for Windows
