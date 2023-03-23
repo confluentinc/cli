@@ -1,6 +1,10 @@
 SHELL              := /bin/bash
 ALL_SRC            := $(shell find . -name "*.go" | grep -v -e vendor)
-GORELEASER_VERSION := v1.16.3-0.20230323115904-f82a32cd3a59
+GORELEASER_VERSION := v1.15.2
+
+GIT_REMOTE_NAME ?= origin
+MAIN_BRANCH     ?= main
+RELEASE_BRANCH  ?= main
 
 .PHONY: build # compile natively based on the system
 build:
@@ -43,7 +47,6 @@ include ./mk-files/cc-cli-service.mk
 include ./mk-files/dockerhub.mk
 include ./mk-files/semver.mk
 include ./mk-files/docs.mk
-include ./mk-files/dry-run.mk
 include ./mk-files/release.mk
 include ./mk-files/release-test.mk
 include ./mk-files/release-notes.mk
@@ -62,6 +65,9 @@ clean:
 	@for dir in bin dist docs legal release-notes; do \
 		[ -d $$dir ] && rm -r $$dir || true ; \
 	done
+
+show-args:
+	@echo "VERSION: $(VERSION)"
 
 .PHONY: lint
 lint: lint-go lint-cli
