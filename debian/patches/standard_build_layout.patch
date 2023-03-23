@@ -1,6 +1,6 @@
---- cli/Makefile	2023-03-23 13:10:02
+--- cli/Makefile	2023-03-23 13:16:53
 +++ debian/Makefile	2023-03-21 10:41:40
-@@ -1,121 +1,130 @@
+@@ -1,122 +1,130 @@
 -SHELL              := /bin/bash
 -ALL_SRC            := $(shell find . -name "*.go" | grep -v -e vendor)
 -GORELEASER_VERSION := v1.16.3-0.20230323115904-f82a32cd3a59
@@ -206,9 +206,6 @@
 +	@ls -laF $(FULL_PACKAGE_TITLE)*rpm
 +	echo "================================================="
  
--.PHONY: generate-packaging-patch
--generate-packaging-patch:
--	diff -u Makefile debian/Makefile | sed "1 s_Makefile_cli/Makefile_" > debian/patches/standard_build_layout.patch
 +# Unfortunately, because of version naming issues and the way rpmbuild expects
 +# the paths in the tar file to be named, we need to rearchive the package. So
 +# instead of depending on archive, this target just uses the unarchived,
@@ -222,7 +219,10 @@
 +	sed "s/##RPMVERSION##/$(RPM_VERSION)/g; s/##RPMRELEASE##/$(RPM_RELEASE_ID)/g" < debian/$(FULL_PACKAGE_TITLE).spec.in > $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)/$(FULL_PACKAGE_TITLE).spec
 +	rm -f $@ && tar -czf $@ $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
 +	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)
-+
+ 
+-.PHONY: generate-packaging-patch
+-generate-packaging-patch:
+-	diff -u Makefile debian/Makefile | sed "1 s_Makefile_cli/Makefile_" > debian/patches/standard_build_layout.patch
 +rpm-build-area: RPM_BUILDING/BUILD RPM_BUILDING/RPMS RPM_BUILDING/SOURCES RPM_BUILDING/SPECS RPM_BUILDING/SRPMS
 +
 +RPM_BUILDING/%:
