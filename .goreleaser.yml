@@ -113,6 +113,9 @@ builds:
         - cmd: scripts/gon_filepath_editor.sh {{ .Path }} arm64
         - cmd: gon dist/gon_confluent_arm64.hcl
 
+release:
+  disable: "{{.Env.DRY_RUN}}"
+
 archives:
   - id: binary
     name_template: '{{ .ProjectName }}_{{ .Version }}_{{ if eq .Os "linux" }}alpine{{ else }}{{ .Os }}{{ end }}_{{ .Arch }}'
@@ -137,9 +140,11 @@ blobs:
     bucket: confluent.cloud
     region: us-west-2
     folder: "{{.Env.S3FOLDER}}/binaries/{{.Version}}"
+    disable: "{{.Env.DRY_RUN}}" 
   - ids:
     - archive
     provider: s3
     bucket: confluent.cloud
     region: us-west-2
     folder: "{{.Env.S3FOLDER}}/archives/{{.Version}}"
+    disable: "{{.Env.DRY_RUN}}" 
