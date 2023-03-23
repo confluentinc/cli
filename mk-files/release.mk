@@ -142,7 +142,7 @@ define copy-archives-checksums-to-latest
 	latest_checksums=confluent_latest_checksums.txt; \
 	cd $(DIR); \
 	$(call dry-run,aws s3 cp $1/confluent-cli/archives/$(CLEAN_VERSION)/$${version_checksums} ./); \
-	cat $${version_checksums} | grep "$(CLEAN_VERSION)" | sed 's/$(CLEAN_VERSION)/latest/' > $${latest_checksums}; \
+	$(call dry-run,cat $${version_checksums} | grep "$(CLEAN_VERSION)" | sed 's/$(CLEAN_VERSION)/latest/' > $${latest_checksums}); \
 	$(call dry-run,aws s3 cp $${latest_checksums} $2/confluent-cli/archives/latest/$${latest_checksums} --acl public-read)
 
 	rm -rf $(DIR)
