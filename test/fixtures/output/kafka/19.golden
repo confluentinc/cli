@@ -10,5 +10,5 @@ region: us-west-2
 availability: single-zone
 status: UP
 endpoint: SASL_SSL://kafka-endpoint
-rest_endpoint: http://127.0.0.1:1025
+rest_endpoint: http://127.0.0.1:1027
 topic_count: 2
