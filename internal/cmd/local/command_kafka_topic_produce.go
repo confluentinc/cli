@@ -6,14 +6,16 @@ import (
 	"os"
 	"os/signal"
 
+	"github.com/spf13/cobra"
+
+	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
+
 	"github.com/confluentinc/cli/internal/cmd/kafka"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/serdes"
-	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
-	"github.com/spf13/cobra"
 )
 
 func (c *localCommand) newProduceCommand() *cobra.Command {

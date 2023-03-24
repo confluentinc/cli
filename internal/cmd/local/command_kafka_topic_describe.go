@@ -3,11 +3,11 @@ package local
 import (
 	"context"
 
-	"github.com/confluentinc/cli/internal/cmd/kafka"
-	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/internal/cmd/kafka"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/examples"
 )
 
 func (c *localCommand) newDescribeCommand() *cobra.Command {
