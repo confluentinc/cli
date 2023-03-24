@@ -22,12 +22,16 @@ const releaseNotesFilename = "release-notes.rst"
 
 var (
 	s3ReleaseNotesBuilderParams = &ReleaseNotesBuilderParams{
-		cliDisplayName:      "Confluent CLI",
-		sectionHeaderFormat: "%s\n-------------",
+		cliDisplayName: "Confluent CLI",
+		sectionHeaderFormat: func(title string) string {
+			return title + "\n" + strings.Repeat("-", len(title))
+		},
 	}
 	docsReleaseNotesBuilderParams = &ReleaseNotesBuilderParams{
-		cliDisplayName:      "|confluent-cli|",
-		sectionHeaderFormat: "**%s**",
+		cliDisplayName: "|confluent-cli|",
+		sectionHeaderFormat: func(title string) string {
+			return fmt.Sprintf("**%s**", title)
+		},
 	}
 )
 
@@ -50,7 +54,6 @@ var sections = []string{
 
 type ReleaseNotes struct {
 	version string
-	bump    string
 
 	major []string
 	minor []string
@@ -187,7 +190,6 @@ func (r *ReleaseNotes) ReadFromGithub() error {
 	if err != nil {
 		return err
 	}
-	r.bump = bump
 
 	r.version = bumpVersion(latestVersion, bump)
 
@@ -198,14 +200,14 @@ func (r *ReleaseNotes) Write(releaseNotesPath string) error {
 	_ = os.Mkdir("release-notes", 0777)
 
 	s3ReleaseNotesBuilder := NewReleaseNotesBuilder(r.version, s3ReleaseNotesBuilderParams)
-	s3ReleaseNotes := s3ReleaseNotesBuilder.buildS3ReleaseNotes(r)
+	s3ReleaseNotes := s3ReleaseNotesBuilder.buildReleaseNotes(r)
 
 	if err := writeFile(filepath.Join("release-notes", "latest-release.rst"), s3ReleaseNotes); err != nil {
 		return err
 	}
 
 	docsReleaseNotesBuilder := NewReleaseNotesBuilder(r.version, docsReleaseNotesBuilderParams)
-	docsReleaseNotes := docsReleaseNotesBuilder.buildDocsReleaseNotes(r)
+	docsReleaseNotes := docsReleaseNotesBuilder.buildReleaseNotes(r)
 	updatedDocsPage, err := buildDocsPage(releaseNotesPath, docsPageHeader, docsReleaseNotes)
 	if err != nil {
 		return err
@@ -214,9 +216,6 @@ func (r *ReleaseNotes) Write(releaseNotesPath string) error {
 		return err
 	}
 
-	if err := writeFile(filepath.Join("release-notes", "bump.txt"), r.bump); err != nil {
-		return err
-	}
 	if err := writeFile(filepath.Join("release-notes", "version.txt"), r.version); err != nil {
 		return err
 	}

@@ -73,26 +73,16 @@ func (suite *ReleaseNotesBuilderTestSuite) runTest(testNamePrefix string, releas
 			content:  suite.noNewFeatureContent,
 			wantFile: fmt.Sprintf("test_files/output/%s_release_notes_builder_no_new_features", testNamePrefix),
 		},
-		{
-			name:     fmt.Sprintf("%s no changes", testNamePrefix),
-			content:  suite.noChangeContent,
-			wantFile: fmt.Sprintf("test_files/output/%s_release_notes_builder_no_changes", testNamePrefix),
-		},
 	}
 	for _, tt := range tests {
 		suite.T().Run(tt.name, func(t *testing.T) {
 			builder := NewReleaseNotesBuilder(suite.version, releaseNotesBuilderParams)
 			builder.date = time.Date(1999, time.February, 24, 0, 0, 0, 0, time.UTC)
 
-			var releaseNotes string
-			if testNamePrefix == "s3" {
-				releaseNotes = builder.buildS3ReleaseNotes(tt.content)
-			} else {
-				releaseNotes = builder.buildDocsReleaseNotes(tt.content)
-			}
-
 			want, err := readTestFile(tt.wantFile)
 			require.NoError(t, err)
+
+			releaseNotes := builder.buildReleaseNotes(tt.content)
 			require.Equal(t, want, releaseNotes)
 		})
 	}
