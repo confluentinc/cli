@@ -17,6 +17,7 @@ const (
 type ReleaseNotesBuilderParams struct {
 	cliDisplayName      string
 	sectionHeaderFormat func(string) string
+	codeSnippetFormat   string
 }
 
 type ReleaseNotesBuilder struct {
@@ -58,6 +59,7 @@ func (b *ReleaseNotesBuilder) buildSection(sectionTitle string, sectionElements 
 func (b *ReleaseNotesBuilder) buildBulletPoints(elements []string) string {
 	bulletPointList := make([]string, len(elements))
 	for i, element := range elements {
+		element = strings.ReplaceAll(element, "`", b.codeSnippetFormat)
 		bulletPointList[i] = fmt.Sprintf("  - %s", element)
 	}
 	return strings.Join(bulletPointList, "\n")

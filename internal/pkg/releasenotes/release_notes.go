@@ -26,12 +26,14 @@ var (
 		sectionHeaderFormat: func(title string) string {
 			return title + "\n" + strings.Repeat("-", len(title))
 		},
+		codeSnippetFormat: "`",
 	}
 	docsReleaseNotesBuilderParams = &ReleaseNotesBuilderParams{
 		cliDisplayName: "|confluent-cli|",
 		sectionHeaderFormat: func(title string) string {
 			return fmt.Sprintf("**%s**", title)
 		},
+		codeSnippetFormat: "``",
 	}
 )
 
