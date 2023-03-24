@@ -25,7 +25,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 	pmock "github.com/confluentinc/cli/internal/pkg/mock"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
-	"github.com/confluentinc/cli/internal/pkg/update/mock"
 	climock "github.com/confluentinc/cli/mock"
 )
 
@@ -95,11 +94,6 @@ func getPreRunBase() *pcmd.PreRun {
 	return &pcmd.PreRun{
 		Config:  v1.AuthenticatedCloudConfigMock(),
 		Version: pmock.NewVersionMock(),
-		UpdateClient: &mock.Client{
-			CheckForUpdatesFunc: func(_, _ string, _ bool) (string, string, error) {
-				return "", "", nil
-			},
-		},
 		FlagResolver: &pcmd.FlagResolverImpl{
 			Prompt: &form.RealPrompt{},
 			Out:    os.Stdout,
@@ -156,13 +150,6 @@ func TestPreRun_HasAPIKey_SetupLoggingAndCheckForUpdates(t *testing.T) {
 
 	// HACK: Checking for updates is intentionally skipped when testing
 	r.Config.IsTest = false
-
-	r.UpdateClient = &mock.Client{
-		CheckForUpdatesFunc: func(_, _ string, _ bool) (string, string, error) {
-			calledAnonymous = true
-			return "", "", nil
-		},
-	}
 
 	root := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
 	root.Flags().CountP("verbose", "v", "Increase verbosity")

@@ -6,7 +6,9 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
+	"github.com/blang/semver"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
@@ -22,10 +24,10 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/featureflags"
 	"github.com/confluentinc/cli/internal/pkg/form"
+	"github.com/confluentinc/cli/internal/pkg/github"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/update"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
@@ -44,7 +46,6 @@ type PreRunner interface {
 // PreRun is the standard PreRunner implementation
 type PreRun struct {
 	Config                  *v1.Config
-	UpdateClient            update.Client
 	FlagResolver            FlagResolver
 	Version                 *version.Version
 	CCloudClientFactory     pauth.CCloudClientFactory
@@ -979,30 +980,36 @@ func (r *PreRun) getClusterIdForAPIKeyCredential(ctx *dynamicconfig.DynamicConte
 
 // notifyIfUpdateAvailable prints a message if an update is available
 func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, currentVersion string) {
-	if !r.shouldCheckForUpdates(cmd) || r.Config.IsTest {
+	if r.Config.IsTest || r.Config.DisableUpdates || r.Config.DisableUpdateCheck || !r.shouldCheckForUpdates(cmd) {
 		return
 	}
 
-	latestMajorVersion, latestMinorVersion, err := r.UpdateClient.CheckForUpdates(version.CLIName, currentVersion, false)
+	if time.Since(r.Config.LastUpdateCheck) < 24*time.Hour {
+		return
+	}
+
+	r.Config.LastUpdateCheck = time.Now()
+	if err := r.Config.Save(); err != nil {
+		return
+	}
+
+	current, err := semver.ParseTolerant(currentVersion)
 	if err != nil {
-		// This is a convenience helper to check-for-updates before arbitrary commands. Since the CLI supports running
-		// in internet-less environments (e.g., local or on-prem deploys), swallow the error and log a warning.
-		log.CliLogger.Warn(err)
 		return
 	}
 
-	if latestMajorVersion != "" {
-		if !strings.HasPrefix(latestMajorVersion, "v") {
-			latestMajorVersion = "v" + latestMajorVersion
-		}
-		output.ErrPrintf(errors.NotifyMajorUpdateMsg, version.CLIName, currentVersion, latestMajorVersion, version.CLIName)
+	latest, err := github.GetLatestRelease()
+	if err != nil {
+		return
 	}
 
-	if latestMinorVersion != "" {
-		if !strings.HasPrefix(latestMinorVersion, "v") {
-			latestMinorVersion = "v" + latestMinorVersion
+	if latest.GT(current) {
+		notify := "A %s version update is available from v%s to v%s.\nTo view release notes and install the update, run `%s`.\n\n"
+		if latest.Major > current.Major {
+			output.ErrPrintf(notify, "major", current, latest, "confluent update --major")
+		} else {
+			output.ErrPrintf(notify, "minor", current, latest, "confluent update")
 		}
-		output.ErrPrintf(errors.NotifyMinorUpdateMsg, version.CLIName, currentVersion, latestMinorVersion, version.CLIName)
 	}
 }
 
