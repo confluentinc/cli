@@ -25,16 +25,16 @@ test-installer:
 verify-binaries:
 	$(eval DIR=$(shell mktemp -d))
 
-	@$(aws-authenticate) && \
+	$(aws-authenticate) && \
 	for os in linux alpine darwin windows; do \
 		for arch in arm64 amd64; do \
 			if [ "$${os}" = "windows" ] && [ "$${arch}" = "arm64" ] ; then \
 				continue; \
-			fi ; \
-			suffix="" ; \
+			fi; \
+			suffix=""; \
 			if [ "$${os}" = "windows" ] ; then \
 				suffix=".exe"; \
-			fi ; \
+			fi; \
 			FILE=$(VERIFY_BIN_FOLDER)/confluent-cli/binaries/$(CLEAN_VERSION)/confluent_$(CLEAN_VERSION)_$${os}_$${arch}$${suffix}; \
 			echo "Checking binary: $${FILE}"; \
 			$(call dry-run,aws s3 cp $$FILE $(DIR)) || { rm -rf $(DIR) && exit 1; }; \
