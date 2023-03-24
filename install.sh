@@ -5,20 +5,9 @@ set -e
 # Manually modified to download from S3 for confluentinc/cli goreleaser config
 #
 # The major modifications include:
-# * reworked `github_release` into `s3_release` function
-# * updated `TARBALL_URL` and `CHECKSUM_URL` to point to S3 instead of GitHub API
-# * added a new `-l` flag to list versions from S3, since we can't link to our (private) GitHub repo
+# * added a new `-l` flag to list versions
 # * extracted a `BINARY` variable instead of having binary names hardcoded in `execute`
-# * updated version/tag handling of the `v` prefix; it's expected in GitHub and inconsistently used in S3
 # * updated the usage message, logging, and file comments a bit
-
-S3_URL=https://s3-us-west-2.amazonaws.com/confluent.cloud
-S3_CONTENT_CHECK_URL="${S3_URL}?prefix="
-if [ -n "$OVERRIDE_S3_FOLDER" ]
-then
-	S3_CONTENT_CHECK_URL="${S3_URL}?prefix=${OVERRIDE_S3_FOLDER}/"
-	S3_URL=${S3_URL}/${OVERRIDE_S3_FOLDER}
-fi
 
 usage() {
   this=$1
@@ -45,7 +34,7 @@ parse_args() {
   while getopts "b:ldh?" arg; do
     case "$arg" in
       b) BINDIR="$OPTARG" ;;
-      l) s3_releases ; exit 0 ;;
+      l) releases; exit 0 ;;
       d) log_set_priority 10 ;;
       h | \?) usage "$0" ;;
     esac
@@ -60,8 +49,8 @@ parse_args() {
 execute() {
   tmpdir=$(mktmpdir)
   log_debug "downloading files into ${tmpdir}"
-  http_download "${tmpdir}/${TARBALL}" "${TARBALL_URL}" "Accept:application/octet-stream"
-  http_download "${tmpdir}/${CHECKSUM}" "${CHECKSUM_URL}" "Accept:application/octet-stream"
+  http_download "${tmpdir}/${TARBALL}" "${TARBALL_URL}" "Accept:application/octet-stream" || (echo "failed to download ${TARBALL_URL}" && exit 1)
+  http_download "${tmpdir}/${CHECKSUM}" "${CHECKSUM_URL}" "Accept:application/octet-stream" || (echo "failed to download ${CHECKSUM_URL}" && exit 1)
   hash_sha256_verify "${tmpdir}/${TARBALL}" "${tmpdir}/${CHECKSUM}"
   srcdir="${tmpdir}/${BINARY}"
   rm -rf "${srcdir}"
@@ -102,18 +91,10 @@ check_platform() {
 }
 tag_to_version() {
   if [ -z "${TAG}" ]; then
-    log_info "checking S3 for latest tag"
+    TAG=$(latest_release)
   else
-    log_info "checking S3 for tag '${TAG}'"
+    TAG=v${TAG#v}
   fi
-  REALTAG=$(s3_release "${TAG}") && true
-  if test -z "$REALTAG"; then
-    log_crit "unable to find '${TAG}' - use 'latest' or see https://docs.confluent.io/${PROJECT_NAME}/current/release-notes.html for available versions."
-    exit 1
-  fi
-  # if version starts with 'v', don't remove it
-  TAG="$REALTAG"
-  VERSION=${TAG}
 }
 adjust_format() {
   # change format (tar.gz or zip) based on ARCH
@@ -133,22 +114,11 @@ adjust_os() {
   esac
   true
 }
-s3_releases() {
-  s3url="${S3_CONTENT_CHECK_URL}${PROJECT_NAME}/archives/&delimiter=/"
-  xml=$(http_copy "$s3url")
-  versions=$(echo "$xml" | sed -n 's/</\
-</gp' | sed -n "s/<Prefix>${PROJECT_NAME}\/archives\/\(.*\)\//\1/p") || return 1
-  test -z "$versions" && return 1
-  echo "$versions" | sort --version-sort
+releases() {
+  curl -s https://api.github.com/repos/confluentinc/cli/releases | grep "tag_name" | sed -r 's/^[^:]*: "(.*)",/\1/' | sort --version-sort
 }
-s3_release() {
-  version=$1
-  test -z "$version" && version="latest"
-  s3url="${S3_CONTENT_CHECK_URL}${PROJECT_NAME}/archives/${version#v}/&delimiter=/"
-  xml=$(http_copy "$s3url")
-  exists=$(echo "$xml" | grep "<Key>") || return 1
-  test -z "$version" && return 1
-  echo "$version"
+latest_release() {
+  curl -s https://api.github.com/repos/confluentinc/cli/releases/latest | grep "tag_name" | sed -r 's/^[^:]*: "(.*)",/\1/'
 }
 
 cat /dev/null <<EOF
@@ -406,23 +376,20 @@ main() {
 
   adjust_os
 
+  # If < v3, archive version is prefixed with "v"
+  VERSION=${TAG}
+  VERSION=${VERSION#v}
+  VERSION=$([ "${VERSION#2.}" = "${VERSION}" ] && echo "${VERSION}" || echo "v${VERSION}")
+  
   if [ ${OS} = "windows" ]; then
-    FORMAT=zip ;
+    FORMAT=zip;
   fi
 
-  log_info "found version: ${VERSION} for ${TAG}/${OS}/${ARCH}"
-
-  # If < v3, archive version is prefixed with "v"
-  VERSION=${VERSION#v}
-  VERSION=$([ "${VERSION#3.}" = "${VERSION}" ] && echo "v${VERSION}" || echo "${VERSION}")
-  VERSION=$([ "${VERSION}" = "vlatest" ] && echo "latest" || echo "${VERSION}")
-  
-  S3_ARCHIVES_URL=${S3_URL}/${PROJECT_NAME}/archives/${VERSION#v}
-  NAME=${BINARY}_${VERSION}_${OS}_${ARCH}
-  TARBALL=${NAME}.${FORMAT}
-  TARBALL_URL=${S3_ARCHIVES_URL}/${TARBALL}
-  CHECKSUM=${BINARY}_${VERSION}_checksums.txt
-  CHECKSUM_URL=${S3_ARCHIVES_URL}/${CHECKSUM}
+  BASE_URL=https://github.com/confluentinc/cli/releases/download/${TAG}
+  TARBALL=${BINARY}_${VERSION}_${OS}_${ARCH}.${FORMAT}
+  TARBALL_URL=${BASE_URL}/${TARBALL}
+  CHECKSUM=${BINARY}_${TAG#v}_checksums.txt
+  CHECKSUM_URL=${BASE_URL}/${CHECKSUM}
 
   execute
 }
