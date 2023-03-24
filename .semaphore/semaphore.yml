@@ -21,6 +21,7 @@ blocks:
         - name: Docker check
           commands:
             - docker images
+            - source ~/git/go/src/github.com/confluentinc/cc-dotfiles/caas.sh && AWS_PROFILE=cc-production-1/prod-administrator aws sts get-caller-identity
             - docker login -u AWS -p $(aws ecr get-login-password --region us-west-2) 523370736235.dkr.ecr.us-west-2.amazonaws.com
         - name: linux/amd64
           commands:
