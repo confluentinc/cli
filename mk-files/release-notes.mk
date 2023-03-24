@@ -5,23 +5,17 @@ release-notes:
 
 	git clone git@github.com:confluentinc/docs-confluent-cli.git $(DOCS_CONFLUENT_CLI) && \
 	go run -ldflags '-X main.releaseNotesPath=$(DOCS_CONFLUENT_CLI)' cmd/releasenotes/main.go && \
-	bump=$$(cat release-notes/bump.txt) && \
 	version=$$(cat release-notes/version.txt) && \
 	cd $(DOCS_CONFLUENT_CLI) && \
-	if [ "$${bump}" = "patch" ]; then \
+	if [ $${version} != *.0 ]; then \
 		git checkout $$(echo $${version} | sed $(STAGING_BRANCH_REGEX)); \
 	fi && \
-	git checkout -b cli-v$${version}-release-notes && \
+	git checkout -b publish-docs-v$${version} && \
 	cd - && \
 	cp release-notes/release-notes.rst $(DOCS_CONFLUENT_CLI) && \
 	cd $(DOCS_CONFLUENT_CLI) && \
 	git commit -am "New release notes for v$${version}" && \
-	$(call dry-run,git push -u origin cli-v$${version}-release-notes) && \
-	base="master" && \
-	if [ "$${bump}" = "patch" ]; then \
-		base=$$(echo $${version} | sed $(STAGING_BRANCH_REGEX)); \
-	fi && \
-	$(call dry-run,gh pr create -B $${base} --title "New release notes for v$${version}" --body "")
+	$(call dry-run,git push -u origin publish-docs-v$${version}) && \
 
 	rm -rf $(DIR)
 

@@ -16,7 +16,8 @@ const (
 
 type ReleaseNotesBuilderParams struct {
 	cliDisplayName      string
-	sectionHeaderFormat string
+	sectionHeaderFormat func(string) string
+	codeSnippetFormat   string
 }
 
 type ReleaseNotesBuilder struct {
@@ -33,26 +34,15 @@ func NewReleaseNotesBuilder(version string, params *ReleaseNotesBuilderParams) *
 	}
 }
 
-func (b *ReleaseNotesBuilder) buildS3ReleaseNotes(content *ReleaseNotes) string {
+func (b *ReleaseNotesBuilder) buildReleaseNotes(content *ReleaseNotes) string {
 	title := fmt.Sprintf(titleFormat, b.buildDate(), b.cliDisplayName, b.version)
 	underline := strings.Repeat("=", len(title))
-	title = "\n" + underline + "\n" + title + "\n" + underline + "\n"
 
 	majorSection := b.buildSection(majorSectionTitle, content.major)
 	minorSection := b.buildSection(minorSectionTitle, content.minor)
 	patchSection := b.buildSection(patchSectionTitle, content.patch)
-	return title + "\n" + b.getReleaseNotesContent(majorSection, minorSection, patchSection)
-}
 
-func (b *ReleaseNotesBuilder) buildDocsReleaseNotes(content *ReleaseNotes) string {
-	title := fmt.Sprintf(titleFormat, b.buildDate(), b.cliDisplayName, b.version)
-	underline := strings.Repeat("=", len(title))
-	title = "\n" + title + "\n" + underline
-
-	breakingChangesSection := b.buildSection(majorSectionTitle, content.major)
-	newFeaturesSection := b.buildSection(minorSectionTitle, content.minor)
-	bugFixesSection := b.buildSection(patchSectionTitle, content.patch)
-	return title + "\n" + b.getReleaseNotesContent(breakingChangesSection, newFeaturesSection, bugFixesSection)
+	return title + "\n" + underline + "\n\n" + b.getReleaseNotesContent(majorSection, minorSection, patchSection) + "\n"
 }
 
 func (b *ReleaseNotesBuilder) buildDate() string {
@@ -63,14 +53,13 @@ func (b *ReleaseNotesBuilder) buildSection(sectionTitle string, sectionElements 
 	if len(sectionElements) == 0 {
 		return ""
 	}
-	sectionHeader := fmt.Sprintf(b.sectionHeaderFormat, sectionTitle)
-	bulletPoints := b.buildBulletPoints(sectionElements)
-	return sectionHeader + "\n" + bulletPoints
+	return b.sectionHeaderFormat(sectionTitle) + "\n" + b.buildBulletPoints(sectionElements)
 }
 
 func (b *ReleaseNotesBuilder) buildBulletPoints(elements []string) string {
 	bulletPointList := make([]string, len(elements))
 	for i, element := range elements {
+		element = strings.ReplaceAll(element, "`", b.codeSnippetFormat)
 		bulletPointList[i] = fmt.Sprintf("  - %s", element)
 	}
 	return strings.Join(bulletPointList, "\n")
