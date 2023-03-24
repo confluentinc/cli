@@ -3,9 +3,10 @@ package local
 import (
 	"context"
 
+	"github.com/spf13/cobra"
+
 	"github.com/confluentinc/cli/internal/cmd/kafka"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/spf13/cobra"
 )
 
 func (c *localCommand) newCreateCommand() *cobra.Command {
