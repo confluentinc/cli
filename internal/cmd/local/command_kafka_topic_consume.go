@@ -16,7 +16,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (c *localCommand) newConsumeCommand() *cobra.Command {
+func (c *command) newConsumeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "consume <topic>",
 		Args:  cobra.ExactArgs(1),
@@ -43,7 +43,7 @@ func (c *localCommand) newConsumeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *localCommand) topicConsume(cmd *cobra.Command, args []string) error {
+func (c *command) topicConsume(cmd *cobra.Command, args []string) error {
 	printKey, err := cmd.Flags().GetBool("print-key")
 	if err != nil {
 		return err

@@ -21,7 +21,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (c *localCommand) newStartCommand() *cobra.Command {
+func (c *command) newStartCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "start",
 		Short: "Start local Kafka service.",
@@ -32,7 +32,7 @@ func (c *localCommand) newStartCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *localCommand) start(cmd *cobra.Command, args []string) error {
+func (c *command) start(cmd *cobra.Command, args []string) error {
 	dockerClient, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		return err
@@ -120,7 +120,7 @@ func (c *localCommand) start(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *localCommand) prepareValidPorts() error {
+func (c *command) prepareValidPorts() error {
 	if c.Config.LocalPorts != nil {
 		return nil
 	}

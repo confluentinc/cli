@@ -2,6 +2,7 @@ package local
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/spf13/cobra"
 
@@ -9,7 +10,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 )
 
-func (c *localCommand) newCreateCommand() *cobra.Command {
+func (c *command) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <topic>",
 		Short: "Create a Kafka topic.",
@@ -31,9 +32,10 @@ func (c *localCommand) newCreateCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *localCommand) topicCreate(cmd *cobra.Command, args []string) error {
+func (c *command) topicCreate(cmd *cobra.Command, args []string) error {
 	restClient, clusterId, err := initKafkaRest(c.CLICommand, cmd)
 	if err != nil {
+		fmt.Println("err", err)
 		return err
 	}
 

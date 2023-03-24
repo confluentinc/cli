@@ -8,7 +8,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
-type localCommand struct {
+type command struct {
 	*pcmd.CLICommand
 }
 
@@ -24,7 +24,7 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 		cmd.Hidden = true
 	}
 
-	c := &localCommand{pcmd.NewAnonymousCLICommand(cmd, prerunner)}
+	c := &command{pcmd.NewAnonymousCLICommand(cmd, prerunner)}
 
 	cmd.AddCommand(c.newKafkaCommand())
 

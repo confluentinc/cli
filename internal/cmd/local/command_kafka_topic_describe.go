@@ -10,7 +10,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 )
 
-func (c *localCommand) newDescribeCommand() *cobra.Command {
+func (c *command) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe <topic>",
 		Args:  cobra.ExactArgs(1),
@@ -29,7 +29,7 @@ func (c *localCommand) newDescribeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *localCommand) topicDescribe(cmd *cobra.Command, args []string) error {
+func (c *command) topicDescribe(cmd *cobra.Command, args []string) error {
 	restClient, clusterId, err := initKafkaRest(c.CLICommand, cmd)
 	if err != nil {
 		return err

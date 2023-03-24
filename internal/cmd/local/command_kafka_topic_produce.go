@@ -18,7 +18,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/serdes"
 )
 
-func (c *localCommand) newProduceCommand() *cobra.Command {
+func (c *command) newProduceCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "produce <topic>",
 		Args:  cobra.ExactArgs(1),
@@ -40,7 +40,7 @@ func (c *localCommand) newProduceCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *localCommand) topicProduce(cmd *cobra.Command, args []string) error {
+func (c *command) topicProduce(cmd *cobra.Command, args []string) error {
 	if c.Config.LocalPorts == nil {
 		return errors.NewErrorWithSuggestions(errors.FailedToReadPortsErrorMsg, errors.FailedToReadPortsSuggestions)
 	}

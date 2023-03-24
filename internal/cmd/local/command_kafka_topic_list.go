@@ -9,7 +9,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
-func (c *localCommand) newListCommand() *cobra.Command {
+func (c *command) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List local Kafka topics.",
@@ -21,7 +21,7 @@ func (c *localCommand) newListCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *localCommand) topicList(cmd *cobra.Command, args []string) error {
+func (c *command) topicList(cmd *cobra.Command, args []string) error {
 	restClient, clusterId, err := initKafkaRest(c.CLICommand, cmd)
 	if err != nil {
 		return err

@@ -10,7 +10,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 )
 
-func (c *localCommand) newUpdateCommand() *cobra.Command {
+func (c *command) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update <topic>",
 		Short: "Update a Kafka topic.",
@@ -30,7 +30,7 @@ func (c *localCommand) newUpdateCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *localCommand) topicUpdate(cmd *cobra.Command, args []string) error {
+func (c *command) topicUpdate(cmd *cobra.Command, args []string) error {
 	restClient, clusterId, err := initKafkaRest(c.CLICommand, cmd)
 	if err != nil {
 		return err

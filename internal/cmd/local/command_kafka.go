@@ -7,7 +7,7 @@ import (
 const imageName = "523370736235.dkr.ecr.us-west-2.amazonaws.com/confluentinc/kafka-local:latest"
 const localhostPrefix = "http://localhost:%s"
 
-func (c *localCommand) newKafkaCommand() *cobra.Command {
+func (c *command) newKafkaCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "kafka",
 		Short: "Manage a single-node instance of Apache Kafka.",
