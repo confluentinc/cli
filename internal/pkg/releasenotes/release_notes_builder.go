@@ -36,12 +36,12 @@ func NewReleaseNotesBuilder(version string, params *ReleaseNotesBuilderParams) *
 func (b *ReleaseNotesBuilder) buildS3ReleaseNotes(content *ReleaseNotes) string {
 	title := fmt.Sprintf(titleFormat, b.buildDate(), b.cliDisplayName, b.version)
 	underline := strings.Repeat("=", len(title))
-	title = "\n" + title + "\n" + underline + "\n"
 
 	majorSection := b.buildSection(majorSectionTitle, content.major)
 	minorSection := b.buildSection(minorSectionTitle, content.minor)
 	patchSection := b.buildSection(patchSectionTitle, content.patch)
-	return title + "\n" + b.getReleaseNotesContent(majorSection, minorSection, patchSection)
+
+	return title + "\n" + underline + "\n\n" + b.getReleaseNotesContent(majorSection, minorSection, patchSection) + "\n"
 }
 
 func (b *ReleaseNotesBuilder) buildDocsReleaseNotes(content *ReleaseNotes) string {
