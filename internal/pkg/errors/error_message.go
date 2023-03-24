@@ -209,18 +209,13 @@ const (
 	KsqlDBTerminateClusterErrorMsg = `failed to terminate ksqlDB cluster "%s" due to "%s"`
 
 	// local commands
-	NoServicesRunningErrorMsg = "no services running"
-	TopNotAvailableErrorMsg   = "top command not available on platform: %s"
-	InvalidConnectorErrorMsg  = "invalid connector: %s"
-	FailedToStartErrorMsg     = "%s failed to start"
-	FailedToStopErrorMsg      = "%s failed to stop"
-	JavaRequirementErrorMsg   = "the Confluent CLI requires Java version 1.8 or 1.11.\n" +
-		"See https://docs.confluent.io/current/installation/versions-interoperability.html .\n" +
-		"If you have multiple versions of Java installed, you may need to set JAVA_HOME to the version you want Confluent to use."
-	NoLogFoundErrorMsg       = `no log found: to run %s, use "confluent local services %s start"`
-	MacVersionErrorMsg       = "macOS version >= %s is required (detected: %s)"
-	JavaExecNotFondErrorMsg  = "could not find java executable, please install java or set JAVA_HOME"
-	NothingToDestroyErrorMsg = "nothing to destroy"
+	ConfluentLocalStartedErrorMsg    = "Confluent local container has been created"
+	ConfluentLocalStartedSuggestions = "Continue your experience with Confluent local running `confluent local kafka produce` and `confluent local kafka consume`.\n" +
+		"To stop Confluent local container, run `confluent local kafka stop`."
+	SavePortsToConfigErrorMsg     = "failed to save local ports to config"
+	RemovePortsFromConfigErrorMsg = "failed to remove local ports from config"
+	FailedToReadPortsErrorMsg     = "failed to read local ports from config"
+	FailedToReadPortsSuggestions  = "Restart Confluent Local with `confluent local kafka stop` and `confluent local kafka start`"
 
 	// schema-registry commands
 	InvalidSchemaRegistryLocationErrorMsg    = "invalid input for flag `--geo`"
