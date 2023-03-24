@@ -1,7 +1,6 @@
 package apikey
 
 import (
-	"github.com/confluentinc/cli/internal/pkg/featureflags"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -11,6 +10,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/featureflags"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
