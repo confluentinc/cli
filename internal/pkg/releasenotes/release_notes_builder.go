@@ -16,7 +16,7 @@ const (
 
 type ReleaseNotesBuilderParams struct {
 	cliDisplayName      string
-	sectionHeaderFormat string
+	sectionHeaderFormat func(string) string
 }
 
 type ReleaseNotesBuilder struct {
@@ -63,9 +63,7 @@ func (b *ReleaseNotesBuilder) buildSection(sectionTitle string, sectionElements 
 	if len(sectionElements) == 0 {
 		return ""
 	}
-	sectionHeader := fmt.Sprintf(b.sectionHeaderFormat, sectionTitle)
-	bulletPoints := b.buildBulletPoints(sectionElements)
-	return sectionHeader + "\n" + bulletPoints
+	return b.sectionHeaderFormat(sectionTitle) + "\n" + b.buildBulletPoints(sectionElements)
 }
 
 func (b *ReleaseNotesBuilder) buildBulletPoints(elements []string) string {

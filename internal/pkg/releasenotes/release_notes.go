@@ -22,12 +22,16 @@ const releaseNotesFilename = "release-notes.rst"
 
 var (
 	s3ReleaseNotesBuilderParams = &ReleaseNotesBuilderParams{
-		cliDisplayName:      "Confluent CLI",
-		sectionHeaderFormat: "%s\n-------------",
+		cliDisplayName: "Confluent CLI",
+		sectionHeaderFormat: func(title string) string {
+			return title + "\n" + strings.Repeat("-", len(title))
+		},
 	}
 	docsReleaseNotesBuilderParams = &ReleaseNotesBuilderParams{
-		cliDisplayName:      "|confluent-cli|",
-		sectionHeaderFormat: "**%s**",
+		cliDisplayName: "|confluent-cli|",
+		sectionHeaderFormat: func(title string) string {
+			return fmt.Sprintf("**%s**", title)
+		},
 	}
 )
 
