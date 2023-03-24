@@ -980,7 +980,7 @@ func (r *PreRun) getClusterIdForAPIKeyCredential(ctx *dynamicconfig.DynamicConte
 
 // notifyIfUpdateAvailable prints a message if an update is available
 func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, currentVersion string) {
-	if !r.shouldCheckForUpdates(cmd) || r.Config.IsTest {
+	if r.Config.IsTest || r.Config.DisableUpdates || r.Config.DisableUpdateCheck || !r.shouldCheckForUpdates(cmd) {
 		return
 	}
 
