@@ -50,7 +50,6 @@ var sections = []string{
 
 type ReleaseNotes struct {
 	version string
-	bump    string
 
 	major []string
 	minor []string
@@ -187,7 +186,6 @@ func (r *ReleaseNotes) ReadFromGithub() error {
 	if err != nil {
 		return err
 	}
-	r.bump = bump
 
 	r.version = bumpVersion(latestVersion, bump)
 
@@ -214,9 +212,6 @@ func (r *ReleaseNotes) Write(releaseNotesPath string) error {
 		return err
 	}
 
-	if err := writeFile(filepath.Join("release-notes", "bump.txt"), r.bump); err != nil {
-		return err
-	}
 	if err := writeFile(filepath.Join("release-notes", "version.txt"), r.version); err != nil {
 		return err
 	}
