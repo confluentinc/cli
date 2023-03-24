@@ -67,7 +67,7 @@ func (c *clusterCommand) newCreateCommand(cfg *v1.Config) *cobra.Command {
 	pcmd.AddRegionFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddAvailabilityFlag(cmd)
 	pcmd.AddTypeFlag(cmd)
-	cmd.Flags().Int("cku", 0, `Number of Confluent Kafka Units (non-negative). Required for Kafka clusters of type "dedicated".`)
+	cmd.Flags().Uint32("cku", 0, `Number of Confluent Kafka Units. Required for Kafka clusters of type "dedicated".`)
 	cmd.Flags().String("encryption-key", "", "Resource ID of the Cloud Key Management Service key (GCP only).")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
@@ -165,17 +165,17 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 	}
 
 	if cmd.Flags().Changed("cku") {
-		cku, err := cmd.Flags().GetInt("cku")
+		cku, err := cmd.Flags().GetUint32("cku")
 		if err != nil {
 			return err
 		}
 		if clusterType != skuDedicated {
-			return errors.NewErrorWithSuggestions("the `--cku` flag can only be used when creating a dedicated Kafka cluster", "Specify a dedicated cluster with `--type`.")
+			return errors.NewErrorWithSuggestions("the `--cku` flag can only be used when creating a dedicated Kafka cluster", "Specify a dedicated cluster with `--type dedicated`.")
 		}
-		if cku <= 0 {
+		if cku == 0 {
 			return errors.New(errors.CKUMoreThanZeroErrorMsg)
 		}
-		setClusterConfigCku(&createCluster, int32(cku))
+		createCluster.Spec.Config.CmkV2Dedicated.SetCku(int32(cku))
 	}
 
 	kafkaCluster, httpResp, err := c.V2Client.CreateKafkaCluster(createCluster)
@@ -292,10 +292,6 @@ func setCmkClusterConfig(typeString string, cku int32, encryptionKeyID string) *
 			CmkV2Basic: &cmkv2.CmkV2Basic{Kind: "Basic"},
 		}
 	}
-}
-
-func setClusterConfigCku(cluster *cmkv2.CmkV2Cluster, cku int32) {
-	cluster.Spec.Config.CmkV2Dedicated.Cku = cku
 }
 
 func getKafkaProvisionEstimate(sku ccstructs.Sku) string {

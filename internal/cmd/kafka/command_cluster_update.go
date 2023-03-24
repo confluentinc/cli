@@ -3,10 +3,12 @@ package kafka
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -35,6 +37,8 @@ func (c *clusterCommand) newUpdateCommand(cfg *v1.Config) *cobra.Command {
 	}
 
 	cmd.Flags().String("name", "", "Name of the Kafka cluster.")
+	pcmd.AddAvailabilityFlag(cmd)
+	pcmd.AddTypeFlag(cmd)
 	cmd.Flags().Uint32("cku", 0, `Number of Confluent Kafka Units. For Kafka clusters of type "dedicated" only. When shrinking a cluster, you must reduce capacity one CKU at a time.`)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
@@ -46,18 +50,22 @@ func (c *clusterCommand) newUpdateCommand(cfg *v1.Config) *cobra.Command {
 }
 
 func (c *clusterCommand) update(cmd *cobra.Command, args []string, prompt form.Prompt) error {
-	if !cmd.Flags().Changed("name") && !cmd.Flags().Changed("cku") {
-		return errors.New(errors.NameOrCKUFlagErrorMsg)
+	if !(cmd.Flags().Changed("name") || cmd.Flags().Changed("availability") || cmd.Flags().Changed("type") || cmd.Flags().Changed("cku")) {
+		return errors.New("must specify one of `--name`, `--availability`, `--type`, or `--cku`")
 	}
 
-	clusterID := args[0]
-	currentCluster, _, err := c.V2Client.DescribeKafkaCluster(clusterID, c.EnvironmentId())
+	clusterId := args[0]
+	currentCluster, _, err := c.V2Client.DescribeKafkaCluster(clusterId, c.EnvironmentId())
 	if err != nil {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.KafkaClusterNotFoundErrorMsg, clusterID), errors.ChooseRightEnvironmentSuggestions)
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.KafkaClusterNotFoundErrorMsg, clusterId), errors.ChooseRightEnvironmentSuggestions)
+	}
+
+	if currentCluster.Status.GetPhase() == ccloudv2.StatusProvisioning {
+		return errors.New(errors.KafkaClusterProvisioningErrorMsg)
 	}
 
 	update := cmkv2.CmkV2ClusterUpdate{
-		Id:   cmkv2.PtrString(clusterID),
+		Id:   cmkv2.PtrString(clusterId),
 		Spec: &cmkv2.CmkV2ClusterSpecUpdate{Environment: &cmkv2.EnvScopedObjectReference{Id: c.EnvironmentId()}},
 	}
 
@@ -67,56 +75,92 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string, prompt form.P
 			return err
 		}
 		if name == "" {
-			return errors.New(errors.NonEmptyNameErrorMsg)
+			return errors.New("`--name` must not be empty")
 		}
+
 		update.Spec.SetDisplayName(name)
+
+		// The backend blocks simultaneous modification of `--name` and `--type`. If both are passed, update the name separately.
+		if cmd.Flags().Changed("type") {
+			if _, err := c.V2Client.UpdateKafkaCluster(clusterId, update); err != nil {
+				return err
+			}
+			update.Spec.DisplayName = nil
+		}
 	}
 
-	if cmd.Flags().Changed("cku") {
-		cku, err := cmd.Flags().GetUint32("cku")
+	if cmd.Flags().Changed("availability") {
+		availability, err := cmd.Flags().GetString("availability")
 		if err != nil {
 			return err
 		}
-		updatedCku, err := c.validateResize(int32(cku), &currentCluster, prompt)
-		if err != nil {
-			return err
+		if availability == "" {
+			return errors.New("`--availability` must not be empty")
 		}
-		update.Spec.Config = &cmkv2.CmkV2ClusterSpecUpdateConfigOneOf{CmkV2Dedicated: &cmkv2.CmkV2Dedicated{Kind: "Dedicated", Cku: updatedCku}}
+		update.Spec.SetAvailability(strings.ToUpper(strings.ReplaceAll(availability, "-", "_")))
 	}
 
-	updatedCluster, err := c.V2Client.UpdateKafkaCluster(clusterID, update)
+	// Both `--type` and `--cku` require changing the config
+	if cmd.Flags().Changed("type") || cmd.Flags().Changed("cku") {
+		// Set base config before setting type or CKU
+		updatedClusterType := getClusterType(currentCluster.Spec.GetConfig())
+		if cmd.Flags().Changed("type") {
+			clusterType, err := cmd.Flags().GetString("type")
+			if err != nil {
+				return err
+			}
+			updatedClusterType = clusterType
+		}
+
+		switch updatedClusterType {
+		case skuBasic:
+			update.Spec.SetConfig(cmkv2.CmkV2ClusterSpecUpdateConfigOneOf{CmkV2Basic: &cmkv2.CmkV2Basic{Kind: "Basic"}})
+		case skuStandard:
+			update.Spec.SetConfig(cmkv2.CmkV2ClusterSpecUpdateConfigOneOf{CmkV2Standard: &cmkv2.CmkV2Standard{Kind: "Standard"}})
+		case skuDedicated:
+			update.Spec.SetConfig(cmkv2.CmkV2ClusterSpecUpdateConfigOneOf{CmkV2Dedicated: &cmkv2.CmkV2Dedicated{Kind: "Dedicated"}})
+		default:
+			return fmt.Errorf(`unsupported cluster type "%s"`, updatedClusterType)
+		}
+
+		if cmd.Flags().Changed("cku") {
+			cku, err := cmd.Flags().GetUint32("cku")
+			if err != nil {
+				return err
+			}
+			if cku == 0 {
+				return errors.New(errors.CKUMoreThanZeroErrorMsg)
+			}
+			if err := c.validateResize(cku, &currentCluster, prompt); err != nil {
+				return err
+			}
+			switch updatedClusterType {
+			case skuDedicated:
+				update.Spec.Config.CmkV2Dedicated.SetCku(int32(cku))
+			}
+		}
+	}
+
+	updatedCluster, err := c.V2Client.UpdateKafkaCluster(clusterId, update)
 	if err != nil {
-		return errors.NewWrapErrorWithSuggestions(err, "failed to update Kafka cluster", errors.KafkaClusterUpdateFailedSuggestions)
+		return err
 	}
 
 	ctx := c.Context.Config.Context()
 	c.Context.Config.SetOverwrittenActiveKafka(ctx.KafkaClusterContext.GetActiveKafkaClusterId())
-	ctx.KafkaClusterContext.SetActiveKafkaCluster(clusterID)
+	ctx.KafkaClusterContext.SetActiveKafkaCluster(clusterId)
 
 	return c.outputKafkaClusterDescription(cmd, &updatedCluster, true)
 }
 
-func (c *clusterCommand) validateResize(cku int32, currentCluster *cmkv2.CmkV2Cluster, prompt form.Prompt) (int32, error) {
-	// Ensure the cluster is a Dedicated Cluster
-	if currentCluster.GetSpec().Config.CmkV2Dedicated == nil {
-		return 0, errors.New(errors.ClusterResizeNotSupportedErrorMsg)
+func (c *clusterCommand) validateResize(cku uint32, currentCluster *cmkv2.CmkV2Cluster, prompt form.Prompt) error {
+	if !isDedicated(currentCluster) {
+		return errors.New(errors.ClusterResizeNotSupportedErrorMsg)
 	}
-	// Durability Checks
-	if currentCluster.Spec.GetAvailability() == highAvailability && cku <= 1 {
-		return 0, errors.New(errors.CKUMoreThanOneErrorMsg)
-	}
-	if cku == 0 {
-		return 0, errors.New(errors.CKUMoreThanZeroErrorMsg)
-	}
-	// Cluster can't be resized while it's provisioning or being expanded already.
-	// Name _can_ be changed during these times, though.
-	if err := isClusterResizeInProgress(currentCluster); err != nil {
-		return 0, err
-	}
+
 	// If shrink
-	if cku < currentCluster.GetSpec().Config.CmkV2Dedicated.Cku {
+	if int32(cku) < currentCluster.Spec.GetConfig().CmkV2Dedicated.GetCku() {
 		promptMessage := ""
-		// metrics api auth via jwt
 		if err := c.validateKafkaClusterMetrics(currentCluster, true); err != nil {
 			promptMessage += fmt.Sprintf("\n%v\n", err)
 		}
@@ -125,11 +169,12 @@ func (c *clusterCommand) validateResize(cku int32, currentCluster *cmkv2.CmkV2Cl
 		}
 		if promptMessage != "" {
 			if ok, err := confirmShrink(prompt, promptMessage); !ok || err != nil {
-				return 0, err
+				return err
 			}
 		}
 	}
-	return cku, nil
+
+	return nil
 }
 
 func (c *clusterCommand) validateKafkaClusterMetrics(currentCluster *cmkv2.CmkV2Cluster, isLatestMetric bool) error {
@@ -138,7 +183,7 @@ func (c *clusterCommand) validateKafkaClusterMetrics(currentCluster *cmkv2.CmkV2
 		window = "15 min"
 	}
 
-	if err := c.validateClusterLoad(*currentCluster.Id, isLatestMetric); err != nil {
+	if err := c.validateClusterLoad(currentCluster.GetId(), isLatestMetric); err != nil {
 		return errors.Errorf("Looking at metrics in the last %s window:\n%v", window, err)
 	}
 
@@ -155,4 +200,16 @@ func confirmShrink(prompt form.Prompt, promptMessage string) (bool, error) {
 		return false, nil
 	}
 	return true, nil
+}
+
+func getClusterType(config cmkv2.CmkV2ClusterSpecConfigOneOf) string {
+	if config.CmkV2Dedicated != nil {
+		return skuDedicated
+	}
+
+	if config.CmkV2Standard != nil {
+		return skuStandard
+	}
+
+	return skuBasic
 }

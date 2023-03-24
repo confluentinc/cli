@@ -51,7 +51,7 @@ func AutocompleteApiKeys(environment string, client *ccloudv2.Client) []string {
 
 func AddAvailabilityFlag(cmd *cobra.Command) {
 	cmd.Flags().String("availability", kafka.Availabilities[0], fmt.Sprintf("Specify the availability of the cluster as %s.", utils.ArrayToCommaDelimitedString(kafka.Availabilities)))
-	RegisterFlagCompletionFunc(cmd, output.FlagName, func(_ *cobra.Command, _ []string) []string { return kafka.Availabilities })
+	RegisterFlagCompletionFunc(cmd, "availability", func(_ *cobra.Command, _ []string) []string { return kafka.Availabilities })
 }
 
 func AddByokKeyFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
@@ -369,7 +369,7 @@ func AutocompleteServiceAccounts(client *ccloudv2.Client) []string {
 
 func AddTypeFlag(cmd *cobra.Command) {
 	cmd.Flags().String("type", kafka.Types[0], fmt.Sprintf("Specify the type of the Kafka cluster as %s.", utils.ArrayToCommaDelimitedString(kafka.Types)))
-	RegisterFlagCompletionFunc(cmd, output.FlagName, func(_ *cobra.Command, _ []string) []string { return kafka.Types })
+	RegisterFlagCompletionFunc(cmd, "type", func(_ *cobra.Command, _ []string) []string { return kafka.Types })
 }
 
 func AddValueFormatFlag(cmd *cobra.Command) {
