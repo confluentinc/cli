@@ -4,11 +4,7 @@ import (
 	"context"
 	_ "embed"
 	"encoding/json"
-	"net/http"
 	"strings"
-
-	v1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"
-	"github.com/google/uuid"
 )
 
 //go:embed mock-data.json
@@ -26,6 +22,8 @@ const (
 	configKeyDatabase = "default_database"
 )
 
+const MOCK_STATEMENTS_OUTPUT_DEMO = true
+
 type StoreInterface interface {
 	ProcessStatement(statement string) (*StatementResult, error)
 }
@@ -35,35 +33,8 @@ type Store struct {
 	index            int
 	Config           map[string]string
 	StatementResults []StatementResult
-	client           *v1.APIClient
-}
-
-func (s *Store) submitStatement(ctx context.Context, authToken, envId, orgId, computePoolId, statement string) (v1.SqlV1alpha1Statement, *http.Response, error) {
-	statementName, ok := s.Config["pipeline.name"]
-	if !ok || strings.TrimSpace(statementName) == "" {
-		statementName = uuid.New().String()
-	}
-	statementObj := v1.SqlV1alpha1Statement{
-		Spec: &v1.SqlV1alpha1StatementSpec{
-			StatementName: &statementName,
-			Statement:     &statement,
-			ComputePoolId: &computePoolId,
-			// Properties: todo - add local config to properties
-		},
-	}
-
-	ctx = context.WithValue(ctx, v1.ContextAccessToken, authToken)
-	createdStatement, resp, err := s.client.StatementsSqlV1alpha1Api.CreateSqlV1alpha1Statement(ctx, envId).SqlV1alpha1Statement(statementObj).Execute()
-	return createdStatement, resp, err
-}
-
-func (s *Store) waitForStatementExecution(envId, statementId string) (*StatementResult, error) {
-	//TODO result handling: https://confluentinc.atlassian.net/wiki/spaces/FLINK/pages/3004703887/WIP+Flink+Gateway+-+Results+handling
-	return &StatementResult{
-		Status:  "Completed",
-		Columns: []string{},
-		Rows:    [][]string{{}},
-	}, nil
+	client           *GatewayClient
+	appOptions       *ApplicationOptions
 }
 
 func (s *Store) ProcessLocalStatement(statement string) (*StatementResult, error) {
@@ -89,14 +60,8 @@ func (s *Store) ProcessStatement(statement string) (*StatementResult, error) {
 		return result, err
 	}
 
-	// This is where we currently mock results, since we don't have a real backend yet
-	// TODO -> we'll receive these from the cli
-	authToken := ""
-	orgId := ""
-	envId := ""
-	computePoolId := ""
-	//return mock data
-	if authToken == "" {
+	// TODO: Remove this once we have a real backend
+	if s.appOptions.MOCK_STATEMENTS_OUTPUT_DEMO {
 		if !startsWithValidSQL(statement) {
 			return nil, &StatementError{"Error: Invalid syntax. Please check your statement."}
 		} else {
@@ -106,8 +71,9 @@ func (s *Store) ProcessStatement(statement string) (*StatementResult, error) {
 	}
 
 	// Process remote statements
-	statementObj, resp, err := s.submitStatement(context.Background(), authToken, envId, orgId, computePoolId, statement)
+	statementObj, resp, err := s.client.CreateStatement(context.Background(), statement, s.Config)
 	err = processHttpErrors(resp, err)
+
 	if err != nil {
 		return nil, &StatementError{err.Error()}
 	}
@@ -117,16 +83,18 @@ func (s *Store) ProcessStatement(statement string) (*StatementResult, error) {
 		Status:  PHASE(statementObj.Status.Phase),
 	}, nil
 
-	/* // TODO Result handling
-	executionResult, err := s.waitForStatementExecution(envId, statement.GetId())
-	return executionResult, err */
+	/* TODO Result handling
+	here's where we will probably fetch results - at least the first page
+	*/
 }
 
-func NewStore(client *v1.APIClient) StoreInterface {
+func NewStore(client *GatewayClient, appOptions *ApplicationOptions) StoreInterface {
+
 	store := Store{
-		Config: map[string]string{},
-		index:  0,
-		client: client,
+		Config:     map[string]string{},
+		index:      0,
+		client:     client,
+		appOptions: appOptions,
 	}
 	// Opening mock data
 	json.Unmarshal(mockData, &store)

@@ -17,7 +17,7 @@ make deps
 Run prototype
 
 ```
-go run .
+go run _examples/demo_main.go
 ```
 
 #### Contributing

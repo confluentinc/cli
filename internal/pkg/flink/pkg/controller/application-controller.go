@@ -4,7 +4,6 @@ import (
 	"os"
 	"sync"
 
-	v1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"
 	"github.com/gdamore/tcell/v2"
 
 	"github.com/confluentinc/flink-sql-client/components"
@@ -31,6 +30,10 @@ type ApplicationController struct {
 	app        *tview.Application
 	outputMode OutputMode
 	history    History
+}
+
+type ApplicationOptions struct {
+	MOCK_STATEMENTS_OUTPUT_DEMO bool
 }
 
 var once sync.Once
@@ -70,8 +73,9 @@ func NewApplicationController(app *tview.Application, history History) *Applicat
 	}
 }
 
-func StartApp() {
-	store := NewStore(v1.NewAPIClient(&v1.Configuration{}))
+func StartApp(envId, computePoolId, authToken string, appOptions *ApplicationOptions) {
+	client := NewGatewayClient(envId, computePoolId, authToken)
+	store := NewStore(client, appOptions)
 	history := LoadHistory()
 	// Create Components
 	table := components.CreateTable()

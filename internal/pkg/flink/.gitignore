@@ -1,6 +1,9 @@
 .idea/
 coverage.txt
 .cache/
+
+.vscode
+
 # ignore the vendor folder
 vendor/
 
@@ -44,7 +47,8 @@ go.work
 .LSOverride
 
 # Icon must end with two \r
-Icon
+Icon
+
 
 # Thumbnails
 ._*
