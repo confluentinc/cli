@@ -83,17 +83,9 @@ const (
 	// secret commands
 	UpdateSecretFileMsg = "Updated the encrypted secrets."
 
-	// update command
-	CheckingForUpdatesMsg   = "Checking for updates..."
-	UpToDateMsg             = "Already up to date."
-	MajorVersionUpdateMsg   = "The only available update is a major version update. Use `%s update --major` to accept the update.\n"
-	NoMajorVersionUpdateMsg = "No major version updates are available.\n"
-
 	// cmd package
-	TokenExpiredMsg      = "Your token has expired. You are now logged out."
-	NotifyMajorUpdateMsg = "A major version update is available for %s from (current: %s, latest: %s).\nTo view release notes and install the update, please run `%s update --major`.\n\n"
-	NotifyMinorUpdateMsg = "A minor version update is available for %s from (current: %s, latest: %s).\nTo view release notes and install the update, please run `%s update`.\n\n"
-	AutoLoginMsg         = "Successful auto log in with non-interactive credentials.\n"
+	TokenExpiredMsg = "Your token has expired. You are now logged out."
+	AutoLoginMsg    = "Successful auto log in with non-interactive credentials.\n"
 
 	// config package
 	APIKeyMissingMsg     = "API key missing"

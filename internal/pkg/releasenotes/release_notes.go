@@ -15,6 +15,7 @@ import (
 
 	"github.com/confluentinc/go-netrc/netrc"
 
+	pgithub "github.com/confluentinc/cli/internal/pkg/github"
 	"github.com/confluentinc/cli/internal/pkg/types"
 )
 
@@ -29,11 +30,6 @@ var (
 		cliDisplayName:      "|confluent-cli|",
 		sectionHeaderFormat: "**%s**",
 	}
-)
-
-const (
-	owner = "confluentinc"
-	repo  = "cli"
 )
 
 const (
@@ -131,12 +127,12 @@ func (r *ReleaseNotes) ReadFromGithub() error {
 	}
 	client := github.NewClient(oauth2.NewClient(ctx, oauth2.StaticTokenSource(&oauth2.Token{AccessToken: githubToken})))
 
-	latestRelease, _, err := client.Repositories.GetLatestRelease(ctx, owner, repo)
+	latestRelease, _, err := client.Repositories.GetLatestRelease(ctx, pgithub.Owner, pgithub.Repo)
 	if err != nil {
 		return err
 	}
 
-	tags, _, err := client.Repositories.ListTags(ctx, owner, repo, nil)
+	tags, _, err := client.Repositories.ListTags(ctx, pgithub.Owner, pgithub.Repo, nil)
 	if err != nil {
 		return err
 	}
@@ -152,7 +148,7 @@ func (r *ReleaseNotes) ReadFromGithub() error {
 
 	for !done {
 		opts := &github.CommitsListOptions{ListOptions: github.ListOptions{Page: page}}
-		commits, _, err := client.Repositories.ListCommits(ctx, owner, repo, opts)
+		commits, _, err := client.Repositories.ListCommits(ctx, pgithub.Owner, pgithub.Repo, opts)
 		if err != nil {
 			return err
 		}
@@ -163,7 +159,7 @@ func (r *ReleaseNotes) ReadFromGithub() error {
 				break
 			}
 
-			pullRequests, _, err := client.PullRequests.ListPullRequestsWithCommit(ctx, owner, repo, commit.GetSHA(), nil)
+			pullRequests, _, err := client.PullRequests.ListPullRequestsWithCommit(ctx, pgithub.Owner, pgithub.Repo, commit.GetSHA(), nil)
 			if err != nil {
 				return err
 			}

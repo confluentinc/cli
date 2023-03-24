@@ -248,8 +248,6 @@ const (
 	UpdateClientFailureSuggestions = "Please submit a support ticket.\n" +
 		"In the meantime, see link for other ways to download the latest CLI version:\n" +
 		"https://docs.confluent.io/current/cli/installing.html ."
-	ReadingYesFlagErrorMsg              = "error reading `--yes` flag as bool"
-	CheckingForUpdateErrorMsg           = "error checking for updates"
 	UpdateBinaryErrorMsg                = "error updating CLI binary"
 	ObtainingReleaseNotesErrorMsg       = "error obtaining release notes: %s"
 	ReleaseNotesVersionCheckErrorMsg    = "unable to perform release notes and binary version check: %s"

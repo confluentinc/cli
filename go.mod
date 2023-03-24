@@ -6,6 +6,7 @@ require (
 	github.com/antihax/optional v1.0.0
 	github.com/aws/aws-sdk-go v1.44.224
 	github.com/billgraziano/dpapi v0.4.0
+	github.com/blang/semver v3.5.1+incompatible
 	github.com/brianstrauch/cobra-shell v0.4.0
 	github.com/chromedp/chromedp v0.9.1
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
@@ -42,6 +43,7 @@ require (
 	github.com/gobuffalo/flect v1.0.2
 	github.com/gogo/protobuf v1.3.2
 	github.com/golang/protobuf v1.5.3
+	github.com/google/go-github/v30 v30.1.0
 	github.com/google/go-github/v50 v50.2.0
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/google/uuid v1.3.0
@@ -53,6 +55,7 @@ require (
 	github.com/havoc-io/gopass v0.0.0-20170602182606-9a121bec1ae7
 	github.com/iancoleman/strcase v0.2.0
 	github.com/imdario/mergo v0.3.14
+	github.com/inconshreveable/go-update v0.0.0-20160112193335-8152e7eb6ccf
 	github.com/jhump/protoreflect v1.15.1
 	github.com/jonboulle/clockwork v0.3.0
 	github.com/keybase/go-keychain v0.0.0-20221221221913-9be78f6c498b

@@ -53,6 +53,8 @@ github.com/aws/aws-sdk-go v1.44.224 h1:09CiaaF35nRmxrzWZ2uRq5v6Ghg/d2RiPjZnSgtt+
 github.com/aws/aws-sdk-go v1.44.224/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
 github.com/billgraziano/dpapi v0.4.0 h1:t39THI1Ld1hkkLVrhkOX6u5TUxwzRddOffq4jcwh2AE=
 github.com/billgraziano/dpapi v0.4.0/go.mod h1:gi1Lin0jvovT53j0EXITkY6UPb3hTfI92POaZgj9JBA=
+github.com/blang/semver v3.5.1+incompatible h1:cQNTCjp13qL8KC3Nbxr/y2Bqb63oX6wdnnjpJbkM4JQ=
+github.com/blang/semver v3.5.1+incompatible/go.mod h1:kRBLl5iJ+tD4TcOOxsy/0fnwebNt5EWlYSAyrTnjyyk=
 github.com/bool64/dev v0.2.24 h1:xptlKivPh870W3Xc9szPcM7wkFmTMuHT8rc0nu7dITk=
 github.com/bool64/shared v0.1.5 h1:fp3eUhBsrSjNCQPcSdQqZxxh9bBwrYiZ+zOKFkM0/2E=
 github.com/brianstrauch/cobra-shell v0.4.0 h1:oPWTBqPPbE8Vd/i3WRvQd8XWTrevIwR0bFBIS7X6gWk=
@@ -250,8 +252,11 @@ github.com/google/go-cmp v0.5.5/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/
 github.com/google/go-cmp v0.5.6/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
 github.com/google/go-cmp v0.5.8/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeNGIjoY=
 github.com/google/go-cmp v0.5.9 h1:O2Tfq5qg4qc4AmwVlvv0oLiVAGB7enBSJ2x2DqQFi38=
+github.com/google/go-github/v30 v30.1.0 h1:VLDx+UolQICEOKu2m4uAoMti1SxuEBAl7RSEG16L+Oo=
+github.com/google/go-github/v30 v30.1.0/go.mod h1:n8jBpHl45a/rlBUtRJMOG4GhNADUQFEufcolZ95JfU8=
 github.com/google/go-github/v50 v50.2.0 h1:j2FyongEHlO9nxXLc+LP3wuBSVU9mVxfpdYUexMpIfk=
 github.com/google/go-github/v50 v50.2.0/go.mod h1:VBY8FB6yPIjrtKhozXv4FQupxKLS6H4m6xFZlT43q8Q=
+github.com/google/go-querystring v1.0.0/go.mod h1:odCYkC5MyYFN7vkCjXpyrEuKhc/BUO6wN/zVPAxq5ck=
 github.com/google/go-querystring v1.1.0 h1:AnCroh3fv4ZBgVIf1Iwtovgjaw/GiKJo8M8yD/fhyJ8=
 github.com/google/go-querystring v1.1.0/go.mod h1:Kcdr2DB4koayq7X8pmAG4sNG59So17icRSOU623lUBU=
 github.com/google/gofuzz v0.0.0-20161122191042-44d81051d367/go.mod h1:HP5RmnzzSNb993RKQDq4+1A4ia9nllfqcQFTQJedwGI=
@@ -316,6 +321,8 @@ github.com/ianlancetaylor/demangle v0.0.0-20200824232613-28f6c0f3b639/go.mod h1:
 github.com/ianlancetaylor/demangle v0.0.0-20210905161508-09a460cdf81d/go.mod h1:aYm2/VgdVmcIU8iMfdMvDMsRAQjcfZSKFby6HOFvi/w=
 github.com/imdario/mergo v0.3.14 h1:fOqeC1+nCuuk6PKQdg9YmosXX7Y7mHX6R/0ZldI9iHo=
 github.com/imdario/mergo v0.3.14/go.mod h1:WBLT9ZmE3lPoWsEzCh9LPo3TiwVN+ZKEjmz+hD27ysY=
+github.com/inconshreveable/go-update v0.0.0-20160112193335-8152e7eb6ccf h1:WfD7VjIE6z8dIvMsI4/s+1qr5EL+zoIGev1BQj1eoJ8=
+github.com/inconshreveable/go-update v0.0.0-20160112193335-8152e7eb6ccf/go.mod h1:hyb9oH7vZsitZCiBt0ZvifOrB+qc8PS5IiilCIb87rg=
 github.com/inconshreveable/mousetrap v1.0.1/go.mod h1:vpF70FUmC8bwa3OWnCshd2FqLfsEA9PFc4w1p2J65bw=
 github.com/inconshreveable/mousetrap v1.1.0 h1:wN+x4NVGpMsO7ErUn/mUI3vEoE6Jt13X2s0bqwp9tc8=
 github.com/inconshreveable/mousetrap v1.1.0/go.mod h1:vpF70FUmC8bwa3OWnCshd2FqLfsEA9PFc4w1p2J65bw=
