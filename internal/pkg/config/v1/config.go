@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/hashicorp/go-version"
@@ -87,6 +88,7 @@ type Config struct {
 	CurrentContext      string                      `json:"current_context"`
 	AnonymousId         string                      `json:"anonymous_id,omitempty"`
 	SavedCredentials    map[string]*LoginCredential `json:"saved_credentials,omitempty"`
+	LastUpdateCheck     time.Time                   `json:"last_update_check,omitempty"`
 
 	// The following configurations are not persisted between runs
 
