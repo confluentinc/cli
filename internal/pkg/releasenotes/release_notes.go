@@ -200,14 +200,14 @@ func (r *ReleaseNotes) Write(releaseNotesPath string) error {
 	_ = os.Mkdir("release-notes", 0777)
 
 	s3ReleaseNotesBuilder := NewReleaseNotesBuilder(r.version, s3ReleaseNotesBuilderParams)
-	s3ReleaseNotes := s3ReleaseNotesBuilder.buildS3ReleaseNotes(r)
+	s3ReleaseNotes := s3ReleaseNotesBuilder.buildReleaseNotes(r)
 
 	if err := writeFile(filepath.Join("release-notes", "latest-release.rst"), s3ReleaseNotes); err != nil {
 		return err
 	}
 
 	docsReleaseNotesBuilder := NewReleaseNotesBuilder(r.version, docsReleaseNotesBuilderParams)
-	docsReleaseNotes := docsReleaseNotesBuilder.buildDocsReleaseNotes(r)
+	docsReleaseNotes := docsReleaseNotesBuilder.buildReleaseNotes(r)
 	updatedDocsPage, err := buildDocsPage(releaseNotesPath, docsPageHeader, docsReleaseNotes)
 	if err != nil {
 		return err
