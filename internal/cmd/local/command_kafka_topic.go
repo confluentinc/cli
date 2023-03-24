@@ -16,8 +16,8 @@ import (
 func (c *localCommand) newTopicCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "topic",
-		Short: "Run Kafka topic related commands",
-		Long:  `Run Kafka commands including produce/consume and list topics`,
+		Short: "Run Kafka topic related commands.",
+		Long:  `Run Kafka commands including produce/consume and list topics.`,
 		Args:  cobra.NoArgs,
 	}
 

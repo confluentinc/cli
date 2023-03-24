@@ -24,7 +24,7 @@ import (
 func (c *localCommand) newStartCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "start",
-		Short: "Start local kafka service",
+		Short: "Start local Kafka service.",
 		Args:  cobra.NoArgs,
 		RunE:  c.start,
 	}

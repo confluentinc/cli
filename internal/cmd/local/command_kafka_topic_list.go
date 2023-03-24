@@ -12,7 +12,7 @@ import (
 func (c *localCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "list Local kafka topics",
+		Short: "List local Kafka topics.",
 		Args:  cobra.NoArgs,
 		RunE:  c.topicList,
 	}

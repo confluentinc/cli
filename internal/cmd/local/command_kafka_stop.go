@@ -16,7 +16,7 @@ import (
 func (c *localCommand) newStopCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "stop",
-		Short: "Stop the local kafka service",
+		Short: "Stop the local Kafka service.",
 		Args:  cobra.NoArgs,
 		RunE:  c.stop,
 	}
