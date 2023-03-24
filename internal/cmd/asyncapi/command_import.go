@@ -95,7 +95,7 @@ type TopicBindings struct {
 func newImportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "import",
-		Short: "Populate cluster using AsyncAPI specification file.",
+		Short: "Fill Kafka cluster & schema registry using AsyncAPI file.",
 		Long:  "Add topics, schemas, and tags from the AsyncAPI YAML specification file to the active Confluent Cloud cluster.",
 		Args:  cobra.NoArgs,
 		Example: examples.BuildExampleString(
@@ -113,7 +113,9 @@ func newImportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.Flags().String("kafka-api-key", "", "Kafka cluster API key.")
 	cmd.Flags().String("schema-registry-api-key", "", "API key for Schema Registry.")
 	cmd.Flags().String("schema-registry-api-secret", "", "API secret for Schema Registry.")
+
 	cobra.CheckErr(cmd.MarkFlagRequired("file"))
+	cobra.CheckErr(cmd.MarkFlagFilename("file", "yaml", "yml"))
 	return cmd
 }
 
@@ -173,7 +175,7 @@ func (c *command) asyncapiImport(cmd *cobra.Command, args []string) error {
 		err := c.addChannelToCluster(details, spec, topicName, topicDetails.Bindings.Kafka, flagsImp.overwrite)
 		if err != nil {
 			if err.Error() == parseErrorMessage {
-				output.Printf("WARNING: \"%s\" %s.\n", topicName, parseErrorMessage)
+				output.Printf("WARNING: topic \"%s\" is already present and `--overwrite` is not set.\n", topicName)
 			} else {
 				log.CliLogger.Warn(err)
 			}
@@ -361,7 +363,7 @@ func registerSchema(details *accountDetails, topicName string, components Compon
 		}
 		jsonSchema, err := yaml3.ToJSON(schema)
 		if err != nil {
-			return 0, fmt.Errorf("failed to convert schema to JSON: %v", err)
+			return 0, fmt.Errorf("failed to encode schema as JSON: %v", err)
 		}
 		id, _, err := details.srClient.DefaultApi.Register(details.srContext, subject,
 			srsdk.RegisterSchemaRequest{
@@ -371,7 +373,7 @@ func registerSchema(details *accountDetails, topicName string, components Compon
 		if err != nil {
 			return 0, fmt.Errorf("unable to register schema: %v", err)
 		}
-		output.Printf("Registered schema under subject \"%s\".\n", subject)
+		output.Printf("Registered schema \"%d\" under subject \"%s\".\n", id.Id, subject)
 		return id.Id, nil
 	}
 	return 0, fmt.Errorf("schema payload not found in YAML input file")
@@ -415,7 +417,7 @@ func addSchemaTags(details *accountDetails, components Components, topicName str
 		if err != nil {
 			return err
 		}
-		output.Printf("Tags %s added to schema \"%d\".\n", utils.ArrayToCommaDelimitedString(tagNames, "and"), schemaId)
+		output.Printf("Tag(s) %s added to schema \"%d\".\n", utils.ArrayToCommaDelimitedString(tagNames, "and"), schemaId)
 	}
 	return nil
 }
@@ -446,7 +448,7 @@ func addTopicTags(details *accountDetails, subscribe Operation, topicName string
 	if err != nil {
 		return err
 	}
-	output.Printf("Tags %s added to Kafka topic \"%s\".\n", utils.ArrayToCommaDelimitedString(tagNames, "and"), topicName)
+	output.Printf("Tag(s) %s added to Kafka topic \"%s\".\n", utils.ArrayToCommaDelimitedString(tagNames, "and"), topicName)
 	return nil
 }
 
