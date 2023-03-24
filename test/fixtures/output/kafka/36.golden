@@ -13,6 +13,6 @@
 | Status               | UP                                     |
 | Endpoint             | SASL_SSL://kafka-endpoint              |
 | Encryption Key ID    | abc123                                 |
-| REST Endpoint        | http://127.0.0.1:1025                  |
+| REST Endpoint        | http://127.0.0.1:1027                  |
 | Topic Count          |                                      2 |
 +----------------------+----------------------------------------+
