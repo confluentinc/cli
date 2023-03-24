@@ -10,13 +10,13 @@ import (
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
-func (c *schemaCommand) newDeleteCommandOnPrem() *cobra.Command {
+func (c *command) newSchemaDeleteCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "delete",
 		Short:       "Delete one or more schemas.",
 		Long:        "Delete one or more schemas. This command should only be used if absolutely necessary.",
 		Args:        cobra.NoArgs,
-		RunE:        c.onPremDelete,
+		RunE:        c.schemaDeleteOnPrem,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -33,13 +33,13 @@ func (c *schemaCommand) newDeleteCommandOnPrem() *cobra.Command {
 	pcmd.AddForceFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
-	_ = cmd.MarkFlagRequired("subject")
-	_ = cmd.MarkFlagRequired("version")
+	cobra.CheckErr(cmd.MarkFlagRequired("subject"))
+	cobra.CheckErr(cmd.MarkFlagRequired("version"))
 
 	return cmd
 }
 
-func (c *schemaCommand) onPremDelete(cmd *cobra.Command, _ []string) error {
+func (c *command) schemaDeleteOnPrem(cmd *cobra.Command, _ []string) error {
 	srClient, ctx, err := GetSrApiClientWithToken(cmd, c.Version, c.AuthToken())
 	if err != nil {
 		return err

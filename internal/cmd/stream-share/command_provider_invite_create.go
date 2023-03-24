@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -32,10 +33,10 @@ func (c *command) newCreateEmailInviteCommand() *cobra.Command {
 	cmd.Flags().StringSlice("schema-registry-subjects", []string{}, "A comma-separated list of Schema Registry subjects.")
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired("email")
-	_ = cmd.MarkFlagRequired("topic")
-	_ = cmd.MarkFlagRequired("environment")
-	_ = cmd.MarkFlagRequired("cluster")
+	cobra.CheckErr(cmd.MarkFlagRequired("email"))
+	cobra.CheckErr(cmd.MarkFlagRequired("topic"))
+	cobra.CheckErr(cmd.MarkFlagRequired("environment"))
+	cobra.CheckErr(cmd.MarkFlagRequired("cluster"))
 
 	return cmd
 }

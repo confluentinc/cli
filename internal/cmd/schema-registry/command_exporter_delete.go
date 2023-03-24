@@ -4,8 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
+
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -14,12 +15,12 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
-func (c *exporterCommand) newDeleteCommand() *cobra.Command {
+func (c *command) newExporterDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete <name>",
 		Short: "Delete schema exporter.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.delete,
+		RunE:  c.exporterDelete,
 	}
 
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
@@ -32,7 +33,7 @@ func (c *exporterCommand) newDeleteCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *exporterCommand) delete(cmd *cobra.Command, args []string) error {
+func (c *command) exporterDelete(cmd *cobra.Command, args []string) error {
 	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
@@ -48,10 +49,10 @@ func (c *exporterCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return deleteExporter(cmd, args[0], srClient, ctx)
+	return deleteExporter(args[0], srClient, ctx)
 }
 
-func deleteExporter(cmd *cobra.Command, name string, srClient *srsdk.APIClient, ctx context.Context) error {
+func deleteExporter(name string, srClient *srsdk.APIClient, ctx context.Context) error {
 	if _, err := srClient.DefaultApi.DeleteExporter(ctx, name); err != nil {
 		return err
 	}

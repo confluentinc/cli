@@ -140,16 +140,18 @@ var (
 				return "", "", &ccloudv1.Error{Message: "invalid user", Code: http.StatusUnauthorized}
 			}
 		},
-		GetConfluentTokenFunc: func(mdsClient *mds.APIClient, credentials *pauth.Credentials) (s string, e error) {
+		GetConfluentTokenFunc: func(_ *mds.APIClient, _ *pauth.Credentials) (string, error) {
 			return testToken1, nil
 		},
 	}
 	mockNetrcHandler = &pmock.NetrcHandler{
-		GetFileNameFunc: func() string { return netrcFile },
-		RemoveNetrcCredentialsFunc: func(isCloud bool, ctxName string) (string, error) {
+		GetFileNameFunc: func() string {
+			return netrcFile
+		},
+		RemoveNetrcCredentialsFunc: func(_ bool, _ string) (string, error) {
 			return "", nil
 		},
-		CheckCredentialExistFunc: func(isCloud bool, ctxName string) (bool, error) {
+		CheckCredentialExistFunc: func(_ bool, _ string) (bool, error) {
 			return false, nil
 		},
 	}
@@ -847,7 +849,7 @@ func TestLoginWithExistingContext(t *testing.T) {
 		req.NoError(err)
 		verifyLoggedOutState(t, cfg, ctx.Name)
 
-		// logging back in the the same context
+		// logging back in the same context
 		_, err = pcmd.ExecuteCommand(loginCmd, s.args...)
 		req.NoError(err)
 		verifyLoggedInState(t, cfg, s.isCloud, org1Id)
@@ -927,9 +929,7 @@ func TestValidateUrl(t *testing.T) {
 	}
 }
 
-func newLoginCmd(auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInterface, isCloud bool, req *require.Assertions, netrcHandler netrc.NetrcHandler,
-	authTokenHandler pauth.AuthTokenHandler, loginCredentialsManager pauth.LoginCredentialsManager,
-	loginOrganizationManager pauth.LoginOrganizationManager) (*cobra.Command, *v1.Config) {
+func newLoginCmd(auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInterface, isCloud bool, req *require.Assertions, netrcHandler netrc.NetrcHandler, authTokenHandler pauth.AuthTokenHandler, loginCredentialsManager pauth.LoginCredentialsManager, loginOrganizationManager pauth.LoginOrganizationManager) (*cobra.Command, *v1.Config) {
 	cfg := v1.New()
 	var mdsClient *mds.APIClient
 	if !isCloud {

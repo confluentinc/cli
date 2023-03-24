@@ -7,13 +7,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/hashicorp/go-version"
+	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/require"
+
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	cmkmock "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2/mock"
-	"github.com/hashicorp/go-version"
-	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/require"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/config"

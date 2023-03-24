@@ -1,10 +1,6 @@
 SHELL              := /bin/bash
 ALL_SRC            := $(shell find . -name "*.go" | grep -v -e vendor)
-GORELEASER_VERSION := v1.15.2
-
-GIT_REMOTE_NAME ?= origin
-MAIN_BRANCH     ?= main
-RELEASE_BRANCH  ?= main
+GORELEASER_VERSION := v1.16.3-0.20230323115904-f82a32cd3a59
 
 .PHONY: build # compile natively based on the system
 build:
@@ -43,14 +39,15 @@ cli-builder:
 	go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
 	TAGS=$(TAGS) CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) VERSION=$(VERSION) GOEXPERIMENT=boringcrypto goreleaser build -f .goreleaser-build.yml --clean --single-target --snapshot
 
+include ./mk-files/cc-cli-service.mk
 include ./mk-files/dockerhub.mk
 include ./mk-files/semver.mk
 include ./mk-files/docs.mk
+include ./mk-files/dry-run.mk
 include ./mk-files/release.mk
 include ./mk-files/release-test.mk
 include ./mk-files/release-notes.mk
 include ./mk-files/unrelease.mk
-include ./mk-files/usage.mk
 include ./mk-files/utils.mk
 
 REF := $(shell [ -d .git ] && git rev-parse --short HEAD || echo "none")
@@ -66,18 +63,13 @@ clean:
 		[ -d $$dir ] && rm -r $$dir || true ; \
 	done
 
-show-args:
-	@echo "VERSION: $(VERSION)"
-
 .PHONY: lint
-lint:
-	make lint-go
-	make lint-cli
+lint: lint-go lint-cli
 
 .PHONY: lint-go
 lint-go:
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.51.1 && \
-	golangci-lint run --timeout=10m
+	golangci-lint run --enable dupword,exportloopref,gci,gocritic,gofmt,goimports,gomoddirectives,govet,ineffassign,misspell,nakedret,nolintlint,nonamedreturns,prealloc,predeclared,tenv,unconvert,unparam,unused,usestdlibvars,whitespace --timeout=10m
 	@echo "✅  golangci-lint"
 
 .PHONY: lint-cli
@@ -107,7 +99,6 @@ ifdef CI
 else
 	go build -ldflags="-s -w -X main.commit=$(REF) -X main.date=$(DATE) -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
 endif
-
 
 .PHONY: integration-test
 integration-test:

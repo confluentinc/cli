@@ -5,13 +5,13 @@ import (
 	"sort"
 	"strings"
 
-	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
-	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
-
-	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	"github.com/spf13/cobra"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
+
+	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
+	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
+	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"

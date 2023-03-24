@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 
 	byokv1 "github.com/confluentinc/ccloud-sdk-go-v2/byok/v1"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
@@ -72,8 +73,8 @@ func (c *command) newCreateCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) createAwsKeyRequest(cmd *cobra.Command, keyArn string) (*byokv1.ByokV1Key, error) {
-	keyReq := byokv1.ByokV1Key{
+func (c *command) createAwsKeyRequest(keyArn string) *byokv1.ByokV1Key {
+	return &byokv1.ByokV1Key{
 		Key: &byokv1.ByokV1KeyKeyOneOf{
 			ByokV1AwsKey: &byokv1.ByokV1AwsKey{
 				KeyArn: keyArn,
@@ -81,8 +82,6 @@ func (c *command) createAwsKeyRequest(cmd *cobra.Command, keyArn string) (*byokv
 			},
 		},
 	}
-
-	return &keyReq, nil
 }
 
 func (c *command) createAzureKeyRequest(cmd *cobra.Command, keyString string) (*byokv1.ByokV1Key, error) {
@@ -122,10 +121,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 			return err
 		}
 	} else if isAWSKey(keyString) {
-		keyReq, err = c.createAwsKeyRequest(cmd, keyString)
-		if err != nil {
-			return err
-		}
+		keyReq = c.createAwsKeyRequest(keyString)
 	} else {
 		return errors.New(fmt.Sprintf("invalid key format: %s", keyString))
 	}

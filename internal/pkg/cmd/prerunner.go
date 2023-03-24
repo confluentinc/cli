@@ -168,8 +168,7 @@ func (c *AuthenticatedCLICommand) AuthToken() string {
 
 func (c *AuthenticatedCLICommand) EnvironmentId() string {
 	if c.Context.GetEnvironment() == nil {
-		noEnvSuggestions := errors.ComposeSuggestionsMessage("This issue may occur if this user has no valid role bindings. Contact an Organization Admin to create a role binding for this user.")
-		output.ErrPrintln(errors.EnvNotSetErrorMsg + noEnvSuggestions)
+		output.ErrPrintln("WARNING: " + errors.NoEnvironmentFoundErrorMsg + errors.ComposeSuggestionsMessage(errors.NoEnvironmentFoundSuggestions))
 	}
 	return c.Context.GetEnvironment().GetId()
 }
@@ -302,7 +301,7 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 
 		setContextErr := r.setAuthenticatedContext(command)
 		if setContextErr != nil {
-			if _, ok := setContextErr.(*errors.NotLoggedInError); ok { //nolint:gosimple // false positive
+			if _, ok := setContextErr.(*errors.NotLoggedInError); ok {
 				var netrcMachineName string
 				if ctx := command.Config.Context(); ctx != nil {
 					netrcMachineName = ctx.GetNetrcMachineName()
@@ -568,7 +567,7 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(cmd
 
 		setContextErr := r.setAuthenticatedWithMDSContext(command)
 		if setContextErr != nil {
-			if _, ok := setContextErr.(*errors.NotLoggedInError); ok { //nolint:gosimple // false positive
+			if _, ok := setContextErr.(*errors.NotLoggedInError); ok {
 				var netrcMachineName string
 				if ctx := command.Config.Context(); ctx != nil {
 					netrcMachineName = ctx.GetNetrcMachineName()
@@ -803,7 +802,7 @@ func createOnPremKafkaRestClient(ctx *dynamicconfig.DynamicContext, caCertPath s
 		}
 		return client, nil
 		// use cert path from config if available
-	} else if ctx != nil && ctx.Context != nil && ctx.Context.Platform != nil && ctx.Context.Platform.CaCertPath != "" { //if no cert-path flag is specified, use the cert path from the config
+	} else if ctx != nil && ctx.Context != nil && ctx.Context.Platform != nil && ctx.Context.Platform.CaCertPath != "" { // if no cert-path flag is specified, use the cert path from the config
 		client, err := utils.CustomCAAndClientCertClient(ctx.Context.Platform.CaCertPath, clientCertPath, clientKeyPath)
 		if err != nil {
 			return nil, err
@@ -834,6 +833,12 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(*cobra.Command, []
 		var clusterId string
 		switch ctx.Credential.CredentialType {
 		case v1.APIKey:
+			if cmd.Flags().Changed("cluster") {
+				output.ErrPrintln("WARNING: The `--cluster` flag is ignored when using API key credentials.")
+			}
+			if cmd.Flags().Changed("environment") {
+				output.ErrPrintln("WARNING: The `--environment` flag is ignored when using API key credentials.")
+			}
 			clusterId = r.getClusterIdForAPIKeyCredential(ctx)
 		case v1.Username:
 			unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")

@@ -8,9 +8,10 @@ import (
 	"reflect"
 	"strings"
 
-	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/google/uuid"
 	"github.com/hashicorp/go-version"
+
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/config"
@@ -26,9 +27,7 @@ const (
 	emptyFieldIndicator  = "EMPTY"
 )
 
-var (
-	ver, _ = version.NewVersion("1.0.0")
-)
+var ver, _ = version.NewVersion("1.0.0")
 
 const signupSuggestion = `If you need a Confluent Cloud account, sign up with "confluent cloud-signup".`
 
@@ -78,6 +77,7 @@ type Config struct {
 	DisableUpdateCheck  bool                        `json:"disable_update_check"`
 	DisableUpdates      bool                        `json:"disable_updates"`
 	DisablePlugins      bool                        `json:"disable_plugins"`
+	DisablePluginsOnce  bool                        `json:"disable_plugins_once,omitempty"`
 	DisableFeatureFlags bool                        `json:"disable_feature_flags"`
 	NoBrowser           bool                        `json:"no_browser"`
 	Platforms           map[string]*Platform        `json:"platforms,omitempty"`

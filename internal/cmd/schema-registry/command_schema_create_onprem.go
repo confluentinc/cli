@@ -13,12 +13,12 @@ import (
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
-func (c *schemaCommand) newCreateCommandOnPrem() *cobra.Command {
+func (c *command) newSchemaCreateCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "create",
 		Short:       "Create a schema.",
 		Args:        cobra.NoArgs,
-		RunE:        c.onPremCreate,
+		RunE:        c.schemaCreateOnPrem,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -36,13 +36,16 @@ func (c *schemaCommand) newCreateCommandOnPrem() *cobra.Command {
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired("schema")
-	_ = cmd.MarkFlagRequired("subject")
+	cobra.CheckErr(cmd.MarkFlagFilename("schema", "avro", "json", "proto"))
+	cobra.CheckErr(cmd.MarkFlagFilename("references", "json"))
+
+	cobra.CheckErr(cmd.MarkFlagRequired("schema"))
+	cobra.CheckErr(cmd.MarkFlagRequired("subject"))
 
 	return cmd
 }
 
-func (c *schemaCommand) onPremCreate(cmd *cobra.Command, _ []string) error {
+func (c *command) schemaCreateOnPrem(cmd *cobra.Command, _ []string) error {
 	subject, err := cmd.Flags().GetString("subject")
 	if err != nil {
 		return err
@@ -83,7 +86,7 @@ func (c *schemaCommand) onPremCreate(cmd *cobra.Command, _ []string) error {
 	return err
 }
 
-func (c *schemaCommand) registerSchemaOnPrem(cmd *cobra.Command, schemaCfg *RegisterSchemaConfigs) ([]byte, map[string]string, error) {
+func (c *command) registerSchemaOnPrem(cmd *cobra.Command, schemaCfg *RegisterSchemaConfigs) ([]byte, map[string]string, error) {
 	if c.State == nil { // require log-in to use oauthbearer token
 		return nil, nil, errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestions)
 	}

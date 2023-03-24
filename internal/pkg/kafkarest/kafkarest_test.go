@@ -6,8 +6,9 @@ import (
 	neturl "net/url"
 	"testing"
 
-	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	"github.com/stretchr/testify/require"
+
+	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
@@ -46,7 +47,7 @@ func TestNewError(t *testing.T) {
 
 	httpResp := http.Response{
 		Status:     "Code: 400",
-		StatusCode: 400,
+		StatusCode: http.StatusBadRequest,
 		Request: &http.Request{
 			Method: http.MethodGet,
 			URL: &neturl.URL{

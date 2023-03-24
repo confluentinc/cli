@@ -4,14 +4,16 @@ import (
 	"context"
 	"fmt"
 
-	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/spf13/cobra"
+
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/kafka"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/types"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -148,13 +150,7 @@ func AddContextFlag(cmd *cobra.Command, command *CLICommand) {
 }
 
 func AutocompleteContexts(cfg *v1.Config) []string {
-	suggestions := make([]string, len(cfg.Contexts))
-	i := 0
-	for ctx := range cfg.Contexts {
-		suggestions[i] = ctx
-		i++
-	}
-	return suggestions
+	return types.GetKeys(cfg.Contexts)
 }
 
 func AddEnvironmentFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {

@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/spf13/cobra"
+
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -108,7 +109,7 @@ func (d *DynamicContext) GetKafkaClusterForCommand() (*v1.KafkaClusterConfig, er
 	}
 
 	cluster, err := d.FindKafkaCluster(clusterId)
-	if presource.LookupType(clusterId) != presource.KafkaCluster {
+	if presource.LookupType(clusterId) != presource.KafkaCluster && clusterId != "anonymous-id" {
 		return nil, errors.Errorf(errors.KafkaClusterMissingPrefixErrorMsg, clusterId)
 	}
 	return cluster, errors.CatchKafkaNotFoundError(err, clusterId, nil)
@@ -228,11 +229,15 @@ func (d *DynamicContext) HasLogin() bool {
 }
 
 func (d *DynamicContext) AuthenticatedEnvId() (string, error) {
-	state, err := d.AuthenticatedState()
-	if err != nil {
+	if _, err := d.AuthenticatedState(); err != nil {
 		return "", err
 	}
-	return state.Auth.Account.Id, nil
+
+	if env := d.GetEnvironment(); env != nil {
+		return env.Id, nil
+	} else {
+		return "", errors.NewErrorWithSuggestions(errors.NoEnvironmentFoundErrorMsg, errors.NoEnvironmentFoundSuggestions)
+	}
 }
 
 // AuthenticatedState returns the context's state if authenticated, and an error otherwise.

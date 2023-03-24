@@ -1,20 +1,20 @@
 package secret
 
 import (
-        "crypto/rand"
+	"crypto/rand"
 	"encoding/base32"
 	"fmt"
 	"os"
 	"strings"
 	"testing"
 
-	"github.com/confluentinc/cli/internal/pkg/utils"
-
-	"github.com/confluentinc/cli/internal/pkg/errors"
-
-	"github.com/confluentinc/properties"
 	"github.com/jonboulle/clockwork"
 	"github.com/stretchr/testify/require"
+
+	"github.com/confluentinc/properties"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func TestPasswordProtectionSuite_CreateMasterKey(t *testing.T) {
@@ -1448,7 +1448,6 @@ func validateUsingDecryption(configFilePath string, localSecureConfigPath string
 		if value != originalVal {
 			return fmt.Errorf("config file is empty")
 		}
-
 	}
 
 	return nil

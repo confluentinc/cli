@@ -8,13 +8,14 @@ import (
 	"strings"
 	"time"
 
-	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
-	ckgo "github.com/confluentinc/confluent-kafka-go/kafka"
-	schemaregistry "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/iancoleman/strcase"
 	"github.com/spf13/cobra"
 	"github.com/swaggest/go-asyncapi/reflector/asyncapi-2.4.0"
 	"github.com/swaggest/go-asyncapi/spec-2.4.0"
+
+	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
+	ckgo "github.com/confluentinc/confluent-kafka-go/kafka"
+	schemaregistry "github.com/confluentinc/schema-registry-sdk-go"
 
 	"github.com/confluentinc/cli/internal/cmd/kafka"
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
@@ -63,29 +64,35 @@ type flags struct {
 
 // messageOffset is 5, as the schema ID is stored at the [1:5] bytes of a message as meta info (when valid)
 const messageOffset int = 5
+const protobufErrorMessage string = "protobuf is not supported"
 
 func newExportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "export",
 		Short: "Create an AsyncAPI specification for a Kafka cluster.",
 	}
+
 	c := &command{AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
-	c.RunE = c.export
-	c.Flags().String("file", "asyncapi-spec.yaml", "Output file name.")
-	c.Flags().String("group-id", "consumerApplication", "Consumer Group ID for getting messages.")
-	c.Flags().Bool("consume-examples", false, "Consume messages from topics for populating examples.")
-	c.Flags().String("spec-version", "1.0.0", "Version number of the output file.")
-	c.Flags().String("kafka-api-key", "", "Kafka cluster API key.")
-	c.Flags().String("schema-registry-api-key", "", "API key for Schema Registry.")
-	c.Flags().String("schema-registry-api-secret", "", "API secret for Schema Registry.")
-	c.Flags().String("schema-context", "default", "Use a specific schema context.")
+	cmd.RunE = c.export
+
+	cmd.Flags().String("file", "asyncapi-spec.yaml", "Output file name.")
+	cmd.Flags().String("group-id", "consumerApplication", "Consumer Group ID for getting messages.")
+	cmd.Flags().Bool("consume-examples", false, "Consume messages from topics for populating examples.")
+	cmd.Flags().String("spec-version", "1.0.0", "Version number of the output file.")
+	cmd.Flags().String("kafka-api-key", "", "Kafka cluster API key.")
+	cmd.Flags().String("schema-registry-api-key", "", "API key for Schema Registry.")
+	cmd.Flags().String("schema-registry-api-secret", "", "API secret for Schema Registry.")
+	cmd.Flags().String("schema-context", "default", "Use a specific schema context.")
 	pcmd.AddValueFormatFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
-	return c.Command
+
+	cobra.CheckErr(cmd.MarkFlagFilename("file", "yaml", "yml"))
+
+	return cmd
 }
 
-func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
+func (c *command) export(cmd *cobra.Command, _ []string) error {
 	flags, err := getFlags(cmd)
 	if err != nil {
 		return err
@@ -111,19 +118,20 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 				continue
 			} else {
 				// Subject and Topic matches
-				channelCount++
 				// Reset channel details
 				accountDetails.channelDetails = channelDetails{
 					currentTopic:   topic,
 					currentSubject: subject,
 				}
 				err := c.getChannelDetails(accountDetails, flags)
-				if err != nil && err.Error() == "protobuf" {
-					continue
-				}
 				if err != nil {
+					if err.Error() == protobufErrorMessage {
+						log.CliLogger.Info(err.Error())
+						continue
+					}
 					return err
 				}
+				channelCount++
 				messages[msgName(topic.GetTopicName())] = spec.Message{
 					OneOf1: &spec.MessageOneOf1{MessageEntity: accountDetails.buildMessageEntity()},
 				}
@@ -155,11 +163,10 @@ func (c *command) export(cmd *cobra.Command, _ []string) (err error) {
 func (c *command) getChannelDetails(details *accountDetails, flags *flags) error {
 	output.Printf("Adding operation: %s\n", details.channelDetails.currentTopic.GetTopicName())
 	err := details.getSchemaDetails()
-	if details.channelDetails.contentType == "PROTOBUF" {
-		log.CliLogger.Info("Protobuf is not supported.")
-		return fmt.Errorf("protobuf")
-	}
 	if err != nil {
+		if err.Error() == protobufErrorMessage {
+			return err
+		}
 		return fmt.Errorf("failed to get schema details: %v", err)
 	}
 	if err := details.getTags(); err != nil {
@@ -174,7 +181,7 @@ func (c *command) getChannelDetails(details *accountDetails, flags *flags) error
 	}
 	details.channelDetails.bindings, err = c.getBindings(details.cluster, details.channelDetails.currentTopic)
 	if err != nil {
-		return fmt.Errorf("bindings not found: %v", err)
+		log.CliLogger.Warnf("bindings not found: %v", err)
 	}
 	if err := details.getTopicDescription(); err != nil {
 		log.CliLogger.Warnf("failed to get topic description: %v", err)
@@ -182,7 +189,7 @@ func (c *command) getChannelDetails(details *accountDetails, flags *flags) error
 	// x-messageCompatibility
 	details.channelDetails.mapOfMessageCompat, err = getMessageCompatibility(details.srClient, details.srContext, details.channelDetails.currentSubject)
 	if err != nil {
-		return fmt.Errorf("failed to get subject's compatibility type")
+		log.CliLogger.Warnf("failed to get subject's compatibility type")
 	}
 	return nil
 }
@@ -436,6 +443,7 @@ func (c *command) getSchemaRegistry(details *accountDetails, flags *flags) error
 func msgName(s string) string {
 	return strcase.ToCamel(s) + "Message"
 }
+
 func addServer(broker string, schemaCluster *v1.SchemaRegistryCluster, specVersion string) asyncapi.Reflector {
 	return asyncapi.Reflector{
 		Schema: &spec.AsyncAPI{
@@ -492,25 +500,34 @@ func addChannel(reflector asyncapi.Reflector, details channelDetails) (asyncapi.
 	channel := asyncapi.ChannelInfo{
 		Name: details.currentTopic.GetTopicName(),
 		BaseChannelItem: &spec.ChannelItem{
-			Description:   details.currentTopicDescription,
-			MapOfAnything: details.mapOfMessageCompat,
+			Description: details.currentTopicDescription,
 			Subscribe: &spec.Operation{
-				ID:       strcase.ToCamel(details.currentTopic.GetTopicName()) + "Subscribe",
-				Message:  &spec.Message{Reference: &spec.Reference{Ref: "#/components/messages/" + msgName(details.currentTopic.GetTopicName())}},
-				Bindings: &details.bindings.operationBinding,
-				Tags:     details.topicLevelTags,
+				ID:   strcase.ToCamel(details.currentTopic.GetTopicName()) + "Subscribe",
+				Tags: details.topicLevelTags,
 			},
 		},
 	}
-	if details.bindings.channelBindings.Kafka != nil {
-		channel.BaseChannelItem.Bindings = &details.bindings.channelBindings
+	if details.mapOfMessageCompat != nil {
+		channel.BaseChannelItem.MapOfAnything = details.mapOfMessageCompat
+	}
+	if details.unmarshalledSchema != nil {
+		channel.BaseChannelItem.Subscribe.Message = &spec.Message{Reference: &spec.Reference{Ref: "#/components/messages/" + msgName(details.currentTopic.GetTopicName())}}
+	}
+	if details.bindings != nil {
+		if details.bindings.operationBinding.Kafka != nil {
+			channel.BaseChannelItem.Subscribe.Bindings = &details.bindings.operationBinding
+		}
+		if details.bindings.channelBindings.Kafka != nil {
+			channel.BaseChannelItem.Bindings = &details.bindings.channelBindings
+		}
 	}
 	err := reflector.AddChannel(channel)
 	return reflector, err
 }
 
 func addComponents(reflector asyncapi.Reflector, messages map[string]spec.Message) asyncapi.Reflector {
-	reflector.Schema.WithComponents(spec.Components{Messages: messages,
+	reflector.Schema.WithComponents(spec.Components{
+		Messages: messages,
 		SecuritySchemes: &spec.ComponentsSecuritySchemes{
 			MapOfComponentsSecuritySchemesWDValues: map[string]spec.ComponentsSecuritySchemesWD{
 				"confluentSchemaRegistry": {

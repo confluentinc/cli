@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/ccloud-sdk-go-v1-public"
+
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -170,7 +171,7 @@ func (c *aclCommand) mapResourceIdToUserId(users []*ccloud.User) map[string]int3
 	return idMap
 }
 
-func (c *aclCommand) provisioningClusterCheck(cmd *cobra.Command, lkc string) error {
+func (c *aclCommand) provisioningClusterCheck(lkc string) error {
 	cluster, httpResp, err := c.V2Client.DescribeKafkaCluster(lkc, c.EnvironmentId())
 	if err != nil {
 		return errors.CatchKafkaNotFoundError(err, lkc, httpResp)

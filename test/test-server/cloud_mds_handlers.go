@@ -6,13 +6,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1"
 	"github.com/stretchr/testify/require"
+
+	"github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1"
 )
 
 func (c *CloudRouter) HandleAllRolesRoute(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/json")
 		namespace := r.URL.Query().Get("namespace")
 		namespaces := strings.Split(namespace, ",")
 
@@ -264,19 +264,19 @@ func rbacStreamCatalogRoles() []mdsv2alpha1.Role {
 				AllowedOperations: []mdsv2alpha1.Operation{
 					{
 						ResourceType: "CatalogTagDefinition",
-						Operations: []string{"Read", "Write", "Delete"},
+						Operations:   []string{"Read", "Write", "Delete"},
 					},
 					{
 						ResourceType: "Topic",
-						Operations: []string{"ReadCatalog", "WriteCatalog"},
+						Operations:   []string{"ReadCatalog", "WriteCatalog"},
 					},
 					{
 						ResourceType: "Subject",
-						Operations: []string{"Delete", "Read", "ReadCatalog", "ReadCompatibility", "Write", "WriteCatalog", "WriteCompatibility"},
+						Operations:   []string{"Delete", "Read", "ReadCatalog", "ReadCompatibility", "Write", "WriteCatalog", "WriteCompatibility"},
 					},
 					{
 						ResourceType: "CatalogBusinessMetadataDefinition",
-						Operations: []string{"Read", "Write", "Delete"},
+						Operations:   []string{"Read", "Write", "Delete"},
 					},
 				},
 			},

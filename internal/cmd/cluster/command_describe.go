@@ -2,7 +2,6 @@ package cluster
 
 import (
 	"fmt"
-	"sort"
 
 	"github.com/spf13/cobra"
 
@@ -11,6 +10,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/types"
 )
 
 type describeCommand struct {
@@ -50,14 +50,13 @@ func newDescribeCommand(prerunner pcmd.PreRunner, userAgent string) *cobra.Comma
 		CLICommand: pcmd.NewAnonymousCLICommand(cmd, prerunner),
 		client:     newScopedIdService(userAgent),
 	}
+	cmd.RunE = c.describe
 
-	c.RunE = c.describe
+	cmd.Flags().String("url", "", "URL to a Confluent cluster.")
+	cmd.Flags().String("ca-cert-path", "", "Self-signed certificate chain in PEM format.")
+	pcmd.AddOutputFlag(cmd)
 
-	c.Flags().String("url", "", "URL to a Confluent cluster.")
-	c.Flags().String("ca-cert-path", "", "Self-signed certificate chain in PEM format.")
-	pcmd.AddOutputFlag(c.Command)
-
-	return c.Command
+	return cmd
 }
 
 func (c *describeCommand) describe(cmd *cobra.Command, _ []string) error {
@@ -102,11 +101,7 @@ func getCACertPath(cmd *cobra.Command) (string, error) {
 }
 
 func printDescribe(cmd *cobra.Command, meta *ScopedId) error {
-	var types []string
-	for name := range meta.Scope.Clusters {
-		types = append(types, name)
-	}
-	sort.Strings(types) // since we don't have hierarchy info, just display in alphabetical order
+	types := types.GetSortedKeys(meta.Scope.Clusters)
 
 	if output.GetFormat(cmd).IsSerialized() {
 		out := &out{

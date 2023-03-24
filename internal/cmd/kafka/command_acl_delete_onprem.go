@@ -39,9 +39,9 @@ func (c *aclCommand) newDeleteCommandOnPrem() *cobra.Command {
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired("principal")
-	_ = cmd.MarkFlagRequired("operation")
-	_ = cmd.MarkFlagRequired("host")
+	cobra.CheckErr(cmd.MarkFlagRequired("principal"))
+	cobra.CheckErr(cmd.MarkFlagRequired("operation"))
+	cobra.CheckErr(cmd.MarkFlagRequired("host"))
 
 	return cmd
 }

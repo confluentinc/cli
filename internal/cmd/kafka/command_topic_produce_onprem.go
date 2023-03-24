@@ -6,8 +6,9 @@ import (
 	"os"
 	"os/signal"
 
-	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/spf13/cobra"
+
+	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -22,7 +23,7 @@ func (c *authenticatedTopicCommand) newProduceCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "produce <topic>",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.onPremProduce,
+		RunE:  c.produceOnPrem,
 		Short: "Produce messages to a Kafka topic.",
 		Long:  "Produce messages to a Kafka topic. Configuration and command guide: https://docs.confluent.io/confluent-cli/current/cp-produce-consume.html.\n\nWhen using this command, you cannot modify the message header, and the message header will not be printed out.",
 		Example: examples.BuildExampleString(
@@ -50,13 +51,17 @@ func (c *authenticatedTopicCommand) newProduceCommandOnPrem() *cobra.Command {
 	cmd.Flags().String("schema-registry-endpoint", "", "The URL of the Schema Registry cluster.")
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired("bootstrap")
-	_ = cmd.MarkFlagRequired("ca-location")
+	cobra.CheckErr(cmd.MarkFlagFilename("schema", "avro", "json", "proto"))
+	cobra.CheckErr(cmd.MarkFlagFilename("references", "json"))
+	cobra.CheckErr(cmd.MarkFlagFilename("config-file", "avro", "json"))
+
+	cobra.CheckErr(cmd.MarkFlagRequired("bootstrap"))
+	cobra.CheckErr(cmd.MarkFlagRequired("ca-location"))
 
 	return cmd
 }
 
-func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []string) error {
+func (c *authenticatedTopicCommand) produceOnPrem(cmd *cobra.Command, args []string) error {
 	if cmd.Flags().Changed("config-file") && cmd.Flags().Changed("config") {
 		return errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "config-file", "config")
 	}

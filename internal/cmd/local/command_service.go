@@ -421,12 +421,8 @@ func (c *Command) startProcess(service string) error {
 	open := make(chan bool)
 	go func() {
 		for {
-			isOpen, err := isPortOpen(service)
-			if err != nil {
-				errorsChan <- err
-			}
-			if isOpen {
-				open <- isOpen
+			if isPortOpen(service) {
+				open <- true
 			}
 			time.Sleep(time.Second)
 		}
@@ -434,8 +430,6 @@ func (c *Command) startProcess(service string) error {
 	select {
 	case <-open:
 		break
-	case err := <-errorsChan:
-		return err
 	case <-time.After(90 * time.Second):
 		return errors.Errorf(errors.FailedToStartErrorMsg, writeServiceName(service))
 	}
@@ -598,20 +592,20 @@ func (c *Command) isRunning(service string) (bool, error) {
 	return process.Signal(syscall.Signal(0)) == nil, nil
 }
 
-func isPortOpen(service string) (bool, error) {
+func isPortOpen(service string) bool {
 	if _, err := os.Stat("/etc/redhat-release"); err == nil { // check to see if it's a RedHat OS (i.e. CentOS) which doesn't have `lsof`
 		out, err := exec.Command("ss", "-lptn", fmt.Sprintf("( sport = :%d )", services[service].port)).Output()
 		if err != nil {
-			return false, nil
+			return false
 		}
-		return strings.Contains(string(out), "LISTEN"), nil // LISTEN is the state of the process; can't just check if len > 0 bc headers are always printed
+		return strings.Contains(string(out), "LISTEN") // LISTEN is the state of the process; can't just check if len > 0 bc headers are always printed
 	} else {
 		addr := fmt.Sprintf(":%d", services[service].port)
 		out, err := exec.Command("lsof", "-i", addr).Output()
 		if err != nil {
-			return false, nil
+			return false
 		}
-		return len(out) > 0, nil
+		return len(out) > 0
 	}
 }
 

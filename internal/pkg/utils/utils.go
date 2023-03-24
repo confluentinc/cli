@@ -39,36 +39,6 @@ func TestEq(a, b []string) bool {
 	return true
 }
 
-func RemoveDuplicates(s []string) []string {
-	check := make(map[string]int)
-	for _, v := range s {
-		check[v] = 0
-	}
-	var noDups []string
-	for k := range check {
-		noDups = append(noDups, k)
-	}
-	return noDups
-}
-
-func Contains(haystack []string, needle string) bool {
-	for _, x := range haystack {
-		if x == needle {
-			return true
-		}
-	}
-	return false
-}
-
-func Remove(haystack []string, needle string) []string {
-	for i, x := range haystack {
-		if x == needle {
-			return append(haystack[:i], haystack[i+1:]...)
-		}
-	}
-	return haystack
-}
-
 func DoesPathExist(path string) bool {
 	if path == "" {
 		return false
@@ -116,8 +86,8 @@ func NormalizeNewLines(raw string) string {
 }
 
 func NormalizeByteArrayNewLines(raw []byte) []byte {
-	normalized := bytes.Replace(raw, []byte{13, 10}, []byte{10}, -1)
-	normalized = bytes.Replace(normalized, []byte{13}, []byte{10}, -1)
+	normalized := bytes.ReplaceAll(raw, []byte{13, 10}, []byte{10})
+	normalized = bytes.ReplaceAll(normalized, []byte{13}, []byte{10})
 	return normalized
 }
 

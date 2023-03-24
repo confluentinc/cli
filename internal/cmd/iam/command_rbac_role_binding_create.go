@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/spf13/cobra"
 )
 
 func (c *roleBindingCommand) newCreateCommand() *cobra.Command {
@@ -65,8 +66,8 @@ func (c *roleBindingCommand) newCreateCommand() *cobra.Command {
 	cmd.Flags().Bool("prefix", false, "Whether the provided resource name is treated as a prefix pattern.")
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired("role")
-	_ = cmd.MarkFlagRequired("principal")
+	cobra.CheckErr(cmd.MarkFlagRequired("role"))
+	cobra.CheckErr(cmd.MarkFlagRequired("principal"))
 
 	return cmd
 }

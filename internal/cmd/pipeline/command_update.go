@@ -48,6 +48,10 @@ func (c *command) newUpdateCommand(enableSourceCode bool) *cobra.Command {
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 
+	if enableSourceCode {
+		cobra.CheckErr(cmd.MarkFlagFilename("sql-file", "sql"))
+	}
+
 	return cmd
 }
 
@@ -99,5 +103,5 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return print(cmd, pipeline)
+	return printTable(cmd, pipeline)
 }

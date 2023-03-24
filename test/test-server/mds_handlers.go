@@ -6,15 +6,15 @@ import (
 	"net/http"
 	"testing"
 
-	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	"github.com/stretchr/testify/require"
+
+	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 )
 
 // Handler for: "/security/1.0/registry/clusters"
-func (m MdsRouter) HandleRegistryClusters(t *testing.T) http.HandlerFunc {
+func handleRegistryClusters(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
-			w.Header().Set("Content-Type", "text/json")
 			clusterType := r.URL.Query().Get("clusterType")
 			response := `[ {
 		"clusterName": "theMdsConnectCluster",
@@ -94,9 +94,8 @@ func (m MdsRouter) HandleRegistryClusters(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/security/1.0/authenticate"
-func (m MdsRouter) HandleAuthenticate(t *testing.T) http.HandlerFunc {
+func handleAuthenticate(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/json")
 		reply := &mds.AuthenticationResponse{
 			AuthToken: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1NjE2NjA4NTcsImV4cCI6MjUzMzg2MDM4NDU3LCJhdWQiOiJ3d3cuZXhhbXBsZS5jb20iLCJzdWIiOiJqcm9ja2V0QGV4YW1wbGUuY29tIn0.G6IgrFm5i0mN7Lz9tkZQ2tZvuZ2U7HKnvxMuZAooPmE",
 			TokenType: "dunno",

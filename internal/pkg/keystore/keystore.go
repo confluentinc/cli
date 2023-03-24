@@ -2,9 +2,8 @@
 package keystore
 
 import (
-	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
-
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 

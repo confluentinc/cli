@@ -1,13 +1,14 @@
 package kafka
 
 import (
-	kafkaquotas "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
 	"github.com/spf13/cobra"
+
+	kafkaquotas "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/set"
+	"github.com/confluentinc/cli/internal/pkg/types"
 )
 
 func (c *quotaCommand) newUpdateCommand() *cobra.Command {
@@ -93,7 +94,7 @@ func (c *quotaCommand) getUpdatedPrincipals(cmd *cobra.Command, updatePrincipals
 		if err != nil {
 			return nil, err
 		}
-		remove := set.New()
+		remove := types.NewSet()
 		for _, p := range removePrincipals {
 			remove.Add(p)
 		}

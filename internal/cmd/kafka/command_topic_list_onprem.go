@@ -13,7 +13,7 @@ func (c *authenticatedTopicCommand) newListCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Args:  cobra.NoArgs,
-		RunE:  c.onPremList,
+		RunE:  c.listOnPrem,
 		Short: "List Kafka topics.",
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -35,7 +35,7 @@ func (c *authenticatedTopicCommand) newListCommandOnPrem() *cobra.Command {
 	return cmd
 }
 
-func (c *authenticatedTopicCommand) onPremList(cmd *cobra.Command, _ []string) error {
+func (c *authenticatedTopicCommand) listOnPrem(cmd *cobra.Command, _ []string) error {
 	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err

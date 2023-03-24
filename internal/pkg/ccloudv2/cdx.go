@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
+
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
@@ -71,7 +72,7 @@ func (c *Client) ListProviderShares(sharedResource string) ([]cdxv1.CdxV1Provide
 		}
 		list = append(list, page.GetData()...)
 
-		pageToken, done, err = extractCdxNextPageToken(page.GetMetadata().Next)
+		pageToken, done, err = extractNextPageToken(page.GetMetadata().Next)
 		if err != nil {
 			return nil, err
 		}
@@ -92,7 +93,7 @@ func (c *Client) ListConsumerShares(sharedResource string) ([]cdxv1.CdxV1Consume
 		}
 		list = append(list, page.GetData()...)
 
-		pageToken, done, err = extractCdxNextPageToken(page.GetMetadata().Next)
+		pageToken, done, err = extractNextPageToken(page.GetMetadata().Next)
 		if err != nil {
 			return nil, err
 		}
@@ -113,7 +114,7 @@ func (c *Client) ListConsumerSharedResources(streamShareId string) ([]cdxv1.CdxV
 		}
 		list = append(list, page.GetData()...)
 
-		pageToken, done, err = extractCdxNextPageToken(page.GetMetadata().Next)
+		pageToken, done, err = extractNextPageToken(page.GetMetadata().Next)
 		if err != nil {
 			return nil, err
 		}
@@ -146,15 +147,6 @@ func (c *Client) executeListProviderShares(sharedResource, pageToken string) (cd
 		req = req.PageToken(pageToken)
 	}
 	return c.CdxClient.ProviderSharesCdxV1Api.ListCdxV1ProviderSharesExecute(req)
-}
-
-func extractCdxNextPageToken(nextPageUrlStringNullable cdxv1.NullableString) (string, bool, error) {
-	if !nextPageUrlStringNullable.IsSet() {
-		return "", true, nil
-	}
-	nextPageUrlString := *nextPageUrlStringNullable.Get()
-	pageToken, err := extractPageToken(nextPageUrlString)
-	return pageToken, false, err
 }
 
 func (c *Client) RedeemSharedToken(token, awsAccountId, azureSubscriptionId, gcpProjectId string) (cdxv1.CdxV1RedeemTokenResponse, error) {

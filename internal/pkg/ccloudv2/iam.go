@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
+
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
@@ -58,7 +59,7 @@ func (c *Client) ListIamServiceAccounts() ([]iamv2.IamV2ServiceAccount, error) {
 		}
 		list = append(list, page.GetData()...)
 
-		pageToken, done, err = extractIamNextPageToken(page.GetMetadata().Next)
+		pageToken, done, err = extractNextPageToken(page.GetMetadata().Next)
 		if err != nil {
 			return nil, err
 		}
@@ -120,7 +121,7 @@ func (c *Client) ListIamUsers() ([]iamv2.IamV2User, error) {
 		}
 		list = append(list, page.GetData()...)
 
-		pageToken, done, err = extractIamNextPageToken(page.GetMetadata().Next)
+		pageToken, done, err = extractNextPageToken(page.GetMetadata().Next)
 		if err != nil {
 			return nil, err
 		}
@@ -168,7 +169,7 @@ func (c *Client) ListIamInvitations() ([]iamv2.IamV2Invitation, error) {
 		}
 		list = append(list, page.GetData()...)
 
-		pageToken, done, err = extractIamNextPageToken(page.GetMetadata().Next)
+		pageToken, done, err = extractNextPageToken(page.GetMetadata().Next)
 		if err != nil {
 			return nil, err
 		}
@@ -182,13 +183,4 @@ func (c *Client) executeListInvitations(pageToken string) (iamv2.IamV2Invitation
 		req = req.PageToken(pageToken)
 	}
 	return c.IamClient.InvitationsIamV2Api.ListIamV2InvitationsExecute(req)
-}
-
-func extractIamNextPageToken(nextPageUrlStringNullable iamv2.NullableString) (string, bool, error) {
-	if !nextPageUrlStringNullable.IsSet() {
-		return "", true, nil
-	}
-	nextPageUrlString := *nextPageUrlStringNullable.Get()
-	pageToken, err := extractPageToken(nextPageUrlString)
-	return pageToken, false, err
 }

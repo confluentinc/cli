@@ -3,8 +3,9 @@ package connect
 import (
 	"fmt"
 
-	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
 	"github.com/spf13/cobra"
+
+	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -27,19 +28,19 @@ func newClusterCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command 
 
 	if cfg.IsCloudLogin() {
 		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)
-		c.AddCommand(c.newCreateCommand())
-		c.AddCommand(c.newDeleteCommand())
-		c.AddCommand(c.newDescribeCommand())
-		c.AddCommand(c.newListCommand())
-		c.AddCommand(c.newPauseCommand())
-		c.AddCommand(c.newResumeCommand())
-		c.AddCommand(c.newUpdateCommand())
+		cmd.AddCommand(c.newCreateCommand())
+		cmd.AddCommand(c.newDeleteCommand())
+		cmd.AddCommand(c.newDescribeCommand())
+		cmd.AddCommand(c.newListCommand())
+		cmd.AddCommand(c.newPauseCommand())
+		cmd.AddCommand(c.newResumeCommand())
+		cmd.AddCommand(c.newUpdateCommand())
 	} else {
 		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner)
-		c.AddCommand(c.newListCommandOnPrem())
+		cmd.AddCommand(c.newListCommandOnPrem())
 	}
 
-	return c.Command
+	return cmd
 }
 
 func (c *clusterCommand) validArgs(cmd *cobra.Command, args []string) []string {
@@ -51,11 +52,11 @@ func (c *clusterCommand) validArgs(cmd *cobra.Command, args []string) []string {
 		return nil
 	}
 
-	return c.autocompleteConnectors(cmd)
+	return c.autocompleteConnectors()
 }
 
-func (c *clusterCommand) autocompleteConnectors(cmd *cobra.Command) []string {
-	connectors, err := c.fetchConnectors(cmd)
+func (c *clusterCommand) autocompleteConnectors() []string {
+	connectors, err := c.fetchConnectors()
 	if err != nil {
 		return nil
 	}
@@ -69,7 +70,7 @@ func (c *clusterCommand) autocompleteConnectors(cmd *cobra.Command) []string {
 	return suggestions
 }
 
-func (c *clusterCommand) fetchConnectors(cmd *cobra.Command) (map[string]connectv1.ConnectV1ConnectorExpansion, error) {
+func (c *clusterCommand) fetchConnectors() (map[string]connectv1.ConnectV1ConnectorExpansion, error) {
 	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return nil, err

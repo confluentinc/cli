@@ -9,7 +9,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/plugin"
-	"github.com/confluentinc/cli/internal/pkg/set"
+	"github.com/confluentinc/cli/internal/pkg/types"
 )
 
 type out struct {
@@ -56,7 +56,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			list.Add(pluginInfo)
 		}
 
-		visitedPaths := set.New(paths[0])
+		visitedPaths := types.NewSet(paths[0])
 		for _, path := range paths[1:] {
 			if visitedPaths.Contains(path) {
 				continue

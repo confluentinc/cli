@@ -10,12 +10,12 @@ import (
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
-func (c *exporterCommand) newCreateCommandOnPrem() *cobra.Command {
+func (c *command) newExporterCreateCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "create <name>",
 		Short:       "Create a new schema exporter.",
 		Args:        cobra.ExactArgs(1),
-		RunE:        c.onPremCreate,
+		RunE:        c.exporterCreateOnPrem,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -34,12 +34,12 @@ func (c *exporterCommand) newCreateCommandOnPrem() *cobra.Command {
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired("config-file")
+	cobra.CheckErr(cmd.MarkFlagRequired("config-file"))
 
 	return cmd
 }
 
-func (c *exporterCommand) onPremCreate(cmd *cobra.Command, args []string) error {
+func (c *command) exporterCreateOnPrem(cmd *cobra.Command, args []string) error {
 	srClient, ctx, err := GetSrApiClientWithToken(cmd, c.Version, c.AuthToken())
 	if err != nil {
 		return err

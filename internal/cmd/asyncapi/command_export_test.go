@@ -7,14 +7,15 @@ import (
 	"testing"
 	"time"
 
+	"github.com/spf13/cobra"
+	"github.com/stretchr/testify/require"
+
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	kafkarestv3mock "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3/mock"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	srMock "github.com/confluentinc/schema-registry-sdk-go/mock"
-	"github.com/spf13/cobra"
-	"github.com/stretchr/testify/require"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/ccstructs"
@@ -53,11 +54,20 @@ var details = &accountDetails{
 			GetSchemaByVersionFunc: func(_ context.Context, subject string, _ string, _ *srsdk.GetSchemaByVersionOpts) (srsdk.Schema, *http.Response, error) {
 				if subject == "subject2" {
 					return srsdk.Schema{
-						Subject:    "subject1",
+						Subject:    "subject2",
 						Version:    1,
 						Id:         1,
 						SchemaType: "PROTOBUF",
 						Schema:     `syntax = "proto3"; package com.mycorp.mynamespace; message SampleRecord { int32 my_field1 = 1; double my_field2 = 2; string my_field3 = 3;}`,
+					}, nil, nil
+				}
+				if subject == "subject-primitive" {
+					return srsdk.Schema{
+						Subject:    "subject-primitive",
+						Version:    1,
+						Id:         1,
+						SchemaType: "avro",
+						Schema:     "string",
 					}, nil, nil
 				}
 				return srsdk.Schema{
@@ -257,8 +267,11 @@ func TestGetSchemaDetails(t *testing.T) {
 	details.topics = topics.Data
 	details.channelDetails.currentSubject = "subject1"
 	details.channelDetails.currentTopic = details.topics[0]
-	schema, _, _ := details.srClient.DefaultApi.GetSchemaByVersion(*new(context.Context), "subject1", "1", nil)
+	schema, _, _ := details.srClient.DefaultApi.GetSchemaByVersion(context.Context(nil), "subject1", "1", nil)
 	details.channelDetails.schema = &schema
+	err = details.getSchemaDetails()
+	require.NoError(t, err)
+	details.channelDetails.currentSubject = "subject-primitive"
 	err = details.getSchemaDetails()
 	require.NoError(t, err)
 }
@@ -279,19 +292,26 @@ func TestGetChannelDetails(t *testing.T) {
 	details.topics = topics.Data
 	details.channelDetails.currentSubject = "subject1"
 	details.channelDetails.currentTopic = details.topics[0]
-	schema, _, _ := details.srClient.DefaultApi.GetSchemaByVersion(*new(context.Context), "subject1", "1", nil)
+	schema, _, _ := details.srClient.DefaultApi.GetSchemaByVersion(context.Context(nil), "subject1", "1", nil)
 	details.channelDetails.schema = &schema
 	flags := &flags{schemaRegistryApiKey: "ASYNCAPIKEY", schemaRegistryApiSecret: "ASYNCAPISECRET"}
 	err = c.getChannelDetails(details, flags)
 	require.NoError(t, err)
-	//Protobuf Schema
+	// Protobuf Schema
 	details.channelDetails.currentSubject = "subject2"
 	details.channelDetails.currentTopic = details.topics[0]
-	schema, _, _ = details.srClient.DefaultApi.GetSchemaByVersion(*new(context.Context), "subject2", "1", nil)
+	schema, _, _ = details.srClient.DefaultApi.GetSchemaByVersion(context.Context(nil), "subject2", "1", nil)
 	details.channelDetails.schema = &schema
 	err = c.getChannelDetails(details, flags)
-	require.Error(t, err, fmt.Errorf("protobuf"))
+	require.Equal(t, err.Error(), protobufErrorMessage)
+}
 
+func TestHandlePrimitiveSchemas(t *testing.T) {
+	unmarshalledSchema, err := handlePrimitiveSchemas(`"string"`, fmt.Errorf("unable to unmarshal schema"))
+	require.NoError(t, err)
+	require.Equal(t, unmarshalledSchema, map[string]any{"type": "string"})
+	_, err = handlePrimitiveSchemas("Invalid_schema", fmt.Errorf("unable to marshal schema"))
+	require.Error(t, err)
 }
 
 func TestGetBindings(t *testing.T) {
@@ -314,7 +334,7 @@ func TestGetBindings(t *testing.T) {
 func TestGetTags(t *testing.T) {
 	c, err := newCmd()
 	require.NoError(t, err)
-	schema, _, _ := details.srClient.DefaultApi.GetSchemaByVersion(*new(context.Context), "subject1", "1", nil)
+	schema, _, _ := details.srClient.DefaultApi.GetSchemaByVersion(context.Context(nil), "subject1", "1", nil)
 	details.srCluster = c.Config.Context().SchemaRegistryClusters["lsrc-asyncapi"]
 	details.channelDetails.schema = &schema
 	err = details.getTags()
@@ -322,7 +342,7 @@ func TestGetTags(t *testing.T) {
 }
 
 func TestGetMessageCompatibility(t *testing.T) {
-	_, err := getMessageCompatibility(details.srClient, *new(context.Context), "subject1")
+	_, err := getMessageCompatibility(details.srClient, context.Context(nil), "subject1")
 	require.NoError(t, err)
 }
 

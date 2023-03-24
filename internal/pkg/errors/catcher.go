@@ -9,11 +9,12 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/pkg/errors"
+
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	"github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
-	"github.com/pkg/errors"
 )
 
 /*
@@ -196,13 +197,13 @@ func CatchResourceNotFoundError(err error, resourceId string) error {
 	return err
 }
 
-func CatchEnvironmentNotFoundError(err error, r *http.Response) error {
+func CatchOrgV2ResourceNotFoundError(err error, resourceType string, r *http.Response) error {
 	if err == nil {
 		return nil
 	}
 
 	if r != nil && r.StatusCode == http.StatusForbidden {
-		return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), "environment not found or access forbidden", EnvNotFoundSuggestions)
+		return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), fmt.Sprintf("%s not found or access forbidden", resourceType), fmt.Sprintf(OrgResourceNotFoundSuggestions, resourceType))
 	}
 
 	return CatchCCloudV2Error(err, r)

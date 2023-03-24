@@ -6,8 +6,9 @@ import (
 	"net/http"
 	"os"
 
-	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	"github.com/spf13/cobra"
+
+	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
@@ -24,6 +25,8 @@ func (c *configCommand) newUpdateCommand() *cobra.Command {
 	cmd.Flags().String("file", "", "A local file path to the JSON configuration file, read as input. Otherwise the command will read from standard input.")
 	cmd.Flags().Bool("force", false, "Updates the configuration, overwriting any concurrent modifications.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
+
+	cobra.CheckErr(cmd.MarkFlagFilename("file", "json"))
 
 	return cmd
 }

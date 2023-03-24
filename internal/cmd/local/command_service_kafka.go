@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"sort"
 
 	"github.com/spf13/cobra"
 
@@ -12,7 +11,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/local"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/types"
 )
 
 var (
@@ -181,11 +180,7 @@ func (c *Command) initFlags(mode string) {
 		usage = kafkaProduceFlagUsage
 	}
 
-	var flags []string
-	for flag := range defaults {
-		flags = append(flags, flag)
-	}
-	sort.Strings(flags)
+	flags := types.GetSortedKeys(defaults)
 
 	for _, flag := range flags {
 		switch val := defaults[flag].(type) {
@@ -265,11 +260,9 @@ func (c *Command) runKafkaCommand(cmd *cobra.Command, args []string, mode string
 		configFileFlag := fmt.Sprintf("--%s.config", modeNoun)
 		kafkaArgs = append(kafkaArgs, configFileFlag, config)
 		kafkaArgs = append(kafkaArgs, "--bootstrap-server", cloudServer)
-	} else {
-		if !utils.Contains(kafkaArgs, "--bootstrap-server") {
-			defaultBootstrapServer := fmt.Sprintf("localhost:%d", services["kafka"].port)
-			kafkaArgs = append(kafkaArgs, "--bootstrap-server", defaultBootstrapServer)
-		}
+	} else if !types.Contains(kafkaArgs, "--bootstrap-server") {
+		defaultBootstrapServer := fmt.Sprintf("localhost:%d", services["kafka"].port)
+		kafkaArgs = append(kafkaArgs, "--bootstrap-server", defaultBootstrapServer)
 	}
 
 	kafkaCommand := exec.Command(scriptFile, kafkaArgs...)

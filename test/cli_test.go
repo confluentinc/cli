@@ -225,10 +225,10 @@ func runCommand(t *testing.T, binaryName string, env []string, argString string,
 	cmd.Stdin = strings.NewReader(input)
 
 	out, err := cmd.CombinedOutput()
-	require.Equal(t, exitCode, cmd.ProcessState.ExitCode())
 	if exitCode == 0 {
 		require.NoError(t, err)
 	}
+	require.Equal(t, exitCode, cmd.ProcessState.ExitCode())
 
 	return string(out)
 }
@@ -243,16 +243,7 @@ func resetConfiguration(t *testing.T, arePluginsEnabled bool) {
 }
 
 func writeFixture(t *testing.T, fixture string, content string) {
-	err := os.WriteFile(FixturePath(t, fixture), []byte(content), 0644)
-	if err != nil {
+	if err := os.WriteFile(FixturePath(t, fixture), []byte(content), 0644); err != nil {
 		t.Fatal(err)
 	}
-}
-
-func unsetFreeTrialEnv() {
-	os.Unsetenv("IS_ON_FREE_TRIAL")
-}
-
-func unsetMarketplaceOrgEnv() {
-	os.Unsetenv("IS_ORG_ON_MARKETPLACE")
 }

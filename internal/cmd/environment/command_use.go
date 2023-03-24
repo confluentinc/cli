@@ -7,9 +7,11 @@ import (
 	"github.com/spf13/cobra"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *command) newUseCommand() *cobra.Command {
@@ -31,7 +33,7 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 
 	environment, err := c.Client.Account.Get(context.Background(), &ccloudv1.Account{Id: id})
 	if err != nil {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.EnvNotFoundErrorMsg, id), errors.EnvNotFoundSuggestions)
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.EnvNotFoundErrorMsg, id), fmt.Sprintf(errors.OrgResourceNotFoundSuggestions, resource.Environment))
 	}
 	c.Context.SetEnvironment(environment)
 

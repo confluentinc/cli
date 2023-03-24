@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"regexp"
 	"time"
 
 	"github.com/dghubble/sling"
@@ -21,7 +20,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/types"
 	"github.com/confluentinc/cli/internal/pkg/version"
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
@@ -261,17 +260,6 @@ func (ld *launchDarklyManager) contextToLDUser(ctx *dynamicconfig.DynamicContext
 	if id := ctx.GetEnvironment().GetId(); id != "" {
 		setCustomAttribute(custom, "environment.id", ldvalue.String(id))
 	}
-	// cluster info
-	cluster, _ := ctx.GetKafkaClusterForCommand()
-	if cluster != nil {
-		if cluster.ID != "" {
-			setCustomAttribute(custom, "cluster.id", ldvalue.String(cluster.ID))
-		}
-		if cluster.Bootstrap != "" {
-			physicalClusterId := parsePkcFromBootstrap(cluster.Bootstrap)
-			setCustomAttribute(custom, "cluster.physicalClusterId", ldvalue.String(physicalClusterId))
-		}
-	}
 	customValueMap := custom.Build()
 	if customValueMap.Count() > 0 {
 		userBuilder.CustomAll(customValueMap)
@@ -280,15 +268,10 @@ func (ld *launchDarklyManager) contextToLDUser(ctx *dynamicconfig.DynamicContext
 }
 
 func setCustomAttribute(custom ldvalue.ValueMapBuilder, key string, value ldvalue.Value) {
-	if !utils.Contains(attributes, key) {
+	if !types.Contains(attributes, key) {
 		panic(fmt.Sprintf(errors.UnsupportedCustomAttributeErrorMsg, key))
 	}
 	custom.Set(key, value)
-}
-
-func parsePkcFromBootstrap(bootstrap string) string {
-	r := regexp.MustCompile("pkc-([a-z0-9]+)")
-	return r.FindString(bootstrap)
 }
 
 func writeFlagsToConfig(ctx *dynamicconfig.DynamicContext, key string, vals map[string]any, user lduser.User, client v1.LaunchDarklyClient) {

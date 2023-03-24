@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/spf13/cobra"
+
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -43,15 +44,15 @@ func New(prerunner pcmd.PreRunner, keystore keystore.KeyStore, resolver pcmd.Fla
 		flagResolver:                  resolver,
 	}
 
-	c.AddCommand(c.newCreateCommand())
-	c.AddCommand(c.newDeleteCommand())
-	c.AddCommand(c.newDescribeCommand())
-	c.AddCommand(c.newListCommand())
-	c.AddCommand(c.newStoreCommand())
-	c.AddCommand(c.newUpdateCommand())
-	c.AddCommand(c.newUseCommand())
+	cmd.AddCommand(c.newCreateCommand())
+	cmd.AddCommand(c.newDeleteCommand())
+	cmd.AddCommand(c.newDescribeCommand())
+	cmd.AddCommand(c.newListCommand())
+	cmd.AddCommand(c.newStoreCommand())
+	cmd.AddCommand(c.newUpdateCommand())
+	cmd.AddCommand(c.newUseCommand())
 
-	return c.Command
+	return cmd
 }
 
 func (c *command) setKeyStoreIfNil() {
@@ -104,8 +105,9 @@ func (c *command) getAllUsers() ([]*ccloudv1.User, error) {
 	}
 	users = append(users, adminUsers...)
 
-	currentUser := c.State.Auth.User
-	users = append(users, currentUser)
+	if currentUser := c.Context.GetUser(); currentUser != nil {
+		users = append(users, currentUser)
+	}
 
 	return users, nil
 }

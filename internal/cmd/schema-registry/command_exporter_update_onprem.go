@@ -10,12 +10,12 @@ import (
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
-func (c *exporterCommand) newUpdateCommandOnPrem() *cobra.Command {
+func (c *command) newExporterUpdateCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "update <name>",
 		Short:       "Update configs or information of schema exporter.",
 		Args:        cobra.ExactArgs(1),
-		RunE:        c.onPremUpdate,
+		RunE:        c.exporterUpdateOnPrem,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -41,7 +41,7 @@ func (c *exporterCommand) newUpdateCommandOnPrem() *cobra.Command {
 	return cmd
 }
 
-func (c *exporterCommand) onPremUpdate(cmd *cobra.Command, args []string) error {
+func (c *command) exporterUpdateOnPrem(cmd *cobra.Command, args []string) error {
 	srClient, ctx, err := GetSrApiClientWithToken(cmd, c.Version, c.AuthToken())
 	if err != nil {
 		return err

@@ -4,15 +4,18 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/confluentinc/cli/internal/pkg/utils"
-	"github.com/confluentinc/go-netrc/netrc"
 	"github.com/google/go-github/v50/github"
 	"github.com/hashicorp/go-version"
 	"golang.org/x/oauth2"
+
+	"github.com/confluentinc/go-netrc/netrc"
+
+	"github.com/confluentinc/cli/internal/pkg/types"
 )
 
 const releaseNotesFilename = "release-notes.rst"
@@ -67,29 +70,31 @@ func NewFromBody(body string) *ReleaseNotes {
 
 	currentSection := ""
 	for _, line := range strings.Split(body, "\n") {
-		if utils.Contains(sections, line) {
+		line = strings.TrimSpace(line)
+
+		if types.Contains(sections, line) {
 			currentSection = line
+			continue
 		}
 
-		if strings.HasPrefix(line, "- ") {
-			note := strings.TrimPrefix(line, "- ")
+		if currentSection != "" {
+			if strings.HasPrefix(line, "- ") {
+				note := strings.TrimPrefix(line, "- ")
+				if note == "PLACEHOLDER" {
+					continue
+				}
 
-			if note == "PLACEHOLDER" {
-				continue
+				switch currentSection {
+				case majorSectionTitle:
+					r.major = append(r.major, note)
+				case minorSectionTitle:
+					r.minor = append(r.minor, note)
+				case patchSectionTitle:
+					r.patch = append(r.patch, note)
+				}
+			} else {
+				currentSection = ""
 			}
-
-			switch currentSection {
-			case majorSectionTitle:
-				r.major = append(r.major, note)
-			case minorSectionTitle:
-				r.minor = append(r.minor, note)
-			case patchSectionTitle:
-				r.patch = append(r.patch, note)
-			}
-		}
-
-		if line == "" {
-			currentSection = ""
 		}
 	}
 
@@ -143,7 +148,7 @@ func (r *ReleaseNotes) ReadFromGithub() error {
 	}
 
 	done := false
-	page := 0
+	page := 1
 
 	for !done {
 		opts := &github.CommitsListOptions{ListOptions: github.ListOptions{Page: page}}
@@ -158,15 +163,15 @@ func (r *ReleaseNotes) ReadFromGithub() error {
 				break
 			}
 
-			// Search for PRs
-			issuesSearchResult, _, err := client.Search.Issues(ctx, commit.GetSHA(), nil)
+			pullRequests, _, err := client.PullRequests.ListPullRequestsWithCommit(ctx, owner, repo, commit.GetSHA(), nil)
 			if err != nil {
 				return err
 			}
 
-			if len(issuesSearchResult.Issues) > 0 {
-				body := issuesSearchResult.Issues[0].GetBody()
-				r.Merge(NewFromBody(body))
+			if len(pullRequests) > 0 {
+				releaseNotes := NewFromBody(pullRequests[0].GetBody())
+				log.Printf("SHA: %s, Release Notes: %v\n", commit.GetSHA(), releaseNotes)
+				r.Merge(releaseNotes)
 			}
 		}
 

@@ -10,13 +10,15 @@ import (
 	"time"
 
 	"github.com/antihax/optional"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	climock "github.com/confluentinc/cli/mock"
-	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
-	"github.com/confluentinc/mds-sdk-go-public/mdsv1/mock"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
+
+	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
+	"github.com/confluentinc/mds-sdk-go-public/mdsv1/mock"
+
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	climock "github.com/confluentinc/cli/mock"
 )
 
 var (
@@ -259,7 +261,8 @@ func (suite *AuditConfigTestSuite) TestAuditConfigRouteList() {
 	expect <- MockCall{
 		Func: ListRoutes,
 		Input: &mds.ListRoutesOpts{
-			Q: optional.NewString("crn://mds1.example.com/kafka=abcde_FGHIJKL-01234567/connect=qa-test")},
+			Q: optional.NewString("crn://mds1.example.com/kafka=abcde_FGHIJKL-01234567/connect=qa-test"),
+		},
 		Result: mds.AuditLogConfigListRoutesResponse{
 			DefaultTopics: mds.AuditLogConfigDefaultTopics{
 				Allowed: "confluent-audit-log-events",
@@ -290,7 +293,8 @@ func (suite *AuditConfigTestSuite) TestAuditConfigRouteLookup() {
 	expect <- MockCall{
 		Func: ResolveResourceRoute,
 		Input: &mds.ResolveResourceRouteOpts{
-			Crn: optional.NewString("crn://mds1.example.com/kafka=abcde_FGHIJKL-01234567/topic=qa-test")},
+			Crn: optional.NewString("crn://mds1.example.com/kafka=abcde_FGHIJKL-01234567/topic=qa-test"),
+		},
 		Result: mds.AuditLogConfigResolveResourceRouteResponse{
 			Route: "default",
 			Categories: mds.AuditLogConfigRouteCategories{
@@ -307,10 +311,9 @@ func (suite *AuditConfigTestSuite) TestAuditConfigRouteLookup() {
 	err := cmd.Execute()
 	assert.Nil(suite.T(), err)
 	assert.Equal(suite.T(), 0, len(expect))
-
 }
 
-func writeToTempFile(spec mds.AuditLogConfigSpec) (f *os.File, err error) {
+func writeToTempFile(spec mds.AuditLogConfigSpec) (*os.File, error) {
 	fileBytes, err := json.Marshal(spec)
 	if err != nil {
 		return nil, err
@@ -319,11 +322,10 @@ func writeToTempFile(spec mds.AuditLogConfigSpec) (f *os.File, err error) {
 	if err != nil {
 		return file, err
 	}
-	_, err = file.Write(fileBytes)
-	if err != nil {
+	if _, err := file.Write(fileBytes); err != nil {
 		return file, err
 	}
-	if err = file.Sync(); err != nil {
+	if err := file.Sync(); err != nil {
 		return file, err
 	}
 	return file, nil

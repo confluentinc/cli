@@ -5,13 +5,12 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/confluentinc/cli/internal/pkg/ccstructs"
-	"github.com/confluentinc/cli/internal/pkg/errors"
-
 	"github.com/hashicorp/go-multierror"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+
+	"github.com/confluentinc/cli/internal/pkg/ccstructs"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 // ACLConfiguration wrapper used for flag parsing and validation
@@ -31,20 +30,19 @@ func NewACLConfig() *ACLConfiguration {
 
 // parse returns ACLConfiguration from the contents of cmd
 func parse(cmd *cobra.Command) ([]*ACLConfiguration, error) {
-	var aclConfigs []*ACLConfiguration
-
 	if cmd.Name() == "list" {
 		aclConfig := NewACLConfig()
 		cmd.Flags().Visit(fromArgs(aclConfig))
-		aclConfigs = append(aclConfigs, aclConfig)
-		return aclConfigs, nil
+		return []*ACLConfiguration{aclConfig}, nil
 	}
 
 	operations, err := cmd.Flags().GetStringSlice("operations")
 	if err != nil {
 		return nil, err
 	}
-	for _, operation := range operations {
+
+	aclConfigs := make([]*ACLConfiguration, len(operations))
+	for i, operation := range operations {
 		aclConfig := NewACLConfig()
 		op, err := getACLOperation(operation)
 		if err != nil {
@@ -52,7 +50,7 @@ func parse(cmd *cobra.Command) ([]*ACLConfiguration, error) {
 		}
 		aclConfig.Entry.Operation = op
 		cmd.Flags().Visit(fromArgs(aclConfig))
-		aclConfigs = append(aclConfigs, aclConfig)
+		aclConfigs[i] = aclConfig
 	}
 	return aclConfigs, nil
 }

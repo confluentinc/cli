@@ -5,9 +5,10 @@ import (
 	"sort"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+
 	pcmd "github.com/confluentinc/cli/internal/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	"github.com/confluentinc/cli/internal/pkg/set"
+	"github.com/confluentinc/cli/internal/pkg/types"
 	"github.com/confluentinc/cli/internal/pkg/usage"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
@@ -48,7 +49,7 @@ func main() {
 }
 
 func buildWhitelist() []string {
-	whitelist := set.New()
+	whitelist := types.NewSet()
 
 	for _, os := range []string{"darwin", "linux", "windows"} {
 		whitelist.Add(os)

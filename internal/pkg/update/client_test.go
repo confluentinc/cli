@@ -690,7 +690,7 @@ func TestUpdateBinary(t *testing.T) {
 				clock: clock,
 				fs: &mock.PassThroughFileSystem{
 					Mock: &mock.FileSystem{
-						CopyFunc: func(dst io.Writer, src io.Reader) (i int64, e error) {
+						CopyFunc: func(_ io.Writer, _ io.Reader) (int64, error) {
 							return 0, errors.New("my dog ate my disks")
 						},
 					},
@@ -785,13 +785,13 @@ func TestUpdateBinary(t *testing.T) {
 				clock: clock,
 				fs: &mock.PassThroughFileSystem{
 					Mock: &mock.FileSystem{
-						MoveFunc: func(src string, dst string) error {
+						MoveFunc: func(_ string, dst string) error {
 							if dst == installedBin { // this will be the case in the second mv call
 								return errors.New("move func intentionally failed")
 							}
 							return nil
 						},
-						CopyFunc: func(dst io.Writer, src io.Reader) (i int64, e error) {
+						CopyFunc: func(_ io.Writer, _ io.Reader) (int64, error) {
 							return 0, errors.New("my dog ate my disks")
 						},
 					},

@@ -4,22 +4,22 @@ import (
 	"context"
 	"os"
 
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
 
-	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
-	"github.com/confluentinc/cli/internal/pkg/log"
-	"github.com/confluentinc/cli/internal/pkg/output"
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
+	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
-func promptSchemaRegistryCredentials(cmd *cobra.Command) (string, string, error) {
+func promptSchemaRegistryCredentials() (string, string, error) {
 	f := form.New(
 		form.Field{ID: "api-key", Prompt: "Enter your Schema Registry API key"},
 		form.Field{ID: "secret", Prompt: "Enter your Schema Registry API secret", IsHidden: true},
@@ -30,7 +30,7 @@ func promptSchemaRegistryCredentials(cmd *cobra.Command) (string, string, error)
 	return f.Responses["api-key"].(string), f.Responses["secret"].(string), nil
 }
 
-func getSchemaRegistryAuth(cmd *cobra.Command, srCredentials *v1.APIKeyPair, shouldPrompt bool) (*srsdk.BasicAuth, bool, error) {
+func getSchemaRegistryAuth(srCredentials *v1.APIKeyPair, shouldPrompt bool) (*srsdk.BasicAuth, bool, error) {
 	auth := &srsdk.BasicAuth{}
 	didPromptUser := false
 
@@ -41,7 +41,7 @@ func getSchemaRegistryAuth(cmd *cobra.Command, srCredentials *v1.APIKeyPair, sho
 
 	if auth.UserName == "" || auth.Password == "" || shouldPrompt {
 		var err error
-		auth.UserName, auth.Password, err = promptSchemaRegistryCredentials(cmd)
+		auth.UserName, auth.Password, err = promptSchemaRegistryCredentials()
 		if err != nil {
 			return nil, false, err
 		}
@@ -116,7 +116,7 @@ func GetSchemaRegistryClientWithApiKey(cmd *cobra.Command, cfg *dynamicconfig.Dy
 		} else if srAPIKey != "" {
 			output.ErrPrintln("No Schema Registry API key secret specified.")
 		}
-		srAuth, didPromptUser, err := getSchemaRegistryAuth(cmd, srCluster.SrCredentials, shouldPrompt)
+		srAuth, didPromptUser, err := getSchemaRegistryAuth(srCluster.SrCredentials, shouldPrompt)
 		if err != nil {
 			return nil, nil, err
 		}

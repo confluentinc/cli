@@ -3,19 +3,20 @@ package schemaregistry
 import (
 	"fmt"
 
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/spf13/cobra"
 )
 
-func (c *exporterCommand) newDeleteCommandOnPrem() *cobra.Command {
+func (c *command) newExporterDeleteCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "delete <name>",
 		Short:       "Delete schema exporter.",
 		Args:        cobra.ExactArgs(1),
-		RunE:        c.onPremDelete,
+		RunE:        c.exporterDeleteOnPrem,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 	}
 
@@ -27,7 +28,7 @@ func (c *exporterCommand) newDeleteCommandOnPrem() *cobra.Command {
 	return cmd
 }
 
-func (c *exporterCommand) onPremDelete(cmd *cobra.Command, args []string) error {
+func (c *command) exporterDeleteOnPrem(cmd *cobra.Command, args []string) error {
 	srClient, ctx, err := GetSrApiClientWithToken(cmd, c.Version, c.AuthToken())
 	if err != nil {
 		return err
@@ -43,5 +44,5 @@ func (c *exporterCommand) onPremDelete(cmd *cobra.Command, args []string) error 
 		return err
 	}
 
-	return deleteExporter(cmd, args[0], srClient, ctx)
+	return deleteExporter(args[0], srClient, ctx)
 }

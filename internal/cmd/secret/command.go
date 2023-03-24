@@ -26,8 +26,8 @@ func New(prerunner pcmd.PreRunner, flagResolver pcmd.FlagResolver, plugin secret
 		plugin:       plugin,
 	}
 
-	c.AddCommand(c.newMasterKeyCommand())
-	c.AddCommand(c.newFileCommand())
+	cmd.AddCommand(c.newMasterKeyCommand())
+	cmd.AddCommand(c.newFileCommand())
 
-	return c.Command
+	return cmd
 }
