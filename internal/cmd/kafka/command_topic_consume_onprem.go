@@ -52,7 +52,6 @@ func (c *authenticatedTopicCommand) newConsumeCommandOnPrem() *cobra.Command {
 	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the consumer client.`)
 	cmd.Flags().String("config-file", "", "The path to the configuration file (in json or avro format) for the consumer client.")
 	cmd.Flags().String("schema-registry-endpoint", "", "The URL of the Schema Registry cluster.")
-	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagFilename("config-file", "avro", "json"))
 
@@ -119,7 +118,7 @@ func (c *authenticatedTopicCommand) consumeOnPrem(cmd *cobra.Command, args []str
 	defer adminClient.Close()
 
 	topicName := args[0]
-	err = c.validateTopic(adminClient, topicName)
+	err = ValidateTopic(adminClient, topicName)
 	if err != nil {
 		return err
 	}
@@ -128,7 +127,7 @@ func (c *authenticatedTopicCommand) consumeOnPrem(cmd *cobra.Command, args []str
 		return errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "from-beginning", "offset")
 	}
 
-	offset, err := getOffsetWithFallback(cmd)
+	offset, err := GetOffsetWithFallback(cmd)
 	if err != nil {
 		return err
 	}
@@ -137,12 +136,12 @@ func (c *authenticatedTopicCommand) consumeOnPrem(cmd *cobra.Command, args []str
 	if err != nil {
 		return err
 	}
-	partitionFilter := partitionFilter{
-		changed: cmd.Flags().Changed("partition"),
-		index:   partition,
+	partitionFilter := PartitionFilter{
+		Changed: cmd.Flags().Changed("partition"),
+		Index:   partition,
 	}
 
-	rebalanceCallback := getRebalanceCallback(offset, partitionFilter)
+	rebalanceCallback := GetRebalanceCallback(offset, partitionFilter)
 	if err := consumer.Subscribe(topicName, rebalanceCallback); err != nil {
 		return err
 	}
@@ -183,5 +182,5 @@ func (c *authenticatedTopicCommand) consumeOnPrem(cmd *cobra.Command, args []str
 			SchemaPath: dir,
 		},
 	}
-	return runConsumer(consumer, groupHandler)
+	return RunConsumer(consumer, groupHandler)
 }
