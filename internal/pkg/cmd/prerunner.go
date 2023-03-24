@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/blang/semver"
 	"github.com/spf13/cobra"
@@ -981,6 +982,15 @@ func (r *PreRun) getClusterIdForAPIKeyCredential(ctx *dynamicconfig.DynamicConte
 // notifyIfUpdateAvailable prints a message if an update is available
 func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, currentVersion string) {
 	if r.Config.IsTest || r.Config.DisableUpdates || r.Config.DisableUpdateCheck || !r.shouldCheckForUpdates(cmd) {
+		return
+	}
+
+	if time.Since(r.Config.LastUpdateCheck) < 24*time.Hour {
+		return
+	}
+
+	r.Config.LastUpdateCheck = time.Now()
+	if err := r.Config.Save(); err != nil {
 		return
 	}
 
