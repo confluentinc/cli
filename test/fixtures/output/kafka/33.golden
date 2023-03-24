@@ -13,6 +13,6 @@
 | Availability         | single-zone                    |
 | Status               | EXPANDING                      |
 | Endpoint             | SASL_SSL://kafka-endpoint      |
-| REST Endpoint        | http://127.0.0.1:1025          |
+| REST Endpoint        | http://127.0.0.1:1027          |
 | Topic Count          |                              2 |
 +----------------------+--------------------------------+

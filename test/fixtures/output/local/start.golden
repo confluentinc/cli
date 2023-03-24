@@ -1,0 +1,5 @@
+The local commands are intended for a single-node development environment only, NOT for production usage. See more: https:\/\/docs.confluent.io\/current\/cli\/index.html
+As of Confluent Platform 8.0, Java 8 is no longer supported.
+
+Started Confluent local container [a-zA-Z0-9]*.
+Continue your experience with Confluent local running `confluent local kafka produce` and `confluent local kafka consume`.
