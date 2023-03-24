@@ -59,7 +59,8 @@ const protobufErrorMessage string = "protobuf is not supported"
 func newExportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "export",
-		Short: "Create an AsyncAPI specification for a Kafka cluster.",
+		Short: "Export an AsyncAPI specification.",
+		Long:  "Create an AsyncAPI specification for a Kafka cluster and Schema Registry.",
 		Args:  cobra.NoArgs,
 	}
 

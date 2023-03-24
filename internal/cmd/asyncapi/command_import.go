@@ -95,8 +95,8 @@ type TopicBindings struct {
 func newImportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "import",
-		Short: "Fill Kafka cluster & schema registry using AsyncAPI file.",
-		Long:  "Add topics, schemas, and tags from the AsyncAPI YAML specification file to the active Confluent Cloud cluster.",
+		Short: "Import an AsyncAPI specification.",
+		Long:  "Update a Kafka cluster and Schema Registry according to an AsyncAPI specification file.",
 		Args:  cobra.NoArgs,
 		Example: examples.BuildExampleString(
 			examples.Example{
