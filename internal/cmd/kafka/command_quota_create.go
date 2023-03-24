@@ -72,6 +72,11 @@ func (c *quotaCommand) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	environmentId, err := c.EnvironmentId()
+	if err != nil {
+		return err
+	}
+
 	quotaToCreate := kafkaquotasv1.KafkaQuotasV1ClientQuota{
 		Spec: &kafkaquotasv1.KafkaQuotasV1ClientQuotaSpec{
 			DisplayName: kafkaquotasv1.PtrString(name),
@@ -79,7 +84,7 @@ func (c *quotaCommand) create(cmd *cobra.Command, _ []string) error {
 			Throughput:  throughput,
 			Cluster:     &kafkaquotasv1.EnvScopedObjectReference{Id: cluster.ID},
 			Principals:  principals,
-			Environment: &kafkaquotasv1.GlobalObjectReference{Id: c.EnvironmentId()},
+			Environment: &kafkaquotasv1.GlobalObjectReference{Id: environmentId},
 		},
 	}
 

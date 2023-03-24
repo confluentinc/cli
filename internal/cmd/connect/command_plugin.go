@@ -58,5 +58,10 @@ func (c *pluginCommand) getPlugins() ([]connectv1.InlineResponse2002, error) {
 		return nil, err
 	}
 
-	return c.V2Client.ListConnectorPlugins(c.EnvironmentId(), kafkaCluster.ID)
+	environmentId, err := c.EnvironmentId()
+	if err != nil {
+		return nil, err
+	}
+
+	return c.V2Client.ListConnectorPlugins(environmentId, kafkaCluster.ID)
 }
