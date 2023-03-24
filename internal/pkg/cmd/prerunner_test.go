@@ -144,8 +144,6 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 }
 
 func TestPreRun_HasAPIKey_SetupLoggingAndCheckForUpdates(t *testing.T) {
-	calledAnonymous := false
-
 	r := getPreRunBase()
 
 	// HACK: Checking for updates is intentionally skipped when testing
@@ -159,9 +157,7 @@ func TestPreRun_HasAPIKey_SetupLoggingAndCheckForUpdates(t *testing.T) {
 	_, err := pcmd.ExecuteCommand(rootCmd.Command, args...)
 	require.NoError(t, err)
 
-	if !calledAnonymous {
-		t.Errorf("PreRun.HasAPIKey() didn't call the Anonymous() helper to set logging level and updates")
-	}
+	require.NotZero(t, r.Config.LastUpdateCheck)
 }
 
 func TestPreRun_TokenExpires(t *testing.T) {
