@@ -35,9 +35,10 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	environmentId, _ := c.EnvironmentId()
 	table := output.NewTable(cmd)
 	table.Add(&out{
-		IsCurrent: environment.Id == c.EnvironmentId(),
+		IsCurrent: environment.Id == environmentId,
 		Id:        environment.Id,
 		Name:      environment.Name,
 	})

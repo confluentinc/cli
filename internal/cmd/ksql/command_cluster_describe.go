@@ -25,7 +25,12 @@ func (c *ksqlCommand) newDescribeCommand() *cobra.Command {
 }
 
 func (c *ksqlCommand) describe(cmd *cobra.Command, args []string) error {
-	cluster, err := c.V2Client.DescribeKsqlCluster(args[0], c.EnvironmentId())
+	environmentId, err := c.EnvironmentId()
+	if err != nil {
+		return err
+	}
+
+	cluster, err := c.V2Client.DescribeKsqlCluster(args[0], environmentId)
 	if err != nil {
 		return errors.CatchKSQLNotFoundError(err, args[0])
 	}
