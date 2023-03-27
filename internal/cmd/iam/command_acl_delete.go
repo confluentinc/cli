@@ -28,10 +28,10 @@ func (c *aclCommand) newDeleteCommand() *cobra.Command {
 	pcmd.AddForceFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
-	_ = cmd.MarkFlagRequired("kafka-cluster")
-	_ = cmd.MarkFlagRequired("principal")
-	_ = cmd.MarkFlagRequired("operation")
-	_ = cmd.MarkFlagRequired("host")
+	cobra.CheckErr(cmd.MarkFlagRequired("kafka-cluster"))
+	cobra.CheckErr(cmd.MarkFlagRequired("principal"))
+	cobra.CheckErr(cmd.MarkFlagRequired("operation"))
+	cobra.CheckErr(cmd.MarkFlagRequired("host"))
 
 	return cmd
 }

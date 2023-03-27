@@ -40,8 +40,12 @@ func (c *command) newCreateCommand(enableSourceCode bool) *cobra.Command {
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 
-	_ = cmd.MarkFlagRequired("ksql-cluster")
-	_ = cmd.MarkFlagRequired("name")
+	if enableSourceCode {
+		cobra.CheckErr(cmd.MarkFlagFilename("sql-file", "sql"))
+	}
+
+	cobra.CheckErr(cmd.MarkFlagRequired("ksql-cluster"))
+	cobra.CheckErr(cmd.MarkFlagRequired("name"))
 
 	return cmd
 }
@@ -58,8 +62,13 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	environmentId, err := c.EnvironmentId()
+	if err != nil {
+		return err
+	}
+
 	// validate ksql id
-	if _, err := c.V2Client.DescribeKsqlCluster(ksqlCluster, c.EnvironmentId()); err != nil {
+	if _, err := c.V2Client.DescribeKsqlCluster(ksqlCluster, environmentId); err != nil {
 		return err
 	}
 
@@ -85,12 +94,12 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	pipeline, err := c.V2Client.CreatePipeline(c.EnvironmentId(), kafkaCluster.ID, name, description, sourceCode, &secretMappings, ksqlCluster, srCluster.Id)
+	pipeline, err := c.V2Client.CreatePipeline(environmentId, kafkaCluster.ID, name, description, sourceCode, &secretMappings, ksqlCluster, srCluster.Id)
 	if err != nil {
 		return err
 	}
 
-	return print(cmd, pipeline)
+	return printTable(cmd, pipeline)
 }
 
 func createSecretMappings(secrets []string, regex string) (map[string]string, error) {

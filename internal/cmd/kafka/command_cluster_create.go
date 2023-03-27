@@ -8,10 +8,10 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/spf13/cobra"
+
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
-
-	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -76,8 +76,8 @@ func (c *clusterCommand) newCreateCommand(cfg *v1.Config) *cobra.Command {
 	}
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired("cloud")
-	_ = cmd.MarkFlagRequired("region")
+	cobra.CheckErr(cmd.MarkFlagRequired("cloud"))
+	cobra.CheckErr(cmd.MarkFlagRequired("region"))
 
 	return cmd
 }
@@ -122,6 +122,11 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 		return err
 	}
 
+	environmentId, err := c.EnvironmentId()
+	if err != nil {
+		return err
+	}
+
 	var encryptionKey string
 	if cmd.Flags().Changed("encryption-key") {
 		if cloud != "gcp" {
@@ -133,7 +138,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 			return err
 		}
 
-		if err := c.validateGcpEncryptionKey(prompt, cloud, c.EnvironmentId()); err != nil {
+		if err := c.validateGcpEncryptionKey(prompt, cloud, environmentId); err != nil {
 			return err
 		}
 	}
@@ -154,7 +159,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 
 	createCluster := cmkv2.CmkV2Cluster{
 		Spec: &cmkv2.CmkV2ClusterSpec{
-			Environment:  &cmkv2.EnvScopedObjectReference{Id: c.EnvironmentId()},
+			Environment:  &cmkv2.EnvScopedObjectReference{Id: environmentId},
 			DisplayName:  cmkv2.PtrString(args[0]),
 			Cloud:        cmkv2.PtrString(cloud),
 			Region:       cmkv2.PtrString(region),
@@ -231,9 +236,11 @@ func (c *clusterCommand) validateGcpEncryptionKey(prompt form.Prompt, cloud stri
 
 	promptMsg := "Please confirm you've authorized the key for this identity: " + externalID
 	f := form.New(
-		form.Field{ID: "authorized",
+		form.Field{
+			ID:        "authorized",
 			Prompt:    promptMsg,
-			IsYesOrNo: true})
+			IsYesOrNo: true,
+		})
 	for {
 		if err := f.Prompt(prompt); err != nil {
 			output.ErrPrintln(errors.FailedToReadConfirmationErrorMsg)

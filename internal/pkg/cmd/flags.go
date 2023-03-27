@@ -4,8 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/spf13/cobra"
+
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -24,7 +25,7 @@ func AddApiKeyFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {
 			return nil
 		}
 
-		return AutocompleteApiKeys(c.EnvironmentId(), c.V2Client)
+		return AutocompleteApiKeys(c.V2Client)
 	})
 }
 
@@ -32,7 +33,7 @@ func AddApiSecretFlag(cmd *cobra.Command) {
 	cmd.Flags().String("api-secret", "", "API key secret.")
 }
 
-func AutocompleteApiKeys(environment string, client *ccloudv2.Client) []string {
+func AutocompleteApiKeys(client *ccloudv2.Client) []string {
 	apiKeys, err := client.ListApiKeys("", "")
 	if err != nil {
 		return nil
@@ -106,7 +107,11 @@ func AddClusterFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {
 			return nil
 		}
 
-		return AutocompleteClusters(c.EnvironmentId(), c.V2Client)
+		environmentId, err := c.EnvironmentId()
+		if err != nil {
+			return nil
+		}
+		return AutocompleteClusters(environmentId, c.V2Client)
 	})
 }
 
@@ -200,7 +205,11 @@ func AddKsqlClusterFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {
 			return nil
 		}
 
-		return autocompleteKSQLClusters(c.EnvironmentId(), c.V2Client)
+		environmentId, err := c.EnvironmentId()
+		if err != nil {
+			return nil
+		}
+		return autocompleteKSQLClusters(environmentId, c.V2Client)
 	})
 }
 

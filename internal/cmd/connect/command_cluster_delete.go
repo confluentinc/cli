@@ -43,12 +43,17 @@ func (c *clusterCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
+	environmentId, err := c.environmentId()
+	if err != nil {
+		return err
+	}
+
 	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
 
-	connectorIdToName, err := c.checkExistence(cmd, kafkaCluster.ID, args)
+	connectorIdToName, err := c.checkExistence(cmd, environmentId, kafkaCluster.ID, args)
 	if err != nil {
 		return err
 	}
@@ -59,7 +64,7 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 
 	var errs error
 	for _, connectorId := range args {
-		if _, err := c.V2Client.DeleteConnector(connectorIdToName[connectorId], c.EnvironmentId(), kafkaCluster.ID); err != nil {
+		if _, err := c.V2Client.DeleteConnector(connectorIdToName[connectorId], environmentId, kafkaCluster.ID); err != nil {
 			errs = errors.Join(errs, err)
 		} else {
 			output.Printf(errors.DeletedResourceMsg, resource.Connector, connectorId)
@@ -69,10 +74,10 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	return errs
 }
 
-func (c *clusterCommand) checkExistence(cmd *cobra.Command, kafkaClusterId string, args []string) (map[string]string, error) {
+func (c *clusterCommand) checkExistence(cmd *cobra.Command, environmentId, kafkaClusterId string, args []string) (map[string]string, error) {
 	// Single
 	if len(args) == 1 {
-		if connector, err := c.V2Client.GetConnectorExpansionById(args[0], c.EnvironmentId(), kafkaClusterId); err != nil {
+		if connector, err := c.V2Client.GetConnectorExpansionById(args[0], environmentId, kafkaClusterId); err != nil {
 			return nil, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, resource.Connector, args[0]), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.Connector))
 		} else {
 			return map[string]string{args[0]: connector.Info.GetName()}, nil
@@ -80,7 +85,7 @@ func (c *clusterCommand) checkExistence(cmd *cobra.Command, kafkaClusterId strin
 	}
 
 	// Multiple
-	connectors, err := c.V2Client.ListConnectorsWithExpansions(c.EnvironmentId(), kafkaClusterId, "id,status")
+	connectors, err := c.V2Client.ListConnectorsWithExpansions(environmentId, kafkaClusterId, "id,status")
 	if err != nil {
 		return nil, err
 	}

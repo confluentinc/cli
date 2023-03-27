@@ -1,8 +1,9 @@
 package pipeline
 
 import (
-	streamdesignerv1 "github.com/confluentinc/ccloud-sdk-go-v2/stream-designer/v1"
 	"github.com/spf13/cobra"
+
+	streamdesignerv1 "github.com/confluentinc/ccloud-sdk-go-v2/stream-designer/v1"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
@@ -45,10 +46,15 @@ func (c *command) deactivate(cmd *cobra.Command, args []string) error {
 		},
 	}
 
-	pipeline, err := c.V2Client.UpdateSdPipeline(c.EnvironmentId(), cluster.ID, args[0], updatePipeline)
+	environmentId, err := c.EnvironmentId()
 	if err != nil {
 		return err
 	}
 
-	return print(cmd, pipeline)
+	pipeline, err := c.V2Client.UpdateSdPipeline(environmentId, cluster.ID, args[0], updatePipeline)
+	if err != nil {
+		return err
+	}
+
+	return printTable(cmd, pipeline)
 }

@@ -12,13 +12,12 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/confluentinc/cli/internal/pkg/log"
-
 	"github.com/hashicorp/go-version"
 	"github.com/jonboulle/clockwork"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	pio "github.com/confluentinc/cli/internal/pkg/io"
+	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
 // Client lets you check for updated application binaries and install them if desired
@@ -310,7 +309,7 @@ func (c *client) UpdateBinary(cliName, version, path string, noVerify bool) erro
 	return nil
 }
 
-func (c *client) readCheckFile() (shouldCheck bool, err error) {
+func (c *client) readCheckFile() (bool, error) {
 	// If CheckFile is not provided, then we'll always perform the check
 	if c.CheckFile == "" {
 		return true, nil

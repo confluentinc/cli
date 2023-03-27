@@ -1,8 +1,9 @@
 package organization
 
 import (
-	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 	"github.com/spf13/cobra"
+
+	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -21,7 +22,7 @@ func (c *command) newUpdateCommand() *cobra.Command {
 	cmd.Flags().String("name", "", "Name of the Confluent Cloud organization.")
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired("name")
+	cobra.CheckErr(cmd.MarkFlagRequired("name"))
 
 	return cmd
 }

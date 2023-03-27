@@ -4,8 +4,9 @@ import (
 	"sort"
 
 	"github.com/antihax/optional"
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -20,7 +21,7 @@ func (c *authenticatedTopicCommand) newUpdateCommandOnPrem() *cobra.Command {
 		Use:   "update <topic>",
 		Short: "Update a Kafka topic.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.onPremUpdate,
+		RunE:  c.updateOnPrem,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Modify the "my_topic" topic for the specified cluster (providing embedded Kafka REST Proxy endpoint) to have a retention period of 3 days (259200000 milliseconds).`,
@@ -40,7 +41,7 @@ func (c *authenticatedTopicCommand) newUpdateCommandOnPrem() *cobra.Command {
 	return cmd
 }
 
-func (c *authenticatedTopicCommand) onPremUpdate(cmd *cobra.Command, args []string) error {
+func (c *authenticatedTopicCommand) updateOnPrem(cmd *cobra.Command, args []string) error {
 	topicName := args[0]
 
 	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)

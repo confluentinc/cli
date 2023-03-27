@@ -6,16 +6,16 @@ import (
 	"testing"
 	"time"
 
-	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
-	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
-	metricsv2 "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2"
-	metricsmock "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2/mock"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	cmkmock "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2/mock"
+	metricsv2 "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2"
+	metricsmock "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2/mock"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -35,8 +35,10 @@ const (
 
 var queryTime = time.Date(2019, 12, 19, 16, 1, 0, 0, time.UTC)
 
-var shouldError bool
-var shouldPrompt bool
+var (
+	shouldError  bool
+	shouldPrompt bool
+)
 
 var cmkByokCluster = cmkv2.CmkV2Cluster{
 	Spec: &cmkv2.CmkV2ClusterSpec{
@@ -85,39 +87,35 @@ type KafkaClusterTestSuite struct {
 func (suite *KafkaClusterTestSuite) SetupTest() {
 	suite.conf = v1.AuthenticatedCloudConfigMock()
 	suite.cmkClusterApi = &cmkmock.ClustersCmkV2Api{
-		CreateCmkV2ClusterFunc: func(ctx context.Context) cmkv2.ApiCreateCmkV2ClusterRequest {
+		CreateCmkV2ClusterFunc: func(_ context.Context) cmkv2.ApiCreateCmkV2ClusterRequest {
 			return cmkv2.ApiCreateCmkV2ClusterRequest{}
 		},
-		CreateCmkV2ClusterExecuteFunc: func(req cmkv2.ApiCreateCmkV2ClusterRequest) (cmkv2.CmkV2Cluster, *http.Response, error) {
+		CreateCmkV2ClusterExecuteFunc: func(_ cmkv2.ApiCreateCmkV2ClusterRequest) (cmkv2.CmkV2Cluster, *http.Response, error) {
 			return cmkByokCluster, nil, nil
 		},
-		GetCmkV2ClusterFunc: func(ctx context.Context, _ string) cmkv2.ApiGetCmkV2ClusterRequest {
+		GetCmkV2ClusterFunc: func(_ context.Context, _ string) cmkv2.ApiGetCmkV2ClusterRequest {
 			return cmkv2.ApiGetCmkV2ClusterRequest{}
 		},
-		GetCmkV2ClusterExecuteFunc: func(req cmkv2.ApiGetCmkV2ClusterRequest) (cmkv2.CmkV2Cluster, *http.Response, error) {
+		GetCmkV2ClusterExecuteFunc: func(_ cmkv2.ApiGetCmkV2ClusterRequest) (cmkv2.CmkV2Cluster, *http.Response, error) {
 			return cmkByokCluster, nil, nil
 		},
-		DeleteCmkV2ClusterFunc: func(ctx context.Context, _ string) cmkv2.ApiDeleteCmkV2ClusterRequest {
+		DeleteCmkV2ClusterFunc: func(_ context.Context, _ string) cmkv2.ApiDeleteCmkV2ClusterRequest {
 			return cmkv2.ApiDeleteCmkV2ClusterRequest{}
 		},
-		DeleteCmkV2ClusterExecuteFunc: func(req cmkv2.ApiDeleteCmkV2ClusterRequest) (*http.Response, error) {
+		DeleteCmkV2ClusterExecuteFunc: func(_ cmkv2.ApiDeleteCmkV2ClusterRequest) (*http.Response, error) {
 			return nil, nil
 		},
 	}
 	suite.envMetadataMock = &ccloudv1mock.EnvironmentMetadata{
-		GetFunc: func(arg0 context.Context) (metadata []*ccloudv1.CloudMetadata, e error) {
+		GetFunc: func(_ context.Context) ([]*ccloudv1.CloudMetadata, error) {
 			cloudMeta := &ccloudv1.CloudMetadata{
 				Id: cloudId,
-				Regions: []*ccloudv1.Region{
-					{
-						Id:            regionId,
-						IsSchedulable: true,
-					},
-				},
+				Regions: []*ccloudv1.Region{{
+					Id:            regionId,
+					IsSchedulable: true,
+				}},
 			}
-			return []*ccloudv1.CloudMetadata{
-				cloudMeta,
-			}, nil
+			return []*ccloudv1.CloudMetadata{cloudMeta}, nil
 		},
 	}
 	suite.metricsApi = &metricsmock.Version2Api{

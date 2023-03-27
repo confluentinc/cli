@@ -5,8 +5,9 @@ import (
 	"net/http"
 	"testing"
 
-	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/stretchr/testify/require"
+
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 )
 
 const (
@@ -56,7 +57,7 @@ func (c *CloudRouter) HandleSchemaRegistries(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/api/schema_registries/{id}"
-func (c *CloudRouter) HandleSchemaRegistry(t *testing.T) http.HandlerFunc {
+func handleSchemaRegistry(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		q := r.URL.Query()
 		id := q.Get("id")

@@ -6,15 +6,15 @@ import (
 	"testing"
 	"time"
 
-	metricsv2 "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2"
 	"github.com/stretchr/testify/require"
+
+	metricsv2 "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2"
 )
 
 var queryTime = time.Date(2019, 12, 19, 16, 1, 0, 0, time.UTC)
 
 func handleMetricsQuery(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		resp := &metricsv2.QueryResponse{
 			FlatQueryResponse: &metricsv2.FlatQueryResponse{
 				Data: []metricsv2.Point{

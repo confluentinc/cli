@@ -30,7 +30,7 @@ func (c *aclCommand) newListCommand() *cobra.Command {
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired("kafka-cluster")
+	cobra.CheckErr(cmd.MarkFlagRequired("kafka-cluster"))
 
 	return cmd
 }

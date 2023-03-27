@@ -21,10 +21,10 @@ func newPluginCommand(prerunner pcmd.PreRunner) *cobra.Command {
 
 	c := &pluginCommand{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
 
-	c.AddCommand(c.newDescribeCommand())
-	c.AddCommand(c.newListCommand())
+	cmd.AddCommand(c.newDescribeCommand())
+	cmd.AddCommand(c.newListCommand())
 
-	return c.Command
+	return cmd
 }
 
 func (c *pluginCommand) validArgs(cmd *cobra.Command, args []string) []string {
@@ -58,5 +58,10 @@ func (c *pluginCommand) getPlugins() ([]connectv1.InlineResponse2002, error) {
 		return nil, err
 	}
 
-	return c.V2Client.ListConnectorPlugins(c.EnvironmentId(), kafkaCluster.ID)
+	environmentId, err := c.EnvironmentId()
+	if err != nil {
+		return nil, err
+	}
+
+	return c.V2Client.ListConnectorPlugins(environmentId, kafkaCluster.ID)
 }

@@ -44,7 +44,8 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 			errs = errors.Join(errs, errors.CatchOrgV2ResourceNotFoundError(err, resource.Environment, httpResp))
 		} else {
 			output.ErrPrintf(errors.DeletedResourceMsg, resource.Environment, envId)
-			if envId == c.EnvironmentId() {
+			environmentId, _ := c.EnvironmentId()
+			if envId == environmentId {
 				c.Context.SetEnvironment(nil)
 
 				if err := c.Config.Save(); err != nil {

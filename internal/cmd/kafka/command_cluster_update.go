@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	"github.com/spf13/cobra"
+
+	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -49,15 +50,20 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string, prompt form.P
 		return errors.New(errors.NameOrCKUFlagErrorMsg)
 	}
 
+	environmentId, err := c.EnvironmentId()
+	if err != nil {
+		return err
+	}
+
 	clusterID := args[0]
-	currentCluster, _, err := c.V2Client.DescribeKafkaCluster(clusterID, c.EnvironmentId())
+	currentCluster, _, err := c.V2Client.DescribeKafkaCluster(clusterID, environmentId)
 	if err != nil {
 		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.KafkaClusterNotFoundErrorMsg, clusterID), errors.ChooseRightEnvironmentSuggestions)
 	}
 
 	update := cmkv2.CmkV2ClusterUpdate{
 		Id:   cmkv2.PtrString(clusterID),
-		Spec: &cmkv2.CmkV2ClusterSpecUpdate{Environment: &cmkv2.EnvScopedObjectReference{Id: c.EnvironmentId()}},
+		Spec: &cmkv2.CmkV2ClusterSpecUpdate{Environment: &cmkv2.EnvScopedObjectReference{Id: environmentId}},
 	}
 
 	if cmd.Flags().Changed("name") {

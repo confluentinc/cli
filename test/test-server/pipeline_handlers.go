@@ -6,14 +6,15 @@ import (
 	"testing"
 	"time"
 
-	streamdesignerv1 "github.com/confluentinc/ccloud-sdk-go-v2/stream-designer/v1"
 	"github.com/stretchr/testify/require"
+
+	streamdesignerv1 "github.com/confluentinc/ccloud-sdk-go-v2/stream-designer/v1"
 )
 
 // Handler for: "/sd/v1/pipelines/{id}"
 func handlePipeline(t *testing.T) http.HandlerFunc {
-	CreatedAt := time.Date(2022, 10, 4, 06, 00, 00, 000000000, time.UTC)
-	UpdatedAt := time.Date(2022, 10, 6, 06, 00, 00, 000000000, time.UTC)
+	CreatedAt := time.Date(2022, 10, 4, 6, 0, 0, 0, time.UTC)
+	UpdatedAt := time.Date(2022, 10, 6, 6, 0, 0, 0, time.UTC)
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodDelete:
@@ -41,7 +42,6 @@ func handlePipeline(t *testing.T) http.HandlerFunc {
 				},
 			}
 
-			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusAccepted)
 			err := json.NewEncoder(w).Encode(pipeline)
 			require.NoError(t, err)
@@ -106,7 +106,6 @@ func handlePipeline(t *testing.T) http.HandlerFunc {
 				}
 			}
 
-			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusAccepted)
 			err = json.NewEncoder(w).Encode(pipeline)
 			require.NoError(t, err)
@@ -157,7 +156,6 @@ func handlePipelines(t *testing.T) http.HandlerFunc {
 				},
 			}
 			pipelineList := streamdesignerv1.SdV1PipelineList{Data: []streamdesignerv1.SdV1Pipeline{*pipeline, *pipeline2}}
-			w.Header().Set("Content-Type", "application/json")
 			err := json.NewEncoder(w).Encode(pipelineList)
 			require.NoError(t, err)
 
@@ -187,7 +185,6 @@ func handlePipelines(t *testing.T) http.HandlerFunc {
 				},
 			}
 
-			w.Header().Set("Content-Type", "application/json")
 			err = json.NewEncoder(w).Encode(pipeline)
 			require.NoError(t, err)
 		}

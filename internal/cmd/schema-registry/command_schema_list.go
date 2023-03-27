@@ -5,8 +5,9 @@ import (
 	"fmt"
 
 	"github.com/antihax/optional"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
+
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
@@ -20,12 +21,12 @@ type row struct {
 	Version  int32  `human:"Version" serialized:"version"`
 }
 
-func (c *schemaCommand) newListCommand() *cobra.Command {
+func (c *command) newSchemaListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "list",
 		Short:       "List schemas for a given subject prefix.",
 		Args:        cobra.NoArgs,
-		RunE:        c.list,
+		RunE:        c.schemaList,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -53,7 +54,7 @@ func (c *schemaCommand) newListCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *schemaCommand) list(cmd *cobra.Command, _ []string) error {
+func (c *command) schemaList(cmd *cobra.Command, _ []string) error {
 	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
@@ -62,7 +63,7 @@ func (c *schemaCommand) list(cmd *cobra.Command, _ []string) error {
 	return c.listSchemas(cmd, srClient, ctx)
 }
 
-func (c *schemaCommand) listSchemas(cmd *cobra.Command, srClient *srsdk.APIClient, ctx context.Context) error {
+func (c *command) listSchemas(cmd *cobra.Command, srClient *srsdk.APIClient, ctx context.Context) error {
 	subjectPrefix, err := cmd.Flags().GetString("subject-prefix")
 	if err != nil {
 		return err

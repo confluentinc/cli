@@ -7,18 +7,16 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/confluentinc/cli/internal/pkg/types"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
+
+	"github.com/confluentinc/cli/internal/pkg/types"
 )
 
-const (
-	authenticate     = "/security/1.0/authenticate"
-	registryClusters = "/security/1.0/registry/clusters"
-	v1Base           = "/security/1.0/roles"
-	v2Base           = "/api/metadata/security/v2alpha1/roles"
-	v2InvalidRole    = "/api/metadata/security/v2alpha1/roles/InvalidRole"
-)
+var mdsRoutes = []route{
+	{"/security/1.0/authenticate", handleAuthenticate},
+	{"/security/1.0/registry/clusters", handleRegistryClusters},
+}
 
 type MdsRouter struct {
 	*mux.Router
@@ -26,16 +24,17 @@ type MdsRouter struct {
 
 func NewMdsRouter(t *testing.T) *MdsRouter {
 	router := &MdsRouter{mux.NewRouter()}
-	router.buildMdsHandler(t)
-	return router
-}
+	router.Use(defaultHeaderMiddleware)
 
-func (m MdsRouter) buildMdsHandler(t *testing.T) {
-	m.HandleFunc(authenticate, m.HandleAuthenticate(t))
-	m.HandleFunc(registryClusters, m.HandleRegistryClusters(t))
-	m.addRoutesAndReplies(t, v1Base, v1RoutesAndReplies, v1RbacRoles)
-	m.addDefaultHandler(t)
-	m.Handle(v2InvalidRole, http.NotFoundHandler())
+	for _, route := range mdsRoutes {
+		router.HandleFunc(route.path, route.handler(t))
+	}
+
+	router.addRoutesAndReplies(t, "/security/1.0/roles", v1RoutesAndReplies, v1RbacRoles)
+	router.addDefaultHandler(t)
+	router.Handle("/api/metadata/security/v2alpha1/roles/InvalidRole", http.NotFoundHandler())
+
+	return router
 }
 
 func (m MdsRouter) addDefaultHandler(t *testing.T) {
@@ -51,7 +50,6 @@ func (m MdsRouter) addRoutesAndReplies(t *testing.T, base string, routesAndRepli
 	for route, reply := range routesAndReplies {
 		s := reply
 		m.HandleFunc(route, func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Content-Type", "text/json")
 			_, err := io.WriteString(w, s)
 			require.NoError(t, err)
 		})

@@ -1,8 +1,9 @@
 package kafka
 
 import (
-	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	"github.com/spf13/cobra"
+
+	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -45,7 +46,12 @@ func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
 			clusters = append(clusters, clustersOfEnvironment...)
 		}
 	} else {
-		clusters, err = c.V2Client.ListKafkaClusters(c.EnvironmentId())
+		environmentId, err := c.EnvironmentId()
+		if err != nil {
+			return err
+		}
+
+		clusters, err = c.V2Client.ListKafkaClusters(environmentId)
 		if err != nil {
 			return err
 		}

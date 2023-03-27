@@ -7,10 +7,6 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 )
 
-type command struct {
-	*pcmd.AuthenticatedStateFlagCommand
-}
-
 type connectOut struct {
 	Id     string `human:"ID" serialized:"id"`
 	Name   string `human:"Name" serialized:"name"`
@@ -26,11 +22,9 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLoginOrOnPremLogin},
 	}
 
-	c := &command{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
+	cmd.AddCommand(newClusterCommand(cfg, prerunner))
+	cmd.AddCommand(newEventCommand(prerunner))
+	cmd.AddCommand(newPluginCommand(prerunner))
 
-	c.AddCommand(newClusterCommand(cfg, prerunner))
-	c.AddCommand(newEventCommand(prerunner))
-	c.AddCommand(newPluginCommand(prerunner))
-
-	return c.Command
+	return cmd
 }

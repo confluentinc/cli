@@ -57,13 +57,13 @@ func (f *Form) Prompt(prompt Prompt) error {
 		if err != nil {
 			if fmt.Sprintf(errors.InvalidInputFormatErrorMsg, val, field.ID) == err.Error() {
 				output.ErrPrintln(err)
-				i-- //re-prompt on invalid regex
+				i-- // re-prompt on invalid regex
 				continue
 			}
 			return err
 		}
 		if checkRequiredYes(field, res) {
-			i-- //re-prompt on required yes
+			i-- // re-prompt on required yes
 		}
 
 		f.Responses[field.ID] = res

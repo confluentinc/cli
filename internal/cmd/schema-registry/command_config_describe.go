@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"net/http"
 
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
+
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -19,12 +20,12 @@ type configOut struct {
 	CompatibilityLevel string `human:"Compatibility Level" serialized:"compatibility_level"`
 }
 
-func (c *configCommand) newDescribeCommand() *cobra.Command {
+func (c *command) newConfigDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe",
 		Short: "Describe top-level or subject-level schema compatibility.",
 		Args:  cobra.NoArgs,
-		RunE:  c.describe,
+		RunE:  c.configDescribe,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Describe the configuration of subject "payments".`,
@@ -47,7 +48,7 @@ func (c *configCommand) newDescribeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *configCommand) describe(cmd *cobra.Command, args []string) error {
+func (c *command) configDescribe(cmd *cobra.Command, args []string) error {
 	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
