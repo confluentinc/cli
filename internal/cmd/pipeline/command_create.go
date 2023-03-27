@@ -5,6 +5,7 @@ import (
 	"os"
 	"regexp"
 	"sort"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -44,7 +45,6 @@ func (c *command) newCreateCommand(enableSourceCode bool) *cobra.Command {
 		cobra.CheckErr(cmd.MarkFlagFilename("sql-file", "sql"))
 	}
 
-	cobra.CheckErr(cmd.MarkFlagRequired("ksql-cluster"))
 	cobra.CheckErr(cmd.MarkFlagRequired("name"))
 
 	return cmd
@@ -68,14 +68,24 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	}
 
 	// validate ksql id
-	if _, err := c.V2Client.DescribeKsqlCluster(ksqlCluster, environmentId); err != nil {
-		return err
+	if ksqlCluster != "" {
+		if _, err := c.V2Client.DescribeKsqlCluster(ksqlCluster, environmentId); err != nil {
+			return err
+		}
 	}
 
 	// validate sr id
+	srId := ""
 	srCluster, err := c.Config.Context().SchemaRegistryCluster(cmd)
 	if err != nil {
-		return err
+		if !strings.Contains(err.Error(), "Schema Registry not enabled") {
+			// ignore if the SR is not enabled
+			return err
+		}
+	}
+
+	if srCluster != nil {
+		srId = srCluster.Id
 	}
 
 	// read pipeline source code file if provided
@@ -94,7 +104,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	pipeline, err := c.V2Client.CreatePipeline(environmentId, kafkaCluster.ID, name, description, sourceCode, &secretMappings, ksqlCluster, srCluster.Id)
+	pipeline, err := c.V2Client.CreatePipeline(environmentId, kafkaCluster.ID, name, description, sourceCode, &secretMappings, ksqlCluster, srId)
 	if err != nil {
 		return err
 	}
