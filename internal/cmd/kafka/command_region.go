@@ -20,7 +20,7 @@ func newRegionCommand(prerunner pcmd.PreRunner) *cobra.Command {
 
 	c := &regionCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 
-	c.AddCommand(c.newListCommand())
+	cmd.AddCommand(c.newListCommand())
 
-	return c.Command
+	return cmd
 }

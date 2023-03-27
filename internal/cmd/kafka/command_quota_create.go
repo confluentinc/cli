@@ -3,8 +3,9 @@ package kafka
 import (
 	"fmt"
 
-	kafkaquotasv1 "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
 	"github.com/spf13/cobra"
+
+	kafkaquotasv1 "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -39,7 +40,7 @@ func (c *quotaCommand) newCreateCommand() *cobra.Command {
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired("name")
+	cobra.CheckErr(cmd.MarkFlagRequired("name"))
 
 	return cmd
 }
@@ -71,6 +72,11 @@ func (c *quotaCommand) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	environmentId, err := c.EnvironmentId()
+	if err != nil {
+		return err
+	}
+
 	quotaToCreate := kafkaquotasv1.KafkaQuotasV1ClientQuota{
 		Spec: &kafkaquotasv1.KafkaQuotasV1ClientQuotaSpec{
 			DisplayName: kafkaquotasv1.PtrString(name),
@@ -78,7 +84,7 @@ func (c *quotaCommand) create(cmd *cobra.Command, _ []string) error {
 			Throughput:  throughput,
 			Cluster:     &kafkaquotasv1.EnvScopedObjectReference{Id: cluster.ID},
 			Principals:  principals,
-			Environment: &kafkaquotasv1.GlobalObjectReference{Id: c.EnvironmentId()},
+			Environment: &kafkaquotasv1.GlobalObjectReference{Id: environmentId},
 		},
 	}
 

@@ -11,10 +11,10 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/confluentinc/cli/internal/pkg/errors"
-
 	"github.com/panta/machineid"
 	"golang.org/x/crypto/pbkdf2"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 const (

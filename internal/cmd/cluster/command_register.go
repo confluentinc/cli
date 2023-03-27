@@ -6,11 +6,11 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-
-	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	"github.com/spf13/pflag"
 
-	print "github.com/confluentinc/cli/internal/pkg/cluster"
+	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
+
+	"github.com/confluentinc/cli/internal/pkg/cluster"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
@@ -28,23 +28,23 @@ func newRegisterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	}
 
 	c := &registerCommand{AuthenticatedCLICommand: pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)}
-	c.RunE = c.register
+	cmd.RunE = c.register
 
-	c.Flags().StringSlice("hosts", []string{}, "A comma-separated list of hosts.")
-	c.Flags().String("protocol", "", "Security protocol.")
-	c.Flags().String("cluster-name", "", "Cluster name.")
-	c.Flags().String("kafka-cluster", "", "Kafka cluster ID.")
-	c.Flags().String("schema-registry-cluster", "", "Schema Registry cluster ID.")
-	c.Flags().String("ksql-cluster", "", "ksqlDB cluster ID.")
-	c.Flags().String("connect-cluster", "", "Kafka Connect cluster ID.")
+	cmd.Flags().StringSlice("hosts", []string{}, "A comma-separated list of hosts.")
+	cmd.Flags().String("protocol", "", "Security protocol.")
+	cmd.Flags().String("cluster-name", "", "Cluster name.")
+	cmd.Flags().String("kafka-cluster", "", "Kafka cluster ID.")
+	cmd.Flags().String("schema-registry-cluster", "", "Schema Registry cluster ID.")
+	cmd.Flags().String("ksql-cluster", "", "ksqlDB cluster ID.")
+	cmd.Flags().String("connect-cluster", "", "Kafka Connect cluster ID.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
-	_ = c.MarkFlagRequired("cluster-name")
-	_ = c.MarkFlagRequired("kafka-cluster")
-	_ = c.MarkFlagRequired("hosts")
-	_ = c.MarkFlagRequired("protocol")
+	cobra.CheckErr(cmd.MarkFlagRequired("cluster-name"))
+	cobra.CheckErr(cmd.MarkFlagRequired("kafka-cluster"))
+	cobra.CheckErr(cmd.MarkFlagRequired("hosts"))
+	cobra.CheckErr(cmd.MarkFlagRequired("protocol"))
 
-	return c.Command
+	return cmd
 }
 
 func (c *registerCommand) register(cmd *cobra.Command, _ []string) error {
@@ -73,11 +73,11 @@ func (c *registerCommand) register(cmd *cobra.Command, _ []string) error {
 
 	response, err := c.MDSClient.ClusterRegistryApi.UpdateClusters(ctx, []mds.ClusterInfo{clusterInfo})
 	if err != nil {
-		return print.HandleClusterError(err, response)
+		return cluster.HandleClusterError(err, response)
 	}
 
 	// On Success display the newly added/updated entry
-	return print.PrintClusters(cmd, []mds.ClusterInfo{clusterInfo})
+	return cluster.PrintClusters(cmd, []mds.ClusterInfo{clusterInfo})
 }
 
 func (c *registerCommand) resolveClusterScope(cmd *cobra.Command) (*mds.ScopeClusters, error) {

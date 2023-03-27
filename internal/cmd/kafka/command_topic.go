@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/spf13/cobra"
+
+	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -145,7 +146,11 @@ func (c *authenticatedTopicCommand) getNumPartitions(topicName string) (int, err
 }
 
 func (c *authenticatedTopicCommand) provisioningClusterCheck(lkc string) error {
-	cluster, httpResp, err := c.V2Client.DescribeKafkaCluster(lkc, c.EnvironmentId())
+	environmentId, err := c.EnvironmentId()
+	if err != nil {
+		return err
+	}
+	cluster, httpResp, err := c.V2Client.DescribeKafkaCluster(lkc, environmentId)
 	if err != nil {
 		return errors.CatchKafkaNotFoundError(err, lkc, httpResp)
 	}

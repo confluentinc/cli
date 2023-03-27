@@ -3,8 +3,9 @@ package cluster
 import (
 	"context"
 
-	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	"github.com/spf13/cobra"
+
+	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
 	"github.com/confluentinc/cli/internal/pkg/cluster"
 	pcluster "github.com/confluentinc/cli/internal/pkg/cluster"
@@ -26,14 +27,14 @@ func newUnregisterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	}
 
 	c := &unregisterCommand{AuthenticatedCLICommand: pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)}
-	c.RunE = c.unregister
+	cmd.RunE = c.unregister
 
-	c.Flags().String("cluster-name", "", "Cluster Name.")
+	cmd.Flags().String("cluster-name", "", "Cluster Name.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
-	_ = c.MarkFlagRequired("cluster-name")
+	cobra.CheckErr(cmd.MarkFlagRequired("cluster-name"))
 
-	return c.Command
+	return cmd
 }
 
 func (c *unregisterCommand) unregister(cmd *cobra.Command, _ []string) error {

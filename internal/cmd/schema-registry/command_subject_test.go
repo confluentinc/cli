@@ -5,12 +5,12 @@ import (
 	"net/http"
 	"testing"
 
-	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
-	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	srMock "github.com/confluentinc/schema-registry-sdk-go/mock"
 
@@ -60,16 +60,16 @@ func (suite *SubjectTestSuite) SetupTest() {
 
 	suite.srClientMock = &srsdk.APIClient{
 		DefaultApi: &srMock.DefaultApi{
-			ListFunc: func(ctx context.Context, opts *srsdk.ListOpts) ([]string, *http.Response, error) {
+			ListFunc: func(_ context.Context, _ *srsdk.ListOpts) ([]string, *http.Response, error) {
 				return []string{"subject 1", "subject 2"}, nil, nil
 			},
-			ListVersionsFunc: func(ctx context.Context, subject string, opts *srsdk.ListVersionsOpts) (int32s []int32, response *http.Response, e error) {
+			ListVersionsFunc: func(_ context.Context, _ string, _ *srsdk.ListVersionsOpts) ([]int32, *http.Response, error) {
 				return []int32{1234, 4567}, nil, nil
 			},
-			UpdateSubjectLevelConfigFunc: func(ctx context.Context, subject string, body srsdk.ConfigUpdateRequest) (request srsdk.ConfigUpdateRequest, response *http.Response, e error) {
+			UpdateSubjectLevelConfigFunc: func(_ context.Context, _ string, body srsdk.ConfigUpdateRequest) (srsdk.ConfigUpdateRequest, *http.Response, error) {
 				return srsdk.ConfigUpdateRequest{Compatibility: body.Compatibility}, nil, nil
 			},
-			UpdateModeFunc: func(ctx context.Context, subject string, body srsdk.ModeUpdateRequest) (request srsdk.ModeUpdateRequest, response *http.Response, e error) {
+			UpdateModeFunc: func(_ context.Context, _ string, body srsdk.ModeUpdateRequest) (srsdk.ModeUpdateRequest, *http.Response, error) {
 				return srsdk.ModeUpdateRequest{Mode: body.Mode}, nil, nil
 			},
 		},

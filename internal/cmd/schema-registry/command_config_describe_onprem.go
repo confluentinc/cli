@@ -10,12 +10,12 @@ import (
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
-func (c *configCommand) newDescribeCommandOnPrem() *cobra.Command {
+func (c *command) newConfigDescribeCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "describe",
 		Short:       "Describe top-level or subject-level schema compatibility.",
-		Args:        cobra.MaximumNArgs(0),
-		RunE:        c.onPremDescribe,
+		Args:        cobra.NoArgs,
+		RunE:        c.configDescribeOnPrem,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -37,7 +37,7 @@ func (c *configCommand) newDescribeCommandOnPrem() *cobra.Command {
 	return cmd
 }
 
-func (c *configCommand) onPremDescribe(cmd *cobra.Command, args []string) error {
+func (c *command) configDescribeOnPrem(cmd *cobra.Command, args []string) error {
 	srClient, ctx, err := GetSrApiClientWithToken(cmd, c.Version, c.AuthToken())
 	if err != nil {
 		return err

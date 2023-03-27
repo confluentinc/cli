@@ -10,13 +10,13 @@ import (
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
-func (c *compatibilityCommand) newValidateCommandOnPrem() *cobra.Command {
+func (c *command) newCompatibilityValidateCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "validate",
 		Short:       "Validate a schema with a subject version.",
 		Long:        "Validate that a schema is compatible against a given subject version.",
 		Args:        cobra.NoArgs,
-		RunE:        c.onPremValidate,
+		RunE:        c.compatibilityValidateOnPrem,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -35,10 +35,13 @@ func (c *compatibilityCommand) newValidateCommandOnPrem() *cobra.Command {
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
+	cobra.CheckErr(cmd.MarkFlagFilename("schema", "avro", "json", "proto"))
+	cobra.CheckErr(cmd.MarkFlagFilename("references", "json"))
+
 	return cmd
 }
 
-func (c *compatibilityCommand) onPremValidate(cmd *cobra.Command, args []string) error {
+func (c *command) compatibilityValidateOnPrem(cmd *cobra.Command, args []string) error {
 	srClient, ctx, err := GetSrApiClientWithToken(cmd, c.Version, c.AuthToken())
 	if err != nil {
 		return err

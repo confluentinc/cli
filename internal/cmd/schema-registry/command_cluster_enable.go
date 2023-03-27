@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"strings"
 
-	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	"github.com/spf13/cobra"
 
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -24,12 +24,12 @@ type enableOut struct {
 
 var availableGeos = []string{"us", "eu", "apac"}
 
-func (c *clusterCommand) newEnableCommand(cfg *v1.Config) *cobra.Command {
+func (c *command) newClusterEnableCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "enable",
 		Short:       "Enable Schema Registry for this environment.",
 		Args:        cobra.NoArgs,
-		RunE:        c.enable,
+		RunE:        c.clusterEnable,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -43,20 +43,18 @@ func (c *clusterCommand) newEnableCommand(cfg *v1.Config) *cobra.Command {
 	cmd.Flags().String("geo", "", fmt.Sprintf("Specify the geo as %s.", utils.ArrayToCommaDelimitedString(availableGeos)))
 	addPackageFlag(cmd, essentialsPackage)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
-	if cfg.IsCloudLogin() {
-		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
-	}
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired("cloud")
-	_ = cmd.MarkFlagRequired("geo")
+	cobra.CheckErr(cmd.MarkFlagRequired("cloud"))
+	cobra.CheckErr(cmd.MarkFlagRequired("geo"))
 
 	pcmd.RegisterFlagCompletionFunc(cmd, "geo", func(_ *cobra.Command, _ []string) []string { return availableGeos })
 
 	return cmd
 }
 
-func (c *clusterCommand) enable(cmd *cobra.Command, _ []string) error {
+func (c *command) clusterEnable(cmd *cobra.Command, _ []string) error {
 	ctx := context.Background()
 	// Collect the parameters
 	cloud, err := cmd.Flags().GetString("cloud")
@@ -85,9 +83,14 @@ func (c *clusterCommand) enable(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	environmentId, err := c.EnvironmentId()
+	if err != nil {
+		return err
+	}
+
 	// Build the SR instance
 	clusterConfig := &ccloudv1.SchemaRegistryClusterConfig{
-		AccountId:       c.EnvironmentId(),
+		AccountId:       environmentId,
 		Location:        location,
 		ServiceProvider: cloud,
 		Package:         packageInternalName,
@@ -101,7 +104,7 @@ func (c *clusterCommand) enable(cmd *cobra.Command, _ []string) error {
 	newCluster, err := c.Client.SchemaRegistry.CreateSchemaRegistryCluster(ctx, clusterConfig)
 	if err != nil {
 		// If it already exists, return the existing one
-		existingCluster, getExistingErr := c.Context.FetchSchemaRegistryByEnvironmentId(ctx, c.EnvironmentId())
+		existingCluster, getExistingErr := c.Context.FetchSchemaRegistryByEnvironmentId(ctx, environmentId)
 		if getExistingErr != nil {
 			// Propagate CreateSchemaRegistryCluster error.
 			return err
@@ -123,7 +126,7 @@ func (c *clusterCommand) enable(cmd *cobra.Command, _ []string) error {
 	return table.Print()
 }
 
-func (c *clusterCommand) validateLocation(location ccloudv1.GlobalSchemaRegistryLocation) error {
+func (c *command) validateLocation(location ccloudv1.GlobalSchemaRegistryLocation) error {
 	if location == ccloudv1.GlobalSchemaRegistryLocation_NONE {
 		return errors.NewErrorWithSuggestions(errors.InvalidSchemaRegistryLocationErrorMsg,
 			errors.InvalidSchemaRegistryLocationSuggestions)

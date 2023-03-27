@@ -99,7 +99,7 @@ endif
 
 rpm: RPM_BUILDING/SOURCES/$(FULL_PACKAGE_TITLE)-$(RPM_VERSION).tar.gz
 	echo "Building the RPM"
-	rpmbuild --define="_topdir `pwd`/RPM_BUILDING" -tb $<
+	rpmbuild --define="_topdir `pwd`/RPM_BUILDING" --nodebuginfo -tb $< || rpmbuild --define="_topdir `pwd`/RPM_BUILDING" -tb $<
 	find RPM_BUILDING/{,S}RPMS/ -type f | xargs -n1 -iXXX mv XXX .
 	echo
 	echo "================================================="

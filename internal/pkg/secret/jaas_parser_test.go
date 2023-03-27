@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/confluentinc/properties"
 	"github.com/stretchr/testify/require"
+
+	"github.com/confluentinc/properties"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )

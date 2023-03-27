@@ -38,10 +38,15 @@ func (c *command) activate(cmd *cobra.Command, args []string) error {
 
 	updatePipeline := streamdesignerv1.SdV1Pipeline{Spec: &streamdesignerv1.SdV1PipelineSpec{Activated: streamdesignerv1.PtrBool(true)}}
 
-	pipeline, err := c.V2Client.UpdateSdPipeline(c.EnvironmentId(), cluster.ID, args[0], updatePipeline)
+	environmentId, err := c.EnvironmentId()
 	if err != nil {
 		return err
 	}
 
-	return print(cmd, pipeline)
+	pipeline, err := c.V2Client.UpdateSdPipeline(environmentId, cluster.ID, args[0], updatePipeline)
+	if err != nil {
+		return err
+	}
+
+	return printTable(cmd, pipeline)
 }

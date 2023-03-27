@@ -6,9 +6,9 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/confluentinc/cli/internal/pkg/errors"
-
 	"github.com/hashicorp/go-version" // This "version" alias is require for go:generate go run github.com/travisjeffery/mocker/cmd/mocker to work
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 // ObjectKey represents an S3 Key for a versioned package
@@ -67,7 +67,7 @@ func (p *PrefixedKey) URLFor(name, version string) string {
 	}
 }
 
-func (p *PrefixedKey) ParseVersion(key, name string) (match bool, foundVersion *version.Version, err error) {
+func (p *PrefixedKey) ParseVersion(key, name string) (bool, *version.Version, error) {
 	split := strings.Split(key, p.Separator)
 
 	// Skip files that don't match our naming standards for binaries

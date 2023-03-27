@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 
 	"github.com/antihax/optional"
-	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	"github.com/spf13/cobra"
+
+	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
@@ -22,7 +23,7 @@ func (c *routeCommand) newListCommand() *cobra.Command {
 	cmd.Flags().String("resource", "", "The Confluent resource name (CRN) that is the subject of the query.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
-	_ = cmd.MarkFlagRequired("resource")
+	cobra.CheckErr(cmd.MarkFlagRequired("resource"))
 
 	return cmd
 }

@@ -10,9 +10,10 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/confluentinc/cli/internal/pkg/types"
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/cli/internal/pkg/types"
 )
 
 const tab = "   "

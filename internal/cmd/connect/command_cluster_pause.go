@@ -1,8 +1,9 @@
 package connect
 
 import (
-	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
 	"github.com/spf13/cobra"
+
+	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -39,7 +40,12 @@ func (c *clusterCommand) pause(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	connectorsByName, err := c.V2Client.ListConnectorsWithExpansions(c.EnvironmentId(), kafkaCluster.ID, "id,info")
+	environmentId, err := c.EnvironmentId()
+	if err != nil {
+		return err
+	}
+
+	connectorsByName, err := c.V2Client.ListConnectorsWithExpansions(environmentId, kafkaCluster.ID, "id,info")
 	if err != nil {
 		return err
 	}
@@ -55,7 +61,7 @@ func (c *clusterCommand) pause(cmd *cobra.Command, args []string) error {
 			return errors.Errorf(errors.UnknownConnectorIdErrorMsg, id)
 		}
 
-		if err := c.V2Client.PauseConnector(connector.Info.GetName(), c.EnvironmentId(), kafkaCluster.ID); err != nil {
+		if err := c.V2Client.PauseConnector(connector.Info.GetName(), environmentId, kafkaCluster.ID); err != nil {
 			return err
 		}
 

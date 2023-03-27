@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
 	"github.com/spf13/cobra"
+
+	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"

@@ -6,10 +6,11 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/keybase/go-keychain"
+
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
-	"github.com/keybase/go-keychain"
 )
 
 const (

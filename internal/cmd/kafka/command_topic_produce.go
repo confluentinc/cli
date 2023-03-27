@@ -8,9 +8,10 @@ import (
 	"os/signal"
 	"strings"
 
+	"github.com/spf13/cobra"
+
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
-	"github.com/spf13/cobra"
 
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -53,6 +54,10 @@ func newProduceCommand(prerunner pcmd.PreRunner, clientId string) *cobra.Command
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	cmd.Flags().String("environment", "", "Environment ID.")
 	pcmd.AddOutputFlag(cmd)
+
+	cobra.CheckErr(cmd.MarkFlagFilename("schema", "avro", "json", "proto"))
+	cobra.CheckErr(cmd.MarkFlagFilename("references", "json"))
+	cobra.CheckErr(cmd.MarkFlagFilename("config-file", "avro", "json"))
 
 	return cmd
 }
@@ -251,8 +256,7 @@ func getMsgKeyAndValue(metaInfo []byte, data, delimiter string, parseKey bool, s
 	if err != nil {
 		return "", "", err
 	}
-	encoded := append(metaInfo, encodedMessage...)
-	value := string(encoded)
+	value := string(append(metaInfo, encodedMessage...))
 	return key, value, nil
 }
 

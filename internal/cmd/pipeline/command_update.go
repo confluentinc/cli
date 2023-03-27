@@ -53,10 +53,14 @@ func (c *command) newUpdateCommand(enableSourceCode bool) *cobra.Command {
 			"If <secret-value> is empty, the named secret will be removed from Stream Designer.")
 	}
 	cmd.Flags().Bool("activation-privilege", true, "Grant or revoke the privilege to activate this pipeline.")
-	cmd.Flags().Bool("update-schema-registry", true, "Update the pipeline with the latest schema registry cluster.")
+	cmd.Flags().Bool("update-schema-registry", false, "Update the pipeline with the latest schema registry cluster.")
 	pcmd.AddOutputFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+
+	if enableSourceCode {
+		cobra.CheckErr(cmd.MarkFlagFilename("sql-file", "sql"))
+	}
 
 	return cmd
 }
@@ -106,8 +110,13 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		updatePipeline.Spec.SetActivationPrivilege(activationPrivilege)
 	}
 
+	environmentId, err := c.EnvironmentId()
+	if err != nil {
+		return err
+	}
+
 	if ksqlCluster != "" {
-		if _, err := c.V2Client.DescribeKsqlCluster(ksqlCluster, c.EnvironmentId()); err != nil {
+		if _, err := c.V2Client.DescribeKsqlCluster(ksqlCluster, environmentId); err != nil {
 			return err
 		}
 		updatePipeline.Spec.SetKsqlCluster(streamdesignerv1.ObjectReference{Id: ksqlCluster})
@@ -124,10 +133,10 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	pipeline, err := c.V2Client.UpdateSdPipeline(c.EnvironmentId(), cluster.ID, args[0], updatePipeline)
+	pipeline, err := c.V2Client.UpdateSdPipeline(environmentId, cluster.ID, args[0], updatePipeline)
 	if err != nil {
 		return err
 	}
 
-	return print(cmd, pipeline)
+	return printTable(cmd, pipeline)
 }

@@ -2,8 +2,9 @@ package iam
 
 import (
 	"github.com/antihax/optional"
-	"github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1"
 	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -15,6 +16,7 @@ var (
 	dataplaneNamespace      = optional.NewString("dataplane")
 	ksqlNamespace           = optional.NewString("ksql")
 	streamCatalogNamespace  = optional.NewString("streamcatalog")
+	identityNamespace       = optional.NewString("identity")
 )
 
 func newRBACCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
