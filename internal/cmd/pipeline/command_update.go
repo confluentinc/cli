@@ -73,7 +73,8 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if name == "" && description == "" && sqlFile == "" && len(secrets) == 0 && !cmd.Flags().Changed("activation-privilege") && !cmd.Flags().Changed("update-schema-registry") {
+	if name == "" && description == "" && sqlFile == "" && len(secrets) == 0 && !cmd.Flags().Changed("activation-privilege") &&
+		ksqlCluster == "" && !cmd.Flags().Changed("update-schema-registry") {
 		return fmt.Errorf("one of the update options must be provided: --name, --description, --sql-file, --secret, --activation-privilege, --update-schema-registry")
 	}
 
