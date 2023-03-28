@@ -44,7 +44,7 @@ func newProduceCommand(prerunner pcmd.PreRunner, clientId string) *cobra.Command
 	cmd.Flags().Bool("parse-key", false, "Parse key from the message.")
 	cmd.Flags().String("delimiter", ":", "The delimiter separating each key and value.")
 	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the producer client.`)
-	cmd.Flags().String("config-file", "", "The path to the configuration file (in json or avro format) for the producer client.")
+	cmd.Flags().String("config-file", "", "The path to the configuration file (in JSON or Avro format) for the producer client.")
 	cmd.Flags().String("schema-registry-endpoint", "", "Endpoint for Schema Registry cluster.")
 	cmd.Flags().String("schema-registry-api-key", "", "Schema registry API key.")
 	cmd.Flags().String("schema-registry-api-secret", "", "Schema registry API key secret.")
@@ -110,28 +110,8 @@ func (c *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 
 	output.ErrPrintln(errors.StartingProducerMsg)
 
-	// Line reader for producer input.
-	scanner := bufio.NewScanner(os.Stdin)
-	// CCloud Kafka messageMaxBytes:
-	// https://github.com/confluentinc/cc-spec-kafka/blob/9f0af828d20e9339aeab6991f32d8355eb3f0776/plugins/kafka/kafka.go#L43.
-	const maxScanTokenSize = 1024*1024*2 + 12
-	scanner.Buffer(nil, maxScanTokenSize)
-	input := make(chan string, 1)
-	// Avoid blocking in for loop so ^C or ^D can exit immediately.
 	var scanErr error
-	scan := func() {
-		hasNext := scanner.Scan()
-		if !hasNext {
-			// Actual error.
-			if scanner.Err() != nil {
-				scanErr = scanner.Err()
-			}
-			// Otherwise just EOF.
-			close(input)
-		} else {
-			input <- scanner.Text()
-		}
-	}
+	input, scan := PrepareInputChannel(&scanErr)
 
 	// Trap SIGINT to trigger a shutdown.
 	signals := make(chan os.Signal, 1)
@@ -150,7 +130,7 @@ func (c *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 			continue
 		}
 
-		msg, err := getProduceMessage(cmd, metaInfo, topic, data, serializationProvider)
+		msg, err := GetProduceMessage(cmd, metaInfo, topic, data, serializationProvider)
 		if err != nil {
 			return err
 		}
@@ -217,7 +197,31 @@ func (c *hasAPIKeyTopicCommand) registerSchema(cmd *cobra.Command, schemaCfg *sr
 	return metaInfo, referencePathMap, nil
 }
 
-func getProduceMessage(cmd *cobra.Command, metaInfo []byte, topicName, data string, serializationProvider serdes.SerializationProvider) (*ckafka.Message, error) {
+func PrepareInputChannel(scanErr *error) (chan string, func()) {
+	// Line reader for producer input.
+	scanner := bufio.NewScanner(os.Stdin)
+	// On-prem Kafka messageMaxBytes: using the same value of cloud. TODO: allow larger sizes if customers request
+	// https://github.com/confluentinc/cc-spec-kafka/blob/9f0af828d20e9339aeab6991f32d8355eb3f0776/plugins/kafka/kafka.go#L43.
+	const maxScanTokenSize = 1024*1024*2 + 12
+	scanner.Buffer(nil, maxScanTokenSize)
+	input := make(chan string, 1)
+	// Avoid blocking in for loop so ^C or ^D can exit immediately.
+	return input, func() {
+		hasNext := scanner.Scan()
+		if !hasNext {
+			// Actual error.
+			if scanner.Err() != nil {
+				*scanErr = scanner.Err()
+			}
+			// Otherwise just EOF.
+			close(input)
+		} else {
+			input <- scanner.Text()
+		}
+	}
+}
+
+func GetProduceMessage(cmd *cobra.Command, metaInfo []byte, topicName, data string, serializationProvider serdes.SerializationProvider) (*ckafka.Message, error) {
 	parseKey, err := cmd.Flags().GetBool("parse-key")
 	if err != nil {
 		return nil, err
