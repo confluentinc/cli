@@ -1020,7 +1020,6 @@ func (r *PreRun) shouldCheckForUpdates(cmd *cobra.Command) bool {
 func (r *PreRun) warnIfConfluentLocal(cmd *cobra.Command) {
 	if strings.HasPrefix(cmd.CommandPath(), "confluent local") {
 		output.ErrPrintln("The local commands are intended for a single-node development environment only, NOT for production usage. See more: https://docs.confluent.io/current/cli/index.html")
-		output.ErrPrintln("As of Confluent Platform 8.0, Java 8 is no longer supported.")
 		output.ErrPrintln()
 	}
 }

@@ -13,18 +13,16 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (c *command) newStopCommand() *cobra.Command {
-	cmd := &cobra.Command{
+func (c *command) newKafkaStopCommand() *cobra.Command {
+	return &cobra.Command{
 		Use:   "stop",
-		Short: "Stop the local Kafka service.",
+		Short: "Stop the local Apache Kafka service.",
 		Args:  cobra.NoArgs,
-		RunE:  c.stop,
+		RunE:  c.kafkaStop,
 	}
-
-	return cmd
 }
 
-func (c *command) stop(cmd *cobra.Command, args []string) error {
+func (c *command) kafkaStop(cmd *cobra.Command, args []string) error {
 	dockerClient, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		return err
@@ -57,7 +55,7 @@ func (c *command) stop(cmd *cobra.Command, args []string) error {
 
 	c.Config.LocalPorts = nil
 	if err := c.Config.Save(); err != nil {
-		return errors.Wrap(err, errors.RemovePortsFromConfigErrorMsg)
+		return errors.Wrap(err, "failed to remove local ports from config")
 	}
 
 	output.Printf(errors.ConfluentLocalThankYouMsg)
