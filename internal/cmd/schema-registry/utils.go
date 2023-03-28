@@ -43,7 +43,7 @@ func getPackageInternalName(inputPackageDisplayName string) (string, error) {
 }
 
 func getCommaDelimitedPackagesString() string {
-	return utils.ArrayToCommaDelimitedString(packageDisplayNames)
+	return utils.ArrayToCommaDelimitedString(packageDisplayNames, "or")
 }
 
 func addPackageFlag(cmd *cobra.Command, defaultPackage string) {
