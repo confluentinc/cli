@@ -7,8 +7,9 @@ import (
 const imageName = "523370736235.dkr.ecr.us-west-2.amazonaws.com/confluentinc/kafka-local:latest" // to be removed
 
 const (
-	localhostPrefix = "http://localhost:%s"
-	localhost       = "localhost"
+	localhostPrefix        = "http://localhost:%s"
+	localhost              = "localhost"
+	containerIdShortLength = 10
 )
 
 func (c *command) newKafkaCommand() *cobra.Command {
