@@ -92,7 +92,7 @@ func Decrypt(username, encrypted string, salt, nonce []byte) (string, error) {
 	}
 	decryptedPassword, err := aesgcm.Open(nil, nonce, cipherText, []byte(username))
 	if err != nil {
-		return "", errors.New(fmt.Sprintf("%s. %s", err.Error(), "Check cli read/write permission to /etc/machine-id."))
+		return "", fmt.Errorf("CLI does not have write permission for `/etc/machine-id`, or `~/.confluent/config.json` was corrupted: %w", err)
 	}
 
 	return string(decryptedPassword), nil
