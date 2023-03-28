@@ -8,6 +8,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
+	"fmt"
 	"os"
 	"strconv"
 
@@ -91,7 +92,7 @@ func Decrypt(username, encrypted string, salt, nonce []byte) (string, error) {
 	}
 	decryptedPassword, err := aesgcm.Open(nil, nonce, cipherText, []byte(username))
 	if err != nil {
-		return "", err
+		return "", errors.New(fmt.Sprintf("%s. %s", err.Error(), "Check cli read/write permission to /etc/machine-id."))
 	}
 
 	return string(decryptedPassword), nil
