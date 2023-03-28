@@ -338,7 +338,7 @@ func addTopicDescription(srClient *srsdk.APIClient, srContext context.Context, q
 			TypeName: "kafka_topic",
 		},
 	}
-	err := retry(context.Background(), 5*time.Second, 1*time.Minute, func() error {
+	err := retry(context.Background(), 5*time.Second, time.Minute, func() error {
 		_, err := srClient.DefaultApi.PartialUpdateByUniqueAttributes(srContext,
 			&srsdk.PartialUpdateByUniqueAttributesOpts{AtlasEntityWithExtInfo: optional.NewInterface(atlasEntity)})
 		return err
@@ -458,7 +458,7 @@ func addTopicTags(details *accountDetails, subscribe Operation, topicName string
 
 func addTagsUtil(details *accountDetails, tagDefConfigs []srsdk.TagDef, tagConfigs []srsdk.Tag) error {
 	tagDefOpts := srsdk.CreateTagDefsOpts{TagDef: optional.NewInterface(tagDefConfigs)}
-	err := retry(context.Background(), 5*time.Second, 1*time.Minute, func() error {
+	err := retry(context.Background(), 5*time.Second, time.Minute, func() error {
 		_, _, err := details.srClient.DefaultApi.CreateTagDefs(details.srContext, &tagDefOpts)
 		return err
 	})
@@ -467,7 +467,7 @@ func addTagsUtil(details *accountDetails, tagDefConfigs []srsdk.TagDef, tagConfi
 	}
 	log.CliLogger.Debugf("Tag Definitions created")
 	tagOpts := srsdk.CreateTagsOpts{Tag: optional.NewInterface(tagConfigs)}
-	err = retry(context.Background(), 5*time.Second, 1*time.Minute, func() error {
+	err = retry(context.Background(), 5*time.Second, time.Minute, func() error {
 		_, _, err = details.srClient.DefaultApi.CreateTags(details.srContext, &tagOpts)
 		return err
 	})

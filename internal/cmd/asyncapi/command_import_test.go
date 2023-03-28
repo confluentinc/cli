@@ -18,10 +18,10 @@ func TestResolveSchemaType(t *testing.T) {
 }
 
 func TestRetry(t *testing.T) {
-	require.Error(t, retry(context.Background(), 1*time.Second, 2*time.Second, func() error {
+	require.Error(t, retry(context.Background(), time.Nanosecond, 2*time.Nanosecond, func() error {
 		return errors.New("error")
 	}))
-	require.NoError(t, retry(context.Background(), 1*time.Second, 2*time.Second, func() error {
+	require.NoError(t, retry(context.Background(), time.Nanosecond, 2*time.Nanosecond, func() error {
 		return nil
 	}))
 }
