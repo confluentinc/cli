@@ -91,7 +91,7 @@ func Decrypt(username, encrypted string, salt, nonce []byte) (string, error) {
 	}
 	decryptedPassword, err := aesgcm.Open(nil, nonce, cipherText, []byte(username))
 	if err != nil {
-		return "", err
+		return "", errors.New(err.Error() + ". Check cli read/write permission to /etc.")
 	}
 
 	return string(decryptedPassword), nil
