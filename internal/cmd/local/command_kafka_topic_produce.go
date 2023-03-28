@@ -1,7 +1,6 @@
 package local
 
 import (
-	"bufio"
 	"fmt"
 	"os"
 	"os/signal"
@@ -18,17 +17,17 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/serdes"
 )
 
-func (c *command) newProduceCommand() *cobra.Command {
+func (c *command) newKafkaTopicProduceCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "produce <topic>",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.topicProduce,
+		RunE:  c.kafkaTopicProduce,
 		Short: "Produce messages to a Kafka topic.",
 		Long:  "Produce messages to a Kafka topic. Configuration and command guide: https://docs.confluent.io/confluent-cli/current/cp-produce-consume.html.\n\nWhen using this command, you cannot modify the message header, and the message header will not be printed out.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Produce message to topic "my_topic" providing key.`,
-				Code: `confluent local kafka topic produce my_topic --parse-key`,
+				Text: `Produce message to topic "test" providing key.`,
+				Code: "confluent local kafka topic produce test --parse-key",
 			},
 		),
 	}
@@ -36,11 +35,11 @@ func (c *command) newProduceCommand() *cobra.Command {
 	cmd.Flags().Bool("parse-key", false, "Parse key from the message.")
 	cmd.Flags().String("delimiter", ":", "The delimiter separating each key and value.")
 	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the producer client.`)
-	cmd.Flags().String("config-file", "", "The path to the configuration file (in json or avro format) for the producer client.")
+	cmd.Flags().String("config-file", "", "The path to the configuration file (in JSON or Avro format) for the producer client.")
 	return cmd
 }
 
-func (c *command) topicProduce(cmd *cobra.Command, args []string) error {
+func (c *command) kafkaTopicProduce(cmd *cobra.Command, args []string) error {
 	if c.Config.LocalPorts == nil {
 		return errors.NewErrorWithSuggestions(errors.FailedToReadPortsErrorMsg, errors.FailedToReadPortsSuggestions)
 	}
@@ -70,28 +69,8 @@ func (c *command) topicProduce(cmd *cobra.Command, args []string) error {
 
 	output.ErrPrintln(errors.StartingProducerMsg)
 
-	// Line reader for producer input.
-	scanner := bufio.NewScanner(os.Stdin)
-	// On-prem Kafka messageMaxBytes: using the same value of cloud. TODO: allow larger sizes if customers request
-	// https://github.com/confluentinc/cc-spec-kafka/blob/9f0af828d20e9339aeab6991f32d8355eb3f0776/plugins/kafka/kafka.go#L43.
-	const maxScanTokenSize = 1024*1024*2 + 12
-	scanner.Buffer(nil, maxScanTokenSize)
-	input := make(chan string, 1)
-	// Avoid blocking in for loop so ^C or ^D can exit immediately.
 	var scanErr error
-	scan := func() {
-		hasNext := scanner.Scan()
-		if !hasNext {
-			// Actual error.
-			if scanner.Err() != nil {
-				scanErr = scanner.Err()
-			}
-			// Otherwise just EOF.
-			close(input)
-		} else {
-			input <- scanner.Text()
-		}
-	}
+	input, scan := kafka.PrepareInputChannel(&scanErr)
 
 	signals := make(chan os.Signal, 1) // Trap SIGINT to trigger a shutdown.
 	signal.Notify(signals, os.Interrupt)
@@ -108,7 +87,7 @@ func (c *command) topicProduce(cmd *cobra.Command, args []string) error {
 			continue
 		}
 
-		msg, err := kafka.GetProduceMessage(cmd, []byte{0, 0, 0, 0}, topicName, data, serializationProvider)
+		msg, err := kafka.GetProduceMessage(cmd, make([]byte, 4), topicName, data, serializationProvider)
 		if err != nil {
 			return err
 		}

@@ -10,16 +10,16 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 )
 
-func (c *command) newDescribeCommand() *cobra.Command {
+func (c *command) newKafkaTopicDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe <topic>",
 		Args:  cobra.ExactArgs(1),
 		Short: "Describe a Kafka topic.",
-		RunE:  c.topicDescribe,
+		RunE:  c.kafkaTopicDescribe,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Describe the "my_topic" topic.`,
-				Code: "confluent local kafka topic describe my_topic",
+				Text: `Describe the "test" topic.`,
+				Code: "confluent local kafka topic describe test",
 			},
 		),
 	}
@@ -29,7 +29,7 @@ func (c *command) newDescribeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) topicDescribe(cmd *cobra.Command, args []string) error {
+func (c *command) kafkaTopicDescribe(cmd *cobra.Command, args []string) error {
 	restClient, clusterId, err := initKafkaRest(c.CLICommand, cmd)
 	if err != nil {
 		return err

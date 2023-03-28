@@ -21,13 +21,13 @@ func (c *command) newTopicCommand() *cobra.Command {
 		Args:  cobra.NoArgs,
 	}
 
-	cmd.AddCommand(c.newListCommand())
-	cmd.AddCommand(c.newCreateCommand())
-	cmd.AddCommand(c.newDescribeCommand())
-	cmd.AddCommand(c.newDeleteCommand())
-	cmd.AddCommand(c.newUpdateCommand())
-	cmd.AddCommand(c.newProduceCommand())
-	cmd.AddCommand(c.newConsumeCommand())
+	cmd.AddCommand(c.newKafkaTopicConsumeCommand())
+	cmd.AddCommand(c.newKafkaTopicCreateCommand())
+	cmd.AddCommand(c.newKafkaTopicDeleteCommand())
+	cmd.AddCommand(c.newKafkaTopicDescribeCommand())
+	cmd.AddCommand(c.newKafkaTopicListCommand())
+	cmd.AddCommand(c.newKafkaTopicProduceCommand())
+	cmd.AddCommand(c.newKafkaTopicUpdateCommand())
 
 	return cmd
 }
@@ -36,21 +36,21 @@ func initKafkaRest(c *pcmd.CLICommand, cmd *cobra.Command) (*kafkarestv3.APIClie
 	if c.Config.LocalPorts == nil {
 		return nil, "", errors.NewErrorWithSuggestions(errors.FailedToReadPortsErrorMsg, errors.FailedToReadPortsSuggestions)
 	}
-	url := fmt.Sprintf(localhostPrefix, c.Config.LocalPorts.RestPort)
+	url := fmt.Sprintf(localhostPrefix, c.Config.LocalPorts.KafkaRestPort)
 
 	unsafeTrace, err := c.Flags().GetBool("unsafe-trace")
 	if err != nil {
 		return nil, "", err
 	}
 
-	kafkaREST := pcmd.KafkaREST{
+	kafkaRest := pcmd.KafkaREST{
 		Context: context.Background(),
 		Client:  pcmd.CreateKafkaRESTClient(url, unsafeTrace),
 	}
-	kafkaRestClient := kafkaREST.Client
+	kafkaRestClient := kafkaRest.Client
 	kafka.SetServerURL(cmd, kafkaRestClient, url)
 
-	clusterListData, _, err := kafkaRestClient.ClusterV3Api.ClustersGet(kafkaREST.Context)
+	clusterListData, _, err := kafkaRestClient.ClusterV3Api.ClustersGet(kafkaRest.Context)
 	if err != nil {
 		return nil, "", err
 	}

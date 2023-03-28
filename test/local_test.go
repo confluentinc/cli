@@ -10,7 +10,6 @@ func (s *CLITestSuite) TestLocal() {
 
 	for _, tt := range tests {
 		tt.workflow = true
-		tt.login = "platform"
 		s.runIntegrationTest(tt)
 	}
 
@@ -25,7 +24,6 @@ func (s *CLITestSuite) TestLocal() {
 
 	for _, tt := range tests2 {
 		tt.workflow = true
-		tt.login = "platform"
 		s.runIntegrationTest(tt)
 	}
 }

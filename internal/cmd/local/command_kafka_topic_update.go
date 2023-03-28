@@ -10,16 +10,16 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 )
 
-func (c *command) newUpdateCommand() *cobra.Command {
+func (c *command) newKafkaTopicUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update <topic>",
 		Short: "Update a Kafka topic.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.topicUpdate,
+		RunE:  c.kafkaTopicUpdate,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Describe the "my_topic" topic.`,
-				Code: "confluent kafka topic describe my_topic",
+				Text: `Describe the "test" topic.`,
+				Code: "confluent kafka topic describe test",
 			},
 		),
 	}
@@ -30,7 +30,7 @@ func (c *command) newUpdateCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) topicUpdate(cmd *cobra.Command, args []string) error {
+func (c *command) kafkaTopicUpdate(cmd *cobra.Command, args []string) error {
 	restClient, clusterId, err := initKafkaRest(c.CLICommand, cmd)
 	if err != nil {
 		return err

@@ -2,7 +2,6 @@ package local
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/spf13/cobra"
 
@@ -10,16 +9,16 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 )
 
-func (c *command) newCreateCommand() *cobra.Command {
+func (c *command) newKafkaTopicCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <topic>",
 		Short: "Create a Kafka topic.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.topicCreate,
+		RunE:  c.kafkaTopicCreate,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Create a topic named "my_topic_2" with specified configuration parameters.`,
-				Code: "confluent local kafka topic create my_topic_2 --config cleanup.policy=compact,compression.type=gzip",
+				Text: `Create a topic named "test" with specified configuration parameters.`,
+				Code: "confluent local kafka topic create test --config cleanup.policy=compact,compression.type=gzip",
 			},
 		),
 	}
@@ -32,10 +31,9 @@ func (c *command) newCreateCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) topicCreate(cmd *cobra.Command, args []string) error {
+func (c *command) kafkaTopicCreate(cmd *cobra.Command, args []string) error {
 	restClient, clusterId, err := initKafkaRest(c.CLICommand, cmd)
 	if err != nil {
-		fmt.Println("err", err)
 		return err
 	}
 

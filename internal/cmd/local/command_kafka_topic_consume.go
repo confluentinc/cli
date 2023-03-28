@@ -16,17 +16,17 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (c *command) newConsumeCommand() *cobra.Command {
+func (c *command) newKafkaTopicConsumeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "consume <topic>",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.topicConsume,
+		RunE:  c.kafkaTopicConsume,
 		Short: "Consume messages from a Kafka topic.",
 		Long:  "Consume messages from a Kafka topic. Configuration and command guide: https://docs.confluent.io/confluent-cli/current/cp-produce-consume.html.\n\nTruncated message headers will be printed if they exist.",
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Consume message from topic "my_topic" from the beginning and with keys printed.`,
-				Code: `confluent local kafka topic consume my_topic --from-beginning --print-key`,
+				Text: `Consume message from topic "test" from the beginning and with keys printed.`,
+				Code: "confluent local kafka topic consume test --from-beginning --print-key",
 			},
 		),
 	}
@@ -39,11 +39,11 @@ func (c *command) newConsumeCommand() *cobra.Command {
 	cmd.Flags().Bool("timestamp", false, "Print message timestamp in milliseconds.")
 	cmd.Flags().String("delimiter", "\t", "The delimiter separating each key and value.")
 	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the consumer client.`)
-	cmd.Flags().String("config-file", "", "The path to the configuration file (in json or avro format) for the consumer client.")
+	cmd.Flags().String("config-file", "", "The path to the configuration file (in JSON or Avro format) for the consumer client.")
 	return cmd
 }
 
-func (c *command) topicConsume(cmd *cobra.Command, args []string) error {
+func (c *command) kafkaTopicConsume(cmd *cobra.Command, args []string) error {
 	printKey, err := cmd.Flags().GetBool("print-key")
 	if err != nil {
 		return err

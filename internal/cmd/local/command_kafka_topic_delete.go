@@ -10,16 +10,16 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 )
 
-func (c *command) newDeleteCommand() *cobra.Command {
+func (c *command) newKafkaTopicDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete <topic>",
 		Short: "Delete a Kafka topic.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.topicDelete,
+		RunE:  c.kafkaTopicDelete,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Delete the topic "my_topic". Use this command carefully as data loss can occur.`,
-				Code: "confluent local kafka topic delete my_topic",
+				Text: `Delete the topic "test". Use this command carefully as data loss can occur.`,
+				Code: "confluent local kafka topic delete test",
 			},
 		),
 	}
@@ -29,7 +29,7 @@ func (c *command) newDeleteCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) topicDelete(cmd *cobra.Command, args []string) error {
+func (c *command) kafkaTopicDelete(cmd *cobra.Command, args []string) error {
 	restClient, clusterId, err := initKafkaRest(c.CLICommand, cmd)
 	if err != nil {
 		return err
