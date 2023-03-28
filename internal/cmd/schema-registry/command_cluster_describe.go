@@ -65,7 +65,11 @@ func (c *command) clusterDescribe(cmd *cobra.Command, _ []string) error {
 	ctx := context.Background()
 
 	// Collect the parameters
-	cluster, err := c.Context.FetchSchemaRegistryByEnvironmentId(ctx, c.EnvironmentId())
+	environmentId, err := c.EnvironmentId()
+	if err != nil {
+		return err
+	}
+	cluster, err := c.Context.FetchSchemaRegistryByEnvironmentId(ctx, environmentId)
 	if err != nil {
 		return err
 	}

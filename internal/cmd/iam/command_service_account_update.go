@@ -28,7 +28,8 @@ func (c *serviceAccountCommand) newUpdateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("description", "", "Description of the service account.")
-	_ = cmd.MarkFlagRequired("description")
+
+	cobra.CheckErr(cmd.MarkFlagRequired("description"))
 
 	return cmd
 }

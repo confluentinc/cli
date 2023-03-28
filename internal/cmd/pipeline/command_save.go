@@ -35,6 +35,8 @@ func (c *command) newSaveCommand(enableSourceCode bool) *cobra.Command {
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
+	cobra.CheckErr(cmd.MarkFlagFilename("sql-file", "sql"))
+
 	return cmd
 }
 
@@ -44,7 +46,12 @@ func (c *command) save(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	pipeline, err := c.V2Client.GetSdPipeline(c.EnvironmentId(), cluster.ID, args[0])
+	environmentId, err := c.EnvironmentId()
+	if err != nil {
+		return err
+	}
+
+	pipeline, err := c.V2Client.GetSdPipeline(environmentId, cluster.ID, args[0])
 	if err != nil {
 		return err
 	}

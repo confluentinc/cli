@@ -35,7 +35,7 @@ func (c *command) newClusterDeleteCommand() *cobra.Command {
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired("environment")
+	cobra.CheckErr(cmd.MarkFlagRequired("environment"))
 
 	return cmd
 }
@@ -43,12 +43,17 @@ func (c *command) newClusterDeleteCommand() *cobra.Command {
 func (c *command) clusterDelete(cmd *cobra.Command, _ []string) error {
 	ctx := context.Background()
 
-	cluster, err := c.Context.FetchSchemaRegistryByEnvironmentId(ctx, c.EnvironmentId())
+	environmentId, err := c.EnvironmentId()
 	if err != nil {
 		return err
 	}
 
-	promptMsg := fmt.Sprintf(`Are you sure you want to delete %s "%s" for %s "%s"?`, resource.SchemaRegistryCluster, cluster.Id, resource.Environment, c.EnvironmentId())
+	cluster, err := c.Context.FetchSchemaRegistryByEnvironmentId(ctx, environmentId)
+	if err != nil {
+		return err
+	}
+
+	promptMsg := fmt.Sprintf(`Are you sure you want to delete %s "%s" for %s "%s"?`, resource.SchemaRegistryCluster, cluster.Id, resource.Environment, environmentId)
 	if ok, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil || !ok {
 		return err
 	}
@@ -58,6 +63,6 @@ func (c *command) clusterDelete(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	output.Printf(errors.SchemaRegistryClusterDeletedMsg, c.EnvironmentId())
+	output.Printf(errors.SchemaRegistryClusterDeletedMsg, environmentId)
 	return nil
 }

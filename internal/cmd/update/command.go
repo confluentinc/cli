@@ -82,14 +82,14 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 
 	releases = getRelevantReleases(releases, current, major)
 
-	latestVersion, err := getReleaseVersion(releases[len(releases)-1])
-	if err != nil {
-		return err
-	}
-
 	if len(releases) == 0 {
 		output.Println("Already up to date.")
 		return nil
+	}
+
+	latestVersion, err := getReleaseVersion(releases[len(releases)-1])
+	if err != nil {
+		return err
 	}
 
 	if major && latestVersion.Major <= current.Major {

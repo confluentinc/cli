@@ -46,8 +46,8 @@ func (c *command) newClusterEnableCommand() *cobra.Command {
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired("cloud")
-	_ = cmd.MarkFlagRequired("geo")
+	cobra.CheckErr(cmd.MarkFlagRequired("cloud"))
+	cobra.CheckErr(cmd.MarkFlagRequired("geo"))
 
 	pcmd.RegisterFlagCompletionFunc(cmd, "geo", func(_ *cobra.Command, _ []string) []string { return availableGeos })
 
@@ -83,9 +83,14 @@ func (c *command) clusterEnable(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	environmentId, err := c.EnvironmentId()
+	if err != nil {
+		return err
+	}
+
 	// Build the SR instance
 	clusterConfig := &ccloudv1.SchemaRegistryClusterConfig{
-		AccountId:       c.EnvironmentId(),
+		AccountId:       environmentId,
 		Location:        location,
 		ServiceProvider: cloud,
 		Package:         packageInternalName,
@@ -99,7 +104,7 @@ func (c *command) clusterEnable(cmd *cobra.Command, _ []string) error {
 	newCluster, err := c.Client.SchemaRegistry.CreateSchemaRegistryCluster(ctx, clusterConfig)
 	if err != nil {
 		// If it already exists, return the existing one
-		existingCluster, getExistingErr := c.Context.FetchSchemaRegistryByEnvironmentId(ctx, c.EnvironmentId())
+		existingCluster, getExistingErr := c.Context.FetchSchemaRegistryByEnvironmentId(ctx, environmentId)
 		if getExistingErr != nil {
 			// Propagate CreateSchemaRegistryCluster error.
 			return err
