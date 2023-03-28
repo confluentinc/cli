@@ -103,5 +103,6 @@
       "username": "test-user",
       "encrypted_password": "encrypted-password"
     }
-  }
+  },
+  "last_update_check": "0001-01-01T00:00:00Z"
 }

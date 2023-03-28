@@ -68,8 +68,6 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).")
 	cmd.PersistentFlags().Bool("unsafe-trace", false, "Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.")
 
-	disableUpdateCheck := cfg.DisableUpdates || cfg.DisableUpdateCheck
-	updateClient := update.NewClient(pversion.CLIName, disableUpdateCheck)
 	authTokenHandler := pauth.NewAuthTokenHandler()
 	ccloudClientFactory := pauth.NewCCloudClientFactory(cfg.Version.UserAgent)
 	flagResolver := &pcmd.FlagResolverImpl{Prompt: form.NewPrompt(os.Stdin), Out: os.Stdout}
@@ -94,7 +92,6 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 		JWTValidator:            jwtValidator,
 		LoginCredentialsManager: loginCredentialsManager,
 		MDSClientManager:        mdsClientManager,
-		UpdateClient:            updateClient,
 		Version:                 cfg.Version,
 	}
 
@@ -124,7 +121,7 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 	cmd.AddCommand(schemaregistry.New(cfg, prerunner, nil))
 	cmd.AddCommand(secret.New(prerunner, flagResolver, secrets.NewPasswordProtectionPlugin()))
 	cmd.AddCommand(shell.New(cmd, func() *cobra.Command { return NewConfluentCommand(cfg) }))
-	cmd.AddCommand(update.New(prerunner, cfg.Version, updateClient))
+	cmd.AddCommand(update.New(prerunner, cfg.Version.Version))
 	cmd.AddCommand(version.New(prerunner, cfg.Version))
 
 	dc := dynamicconfig.New(cfg, nil, nil)

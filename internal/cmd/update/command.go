@@ -1,39 +1,34 @@
 package update
 
 import (
+	"context"
+	"encoding/hex"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
+	"runtime"
 	"strings"
 	"time"
 
-	"github.com/hashicorp/go-version"
+	"github.com/blang/semver"
+	"github.com/google/go-github/v50/github"
+	update "github.com/inconshreveable/go-update"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/form"
+	pgithub "github.com/confluentinc/cli/internal/pkg/github"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/update"
-	"github.com/confluentinc/cli/internal/pkg/update/s3"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
-)
-
-const (
-	S3BinBucket             = "confluent.cloud"
-	S3BinRegion             = "us-west-2"
-	S3BinPrefixFmt          = "%s-cli/binaries"
-	S3ReleaseNotesPrefixFmt = "%s-cli/release-notes"
-	CheckFileFmt            = "%s/.%s/update_check"
-	CheckInterval           = 24 * time.Hour
 )
 
 type command struct {
 	*pcmd.CLICommand
-	version *pversion.Version
-	client  update.Client
+	version string
 }
 
-func New(prerunner pcmd.PreRunner, version *pversion.Version, client update.Client) *cobra.Command {
+func New(prerunner pcmd.PreRunner, version string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "update",
 		Short:       fmt.Sprintf("Update the %s.", pversion.FullCLIName),
@@ -41,42 +36,23 @@ func New(prerunner pcmd.PreRunner, version *pversion.Version, client update.Clie
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireUpdatesEnabled},
 	}
 
+	c := &command{
+		CLICommand: pcmd.NewAnonymousCLICommand(cmd, prerunner),
+		version:    version,
+	}
+	cmd.RunE = c.update
+
 	cmd.Flags().BoolP("yes", "y", false, "Update without prompting.")
 	cmd.Flags().Bool("major", false, "Allow major version updates.")
 	cmd.Flags().Bool("no-verify", false, "Skip checksum verification of new binary.")
 
-	c := &command{
-		CLICommand: pcmd.NewAnonymousCLICommand(cmd, prerunner),
-		version:    version,
-		client:     client,
-	}
-	cmd.RunE = c.update
-
 	return cmd
-}
-
-// NewClient returns a new update.Client configured for the CLI
-func NewClient(cliName string, disableUpdateCheck bool) update.Client {
-	repo := s3.NewPublicRepo(&s3.PublicRepoParams{
-		S3BinRegion:             S3BinRegion,
-		S3BinBucket:             S3BinBucket,
-		S3BinPrefixFmt:          S3BinPrefixFmt,
-		S3ReleaseNotesPrefixFmt: S3ReleaseNotesPrefixFmt,
-	})
-	homedir, _ := os.UserHomeDir()
-	return update.NewClient(&update.ClientParams{
-		Repository:    repo,
-		DisableCheck:  disableUpdateCheck,
-		CheckFile:     fmt.Sprintf(CheckFileFmt, homedir, cliName),
-		CheckInterval: CheckInterval,
-		Out:           os.Stdout,
-	})
 }
 
 func (c *command) update(cmd *cobra.Command, _ []string) error {
 	yes, err := cmd.Flags().GetBool("yes")
 	if err != nil {
-		return errors.Wrap(err, errors.ReadingYesFlagErrorMsg)
+		return err
 	}
 
 	major, err := cmd.Flags().GetBool("major")
@@ -89,89 +65,197 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	output.ErrPrintln(errors.CheckingForUpdatesMsg)
-	latestMajorVersion, latestMinorVersion, err := c.client.CheckForUpdates(pversion.CLIName, c.version.Version, true)
-	if err != nil {
-		return errors.NewUpdateClientWrapError(err, errors.CheckingForUpdateErrorMsg)
-	}
+	output.ErrPrintln("Checking for updates...")
 
-	if latestMajorVersion == "" && latestMinorVersion == "" {
-		output.Println(errors.UpToDateMsg)
-		return nil
-	}
-
-	if latestMajorVersion != "" && latestMinorVersion == "" && !major {
-		output.Printf(errors.MajorVersionUpdateMsg, pversion.CLIName)
-		return nil
-	}
-
-	if latestMajorVersion == "" && major {
-		output.Print(errors.NoMajorVersionUpdateMsg)
-		return nil
-	}
-
-	isMajorVersionUpdate := major && latestMajorVersion != ""
-
-	updateVersion := latestMinorVersion
-	if isMajorVersionUpdate {
-		updateVersion = latestMajorVersion
-	}
-
-	releaseNotes := c.getReleaseNotes(pversion.CLIName, updateVersion)
-
-	// HACK: our packaging doesn't include the "v" in the version, so we add it back so that the prompt is consistent
-	//   example S3 path: ccloud-cli/binaries/0.50.0/ccloud_0.50.0_darwin_amd64
-	// Without this hack, the prompt looks like
-	//   Current Version: v0.0.0
-	//   Latest Version:  0.50.0
-	// Unfortunately the "UpdateBinary" output will still show 0.50.0, and we can't hack that since it must match S3
-	if !c.client.PromptToDownload(pversion.CLIName, c.version.Version, "v"+updateVersion, releaseNotes, !yes) {
-		return nil
-	}
-
-	oldBin, err := os.Executable()
+	current, err := semver.ParseTolerant(c.version)
 	if err != nil {
 		return err
 	}
-	if err := c.client.UpdateBinary(pversion.CLIName, updateVersion, oldBin, noVerify); err != nil {
-		return errors.NewUpdateClientWrapError(err, errors.UpdateBinaryErrorMsg)
+
+	client := github.NewClient(nil)
+
+	// Intentionally do not paginate. By default there are 30 entries per page, and printing more than 30 release notes would be overkill.
+	releases, _, err := client.Repositories.ListReleases(context.Background(), pgithub.Owner, pgithub.Repo, nil)
+	if err != nil {
+		return err
 	}
+
+	releases = getRelevantReleases(releases, current, major)
+
+	if len(releases) == 0 {
+		output.Println("Already up to date.")
+		return nil
+	}
+
+	latestVersion, err := getReleaseVersion(releases[len(releases)-1])
+	if err != nil {
+		return err
+	}
+
+	if major && latestVersion.Major <= current.Major {
+		output.Println("No major version updates are available.")
+		return nil
+	}
+
+	if !major && latestVersion.LTE(current) {
+		output.Println("The only available update is a major version update. Use `confluent update --major` to accept the update.")
+		return nil
+	}
+
+	output.Println("New version of confluent is available")
+	output.Printf("Current Version: v%s\n", current)
+	output.Printf("Latest Version:  v%s\n", latestVersion)
+
+	for _, release := range releases {
+		output.Println()
+		output.Println(release.GetBody())
+	}
+
+	if !yes {
+		ok, err := verify()
+		if err != nil {
+			return err
+		}
+		if !ok {
+			return nil
+		}
+	}
+
+	assets, _, err := client.Repositories.ListReleaseAssets(context.Background(), pgithub.Owner, pgithub.Repo, releases[len(releases)-1].GetID(), nil)
+	if err != nil {
+		return err
+	}
+
+	var binaryReader io.Reader
+	var bytes int64
+	var checksum []byte
+
+	binary := fmt.Sprintf("confluent_%s_%s_%s", latestVersion.String(), runtime.GOOS, runtime.GOARCH)
+
+	for _, asset := range assets {
+		if asset.GetName() == binary {
+			binaryReader, bytes, err = downloadReleaseAsset(client, asset)
+			if err != nil {
+				return err
+			}
+		} else if !noVerify && asset.GetName() == fmt.Sprintf("confluent_%s_checksums.txt", latestVersion.String()) {
+			reader, _, err := downloadReleaseAsset(client, asset)
+			if err != nil {
+				return err
+			}
+
+			checksums, err := io.ReadAll(reader)
+			if err != nil {
+				return err
+			}
+
+			checksum, err = findChecksum(string(checksums), binary)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	if binaryReader == nil {
+		return fmt.Errorf("could not find release")
+	}
+	if !noVerify && checksum == nil {
+		return fmt.Errorf("could not find checksum")
+	}
+
+	var opts update.Options
+	if !noVerify {
+		opts.Checksum = checksum
+	}
+
+	start := time.Now()
+	if err := update.Apply(binaryReader, opts); err != nil {
+		return err
+	}
+
+	mb := convertBytesToMegabytes(bytes)
+	s := time.Since(start).Seconds()
+	output.Printf("Done. Downloaded %.2f MB in %.0f seconds. (%.2f MB/s)\n", mb, s, mb/s)
 
 	return nil
 }
 
-func (c *command) getReleaseNotes(cliName, latestBinaryVersion string) string {
-	latestReleaseNotesVersion, allReleaseNotes, err := c.client.GetLatestReleaseNotes(cliName, c.version.Version)
+// getRelevantReleases gets an ordered list of releases that have happened since the last update.
+func getRelevantReleases(releases []*github.RepositoryRelease, current semver.Version, major bool) []*github.RepositoryRelease {
+	var lo int
+	var hi int
 
-	var errMsg string
-	if err != nil {
-		errMsg = fmt.Sprintf(errors.ObtainingReleaseNotesErrorMsg, err)
-	} else {
-		isSameVersion, err := sameVersionCheck(latestBinaryVersion, latestReleaseNotesVersion)
+	var found bool
+
+	for i, release := range releases {
+		version, err := getReleaseVersion(release)
 		if err != nil {
-			errMsg = fmt.Sprintf(errors.ReleaseNotesVersionCheckErrorMsg, err)
+			continue
 		}
-		if !isSameVersion {
-			errMsg = fmt.Sprintf(errors.ReleaseNotesVersionMismatchErrorMsg, latestBinaryVersion, latestReleaseNotesVersion)
+
+		if !found && (major || version.Major == current.Major) {
+			lo = i
+			found = true
+		}
+
+		hi = i
+		if version.LTE(current) {
+			break
 		}
 	}
 
-	if errMsg != "" {
-		log.CliLogger.Debugf(errMsg)
-		return ""
+	reversed := make([]*github.RepositoryRelease, hi-lo)
+	j := 0
+	for i := hi - 1; i >= lo; i-- {
+		reversed[j] = releases[i]
+		j++
 	}
 
-	return strings.Join(allReleaseNotes, "\n")
+	return reversed
 }
 
-func sameVersionCheck(v1 string, v2 string) (bool, error) {
-	version1, err := version.NewVersion(v1)
+func getReleaseVersion(release *github.RepositoryRelease) (semver.Version, error) {
+	return semver.ParseTolerant(release.GetTagName())
+}
+
+func downloadReleaseAsset(client *github.Client, asset *github.ReleaseAsset) (io.ReadCloser, int64, error) {
+	_, url, err := client.Repositories.DownloadReleaseAsset(context.Background(), pgithub.Owner, pgithub.Repo, asset.GetID(), nil)
 	if err != nil {
+		return nil, 0, err
+	}
+
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, 0, err
+	}
+	return resp.Body, resp.ContentLength, nil
+}
+
+func verify() (bool, error) {
+	f := form.New(form.Field{
+		ID:        "update",
+		Prompt:    "Do you want to download and install this update?",
+		IsYesOrNo: true,
+	})
+	if err := f.Prompt(form.NewPrompt(os.Stdin)); err != nil {
 		return false, err
 	}
-	version2, err := version.NewVersion(v2)
-	if err != nil {
-		return false, err
+	return f.Responses["update"].(bool), nil
+}
+
+func findChecksum(checksums, filename string) ([]byte, error) {
+	for _, line := range strings.Split(checksums, "\n") {
+		if x := strings.SplitN(line, "  ", 2); len(x) == 2 && x[1] == filename {
+			checksum := make([]byte, len(x[0])/2)
+			if _, err := hex.Decode(checksum, []byte(x[0])); err != nil {
+				return nil, err
+			}
+			return checksum, nil
+		}
 	}
-	return version1.Compare(version2) == 0, nil
+	return nil, nil
+}
+
+func convertBytesToMegabytes(b int64) float64 {
+	return float64(b) / 1024.0 / 1024.0
 }
