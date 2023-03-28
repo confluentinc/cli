@@ -32,12 +32,12 @@ func (c *command) newUpdateCommand(enableSourceCode bool) *cobra.Command {
 				Code: `confluent pipeline update pipe-12345 --activation-privilege false`,
 			},
 			examples.Example{
-				Text: `Request to update Stream Designer pipeline "pipe-12345", with new ksql cluster Id.`,
+				Text: `Update Stream Designer pipeline "pipe-12345" with KSQL cluster ID "lksqlc-123456".`,
 				Code: `confluent pipeline update pipe-12345 --ksql-cluster lksqlc-123456.`,
 			},
 			examples.Example{
-				Text: `Request to update Stream Designer pipeline "pipe-12345", with new schema registry cluster Id.`,
-				Code: `confluent pipeline update pipe-12345 --update-schema-registry`,
+				Text: `Update Stream Designer pipeline "pipe-12345" with new schema registry cluster Id.`,
+				Code: `confluent pipeline update pipe-12345 --update-schema-registry true`,
 			},
 		),
 	}
@@ -79,7 +79,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 
 	if name == "" && description == "" && sqlFile == "" && len(secrets) == 0 && !cmd.Flags().Changed("activation-privilege") &&
 		ksqlCluster == "" && !cmd.Flags().Changed("update-schema-registry") {
-		return fmt.Errorf("one of the update options must be provided: --name, --description, --sql-file, --secret, --activation-privilege, --update-schema-registry")
+		return fmt.Errorf("one of the update options must be provided: `--name`, `--description`, `--sql-file`, `--secret`, `--activation-privilege`, `--update-schema-registry`")
 	}
 
 	updatePipeline := streamdesignerv1.SdV1Pipeline{Spec: &streamdesignerv1.SdV1PipelineSpec{}}
