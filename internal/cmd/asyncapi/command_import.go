@@ -6,6 +6,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/antihax/optional"
 	"github.com/go-yaml/yaml"
@@ -337,8 +338,19 @@ func addTopicDescription(srClient *srsdk.APIClient, srContext context.Context, q
 			TypeName: "kafka_topic",
 		},
 	}
-	_, err := srClient.DefaultApi.PartialUpdateByUniqueAttributes(srContext,
-		&srsdk.PartialUpdateByUniqueAttributesOpts{AtlasEntityWithExtInfo: optional.NewInterface(atlasEntity)})
+	var err error
+	for attempt := 1; attempt <= 10; attempt++ {
+		_, err = srClient.DefaultApi.PartialUpdateByUniqueAttributes(srContext,
+			&srsdk.PartialUpdateByUniqueAttributesOpts{AtlasEntityWithExtInfo: optional.NewInterface(atlasEntity)})
+		if err == nil {
+			break
+		}
+		log.CliLogger.Debug(err)
+		if attempt < 10 {
+			log.CliLogger.Info("Retry adding topic description")
+			time.Sleep(10 * time.Second)
+		}
+	}
 	return err
 }
 
@@ -440,7 +452,7 @@ func addTopicTags(details *accountDetails, subscribe Operation, topicName string
 		tagConfigs = append(tagConfigs, srsdk.Tag{
 			TypeName:   tag.Name,
 			EntityType: "kafka_topic",
-			EntityName: fmt.Sprintf("%s:%s:%s", details.srCluster.Id, details.clusterId, topicName),
+			EntityName: fmt.Sprintf("%s:%s", details.clusterId, topicName),
 		})
 		tagNames = append(tagNames, tag.Name)
 	}
@@ -454,13 +466,36 @@ func addTopicTags(details *accountDetails, subscribe Operation, topicName string
 
 func addTagsUtil(details *accountDetails, tagDefConfigs []srsdk.TagDef, tagConfigs []srsdk.Tag) error {
 	tagDefOpts := srsdk.CreateTagDefsOpts{TagDef: optional.NewInterface(tagDefConfigs)}
-	defs, _, err := details.srClient.DefaultApi.CreateTagDefs(details.srContext, &tagDefOpts)
+	var err error
+	var defs []srsdk.TagDefResponse
+	for attempt := 1; attempt <= 10; attempt++ {
+		defs, _, err = details.srClient.DefaultApi.CreateTagDefs(details.srContext, &tagDefOpts)
+		if err == nil {
+			break
+		}
+		log.CliLogger.Debug(err)
+		if attempt < 10 {
+			log.CliLogger.Infof("Retry creating tag definition(s)")
+			time.Sleep(10 * time.Second)
+		}
+	}
 	if err != nil {
 		return fmt.Errorf("unable to create tag definition: %v", err)
 	}
 	log.CliLogger.Debugf("Tag Definitions created: %v", defs)
 	tagOpts := srsdk.CreateTagsOpts{Tag: optional.NewInterface(tagConfigs)}
-	tags, _, err := details.srClient.DefaultApi.CreateTags(details.srContext, &tagOpts)
+	var tags []srsdk.TagResponse
+	for attempt := 1; attempt <= 10; attempt++ {
+		tags, _, err = details.srClient.DefaultApi.CreateTags(details.srContext, &tagOpts)
+		if err == nil {
+			break
+		}
+		log.CliLogger.Debug(err)
+		if attempt < 10 {
+			log.CliLogger.Infof("Retry adding tag(s) to resources.")
+			time.Sleep(10 * time.Second)
+		}
+	}
 	if err != nil {
 		return fmt.Errorf("unable to add tag to resource: %v", err)
 	}
