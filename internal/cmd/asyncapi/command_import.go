@@ -338,19 +338,11 @@ func addTopicDescription(srClient *srsdk.APIClient, srContext context.Context, q
 			TypeName: "kafka_topic",
 		},
 	}
-	var err error
-	for attempt := 1; attempt <= 10; attempt++ {
-		_, err = srClient.DefaultApi.PartialUpdateByUniqueAttributes(srContext,
+	err := retry(context.Background(), 5*time.Second, 1*time.Minute, func() error {
+		_, err := srClient.DefaultApi.PartialUpdateByUniqueAttributes(srContext,
 			&srsdk.PartialUpdateByUniqueAttributesOpts{AtlasEntityWithExtInfo: optional.NewInterface(atlasEntity)})
-		if err == nil {
-			break
-		}
-		log.CliLogger.Debug(err)
-		if attempt < 10 {
-			log.CliLogger.Info("Retry adding topic description")
-			time.Sleep(10 * time.Second)
-		}
-	}
+		return err
+	})
 	return err
 }
 
@@ -466,39 +458,47 @@ func addTopicTags(details *accountDetails, subscribe Operation, topicName string
 
 func addTagsUtil(details *accountDetails, tagDefConfigs []srsdk.TagDef, tagConfigs []srsdk.Tag) error {
 	tagDefOpts := srsdk.CreateTagDefsOpts{TagDef: optional.NewInterface(tagDefConfigs)}
-	var err error
-	var defs []srsdk.TagDefResponse
-	for attempt := 1; attempt <= 10; attempt++ {
-		defs, _, err = details.srClient.DefaultApi.CreateTagDefs(details.srContext, &tagDefOpts)
-		if err == nil {
-			break
-		}
-		log.CliLogger.Debug(err)
-		if attempt < 10 {
-			log.CliLogger.Infof("Retry creating tag definition(s)")
-			time.Sleep(10 * time.Second)
-		}
-	}
+	err := retry(context.Background(), 5*time.Second, 1*time.Minute, func() error {
+		_, _, err := details.srClient.DefaultApi.CreateTagDefs(details.srContext, &tagDefOpts)
+		return err
+	})
 	if err != nil {
 		return fmt.Errorf("unable to create tag definition: %v", err)
 	}
-	log.CliLogger.Debugf("Tag Definitions created: %v", defs)
+	log.CliLogger.Debugf("Tag Definitions created")
 	tagOpts := srsdk.CreateTagsOpts{Tag: optional.NewInterface(tagConfigs)}
-	var tags []srsdk.TagResponse
-	for attempt := 1; attempt <= 10; attempt++ {
-		tags, _, err = details.srClient.DefaultApi.CreateTags(details.srContext, &tagOpts)
-		if err == nil {
-			break
-		}
-		log.CliLogger.Debug(err)
-		if attempt < 10 {
-			log.CliLogger.Infof("Retry adding tag(s) to resources.")
-			time.Sleep(10 * time.Second)
-		}
-	}
+	err = retry(context.Background(), 5*time.Second, 1*time.Minute, func() error {
+		_, _, err = details.srClient.DefaultApi.CreateTags(details.srContext, &tagOpts)
+		return err
+	})
 	if err != nil {
 		return fmt.Errorf("unable to add tag to resource: %v", err)
 	}
-	log.CliLogger.Infof("%v added to resource %s", tags, tagConfigs[0].EntityName)
+	return nil
+}
+
+func retry(ctx context.Context, tick time.Duration, timeout time.Duration, f func() error) error {
+	if err := f(); err != nil {
+		log.CliLogger.Debugf("Fail #1: %v", err)
+	} else {
+		return nil
+	}
+	ticker := time.NewTicker(tick)
+	after := time.After(timeout)
+
+	for i := 2; true; i++ {
+		select {
+		case <-ticker.C:
+			if err := f(); err != nil {
+				log.CliLogger.Debugf("Fail #%d: %v", i, err)
+			} else {
+				return nil
+			}
+		case <-after:
+			return fmt.Errorf("retry failed due to timeout of %v", timeout)
+		case <-ctx.Done():
+			return fmt.Errorf("retry failed due to context cancel")
+		}
+	}
 	return nil
 }
