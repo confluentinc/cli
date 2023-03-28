@@ -9,7 +9,7 @@ Create a new Stream Designer pipeline
   $ confluent pipeline create --name test-pipeline --ksql-cluster lksqlc-12345 --description "this is a test pipeline"
 
 Flags:
-      --ksql-cluster string   REQUIRED: KSQL cluster for the pipeline.
+      --ksql-cluster string   KSQL cluster for the pipeline.
       --name string           REQUIRED: Name of the pipeline.
       --description string    Description of the pipeline.
       --sql-file string       Path to a KSQL file containing the pipeline's source code.
