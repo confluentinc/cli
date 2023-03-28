@@ -473,8 +473,6 @@ func (r *PreRun) setCCloudClient(c *AuthenticatedCLICommand) error {
 			if err != nil {
 				return nil, err
 			}
-			fmt.Println("lkc", lkc)
-			fmt.Println("endpoint,", restEndpoint)
 			kafkaRest := &KafkaREST{
 				Context:     context.WithValue(context.Background(), kafkarestv3.ContextAccessToken, bearerToken),
 				CloudClient: ccloudv2.NewKafkaRestClient(restEndpoint, r.Version.UserAgent, unsafeTrace, bearerToken),

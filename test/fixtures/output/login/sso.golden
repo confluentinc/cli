@@ -1,5 +1,5 @@
 Navigate to the following link in your browser to authenticate:
-https://test.com/authorize\?response_type=code\&code_challenge=.*\&code_challenge_method=S256\&client_id=00000000000000000000000000000000\&redirect_uri=http://127\.0\.0\.1:1026/cli_callback\&scope=email\%20openid\%20offline_access\&audience=https://test\.auth0\.com/api/v2/\&state=.*\&connection=realm
+https://test.com/authorize\?response_type=code\&code_challenge=.*\&code_challenge_method=S256\&client_id=00000000000000000000000000000000\&redirect_uri=http://127\.0\.0\.1:1024/cli_callback\&scope=email\%20openid\%20offline_access\&audience=https://test\.auth0\.com/api/v2/\&state=.*\&connection=realm
 
 After authenticating in your browser, paste the code here:
 Error: pasted input had invalid format

@@ -6,8 +6,8 @@
   "disable_feature_flags": false,
   "no_browser": false,
   "platforms": {
-    "http://127.0.0.1:1026": {
-      "name": "http://127.0.0.1:1026",
+    "http://127.0.0.1:1024": {
+      "name": "http://127.0.0.1:1024",
       "server": "http://test"
     }
   },
@@ -34,7 +34,7 @@
     "my-context": {
       "name": "my-context",
       "netrc_machine_name": "",
-      "platform": "http://127.0.0.1:1026",
+      "platform": "http://127.0.0.1:1024",
       "credential": "api-key-abc-key-123",
       "kafka_cluster_context": {
         "environment_context": false,
