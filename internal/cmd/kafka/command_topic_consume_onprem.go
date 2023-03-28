@@ -53,7 +53,7 @@ func (c *authenticatedTopicCommand) newConsumeCommandOnPrem() *cobra.Command {
 	cmd.Flags().String("config-file", "", "The path to the configuration file (in JSON or Avro format) for the consumer client.")
 	cmd.Flags().String("schema-registry-endpoint", "", "The URL of the Schema Registry cluster.")
 
-	cobra.CheckErr(cmd.MarkFlagFilename("config-file", "avro", "json"))
+	cobra.CheckErr(cmd.MarkFlagFilename("config-file", "avsc", "json"))
 
 	cobra.CheckErr(cmd.MarkFlagRequired("bootstrap"))
 	cobra.CheckErr(cmd.MarkFlagRequired("ca-location"))
