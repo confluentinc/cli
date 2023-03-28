@@ -122,6 +122,11 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 		return err
 	}
 
+	environmentId, err := c.EnvironmentId()
+	if err != nil {
+		return err
+	}
+
 	var encryptionKey string
 	if cmd.Flags().Changed("encryption-key") {
 		if cloud != "gcp" {
@@ -133,7 +138,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 			return err
 		}
 
-		if err := c.validateGcpEncryptionKey(prompt, cloud, c.EnvironmentId()); err != nil {
+		if err := c.validateGcpEncryptionKey(prompt, cloud, environmentId); err != nil {
 			return err
 		}
 	}
@@ -154,7 +159,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 
 	createCluster := cmkv2.CmkV2Cluster{
 		Spec: &cmkv2.CmkV2ClusterSpec{
-			Environment:  &cmkv2.EnvScopedObjectReference{Id: c.EnvironmentId()},
+			Environment:  &cmkv2.EnvScopedObjectReference{Id: environmentId},
 			DisplayName:  cmkv2.PtrString(args[0]),
 			Cloud:        cmkv2.PtrString(cloud),
 			Region:       cmkv2.PtrString(region),

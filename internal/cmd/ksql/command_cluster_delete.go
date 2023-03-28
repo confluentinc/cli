@@ -39,8 +39,13 @@ func (c *ksqlCommand) delete(cmd *cobra.Command, args []string) error {
 	id := args[0]
 	log.CliLogger.Debugf("Deleting ksqlDB cluster \"%v\".\n", id)
 
+	environmentId, err := c.EnvironmentId()
+	if err != nil {
+		return err
+	}
+
 	// Check KSQL exists
-	cluster, err := c.V2Client.DescribeKsqlCluster(id, c.EnvironmentId())
+	cluster, err := c.V2Client.DescribeKsqlCluster(id, environmentId)
 	if err != nil {
 		return errors.CatchKSQLNotFoundError(err, id)
 	}
@@ -59,7 +64,7 @@ func (c *ksqlCommand) delete(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	if err := c.V2Client.DeleteKsqlCluster(id, c.EnvironmentId()); err != nil {
+	if err := c.V2Client.DeleteKsqlCluster(id, environmentId); err != nil {
 		return err
 	}
 

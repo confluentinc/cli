@@ -34,7 +34,12 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	pipeline, err := c.V2Client.GetSdPipeline(c.EnvironmentId(), cluster.ID, args[0])
+	environmentId, err := c.EnvironmentId()
+	if err != nil {
+		return err
+	}
+
+	pipeline, err := c.V2Client.GetSdPipeline(environmentId, cluster.ID, args[0])
 	if err != nil {
 		return err
 	}

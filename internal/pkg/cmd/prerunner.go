@@ -166,11 +166,11 @@ func (c *AuthenticatedCLICommand) AuthToken() string {
 	return c.Context.GetAuthToken()
 }
 
-func (c *AuthenticatedCLICommand) EnvironmentId() string {
+func (c *AuthenticatedCLICommand) EnvironmentId() (string, error) {
 	if c.Context.GetEnvironment() == nil {
-		output.ErrPrintln("WARNING: " + errors.NoEnvironmentFoundErrorMsg + errors.ComposeSuggestionsMessage(errors.NoEnvironmentFoundSuggestions))
+		return "", errors.NewErrorWithSuggestions(errors.NoEnvironmentFoundErrorMsg, errors.NoEnvironmentFoundSuggestions)
 	}
-	return c.Context.GetEnvironment().GetId()
+	return c.Context.GetEnvironment().GetId(), nil
 }
 
 func (h *HasAPIKeyCLICommand) AddCommand(cmd *cobra.Command) {
@@ -456,7 +456,11 @@ func (r *PreRun) setCCloudClient(c *AuthenticatedCLICommand) error {
 		if err != nil {
 			return nil, err
 		}
-		cluster, httpResp, err := c.V2Client.DescribeKafkaCluster(lkc, c.EnvironmentId())
+		environmentId, err := c.EnvironmentId()
+		if err != nil {
+			return nil, err
+		}
+		cluster, httpResp, err := c.V2Client.DescribeKafkaCluster(lkc, environmentId)
 		if err != nil {
 			return nil, errors.CatchKafkaNotFoundError(err, lkc, httpResp)
 		}
