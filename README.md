@@ -45,6 +45,16 @@ Install the latest version of `confluent` to `/usr/local/bin`:
 2. Unzip `confluent_X.X.X_windows_amd64.zip`
 3. Run `confluent.exe`
 
+#### Docker
+
+Pull the latest version:
+
+    docker pull confluentinc/confluent-cli:latest
+
+Pull `confluent` v3.6.0:
+
+    docker pull confluentinc/confluent-cli:3.6.0
+
 #### Install a Specific Version
 
 Print a complete list of versions available for download:
@@ -53,7 +63,7 @@ Print a complete list of versions available for download:
 
 Install `confluent` v3.6.0 to `/usr/local/bin`:
 
-    curl -sL https://raw.githubusercontent.com/confluentinc/cli/main/install.sh | sh -s -- -b /usr/local/bin v3.6.0
+    curl -sL https://raw.githubusercontent.com/confluentinc/cli/main/install.sh | sh -s -- -b /usr/local/bin 3.6.0
 
 ### Building from Source
 
