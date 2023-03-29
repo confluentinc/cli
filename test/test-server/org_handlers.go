@@ -24,19 +24,11 @@ func handleOrgEnvironment(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		envId := vars["id"]
-
-		if r.Method == http.MethodGet {
-			environment := &orgv2.OrgV2Environment{
-				Id:          orgv2.PtrString(envId),
-				DisplayName: orgv2.PtrString("default"),
-			}
-			err := json.NewEncoder(w).Encode(environment)
-			require.NoError(t, err)
-			return
-		}
-
 		if env := isValidOrgEnvironmentId(OrgEnvironments, envId); env != nil {
 			switch r.Method {
+			case http.MethodGet:
+				err := json.NewEncoder(w).Encode(env)
+				require.NoError(t, err)
 			case http.MethodDelete:
 				_, err := io.WriteString(w, "")
 				require.NoError(t, err)
