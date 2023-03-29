@@ -29,7 +29,7 @@ var (
 type ApplicationController struct {
 	app        *tview.Application
 	outputMode OutputMode
-	history    History
+	history    *History
 }
 
 type ApplicationOptions struct {
@@ -65,7 +65,7 @@ func (a *ApplicationController) getOutputMode() OutputMode {
 	return a.outputMode
 }
 
-func NewApplicationController(app *tview.Application, history History) *ApplicationController {
+func NewApplicationController(app *tview.Application, history *History) *ApplicationController {
 	return &ApplicationController{
 		app:        app,
 		outputMode: TViewOutput,
@@ -86,7 +86,7 @@ func StartApp(envId, computePoolId, authToken string, appOptions *ApplicationOpt
 	appController := NewApplicationController(app, history)
 	tableController := NewTableController(table, store, appController)
 
-	inputController := NewInputController(history, tableController, appController, store)
+	inputController := NewInputController(tableController, appController, store, history)
 	shortcutsController := NewShortcutsController(shortcuts, appController, tableController)
 
 	// Instatiate Application Controller

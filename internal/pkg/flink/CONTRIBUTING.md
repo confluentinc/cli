@@ -1,11 +1,10 @@
-#### Code Architecture
+### Run test converage
 
-The following diagram represents approximately the code structure.
-
-<img src="https://user-images.githubusercontent.com/11739405/212975377-804fc1c3-4e93-45f6-86c0-6eb012312779.png" width="700" >
-
-We have view-only dumb components and controllers to manage them. The controllers should ideally communicate through the ApplicationController to
-maintain a unidirectional data flow and avoid creating circular dependencies: view -> x-controller -> aplicationController -> x-controller (if necessary). That should make the application easier to debug and further development easier to manage without getting convoluted. This diagram might be outdated by the time you see this, but this might help you have an idea of how the whole architecture.
+The following command runs the tests and generates a coverage report in the `coverage` folder.
+```
+make test-coverage
+```
+You can then open the coverage.html file from the repository root in your browser to see the coverage report for each file.
 
 #### Interacting with Clipboard in interactive mode
 

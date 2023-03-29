@@ -29,7 +29,7 @@ func TestRemoveStatementTerminator(t *testing.T) {
 	}
 }
 
-func TestTemoveWhiteSpaces(t *testing.T) {
+func TestRemoveWhiteSpaces(t *testing.T) {
 	type args struct {
 		str string
 	}

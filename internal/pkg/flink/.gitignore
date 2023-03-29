@@ -1,11 +1,18 @@
+# idea settings and cache
 .idea/
-coverage.txt
 .cache/
 
-.vscode
+# test coverage files
+coverage.txt
+coverage.out
+coverage.html
 
+.vscode
 # ignore the vendor folder
 vendor/
+
+# ignore bin folder
+bin/
 
 #
 # BEGIN managed content - any manual changes below this block will be discarded

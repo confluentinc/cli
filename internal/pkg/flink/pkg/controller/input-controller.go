@@ -15,7 +15,7 @@ import (
 )
 
 type InputController struct {
-	History         History
+	History         *History
 	appController   *ApplicationController
 	smartCompletion bool
 	table           *TableController
@@ -203,7 +203,7 @@ func (c *InputController) GetMaxCol() (int, error) {
 	return int(maxCol), nil
 }
 
-func NewInputController(history History, t *TableController, a *ApplicationController, store StoreInterface) (c InputController) {
+func NewInputController(t *TableController, a *ApplicationController, store StoreInterface, history *History) (c InputController) {
 	// Initialization
 	c.History = history
 	c.smartCompletion = true
