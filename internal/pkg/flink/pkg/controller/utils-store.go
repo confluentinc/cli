@@ -24,11 +24,13 @@ func (e *StatementError) Error() string {
 
 // Custom Internal type that shall be used internally by the client
 type StatementResult struct {
-	Message string     `json:"message"` // Shown at the top before the table
-	Status  PHASE      `json:"status"`
-	Columns []string   `json:"columns"`
-	Rows    [][]string `json:"rows"`
-	//ResultsSuffix string     `json:"ResultsSuffix"` // Property that probably will be necessary in some cases Message shown after the table. i.e: "Press enter for next page..."
+	Name         string     `json:"name"`
+	Statement    string     `json:"statement"`
+	ComputePool  string     `json:"compute_pool"`
+	Status       PHASE      `json:"status"`
+	StatusDetail string     `json:"status_detail,omitempty"` // Shown at the top before the table
+	Columns      []string   `json:"columns"`
+	Rows         [][]string `json:"rows"`
 }
 
 type PHASE string
@@ -50,7 +52,7 @@ const (
 	OTHER_STATEMENT StatementType = "OTHER"
 )
 
-func processSetStatement(statement string, s *Store) (*StatementResult, error) {
+func (s *Store) processSetStatement(statement string) (*StatementResult, error) {
 	configKey, configVal, err := parseSetStatement(statement)
 	if err != nil {
 		return nil, err
@@ -58,22 +60,24 @@ func processSetStatement(statement string, s *Store) (*StatementResult, error) {
 	if configKey == "" {
 
 		return &StatementResult{
-			Status:  "Completed",
-			Columns: []string{"Key", "Value"},
-			Rows:    lo.MapToSlice(s.Config, func(key, val string) []string { return []string{key, val} }),
+			Statement: configOpSet,
+			Status:    "Completed",
+			Columns:   []string{"Key", "Value"},
+			Rows:      lo.MapToSlice(s.Config, func(key, val string) []string { return []string{key, val} }),
 		}, nil
 	}
 	s.Config[configKey] = configVal
 
 	return &StatementResult{
-		Message: "Config updated successfuly.",
-		Status:  "Completed",
-		Columns: []string{"Key", "Value"},
-		Rows:    [][]string{{configKey, configVal}},
+		Statement:    configOpSet,
+		StatusDetail: "Config updated successfuly.",
+		Status:       "Completed",
+		Columns:      []string{"Key", "Value"},
+		Rows:         [][]string{{configKey, configVal}},
 	}, nil
 }
 
-func processResetStatement(statement string, s *Store) (*StatementResult, error) {
+func (s *Store) processResetStatement(statement string) (*StatementResult, error) {
 	configKey, err := parseResetStatement(statement)
 	if err != nil {
 		return nil, err
@@ -81,8 +85,9 @@ func processResetStatement(statement string, s *Store) (*StatementResult, error)
 	if configKey == "" {
 		s.Config = make(map[string]string)
 		return &StatementResult{
-			Message: "Configuration has been reset successfuly.",
-			Status:  "Completed",
+			Statement:    configOpReset,
+			StatusDetail: "Configuration has been reset successfuly.",
+			Status:       "Completed",
 		}, nil
 	} else {
 		_, keyExists := s.Config[configKey]
@@ -92,15 +97,16 @@ func processResetStatement(statement string, s *Store) (*StatementResult, error)
 
 		delete(s.Config, configKey)
 		return &StatementResult{
-			Message: fmt.Sprintf("Config key \"%s\" has been reset successfuly.", configKey),
-			Status:  "Completed",
-			Columns: []string{"Key", "Value"},
-			Rows:    lo.MapToSlice(s.Config, func(key, val string) []string { return []string{key, val} }),
+			Statement:    configOpReset,
+			StatusDetail: fmt.Sprintf("Config key \"%s\" has been reset successfuly.", configKey),
+			Status:       "Completed",
+			Columns:      []string{"Key", "Value"},
+			Rows:         lo.MapToSlice(s.Config, func(key, val string) []string { return []string{key, val} }),
 		}, nil
 	}
 }
 
-func processUseStatement(statement string, s *Store) (*StatementResult, error) {
+func (s *Store) processUseStatement(statement string) (*StatementResult, error) {
 	configKey, configVal, err := parseUseStatement(statement)
 	if err != nil {
 		return nil, err
@@ -108,10 +114,11 @@ func processUseStatement(statement string, s *Store) (*StatementResult, error) {
 
 	s.Config[configKey] = configVal
 	return &StatementResult{
-		Message: "Config updated successfuly.",
-		Status:  "Completed",
-		Columns: []string{"Key", "Value"},
-		Rows:    [][]string{{configKey, configVal}},
+		Statement:    configOpUse,
+		StatusDetail: "Config updated successfuly.",
+		Status:       "Completed",
+		Columns:      []string{"Key", "Value"},
+		Rows:         [][]string{{configKey, configVal}},
 	}, nil
 }
 
@@ -268,6 +275,7 @@ func processHttpErrors(resp *http.Response, err error) error {
 }
 
 // Used to to help mocking answers for now - will be removed in the future
+//  Or replaced with a call to a /validate endpoint
 func startsWithValidSQL(statement string) bool {
 	if statement == "" {
 		return false

@@ -22,6 +22,28 @@ func TestStoreTestSuite(t *testing.T) {
 	suite.Run(t, new(StoreTestSuite))
 }
 
+func TestStore_ProcessLocalStatement(t *testing.T) {
+	// Create a new store
+	client := NewGatewayClient("envId", "computePoolId", "authToken")
+	s := NewStore(client, nil).(*Store)
+
+	result, err := s.ProcessLocalStatement("SET foo=bar;")
+	assert.NoError(t, err)
+	assert.NotNil(t, result)
+
+	result, err = s.ProcessLocalStatement("RESET;")
+	assert.NoError(t, err)
+	assert.NotNil(t, result)
+
+	result, err = s.ProcessLocalStatement("USE my_database;")
+	assert.NoError(t, err)
+	assert.NotNil(t, result)
+
+	result, err = s.ProcessLocalStatement("SELECT * FROM users;")
+	assert.NoError(t, err)
+	assert.Nil(t, result)
+}
+
 func (s *StoreTestSuite) TestIsSETStatement() {
 	assert.True(s.T(), true, statementStartsWithOp("SET", configOpSet))
 	assert.True(s.T(), true, statementStartsWithOp("SET key", configOpSet))

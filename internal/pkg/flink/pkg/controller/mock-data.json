@@ -1,19 +1,19 @@
 {
   "data": [
     {
-      "message": "Statement successfully created with id \"7434\".",
+      "status_detail": "Statement successfully created with id \"7434\".",
       "status": "PENDING",
       "columns": [],
       "rows": []
     },
     {
-      "message": "Statement with id \"7434\" wasn't created successfully.",
       "status": "FAILED",
+      "status_detail": "Statement with id \"7434\" wasn't created successfully.",
       "columns": [],
       "rows": []
     },
     {
-      "message": "Statement successfully created with id \"1234\".",
+      "status_detail": "Statement successfully created with id \"1234\".",
       "status": "COMPLETED",
       "columns": [
         "OrderDate",
@@ -38,7 +38,7 @@
       ]
     },
     {
-      "message": "Statement successfully created with id \"5678\".",
+      "status_detail": "Statement successfully created with id \"5678\".",
       "status": "COMPLETED",
       "columns": [
         "OrderDate",
@@ -56,7 +56,7 @@
       ]
     },
     {
-      "message": "Statement successfully created with id \"9321\".",
+      "status_detail": "Statement successfully created with id \"9321\".",
       "status": "COMPLETED",
       "columns": [
         "OrderDate",

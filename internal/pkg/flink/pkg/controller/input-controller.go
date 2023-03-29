@@ -37,14 +37,14 @@ func (c *InputController) RunInteractiveInput() {
 		statementResult, err = c.store.ProcessStatement(input)
 
 		if err == nil {
-			if statementResult.Message != "" {
-				fmt.Println(statementResult.Message)
+			if statementResult.StatusDetail != "" {
+				fmt.Println(statementResult.StatusDetail)
 			}
 			if statementResult.Status != "" {
 				fmt.Println("Current status: " + statementResult.Status + ".")
 			}
 			// We only print a new line if a status or a message are shown
-			if statementResult.Message != "" || statementResult.Status != "" {
+			if statementResult.StatusDetail != "" || statementResult.Status != "" {
 				fmt.Println("")
 			}
 		} else {

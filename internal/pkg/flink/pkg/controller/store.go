@@ -40,11 +40,11 @@ type Store struct {
 func (s *Store) ProcessLocalStatement(statement string) (*StatementResult, error) {
 	switch statementType := parseStatementType(statement); statementType {
 	case SET_STATEMENT:
-		return processSetStatement(statement, s)
+		return s.processSetStatement(statement)
 	case RESET_STATEMENT:
-		return processResetStatement(statement, s)
+		return s.processResetStatement(statement)
 	case USE_STATEMENT:
-		return processUseStatement(statement, s)
+		return s.processUseStatement(statement)
 	default:
 		return nil, nil
 	}
@@ -79,13 +79,9 @@ func (s *Store) ProcessStatement(statement string) (*StatementResult, error) {
 	}
 
 	return &StatementResult{
-		Message: *statementObj.Status.Detail,
-		Status:  PHASE(statementObj.Status.Phase),
+		StatusDetail: *statementObj.Status.Detail,
+		Status:       PHASE(statementObj.Status.GetPhase()),
 	}, nil
-
-	/* TODO Result handling
-	here's where we will probably fetch results - at least the first page
-	*/
 }
 
 func NewStore(client *GatewayClient, appOptions *ApplicationOptions) StoreInterface {
