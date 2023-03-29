@@ -1,0 +1,5 @@
+Error: connectors not found: "lcc-456", "lcc-789", and "lcc-101112"
+
+Suggestions:
+    Use the `--skip-invalid` flag to suppress this error and delete the remaining connector entered.
+    List available connectors with `confluent connect cluster list`.
