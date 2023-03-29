@@ -1,10 +1,12 @@
 package pipeline
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"regexp"
 	"sort"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -44,18 +46,36 @@ func (c *command) newCreateCommand(enableSourceCode bool) *cobra.Command {
 		cobra.CheckErr(cmd.MarkFlagFilename("sql-file", "sql"))
 	}
 
-	cobra.CheckErr(cmd.MarkFlagRequired("ksql-cluster"))
 	cobra.CheckErr(cmd.MarkFlagRequired("name"))
 
 	return cmd
 }
 
 func (c *command) create(cmd *cobra.Command, _ []string) error {
-	name, _ := cmd.Flags().GetString("name")
-	description, _ := cmd.Flags().GetString("description")
-	ksqlCluster, _ := cmd.Flags().GetString("ksql-cluster")
-	sqlFile, _ := cmd.Flags().GetString("sql-file")
-	secrets, _ := cmd.Flags().GetStringArray("secret")
+	name, err := cmd.Flags().GetString("name")
+	if err != nil {
+		return err
+	}
+
+	description, err := cmd.Flags().GetString("description")
+	if err != nil {
+		return err
+	}
+
+	ksqlCluster, err := cmd.Flags().GetString("ksql-cluster")
+	if err != nil {
+		return err
+	}
+
+	sqlFile, err := cmd.Flags().GetString("sql-file")
+	if err != nil {
+		return err
+	}
+
+	secrets, err := cmd.Flags().GetStringArray("secret")
+	if err != nil {
+		return err
+	}
 
 	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
@@ -68,14 +88,19 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	}
 
 	// validate ksql id
-	if _, err := c.V2Client.DescribeKsqlCluster(ksqlCluster, environmentId); err != nil {
-		return err
+	if ksqlCluster != "" {
+		if _, err := c.V2Client.DescribeKsqlCluster(ksqlCluster, environmentId); err != nil {
+			return err
+		}
 	}
 
 	// validate sr id
-	srCluster, err := c.Config.Context().SchemaRegistryCluster(cmd)
+	srCluster, err := c.Context.FetchSchemaRegistryByEnvironmentId(context.Background(), environmentId)
 	if err != nil {
-		return err
+		if !strings.Contains(err.Error(), "Schema Registry not enabled") {
+			// ignore if the SR is not enabled
+			return err
+		}
 	}
 
 	// read pipeline source code file if provided
@@ -94,7 +119,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	pipeline, err := c.V2Client.CreatePipeline(environmentId, kafkaCluster.ID, name, description, sourceCode, &secretMappings, ksqlCluster, srCluster.Id)
+	pipeline, err := c.V2Client.CreatePipeline(environmentId, kafkaCluster.ID, name, description, sourceCode, &secretMappings, ksqlCluster, srCluster.GetId())
 	if err != nil {
 		return err
 	}
