@@ -414,10 +414,10 @@ func handleIamIdentityPool(t *testing.T) http.HandlerFunc {
 				var req identityproviderv2.IamV2IdentityPool
 				err := json.NewDecoder(r.Body).Decode(&req)
 				require.NoError(t, err)
-				pool.DisplayName   = req.DisplayName
-				pool.Description   = req.Description
+				pool.DisplayName = req.DisplayName
+				pool.Description = req.Description
 				pool.IdentityClaim = req.IdentityClaim
-				pool.Filter        = req.Filter
+				pool.Filter = req.Filter
 				err = json.NewEncoder(w).Encode(pool)
 				require.NoError(t, err)
 			case http.MethodDelete:

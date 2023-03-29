@@ -174,7 +174,7 @@ func (s *CLITestSuite) TestIAMServiceAccount() {
 		{args: "iam service-account create yaml-service --description yaml-output -o yaml", fixture: "iam/service-account/create-yaml.golden"},
 		{args: "iam service-account delete sa-12345 --force", fixture: "iam/service-account/delete.golden"},
 		{args: "iam service-account delete sa-12345 sa-67890", fixture: "iam/service-account/delete-multiple-fail.golden", exitCode: 1},
-		{args: "iam service-account delete sa-12345 sa-54321", input :"y\n", fixture: "iam/service-account/delete-multiple-success.golden"},
+		{args: "iam service-account delete sa-12345 sa-54321", input: "y\n", fixture: "iam/service-account/delete-multiple-success.golden"},
 		{args: "iam service-account delete sa-12345", input: "service_account\n", fixture: "iam/service-account/delete-prompt.golden"},
 		{args: "iam service-account list -o json", fixture: "iam/service-account/list-json.golden"},
 		{args: "iam service-account list -o yaml", fixture: "iam/service-account/list-yaml.golden"},
