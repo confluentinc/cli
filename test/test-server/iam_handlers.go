@@ -50,6 +50,23 @@ var (
 			"crn://confluent.cloud/organization=abc-123/environment=a-595/schema-registry=lsrc-3333ccc/subject=clicks"),
 	}
 
+	IamIdentityProviders = []*identityproviderv2.IamV2IdentityProvider{
+		{
+			Id:          identityproviderv2.PtrString(identityProviderResourceID),
+			DisplayName: identityproviderv2.PtrString("identity_provider"),
+			Description: identityproviderv2.PtrString("providing identities."),
+			Issuer:      identityproviderv2.PtrString("https://company.provider.com"),
+			JwksUri:     identityproviderv2.PtrString("https://company.provider.com/oauth2/v1/keys"),
+		},
+		{
+			Id:          identityproviderv2.PtrString("op-67890"),
+			DisplayName: identityproviderv2.PtrString("identity_provider_2"),
+			Description: identityproviderv2.PtrString("providing identities."),
+			Issuer:      identityproviderv2.PtrString("https://company.provider.com"),
+			JwksUri:     identityproviderv2.PtrString("https://company.provider.com/oauth2/v1/keys"),
+		},
+	}
+
 	IamIdentityPools = []*identityproviderv2.IamV2IdentityPool{
 		{
 			Id:            identityproviderv2.PtrString("pool-12345"),
@@ -325,37 +342,25 @@ func handleIamRoleBindings(t *testing.T) http.HandlerFunc {
 func handleIamIdentityProvider(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := mux.Vars(r)["id"]
-		switch r.Method {
-		case http.MethodPatch:
-			var req identityproviderv2.IamV2IdentityProvider
-			err := json.NewDecoder(r.Body).Decode(&req)
-			require.NoError(t, err)
-			res := &identityproviderv2.IamV2IdentityProvider{
-				Id:          identityproviderv2.PtrString("op-55555"),
-				DisplayName: req.DisplayName,
-				Description: req.Description,
-				Issuer:      identityproviderv2.PtrString("https://company.provider.com"),
-				JwksUri:     identityproviderv2.PtrString("https://company.provider.com/oauth2/v1/keys"),
-			}
-			err = json.NewEncoder(w).Encode(res)
-			require.NoError(t, err)
-		case http.MethodDelete:
-			switch id {
-			case "op-1":
-				err := writeResourceNotFoundError(w)
+		if i := slices.IndexFunc(IamIdentityProviders, func(provider *identityproviderv2.IamV2IdentityProvider) bool { return provider.GetId() == id }); i != -1 {
+			provider := IamIdentityProviders[i]
+			switch r.Method {
+			case http.MethodGet:
+				err := json.NewEncoder(w).Encode(provider)
 				require.NoError(t, err)
-			default:
+			case http.MethodPatch:
+				var req identityproviderv2.IamV2IdentityProvider
+				err := json.NewDecoder(r.Body).Decode(&req)
+				require.NoError(t, err)
+				provider.DisplayName = req.DisplayName
+				provider.Description = req.Description
+				err = json.NewEncoder(w).Encode(provider)
+				require.NoError(t, err)
+			case http.MethodDelete:
 				w.WriteHeader(http.StatusNoContent)
 			}
-		case http.MethodGet:
-			identityProvider := identityproviderv2.IamV2IdentityProvider{
-				Id:          identityproviderv2.PtrString(identityProviderResourceID),
-				DisplayName: identityproviderv2.PtrString("identity_provider"),
-				Description: identityproviderv2.PtrString("providing identities."),
-				Issuer:      identityproviderv2.PtrString("https://company.provider.com"),
-				JwksUri:     identityproviderv2.PtrString("https://company.provider.com/oauth2/v1/keys"),
-			}
-			err := json.NewEncoder(w).Encode(identityProvider)
+		} else {
+			err := writeResourceNotFoundError(w)
 			require.NoError(t, err)
 		}
 	}
@@ -366,21 +371,7 @@ func handleIamIdentityProviders(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			identityProvider := identityproviderv2.IamV2IdentityProvider{
-				Id:          identityproviderv2.PtrString(identityProviderResourceID),
-				DisplayName: identityproviderv2.PtrString("identity_provider"),
-				Description: identityproviderv2.PtrString("providing identities."),
-				Issuer:      identityproviderv2.PtrString("https://company.provider.com"),
-				JwksUri:     identityproviderv2.PtrString("https://company.provider.com/oauth2/v1/keys"),
-			}
-			identityProviderTwo := identityproviderv2.IamV2IdentityProvider{
-				Id:          identityproviderv2.PtrString("op-67890"),
-				DisplayName: identityproviderv2.PtrString("identity_provider_2"),
-				Description: identityproviderv2.PtrString("providing identities."),
-				Issuer:      identityproviderv2.PtrString("https://company.provider.com"),
-				JwksUri:     identityproviderv2.PtrString("https://company.provider.com/oauth2/v1/keys"),
-			}
-			err := json.NewEncoder(w).Encode(identityproviderv2.IamV2IdentityProviderList{Data: []identityproviderv2.IamV2IdentityProvider{identityProvider, identityProviderTwo}})
+			err := json.NewEncoder(w).Encode(identityproviderv2.IamV2IdentityProviderList{Data: getV2List(IamIdentityProviders)})
 			require.NoError(t, err)
 		case http.MethodPost:
 			var req identityproviderv2.IamV2IdentityProvider
