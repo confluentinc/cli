@@ -203,7 +203,7 @@ func CatchOrgV2ResourceNotFoundError(err error, resourceType string, r *http.Res
 	}
 
 	if r != nil && r.StatusCode == http.StatusForbidden {
-		return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), fmt.Sprintf("%s not found or access forbidden", resourceType), fmt.Sprintf(OrgResourceNotFoundSuggestions, resourceType))
+		return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), fmt.Sprintf("%s not found or access forbidden", resourceType), fmt.Sprintf(ListResourceSuggestions, resourceType, resourceType))
 	}
 
 	return CatchCCloudV2Error(err, r)

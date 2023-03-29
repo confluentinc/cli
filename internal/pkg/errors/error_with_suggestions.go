@@ -34,7 +34,7 @@ func NewWrapErrorWithSuggestions(err error, errorMsg string, suggestionsMsg stri
 	}
 }
 
-func WrapSuggestions(err error, newSuggestionsMsg string) ErrorWithSuggestions {
+func NewWrapAdditionalSuggestions(err error, newSuggestionsMsg string) ErrorWithSuggestions {
 	if err == nil {
 		return nil
 	}

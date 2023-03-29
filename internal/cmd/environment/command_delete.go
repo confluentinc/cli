@@ -58,7 +58,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	deletion.PrintSuccessfulDeletionMsg(deleted, resource.Environment)
 
 	if errs != nil {
-		errs = errors.NewErrorWithSuggestions(errs.Error(), fmt.Sprintf(errors.OrgResourceNotFoundSuggestions, resource.Environment))
+		errs = errors.NewErrorWithSuggestions(errs.Error(), fmt.Sprintf(errors.ListResourceSuggestions, resource.Environment, resource.Environment))
 	}
 
 	return errs
@@ -76,6 +76,7 @@ func (c *command) validateArgs(cmd *cobra.Command, args []string) (string, []str
 	}
 
 	validArgs, err := deletion.ValidateArgsForDeletion(cmd, args, resource.Environment, describeFunc)
+	err = errors.NewWrapAdditionalSuggestions(err, fmt.Sprintf(errors.ListResourceSuggestions, resource.Environment, resource.Environment))
 
-	return displayName, validArgs, errors.WrapSuggestions(err, fmt.Sprintf(errors.OrgResourceNotFoundSuggestions, resource.Environment))
+	return displayName, validArgs, err
 }
