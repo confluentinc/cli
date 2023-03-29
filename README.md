@@ -21,6 +21,12 @@ When opening a PR, please make sure to follow our [contribution guide](CONTRIBUT
 
 The Confluent CLI is available to install for macOS, Linux, and Windows.
 
+#### Scripted installation
+
+Install the latest version of `confluent` to `/usr/local/bin`:
+
+    curl -sL https://raw.githubusercontent.com/confluentinc/cli/main/install.sh | sh -s -- -b /usr/local/bin
+
 #### macOS
 
 1. Download the latest macOS tar.gz file for your architecture type from https://github.com/confluentinc/cli/releases/latest
@@ -41,7 +47,13 @@ The Confluent CLI is available to install for macOS, Linux, and Windows.
 
 #### Install a Specific Version
 
-See the [releases page](https://github.com/confluentinc/cli/releases) for a complete list of versions available for download.
+Print a complete list of versions available for download:
+
+    curl -sL https://raw.githubusercontent.com/confluentinc/cli/main/install.sh | sh -s -- -l
+
+Install `confluent` v3.6.0 to `/usr/local/bin`:
+
+    curl -sL https://raw.githubusercontent.com/confluentinc/cli/main/install.sh | sh -s -- -b /usr/local/bin v3.6.0
 
 ### Building from Source
 
