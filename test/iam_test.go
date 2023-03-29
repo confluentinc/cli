@@ -346,7 +346,7 @@ func (s *CLITestSuite) TestIAMPoolDelete() {
 		{args: "iam pool delete pool-55555 --provider op-12345 --force", fixture: "iam/identity-pool/delete.golden"},
 		{args: "iam pool delete pool-55555 pool-44444 --provider op-12345", fixture: "iam/identity-pool/delete-multiple-fail.golden", exitCode: 1},
 		{args: "iam pool delete pool-55555 pool-12345 --provider op-12345", input: "y\n", fixture: "iam/identity-pool/delete-multiple-success.golden"},
-		{args: "iam pool delete pool-55555 --provider op-12345", input: "identity_pool\n", fixture: "iam/identity-pool/delete-prompt.golden"},
+		{args: "iam pool delete pool-55555 --provider op-12345", input: "identity_pool_2\n", fixture: "iam/identity-pool/delete-prompt.golden"},
 		{args: "iam pool delete pool-1 --provider op-12345 --force", fixture: "iam/identity-pool/delete-dne.golden", exitCode: 1},
 	}
 

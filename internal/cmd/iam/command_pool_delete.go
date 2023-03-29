@@ -6,13 +6,11 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/deletion"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
-	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/types"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *identityPoolCommand) newDeleteCommand() *cobra.Command {
@@ -32,6 +30,7 @@ func (c *identityPoolCommand) newDeleteCommand() *cobra.Command {
 
 	pcmd.AddProviderFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddForceFlag(cmd)
+	pcmd.AddSkipInvalidFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("provider"))
 
@@ -44,62 +43,43 @@ func (c *identityPoolCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	displayName, err := c.checkExistence(cmd, provider, args)
+	displayName, validArgs, err := c.validateArgs(cmd, provider, args)
 	if err != nil {
 		return err
 	}
+	args = validArgs
 
 	if _, err := form.ConfirmDeletionType(cmd, resource.IdentityPool, displayName, args); err != nil {
 		return err
 	}
 
 	var errs error
-	for _, poolId := range args {
-		if err := c.V2Client.DeleteIdentityPool(poolId, provider); err != nil {
+	var deleted []string
+	for _, id := range args {
+		if err := c.V2Client.DeleteIdentityPool(id, provider); err != nil {
 			errs = errors.Join(errs, err)
 		} else {
-			output.ErrPrintf(errors.DeletedResourceMsg, resource.IdentityPool, poolId)
+			deleted = append(deleted, id)
 		}
 	}
+	deletion.PrintSuccessfulDeletionMsg(deleted, resource.IdentityPool)
 
 	return errs
 }
 
-func (c *identityPoolCommand) checkExistence(cmd *cobra.Command, provider string, args []string) (string, error) {
-	// Single
-	if len(args) == 1 {
-		if pool, err := c.V2Client.GetIdentityPool(args[0], provider); err != nil {
-			return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, resource.IdentityPool, args[0]), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.IdentityPool))
-		} else {
-			return pool.GetDisplayName(), nil
+func (c *identityPoolCommand) validateArgs(cmd *cobra.Command, provider string, args []string) (string, []string, error) {
+	var displayName string
+	describeFunc := func(id string) error {
+		if pool, err := c.V2Client.GetIdentityPool(id, provider); err != nil {
+			return err
+		} else if id == args[0] {
+			displayName = pool.GetDisplayName()
 		}
+		return nil
 	}
 
-	// Multiple
-	identityPools, err := c.V2Client.ListIdentityPools(provider)
-	if err != nil {
-		return "", err
-	}
+	validArgs, err := deletion.ValidateArgsForDeletion(cmd, args, resource.IdentityPool, describeFunc)
+	err = errors.NewWrapAdditionalSuggestions(err, fmt.Sprintf(errors.ListResourceSuggestions, resource.IdentityPool, "iam pool"))
 
-	set := types.NewSet()
-	for _, pool := range identityPools {
-		set.Add(pool.GetId())
-	}
-
-	validArgs, invalidArgs := set.IntersectionAndDifference(args)
-	if force, err := cmd.Flags().GetBool("force"); err != nil {
-		return "", err
-	} else if force && len(invalidArgs) > 0 {
-		args = validArgs
-		return "", nil
-	}
-
-	invalidArgsStr := utils.ArrayToCommaDelimitedString(invalidArgs, "and")
-	if len(invalidArgs) == 1 {
-		return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, resource.IdentityPool, invalidArgsStr), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.IdentityPool))
-	} else if len(invalidArgs) > 1 {
-		return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, resource.Plural(resource.IdentityPool), invalidArgsStr), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.IdentityPool))
-	}
-
-	return "", nil
+	return displayName, validArgs, err
 }
