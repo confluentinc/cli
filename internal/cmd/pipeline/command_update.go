@@ -38,7 +38,7 @@ func (c *command) newUpdateCommand(enableSourceCode bool) *cobra.Command {
 			},
 			examples.Example{
 				Text: `Update Stream Designer pipeline "pipe-12345" with new Schema Registry cluster ID.`,
-				Code: `confluent pipeline update pipe-12345 --update-schema-registry`,
+				Code: "confluent pipeline update pipe-12345 --update-schema-registry",
 			},
 		),
 	}
