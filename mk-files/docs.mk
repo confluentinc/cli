@@ -14,77 +14,58 @@ SHORT_NEXT_MINOR_VERSION = $(word 1,$(split_version)).$(shell expr $(word 2,$(sp
 CURRENT_SHORT_MINOR_VERSION = $(word 1,$(split_version)).$(word 2,$(split_version))
 NEXT_PATCH_VERSION = $(word 1,$(split_version)).$(word 2,$(split_version)).$(shell expr $(word 3,$(split_version)) + 1)
 
-.PHONY: clone-docs-repo
-clone-docs-repo:
-	$(eval DIR=$(shell mktemp -d))
-	$(eval DOCS_CONFLUENT_CLI=$(DIR)/docs-confluent-cli)
-
-	git clone git@github.com:confluentinc/docs-confluent-cli.git $(DOCS_CONFLUENT_CLI)
-	bump=$$(cat release-notes/bump.txt) && \
-	version=$$(cat release-notes/version.txt) && \
-	cd $(DOCS_CONFLUENT_CLI) && \
-	git fetch && \
-	if [ "$${bump}" = "patch" ]; then \
-		git checkout $$(echo $${version} | sed $(STAGING_BRANCH_REGEX)) ; \
-	fi
-
 .PHONY: docs
-docs: clean-docs
+docs:
+	rm -rf docs/ && \
 	go run cmd/docs/main.go
 
 .PHONY: publish-docs
-publish-docs: docs clone-docs-repo
-	bump=$$(cat release-notes/bump.txt); \
-	cd $(DOCS_CONFLUENT_CLI); \
-	git checkout -b cli-$(VERSION) || exit 1; \
-	rm -rf command-reference; \
-	cp -R ~/git/go/src/github.com/confluentinc/cli/docs command-reference; \
-	[ ! -f "command-reference/kafka/topic/confluent_kafka_topic_consume.rst" ] || sed -i '' 's/default "confluent_cli_consumer_[^"]*"/default "confluent_cli_consumer_<randomly-generated-id>"/' command-reference/kafka/topic/confluent_kafka_topic_consume.rst || exit 1; \
-	git add . || exit 1; \
+publish-docs: docs
+	$(eval DIR=$(shell mktemp -d))
+	$(eval DOCS_CONFLUENT_CLI=$(DIR)/docs-confluent-cli)
+
+	git clone git@github.com:confluentinc/docs-confluent-cli.git $(DOCS_CONFLUENT_CLI) && \
+	version=$$(cat release-notes/version.txt) && \
+	cd $(DOCS_CONFLUENT_CLI) && \
+	git checkout publish-docs-$${version} && \
+	rm -rf command-reference && \
+	cp -R ~/git/go/src/github.com/confluentinc/cli/docs command-reference && \
+	[ ! -f "command-reference/kafka/topic/confluent_kafka_topic_consume.rst" ] || sed -i '' 's/default "confluent_cli_consumer_[^"]*"/default "confluent_cli_consumer_<randomly-generated-id>"/' command-reference/kafka/topic/confluent_kafka_topic_consume.rst || exit 1 && \
+	git add . && \
 	git diff --cached --exit-code > /dev/null && echo "nothing to update for docs" && exit 0; \
-	git commit -m "[ci skip] chore: update CLI docs for $(VERSION)" || exit 1; \
-	$(call dry-run,git push origin cli-$(VERSION)) || exit 1; \
+	git commit -m "[ci skip] chore: update CLI docs for $${version}" && \
+	$(call dry-run,git push origin publish-docs-$${version}) && \
 	base="master" && \
-	if [ "$${bump}" = "patch" ]; then \
-		base=$(STAGING_BRANCH) ; \
+	if [ $${version} != *.0 ]; then \
+		base=$(STAGING_BRANCH); \
 	fi && \
-	$(call dry-run,gh pr create -B $${base} --title "chore: update CLI docs for $(VERSION)" --body "") || exit 1
+	$(call dry-run,gh pr create -B $${base} --title "chore: update CLI docs for $${version}" --body "")
 
-.PHONY: clean-docs
-clean-docs:
-	rm -rf docs/
-
-# This should be getting run after a version release has happened.
-# So $(VERSION) is the version that was just released, and $$(cat release-notes/bump.txt)
-# would be the next minor release (something in the future that doesn't exist yet).
-.PHONY: release-docs
-release-docs: clone-docs-repo cut-docs-branches update-settings-and-conf
+	rm -rf $(DIR)
 
 # NB: When releasing a new version, the -post branch is updated to the current state of the .x branch,
 # whether the -post branch exists or not. The `git checkout -B ...` handles this behavior.
-.PHONY: cut-docs-branches
-cut-docs-branches:
-	bump=$$(cat release-notes/bump.txt) && \
+# If this is a patch release, we don't have to update master.
+# The .x branch has been updated to ignore [ci skip] for minor branches since it is a pure upstream branch of minor branches.
+# To ensure pint merge will work correctly, we will manually merge the -post branch into the .x branch using `-s ours`. Then, these
+# branches will be pushed at the same time. This ensure there are no errors with pint merge.
+.PHONY: release-docs
+release-docs:
+	$(eval DIR=$(shell mktemp -d))
+	$(eval DOCS_CONFLUENT_CLI=$(DIR)/docs-confluent-cli)
+
+	git clone git@github.com:confluentinc/docs-confluent-cli.git $(DOCS_CONFLUENT_CLI) && \
+	version=$$(cat release-notes/version.txt) && \
 	cd $(DOCS_CONFLUENT_CLI) && \
 	git fetch && \
-	if [[ "$${bump}" != "patch" ]]; then \
+	if [[ $${version} == *.0 ]]; then \
 		git checkout master && \
 		git checkout -b $(STAGING_BRANCH) && \
 		$(call dry-run,git push -u origin $(STAGING_BRANCH)); \
 	fi && \
 	git checkout -B $(CURRENT_SHORT_MINOR_VERSION)-post origin/$(STAGING_BRANCH) && \
-	$(call dry-run,git push -u origin $(CURRENT_SHORT_MINOR_VERSION)-post)
-
-# If this is a patch release, we don't have to update master.
-# The .x branch has been updated to ignore [ci skip] for minor branches since it is a pure upstream branch of minor branches.
-# To ensure pint merge will work correctly, we will manually merge the -post branch into the .x branch using `-s ours`. Then, these
-# branches will be pushed at the same time. This ensure there are no errors with pint merge.
-.PHONY: update-settings-and-conf
-update-settings-and-conf:
-	bump=$$(cat release-notes/bump.txt) && \
-	cd $(DOCS_CONFLUENT_CLI) && \
-	git fetch && \
-	if [[ "$${bump}" != "patch" ]]; then \
+	$(call dry-run,git push -u origin $(CURRENT_SHORT_MINOR_VERSION)-post) && \
+	if [[ $${version} == *.0 ]]; then \
 		git checkout master && \
 		sed $(SED_OPTION_INPLACE) 's/export RELEASE_VERSION=.*/export RELEASE_VERSION=$(NEXT_MINOR_VERSION)-SNAPSHOT/g' settings.sh && \
 		sed $(SED_OPTION_INPLACE) 's/export PUBLIC_VERSION=.*/export PUBLIC_VERSION=$(SHORT_NEXT_MINOR_VERSION)/g' settings.sh && \
@@ -108,3 +89,5 @@ update-settings-and-conf:
 	git checkout $(STAGING_BRANCH) && \
 	git merge -s ours -m "Merge branch '$(CURRENT_SHORT_MINOR_VERSION)-post' into $(STAGING_BRANCH)" $(CURRENT_SHORT_MINOR_VERSION)-post && \
 	$(call dry-run,git push origin "$(CURRENT_SHORT_MINOR_VERSION)-post:$(CURRENT_SHORT_MINOR_VERSION)-post" "$(STAGING_BRANCH):$(STAGING_BRANCH)")
+
+	rm -rf $(DIR)
