@@ -1,1 +1,4 @@
 Error: self-managed key not found: "cck-404"
+
+Suggestions:
+    List available self-managed keys with `confluent byok list`.

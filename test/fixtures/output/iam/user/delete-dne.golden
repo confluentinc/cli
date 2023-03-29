@@ -1,1 +1,4 @@
 Error: user not found: "u-1"
+
+Suggestions:
+    List available users with `confluent iam user list`.

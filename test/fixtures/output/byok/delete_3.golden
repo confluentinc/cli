@@ -2,3 +2,4 @@ Error: self-managed keys not found: "cck-006", "cck-007", and "cck-100"
 
 Suggestions:
     Use the `--skip-invalid` flag to suppress this error and delete the remaining self-managed key entered.
+    List available self-managed keys with `confluent byok list`.
