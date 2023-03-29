@@ -1,6 +1,7 @@
 package pipeline
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -36,8 +37,8 @@ func (c *command) newUpdateCommand(enableSourceCode bool) *cobra.Command {
 				Code: `confluent pipeline update pipe-12345 --ksql-cluster lksqlc-123456.`,
 			},
 			examples.Example{
-				Text: `Update Stream Designer pipeline "pipe-12345" with new schema registry cluster Id.`,
-				Code: `confluent pipeline update pipe-12345 --update-schema-registry true`,
+				Text: `Update Stream Designer pipeline "pipe-12345" with new Schema Registry cluster ID.`,
+				Code: `confluent pipeline update pipe-12345 --update-schema-registry`,
 			},
 		),
 	}
@@ -125,7 +126,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	if cmd.Flags().Changed("update-schema-registry") {
 		updateSRCluster, _ := cmd.Flags().GetBool("update-schema-registry")
 		if updateSRCluster {
-			srCluster, err := c.Config.Context().SchemaRegistryCluster(cmd)
+			srCluster, err := c.Context.FetchSchemaRegistryByEnvironmentId(context.Background(), environmentId)
 			if err != nil {
 				return err
 			}

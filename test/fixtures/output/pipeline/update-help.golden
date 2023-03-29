@@ -20,9 +20,9 @@ Update Stream Designer pipeline "pipe-12345" with KSQL cluster ID "lksqlc-123456
 
   $ confluent pipeline update pipe-12345 --ksql-cluster lksqlc-123456.
 
-Update Stream Designer pipeline "pipe-12345" with new schema registry cluster Id.
+Update Stream Designer pipeline "pipe-12345" with new Schema Registry cluster ID.
 
-  $ confluent pipeline update pipe-12345 --update-schema-registry true
+  $ confluent pipeline update pipe-12345 --update-schema-registry
 
 Flags:
       --name string              Name of the pipeline.

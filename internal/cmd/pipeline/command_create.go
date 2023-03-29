@@ -1,6 +1,7 @@
 package pipeline
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"regexp"
@@ -51,11 +52,30 @@ func (c *command) newCreateCommand(enableSourceCode bool) *cobra.Command {
 }
 
 func (c *command) create(cmd *cobra.Command, _ []string) error {
-	name, _ := cmd.Flags().GetString("name")
-	description, _ := cmd.Flags().GetString("description")
-	ksqlCluster, _ := cmd.Flags().GetString("ksql-cluster")
-	sqlFile, _ := cmd.Flags().GetString("sql-file")
-	secrets, _ := cmd.Flags().GetStringArray("secret")
+	name, err := cmd.Flags().GetString("name")
+	if err != nil {
+		return err
+	}
+
+	description, err := cmd.Flags().GetString("description")
+	if err != nil {
+		return err
+	}
+
+	ksqlCluster, err := cmd.Flags().GetString("ksql-cluster")
+	if err != nil {
+		return err
+	}
+
+	sqlFile, err := cmd.Flags().GetString("sql-file")
+	if err != nil {
+		return err
+	}
+
+	secrets, err := cmd.Flags().GetStringArray("secret")
+	if err != nil {
+		return err
+	}
 
 	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
@@ -76,7 +96,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 
 	// validate sr id
 	srId := ""
-	srCluster, err := c.Config.Context().SchemaRegistryCluster(cmd)
+	srCluster, err := c.Context.FetchSchemaRegistryByEnvironmentId(context.Background(), environmentId)
 	if err != nil {
 		if !strings.Contains(err.Error(), "Schema Registry not enabled") {
 			// ignore if the SR is not enabled
