@@ -2,3 +2,4 @@ Error: API key not found: "MYKEY19"
 
 Suggestions:
     Use the `--skip-invalid` flag to suppress this error and delete the remaining API keys entered.
+    List available API keys with `confluent api-key list`.

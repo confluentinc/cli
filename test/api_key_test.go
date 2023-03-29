@@ -173,6 +173,7 @@ func (s *CLITestSuite) TestAPIKeyDelete() {
 		{args: "api-key delete MYKEY6 MYKEY17 MYKEY18 --skip-invalid --force", input: "y\n", fixture: "api-key/delete/2.golden"},
 		{args: "api-key delete MYKEY7 MYKEY8 MYKEY19", input: "y\n", fixture: "api-key/delete/3.golden", exitCode: 1},
 		{args: "api-key delete MYKEY7 MYKEY8", input: "y\n", fixture: "api-key/delete/4.golden"},
+		{args: "api-key delete MYKEY17 MYKEY18", fixture: "api-key/delete/5.golden", exitCode: 1},
 	}
 
 	resetConfiguration(s.T(), false)
