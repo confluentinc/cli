@@ -2,7 +2,7 @@ package test
 
 import "time"
 
-func (s *CLITestSuite) TestLocal() {
+func (s *CLITestSuite) TestLocalKafka() {
 	tests := []CLITest{
 		{args: "local kafka stop", fixture: "local/stop.golden"},
 		{args: "local kafka start", fixture: "local/start.golden", regex: true},

@@ -7,9 +7,8 @@ import (
 const imageName = "523370736235.dkr.ecr.us-west-2.amazonaws.com/confluentinc/kafka-local:latest" // to be removed
 
 const (
-	localhostPrefix        = "http://localhost:%s"
-	localhost              = "localhost"
-	containerIdShortLength = 10
+	localhostPrefix = "http://localhost:%s"
+	localhost       = "localhost"
 )
 
 func (c *command) newKafkaCommand() *cobra.Command {
@@ -23,4 +22,9 @@ func (c *command) newKafkaCommand() *cobra.Command {
 	cmd.AddCommand(c.newTopicCommand())
 
 	return cmd
+}
+
+func getShortenedContainerId(id string) string {
+	containerIdShortLength := 10
+	return id[:containerIdShortLength]
 }
