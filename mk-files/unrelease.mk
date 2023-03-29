@@ -18,17 +18,15 @@ reset-tag-and-commit:
 	git diff-index --quiet HEAD # ensures git status is clean
 	git tag -d v$(CLEAN_VERSION) # delete local tag
 	$(call dry-run,git push --delete origin v$(CLEAN_VERSION)) # delete remote tag
-	$(call dry-run,git reset --hard HEAD~1) # warning: assumes "chore" version bump was last commit
-	$(call dry-run,git push origin HEAD --force)
 
 .PHONY: unrelease-warn
 unrelease-warn:
 	@echo "Latest tag:"
-	@git describe --tags `git rev-list --tags --max-count=1`
+	git describe --tags `git rev-list --tags --max-count=1`
 	@echo "Latest commits:"
-	@git --no-pager log --decorate=short --pretty=oneline -n10
+	git --no-pager log --decorate=short --pretty=oneline -n10
 	@echo -n "Warning: Ensure a git version bump (new commit and new tag) has occurred before continuing, else you will remove the prior version. Continue? (y/n): "
-	@read line; if [ $$line = "n" ] || [ $$line = "N" ]; then echo aborting; exit 1; fi
+	read line; if [ $$line = "n" ] || [ $$line = "N" ]; then echo aborting; exit 1; fi
 
 .PHONY: delete-archives-and-binaries
 delete-archives-and-binaries:
@@ -39,7 +37,7 @@ delete-archives-and-binaries:
 .PHONY: delete-release-notes
 delete-release-notes:
 	@echo -n "Do you want to delete the release notes from S3? (y/n): "
-	@read line; if [ $$line = "y" ] || [ $$line = "Y" ]; then $(aws-authenticate); $(call delete-release-folder,release-notes); fi
+	read line; if [ $$line = "y" ] || [ $$line = "Y" ]; then $(aws-authenticate); $(call delete-release-folder,release-notes); fi
 
 define delete-release-folder
 	$(call dry-run,aws s3 rm $(S3_BUCKET_PATH)/confluent-cli/$1/$(CLEAN_VERSION) --recursive)
@@ -62,7 +60,7 @@ copy-prod-archives-to-stag-latest:
 .PHONY: restore-latest-archives-warn
 restore-latest-archives-warn:
 	@echo -n "Warning: Overriding archives in the latest folder with archives from version v$(CLEAN_VERSION). Continue? (y/n): "
-	@read line; if [ $$line = "n" ] || [ $$line = "N" ]; then echo aborting; exit 1; fi
+	read line; if [ $$line = "n" ] || [ $$line = "N" ]; then echo aborting; exit 1; fi
 
 .PHONY: clean-staging-folder
 clean-staging-folder:

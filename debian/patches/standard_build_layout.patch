@@ -1,5 +1,5 @@
---- cli/Makefile	2023-03-23 13:29:19.342316125 -0700
-+++ debian/Makefile	2023-03-21 10:41:40.431704825 -0700
+--- cli/Makefile	2023-03-23 16:02:13.701919446 -0700
++++ debian/Makefile	2023-03-23 16:01:16.035879374 -0700
 @@ -1,121 +1,130 @@
 -SHELL              := /bin/bash
 -ALL_SRC            := $(shell find . -name "*.go" | grep -v -e vendor)
@@ -63,8 +63,8 @@
  
 -.PHONY: clean
 -clean:
--	@for dir in bin dist docs legal release-notes; do \
--		[ -d $$dir ] && rm -r $$dir || true ; \
+-	for dir in bin dist docs legal release-notes; do \
+-		[ -d $$dir ] && rm -r $$dir || true; \
 -	done
 +ifndef VERSION
 +	VERSION=$(CLI_VERSION)
@@ -152,13 +152,13 @@
 +	cp packaging/confluent.sh $(DESTDIR)$(BINPATH)/confluent
 +	chmod 755 $(DESTDIR)$(BINPATH)/confluent
 +
-+	cd $(DESTDIR)$(LIBPATH) ; \
++	cd $(DESTDIR)$(LIBPATH); \
 +	for dir in darwin_amd64 darwin_arm64 linux_amd64 windows_amd64; do \
-+		mkdir -p $${dir} ; \
-+		ext=""; if [[ $${dir} =~ windows_.+ ]]; then ext=".exe"; fi ; \
-+		filepath=$${dir}/confluent$${ext} ; \
-+		curl -f -s https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/binaries/$(CLI_VERSION)/confluent_$(CLI_VERSION)_$${dir}$${ext} -o $${filepath} ; \
-+		chmod 755 $${filepath} ; \
++		mkdir -p $${dir}; \
++		ext=""; if [[ $${dir} =~ windows_.+ ]]; then ext=".exe"; fi; \
++		filepath=$${dir}/confluent$${ext}; \
++		curl -f -s https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/binaries/$(CLI_VERSION)/confluent_$(CLI_VERSION)_$${dir}$${ext} -o $${filepath}; \
++		chmod 755 $${filepath}; \
 +	done
 +
 +	cp LICENSE $(DESTDIR)$(DOCPATH)/COPYRIGHT

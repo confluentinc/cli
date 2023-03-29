@@ -13,15 +13,15 @@ func TestDocsUpdateHandler(t *testing.T) {
 ====================================
 
 Breaking Changes
-------------------------
+----------------
 - 1.2 breaking change
 
 New Features
-------------------------
+------------
 - v1.2.0 feature
 
 Bug Fixes
-------------------------
+---------
 - v1.2.0 bug`
 
 	tests := []struct {
