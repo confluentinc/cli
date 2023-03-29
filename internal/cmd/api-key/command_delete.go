@@ -4,12 +4,10 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/delete"
+	"github.com/confluentinc/cli/internal/pkg/deletion"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
-	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *command) newDeleteCommand() *cobra.Command {
@@ -22,7 +20,7 @@ func (c *command) newDeleteCommand() *cobra.Command {
 	}
 
 	pcmd.AddForceFlag(cmd)
-	pcmd.AddWarnFlag(cmd)
+	pcmd.AddSkipInvalidFlag(cmd)
 
 	return cmd
 }
@@ -41,37 +39,33 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	var errs error
-	var successful []string
+	var deleted []string
 	for _, id := range args {
-		if httpResp, err := c.V2Client.DeleteApiKey(id); err != nil {
-			errs = errors.Join(errs, errors.CatchApiKeyForbiddenAccessError(err, deleteOperation, id, httpResp))
+		if r, err := c.V2Client.DeleteApiKey(id); err != nil {
+			errs = errors.Join(errs, errors.CatchApiKeyForbiddenAccessError(err, deleteOperation, id, r))
 		} else {
-			successful = append(successful, id)
+			deleted = append(deleted, id)
 			if err := c.keystore.DeleteAPIKey(id); err != nil {
 				errs = errors.Join(errs, err)
 			}
 		}
 	}
+	deletion.PrintSuccessfulDeletionMsg(deleted, resource.ApiKey)
+
 	if errs != nil {
 		errs = errors.NewErrorWithSuggestions(errs.Error(), errors.APIKeyNotFoundSuggestions)
-	}
-
-	if len(successful) == 1 {
-		output.Printf(errors.DeletedResourceMsg, resource.ApiKey, successful[0])
-	} else if len(successful) > 1 {
-		output.Printf(errors.DeletedResourcesMsg, resource.Plural(resource.ApiKey), utils.ArrayToCommaDelimitedString(successful, "and"))
 	}
 
 	return errs
 }
 
 func (c *command) validateArgs(cmd *cobra.Command, args []string) ([]string, error) {
-	describeFunc := func(arg string) error {
-		if _, _, err := c.V2Client.GetApiKey(arg); err != nil {
+	describeFunc := func(id string) error {
+		if _, _, err := c.V2Client.GetApiKey(id); err != nil {
 			return err
 		}
 		return nil
 	}
 
-	return delete.ValidateArgsForDeletion(cmd, args, resource.ApiKey, describeFunc)
+	return deletion.ValidateArgsForDeletion(cmd, args, resource.ApiKey, describeFunc)
 }

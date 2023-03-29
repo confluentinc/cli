@@ -4,12 +4,10 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/delete"
+	"github.com/confluentinc/cli/internal/pkg/deletion"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
-	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *userCommand) newDeleteCommand() *cobra.Command {
@@ -21,7 +19,7 @@ func (c *userCommand) newDeleteCommand() *cobra.Command {
 	}
 
 	pcmd.AddForceFlag(cmd)
-	pcmd.AddWarnFlag(cmd)
+	pcmd.AddSkipInvalidFlag(cmd)
 
 	return cmd
 }
@@ -38,20 +36,15 @@ func (c *userCommand) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	var errs error
-	var successful []string
-	for _, resourceId := range args {
-		if err := c.V2Client.DeleteIamUser(resourceId); err != nil {
-			errs = errors.Join(errs, errors.Errorf(errors.DeleteResourceErrorMsg, resource.User, resourceId, err))
+	var deleted []string
+	for _, id := range args {
+		if err := c.V2Client.DeleteIamUser(id); err != nil {
+			errs = errors.Join(errs, errors.Errorf(errors.DeleteResourceErrorMsg, resource.User, id, err))
 		} else {
-			successful = append(successful, resourceId)
+			deleted = append(deleted, id)
 		}
 	}
-
-	if len(successful) == 1 {
-		output.Printf(errors.DeletedResourceMsg, resource.User, successful[0])
-	} else if len(successful) > 1 {
-		output.Printf(errors.DeletedResourcesMsg, resource.Plural(resource.User), utils.ArrayToCommaDelimitedString(successful, "and"))
-	}
+	deletion.PrintSuccessfulDeletionMsg(deleted, resource.User)
 
 	return errs
 }
@@ -62,16 +55,16 @@ func (c *userCommand) validateArgs(cmd *cobra.Command, args []string) (string, [
 	}
 
 	var fullName string
-	describeFunc := func(arg string) error {
-		if user, err := c.V2Client.GetIamUserById(arg); err != nil {
+	describeFunc := func(id string) error {
+		if user, err := c.V2Client.GetIamUserById(id); err != nil {
 			return err
-		} else if arg == args[0] {
+		} else if id == args[0] {
 			fullName = user.GetFullName()
 		}
 		return nil
 	}
 
-	validArgs, err := delete.ValidateArgsForDeletion(cmd, args, resource.User, describeFunc)
+	validArgs, err := deletion.ValidateArgsForDeletion(cmd, args, resource.User, describeFunc)
 
 	return fullName, validArgs, err
 }

@@ -6,12 +6,10 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/deletion"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
-	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/types"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *command) newDeleteCommand() *cobra.Command {
@@ -24,28 +22,31 @@ func (c *command) newDeleteCommand() *cobra.Command {
 	}
 
 	pcmd.AddForceFlag(cmd)
+	pcmd.AddSkipInvalidFlag(cmd)
 
 	return cmd
 }
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
-	displayName, err := c.checkExistence(cmd, args)
+	displayName, validArgs, err := c.validateArgs(cmd, args)
 	if err != nil {
 		return err
 	}
+	args = validArgs
 
 	if _, err := form.ConfirmDeletionType(cmd, resource.Environment, displayName, args); err != nil {
 		return err
 	}
 
 	var errs error
-	for _, envId := range args {
-		if httpResp, err := c.V2Client.DeleteOrgEnvironment(envId); err != nil {
+	var deleted []string
+	environmentId, _ := c.EnvironmentId()
+	for _, id := range args {
+		if httpResp, err := c.V2Client.DeleteOrgEnvironment(id); err != nil {
 			errs = errors.Join(errs, errors.CatchOrgV2ResourceNotFoundError(err, resource.Environment, httpResp))
 		} else {
-			output.ErrPrintf(errors.DeletedResourceMsg, resource.Environment, envId)
-			environmentId, _ := c.EnvironmentId()
-			if envId == environmentId {
+			deleted = append(deleted, id)
+			if id == environmentId {
 				c.Context.SetEnvironment(nil)
 
 				if err := c.Config.Save(); err != nil {
@@ -54,6 +55,8 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 			}
 		}
 	}
+	deletion.PrintSuccessfulDeletionMsg(deleted, resource.Environment)
+
 	if errs != nil {
 		errs = errors.NewErrorWithSuggestions(errs.Error(), fmt.Sprintf(errors.OrgResourceNotFoundSuggestions, resource.Environment))
 	}
@@ -61,41 +64,18 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	return errs
 }
 
-func (c *command) checkExistence(cmd *cobra.Command, args []string) (string, error) {
-	// Single
-	if len(args) == 1 {
-		if environment, _, err := c.V2Client.GetOrgEnvironment(args[0]); err != nil {
-			return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, resource.Environment, args[0]), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.Environment))
-		} else {
-			return environment.GetDisplayName(), nil
+func (c *command) validateArgs(cmd *cobra.Command, args []string) (string, []string, error) {
+	var displayName string
+	describeFunc := func(id string) error {
+		if environment, _, err := c.V2Client.GetOrgEnvironment(id); err != nil {
+			return err
+		} else if id == args[0] {
+			displayName = environment.GetDisplayName()
 		}
+		return nil
 	}
 
-	// Multiple
-	environments, err := c.V2Client.ListOrgEnvironments()
-	if err != nil {
-		return "", err
-	}
+	validArgs, err := deletion.ValidateArgsForDeletion(cmd, args, resource.Environment, describeFunc)
 
-	set := types.NewSet()
-	for _, environment := range environments {
-		set.Add(environment.GetId())
-	}
-
-	validArgs, invalidArgs := set.IntersectionAndDifference(args)
-	if force, err := cmd.Flags().GetBool("force"); err != nil {
-		return "", err
-	} else if force && len(invalidArgs) > 0 {
-		args = validArgs
-		return "", nil
-	}
-
-	invalidArgsStr := utils.ArrayToCommaDelimitedString(invalidArgs, "and")
-	if len(invalidArgs) == 1 {
-		return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, resource.Environment, invalidArgsStr), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.Environment))
-	} else if len(invalidArgs) > 1 {
-		return "", errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, resource.Plural(resource.Environment), invalidArgsStr), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.Environment))
-	}
-
-	return "", nil
+	return displayName, validArgs, errors.WrapSuggestions(err, fmt.Sprintf(errors.OrgResourceNotFoundSuggestions, resource.Environment))
 }

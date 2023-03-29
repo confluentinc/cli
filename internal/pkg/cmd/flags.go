@@ -194,8 +194,8 @@ func AddForceFlag(cmd *cobra.Command) {
 	cmd.Flags().Bool("force", false, "Skip the deletion confirmation prompt.")
 }
 
-func AddWarnFlag(cmd *cobra.Command) {
-	cmd.Flags().Bool("warn", false, "Treat invalid argument errors as warnings, and process valid arguments.")
+func AddSkipInvalidFlag(cmd *cobra.Command) {
+	cmd.Flags().Bool("skip-invalid", false, "Treat invalid argument errors as warnings, and process valid arguments.")
 }
 
 func AddKsqlClusterFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {

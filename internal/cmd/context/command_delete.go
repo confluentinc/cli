@@ -1,17 +1,13 @@
 package context
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/deletion"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
-	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/types"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *command) newDeleteCommand() *cobra.Command {
@@ -24,13 +20,16 @@ func (c *command) newDeleteCommand() *cobra.Command {
 	}
 
 	pcmd.AddForceFlag(cmd)
+	pcmd.AddSkipInvalidFlag(cmd)
 
 	return cmd
 }
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
-	if err := c.checkExistence(cmd, args); err != nil {
+	if validArgs, err := c.validateArgs(cmd, args); err != nil {
 		return err
+	} else {
+		args = validArgs
 	}
 
 	if ok, err := form.ConfirmDeletionYesNo(cmd, resource.Context, args); err != nil || !ok {
@@ -38,46 +37,26 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	var errs error
-	for _, ctxName := range args {
-		if err := c.Config.DeleteContext(ctxName); err != nil {
+	var deleted []string
+	for _, id := range args {
+		if err := c.Config.DeleteContext(id); err != nil {
 			errs = errors.Join(errs, err)
 		} else {
-			output.Printf(errors.DeletedResourceMsg, resource.Context, ctxName)
+			deleted = append(deleted, id)
 		}
 	}
+	deletion.PrintSuccessfulDeletionMsg(deleted, resource.Context)
 
 	return errs
 }
 
-func (c *command) checkExistence(cmd *cobra.Command, args []string) error {
-	// Single
-	if len(args) == 1 {
-		if _, err := c.Config.FindContext(args[0]); err != nil {
-			return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, resource.Context, args[0]), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.Context))
+func (c *command) validateArgs(cmd *cobra.Command, args []string) ([]string, error) {
+	describeFunc := func(id string) error {
+		if _, err := c.Config.FindContext(id); err != nil {
+			return err
 		}
 		return nil
 	}
 
-	// Multiple
-	set := types.NewSet()
-	for _, context := range c.Config.Contexts {
-		set.Add(context.Name)
-	}
-
-	validArgs, invalidArgs := set.IntersectionAndDifference(args)
-	if force, err := cmd.Flags().GetBool("force"); err != nil {
-		return err
-	} else if force && len(invalidArgs) > 0 {
-		args = validArgs
-		return nil
-	}
-
-	invalidArgsStr := utils.ArrayToCommaDelimitedString(invalidArgs, "and")
-	if len(invalidArgs) == 1 {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, resource.Context, invalidArgsStr), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.Context))
-	} else if len(invalidArgs) > 1 {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.NotFoundErrorMsg, resource.Plural(resource.Context), invalidArgsStr), fmt.Sprintf(errors.DeleteNotFoundSuggestions, resource.Context))
-	}
-
-	return nil
+	return deletion.ValidateArgsForDeletion(cmd, args, resource.Context, describeFunc)
 }

@@ -1,4 +1,4 @@
-package delete
+package deletion
 
 import (
 	"fmt"
@@ -29,7 +29,7 @@ func ValidateArgsForDeletion(cmd *cobra.Command, args []string, resourceType str
 	}
 
 	if len(invalidArgs) != 0 {
-		if warn, err := cmd.Flags().GetBool("warn"); err != nil {
+		if warn, err := cmd.Flags().GetBool("skip-invalid"); err != nil {
 			return nil, err
 		} else if warn {
 			output.ErrPrintln(invalidArgsErrMsg)
@@ -46,4 +46,12 @@ func ValidateArgsForDeletion(cmd *cobra.Command, args []string, resourceType str
 	}
 
 	return args, nil
+}
+
+func PrintSuccessfulDeletionMsg(successful []string, resourceType string) {
+	if len(successful) == 1 {
+		output.Printf(errors.DeletedResourceMsg, resourceType, successful[0])
+	} else if len(successful) > 1 {
+		output.Printf(errors.DeletedResourcesMsg, resource.Plural(resourceType), utils.ArrayToCommaDelimitedString(successful, "and"))
+	}
 }
