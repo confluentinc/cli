@@ -3,8 +3,8 @@ package iam
 import (
 	"github.com/spf13/cobra"
 
+	aclutil "github.com/confluentinc/cli/internal/pkg/acl"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
 )
@@ -47,11 +47,11 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		return c.handleACLError(cmd, err, response)
 	}
 
-	promptMsg := errors.DeleteACLConfirmMsg
+	promptMsg := aclutil.DeleteACLConfirmMsg
 	if len(bindings) > 1 {
-		promptMsg = errors.DeleteACLsConfirmMsg
+		promptMsg = aclutil.DeleteACLsConfirmMsg
 	}
-	if ok, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil || !ok {
+	if ok, err := form.ConfirmDeletionYesNoCustomPrompt(cmd, promptMsg); err != nil || !ok {
 		return err
 	}
 

@@ -2,6 +2,9 @@ package resource
 
 import (
 	"strings"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 const (
@@ -54,6 +57,18 @@ var prefixToResource = map[string]string{
 	UserPrefix:                  User,
 }
 
+var resourceToPrefix = map[string]string{
+	ClusterLink:           ClusterLinkPrefix,
+	Environment:           EnvironmentPrefix,
+	IdentityPool:          IdentityPoolPrefix,
+	IdentityProvider:      IdentityProviderPrefix,
+	KafkaCluster:          KafkaClusterPrefix,
+	KsqlCluster:           KsqlClusterPrefix,
+	SchemaRegistryCluster: SchemaRegistryClusterPrefix,
+	ServiceAccount:        ServiceAccountPrefix,
+	User:                  UserPrefix,
+}
+
 func LookupType(resourceId string) string {
 	if resourceId == "cloud" {
 		return Cloud
@@ -67,4 +82,43 @@ func LookupType(resourceId string) string {
 	}
 
 	return Unknown
+}
+
+func ValidatePrefixes(resourceType string, args []string) error {
+	prefix, ok := resourceToPrefix[resourceType]
+	if !ok {
+		return nil
+	}
+
+	var malformed []string
+	for _, resourceId := range args {
+		if LookupType(resourceId) != resourceType {
+			malformed = append(malformed, resourceId)
+		}
+	}
+
+	if len(malformed) == 1 {
+		return errors.Errorf(`failed parsing resource ID %s: missing prefix "%s-" is required`, malformed[0], prefix)
+	} else if len(malformed) > 1 {
+		return errors.Errorf(`failed parsing resource IDs %s: missing prefix "%s-" is required`, utils.ArrayToCommaDelimitedString(malformed, "and"), prefix)
+	}
+
+	return nil
+}
+
+func Plural(resource string) string {
+	if resource == "" {
+		return ""
+	}
+
+	if last := string(resource[len(resource)-1]); last == "s" || last == "x" || last == "z" {
+		return resource + "es"
+	}
+	if len(resource) > 1 {
+		if lastTwo := string(resource[len(resource)-2:]); lastTwo == "ch" || lastTwo == "sh" {
+			return resource + "es"
+		}
+	}
+
+	return resource + "s"
 }

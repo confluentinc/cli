@@ -173,6 +173,8 @@ func (s *CLITestSuite) TestIAMServiceAccount() {
 		{args: "iam service-account create json-service --description json-output -o json", fixture: "iam/service-account/create-json.golden"},
 		{args: "iam service-account create yaml-service --description yaml-output -o yaml", fixture: "iam/service-account/create-yaml.golden"},
 		{args: "iam service-account delete sa-12345 --force", fixture: "iam/service-account/delete.golden"},
+		{args: "iam service-account delete sa-12345 sa-67890", fixture: "iam/service-account/delete-multiple-fail.golden", exitCode: 1},
+		{args: "iam service-account delete sa-12345 sa-54321", input :"y\n", fixture: "iam/service-account/delete-multiple-success.golden"},
 		{args: "iam service-account delete sa-12345", input: "service_account\n", fixture: "iam/service-account/delete-prompt.golden"},
 		{args: "iam service-account list -o json", fixture: "iam/service-account/list-json.golden"},
 		{args: "iam service-account list -o yaml", fixture: "iam/service-account/list-yaml.golden"},
@@ -219,8 +221,10 @@ func (s *CLITestSuite) TestIAMUserDescribe() {
 func (s *CLITestSuite) TestIAMUserDelete() {
 	tests := []CLITest{
 		{args: "iam user delete u-2 --force", fixture: "iam/user/delete.golden"},
+		{args: "iam user delete u-11aaa u-11bbb", fixture: "iam/user/delete-multiple-fail.golden", exitCode: 1},
+		{args: "iam user delete u-11aaa u-22bbb", input: "y\n", fixture: "iam/user/delete-multiple-success.golden"},
 		{args: "iam user delete u-2", input: "Bono\n", fixture: "iam/user/delete-prompt.golden"},
-		{args: "iam user delete 0 --force", fixture: "iam/user/bad-resource-id.golden", exitCode: 1},
+		{args: "iam user delete 0 --force", fixture: "iam/user/bad-resource-id-delete.golden", exitCode: 1},
 		{args: "iam user delete u-1 --force", fixture: "iam/user/delete-dne.golden", exitCode: 1},
 	}
 
@@ -280,8 +284,10 @@ func (s *CLITestSuite) TestIAMProviderCreate() {
 
 func (s *CLITestSuite) TestIAMProviderDelete() {
 	tests := []CLITest{
-		{args: "iam provider delete op-55555 --force", fixture: "iam/identity-provider/delete.golden"},
-		{args: "iam provider delete op-55555", input: "identity_provider\n", fixture: "iam/identity-provider/delete-prompt.golden"},
+		{args: "iam provider delete op-67890 --force", fixture: "iam/identity-provider/delete.golden"},
+		{args: "iam provider delete op-12345 op-54321", fixture: "iam/identity-provider/delete-multiple-fail.golden", exitCode: 1},
+		{args: "iam provider delete op-12345 op-67890", input: "y\n", fixture: "iam/identity-provider/delete-multiple-success.golden"},
+		{args: "iam provider delete op-67890", input: "identity_provider_2\n", fixture: "iam/identity-provider/delete-prompt.golden"},
 		{args: "iam provider delete op-1 --force", fixture: "iam/identity-provider/delete-dne.golden", exitCode: 1},
 	}
 
@@ -338,7 +344,9 @@ func (s *CLITestSuite) TestIAMPoolCreate() {
 func (s *CLITestSuite) TestIAMPoolDelete() {
 	tests := []CLITest{
 		{args: "iam pool delete pool-55555 --provider op-12345 --force", fixture: "iam/identity-pool/delete.golden"},
-		{args: "iam pool delete pool-55555 --provider op-12345", input: "identity_pool\n", fixture: "iam/identity-pool/delete-prompt.golden"},
+		{args: "iam pool delete pool-55555 pool-44444 --provider op-12345", fixture: "iam/identity-pool/delete-multiple-fail.golden", exitCode: 1},
+		{args: "iam pool delete pool-55555 pool-12345 --provider op-12345", input: "y\n", fixture: "iam/identity-pool/delete-multiple-success.golden"},
+		{args: "iam pool delete pool-55555 --provider op-12345", input: "identity_pool_2\n", fixture: "iam/identity-pool/delete-prompt.golden"},
 		{args: "iam pool delete pool-1 --provider op-12345 --force", fixture: "iam/identity-pool/delete-dne.golden", exitCode: 1},
 	}
 
