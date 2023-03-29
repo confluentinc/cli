@@ -95,17 +95,12 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	}
 
 	// validate sr id
-	srId := ""
 	srCluster, err := c.Context.FetchSchemaRegistryByEnvironmentId(context.Background(), environmentId)
 	if err != nil {
 		if !strings.Contains(err.Error(), "Schema Registry not enabled") {
 			// ignore if the SR is not enabled
 			return err
 		}
-	}
-
-	if srCluster != nil {
-		srId = srCluster.Id
 	}
 
 	// read pipeline source code file if provided
@@ -124,7 +119,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	pipeline, err := c.V2Client.CreatePipeline(environmentId, kafkaCluster.ID, name, description, sourceCode, &secretMappings, ksqlCluster, srId)
+	pipeline, err := c.V2Client.CreatePipeline(environmentId, kafkaCluster.ID, name, description, sourceCode, &secretMappings, ksqlCluster, srCluster.GetId())
 	if err != nil {
 		return err
 	}

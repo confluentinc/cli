@@ -130,7 +130,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 			if err != nil {
 				return err
 			}
-			updatePipeline.Spec.SetStreamGovernanceCluster(streamdesignerv1.ObjectReference{Id: srCluster.Id})
+			updatePipeline.Spec.SetStreamGovernanceCluster(streamdesignerv1.ObjectReference{Id: srCluster.GetId()})
 		}
 	}
 
