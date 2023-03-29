@@ -18,8 +18,6 @@ reset-tag-and-commit:
 	git diff-index --quiet HEAD # ensures git status is clean
 	git tag -d v$(CLEAN_VERSION) # delete local tag
 	$(call dry-run,git push --delete origin v$(CLEAN_VERSION)) # delete remote tag
-	$(call dry-run,git reset --hard HEAD~1) # warning: assumes "chore" version bump was last commit
-	$(call dry-run,git push origin HEAD --force)
 
 .PHONY: unrelease-warn
 unrelease-warn:
