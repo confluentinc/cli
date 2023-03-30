@@ -31,6 +31,24 @@ func TestBasicLexer(t *testing.T) {
 	}
 }
 
+func TestLexerShouldIgnoreLineBreaks(t *testing.T) {
+	// given
+	line := "SELECT FIELD \nFROM TABLE;"
+
+	// when
+	elements := Lexer(line)
+
+	// then
+	for i, element := range elements {
+		if i >= 0 && i < 6 || i > 12 && i < 18 {
+			require.Equal(t, config.HIGHLIGHT_COLOR, element.Color)
+		} else {
+			require.Equal(t, prompt.White, element.Color)
+		}
+
+	}
+}
+
 func TestIsLexerCaseInsensitive(t *testing.T) {
 	// given
 	line := "select field from table;"

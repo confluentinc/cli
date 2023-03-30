@@ -20,7 +20,7 @@ func wordLexer(line string) []prompt.LexerElement {
 	for i, word := range words {
 		element := prompt.LexerElement{}
 
-		_, isKeyword := config.SQLKeywords[strings.ToUpper(word)]
+		_, isKeyword := config.SQLKeywords[strings.ToUpper(strings.TrimSpace(word))]
 		if isKeyword {
 			element.Color = config.HIGHLIGHT_COLOR
 		} else {
