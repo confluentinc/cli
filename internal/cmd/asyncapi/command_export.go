@@ -60,7 +60,7 @@ func newExportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "export",
 		Short: "Export an AsyncAPI specification.",
-		Long:  "Create an AsyncAPI specification for a Kafka cluster and Schema Registry.",
+		Long:  "Export an AsyncAPI specification for a Kafka cluster and Schema Registry.",
 		Args:  cobra.NoArgs,
 	}
 
