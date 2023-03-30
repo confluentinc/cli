@@ -1,6 +1,5 @@
 package kafka
 
-// confluent kafka topic <commands>
 import (
 	"context"
 	"fmt"
@@ -13,22 +12,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
-
-type PartitionData struct {
-	TopicName              string  `json:"topic" yaml:"topic"`
-	PartitionId            int32   `json:"partition" yaml:"partition"`
-	LeaderBrokerId         int32   `json:"leader" yaml:"leader"`
-	ReplicaBrokerIds       []int32 `json:"replicas" yaml:"replicas"`
-	InSyncReplicaBrokerIds []int32 `json:"isr" yaml:"isr"`
-}
-
-type TopicData struct {
-	TopicName         string            `json:"topic_name" yaml:"topic_name"`
-	PartitionCount    int               `json:"partition_count" yaml:"partition_count"`
-	ReplicationFactor int               `json:"replication_factor" yaml:"replication_factor"`
-	Partitions        []PartitionData   `json:"partitions" yaml:"partitions"`
-	Configs           map[string]string `json:"config" yaml:"config"`
-}
 
 func getClusterIdForRestRequests(client *kafkarestv3.APIClient, ctx context.Context) (string, error) {
 	clusters, resp, err := client.ClusterV3Api.ClustersGet(ctx)
@@ -59,7 +42,7 @@ func (c *authenticatedTopicCommand) validateTopic(adminClient *ckafka.AdminClien
 	}
 	if !foundTopic {
 		log.CliLogger.Tracef("validateTopic failed due to topic not being found in the client's topic list")
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.TopicDoesNotExistOrMissingACLsErrorMsg, topic), fmt.Sprintf(errors.TopicDoesNotExistOrMissingACLsSuggestions, "<cluster-Id>", "<cluster-Id>", "<cluster-Id>"))
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.TopicDoesNotExistOrMissingPermissionsErrorMsg, topic), fmt.Sprintf(errors.TopicDoesNotExistOrMissingPermissionsSuggestions, "<cluster-id>", "<cluster-id>", "<cluster-id>"))
 	}
 
 	log.CliLogger.Tracef("validateTopic succeeded")

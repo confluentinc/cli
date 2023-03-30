@@ -4,15 +4,9 @@ Usage:
   confluent connect [command]
 
 Available Commands:
-  create      Create a connector.
-  delete      Delete a connector.
-  describe    Describe a connector.
+  cluster     Manage Connect clusters.
   event       Manage Connect log events configuration.
-  list        List connectors.
-  pause       Pause connectors.
   plugin      Show plugins and their configurations.
-  resume      Resume connectors.
-  update      Update a connector configuration.
 
 Global Flags:
   -h, --help            Show help for this command.

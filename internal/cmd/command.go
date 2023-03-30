@@ -6,14 +6,16 @@ import (
 	"strings"
 
 	shell "github.com/brianstrauch/cobra-shell"
-	"github.com/confluentinc/ccloud-sdk-go-v1"
-	cliv1 "github.com/confluentinc/ccloud-sdk-go-v2/cli/v1"
 	"github.com/spf13/cobra"
+
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+	cliv1 "github.com/confluentinc/ccloud-sdk-go-v2/cli/v1"
 
 	"github.com/confluentinc/cli/internal/cmd/admin"
 	apikey "github.com/confluentinc/cli/internal/cmd/api-key"
 	"github.com/confluentinc/cli/internal/cmd/asyncapi"
 	auditlog "github.com/confluentinc/cli/internal/cmd/audit-log"
+	byok "github.com/confluentinc/cli/internal/cmd/byok"
 	cloudsignup "github.com/confluentinc/cli/internal/cmd/cloud-signup"
 	"github.com/confluentinc/cli/internal/cmd/cluster"
 	"github.com/confluentinc/cli/internal/cmd/completion"
@@ -26,6 +28,7 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/local"
 	"github.com/confluentinc/cli/internal/cmd/login"
 	"github.com/confluentinc/cli/internal/cmd/logout"
+	"github.com/confluentinc/cli/internal/cmd/organization"
 	"github.com/confluentinc/cli/internal/cmd/pipeline"
 	"github.com/confluentinc/cli/internal/cmd/plugin"
 	"github.com/confluentinc/cli/internal/cmd/price"
@@ -45,6 +48,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/help"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	pplugin "github.com/confluentinc/cli/internal/pkg/plugin"
 	secrets "github.com/confluentinc/cli/internal/pkg/secret"
 	"github.com/confluentinc/cli/internal/pkg/usage"
@@ -98,11 +102,12 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 	cmd.AddCommand(apikey.New(prerunner, nil, flagResolver))
 	cmd.AddCommand(asyncapi.New(prerunner))
 	cmd.AddCommand(auditlog.New(prerunner))
+	cmd.AddCommand(byok.New(prerunner))
 	cmd.AddCommand(cluster.New(prerunner, cfg.Version.UserAgent))
-	cmd.AddCommand(cloudsignup.New(prerunner, cfg.Version.UserAgent, ccloudClientFactory, cfg.IsTest))
+	cmd.AddCommand(cloudsignup.New())
 	cmd.AddCommand(completion.New())
 	cmd.AddCommand(context.New(prerunner, flagResolver))
-	cmd.AddCommand(connect.New(prerunner))
+	cmd.AddCommand(connect.New(cfg, prerunner))
 	cmd.AddCommand(environment.New(prerunner))
 	cmd.AddCommand(iam.New(cfg, prerunner))
 	cmd.AddCommand(kafka.New(cfg, prerunner, cfg.Version.ClientID))
@@ -110,6 +115,8 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 	cmd.AddCommand(local.New(prerunner))
 	cmd.AddCommand(login.New(cfg, prerunner, ccloudClientFactory, mdsClientManager, netrcHandler, loginCredentialsManager, loginOrganizationManager, authTokenHandler))
 	cmd.AddCommand(logout.New(cfg, prerunner, netrcHandler))
+	cmd.AddCommand(organization.New(prerunner))
+	cmd.AddCommand(pipeline.New(cfg, prerunner))
 	cmd.AddCommand(plugin.New(cfg, prerunner))
 	cmd.AddCommand(price.New(prerunner))
 	cmd.AddCommand(prompt.New(cfg))
@@ -120,13 +127,10 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 	cmd.AddCommand(update.New(prerunner, cfg.Version, updateClient))
 	cmd.AddCommand(version.New(prerunner, cfg.Version))
 
-	dc := dynamicconfig.New(cfg, nil, nil, nil)
+	dc := dynamicconfig.New(cfg, nil, nil)
 	_ = dc.ParseFlagsIntoConfig(cmd)
 	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.cdx", dc.Context(), v1.CliLaunchDarklyClient, true, false) {
 		cmd.AddCommand(streamshare.New(cfg, prerunner))
-	}
-	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.stream_designer", dc.Context(), v1.CliLaunchDarklyClient, true, false) {
-		cmd.AddCommand(pipeline.New(cfg, prerunner))
 	}
 
 	changeDefaults(cmd, cfg)
@@ -148,7 +152,7 @@ func Execute(cmd *cobra.Command, args []string, cfg *v1.Config) error {
 	}
 
 	err := cmd.Execute()
-	errors.DisplaySuggestionsMessage(err, os.Stderr)
+	output.ErrPrint(errors.DisplaySuggestionsMessage(err))
 	u.Error = cliv1.PtrBool(err != nil)
 
 	if cfg.IsCloudLogin() && u.Command != nil && *(u.Command) != "" {
@@ -210,16 +214,16 @@ func catchErrors(cmd *cobra.Command) {
 	}
 }
 
-func getCloudClient(cfg *v1.Config, ccloudClientFactory pauth.CCloudClientFactory) *ccloud.Client {
+func getCloudClient(cfg *v1.Config, ccloudClientFactory pauth.CCloudClientFactory) *ccloudv1.Client {
 	if cfg.IsCloudLogin() {
-		return ccloudClientFactory.PrivateAnonHTTPClientFactory(pauth.CCloudURL)
+		return ccloudClientFactory.AnonHTTPClientFactory(pauth.CCloudURL)
 	}
 	return nil
 }
 
 func deprecateCommandsAndFlags(cmd *cobra.Command, cfg *v1.Config) {
-	ctx := dynamicconfig.NewDynamicContext(cfg.Context(), nil, nil, nil)
-	deprecatedCmds := featureflags.Manager.JsonVariation(featureflags.DeprecationNotices, ctx, v1.CliLaunchDarklyClient, true, []interface{}{})
+	ctx := dynamicconfig.NewDynamicContext(cfg.Context(), nil, nil)
+	deprecatedCmds := featureflags.Manager.JsonVariation(featureflags.DeprecationNotices, ctx, v1.CliLaunchDarklyClient, true, []any{})
 	cmdToFlagsAndMsg := featureflags.GetAnnouncementsOrDeprecation(deprecatedCmds)
 	for name, flagsAndMsg := range cmdToFlagsAndMsg {
 		if cmd, _, err := cmd.Find(strings.Split(name, " ")); err == nil {

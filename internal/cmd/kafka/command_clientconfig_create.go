@@ -10,21 +10,21 @@ import (
 	"time"
 	"unicode"
 
+	"github.com/spf13/cobra"
+
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
-	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 type createCommand struct {
 	*pcmd.HasAPIKeyCLICommand
-	prerunner pcmd.PreRunner
-	clientId  string
+	clientId string
 }
 
 type clientConfig struct {
@@ -40,7 +40,7 @@ const (
 
 	contextExampleFmt = "confluent kafka client-config create %s"
 	flagExampleFmt    = "confluent kafka client-config create %s --environment env-123 --cluster lkc-123456 --api-key my-key --api-secret my-secret"
-	srFlagExample     = " --sr-apikey my-sr-key --sr-apisecret my-sr-secret"
+	srFlagExample     = " --schema-registry-api-key my-sr-key --schema-registry-api-secret my-sr-secret"
 
 	javaConfig         = "java"
 	javaSRConfig       = "java-sr"
@@ -80,12 +80,13 @@ var (
 	springBoot = &clientConfig{"Spring Boot", "springboot", springbootSrConfig, true}
 
 	clientConfigurations = []*clientConfig{
-		clojure, cpp, csharp, golang, groovy, java, kotlin, ktor, nodeJS, python, ruby, rust, scala, springBoot, restAPI}
+		clojure, cpp, csharp, golang, groovy, java, kotlin, ktor, nodeJS, python, ruby, rust, scala, springBoot, restAPI,
+	}
 
 	re = regexp.MustCompile(fmt.Sprintf("%s|%s|%s", srEndpointProperty, srCredentialsSourceProperty, srUserInfoProperty))
 )
 
-func (c *clientConfigCommand) newCreateCommand() *cobra.Command {
+func (c *clientConfigCommand) newCreateCommand(prerunner pcmd.PreRunner, clientId string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "create",
 		Short:       "Create a Kafka client configuration file.",
@@ -93,9 +94,8 @@ func (c *clientConfigCommand) newCreateCommand() *cobra.Command {
 	}
 
 	cc := &createCommand{
-		HasAPIKeyCLICommand: pcmd.NewHasAPIKeyCLICommand(cmd, c.prerunner),
-		prerunner:           c.prerunner,
-		clientId:            c.clientId,
+		HasAPIKeyCLICommand: pcmd.NewHasAPIKeyCLICommand(cmd, prerunner),
+		clientId:            clientId,
 	}
 
 	for _, language := range clientConfigurations {
@@ -151,8 +151,8 @@ func (c *createCommand) addCommand(clientConfig *clientConfig) {
 
 	// add sr flags
 	if clientConfig.isSrApiAvailable {
-		cmd.Flags().String("sr-apikey", "", "Schema registry API key.")
-		cmd.Flags().String("sr-apisecret", "", "Schema registry API key secret.")
+		cmd.Flags().String("schema-registry-api-key", "", "Schema registry API key.")
+		cmd.Flags().String("schema-registry-api-secret", "", "Schema registry API key secret.")
 	}
 
 	c.AddCommand(cmd)
@@ -181,7 +181,7 @@ func (c *createCommand) create(configId string, srApiAvailable bool) func(cmd *c
 		}
 
 		// print configuration file to stdout
-		utils.Println(cmd, string(configFile))
+		output.Println(configFile)
 		return nil
 	}
 }
@@ -193,10 +193,9 @@ func (c *createCommand) setKafkaCluster(cmd *cobra.Command, configFile string) (
 		return "", err
 	}
 
-	// only validate that the key pair matches with the cluster if it's passed via the flag.
-	// this is because currently "api-key store" does not check if the secret is valid. therefore, if users
+	// Only validate that the key pair matches with the cluster if it's passed via the flag.
+	// This is because currently "api-key store" does not check if the secret is valid. Therefore, if users
 	// choose to use the key pair stored in the context, we should use it without doing a validation.
-	// TODO: always validate key pair after feature enhancement: https://confluentinc.atlassian.net/browse/CLI-1575
 	flagKey, flagSecret, err := c.Config.Context().KeyAndSecretFlags(cmd)
 	if err != nil {
 		return "", err
@@ -225,7 +224,7 @@ func (c *createCommand) setSchemaRegistryCluster(cmd *cobra.Command, configFile 
 		}
 		// if SR not enabled, comment out SR in the configuration file and warn users
 		if srNotEnabledErr, ok := err.(*errors.SRNotEnabledError); ok {
-			return commentAndWarnAboutSchemaRegistry(srNotEnabledErr.ErrorMsg, srNotEnabledErr.SuggestionsMsg, configFile)
+			return commentAndWarnAboutSchemaRegistry(srNotEnabledErr.ErrorMsg, srNotEnabledErr.SuggestionsMsg, configFile), nil
 		}
 		return "", err
 	}
@@ -235,27 +234,18 @@ func (c *createCommand) setSchemaRegistryCluster(cmd *cobra.Command, configFile 
 		srEndpointTemplate: srCluster.SchemaRegistryEndpoint,
 	})
 
-	// if empty api key or secret, comment out SR in the configuration file (but still replace SR_ENDPOINT) and warn users
+	// if empty API key or secret, comment out SR in the configuration file (but still replace SR_ENDPOINT) and warn users
 	if len(srCluster.SrCredentials.Key) == 0 || len(srCluster.SrCredentials.Secret) == 0 {
 		// comment out SR and warn users
 		if len(srCluster.SrCredentials.Key) == 0 && len(srCluster.SrCredentials.Secret) == 0 {
 			// both key and secret empty
-			configFile, err = commentAndWarnAboutSchemaRegistry(errors.SRCredsNotSetReason, errors.SRCredsNotSetSuggestions, configFile)
-			if err != nil {
-				return "", err
-			}
+			configFile = commentAndWarnAboutSchemaRegistry(errors.SRCredsNotSetReason, errors.SRCredsNotSetSuggestions, configFile)
 		} else if len(srCluster.SrCredentials.Key) == 0 {
 			// only key empty
-			configFile, err = commentAndWarnAboutSchemaRegistry(errors.SRKeyNotSetReason, errors.SRKeyNotSetSuggestions, configFile)
-			if err != nil {
-				return "", err
-			}
+			configFile = commentAndWarnAboutSchemaRegistry(errors.SRKeyNotSetReason, errors.SRKeyNotSetSuggestions, configFile)
 		} else {
 			// only secret empty
-			configFile, err = commentAndWarnAboutSchemaRegistry(fmt.Sprintf(errors.SRSecretNotSetReason, srCluster.SrCredentials.Key), errors.SRSecretNotSetSuggestions, configFile)
-			if err != nil {
-				return "", err
-			}
+			configFile = commentAndWarnAboutSchemaRegistry(fmt.Sprintf(errors.SRSecretNotSetReason, srCluster.SrCredentials.Key), errors.SRSecretNotSetSuggestions, configFile)
 		}
 
 		return configFile, nil
@@ -279,7 +269,7 @@ func (c *createCommand) setSchemaRegistryCluster(cmd *cobra.Command, configFile 
 	return configFile, nil
 }
 
-// TODO: once dynamic_context::SchemaRegistryCluster consolidates the SR api key stored in the context and
+// TODO: once dynamic_context::SchemaRegistryCluster consolidates the SR API key stored in the context and
 // the key passed via the flags, please remove this function entirely because there is no more need to
 // manually fetch the values of the flags. (see setKafkaCluster as example)
 func (c *createCommand) getSchemaRegistryCluster(cmd *cobra.Command) (*v1.SchemaRegistryCluster, error) {
@@ -290,19 +280,19 @@ func (c *createCommand) getSchemaRegistryCluster(cmd *cobra.Command) (*v1.Schema
 	}
 
 	// get SR key pair from flag
-	apiKey, err := cmd.Flags().GetString("sr-apikey")
+	schemaRegistryApiKey, err := cmd.Flags().GetString("schema-registry-api-key")
 	if err != nil {
 		return nil, err
 	}
-	apiSecret, err := cmd.Flags().GetString("sr-apisecret")
+	schemaRegistryApiSecret, err := cmd.Flags().GetString("schema-registry-api-secret")
 	if err != nil {
 		return nil, err
 	}
 
 	// set SR key pair
 	srCluster.SrCredentials = &v1.APIKeyPair{
-		Key:    apiKey,
-		Secret: apiSecret,
+		Key:    schemaRegistryApiKey,
+		Secret: schemaRegistryApiSecret,
 	}
 	return srCluster, nil
 }
@@ -379,22 +369,14 @@ func replaceTemplates(configFile string, m map[string]string) string {
 	return configFile
 }
 
-func commentAndWarnAboutSchemaRegistry(reason string, suggestions string, configFile string) (string, error) {
-	warning := errors.NewWarningWithSuggestions(
-		errors.SRInConfigFileWarning,
-		reason,
-		suggestions+"\n"+errors.SRInConfigFileSuggestions)
-	warning.DisplayWarningWithSuggestions()
+func commentAndWarnAboutSchemaRegistry(reason, suggestions, configFile string) string {
+	warning := errors.NewWarningWithSuggestions(errors.SRInConfigFileWarning, reason, suggestions+"\n"+errors.SRInConfigFileSuggestions)
+	output.ErrPrint(warning.DisplayWarningWithSuggestions())
 
-	configFile, err := commentSchemaRegistryLines(configFile)
-	if err != nil {
-		return "", err
-	}
-
-	return configFile, nil
+	return commentSchemaRegistryLines(configFile)
 }
 
-func commentSchemaRegistryLines(configFile string) (string, error) {
+func commentSchemaRegistryLines(configFile string) string {
 	/* Examples:
 	1. Case where SR properties start at the beginning of the line
 	# Required connection configs for Confluent Cloud Schema Registry
@@ -440,5 +422,5 @@ func commentSchemaRegistryLines(configFile string) (string, error) {
 		}
 	}
 
-	return strings.Join(lines, "\n"), nil
+	return strings.Join(lines, "\n")
 }

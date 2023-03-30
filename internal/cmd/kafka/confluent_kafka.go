@@ -13,14 +13,16 @@ import (
 	"time"
 
 	"github.com/antihax/optional"
+	"github.com/spf13/cobra"
+
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
-	"github.com/spf13/cobra"
 
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	configv1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/serdes"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
@@ -46,6 +48,7 @@ type ConsumerProperties struct {
 	Delimiter  string
 	FullHeader bool
 	PrintKey   bool
+	Timestamp  bool
 	SchemaPath string
 }
 
@@ -64,11 +67,11 @@ func (c *authenticatedTopicCommand) refreshOAuthBearerToken(cmd *cobra.Command, 
 	if err != nil {
 		return err
 	}
-	mechanism, err := cmd.Flags().GetString("sasl-mechanism")
+	saslMechanism, err := cmd.Flags().GetString("sasl-mechanism")
 	if err != nil {
 		return err
 	}
-	if protocol == "SASL_SSL" && mechanism == "OAUTHBEARER" {
+	if protocol == "SASL_SSL" && saslMechanism == "OAUTHBEARER" {
 		oart := ckafka.OAuthBearerTokenRefresh{Config: oauthConfig}
 		if c.State == nil { // require log-in to use oauthbearer token
 			return errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestions)
@@ -155,29 +158,26 @@ func newOnPremConsumer(cmd *cobra.Command, clientID string, configPath string, c
 }
 
 // example: https://github.com/confluentinc/confluent-kafka-go/blob/e01dd295220b5bf55f3fbfabdf8cc6d3f0ae185f/examples/cooperative_consumer_example/cooperative_consumer_example.go#L121
-func getRebalanceCallback(cmd *cobra.Command, offset ckafka.Offset, partitionFilter partitionFilter) func(*ckafka.Consumer, ckafka.Event) error {
+func getRebalanceCallback(offset ckafka.Offset, partitionFilter partitionFilter) func(*ckafka.Consumer, ckafka.Event) error {
 	return func(consumer *ckafka.Consumer, event ckafka.Event) error {
 		switch ev := event.(type) { // ev is of type ckafka.Event
 		case kafka.AssignedPartitions:
-			partitions := make([]ckafka.TopicPartition,
-				len(ev.Partitions))
+			partitions := make([]ckafka.TopicPartition, len(ev.Partitions))
 			for i, partition := range ev.Partitions {
 				partition.Offset = offset
 				partitions[i] = partition
 			}
 			partitions = getPartitionsByIndex(partitions, partitionFilter)
 
-			err := consumer.IncrementalAssign(partitions)
-			if err != nil {
+			if err := consumer.IncrementalAssign(partitions); err != nil {
 				return err
 			}
 		case kafka.RevokedPartitions:
 			if consumer.AssignmentLost() {
-				utils.ErrPrintln(cmd, "%% Current assignment lost.")
+				output.ErrPrintln("%% Current assignment lost.")
 			}
 			parts := getPartitionsByIndex(ev.Partitions, partitionFilter)
-			err := consumer.IncrementalUnassign(parts)
-			if err != nil {
+			if err := consumer.IncrementalUnassign(parts); err != nil {
 				return err
 			}
 		}
@@ -223,13 +223,17 @@ func consumeMessage(e *ckafka.Message, h *GroupHandler) error {
 		return err
 	}
 
+	if h.Properties.Timestamp {
+		jsonMessage = fmt.Sprintf("Timestamp: %d\t%s", e.Timestamp.UnixMilli(), jsonMessage)
+	}
+
 	_, err = fmt.Fprintln(h.Out, jsonMessage)
 	if err != nil {
 		return err
 	}
 
 	if e.Headers != nil {
-		var headers interface{} = e.Headers
+		var headers any = e.Headers
 		if h.Properties.FullHeader {
 			headers = getFullHeaders(e.Headers)
 		}
@@ -238,17 +242,18 @@ func consumeMessage(e *ckafka.Message, h *GroupHandler) error {
 			return err
 		}
 	}
+
 	return nil
 }
 
-func runConsumer(cmd *cobra.Command, consumer *ckafka.Consumer, groupHandler *GroupHandler) error {
+func runConsumer(consumer *ckafka.Consumer, groupHandler *GroupHandler) error {
 	run := true
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, os.Interrupt)
 	for run {
 		select {
 		case <-signals: // Trap SIGINT to trigger a shutdown.
-			utils.ErrPrintln(cmd, errors.StoppingConsumerMsg)
+			output.ErrPrintln(errors.StoppingConsumerMsg)
 			consumer.Close()
 			run = false
 		default:
@@ -281,7 +286,7 @@ func (h *GroupHandler) RequestSchema(value []byte) (string, map[string]string, e
 	// Retrieve schema from cluster only if schema is specified.
 	schemaID := int32(binary.BigEndian.Uint32(value[1:messageOffset])) // schema id is stored as a part of message meta info
 
-	// Create temporary file to store schema retrieved (also for cache). Retry if get error retriving schema or writing temp schema file
+	// Create temporary file to store schema retrieved (also for cache). Retry if get error retrieving schema or writing temp schema file
 	tempStorePath := filepath.Join(h.Properties.SchemaPath, fmt.Sprintf("%s-%d.txt", h.Subject, schemaID))
 	tempRefStorePath := filepath.Join(h.Properties.SchemaPath, fmt.Sprintf("%s-%d.ref", h.Subject, schemaID))
 	var references []srsdk.SchemaReference
@@ -342,6 +347,6 @@ func getHeaderString(header ckafka.Header) string {
 	} else if len(header.Value) == 0 {
 		return fmt.Sprintf("%s=<empty>", header.Key)
 	} else {
-		return fmt.Sprintf("%s=%s", header.Key, string(header.Value))
+		return fmt.Sprintf(`%s="%s"`, header.Key, string(header.Value))
 	}
 }

@@ -8,8 +8,8 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *serviceAccountCommand) newUpdateCommand() *cobra.Command {
@@ -28,7 +28,8 @@ func (c *serviceAccountCommand) newUpdateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("description", "", "Description of the service account.")
-	_ = cmd.MarkFlagRequired("description")
+
+	cobra.CheckErr(cmd.MarkFlagRequired("description"))
 
 	return cmd
 }
@@ -48,14 +49,11 @@ func (c *serviceAccountCommand) update(cmd *cobra.Command, args []string) error 
 	}
 	serviceAccountId := args[0]
 
-	update := iamv2.IamV2ServiceAccountUpdate{
-		Description: &description,
-	}
-	_, httpResp, err := c.V2Client.UpdateIamServiceAccount(serviceAccountId, update)
-	if err != nil {
-		return errors.CatchServiceAccountNotFoundError(err, httpResp, serviceAccountId)
+	update := iamv2.IamV2ServiceAccountUpdate{Description: &description}
+	if _, r, err := c.V2Client.UpdateIamServiceAccount(serviceAccountId, update); err != nil {
+		return errors.CatchServiceAccountNotFoundError(err, r, serviceAccountId)
 	}
 
-	utils.ErrPrintf(cmd, errors.UpdateSuccessMsg, "description", "service account", serviceAccountId, description)
+	output.ErrPrintf(errors.UpdateSuccessMsg, "description", "service account", serviceAccountId, description)
 	return nil
 }

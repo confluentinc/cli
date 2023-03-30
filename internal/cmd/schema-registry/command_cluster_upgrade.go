@@ -9,16 +9,16 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
-func (c *clusterCommand) newUpgradeCommand() *cobra.Command {
+func (c *command) newClusterUpgradeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "upgrade",
 		Short:       "Upgrade the Schema Registry package for this environment.",
 		Args:        cobra.NoArgs,
-		RunE:        c.upgrade,
+		RunE:        c.clusterUpgrade,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -33,12 +33,12 @@ func (c *clusterCommand) newUpgradeCommand() *cobra.Command {
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired("package")
+	cobra.CheckErr(cmd.MarkFlagRequired("package"))
 
 	return cmd
 }
 
-func (c *clusterCommand) upgrade(cmd *cobra.Command, _ []string) error {
+func (c *command) clusterUpgrade(cmd *cobra.Command, _ []string) error {
 	packageDisplayName, err := cmd.Flags().GetString("package")
 	if err != nil {
 		return err
@@ -49,23 +49,27 @@ func (c *clusterCommand) upgrade(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	environmentId, err := c.EnvironmentId()
+	if err != nil {
+		return err
+	}
+
 	ctx := context.Background()
-	cluster, err := c.Context.FetchSchemaRegistryByAccountId(ctx, c.EnvironmentId())
+	cluster, err := c.Context.FetchSchemaRegistryByEnvironmentId(ctx, environmentId)
 	if err != nil {
 		return err
 	}
 
 	if packageInternalName == cluster.Package {
-		utils.ErrPrintf(cmd, errors.SRInvalidPackageUpgrade, c.EnvironmentId(), packageDisplayName)
+		output.ErrPrintf(errors.SRInvalidPackageUpgrade, environmentId, packageDisplayName)
 		return nil
 	}
-
 	cluster.Package = packageInternalName
-	_, err = c.PrivateClient.SchemaRegistry.UpdateSchemaRegistryCluster(ctx, cluster)
-	if err != nil {
+
+	if _, err := c.Client.SchemaRegistry.UpdateSchemaRegistryCluster(ctx, cluster); err != nil {
 		return err
 	}
 
-	utils.Printf(cmd, errors.SchemaRegistryClusterUpgradedMsg, c.EnvironmentId(), packageDisplayName)
+	output.Printf(errors.SchemaRegistryClusterUpgradedMsg, environmentId, packageDisplayName)
 	return nil
 }

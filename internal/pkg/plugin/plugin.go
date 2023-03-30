@@ -13,9 +13,11 @@ import (
 
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/log"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/types"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
+
+var pluginRegex = regexp.MustCompile(`^confluent(-[a-z][0-9_a-z]*)+$`)
 
 type pluginInfo struct {
 	args     []string
@@ -25,19 +27,23 @@ type pluginInfo struct {
 
 // SearchPath goes through the files in the user's $PATH and checks if they are plugins
 func SearchPath(cfg *v1.Config) map[string][]string {
-	log.CliLogger.Debugf("Recursively searching $PATH for plugins. Plugins can be disabled in %s.\n", cfg.GetFilename())
+	log.CliLogger.Debugf("Searching `$PATH` for plugins. Plugins can be disabled in %s.\n", cfg.GetFilename())
 
-	delimiter := ":"
-	if runtime.GOOS == "windows" {
-		delimiter = ";"
+	home, err := os.UserHomeDir()
+	if err != nil {
+		home = ""
 	}
 
 	plugins := make(map[string][]string)
-	for _, dir := range strings.Split(os.Getenv("PATH"), delimiter) {
+	for _, dir := range filepath.SplitList(os.Getenv("PATH")) {
 		entries, err := os.ReadDir(dir)
 		if err != nil {
-			log.CliLogger.Warnf("unable to read directory from $PATH: %s", dir)
+			log.CliLogger.Warnf("unable to read directory from `$PATH`: %s", dir)
 			continue
+		}
+
+		if home != "" && strings.HasPrefix(dir, home) {
+			dir = filepath.Join("~", strings.TrimPrefix(dir, home))
 		}
 
 		for _, entry := range entries {
@@ -59,7 +65,7 @@ func pluginFromEntry(entry os.DirEntry) string {
 	name := entry.Name()
 	name = strings.TrimSuffix(name, filepath.Ext(name))
 
-	if !regexp.MustCompile(`^confluent(-[a-z][0-9_a-z]*)+$`).MatchString(name) {
+	if !pluginRegex.MatchString(name) {
 		return ""
 	}
 
@@ -68,18 +74,16 @@ func pluginFromEntry(entry os.DirEntry) string {
 
 func isExecutable(entry fs.DirEntry) bool {
 	if runtime.GOOS == "windows" {
-		return isExecutableWindows(entry.Name())
+		extension := strings.ToUpper(filepath.Ext(entry.Name()))
+		return types.Contains(filepath.SplitList(os.Getenv("PATHEXT")), extension)
 	}
+
 	fileInfo, err := entry.Info()
 	if err != nil {
 		return false
 	}
-	return !fileInfo.Mode().IsDir() && fileInfo.Mode()&0111 != 0
-}
 
-func isExecutableWindows(name string) bool {
-	ext := strings.ToLower(filepath.Ext(name))
-	return utils.Contains([]string{".bat", ".cmd", ".com", ".exe", ".ps1"}, ext)
+	return !fileInfo.Mode().IsDir() && fileInfo.Mode()&0111 != 0
 }
 
 // FindPlugin determines if the arguments passed in are meant for a plugin

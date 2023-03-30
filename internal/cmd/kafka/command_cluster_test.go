@@ -6,25 +6,23 @@ import (
 	"testing"
 	"time"
 
-	corev1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/confluentinc/ccloud-sdk-go-v1"
-	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
-	metricsv2 "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2"
-	metricsmock "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2/mock"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	cmkmock "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2/mock"
+	metricsv2 "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2"
+	metricsmock "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2/mock"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	cliMock "github.com/confluentinc/cli/mock"
+	climock "github.com/confluentinc/cli/mock"
 )
 
 const (
@@ -37,12 +35,14 @@ const (
 
 var queryTime = time.Date(2019, 12, 19, 16, 1, 0, 0, time.UTC)
 
-var shouldError bool
-var shouldPrompt bool
+var (
+	shouldError  bool
+	shouldPrompt bool
+)
 
 var cmkByokCluster = cmkv2.CmkV2Cluster{
 	Spec: &cmkv2.CmkV2ClusterSpec{
-		Environment: &cmkv2.ObjectReference{
+		Environment: &cmkv2.EnvScopedObjectReference{
 			Id: environmentId,
 		},
 		DisplayName:  cmkv2.PtrString("gcp-byok-test"),
@@ -60,7 +60,7 @@ var cmkByokCluster = cmkv2.CmkV2Cluster{
 
 var cmkExpandCluster = cmkv2.CmkV2Cluster{
 	Spec: &cmkv2.CmkV2ClusterSpec{
-		Environment: &cmkv2.ObjectReference{
+		Environment: &cmkv2.EnvScopedObjectReference{
 			Id: environmentId,
 		},
 		DisplayName:  cmkv2.PtrString("gcp-shrink-test"),
@@ -79,56 +79,43 @@ var cmkExpandCluster = cmkv2.CmkV2Cluster{
 type KafkaClusterTestSuite struct {
 	suite.Suite
 	conf            *v1.Config
-	kafkaMock       *ccsdkmock.Kafka
-	envMetadataMock *ccsdkmock.EnvironmentMetadata
+	envMetadataMock *ccloudv1mock.EnvironmentMetadata
 	metricsApi      *metricsmock.Version2Api
-	usageLimits     *ccsdkmock.UsageLimits
 	cmkClusterApi   *cmkmock.ClustersCmkV2Api
 }
 
 func (suite *KafkaClusterTestSuite) SetupTest() {
 	suite.conf = v1.AuthenticatedCloudConfigMock()
-	suite.kafkaMock = &ccsdkmock.Kafka{
-		DescribeFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) (*schedv1.KafkaCluster, error) {
-			return &schedv1.KafkaCluster{
-				ApiEndpoint: "api-endpoint",
-			}, nil
-		},
-	}
 	suite.cmkClusterApi = &cmkmock.ClustersCmkV2Api{
-		CreateCmkV2ClusterFunc: func(ctx context.Context) cmkv2.ApiCreateCmkV2ClusterRequest {
+		CreateCmkV2ClusterFunc: func(_ context.Context) cmkv2.ApiCreateCmkV2ClusterRequest {
 			return cmkv2.ApiCreateCmkV2ClusterRequest{}
 		},
-		CreateCmkV2ClusterExecuteFunc: func(req cmkv2.ApiCreateCmkV2ClusterRequest) (cmkv2.CmkV2Cluster, *http.Response, error) {
+		CreateCmkV2ClusterExecuteFunc: func(_ cmkv2.ApiCreateCmkV2ClusterRequest) (cmkv2.CmkV2Cluster, *http.Response, error) {
 			return cmkByokCluster, nil, nil
 		},
-		GetCmkV2ClusterFunc: func(ctx context.Context, _ string) cmkv2.ApiGetCmkV2ClusterRequest {
+		GetCmkV2ClusterFunc: func(_ context.Context, _ string) cmkv2.ApiGetCmkV2ClusterRequest {
 			return cmkv2.ApiGetCmkV2ClusterRequest{}
 		},
-		GetCmkV2ClusterExecuteFunc: func(req cmkv2.ApiGetCmkV2ClusterRequest) (cmkv2.CmkV2Cluster, *http.Response, error) {
+		GetCmkV2ClusterExecuteFunc: func(_ cmkv2.ApiGetCmkV2ClusterRequest) (cmkv2.CmkV2Cluster, *http.Response, error) {
 			return cmkByokCluster, nil, nil
 		},
-		DeleteCmkV2ClusterFunc: func(ctx context.Context, _ string) cmkv2.ApiDeleteCmkV2ClusterRequest {
+		DeleteCmkV2ClusterFunc: func(_ context.Context, _ string) cmkv2.ApiDeleteCmkV2ClusterRequest {
 			return cmkv2.ApiDeleteCmkV2ClusterRequest{}
 		},
-		DeleteCmkV2ClusterExecuteFunc: func(req cmkv2.ApiDeleteCmkV2ClusterRequest) (*http.Response, error) {
+		DeleteCmkV2ClusterExecuteFunc: func(_ cmkv2.ApiDeleteCmkV2ClusterRequest) (*http.Response, error) {
 			return nil, nil
 		},
 	}
-	suite.envMetadataMock = &ccsdkmock.EnvironmentMetadata{
-		GetFunc: func(arg0 context.Context) (metadata []*schedv1.CloudMetadata, e error) {
-			cloudMeta := &schedv1.CloudMetadata{
+	suite.envMetadataMock = &ccloudv1mock.EnvironmentMetadata{
+		GetFunc: func(_ context.Context) ([]*ccloudv1.CloudMetadata, error) {
+			cloudMeta := &ccloudv1.CloudMetadata{
 				Id: cloudId,
-				Regions: []*schedv1.Region{
-					{
-						Id:            regionId,
-						IsSchedulable: true,
-					},
-				},
+				Regions: []*ccloudv1.Region{{
+					Id:            regionId,
+					IsSchedulable: true,
+				}},
 			}
-			return []*schedv1.CloudMetadata{
-				cloudMeta,
-			}, nil
+			return []*ccloudv1.CloudMetadata{cloudMeta}, nil
 		},
 	}
 	suite.metricsApi = &metricsmock.Version2Api{
@@ -153,50 +140,18 @@ func (suite *KafkaClusterTestSuite) SetupTest() {
 			return resp, nil, nil
 		},
 	}
-	suite.usageLimits = &ccsdkmock.UsageLimits{
-		GetUsageLimitsFunc: func(ctx context.Context, provider ...string) (*schedv1.GetUsageLimitsReply, error) {
-			return &schedv1.GetUsageLimitsReply{UsageLimits: &corev1.UsageLimits{
-				TierLimits: map[string]*corev1.TierFixedLimits{
-					"BASIC": {
-						PartitionLimits: &corev1.KafkaPartitionLimits{},
-						ClusterLimits:   &corev1.KafkaClusterLimits{},
-					},
-				},
-				CkuLimits: map[uint32]*corev1.CKULimits{
-					uint32(2): {
-						NumBrokers: &corev1.IntegerUsageLimit{Limit: &corev1.IntegerUsageLimit_Value{Value: 5}},
-						Storage: &corev1.IntegerUsageLimit{
-							Limit: &corev1.IntegerUsageLimit_Value{Value: 500},
-							Unit:  corev1.LimitUnit_GB,
-						},
-						NumPartitions: &corev1.IntegerUsageLimit{Limit: &corev1.IntegerUsageLimit_Value{Value: 2000}},
-					},
-					uint32(3): {
-						NumBrokers: &corev1.IntegerUsageLimit{Limit: &corev1.IntegerUsageLimit_Value{Value: 5}},
-						Storage: &corev1.IntegerUsageLimit{
-							Limit: &corev1.IntegerUsageLimit_Value{Value: 1000},
-							Unit:  corev1.LimitUnit_GB,
-						},
-						NumPartitions: &corev1.IntegerUsageLimit{Limit: &corev1.IntegerUsageLimit_Value{Value: 3000}},
-					},
-				},
-			}}, nil
-		},
-	}
 }
 
 func (suite *KafkaClusterTestSuite) newCmd(conf *v1.Config) *cobra.Command {
-	client := &ccloud.Client{
-		Kafka:               suite.kafkaMock,
+	client := &ccloudv1.Client{
 		EnvironmentMetadata: suite.envMetadataMock,
-		UsageLimits:         suite.usageLimits,
 	}
 	v2Client := &ccloudv2.Client{
 		AuthToken:     "auth-token",
 		CmkClient:     &cmkv2.APIClient{ClustersCmkV2Api: suite.cmkClusterApi},
 		MetricsClient: &metricsv2.APIClient{Version2Api: suite.metricsApi},
 	}
-	prerunner := cliMock.NewPreRunnerMock(client, nil, v2Client, nil, nil, conf)
+	prerunner := climock.NewPreRunnerMock(client, v2Client, nil, nil, conf)
 	return newClusterCommand(conf, prerunner)
 }
 
@@ -221,27 +176,6 @@ func (suite *KafkaClusterTestSuite) TestClusterShrinkShouldPrompt() {
 	req.True(suite.metricsApi.V2MetricsDatasetQueryPostExecuteCalled())
 }
 
-func (suite *KafkaClusterTestSuite) TestClusterShrinkValidationError() {
-	req := require.New(suite.T())
-	suite.cmkClusterApi = &cmkmock.ClustersCmkV2Api{
-		GetCmkV2ClusterFunc: func(ctx context.Context, _ string) cmkv2.ApiGetCmkV2ClusterRequest {
-			return cmkv2.ApiGetCmkV2ClusterRequest{}
-		},
-		GetCmkV2ClusterExecuteFunc: func(req cmkv2.ApiGetCmkV2ClusterRequest) (cmkv2.CmkV2Cluster, *http.Response, error) {
-			return cmkExpandCluster, nil, nil
-		},
-	}
-	// Set variable for Metrics API mock
-	shouldError = true
-	shouldPrompt = false
-	cmd := suite.newCmd(v1.AuthenticatedCloudConfigMock())
-	cmd.SetArgs([]string{"update", clusterName, "--cku", "2"})
-	err := cmd.Execute()
-	req.True(suite.metricsApi.V2MetricsDatasetQueryPostCalled())
-	req.True(suite.metricsApi.V2MetricsDatasetQueryPostExecuteCalled())
-	req.Contains(err.Error(), "cluster shrink validation error")
-}
-
 func (suite *KafkaClusterTestSuite) TestCreateKafkaCluster() {
 	cmd := suite.newCmd(v1.AuthenticatedCloudConfigMock())
 	cmd.SetArgs([]string{"create", clusterName, "--cloud", cloudId, "--region", regionId})
@@ -254,7 +188,7 @@ func (suite *KafkaClusterTestSuite) TestCreateKafkaCluster() {
 
 func (suite *KafkaClusterTestSuite) TestDeleteKafkaCluster() {
 	cmd := suite.newCmd(v1.AuthenticatedCloudConfigMock())
-	cmd.SetArgs([]string{"delete", clusterId})
+	cmd.SetArgs([]string{"delete", clusterId, "--force"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -267,7 +201,7 @@ func (suite *KafkaClusterTestSuite) TestGetLkcForDescribe() {
 	cfg := v1.AuthenticatedCloudConfigMock()
 	prerunner := &pcmd.PreRun{Config: cfg}
 	c := &clusterCommand{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
-	c.Config = dynamicconfig.New(cfg, nil, nil, nil)
+	c.Config = dynamicconfig.New(cfg, nil, nil)
 	lkc, err := c.getLkcForDescribe([]string{"lkc-123"})
 	req.Equal("lkc-123", lkc)
 	req.NoError(err)

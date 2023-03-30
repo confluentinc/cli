@@ -10,14 +10,15 @@ import (
 	"time"
 
 	"github.com/antihax/optional"
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
-	"github.com/confluentinc/mds-sdk-go/mdsv1/mock"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 
+	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
+	"github.com/confluentinc/mds-sdk-go-public/mdsv1/mock"
+
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	cliMock "github.com/confluentinc/cli/mock"
+	climock "github.com/confluentinc/cli/mock"
 )
 
 var (
@@ -98,8 +99,8 @@ const (
 
 type MockCall struct {
 	Func   ApiFunc
-	Input  interface{}
-	Result interface{}
+	Input  any
+	Result any
 }
 
 func (suite *AuditConfigTestSuite) SetupSuite() {
@@ -109,7 +110,7 @@ func (suite *AuditConfigTestSuite) SetupSuite() {
 func (suite *AuditConfigTestSuite) TearDownSuite() {
 }
 
-func StripTimestamp(obj interface{}) interface{} {
+func StripTimestamp(obj any) any {
 	spec, castOk := obj.(mds.AuditLogConfigSpec)
 	if castOk {
 		return mds.AuditLogConfigSpec{
@@ -126,7 +127,7 @@ func StripTimestamp(obj interface{}) interface{} {
 	}
 }
 
-func (suite *AuditConfigTestSuite) mockCmdReceiver(expect chan MockCall, expectedFunc ApiFunc, expectedInput interface{}) (interface{}, error) {
+func (suite *AuditConfigTestSuite) mockCmdReceiver(expect chan MockCall, expectedFunc ApiFunc, expectedInput any) (any, error) {
 	if !assert.Greater(suite.T(), len(expect), 0) {
 		return nil, fmt.Errorf("unexpected call to %#v", expectedFunc)
 	}
@@ -197,7 +198,7 @@ func (suite *AuditConfigTestSuite) newMockCmd(expect chan MockCall) *cobra.Comma
 	}
 	mdsClient := mds.NewAPIClient(mds.NewConfiguration())
 	mdsClient.AuditLogConfigurationApi = suite.mockApi
-	return New(cliMock.NewPreRunnerMock(nil, nil, nil, mdsClient, nil, suite.conf))
+	return New(climock.NewPreRunnerMock(nil, nil, mdsClient, nil, suite.conf))
 }
 
 func TestAuditConfigTestSuite(t *testing.T) {
@@ -260,7 +261,8 @@ func (suite *AuditConfigTestSuite) TestAuditConfigRouteList() {
 	expect <- MockCall{
 		Func: ListRoutes,
 		Input: &mds.ListRoutesOpts{
-			Q: optional.NewString("crn://mds1.example.com/kafka=abcde_FGHIJKL-01234567/connect=qa-test")},
+			Q: optional.NewString("crn://mds1.example.com/kafka=abcde_FGHIJKL-01234567/connect=qa-test"),
+		},
 		Result: mds.AuditLogConfigListRoutesResponse{
 			DefaultTopics: mds.AuditLogConfigDefaultTopics{
 				Allowed: "confluent-audit-log-events",
@@ -291,7 +293,8 @@ func (suite *AuditConfigTestSuite) TestAuditConfigRouteLookup() {
 	expect <- MockCall{
 		Func: ResolveResourceRoute,
 		Input: &mds.ResolveResourceRouteOpts{
-			Crn: optional.NewString("crn://mds1.example.com/kafka=abcde_FGHIJKL-01234567/topic=qa-test")},
+			Crn: optional.NewString("crn://mds1.example.com/kafka=abcde_FGHIJKL-01234567/topic=qa-test"),
+		},
 		Result: mds.AuditLogConfigResolveResourceRouteResponse{
 			Route: "default",
 			Categories: mds.AuditLogConfigRouteCategories{
@@ -308,10 +311,9 @@ func (suite *AuditConfigTestSuite) TestAuditConfigRouteLookup() {
 	err := cmd.Execute()
 	assert.Nil(suite.T(), err)
 	assert.Equal(suite.T(), 0, len(expect))
-
 }
 
-func writeToTempFile(spec mds.AuditLogConfigSpec) (f *os.File, err error) {
+func writeToTempFile(spec mds.AuditLogConfigSpec) (*os.File, error) {
 	fileBytes, err := json.Marshal(spec)
 	if err != nil {
 		return nil, err
@@ -320,11 +322,10 @@ func writeToTempFile(spec mds.AuditLogConfigSpec) (f *os.File, err error) {
 	if err != nil {
 		return file, err
 	}
-	_, err = file.Write(fileBytes)
-	if err != nil {
+	if _, err := file.Write(fileBytes); err != nil {
 		return file, err
 	}
-	if err = file.Sync(); err != nil {
+	if err := file.Sync(); err != nil {
 		return file, err
 	}
 	return file, nil

@@ -5,12 +5,15 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/confluentinc/go-printer"
-	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
+	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/featureflags"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -41,50 +44,50 @@ func (c *roleCommand) describe(cmd *cobra.Command, args []string) error {
 }
 
 func (c *roleCommand) ccloudDescribe(cmd *cobra.Command, role string) error {
-	opts := &mdsv2alpha1.RoleDetailOpts{Namespace: dataplaneNamespace}
-
-	// Currently we don't allow multiple namespace in opts so as a workaround we first check with dataplane
-	// namespace and if we get an error try without any namespace.
-	details, r, err := c.MDSv2Client.RBACRoleDefinitionsApi.RoleDetail(c.createContext(), role, opts)
-	if err != nil || r.StatusCode == http.StatusNoContent {
-		details, r, err = c.MDSv2Client.RBACRoleDefinitionsApi.RoleDetail(c.createContext(), role, nil)
-		if err != nil {
-			if r.StatusCode == http.StatusNotFound {
-				publicRolenames, _, err := c.MDSv2Client.RBACRoleDefinitionsApi.Rolenames(c.createContext(), nil)
-				if err != nil {
-					return err
-				}
-
-				opts := &mdsv2alpha1.RolenamesOpts{Namespace: dataplaneNamespace}
-				dataplaneRolenames, _, _ := c.MDSv2Client.RBACRoleDefinitionsApi.Rolenames(c.createContext(), opts)
-				rolenames := append(publicRolenames, dataplaneRolenames...)
-
-				suggestionsMsg := fmt.Sprintf(errors.UnknownRoleSuggestions, strings.Join(rolenames, ", "))
-				return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.UnknownRoleErrorMsg, role), suggestionsMsg)
-			}
-
-			return err
-		}
+	// check for role in all namespaces
+	namespacesList := []string{
+		dataplaneNamespace.Value(),
+		dataGovernanceNamespace.Value(),
+		ksqlNamespace.Value(),
+		publicNamespace.Value(),
+		streamCatalogNamespace.Value(),
 	}
 
-	format, err := cmd.Flags().GetString(output.FlagName)
+	// check if IdentityAdmin is enabled
+	ldClient := v1.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
+	if featureflags.Manager.BoolVariation("auth.rbac.identity_admin.enable", c.Context, ldClient, true, false) {
+		namespacesList = append(namespacesList, identityNamespace.Value())
+	}
+
+	namespaces := optional.NewString(strings.Join(namespacesList, ","))
+
+	opts := &mdsv2alpha1.RoleDetailOpts{Namespace: namespaces}
+
+	details, r, err := c.MDSv2Client.RBACRoleDefinitionsApi.RoleDetail(c.createContext(), role, opts)
+
+	if err != nil || r.StatusCode == http.StatusNotFound {
+		opts := &mdsv2alpha1.RolenamesOpts{Namespace: namespaces}
+		roleNames, _, err := c.MDSv2Client.RBACRoleDefinitionsApi.Rolenames(c.createContext(), opts)
+		if err != nil {
+			return err
+		}
+
+		suggestionsMsg := fmt.Sprintf(errors.UnknownRoleSuggestions, strings.Join(roleNames, ", "))
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.UnknownRoleErrorMsg, role), suggestionsMsg)
+	}
+
+	if output.GetFormat(cmd).IsSerialized() {
+		return output.SerializedOutput(cmd, details)
+	}
+
+	roleDisplay, err := createPrettyRoleV2(details)
 	if err != nil {
 		return err
 	}
 
-	if format == output.Human.String() {
-		var data [][]string
-		roleDisplay, err := createPrettyRoleV2(details)
-		if err != nil {
-			return err
-		}
-		data = append(data, printer.ToRow(roleDisplay, roleFields))
-		outputTable(data)
-	} else {
-		return output.StructuredOutput(format, details)
-	}
-
-	return nil
+	table := output.NewTable(cmd)
+	table.Add(roleDisplay)
+	return table.PrintWithAutoWrap(false)
 }
 
 func (c *roleCommand) confluentDescribe(cmd *cobra.Command, role string) error {
@@ -102,22 +105,16 @@ func (c *roleCommand) confluentDescribe(cmd *cobra.Command, role string) error {
 		return err
 	}
 
-	format, err := cmd.Flags().GetString(output.FlagName)
+	if output.GetFormat(cmd).IsSerialized() {
+		return output.SerializedOutput(cmd, details)
+	}
+
+	roleDisplay, err := createPrettyRole(details)
 	if err != nil {
 		return err
 	}
 
-	if format == output.Human.String() {
-		var data [][]string
-		roleDisplay, err := createPrettyRole(details)
-		if err != nil {
-			return err
-		}
-		data = append(data, printer.ToRow(roleDisplay, roleFields))
-		outputTable(data)
-	} else {
-		return output.StructuredOutput(format, details)
-	}
-
-	return nil
+	list := output.NewList(cmd)
+	list.Add(roleDisplay)
+	return list.PrintWithAutoWrap(false)
 }

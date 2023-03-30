@@ -27,10 +27,10 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner, clientID string) *cobra.Comma
 	cmd.AddCommand(newReplicaCommand(prerunner))
 	cmd.AddCommand(newTopicCommand(cfg, prerunner, clientID))
 
-	dc := dynamicconfig.New(cfg, nil, nil, nil)
+	dc := dynamicconfig.New(cfg, nil, nil)
 	_ = dc.ParseFlagsIntoConfig(cmd)
 	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.client_quotas.enable", dc.Context(), v1.CliLaunchDarklyClient, true, false) {
-		cmd.AddCommand(newQuotaCommand(cfg, prerunner))
+		cmd.AddCommand(newQuotaCommand(prerunner))
 	}
 
 	return cmd

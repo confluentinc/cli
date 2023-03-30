@@ -1,16 +1,19 @@
 package pipeline
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/form"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-func (c *command) newDeleteCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func (c *command) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete <pipeline-id>",
 		Short: "Delete a pipeline.",
@@ -24,6 +27,7 @@ func (c *command) newDeleteCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		),
 	}
 
+	pcmd.AddForceFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 
@@ -31,17 +35,30 @@ func (c *command) newDeleteCommand(prerunner pcmd.PreRunner) *cobra.Command {
 }
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
-	// get kafka cluster
 	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
 
-	// call api
-	if err := c.V2Client.DeleteSdPipeline(c.EnvironmentId(), cluster.ID, args[0]); err != nil {
+	environmentId, err := c.EnvironmentId()
+	if err != nil {
 		return err
 	}
 
-	utils.Printf(cmd, errors.RequestedDeleteResourceMsg, resource.Pipeline, args[0])
+	pipeline, err := c.V2Client.GetSdPipeline(environmentId, cluster.ID, args[0])
+	if err != nil {
+		return err
+	}
+
+	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.Pipeline, pipeline.GetId(), pipeline.Spec.GetDisplayName())
+	if _, err := form.ConfirmDeletion(cmd, promptMsg, pipeline.Spec.GetDisplayName()); err != nil {
+		return err
+	}
+
+	if err := c.V2Client.DeleteSdPipeline(environmentId, cluster.ID, args[0]); err != nil {
+		return err
+	}
+
+	output.Printf(errors.RequestedDeleteResourceMsg, resource.Pipeline, args[0])
 	return nil
 }

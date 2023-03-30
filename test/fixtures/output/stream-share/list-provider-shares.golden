@@ -1,3 +1,3 @@
-     ID    | Consumer Name | Consumer Organization Name | Status | Delivery Method |          Invited At           |          Redeemed At          |       Invite Expires At        
+     ID    | Consumer Name | Consumer Organization Name | Status | Delivery Method |          Redeemed At          |          Invited At           |       Invite Expires At        
 -----------+---------------+----------------------------+--------+-----------------+-------------------------------+-------------------------------+--------------------------------
-  ss-12345 | consumer      | consumer org               | active | email           | 2022-07-20 22:08:41 +0000 UTC | 2022-07-21 22:08:41 +0000 UTC | 2022-07-22 22:08:41 +0000 UTC  
+  ss-12345 | consumer      | consumer org               | active | email           | 2022-07-21 22:08:41 +0000 UTC | 2022-07-20 22:08:41 +0000 UTC | 2022-07-22 22:08:41 +0000 UTC  

@@ -1,7 +1,0 @@
-`confluent ksql app` is deprecated: Use the equivalent `confluent ksql cluster` commands instead.
-       ID       |           Name            |  Topic Prefix  |    Kafka    | Storage |         Endpoint         |    Status    | Detailed Processing Log  
-----------------+---------------------------+----------------+-------------+---------+--------------------------+--------------+--------------------------
-  lksqlc-ksql5  | account ksql              | pksqlc-abcde   | lkc-qwert   |     101 | SASL_SSL://ksql-endpoint | PROVISIONING | true                     
-  lksqlc-woooo  | kay cee queue elle        | pksqlc-ghjkl   | lkc-zxcvb   |     123 | SASL_SSL://ksql-endpoint | PROVISIONING | true                     
-  lksqlc-v80wnz | ksql-cluster-name-2222bbb | pksqlc-2222aaa | lkc-1111aaa |     123 | SASL_SSL://ksql-endpoint | PROVISIONING | true                     
-  lksqlc-a90wnz | ksqlDB_cluster_name       | pksqlc-1234a   | lkc-1234abc |     123 | SASL_SSL://ksql-endpoint | PROVISIONING | true                     

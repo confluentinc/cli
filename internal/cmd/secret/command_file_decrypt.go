@@ -18,9 +18,9 @@ func (c *command) newDecryptCommand() *cobra.Command {
 	cmd.Flags().String("output-file", "", "Output file path.")
 	cmd.Flags().String("config", "", "List of configuration keys.")
 
-	_ = cmd.MarkFlagRequired("config-file")
-	_ = cmd.MarkFlagRequired("local-secrets-file")
-	_ = cmd.MarkFlagRequired("output-file")
+	cobra.CheckErr(cmd.MarkFlagRequired("config-file"))
+	cobra.CheckErr(cmd.MarkFlagRequired("local-secrets-file"))
+	cobra.CheckErr(cmd.MarkFlagRequired("output-file"))
 
 	return cmd
 }
@@ -31,23 +31,20 @@ func (c *command) decrypt(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	configPath, err := cmd.Flags().GetString("config-file")
+	configFile, err := cmd.Flags().GetString("config-file")
 	if err != nil {
 		return err
 	}
 
-	localSecretsPath, err := cmd.Flags().GetString("local-secrets-file")
+	localSecretsFile, err := cmd.Flags().GetString("local-secrets-file")
 	if err != nil {
 		return err
 	}
 
-	outputPath, err := cmd.Flags().GetString("output-file")
+	outputFile, err := cmd.Flags().GetString("output-file")
 	if err != nil {
 		return err
 	}
 
-	cipherMode := c.getCipherMode()
-	c.plugin.SetCipherMode(cipherMode)
-
-	return c.plugin.DecryptConfigFileSecrets(configPath, localSecretsPath, outputPath, configs)
+	return c.plugin.DecryptConfigFileSecrets(configFile, localSecretsFile, outputFile, configs)
 }

@@ -6,14 +6,14 @@ Usage:
 Examples:
 List all the ACLs for the specified Kafka cluster:
 
-  $ confluent iam acl list --kafka-cluster-id <kafka-cluster-id>
+  $ confluent iam acl list --kafka-cluster <kafka-cluster-id>
 
-List all the ACLs for the specified cluster that include allow permissions for the user Jane:
+List all the ACLs for the specified cluster that include "allow" permissions for the user Jane:
 
-  $ confluent iam acl list --kafka-cluster-id <kafka-cluster-id> --allow --principal User:Jane
+  $ confluent iam acl list --kafka-cluster <kafka-cluster-id> --allow --principal User:Jane
 
 Flags:
-      --kafka-cluster-id string   REQUIRED: Kafka cluster ID for scope of ACL commands.
+      --kafka-cluster string      REQUIRED: Kafka cluster ID for scope of ACL commands.
       --principal string          Principal for this operation with User: or Group: prefix.
       --operation string          Set ACL Operation to: (all, alter, alter-configs, cluster-action, create, delete, describe, describe-configs, idempotent-write, read, write).
       --host string               Set host for access. Only IP addresses are supported. (default "*")

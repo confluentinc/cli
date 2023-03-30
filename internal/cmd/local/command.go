@@ -5,9 +5,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/local"
-
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/local"
 )
 
 type Command struct {
@@ -16,9 +15,9 @@ type Command struct {
 	cc local.ConfluentCurrent
 }
 
-func NewLocalCommand(command *cobra.Command, prerunner pcmd.PreRunner) *Command {
+func NewLocalCommand(cmd *cobra.Command, prerunner pcmd.PreRunner) *Command {
 	return &Command{
-		CLICommand: pcmd.NewAnonymousCLICommand(command, prerunner),
+		CLICommand: pcmd.NewAnonymousCLICommand(cmd, prerunner),
 		ch:         local.NewConfluentHomeManager(),
 		cc:         local.NewConfluentCurrentManager(),
 	}

@@ -11,18 +11,18 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/properties"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
-func (c *exporterCommand) newCreateCommand() *cobra.Command {
+func (c *command) newExporterCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <name>",
 		Short: "Create a new schema exporter.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.create,
+		RunE:  c.exporterCreate,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a new schema exporter.",
@@ -42,12 +42,12 @@ func (c *exporterCommand) newCreateCommand() *cobra.Command {
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired("config-file")
+	cobra.CheckErr(cmd.MarkFlagRequired("config-file"))
 
 	return cmd
 }
 
-func (c *exporterCommand) create(cmd *cobra.Command, args []string) error {
+func (c *command) exporterCreate(cmd *cobra.Command, args []string) error {
 	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
@@ -104,10 +104,10 @@ func createExporter(cmd *cobra.Command, name string, srClient *srsdk.APIClient, 
 		Config:              configMap,
 	}
 
-	if _, _, err = srClient.DefaultApi.CreateExporter(ctx, req); err != nil {
+	if _, _, err := srClient.DefaultApi.CreateExporter(ctx, req); err != nil {
 		return err
 	}
 
-	utils.Printf(cmd, errors.CreatedResourceMsg, resource.SchemaExporter, name)
+	output.Printf(errors.CreatedResourceMsg, resource.SchemaExporter, name)
 	return nil
 }

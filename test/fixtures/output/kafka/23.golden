@@ -1,15 +1,15 @@
 {
+  "is_current": false,
   "id": "lkc-def963",
   "name": "my-new-cluster",
   "type": "BASIC",
-  "ingress": 100,
-  "egress": 100,
+  "ingress": 250,
+  "egress": 750,
   "storage": "5 TB",
   "provider": "aws",
   "region": "us-east-1",
   "availability": "single-zone",
   "status": "PROVISIONING",
   "endpoint": "SASL_SSL://kafka-endpoint",
-  "api_endpoint": "http://kafka-api-url",
   "rest_endpoint": "https://pkc-endpoint"
 }

@@ -2,6 +2,7 @@ package ccloudv2
 
 import (
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
+	byokv1 "github.com/confluentinc/ccloud-sdk-go-v2/byok/v1"
 	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
 	cliv1 "github.com/confluentinc/ccloud-sdk-go-v2/cli/v1"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
@@ -9,6 +10,8 @@ import (
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 	identityproviderv2 "github.com/confluentinc/ccloud-sdk-go-v2/identity-provider/v2"
 	kafkaquotas "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
+	ksql "github.com/confluentinc/ccloud-sdk-go-v2/ksql/v2"
+	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
 	metricsv2 "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2"
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 	servicequotav1 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v1"
@@ -24,13 +27,16 @@ type Client struct {
 	JwtToken  string
 
 	ApiKeysClient          *apikeysv2.APIClient
+	ByokClient             *byokv1.APIClient
 	CdxClient              *cdxv1.APIClient
 	CliClient              *cliv1.APIClient
 	CmkClient              *cmkv2.APIClient
 	ConnectClient          *connectv1.APIClient
 	IamClient              *iamv2.APIClient
 	IdentityProviderClient *identityproviderv2.APIClient
+	KsqlClient             *ksql.APIClient
 	KafkaQuotasClient      *kafkaquotas.APIClient
+	MdsClient              *mdsv2.APIClient
 	MetricsClient          *metricsv2.APIClient
 	OrgClient              *orgv2.APIClient
 	SchemaRegistryClient   *srcm.APIClient
@@ -41,20 +47,23 @@ type Client struct {
 func NewClient(baseUrl string, isTest bool, authToken, userAgent string, unsafeTrace bool) *Client {
 	url := getServerUrl(baseUrl)
 	if isTest {
-		url = testserver.TestV2CloudURL.String()
+		url = testserver.TestV2CloudUrl.String()
 	}
 
 	return &Client{
 		AuthToken: authToken,
 
 		ApiKeysClient:          newApiKeysClient(url, userAgent, unsafeTrace),
+		ByokClient:             newByokV1Client(url, userAgent, unsafeTrace),
 		CdxClient:              newCdxClient(url, userAgent, unsafeTrace),
 		CliClient:              newCliClient(url, userAgent, unsafeTrace),
 		CmkClient:              newCmkClient(url, userAgent, unsafeTrace),
 		ConnectClient:          newConnectClient(url, userAgent, unsafeTrace),
 		IamClient:              newIamClient(url, userAgent, unsafeTrace),
 		IdentityProviderClient: newIdentityProviderClient(url, userAgent, unsafeTrace),
+		KsqlClient:             newKsqlClient(url, userAgent, unsafeTrace),
 		KafkaQuotasClient:      newKafkaQuotasClient(url, userAgent, unsafeTrace),
+		MdsClient:              newMdsClient(url, userAgent, unsafeTrace),
 		MetricsClient:          newMetricsClient(baseUrl, userAgent, unsafeTrace, isTest),
 		OrgClient:              newOrgClient(url, userAgent, unsafeTrace),
 		SchemaRegistryClient:   newSchemaRegistryClient(url, userAgent, unsafeTrace),

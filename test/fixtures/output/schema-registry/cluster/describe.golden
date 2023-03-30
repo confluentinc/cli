@@ -1,6 +1,6 @@
 +-------------------------+-------------------------+
 | Name                    | account schema-registry |
-| Cluster ID              | lsrc-1234               |
+| Cluster                 | lsrc-1234               |
 | Endpoint URL            | SASL_SSL://sr-endpoint  |
 | Used Schemas            |                       0 |
 | Available Schemas       |                    1000 |

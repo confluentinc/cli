@@ -3,8 +3,9 @@ package kafka
 import (
 	"net/http"
 
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
@@ -12,6 +13,40 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
+
+type replicaHumanOut struct {
+	ClusterId          string `human:"Cluster"`
+	TopicName          string `human:"Topic Name"`
+	BrokerId           int32  `human:"Broker ID"`
+	PartitionId        int32  `human:"Partition ID"`
+	IsLeader           bool   `human:"Leader"`
+	IsObserver         bool   `human:"Observer"`
+	IsIsrEligible      bool   `human:"ISR Eligible"`
+	IsInIsr            bool   `human:"In ISR"`
+	IsCaughtUp         bool   `human:"Caught Up"`
+	LogStartOffset     int64  `human:"Log Start Offset"`
+	LogEndOffset       int64  `human:"Log End Offset"`
+	LastCaughtUpTimeMs string `human:"Last Caught Up Time (ms)"`
+	LastFetchTimeMs    string `human:"Last Fetch Time (ms)"`
+	LinkName           string `human:"Link Name"`
+}
+
+type replicaSerializedOut struct {
+	ClusterId          string `serialized:"cluster_id"`
+	TopicName          string `serialized:"topic_name"`
+	BrokerId           int32  `serialized:"broker_id"`
+	PartitionId        int32  `serialized:"partition_id"`
+	IsLeader           bool   `serialized:"is_leader"`
+	IsObserver         bool   `serialized:"is_observer"`
+	IsIsrEligible      bool   `serialized:"is_isr_eligible"`
+	IsInIsr            bool   `serialized:"is_in_isr"`
+	IsCaughtUp         bool   `serialized:"is_caught_up"`
+	LogStartOffset     int64  `serialized:"log_start_offset"`
+	LogEndOffset       int64  `serialized:"log_end_offset"`
+	LastCaughtUpTimeMs int64  `serialized:"last_caught_up_time_ms"`
+	LastFetchTimeMs    int64  `serialized:"last_fetch_time_ms"`
+	LinkName           string `serialized:"link_name"`
+}
 
 func (c *replicaCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -37,7 +72,7 @@ func (c *replicaCommand) newListCommand() *cobra.Command {
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired("topic")
+	cobra.CheckErr(cmd.MarkFlagRequired("topic"))
 
 	return cmd
 }
@@ -47,14 +82,17 @@ func (c *replicaCommand) list(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
+
 	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err
 	}
+
 	clusterId, err := getClusterIdForRestRequests(restClient, restContext)
 	if err != nil {
 		return err
 	}
+
 	var replicaStatusDataList kafkarestv3.ReplicaStatusDataList
 	var resp *http.Response
 	if partitionId != -1 {
@@ -65,33 +103,11 @@ func (c *replicaCommand) list(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 	}
-	outputWriter, err := output.NewListOutputWriter(cmd, replicaStatusListFields, replicaHumanFields, camelToSnake(replicaStatusListFields))
-	if err != nil {
-		return err
-	}
-	format, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		return err
-	}
-	humanOutput := format == output.Human.String()
+
+	list := output.NewList(cmd)
 	for _, data := range replicaStatusDataList.Data {
-		if humanOutput {
-			d := &struct {
-				ClusterId          string
-				TopicName          string
-				BrokerId           int32
-				PartitionId        int32
-				IsLeader           bool
-				IsObserver         bool
-				IsIsrEligible      bool
-				IsInIsr            bool
-				IsCaughtUp         bool
-				LogStartOffset     int64
-				LogEndOffset       int64
-				LastCaughtUpTimeMs string
-				LastFetchTimeMs    string
-				LinkName           string
-			}{
+		if output.GetFormat(cmd) == output.Human {
+			list.Add(&replicaHumanOut{
 				ClusterId:          data.ClusterId,
 				TopicName:          data.TopicName,
 				BrokerId:           data.BrokerId,
@@ -106,13 +122,27 @@ func (c *replicaCommand) list(cmd *cobra.Command, _ []string) error {
 				LastCaughtUpTimeMs: utils.FormatUnixTime(data.LastCaughtUpTimeMs),
 				LastFetchTimeMs:    utils.FormatUnixTime(data.LastFetchTimeMs),
 				LinkName:           data.LinkName,
-			}
-			outputWriter.AddElement(d)
+			})
 		} else {
-			outputWriter.AddElement(&data)
+			list.Add(&replicaSerializedOut{
+				ClusterId:          data.ClusterId,
+				TopicName:          data.TopicName,
+				BrokerId:           data.BrokerId,
+				PartitionId:        data.PartitionId,
+				IsLeader:           data.IsLeader,
+				IsObserver:         data.IsObserver,
+				IsIsrEligible:      data.IsIsrEligible,
+				IsInIsr:            data.IsInIsr,
+				IsCaughtUp:         data.IsCaughtUp,
+				LogStartOffset:     data.LogStartOffset,
+				LogEndOffset:       data.LogEndOffset,
+				LastCaughtUpTimeMs: data.LastCaughtUpTimeMs,
+				LastFetchTimeMs:    data.LastFetchTimeMs,
+				LinkName:           data.LinkName,
+			})
 		}
 	}
-	return outputWriter.Out()
+	return list.Print()
 }
 
 func readFlagValues(cmd *cobra.Command) (string, int32, error) {

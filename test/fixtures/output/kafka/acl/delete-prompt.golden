@@ -1,0 +1,3 @@
+Are you sure you want to delete the ACL corresponding to these parameters? (y/n):   Principal  | Permission | Operation | Host | Resource Type | Resource Name | Pattern Type  
+-------------+------------+-----------+------+---------------+---------------+---------------
+  User:12345 | ALLOW      | READ      | *    | TOPIC         | test-topic    | LITERAL       

@@ -5,32 +5,35 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/spf13/cobra"
+
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
-	"github.com/spf13/cobra"
 
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/log"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 func (c *authenticatedTopicCommand) newConsumeCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "consume <topic>",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.onPremConsume,
+		RunE:  c.consumeOnPrem,
 		Short: "Consume messages from a Kafka topic.",
 		Long:  "Consume messages from a Kafka topic. Configuration and command guide: https://docs.confluent.io/confluent-cli/current/cp-produce-consume.html.\n\nTruncated message headers will be printed if they exist.",
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Consume message from topic "my_topic" with SSL protocol and SSL verification enabled (providing certificate and private key).`,
-				Code: `confluent kafka topic consume my_topic --protocol SSL --bootstrap "localhost:19091" --ca-location my-cert.crt --cert-location client.pem --key-location client.key`},
+				Code: `confluent kafka topic consume my_topic --protocol SSL --bootstrap "localhost:19091" --ca-location my-cert.crt --cert-location client.pem --key-location client.key`,
+			},
 			examples.Example{
 				Text: `Consume message from topic "my_topic" with SASL_SSL/OAUTHBEARER protocol enabled (using MDS token).`,
-				Code: `confluent kafka topic consume my_topic --protocol SASL_SSL --sasl-mechanism OAUTHBEARER --bootstrap "localhost:19091" --ca-location my-cert.crt`},
+				Code: `confluent kafka topic consume my_topic --protocol SASL_SSL --sasl-mechanism OAUTHBEARER --bootstrap "localhost:19091" --ca-location my-cert.crt`,
+			},
 		),
 	}
 
@@ -44,25 +47,33 @@ func (c *authenticatedTopicCommand) newConsumeCommandOnPrem() *cobra.Command {
 	pcmd.AddValueFormatFlag(cmd)
 	cmd.Flags().Bool("print-key", false, "Print key of the message.")
 	cmd.Flags().Bool("full-header", false, "Print complete content of message headers.")
+	cmd.Flags().Bool("timestamp", false, "Print message timestamp in milliseconds.")
 	cmd.Flags().String("delimiter", "\t", "The delimiter separating each key and value.")
 	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the consumer client.`)
 	cmd.Flags().String("config-file", "", "The path to the configuration file (in json or avro format) for the consumer client.")
-	cmd.Flags().String("sr-endpoint", "", "The URL of the schema registry cluster.")
+	cmd.Flags().String("schema-registry-endpoint", "", "The URL of the Schema Registry cluster.")
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired("bootstrap")
-	_ = cmd.MarkFlagRequired("ca-location")
+	cobra.CheckErr(cmd.MarkFlagFilename("config-file", "avsc", "json"))
+
+	cobra.CheckErr(cmd.MarkFlagRequired("bootstrap"))
+	cobra.CheckErr(cmd.MarkFlagRequired("ca-location"))
 
 	return cmd
 }
 
-func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []string) error {
+func (c *authenticatedTopicCommand) consumeOnPrem(cmd *cobra.Command, args []string) error {
 	printKey, err := cmd.Flags().GetBool("print-key")
 	if err != nil {
 		return err
 	}
 
 	fullHeader, err := cmd.Flags().GetBool("full-header")
+	if err != nil {
+		return err
+	}
+
+	timestamp, err := cmd.Flags().GetBool("timestamp")
 	if err != nil {
 		return err
 	}
@@ -131,13 +142,12 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 		index:   partition,
 	}
 
-	rebalanceCallback := getRebalanceCallback(cmd, offset, partitionFilter)
-	err = consumer.Subscribe(topicName, rebalanceCallback)
-	if err != nil {
+	rebalanceCallback := getRebalanceCallback(offset, partitionFilter)
+	if err := consumer.Subscribe(topicName, rebalanceCallback); err != nil {
 		return err
 	}
 
-	utils.ErrPrintln(cmd, errors.StartingConsumerMsg)
+	output.ErrPrintln(errors.StartingConsumerMsg)
 
 	var srClient *srsdk.APIClient
 	var ctx context.Context
@@ -161,11 +171,17 @@ func (c *authenticatedTopicCommand) onPremConsume(cmd *cobra.Command, args []str
 	}()
 
 	groupHandler := &GroupHandler{
-		SrClient:   srClient,
-		Ctx:        ctx,
-		Format:     valueFormat,
-		Out:        cmd.OutOrStdout(),
-		Properties: ConsumerProperties{PrintKey: printKey, FullHeader: fullHeader, Delimiter: delimiter, SchemaPath: dir},
+		SrClient: srClient,
+		Ctx:      ctx,
+		Format:   valueFormat,
+		Out:      cmd.OutOrStdout(), // TODO
+		Properties: ConsumerProperties{
+			PrintKey:   printKey,
+			FullHeader: fullHeader,
+			Timestamp:  timestamp,
+			Delimiter:  delimiter,
+			SchemaPath: dir,
+		},
 	}
-	return runConsumer(cmd, consumer, groupHandler)
+	return runConsumer(consumer, groupHandler)
 }

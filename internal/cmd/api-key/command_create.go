@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"net/http"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	"github.com/spf13/cobra"
+
+	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -15,14 +15,12 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-var (
-	createFields            = []string{"Key", "Secret"}
-	createHumanRenames      = map[string]string{"Key": "API Key"}
-	createStructuredRenames = map[string]string{"Key": "key", "Secret": "secret"}
-)
+type createOut struct {
+	ApiKey    string `human:"API Key" serialized:"api_key"`
+	ApiSecret string `human:"API Secret" serialized:"api_secret"`
+}
 
 var resourceTypeToKind = map[string]string{
 	resource.KafkaCluster:          "Cluster",
@@ -52,24 +50,25 @@ func (c *command) newCreateCommand() *cobra.Command {
 
 	cmd.Flags().String(resourceFlagName, "", `The resource ID. Use "cloud" to create a Cloud API key.`)
 	cmd.Flags().String("description", "", "Description of API key.")
+	cmd.Flags().Bool("use", false, "Use the created API key for the provided resource.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired(resourceFlagName)
+	cobra.CheckErr(cmd.MarkFlagRequired(resourceFlagName))
 
 	return cmd
 }
 
 func (c *command) create(cmd *cobra.Command, _ []string) error {
 	c.setKeyStoreIfNil()
-	resourceType, clusterId, _, err := c.resolveResourceId(cmd, c.PrivateClient)
+	resourceType, clusterId, _, err := c.resolveResourceId(cmd, c.V2Client)
 	if err != nil {
 		return err
 	}
 
-	ownerResourceId, err := cmd.Flags().GetString("service-account")
+	serviceAccount, err := cmd.Flags().GetString("service-account")
 	if err != nil {
 		return err
 	}
@@ -79,57 +78,48 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	var userKey *v1.APIKeyPair
-	if resourceType == resource.KsqlCluster || resourceType == resource.SchemaRegistryCluster {
-		userKey, err = c.createV1(ownerResourceId, clusterId, resourceType, description)
+	if serviceAccount == "" {
+		serviceAccount, err = c.getCurrentUserId()
 		if err != nil {
 			return err
 		}
-	} else {
-		if ownerResourceId == "" {
-			ownerResourceId, err = c.getCurrentUserId()
-			if err != nil {
-				return err
-			}
-		}
+	}
 
-		key := apikeysv2.IamV2ApiKey{
-			Spec: &apikeysv2.IamV2ApiKeySpec{
-				Description: apikeysv2.PtrString(description),
-				Owner:       &apikeysv2.ObjectReference{Id: ownerResourceId},
-				Resource: &apikeysv2.ObjectReference{
-					Id:   clusterId,
-					Kind: apikeysv2.PtrString(resourceTypeToKind[resourceType]),
-				},
+	key := apikeysv2.IamV2ApiKey{
+		Spec: &apikeysv2.IamV2ApiKeySpec{
+			Description: apikeysv2.PtrString(description),
+			Owner:       &apikeysv2.ObjectReference{Id: serviceAccount},
+			Resource: &apikeysv2.ObjectReference{
+				Id:   clusterId,
+				Kind: apikeysv2.PtrString(resourceTypeToKind[resourceType]),
 			},
-		}
-		if resourceType == resource.Cloud {
-			key.Spec.Resource.Id = "cloud"
-		}
-
-		v2Key, httpResp, err := c.V2Client.CreateApiKey(key)
-		if err != nil {
-			return c.catchServiceAccountNotValidError(err, httpResp, clusterId, ownerResourceId)
-		}
-
-		userKey = &v1.APIKeyPair{
-			Key:    *v2Key.Id,
-			Secret: *v2Key.Spec.Secret,
-		}
+		},
+	}
+	if resourceType == resource.Cloud {
+		key.Spec.Resource.Id = "cloud"
 	}
 
-	outputFormat, err := cmd.Flags().GetString(output.FlagName)
+	v2Key, httpResp, err := c.V2Client.CreateApiKey(key)
 	if err != nil {
-		return err
+		return c.catchServiceAccountNotValidError(err, httpResp, clusterId, serviceAccount)
 	}
 
-	if outputFormat == output.Human.String() {
-		utils.ErrPrintln(cmd, errors.APIKeyTime)
-		utils.ErrPrintln(cmd, errors.APIKeyNotRetrievableMsg)
+	userKey := &v1.APIKeyPair{
+		Key:    v2Key.GetId(),
+		Secret: v2Key.Spec.GetSecret(),
 	}
 
-	err = output.DescribeObject(cmd, userKey, createFields, createHumanRenames, createStructuredRenames)
-	if err != nil {
+	if output.GetFormat(cmd) == output.Human {
+		output.ErrPrintln(errors.APIKeyTime)
+		output.ErrPrintln(errors.APIKeyNotRetrievableMsg)
+	}
+
+	table := output.NewTable(cmd)
+	table.Add(&createOut{
+		ApiKey:    userKey.Key,
+		ApiSecret: userKey.Secret,
+	})
+	if err := table.Print(); err != nil {
 		return err
 	}
 
@@ -139,55 +129,22 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
-	return nil
-}
-
-func (c *command) createV1(ownerResourceId, clusterId, resourceType, description string) (*v1.APIKeyPair, error) {
-	key := &schedv1.ApiKey{
-		UserResourceId: ownerResourceId,
-		Description:    description,
-		AccountId:      c.EnvironmentId(),
-	}
-
-	key, err := c.completeKeyUserId(key) // get corresponding numeric ID if the cmd has a service-account flag
+	use, err := cmd.Flags().GetBool("use")
 	if err != nil {
-		return nil, err
+		return err
 	}
-	if resourceType != resource.Cloud {
-		key.LogicalClusters = []*schedv1.ApiKey_Cluster{{Id: clusterId, Type: resourceType}}
-	}
-
-	schedv1ApiKey, err := c.PrivateClient.APIKey.Create(context.Background(), key)
-	if err != nil {
-		return nil, c.catchServiceAccountNotValidError(err, nil, clusterId, ownerResourceId)
-	}
-
-	displayKey := &v1.APIKeyPair{
-		Key:    schedv1ApiKey.Key,
-		Secret: schedv1ApiKey.Secret,
-	}
-	return displayKey, nil
-}
-
-func (c *command) completeKeyUserId(key *schedv1.ApiKey) (*schedv1.ApiKey, error) {
-	if key.UserResourceId != "" { // it has a service-account flag
-		if resource.LookupType(key.UserResourceId) != resource.ServiceAccount {
-			return nil, errors.New(errors.BadServiceAccountIDErrorMsg)
+	if use {
+		if resourceType != resource.KafkaCluster {
+			return errors.Wrap(errors.New(errors.NonKafkaNotImplementedErrorMsg), "`--use` set but ineffective")
 		}
-		users, err := c.getAllUsers()
+		err = c.Context.UseAPIKey(userKey.Key, clusterId)
 		if err != nil {
-			return key, err
+			return errors.NewWrapErrorWithSuggestions(err, errors.APIKeyUseFailedErrorMsg, fmt.Sprintf(errors.APIKeyUseFailedSuggestions, userKey.Key))
 		}
-		for _, user := range users {
-			if key.UserResourceId == user.ResourceId {
-				key.UserId = user.Id
-				break
-			}
-		}
-	} else {
-		key.ServiceAccount = false
+		output.Printf(errors.UseAPIKeyMsg, userKey.Key, clusterId)
 	}
-	return key, nil
+
+	return nil
 }
 
 func (c *command) getCurrentUserId() (string, error) {
@@ -214,7 +171,7 @@ func (c *command) catchServiceAccountNotValidError(err error, r *http.Response, 
 
 	isInvalid := err.Error() == "error creating api key: service account is not valid" || err.Error() == "403 Forbidden"
 	if isInvalid && clusterId == auditLog.GetClusterId() {
-		auditLogServiceAccount, err2 := c.PrivateClient.User.GetServiceAccount(context.Background(), auditLog.GetServiceAccountId())
+		auditLogServiceAccount, err2 := c.Client.User.GetServiceAccount(context.Background(), auditLog.GetServiceAccountId())
 		if err2 != nil {
 			return err
 		}

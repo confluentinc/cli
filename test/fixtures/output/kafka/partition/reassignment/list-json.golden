@@ -1,0 +1,30 @@
+[
+  {
+    "cluster_id": "cluster-1",
+    "topic_name": "topic1",
+    "partition_id": 0,
+    "adding_replicas": [1, 2, 3],
+    "removing_replicas": [4]
+  },
+  {
+    "cluster_id": "cluster-1",
+    "topic_name": "topic1",
+    "partition_id": 1,
+    "adding_replicas": [4],
+    "removing_replicas": [1, 2, 3]
+  },
+  {
+    "cluster_id": "cluster-1",
+    "topic_name": "topic2",
+    "partition_id": 0,
+    "adding_replicas": [1, 2, 3],
+    "removing_replicas": [4]
+  },
+  {
+    "cluster_id": "cluster-1",
+    "topic_name": "topic2",
+    "partition_id": 1,
+    "adding_replicas": [4],
+    "removing_replicas": [1, 2, 3]
+  }
+]

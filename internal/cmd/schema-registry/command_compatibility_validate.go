@@ -6,8 +6,9 @@ import (
 	"os"
 	"strings"
 
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
+
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -16,17 +17,21 @@ import (
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
-func (c *compatibilityCommand) newValidateCommand() *cobra.Command {
+type validateOut struct {
+	IsCompatible bool `human:"Compatible" serialized:"is_compatible"`
+}
+
+func (c *command) newCompatibilityValidateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "validate",
 		Short: "Validate a schema with a subject version.",
 		Long:  "Validate that a schema is compatible against a given subject version.",
 		Args:  cobra.NoArgs,
-		RunE:  c.validate,
+		RunE:  c.compatibilityValidate,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Validate the compatibility of schema `payments` against the latest version of subject `records`.",
-				Code: fmt.Sprintf("%s schema-registry compatibility validate --schema payments.avro --type AVRO --subject records --version latest", pversion.CLIName),
+				Code: fmt.Sprintf("%s schema-registry compatibility validate --schema payments.avro --type avro --subject records --version latest", pversion.CLIName),
 			},
 		),
 	}
@@ -35,17 +40,20 @@ func (c *compatibilityCommand) newValidateCommand() *cobra.Command {
 	cmd.Flags().String("version", "", `Version of the schema. Can be a specific version or "latest".`)
 	cmd.Flags().String("schema", "", "The path to the schema file.")
 	pcmd.AddSchemaTypeFlag(cmd)
-	cmd.Flags().String("refs", "", "The path to the references file.")
+	cmd.Flags().String("references", "", "The path to the references file.")
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddApiSecretFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
+	cobra.CheckErr(cmd.MarkFlagFilename("schema", "avsc", "json", "proto"))
+	cobra.CheckErr(cmd.MarkFlagFilename("references", "json"))
+
 	return cmd
 }
 
-func (c *compatibilityCommand) validate(cmd *cobra.Command, args []string) error {
+func (c *command) compatibilityValidate(cmd *cobra.Command, args []string) error {
 	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
@@ -87,15 +95,12 @@ func validateSchemaCompatibility(cmd *cobra.Command, srClient *srsdk.APIClient, 
 
 	req := srsdk.RegisterSchemaRequest{Schema: string(schema), SchemaType: schemaType, References: refs}
 
-	resp, httpResp, err := srClient.DefaultApi.TestCompatibilityBySubjectName(ctx, subject, version, req, nil)
+	compatibilityCheck, httpResp, err := srClient.DefaultApi.TestCompatibilityBySubjectName(ctx, subject, version, req, nil)
 	if err != nil {
 		return errors.CatchSchemaNotFoundError(err, httpResp)
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, []string{"IsCompatible"}, []string{"Compatibility"}, []string{"compatibility"})
-	if err != nil {
-		return err
-	}
-	outputWriter.AddElement(&resp)
-	return outputWriter.Out()
+	table := output.NewTable(cmd)
+	table.Add(&validateOut{IsCompatible: compatibilityCheck.IsCompatible})
+	return table.Print()
 }

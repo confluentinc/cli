@@ -5,18 +5,18 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/confluentinc/ccloud-sdk-go-v1"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/confluentinc/ccloud-sdk-go-v1/mock"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	srMock "github.com/confluentinc/schema-registry-sdk-go/mock"
 
+	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	cliMock "github.com/confluentinc/cli/mock"
+	climock "github.com/confluentinc/cli/mock"
 )
 
 const (
@@ -26,9 +26,9 @@ const (
 type SubjectTestSuite struct {
 	suite.Suite
 	conf             *v1.Config
-	kafkaCluster     *schedv1.KafkaCluster
-	srCluster        *schedv1.SchemaRegistryCluster
-	srMothershipMock *mock.SchemaRegistry
+	kafkaCluster     *ccstructs.KafkaCluster
+	srCluster        *ccloudv1.SchemaRegistryCluster
+	srMothershipMock *ccloudv1mock.SchemaRegistry
 	srClientMock     *srsdk.APIClient
 }
 
@@ -38,39 +38,38 @@ func (suite *SubjectTestSuite) SetupSuite() {
 	srCluster := ctx.SchemaRegistryClusters[ctx.GetEnvironment().GetId()]
 	srCluster.SrCredentials = &v1.APIKeyPair{Key: "key", Secret: "secret"}
 	cluster := ctx.KafkaClusterContext.GetActiveKafkaClusterConfig()
-	suite.kafkaCluster = &schedv1.KafkaCluster{
+	suite.kafkaCluster = &ccstructs.KafkaCluster{
 		Id:         cluster.ID,
 		Name:       cluster.Name,
-		Endpoint:   cluster.APIEndpoint,
 		Enterprise: true,
 	}
-	suite.srCluster = &schedv1.SchemaRegistryCluster{
+	suite.srCluster = &ccloudv1.SchemaRegistryCluster{
 		Id: srClusterID,
 	}
 }
 
 func (suite *SubjectTestSuite) SetupTest() {
-	suite.srMothershipMock = &mock.SchemaRegistry{
-		CreateSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *schedv1.SchemaRegistryClusterConfig) (*schedv1.SchemaRegistryCluster, error) {
+	suite.srMothershipMock = &ccloudv1mock.SchemaRegistry{
+		CreateSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *ccloudv1.SchemaRegistryClusterConfig) (*ccloudv1.SchemaRegistryCluster, error) {
 			return suite.srCluster, nil
 		},
-		GetSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *schedv1.SchemaRegistryCluster) (*schedv1.SchemaRegistryCluster, error) {
+		GetSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *ccloudv1.SchemaRegistryCluster) (*ccloudv1.SchemaRegistryCluster, error) {
 			return nil, nil
 		},
 	}
 
 	suite.srClientMock = &srsdk.APIClient{
 		DefaultApi: &srMock.DefaultApi{
-			ListFunc: func(ctx context.Context, opts *srsdk.ListOpts) ([]string, *http.Response, error) {
+			ListFunc: func(_ context.Context, _ *srsdk.ListOpts) ([]string, *http.Response, error) {
 				return []string{"subject 1", "subject 2"}, nil, nil
 			},
-			ListVersionsFunc: func(ctx context.Context, subject string, opts *srsdk.ListVersionsOpts) (int32s []int32, response *http.Response, e error) {
+			ListVersionsFunc: func(_ context.Context, _ string, _ *srsdk.ListVersionsOpts) ([]int32, *http.Response, error) {
 				return []int32{1234, 4567}, nil, nil
 			},
-			UpdateSubjectLevelConfigFunc: func(ctx context.Context, subject string, body srsdk.ConfigUpdateRequest) (request srsdk.ConfigUpdateRequest, response *http.Response, e error) {
+			UpdateSubjectLevelConfigFunc: func(_ context.Context, _ string, body srsdk.ConfigUpdateRequest) (srsdk.ConfigUpdateRequest, *http.Response, error) {
 				return srsdk.ConfigUpdateRequest{Compatibility: body.Compatibility}, nil, nil
 			},
-			UpdateModeFunc: func(ctx context.Context, subject string, body srsdk.ModeUpdateRequest) (request srsdk.ModeUpdateRequest, response *http.Response, e error) {
+			UpdateModeFunc: func(_ context.Context, _ string, body srsdk.ModeUpdateRequest) (srsdk.ModeUpdateRequest, *http.Response, error) {
 				return srsdk.ModeUpdateRequest{Mode: body.Mode}, nil, nil
 			},
 		},
@@ -78,10 +77,10 @@ func (suite *SubjectTestSuite) SetupTest() {
 }
 
 func (suite *SubjectTestSuite) newCMD() *cobra.Command {
-	client := &ccloud.Client{
+	client := &ccloudv1.Client{
 		SchemaRegistry: suite.srMothershipMock,
 	}
-	cmd := New(suite.conf, cliMock.NewPreRunnerMock(client, nil, nil, nil, nil, suite.conf), suite.srClientMock)
+	cmd := New(suite.conf, climock.NewPreRunnerMock(client, nil, nil, nil, suite.conf), suite.srClientMock)
 	return cmd
 }
 

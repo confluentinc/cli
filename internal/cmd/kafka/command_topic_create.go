@@ -1,20 +1,19 @@
 package kafka
 
 import (
-	"context"
 	"fmt"
-	"net/http"
 	"strings"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	"github.com/spf13/cobra"
 
+	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
+
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/properties"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -58,6 +57,7 @@ func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 	if err != nil {
 		return err
 	}
+
 	configMap, err := properties.ConfigFlagToMap(configs)
 	if err != nil {
 		return err
@@ -73,7 +73,7 @@ func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 		return err
 	}
 
-	kafkaClusterConfig, err := c.AuthenticatedCLICommand.Context.GetKafkaClusterForCommand()
+	kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
@@ -82,91 +82,55 @@ func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 		return err
 	}
 
-	if kafkaREST, _ := c.GetKafkaREST(); kafkaREST != nil && !dryRun {
-		topicConfigs := make([]kafkarestv3.CreateTopicRequestDataConfigs, len(configMap))
-		i := 0
-		for key, val := range configMap {
-			v := val
-			topicConfigs[i] = kafkarestv3.CreateTopicRequestDataConfigs{
-				Name:  key,
-				Value: *kafkarestv3.NewNullableString(&v),
-			}
-			i++
-		}
-
-		data := kafkarestv3.CreateTopicRequestData{
-			TopicName: topicName,
-			Configs:   &topicConfigs,
-		}
-
-		if cmd.Flags().Changed("partitions") {
-			data.PartitionsCount = utils.Int32Ptr(int32(partitions))
-		}
-
-		_, httpResp, err := kafkaREST.CloudClient.CreateKafkaTopic(kafkaClusterConfig.ID, data)
-		if err != nil && httpResp != nil {
-			// Kafka REST is available, but there was an error
-			restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err)
-			if parseErr == nil {
-				if restErr.Code == badRequestErrorCode {
-					// Ignore or pretty print topic exists error
-					if strings.Contains(restErr.Message, "already exists") {
-						if !ifNotExists {
-							return errors.NewErrorWithSuggestions(
-								fmt.Sprintf(errors.TopicExistsErrorMsg, topicName, kafkaClusterConfig.ID),
-								fmt.Sprintf(errors.TopicExistsSuggestions, kafkaClusterConfig.ID, kafkaClusterConfig.ID))
-						}
-						return nil
-					}
-
-					// Print partition limit error w/ suggestion
-					if strings.Contains(restErr.Message, "partitions will exceed") {
-						return errors.NewErrorWithSuggestions(restErr.Message, errors.ExceedPartitionLimitSuggestions)
-					}
-				}
-			}
-			return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
-		}
-
-		if err == nil && httpResp != nil {
-			if httpResp.StatusCode != http.StatusCreated {
-				return errors.NewErrorWithSuggestions(
-					fmt.Sprintf(errors.KafkaRestUnexpectedStatusErrorMsg, httpResp.Request.URL, httpResp.StatusCode),
-					errors.InternalServerErrorSuggestions)
-			}
-			// Kafka REST is available and there was no error
-			utils.Printf(cmd, errors.CreatedResourceMsg, resource.Topic, topicName)
-			return nil
-		}
-	}
-
-	// Kafka REST is not available, fall back to KafkaAPI
-
-	cluster, err := dynamicconfig.KafkaCluster(c.Context)
+	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {
 		return err
 	}
 
-	topic := &schedv1.Topic{
-		Spec: &schedv1.TopicSpecification{
-			Name:              topicName,
-			Configs:           configMap,
-			ReplicationFactor: 3,
-			NumPartitions:     6,
-		},
-		Validate: dryRun,
+	topicConfigs := make([]kafkarestv3.CreateTopicRequestDataConfigs, len(configMap))
+	i := 0
+	for key, val := range configMap {
+		v := val
+		topicConfigs[i] = kafkarestv3.CreateTopicRequestDataConfigs{
+			Name:  key,
+			Value: *kafkarestv3.NewNullableString(&v),
+		}
+		i++
+	}
+
+	data := kafkarestv3.CreateTopicRequestData{
+		TopicName:    topicName,
+		Configs:      &topicConfigs,
+		ValidateOnly: &dryRun,
 	}
 
 	if cmd.Flags().Changed("partitions") {
-		topic.Spec.NumPartitions = int32(partitions)
+		data.PartitionsCount = utils.Int32Ptr(int32(partitions))
 	}
 
-	if err := c.PrivateClient.Kafka.CreateTopic(context.Background(), cluster, topic); err != nil {
-		err = errors.CatchTopicExistsError(err, cluster.Id, topic.Spec.Name, ifNotExists)
-		err = errors.CatchClusterNotReadyError(err, cluster.Id)
-		return err
+	_, httpResp, err := kafkaREST.CloudClient.CreateKafkaTopic(kafkaClusterConfig.ID, data)
+	if err != nil {
+		restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err)
+		if parseErr == nil && restErr.Code == ccloudv2.BadRequestErrorCode {
+			// Ignore or pretty print topic exists error
+			if strings.Contains(restErr.Message, "already exists") {
+				if ifNotExists {
+					return nil
+				}
+				return errors.NewErrorWithSuggestions(
+					fmt.Sprintf(errors.TopicExistsErrorMsg, topicName, kafkaClusterConfig.ID),
+					fmt.Sprintf(errors.TopicExistsSuggestions, kafkaClusterConfig.ID, kafkaClusterConfig.ID))
+			}
+
+			// Print partition limit error w/ suggestion
+			if strings.Contains(restErr.Message, "partitions will exceed") {
+				return errors.NewErrorWithSuggestions(restErr.Message, errors.ExceedPartitionLimitSuggestions)
+			}
+		}
+
+		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
-	utils.Printf(cmd, errors.CreatedResourceMsg, resource.Topic, topic.Spec.Name)
+	output.Printf(errors.CreatedResourceMsg, resource.Topic, topicName)
 	return nil
 }

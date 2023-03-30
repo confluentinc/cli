@@ -18,21 +18,21 @@ func (c *command) newAddCommand() *cobra.Command {
 	cmd.Flags().String("remote-secrets-file", "", "Path to the remote encrypted configuration properties file.")
 	cmd.Flags().String("config", "", "List of key/value pairs of configuration properties.")
 
-	_ = cmd.MarkFlagRequired("config-file")
-	_ = cmd.MarkFlagRequired("local-secrets-file")
-	_ = cmd.MarkFlagRequired("remote-secrets-file")
-	_ = cmd.MarkFlagRequired("config")
+	cobra.CheckErr(cmd.MarkFlagRequired("config-file"))
+	cobra.CheckErr(cmd.MarkFlagRequired("local-secrets-file"))
+	cobra.CheckErr(cmd.MarkFlagRequired("remote-secrets-file"))
+	cobra.CheckErr(cmd.MarkFlagRequired("config"))
 
 	return cmd
 }
 
 func (c *command) add(cmd *cobra.Command, _ []string) error {
-	configSource, err := cmd.Flags().GetString("config")
+	config, err := cmd.Flags().GetString("config")
 	if err != nil {
 		return err
 	}
 
-	newConfigs, err := c.getConfigs(configSource, "config properties", "", false)
+	newConfigs, err := c.getConfigs(config, "config properties", "", false)
 	if err != nil {
 		return err
 	}
@@ -42,7 +42,5 @@ func (c *command) add(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	cipherMode := c.getCipherMode()
-	c.plugin.SetCipherMode(cipherMode)
 	return c.plugin.AddEncryptedPasswords(configPath, localSecretsPath, remoteSecretsPath, newConfigs)
 }

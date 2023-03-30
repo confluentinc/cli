@@ -10,12 +10,12 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
-func (c *subjectCommand) newListCommandOnPrem() *cobra.Command {
+func (c *command) newSubjectListCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "list",
 		Short:       "List subjects.",
 		Args:        cobra.NoArgs,
-		RunE:        c.onPremList,
+		RunE:        c.subjectListOnPrem,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -25,7 +25,7 @@ func (c *subjectCommand) newListCommandOnPrem() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().BoolP("deleted", "D", false, "View the deleted subjects.")
+	cmd.Flags().Bool("deleted", false, "View the deleted subjects.")
 	cmd.Flags().String("prefix", ":*:", "Subject prefix.")
 	cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -34,7 +34,7 @@ func (c *subjectCommand) newListCommandOnPrem() *cobra.Command {
 	return cmd
 }
 
-func (c *subjectCommand) onPremList(cmd *cobra.Command, _ []string) error {
+func (c *command) subjectListOnPrem(cmd *cobra.Command, _ []string) error {
 	srClient, ctx, err := GetSrApiClientWithToken(cmd, c.Version, c.AuthToken())
 	if err != nil {
 		return err

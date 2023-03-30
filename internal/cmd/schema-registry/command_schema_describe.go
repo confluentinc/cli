@@ -1,30 +1,37 @@
 package schemaregistry
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
 
 	"github.com/antihax/optional"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
+	"github.com/tidwall/pretty"
+
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
-func (c *schemaCommand) newDescribeCommand() *cobra.Command {
+type schemaOut struct {
+	Schemas []srsdk.Schema `json:"schemas"`
+}
+
+func (c *command) newSchemaDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "describe [id]",
 		Short:       "Get schema either by schema ID, or by subject/version.",
 		Args:        cobra.MaximumNArgs(1),
 		PreRunE:     c.preDescribe,
-		RunE:        c.describe,
+		RunE:        c.schemaDescribe,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -38,9 +45,9 @@ func (c *schemaCommand) newDescribeCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().StringP("subject", "S", "", SubjectUsage)
-	cmd.Flags().StringP("version", "V", "", `Version of the schema. Can be a specific version or "latest".`)
-	cmd.Flags().Bool("show-refs", false, "Display the entire schema graph, including references.")
+	cmd.Flags().String("subject", "", SubjectUsage)
+	cmd.Flags().String("version", "", `Version of the schema. Can be a specific version or "latest".`)
+	cmd.Flags().Bool("show-references", false, "Display the entire schema graph, including references.")
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddApiSecretFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -49,7 +56,7 @@ func (c *schemaCommand) newDescribeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *schemaCommand) preDescribe(cmd *cobra.Command, args []string) error {
+func (c *command) preDescribe(cmd *cobra.Command, args []string) error {
 	subject, err := cmd.Flags().GetString("subject")
 	if err != nil {
 		return err
@@ -69,13 +76,13 @@ func (c *schemaCommand) preDescribe(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *schemaCommand) describe(cmd *cobra.Command, args []string) error {
+func (c *command) schemaDescribe(cmd *cobra.Command, args []string) error {
 	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
 	}
 
-	showRefs, err := cmd.Flags().GetBool("show-refs")
+	showReferences, err := cmd.Flags().GetBool("show-references")
 	if err != nil {
 		return err
 	}
@@ -85,17 +92,17 @@ func (c *schemaCommand) describe(cmd *cobra.Command, args []string) error {
 		id = args[0]
 	}
 
-	if showRefs {
+	if showReferences {
 		return describeGraph(cmd, id, srClient, ctx)
 	}
 
 	if id != "" {
-		return describeById(cmd, id, srClient, ctx)
+		return describeById(id, srClient, ctx)
 	}
 	return describeBySubject(cmd, srClient, ctx)
 }
 
-func describeById(cmd *cobra.Command, id string, srClient *srsdk.APIClient, ctx context.Context) error {
+func describeById(id string, srClient *srsdk.APIClient, ctx context.Context) error {
 	schemaID, err := strconv.ParseInt(id, 10, 32)
 	if err != nil {
 		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.SchemaIntegerErrorMsg, id), errors.SchemaIntegerSuggestions)
@@ -106,7 +113,7 @@ func describeById(cmd *cobra.Command, id string, srClient *srsdk.APIClient, ctx 
 		return err
 	}
 
-	return printSchema(cmd, schemaID, schemaString.Schema, schemaString.SchemaType, schemaString.References)
+	return printSchema(schemaID, schemaString.Schema, schemaString.SchemaType, schemaString.References)
 }
 
 func describeBySubject(cmd *cobra.Command, srClient *srsdk.APIClient, ctx context.Context) error {
@@ -125,7 +132,7 @@ func describeBySubject(cmd *cobra.Command, srClient *srsdk.APIClient, ctx contex
 		return errors.CatchSchemaNotFoundError(err, httpResp)
 	}
 
-	return printSchema(cmd, int64(schema.Id), schema.Schema, schema.SchemaType, schema.References)
+	return printSchema(int64(schema.Id), schema.Schema, schema.SchemaType, schema.References)
 }
 
 func describeGraph(cmd *cobra.Command, id string, srClient *srsdk.APIClient, ctx context.Context) error {
@@ -162,9 +169,13 @@ func describeGraph(cmd *cobra.Command, id string, srClient *srsdk.APIClient, ctx
 		schemaGraph = append([]srsdk.Schema{*root}, schemaGraph...)
 	}
 
-	return output.StructuredOutput(output.JSON.String(), &struct {
-		Schemas []srsdk.Schema `json:"schemas"`
-	}{schemaGraph})
+	b, err := json.Marshal(&schemaOut{schemaGraph})
+	if err != nil {
+		return err
+	}
+	output.Print(string(pretty.Pretty(b)))
+
+	return nil
 }
 
 func traverseDAG(srClient *srsdk.APIClient, ctx context.Context, visited map[string]bool, id int32, subject string, version string) (srsdk.SchemaString, []srsdk.Schema, error) {
@@ -209,16 +220,30 @@ func traverseDAG(srClient *srsdk.APIClient, ctx context.Context, visited map[str
 	return root, schemaGraph, nil
 }
 
-func printSchema(cmd *cobra.Command, schemaID int64, schema string, sType string, refs []srsdk.SchemaReference) error {
-	utils.Printf(cmd, "Schema ID: %d\n", schemaID)
-	if sType != "" {
-		utils.Println(cmd, "Type: "+sType)
+func printSchema(schemaID int64, schema, schemaType string, refs []srsdk.SchemaReference) error {
+	output.Printf("Schema ID: %d\n", schemaID)
+
+	if schemaType != "" {
+		schemaType = "AVRO"
 	}
-	utils.Println(cmd, "Schema: "+schema)
+	output.Println("Type: " + schemaType)
+
+	switch schemaType {
+	case "JSON", "AVRO":
+		var jsonBuffer bytes.Buffer
+		if err := json.Indent(&jsonBuffer, []byte(schema), "", "    "); err != nil {
+			return err
+		}
+		schema = jsonBuffer.String()
+	}
+
+	output.Println("Schema:")
+	output.Println(schema)
+
 	if len(refs) > 0 {
-		utils.Println(cmd, "References:")
+		output.Println("References:")
 		for i := 0; i < len(refs); i++ {
-			utils.Printf(cmd, "\t%s -> %s %d\n", refs[i].Name, refs[i].Subject, refs[i].Version)
+			output.Printf("\t%s -> %s %d\n", refs[i].Name, refs[i].Subject, refs[i].Version)
 		}
 	}
 	return nil

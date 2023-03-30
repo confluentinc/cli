@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
 	warn "github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/test"

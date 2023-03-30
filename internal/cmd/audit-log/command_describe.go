@@ -11,31 +11,15 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-var (
-	listFields    = []string{"ClusterId", "EnvironmentId", "ServiceAccountId", "TopicName"}
-	humanLabelMap = map[string]string{
-		"ClusterId":        "Cluster",
-		"EnvironmentId":    "Environment",
-		"ServiceAccountId": "Service Account",
-		"TopicName":        "Topic Name",
-	}
-	structuredLabelMap = map[string]string{
-		"ClusterId":        "cluster_id",
-		"EnvironmentId":    "environment_id",
-		"ServiceAccountId": "service_account_id",
-		"TopicName":        "topic_name",
-	}
-)
-
 type describeCmd struct {
 	*pcmd.AuthenticatedCLICommand
 }
 
-type auditLogStruct struct {
-	ClusterId        string
-	EnvironmentId    string
-	ServiceAccountId string
-	TopicName        string
+type out struct {
+	ClusterId        string `human:"Cluster" serialized:"cluster_id"`
+	EnvironmentId    string `human:"Environment" serialized:"environment_id"`
+	ServiceAccountId string `human:"Service Account" serialized:"service_account_id"`
+	TopicName        string `human:"Topic Name" serialized:"topic_name"`
 }
 
 func newDescribeCommand(prerunner pcmd.PreRunner) *cobra.Command {
@@ -47,11 +31,11 @@ func newDescribeCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	}
 
 	c := &describeCmd{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
-	c.RunE = c.describe
+	cmd.RunE = c.describe
 
-	pcmd.AddOutputFlag(c.Command)
+	pcmd.AddOutputFlag(cmd)
 
-	return c.Command
+	return cmd
 }
 
 func (c describeCmd) describe(cmd *cobra.Command, _ []string) error {
@@ -61,15 +45,17 @@ func (c describeCmd) describe(cmd *cobra.Command, _ []string) error {
 
 	auditLog := c.Context.GetOrganization().GetAuditLog()
 
-	serviceAccount, err := c.PrivateClient.User.GetServiceAccount(context.Background(), auditLog.GetServiceAccountId())
+	serviceAccount, err := c.Client.User.GetServiceAccount(context.Background(), auditLog.GetServiceAccountId())
 	if err != nil {
 		return err
 	}
 
-	return output.DescribeObject(cmd, &auditLogStruct{
+	table := output.NewTable(cmd)
+	table.Add(&out{
 		ClusterId:        auditLog.GetClusterId(),
 		EnvironmentId:    auditLog.GetAccountId(),
 		ServiceAccountId: serviceAccount.GetResourceId(),
 		TopicName:        auditLog.GetTopicName(),
-	}, listFields, humanLabelMap, structuredLabelMap)
+	})
+	return table.Print()
 }

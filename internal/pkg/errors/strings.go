@@ -1,22 +1,20 @@
 package errors
 
 const (
-	//admin commands
-	EmailInviteSentMsg = "An email invitation has been sent to %s"
-
 	// api-key command
 	StoredAPIKeyMsg = "Stored API secret for API key \"%s\".\n"
 	UseAPIKeyMsg    = "Set API Key \"%s\" as the active API key for \"%s\".\n"
 
 	// auth commands
-	LoggedInAsMsg              = "Logged in as \"%s\".\n"
-	LoggedInAsMsgWithOrg       = "Logged in as \"%s\" for organization \"%s\" (\"%s\").\n"
-	LoggedInUsingEnvMsg        = "Using environment \"%s\" (\"%s\").\n"
-	LoggedOutMsg               = "You are now logged out."
-	WroteCredentialsToNetrcMsg = "Wrote credentials to netrc file \"%s\"\n"
-	RemoveNetrcCredentialsMsg  = "Removed credentials for user \"%s\" from netrc file \"%s\"\n"
-	StopNonInteractiveMsg      = "(remove these credentials or use the `--prompt` flag to bypass non-interactive login)"
-	FoundEnvCredMsg            = "Found credentials for user \"%s\" from environment variables \"%s\" and \"%s\" " +
+	LoggedInAsMsg                 = "Logged in as \"%s\".\n"
+	LoggedInAsMsgWithOrg          = "Logged in as \"%s\" for organization \"%s\" (\"%s\").\n"
+	LoggedInUsingEnvMsg           = "Using environment \"%s\" (\"%s\").\n"
+	LoggedOutMsg                  = "You are now logged out."
+	WroteCredentialsToKeychainMsg = "Wrote login credentials to keychain\n"
+	RemoveNetrcCredentialsMsg     = "Removed credentials for user \"%s\" from netrc file \"%s\"\n"
+	RemoveKeychainCredentialsMsg  = "Removed credentials for user \"%s\" from keychain\n"
+	StopNonInteractiveMsg         = "(remove these credentials or use the `--prompt` flag to bypass non-interactive login)"
+	FoundEnvCredMsg               = "Found credentials for user \"%s\" from environment variables \"%s\" and \"%s\" " +
 		StopNonInteractiveMsg + ".\n"
 	FoundNetrcCredMsg = "Found credentials for user \"%s\" from netrc file \"%s\" " +
 		StopNonInteractiveMsg + ".\n"
@@ -30,19 +28,16 @@ const (
 	UnregisteredClusterMsg = "Successfully unregistered the cluster %s from the Cluster Registry.\n"
 
 	// connector commands
-	CreatedConnectorMsg = "Created connector \"%s\" (%s).\n"
 	PausedConnectorMsg  = "Paused connector \"%s\".\n"
 	ResumedConnectorMsg = "Resumed connector \"%s\".\n"
 
 	// environment commands
 	UsingEnvMsg = "Now using \"%s\" as the default (active) environment.\n"
 
-	// feedback commands
-	ThanksForFeedbackMsg = "Thanks for your feedback."
-
 	// kafka cluster commands
-	UseKafkaClusterMsg              = "Set Kafka cluster \"%s\" as the active cluster for environment \"%s\".\n"
-	CopyBYOKAWSPermissionsHeaderMsg = "Copy and append these permissions to the existing \"Statements\" array field in the key policy of your ARN to authorize access for Confluent:"
+	UseKafkaClusterMsg               = "Set Kafka cluster \"%s\" as the active cluster for environment \"%s\".\n"
+	CopyByokAwsPermissionsHeaderMsg  = `Copy and append these permissions into the key policy "Statements" field of the ARN in your AWS key management system to authorize access for your Confluent Cloud cluster.`
+	RunByokAzurePermissionsHeaderMsg = "To ensure the key vault has the correct role assignments, please run the following azure-cli command (certified for azure-cli v2.45):"
 
 	// kafka consumer-group commands
 	RestProxyNotAvailable = "Operation not supported: REST proxy is not available.\n"
@@ -57,16 +52,11 @@ const (
 	// kafka mirror commands
 	RestProxyNotAvailableMsg = "Kafka REST is not enabled: the operation is only supported with Kafka REST proxy."
 
-	// kafka acl commands
-	DeletedACLsMsg      = "Deleted ACLs.\n"
-	DeletedACLsCountMsg = "Deleted %d ACLs.\n"
-	ACLsNotFoundMsg     = "ACL not found; ACL may have been misspelled or already deleted.\n"
-
 	// kafka REST proxy
 	MDSTokenNotFoundMsg = "No session token found, please enter user credentials. To avoid being prompted, run \"confluent login\"."
 
 	// ksql commands
-	EndPointNotPopulatedMsg   = "Endpoint not yet populated. To obtain the endpoint, use `confluent ksql app describe`."
+	EndPointNotPopulatedMsg   = "Endpoint not yet populated. To obtain the endpoint, use `confluent ksql cluster describe`."
 	KsqlDBNotBackedByKafkaMsg = "The ksqlDB cluster \"%s\" is backed by \"%s\" which is not the current Kafka cluster \"%s\".\nTo switch to the correct cluster, use `confluent kafka cluster use %s`.\n"
 
 	// local commands
@@ -87,8 +77,6 @@ const (
 	UpdatedSubjectLevelCompatibilityMsg = "Successfully updated Subject Level compatibility to \"%s\" for subject \"%s\"\n"
 	UpdatedSubjectLevelModeMsg          = "Successfully updated Subject level Mode to \"%s\" for subject \"%s\"\n"
 	ExporterActionMsg                   = "%s schema exporter \"%s\".\n"
-	NoSubjectsMsg                       = "No subjects."
-	NoExporterMsg                       = "No exporters."
 	SchemaRegistryClusterDeletedMsg     = "Deleted Schema Registry cluster for environment \"%s\".\n"
 	SchemaRegistryClusterUpgradedMsg    = "The Stream Governance package for environment \"%s\" has been upgraded to \"%s\".\n"
 
@@ -102,11 +90,10 @@ const (
 	NoMajorVersionUpdateMsg = "No major version updates are available.\n"
 
 	// cmd package
-	TokenExpiredMsg        = "Your token has expired. You are now logged out."
-	NotifyMajorUpdateMsg   = "A major version update is available for %s from (current: %s, latest: %s).\nTo view release notes and install the update, please run `%s update --major`.\n\n"
-	NotifyMinorUpdateMsg   = "A minor version update is available for %s from (current: %s, latest: %s).\nTo view release notes and install the update, please run `%s update`.\n\n"
-	LocalCommandDevOnlyMsg = "The local commands are intended for a single-node development environment only,\nNOT for production usage. https://docs.confluent.io/current/cli/index.html\n\n"
-	AutoLoginMsg           = "Successful auto log in with non-interactive credentials.\n"
+	TokenExpiredMsg      = "Your token has expired. You are now logged out."
+	NotifyMajorUpdateMsg = "A major version update is available for %s from (current: %s, latest: %s).\nTo view release notes and install the update, please run `%s update --major`.\n\n"
+	NotifyMinorUpdateMsg = "A minor version update is available for %s from (current: %s, latest: %s).\nTo view release notes and install the update, please run `%s update`.\n\n"
+	AutoLoginMsg         = "Successful auto log in with non-interactive credentials.\n"
 
 	// config package
 	APIKeyMissingMsg     = "API key missing"
@@ -119,10 +106,6 @@ const (
 	CurrentAPIKeyAutofixMsg = "Current API key \"%s\" of resource \"%s\" under context \"%s\" is not found.\n" +
 		"Removing current API key setting for the resource.\n" +
 		"You can re-add the API key with `confluent api-key store --resource %s'` and then set current API key with `confluent api-key use`.\n"
-
-	// feedback package
-	FeedbackNudgeMsg = "\nDid you know you can use the `confluent feedback` command to send the team feedback?\n" +
-		"Let us know if the CLI is meeting your needs, or what we can do to improve it.\n"
 
 	// sso package
 	NoBrowserSSOInstructionsMsg = "Navigate to the following link in your browser to authenticate:\n" +
@@ -138,15 +121,19 @@ const (
 	InvalidChoiceMsg = "%s is not a valid choice"
 
 	// General
-	CreatedResourceMsg         = "Created %s \"%s\".\n"
-	DeletedResourceMsg         = "Deleted %s \"%s\".\n"
-	RequestedDeleteResourceMsg = "Requested to delete %s \"%s\".\n"
-	UpdatedResourceMsg         = "Updated %s \"%s\".\n"
+	CreatedResourceMsg            = "Created %s \"%s\".\n"
+	DeletedResourceMsg            = "Deleted %s \"%s\".\n"
+	DeleteResourceConfirmMsg      = "Are you sure you want to delete %s \"%s\"?\nTo confirm, type \"%s\". To cancel, press Ctrl-C"
+	DeleteResourceConfirmYesNoMsg = `Are you sure you want to delete %s "%s"?`
+	DeleteACLConfirmMsg           = "Are you sure you want to delete the ACL corresponding to these parameters?"
+	DeleteACLsConfirmMsg          = "Are you sure you want to delete the ACLs corresponding to these parameters?"
+	RequestedDeleteResourceMsg    = "Requested to delete %s \"%s\".\n"
+	UpdatedResourceMsg            = "Updated %s \"%s\".\n"
 
 	UpdateSuccessMsg = "Updated the %s of %s \"%s\" to \"%s\".\n"
 
 	// Stream Sharing commands
 	ResendInviteMsg = "Sent invitation for \"%s\".\n"
-	OptInMsg        = "Successfully opted in to Stream Sharing.\n"
-	OptOutMsg       = "Successfully opted out of Stream Sharing.\n"
+	OptInMsg        = "Successfully opted in to Stream Sharing."
+	OptOutMsg       = "Successfully opted out of Stream Sharing."
 )

@@ -1,110 +1,110 @@
 [
   {
-    "created": "1999-02-24T00:00:00Z",
-    "description": "",
     "key": "DEACTIVATEDUSERKEY",
+    "description": "",
+    "owner_id": "sa-6666",
     "owner_email": "\u003cdeactivated user\u003e",
-    "owner_resource_id": "sa-6666",
+    "resource_type": "kafka",
     "resource_id": "lkc-bob",
-    "resource_type": "kafka"
+    "created": "1999-02-24T00:00:00Z"
   },
   {
-    "created": "1999-02-24T00:00:00Z",
-    "description": "works for two clusters",
     "key": "MULTICLUSTERKEY1",
+    "description": "works for two clusters",
+    "owner_id": "u-44ddd",
     "owner_email": "mhe@confluent.io",
-    "owner_resource_id": "u-44ddd",
+    "resource_type": "kafka",
     "resource_id": "lkc-abc",
-    "resource_type": "kafka"
+    "created": "1999-02-24T00:00:00Z"
   },
   {
-    "created": "1999-02-24T00:00:00Z",
-    "description": "works for two clusters but on a different sr cluster",
     "key": "MULTICLUSTERKEY2",
+    "description": "works for two clusters but on a different sr cluster",
+    "owner_id": "u-44ddd",
     "owner_email": "mhe@confluent.io",
-    "owner_resource_id": "u-44ddd",
+    "resource_type": "kafka",
     "resource_id": "lkc-abc",
-    "resource_type": "kafka"
+    "created": "1999-02-24T00:00:00Z"
   },
   {
-    "created": "1999-02-24T00:00:00Z",
-    "description": "works for two clusters and owned by service account",
     "key": "MULTICLUSTERKEY3",
+    "description": "works for two clusters and owned by service account",
+    "owner_id": "sa-12345",
     "owner_email": "\u003cservice account\u003e",
-    "owner_resource_id": "sa-12345",
+    "resource_type": "kafka",
     "resource_id": "lkc-abc",
-    "resource_type": "kafka"
+    "created": "1999-02-24T00:00:00Z"
   },
   {
-    "created": "1999-02-24T00:00:00Z",
-    "description": "first-key",
     "key": "MYKEY1",
+    "description": "first-key",
+    "owner_id": "u11",
     "owner_email": "bstrauch@confluent.io",
-    "owner_resource_id": "u11",
+    "resource_type": "kafka",
     "resource_id": "lkc-bob",
-    "resource_type": "kafka"
+    "created": "1999-02-24T00:00:00Z"
   },
   {
-    "created": "1999-02-24T00:00:00Z",
-    "description": "",
     "key": "MYKEY2",
+    "description": "",
+    "owner_id": "u-17",
     "owner_email": "mtodzo@confluent.io",
-    "owner_resource_id": "u-17",
+    "resource_type": "kafka",
     "resource_id": "lkc-abc",
-    "resource_type": "kafka"
+    "created": "1999-02-24T00:00:00Z"
   },
   {
-    "created": "1999-02-24T00:00:00Z",
-    "description": "",
     "key": "MYKEY3",
+    "description": "",
+    "owner_id": "u-44ddd",
     "owner_email": "mhe@confluent.io",
-    "owner_resource_id": "u-44ddd",
+    "resource_type": "kafka",
     "resource_id": "lkc-bob",
-    "resource_type": "kafka"
+    "created": "1999-02-24T00:00:00Z"
   },
   {
-    "created": "1999-02-24T00:00:00Z",
-    "description": "",
     "key": "SERVICEACCOUNTKEY1",
+    "description": "",
+    "owner_id": "sa-12345",
     "owner_email": "\u003cservice account\u003e",
-    "owner_resource_id": "sa-12345",
+    "resource_type": "kafka",
     "resource_id": "lkc-bob",
-    "resource_type": "kafka"
+    "created": "1999-02-24T00:00:00Z"
   },
   {
-    "created": "1999-02-24T00:00:00Z",
-    "description": "",
     "key": "UIAPIKEY100",
+    "description": "",
+    "owner_id": "u-22bbb",
     "owner_email": "u-22bbb@confluent.io",
-    "owner_resource_id": "u-22bbb",
+    "resource_type": "kafka",
     "resource_id": "lkc-cool1",
-    "resource_type": "kafka"
+    "created": "1999-02-24T00:00:00Z"
   },
   {
-    "created": "1999-02-24T00:00:00Z",
-    "description": "",
     "key": "UIAPIKEY101",
+    "description": "",
+    "owner_id": "u-22bbb",
     "owner_email": "u-22bbb@confluent.io",
-    "owner_resource_id": "u-22bbb",
+    "resource_type": "kafka",
     "resource_id": "lkc-other1",
-    "resource_type": "kafka"
+    "created": "1999-02-24T00:00:00Z"
   },
   {
-    "created": "1999-02-24T00:00:00Z",
-    "description": "",
     "key": "UIAPIKEY102",
+    "description": "",
+    "owner_id": "u-22bbb",
     "owner_email": "u-22bbb@confluent.io",
-    "owner_resource_id": "u-22bbb",
+    "resource_type": "ksql",
     "resource_id": "lksqlc-ksql1",
-    "resource_type": "ksql"
+    "created": "1999-02-24T00:00:00Z"
   },
   {
-    "created": "1999-02-24T00:00:00Z",
-    "description": "",
     "key": "UIAPIKEY103",
+    "description": "",
+    "owner_id": "u-22bbb",
     "owner_email": "u-22bbb@confluent.io",
-    "owner_resource_id": "u-22bbb",
+    "resource_type": "kafka",
     "resource_id": "lkc-cool1",
-    "resource_type": "kafka"
+    "created": "1999-02-24T00:00:00Z"
   }
 ]

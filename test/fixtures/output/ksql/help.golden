@@ -4,7 +4,6 @@ Usage:
   confluent ksql [command]
 
 Available Commands:
-  app         DEPRECATED: Manage ksqlDB apps.
   cluster     Manage ksqlDB clusters.
 
 Global Flags:

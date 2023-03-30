@@ -1,16 +1,17 @@
 package kafka
 
 import (
-	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	"github.com/spf13/cobra"
+
+	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/properties"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *mirrorCommand) newCreateCommand() *cobra.Command {
@@ -44,7 +45,7 @@ func (c *mirrorCommand) newCreateCommand() *cobra.Command {
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 
-	_ = cmd.MarkFlagRequired(linkFlagName)
+	cobra.CheckErr(cmd.MarkFlagRequired(linkFlagName))
 
 	return cmd
 }
@@ -112,6 +113,6 @@ func (c *mirrorCommand) create(cmd *cobra.Command, args []string) error {
 		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
-	utils.Printf(cmd, errors.CreatedResourceMsg, resource.MirrorTopic, mirrorTopicName)
+	output.Printf(errors.CreatedResourceMsg, resource.MirrorTopic, mirrorTopicName)
 	return nil
 }

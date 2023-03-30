@@ -14,12 +14,12 @@ type MachineContextInfo struct {
 }
 
 func ParseNetrcMachineName(machineName string) (*MachineContextInfo, error) {
-	if !strings.HasPrefix(machineName, netrcCredentialsPrefix) {
+	if !strings.HasPrefix(machineName, localCredentialsPrefix) {
 		return nil, errors.New("Incorrect machine name format")
 	}
 
 	// example: machinename = confluent-cli:ccloud-username-password:login-caas-team+integ-cli@confluent.io-https://devel.cpdev.cloud
-	credTypeAndContextNameString := suffixFromIndex(machineName, len(netrcCredentialsPrefix)+1)
+	credTypeAndContextNameString := suffixFromIndex(machineName, len(localCredentialsPrefix)+1)
 
 	// credTypeAndContextName = ccloud-username-password:login-caas-team+integ-cli@confluent.io-https://devel.cpdev.cloud
 	credType, contextNameString, err := extractCredentialType(credTypeAndContextNameString)
@@ -41,28 +41,26 @@ func ParseNetrcMachineName(machineName string) (*MachineContextInfo, error) {
 		URL:            url,
 		CaCertPath:     caCertPath,
 	}, nil
-
 }
 
-func extractCredentialType(nameSubstring string) (credType string, rest string, err error) {
+func extractCredentialType(nameSubstring string) (string, string, error) {
+	var credType string
 	if strings.HasPrefix(nameSubstring, mdsUsernamePasswordString) {
 		credType = mdsUsernamePasswordString
 	} else if strings.HasPrefix(nameSubstring, ccloudUsernamePasswordString) {
 		credType = ccloudUsernamePasswordString
-	} else if strings.HasPrefix(nameSubstring, ccloudSSORefreshTokenString) {
-		credType = ccloudSSORefreshTokenString
 	} else {
-		return "", "", errors.New("Incorrect machine name format")
+		return "", "", errors.New("incorrect machine name format")
 	}
 	// +1 to remove the character ":"
-	rest = suffixFromIndex(nameSubstring, len(credType)+1)
-	return
+	rest := suffixFromIndex(nameSubstring, len(credType)+1)
+	return credType, rest, nil
 }
 
-func parseContextName(nameSubstring string) (username string, url string, caCertPath string, err error) {
+func parseContextName(nameSubstring string) (string, string, string, error) {
 	contextNamePrefix := "login-"
 	if !strings.HasPrefix(nameSubstring, contextNamePrefix) {
-		return "", "", "", errors.New("Incorrect context name format")
+		return "", "", "", errors.New("incorrect context name format")
 	}
 
 	contextName := suffixFromIndex(nameSubstring, len(contextNamePrefix))
@@ -70,19 +68,20 @@ func parseContextName(nameSubstring string) (username string, url string, caCert
 	urlIndex := strings.Index(contextName, "http")
 
 	// -1 to exclude "-"
-	username = prefixToIndex(contextName, urlIndex-1)
+	username := prefixToIndex(contextName, urlIndex-1)
 
 	// +1 to exclude "-"
 	rest := suffixFromIndex(contextName, len(username)+1)
 
-	questionMarkIndex := strings.Index(rest, "?")
-	if questionMarkIndex == -1 {
-		url = rest
-	} else {
-		url = prefixToIndex(rest, questionMarkIndex)
-		caCertPath = suffixFromIndex(rest, questionMarkIndex+len("cacertpath")+2)
+	url := rest
+	caCertPath := ""
+
+	if idx := strings.Index(rest, "?"); idx != -1 {
+		url = prefixToIndex(rest, idx)
+		caCertPath = suffixFromIndex(rest, idx+len("cacertpath")+2)
 	}
-	return
+
+	return username, url, caCertPath, nil
 }
 
 func suffixFromIndex(s string, index int) string {

@@ -1,0 +1,1 @@
+Error: unable to parse config test/fixtures/input/connect/config-malformed-old.json: only string values are permitted for the configuration "quickstart"

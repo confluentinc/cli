@@ -5,14 +5,14 @@ import (
 	"net/http"
 	"testing"
 
-	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
 	"github.com/stretchr/testify/require"
+
+	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
 )
 
 // Handler for: "/connect/v1/environments/{env}/clusters/{clusters}/connectors/{connector}"
 func handleConnector(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		if r.Method == http.MethodDelete {
 			err := json.NewEncoder(w).Encode(connectv1.InlineResponse200{})
 			require.NoError(t, err)
@@ -25,7 +25,6 @@ func handleConnector(t *testing.T) http.HandlerFunc {
 // Handler for: "/connect/v1/environments/{env}/clusters/{clusters}/connectors/{connector}/config"
 func handleConnectorConfig(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		var request map[string]string
 		err := json.NewDecoder(r.Body).Decode(&request)
 		require.NoError(t, err)
@@ -41,7 +40,6 @@ func handleConnectorConfig(t *testing.T) http.HandlerFunc {
 // Handler for: "/connect/v1/environments/{env}/clusters/{clusters}/connectors/{connector}/pause"
 func handleConnectorPause(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNoContent)
 	}
 }
@@ -49,7 +47,6 @@ func handleConnectorPause(t *testing.T) http.HandlerFunc {
 // Handler for: "/connect/v1/environments/{env}/clusters/{clusters}/connectors/{connector}/resume"
 func handleConnectorResume(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusNoContent)
 	}
 }
@@ -57,7 +54,6 @@ func handleConnectorResume(t *testing.T) http.HandlerFunc {
 // Handler for: "/connect/v1/environments/{env}/clusters/{clusters}/connectors"
 func handleConnectors(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		if r.Method == http.MethodGet {
 			connectorExpansion := connectv1.ConnectV1ConnectorExpansion{
 				Id: &connectv1.ConnectV1ConnectorExpansionId{Id: connectv1.PtrString("lcc-123")},
@@ -94,7 +90,6 @@ func handleConnectors(t *testing.T) http.HandlerFunc {
 // Handler for: "/connect/v1/environments/{env}/clusters/{clusters}/connector-plugins"
 func handlePlugins(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		if r.Method == http.MethodGet {
 			connectorPlugin1 := connectv1.InlineResponse2002{
 				Class: "GcsSink",
@@ -113,72 +108,94 @@ func handlePlugins(t *testing.T) http.HandlerFunc {
 // Handler for: "/connect/v1/environments/{env}/clusters/{clusters}/connector-plugins/{plugin}/config/validate"
 func handlePluginValidate(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		configs := &[]connectv1.InlineResponse2003Configs{
-			connectv1.InlineResponse2003Configs{
+			{
 				Value: &connectv1.InlineResponse2003Value{
 					Name:   connectv1.PtrString("kafka.api.key"),
 					Errors: &[]string{`"kafka.api.key" is required`},
 				},
 				Definition: &connectv1.InlineResponse2003Definition{
 					Documentation: connectv1.PtrString("Kafka API Key"),
-					Required:      connectv1.PtrBool(true)}},
-			connectv1.InlineResponse2003Configs{
+					Required:      connectv1.PtrBool(true),
+				},
+			},
+			{
 				Value: &connectv1.InlineResponse2003Value{
 					Name:   connectv1.PtrString("kafka.api.secret"),
 					Errors: &[]string{`"kafka.api.secret" is required`},
 				},
 				Definition: &connectv1.InlineResponse2003Definition{
 					Documentation: connectv1.PtrString("Kafka API Secret"),
-					Required:      connectv1.PtrBool(true)}},
-			connectv1.InlineResponse2003Configs{
+					Required:      connectv1.PtrBool(true),
+				},
+			},
+			{
 				Value: &connectv1.InlineResponse2003Value{
 					Name:   connectv1.PtrString("topics"),
-					Errors: &[]string{`"topics" is required`}},
+					Errors: &[]string{`"topics" is required`},
+				},
 				Definition: &connectv1.InlineResponse2003Definition{
 					Documentation: connectv1.PtrString("Identifies the topic name."),
-					Required:      connectv1.PtrBool(true)}},
-			connectv1.InlineResponse2003Configs{
+					Required:      connectv1.PtrBool(true),
+				},
+			},
+			{
 				Value: &connectv1.InlineResponse2003Value{
 					Name:   connectv1.PtrString("data.format"),
-					Errors: &[]string{`"data.format" is required, Value "null" doesn't belong to the property's "data.format" enum`}},
+					Errors: &[]string{`"data.format" is required, Value "null" doesn't belong to the property's "data.format" enum`},
+				},
 				Definition: &connectv1.InlineResponse2003Definition{
 					Documentation: connectv1.PtrString("Sets the input value format."),
-					Required:      connectv1.PtrBool(true)}},
-			connectv1.InlineResponse2003Configs{
+					Required:      connectv1.PtrBool(true),
+				},
+			},
+			{
 				Value: &connectv1.InlineResponse2003Value{
 					Name:   connectv1.PtrString("gcs.credentials.config"),
-					Errors: &[]string{`"gcs.credentials.config" is required`}},
+					Errors: &[]string{`"gcs.credentials.config" is required`},
+				},
 				Definition: &connectv1.InlineResponse2003Definition{
 					Documentation: connectv1.PtrString("GCP service account JSON file."),
-					Required:      connectv1.PtrBool(true)}},
-			connectv1.InlineResponse2003Configs{
+					Required:      connectv1.PtrBool(true),
+				},
+			},
+			{
 				Value: &connectv1.InlineResponse2003Value{
 					Name:   connectv1.PtrString("gcs.bucket.name"),
-					Errors: &[]string{`"gcs.bucket.name" is required`}},
+					Errors: &[]string{`"gcs.bucket.name" is required`},
+				},
 				Definition: &connectv1.InlineResponse2003Definition{
 					Documentation: connectv1.PtrString("GCS bucket name."),
-					Required:      connectv1.PtrBool(true)}},
-			connectv1.InlineResponse2003Configs{
+					Required:      connectv1.PtrBool(true),
+				},
+			},
+			{
 				Value: &connectv1.InlineResponse2003Value{
 					Name:   connectv1.PtrString("time.interval"),
-					Errors: &[]string{`"data.format" is required, Value "null" doesn't belong to the property's "time.interval" enum`}},
+					Errors: &[]string{`"data.format" is required, Value "null" doesn't belong to the property's "time.interval" enum`},
+				},
 				Definition: &connectv1.InlineResponse2003Definition{
 					Documentation: connectv1.PtrString("Partitioning interval of data."),
-					Required:      connectv1.PtrBool(true)}},
-			connectv1.InlineResponse2003Configs{
+					Required:      connectv1.PtrBool(true),
+				},
+			},
+			{
 				Value: &connectv1.InlineResponse2003Value{
 					Name:   connectv1.PtrString("tasks.max"),
-					Errors: &[]string{`"tasks.max" is required`}},
+					Errors: &[]string{`"tasks.max" is required`},
+				},
 				Definition: &connectv1.InlineResponse2003Definition{
 					Documentation: connectv1.PtrString("Tasks"),
-					Required:      connectv1.PtrBool(true)}},
-			connectv1.InlineResponse2003Configs{
-				Value: &connectv1.InlineResponse2003Value{
-					Name: connectv1.PtrString("flush.size")},
+					Required:      connectv1.PtrBool(true),
+				},
+			},
+			{
+				Value: &connectv1.InlineResponse2003Value{Name: connectv1.PtrString("flush.size")},
 				Definition: &connectv1.InlineResponse2003Definition{
 					Documentation: connectv1.PtrString("Commit file size."),
-					Required:      connectv1.PtrBool(false)}},
+					Required:      connectv1.PtrBool(false),
+				},
+			},
 		}
 
 		err := json.NewEncoder(w).Encode(connectv1.InlineResponse2003{Configs: configs})

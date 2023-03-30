@@ -31,7 +31,7 @@ func NewMockPublicS3(response, path, query string, req *require.Assertions) *htt
 func NewMockPublicS3Error() *httptest.Server {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(500)
+		w.WriteHeader(http.StatusInternalServerError)
 	})
 	return httptest.NewServer(mux)
 }
@@ -417,7 +417,7 @@ func TestPublicRepo_DownloadVersion(t *testing.T) {
 				Endpoint: NewMockPublicS3(ListVersionsPublicFixture, "/confluent-cli/0.47.0/confluent_0.47.0_darwin_amd64", "", req).URL,
 				FileSystem: &pmock.PassThroughFileSystem{
 					Mock: &pmock.FileSystem{
-						CopyFunc: func(dst io.Writer, src io.Reader) (i int64, e error) {
+						CopyFunc: func(_ io.Writer, _ io.Reader) (int64, error) {
 							return 0, errors.New("you no can do that")
 						},
 					},

@@ -1,18 +1,22 @@
 [
   {
+    "is_current": false,
     "id": "a-595",
     "name": "default"
   },
   {
-    "id": "not-595",
-    "name": "new-other-name"
-  },
-  {
+    "is_current": false,
     "id": "env-123",
     "name": "env123"
   },
   {
+    "is_current": false,
     "id": "env-srUpdate",
     "name": "srUpdate"
+  },
+  {
+    "is_current": true,
+    "id": "not-595",
+    "name": "new-other-name"
   }
 ]

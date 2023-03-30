@@ -9,8 +9,13 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
+
+type out struct {
+	Name       string `human:"Name" serialized:"name"`
+	Platform   string `human:"Platform" serialized:"platform"`
+	Credential string `human:"Credential" serialized:"credential"`
+}
 
 func (c *command) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -52,12 +57,12 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	}
 
 	if apiKey {
-		utils.Println(cmd, credential.APIKeyPair.Key)
+		output.Println(credential.APIKeyPair.Key)
 		return nil
 	}
 
 	if username {
-		utils.Println(cmd, credential.Username)
+		output.Println(credential.Username)
 		return nil
 	}
 
@@ -65,21 +70,11 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 }
 
 func describeContext(cmd *cobra.Command, ctx *dynamicconfig.DynamicContext) error {
-	var (
-		listFields        = []string{"Name", "Platform", "Credential"}
-		humanRenames      = map[string]string{"Name": "Name", "Platform": "Platform", "Credential": "Credential"}
-		structuredRenames = map[string]string{"Name": "name", "Platform": "platform", "Credential": "credential"}
-	)
-
-	row := &struct {
-		Name       string
-		Platform   string
-		Credential string
-	}{
+	table := output.NewTable(cmd)
+	table.Add(&out{
 		Name:       ctx.Name,
 		Platform:   ctx.PlatformName,
 		Credential: ctx.CredentialName,
-	}
-
-	return output.DescribeObject(cmd, row, listFields, humanRenames, structuredRenames)
+	})
+	return table.Print()
 }

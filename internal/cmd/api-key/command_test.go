@@ -7,24 +7,26 @@ import (
 	"testing"
 	"time"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/confluentinc/ccloud-sdk-go-v1"
-	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
-	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
-	apikeysmock "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2/mock"
-	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
-	iamMock "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2/mock"
-	"github.com/gogo/protobuf/types"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
+	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
+	apikeysmock "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2/mock"
+	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
+	cmkmock "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2/mock"
+	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
+	iammock "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2/mock"
+	ksqlmock "github.com/confluentinc/ccloud-sdk-go-v2/ksql/mock"
+	ksqlv2 "github.com/confluentinc/ccloud-sdk-go-v2/ksql/v2"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/mock"
-	cliMock "github.com/confluentinc/cli/mock"
+	climock "github.com/confluentinc/cli/mock"
 )
 
 const (
@@ -59,16 +61,6 @@ const (
 )
 
 var (
-	apiValueV1 = &schedv1.ApiKey{
-		LogicalClusters: []*schedv1.ApiKey_Cluster{{Id: kafkaClusterID, Type: "kafka"}},
-		UserId:          serviceAccountId,
-		UserResourceId:  userResourceId,
-		Key:             apiKeyVal,
-		Secret:          apiSecretVal,
-		Description:     apiKeyDescription,
-		Created:         types.TimestampNow(),
-		Id:              apiKeyResourceId,
-	}
 	apiValue = apikeysv2.IamV2ApiKey{
 		Spec: &apikeysv2.IamV2ApiKeySpec{
 			Description: apikeysv2.PtrString(apiKeyDescription),
@@ -115,28 +107,24 @@ var (
 			},
 			Secret: apikeysv2.PtrString(myApiKeySecretVal),
 		},
-		Id: apikeysv2.PtrString(myApiKeyVal),
-		Metadata: &apikeysv2.ObjectMeta{
-			CreatedAt: &time.Time{},
-		},
+		Id:       apikeysv2.PtrString(myApiKeyVal),
+		Metadata: &apikeysv2.ObjectMeta{CreatedAt: &time.Time{}},
 	}
 )
 
 type APITestSuite struct {
 	suite.Suite
 	conf                  *v1.Config
-	apiMock               *ccsdkmock.APIKey
 	apiKeysMock           *apikeysmock.APIKeysIamV2Api
-	iamServiceAccountMock *iamMock.ServiceAccountsIamV2Api
+	iamServiceAccountMock *iammock.ServiceAccountsIamV2Api
 	keystore              *mock.KeyStore
-	kafkaCluster          *schedv1.KafkaCluster
-	ksqlCluster           *schedv1.KSQLCluster
-	srCluster             *schedv1.SchemaRegistryCluster
-	srMothershipMock      *ccsdkmock.SchemaRegistry
-	kafkaMock             *ccsdkmock.Kafka
-	ksqlMock              *ccsdkmock.KSQL
+	kafkaCluster          *cmkv2.CmkV2Cluster
+	srCluster             *ccloudv1.SchemaRegistryCluster
+	srMothershipMock      *ccloudv1mock.SchemaRegistry
+	kafkaMock             *cmkmock.ClustersCmkV2Api
+	ksqlmock              *ksqlmock.ClustersKsqldbcmV2Api
 	isPromptPipe          bool
-	userMock              *ccsdkmock.User
+	userMock              *ccloudv1mock.UserInterface
 }
 
 // Require
@@ -148,53 +136,50 @@ func (suite *APITestSuite) SetupTest() {
 	srCluster.SrCredentials = &v1.APIKeyPair{Key: apiKeyVal, Secret: apiSecretVal}
 	cluster := ctx.KafkaClusterContext.GetActiveKafkaClusterConfig()
 	// Set up audit logs
-	ctx.State.Auth.Organization.AuditLog = &orgv1.AuditLog{
+	ctx.State.Auth.Organization.AuditLog = &ccloudv1.AuditLog{
 		ClusterId:        cluster.ID,
 		AccountId:        "env-zy987",
 		ServiceAccountId: auditLogServiceAccountId,
 		TopicName:        "confluent-audit-log-events",
 	}
-	suite.kafkaCluster = &schedv1.KafkaCluster{
-		Id:         cluster.ID,
-		Name:       cluster.Name,
-		Endpoint:   cluster.APIEndpoint,
-		Enterprise: true,
-		AccountId:  environment,
+	suite.kafkaCluster = &cmkv2.CmkV2Cluster{
+		Id:   cmkv2.PtrString(cluster.ID),
+		Spec: &cmkv2.CmkV2ClusterSpec{DisplayName: cmkv2.PtrString(cluster.Name)},
 	}
-	suite.ksqlCluster = &schedv1.KSQLCluster{
-		Id:   "ksql-123",
-		Name: "ksql",
-	}
-	suite.srCluster = &schedv1.SchemaRegistryCluster{
+	suite.srCluster = &ccloudv1.SchemaRegistryCluster{
 		Id: srClusterID,
 	}
-	suite.kafkaMock = &ccsdkmock.Kafka{
-		DescribeFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) (*schedv1.KafkaCluster, error) {
-			return suite.kafkaCluster, nil
+	suite.kafkaMock = &cmkmock.ClustersCmkV2Api{
+		GetCmkV2ClusterFunc: func(ctx context.Context, _ string) cmkv2.ApiGetCmkV2ClusterRequest {
+			return cmkv2.ApiGetCmkV2ClusterRequest{}
 		},
-		ListFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) (clusters []*schedv1.KafkaCluster, e error) {
-			return []*schedv1.KafkaCluster{suite.kafkaCluster}, nil
-		},
-	}
-	suite.ksqlMock = &ccsdkmock.KSQL{
-		ListFunc: func(arg0 context.Context, arg1 *schedv1.KSQLCluster) (clusters []*schedv1.KSQLCluster, e error) {
-			return []*schedv1.KSQLCluster{suite.ksqlCluster}, nil
+		GetCmkV2ClusterExecuteFunc: func(req cmkv2.ApiGetCmkV2ClusterRequest) (cmkv2.CmkV2Cluster, *http.Response, error) {
+			return *suite.kafkaCluster, nil, nil
 		},
 	}
-	suite.srMothershipMock = &ccsdkmock.SchemaRegistry{
-		CreateSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *schedv1.SchemaRegistryClusterConfig) (*schedv1.SchemaRegistryCluster, error) {
+	suite.ksqlmock = &ksqlmock.ClustersKsqldbcmV2Api{
+		GetKsqldbcmV2ClusterFunc: func(context.Context, string) ksqlv2.ApiGetKsqldbcmV2ClusterRequest {
+			return ksqlv2.ApiGetKsqldbcmV2ClusterRequest{}
+		},
+		GetKsqldbcmV2ClusterExecuteFunc: func(ksqlv2.ApiGetKsqldbcmV2ClusterRequest) (ksqlv2.KsqldbcmV2Cluster, *http.Response, error) {
+			cluster := ksqlv2.KsqldbcmV2Cluster{
+				Id: ksqlv2.PtrString("ksql-123"),
+				Spec: &ksqlv2.KsqldbcmV2ClusterSpec{
+					DisplayName: ksqlv2.PtrString("ksql"),
+				},
+			}
+			return cluster, nil, nil
+		},
+	}
+	suite.srMothershipMock = &ccloudv1mock.SchemaRegistry{
+		CreateSchemaRegistryClusterFunc: func(_ context.Context, _ *ccloudv1.SchemaRegistryClusterConfig) (*ccloudv1.SchemaRegistryCluster, error) {
 			return suite.srCluster, nil
 		},
-		GetSchemaRegistryClusterFunc: func(ctx context.Context, cluster *schedv1.SchemaRegistryCluster) (*schedv1.SchemaRegistryCluster, error) {
+		GetSchemaRegistryClusterFunc: func(_ context.Context, _ *ccloudv1.SchemaRegistryCluster) (*ccloudv1.SchemaRegistryCluster, error) {
 			return suite.srCluster, nil
 		},
-		GetSchemaRegistryClustersFunc: func(ctx context.Context, cluster *schedv1.SchemaRegistryCluster) (clusters []*schedv1.SchemaRegistryCluster, e error) {
-			return []*schedv1.SchemaRegistryCluster{suite.srCluster}, nil
-		},
-	}
-	suite.apiMock = &ccsdkmock.APIKey{
-		CreateFunc: func(ctx context.Context, apiKey *schedv1.ApiKey) (*schedv1.ApiKey, error) {
-			return apiValueV1, nil
+		GetSchemaRegistryClustersFunc: func(_ context.Context, _ *ccloudv1.SchemaRegistryCluster) ([]*ccloudv1.SchemaRegistryCluster, error) {
+			return []*ccloudv1.SchemaRegistryCluster{suite.srCluster}, nil
 		},
 	}
 	suite.apiKeysMock = &apikeysmock.APIKeysIamV2Api{
@@ -227,48 +212,42 @@ func (suite *APITestSuite) SetupTest() {
 		},
 	}
 	suite.keystore = &mock.KeyStore{
-		HasAPIKeyFunc: func(key, clusterId string) (b bool, e error) {
+		HasAPIKeyFunc: func(key, _ string) (bool, error) {
 			return key == apiKeyVal, nil
 		},
-		StoreAPIKeyFunc: func(key *v1.APIKeyPair, clusterId string) error {
+		StoreAPIKeyFunc: func(_ *v1.APIKeyPair, _ string) error {
 			return nil
 		},
-		DeleteAPIKeyFunc: func(key string) error {
+		DeleteAPIKeyFunc: func(_ string) error {
 			return nil
 		},
 	}
-	suite.iamServiceAccountMock = &iamMock.ServiceAccountsIamV2Api{
+	suite.iamServiceAccountMock = &iammock.ServiceAccountsIamV2Api{
 		ListIamV2ServiceAccountsFunc: func(_ context.Context) iamv2.ApiListIamV2ServiceAccountsRequest {
 			return iamv2.ApiListIamV2ServiceAccountsRequest{}
 		},
 		ListIamV2ServiceAccountsExecuteFunc: func(_ iamv2.ApiListIamV2ServiceAccountsRequest) (iamv2.IamV2ServiceAccountList, *http.Response, error) {
-			list := iamv2.IamV2ServiceAccountList{
-				Data: []iamv2.IamV2ServiceAccount{iamv2.IamV2ServiceAccount{
-					Id: iamv2.PtrString(userResourceId),
-				}},
-			}
+			list := iamv2.IamV2ServiceAccountList{Data: []iamv2.IamV2ServiceAccount{{Id: iamv2.PtrString(userResourceId)}}}
 			return list, nil, nil
 		},
 	}
-	suite.userMock = &ccsdkmock.User{
-		GetServiceAccountsFunc: func(arg0 context.Context) (users []*orgv1.User, e error) {
-			return []*orgv1.User{
-				{
-					Id:          serviceAccountId,
-					ResourceId:  userResourceId,
-					ServiceName: serviceAccountName,
-				},
-			}, nil
+	suite.userMock = &ccloudv1mock.UserInterface{
+		GetServiceAccountsFunc: func(_ context.Context) ([]*ccloudv1.User, error) {
+			return []*ccloudv1.User{{
+				Id:          serviceAccountId,
+				ResourceId:  userResourceId,
+				ServiceName: serviceAccountName,
+			}}, nil
 		},
-		GetServiceAccountFunc: func(_ context.Context, _ int32) (*orgv1.User, error) {
-			return &orgv1.User{
+		GetServiceAccountFunc: func(_ context.Context, _ int32) (*ccloudv1.User, error) {
+			return &ccloudv1.User{
 				Id:          serviceAccountId,
 				ResourceId:  userResourceId,
 				ServiceName: serviceAccountName,
 			}, nil
 		},
-		ListFunc: func(_ context.Context) ([]*orgv1.User, error) {
-			return []*orgv1.User{
+		ListFunc: func(_ context.Context) ([]*ccloudv1.User, error) {
+			return []*ccloudv1.User{
 				{
 					Id:          serviceAccountId,
 					ResourceId:  userResourceId,
@@ -278,7 +257,7 @@ func (suite *APITestSuite) SetupTest() {
 					Id:          myServiceAccountId,
 					ResourceId:  myUserResourceId,
 					ServiceName: myAccountName,
-					Email:       "csreesangkom@confluent.io",
+					Email:       "cli-mock-email@confluent.io",
 				},
 				{
 					Id:         auditLogServiceAccountId,
@@ -290,26 +269,15 @@ func (suite *APITestSuite) SetupTest() {
 }
 
 func (suite *APITestSuite) newCmd() *cobra.Command {
-	privateClient := &ccloud.Client{
-		Auth:           &ccsdkmock.Auth{},
-		Account:        &ccsdkmock.Account{},
-		Kafka:          suite.kafkaMock,
-		SchemaRegistry: suite.srMothershipMock,
-		Connect:        &ccsdkmock.Connect{},
+	client := &ccloudv1.Client{
 		User:           suite.userMock,
-		APIKey:         suite.apiMock,
-		KSQL:           suite.ksqlMock,
-		Metrics:        &ccsdkmock.Metrics{},
-	}
-	apiKeyClient := &apikeysv2.APIClient{
-		APIKeysIamV2Api: suite.apiKeysMock,
-	}
-	iamClient := &iamv2.APIClient{
-		ServiceAccountsIamV2Api: suite.iamServiceAccountMock,
+		SchemaRegistry: suite.srMothershipMock,
 	}
 	v2Client := &ccloudv2.Client{
-		ApiKeysClient: apiKeyClient,
-		IamClient:     iamClient,
+		ApiKeysClient: &apikeysv2.APIClient{APIKeysIamV2Api: suite.apiKeysMock},
+		CmkClient:     &cmkv2.APIClient{ClustersCmkV2Api: suite.kafkaMock},
+		IamClient:     &iamv2.APIClient{ServiceAccountsIamV2Api: suite.iamServiceAccountMock},
+		KsqlClient:    &ksqlv2.APIClient{ClustersKsqldbcmV2Api: suite.ksqlmock},
 	}
 	resolverMock := &pcmd.FlagResolverImpl{
 		Prompt: &mock.Prompt{
@@ -325,12 +293,11 @@ func (suite *APITestSuite) newCmd() *cobra.Command {
 		},
 		Out: os.Stdout,
 	}
-	prerunner := &cliMock.Commander{
-		FlagResolver:  resolverMock,
-		PrivateClient: privateClient,
-		V2Client:      v2Client,
-		MDSClient:     nil,
-		Config:        suite.conf,
+	prerunner := &climock.Commander{
+		FlagResolver: resolverMock,
+		Client:       client,
+		V2Client:     v2Client,
+		Config:       suite.conf,
 	}
 	return New(prerunner, suite.keystore, resolverMock)
 }
@@ -342,14 +309,12 @@ func (suite *APITestSuite) TestCreateSrApiKey() {
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
-	req.True(suite.apiMock.CreateCalled())
-	inputKey := suite.apiMock.CreateCalls()[0].Arg1
-	req.Equal(inputKey.LogicalClusters[0].Id, srClusterID)
+	req.True(suite.apiKeysMock.CreateIamV2ApiKeyExecuteCalled())
 }
 
 func (suite *APITestSuite) TestCreateKafkaApiKey() {
 	cmd := suite.newCmd()
-	cmd.SetArgs([]string{"create", "--resource", suite.kafkaCluster.Id})
+	cmd.SetArgs([]string{"create", "--resource", suite.kafkaCluster.GetId()})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -367,7 +332,7 @@ func (suite *APITestSuite) TestCreateCloudAPIKey() {
 
 func (suite *APITestSuite) TestDeleteApiKey() {
 	cmd := suite.newCmd()
-	cmd.SetArgs([]string{"delete", apiKeyVal})
+	cmd.SetArgs([]string{"delete", apiKeyVal, "--force"})
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
@@ -384,7 +349,7 @@ func (suite *APITestSuite) TestListSrApiKey() {
 
 func (suite *APITestSuite) TestListKafkaApiKey() {
 	cmd := suite.newCmd()
-	_, err := pcmd.ExecuteCommand(cmd, "list", "--resource", suite.kafkaCluster.Id)
+	_, err := pcmd.ExecuteCommand(cmd, "list", "--resource", suite.kafkaCluster.GetId())
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.apiKeysMock.ListIamV2ApiKeysExecuteCalled())
@@ -393,12 +358,12 @@ func (suite *APITestSuite) TestListKafkaApiKey() {
 // Audit Log Destination Clusters are kafka clusters, however their API keys are created by internal service accounts
 func (suite *APITestSuite) TestListAuditLogDestinationClusterApiKey() {
 	cmd := suite.newCmd()
-	out, err := pcmd.ExecuteCommand(cmd, "list", "--resource", suite.kafkaCluster.Id)
+	out, err := pcmd.ExecuteCommand(cmd, "list", "--resource", suite.kafkaCluster.GetId())
 
 	req := require.New(suite.T())
 	req.Nil(err)
 	req.True(suite.apiKeysMock.ListIamV2ApiKeysExecuteCalled())
-	req.Contains(out, "auditlog service account")
+	req.Contains(out, "<auditlog service account>")
 }
 
 func (suite *APITestSuite) TestListCloudAPIKey() {
@@ -418,7 +383,7 @@ func (suite *APITestSuite) TestListEmails() {
 	req.True(suite.apiKeysMock.ListIamV2ApiKeysExecuteCalled())
 	req.Contains(out, "<auditlog service account>")
 	req.Contains(out, "<service account>")
-	req.Contains(out, "csreesangkom@confluent.io")
+	req.Contains(out, "cli-mock-email@confluent.io")
 }
 
 func (suite *APITestSuite) TestStoreApiKeyForce() {
@@ -444,7 +409,7 @@ func (suite *APITestSuite) TestStoreApiKeyPipe() {
 	req := require.New(suite.T())
 	suite.isPromptPipe = true
 	cmd := suite.newCmd()
-	// no need to force for new api keys
+	// no need to force for new API keys
 	cmd.SetArgs([]string{"store", anotherApiKeyVal, "-", "--resource", kafkaClusterID})
 	err := cmd.Execute()
 	req.NoError(err)

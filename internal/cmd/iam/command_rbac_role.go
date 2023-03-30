@@ -3,22 +3,15 @@ package iam
 import (
 	"context"
 	"encoding/json"
-	"os"
 
-	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
 	"github.com/tidwall/pretty"
 
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
-	"github.com/confluentinc/mds-sdk-go/mdsv2alpha1"
+	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
+	"github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-)
-
-var (
-	roleFields = []string{"Name", "AccessPolicy"}
-	roleLabels = []string{"Name", "Access Policy"}
 )
 
 type roleCommand struct {
@@ -27,8 +20,8 @@ type roleCommand struct {
 }
 
 type prettyRole struct {
-	Name         string
-	AccessPolicy string
+	Name         string `human:"Name"`
+	AccessPolicy string `human:"Access Policy"`
 }
 
 func newRoleCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
@@ -46,10 +39,10 @@ func newRoleCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)
 	}
 
-	c.AddCommand(c.newDescribeCommand())
-	c.AddCommand(c.newListCommand())
+	cmd.AddCommand(c.newDescribeCommand())
+	cmd.AddCommand(c.newListCommand())
 
-	return c.Command
+	return cmd
 }
 
 func (c *roleCommand) createContext() context.Context {
@@ -82,14 +75,4 @@ func createPrettyRoleV2(role mdsv2alpha1.Role) (*prettyRole, error) {
 		role.Name,
 		string(pretty.Pretty(marshalled)),
 	}, nil
-}
-
-func outputTable(data [][]string) {
-	tablePrinter := tablewriter.NewWriter(os.Stdout)
-	tablePrinter.SetAutoWrapText(false)
-	tablePrinter.SetAutoFormatHeaders(false)
-	tablePrinter.SetHeader(roleLabels)
-	tablePrinter.AppendBulk(data)
-	tablePrinter.SetBorder(false)
-	tablePrinter.Render()
 }

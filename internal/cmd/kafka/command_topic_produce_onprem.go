@@ -6,22 +6,24 @@ import (
 	"os"
 	"os/signal"
 
-	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/spf13/cobra"
+
+	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/log"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/serdes"
 )
 
 func (c *authenticatedTopicCommand) newProduceCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "produce <topic>",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.onPremProduce,
+		RunE:  c.produceOnPrem,
 		Short: "Produce messages to a Kafka topic.",
 		Long:  "Produce messages to a Kafka topic. Configuration and command guide: https://docs.confluent.io/confluent-cli/current/cp-produce-consume.html.\n\nWhen using this command, you cannot modify the message header, and the message header will not be printed out.",
 		Example: examples.BuildExampleString(
@@ -41,21 +43,25 @@ func (c *authenticatedTopicCommand) newProduceCommandOnPrem() *cobra.Command {
 	pcmd.AddMechanismFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("schema", "", "The path to the local schema file.")
 	pcmd.AddValueFormatFlag(cmd)
-	cmd.Flags().String("refs", "", "The path to the references file.")
+	cmd.Flags().String("references", "", "The path to the references file.")
 	cmd.Flags().Bool("parse-key", false, "Parse key from the message.")
 	cmd.Flags().String("delimiter", ":", "The delimiter separating each key and value.")
 	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the producer client.`)
 	cmd.Flags().String("config-file", "", "The path to the configuration file (in json or avro format) for the producer client.")
-	cmd.Flags().String("sr-endpoint", "", "The URL of the schema registry cluster.")
+	cmd.Flags().String("schema-registry-endpoint", "", "The URL of the Schema Registry cluster.")
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired("bootstrap")
-	_ = cmd.MarkFlagRequired("ca-location")
+	cobra.CheckErr(cmd.MarkFlagFilename("schema", "avsc", "json", "proto"))
+	cobra.CheckErr(cmd.MarkFlagFilename("references", "json"))
+	cobra.CheckErr(cmd.MarkFlagFilename("config-file", "avsc", "json"))
+
+	cobra.CheckErr(cmd.MarkFlagRequired("bootstrap"))
+	cobra.CheckErr(cmd.MarkFlagRequired("ca-location"))
 
 	return cmd
 }
 
-func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []string) error {
+func (c *authenticatedTopicCommand) produceOnPrem(cmd *cobra.Command, args []string) error {
 	if cmd.Flags().Changed("config-file") && cmd.Flags().Changed("config") {
 		return errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "config-file", "config")
 	}
@@ -98,7 +104,7 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 		return err
 	}
 
-	schemaPath, err := cmd.Flags().GetString("schema")
+	schema, err := cmd.Flags().GetString("schema")
 	if err != nil {
 		return err
 	}
@@ -120,19 +126,18 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 		SchemaDir:   dir,
 		SchemaType:  serializationProvider.GetSchemaName(),
 		ValueFormat: valueFormat,
-		SchemaPath:  &schemaPath,
+		SchemaPath:  &schema,
 		Refs:        refs,
 	}
 	metaInfo, referencePathMap, err := c.registerSchema(cmd, schemaCfg)
 	if err != nil {
 		return err
 	}
-	err = serializationProvider.LoadSchema(schemaPath, referencePathMap)
-	if err != nil {
+	if err := serializationProvider.LoadSchema(schema, referencePathMap); err != nil {
 		return err
 	}
 
-	utils.ErrPrintln(cmd, errors.StartingProducerMsg)
+	output.ErrPrintln(errors.StartingProducerMsg)
 
 	// Line reader for producer input.
 	scanner := bufio.NewScanner(os.Stdin)
@@ -178,7 +183,7 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 		}
 		err = producer.Produce(msg, deliveryChan)
 		if err != nil {
-			utils.ErrPrintf(cmd, errors.FailedToProduceErrorMsg, msg.TopicPartition.Offset, err)
+			output.ErrPrintf(errors.FailedToProduceErrorMsg, msg.TopicPartition.Offset, err)
 		}
 
 		e := <-deliveryChan                // read a ckafka event from the channel
@@ -190,12 +195,25 @@ func (c *authenticatedTopicCommand) onPremProduce(cmd *cobra.Command, args []str
 				close(input)
 				break
 			}
-			utils.ErrPrintf(cmd, errors.FailedToProduceErrorMsg, m.TopicPartition.Offset, m.TopicPartition.Error)
+			output.ErrPrintf(errors.FailedToProduceErrorMsg, m.TopicPartition.Offset, m.TopicPartition.Error)
 		}
 		go scan()
 	}
 	close(deliveryChan)
 	return scanErr
+}
+
+func prepareSerializer(cmd *cobra.Command, topicName string) (string, string, serdes.SerializationProvider, error) {
+	valueFormat, err := cmd.Flags().GetString("value-format")
+	if err != nil {
+		return "", "", nil, err
+	}
+	subject := topicNameStrategy(topicName)
+	serializationProvider, err := serdes.GetSerializationProvider(valueFormat)
+	if err != nil {
+		return "", "", nil, err
+	}
+	return valueFormat, subject, serializationProvider, nil
 }
 
 func (c *authenticatedTopicCommand) registerSchema(cmd *cobra.Command, schemaCfg *sr.RegisterSchemaConfigs) ([]byte, map[string]string, error) {

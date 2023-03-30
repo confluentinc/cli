@@ -9,17 +9,10 @@ type Cipher struct {
 	EncryptedDataKey string
 }
 
-func NewCipher(cipherMode string) *Cipher {
-
-	cipher := &Cipher{
+func NewCipher() *Cipher {
+	return &Cipher{
 		Iterations:     MetadataKeyDefaultIterations,
 		KeyLength:      MetadataKeyDefaultLengthBytes,
-		EncryptionAlgo: AES_CBC,
+		EncryptionAlgo: AesGcm,
 	}
-
-	if cipherMode != "" {
-		cipher.EncryptionAlgo = cipherMode
-	}
-
-	return cipher
 }

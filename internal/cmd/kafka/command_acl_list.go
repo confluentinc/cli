@@ -1,17 +1,10 @@
 package kafka
 
 import (
-	"context"
-	"fmt"
-	"net/http"
-	"os"
-
 	"github.com/spf13/cobra"
 
 	aclutil "github.com/confluentinc/cli/internal/pkg/acl"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 )
 
@@ -23,7 +16,11 @@ func (c *aclCommand) newListCommand() *cobra.Command {
 		RunE:  c.list,
 	}
 
-	cmd.Flags().AddFlagSet(resourceFlags())
+	cmd.Flags().Bool("cluster-scope", false, "Modify ACLs for the cluster.")
+	cmd.Flags().String("topic", "", "Modify ACLs for the specified topic resource.")
+	cmd.Flags().String("consumer-group", "", "Modify ACLs for the specified consumer group resource.")
+	cmd.Flags().String("transactional-id", "", "Modify ACLs for the specified TransactionalID resource.")
+	cmd.Flags().Bool("prefix", false, "When this flag is set, the specified resource name is interpreted as a prefix.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -40,10 +37,12 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	userIdMap, err := c.mapResourceIdToUserId()
+	users, err := c.getAllUsers()
 	if err != nil {
 		return err
 	}
+
+	userIdMap := c.mapResourceIdToUserId(users)
 
 	if err := c.aclResourceIdToNumericId(acl, userIdMap); err != nil {
 		return err
@@ -53,47 +52,26 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 		return acl[0].errors
 	}
 
-	resourceIdMap, err := c.mapUserIdToResourceId()
-	if err != nil {
-		return err
-	}
+	resourceIdMap := c.mapUserIdToResourceId(users)
 
 	kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
-	err = c.provisioningClusterCheck(kafkaClusterConfig.ID)
+
+	if err := c.provisioningClusterCheck(kafkaClusterConfig.ID); err != nil {
+		return err
+	}
+
+	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {
 		return err
 	}
 
-	if kafkaREST, _ := c.GetKafkaREST(); kafkaREST != nil {
-		aclDataList, httpResp, err := kafkaREST.CloudClient.GetKafkaAcls(kafkaClusterConfig.ID, acl[0].ACLBinding)
-		if err != nil && httpResp != nil {
-			// Kafka REST is available, but an error occurred
-			return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
-		}
-		if err == nil && httpResp != nil {
-			if httpResp.StatusCode != http.StatusOK {
-				return errors.NewErrorWithSuggestions(
-					fmt.Sprintf(errors.KafkaRestUnexpectedStatusErrorMsg, httpResp.Request.URL, httpResp.StatusCode),
-					errors.InternalServerErrorSuggestions)
-			}
-			// Kafka REST is available and there was no error
-			return aclutil.PrintACLsFromKafkaRestResponseWithResourceIdMap(cmd, aclDataList, cmd.OutOrStdout(), resourceIdMap)
-		}
-	}
-
-	// Kafka REST is not available, fallback to KafkaAPI
-	cluster, err := dynamicconfig.KafkaCluster(c.Context)
+	aclDataList, httpResp, err := kafkaREST.CloudClient.GetKafkaAcls(kafkaClusterConfig.ID, acl[0].ACLBinding)
 	if err != nil {
-		return err
+		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
-	resp, err := c.PrivateClient.Kafka.ListACLs(context.Background(), cluster, convertToFilter(acl[0].ACLBinding))
-	if err != nil {
-		return err
-	}
-
-	return aclutil.PrintACLsWithResourceIdMap(cmd, resp, os.Stdout, resourceIdMap)
+	return aclutil.PrintACLsFromKafkaRestResponseWithResourceIdMap(cmd, aclDataList.Data, resourceIdMap)
 }

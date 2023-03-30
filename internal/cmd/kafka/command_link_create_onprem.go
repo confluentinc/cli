@@ -4,14 +4,15 @@ import (
 	"fmt"
 
 	"github.com/antihax/optional"
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *linkCommand) newCreateCommandOnPrem() *cobra.Command {
@@ -23,11 +24,11 @@ func (c *linkCommand) newCreateCommandOnPrem() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a cluster link, using a configuration file.",
-				Code: "confluent kafka link create my-link --destination-cluster-id 123456789 --config-file config.txt",
+				Code: "confluent kafka link create my-link --destination-cluster 123456789 --config-file config.txt",
 			},
 			examples.Example{
 				Text: "Create a cluster link using command line flags.",
-				Code: "confluent kafka link create my-link --destination-cluster-id 123456789 --destination-bootstrap-server my-host:1234 --source-api-key my-key --source-api-secret my-secret",
+				Code: "confluent kafka link create my-link --destination-cluster 123456789 --destination-bootstrap-server my-host:1234 --source-api-key my-key --source-api-secret my-secret",
 			},
 		),
 	}
@@ -44,7 +45,7 @@ func (c *linkCommand) newCreateCommandOnPrem() *cobra.Command {
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
-	_ = cmd.MarkFlagRequired(destinationClusterIdFlagName)
+	cobra.CheckErr(cmd.MarkFlagRequired(destinationClusterIdFlagName))
 
 	return cmd
 }
@@ -72,9 +73,8 @@ func (c *linkCommand) createOnPrem(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// For on prem deployments, we only support source initiated links.
 	if linkMode != Source {
-		return errors.New("Confluent Platform only supports source initiated links.")
+		return errors.New("only source-initiated links can be created for Confluent Platform from the CLI")
 	}
 
 	if err := c.addSecurityConfigToMap(cmd, linkMode, configMap); err != nil {
@@ -125,13 +125,13 @@ func (c *linkCommand) createOnPrem(cmd *cobra.Command, args []string) error {
 	if dryRun {
 		msg = "[DRY RUN]: " + msg
 	}
-	utils.Print(cmd, msg)
+	output.Print(msg)
 
 	return nil
 }
 
 func getListFieldsOnPrem(includeTopics bool) []string {
-	x := []string{"LinkName"}
+	x := []string{"Name"}
 
 	if includeTopics {
 		x = append(x, "TopicName")

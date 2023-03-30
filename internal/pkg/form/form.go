@@ -2,13 +2,13 @@ package form
 
 import (
 	"fmt"
-	"regexp"
-	"strings"
+	"os"
 
 	"github.com/spf13/cobra"
+	"golang.org/x/term"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 /*
@@ -32,47 +32,37 @@ Save file as: (file.txt) other.txt
 
 type Form struct {
 	Fields    []Field
-	Responses map[string]interface{}
-}
-
-type Field struct {
-	ID           string
-	Prompt       string
-	DefaultValue interface{}
-	IsYesOrNo    bool
-	IsHidden     bool
-	Regex        string
-	RequireYes   bool
+	Responses map[string]any
 }
 
 func New(fields ...Field) *Form {
 	return &Form{
 		Fields:    fields,
-		Responses: make(map[string]interface{}),
+		Responses: make(map[string]any),
 	}
 }
 
-func (f *Form) Prompt(command *cobra.Command, prompt Prompt) error {
+func (f *Form) Prompt(prompt Prompt) error {
 	for i := 0; i < len(f.Fields); i++ {
 		field := f.Fields[i]
-		show(command, field)
+		output.Print(field.String())
 
-		val, err := read(field, prompt)
+		val, err := field.read(prompt)
 		if err != nil {
 			return err
 		}
 
-		res, err := validate(field, val)
+		res, err := field.validate(val)
 		if err != nil {
 			if fmt.Sprintf(errors.InvalidInputFormatErrorMsg, val, field.ID) == err.Error() {
-				utils.ErrPrintln(command, err)
-				i-- //re-prompt on invalid regex
+				output.ErrPrintln(err)
+				i-- // re-prompt on invalid regex
 				continue
 			}
 			return err
 		}
-		if checkRequiredYes(command, field, res) {
-			i-- //re-prompt on required yes
+		if checkRequiredYes(field, res) {
+			i-- // re-prompt on required yes
 		}
 
 		f.Responses[field.ID] = res
@@ -81,62 +71,53 @@ func (f *Form) Prompt(command *cobra.Command, prompt Prompt) error {
 	return nil
 }
 
-func show(cmd *cobra.Command, field Field) {
-	utils.Print(cmd, field.Prompt)
-	if field.IsYesOrNo {
-		utils.Print(cmd, " (y/n)")
-	}
-	utils.Print(cmd, ": ")
-
-	if field.DefaultValue != nil {
-		utils.Printf(cmd, "(%v) ", field.DefaultValue)
-	}
-}
-
-func read(field Field, prompt Prompt) (string, error) {
-	var val string
-	var err error
-
-	if field.IsHidden {
-		val, err = prompt.ReadLineMasked()
-	} else {
-		val, err = prompt.ReadLine()
-	}
+func ConfirmDeletion(cmd *cobra.Command, promptMsg, stringToType string) (bool, error) {
+	force, err := cmd.Flags().GetBool("force")
 	if err != nil {
-		return "", err
+		return false, err
+	}
+	if force {
+		return true, nil
 	}
 
-	return val, nil
+	prompt := NewPrompt(os.Stdin)
+	isYesNo := stringToType == ""
+	f := New(Field{ID: "confirm", Prompt: promptMsg, IsYesOrNo: isYesNo})
+	if err := f.Prompt(prompt); err != nil && isYesNo {
+		return false, errors.New(errors.FailedToReadInputErrorMsg)
+	} else if err != nil {
+		return false, err
+	}
+
+	if isYesNo {
+		return f.Responses["confirm"].(bool), nil
+	}
+
+	if f.Responses["confirm"].(string) == stringToType || f.Responses["confirm"].(string) == fmt.Sprintf(`"%s"`, stringToType) {
+		return true, nil
+	}
+
+	DeleteResourceConfirmSuggestions := "Use the `--force` flag to delete without a confirmation prompt."
+	return false, errors.NewErrorWithSuggestions(fmt.Sprintf(`input does not match "%s"`, stringToType), DeleteResourceConfirmSuggestions)
 }
 
-func validate(field Field, val string) (interface{}, error) {
-	if field.IsYesOrNo {
-		switch strings.ToUpper(val) {
-		case "Y", "YES":
-			return true, nil
-		case "N", "NO":
-			return false, nil
-		}
-		return false, fmt.Errorf(errors.InvalidChoiceMsg, val)
-	}
+func ConfirmEnter() error {
+	// This function prevents echoing of user input instead of displaying text or *'s by using
+	// term.ReadPassword so that the CLI will appear to wait until 'enter' or 'Ctrl-C' are entered.
+	output.Print("Press enter to continue or Ctrl-C to cancel:")
 
-	if val == "" && field.DefaultValue != nil {
-		return field.DefaultValue, nil
+	if _, err := term.ReadPassword(int(os.Stdin.Fd())); err != nil {
+		return err
 	}
+	// Warning: do not remove this print line; it prevents an unexpected interaction with browser.OpenUrl causing pages to open in the background
+	output.Print("\n")
 
-	if field.Regex != "" {
-		re, _ := regexp.Compile(field.Regex)
-		if match := re.MatchString(val); !match {
-			return nil, fmt.Errorf(errors.InvalidInputFormatErrorMsg, val, field.ID)
-		}
-	}
-
-	return val, nil
+	return nil
 }
 
-func checkRequiredYes(cmd *cobra.Command, field Field, res interface{}) bool {
+func checkRequiredYes(field Field, res any) bool {
 	if field.IsYesOrNo && field.RequireYes && !res.(bool) {
-		utils.Println(cmd, "You must accept to continue. To abandon flow, use Ctrl-C.")
+		output.Println("You must accept to continue. To abandon flow, use Ctrl-C.")
 		return true
 	}
 	return false

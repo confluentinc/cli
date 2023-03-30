@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -26,13 +26,12 @@ func New(prerunner pcmd.PreRunner, ver *pversion.Version) *cobra.Command {
 		CLICommand: pcmd.NewAnonymousCLICommand(cmd, prerunner),
 		ver:        ver,
 	}
+	cmd.RunE = c.version
 
-	c.RunE = c.version
-
-	return c.Command
+	return cmd
 }
 
-func (c *command) version(cmd *cobra.Command, _ []string) error {
-	utils.Println(cmd, c.ver)
+func (c *command) version(_ *cobra.Command, _ []string) error {
+	output.Println(c.ver)
 	return nil
 }

@@ -1,6 +1,6 @@
-  Mirror Topic Name | Partition | Partition Mirror Lag | Error Message  | Error Code | Last Source Fetch Offset  
---------------------+-----------+----------------------+----------------+------------+---------------------------
-  dest-topic-1      |         0 |               142857 |                |            |                  1293009  
-  dest-topic-1      |         1 |               285714 |                |            |                 28340404  
-  dest-topic-1      |         2 |               571428 |                |            |                  5739304  
-  dest-topic-1      |        -1 |                   -1 | Not authorized |        401 |                       -1  
+  Mirror Topic Name | Partition | Partition Mirror Lag | Last Source Fetch Offset | Error Message  | Error Code  
+--------------------+-----------+----------------------+--------------------------+----------------+-------------
+  dest-topic-1      |        -1 |                   -1 |                       -1 | Not authorized |        401  
+  dest-topic-1      |         0 |               142857 |                  1293009 |                |             
+  dest-topic-1      |         1 |               285714 |                 28340404 |                |             
+  dest-topic-1      |         2 |               571428 |                  5739304 |                |             

@@ -4,11 +4,11 @@ import (
 	"context"
 	"testing"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-	"github.com/confluentinc/ccloud-sdk-go-v1"
-	ccloudmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
+
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -32,10 +32,10 @@ func TestAuditLogDescribeUnconfigured(t *testing.T) {
 }
 
 func mockAuditLogCommand(configured bool) *cobra.Command {
-	client := &ccloud.Client{
-		User: &ccloudmock.User{
-			GetServiceAccountFunc: func(_ context.Context, id int32) (*orgv1.User, error) {
-				return &orgv1.User{ResourceId: "sa-123456"}, nil
+	client := &ccloudv1.Client{
+		User: &ccloudv1mock.UserInterface{
+			GetServiceAccountFunc: func(_ context.Context, id int32) (*ccloudv1.User, error) {
+				return &ccloudv1.User{ResourceId: "sa-123456"}, nil
 			},
 		},
 	}
@@ -43,7 +43,7 @@ func mockAuditLogCommand(configured bool) *cobra.Command {
 	cfg := v1.AuthenticatedCloudConfigMock()
 
 	if configured {
-		cfg.Context().State.Auth.Organization.AuditLog = &orgv1.AuditLog{
+		cfg.Context().State.Auth.Organization.AuditLog = &ccloudv1.AuditLog{
 			ClusterId:        "lkc-ab123",
 			AccountId:        "env-zy987",
 			ServiceAccountId: 12345,
@@ -51,5 +51,5 @@ func mockAuditLogCommand(configured bool) *cobra.Command {
 		}
 	}
 
-	return New(climock.NewPreRunnerMock(client, nil, nil, nil, nil, cfg))
+	return New(climock.NewPreRunnerMock(client, nil, nil, nil, cfg))
 }

@@ -8,7 +8,7 @@ import (
 )
 
 type command struct {
-	*pcmd.AuthenticatedStateFlagCommand
+	*pcmd.CLICommand
 	flagResolver pcmd.FlagResolver
 	plugin       secret.PasswordProtection
 }
@@ -21,13 +21,13 @@ func New(prerunner pcmd.PreRunner, flagResolver pcmd.FlagResolver, plugin secret
 	}
 
 	c := &command{
-		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner),
-		flagResolver:                  flagResolver,
-		plugin:                        plugin,
+		CLICommand:   pcmd.NewAnonymousCLICommand(cmd, prerunner),
+		flagResolver: flagResolver,
+		plugin:       plugin,
 	}
 
-	c.AddCommand(c.newMasterKeyCommand())
-	c.AddCommand(c.newFileCommand())
+	cmd.AddCommand(c.newMasterKeyCommand())
+	cmd.AddCommand(c.newFileCommand())
 
-	return c.Command
+	return cmd
 }

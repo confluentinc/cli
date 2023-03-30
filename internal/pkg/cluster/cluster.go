@@ -3,25 +3,15 @@ package cluster
 import (
 	"fmt"
 	"net/http"
-	"os"
 	"strings"
 
-	"github.com/confluentinc/go-printer"
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
-	"github.com/olekukonko/tablewriter"
+	"github.com/spf13/cobra"
+
+	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
-
-type prettyCluster struct {
-	Name     string
-	Type     string
-	ID       string
-	CID      string
-	Hosts    string
-	Protocol string
-}
 
 const (
 	connectClusterTypeName        = "connect-cluster"
@@ -30,46 +20,37 @@ const (
 	schemaRegistryClusterTypeName = "schema-registry-cluster"
 )
 
-var (
-	clusterFields = []string{"Name", "Type", "ID", "CID", "Hosts", "Protocol"}
-	clusterLabels = []string{"Name", "Type", " Kafka ID", "Component ID", "Hosts", "Protocol"}
-)
+type prettyCluster struct {
+	Name           string `human:"Name" serialized:"name"`
+	Type           string `human:"Type" serialized:"type"`
+	KafkaClusterId string `human:"Kafka Cluster" serialized:"kafka_cluster_id"`
+	ComponentId    string `human:"Component ID" serialized:"component_id"`
+	Hosts          string `human:"Hosts" serialized:"hosts"`
+	Protocol       string `human:"Protocol" serialized:"protocol"`
+}
 
-func PrintCluster(clusterInfos []mds.ClusterInfo, format string) error {
-	if format == output.Human.String() {
-		var data [][]string
-		for _, clusterInfo := range clusterInfos {
-			clusterDisplay, err := createPrettyCluster(clusterInfo)
-			if err != nil {
-				return err
-			}
-			data = append(data, printer.ToRow(clusterDisplay, clusterFields))
-		}
-		outputTable(data)
-	} else {
-		return output.StructuredOutput(format, clusterInfos)
+func PrintClusters(cmd *cobra.Command, clusterInfos []mds.ClusterInfo) error {
+	if output.GetFormat(cmd).IsSerialized() {
+		return output.SerializedOutput(cmd, clusterInfos)
 	}
 
-	return nil
+	list := output.NewList(cmd)
+	for _, clusterInfo := range clusterInfos {
+		list.Add(createPrettyCluster(clusterInfo))
+	}
+	return list.Print()
 }
 
 func createPrettyProtocol(protocol mds.Protocol) string {
-
 	switch protocol {
-	case mds.PROTOCOL_SASL_PLAINTEXT:
-		return "SASL_PLAINTEXT"
-	case mds.PROTOCOL_SASL_SSL:
-		return "SASL_SSL"
-	case mds.PROTOCOL_HTTP:
-		return "HTTP"
-	case mds.PROTOCOL_HTTPS:
-		return "HTTPS"
+	case mds.PROTOCOL_SASL_PLAINTEXT, mds.PROTOCOL_SASL_SSL, mds.PROTOCOL_HTTP, mds.PROTOCOL_HTTPS:
+		return string(protocol)
 	default:
 		return ""
 	}
 }
 
-func createPrettyCluster(clusterInfo mds.ClusterInfo) (*prettyCluster, error) {
+func createPrettyCluster(clusterInfo mds.ClusterInfo) *prettyCluster {
 	var t, id, cid, p string
 	switch {
 	case clusterInfo.Scope.Clusters.ConnectCluster != "":
@@ -91,34 +72,24 @@ func createPrettyCluster(clusterInfo mds.ClusterInfo) (*prettyCluster, error) {
 	}
 	hosts := make([]string, len(clusterInfo.Hosts))
 	for i, hostInfo := range clusterInfo.Hosts {
-		hosts[i], _ = createPrettyHost(hostInfo)
+		hosts[i] = createPrettyHost(hostInfo)
 	}
 	p = createPrettyProtocol(clusterInfo.Protocol)
 	return &prettyCluster{
-		clusterInfo.ClusterName,
-		t,
-		id,
-		cid,
-		strings.Join(hosts, ", "),
-		p,
-	}, nil
-}
-
-func createPrettyHost(hostInfo mds.HostInfo) (string, error) {
-	if hostInfo.Port > 0 {
-		return fmt.Sprintf("%s:%d", hostInfo.Host, hostInfo.Port), nil
+		Name:           clusterInfo.ClusterName,
+		Type:           t,
+		KafkaClusterId: id,
+		ComponentId:    cid,
+		Hosts:          strings.Join(hosts, ", "),
+		Protocol:       p,
 	}
-	return hostInfo.Host, nil
 }
 
-func outputTable(data [][]string) {
-	tablePrinter := tablewriter.NewWriter(os.Stdout)
-	tablePrinter.SetAutoWrapText(false)
-	tablePrinter.SetAutoFormatHeaders(false)
-	tablePrinter.SetHeader(clusterLabels)
-	tablePrinter.AppendBulk(data)
-	tablePrinter.SetBorder(false)
-	tablePrinter.Render()
+func createPrettyHost(hostInfo mds.HostInfo) string {
+	if hostInfo.Port > 0 {
+		return fmt.Sprintf("%s:%d", hostInfo.Host, hostInfo.Port)
+	}
+	return hostInfo.Host
 }
 
 func HandleClusterError(err error, response *http.Response) error {

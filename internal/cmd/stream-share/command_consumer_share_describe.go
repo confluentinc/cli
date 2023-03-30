@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -34,7 +35,7 @@ func (c *command) newConsumerShareDescribeCommand() *cobra.Command {
 func (c *command) describeConsumerShare(cmd *cobra.Command, args []string) error {
 	shareId := args[0]
 
-	consumerShare, err := c.V2Client.DescribeConsumerShare(shareId)
+	consumerShare, err := c.V2Client.DescribeConsumerShare(args[0])
 	if err != nil {
 		return err
 	}
@@ -53,25 +54,28 @@ func (c *command) describeConsumerShare(cmd *cobra.Command, args []string) error
 		network = privateNetwork
 	}
 
-	consumerShareObj := c.buildConsumerShare(consumerShare)
+	out := c.buildConsumerShare(consumerShare)
 	cloud := network.GetCloud()
 	if cloud.CdxV1AwsNetwork == nil && cloud.CdxV1AzureNetwork == nil && cloud.CdxV1GcpNetwork == nil {
-		return output.DescribeObject(cmd, consumerShareObj, consumerShareListFields, consumerHumanLabelMap, consumerStructuredLabelMap)
+		table := output.NewTable(cmd)
+		table.Add(out)
+		table.Filter([]string{"Id", "ProviderName", "ProviderOrganizationName", "Status", "InviteExpiresAt"})
+		return table.Print()
 	}
 
-	return c.handlePrivateLinkClusterConsumerShare(cmd, network, consumerShareObj)
+	return c.handlePrivateLinkClusterConsumerShare(cmd, network, out)
 }
 
-func (c *command) handlePrivateLinkClusterConsumerShare(cmd *cobra.Command, network cdxv1.CdxV1Network, consumerShareObj *consumerShare) error {
+func (c *command) handlePrivateLinkClusterConsumerShare(cmd *cobra.Command, network cdxv1.CdxV1Network, out *consumerShareOut) error {
 	networkDetails := getPrivateLinkNetworkDetails(network)
-	consumerShareObj.NetworkDnsDomain = network.GetDnsDomain()
-	consumerShareObj.NetworkZones = strings.Join(network.GetZones(), ",")
-	consumerShareObj.NetworkZonalSubdomains = mapSubdomainsToList(network.GetZonalSubdomains())
-	consumerShareObj.NetworkKind = networkDetails.networkKind
-	consumerShareObj.NetworkPrivateLinkDataType = networkDetails.privateLinkDataType
-	consumerShareObj.NetworkPrivateLinkData = networkDetails.privateLinkData
+	out.NetworkDnsDomain = network.GetDnsDomain()
+	out.NetworkZones = strings.Join(network.GetZones(), ",")
+	out.NetworkZonalSubdomains = mapSubdomainsToList(network.GetZonalSubdomains())
+	out.NetworkKind = networkDetails.networkKind
+	out.NetworkPrivateLinkDataType = networkDetails.privateLinkDataType
+	out.NetworkPrivateLinkData = networkDetails.privateLinkData
 
-	return output.DescribeObject(cmd, consumerShareObj, append(consumerShareListFields, redeemTokenPrivateLinkFields...),
-		combineMaps(consumerHumanLabelMap, redeemTokenPrivateLinkHumanLabelMap),
-		combineMaps(consumerStructuredLabelMap, redeemTokenPrivateLinkStructuredLabelMap))
+	table := output.NewTable(cmd)
+	table.Add(out)
+	return table.Print()
 }

@@ -3,12 +3,11 @@ package kafka
 import (
 	"context"
 	"net/http"
-	"sort"
 	"time"
 
-	"github.com/confluentinc/go-printer"
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -18,24 +17,24 @@ import (
 )
 
 type brokerTaskData struct {
-	ClusterId         string                     `json:"cluster_id" yaml:"cluster_id"`
-	BrokerId          int32                      `json:"broker_id" yaml:"broker_id"`
-	TaskType          kafkarestv3.BrokerTaskType `json:"task_type" yaml:"task_type"`
-	TaskStatus        string                     `json:"task_status" yaml:"task_status"`
-	CreatedAt         time.Time                  `json:"created_at" yaml:"created_at"`
-	UpdatedAt         time.Time                  `json:"updated_at" yaml:"updated_at"`
-	ShutdownScheduled bool                       `json:"shutdown_scheduled,omitempty" yaml:"shutdown_scheduled,omitempty"`
-	SubTaskStatuses   string                     `json:"sub_task_statuses" yaml:"sub_task_statuses"`
-	ErrorCode         int32                      `json:"error_code,omitempty" yaml:"error_code,omitempty"`
-	ErrorMessage      string                     `json:"error_message,omitempty" yaml:"error_message,omitempty"`
+	ClusterId         string                     `human:"Cluster" serialized:"cluster_id"`
+	BrokerId          int32                      `human:"Broker ID" serialized:"broker_id"`
+	TaskType          kafkarestv3.BrokerTaskType `human:"Task Type" serialized:"task_type"`
+	TaskStatus        string                     `human:"Task Status" serialized:"task_status"`
+	CreatedAt         time.Time                  `human:"Created At" serialized:"created_at"`
+	UpdatedAt         time.Time                  `human:"Updated At" serialized:"updated_at"`
+	ShutdownScheduled bool                       `human:"Shutdown Scheduled,omitempty" serialized:"shutdown_scheduled,omitempty"`
+	SubtaskStatuses   string                     `human:"Subtask Statuses" serialized:"subtask_statuses"`
+	ErrorCode         int32                      `human:"Error Code,omitempty" serialized:"error_code,omitempty"`
+	ErrorMessage      string                     `human:"Error Message,omitempty" serialized:"error_message,omitempty"`
 }
 
 func (c *brokerCommand) newGetTasksCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "get-tasks [id]",
+		Short: "List broker tasks.",
 		Args:  cobra.MaximumNArgs(1),
 		RunE:  c.getTasks,
-		Short: "List broker tasks.",
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "List remove-broker tasks for broker 1.",
@@ -62,17 +61,12 @@ func (c *brokerCommand) getTasks(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	taskName, err := cmd.Flags().GetString("task-type")
+	taskType, err := cmd.Flags().GetString("task-type")
 	if err != nil {
 		return err
 	}
 
-	taskType, err := getBrokerTaskType(taskName)
-	if err != nil {
-		return err
-	}
-
-	format, err := cmd.Flags().GetString(output.FlagName)
+	brokerTaskType, err := getBrokerTaskType(taskType)
 	if err != nil {
 		return err
 	}
@@ -89,47 +83,33 @@ func (c *brokerCommand) getTasks(cmd *cobra.Command, args []string) error {
 
 	var taskData kafkarestv3.BrokerTaskDataList
 	if all { // get BrokerTasks for the cluster
-		taskData, err = getBrokerTasksForCluster(restClient, restContext, clusterId, taskType)
+		taskData, err = getBrokerTasksForCluster(restClient, restContext, clusterId, brokerTaskType)
 		if err != nil {
 			return err
 		}
 	} else { // fetch individual broker configs
-		taskData, err = getBrokerTasksForBroker(restClient, restContext, clusterId, brokerId, taskType)
+		taskData, err = getBrokerTasksForBroker(restClient, restContext, clusterId, brokerId, brokerTaskType)
 		if err != nil {
 			return err
 		}
 	}
 
-	if format == output.Human.String() {
-		configsTableLabels := []string{"Cluster ID", "Broker ID", "Task Type", "Task Status", "Created At", "Updated At", "Shutdown Scheduled", "Subtask Statuses", "Error Code", "Error Message"}
-		configsTableEntries := make([][]string, len(taskData.Data))
-		for i, entry := range taskData.Data {
-			s := parseBrokerTaskData(entry)
-			configsTableEntries[i] = printer.ToRow(&s, []string{"ClusterId", "BrokerId", "TaskType", "TaskStatus", "CreatedAt", "UpdatedAt", "ShutdownScheduled", "SubTaskStatuses", "ErrorCode", "ErrorMessage"})
-		}
-		sort.Slice(configsTableEntries, func(i, j int) bool {
-			return configsTableEntries[i][0] < configsTableEntries[j][0]
-		})
-		printer.RenderCollectionTable(configsTableEntries, configsTableLabels)
-		return nil
+	list := output.NewList(cmd)
+	for _, entry := range taskData.Data {
+		list.Add(parseBrokerTaskData(entry))
 	}
-
-	printData := make([]brokerTaskData, len(taskData.Data))
-	for i, entry := range taskData.Data {
-		printData[i] = parseBrokerTaskData(entry)
-	}
-	return output.StructuredOutputForCommand(cmd, format, printData)
+	return list.Print()
 }
 
-func parseBrokerTaskData(entry kafkarestv3.BrokerTaskData) brokerTaskData {
-	s := brokerTaskData{
+func parseBrokerTaskData(entry kafkarestv3.BrokerTaskData) *brokerTaskData {
+	s := &brokerTaskData{
 		ClusterId:       entry.ClusterId,
 		BrokerId:        entry.BrokerId,
 		TaskType:        entry.TaskType,
-		TaskStatus:      string(entry.TaskStatus),
+		TaskStatus:      entry.TaskStatus,
 		CreatedAt:       entry.CreatedAt,
 		UpdatedAt:       entry.UpdatedAt,
-		SubTaskStatuses: mapToKeyValueString(entry.SubTaskStatuses),
+		SubtaskStatuses: mapToKeyValueString(entry.SubTaskStatuses),
 	}
 	if entry.ShutdownScheduled != nil {
 		s.ShutdownScheduled = *entry.ShutdownScheduled

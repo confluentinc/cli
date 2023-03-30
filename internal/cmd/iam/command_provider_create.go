@@ -29,8 +29,8 @@ func (c *identityProviderCommand) newCreateCommand() *cobra.Command {
 	cmd.Flags().String("description", "", "Description of the identity provider.")
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired("issuer-uri")
-	_ = cmd.MarkFlagRequired("jwks-uri")
+	cobra.CheckErr(cmd.MarkFlagRequired("issuer-uri"))
+	cobra.CheckErr(cmd.MarkFlagRequired("jwks-uri"))
 
 	return cmd
 }
@@ -43,12 +43,12 @@ func (c *identityProviderCommand) create(cmd *cobra.Command, args []string) erro
 		return err
 	}
 
-	issuer, err := cmd.Flags().GetString("issuer-uri")
+	issuerUri, err := cmd.Flags().GetString("issuer-uri")
 	if err != nil {
 		return err
 	}
 
-	jwksuri, err := cmd.Flags().GetString("jwks-uri")
+	jwksUri, err := cmd.Flags().GetString("jwks-uri")
 	if err != nil {
 		return err
 	}
@@ -56,23 +56,21 @@ func (c *identityProviderCommand) create(cmd *cobra.Command, args []string) erro
 	newIdentityProvider := identityproviderv2.IamV2IdentityProvider{
 		DisplayName: identityproviderv2.PtrString(name),
 		Description: identityproviderv2.PtrString(description),
-		Issuer:      identityproviderv2.PtrString(issuer),
-		JwksUri:     identityproviderv2.PtrString(jwksuri),
+		Issuer:      identityproviderv2.PtrString(issuerUri),
+		JwksUri:     identityproviderv2.PtrString(jwksUri),
 	}
-	resp, err := c.V2Client.CreateIdentityProvider(newIdentityProvider)
+	provider, err := c.V2Client.CreateIdentityProvider(newIdentityProvider)
 	if err != nil {
 		return err
 	}
 
-	identityProvider := &identityProvider{
-		Id:        *resp.Id,
-		Name:      *resp.DisplayName,
-		IssuerUri: *resp.Issuer,
-		JwksUri:   *resp.JwksUri,
-	}
-	if resp.Description != nil {
-		identityProvider.Description = *resp.Description
-	}
-
-	return output.DescribeObject(cmd, identityProvider, providerListFields, providerHumanLabelMap, providerStructuredLabelMap)
+	table := output.NewTable(cmd)
+	table.Add(&identityProviderOut{
+		Id:          provider.GetId(),
+		Name:        provider.GetDisplayName(),
+		Description: provider.GetDescription(),
+		IssuerUri:   provider.GetIssuer(),
+		JwksUri:     provider.GetJwksUri(),
+	})
+	return table.Print()
 }

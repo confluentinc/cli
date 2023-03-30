@@ -7,8 +7,8 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *command) newUseCommand() *cobra.Command {
@@ -22,7 +22,8 @@ func (c *command) newUseCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String(resourceFlagName, "", "The resource ID.")
-	_ = cmd.MarkFlagRequired(resourceFlagName)
+
+	cobra.CheckErr(cmd.MarkFlagRequired(resourceFlagName))
 
 	return cmd
 }
@@ -30,7 +31,7 @@ func (c *command) newUseCommand() *cobra.Command {
 func (c *command) use(cmd *cobra.Command, args []string) error {
 	c.setKeyStoreIfNil()
 	apiKey := args[0]
-	resourceType, clusterId, _, err := c.resolveResourceId(cmd, c.PrivateClient)
+	resourceType, clusterId, _, err := c.resolveResourceId(cmd, c.V2Client)
 	if err != nil {
 		return err
 	}
@@ -45,6 +46,6 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.NewWrapErrorWithSuggestions(err, errors.APIKeyUseFailedErrorMsg, fmt.Sprintf(errors.APIKeyUseFailedSuggestions, apiKey))
 	}
-	utils.Printf(cmd, errors.UseAPIKeyMsg, apiKey, clusterId)
+	output.Printf(errors.UseAPIKeyMsg, apiKey, clusterId)
 	return nil
 }

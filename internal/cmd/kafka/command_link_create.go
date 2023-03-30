@@ -4,16 +4,17 @@ import (
 	"fmt"
 	"strings"
 
-	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	"github.com/spf13/cobra"
+
+	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/properties"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 type linkMode int
@@ -29,10 +30,10 @@ const (
 	destinationApiKeyFlagName          = "destination-api-key"
 	destinationApiSecretFlagName       = "destination-api-secret"
 	destinationBootstrapServerFlagName = "destination-bootstrap-server"
-	destinationClusterIdFlagName       = "destination-cluster-id"
+	destinationClusterIdFlagName       = "destination-cluster"
 	noValidateFlagName                 = "no-validate"
 	sourceBootstrapServerFlagName      = "source-bootstrap-server"
-	sourceClusterIdFlagName            = "source-cluster-id"
+	sourceClusterIdFlagName            = "source-cluster"
 
 	authHelperMsg = "If specified, the cluster will use SASL_SSL with PLAIN SASL as its mechanism for authentication. " +
 		"If you wish to use another authentication mechanism, please do NOT specify this flag, " +
@@ -65,11 +66,11 @@ func (c *linkCommand) newCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a cluster link, using a configuration file.",
-				Code: "confluent kafka link create my-link --source-cluster-id lkc-123456 --config-file config.txt",
+				Code: "confluent kafka link create my-link --source-cluster lkc-123456 --config-file config.txt",
 			},
 			examples.Example{
 				Text: "Create a cluster link using command line flags.",
-				Code: "confluent kafka link create my-link --source-cluster-id lkc-123456 --source-bootstrap-server my-host:1234 --source-api-key my-key --source-api-secret my-secret",
+				Code: "confluent kafka link create my-link --source-cluster lkc-123456 --source-bootstrap-server my-host:1234 --source-api-key my-key --source-api-secret my-secret",
 			},
 		),
 	}
@@ -160,7 +161,7 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 	if dryRun {
 		msg = "[DRY RUN]: " + msg
 	}
-	utils.Print(cmd, msg)
+	output.Print(msg)
 
 	return nil
 }

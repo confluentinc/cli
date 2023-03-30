@@ -30,10 +30,11 @@ def job = {
                     withEnv(["GIT_CREDENTIAL=${env.GIT_USER}:${env.GIT_TOKEN}", "GIT_USER=${env.GIT_USER}", "GIT_TOKEN=${env.GIT_TOKEN}"]) {
                         withGradleFile(["gradle/gradle_properties_maven", "gradle_properties_file",
                             "gradle.properties", "GRADLE_PROPERTIES_FILE"]) {
+                            loadNPMCredentials()
                             sh '''#!/usr/bin/env bash
                                 export HASH=$(git rev-parse --short=7 HEAD)
-                                wget "https://golang.org/dl/go1.19.linux-amd64.tar.gz" --quiet --output-document go1.19.tar.gz
-                                tar -C $(pwd) -xzf go1.19.tar.gz
+                                wget "https://golang.org/dl/go1.20.linux-amd64.tar.gz" --quiet --output-document go1.20.tar.gz
+                                tar -C $(pwd) -xzf go1.20.tar.gz
                                 export GOROOT=$(pwd)/go
                                 export GOPATH=$(pwd)/go/path
                                 export GOBIN=$(pwd)/go/bin
@@ -42,7 +43,6 @@ def job = {
                                 mkdir -p $GOROOT/bin
                                 export PATH=$GOPATH/bin:$GOROOT/bin:$PATH
                                 echo "machine github.com\n\tlogin $GIT_USER\n\tpassword $GIT_TOKEN" > ~/.netrc
-                                make jenkins-deps
                                 make build || exit 1
                                 cd dist
                                 dir=confluent_SNAPSHOT-${HASH}_linux_amd64
@@ -70,7 +70,7 @@ def job = {
                                 export confluent_s3="https://s3-us-west-2.amazonaws.com"
                                 git clone git@github.com:confluentinc/muckrake.git
                                 cd muckrake
-                                git checkout 7.3.x
+                                git checkout 7.4.x
                                 sed -i "s?\\(confluent-cli-\\(.*\\)=\\)\\(.*\\)?\\1${confluent_s3}/confluent.cloud/confluent-cli-system-test-builds/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz\\"?" ducker/ducker
                                 sed -i "s?get_cli .*?& ${confluent_s3}/confluent.cloud/confluent-cli-system-test-builds/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz?g" vagrant/base-ubuntu.sh
                                 sed -i "s?get_cli .*?& ${confluent_s3}/confluent.cloud/confluent-cli-system-test-builds/confluent_SNAPSHOT-${HASH}_linux_amd64\\.tar\\.gz?g" vagrant/base-redhat.sh
@@ -91,20 +91,23 @@ def job = {
                     ["github/confluent_jenkins", "user", "GIT_USER"],
                     ["github/confluent_jenkins", "access_token", "GIT_TOKEN"]]) {
                     withEnv(["GIT_CREDENTIAL=${env.GIT_USER}:${env.GIT_TOKEN}",
-                        "AWS_KEYPAIR_FILE=${pem_file}", "GIT_BRANCH=7.3.x"]) {
+                        "AWS_KEYPAIR_FILE=${pem_file}", "GIT_BRANCH=7.4.x"]) {
                         withGradleFile(["gradle/gradle_properties_maven", "gradle_properties_file",
                             "gradle.properties", "GRADLE_PROPERTIES_FILE"]) {
-                            sh '''#!/usr/bin/env bash
-                                export HASH=$(git rev-parse --short=7 HEAD)
-                                . extract-iam-credential.sh
-                                if [ -z "${TEST_PATH}" ]; then
-                                    export TEST_PATH="muckrake/tests/everything_runs_test.py"
-                                fi
-                                muckrake/ducker/resources/setup-gradle-properties.sh
-                                muckrake/ducker/resources/setup-git-credential-store
-                                export CHANGE_BRANCH=cli_system_test_$HASH
-                                cd muckrake/ducker; ./vagrant-build-ducker.sh --pr true
-                            '''
+                            withMavenSettings("maven/jenkins_maven_global_settings", "settings", "MAVEN_GLOBAL_SETTINGS_FILE", mavenSettingsFile) {
+                                loadNPMCredentials()
+                                sh '''#!/usr/bin/env bash
+                                    export HASH=$(git rev-parse --short=7 HEAD)
+                                    . extract-iam-credential.sh
+                                    if [ -z "${TEST_PATH}" ]; then
+                                        export TEST_PATH="muckrake/tests/everything_runs_test.py"
+                                    fi
+                                    muckrake/ducker/resources/setup-gradle-properties.sh
+                                    muckrake/ducker/resources/setup-git-credential-store
+                                    export CHANGE_BRANCH=cli_system_test_$HASH
+                                    cd muckrake/ducker; ./vagrant-build-ducker.sh --pr true
+                                '''
+                            }
                         }
                     }
                 }

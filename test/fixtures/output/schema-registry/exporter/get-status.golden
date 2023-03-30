@@ -1,7 +1,7 @@
-+--------------------+------------+
-| Name               | myexporter |
-| Exporter State     | RUNNING    |
-| Exporter Offset    |          0 |
-| Exporter Timestamp |          0 |
-| Error Trace        |            |
-+--------------------+------------+
++-------------+------------+
+| Name        | myexporter |
+| State       | RUNNING    |
+| Offset      |          0 |
+| Timestamp   |          0 |
+| Error Trace |            |
++-------------+------------+

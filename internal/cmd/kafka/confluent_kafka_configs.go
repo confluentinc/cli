@@ -6,9 +6,10 @@ import (
 	"io"
 	"os"
 
-	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
+
+	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 
 	configv1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -151,7 +152,7 @@ func setProtocolConfig(cmd *cobra.Command, configMap *ckafka.ConfigMap) (*ckafka
 			return nil, err
 		}
 	case "SASL_SSL":
-		configMap, err = setSASLConfig(cmd, configMap)
+		configMap, err = setSaslConfig(cmd, configMap)
 		if err != nil {
 			return nil, err
 		}
@@ -188,16 +189,16 @@ func setSSLConfig(cmd *cobra.Command, configMap *ckafka.ConfigMap) (*ckafka.Conf
 	return configMap, nil
 }
 
-func setSASLConfig(cmd *cobra.Command, configMap *ckafka.ConfigMap) (*ckafka.ConfigMap, error) {
-	mechanism, err := cmd.Flags().GetString("sasl-mechanism")
+func setSaslConfig(cmd *cobra.Command, configMap *ckafka.ConfigMap) (*ckafka.ConfigMap, error) {
+	saslMechanism, err := cmd.Flags().GetString("sasl-mechanism")
 	if err != nil {
 		return nil, err
 	}
 	saslMap := map[string]string{
 		"security.protocol": "SASL_SSL",
-		"sasl.mechanism":    mechanism,
+		"sasl.mechanism":    saslMechanism,
 	}
-	if mechanism == "PLAIN" {
+	if saslMechanism == "PLAIN" {
 		username, password, err := promptForSASLAuth(cmd)
 		if err != nil {
 			return nil, err
@@ -231,7 +232,7 @@ func promptForSASLAuth(cmd *cobra.Command) (string, string, error) {
 		form.Field{ID: "username", Prompt: "Enter your SASL username"},
 		form.Field{ID: "password", Prompt: "Enter your SASL password", IsHidden: true},
 	)
-	if err := f.Prompt(cmd, form.NewPrompt(os.Stdin)); err != nil {
+	if err := f.Prompt(form.NewPrompt(os.Stdin)); err != nil {
 		return "", "", err
 	}
 	return f.Responses["username"].(string), f.Responses["password"].(string), nil
@@ -248,12 +249,12 @@ func getOffsetWithFallback(cmd *cobra.Command) (ckafka.Offset, error) {
 		}
 		return ckafka.NewOffset(offset)
 	} else {
-		beginning, err := cmd.Flags().GetBool("from-beginning")
+		fromBeginning, err := cmd.Flags().GetBool("from-beginning")
 		if err != nil {
 			return ckafka.OffsetInvalid, err
 		}
 		autoOffsetReset := "latest"
-		if beginning {
+		if fromBeginning {
 			autoOffsetReset = "earliest"
 		}
 		return ckafka.NewOffset(autoOffsetReset)
@@ -263,7 +264,7 @@ func getOffsetWithFallback(cmd *cobra.Command) (ckafka.Offset, error) {
 func getPartitionsByIndex(partitions []ckafka.TopicPartition, partitionFilter partitionFilter) []ckafka.TopicPartition {
 	if partitionFilter.changed {
 		for _, partition := range partitions {
-			if partition.Partition == int32(partitionFilter.index) {
+			if partition.Partition == partitionFilter.index {
 				log.CliLogger.Debugf("Consuming from partition: %d", partitionFilter.index)
 				return []ckafka.TopicPartition{partition}
 			}

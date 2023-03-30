@@ -4,8 +4,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
@@ -25,7 +26,7 @@ func newPartitionCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	c.PersistentPreRunE = prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand)
 
 	cmd.AddCommand(c.newDescribeCommand())
-	cmd.AddCommand(c.newGetReassignmentsCommand())
+	cmd.AddCommand(c.newReassignmentCommand())
 	cmd.AddCommand(c.newListCommand())
 
 	return cmd

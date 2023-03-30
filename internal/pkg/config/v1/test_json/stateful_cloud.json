@@ -91,9 +91,17 @@
           "name": "test-org"
         }
       },
-      "auth_token": "abc123",
-      "auth_refresh_token": ""
+      "auth_token": "eyJ.eyJ.abc",
+      "auth_refresh_token": "v1.abc"
     }
   },
-  "current_context": "my-context"
+  "current_context": "my-context",
+  "saved_credentials": {
+    "my-context": {
+      "is_cloud": true,
+      "url": "",
+      "username": "test-user",
+      "encrypted_password": "encrypted-password"
+    }
+  }
 }

@@ -1,10 +1,10 @@
-         Key         |          Description           | Owner Resource ID |   Owner Email    |  Resource Type  | Resource ID  |       Created         
----------------------+--------------------------------+-------------------+------------------+-----------------+--------------+-----------------------
-    MULTICLUSTERKEY1 | works for two clusters         | u-44ddd           | mhe@confluent.io | kafka           | lkc-abc      | 1999-02-24T00:00:00Z  
-    MULTICLUSTERKEY2 | works for two clusters but on  | u-44ddd           | mhe@confluent.io | kafka           | lkc-abc      | 1999-02-24T00:00:00Z  
-                     | a different sr cluster         |                   |                  |                 |              |                       
-    MYKEY3           |                                | u-44ddd           | mhe@confluent.io | kafka           | lkc-bob      | 1999-02-24T00:00:00Z  
-    MYKEY4           | my-cool-app                    | u-44ddd           | mhe@confluent.io | kafka           | lkc-cool1    | 1999-02-24T00:00:00Z  
-    MYKEY6           | my-ksql-app                    | u-44ddd           | mhe@confluent.io | ksql            | lksqlc-ksql1 | 1999-02-24T00:00:00Z  
-    MYKEY7           |                                | u-44ddd           | mhe@confluent.io | schema-registry | lsrc-1       | 1999-02-24T00:00:00Z  
-    MYKEY8           |                                | u-44ddd           | mhe@confluent.io | cloud           |              | 1999-02-24T00:00:00Z  
+  Current |       Key        |          Description           |  Owner  |   Owner Email    |  Resource Type  |   Resource   |       Created         
+----------+------------------+--------------------------------+---------+------------------+-----------------+--------------+-----------------------
+          | MULTICLUSTERKEY1 | works for two clusters         | u-44ddd | mhe@confluent.io | kafka           | lkc-abc      | 1999-02-24T00:00:00Z  
+          | MULTICLUSTERKEY2 | works for two clusters but on  | u-44ddd | mhe@confluent.io | kafka           | lkc-abc      | 1999-02-24T00:00:00Z  
+          |                  | a different sr cluster         |         |                  |                 |              |                       
+          | MYKEY3           |                                | u-44ddd | mhe@confluent.io | kafka           | lkc-bob      | 1999-02-24T00:00:00Z  
+          | MYKEY4           | my-cool-app                    | u-44ddd | mhe@confluent.io | kafka           | lkc-cool1    | 1999-02-24T00:00:00Z  
+          | MYKEY6           | my-ksql-app                    | u-44ddd | mhe@confluent.io | ksql            | lksqlc-ksql1 | 1999-02-24T00:00:00Z  
+          | MYKEY7           |                                | u-44ddd | mhe@confluent.io | schema-registry | lsrc-1       | 1999-02-24T00:00:00Z  
+          | MYKEY8           |                                | u-44ddd | mhe@confluent.io | cloud           |              | 1999-02-24T00:00:00Z  

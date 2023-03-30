@@ -15,6 +15,8 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/local"
+	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/types"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -68,18 +70,18 @@ func NewConnectConnectorConfigCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *Command) runConnectConnectorConfigCommand(command *cobra.Command, args []string) error {
+func (c *Command) runConnectConnectorConfigCommand(cmd *cobra.Command, args []string) error {
 	isUp, err := c.isRunning("connect")
 	if err != nil {
 		return err
 	}
 	if !isUp {
-		return c.printStatus(command, "connect")
+		return c.printStatus("connect")
 	}
 
 	connector := args[0]
 
-	configFile, err := command.Flags().GetString("config")
+	configFile, err := cmd.Flags().GetString("config")
 	if err != nil {
 		return err
 	}
@@ -89,8 +91,8 @@ func (c *Command) runConnectConnectorConfigCommand(command *cobra.Command, args 
 			return err
 		}
 
-		utils.Printf(command, "Current configuration of %s:\n", connector)
-		utils.Println(command, out)
+		output.Printf("Current configuration of %s:\n", connector)
+		output.Println(out)
 		return nil
 	}
 
@@ -99,13 +101,13 @@ func (c *Command) runConnectConnectorConfigCommand(command *cobra.Command, args 
 		return err
 	}
 
-	var config map[string]interface{}
+	var config map[string]any
 	if isJSON(data) {
 		if err := json.Unmarshal(data, &config); err != nil {
 			return err
 		}
 		if inner, ok := config["config"]; ok {
-			config = inner.(map[string]interface{})
+			config = inner.(map[string]any)
 		}
 	} else {
 		config = local.ExtractConfig(data)
@@ -122,7 +124,7 @@ func (c *Command) runConnectConnectorConfigCommand(command *cobra.Command, args 
 		return err
 	}
 
-	utils.Println(command, out)
+	output.Println(out)
 	return nil
 }
 
@@ -138,13 +140,13 @@ func NewConnectConnectorStatusCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *Command) runConnectConnectorStatusCommand(command *cobra.Command, args []string) error {
+func (c *Command) runConnectConnectorStatusCommand(_ *cobra.Command, args []string) error {
 	isUp, err := c.isRunning("connect")
 	if err != nil {
 		return err
 	}
 	if !isUp {
-		return c.printStatus(command, "connect")
+		return c.printStatus("connect")
 	}
 
 	if len(args) == 0 {
@@ -153,7 +155,7 @@ func (c *Command) runConnectConnectorStatusCommand(command *cobra.Command, args 
 			return err
 		}
 
-		utils.Println(command, out)
+		output.Println(out)
 		return nil
 	}
 
@@ -163,7 +165,7 @@ func (c *Command) runConnectConnectorStatusCommand(command *cobra.Command, args 
 		return err
 	}
 
-	utils.Println(command, out)
+	output.Println(out)
 	return nil
 }
 
@@ -180,9 +182,9 @@ func NewConnectConnectorListCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *Command) runConnectConnectorListCommand(command *cobra.Command, _ []string) {
-	utils.Println(command, "Bundled Connectors:")
-	utils.Println(command, local.BuildTabbedList(connectors))
+func (c *Command) runConnectConnectorListCommand(_ *cobra.Command, _ []string) {
+	output.Println("Bundled Connectors:")
+	output.Println(local.BuildTabbedList(connectors))
 }
 
 func NewConnectConnectorLoadCommand(prerunner cmd.PreRunner) *cobra.Command {
@@ -205,26 +207,26 @@ func NewConnectConnectorLoadCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *Command) runConnectConnectorLoadCommand(command *cobra.Command, args []string) error {
+func (c *Command) runConnectConnectorLoadCommand(cmd *cobra.Command, args []string) error {
 	isUp, err := c.isRunning("connect")
 	if err != nil {
 		return err
 	}
 	if !isUp {
-		return c.printStatus(command, "connect")
+		return c.printStatus("connect")
 	}
 
 	connector := args[0]
 
 	var configFile string
 
-	if utils.Contains(connectors, connector) {
+	if types.Contains(connectors, connector) {
 		configFile, err = c.ch.GetConnectorConfigFile(connector)
 		if err != nil {
 			return err
 		}
 	} else {
-		configFile, err = command.Flags().GetString("config")
+		configFile, err = cmd.Flags().GetString("config")
 		if err != nil {
 			return err
 		}
@@ -241,7 +243,7 @@ func (c *Command) runConnectConnectorLoadCommand(command *cobra.Command, args []
 		config := local.ExtractConfig(data)
 		delete(config, "name")
 
-		full := map[string]interface{}{
+		full := map[string]any{
 			"name":   connector,
 			"config": config,
 		}
@@ -257,7 +259,7 @@ func (c *Command) runConnectConnectorLoadCommand(command *cobra.Command, args []
 		return err
 	}
 
-	utils.Println(command, out)
+	output.Println(out)
 	return nil
 }
 
@@ -279,13 +281,13 @@ func NewConnectConnectorUnloadCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *Command) runConnectConnectorUnloadCommand(command *cobra.Command, args []string) error {
+func (c *Command) runConnectConnectorUnloadCommand(_ *cobra.Command, args []string) error {
 	isUp, err := c.isRunning("connect")
 	if err != nil {
 		return err
 	}
 	if !isUp {
-		return c.printStatus(command, "connect")
+		return c.printStatus("connect")
 	}
 
 	connector := args[0]
@@ -295,9 +297,9 @@ func (c *Command) runConnectConnectorUnloadCommand(command *cobra.Command, args 
 	}
 
 	if len(out) > 0 {
-		utils.Println(command, out)
+		output.Println(out)
 	} else {
-		utils.Println(command, "Success.")
+		output.Println("Success.")
 	}
 	return nil
 }
@@ -328,13 +330,13 @@ func NewConnectPluginListCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *Command) runConnectPluginListCommand(command *cobra.Command, _ []string) error {
+func (c *Command) runConnectPluginListCommand(_ *cobra.Command, _ []string) error {
 	isUp, err := c.isRunning("connect")
 	if err != nil {
 		return err
 	}
 	if !isUp {
-		return c.printStatus(command, "connect")
+		return c.printStatus("connect")
 	}
 
 	url := fmt.Sprintf("http://localhost:%d/connector-plugins", services["connect"].port)
@@ -343,12 +345,12 @@ func (c *Command) runConnectPluginListCommand(command *cobra.Command, _ []string
 		return err
 	}
 
-	utils.Printf(command, errors.AvailableConnectPluginsMsg, out)
+	output.Printf(errors.AvailableConnectPluginsMsg, out)
 	return nil
 }
 
 func isJSON(data []byte) bool {
-	var out map[string]interface{}
+	var out map[string]any
 	return json.Unmarshal(data, &out) == nil
 }
 

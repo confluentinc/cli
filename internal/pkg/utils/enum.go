@@ -4,11 +4,11 @@ import (
 	"fmt"
 )
 
-type EnumUtils map[string]interface{}
+type EnumUtils map[string]any
 
-func (enumUtils EnumUtils) Init(enums ...interface{}) EnumUtils {
+func (enumUtils EnumUtils) Init(enums ...any) EnumUtils {
 	for _, enum := range enums {
-		enumUtils[fmt.Sprintf("%v", enum)] = enum
+		enumUtils[fmt.Sprint(enum)] = enum
 	}
 	return enumUtils
 }

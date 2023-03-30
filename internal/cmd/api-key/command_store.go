@@ -9,8 +9,8 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 const longDescription = `Use this command to register an API secret created by another
@@ -70,7 +70,7 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 
 	// Attempt to get cluster from --resource flag if set; if that doesn't work,
 	// attempt to fall back to the currently active Kafka cluster
-	resourceType, clusterId, _, err := c.resolveResourceId(cmd, c.PrivateClient)
+	resourceType, clusterId, _, err := c.resolveResourceId(cmd, c.V2Client)
 	if err == nil && clusterId != "" {
 		if resourceType != resource.KafkaCluster {
 			return errors.Errorf(errors.NonKafkaNotImplementedErrorMsg)
@@ -137,6 +137,6 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 	if err := c.keystore.StoreAPIKey(&v1.APIKeyPair{Key: key, Secret: secret}, cluster.ID); err != nil {
 		return errors.Wrap(err, errors.UnableToStoreAPIKeyErrorMsg)
 	}
-	utils.ErrPrintf(cmd, errors.StoredAPIKeyMsg, key)
+	output.ErrPrintf(errors.StoredAPIKeyMsg, key)
 	return nil
 }

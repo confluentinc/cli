@@ -2,16 +2,17 @@ package pipeline
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 	"os"
 
+	"github.com/spf13/cobra"
+
 	streamdesignerv1 "github.com/confluentinc/ccloud-sdk-go-v2/stream-designer/v1"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (c *command) newUpdateCommand(prerunner pcmd.PreRunner, enableSourceCode bool) *cobra.Command {
+func (c *command) newUpdateCommand(enableSourceCode bool) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update <pipeline-id>",
 		Short: "Update an existing pipeline.",
@@ -22,6 +23,14 @@ func (c *command) newUpdateCommand(prerunner pcmd.PreRunner, enableSourceCode bo
 				Text: `Request to update Stream Designer pipeline "pipe-12345", with new name and new description.`,
 				Code: `confluent pipeline update pipe-12345 --name test-pipeline --description "Description of the pipeline"`,
 			},
+			examples.Example{
+				Text: `Grant privilege to activate Stream Designer pipeline "pipe-12345".`,
+				Code: `confluent pipeline update pipe-12345 --activation-privilege true`,
+			},
+			examples.Example{
+				Text: `Revoke privilege to activate Stream Designer pipeline "pipe-12345".`,
+				Code: `confluent pipeline update pipe-12345 --activation-privilege false`,
+			},
 		),
 	}
 
@@ -31,13 +40,17 @@ func (c *command) newUpdateCommand(prerunner pcmd.PreRunner, enableSourceCode bo
 		cmd.Flags().String("sql-file", "", "Path to a KSQL file containing the pipeline's source code.")
 		cmd.Flags().StringArray("secret", []string{}, "A named secret that can be referenced in pipeline source code, e.g. \"secret_name=secret_content\".\n"+
 			"This flag can be supplied multiple times. The secret mapping must have the format <secret-name>=<secret-value>,\n"+
-			"where <secret-name> consists of 1-64 lowercase, uppercase, numeric or underscore characters but may not begin with a digit.\n"+
+			"where <secret-name> consists of 1-128 lowercase, uppercase, numeric or underscore characters but may not begin with a digit.\n"+
 			"If <secret-value> is empty, the named secret will be removed from Stream Designer.")
 	}
-
+	cmd.Flags().Bool("activation-privilege", true, "Grant or revoke the privilege to activate this pipeline.")
 	pcmd.AddOutputFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+
+	if enableSourceCode {
+		cobra.CheckErr(cmd.MarkFlagFilename("sql-file", "sql"))
+	}
 
 	return cmd
 }
@@ -53,8 +66,8 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if name == "" && description == "" && sqlFile == "" && len(secrets) == 0 {
-		return fmt.Errorf("one of the update options must be provided: --name, --description, --sql-file, --secret")
+	if name == "" && description == "" && sqlFile == "" && len(secrets) == 0 && !cmd.Flags().Changed("activation-privilege") {
+		return fmt.Errorf("one of the update options must be provided: --name, --description, --sql-file, --secret, --activation-privilege")
 	}
 
 	updatePipeline := streamdesignerv1.SdV1PipelineUpdate{Spec: &streamdesignerv1.SdV1PipelineSpecUpdate{}}
@@ -80,21 +93,20 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	}
 	updatePipeline.Spec.SetSecrets(secretMappings)
 
-	// call api
-	pipeline, err := c.V2Client.UpdateSdPipeline(c.EnvironmentId(), cluster.ID, args[0], updatePipeline)
+	if cmd.Flags().Changed("activation-privilege") {
+		activationPrivilege, _ := cmd.Flags().GetBool("activation-privilege")
+		updatePipeline.Spec.SetActivationPrivilege(activationPrivilege)
+	}
+
+	environmentId, err := c.EnvironmentId()
 	if err != nil {
 		return err
 	}
 
-	element := &Pipeline{
-		Id:          *pipeline.Id,
-		Name:        *pipeline.Spec.DisplayName,
-		Description: *pipeline.Spec.Description,
-		KsqlCluster: pipeline.Spec.KsqlCluster.Id,
-		State:       *pipeline.Status.State,
-		CreatedAt:   *pipeline.Metadata.CreatedAt,
-		UpdatedAt:   *pipeline.Metadata.UpdatedAt,
+	pipeline, err := c.V2Client.UpdateSdPipeline(environmentId, cluster.ID, args[0], updatePipeline)
+	if err != nil {
+		return err
 	}
 
-	return output.DescribeObject(cmd, element, pipelineDescribeFields, pipelineDescribeHumanLabels, pipelineDescribeStructuredLabels)
+	return printTable(cmd, pipeline)
 }

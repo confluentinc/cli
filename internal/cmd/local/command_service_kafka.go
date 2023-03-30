@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"sort"
 
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/local"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/types"
 )
 
 var (
@@ -45,7 +45,7 @@ var (
 		"value-deserializer":    "",
 		"whitelist":             "Regular expression specifying whitelist of topics to include for consumption.",
 	}
-	kafkaConsumeDefaultValues = map[string]interface{}{
+	kafkaConsumeDefaultValues = map[string]any{
 		"bootstrap-server":      defaultString,
 		"consumer-property":     defaultString,
 		"consumer.config":       defaultString,
@@ -85,7 +85,7 @@ var (
 		"sync":                       "If set, message send requests to brokers arrive synchronously.",
 		"timeout":                    "If set and the producer is running in asynchronous mode, this gives the maximum amount of time a message will queue awaiting sufficient batch size. The value is given in ms. (default 1000)",
 	}
-	kafkaProduceDefaultValues = map[string]interface{}{
+	kafkaProduceDefaultValues = map[string]any{
 		"batch-size":                 defaultInt,
 		"bootstrap-server":           defaultString,
 		"compression-codec":          defaultString,
@@ -132,8 +132,8 @@ func NewKafkaConsumeCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *Command) runKafkaConsumeCommand(command *cobra.Command, args []string) error {
-	return c.runKafkaCommand(command, args, "consume", kafkaConsumeDefaultValues)
+func (c *Command) runKafkaConsumeCommand(cmd *cobra.Command, args []string) error {
+	return c.runKafkaCommand(cmd, args, "consume", kafkaConsumeDefaultValues)
 }
 
 func NewKafkaProduceCommand(prerunner cmd.PreRunner) *cobra.Command {
@@ -161,8 +161,8 @@ func NewKafkaProduceCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *Command) runKafkaProduceCommand(command *cobra.Command, args []string) error {
-	return c.runKafkaCommand(command, args, "produce", kafkaProduceDefaultValues)
+func (c *Command) runKafkaProduceCommand(cmd *cobra.Command, args []string) error {
+	return c.runKafkaCommand(cmd, args, "produce", kafkaProduceDefaultValues)
 }
 
 func (c *Command) initFlags(mode string) {
@@ -180,11 +180,7 @@ func (c *Command) initFlags(mode string) {
 		usage = kafkaProduceFlagUsage
 	}
 
-	var flags []string
-	for flag := range defaults {
-		flags = append(flags, flag)
-	}
-	sort.Strings(flags)
+	flags := types.GetSortedKeys(defaults)
 
 	for _, flag := range flags {
 		switch val := defaults[flag].(type) {
@@ -200,13 +196,13 @@ func (c *Command) initFlags(mode string) {
 	}
 }
 
-func (c *Command) runKafkaCommand(command *cobra.Command, args []string, mode string, kafkaFlagTypes map[string]interface{}) error {
-	cloud, err := command.Flags().GetBool("cloud")
+func (c *Command) runKafkaCommand(cmd *cobra.Command, args []string, mode string, kafkaFlagTypes map[string]any) error {
+	cloud, err := cmd.Flags().GetBool("cloud")
 	if err != nil {
 		return err
 	}
 
-	bootSet := command.Flags().Changed("bootstrap-server")
+	bootSet := cmd.Flags().Changed("bootstrap-server")
 
 	// Only check if local Kafka is up if we are really connecting to a local Kafka
 	if !(cloud || bootSet) {
@@ -215,11 +211,11 @@ func (c *Command) runKafkaCommand(command *cobra.Command, args []string, mode st
 			return err
 		}
 		if !isUp {
-			return c.printStatus(command, "kafka")
+			return c.printStatus("kafka")
 		}
 	}
 
-	format, err := command.Flags().GetString("value-format")
+	valueFormat, err := cmd.Flags().GetString("value-format")
 	if err != nil {
 		return err
 	}
@@ -227,21 +223,21 @@ func (c *Command) runKafkaCommand(command *cobra.Command, args []string, mode st
 	// "consume" -> "consumer"
 	modeNoun := fmt.Sprintf("%sr", mode)
 
-	scriptFile, err := c.ch.GetKafkaScript(format, modeNoun)
+	scriptFile, err := c.ch.GetKafkaScript(valueFormat, modeNoun)
 	if err != nil {
 		return err
 	}
 
-	var cloudConfigFile string
+	var config string
 	var cloudServer string
 
 	if cloud {
-		cloudConfigFile, err = command.Flags().GetString("config")
+		config, err = cmd.Flags().GetString("config")
 		if err != nil {
 			return err
 		}
 
-		data, err := os.ReadFile(cloudConfigFile)
+		data, err := os.ReadFile(config)
 		if err != nil {
 			return err
 		}
@@ -254,7 +250,7 @@ func (c *Command) runKafkaCommand(command *cobra.Command, args []string, mode st
 		delete(kafkaFlagTypes, "bootstrap-server")
 	}
 
-	kafkaArgs, err := local.CollectFlags(command.Flags(), kafkaFlagTypes)
+	kafkaArgs, err := local.CollectFlags(cmd.Flags(), kafkaFlagTypes)
 	if err != nil {
 		return err
 	}
@@ -262,13 +258,11 @@ func (c *Command) runKafkaCommand(command *cobra.Command, args []string, mode st
 	kafkaArgs = append(kafkaArgs, "--topic", args[0])
 	if cloud {
 		configFileFlag := fmt.Sprintf("--%s.config", modeNoun)
-		kafkaArgs = append(kafkaArgs, configFileFlag, cloudConfigFile)
+		kafkaArgs = append(kafkaArgs, configFileFlag, config)
 		kafkaArgs = append(kafkaArgs, "--bootstrap-server", cloudServer)
-	} else {
-		if !utils.Contains(kafkaArgs, "--bootstrap-server") {
-			defaultBootstrapServer := fmt.Sprintf("localhost:%d", services["kafka"].port)
-			kafkaArgs = append(kafkaArgs, "--bootstrap-server", defaultBootstrapServer)
-		}
+	} else if !types.Contains(kafkaArgs, "--bootstrap-server") {
+		defaultBootstrapServer := fmt.Sprintf("localhost:%d", services["kafka"].port)
+		kafkaArgs = append(kafkaArgs, "--bootstrap-server", defaultBootstrapServer)
 	}
 
 	kafkaCommand := exec.Command(scriptFile, kafkaArgs...)
@@ -276,7 +270,7 @@ func (c *Command) runKafkaCommand(command *cobra.Command, args []string, mode st
 	kafkaCommand.Stderr = os.Stderr
 	if mode == "produce" {
 		kafkaCommand.Stdin = os.Stdin
-		utils.Println(command, "Exit with Ctrl+D")
+		output.Println("Exit with Ctrl-D")
 	}
 
 	kafkaCommand.Env = []string{

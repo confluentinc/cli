@@ -12,9 +12,9 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/update"
 	"github.com/confluentinc/cli/internal/pkg/update/s3"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -50,10 +50,9 @@ func New(prerunner pcmd.PreRunner, version *pversion.Version, client update.Clie
 		version:    version,
 		client:     client,
 	}
+	cmd.RunE = c.update
 
-	c.RunE = c.update
-
-	return c.Command
+	return cmd
 }
 
 // NewClient returns a new update.Client configured for the CLI
@@ -75,7 +74,7 @@ func NewClient(cliName string, disableUpdateCheck bool) update.Client {
 }
 
 func (c *command) update(cmd *cobra.Command, _ []string) error {
-	updateYes, err := cmd.Flags().GetBool("yes")
+	yes, err := cmd.Flags().GetBool("yes")
 	if err != nil {
 		return errors.Wrap(err, errors.ReadingYesFlagErrorMsg)
 	}
@@ -90,24 +89,24 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	utils.ErrPrintln(cmd, errors.CheckingForUpdatesMsg)
+	output.ErrPrintln(errors.CheckingForUpdatesMsg)
 	latestMajorVersion, latestMinorVersion, err := c.client.CheckForUpdates(pversion.CLIName, c.version.Version, true)
 	if err != nil {
 		return errors.NewUpdateClientWrapError(err, errors.CheckingForUpdateErrorMsg)
 	}
 
 	if latestMajorVersion == "" && latestMinorVersion == "" {
-		utils.Println(cmd, errors.UpToDateMsg)
+		output.Println(errors.UpToDateMsg)
 		return nil
 	}
 
 	if latestMajorVersion != "" && latestMinorVersion == "" && !major {
-		utils.Printf(cmd, errors.MajorVersionUpdateMsg, pversion.CLIName)
+		output.Printf(errors.MajorVersionUpdateMsg, pversion.CLIName)
 		return nil
 	}
 
 	if latestMajorVersion == "" && major {
-		utils.Print(cmd, errors.NoMajorVersionUpdateMsg)
+		output.Print(errors.NoMajorVersionUpdateMsg)
 		return nil
 	}
 
@@ -126,7 +125,7 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 	//   Current Version: v0.0.0
 	//   Latest Version:  0.50.0
 	// Unfortunately the "UpdateBinary" output will still show 0.50.0, and we can't hack that since it must match S3
-	if !c.client.PromptToDownload(pversion.CLIName, c.version.Version, "v"+updateVersion, releaseNotes, !updateYes) {
+	if !c.client.PromptToDownload(pversion.CLIName, c.version.Version, "v"+updateVersion, releaseNotes, !yes) {
 		return nil
 	}
 

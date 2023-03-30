@@ -1,13 +1,16 @@
 package kafka
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/form"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *clusterCommand) newDeleteCommand(cfg *v1.Config) *cobra.Command {
@@ -20,6 +23,7 @@ func (c *clusterCommand) newDeleteCommand(cfg *v1.Config) *cobra.Command {
 		Annotations:       map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
+	pcmd.AddForceFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -29,7 +33,23 @@ func (c *clusterCommand) newDeleteCommand(cfg *v1.Config) *cobra.Command {
 }
 
 func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
-	httpResp, err := c.V2Client.DeleteKafkaCluster(args[0], c.EnvironmentId())
+	cluster, err := c.Context.FindKafkaCluster(args[0])
+	if err != nil {
+		// Replace the suggestions w/ the suggestions specific to delete requests
+		return errors.NewErrorWithSuggestions(err.Error(), errors.KafkaClusterDeletingSuggestions)
+	}
+
+	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.KafkaCluster, args[0], cluster.GetName())
+	if _, err := form.ConfirmDeletion(cmd, promptMsg, cluster.GetName()); err != nil {
+		return err
+	}
+
+	environmentId, err := c.EnvironmentId()
+	if err != nil {
+		return err
+	}
+
+	httpResp, err := c.V2Client.DeleteKafkaCluster(args[0], environmentId)
 	if err != nil {
 		return errors.CatchKafkaNotFoundError(err, args[0], httpResp)
 	}
@@ -38,6 +58,6 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	utils.Printf(cmd, errors.DeletedResourceMsg, resource.KafkaCluster, args[0])
+	output.Printf(errors.DeletedResourceMsg, resource.KafkaCluster, args[0])
 	return nil
 }

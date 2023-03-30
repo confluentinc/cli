@@ -1,16 +1,17 @@
 package schemaregistry
 
 import (
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/spf13/cobra"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
-func (c *exporterCommand) newPauseCommandOnPrem() *cobra.Command {
+func (c *command) newExporterPauseCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "pause <name>",
 		Short:       "Pause schema exporter.",
 		Args:        cobra.ExactArgs(1),
-		RunE:        c.onPremPause,
+		RunE:        c.exporterPauseOnPrem,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 	}
 
@@ -21,11 +22,11 @@ func (c *exporterCommand) newPauseCommandOnPrem() *cobra.Command {
 	return cmd
 }
 
-func (c *exporterCommand) onPremPause(cmd *cobra.Command, args []string) error {
+func (c *command) exporterPauseOnPrem(cmd *cobra.Command, args []string) error {
 	srClient, ctx, err := GetSrApiClientWithToken(cmd, c.Version, c.AuthToken())
 	if err != nil {
 		return err
 	}
 
-	return pauseExporter(cmd, args[0], srClient, ctx)
+	return pauseExporter(args[0], srClient, ctx)
 }

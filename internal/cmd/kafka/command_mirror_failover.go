@@ -2,8 +2,9 @@ package kafka
 
 import (
 	"github.com/antihax/optional"
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -32,7 +33,7 @@ func (c *mirrorCommand) newFailoverCommand() *cobra.Command {
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired(linkFlagName)
+	cobra.CheckErr(cmd.MarkFlagRequired(linkFlagName))
 
 	return cmd
 }
@@ -43,7 +44,7 @@ func (c *mirrorCommand) failover(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	validateOnly, err := cmd.Flags().GetBool(dryrunFlagName)
+	dryRun, err := cmd.Flags().GetBool(dryrunFlagName)
 	if err != nil {
 		return err
 	}
@@ -63,7 +64,7 @@ func (c *mirrorCommand) failover(cmd *cobra.Command, args []string) error {
 
 	failoverMirrorOpt := &kafkarestv3.UpdateKafkaMirrorTopicsFailoverOpts{
 		AlterMirrorsRequestData: optional.NewInterface(kafkarestv3.AlterMirrorsRequestData{MirrorTopicNames: args}),
-		ValidateOnly:            optional.NewBool(validateOnly),
+		ValidateOnly:            optional.NewBool(dryRun),
 	}
 
 	results, httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.UpdateKafkaMirrorTopicsFailover(kafkaREST.Context, lkc, linkName, failoverMirrorOpt)

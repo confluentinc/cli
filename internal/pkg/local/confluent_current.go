@@ -241,10 +241,10 @@ func (cc *ConfluentCurrentManager) getServiceFile(service, file string) (string,
 }
 
 func getRandomChildDir(parentDir string) string {
-	rand.Seed(time.Now().Unix())
+	rng := rand.New(rand.NewSource(time.Now().Unix()))
 
 	for {
-		childDir := fmt.Sprintf("confluent.%06d", rand.Intn(1000000))
+		childDir := fmt.Sprintf("confluent.%06d", rng.Intn(1000000))
 		path := filepath.Join(parentDir, childDir)
 		if !exists(path) {
 			return path

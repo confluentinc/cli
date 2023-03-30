@@ -3,7 +3,7 @@ Warning: created client configuration file but Schema Registry is not fully conf
 Reason: no Schema Registry API key or secret specified
 
 Suggestions:
-    Pass the `--sr-apikey` and `--sr-apisecret` flags to specify the Schema Registry API key and secret.
+    Pass the `--schema-registry-api-key` and `--schema-registry-api-secret` flags to specify the Schema Registry API key and secret.
     Alternatively, you can configure Schema Registry manually in the client configuration file before using it.
 
 # Required connection configs for Kafka producer, consumer, and admin

@@ -8,21 +8,23 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/confluentinc/cli/internal/pkg/utils"
-
-	"github.com/confluentinc/cli/internal/pkg/errors"
-
-	"github.com/confluentinc/properties"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/pretty"
 	"github.com/tidwall/sjson"
+
+	"github.com/confluentinc/properties"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-var dataRegex = regexp.MustCompile(DataPattern)
-var ivRegex = regexp.MustCompile(IVPattern)
-var algoRegex = regexp.MustCompile(EncPattern)
-var passwordRegex = regexp.MustCompile(PasswordPattern)
-var cipherRegex = regexp.MustCompile(CipherPattern)
+var (
+	dataRegex     = regexp.MustCompile(DataPattern)
+	ivRegex       = regexp.MustCompile(IVPattern)
+	algoRegex     = regexp.MustCompile(EncPattern)
+	passwordRegex = regexp.MustCompile(PasswordPattern)
+	cipherRegex   = regexp.MustCompile(CipherPattern)
+)
 
 func GenerateConfigValue(key string, path string) string {
 	return "${securepass:" + path + ":" + key + "}"
@@ -67,7 +69,6 @@ func WritePropertiesFile(path string, property *properties.Properties, writeComm
 		if err != nil {
 			return err
 		}
-
 	}
 
 	err := WriteFile(path, buf.Bytes())
@@ -167,7 +168,6 @@ func parseJAASProperties(props *properties.Properties) *properties.Properties {
 		if err == nil {
 			props.Merge(jaasProps)
 		}
-
 	}
 	return props
 }
@@ -204,7 +204,6 @@ func convertPropertiesJAAS(props *properties.Properties, originalConfigs *proper
 				props.Delete(key)
 			}
 		}
-
 	}
 
 	parser.SetOriginalConfigKeys(jaasOriginal)
@@ -282,7 +281,6 @@ func writePropertiesConfig(path string, configs *properties.Properties, addSecur
 		if err != nil {
 			return err
 		}
-
 	}
 
 	if addSecureConfig {
@@ -306,7 +304,7 @@ func RemovePropertiesConfig(removeConfigs []string, path string) error {
 	removeJAASConfig := properties.NewProperties()
 	removeJAASConfig.DisableExpansion = true
 	for _, key := range removeConfigs {
-		//Check if config is present
+		// check if config is present
 		if pattern.MatchString(key) {
 			_, _, err = removeJAASConfig.Set(key, "")
 			if err != nil {
@@ -322,7 +320,6 @@ func RemovePropertiesConfig(removeConfigs []string, path string) error {
 	}
 
 	configs, err := convertPropertiesJAAS(removeJAASConfig, configProps, Delete)
-
 	if err != nil {
 		return err
 	}
@@ -332,7 +329,6 @@ func RemovePropertiesConfig(removeConfigs []string, path string) error {
 		if err != nil {
 			return err
 		}
-
 	}
 
 	err = WritePropertiesFile(path, configProps, true)
@@ -393,6 +389,6 @@ func WriteFile(path string, data []byte) error {
 func GenerateConfigKey(path string, key string) string {
 	fileName := filepath.Base(path)
 	// Intentionally not using the filepath.Join(fileName, key), because even if this CLI is run on Windows we know that
-	// the server-side version will be running on a *nix variant and will thus have forward slashes to lookup the correct path
+	// the server-side version will be running on a *nix variant and will thus have forward slashes to look up the correct path
 	return fileName + "/" + key
 }

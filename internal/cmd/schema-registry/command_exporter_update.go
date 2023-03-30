@@ -11,18 +11,18 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/properties"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
-func (c *exporterCommand) newUpdateCommand() *cobra.Command {
+func (c *command) newExporterUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update <name>",
 		Short: "Update configs or information of schema exporter.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.update,
+		RunE:  c.exporterUpdate,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Update information of new schema exporter.",
@@ -49,7 +49,7 @@ func (c *exporterCommand) newUpdateCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *exporterCommand) update(cmd *cobra.Command, args []string) error {
+func (c *command) exporterUpdate(cmd *cobra.Command, args []string) error {
 	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
@@ -114,10 +114,10 @@ func updateExporter(cmd *cobra.Command, name string, srClient *srsdk.APIClient, 
 		}
 	}
 
-	if _, _, err = srClient.DefaultApi.PutExporter(ctx, name, updateRequest); err != nil {
+	if _, _, err := srClient.DefaultApi.PutExporter(ctx, name, updateRequest); err != nil {
 		return err
 	}
 
-	utils.Printf(cmd, errors.UpdatedResourceMsg, resource.SchemaExporter, name)
+	output.Printf(errors.UpdatedResourceMsg, resource.SchemaExporter, name)
 	return nil
 }

@@ -2,21 +2,18 @@ package price
 
 import (
 	"context"
-	"encoding/json"
-	"strconv"
 	"strings"
 	"testing"
 
-	billingv1 "github.com/confluentinc/cc-structs/kafka/billing/v1"
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-	"github.com/confluentinc/ccloud-sdk-go-v1"
-	ccloudmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
+
 	"github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	"github.com/confluentinc/cli/mock"
+	climock "github.com/confluentinc/cli/mock"
 )
 
 const (
@@ -55,26 +52,6 @@ func TestList(t *testing.T) {
 	require.Equal(t, want+"\n", got)
 }
 
-func TestListJSON(t *testing.T) {
-	command := mockSingleRowCommand()
-
-	res := []map[string]string{
-		{
-			"availability": exampleAvailability,
-			"cluster_type": exampleClusterType,
-			"metric":       exampleMetric,
-			"network_type": exampleNetworkType,
-			"price":        strconv.Itoa(examplePrice),
-		},
-	}
-	want, err := json.MarshalIndent(res, "", "  ")
-	require.NoError(t, err)
-
-	got, err := cmd.ExecuteCommand(command, "list", "--cloud", exampleCloud, "--region", exampleRegion, "-o", "json")
-	require.NoError(t, err)
-	require.Equal(t, string(want)+"\n", got)
-}
-
 func TestListLegacyClusterTypes(t *testing.T) {
 	command := mockPriceCommand(map[string]float64{
 		strings.Join([]string{exampleCloud, exampleRegion, exampleAvailability, exampleLegacyClusterType, exampleNetworkType}, ":"): examplePrice,
@@ -107,11 +84,11 @@ func mockSingleRowCommand() *cobra.Command {
 }
 
 func mockPriceCommand(prices map[string]float64, metricsName, metricsUnit string) *cobra.Command {
-	client := &ccloud.Client{
-		Billing: &ccloudmock.Billing{
-			GetPriceTableFunc: func(_ context.Context, organization *orgv1.Organization, _ string) (*billingv1.PriceTable, error) {
-				table := &billingv1.PriceTable{
-					PriceTable: map[string]*billingv1.UnitPrices{
+	client := &ccloudv1.Client{
+		Billing: &ccloudv1mock.Billing{
+			GetPriceTableFunc: func(_ context.Context, organization *ccloudv1.Organization, _ string) (*ccloudv1.PriceTable, error) {
+				table := &ccloudv1.PriceTable{
+					PriceTable: map[string]*ccloudv1.UnitPrices{
 						metricsName: {Unit: metricsUnit, Prices: prices},
 					},
 				}
@@ -122,7 +99,7 @@ func mockPriceCommand(prices map[string]float64, metricsName, metricsUnit string
 
 	cfg := v1.AuthenticatedCloudConfigMock()
 
-	return New(mock.NewPreRunnerMock(client, nil, nil, nil, nil, cfg))
+	return New(climock.NewPreRunnerMock(client, nil, nil, nil, cfg))
 }
 
 func TestFormatPrice(t *testing.T) {

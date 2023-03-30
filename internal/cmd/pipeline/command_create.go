@@ -1,19 +1,18 @@
 package pipeline
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"regexp"
+	"sort"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/spf13/cobra"
 )
 
-func (c *command) newCreateCommand(prerunner pcmd.PreRunner, enableSourceCode bool) *cobra.Command {
+func (c *command) newCreateCommand(enableSourceCode bool) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
 		Short: "Create a new pipeline.",
@@ -34,20 +33,24 @@ func (c *command) newCreateCommand(prerunner pcmd.PreRunner, enableSourceCode bo
 		cmd.Flags().String("sql-file", "", "Path to a KSQL file containing the pipeline's source code.")
 		cmd.Flags().StringArray("secret", []string{}, "A named secret that can be referenced in pipeline source code, e.g. \"secret_name=secret_content\".\n"+
 			"This flag can be supplied multiple times. The secret mapping must have the format <secret-name>=<secret-value>,\n"+
-			"where <secret-name> consists of 1-64 lowercase, uppercase, numeric or underscore characters but may not begin with a digit.\n"+
+			"where <secret-name> consists of 1-128 lowercase, uppercase, numeric or underscore characters but may not begin with a digit.\n"+
 			"The <secret-value> can be of any format but may not be empty.")
 	}
 	pcmd.AddOutputFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 
-	_ = cmd.MarkFlagRequired("ksql-cluster")
-	_ = cmd.MarkFlagRequired("name")
+	if enableSourceCode {
+		cobra.CheckErr(cmd.MarkFlagFilename("sql-file", "sql"))
+	}
+
+	cobra.CheckErr(cmd.MarkFlagRequired("ksql-cluster"))
+	cobra.CheckErr(cmd.MarkFlagRequired("name"))
 
 	return cmd
 }
 
-func (c *command) create(cmd *cobra.Command, args []string) error {
+func (c *command) create(cmd *cobra.Command, _ []string) error {
 	name, _ := cmd.Flags().GetString("name")
 	description, _ := cmd.Flags().GetString("description")
 	ksqlCluster, _ := cmd.Flags().GetString("ksql-cluster")
@@ -59,14 +62,13 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// validate ksql id
-	ksqlReq := &schedv1.KSQLCluster{
-		AccountId: c.EnvironmentId(),
-		Id:        ksqlCluster,
+	environmentId, err := c.EnvironmentId()
+	if err != nil {
+		return err
 	}
 
-	_, err = c.PrivateClient.KSQL.Describe(context.Background(), ksqlReq)
-	if err != nil {
+	// validate ksql id
+	if _, err := c.V2Client.DescribeKsqlCluster(ksqlCluster, environmentId); err != nil {
 		return err
 	}
 
@@ -92,28 +94,18 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	pipeline, err := c.V2Client.CreatePipeline(c.EnvironmentId(), kafkaCluster.ID, name, description, sourceCode, &secretMappings, ksqlCluster, srCluster.Id)
+	pipeline, err := c.V2Client.CreatePipeline(environmentId, kafkaCluster.ID, name, description, sourceCode, &secretMappings, ksqlCluster, srCluster.Id)
 	if err != nil {
 		return err
 	}
 
-	element := &Pipeline{
-		Id:          *pipeline.Id,
-		Name:        *pipeline.Spec.DisplayName,
-		Description: *pipeline.Spec.Description,
-		KsqlCluster: pipeline.Spec.KsqlCluster.Id,
-		State:       *pipeline.Status.State,
-		CreatedAt:   *pipeline.Metadata.CreatedAt,
-		UpdatedAt:   *pipeline.Metadata.UpdatedAt,
-	}
-
-	return output.DescribeObject(cmd, element, pipelineDescribeFields, pipelineDescribeHumanLabels, pipelineDescribeStructuredLabels)
+	return printTable(cmd, pipeline)
 }
 
 func createSecretMappings(secrets []string, regex string) (map[string]string, error) {
 	secretMappings := make(map[string]string)
 
-	// The name of a secret may consist of 1-64 lowercase letters, uppercase letters, digits,
+	// The name of a secret may consist of lowercase letters, uppercase letters, digits,
 	// and the '_' (underscore) and may not begin with a digit.
 	pattern := regexp.MustCompile(regex)
 
@@ -124,10 +116,21 @@ func createSecretMappings(secrets []string, regex string) (map[string]string, er
 
 		matches := pattern.FindStringSubmatch(secret)
 		name, value := matches[1], matches[2]
-		if len(name) > 64 {
-			return nil, fmt.Errorf(`secret name "%s" cannot exceed 64 characters`, name)
-		}
 		secretMappings[name] = value
 	}
 	return secretMappings, nil
+}
+
+func getOrderedSecretNames(secrets *map[string]string) []string {
+	if secrets == nil {
+		return []string{}
+	}
+
+	names := make([]string, 0, len(*secrets))
+	for n := range *secrets {
+		names = append(names, n)
+	}
+
+	sort.Strings(names)
+	return names
 }

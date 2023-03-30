@@ -3,10 +3,13 @@ package admin
 import (
 	"context"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/featureflags"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 func (c *command) newDescribeCommand() *cobra.Command {
@@ -19,18 +22,29 @@ func (c *command) newDescribeCommand() *cobra.Command {
 }
 
 func (c *command) describe(cmd *cobra.Command, _ []string) error {
-	org := &orgv1.Organization{Id: c.Context.GetOrganization().GetId()}
+	org := &ccloudv1.Organization{Id: c.Context.GetOrganization().GetId()}
+	marketplace := c.Context.GetOrganization().GetMarketplace()
 
-	card, err := c.PrivateClient.Billing.GetPaymentInfo(context.Background(), org)
+	card, err := c.Client.Billing.GetPaymentInfo(context.Background(), org)
 	if err != nil {
 		return err
 	}
 
+	if marketplace != nil && marketplace.GetPartner() != ccloudv1.MarketplacePartner_UNKNOWN {
+		output.Printf("Organization is currently linked to %s Marketplace account.\n", marketplace.GetPartner())
+	}
+
 	if card == nil {
-		utils.Println(cmd, "Payment method not found. Add one using `confluent admin payment update`.")
+		output.Println("No credit card found. Add one using `confluent admin payment update`.")
+
+		ldClient := v1.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
+		if featureflags.Manager.BoolVariation("cloud_growth.marketplace_linking_advertisement_experiment.enable", c.Context, ldClient, true, false) {
+			output.Println("Alternatively, you can also link to AWS, GCP, or Azure Marketplace as your payment option. For more information, visit https://confluent.cloud/add-payment.")
+		}
+
 		return nil
 	}
 
-	utils.Printf(cmd, "%s ending in %s\n", card.GetBrand(), card.GetLast4())
+	output.Printf("%s ending in %s\n", card.GetBrand(), card.GetLast4())
 	return nil
 }

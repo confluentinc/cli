@@ -3,19 +3,20 @@ package schemaregistry
 import (
 	"context"
 
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
+
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (c *exporterCommand) newGetConfigCommand() *cobra.Command {
+func (c *command) newExporterGetConfigCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "get-config <name>",
 		Short: "Get the configurations of the schema exporter.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.getConfig,
+		RunE:  c.exporterGetConfig,
 	}
 
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
@@ -27,7 +28,7 @@ func (c *exporterCommand) newGetConfigCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *exporterCommand) getConfig(cmd *cobra.Command, args []string) error {
+func (c *command) exporterGetConfig(cmd *cobra.Command, args []string) error {
 	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
@@ -42,10 +43,7 @@ func getExporterConfig(cmd *cobra.Command, name string, srClient *srsdk.APIClien
 		return err
 	}
 
-	outputFormat, err := cmd.Flags().GetString("output")
-	if err != nil {
-		return err
-	}
-
-	return output.StructuredOutputForCommand(cmd, outputFormat, configs)
+	table := output.NewTable(cmd)
+	table.Add(configs)
+	return table.Print()
 }

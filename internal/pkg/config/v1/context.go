@@ -2,36 +2,34 @@ package v1
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
 // Context represents a specific CLI context.
 type Context struct {
-	Name                   string                            `json:"name" hcl:"name"`
-	NetrcMachineName       string                            `json:"netrc_machine_name" hcl:"netrc_machine_name"`
-	Platform               *Platform                         `json:"-" hcl:"-"`
-	PlatformName           string                            `json:"platform" hcl:"platform"`
-	Credential             *Credential                       `json:"-" hcl:"-"`
-	CredentialName         string                            `json:"credential" hcl:"credential"`
-	KafkaClusterContext    *KafkaClusterContext              `json:"kafka_cluster_context" hcl:"kafka_cluster_config"`
-	SchemaRegistryClusters map[string]*SchemaRegistryCluster `json:"schema_registry_clusters" hcl:"schema_registry_clusters"`
-	State                  *ContextState                     `json:"-" hcl:"-"`
-	Config                 *Config                           `json:"-" hcl:"-"`
-	LastOrgId              string                            `json:"last_org_id" hcl:"last_org_id"`
-	FeatureFlags           *FeatureFlags                     `json:"feature_flags,omitempty" hcl:"feature_flags,omitempty"`
+	Name                   string                            `json:"name"`
+	NetrcMachineName       string                            `json:"netrc_machine_name"`
+	PlatformName           string                            `json:"platform"`
+	CredentialName         string                            `json:"credential"`
+	KafkaClusterContext    *KafkaClusterContext              `json:"kafka_cluster_context"`
+	SchemaRegistryClusters map[string]*SchemaRegistryCluster `json:"schema_registry_clusters"`
+	LastOrgId              string                            `json:"last_org_id"`
+	FeatureFlags           *FeatureFlags                     `json:"feature_flags,omitempty"`
+
+	Platform   *Platform     `json:"-"`
+	Credential *Credential   `json:"-"`
+	State      *ContextState `json:"-"`
+	Config     *Config       `json:"-"`
 }
 
-func newContext(name string, platform *Platform, credential *Credential,
-	kafkaClusters map[string]*KafkaClusterConfig, kafka string,
-	schemaRegistryClusters map[string]*SchemaRegistryCluster, state *ContextState, config *Config,
-	orgResourceId string) (*Context, error) {
+func newContext(name string, platform *Platform, credential *Credential, kafkaClusters map[string]*KafkaClusterConfig, kafka string, schemaRegistryClusters map[string]*SchemaRegistryCluster, state *ContextState, config *Config, orgResourceId string) (*Context, error) {
 	ctx := &Context{
 		Name:                   name,
 		NetrcMachineName:       name,
@@ -128,7 +126,7 @@ func (c *Context) UpdateAuthTokens(token, refreshToken string) error {
 }
 
 func (c *Context) IsCloud(isTest bool) bool {
-	if isTest && c.PlatformName == testserver.TestCloudURL.String() {
+	if isTest && c.PlatformName == testserver.TestCloudUrl.String() {
 		return true
 	}
 
@@ -162,7 +160,7 @@ func (c *Context) GetState() *ContextState {
 }
 
 func (c *Context) GetAuth() *AuthConfig {
-	if c.State != nil {
+	if c.GetState() != nil {
 		return c.State.Auth
 	}
 	return nil
@@ -175,43 +173,50 @@ func (c *Context) SetAuth(auth *AuthConfig) {
 	c.GetState().Auth = auth
 }
 
-func (c *Context) GetUser() *orgv1.User {
+func (c *Context) GetUser() *ccloudv1.User {
 	if auth := c.GetAuth(); auth != nil {
 		return auth.User
 	}
 	return nil
 }
 
-func (c *Context) GetOrganization() *orgv1.Organization {
+func (c *Context) GetOrganization() *ccloudv1.Organization {
 	if auth := c.GetAuth(); auth != nil {
 		return auth.Organization
 	}
 	return nil
 }
 
-func (c *Context) GetSuspensionStatus() *orgv1.SuspensionStatus {
+func (c *Context) GetSuspensionStatus() *ccloudv1.SuspensionStatus {
 	return c.GetOrganization().GetSuspensionStatus()
 }
 
-func (c *Context) GetEnvironment() *orgv1.Account {
+func (c *Context) GetEnvironment() *ccloudv1.Account {
 	if auth := c.GetAuth(); auth != nil {
 		return auth.Account
 	}
 	return nil
 }
 
-func (c *Context) SetEnvironment(environment *orgv1.Account) {
+func (c *Context) SetEnvironment(environment *ccloudv1.Account) {
 	if c.GetAuth() == nil {
 		c.SetAuth(new(AuthConfig))
 	}
 	c.GetAuth().Account = environment
 }
 
-func (c *Context) GetEnvironments() []*orgv1.Account {
+func (c *Context) GetEnvironments() []*ccloudv1.Account {
 	if auth := c.GetAuth(); auth != nil {
 		return auth.Accounts
 	}
 	return nil
+}
+
+func (c *Context) SetEnvironments(environments []*ccloudv1.Account) {
+	if c.GetAuth() == nil {
+		c.SetAuth(new(AuthConfig))
+	}
+	c.GetAuth().Accounts = environments
 }
 
 func (c *Context) GetAuthToken() string {
@@ -228,9 +233,9 @@ func (c *Context) GetAuthRefreshToken() string {
 	return ""
 }
 
-func (c *Context) GetLDFlags(client LaunchDarklyClient) map[string]interface{} {
+func (c *Context) GetLDFlags(client LaunchDarklyClient) map[string]any {
 	if c.FeatureFlags == nil {
-		return map[string]interface{}{}
+		return map[string]any{}
 	}
 
 	switch client {
@@ -239,6 +244,13 @@ func (c *Context) GetLDFlags(client LaunchDarklyClient) map[string]interface{} {
 	default:
 		return c.FeatureFlags.Values
 	}
+}
+
+func (c *Context) GetNetrcMachineName() string {
+	if c != nil {
+		return c.NetrcMachineName
+	}
+	return ""
 }
 
 func printApiKeysDictErrorMessage(missingKey, mismatchKey, missingSecret bool, cluster *KafkaClusterConfig, contextName string) {
@@ -253,5 +265,5 @@ func printApiKeysDictErrorMessage(missingKey, mismatchKey, missingSecret bool, c
 		problems = append(problems, errors.APISecretMissingMsg)
 	}
 	problemString := strings.Join(problems, ", ")
-	_, _ = fmt.Fprintf(os.Stderr, errors.APIKeysMapAutofixMsg, cluster.ID, contextName, problemString, cluster.ID)
+	output.ErrPrintf(errors.APIKeysMapAutofixMsg, cluster.ID, contextName, problemString, cluster.ID)
 }

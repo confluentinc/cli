@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
+
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
@@ -57,7 +58,7 @@ func (c *Client) ListKafkaClusters(environment string) ([]cmkv2.CmkV2Cluster, er
 		}
 		list = append(list, page.GetData()...)
 
-		pageToken, done, err = extractCmkNextPageToken(page.GetMetadata().Next)
+		pageToken, done, err = extractNextPageToken(page.GetMetadata().Next)
 		if err != nil {
 			return nil, err
 		}
@@ -71,13 +72,4 @@ func (c *Client) executeListClusters(pageToken, environment string) (cmkv2.CmkV2
 		req = req.PageToken(pageToken)
 	}
 	return c.CmkClient.ClustersCmkV2Api.ListCmkV2ClustersExecute(req)
-}
-
-func extractCmkNextPageToken(nextPageUrlStringNullable cmkv2.NullableString) (string, bool, error) {
-	if !nextPageUrlStringNullable.IsSet() {
-		return "", true, nil
-	}
-	nextPageUrlString := *nextPageUrlStringNullable.Get()
-	pageToken, err := extractPageToken(nextPageUrlString)
-	return pageToken, false, err
 }

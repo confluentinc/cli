@@ -3,14 +3,15 @@ package cluster
 import (
 	"context"
 
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/spf13/cobra"
+
+	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
 	"github.com/confluentinc/cli/internal/pkg/cluster"
 	pcluster "github.com/confluentinc/cli/internal/pkg/cluster"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 type unregisterCommand struct {
@@ -26,20 +27,20 @@ func newUnregisterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	}
 
 	c := &unregisterCommand{AuthenticatedCLICommand: pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)}
-	c.RunE = c.unregister
+	cmd.RunE = c.unregister
 
-	c.Flags().String("cluster-name", "", "Cluster Name.")
+	cmd.Flags().String("cluster-name", "", "Cluster Name.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
-	_ = c.MarkFlagRequired("cluster-name")
+	cobra.CheckErr(cmd.MarkFlagRequired("cluster-name"))
 
-	return c.Command
+	return cmd
 }
 
 func (c *unregisterCommand) unregister(cmd *cobra.Command, _ []string) error {
 	ctx := context.WithValue(context.Background(), mds.ContextAccessToken, c.Context.GetAuthToken())
 
-	name, err := cmd.Flags().GetString("cluster-name")
+	clusterName, err := cmd.Flags().GetString("cluster-name")
 	if err != nil {
 		return err
 	}
@@ -50,19 +51,19 @@ func (c *unregisterCommand) unregister(cmd *cobra.Command, _ []string) error {
 	}
 	clusterFound := false
 	for _, cluster := range clusterInfos {
-		if name == cluster.ClusterName {
+		if clusterName == cluster.ClusterName {
 			clusterFound = true
 		}
 	}
 	if !clusterFound {
-		return errors.Errorf(errors.UnknownClusterErrorMsg, name)
+		return errors.Errorf(errors.UnknownClusterErrorMsg, clusterName)
 	}
 
-	httpResp, err = c.MDSClient.ClusterRegistryApi.DeleteNamedCluster(ctx, name)
+	httpResp, err = c.MDSClient.ClusterRegistryApi.DeleteNamedCluster(ctx, clusterName)
 	if err != nil {
 		return cluster.HandleClusterError(err, httpResp)
 	}
 
-	utils.Printf(cmd, errors.UnregisteredClusterMsg, name)
+	output.Printf(errors.UnregisteredClusterMsg, clusterName)
 	return nil
 }

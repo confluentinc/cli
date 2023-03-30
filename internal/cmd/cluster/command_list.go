@@ -3,12 +3,12 @@ package cluster
 import (
 	"context"
 
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/spf13/cobra"
+
+	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
 	pcluster "github.com/confluentinc/cli/internal/pkg/cluster"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 type listCommand struct {
@@ -23,12 +23,12 @@ func newListCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	}
 
 	c := &listCommand{pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)}
-	c.RunE = c.list
+	cmd.RunE = c.list
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
-	pcmd.AddOutputFlag(c.Command)
+	pcmd.AddOutputFlag(cmd)
 
-	return c.Command
+	return cmd
 }
 
 func (c *listCommand) list(cmd *cobra.Command, _ []string) error {
@@ -38,10 +38,5 @@ func (c *listCommand) list(cmd *cobra.Command, _ []string) error {
 		return pcluster.HandleClusterError(err, response)
 	}
 
-	format, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		return err
-	}
-
-	return pcluster.PrintCluster(clusterInfos, format)
+	return pcluster.PrintClusters(cmd, clusterInfos)
 }

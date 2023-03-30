@@ -1,5 +1,5 @@
-     Principal    |        Email         |  Service Name   |   Pool Name    
-------------------+----------------------+-----------------+----------------
-  User:pool-12345 |                      |                 | identity_pool  
-  User:sa-12345   |                      | service_account |                
-  User:u-11aaa    | u-11aaa@confluent.io |                 |                
+     Principal    |      Name       |        Email          
+------------------+-----------------+-----------------------
+  User:pool-12345 | identity_pool   |                       
+  User:sa-12345   | service_account |                       
+  User:u-11aaa    |                 | u-11aaa@confluent.io  

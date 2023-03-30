@@ -1,12 +1,12 @@
-         Key         |          Description           | Owner Resource ID |    Owner Email    |  Resource Type  | Resource ID |       Created         
----------------------+--------------------------------+-------------------+-------------------+-----------------+-------------+-----------------------
-    MULTICLUSTERKEY1 | works for two clusters         | u-44ddd           | mhe@confluent.io  | kafka           | lkc-abc     | 1999-02-24T00:00:00Z  
-    MULTICLUSTERKEY1 | works for two clusters         | u-44ddd           | mhe@confluent.io  | schema-registry | lsrc-abc    | 1999-02-24T00:00:00Z  
-    MULTICLUSTERKEY2 | works for two clusters but on  | u-44ddd           | mhe@confluent.io  | kafka           | lkc-abc     | 1999-02-24T00:00:00Z  
-                     | a different sr cluster         |                   |                   |                 |             |                       
-    MULTICLUSTERKEY2 | works for two clusters but on  | u-44ddd           | mhe@confluent.io  | schema-registry | lsrc-abc123 | 1999-02-24T00:00:00Z  
-                     | a different sr cluster         |                   |                   |                 |             |                       
-    MULTICLUSTERKEY3 | works for two clusters and     | sa-12345          | <service account> | kafka           | lkc-abc     | 1999-02-24T00:00:00Z  
-                     | owned by service account       |                   |                   |                 |             |                       
-    MULTICLUSTERKEY3 | works for two clusters and     | sa-12345          | <service account> | schema-registry | lsrc-abc    | 1999-02-24T00:00:00Z  
-                     | owned by service account       |                   |                   |                 |             |                       
+  Current |       Key        |          Description           |  Owner   |    Owner Email    |  Resource Type  |  Resource   |       Created         
+----------+------------------+--------------------------------+----------+-------------------+-----------------+-------------+-----------------------
+          | MULTICLUSTERKEY1 | works for two clusters         | u-44ddd  | mhe@confluent.io  | kafka           | lkc-abc     | 1999-02-24T00:00:00Z  
+          | MULTICLUSTERKEY1 | works for two clusters         | u-44ddd  | mhe@confluent.io  | schema-registry | lsrc-abc    | 1999-02-24T00:00:00Z  
+          | MULTICLUSTERKEY2 | works for two clusters but on  | u-44ddd  | mhe@confluent.io  | kafka           | lkc-abc     | 1999-02-24T00:00:00Z  
+          |                  | a different sr cluster         |          |                   |                 |             |                       
+          | MULTICLUSTERKEY2 | works for two clusters but on  | u-44ddd  | mhe@confluent.io  | schema-registry | lsrc-abc123 | 1999-02-24T00:00:00Z  
+          |                  | a different sr cluster         |          |                   |                 |             |                       
+          | MULTICLUSTERKEY3 | works for two clusters and     | sa-12345 | <service account> | kafka           | lkc-abc     | 1999-02-24T00:00:00Z  
+          |                  | owned by service account       |          |                   |                 |             |                       
+          | MULTICLUSTERKEY3 | works for two clusters and     | sa-12345 | <service account> | schema-registry | lsrc-abc    | 1999-02-24T00:00:00Z  
+          |                  | owned by service account       |          |                   |                 |             |                       

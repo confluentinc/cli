@@ -8,16 +8,46 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gorilla/mux"
+	"github.com/stretchr/testify/require"
+
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 	identityproviderv2 "github.com/confluentinc/ccloud-sdk-go-v2/identity-provider/v2"
-	"github.com/gorilla/mux"
-	"github.com/stretchr/testify/require"
+	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
 )
 
 var (
-	keyStoreV2 = map[string]*apikeysv2.IamV2ApiKey{}
-	keyTime    = apikeysv2.PtrTime(time.Date(1999, time.February, 24, 0, 0, 0, 0, time.UTC))
+	keyStoreV2       = map[string]*apikeysv2.IamV2ApiKey{}
+	keyTime          = apikeysv2.PtrTime(time.Date(1999, time.February, 24, 0, 0, 0, 0, time.UTC))
+	roleBindingStore = []mdsv2.IamV2RoleBinding{
+		buildRoleBinding("pool-12345", "OrganizationAdmin",
+			"crn://confluent.cloud/organization=abc-123/identity-provider="+identityProviderResourceID),
+		buildRoleBinding("u-11aaa", "OrganizationAdmin",
+			"crn://confluent.cloud/organization=abc-123"),
+		buildRoleBinding("sa-12345", "OrganizationAdmin",
+			"crn://confluent.cloud/organization=abc-123"),
+		buildRoleBinding("u-11aaa", "CloudClusterAdmin",
+			"crn://confluent.cloud/organization=abc-123/environment=a-595/cloud-cluster=lkc-1111aaa"),
+		buildRoleBinding("u-22bbb", "CloudClusterAdmin",
+			"crn://confluent.cloud/organization=abc-123/environment=a-595/cloud-cluster=lkc-1111aaa"),
+		buildRoleBinding("u-22bbb", "EnvironmentAdmin",
+			"crn://confluent.cloud/organization=abc-123/environment=a-595"),
+		buildRoleBinding("u-33ccc", "CloudClusterAdmin",
+			"crn://confluent.cloud/organization=abc-123/environment=a-595/cloud-cluster=lkc-1111aaa"),
+		buildRoleBinding("u-44ddd", "CloudClusterAdmin",
+			"crn://confluent.cloud/organization=abc-123/environment=a-595/cloud-cluster=lkc-1111aaa"),
+		buildRoleBinding("u-55eee", "ResourceOwner",
+			"crn://confluent.cloud/organization=abc-123/environment=a-595/cloud-cluster=lkc-1111aaa/kafka=lkc-1111aaa/group=readers"),
+		buildRoleBinding("u-55eee", "ResourceOwner",
+			"crn://confluent.cloud/organization=abc-123/environment=a-595/cloud-cluster=lkc-1111aaa/kafka=lkc-1111aaa/topic=clicks-*"),
+		buildRoleBinding("u-55eee", "ResourceOwner",
+			"crn://confluent.cloud/organization=abc-123/environment=a-595/cloud-cluster=lkc-1111aaa/kafka=lkc-1111aaa/topic=payroll"),
+		buildRoleBinding("u-66fff", "ResourceOwner",
+			"crn://confluent.cloud/organization=abc-123/environment=a-595/cloud-cluster=lkc-1111aaa/ksql=ksql-cluster-name-2222bbb"),
+		buildRoleBinding("u-77ggg", "ResourceOwner",
+			"crn://confluent.cloud/organization=abc-123/environment=a-595/schema-registry=lsrc-3333ccc/subject=clicks"),
+	}
 )
 
 func init() {
@@ -27,7 +57,6 @@ func init() {
 // Handler for: "/iam/v2/api-keys/{id}"
 func handleIamApiKey(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		vars := mux.Vars(r)
 		keyStr := vars["id"]
 		switch r.Method {
@@ -68,15 +97,19 @@ func handleIamApiKeyGet(t *testing.T, keyStr string) http.HandlerFunc {
 
 func handleIamApiKeyDelete(t *testing.T, keyStr string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if keyStr == "UNKNOWN" {
+			err := writeResourceNotFoundError(w)
+			require.NoError(t, err)
+			return
+		}
 		delete(keyStoreV2, keyStr)
 		w.WriteHeader(http.StatusNoContent)
 	}
 }
 
-// Hanlder for: "/iam/v2/api-keys"
+// Handler for: "/iam/v2/api-keys"
 func handleIamApiKeys(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		if r.Method == http.MethodPost {
 			handleIamApiKeysCreate(t)(w, r)
 		} else if r.Method == http.MethodGet {
@@ -118,17 +151,21 @@ func handleIamUser(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		userId := vars["id"]
-		w.Header().Set("Content-Type", "application/json")
+		var user iamv2.IamV2User
 		switch userId {
-		case "u-1":
+		case "u-0", "u-1":
 			err := writeResourceNotFoundError(w)
 			require.NoError(t, err)
+			return
+		case "u-2":
+			user = buildIamUser("u-2@confluent.io", "Bono", "u-2", "AUTH_TYPE_LOCAL")
 		case "u-11aaa":
-			err := json.NewEncoder(w).Encode(buildIamUser("u-11aaa@confluent.io", "11 Aaa", "u-11aaa"))
-			require.NoError(t, err)
+			user = buildIamUser("u-11aaa@confluent.io", "11 Aaa", "u-11aaa", "AUTH_TYPE_LOCAL")
 		default:
-			w.WriteHeader(http.StatusNoContent)
+			user = buildIamUser("mhe@confluent.io", "Muwei He", userId, "AUTH_TYPE_LOCAL")
 		}
+		err := json.NewEncoder(w).Encode(user)
+		require.NoError(t, err)
 	}
 }
 
@@ -137,12 +174,12 @@ func handleIamUsers(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			users := []iamv2.IamV2User{
-				buildIamUser("bstrauch@confluent.io", "Brian Strauch", "u11"),
-				buildIamUser("mtodzo@confluent.io", "Miles Todzo", "u-17"),
-				buildIamUser("u-11aaa@confluent.io", "11 Aaa", "u-11aaa"),
-				buildIamUser("u-22bbb@confluent.io", "22 Bbb", "u-22bbb"),
-				buildIamUser("u-33ccc@confluent.io", "33 Ccc", "u-33ccc"),
-				buildIamUser("mhe@confluent.io", "Muwei He", "u-44ddd"),
+				buildIamUser("bstrauch@confluent.io", "Brian Strauch", "u11", "AUTH_TYPE_LOCAL"),
+				buildIamUser("mtodzo@confluent.io", "Miles Todzo", "u-17", "AUTH_TYPE_LOCAL"),
+				buildIamUser("u-11aaa@confluent.io", "11 Aaa", "u-11aaa", "AUTH_TYPE_LOCAL"),
+				buildIamUser("u-22bbb@confluent.io", "22 Bbb", "u-22bbb", "AUTH_TYPE_LOCAL"),
+				buildIamUser("u-33ccc@confluent.io", "33 Ccc", "u-33ccc", "AUTH_TYPE_SSO"),
+				buildIamUser("mhe@confluent.io", "Muwei He", "u-44ddd", "AUTH_TYPE_LOCAL"),
 			}
 			userId := r.URL.Query().Get("id")
 			if userId != "" {
@@ -164,7 +201,6 @@ func handleIamUsers(t *testing.T) http.HandlerFunc {
 					}
 				}
 			}
-			w.Header().Set("Content-Type", "application/json")
 			err := json.NewEncoder(w).Encode(res)
 			require.NoError(t, err)
 		}
@@ -174,7 +210,6 @@ func handleIamUsers(t *testing.T) http.HandlerFunc {
 // Handler for: "/iam/v2/service_accounts/{id}"
 func handleIamServiceAccount(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		id := mux.Vars(r)["id"]
 		switch r.Method {
 		case http.MethodGet:
@@ -207,7 +242,6 @@ func handleIamServiceAccount(t *testing.T) http.HandlerFunc {
 // Handler for: "/iam/v2/service_accounts"
 func handleIamServiceAccounts(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		switch r.Method {
 		case http.MethodGet:
 			serviceAccount := iamv2.IamV2ServiceAccount{
@@ -232,10 +266,37 @@ func handleIamServiceAccounts(t *testing.T) http.HandlerFunc {
 	}
 }
 
+// Handler for :"/iam/v2/role-bindings"
+func handleIamRoleBindings(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		crnPattern := r.URL.Query().Get("crn_pattern")
+		principal := r.URL.Query().Get("principal")
+		roleName := r.URL.Query().Get("role_name")
+		switch r.Method {
+		case http.MethodGet:
+			if roleName == "InvalidOrgAdmin" || roleName == "InvalidMetricsViewer" {
+				err := writeInvalidRoleNameError(w, roleName)
+				require.NoError(t, err)
+				return
+			}
+			roleBindings := []mdsv2.IamV2RoleBinding{}
+			for _, rolebinding := range roleBindingStore {
+				if isRoleBindingMatch(rolebinding, principal, roleName, crnPattern) {
+					roleBindings = append(roleBindings, rolebinding)
+				}
+			}
+			res := mdsv2.IamV2RoleBindingList{Data: roleBindings}
+			err := json.NewEncoder(w).Encode(res)
+			require.NoError(t, err)
+		case http.MethodPost:
+			w.WriteHeader(http.StatusCreated)
+		}
+	}
+}
+
 // Handler for: "/iam/v2/identity-provider/{id}"
 func handleIamIdentityProvider(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		id := mux.Vars(r)["id"]
 		switch r.Method {
 		case http.MethodPatch:
@@ -254,7 +315,6 @@ func handleIamIdentityProvider(t *testing.T) http.HandlerFunc {
 		case http.MethodDelete:
 			switch id {
 			case "op-1":
-				w.Header().Set("Content-Type", "application/json")
 				err := writeResourceNotFoundError(w)
 				require.NoError(t, err)
 			default:
@@ -277,7 +337,6 @@ func handleIamIdentityProvider(t *testing.T) http.HandlerFunc {
 // Handler for: "/iam/v2/identity-providers"
 func handleIamIdentityProviders(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		switch r.Method {
 		case http.MethodGet:
 			identityProvider := identityproviderv2.IamV2IdentityProvider{
@@ -306,10 +365,19 @@ func handleIamIdentityProviders(t *testing.T) http.HandlerFunc {
 	}
 }
 
+// Handler for :"/iam/v2/role-bindings/{id}"
+func handleIamRoleBinding(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodDelete:
+			w.WriteHeader(http.StatusNoContent)
+		}
+	}
+}
+
 // Handler for: "/iam/v2/identity-providers/{provider_id}/identity-pools/{id}"
 func handleIamIdentityPool(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		id := mux.Vars(r)["id"]
 		switch r.Method {
 		case http.MethodPatch:
@@ -328,7 +396,6 @@ func handleIamIdentityPool(t *testing.T) http.HandlerFunc {
 		case http.MethodDelete:
 			switch id {
 			case "pool-1":
-				w.Header().Set("Content-Type", "application/json")
 				err := writeResourceNotFoundError(w)
 				require.NoError(t, err)
 			default:
@@ -351,7 +418,6 @@ func handleIamIdentityPool(t *testing.T) http.HandlerFunc {
 // Handler for: "/iam/v2/identity-providers/{provider_id}/identity-pools"
 func handleIamIdentityPools(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		switch r.Method {
 		case http.MethodGet:
 			identityPool := identityproviderv2.IamV2IdentityPool{
@@ -383,7 +449,6 @@ func handleIamIdentityPools(t *testing.T) http.HandlerFunc {
 // Handler for "iam/v2/invitations"
 func handleIamInvitations(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		switch r.Method {
 		case http.MethodGet:
 			invitationList := &iamv2.IamV2InvitationList{Data: []iamv2.IamV2Invitation{

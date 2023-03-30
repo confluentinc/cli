@@ -45,7 +45,7 @@ func newClusterCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command 
 
 	cmd.AddCommand(c.newCreateCommand(cfg))
 	cmd.AddCommand(c.newDeleteCommand(cfg))
-	cmd.AddCommand(c.newDescribeCommand(cfg))
+	cmd.AddCommand(c.newDescribeCommand())
 	cmd.AddCommand(c.newUpdateCommand(cfg))
 	cmd.AddCommand(c.newUseCommand(cfg))
 
@@ -67,5 +67,6 @@ func (c *clusterCommand) validArgs(cmd *cobra.Command, args []string) []string {
 		return nil
 	}
 
-	return pcmd.AutocompleteCmkClusters(c.EnvironmentId(), c.V2Client)
+	environmentId, _ := c.EnvironmentId()
+	return pcmd.AutocompleteCmkClusters(environmentId, c.V2Client)
 }

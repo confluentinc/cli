@@ -1,4 +1,4 @@
-  ID |        Email         | First Name | Last Name | User ID |  Status   
------+----------------------+------------+-----------+---------+-----------
-   1 | u-11aaa@confluent.io |         11 | Aaa       | u-11aaa | VERIFIED  
-   2 | u-22bbb@confluent.io |         22 | Bbb       | u-22bbb | SENT      
+  ID |   Name   |        Email         |  User   |  Status   
+-----+----------+----------------------+---------+-----------
+   1 | 11 Aaa   | u-11aaa@confluent.io | u-11aaa | VERIFIED  
+   2 | Muwei He | u-22bbb@confluent.io | u-22bbb | SENT      

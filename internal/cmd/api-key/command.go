@@ -5,33 +5,22 @@ import (
 	"fmt"
 	"strings"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/confluentinc/ccloud-sdk-go-v1"
-	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	"github.com/spf13/cobra"
 
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/keystore"
-	"github.com/confluentinc/cli/internal/pkg/resource"
+	presource "github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 type command struct {
 	*pcmd.AuthenticatedStateFlagCommand
 	keystore     keystore.KeyStore
 	flagResolver pcmd.FlagResolver
-}
-
-type row struct {
-	Key             string
-	Description     string
-	OwnerResourceId string
-	OwnerEmail      string
-	ResourceType    string
-	ResourceId      string
-	Created         string
 }
 
 const resourceFlagName = "resource"
@@ -55,15 +44,15 @@ func New(prerunner pcmd.PreRunner, keystore keystore.KeyStore, resolver pcmd.Fla
 		flagResolver:                  resolver,
 	}
 
-	c.AddCommand(c.newCreateCommand())
-	c.AddCommand(c.newDeleteCommand())
-	c.AddCommand(c.newDescribeCommand())
-	c.AddCommand(c.newListCommand())
-	c.AddCommand(c.newStoreCommand())
-	c.AddCommand(c.newUpdateCommand())
-	c.AddCommand(c.newUseCommand())
+	cmd.AddCommand(c.newCreateCommand())
+	cmd.AddCommand(c.newDeleteCommand())
+	cmd.AddCommand(c.newDescribeCommand())
+	cmd.AddCommand(c.newListCommand())
+	cmd.AddCommand(c.newStoreCommand())
+	cmd.AddCommand(c.newUpdateCommand())
+	cmd.AddCommand(c.newUseCommand())
 
-	return c.Command
+	return cmd
 }
 
 func (c *command) setKeyStoreIfNil() {
@@ -89,83 +78,86 @@ func (c *command) validArgs(cmd *cobra.Command, args []string) []string {
 		return nil
 	}
 
-	return pcmd.AutocompleteApiKeys(c.EnvironmentId(), c.V2Client)
+	return pcmd.AutocompleteApiKeys(c.V2Client)
 }
 
-func (c *command) getAllUsers() ([]*orgv1.User, error) {
-	users, err := c.PrivateClient.User.GetServiceAccounts(context.Background())
+func (c *command) getAllUsers() ([]*ccloudv1.User, error) {
+	users, err := c.Client.User.GetServiceAccounts(context.Background())
 	if err != nil {
 		return nil, err
 	}
 
 	if auditLog := v1.GetAuditLog(c.Context.Context); auditLog != nil {
-		serviceAccount, err := c.PrivateClient.User.GetServiceAccount(context.Background(), auditLog.GetServiceAccountId())
+		serviceAccount, err := c.Client.User.GetServiceAccount(context.Background(), auditLog.GetServiceAccountId())
 		if err != nil {
-			return nil, err
+			// ignore 403s so we can still get other users
+			if !strings.Contains(err.Error(), "Forbidden Access") {
+				return nil, err
+			}
+		} else {
+			users = append(users, serviceAccount)
 		}
-		users = append(users, serviceAccount)
 	}
 
-	adminUsers, err := c.PrivateClient.User.List(context.Background())
+	adminUsers, err := c.Client.User.List(context.Background())
 	if err != nil {
 		return nil, err
 	}
 	users = append(users, adminUsers...)
 
+	if currentUser := c.Context.GetUser(); currentUser != nil {
+		users = append(users, currentUser)
+	}
+
 	return users, nil
 }
 
-func (c *command) resolveResourceId(cmd *cobra.Command, client *ccloud.Client) (string, string, string, error) {
-	resourceId, err := cmd.Flags().GetString("resource")
+func (c *command) resolveResourceId(cmd *cobra.Command, v2Client *ccloudv2.Client) (string, string, string, error) {
+	resource, err := cmd.Flags().GetString("resource")
 	if err != nil {
 		return "", "", "", err
 	}
-	if resourceId == "" {
+	if resource == "" {
 		return "", "", "", nil
 	}
 
-	resourceType := resource.LookupType(resourceId)
+	resourceType := presource.LookupType(resource)
 
 	var clusterId string
 	var apiKey string
 
 	switch resourceType {
-	case resource.Cloud:
+	case presource.Cloud:
 		break
-	case resource.KafkaCluster:
-		cluster, err := c.Context.FindKafkaCluster(resourceId)
+	case presource.KafkaCluster:
+		cluster, err := c.Context.FindKafkaCluster(resource)
 		if err != nil {
-			return "", "", "", errors.CatchResourceNotFoundError(err, resourceId)
+			return "", "", "", errors.CatchResourceNotFoundError(err, resource)
 		}
 		clusterId = cluster.ID
 		apiKey = cluster.APIKey
-	case resource.KsqlCluster:
-		cluster := &schedv1.KSQLCluster{Id: resourceId, AccountId: c.EnvironmentId()}
-		cluster, err := client.KSQL.Describe(context.Background(), cluster)
+	case presource.KsqlCluster:
+		environmentId, err := c.EnvironmentId()
 		if err != nil {
-			return "", "", "", errors.CatchResourceNotFoundError(err, resourceId)
+			return "", "", "", err
 		}
-		clusterId = cluster.Id
-	case resource.SchemaRegistryCluster:
+		cluster, err := v2Client.DescribeKsqlCluster(resource, environmentId)
+		if err != nil {
+			return "", "", "", errors.CatchResourceNotFoundError(err, resource)
+		}
+		clusterId = cluster.GetId()
+	case presource.SchemaRegistryCluster:
 		cluster, err := c.Context.SchemaRegistryCluster(cmd)
 		if err != nil {
-			return "", "", "", errors.CatchResourceNotFoundError(err, resourceId)
+			return "", "", "", errors.CatchResourceNotFoundError(err, resource)
 		}
 		clusterId = cluster.Id
 		if cluster.SrCredentials != nil {
 			apiKey = cluster.SrCredentials.Key
 		}
 	default:
-		return "", "", "", fmt.Errorf(`unsupported resource type for resource "%s"`, resourceId)
+		return "", "", "", fmt.Errorf(`unsupported resource type for resource "%s"`, resource)
 	}
 
 	return resourceType, clusterId, apiKey, nil
-}
-
-func isSchemaRegistryOrKsqlApiKey(key apikeysv2.IamV2ApiKey) bool {
-	var kind string
-	if key.Spec.HasResource() && key.Spec.Resource.HasKind() {
-		kind = key.Spec.Resource.GetKind()
-	}
-	return kind == "SchemaRegistry" || kind == "ksqlDB"
 }

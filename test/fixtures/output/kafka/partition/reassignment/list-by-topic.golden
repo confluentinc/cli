@@ -1,0 +1,4 @@
+   Cluster  | Topic Name | Partition ID | Adding Replicas | Removing Replicas  
+------------+------------+--------------+-----------------+--------------------
+  cluster-1 | topic1     |            0 | [1 2 3]         | [4]                
+  cluster-1 | topic1     |            1 | [4]             | [1 2 3]            

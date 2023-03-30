@@ -4,7 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 func (c *command) newUpdateCommand() *cobra.Command {
@@ -21,21 +21,21 @@ func (c *command) newUpdateCommand() *cobra.Command {
 	cmd.Flags().String("remote-secrets-file", "", "Path to the remote encrypted configuration properties file.")
 	cmd.Flags().String("config", "", "List of key/value pairs of configuration properties.")
 
-	_ = cmd.MarkFlagRequired("config-file")
-	_ = cmd.MarkFlagRequired("local-secrets-file")
-	_ = cmd.MarkFlagRequired("remote-secrets-file")
-	_ = cmd.MarkFlagRequired("config")
+	cobra.CheckErr(cmd.MarkFlagRequired("config-file"))
+	cobra.CheckErr(cmd.MarkFlagRequired("local-secrets-file"))
+	cobra.CheckErr(cmd.MarkFlagRequired("remote-secrets-file"))
+	cobra.CheckErr(cmd.MarkFlagRequired("config"))
 
 	return cmd
 }
 
 func (c *command) update(cmd *cobra.Command, _ []string) error {
-	configSource, err := cmd.Flags().GetString("config")
+	config, err := cmd.Flags().GetString("config")
 	if err != nil {
 		return err
 	}
 
-	newConfigs, err := c.getConfigs(configSource, "config properties", "", false)
+	newConfigs, err := c.getConfigs(config, "config properties", "", false)
 	if err != nil {
 		return err
 	}
@@ -45,13 +45,10 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	cipherMode := c.getCipherMode()
-	c.plugin.SetCipherMode(cipherMode)
-
 	if err := c.plugin.UpdateEncryptedPasswords(configPath, localSecretsPath, remoteSecretsPath, newConfigs); err != nil {
 		return err
 	}
 
-	utils.ErrPrintln(cmd, errors.UpdateSecretFileMsg)
+	output.ErrPrintln(errors.UpdateSecretFileMsg)
 	return nil
 }

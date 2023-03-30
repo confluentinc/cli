@@ -2,10 +2,10 @@ package ccloudv2
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
+
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
@@ -53,27 +53,9 @@ func (c *Client) DescribeConsumerShare(shareId string) (cdxv1.CdxV1ConsumerShare
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) CreateProviderInvite(environment, kafkaCluster, topic, email, srClusterId, orgId string, subjects []string) (cdxv1.CdxV1ProviderShare, error) {
-	deliveryMethod := "Email"
-
-	resources := []string{
-		fmt.Sprintf("crn://confluent.cloud/organization=%s/environment=%s/kafka=%s/topic=%s", orgId, environment, kafkaCluster, topic),
-	}
-	for _, subject := range subjects {
-		resources = append(resources, fmt.Sprintf("crn://confluent.cloud/organization=%s/environment=%s/schema-registry=%s/subject=%s", orgId, environment, srClusterId, subject))
-	}
-
+func (c *Client) CreateProviderInvite(shareReq cdxv1.CdxV1CreateProviderShareRequest) (cdxv1.CdxV1ProviderShare, error) {
 	req := c.CdxClient.ProviderSharesCdxV1Api.CreateCdxV1ProviderShare(c.cdxApiContext()).
-		CdxV1CreateProviderShareRequest(cdxv1.CdxV1CreateProviderShareRequest{
-			ConsumerRestriction: &cdxv1.CdxV1CreateProviderShareRequestConsumerRestrictionOneOf{
-				CdxV1EmailConsumerRestriction: &cdxv1.CdxV1EmailConsumerRestriction{
-					Kind:  deliveryMethod,
-					Email: email,
-				},
-			},
-			DeliveryMethod: &deliveryMethod,
-			Resources:      &resources,
-		})
+		CdxV1CreateProviderShareRequest(shareReq)
 	resp, httpResp, err := c.CdxClient.ProviderSharesCdxV1Api.CreateCdxV1ProviderShareExecute(req)
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
@@ -90,7 +72,7 @@ func (c *Client) ListProviderShares(sharedResource string) ([]cdxv1.CdxV1Provide
 		}
 		list = append(list, page.GetData()...)
 
-		pageToken, done, err = extractCdxNextPageToken(page.GetMetadata().Next)
+		pageToken, done, err = extractNextPageToken(page.GetMetadata().Next)
 		if err != nil {
 			return nil, err
 		}
@@ -111,7 +93,7 @@ func (c *Client) ListConsumerShares(sharedResource string) ([]cdxv1.CdxV1Consume
 		}
 		list = append(list, page.GetData()...)
 
-		pageToken, done, err = extractCdxNextPageToken(page.GetMetadata().Next)
+		pageToken, done, err = extractNextPageToken(page.GetMetadata().Next)
 		if err != nil {
 			return nil, err
 		}
@@ -132,7 +114,7 @@ func (c *Client) ListConsumerSharedResources(streamShareId string) ([]cdxv1.CdxV
 		}
 		list = append(list, page.GetData()...)
 
-		pageToken, done, err = extractCdxNextPageToken(page.GetMetadata().Next)
+		pageToken, done, err = extractNextPageToken(page.GetMetadata().Next)
 		if err != nil {
 			return nil, err
 		}
@@ -165,15 +147,6 @@ func (c *Client) executeListProviderShares(sharedResource, pageToken string) (cd
 		req = req.PageToken(pageToken)
 	}
 	return c.CdxClient.ProviderSharesCdxV1Api.ListCdxV1ProviderSharesExecute(req)
-}
-
-func extractCdxNextPageToken(nextPageUrlStringNullable cdxv1.NullableString) (string, bool, error) {
-	if !nextPageUrlStringNullable.IsSet() {
-		return "", true, nil
-	}
-	nextPageUrlString := *nextPageUrlStringNullable.Get()
-	pageToken, err := extractPageToken(nextPageUrlString)
-	return pageToken, false, err
 }
 
 func (c *Client) RedeemSharedToken(token, awsAccountId, azureSubscriptionId, gcpProjectId string) (cdxv1.CdxV1RedeemTokenResponse, error) {

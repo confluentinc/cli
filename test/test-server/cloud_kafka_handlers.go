@@ -5,14 +5,14 @@ import (
 	"net/http"
 	"testing"
 
-	kafkaquotasv1 "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
+
+	kafkaquotasv1 "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
 )
 
 func handleKafkaClientQuota(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		switch r.Method {
 		case http.MethodGet:
 			resp := kafkaquotasv1.KafkaQuotasV1ClientQuota{
@@ -48,7 +48,6 @@ func handleKafkaClientQuota(t *testing.T) http.HandlerFunc {
 
 func handleKafkaClientQuotas(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
 		switch r.Method {
 		case http.MethodGet:
 			resp := kafkaquotasv1.KafkaQuotasV1ClientQuotaList{
@@ -86,12 +85,11 @@ func handleKafkaClientQuotas(t *testing.T) http.HandlerFunc {
 			err := json.NewEncoder(w).Encode(resp)
 			require.NoError(t, err)
 		case http.MethodPost:
-			id := "cq-1234"
 			req := &kafkaquotasv1.KafkaQuotasV1ClientQuota{}
 			err := json.NewDecoder(r.Body).Decode(req)
 			require.NoError(t, err)
 			resp := kafkaquotasv1.KafkaQuotasV1ClientQuota{
-				Id: &id,
+				Id: kafkaquotasv1.PtrString("cq-1234"),
 				Spec: &kafkaquotasv1.KafkaQuotasV1ClientQuotaSpec{
 					DisplayName: req.Spec.DisplayName,
 					Description: req.Spec.Description,

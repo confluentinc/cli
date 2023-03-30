@@ -4,11 +4,10 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/confluentinc/cli/internal/pkg/local"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/local"
 )
 
 var (
@@ -23,7 +22,7 @@ var (
 		"topic":     "Topic to which the ACL is being applied to. The corresponding subjects would be topic-key and topic-value. Only applicable for SUBJECT operations. Use * to apply to all subjects.",
 	}
 
-	defaultValues = map[string]interface{}{
+	defaultValues = map[string]any{
 		"add":    defaultBool,
 		"list":   defaultBool,
 		"remove": defaultBool,
@@ -68,13 +67,13 @@ func NewSchemaRegistryACLCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *Command) runSchemaRegistryACLCommand(command *cobra.Command, _ []string) error {
+func (c *Command) runSchemaRegistryACLCommand(cmd *cobra.Command, _ []string) error {
 	isUp, err := c.isRunning("kafka")
 	if err != nil {
 		return err
 	}
 	if !isUp {
-		return c.printStatus(command, "kafka")
+		return c.printStatus("kafka")
 	}
 
 	file, err := c.ch.GetFile("bin", "sr-acl-cli")
@@ -87,7 +86,7 @@ func (c *Command) runSchemaRegistryACLCommand(command *cobra.Command, _ []string
 		return err
 	}
 
-	args, err := local.CollectFlags(command.Flags(), defaultValues)
+	args, err := local.CollectFlags(cmd.Flags(), defaultValues)
 	if err != nil {
 		return err
 	}

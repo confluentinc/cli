@@ -1,9 +1,10 @@
 package iam
 
 import (
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
+
+	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -19,16 +20,16 @@ func (c *aclCommand) newCreateCommand() *cobra.Command {
 		RunE:  c.create,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Create an ACL that grants the specified user READ permission to the specified consumer group in the specified Kafka cluster:",
-				Code: "confluent iam acl create --allow --principal User:User1 --operation READ --consumer-group java_example_group_1 --kafka-cluster-id <kafka-cluster-id>",
+				Text: `Create an ACL that grants the specified user "read" permission to the specified consumer group in the specified Kafka cluster:`,
+				Code: "confluent iam acl create --allow --principal User:User1 --operation read --consumer-group java_example_group_1 --kafka-cluster <kafka-cluster-id>",
 			},
 			examples.Example{
-				Text: "Create an ACL that grants the specified user WRITE permission on all topics in the specified Kafka cluster:",
-				Code: "confluent iam acl create --allow --principal User:User1 --operation WRITE --topic '*' --kafka-cluster-id <kafka-cluster-id>",
+				Text: `Create an ACL that grants the specified user "write" permission on all topics in the specified Kafka cluster:`,
+				Code: "confluent iam acl create --allow --principal User:User1 --operation write --topic '*' --kafka-cluster <kafka-cluster-id>",
 			},
 			examples.Example{
-				Text: "Create an ACL that assigns a group READ access to all topics that use the specified prefix in the specified Kafka cluster:",
-				Code: "confluent iam acl create --allow --principal Group:Finance --operation READ --topic financial --prefix --kafka-cluster-id <kafka-cluster-id>",
+				Text: `Create an ACL that assigns a group "read" access to all topics that use the specified prefix in the specified Kafka cluster:`,
+				Code: "confluent iam acl create --allow --principal Group:Finance --operation read --topic financial --prefix --kafka-cluster <kafka-cluster-id>",
 			},
 		),
 	}
@@ -36,9 +37,9 @@ func (c *aclCommand) newCreateCommand() *cobra.Command {
 	cmd.Flags().AddFlagSet(aclFlags())
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
-	_ = cmd.MarkFlagRequired("kafka-cluster-id")
-	_ = cmd.MarkFlagRequired("principal")
-	_ = cmd.MarkFlagRequired("operation")
+	cobra.CheckErr(cmd.MarkFlagRequired("kafka-cluster"))
+	cobra.CheckErr(cmd.MarkFlagRequired("principal"))
+	cobra.CheckErr(cmd.MarkFlagRequired("operation"))
 
 	return cmd
 }

@@ -3,16 +3,15 @@ package price
 import (
 	"context"
 	"fmt"
-	"sort"
 	"strings"
 
-	billingv1 "github.com/confluentinc/cc-structs/kafka/billing/v1"
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/spf13/cobra"
 
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	poutput "github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/types"
 )
 
 var (
@@ -36,7 +35,15 @@ var (
 		"ClusterLinkingWrite":   "Cluster linking write",
 	}
 
-	formatClusterType = map[string]string{
+	formatClusterTypeSerialized = map[string]string{
+		"basic":       "basic",
+		"custom":      "custom-legacy",
+		"dedicated":   "dedicated",
+		"standard":    "basic-legacy",
+		"standard_v2": "standard",
+	}
+
+	formatClusterTypeHuman = map[string]string{
 		"basic":       "Basic",
 		"custom":      "Legacy - Custom",
 		"dedicated":   "Dedicated",
@@ -58,17 +65,27 @@ var (
 )
 
 var (
-	metrics        = mapToSlice(formatMetric)
-	clusterTypes   = mapToSlice(formatClusterType)
-	availabilities = mapToSlice(formatAvailability)
-	networkTypes   = mapToSlice(formatNetworkType)
+	metrics        = types.GetSortedKeys(formatMetric)
+	clusterTypes   = types.GetSortedValues(formatClusterTypeSerialized)
+	availabilities = types.GetSortedKeys(formatAvailability)
+	networkTypes   = types.GetSortedKeys(formatNetworkType)
 )
 
-var (
-	listFields       = []string{"metric", "clusterType", "availability", "networkType", "price"}
-	humanLabels      = []string{"Metric", "Cluster Type", "Availability", "Network Type", "Price"}
-	structuredLabels = []string{"metric", "cluster_type", "availability", "network_type", "price"}
-)
+type humanOut struct {
+	Metric       string `human:"Metric"`
+	ClusterType  string `human:"Cluster Type"`
+	Availability string `human:"Availability"`
+	NetworkType  string `human:"Network Type"`
+	Price        string `human:"Price"`
+}
+
+type serializedOut struct {
+	Metric       string  `serialized:"metric"`
+	ClusterType  string  `serialized:"cluster_type"`
+	Availability string  `serialized:"availability"`
+	NetworkType  string  `serialized:"network_type"`
+	Price        float64 `serialized:"price"`
+}
 
 type row struct {
 	metric       string
@@ -79,45 +96,12 @@ type row struct {
 	unit         string
 }
 
-type humanRow struct {
-	metric       string
-	clusterType  string
-	availability string
-	networkType  string
-	price        string
-}
-
-type structuredRow struct {
-	metric       string
-	clusterType  string
-	availability string
-	networkType  string
-	price        float64
-}
-
 func (c *command) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "Print an organization's price list.",
 		Args:  cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			filterFlags := []string{"cloud", "region", "availability", "cluster-type", "network-type"}
-
-			filters := make([]string, len(filterFlags))
-			for i, flag := range filterFlags {
-				filters[i], _ = cmd.Flags().GetString(flag)
-			}
-
-			metric, _ := cmd.Flags().GetString("metric")
-			legacy, _ := cmd.Flags().GetBool("legacy")
-
-			rows, err := c.list(filters, metric, legacy)
-			if err != nil {
-				return err
-			}
-
-			return printTable(cmd, rows)
-		},
+		RunE:  c.list,
 	}
 
 	pcmd.AddCloudFlag(cmd)
@@ -129,8 +113,8 @@ func (c *command) newListCommand() *cobra.Command {
 	cmd.Flags().Bool("legacy", false, "Show legacy cluster types.")
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired("cloud")
-	_ = cmd.MarkFlagRequired("region")
+	cobra.CheckErr(cmd.MarkFlagRequired("cloud"))
+	cobra.CheckErr(cmd.MarkFlagRequired("region"))
 
 	pcmd.RegisterFlagCompletionFunc(cmd, "availability", func(_ *cobra.Command, _ []string) []string { return availabilities })
 	pcmd.RegisterFlagCompletionFunc(cmd, "cluster-type", func(_ *cobra.Command, _ []string) []string { return clusterTypes })
@@ -140,28 +124,56 @@ func (c *command) newListCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) list(filters []string, metric string, legacy bool) ([]row, error) {
-	org := &orgv1.Organization{Id: c.Context.GetOrganization().GetId()}
+func (c *command) list(cmd *cobra.Command, _ []string) error {
+	filterFlags := []string{"cloud", "region", "availability", "cluster-type", "network-type"}
 
-	kafkaPricesReply, err := c.PrivateClient.Billing.GetPriceTable(context.Background(), org, "kafka")
+	filters := make([]string, len(filterFlags))
+	for i, flag := range filterFlags {
+		if cmd.Flags().Changed(flag) {
+			filter, err := cmd.Flags().GetString(flag)
+			if err != nil {
+				return err
+			}
+			if filter == "" {
+				return fmt.Errorf("`--%s` must not be empty", flag)
+			}
+			filters[i] = filter
+		}
+	}
+
+	metric, err := cmd.Flags().GetString("metric")
+	if err != nil {
+		return err
+	}
+
+	legacy, err := cmd.Flags().GetBool("legacy")
+	if err != nil {
+		return err
+	}
+
+	rows, err := c.listRows(filters, metric, legacy)
+	if err != nil {
+		return err
+	}
+
+	return printTable(cmd, rows)
+}
+
+func (c *command) listRows(filters []string, metric string, legacy bool) ([]row, error) {
+	org := &ccloudv1.Organization{Id: c.Context.GetOrganization().GetId()}
+
+	kafkaPricesReply, err := c.Client.Billing.GetPriceTable(context.Background(), org, "kafka")
 	if err != nil {
 		return nil, err
 	}
 
-	clusterLinkPricesReply, err := c.PrivateClient.Billing.GetPriceTable(context.Background(), org, "cluster-link")
+	clusterLinkPricesReply, err := c.Client.Billing.GetPriceTable(context.Background(), org, "cluster-link")
 	if err != nil {
 		return nil, err
 	}
 
-	kafkaTable, err := filterTable(kafkaPricesReply.PriceTable, filters, metric, legacy)
-	if err != nil {
-		return nil, err
-	}
-
-	clusterLinkTable, err := filterTable(clusterLinkPricesReply.PriceTable, filters, metric, legacy)
-	if err != nil {
-		return nil, err
-	}
+	kafkaTable := filterTable(kafkaPricesReply.PriceTable, filters, metric, legacy)
+	clusterLinkTable := filterTable(clusterLinkPricesReply.PriceTable, filters, metric, legacy)
 
 	// Merge cluster link price table into kafka table
 	// Kafka metrics and cluster link metrics will not have overlap
@@ -192,8 +204,8 @@ func (c *command) list(filters []string, metric string, legacy bool) ([]row, err
 	return rows, nil
 }
 
-func filterTable(table map[string]*billingv1.UnitPrices, filters []string, metric string, legacy bool) (map[string]*billingv1.UnitPrices, error) {
-	filteredTable := make(map[string]*billingv1.UnitPrices)
+func filterTable(table map[string]*ccloudv1.UnitPrices, filters []string, metric string, legacy bool) map[string]*ccloudv1.UnitPrices {
+	filteredTable := make(map[string]*ccloudv1.UnitPrices)
 
 	for service, val := range table {
 		if metric != "" && service != metric {
@@ -201,11 +213,11 @@ func filterTable(table map[string]*billingv1.UnitPrices, filters []string, metri
 		}
 
 		for key, price := range val.Prices {
-			args := strings.Split(key, ":")
+			fields := strings.Split(key, ":")
 
 			shouldContinue := false
 			for i, val := range filters {
-				if val != "" && args[i] != val {
+				if val != "" && fields[i] != val {
 					shouldContinue = true
 				}
 			}
@@ -214,7 +226,7 @@ func filterTable(table map[string]*billingv1.UnitPrices, filters []string, metri
 			}
 
 			// Hide legacy cluster types unless --legacy flag is enabled
-			if utils.Contains([]string{"standard", "custom"}, args[3]) && !legacy {
+			if types.Contains([]string{"standard", "custom"}, fields[3]) && !legacy {
 				continue
 			}
 
@@ -223,7 +235,7 @@ func filterTable(table map[string]*billingv1.UnitPrices, filters []string, metri
 			}
 
 			if _, ok := filteredTable[service]; !ok {
-				filteredTable[service] = &billingv1.UnitPrices{
+				filteredTable[service] = &ccloudv1.UnitPrices{
 					Prices: make(map[string]float64),
 					Unit:   val.Unit,
 				}
@@ -233,52 +245,35 @@ func filterTable(table map[string]*billingv1.UnitPrices, filters []string, metri
 		}
 	}
 
-	return filteredTable, nil
-}
-
-func mapToSlice(m map[string]string) []string {
-	var slice []string
-	for key := range m {
-		slice = append(slice, key)
-	}
-	sort.Strings(slice)
-	return slice
+	return filteredTable
 }
 
 func printTable(cmd *cobra.Command, rows []row) error {
-	output, _ := cmd.Flags().GetString("output")
-
-	w, err := poutput.NewListOutputCustomizableWriter(cmd, listFields, humanLabels, structuredLabels, cmd.OutOrStdout())
-	if err != nil {
-		return err
-	}
-
+	list := output.NewList(cmd)
 	for _, row := range rows {
-		if output == poutput.Human.String() {
-			w.AddElement(&humanRow{
-				metric:       formatMetric[row.metric],
-				clusterType:  formatClusterType[row.clusterType],
-				availability: formatAvailability[row.availability],
-				networkType:  formatNetworkType[row.networkType],
-				price:        formatPrice(row.price, row.unit),
+		if output.GetFormat(cmd) == output.Human {
+			list.Add(&humanOut{
+				Metric:       formatMetric[row.metric],
+				ClusterType:  formatClusterTypeHuman[row.clusterType],
+				Availability: formatAvailability[row.availability],
+				NetworkType:  formatNetworkType[row.networkType],
+				Price:        formatPrice(row.price, row.unit),
 			})
 		} else {
-			w.AddElement(&structuredRow{
-				metric:       row.metric,
-				clusterType:  row.clusterType,
-				availability: row.availability,
-				networkType:  row.networkType,
-				price:        row.price,
+			list.Add(&serializedOut{
+				Metric:       row.metric,
+				ClusterType:  formatClusterTypeSerialized[row.clusterType],
+				Availability: row.availability,
+				NetworkType:  row.networkType,
+				Price:        row.price,
 			})
 		}
 	}
-
-	w.StableSort()
-	return w.Out()
+	return list.Print()
 }
 
 func formatPrice(price float64, unit string) string {
-	priceStr := fmt.Sprintf("%v", price)
+	priceStr := fmt.Sprint(price)
 
 	// Require >= 2 digits after the decimal
 	if strings.Contains(priceStr, ".") {

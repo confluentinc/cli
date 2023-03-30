@@ -2,24 +2,28 @@ package asyncapi
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"testing"
 	"time"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/confluentinc/ccloud-sdk-go-v1"
-	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
-	srMock "github.com/confluentinc/schema-registry-sdk-go/mock"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
+	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
+	kafkarestv3mock "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3/mock"
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+	srMock "github.com/confluentinc/schema-registry-sdk-go/mock"
+
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
+	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/version"
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
@@ -27,18 +31,17 @@ import (
 const BackwardCompatibilityLevel = "BACKWARD"
 
 var details = &accountDetails{
-	cluster: &schedv1.KafkaCluster{
-		Id:          "lkc-asyncapi",
-		Name:        "AsyncAPI Cluster",
-		Endpoint:    "http://kafka-endpoint",
-		ApiEndpoint: "http://kafka-endpoint",
-		AccountId:   "env-asyncapi",
+	cluster: &ccstructs.KafkaCluster{
+		Id:        "lkc-asyncapi",
+		Name:      "AsyncAPI Cluster",
+		Endpoint:  "http://kafka-endpoint",
+		AccountId: "env-asyncapi",
 	},
 	srClient: &srsdk.APIClient{
 		DefaultApi: &srMock.DefaultApi{
 			GetByUniqueAttributesFunc: func(_ context.Context, typeName string, qualifiedName string, localVarOptionals *srsdk.GetByUniqueAttributesOpts) (srsdk.AtlasEntityWithExtInfo, *http.Response, error) {
 				if typeName == "kafka_topic" {
-					return srsdk.AtlasEntityWithExtInfo{Entity: srsdk.AtlasEntity{Attributes: map[string]interface{}{"description": "kafka topic description"}}}, nil, nil
+					return srsdk.AtlasEntityWithExtInfo{Entity: srsdk.AtlasEntity{Attributes: map[string]any{"description": "kafka topic description"}}}, nil, nil
 				}
 				return srsdk.AtlasEntityWithExtInfo{}, nil, nil
 			},
@@ -48,7 +51,25 @@ var details = &accountDetails{
 			ListVersionsFunc: func(_ context.Context, _ string, _ *srsdk.ListVersionsOpts) ([]int32, *http.Response, error) {
 				return []int32{1234, 4567}, nil, nil
 			},
-			GetSchemaByVersionFunc: func(_ context.Context, _ string, _ string, _ *srsdk.GetSchemaByVersionOpts) (srsdk.Schema, *http.Response, error) {
+			GetSchemaByVersionFunc: func(_ context.Context, subject string, _ string, _ *srsdk.GetSchemaByVersionOpts) (srsdk.Schema, *http.Response, error) {
+				if subject == "subject2" {
+					return srsdk.Schema{
+						Subject:    "subject2",
+						Version:    1,
+						Id:         1,
+						SchemaType: "PROTOBUF",
+						Schema:     `syntax = "proto3"; package com.mycorp.mynamespace; message SampleRecord { int32 my_field1 = 1; double my_field2 = 2; string my_field3 = 3;}`,
+					}, nil, nil
+				}
+				if subject == "subject-primitive" {
+					return srsdk.Schema{
+						Subject:    "subject-primitive",
+						Version:    1,
+						Id:         1,
+						SchemaType: "avro",
+						Schema:     "string",
+					}, nil, nil
+				}
 				return srsdk.Schema{
 					Subject:    "subject1",
 					Version:    1,
@@ -87,7 +108,7 @@ func newCmd() (*command, error) {
 				State: &v1.ContextState{
 					Auth: &v1.AuthConfig{
 						Organization: testserver.RegularOrg,
-						Account:      &orgv1.Account{Id: "env-asyncapi", Name: "asyncapi"},
+						Account:      &ccloudv1.Account{Id: "env-asyncapi", Name: "asyncapi"},
 					},
 					AuthToken: "env-asyncapi",
 				},
@@ -106,7 +127,6 @@ func newCmd() (*command, error) {
 							ID:           "lkc-asyncapi",
 							Name:         "AsyncAPI Cluster",
 							Bootstrap:    "kafka-endpoint",
-							APIEndpoint:  "kafka-endpoint",
 							RestEndpoint: "kafka-endpoint",
 							APIKeys: map[string]*v1.APIKeyPair{
 								"AsyncAPI": {Key: "ASYNCAPIKEY", Secret: "ASYNCAPISECRET"},
@@ -125,113 +145,70 @@ func newCmd() (*command, error) {
 	c := &command{AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
 	c.Command.Flags().String("resource", "lsrc-asyncapi", "resource flag for SR testing")
 	c.Version = &version.Version{Version: "1", UserAgent: "asyncapi"}
-	pcmd.AddApiKeyFlag(c.Command, c.AuthenticatedCLICommand)
-	pcmd.AddApiSecretFlag(c.Command)
-	err := c.Command.Flags().Set("api-key", "ASYNCAPIKEY")
+	c.Command.Flags().String("schema-registry-api-key", "ASYNCAPIKEY", "API Key for schema registry")
+	c.Command.Flags().String("schema-registry-api-secret", "ASYNCAPISECRET", "API Secret for Schema Registry")
+	err := c.Command.Flags().Set("schema-registry-api-key", "ASYNCAPIKEY")
 	if err != nil {
 		return nil, err
 	}
-	err = c.Command.Flags().Set("api-secret", "ASYNCAPISECRET")
+	err = c.Command.Flags().Set("schema-registry-api-secret", "ASYNCAPISECRET")
 	if err != nil {
 		return nil, err
 	}
 	c.Command.Flags().String("sr-endpoint", "schema-registry-endpoint", "SR endpoint")
 	c.State = cfg.Context().State
-	c.Config = dynamicconfig.New(cfg, nil, nil, nil)
+	c.Config = dynamicconfig.New(cfg, nil, nil)
 	c.Config.CurrentContext = cfg.CurrentContext
 	c.Context = c.Config.Context()
-	c.PrivateClient = &ccloud.Client{
-		Account: &ccsdkmock.Account{
-			CreateFunc: func(context.Context, *orgv1.Account) (*orgv1.Account, error) {
-				return nil, nil
-			},
-			GetFunc: func(context.Context, *orgv1.Account) (*orgv1.Account, error) {
-				return nil, nil
-			},
-			ListFunc: func(context.Context, *orgv1.Account) ([]*orgv1.Account, error) {
+	apiClient := kafkarestv3.NewAPIClient(kafkarestv3.NewConfiguration())
+	apiClient.ConfigsV3Api = &kafkarestv3mock.ConfigsV3Api{
+		ListKafkaTopicConfigsFunc: func(_ context.Context, _, _ string) kafkarestv3.ApiListKafkaTopicConfigsRequest {
+			return kafkarestv3.ApiListKafkaTopicConfigsRequest{}
+		},
+		ListKafkaTopicConfigsExecuteFunc: func(_ kafkarestv3.ApiListKafkaTopicConfigsRequest) (kafkarestv3.TopicConfigDataList, *http.Response, error) {
+			configs := []kafkarestv3.TopicConfigData{
+				{
+					Name:  "cleanup.policy",
+					Value: *kafkarestv3.NewNullableString(kafkarestv3.PtrString("delete")),
+				},
+				{
+					Name:  "delete.retention.ms",
+					Value: *kafkarestv3.NewNullableString(kafkarestv3.PtrString("86400000")),
+				},
+			}
+			return kafkarestv3.TopicConfigDataList{Data: configs}, nil, nil
+		},
+	}
+	apiClient.TopicV3Api = &kafkarestv3mock.TopicV3Api{
+		ListKafkaTopicsFunc: func(_ context.Context, _ string) kafkarestv3.ApiListKafkaTopicsRequest {
+			return kafkarestv3.ApiListKafkaTopicsRequest{}
+		},
+		ListKafkaTopicsExecuteFunc: func(_ kafkarestv3.ApiListKafkaTopicsRequest) (kafkarestv3.TopicDataList, *http.Response, error) {
+			return kafkarestv3.TopicDataList{Data: []kafkarestv3.TopicData{{TopicName: "topic1"}}}, nil, nil
+		},
+	}
+	kafkaRestProvider := pcmd.KafkaRESTProvider(func() (*pcmd.KafkaREST, error) {
+		return &pcmd.KafkaREST{CloudClient: &ccloudv2.KafkaRestClient{APIClient: apiClient}}, nil
+	})
+	c.KafkaRESTProvider = &kafkaRestProvider
+	c.Client = &ccloudv1.Client{
+		SchemaRegistry: &ccloudv1mock.SchemaRegistry{
+			GetSchemaRegistryClusterFunc: func(_ context.Context, _ *ccloudv1.SchemaRegistryCluster) (*ccloudv1.SchemaRegistryCluster, error) {
 				return nil, nil
 			},
 		},
-		SchemaRegistry: &ccsdkmock.SchemaRegistry{
-			GetSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *schedv1.SchemaRegistryCluster) (*schedv1.SchemaRegistryCluster, error) {
+		Account: &ccloudv1mock.AccountInterface{
+			CreateFunc: func(context.Context, *ccloudv1.Account) (*ccloudv1.Account, error) {
+				return nil, nil
+			},
+			GetFunc: func(context.Context, *ccloudv1.Account) (*ccloudv1.Account, error) {
+				return nil, nil
+			},
+			ListFunc: func(context.Context, *ccloudv1.Account) ([]*ccloudv1.Account, error) {
 				return nil, nil
 			},
 		},
-		Kafka: &ccsdkmock.Kafka{
-			DescribeFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) (*schedv1.KafkaCluster, error) {
-				return details.cluster, nil
-			},
-			ListFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) (clusters []*schedv1.KafkaCluster, e error) {
-				return []*schedv1.KafkaCluster{details.cluster}, nil
-			},
-			ListTopicsFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster) ([]*schedv1.TopicDescription, error) {
-				return []*schedv1.TopicDescription{
-					{
-						Name: "topic1",
-						Config: []*schedv1.TopicConfigEntry{
-							{
-								Name:  "cleanup.policy",
-								Value: "delete",
-							},
-							{
-								Name:  "delete.retention.ms",
-								Value: "86400000",
-							},
-						},
-						Partitions: []*schedv1.TopicPartitionInfo{
-							{Partition: 0,
-								Leader: &schedv1.KafkaNode{Id: 1001},
-								Replicas: []*schedv1.KafkaNode{
-									{Id: 1001},
-									{Id: 1002},
-									{Id: 1003},
-								},
-								Isr: []*schedv1.KafkaNode{
-									{Id: 1001},
-									{Id: 1002},
-									{Id: 1003},
-								},
-							},
-							{Partition: 1,
-								Leader: &schedv1.KafkaNode{Id: 1002},
-								Replicas: []*schedv1.KafkaNode{
-									{Id: 1001},
-									{Id: 1002},
-									{Id: 1003},
-								},
-								Isr: []*schedv1.KafkaNode{
-									{Id: 1002},
-									{Id: 1003},
-								},
-							},
-							{Partition: 2,
-								Leader: &schedv1.KafkaNode{Id: 1003},
-								Replicas: []*schedv1.KafkaNode{
-									{Id: 1001},
-									{Id: 1002},
-									{Id: 1003},
-								},
-								Isr: []*schedv1.KafkaNode{
-									{Id: 1003},
-								},
-							},
-						},
-					},
-				}, nil
-			},
-			ListTopicConfigFunc: func(ctx context.Context, cluster *schedv1.KafkaCluster, topic *schedv1.Topic) (*schedv1.TopicConfig, error) {
-				return &schedv1.TopicConfig{Entries: []*schedv1.TopicConfigEntry{
-					{
-						Name:  "cleanup.policy",
-						Value: "delete",
-					},
-					{
-						Name:  "delete.retention.ms",
-						Value: "86400000",
-					},
-				}}, nil
-			},
-		}}
+	}
 	details.srCluster = c.Config.Context().SchemaRegistryClusters["lsrc-asyncapi"]
 	return c, nil
 }
@@ -239,7 +216,17 @@ func newCmd() (*command, error) {
 func TestGetTopicDescription(t *testing.T) {
 	c, err := newCmd()
 	require.NoError(t, err)
-	details.topics, _ = c.PrivateClient.Kafka.ListTopics(*new(context.Context), new(schedv1.KafkaCluster))
+
+	kafkaREST, err := c.GetKafkaREST()
+	require.NoError(t, err)
+
+	kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand()
+	require.NoError(t, err)
+
+	topics, _, err := kafkaREST.CloudClient.ListKafkaTopics(kafkaClusterConfig.ID)
+	require.NoError(t, err)
+
+	details.topics = topics.Data
 	details.channelDetails.currentSubject = "subject1"
 	details.channelDetails.currentTopic = details.topics[0]
 	err = details.getTopicDescription()
@@ -250,27 +237,41 @@ func TestGetTopicDescription(t *testing.T) {
 func TestGetClusterDetails(t *testing.T) {
 	c, err := newCmd()
 	require.NoError(t, err)
-	err = c.getClusterDetails(details)
+	flags := &flags{kafkaApiKey: ""}
+	err = c.getClusterDetails(details, flags)
 	require.NoError(t, err)
 }
 
 func TestGetSchemaRegistry(t *testing.T) {
 	c, err := newCmd()
 	require.NoError(t, err)
-	flags := &flags{apiKey: "ASYNCAPIKEY", apiSecret: "ASYNCAPISECRET"}
+	flags := &flags{schemaRegistryApiKey: "ASYNCAPIKEY", schemaRegistryApiSecret: "ASYNCAPISECRET"}
 	err = c.getSchemaRegistry(details, flags)
-	utils.Println(c.Command, "")
+	output.Println("")
 	require.Error(t, err)
 }
 
 func TestGetSchemaDetails(t *testing.T) {
 	c, err := newCmd()
 	require.NoError(t, err)
-	details.topics, _ = c.PrivateClient.Kafka.ListTopics(*new(context.Context), new(schedv1.KafkaCluster))
+
+	kafkaREST, err := c.GetKafkaREST()
+	require.NoError(t, err)
+
+	kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand()
+	require.NoError(t, err)
+
+	topics, _, err := kafkaREST.CloudClient.ListKafkaTopics(kafkaClusterConfig.ID)
+	require.NoError(t, err)
+
+	details.topics = topics.Data
 	details.channelDetails.currentSubject = "subject1"
 	details.channelDetails.currentTopic = details.topics[0]
-	schema, _, _ := details.srClient.DefaultApi.GetSchemaByVersion(*new(context.Context), "subject1", "1", nil)
+	schema, _, _ := details.srClient.DefaultApi.GetSchemaByVersion(context.Context(nil), "subject1", "1", nil)
 	details.channelDetails.schema = &schema
+	err = details.getSchemaDetails()
+	require.NoError(t, err)
+	details.channelDetails.currentSubject = "subject-primitive"
 	err = details.getSchemaDetails()
 	require.NoError(t, err)
 }
@@ -278,28 +279,62 @@ func TestGetSchemaDetails(t *testing.T) {
 func TestGetChannelDetails(t *testing.T) {
 	c, err := newCmd()
 	require.NoError(t, err)
-	details.topics, _ = c.PrivateClient.Kafka.ListTopics(*new(context.Context), new(schedv1.KafkaCluster))
+
+	kafkaREST, err := c.GetKafkaREST()
+	require.NoError(t, err)
+
+	kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand()
+	require.NoError(t, err)
+
+	topics, _, err := kafkaREST.CloudClient.ListKafkaTopics(kafkaClusterConfig.ID)
+	require.NoError(t, err)
+
+	details.topics = topics.Data
 	details.channelDetails.currentSubject = "subject1"
 	details.channelDetails.currentTopic = details.topics[0]
-	schema, _, _ := details.srClient.DefaultApi.GetSchemaByVersion(*new(context.Context), "subject1", "1", nil)
+	schema, _, _ := details.srClient.DefaultApi.GetSchemaByVersion(context.Context(nil), "subject1", "1", nil)
 	details.channelDetails.schema = &schema
-	flags := &flags{apiKey: "ASYNCAPIKEY", apiSecret: "ASYNCAPISECRET"}
+	flags := &flags{schemaRegistryApiKey: "ASYNCAPIKEY", schemaRegistryApiSecret: "ASYNCAPISECRET"}
 	err = c.getChannelDetails(details, flags)
 	require.NoError(t, err)
+	// Protobuf Schema
+	details.channelDetails.currentSubject = "subject2"
+	details.channelDetails.currentTopic = details.topics[0]
+	schema, _, _ = details.srClient.DefaultApi.GetSchemaByVersion(context.Context(nil), "subject2", "1", nil)
+	details.channelDetails.schema = &schema
+	err = c.getChannelDetails(details, flags)
+	require.Equal(t, err.Error(), protobufErrorMessage)
+}
+
+func TestHandlePrimitiveSchemas(t *testing.T) {
+	unmarshalledSchema, err := handlePrimitiveSchemas(`"string"`, fmt.Errorf("unable to unmarshal schema"))
+	require.NoError(t, err)
+	require.Equal(t, unmarshalledSchema, map[string]any{"type": "string"})
+	_, err = handlePrimitiveSchemas("Invalid_schema", fmt.Errorf("unable to marshal schema"))
+	require.Error(t, err)
 }
 
 func TestGetBindings(t *testing.T) {
 	c, err := newCmd()
 	require.NoError(t, err)
-	topics, _ := c.PrivateClient.Kafka.ListTopics(*new(context.Context), new(schedv1.KafkaCluster))
-	_, err = c.getBindings(details.cluster, topics[0])
+
+	kafkaREST, err := c.GetKafkaREST()
+	require.NoError(t, err)
+
+	kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand()
+	require.NoError(t, err)
+
+	topics, _, err := kafkaREST.CloudClient.ListKafkaTopics(kafkaClusterConfig.ID)
+	require.NoError(t, err)
+
+	_, err = c.getBindings(details.cluster, topics.Data[0])
 	require.NoError(t, err)
 }
 
 func TestGetTags(t *testing.T) {
 	c, err := newCmd()
 	require.NoError(t, err)
-	schema, _, _ := details.srClient.DefaultApi.GetSchemaByVersion(*new(context.Context), "subject1", "1", nil)
+	schema, _, _ := details.srClient.DefaultApi.GetSchemaByVersion(context.Context(nil), "subject1", "1", nil)
 	details.srCluster = c.Config.Context().SchemaRegistryClusters["lsrc-asyncapi"]
 	details.channelDetails.schema = &schema
 	err = details.getTags()
@@ -307,7 +342,7 @@ func TestGetTags(t *testing.T) {
 }
 
 func TestGetMessageCompatibility(t *testing.T) {
-	_, err := getMessageCompatibility(details.srClient, *new(context.Context), "subject1")
+	_, err := getMessageCompatibility(details.srClient, context.Context(nil), "subject1")
 	require.NoError(t, err)
 }
 

@@ -1,4 +1,4 @@
-  Cluster ID | Broker ID |  Host  | Port  
--------------+-----------+--------+-------
-  cluster-1  |         1 | kafka1 |    1  
-  cluster-1  |         2 | kafka2 |    2  
+   Cluster  | Broker ID |  Host  | Port  
+------------+-----------+--------+-------
+  cluster-1 |         1 | kafka1 |    1  
+  cluster-1 |         2 | kafka2 |    2  

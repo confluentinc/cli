@@ -1,84 +1,84 @@
-- created: "1999-02-24T00:00:00Z"
+- key: DEACTIVATEDUSERKEY
   description: ""
-  key: DEACTIVATEDUSERKEY
+  owner_id: sa-6666
   owner_email: <deactivated user>
-  owner_resource_id: sa-6666
-  resource_id: lkc-bob
   resource_type: kafka
-- created: "1999-02-24T00:00:00Z"
+  resource_id: lkc-bob
+  created: "1999-02-24T00:00:00Z"
+- key: MULTICLUSTERKEY1
   description: works for two clusters
-  key: MULTICLUSTERKEY1
+  owner_id: u-44ddd
   owner_email: mhe@confluent.io
-  owner_resource_id: u-44ddd
-  resource_id: lkc-abc
   resource_type: kafka
-- created: "1999-02-24T00:00:00Z"
+  resource_id: lkc-abc
+  created: "1999-02-24T00:00:00Z"
+- key: MULTICLUSTERKEY2
   description: works for two clusters but on a different sr cluster
-  key: MULTICLUSTERKEY2
+  owner_id: u-44ddd
   owner_email: mhe@confluent.io
-  owner_resource_id: u-44ddd
-  resource_id: lkc-abc
   resource_type: kafka
-- created: "1999-02-24T00:00:00Z"
+  resource_id: lkc-abc
+  created: "1999-02-24T00:00:00Z"
+- key: MULTICLUSTERKEY3
   description: works for two clusters and owned by service account
-  key: MULTICLUSTERKEY3
+  owner_id: sa-12345
   owner_email: <service account>
-  owner_resource_id: sa-12345
-  resource_id: lkc-abc
   resource_type: kafka
-- created: "1999-02-24T00:00:00Z"
+  resource_id: lkc-abc
+  created: "1999-02-24T00:00:00Z"
+- key: MYKEY1
   description: first-key
-  key: MYKEY1
+  owner_id: u11
   owner_email: bstrauch@confluent.io
-  owner_resource_id: u11
-  resource_id: lkc-bob
   resource_type: kafka
-- created: "1999-02-24T00:00:00Z"
+  resource_id: lkc-bob
+  created: "1999-02-24T00:00:00Z"
+- key: MYKEY2
   description: ""
-  key: MYKEY2
+  owner_id: u-17
   owner_email: mtodzo@confluent.io
-  owner_resource_id: u-17
+  resource_type: kafka
   resource_id: lkc-abc
-  resource_type: kafka
-- created: "1999-02-24T00:00:00Z"
+  created: "1999-02-24T00:00:00Z"
+- key: MYKEY3
   description: ""
-  key: MYKEY3
+  owner_id: u-44ddd
   owner_email: mhe@confluent.io
-  owner_resource_id: u-44ddd
-  resource_id: lkc-bob
   resource_type: kafka
-- created: "1999-02-24T00:00:00Z"
+  resource_id: lkc-bob
+  created: "1999-02-24T00:00:00Z"
+- key: SERVICEACCOUNTKEY1
   description: ""
-  key: SERVICEACCOUNTKEY1
+  owner_id: sa-12345
   owner_email: <service account>
-  owner_resource_id: sa-12345
+  resource_type: kafka
   resource_id: lkc-bob
-  resource_type: kafka
-- created: "1999-02-24T00:00:00Z"
+  created: "1999-02-24T00:00:00Z"
+- key: UIAPIKEY100
   description: ""
-  key: UIAPIKEY100
+  owner_id: u-22bbb
   owner_email: u-22bbb@confluent.io
-  owner_resource_id: u-22bbb
+  resource_type: kafka
   resource_id: lkc-cool1
-  resource_type: kafka
-- created: "1999-02-24T00:00:00Z"
+  created: "1999-02-24T00:00:00Z"
+- key: UIAPIKEY101
   description: ""
-  key: UIAPIKEY101
+  owner_id: u-22bbb
   owner_email: u-22bbb@confluent.io
-  owner_resource_id: u-22bbb
+  resource_type: kafka
   resource_id: lkc-other1
-  resource_type: kafka
-- created: "1999-02-24T00:00:00Z"
+  created: "1999-02-24T00:00:00Z"
+- key: UIAPIKEY102
   description: ""
-  key: UIAPIKEY102
+  owner_id: u-22bbb
   owner_email: u-22bbb@confluent.io
-  owner_resource_id: u-22bbb
-  resource_id: lksqlc-ksql1
   resource_type: ksql
-- created: "1999-02-24T00:00:00Z"
+  resource_id: lksqlc-ksql1
+  created: "1999-02-24T00:00:00Z"
+- key: UIAPIKEY103
   description: ""
-  key: UIAPIKEY103
+  owner_id: u-22bbb
   owner_email: u-22bbb@confluent.io
-  owner_resource_id: u-22bbb
-  resource_id: lkc-cool1
   resource_type: kafka
+  resource_id: lkc-cool1
+  created: "1999-02-24T00:00:00Z"

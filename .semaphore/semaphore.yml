@@ -3,15 +3,12 @@ name: Confluent CLI
 
 agent:
   machine:
-    type: s1-prod-ubuntu20-04-amd64-1
+    type: e1-standard-2
+    os_image: ubuntu2004
 
 auto_cancel:
   running:
-    when: "true"
-
-global_job_config:
-  secrets:
-    - name: vault_sem2_approle
+    when: "branch != 'main'"
 
 execution_time_limit:
   hours: 1
@@ -23,29 +20,18 @@ blocks:
       jobs:
         - name: linux/amd64
           commands:
-            # Get GitHub SSH key from Vault
-            - vault login -no-print token="$(vault write -field=token auth/app/devel/login role_id=${VAULT_ROLE_ID} secret_id=${VAULT_SECRET_ID})"
-            - vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
-            - source script.sh
-
             # Set up Go
             - checkout
-            - goenv install --skip-existing
-            - export "PATH=$(go env GOPATH)/bin:$PATH"
+            - sem-version go $(cat .go-version)
 
             # Try to restore cached dependencies
             - cache restore linux-$(checksum go.sum)
 
-            # Set up Git
-            - export "GOPRIVATE=github.com/confluentinc"
-            - git config --global url."git@github.com:".insteadOf "https://github.com/"
-
             # Run tests
             - make generate-packaging-patch
+            - diff --version
             - diff -w -u <(git cat-file --filters HEAD:debian/patches/standard_build_layout.patch | awk "{if (NR>3) {print}}") <(cat debian/patches/standard_build_layout.patch | awk "{if (NR>3) {print}}")
-            - make deps
             - make lint
-            - ulimit -n 2048
             - make test
             - make test-installer
 
@@ -61,74 +47,20 @@ blocks:
     task:
       agent:
         machine:
-          type: s1-prod-macos
+          type: a1-standard-4
+          os_image: macos-xcode14
       jobs:
         - name: darwin/amd64
           commands:
-            # Get GitHub SSH key from Vault
-            - vault login -no-print token="$(vault write -field=token auth/app/devel/login role_id=${VAULT_ROLE_ID} secret_id=${VAULT_SECRET_ID})"
-            - vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
-            - source script.sh
-
             # Set up Go
             - checkout
-            - goenv install --skip-existing
-            - eval "$(goenv init -)"
-            - export "PATH=$GOROOT/bin:$PATH"
-            - export "PATH=$GOPATH/bin:$PATH"
-
-            # Set up Git
-            - export "GOPRIVATE=github.com/confluentinc"
-            - git config --global url."git@github.com:".insteadOf "https://github.com/"
+            - wget https://go.dev/dl/go$(cat .go-version).darwin-amd64.tar.gz
+            - sudo tar -xvf go$(cat .go-version).darwin-amd64.tar.gz -C /usr/local
+            - export PATH=$PATH:/usr/local/go/bin
+            - export PATH=$PATH:$(go env GOPATH)/bin
 
             # Run tests
-            - make semaphore-deps
-            - ulimit -n 2048
             - make test
-      epilogue:
-        always:
-          commands:
-            - test-results publish . -N "darwin/amd64"
-            - rm *.xml
-
-  - name: windows/amd64
-    dependencies: []
-    task:
-      agent:
-        machine:
-          type: s1-prod-windows
-      jobs:
-        - name: windows/amd64
-          commands:
-            # Get GitHub SSH key from Vault
-            - vault login -no-print token="$(vault.exe write -field=token auth/app/devel/login role_id=$Env:VAULT_ROLE_ID secret_id=$Env:VAULT_SECRET_ID)"
-            - vault kv get -field=script "v1/ci/kv/semaphore2/ssh_id_rsa" > script.sh
-            - Set-Content id_rsa.b64 $(Select-String "echo" script.sh)[0].Line.Split('"')[1]
-            - base64 -d -i id_rsa.b64 -o "C:\Users\semaphore\.ssh\id_rsa"
-
-            # Set up Go
-            # TODO: https://confluentinc.atlassian.net/browse/DP-9532
-
-            # Set up Git
-            - checkout
-            - $Env:GOPRIVATE = "github.com/confluentinc"
-            # TODO: https://confluentinc.atlassian.net/browse/DP-8234
-            - git config --global url."git@github.com:".insteadOf "https://github.com/"
-
-            # Try to restore cached dependencies
-            - cache restore windows-$($(Get-FileHash go.sum).Hash)
-
-            # Run tests
-            - make semaphore-deps
-            - gotestsum --junitfile unit-test-report.xml -- -v $(go list ./... | Select-String test -NotMatch) -ldflags "-buildmode=exe"
-            - gotestsum --junitfile integration-test-report.xml -- -v $(go list ./... | Select-String test)
-
-            # Cache Go dependencies
-            - $gopath=$(go env GOPATH); cache store windows-$($(Get-FileHash go.sum).Hash) $gopath\pkg\mod
-      epilogue:
-        always:
-          commands:
-            - test-results publish . -N "windows/amd64"
 
 after_pipeline:
   task:

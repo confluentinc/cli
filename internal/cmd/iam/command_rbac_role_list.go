@@ -4,10 +4,11 @@ import (
 	"strings"
 
 	"github.com/antihax/optional"
-	"github.com/confluentinc/go-printer"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/featureflags"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -37,34 +38,43 @@ func (c *roleCommand) list(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *roleCommand) ccloudList(cmd *cobra.Command) error {
-	// add public, dataplane, datagovernance, and ksql roles
-	namespaces := []string{publicNamespace.Value(), dataplaneNamespace.Value(), dataGovernanceNamespace.Value(), ksqlNamespace.Value()}
+	// add public, dataplane, datagovernance, ksql, and streamcatalog roles
+	namespaces := []string{
+		dataplaneNamespace.Value(),
+		dataGovernanceNamespace.Value(),
+		ksqlNamespace.Value(),
+		publicNamespace.Value(),
+		streamCatalogNamespace.Value(),
+	}
 	opt := optional.NewString(strings.Join(namespaces, ","))
 	roles, err := c.namespaceRoles(opt)
 	if err != nil {
 		return err
 	}
 
-	format, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		return err
-	}
-
-	if format == output.Human.String() {
-		var data [][]string
-		for _, role := range roles {
-			roleDisplay, err := createPrettyRoleV2(role)
-			if err != nil {
-				return err
-			}
-			data = append(data, printer.ToRow(roleDisplay, roleFields))
+	// check if IdentityAdmin is enabled
+	ldClient := v1.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
+	if featureflags.Manager.BoolVariation("auth.rbac.identity_admin.enable", c.Context, ldClient, true, false) {
+		identityRoles, err := c.namespaceRoles(identityNamespace)
+		if err != nil {
+			return err
 		}
-		outputTable(data)
-	} else {
-		return output.StructuredOutput(format, roles)
+		roles = append(roles, identityRoles...)
 	}
 
-	return nil
+	if output.GetFormat(cmd).IsSerialized() {
+		return output.SerializedOutput(cmd, roles)
+	}
+
+	list := output.NewList(cmd)
+	for _, role := range roles {
+		roleDisplay, err := createPrettyRoleV2(role)
+		if err != nil {
+			return err
+		}
+		list.Add(roleDisplay)
+	}
+	return list.PrintWithAutoWrap(false)
 }
 
 func (c *roleCommand) confluentList(cmd *cobra.Command) error {
@@ -73,23 +83,17 @@ func (c *roleCommand) confluentList(cmd *cobra.Command) error {
 		return err
 	}
 
-	format, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		return err
+	if output.GetFormat(cmd).IsSerialized() {
+		return output.SerializedOutput(cmd, roles)
 	}
 
-	if format == output.Human.String() {
-		var data [][]string
-		for _, role := range roles {
-			roleDisplay, err := createPrettyRole(role)
-			if err != nil {
-				return err
-			}
-			data = append(data, printer.ToRow(roleDisplay, roleFields))
+	list := output.NewList(cmd)
+	for _, role := range roles {
+		roleDisplay, err := createPrettyRole(role)
+		if err != nil {
+			return err
 		}
-		outputTable(data)
-	} else {
-		return output.StructuredOutput(format, roles)
+		list.Add(roleDisplay)
 	}
-	return nil
+	return list.PrintWithAutoWrap(false)
 }

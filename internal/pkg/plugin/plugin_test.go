@@ -23,9 +23,11 @@ func TestIsExec_Dir(t *testing.T) {
 
 func TestIsExec_Executable(t *testing.T) {
 	if runtime.GOOS == "windows" {
-		require.True(t, isExecutableWindows("hello.exe"))
+		assert.False(t, isExecutable(&mock.FileInfo{NameVal: "hello.nonexe"}))
+		assert.True(t, isExecutable(&mock.FileInfo{NameVal: "hello.exe"}))
 	} else {
-		require.True(t, isExecutable(&mock.FileInfo{ModeVal: fs.ModePerm}))
+		assert.False(t, isExecutable(&mock.FileInfo{ModeVal: fs.ModeDir}))
+		assert.True(t, isExecutable(&mock.FileInfo{ModeVal: fs.ModePerm}))
 	}
 }
 
@@ -91,13 +93,8 @@ func TestSearchPath(t *testing.T) {
 		err = file.Chmod(fs.ModePerm)
 		require.NoError(t, err)
 	}
-	path := os.Getenv("PATH")
-	err = os.Setenv("PATH", root)
-	require.NoError(t, err)
-	defer func() {
-		err := os.Setenv("PATH", path)
-		require.NoError(t, err)
-	}()
+
+	t.Setenv("PATH", root)
 
 	pluginMap := SearchPath(&v1.Config{BaseConfig: new(config.BaseConfig)})
 	pluginPaths, ok := pluginMap[pluginName]

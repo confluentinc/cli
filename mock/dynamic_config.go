@@ -8,8 +8,7 @@ import (
 
 func AuthenticatedDynamicConfigMock() *dynamicconfig.DynamicConfig {
 	cfg := v1.AuthenticatedCloudConfigMock()
-	privateClient := mock.NewPrivateClientMock()
 	client := mock.NewClientMock()
 	v2Client := mock.NewV2ClientMock()
-	return dynamicconfig.New(cfg, privateClient, client, v2Client)
+	return dynamicconfig.New(cfg, client, v2Client)
 }

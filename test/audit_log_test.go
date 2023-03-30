@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"regexp"
 
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
+	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 )
 
 func (s *CLITestSuite) TestAuditLogDescribe() {
@@ -86,17 +86,17 @@ func (s *CLITestSuite) TestAuditConfigMigrate() {
 
 	tests := []CLITest{
 		{
-			args: fmt.Sprintf("audit-log migrate config --combine cluster123=%s,clusterABC=%s "+
+			args: fmt.Sprintf("audit-log config migrate --combine cluster123=%s,clusterABC=%s "+
 				"--bootstrap-servers new_bootstrap_2 --bootstrap-servers new_bootstrap_1 --authority NEW.CRN.AUTHORITY.COM", migration1, migration2),
 			fixture: "audit-log/migrate/result-with-warnings.golden",
 		},
 		{
-			args: fmt.Sprintf("audit-log migrate config --combine cluster123=%s,clusterABC=%s "+
+			args: fmt.Sprintf("audit-log config migrate --combine cluster123=%s,clusterABC=%s "+
 				"--bootstrap-servers new_bootstrap_2", malformed, migration2),
 			contains: "Ignoring property file",
 		},
 		{
-			args:    fmt.Sprintf("audit-log migrate config --combine cluster123=%s,clusterABC=%s", nullFields, nullFields),
+			args:    fmt.Sprintf("audit-log config migrate --combine cluster123=%s,clusterABC=%s", nullFields, nullFields),
 			fixture: "audit-log/migrate/empty-result.golden",
 		},
 	}
@@ -108,5 +108,5 @@ func (s *CLITestSuite) TestAuditConfigMigrate() {
 }
 
 func (s *CLITestSuite) TestAuditLogDisabledDescribe() {
-	s.runIntegrationTest(CLITest{args: "audit-log describe", login: "cloud", fixture: "audit-log/describe-fail.golden", disableAuditLog: true, wantErrCode: 1})
+	s.runIntegrationTest(CLITest{args: "audit-log describe", login: "cloud", fixture: "audit-log/describe-fail.golden", disableAuditLog: true, exitCode: 1})
 }

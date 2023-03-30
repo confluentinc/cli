@@ -3,7 +3,7 @@ package secret
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 func (c *command) newRemoveCommand() *cobra.Command {
@@ -18,41 +18,38 @@ func (c *command) newRemoveCommand() *cobra.Command {
 	cmd.Flags().String("local-secrets-file", "", "Path to the local encrypted configuration properties file.")
 	cmd.Flags().String("config", "", "List of configuration keys.")
 
-	_ = cmd.MarkFlagRequired("config-file")
-	_ = cmd.MarkFlagRequired("local-secrets-file")
-	_ = cmd.MarkFlagRequired("config")
+	cobra.CheckErr(cmd.MarkFlagRequired("config-file"))
+	cobra.CheckErr(cmd.MarkFlagRequired("local-secrets-file"))
+	cobra.CheckErr(cmd.MarkFlagRequired("config"))
 
 	return cmd
 }
 
 func (c *command) remove(cmd *cobra.Command, _ []string) error {
-	configSource, err := cmd.Flags().GetString("config")
+	config, err := cmd.Flags().GetString("config")
 	if err != nil {
 		return err
 	}
 
-	removeConfigs, err := c.getConfigs(configSource, "config properties", "", false)
+	removeConfigs, err := c.getConfigs(config, "config properties", "", false)
 	if err != nil {
 		return err
 	}
 
-	configPath, err := cmd.Flags().GetString("config-file")
+	configFile, err := cmd.Flags().GetString("config-file")
 	if err != nil {
 		return err
 	}
 
-	localSecretsPath, err := cmd.Flags().GetString("local-secrets-file")
+	localSecretsFile, err := cmd.Flags().GetString("local-secrets-file")
 	if err != nil {
 		return err
 	}
 
-	cipherMode := c.getCipherMode()
-	c.plugin.SetCipherMode(cipherMode)
-
-	if err := c.plugin.RemoveEncryptedPasswords(configPath, localSecretsPath, removeConfigs); err != nil {
+	if err := c.plugin.RemoveEncryptedPasswords(configFile, localSecretsFile, removeConfigs); err != nil {
 		return err
 	}
 
-	utils.ErrPrintln(cmd, "Deleted configuration values.")
+	output.ErrPrintln("Deleted configuration values.")
 	return nil
 }

@@ -10,13 +10,13 @@ import (
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
-func (c *schemaCommand) newDescribeCommandOnPrem() *cobra.Command {
+func (c *command) newSchemaDescribeCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "describe [id]",
 		Short:       "Get schema either by schema ID, or by subject/version.",
 		Args:        cobra.MaximumNArgs(1),
 		PreRunE:     c.preDescribe,
-		RunE:        c.onPremDescribe,
+		RunE:        c.schemaDescribeOnPrem,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -30,22 +30,22 @@ func (c *schemaCommand) newDescribeCommandOnPrem() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().StringP("subject", "S", "", SubjectUsage)
-	cmd.Flags().StringP("version", "V", "", `Version of the schema. Can be a specific version or "latest".`)
-	cmd.Flags().Bool("show-refs", false, "Display the entire schema graph, including references.")
+	cmd.Flags().String("subject", "", SubjectUsage)
+	cmd.Flags().String("version", "", `Version of the schema. Can be a specific version or "latest".`)
+	cmd.Flags().Bool("show-references", false, "Display the entire schema graph, including references.")
 	cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
 	return cmd
 }
 
-func (c *schemaCommand) onPremDescribe(cmd *cobra.Command, args []string) error {
+func (c *command) schemaDescribeOnPrem(cmd *cobra.Command, args []string) error {
 	srClient, ctx, err := GetSrApiClientWithToken(cmd, c.Version, c.AuthToken())
 	if err != nil {
 		return err
 	}
 
-	showRefs, err := cmd.Flags().GetBool("show-refs")
+	showReferences, err := cmd.Flags().GetBool("show-references")
 	if err != nil {
 		return err
 	}
@@ -55,12 +55,12 @@ func (c *schemaCommand) onPremDescribe(cmd *cobra.Command, args []string) error 
 		id = args[0]
 	}
 
-	if showRefs {
+	if showReferences {
 		return describeGraph(cmd, id, srClient, ctx)
 	}
 
 	if id != "" {
-		return describeById(cmd, id, srClient, ctx)
+		return describeById(id, srClient, ctx)
 	}
 	return describeBySubject(cmd, srClient, ctx)
 }

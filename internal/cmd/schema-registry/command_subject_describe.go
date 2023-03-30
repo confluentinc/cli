@@ -5,8 +5,9 @@ import (
 	"fmt"
 
 	"github.com/antihax/optional"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
+
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -15,12 +16,16 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
-func (c *subjectCommand) newDescribeCommand() *cobra.Command {
+type versionOut struct {
+	Version int32 `human:"Version" serialized:"version"`
+}
+
+func (c *command) newSubjectDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe <subject>",
 		Short: "Describe subject versions.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.describe,
+		RunE:  c.subjectDescribe,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Retrieve all versions registered under subject "payments" and its compatibility level.`,
@@ -29,7 +34,7 @@ func (c *subjectCommand) newDescribeCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().BoolP("deleted", "D", false, "View the deleted schema.")
+	cmd.Flags().Bool("deleted", false, "View the deleted schema.")
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddApiSecretFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -39,7 +44,7 @@ func (c *subjectCommand) newDescribeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *subjectCommand) describe(cmd *cobra.Command, args []string) error {
+func (c *command) subjectDescribe(cmd *cobra.Command, args []string) error {
 	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
@@ -53,25 +58,15 @@ func listSubjectVersions(cmd *cobra.Command, subject string, srClient *srsdk.API
 		return err
 	}
 
-	listVersionsOpts := srsdk.ListVersionsOpts{Deleted: optional.NewBool(deleted)}
-	versions, httpResp, err := srClient.DefaultApi.ListVersions(ctx, subject, &listVersionsOpts)
+	opts := &srsdk.ListVersionsOpts{Deleted: optional.NewBool(deleted)}
+	versions, httpResp, err := srClient.DefaultApi.ListVersions(ctx, subject, opts)
 	if err != nil {
 		return errors.CatchSchemaNotFoundError(err, httpResp)
 	}
 
-	outputOption, err := cmd.Flags().GetString(output.FlagName)
-	if err != nil {
-		return err
+	list := output.NewList(cmd)
+	for _, version := range versions {
+		list.Add(&versionOut{Version: version})
 	}
-
-	if outputOption == output.Human.String() {
-		printVersions(versions)
-	} else {
-		structuredOutput := &struct{ Version []int32 }{versions}
-		fields := []string{"Version"}
-		structuredRenames := map[string]string{"Version": "version"}
-		return output.DescribeObject(cmd, structuredOutput, fields, map[string]string{}, structuredRenames)
-	}
-
-	return nil
+	return list.Print()
 }

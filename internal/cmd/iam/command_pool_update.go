@@ -33,7 +33,7 @@ func (c *identityPoolCommand) newUpdateCommand() *cobra.Command {
 	cmd.Flags().String("identity-claim", "", "Claim specifying the external identity using this identity pool.")
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired("provider")
+	cobra.CheckErr(cmd.MarkFlagRequired("provider"))
 
 	return cmd
 }
@@ -83,17 +83,18 @@ func (c *identityPoolCommand) update(cmd *cobra.Command, args []string) error {
 		updateIdentityPool.Filter = &filter
 	}
 
-	resp, err := c.V2Client.UpdateIdentityPool(updateIdentityPool, provider)
+	pool, err := c.V2Client.UpdateIdentityPool(updateIdentityPool, provider)
 	if err != nil {
 		return err
 	}
 
-	describeIdentityPool := &identityPool{
-		Id:            *resp.Id,
-		DisplayName:   *resp.DisplayName,
-		Description:   *resp.Description,
-		IdentityClaim: *resp.IdentityClaim,
-		Filter:        *resp.Filter,
-	}
-	return output.DescribeObject(cmd, describeIdentityPool, identityPoolListFields, poolHumanLabelMap, poolStructuredLabelMap)
+	table := output.NewTable(cmd)
+	table.Add(&identityPoolOut{
+		Id:            pool.GetId(),
+		DisplayName:   pool.GetDisplayName(),
+		Description:   pool.GetDescription(),
+		IdentityClaim: pool.GetIdentityClaim(),
+		Filter:        pool.GetFilter(),
+	})
+	return table.Print()
 }

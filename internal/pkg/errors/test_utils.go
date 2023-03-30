@@ -1,24 +1,19 @@
 package errors
 
 import (
-	"bytes"
 	"fmt"
 
 	"github.com/stretchr/testify/require"
 )
 
-var (
-	errorAndSuggestionsMessageFormat = "Error: %s\n%s"
-)
+var errorAndSuggestionsMessageFormat = "Error: %s\n%s"
 
 func VerifyErrorAndSuggestions(assertions *require.Assertions, err error, expectedErrorMsg string, expectedSuggestions string) {
 	assertions.Equal(expectedErrorOutput(expectedErrorMsg, expectedSuggestions), GetErrorStringWithSuggestions(err))
 }
 
 func GetErrorStringWithSuggestions(err error) string {
-	var b bytes.Buffer
-	DisplaySuggestionsMessage(err, &b)
-	out := b.String()
+	out := DisplaySuggestionsMessage(err)
 	if out == "" {
 		return err.Error()
 	}

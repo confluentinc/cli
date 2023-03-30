@@ -34,7 +34,7 @@ func newMetricsClient(baseUrl, userAgent string, unsafeTrace, isTest bool) *metr
 
 func getMetricsServerUrl(baseURL string, isTest bool) string {
 	if isTest {
-		return testserver.TestV2CloudURL.String()
+		return testserver.TestV2CloudUrl.String()
 	}
 	if strings.Contains(baseURL, "devel") {
 		return "https://devel-sandbox-api.telemetry.aws.confluent.cloud"

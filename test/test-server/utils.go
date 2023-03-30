@@ -6,40 +6,25 @@ import (
 	"net/http"
 	"net/url"
 	"sort"
+	"strings"
+	"time"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-	productv1 "github.com/confluentinc/cc-structs/kafka/product/core/v1"
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
+	byokv1 "github.com/confluentinc/ccloud-sdk-go-v2/byok/v1"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
+	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 )
 
 var (
-	serviceAccountInvalidErrMsg = `{"errors":[{"detail":"service account is not valid"}]}`
+	serviceAccountInvalidErrMsg = `{"errors":[{"status":"403","detail":"service account is not valid"}]}`
+	roleNameInvalidErrMsg       = `{"status_code":400,"message":"Invalid role name : %s","type":"INVALID REQUEST DATA"}`
 	resourceNotFoundErrMsg      = `{"errors":[{"detail":"resource not found"}], "message":"resource not found"}`
-	v1ResourceNotFoundErrMsg    = `{"error":{"code":403,"message":"resource not found","nested_errors":{},"details":[],"stack":null},"cluster":null}`
 	badRequestErrMsg            = `{"errors":[{"status":"400","detail":"Bad Request"}]}`
 	userConflictErrMsg          = `{"errors":[{"detail":"This user already exists within the Organization"}]}`
 )
-
-type ApiKeyList []*schedv1.ApiKey
-
-// Len is part of sort.Interface.
-func (d ApiKeyList) Len() int {
-	return len(d)
-}
-
-// Swap is part of sort.Interface.
-func (d ApiKeyList) Swap(i, j int) {
-	d[i], d[j] = d[j], d[i]
-}
-
-// Less is part of sort.Interface. We use Key as the value to sort by
-func (d ApiKeyList) Less(i, j int) bool {
-	return d[i].Key < d[j].Key
-}
 
 type ApiKeyListV2 []apikeysv2.IamV2ApiKey
 
@@ -56,94 +41,6 @@ func (d ApiKeyListV2) Swap(i, j int) {
 // Less is part of sort.Interface. We use Key as the value to sort by
 func (d ApiKeyListV2) Less(i, j int) bool {
 	return *d[i].Id < *d[j].Id
-}
-
-func fillKeyStore() {
-	keyStore[keyIndex] = &schedv1.ApiKey{
-		Id:     keyIndex,
-		Key:    "MYKEY1",
-		Secret: "MYSECRET1",
-		LogicalClusters: []*schedv1.ApiKey_Cluster{
-			{Id: "lkc-bob", Type: "kafka"},
-		},
-		UserId:         1,
-		UserResourceId: "u11",
-	}
-	keyIndex += 1
-	keyStore[keyIndex] = &schedv1.ApiKey{
-		Id:     keyIndex,
-		Key:    "MYKEY2",
-		Secret: "MYSECRET2",
-		LogicalClusters: []*schedv1.ApiKey_Cluster{
-			{Id: "lkc-abc", Type: "kafka"},
-		},
-		UserId:         2,
-		UserResourceId: "u-17",
-	}
-	keyIndex += 1
-	keyStore[100] = &schedv1.ApiKey{
-		Id:     keyIndex,
-		Key:    "UIAPIKEY100",
-		Secret: "UIAPISECRET100",
-		LogicalClusters: []*schedv1.ApiKey_Cluster{
-			{Id: "lkc-cool1", Type: "kafka"},
-		},
-		UserId:         4,
-		UserResourceId: "u-22bbb",
-	}
-	keyStore[101] = &schedv1.ApiKey{
-		Id:     keyIndex,
-		Key:    "UIAPIKEY101",
-		Secret: "UIAPISECRET101",
-		LogicalClusters: []*schedv1.ApiKey_Cluster{
-			{Id: "lkc-other1", Type: "kafka"},
-		},
-		UserId:         4,
-		UserResourceId: "u-22bbb",
-	}
-	keyStore[102] = &schedv1.ApiKey{
-		Id:     keyIndex,
-		Key:    "UIAPIKEY102",
-		Secret: "UIAPISECRET102",
-		LogicalClusters: []*schedv1.ApiKey_Cluster{
-			{Id: "lksqlc-ksql1", Type: "ksql"},
-		},
-		UserId:         4,
-		UserResourceId: "u-22bbb",
-	}
-	keyStore[103] = &schedv1.ApiKey{
-		Id:     keyIndex,
-		Key:    "UIAPIKEY103",
-		Secret: "UIAPISECRET103",
-		LogicalClusters: []*schedv1.ApiKey_Cluster{
-			{Id: "lkc-cool1", Type: "kafka"},
-		},
-		UserId:         4,
-		UserResourceId: "u-22bbb",
-	}
-	keyStore[200] = &schedv1.ApiKey{
-		Id:     keyIndex,
-		Key:    "SERVICEACCOUNTKEY1",
-		Secret: "SERVICEACCOUNTSECRET1",
-		LogicalClusters: []*schedv1.ApiKey_Cluster{
-			{Id: "lkc-bob", Type: "kafka"},
-		},
-		UserId:         serviceAccountID,
-		UserResourceId: serviceAccountResourceID,
-	}
-	keyStore[201] = &schedv1.ApiKey{
-		Id:     keyIndex,
-		Key:    "DEACTIVATEDUSERKEY",
-		Secret: "DEACTIVATEDUSERSECRET",
-		LogicalClusters: []*schedv1.ApiKey_Cluster{
-			{Id: "lkc-bob", Type: "kafka"},
-		},
-		UserId:         deactivatedUserID,
-		UserResourceId: deactivatedResourceID,
-	}
-	for _, k := range keyStore {
-		k.Created = keyTimestamp
-	}
 }
 
 func fillKeyStoreV2() {
@@ -287,17 +184,60 @@ func containsResourceId(key *apikeysv2.IamV2ApiKey, resourceId string) bool {
 	return false
 }
 
-func getV2ApiKey(apiKey *schedv1.ApiKey) *apikeysv2.IamV2ApiKey {
-	return &apikeysv2.IamV2ApiKey{
-		Id: apikeysv2.PtrString(apiKey.Key),
-		Spec: &apikeysv2.IamV2ApiKeySpec{
-			Owner:       &apikeysv2.ObjectReference{Id: apiKey.UserResourceId},
-			Secret:      apikeysv2.PtrString(fmt.Sprintf("MYSECRET%d", keyIndex)),
-			Resource:    &apikeysv2.ObjectReference{Id: apiKey.LogicalClusters[0].Id, Kind: apikeysv2.PtrString(resourceTypeToKind[apiKey.LogicalClusters[0].Type])},
-			Description: apikeysv2.PtrString(apiKey.Description),
+func fillByokStoreV1() map[string]*byokv1.ByokV1Key {
+	byokStoreV1 := map[string]*byokv1.ByokV1Key{}
+
+	byokStoreV1["cck-001"] = &byokv1.ByokV1Key{
+		Id:       byokv1.PtrString("cck-001"),
+		Metadata: &byokv1.ObjectMeta{CreatedAt: byokv1.PtrTime(time.Date(2022, time.November, 12, 8, 24, 0, 0, time.UTC))},
+		Key: &byokv1.ByokV1KeyKeyOneOf{
+			ByokV1AwsKey: &byokv1.ByokV1AwsKey{
+				KeyArn: "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012",
+				Kind:   "AwsKey",
+				Roles: &[]string{
+					"arn:aws:iam::123456789012:role/role1",
+					"arn:aws:iam::123456789012:role/role2",
+				},
+			},
 		},
-		Metadata: &apikeysv2.ObjectMeta{CreatedAt: keyTime},
+		Provider: byokv1.PtrString("AWS"),
+		State:    byokv1.PtrString("IN_USE"),
 	}
+
+	byokStoreV1["cck-002"] = &byokv1.ByokV1Key{
+		Id:       byokv1.PtrString("cck-002"),
+		Metadata: &byokv1.ObjectMeta{CreatedAt: byokv1.PtrTime(time.Date(2022, time.November, 7, 5, 30, 0, 0, time.UTC))},
+		Key: &byokv1.ByokV1KeyKeyOneOf{
+			ByokV1AwsKey: &byokv1.ByokV1AwsKey{
+				KeyArn: "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012",
+				Kind:   "AwsKey",
+				Roles: &[]string{
+					"arn:aws:iam::123456789012:role/role1",
+					"arn:aws:iam::123456789012:role/role2",
+				},
+			},
+		},
+		Provider: byokv1.PtrString("AWS"),
+		State:    byokv1.PtrString("AVAILABLE"),
+	}
+
+	byokStoreV1["cck-003"] = &byokv1.ByokV1Key{
+		Id:       byokv1.PtrString("cck-003"),
+		Metadata: &byokv1.ObjectMeta{CreatedAt: byokv1.PtrTime(time.Date(2023, time.January, 1, 12, 0, 30, 0, time.UTC))},
+		Key: &byokv1.ByokV1KeyKeyOneOf{
+			ByokV1AzureKey: &byokv1.ByokV1AzureKey{
+				ApplicationId: byokv1.PtrString("00000000-0000-0000-0000-000000000000"),
+				KeyId:         "https://a-vault.vault.azure.net/keys/a-key",
+				KeyVaultId:    "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/a-resourcegroups/providers/Microsoft.KeyVault/vaults/a-vault",
+				Kind:          "AzureKey",
+				TenantId:      "00000000-0000-0000-0000-000000000000",
+			},
+		},
+		Provider: byokv1.PtrString("Azure"),
+		State:    byokv1.PtrString("AVAILABLE"),
+	}
+
+	return byokStoreV1
 }
 
 func writeServiceAccountInvalidError(w http.ResponseWriter) error {
@@ -307,40 +247,21 @@ func writeServiceAccountInvalidError(w http.ResponseWriter) error {
 }
 
 func writeResourceNotFoundError(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusForbidden)
 	_, err := io.WriteString(w, resourceNotFoundErrMsg)
 	return err
 }
 
+func writeInvalidRoleNameError(w http.ResponseWriter, roleName string) error {
+	w.WriteHeader(http.StatusBadRequest)
+	_, err := io.WriteString(w, fmt.Sprintf(roleNameInvalidErrMsg, roleName))
+	return err
+}
+
 func writeUserConflictError(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusConflict)
 	_, err := io.WriteString(w, userConflictErrMsg)
 	return err
-}
-
-func writeV1ResourceNotFoundError(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusForbidden)
-	_, err := io.WriteString(w, v1ResourceNotFoundErrMsg)
-	return err
-}
-
-func getBaseDescribeCluster(id, name string) *schedv1.KafkaCluster {
-	return &schedv1.KafkaCluster{
-		Id:              id,
-		Name:            name,
-		Deployment:      &schedv1.Deployment{Sku: productv1.Sku_BASIC},
-		NetworkIngress:  100,
-		NetworkEgress:   100,
-		Storage:         500,
-		ServiceProvider: "aws",
-		Region:          "us-west-2",
-		Endpoint:        "SASL_SSL://kafka-endpoint",
-		ApiEndpoint:     "http://kafka-api-url",
-		RestEndpoint:    "http://kafka-rest-url",
-	}
 }
 
 func getCmkBasicDescribeCluster(id string, name string) *cmkv2.CmkV2Cluster {
@@ -384,24 +305,22 @@ func getCmkDedicatedDescribeCluster(id string, name string, cku int32) *cmkv2.Cm
 	}
 }
 
-func buildUser(id int32, email, firstName, lastName, resourceId string) *orgv1.User {
-	return &orgv1.User{
-		Id:             id,
-		Email:          email,
-		FirstName:      firstName,
-		LastName:       lastName,
-		OrganizationId: 0,
-		Deactivated:    false,
-		Verified:       nil,
-		ResourceId:     resourceId,
+func buildUser(id int32, email, firstName, lastName, resourceId string) *ccloudv1.User {
+	return &ccloudv1.User{
+		Id:         id,
+		Email:      email,
+		FirstName:  firstName,
+		LastName:   lastName,
+		ResourceId: resourceId,
 	}
 }
 
-func buildIamUser(email, name, resourceId string) iamv2.IamV2User {
+func buildIamUser(email, name, resourceId, authType string) iamv2.IamV2User {
 	return iamv2.IamV2User{
 		Email:    iamv2.PtrString(email),
 		FullName: iamv2.PtrString(name),
 		Id:       iamv2.PtrString(resourceId),
+		AuthType: iamv2.PtrString(authType),
 	}
 }
 
@@ -414,16 +333,29 @@ func buildIamInvitation(id, email, userId, status string) iamv2.IamV2Invitation 
 	}
 }
 
-func buildInvitation(id, email, resourceId, status string) *orgv1.Invitation {
-	return &orgv1.Invitation{
-		Id:             id,
-		Email:          email,
-		UserResourceId: resourceId,
-		Status:         status,
+func buildRoleBinding(user, roleName, crn string) mdsv2.IamV2RoleBinding {
+	return mdsv2.IamV2RoleBinding{
+		Id:         mdsv2.PtrString("0"),
+		Principal:  mdsv2.PtrString("User:" + user),
+		RoleName:   mdsv2.PtrString(roleName),
+		CrnPattern: mdsv2.PtrString(crn),
 	}
 }
 
-func isValidEnvironmentId(environments []*orgv1.Account, reqEnvId string) *orgv1.Account {
+func isRoleBindingMatch(rolebinding mdsv2.IamV2RoleBinding, principal, roleName, crnPattern string) bool {
+	if !strings.Contains(*rolebinding.CrnPattern, strings.TrimSuffix(crnPattern, "/*")) {
+		return false
+	}
+	if principal != "" && principal != *rolebinding.Principal {
+		return false
+	}
+	if roleName != "" && roleName != *rolebinding.RoleName {
+		return false
+	}
+	return true
+}
+
+func isValidEnvironmentId(environments []*ccloudv1.Account, reqEnvId string) *ccloudv1.Account {
 	for _, env := range environments {
 		if reqEnvId == env.Id {
 			return env

@@ -6,9 +6,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
-
 	"github.com/stretchr/testify/require"
+
+	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
 )
 
 func TestSerializationProvider(t *testing.T) {
@@ -401,8 +401,10 @@ func TestProtobufSerdesNestedValid(t *testing.T) {
 	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
 
 	expectedString := `{"name":"abc","id":2,"add":{"zip":"123","street":"def"},"phones":{"number":"234"}}`
-	expectedBytes := []byte{0, 10, 3, 97, 98, 99, 16, 2, 26, 10, 10, 3,
-		49, 50, 51, 18, 3, 100, 101, 102, 34, 5, 10, 3, 50, 51, 52}
+	expectedBytes := []byte{
+		0, 10, 3, 97, 98, 99, 16, 2, 26, 10, 10, 3,
+		49, 50, 51, 18, 3, 100, 101, 102, 34, 5, 10, 3, 50, 51, 52,
+	}
 
 	serializationProvider, _ := GetSerializationProvider(PROTOBUFSCHEMANAME)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})

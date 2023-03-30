@@ -1,13 +1,14 @@
 package kafka
 
 import (
-	kafkaquotas "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
 	"github.com/spf13/cobra"
+
+	kafkaquotas "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/set"
+	"github.com/confluentinc/cli/internal/pkg/types"
 )
 
 func (c *quotaCommand) newUpdateCommand() *cobra.Command {
@@ -58,6 +59,7 @@ func (c *quotaCommand) update(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+
 	quotaUpdate := kafkaquotas.KafkaQuotasV1ClientQuotaUpdate{
 		Id: &quotaId,
 		Spec: &kafkaquotas.KafkaQuotasV1ClientQuotaSpecUpdate{
@@ -71,32 +73,34 @@ func (c *quotaCommand) update(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	format, _ := cmd.Flags().GetString(output.FlagName)
-	printQuota := quotaToPrintable(updatedQuota, format)
-	return output.DescribeObject(cmd, printQuota, quotaListFields, humanRenames, structuredRenames)
+
+	table := output.NewTable(cmd)
+	format := output.GetFormat(cmd)
+	table.Add(quotaToPrintable(updatedQuota, format))
+	return table.Print()
 }
 
 func (c *quotaCommand) getUpdatedPrincipals(cmd *cobra.Command, updatePrincipals []kafkaquotas.GlobalObjectReference) (*[]kafkaquotas.GlobalObjectReference, error) {
 	if cmd.Flags().Changed("add-principals") {
-		serviceAccountsToAdd, err := cmd.Flags().GetStringSlice("add-principals")
+		addPrincipals, err := cmd.Flags().GetStringSlice("add-principals")
 		if err != nil {
 			return nil, err
 		}
-		principalsToAdd := sliceToObjRefArray(serviceAccountsToAdd)
+		principalsToAdd := sliceToObjRefArray(addPrincipals)
 		updatePrincipals = append(updatePrincipals, *principalsToAdd...)
 	}
 	if cmd.Flags().Changed("remove-principals") {
-		principalsToRemove, err := cmd.Flags().GetStringSlice("remove-principals")
+		removePrincipals, err := cmd.Flags().GetStringSlice("remove-principals")
 		if err != nil {
 			return nil, err
 		}
-		removePrincipals := set.New()
-		for _, p := range principalsToRemove {
-			removePrincipals.Add(p)
+		remove := types.NewSet()
+		for _, p := range removePrincipals {
+			remove.Add(p)
 		}
 		i := 0
 		for _, principal := range updatePrincipals {
-			if contains := removePrincipals.Contains(principal.Id); !contains {
+			if contains := remove.Contains(principal.Id); !contains {
 				updatePrincipals[i] = principal
 				i++
 			}
@@ -108,18 +112,18 @@ func (c *quotaCommand) getUpdatedPrincipals(cmd *cobra.Command, updatePrincipals
 
 func getUpdatedThroughput(cmd *cobra.Command, throughput *kafkaquotas.KafkaQuotasV1Throughput) (*kafkaquotas.KafkaQuotasV1Throughput, error) {
 	if cmd.Flags().Changed("ingress") {
-		updatedIngress, err := cmd.Flags().GetString("ingress")
+		ingress, err := cmd.Flags().GetString("ingress")
 		if err != nil {
 			return throughput, err
 		}
-		throughput.SetIngressByteRate(updatedIngress)
+		throughput.SetIngressByteRate(ingress)
 	}
 	if cmd.Flags().Changed("egress") {
-		updatedEgress, err := cmd.Flags().GetString("egress")
+		egress, err := cmd.Flags().GetString("egress")
 		if err != nil {
 			return throughput, err
 		}
-		throughput.SetEgressByteRate(updatedEgress)
+		throughput.SetEgressByteRate(egress)
 	}
 	return throughput, nil
 }

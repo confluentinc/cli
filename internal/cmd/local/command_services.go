@@ -15,7 +15,8 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/local"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/types"
 )
 
 type Service struct {
@@ -161,7 +162,7 @@ func NewServicesListCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *Command) runServicesListCommand(command *cobra.Command, _ []string) error {
+func (c *Command) runServicesListCommand(_ *cobra.Command, _ []string) error {
 	services, err := c.getAvailableServices()
 	if err != nil {
 		return err
@@ -174,7 +175,7 @@ func (c *Command) runServicesListCommand(command *cobra.Command, _ []string) err
 		serviceNames[i] = writeServiceName(service)
 	}
 
-	utils.Printf(command, errors.AvailableServicesMsg, local.BuildTabbedList(serviceNames))
+	output.Printf(errors.AvailableServicesMsg, local.BuildTabbedList(serviceNames))
 	return nil
 }
 
@@ -201,20 +202,20 @@ func NewServicesStartCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *Command) runServicesStartCommand(command *cobra.Command, _ []string) error {
+func (c *Command) runServicesStartCommand(_ *cobra.Command, _ []string) error {
 	availableServices, err := c.getAvailableServices()
 	if err != nil {
 		return err
 	}
 
-	if err := c.notifyConfluentCurrent(command); err != nil {
+	if err := c.notifyConfluentCurrent(); err != nil {
 		return err
 	}
 
 	// Topological order
 	for i := 0; i < len(availableServices); i++ {
 		service := availableServices[i]
-		if err := c.startService(command, service, ""); err != nil {
+		if err := c.startService(service, ""); err != nil {
 			return err
 		}
 	}
@@ -234,19 +235,19 @@ func NewServicesStatusCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *Command) runServicesStatusCommand(command *cobra.Command, _ []string) error {
+func (c *Command) runServicesStatusCommand(cmd *cobra.Command, _ []string) error {
 	availableServices, err := c.getAvailableServices()
 	if err != nil {
 		return err
 	}
 
-	if err := c.notifyConfluentCurrent(command); err != nil {
+	if err := c.notifyConfluentCurrent(); err != nil {
 		return err
 	}
 
 	sort.Strings(availableServices)
 	for _, service := range availableServices {
-		if err := c.printStatus(command, service); err != nil {
+		if err := c.printStatus(service); err != nil {
 			return err
 		}
 	}
@@ -277,20 +278,20 @@ func NewServicesStopCommand(prerunner cmd.PreRunner) *cobra.Command {
 	return c.Command
 }
 
-func (c *Command) runServicesStopCommand(command *cobra.Command, _ []string) error {
+func (c *Command) runServicesStopCommand(cmd *cobra.Command, _ []string) error {
 	availableServices, err := c.getAvailableServices()
 	if err != nil {
 		return err
 	}
 
-	if err := c.notifyConfluentCurrent(command); err != nil {
+	if err := c.notifyConfluentCurrent(); err != nil {
 		return err
 	}
 
 	// Reverse topological order
 	for i := len(availableServices) - 1; i >= 0; i-- {
 		service := availableServices[i]
-		if err := c.stopService(command, service); err != nil {
+		if err := c.stopService(service); err != nil {
 			return err
 		}
 	}
@@ -414,7 +415,7 @@ func (c *Command) getConfig(service string) (map[string]string, error) {
 		config["dataDir"] = data
 	}
 
-	if isCP && utils.Contains([]string{"connect", "kafka-rest", "ksql-server", "schema-registry"}, service) {
+	if isCP && types.Contains([]string{"connect", "kafka-rest", "ksql-server", "schema-registry"}, service) {
 		config["consumer.interceptor.classes"] = "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
 		config["producer.interceptor.classes"] = "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
 	}
@@ -463,12 +464,12 @@ func (c *Command) getAvailableServices() ([]string, error) {
 	return available, err
 }
 
-func (c *Command) notifyConfluentCurrent(command *cobra.Command) error {
+func (c *Command) notifyConfluentCurrent() error {
 	dir, err := c.cc.GetCurrentDir()
 	if err != nil {
 		return err
 	}
 
-	utils.Printf(command, errors.UsingConfluentCurrentMsg, dir)
+	output.Printf(errors.UsingConfluentCurrentMsg, dir)
 	return nil
 }

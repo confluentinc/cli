@@ -3,15 +3,13 @@ package login
 import (
 	"context"
 	"fmt"
-	"os"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
 
 	"github.com/spf13/cobra"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-	"github.com/confluentinc/ccloud-sdk-go-v1"
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
 	"github.com/confluentinc/cli/internal/cmd/admin"
@@ -21,9 +19,10 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/keychain"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 type command struct {
@@ -59,7 +58,7 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCl
 			},
 			examples.Example{
 				Text: "Log in to Confluent Platform with a MDS URL and CA certificate.",
-				Code: "confluent login --url http://localhost:8090 --ca-cert-path certs/my-cert.crt",
+				Code: "confluent login --url https://localhost:8090 --ca-cert-path certs/my-cert.crt",
 			},
 		),
 	}
@@ -69,8 +68,7 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCl
 	cmd.Flags().Bool("no-browser", false, "Do not open a browser window when authenticating via Single Sign-On (SSO).")
 	cmd.Flags().String("organization-id", "", "The Confluent Cloud organization to log in to. If empty, log in to the default organization.")
 	cmd.Flags().Bool("prompt", false, "Bypass non-interactive login and prompt for login credentials.")
-	cmd.Flags().Bool("save", false, "Save username/password (non-SSO) credentials to the .netrc file in your $HOME directory. Use the flag to get automatically logged back in when your token expires, after one hour for Confluent Cloud or after six hours for Confluent Platform.")
-
+	cmd.Flags().Bool("save", false, "Save username and encrypted password (non-SSO credentials) to the configuration file in your $HOME directory, and to macOS keychain if applicable. You will be automatically logged back in when your token expires, after one hour for Confluent Cloud or after six hours for Confluent Platform.")
 	c := &command{
 		CLICommand:               pcmd.NewAnonymousCLICommand(cmd, prerunner),
 		cfg:                      cfg,
@@ -99,7 +97,7 @@ func (c *command) login(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	if warningMsg != "" {
-		utils.ErrPrintf(cmd, errors.UsingLoginURLDefaults, warningMsg)
+		output.ErrPrintf(errors.UsingLoginURLDefaults, warningMsg)
 	}
 
 	if isCCloud {
@@ -115,12 +113,12 @@ func (c *command) loginCCloud(cmd *cobra.Command, url string) error {
 		return err
 	}
 
-	credentials, err := c.getCCloudCredentials(cmd, url, orgResourceId)
+	noBrowser, err := cmd.Flags().GetBool("no-browser")
 	if err != nil {
 		return err
 	}
 
-	noBrowser, err := cmd.Flags().GetBool("no-browser")
+	credentials, err := c.getCCloudCredentials(cmd, url, orgResourceId)
 	if err != nil {
 		return err
 	}
@@ -133,23 +131,27 @@ func (c *command) loginCCloud(cmd *cobra.Command, url string) error {
 	// able to log in.
 	if err != nil && !isEndOfFreeTrialErr {
 		// for orgs that are suspended due to other reason, they shouldn't be able to log in and should return error immediately.
-		if err, ok := err.(*ccloud.SuspendedOrganizationError); ok {
+		if err, ok := err.(*ccloudv1.SuspendedOrganizationError); ok {
 			return errors.NewErrorWithSuggestions(err.Error(), errors.SuspendedOrganizationSuggestions)
 		}
 		return err
 	}
 
-	privateClient := c.ccloudClientFactory.PrivateJwtHTTPClientFactory(context.Background(), token, url)
 	client := c.ccloudClientFactory.JwtHTTPClientFactory(context.Background(), token, url)
 	credentials.AuthToken = token
 	credentials.AuthRefreshToken = refreshToken
 
-	currentEnv, currentOrg, err := pauth.PersistCCloudCredentialsToConfig(c.Config.Config, privateClient, url, credentials)
+	save, err := cmd.Flags().GetBool("save")
 	if err != nil {
 		return err
 	}
 
-	utils.Printf(cmd, errors.LoggedInAsMsgWithOrg, credentials.Username, currentOrg.GetResourceId(), currentOrg.GetName())
+	currentEnv, currentOrg, err := pauth.PersistCCloudCredentialsToConfig(c.Config.Config, client, url, credentials, save)
+	if err != nil {
+		return err
+	}
+
+	output.Printf(errors.LoggedInAsMsgWithOrg, credentials.Username, currentOrg.GetResourceId(), currentOrg.GetName())
 	if currentEnv != nil {
 		log.CliLogger.Debugf(errors.LoggedInUsingEnvMsg, currentEnv.GetId(), currentEnv.GetName())
 	}
@@ -158,16 +160,19 @@ func (c *command) loginCCloud(cmd *cobra.Command, url string) error {
 	// otherwise, print remaining free credit upon each login.
 	if isEndOfFreeTrialErr {
 		// only print error and do not return it, since end-of-free-trial users should still be able to log in.
-		utils.ErrPrintln(cmd, fmt.Sprintf("Error: %s", endOfFreeTrialErr.Error()))
-		errors.DisplaySuggestionsMessage(endOfFreeTrialErr.UserFacingError(), os.Stderr)
+		output.ErrPrintf("Error: %s", endOfFreeTrialErr.Error())
+		output.ErrPrint(errors.DisplaySuggestionsMessage(endOfFreeTrialErr.UserFacingError()))
 	} else {
-		c.printRemainingFreeCredit(cmd, client, currentOrg)
+		c.printRemainingFreeCredit(client, currentOrg)
 	}
 
-	return c.saveLoginToNetrc(cmd, true, credentials)
+	if save && runtime.GOOS == "darwin" && !c.cfg.IsTest {
+		return c.saveLoginToKeychain(true, url, credentials)
+	}
+	return nil
 }
 
-func (c *command) printRemainingFreeCredit(cmd *cobra.Command, client *ccloudv1.Client, currentOrg *orgv1.Organization) {
+func (c *command) printRemainingFreeCredit(client *ccloudv1.Client, currentOrg *ccloudv1.Organization) {
 	promoCodeClaims, err := client.Growth.GetFreeTrialInfo(context.Background(), currentOrg.Id)
 	if err != nil {
 		log.CliLogger.Warnf("Failed to get free trial info: %v", err)
@@ -188,38 +193,39 @@ func (c *command) printRemainingFreeCredit(cmd *cobra.Command, client *ccloudv1.
 
 	// only print remaining free credit if there is any unexpired promo code and there is no payment method yet
 	if remainingFreeCredit > 0 {
-		utils.ErrPrintf(cmd, errors.RemainingFreeCreditMsg, admin.ConvertToUSD(remainingFreeCredit))
+		output.ErrPrintf(errors.RemainingFreeCreditMsg, admin.ConvertToUSD(remainingFreeCredit))
 	}
 }
 
 // Order of precedence: env vars > config file > netrc file > prompt
 // i.e. if login credentials found in env vars then acquire token using env vars and skip checking for credentials else where
 func (c *command) getCCloudCredentials(cmd *cobra.Command, url, orgResourceId string) (*pauth.Credentials, error) {
-	privateClient := c.ccloudClientFactory.PrivateAnonHTTPClientFactory(url)
-	c.loginCredentialsManager.SetCloudClient(privateClient)
+	client := c.ccloudClientFactory.AnonHTTPClientFactory(url)
+	c.loginCredentialsManager.SetCloudClient(client)
 
-	promptOnly, err := cmd.Flags().GetBool("prompt")
+	prompt, err := cmd.Flags().GetBool("prompt")
 	if err != nil {
 		return nil, err
 	}
-	if promptOnly {
-		return pauth.GetLoginCredentials(c.loginCredentialsManager.GetCloudCredentialsFromPrompt(cmd, orgResourceId))
+	if prompt {
+		return pauth.GetLoginCredentials(c.loginCredentialsManager.GetCloudCredentialsFromPrompt(orgResourceId))
 	}
-
-	netrcFilterParams := netrc.NetrcMachineParams{
+	filterParams := netrc.NetrcMachineParams{
 		IsCloud: true,
 		URL:     url,
 	}
 	ctx := c.Config.Config.Context()
-	if ctx != nil && strings.Contains(ctx.NetrcMachineName, url) {
-		netrcFilterParams.Name = ctx.NetrcMachineName
+	if strings.Contains(ctx.GetNetrcMachineName(), url) {
+		filterParams.Name = ctx.GetNetrcMachineName()
 	}
 
 	return pauth.GetLoginCredentials(
 		c.loginCredentialsManager.GetCloudCredentialsFromEnvVar(orgResourceId),
-		c.loginCredentialsManager.GetCredentialsFromConfig(c.cfg),
-		c.loginCredentialsManager.GetCredentialsFromNetrc(netrcFilterParams),
-		c.loginCredentialsManager.GetCloudCredentialsFromPrompt(cmd, orgResourceId),
+		c.loginCredentialsManager.GetSsoCredentialsFromConfig(c.cfg),
+		c.loginCredentialsManager.GetCredentialsFromKeychain(c.cfg, true, filterParams.Name, url),
+		c.loginCredentialsManager.GetCredentialsFromConfig(c.cfg, filterParams),
+		c.loginCredentialsManager.GetCredentialsFromNetrc(filterParams),
+		c.loginCredentialsManager.GetCloudCredentialsFromPrompt(orgResourceId),
 	)
 }
 
@@ -231,7 +237,7 @@ func (c *command) loginMDS(cmd *cobra.Command, url string) error {
 
 	// Current functionality:
 	// empty ca-cert-path is equivalent to not using ca-cert-path flag
-	// if users want to login with ca-cert-path they must explicilty use the flag every time they login
+	// if users want to login with ca-cert-path they must explicitly use the flag every time they login
 	//
 	// For legacy users:
 	// if ca-cert-path flag is not used, then return caCertPath value stored in config for the login context
@@ -244,10 +250,7 @@ func (c *command) loginMDS(cmd *cobra.Command, url string) error {
 	}
 	if caCertPath == "" {
 		contextName := pauth.GenerateContextName(credentials.Username, url, "")
-		caCertPath, err = c.checkLegacyContextCACertPath(cmd, contextName)
-		if err != nil {
-			return err
-		}
+		caCertPath = c.checkLegacyContextCACertPath(cmd, contextName)
 		isLegacyContext = caCertPath != ""
 	}
 
@@ -273,13 +276,19 @@ func (c *command) loginMDS(cmd *cobra.Command, url string) error {
 		return err
 	}
 
-	err = pauth.PersistConfluentLoginToConfig(c.Config.Config, credentials.Username, url, token, caCertPath, isLegacyContext)
+	save, err := cmd.Flags().GetBool("save")
 	if err != nil {
 		return err
 	}
 
-	if err := c.saveLoginToNetrc(cmd, false, credentials); err != nil {
+	if err := pauth.PersistConfluentLoginToConfig(c.Config.Config, credentials, url, token, caCertPath, isLegacyContext, save); err != nil {
 		return err
+	}
+
+	if save && runtime.GOOS == "darwin" && !c.cfg.IsTest {
+		if err := c.saveLoginToKeychain(false, url, credentials); err != nil {
+			return err
+		}
 	}
 
 	log.CliLogger.Debugf(errors.LoggedInAsMsg, credentials.Username)
@@ -287,8 +296,8 @@ func (c *command) loginMDS(cmd *cobra.Command, url string) error {
 }
 
 func getCACertPath(cmd *cobra.Command) (string, error) {
-	if path, err := cmd.Flags().GetString("ca-cert-path"); path != "" || err != nil {
-		return path, err
+	if caCertPath, err := cmd.Flags().GetString("ca-cert-path"); caCertPath != "" || err != nil {
+		return caCertPath, err
 	}
 
 	return pauth.GetEnvWithFallback(pauth.ConfluentPlatformCACertPath, pauth.DeprecatedConfluentPlatformCACertPath), nil
@@ -297,12 +306,12 @@ func getCACertPath(cmd *cobra.Command) (string, error) {
 // Order of precedence: env vars > netrc > prompt
 // i.e. if login credentials found in env vars then acquire token using env vars and skip checking for credentials else where
 func (c *command) getConfluentCredentials(cmd *cobra.Command, url string) (*pauth.Credentials, error) {
-	promptOnly, err := cmd.Flags().GetBool("prompt")
+	prompt, err := cmd.Flags().GetBool("prompt")
 	if err != nil {
 		return nil, err
 	}
-	if promptOnly {
-		return pauth.GetLoginCredentials(c.loginCredentialsManager.GetOnPremCredentialsFromPrompt(cmd))
+	if prompt {
+		return pauth.GetLoginCredentials(c.loginCredentialsManager.GetOnPremCredentialsFromPrompt())
 	}
 
 	netrcFilterParams := netrc.NetrcMachineParams{
@@ -310,28 +319,30 @@ func (c *command) getConfluentCredentials(cmd *cobra.Command, url string) (*paut
 		URL:        url,
 	}
 	ctx := c.Config.Config.Context()
-	if ctx != nil && strings.Contains(ctx.NetrcMachineName, url) {
-		netrcFilterParams.Name = ctx.NetrcMachineName
+	if strings.Contains(ctx.GetNetrcMachineName(), url) {
+		netrcFilterParams.Name = ctx.GetNetrcMachineName()
 	}
 
 	return pauth.GetLoginCredentials(
 		c.loginCredentialsManager.GetOnPremCredentialsFromEnvVar(),
+		c.loginCredentialsManager.GetCredentialsFromKeychain(c.cfg, false, netrcFilterParams.Name, url),
+		c.loginCredentialsManager.GetCredentialsFromConfig(c.cfg, netrcFilterParams),
 		c.loginCredentialsManager.GetCredentialsFromNetrc(netrcFilterParams),
-		c.loginCredentialsManager.GetOnPremCredentialsFromPrompt(cmd),
+		c.loginCredentialsManager.GetOnPremCredentialsFromPrompt(),
 	)
 }
 
-func (c *command) checkLegacyContextCACertPath(cmd *cobra.Command, contextName string) (string, error) {
+func (c *command) checkLegacyContextCACertPath(cmd *cobra.Command, contextName string) string {
 	changed := cmd.Flags().Changed("ca-cert-path")
 	// if flag used but empty string is passed then user intends to reset the ca-cert-path
 	if changed {
-		return "", nil
+		return ""
 	}
 	ctx, ok := c.Config.Contexts[contextName]
 	if !ok {
-		return "", nil
+		return ""
 	}
-	return ctx.Platform.CaCertPath, nil
+	return ctx.Platform.CaCertPath
 }
 
 func (c *command) getURL(cmd *cobra.Command) (string, error) {
@@ -346,70 +357,49 @@ func (c *command) getURL(cmd *cobra.Command) (string, error) {
 	return pauth.CCloudURL, nil
 }
 
-func (c *command) saveLoginToNetrc(cmd *cobra.Command, isCloud bool, credentials *pauth.Credentials) error {
-	save, err := cmd.Flags().GetBool("save")
-	if err != nil {
+func (c *command) saveLoginToKeychain(isCloud bool, url string, credentials *pauth.Credentials) error {
+	if credentials.IsSSO {
+		output.ErrPrintln("The `--save` flag was ignored since SSO credentials are not stored locally.")
+		return nil
+	}
+
+	ctxName := c.Config.Config.Context().GetNetrcMachineName()
+	if err := keychain.Write(isCloud, ctxName, url, credentials.Username, credentials.Password); err != nil {
 		return err
 	}
 
-	if save {
-		if credentials.IsSSO {
-			utils.ErrPrintln(cmd, "The `--save` flag was ignored since SSO credentials are not stored locally.")
-			return nil
-		}
-
-		if err := c.netrcHandler.WriteNetrcCredentials(isCloud, credentials.IsSSO, c.Config.Config.Context().NetrcMachineName, credentials.Username, credentials.Password); err != nil {
-			return err
-		}
-
-		utils.ErrPrintf(cmd, errors.WroteCredentialsToNetrcMsg, c.netrcHandler.GetFileName())
-	}
+	output.ErrPrintf(errors.WroteCredentialsToKeychainMsg)
 
 	return nil
 }
 
 func validateURL(url string, isCCloud bool) (string, string, error) {
 	if isCCloud {
-		for _, hostname := range ccloudv2.Hostnames {
-			if strings.Contains(url, hostname) {
-				if !strings.HasSuffix(strings.TrimSuffix(url, "/"), hostname) {
-					return url, "", errors.NewErrorWithSuggestions(errors.UnneccessaryUrlFlagForCloudLoginErrorMsg, errors.UnneccessaryUrlFlagForCloudLoginSuggestions)
-				} else {
-					break
-				}
+		if strings.Contains(url, ccloudv2.Hostnames[0]) {
+			if !strings.HasSuffix(strings.TrimSuffix(url, "/"), ccloudv2.Hostnames[0]) {
+				return url, "", errors.NewErrorWithSuggestions(errors.UnneccessaryUrlFlagForCloudLoginErrorMsg, errors.UnneccessaryUrlFlagForCloudLoginSuggestions)
 			}
 		}
 	}
-	protocolRgx, _ := regexp.Compile(`(\w+)://`)
-	portRgx, _ := regexp.Compile(`:(\d+\/?)`)
-
-	protocolMatch := protocolRgx.MatchString(url)
-	portMatch := portRgx.MatchString(url)
 
 	var msg []string
-	if !protocolMatch {
-		if isCCloud {
-			url = "https://" + url
-			msg = append(msg, "https protocol")
-		} else {
-			url = "http://" + url
-			msg = append(msg, "http protocol")
-		}
+	if !regexp.MustCompile(`(\w+)://`).MatchString(url) {
+		url = "https://" + url
+		msg = append(msg, "https protocol")
 	}
-	if !portMatch && !isCCloud {
-		url = url + ":8090"
+	if !isCCloud && !regexp.MustCompile(`:(\d+\/?)`).MatchString(url) {
+		url += ":8090"
 		msg = append(msg, "default MDS port 8090")
 	}
 
-	var pattern string
+	var pattern *regexp.Regexp
 	if isCCloud {
-		pattern = `^\w+://[^/ ]+`
+		pattern = regexp.MustCompile(`^\w+://[^/ ]+`)
 	} else {
-		pattern = `^\w+://[^/ ]+:\d+(?:\/|$)`
+		pattern = regexp.MustCompile(`^\w+://[^/ ]+:\d+(?:\/|$)`)
 	}
-	matched, _ := regexp.MatchString(pattern, url)
-	if !matched {
-		return url, "", errors.New(errors.InvalidLoginURLErrorMsg)
+	if !pattern.MatchString(url) {
+		return "", "", errors.New(errors.InvalidLoginURLErrorMsg)
 	}
 
 	return url, strings.Join(msg, " and "), nil

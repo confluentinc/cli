@@ -6,20 +6,21 @@ import (
 	"testing"
 	"time"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
-	"github.com/confluentinc/ccloud-sdk-go-v1"
-	ccsdkmock "github.com/confluentinc/ccloud-sdk-go-v1/mock"
-	metricsv2 "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2"
-	metricsmock "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2/mock"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
-	srMock "github.com/confluentinc/schema-registry-sdk-go/mock"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
+	metricsv2 "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2"
+	metricsmock "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2/mock"
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+	srMock "github.com/confluentinc/schema-registry-sdk-go/mock"
+
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
+	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	cliMock "github.com/confluentinc/cli/mock"
+	climock "github.com/confluentinc/cli/mock"
 )
 
 const (
@@ -31,9 +32,9 @@ var queryTime = time.Date(2019, 12, 19, 16, 1, 0, 0, time.UTC)
 type ClusterTestSuite struct {
 	suite.Suite
 	conf         *v1.Config
-	kafkaCluster *schedv1.KafkaCluster
-	srCluster    *schedv1.SchemaRegistryCluster
-	srMock       *ccsdkmock.SchemaRegistry
+	kafkaCluster *ccstructs.KafkaCluster
+	srCluster    *ccloudv1.SchemaRegistryCluster
+	srMock       *ccloudv1mock.SchemaRegistry
 	srClientMock *srsdk.APIClient
 	metricsApi   *metricsmock.Version2Api
 }
@@ -42,27 +43,26 @@ func (suite *ClusterTestSuite) SetupSuite() {
 	suite.conf = v1.AuthenticatedCloudConfigMock()
 	ctx := suite.conf.Context()
 	cluster := ctx.KafkaClusterContext.GetActiveKafkaClusterConfig()
-	suite.kafkaCluster = &schedv1.KafkaCluster{
+	suite.kafkaCluster = &ccstructs.KafkaCluster{
 		Id:         cluster.ID,
 		Name:       cluster.Name,
-		Endpoint:   cluster.APIEndpoint,
 		Enterprise: true,
 	}
-	suite.srCluster = &schedv1.SchemaRegistryCluster{
+	suite.srCluster = &ccloudv1.SchemaRegistryCluster{
 		Id: srClusterID,
 	}
 	suite.srClientMock = &srsdk.APIClient{
 		DefaultApi: &srMock.DefaultApi{
-			GetTopLevelConfigFunc: func(ctx context.Context) (srsdk.Config, *http.Response, error) {
+			GetTopLevelConfigFunc: func(_ context.Context) (srsdk.Config, *http.Response, error) {
 				return srsdk.Config{CompatibilityLevel: "FULL"}, nil, nil
 			},
-			GetTopLevelModeFunc: func(ctx context.Context) (srsdk.Mode, *http.Response, error) {
+			GetTopLevelModeFunc: func(_ context.Context) (srsdk.Mode, *http.Response, error) {
 				return srsdk.Mode{}, nil, nil
 			},
-			UpdateTopLevelModeFunc: func(ctx context.Context, body srsdk.ModeUpdateRequest) (request srsdk.ModeUpdateRequest, response *http.Response, e error) {
+			UpdateTopLevelModeFunc: func(_ context.Context, body srsdk.ModeUpdateRequest) (srsdk.ModeUpdateRequest, *http.Response, error) {
 				return srsdk.ModeUpdateRequest{Mode: body.Mode}, nil, nil
 			},
-			UpdateTopLevelConfigFunc: func(ctx context.Context, body srsdk.ConfigUpdateRequest) (request srsdk.ConfigUpdateRequest, response *http.Response, e error) {
+			UpdateTopLevelConfigFunc: func(_ context.Context, body srsdk.ConfigUpdateRequest) (srsdk.ConfigUpdateRequest, *http.Response, error) {
 				return srsdk.ConfigUpdateRequest{Compatibility: body.Compatibility}, nil, nil
 			},
 		},
@@ -70,12 +70,12 @@ func (suite *ClusterTestSuite) SetupSuite() {
 }
 
 func (suite *ClusterTestSuite) SetupTest() {
-	suite.srMock = &ccsdkmock.SchemaRegistry{
-		CreateSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *schedv1.SchemaRegistryClusterConfig) (*schedv1.SchemaRegistryCluster, error) {
+	suite.srMock = &ccloudv1mock.SchemaRegistry{
+		CreateSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *ccloudv1.SchemaRegistryClusterConfig) (*ccloudv1.SchemaRegistryCluster, error) {
 			return suite.srCluster, nil
 		},
-		GetSchemaRegistryClustersFunc: func(ctx context.Context, clusterConfig *schedv1.SchemaRegistryCluster) ([]*schedv1.SchemaRegistryCluster, error) {
-			return []*schedv1.SchemaRegistryCluster{suite.srCluster}, nil
+		GetSchemaRegistryClustersFunc: func(ctx context.Context, clusterConfig *ccloudv1.SchemaRegistryCluster) ([]*ccloudv1.SchemaRegistryCluster, error) {
+			return []*ccloudv1.SchemaRegistryCluster{suite.srCluster}, nil
 		},
 	}
 	suite.metricsApi = &metricsmock.Version2Api{
@@ -96,14 +96,14 @@ func (suite *ClusterTestSuite) SetupTest() {
 }
 
 func (suite *ClusterTestSuite) newCMD() *cobra.Command {
-	client := &ccloud.Client{
+	client := &ccloudv1.Client{
 		SchemaRegistry: suite.srMock,
 	}
 	v2Client := &ccloudv2.Client{
 		AuthToken:     "auth-token",
 		MetricsClient: &metricsv2.APIClient{Version2Api: suite.metricsApi},
 	}
-	return New(suite.conf, cliMock.NewPreRunnerMock(client, nil, v2Client, nil, nil, suite.conf), suite.srClientMock)
+	return New(suite.conf, climock.NewPreRunnerMock(client, v2Client, nil, nil, suite.conf), suite.srClientMock)
 }
 
 func (suite *ClusterTestSuite) TestCreateSR() {

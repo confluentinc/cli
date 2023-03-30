@@ -13,7 +13,7 @@ func (c *authenticatedTopicCommand) newListCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Args:  cobra.NoArgs,
-		RunE:  c.onPremList,
+		RunE:  c.listOnPrem,
 		Short: "List Kafka topics.",
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -29,13 +29,13 @@ func (c *authenticatedTopicCommand) newListCommandOnPrem() *cobra.Command {
 			},
 		),
 	}
-	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet()) //includes url, ca-cert-path, client-cert-path, client-key-path, and no-auth flags
+	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
 
-func (c *authenticatedTopicCommand) onPremList(cmd *cobra.Command, _ []string) error {
+func (c *authenticatedTopicCommand) listOnPrem(cmd *cobra.Command, _ []string) error {
 	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err
@@ -44,21 +44,17 @@ func (c *authenticatedTopicCommand) onPremList(cmd *cobra.Command, _ []string) e
 	if err != nil {
 		return err
 	}
+
 	// Get Topics
-	topicGetResp, resp, err := restClient.TopicV3Api.ListKafkaTopics(restContext, clusterId)
+	topicList, resp, err := restClient.TopicV3Api.ListKafkaTopics(restContext, clusterId)
 	if err != nil {
 		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 	}
-	topicDatas := topicGetResp.Data
 
 	// Create and populate output writer
-	outputWriter, err := output.NewListOutputWriter(cmd, []string{"TopicName"}, []string{"Name"}, []string{"name"})
-	if err != nil {
-		return err
+	list := output.NewList(cmd)
+	for _, topic := range topicList.Data {
+		list.Add(&topicOut{Name: topic.TopicName})
 	}
-	for _, topicData := range topicDatas {
-		outputWriter.AddElement(&topicData)
-	}
-
-	return outputWriter.Out()
+	return list.Print()
 }

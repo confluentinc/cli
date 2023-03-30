@@ -1,4 +1,0 @@
-Error: Kafka cluster "lkc-not-ready" not ready
-
-Suggestions:
-    It may take up to 5 minutes for a recently created Kafka cluster to be ready.

@@ -1,6 +1,5 @@
 package kafka
 
-// TODO: wrap all link / mirror commands with kafka rest error
 import (
 	"github.com/spf13/cobra"
 
@@ -20,7 +19,7 @@ type linkCommand struct {
 func newLinkCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "link",
-		Short:       "Manages inter-cluster links.",
+		Short:       "Manage inter-cluster links.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLoginOrOnPremLogin},
 	}
 
@@ -29,21 +28,19 @@ func newLinkCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	if cfg.IsCloudLogin() {
 		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)
 
-		c.AddCommand(c.newCreateCommand())
-		c.AddCommand(c.newDeleteCommand())
-		c.AddCommand(c.newDescribeCommand())
-		c.AddCommand(c.newListCommand())
-		c.AddCommand(c.newUpdateCommand())
+		cmd.AddCommand(c.newConfigurationCommand(cfg))
+		cmd.AddCommand(c.newCreateCommand())
+		cmd.AddCommand(c.newDeleteCommand())
+		cmd.AddCommand(c.newListCommand())
 	} else {
 		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner)
 		c.PersistentPreRunE = prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand)
 
-		c.AddCommand(c.newCreateCommandOnPrem())
-		c.AddCommand(c.newDeleteCommandOnPrem())
-		c.AddCommand(c.newDescribeCommandOnPrem())
-		c.AddCommand(c.newListCommandOnPrem())
-		c.AddCommand(c.newUpdateCommandOnPrem())
+		cmd.AddCommand(c.newConfigurationCommand(cfg))
+		cmd.AddCommand(c.newCreateCommandOnPrem())
+		cmd.AddCommand(c.newDeleteCommandOnPrem())
+		cmd.AddCommand(c.newListCommandOnPrem())
 	}
 
-	return c.Command
+	return cmd
 }

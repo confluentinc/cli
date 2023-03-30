@@ -5,14 +5,14 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *linkCommand) newDeleteCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete <link>",
-		Short: "Delete a previously created cluster link.",
+		Short: "Delete a cluster link.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.deleteOnPrem,
 	}
@@ -40,6 +40,6 @@ func (c *linkCommand) deleteOnPrem(cmd *cobra.Command, args []string) error {
 		return handleOpenApiError(httpResp, err, client)
 	}
 
-	utils.Printf(cmd, errors.DeletedResourceMsg, resource.ClusterLink, linkName)
+	output.Printf(errors.DeletedResourceMsg, resource.ClusterLink, linkName)
 	return nil
 }

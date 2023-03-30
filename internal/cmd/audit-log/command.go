@@ -5,16 +5,13 @@ import (
 	"fmt"
 	"net/http"
 
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/spf13/cobra"
+
+	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
-
-type command struct {
-	*pcmd.CLICommand
-}
 
 func New(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
@@ -25,14 +22,11 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLoginOrOnPremLogin},
 	}
 
-	c := &command{pcmd.NewAnonymousCLICommand(cmd, prerunner)}
+	cmd.AddCommand(newDescribeCommand(prerunner))
+	cmd.AddCommand(newConfigCommand(prerunner))
+	cmd.AddCommand(newRouteCommand(prerunner))
 
-	c.AddCommand(newDescribeCommand(prerunner))
-	c.AddCommand(newMigrateCommand(prerunner))
-	c.AddCommand(newConfigCommand(prerunner))
-	c.AddCommand(newRouteCommand(prerunner))
-
-	return c.Command
+	return cmd
 }
 
 type errorMessage struct {

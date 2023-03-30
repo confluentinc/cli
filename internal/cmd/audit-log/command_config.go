@@ -3,8 +3,9 @@ package auditlog
 import (
 	"context"
 
-	mds "github.com/confluentinc/mds-sdk-go/mdsv1"
 	"github.com/spf13/cobra"
+
+	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
@@ -23,11 +24,12 @@ func newConfigCommand(prerunner pcmd.PreRunner) *cobra.Command {
 
 	c := &configCommand{pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner)}
 
-	c.AddCommand(c.newDescribeCommand())
-	c.AddCommand(c.newEditCommand())
-	c.AddCommand(c.newUpdateCommand())
+	cmd.AddCommand(c.newDescribeCommand())
+	cmd.AddCommand(c.newEditCommand())
+	cmd.AddCommand(c.newMigrateCommand())
+	cmd.AddCommand(c.newUpdateCommand())
 
-	return c.Command
+	return cmd
 }
 
 func (c *configCommand) createContext() context.Context {

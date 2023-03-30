@@ -4,7 +4,7 @@ Usage:
   confluent audit-log route list [flags]
 
 Flags:
-  -r, --resource string   REQUIRED: The Confluent resource name (CRN) that is the subject of the query.
+      --resource string   REQUIRED: The Confluent resource name (CRN) that is the subject of the query.
       --context string    CLI context name.
 
 Global Flags:

@@ -10,18 +10,18 @@ import (
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
-func (c *compatibilityCommand) newValidateCommandOnPrem() *cobra.Command {
+func (c *command) newCompatibilityValidateCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "validate",
 		Short:       "Validate a schema with a subject version.",
 		Long:        "Validate that a schema is compatible against a given subject version.",
 		Args:        cobra.NoArgs,
-		RunE:        c.onPremValidate,
+		RunE:        c.compatibilityValidateOnPrem,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Validate the compatibility of schema `payments` against the latest version of subject `records`.",
-				Code: fmt.Sprintf("%s schema-registry compatibility validate --schema payments.avro --type AVRO --subject records --version latest %s", pversion.CLIName, OnPremAuthenticationMsg),
+				Code: fmt.Sprintf("%s schema-registry compatibility validate --schema payments.avro --type avro --subject records --version latest %s", pversion.CLIName, OnPremAuthenticationMsg),
 			},
 		),
 	}
@@ -30,15 +30,18 @@ func (c *compatibilityCommand) newValidateCommandOnPrem() *cobra.Command {
 	cmd.Flags().String("version", "", `Version of the schema. Can be a specific version or "latest".`)
 	cmd.Flags().String("schema", "", "The path to the schema file.")
 	pcmd.AddSchemaTypeFlag(cmd)
-	cmd.Flags().String("refs", "", "The path to the references file.")
+	cmd.Flags().String("references", "", "The path to the references file.")
 	cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
+	cobra.CheckErr(cmd.MarkFlagFilename("schema", "avsc", "json", "proto"))
+	cobra.CheckErr(cmd.MarkFlagFilename("references", "json"))
+
 	return cmd
 }
 
-func (c *compatibilityCommand) onPremValidate(cmd *cobra.Command, args []string) error {
+func (c *command) compatibilityValidateOnPrem(cmd *cobra.Command, args []string) error {
 	srClient, ctx, err := GetSrApiClientWithToken(cmd, c.Version, c.AuthToken())
 	if err != nil {
 		return err

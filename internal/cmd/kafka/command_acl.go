@@ -6,21 +6,17 @@ import (
 	"strconv"
 	"strings"
 
-	schedv1 "github.com/confluentinc/cc-structs/kafka/scheduler/v1"
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/ccloud-sdk-go-v1-public"
+
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
+	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-)
-
-var (
-	listFieldsOnPrem       = []string{"Principal", "Permission", "Operation", "Host", "ResourceType", "ResourceName", "PatternType"}
-	humanLabelsOnPrem      = []string{"Principal", "Permission", "Operation", "Host", "Resource Type", "Resource Name", "Pattern Type"}
-	structuredLabelsOnPrem = []string{"principal", "permission", "operation", "host", "resource_type", "resource_name", "pattern_type"}
 )
 
 type aclCommand struct {
@@ -56,55 +52,55 @@ func validateAddAndDelete(binding *ACLConfiguration) {
 		binding.errors = multierror.Append(binding.errors, err)
 	}
 
-	if binding.Entry.PermissionType == schedv1.ACLPermissionTypes_UNKNOWN {
+	if binding.Entry.PermissionType == ccstructs.ACLPermissionTypes_UNKNOWN {
 		err := fmt.Errorf(errors.MustSetAllowOrDenyErrorMsg)
 		binding.errors = multierror.Append(binding.errors, err)
 	}
 
-	if binding.Pattern.PatternType == schedv1.PatternTypes_UNKNOWN {
-		binding.Pattern.PatternType = schedv1.PatternTypes_LITERAL
+	if binding.Pattern.PatternType == ccstructs.PatternTypes_UNKNOWN {
+		binding.Pattern.PatternType = ccstructs.PatternTypes_LITERAL
 	}
 
-	if binding.Pattern == nil || binding.Pattern.ResourceType == schedv1.ResourceTypes_UNKNOWN {
+	if binding.Pattern == nil || binding.Pattern.ResourceType == ccstructs.ResourceTypes_UNKNOWN {
 		err := fmt.Errorf(errors.MustSetResourceTypeErrorMsg,
-			listEnum(schedv1.ResourceTypes_ResourceType_name, []string{"ANY", "UNKNOWN"}))
+			listEnum(ccstructs.ResourceTypes_ResourceType_name, []string{"ANY", "UNKNOWN"}))
 		binding.errors = multierror.Append(binding.errors, err)
 	}
 }
 
 // convertToFilter converts a ACLBinding to a KafkaAPIACLFilterRequest
-func convertToFilter(binding *schedv1.ACLBinding) *schedv1.ACLFilter {
+func convertToFilter(binding *ccstructs.ACLBinding) *ccstructs.ACLFilter {
 	// ACE matching rules
 	// https://github.com/apache/kafka/blob/trunk/clients/src/main/java/org/apache/kafka/common/acl/AccessControlEntryFilter.java#L102-L113
 	if binding.Entry == nil {
-		binding.Entry = new(schedv1.AccessControlEntryConfig)
+		binding.Entry = new(ccstructs.AccessControlEntryConfig)
 	}
 
-	if binding.Entry.Operation == schedv1.ACLOperations_UNKNOWN {
-		binding.Entry.Operation = schedv1.ACLOperations_ANY
+	if binding.Entry.Operation == ccstructs.ACLOperations_UNKNOWN {
+		binding.Entry.Operation = ccstructs.ACLOperations_ANY
 	}
 
-	if binding.Entry.PermissionType == schedv1.ACLPermissionTypes_UNKNOWN {
-		binding.Entry.PermissionType = schedv1.ACLPermissionTypes_ANY
+	if binding.Entry.PermissionType == ccstructs.ACLPermissionTypes_UNKNOWN {
+		binding.Entry.PermissionType = ccstructs.ACLPermissionTypes_ANY
 	}
 
 	// ResourcePattern matching rules
 	// https://github.com/apache/kafka/blob/trunk/clients/src/main/java/org/apache/kafka/common/resource/ResourcePatternFilter.java#L42-L56
 	if binding.Pattern == nil {
-		binding.Pattern = &schedv1.ResourcePatternConfig{}
+		binding.Pattern = &ccstructs.ResourcePatternConfig{}
 	}
 
 	binding.Entry.Host = "*"
 
-	if binding.Pattern.ResourceType == schedv1.ResourceTypes_UNKNOWN {
-		binding.Pattern.ResourceType = schedv1.ResourceTypes_ANY
+	if binding.Pattern.ResourceType == ccstructs.ResourceTypes_UNKNOWN {
+		binding.Pattern.ResourceType = ccstructs.ResourceTypes_ANY
 	}
 
-	if binding.Pattern.PatternType == schedv1.PatternTypes_UNKNOWN {
-		binding.Pattern.PatternType = schedv1.PatternTypes_ANY
+	if binding.Pattern.PatternType == ccstructs.PatternTypes_UNKNOWN {
+		binding.Pattern.PatternType = ccstructs.PatternTypes_ANY
 	}
 
-	return &schedv1.ACLFilter{
+	return &ccstructs.ACLFilter{
 		EntryFilter:   binding.Entry,
 		PatternFilter: binding.Pattern,
 	}
@@ -133,54 +129,54 @@ func (c *aclCommand) aclResourceIdToNumericId(acl []*ACLConfiguration, idMap map
 
 func parsePrincipal(principal string) (string, error) {
 	if !strings.HasPrefix(principal, "User:") {
-		return "", fmt.Errorf(errors.BadPrincipalErrorMsg)
+		return "", fmt.Errorf(`principal must begin with "User:"`)
 	}
-	resourceId := strings.SplitN(principal, ":", 2)[1]
-	return resourceId, nil
+
+	id := strings.TrimPrefix(principal, "User:")
+
+	if _, err := strconv.Atoi(id); err == nil {
+		return "", fmt.Errorf("numeric IDs are not supported")
+	}
+
+	return id, nil
 }
 
-func (c *aclCommand) mapUserIdToResourceId() (map[int32]string, error) {
-	serviceAccounts, err := c.PrivateClient.User.GetServiceAccounts(context.Background())
+func (c *aclCommand) getAllUsers() ([]*ccloud.User, error) {
+	serviceAccounts, err := c.Client.User.GetServiceAccounts(context.Background())
 	if err != nil {
 		return nil, err
 	}
 
-	adminUsers, err := c.PrivateClient.User.List(context.Background())
+	adminUsers, err := c.Client.User.List(context.Background())
 	if err != nil {
 		return nil, err
 	}
 
-	users := append(serviceAccounts, adminUsers...)
+	return append(serviceAccounts, adminUsers...), nil
+}
 
+func (c *aclCommand) mapUserIdToResourceId(users []*ccloud.User) map[int32]string {
 	idMap := make(map[int32]string)
 	for _, sa := range users {
 		idMap[sa.Id] = sa.ResourceId
 	}
-	return idMap, nil
+	return idMap
 }
 
-func (c *aclCommand) mapResourceIdToUserId() (map[string]int32, error) {
-	serviceAccounts, err := c.PrivateClient.User.GetServiceAccounts(context.Background())
-	if err != nil {
-		return nil, err
-	}
-
-	adminUsers, err := c.PrivateClient.User.List(context.Background())
-	if err != nil {
-		return nil, err
-	}
-
-	users := append(serviceAccounts, adminUsers...)
-
+func (c *aclCommand) mapResourceIdToUserId(users []*ccloud.User) map[string]int32 {
 	idMap := make(map[string]int32)
 	for _, sa := range users {
 		idMap[sa.ResourceId] = sa.Id
 	}
-	return idMap, nil
+	return idMap
 }
 
 func (c *aclCommand) provisioningClusterCheck(lkc string) error {
-	cluster, httpResp, err := c.V2Client.DescribeKafkaCluster(lkc, c.EnvironmentId())
+	environmentId, err := c.EnvironmentId()
+	if err != nil {
+		return err
+	}
+	cluster, httpResp, err := c.V2Client.DescribeKafkaCluster(lkc, environmentId)
 	if err != nil {
 		return errors.CatchKafkaNotFoundError(err, lkc, httpResp)
 	}

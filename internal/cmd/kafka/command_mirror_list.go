@@ -4,8 +4,9 @@ import (
 	"net/http"
 
 	"github.com/antihax/optional"
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -81,11 +82,7 @@ func (c *mirrorCommand) list(cmd *cobra.Command, _ []string) error {
 		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, listMirrorFields, humanListMirrorFields, structuredListMirrorFields)
-	if err != nil {
-		return err
-	}
-
+	list := output.NewList(cmd)
 	for _, mirror := range listMirrorTopicsResponseDataList.Data {
 		var maxLag int64 = 0
 		for _, mirrorLag := range mirror.MirrorLags {
@@ -94,7 +91,7 @@ func (c *mirrorCommand) list(cmd *cobra.Command, _ []string) error {
 			}
 		}
 
-		outputWriter.AddElement(&listMirrorWrite{
+		list.Add(&mirrorOut{
 			LinkName:                 mirror.LinkName,
 			MirrorTopicName:          mirror.MirrorTopicName,
 			SourceTopicName:          mirror.SourceTopicName,
@@ -104,6 +101,6 @@ func (c *mirrorCommand) list(cmd *cobra.Command, _ []string) error {
 			MaxPerPartitionMirrorLag: maxLag,
 		})
 	}
-
-	return outputWriter.Out()
+	list.Filter([]string{"LinkName", "MirrorTopicName", "NumPartition", "MaxPerPartitionMirrorLag", "SourceTopicName", "MirrorStatus", "StatusTimeMs"})
+	return list.Print()
 }

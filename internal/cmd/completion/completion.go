@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 const longDescription = `Use this command to print the shell completion
@@ -16,7 +16,7 @@ interactive completion of ` + "`confluent`" + ` commands.
 Install Bash completions on macOS:
   #. Install Homebrew (https://brew.sh/).
 
-  #. Install Bash completions using the ` + "`homebrew`" + ` command:
+  #. Install Bash completions using the ` + "`brew`" + ` command:
   
      ::
      
@@ -86,7 +86,7 @@ func New() *cobra.Command {
 				return err
 			}
 
-			utils.Println(cmd, out)
+			output.Println(out)
 			return nil
 		},
 	}

@@ -9,10 +9,10 @@ import (
 )
 
 var (
-	// TestCloudURL is used to hardcode a specific port (1024) so tests can identify CCloud URLs
-	TestCloudURL          = url.URL{Scheme: "http", Host: "127.0.0.1:1024"}
+	// TestCloudUrl is used to hardcode a specific port (1024) so tests can identify CCloud URLs
+	TestCloudUrl          = url.URL{Scheme: "http", Host: "127.0.0.1:1024"}
 	TestKafkaRestProxyUrl = url.URL{Scheme: "http", Host: "127.0.0.1:1025"}
-	TestV2CloudURL        = url.URL{Scheme: "http", Host: "127.0.0.1:2048"}
+	TestV2CloudUrl        = url.URL{Scheme: "http", Host: "127.0.0.1:2048"}
 )
 
 // TestBackend consists of the servers for necessary mocked backend services
@@ -20,7 +20,6 @@ var (
 type TestBackend struct {
 	cloud          *httptest.Server
 	v2Api          *httptest.Server
-	kafkaApi       *httptest.Server
 	kafkaRestProxy *httptest.Server
 	mds            *httptest.Server
 	sr             *httptest.Server
@@ -28,28 +27,23 @@ type TestBackend struct {
 
 func StartTestBackend(t *testing.T, isAuditLogEnabled bool) *TestBackend {
 	cloudRouter := NewCloudRouter(t, isAuditLogEnabled)
-	v2Router := NewV2Router(t)
-	kafkaRouter := NewKafkaRouter(t)
-	mdsRouter := NewMdsRouter(t)
-	srRouter := NewSRRouter(t)
 
 	backend := &TestBackend{
-		cloud:          newTestCloudServer(cloudRouter, TestCloudURL.Host),
-		v2Api:          newTestCloudServer(v2Router, TestV2CloudURL.Host),
-		kafkaApi:       httptest.NewServer(kafkaRouter.KafkaApi),
-		kafkaRestProxy: newTestCloudServer(kafkaRouter.KafkaRP, TestKafkaRestProxyUrl.Host),
-		mds:            httptest.NewServer(mdsRouter),
-		sr:             httptest.NewServer(srRouter),
+		cloud:          newTestCloudServer(cloudRouter, TestCloudUrl.Host),
+		v2Api:          newTestCloudServer(NewV2Router(t), TestV2CloudUrl.Host),
+		kafkaRestProxy: newTestCloudServer(NewKafkaRestProxyRouter(t), TestKafkaRestProxyUrl.Host),
+		mds:            httptest.NewServer(NewMdsRouter(t)),
+		sr:             httptest.NewServer(NewSRRouter(t)),
 	}
-	cloudRouter.kafkaApiUrl = backend.kafkaApi.URL
+
 	cloudRouter.srApiUrl = backend.sr.URL
-	cloudRouter.kafkaRPUrl = backend.kafkaRestProxy.URL
+
 	return backend
 }
 
 func StartTestCloudServer(t *testing.T, isAuditLogEnabled bool) *TestBackend {
 	router := NewCloudRouter(t, isAuditLogEnabled)
-	return &TestBackend{cloud: newTestCloudServer(router, TestCloudURL.Host)}
+	return &TestBackend{cloud: newTestCloudServer(router, TestCloudUrl.Host)}
 }
 
 func newTestCloudServer(handler http.Handler, address string) *httptest.Server {
@@ -79,9 +73,6 @@ func (b *TestBackend) Close() {
 	if b.v2Api != nil {
 		b.v2Api.Close()
 	}
-	if b.kafkaApi != nil {
-		b.kafkaApi.Close()
-	}
 	if b.kafkaRestProxy != nil {
 		b.kafkaRestProxy.Close()
 	}
@@ -95,10 +86,6 @@ func (b *TestBackend) Close() {
 
 func (b *TestBackend) GetCloudUrl() string {
 	return b.cloud.URL
-}
-
-func (b *TestBackend) GetKafkaApiUrl() string {
-	return b.kafkaApi.URL
 }
 
 func (b *TestBackend) GetKafkaRestUrl() string {

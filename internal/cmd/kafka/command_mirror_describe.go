@@ -30,7 +30,7 @@ func (c *mirrorCommand) newDescribeCommand() *cobra.Command {
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired(linkFlagName)
+	cobra.CheckErr(cmd.MarkFlagRequired(linkFlagName))
 
 	return cmd
 }
@@ -61,13 +61,9 @@ func (c *mirrorCommand) describe(cmd *cobra.Command, args []string) error {
 		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, describeMirrorFields, humanDescribeMirrorFields, structuredDescribeMirrorFields)
-	if err != nil {
-		return err
-	}
-
+	list := output.NewList(cmd)
 	for _, partitionLag := range mirror.MirrorLags {
-		outputWriter.AddElement(&describeMirrorWrite{
+		list.Add(&mirrorOut{
 			LinkName:              mirror.LinkName,
 			MirrorTopicName:       mirror.MirrorTopicName,
 			SourceTopicName:       mirror.SourceTopicName,
@@ -78,6 +74,6 @@ func (c *mirrorCommand) describe(cmd *cobra.Command, args []string) error {
 			LastSourceFetchOffset: partitionLag.LastSourceFetchOffset,
 		})
 	}
-
-	return outputWriter.Out()
+	list.Filter([]string{"LinkName", "MirrorTopicName", "Partition", "PartitionMirrorLag", "SourceTopicName", "MirrorStatus", "StatusTimeMs", "LastSourceFetchOffset"})
+	return list.Print()
 }

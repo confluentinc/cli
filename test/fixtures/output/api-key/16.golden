@@ -1,6 +1,6 @@
 It may take a couple of minutes for the API key to be ready.
 Save the API key and secret. The secret is not retrievable later.
-+---------+-----------+
-| API Key | MYKEY7    |
-| Secret  | MYSECRET7 |
-+---------+-----------+
++------------+-----------+
+| API Key    | MYKEY7    |
+| API Secret | MYSECRET7 |
++------------+-----------+

@@ -30,9 +30,9 @@ func (c *identityPoolCommand) newCreateCommand() *cobra.Command {
 	cmd.Flags().String("description", "", "Description of the identity pool.")
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired("filter")
-	_ = cmd.MarkFlagRequired("identity-claim")
-	_ = cmd.MarkFlagRequired("provider")
+	cobra.CheckErr(cmd.MarkFlagRequired("filter"))
+	cobra.CheckErr(cmd.MarkFlagRequired("identity-claim"))
+	cobra.CheckErr(cmd.MarkFlagRequired("provider"))
 
 	return cmd
 }
@@ -71,15 +71,13 @@ func (c *identityPoolCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	identityPool := &identityPool{
-		Id:            *resp.Id,
-		DisplayName:   *resp.DisplayName,
-		IdentityClaim: *resp.IdentityClaim,
-		Filter:        *resp.Filter,
-	}
-	if resp.Description != nil {
-		identityPool.Description = *resp.Description
-	}
-
-	return output.DescribeObject(cmd, identityPool, identityPoolListFields, poolHumanLabelMap, poolStructuredLabelMap)
+	table := output.NewTable(cmd)
+	table.Add(&identityPoolOut{
+		Id:            resp.GetId(),
+		DisplayName:   resp.GetDisplayName(),
+		Description:   resp.GetDescription(),
+		IdentityClaim: resp.GetIdentityClaim(),
+		Filter:        resp.GetFilter(),
+	})
+	return table.Print()
 }

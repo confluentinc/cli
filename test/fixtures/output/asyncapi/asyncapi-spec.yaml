@@ -1,65 +1,63 @@
-asyncapi:2.4.0
+asyncapi: 2.4.0
 info:
-title:APIDocumentforConfluentCluster
-version:1.0.0
+  title: API Document for Confluent Cluster
+  version: 1.0.0
 servers:
-confluentSchemaRegistry:[]
+  confluentSchemaRegistry: []
 channels:
-topic1:
-subscribe:
-operationId:Topic1Subscribe
-bindings:
-kafka:
-bindingVersion:0.3.0
-groupId:
-type:string
-clientId:
-type:string
-message:
-$ref:'#/components/messages/Topic1Message'
-bindings:
-kafka:
-x-partitions:3
-x-replicas:3
-x-configs:
-cleanup.policy:delete
-delete.retention.ms:8.64e+07
-confluent.value.schema.validation:"true"
-x-messageCompatibility:FORWARD
+  topic1:
+    subscribe:
+      operationId: Topic1Subscribe
+      bindings:
+        kafka:
+          bindingVersion: 0.3.0
+          groupId:
+            type: string
+          clientId:
+            type: string
+      message:
+        $ref: '#/components/messages/Topic1Message'
+    bindings:
+      kafka:
+        x-configs:
+          cleanup.policy: delete
+          delete.retention.ms: 8.64e+07
+          confluent.value.schema.validation: "true"
+    x-messageCompatibility: FORWARD
 components:
-messages:
-Topic1Message:
-payload:
-doc:Sampleschematohelpyougetstarted.
-fields:
--doc:Theinttypeisa32-bitsignedinteger.
-name:my_field1
-type:int
--doc:Thedoubletypeisadoubleprecision(64-bit)IEEE754floating-point
-number.
-name:my_field2
-type:double
--doc:Thestringisaunicodecharactersequence.
-name:my_field3
-type:string
-name:sampleRecord
-namespace:com.mycorp.mynamespace
-type:record
-name:Topic1Message
-bindings:
-kafka:
-bindingVersion:0.3.0
-key:
-type:string
-securitySchemes:
-confluentBroker:
-type:userPassword
-x-configs:
-sasl.mechanisms:PLAIN
-sasl.password:'{{CLUSTER_API_SECRET}}'
-sasl.username:'{{CLUSTER_API_KEY}}'
-security.protocol:sasl_ssl
-confluentSchemaRegistry:
-type:userPassword
-x-configs:
-basic.auth.user.info:'{{SCHEMA_REGISTRY_API_KEY}}:{{SCHEMA_REGISTRY_API_SECRET}}'
+  messages:
+    Topic1Message:
+      payload:
+        doc: Sample schema to help you get started.
+        fields:
+        - doc: The int type is a 32-bit signed integer.
+          name: my_field1
+          type: int
+        - doc: The double type is a double precision(64-bit) IEEE754 floating-point
+            number.
+          name: my_field2
+          type: double
+        - doc: The string is a unicode character sequence.
+          name: my_field3
+          type: string
+        name: sampleRecord
+        namespace: com.mycorp.mynamespace
+        type: AVRO
+      name: Topic1Message
+      bindings:
+        kafka:
+          bindingVersion: 0.3.0
+          key:
+            type: string
+  securitySchemes:
+    confluentBroker:
+      type: userPassword
+      x-configs:
+        sasl.mechanisms: PLAIN
+        sasl.password: '{{CLUSTER_API_SECRET}}'
+        sasl.username: '{{CLUSTER_API_KEY}}'
+        security.protocol: sasl_ssl
+    confluentSchemaRegistry:
+      type: userPassword
+      x-configs:
+        basic.auth.user.info: '{{SCHEMA_REGISTRY_API_KEY}}:{{SCHEMA_REGISTRY_API_SECRET}}'

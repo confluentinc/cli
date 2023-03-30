@@ -1,27 +1,15 @@
 package connect
 
 import (
-	"net/http"
-
 	"github.com/spf13/cobra"
 
 	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
 type pluginCommand struct {
 	*pcmd.AuthenticatedStateFlagCommand
-}
-
-type pluginListDisplay struct {
-	Class string `json:"class"`
-	Type  string `json:"type"`
-}
-
-type pluginConfigDisplay struct {
-	Config        string
-	Documentation string
-	IsRequired    bool
 }
 
 func newPluginCommand(prerunner pcmd.PreRunner) *cobra.Command {
@@ -33,10 +21,10 @@ func newPluginCommand(prerunner pcmd.PreRunner) *cobra.Command {
 
 	c := &pluginCommand{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
 
-	c.AddCommand(c.newDescribeCommand())
-	c.AddCommand(c.newListCommand())
+	cmd.AddCommand(c.newDescribeCommand())
+	cmd.AddCommand(c.newListCommand())
 
-	return c.Command
+	return cmd
 }
 
 func (c *pluginCommand) validArgs(cmd *cobra.Command, args []string) []string {
@@ -52,7 +40,7 @@ func (c *pluginCommand) validArgs(cmd *cobra.Command, args []string) []string {
 }
 
 func (c *pluginCommand) autocompleteConnectorPlugins() []string {
-	plugins, _, err := c.getPlugins()
+	plugins, err := c.getPlugins()
 	if err != nil {
 		return nil
 	}
@@ -64,11 +52,16 @@ func (c *pluginCommand) autocompleteConnectorPlugins() []string {
 	return suggestions
 }
 
-func (c *pluginCommand) getPlugins() ([]connectv1.InlineResponse2002, *http.Response, error) {
+func (c *pluginCommand) getPlugins() ([]connectv1.InlineResponse2002, error) {
 	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	return c.V2Client.ListConnectorPlugins(c.EnvironmentId(), kafkaCluster.ID)
+	environmentId, err := c.EnvironmentId()
+	if err != nil {
+		return nil, err
+	}
+
+	return c.V2Client.ListConnectorPlugins(environmentId, kafkaCluster.ID)
 }

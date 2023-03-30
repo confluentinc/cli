@@ -1,13 +1,16 @@
 package iam
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/form"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *identityPoolCommand) newDeleteCommand() *cobra.Command {
@@ -26,7 +29,9 @@ func (c *identityPoolCommand) newDeleteCommand() *cobra.Command {
 	}
 
 	pcmd.AddProviderFlag(cmd, c.AuthenticatedCLICommand)
-	_ = cmd.MarkFlagRequired("provider")
+	pcmd.AddForceFlag(cmd)
+
+	cobra.CheckErr(cmd.MarkFlagRequired("provider"))
 
 	return cmd
 }
@@ -37,11 +42,20 @@ func (c *identityPoolCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	err = c.V2Client.DeleteIdentityPool(args[0], provider)
+	pool, err := c.V2Client.GetIdentityPool(args[0], provider)
 	if err != nil {
 		return err
 	}
 
-	utils.ErrPrintf(cmd, errors.DeletedResourceMsg, resource.IdentityPool, args[0])
+	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.IdentityPool, args[0], pool.GetDisplayName())
+	if _, err := form.ConfirmDeletion(cmd, promptMsg, pool.GetDisplayName()); err != nil {
+		return err
+	}
+
+	if err := c.V2Client.DeleteIdentityPool(args[0], provider); err != nil {
+		return err
+	}
+
+	output.ErrPrintf(errors.DeletedResourceMsg, resource.IdentityPool, args[0])
 	return nil
 }

@@ -1,8 +1,9 @@
 package kafka
 
 import (
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	aclutil "github.com/confluentinc/cli/internal/pkg/acl"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -18,11 +19,25 @@ func (c *aclCommand) newCreateCommandOnPrem() *cobra.Command {
 		RunE:  c.createOnPrem,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "You can specify only one of the following flags per command invocation: `--cluster-scope`, `--consumer-group`, `--topic`, or `--transactional-id`. For example, for a consumer to read a topic, you need to grant \"READ\" and \"DESCRIBE\" both on the `--consumer-group` and the `--topic` resources, issuing two separate commands:",
-				Code: "confluent kafka acl create --allow --principal User:Jane --operation READ --operation DESCRIBE --consumer-group java_example_group_1",
+				Text: "You can specify only one of the following flags per command invocation: `--cluster-scope`, `--consumer-group`, `--topic`, or `--transactional-id`. For example, for a consumer to read a topic, you need to grant \"read\" and \"describe\" both on the `--consumer-group` and the `--topic` resources, issuing two separate commands:",
+				Code: "confluent kafka acl create --allow --principal User:Jane --operation read --consumer-group java_example_group_1",
 			},
 			examples.Example{
-				Code: "confluent kafka acl create --allow --principal User:Jane --operation READ --operation DESCRIBE --topic '*'",
+				Code: `confluent kafka acl create --allow --principal User:Jane --operation read --topic "*"`,
+			},
+			examples.Example{
+				Text: "You can run the previous example without logging in if you provide the embedded Kafka REST Proxy endpoint with the `--url` flag.",
+				Code: "confluent kafka acl create --url http://localhost:8090/kafka --allow --principal User:Jane --operation read --consumer-group java_example_group_1",
+			},
+			examples.Example{
+				Code: `confluent kafka acl create --url http://localhost:8090/kafka --allow --principal User:Jane --operation read --topic "*"`,
+			},
+			examples.Example{
+				Text: "You can also run the example above without logging in if you provide the Kafka REST proxy endpoint with the `--url` flag.",
+				Code: "confluent kafka acl create --url http://localhost:8082 --allow --principal User:Jane --operation read --consumer-group java_example_group_1",
+			},
+			examples.Example{
+				Code: `confluent kafka acl create --url http://localhost:8082 --allow --principal User:Jane --operation read --topic "*"`,
 			},
 		),
 	}
@@ -32,8 +47,8 @@ func (c *aclCommand) newCreateCommandOnPrem() *cobra.Command {
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired("principal")
-	_ = cmd.MarkFlagRequired("operation")
+	cobra.CheckErr(cmd.MarkFlagRequired("principal"))
+	cobra.CheckErr(cmd.MarkFlagRequired("operation"))
 
 	return cmd
 }
@@ -62,5 +77,5 @@ func (c *aclCommand) createOnPrem(cmd *cobra.Command, _ []string) error {
 	}
 
 	aclData := aclutil.CreateAclRequestDataToAclData(acl)
-	return aclutil.PrintACLsFromKafkaRestResponse(cmd, []kafkarestv3.AclData{aclData}, cmd.OutOrStdout(), listFieldsOnPrem, humanLabelsOnPrem, structuredLabelsOnPrem)
+	return aclutil.PrintACLsFromKafkaRestResponse(cmd, []kafkarestv3.AclData{aclData})
 }

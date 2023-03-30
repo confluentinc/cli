@@ -6,13 +6,13 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
-	"github.com/confluentinc/cli/mock"
+	climock "github.com/confluentinc/cli/mock"
 )
 
 func TestSrAuthFound(t *testing.T) {
 	req := require.New(t)
 
-	cfg := mock.AuthenticatedDynamicConfigMock()
+	cfg := climock.AuthenticatedDynamicConfigMock()
 	cmd := &cobra.Command{}
 
 	ctx := cfg.Context()
@@ -20,7 +20,7 @@ func TestSrAuthFound(t *testing.T) {
 	srCluster, err := ctx.SchemaRegistryCluster(cmd)
 	req.NoError(err)
 
-	srAuth, didPromptUser, err := getSchemaRegistryAuth(cmd, srCluster.SrCredentials, false)
+	srAuth, didPromptUser, err := getSchemaRegistryAuth(srCluster.SrCredentials, false)
 	req.NoError(err)
 
 	req.False(didPromptUser)

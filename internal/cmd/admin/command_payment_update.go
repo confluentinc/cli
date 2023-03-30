@@ -4,10 +4,12 @@ import (
 	"context"
 	"os"
 
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/spf13/cobra"
 
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+
 	"github.com/confluentinc/cli/internal/pkg/form"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -21,11 +23,9 @@ func (c *command) newUpdateCommand() *cobra.Command {
 }
 
 func (c *command) update(cmd *cobra.Command, _ []string) error {
-	return c.updateWithPrompt(cmd, form.NewPrompt(os.Stdin))
-}
+	prompt := form.NewPrompt(os.Stdin)
 
-func (c *command) updateWithPrompt(cmd *cobra.Command, prompt form.Prompt) error {
-	utils.Println(cmd, "Edit credit card")
+	output.Println("Edit credit card")
 
 	f := form.New(
 		form.Field{ID: "card number", Prompt: "Card number", Regex: `^(?:\d[ -]*?){13,19}$`},
@@ -34,7 +34,7 @@ func (c *command) updateWithPrompt(cmd *cobra.Command, prompt form.Prompt) error
 		form.Field{ID: "name", Prompt: "Cardholder name"},
 	)
 
-	if err := f.Prompt(cmd, prompt); err != nil {
+	if err := f.Prompt(prompt); err != nil {
 		return err
 	}
 
@@ -43,11 +43,11 @@ func (c *command) updateWithPrompt(cmd *cobra.Command, prompt form.Prompt) error
 		return err
 	}
 
-	org := &orgv1.Organization{Id: c.Context.GetOrganization().GetId()}
-	if err := c.PrivateClient.Billing.UpdatePaymentInfo(context.Background(), org, stripeToken.ID); err != nil {
+	org := &ccloudv1.Organization{Id: c.Context.GetOrganization().GetId()}
+	if err := c.Client.Billing.UpdatePaymentInfo(context.Background(), org, stripeToken.ID); err != nil {
 		return err
 	}
 
-	utils.Println(cmd, "Updated.")
+	output.Println("Updated.")
 	return nil
 }

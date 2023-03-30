@@ -6,9 +6,9 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/confluentinc/cli/internal/pkg/errors"
-
 	"github.com/hashicorp/go-version" // This "version" alias is require for go:generate go run github.com/travisjeffery/mocker/cmd/mocker to work
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 // ObjectKey represents an S3 Key for a versioned package
@@ -35,7 +35,7 @@ type PrefixedKey struct {
 // the separator for parts of the package name (shown below with "_" separators).
 //
 // If prefixVersion, s3 key format is PREFIX/VERSION/PACKAGE_VERSION_OS_ARCH
-//        otherwise, s3 key format is PREFIX/PACKAGE_VERSION_OS_ARCH
+// otherwise, s3 key format is PREFIX/PACKAGE_VERSION_OS_ARCH
 //
 // Prefix may be an empty string. An error will be returned if sep is empty or a space.
 func NewPrefixedKey(prefix, sep string, prefixVersion bool) (*PrefixedKey, error) {
@@ -67,7 +67,7 @@ func (p *PrefixedKey) URLFor(name, version string) string {
 	}
 }
 
-func (p *PrefixedKey) ParseVersion(key, name string) (match bool, foundVersion *version.Version, err error) {
+func (p *PrefixedKey) ParseVersion(key, name string) (bool, *version.Version, error) {
 	split := strings.Split(key, p.Separator)
 
 	// Skip files that don't match our naming standards for binaries

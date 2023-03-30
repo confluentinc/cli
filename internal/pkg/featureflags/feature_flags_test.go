@@ -20,7 +20,7 @@ type LaunchDarklyTestSuite struct {
 }
 
 func (suite *LaunchDarklyTestSuite) SetupTest() {
-	suite.ctx = dynamicconfig.NewDynamicContext(v1.AuthenticatedCloudConfigMock().Context(), nil, nil, nil)
+	suite.ctx = dynamicconfig.NewDynamicContext(v1.AuthenticatedCloudConfigMock().Context(), nil, nil)
 
 	type kv struct {
 		key string
@@ -29,7 +29,7 @@ func (suite *LaunchDarklyTestSuite) SetupTest() {
 
 	ld := launchDarklyManager{}
 	suite.ctx.FeatureFlags = &v1.FeatureFlags{
-		Values:         map[string]interface{}{"testJson": kv{key: "key", val: "val"}, "testBool": true, "testInt": 3, "testString": "value"},
+		Values:         map[string]any{"testJson": kv{key: "key", val: "val"}, "testBool": true, "testInt": 3, "testString": "value"},
 		LastUpdateTime: time.Now().Unix(),
 		User:           ld.contextToLDUser(suite.ctx),
 	}
@@ -42,7 +42,7 @@ func (suite *LaunchDarklyTestSuite) TestFlags() {
 		cliClient: sling.New().Base(server.GetCloudUrl() + "/ldapi/sdk/eval/1234/"),
 		version:   version.NewVersion("v1.2", "", ""),
 	}
-	ctx := dynamicconfig.NewDynamicContext(v1.AuthenticatedCloudConfigMock().Context(), nil, nil, nil)
+	ctx := dynamicconfig.NewDynamicContext(v1.AuthenticatedCloudConfigMock().Context(), nil, nil)
 	req := require.New(suite.T())
 
 	boolFlag := ld.BoolVariation("testBool", ctx, v1.CliLaunchDarklyClient, true, false)
@@ -55,7 +55,7 @@ func (suite *LaunchDarklyTestSuite) TestFlags() {
 	req.Equal(1, intFlag)
 
 	jsonFlag := ld.JsonVariation("testJson", ctx, v1.CliLaunchDarklyClient, true, map[string]string{})
-	req.Equal(map[string]interface{}{"key": "val"}, jsonFlag)
+	req.Equal(map[string]any{"key": "val"}, jsonFlag)
 }
 
 // Flag variation tests using cached flag values
@@ -101,10 +101,6 @@ func (suite *LaunchDarklyTestSuite) TestContextToLDUser() {
 	req.Equal(v1.MockOrgResourceId, orgResourceId.StringValue())
 	environmentId, _ := user.GetCustom("environment.id")
 	req.Equal(v1.MockEnvironmentId, environmentId.StringValue())
-	clusterId, _ := user.GetCustom("cluster.id")
-	req.Equal(v1.MockKafkaClusterId(), clusterId.StringValue())
-	pkc, _ := user.GetCustom("cluster.physicalClusterId")
-	req.Equal("pkc-abc123", pkc.StringValue())
 }
 
 func TestLaunchDarklySuite(t *testing.T) {

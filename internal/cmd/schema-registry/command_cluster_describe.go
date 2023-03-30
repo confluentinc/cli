@@ -6,26 +6,31 @@ import (
 	"math"
 	"strconv"
 
-	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
-	"github.com/confluentinc/cli/internal/pkg/log"
-
-	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
-	metricsv2 "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	"github.com/spf13/cobra"
 
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+	metricsv2 "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2"
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-var (
-	describeLabels       = []string{"Name", "ID", "URL", "Used", "Available", "FreeSchemasLimit", "Compatibility", "Mode", "ServiceProvider", "ServiceProviderRegion", "Package"}
-	describeHumanRenames = map[string]string{"ID": "Cluster ID", "URL": "Endpoint URL", "Used": "Used Schemas", "Available": "Available Schemas", "FreeSchemasLimit": "Free Schemas Limit",
-		"Compatibility": "Global Compatibility", "ServiceProvider": "Service Provider", "ServiceProviderRegion": "Service Provider Region"}
-	describeStructuredRenames = map[string]string{"Name": "name", "ID": "cluster_id", "URL": "endpoint_url", "Used": "used_schemas", "Available": "available_schemas", "FreeSchemasLimit": "free_schemas_limit",
-		"Compatibility": "global_compatibility", "Mode": "mode", "ServiceProvider": "service_provider", "ServiceProviderRegion": "service_provider_region", "Package": "package"}
-)
+type clusterOut struct {
+	Name                  string `human:"Name" serialized:"name"`
+	ClusterId             string `human:"Cluster" serialized:"cluster_id"`
+	EndpointUrl           string `human:"Endpoint URL" serialized:"endpoint_url"`
+	UsedSchemas           string `human:"Used Schemas" serialized:"used_schemas"`
+	AvailableSchemas      string `human:"Available Schemas" serialized:"available_schemas"`
+	FreeSchemasLimit      int    `human:"Free Schemas Limit" serialized:"free_schemas_limit"`
+	GlobalCompatibility   string `human:"Global Compatibility" serialized:"global_compatibility"`
+	Mode                  string `human:"Mode" serialized:"mode"`
+	ServiceProvider       string `human:"Service Provider" serialized:"service_provider"`
+	ServiceProviderRegion string `human:"Service Provider Region" serialized:"service_provider_region"`
+	Package               string `human:"Package" serialized:"package"`
+}
 
 const (
 	defaultSchemaLimitAdvanced            = 20000
@@ -33,41 +38,25 @@ const (
 	schemaRegistryPriceTableName          = "SchemaRegistry"
 )
 
-type describeDisplay struct {
-	Name                  string
-	ID                    string
-	URL                   string
-	Used                  string
-	Available             string
-	FreeSchemasLimit      string
-	Compatibility         string
-	Mode                  string
-	ServiceProvider       string
-	ServiceProviderRegion string
-	Package               string
-}
-
-func (c *clusterCommand) newDescribeCommand(cfg *v1.Config) *cobra.Command {
+func (c *command) newClusterDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "describe",
 		Short:       "Describe the Schema Registry cluster for this environment.",
 		Args:        cobra.NoArgs,
-		RunE:        c.describe,
+		RunE:        c.clusterDescribe,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}
 
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddApiSecretFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
-	if cfg.IsCloudLogin() {
-		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
-	}
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
 
-func (c *clusterCommand) describe(cmd *cobra.Command, _ []string) error {
+func (c *command) clusterDescribe(cmd *cobra.Command, _ []string) error {
 	var compatibility string
 	var mode string
 	var numSchemas string
@@ -76,7 +65,11 @@ func (c *clusterCommand) describe(cmd *cobra.Command, _ []string) error {
 	ctx := context.Background()
 
 	// Collect the parameters
-	cluster, err := c.Context.FetchSchemaRegistryByAccountId(ctx, c.EnvironmentId())
+	environmentId, err := c.EnvironmentId()
+	if err != nil {
+		return err
+	}
+	cluster, err := c.Context.FetchSchemaRegistryByEnvironmentId(ctx, environmentId)
 	if err != nil {
 		return err
 	}
@@ -121,9 +114,8 @@ func (c *clusterCommand) describe(cmd *cobra.Command, _ []string) error {
 
 	freeSchemasLimit := int(cluster.MaxSchemas)
 	if cluster.Package == essentialsPackageInternal {
-		org := &orgv1.Organization{Id: c.State.Auth.Organization.Id}
-		prices, err := c.PrivateClient.Billing.GetPriceTable(context.Background(), org, streamGovernancePriceTableProductName)
-
+		org := &ccloudv1.Organization{Id: c.Context.GetOrganization().GetId()}
+		prices, err := c.Client.Billing.GetPriceTable(context.Background(), org, streamGovernancePriceTableProductName)
 		if err == nil {
 			priceKey := getMaxSchemaLimitPriceKey(cluster.Package, cluster.ServiceProvider, cluster.ServiceProviderRegion)
 			freeSchemasLimit = int(prices.GetPriceTable()[schemaRegistryPriceTableName].Prices[priceKey])
@@ -150,20 +142,21 @@ func (c *clusterCommand) describe(cmd *cobra.Command, _ []string) error {
 		availableSchemas = ""
 	}
 
-	data := &describeDisplay{
+	table := output.NewTable(cmd)
+	table.Add(&clusterOut{
 		Name:                  cluster.Name,
-		ID:                    cluster.Id,
-		URL:                   cluster.Endpoint,
+		ClusterId:             cluster.Id,
+		EndpointUrl:           cluster.Endpoint,
 		ServiceProvider:       cluster.ServiceProvider,
 		ServiceProviderRegion: cluster.ServiceProviderRegion,
 		Package:               getPackageDisplayName(cluster.Package),
-		Used:                  numSchemas,
-		Available:             availableSchemas,
-		FreeSchemasLimit:      strconv.Itoa(freeSchemasLimit),
-		Compatibility:         compatibility,
+		UsedSchemas:           numSchemas,
+		AvailableSchemas:      availableSchemas,
+		FreeSchemasLimit:      freeSchemasLimit,
+		GlobalCompatibility:   compatibility,
 		Mode:                  mode,
-	}
-	return output.DescribeObject(cmd, data, describeLabels, describeHumanRenames, describeStructuredRenames)
+	})
+	return table.Print()
 }
 
 func schemaCountQueryFor(schemaRegistryId string) metricsv2.QueryRequest {

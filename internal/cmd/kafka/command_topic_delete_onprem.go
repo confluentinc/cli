@@ -1,14 +1,17 @@
 package kafka
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *authenticatedTopicCommand) newDeleteCommandOnPrem() *cobra.Command {
@@ -16,7 +19,7 @@ func (c *authenticatedTopicCommand) newDeleteCommandOnPrem() *cobra.Command {
 		Use:   "delete <topic>",
 		Short: "Delete a Kafka topic.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.onPremDelete,
+		RunE:  c.deleteOnPrem,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Delete the topic "my_topic" for the specified cluster (providing embedded Kafka REST Proxy endpoint). Use this command carefully as data loss can occur.`,
@@ -27,12 +30,14 @@ func (c *authenticatedTopicCommand) newDeleteCommandOnPrem() *cobra.Command {
 				Code: "confluent kafka topic delete my_topic --url http://localhost:8082",
 			}),
 	}
-	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet()) //includes url, ca-cert-path, client-cert-path, client-key-path, and no-auth flags
+
+	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
+	pcmd.AddForceFlag(cmd)
 
 	return cmd
 }
 
-func (c *authenticatedTopicCommand) onPremDelete(cmd *cobra.Command, args []string) error {
+func (c *authenticatedTopicCommand) deleteOnPrem(cmd *cobra.Command, args []string) error {
 	// Parse arguments
 	topicName := args[0]
 	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
@@ -43,11 +48,20 @@ func (c *authenticatedTopicCommand) onPremDelete(cmd *cobra.Command, args []stri
 	if err != nil {
 		return err
 	}
-	// Delete Topic
-	resp, err := restClient.TopicV3Api.DeleteKafkaTopic(restContext, clusterId, topicName)
-	if err != nil {
+
+	if _, resp, err := restClient.TopicV3Api.GetKafkaTopic(restContext, clusterId, topicName); err != nil {
 		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 	}
-	utils.Printf(cmd, errors.DeletedResourceMsg, resource.Topic, topicName)
+
+	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.Topic, topicName, topicName)
+	if _, err := form.ConfirmDeletion(cmd, promptMsg, topicName); err != nil {
+		return err
+	}
+
+	if resp, err := restClient.TopicV3Api.DeleteKafkaTopic(restContext, clusterId, topicName); err != nil {
+		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
+	}
+
+	output.Printf(errors.DeletedResourceMsg, resource.Topic, topicName)
 	return nil
 }

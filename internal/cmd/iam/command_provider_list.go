@@ -7,12 +7,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-var (
-	identityProviderListFields           = []string{"Id", "Name", "Description", "IssuerUri", "JwksUri"}
-	identityProviderListHumanLabels      = []string{"ID", "Name", "Description", "Issuer URI", "JWKS URI"}
-	identityProviderListStructuredLabels = []string{"id", "name", "description", "issuer_uri", "jwks_uri"}
-)
-
 func (c *identityProviderCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
@@ -32,21 +26,15 @@ func (c *identityProviderCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	outputWriter, err := output.NewListOutputWriter(cmd, identityProviderListFields, identityProviderListHumanLabels, identityProviderListStructuredLabels)
-	if err != nil {
-		return err
+	list := output.NewList(cmd)
+	for _, provider := range identityProviders {
+		list.Add(&identityProviderOut{
+			Id:          provider.GetId(),
+			Name:        provider.GetDisplayName(),
+			Description: provider.GetDescription(),
+			IssuerUri:   provider.GetIssuer(),
+			JwksUri:     provider.GetJwksUri(),
+		})
 	}
-	for _, op := range identityProviders {
-		element := &identityProvider{
-			Id:        *op.Id,
-			Name:      *op.DisplayName,
-			IssuerUri: *op.Issuer,
-			JwksUri:   *op.JwksUri,
-		}
-		if op.Description != nil {
-			element.Description = *op.Description
-		}
-		outputWriter.AddElement(element)
-	}
-	return outputWriter.Out()
+	return list.Print()
 }

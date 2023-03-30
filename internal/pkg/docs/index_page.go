@@ -8,11 +8,12 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
-	"sort"
 	"strings"
 
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/cli/internal/pkg/types"
 )
 
 const tab = "   "
@@ -124,12 +125,7 @@ func printTableOfContents(tabs []Tab) []string {
 		}
 	}
 
-	// Sort names
-	var names []string
-	for name := range linksByName {
-		names = append(names, name)
-	}
-	sort.Strings(names)
+	names := types.GetSortedKeys(linksByName)
 
 	rows := []string{
 		".. toctree::",
