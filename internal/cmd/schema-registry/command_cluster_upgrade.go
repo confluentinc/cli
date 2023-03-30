@@ -2,8 +2,9 @@ package schemaregistry
 
 import (
 	"fmt"
-	srcm "github.com/confluentinc/ccloud-sdk-go-v2/srcm/v2"
 	"strings"
+
+	srcm "github.com/confluentinc/ccloud-sdk-go-v2/srcm/v2"
 
 	"github.com/spf13/cobra"
 
