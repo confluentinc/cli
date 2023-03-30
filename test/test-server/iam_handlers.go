@@ -50,6 +50,19 @@ var (
 			"crn://confluent.cloud/organization=abc-123/environment=a-595/schema-registry=lsrc-3333ccc/subject=clicks"),
 	}
 
+	IamServiceAccounts = []*iamv2.IamV2ServiceAccount{
+		{
+			Id:          iamv2.PtrString(serviceAccountResourceID),
+			DisplayName: iamv2.PtrString("service_account"),
+			Description: iamv2.PtrString("at your service."),
+		},
+		{
+			Id:          iamv2.PtrString("sa-54321"),
+			DisplayName: iamv2.PtrString("service_account_2"),
+			Description: iamv2.PtrString("at your service."),
+		},
+	}
+
 	IamIdentityProviders = []*identityproviderv2.IamV2IdentityProvider{
 		{
 			Id:          identityproviderv2.PtrString(identityProviderResourceID),
@@ -250,30 +263,25 @@ func handleIamUsers(t *testing.T) http.HandlerFunc {
 func handleIamServiceAccount(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := mux.Vars(r)["id"]
-		switch r.Method {
-		case http.MethodGet:
-			switch id {
-			case "sa-6789":
-				err := writeResourceNotFoundError(w)
-				require.NoError(t, err)
-			default:
-				serviceAccount := iamv2.IamV2ServiceAccount{
-					Id:          iamv2.PtrString(serviceAccountResourceID),
-					DisplayName: iamv2.PtrString("service_account"),
-					Description: iamv2.PtrString("at your service."),
-				}
+		if i := slices.IndexFunc(IamServiceAccounts, func(serviceAccount *iamv2.IamV2ServiceAccount) bool { return serviceAccount.GetId() == id }); i != -1 {
+			serviceAccount := IamServiceAccounts[i]
+			switch r.Method {
+			case http.MethodGet:
 				err := json.NewEncoder(w).Encode(serviceAccount)
 				require.NoError(t, err)
+			case http.MethodPatch:
+				var req iamv2.IamV2ServiceAccount
+				err := json.NewDecoder(r.Body).Decode(&req)
+				require.NoError(t, err)
+				serviceAccount.Description = req.Description
+				err = json.NewEncoder(w).Encode(serviceAccount)
+				require.NoError(t, err)
+			case http.MethodDelete:
+				w.WriteHeader(http.StatusNoContent)
 			}
-		case http.MethodPatch:
-			var req iamv2.IamV2ServiceAccount
-			err := json.NewDecoder(r.Body).Decode(&req)
+		} else {
+			err := writeResourceNotFoundError(w)
 			require.NoError(t, err)
-			res := &iamv2.IamV2ServiceAccount{Id: iamv2.PtrString(id), Description: req.Description}
-			err = json.NewEncoder(w).Encode(res)
-			require.NoError(t, err)
-		case http.MethodDelete:
-			w.WriteHeader(http.StatusNoContent)
 		}
 	}
 }
@@ -283,17 +291,7 @@ func handleIamServiceAccounts(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			serviceAccount := iamv2.IamV2ServiceAccount{
-				Id:          iamv2.PtrString(serviceAccountResourceID),
-				DisplayName: iamv2.PtrString("service_account"),
-				Description: iamv2.PtrString("at your service."),
-			}
-			serviceAccountTwo := iamv2.IamV2ServiceAccount{
-				Id:          iamv2.PtrString("sa-54321"),
-				DisplayName: iamv2.PtrString("service_account_2"),
-				Description: iamv2.PtrString("at your service."),
-			}
-			err := json.NewEncoder(w).Encode(iamv2.IamV2ServiceAccountList{Data: []iamv2.IamV2ServiceAccount{serviceAccount, serviceAccountTwo}})
+			err := json.NewEncoder(w).Encode(iamv2.IamV2ServiceAccountList{Data: getV2List(IamServiceAccounts)})
 			require.NoError(t, err)
 		case http.MethodPost:
 			var req iamv2.IamV2ServiceAccount
