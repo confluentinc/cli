@@ -79,7 +79,7 @@ require (
 	golang.org/x/text v0.8.0
 	gopkg.in/launchdarkly/go-sdk-common.v2 v2.5.1
 	gopkg.in/square/go-jose.v2 v2.6.0
-	k8s.io/apimachinery v0.26.1
+	k8s.io/apimachinery v0.26.3
 )
 
 require (
