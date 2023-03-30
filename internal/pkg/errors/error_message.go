@@ -151,7 +151,7 @@ const (
 	InvalidAvailableFlagErrorMsg                     = "invalid value \"%s\" for `--availability` flag"
 	InvalidAvailableFlagSuggestions                  = "Allowed values for `--availability` flag are: %s, %s."
 	InvalidTypeFlagErrorMsg                          = "invalid value \"%s\" for `--type` flag"
-	InvalidTypeFlagSuggestions                       = "Allowed values for `--type` flag are: %s, %s, %s."
+	InvalidTypeFlagSuggestions                       = "Allowed values for `--type` flag are: %s, %s, %s, %s."
 	NameOrCKUFlagErrorMsg                            = "must either specify --name with non-empty value or --cku (for dedicated clusters) with positive integer"
 	NonEmptyNameErrorMsg                             = "`--name` flag value must not be empty"
 	KafkaClusterNotFoundErrorMsg                     = `Kafka cluster "%s" not found`
