@@ -12,13 +12,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
-var (
-	regionListFields           = []string{"ID", "Cloud", "RegionName", "DisplayName", "Packages"}
-	regionListHumanLabels      = []string{"ID", "Cloud", "Region Name", "Display Name", "Packages"}
-	regionListStructuredLabels = []string{"id", "cloud", "region_name", "display_name", "packages"}
-)
-
-func (c *regionCommand) newListCommand() *cobra.Command {
+func (c *command) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "list",
 		Short:       "List Schema Registry cloud regions.",
@@ -40,7 +34,7 @@ func (c *regionCommand) newListCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *regionCommand) list(cmd *cobra.Command, _ []string) error {
+func (c *command) list(cmd *cobra.Command, _ []string) error {
 	ctx := c.V2Client.SchemaRegistryApiContext()
 
 	// Collect the parameters
@@ -86,10 +80,7 @@ func (c *regionCommand) list(cmd *cobra.Command, _ []string) error {
 }
 
 func printRegionList(cmd *cobra.Command, regionList []srcm.SrcmV2Region) error {
-	listOutputWriter, err := output.NewListOutputWriter(cmd, regionListFields, regionListHumanLabels, regionListStructuredLabels)
-	if err != nil {
-		return err
-	}
+	outputList := output.NewList(cmd)
 
 	for _, region := range regionList {
 		regionSpec := region.GetSpec()
@@ -101,7 +92,9 @@ func printRegionList(cmd *cobra.Command, regionList []srcm.SrcmV2Region) error {
 			Packages:    regionSpec.GetPackages(),
 		}
 
-		listOutputWriter.AddElement(v2Region)
+		outputList.Add(v2Region)
 	}
-	return listOutputWriter.Out()
+
+	outputList.Sort(false)
+	return outputList.Print()
 }
