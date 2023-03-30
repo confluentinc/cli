@@ -48,13 +48,11 @@ func handleSchemaRegistryRegion(t *testing.T) http.HandlerFunc {
 
 		switch id {
 		case idRegion1:
-			sgRegion := getSchemaRegistryRegion(
-				id, nameRegion1, cloudRegion1, packageTypeRegion1, displayNameRegion1)
+			sgRegion := getSchemaRegistryRegion(id, nameRegion1, cloudRegion1, packageTypeRegion1, displayNameRegion1)
 			err := json.NewEncoder(w).Encode(sgRegion)
 			require.NoError(t, err)
 		case idRegion2:
-			sgRegion := getSchemaRegistryRegion(
-				id, nameRegion2, cloudRegion2, packageTypeRegion2, displayNameRegion2)
+			sgRegion := getSchemaRegistryRegion(id, nameRegion2, cloudRegion2, packageTypeRegion2, displayNameRegion2)
 			err := json.NewEncoder(w).Encode(sgRegion)
 			require.NoError(t, err)
 		default:
@@ -77,12 +75,12 @@ func getSchemaRegistryRegionList(filterCloud, filterRegion, filterPackage string
 
 func getSchemaRegistryRegion(id, region, cloud, packageType, displayName string) srcm.SrcmV2Region {
 	return srcm.SrcmV2Region{
-		Id: &id,
+		Id: srcm.PtrString(id),
 		Spec: &srcm.SrcmV2RegionSpec{
-			RegionName:  &region,
-			Cloud:       &cloud,
+			RegionName:  srcm.PtrString(region),
+			Cloud:       srcm.PtrString(cloud),
 			Packages:    &[]string{packageType},
-			DisplayName: &displayName,
+			DisplayName: srcm.PtrString(displayName),
 		},
 	}
 }
