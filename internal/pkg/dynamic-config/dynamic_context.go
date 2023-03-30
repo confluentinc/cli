@@ -9,6 +9,7 @@ import (
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
+	srcm "github.com/confluentinc/ccloud-sdk-go-v2/srcm/v2"
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -189,21 +190,21 @@ func (d *DynamicContext) SchemaRegistryCluster(cmd *cobra.Command) (*v1.SchemaRe
 			}
 		}
 		if cluster == nil || missingDetails(cluster) {
-			srCluster, err := d.FetchSchemaRegistryById(context.Background(), resource, envId)
+			srCluster, _, err := d.V2Client.GetSchemaRegistryClusterById(resource, envId)
 			if err != nil {
 				return nil, errors.CatchResourceNotFoundError(err, resource)
 			}
-			cluster = makeSRCluster(srCluster)
+			cluster = makeSRCluster(&srCluster)
 			clusterChanged = true
 		}
 	} else {
 		cluster = d.SchemaRegistryClusters[envId]
 		if cluster == nil || missingDetails(cluster) {
-			srCluster, err := d.FetchSchemaRegistryByEnvironmentId(context.Background(), envId)
+			srCluster, _, err := d.V2Client.GetSchemaRegistryClusterById(resource, envId)
 			if err != nil {
 				return nil, errors.CatchResourceNotFoundError(err, resource)
 			}
-			cluster = makeSRCluster(srCluster)
+			cluster = makeSRCluster(&srCluster)
 			clusterChanged = true
 		}
 	}
@@ -301,10 +302,11 @@ func missingDetails(cluster *v1.SchemaRegistryCluster) bool {
 	return cluster.SchemaRegistryEndpoint == "" || cluster.Id == ""
 }
 
-func makeSRCluster(cluster *ccloudv1.SchemaRegistryCluster) *v1.SchemaRegistryCluster {
+func makeSRCluster(cluster *srcm.SrcmV2Cluster) *v1.SchemaRegistryCluster {
+	clusterSpec := cluster.GetSpec()
 	return &v1.SchemaRegistryCluster{
 		Id:                     cluster.GetId(),
-		SchemaRegistryEndpoint: cluster.GetEndpoint(),
+		SchemaRegistryEndpoint: clusterSpec.GetHttpEndpoint(),
 		SrCredentials:          nil, // For now.
 	}
 }
