@@ -4,6 +4,8 @@ import (
 	"context"
 
 	srcm "github.com/confluentinc/ccloud-sdk-go-v2/srcm/v2"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 func newSchemaRegistryClient(url, userAgent string, unsafeTrace bool) *srcm.APIClient {
@@ -28,8 +30,7 @@ func (c *Client) ListSchemaRegistryRegions(cloud, packageType string) ([]srcm.Sr
 	}
 
 	if packageType != "" {
-		packageSpec := []string{packageType}
-		regionListRequest = regionListRequest.SpecPackages(packageSpec)
+		regionListRequest = regionListRequest.SpecPackages([]string{packageType})
 	}
 
 	var regionList []srcm.SrcmV2Region
@@ -37,9 +38,9 @@ func (c *Client) ListSchemaRegistryRegions(cloud, packageType string) ([]srcm.Sr
 	pageToken := ""
 	for !done {
 		regionListRequest = regionListRequest.PageToken(pageToken)
-		regionPage, _, err := c.SchemaRegistryClient.RegionsSrcmV2Api.ListSrcmV2RegionsExecute(regionListRequest)
+		regionPage, httpResp, err := c.SchemaRegistryClient.RegionsSrcmV2Api.ListSrcmV2RegionsExecute(regionListRequest)
 		if err != nil {
-			return nil, err
+			return nil, errors.CatchCCloudV2Error(err, httpResp)
 		}
 		regionList = append(regionList, regionPage.GetData()...)
 
