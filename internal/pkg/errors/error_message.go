@@ -63,10 +63,10 @@ const (
 	ConnectLogEventsNotEnabledErrorMsg = "Connect Log Events are not enabled for this organization"
 
 	// environment & organization command
-	EnvNotFoundErrorMsg            = `environment "%s" not found`
-	EnvSwitchErrorMsg              = "failed to switch environment: failed to save config"
-	NoEnvironmentFoundErrorMsg     = "no environment found"
-	NoEnvironmentFoundSuggestions  = "This issue may occur if this user has no valid role bindings. Contact an Organization Admin to create a role binding for this user."
+	EnvNotFoundErrorMsg           = `environment "%s" not found`
+	EnvSwitchErrorMsg             = "failed to switch environment: failed to save config"
+	NoEnvironmentFoundErrorMsg    = "no environment found"
+	NoEnvironmentFoundSuggestions = "This issue may occur if this user has no valid role bindings. Contact an Organization Admin to create a role binding for this user."
 
 	// iam acl & kafka acl commands
 	UnableToPerformAclErrorMsg    = "unable to %s ACLs: %s"

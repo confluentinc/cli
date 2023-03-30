@@ -115,7 +115,7 @@ func Plural(resource string) string {
 		return resource + "es"
 	}
 	if len(resource) > 1 {
-		if lastTwo := string(resource[len(resource)-2:]); lastTwo == "ch" || lastTwo == "sh" {
+		if lastTwo := resource[len(resource)-2:]; lastTwo == "ch" || lastTwo == "sh" {
 			return resource + "es"
 		}
 	}
