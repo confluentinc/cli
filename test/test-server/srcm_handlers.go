@@ -9,6 +9,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	srcm "github.com/confluentinc/ccloud-sdk-go-v2/srcm/v2"
+
+	"github.com/confluentinc/cli/internal/pkg/types"
 )
 
 const (
@@ -90,18 +92,9 @@ func filterRegionList(regionList []srcm.SrcmV2Region, cloud, region, packageType
 	for _, regionSpec := range regionList {
 		if (regionSpec.Spec.GetCloud() == cloud || cloud == "") &&
 			(regionSpec.Spec.GetRegionName() == region || region == "") &&
-			(contains(regionSpec.Spec.GetPackages(), packageType) || packageType == "") {
+			(types.Contains(regionSpec.Spec.GetPackages(), packageType) || packageType == "") {
 			filteredRegionList = append(filteredRegionList, regionSpec)
 		}
 	}
 	return filteredRegionList
-}
-
-func contains(arr []string, elementToCheck string) bool {
-	for _, ele := range arr {
-		if ele == elementToCheck {
-			return true
-		}
-	}
-	return false
 }
