@@ -11,6 +11,7 @@ Available Commands:
   compatibility Validate schema compatibility.
   config        Manage Schema Registry configuration.
   exporter      Manage Schema Registry exporters.
+  region        Manage Schema Registry cloud regions.
   schema        Manage Schema Registry schemas.
   subject       Manage Schema Registry subjects.
 
