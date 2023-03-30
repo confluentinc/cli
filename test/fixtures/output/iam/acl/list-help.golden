@@ -1,4 +1,4 @@
-List Kafka ACLs for a resource. This command only works with centralized ACLs.
+List centralized ACLs for a resource.
 
 Usage:
   confluent iam acl list [flags]
@@ -8,7 +8,7 @@ List all the ACLs for the specified Kafka cluster:
 
   $ confluent iam acl list --kafka-cluster <kafka-cluster-id>
 
-List all the ACLs for the specified cluster that include "allow" permissions for the user Jane:
+List all the ACLs for the specified cluster that include "allow" permissions for user "Jane":
 
   $ confluent iam acl list --kafka-cluster <kafka-cluster-id> --allow --principal User:Jane
 
