@@ -7,7 +7,7 @@ release-notes:
 	go run -ldflags '-X main.releaseNotesPath=$(DOCS_CONFLUENT_CLI)' cmd/releasenotes/main.go && \
 	version=$$(cat release-notes/version.txt) && \
 	cd $(DOCS_CONFLUENT_CLI) && \
-	if [ $${version} != *.0 ]; then \
+	if [[ $${version} != *.0 ]]; then \
 		git checkout $$(echo $${version} | sed $(STAGING_BRANCH_REGEX)); \
 	fi && \
 	git checkout -b publish-docs-v$${version} && \
@@ -15,7 +15,7 @@ release-notes:
 	cp release-notes/release-notes.rst $(DOCS_CONFLUENT_CLI) && \
 	cd $(DOCS_CONFLUENT_CLI) && \
 	git commit -am "New release notes for v$${version}" && \
-	$(call dry-run,git push -u origin publish-docs-v$${version}) && \
+	$(call dry-run,git push -u origin publish-docs-v$${version})
 
 	rm -rf $(DIR)
 
