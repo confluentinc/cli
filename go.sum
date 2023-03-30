@@ -117,6 +117,8 @@ github.com/confluentinc/ccloud-sdk-go-v2/org v0.6.0 h1:kHITtUyof5/kALFCHLH7wSMlY
 github.com/confluentinc/ccloud-sdk-go-v2/org v0.6.0/go.mod h1:40AGTF6TnYiBLR25utDlAdBKEYB3gt0wldxokJLz5r0=
 github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.2.0 h1:xVSmwdycExze1E2Jta99CaFuMOlL6k6KExOOSY1hSFg=
 github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.2.0/go.mod h1:zZWZoGWJuO0Qm4lO6H2KlXMx4OoB/yhD8y6J1ZB/97Q=
+github.com/confluentinc/ccloud-sdk-go-v2/srcm v0.2.0 h1:ezCzDCOOavjTPVKvdET0QjAXm1u9iRJjg2s5lkSMrps=
+github.com/confluentinc/ccloud-sdk-go-v2/srcm v0.2.0/go.mod h1:qY4Y/QCDKI0eR+HLVJWGFstsTAiI83+sowKOyoRFhF0=
 github.com/confluentinc/ccloud-sdk-go-v2/stream-designer v0.2.0 h1:PPX84ol90CmVws/g77n/GwpEP+77wNO+UuRs7nDhYG4=
 github.com/confluentinc/ccloud-sdk-go-v2/stream-designer v0.2.0/go.mod h1:29HYKS91pkCre55OPNGRIWpkKSBLUDlzXbrxZ291Xhk=
 github.com/confluentinc/confluent-kafka-go v1.9.3-RC3 h1:urDeBIsNr0hgRf3nZn66SHtdBO/4DmEDSsMWquaolmo=
