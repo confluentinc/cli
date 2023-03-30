@@ -26,6 +26,14 @@ var (
 	TViewOutput    OutputMode = "tview"
 )
 
+type ApplicationControllerInterface interface {
+	SuspendOutputMode(callback func())
+	ToggleOutputMode()
+	GetOutputMode() OutputMode
+	ExitApplication()
+	TView() *tview.Application
+}
+
 type ApplicationController struct {
 	app        *tview.Application
 	outputMode OutputMode
@@ -38,15 +46,15 @@ type ApplicationOptions struct {
 
 var once sync.Once
 
-func (a *ApplicationController) suspendOutputMode(cb func()) {
-	a.toggleOutputMode()
+func (a *ApplicationController) SuspendOutputMode(cb func()) {
+	a.ToggleOutputMode()
 	a.app.Suspend(cb)
 	// InteractiveInput has already set the data to be displayed in the table
 	// Now we just need to render it
 	a.app.ForceDraw()
 }
 
-func (a *ApplicationController) toggleOutputMode() {
+func (a *ApplicationController) ToggleOutputMode() {
 	if a.outputMode == TViewOutput {
 		a.outputMode = GoPromptOutput
 	} else {
@@ -55,17 +63,21 @@ func (a *ApplicationController) toggleOutputMode() {
 }
 
 // This function should be used to proparly stop the application, cache saving, cleanup and so on
-func (a *ApplicationController) exitApplication() {
+func (a *ApplicationController) ExitApplication() {
 	a.history.Save()
 	a.app.Stop()
 	os.Exit(0)
 }
 
-func (a *ApplicationController) getOutputMode() OutputMode {
+func (a *ApplicationController) GetOutputMode() OutputMode {
 	return a.outputMode
 }
 
-func NewApplicationController(app *tview.Application, history *History) *ApplicationController {
+func (a *ApplicationController) TView() *tview.Application {
+	return a.app
+}
+
+func NewApplicationController(app *tview.Application, history *History) ApplicationControllerInterface {
 	return &ApplicationController{
 		app:        app,
 		outputMode: TViewOutput,
@@ -74,22 +86,30 @@ func NewApplicationController(app *tview.Application, history *History) *Applica
 }
 
 func StartApp(envId, computePoolId, authToken string, appOptions *ApplicationOptions) {
-	client := NewGatewayClient(envId, computePoolId, authToken)
-	store := NewStore(client, appOptions)
-	history := LoadHistory()
-	// Create Components
+	// Create Tview Components
 	table := components.CreateTable()
 	shortcuts := components.Shortcuts()
 	app := tview.NewApplication()
 
-	// Instantiate Component Controllers
-	appController := NewApplicationController(app, history)
-	tableController := NewTableController(table, store, appController)
+	// Load history of previous commands from cache file
+	history := LoadHistory()
 
+	// Client used to communicate with the gateway
+	client := NewGatewayClient(envId, computePoolId, authToken)
+
+	// Store used to process statements and store local properties
+	store := NewStore(client, appOptions)
+
+	// Instantiate Application Controller - this is the top level controller that will be passed down to all other controllers
+	// and should be used for functions that are not specific to a component
+	appController := NewApplicationController(app, history)
+
+	// Instantiate Component Controllers
+	tableController := NewTableController(table, store, appController)
 	inputController := NewInputController(tableController, appController, store, history)
 	shortcutsController := NewShortcutsController(shortcuts, appController, tableController)
 
-	// Instatiate Application Controller
+	// Pass input controller to table controller - input and output view interact with each other and that it easier
 	tableController.InputController = &inputController
 
 	// Event handlers
@@ -103,13 +123,13 @@ func StartApp(envId, computePoolId, authToken string, appOptions *ApplicationOpt
 	app.SetAfterDrawFunc(func(screen tcell.Screen) {
 		if !screen.HasPendingEvent() {
 			once.Do(func() {
-				go appController.suspendOutputMode(inputController.RunInteractiveInput)
+				go appController.SuspendOutputMode(inputController.RunInteractiveInput)
 			})
 		}
 	})
 
 	// Start the application.
-	if err := appController.app.SetRoot(rootLayout, true).EnableMouse(true).Run(); err != nil {
+	if err := appController.TView().SetRoot(rootLayout, true).EnableMouse(true).Run(); err != nil {
 		panic(err)
 	}
 }

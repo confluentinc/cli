@@ -15,7 +15,8 @@ import (
 )
 
 type StatementError struct {
-	Msg string
+	Msg              string
+	HttpResponseCode int
 }
 
 func (e *StatementError) Error() string {
@@ -52,10 +53,10 @@ const (
 	OTHER_STATEMENT StatementType = "OTHER"
 )
 
-func (s *Store) processSetStatement(statement string) (*StatementResult, error) {
+func (s *Store) processSetStatement(statement string) (*StatementResult, *StatementError) {
 	configKey, configVal, err := parseSetStatement(statement)
 	if err != nil {
-		return nil, err
+		return nil, err.(*StatementError)
 	}
 	if configKey == "" {
 
@@ -77,10 +78,10 @@ func (s *Store) processSetStatement(statement string) (*StatementResult, error) 
 	}, nil
 }
 
-func (s *Store) processResetStatement(statement string) (*StatementResult, error) {
+func (s *Store) processResetStatement(statement string) (*StatementResult, *StatementError) {
 	configKey, err := parseResetStatement(statement)
 	if err != nil {
-		return nil, err
+		return nil, &StatementError{Msg: err.Error()}
 	}
 	if configKey == "" {
 		s.Config = make(map[string]string)
@@ -92,7 +93,7 @@ func (s *Store) processResetStatement(statement string) (*StatementResult, error
 	} else {
 		_, keyExists := s.Config[configKey]
 		if !keyExists {
-			return nil, &StatementError{fmt.Sprintf("Error: Config key \"%s\" is currently not set.", configKey)}
+			return nil, &StatementError{Msg: fmt.Sprintf("Error: Config key \"%s\" is currently not set.", configKey)}
 		}
 
 		delete(s.Config, configKey)
@@ -106,10 +107,10 @@ func (s *Store) processResetStatement(statement string) (*StatementResult, error
 	}
 }
 
-func (s *Store) processUseStatement(statement string) (*StatementResult, error) {
+func (s *Store) processUseStatement(statement string) (*StatementResult, *StatementError) {
 	configKey, configVal, err := parseUseStatement(statement)
 	if err != nil {
-		return nil, err
+		return nil, &StatementError{Msg: err.Error()}
 	}
 
 	s.Config[configKey] = configVal
@@ -137,7 +138,7 @@ func parseSetStatement(statement string) (string, string, error) {
 
 	indexOfSet := strings.Index(strings.ToUpper(statement), configOpSet)
 	if indexOfSet == -1 {
-		return "", "", &StatementError{"Error: Invalid syntax for SET. Usage example: SET key=value."}
+		return "", "", &StatementError{Msg: "Error: Invalid syntax for SET. Usage example: SET key=value."}
 	}
 	startOfStrAfterSet := indexOfSet + len(configOpSet)
 	// This is the case when the statement is simply "SET", which is used to display current config.
@@ -154,25 +155,25 @@ func parseSetStatement(statement string) (string, string, error) {
 	}
 
 	if !strings.Contains(strAfterSet, "=") {
-		return "", "", &StatementError{"Error: missing \"=\". Usage example: SET key=value."}
+		return "", "", &StatementError{Msg: "Error: missing \"=\". Usage example: SET key=value."}
 	}
 
 	keyValuePair := strings.Split(strAfterSet, "=")
 
 	if len(keyValuePair) != 2 {
-		return "", "", &StatementError{"Error: \"=\" should only appear once. Usage example: SET key=value."}
+		return "", "", &StatementError{Msg: "Error: \"=\" should only appear once. Usage example: SET key=value."}
 	}
 
 	if keyValuePair[0] != "" && keyValuePair[1] == "" {
-		return "", "", &StatementError{"Error: Value for key not present. If you want to reset a key, use \"RESET key\"."}
+		return "", "", &StatementError{Msg: "Error: Value for key not present. If you want to reset a key, use \"RESET key\"."}
 	}
 
 	if keyValuePair[0] == "" && keyValuePair[1] != "" {
-		return "", "", &StatementError{"Error: Key not present. Usage example: SET key=value."}
+		return "", "", &StatementError{Msg: "Error: Key not present. Usage example: SET key=value."}
 	}
 
 	if keyValuePair[0] == "" && keyValuePair[1] == "" {
-		return "", "", &StatementError{"Error: Key and value not present. Usage example: SET key=value."}
+		return "", "", &StatementError{Msg: "Error: Key and value not present. Usage example: SET key=value."}
 	}
 
 	return keyValuePair[0], keyValuePair[1], nil
@@ -192,7 +193,7 @@ func parseUseStatement(statement string) (string, string, error) {
 	statement = removeStatementTerminator(statement)
 	words := strings.Fields(statement)
 	if len(words) < 2 {
-		return "", "", &StatementError{"Error: Missing database/catalog name: Usage examples: USE DB1 OR USE CATALOG METADATA."}
+		return "", "", &StatementError{Msg: "Error: Missing database/catalog name: Usage examples: USE DB1 OR USE CATALOG METADATA."}
 	}
 
 	isFirstWordUse := strings.ToUpper(words[0]) == configOpUse
@@ -201,7 +202,7 @@ func parseUseStatement(statement string) (string, string, error) {
 	if len(words) == 2 && isFirstWordUse {
 		if isSecondWordCatalog {
 			// handle empty catalog name -> "USE CATALOG "
-			return "", "", &StatementError{"Error: Missing catalog name: Usage example: USE CATALOG METADATA."}
+			return "", "", &StatementError{Msg: "Error: Missing catalog name: Usage example: USE CATALOG METADATA."}
 		} else {
 			return configKeyDatabase, words[1], nil
 		}
@@ -212,7 +213,7 @@ func parseUseStatement(statement string) (string, string, error) {
 		return configKeyCatalog, words[2], nil
 	}
 
-	return "", "", &StatementError{"Invalid syntax for USE. Usage examples: USE CATALOG my_catalog or USE my_database"}
+	return "", "", &StatementError{Msg: "Invalid syntax for USE. Usage examples: USE CATALOG my_catalog or USE my_database"}
 }
 
 /* Expected statement: "RESET pipeline.name" */
@@ -220,7 +221,7 @@ func parseResetStatement(statement string) (string, error) {
 	statement = removeStatementTerminator(statement)
 	words := strings.Fields(statement)
 	if len(words) == 0 {
-		return "", &StatementError{"Error: Invalid syntax for RESET. Usage example: RESET key."}
+		return "", &StatementError{Msg: "Error: Invalid syntax for RESET. Usage example: RESET key."}
 	}
 
 	// This is the case where we reset the entire config (e.g. "RESET")
@@ -237,38 +238,38 @@ func parseResetStatement(statement string) (string, error) {
 	}
 
 	if len(words) > 2 {
-		return "", &StatementError{"Error: too many keys for RESET provided. Usage example: RESET key."}
+		return "", &StatementError{Msg: "Error: too many keys for RESET provided. Usage example: RESET key."}
 	}
 
-	return "", &StatementError{"Error: Invalid syntax for RESET. Usage example: RESET key."}
+	return "", &StatementError{Msg: "Error: Invalid syntax for RESET. Usage example: RESET key."}
 }
 
 func processHttpErrors(resp *http.Response, err error) error {
 	if resp.StatusCode != http.StatusAccepted {
 
 		if resp.StatusCode == http.StatusUnauthorized {
-			return &StatementError{"Error: Unauthorized. Please consider running confluent login again."}
+			return &StatementError{Msg: "Error: Unauthorized. Please consider running confluent login again.", HttpResponseCode: resp.StatusCode}
 		}
 
 		statementErr := v1.NewError()
 		body, err := io.ReadAll(resp.Body)
 
 		if err != nil {
-			return &StatementError{fmt.Sprintf("Error: received error with code \"%d\" from server but could not parse it. This is not expected. Please contact support.", resp.StatusCode)}
+			return &StatementError{Msg: fmt.Sprintf("Error: received error with code \"%d\" from server but could not parse it. This is not expected. Please contact support.", resp.StatusCode)}
 		}
 
 		err = json.Unmarshal(body, &statementErr)
 
 		if err != nil || statementErr == nil || statementErr.Error.Title == nil || statementErr.Error.Detail == nil {
-			return &StatementError{fmt.Sprintf("Error: received error with code \"%d\" from server but could not parse it. This is not expected. Please contact support.", resp.StatusCode)}
+			return &StatementError{Msg: fmt.Sprintf("Error: received error with code \"%d\" from server but could not parse it. This is not expected. Please contact support.", resp.StatusCode)}
 		}
 
-		return &StatementError{*statementErr.Error.Title + ": " + *statementErr.Error.Detail}
+		return &StatementError{Msg: *statementErr.Error.Title + ": " + *statementErr.Error.Detail}
 
 	}
 
 	if err != nil {
-		return &StatementError{err.Error()}
+		return &StatementError{Msg: err.Error()}
 	}
 
 	return nil

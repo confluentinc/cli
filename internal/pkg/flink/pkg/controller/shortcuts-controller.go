@@ -9,7 +9,7 @@ import (
 )
 
 type ShortcutsController struct {
-	appController   *ApplicationController
+	appController   ApplicationControllerInterface
 	tableController *TableController
 	shortcuts       *tview.TextView
 }
@@ -35,14 +35,14 @@ func (s *ShortcutsController) shortcutHighlighted(added, removed, remaining []st
 	case "Toggle Display Mode":
 		s.tableController.borders()
 	case "Quit":
-		s.appController.exitApplication()
+		s.appController.ExitApplication()
 	}
 }
 
-func NewShortcutsController(shortcutsRef *tview.TextView, appcontroller *ApplicationController, tableController *TableController) ShortcutsController {
+func NewShortcutsController(shortcutsRef *tview.TextView, appController ApplicationControllerInterface, tableController *TableController) ShortcutsController {
 	for index, shortcut := range appShortcuts {
 		fmt.Fprintf(shortcutsRef, `[[white]%s] ["%d"][darkcyan]%s[white][""]  `, shortcut.KeyText, index, shortcut.Text)
 	}
 
-	return ShortcutsController{shortcuts: shortcutsRef, appController: appcontroller, tableController: tableController}
+	return ShortcutsController{shortcuts: shortcutsRef, appController: appController, tableController: tableController}
 }

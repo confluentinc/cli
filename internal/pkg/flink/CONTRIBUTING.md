@@ -6,6 +6,14 @@ make test-coverage
 ```
 You can then open the coverage.html file from the repository root in your browser to see the coverage report for each file.
 
+### Generating Mocks
+We have generated mocked as we need them. We will probably eventually write a make target to generate all mocks. For now, to generate a new mock, you need to run a command like this:
+
+```
+mockgen -package=mock -destination application_controller_mock github.com/confluentinc/flink-sql-client/pkg/controller ApplicationControllerInterface
+```
+
+More info on how to generate mocks: https://github.com/golang/mock
 #### Interacting with Clipboard in interactive mode
 
 We use currently using https://github.com/atotto/clipboard to copy and write to the clipboard. It works for window, mac and linux. For the latter however, it requires 'xclip' or 'xsel' command to be installed. It doesn't seem to exist a workaround for now. One of the reasons to pick this lib, is because it's already being used in our current CLI, where this client will get integrated.

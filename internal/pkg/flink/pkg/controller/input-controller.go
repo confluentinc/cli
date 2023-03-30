@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"reflect"
 	"strings"
@@ -16,7 +17,7 @@ import (
 
 type InputController struct {
 	History         *History
-	appController   *ApplicationController
+	appController   ApplicationControllerInterface
 	smartCompletion bool
 	table           *TableController
 	p               *prompt.Prompt
@@ -28,39 +29,53 @@ type InputController struct {
 func (c *InputController) RunInteractiveInput() {
 
 	var statementResult *StatementResult
-	var err error
+	var err *StatementError
 	// We check for statement result and rows so we don't leave GoPrompt in case of errors
-	for c.appController.getOutputMode() == GoPromptOutput || statementResult == nil || len(statementResult.Rows) == 0 {
+	for c.appController.GetOutputMode() == GoPromptOutput || statementResult == nil || len(statementResult.Rows) == 0 {
 		// Run interactive input and take over terminal
 		input := c.p.Input()
 		c.History.Append([]string{input})
 		statementResult, err = c.store.ProcessStatement(input)
-
-		if err == nil {
-			if statementResult.StatusDetail != "" {
-				fmt.Println(statementResult.StatusDetail)
-			}
-			if statementResult.Status != "" {
-				fmt.Println("Current status: " + statementResult.Status + ".")
-			}
-			// We only print a new line if a status or a message are shown
-			if statementResult.StatusDetail != "" || statementResult.Status != "" {
-				fmt.Println("")
-			}
-		} else {
-			fmt.Println(err.Error() + "\n")
+		renderMsgAndStatus(statementResult)
+		if err != nil {
+			fmt.Println(err.Error())
+			c.isSessionValid(err)
 			continue
 		}
 
-		if c.appController.getOutputMode() == GoPromptOutput {
+		if c.appController.GetOutputMode() == GoPromptOutput {
 			// Print raw text table
 			printResultToSTDOUT(statementResult)
 		}
 	}
 
 	// If output mode is TViewOutput we set the data to be displayed in the interactive table
-	if c.appController.outputMode == TViewOutput {
+	if c.appController.GetOutputMode() == TViewOutput {
 		c.table.setDataAndFocus(statementResult)
+	}
+}
+
+func (c *InputController) isSessionValid(err *StatementError) bool {
+	// exit application if user needs to authenticate again
+	if err != nil && err.HttpResponseCode == http.StatusUnauthorized {
+		c.appController.ExitApplication()
+		return false
+	}
+	return true
+}
+
+func renderMsgAndStatus(statementResult *StatementResult) {
+	if statementResult == nil {
+		return
+	}
+	if statementResult.StatusDetail != "" {
+		fmt.Println(statementResult.StatusDetail)
+	}
+	if statementResult.Status != "" {
+		fmt.Println("Current status: " + statementResult.Status + ".")
+	}
+	if statementResult.StatusDetail != "" || statementResult.Status != "" {
+		fmt.Println("")
 	}
 }
 
@@ -77,7 +92,7 @@ func (c *InputController) toggleSmartCompletion() {
 }
 
 func (c *InputController) toggleOutputMode() {
-	c.appController.toggleOutputMode()
+	c.appController.ToggleOutputMode()
 
 	maxCol, err := c.GetMaxCol()
 	if err != nil {
@@ -85,7 +100,7 @@ func (c *InputController) toggleOutputMode() {
 		return
 	}
 
-	components.PrintOutputModeState(c.appController.getOutputMode() == TViewOutput, maxCol)
+	components.PrintOutputModeState(c.appController.GetOutputMode() == TViewOutput, maxCol)
 }
 
 func printResultToSTDOUT(data *StatementResult) {
@@ -124,13 +139,13 @@ func (c *InputController) Prompt() *prompt.Prompt {
 		prompt.OptionAddKeyBind(prompt.KeyBind{
 			Key: prompt.ControlD,
 			Fn: func(b *prompt.Buffer) {
-				c.appController.exitApplication()
+				c.appController.ExitApplication()
 			},
 		}),
 		prompt.OptionAddKeyBind(prompt.KeyBind{
 			Key: prompt.ControlQ,
 			Fn: func(b *prompt.Buffer) {
-				c.appController.exitApplication()
+				c.appController.ExitApplication()
 			},
 		}),
 		prompt.OptionAddKeyBind(prompt.KeyBind{
@@ -203,7 +218,7 @@ func (c *InputController) GetMaxCol() (int, error) {
 	return int(maxCol), nil
 }
 
-func NewInputController(t *TableController, a *ApplicationController, store StoreInterface, history *History) (c InputController) {
+func NewInputController(t *TableController, a ApplicationControllerInterface, store StoreInterface, history *History) (c InputController) {
 	// Initialization
 	c.History = history
 	c.smartCompletion = true

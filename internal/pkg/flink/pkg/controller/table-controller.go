@@ -11,7 +11,7 @@ import (
 type TableController struct {
 	table           *tview.Table
 	tableStyle      TableStyle
-	appController   *ApplicationController
+	appController   ApplicationControllerInterface
 	InputController *InputController
 	store           StoreInterface
 }
@@ -57,7 +57,7 @@ func (t *TableController) setData(newData *StatementResult) {
 func (t *TableController) handleCellEvent(event *tcell.EventKey) *tcell.EventKey {
 	if event.Key() == tcell.KeyEscape {
 		// Here we suspend outpude mode/tview aand run the interactive input again
-		t.appController.suspendOutputMode(t.InputController.RunInteractiveInput)
+		t.appController.SuspendOutputMode(t.InputController.RunInteractiveInput)
 
 		return nil
 	}
@@ -103,7 +103,7 @@ func (t *TableController) selectRow() {
 
 func (t *TableController) focus() {
 	t.selectRow()
-	t.appController.app.SetFocus(t.table)
+	t.appController.TView().SetFocus(t.table)
 }
 
 func (t *TableController) onCtrlC() {
@@ -147,7 +147,7 @@ func (a *TableController) setDataAndFocus(statementResult *StatementResult) {
 	a.focus()
 }
 
-func NewTableController(tableRef *tview.Table, store StoreInterface, appController *ApplicationController) *TableController {
+func NewTableController(tableRef *tview.Table, store StoreInterface, appController ApplicationControllerInterface) *TableController {
 	controller := &TableController{
 		table:         tableRef,
 		store:         store,

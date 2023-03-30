@@ -181,7 +181,7 @@ func TestProcessUseStatement(t *testing.T) {
 
 	t.Run("should update the database name in config", func(t *testing.T) {
 		result, err := s.processUseStatement("use db1")
-		require.NoError(t, err)
+		require.Nil(t, err)
 		require.Equal(t, configOpUse, result.Statement)
 		require.EqualValues(t, "Completed", result.Status)
 		require.Equal(t, "Config updated successfuly.", result.StatusDetail)
@@ -196,7 +196,7 @@ func TestProcessUseStatement(t *testing.T) {
 
 	t.Run("should update the catalog name in config", func(t *testing.T) {
 		result, err := s.processUseStatement("use catalog metadata")
-		require.NoError(t, err)
+		require.Nil(t, err)
 		require.Equal(t, configOpUse, result.Statement)
 		require.EqualValues(t, "Completed", result.Status)
 		require.Equal(t, "Config updated successfuly.", result.StatusDetail)

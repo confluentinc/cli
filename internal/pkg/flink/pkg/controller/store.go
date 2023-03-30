@@ -25,7 +25,7 @@ const (
 const MOCK_STATEMENTS_OUTPUT_DEMO = true
 
 type StoreInterface interface {
-	ProcessStatement(statement string) (*StatementResult, error)
+	ProcessStatement(statement string) (*StatementResult, *StatementError)
 }
 
 type Store struct {
@@ -37,7 +37,7 @@ type Store struct {
 	appOptions       *ApplicationOptions
 }
 
-func (s *Store) ProcessLocalStatement(statement string) (*StatementResult, error) {
+func (s *Store) ProcessLocalStatement(statement string) (*StatementResult, *StatementError) {
 	switch statementType := parseStatementType(statement); statementType {
 	case SET_STATEMENT:
 		return s.processSetStatement(statement)
@@ -50,20 +50,21 @@ func (s *Store) ProcessLocalStatement(statement string) (*StatementResult, error
 	}
 }
 
-func (s *Store) ProcessStatement(statement string) (*StatementResult, error) {
+func (s *Store) ProcessStatement(statement string) (*StatementResult, *StatementError) {
 	// We trim the statement here once so we don't have to do it in every function
 	statement = strings.TrimSpace(statement)
 
 	// Process local statements: set, use, reset
-	result, err := s.ProcessLocalStatement(statement)
-	if result != nil || err != nil {
-		return result, err
+	result, sErr := s.ProcessLocalStatement(statement)
+	if result != nil || sErr != nil {
+		return result, sErr
 	}
 
 	// TODO: Remove this once we have a real backend
 	if s.appOptions.MOCK_STATEMENTS_OUTPUT_DEMO {
+
 		if !startsWithValidSQL(statement) {
-			return nil, &StatementError{"Error: Invalid syntax. Please check your statement."}
+			return nil, &StatementError{Msg: "Error: Invalid syntax. Please check your statement."}
 		} else {
 			s.index++
 			return &s.MockData[s.index%len(s.MockData)], nil
@@ -75,7 +76,7 @@ func (s *Store) ProcessStatement(statement string) (*StatementResult, error) {
 	err = processHttpErrors(resp, err)
 
 	if err != nil {
-		return nil, &StatementError{err.Error()}
+		return nil, &StatementError{Msg: err.Error()}
 	}
 
 	return &StatementResult{
