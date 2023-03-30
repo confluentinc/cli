@@ -1,7 +1,7 @@
 package schemaregistry
 
 import (
-	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -10,7 +10,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
 func (c *command) newListCommand() *cobra.Command {
@@ -22,23 +21,20 @@ func (c *command) newListCommand() *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `List the schema registry cloud regions in "aws" for "advanced" package`,
-				Code: fmt.Sprintf("%s schema-registry region list --cloud aws --package advanced", version.CLIName),
+				Text: `List the Schema Registry cloud regions for AWS in the "advanced" package.`,
+				Code: "confluent schema-registry region list --cloud aws --package advanced",
 			},
 		),
 	}
 
-	addPackageFlag(cmd, "")
 	pcmd.AddCloudFlag(cmd)
+	addPackageFlag(cmd, "")
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
 
 func (c *command) list(cmd *cobra.Command, _ []string) error {
-	ctx := c.V2Client.SchemaRegistryApiContext()
-
-	// Collect the parameters
 	cloud, err := cmd.Flags().GetString("cloud")
 	if err != nil {
 		return err
@@ -49,32 +45,9 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	regionListRequest := c.V2Client.SchemaRegistryClient.RegionsSrcmV2Api.ListSrcmV2Regions(ctx)
-
-	if cloud != "" {
-		regionListRequest = regionListRequest.SpecCloud(cloud)
-	}
-
-	if packageType != "" {
-		packageSpec := []string{packageType}
-		regionListRequest = regionListRequest.SpecPackages(packageSpec)
-	}
-
-	var regionList []srcm.SrcmV2Region
-	done := false
-	pageToken := ""
-	for !done {
-		regionListRequest = regionListRequest.PageToken(pageToken)
-		regionPage, _, err := c.V2Client.SchemaRegistryClient.RegionsSrcmV2Api.ListSrcmV2RegionsExecute(regionListRequest)
-		if err != nil {
-			return err
-		}
-		regionList = append(regionList, regionPage.GetData()...)
-
-		pageToken, done, err = c.V2Client.ExtractNextPageToken(regionPage.GetMetadata().Next)
-		if err != nil {
-			return err
-		}
+	regionList, err := c.V2Client.ListSchemaRegistryCloudRegions(cloud, packageType)
+	if err != nil {
+		return err
 	}
 
 	return printRegionList(cmd, regionList)
@@ -85,15 +58,23 @@ func printRegionList(cmd *cobra.Command, regionList []srcm.SrcmV2Region) error {
 
 	for _, region := range regionList {
 		regionSpec := region.GetSpec()
-		v2Region := &schemaRegistryCloudRegion{
-			ID:          region.GetId(),
-			Cloud:       regionSpec.GetCloud(),
-			RegionName:  regionSpec.GetRegionName(),
-			DisplayName: regionSpec.GetDisplayName(),
-			Packages:    regionSpec.GetPackages(),
+		if output.GetFormat(cmd) == output.Human {
+			outputList.Add(&schemaRegistryCloudRegionHumanOut{
+				ID:         region.GetId(),
+				Name:       regionSpec.GetDisplayName(),
+				Cloud:      regionSpec.GetCloud(),
+				RegionName: regionSpec.GetRegionName(),
+				Packages:   strings.Join(regionSpec.GetPackages(), ", "),
+			})
+		} else {
+			outputList.Add(&schemaRegistryCloudRegionSerializedOut{
+				ID:         region.GetId(),
+				Name:       regionSpec.GetDisplayName(),
+				Cloud:      regionSpec.GetCloud(),
+				RegionName: regionSpec.GetRegionName(),
+				Packages:   regionSpec.GetPackages(),
+			})
 		}
-
-		outputList.Add(v2Region)
 	}
 
 	outputList.Sort(false)
