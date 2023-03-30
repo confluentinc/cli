@@ -3,8 +3,10 @@ package schemaregistry
 import (
 	"context"
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"math"
 	"strconv"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -33,6 +35,7 @@ type clusterOut struct {
 }
 
 const (
+	defaultSchemaLimitEssentials          = 1000
 	defaultSchemaLimitAdvanced            = 20000
 	streamGovernancePriceTableProductName = "stream-governance"
 	schemaRegistryPriceTableName          = "SchemaRegistry"
@@ -62,17 +65,27 @@ func (c *command) clusterDescribe(cmd *cobra.Command, _ []string) error {
 	var numSchemas string
 	var availableSchemas string
 	var srClient *srsdk.APIClient
-	ctx := context.Background()
+	ctx := c.V2Client.SchemaRegistryApiContext()
 
 	// Collect the parameters
 	environmentId, err := c.EnvironmentId()
 	if err != nil {
 		return err
 	}
-	cluster, err := c.Context.FetchSchemaRegistryByEnvironmentId(ctx, environmentId)
+	clusterList, _, err := c.V2Client.GetSchemaRegistryClusterByEnvironment(environmentId)
 	if err != nil {
 		return err
 	}
+	if len(clusterList.Data) == 0 {
+		return errors.NewSRNotEnabledError()
+	}
+
+	cluster := clusterList.GetData()[0]
+	clusterSpec := cluster.GetSpec()
+	regionSpec := clusterSpec.GetRegion()
+	sgRegion, _, err := c.V2Client.GetStreamGovernanceRegionById(regionSpec.GetId())
+	sgRegionSpec := sgRegion.GetSpec()
+
 	// Retrieve SR compatibility and Mode if API key is set up in user's config.json file
 	srClusterHasAPIKey, err := c.Context.CheckSchemaRegistryHasAPIKey(cmd)
 	if err != nil {
@@ -105,19 +118,20 @@ func (c *command) clusterDescribe(cmd *cobra.Command, _ []string) error {
 		mode = "<Requires API Key>"
 	}
 
-	query := schemaCountQueryFor(cluster.Id)
+	query := schemaCountQueryFor(cluster.GetId())
 	metricsResponse, httpResp, err := c.V2Client.MetricsDatasetQuery("cloud", query)
 	unmarshalErr := ccloudv2.UnmarshalFlatQueryResponseIfDataSchemaMatchError(err, metricsResponse, httpResp)
 	if unmarshalErr != nil {
 		return unmarshalErr
 	}
 
-	freeSchemasLimit := int(cluster.MaxSchemas)
-	if cluster.Package == essentialsPackageInternal {
+	freeSchemasLimit := defaultSchemaLimitEssentials
+	if strings.ToLower(clusterSpec.GetPackage()) == essentialsPackage {
 		org := &ccloudv1.Organization{Id: c.Context.GetOrganization().GetId()}
 		prices, err := c.Client.Billing.GetPriceTable(context.Background(), org, streamGovernancePriceTableProductName)
 		if err == nil {
-			priceKey := getMaxSchemaLimitPriceKey(cluster.Package, cluster.ServiceProvider, cluster.ServiceProviderRegion)
+			internalPackageName, _ := getPackageInternalName(clusterSpec.GetPackage())
+			priceKey := getMaxSchemaLimitPriceKey(internalPackageName, sgRegionSpec.GetCloud(), sgRegionSpec.GetRegionName())
 			freeSchemasLimit = int(prices.GetPriceTable()[schemaRegistryPriceTableName].Prices[priceKey])
 		}
 	} else {
@@ -143,13 +157,16 @@ func (c *command) clusterDescribe(cmd *cobra.Command, _ []string) error {
 	}
 
 	table := output.NewTable(cmd)
+	fmt.Print(numSchemas)
+	fmt.Print(availableSchemas)
+	fmt.Print(freeSchemasLimit)
 	table.Add(&clusterOut{
-		Name:                  cluster.Name,
-		ClusterId:             cluster.Id,
-		EndpointUrl:           cluster.Endpoint,
-		ServiceProvider:       cluster.ServiceProvider,
-		ServiceProviderRegion: cluster.ServiceProviderRegion,
-		Package:               getPackageDisplayName(cluster.Package),
+		Name:                  clusterSpec.GetDisplayName(),
+		ClusterId:             cluster.GetId(),
+		EndpointUrl:           clusterSpec.GetHttpEndpoint(),
+		ServiceProvider:       sgRegionSpec.GetCloud(),
+		ServiceProviderRegion: sgRegionSpec.GetRegionName(),
+		Package:               clusterSpec.GetPackage(),
 		UsedSchemas:           numSchemas,
 		AvailableSchemas:      availableSchemas,
 		FreeSchemasLimit:      freeSchemasLimit,
@@ -178,5 +195,5 @@ func schemaCountQueryFor(schemaRegistryId string) metricsv2.QueryRequest {
 }
 
 func getMaxSchemaLimitPriceKey(sgPackage, serviceProvider, serviceProviderRegion string) string {
-	return fmt.Sprintf("%s:%s:%s:1:max", serviceProvider, serviceProviderRegion, sgPackage)
+	return fmt.Sprintf("%s:%s:%s:1:max", strings.ToLower(serviceProvider), serviceProviderRegion, sgPackage)
 }
