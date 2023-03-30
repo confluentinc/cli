@@ -34,11 +34,29 @@ func NewWrapErrorWithSuggestions(err error, errorMsg string, suggestionsMsg stri
 	}
 }
 
+func NewWrapAdditionalSuggestions(err error, newSuggestionsMsg string) ErrorWithSuggestions {
+	if err == nil {
+		return nil
+	}
+
+	suggestionsMsg := newSuggestionsMsg
+	if err, ok := err.(ErrorWithSuggestions); ok {
+		suggestionsMsg = fmt.Sprintf("%s\n%s", err.GetSuggestionsMsg(), suggestionsMsg)
+	}
+	return NewErrorWithSuggestions(err.Error(), suggestionsMsg)
+}
+
 func (b *ErrorWithSuggestionsImpl) Error() string {
+	if b == nil {
+		return ""
+	}
 	return b.errorMsg
 }
 
 func (b *ErrorWithSuggestionsImpl) GetSuggestionsMsg() string {
+	if b == nil {
+		return ""
+	}
 	return b.suggestionsMsg
 }
 

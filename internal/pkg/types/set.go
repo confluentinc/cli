@@ -21,3 +21,17 @@ func (s Set) Contains(key string) bool {
 func (s Set) Slice() []string {
 	return GetKeys(s)
 }
+
+// Returns the elements of list which are contained in set s (intersection) and which aren't (difference)
+func (s Set) IntersectionAndDifference(list []string) ([]string, []string) {
+	var commonElements, remainingElements []string
+	for _, element := range list {
+		if s.Contains(element) {
+			commonElements = append(commonElements, element)
+		} else {
+			remainingElements = append(remainingElements, element)
+		}
+	}
+
+	return commonElements, remainingElements
+}

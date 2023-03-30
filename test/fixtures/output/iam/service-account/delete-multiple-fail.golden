@@ -1,0 +1,5 @@
+Error: service account not found: "sa-67890"
+
+Suggestions:
+    Use the `--skip-invalid` flag to suppress this error and delete the remaining service account entered.
+    List available service accounts with `confluent iam service-account list`.

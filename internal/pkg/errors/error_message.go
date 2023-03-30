@@ -64,7 +64,6 @@ const (
 
 	// environment & organization command
 	EnvNotFoundErrorMsg            = `environment "%s" not found`
-	OrgResourceNotFoundSuggestions = "List available %[1]ss with `confluent %[1]s list`."
 	EnvSwitchErrorMsg              = "failed to switch environment: failed to save config"
 	NoEnvironmentFoundErrorMsg     = "no environment found"
 	NoEnvironmentFoundSuggestions  = "This issue may occur if this user has no valid role bindings. Contact an Organization Admin to create a role binding for this user."
@@ -471,6 +470,9 @@ const (
 		"To create an API key, use `confluent api-key create --resource %s`.\n" +
 		"To store an existing API key, use `confluent api-key store --resource %s`."
 	FailedToReadInputErrorMsg = "failed to read input"
+	NotFoundErrorMsg          = "%s not found: %s"
+	AccessForbiddenErrorMsg   = "%s(s) not found or access forbidden: %s"
+	DeleteNotFoundSuggestions = "Use the `--skip-invalid` flag to suppress this error and delete the remaining %s entered."
 
 	// Flag parsing errors
 	EnvironmentFlagWithApiLoginErrorMsg = `"environment" flag should not be passed for API key context`
@@ -495,6 +497,7 @@ const (
 	// General
 	DeleteResourceErrorMsg        = `failed to delete %s "%s": %v`
 	DeleteResourceConfirmErrorMsg = `input does not match "%s"`
+	ListResourceSuggestions       = "List available %ss with `confluent %s list`."
 	UpdateResourceErrorMsg        = `failed to update %s "%s": %v`
 	MustSpecifyBothFlagsErrorMsg  = "must specify both `--%s` and `--%s`"
 )
