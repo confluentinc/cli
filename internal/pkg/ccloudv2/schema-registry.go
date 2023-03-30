@@ -37,6 +37,11 @@ func (c *Client) DeleteSchemaRegistryCluster(clusterId, environment string) (*ht
 	return c.SchemaRegistryClient.ClustersSrcmV2Api.DeleteSrcmV2Cluster(c.SchemaRegistryApiContext(), clusterId).Environment(environment).Execute()
 }
 
+func (c *Client) UpgradeSchemaRegistryCluster(srcmV2ClusterUpdate srcm.SrcmV2ClusterUpdate, clusterId string) (srcm.SrcmV2Cluster, *http.Response, error) {
+	return c.SchemaRegistryClient.ClustersSrcmV2Api.UpdateSrcmV2Cluster(c.SchemaRegistryApiContext(), clusterId).
+		SrcmV2ClusterUpdate(srcmV2ClusterUpdate).Execute()
+}
+
 func (c *Client) ExtractNextPageToken(nextPageUrlStringNullable srcm.NullableString) (string, bool, error) {
 	if !nextPageUrlStringNullable.IsSet() {
 		return "", true, nil
