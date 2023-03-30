@@ -32,7 +32,7 @@ type aclCommand struct {
 func newACLCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "acl",
-		Short:       "Manage Kafka ACLs (5.4+ only).",
+		Short:       "Manage centralized ACLs.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 	}
 
