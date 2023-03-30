@@ -27,6 +27,9 @@ var schemaRegistryRoutes = []route{
 	{"/config/{subject}", handleSRSubjectConfig},
 	{"/mode/{subject}", handleSRSubjectMode},
 	{"/asyncapi", handleSRAsyncApi},
+	{"/catalog/v1/types/tagdefs", handleSRTagDefs},
+	{"/catalog/v1/entity/tags", handleSRTags},
+	{"/catalog/v1/entity", handleSRUniqueAttributes},
 }
 
 func NewSRRouter(t *testing.T) *mux.Router {

@@ -36,7 +36,7 @@ publish-docs: docs
 	git commit -m "[ci skip] chore: update CLI docs for $${version}" && \
 	$(call dry-run,git push origin publish-docs-$${version}) && \
 	base="master" && \
-	if [ $${version} != *.0 ]; then \
+	if [[ $${version} != *.0 ]]; then \
 		base=$(STAGING_BRANCH); \
 	fi && \
 	$(call dry-run,gh pr create -B $${base} --title "chore: update CLI docs for $${version}" --body "")
