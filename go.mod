@@ -25,7 +25,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/metrics v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/org v0.6.0
 	github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.2.0
-	github.com/confluentinc/ccloud-sdk-go-v2/srcm v0.2.0
+	github.com/confluentinc/ccloud-sdk-go-v2/srcm v0.3.0
 	github.com/confluentinc/ccloud-sdk-go-v2/stream-designer v0.2.0
 	github.com/confluentinc/confluent-kafka-go v1.9.3-RC3
 	github.com/confluentinc/go-editor v0.11.0
