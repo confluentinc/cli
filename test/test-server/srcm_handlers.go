@@ -5,20 +5,21 @@ import (
 	"net/http"
 	"testing"
 
-	srcm "github.com/confluentinc/ccloud-sdk-go-v2/srcm/v2"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
+
+	srcm "github.com/confluentinc/ccloud-sdk-go-v2/srcm/v2"
 )
 
 const (
-	//test region 1
+	// test region 1
 	idRegion1          = "sgreg-1"
 	packageTypeRegion1 = "advanced"
 	cloudRegion1       = "aws"
 	nameRegion1        = "us-east-2"
 	displayNameRegion1 = "Ohio (us-east-2)"
 
-	//test region 2
+	// test region 2
 	idRegion2          = "sgreg-2"
 	packageTypeRegion2 = "essentials"
 	cloudRegion2       = "gcp"
@@ -86,7 +87,8 @@ func getSchemaRegistryRegion(id, region, cloud, packageType, displayName string)
 	}
 }
 
-func filterRegionList(regionList []srcm.SrcmV2Region, cloud, region, packageType string) (filteredRegionList []srcm.SrcmV2Region) {
+func filterRegionList(regionList []srcm.SrcmV2Region, cloud, region, packageType string) []srcm.SrcmV2Region {
+	var filteredRegionList []srcm.SrcmV2Region
 	for _, regionSpec := range regionList {
 		if (regionSpec.Spec.GetCloud() == cloud || cloud == "") &&
 			(regionSpec.Spec.GetRegionName() == region || region == "") &&
@@ -94,7 +96,7 @@ func filterRegionList(regionList []srcm.SrcmV2Region, cloud, region, packageType
 			filteredRegionList = append(filteredRegionList, regionSpec)
 		}
 	}
-	return
+	return filteredRegionList
 }
 
 func contains(arr []string, elementToCheck string) bool {
