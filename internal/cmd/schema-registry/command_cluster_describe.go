@@ -157,9 +157,6 @@ func (c *command) clusterDescribe(cmd *cobra.Command, _ []string) error {
 	}
 
 	table := output.NewTable(cmd)
-	fmt.Print(numSchemas)
-	fmt.Print(availableSchemas)
-	fmt.Print(freeSchemasLimit)
 	table.Add(&clusterOut{
 		Name:                  clusterSpec.GetDisplayName(),
 		ClusterId:             cluster.GetId(),
