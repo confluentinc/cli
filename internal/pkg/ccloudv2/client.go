@@ -15,6 +15,7 @@ import (
 	metricsv2 "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2"
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 	servicequotav1 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v1"
+	srcm "github.com/confluentinc/ccloud-sdk-go-v2/srcm/v2"
 	streamdesignerv1 "github.com/confluentinc/ccloud-sdk-go-v2/stream-designer/v1"
 
 	testserver "github.com/confluentinc/cli/test/test-server"
@@ -38,6 +39,7 @@ type Client struct {
 	MdsClient              *mdsv2.APIClient
 	MetricsClient          *metricsv2.APIClient
 	OrgClient              *orgv2.APIClient
+	SchemaRegistryClient   *srcm.APIClient
 	StreamDesignerClient   *streamdesignerv1.APIClient
 	ServiceQuotaClient     *servicequotav1.APIClient
 }
@@ -64,6 +66,7 @@ func NewClient(baseUrl string, isTest bool, authToken, userAgent string, unsafeT
 		MdsClient:              newMdsClient(url, userAgent, unsafeTrace),
 		MetricsClient:          newMetricsClient(baseUrl, userAgent, unsafeTrace, isTest),
 		OrgClient:              newOrgClient(url, userAgent, unsafeTrace),
+		SchemaRegistryClient:   newSchemaRegistryClient(url, userAgent, unsafeTrace),
 		StreamDesignerClient:   newStreamDesignerClient(url, userAgent, unsafeTrace),
 		ServiceQuotaClient:     newServiceQuotaClient(url, userAgent, unsafeTrace),
 	}
