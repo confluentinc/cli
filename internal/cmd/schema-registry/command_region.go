@@ -6,7 +6,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
-type schemaRegistryCloudRegionHumanOut struct {
+type regionHumanOut struct {
 	ID         string `human:"ID"`
 	Name       string `human:"Name"`
 	Cloud      string `human:"Cloud"`
@@ -14,7 +14,7 @@ type schemaRegistryCloudRegionHumanOut struct {
 	Packages   string `human:"Packages"`
 }
 
-type schemaRegistryCloudRegionSerializedOut struct {
+type regionSerializedOut struct {
 	ID         string   `serialized:"id"`
 	Name       string   `serialized:"name"`
 	Cloud      string   `serialized:"cloud"`

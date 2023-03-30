@@ -20,7 +20,7 @@ func (c *Client) SchemaRegistryApiContext() context.Context {
 	return context.WithValue(context.Background(), srcm.ContextAccessToken, c.AuthToken)
 }
 
-func (c *Client) ListSchemaRegistryCloudRegions(cloud, packageType string) ([]srcm.SrcmV2Region, error) {
+func (c *Client) ListSchemaRegistryRegions(cloud, packageType string) ([]srcm.SrcmV2Region, error) {
 	regionListRequest := c.SchemaRegistryClient.RegionsSrcmV2Api.ListSrcmV2Regions(c.SchemaRegistryApiContext())
 
 	if cloud != "" {

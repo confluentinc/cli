@@ -45,7 +45,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	regionList, err := c.V2Client.ListSchemaRegistryCloudRegions(cloud, packageType)
+	regionList, err := c.V2Client.ListSchemaRegistryRegions(cloud, packageType)
 	if err != nil {
 		return err
 	}
@@ -59,7 +59,7 @@ func printRegionList(cmd *cobra.Command, regionList []srcm.SrcmV2Region) error {
 	for _, region := range regionList {
 		regionSpec := region.GetSpec()
 		if output.GetFormat(cmd) == output.Human {
-			outputList.Add(&schemaRegistryCloudRegionHumanOut{
+			outputList.Add(&regionHumanOut{
 				ID:         region.GetId(),
 				Name:       regionSpec.GetDisplayName(),
 				Cloud:      regionSpec.GetCloud(),
@@ -67,7 +67,7 @@ func printRegionList(cmd *cobra.Command, regionList []srcm.SrcmV2Region) error {
 				Packages:   strings.Join(regionSpec.GetPackages(), ", "),
 			})
 		} else {
-			outputList.Add(&schemaRegistryCloudRegionSerializedOut{
+			outputList.Add(&regionSerializedOut{
 				ID:         region.GetId(),
 				Name:       regionSpec.GetDisplayName(),
 				Cloud:      regionSpec.GetCloud(),
