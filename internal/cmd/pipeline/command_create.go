@@ -3,6 +3,7 @@ package pipeline
 import (
 	"context"
 	"fmt"
+	streamdesignerv1 "github.com/confluentinc/ccloud-sdk-go-v2/stream-designer/v1"
 	"os"
 	"regexp"
 	"sort"
@@ -97,8 +98,8 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	// validate sr id
 	srCluster, err := c.Context.FetchSchemaRegistryByEnvironmentId(context.Background(), environmentId)
 	if err != nil {
+		// ignore if the SR is not enabled
 		if !strings.Contains(err.Error(), "Schema Registry not enabled") {
-			// ignore if the SR is not enabled
 			return err
 		}
 	}
@@ -119,7 +120,29 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	pipeline, err := c.V2Client.CreatePipeline(environmentId, kafkaCluster.ID, name, description, sourceCode, &secretMappings, ksqlCluster, srCluster.GetId())
+	// required fields
+	createPipeline := streamdesignerv1.SdV1Pipeline{
+		Spec: &streamdesignerv1.SdV1PipelineSpec{
+			DisplayName:  streamdesignerv1.PtrString(name),
+			Description:  streamdesignerv1.PtrString(description),
+			SourceCode:   &streamdesignerv1.SdV1SourceCodeObject{Sql: sourceCode},
+			Secrets:      &secretMappings,
+			Environment:  &streamdesignerv1.ObjectReference{Id: environmentId},
+			KafkaCluster: &streamdesignerv1.ObjectReference{Id: kafkaCluster.ID},
+		},
+	}
+
+	// add KSQL cluster if present
+	if ksqlCluster != "" {
+		createPipeline.Spec.KsqlCluster = &streamdesignerv1.ObjectReference{Id: ksqlCluster}
+	}
+
+	// add Schema Registry Cluster if its provisioned
+	if srCluster != nil {
+		createPipeline.Spec.StreamGovernanceCluster = &streamdesignerv1.ObjectReference{Id: srCluster.GetId()}
+	}
+
+	pipeline, err := c.V2Client.CreatePipeline(createPipeline)
 	if err != nil {
 		return err
 	}

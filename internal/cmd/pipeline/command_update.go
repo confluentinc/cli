@@ -33,11 +33,11 @@ func (c *command) newUpdateCommand(enableSourceCode bool) *cobra.Command {
 				Code: `confluent pipeline update pipe-12345 --activation-privilege false`,
 			},
 			examples.Example{
-				Text: `Update Stream Designer pipeline "pipe-12345" with KSQL cluster ID "lksqlc-123456".`,
-				Code: `confluent pipeline update pipe-12345 --ksql-cluster lksqlc-123456.`,
+				Text: `Update Stream Designer pipeline "pipe-12345" with KSQL cluster ID "lksqlc-123456"`,
+				Code: `confluent pipeline update pipe-12345 --ksql-cluster lksqlc-123456`,
 			},
 			examples.Example{
-				Text: `Update Stream Designer pipeline "pipe-12345" with new Schema Registry cluster ID.`,
+				Text: `Update Stream Designer pipeline "pipe-12345" with new Schema Registry cluster ID`,
 				Code: `confluent pipeline update pipe-12345 --update-schema-registry`,
 			},
 		),
@@ -54,7 +54,7 @@ func (c *command) newUpdateCommand(enableSourceCode bool) *cobra.Command {
 			"If <secret-value> is empty, the named secret will be removed from Stream Designer.")
 	}
 	cmd.Flags().Bool("activation-privilege", true, "Grant or revoke the privilege to activate this pipeline.")
-	cmd.Flags().Bool("update-schema-registry", false, "Update the pipeline with the latest schema registry cluster.")
+	cmd.Flags().Bool("update-schema-registry", false, "Update the pipeline with the latest Schema Registry cluster.")
 	pcmd.AddOutputFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -67,23 +67,50 @@ func (c *command) newUpdateCommand(enableSourceCode bool) *cobra.Command {
 }
 
 func (c *command) update(cmd *cobra.Command, args []string) error {
-	name, _ := cmd.Flags().GetString("name")
-	description, _ := cmd.Flags().GetString("description")
-	sqlFile, _ := cmd.Flags().GetString("sql-file")
-	secrets, _ := cmd.Flags().GetStringArray("secret")
-	ksqlCluster, _ := cmd.Flags().GetString("ksql-cluster")
+	name, err := cmd.Flags().GetString("name")
+	if err != nil {
+		return err
+	}
+
+	description, err := cmd.Flags().GetString("description")
+	if err != nil {
+		return err
+	}
+
+	ksqlCluster, err := cmd.Flags().GetString("ksql-cluster")
+	if err != nil {
+		return err
+	}
+
+	sqlFile, err := cmd.Flags().GetString("sql-file")
+	if err != nil {
+		return err
+	}
+
+	secrets, err := cmd.Flags().GetStringArray("secret")
+	if err != nil {
+		return err
+	}
 
 	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
 
-	if name == "" && description == "" && sqlFile == "" && len(secrets) == 0 && !cmd.Flags().Changed("activation-privilege") &&
-		ksqlCluster == "" && !cmd.Flags().Changed("update-schema-registry") {
-		return fmt.Errorf("one of the update options must be provided: `--name`, `--description`, `--sql-file`, `--secret`, `--activation-privilege`, `--update-schema-registry`")
+	if name == "" && description == "" && sqlFile == "" && len(secrets) == 0 && ksqlCluster == "" &&
+		!cmd.Flags().Changed("activation-privilege") && !cmd.Flags().Changed("update-schema-registry") {
+		return fmt.Errorf("one of the update options must be provided:" +
+			"` --name`," +
+			" `--description`," +
+			" `--ksql-cluster`," +
+			" `--sql-file`," +
+			" `--secret`," +
+			" `--activation-privilege`," +
+			" `--update-schema-registry`")
 	}
 
 	updatePipeline := streamdesignerv1.SdV1Pipeline{Spec: &streamdesignerv1.SdV1PipelineSpec{}}
+
 	if name != "" {
 		updatePipeline.Spec.SetDisplayName(name)
 	}
@@ -124,8 +151,11 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	}
 
 	if cmd.Flags().Changed("update-schema-registry") {
-		updateSRCluster, _ := cmd.Flags().GetBool("update-schema-registry")
-		if updateSRCluster {
+		updateSchemaRegistry, err := cmd.Flags().GetBool("update-schema-registry")
+		if err != nil {
+			return err
+		}
+		if updateSchemaRegistry {
 			srCluster, err := c.Context.FetchSchemaRegistryByEnvironmentId(context.Background(), environmentId)
 			if err != nil {
 				return err
