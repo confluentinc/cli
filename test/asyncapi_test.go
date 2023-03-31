@@ -1,8 +1,8 @@
 package test
 
 import (
+	"bytes"
 	"os"
-	"strings"
 
 	testserver "github.com/confluentinc/cli/test/test-server"
 	"github.com/stretchr/testify/require"
@@ -22,19 +22,22 @@ func (s *CLITestSuite) TestAsyncApiExport() {
 		test.login = "cloud"
 		s.runIntegrationTest(test)
 	}
-	fileNames := []string{"asyncapi-spec.yaml", "asyncapi-with-context.yaml"}
-	for _, fileName := range fileNames {
-		defer os.Remove(fileName)
-		require.FileExists(s.T(), fileName)
-		file, err := os.ReadFile(fileName)
+
+	for _, filename := range []string{"asyncapi-spec.yaml", "asyncapi-with-context.yaml"} {
+		require.FileExists(s.T(), filename)
+		defer os.Remove(filename)
+
+		file, err := os.ReadFile(filename)
 		require.NoError(s.T(), err)
-		testfile, err := os.ReadFile("test/fixtures/output/asyncapi/" + fileName)
+
+		testfile, err := os.ReadFile("test/fixtures/output/asyncapi/" + filename)
 		require.NoError(s.T(), err)
-		index1 := strings.Index(string(file), "cluster:")
-		index2 := strings.Index(string(file), "confluentSchemaRegistry")
-		file1 := string(file[:index1]) + string(file[index2:])
-		file1 = strings.ReplaceAll(file1, "\r", "")
-		require.Equal(s.T(), string(testfile), file)
+
+		index1 := bytes.Index(file, []byte("cluster:"))
+		index2 := bytes.Index(file, []byte("confluentSchemaRegistry"))
+		file1 := append(file[:index1], file[index2:]...)
+		file1 = bytes.ReplaceAll(file1, []byte("\r"), []byte(""))
+		require.Equal(s.T(), string(testfile), string(file1))
 	}
 }
 
