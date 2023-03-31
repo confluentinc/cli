@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -31,6 +32,12 @@ func (c *command) newListCommand() *cobra.Command {
 		Long:  "List Confluent Cloud service quota values by a scope (organization, environment, network, kafka_cluster, service_account, or user_account).",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.list,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: `List Confluent Cloud service quota values for scope "organization".`,
+				Code: "confluent service-quota list organization",
+			},
+		),
 	}
 
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)

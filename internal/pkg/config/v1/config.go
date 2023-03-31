@@ -29,12 +29,12 @@ const (
 
 var ver, _ = version.NewVersion("1.0.0")
 
-const signupSuggestion = `If you need a Confluent Cloud account, sign up with "confluent cloud-signup".`
+const signupSuggestion = "If you need a Confluent Cloud account, sign up with `confluent cloud-signup`."
 
 var (
 	RequireCloudLoginErr = errors.NewErrorWithSuggestions(
 		"you must log in to Confluent Cloud to use this command",
-		"Log in with \"confluent login\".\n"+signupSuggestion,
+		"Log in with `confluent login`.\n"+signupSuggestion,
 	)
 	RequireCloudLoginOrgUnsuspendedErr = errors.NewErrorWithSuggestions(
 		"you must unsuspend your organization to use this command",
@@ -46,23 +46,23 @@ var (
 	)
 	RequireCloudLoginOrOnPremErr = errors.NewErrorWithSuggestions(
 		"you must log in to use this command",
-		"Log in with \"confluent login\".\n"+signupSuggestion,
+		"Log in with `confluent login`.\n"+signupSuggestion,
 	)
 	RequireNonAPIKeyCloudLoginErr = errors.NewErrorWithSuggestions(
 		"you must log in to Confluent Cloud with a username and password to use this command",
-		"Log in with \"confluent login\".\n"+signupSuggestion,
+		"Log in with `confluent login`.\n"+signupSuggestion,
 	)
 	RequireNonAPIKeyCloudLoginOrOnPremLoginErr = errors.NewErrorWithSuggestions(
 		"you must log in to Confluent Cloud with a username and password or log in to Confluent Platform to use this command",
-		"Log in with \"confluent login\" or \"confluent login --url <mds-url>\".\n"+signupSuggestion,
+		"Log in with `confluent login` or `confluent login --url <mds-url>`.\n"+signupSuggestion,
 	)
 	RequireNonCloudLogin = errors.NewErrorWithSuggestions(
 		"you must log out of Confluent Cloud to use this command",
-		"Log out with \"confluent logout\".\n",
+		"Log out with `confluent logout`.\n",
 	)
 	RequireOnPremLoginErr = errors.NewErrorWithSuggestions(
 		"you must log in to Confluent Platform to use this command",
-		`Log in with "confluent login --url <mds-url>".`,
+		"Log in with `confluent login --url <mds-url>`.",
 	)
 	RequireUpdatesEnabledErr = errors.NewErrorWithSuggestions(
 		"you must enable updates to use this command",

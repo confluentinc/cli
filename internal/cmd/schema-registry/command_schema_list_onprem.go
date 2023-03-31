@@ -7,7 +7,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 func (c *command) newSchemaListCommandOnPrem() *cobra.Command {
@@ -20,15 +19,15 @@ func (c *command) newSchemaListCommandOnPrem() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `List all schemas for subjects with prefix "my-subject".`,
-				Code: fmt.Sprintf("%s schema-registry schema list --subject-prefix my-subject %s", pversion.CLIName, OnPremAuthenticationMsg),
+				Code: fmt.Sprintf("confluent schema-registry schema list --subject-prefix my-subject %s", OnPremAuthenticationMsg),
 			},
 			examples.Example{
 				Text: `List all schemas for all subjects in context ":.mycontext:".`,
-				Code: fmt.Sprintf("%s schema-registry schema list --subject-prefix :.mycontext: %s", pversion.CLIName, OnPremAuthenticationMsg),
+				Code: fmt.Sprintf("confluent schema-registry schema list --subject-prefix :.mycontext: %s", OnPremAuthenticationMsg),
 			},
 			examples.Example{
 				Text: "List all schemas in the default context.",
-				Code: fmt.Sprintf("%s schema-registry schema list %s", pversion.CLIName, OnPremAuthenticationMsg),
+				Code: fmt.Sprintf("confluent schema-registry schema list %s", OnPremAuthenticationMsg),
 			},
 		),
 	}

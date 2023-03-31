@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	testserver "github.com/confluentinc/cli/test/test-server"
+	"github.com/stretchr/testify/require"
 )
 
 func (s *CLITestSuite) TestAsyncApiExport() {
@@ -24,19 +25,16 @@ func (s *CLITestSuite) TestAsyncApiExport() {
 	fileNames := []string{"asyncapi-spec.yaml", "asyncapi-with-context.yaml"}
 	for _, fileName := range fileNames {
 		defer os.Remove(fileName)
-		s.FileExistsf("./"+fileName, "Spec file not generated.")
+		require.FileExists(s.T(), fileName)
 		file, err := os.ReadFile(fileName)
-		if err != nil {
-			s.Errorf(err, "Cannot read file %s", fileName)
-		}
-		testfile, _ := os.ReadFile("test/fixtures/output/asyncapi/" + fileName)
+		require.NoError(s.T(), err)
+		testfile, err := os.ReadFile("test/fixtures/output/asyncapi/" + fileName)
+		require.NoError(s.T(), err)
 		index1 := strings.Index(string(file), "cluster:")
 		index2 := strings.Index(string(file), "confluentSchemaRegistry")
 		file1 := string(file[:index1]) + string(file[index2:])
 		file1 = strings.ReplaceAll(file1, "\r", "")
-		if strings.Compare(file1, string(testfile)) != 0 {
-			s.Error(nil, "spec generated does not match the template output file")
-		}
+		require.Equal(s.T(), string(testfile), file)
 	}
 }
 
