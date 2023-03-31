@@ -64,7 +64,7 @@ func newExportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Args:  cobra.NoArgs,
 	}
 
-	c := &command{AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
+	c := &command{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
 	cmd.RunE = c.export
 
 	cmd.Flags().String("file", "asyncapi-spec.yaml", "Output file name.")

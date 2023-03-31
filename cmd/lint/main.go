@@ -8,8 +8,6 @@ import (
 
 	"github.com/client9/gospell"
 
-	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
-
 	pcmd "github.com/confluentinc/cli/internal/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/linter"
@@ -296,7 +294,7 @@ func main() {
 	// Lint all three subsets of commands: no context, cloud, and on-prem
 	configs := []*v1.Config{
 		{CurrentContext: "No Context"},
-		{CurrentContext: "Cloud", Contexts: map[string]*v1.Context{"Cloud": {PlatformName: "https://confluent.cloud", State: &v1.ContextState{Auth: &v1.AuthConfig{Organization: &ccloudv1.Organization{}}}}}},
+		{CurrentContext: "Cloud", Contexts: map[string]*v1.Context{"Cloud": {PlatformName: "https://confluent.cloud"}}},
 		{CurrentContext: "On-Prem", Contexts: map[string]*v1.Context{"On-Prem": {PlatformName: "https://example.com"}}},
 	}
 
