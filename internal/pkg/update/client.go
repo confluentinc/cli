@@ -299,13 +299,6 @@ func (c *client) UpdateBinary(cliName, version, path string, noVerify bool) erro
 		return errors.Wrapf(err, errors.ChmodErrorMsg, newPath)
 	}
 
-	// After updating `ccloud` to `confluent`, remove `ccloud`.
-	if newPath != path {
-		if err := c.fs.Remove(path); err != nil {
-			return errors.Wrapf(err, "unable to remove %s", path)
-		}
-	}
-
 	return nil
 }
 
