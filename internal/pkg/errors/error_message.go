@@ -161,13 +161,12 @@ const (
 	KafkaClusterInaccessibleErrorMsg                 = `Kafka cluster "%s" not found or access forbidden`
 	KafkaClusterInaccessibleSuggestions              = ChooseRightEnvironmentSuggestions + "\n" +
 		"The active Kafka cluster may have been deleted. Set a new active cluster with `confluent kafka cluster use`."
-	KafkaClusterDeletingSuggestions = KafkaClusterInaccessibleSuggestions + "\n" +
-		"Ensure the cluster is not associated with any active Connect clusters."
 	ChooseRightEnvironmentSuggestions = "Ensure the cluster ID you entered is valid.\n" +
 		"Ensure the cluster you are specifying belongs to the currently selected environment with `confluent kafka cluster list`, `confluent environment list`, and `confluent environment use`."
-	UnknownTopicErrorMsg              = `unknown topic "%s"`
-	MdsUrlNotFoundSuggestions         = "Pass the `--url` flag or set the `CONFLUENT_PLATFORM_MDS_URL` environment variable."
-	KafkaClusterMissingPrefixErrorMsg = `Kafka cluster "%s" is missing required prefix "lkc-"`
+	PluralClusterEnvironmentSuggestions = "Ensure the clusters you are specifying belong to the currently selected environment with `confluent kafka cluster list`, `confluent environment list`, and `confluent environment use`."
+	UnknownTopicErrorMsg                = `unknown topic "%s"`
+	MdsUrlNotFoundSuggestions           = "Pass the `--url` flag or set the `CONFLUENT_PLATFORM_MDS_URL` environment variable."
+	KafkaClusterMissingPrefixErrorMsg   = `Kafka cluster "%s" is missing required prefix "lkc-"`
 
 	// kafka topic commands
 	FailedToCreateProducerErrorMsg       = "failed to create producer: %v"

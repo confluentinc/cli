@@ -218,11 +218,7 @@ func CatchKafkaNotFoundError(err error, clusterId string, r *http.Response) erro
 	}
 
 	if r != nil && r.StatusCode == http.StatusForbidden {
-		suggestions := KafkaClusterInaccessibleSuggestions
-		if r.Request.Method == http.MethodDelete {
-			suggestions = KafkaClusterDeletingSuggestions
-		}
-		return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), fmt.Sprintf(KafkaClusterInaccessibleErrorMsg, clusterId), suggestions)
+		return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), fmt.Sprintf(KafkaClusterInaccessibleErrorMsg, clusterId), KafkaClusterInaccessibleSuggestions)
 	}
 
 	return CatchCCloudV2Error(err, r)

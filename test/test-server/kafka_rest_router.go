@@ -1258,29 +1258,34 @@ func handleKafkaBrokerIdConfigsName(t *testing.T) http.HandlerFunc {
 func handleKafkaBrokerIdConfigs(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		configValue1 := "gzip"
-		configValue2 := "SASL/PLAIN"
-		err := json.NewEncoder(w).Encode(cpkafkarestv3.BrokerConfigDataList{
-			Data: []cpkafkarestv3.BrokerConfigData{
-				{
-					ClusterId:   vars["cluster_id"],
-					Name:        "compression.type",
-					Value:       &configValue1,
-					IsDefault:   true,
-					IsReadOnly:  true,
-					IsSensitive: true,
+		brokerId := vars["broker_id"]
+		if brokerId == "1" || brokerId == "2" {
+			configValue1 := "gzip"
+			configValue2 := "SASL/PLAIN"
+			err := json.NewEncoder(w).Encode(cpkafkarestv3.BrokerConfigDataList{
+				Data: []cpkafkarestv3.BrokerConfigData{
+					{
+						ClusterId:   vars["cluster_id"],
+						Name:        "compression.type",
+						Value:       &configValue1,
+						IsDefault:   true,
+						IsReadOnly:  true,
+						IsSensitive: true,
+					},
+					{
+						ClusterId:   vars["cluster_id"],
+						Name:        "sasl_mechanism",
+						Value:       &configValue2,
+						IsDefault:   false,
+						IsReadOnly:  false,
+						IsSensitive: false,
+					},
 				},
-				{
-					ClusterId:   vars["cluster_id"],
-					Name:        "sasl_mechanism",
-					Value:       &configValue2,
-					IsDefault:   false,
-					IsReadOnly:  false,
-					IsSensitive: false,
-				},
-			},
-		})
-		require.NoError(t, err)
+			})
+			require.NoError(t, err)
+		} else {
+			w.WriteHeader(http.StatusForbidden)
+		}
 	}
 }
 

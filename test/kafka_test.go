@@ -50,6 +50,8 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka cluster delete lkc-unknown --force", fixture: "kafka/cluster/delete-unknown-error.golden", exitCode: 1},
 		{args: "kafka cluster delete lkc-def973 --force", fixture: "kafka/5.golden"},
 		{args: "kafka cluster delete lkc-def973", input: "kafka-cluster\n", fixture: "kafka/5-prompt.golden"},
+		{args: "kafka cluster delete lkc-def973 lkc-unknown", fixture: "kafka/cluster/delete-multiple-fail.golden", exitCode: 1},
+		{args: "kafka cluster delete lkc-def973 lkc-update", input: "y\n", fixture: "kafka/cluster/delete-multiple-success.golden"},
 
 		{args: "kafka cluster use a-595", fixture: "kafka/40.golden"},
 
@@ -275,6 +277,8 @@ func (s *CLITestSuite) TestKafkaBroker() {
 		{args: "kafka broker delete -h", fixture: "kafka/broker/delete-help.golden"},
 		{args: "kafka broker delete 1 --force", fixture: "kafka/broker/delete.golden"},
 		{args: "kafka broker delete 1", input: "y\n", fixture: "kafka/broker/delete-prompt.golden"},
+		{args: "kafka broker delete 1 2", input: "y\n", fixture: "kafka/broker/delete-multiple-prompt.golden"},
+		{args: "kafka broker delete 1 3", fixture: "kafka/broker/delete-multiple-fail.golden", exitCode: 1},
 
 		{args: "kafka broker get-tasks -h", fixture: "kafka/broker/get-tasks-help.golden"},
 		{args: "kafka broker get-tasks 1", fixture: "kafka/broker/get-tasks-1.golden"},
