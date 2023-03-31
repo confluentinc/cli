@@ -264,6 +264,10 @@ func (s *CLITestSuite) TestSchemaRegistry() {
 			fixture: "schema-registry/region/list-all.golden",
 		},
 		{
+			args:    "schema-registry region list -o json",
+			fixture: "schema-registry/region/list-all-json.golden",
+		},
+		{
 			args:    "schema-registry region list --cloud aws",
 			fixture: "schema-registry/region/list-filter-cloud.golden",
 		},
