@@ -12,7 +12,7 @@ func TestStartContainer(t *testing.T) {
 	pool, err := dockertest.NewPool("")
 	req.NoError(err)
 
-	resource, err := pool.Run("523370736235.dkr.ecr.us-west-2.amazonaws.com/confluentinc/kafka-local", "latest", []string{}) // add to ci
+	resource, err := pool.Run("523370736235.dkr.ecr.us-west-2.amazonaws.com/confluentinc/kafka-local", "latest", []string{}) // might need to pull the image first in semaphore
 	req.NoError(err)
 
 	t.Cleanup(func() {
