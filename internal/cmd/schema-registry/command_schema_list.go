@@ -2,7 +2,6 @@ package schemaregistry
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
@@ -12,7 +11,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 type row struct {
@@ -31,15 +29,15 @@ func (c *command) newSchemaListCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `List all schemas for subjects with prefix "my-subject".`,
-				Code: fmt.Sprintf("%s schema-registry schema list --subject-prefix my-subject", pversion.CLIName),
+				Code: "confluent schema-registry schema list --subject-prefix my-subject",
 			},
 			examples.Example{
 				Text: `List all schemas for all subjects in context ":.mycontext:".`,
-				Code: fmt.Sprintf("%s schema-registry schema list --subject-prefix :.mycontext:", pversion.CLIName),
+				Code: "confluent schema-registry schema list --subject-prefix :.mycontext:",
 			},
 			examples.Example{
 				Text: "List all schemas in the default context.",
-				Code: fmt.Sprintf("%s schema-registry schema list", pversion.CLIName),
+				Code: "confluent schema-registry schema list",
 			},
 		),
 	}

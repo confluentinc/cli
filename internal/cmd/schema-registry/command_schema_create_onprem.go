@@ -10,7 +10,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 func (c *command) newSchemaCreateCommandOnPrem() *cobra.Command {
@@ -23,7 +22,7 @@ func (c *command) newSchemaCreateCommandOnPrem() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Register a new schema.",
-				Code: fmt.Sprintf("%s schema-registry schema create --subject payments --schema payments.avro --type avro %s", pversion.CLIName, OnPremAuthenticationMsg),
+				Code: fmt.Sprintf("confluent schema-registry schema create --subject payments --schema payments.avro --type avro %s", OnPremAuthenticationMsg),
 			},
 		),
 	}

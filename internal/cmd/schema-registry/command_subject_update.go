@@ -2,7 +2,6 @@ package schemaregistry
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -13,7 +12,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
 func (c *command) newSubjectUpdateCommand() *cobra.Command {
@@ -25,11 +23,11 @@ func (c *command) newSubjectUpdateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Update subject-level compatibility of subject "payments".`,
-				Code: fmt.Sprintf("%s schema-registry subject update payments --compatibility backward", version.CLIName),
+				Code: "confluent schema-registry subject update payments --compatibility backward",
 			},
 			examples.Example{
 				Text: `Update subject-level mode of subject "payments".`,
-				Code: fmt.Sprintf("%s schema-registry subject update payments --mode readwrite", version.CLIName),
+				Code: "confluent schema-registry subject update payments --mode readwrite",
 			},
 		),
 	}
