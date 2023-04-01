@@ -41,8 +41,14 @@ func (c *serviceAccountCommand) delete(cmd *cobra.Command, args []string) error 
 	}
 	args = validArgs
 
-	if _, err := form.ConfirmDeletionType(cmd, resource.ServiceAccount, displayName, args); err != nil {
-		return err
+	if len(args) == 1 {
+		if err := form.ConfirmDeletionWithString(cmd, resource.ServiceAccount, args[0], displayName); err != nil {
+			return err
+		}
+	} else {
+		if ok, err := form.ConfirmDeletionYesNo(cmd, resource.ServiceAccount, args); err != nil || !ok {
+			return err
+		}
 	}
 
 	var errs error
@@ -68,7 +74,7 @@ func (c *serviceAccountCommand) validateArgs(cmd *cobra.Command, args []string) 
 	describeFunc := func(id string) error {
 		if serviceAccount, _, err := c.V2Client.GetIamServiceAccount(id); err != nil {
 			return err
-		} else if id == args[0] {
+		} else if displayName == "" { // store the first valid provider name
 			displayName = serviceAccount.GetDisplayName()
 		}
 		return nil

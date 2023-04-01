@@ -990,35 +990,40 @@ func handleKafkaRPLags(t *testing.T) http.HandlerFunc {
 // Handler for: "/kafka/v3/clusters/{cluster_id}/links/{link_name}/configs"
 func handleKafkaRPLinkConfigs(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			err := json.NewEncoder(w).Encode(cpkafkarestv3.ListLinkConfigsResponseDataList{Data: []cpkafkarestv3.ListLinkConfigsResponseData{
-				{
-					Kind:      "",
-					Metadata:  cpkafkarestv3.ResourceMetadata{},
-					ClusterId: "cluster-1",
-					Name:      "replica.fetch.max.bytes",
-					Value:     "1048576",
-					ReadOnly:  false,
-					Sensitive: false,
-					Source:    "source-1",
-					Synonyms:  []string{"rfmb", "bmfr"},
-					LinkName:  "link-1",
-				},
-				{
-					Kind:      "",
-					Metadata:  cpkafkarestv3.ResourceMetadata{},
-					ClusterId: "cluster-1",
-					Name:      "bootstrap.servers",
-					Value:     "bitcoin.com:8888",
-					ReadOnly:  false,
-					Sensitive: false,
-					Source:    "source-2",
-					Synonyms:  nil,
-					LinkName:  "link-1",
-				},
-			}})
-			require.NoError(t, err)
+		link := mux.Vars(r)["link"]
+		if link == "link-dne" {
+			w.WriteHeader(http.StatusForbidden)
+		} else {
+			switch r.Method {
+			case http.MethodGet:
+				err := json.NewEncoder(w).Encode(cpkafkarestv3.ListLinkConfigsResponseDataList{Data: []cpkafkarestv3.ListLinkConfigsResponseData{
+					{
+						Kind:      "",
+						Metadata:  cpkafkarestv3.ResourceMetadata{},
+						ClusterId: "cluster-1",
+						Name:      "replica.fetch.max.bytes",
+						Value:     "1048576",
+						ReadOnly:  false,
+						Sensitive: false,
+						Source:    "source-1",
+						Synonyms:  []string{"rfmb", "bmfr"},
+						LinkName:  "link-1",
+					},
+					{
+						Kind:      "",
+						Metadata:  cpkafkarestv3.ResourceMetadata{},
+						ClusterId: "cluster-1",
+						Name:      "bootstrap.servers",
+						Value:     "bitcoin.com:8888",
+						ReadOnly:  false,
+						Sensitive: false,
+						Source:    "source-2",
+						Synonyms:  nil,
+						LinkName:  "link-1",
+					},
+				}})
+				require.NoError(t, err)
+			}
 		}
 	}
 }

@@ -41,8 +41,14 @@ func (c *identityProviderCommand) delete(cmd *cobra.Command, args []string) erro
 	}
 	args = validArgs
 
-	if _, err := form.ConfirmDeletionType(cmd, resource.IdentityProvider, displayName, args); err != nil {
-		return err
+	if len(args) == 1 {
+		if err := form.ConfirmDeletionWithString(cmd, resource.IdentityProvider, args[0], displayName); err != nil {
+			return err
+		}
+	} else {
+		if ok, err := form.ConfirmDeletionYesNo(cmd, resource.IdentityProvider, args); err != nil || !ok {
+			return err
+		}
 	}
 
 	var errs error
@@ -64,7 +70,7 @@ func (c *identityProviderCommand) validateArgs(cmd *cobra.Command, args []string
 	describeFunc := func(id string) error {
 		if provider, err := c.V2Client.GetIdentityProvider(id); err != nil {
 			return err
-		} else if id == args[0] {
+		} else if displayName == "" { // store the first valid provider name
 			displayName = provider.GetDisplayName()
 		}
 		return nil

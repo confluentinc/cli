@@ -43,8 +43,14 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	}
 	args = validArgs
 
-	if _, err := form.ConfirmDeletionType(cmd, resource.KafkaCluster, displayName, args); err != nil {
-		return err
+	if len(args) == 1 {
+		if err := form.ConfirmDeletionWithString(cmd, resource.KafkaCluster, args[0], displayName); err != nil {
+			return err
+		}
+	} else {
+		if ok, err := form.ConfirmDeletionYesNo(cmd, resource.KafkaCluster, args); err != nil || !ok {
+			return err
+		}
 	}
 
 	var errs error
@@ -81,7 +87,7 @@ func (c *clusterCommand) validateArgs(cmd *cobra.Command, environmentId string, 
 	describeFunc := func(id string) error {
 		if cluster, _, err := c.V2Client.DescribeKafkaCluster(id, environmentId); err != nil {
 			return err
-		} else if id == args[0] {
+		} else if displayName == "" { // store the first valid cluster name
 			displayName = cluster.Spec.GetDisplayName()
 		}
 		return nil

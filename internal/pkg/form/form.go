@@ -102,34 +102,30 @@ func ConfirmDeletion(cmd *cobra.Command, promptMsg, stringToType string) (bool, 
 	return false, errors.NewErrorWithSuggestions(fmt.Sprintf(`input does not match "%s"`, stringToType), DeleteResourceConfirmSuggestions)
 }
 
-func ConfirmDeletionType(cmd *cobra.Command, resourceType, stringToType string, idList []string) (bool, error) {
-	if len(idList) > 1 {
-		return ConfirmDeletionYesNo(cmd, resourceType, idList)
-	}
-
-	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resourceType, idList[0], stringToType)
+func ConfirmDeletionWithString(cmd *cobra.Command, resourceType, id, stringToType string) error {
+	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resourceType, id, stringToType)
 	return ConfirmDeletionTypeCustomPrompt(cmd, promptMsg, stringToType)
 }
 
-func ConfirmDeletionTypeCustomPrompt(cmd *cobra.Command, promptMsg, stringToType string) (bool, error) {
+func ConfirmDeletionTypeCustomPrompt(cmd *cobra.Command, promptMsg, stringToType string) error {
 	if force, err := cmd.Flags().GetBool("force"); err != nil {
-		return false, err
+		return err
 	} else if force {
-		return true, nil
+		return nil
 	}
 
 	prompt := NewPrompt(os.Stdin)
 	f := New(Field{ID: "confirm", Prompt: promptMsg})
 	if err := f.Prompt(prompt); err != nil {
-		return false, err
+		return err
 	}
 
 	if f.Responses["confirm"].(string) == stringToType || f.Responses["confirm"].(string) == fmt.Sprintf(`"%s"`, stringToType) {
-		return true, nil
+		return nil
 	}
 
 	DeleteResourceConfirmSuggestions := "Use the `--force` flag to delete without a confirmation prompt."
-	return false, errors.NewErrorWithSuggestions(fmt.Sprintf(`input does not match "%s"`, stringToType), DeleteResourceConfirmSuggestions)
+	return errors.NewErrorWithSuggestions(fmt.Sprintf(`input does not match "%s"`, stringToType), DeleteResourceConfirmSuggestions)
 }
 
 func ConfirmDeletionYesNo(cmd *cobra.Command, resourceType string, idList []string) (bool, error) {

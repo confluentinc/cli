@@ -34,8 +34,14 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	}
 	args = validArgs
 
-	if _, err := form.ConfirmDeletionType(cmd, resource.Environment, displayName, args); err != nil {
-		return err
+	if len(args) == 1 {
+		if err := form.ConfirmDeletionWithString(cmd, resource.Environment, args[0], displayName); err != nil {
+			return err
+		}
+	} else {
+		if ok, err := form.ConfirmDeletionYesNo(cmd, resource.Environment, args); err != nil || !ok {
+			return err
+		}
 	}
 
 	var errs error
@@ -69,7 +75,7 @@ func (c *command) validateArgs(cmd *cobra.Command, args []string) (string, []str
 	describeFunc := func(id string) error {
 		if environment, _, err := c.V2Client.GetOrgEnvironment(id); err != nil {
 			return err
-		} else if id == args[0] {
+		} else if displayName == "" { // store the first valid environment name
 			displayName = environment.GetDisplayName()
 		}
 		return nil

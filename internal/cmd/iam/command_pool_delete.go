@@ -49,8 +49,14 @@ func (c *identityPoolCommand) delete(cmd *cobra.Command, args []string) error {
 	}
 	args = validArgs
 
-	if _, err := form.ConfirmDeletionType(cmd, resource.IdentityPool, displayName, args); err != nil {
-		return err
+	if len(args) == 1 {
+		if err := form.ConfirmDeletionWithString(cmd, resource.IdentityPool, args[0], displayName); err != nil {
+			return err
+		}
+	} else {
+		if ok, err := form.ConfirmDeletionYesNo(cmd, resource.IdentityPool, args); err != nil || !ok {
+			return err
+		}
 	}
 
 	var errs error
@@ -72,7 +78,7 @@ func (c *identityPoolCommand) validateArgs(cmd *cobra.Command, provider string, 
 	describeFunc := func(id string) error {
 		if pool, err := c.V2Client.GetIdentityPool(id, provider); err != nil {
 			return err
-		} else if id == args[0] {
+		} else if displayName == "" { // store the first valid pool name
 			displayName = pool.GetDisplayName()
 		}
 		return nil

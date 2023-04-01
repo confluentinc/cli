@@ -58,8 +58,14 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	}
 	args = validArgs
 
-	if _, err := form.ConfirmDeletionType(cmd, resource.Connector, connectorIdToName[args[0]], args); err != nil {
-		return err
+	if len(args) == 1 {
+		if err := form.ConfirmDeletionWithString(cmd, resource.Connector, args[0], connectorIdToName[args[0]]); err != nil {
+			return err
+		}
+	} else {
+		if ok, err := form.ConfirmDeletionYesNo(cmd, resource.Connector, args); err != nil || !ok {
+			return err
+		}
 	}
 
 	var errs error

@@ -1,0 +1,5 @@
+Error: cluster link not found: "link-dne"
+
+Suggestions:
+    Use the `--skip-invalid` flag to suppress this error and delete the remaining cluster links entered.
+    List available cluster links with `confluent kafka link list`.

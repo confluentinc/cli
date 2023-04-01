@@ -33,8 +33,14 @@ func (c *userCommand) delete(cmd *cobra.Command, args []string) error {
 	}
 	args = validArgs
 
-	if _, err := form.ConfirmDeletionType(cmd, resource.User, fullName, args); err != nil {
-		return err
+	if len(args) == 1 {
+		if err := form.ConfirmDeletionWithString(cmd, resource.User, args[0], fullName); err != nil {
+			return err
+		}
+	} else {
+		if ok, err := form.ConfirmDeletionYesNo(cmd, resource.User, args); err != nil || !ok {
+			return err
+		}
 	}
 
 	var errs error
@@ -60,7 +66,7 @@ func (c *userCommand) validateArgs(cmd *cobra.Command, args []string) (string, [
 	describeFunc := func(id string) error {
 		if user, err := c.V2Client.GetIamUserById(id); err != nil {
 			return err
-		} else if id == args[0] {
+		} else if fullName == "" { // store the first valid user name
 			fullName = user.GetFullName()
 		}
 		return nil
