@@ -2,6 +2,7 @@ package schemaregistry
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 
 	"github.com/spf13/cobra"
@@ -16,6 +17,11 @@ import (
 
 type configOut struct {
 	CompatibilityLevel string `human:"Compatibility Level" serialized:"compatibility_level"`
+	CompatibilityGroup string `human:"Compatibility Group" serialized:"compatibility_group"`
+	DefaultMetadata    string `human:"Default Metadata" serialized:"default_metadata"`
+	OverrideMetadata   string `human:"Override Metadata" serialized:"override_metadata"`
+	DefaultRuleSet     string `human:"Default Rule Set" serialized:"default_rule_set"`
+	OverrideRuleSet    string `human:"Override Rule Set" serialized:"override_rule_set"`
 }
 
 func (c *command) newConfigDescribeCommand() *cobra.Command {
@@ -75,7 +81,33 @@ func describeSchemaConfig(cmd *cobra.Command, srClient *srsdk.APIClient, ctx con
 		}
 	}
 
+	defaultMetadata, err := json.Marshal(config.DefaultMetadata)
+	if err != nil {
+		return err
+	}
+
+	overrideMetadata, err := json.Marshal(config.OverrideMetadata)
+	if err != nil {
+		return err
+	}
+
+	defaultRuleSet, err := json.Marshal(config.DefaultRuleSet)
+	if err != nil {
+		return err
+	}
+
+	overrideRuleSet, err := json.Marshal(config.OverrideRuleSet)
+	if err != nil {
+		return err
+	}
+
 	table := output.NewTable(cmd)
-	table.Add(&configOut{CompatibilityLevel: config.CompatibilityLevel})
+	table.Add(&configOut{CompatibilityLevel: config.CompatibilityLevel,
+		CompatibilityGroup: config.CompatibilityGroup,
+		DefaultMetadata:    string(defaultMetadata),
+		OverrideMetadata:   string(overrideMetadata),
+		DefaultRuleSet:     string(defaultRuleSet),
+		OverrideRuleSet:    string(overrideRuleSet),
+	})
 	return table.Print()
 }

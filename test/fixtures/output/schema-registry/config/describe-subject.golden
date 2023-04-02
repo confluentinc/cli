@@ -1,3 +1,8 @@
 +---------------------+---------+
 | Compatibility Level | FORWARD |
+| Compatibility Group |         |
+| Default Metadata    | {}      |
+| Override Metadata   | {}      |
+| Default Rule Set    | {}      |
+| Override Rule Set   | {}      |
 +---------------------+---------+

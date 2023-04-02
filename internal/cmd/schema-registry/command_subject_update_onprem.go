@@ -30,9 +30,19 @@ func (c *command) newSubjectUpdateCommandOnPrem() *cobra.Command {
 	}
 
 	addCompatibilityFlag(cmd)
+	cmd.Flags().String("compatibility-group", "", "The name for compatibility group.")
+	cmd.Flags().String("default-metadata", "", "The path to default metadata file.")
+	cmd.Flags().String("override-metadata", "", "The path to override metadata file.")
+	cmd.Flags().String("default-rule-set", "", "The path to default schema rule set file.")
+	cmd.Flags().String("override-rule-set", "", "The path to override schema rule set file.")
 	addModeFlag(cmd)
 	cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
 	pcmd.AddContextFlag(cmd, c.CLICommand)
+
+	cobra.CheckErr(cmd.MarkFlagFilename("default-metadata", "json"))
+	cobra.CheckErr(cmd.MarkFlagFilename("override-metadata", "json"))
+	cobra.CheckErr(cmd.MarkFlagFilename("default-rule-set", "json"))
+	cobra.CheckErr(cmd.MarkFlagFilename("override-rule-set", "json"))
 
 	return cmd
 }
@@ -59,7 +69,7 @@ func (c *command) subjectUpdateOnPrem(cmd *cobra.Command, args []string) error {
 	}
 
 	if compatibility != "" {
-		return c.updateCompatibility(subject, compatibility, srClient, ctx)
+		return c.updateCompatibility(subject, compatibility, cmd, srClient, ctx)
 	}
 
 	if mode != "" {
