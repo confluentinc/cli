@@ -13,12 +13,17 @@ Update subject-level mode of subject "payments".
   $ confluent schema-registry subject update payments --mode readwrite
 
 Flags:
-      --compatibility string   Can be "backward", "backward_transitive", "forward", "forward_transitive", "full", "full_transitive", or "none".
-      --mode string            Can be "readwrite", "readonly", or "import".
-      --api-key string         API key.
-      --api-secret string      API key secret.
-      --context string         CLI context name.
-      --environment string     Environment ID.
+      --compatibility string         Can be "backward", "backward_transitive", "forward", "forward_transitive", "full", "full_transitive", or "none".
+      --compatibility-group string   The name for compatibility group.
+      --default-metadata string      The path to default metadata file.
+      --override-metadata string     The path to override metadata file.
+      --default-rule-set string      The path to default schema rule set file.
+      --override-rule-set string     The path to override schema rule set file.
+      --mode string                  Can be "readwrite", "readonly", or "import".
+      --api-key string               API key.
+      --api-secret string            API key secret.
+      --context string               CLI context name.
+      --environment string           Environment ID.
 
 Global Flags:
   -h, --help            Show help for this command.

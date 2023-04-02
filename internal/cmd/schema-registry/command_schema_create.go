@@ -2,6 +2,7 @@ package schemaregistry
 
 import (
 	"fmt"
+	"github.com/antihax/optional"
 	"os"
 	"strings"
 
@@ -56,6 +57,9 @@ func (c *command) newSchemaCreateCommand() *cobra.Command {
 	cmd.Flags().String("subject", "", SubjectUsage)
 	pcmd.AddSchemaTypeFlag(cmd)
 	cmd.Flags().String("references", "", "The path to the references file.")
+	cmd.Flags().String("metadata", "", "The path to metadata file.")
+	cmd.Flags().String("rule-set", "", "The path to schema rule set file.")
+	cmd.Flags().Bool("normalize", false, "Whether to register the normalized schema.")
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddApiSecretFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -64,6 +68,8 @@ func (c *command) newSchemaCreateCommand() *cobra.Command {
 
 	cobra.CheckErr(cmd.MarkFlagFilename("schema", "avsc", "json", "proto"))
 	cobra.CheckErr(cmd.MarkFlagFilename("references", "json"))
+	cobra.CheckErr(cmd.MarkFlagFilename("metadata", "json"))
+	cobra.CheckErr(cmd.MarkFlagFilename("rule-set", "json"))
 
 	cobra.CheckErr(cmd.MarkFlagRequired("schema"))
 	cobra.CheckErr(cmd.MarkFlagRequired("subject"))
@@ -103,7 +109,31 @@ func (c *command) schemaCreate(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	response, _, err := srClient.DefaultApi.Register(ctx, subject, srsdk.RegisterSchemaRequest{Schema: string(schema), SchemaType: schemaType, References: refs})
+	metadata, err := ReadMetadata("metadata", cmd)
+	if err != nil {
+		return err
+	}
+
+	ruleset, err := ReadRuleSet("rule-set", cmd)
+	if err != nil {
+		return err
+	}
+
+	normalize, err := cmd.Flags().GetBool("normalize")
+	registerOpts := srsdk.RegisterOpts{
+		Normalize: optional.NewBool(normalize),
+	}
+	if err != nil {
+		return err
+	}
+
+	response, _, err := srClient.DefaultApi.Register(ctx, subject,
+		srsdk.RegisterSchemaRequest{Schema: string(schema),
+			SchemaType: schemaType,
+			References: refs,
+			Metadata:   *metadata,
+			RuleSet:    *ruleset},
+		&registerOpts)
 	if err != nil {
 		return err
 	}
