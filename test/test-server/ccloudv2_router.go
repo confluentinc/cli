@@ -52,6 +52,8 @@ var ccloudV2Routes = []route{
 	{"/sd/v1/pipelines/{id}", handlePipeline},
 	{"/service-quota/v1/applied-quotas", handleAppliedQuotas},
 	{"/service-quota/v2/applied-quotas", handleAppliedQuotas},
+	{"/srcm/v2/regions", handleSchemaRegistryRegions},
+	{"/srcm/v2/regions/{id}", handleSchemaRegistryRegion},
 	{"/v2/metrics/cloud/query", handleMetricsQuery},
 }
 

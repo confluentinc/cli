@@ -27,19 +27,18 @@ publish-docs: docs
 	git clone git@github.com:confluentinc/docs-confluent-cli.git $(DOCS_CONFLUENT_CLI) && \
 	version=$$(cat release-notes/version.txt) && \
 	cd $(DOCS_CONFLUENT_CLI) && \
-	git checkout publish-docs-$${version} && \
+	git checkout publish-docs-v$${version} && \
 	rm -rf command-reference && \
 	cp -R ~/git/go/src/github.com/confluentinc/cli/docs command-reference && \
 	[ ! -f "command-reference/kafka/topic/confluent_kafka_topic_consume.rst" ] || sed -i '' 's/default "confluent_cli_consumer_[^"]*"/default "confluent_cli_consumer_<randomly-generated-id>"/' command-reference/kafka/topic/confluent_kafka_topic_consume.rst || exit 1 && \
 	git add . && \
-	git diff --cached --exit-code > /dev/null && echo "nothing to update for docs" && exit 0; \
-	git commit -m "[ci skip] chore: update CLI docs for $${version}" && \
-	$(call dry-run,git push origin publish-docs-$${version}) && \
+	git commit --allow-empty -m "[ci skip] chore: update CLI docs for v$${version}" && \
+	$(call dry-run,git push origin publish-docs-v$${version}) && \
 	base="master" && \
 	if [[ $${version} != *.0 ]]; then \
 		base=$(STAGING_BRANCH); \
 	fi && \
-	$(call dry-run,gh pr create -B $${base} --title "chore: update CLI docs for $${version}" --body "")
+	$(call dry-run,gh pr create -B $${base} --title "chore: update CLI docs for v$${version}" --body "")
 
 	rm -rf $(DIR)
 
