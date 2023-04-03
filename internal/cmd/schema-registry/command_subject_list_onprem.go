@@ -7,7 +7,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
 func (c *command) newSubjectListCommandOnPrem() *cobra.Command {
@@ -20,7 +19,7 @@ func (c *command) newSubjectListCommandOnPrem() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "List all available subjects.",
-				Code: fmt.Sprintf("%s schema-registry subject list %s", version.CLIName, OnPremAuthenticationMsg),
+				Code: fmt.Sprintf("confluent schema-registry subject list %s", OnPremAuthenticationMsg),
 			},
 		),
 	}

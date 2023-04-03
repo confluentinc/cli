@@ -46,7 +46,6 @@ var (
 
 type command struct {
 	*pcmd.AuthenticatedStateFlagCommand
-	prerunner pcmd.PreRunner
 }
 
 func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
@@ -56,10 +55,7 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
-	c := &command{
-		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner),
-		prerunner:                     prerunner,
-	}
+	c := &command{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
 
 	dc := dynamicconfig.New(cfg, nil, nil)
 	_ = dc.ParseFlagsIntoConfig(cmd)
