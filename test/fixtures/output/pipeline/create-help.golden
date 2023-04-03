@@ -9,9 +9,9 @@ Create a new Stream Designer pipeline
   $ confluent pipeline create --name test-pipeline --ksql-cluster lksqlc-12345 --description "this is a test pipeline"
 
 Flags:
-      --ksql-cluster string   KSQL cluster for the pipeline.
       --name string           REQUIRED: Name of the pipeline.
       --description string    Description of the pipeline.
+      --ksql-cluster string   KSQL cluster for the pipeline.
       --sql-file string       Path to a KSQL file containing the pipeline's source code.
       --secret stringArray    A named secret that can be referenced in pipeline source code, e.g. "secret_name=secret_content".
                               This flag can be supplied multiple times. The secret mapping must have the format <secret-name>=<secret-value>,
