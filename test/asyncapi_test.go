@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"os"
 
-	testserver "github.com/confluentinc/cli/test/test-server"
 	"github.com/stretchr/testify/require"
+
+	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
 func (s *CLITestSuite) TestAsyncApiExport() {
@@ -35,9 +36,9 @@ func (s *CLITestSuite) TestAsyncApiExport() {
 
 		index1 := bytes.Index(file, []byte("cluster:"))
 		index2 := bytes.Index(file, []byte("confluentSchemaRegistry"))
-		file1 := append(file[:index1], file[index2:]...)
-		file1 = bytes.ReplaceAll(file1, []byte("\r"), []byte(""))
-		require.Equal(s.T(), string(testfile), string(file1))
+		file = append(file[:index1], file[index2:]...)
+		file = bytes.ReplaceAll(file, []byte("\r"), []byte(""))
+		require.Equal(s.T(), string(testfile), string(file))
 	}
 }
 
