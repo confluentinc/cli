@@ -1,1 +1,1 @@
-Error: must set "client-cert-path" and "client-key-path" flags together
+Error: must set `--client-cert-path` and `--client-key-path` flags together

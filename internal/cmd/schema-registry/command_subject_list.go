@@ -2,7 +2,6 @@ package schemaregistry
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
@@ -10,9 +9,7 @@ import (
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
 type subjectListOut struct {
@@ -25,12 +22,6 @@ func (c *command) newSubjectListCommand() *cobra.Command {
 		Short: "List subjects.",
 		Args:  cobra.NoArgs,
 		RunE:  c.subjectList,
-		Example: examples.BuildExampleString(
-			examples.Example{
-				Text: "List all available subjects.",
-				Code: fmt.Sprintf("%s schema-registry subject list", version.CLIName),
-			},
-		),
 	}
 
 	cmd.Flags().Bool("deleted", false, "View the deleted subjects.")
