@@ -269,6 +269,8 @@ func (c *client) UpdateBinary(cliName, version, path string, noVerify bool) erro
 	newPath := filepath.Join(filepath.Dir(path), cliName)
 
 	if c.OS == "windows" {
+		newPath += ".exe"
+
 		// The old version will get deleted automatically eventually as we put it in the system's or user's temp dir
 		previousVersionBinary := filepath.Join(downloadDir, cliName+".old")
 		err = c.fs.Move(path, previousVersionBinary)
@@ -297,13 +299,6 @@ func (c *client) UpdateBinary(cliName, version, path string, noVerify bool) erro
 
 	if err := c.fs.Chmod(newPath, 0755); err != nil {
 		return errors.Wrapf(err, errors.ChmodErrorMsg, newPath)
-	}
-
-	// After updating `ccloud` to `confluent`, remove `ccloud`.
-	if newPath != path {
-		if err := c.fs.Remove(path); err != nil {
-			return errors.Wrapf(err, "unable to remove %s", path)
-		}
 	}
 
 	return nil

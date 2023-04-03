@@ -12,14 +12,13 @@ import (
 func (c *aclCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete",
-		Short: "Delete a Kafka ACL.",
-		Long:  "Delete a Kafka ACL. This command only works with centralized ACLs.",
+		Short: "Delete a centralized ACL.",
 		Args:  cobra.NoArgs,
 		RunE:  c.delete,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Delete an ACL that granted the specified user access to the "test" topic in the specified cluster.`,
-				Code: "confluent iam acl delete --kafka-cluster <kafka-cluster-id> --allow --principal User:Jane --topic test --operation write --host *",
+				Code: `confluent iam acl delete --kafka-cluster <kafka-cluster-id> --allow --principal User:Jane --topic test --operation write --host "*"`,
 			},
 		),
 	}
