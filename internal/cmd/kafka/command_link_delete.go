@@ -44,11 +44,11 @@ func (c *linkCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	validArgs, err := c.validateArgs(cmd, kafkaREST, clusterId, args)
-	if err != nil {
+	if validArgs, err := c.validateArgs(cmd, kafkaREST, clusterId, args); err != nil {
 		return err
+	} else {
+		args = validArgs
 	}
-	args = validArgs
 
 	if len(args) == 1 {
 		if err := form.ConfirmDeletionWithString(cmd, resource.ClusterLink, args[0], args[0]); err != nil {
