@@ -370,3 +370,7 @@ func getV2List[T any](ptrList []*T) []T {
 	}
 	return objList
 }
+
+func getV2Ptr[T any](obj T) *T {
+	return &obj
+}
