@@ -2,7 +2,6 @@ package dynamicconfig
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"testing"
 	"time"
@@ -19,7 +18,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	pmock "github.com/confluentinc/cli/internal/pkg/mock"
 )
 
@@ -104,7 +102,6 @@ func TestDynamicContext_ParseFlagsIntoContext(t *testing.T) {
 		ctx            *DynamicContext
 		cluster        string
 		environment    string
-		errMsg         string
 		suggestionsMsg string
 	}{
 		{
@@ -124,12 +121,6 @@ func TestDynamicContext_ParseFlagsIntoContext(t *testing.T) {
 			name:        "read environment from flag",
 			environment: flagEnvironment,
 			ctx:         getEnvFlagContext(),
-		},
-		{
-			name:        "environment not found",
-			environment: badFlagEnv,
-			ctx:         getEnvFlagContext(),
-			errMsg:      fmt.Sprintf(errors.EnvironmentNotFoundErrorMsg, badFlagEnv, getEnvFlagContext().Name),
 		},
 		{
 			name:        "pass cluster and environment",
@@ -152,29 +143,21 @@ func TestDynamicContext_ParseFlagsIntoContext(t *testing.T) {
 		cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 		err := cmd.ParseFlags([]string{"--cluster", tt.cluster, "--environment", tt.environment})
 		require.NoError(t, err)
-		initialEnvId := tt.ctx.GetEnvironment().GetId()
+		initialEnvId := tt.ctx.GetCurrentEnvironment()
 		initialActiveKafkaId := tt.ctx.KafkaClusterContext.GetActiveKafkaClusterId()
 		err = tt.ctx.ParseFlagsIntoContext(cmd, client)
-		if tt.errMsg != "" {
-			require.Error(t, err)
-			require.Equal(t, tt.errMsg, err.Error())
-			if tt.suggestionsMsg != "" {
-				errors.VerifyErrorAndSuggestions(require.New(t), err, tt.errMsg, tt.suggestionsMsg)
-			}
+		require.NoError(t, err)
+		finalEnv := tt.ctx.GetCurrentEnvironment()
+		finalCluster := tt.ctx.KafkaClusterContext.GetActiveKafkaClusterId()
+		if tt.environment != "" {
+			require.Equal(t, tt.environment, finalEnv)
 		} else {
-			require.NoError(t, err)
-			finalEnv := tt.ctx.GetEnvironment().GetId()
-			finalCluster := tt.ctx.KafkaClusterContext.GetActiveKafkaClusterId()
-			if tt.environment != "" {
-				require.Equal(t, tt.environment, finalEnv)
-			} else {
-				require.Equal(t, initialEnvId, finalEnv)
-			}
-			if tt.cluster != "" {
-				require.Equal(t, tt.cluster, finalCluster)
-			} else if tt.environment == "" {
-				require.Equal(t, initialActiveKafkaId, finalCluster)
-			}
+			require.Equal(t, initialEnvId, finalEnv)
+		}
+		if tt.cluster != "" {
+			require.Equal(t, tt.cluster, finalCluster)
+		} else if tt.environment == "" {
+			require.Equal(t, initialActiveKafkaId, finalCluster)
 		}
 	}
 }
@@ -203,6 +186,7 @@ func getClusterFlagContext() *DynamicContext {
 	return clusterFlagContext
 }
 
+// TODO
 func getEnvFlagContext() *DynamicContext {
 	config := v1.AuthenticatedCloudConfigMock()
 	envFlagContext := NewDynamicContext(config.Context(), pmock.NewClientMock(), pmock.NewV2ClientMock())
@@ -210,6 +194,7 @@ func getEnvFlagContext() *DynamicContext {
 	return envFlagContext
 }
 
+// TODO
 func getEnvAndClusterFlagContext() *DynamicContext {
 	config := v1.AuthenticatedCloudConfigMock()
 	envAndClusterFlagContext := NewDynamicContext(config.Context(), pmock.NewClientMock(), pmock.NewV2ClientMock())

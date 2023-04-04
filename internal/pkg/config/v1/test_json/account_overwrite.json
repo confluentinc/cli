@@ -36,6 +36,11 @@
       "netrc_machine_name": "",
       "platform": "http://127.0.0.1:1024",
       "credential": "username-test-user",
+      "current_environment": "acc-123",
+      "environments": {
+        "acc-123": {},
+        "env-flag": {}
+      },
       "kafka_cluster_context": {
         "environment_context": true,
         "kafka_environment_contexts": {
@@ -76,20 +81,6 @@
           "id": 123,
           "email": "test-user@email"
         },
-        "account": {
-          "id": "acc-123",
-          "name": "test-env"
-        },
-        "accounts": [
-          {
-            "id": "acc-123",
-            "name": "test-env"
-          },
-          {
-            "id": "env-flag",
-            "name": "test-env2"
-          }
-        ],
         "organization": {
           "id": 321,
           "name": "test-org"

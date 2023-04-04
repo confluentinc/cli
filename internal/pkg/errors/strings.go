@@ -8,7 +8,7 @@ const (
 	// auth commands
 	LoggedInAsMsg                 = "Logged in as \"%s\".\n"
 	LoggedInAsMsgWithOrg          = "Logged in as \"%s\" for organization \"%s\" (\"%s\").\n"
-	LoggedInUsingEnvMsg           = "Using environment \"%s\" (\"%s\").\n"
+	LoggedInUsingEnvMsg           = "Using environment \"%s\".\n"
 	LoggedOutMsg                  = "You are now logged out."
 	WroteCredentialsToKeychainMsg = "Wrote login credentials to keychain\n"
 	RemoveNetrcCredentialsMsg     = "Removed credentials for user \"%s\" from netrc file \"%s\"\n"
