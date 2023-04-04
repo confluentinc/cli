@@ -14,7 +14,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
-	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
 type enableOut struct {
@@ -34,7 +33,7 @@ func (c *command) newClusterEnableCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Enable Schema Registry, using Google Cloud Platform in the US with the "advanced" package.`,
-				Code: fmt.Sprintf("%s schema-registry cluster enable --cloud gcp --geo us --package advanced", version.CLIName),
+				Code: "confluent schema-registry cluster enable --cloud gcp --geo us --package advanced",
 			},
 		),
 	}
