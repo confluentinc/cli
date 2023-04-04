@@ -32,11 +32,11 @@ func loadSnippetSuggestions() {
 	})
 }
 
-func generateDocsCompleter() prompt.Completer {
+func GenerateDocsCompleter() prompt.Completer {
 	loadSnippetSuggestions()
 	return docsCompleter
 }
 
 func docsCompleter(in prompt.Document) []prompt.Suggest {
-	return SuggestNextWordFromLastWord(snippetSuggestions, in.TextBeforeCursor())
+	return SuggestNextWord(snippetSuggestions, in.TextBeforeCursor())
 }

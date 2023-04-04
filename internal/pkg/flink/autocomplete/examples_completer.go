@@ -4,7 +4,7 @@ import (
 	prompt "github.com/confluentinc/go-prompt"
 )
 
-func examplesCompleter(in prompt.Document) []prompt.Suggest {
+func ExamplesCompleter(in prompt.Document) []prompt.Suggest {
 	s := []prompt.Suggest{
 		{Text: "CREATE TABLE Orders (product STRING, amount INT);", Description: "Register a table/view/function into current or specified Catalog"},
 		{Text: "DROP TABLE Orders;", Description: "Drop a table/view/function from current or specified Catalog or the catalog itself"},

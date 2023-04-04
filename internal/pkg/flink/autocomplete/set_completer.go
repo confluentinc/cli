@@ -4,7 +4,7 @@ import (
 	prompt "github.com/confluentinc/go-prompt"
 )
 
-func setCompleter(in prompt.Document) []prompt.Suggest {
+func SetCompleter(in prompt.Document) []prompt.Suggest {
 	s := []prompt.Suggest{
 		{Text: "SET 'pipeline.name' = 'SqlJob';", Description: "Sets the job name"},
 		{Text: "SET 'parallelism.default' = '100';", Description: "Sets the job parallelism"},

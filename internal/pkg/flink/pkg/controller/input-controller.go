@@ -115,14 +115,20 @@ func printResultToSTDOUT(data *StatementResult) {
 }
 
 func (c *InputController) Prompt() *prompt.Prompt {
-	completerWithDocsExamples := autocomplete.CompleterWithDocsExamples(c.getSmartCompletion)
+	completer := autocomplete.NewCompleterBuilder(c.getSmartCompletion).
+		AddCompleter(autocomplete.ExamplesCompleter).
+		AddCompleter(autocomplete.SetCompleter).
+		AddCompleter(autocomplete.ShowCompleter).
+		AddCompleter(autocomplete.GenerateHistoryCompleter(&c.History.Data)).
+		AddCompleter(autocomplete.GenerateDocsCompleter()).
+		BuildCompleter()
 
 	// We need to disable the live prefix, in case we just submited a statement
 	components.LivePrefixState.IsEnabled = false
 
 	return prompt.New(
 		components.Executor,
-		completerWithDocsExamples,
+		completer,
 		prompt.OptionTitle("sql-prompt"),
 		prompt.OptionHistory(c.History.Data),
 		prompt.OptionSwitchKeyBindMode(prompt.EmacsKeyBind),

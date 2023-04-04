@@ -1,16 +1,17 @@
 package autocomplete
 
-import "github.com/confluentinc/go-prompt"
+import (
+	"github.com/confluentinc/go-prompt"
+)
 
-// Currently disabled. History entries are not shown in autocompletion.
-//  If we enable this again in the future, it would be good to filter duplicates in the history.
-func generateHISTORYCompleter(history []string) prompt.Completer {
-	historyCompletions := []prompt.Suggest{}
-	for _, v := range history {
-		historyCompletions = append(historyCompletions, prompt.Suggest{Text: v, Description: "History entry"})
-	}
-
+func GenerateHistoryCompleter(history *[]string) prompt.Completer {
 	return func(in prompt.Document) []prompt.Suggest {
-		return SuggestFromPrefix(historyCompletions, in.TextBeforeCursor())
+		historyCompletions := make([]prompt.Suggest, 0)
+		// iterate backwards to show recent entries first
+		for i := len(*history) - 1; i >= 0; i-- {
+			historyEntry := (*history)[i]
+			historyCompletions = append(historyCompletions, prompt.Suggest{Text: historyEntry, Description: "History entry"})
+		}
+		return SuggestNextWord(historyCompletions, in.TextBeforeCursor())
 	}
 }

@@ -4,7 +4,7 @@ import (
 	prompt "github.com/confluentinc/go-prompt"
 )
 
-func showCompleter(in prompt.Document) []prompt.Suggest {
+func ShowCompleter(in prompt.Document) []prompt.Suggest {
 	s := []prompt.Suggest{
 		{Text: "SHOW CATALOGS;", Description: "Used to list catalogs"},
 		{Text: "SHOW DATABASES;", Description: "Used to list databases"},

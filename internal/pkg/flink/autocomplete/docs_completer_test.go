@@ -17,7 +17,7 @@ func TestDocsCompleterTestSuite(t *testing.T) {
 }
 
 func (s *DocsCompleterTestSuite) SetupSuite() {
-	s.completer = generateDocsCompleter()
+	s.completer = GenerateDocsCompleter()
 }
 
 func (s *DocsCompleterTestSuite) TestSelectDocsAutoCompletionSnapshot() {

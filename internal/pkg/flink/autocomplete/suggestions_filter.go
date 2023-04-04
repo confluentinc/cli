@@ -73,7 +73,7 @@ func SuggestFromPrefix(suggestions []prompt.Suggest, prefix string) []prompt.Sug
 }
 
 // filters all suggestions that contain this word and returns only the next word after this word
-func SuggestNextWordFromLastWord(suggestions []prompt.Suggest, prefix string) []prompt.Suggest {
+func SuggestNextWord(suggestions []prompt.Suggest, prefix string) []prompt.Suggest {
 	nextWordSuggestions := make([]prompt.Suggest, 0)
 	if strings.TrimSpace(prefix) == "" {
 		return nextWordSuggestions
@@ -125,7 +125,7 @@ func SuggestNextWordFromLastWord(suggestions []prompt.Suggest, prefix string) []
 		_, suggestionExists := suggestionSet[suggestionKey]
 		suggestionSet[suggestionKey] = true
 		if !suggestionExists && suggestionKey != "" {
-			nextWordSuggestions = append(nextWordSuggestions, prompt.Suggest{Text: suggestionKey})
+			nextWordSuggestions = append(nextWordSuggestions, prompt.Suggest{Text: suggestionKey, Description: suggestion.Description})
 		}
 	}
 	return nextWordSuggestions

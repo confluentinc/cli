@@ -10,15 +10,6 @@ import (
 	"pgregory.net/rapid"
 )
 
-func containsSuggestion(suggestions []prompt.Suggest, s prompt.Suggest) bool {
-	for _, v := range suggestions {
-		if v.Text == s.Text {
-			return true
-		}
-	}
-
-	return false
-}
 func mockGetSmartCompletion() bool {
 	return true
 }
@@ -29,11 +20,14 @@ func TestBasicSelectAutoCompletion(t *testing.T) {
 	buffer.InsertText(input, false, true)
 
 	expected := prompt.Suggest{Text: "SELECT * FROM Orders WHERE amount = 2;", Description: "Select data from a database"}
-	actual := Completer(*buffer.Document())
+	completer := NewCompleterBuilder(mockGetSmartCompletion).
+		AddCompleter(ExamplesCompleter).
+		AddCompleter(SetCompleter).
+		AddCompleter(ShowCompleter).
+		BuildCompleter()
 
-	if !containsSuggestion(actual, expected) {
-		t.Errorf("prompt.Run() = %q, want %q", actual, expected)
-	}
+	suggestions := completer(*buffer.Document())
+	require.Contains(t, suggestions, expected)
 }
 
 func TestFailingBasicAutoCompletion(t *testing.T) {
@@ -43,11 +37,14 @@ func TestFailingBasicAutoCompletion(t *testing.T) {
 	//buffer.CursorRight(2)
 
 	expected := prompt.Suggest{Text: "SELECT", Description: "Select data from a database"}
-	actual := Completer(*buffer.Document())
+	completer := NewCompleterBuilder(mockGetSmartCompletion).
+		AddCompleter(ExamplesCompleter).
+		AddCompleter(SetCompleter).
+		AddCompleter(ShowCompleter).
+		BuildCompleter()
 
-	if containsSuggestion(actual, expected) {
-		t.Errorf("prompt.Run() = %q, want %q", actual, expected)
-	}
+	suggestions := completer(*buffer.Document())
+	require.NotContains(t, suggestions, expected)
 }
 
 /*
@@ -67,7 +64,12 @@ func TestNoLineBreaksInAutocompletion(t *testing.T) {
 
 		// when
 		buffer.InsertText(randomStatement.Text, false, true)
-		suggestions := Completer(*buffer.Document())
+		completer := NewCompleterBuilder(mockGetSmartCompletion).
+			AddCompleter(ExamplesCompleter).
+			AddCompleter(SetCompleter).
+			AddCompleter(ShowCompleter).
+			BuildCompleter()
+		suggestions := completer(*buffer.Document())
 
 		// then
 		for _, element := range suggestions {

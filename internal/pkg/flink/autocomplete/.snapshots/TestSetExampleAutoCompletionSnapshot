@@ -1,18 +1,6 @@
-([]prompt.Suggest) (len=4) {
+([]prompt.Suggest) (len=1) {
   (prompt.Suggest) {
     Text: (string) (len=47) "SET 'table.local-time-zone;' = 'Europe/Berlin';",
     Description: (string) (len=58) "Used to modify the configuration or list the configuration"
-  },
-  (prompt.Suggest) {
-    Text: (string) (len=31) "SET 'pipeline.name' = 'SqlJob';",
-    Description: (string) (len=17) "Sets the job name"
-  },
-  (prompt.Suggest) {
-    Text: (string) (len=34) "SET 'parallelism.default' = '100';",
-    Description: (string) (len=24) "Sets the job parallelism"
-  },
-  (prompt.Suggest) {
-    Text: (string) (len=49) "SET 'sql-client.execution.result-mode' = 'TABLE';",
-    Description: (string) (len=51) "Determines how the query result should be displayed"
   }
 }

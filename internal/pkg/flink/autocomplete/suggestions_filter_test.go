@@ -145,12 +145,12 @@ func (s *SuggestionFilterTestSuite) TestSuggestNextWordFromLastWordShouldNotIncl
 		{Text: "CREATE TABLE Orders (product STRING, amount INT);"},
 		{Text: "DROP TABLE Orders;"},
 	}
-	suggestions := SuggestNextWordFromLastWord(prompts, "TABLE ")
+	suggestions := SuggestNextWord(prompts, "TABLE ")
 	assert.Equal(s.T(), 2, len(suggestions))
 	assert.Equal(s.T(), "Orders", suggestions[0].Text)
 	assert.Equal(s.T(), "Orders;", suggestions[1].Text)
 
-	suggestions = SuggestNextWordFromLastWord(prompts, "CREATE ")
+	suggestions = SuggestNextWord(prompts, "CREATE ")
 	assert.Equal(s.T(), 1, len(suggestions))
 	assert.Equal(s.T(), "TABLE", suggestions[0].Text)
 }
@@ -160,12 +160,12 @@ func (s *SuggestionFilterTestSuite) TestSuggestNextWordFromLastWordShouldInclude
 		{Text: "CREATE TABLE Orders (product STRING, amount INT);"},
 		{Text: "DROP TABLE Orders;"},
 	}
-	suggestions := SuggestNextWordFromLastWord(prompts, "TABL")
+	suggestions := SuggestNextWord(prompts, "TABL")
 	assert.Equal(s.T(), 2, len(suggestions))
 	assert.Equal(s.T(), "TABLE Orders", suggestions[0].Text)
 	assert.Equal(s.T(), "TABLE Orders;", suggestions[1].Text)
 
-	suggestions = SuggestNextWordFromLastWord(prompts, "CREATE")
+	suggestions = SuggestNextWord(prompts, "CREATE")
 	assert.Equal(s.T(), 1, len(suggestions))
 	assert.Equal(s.T(), "CREATE TABLE", suggestions[0].Text)
 }
@@ -175,12 +175,12 @@ func (s *SuggestionFilterTestSuite) TestSuggestNextWordFromLastWordShouldIgnoreC
 		{Text: "CREATE TABLE Orders (product STRING, amount INT);"},
 		{Text: "DROP TABLE Orders;"},
 	}
-	suggestions := SuggestNextWordFromLastWord(prompts, "TABL")
+	suggestions := SuggestNextWord(prompts, "TABL")
 	assert.Equal(s.T(), 2, len(suggestions))
 	assert.Equal(s.T(), "TABLE Orders", suggestions[0].Text)
 	assert.Equal(s.T(), "TABLE Orders;", suggestions[1].Text)
 
-	suggestions = SuggestNextWordFromLastWord(prompts, "tABl")
+	suggestions = SuggestNextWord(prompts, "tABl")
 	assert.Equal(s.T(), 2, len(suggestions))
 	assert.Equal(s.T(), "TABLE Orders", suggestions[0].Text)
 	assert.Equal(s.T(), "TABLE Orders;", suggestions[1].Text)
@@ -191,12 +191,12 @@ func (s *SuggestionFilterTestSuite) TestSuggestNextWordFromLastWordShouldIgnoreL
 		{Text: "CREATE TABLE Orders (product STRING, amount INT);"},
 		{Text: "DROP TABLE Orders;"},
 	}
-	suggestions := SuggestNextWordFromLastWord(prompts, "\nTABL")
+	suggestions := SuggestNextWord(prompts, "\nTABL")
 	assert.Equal(s.T(), 2, len(suggestions))
 	assert.Equal(s.T(), "TABLE Orders", suggestions[0].Text)
 	assert.Equal(s.T(), "TABLE Orders;", suggestions[1].Text)
 
-	suggestions = SuggestNextWordFromLastWord(prompts, "CREATE\n")
+	suggestions = SuggestNextWord(prompts, "CREATE\n")
 	assert.Equal(s.T(), 1, len(suggestions))
 	assert.Equal(s.T(), "TABLE", suggestions[0].Text)
 }
@@ -206,10 +206,10 @@ func (s *SuggestionFilterTestSuite) TestSuggestNextWordFromLastWordShouldGiveNoR
 		{Text: "CREATE TABLE Orders (product STRING, amount INT);"},
 		{Text: "DROP TABLE Orders;"},
 	}
-	suggestions := SuggestNextWordFromLastWord(prompts, "")
+	suggestions := SuggestNextWord(prompts, "")
 	assert.Equal(s.T(), 0, len(suggestions))
 
-	suggestions = SuggestNextWordFromLastWord(prompts, " ")
+	suggestions = SuggestNextWord(prompts, " ")
 	assert.Equal(s.T(), 0, len(suggestions))
 }
 
@@ -218,7 +218,7 @@ func (s *SuggestionFilterTestSuite) TestSuggestNextWordFromLastWordShouldGiveNoR
 		{Text: "CREATE TABLE Orders (product STRING, amount INT);"},
 		{Text: "DROP TABLE Orders;"},
 	}
-	suggestions := SuggestNextWordFromLastWord(prompts, "missing_word")
+	suggestions := SuggestNextWord(prompts, "missing_word")
 	assert.Equal(s.T(), 0, len(suggestions))
 }
 
@@ -227,7 +227,7 @@ func (s *SuggestionFilterTestSuite) TestSuggestNextWordFromLastWordShouldGiveNoD
 		{Text: "CREATE TABLE Orders (product STRING, amount INT);"},
 		{Text: "DROP TABLE Orders"},
 	}
-	suggestions := SuggestNextWordFromLastWord(prompts, "TABLE")
+	suggestions := SuggestNextWord(prompts, "TABLE")
 	assert.Equal(s.T(), 1, len(suggestions))
 	assert.Equal(s.T(), "TABLE Orders", suggestions[0].Text)
 }
@@ -238,7 +238,7 @@ func (s *SuggestionFilterTestSuite) TestSuggestNextWordFromLastWordShouldRemoveP
 		{Text: "SELECT * FROM (Orders WHERE id = 1)"},
 		{Text: "SELECT * FROM ( Orders WHERE id = 1 )"},
 	}
-	suggestions := SuggestNextWordFromLastWord(prompts, "1")
+	suggestions := SuggestNextWord(prompts, "1")
 	assert.Equal(s.T(), 3, len(suggestions))
 	assert.Equal(s.T(), "1;", suggestions[0].Text)
 	assert.Equal(s.T(), "1", suggestions[1].Text)
@@ -249,6 +249,6 @@ func (s *SuggestionFilterTestSuite) TestSuggestNextWordFromLastWordShouldNotRetu
 	prompts := []prompt.Suggest{
 		{Text: "SELECT * FROM ( Orders WHERE id = 1 )"},
 	}
-	suggestions := SuggestNextWordFromLastWord(prompts, "1 ")
+	suggestions := SuggestNextWord(prompts, "1 ")
 	assert.Equal(s.T(), 0, len(suggestions))
 }

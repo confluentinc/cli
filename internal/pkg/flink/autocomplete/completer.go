@@ -1,7 +1,7 @@
 package autocomplete
 
 import (
-	prompt "github.com/confluentinc/go-prompt"
+	"github.com/confluentinc/go-prompt"
 )
 
 func combineCompleters(getSmartCompletion func() bool, completers ...prompt.Completer) prompt.Completer {
@@ -19,17 +19,26 @@ func combineCompleters(getSmartCompletion func() bool, completers ...prompt.Comp
 	}
 }
 
-func CompleterWithDocsExamples(getSmartCompletion func() bool) prompt.Completer {
-	docsCompleter := generateDocsCompleter()
-	return combineCompleters(getSmartCompletion, Completer, docsCompleter)
+type completerBuilder struct {
+	isSmartCompletionEnabled func() bool
+	completer                prompt.Completer
 }
 
-// Since we combine completers twice, we just need to control this properly once using "getSmartCompletion". Maybe
-// we could solve this in a more elegant way, but this works for now.
-func smartCompletionEnabled() bool {
-	return true
+func NewCompleterBuilder(isSmartCompletionEnabled func() bool) *completerBuilder {
+	return &completerBuilder{
+		isSmartCompletionEnabled: isSmartCompletionEnabled,
+	}
 }
 
-func Completer(in prompt.Document) []prompt.Suggest {
-	return combineCompleters(smartCompletionEnabled, examplesCompleter, setCompleter, showCompleter)(in)
+func (a *completerBuilder) AddCompleter(completer prompt.Completer) *completerBuilder {
+	if a.completer == nil {
+		a.completer = combineCompleters(a.isSmartCompletionEnabled, completer)
+	} else {
+		a.completer = combineCompleters(a.isSmartCompletionEnabled, a.completer, completer)
+	}
+	return a
+}
+
+func (a *completerBuilder) BuildCompleter() prompt.Completer {
+	return a.completer
 }
