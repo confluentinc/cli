@@ -34,11 +34,11 @@ func (c *command) newUpdateCommand(enableSourceCode bool) *cobra.Command {
 			},
 			examples.Example{
 				Text: `Update Stream Designer pipeline "pipe-12345" with KSQL cluster ID "lksqlc-123456"`,
-				Code: `confluent pipeline update pipe-12345 --ksql-cluster lksqlc-123456`,
+				Code: "confluent pipeline update pipe-12345 --ksql-cluster lksqlc-123456",
 			},
 			examples.Example{
 				Text: `Update Stream Designer pipeline "pipe-12345" with new Schema Registry cluster ID`,
-				Code: `confluent pipeline update pipe-12345 --update-schema-registry`,
+				Code: "confluent pipeline update pipe-12345 --update-schema-registry",
 			},
 		),
 	}
@@ -100,7 +100,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	if name == "" && description == "" && sqlFile == "" && len(secrets) == 0 && ksqlCluster == "" &&
 		!cmd.Flags().Changed("activation-privilege") && !cmd.Flags().Changed("update-schema-registry") {
 		return fmt.Errorf("one of the update options must be provided:" +
-			"` --name`," +
+			" `--name`," +
 			" `--description`," +
 			" `--ksql-cluster`," +
 			" `--sql-file`," +
