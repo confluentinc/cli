@@ -10,7 +10,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/exp/slices"
 
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
@@ -263,7 +262,7 @@ func handleIamUsers(t *testing.T) http.HandlerFunc {
 func handleIamServiceAccount(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := mux.Vars(r)["id"]
-		if i := slices.IndexFunc(iamServiceAccounts, func(serviceAccount *iamv2.IamV2ServiceAccount) bool { return serviceAccount.GetId() == id }); i != -1 {
+		if i := getV2Index(iamServiceAccounts, id); i != -1 {
 			serviceAccount := iamServiceAccounts[i]
 			switch r.Method {
 			case http.MethodGet:
@@ -345,7 +344,7 @@ func handleIamRoleBindings(t *testing.T) http.HandlerFunc {
 func handleIamIdentityProvider(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := mux.Vars(r)["id"]
-		if i := slices.IndexFunc(iamIdentityProviders, func(provider *identityproviderv2.IamV2IdentityProvider) bool { return provider.GetId() == id }); i != -1 {
+		if i := getV2Index(iamIdentityProviders, id); i != -1 {
 			provider := iamIdentityProviders[i]
 			switch r.Method {
 			case http.MethodGet:
@@ -414,7 +413,7 @@ func handleIamRoleBinding(t *testing.T) http.HandlerFunc {
 func handleIamIdentityPool(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := mux.Vars(r)["id"]
-		if i := slices.IndexFunc(iamIdentityPools, func(pool *identityproviderv2.IamV2IdentityPool) bool { return pool.GetId() == id }); i != -1 {
+		if i := getV2Index(iamIdentityPools, id); i != -1 {
 			pool := iamIdentityPools[i]
 			switch r.Method {
 			case http.MethodGet:

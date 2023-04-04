@@ -8,7 +8,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/exp/slices"
 
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 )
@@ -24,7 +23,7 @@ var orgEnvironments = []*orgv2.OrgV2Environment{
 func handleOrgEnvironment(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		envId := mux.Vars(r)["id"]
-		if i := slices.IndexFunc(orgEnvironments, func(env *orgv2.OrgV2Environment) bool { return env.GetId() == envId }); i != -1 {
+		if i := getV2Index(orgEnvironments, envId); i != -1 {
 			env := orgEnvironments[i]
 			switch r.Method {
 			case http.MethodGet:

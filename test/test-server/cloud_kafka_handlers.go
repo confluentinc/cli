@@ -8,7 +8,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/exp/slices"
 
 	kafkaquotasv1 "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
 )
@@ -47,7 +46,7 @@ var kafkaQuotas = []*kafkaquotasv1.KafkaQuotasV1ClientQuota{
 func handleKafkaClientQuota(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		quotaId := mux.Vars(r)["id"]
-		if i := slices.IndexFunc(kafkaQuotas, func(quota *kafkaquotasv1.KafkaQuotasV1ClientQuota) bool { return quota.GetId() == quotaId }); i != -1 {
+		if i := getV2Index(kafkaQuotas, quotaId); i != -1 {
 			quota := kafkaQuotas[i]
 			switch r.Method {
 			case http.MethodGet:

@@ -8,7 +8,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/exp/slices"
 
 	streamdesignerv1 "github.com/confluentinc/ccloud-sdk-go-v2/stream-designer/v1"
 )
@@ -62,7 +61,7 @@ var (
 func handlePipeline(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		pipelineId := mux.Vars(r)["id"]
-		if i := slices.IndexFunc(pipelines, func(pipeline *streamdesignerv1.SdV1Pipeline) bool { return pipeline.GetId() == pipelineId }); i != -1 {
+		if i := getV2Index(pipelines, pipelineId); i != -1 {
 			pipeline := pipelines[i]
 			switch r.Method {
 			case http.MethodDelete:

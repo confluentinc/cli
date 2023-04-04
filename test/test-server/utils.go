@@ -370,6 +370,17 @@ func getV2List[T any](ptrList []*T) []T {
 	}
 	return objList
 }
+type ObjWithId interface {
+	GetId() string
+}
+func getV2Index[T ObjWithId](objSlice []T, id string) int {
+	for i, obj := range objSlice {
+		if obj.GetId() == id {
+			return i
+		}
+	}
+	return -1
+}
 
 func getV2Ptr[T any](obj T) *T {
 	return &obj
