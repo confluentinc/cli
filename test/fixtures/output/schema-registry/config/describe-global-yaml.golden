@@ -1,6 +1,5 @@
 compatibility_level: FULL
-compatibility_group: ""
 default_metadata: '{}'
 override_metadata: '{}'
-default_rule_set: '{}'
-override_rule_set: '{}'
+default_ruleset: '{}'
+override_ruleset: '{}'

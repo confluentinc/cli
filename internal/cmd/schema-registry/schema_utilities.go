@@ -86,7 +86,7 @@ func ReadSchemaRefs(cmd *cobra.Command) ([]srsdk.SchemaReference, error) {
 	return refs, nil
 }
 
-func ReadMetadata(flagName string, cmd *cobra.Command) (*srsdk.Metadata, error) {
+func readMetadata(flagName string, cmd *cobra.Command) (*srsdk.Metadata, error) {
 	var metadata srsdk.Metadata
 	metadataPath, err := cmd.Flags().GetString(flagName)
 	if err != nil {
@@ -97,15 +97,14 @@ func ReadMetadata(flagName string, cmd *cobra.Command) (*srsdk.Metadata, error) 
 		if err != nil {
 			return nil, err
 		}
-		err = json.Unmarshal(metadataBlob, &metadata)
-		if err != nil {
+		if err = json.Unmarshal(metadataBlob, &metadata); err != nil {
 			return nil, err
 		}
 	}
 	return &metadata, nil
 }
 
-func ReadRuleSet(flagName string, cmd *cobra.Command) (*srsdk.RuleSet, error) {
+func readRuleset(flagName string, cmd *cobra.Command) (*srsdk.RuleSet, error) {
 	var ruleSet srsdk.RuleSet
 	ruleSetPath, err := cmd.Flags().GetString(flagName)
 	if err != nil {
@@ -116,8 +115,7 @@ func ReadRuleSet(flagName string, cmd *cobra.Command) (*srsdk.RuleSet, error) {
 		if err != nil {
 			return nil, err
 		}
-		err = json.Unmarshal(ruleSetBlob, &ruleSet)
-		if err != nil {
+		if err = json.Unmarshal(ruleSetBlob, &ruleSet); err != nil {
 			return nil, err
 		}
 	}

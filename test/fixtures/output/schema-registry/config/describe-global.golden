@@ -1,8 +1,7 @@
 +---------------------+------+
 | Compatibility Level | FULL |
-| Compatibility Group |      |
 | Default Metadata    | {}   |
 | Override Metadata   | {}   |
-| Default Rule Set    | {}   |
-| Override Rule Set   | {}   |
+| Default RuleSet     | {}   |
+| Override RuleSet    | {}   |
 +---------------------+------+

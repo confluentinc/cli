@@ -16,12 +16,12 @@ import (
 )
 
 type configOut struct {
-	CompatibilityLevel string `human:"Compatibility Level" serialized:"compatibility_level"`
-	CompatibilityGroup string `human:"Compatibility Group" serialized:"compatibility_group"`
-	DefaultMetadata    string `human:"Default Metadata" serialized:"default_metadata"`
-	OverrideMetadata   string `human:"Override Metadata" serialized:"override_metadata"`
-	DefaultRuleSet     string `human:"Default Rule Set" serialized:"default_rule_set"`
-	OverrideRuleSet    string `human:"Override Rule Set" serialized:"override_rule_set"`
+	CompatibilityLevel string `human:"Compatibility Level,omitempty" serialized:"compatibility_level,omitempty"`
+	CompatibilityGroup string `human:"Compatibility Group,omitempty" serialized:"compatibility_group,omitempty"`
+	DefaultMetadata    string `human:"Default Metadata,omitempty" serialized:"default_metadata,omitempty"`
+	OverrideMetadata   string `human:"Override Metadata,omitempty" serialized:"override_metadata,omitempty"`
+	DefaultRuleSet     string `human:"Default RuleSet,omitempty" serialized:"default_ruleset,omitempty"`
+	OverrideRuleSet    string `human:"Override RuleSet,omitempty" serialized:"override_ruleset,omitempty"`
 }
 
 func (c *command) newConfigDescribeCommand() *cobra.Command {

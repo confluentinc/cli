@@ -36,8 +36,8 @@ func (c *command) newSubjectUpdateCommand() *cobra.Command {
 	cmd.Flags().String("compatibility-group", "", "The name for compatibility group.")
 	cmd.Flags().String("default-metadata", "", "The path to default metadata file.")
 	cmd.Flags().String("override-metadata", "", "The path to override metadata file.")
-	cmd.Flags().String("default-rule-set", "", "The path to default schema rule set file.")
-	cmd.Flags().String("override-rule-set", "", "The path to override schema rule set file.")
+	cmd.Flags().String("default-ruleset", "", "The path to default schema ruleset file.")
+	cmd.Flags().String("override-ruleset", "", "The path to override schema ruleset file.")
 	addModeFlag(cmd)
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddApiSecretFlag(cmd)
@@ -46,8 +46,8 @@ func (c *command) newSubjectUpdateCommand() *cobra.Command {
 
 	cobra.CheckErr(cmd.MarkFlagFilename("default-metadata", "json"))
 	cobra.CheckErr(cmd.MarkFlagFilename("override-metadata", "json"))
-	cobra.CheckErr(cmd.MarkFlagFilename("default-rule-set", "json"))
-	cobra.CheckErr(cmd.MarkFlagFilename("override-rule-set", "json"))
+	cobra.CheckErr(cmd.MarkFlagFilename("default-ruleset", "json"))
+	cobra.CheckErr(cmd.MarkFlagFilename("override-ruleset", "json"))
 
 	return cmd
 }
@@ -91,22 +91,22 @@ func (c *command) updateCompatibility(subject, compatibility string, cmd *cobra.
 		return err
 	}
 
-	defaultMetadata, err := ReadMetadata("default-metadata", cmd)
+	defaultMetadata, err := readMetadata("default-metadata", cmd)
 	if err != nil {
 		return err
 	}
 
-	overrideMetadata, err := ReadMetadata("override-metadata", cmd)
+	overrideMetadata, err := readMetadata("override-metadata", cmd)
 	if err != nil {
 		return err
 	}
 
-	defaultRuleSet, err := ReadRuleSet("default-rule-set", cmd)
+	defaultRuleSet, err := readRuleset("default-ruleset", cmd)
 	if err != nil {
 		return err
 	}
 
-	overrideRuleSet, err := ReadRuleSet("override-rule-set", cmd)
+	overrideRuleSet, err := readRuleset("override-ruleset", cmd)
 	if err != nil {
 		return err
 	}

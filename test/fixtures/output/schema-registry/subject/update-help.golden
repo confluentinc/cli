@@ -17,8 +17,8 @@ Flags:
       --compatibility-group string   The name for compatibility group.
       --default-metadata string      The path to default metadata file.
       --override-metadata string     The path to override metadata file.
-      --default-rule-set string      The path to default schema rule set file.
-      --override-rule-set string     The path to override schema rule set file.
+      --default-ruleset string       The path to default schema ruleset file.
+      --override-ruleset string      The path to override schema ruleset file.
       --mode string                  Can be "readwrite", "readonly", or "import".
       --api-key string               API key.
       --api-secret string            API key secret.
