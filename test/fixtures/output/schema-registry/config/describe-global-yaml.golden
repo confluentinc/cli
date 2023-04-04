@@ -1,1 +1,5 @@
 compatibility_level: FULL
+default_metadata: '{}'
+override_metadata: '{}'
+default_ruleset: '{}'
+override_ruleset: '{}'

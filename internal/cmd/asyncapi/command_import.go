@@ -373,7 +373,9 @@ func registerSchema(details *accountDetails, topicName string, components Compon
 			srsdk.RegisterSchemaRequest{
 				Schema:     string(jsonSchema),
 				SchemaType: resolveSchemaType(components.Messages[strcase.ToCamel(topicName)+"Message"].ContentType),
-			})
+			},
+			&srsdk.RegisterOpts{Normalize: optional.NewBool(false)},
+		)
 		if err != nil {
 			return 0, fmt.Errorf("unable to register schema: %v", err)
 		}

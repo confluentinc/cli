@@ -33,11 +33,21 @@ func (c *command) newSubjectUpdateCommand() *cobra.Command {
 	}
 
 	addCompatibilityFlag(cmd)
+	cmd.Flags().String("compatibility-group", "", "The name for compatibility group.")
+	cmd.Flags().String("default-metadata", "", "The path to default metadata file.")
+	cmd.Flags().String("override-metadata", "", "The path to override metadata file.")
+	cmd.Flags().String("default-ruleset", "", "The path to default schema ruleset file.")
+	cmd.Flags().String("override-ruleset", "", "The path to override schema ruleset file.")
 	addModeFlag(cmd)
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddApiSecretFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+
+	cobra.CheckErr(cmd.MarkFlagFilename("default-metadata", "json"))
+	cobra.CheckErr(cmd.MarkFlagFilename("override-metadata", "json"))
+	cobra.CheckErr(cmd.MarkFlagFilename("default-ruleset", "json"))
+	cobra.CheckErr(cmd.MarkFlagFilename("override-ruleset", "json"))
 
 	return cmd
 }
@@ -64,7 +74,7 @@ func (c *command) subjectUpdate(cmd *cobra.Command, args []string) error {
 	}
 
 	if compatibility != "" {
-		return c.updateCompatibility(subject, compatibility, srClient, ctx)
+		return c.updateCompatibility(subject, compatibility, cmd, srClient, ctx)
 	}
 
 	if mode != "" {
@@ -74,8 +84,42 @@ func (c *command) subjectUpdate(cmd *cobra.Command, args []string) error {
 	return errors.New(errors.CompatibilityOrModeErrorMsg)
 }
 
-func (c *command) updateCompatibility(subject, compatibility string, srClient *srsdk.APIClient, ctx context.Context) error {
-	updateReq := srsdk.ConfigUpdateRequest{Compatibility: compatibility}
+func (c *command) updateCompatibility(subject, compatibility string, cmd *cobra.Command, srClient *srsdk.APIClient, ctx context.Context) error {
+
+	compatibilityGroup, err := cmd.Flags().GetString("compatibility-group")
+	if err != nil {
+		return err
+	}
+
+	defaultMetadata, err := readMetadata("default-metadata", cmd)
+	if err != nil {
+		return err
+	}
+
+	overrideMetadata, err := readMetadata("override-metadata", cmd)
+	if err != nil {
+		return err
+	}
+
+	defaultRuleSet, err := readRuleset("default-ruleset", cmd)
+	if err != nil {
+		return err
+	}
+
+	overrideRuleSet, err := readRuleset("override-ruleset", cmd)
+	if err != nil {
+		return err
+	}
+
+	updateReq := srsdk.ConfigUpdateRequest{
+		Compatibility:      compatibility,
+		CompatibilityGroup: compatibilityGroup,
+		DefaultMetadata:    *defaultMetadata,
+		OverrideMetadata:   *overrideMetadata,
+		DefaultRuleSet:     *defaultRuleSet,
+		OverrideRuleSet:    *overrideRuleSet,
+	}
+
 	if _, httpResp, err := srClient.DefaultApi.UpdateSubjectLevelConfig(ctx, subject, updateReq); err != nil {
 		return errors.CatchSchemaNotFoundError(err, httpResp)
 	}
