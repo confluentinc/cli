@@ -1,0 +1,5 @@
+Error: environment not found: "env-dne"
+
+Suggestions:
+    Use the `--skip-invalid` flag to suppress this error and delete the remaining environment entered.
+    List available environments with `confluent environment list`.

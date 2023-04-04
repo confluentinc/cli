@@ -1,1 +1,4 @@
-Error: unknown topic "topic2"
+Error: topic not found: "topic2"
+
+Suggestions:
+    List available topics with `confluent kafka topic list`.
