@@ -396,9 +396,10 @@ func (s *CLITestSuite) TestKafkaTopicCreate() {
 func (s *CLITestSuite) TestKafkaTopicDelete() {
 	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
 	tests := []CLITest{
-		{args: fmt.Sprintf("kafka topic delete --url %s --no-authentication --force", kafkaRestURL), contains: "Error: accepts 1 arg(s), received 0", exitCode: 1, name: "missing topic-name should return error"},
+		{args: fmt.Sprintf("kafka topic delete --url %s --no-authentication --force", kafkaRestURL), contains: "Error: requires at least 1 arg(s), only received 0", exitCode: 1, name: "missing topic-name should return error"},
 		{args: fmt.Sprintf("kafka topic delete topic-exist --url %s --no-authentication --force", kafkaRestURL), fixture: "kafka/topic/delete-topic-success.golden", name: "deleting existing topic with correct url should delete successfully"},
 		{args: fmt.Sprintf("kafka topic delete topic-exist --url %s --no-authentication", kafkaRestURL), input: "topic-exist\n", fixture: "kafka/topic/delete-topic-success-prompt.golden", name: "deleting existing topic with correct url and prompt should delete successfully"},
+		{args: fmt.Sprintf("kafka topic delete topic-exist topic2 --url %s --no-authentication", kafkaRestURL), fixture: "kafka/topic/delete-multiple-fail.golden", exitCode: 1, name: "deleting existing topic and non-existent topic should fail"},
 		{args: fmt.Sprintf("kafka topic delete topic-not-exist --url %s --no-authentication --force", kafkaRestURL), fixture: "kafka/topic/delete-topic-not-exist-failure.golden", exitCode: 1, name: "deleting a non-existent topic should fail"},
 	}
 

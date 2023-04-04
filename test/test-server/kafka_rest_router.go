@@ -528,6 +528,11 @@ func handleKafkaRPTopic(t *testing.T) http.HandlerFunc {
 				// topic not found
 				require.NoError(t, writeErrorResponse(w, http.StatusNotFound, 40403, "This server does not host this topic-partition."))
 			}
+		case http.MethodGet:
+			if vars["topic"] != "topic-exist" {
+				// topic not found
+				require.NoError(t, writeErrorResponse(w, http.StatusNotFound, 40403, "This server does not host this topic-partition."))
+			}
 		}
 	}
 }
