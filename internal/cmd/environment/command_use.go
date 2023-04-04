@@ -31,12 +31,11 @@ func (c *command) newUseCommand() *cobra.Command {
 func (c *command) use(cmd *cobra.Command, args []string) error {
 	id := args[0]
 
-	environment, err := c.Client.Account.Get(context.Background(), &ccloudv1.Account{Id: id})
-	if err != nil {
+	if _, err := c.Client.Account.Get(context.Background(), &ccloudv1.Account{Id: id}); err != nil {
 		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.EnvNotFoundErrorMsg, id), fmt.Sprintf(errors.OrgResourceNotFoundSuggestions, resource.Environment))
 	}
-	c.Context.SetEnvironment(environment)
 
+	c.Context.SetCurrentEnvironment(id)
 	if err := c.Config.Save(); err != nil {
 		return errors.Wrap(err, errors.EnvSwitchErrorMsg)
 	}
