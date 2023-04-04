@@ -66,9 +66,9 @@ func (c *brokerCommand) delete(cmd *cobra.Command, args []string) error {
 		}
 	}
 	if len(deleted) == 1 {
-		output.Printf("Started deletion of broker %[1]s. To monitor the remove-broker task run `confluent kafka broker get-tasks %[1]s --task-type remove-broker`.", deleted[0])
+		output.Printf("Started deletion of broker %[1]s. To monitor the remove-broker task run `confluent kafka broker get-tasks %[1]s --task-type remove-broker`.\n", deleted[0])
 	} else if len(deleted) > 1 {
-		output.Printf("Started deletion of brokers %s. To monitor a remove-broker task run `confluent kafka broker get-tasks <id> --task-type remove-broker`.", utils.ArrayToCommaDelimitedString(deleted, "and"))
+		output.Printf("Started deletion of brokers %s. To monitor a remove-broker task run `confluent kafka broker get-tasks <id> --task-type remove-broker`.\n", utils.ArrayToCommaDelimitedString(deleted, "and"))
 	}
 
 	return nil
