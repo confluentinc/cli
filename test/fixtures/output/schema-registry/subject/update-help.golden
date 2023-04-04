@@ -8,6 +8,10 @@ Update subject-level compatibility of subject "payments".
 
   $ confluent schema-registry subject update payments --compatibility backward
 
+Update subject-level compatibility of subject "payments" and set compatibility group to "application.version"
+
+  $ confluent schema-registry subject update payments --compatibility backward --compatibility-group application.version
+
 Update subject-level mode of subject "payments".
 
   $ confluent schema-registry subject update payments --mode readwrite
@@ -16,9 +20,9 @@ Flags:
       --compatibility string         Can be "backward", "backward_transitive", "forward", "forward_transitive", "full", "full_transitive", or "none".
       --compatibility-group string   The name for compatibility group.
       --default-metadata string      The path to default metadata file.
-      --override-metadata string     The path to override metadata file.
+      --overridden-metadata string   The path to overridden metadata file.
       --default-ruleset string       The path to default schema ruleset file.
-      --override-ruleset string      The path to override schema ruleset file.
+      --overridden-ruleset string    The path to overridden schema ruleset file.
       --mode string                  Can be "readwrite", "readonly", or "import".
       --api-key string               API key.
       --api-secret string            API key secret.

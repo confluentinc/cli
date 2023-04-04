@@ -33,7 +33,7 @@ func (c *command) newSchemaCreateCommandOnPrem() *cobra.Command {
 	cmd.Flags().String("references", "", "The path to the references file.")
 	cmd.Flags().String("metadata", "", "The path to metadata file.")
 	cmd.Flags().String("ruleset", "", "The path to schema ruleset file.")
-	cmd.Flags().Bool("normalize", false, "Whether to register the normalized schema.")
+	cmd.Flags().Bool("normalize", false, "Alphabetize the list of schema fields.")
 	cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -79,12 +79,20 @@ func (c *command) schemaCreateOnPrem(cmd *cobra.Command, _ []string) error {
 		_ = os.RemoveAll(dir)
 	}()
 
-	metadata, err := readMetadata("metadata", cmd)
+	metadataPath, err := cmd.Flags().GetString("metadata")
+	if err != nil {
+		return err
+	}
+	metadata, err := readMetadata(metadataPath)
 	if err != nil {
 		return err
 	}
 
-	ruleset, err := readRuleset("ruleset", cmd)
+	rulesetPath, err := cmd.Flags().GetString("ruleset")
+	if err != nil {
+		return err
+	}
+	ruleset, err := readRuleset(rulesetPath)
 	if err != nil {
 		return err
 	}

@@ -1,10 +1,11 @@
 package schemaregistry
 
 import (
-	"github.com/antihax/optional"
+	"encoding/json"
 	"os"
 	"strings"
 
+	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
@@ -57,7 +58,7 @@ func (c *command) newSchemaCreateCommand() *cobra.Command {
 	cmd.Flags().String("references", "", "The path to the references file.")
 	cmd.Flags().String("metadata", "", "The path to metadata file.")
 	cmd.Flags().String("ruleset", "", "The path to schema ruleset file.")
-	cmd.Flags().Bool("normalize", false, "Whether to register the normalized schema.")
+	cmd.Flags().Bool("normalize", false, "Alphabetize the list of schema fields.")
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddApiSecretFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -107,12 +108,20 @@ func (c *command) schemaCreate(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	metadata, err := readMetadata("metadata", cmd)
+	metadataPath, err := cmd.Flags().GetString("metadata")
+	if err != nil {
+		return err
+	}
+	metadata, err := readMetadata(metadataPath)
 	if err != nil {
 		return err
 	}
 
-	ruleset, err := readRuleset("ruleset", cmd)
+	rulesetPath, err := cmd.Flags().GetString("ruleset")
+	if err != nil {
+		return err
+	}
+	ruleset, err := readRuleset(rulesetPath)
 	if err != nil {
 		return err
 	}
@@ -141,4 +150,32 @@ func (c *command) schemaCreate(cmd *cobra.Command, _ []string) error {
 
 	output.Printf(errors.RegisteredSchemaMsg, response.Id)
 	return nil
+}
+
+func readMetadata(metadataPath string) (*srsdk.Metadata, error) {
+	var metadata srsdk.Metadata
+	if metadataPath != "" {
+		metadataBlob, err := os.ReadFile(metadataPath)
+		if err != nil {
+			return nil, err
+		}
+		if err = json.Unmarshal(metadataBlob, &metadata); err != nil {
+			return nil, err
+		}
+	}
+	return &metadata, nil
+}
+
+func readRuleset(rulesetPath string) (*srsdk.RuleSet, error) {
+	var ruleSet srsdk.RuleSet
+	if rulesetPath != "" {
+		rulesetBlob, err := os.ReadFile(rulesetPath)
+		if err != nil {
+			return nil, err
+		}
+		if err = json.Unmarshal(rulesetBlob, &ruleSet); err != nil {
+			return nil, err
+		}
+	}
+	return &ruleSet, nil
 }

@@ -26,6 +26,10 @@ func (c *command) newSubjectUpdateCommand() *cobra.Command {
 				Code: "confluent schema-registry subject update payments --compatibility backward",
 			},
 			examples.Example{
+				Text: `Update subject-level compatibility of subject "payments" and set compatibility group to "application.version"`,
+				Code: "confluent schema-registry subject update payments --compatibility backward --compatibility-group application.version",
+			},
+			examples.Example{
 				Text: `Update subject-level mode of subject "payments".`,
 				Code: "confluent schema-registry subject update payments --mode readwrite",
 			},
@@ -35,9 +39,9 @@ func (c *command) newSubjectUpdateCommand() *cobra.Command {
 	addCompatibilityFlag(cmd)
 	cmd.Flags().String("compatibility-group", "", "The name for compatibility group.")
 	cmd.Flags().String("default-metadata", "", "The path to default metadata file.")
-	cmd.Flags().String("override-metadata", "", "The path to override metadata file.")
+	cmd.Flags().String("overridden-metadata", "", "The path to overridden metadata file.")
 	cmd.Flags().String("default-ruleset", "", "The path to default schema ruleset file.")
-	cmd.Flags().String("override-ruleset", "", "The path to override schema ruleset file.")
+	cmd.Flags().String("overridden-ruleset", "", "The path to overridden schema ruleset file.")
 	addModeFlag(cmd)
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddApiSecretFlag(cmd)
@@ -45,9 +49,9 @@ func (c *command) newSubjectUpdateCommand() *cobra.Command {
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 
 	cobra.CheckErr(cmd.MarkFlagFilename("default-metadata", "json"))
-	cobra.CheckErr(cmd.MarkFlagFilename("override-metadata", "json"))
+	cobra.CheckErr(cmd.MarkFlagFilename("overridden-metadata", "json"))
 	cobra.CheckErr(cmd.MarkFlagFilename("default-ruleset", "json"))
-	cobra.CheckErr(cmd.MarkFlagFilename("override-ruleset", "json"))
+	cobra.CheckErr(cmd.MarkFlagFilename("overridden-ruleset", "json"))
 
 	return cmd
 }
@@ -85,28 +89,43 @@ func (c *command) subjectUpdate(cmd *cobra.Command, args []string) error {
 }
 
 func (c *command) updateCompatibility(subject, compatibility string, cmd *cobra.Command, srClient *srsdk.APIClient, ctx context.Context) error {
-
 	compatibilityGroup, err := cmd.Flags().GetString("compatibility-group")
 	if err != nil {
 		return err
 	}
 
-	defaultMetadata, err := readMetadata("default-metadata", cmd)
+	metadataPath, err := cmd.Flags().GetString("default-metadata")
+	if err != nil {
+		return err
+	}
+	defaultMetadata, err := readMetadata(metadataPath)
 	if err != nil {
 		return err
 	}
 
-	overrideMetadata, err := readMetadata("override-metadata", cmd)
+	metadataPath, err = cmd.Flags().GetString("overridden-metadata")
+	if err != nil {
+		return err
+	}
+	overrideMetadata, err := readMetadata(metadataPath)
 	if err != nil {
 		return err
 	}
 
-	defaultRuleSet, err := readRuleset("default-ruleset", cmd)
+	rulesetPath, err := cmd.Flags().GetString("default-ruleset")
+	if err != nil {
+		return err
+	}
+	defaultRuleSet, err := readRuleset(rulesetPath)
 	if err != nil {
 		return err
 	}
 
-	overrideRuleSet, err := readRuleset("override-ruleset", cmd)
+	rulesetPath, err = cmd.Flags().GetString("overridden-ruleset")
+	if err != nil {
+		return err
+	}
+	overrideRuleSet, err := readRuleset(rulesetPath)
 	if err != nil {
 		return err
 	}

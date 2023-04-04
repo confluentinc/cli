@@ -19,9 +19,9 @@ type configOut struct {
 	CompatibilityLevel string `human:"Compatibility Level,omitempty" serialized:"compatibility_level,omitempty"`
 	CompatibilityGroup string `human:"Compatibility Group,omitempty" serialized:"compatibility_group,omitempty"`
 	DefaultMetadata    string `human:"Default Metadata,omitempty" serialized:"default_metadata,omitempty"`
-	OverrideMetadata   string `human:"Override Metadata,omitempty" serialized:"override_metadata,omitempty"`
-	DefaultRuleSet     string `human:"Default RuleSet,omitempty" serialized:"default_ruleset,omitempty"`
-	OverrideRuleSet    string `human:"Override RuleSet,omitempty" serialized:"override_ruleset,omitempty"`
+	OverrideMetadata   string `human:"Overridden Metadata,omitempty" serialized:"overridden_metadata,omitempty"`
+	DefaultRuleSet     string `human:"Default Ruleset,omitempty" serialized:"default_ruleset,omitempty"`
+	OverrideRuleSet    string `human:"Overridden Ruleset,omitempty" serialized:"overridden_ruleset,omitempty"`
 }
 
 func (c *command) newConfigDescribeCommand() *cobra.Command {

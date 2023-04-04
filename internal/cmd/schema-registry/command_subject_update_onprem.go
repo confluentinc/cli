@@ -23,6 +23,10 @@ func (c *command) newSubjectUpdateCommandOnPrem() *cobra.Command {
 				Code: fmt.Sprintf("confluent schema-registry subject update payments --compatibility backward %s", OnPremAuthenticationMsg),
 			},
 			examples.Example{
+				Text: `Update subject-level compatibility of subject "payments" and set compatibility group to "application.version"`,
+				Code: "confluent schema-registry subject update payments --compatibility backward --compatibility-group application.version",
+			},
+			examples.Example{
 				Text: `Update subject-level mode of subject "payments".`,
 				Code: fmt.Sprintf("confluent schema-registry subject update payments --mode readwrite %s", OnPremAuthenticationMsg),
 			},
@@ -32,17 +36,17 @@ func (c *command) newSubjectUpdateCommandOnPrem() *cobra.Command {
 	addCompatibilityFlag(cmd)
 	cmd.Flags().String("compatibility-group", "", "The name for compatibility group.")
 	cmd.Flags().String("default-metadata", "", "The path to default metadata file.")
-	cmd.Flags().String("override-metadata", "", "The path to override metadata file.")
+	cmd.Flags().String("overridden-metadata", "", "The path to overridden metadata file.")
 	cmd.Flags().String("default-ruleset", "", "The path to default schema ruleset file.")
-	cmd.Flags().String("override-ruleset", "", "The path to override schema ruleset file.")
+	cmd.Flags().String("overridden-ruleset", "", "The path to overridden schema ruleset file.")
 	addModeFlag(cmd)
 	cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
 	cobra.CheckErr(cmd.MarkFlagFilename("default-metadata", "json"))
-	cobra.CheckErr(cmd.MarkFlagFilename("override-metadata", "json"))
+	cobra.CheckErr(cmd.MarkFlagFilename("overridden-metadata", "json"))
 	cobra.CheckErr(cmd.MarkFlagFilename("default-ruleset", "json"))
-	cobra.CheckErr(cmd.MarkFlagFilename("override-ruleset", "json"))
+	cobra.CheckErr(cmd.MarkFlagFilename("overridden-ruleset", "json"))
 
 	return cmd
 }

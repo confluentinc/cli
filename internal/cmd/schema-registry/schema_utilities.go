@@ -86,42 +86,6 @@ func ReadSchemaRefs(cmd *cobra.Command) ([]srsdk.SchemaReference, error) {
 	return refs, nil
 }
 
-func readMetadata(flagName string, cmd *cobra.Command) (*srsdk.Metadata, error) {
-	var metadata srsdk.Metadata
-	metadataPath, err := cmd.Flags().GetString(flagName)
-	if err != nil {
-		return nil, err
-	}
-	if metadataPath != "" {
-		metadataBlob, err := os.ReadFile(metadataPath)
-		if err != nil {
-			return nil, err
-		}
-		if err = json.Unmarshal(metadataBlob, &metadata); err != nil {
-			return nil, err
-		}
-	}
-	return &metadata, nil
-}
-
-func readRuleset(flagName string, cmd *cobra.Command) (*srsdk.RuleSet, error) {
-	var ruleSet srsdk.RuleSet
-	ruleSetPath, err := cmd.Flags().GetString(flagName)
-	if err != nil {
-		return nil, err
-	}
-	if ruleSetPath != "" {
-		ruleSetBlob, err := os.ReadFile(ruleSetPath)
-		if err != nil {
-			return nil, err
-		}
-		if err = json.Unmarshal(ruleSetBlob, &ruleSet); err != nil {
-			return nil, err
-		}
-	}
-	return &ruleSet, nil
-}
-
 func StoreSchemaReferences(schemaDir string, refs []srsdk.SchemaReference, srClient *srsdk.APIClient, ctx context.Context) (map[string]string, error) {
 	referencePathMap := map[string]string{}
 	for _, ref := range refs {

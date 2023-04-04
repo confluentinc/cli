@@ -1,7 +1,7 @@
 +---------------------+---------+
 | Compatibility Level | FORWARD |
 | Default Metadata    | {}      |
-| Override Metadata   | {}      |
-| Default RuleSet     | {}      |
-| Override RuleSet    | {}      |
+| Overridden Metadata | {}      |
+| Default Ruleset     | {}      |
+| Overridden Ruleset  | {}      |
 +---------------------+---------+
