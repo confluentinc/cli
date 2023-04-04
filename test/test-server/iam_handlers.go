@@ -50,7 +50,7 @@ var (
 			"crn://confluent.cloud/organization=abc-123/environment=a-595/schema-registry=lsrc-3333ccc/subject=clicks"),
 	}
 
-	IamServiceAccounts = []*iamv2.IamV2ServiceAccount{
+	iamServiceAccounts = []*iamv2.IamV2ServiceAccount{
 		{
 			Id:          iamv2.PtrString(serviceAccountResourceID),
 			DisplayName: iamv2.PtrString("service_account"),
@@ -63,7 +63,7 @@ var (
 		},
 	}
 
-	IamIdentityProviders = []*identityproviderv2.IamV2IdentityProvider{
+	iamIdentityProviders = []*identityproviderv2.IamV2IdentityProvider{
 		{
 			Id:          identityproviderv2.PtrString(identityProviderResourceID),
 			DisplayName: identityproviderv2.PtrString("identity_provider"),
@@ -80,7 +80,7 @@ var (
 		},
 	}
 
-	IamIdentityPools = []*identityproviderv2.IamV2IdentityPool{
+	iamIdentityPools = []*identityproviderv2.IamV2IdentityPool{
 		{
 			Id:            identityproviderv2.PtrString("pool-12345"),
 			DisplayName:   identityproviderv2.PtrString("identity_pool"),
@@ -263,18 +263,23 @@ func handleIamUsers(t *testing.T) http.HandlerFunc {
 func handleIamServiceAccount(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := mux.Vars(r)["id"]
-		if i := slices.IndexFunc(IamServiceAccounts, func(serviceAccount *iamv2.IamV2ServiceAccount) bool { return serviceAccount.GetId() == id }); i != -1 {
-			serviceAccount := IamServiceAccounts[i]
+		if i := slices.IndexFunc(iamServiceAccounts, func(serviceAccount *iamv2.IamV2ServiceAccount) bool { return serviceAccount.GetId() == id }); i != -1 {
+			serviceAccount := iamServiceAccounts[i]
 			switch r.Method {
 			case http.MethodGet:
 				err := json.NewEncoder(w).Encode(serviceAccount)
 				require.NoError(t, err)
 			case http.MethodPatch:
+				serviceAccountPatch := &iamv2.IamV2ServiceAccount{ // make a deep copy so changes don't reflect in subsequent tests
+					Id:          iamv2.PtrString(serviceAccount.GetId()),
+					DisplayName: iamv2.PtrString(serviceAccount.GetDisplayName()),
+					Description: iamv2.PtrString(serviceAccount.GetDescription()),
+				}
 				var req iamv2.IamV2ServiceAccount
 				err := json.NewDecoder(r.Body).Decode(&req)
 				require.NoError(t, err)
-				serviceAccount.Description = req.Description
-				err = json.NewEncoder(w).Encode(serviceAccount)
+				serviceAccountPatch.Description = req.Description
+				err = json.NewEncoder(w).Encode(serviceAccountPatch)
 				require.NoError(t, err)
 			case http.MethodDelete:
 				w.WriteHeader(http.StatusNoContent)
@@ -291,7 +296,7 @@ func handleIamServiceAccounts(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			err := json.NewEncoder(w).Encode(iamv2.IamV2ServiceAccountList{Data: getV2List(IamServiceAccounts)})
+			err := json.NewEncoder(w).Encode(iamv2.IamV2ServiceAccountList{Data: getV2List(iamServiceAccounts)})
 			require.NoError(t, err)
 		case http.MethodPost:
 			var req iamv2.IamV2ServiceAccount
@@ -340,19 +345,26 @@ func handleIamRoleBindings(t *testing.T) http.HandlerFunc {
 func handleIamIdentityProvider(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := mux.Vars(r)["id"]
-		if i := slices.IndexFunc(IamIdentityProviders, func(provider *identityproviderv2.IamV2IdentityProvider) bool { return provider.GetId() == id }); i != -1 {
-			provider := IamIdentityProviders[i]
+		if i := slices.IndexFunc(iamIdentityProviders, func(provider *identityproviderv2.IamV2IdentityProvider) bool { return provider.GetId() == id }); i != -1 {
+			provider := iamIdentityProviders[i]
 			switch r.Method {
 			case http.MethodGet:
 				err := json.NewEncoder(w).Encode(provider)
 				require.NoError(t, err)
 			case http.MethodPatch:
+				providerPatch := &identityproviderv2.IamV2IdentityProvider{ // make a deep copy so changes don't reflect in subsequent tests
+					Id:          identityproviderv2.PtrString(provider.GetId()),
+					DisplayName: identityproviderv2.PtrString(provider.GetDisplayName()),
+					Description: identityproviderv2.PtrString(provider.GetDescription()),
+					Issuer:      identityproviderv2.PtrString(provider.GetIssuer()),
+					JwksUri:     identityproviderv2.PtrString(provider.GetJwksUri()),
+				}
 				var req identityproviderv2.IamV2IdentityProvider
 				err := json.NewDecoder(r.Body).Decode(&req)
 				require.NoError(t, err)
-				provider.DisplayName = req.DisplayName
-				provider.Description = req.Description
-				err = json.NewEncoder(w).Encode(provider)
+				providerPatch.DisplayName = req.DisplayName
+				providerPatch.Description = req.Description
+				err = json.NewEncoder(w).Encode(providerPatch)
 				require.NoError(t, err)
 			case http.MethodDelete:
 				w.WriteHeader(http.StatusNoContent)
@@ -369,7 +381,7 @@ func handleIamIdentityProviders(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			err := json.NewEncoder(w).Encode(identityproviderv2.IamV2IdentityProviderList{Data: getV2List(IamIdentityProviders)})
+			err := json.NewEncoder(w).Encode(identityproviderv2.IamV2IdentityProviderList{Data: getV2List(iamIdentityProviders)})
 			require.NoError(t, err)
 		case http.MethodPost:
 			var req identityproviderv2.IamV2IdentityProvider
@@ -402,21 +414,28 @@ func handleIamRoleBinding(t *testing.T) http.HandlerFunc {
 func handleIamIdentityPool(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := mux.Vars(r)["id"]
-		if i := slices.IndexFunc(IamIdentityPools, func(pool *identityproviderv2.IamV2IdentityPool) bool { return pool.GetId() == id }); i != -1 {
-			pool := IamIdentityPools[i]
+		if i := slices.IndexFunc(iamIdentityPools, func(pool *identityproviderv2.IamV2IdentityPool) bool { return pool.GetId() == id }); i != -1 {
+			pool := iamIdentityPools[i]
 			switch r.Method {
 			case http.MethodGet:
 				err := json.NewEncoder(w).Encode(pool)
 				require.NoError(t, err)
 			case http.MethodPatch:
+				poolPatch := &identityproviderv2.IamV2IdentityPool{ // make a deep copy so changes don't reflect in subsequent tests
+					Id:            identityproviderv2.PtrString(pool.GetId()),
+					DisplayName:   identityproviderv2.PtrString(pool.GetDisplayName()),
+					Description:   identityproviderv2.PtrString(pool.GetDescription()),
+					IdentityClaim: identityproviderv2.PtrString(pool.GetIdentityClaim()),
+					Filter:        identityproviderv2.PtrString(pool.GetFilter()),
+				}
 				var req identityproviderv2.IamV2IdentityPool
 				err := json.NewDecoder(r.Body).Decode(&req)
 				require.NoError(t, err)
-				pool.DisplayName = req.DisplayName
-				pool.Description = req.Description
-				pool.IdentityClaim = req.IdentityClaim
-				pool.Filter = req.Filter
-				err = json.NewEncoder(w).Encode(pool)
+				poolPatch.DisplayName = req.DisplayName
+				poolPatch.Description = req.Description
+				poolPatch.IdentityClaim = req.IdentityClaim
+				poolPatch.Filter = req.Filter
+				err = json.NewEncoder(w).Encode(poolPatch)
 				require.NoError(t, err)
 			case http.MethodDelete:
 				w.WriteHeader(http.StatusNoContent)
@@ -433,7 +452,7 @@ func handleIamIdentityPools(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			err := json.NewEncoder(w).Encode(identityproviderv2.IamV2IdentityPoolList{Data: getV2List(IamIdentityPools)})
+			err := json.NewEncoder(w).Encode(identityproviderv2.IamV2IdentityPoolList{Data: getV2List(iamIdentityPools)})
 			require.NoError(t, err)
 		case http.MethodPost:
 			var req identityproviderv2.IamV2IdentityPool

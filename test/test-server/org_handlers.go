@@ -13,7 +13,7 @@ import (
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 )
 
-var OrgEnvironments = []*orgv2.OrgV2Environment{
+var orgEnvironments = []*orgv2.OrgV2Environment{
 	{Id: orgv2.PtrString("a-595"), DisplayName: orgv2.PtrString("default")},
 	{Id: orgv2.PtrString("not-595"), DisplayName: orgv2.PtrString("other")},
 	{Id: orgv2.PtrString("env-123"), DisplayName: orgv2.PtrString("env123")},
@@ -24,8 +24,8 @@ var OrgEnvironments = []*orgv2.OrgV2Environment{
 func handleOrgEnvironment(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		envId := mux.Vars(r)["id"]
-		if i := slices.IndexFunc(OrgEnvironments, func(env *orgv2.OrgV2Environment) bool { return env.GetId() == envId }); i != -1 {
-			env := OrgEnvironments[i]
+		if i := slices.IndexFunc(orgEnvironments, func(env *orgv2.OrgV2Environment) bool { return env.GetId() == envId }); i != -1 {
+			env := orgEnvironments[i]
 			switch r.Method {
 			case http.MethodGet:
 				err := json.NewEncoder(w).Encode(env)
@@ -34,10 +34,17 @@ func handleOrgEnvironment(t *testing.T) http.HandlerFunc {
 				_, err := io.WriteString(w, "")
 				require.NoError(t, err)
 			case http.MethodPatch: // `environment update {id} --name`
+				envPatch := &orgv2.OrgV2Environment{ // make a deep copy so changes don't reflect in subsequent tests
+					Id:          orgv2.PtrString(env.GetId()),
+					DisplayName: orgv2.PtrString(env.GetDisplayName()),
+				}
 				req := orgv2.OrgV2Environment{}
 				err := json.NewDecoder(r.Body).Decode(&req)
 				require.NoError(t, err)
-				env.DisplayName = req.DisplayName
+				envPatch.DisplayName = req.DisplayName
+
+				err = json.NewEncoder(w).Encode(envPatch)
+				require.NoError(t, err)
 			}
 		} else {
 			// env not found
@@ -50,7 +57,7 @@ func handleOrgEnvironment(t *testing.T) http.HandlerFunc {
 func handleOrgEnvironments(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
-			environmentList := &orgv2.OrgV2EnvironmentList{Data: getV2List(OrgEnvironments)}
+			environmentList := &orgv2.OrgV2EnvironmentList{Data: getV2List(orgEnvironments)}
 			err := json.NewEncoder(w).Encode(environmentList)
 			require.NoError(t, err)
 		}

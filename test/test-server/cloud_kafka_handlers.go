@@ -13,7 +13,7 @@ import (
 	kafkaquotasv1 "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
 )
 
-var KafkaQuotas = []*kafkaquotasv1.KafkaQuotasV1ClientQuota{
+var kafkaQuotas = []*kafkaquotasv1.KafkaQuotasV1ClientQuota{
 	{
 		Id: kafkaquotasv1.PtrString("cq-1234"),
 		Spec: &kafkaquotasv1.KafkaQuotasV1ClientQuotaSpec{
@@ -47,8 +47,8 @@ var KafkaQuotas = []*kafkaquotasv1.KafkaQuotasV1ClientQuota{
 func handleKafkaClientQuota(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		quotaId := mux.Vars(r)["id"]
-		if i := slices.IndexFunc(KafkaQuotas, func(quota *kafkaquotasv1.KafkaQuotasV1ClientQuota) bool { return quota.GetId() == quotaId }); i != -1 {
-			quota := KafkaQuotas[i]
+		if i := slices.IndexFunc(kafkaQuotas, func(quota *kafkaquotasv1.KafkaQuotasV1ClientQuota) bool { return quota.GetId() == quotaId }); i != -1 {
+			quota := kafkaQuotas[i]
 			switch r.Method {
 			case http.MethodGet:
 				err := json.NewEncoder(w).Encode(quota)
@@ -57,14 +57,18 @@ func handleKafkaClientQuota(t *testing.T) http.HandlerFunc {
 				_, err := io.WriteString(w, "")
 				require.NoError(t, err)
 			case http.MethodPatch:
+				quotaPatch := &kafkaquotasv1.KafkaQuotasV1ClientQuota{ // make a deep copy so changes don't reflect in subsequent tests
+					Id:   kafkaquotasv1.PtrString(quota.GetId()),
+					Spec: getV2Ptr(quota.GetSpec()),
+				}
 				req := kafkaquotasv1.KafkaQuotasV1ClientQuota{}
 				err := json.NewDecoder(r.Body).Decode(&req)
 				require.NoError(t, err)
-				quota.Spec.DisplayName = req.Spec.DisplayName
-				quota.Spec.Description = req.Spec.Description
-				quota.Spec.Throughput = req.Spec.Throughput
-				quota.Spec.Principals = req.Spec.Principals
-				err = json.NewEncoder(w).Encode(quota)
+				quotaPatch.Spec.DisplayName = req.Spec.DisplayName
+				quotaPatch.Spec.Description = req.Spec.Description
+				quotaPatch.Spec.Throughput = req.Spec.Throughput
+				quotaPatch.Spec.Principals = req.Spec.Principals
+				err = json.NewEncoder(w).Encode(quotaPatch)
 				require.NoError(t, err)
 			}
 		} else {
@@ -78,7 +82,7 @@ func handleKafkaClientQuotas(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			quotaList := &kafkaquotasv1.KafkaQuotasV1ClientQuotaList{Data: getV2List(KafkaQuotas)}
+			quotaList := &kafkaquotasv1.KafkaQuotasV1ClientQuotaList{Data: getV2List(kafkaQuotas)}
 			err := json.NewEncoder(w).Encode(quotaList)
 			require.NoError(t, err)
 		case http.MethodPost:
