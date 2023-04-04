@@ -8,6 +8,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/exp/slices"
 
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 )
@@ -22,21 +23,13 @@ var OrgEnvironments = []*orgv2.OrgV2Environment{
 // Handler for: "/org/v2/environments/{id}"
 func handleOrgEnvironment(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		envId := vars["id"]
-
-		if r.Method == http.MethodGet {
-			environment := &orgv2.OrgV2Environment{
-				Id:          orgv2.PtrString(envId),
-				DisplayName: orgv2.PtrString("default"),
-			}
-			err := json.NewEncoder(w).Encode(environment)
-			require.NoError(t, err)
-			return
-		}
-
-		if env := isValidOrgEnvironmentId(OrgEnvironments, envId); env != nil {
+		envId := mux.Vars(r)["id"]
+		if i := slices.IndexFunc(OrgEnvironments, func(env *orgv2.OrgV2Environment) bool { return env.GetId() == envId }); i != -1 {
+			env := OrgEnvironments[i]
 			switch r.Method {
+			case http.MethodGet:
+				err := json.NewEncoder(w).Encode(env)
+				require.NoError(t, err)
 			case http.MethodDelete:
 				_, err := io.WriteString(w, "")
 				require.NoError(t, err)
@@ -57,7 +50,7 @@ func handleOrgEnvironment(t *testing.T) http.HandlerFunc {
 func handleOrgEnvironments(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
-			environmentList := &orgv2.OrgV2EnvironmentList{Data: getOrgEnvironmentsList(OrgEnvironments)}
+			environmentList := &orgv2.OrgV2EnvironmentList{Data: getV2List(OrgEnvironments)}
 			err := json.NewEncoder(w).Encode(environmentList)
 			require.NoError(t, err)
 		}
@@ -102,12 +95,4 @@ func handleOrgOrganizations(t *testing.T) http.HandlerFunc {
 			require.NoError(t, err)
 		}
 	}
-}
-
-func getOrgEnvironmentsList(envs []*orgv2.OrgV2Environment) []orgv2.OrgV2Environment {
-	envList := []orgv2.OrgV2Environment{}
-	for _, env := range envs {
-		envList = append(envList, *env)
-	}
-	return envList
 }

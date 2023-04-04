@@ -1,7 +1,7 @@
 Configure ACLs for a ksqlDB cluster.
 
 Usage:
-  confluent ksql cluster configure-acls <id> [topic-1] [topic-2] ... [topic-N] [flags]
+  confluent ksql cluster configure-acls <id> [topic-1] [topic-2] ... [topic-n] [flags]
 
 Flags:
       --dry-run              If specified, print the ACLs that will be set and exit.
