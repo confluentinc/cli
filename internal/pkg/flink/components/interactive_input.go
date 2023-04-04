@@ -85,7 +85,7 @@ func PrintWelcomeHeader() {
 	fmt.Println(string(flinkAsciiArt))
 
 	// Print welcome message
-	fmt.Fprintf(os.Stdout, "Welcome! \033[0m%s \033[0;36m%s. \033[0m \n \n", "Flink SQL Client powered", "by Confluent")
+	fmt.Fprintf(os.Stdout, "Welcome! \n")
 
 	// Print shortcuts
 	fmt.Fprintf(os.Stdout, "\033[0m%s \033[0;36m%s \033[0m", "[CtrlQ]", "Quit")

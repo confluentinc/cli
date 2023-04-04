@@ -42,6 +42,9 @@ type ApplicationController struct {
 
 type ApplicationOptions struct {
 	MOCK_STATEMENTS_OUTPUT_DEMO bool
+	HTTP_CLIENT_UNSAFE_TRACE    bool
+	FLINK_GATEWAY_URL           string
+	DEFAULT_PROPERTIES          map[string]string
 }
 
 var once sync.Once
@@ -85,20 +88,20 @@ func NewApplicationController(app *tview.Application, history *History) Applicat
 	}
 }
 
-func StartApp(envId, computePoolId, authToken string, appOptions *ApplicationOptions) {
-	// Create Tview Components
-	table := components.CreateTable()
-	shortcuts := components.Shortcuts()
-	app := tview.NewApplication()
+func StartApp(envId, orgResourceId, kafkaClusterId, computePoolId, authToken string, appOptions *ApplicationOptions) {
+	// Client used to communicate with the gateway
+	client := NewGatewayClient(envId, orgResourceId, kafkaClusterId, computePoolId, authToken, appOptions)
+
+	// Store used to process statements and store local properties
+	store := NewStore(client, appOptions)
 
 	// Load history of previous commands from cache file
 	history := LoadHistory()
 
-	// Client used to communicate with the gateway
-	client := NewGatewayClient(envId, computePoolId, authToken)
-
-	// Store used to process statements and store local properties
-	store := NewStore(client, appOptions)
+	// Create Components
+	table := components.CreateTable()
+	shortcuts := components.Shortcuts()
+	app := tview.NewApplication()
 
 	// Instantiate Application Controller - this is the top level controller that will be passed down to all other controllers
 	// and should be used for functions that are not specific to a component

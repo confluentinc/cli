@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/atotto/clipboard v0.1.4
 	github.com/bradleyjkemp/cupaloy v2.3.0+incompatible
-	github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway v0.0.1
+	github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway v0.0.2
 	github.com/confluentinc/go-prompt v0.2.6
 	github.com/gdamore/tcell/v2 v2.5.4
 	github.com/google/uuid v1.3.0
@@ -17,11 +17,14 @@ require (
 	pgregory.net/rapid v0.5.5
 )
 
+require github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
+
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/gdamore/encoding v1.0.0 // indirect
 	github.com/golang/mock v1.6.0 // indirect
 	github.com/golang/protobuf v1.4.2 // indirect
+	github.com/hashicorp/go-retryablehttp v0.7.2
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/mattn/go-colorable v0.1.7 // indirect
 	github.com/mattn/go-isatty v0.0.12 // indirect

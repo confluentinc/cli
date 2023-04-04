@@ -70,12 +70,14 @@ func renderMsgAndStatus(statementResult *StatementResult) {
 	}
 	if statementResult.StatusDetail != "" {
 		fmt.Println(statementResult.StatusDetail)
+	} else {
+		fmt.Println("Statement successfully submited. No details returned from server.")
+	}
+	if statementResult.StatementName != "" {
+		fmt.Println("Statement ID: " + statementResult.StatementName)
 	}
 	if statementResult.Status != "" {
 		fmt.Println("Current status: " + statementResult.Status + ".")
-	}
-	if statementResult.StatusDetail != "" || statementResult.Status != "" {
-		fmt.Println("")
 	}
 }
 

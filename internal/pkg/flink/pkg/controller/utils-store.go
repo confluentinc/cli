@@ -25,13 +25,14 @@ func (e *StatementError) Error() string {
 
 // Custom Internal type that shall be used internally by the client
 type StatementResult struct {
-	Name         string     `json:"name"`
-	Statement    string     `json:"statement"`
-	ComputePool  string     `json:"compute_pool"`
-	Status       PHASE      `json:"status"`
-	StatusDetail string     `json:"status_detail,omitempty"` // Shown at the top before the table
-	Columns      []string   `json:"columns"`
-	Rows         [][]string `json:"rows"`
+	Name          string     `json:"name"`
+	Statement     string     `json:"statement"`
+	StatementName string     `json:"statement_name"`
+	ComputePool   string     `json:"compute_pool"`
+	Status        PHASE      `json:"status"`
+	StatusDetail  string     `json:"status_detail,omitempty"` // Shown at the top before the table
+	Columns       []string   `json:"columns"`
+	Rows          [][]string `json:"rows"`
 }
 
 type PHASE string
@@ -64,10 +65,10 @@ func (s *Store) processSetStatement(statement string) (*StatementResult, *Statem
 			Statement: configOpSet,
 			Status:    "Completed",
 			Columns:   []string{"Key", "Value"},
-			Rows:      lo.MapToSlice(s.Config, func(key, val string) []string { return []string{key, val} }),
+			Rows:      lo.MapToSlice(s.Properties, func(key, val string) []string { return []string{key, val} }),
 		}, nil
 	}
-	s.Config[configKey] = configVal
+	s.Properties[configKey] = configVal
 
 	return &StatementResult{
 		Statement:    configOpSet,
@@ -84,25 +85,25 @@ func (s *Store) processResetStatement(statement string) (*StatementResult, *Stat
 		return nil, &StatementError{Msg: err.Error()}
 	}
 	if configKey == "" {
-		s.Config = make(map[string]string)
+		s.Properties = make(map[string]string)
 		return &StatementResult{
 			Statement:    configOpReset,
 			StatusDetail: "Configuration has been reset successfuly.",
 			Status:       "Completed",
 		}, nil
 	} else {
-		_, keyExists := s.Config[configKey]
+		_, keyExists := s.Properties[configKey]
 		if !keyExists {
 			return nil, &StatementError{Msg: fmt.Sprintf("Error: Config key \"%s\" is currently not set.", configKey)}
 		}
 
-		delete(s.Config, configKey)
+		delete(s.Properties, configKey)
 		return &StatementResult{
 			Statement:    configOpReset,
 			StatusDetail: fmt.Sprintf("Config key \"%s\" has been reset successfuly.", configKey),
 			Status:       "Completed",
 			Columns:      []string{"Key", "Value"},
-			Rows:         lo.MapToSlice(s.Config, func(key, val string) []string { return []string{key, val} }),
+			Rows:         lo.MapToSlice(s.Properties, func(key, val string) []string { return []string{key, val} }),
 		}, nil
 	}
 }
@@ -113,7 +114,7 @@ func (s *Store) processUseStatement(statement string) (*StatementResult, *Statem
 		return nil, &StatementError{Msg: err.Error()}
 	}
 
-	s.Config[configKey] = configVal
+	s.Properties[configKey] = configVal
 	return &StatementResult{
 		Statement:    configOpUse,
 		StatusDetail: "Config updated successfuly.",
@@ -245,8 +246,11 @@ func parseResetStatement(statement string) (string, error) {
 }
 
 func processHttpErrors(resp *http.Response, err error) error {
-	if resp.StatusCode != http.StatusAccepted {
+	if err != nil {
+		return &StatementError{Msg: "Error: " + err.Error()}
+	}
 
+	if resp != nil && resp.StatusCode >= 400 {
 		if resp.StatusCode == http.StatusUnauthorized {
 			return &StatementError{Msg: "Error: Unauthorized. Please consider running confluent login again.", HttpResponseCode: resp.StatusCode}
 		}
@@ -260,16 +264,12 @@ func processHttpErrors(resp *http.Response, err error) error {
 
 		err = json.Unmarshal(body, &statementErr)
 
-		if err != nil || statementErr == nil || statementErr.Error.Title == nil || statementErr.Error.Detail == nil {
+		if err != nil || statementErr == nil || statementErr.Error == nil || statementErr.Error.Title == nil || statementErr.Error.Detail == nil {
 			return &StatementError{Msg: fmt.Sprintf("Error: received error with code \"%d\" from server but could not parse it. This is not expected. Please contact support.", resp.StatusCode)}
 		}
 
 		return &StatementError{Msg: *statementErr.Error.Title + ": " + *statementErr.Error.Detail}
 
-	}
-
-	if err != nil {
-		return &StatementError{Msg: err.Error()}
 	}
 
 	return nil

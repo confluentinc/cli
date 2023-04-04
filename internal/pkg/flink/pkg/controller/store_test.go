@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"testing"
@@ -24,7 +25,7 @@ func TestStoreTestSuite(t *testing.T) {
 
 func TestStore_ProcessLocalStatement(t *testing.T) {
 	// Create a new store
-	client := NewGatewayClient("envId", "computePoolId", "authToken")
+	client := NewGatewayClient("envId", "orgResourceId", "kafkaClusterId", "computePoolId", "authToken", nil)
 	s := NewStore(client, nil).(*Store)
 
 	result, err := s.ProcessLocalStatement("SET foo=bar;")
@@ -336,6 +337,26 @@ func (s *StoreTestSuite) TestProccessHttpErrors() {
 	assert.NotNil(s.T(), err)
 	assert.Equal(s.T(), "Error: received error with code \"500\" from server but could not parse it. This is not expected. Please contact support.", err.Error())
 
+	// given
+	res = &http.Response{
+		StatusCode: 201,
+		Body:       generateCloserFromObject(nil),
+	}
+
+	// when
+	err = processHttpErrors(res, nil)
+
+	// expect
+	assert.Nil(s.T(), err)
+
+	// given
+	err = errors.New("some error")
+
+	// when
+	err = processHttpErrors(nil, err)
+
+	// expect
+	assert.Equal(s.T(), "Error: some error", err.Error())
 }
 
 func generateCloserFromObject(obj interface{}) io.ReadCloser {

@@ -5,5 +5,5 @@ import (
 )
 
 func main() {
-	application.StartApp("envId", "computePoolId", "authToken", &application.ApplicationOptions{MOCK_STATEMENTS_OUTPUT_DEMO: true})
+	application.StartApp("envId", "orgResourceId", "kafkaClusterId", "computePoolId", "authToken", &application.ApplicationOptions{MOCK_STATEMENTS_OUTPUT_DEMO: true})
 }

@@ -17,9 +17,12 @@ const (
 	configOpReset             = "RESET"
 	configOpUseCatalog        = "CATALOG"
 	configStatementTerminator = ";"
+
 	//keys
-	configKeyCatalog  = "default_catalog"
-	configKeyDatabase = "default_database"
+	configKeyCatalog          = "default_catalog"
+	configKeyDatabase         = "default_database"
+	configKeyOrgResourceId    = "org-resource-id"
+	configKeyExecutionRuntime = "execution.runtime-mode"
 )
 
 const MOCK_STATEMENTS_OUTPUT_DEMO = true
@@ -31,7 +34,7 @@ type StoreInterface interface {
 type Store struct {
 	MockData         []StatementResult `json:"data"`
 	index            int
-	Config           map[string]string
+	Properties       map[string]string
 	StatementResults []StatementResult
 	client           *GatewayClient
 	appOptions       *ApplicationOptions
@@ -61,7 +64,7 @@ func (s *Store) ProcessStatement(statement string) (*StatementResult, *Statement
 	}
 
 	// TODO: Remove this once we have a real backend
-	if s.appOptions.MOCK_STATEMENTS_OUTPUT_DEMO {
+	if s.appOptions != nil && s.appOptions.MOCK_STATEMENTS_OUTPUT_DEMO {
 
 		if !startsWithValidSQL(statement) {
 			return nil, &StatementError{Msg: "Error: Invalid syntax. Please check your statement."}
@@ -72,7 +75,7 @@ func (s *Store) ProcessStatement(statement string) (*StatementResult, *Statement
 	}
 
 	// Process remote statements
-	statementObj, resp, err := s.client.CreateStatement(context.Background(), statement, s.Config)
+	statementObj, resp, err := s.client.CreateStatement(context.Background(), statement, s.Properties)
 	err = processHttpErrors(resp, err)
 
 	if err != nil {
@@ -80,15 +83,21 @@ func (s *Store) ProcessStatement(statement string) (*StatementResult, *Statement
 	}
 
 	return &StatementResult{
-		StatusDetail: *statementObj.Status.Detail,
-		Status:       PHASE(statementObj.Status.GetPhase()),
+		StatementName: statementObj.Spec.GetStatementName(),
+		StatusDetail:  statementObj.Status.GetDetail(),
+		Status:        PHASE(statementObj.Status.GetPhase()),
 	}, nil
 }
 
 func NewStore(client *GatewayClient, appOptions *ApplicationOptions) StoreInterface {
+	defaultProperties := make(map[string]string)
+
+	if appOptions != nil && appOptions.DEFAULT_PROPERTIES != nil {
+		defaultProperties = appOptions.DEFAULT_PROPERTIES
+	}
 
 	store := Store{
-		Config:     map[string]string{},
+		Properties: defaultProperties,
 		index:      0,
 		client:     client,
 		appOptions: appOptions,

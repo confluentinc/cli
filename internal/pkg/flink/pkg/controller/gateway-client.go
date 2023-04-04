@@ -3,44 +3,45 @@ package controller
 import (
 	"context"
 	"net/http"
-	"strings"
+
+	"github.com/google/uuid"
+	"github.com/hashicorp/go-retryablehttp"
 
 	v1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"
-	"github.com/google/uuid"
-	"github.com/samber/lo"
 )
 
 type GatewayClient struct {
-	authToken     string
-	envId         string
-	computePoolId string
-	client        *v1.APIClient
+	authToken         string
+	envId             string
+	orgResourceId     string
+	kafkaClusterId    string
+	computePoolId     string
+	defaultProperties map[string]string
+	client            *v1.APIClient
 }
 
 func (c *GatewayClient) CreateStatement(ctx context.Context, statement string, properties map[string]string) (v1.SqlV1alpha1Statement, *http.Response, error) {
-	statementName, ok := properties["pipeline.name"]
-	if !ok || strings.TrimSpace(statementName) == "" {
-		statementName = uuid.New().String()
-	}
-
-	propsSlice := lo.MapToSlice(properties, func(key, val string) v1.SqlV1alpha1Property { return v1.SqlV1alpha1Property{Key: &key, Value: &val} })
+	statementName := uuid.New().String()
+	properties = c.propsDefault(properties)
 
 	statementObj := v1.SqlV1alpha1Statement{
 		Spec: &v1.SqlV1alpha1StatementSpec{
 			StatementName: &statementName,
 			Statement:     &statement,
 			ComputePoolId: &c.computePoolId,
-			Properties:    &propsSlice,
+			Properties:    &properties,
 		},
 	}
 
 	ctx = context.WithValue(ctx, v1.ContextAccessToken, c.authToken)
-	createdStatement, resp, err := c.client.StatementsSqlV1alpha1Api.CreateSqlV1alpha1Statement(ctx, c.envId).SqlV1alpha1Statement(statementObj).Execute()
+	req := c.client.StatementsSqlV1alpha1Api.CreateSqlV1alpha1Statement(ctx, c.envId).SqlV1alpha1Statement(statementObj)
+	createdStatement, resp, err := req.Execute()
+
 	return createdStatement, resp, err
 }
 
 // TODO result handling: https://confluentinc.atlassian.net/wiki/spaces/FLINK/pages/3004703887/WIP+Flink+Gateway+-+Results+handling
-func (s *Store) FetchStatementResults(envId, statementId string) (*StatementResult, error) {
+func (c *GatewayClient) FetchStatementResults(envId, statementId string) (*StatementResult, error) {
 	return &StatementResult{
 		Status:  "Completed",
 		Columns: []string{},
@@ -48,11 +49,61 @@ func (s *Store) FetchStatementResults(envId, statementId string) (*StatementResu
 	}, nil
 }
 
-func NewGatewayClient(envId, computePoolId, authToken string) *GatewayClient {
+// Set properties default values if not set by the user
+// We probably want to refactor the keys names and where they are stored. Maybe also the default values.
+func (c *GatewayClient) propsDefault(properties map[string]string) map[string]string {
+	if _, ok := properties[configKeyCatalog]; !ok {
+		properties[configKeyCatalog] = c.envId
+	}
+	if _, ok := properties[configKeyDatabase]; !ok {
+		properties[configKeyDatabase] = c.kafkaClusterId
+	}
+	if _, ok := properties[configKeyOrgResourceId]; !ok {
+		properties[configKeyOrgResourceId] = c.orgResourceId
+	}
+	if _, ok := properties[configKeyExecutionRuntime]; !ok {
+		properties[configKeyExecutionRuntime] = "streaming"
+	}
+
+	return properties
+}
+
+func newRetryableHttpClient(unsafeTrace bool) *http.Client {
+	client := retryablehttp.NewClient()
+	client.Logger = nil
+	//client.Logger = plog.NewLeveledLogger(unsafeTrace)
+	client.CheckRetry = func(ctx context.Context, resp *http.Response, err error) (bool, error) {
+		if resp == nil {
+			return false, err
+		}
+		return resp.StatusCode == http.StatusTooManyRequests || resp.StatusCode >= 500, err
+	}
+	return client.StandardClient()
+}
+
+func NewGatewayClient(envId, orgResourceId, kafkaClusterId, computePoolId, authToken string, appOptions *ApplicationOptions) *GatewayClient {
+	cfg := v1.NewConfiguration()
+	unsafeTrace := false
+	defaultProperties := make(map[string]string)
+	if appOptions != nil {
+		if appOptions.HTTP_CLIENT_UNSAFE_TRACE {
+			unsafeTrace = true
+		}
+		if appOptions.FLINK_GATEWAY_URL != "" {
+			cfg.Servers = v1.ServerConfigurations{{URL: appOptions.FLINK_GATEWAY_URL}}
+		}
+	}
+
+	cfg.Debug = unsafeTrace
+	cfg.HTTPClient = newRetryableHttpClient(unsafeTrace)
+
 	return &GatewayClient{
-		envId:         envId,
-		computePoolId: computePoolId,
-		authToken:     authToken,
-		client:        v1.NewAPIClient(v1.NewConfiguration()),
+		envId:             envId,
+		orgResourceId:     orgResourceId,
+		kafkaClusterId:    kafkaClusterId,
+		computePoolId:     computePoolId,
+		authToken:         authToken,
+		defaultProperties: defaultProperties,
+		client:            v1.NewAPIClient(cfg),
 	}
 }

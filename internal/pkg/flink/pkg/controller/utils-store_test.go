@@ -76,7 +76,7 @@ func TestRemoveWhiteSpaces(t *testing.T) {
 
 func TestProcessSetStatement(t *testing.T) {
 	// Create a new store
-	client := NewGatewayClient("envId", "computePoolId", "authToken")
+	client := NewGatewayClient("envId", "orgResourceId", "kafkaClusterId", "computePoolId", "authToken", nil)
 	s := NewStore(client, nil).(*Store)
 
 	t.Run("should return an error message if statement is invalid", func(t *testing.T) {
@@ -92,8 +92,8 @@ func TestProcessSetStatement(t *testing.T) {
 		assert.Equal(t, [][]string{}, result.Rows)
 
 		// Add some key-value pairs to the config
-		s.Config["pipeline.name"] = "job1"
-		s.Config["timeout"] = "30"
+		s.Properties["pipeline.name"] = "job1"
+		s.Properties["timeout"] = "30"
 	})
 
 	t.Run("should update config for valid configKey", func(t *testing.T) {
@@ -126,7 +126,7 @@ func TestProcessSetStatement(t *testing.T) {
 
 func TestProcessResetStatement(t *testing.T) {
 	// Create a new store
-	client := NewGatewayClient("envId", "computePoolId", "authToken")
+	client := NewGatewayClient("envId", "orgResourceId", "kafkaClusterId", "computePoolId", "authToken", nil)
 	s := NewStore(client, nil).(*Store)
 
 	t.Run("should return an error message if statement is invalid", func(t *testing.T) {
@@ -135,8 +135,8 @@ func TestProcessResetStatement(t *testing.T) {
 	})
 
 	t.Run("should reset all keys and values from config", func(t *testing.T) {
-		s.Config["pipeline.name"] = "job1"
-		s.Config["timeout"] = "30"
+		s.Properties["pipeline.name"] = "job1"
+		s.Properties["timeout"] = "30"
 		result, _ := s.processResetStatement("reset")
 		assert.EqualValues(t, "Completed", result.Status)
 		assert.Equal(t, "Configuration has been reset successfuly.", result.StatusDetail)
@@ -152,7 +152,7 @@ func TestProcessResetStatement(t *testing.T) {
 	})
 
 	t.Run("should reset config for valid configKey", func(t *testing.T) {
-		s.Config["pipeline.name"] = "job1"
+		s.Properties["pipeline.name"] = "job1"
 		result, _ := s.processResetStatement("reset pipeline.name")
 		assert.EqualValues(t, "Completed", result.Status)
 		assert.Equal(t, "Config key \"pipeline.name\" has been reset successfuly.", result.StatusDetail)
@@ -171,7 +171,7 @@ func TestProcessResetStatement(t *testing.T) {
 
 func TestProcessUseStatement(t *testing.T) {
 	// Create a new store
-	client := NewGatewayClient("envId", "computePoolId", "authToken")
+	client := NewGatewayClient("envId", "orgResourceId", "kafkaClusterId", "computePoolId", "authToken", nil)
 	s := NewStore(client, nil).(*Store)
 
 	t.Run("should return an error message if statement is invalid", func(t *testing.T) {
