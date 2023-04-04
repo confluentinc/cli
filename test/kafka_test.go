@@ -116,6 +116,7 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka topic delete --force", login: "cloud", useKafka: "lkc-delete-topic", fixture: "kafka/topic/delete.golden", exitCode: 1},
 		{args: "kafka topic delete topic-exist --force", useKafka: "lkc-delete-topic", fixture: "kafka/topic/delete-success.golden"},
 		{args: "kafka topic delete topic-exist", useKafka: "lkc-delete-topic", input: "topic-exist\n", fixture: "kafka/topic/delete-success-prompt.golden"},
+		{args: "kafka topic delete topic-exist topic2", useKafka: "lkc-delete-topic", fixture: "kafka/topic/delete-multiple-fail.golden", exitCode: 1},
 		{args: "kafka topic delete topic2 --force", login: "cloud", useKafka: "lkc-delete-topic", fixture: "kafka/topic/delete-not-found-topic2.golden", exitCode: 1},
 
 		{args: "kafka topic update topic-exist-rest --config retention.ms=1,compression.type=gzip", useKafka: "lkc-describe-topic", fixture: "kafka/topic/update-success-rest.golden"},
