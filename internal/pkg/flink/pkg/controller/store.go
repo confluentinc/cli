@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-//go:embed mock-data.json
+//go:embed mock_data.json
 var mockData []byte
 
 const (
