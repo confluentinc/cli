@@ -51,10 +51,10 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	deletion.PrintSuccessfulDeletionMsg(deleted, resource.ByokKey)
 
 	if errs != nil {
-		errs = errors.NewErrorWithSuggestions(errs.Error(), errors.ByokKeyNotFoundSuggestions)
+		return errors.NewErrorWithSuggestions(errs.Error(), errors.ByokKeyNotFoundSuggestions)
 	}
 
-	return errs
+	return nil
 }
 
 func (c *command) validateArgs(cmd *cobra.Command, args []string) ([]string, error) {

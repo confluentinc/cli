@@ -69,13 +69,13 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 
 	if errs != nil {
 		if len(args) - len(deleted) > 1 {
-			errs = errors.NewErrorWithSuggestions(errs.Error(), "Ensure the clusters are not associated with any active Connect clusters.")
+			return errors.NewErrorWithSuggestions(errs.Error(), "Ensure the clusters are not associated with any active Connect clusters.")
 		} else {
-			errs = errors.NewErrorWithSuggestions(errs.Error(), "Ensure the cluster is not associated with any active Connect clusters.")
+			return errors.NewErrorWithSuggestions(errs.Error(), "Ensure the cluster is not associated with any active Connect clusters.")
 		}
 	}
 
-	return errs
+	return nil
 }
 
 func (c *clusterCommand) validateArgs(cmd *cobra.Command, environmentId string, args []string) (string, []string, error) {

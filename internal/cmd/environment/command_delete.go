@@ -64,10 +64,10 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	deletion.PrintSuccessfulDeletionMsg(deleted, resource.Environment)
 
 	if errs != nil {
-		errs = errors.NewErrorWithSuggestions(errs.Error(), fmt.Sprintf(errors.ListResourceSuggestions, resource.Environment, resource.Environment))
+		return errors.NewErrorWithSuggestions(errs.Error(), fmt.Sprintf(errors.ListResourceSuggestions, resource.Environment, resource.Environment))
 	}
 
-	return errs
+	return nil
 }
 
 func (c *command) validateArgs(cmd *cobra.Command, args []string) (string, []string, error) {

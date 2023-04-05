@@ -55,10 +55,10 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	deletion.PrintSuccessfulDeletionMsg(deleted, resource.ApiKey)
 
 	if errs != nil {
-		errs = errors.NewErrorWithSuggestions(errs.Error(), errors.APIKeyNotFoundSuggestions)
+		return errors.NewErrorWithSuggestions(errs.Error(), errors.APIKeyNotFoundSuggestions)
 	}
 
-	return errs
+	return nil
 }
 
 func (c *command) validateArgs(cmd *cobra.Command, args []string) ([]string, error) {
