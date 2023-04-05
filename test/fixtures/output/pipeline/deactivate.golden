@@ -3,7 +3,7 @@
 | Name                 | testPipeline                  |
 | Description          | description                   |
 | KSQL Cluster         | lksqlc-12345                  |
-| Secret Names         | name1, name2, name3           |
+| Secret Names         | name1, name2                  |
 | Activation Privilege | false                         |
 | State                | deactivating                  |
 | Created At           | 2022-10-04 06:00:00 +0000 UTC |
