@@ -21,9 +21,10 @@ func ValidateArgsForDeletion(cmd *cobra.Command, args []string, resourceType str
 	}
 
 	if len(invalidArgs) != 0 {
-		invalidArgsErrMsg := fmt.Sprintf(errors.NotFoundErrorMsg, resourceType, utils.ArrayToCommaDelimitedString(invalidArgs, "and"))
+		NotFoundErrorMsg := `%s "%s" not found`
+		invalidArgsErrMsg := fmt.Sprintf(NotFoundErrorMsg, resourceType, utils.ArrayToCommaDelimitedString(invalidArgs, "and"))
 		if len(invalidArgs) > 1 {
-			invalidArgsErrMsg = fmt.Sprintf(errors.NotFoundErrorMsg, resource.Plural(resourceType), utils.ArrayToCommaDelimitedString(invalidArgs, "and"))
+			invalidArgsErrMsg = fmt.Sprintf(NotFoundErrorMsg, resource.Plural(resourceType), utils.ArrayToCommaDelimitedString(invalidArgs, "and"))
 		}
 		return errors.NewErrorWithSuggestions(invalidArgsErrMsg, fmt.Sprintf(errors.ListResourceSuggestions, resourceType, pcmd.FullParentName(cmd)))
 	}
