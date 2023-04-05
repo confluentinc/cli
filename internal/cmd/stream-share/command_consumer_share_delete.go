@@ -61,10 +61,8 @@ func (c *command) deleteConsumerShare(cmd *cobra.Command, args []string) error {
 
 func (c *command) validateArgsConsumerShare(cmd *cobra.Command, args []string) ([]string, error) {
 	describeFunc := func(id string) error {
-		if _, err := c.V2Client.DescribeConsumerShare(id); err != nil {
-			return err
-		}
-		return nil
+		_, err := c.V2Client.DescribeConsumerShare(id)
+		return err
 	}
 
 	validArgs, err := deletion.ValidateArgsForDeletion(cmd, args, resource.ConsumerShare, describeFunc)

@@ -76,12 +76,11 @@ func (c *identityPoolCommand) delete(cmd *cobra.Command, args []string) error {
 func (c *identityPoolCommand) validateArgs(cmd *cobra.Command, provider string, args []string) (string, []string, error) {
 	var displayName string
 	describeFunc := func(id string) error {
-		if pool, err := c.V2Client.GetIdentityPool(id, provider); err != nil {
-			return err
-		} else if displayName == "" { // store the first valid pool name
+		pool, err := c.V2Client.GetIdentityPool(id, provider)
+		if err == nil && displayName == "" { // store the first valid pool name
 			displayName = pool.GetDisplayName()
 		}
-		return nil
+		return err
 	}
 
 	validArgs, err := deletion.ValidateArgsForDeletion(cmd, args, resource.IdentityPool, describeFunc)

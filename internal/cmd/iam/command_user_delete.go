@@ -64,12 +64,11 @@ func (c *userCommand) validateArgs(cmd *cobra.Command, args []string) (string, [
 
 	var fullName string
 	describeFunc := func(id string) error {
-		if user, err := c.V2Client.GetIamUserById(id); err != nil {
-			return err
-		} else if fullName == "" { // store the first valid user name
+		user, err := c.V2Client.GetIamUserById(id)
+		if err == nil && fullName == "" { // store the first valid user name
 			fullName = user.GetFullName()
 		}
-		return nil
+		return err
 	}
 
 	validArgs, err := deletion.ValidateArgsForDeletion(cmd, args, resource.User, describeFunc)

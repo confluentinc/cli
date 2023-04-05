@@ -85,12 +85,11 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 func (c *clusterCommand) validateArgs(cmd *cobra.Command, environmentId, kafkaClusterId string, args []string) (map[string]string, []string, error) {
 	connectorIdToName := make(map[string]string)
 	describeFunc := func(id string) error {
-		if connector, err := c.V2Client.GetConnectorExpansionById(id, environmentId, kafkaClusterId); err != nil {
-			return err
-		} else {
+		connector, err := c.V2Client.GetConnectorExpansionById(id, environmentId, kafkaClusterId)
+		if err == nil {
 			connectorIdToName[id] = connector.Info.GetName()
 		}
-		return nil
+		return err
 	}
 
 	validArgs, err := deletion.ValidateArgsForDeletion(cmd, args, resource.Connector, describeFunc)

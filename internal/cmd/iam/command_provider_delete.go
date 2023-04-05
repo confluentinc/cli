@@ -68,12 +68,11 @@ func (c *identityProviderCommand) delete(cmd *cobra.Command, args []string) erro
 func (c *identityProviderCommand) validateArgs(cmd *cobra.Command, args []string) (string, []string, error) {
 	var displayName string
 	describeFunc := func(id string) error {
-		if provider, err := c.V2Client.GetIdentityProvider(id); err != nil {
-			return err
-		} else if displayName == "" { // store the first valid provider name
+		provider, err := c.V2Client.GetIdentityProvider(id)
+		if err == nil && displayName == "" { // store the first valid provider name
 			displayName = provider.GetDisplayName()
 		}
-		return nil
+		return err
 	}
 
 	validArgs, err := deletion.ValidateArgsForDeletion(cmd, args, resource.IdentityProvider, describeFunc)

@@ -72,12 +72,11 @@ func (c *serviceAccountCommand) validateArgs(cmd *cobra.Command, args []string) 
 
 	var displayName string
 	describeFunc := func(id string) error {
-		if serviceAccount, _, err := c.V2Client.GetIamServiceAccount(id); err != nil {
-			return err
-		} else if displayName == "" { // store the first valid provider name
+		serviceAccount, _, err := c.V2Client.GetIamServiceAccount(id)
+		if err == nil && displayName == "" { // store the first valid provider name
 			displayName = serviceAccount.GetDisplayName()
 		}
-		return nil
+		return err
 	}
 
 	validArgs, err := deletion.ValidateArgsForDeletion(cmd, args, resource.ServiceAccount, describeFunc)

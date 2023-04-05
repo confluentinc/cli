@@ -85,12 +85,11 @@ func (c *clusterCommand) validateArgs(cmd *cobra.Command, environmentId string, 
 
 	var displayName string
 	describeFunc := func(id string) error {
-		if cluster, _, err := c.V2Client.DescribeKafkaCluster(id, environmentId); err != nil {
-			return err
-		} else if displayName == "" { // store the first valid cluster name
+		cluster, _, err := c.V2Client.DescribeKafkaCluster(id, environmentId)
+		if err == nil && displayName == "" { // store the first valid cluster name
 			displayName = cluster.Spec.GetDisplayName()
 		}
-		return nil
+		return err
 	}
 
 	validArgs, err := deletion.ValidateArgsForDeletion(cmd, args, resource.KafkaCluster, describeFunc)

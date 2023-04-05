@@ -61,10 +61,8 @@ func (c *command) deleteProviderShare(cmd *cobra.Command, args []string) error {
 
 func (c *command) validateArgsProviderShare(cmd *cobra.Command, args []string) ([]string, error) {
 	describeFunc := func(id string) error {
-		if _, err := c.V2Client.DescribeProviderShare(id); err != nil {
-			return err
-		}
-		return nil
+		_, err := c.V2Client.DescribeProviderShare(id)
+		return err
 	}
 
 	validArgs, err := deletion.ValidateArgsForDeletion(cmd, args, resource.ProviderShare, describeFunc)

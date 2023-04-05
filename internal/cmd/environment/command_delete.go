@@ -73,12 +73,11 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 func (c *command) validateArgs(cmd *cobra.Command, args []string) (string, []string, error) {
 	var displayName string
 	describeFunc := func(id string) error {
-		if environment, _, err := c.V2Client.GetOrgEnvironment(id); err != nil {
-			return err
-		} else if displayName == "" { // store the first valid environment name
+		environment, _, err := c.V2Client.GetOrgEnvironment(id)
+		if err == nil && displayName == "" { // store the first valid environment name
 			displayName = environment.GetDisplayName()
 		}
-		return nil
+		return err
 	}
 
 	validArgs, err := deletion.ValidateArgsForDeletion(cmd, args, resource.Environment, describeFunc)

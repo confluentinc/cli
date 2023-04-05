@@ -83,12 +83,11 @@ func (c *brokerCommand) validateArgs(cmd *cobra.Command, restClient *kafkarestv3
 		}
 		numId := int32(i)
 
-		if _, _, err := restClient.ConfigsV3Api.ClustersClusterIdBrokersBrokerIdConfigsGet(restContext, clusterId, numId); err != nil {
-			return err
-		} else {
+		_, _, err := restClient.ConfigsV3Api.ClustersClusterIdBrokersBrokerIdConfigsGet(restContext, clusterId, numId)
+		if err == nil {
 			brokerIdToNumId[id] = numId
 		}
-		return nil
+		return err
 	}
 
 	validArgs, err := deletion.ValidateArgsForDeletion(cmd, args, "broker", describeFunc)

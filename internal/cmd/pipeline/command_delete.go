@@ -85,12 +85,11 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 func (c *command) validateArgs(cmd *cobra.Command, environmentId, clusterId string, args []string) (string, []string, error) {
 	var displayName string
 	describeFunc := func(id string) error {
-		if pipeline, err := c.V2Client.GetSdPipeline(environmentId, clusterId, id); err != nil {
-			return err
-		} else if displayName == "" { // store the first valid pipeline name
+		pipeline, err := c.V2Client.GetSdPipeline(environmentId, clusterId, id)
+		if err == nil && displayName == "" { // store the first valid pipeline name
 			displayName = pipeline.Spec.GetDisplayName()
 		}
-		return nil
+		return err
 	}
 
 	validArgs, err := deletion.ValidateArgsForDeletion(cmd, args, resource.Pipeline, describeFunc)

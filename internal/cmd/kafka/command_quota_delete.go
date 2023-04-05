@@ -60,10 +60,8 @@ func (c *quotaCommand) delete(cmd *cobra.Command, args []string) error {
 
 func (c *quotaCommand) validateArgs(cmd *cobra.Command, args []string) ([]string, error) {
 	describeFunc := func(id string) error {
-		if _, err := c.V2Client.DescribeKafkaQuota(id); err != nil {
-			return err
-		}
-		return nil
+		_, err := c.V2Client.DescribeKafkaQuota(id)
+		return err
 	}
 
 	validArgs, err := deletion.ValidateArgsForDeletion(cmd, args, resource.ClientQuota, describeFunc)

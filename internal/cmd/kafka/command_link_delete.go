@@ -76,10 +76,8 @@ func (c *linkCommand) delete(cmd *cobra.Command, args []string) error {
 
 func (c *linkCommand) validateArgs(cmd *cobra.Command, kafkaREST *pcmd.KafkaREST, clusterId string, args []string) ([]string, error) {
 	describeFunc := func(id string) error {
-		if _, _, err := kafkaREST.CloudClient.ListKafkaLinkConfigs(clusterId, id); err != nil {
-			return err
-		}
-		return nil
+		_, _, err := kafkaREST.CloudClient.ListKafkaLinkConfigs(clusterId, id)
+		return err
 	}
 
 	validArgs, err := deletion.ValidateArgsForDeletion(cmd, args, resource.ClusterLink, describeFunc)

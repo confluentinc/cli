@@ -74,10 +74,8 @@ func (c *linkCommand) deleteOnPrem(cmd *cobra.Command, args []string) error {
 
 func (c *linkCommand) validateArgsOnPrem(cmd *cobra.Command, client *kafkarestv3.APIClient, ctx context.Context, clusterId string, args []string) ([]string, error) {
 	describeFunc := func(id string) error {
-		if _, _, err := client.ClusterLinkingV3Api.ListKafkaLinkConfigs(ctx, clusterId, id); err != nil {
-			return err
-		}
-		return nil
+		_, _, err := client.ClusterLinkingV3Api.ListKafkaLinkConfigs(ctx, clusterId, id)
+		return err
 	}
 
 	validArgs, err := deletion.ValidateArgsForDeletion(cmd, args, resource.ClusterLink, describeFunc)

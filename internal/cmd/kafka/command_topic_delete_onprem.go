@@ -83,10 +83,8 @@ func (c *authenticatedTopicCommand) deleteOnPrem(cmd *cobra.Command, args []stri
 
 func (c *authenticatedTopicCommand) validateArgsOnPrem(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restContext context.Context, clusterId string, args []string) ([]string, error) {
 	describeFunc := func(id string) error {
-		if _, r, err := restClient.TopicV3Api.GetKafkaTopic(restContext, clusterId, id); err != nil {
-			return kafkarest.NewError(restClient.GetConfig().BasePath, err, r)
-		}
-		return nil
+		_, _, err := restClient.TopicV3Api.GetKafkaTopic(restContext, clusterId, id)
+		return err
 	}
 
 	validArgs, err := deletion.ValidateArgsForDeletion(cmd, args, resource.Topic, describeFunc)
