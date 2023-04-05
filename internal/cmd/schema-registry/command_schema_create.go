@@ -159,7 +159,7 @@ func readMetadata(metadataPath string) (*srsdk.Metadata, error) {
 		if err != nil {
 			return nil, err
 		}
-		if err = json.Unmarshal(metadataBlob, &metadata); err != nil {
+		if err := json.Unmarshal(metadataBlob, &metadata); err != nil {
 			return nil, err
 		}
 	}
@@ -173,7 +173,7 @@ func readRuleset(rulesetPath string) (*srsdk.RuleSet, error) {
 		if err != nil {
 			return nil, err
 		}
-		if err = json.Unmarshal(rulesetBlob, &ruleSet); err != nil {
+		if err := json.Unmarshal(rulesetBlob, &ruleSet); err != nil {
 			return nil, err
 		}
 	}

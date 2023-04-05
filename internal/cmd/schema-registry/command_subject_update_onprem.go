@@ -35,18 +35,18 @@ func (c *command) newSubjectUpdateCommandOnPrem() *cobra.Command {
 
 	addCompatibilityFlag(cmd)
 	cmd.Flags().String("compatibility-group", "", "The name for compatibility group.")
-	cmd.Flags().String("default-metadata", "", "The path to default metadata file.")
-	cmd.Flags().String("overridden-metadata", "", "The path to overridden metadata file.")
-	cmd.Flags().String("default-ruleset", "", "The path to default schema ruleset file.")
-	cmd.Flags().String("overridden-ruleset", "", "The path to overridden schema ruleset file.")
+	cmd.Flags().String("metadata-defaults", "", "The path to schema metadata defaults file.")
+	cmd.Flags().String("metadata-overrides", "", "The path to schema metadata overrides file.")
+	cmd.Flags().String("ruleset-defaults", "", "The path to schema ruleset defaults file.")
+	cmd.Flags().String("ruleset-overrides", "", "The path to schema ruleset overrides file.")
 	addModeFlag(cmd)
 	cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
-	cobra.CheckErr(cmd.MarkFlagFilename("default-metadata", "json"))
-	cobra.CheckErr(cmd.MarkFlagFilename("overridden-metadata", "json"))
-	cobra.CheckErr(cmd.MarkFlagFilename("default-ruleset", "json"))
-	cobra.CheckErr(cmd.MarkFlagFilename("overridden-ruleset", "json"))
+	cobra.CheckErr(cmd.MarkFlagFilename("metadata-defaults", "json"))
+	cobra.CheckErr(cmd.MarkFlagFilename("metadata-overrides", "json"))
+	cobra.CheckErr(cmd.MarkFlagFilename("ruleset-defaults", "json"))
+	cobra.CheckErr(cmd.MarkFlagFilename("ruleset-overrides", "json"))
 
 	return cmd
 }

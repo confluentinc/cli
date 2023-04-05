@@ -18,10 +18,10 @@ import (
 type configOut struct {
 	CompatibilityLevel string `human:"Compatibility Level,omitempty" serialized:"compatibility_level,omitempty"`
 	CompatibilityGroup string `human:"Compatibility Group,omitempty" serialized:"compatibility_group,omitempty"`
-	DefaultMetadata    string `human:"Default Metadata,omitempty" serialized:"default_metadata,omitempty"`
-	OverrideMetadata   string `human:"Overridden Metadata,omitempty" serialized:"overridden_metadata,omitempty"`
-	DefaultRuleSet     string `human:"Default Ruleset,omitempty" serialized:"default_ruleset,omitempty"`
-	OverrideRuleSet    string `human:"Overridden Ruleset,omitempty" serialized:"overridden_ruleset,omitempty"`
+	DefaultMetadata    string `human:"Metadata Defaults,omitempty" serialized:"metadata_defaults,omitempty"`
+	OverrideMetadata   string `human:"Metadata Overrides,omitempty" serialized:"metadata_overrides,omitempty"`
+	DefaultRuleSet     string `human:"Ruleset Defaults,omitempty" serialized:"ruleset_defaults,omitempty"`
+	OverrideRuleSet    string `human:"Ruleset Overrides,omitempty" serialized:"ruleset_overrides,omitempty"`
 }
 
 func (c *command) newConfigDescribeCommand() *cobra.Command {

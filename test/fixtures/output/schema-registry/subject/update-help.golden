@@ -19,10 +19,10 @@ Update subject-level mode of subject "payments".
 Flags:
       --compatibility string         Can be "backward", "backward_transitive", "forward", "forward_transitive", "full", "full_transitive", or "none".
       --compatibility-group string   The name for compatibility group.
-      --default-metadata string      The path to default metadata file.
-      --overridden-metadata string   The path to overridden metadata file.
-      --default-ruleset string       The path to default schema ruleset file.
-      --overridden-ruleset string    The path to overridden schema ruleset file.
+      --metadata-defaults string     The path to schema metadata defaults file.
+      --metadata-overrides string    The path to schema metadata overrides file.
+      --ruleset-defaults string      The path to schema ruleset defaults file.
+      --ruleset-overrides string     The path to schema ruleset overrides file.
       --mode string                  Can be "readwrite", "readonly", or "import".
       --api-key string               API key.
       --api-secret string            API key secret.

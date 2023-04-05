@@ -38,20 +38,20 @@ func (c *command) newSubjectUpdateCommand() *cobra.Command {
 
 	addCompatibilityFlag(cmd)
 	cmd.Flags().String("compatibility-group", "", "The name for compatibility group.")
-	cmd.Flags().String("default-metadata", "", "The path to default metadata file.")
-	cmd.Flags().String("overridden-metadata", "", "The path to overridden metadata file.")
-	cmd.Flags().String("default-ruleset", "", "The path to default schema ruleset file.")
-	cmd.Flags().String("overridden-ruleset", "", "The path to overridden schema ruleset file.")
+	cmd.Flags().String("metadata-defaults", "", "The path to schema metadata defaults file.")
+	cmd.Flags().String("metadata-overrides", "", "The path to schema metadata overrides file.")
+	cmd.Flags().String("ruleset-defaults", "", "The path to schema ruleset defaults file.")
+	cmd.Flags().String("ruleset-overrides", "", "The path to schema ruleset overrides file.")
 	addModeFlag(cmd)
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddApiSecretFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 
-	cobra.CheckErr(cmd.MarkFlagFilename("default-metadata", "json"))
-	cobra.CheckErr(cmd.MarkFlagFilename("overridden-metadata", "json"))
-	cobra.CheckErr(cmd.MarkFlagFilename("default-ruleset", "json"))
-	cobra.CheckErr(cmd.MarkFlagFilename("overridden-ruleset", "json"))
+	cobra.CheckErr(cmd.MarkFlagFilename("metadata-defaults", "json"))
+	cobra.CheckErr(cmd.MarkFlagFilename("metadata-overrides", "json"))
+	cobra.CheckErr(cmd.MarkFlagFilename("ruleset-defaults", "json"))
+	cobra.CheckErr(cmd.MarkFlagFilename("ruleset-overrides", "json"))
 
 	return cmd
 }
@@ -94,7 +94,7 @@ func (c *command) updateCompatibility(subject, compatibility string, cmd *cobra.
 		return err
 	}
 
-	metadataPath, err := cmd.Flags().GetString("default-metadata")
+	metadataPath, err := cmd.Flags().GetString("metadata-defaults")
 	if err != nil {
 		return err
 	}
@@ -103,7 +103,7 @@ func (c *command) updateCompatibility(subject, compatibility string, cmd *cobra.
 		return err
 	}
 
-	metadataPath, err = cmd.Flags().GetString("overridden-metadata")
+	metadataPath, err = cmd.Flags().GetString("metadata-overrides")
 	if err != nil {
 		return err
 	}
@@ -112,7 +112,7 @@ func (c *command) updateCompatibility(subject, compatibility string, cmd *cobra.
 		return err
 	}
 
-	rulesetPath, err := cmd.Flags().GetString("default-ruleset")
+	rulesetPath, err := cmd.Flags().GetString("ruleset-defaults")
 	if err != nil {
 		return err
 	}
@@ -121,7 +121,7 @@ func (c *command) updateCompatibility(subject, compatibility string, cmd *cobra.
 		return err
 	}
 
-	rulesetPath, err = cmd.Flags().GetString("overridden-ruleset")
+	rulesetPath, err = cmd.Flags().GetString("ruleset-overrides")
 	if err != nil {
 		return err
 	}
