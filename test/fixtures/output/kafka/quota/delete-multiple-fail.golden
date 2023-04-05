@@ -1,0 +1,5 @@
+Error: client quota not found: "cq-dne"
+
+Suggestions:
+    Use the `--skip-invalid` flag to suppress this error and delete the remaining client quota entered.
+    List available client quotas with `confluent kafka quota list`.
