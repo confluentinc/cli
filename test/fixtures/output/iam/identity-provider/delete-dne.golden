@@ -1,1 +1,4 @@
-Error: resource not found: 403 Forbidden
+Error: identity provider not found: "op-1"
+
+Suggestions:
+    List available identity providers with `confluent iam provider list`.

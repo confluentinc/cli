@@ -1,0 +1,5 @@
+Error: topic not found: "topic2"
+
+Suggestions:
+    Use the `--skip-invalid` flag to suppress this error and delete the remaining topic entered.
+    List available topics with `confluent kafka topic list`.

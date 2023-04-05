@@ -15,7 +15,6 @@ import (
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
-	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 )
 
 var (
@@ -27,6 +26,10 @@ var (
 )
 
 type ApiKeyListV2 []apikeysv2.IamV2ApiKey
+
+type ObjWithId interface {
+	GetId() string
+}
 
 // Len is part of sort.Interface.
 func (d ApiKeyListV2) Len() int {
@@ -364,11 +367,23 @@ func isValidEnvironmentId(environments []*ccloudv1.Account, reqEnvId string) *cc
 	return nil
 }
 
-func isValidOrgEnvironmentId(environments []*orgv2.OrgV2Environment, reqEnvId string) *orgv2.OrgV2Environment {
-	for _, env := range environments {
-		if reqEnvId == *env.Id {
-			return env
+func getV2List[T any](ptrList []*T) []T {
+	objList := make([]T, len(ptrList))
+	for i, ptr := range ptrList {
+		objList[i] = *ptr
+	}
+	return objList
+}
+
+func getV2Index[T ObjWithId](objSlice []T, id string) int {
+	for i, obj := range objSlice {
+		if obj.GetId() == id {
+			return i
 		}
 	}
-	return nil
+	return -1
+}
+
+func ptr[T any](obj T) *T {
+	return &obj
 }

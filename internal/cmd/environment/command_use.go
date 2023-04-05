@@ -33,7 +33,7 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 
 	environment, err := c.Client.Account.Get(context.Background(), &ccloudv1.Account{Id: id})
 	if err != nil {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.EnvNotFoundErrorMsg, id), fmt.Sprintf(errors.OrgResourceNotFoundSuggestions, resource.Environment))
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.EnvNotFoundErrorMsg, id), fmt.Sprintf(errors.ListResourceSuggestions, resource.Environment, resource.Environment))
 	}
 	c.Context.SetEnvironment(environment)
 
