@@ -338,7 +338,7 @@ func (c *Config) resolveOverwrittenCurrentEnvironment() string {
 	var tempEnvironment string
 	if c.overwrittenCurrentEnvironment != "" {
 		tempEnvironment = c.Context().GetCurrentEnvironment()
-		c.Context().CurrentEnvironment = c.overwrittenCurrentEnvironment
+		c.Context().SetCurrentEnvironment(c.overwrittenCurrentEnvironment)
 	}
 	return tempEnvironment
 }
@@ -346,7 +346,7 @@ func (c *Config) resolveOverwrittenCurrentEnvironment() string {
 // Restore the flag account back into the struct so that it is used for any execution after Save()
 func (c *Config) restoreOverwrittenEnvironment(id string) {
 	if id != "" {
-		c.Context().CurrentEnvironment = id
+		c.Context().SetCurrentEnvironment(id)
 	}
 }
 

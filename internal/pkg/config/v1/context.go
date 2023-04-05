@@ -212,6 +212,7 @@ func (c *Context) GetCurrentEnvironment() string {
 
 func (c *Context) SetCurrentEnvironment(id string) {
 	c.CurrentEnvironment = id
+
 	if auth := c.GetAuth(); auth != nil {
 		auth.Account = nil
 		auth.Accounts = nil

@@ -397,7 +397,7 @@ func TestConfig_SaveWithEnvironmentOverwrite(t *testing.T) {
 		EncryptedPassword: "encrypted-password",
 	}}
 	config.SetOverwrittenCurrentEnvironment(config.Context().GetCurrentEnvironment())
-	config.Context().CurrentEnvironment = "env-flag"
+	config.Context().SetCurrentEnvironment("env-flag")
 	err = config.Save()
 	require.NoError(t, err)
 
@@ -809,7 +809,7 @@ func TestKafkaClusterContext_SetAndGetActiveKafkaCluster_Env(t *testing.T) {
 	require.Equal(t, ctx.KafkaClusterContext.GetActiveKafkaClusterConfig().ID, activeKafka)
 
 	// switch environment add the kafka cluster, and set it as active cluster
-	ctx.CurrentEnvironment = otherEnvironmentId
+	ctx.SetCurrentEnvironment(otherEnvironmentId)
 	ctx.KafkaClusterContext.AddKafkaClusterConfig(otherKafkaCluster)
 	ctx.KafkaClusterContext.SetActiveKafkaCluster(otherKafkaCluster.ID)
 	activeKafka = ctx.KafkaClusterContext.GetActiveKafkaClusterId()
@@ -817,7 +817,7 @@ func TestKafkaClusterContext_SetAndGetActiveKafkaCluster_Env(t *testing.T) {
 	require.Equal(t, ctx.KafkaClusterContext.GetActiveKafkaClusterConfig().ID, activeKafka)
 
 	// switch environment back
-	ctx.CurrentEnvironment = testInputs.environment
+	ctx.SetCurrentEnvironment(testInputs.environment)
 	activeKafka = ctx.KafkaClusterContext.GetActiveKafkaClusterId()
 	require.Equal(t, testInputs.activeKafka, activeKafka)
 	require.Equal(t, ctx.KafkaClusterContext.GetActiveKafkaClusterConfig().ID, activeKafka)

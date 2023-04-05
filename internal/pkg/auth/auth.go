@@ -100,7 +100,7 @@ func PersistCCloudCredentialsToConfig(config *v1.Config, client *ccloudv1.Client
 
 	ctx := config.Context()
 	if ctx.CurrentEnvironment == "" && len(user.GetAccounts()) > 0 {
-		ctx.CurrentEnvironment = user.GetAccounts()[0].GetId()
+		ctx.SetCurrentEnvironment(user.GetAccounts()[0].GetId())
 		if err := config.Save(); err != nil {
 			return "", nil, err
 		}
