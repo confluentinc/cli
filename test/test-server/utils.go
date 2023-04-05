@@ -384,6 +384,6 @@ func getV2Index[T ObjWithId](objSlice []T, id string) int {
 	return -1
 }
 
-func ptrObj[T any](obj T) *T {
+func ptr[T any](obj T) *T {
 	return &obj
 }
