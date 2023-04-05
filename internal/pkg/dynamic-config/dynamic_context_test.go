@@ -25,7 +25,6 @@ var (
 	flagEnvironment  = "env-test"
 	flagCluster      = "lkc-0001"
 	flagClusterInEnv = "lkc-0002"
-	badFlagEnv       = "bad-env"
 	apiEnvironment   = "env-from-api-call"
 )
 
