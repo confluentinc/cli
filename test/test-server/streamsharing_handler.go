@@ -27,6 +27,13 @@ var (
 			Status:                   &cdxv1.CdxV1ConsumerShareStatus{Phase: "active"},
 			InviteExpiresAt:          &expiresAt,
 		},
+		{
+			Id:                       cdxv1.PtrString("ss-67890"),
+			ProviderUserName:         cdxv1.PtrString("provider2"),
+			ProviderOrganizationName: cdxv1.PtrString("provider org 2"),
+			Status:                   &cdxv1.CdxV1ConsumerShareStatus{Phase: "active"},
+			InviteExpiresAt:          &expiresAt,
+		},
 	}
 
 	providerShares = []*cdxv1.CdxV1ProviderShare{
@@ -34,6 +41,16 @@ var (
 			Id:                       cdxv1.PtrString("ss-12345"),
 			ConsumerUserName:         cdxv1.PtrString("consumer"),
 			ConsumerOrganizationName: cdxv1.PtrString("consumer org"),
+			Status:                   &cdxv1.CdxV1ProviderShareStatus{Phase: "active"},
+			DeliveryMethod:           cdxv1.PtrString("email"),
+			RedeemedAt:               &redeemedAt,
+			InvitedAt:                &invitedAt,
+			InviteExpiresAt:          &expiresAt,
+		},
+		{
+			Id:                       cdxv1.PtrString("ss-67890"),
+			ConsumerUserName:         cdxv1.PtrString("consumer2"),
+			ConsumerOrganizationName: cdxv1.PtrString("consumer org 2"),
 			Status:                   &cdxv1.CdxV1ProviderShareStatus{Phase: "active"},
 			DeliveryMethod:           cdxv1.PtrString("email"),
 			RedeemedAt:               &redeemedAt,

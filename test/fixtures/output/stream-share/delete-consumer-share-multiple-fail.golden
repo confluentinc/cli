@@ -1,0 +1,5 @@
+Error: consumer share not found: "ss-12346"
+
+Suggestions:
+    Use the `--skip-invalid` flag to suppress this error and delete the remaining consumer share entered.
+    List available consumer shares with `confluent stream-share consumer share list`.
