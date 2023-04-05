@@ -250,16 +250,16 @@ func handleKafkaRPTopicConfigs(t *testing.T) http.HandlerFunc {
 					Data: []cpkafkarestv3.TopicConfigData{
 						{
 							Name:  "cleanup.policy",
-							Value: ptr("delete"),
+							Value: cpkafkarestv3.PtrString("delete"),
 						},
 						{
 							Name:       "compression.type",
-							Value:      ptr("producer"),
+							Value:      cpkafkarestv3.PtrString("producer"),
 							IsReadOnly: true,
 						},
 						{
 							Name:  "retention.ms",
-							Value: ptr("604800000"),
+							Value: cpkafkarestv3.PtrString("604800000"),
 						},
 					},
 				}
@@ -272,11 +272,11 @@ func handleKafkaRPTopicConfigs(t *testing.T) http.HandlerFunc {
 					Data: []cpkafkarestv3.TopicConfigData{
 						{
 							Name:  "compression.type",
-							Value: ptr("gzip"),
+							Value: cpkafkarestv3.PtrString("gzip"),
 						},
 						{
 							Name:  "retention.ms",
-							Value: ptr("1"),
+							Value: cpkafkarestv3.PtrString("1"),
 						},
 					},
 				}
@@ -638,7 +638,7 @@ func handleKafkaRPLink(t *testing.T) http.HandlerFunc {
 			err := json.NewEncoder(w).Encode(cpkafkarestv3.ListLinksResponseData{
 				Kind:            "",
 				Metadata:        cpkafkarestv3.ResourceMetadata{},
-				SourceClusterId: ptr("cluster-1"),
+				SourceClusterId: cpkafkarestv3.PtrString("cluster-1"),
 				LinkName:        "link-1",
 				LinkId:          "LINKID1",
 				TopicsNames:     []string{"link-1-topic-1", "link-1-topic-2"},

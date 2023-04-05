@@ -132,13 +132,13 @@ func handleStreamSharingConsumerShare(t *testing.T) http.HandlerFunc {
 func handleStreamSharingRedeemToken(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		response := cdxv1.CdxV1RedeemTokenResponse{
-			Id:                   ptr("ss-12345"),
-			ApiKey:               ptr("00000000000000000000"),
-			Secret:               ptr("00000000000000000000"),
-			KafkaBootstrapUrl:    ptr("pkc-00000.us-east1.gcp.confluent.cloud:9092"),
-			SchemaRegistryUrl:    ptr("https://psrc-xyz123.us-west-2.aws.cpdev.cloud"),
-			SchemaRegistryApiKey: ptr("00000000000000000000"),
-			SchemaRegistrySecret: ptr("00000000000000000000"),
+			Id:                   cdxv1.PtrString("ss-12345"),
+			ApiKey:               cdxv1.PtrString("00000000000000000000"),
+			Secret:               cdxv1.PtrString("00000000000000000000"),
+			KafkaBootstrapUrl:    cdxv1.PtrString("pkc-00000.us-east1.gcp.confluent.cloud:9092"),
+			SchemaRegistryUrl:    cdxv1.PtrString("https://psrc-xyz123.us-west-2.aws.cpdev.cloud"),
+			SchemaRegistryApiKey: cdxv1.PtrString("00000000000000000000"),
+			SchemaRegistrySecret: cdxv1.PtrString("00000000000000000000"),
 			Resources: &[]cdxv1.CdxV1RedeemTokenResponseResourcesOneOf{
 				{
 					CdxV1SharedTopic: &cdxv1.CdxV1SharedTopic{
@@ -164,7 +164,7 @@ func handleStreamSharingRedeemToken(t *testing.T) http.HandlerFunc {
 // Handler for: "/cdx/v1/consumer-shared-resources"
 func handleConsumerSharedResources(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		list := &cdxv1.CdxV1ConsumerSharedResourceList{Data: []cdxv1.CdxV1ConsumerSharedResource{{Id: ptr("sr-12345")}}}
+		list := &cdxv1.CdxV1ConsumerSharedResourceList{Data: []cdxv1.CdxV1ConsumerSharedResource{{Id: cdxv1.PtrString("sr-12345")}}}
 		b, err := json.Marshal(list)
 		require.NoError(t, err)
 		_, err = io.WriteString(w, string(b))
@@ -176,13 +176,13 @@ func handleConsumerSharedResources(t *testing.T) http.HandlerFunc {
 func handlePrivateLinkNetworkConfig(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		network := cdxv1.CdxV1Network{
-			DnsDomain:       ptr("abc123.us-west-2.aws.stag.cpdev.cloud"),
+			DnsDomain:       cdxv1.PtrString("abc123.us-west-2.aws.stag.cpdev.cloud"),
 			Zones:           &[]string{"usw2-az1", "usw2-az3", "usw2-az2"},
 			ZonalSubdomains: &map[string]string{"usw2-az2": "usw2-az2.abc123.us-west-2.aws.stag.cpdev.cloud"},
 			Cloud: &cdxv1.CdxV1NetworkCloudOneOf{
 				CdxV1AwsNetwork: &cdxv1.CdxV1AwsNetwork{
 					Kind:                       "AwsNetwork",
-					PrivateLinkEndpointService: ptr("com.amazonaws.vpce.us-west-2.vpce-svc-0000000000"),
+					PrivateLinkEndpointService: cdxv1.PtrString("com.amazonaws.vpce.us-west-2.vpce-svc-0000000000"),
 				},
 			},
 		}

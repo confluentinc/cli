@@ -19,45 +19,45 @@ func handleAppliedQuotas(t *testing.T) http.HandlerFunc {
 		quotaCode := r.URL.Query().Get("id")
 
 		quota1 := servicequotav1.ServiceQuotaV1AppliedQuota{
-			Id:           ptr("quota_a"),
-			Scope:        ptr("kafka_cluster"),
-			DisplayName:  ptr("Quota A"),
+			Id:           servicequotav1.PtrString("quota_a"),
+			Scope:        servicequotav1.PtrString("kafka_cluster"),
+			DisplayName:  servicequotav1.PtrString("Quota A"),
 			Organization: servicequotav1.NewObjectReference("org-123", "", ""),
 			KafkaCluster: servicequotav1.NewObjectReference("lkc-1", "", ""),
 			Environment:  servicequotav1.NewObjectReference("env-1", "", ""),
-			Usage:        ptr(int32(10)),
-			AppliedLimit: ptr(int32(15)),
+			Usage:        servicequotav1.PtrInt32(10),
+			AppliedLimit: servicequotav1.PtrInt32(15),
 		}
 
 		quota2 := servicequotav1.ServiceQuotaV1AppliedQuota{
 			Id:           servicequotav1.PtrString("quota_a"),
-			Scope:        ptr("kafka_cluster"),
-			DisplayName:  ptr("Qutoa A"),
+			Scope:        servicequotav1.PtrString("kafka_cluster"),
+			DisplayName:  servicequotav1.PtrString("Qutoa A"),
 			Organization: servicequotav1.NewObjectReference("org-123", "", ""),
 			KafkaCluster: servicequotav1.NewObjectReference("lkc-2", "", ""),
 			Environment:  servicequotav1.NewObjectReference("env-2", "", ""),
-			Usage:        ptr(int32(11)),
-			AppliedLimit: ptr(int32(16)),
+			Usage:        servicequotav1.PtrInt32(11),
+			AppliedLimit: servicequotav1.PtrInt32(16),
 		}
 
 		quota3 := servicequotav1.ServiceQuotaV1AppliedQuota{
-			Id:           ptr("quota_b"),
-			Scope:        ptr("kafka_cluster"),
-			DisplayName:  ptr("Quota B"),
+			Id:           servicequotav1.PtrString("quota_b"),
+			Scope:        servicequotav1.PtrString("kafka_cluster"),
+			DisplayName:  servicequotav1.PtrString("Quota B"),
 			Organization: servicequotav1.NewObjectReference("org-123", "", ""),
 			KafkaCluster: servicequotav1.NewObjectReference("lkc-1", "", ""),
 			Environment:  servicequotav1.NewObjectReference("env-1", "", ""),
-			AppliedLimit: ptr(int32(17)),
+			AppliedLimit: servicequotav1.PtrInt32(17),
 		}
 
 		quota4 := servicequotav1.ServiceQuotaV1AppliedQuota{
-			Id:           ptr("quota_b"),
-			Scope:        ptr("kafka_cluster"),
-			DisplayName:  ptr("Quota B"),
+			Id:           servicequotav1.PtrString("quota_b"),
+			Scope:        servicequotav1.PtrString("kafka_cluster"),
+			DisplayName:  servicequotav1.PtrString("Quota B"),
 			Organization: servicequotav1.NewObjectReference("org-123", "", ""),
 			KafkaCluster: servicequotav1.NewObjectReference("lkc-2", "", ""),
 			Environment:  servicequotav1.NewObjectReference("env-2", "", ""),
-			AppliedLimit: ptr(int32(18)),
+			AppliedLimit: servicequotav1.PtrInt32(18),
 		}
 
 		filteredData := filterQuotaResults([]servicequotav1.ServiceQuotaV1AppliedQuota{quota1, quota2, quota3, quota4}, environment, network, kafkaCluster, quotaCode)
