@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	aclutil "github.com/confluentinc/cli/internal/pkg/acl"
+	pacl "github.com/confluentinc/cli/internal/pkg/acl"
 	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -96,9 +96,9 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		count += len(aclDataList.Data)
 	}
 
-	promptMsg := aclutil.DeleteACLConfirmMsg
+	promptMsg := pacl.DeleteACLConfirmMsg
 	if count > 1 {
-		promptMsg = aclutil.DeleteACLsConfirmMsg
+		promptMsg = pacl.DeleteACLsConfirmMsg
 	}
 	if ok, err := form.ConfirmDeletionYesNoCustomPrompt(cmd, promptMsg); err != nil || !ok {
 		return err
