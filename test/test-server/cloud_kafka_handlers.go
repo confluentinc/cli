@@ -58,7 +58,7 @@ func handleKafkaClientQuota(t *testing.T) http.HandlerFunc {
 			case http.MethodPatch:
 				quotaPatch := &kafkaquotasv1.KafkaQuotasV1ClientQuota{ // make a deep copy so changes don't reflect in subsequent tests
 					Id:   kafkaquotasv1.PtrString(quota.GetId()),
-					Spec: getV2Ptr(quota.GetSpec()),
+					Spec: ptrObj(quota.GetSpec()),
 				}
 				req := kafkaquotasv1.KafkaQuotasV1ClientQuota{}
 				err := json.NewDecoder(r.Body).Decode(&req)

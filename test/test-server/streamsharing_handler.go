@@ -4,53 +4,44 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"strings"
 	"testing"
 	"time"
 
+	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
 
 	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
 )
 
-func getTestConsumerShare() cdxv1.CdxV1ConsumerShare {
-	expiresAt, _ := time.Parse(time.RFC3339, "2022-07-22T22:08:41+00:00")
-	return cdxv1.CdxV1ConsumerShare{
-		Id:                       stringToPtr("ss-12345"),
-		ProviderUserName:         stringToPtr("provider"),
-		ProviderOrganizationName: stringPtr("provider org"),
-		Status:                   &cdxv1.CdxV1ConsumerShareStatus{Phase: "active"},
-		InviteExpiresAt:          &expiresAt,
-	}
-}
+var (
+	invitedAt, _ = time.Parse(time.RFC3339, "2022-07-20T22:08:41+00:00")
+	redeemedAt, _ = time.Parse(time.RFC3339, "2022-07-21T22:08:41+00:00")
+	expiresAt, _ = time.Parse(time.RFC3339, "2022-07-22T22:08:41+00:00")
 
-func getTestConsumerSharedResource() cdxv1.CdxV1ConsumerSharedResource {
-	return cdxv1.CdxV1ConsumerSharedResource{
-		Id: stringToPtr("sr-12345"),
+	consumerShares = []*cdxv1.CdxV1ConsumerShare{
+		{
+			Id:                       cdxv1.PtrString("ss-12345"),
+			ProviderUserName:         cdxv1.PtrString("provider"),
+			ProviderOrganizationName: cdxv1.PtrString("provider org"),
+			Status:                   &cdxv1.CdxV1ConsumerShareStatus{Phase: "active"},
+			InviteExpiresAt:          &expiresAt,
+		},
 	}
-}
 
-func getTestAWSNetwork() *cdxv1.CdxV1AwsNetwork {
-	return &cdxv1.CdxV1AwsNetwork{
-		Kind:                       "AwsNetwork",
-		PrivateLinkEndpointService: stringToPtr("com.amazonaws.vpce.us-west-2.vpce-svc-0000000000"),
+	providerShares = []*cdxv1.CdxV1ProviderShare{
+		{
+			Id:                       cdxv1.PtrString("ss-12345"),
+			ConsumerUserName:         cdxv1.PtrString("consumer"),
+			ConsumerOrganizationName: cdxv1.PtrString("consumer org"),
+			Status:                   &cdxv1.CdxV1ProviderShareStatus{Phase: "active"},
+			DeliveryMethod:           cdxv1.PtrString("email"),
+			RedeemedAt:               &redeemedAt,
+			InvitedAt:                &invitedAt,
+			InviteExpiresAt:          &expiresAt,
+		},
 	}
-}
-
-func getTestProviderShare() cdxv1.CdxV1ProviderShare {
-	invitedAt, _ := time.Parse(time.RFC3339, "2022-07-20T22:08:41+00:00")
-	redeemedAt, _ := time.Parse(time.RFC3339, "2022-07-21T22:08:41+00:00")
-	expiresAt, _ := time.Parse(time.RFC3339, "2022-07-22T22:08:41+00:00")
-	return cdxv1.CdxV1ProviderShare{
-		Id:                       stringToPtr("ss-12345"),
-		ConsumerUserName:         stringToPtr("consumer"),
-		ConsumerOrganizationName: stringToPtr("consumer org"),
-		Status:                   &cdxv1.CdxV1ProviderShareStatus{Phase: "active"},
-		DeliveryMethod:           stringToPtr("email"),
-		RedeemedAt:               &redeemedAt,
-		InvitedAt:                &invitedAt,
-		InviteExpiresAt:          &expiresAt,
-	}
-}
+)
 
 // Handler for: "/cdx/v1/provider-shares/{id}:resend"
 func handleStreamSharingResendInvite(t *testing.T) http.HandlerFunc {
@@ -64,17 +55,10 @@ func handleStreamSharingProviderShares(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			list := cdxv1.CdxV1ProviderShareList{
-				Data: []cdxv1.CdxV1ProviderShare{getTestProviderShare()},
-			}
-			b, err := json.Marshal(&list)
-			require.NoError(t, err)
-			_, err = io.WriteString(w, string(b))
+			err := json.NewEncoder(w).Encode(cdxv1.CdxV1ProviderShareList{Data: getV2List(providerShares)})
 			require.NoError(t, err)
 		case http.MethodPost:
-			b, err := json.Marshal(getTestProviderShare())
-			require.NoError(t, err)
-			_, err = io.WriteString(w, string(b))
+			err := json.NewEncoder(w).Encode(providerShares[0])
 			require.NoError(t, err)
 		}
 	}
@@ -83,14 +67,19 @@ func handleStreamSharingProviderShares(t *testing.T) http.HandlerFunc {
 // Handler for: "/cdx/v1/provider-shares/{id}"
 func handleStreamSharingProviderShare(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			b, err := json.Marshal(getTestProviderShare())
+		id := mux.Vars(r)["id"]
+		id = strings.TrimSuffix(id, ":resend")
+		if i := getV2Index(providerShares, id); i != -1 {
+			switch r.Method {
+			case http.MethodGet:
+				err := json.NewEncoder(w).Encode(providerShares[i])
+				require.NoError(t, err)
+			case http.MethodDelete:
+				w.WriteHeader(http.StatusNoContent)
+			}
+		} else {
+			err := writeResourceNotFoundError(w)
 			require.NoError(t, err)
-			_, err = io.WriteString(w, string(b))
-			require.NoError(t, err)
-		case http.MethodDelete:
-			w.WriteHeader(http.StatusNoContent)
 		}
 	}
 }
@@ -98,12 +87,7 @@ func handleStreamSharingProviderShare(t *testing.T) http.HandlerFunc {
 // Handler for: "/cdx/v1/consumer-shares"
 func handleStreamSharingConsumerShares(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		list := cdxv1.CdxV1ConsumerShareList{
-			Data: []cdxv1.CdxV1ConsumerShare{getTestConsumerShare()},
-		}
-		b, err := json.Marshal(&list)
-		require.NoError(t, err)
-		_, err = io.WriteString(w, string(b))
+		err := json.NewEncoder(w).Encode(cdxv1.CdxV1ConsumerShareList{Data: getV2List(consumerShares)})
 		require.NoError(t, err)
 	}
 }
@@ -111,14 +95,18 @@ func handleStreamSharingConsumerShares(t *testing.T) http.HandlerFunc {
 // Handler for: "/cdx/v1/consumer-shares/{id}"
 func handleStreamSharingConsumerShare(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			b, err := json.Marshal(getTestConsumerShare())
+		id := mux.Vars(r)["id"]
+		if i := getV2Index(consumerShares, id); i != -1 {
+			switch r.Method {
+			case http.MethodGet:
+				err := json.NewEncoder(w).Encode(consumerShares[i])
+				require.NoError(t, err)
+			case http.MethodDelete:
+				w.WriteHeader(http.StatusNoContent)
+			}
+		} else {
+			err := writeResourceNotFoundError(w)
 			require.NoError(t, err)
-			_, err = io.WriteString(w, string(b))
-			require.NoError(t, err)
-		case http.MethodDelete:
-			w.WriteHeader(http.StatusNoContent)
 		}
 	}
 }
@@ -127,13 +115,13 @@ func handleStreamSharingConsumerShare(t *testing.T) http.HandlerFunc {
 func handleStreamSharingRedeemToken(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		response := cdxv1.CdxV1RedeemTokenResponse{
-			Id:                   stringPtr("ss-12345"),
-			ApiKey:               stringPtr("00000000000000000000"),
-			Secret:               stringPtr("00000000000000000000"),
-			KafkaBootstrapUrl:    stringPtr("pkc-00000.us-east1.gcp.confluent.cloud:9092"),
-			SchemaRegistryUrl:    stringToPtr("https://psrc-xyz123.us-west-2.aws.cpdev.cloud"),
-			SchemaRegistryApiKey: stringPtr("00000000000000000000"),
-			SchemaRegistrySecret: stringPtr("00000000000000000000"),
+			Id:                   ptrObj("ss-12345"),
+			ApiKey:               ptrObj("00000000000000000000"),
+			Secret:               ptrObj("00000000000000000000"),
+			KafkaBootstrapUrl:    ptrObj("pkc-00000.us-east1.gcp.confluent.cloud:9092"),
+			SchemaRegistryUrl:    ptrObj("https://psrc-xyz123.us-west-2.aws.cpdev.cloud"),
+			SchemaRegistryApiKey: ptrObj("00000000000000000000"),
+			SchemaRegistrySecret: ptrObj("00000000000000000000"),
 			Resources: &[]cdxv1.CdxV1RedeemTokenResponseResourcesOneOf{
 				{
 					CdxV1SharedTopic: &cdxv1.CdxV1SharedTopic{
@@ -159,7 +147,7 @@ func handleStreamSharingRedeemToken(t *testing.T) http.HandlerFunc {
 // Handler for: "/cdx/v1/consumer-shared-resources"
 func handleConsumerSharedResources(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		list := &cdxv1.CdxV1ConsumerSharedResourceList{Data: []cdxv1.CdxV1ConsumerSharedResource{getTestConsumerSharedResource()}}
+		list := &cdxv1.CdxV1ConsumerSharedResourceList{Data: []cdxv1.CdxV1ConsumerSharedResource{{Id: ptrObj("sr-12345")}}}
 		b, err := json.Marshal(list)
 		require.NoError(t, err)
 		_, err = io.WriteString(w, string(b))
@@ -171,10 +159,15 @@ func handleConsumerSharedResources(t *testing.T) http.HandlerFunc {
 func handlePrivateLinkNetworkConfig(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		network := cdxv1.CdxV1Network{
-			DnsDomain:       stringToPtr("abc123.us-west-2.aws.stag.cpdev.cloud"),
+			DnsDomain:       ptrObj("abc123.us-west-2.aws.stag.cpdev.cloud"),
 			Zones:           &[]string{"usw2-az1", "usw2-az3", "usw2-az2"},
 			ZonalSubdomains: &map[string]string{"usw2-az2": "usw2-az2.abc123.us-west-2.aws.stag.cpdev.cloud"},
-			Cloud:           &cdxv1.CdxV1NetworkCloudOneOf{CdxV1AwsNetwork: getTestAWSNetwork()},
+			Cloud: &cdxv1.CdxV1NetworkCloudOneOf{
+				CdxV1AwsNetwork: &cdxv1.CdxV1AwsNetwork{
+					Kind:                       "AwsNetwork",
+					PrivateLinkEndpointService: ptrObj("com.amazonaws.vpce.us-west-2.vpce-svc-0000000000"),
+				},
+			},
 		}
 		b, err := json.Marshal(&network)
 		require.NoError(t, err)

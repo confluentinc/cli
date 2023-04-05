@@ -32,7 +32,7 @@ func handleOrgEnvironment(t *testing.T) http.HandlerFunc {
 			case http.MethodDelete:
 				_, err := io.WriteString(w, "")
 				require.NoError(t, err)
-			case http.MethodPatch: // `environment update {id} --name`
+			case http.MethodPatch:
 				envPatch := &orgv2.OrgV2Environment{ // make a deep copy so changes don't reflect in subsequent tests
 					Id:          orgv2.PtrString(env.GetId()),
 					DisplayName: orgv2.PtrString(env.GetDisplayName()),

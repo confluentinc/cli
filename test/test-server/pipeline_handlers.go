@@ -73,9 +73,9 @@ func handlePipeline(t *testing.T) http.HandlerFunc {
 			case http.MethodPatch:
 				pipelinePatch := &streamdesignerv1.SdV1Pipeline{ // make a deep copy so changes don't reflect in subsequent tests
 					Id:       streamdesignerv1.PtrString(pipeline.GetId()),
-					Spec:     getV2Ptr(pipeline.GetSpec()),
-					Status:   getV2Ptr(pipeline.GetStatus()),
-					Metadata: getV2Ptr(pipeline.GetMetadata()),
+					Spec:     ptrObj(pipeline.GetSpec()),
+					Status:   ptrObj(pipeline.GetStatus()),
+					Metadata: ptrObj(pipeline.GetMetadata()),
 				}
 				var body streamdesignerv1.SdV1Pipeline
 				err := json.NewDecoder(r.Body).Decode(&body)

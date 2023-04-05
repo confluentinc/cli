@@ -27,6 +27,10 @@ var (
 
 type ApiKeyListV2 []apikeysv2.IamV2ApiKey
 
+type ObjWithId interface {
+	GetId() string
+}
+
 // Len is part of sort.Interface.
 func (d ApiKeyListV2) Len() int {
 	return len(d)
@@ -370,9 +374,7 @@ func getV2List[T any](ptrList []*T) []T {
 	}
 	return objList
 }
-type ObjWithId interface {
-	GetId() string
-}
+
 func getV2Index[T ObjWithId](objSlice []T, id string) int {
 	for i, obj := range objSlice {
 		if obj.GetId() == id {
@@ -382,6 +384,6 @@ func getV2Index[T ObjWithId](objSlice []T, id string) int {
 	return -1
 }
 
-func getV2Ptr[T any](obj T) *T {
+func ptrObj[T any](obj T) *T {
 	return &obj
 }

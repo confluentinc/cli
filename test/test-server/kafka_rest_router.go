@@ -250,16 +250,16 @@ func handleKafkaRPTopicConfigs(t *testing.T) http.HandlerFunc {
 					Data: []cpkafkarestv3.TopicConfigData{
 						{
 							Name:  "cleanup.policy",
-							Value: stringPtr("delete"),
+							Value: ptrObj("delete"),
 						},
 						{
 							Name:       "compression.type",
-							Value:      stringPtr("producer"),
+							Value:      ptrObj("producer"),
 							IsReadOnly: true,
 						},
 						{
 							Name:  "retention.ms",
-							Value: stringPtr("604800000"),
+							Value: ptrObj("604800000"),
 						},
 					},
 				}
@@ -272,11 +272,11 @@ func handleKafkaRPTopicConfigs(t *testing.T) http.HandlerFunc {
 					Data: []cpkafkarestv3.TopicConfigData{
 						{
 							Name:  "compression.type",
-							Value: stringPtr("gzip"),
+							Value: ptrObj("gzip"),
 						},
 						{
 							Name:  "retention.ms",
-							Value: stringPtr("1"),
+							Value: ptrObj("1"),
 						},
 					},
 				}
@@ -638,7 +638,7 @@ func handleKafkaRPLink(t *testing.T) http.HandlerFunc {
 			err := json.NewEncoder(w).Encode(cpkafkarestv3.ListLinksResponseData{
 				Kind:            "",
 				Metadata:        cpkafkarestv3.ResourceMetadata{},
-				SourceClusterId: stringPtr("cluster-1"),
+				SourceClusterId: ptrObj("cluster-1"),
 				LinkName:        "link-1",
 				LinkId:          "LINKID1",
 				TopicsNames:     []string{"link-1-topic-1", "link-1-topic-2"},
@@ -1633,8 +1633,4 @@ func writeErrorResponse(responseWriter http.ResponseWriter, statusCode int, erro
 	}`, errorCode, message)
 	_, err := io.WriteString(responseWriter, errorResponseBody)
 	return err
-}
-
-func stringPtr(s string) *string {
-	return &s
 }
