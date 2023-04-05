@@ -250,16 +250,16 @@ func handleKafkaRPTopicConfigs(t *testing.T) http.HandlerFunc {
 					Data: []cpkafkarestv3.TopicConfigData{
 						{
 							Name:  "cleanup.policy",
-							Value: stringPtr("delete"),
+							Value: ptr("delete"),
 						},
 						{
 							Name:       "compression.type",
-							Value:      stringPtr("producer"),
+							Value:      ptr("producer"),
 							IsReadOnly: true,
 						},
 						{
 							Name:  "retention.ms",
-							Value: stringPtr("604800000"),
+							Value: ptr("604800000"),
 						},
 					},
 				}
@@ -272,11 +272,11 @@ func handleKafkaRPTopicConfigs(t *testing.T) http.HandlerFunc {
 					Data: []cpkafkarestv3.TopicConfigData{
 						{
 							Name:  "compression.type",
-							Value: stringPtr("gzip"),
+							Value: ptr("gzip"),
 						},
 						{
 							Name:  "retention.ms",
-							Value: stringPtr("1"),
+							Value: ptr("1"),
 						},
 					},
 				}
@@ -528,6 +528,11 @@ func handleKafkaRPTopic(t *testing.T) http.HandlerFunc {
 				// topic not found
 				require.NoError(t, writeErrorResponse(w, http.StatusNotFound, 40403, "This server does not host this topic-partition."))
 			}
+		case http.MethodGet:
+			if vars["topic"] != "topic-exist" {
+				// topic not found
+				require.NoError(t, writeErrorResponse(w, http.StatusNotFound, 40403, "This server does not host this topic-partition."))
+			}
 		}
 	}
 }
@@ -633,7 +638,7 @@ func handleKafkaRPLink(t *testing.T) http.HandlerFunc {
 			err := json.NewEncoder(w).Encode(cpkafkarestv3.ListLinksResponseData{
 				Kind:            "",
 				Metadata:        cpkafkarestv3.ResourceMetadata{},
-				SourceClusterId: stringPtr("cluster-1"),
+				SourceClusterId: ptr("cluster-1"),
 				LinkName:        "link-1",
 				LinkId:          "LINKID1",
 				TopicsNames:     []string{"link-1-topic-1", "link-1-topic-2"},
@@ -992,35 +997,40 @@ func handleKafkaRPLags(t *testing.T) http.HandlerFunc {
 // Handler for: "/kafka/v3/clusters/{cluster_id}/links/{link_name}/configs"
 func handleKafkaRPLinkConfigs(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			err := json.NewEncoder(w).Encode(cpkafkarestv3.ListLinkConfigsResponseDataList{Data: []cpkafkarestv3.ListLinkConfigsResponseData{
-				{
-					Kind:      "",
-					Metadata:  cpkafkarestv3.ResourceMetadata{},
-					ClusterId: "cluster-1",
-					Name:      "replica.fetch.max.bytes",
-					Value:     "1048576",
-					ReadOnly:  false,
-					Sensitive: false,
-					Source:    "source-1",
-					Synonyms:  []string{"rfmb", "bmfr"},
-					LinkName:  "link-1",
-				},
-				{
-					Kind:      "",
-					Metadata:  cpkafkarestv3.ResourceMetadata{},
-					ClusterId: "cluster-1",
-					Name:      "bootstrap.servers",
-					Value:     "bitcoin.com:8888",
-					ReadOnly:  false,
-					Sensitive: false,
-					Source:    "source-2",
-					Synonyms:  nil,
-					LinkName:  "link-1",
-				},
-			}})
-			require.NoError(t, err)
+		link := mux.Vars(r)["link"]
+		if link == "link-dne" {
+			w.WriteHeader(http.StatusForbidden)
+		} else {
+			switch r.Method {
+			case http.MethodGet:
+				err := json.NewEncoder(w).Encode(cpkafkarestv3.ListLinkConfigsResponseDataList{Data: []cpkafkarestv3.ListLinkConfigsResponseData{
+					{
+						Kind:      "",
+						Metadata:  cpkafkarestv3.ResourceMetadata{},
+						ClusterId: "cluster-1",
+						Name:      "replica.fetch.max.bytes",
+						Value:     "1048576",
+						ReadOnly:  false,
+						Sensitive: false,
+						Source:    "source-1",
+						Synonyms:  []string{"rfmb", "bmfr"},
+						LinkName:  "link-1",
+					},
+					{
+						Kind:      "",
+						Metadata:  cpkafkarestv3.ResourceMetadata{},
+						ClusterId: "cluster-1",
+						Name:      "bootstrap.servers",
+						Value:     "bitcoin.com:8888",
+						ReadOnly:  false,
+						Sensitive: false,
+						Source:    "source-2",
+						Synonyms:  nil,
+						LinkName:  "link-1",
+					},
+				}})
+				require.NoError(t, err)
+			}
 		}
 	}
 }
@@ -1260,29 +1270,34 @@ func handleKafkaBrokerIdConfigsName(t *testing.T) http.HandlerFunc {
 func handleKafkaBrokerIdConfigs(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		configValue1 := "gzip"
-		configValue2 := "SASL/PLAIN"
-		err := json.NewEncoder(w).Encode(cpkafkarestv3.BrokerConfigDataList{
-			Data: []cpkafkarestv3.BrokerConfigData{
-				{
-					ClusterId:   vars["cluster_id"],
-					Name:        "compression.type",
-					Value:       &configValue1,
-					IsDefault:   true,
-					IsReadOnly:  true,
-					IsSensitive: true,
+		brokerId := vars["broker_id"]
+		if brokerId == "1" || brokerId == "2" {
+			configValue1 := "gzip"
+			configValue2 := "SASL/PLAIN"
+			err := json.NewEncoder(w).Encode(cpkafkarestv3.BrokerConfigDataList{
+				Data: []cpkafkarestv3.BrokerConfigData{
+					{
+						ClusterId:   vars["cluster_id"],
+						Name:        "compression.type",
+						Value:       &configValue1,
+						IsDefault:   true,
+						IsReadOnly:  true,
+						IsSensitive: true,
+					},
+					{
+						ClusterId:   vars["cluster_id"],
+						Name:        "sasl_mechanism",
+						Value:       &configValue2,
+						IsDefault:   false,
+						IsReadOnly:  false,
+						IsSensitive: false,
+					},
 				},
-				{
-					ClusterId:   vars["cluster_id"],
-					Name:        "sasl_mechanism",
-					Value:       &configValue2,
-					IsDefault:   false,
-					IsReadOnly:  false,
-					IsSensitive: false,
-				},
-			},
-		})
-		require.NoError(t, err)
+			})
+			require.NoError(t, err)
+		} else {
+			w.WriteHeader(http.StatusForbidden)
+		}
 	}
 }
 
@@ -1618,8 +1633,4 @@ func writeErrorResponse(responseWriter http.ResponseWriter, statusCode int, erro
 	}`, errorCode, message)
 	_, err := io.WriteString(responseWriter, errorResponseBody)
 	return err
-}
-
-func stringPtr(s string) *string {
-	return &s
 }

@@ -1,0 +1,4 @@
+Error: self-managed keys not found: "cck-006", "cck-007", and "cck-100"
+
+Suggestions:
+    List available self-managed keys with `confluent byok list`.

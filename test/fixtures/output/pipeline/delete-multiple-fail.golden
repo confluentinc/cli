@@ -1,0 +1,4 @@
+Error: pipeline not found: "pipe-54321"
+
+Suggestions:
+    List available pipelines with `confluent pipeline list`.

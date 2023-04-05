@@ -1,0 +1,4 @@
+Error: client quota not found: "cq-dne"
+
+Suggestions:
+    List available client quotas with `confluent kafka quota list`.

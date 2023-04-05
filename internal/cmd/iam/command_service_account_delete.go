@@ -1,23 +1,21 @@
 package iam
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/deletion"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
-	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *serviceAccountCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "delete <id>",
-		Short:             "Delete a service account.",
-		Args:              cobra.ExactArgs(1),
+		Use:               "delete <id-1> [id-2] ... [id-n]",
+		Short:             "Delete service accounts.",
+		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.delete,
 		Example: examples.BuildExampleString(
@@ -34,27 +32,48 @@ func (c *serviceAccountCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *serviceAccountCommand) delete(cmd *cobra.Command, args []string) error {
-	serviceAccountId := args[0]
-
-	if resource.LookupType(serviceAccountId) != resource.ServiceAccount {
-		return errors.New(errors.BadServiceAccountIDErrorMsg)
-	}
-
-	serviceAccount, httpResp, err := c.V2Client.GetIamServiceAccount(serviceAccountId)
+	displayName, err := c.validateArgs(cmd, args)
 	if err != nil {
-		return errors.CatchServiceAccountNotFoundError(err, httpResp, serviceAccountId)
-	}
-
-	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.ServiceAccount, serviceAccountId, serviceAccount.GetDisplayName())
-	if _, err := form.ConfirmDeletion(cmd, promptMsg, serviceAccount.GetDisplayName()); err != nil {
 		return err
 	}
 
-	err = c.V2Client.DeleteIamServiceAccount(serviceAccountId)
-	if err != nil {
-		return errors.Errorf(errors.DeleteResourceErrorMsg, resource.ServiceAccount, serviceAccountId, err)
+	if len(args) == 1 {
+		if err := form.ConfirmDeletionWithString(cmd, resource.ServiceAccount, args[0], displayName); err != nil {
+			return err
+		}
+	} else {
+		if ok, err := form.ConfirmDeletionYesNo(cmd, resource.ServiceAccount, args); err != nil || !ok {
+			return err
+		}
 	}
 
-	output.ErrPrintf(errors.DeletedResourceMsg, resource.ServiceAccount, serviceAccountId)
-	return nil
+	var errs error
+	var deleted []string
+	for _, id := range args {
+		if err := c.V2Client.DeleteIamServiceAccount(id); err != nil {
+			errs = errors.Join(errs, errors.Errorf(errors.DeleteResourceErrorMsg, resource.ServiceAccount, id, err))
+		} else {
+			deleted = append(deleted, id)
+		}
+	}
+	deletion.PrintSuccessfulDeletionMsg(deleted, resource.ServiceAccount)
+
+	return errs
+}
+
+func (c *serviceAccountCommand) validateArgs(cmd *cobra.Command, args []string) (string, error) {
+	if err := resource.ValidatePrefixes(resource.ServiceAccount, args); err != nil {
+		return "", err
+	}
+
+	var displayName string
+	describeFunc := func(id string) error {
+		serviceAccount, _, err := c.V2Client.GetIamServiceAccount(id)
+		if err == nil && displayName == "" { // store the first valid provider name
+			displayName = serviceAccount.GetDisplayName()
+		}
+		return err
+	}
+
+	return displayName, deletion.ValidateArgsForDeletion(cmd, args, resource.ServiceAccount, describeFunc)
 }

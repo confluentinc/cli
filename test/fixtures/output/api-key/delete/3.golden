@@ -1,0 +1,4 @@
+Error: API key not found: "MYKEY19"
+
+Suggestions:
+    List available API keys with `confluent api-key list`.

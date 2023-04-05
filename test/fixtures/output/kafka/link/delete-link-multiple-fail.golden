@@ -1,0 +1,4 @@
+Error: cluster link not found: "link-dne"
+
+Suggestions:
+    List available cluster links with `confluent kafka link list`.

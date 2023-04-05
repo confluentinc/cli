@@ -1,0 +1,4 @@
+Error: identity provider not found: "op-54321"
+
+Suggestions:
+    List available identity providers with `confluent iam provider list`.
