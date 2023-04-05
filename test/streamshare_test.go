@@ -6,6 +6,8 @@ func (s *CLITestSuite) TestStreamShare() {
 		{args: "stream-share provider share describe ss-12345", fixture: "stream-share/describe-provider-share.golden"},
 		{args: "stream-share provider share delete ss-12345 --force", fixture: "stream-share/delete-provider-share.golden"},
 		{args: "stream-share provider share delete ss-12345", input: "y\n", fixture: "stream-share/delete-provider-share-prompt.golden"},
+		{args: "stream-share provider share delete ss-12345 ss-12346", fixture: "stream-share/delete-provider-share-multiple-fail.golden", exitCode: 1},
+		{args: "stream-share provider share delete ss-12345 ss-67890", input: "y\n", fixture: "stream-share/delete-provider-share-multiple-success.golden"},
 
 		{args: "stream-share provider invite create --email user@example.com --topic topic-12345 --environment env-12345 --cluster lkc-12345 --schema-registry-subjects sub1,sub2,sub3", fixture: "stream-share/create-invite.golden"},
 		{args: "stream-share provider invite resend ss-12345", fixture: "stream-share/resend-invite.golden"},
@@ -17,6 +19,8 @@ func (s *CLITestSuite) TestStreamShare() {
 		{args: "stream-share consumer share list --shared-resource sr-12345", fixture: "stream-share/list-consumer-shares.golden"},
 		{args: "stream-share consumer share delete ss-12345 --force", fixture: "stream-share/delete-consumer-share.golden"},
 		{args: "stream-share consumer share delete ss-12345", input: "y\n", fixture: "stream-share/delete-consumer-share-prompt.golden"},
+		{args: "stream-share consumer share delete ss-12345 ss-12346", fixture: "stream-share/delete-consumer-share-multiple-fail.golden", exitCode: 1},
+		{args: "stream-share consumer share delete ss-12345 ss-67890", input: "y\n", fixture: "stream-share/delete-consumer-share-multiple-success.golden"},
 		{args: "stream-share consumer share describe ss-12345", fixture: "stream-share/describe-consumer-share.golden"},
 
 		{args: "stream-share consumer redeem stream-share-token", fixture: "stream-share/redeem-share.golden"},
