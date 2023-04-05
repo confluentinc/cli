@@ -26,6 +26,10 @@ func (c *command) newSubjectUpdateCommand() *cobra.Command {
 				Code: "confluent schema-registry subject update payments --compatibility backward",
 			},
 			examples.Example{
+				Text: `Update subject-level compatibility of subject "payments" and set compatibility group to "application.version".`,
+				Code: "confluent schema-registry subject update payments --compatibility backward --compatibility-group application.version",
+			},
+			examples.Example{
 				Text: `Update subject-level mode of subject "payments".`,
 				Code: "confluent schema-registry subject update payments --mode readwrite",
 			},
@@ -64,7 +68,7 @@ func (c *command) subjectUpdate(cmd *cobra.Command, args []string) error {
 	}
 
 	if compatibility != "" {
-		return c.updateCompatibility(subject, compatibility, srClient, ctx)
+		return c.updateCompatibility(subject, compatibility, cmd, srClient, ctx)
 	}
 
 	if mode != "" {
@@ -74,8 +78,57 @@ func (c *command) subjectUpdate(cmd *cobra.Command, args []string) error {
 	return errors.New(errors.CompatibilityOrModeErrorMsg)
 }
 
-func (c *command) updateCompatibility(subject, compatibility string, srClient *srsdk.APIClient, ctx context.Context) error {
-	updateReq := srsdk.ConfigUpdateRequest{Compatibility: compatibility}
+func (c *command) updateCompatibility(subject, compatibility string, cmd *cobra.Command, srClient *srsdk.APIClient, ctx context.Context) error {
+	compatibilityGroup, err := cmd.Flags().GetString("compatibility-group")
+	if err != nil {
+		return err
+	}
+
+	metadataPath, err := cmd.Flags().GetString("metadata-defaults")
+	if err != nil {
+		return err
+	}
+	defaultMetadata, err := readMetadata(metadataPath)
+	if err != nil {
+		return err
+	}
+
+	metadataPath, err = cmd.Flags().GetString("metadata-overrides")
+	if err != nil {
+		return err
+	}
+	overrideMetadata, err := readMetadata(metadataPath)
+	if err != nil {
+		return err
+	}
+
+	rulesetPath, err := cmd.Flags().GetString("ruleset-defaults")
+	if err != nil {
+		return err
+	}
+	defaultRuleSet, err := readRuleset(rulesetPath)
+	if err != nil {
+		return err
+	}
+
+	rulesetPath, err = cmd.Flags().GetString("ruleset-overrides")
+	if err != nil {
+		return err
+	}
+	overrideRuleSet, err := readRuleset(rulesetPath)
+	if err != nil {
+		return err
+	}
+
+	updateReq := srsdk.ConfigUpdateRequest{
+		Compatibility:      compatibility,
+		CompatibilityGroup: compatibilityGroup,
+		DefaultMetadata:    *defaultMetadata,
+		OverrideMetadata:   *overrideMetadata,
+		DefaultRuleSet:     *defaultRuleSet,
+		OverrideRuleSet:    *overrideRuleSet,
+	}
+
 	if _, httpResp, err := srClient.DefaultApi.UpdateSubjectLevelConfig(ctx, subject, updateReq); err != nil {
 		return errors.CatchSchemaNotFoundError(err, httpResp)
 	}

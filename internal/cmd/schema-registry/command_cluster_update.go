@@ -26,6 +26,10 @@ func (c *command) newClusterUpdateCommand() *cobra.Command {
 				Code: "confluent schema-registry cluster update --compatibility backward",
 			},
 			examples.Example{
+				Text: `Update top-level compatibility of Schema Registry and set compatibility group to "application.version".`,
+				Code: "confluent schema-registry cluster update --compatibility backward --compatibility-group application.version",
+			},
+			examples.Example{
 				Text: "Update top-level mode of Schema Registry.",
 				Code: "confluent schema-registry cluster update --mode readwrite",
 			},
@@ -73,7 +77,55 @@ func (c *command) updateTopLevelCompatibility(cmd *cobra.Command) error {
 		return err
 	}
 
-	updateReq := srsdk.ConfigUpdateRequest{Compatibility: strings.ToUpper(compatibility)}
+	compatibilityGroup, err := cmd.Flags().GetString("compatibility-group")
+	if err != nil {
+		return err
+	}
+
+	metadataPath, err := cmd.Flags().GetString("metadata-defaults")
+	if err != nil {
+		return err
+	}
+	defaultMetadata, err := readMetadata(metadataPath)
+	if err != nil {
+		return err
+	}
+
+	metadataPath, err = cmd.Flags().GetString("metadata-overrides")
+	if err != nil {
+		return err
+	}
+	overrideMetadata, err := readMetadata(metadataPath)
+	if err != nil {
+		return err
+	}
+
+	rulesetPath, err := cmd.Flags().GetString("ruleset-defaults")
+	if err != nil {
+		return err
+	}
+	defaultRuleSet, err := readRuleset(rulesetPath)
+	if err != nil {
+		return err
+	}
+
+	rulesetPath, err = cmd.Flags().GetString("ruleset-overrides")
+	if err != nil {
+		return err
+	}
+	overrideRuleSet, err := readRuleset(rulesetPath)
+	if err != nil {
+		return err
+	}
+
+	updateReq := srsdk.ConfigUpdateRequest{
+		Compatibility:      strings.ToUpper(compatibility),
+		CompatibilityGroup: compatibilityGroup,
+		DefaultMetadata:    *defaultMetadata,
+		OverrideMetadata:   *overrideMetadata,
+		DefaultRuleSet:     *defaultRuleSet,
+		OverrideRuleSet:    *overrideRuleSet,
+	}
 
 	if _, _, err := srClient.DefaultApi.UpdateTopLevelConfig(ctx, updateReq); err != nil {
 		return err

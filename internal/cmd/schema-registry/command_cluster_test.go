@@ -135,7 +135,7 @@ func (suite *ClusterTestSuite) TestUpdateCompatibility() {
 	apiMock, _ := suite.srClientMock.DefaultApi.(*srMock.DefaultApi)
 	req.True(apiMock.UpdateTopLevelConfigCalled())
 	retVal := apiMock.UpdateTopLevelConfigCalls()[0]
-	req.Equal(retVal.Body.Compatibility, "BACKWARD")
+	req.Equal(retVal.ConfigUpdateRequest.Compatibility, "BACKWARD")
 }
 
 func (suite *ClusterTestSuite) TestUpdateMode() {
