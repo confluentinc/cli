@@ -83,7 +83,7 @@ func (c *brokerCommand) validateArgs(cmd *cobra.Command, restClient *kafkarestv3
 		}
 		numId := int32(i)
 
-		_, _, err := restClient.ConfigsV3Api.ClustersClusterIdBrokersBrokerIdConfigsGet(restContext, clusterId, numId)
+		_, _, err = restClient.ConfigsV3Api.ClustersClusterIdBrokersBrokerIdConfigsGet(restContext, clusterId, numId)
 		if err == nil {
 			brokerIdToNumId[id] = numId
 		}
