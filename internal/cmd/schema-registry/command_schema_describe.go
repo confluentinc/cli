@@ -18,7 +18,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 type schemaOut struct {
@@ -36,11 +35,11 @@ func (c *command) newSchemaDescribeCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Describe the schema string by schema ID.",
-				Code: fmt.Sprintf("%s schema-registry schema describe 1337", pversion.CLIName),
+				Code: "confluent schema-registry schema describe 1337",
 			},
 			examples.Example{
 				Text: "Describe the schema by both subject and version.",
-				Code: fmt.Sprintf("%s schema-registry schema describe --subject payments --version latest", pversion.CLIName),
+				Code: "confluent schema-registry schema describe --subject payments --version latest",
 			},
 		),
 	}

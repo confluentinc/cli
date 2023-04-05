@@ -2,7 +2,6 @@ package schemaregistry
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"strings"
 
@@ -14,7 +13,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 type validateOut struct {
@@ -30,8 +28,8 @@ func (c *command) newCompatibilityValidateCommand() *cobra.Command {
 		RunE:  c.compatibilityValidate,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Validate the compatibility of schema `payments` against the latest version of subject `records`.",
-				Code: fmt.Sprintf("%s schema-registry compatibility validate --schema payments.avro --type avro --subject records --version latest", pversion.CLIName),
+				Text: `Validate the compatibility of schema "payments" against the latest version of subject "records".`,
+				Code: "confluent schema-registry compatibility validate --schema payments.avro --type avro --subject records --version latest",
 			},
 		),
 	}

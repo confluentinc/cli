@@ -28,7 +28,7 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 		&cobra.Command{
 			Use:   "local",
 			Short: "Manage a local Confluent Platform development environment.",
-			Long:  "Use the \"confluent local\" commands to try out Confluent Platform by running a single-node instance locally on your machine. Keep in mind, these commands require Java to run.",
+			Long:  "Use the `confluent local` commands to try out Confluent Platform by running a single-node instance locally on your machine. Keep in mind, these commands require Java to run.",
 			Args:  cobra.NoArgs,
 		}, prerunner)
 

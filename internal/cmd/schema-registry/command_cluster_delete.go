@@ -12,7 +12,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
 func (c *command) newClusterDeleteCommand() *cobra.Command {
@@ -24,8 +23,8 @@ func (c *command) newClusterDeleteCommand() *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Delete the Schema Registry cluster for environment "env-12345"`,
-				Code: fmt.Sprintf("%s schema-registry cluster delete --environment env-12345", version.CLIName),
+				Text: `Delete the Schema Registry cluster for environment "env-12345".`,
+				Code: "confluent schema-registry cluster delete --environment env-12345",
 			},
 		),
 	}

@@ -14,7 +14,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 func (c *command) newSchemaDeleteCommand() *cobra.Command {
@@ -28,7 +27,7 @@ func (c *command) newSchemaDeleteCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Soft delete the latest version of subject "payments".`,
-				Code: fmt.Sprintf("%s schema-registry schema delete --subject payments --version latest", pversion.CLIName),
+				Code: "confluent schema-registry schema delete --subject payments --version latest",
 			},
 		),
 	}
