@@ -1,0 +1,4 @@
+Error: API keys not found: "MYKEY17" and "MYKEY18"
+
+Suggestions:
+    List available API keys with `confluent api-key list`.
