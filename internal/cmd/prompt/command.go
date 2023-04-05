@@ -49,22 +49,8 @@ func New(cfg *v1.Config) *cobra.Command {
 				if ctx == nil {
 					return none
 				}
-				if id := ctx.GetEnvironment().GetId(); id != "" {
+				if id := ctx.GetCurrentEnvironment(); id != "" {
 					return id
-				}
-				return none
-			},
-		},
-		{
-			Name: 'E',
-			Desc: `The name of the current environment in use. E.g., "default", "prod-team1"`,
-			Func: func() string {
-				ctx := cfg.Context()
-				if ctx == nil {
-					return none
-				}
-				if name := ctx.GetEnvironment().GetName(); name != "" {
-					return name
 				}
 				return none
 			},
