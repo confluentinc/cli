@@ -63,10 +63,8 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 
 func (c *command) validateArgs(cmd *cobra.Command, args []string) ([]string, error) {
 	describeFunc := func(id string) error {
-		if _, _, err := c.V2Client.GetApiKey(id); err != nil {
-			return err
-		}
-		return nil
+		_, _, err := c.V2Client.GetApiKey(id)
+		return err
 	}
 
 	validArgs, err := deletion.ValidateArgsForDeletion(cmd, args, resource.ApiKey, describeFunc)
