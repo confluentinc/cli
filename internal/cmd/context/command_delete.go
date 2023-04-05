@@ -6,41 +6,60 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/deletion"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
-	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *command) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "delete <context>",
-		Short:             "Delete a context.",
-		Args:              cobra.ExactArgs(1),
+		Use:               "delete <context-1> [context-2] ... [context-n]",
+		Short:             "Delete contexts.",
+		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.delete,
 	}
 
 	pcmd.AddForceFlag(cmd)
+	pcmd.AddSkipInvalidFlag(cmd)
 
 	return cmd
 }
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
-	ctx, err := c.Config.FindContext(args[0])
-	if err != nil {
+	if validArgs, err := c.validateArgs(cmd, args); err != nil {
+		return err
+	} else {
+		args = validArgs
+	}
+
+	if ok, err := form.ConfirmDeletionYesNo(cmd, resource.Context, args); err != nil || !ok {
 		return err
 	}
 
-	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmYesNoMsg, resource.Context, ctx.Name)
-	if ok, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil || !ok {
+	var errs error
+	var deleted []string
+	for _, id := range args {
+		if err := c.Config.DeleteContext(id); err != nil {
+			errs = errors.Join(errs, err)
+		} else {
+			deleted = append(deleted, id)
+		}
+	}
+	deletion.PrintSuccessfulDeletionMsg(deleted, resource.Context)
+
+	return errs
+}
+
+func (c *command) validateArgs(cmd *cobra.Command, args []string) ([]string, error) {
+	describeFunc := func(id string) error {
+		_, err := c.Config.FindContext(id)
 		return err
 	}
 
-	if err := c.Config.DeleteContext(ctx.Name); err != nil {
-		return err
-	}
+	validArgs, err := deletion.ValidateArgsForDeletion(cmd, args, resource.Context, describeFunc)
+	err = errors.NewWrapAdditionalSuggestions(err, fmt.Sprintf(errors.ListResourceSuggestions, resource.Context, resource.Context))
 
-	output.Printf(errors.DeletedResourceMsg, resource.Context, ctx.Name)
-	return nil
+	return validArgs, err
 }

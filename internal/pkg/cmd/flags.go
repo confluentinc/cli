@@ -194,6 +194,10 @@ func AddForceFlag(cmd *cobra.Command) {
 	cmd.Flags().Bool("force", false, "Skip the deletion confirmation prompt.")
 }
 
+func AddSkipInvalidFlag(cmd *cobra.Command) {
+	cmd.Flags().Bool("skip-invalid", false, "Treat invalid argument errors as warnings, and process valid arguments.")
+}
+
 func AddKsqlClusterFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {
 	cmd.Flags().String("ksql-cluster", "", "KSQL cluster for the pipeline.")
 	RegisterFlagCompletionFunc(cmd, "ksql-cluster", func(cmd *cobra.Command, args []string) []string {

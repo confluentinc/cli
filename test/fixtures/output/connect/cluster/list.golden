@@ -1,3 +1,4 @@
-    ID    |     Name     | Status  | Type | Trace  
-----------+--------------+---------+------+--------
-  lcc-123 | az-connector | RUNNING | Sink |        
+    ID    |      Name      | Status  | Type | Trace  
+----------+----------------+---------+------+--------
+  lcc-111 | az-connector-2 | RUNNING | Sink |        
+  lcc-123 | az-connector   | RUNNING | Sink |        
