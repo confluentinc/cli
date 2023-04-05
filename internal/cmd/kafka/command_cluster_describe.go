@@ -64,7 +64,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 	}
 
 	ctx := c.Context.Config.Context()
-	c.Context.Config.SetOverwrittenActiveKafka(ctx.KafkaClusterContext.GetActiveKafkaClusterId())
+	c.Context.Config.SetOverwrittenCurrentKafkaCluster(ctx.KafkaClusterContext.GetActiveKafkaClusterId())
 	ctx.KafkaClusterContext.SetActiveKafkaCluster(lkc)
 
 	environmentId, err := c.EnvironmentId()
