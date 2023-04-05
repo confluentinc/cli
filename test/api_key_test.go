@@ -179,8 +179,8 @@ func (s *CLITestSuite) TestAPIKeyDelete() {
 	resetConfiguration(s.T(), false)
 
 	for _, test := range tests {
-		tt.login = "cloud"
-		s.runIntegrationTest(tt)
+		test.login = "cloud"
+		s.runIntegrationTest(test)
 	}
 }
 
