@@ -1,4 +1,4 @@
-Error: topic not found: "topic-not-exist"
+Error: topic "topic-not-exist" not found
 
 Suggestions:
     List available topics with `confluent kafka topic list`.

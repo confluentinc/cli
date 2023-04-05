@@ -1,4 +1,4 @@
-Error: environment not found: "env-dne"
+Error: environment "env-dne" not found
 
 Suggestions:
     List available environments with `confluent environment list`.

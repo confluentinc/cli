@@ -1,4 +1,4 @@
-Error: API key not found: "UNKNOWN"
+Error: API key "UNKNOWN" not found
 
 Suggestions:
     List available API keys with `confluent api-key list`.

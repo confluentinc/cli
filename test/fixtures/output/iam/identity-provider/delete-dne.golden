@@ -1,4 +1,4 @@
-Error: identity provider not found: "op-1"
+Error: identity provider "op-1" not found
 
 Suggestions:
     List available identity providers with `confluent iam provider list`.

@@ -1,4 +1,4 @@
-Error: user not found: "u-1"
+Error: user "u-1" not found
 
 Suggestions:
     List available users with `confluent iam user list`.
