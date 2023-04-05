@@ -11,7 +11,6 @@ Flags:
       --no-authentication         Include if requests should be made without authentication headers, and user will not be prompted for credentials.
       --prompt                    Bypass use of available login credentials and prompt for Kafka Rest credentials.
       --force                     Skip the deletion confirmation prompt.
-      --skip-invalid              Treat invalid argument errors as warnings, and process valid arguments.
 
 Global Flags:
   -h, --help            Show help for this command.

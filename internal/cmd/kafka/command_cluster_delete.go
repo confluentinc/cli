@@ -22,7 +22,6 @@ func (c *clusterCommand) newDeleteCommand(cfg *v1.Config) *cobra.Command {
 	}
 
 	pcmd.AddForceFlag(cmd)
-	pcmd.AddSkipInvalidFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -37,11 +36,10 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	displayName, validArgs, err := c.validateArgs(cmd, environmentId, args)
+	displayName, err := c.validateArgs(cmd, environmentId, args)
 	if err != nil {
 		return err
 	}
-	args = validArgs
 
 	if len(args) == 1 {
 		if err := form.ConfirmDeletionWithString(cmd, resource.KafkaCluster, args[0], displayName); err != nil {
@@ -78,9 +76,9 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *clusterCommand) validateArgs(cmd *cobra.Command, environmentId string, args []string) (string, []string, error) {
+func (c *clusterCommand) validateArgs(cmd *cobra.Command, environmentId string, args []string) (string, error) {
 	if err := resource.ValidatePrefixes(resource.KafkaCluster, args); err != nil {
-		return "", nil, err
+		return "", err
 	}
 
 	var displayName string
@@ -92,8 +90,8 @@ func (c *clusterCommand) validateArgs(cmd *cobra.Command, environmentId string, 
 		return err
 	}
 
-	validArgs, err := deletion.ValidateArgsForDeletion(cmd, args, resource.KafkaCluster, describeFunc)
+	err := deletion.ValidateArgsForDeletion(cmd, args, resource.KafkaCluster, describeFunc)
 	err = errors.NewWrapAdditionalSuggestions(err, errors.PluralClusterEnvironmentSuggestions)
 
-	return displayName, validArgs, err
+	return displayName, err
 }

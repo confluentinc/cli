@@ -29,17 +29,15 @@ func (c *identityProviderCommand) newDeleteCommand() *cobra.Command {
 	}
 
 	pcmd.AddForceFlag(cmd)
-	pcmd.AddSkipInvalidFlag(cmd)
 
 	return cmd
 }
 
 func (c *identityProviderCommand) delete(cmd *cobra.Command, args []string) error {
-	displayName, validArgs, err := c.validateArgs(cmd, args)
+	displayName, err := c.validateArgs(cmd, args)
 	if err != nil {
 		return err
 	}
-	args = validArgs
 
 	if len(args) == 1 {
 		if err := form.ConfirmDeletionWithString(cmd, resource.IdentityProvider, args[0], displayName); err != nil {
@@ -65,7 +63,7 @@ func (c *identityProviderCommand) delete(cmd *cobra.Command, args []string) erro
 	return errs
 }
 
-func (c *identityProviderCommand) validateArgs(cmd *cobra.Command, args []string) (string, []string, error) {
+func (c *identityProviderCommand) validateArgs(cmd *cobra.Command, args []string) (string, error) {
 	var displayName string
 	describeFunc := func(id string) error {
 		provider, err := c.V2Client.GetIdentityProvider(id)
@@ -75,8 +73,8 @@ func (c *identityProviderCommand) validateArgs(cmd *cobra.Command, args []string
 		return err
 	}
 
-	validArgs, err := deletion.ValidateArgsForDeletion(cmd, args, resource.IdentityProvider, describeFunc)
+	err := deletion.ValidateArgsForDeletion(cmd, args, resource.IdentityProvider, describeFunc)
 	err = errors.NewWrapAdditionalSuggestions(err, fmt.Sprintf(errors.ListResourceSuggestions, resource.IdentityProvider, "iam provider"))
 
-	return displayName, validArgs, err
+	return displayName, err
 }

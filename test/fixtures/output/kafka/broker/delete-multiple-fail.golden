@@ -1,5 +1,4 @@
 Error: broker not found: "3"
 
 Suggestions:
-    Use the `--skip-invalid` flag to suppress this error and delete the remaining broker entered.
     List available brokers with `confluent kafka broker list`.

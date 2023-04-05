@@ -24,7 +24,6 @@ func (c *linkCommand) newDeleteCommandOnPrem() *cobra.Command {
 	}
 
 	pcmd.AddForceFlag(cmd)
-	pcmd.AddSkipInvalidFlag(cmd)
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
@@ -42,10 +41,8 @@ func (c *linkCommand) deleteOnPrem(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if validArgs, err := c.validateArgsOnPrem(cmd, client, ctx, clusterId, args); err != nil {
+	if err := c.validateArgsOnPrem(cmd, client, ctx, clusterId, args); err != nil {
 		return err
-	} else {
-		args = validArgs
 	}
 
 	if len(args) == 1 {
@@ -72,14 +69,14 @@ func (c *linkCommand) deleteOnPrem(cmd *cobra.Command, args []string) error {
 	return errs
 }
 
-func (c *linkCommand) validateArgsOnPrem(cmd *cobra.Command, client *kafkarestv3.APIClient, ctx context.Context, clusterId string, args []string) ([]string, error) {
+func (c *linkCommand) validateArgsOnPrem(cmd *cobra.Command, client *kafkarestv3.APIClient, ctx context.Context, clusterId string, args []string) error {
 	describeFunc := func(id string) error {
 		_, _, err := client.ClusterLinkingV3Api.ListKafkaLinkConfigs(ctx, clusterId, id)
 		return err
 	}
 
-	validArgs, err := deletion.ValidateArgsForDeletion(cmd, args, resource.ClusterLink, describeFunc)
+	err := deletion.ValidateArgsForDeletion(cmd, args, resource.ClusterLink, describeFunc)
 	err = errors.NewWrapAdditionalSuggestions(err, fmt.Sprintf(errors.ListResourceSuggestions, resource.ClusterLink, "kafka link"))
 
-	return validArgs, err
+	return err
 }

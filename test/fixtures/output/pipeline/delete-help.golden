@@ -10,7 +10,6 @@ Request to delete Stream Designer pipeline "pipe-12345".
 
 Flags:
       --force                Skip the deletion confirmation prompt.
-      --skip-invalid         Treat invalid argument errors as warnings, and process valid arguments.
       --cluster string       Kafka cluster ID.
       --environment string   Environment ID.
 

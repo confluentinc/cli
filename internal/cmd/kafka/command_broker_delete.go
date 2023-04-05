@@ -29,7 +29,6 @@ func (c *brokerCommand) newDeleteCommand() *cobra.Command {
 
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	pcmd.AddForceFlag(cmd)
-	pcmd.AddSkipInvalidFlag(cmd)
 
 	return cmd
 }
@@ -45,11 +44,10 @@ func (c *brokerCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	brokerIdToNumId, validArgs, err := c.validateArgs(cmd, restClient, restContext, clusterId, args)
+	brokerIdToNumId, err := c.validateArgs(cmd, restClient, restContext, clusterId, args)
 	if err != nil {
 		return err
 	}
-	args = validArgs
 
 	if ok, err := form.ConfirmDeletionYesNo(cmd, "broker", args); err != nil || !ok {
 		return err
@@ -74,7 +72,7 @@ func (c *brokerCommand) delete(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *brokerCommand) validateArgs(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restContext context.Context, clusterId string, args []string) (map[string]int32, []string, error) {
+func (c *brokerCommand) validateArgs(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restContext context.Context, clusterId string, args []string) (map[string]int32, error) {
 	brokerIdToNumId := make(map[string]int32)
 	describeFunc := func(id string) error {
 		i, err := strconv.ParseInt(id, 10, 32)
@@ -90,8 +88,8 @@ func (c *brokerCommand) validateArgs(cmd *cobra.Command, restClient *kafkarestv3
 		return err
 	}
 
-	validArgs, err := deletion.ValidateArgsForDeletion(cmd, args, "broker", describeFunc)
+	err := deletion.ValidateArgsForDeletion(cmd, args, "broker", describeFunc)
 	err = errors.NewWrapAdditionalSuggestions(err, fmt.Sprintf(errors.ListResourceSuggestions, "broker", "kafka broker"))
 
-	return brokerIdToNumId, validArgs, err
+	return brokerIdToNumId, err
 }

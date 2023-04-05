@@ -30,7 +30,6 @@ func (c *command) newDeleteCommand() *cobra.Command {
 	}
 
 	pcmd.AddForceFlag(cmd)
-	pcmd.AddSkipInvalidFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 
@@ -48,11 +47,10 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	displayName, validArgs, err := c.validateArgs(cmd, environmentId, cluster.ID, args)
+	displayName, err := c.validateArgs(cmd, environmentId, cluster.ID, args)
 	if err != nil {
 		return err
 	}
-	args = validArgs
 
 	if len(args) == 1 {
 		if err := form.ConfirmDeletionWithString(cmd, resource.Pipeline, args[0], displayName); err != nil {
@@ -82,7 +80,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	return errs
 }
 
-func (c *command) validateArgs(cmd *cobra.Command, environmentId, clusterId string, args []string) (string, []string, error) {
+func (c *command) validateArgs(cmd *cobra.Command, environmentId, clusterId string, args []string) (string, error) {
 	var displayName string
 	describeFunc := func(id string) error {
 		pipeline, err := c.V2Client.GetSdPipeline(environmentId, clusterId, id)
@@ -92,8 +90,8 @@ func (c *command) validateArgs(cmd *cobra.Command, environmentId, clusterId stri
 		return err
 	}
 
-	validArgs, err := deletion.ValidateArgsForDeletion(cmd, args, resource.Pipeline, describeFunc)
+	err := deletion.ValidateArgsForDeletion(cmd, args, resource.Pipeline, describeFunc)
 	err = errors.NewWrapAdditionalSuggestions(err, fmt.Sprintf(errors.ListResourceSuggestions, resource.Pipeline, resource.Pipeline))
 
-	return displayName, validArgs, err
+	return displayName, err
 }

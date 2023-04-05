@@ -21,17 +21,14 @@ func (c *quotaCommand) newDeleteCommand() *cobra.Command {
 	}
 
 	pcmd.AddForceFlag(cmd)
-	pcmd.AddSkipInvalidFlag(cmd)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
 
 func (c *quotaCommand) delete(cmd *cobra.Command, args []string) error {
-	if validArgs, err := c.validateArgs(cmd, args); err != nil {
+	if err := c.validateArgs(cmd, args); err != nil {
 		return err
-	} else {
-		args = validArgs
 	}
 
 	if len(args) == 1 {
@@ -58,14 +55,14 @@ func (c *quotaCommand) delete(cmd *cobra.Command, args []string) error {
 	return errs
 }
 
-func (c *quotaCommand) validateArgs(cmd *cobra.Command, args []string) ([]string, error) {
+func (c *quotaCommand) validateArgs(cmd *cobra.Command, args []string) error {
 	describeFunc := func(id string) error {
 		_, err := c.V2Client.DescribeKafkaQuota(id)
 		return err
 	}
 
-	validArgs, err := deletion.ValidateArgsForDeletion(cmd, args, resource.ClientQuota, describeFunc)
+	err := deletion.ValidateArgsForDeletion(cmd, args, resource.ClientQuota, describeFunc)
 	err = errors.NewWrapAdditionalSuggestions(err, fmt.Sprintf(errors.ListResourceSuggestions, resource.ClientQuota, "kafka quota"))
 
-	return validArgs, err
+	return err
 }

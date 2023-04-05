@@ -29,16 +29,13 @@ func (c *command) newConsumerShareDeleteCommand() *cobra.Command {
 	}
 
 	pcmd.AddForceFlag(cmd)
-	pcmd.AddSkipInvalidFlag(cmd)
 
 	return cmd
 }
 
 func (c *command) deleteConsumerShare(cmd *cobra.Command, args []string) error {
-	if validArgs, err := c.validateArgsConsumerShare(cmd, args); err != nil {
+	if err := c.validateArgsConsumerShare(cmd, args); err != nil {
 		return err
-	} else {
-		args = validArgs
 	}
 
 	if ok, err := form.ConfirmDeletionYesNo(cmd, resource.ConsumerShare, args); err != nil || !ok {
@@ -59,14 +56,14 @@ func (c *command) deleteConsumerShare(cmd *cobra.Command, args []string) error {
 	return errs
 }
 
-func (c *command) validateArgsConsumerShare(cmd *cobra.Command, args []string) ([]string, error) {
+func (c *command) validateArgsConsumerShare(cmd *cobra.Command, args []string) error {
 	describeFunc := func(id string) error {
 		_, err := c.V2Client.DescribeConsumerShare(id)
 		return err
 	}
 
-	validArgs, err := deletion.ValidateArgsForDeletion(cmd, args, resource.ConsumerShare, describeFunc)
+	err := deletion.ValidateArgsForDeletion(cmd, args, resource.ConsumerShare, describeFunc)
 	err = errors.NewWrapAdditionalSuggestions(err, fmt.Sprintf(errors.ListResourceSuggestions, resource.ConsumerShare, "stream-share consumer share"))
 
-	return validArgs, err
+	return err
 }

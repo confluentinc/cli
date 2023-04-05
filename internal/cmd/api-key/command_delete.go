@@ -22,7 +22,6 @@ func (c *command) newDeleteCommand() *cobra.Command {
 	}
 
 	pcmd.AddForceFlag(cmd)
-	pcmd.AddSkipInvalidFlag(cmd)
 
 	return cmd
 }
@@ -30,10 +29,8 @@ func (c *command) newDeleteCommand() *cobra.Command {
 func (c *command) delete(cmd *cobra.Command, args []string) error {
 	c.setKeyStoreIfNil()
 
-	if validArgs, err := c.validateArgs(cmd, args); err != nil {
+	if err := c.validateArgs(cmd, args); err != nil {
 		return err
-	} else {
-		args = validArgs
 	}
 
 	if ok, err := form.ConfirmDeletionYesNo(cmd, resource.ApiKey, args); err != nil || !ok {
@@ -61,14 +58,14 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *command) validateArgs(cmd *cobra.Command, args []string) ([]string, error) {
+func (c *command) validateArgs(cmd *cobra.Command, args []string) error {
 	describeFunc := func(id string) error {
 		_, _, err := c.V2Client.GetApiKey(id)
 		return err
 	}
 
-	validArgs, err := deletion.ValidateArgsForDeletion(cmd, args, resource.ApiKey, describeFunc)
+	err := deletion.ValidateArgsForDeletion(cmd, args, resource.ApiKey, describeFunc)
 	err = errors.NewWrapAdditionalSuggestions(err, fmt.Sprintf(errors.ListResourceSuggestions, resource.ApiKey, "api-key"))
 
-	return validArgs, err
+	return err
 }

@@ -22,7 +22,6 @@ func (c *linkCommand) newDeleteCommand() *cobra.Command {
 	}
 
 	pcmd.AddForceFlag(cmd)
-	pcmd.AddSkipInvalidFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -44,10 +43,8 @@ func (c *linkCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if validArgs, err := c.validateArgs(cmd, kafkaREST, clusterId, args); err != nil {
+	if err := c.validateArgs(cmd, kafkaREST, clusterId, args); err != nil {
 		return err
-	} else {
-		args = validArgs
 	}
 
 	if len(args) == 1 {
@@ -74,14 +71,14 @@ func (c *linkCommand) delete(cmd *cobra.Command, args []string) error {
 	return errs
 }
 
-func (c *linkCommand) validateArgs(cmd *cobra.Command, kafkaREST *pcmd.KafkaREST, clusterId string, args []string) ([]string, error) {
+func (c *linkCommand) validateArgs(cmd *cobra.Command, kafkaREST *pcmd.KafkaREST, clusterId string, args []string) error {
 	describeFunc := func(id string) error {
 		_, _, err := kafkaREST.CloudClient.ListKafkaLinkConfigs(clusterId, id)
 		return err
 	}
 
-	validArgs, err := deletion.ValidateArgsForDeletion(cmd, args, resource.ClusterLink, describeFunc)
+	err := deletion.ValidateArgsForDeletion(cmd, args, resource.ClusterLink, describeFunc)
 	err = errors.NewWrapAdditionalSuggestions(err, fmt.Sprintf(errors.ListResourceSuggestions, resource.ClusterLink, "kafka link"))
 
-	return validArgs, err
+	return err
 }

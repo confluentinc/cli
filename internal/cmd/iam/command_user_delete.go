@@ -21,17 +21,15 @@ func (c *userCommand) newDeleteCommand() *cobra.Command {
 	}
 
 	pcmd.AddForceFlag(cmd)
-	pcmd.AddSkipInvalidFlag(cmd)
 
 	return cmd
 }
 
 func (c *userCommand) delete(cmd *cobra.Command, args []string) error {
-	fullName, validArgs, err := c.validateArgs(cmd, args)
+	fullName, err := c.validateArgs(cmd, args)
 	if err != nil {
 		return err
 	}
-	args = validArgs
 
 	if len(args) == 1 {
 		if err := form.ConfirmDeletionWithString(cmd, resource.User, args[0], fullName); err != nil {
@@ -57,9 +55,9 @@ func (c *userCommand) delete(cmd *cobra.Command, args []string) error {
 	return errs
 }
 
-func (c *userCommand) validateArgs(cmd *cobra.Command, args []string) (string, []string, error) {
+func (c *userCommand) validateArgs(cmd *cobra.Command, args []string) (string, error) {
 	if err := resource.ValidatePrefixes(resource.User, args); err != nil {
-		return "", nil, err
+		return "", err
 	}
 
 	var fullName string
@@ -71,8 +69,8 @@ func (c *userCommand) validateArgs(cmd *cobra.Command, args []string) (string, [
 		return err
 	}
 
-	validArgs, err := deletion.ValidateArgsForDeletion(cmd, args, resource.User, describeFunc)
+	err := deletion.ValidateArgsForDeletion(cmd, args, resource.User, describeFunc)
 	err = errors.NewWrapAdditionalSuggestions(err, fmt.Sprintf(errors.ListResourceSuggestions, resource.User, "iam user"))
 
-	return fullName, validArgs, err
+	return fullName, err
 }

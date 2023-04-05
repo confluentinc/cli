@@ -1,5 +1,4 @@
 Error: Kafka cluster not found: "lkc-unknown"
 
 Suggestions:
-    Use the `--skip-invalid` flag to suppress this error and delete the remaining Kafka cluster entered.
     Ensure the clusters you are specifying belong to the currently selected environment with `confluent kafka cluster list`, `confluent environment list`, and `confluent environment use`.

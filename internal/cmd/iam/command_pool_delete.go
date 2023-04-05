@@ -30,7 +30,6 @@ func (c *identityPoolCommand) newDeleteCommand() *cobra.Command {
 
 	pcmd.AddProviderFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddForceFlag(cmd)
-	pcmd.AddSkipInvalidFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("provider"))
 
@@ -43,11 +42,10 @@ func (c *identityPoolCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	displayName, validArgs, err := c.validateArgs(cmd, provider, args)
+	displayName, err := c.validateArgs(cmd, provider, args)
 	if err != nil {
 		return err
 	}
-	args = validArgs
 
 	if len(args) == 1 {
 		if err := form.ConfirmDeletionWithString(cmd, resource.IdentityPool, args[0], displayName); err != nil {
@@ -73,7 +71,7 @@ func (c *identityPoolCommand) delete(cmd *cobra.Command, args []string) error {
 	return errs
 }
 
-func (c *identityPoolCommand) validateArgs(cmd *cobra.Command, provider string, args []string) (string, []string, error) {
+func (c *identityPoolCommand) validateArgs(cmd *cobra.Command, provider string, args []string) (string, error) {
 	var displayName string
 	describeFunc := func(id string) error {
 		pool, err := c.V2Client.GetIdentityPool(id, provider)
@@ -83,8 +81,8 @@ func (c *identityPoolCommand) validateArgs(cmd *cobra.Command, provider string, 
 		return err
 	}
 
-	validArgs, err := deletion.ValidateArgsForDeletion(cmd, args, resource.IdentityPool, describeFunc)
+	err := deletion.ValidateArgsForDeletion(cmd, args, resource.IdentityPool, describeFunc)
 	err = errors.NewWrapAdditionalSuggestions(err, fmt.Sprintf(errors.ListResourceSuggestions, resource.IdentityPool, "iam pool"))
 
-	return displayName, validArgs, err
+	return displayName, err
 }

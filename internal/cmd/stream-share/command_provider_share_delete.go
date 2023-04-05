@@ -29,16 +29,13 @@ func (c *command) newProviderShareDeleteCommand() *cobra.Command {
 	}
 
 	pcmd.AddForceFlag(cmd)
-	pcmd.AddSkipInvalidFlag(cmd)
 
 	return cmd
 }
 
 func (c *command) deleteProviderShare(cmd *cobra.Command, args []string) error {
-	if validArgs, err := c.validateArgsProviderShare(cmd, args); err != nil {
+	if err := c.validateArgsProviderShare(cmd, args); err != nil {
 		return err
-	} else {
-		args = validArgs
 	}
 
 	if ok, err := form.ConfirmDeletionYesNo(cmd, resource.ProviderShare, args); err != nil || !ok {
@@ -59,14 +56,14 @@ func (c *command) deleteProviderShare(cmd *cobra.Command, args []string) error {
 	return errs
 }
 
-func (c *command) validateArgsProviderShare(cmd *cobra.Command, args []string) ([]string, error) {
+func (c *command) validateArgsProviderShare(cmd *cobra.Command, args []string) error {
 	describeFunc := func(id string) error {
 		_, err := c.V2Client.DescribeProviderShare(id)
 		return err
 	}
 
-	validArgs, err := deletion.ValidateArgsForDeletion(cmd, args, resource.ProviderShare, describeFunc)
+	err := deletion.ValidateArgsForDeletion(cmd, args, resource.ProviderShare, describeFunc)
 	err = errors.NewWrapAdditionalSuggestions(err, fmt.Sprintf(errors.ListResourceSuggestions, resource.ProviderShare, "stream-share provider share"))
 
-	return validArgs, err
+	return err
 }

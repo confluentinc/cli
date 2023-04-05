@@ -33,7 +33,6 @@ func (c *clusterCommand) newDeleteCommand() *cobra.Command {
 	}
 
 	pcmd.AddForceFlag(cmd)
-	pcmd.AddSkipInvalidFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -52,11 +51,10 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	connectorIdToName, validArgs, err := c.validateArgs(cmd, environmentId, kafkaCluster.ID, args)
+	connectorIdToName, err := c.validateArgs(cmd, environmentId, kafkaCluster.ID, args)
 	if err != nil {
 		return err
 	}
-	args = validArgs
 
 	if len(args) == 1 {
 		if err := form.ConfirmDeletionWithString(cmd, resource.Connector, args[0], connectorIdToName[args[0]]); err != nil {
@@ -82,7 +80,7 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	return errs
 }
 
-func (c *clusterCommand) validateArgs(cmd *cobra.Command, environmentId, kafkaClusterId string, args []string) (map[string]string, []string, error) {
+func (c *clusterCommand) validateArgs(cmd *cobra.Command, environmentId, kafkaClusterId string, args []string) (map[string]string, error) {
 	connectorIdToName := make(map[string]string)
 	describeFunc := func(id string) error {
 		connector, err := c.V2Client.GetConnectorExpansionById(id, environmentId, kafkaClusterId)
@@ -92,8 +90,8 @@ func (c *clusterCommand) validateArgs(cmd *cobra.Command, environmentId, kafkaCl
 		return err
 	}
 
-	validArgs, err := deletion.ValidateArgsForDeletion(cmd, args, resource.Connector, describeFunc)
+	err := deletion.ValidateArgsForDeletion(cmd, args, resource.Connector, describeFunc)
 	err = errors.NewWrapAdditionalSuggestions(err, fmt.Sprintf(errors.ListResourceSuggestions, resource.Connector, "connect cluster"))
 
-	return connectorIdToName, validArgs, err
+	return connectorIdToName, err
 }

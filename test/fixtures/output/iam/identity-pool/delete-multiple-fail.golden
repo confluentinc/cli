@@ -1,5 +1,4 @@
 Error: identity pool not found: "pool-44444"
 
 Suggestions:
-    Use the `--skip-invalid` flag to suppress this error and delete the remaining identity pool entered.
     List available identity pools with `confluent iam pool list`.

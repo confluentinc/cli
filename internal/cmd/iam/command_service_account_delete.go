@@ -29,17 +29,15 @@ func (c *serviceAccountCommand) newDeleteCommand() *cobra.Command {
 	}
 
 	pcmd.AddForceFlag(cmd)
-	pcmd.AddSkipInvalidFlag(cmd)
 
 	return cmd
 }
 
 func (c *serviceAccountCommand) delete(cmd *cobra.Command, args []string) error {
-	displayName, validArgs, err := c.validateArgs(cmd, args)
+	displayName, err := c.validateArgs(cmd, args)
 	if err != nil {
 		return err
 	}
-	args = validArgs
 
 	if len(args) == 1 {
 		if err := form.ConfirmDeletionWithString(cmd, resource.ServiceAccount, args[0], displayName); err != nil {
@@ -65,9 +63,9 @@ func (c *serviceAccountCommand) delete(cmd *cobra.Command, args []string) error 
 	return errs
 }
 
-func (c *serviceAccountCommand) validateArgs(cmd *cobra.Command, args []string) (string, []string, error) {
+func (c *serviceAccountCommand) validateArgs(cmd *cobra.Command, args []string) (string, error) {
 	if err := resource.ValidatePrefixes(resource.ServiceAccount, args); err != nil {
-		return "", nil, err
+		return "", err
 	}
 
 	var displayName string
@@ -79,8 +77,8 @@ func (c *serviceAccountCommand) validateArgs(cmd *cobra.Command, args []string) 
 		return err
 	}
 
-	validArgs, err := deletion.ValidateArgsForDeletion(cmd, args, resource.ServiceAccount, describeFunc)
+	err := deletion.ValidateArgsForDeletion(cmd, args, resource.ServiceAccount, describeFunc)
 	err = errors.NewWrapAdditionalSuggestions(err, fmt.Sprintf(errors.ListResourceSuggestions, resource.ServiceAccount, "iam service-account"))
 
-	return displayName, validArgs, err
+	return displayName, err
 }

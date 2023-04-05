@@ -32,7 +32,6 @@ func (c *authenticatedTopicCommand) newDeleteCommand() *cobra.Command {
 	}
 
 	pcmd.AddForceFlag(cmd)
-	pcmd.AddSkipInvalidFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -55,10 +54,8 @@ func (c *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 		return err
 	}
 
-	if validArgs, err := c.validateArgs(cmd, kafkaREST, kafkaClusterConfig.ID, args); err != nil {
+	if err := c.validateArgs(cmd, kafkaREST, kafkaClusterConfig.ID, args); err != nil {
 		return err
-	} else {
-		args = validArgs
 	}
 
 	if len(args) == 1 {
@@ -90,14 +87,14 @@ func (c *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 	return errs
 }
 
-func (c *authenticatedTopicCommand) validateArgs(cmd *cobra.Command, kafkaREST *pcmd.KafkaREST, clusterId string, args []string) ([]string, error) {
+func (c *authenticatedTopicCommand) validateArgs(cmd *cobra.Command, kafkaREST *pcmd.KafkaREST, clusterId string, args []string) error {
 	describeFunc := func(id string) error {
 		_, err := kafkaREST.CloudClient.ListKafkaTopicConfigs(clusterId, id)
 		return err
 	}
 
-	validArgs, err := deletion.ValidateArgsForDeletion(cmd, args, resource.Topic, describeFunc)
+	err := deletion.ValidateArgsForDeletion(cmd, args, resource.Topic, describeFunc)
 	err = errors.NewWrapAdditionalSuggestions(err, fmt.Sprintf(errors.ListResourceSuggestions, resource.Topic, "kafka topic"))
 
-	return validArgs, err
+	return err
 }
