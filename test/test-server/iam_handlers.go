@@ -269,16 +269,12 @@ func handleIamServiceAccount(t *testing.T) http.HandlerFunc {
 				err := json.NewEncoder(w).Encode(serviceAccount)
 				require.NoError(t, err)
 			case http.MethodPatch:
-				serviceAccountPatch := &iamv2.IamV2ServiceAccount{ // make a deep copy so changes don't reflect in subsequent tests
-					Id:          iamv2.PtrString(serviceAccount.GetId()),
-					DisplayName: iamv2.PtrString(serviceAccount.GetDisplayName()),
-					Description: iamv2.PtrString(serviceAccount.GetDescription()),
-				}
+				serviceAccountPatch := *serviceAccount
 				var req iamv2.IamV2ServiceAccount
 				err := json.NewDecoder(r.Body).Decode(&req)
 				require.NoError(t, err)
 				serviceAccountPatch.Description = req.Description
-				err = json.NewEncoder(w).Encode(serviceAccountPatch)
+				err = json.NewEncoder(w).Encode(&serviceAccountPatch)
 				require.NoError(t, err)
 			case http.MethodDelete:
 				w.WriteHeader(http.StatusNoContent)
@@ -351,19 +347,13 @@ func handleIamIdentityProvider(t *testing.T) http.HandlerFunc {
 				err := json.NewEncoder(w).Encode(provider)
 				require.NoError(t, err)
 			case http.MethodPatch:
-				providerPatch := &identityproviderv2.IamV2IdentityProvider{ // make a deep copy so changes don't reflect in subsequent tests
-					Id:          identityproviderv2.PtrString(provider.GetId()),
-					DisplayName: identityproviderv2.PtrString(provider.GetDisplayName()),
-					Description: identityproviderv2.PtrString(provider.GetDescription()),
-					Issuer:      identityproviderv2.PtrString(provider.GetIssuer()),
-					JwksUri:     identityproviderv2.PtrString(provider.GetJwksUri()),
-				}
+				providerPatch := *provider
 				var req identityproviderv2.IamV2IdentityProvider
 				err := json.NewDecoder(r.Body).Decode(&req)
 				require.NoError(t, err)
 				providerPatch.DisplayName = req.DisplayName
 				providerPatch.Description = req.Description
-				err = json.NewEncoder(w).Encode(providerPatch)
+				err = json.NewEncoder(w).Encode(&providerPatch)
 				require.NoError(t, err)
 			case http.MethodDelete:
 				w.WriteHeader(http.StatusNoContent)
@@ -420,13 +410,7 @@ func handleIamIdentityPool(t *testing.T) http.HandlerFunc {
 				err := json.NewEncoder(w).Encode(pool)
 				require.NoError(t, err)
 			case http.MethodPatch:
-				poolPatch := &identityproviderv2.IamV2IdentityPool{ // make a deep copy so changes don't reflect in subsequent tests
-					Id:            identityproviderv2.PtrString(pool.GetId()),
-					DisplayName:   identityproviderv2.PtrString(pool.GetDisplayName()),
-					Description:   identityproviderv2.PtrString(pool.GetDescription()),
-					IdentityClaim: identityproviderv2.PtrString(pool.GetIdentityClaim()),
-					Filter:        identityproviderv2.PtrString(pool.GetFilter()),
-				}
+				poolPatch := *pool
 				var req identityproviderv2.IamV2IdentityPool
 				err := json.NewDecoder(r.Body).Decode(&req)
 				require.NoError(t, err)
@@ -434,7 +418,7 @@ func handleIamIdentityPool(t *testing.T) http.HandlerFunc {
 				poolPatch.Description = req.Description
 				poolPatch.IdentityClaim = req.IdentityClaim
 				poolPatch.Filter = req.Filter
-				err = json.NewEncoder(w).Encode(poolPatch)
+				err = json.NewEncoder(w).Encode(&poolPatch)
 				require.NoError(t, err)
 			case http.MethodDelete:
 				w.WriteHeader(http.StatusNoContent)

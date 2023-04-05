@@ -33,16 +33,13 @@ func handleOrgEnvironment(t *testing.T) http.HandlerFunc {
 				_, err := io.WriteString(w, "")
 				require.NoError(t, err)
 			case http.MethodPatch:
-				envPatch := &orgv2.OrgV2Environment{ // make a deep copy so changes don't reflect in subsequent tests
-					Id:          orgv2.PtrString(env.GetId()),
-					DisplayName: orgv2.PtrString(env.GetDisplayName()),
-				}
+				envPatch := *env
 				req := orgv2.OrgV2Environment{}
 				err := json.NewDecoder(r.Body).Decode(&req)
 				require.NoError(t, err)
 				envPatch.DisplayName = req.DisplayName
 
-				err = json.NewEncoder(w).Encode(envPatch)
+				err = json.NewEncoder(w).Encode(&envPatch)
 				require.NoError(t, err)
 			}
 		} else {

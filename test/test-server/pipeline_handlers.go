@@ -71,12 +71,10 @@ func handlePipeline(t *testing.T) http.HandlerFunc {
 				err := json.NewEncoder(w).Encode(pipeline)
 				require.NoError(t, err)
 			case http.MethodPatch:
-				pipelinePatch := &streamdesignerv1.SdV1Pipeline{ // make a deep copy so changes don't reflect in subsequent tests
-					Id:       streamdesignerv1.PtrString(pipeline.GetId()),
-					Spec:     ptr(pipeline.GetSpec()),
-					Status:   ptr(pipeline.GetStatus()),
-					Metadata: ptr(pipeline.GetMetadata()),
-				}
+				pipelinePatch := *pipeline
+				// deep copy modifiable fields that have nested pointers so that changes don't persist
+				pipelinePatch.Spec = ptr(pipeline.GetSpec())
+				pipelinePatch.Status = ptr(pipeline.GetStatus())
 				var body streamdesignerv1.SdV1Pipeline
 				err := json.NewDecoder(r.Body).Decode(&body)
 				require.NoError(t, err)
@@ -114,7 +112,7 @@ func handlePipeline(t *testing.T) http.HandlerFunc {
 				}
 
 				w.WriteHeader(http.StatusAccepted)
-				err = json.NewEncoder(w).Encode(pipelinePatch)
+				err = json.NewEncoder(w).Encode(&pipelinePatch)
 				require.NoError(t, err)
 			}
 		} else {

@@ -56,10 +56,9 @@ func handleKafkaClientQuota(t *testing.T) http.HandlerFunc {
 				_, err := io.WriteString(w, "")
 				require.NoError(t, err)
 			case http.MethodPatch:
-				quotaPatch := &kafkaquotasv1.KafkaQuotasV1ClientQuota{ // make a deep copy so changes don't reflect in subsequent tests
-					Id:   kafkaquotasv1.PtrString(quota.GetId()),
-					Spec: ptr(quota.GetSpec()),
-				}
+				quotaPatch := *quota
+				// deep copy modifiable fields that have nested pointers so that changes don't persist
+				quotaPatch.Spec = ptr(quota.GetSpec())
 				req := kafkaquotasv1.KafkaQuotasV1ClientQuota{}
 				err := json.NewDecoder(r.Body).Decode(&req)
 				require.NoError(t, err)
@@ -67,7 +66,7 @@ func handleKafkaClientQuota(t *testing.T) http.HandlerFunc {
 				quotaPatch.Spec.Description = req.Spec.Description
 				quotaPatch.Spec.Throughput = req.Spec.Throughput
 				quotaPatch.Spec.Principals = req.Spec.Principals
-				err = json.NewEncoder(w).Encode(quotaPatch)
+				err = json.NewEncoder(w).Encode(&quotaPatch)
 				require.NoError(t, err)
 			}
 		} else {
