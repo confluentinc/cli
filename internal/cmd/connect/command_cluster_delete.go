@@ -1,8 +1,6 @@
 package connect
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -90,8 +88,5 @@ func (c *clusterCommand) validateArgs(cmd *cobra.Command, environmentId, kafkaCl
 		return err
 	}
 
-	err := deletion.ValidateArgsForDeletion(cmd, args, resource.Connector, describeFunc)
-	err = errors.NewWrapAdditionalSuggestions(err, fmt.Sprintf(errors.ListResourceSuggestions, resource.Connector, "connect cluster"))
-
-	return connectorIdToName, err
+	return connectorIdToName, deletion.ValidateArgsForDeletion(cmd, args, resource.Connector, describeFunc)
 }

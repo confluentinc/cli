@@ -1,8 +1,6 @@
 package streamshare
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -62,8 +60,5 @@ func (c *command) validateArgsConsumerShare(cmd *cobra.Command, args []string) e
 		return err
 	}
 
-	err := deletion.ValidateArgsForDeletion(cmd, args, resource.ConsumerShare, describeFunc)
-	err = errors.NewWrapAdditionalSuggestions(err, fmt.Sprintf(errors.ListResourceSuggestions, resource.ConsumerShare, "stream-share consumer share"))
-
-	return err
+	return deletion.ValidateArgsForDeletion(cmd, args, resource.ConsumerShare, describeFunc)
 }

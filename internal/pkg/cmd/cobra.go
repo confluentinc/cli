@@ -45,3 +45,18 @@ func RegisterFlagCompletionFunc(cmd *cobra.Command, flag string, f func(*cobra.C
 		return f(cmd, args), cobra.ShellCompDirectiveNoFileComp
 	})
 }
+
+func FullParentName(c *cobra.Command) string {
+	var name string
+	if c.HasParent() {
+		name = c.Parent().Name()
+		c = c.Parent()
+	}
+
+	for c.HasParent() {
+		name = c.Parent().Name() + " " + name
+		c = c.Parent()
+	}
+
+	return name
+}

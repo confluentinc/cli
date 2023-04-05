@@ -1,8 +1,6 @@
 package iam
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -77,8 +75,5 @@ func (c *serviceAccountCommand) validateArgs(cmd *cobra.Command, args []string) 
 		return err
 	}
 
-	err := deletion.ValidateArgsForDeletion(cmd, args, resource.ServiceAccount, describeFunc)
-	err = errors.NewWrapAdditionalSuggestions(err, fmt.Sprintf(errors.ListResourceSuggestions, resource.ServiceAccount, "iam service-account"))
-
-	return displayName, err
+	return displayName, deletion.ValidateArgsForDeletion(cmd, args, resource.ServiceAccount, describeFunc)
 }

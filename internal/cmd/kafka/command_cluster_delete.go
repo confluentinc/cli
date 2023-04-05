@@ -91,7 +91,9 @@ func (c *clusterCommand) validateArgs(cmd *cobra.Command, environmentId string, 
 	}
 
 	err := deletion.ValidateArgsForDeletion(cmd, args, resource.KafkaCluster, describeFunc)
-	err = errors.NewWrapAdditionalSuggestions(err, errors.PluralClusterEnvironmentSuggestions)
+	if err != nil {
+		err = errors.NewErrorWithSuggestions(err.Error(), errors.PluralClusterEnvironmentSuggestions)
+	}
 
 	return displayName, err
 }

@@ -5,6 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
@@ -24,7 +25,7 @@ func ValidateArgsForDeletion(cmd *cobra.Command, args []string, resourceType str
 		if len(invalidArgs) > 1 {
 			invalidArgsErrMsg = fmt.Sprintf(errors.NotFoundErrorMsg, resource.Plural(resourceType), utils.ArrayToCommaDelimitedString(invalidArgs, "and"))
 		}
-		return errors.New(invalidArgsErrMsg)
+		return errors.NewErrorWithSuggestions(invalidArgsErrMsg, fmt.Sprintf(errors.ListResourceSuggestions, resourceType, pcmd.FullParentName(cmd)))
 	}
 
 	return nil

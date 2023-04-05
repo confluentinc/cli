@@ -1,8 +1,6 @@
 package apikey
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -64,8 +62,5 @@ func (c *command) validateArgs(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	err := deletion.ValidateArgsForDeletion(cmd, args, resource.ApiKey, describeFunc)
-	err = errors.NewWrapAdditionalSuggestions(err, fmt.Sprintf(errors.ListResourceSuggestions, resource.ApiKey, "api-key"))
-
-	return err
+	return deletion.ValidateArgsForDeletion(cmd, args, resource.ApiKey, describeFunc)
 }

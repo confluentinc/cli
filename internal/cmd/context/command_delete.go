@@ -1,8 +1,6 @@
 package context
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -55,8 +53,5 @@ func (c *command) validateArgs(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	err := deletion.ValidateArgsForDeletion(cmd, args, resource.Context, describeFunc)
-	err = errors.NewWrapAdditionalSuggestions(err, fmt.Sprintf(errors.ListResourceSuggestions, resource.Context, resource.Context))
-
-	return err
+	return deletion.ValidateArgsForDeletion(cmd, args, resource.Context, describeFunc)
 }

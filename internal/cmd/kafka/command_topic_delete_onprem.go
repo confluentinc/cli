@@ -2,7 +2,6 @@ package kafka
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/spf13/cobra"
 
@@ -84,8 +83,5 @@ func (c *authenticatedTopicCommand) validateArgsOnPrem(cmd *cobra.Command, restC
 		return err
 	}
 
-	err := deletion.ValidateArgsForDeletion(cmd, args, resource.Topic, describeFunc)
-	err = errors.NewWrapAdditionalSuggestions(err, fmt.Sprintf(errors.ListResourceSuggestions, resource.Topic, "kafka topic"))
-
-	return err
+	return deletion.ValidateArgsForDeletion(cmd, args, resource.Topic, describeFunc)
 }

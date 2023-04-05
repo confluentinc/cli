@@ -2,7 +2,6 @@ package kafka
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 
 	"github.com/antihax/optional"
@@ -88,8 +87,5 @@ func (c *brokerCommand) validateArgs(cmd *cobra.Command, restClient *kafkarestv3
 		return err
 	}
 
-	err := deletion.ValidateArgsForDeletion(cmd, args, "broker", describeFunc)
-	err = errors.NewWrapAdditionalSuggestions(err, fmt.Sprintf(errors.ListResourceSuggestions, "broker", "kafka broker"))
-
-	return brokerIdToNumId, err
+	return brokerIdToNumId, deletion.ValidateArgsForDeletion(cmd, args, "broker", describeFunc)
 }

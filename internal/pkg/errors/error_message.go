@@ -495,7 +495,7 @@ const (
 	// General
 	DeleteResourceErrorMsg        = `failed to delete %s "%s": %v`
 	DeleteResourceConfirmErrorMsg = `input does not match "%s"`
-	ListResourceSuggestions       = "List available %ss with `confluent %s list`."
+	ListResourceSuggestions       = "List available %ss with `%s list`."
 	UpdateResourceErrorMsg        = `failed to update %s "%s": %v`
 	MustSpecifyBothFlagsErrorMsg  = "must specify both `--%s` and `--%s`"
 )

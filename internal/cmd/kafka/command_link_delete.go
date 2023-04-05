@@ -1,8 +1,6 @@
 package kafka
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -77,8 +75,5 @@ func (c *linkCommand) validateArgs(cmd *cobra.Command, kafkaREST *pcmd.KafkaREST
 		return err
 	}
 
-	err := deletion.ValidateArgsForDeletion(cmd, args, resource.ClusterLink, describeFunc)
-	err = errors.NewWrapAdditionalSuggestions(err, fmt.Sprintf(errors.ListResourceSuggestions, resource.ClusterLink, "kafka link"))
-
-	return err
+	return deletion.ValidateArgsForDeletion(cmd, args, resource.ClusterLink, describeFunc)
 }

@@ -1,8 +1,6 @@
 package iam
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -73,8 +71,5 @@ func (c *identityProviderCommand) validateArgs(cmd *cobra.Command, args []string
 		return err
 	}
 
-	err := deletion.ValidateArgsForDeletion(cmd, args, resource.IdentityProvider, describeFunc)
-	err = errors.NewWrapAdditionalSuggestions(err, fmt.Sprintf(errors.ListResourceSuggestions, resource.IdentityProvider, "iam provider"))
-
-	return displayName, err
+	return displayName, deletion.ValidateArgsForDeletion(cmd, args, resource.IdentityProvider, describeFunc)
 }

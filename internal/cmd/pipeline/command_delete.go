@@ -1,8 +1,6 @@
 package pipeline
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -90,8 +88,5 @@ func (c *command) validateArgs(cmd *cobra.Command, environmentId, clusterId stri
 		return err
 	}
 
-	err := deletion.ValidateArgsForDeletion(cmd, args, resource.Pipeline, describeFunc)
-	err = errors.NewWrapAdditionalSuggestions(err, fmt.Sprintf(errors.ListResourceSuggestions, resource.Pipeline, resource.Pipeline))
-
-	return displayName, err
+	return displayName, deletion.ValidateArgsForDeletion(cmd, args, resource.Pipeline, describeFunc)
 }

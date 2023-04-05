@@ -93,8 +93,5 @@ func (c *authenticatedTopicCommand) validateArgs(cmd *cobra.Command, kafkaREST *
 		return err
 	}
 
-	err := deletion.ValidateArgsForDeletion(cmd, args, resource.Topic, describeFunc)
-	err = errors.NewWrapAdditionalSuggestions(err, fmt.Sprintf(errors.ListResourceSuggestions, resource.Topic, "kafka topic"))
-
-	return err
+	return deletion.ValidateArgsForDeletion(cmd, args, resource.Topic, describeFunc)
 }

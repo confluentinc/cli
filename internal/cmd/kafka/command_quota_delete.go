@@ -1,8 +1,6 @@
 package kafka
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -61,8 +59,5 @@ func (c *quotaCommand) validateArgs(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	err := deletion.ValidateArgsForDeletion(cmd, args, resource.ClientQuota, describeFunc)
-	err = errors.NewWrapAdditionalSuggestions(err, fmt.Sprintf(errors.ListResourceSuggestions, resource.ClientQuota, "kafka quota"))
-
-	return err
+	return deletion.ValidateArgsForDeletion(cmd, args, resource.ClientQuota, describeFunc)
 }
