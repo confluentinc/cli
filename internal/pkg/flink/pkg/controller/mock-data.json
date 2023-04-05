@@ -1,19 +1,20 @@
 {
   "data": [
     {
-      "status_detail": "Statement successfully created with id \"7434\".",
+      "status_detail": "Statement successfully created.",
       "status": "PENDING",
       "columns": [],
       "rows": []
     },
     {
       "status": "FAILED",
-      "status_detail": "Statement with id \"7434\" wasn't created successfully.",
+      "status_detail": "Statement wasn't created successfully.",
       "columns": [],
       "rows": []
     },
     {
-      "status_detail": "Statement successfully created with id \"1234\".",
+      "statement_name": "570ce633-4dec-4c01-8087-3417050055b0",
+      "status_detail": "Statement successfully created.",
       "status": "COMPLETED",
       "columns": [
         "OrderDate",
@@ -38,7 +39,8 @@
       ]
     },
     {
-      "status_detail": "Statement successfully created with id \"5678\".",
+      "statement_name": "570ce633-4dec-4c01-8087-3417050055b0",
+      "status_detail": "Statement successfully created.",
       "status": "COMPLETED",
       "columns": [
         "OrderDate",
@@ -56,7 +58,8 @@
       ]
     },
     {
-      "status_detail": "Statement successfully created with id \"9321\".",
+      "statement_name": "570ce633-4dec-4c01-8087-3417050055b0",
+      "status_detail": "Statement successfully created.",
       "status": "COMPLETED",
       "columns": [
         "OrderDate",

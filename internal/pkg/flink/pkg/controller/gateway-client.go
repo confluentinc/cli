@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
-	"github.com/hashicorp/go-retryablehttp"
 
 	v1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"
 )
@@ -68,19 +67,6 @@ func (c *GatewayClient) propsDefault(properties map[string]string) map[string]st
 	return properties
 }
 
-func newRetryableHttpClient(unsafeTrace bool) *http.Client {
-	client := retryablehttp.NewClient()
-	client.Logger = nil
-	//client.Logger = plog.NewLeveledLogger(unsafeTrace)
-	client.CheckRetry = func(ctx context.Context, resp *http.Response, err error) (bool, error) {
-		if resp == nil {
-			return false, err
-		}
-		return resp.StatusCode == http.StatusTooManyRequests || resp.StatusCode >= 500, err
-	}
-	return client.StandardClient()
-}
-
 func NewGatewayClient(envId, orgResourceId, kafkaClusterId, computePoolId, authToken string, appOptions *ApplicationOptions) *GatewayClient {
 	cfg := v1.NewConfiguration()
 	unsafeTrace := false
@@ -95,7 +81,6 @@ func NewGatewayClient(envId, orgResourceId, kafkaClusterId, computePoolId, authT
 	}
 
 	cfg.Debug = unsafeTrace
-	cfg.HTTPClient = newRetryableHttpClient(unsafeTrace)
 
 	return &GatewayClient{
 		envId:             envId,
