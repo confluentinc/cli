@@ -98,9 +98,9 @@ func ValidatePrefixes(resourceType string, args []string) error {
 	}
 
 	if len(malformed) == 1 {
-		return errors.Errorf(`failed parsing resource ID %s: missing prefix "%s-" is required`, malformed[0], prefix)
+		return errors.Errorf(`failed parsing resource ID %s: missing prefix "%s-"`, malformed[0], prefix)
 	} else if len(malformed) > 1 {
-		return errors.Errorf(`failed parsing resource IDs %s: missing prefix "%s-" is required`, utils.ArrayToCommaDelimitedString(malformed, "and"), prefix)
+		return errors.Errorf(`failed parsing resource IDs %s: missing prefix "%s-"`, utils.ArrayToCommaDelimitedString(malformed, "and"), prefix)
 	}
 
 	return nil
