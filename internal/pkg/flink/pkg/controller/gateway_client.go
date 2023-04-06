@@ -20,7 +20,7 @@ type GatewayClient struct {
 }
 
 func (c *GatewayClient) CreateStatement(ctx context.Context, statement string, properties map[string]string) (v1.SqlV1alpha1Statement, *http.Response, error) {
-	statementName := uuid.New().String()
+	statementName := uuid.New().String()[:20]
 	properties = c.propsDefault(properties)
 
 	statementObj := v1.SqlV1alpha1Statement{

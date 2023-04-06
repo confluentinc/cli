@@ -9,14 +9,12 @@ func main() {
 		"env-g99xx1",
 		"570ce633-4dec-4c01-8087-3417050055b0",
 		"lkc-y39kdo",
-		"lflinkc-12345",
+		"compute123",
 		"authToken",
 		&application.ApplicationOptions{
-			FLINK_GATEWAY_URL:        "http://localhost:8181",
+			FLINK_GATEWAY_URL:        "https://flink.us-west-2.aws.devel.cpdev.cloud",
 			HTTP_CLIENT_UNSAFE_TRACE: false,
 			DEFAULT_PROPERTIES: map[string]string{
-				"kafka.key":              "JIM",
-				"kafka.secret":           "SECRET",
 				"execution.runtime-mode": "streaming",
 			},
 		})
