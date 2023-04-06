@@ -16,18 +16,28 @@ Revoke privilege to activate Stream Designer pipeline "pipe-12345".
 
   $ confluent pipeline update pipe-12345 --activation-privilege false
 
+Update Stream Designer pipeline "pipe-12345" with KSQL cluster ID "lksqlc-123456".
+
+  $ confluent pipeline update pipe-12345 --ksql-cluster lksqlc-123456.
+
+Update Stream Designer pipeline "pipe-12345" with new Schema Registry cluster ID.
+
+  $ confluent pipeline update pipe-12345 --update-schema-registry
+
 Flags:
-      --name string            Name of the pipeline.
-      --description string     Description of the pipeline.
-      --sql-file string        Path to a KSQL file containing the pipeline's source code.
-      --secret stringArray     A named secret that can be referenced in pipeline source code, e.g. "secret_name=secret_content".
-                               This flag can be supplied multiple times. The secret mapping must have the format <secret-name>=<secret-value>,
-                               where <secret-name> consists of 1-128 lowercase, uppercase, numeric or underscore characters but may not begin with a digit.
-                               If <secret-value> is empty, the named secret will be removed from Stream Designer.
-      --activation-privilege   Grant or revoke the privilege to activate this pipeline. (default true)
-  -o, --output string          Specify the output format as "human", "json", or "yaml". (default "human")
-      --cluster string         Kafka cluster ID.
-      --environment string     Environment ID.
+      --name string              Name of the pipeline.
+      --description string       Description of the pipeline.
+      --ksql-cluster string      KSQL cluster for the pipeline.
+      --sql-file string          Path to a KSQL file containing the pipeline's source code.
+      --secret stringArray       A named secret that can be referenced in pipeline source code, e.g. "secret_name=secret_content".
+                                 This flag can be supplied multiple times. The secret mapping must have the format <secret-name>=<secret-value>,
+                                 where <secret-name> consists of 1-128 lowercase, uppercase, numeric or underscore characters but may not begin with a digit.
+                                 If <secret-value> is empty, the named secret will be removed from Stream Designer.
+      --activation-privilege     Grant or revoke the privilege to activate this pipeline. (default true)
+      --update-schema-registry   Update the pipeline with the latest Schema Registry cluster.
+  -o, --output string            Specify the output format as "human", "json", or "yaml". (default "human")
+      --cluster string           Kafka cluster ID.
+      --environment string       Environment ID.
 
 Global Flags:
   -h, --help            Show help for this command.
