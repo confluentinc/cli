@@ -35,7 +35,7 @@ import (
 
 // SqlV1alpha1StatementStatus The status of the Statement
 type SqlV1alpha1StatementStatus struct {
-	// The lifecycle phase of the submitted SQL statement: PENDING: SQL statement is pending execution; RUNNING: SQL statement execution is in progress; COMPLETED: SQL statement is completed; DELETING: SQL statement deletion is in progress; FAILED: SQL statement execution has failed; 
+	// The lifecycle phase of the submitted SQL statement: PENDING: SQL statement is pending execution; RUNNING: SQL statement execution is in progress; COMPLETED: SQL statement is completed; DELETING: SQL statement deletion is in progress; FAILED: SQL statement execution has failed;
 	Phase string `json:"phase"`
 	// Description of a SQL statement phase.
 	Detail *string `json:"detail,omitempty"`
@@ -72,7 +72,7 @@ func (o *SqlV1alpha1StatementStatus) GetPhase() string {
 // GetPhaseOk returns a tuple with the Phase field value
 // and a boolean to check if the value has been set.
 func (o *SqlV1alpha1StatementStatus) GetPhaseOk() (*string, bool) {
-	if o == nil  {
+	if o == nil {
 		return nil, false
 	}
 	return &o.Phase, true
@@ -117,38 +117,38 @@ func (o *SqlV1alpha1StatementStatus) SetDetail(v string) {
 
 // Redact resets all sensitive fields to their zero value.
 func (o *SqlV1alpha1StatementStatus) Redact() {
-    o.recurseRedact(&o.Phase)
-    o.recurseRedact(o.Detail)
+	o.recurseRedact(&o.Phase)
+	o.recurseRedact(o.Detail)
 }
 
 func (o *SqlV1alpha1StatementStatus) recurseRedact(v interface{}) {
-    type redactor interface {
-        Redact()
-    }
-    if r, ok := v.(redactor); ok {
-        r.Redact()
-    } else {
-        val := reflect.ValueOf(v)
-        if val.Kind() == reflect.Ptr {
-            val = val.Elem()
-        }
-        switch val.Kind() {
-        case reflect.Slice, reflect.Array:
-            for i := 0; i < val.Len(); i++ {
-                // support data types declared without pointers
-                o.recurseRedact(val.Index(i).Interface())
-                // ... and data types that were declared without but need pointers (for Redact)
-                if val.Index(i).CanAddr() {
-                    o.recurseRedact(val.Index(i).Addr().Interface())
-                }
-            }
-        }
-    }
+	type redactor interface {
+		Redact()
+	}
+	if r, ok := v.(redactor); ok {
+		r.Redact()
+	} else {
+		val := reflect.ValueOf(v)
+		if val.Kind() == reflect.Ptr {
+			val = val.Elem()
+		}
+		switch val.Kind() {
+		case reflect.Slice, reflect.Array:
+			for i := 0; i < val.Len(); i++ {
+				// support data types declared without pointers
+				o.recurseRedact(val.Index(i).Interface())
+				// ... and data types that were declared without but need pointers (for Redact)
+				if val.Index(i).CanAddr() {
+					o.recurseRedact(val.Index(i).Addr().Interface())
+				}
+			}
+		}
+	}
 }
 
 func (o SqlV1alpha1StatementStatus) zeroField(v interface{}) {
-    p := reflect.ValueOf(v).Elem()
-    p.Set(reflect.Zero(p.Type()))
+	p := reflect.ValueOf(v).Elem()
+	p.Set(reflect.Zero(p.Type()))
 }
 
 func (o SqlV1alpha1StatementStatus) MarshalJSON() ([]byte, error) {
@@ -197,5 +197,3 @@ func (v *NullableSqlV1alpha1StatementStatus) UnmarshalJSON(src []byte) error {
 	v.isSet = true
 	return json.Unmarshal(src, &v.value)
 }
-
-
