@@ -59,6 +59,11 @@ type AclRequestDataWithError struct {
 	Errors       error
 }
 
+var (
+	DeleteACLConfirmMsg  = "Are you sure you want to delete the ACL corresponding to these parameters?"
+	DeleteACLsConfirmMsg = "Are you sure you want to delete the ACLs corresponding to these parameters?"
+)
+
 func PrintACLsFromKafkaRestResponse(cmd *cobra.Command, acls []cpkafkarestv3.AclData) error {
 	list := output.NewList(cmd)
 	for _, acl := range acls {

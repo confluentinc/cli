@@ -35,10 +35,16 @@ func NewWrapErrorWithSuggestions(err error, errorMsg string, suggestionsMsg stri
 }
 
 func (b *ErrorWithSuggestionsImpl) Error() string {
+	if b == nil {
+		return ""
+	}
 	return b.errorMsg
 }
 
 func (b *ErrorWithSuggestionsImpl) GetSuggestionsMsg() string {
+	if b == nil {
+		return ""
+	}
 	return b.suggestionsMsg
 }
 

@@ -1,1 +1,4 @@
-Error: resource not found: 403 Forbidden
+Error: user "u-1" not found
+
+Suggestions:
+    List available users with `confluent iam user list`.
