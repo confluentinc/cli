@@ -34,7 +34,7 @@ Flags:
                                  where <secret-name> consists of 1-128 lowercase, uppercase, numeric or underscore characters but may not begin with a digit.
                                  If <secret-value> is empty, the named secret will be removed from Stream Designer.
       --activation-privilege     Grant or revoke the privilege to activate this pipeline. (default true)
-      --update-schema-registry   Update the pipeline with the latest schema registry cluster.
+      --update-schema-registry   Update the pipeline with the latest Schema Registry cluster.
   -o, --output string            Specify the output format as "human", "json", or "yaml". (default "human")
       --cluster string           Kafka cluster ID.
       --environment string       Environment ID.
