@@ -31,9 +31,6 @@ const (
 	PausedConnectorMsg  = "Paused connector \"%s\".\n"
 	ResumedConnectorMsg = "Resumed connector \"%s\".\n"
 
-	// environment commands
-	UsingEnvMsg = "Now using \"%s\" as the default (active) environment.\n"
-
 	// kafka cluster commands
 	UseKafkaClusterMsg               = "Set Kafka cluster \"%s\" as the active cluster for environment \"%s\".\n"
 	CopyByokAwsPermissionsHeaderMsg  = `Copy and append these permissions into the key policy "Statements" field of the ARN in your AWS key management system to authorize access for your Confluent Cloud cluster.`

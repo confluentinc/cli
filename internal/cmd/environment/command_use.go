@@ -37,9 +37,9 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 
 	c.Context.SetCurrentEnvironment(id)
 	if err := c.Config.Save(); err != nil {
-		return errors.Wrap(err, errors.EnvSwitchErrorMsg)
+		return err
 	}
 
-	output.Printf(errors.UsingEnvMsg, id)
+	output.Printf("Now using \"%s\" as the default (active) environment.\n", id)
 	return nil
 }

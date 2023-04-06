@@ -199,7 +199,7 @@ func (c *Context) GetSuspensionStatus() *ccloudv1.SuspensionStatus {
 }
 
 func (c *Context) GetCurrentEnvironment() string {
-	if c.CurrentEnvironment != "" {
+	if c != nil && c.CurrentEnvironment != "" {
 		return c.CurrentEnvironment
 	}
 
@@ -213,18 +213,24 @@ func (c *Context) GetCurrentEnvironment() string {
 func (c *Context) SetCurrentEnvironment(id string) {
 	c.CurrentEnvironment = id
 
+	if id != "" {
+		c.AddEnvironment(id)
+	}
+
 	if auth := c.GetAuth(); auth != nil {
 		auth.Account = nil
 		auth.Accounts = nil
 	}
+}
 
-	if id != "" {
-		if _, ok := c.Environments[id]; !ok {
-			c.Environments[id] = &EnvironmentContext{}
-		}
-	} else {
-		delete(c.Environments, id)
+func (c *Context) AddEnvironment(id string) {
+	if _, ok := c.Environments[id]; !ok {
+		c.Environments[id] = &EnvironmentContext{}
 	}
+}
+
+func (c *Context) DeleteEnvironment(id string) {
+	delete(c.Environments, id)
 }
 
 func (c *Context) GetAuthToken() string {
