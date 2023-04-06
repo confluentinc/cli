@@ -66,7 +66,7 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	deletion.PrintSuccessfulDeletionMsg(deleted, resource.KafkaCluster)
 
 	if errs != nil {
-		if len(args) - len(deleted) > 1 {
+		if len(args)-len(deleted) > 1 {
 			return errors.NewErrorWithSuggestions(errs.Error(), "Ensure the clusters are not associated with any active Connect clusters.")
 		} else {
 			return errors.NewErrorWithSuggestions(errs.Error(), "Ensure the cluster is not associated with any active Connect clusters.")

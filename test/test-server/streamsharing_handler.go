@@ -15,9 +15,9 @@ import (
 )
 
 var (
-	invitedAt, _ = time.Parse(time.RFC3339, "2022-07-20T22:08:41+00:00")
+	invitedAt, _  = time.Parse(time.RFC3339, "2022-07-20T22:08:41+00:00")
 	redeemedAt, _ = time.Parse(time.RFC3339, "2022-07-21T22:08:41+00:00")
-	expiresAt, _ = time.Parse(time.RFC3339, "2022-07-22T22:08:41+00:00")
+	expiresAt, _  = time.Parse(time.RFC3339, "2022-07-22T22:08:41+00:00")
 
 	consumerShares = []*cdxv1.CdxV1ConsumerShare{
 		{
