@@ -21,6 +21,7 @@ func (c *command) newDeleteCommand() *cobra.Command {
 		RunE:              c.delete,
 	}
 
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddForceFlag(cmd)
 
 	return cmd
@@ -45,13 +46,16 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	output.ErrPrintf(errors.DeletedResourceMsg, resource.Environment, id)
-	environmentId, _ := c.EnvironmentId()
-	if id == environmentId {
-		c.Context.SetEnvironment(nil)
 
+	if id == c.Context.GetCurrentEnvironment() {
+		c.Context.SetCurrentEnvironment("")
 		if err := c.Config.Save(); err != nil {
-			return errors.Wrap(err, errors.EnvSwitchErrorMsg)
+			return err
 		}
 	}
+
+	c.Context.DeleteEnvironment(id)
+	c.Config.Save()
+
 	return nil
 }

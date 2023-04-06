@@ -8,7 +8,7 @@ const (
 	// auth commands
 	LoggedInAsMsg                 = "Logged in as \"%s\".\n"
 	LoggedInAsMsgWithOrg          = "Logged in as \"%s\" for organization \"%s\" (\"%s\").\n"
-	LoggedInUsingEnvMsg           = "Using environment \"%s\" (\"%s\").\n"
+	LoggedInUsingEnvMsg           = "Using environment \"%s\".\n"
 	LoggedOutMsg                  = "You are now logged out."
 	WroteCredentialsToKeychainMsg = "Wrote login credentials to keychain\n"
 	RemoveNetrcCredentialsMsg     = "Removed credentials for user \"%s\" from netrc file \"%s\"\n"
@@ -30,9 +30,6 @@ const (
 	// connector commands
 	PausedConnectorMsg  = "Paused connector \"%s\".\n"
 	ResumedConnectorMsg = "Resumed connector \"%s\".\n"
-
-	// environment commands
-	UsingEnvMsg = "Now using \"%s\" as the default (active) environment.\n"
 
 	// kafka cluster commands
 	UseKafkaClusterMsg               = "Set Kafka cluster \"%s\" as the active cluster for environment \"%s\".\n"

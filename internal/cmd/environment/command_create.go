@@ -19,6 +19,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 		RunE:  c.create,
 	}
 
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
@@ -35,12 +36,18 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	environmentId, _ := c.EnvironmentId()
 	table := output.NewTable(cmd)
 	table.Add(&out{
-		IsCurrent: environment.Id == environmentId,
-		Id:        environment.Id,
-		Name:      environment.Name,
+		IsCurrent: environment.GetId() == c.Context.GetCurrentEnvironment(),
+		Id:        environment.GetId(),
+		Name:      environment.GetName(),
 	})
-	return table.Print()
+	if err := table.Print(); err != nil {
+		return err
+	}
+
+	c.Context.AddEnvironment(environment.GetId())
+	c.Config.Save()
+
+	return nil
 }

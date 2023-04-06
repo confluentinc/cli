@@ -21,6 +21,8 @@ func (c *command) newUpdateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("name", "", "New name for Confluent Cloud environment.")
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("name"))
 
@@ -36,11 +38,16 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	}
 
 	updateEnvironment := orgv2.OrgV2Environment{DisplayName: orgv2.PtrString(name)}
-	_, httpResp, err := c.V2Client.UpdateOrgEnvironment(id, updateEnvironment)
+	environment, httpResp, err := c.V2Client.UpdateOrgEnvironment(id, updateEnvironment)
 	if err != nil {
 		return errors.CatchOrgV2ResourceNotFoundError(err, resource.Environment, httpResp)
 	}
 
-	output.ErrPrintf(errors.UpdateSuccessMsg, "name", "environment", id, name)
-	return nil
+	table := output.NewTable(cmd)
+	table.Add(&out{
+		IsCurrent: environment.GetId() == c.Context.GetCurrentEnvironment(),
+		Id:        environment.GetId(),
+		Name:      environment.GetDisplayName(),
+	})
+	return table.Print()
 }

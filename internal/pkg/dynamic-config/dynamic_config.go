@@ -37,7 +37,7 @@ func (d *DynamicConfig) ParseFlagsIntoConfig(cmd *cobra.Command) error {
 		if _, err := d.FindContext(context); err != nil {
 			return err
 		}
-		d.Config.SetOverwrittenCurrContext(d.Config.CurrentContext)
+		d.Config.SetOverwrittenCurrentContext(d.Config.CurrentContext)
 		d.Config.CurrentContext = context
 	}
 
