@@ -1,22 +1,20 @@
 package context
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/deletion"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
-	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *command) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "delete <context>",
-		Short:             "Delete a context.",
-		Args:              cobra.ExactArgs(1),
+		Use:               "delete <context-1> [context-2] ... [context-n]",
+		Short:             "Delete contexts.",
+		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.delete,
 	}
@@ -27,20 +25,33 @@ func (c *command) newDeleteCommand() *cobra.Command {
 }
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
-	ctx, err := c.Config.FindContext(args[0])
-	if err != nil {
+	if err := c.validateArgs(cmd, args); err != nil {
 		return err
 	}
 
-	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmYesNoMsg, resource.Context, ctx.Name)
-	if ok, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil || !ok {
+	if ok, err := form.ConfirmDeletionYesNo(cmd, resource.Context, args); err != nil || !ok {
 		return err
 	}
 
-	if err := c.Config.DeleteContext(ctx.Name); err != nil {
+	var errs error
+	var deleted []string
+	for _, id := range args {
+		if err := c.Config.DeleteContext(id); err != nil {
+			errs = errors.Join(errs, err)
+		} else {
+			deleted = append(deleted, id)
+		}
+	}
+	deletion.PrintSuccessfulDeletionMsg(deleted, resource.Context)
+
+	return errs
+}
+
+func (c *command) validateArgs(cmd *cobra.Command, args []string) error {
+	describeFunc := func(id string) error {
+		_, err := c.Config.FindContext(id)
 		return err
 	}
 
-	output.Printf(errors.DeletedResourceMsg, resource.Context, ctx.Name)
-	return nil
+	return deletion.ValidateArgsForDeletion(cmd, args, resource.Context, describeFunc)
 }
