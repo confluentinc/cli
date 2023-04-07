@@ -24,6 +24,7 @@ func (c *command) newDescribeCommand() *cobra.Command {
 		RunE:              c.describe,
 	}
 
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
@@ -35,12 +36,11 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		return errors.CatchOrgV2ResourceNotFoundError(err, resource.Environment, httpResp)
 	}
 
-	environmentId, _ := c.EnvironmentId()
 	table := output.NewTable(cmd)
 	table.Add(&out{
-		IsCurrent: *environment.Id == environmentId,
-		Id:        *environment.Id,
-		Name:      *environment.DisplayName,
+		IsCurrent: environment.GetId() == c.Context.GetCurrentEnvironment(),
+		Id:        environment.GetId(),
+		Name:      environment.GetDisplayName(),
 	})
 	return table.Print()
 }

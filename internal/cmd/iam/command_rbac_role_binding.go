@@ -517,7 +517,7 @@ func (c *roleBindingCommand) parseV2RoleBinding(cmd *cobra.Command) (*mdsv2.IamV
 }
 
 func (c *roleBindingCommand) parseV2BaseCrnPattern(cmd *cobra.Command) (string, error) {
-	orgResourceId := c.State.Auth.Account.GetOrgResourceId()
+	orgResourceId := c.Context.GetOrganization().GetResourceId()
 	crnPattern := "crn://confluent.cloud/organization=" + orgResourceId
 
 	if cmd.Flags().Changed("current-environment") {

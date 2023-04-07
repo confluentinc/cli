@@ -146,14 +146,14 @@ func (c *command) loginCCloud(cmd *cobra.Command, url string) error {
 		return err
 	}
 
-	currentEnv, currentOrg, err := pauth.PersistCCloudCredentialsToConfig(c.Config.Config, client, url, credentials, save)
+	currentEnvironment, currentOrg, err := pauth.PersistCCloudCredentialsToConfig(c.Config.Config, client, url, credentials, save)
 	if err != nil {
 		return err
 	}
 
 	output.Printf(errors.LoggedInAsMsgWithOrg, credentials.Username, currentOrg.GetResourceId(), currentOrg.GetName())
-	if currentEnv != nil {
-		log.CliLogger.Debugf(errors.LoggedInUsingEnvMsg, currentEnv.GetId(), currentEnv.GetName())
+	if currentEnvironment != "" {
+		log.CliLogger.Debugf(errors.LoggedInUsingEnvMsg, currentEnvironment)
 	}
 
 	// if org is at the end of free trial, print instruction about how to add payment method to unsuspend the org.

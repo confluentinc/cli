@@ -95,7 +95,7 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string, prompt form.P
 	}
 
 	ctx := c.Context.Config.Context()
-	c.Context.Config.SetOverwrittenActiveKafka(ctx.KafkaClusterContext.GetActiveKafkaClusterId())
+	c.Context.Config.SetOverwrittenCurrentKafkaCluster(ctx.KafkaClusterContext.GetActiveKafkaClusterId())
 	ctx.KafkaClusterContext.SetActiveKafkaCluster(clusterID)
 
 	return c.outputKafkaClusterDescription(cmd, &updatedCluster, true)
