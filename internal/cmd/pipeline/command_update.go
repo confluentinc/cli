@@ -33,11 +33,11 @@ func (c *command) newUpdateCommand(enableSourceCode bool) *cobra.Command {
 				Code: `confluent pipeline update pipe-12345 --activation-privilege false`,
 			},
 			examples.Example{
-				Text: `Update Stream Designer pipeline "pipe-12345" with KSQL cluster ID "lksqlc-123456"`,
+				Text: `Update Stream Designer pipeline "pipe-12345" with KSQL cluster ID "lksqlc-123456".`,
 				Code: "confluent pipeline update pipe-12345 --ksql-cluster lksqlc-123456",
 			},
 			examples.Example{
-				Text: `Update Stream Designer pipeline "pipe-12345" with new Schema Registry cluster ID`,
+				Text: `Update Stream Designer pipeline "pipe-12345" with new Schema Registry cluster ID.`,
 				Code: "confluent pipeline update pipe-12345 --update-schema-registry",
 			},
 		),

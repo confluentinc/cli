@@ -30,9 +30,9 @@ func (c *command) newCreateCommand(enableSourceCode bool) *cobra.Command {
 		),
 	}
 
-	pcmd.AddKsqlClusterFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("name", "", "Name of the pipeline.")
 	cmd.Flags().String("description", "", "Description of the pipeline.")
+	pcmd.AddKsqlClusterFlag(cmd, c.AuthenticatedCLICommand)
 	if enableSourceCode {
 		cmd.Flags().String("sql-file", "", "Path to a KSQL file containing the pipeline's source code.")
 		cmd.Flags().StringArray("secret", []string{}, "A named secret that can be referenced in pipeline source code, e.g. \"secret_name=secret_content\".\n"+
