@@ -83,7 +83,11 @@ func handleMe(t *testing.T, isAuditLogEnabled bool) http.HandlerFunc {
 			orgResourceId = "abc-123"
 		}
 
-		org := &ccloudv1.Organization{Id: 42, ResourceId: orgResourceId, Name: "Confluent"}
+		org := &ccloudv1.Organization{
+			Id:         42,
+			ResourceId: orgResourceId,
+			Name:       "Confluent",
+		}
 		if !isAuditLogEnabled {
 			org.AuditLog = &ccloudv1.AuditLog{
 				ClusterId:        "lkc-ab123",
@@ -93,8 +97,7 @@ func handleMe(t *testing.T, isAuditLogEnabled bool) http.HandlerFunc {
 			}
 		}
 
-		isOrgOnMarketplace := os.Getenv("IS_ORG_ON_MARKETPLACE") == "true"
-		if isOrgOnMarketplace {
+		if os.Getenv("IS_ORG_ON_MARKETPLACE") == "true" {
 			org.Marketplace = &ccloudv1.Marketplace{Partner: ccloudv1.MarketplacePartner_AWS}
 		}
 

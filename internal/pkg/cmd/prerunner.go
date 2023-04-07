@@ -167,10 +167,10 @@ func (c *AuthenticatedCLICommand) AuthToken() string {
 }
 
 func (c *AuthenticatedCLICommand) EnvironmentId() (string, error) {
-	if c.Context.GetEnvironment() == nil {
-		return "", errors.NewErrorWithSuggestions(errors.NoEnvironmentFoundErrorMsg, errors.NoEnvironmentFoundSuggestions)
+	if id := c.Context.GetCurrentEnvironment(); id != "" {
+		return id, nil
 	}
-	return c.Context.GetEnvironment().GetId(), nil
+	return "", errors.NewErrorWithSuggestions(errors.NoEnvironmentFoundErrorMsg, errors.NoEnvironmentFoundSuggestions)
 }
 
 func (h *HasAPIKeyCLICommand) AddCommand(cmd *cobra.Command) {
@@ -398,7 +398,7 @@ func (r *PreRun) ccloudAutoLogin(netrcMachineName string) error {
 
 	log.CliLogger.Debug(errors.AutoLoginMsg)
 	log.CliLogger.Debugf(errors.LoggedInAsMsgWithOrg, credentials.Username, currentOrg.ResourceId, currentOrg.Name)
-	log.CliLogger.Debugf(errors.LoggedInUsingEnvMsg, currentEnv.GetId(), currentEnv.GetName())
+	log.CliLogger.Debugf(errors.LoggedInUsingEnvMsg, currentEnv)
 
 	return nil
 }

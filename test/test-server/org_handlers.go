@@ -41,10 +41,15 @@ func handleOrgEnvironment(t *testing.T) http.HandlerFunc {
 				_, err := io.WriteString(w, "")
 				require.NoError(t, err)
 			case http.MethodPatch: // `environment update {id} --name`
-				req := orgv2.OrgV2Environment{}
-				err := json.NewDecoder(r.Body).Decode(&req)
+				req := &orgv2.OrgV2Environment{}
+				err := json.NewDecoder(r.Body).Decode(req)
 				require.NoError(t, err)
+
 				env.DisplayName = req.DisplayName
+
+				req.Id = orgv2.PtrString(envId)
+				err = json.NewEncoder(w).Encode(req)
+				require.NoError(t, err)
 			}
 		} else {
 			// env not found
