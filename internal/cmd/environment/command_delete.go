@@ -55,7 +55,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	c.Context.DeleteEnvironment(id)
-	c.Config.Save()
+	_ = c.Config.Save()
 
 	return nil
 }
