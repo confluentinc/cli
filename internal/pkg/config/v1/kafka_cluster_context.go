@@ -33,26 +33,23 @@ func NewKafkaClusterContext(ctx *Context, activeKafka string, kafkaClusters map[
 }
 
 func newKafkaClusterEnvironmentContext(activeKafka string, kafkaClusters map[string]*KafkaClusterConfig, ctx *Context) *KafkaClusterContext {
-	kafkaEnvContext := &KafkaEnvContext{
-		ActiveKafkaCluster:  activeKafka,
-		KafkaClusterConfigs: kafkaClusters,
+	return &KafkaClusterContext{
+		EnvContext: true,
+		KafkaEnvContexts: map[string]*KafkaEnvContext{ctx.GetCurrentEnvironment(): {
+			ActiveKafkaCluster:  activeKafka,
+			KafkaClusterConfigs: kafkaClusters,
+		}},
+		Context: ctx,
 	}
-	kafkaClusterContext := &KafkaClusterContext{
-		EnvContext:       true,
-		KafkaEnvContexts: map[string]*KafkaEnvContext{ctx.GetEnvironment().GetId(): kafkaEnvContext},
-		Context:          ctx,
-	}
-	return kafkaClusterContext
 }
 
 func newKafkaClusterNonEnvironmentContext(activeKafka string, kafkaClusters map[string]*KafkaClusterConfig, ctx *Context) *KafkaClusterContext {
-	kafkaClusterContext := &KafkaClusterContext{
+	return &KafkaClusterContext{
 		EnvContext:          false,
 		ActiveKafkaCluster:  activeKafka,
 		KafkaClusterConfigs: kafkaClusters,
 		Context:             ctx,
 	}
-	return kafkaClusterContext
 }
 
 func (k *KafkaClusterContext) GetActiveKafkaClusterId() string {
@@ -129,7 +126,7 @@ func (k *KafkaClusterContext) DeleteAPIKey(apiKey string) {
 }
 
 func (k *KafkaClusterContext) GetCurrentKafkaEnvContext() *KafkaEnvContext {
-	curEnv := k.Context.GetEnvironment().GetId()
+	curEnv := k.Context.GetCurrentEnvironment()
 	if k.KafkaEnvContexts[curEnv] == nil {
 		k.KafkaEnvContexts[curEnv] = &KafkaEnvContext{
 			ActiveKafkaCluster:  "",
