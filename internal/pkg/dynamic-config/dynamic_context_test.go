@@ -185,20 +185,16 @@ func getClusterFlagContext() *DynamicContext {
 	return clusterFlagContext
 }
 
-// TODO
 func getEnvFlagContext() *DynamicContext {
 	config := v1.AuthenticatedCloudConfigMock()
 	envFlagContext := NewDynamicContext(config.Context(), pmock.NewClientMock(), pmock.NewV2ClientMock())
-	envFlagContext.State.Auth.Accounts = append(envFlagContext.State.Auth.Accounts, &ccloudv1.Account{Name: flagEnvironment, Id: flagEnvironment})
+	envFlagContext.Environments[flagEnvironment] = &v1.EnvironmentContext{}
 	return envFlagContext
 }
 
-// TODO
 func getEnvAndClusterFlagContext() *DynamicContext {
-	config := v1.AuthenticatedCloudConfigMock()
-	envAndClusterFlagContext := NewDynamicContext(config.Context(), pmock.NewClientMock(), pmock.NewV2ClientMock())
+	envAndClusterFlagContext := getEnvFlagContext()
 
-	envAndClusterFlagContext.State.Auth.Accounts = append(envAndClusterFlagContext.State.Auth.Accounts, &ccloudv1.Account{Name: flagEnvironment, Id: flagEnvironment})
 	envAndClusterFlagContext.KafkaClusterContext.KafkaEnvContexts[flagEnvironment] = &v1.KafkaEnvContext{
 		ActiveKafkaCluster:  "",
 		KafkaClusterConfigs: map[string]*v1.KafkaClusterConfig{},
