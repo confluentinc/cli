@@ -250,23 +250,23 @@ func TestConfig_Load(t *testing.T) {
 			want: testConfigsCloud.statefulConfig,
 			file: "test_json/stateful_cloud.json",
 		},
-		// {
-		// 	name: "should load disable update checks and disable updates",
-		// 	want: &Config{
-		// 		BaseConfig: &config.BaseConfig{
-		// 			Filename: "test_json/load_disable_update.json",
-		// 			Ver:      config.Version{Version: ver},
-		// 		},
-		// 		DisableUpdates:     true,
-		// 		DisableUpdateCheck: true,
-		// 		Platforms:          map[string]*Platform{},
-		// 		Credentials:        map[string]*Credential{},
-		// 		Contexts:           map[string]*Context{},
-		// 		ContextStates:      map[string]*ContextState{},
-		// 		SavedCredentials:   map[string]*LoginCredential{},
-		// 	},
-		// 	file: "test_json/load_disable_update.json",
-		// },
+		{
+			name: "should load disable update checks and disable updates",
+			want: &Config{
+				BaseConfig: &config.BaseConfig{
+					Filename: "test_json/load_disable_update.json",
+					Ver:      config.Version{Version: ver},
+				},
+				DisableUpdates:     true,
+				DisableUpdateCheck: true,
+				Platforms:          map[string]*Platform{},
+				Credentials:        map[string]*Credential{},
+				Contexts:           map[string]*Context{},
+				ContextStates:      map[string]*ContextState{},
+				SavedCredentials:   map[string]*LoginCredential{},
+			},
+			file: "test_json/load_disable_update.json",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
