@@ -1,12 +1,16 @@
 package pipeline
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"regexp"
 	"sort"
+	"strings"
 
 	"github.com/spf13/cobra"
+
+	streamdesignerv1 "github.com/confluentinc/ccloud-sdk-go-v2/stream-designer/v1"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
@@ -26,9 +30,9 @@ func (c *command) newCreateCommand(enableSourceCode bool) *cobra.Command {
 		),
 	}
 
-	pcmd.AddKsqlClusterFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("name", "", "Name of the pipeline.")
 	cmd.Flags().String("description", "", "Description of the pipeline.")
+	pcmd.AddKsqlClusterFlag(cmd, c.AuthenticatedCLICommand)
 	if enableSourceCode {
 		cmd.Flags().String("sql-file", "", "Path to a KSQL file containing the pipeline's source code.")
 		cmd.Flags().StringArray("secret", []string{}, "A named secret that can be referenced in pipeline source code, e.g. \"secret_name=secret_content\".\n"+
@@ -44,18 +48,36 @@ func (c *command) newCreateCommand(enableSourceCode bool) *cobra.Command {
 		cobra.CheckErr(cmd.MarkFlagFilename("sql-file", "sql"))
 	}
 
-	cobra.CheckErr(cmd.MarkFlagRequired("ksql-cluster"))
 	cobra.CheckErr(cmd.MarkFlagRequired("name"))
 
 	return cmd
 }
 
 func (c *command) create(cmd *cobra.Command, _ []string) error {
-	name, _ := cmd.Flags().GetString("name")
-	description, _ := cmd.Flags().GetString("description")
-	ksqlCluster, _ := cmd.Flags().GetString("ksql-cluster")
-	sqlFile, _ := cmd.Flags().GetString("sql-file")
-	secrets, _ := cmd.Flags().GetStringArray("secret")
+	name, err := cmd.Flags().GetString("name")
+	if err != nil {
+		return err
+	}
+
+	description, err := cmd.Flags().GetString("description")
+	if err != nil {
+		return err
+	}
+
+	ksqlCluster, err := cmd.Flags().GetString("ksql-cluster")
+	if err != nil {
+		return err
+	}
+
+	sqlFile, err := cmd.Flags().GetString("sql-file")
+	if err != nil {
+		return err
+	}
+
+	secrets, err := cmd.Flags().GetStringArray("secret")
+	if err != nil {
+		return err
+	}
 
 	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
@@ -68,14 +90,19 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	}
 
 	// validate ksql id
-	if _, err := c.V2Client.DescribeKsqlCluster(ksqlCluster, environmentId); err != nil {
-		return err
+	if ksqlCluster != "" {
+		if _, err := c.V2Client.DescribeKsqlCluster(ksqlCluster, environmentId); err != nil {
+			return err
+		}
 	}
 
 	// validate sr id
-	srCluster, err := c.Config.Context().SchemaRegistryCluster(cmd)
+	srCluster, err := c.Context.FetchSchemaRegistryByEnvironmentId(context.Background(), environmentId)
 	if err != nil {
-		return err
+		// ignore if the SR is not enabled
+		if !strings.Contains(err.Error(), "Schema Registry not enabled") {
+			return err
+		}
 	}
 
 	// read pipeline source code file if provided
@@ -94,7 +121,29 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	pipeline, err := c.V2Client.CreatePipeline(environmentId, kafkaCluster.ID, name, description, sourceCode, &secretMappings, ksqlCluster, srCluster.Id)
+	// required fields
+	createPipeline := streamdesignerv1.SdV1Pipeline{
+		Spec: &streamdesignerv1.SdV1PipelineSpec{
+			DisplayName:  streamdesignerv1.PtrString(name),
+			Description:  streamdesignerv1.PtrString(description),
+			SourceCode:   &streamdesignerv1.SdV1SourceCodeObject{Sql: sourceCode},
+			Secrets:      &secretMappings,
+			Environment:  &streamdesignerv1.ObjectReference{Id: environmentId},
+			KafkaCluster: &streamdesignerv1.ObjectReference{Id: kafkaCluster.ID},
+		},
+	}
+
+	// add KSQL cluster if present
+	if ksqlCluster != "" {
+		createPipeline.Spec.KsqlCluster = &streamdesignerv1.ObjectReference{Id: ksqlCluster}
+	}
+
+	// add Schema Registry Cluster if its provisioned
+	if srCluster != nil {
+		createPipeline.Spec.StreamGovernanceCluster = &streamdesignerv1.ObjectReference{Id: srCluster.GetId()}
+	}
+
+	pipeline, err := c.V2Client.CreatePipeline(createPipeline)
 	if err != nil {
 		return err
 	}

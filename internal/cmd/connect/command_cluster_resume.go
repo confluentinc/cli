@@ -16,7 +16,7 @@ func (c *clusterCommand) newResumeCommand() *cobra.Command {
 		Use:               "resume <id-1> [id-2] ... [id-n]",
 		Short:             "Resume connectors.",
 		Args:              cobra.MinimumNArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgsMultiple),
 		RunE:              c.resume,
 		Annotations:       map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		Example: examples.BuildExampleString(

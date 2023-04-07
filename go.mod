@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/antihax/optional v1.0.0
-	github.com/aws/aws-sdk-go v1.44.234
+	github.com/aws/aws-sdk-go v1.44.238
 	github.com/billgraziano/dpapi v0.4.0
 	github.com/brianstrauch/cobra-shell v0.4.0
 	github.com/chromedp/chromedp v0.9.1
@@ -26,7 +26,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/org v0.6.0
 	github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/srcm v0.3.0
-	github.com/confluentinc/ccloud-sdk-go-v2/stream-designer v0.2.0
+	github.com/confluentinc/ccloud-sdk-go-v2/stream-designer v0.3.0
 	github.com/confluentinc/confluent-kafka-go v1.9.3-RC3
 	github.com/confluentinc/go-editor v0.11.0
 	github.com/confluentinc/go-netrc v0.0.0-20220321173724-4d50f36ff450
@@ -73,11 +73,11 @@ require (
 	github.com/tidwall/pretty v1.2.1
 	github.com/tidwall/sjson v1.2.5
 	github.com/xeipuuv/gojsonschema v1.2.0
-	golang.org/x/crypto v0.7.0
+	golang.org/x/crypto v0.8.0
 	golang.org/x/exp v0.0.0-20230307190834-24139beb5833
-	golang.org/x/oauth2 v0.6.0
-	golang.org/x/term v0.6.0
-	golang.org/x/text v0.8.0
+	golang.org/x/oauth2 v0.7.0
+	golang.org/x/term v0.7.0
+	golang.org/x/text v0.9.0
 	gopkg.in/launchdarkly/go-sdk-common.v2 v2.5.1
 	gopkg.in/square/go-jose.v2 v2.6.0
 	k8s.io/apimachinery v0.26.3
@@ -126,9 +126,9 @@ require (
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
 	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616 // indirect
 	golang.org/x/mod v0.8.0 // indirect
-	golang.org/x/net v0.8.0 // indirect
+	golang.org/x/net v0.9.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
-	golang.org/x/sys v0.6.0 // indirect
+	golang.org/x/sys v0.7.0 // indirect
 	golang.org/x/tools v0.6.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20230119192704-9d59e20e5cd1 // indirect
