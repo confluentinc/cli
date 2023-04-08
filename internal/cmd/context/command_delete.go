@@ -15,7 +15,7 @@ func (c *command) newDeleteCommand() *cobra.Command {
 		Use:               "delete <context-1> [context-2] ... [context-n]",
 		Short:             "Delete contexts.",
 		Args:              cobra.MinimumNArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgsMultiple),
 		RunE:              c.delete,
 	}
 

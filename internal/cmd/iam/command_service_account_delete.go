@@ -16,7 +16,7 @@ func (c *serviceAccountCommand) newDeleteCommand() *cobra.Command {
 		Use:               "delete <id-1> [id-2] ... [id-n]",
 		Short:             "Delete service accounts.",
 		Args:              cobra.MinimumNArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgsMultiple),
 		RunE:              c.delete,
 		Example: examples.BuildExampleString(
 			examples.Example{

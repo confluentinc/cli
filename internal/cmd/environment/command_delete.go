@@ -17,7 +17,7 @@ func (c *command) newDeleteCommand() *cobra.Command {
 		Use:               "delete <id-1> [id-2] ... [id-n]",
 		Short:             "Delete Confluent Cloud environments and all their resources.",
 		Args:              cobra.MinimumNArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgsMultiple),
 		RunE:              c.delete,
 	}
 

@@ -16,7 +16,7 @@ func (c *clusterCommand) newDeleteCommand() *cobra.Command {
 		Use:               "delete <id-1> [id-2] ... [id-n]",
 		Short:             "Delete connectors.",
 		Args:              cobra.MinimumNArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgsMultiple),
 		RunE:              c.delete,
 		Annotations:       map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		Example: examples.BuildExampleString(
