@@ -51,17 +51,11 @@ func TestFindKafkaCluster_Expired(t *testing.T) {
 
 	d := &DynamicContext{
 		Context: &v1.Context{
-			KafkaClusterContext: &v1.KafkaClusterContext{
-				KafkaClusterConfigs: map[string]*v1.KafkaClusterConfig{
-					"lkc-123456": {LastUpdate: update},
-				},
-			},
-			Credential: &v1.Credential{CredentialType: v1.Username},
-			State: &v1.ContextState{
-				Auth:      &v1.AuthConfig{Account: &ccloudv1.Account{Id: "env-123456"}},
-				AuthToken: "token",
-			},
-			Config: &v1.Config{BaseConfig: &config.BaseConfig{Ver: config.Version{Version: &version.Version{}}}},
+			CurrentEnvironment:  "env-123456",
+			KafkaClusterContext: &v1.KafkaClusterContext{KafkaClusterConfigs: map[string]*v1.KafkaClusterConfig{"lkc-123456": {LastUpdate: update}}},
+			Credential:          &v1.Credential{CredentialType: v1.Username},
+			State:               &v1.ContextState{AuthToken: "token"},
+			Config:              &v1.Config{BaseConfig: &config.BaseConfig{Ver: config.Version{Version: &version.Version{}}}},
 		},
 		V2Client: &ccloudv2.Client{
 			CmkClient: &cmkv2.APIClient{
@@ -135,9 +129,7 @@ func TestDynamicContext_ParseFlagsIntoContext(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		cmd := &cobra.Command{
-			Run: func(cmd *cobra.Command, args []string) {},
-		}
+		cmd := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
 		cmd.Flags().String("environment", "", "Environment ID.")
 		cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 		err := cmd.ParseFlags([]string{"--cluster", tt.cluster, "--environment", tt.environment})
@@ -163,7 +155,7 @@ func TestDynamicContext_ParseFlagsIntoContext(t *testing.T) {
 
 func buildCcloudMockClient() *ccloudv1.Client {
 	client := pmock.NewClientMock()
-	client.Account = &ccloudv1mock.AccountInterface{ListFunc: func(ctx context.Context, account *ccloudv1.Account) ([]*ccloudv1.Account, error) {
+	client.Account = &ccloudv1mock.AccountInterface{ListFunc: func(_ context.Context, _ *ccloudv1.Account) ([]*ccloudv1.Account, error) {
 		return []*ccloudv1.Account{{Id: apiEnvironment}}, nil
 	}}
 	return client

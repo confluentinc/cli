@@ -302,7 +302,6 @@ func TestConfig_Save(t *testing.T) {
 		wantErr          bool
 		kafkaOverwrite   string
 		contextOverwrite string
-		accountOverwrite *ccloudv1.Account
 	}{
 		{
 			name:     "save on-prem config with state to file",
