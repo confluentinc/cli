@@ -76,14 +76,18 @@ const (
 )
 
 // Handler for: "/api/me"
-func (c *CloudRouter) HandleMe(t *testing.T, isAuditLogEnabled bool) http.HandlerFunc {
+func handleMe(t *testing.T, isAuditLogEnabled bool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		orgResourceId := os.Getenv("CONFLUENT_CLOUD_ORGANIZATION_ID")
 		if orgResourceId == "" {
 			orgResourceId = "abc-123"
 		}
 
-		org := &ccloudv1.Organization{Id: 42, ResourceId: orgResourceId, Name: "Confluent"}
+		org := &ccloudv1.Organization{
+			Id:         42,
+			ResourceId: orgResourceId,
+			Name:       "Confluent",
+		}
 		if !isAuditLogEnabled {
 			org.AuditLog = &ccloudv1.AuditLog{
 				ClusterId:        "lkc-ab123",
@@ -93,11 +97,14 @@ func (c *CloudRouter) HandleMe(t *testing.T, isAuditLogEnabled bool) http.Handle
 			}
 		}
 
-		isOrgOnMarketplace := os.Getenv("IS_ORG_ON_MARKETPLACE") == "true"
-		if isOrgOnMarketplace {
+		if os.Getenv("IS_ORG_ON_MARKETPLACE") == "true" {
 			org.Marketplace = &ccloudv1.Marketplace{Partner: ccloudv1.MarketplacePartner_AWS}
 		}
 
+		environmentList := environments
+		if os.Getenv("CONFLUENT_CLOUD_EMAIL") == "no-environment-user@example.com" {
+			environmentList = []*ccloudv1.Account{}
+		}
 		b, err := ccloudv1.MarshalJSONToBytes(&ccloudv1.GetMeReply{
 			User: &ccloudv1.User{
 				Id:         23,
@@ -105,7 +112,7 @@ func (c *CloudRouter) HandleMe(t *testing.T, isAuditLogEnabled bool) http.Handle
 				FirstName:  "Muwei",
 				ResourceId: "u-44ddd",
 			},
-			Accounts:     environments,
+			Accounts:     environmentList,
 			Organization: org,
 		})
 		require.NoError(t, err)
@@ -162,59 +169,8 @@ func handleLoginRealm(t *testing.T) http.HandlerFunc {
 	}
 }
 
-// Handler for: "/api/accounts/{id}"
-func (c *CloudRouter) HandleEnvironment(t *testing.T) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		envId := vars["id"]
-		if env := isValidEnvironmentId(environments, envId); env != nil {
-			switch r.Method {
-			case http.MethodGet: // called by `environment use`
-				b, err := ccstructs.MarshalJSONToBytes(&ccloudv1.GetAccountReply{Account: env})
-				require.NoError(t, err)
-				_, err = io.WriteString(w, string(b))
-				require.NoError(t, err)
-			case http.MethodPut: // called by `environment create`
-				req := &ccloudv1.CreateAccountRequest{}
-				err := ccstructs.UnmarshalJSON(r.Body, req)
-				require.NoError(t, err)
-				env.Name = req.Account.Name
-				b, err := ccstructs.MarshalJSONToBytes(&ccloudv1.CreateAccountReply{Account: env})
-				require.NoError(t, err)
-				_, err = io.WriteString(w, string(b))
-				require.NoError(t, err)
-			}
-		} else {
-			// env not found
-			w.WriteHeader(http.StatusNotFound)
-		}
-	}
-}
-
-// Handler for: "/api/accounts" Post
-func (c *CloudRouter) HandleEnvironments(t *testing.T) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodPost {
-			req := &ccloudv1.CreateAccountRequest{}
-			err := ccstructs.UnmarshalJSON(r.Body, req)
-			require.NoError(t, err)
-			account := &ccloudv1.Account{
-				Id:             "a-5555",
-				Name:           req.Account.Name,
-				OrganizationId: 0,
-			}
-			b, err := ccstructs.MarshalJSONToBytes(&ccloudv1.CreateAccountReply{
-				Account: account,
-			})
-			require.NoError(t, err)
-			_, err = io.WriteString(w, string(b))
-			require.NoError(t, err)
-		}
-	}
-}
-
 // Handler for: "/api/organizations/{id}/payment_info"
-func (c *CloudRouter) HandlePaymentInfo(t *testing.T) http.HandlerFunc {
+func handlePaymentInfo(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodPost: // admin payment update
@@ -246,7 +202,7 @@ func (c *CloudRouter) HandlePaymentInfo(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/api/service_accounts"
-func (c *CloudRouter) HandleServiceAccounts(t *testing.T) http.HandlerFunc {
+func handleServiceAccounts(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
@@ -275,7 +231,7 @@ func (c *CloudRouter) HandleServiceAccounts(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/api/service_accounts/{id}"
-func (c *CloudRouter) HandleServiceAccount(t *testing.T) http.HandlerFunc {
+func handleServiceAccount(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		idStr := mux.Vars(r)["id"]
 		id, err := strconv.ParseInt(idStr, 10, 32)
@@ -299,7 +255,7 @@ func (c *CloudRouter) HandleServiceAccount(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "api/env_metadata"
-func (c *CloudRouter) HandleEnvMetadata(t *testing.T) http.HandlerFunc {
+func handleEnvMetadata(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		clouds := []*ccloudv1.CloudMetadata{
 			{
@@ -356,7 +312,7 @@ func (c *CloudRouter) HandleEnvMetadata(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/api/users"
-func (c *CloudRouter) HandleUsers(t *testing.T) http.HandlerFunc {
+func handleUsers(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			users := []*ccloudv1.User{
@@ -400,9 +356,8 @@ func (c *CloudRouter) HandleUsers(t *testing.T) http.HandlerFunc {
 }
 
 // Handler for: "/api/metadata/security/v2alpha1/authenticate"
-func (c CloudRouter) HandleV2Authenticate(t *testing.T) http.HandlerFunc {
+func handleV2Authenticate(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/json")
 		reply := &mds.AuthenticationResponse{
 			AuthToken: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1NjE2NjA4NTcsImV4cCI6MjUzMzg2MDM4NDU3LCJhdWQiOiJ3d3cuZXhhbXBsZS5jb20iLCJzdWIiOiJqcm9ja2V0QGV4YW1wbGUuY29tIn0.G6IgrFm5i0mN7Lz9tkZQ2tZvuZ2U7HKnvxMuZAooPmE",
 			TokenType: "dunno",
@@ -415,25 +370,8 @@ func (c CloudRouter) HandleV2Authenticate(t *testing.T) http.HandlerFunc {
 	}
 }
 
-// Handler for: "/api/signup"
-func (c *CloudRouter) HandleSignup(t *testing.T) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		req := &ccloudv1.SignupRequest{}
-		err := ccstructs.UnmarshalJSON(r.Body, req)
-		require.NoError(t, err)
-		require.NotEmpty(t, req.Organization.Name)
-		require.NotEmpty(t, req.User)
-		require.NotEmpty(t, req.Credentials)
-		signupReply := &ccloudv1.SignupReply{Organization: &ccloudv1.Organization{}}
-		reply, err := ccstructs.MarshalJSONToBytes(signupReply)
-		require.NoError(t, err)
-		_, err = io.WriteString(w, string(reply))
-		require.NoError(t, err)
-	}
-}
-
 // Handler for: "/ldapi/sdk/eval/{env}/users/{user}"
-func (c *CloudRouter) HandleLaunchDarkly(t *testing.T) http.HandlerFunc {
+func handleLaunchDarkly(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		ldUserData, err := base64.StdEncoding.DecodeString(vars["user"])
@@ -442,7 +380,6 @@ func (c *CloudRouter) HandleLaunchDarkly(t *testing.T) http.HandlerFunc {
 		ldUser := lduser.User{}
 		require.NoError(t, json.Unmarshal(ldUserData, &ldUser))
 
-		w.Header().Set("Content-Type", "application/json")
 		flags := map[string]any{
 			"testBool":                               true,
 			"testString":                             "string",

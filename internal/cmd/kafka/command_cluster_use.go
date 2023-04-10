@@ -41,6 +41,6 @@ func (c *clusterCommand) use(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	output.ErrPrintf(errors.UseKafkaClusterMsg, clusterID, c.Context.GetEnvironment().GetId())
+	output.ErrPrintf(errors.UseKafkaClusterMsg, clusterID, c.Context.GetCurrentEnvironment())
 	return nil
 }

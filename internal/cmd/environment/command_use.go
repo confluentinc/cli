@@ -1,17 +1,11 @@
 package environment
 
 import (
-	"context"
-	"fmt"
-
 	"github.com/spf13/cobra"
-
-	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *command) newUseCommand() *cobra.Command {
@@ -30,16 +24,17 @@ func (c *command) newUseCommand() *cobra.Command {
 }
 
 func (c *command) use(cmd *cobra.Command, args []string) error {
-	environment, err := c.Client.Account.Get(context.Background(), &ccloudv1.Account{Id: args[0]})
-	if err != nil {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.EnvNotFoundErrorMsg, args[0]), fmt.Sprintf(errors.OrgResourceNotFoundSuggestions, resource.Environment))
-	}
-	c.Context.UseEnvironment(environment)
+	id := args[0]
 
+	if _, err := c.V2Client.GetOrgEnvironment(id); err != nil {
+		return errors.NewErrorWithSuggestions(err.Error(), "List available environments with `confluent environment list`.")
+	}
+
+	c.Context.SetCurrentEnvironment(id)
 	if err := c.Config.Save(); err != nil {
-		return errors.Wrap(err, errors.EnvSwitchErrorMsg)
+		return err
 	}
 
-	output.Printf("Using environment \"%s\".\n", args[0])
+	output.Printf("Using environment \"%s\".\n", id)
 	return nil
 }

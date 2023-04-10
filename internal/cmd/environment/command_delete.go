@@ -21,6 +21,7 @@ func (c *command) newDeleteCommand() *cobra.Command {
 		RunE:              c.delete,
 	}
 
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddForceFlag(cmd)
 
 	return cmd
@@ -29,28 +30,31 @@ func (c *command) newDeleteCommand() *cobra.Command {
 func (c *command) delete(cmd *cobra.Command, args []string) error {
 	id := args[0]
 
-	environment, httpResp, err := c.V2Client.GetOrgEnvironment(id)
+	environment, err := c.V2Client.GetOrgEnvironment(id)
 	if err != nil {
-		return errors.CatchOrgV2ResourceNotFoundError(err, resource.Environment, httpResp)
+		return errors.NewErrorWithSuggestions(err.Error(), "List available environments with `confluent environment list`.")
 	}
 
-	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.Environment, id, *environment.DisplayName)
-	if _, err := form.ConfirmDeletion(cmd, promptMsg, *environment.DisplayName); err != nil {
+	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.Environment, id, environment.GetDisplayName())
+	if _, err := form.ConfirmDeletion(cmd, promptMsg, environment.GetDisplayName()); err != nil {
 		return err
 	}
 
-	httpResp, err = c.V2Client.DeleteOrgEnvironment(id)
-	if err != nil {
-		return errors.CatchOrgV2ResourceNotFoundError(err, resource.Environment, httpResp)
+	if err := c.V2Client.DeleteOrgEnvironment(id); err != nil {
+		return err
 	}
 
 	output.ErrPrintf(errors.DeletedResourceMsg, resource.Environment, id)
-	if id == c.EnvironmentId() {
-		c.Context.UseEnvironment(nil)
 
+	if id == c.Context.GetCurrentEnvironment() {
+		c.Context.SetCurrentEnvironment("")
 		if err := c.Config.Save(); err != nil {
-			return errors.Wrap(err, errors.EnvSwitchErrorMsg)
+			return err
 		}
 	}
+
+	c.Context.DeleteEnvironment(id)
+	_ = c.Config.Save()
+
 	return nil
 }

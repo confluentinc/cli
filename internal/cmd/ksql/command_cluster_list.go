@@ -23,7 +23,12 @@ func (c *ksqlCommand) newListCommand() *cobra.Command {
 }
 
 func (c *ksqlCommand) list(cmd *cobra.Command, _ []string) error {
-	clusters, err := c.V2Client.ListKsqlClusters(c.EnvironmentId())
+	environmentId, err := c.EnvironmentId()
+	if err != nil {
+		return err
+	}
+
+	clusters, err := c.V2Client.ListKsqlClusters(environmentId)
 	if err != nil {
 		return err
 	}

@@ -48,6 +48,10 @@ func (c *clusterCommand) validArgs(cmd *cobra.Command, args []string) []string {
 		return nil
 	}
 
+	return c.validArgsMultiple(cmd, args)
+}
+
+func (c *clusterCommand) validArgsMultiple(cmd *cobra.Command, args []string) []string {
 	if err := c.PersistentPreRunE(cmd, args); err != nil {
 		return nil
 	}
@@ -76,5 +80,10 @@ func (c *clusterCommand) fetchConnectors() (map[string]connectv1.ConnectV1Connec
 		return nil, err
 	}
 
-	return c.V2Client.ListConnectorsWithExpansions(c.EnvironmentId(), kafkaCluster.ID, "id,info")
+	environmentId, err := c.EnvironmentId()
+	if err != nil {
+		return nil, err
+	}
+
+	return c.V2Client.ListConnectorsWithExpansions(environmentId, kafkaCluster.ID, "id,info")
 }

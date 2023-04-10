@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -25,7 +24,7 @@ func AddApiKeyFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {
 			return nil
 		}
 
-		return AutocompleteApiKeys(c.EnvironmentId(), c.V2Client)
+		return AutocompleteApiKeys(c.V2Client)
 	})
 }
 
@@ -33,7 +32,7 @@ func AddApiSecretFlag(cmd *cobra.Command) {
 	cmd.Flags().String("api-secret", "", "API key secret.")
 }
 
-func AutocompleteApiKeys(environment string, client *ccloudv2.Client) []string {
+func AutocompleteApiKeys(client *ccloudv2.Client) []string {
 	apiKeys, err := client.ListApiKeys("", "")
 	if err != nil {
 		return nil
@@ -50,7 +49,7 @@ func AutocompleteApiKeys(environment string, client *ccloudv2.Client) []string {
 }
 
 func AddAvailabilityFlag(cmd *cobra.Command) {
-	cmd.Flags().String("availability", kafka.Availabilities[0], fmt.Sprintf("Specify the availability of the cluster as %s.", utils.ArrayToCommaDelimitedString(kafka.Availabilities)))
+	cmd.Flags().String("availability", kafka.Availabilities[0], fmt.Sprintf("Specify the availability of the cluster as %s.", utils.ArrayToCommaDelimitedString(kafka.Availabilities, "or")))
 	RegisterFlagCompletionFunc(cmd, output.FlagName, func(_ *cobra.Command, _ []string) []string { return kafka.Availabilities })
 }
 
@@ -80,7 +79,7 @@ func AutocompleteByokKeyIds(client *ccloudv2.Client) []string {
 }
 
 func AddByokProviderFlag(cmd *cobra.Command) {
-	cmd.Flags().String("provider", "", fmt.Sprintf("Specify the provider as %s.", utils.ArrayToCommaDelimitedString([]string{"aws", "azure"})))
+	cmd.Flags().String("provider", "", fmt.Sprintf("Specify the provider as %s.", utils.ArrayToCommaDelimitedString([]string{"aws", "azure"}, "or")))
 
 	RegisterFlagCompletionFunc(cmd, "provider", func(_ *cobra.Command, _ []string) []string {
 		return []string{"aws", "azure"}
@@ -88,7 +87,7 @@ func AddByokProviderFlag(cmd *cobra.Command) {
 }
 
 func AddByokStateFlag(cmd *cobra.Command) {
-	cmd.Flags().String("state", "", fmt.Sprintf("Specify the state as %s.", utils.ArrayToCommaDelimitedString([]string{"in-use", "available"})))
+	cmd.Flags().String("state", "", fmt.Sprintf("Specify the state as %s.", utils.ArrayToCommaDelimitedString([]string{"in-use", "available"}, "or")))
 
 	RegisterFlagCompletionFunc(cmd, "state", func(_ *cobra.Command, _ []string) []string {
 		return []string{"in-use", "available"}
@@ -96,7 +95,7 @@ func AddByokStateFlag(cmd *cobra.Command) {
 }
 
 func AddCloudFlag(cmd *cobra.Command) {
-	cmd.Flags().String("cloud", "", fmt.Sprintf("Specify the cloud provider as %s.", utils.ArrayToCommaDelimitedString(kafka.Clouds)))
+	cmd.Flags().String("cloud", "", fmt.Sprintf("Specify the cloud provider as %s.", utils.ArrayToCommaDelimitedString(kafka.Clouds, "or")))
 	RegisterFlagCompletionFunc(cmd, "cloud", func(_ *cobra.Command, _ []string) []string { return kafka.Clouds })
 }
 
@@ -107,7 +106,11 @@ func AddClusterFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {
 			return nil
 		}
 
-		return AutocompleteClusters(c.EnvironmentId(), c.V2Client)
+		environmentId, err := c.EnvironmentId()
+		if err != nil {
+			return nil
+		}
+		return AutocompleteClusters(environmentId, c.V2Client)
 	})
 }
 
@@ -176,11 +179,11 @@ func AutocompleteEnvironments(v1Client *ccloudv1.Client, v2Client *ccloudv2.Clie
 	}
 
 	if auditLog := v1.GetAuditLog(ctx.Context); auditLog != nil {
-		auditLogAccount, err := v1Client.Account.Get(context.Background(), &ccloudv1.Account{Id: auditLog.GetAccountId()})
+		environment, err := v2Client.GetOrgEnvironment(auditLog.GetAccountId())
 		if err != nil {
 			return nil
 		}
-		suggestions = append(suggestions, fmt.Sprintf("%s\t%s", auditLog.GetAccountId(), auditLogAccount.GetName()))
+		suggestions = append(suggestions, fmt.Sprintf("%s\t%s", auditLog.GetAccountId(), environment.GetDisplayName()))
 	}
 
 	return suggestions
@@ -197,7 +200,11 @@ func AddKsqlClusterFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {
 			return nil
 		}
 
-		return autocompleteKSQLClusters(c.EnvironmentId(), c.V2Client)
+		environmentId, err := c.EnvironmentId()
+		if err != nil {
+			return nil
+		}
+		return autocompleteKSQLClusters(environmentId, c.V2Client)
 	})
 }
 
@@ -242,7 +249,7 @@ func AddOutputFlag(cmd *cobra.Command) {
 }
 
 func AddOutputFlagWithDefaultValue(cmd *cobra.Command, defaultValue string) {
-	cmd.Flags().StringP(output.FlagName, "o", defaultValue, fmt.Sprintf("Specify the output format as %s.", utils.ArrayToCommaDelimitedString(output.ValidFlagValues)))
+	cmd.Flags().StringP(output.FlagName, "o", defaultValue, fmt.Sprintf("Specify the output format as %s.", utils.ArrayToCommaDelimitedString(output.ValidFlagValues, "or")))
 
 	RegisterFlagCompletionFunc(cmd, output.FlagName, func(_ *cobra.Command, _ []string) []string {
 		return output.ValidFlagValues
@@ -332,7 +339,7 @@ func autocompleteRegions(client *ccloudv1.Client, cloud string) []string {
 
 func AddSchemaTypeFlag(cmd *cobra.Command) {
 	arr := []string{"avro", "json", "protobuf"}
-	str := utils.ArrayToCommaDelimitedString(arr)
+	str := utils.ArrayToCommaDelimitedString(arr, "or")
 
 	cmd.Flags().String("type", "", fmt.Sprintf("Specify the schema type as %s.", str))
 
@@ -368,13 +375,13 @@ func AutocompleteServiceAccounts(client *ccloudv2.Client) []string {
 }
 
 func AddTypeFlag(cmd *cobra.Command) {
-	cmd.Flags().String("type", kafka.Types[0], fmt.Sprintf("Specify the type of the Kafka cluster as %s.", utils.ArrayToCommaDelimitedString(kafka.Types)))
+	cmd.Flags().String("type", kafka.Types[0], fmt.Sprintf("Specify the type of the Kafka cluster as %s.", utils.ArrayToCommaDelimitedString(kafka.Types, "or")))
 	RegisterFlagCompletionFunc(cmd, output.FlagName, func(_ *cobra.Command, _ []string) []string { return kafka.Types })
 }
 
 func AddValueFormatFlag(cmd *cobra.Command) {
 	arr := []string{"string", "avro", "jsonschema", "protobuf"}
-	str := utils.ArrayToCommaDelimitedString(arr)
+	str := utils.ArrayToCommaDelimitedString(arr, "or")
 
 	cmd.Flags().String("value-format", "string", fmt.Sprintf("Format of message value as %s. Note that schema references are not supported for avro.", str))
 

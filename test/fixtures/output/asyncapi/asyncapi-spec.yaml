@@ -21,8 +21,7 @@ channels:
       kafka:
         x-configs:
           cleanup.policy: delete
-          delete.retention.ms: 8.64e+07
-          confluent.value.schema.validation: "true"
+          delete.retention.ms: "86400000"
     x-messageCompatibility: FORWARD
 components:
   messages:

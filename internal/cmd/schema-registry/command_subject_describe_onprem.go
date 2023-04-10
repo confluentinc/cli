@@ -7,7 +7,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
 func (c *command) newSubjectDescribeCommandOnPrem() *cobra.Command {
@@ -20,7 +19,7 @@ func (c *command) newSubjectDescribeCommandOnPrem() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Retrieve all versions registered under subject "payments" and its compatibility level.`,
-				Code: fmt.Sprintf("%s schema-registry subject describe payments %s", version.CLIName, OnPremAuthenticationMsg),
+				Code: fmt.Sprintf("confluent schema-registry subject describe payments %s", OnPremAuthenticationMsg),
 			},
 		),
 	}

@@ -7,7 +7,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 func (c *command) newSchemaDescribeCommandOnPrem() *cobra.Command {
@@ -21,11 +20,11 @@ func (c *command) newSchemaDescribeCommandOnPrem() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Describe the schema string by schema ID.",
-				Code: fmt.Sprintf("%s schema-registry schema describe 1337 %s", pversion.CLIName, OnPremAuthenticationMsg),
+				Code: fmt.Sprintf("confluent schema-registry schema describe 1337 %s", OnPremAuthenticationMsg),
 			},
 			examples.Example{
 				Text: "Describe the schema string by both subject and version.",
-				Code: fmt.Sprintf("%s schema-registry schema describe --subject payments --version latest %s", pversion.CLIName, OnPremAuthenticationMsg),
+				Code: fmt.Sprintf("confluent schema-registry schema describe --subject payments --version latest %s", OnPremAuthenticationMsg),
 			},
 		),
 	}

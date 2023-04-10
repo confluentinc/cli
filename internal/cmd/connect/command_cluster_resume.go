@@ -16,7 +16,7 @@ func (c *clusterCommand) newResumeCommand() *cobra.Command {
 		Use:               "resume <id-1> [id-2] ... [id-N]",
 		Short:             "Resume connectors.",
 		Args:              cobra.MinimumNArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgsMultiple),
 		RunE:              c.resume,
 		Annotations:       map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		Example: examples.BuildExampleString(
@@ -40,7 +40,12 @@ func (c *clusterCommand) resume(_ *cobra.Command, args []string) error {
 		return err
 	}
 
-	connectorsByName, err := c.V2Client.ListConnectorsWithExpansions(c.EnvironmentId(), kafkaCluster.ID, "id,info")
+	environmentId, err := c.EnvironmentId()
+	if err != nil {
+		return err
+	}
+
+	connectorsByName, err := c.V2Client.ListConnectorsWithExpansions(environmentId, kafkaCluster.ID, "id,info")
 	if err != nil {
 		return err
 	}
@@ -56,7 +61,7 @@ func (c *clusterCommand) resume(_ *cobra.Command, args []string) error {
 			return errors.Errorf(errors.UnknownConnectorIdErrorMsg, id)
 		}
 
-		if err := c.V2Client.ResumeConnector(connector.Info.GetName(), c.EnvironmentId(), kafkaCluster.ID); err != nil {
+		if err := c.V2Client.ResumeConnector(connector.Info.GetName(), environmentId, kafkaCluster.ID); err != nil {
 			return err
 		}
 

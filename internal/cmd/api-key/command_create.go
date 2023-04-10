@@ -56,7 +56,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired(resourceFlagName)
+	cobra.CheckErr(cmd.MarkFlagRequired(resourceFlagName))
 
 	return cmd
 }

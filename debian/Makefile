@@ -55,13 +55,13 @@ install: apply-patches
 	cp packaging/confluent.sh $(DESTDIR)$(BINPATH)/confluent
 	chmod 755 $(DESTDIR)$(BINPATH)/confluent
 
-	cd $(DESTDIR)$(LIBPATH) ; \
+	cd $(DESTDIR)$(LIBPATH); \
 	for dir in darwin_amd64 darwin_arm64 linux_amd64 windows_amd64; do \
-		mkdir -p $${dir} ; \
-		ext=""; if [[ $${dir} =~ windows_.+ ]]; then ext=".exe"; fi ; \
-		filepath=$${dir}/confluent$${ext} ; \
-		curl -f -s https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/binaries/$(CLI_VERSION)/confluent_$(CLI_VERSION)_$${dir}$${ext} -o $${filepath} ; \
-		chmod 755 $${filepath} ; \
+		mkdir -p $${dir}; \
+		ext=""; if [[ $${dir} =~ windows_.+ ]]; then ext=".exe"; fi; \
+		filepath=$${dir}/confluent$${ext}; \
+		curl -f -s https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/binaries/$(CLI_VERSION)/confluent_$(CLI_VERSION)_$${dir}$${ext} -o $${filepath}; \
+		chmod 755 $${filepath}; \
 	done
 
 	cp LICENSE $(DESTDIR)$(DOCPATH)/COPYRIGHT

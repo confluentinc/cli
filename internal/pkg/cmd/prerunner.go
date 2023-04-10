@@ -166,12 +166,11 @@ func (c *AuthenticatedCLICommand) AuthToken() string {
 	return c.Context.GetAuthToken()
 }
 
-func (c *AuthenticatedCLICommand) EnvironmentId() string {
-	if c.Context.GetEnvironment() == nil {
-		noEnvSuggestions := errors.ComposeSuggestionsMessage("This issue may occur if this user has no valid role bindings. Contact an Organization Admin to create a role binding for this user.")
-		output.ErrPrintln(errors.EnvNotSetErrorMsg + noEnvSuggestions)
+func (c *AuthenticatedCLICommand) EnvironmentId() (string, error) {
+	if id := c.Context.GetCurrentEnvironment(); id != "" {
+		return id, nil
 	}
-	return c.Context.GetEnvironment().GetId()
+	return "", errors.NewErrorWithSuggestions(errors.NoEnvironmentFoundErrorMsg, errors.NoEnvironmentFoundSuggestions)
 }
 
 func (h *HasAPIKeyCLICommand) AddCommand(cmd *cobra.Command) {
@@ -399,7 +398,7 @@ func (r *PreRun) ccloudAutoLogin(netrcMachineName string) error {
 
 	log.CliLogger.Debug(errors.AutoLoginMsg)
 	log.CliLogger.Debugf(errors.LoggedInAsMsgWithOrg, credentials.Username, currentOrg.ResourceId, currentOrg.Name)
-	log.CliLogger.Debugf(errors.LoggedInUsingEnvMsg, currentEnv.GetId(), currentEnv.GetName())
+	log.CliLogger.Debugf(errors.LoggedInUsingEnvMsg, currentEnv)
 
 	return nil
 }
@@ -457,7 +456,11 @@ func (r *PreRun) setCCloudClient(c *AuthenticatedCLICommand) error {
 		if err != nil {
 			return nil, err
 		}
-		cluster, httpResp, err := c.V2Client.DescribeKafkaCluster(lkc, c.EnvironmentId())
+		environmentId, err := c.EnvironmentId()
+		if err != nil {
+			return nil, err
+		}
+		cluster, httpResp, err := c.V2Client.DescribeKafkaCluster(lkc, environmentId)
 		if err != nil {
 			return nil, errors.CatchKafkaNotFoundError(err, lkc, httpResp)
 		}
@@ -834,6 +837,12 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(*cobra.Command, []
 		var clusterId string
 		switch ctx.Credential.CredentialType {
 		case v1.APIKey:
+			if cmd.Flags().Changed("cluster") {
+				output.ErrPrintln("WARNING: The `--cluster` flag is ignored when using API key credentials.")
+			}
+			if cmd.Flags().Changed("environment") {
+				output.ErrPrintln("WARNING: The `--environment` flag is ignored when using API key credentials.")
+			}
 			clusterId = r.getClusterIdForAPIKeyCredential(ctx)
 		case v1.Username:
 			unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")

@@ -1,7 +1,6 @@
 package schemaregistry
 
 import (
-	"fmt"
 	"os"
 	"strings"
 
@@ -13,7 +12,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 type outputStruct struct {
@@ -29,7 +27,7 @@ func (c *command) newSchemaCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Register a new schema.",
-				Code: fmt.Sprintf("%s schema-registry schema create --subject payments --schema payments.avro --type avro", pversion.CLIName),
+				Code: "confluent schema-registry schema create --subject payments --schema payments.avro --type avro",
 			},
 			examples.Example{
 				Text: "Where `schemafilepath` may include these contents:",
@@ -62,8 +60,11 @@ func (c *command) newSchemaCreateCommand() *cobra.Command {
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired("schema")
-	_ = cmd.MarkFlagRequired("subject")
+	cobra.CheckErr(cmd.MarkFlagFilename("schema", "avsc", "json", "proto"))
+	cobra.CheckErr(cmd.MarkFlagFilename("references", "json"))
+
+	cobra.CheckErr(cmd.MarkFlagRequired("schema"))
+	cobra.CheckErr(cmd.MarkFlagRequired("subject"))
 
 	return cmd
 }

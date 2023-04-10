@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"regexp"
 	"time"
 
 	"github.com/dghubble/sling"
@@ -258,19 +257,8 @@ func (ld *launchDarklyManager) contextToLDUser(ctx *dynamicconfig.DynamicContext
 		setCustomAttribute(custom, "org.resource_id", ldvalue.String(id))
 	}
 	// environment (account) info
-	if id := ctx.GetEnvironment().GetId(); id != "" {
+	if id := ctx.GetCurrentEnvironment(); id != "" {
 		setCustomAttribute(custom, "environment.id", ldvalue.String(id))
-	}
-	// cluster info
-	cluster, _ := ctx.GetKafkaClusterForCommand()
-	if cluster != nil {
-		if cluster.ID != "" {
-			setCustomAttribute(custom, "cluster.id", ldvalue.String(cluster.ID))
-		}
-		if cluster.Bootstrap != "" {
-			physicalClusterId := parsePkcFromBootstrap(cluster.Bootstrap)
-			setCustomAttribute(custom, "cluster.physicalClusterId", ldvalue.String(physicalClusterId))
-		}
 	}
 	customValueMap := custom.Build()
 	if customValueMap.Count() > 0 {
@@ -284,11 +272,6 @@ func setCustomAttribute(custom ldvalue.ValueMapBuilder, key string, value ldvalu
 		panic(fmt.Sprintf(errors.UnsupportedCustomAttributeErrorMsg, key))
 	}
 	custom.Set(key, value)
-}
-
-func parsePkcFromBootstrap(bootstrap string) string {
-	r := regexp.MustCompile("pkc-([a-z0-9]+)")
-	return r.FindString(bootstrap)
 }
 
 func writeFlagsToConfig(ctx *dynamicconfig.DynamicContext, key string, vals map[string]any, user lduser.User, client v1.LaunchDarklyClient) {

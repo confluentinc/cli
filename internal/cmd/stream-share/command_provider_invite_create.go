@@ -33,10 +33,10 @@ func (c *command) newCreateEmailInviteCommand() *cobra.Command {
 	cmd.Flags().StringSlice("schema-registry-subjects", []string{}, "A comma-separated list of Schema Registry subjects.")
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired("email")
-	_ = cmd.MarkFlagRequired("topic")
-	_ = cmd.MarkFlagRequired("environment")
-	_ = cmd.MarkFlagRequired("cluster")
+	cobra.CheckErr(cmd.MarkFlagRequired("email"))
+	cobra.CheckErr(cmd.MarkFlagRequired("topic"))
+	cobra.CheckErr(cmd.MarkFlagRequired("environment"))
+	cobra.CheckErr(cmd.MarkFlagRequired("cluster"))
 
 	return cmd
 }
