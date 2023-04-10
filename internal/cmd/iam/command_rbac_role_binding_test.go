@@ -20,7 +20,7 @@ type RoleBindingTestSuite struct {
 
 func (suite *RoleBindingTestSuite) SetupSuite() {
 	suite.conf = v1.AuthenticatedCloudConfigMock()
-	v1.AddEnvironmentToConfigMock(suite.conf, env123, env123)
+	v1.AddEnvironmentToConfigMock(suite.conf, env123)
 }
 
 func TestParseAndValidateResourcePattern_Prefixed(t *testing.T) {

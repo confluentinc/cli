@@ -15,7 +15,6 @@ import (
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
-	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 )
 
 var (
@@ -353,22 +352,4 @@ func isRoleBindingMatch(rolebinding mdsv2.IamV2RoleBinding, principal, roleName,
 		return false
 	}
 	return true
-}
-
-func isValidEnvironmentId(environments []*ccloudv1.Account, reqEnvId string) *ccloudv1.Account {
-	for _, env := range environments {
-		if reqEnvId == env.Id {
-			return env
-		}
-	}
-	return nil
-}
-
-func isValidOrgEnvironmentId(environments []*orgv2.OrgV2Environment, reqEnvId string) *orgv2.OrgV2Environment {
-	for _, env := range environments {
-		if reqEnvId == *env.Id {
-			return env
-		}
-	}
-	return nil
 }
