@@ -6,7 +6,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 type out struct {
@@ -31,9 +30,9 @@ func (c *command) newDescribeCommand() *cobra.Command {
 }
 
 func (c *command) describe(cmd *cobra.Command, args []string) error {
-	environment, httpResp, err := c.V2Client.GetOrgEnvironment(args[0])
+	environment, err := c.V2Client.GetOrgEnvironment(args[0])
 	if err != nil {
-		return errors.CatchOrgV2ResourceNotFoundError(err, resource.Environment, httpResp)
+		return errors.NewErrorWithSuggestions(err.Error(), "List available environments with `confluent environment list`.")
 	}
 
 	table := output.NewTable(cmd)

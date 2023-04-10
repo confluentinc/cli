@@ -169,57 +169,6 @@ func handleLoginRealm(t *testing.T) http.HandlerFunc {
 	}
 }
 
-// Handler for: "/api/accounts/{id}"
-func handleEnvironment(t *testing.T) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		envId := vars["id"]
-		if env := isValidEnvironmentId(environments, envId); env != nil {
-			switch r.Method {
-			case http.MethodGet: // called by `environment use`
-				b, err := ccstructs.MarshalJSONToBytes(&ccloudv1.GetAccountReply{Account: env})
-				require.NoError(t, err)
-				_, err = io.WriteString(w, string(b))
-				require.NoError(t, err)
-			case http.MethodPut: // called by `environment create`
-				req := &ccloudv1.CreateAccountRequest{}
-				err := ccstructs.UnmarshalJSON(r.Body, req)
-				require.NoError(t, err)
-				env.Name = req.Account.Name
-				b, err := ccstructs.MarshalJSONToBytes(&ccloudv1.CreateAccountReply{Account: env})
-				require.NoError(t, err)
-				_, err = io.WriteString(w, string(b))
-				require.NoError(t, err)
-			}
-		} else {
-			// env not found
-			w.WriteHeader(http.StatusNotFound)
-		}
-	}
-}
-
-// Handler for: "/api/accounts" Post
-func handleEnvironments(t *testing.T) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodPost {
-			req := &ccloudv1.CreateAccountRequest{}
-			err := ccstructs.UnmarshalJSON(r.Body, req)
-			require.NoError(t, err)
-
-			createAccountReply := &ccloudv1.CreateAccountReply{
-				Account: &ccloudv1.Account{
-					Id:   "a-5555",
-					Name: req.Account.Name,
-				},
-			}
-			b, err := ccstructs.MarshalJSONToBytes(createAccountReply)
-			require.NoError(t, err)
-			_, err = io.WriteString(w, string(b))
-			require.NoError(t, err)
-		}
-	}
-}
-
 // Handler for: "/api/organizations/{id}/payment_info"
 func handlePaymentInfo(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

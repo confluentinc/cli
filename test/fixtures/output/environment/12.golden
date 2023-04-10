@@ -1,4 +1,4 @@
-Error: environment not found or access forbidden: 403 Forbidden
+Error: 404 Not Found
 
 Suggestions:
     List available environments with `confluent environment list`.

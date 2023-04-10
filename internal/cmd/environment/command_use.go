@@ -1,17 +1,11 @@
 package environment
 
 import (
-	"context"
-	"fmt"
-
 	"github.com/spf13/cobra"
-
-	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *command) newUseCommand() *cobra.Command {
@@ -31,8 +25,8 @@ func (c *command) newUseCommand() *cobra.Command {
 func (c *command) use(cmd *cobra.Command, args []string) error {
 	id := args[0]
 
-	if _, err := c.Client.Account.Get(context.Background(), &ccloudv1.Account{Id: id}); err != nil {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.EnvNotFoundErrorMsg, id), fmt.Sprintf(errors.OrgResourceNotFoundSuggestions, resource.Environment))
+	if _, err := c.V2Client.GetOrgEnvironment(id); err != nil {
+		return errors.NewErrorWithSuggestions(err.Error(), "List available environments with `confluent environment list`.")
 	}
 
 	c.Context.SetCurrentEnvironment(id)

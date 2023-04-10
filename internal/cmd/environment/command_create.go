@@ -1,11 +1,9 @@
 package environment
 
 import (
-	"context"
-
 	"github.com/spf13/cobra"
 
-	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -26,12 +24,8 @@ func (c *command) newCreateCommand() *cobra.Command {
 }
 
 func (c *command) create(cmd *cobra.Command, args []string) error {
-	account := &ccloudv1.Account{
-		Name:           args[0],
-		OrganizationId: c.Context.GetOrganization().GetId(),
-	}
-
-	environment, err := c.Client.Account.Create(context.Background(), account)
+	environment := orgv2.OrgV2Environment{DisplayName: orgv2.PtrString(args[0])}
+	environment, err := c.V2Client.CreateOrgEnvironment(environment)
 	if err != nil {
 		return err
 	}
@@ -40,7 +34,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	table.Add(&out{
 		IsCurrent: environment.GetId() == c.Context.GetCurrentEnvironment(),
 		Id:        environment.GetId(),
-		Name:      environment.GetName(),
+		Name:      environment.GetDisplayName(),
 	})
 	if err := table.Print(); err != nil {
 		return err
