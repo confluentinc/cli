@@ -29,7 +29,12 @@ func (c *command) newStatementDeleteCommand() *cobra.Command {
 }
 
 func (c *command) statementDelete(cmd *cobra.Command, args []string) error {
-	statement, err := c.V2Client.GetStatement(c.EnvironmentId(), args[0])
+	environment, err := c.EnvironmentId()
+	if err != nil {
+		return err
+	}
+
+	statement, err := c.V2Client.GetStatement(environment, args[0])
 	if err != nil {
 		return err
 	}
@@ -39,7 +44,7 @@ func (c *command) statementDelete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if err := c.V2Client.DeleteStatement(c.EnvironmentId(), args[0]); err != nil {
+	if err := c.V2Client.DeleteStatement(environment, args[0]); err != nil {
 		return err
 	}
 

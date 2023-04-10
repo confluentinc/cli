@@ -21,7 +21,12 @@ func (c *command) newStatementListCommand() *cobra.Command {
 }
 
 func (c *command) statementList(cmd *cobra.Command, args []string) error {
-	statements, err := c.V2Client.ListStatements(c.EnvironmentId())
+	environment, err := c.EnvironmentId()
+	if err != nil {
+		return err
+	}
+
+	statements, err := c.V2Client.ListStatements(environment)
 	if err != nil {
 		return err
 	}

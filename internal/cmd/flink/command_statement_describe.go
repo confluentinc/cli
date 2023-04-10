@@ -21,7 +21,12 @@ func (c *command) newStatementDescribeCommand() *cobra.Command {
 }
 
 func (c *command) statementDescribe(cmd *cobra.Command, args []string) error {
-	statement, err := c.V2Client.GetStatement(c.EnvironmentId(), args[0])
+	environment, err := c.EnvironmentId()
+	if err != nil {
+		return err
+	}
+
+	statement, err := c.V2Client.GetStatement(environment, args[0])
 	if err != nil {
 		return err
 	}

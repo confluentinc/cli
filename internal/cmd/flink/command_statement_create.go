@@ -36,6 +36,11 @@ func (c *command) newStatementCreateCommand() *cobra.Command {
 }
 
 func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
+	environment, err := c.EnvironmentId()
+	if err != nil {
+		return err
+	}
+
 	name, err := cmd.Flags().GetString("name")
 	if err != nil {
 		return err
@@ -63,7 +68,7 @@ func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
 		ComputePoolId: flinkgatewayv1alpha1.PtrString(computePool),
 	}}
 
-	statement, err = c.V2Client.CreateStatement(c.EnvironmentId(), statement)
+	statement, err = c.V2Client.CreateStatement(environment, statement)
 	if err != nil {
 		return err
 	}
