@@ -10,8 +10,7 @@ import (
 func (c *aclCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List Kafka ACLs for a resource.",
-		Long:  "List Kafka ACLs for a resource. This command only works with centralized ACLs.",
+		Short: "List centralized ACLs for a resource.",
 		Args:  cobra.NoArgs,
 		RunE:  c.list,
 		Example: examples.BuildExampleString(
@@ -20,7 +19,7 @@ func (c *aclCommand) newListCommand() *cobra.Command {
 				Code: "confluent iam acl list --kafka-cluster <kafka-cluster-id>",
 			},
 			examples.Example{
-				Text: `List all the ACLs for the specified cluster that include "allow" permissions for the user Jane:`,
+				Text: `List all the ACLs for the specified cluster that include "allow" permissions for user "Jane":`,
 				Code: "confluent iam acl list --kafka-cluster <kafka-cluster-id> --allow --principal User:Jane",
 			},
 		),
@@ -30,7 +29,7 @@ func (c *aclCommand) newListCommand() *cobra.Command {
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired("kafka-cluster")
+	cobra.CheckErr(cmd.MarkFlagRequired("kafka-cluster"))
 
 	return cmd
 }

@@ -8,8 +8,6 @@ import (
 
 	"github.com/client9/gospell"
 
-	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
-
 	pcmd "github.com/confluentinc/cli/internal/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/linter"
@@ -83,10 +81,10 @@ var flagRules = []linter.FlagRule{
 		linter.RequireFlagNameLength(2, 20),
 		linter.ExcludeFlag(
 			"azure-subscription-id",
-			"destination-bootstrap-server",
-			"destination-cluster",
 			"destination-api-key",
 			"destination-api-secret",
+			"destination-bootstrap-server",
+			"destination-cluster",
 			"enable-systest-events",
 			"max-partition-memory-bytes",
 			"message-send-max-retries",
@@ -99,6 +97,7 @@ var flagRules = []linter.FlagRule{
 			"schema-registry-subjects",
 			"skip-message-on-error",
 			"source-bootstrap-server",
+			"update-schema-registry",
 		),
 	),
 	linter.FlagFilter(
@@ -106,17 +105,18 @@ var flagRules = []linter.FlagRule{
 		linter.ExcludeFlag(
 			"aws-account-id",
 			"azure-subscription-id",
-			"gcp-project-id",
 			"ca-cert-path",
 			"client-cert-path",
 			"client-key-path",
-			"destination-bootstrap-server",
 			"destination-api-key",
 			"destination-api-secret",
+			"destination-bootstrap-server",
 			"enable-systest-events",
-			"log-exclude-rows",
+			"gcp-project-id",
 			"if-not-exists",
+			"kafka-api-key",
 			"local-secrets-file",
+			"log-exclude-rows",
 			"max-block-ms",
 			"max-memory-bytes",
 			"max-partition-memory-bytes",
@@ -137,7 +137,7 @@ var flagRules = []linter.FlagRule{
 			"source-api-key",
 			"source-api-secret",
 			"source-bootstrap-server",
-			"kafka-api-key",
+			"update-schema-registry",
 		),
 	),
 }
@@ -296,7 +296,7 @@ func main() {
 	// Lint all three subsets of commands: no context, cloud, and on-prem
 	configs := []*v1.Config{
 		{CurrentContext: "No Context"},
-		{CurrentContext: "Cloud", Contexts: map[string]*v1.Context{"Cloud": {PlatformName: "https://confluent.cloud", State: &v1.ContextState{Auth: &v1.AuthConfig{Organization: &ccloudv1.Organization{}}}}}},
+		{CurrentContext: "Cloud", Contexts: map[string]*v1.Context{"Cloud": {PlatformName: "https://confluent.cloud"}}},
 		{CurrentContext: "On-Prem", Contexts: map[string]*v1.Context{"On-Prem": {PlatformName: "https://example.com"}}},
 	}
 

@@ -1,40 +1,25 @@
 .PHONY: release-notes
 release-notes:
-	$(eval TMP_BASE=$(shell mktemp -d))
-	$(eval CONFLUENT_DOCS_DIR=$(TMP_BASE)/docs-confluent-cli)
+	$(eval DIR=$(shell mktemp -d))
+	$(eval DOCS_CONFLUENT_CLI=$(DIR)/docs-confluent-cli)
 
-	git clone git@github.com:confluentinc/docs-confluent-cli.git $(CONFLUENT_DOCS_DIR) && \
-	go run -ldflags '-X main.releaseNotesPath=$(CONFLUENT_DOCS_DIR)' cmd/releasenotes/main.go && \
-	bump=$$(cat release-notes/bump.txt) && \
+	git clone git@github.com:confluentinc/docs-confluent-cli.git $(DOCS_CONFLUENT_CLI) && \
+	go run -ldflags '-X main.releaseNotesPath=$(DOCS_CONFLUENT_CLI)' cmd/releasenotes/main.go && \
 	version=$$(cat release-notes/version.txt) && \
-	cd $(CONFLUENT_DOCS_DIR) && \
-	if [ "$${bump}" = "patch" ]; then \
+	cd $(DOCS_CONFLUENT_CLI) && \
+	if [[ $${version} != *.0 ]]; then \
 		git checkout $$(echo $${version} | sed $(STAGING_BRANCH_REGEX)); \
 	fi && \
-	git checkout -b cli-v$${version}-release-notes && \
+	git checkout -b publish-docs-v$${version} && \
 	cd - && \
-	CONFLUENT_DOCS_DIR=$(CONFLUENT_DOCS_DIR) make publish-release-notes-to-docs-repo && \
-	rm -rf $(TMP_BASE)
-
-.PHONY: publish-release-notes-to-docs-repo
-publish-release-notes-to-docs-repo:
-	bump=$$(cat release-notes/bump.txt) && \
-	version=$$(cat release-notes/version.txt) && \
-	cp release-notes/release-notes.rst $(CONFLUENT_DOCS_DIR) && \
-	cd $(CONFLUENT_DOCS_DIR) && \
+	cp release-notes/release-notes.rst $(DOCS_CONFLUENT_CLI) && \
+	cd $(DOCS_CONFLUENT_CLI) && \
 	git commit -am "New release notes for v$${version}" && \
-	git push -u origin cli-v$${version}-release-notes && \
-	base="master" && \
-	if [ "$${bump}" = "patch" ]; then \
-		base=$$(echo $${version} | sed $(STAGING_BRANCH_REGEX)); \
-	fi && \
-	gh pr create -B $${base} --title "New release notes for v$${version}" --body ""
+	$(call dry-run,git push -u origin publish-docs-v$${version})
+
+	rm -rf $(DIR)
 
 .PHONY: publish-release-notes-to-s3
 publish-release-notes-to-s3:
 	$(aws-authenticate); \
-    aws s3 cp release-notes/latest-release.rst $(S3_BUCKET_PATH)/confluent-cli/release-notes/$$(cat release-notes/version.txt)/release-notes.rst --acl public-read
-
-.PHONY: clean-release-notes
-clean-release-notes:
-	rm -r release-notes/
+    $(call dry-run,aws s3 cp release-notes/latest-release.rst $(S3_BUCKET_PATH)/confluent-cli/release-notes/$$(cat release-notes/version.txt)/release-notes.rst --acl public-read)

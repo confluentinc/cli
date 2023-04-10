@@ -32,7 +32,7 @@ func newUnregisterCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.Flags().String("cluster-name", "", "Cluster Name.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
-	_ = cmd.MarkFlagRequired("cluster-name")
+	cobra.CheckErr(cmd.MarkFlagRequired("cluster-name"))
 
 	return cmd
 }

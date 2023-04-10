@@ -14,8 +14,7 @@ import (
 func (c *aclCommand) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
-		Short: "Create a Kafka ACL.",
-		Long:  "Create a Kafka ACL. This command only works with centralized ACLs.",
+		Short: "Create a centralized ACL.",
 		Args:  cobra.NoArgs,
 		RunE:  c.create,
 		Example: examples.BuildExampleString(
@@ -25,7 +24,7 @@ func (c *aclCommand) newCreateCommand() *cobra.Command {
 			},
 			examples.Example{
 				Text: `Create an ACL that grants the specified user "write" permission on all topics in the specified Kafka cluster:`,
-				Code: "confluent iam acl create --allow --principal User:User1 --operation write --topic '*' --kafka-cluster <kafka-cluster-id>",
+				Code: `confluent iam acl create --allow --principal User:User1 --operation write --topic "*" --kafka-cluster <kafka-cluster-id>`,
 			},
 			examples.Example{
 				Text: `Create an ACL that assigns a group "read" access to all topics that use the specified prefix in the specified Kafka cluster:`,
@@ -37,9 +36,9 @@ func (c *aclCommand) newCreateCommand() *cobra.Command {
 	cmd.Flags().AddFlagSet(aclFlags())
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
-	_ = cmd.MarkFlagRequired("kafka-cluster")
-	_ = cmd.MarkFlagRequired("principal")
-	_ = cmd.MarkFlagRequired("operation")
+	cobra.CheckErr(cmd.MarkFlagRequired("kafka-cluster"))
+	cobra.CheckErr(cmd.MarkFlagRequired("principal"))
+	cobra.CheckErr(cmd.MarkFlagRequired("operation"))
 
 	return cmd
 }

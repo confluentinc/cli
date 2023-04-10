@@ -23,24 +23,28 @@ func (c *Client) orgApiContext() context.Context {
 	return context.WithValue(context.Background(), orgv2.ContextAccessToken, c.AuthToken)
 }
 
-func (c *Client) CreateOrgEnvironment(environment orgv2.OrgV2Environment) (orgv2.OrgV2Environment, *http.Response, error) {
+func (c *Client) CreateOrgEnvironment(environment orgv2.OrgV2Environment) (orgv2.OrgV2Environment, error) {
 	req := c.OrgClient.EnvironmentsOrgV2Api.CreateOrgV2Environment(c.orgApiContext()).OrgV2Environment(environment)
-	return c.OrgClient.EnvironmentsOrgV2Api.CreateOrgV2EnvironmentExecute(req)
+	res, r, err := c.OrgClient.EnvironmentsOrgV2Api.CreateOrgV2EnvironmentExecute(req)
+	return res, errors.CatchCCloudV2Error(err, r)
 }
 
-func (c *Client) GetOrgEnvironment(envId string) (orgv2.OrgV2Environment, *http.Response, error) {
+func (c *Client) GetOrgEnvironment(envId string) (orgv2.OrgV2Environment, error) {
 	req := c.OrgClient.EnvironmentsOrgV2Api.GetOrgV2Environment(c.orgApiContext(), envId)
-	return c.OrgClient.EnvironmentsOrgV2Api.GetOrgV2EnvironmentExecute(req)
+	res, r, err := c.OrgClient.EnvironmentsOrgV2Api.GetOrgV2EnvironmentExecute(req)
+	return res, errors.CatchCCloudV2Error(err, r)
 }
 
-func (c *Client) UpdateOrgEnvironment(envId string, updateEnvironment orgv2.OrgV2Environment) (orgv2.OrgV2Environment, *http.Response, error) {
+func (c *Client) UpdateOrgEnvironment(envId string, updateEnvironment orgv2.OrgV2Environment) (orgv2.OrgV2Environment, error) {
 	req := c.OrgClient.EnvironmentsOrgV2Api.UpdateOrgV2Environment(c.orgApiContext(), envId).OrgV2Environment(updateEnvironment)
-	return c.OrgClient.EnvironmentsOrgV2Api.UpdateOrgV2EnvironmentExecute(req)
+	res, r, err := c.OrgClient.EnvironmentsOrgV2Api.UpdateOrgV2EnvironmentExecute(req)
+	return res, errors.CatchCCloudV2Error(err, r)
 }
 
-func (c *Client) DeleteOrgEnvironment(envId string) (*http.Response, error) {
+func (c *Client) DeleteOrgEnvironment(envId string) error {
 	req := c.OrgClient.EnvironmentsOrgV2Api.DeleteOrgV2Environment(c.orgApiContext(), envId)
-	return c.OrgClient.EnvironmentsOrgV2Api.DeleteOrgV2EnvironmentExecute(req)
+	r, err := c.OrgClient.EnvironmentsOrgV2Api.DeleteOrgV2EnvironmentExecute(req)
+	return errors.CatchCCloudV2Error(err, r)
 }
 
 func (c *Client) ListOrgEnvironments() ([]orgv2.OrgV2Environment, error) {

@@ -7,7 +7,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 func (c *command) newCompatibilityValidateCommandOnPrem() *cobra.Command {
@@ -20,8 +19,8 @@ func (c *command) newCompatibilityValidateCommandOnPrem() *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Validate the compatibility of schema `payments` against the latest version of subject `records`.",
-				Code: fmt.Sprintf("%s schema-registry compatibility validate --schema payments.avro --type avro --subject records --version latest %s", pversion.CLIName, OnPremAuthenticationMsg),
+				Text: `Validate the compatibility of schema "payments" against the latest version of subject "records".`,
+				Code: fmt.Sprintf("confluent schema-registry compatibility validate --schema payments.avro --type avro --subject records --version latest %s", OnPremAuthenticationMsg),
 			},
 		),
 	}
@@ -34,6 +33,9 @@ func (c *command) newCompatibilityValidateCommandOnPrem() *cobra.Command {
 	cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
+
+	cobra.CheckErr(cmd.MarkFlagFilename("schema", "avsc", "json", "proto"))
+	cobra.CheckErr(cmd.MarkFlagFilename("references", "json"))
 
 	return cmd
 }

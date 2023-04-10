@@ -36,6 +36,7 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *c
 	cmd.AddCommand(c.newCompatibilityCommand(cfg))
 	cmd.AddCommand(c.newConfigCommand(cfg))
 	cmd.AddCommand(c.newExporterCommand(cfg))
+	cmd.AddCommand(c.newRegionCommand())
 	cmd.AddCommand(c.newSchemaCommand(cfg))
 	cmd.AddCommand(c.newSubjectCommand(cfg))
 
@@ -44,7 +45,7 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *c
 
 func addCompatibilityFlag(cmd *cobra.Command) {
 	compatibilities := []string{"backward", "backward_transitive", "forward", "forward_transitive", "full", "full_transitive", "none"}
-	cmd.Flags().String("compatibility", "", fmt.Sprintf("Can be %s.", utils.ArrayToCommaDelimitedString(compatibilities)))
+	cmd.Flags().String("compatibility", "", fmt.Sprintf("Can be %s.", utils.ArrayToCommaDelimitedString(compatibilities, "or")))
 	pcmd.RegisterFlagCompletionFunc(cmd, "compatibility", func(_ *cobra.Command, _ []string) []string {
 		return compatibilities
 	})
@@ -52,6 +53,6 @@ func addCompatibilityFlag(cmd *cobra.Command) {
 
 func addModeFlag(cmd *cobra.Command) {
 	modes := []string{"readwrite", "readonly", "import"}
-	cmd.Flags().String("mode", "", fmt.Sprintf("Can be %s.", utils.ArrayToCommaDelimitedString(modes)))
+	cmd.Flags().String("mode", "", fmt.Sprintf("Can be %s.", utils.ArrayToCommaDelimitedString(modes, "or")))
 	pcmd.RegisterFlagCompletionFunc(cmd, "mode", func(_ *cobra.Command, _ []string) []string { return modes })
 }

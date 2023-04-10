@@ -112,7 +112,6 @@ func (s *CLITestSuite) runIntegrationTest(tt CLITest) {
 		isAuditLogDisabled := os.Getenv("DISABLE_AUDIT_LOG") == "true"
 		if isAuditLogDisabled != tt.disableAuditLog {
 			s.TestBackend.Close()
-			s.TestBackend = nil
 			os.Setenv("DISABLE_AUDIT_LOG", strconv.FormatBool(tt.disableAuditLog))
 			s.TestBackend = testserver.StartTestBackend(t, tt.disableAuditLog)
 		}
@@ -225,10 +224,10 @@ func runCommand(t *testing.T, binaryName string, env []string, argString string,
 	cmd.Stdin = strings.NewReader(input)
 
 	out, err := cmd.CombinedOutput()
-	require.Equal(t, exitCode, cmd.ProcessState.ExitCode())
 	if exitCode == 0 {
-		require.NoError(t, err)
+		require.NoError(t, err, string(out))
 	}
+	require.Equal(t, exitCode, cmd.ProcessState.ExitCode())
 
 	return string(out)
 }

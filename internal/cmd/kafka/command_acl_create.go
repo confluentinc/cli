@@ -44,7 +44,7 @@ func (c *aclCommand) newCreateCommand() *cobra.Command {
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired("operations")
+	cobra.CheckErr(cmd.MarkFlagRequired("operations"))
 
 	return cmd
 }

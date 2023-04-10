@@ -31,9 +31,9 @@ func (c *command) newCreateCommand() *cobra.Command {
 	cmd.Flags().String("api-secret", "", "API secret. Can be specified as plaintext, as a file, starting with '@', or as stdin, starting with '-'.")
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired("bootstrap")
-	_ = cmd.MarkFlagRequired("api-key")
-	_ = cmd.MarkFlagRequired("api-secret")
+	cobra.CheckErr(cmd.MarkFlagRequired("bootstrap"))
+	cobra.CheckErr(cmd.MarkFlagRequired("api-key"))
+	cobra.CheckErr(cmd.MarkFlagRequired("api-secret"))
 
 	return cmd
 }

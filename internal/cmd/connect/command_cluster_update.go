@@ -25,11 +25,18 @@ func (c *clusterCommand) newUpdateCommand() *cobra.Command {
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 
+	cobra.CheckErr(cmd.MarkFlagFilename("config-file", "json"))
+
 	return cmd
 }
 
 func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
+	if err != nil {
+		return err
+	}
+
+	environmentId, err := c.EnvironmentId()
 	if err != nil {
 		return err
 	}
@@ -45,7 +52,7 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		connector, err := c.V2Client.GetConnectorExpansionById(args[0], c.EnvironmentId(), kafkaCluster.ID)
+		connector, err := c.V2Client.GetConnectorExpansionById(args[0], environmentId, kafkaCluster.ID)
 		if err != nil {
 			return err
 		}
@@ -64,12 +71,12 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 		return errors.New("one of `--config` or `--config-file` must be specified")
 	}
 
-	connector, err := c.V2Client.GetConnectorExpansionById(args[0], c.EnvironmentId(), kafkaCluster.ID)
+	connector, err := c.V2Client.GetConnectorExpansionById(args[0], environmentId, kafkaCluster.ID)
 	if err != nil {
 		return err
 	}
 
-	if _, err := c.V2Client.CreateOrUpdateConnectorConfig(connector.Info.GetName(), c.EnvironmentId(), kafkaCluster.ID, *userConfigs); err != nil {
+	if _, err := c.V2Client.CreateOrUpdateConnectorConfig(connector.Info.GetName(), environmentId, kafkaCluster.ID, *userConfigs); err != nil {
 		return err
 	}
 

@@ -2,7 +2,6 @@ package schemaregistry
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
@@ -13,7 +12,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
 type versionOut struct {
@@ -29,7 +27,7 @@ func (c *command) newSubjectDescribeCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Retrieve all versions registered under subject "payments" and its compatibility level.`,
-				Code: fmt.Sprintf("%s schema-registry subject describe payments", version.CLIName),
+				Code: "confluent schema-registry subject describe payments",
 			},
 		),
 	}

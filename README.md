@@ -1,6 +1,6 @@
 # Confluent CLI
 
-[![Release](release.svg)](https://github.com/confluentinc/cli/releases/latest)
+[![Release](https://img.shields.io/github/v/release/confluentinc/cli)](https://github.com/confluentinc/cli/releases/latest)
 [![Build Status](https://confluent-cli.semaphoreci.com/badges/cli/branches/main.svg?style=shields&key=d7163855-c2f5-40b9-a5d7-ff9e3e2214fe)](https://confluent-cli.semaphoreci.com/projects/cli)
 
 The Confluent CLI lets you manage your Confluent Cloud and Confluent Platform deployments, right from the terminal.
@@ -21,6 +21,12 @@ When opening a PR, please make sure to follow our [contribution guide](CONTRIBUT
 
 The Confluent CLI is available to install for macOS, Linux, and Windows.
 
+#### Scripted installation
+
+Install the latest version of `confluent` to `/usr/local/bin`:
+
+    curl -sL https://raw.githubusercontent.com/confluentinc/cli/main/install.sh | sh -s -- -b /usr/local/bin
+
 #### macOS
 
 1. Download the latest macOS tar.gz file for your architecture type from https://github.com/confluentinc/cli/releases/latest
@@ -39,9 +45,25 @@ The Confluent CLI is available to install for macOS, Linux, and Windows.
 2. Unzip `confluent_X.X.X_windows_amd64.zip`
 3. Run `confluent.exe`
 
+#### Docker
+
+Pull the latest version:
+
+    docker pull confluentinc/confluent-cli:latest
+
+Pull `confluent` v3.6.0:
+
+    docker pull confluentinc/confluent-cli:3.6.0
+
 #### Install a Specific Version
 
-See the [releases page](https://github.com/confluentinc/cli/releases) for a complete list of versions available for download.
+Print a complete list of versions available for download:
+
+    curl -sL https://raw.githubusercontent.com/confluentinc/cli/main/install.sh | sh -s -- -l
+
+Install `confluent` v3.6.0 to `/usr/local/bin`:
+
+    curl -sL https://raw.githubusercontent.com/confluentinc/cli/main/install.sh | sh -s -- -b /usr/local/bin 3.6.0
 
 ### Building from Source
 

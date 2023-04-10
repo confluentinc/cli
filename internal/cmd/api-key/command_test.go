@@ -132,7 +132,7 @@ func (suite *APITestSuite) SetupTest() {
 	suite.conf = v1.AuthenticatedCloudConfigMock()
 	ctx := suite.conf.Context()
 
-	srCluster := ctx.SchemaRegistryClusters[ctx.GetEnvironment().GetId()]
+	srCluster := ctx.SchemaRegistryClusters[ctx.GetCurrentEnvironment()]
 	srCluster.SrCredentials = &v1.APIKeyPair{Key: apiKeyVal, Secret: apiSecretVal}
 	cluster := ctx.KafkaClusterContext.GetActiveKafkaClusterConfig()
 	// Set up audit logs

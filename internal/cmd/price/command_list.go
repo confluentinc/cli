@@ -113,8 +113,8 @@ func (c *command) newListCommand() *cobra.Command {
 	cmd.Flags().Bool("legacy", false, "Show legacy cluster types.")
 	pcmd.AddOutputFlag(cmd)
 
-	_ = cmd.MarkFlagRequired("cloud")
-	_ = cmd.MarkFlagRequired("region")
+	cobra.CheckErr(cmd.MarkFlagRequired("cloud"))
+	cobra.CheckErr(cmd.MarkFlagRequired("region"))
 
 	pcmd.RegisterFlagCompletionFunc(cmd, "availability", func(_ *cobra.Command, _ []string) []string { return availabilities })
 	pcmd.RegisterFlagCompletionFunc(cmd, "cluster-type", func(_ *cobra.Command, _ []string) []string { return clusterTypes })

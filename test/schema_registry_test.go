@@ -255,6 +255,26 @@ func (s *CLITestSuite) TestSchemaRegistry() {
 			args:    fmt.Sprintf(`schema-registry exporter reset myexporter --api-key key --api-secret secret --environment %s`, testserver.SRApiEnvId),
 			fixture: "schema-registry/exporter/reset.golden",
 		},
+		{
+			args:    "schema-registry region --help",
+			fixture: "schema-registry/region/help.golden",
+		},
+		{
+			args:    "schema-registry region list",
+			fixture: "schema-registry/region/list-all.golden",
+		},
+		{
+			args:    "schema-registry region list -o json",
+			fixture: "schema-registry/region/list-all-json.golden",
+		},
+		{
+			args:    "schema-registry region list --cloud aws",
+			fixture: "schema-registry/region/list-filter-cloud.golden",
+		},
+		{
+			args:    "schema-registry region list --package advanced",
+			fixture: "schema-registry/region/list-filter-package.golden",
+		},
 	}
 
 	for _, tt := range tests {
