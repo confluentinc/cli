@@ -9,9 +9,9 @@ import (
 
 func (c *command) newComputePoolDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "describe <id>",
+		Use:   "describe [id]",
 		Short: "Describe a Flink compute pool.",
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.MaximumNArgs(1),
 		RunE:  c.describe,
 	}
 
@@ -22,15 +22,21 @@ func (c *command) newComputePoolDescribeCommand() *cobra.Command {
 }
 
 func (c *command) describe(cmd *cobra.Command, args []string) error {
-	computePool, err := c.V2Client.DescribeFlinkComputePool(args[0], c.EnvironmentId())
+	environmentId, err := c.EnvironmentId()
+	if err != nil {
+		return err
+	}
+
+	computePool, err := c.V2Client.DescribeFlinkComputePool(c.Context.GetCurrentFlinkComputePool(), environmentId)
 	if err != nil {
 		return err
 	}
 
 	table := output.NewTable(cmd)
 	table.Add(&computePoolOut{
-		Id:   computePool.GetId(),
-		Name: computePool.Spec.GetDisplayName(),
+		Current: computePool.GetId() == c.Context.GetCurrentFlinkComputePool(),
+		Id:      computePool.GetId(),
+		Name:    computePool.Spec.GetDisplayName(),
 	})
 	return table.Print()
 }

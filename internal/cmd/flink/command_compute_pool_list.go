@@ -30,7 +30,12 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	computePools, err := c.V2Client.ListFlinkComputePools(region, c.EnvironmentId())
+	environment, err := c.EnvironmentId()
+	if err != nil {
+		return err
+	}
+
+	computePools, err := c.V2Client.ListFlinkComputePools(region, environment)
 	if err != nil {
 		return err
 	}
@@ -38,8 +43,9 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 	list := output.NewList(cmd)
 	for _, computePool := range computePools {
 		list.Add(&computePoolOut{
-			Id:   computePool.GetId(),
-			Name: computePool.Spec.GetDisplayName(),
+			Current: computePool.GetId() == c.Context.GetCurrentFlinkComputePool(),
+			Id:      computePool.GetId(),
+			Name:    computePool.Spec.GetDisplayName(),
 		})
 	}
 	return list.Print()

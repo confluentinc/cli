@@ -19,8 +19,8 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 
 	c := &command{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
 
-	cmd.AddCommand(c.newComputePoolCommand(prerunner))
-	cmd.AddCommand(c.newRegionCommand(prerunner))
+	cmd.AddCommand(c.newComputePoolCommand())
+	cmd.AddCommand(c.newRegionCommand())
 
 	return cmd
 }

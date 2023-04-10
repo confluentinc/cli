@@ -4,7 +4,9 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *command) newComputePoolUseCommand() *cobra.Command {
@@ -16,18 +18,20 @@ func (c *command) newComputePoolUseCommand() *cobra.Command {
 		RunE:  c.use,
 	}
 
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
 
 func (c *command) use(cmd *cobra.Command, args []string) error {
-	context := c.Config.Contexts[c.Config.CurrentContext]
-	context.Environments[context.CurrentEnvironment].CurrentFlinkComputePool = args[0]
+	if err := c.Context.SetCurrentFlinkComputePool(args[0]); err != nil {
+		return err
+	}
 	if err := c.Config.Save(); err != nil {
 		return err
 	}
 
-	output.Printf("Using compute pool \"%s\".\n", args[0])
+	output.Printf(errors.UsingResourceMsg, resource.FlinkComputePool, args[0])
 	return nil
 }
