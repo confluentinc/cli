@@ -1,4 +1,4 @@
-Error: environment "non-existent-id" not found
+Error: 404 Not Found
 
 Suggestions:
     List available environments with `confluent environment list`.

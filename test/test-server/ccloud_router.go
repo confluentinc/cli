@@ -10,8 +10,6 @@ import (
 )
 
 var ccloudHandlers = []route{
-	{"/api/accounts", handleEnvironments},
-	{"/api/accounts/{id}", handleEnvironment},
 	{"/api/env_metadata", handleEnvMetadata},
 	{"/api/external_identities", handleExternalIdentities},
 	{"/api/growth/v1/free-trial-info", handleFreeTrialInfo},
