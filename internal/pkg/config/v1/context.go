@@ -18,6 +18,8 @@ type Context struct {
 	NetrcMachineName       string                            `json:"netrc_machine_name"`
 	PlatformName           string                            `json:"platform"`
 	CredentialName         string                            `json:"credential"`
+	CurrentEnvironment     string                            `json:"current_environment"`
+	Environments           map[string]*EnvironmentContext    `json:"environments"`
 	KafkaClusterContext    *KafkaClusterContext              `json:"kafka_cluster_context"`
 	SchemaRegistryClusters map[string]*SchemaRegistryCluster `json:"schema_registry_clusters"`
 	LastOrgId              string                            `json:"last_org_id"`
@@ -198,7 +200,12 @@ func (c *Context) GetEnvironment() *ccloudv1.Account {
 	return nil
 }
 
-func (c *Context) SetEnvironment(environment *ccloudv1.Account) {
+func (c *Context) UseEnvironment(environment *ccloudv1.Account) {
+	c.CurrentEnvironment = environment.GetId()
+	if _, ok := c.Environments[environment.GetId()]; !ok {
+		c.Environments[environment.GetId()] = NewEnvironmentContext()
+	}
+
 	if c.GetAuth() == nil {
 		c.SetAuth(new(AuthConfig))
 	}

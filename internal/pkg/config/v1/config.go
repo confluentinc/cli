@@ -82,9 +82,9 @@ type Config struct {
 	NoBrowser           bool                        `json:"no_browser"`
 	Platforms           map[string]*Platform        `json:"platforms,omitempty"`
 	Credentials         map[string]*Credential      `json:"credentials,omitempty"`
+	CurrentContext      string                      `json:"current_context"`
 	Contexts            map[string]*Context         `json:"contexts,omitempty"`
 	ContextStates       map[string]*ContextState    `json:"context_states,omitempty"`
-	CurrentContext      string                      `json:"current_context"`
 	AnonymousId         string                      `json:"anonymous_id,omitempty"`
 	SavedCredentials    map[string]*LoginCredential `json:"saved_credentials,omitempty"`
 

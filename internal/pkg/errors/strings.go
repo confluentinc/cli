@@ -3,7 +3,7 @@ package errors
 const (
 	// api-key command
 	StoredAPIKeyMsg = "Stored API secret for API key \"%s\".\n"
-	UseAPIKeyMsg    = "Set API Key \"%s\" as the active API key for \"%s\".\n"
+	UseAPIKeyMsg    = "Using API Key \"%s\".\n"
 
 	// auth commands
 	LoggedInAsMsg                 = "Logged in as \"%s\".\n"
@@ -30,9 +30,6 @@ const (
 	// connector commands
 	PausedConnectorMsg  = "Paused connector \"%s\".\n"
 	ResumedConnectorMsg = "Resumed connector \"%s\".\n"
-
-	// environment commands
-	UsingEnvMsg = "Now using \"%s\" as the default (active) environment.\n"
 
 	// kafka cluster commands
 	UseKafkaClusterMsg               = "Set Kafka cluster \"%s\" as the active cluster for environment \"%s\".\n"

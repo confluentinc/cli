@@ -17,7 +17,8 @@ import (
 func (c *command) newUseCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "use <id>",
-		Short:             "Switch to the specified Confluent Cloud environment.",
+		Short:             "Choose a Confluent Cloud environment to be used in subsequent commands.",
+		Long:              "Choose a Confluent Cloud environment to be used in subsequent commands which support passing an environment with the `--environment` flag.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.use,
@@ -29,18 +30,16 @@ func (c *command) newUseCommand() *cobra.Command {
 }
 
 func (c *command) use(cmd *cobra.Command, args []string) error {
-	id := args[0]
-
-	environment, err := c.Client.Account.Get(context.Background(), &ccloudv1.Account{Id: id})
+	environment, err := c.Client.Account.Get(context.Background(), &ccloudv1.Account{Id: args[0]})
 	if err != nil {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.EnvNotFoundErrorMsg, id), fmt.Sprintf(errors.OrgResourceNotFoundSuggestions, resource.Environment))
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.EnvNotFoundErrorMsg, args[0]), fmt.Sprintf(errors.OrgResourceNotFoundSuggestions, resource.Environment))
 	}
-	c.Context.SetEnvironment(environment)
+	c.Context.UseEnvironment(environment)
 
 	if err := c.Config.Save(); err != nil {
 		return errors.Wrap(err, errors.EnvSwitchErrorMsg)
 	}
 
-	output.Printf(errors.UsingEnvMsg, id)
+	output.Printf("Using environment \"%s\".\n", args[0])
 	return nil
 }
