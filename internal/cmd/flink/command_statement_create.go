@@ -8,7 +8,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/properties"
+	pproperties "github.com/confluentinc/cli/internal/pkg/properties"
 )
 
 func (c *command) newStatementCreateCommand() *cobra.Command {
@@ -51,29 +51,17 @@ func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	configMap, err := properties.ConfigFlagToMap(configs)
+	properties, err := pproperties.ConfigFlagToMap(configs)
 	if err != nil {
 		return err
 	}
 
-	properties := make([]flinkgatewayv1alpha1.SqlV1alpha1Property, len(configMap))
-	i := 0
-	for key, value := range configMap {
-		properties[i] = flinkgatewayv1alpha1.SqlV1alpha1Property{
-			Key:   flinkgatewayv1alpha1.PtrString(key),
-			Value: flinkgatewayv1alpha1.PtrString(value),
-		}
-		i++
-	}
-
-	statement := flinkgatewayv1alpha1.SqlV1alpha1Statement{
-		Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
-			StatementName: flinkgatewayv1alpha1.PtrString(name),
-			Statement:     flinkgatewayv1alpha1.PtrString(args[0]),
-			Properties:    &properties,
-			ComputePoolId: flinkgatewayv1alpha1.PtrString(computePool),
-		},
-	}
+	statement := flinkgatewayv1alpha1.SqlV1alpha1Statement{Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
+		StatementName: flinkgatewayv1alpha1.PtrString(name),
+		Statement:     flinkgatewayv1alpha1.PtrString(args[0]),
+		Properties:    &properties,
+		ComputePoolId: flinkgatewayv1alpha1.PtrString(computePool),
+	}}
 
 	statement, err = c.V2Client.CreateStatement(c.EnvironmentId(), statement)
 	if err != nil {
