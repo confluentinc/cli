@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -180,11 +179,11 @@ func AutocompleteEnvironments(v1Client *ccloudv1.Client, v2Client *ccloudv2.Clie
 	}
 
 	if auditLog := v1.GetAuditLog(ctx.Context); auditLog != nil {
-		auditLogAccount, err := v1Client.Account.Get(context.Background(), &ccloudv1.Account{Id: auditLog.GetAccountId()})
+		environment, err := v2Client.GetOrgEnvironment(auditLog.GetAccountId())
 		if err != nil {
 			return nil
 		}
-		suggestions = append(suggestions, fmt.Sprintf("%s\t%s", auditLog.GetAccountId(), auditLogAccount.GetName()))
+		suggestions = append(suggestions, fmt.Sprintf("%s\t%s", auditLog.GetAccountId(), environment.GetDisplayName()))
 	}
 
 	return suggestions
