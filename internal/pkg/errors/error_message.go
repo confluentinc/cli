@@ -125,10 +125,10 @@ const (
 	FetchConfigFileErrorMsg               = "failed to get config file: error code %d"
 	KafkaCredsValidationFailedErrorMsg    = "failed to validate Kafka API credential"
 	KafkaCredsValidationFailedSuggestions = "Verify that the correct Kafka API credential is used.\n" +
-		"If you are using the stored Kafka API credential, verify that the secret is correct. If incorrect, override with `confluent api-key store -f`.\n" +
+		"If you are using the stored Kafka API credential, verify that the secret is correct. If incorrect, override with `confluent api-key store --force`.\n" +
 		"If you are using the flags, verify that the correct Kafka API credential is passed to `--api-key` and `--api-secret`."
 	SRCredsValidationFailedErrorMsg    = "failed to validate Schema Registry API credential"
-	SRCredsValidationFailedSuggestions = "Verify that the correct Schema Registry API credential is passed to `--schema-registry-api-key` and --schema-registry-api-secret`."
+	SRCredsValidationFailedSuggestions = "Verify that the correct Schema Registry API credential is passed to `--schema-registry-api-key` and `--schema-registry-api-secret`."
 
 	// kafka cluster commands
 	ListTopicSuggestions                             = "To list topics for the cluster \"%s\", use `confluent kafka topic list --cluster %s`."
