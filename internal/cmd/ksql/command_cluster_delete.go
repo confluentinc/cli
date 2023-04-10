@@ -39,7 +39,7 @@ func (c *ksqlCommand) delete(cmd *cobra.Command, args []string) error {
 	id := args[0]
 	log.CliLogger.Debugf("Deleting ksqlDB cluster \"%v\".\n", id)
 
-	environmentId, err := c.EnvironmentId()
+	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}

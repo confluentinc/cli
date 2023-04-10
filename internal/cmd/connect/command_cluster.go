@@ -80,7 +80,7 @@ func (c *clusterCommand) fetchConnectors() (map[string]connectv1.ConnectV1Connec
 		return nil, err
 	}
 
-	environmentId, err := c.EnvironmentId()
+	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return nil, err
 	}

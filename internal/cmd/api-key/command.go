@@ -137,7 +137,7 @@ func (c *command) resolveResourceId(cmd *cobra.Command, v2Client *ccloudv2.Clien
 		clusterId = cluster.ID
 		apiKey = cluster.APIKey
 	case presource.KsqlCluster:
-		environmentId, err := c.EnvironmentId()
+		environmentId, err := c.Context.EnvironmentId()
 		if err != nil {
 			return "", "", "", err
 		}
