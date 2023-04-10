@@ -106,7 +106,7 @@ func AddClusterFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {
 			return nil
 		}
 
-		environmentId, err := c.EnvironmentId()
+		environmentId, err := c.Context.EnvironmentId()
 		if err != nil {
 			return nil
 		}
@@ -200,7 +200,7 @@ func AddKsqlClusterFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {
 			return nil
 		}
 
-		environmentId, err := c.EnvironmentId()
+		environmentId, err := c.Context.EnvironmentId()
 		if err != nil {
 			return nil
 		}

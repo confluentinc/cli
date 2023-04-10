@@ -23,7 +23,7 @@ func (c *ksqlCommand) newListCommand() *cobra.Command {
 }
 
 func (c *ksqlCommand) list(cmd *cobra.Command, _ []string) error {
-	environmentId, err := c.EnvironmentId()
+	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}

@@ -118,7 +118,11 @@ func (c *ksqlCommand) validArgs(cmd *cobra.Command, args []string) []string {
 		return nil
 	}
 
-	environmentId, _ := c.EnvironmentId()
+	environmentId, err := c.Context.EnvironmentId()
+	if err != nil {
+		return nil
+	}
+
 	return autocompleteClusters(environmentId, c.V2Client)
 }
 

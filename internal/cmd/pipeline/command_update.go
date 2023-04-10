@@ -138,7 +138,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		updatePipeline.Spec.SetActivationPrivilege(activationPrivilege)
 	}
 
-	environmentId, err := c.EnvironmentId()
+	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}

@@ -166,13 +166,6 @@ func (c *AuthenticatedCLICommand) AuthToken() string {
 	return c.Context.GetAuthToken()
 }
 
-func (c *AuthenticatedCLICommand) EnvironmentId() (string, error) {
-	if id := c.Context.GetCurrentEnvironment(); id != "" {
-		return id, nil
-	}
-	return "", errors.NewErrorWithSuggestions(errors.NoEnvironmentFoundErrorMsg, errors.NoEnvironmentFoundSuggestions)
-}
-
 func (h *HasAPIKeyCLICommand) AddCommand(cmd *cobra.Command) {
 	cmd.PersistentPreRunE = h.PersistentPreRunE
 	h.Command.AddCommand(cmd)
@@ -456,7 +449,7 @@ func (r *PreRun) setCCloudClient(c *AuthenticatedCLICommand) error {
 		if err != nil {
 			return nil, err
 		}
-		environmentId, err := c.EnvironmentId()
+		environmentId, err := c.Context.EnvironmentId()
 		if err != nil {
 			return nil, err
 		}
