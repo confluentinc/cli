@@ -34,7 +34,7 @@ func (c *ksqlCommand) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	list := output.NewList(cmd)
-	for _, cluster := range clusters.Data {
+	for _, cluster := range clusters {
 		list.Add(c.formatClusterForDisplayAndList(&cluster))
 	}
 	return list.Print()
