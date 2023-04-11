@@ -15,10 +15,11 @@ import (
 
 func (c *command) newUpdateCommand(enableSourceCode bool) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update <pipeline-id>",
-		Short: "Update an existing pipeline.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  c.update,
+		Use:               "update <pipeline-id>",
+		Short:             "Update an existing pipeline.",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		RunE:              c.update,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Request to update Stream Designer pipeline "pipe-12345", with new name and new description.`,

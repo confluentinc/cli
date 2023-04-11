@@ -27,6 +27,7 @@ var (
 		{Id: "not-595", Name: "other"},
 		{Id: "env-123", Name: "env123"},
 		{Id: SRApiEnvId, Name: "srUpdate"},
+		{Id: "env-987zy", Name: "confluent-audit-log"},
 	}
 	keyIndex      = int32(3)
 	resourceIdMap = map[int32]string{auditLogServiceAccountID: auditLogServiceAccountResourceID, serviceAccountID: serviceAccountResourceID}

@@ -29,6 +29,7 @@ func (s *CLITestSuite) TestEnvironment() {
 
 func (s *CLITestSuite) TestEnvironmentDescribe() {
 	tests := []CLITest{
+		{args: `__complete environment describe ""`, fixture: "environment/describe-autocomplete.golden"},
 		{args: "environment describe env-12345", fixture: "environment/describe.golden"},
 		{args: "environment describe env-12345 -o json", fixture: "environment/describe-json.golden"},
 	}
