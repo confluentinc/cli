@@ -8,16 +8,81 @@ import (
 	"github.com/rivo/tview"
 )
 
+type TableControllerInterface interface {
+	HandleCellEvent(event *tcell.EventKey) *tcell.EventKey
+	Borders()
+	AppInputCapture(event *tcell.EventKey) *tcell.EventKey
+	SetDataAndFocus(statementResult *StatementResult)
+	SetInputController(inputController InputControllerInterface)
+}
+
 type TableController struct {
 	table           *tview.Table
 	tableStyle      TableStyle
 	appController   ApplicationControllerInterface
-	InputController *InputController
+	InputController InputControllerInterface
 	store           StoreInterface
 }
 
 type TableStyle struct {
 	borders bool
+}
+
+func NewTableController(tableRef *tview.Table, store StoreInterface, appController ApplicationControllerInterface) TableControllerInterface {
+	controller := &TableController{
+		table:         tableRef,
+		store:         store,
+		appController: appController,
+	}
+	return controller
+}
+
+func (t *TableController) SetInputController(inputController InputControllerInterface) {
+	t.InputController = inputController
+}
+
+func (t *TableController) HandleCellEvent(event *tcell.EventKey) *tcell.EventKey {
+	if event.Key() == tcell.KeyEscape {
+		// Here we suspend outpude mode/tview aand run the interactive input again
+		t.appController.SuspendOutputMode(t.InputController.RunInteractiveInput)
+
+		return nil
+	}
+
+	return event
+}
+
+func (t *TableController) Borders() {
+	t.tableStyle.borders = !t.tableStyle.borders
+	t.table.SetBorders(t.tableStyle.borders)
+}
+
+// Function to handle shortcuts and keybindings for the whole app
+func (a *TableController) AppInputCapture(event *tcell.EventKey) *tcell.EventKey {
+
+	if event.Key() == tcell.KeyCtrlT {
+		a.Borders()
+		return nil
+		// TODO we have to actually go forward and backwards and not only go to the next mock
+	} else if event.Key() == tcell.KeyCtrlN || event.Key() == tcell.KeyCtrlP {
+		// We send select so we can get the next mock
+		data, err := a.store.ProcessStatement("select ;")
+		if err == nil {
+			a.setData(data)
+		}
+		return nil
+	} else if event.Key() == tcell.KeyCtrlC {
+		a.onCtrlC()
+		return nil
+	}
+	return event
+
+}
+
+// This function will be changed when we actually use tview
+func (a *TableController) SetDataAndFocus(statementResult *StatementResult) {
+	a.setData(statementResult)
+	a.focus()
 }
 
 func (t *TableController) setData(newData *StatementResult) {
@@ -52,22 +117,6 @@ func (t *TableController) setData(newData *StatementResult) {
 			t.table.SetCell(row+1, column, tableCell)
 		}
 	}
-}
-
-func (t *TableController) handleCellEvent(event *tcell.EventKey) *tcell.EventKey {
-	if event.Key() == tcell.KeyEscape {
-		// Here we suspend outpude mode/tview aand run the interactive input again
-		t.appController.SuspendOutputMode(t.InputController.RunInteractiveInput)
-
-		return nil
-	}
-
-	return event
-}
-
-func (t *TableController) borders() {
-	t.tableStyle.borders = !t.tableStyle.borders
-	t.table.SetBorders(t.tableStyle.borders)
 }
 
 func (t *TableController) selectRow() {
@@ -117,41 +166,4 @@ func (t *TableController) onCtrlC() {
 	clipboardValue := strings.Join(row, ", ")
 
 	clipboard.WriteAll(clipboardValue)
-}
-
-// Function to handle shortcuts and keybindings for the whole app
-func (a *TableController) appInputCapture(event *tcell.EventKey) *tcell.EventKey {
-
-	if event.Key() == tcell.KeyCtrlT {
-		a.borders()
-		return nil
-		// TODO we have to actually go forward and backwards and not only go to the next mock
-	} else if event.Key() == tcell.KeyCtrlN || event.Key() == tcell.KeyCtrlP {
-		// We send select so we can get the next mock
-		data, err := a.store.ProcessStatement("select ;")
-		if err == nil {
-			a.setData(data)
-		}
-		return nil
-	} else if event.Key() == tcell.KeyCtrlC {
-		a.onCtrlC()
-		return nil
-	}
-	return event
-
-}
-
-// This function will be changed when we actually use tview
-func (a *TableController) setDataAndFocus(statementResult *StatementResult) {
-	a.setData(statementResult)
-	a.focus()
-}
-
-func NewTableController(tableRef *tview.Table, store StoreInterface, appController ApplicationControllerInterface) *TableController {
-	controller := &TableController{
-		table:         tableRef,
-		store:         store,
-		appController: appController,
-	}
-	return controller
 }

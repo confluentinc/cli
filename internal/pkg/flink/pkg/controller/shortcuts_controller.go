@@ -8,9 +8,13 @@ import (
 	"github.com/rivo/tview"
 )
 
+type ShortcutsControllerInterface interface {
+	ShortcutHighlighted(added, removed, remaining []string)
+}
+
 type ShortcutsController struct {
 	appController   ApplicationControllerInterface
-	tableController *TableController
+	tableController TableControllerInterface
 	shortcuts       *tview.TextView
 }
 
@@ -29,20 +33,20 @@ var appShortcuts = []Shortcut{
 	{Key: tcell.KeyCtrlT, KeyText: "P", Text: "Prev Page"},
 }
 
-func (s *ShortcutsController) shortcutHighlighted(added, removed, remaining []string) {
+func (s *ShortcutsController) ShortcutHighlighted(added, removed, remaining []string) {
 	index, _ := strconv.Atoi(added[0])
 	switch appShortcuts[index].Text {
 	case "Toggle Display Mode":
-		s.tableController.borders()
+		s.tableController.Borders()
 	case "Quit":
 		s.appController.ExitApplication()
 	}
 }
 
-func NewShortcutsController(shortcutsRef *tview.TextView, appController ApplicationControllerInterface, tableController *TableController) ShortcutsController {
+func NewShortcutsController(shortcutsRef *tview.TextView, appController ApplicationControllerInterface, tableController TableControllerInterface) ShortcutsControllerInterface {
 	for index, shortcut := range appShortcuts {
 		fmt.Fprintf(shortcutsRef, `[[white]%s] ["%d"][darkcyan]%s[white][""]  `, shortcut.KeyText, index, shortcut.Text)
 	}
 
-	return ShortcutsController{shortcuts: shortcutsRef, appController: appController, tableController: tableController}
+	return &ShortcutsController{shortcuts: shortcutsRef, appController: appController, tableController: tableController}
 }

@@ -113,12 +113,12 @@ func StartApp(envId, orgResourceId, kafkaClusterId, computePoolId, authToken str
 	shortcutsController := NewShortcutsController(shortcuts, appController, tableController)
 
 	// Pass input controller to table controller - input and output view interact with each other and that it easier
-	tableController.InputController = &inputController
+	tableController.SetInputController(inputController)
 
 	// Event handlers
-	table.SetInputCapture(tableController.handleCellEvent)
-	app.SetInputCapture(tableController.appInputCapture)
-	shortcuts.SetHighlightedFunc(shortcutsController.shortcutHighlighted)
+	table.SetInputCapture(tableController.HandleCellEvent)
+	app.SetInputCapture(tableController.AppInputCapture)
+	shortcuts.SetHighlightedFunc(shortcutsController.ShortcutHighlighted)
 	interactiveOutput := components.InteractiveOutput(table, shortcuts)
 	rootLayout := components.RootLayout(interactiveOutput)
 

@@ -15,11 +15,17 @@ import (
 	"github.com/olekukonko/tablewriter"
 )
 
+type InputControllerInterface interface {
+	RunInteractiveInput()
+	Prompt() *prompt.Prompt
+	GetMaxCol() (int, error)
+}
+
 type InputController struct {
 	History         *History
 	appController   ApplicationControllerInterface
 	smartCompletion bool
-	table           *TableController
+	table           TableControllerInterface
 	p               *prompt.Prompt
 	store           StoreInterface
 }
@@ -51,7 +57,7 @@ func (c *InputController) RunInteractiveInput() {
 
 	// If output mode is TViewOutput we set the data to be displayed in the interactive table
 	if c.appController.GetOutputMode() == TViewOutput {
-		c.table.setDataAndFocus(statementResult)
+		c.table.SetDataAndFocus(statementResult)
 	}
 }
 
@@ -226,15 +232,16 @@ func (c *InputController) GetMaxCol() (int, error) {
 	return int(maxCol), nil
 }
 
-func NewInputController(t *TableController, a ApplicationControllerInterface, store StoreInterface, history *History) (c InputController) {
-	// Initialization
-	c.History = history
-	c.smartCompletion = true
-	c.table = t
-	c.appController = a
-	c.store = store
-	c.p = c.Prompt()
+func NewInputController(t TableControllerInterface, a ApplicationControllerInterface, store StoreInterface, history *History) (c InputControllerInterface) {
+	inputController := &InputController{
+		History:         history,
+		table:           t,
+		store:           store,
+		appController:   a,
+		smartCompletion: true,
+	}
+	inputController.p = inputController.Prompt()
 	components.PrintWelcomeHeader()
 
-	return c
+	return inputController
 }
