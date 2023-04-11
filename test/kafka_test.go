@@ -60,6 +60,8 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka region list --cloud aws", fixture: "kafka/10.golden"},
 		{args: "kafka region list --cloud azure", fixture: "kafka/11.golden"},
 
+		{args: `__complete kafka cluster describe ""`, fixture: "kafka/describe-autocomplete.golden"},
+
 		{args: "kafka cluster describe lkc-describe", fixture: "kafka/17.golden"},
 		{args: "kafka cluster describe lkc-describe -o json", fixture: "kafka/18.golden"},
 		{args: "kafka cluster describe lkc-describe -o yaml", fixture: "kafka/19.golden"},
@@ -106,6 +108,7 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka topic create topic-exist", login: "cloud", useKafka: "lkc-create-topic", fixture: "kafka/topic/create-dup-topic.golden", exitCode: 1},
 		{args: "kafka topic create topic-exceed-limit --partitions 9001", login: "cloud", useKafka: "lkc-create-topic", fixture: "kafka/topic/create-limit-topic.golden", exitCode: 1},
 
+		{args: `__complete kafka topic describe ""`, login: "cloud", useKafka: "lkc-describe-topic", fixture: "kafka/topic/describe-autocomplete.golden"},
 		{args: "kafka topic describe", login: "cloud", useKafka: "lkc-describe-topic", fixture: "kafka/topic/describe.golden", exitCode: 1},
 		{args: "kafka topic describe topic-exist", useKafka: "lkc-describe-topic", fixture: "kafka/topic/describe-success.golden"},
 		{args: "kafka topic describe topic-exist --output json", login: "cloud", useKafka: "lkc-describe-topic", fixture: "kafka/topic/describe-json-success.golden"},
