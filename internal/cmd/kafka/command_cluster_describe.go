@@ -11,6 +11,8 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
+	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 )
@@ -101,7 +103,7 @@ func (c *clusterCommand) outputKafkaClusterDescription(cmd *cobra.Command, clust
 	if getTopicCount {
 		topicCount, err := c.getTopicCountForKafkaCluster(cluster)
 		if err != nil { // topicCount is 0 when err != nil, and will be omitted by `omitempty`
-			output.ErrPrintln("WARNING: The CLI was unable to retrieve Kafka topics for this cluster. The topic count will be omitted.")
+		log.CliLogger.Infof(errors.OmitTopicCountMsg, err.Error())
 		}
 		out.TopicCount = topicCount
 	}
@@ -177,9 +179,9 @@ func (c *clusterCommand) getTopicCountForKafkaCluster(cluster *cmkv2.CmkV2Cluste
 		return 0, err
 	}
 
-	topics, _, err := kafkaREST.CloudClient.ListKafkaTopics(cluster.GetId())
+	topics, r, err := kafkaREST.CloudClient.ListKafkaTopics(cluster.GetId())
 	if err != nil {
-		return 0, err
+		return 0, kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, r)
 	}
 
 	return len(topics.Data), nil

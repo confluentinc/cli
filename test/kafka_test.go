@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 func (s *CLITestSuite) TestKafka() {
@@ -81,7 +83,7 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka cluster describe lkc-describe-infinite -o yaml", fixture: "kafka/43.golden"},
 
 		{args: "kafka cluster describe lkc-describe-dedicated-provisioning", fixture: "kafka/cluster-describe-dedicated-provisioning.golden"},
-		{args: "kafka cluster describe lkc-describe-topic-error", fixture: "kafka/cluster-describe-no-topic-count.golden"},
+		{args: "kafka cluster describe lkc-describe-topic-error -vv", contains: errors.OmitTopicCountMsg},
 
 		{args: "kafka cluster describe lkc-unknown", fixture: "kafka/48.golden", exitCode: 1},
 
