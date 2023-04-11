@@ -172,7 +172,7 @@ func (c *aclCommand) mapResourceIdToUserId(users []*ccloud.User) map[string]int3
 }
 
 func (c *aclCommand) provisioningClusterCheck(lkc string) error {
-	environmentId, err := c.EnvironmentId()
+	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}

@@ -58,7 +58,7 @@ func (c *pluginCommand) getPlugins() ([]connectv1.InlineResponse2002, error) {
 		return nil, err
 	}
 
-	environmentId, err := c.EnvironmentId()
+	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return nil, err
 	}

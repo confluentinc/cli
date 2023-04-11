@@ -44,7 +44,7 @@ func (c *command) deactivate(cmd *cobra.Command, args []string) error {
 		RetainedTopicNames: &retainedTopics,
 	}}
 
-	environmentId, err := c.EnvironmentId()
+	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}
