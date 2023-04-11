@@ -1,10 +1,16 @@
 package kafka
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
+
+	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 )
 
 const (
@@ -43,4 +49,49 @@ func newLinkCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	}
 
 	return cmd
+}
+
+func (c *linkCommand) validArgs(cmd *cobra.Command, args []string) []string {
+	if len(args) > 0 {
+		return nil
+	}
+
+	if err := c.PersistentPreRunE(cmd, args); err != nil {
+		return nil
+	}
+
+	return c.autocompleteLinks()
+}
+
+func (c *linkCommand) autocompleteLinks() []string {
+	links, err := c.getLinks()
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(links.Data))
+	for i, link := range links.Data {
+		description := fmt.Sprintf("%s: %s", link.GetSourceClusterId(), link.GetDestinationClusterId())
+		suggestions[i] = fmt.Sprintf("%s\t%s", link.GetLinkName(), description)
+	}
+	return suggestions
+}
+
+func (c *linkCommand) getLinks() (kafkarestv3.ListLinksResponseDataList, error) {
+	kafkaREST, err := c.GetKafkaREST()
+	if kafkaREST == nil {
+		if err != nil {
+			return kafkarestv3.ListLinksResponseDataList{}, err
+		}
+		return kafkarestv3.ListLinksResponseDataList{}, errors.New(errors.RestProxyNotAvailableMsg)
+	}
+
+	clusterId, err := getKafkaClusterLkcId(c.AuthenticatedStateFlagCommand)
+	if err != nil {
+		return kafkarestv3.ListLinksResponseDataList{}, err
+	}
+
+	listLinksRespDataList, httpResp, err := kafkaREST.CloudClient.ListKafkaLinks(clusterId)
+
+	return listLinksRespDataList, kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 }

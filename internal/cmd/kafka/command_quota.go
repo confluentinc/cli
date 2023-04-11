@@ -1,9 +1,11 @@
 package kafka
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
-	kafkaquotas "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
+	kafkaquotasv1 "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -42,7 +44,7 @@ type quotaOut struct {
 	Environment string `human:"Environment" serialized:"environment"`
 }
 
-func quotaToPrintable(quota kafkaquotas.KafkaQuotasV1ClientQuota, format output.Format) *quotaOut {
+func quotaToPrintable(quota kafkaquotasv1.KafkaQuotasV1ClientQuota, format output.Format) *quotaOut {
 	out := &quotaOut{
 		Id:          quota.GetId(),
 		DisplayName: quota.Spec.GetDisplayName(),
@@ -60,7 +62,7 @@ func quotaToPrintable(quota kafkaquotas.KafkaQuotasV1ClientQuota, format output.
 	return out
 }
 
-func principalsToString(principals []kafkaquotas.GlobalObjectReference) string {
+func principalsToString(principals []kafkaquotasv1.GlobalObjectReference) string {
 	principalStr := ""
 	for i, principal := range principals {
 		principalStr += principal.Id
@@ -69,4 +71,44 @@ func principalsToString(principals []kafkaquotas.GlobalObjectReference) string {
 		}
 	}
 	return principalStr
+}
+
+func (c *quotaCommand) validArgs(cmd *cobra.Command, args []string) []string {
+	if len(args) > 0 {
+		return nil
+	}
+
+	if err := c.PersistentPreRunE(cmd, args); err != nil {
+		return nil
+	}
+
+	return c.autocompleteQuotas()
+}
+
+func (c *quotaCommand) autocompleteQuotas() []string {
+	quotas, err := c.getQuotas()
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(quotas))
+	for i, quota := range quotas {
+		description := fmt.Sprintf("%s: %s", quota.Spec.GetDisplayName(), quota.Spec.GetDescription())
+		suggestions[i] = fmt.Sprintf("%s\t%s", quota.GetId(), description)
+	}
+	return suggestions
+}
+
+func (c *quotaCommand) getQuotas() ([]kafkaquotasv1.KafkaQuotasV1ClientQuota, error) {
+	cluster, err := c.Context.GetKafkaClusterForCommand()
+	if err != nil {
+		return nil, err
+	}
+
+	environmentId, err := c.EnvironmentId()
+	if err != nil {
+		return nil, err
+	}
+
+	return c.V2Client.ListKafkaQuotas(cluster.ID, environmentId)
 }

@@ -126,6 +126,7 @@ func (s *CLITestSuite) TestKafka() {
 
 		// Cluster linking
 		{args: "kafka link create my_link --source-cluster lkc-describe-topic --source-bootstrap-server myhost:1234 --config-file " + getCreateLinkConfigFile(), fixture: "kafka/link/create-link.golden", useKafka: "lkc-describe-topic"},
+		{args: `__complete kafka link delete ""`, fixture: "kafka/link/list-link-delete-autocomplete.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka link list --cluster lkc-describe-topic", fixture: "kafka/link/list-link-plain.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka link list --cluster lkc-describe-topic -o json", fixture: "kafka/link/list-link-json.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka link list --cluster lkc-describe-topic -o yaml", fixture: "kafka/link/list-link-yaml.golden", useKafka: "lkc-describe-topic"},
@@ -481,6 +482,7 @@ func (s *CLITestSuite) TestKafkaClientQuotas() {
 		{args: "kafka quota list --cluster lkc-1234", fixture: "kafka/quota/list.golden"},
 		{args: "kafka quota list --cluster lkc-1234 --principal sa-5678 -o json", fixture: "kafka/quota/list-json.golden"},
 		{args: "kafka quota list --cluster lkc-1234 -o yaml", fixture: "kafka/quota/list-yaml.golden"},
+		{args: `__complete kafka quota describe ""`, useKafka: "lkc-1234", fixture: "kafka/quota/describe-autocomplete.golden"},
 		{args: "kafka quota describe cq-123 --cluster lkc-1234", fixture: "kafka/quota/describe.golden"},
 		{args: "kafka quota describe cq-123 --cluster lkc-1234 -o json", fixture: "kafka/quota/describe-json.golden"},
 		{args: "kafka quota delete cq-123 --force", fixture: "kafka/quota/delete.golden"},
