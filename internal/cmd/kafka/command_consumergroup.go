@@ -10,7 +10,7 @@ import (
 )
 
 type consumerGroupCommand struct {
-	*pcmd.AuthenticatedStateFlagCommand
+	*pcmd.AuthenticatedCLICommand
 }
 
 type consumerData struct {
@@ -48,7 +48,7 @@ func newConsumerGroupCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Hidden:      true,
 	}
 
-	c := &consumerGroupCommand{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
+	c := &consumerGroupCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 
 	cmd.AddCommand(c.newDescribeCommand())
 	cmd.AddCommand(newLagCommand(prerunner))
@@ -70,7 +70,7 @@ func (c *consumerGroupCommand) validArgs(cmd *cobra.Command, args []string) []st
 }
 
 func (c *consumerGroupCommand) autocompleteConsumerGroups() []string {
-	consumerGroupDataList, err := listConsumerGroups(c.AuthenticatedStateFlagCommand)
+	consumerGroupDataList, err := listConsumerGroups(c.AuthenticatedCLICommand)
 	if err != nil {
 		return nil
 	}
@@ -82,7 +82,7 @@ func (c *consumerGroupCommand) autocompleteConsumerGroups() []string {
 	return suggestions
 }
 
-func listConsumerGroups(flagCmd *pcmd.AuthenticatedStateFlagCommand) (*kafkarestv3.ConsumerGroupDataList, error) {
+func listConsumerGroups(flagCmd *pcmd.AuthenticatedCLICommand) (*kafkarestv3.ConsumerGroupDataList, error) {
 	kafkaREST, lkc, err := getKafkaRestProxyAndLkcId(flagCmd)
 	if err != nil {
 		return nil, err

@@ -11,7 +11,7 @@ import (
 )
 
 type configCommand struct {
-	*pcmd.AuthenticatedStateFlagCommand
+	*pcmd.AuthenticatedCLICommand
 }
 
 func newConfigCommand(prerunner pcmd.PreRunner) *cobra.Command {
@@ -22,7 +22,7 @@ func newConfigCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 	}
 
-	c := &configCommand{pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner)}
+	c := &configCommand{pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)}
 
 	cmd.AddCommand(c.newDescribeCommand())
 	cmd.AddCommand(c.newEditCommand())
