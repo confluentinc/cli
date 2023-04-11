@@ -58,7 +58,7 @@ func (c *mirrorCommand) list(cmd *cobra.Command, _ []string) error {
 		return errors.New(errors.RestProxyNotAvailableMsg)
 	}
 
-	lkc, err := getKafkaClusterLkcId(c.AuthenticatedStateFlagCommand)
+	lkc, err := getKafkaClusterLkcId(c.AuthenticatedCLICommand)
 	if err != nil {
 		return err
 	}

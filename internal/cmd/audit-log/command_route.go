@@ -11,7 +11,7 @@ import (
 )
 
 type routeCommand struct {
-	*pcmd.AuthenticatedStateFlagCommand
+	*pcmd.AuthenticatedCLICommand
 }
 
 func newRouteCommand(prerunner pcmd.PreRunner) *cobra.Command {
@@ -22,7 +22,7 @@ func newRouteCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 	}
 
-	c := &routeCommand{pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner)}
+	c := &routeCommand{pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)}
 
 	cmd.AddCommand(c.newListCommand())
 	cmd.AddCommand(c.newLookupCommand())

@@ -107,7 +107,7 @@ func newImportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		),
 	}
 
-	c := &command{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
+	c := &command{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 	cmd.RunE = c.asyncapiImport
 	cmd.Flags().String("file", "", "Input file name.")
 	cmd.Flags().Bool("overwrite", false, "Overwrite existing topics with the same name.")

@@ -18,7 +18,7 @@ import (
 )
 
 type ksqlCommand struct {
-	*pcmd.AuthenticatedStateFlagCommand
+	*pcmd.AuthenticatedCLICommand
 }
 
 type ksqlCluster struct {

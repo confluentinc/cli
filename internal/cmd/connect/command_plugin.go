@@ -9,7 +9,7 @@ import (
 )
 
 type pluginCommand struct {
-	*pcmd.AuthenticatedStateFlagCommand
+	*pcmd.AuthenticatedCLICommand
 }
 
 func newPluginCommand(prerunner pcmd.PreRunner) *cobra.Command {
@@ -19,7 +19,7 @@ func newPluginCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
-	c := &pluginCommand{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
+	c := &pluginCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 
 	cmd.AddCommand(c.newDescribeCommand())
 	cmd.AddCommand(c.newListCommand())
