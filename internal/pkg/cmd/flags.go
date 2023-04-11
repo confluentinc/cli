@@ -43,7 +43,7 @@ func AutocompleteApiKeys(client *ccloudv2.Client) []string {
 		if !apiKey.Spec.HasOwner() {
 			continue
 		}
-		suggestions[i] = fmt.Sprintf("%s\t%s", *apiKey.Id, *apiKey.GetSpec().Description)
+		suggestions[i] = fmt.Sprintf("%s\t%s", apiKey.GetId(), *apiKey.GetSpec().Description)
 	}
 	return suggestions
 }
@@ -292,8 +292,8 @@ func AutocompleteIdentityProviders(client *ccloudv2.Client) []string {
 
 	suggestions := make([]string, len(identityProviders))
 	for i, identityProvider := range identityProviders {
-		description := fmt.Sprintf("%s: %s", *identityProvider.DisplayName, *identityProvider.Description)
-		suggestions[i] = fmt.Sprintf("%s\t%s", *identityProvider.Id, description)
+		description := fmt.Sprintf("%s: %s", identityProvider.GetDisplayName(), identityProvider.GetDescription())
+		suggestions[i] = fmt.Sprintf("%s\t%s", identityProvider.GetId(), description)
 	}
 	return suggestions
 }
@@ -306,8 +306,8 @@ func AutocompleteIdentityPools(client *ccloudv2.Client, providerID string) []str
 
 	suggestions := make([]string, len(identityPools))
 	for i, identityPool := range identityPools {
-		description := fmt.Sprintf("%s: %s", *identityPool.DisplayName, *identityPool.Description)
-		suggestions[i] = fmt.Sprintf("%s\t%s", *identityPool.Id, description)
+		description := fmt.Sprintf("%s: %s", identityPool.GetDisplayName(), identityPool.GetDescription())
+		suggestions[i] = fmt.Sprintf("%s\t%s", identityPool.GetId(), description)
 	}
 	return suggestions
 }
@@ -368,8 +368,21 @@ func AutocompleteServiceAccounts(client *ccloudv2.Client) []string {
 
 	suggestions := make([]string, len(serviceAccounts))
 	for i, serviceAccount := range serviceAccounts {
-		description := fmt.Sprintf("%s: %s", *serviceAccount.DisplayName, *serviceAccount.Description)
-		suggestions[i] = fmt.Sprintf("%s\t%s", *serviceAccount.Id, description)
+		description := fmt.Sprintf("%s: %s", serviceAccount.GetDisplayName(), serviceAccount.GetDescription())
+		suggestions[i] = fmt.Sprintf("%s\t%s", serviceAccount.GetId(), description)
+	}
+	return suggestions
+}
+
+func AutocompleteUsers(client *ccloudv2.Client) []string {
+	users, err := client.ListIamUsers()
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(users))
+	for i, user := range users {
+		suggestions[i] = fmt.Sprintf("%s\t%s", user.GetId(), user.GetFullName())
 	}
 	return suggestions
 }
