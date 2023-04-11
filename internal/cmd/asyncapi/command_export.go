@@ -31,8 +31,8 @@ type command struct {
 }
 
 type confluentBinding struct {
-	XPartitions int32             `json:"x-partitions,omitempty"`
-	Configs     map[string]string `json:"x-configs"`
+	Partitions int32             `json:"x-partitions,omitempty"`
+	Configs    map[string]string `json:"x-configs"`
 }
 
 type bindings struct {
@@ -300,8 +300,8 @@ func (c *command) getBindings(clusterId, topicName string) (*bindings, error) {
 		configsMap[config.GetName()] = config.GetValue()
 	}
 	var channelBindings any = confluentBinding{
-		XPartitions: numPartitions,
-		Configs:     configsMap,
+		Partitions: numPartitions,
+		Configs:    configsMap,
 	}
 	messageBindings := spec.MessageBindingsObject{Kafka: &spec.KafkaMessage{Key: &spec.KafkaMessageKey{Schema: map[string]any{"type": "string"}}}}
 	operationBindings := spec.OperationBindingsObject{Kafka: &spec.KafkaOperation{

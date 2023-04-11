@@ -41,8 +41,8 @@ type flagsImport struct {
 }
 
 type kafkaBinding struct {
-	Partitions int32             `yaml:"x-partitions"`
-	XConfigs   map[string]string `yaml:"x-configs"`
+	XPartitions int32             `yaml:"x-partitions"`
+	XConfigs    map[string]string `yaml:"x-configs"`
 }
 
 type Message struct {
@@ -272,8 +272,8 @@ func (c *command) createTopic(details *accountDetails, topicName string, kafkaBi
 		TopicName: topicName,
 		Configs:   &topicConfigs,
 	}
-	if kafkaBinding.Partitions != 0 {
-		createTopicRequestData.PartitionsCount = &kafkaBinding.Partitions
+	if kafkaBinding.XPartitions != 0 {
+		createTopicRequestData.PartitionsCount = &kafkaBinding.XPartitions
 	}
 	kafkaRest, err := c.GetKafkaREST()
 	if err != nil {
