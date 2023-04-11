@@ -83,7 +83,7 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka cluster describe lkc-describe-infinite -o yaml", fixture: "kafka/43.golden"},
 
 		{args: "kafka cluster describe lkc-describe-dedicated-provisioning", fixture: "kafka/cluster-describe-dedicated-provisioning.golden"},
-		{args: "kafka cluster describe lkc-describe-topic-error -vv", contains: errors.OmitTopicCountMsg},
+		{args: "kafka cluster describe lkc-describe-topic-error -vv", contains: fmt.Sprintf(errors.OmitTopicCountMsg, "")},
 
 		{args: "kafka cluster describe lkc-unknown", fixture: "kafka/48.golden", exitCode: 1},
 
