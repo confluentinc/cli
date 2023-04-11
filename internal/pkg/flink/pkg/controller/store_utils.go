@@ -264,11 +264,11 @@ func processHttpErrors(resp *http.Response, err error) error {
 
 		err = json.Unmarshal(body, &statementErr)
 
-		if err != nil || statementErr == nil || statementErr.Error == nil || statementErr.Error.Title == nil || statementErr.Error.Detail == nil {
+		if err != nil || statementErr == nil || statementErr.Title == nil || statementErr.Detail == nil {
 			return &StatementError{Msg: fmt.Sprintf("Error: received error with code \"%d\" from server but could not parse it. This is not expected. Please contact support.", resp.StatusCode)}
 		}
 
-		return &StatementError{Msg: *statementErr.Error.Title + ": " + *statementErr.Error.Detail}
+		return &StatementError{Msg: statementErr.GetTitle() + ": " + statementErr.GetDetail()}
 
 	}
 

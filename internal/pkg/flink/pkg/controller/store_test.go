@@ -311,7 +311,7 @@ func (s *StoreTestSuite) TestProccessHttpErrors() {
 	// given
 	title := "Invalid syntax"
 	detail := "you should provide a table for select"
-	statementErr := &v1.Error{Error: &v1.SqlV1alpha1ErrorDetails{Title: &title, Detail: &detail}}
+	statementErr := &v1.Error{Title: &title, Detail: &detail}
 	res = &http.Response{
 		StatusCode: 400,
 		Body:       generateCloserFromObject(statementErr),

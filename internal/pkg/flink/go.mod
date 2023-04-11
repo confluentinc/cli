@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/atotto/clipboard v0.1.4
 	github.com/bradleyjkemp/cupaloy v2.3.0+incompatible
-	github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway v0.0.2
+	github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway v0.0.7
 	github.com/confluentinc/go-prompt v0.2.6
 	github.com/gdamore/tcell/v2 v2.5.4
 	github.com/google/uuid v1.3.0
