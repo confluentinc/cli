@@ -5,6 +5,7 @@ import (
 
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
@@ -12,10 +13,11 @@ import (
 
 func (c *userCommand) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update <id>",
-		Short: "Update a user.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  c.update,
+		Use:               "update <id>",
+		Short:             "Update a user.",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		RunE:              c.update,
 	}
 
 	cmd.Flags().String("full-name", "", "The user's full name.")
