@@ -290,7 +290,7 @@ func (c *command) getBindings(clusterId, topicName string) (*bindings, error) {
 	var numPartitions int32
 	partitionsResp, _, err := kafkaREST.CloudClient.ListKafkaPartitions(clusterId, topicName)
 	if err != nil {
-		log.CliLogger.Debugf("Unable to get topic partitions: %v", err)
+		return nil, fmt.Errorf("unable to get topic partitions: %v", err)
 	}
 	if partitionsResp.Data != nil {
 		numPartitions = int32(len(partitionsResp.Data))
@@ -299,7 +299,10 @@ func (c *command) getBindings(clusterId, topicName string) (*bindings, error) {
 	for _, config := range configs.Data {
 		configsMap[config.GetName()] = config.GetValue()
 	}
-	var channelBindings any = confluentBinding{Partitions: numPartitions, Configs: configsMap}
+	var channelBindings any = confluentBinding{
+		Partitions: numPartitions,
+		Configs:    configsMap,
+	}
 	messageBindings := spec.MessageBindingsObject{Kafka: &spec.KafkaMessage{Key: &spec.KafkaMessageKey{Schema: map[string]any{"type": "string"}}}}
 	operationBindings := spec.OperationBindingsObject{Kafka: &spec.KafkaOperation{
 		GroupID:  &spec.KafkaOperationGroupID{Schema: map[string]any{"type": "string"}},
