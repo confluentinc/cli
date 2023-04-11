@@ -12,7 +12,7 @@ import (
 )
 
 type partitionCommand struct {
-	*pcmd.AuthenticatedStateFlagCommand
+	*pcmd.AuthenticatedCLICommand
 }
 
 func newPartitionCommand(prerunner pcmd.PreRunner) *cobra.Command {
@@ -22,7 +22,7 @@ func newPartitionCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 	}
 
-	c := &partitionCommand{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
+	c := &partitionCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 	c.PersistentPreRunE = prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand)
 
 	cmd.AddCommand(c.newDescribeCommand())

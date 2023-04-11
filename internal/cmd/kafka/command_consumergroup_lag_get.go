@@ -52,7 +52,7 @@ func (c *lagCommand) getLag(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	kafkaREST, lkc, err := getKafkaRestProxyAndLkcId(c.AuthenticatedStateFlagCommand)
+	kafkaREST, lkc, err := getKafkaRestProxyAndLkcId(c.AuthenticatedCLICommand)
 	if err != nil {
 		return err
 	}

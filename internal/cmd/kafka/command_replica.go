@@ -7,7 +7,7 @@ import (
 )
 
 type replicaCommand struct {
-	*pcmd.AuthenticatedStateFlagCommand
+	*pcmd.AuthenticatedCLICommand
 }
 
 func newReplicaCommand(prerunner pcmd.PreRunner) *cobra.Command {
@@ -17,7 +17,7 @@ func newReplicaCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 	}
 
-	c := &replicaCommand{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
+	c := &replicaCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 	c.PersistentPreRunE = prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand)
 
 	cmd.AddCommand(c.newListCommand())

@@ -27,7 +27,7 @@ import (
 )
 
 type command struct {
-	*pcmd.AuthenticatedStateFlagCommand
+	*pcmd.AuthenticatedCLICommand
 }
 
 type confluentBinding struct {
@@ -64,7 +64,7 @@ func newExportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Args:  cobra.NoArgs,
 	}
 
-	c := &command{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
+	c := &command{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 	cmd.RunE = c.export
 
 	cmd.Flags().String("file", "asyncapi-spec.yaml", "Output file name.")

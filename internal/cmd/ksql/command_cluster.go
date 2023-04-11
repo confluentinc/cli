@@ -15,14 +15,14 @@ func newClusterCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command 
 	}
 
 	if cfg.IsCloudLogin() {
-		c := &ksqlCommand{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
+		c := &ksqlCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 		cmd.AddCommand(c.newConfigureAclsCommand())
 		cmd.AddCommand(c.newCreateCommand())
 		cmd.AddCommand(c.newDeleteCommand())
 		cmd.AddCommand(c.newDescribeCommand())
 		cmd.AddCommand(c.newListCommand())
 	} else {
-		c := &ksqlCommand{pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner)}
+		c := &ksqlCommand{pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)}
 		cmd.AddCommand(c.newListCommandOnPrem())
 	}
 
