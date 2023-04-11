@@ -31,7 +31,8 @@ type command struct {
 }
 
 type confluentBinding struct {
-	Configs map[string]string `json:"x-configs"`
+	Partitions int32             `json:"x-partitions,omitempty"`
+	Configs    map[string]string `json:"x-configs"`
 }
 
 type bindings struct {
@@ -286,11 +287,22 @@ func (c *command) getBindings(clusterId, topicName string) (*bindings, error) {
 	if err != nil {
 		return nil, err
 	}
+	var numPartitions int32
+	partitionsResp, _, err := kafkaREST.CloudClient.ListKafkaPartitions(clusterId, topicName)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get topic partitions: %v", err)
+	}
+	if partitionsResp.Data != nil {
+		numPartitions = int32(len(partitionsResp.Data))
+	}
 	configsMap := make(map[string]string)
 	for _, config := range configs.Data {
 		configsMap[config.GetName()] = config.GetValue()
 	}
-	var channelBindings any = confluentBinding{configsMap}
+	var channelBindings any = confluentBinding{
+		Partitions: numPartitions,
+		Configs:    configsMap,
+	}
 	messageBindings := spec.MessageBindingsObject{Kafka: &spec.KafkaMessage{Key: &spec.KafkaMessageKey{Schema: map[string]any{"type": "string"}}}}
 	operationBindings := spec.OperationBindingsObject{Kafka: &spec.KafkaOperation{
 		GroupID:  &spec.KafkaOperationGroupID{Schema: map[string]any{"type": "string"}},
