@@ -103,7 +103,7 @@ func (c *clusterCommand) outputKafkaClusterDescription(cmd *cobra.Command, clust
 	if getTopicCount {
 		topicCount, err := c.getTopicCountForKafkaCluster(cluster)
 		if err != nil { // topicCount is 0 when err != nil, and will be omitted by `omitempty`
-		log.CliLogger.Infof(errors.OmitTopicCountMsg, err)
+			log.CliLogger.Infof(errors.OmitTopicCountMsg, err)
 		}
 		out.TopicCount = topicCount
 	}
