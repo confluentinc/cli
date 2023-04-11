@@ -17,7 +17,7 @@ func newReplicaCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 	}
 
-	c := &replicaCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
+	c := &replicaCommand{pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)}
 	c.PersistentPreRunE = prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand)
 
 	cmd.AddCommand(c.newListCommand())

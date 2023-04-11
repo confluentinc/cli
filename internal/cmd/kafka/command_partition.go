@@ -22,7 +22,7 @@ func newPartitionCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 	}
 
-	c := &partitionCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
+	c := &partitionCommand{pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)}
 	c.PersistentPreRunE = prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand)
 
 	cmd.AddCommand(c.newDescribeCommand())
