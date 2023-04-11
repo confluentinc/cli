@@ -1,0 +1,16 @@
+WARNING: The CLI was unable to retrieve Kafka topics for this cluster. The topic count will be omitted.
++----------------------+---------------------------+
+| Current              | true                      |
+| ID                   | lkc-describe-topic-error  |
+| Name                 | kafka-cluster             |
+| Type                 | BASIC                     |
+| Ingress Limit (MB/s) |                       250 |
+| Egress Limit (MB/s)  |                       750 |
+| Storage              | 5 TB                      |
+| Provider             | aws                       |
+| Region               | us-west-2                 |
+| Availability         | single-zone               |
+| Status               | UP                        |
+| Endpoint             | SASL_SSL://kafka-endpoint |
+| REST Endpoint        | http://127.0.0.1:1025     |
++----------------------+---------------------------+
