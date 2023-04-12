@@ -34,7 +34,7 @@ func (c *lagCommand) newListCommand() *cobra.Command {
 }
 
 func (c *lagCommand) list(cmd *cobra.Command, args []string) error {
-	kafkaREST, lkc, err := getKafkaRestProxyAndLkcId(c.AuthenticatedStateFlagCommand)
+	kafkaREST, lkc, err := getKafkaRestProxyAndLkcId(c.AuthenticatedCLICommand)
 	if err != nil {
 		return err
 	}

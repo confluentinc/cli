@@ -132,7 +132,7 @@ func (d *DynamicContext) SchemaRegistryCluster(cmd *cobra.Command) (*v1.SchemaRe
 	resource, _ := cmd.Flags().GetString("resource")
 	resourceType := presource.LookupType(resource)
 
-	envId, err := d.AuthenticatedEnvId()
+	environmentId, err := d.EnvironmentId()
 	if err != nil {
 		return nil, err
 	}
@@ -146,7 +146,7 @@ func (d *DynamicContext) SchemaRegistryCluster(cmd *cobra.Command) (*v1.SchemaRe
 			}
 		}
 		if cluster == nil || missingDetails(cluster) {
-			srCluster, err := d.FetchSchemaRegistryById(context.Background(), resource, envId)
+			srCluster, err := d.FetchSchemaRegistryById(context.Background(), resource, environmentId)
 			if err != nil {
 				return nil, errors.CatchResourceNotFoundError(err, resource)
 			}
@@ -154,9 +154,9 @@ func (d *DynamicContext) SchemaRegistryCluster(cmd *cobra.Command) (*v1.SchemaRe
 			clusterChanged = true
 		}
 	} else {
-		cluster = d.SchemaRegistryClusters[envId]
+		cluster = d.SchemaRegistryClusters[environmentId]
 		if cluster == nil || missingDetails(cluster) {
-			srCluster, err := d.FetchSchemaRegistryByEnvironmentId(context.Background(), envId)
+			srCluster, err := d.FetchSchemaRegistryByEnvironmentId(context.Background(), environmentId)
 			if err != nil {
 				return nil, errors.CatchResourceNotFoundError(err, resource)
 			}
@@ -164,7 +164,7 @@ func (d *DynamicContext) SchemaRegistryCluster(cmd *cobra.Command) (*v1.SchemaRe
 			clusterChanged = true
 		}
 	}
-	d.SchemaRegistryClusters[envId] = cluster
+	d.SchemaRegistryClusters[environmentId] = cluster
 	if clusterChanged {
 		if err := d.Save(); err != nil {
 			return nil, err
@@ -185,7 +185,7 @@ func (d *DynamicContext) HasLogin() bool {
 	}
 }
 
-func (d *DynamicContext) AuthenticatedEnvId() (string, error) {
+func (d *DynamicContext) EnvironmentId() (string, error) {
 	if id := d.GetCurrentEnvironment(); id != "" {
 		return id, nil
 	}

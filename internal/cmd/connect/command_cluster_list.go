@@ -40,7 +40,7 @@ func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	environmentId, err := c.EnvironmentId()
+	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}

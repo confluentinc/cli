@@ -64,7 +64,7 @@ func (c *linkCommand) configurationUpdate(cmd *cobra.Command, args []string) err
 		return errors.New(errors.RestProxyNotAvailableMsg)
 	}
 
-	clusterId, err := getKafkaClusterLkcId(c.AuthenticatedStateFlagCommand)
+	clusterId, err := getKafkaClusterLkcId(c.AuthenticatedCLICommand)
 	if err != nil {
 		return err
 	}

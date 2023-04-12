@@ -12,7 +12,7 @@ import (
 )
 
 type quotaCommand struct {
-	*pcmd.AuthenticatedStateFlagCommand
+	*pcmd.AuthenticatedCLICommand
 }
 
 func newQuotaCommand(prerunner pcmd.PreRunner) *cobra.Command {
@@ -22,7 +22,7 @@ func newQuotaCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
-	c := &quotaCommand{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
+	c := &quotaCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 
 	cmd.AddCommand(c.newCreateCommand())
 	cmd.AddCommand(c.newDeleteCommand())
@@ -105,7 +105,7 @@ func (c *quotaCommand) getQuotas() ([]kafkaquotasv1.KafkaQuotasV1ClientQuota, er
 		return nil, err
 	}
 
-	environmentId, err := c.EnvironmentId()
+	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return nil, err
 	}

@@ -65,7 +65,7 @@ func (c *command) clusterDescribe(cmd *cobra.Command, _ []string) error {
 	ctx := context.Background()
 
 	// Collect the parameters
-	environmentId, err := c.EnvironmentId()
+	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}

@@ -25,7 +25,7 @@ func (c *ksqlCommand) newDescribeCommand() *cobra.Command {
 }
 
 func (c *ksqlCommand) describe(cmd *cobra.Command, args []string) error {
-	environmentId, err := c.EnvironmentId()
+	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}

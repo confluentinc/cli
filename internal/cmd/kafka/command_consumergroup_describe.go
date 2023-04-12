@@ -40,7 +40,7 @@ func (c *consumerGroupCommand) newDescribeCommand() *cobra.Command {
 func (c *consumerGroupCommand) describe(cmd *cobra.Command, args []string) error {
 	consumerGroupId := args[0]
 
-	kafkaREST, lkc, err := getKafkaRestProxyAndLkcId(c.AuthenticatedStateFlagCommand)
+	kafkaREST, lkc, err := getKafkaRestProxyAndLkcId(c.AuthenticatedCLICommand)
 	if err != nil {
 		return err
 	}

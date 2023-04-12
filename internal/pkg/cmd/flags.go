@@ -106,7 +106,7 @@ func AddClusterFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {
 			return nil
 		}
 
-		environmentId, err := c.EnvironmentId()
+		environmentId, err := c.Context.EnvironmentId()
 		if err != nil {
 			return nil
 		}
@@ -200,7 +200,7 @@ func AddKsqlClusterFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {
 			return nil
 		}
 
-		environmentId, err := c.EnvironmentId()
+		environmentId, err := c.Context.EnvironmentId()
 		if err != nil {
 			return nil
 		}
@@ -214,8 +214,8 @@ func autocompleteKSQLClusters(environmentId string, client *ccloudv2.Client) []s
 		return nil
 	}
 
-	suggestions := make([]string, len(clusters.Data))
-	for i, cluster := range clusters.Data {
+	suggestions := make([]string, len(clusters))
+	for i, cluster := range clusters {
 		suggestions[i] = fmt.Sprintf("%s\t%s", cluster.GetId(), cluster.Spec.GetDisplayName())
 	}
 	return suggestions

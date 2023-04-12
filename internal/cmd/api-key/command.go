@@ -18,7 +18,7 @@ import (
 )
 
 type command struct {
-	*pcmd.AuthenticatedStateFlagCommand
+	*pcmd.AuthenticatedCLICommand
 	keystore     keystore.KeyStore
 	flagResolver pcmd.FlagResolver
 }
@@ -39,9 +39,9 @@ func New(prerunner pcmd.PreRunner, keystore keystore.KeyStore, resolver pcmd.Fla
 	}
 
 	c := &command{
-		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner),
-		keystore:                      keystore,
-		flagResolver:                  resolver,
+		AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(cmd, prerunner),
+		keystore:                keystore,
+		flagResolver:            resolver,
 	}
 
 	cmd.AddCommand(c.newCreateCommand())
@@ -137,7 +137,7 @@ func (c *command) resolveResourceId(cmd *cobra.Command, v2Client *ccloudv2.Clien
 		clusterId = cluster.ID
 		apiKey = cluster.APIKey
 	case presource.KsqlCluster:
-		environmentId, err := c.EnvironmentId()
+		environmentId, err := c.Context.EnvironmentId()
 		if err != nil {
 			return "", "", "", err
 		}
