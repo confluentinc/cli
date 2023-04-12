@@ -404,7 +404,7 @@ func AddValueFormatFlag(cmd *cobra.Command) {
 }
 
 func AddLinkFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
-	cmd.Flags().String("link", "", "Cluster link name.")
+	cmd.Flags().String("link", "", "Name of cluster link.")
 
 	RegisterFlagCompletionFunc(cmd, "link", func(cmd *cobra.Command, args []string) []string {
 		if err := command.PersistentPreRunE(cmd, args); err != nil {
