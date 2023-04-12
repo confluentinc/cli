@@ -14,10 +14,11 @@ import (
 
 func (c *mirrorCommand) newFailoverCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "failover <destination-topic-1> [destination-topic-2] ... [destination-topic-N] --link my-link",
-		Short: "Failover mirror topics.",
-		Args:  cobra.MinimumNArgs(1),
-		RunE:  c.failover,
+		Use:               "failover <destination-topic-1> [destination-topic-2] ... [destination-topic-N] --link my-link",
+		Short:             "Failover mirror topics.",
+		Args:              cobra.MinimumNArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		RunE:              c.failover,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Failover mirror topics "my-topic-1" and "my-topic-2":`,

@@ -17,10 +17,11 @@ import (
 
 func (c *mirrorCommand) newResumeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "resume <destination-topic-1> [destination-topic-2] ... [destination-topic-N]",
-		Short: "Resume mirror topics.",
-		Args:  cobra.MinimumNArgs(1),
-		RunE:  c.resume,
+		Use:               "resume <destination-topic-1> [destination-topic-2] ... [destination-topic-N]",
+		Short:             "Resume mirror topics.",
+		Args:              cobra.MinimumNArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		RunE:              c.resume,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Resume mirror topics "my-topic-1" and "my-topic-2":`,

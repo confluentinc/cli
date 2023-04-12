@@ -14,10 +14,11 @@ import (
 
 func (c *mirrorCommand) newPauseCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "pause <destination-topic-1> [destination-topic-2] ... [destination-topic-N] --link my-link",
-		Short: "Pause mirror topics.",
-		Args:  cobra.MinimumNArgs(1),
-		RunE:  c.pause,
+		Use:               "pause <destination-topic-1> [destination-topic-2] ... [destination-topic-N] --link my-link",
+		Short:             "Pause mirror topics.",
+		Args:              cobra.MinimumNArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		RunE:              c.pause,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Pause mirror topics "my-topic-1" and "my-topic-2":`,

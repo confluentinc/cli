@@ -12,10 +12,11 @@ import (
 
 func (c *mirrorCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "describe <destination-topic-name>",
-		Short: "Describe a mirror topic.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  c.describe,
+		Use:               "describe <destination-topic-name>",
+		Short:             "Describe a mirror topic.",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		RunE:              c.describe,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Describe mirror topic "my-topic" under the link "my-link":`,
