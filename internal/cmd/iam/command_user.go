@@ -40,3 +40,15 @@ func newUserCommand(prerunner pcmd.PreRunner) *cobra.Command {
 
 	return cmd
 }
+
+func (c *userCommand) validArgs(cmd *cobra.Command, args []string) []string {
+	if len(args) > 0 {
+		return nil
+	}
+
+	if err := c.PersistentPreRunE(cmd, args); err != nil {
+		return nil
+	}
+
+	return pcmd.AutocompleteUsers(c.V2Client)
+}

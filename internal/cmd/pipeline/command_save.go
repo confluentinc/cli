@@ -13,10 +13,11 @@ import (
 
 func (c *command) newSaveCommand(enableSourceCode bool) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "save <pipeline-id>",
-		Short: "Save a Stream Designer pipeline's source code to a local file.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  c.save,
+		Use:               "save <pipeline-id>",
+		Short:             "Save a Stream Designer pipeline's source code to a local file.",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		RunE:              c.save,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Save the source code for Stream Designer pipeline "pipe-12345" to the default file at "./pipe-12345.sql".`,
