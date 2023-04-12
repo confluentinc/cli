@@ -1,0 +1,4 @@
+pipe-12345	testPipeline: description
+pipe-12346	testPipeline2: description2
+:4
+Completion ended with directive: ShellCompDirectiveNoFileComp

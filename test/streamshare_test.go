@@ -3,6 +3,7 @@ package test
 func (s *CLITestSuite) TestStreamShare() {
 	tests := []CLITest{
 		{args: "stream-share provider share list --shared-resource sr-12345", fixture: "stream-share/list-provider-shares.golden"},
+		{args: `__complete stream-share provider share describe ""`, fixture: "stream-share/describe-provider-share-autocomplete.golden"},
 		{args: "stream-share provider share describe ss-12345", fixture: "stream-share/describe-provider-share.golden"},
 		{args: "stream-share provider share delete ss-12345 --force", fixture: "stream-share/delete-provider-share.golden"},
 		{args: "stream-share provider share delete ss-12345", input: "y\n", fixture: "stream-share/delete-provider-share-prompt.golden"},
@@ -17,6 +18,7 @@ func (s *CLITestSuite) TestStreamShare() {
 		{args: "stream-share consumer share list --shared-resource sr-12345", fixture: "stream-share/list-consumer-shares.golden"},
 		{args: "stream-share consumer share delete ss-12345 --force", fixture: "stream-share/delete-consumer-share.golden"},
 		{args: "stream-share consumer share delete ss-12345", input: "y\n", fixture: "stream-share/delete-consumer-share-prompt.golden"},
+		{args: `__complete stream-share consumer share describe ""`, fixture: "stream-share/describe-consumer-share-autocomplete.golden"},
 		{args: "stream-share consumer share describe ss-12345", fixture: "stream-share/describe-consumer-share.golden"},
 
 		{args: "stream-share consumer redeem stream-share-token", fixture: "stream-share/redeem-share.golden"},
