@@ -26,10 +26,14 @@ func (c *mirrorCommand) newListCommand() *cobra.Command {
 				Text: `List all active mirror topics under "my-link":`,
 				Code: "confluent kafka mirror list --link my-link --mirror-status active",
 			},
+			examples.Example{
+				Text: "Omit `--link` to list all mirror topics in the cluster:",
+				Code: "confluent kafka mirror list --cluster lkc-1234",
+			},
 		),
 	}
 
-	cmd.Flags().String(linkFlagName, "", "Cluster link name. If not specified, list all mirror topics in the cluster.")
+	pcmd.AddLinkFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String(mirrorStatusFlagName, "", "Mirror topic status. Can be one of [active, failed, paused, stopped, pending_stopped]. If not specified, list all mirror topics.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
