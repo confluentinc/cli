@@ -17,7 +17,7 @@ func (c *mirrorCommand) newPauseCommand() *cobra.Command {
 		Use:               "pause <destination-topic-1> [destination-topic-2] ... [destination-topic-N] --link my-link",
 		Short:             "Pause mirror topics.",
 		Args:              cobra.MinimumNArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgsMultiple),
 		RunE:              c.pause,
 		Example: examples.BuildExampleString(
 			examples.Example{

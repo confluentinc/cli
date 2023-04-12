@@ -18,7 +18,7 @@ func (c *mirrorCommand) newPromoteCommand() *cobra.Command {
 		Short:             "Promote mirror topics.",
 		RunE:              c.promote,
 		Args:              cobra.MinimumNArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgsMultiple),
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Promote mirror topics "my-topic-1" and "my-topic-2":`,
