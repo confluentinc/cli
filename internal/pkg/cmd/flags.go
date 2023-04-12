@@ -402,3 +402,39 @@ func AddValueFormatFlag(cmd *cobra.Command) {
 		return arr
 	})
 }
+
+func AddLinkFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
+	cmd.Flags().String("link", "", "Cluster link name.")
+
+	RegisterFlagCompletionFunc(cmd, "link", func(cmd *cobra.Command, args []string) []string {
+		if err := command.PersistentPreRunE(cmd, args); err != nil {
+			return nil
+		}
+
+		return AutocompleteLinks(command)
+	})
+}
+
+func AutocompleteLinks(command *AuthenticatedCLICommand) []string {
+	kafkaREST, err := command.GetKafkaREST()
+	if kafkaREST == nil {
+		return nil
+	}
+
+	kafkaClusterConfig, err := command.Context.GetKafkaClusterForCommand()
+	if err != nil {
+		return nil
+	}
+
+	links, _, err := kafkaREST.CloudClient.ListKafkaLinks(kafkaClusterConfig.ID)
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(links.Data))
+	for i, link := range links.Data {
+		description := fmt.Sprintf("%s: %s", link.GetSourceClusterId(), link.GetDestinationClusterId())
+		suggestions[i] = fmt.Sprintf("%s\t%s", link.GetLinkName(), description)
+	}
+	return suggestions
+}
