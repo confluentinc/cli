@@ -13,7 +13,7 @@ import (
 
 func (c *command) newSaveCommand(enableSourceCode bool) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "save <pipeline-id>",
+		Use:               "save <id>",
 		Short:             "Save a Stream Designer pipeline's source code to a local file.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
