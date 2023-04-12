@@ -416,8 +416,8 @@ func AddLinkFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 }
 
 func AutocompleteLinks(command *AuthenticatedCLICommand) []string {
-	kafkaREST, _ := command.GetKafkaREST()
-	if kafkaREST == nil {
+	kafkaREST, err := command.GetKafkaREST()
+	if err != nil || kafkaREST == nil {
 		return nil
 	}
 
@@ -433,8 +433,7 @@ func AutocompleteLinks(command *AuthenticatedCLICommand) []string {
 
 	suggestions := make([]string, len(links.Data))
 	for i, link := range links.Data {
-		description := fmt.Sprintf("%s: %s", link.GetSourceClusterId(), link.GetDestinationClusterId())
-		suggestions[i] = fmt.Sprintf("%s\t%s", link.GetLinkName(), description)
+		suggestions[i] = link.GetLinkName()
 	}
 	return suggestions
 }

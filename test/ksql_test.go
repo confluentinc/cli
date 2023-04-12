@@ -20,7 +20,6 @@ func (s *CLITestSuite) TestKSQL() {
 		{args: "ksql cluster delete lksqlc-12345 --force", fixture: "ksql/cluster/delete-result.golden"},
 		{args: "ksql cluster delete lksqlc-12345", input: "account ksql\n", fixture: "ksql/cluster/delete-result-prompt.golden"},
 		{args: "ksql cluster describe --help", fixture: "ksql/cluster/describe-help.golden"},
-		{args: `__complete ksql cluster describe ""`, fixture: "ksql/cluster/describe-autocomplete.golden"},
 		{args: "ksql cluster describe lksqlc-12345 -o json", fixture: "ksql/cluster/describe-result-json.golden"},
 		{args: "ksql cluster describe lksqlc-12345 -o yaml", fixture: "ksql/cluster/describe-result-yaml.golden"},
 		{args: "ksql cluster describe lksqlc-12345", fixture: "ksql/cluster/describe-result.golden"},
@@ -48,4 +47,9 @@ func (s *CLITestSuite) TestKsqlClusterConfigureAcls() {
 		tt.login = "cloud"
 		s.runIntegrationTest(tt)
 	}
+}
+
+func (s *CLITestSuite) TestKSQLAutocomplete() {
+	test := CLITest{args: `__complete ksql cluster describe ""`, login: "cloud", fixture: "ksql/cluster/describe-autocomplete.golden"}
+	s.runIntegrationTest(test)
 }

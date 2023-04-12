@@ -177,7 +177,6 @@ func (s *CLITestSuite) TestIAMServiceAccount() {
 		{args: "iam service-account list -o json", fixture: "iam/service-account/list-json.golden"},
 		{args: "iam service-account list -o yaml", fixture: "iam/service-account/list-yaml.golden"},
 		{args: "iam service-account list", fixture: "iam/service-account/list.golden"},
-		{args: `__complete iam service-account describe ""`, fixture: "iam/service-account/describe-autocomplete.golden"},
 		{args: "iam service-account describe sa-12345 -o json", fixture: "iam/service-account/describe-json.golden"},
 		{args: "iam service-account describe sa-12345 -o yaml", fixture: "iam/service-account/describe-yaml.golden"},
 		{args: "iam service-account describe sa-12345", fixture: "iam/service-account/describe.golden"},
@@ -206,7 +205,6 @@ func (s *CLITestSuite) TestIAMUserList() {
 
 func (s *CLITestSuite) TestIAMUserDescribe() {
 	tests := []CLITest{
-		{args: `__complete iam user describe ""`, fixture: "iam/user/describe-autocomplete.golden"},
 		{args: "iam user describe u-0", fixture: "iam/user/resource-not-found.golden", exitCode: 1},
 		{args: "iam user describe u-17", fixture: "iam/user/describe.golden"},
 		{args: "iam user describe 0", fixture: "iam/user/bad-resource-id.golden", exitCode: 1},
@@ -295,7 +293,6 @@ func (s *CLITestSuite) TestIAMProviderDelete() {
 
 func (s *CLITestSuite) TestIAMProviderDescribe() {
 	tests := []CLITest{
-		{args: `__complete iam provider describe ""`, fixture: "iam/identity-provider/describe-autocomplete.golden"},
 		{args: "iam provider describe op-12345", fixture: "iam/identity-provider/describe.golden"},
 	}
 
@@ -353,7 +350,6 @@ func (s *CLITestSuite) TestIAMPoolDelete() {
 
 func (s *CLITestSuite) TestIAMPoolDescribe() {
 	tests := []CLITest{
-		{args: `__complete iam pool describe --provider op-12345 ""`, fixture: "iam/identity-pool/describe-autocomplete.golden"},
 		{args: "iam pool describe pool-12345 --provider op-12345", fixture: "iam/identity-pool/describe.golden"},
 	}
 
@@ -377,6 +373,20 @@ func (s *CLITestSuite) TestIAMPoolUpdate() {
 func (s *CLITestSuite) TestIAMPoolList() {
 	tests := []CLITest{
 		{args: "iam pool list --provider op-12345", fixture: "iam/identity-pool/list.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestIAMAutocomplete() {
+	tests := []CLITest{
+		{args: `__complete iam pool describe --provider op-12345 ""`, fixture: "iam/identity-pool/describe-autocomplete.golden"},
+		{args: `__complete iam provider describe ""`, fixture: "iam/identity-provider/describe-autocomplete.golden"},
+		{args: `__complete iam service-account describe ""`, fixture: "iam/service-account/describe-autocomplete.golden"},
+		{args: `__complete iam user describe ""`, fixture: "iam/user/describe-autocomplete.golden"},
 	}
 
 	for _, test := range tests {

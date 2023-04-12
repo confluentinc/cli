@@ -60,8 +60,6 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka region list --cloud aws", fixture: "kafka/10.golden"},
 		{args: "kafka region list --cloud azure", fixture: "kafka/11.golden"},
 
-		{args: `__complete kafka cluster describe ""`, fixture: "kafka/describe-autocomplete.golden"},
-
 		{args: "kafka cluster describe lkc-describe", fixture: "kafka/17.golden"},
 		{args: "kafka cluster describe lkc-describe -o json", fixture: "kafka/18.golden"},
 		{args: "kafka cluster describe lkc-describe -o yaml", fixture: "kafka/19.golden"},
@@ -108,7 +106,6 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka topic create topic-exist", login: "cloud", useKafka: "lkc-create-topic", fixture: "kafka/topic/create-dup-topic.golden", exitCode: 1},
 		{args: "kafka topic create topic-exceed-limit --partitions 9001", login: "cloud", useKafka: "lkc-create-topic", fixture: "kafka/topic/create-limit-topic.golden", exitCode: 1},
 
-		{args: `__complete kafka topic describe ""`, login: "cloud", useKafka: "lkc-describe-topic", fixture: "kafka/topic/describe-autocomplete.golden"},
 		{args: "kafka topic describe", login: "cloud", useKafka: "lkc-describe-topic", fixture: "kafka/topic/describe.golden", exitCode: 1},
 		{args: "kafka topic describe topic-exist", useKafka: "lkc-describe-topic", fixture: "kafka/topic/describe-success.golden"},
 		{args: "kafka topic describe topic-exist --output json", login: "cloud", useKafka: "lkc-describe-topic", fixture: "kafka/topic/describe-json-success.golden"},
@@ -126,7 +123,6 @@ func (s *CLITestSuite) TestKafka() {
 
 		// Cluster linking
 		{args: "kafka link create my_link --source-cluster lkc-describe-topic --source-bootstrap-server myhost:1234 --config-file " + getCreateLinkConfigFile(), fixture: "kafka/link/create-link.golden", useKafka: "lkc-describe-topic"},
-		{args: `__complete kafka link delete ""`, fixture: "kafka/link/list-link-delete-autocomplete.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka link list --cluster lkc-describe-topic", fixture: "kafka/link/list-link-plain.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka link list --cluster lkc-describe-topic -o json", fixture: "kafka/link/list-link-json.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka link list --cluster lkc-describe-topic -o yaml", fixture: "kafka/link/list-link-yaml.golden", useKafka: "lkc-describe-topic"},
@@ -140,7 +136,6 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka mirror list --cluster lkc-describe-topic", fixture: "kafka/mirror/list-all-mirror.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka mirror list --cluster lkc-describe-topic -o json", fixture: "kafka/mirror/list-all-mirror-json.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka mirror list --cluster lkc-describe-topic -o yaml", fixture: "kafka/mirror/list-all-mirror-yaml.golden", useKafka: "lkc-describe-topic"},
-		{args: `__complete kafka mirror describe --link link-1 ""`, fixture: "kafka/mirror/describe-autocomplete.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka mirror describe topic-1 --link link-1 --cluster lkc-describe-topic", fixture: "kafka/mirror/describe-mirror.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka mirror describe topic-1 --link link-1 --cluster lkc-describe-topic -o json", fixture: "kafka/mirror/describe-mirror-json.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka mirror describe topic-1 --link link-1 --cluster lkc-describe-topic -o yaml", fixture: "kafka/mirror/describe-mirror-yaml.golden", useKafka: "lkc-describe-topic"},
@@ -483,12 +478,26 @@ func (s *CLITestSuite) TestKafkaClientQuotas() {
 		{args: "kafka quota list --cluster lkc-1234", fixture: "kafka/quota/list.golden"},
 		{args: "kafka quota list --cluster lkc-1234 --principal sa-5678 -o json", fixture: "kafka/quota/list-json.golden"},
 		{args: "kafka quota list --cluster lkc-1234 -o yaml", fixture: "kafka/quota/list-yaml.golden"},
-		{args: `__complete kafka quota describe ""`, useKafka: "lkc-1234", fixture: "kafka/quota/describe-autocomplete.golden"},
 		{args: "kafka quota describe cq-123 --cluster lkc-1234", fixture: "kafka/quota/describe.golden"},
 		{args: "kafka quota describe cq-123 --cluster lkc-1234 -o json", fixture: "kafka/quota/describe-json.golden"},
 		{args: "kafka quota delete cq-123 --force", fixture: "kafka/quota/delete.golden"},
 		{args: "kafka quota delete cq-123", input: "cq-123\n", fixture: "kafka/quota/delete-prompt.golden"},
 		{args: "kafka quota update cq-123 --ingress 100 --egress 100 --add-principals sa-4321 --remove-principals sa-1234 --name newName", fixture: "kafka/quota/update.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestKafkaAutocomplete() {
+	tests := []CLITest{
+		{args: `__complete kafka cluster describe ""`, fixture: "kafka/describe-autocomplete.golden"},
+		{args: `__complete kafka link delete ""`, fixture: "kafka/link/list-link-delete-autocomplete.golden", useKafka: "lkc-describe-topic"}, // use delete since link has no describe subcommand
+		{args: `__complete kafka mirror describe --link link-1 ""`, fixture: "kafka/mirror/describe-autocomplete.golden", useKafka: "lkc-describe-topic"},
+		{args: `__complete kafka quota describe ""`, useKafka: "lkc-1234", fixture: "kafka/quota/describe-autocomplete.golden"},
+		{args: `__complete kafka topic describe ""`, useKafka: "lkc-describe-topic", fixture: "kafka/topic/describe-autocomplete.golden"},
 	}
 
 	for _, test := range tests {

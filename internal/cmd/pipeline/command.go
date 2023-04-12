@@ -127,8 +127,7 @@ func (c *command) autocompletePipelines() []string {
 
 	suggestions := make([]string, len(pipelines))
 	for i, pipeline := range pipelines {
-		description := fmt.Sprintf("%s: %s", pipeline.Spec.GetDisplayName(), pipeline.Spec.GetDescription())
-		suggestions[i] = fmt.Sprintf("%s\t%s", pipeline.GetId(), description)
+		suggestions[i] = fmt.Sprintf("%s\t%s", pipeline.GetId(), pipeline.Spec.GetDisplayName())
 	}
 	return suggestions
 }

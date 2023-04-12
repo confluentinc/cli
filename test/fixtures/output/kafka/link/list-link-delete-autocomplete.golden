@@ -1,5 +1,5 @@
-link-1	cluster-1: cluster-2
-link-2	cluster-1: cluster-2
-link-3	cluster-1: cluster-2
+link-1
+link-2
+link-3
 :4
 Completion ended with directive: ShellCompDirectiveNoFileComp

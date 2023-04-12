@@ -44,7 +44,6 @@ func (s *CLITestSuite) TestDescribe() {
 
 	tests := []CLITest{
 		{args: s.contextCreateArgs("0")},
-		{args: `__complete context describe ""`, fixture: "context/describe/describe-autocomplete.golden"},
 		{args: "context use 0"},
 		{args: "context describe", fixture: "context/describe/0.golden"},
 		{args: "context describe --api-key", fixture: "context/describe/1.golden"},
@@ -127,5 +126,17 @@ func (s *CLITestSuite) TestContextUse() {
 	for _, tt := range tests {
 		tt.workflow = true
 		s.runIntegrationTest(tt)
+	}
+}
+
+func (s *CLITestSuite) TestContextAutocomplete() {
+	tests := []CLITest{
+		{args: s.contextCreateArgs("0")},
+		{args: `__complete context describe ""`, fixture: "context/describe/describe-autocomplete.golden"},
+	}
+
+	for _, test := range tests {
+		test.workflow = true
+		s.runIntegrationTest(test)
 	}
 }

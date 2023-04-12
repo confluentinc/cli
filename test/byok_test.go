@@ -29,7 +29,6 @@ func (s *CLITestSuite) TestBYOK() {
 
 func (s *CLITestSuite) TestBYOKDescribe() {
 	tests := []CLITest{
-		{args: `__complete byok describe ""`, fixture: "byok/describe-autocomplete.golden"},
 		{args: "byok describe cck-001", fixture: "byok/describe-aws.golden"},
 		{args: "byok describe cck-001 -o json", fixture: "byok/describe-aws-json.golden"},
 		{args: "byok describe cck-003", fixture: "byok/describe-azure.golden"},
@@ -40,4 +39,9 @@ func (s *CLITestSuite) TestBYOKDescribe() {
 		tt.login = "cloud"
 		s.runIntegrationTest(tt)
 	}
+}
+
+func (s *CLITestSuite) TestBYOKAutocomplete() {
+	test := CLITest{args: `__complete byok describe ""`, login: "cloud", fixture: "byok/describe-autocomplete.golden"}
+	s.runIntegrationTest(test)
 }

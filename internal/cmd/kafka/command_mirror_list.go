@@ -23,12 +23,12 @@ func (c *mirrorCommand) newListCommand() *cobra.Command {
 		RunE:  c.list,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `List all active mirror topics under "my-link":`,
-				Code: "confluent kafka mirror list --link my-link --mirror-status active",
+				Text: "List all mirror topics in the cluster:",
+				Code: "confluent kafka mirror list --cluster lkc-1234",
 			},
 			examples.Example{
-				Text: "Omit `--link` to list all mirror topics in the cluster:",
-				Code: "confluent kafka mirror list --cluster lkc-1234",
+				Text: `List all active mirror topics under "my-link":`,
+				Code: "confluent kafka mirror list --link my-link --mirror-status active",
 			},
 		),
 	}

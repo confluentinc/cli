@@ -19,7 +19,6 @@ func (s *CLITestSuite) TestPipeline() {
 		{args: "pipeline list --help", fixture: "pipeline/list-help.golden"},
 		{args: "pipeline list", fixture: "pipeline/list.golden"},
 		{args: "pipeline describe --help", fixture: "pipeline/describe-help.golden"},
-		{args: `__complete pipeline describe ""`, fixture: "pipeline/describe-autocomplete.golden"},
 		{args: "pipeline describe pipe-12345", fixture: "pipeline/describe-pass.golden"},
 		{args: "pipeline save --help", fixture: "pipeline/save-help.golden"},
 		{args: fmt.Sprintf("pipeline save pipe-12345 --sql-file %s", testOutputFile.Name()), fixture: "pipeline/save.golden", regex: true},
@@ -52,4 +51,9 @@ func (s *CLITestSuite) TestPipeline() {
 		tt.useKafka = "lkc-12345"
 		s.runIntegrationTest(tt)
 	}
+}
+
+func (s *CLITestSuite) TestPipelineAutocomplete() {
+	test := CLITest{args: `__complete pipeline describe ""`, login: "cloud", useKafka: "lkc-12345", fixture: "pipeline/describe-autocomplete.golden"}
+	s.runIntegrationTest(test)
 }
