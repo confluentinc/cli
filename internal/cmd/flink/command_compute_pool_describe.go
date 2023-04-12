@@ -12,7 +12,7 @@ func (c *command) newComputePoolDescribeCommand() *cobra.Command {
 		Use:   "describe [id]",
 		Short: "Describe a Flink compute pool.",
 		Args:  cobra.MaximumNArgs(1),
-		RunE:  c.describe,
+		RunE:  c.computePoolDescribe,
 	}
 
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -21,7 +21,7 @@ func (c *command) newComputePoolDescribeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) describe(cmd *cobra.Command, args []string) error {
+func (c *command) computePoolDescribe(cmd *cobra.Command, args []string) error {
 	environmentId, err := c.EnvironmentId()
 	if err != nil {
 		return err

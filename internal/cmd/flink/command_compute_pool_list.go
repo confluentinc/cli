@@ -12,7 +12,7 @@ func (c *command) newComputePoolListCommand() *cobra.Command {
 		Use:   "list",
 		Short: "List Flink compute pools.",
 		Args:  cobra.NoArgs,
-		RunE:  c.list,
+		RunE:  c.computePoolList,
 	}
 
 	pcmd.AddRegionFlag(cmd, c.AuthenticatedCLICommand)
@@ -24,7 +24,7 @@ func (c *command) newComputePoolListCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) list(cmd *cobra.Command, args []string) error {
+func (c *command) computePoolList(cmd *cobra.Command, args []string) error {
 	region, err := cmd.Flags().GetString("region")
 	if err != nil {
 		return err

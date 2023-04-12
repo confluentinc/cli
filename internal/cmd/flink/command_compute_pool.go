@@ -16,6 +16,7 @@ func (c *command) newComputePoolCommand() *cobra.Command {
 		Short: "Manage Flink compute pools.",
 	}
 
+	cmd.AddCommand(c.newComputePoolCreateCommand())
 	cmd.AddCommand(c.newComputePoolDescribeCommand())
 	cmd.AddCommand(c.newComputePoolListCommand())
 	cmd.AddCommand(c.newComputePoolUseCommand())

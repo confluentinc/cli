@@ -15,7 +15,7 @@ func (c *command) newComputePoolUseCommand() *cobra.Command {
 		Short: "Choose a Flink compute pool to be used in subsequent commands.",
 		Long:  "Choose a Flink compute pool to be used in subsequent commands which support passing a compute pool with the `--compute-pool` flag.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.use,
+		RunE:  c.computePoolUse,
 	}
 
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -24,7 +24,7 @@ func (c *command) newComputePoolUseCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) use(cmd *cobra.Command, args []string) error {
+func (c *command) computePoolUse(cmd *cobra.Command, args []string) error {
 	if err := c.Context.SetCurrentFlinkComputePool(args[0]); err != nil {
 		return err
 	}
