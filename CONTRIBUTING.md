@@ -251,7 +251,7 @@ Now, run `make integration-test INTEGRATION_TEST_ARGS="-run TestCLI/TestConfigDe
 
 #### Add Autocompletion
 
-Add support for autocompletion using `ValidArgsFunction` if applicable(e.g. if the command takes resource IDs or resource names as arguments):
+Add support for autocompletion using `ValidArgsFunction` if applicable (for example, if the command takes resource IDs or resource names as arguments):
 
 ```go
 func (c *command) newDescribeCommand() *cobra.Command {
