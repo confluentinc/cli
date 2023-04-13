@@ -1,7 +1,7 @@
 Update an existing pipeline.
 
 Usage:
-  confluent pipeline update <pipeline-id> [flags]
+  confluent pipeline update <id> [flags]
 
 Examples:
 Request to update Stream Designer pipeline "pipe-12345", with new name and new description.
