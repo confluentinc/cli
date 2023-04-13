@@ -14,10 +14,11 @@ import (
 
 func (c *quotaCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delete <id>",
-		Short: "Delete a Kafka client quota.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  c.delete,
+		Use:               "delete <id>",
+		Short:             "Delete a Kafka client quota.",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		RunE:              c.delete,
 	}
 
 	pcmd.AddForceFlag(cmd)

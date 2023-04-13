@@ -8,7 +8,11 @@ Here's how you would use the `NewValidArgsFunction()` function to dynamically co
 key as an argument:
 
 ```go
-pcmd.NewValidArgsFunction(func(cmd *cobra.Command, args []string) []string {
+pcmd.NewValidArgsFunction(c.validArgs)
+```
+
+```go
+func (c *command) validArgs(cmd *cobra.Command, args []string) []string {
     if len(args) > 0 {
         return nil
     }
@@ -18,7 +22,7 @@ pcmd.NewValidArgsFunction(func(cmd *cobra.Command, args []string) []string {
     }
 
     return pcmd.AutocompleteApiKeys(c.V2Client)
-})
+}
 ```
 
 Here's how you would use the `RegisterFlagCompletionFunc()` function to dynamically complete a flag which accepts an API
