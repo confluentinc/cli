@@ -380,3 +380,17 @@ func (s *CLITestSuite) TestIAMPoolList() {
 		s.runIntegrationTest(test)
 	}
 }
+
+func (s *CLITestSuite) TestIAMAutocomplete() {
+	tests := []CLITest{
+		{args: `__complete iam pool describe --provider op-12345 ""`, fixture: "iam/identity-pool/describe-autocomplete.golden"},
+		{args: `__complete iam provider describe ""`, fixture: "iam/identity-provider/describe-autocomplete.golden"},
+		{args: `__complete iam service-account describe ""`, fixture: "iam/service-account/describe-autocomplete.golden"},
+		{args: `__complete iam user describe ""`, fixture: "iam/user/describe-autocomplete.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
