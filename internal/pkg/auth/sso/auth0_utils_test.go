@@ -3,8 +3,9 @@ package sso
 import (
 	"testing"
 
-	testserver "github.com/confluentinc/cli/test/test-server"
 	"github.com/stretchr/testify/assert"
+
+	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
 func TestGetCCloudEnvFromBaseUrl(t *testing.T) {
