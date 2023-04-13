@@ -1,6 +1,7 @@
 package sso
 
 import (
+	"net/url"
 	"strings"
 
 	testserver "github.com/confluentinc/cli/test/test-server"
@@ -15,24 +16,28 @@ var auth0ClientIds = map[string]string{
 }
 
 func GetAuth0CCloudClientIdFromBaseUrl(baseUrl string) string {
-	if baseUrl == "" {
-		baseUrl = "https://confluent.cloud"
-	}
-
-	var env string
-	if baseUrl == "https://confluent.cloud" {
-		env = "prod"
-	} else if strings.HasSuffix(baseUrl, "priv.cpdev.cloud") {
-		env = "cpd"
-	} else if baseUrl == "https://devel.cpdev.cloud" {
-		env = "devel"
-	} else if baseUrl == "https://stag.cpdev.cloud" {
-		env = "stag"
-	} else if baseUrl == testserver.TestCloudUrl.String() {
-		env = "test"
-	} else {
-		return ""
-	}
-
+	env := getCCloudEnvFromBaseUrl(baseUrl)
 	return auth0ClientIds[env]
+}
+
+func getCCloudEnvFromBaseUrl(baseUrl string) string {
+	u, err := url.Parse(baseUrl)
+	if err != nil {
+		return "prod"
+	}
+
+	if strings.HasSuffix(u.Host, "priv.cpdev.cloud") {
+		return "cpd"
+	}
+
+	switch u.Host {
+	case "stag.cpdev.cloud":
+		return "stag"
+	case "devel.cpdev.cloud":
+		return "devel"
+	case testserver.TestCloudUrl.Host:
+		return "test"
+	default:
+		return "prod"
+	}
 }
