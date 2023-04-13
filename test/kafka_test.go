@@ -490,3 +490,18 @@ func (s *CLITestSuite) TestKafkaClientQuotas() {
 		s.runIntegrationTest(test)
 	}
 }
+
+func (s *CLITestSuite) TestKafkaAutocomplete() {
+	tests := []CLITest{
+		{args: `__complete kafka cluster describe ""`, fixture: "kafka/describe-autocomplete.golden"},
+		{args: `__complete kafka link delete ""`, fixture: "kafka/link/list-link-delete-autocomplete.golden", useKafka: "lkc-describe-topic"}, // use delete since link has no describe subcommand
+		{args: `__complete kafka mirror describe --link link-1 ""`, fixture: "kafka/mirror/describe-autocomplete.golden", useKafka: "lkc-describe-topic"},
+		{args: `__complete kafka quota describe ""`, useKafka: "lkc-1234", fixture: "kafka/quota/describe-autocomplete.golden"},
+		{args: `__complete kafka topic describe ""`, useKafka: "lkc-describe-topic", fixture: "kafka/topic/describe-autocomplete.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
