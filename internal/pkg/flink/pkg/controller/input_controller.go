@@ -3,6 +3,7 @@ package controller
 import (
 	"errors"
 	"fmt"
+	"github.com/confluentinc/flink-sql-client/lexer"
 	"log"
 	"net/http"
 	"os"
@@ -187,7 +188,7 @@ func (c *InputController) Prompt() *prompt.Prompt {
 		prompt.OptionSelectedSuggestionBGColor(prompt.LightGray),
 		prompt.OptionSuggestionBGColor(prompt.DarkGray),
 		prompt.OptionLivePrefix(components.ChangeLivePrefix),
-		prompt.OptionSetLexer(components.Lexer),
+		prompt.OptionSetLexer(lexer.Lexer),
 		prompt.OptionSetStatementTerminator(func(lastKeyStroke prompt.Key, buffer *prompt.Buffer) bool {
 			text := buffer.Text()
 			text = strings.TrimSpace(text)
