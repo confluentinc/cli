@@ -52,3 +52,8 @@ func (s *CLITestSuite) TestPipeline() {
 		s.runIntegrationTest(tt)
 	}
 }
+
+func (s *CLITestSuite) TestPipelineAutocomplete() {
+	test := CLITest{args: `__complete pipeline describe ""`, login: "cloud", useKafka: "lkc-12345", fixture: "pipeline/describe-autocomplete.golden"}
+	s.runIntegrationTest(test)
+}
