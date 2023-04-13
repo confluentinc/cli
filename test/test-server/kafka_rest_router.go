@@ -147,42 +147,36 @@ func handleKafkaRPTopics(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			cluster := mux.Vars(r)["cluster"]
-			if cluster == "lkc-describe-topic-error" {
-				err := writeResourceNotFoundError(w)
-				require.NoError(t, err)
-			} else {
-				response := `{
-					"kind": "KafkaTopicList",
-					"metadata": {"self": "http://localhost:9391/v3/clusters/cluster-1/topics","next": null},
-					"data": [
-					  {
-						"kind": "KafkaTopic",
-						"metadata": {"self": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1","resource_name": "crn:///kafka=cluster-1/topic=topic-1"},
-						"cluster_id": "cluster-1",
-						"topic_name": "topic1",
-						"is_internal": false,
-						"replication_factor": 3,
-						"partitions": {"related": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1/partitions"},
-						"configs": {"related": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1/configs"},
-						"partition_reassignments": {"related": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1/partitions/-/reassignments"}
-					  },
-					  {
-						"kind": "KafkaTopic",
-						"metadata": {"self": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-2","resource_name": "crn:///kafka=cluster-1/topic=topic-2"},
-						"cluster_id": "cluster-1",
-						"topic_name": "topic2",
-						"is_internal": true,
-						"replication_factor": 4,
-						"partitions": {"related": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-2/partitions"},
-						"configs": {"related": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-2/configs"},
-						"partition_reassignments": {"related": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-2/partitions/-/reassignments"}
-					  }
-					]
-				}`
-				_, err := io.WriteString(w, response)
-				require.NoError(t, err)
-			}
+			response := `{
+				"kind": "KafkaTopicList",
+				"metadata": {"self": "http://localhost:9391/v3/clusters/cluster-1/topics","next": null},
+				"data": [
+					{
+					"kind": "KafkaTopic",
+					"metadata": {"self": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1","resource_name": "crn:///kafka=cluster-1/topic=topic-1"},
+					"cluster_id": "cluster-1",
+					"topic_name": "topic1",
+					"is_internal": false,
+					"replication_factor": 3,
+					"partitions": {"related": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1/partitions"},
+					"configs": {"related": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1/configs"},
+					"partition_reassignments": {"related": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1/partitions/-/reassignments"}
+					},
+					{
+					"kind": "KafkaTopic",
+					"metadata": {"self": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-2","resource_name": "crn:///kafka=cluster-1/topic=topic-2"},
+					"cluster_id": "cluster-1",
+					"topic_name": "topic2",
+					"is_internal": true,
+					"replication_factor": 4,
+					"partitions": {"related": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-2/partitions"},
+					"configs": {"related": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-2/configs"},
+					"partition_reassignments": {"related": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-2/partitions/-/reassignments"}
+					}
+				]
+			}`
+			_, err := io.WriteString(w, response)
+			require.NoError(t, err)
 		case http.MethodPost:
 			// Parse Create Args
 			reqBody, _ := io.ReadAll(r.Body)

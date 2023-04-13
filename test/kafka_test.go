@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"os"
 	"runtime"
-
-	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 func (s *CLITestSuite) TestKafka() {
