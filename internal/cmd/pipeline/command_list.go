@@ -23,17 +23,7 @@ func (c *command) newListCommand() *cobra.Command {
 }
 
 func (c *command) list(cmd *cobra.Command, _ []string) error {
-	cluster, err := c.Context.GetKafkaClusterForCommand()
-	if err != nil {
-		return err
-	}
-
-	environmentId, err := c.Context.EnvironmentId()
-	if err != nil {
-		return err
-	}
-
-	pipelines, err := c.V2Client.ListPipelines(environmentId, cluster.ID)
+	pipelines, err := c.getPipelines()
 	if err != nil {
 		return err
 	}

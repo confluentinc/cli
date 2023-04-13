@@ -63,6 +63,7 @@ func (s *CLITestSuite) TestConnectPlugin() {
 	tests := []CLITest{
 		{args: "connect plugin --help", fixture: "connect/plugin/help.golden"},
 		{args: "connect plugin describe GcsSink --cluster lkc-123 -o json", fixture: "connect/plugin/describe-json.golden"},
+		{args: "connect plugin describe GcsSink --cluster lkc-123 -o json", fixture: "connect/plugin/describe-json.golden"},
 		{args: "connect plugin describe GcsSink --cluster lkc-123 -o yaml", fixture: "connect/plugin/describe-yaml.golden"},
 		{args: "connect plugin describe GcsSink --cluster lkc-123", fixture: "connect/plugin/describe.golden"},
 		{args: "connect plugin list --cluster lkc-123 -o json", fixture: "connect/plugin/list-json.golden"},
@@ -73,5 +74,17 @@ func (s *CLITestSuite) TestConnectPlugin() {
 	for _, tt := range tests {
 		tt.login = "cloud"
 		s.runIntegrationTest(tt)
+	}
+}
+
+func (s *CLITestSuite) TestConnectAutocomplete() {
+	tests := []CLITest{
+		{args: `__complete connect cluster describe ""`, useKafka: "lkc-123", fixture: "connect/cluster/describe-autocomplete.golden"},
+		{args: `__complete connect plugin describe ""`, useKafka: "lkc-123", fixture: "connect/plugin/describe-autocomplete.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
 	}
 }
