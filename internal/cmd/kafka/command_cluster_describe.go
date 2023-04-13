@@ -37,7 +37,7 @@ type describeStruct struct {
 	ByokKeyId          string `human:"BYOK Key ID" serialized:"byok_key_id"`
 	EncryptionKeyId    string `human:"Encryption Key ID" serialized:"encryption_key_id"`
 	RestEndpoint       string `human:"REST Endpoint" serialized:"rest_endpoint"`
-	TopicCount         int    `human:"Topic Count,omitempty" serialized:"topic_count,omitempty"`
+	TopicCount         int    `human:"Topic Count,omitempty" serialized:"topic_count"`
 }
 
 func (c *clusterCommand) newDescribeCommand() *cobra.Command {
