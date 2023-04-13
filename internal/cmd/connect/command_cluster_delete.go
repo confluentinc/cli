@@ -39,7 +39,7 @@ func (c *clusterCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
-	environmentId, err := c.EnvironmentId()
+	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}

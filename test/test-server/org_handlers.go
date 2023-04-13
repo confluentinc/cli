@@ -22,29 +22,31 @@ var orgEnvironments = []*orgv2.OrgV2Environment{
 // Handler for: "/org/v2/environments/{id}"
 func handleOrgEnvironment(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		envId := mux.Vars(r)["id"]
-		if i := getV2Index(orgEnvironments, envId); i != -1 {
-			env := orgEnvironments[i]
-			switch r.Method {
-			case http.MethodGet:
-				err := json.NewEncoder(w).Encode(env)
-				require.NoError(t, err)
-			case http.MethodDelete:
-				_, err := io.WriteString(w, "")
-				require.NoError(t, err)
-			case http.MethodPatch:
-				envPatch := *env
-				req := orgv2.OrgV2Environment{}
-				err := json.NewDecoder(r.Body).Decode(&req)
-				require.NoError(t, err)
-				envPatch.DisplayName = req.DisplayName
+		id := mux.Vars(r)["id"]
 
-				err = json.NewEncoder(w).Encode(&envPatch)
-				require.NoError(t, err)
+		switch r.Method {
+		case http.MethodGet:
+			if id == "env-dne" {
+				w.WriteHeader(http.StatusNotFound)
+				return
 			}
-		} else {
-			// env not found
-			w.WriteHeader(http.StatusForbidden)
+			environment := &orgv2.OrgV2Environment{
+				Id:          orgv2.PtrString(id),
+				DisplayName: orgv2.PtrString("default"),
+			}
+			err := json.NewEncoder(w).Encode(environment)
+			require.NoError(t, err)
+		case http.MethodDelete:
+			_, err := io.WriteString(w, "")
+			require.NoError(t, err)
+		case http.MethodPatch:
+			req := &orgv2.OrgV2Environment{}
+			err := json.NewDecoder(r.Body).Decode(req)
+			require.NoError(t, err)
+			req.Id = orgv2.PtrString(id)
+
+			err = json.NewEncoder(w).Encode(req)
+			require.NoError(t, err)
 		}
 	}
 }
@@ -52,9 +54,21 @@ func handleOrgEnvironment(t *testing.T) http.HandlerFunc {
 // Handler for: "/org/v2/environments"
 func handleOrgEnvironments(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodGet {
+		switch r.Method {
+		case http.MethodGet:
 			environmentList := &orgv2.OrgV2EnvironmentList{Data: getV2List(orgEnvironments)}
 			err := json.NewEncoder(w).Encode(environmentList)
+			require.NoError(t, err)
+		case http.MethodPost:
+			req := &orgv2.OrgV2Environment{}
+			err := json.NewDecoder(r.Body).Decode(req)
+			require.NoError(t, err)
+
+			environment := &orgv2.OrgV2Environment{
+				Id:          orgv2.PtrString("a-5555"),
+				DisplayName: orgv2.PtrString(req.GetDisplayName()),
+			}
+			err = json.NewEncoder(w).Encode(environment)
 			require.NoError(t, err)
 		}
 	}

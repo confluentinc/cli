@@ -33,7 +33,7 @@ func (c *consumerGroupCommand) newListCommand() *cobra.Command {
 }
 
 func (c *consumerGroupCommand) list(cmd *cobra.Command, _ []string) error {
-	kafkaREST, lkc, err := getKafkaRestProxyAndLkcId(c.AuthenticatedStateFlagCommand)
+	kafkaREST, lkc, err := getKafkaRestProxyAndLkcId(c.AuthenticatedCLICommand)
 	if err != nil {
 		return err
 	}

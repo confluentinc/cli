@@ -1,12 +1,9 @@
 package environment
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
-
-	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -31,16 +28,15 @@ func (c *command) newUseCommand() *cobra.Command {
 func (c *command) use(cmd *cobra.Command, args []string) error {
 	id := args[0]
 
-	environment, err := c.Client.Account.Get(context.Background(), &ccloudv1.Account{Id: id})
-	if err != nil {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.EnvNotFoundErrorMsg, id), fmt.Sprintf(errors.ListResourceSuggestions, resource.Environment, pcmd.FullParentName(cmd)))
+	if _, err := c.V2Client.GetOrgEnvironment(id); err != nil {
+		return errors.NewErrorWithSuggestions(err.Error(), fmt.Sprintf(errors.ListResourceSuggestions, resource.Environment, pcmd.FullParentName(cmd)))
 	}
-	c.Context.SetEnvironment(environment)
 
+	c.Context.SetCurrentEnvironment(id)
 	if err := c.Config.Save(); err != nil {
-		return errors.Wrap(err, errors.EnvSwitchErrorMsg)
+		return err
 	}
 
-	output.Printf(errors.UsingEnvMsg, id)
+	output.Printf("Now using \"%s\" as the default (active) environment.\n", id)
 	return nil
 }

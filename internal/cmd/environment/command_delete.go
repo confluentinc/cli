@@ -21,6 +21,7 @@ func (c *command) newDeleteCommand() *cobra.Command {
 		RunE:              c.delete,
 	}
 
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddForceFlag(cmd)
 
 	return cmd
@@ -44,19 +45,20 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 
 	var errs error
 	var deleted []string
-	environmentId, _ := c.EnvironmentId()
 	for _, id := range args {
-		if httpResp, err := c.V2Client.DeleteOrgEnvironment(id); err != nil {
-			errs = errors.Join(errs, errors.CatchOrgV2ResourceNotFoundError(err, resource.Environment, httpResp))
+		if err := c.V2Client.DeleteOrgEnvironment(id); err != nil {
+			errs = errors.Join(err)
 		} else {
 			deleted = append(deleted, id)
-			if id == environmentId {
-				c.Context.SetEnvironment(nil)
+			if id == c.Context.GetCurrentEnvironment() {
+				c.Context.SetCurrentEnvironment("")
 
 				if err := c.Config.Save(); err != nil {
 					errs = errors.Join(errs, errors.Wrap(err, errors.EnvSwitchErrorMsg))
 				}
 			}
+			c.Context.DeleteEnvironment(id)
+			_ = c.Config.Save()
 		}
 	}
 	deletion.PrintSuccessfulDeletionMsg(deleted, resource.Environment)
@@ -71,7 +73,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 func (c *command) validateArgs(cmd *cobra.Command, args []string) (string, error) {
 	var displayName string
 	describeFunc := func(id string) error {
-		environment, _, err := c.V2Client.GetOrgEnvironment(id)
+		environment, err := c.V2Client.GetOrgEnvironment(id)
 		if err == nil && displayName == "" { // store the first valid environment name
 			displayName = environment.GetDisplayName()
 		}

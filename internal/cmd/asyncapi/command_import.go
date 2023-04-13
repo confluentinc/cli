@@ -41,7 +41,8 @@ type flagsImport struct {
 }
 
 type kafkaBinding struct {
-	XConfigs map[string]string `yaml:"x-configs"`
+	XPartitions int32             `yaml:"x-partitions"`
+	XConfigs    map[string]string `yaml:"x-configs"`
 }
 
 type Message struct {
@@ -107,7 +108,7 @@ func newImportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		),
 	}
 
-	c := &command{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
+	c := &command{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 	cmd.RunE = c.asyncapiImport
 	cmd.Flags().String("file", "", "Input file name.")
 	cmd.Flags().Bool("overwrite", false, "Overwrite existing topics with the same name.")
@@ -270,6 +271,9 @@ func (c *command) createTopic(details *accountDetails, topicName string, kafkaBi
 	createTopicRequestData := kafkarestv3.CreateTopicRequestData{
 		TopicName: topicName,
 		Configs:   &topicConfigs,
+	}
+	if kafkaBinding.XPartitions != 0 {
+		createTopicRequestData.PartitionsCount = &kafkaBinding.XPartitions
 	}
 	kafkaRest, err := c.GetKafkaREST()
 	if err != nil {

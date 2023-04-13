@@ -18,7 +18,7 @@ import (
 )
 
 type ksqlCommand struct {
-	*pcmd.AuthenticatedStateFlagCommand
+	*pcmd.AuthenticatedCLICommand
 }
 
 type ksqlCluster struct {
@@ -118,7 +118,11 @@ func (c *ksqlCommand) validArgs(cmd *cobra.Command, args []string) []string {
 		return nil
 	}
 
-	environmentId, _ := c.EnvironmentId()
+	environmentId, err := c.Context.EnvironmentId()
+	if err != nil {
+		return nil
+	}
+
 	return autocompleteClusters(environmentId, c.V2Client)
 }
 
@@ -128,8 +132,8 @@ func autocompleteClusters(environment string, client *ccloudv2.Client) []string 
 		return nil
 	}
 
-	suggestions := make([]string, len(clusters.Data))
-	for i, cluster := range clusters.Data {
+	suggestions := make([]string, len(clusters))
+	for i, cluster := range clusters {
 		suggestions[i] = fmt.Sprintf("%s\t%s", cluster.GetId(), cluster.Spec.GetDisplayName())
 	}
 	return suggestions

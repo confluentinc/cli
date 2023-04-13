@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -107,7 +106,7 @@ func AddClusterFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {
 			return nil
 		}
 
-		environmentId, err := c.EnvironmentId()
+		environmentId, err := c.Context.EnvironmentId()
 		if err != nil {
 			return nil
 		}
@@ -180,11 +179,11 @@ func AutocompleteEnvironments(v1Client *ccloudv1.Client, v2Client *ccloudv2.Clie
 	}
 
 	if auditLog := v1.GetAuditLog(ctx.Context); auditLog != nil {
-		auditLogAccount, err := v1Client.Account.Get(context.Background(), &ccloudv1.Account{Id: auditLog.GetAccountId()})
+		environment, err := v2Client.GetOrgEnvironment(auditLog.GetAccountId())
 		if err != nil {
 			return nil
 		}
-		suggestions = append(suggestions, fmt.Sprintf("%s\t%s", auditLog.GetAccountId(), auditLogAccount.GetName()))
+		suggestions = append(suggestions, fmt.Sprintf("%s\t%s", auditLog.GetAccountId(), environment.GetDisplayName()))
 	}
 
 	return suggestions
@@ -201,7 +200,7 @@ func AddKsqlClusterFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {
 			return nil
 		}
 
-		environmentId, err := c.EnvironmentId()
+		environmentId, err := c.Context.EnvironmentId()
 		if err != nil {
 			return nil
 		}
@@ -215,8 +214,8 @@ func autocompleteKSQLClusters(environmentId string, client *ccloudv2.Client) []s
 		return nil
 	}
 
-	suggestions := make([]string, len(clusters.Data))
-	for i, cluster := range clusters.Data {
+	suggestions := make([]string, len(clusters))
+	for i, cluster := range clusters {
 		suggestions[i] = fmt.Sprintf("%s\t%s", cluster.GetId(), cluster.Spec.GetDisplayName())
 	}
 	return suggestions

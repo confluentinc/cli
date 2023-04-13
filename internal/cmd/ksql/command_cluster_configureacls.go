@@ -46,7 +46,7 @@ func (c *ksqlCommand) configureACLs(cmd *cobra.Command, args []string) error {
 
 	ksqlCluster := args[0]
 
-	environmentId, err := c.EnvironmentId()
+	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}
