@@ -34,22 +34,21 @@ func RandomSQLSentence() *rapid.Generator[SQLSentence] {
 			rapid.ID[string],
 		).Draw(t, "regular words")
 
+		tokens := append(words, regularWords...)
+		shuffled := FisherYatesShuffle(tokens).Draw(t, "shuffled")
 		splitTokens := rapid.SliceOfNDistinct(
 			rapid.SampledFrom(maps.Keys(SpecialSplitTokens)),
-			1,
-			10,
+			len(shuffled)+1,
+			len(shuffled)+1,
 			rapid.ID[int32],
 		).Draw(t, "split tokens")
 
-		tokens := lo.Map(splitTokens, func(token int32, _ int) string { return string(token) })
-		tokens = append(tokens, words...)
-		tokens = append(tokens, regularWords...)
+		stopwords := lo.Map(splitTokens, func(token int32, _ int) string { return string(token) })
+		shuffled = lo.Interleave(shuffled, stopwords)
 
-		shuffled := FisherYatesShuffle(tokens).Draw(t, "shuffled")
+		line := strings.Join(shuffled, "")
 
-		line := strings.Join(shuffled, " ")
-
-		return SQLSentence{Text: line, TokenCount: 2*len(tokens) - 1, Tokens: tokens}
+		return SQLSentence{Text: line, TokenCount: len(shuffled), Tokens: shuffled}
 	})
 }
 
