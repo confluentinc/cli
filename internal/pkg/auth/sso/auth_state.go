@@ -12,7 +12,6 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
-	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
 var (
@@ -69,24 +68,7 @@ type authState struct {
 // and tweaks certain variables for internal development and testing of the CLIs
 // auth0 server / SSO integration.
 func newState(authURL string, noBrowser bool) (*authState, error) {
-	if authURL == "" {
-		authURL = "https://confluent.cloud"
-	}
-
-	var env string
-	if authURL == "https://confluent.cloud" {
-		env = "prod"
-	} else if strings.HasSuffix(authURL, "priv.cpdev.cloud") {
-		env = "cpd"
-	} else if authURL == "https://devel.cpdev.cloud" {
-		env = "devel"
-	} else if authURL == "https://stag.cpdev.cloud" {
-		env = "stag"
-	} else if authURL == testserver.TestCloudUrl.String() {
-		env = "test"
-	} else {
-		return nil, fmt.Errorf("unrecognized auth url: %s", authURL)
-	}
+	env := getCCloudEnvFromBaseUrl(authURL)
 
 	state := &authState{}
 	state.SSOProviderCallbackUrl = authURL + ssoProviderCallbackEndpoint
