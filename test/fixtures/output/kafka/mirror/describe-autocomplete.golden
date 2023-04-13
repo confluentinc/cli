@@ -1,4 +1,4 @@
-dest-topic-1	link-1: src-topic-1
-dest-topic-2	link-2: src-topic-2
+dest-topic-1
+dest-topic-2
 :4
 Completion ended with directive: ShellCompDirectiveNoFileComp

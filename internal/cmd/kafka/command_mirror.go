@@ -1,8 +1,6 @@
 package kafka
 
 import (
-	"fmt"
-
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
@@ -97,8 +95,7 @@ func (c *mirrorCommand) autocompleteMirrorTopics(cmd *cobra.Command) []string {
 
 	suggestions := make([]string, len(listMirrorTopicsResponseDataList.Data))
 	for i, mirrorTopic := range listMirrorTopicsResponseDataList.Data {
-		description := fmt.Sprintf("%s: %s", mirrorTopic.LinkName, mirrorTopic.SourceTopicName)
-		suggestions[i] = fmt.Sprintf("%s\t%s", mirrorTopic.MirrorTopicName, description)
+		suggestions[i] = mirrorTopic.MirrorTopicName
 	}
 	return suggestions
 }
