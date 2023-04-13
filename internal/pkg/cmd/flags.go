@@ -43,7 +43,7 @@ func AutocompleteApiKeys(client *ccloudv2.Client) []string {
 		if !apiKey.Spec.HasOwner() {
 			continue
 		}
-		suggestions[i] = fmt.Sprintf("%s\t%s", apiKey.GetId(), *apiKey.GetSpec().Description)
+		suggestions[i] = fmt.Sprintf("%s\t%s", apiKey.GetId(), apiKey.Spec.GetDescription())
 	}
 	return suggestions
 }
