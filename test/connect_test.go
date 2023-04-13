@@ -76,7 +76,7 @@ func (s *CLITestSuite) TestConnectPlugin() {
 	}
 }
 
-func (s *CLITestSuite) TestConnectAutocomplete() {
+func (s *CLITestSuite) TestConnect_Autocomplete() {
 	tests := []CLITest{
 		{args: `__complete connect cluster describe ""`, useKafka: "lkc-123", fixture: "connect/cluster/describe-autocomplete.golden"},
 		{args: `__complete connect plugin describe ""`, useKafka: "lkc-123", fixture: "connect/plugin/describe-autocomplete.golden"},
