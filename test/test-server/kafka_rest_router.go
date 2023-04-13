@@ -151,7 +151,7 @@ func handleKafkaRPTopics(t *testing.T) http.HandlerFunc {
 				"kind": "KafkaTopicList",
 				"metadata": {"self": "http://localhost:9391/v3/clusters/cluster-1/topics","next": null},
 				"data": [
-				  {
+					{
 					"kind": "KafkaTopic",
 					"metadata": {"self": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1","resource_name": "crn:///kafka=cluster-1/topic=topic-1"},
 					"cluster_id": "cluster-1",
@@ -161,8 +161,8 @@ func handleKafkaRPTopics(t *testing.T) http.HandlerFunc {
 					"partitions": {"related": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1/partitions"},
 					"configs": {"related": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1/configs"},
 					"partition_reassignments": {"related": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1/partitions/-/reassignments"}
-				  },
-				  {
+					},
+					{
 					"kind": "KafkaTopic",
 					"metadata": {"self": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-2","resource_name": "crn:///kafka=cluster-1/topic=topic-2"},
 					"cluster_id": "cluster-1",
@@ -172,7 +172,7 @@ func handleKafkaRPTopics(t *testing.T) http.HandlerFunc {
 					"partitions": {"related": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-2/partitions"},
 					"configs": {"related": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-2/configs"},
 					"partition_reassignments": {"related": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-2/partitions/-/reassignments"}
-				  }
+					}
 				]
 			}`
 			_, err := io.WriteString(w, response)
