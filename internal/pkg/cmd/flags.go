@@ -153,7 +153,7 @@ func AddContextFlag(cmd *cobra.Command, command *CLICommand) {
 }
 
 func AutocompleteContexts(cfg *v1.Config) []string {
-	return types.GetKeys(cfg.Contexts)
+	return types.GetSortedKeys(cfg.Contexts)
 }
 
 func AddEnvironmentFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
