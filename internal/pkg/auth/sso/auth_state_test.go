@@ -12,7 +12,7 @@ import (
 )
 
 func TestNewStateDev(t *testing.T) {
-	state, err := newState("https://devel.cpdev.cloud", false)
+	state, err := newState("https://devel.cpdev.cloud/", false)
 	require.NoError(t, err)
 	// randomly generated
 	require.True(t, len(state.CodeVerifier) > 10)
@@ -32,7 +32,7 @@ func TestNewStateDev(t *testing.T) {
 	require.Empty(t, state.SSOProviderIDToken)
 
 	// check stag configs
-	stateStag, err := newState("https://stag.cpdev.cloud", false)
+	stateStag, err := newState("https://stag.cpdev.cloud/", false)
 	require.NoError(t, err)
 	require.Equal(t, "https://login-stag.confluent-dev.io", stateStag.SSOProviderHost)
 	require.Equal(t, "8RxQmZEYtEDah4MTIIzl4hGGeFwdJS6w", stateStag.SSOProviderClientID)
@@ -42,7 +42,7 @@ func TestNewStateDev(t *testing.T) {
 	require.Empty(t, state.SSOProviderIDToken)
 
 	// check cpd configs
-	stateCpd, err := newState("https://aware-monkfish.gcp.priv.cpdev.cloud", false)
+	stateCpd, err := newState("https://aware-monkfish.gcp.priv.cpdev.cloud/", false)
 	require.NoError(t, err)
 	require.Equal(t, "https://login-cpd.confluent-dev.io", stateCpd.SSOProviderHost)
 	require.Equal(t, "7rG4pmRbnMn5mIsEBLAP941IE1x2rNqC", stateCpd.SSOProviderClientID)
@@ -128,10 +128,10 @@ func TestNewStateProdNoBrowser(t *testing.T) {
 				(state.CodeVerifier != state.SSOProviderState) &&
 				(state.CodeChallenge != state.SSOProviderState))
 
-		require.Equal(t, state.SSOProviderHost, "https://login.confluent.io")
-		require.Equal(t, state.SSOProviderClientID, "oX2nvSKl5jvBKVgwehZfvR4K8RhsZIEs")
-		require.Equal(t, state.SSOProviderCallbackUrl, "https://confluent.cloud/cli_callback")
-		require.Equal(t, state.SSOProviderIdentifier, "https://confluent.auth0.com/api/v2/")
+		require.Equal(t, "https://login.confluent.io", state.SSOProviderHost)
+		require.Equal(t, "oX2nvSKl5jvBKVgwehZfvR4K8RhsZIEs", state.SSOProviderClientID)
+		require.Equal(t, "https://confluent.cloud/cli_callback", state.SSOProviderCallbackUrl)
+		require.Equal(t, "https://confluent.auth0.com/api/v2/", state.SSOProviderIdentifier)
 		require.Empty(t, state.SSOProviderAuthenticationCode)
 		require.Empty(t, state.SSOProviderIDToken)
 	}
