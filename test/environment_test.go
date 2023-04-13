@@ -15,6 +15,9 @@ func (s *CLITestSuite) TestEnvironment() {
 		{args: "environment delete not-595 --force", fixture: "environment/11.golden"},
 		{args: "environment delete not-595", input: "default\n", fixture: "environment/11-prompt.golden"},
 		{args: "environment delete env-dne --force", fixture: "environment/12.golden", exitCode: 1},
+		{args: "environment use env-123"},
+		{args: "environment delete env-srUpdate env-dne", fixture: "environment/13.golden", exitCode: 1},
+		{args: "environment delete env-srUpdate not-595", input: "y\n", fixture: "environment/14.golden"},
 	}
 
 	resetConfiguration(s.T(), false)
@@ -27,8 +30,8 @@ func (s *CLITestSuite) TestEnvironment() {
 
 func (s *CLITestSuite) TestEnvironmentDescribe() {
 	tests := []CLITest{
-		{args: "environment describe env-12345", fixture: "environment/describe.golden"},
-		{args: "environment describe env-12345 -o json", fixture: "environment/describe-json.golden"},
+		{args: "environment describe env-123", fixture: "environment/describe.golden"},
+		{args: "environment describe env-123 -o json", fixture: "environment/describe-json.golden"},
 	}
 
 	for _, tt := range tests {

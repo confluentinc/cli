@@ -1,3 +1,4 @@
      ID    | Provider Name | Provider Organization Name | Status |       Invite Expires At        
 -----------+---------------+----------------------------+--------+--------------------------------
   ss-12345 | provider      | provider org               | active | 2022-07-22 22:08:41 +0000 UTC  
+  ss-67890 | provider2     | provider org 2             | active | 2022-07-22 22:08:41 +0000 UTC  

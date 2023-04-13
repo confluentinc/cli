@@ -27,6 +27,10 @@ var (
 
 type ApiKeyListV2 []apikeysv2.IamV2ApiKey
 
+type ObjWithId interface {
+	GetId() string
+}
+
 // Len is part of sort.Interface.
 func (d ApiKeyListV2) Len() int {
 	return len(d)
@@ -352,4 +356,34 @@ func isRoleBindingMatch(rolebinding mdsv2.IamV2RoleBinding, principal, roleName,
 		return false
 	}
 	return true
+}
+
+func isValidEnvironmentId(environments []*ccloudv1.Account, reqEnvId string) *ccloudv1.Account {
+	for _, env := range environments {
+		if reqEnvId == env.Id {
+			return env
+		}
+	}
+	return nil
+}
+
+func getV2List[T any](ptrList []*T) []T {
+	objList := make([]T, len(ptrList))
+	for i, ptr := range ptrList {
+		objList[i] = *ptr
+	}
+	return objList
+}
+
+func getV2Index[T ObjWithId](objSlice []T, id string) int {
+	for i, obj := range objSlice {
+		if obj.GetId() == id {
+			return i
+		}
+	}
+	return -1
+}
+
+func ptr[T any](obj T) *T {
+	return &obj
 }

@@ -17,6 +17,8 @@ func (s *CLITestSuite) TestBYOK() {
 		// delete tests
 		{args: "byok delete cck-001", input: "y\n", fixture: "byok/delete_1.golden"},
 		{args: "byok delete cck-404", fixture: "byok/delete_2.golden", exitCode: 1},
+		{args: "byok delete cck-002 cck-006 cck-007 cck-100", fixture: "byok/delete_3.golden", exitCode: 1},
+		{args: "byok delete cck-002 cck-003", input: "y\n", fixture: "byok/delete_4.golden"},
 	}
 
 	resetConfiguration(s.T(), false)
