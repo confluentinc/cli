@@ -14,10 +14,11 @@ import (
 
 func (c *linkCommand) newConfigurationUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update <link>",
-		Short: "Update cluster link configurations.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  c.configurationUpdate,
+		Use:               "update <link>",
+		Short:             "Update cluster link configurations.",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		RunE:              c.configurationUpdate,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Update configuration values for the cluster link "my-link".`,
