@@ -1,0 +1,16 @@
++----------------------+-------------------------------------+
+| Current              | true                                |
+| ID                   | lkc-describe-dedicated-provisioning |
+| Name                 | kafka-cluster                       |
+| Type                 | DEDICATED                           |
+| Cluster Size         |                                   1 |
+| Ingress Limit (MB/s) |                                  50 |
+| Egress Limit (MB/s)  |                                 150 |
+| Storage              | Infinite                            |
+| Provider             | aws                                 |
+| Region               | us-west-2                           |
+| Availability         | single-zone                         |
+| Status               | PROVISIONING                        |
+| Endpoint             |                                     |
+| REST Endpoint        |                                     |
++----------------------+-------------------------------------+
