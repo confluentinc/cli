@@ -13,10 +13,11 @@ import (
 
 func (c *quotaCommand) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update <id>",
-		Short: "Update a Kafka client quota.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  c.update,
+		Use:               "update <id>",
+		Short:             "Update a Kafka client quota.",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		RunE:              c.update,
 		Example: examples.BuildExampleString(examples.Example{
 			Text: `Add "sa-12345" to an existing quota and remove "sa-67890".`,
 			Code: `confluent kafka quota update cq-123ab --add-principals sa-12345 --remove-principals sa-67890`,
