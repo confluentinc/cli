@@ -48,3 +48,8 @@ func (s *CLITestSuite) TestKsqlClusterConfigureAcls() {
 		s.runIntegrationTest(tt)
 	}
 }
+
+func (s *CLITestSuite) TestKSQLAutocomplete() {
+	test := CLITest{args: `__complete ksql cluster describe ""`, login: "cloud", fixture: "ksql/cluster/describe-autocomplete.golden"}
+	s.runIntegrationTest(test)
+}
