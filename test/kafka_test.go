@@ -172,7 +172,7 @@ func (s *CLITestSuite) TestKafka() {
 	}
 }
 
-func (s *CLITestSuite) TestKafka_ClusterCreateByok() {
+func (s *CLITestSuite) TestKafkaClusterCreate_Byok() {
 	test := CLITest{
 		login:   "cloud",
 		args:    "kafka cluster create cck-byok-test --cloud aws --region us-east-1 --type dedicated --cku 1 --byok cck-001",
@@ -182,7 +182,7 @@ func (s *CLITestSuite) TestKafka_ClusterCreateByok() {
 	s.runIntegrationTest(test)
 }
 
-func (s *CLITestSuite) TestKafka_ClusterCreateGcpByok() {
+func (s *CLITestSuite) TestKafkaClusterCreate_GcpByok() {
 	test := CLITest{
 		login:   "cloud",
 		args:    "kafka cluster create gcp-byok-test --cloud gcp --region asia-southeast1 --type dedicated --cku 1 --encryption-key xyz",
@@ -193,7 +193,7 @@ func (s *CLITestSuite) TestKafka_ClusterCreateGcpByok() {
 	s.runIntegrationTest(test)
 }
 
-func (s *CLITestSuite) TestKafka_ClientConfig() {
+func (s *CLITestSuite) TestKafkaClientConfig() {
 	// TODO: add --config flag to all commands or ENVVAR instead of using standard config file location
 	tests := []CLITest{
 		// pass - check flags
@@ -249,7 +249,7 @@ func getCreateLinkConfigFile() string {
 	return file.Name()
 }
 
-func (s *CLITestSuite) TestKafka_Broker() {
+func (s *CLITestSuite) TestKafkaBroker() {
 	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
 	tests := []CLITest{
 		{args: "kafka broker list -h", fixture: "kafka/broker/list-help.golden"},
@@ -292,7 +292,7 @@ func (s *CLITestSuite) TestKafka_Broker() {
 	}
 }
 
-func (s *CLITestSuite) TestKafka_Partition() {
+func (s *CLITestSuite) TestKafkaPartition() {
 	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
 	tests := []CLITest{
 		{args: "kafka partition --help", fixture: "kafka/partition/help.golden"},
@@ -318,7 +318,7 @@ func (s *CLITestSuite) TestKafka_Partition() {
 	}
 }
 
-func (s *CLITestSuite) TestKafka_Replica() {
+func (s *CLITestSuite) TestKafkaReplica() {
 	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
 	tests := []CLITest{
 		{args: "kafka replica --help", fixture: "kafka/replica/help.golden"},
@@ -336,7 +336,7 @@ func (s *CLITestSuite) TestKafka_Replica() {
 	}
 }
 
-func (s *CLITestSuite) TestKafka_TopicList() {
+func (s *CLITestSuite) TestKafkaTopicList() {
 	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
 	tests := []CLITest{
 		// Test correct usage
@@ -361,7 +361,7 @@ func (s *CLITestSuite) TestKafka_TopicList() {
 	}
 }
 
-func (s *CLITestSuite) TestKafka_TopicCreate() {
+func (s *CLITestSuite) TestKafkaTopicCreate() {
 	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
 	tests := []CLITest{
 		// <topic> errors
@@ -387,7 +387,7 @@ func (s *CLITestSuite) TestKafka_TopicCreate() {
 	}
 }
 
-func (s *CLITestSuite) TestKafka_TopicDelete() {
+func (s *CLITestSuite) TestKafkaTopicDelete() {
 	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
 	tests := []CLITest{
 		{args: fmt.Sprintf("kafka topic delete --url %s --no-authentication --force", kafkaRestURL), contains: "Error: accepts 1 arg(s), received 0", exitCode: 1, name: "missing topic-name should return error"},
@@ -401,7 +401,7 @@ func (s *CLITestSuite) TestKafka_TopicDelete() {
 	}
 }
 
-func (s *CLITestSuite) TestKafka_TopicUpdate() {
+func (s *CLITestSuite) TestKafkaTopicUpdate() {
 	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
 	tests := []CLITest{
 		// Topic name errors
@@ -422,7 +422,7 @@ func (s *CLITestSuite) TestKafka_TopicUpdate() {
 	}
 }
 
-func (s *CLITestSuite) TestKafka_TopicDescribe() {
+func (s *CLITestSuite) TestKafkaTopicDescribe() {
 	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
 	tests := []CLITest{
 		// Topic name errors
@@ -440,7 +440,7 @@ func (s *CLITestSuite) TestKafka_TopicDescribe() {
 	}
 }
 
-func (s *CLITestSuite) TestKafka_Acl() {
+func (s *CLITestSuite) TestKafkaAcl() {
 	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
 	tests := []CLITest{
 		// error case: bad operation, specified more than one resource type
@@ -471,7 +471,7 @@ func (s *CLITestSuite) TestKafka_Acl() {
 	}
 }
 
-func (s *CLITestSuite) TestKafka_ClientQuotas() {
+func (s *CLITestSuite) TestKafkaQuota() {
 	tests := []CLITest{
 		// Client Quotas
 		{args: "kafka quota create --name clientQuota --description description --ingress 500 --egress 100 --principals sa-1234,sa-5678 --cluster lkc-1234", fixture: "kafka/quota/create.golden"},

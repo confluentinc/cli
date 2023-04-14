@@ -42,7 +42,7 @@ func (s *CLITestSuite) TestAsyncApiExport() {
 	}
 }
 
-func (s *CLITestSuite) TestAsyncApi_Import() {
+func (s *CLITestSuite) TestAsyncApiImport() {
 	tests := []CLITest{
 		{args: "asyncapi import", fixture: "asyncapi/import-err-no-file.golden", exitCode: 1},
 		{args: "asyncapi import --file=./test/fixtures/input/asyncapi/asyncapi-spec.yaml", exitCode: 1, fixture: "asyncapi/no-kafka.golden"},

@@ -27,7 +27,7 @@ func (s *CLITestSuite) TestByok() {
 	}
 }
 
-func (s *CLITestSuite) TestByok_Describe() {
+func (s *CLITestSuite) TestByokDescribe() {
 	tests := []CLITest{
 		{args: "byok describe cck-001", fixture: "byok/describe-aws.golden"},
 		{args: "byok describe cck-001 -o json", fixture: "byok/describe-aws-json.golden"},

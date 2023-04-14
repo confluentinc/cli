@@ -36,7 +36,7 @@ func (s *CLITestSuite) TestKsql() {
 	}
 }
 
-func (s *CLITestSuite) TestKsql_ClusterConfigureAcls() {
+func (s *CLITestSuite) TestKsqlClusterConfigureAcls() {
 	tests := []CLITest{
 		{args: "ksql cluster configure-acls --help", fixture: "ksql/cluster/configure-acls-help.golden"},
 		{args: "ksql cluster configure-acls lksqlc-12345 --cluster lkc-abcde", fixture: "ksql/cluster/configure-acls.golden"},

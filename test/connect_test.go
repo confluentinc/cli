@@ -32,7 +32,7 @@ func (s *CLITestSuite) TestConnect() {
 	}
 }
 
-func (s *CLITestSuite) TestConnect_ClusterPause() {
+func (s *CLITestSuite) TestConnectClusterPause() {
 	tests := []CLITest{
 		{args: "connect cluster pause --help", fixture: "connect/cluster/pause-help.golden"},
 		{args: "connect cluster pause lcc-000000 --cluster lkc-123456", fixture: "connect/cluster/pause-unknown.golden", exitCode: 1},
@@ -45,7 +45,7 @@ func (s *CLITestSuite) TestConnect_ClusterPause() {
 	}
 }
 
-func (s *CLITestSuite) TestConnect_ClusterResume() {
+func (s *CLITestSuite) TestConnectClusterResume() {
 	tests := []CLITest{
 		{args: "connect cluster resume --help", fixture: "connect/cluster/resume-help.golden"},
 		{args: "connect cluster resume lcc-000000 --cluster lkc-123456", fixture: "connect/cluster/resume-unknown.golden", exitCode: 1},
@@ -58,7 +58,7 @@ func (s *CLITestSuite) TestConnect_ClusterResume() {
 	}
 }
 
-func (s *CLITestSuite) TestConnect_Plugin() {
+func (s *CLITestSuite) TestConnectPlugin() {
 	// TODO: add --config flag to all commands or ENVVAR instead of using standard config file location
 	tests := []CLITest{
 		{args: "connect plugin --help", fixture: "connect/plugin/help.golden"},

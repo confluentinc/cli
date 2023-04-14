@@ -14,7 +14,7 @@ Describe the non-default cluster-wide broker configuration values.
 
 Flags:
       --all                       Get cluster-wide broker configurations (non-default values only).
-      --config-name string        Get a specific configuration value (pair with --all to see a cluster-wide config).
+      --config-name string        Get a specific configuration value (pair with "--all" to see a cluster-wide config).
       --url string                Base URL of REST Proxy Endpoint of Kafka Cluster (include /kafka for embedded Rest Proxy). Must set flag or CONFLUENT_REST_URL.
       --ca-cert-path string       Path to a PEM-encoded CA to verify the Confluent REST Proxy.
       --client-cert-path string   Path to client cert to be verified by Confluent REST Proxy, include for mTLS authentication.

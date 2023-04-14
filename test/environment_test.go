@@ -25,7 +25,7 @@ func (s *CLITestSuite) TestEnvironment() {
 	}
 }
 
-func (s *CLITestSuite) TestEnvironment_Describe() {
+func (s *CLITestSuite) TestEnvironmentDescribe() {
 	tests := []CLITest{
 		{args: "environment describe env-12345", fixture: "environment/describe.golden"},
 		{args: "environment describe env-12345 -o json", fixture: "environment/describe-json.golden"},

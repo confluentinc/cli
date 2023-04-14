@@ -152,7 +152,7 @@ func (s *CLITestSuite) TestApiKey() {
 	}
 }
 
-func (s *CLITestSuite) TestApiKey_Describe() {
+func (s *CLITestSuite) TestApiKeyDescribe() {
 	resetConfiguration(s.T(), false)
 
 	tests := []CLITest{
@@ -167,7 +167,7 @@ func (s *CLITestSuite) TestApiKey_Describe() {
 	}
 }
 
-func (s *CLITestSuite) TestApiKey_CreateServiceAccountNotValid() {
+func (s *CLITestSuite) TestApiKeyCreate_ServiceAccountNotValid() {
 	tt := CLITest{args: "api-key create --resource lkc-ab123 --service-account sa-123456", login: "cloud", fixture: "api-key/55.golden", exitCode: 1}
 	s.runIntegrationTest(tt)
 }

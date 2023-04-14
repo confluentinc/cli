@@ -16,13 +16,13 @@ func (s *CLITestSuite) contextCreateArgs(name string) string {
 	return fmt.Sprintf("context create %s --bootstrap %s --api-key %s --api-secret %s", name, bootstrap, apiKey, apiSecret)
 }
 
-func (s *CLITestSuite) TestContext_Create() {
+func (s *CLITestSuite) TestContextCreate() {
 	resetConfiguration(s.T(), false)
 	tt := CLITest{fixture: "context/create/0.golden", args: s.contextCreateArgs("0")}
 	s.runIntegrationTest(tt)
 }
 
-func (s *CLITestSuite) TestContext_Delete() {
+func (s *CLITestSuite) TestContextDelete() {
 	resetConfiguration(s.T(), false)
 
 	tests := []CLITest{
@@ -39,7 +39,7 @@ func (s *CLITestSuite) TestContext_Delete() {
 	}
 }
 
-func (s *CLITestSuite) TestContext_Describe() {
+func (s *CLITestSuite) TestContextDescribe() {
 	resetConfiguration(s.T(), false)
 
 	tests := []CLITest{
@@ -58,7 +58,7 @@ func (s *CLITestSuite) TestContext_Describe() {
 	}
 }
 
-func (s *CLITestSuite) TestContext_List() {
+func (s *CLITestSuite) TestContextList() {
 	resetConfiguration(s.T(), false)
 
 	tests := []CLITest{
@@ -73,7 +73,7 @@ func (s *CLITestSuite) TestContext_List() {
 	}
 }
 
-func (s *CLITestSuite) TestContext_ListCloudAndOnPrem() {
+func (s *CLITestSuite) TestContextList_CloudAndOnPrem() {
 	resetConfiguration(s.T(), false)
 
 	tests := []CLITest{
@@ -95,7 +95,7 @@ func (s *CLITestSuite) TestContext_ListCloudAndOnPrem() {
 	}
 }
 
-func (s *CLITestSuite) TestContext_Update() {
+func (s *CLITestSuite) TestContextUpdate() {
 	resetConfiguration(s.T(), false)
 
 	tests := []CLITest{
@@ -113,7 +113,7 @@ func (s *CLITestSuite) TestContext_Update() {
 	}
 }
 
-func (s *CLITestSuite) TestContext_Use() {
+func (s *CLITestSuite) TestContextUse() {
 	resetConfiguration(s.T(), false)
 
 	tests := []CLITest{
@@ -130,8 +130,10 @@ func (s *CLITestSuite) TestContext_Use() {
 }
 
 func (s *CLITestSuite) TestContext_Autocomplete() {
+	resetConfiguration(s.T(), false)
 	tests := []CLITest{
 		{args: s.contextCreateArgs("0")},
+		{args: s.contextCreateArgs("1")},
 		{args: `__complete context describe ""`, fixture: "context/describe/describe-autocomplete.golden"},
 	}
 
