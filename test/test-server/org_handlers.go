@@ -12,7 +12,7 @@ import (
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 )
 
-var orgEnvironments = []*orgv2.OrgV2Environment{
+var OrgEnvironments = []*orgv2.OrgV2Environment{
 	{Id: orgv2.PtrString("a-595"), DisplayName: orgv2.PtrString("default")},
 	{Id: orgv2.PtrString("not-595"), DisplayName: orgv2.PtrString("other")},
 	{Id: orgv2.PtrString("env-123"), DisplayName: orgv2.PtrString("env123")},
@@ -56,7 +56,7 @@ func handleOrgEnvironments(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			environmentList := &orgv2.OrgV2EnvironmentList{Data: getV2List(orgEnvironments)}
+			environmentList := &orgv2.OrgV2EnvironmentList{Data: getOrgEnvironmentsList(OrgEnvironments)}
 			err := json.NewEncoder(w).Encode(environmentList)
 			require.NoError(t, err)
 		case http.MethodPost:
@@ -112,4 +112,12 @@ func handleOrgOrganizations(t *testing.T) http.HandlerFunc {
 			require.NoError(t, err)
 		}
 	}
+}
+
+func getOrgEnvironmentsList(envs []*orgv2.OrgV2Environment) []orgv2.OrgV2Environment {
+	envList := []orgv2.OrgV2Environment{}
+	for _, env := range envs {
+		envList = append(envList, *env)
+	}
+	return envList
 }
