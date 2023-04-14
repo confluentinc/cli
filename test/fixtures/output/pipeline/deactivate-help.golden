@@ -1,7 +1,7 @@
 Request to deactivate a pipeline.
 
 Usage:
-  confluent pipeline deactivate <pipeline-id> [flags]
+  confluent pipeline deactivate <id> [flags]
 
 Examples:
 Request to deactivate Stream Designer pipeline "pipe-12345" with 3 retained topics.

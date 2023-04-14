@@ -1,7 +1,7 @@
 Delete a pipeline.
 
 Usage:
-  confluent pipeline delete <pipeline-id> [flags]
+  confluent pipeline delete <id> [flags]
 
 Examples:
 Request to delete Stream Designer pipeline "pipe-12345".

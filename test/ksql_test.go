@@ -1,6 +1,6 @@
 package test
 
-func (s *CLITestSuite) TestKSQL() {
+func (s *CLITestSuite) TestKsql() {
 	// TODO: add --config flag to all commands or ENVVAR instead of using standard config file location
 	tests := []CLITest{
 		{args: "ksql --help", fixture: "ksql/help.golden"},
@@ -36,7 +36,7 @@ func (s *CLITestSuite) TestKSQL() {
 	}
 }
 
-func (s *CLITestSuite) TestKsqlClusterConfigureAcls() {
+func (s *CLITestSuite) TestKsql_ClusterConfigureAcls() {
 	tests := []CLITest{
 		{args: "ksql cluster configure-acls --help", fixture: "ksql/cluster/configure-acls-help.golden"},
 		{args: "ksql cluster configure-acls lksqlc-12345 --cluster lkc-abcde", fixture: "ksql/cluster/configure-acls.golden"},
@@ -49,7 +49,7 @@ func (s *CLITestSuite) TestKsqlClusterConfigureAcls() {
 	}
 }
 
-func (s *CLITestSuite) TestKSQLAutocomplete() {
+func (s *CLITestSuite) TestKsql_Autocomplete() {
 	test := CLITest{args: `__complete ksql cluster describe ""`, login: "cloud", fixture: "ksql/cluster/describe-autocomplete.golden"}
 	s.runIntegrationTest(test)
 }

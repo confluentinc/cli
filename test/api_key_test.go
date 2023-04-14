@@ -11,7 +11,7 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 )
 
-func (s *CLITestSuite) TestAPIKey() {
+func (s *CLITestSuite) TestApiKey() {
 	// TODO: add --config flag to all commands or ENVVAR instead of using standard config file location
 	tests := []CLITest{
 		{args: "api-key create --resource lkc-bob", login: "cloud", fixture: "api-key/1.golden"}, // MYKEY3
@@ -152,7 +152,7 @@ func (s *CLITestSuite) TestAPIKey() {
 	}
 }
 
-func (s *CLITestSuite) TestApiKeyDescribe() {
+func (s *CLITestSuite) TestApiKey_Describe() {
 	resetConfiguration(s.T(), false)
 
 	tests := []CLITest{
@@ -167,17 +167,17 @@ func (s *CLITestSuite) TestApiKeyDescribe() {
 	}
 }
 
-func (s *CLITestSuite) TestAPIKeyCreate_ServiceAccountNotValid() {
+func (s *CLITestSuite) TestApiKey_CreateServiceAccountNotValid() {
 	tt := CLITest{args: "api-key create --resource lkc-ab123 --service-account sa-123456", login: "cloud", fixture: "api-key/55.golden", exitCode: 1}
 	s.runIntegrationTest(tt)
 }
 
-func (s *CLITestSuite) TestAPIKey_EnvironmentNotValid() {
+func (s *CLITestSuite) TestApiKey_EnvironmentNotValid() {
 	tt := CLITest{args: "api-key list --resource lkc-dne", login: "cloud", env: []string{fmt.Sprintf("%s=no-environment-user@example.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}, fixture: "api-key/no-env.golden", exitCode: 1}
 	s.runIntegrationTest(tt)
 }
 
-func (s *CLITestSuite) TestApiKeyAutocomplete() {
+func (s *CLITestSuite) TestApiKey_Autocomplete() {
 	test := CLITest{args: `__complete api-key describe ""`, login: "cloud", fixture: "api-key/describe-autocomplete.golden"}
 	s.runIntegrationTest(test)
 }
