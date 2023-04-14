@@ -7,7 +7,7 @@ const (
 	exampleRegion = "us-east-1"
 )
 
-func (s *CLITestSuite) TestPrice() {
+func (s *CLITestSuite) TestPriceList() {
 	tests := []CLITest{
 		{args: fmt.Sprintf("price list --cloud %s --region %s", exampleCloud, exampleRegion), fixture: "price/list.golden"},
 		{args: fmt.Sprintf("price list --cloud %s --region %s -o json", exampleCloud, exampleRegion), fixture: "price/list-json.golden"},
