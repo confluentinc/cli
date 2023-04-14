@@ -11,7 +11,7 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 )
 
-func (s *CLITestSuite) TestAPIKey() {
+func (s *CLITestSuite) TestApiKey() {
 	// TODO: add --config flag to all commands or ENVVAR instead of using standard config file location
 	tests := []CLITest{
 		{args: "api-key create --resource lkc-bob", login: "cloud", fixture: "api-key/1.golden"}, // MYKEY3
@@ -63,16 +63,16 @@ func (s *CLITestSuite) TestAPIKey() {
 		{args: "api-key list --resource lkc-other1", fixture: "api-key/25.golden"},
 
 		// store an API key for kafka cluster
-		{args: "api-key store UIAPIKEY100 @test/fixtures/input/api-key/UIAPISECRET100.txt --resource lkc-cool1", fixture: "api-key/26.golden"},
+		{args: "api-key store UIAPIKEY100 --resource lkc-cool1", input: "UIAPISECRET100\n", fixture: "api-key/26.golden"},
 		{args: "api-key list --resource lkc-cool1", fixture: "api-key/21.golden"},
 
 		// store an API key for other kafka cluster
-		{args: "api-key store UIAPIKEY101 @test/fixtures/input/api-key/UIAPISECRET101.txt --resource lkc-other1", fixture: "api-key/27.golden"},
+		{args: "api-key store UIAPIKEY101 --resource lkc-other1", input: "UIAPISECRET101\n", fixture: "api-key/27.golden"},
 		{args: "api-key list --resource lkc-cool1", fixture: "api-key/21.golden"},
 		{args: "api-key list --resource lkc-other1", fixture: "api-key/28.golden"},
 
 		// store exists already error
-		{args: "api-key store UIAPIKEY101 @test/fixtures/input/api-key/UIAPISECRET101.txt --resource lkc-other1", fixture: "api-key/override-error.golden", exitCode: 1},
+		{args: "api-key store UIAPIKEY101 --resource lkc-other1", input: "UIAPISECRET101\n", fixture: "api-key/override-error.golden", exitCode: 1},
 
 		{args: "api-key store UIAPIKEY103 UIAPISECRET103 --resource lksqlc-ksql1", fixture: "api-key/29.golden", exitCode: 1},
 		{args: "api-key use UIAPIKEY103 --resource lksqlc-ksql1", fixture: "api-key/29.golden", exitCode: 1},
@@ -109,10 +109,10 @@ func (s *CLITestSuite) TestAPIKey() {
 		{args: "api-key create --description my-cool-app --resource lkc-cool1 --use", fixture: "api-key/60.golden"}, // MYKEY16
 
 		// store: error handling
-		{name: "error if storing unknown API key", args: "api-key store UNKNOWN @test/fixtures/input/api-key/UIAPISECRET100.txt --resource lkc-cool1", fixture: "api-key/47.golden", exitCode: 1},
+		{name: "error if storing unknown API key", args: "api-key store UNKNOWN --resource lkc-cool1", input: "UIAPISECRET100\n", fixture: "api-key/47.golden", exitCode: 1},
 		{name: "error if storing API key with existing secret", args: "api-key store UIAPIKEY100 NEWSECRET --resource lkc-cool1", fixture: "api-key/48.golden", exitCode: 1},
 		{
-			name: "succeed if forced to overwrite existing secret", args: "api-key store -f UIAPIKEY100 NEWSECRET --resource lkc-cool1", fixture: "api-key/49.golden",
+			name: "succeed if forced to overwrite existing secret", args: "api-key store UIAPIKEY100 NEWSECRET --resource lkc-cool1 --force", fixture: "api-key/49.golden",
 			wantFunc: func(t *testing.T) {
 				cfg := v1.New()
 				cfg, err := load.LoadAndMigrate(cfg)
@@ -167,12 +167,12 @@ func (s *CLITestSuite) TestApiKeyDescribe() {
 	}
 }
 
-func (s *CLITestSuite) TestAPIKeyCreate_ServiceAccountNotValid() {
+func (s *CLITestSuite) TestApiKeyCreate_ServiceAccountNotValid() {
 	tt := CLITest{args: "api-key create --resource lkc-ab123 --service-account sa-123456", login: "cloud", fixture: "api-key/55.golden", exitCode: 1}
 	s.runIntegrationTest(tt)
 }
 
-func (s *CLITestSuite) TestAPIKey_EnvironmentNotValid() {
+func (s *CLITestSuite) TestApiKey_EnvironmentNotValid() {
 	tt := CLITest{args: "api-key list --resource lkc-dne", login: "cloud", env: []string{fmt.Sprintf("%s=no-environment-user@example.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}, fixture: "api-key/no-env.golden", exitCode: 1}
 	s.runIntegrationTest(tt)
 }
