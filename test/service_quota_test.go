@@ -1,6 +1,6 @@
 package test
 
-func (s *CLITestSuite) TestQuotaValues() {
+func (s *CLITestSuite) TestServiceQuota() {
 	tests := []CLITest{
 		{args: "service-quota list kafka_cluster", fixture: "service-quota/1.golden", login: "cloud"},
 		{args: "service-quota list kafka_cluster --environment env-1", fixture: "service-quota/2.golden"},

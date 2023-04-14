@@ -14,7 +14,7 @@ import (
 
 func (c *command) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "delete <context>",
+		Use:               "delete <name>",
 		Short:             "Delete a context.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),

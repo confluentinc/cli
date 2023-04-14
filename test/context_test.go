@@ -16,13 +16,13 @@ func (s *CLITestSuite) contextCreateArgs(name string) string {
 	return fmt.Sprintf("context create %s --bootstrap %s --api-key %s --api-secret %s", name, bootstrap, apiKey, apiSecret)
 }
 
-func (s *CLITestSuite) TestContextCreate() {
+func (s *CLITestSuite) TestContext_Create() {
 	resetConfiguration(s.T(), false)
 	tt := CLITest{fixture: "context/create/0.golden", args: s.contextCreateArgs("0")}
 	s.runIntegrationTest(tt)
 }
 
-func (s *CLITestSuite) TestContextDelete() {
+func (s *CLITestSuite) TestContext_Delete() {
 	resetConfiguration(s.T(), false)
 
 	tests := []CLITest{
@@ -39,7 +39,7 @@ func (s *CLITestSuite) TestContextDelete() {
 	}
 }
 
-func (s *CLITestSuite) TestDescribe() {
+func (s *CLITestSuite) TestContext_Describe() {
 	resetConfiguration(s.T(), false)
 
 	tests := []CLITest{
@@ -58,7 +58,7 @@ func (s *CLITestSuite) TestDescribe() {
 	}
 }
 
-func (s *CLITestSuite) TestContextList() {
+func (s *CLITestSuite) TestContext_List() {
 	resetConfiguration(s.T(), false)
 
 	tests := []CLITest{
@@ -73,7 +73,7 @@ func (s *CLITestSuite) TestContextList() {
 	}
 }
 
-func (s *CLITestSuite) TestContextList_CloudAndOnPrem() {
+func (s *CLITestSuite) TestContext_ListCloudAndOnPrem() {
 	resetConfiguration(s.T(), false)
 
 	tests := []CLITest{
@@ -95,7 +95,7 @@ func (s *CLITestSuite) TestContextList_CloudAndOnPrem() {
 	}
 }
 
-func (s *CLITestSuite) TestContextUpdate() {
+func (s *CLITestSuite) TestContext_Update() {
 	resetConfiguration(s.T(), false)
 
 	tests := []CLITest{
@@ -113,7 +113,7 @@ func (s *CLITestSuite) TestContextUpdate() {
 	}
 }
 
-func (s *CLITestSuite) TestContextUse() {
+func (s *CLITestSuite) TestContext_Use() {
 	resetConfiguration(s.T(), false)
 
 	tests := []CLITest{
@@ -129,7 +129,7 @@ func (s *CLITestSuite) TestContextUse() {
 	}
 }
 
-func (s *CLITestSuite) TestContextAutocomplete() {
+func (s *CLITestSuite) TestContext_Autocomplete() {
 	tests := []CLITest{
 		{args: s.contextCreateArgs("0")},
 		{args: `__complete context describe ""`, fixture: "context/describe/describe-autocomplete.golden"},

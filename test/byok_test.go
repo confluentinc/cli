@@ -1,6 +1,6 @@
 package test
 
-func (s *CLITestSuite) TestBYOK() {
+func (s *CLITestSuite) TestByok() {
 	tests := []CLITest{
 		// Only log in at the beginning so active env is not reset
 		// tt.workflow=true so login is not reset
@@ -27,7 +27,7 @@ func (s *CLITestSuite) TestBYOK() {
 	}
 }
 
-func (s *CLITestSuite) TestBYOKDescribe() {
+func (s *CLITestSuite) TestByok_Describe() {
 	tests := []CLITest{
 		{args: "byok describe cck-001", fixture: "byok/describe-aws.golden"},
 		{args: "byok describe cck-001 -o json", fixture: "byok/describe-aws-json.golden"},
@@ -41,7 +41,7 @@ func (s *CLITestSuite) TestBYOKDescribe() {
 	}
 }
 
-func (s *CLITestSuite) TestByokAutocomplete() {
+func (s *CLITestSuite) TestByok_Autocomplete() {
 	test := CLITest{args: `__complete byok describe ""`, login: "cloud", fixture: "byok/describe-autocomplete.golden"}
 	s.runIntegrationTest(test)
 }
