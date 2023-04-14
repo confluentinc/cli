@@ -45,7 +45,7 @@ func (c *brokerCommand) newDescribeCommand() *cobra.Command {
 	}
 
 	cmd.Flags().Bool("all", false, "Get cluster-wide broker configurations (non-default values only).")
-	cmd.Flags().String("config-name", "", "Get a specific configuration value (pair with --all to see a cluster-wide config).")
+	cmd.Flags().String("config-name", "", `Get a specific configuration value (pair with "--all" to see a cluster-wide config).`)
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	pcmd.AddOutputFlag(cmd)
 
