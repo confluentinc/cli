@@ -11,10 +11,11 @@ import (
 
 func (c *command) newDeactivateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "deactivate <pipeline-id>",
-		Short: "Request to deactivate a pipeline.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  c.deactivate,
+		Use:               "deactivate <pipeline-id>",
+		Short:             "Request to deactivate a pipeline.",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		RunE:              c.deactivate,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Request to deactivate Stream Designer pipeline "pipe-12345" with 3 retained topics.`,
@@ -44,7 +45,7 @@ func (c *command) deactivate(cmd *cobra.Command, args []string) error {
 		RetainedTopicNames: &retainedTopics,
 	}}
 
-	environmentId, err := c.EnvironmentId()
+	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}

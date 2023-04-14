@@ -200,7 +200,7 @@ func (suite *KafkaClusterTestSuite) TestGetLkcForDescribe() {
 	cmd := new(cobra.Command)
 	cfg := v1.AuthenticatedCloudConfigMock()
 	prerunner := &pcmd.PreRun{Config: cfg}
-	c := &clusterCommand{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
+	c := &clusterCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 	c.Config = dynamicconfig.New(cfg, nil, nil)
 	lkc, err := c.getLkcForDescribe([]string{"lkc-123"})
 	req.Equal("lkc-123", lkc)

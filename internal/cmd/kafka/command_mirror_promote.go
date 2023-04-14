@@ -14,10 +14,11 @@ import (
 
 func (c *mirrorCommand) newPromoteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "promote <destination-topic-1> [destination-topic-2] ... [destination-topic-N] --link my-link",
-		Short: "Promote mirror topics.",
-		RunE:  c.promote,
-		Args:  cobra.MinimumNArgs(1),
+		Use:               "promote <destination-topic-1> [destination-topic-2] ... [destination-topic-N]",
+		Short:             "Promote mirror topics.",
+		RunE:              c.promote,
+		Args:              cobra.MinimumNArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgsMultiple),
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Promote mirror topics "my-topic-1" and "my-topic-2":`,
@@ -26,7 +27,7 @@ func (c *mirrorCommand) newPromoteCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String(linkFlagName, "", "The name of the cluster link.")
+	pcmd.AddLinkFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().Bool(dryrunFlagName, false, "If set, does not actually create the link, but simply validates it.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -57,7 +58,7 @@ func (c *mirrorCommand) promote(cmd *cobra.Command, args []string) error {
 		return errors.New(errors.RestProxyNotAvailableMsg)
 	}
 
-	lkc, err := getKafkaClusterLkcId(c.AuthenticatedStateFlagCommand)
+	lkc, err := getKafkaClusterLkcId(c.AuthenticatedCLICommand)
 	if err != nil {
 		return err
 	}

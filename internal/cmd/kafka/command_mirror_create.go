@@ -37,7 +37,7 @@ func (c *mirrorCommand) newCreateCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String(linkFlagName, "", "The name of the cluster link to attach to the mirror topic.")
+	pcmd.AddLinkFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().Int32(replicationFactorFlagName, 3, "Replication factor.")
 	cmd.Flags().String(configFileFlagName, "", "Name of a file with additional topic configuration. Each property should be on its own line with the format: key=value.")
 	cmd.Flags().String(sourceTopicFlagName, "", "Name of the topic to be mirrored over the cluster link, i.e. the source topic's name. Only required when there is a prefix configured on the link.")
@@ -92,7 +92,7 @@ func (c *mirrorCommand) create(cmd *cobra.Command, args []string) error {
 		return errors.New(errors.RestProxyNotAvailableMsg)
 	}
 
-	lkc, err := getKafkaClusterLkcId(c.AuthenticatedStateFlagCommand)
+	lkc, err := getKafkaClusterLkcId(c.AuthenticatedCLICommand)
 	if err != nil {
 		return err
 	}

@@ -25,7 +25,7 @@ var availabilitiesToModel = map[string]string{
 }
 
 type clusterCommand struct {
-	*pcmd.AuthenticatedStateFlagCommand
+	*pcmd.AuthenticatedCLICommand
 }
 
 func newClusterCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
@@ -38,9 +38,9 @@ func newClusterCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command 
 	c := &clusterCommand{}
 
 	if cfg.IsCloudLogin() {
-		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)
+		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedCLICommand(cmd, prerunner)
 	} else {
-		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner)
+		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)
 	}
 
 	cmd.AddCommand(c.newCreateCommand(cfg))
@@ -67,6 +67,6 @@ func (c *clusterCommand) validArgs(cmd *cobra.Command, args []string) []string {
 		return nil
 	}
 
-	environmentId, _ := c.EnvironmentId()
+	environmentId, _ := c.Context.EnvironmentId()
 	return pcmd.AutocompleteCmkClusters(environmentId, c.V2Client)
 }

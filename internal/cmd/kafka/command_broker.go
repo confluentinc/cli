@@ -10,7 +10,7 @@ import (
 )
 
 type brokerCommand struct {
-	*pcmd.AuthenticatedStateFlagCommand
+	*pcmd.AuthenticatedCLICommand
 }
 
 func newBrokerCommand(prerunner pcmd.PreRunner) *cobra.Command {
@@ -20,7 +20,7 @@ func newBrokerCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 	}
 
-	c := &brokerCommand{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
+	c := &brokerCommand{pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)}
 	cmd.PersistentPreRunE = prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand)
 
 	cmd.AddCommand(c.newDeleteCommand())
