@@ -14,7 +14,7 @@ import (
 
 func (c *mirrorCommand) newFailoverCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "failover <destination-topic-1> [destination-topic-2] ... [destination-topic-N]",
+		Use:               "failover <name-1> [name-2] ... [name-n]",
 		Short:             "Failover mirror topics.",
 		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgsMultiple),

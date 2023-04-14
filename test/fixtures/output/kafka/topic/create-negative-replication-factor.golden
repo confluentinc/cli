@@ -1,6 +1,6 @@
 Error: invalid argument "-2" for "--replication-factor" flag: strconv.ParseUint: parsing "-2": invalid syntax
 Usage:
-  confluent kafka topic create <topic> [flags]
+  confluent kafka topic create <name> [flags]
 
 Examples:
 Create a topic named "my_topic" with default options for the current specified cluster (providing embedded Kafka REST Proxy endpoint).

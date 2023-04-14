@@ -20,7 +20,7 @@ type linkConfigurationOut struct {
 
 func (c *linkCommand) newConfigurationListCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "list <link>",
+		Use:               "list <name>",
 		Short:             "List cluster link configurations.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),

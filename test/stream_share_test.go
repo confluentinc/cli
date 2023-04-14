@@ -29,7 +29,7 @@ func (s *CLITestSuite) TestStreamShare() {
 	}
 }
 
-func (s *CLITestSuite) TestStreamShareAutocomplete() {
+func (s *CLITestSuite) TestStreamShare_Autocomplete() {
 	tests := []CLITest{
 		{args: `__complete stream-share consumer share describe ""`, fixture: "stream-share/describe-consumer-share-autocomplete.golden"},
 		{args: `__complete stream-share provider share describe ""`, fixture: "stream-share/describe-provider-share-autocomplete.golden"},

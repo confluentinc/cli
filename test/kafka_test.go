@@ -172,7 +172,7 @@ func (s *CLITestSuite) TestKafka() {
 	}
 }
 
-func (s *CLITestSuite) TestKafkaClusterCreateByok() {
+func (s *CLITestSuite) TestKafkaClusterCreate_Byok() {
 	test := CLITest{
 		login:   "cloud",
 		args:    "kafka cluster create cck-byok-test --cloud aws --region us-east-1 --type dedicated --cku 1 --byok cck-001",
@@ -292,7 +292,7 @@ func (s *CLITestSuite) TestKafkaBroker() {
 	}
 }
 
-func (s *CLITestSuite) TestKafkaPartitions() {
+func (s *CLITestSuite) TestKafkaPartition() {
 	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
 	tests := []CLITest{
 		{args: "kafka partition --help", fixture: "kafka/partition/help.golden"},
@@ -471,7 +471,7 @@ func (s *CLITestSuite) TestKafkaAcl() {
 	}
 }
 
-func (s *CLITestSuite) TestKafkaClientQuotas() {
+func (s *CLITestSuite) TestKafkaQuota() {
 	tests := []CLITest{
 		// Client Quotas
 		{args: "kafka quota create --name clientQuota --description description --ingress 500 --egress 100 --principals sa-1234,sa-5678 --cluster lkc-1234", fixture: "kafka/quota/create.golden"},
@@ -493,7 +493,7 @@ func (s *CLITestSuite) TestKafkaClientQuotas() {
 	}
 }
 
-func (s *CLITestSuite) TestKafkaAutocomplete() {
+func (s *CLITestSuite) TestKafka_Autocomplete() {
 	tests := []CLITest{
 		{args: `__complete kafka cluster describe ""`, fixture: "kafka/describe-autocomplete.golden"},
 		{args: `__complete kafka link delete ""`, fixture: "kafka/link/list-link-delete-autocomplete.golden", useKafka: "lkc-describe-topic"}, // use delete since link has no describe subcommand

@@ -37,7 +37,7 @@ func (s *CLITestSuite) TestAuditLogConfig() {
 	}
 }
 
-func (s *CLITestSuite) TestAuditLogConfigSpecSerialization() {
+func (s *CLITestSuite) TestAuditLogConfig_SpecSerialization() {
 	original := LoadFixture(s.T(), "audit-log/config/roundtrip-fixedpoint.golden")
 	originalBytes := []byte(original)
 	spec := mds.AuditLogConfigSpec{}
@@ -77,7 +77,7 @@ func (s *CLITestSuite) TestAuditLogRoute() {
 	}
 }
 
-func (s *CLITestSuite) TestAuditConfigMigrate() {
+func (s *CLITestSuite) TestAuditLogConfigMigrate() {
 	migration1 := GetInputFixturePath(s.T(), "audit-log", "config-migration-server1.golden")
 	migration2 := GetInputFixturePath(s.T(), "audit-log", "config-migration-server2.golden")
 
@@ -107,6 +107,6 @@ func (s *CLITestSuite) TestAuditConfigMigrate() {
 	}
 }
 
-func (s *CLITestSuite) TestAuditLogDisabledDescribe() {
+func (s *CLITestSuite) TestAuditLogDescribe_Disabled() {
 	s.runIntegrationTest(CLITest{args: "audit-log describe", login: "cloud", fixture: "audit-log/describe-fail.golden", disableAuditLog: true, exitCode: 1})
 }

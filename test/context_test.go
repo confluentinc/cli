@@ -39,7 +39,7 @@ func (s *CLITestSuite) TestContextDelete() {
 	}
 }
 
-func (s *CLITestSuite) TestDescribe() {
+func (s *CLITestSuite) TestContextDescribe() {
 	resetConfiguration(s.T(), false)
 
 	tests := []CLITest{
@@ -129,9 +129,11 @@ func (s *CLITestSuite) TestContextUse() {
 	}
 }
 
-func (s *CLITestSuite) TestContextAutocomplete() {
+func (s *CLITestSuite) TestContext_Autocomplete() {
+	resetConfiguration(s.T(), false)
 	tests := []CLITest{
 		{args: s.contextCreateArgs("0")},
+		{args: s.contextCreateArgs("1")},
 		{args: `__complete context describe ""`, fixture: "context/describe/describe-autocomplete.golden"},
 	}
 

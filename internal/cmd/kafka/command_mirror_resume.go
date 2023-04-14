@@ -17,7 +17,7 @@ import (
 
 func (c *mirrorCommand) newResumeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "resume <destination-topic-1> [destination-topic-2] ... [destination-topic-N]",
+		Use:               "resume <name-1> [name-2] ... [name-n]",
 		Short:             "Resume mirror topics.",
 		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgsMultiple),
