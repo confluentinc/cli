@@ -9,7 +9,7 @@ import (
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
-func (s *CLITestSuite) TestAsyncApi_Export() {
+func (s *CLITestSuite) TestAsyncapiExport() {
 	tests := []CLITest{
 		{args: "asyncapi export", exitCode: 1, fixture: "asyncapi/no-kafka.golden"},
 		{args: "asyncapi export", exitCode: 1, useKafka: "lkc-asyncapi", authKafka: "true", fixture: "asyncapi/no-sr-key.golden"},
