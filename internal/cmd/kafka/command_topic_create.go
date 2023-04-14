@@ -21,7 +21,7 @@ import (
 
 func (c *authenticatedTopicCommand) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create <topic>",
+		Use:   "create <name>",
 		Short: "Create a Kafka topic.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.create,

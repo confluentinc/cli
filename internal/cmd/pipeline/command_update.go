@@ -15,7 +15,7 @@ import (
 
 func (c *command) newUpdateCommand(enableSourceCode bool) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "update <pipeline-id>",
+		Use:               "update <id>",
 		Short:             "Update an existing pipeline.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),

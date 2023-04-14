@@ -12,7 +12,7 @@ import (
 
 func (c *command) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "update <api-key>",
+		Use:               "update <key>",
 		Short:             "Update an API key.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),

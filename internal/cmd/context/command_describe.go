@@ -19,7 +19,7 @@ type out struct {
 
 func (c *command) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "describe [context]",
+		Use:               "describe [name]",
 		Short:             "Describe a context.",
 		Long:              "Describe a context or a specific context field.",
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),

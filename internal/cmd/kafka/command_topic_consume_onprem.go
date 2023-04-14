@@ -20,7 +20,7 @@ import (
 
 func (c *authenticatedTopicCommand) newConsumeCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "consume <topic>",
+		Use:   "consume <name>",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.consumeOnPrem,
 		Short: "Consume messages from a Kafka topic.",
