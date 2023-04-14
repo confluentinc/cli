@@ -1,7 +1,7 @@
 Describe a Kafka partition via Confluent Kafka REST.
 
 Usage:
-  confluent kafka partition describe <partition-id> [flags]
+  confluent kafka partition describe <id> [flags]
 
 Examples:
 Describe partition "1" for topic "my_topic".

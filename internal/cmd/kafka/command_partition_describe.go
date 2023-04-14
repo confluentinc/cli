@@ -18,7 +18,7 @@ type partitionOut struct {
 
 func (c *partitionCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "describe <partition-id>",
+		Use:   "describe <id>",
 		Short: "Describe a Kafka partition.",
 		Long:  "Describe a Kafka partition via Confluent Kafka REST.",
 		Args:  cobra.ExactArgs(1),
