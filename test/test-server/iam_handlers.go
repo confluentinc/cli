@@ -378,13 +378,18 @@ func handleIamRoleBinding(t *testing.T) http.HandlerFunc {
 func handleIamIdentityPool(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := mux.Vars(r)["id"]
+		if id != "pool-12345" && id != "pool-55555" {
+			err := writeResourceNotFoundError(w)
+			require.NoError(t, err)
+			return
+		}
 		switch r.Method {
 		case http.MethodPatch:
 			var req identityproviderv2.IamV2IdentityPool
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
 			res := &identityproviderv2.IamV2IdentityPool{
-				Id:            identityproviderv2.PtrString("op-55555"),
+				Id:            req.Id,
 				DisplayName:   req.DisplayName,
 				Description:   req.Description,
 				IdentityClaim: req.IdentityClaim,
@@ -393,16 +398,10 @@ func handleIamIdentityPool(t *testing.T) http.HandlerFunc {
 			err = json.NewEncoder(w).Encode(res)
 			require.NoError(t, err)
 		case http.MethodDelete:
-			switch id {
-			case "pool-1":
-				err := writeResourceNotFoundError(w)
-				require.NoError(t, err)
-			default:
-				w.WriteHeader(http.StatusNoContent)
-			}
+			w.WriteHeader(http.StatusNoContent)
 		case http.MethodGet:
 			identityPool := identityproviderv2.IamV2IdentityPool{
-				Id:            identityproviderv2.PtrString(identityPoolResourceID),
+				Id:            identityproviderv2.PtrString(id),
 				DisplayName:   identityproviderv2.PtrString("identity_pool"),
 				Description:   identityproviderv2.PtrString("pooling identities"),
 				IdentityClaim: identityproviderv2.PtrString("sub"),
@@ -420,7 +419,7 @@ func handleIamIdentityPools(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			identityPool := identityproviderv2.IamV2IdentityPool{
-				Id:            identityproviderv2.PtrString(identityPoolResourceID),
+				Id:            identityproviderv2.PtrString("pool-12345"),
 				DisplayName:   identityproviderv2.PtrString("identity_pool"),
 				Description:   identityproviderv2.PtrString("pooling identities."),
 				IdentityClaim: identityproviderv2.PtrString("sub"),
