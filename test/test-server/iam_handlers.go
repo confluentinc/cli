@@ -297,13 +297,18 @@ func handleIamRoleBindings(t *testing.T) http.HandlerFunc {
 func handleIamIdentityProvider(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := mux.Vars(r)["id"]
+		if id != identityProviderResourceID && id != "op-67890" {
+			err := writeResourceNotFoundError(w)
+			require.NoError(t, err)
+			return
+		}
 		switch r.Method {
 		case http.MethodPatch:
 			var req identityproviderv2.IamV2IdentityProvider
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
 			res := &identityproviderv2.IamV2IdentityProvider{
-				Id:          identityproviderv2.PtrString("op-55555"),
+				Id:          req.Id,
 				DisplayName: req.DisplayName,
 				Description: req.Description,
 				Issuer:      identityproviderv2.PtrString("https://company.provider.com"),
@@ -312,16 +317,10 @@ func handleIamIdentityProvider(t *testing.T) http.HandlerFunc {
 			err = json.NewEncoder(w).Encode(res)
 			require.NoError(t, err)
 		case http.MethodDelete:
-			switch id {
-			case "op-1":
-				err := writeResourceNotFoundError(w)
-				require.NoError(t, err)
-			default:
-				w.WriteHeader(http.StatusNoContent)
-			}
+			w.WriteHeader(http.StatusNoContent)
 		case http.MethodGet:
 			identityProvider := identityproviderv2.IamV2IdentityProvider{
-				Id:          identityproviderv2.PtrString(identityProviderResourceID),
+				Id:          identityproviderv2.PtrString(id),
 				DisplayName: identityproviderv2.PtrString("identity_provider"),
 				Description: identityproviderv2.PtrString("providing identities."),
 				Issuer:      identityproviderv2.PtrString("https://company.provider.com"),
