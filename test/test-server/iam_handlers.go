@@ -84,14 +84,13 @@ func handleIamApiKeyUpdate(t *testing.T, keyStr string) http.HandlerFunc {
 
 func handleIamApiKeyGet(t *testing.T, keyStr string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if keyStr == "UNKNOWN" {
+		if apiKey, ok := keyStoreV2[keyStr]; ok {
+			err := json.NewEncoder(w).Encode(apiKey)
+			require.NoError(t, err)
+		} else {
 			err := writeResourceNotFoundError(w)
 			require.NoError(t, err)
-			return
 		}
-		apiKey := keyStoreV2[keyStr]
-		err := json.NewEncoder(w).Encode(apiKey)
-		require.NoError(t, err)
 	}
 }
 
