@@ -14,7 +14,7 @@ import (
 
 func (c *command) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "delete <api-key>",
+		Use:               "delete <key>",
 		Short:             "Delete an API key.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),

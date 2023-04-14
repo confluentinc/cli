@@ -27,7 +27,7 @@ type topicConfigurationOut struct {
 
 func (c *authenticatedTopicCommand) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "update <topic>",
+		Use:               "update <name>",
 		Short:             "Update a Kafka topic.",
 		Args:              cobra.ExactArgs(1),
 		RunE:              c.update,
