@@ -14,7 +14,7 @@ import (
 
 func (c *mirrorCommand) newPromoteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "promote <mirror-topic-name-1> [mirror-topic-name-2] ... [mirror-topic-name-n]",
+		Use:               "promote <name-1> [name-2] ... [name-n]",
 		Short:             "Promote mirror topics.",
 		RunE:              c.promote,
 		Args:              cobra.MinimumNArgs(1),
