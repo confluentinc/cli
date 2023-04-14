@@ -210,26 +210,25 @@ func handleIamUsers(t *testing.T) http.HandlerFunc {
 func handleIamServiceAccount(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := mux.Vars(r)["id"]
+		if id != serviceAccountResourceID && id != "sa-54321" {
+			err := writeResourceNotFoundError(w)
+			require.NoError(t, err)
+			return
+		}
 		switch r.Method {
 		case http.MethodGet:
-			switch id {
-			case "sa-6789":
-				err := writeResourceNotFoundError(w)
-				require.NoError(t, err)
-			default:
-				serviceAccount := iamv2.IamV2ServiceAccount{
-					Id:          iamv2.PtrString(serviceAccountResourceID),
-					DisplayName: iamv2.PtrString("service_account"),
-					Description: iamv2.PtrString("at your service."),
-				}
-				err := json.NewEncoder(w).Encode(serviceAccount)
-				require.NoError(t, err)
+			serviceAccount := iamv2.IamV2ServiceAccount{
+				Id:          iamv2.PtrString(id),
+				DisplayName: iamv2.PtrString("service_account"),
+				Description: iamv2.PtrString("at your service."),
 			}
+			err := json.NewEncoder(w).Encode(serviceAccount)
+			require.NoError(t, err)
 		case http.MethodPatch:
 			var req iamv2.IamV2ServiceAccount
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
-			res := &iamv2.IamV2ServiceAccount{Id: iamv2.PtrString(id), Description: req.Description}
+			res := &iamv2.IamV2ServiceAccount{Id: req.Id, Description: req.Description}
 			err = json.NewEncoder(w).Encode(res)
 			require.NoError(t, err)
 		case http.MethodDelete:
