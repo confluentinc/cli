@@ -55,7 +55,7 @@ func (s *CLITestSuite) TestAsyncApiImport() {
 	}
 }
 
-func (s *CLITestSuite) TestAsyncApiImportWithWorkflow() {
+func (s *CLITestSuite) TestAsyncApiImport_WithWorkflow() {
 	tests := []CLITest{
 		{args: "environment use " + testserver.SRApiEnvId, workflow: true},
 		{args: "asyncapi import --file=./test/fixtures/input/asyncapi/asyncapi-spec.yaml --schema-registry-api-key ASYNCAPIKEY --schema-registry-api-secret ASYNCAPISECRET", useKafka: "lkc-asyncapi", authKafka: "true", workflow: true, fixture: "asyncapi/import-no-overwrite.golden"},

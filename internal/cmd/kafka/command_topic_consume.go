@@ -21,7 +21,7 @@ import (
 
 func newConsumeCommand(prerunner pcmd.PreRunner, clientId string) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "consume <topic>",
+		Use:         "consume <name>",
 		Short:       "Consume messages from a Kafka topic.",
 		Long:        "Consume messages from a Kafka topic.\n\nTruncated message headers will be printed if they exist.",
 		Args:        cobra.ExactArgs(1),

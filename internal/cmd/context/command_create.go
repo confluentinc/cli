@@ -13,7 +13,7 @@ import (
 
 func (c *command) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create [context]",
+		Use:   "create <name>",
 		Short: "Create a new context.",
 		Long:  "Create a new Cloud context with an API key.",
 		Args:  cobra.ExactArgs(1),

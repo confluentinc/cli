@@ -9,7 +9,7 @@ import (
 
 func (c *command) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "describe <pipeline-id>",
+		Use:               "describe <id>",
 		Short:             "Describe a Stream Designer pipeline.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),

@@ -11,7 +11,7 @@ import (
 
 func (c *command) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "update [context]",
+		Use:               "update [name]",
 		Short:             "Update a context field.",
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.update,

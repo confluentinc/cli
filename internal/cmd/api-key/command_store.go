@@ -26,7 +26,7 @@ work. For example, the Kafka topic consume and produce commands require an API s
 
 func (c *command) newStoreCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "store [api-key] [secret]",
+		Use:   "store [key] [secret]",
 		Short: "Store an API key/secret locally to use in the CLI.",
 		Long:  longDescription,
 		Args:  cobra.MaximumNArgs(2),

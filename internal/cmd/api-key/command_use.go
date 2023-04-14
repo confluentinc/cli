@@ -13,7 +13,7 @@ import (
 
 func (c *command) newUseCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "use <api-key>",
+		Use:               "use <key>",
 		Short:             "Set the active API key for use in other commands.",
 		Long:              "Set the active API key for use in any command which supports passing an API key with the `--api-key` flag.",
 		Args:              cobra.ExactArgs(1),
