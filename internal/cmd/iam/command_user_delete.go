@@ -12,10 +12,11 @@ import (
 
 func (c *userCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delete <id-1> [id-2] ... [id-n]",
-		Short: "Delete users from your organization.",
-		Args:  cobra.MinimumNArgs(1),
-		RunE:  c.delete,
+		Use:               "delete <id-1> [id-2] ... [id-n]",
+		Short:             "Delete users from your organization.",
+		Args:              cobra.MinimumNArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		RunE:              c.delete,
 	}
 
 	pcmd.AddForceFlag(cmd)

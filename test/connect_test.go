@@ -77,3 +77,15 @@ func (s *CLITestSuite) TestConnectPlugin() {
 		s.runIntegrationTest(tt)
 	}
 }
+
+func (s *CLITestSuite) TestConnect_Autocomplete() {
+	tests := []CLITest{
+		{args: `__complete connect cluster describe ""`, useKafka: "lkc-123", fixture: "connect/cluster/describe-autocomplete.golden"},
+		{args: `__complete connect plugin describe ""`, useKafka: "lkc-123", fixture: "connect/plugin/describe-autocomplete.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}

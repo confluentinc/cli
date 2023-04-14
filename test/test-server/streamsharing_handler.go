@@ -14,49 +14,43 @@ import (
 	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
 )
 
-var (
-	invitedAt, _  = time.Parse(time.RFC3339, "2022-07-20T22:08:41+00:00")
-	redeemedAt, _ = time.Parse(time.RFC3339, "2022-07-21T22:08:41+00:00")
-	expiresAt, _  = time.Parse(time.RFC3339, "2022-07-22T22:08:41+00:00")
-
-	consumerShares = []*cdxv1.CdxV1ConsumerShare{
-		{
-			Id:                       cdxv1.PtrString("ss-12345"),
-			ProviderUserName:         cdxv1.PtrString("provider"),
-			ProviderOrganizationName: cdxv1.PtrString("provider org"),
-			Status:                   &cdxv1.CdxV1ConsumerShareStatus{Phase: "active"},
-			InviteExpiresAt:          &expiresAt,
-		},
-		{
-			Id:                       cdxv1.PtrString("ss-67890"),
-			ProviderUserName:         cdxv1.PtrString("provider2"),
-			ProviderOrganizationName: cdxv1.PtrString("provider org 2"),
-			Status:                   &cdxv1.CdxV1ConsumerShareStatus{Phase: "active"},
-			InviteExpiresAt:          &expiresAt,
-		},
+func getTestConsumerShare() cdxv1.CdxV1ConsumerShare {
+	expiresAt, _ := time.Parse(time.RFC3339, "2022-07-22T22:08:41+00:00")
+	return cdxv1.CdxV1ConsumerShare{
+		Id:                       cdxv1.PtrString("ss-12345"),
+		ProviderUserName:         cdxv1.PtrString("provider"),
+		ProviderOrganizationName: cdxv1.PtrString("provider org"),
+		Status:                   &cdxv1.CdxV1ConsumerShareStatus{Phase: "active"},
+		InviteExpiresAt:          &expiresAt,
 	}
+}
 
-	providerShares = []*cdxv1.CdxV1ProviderShare{
-		{
-			Id:                       cdxv1.PtrString("ss-12345"),
-			ConsumerUserName:         cdxv1.PtrString("consumer"),
-			ConsumerOrganizationName: cdxv1.PtrString("consumer org"),
-			Status:                   &cdxv1.CdxV1ProviderShareStatus{Phase: "active"},
-			DeliveryMethod:           cdxv1.PtrString("email"),
-			RedeemedAt:               &redeemedAt,
-			InvitedAt:                &invitedAt,
-			InviteExpiresAt:          &expiresAt,
-		},
-		{
-			Id:                       cdxv1.PtrString("ss-67890"),
-			ConsumerUserName:         cdxv1.PtrString("consumer2"),
-			ConsumerOrganizationName: cdxv1.PtrString("consumer org 2"),
-			Status:                   &cdxv1.CdxV1ProviderShareStatus{Phase: "active"},
-			DeliveryMethod:           cdxv1.PtrString("email"),
-			RedeemedAt:               &redeemedAt,
-			InvitedAt:                &invitedAt,
-			InviteExpiresAt:          &expiresAt,
-		},
+func getTestConsumerSharedResource() cdxv1.CdxV1ConsumerSharedResource {
+	return cdxv1.CdxV1ConsumerSharedResource{
+		Id: cdxv1.PtrString("sr-12345"),
+	}
+}
+
+func getTestAWSNetwork() *cdxv1.CdxV1AwsNetwork {
+	return &cdxv1.CdxV1AwsNetwork{
+		Kind:                       "AwsNetwork",
+		PrivateLinkEndpointService: cdxv1.PtrString("com.amazonaws.vpce.us-west-2.vpce-svc-0000000000"),
+	}
+}
+
+func getTestProviderShare() cdxv1.CdxV1ProviderShare {
+	invitedAt, _ := time.Parse(time.RFC3339, "2022-07-20T22:08:41+00:00")
+	redeemedAt, _ := time.Parse(time.RFC3339, "2022-07-21T22:08:41+00:00")
+	expiresAt, _ := time.Parse(time.RFC3339, "2022-07-22T22:08:41+00:00")
+	return cdxv1.CdxV1ProviderShare{
+		Id:                       cdxv1.PtrString("ss-12345"),
+		ConsumerUserName:         cdxv1.PtrString("consumer"),
+		ConsumerOrganizationName: cdxv1.PtrString("consumer org"),
+		Status:                   &cdxv1.CdxV1ProviderShareStatus{Phase: "active"},
+		DeliveryMethod:           cdxv1.PtrString("email"),
+		RedeemedAt:               &redeemedAt,
+		InvitedAt:                &invitedAt,
+		InviteExpiresAt:          &expiresAt,
 	}
 )
 

@@ -15,10 +15,11 @@ import (
 
 func (c *command) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delete <pipeline-id-1> [pipeline-id-2] ... [pipeline-id-n]",
-		Short: "Delete pipelines.",
-		Args:  cobra.MinimumNArgs(1),
-		RunE:  c.delete,
+		Use:               "delete <pipeline-id-1> [pipeline-id-2] ... [pipeline-id-n]",
+		Short:             "Delete pipelines.",
+		Args:              cobra.MinimumNArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		RunE:              c.delete,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Request to delete Stream Designer pipeline "pipe-12345".`,

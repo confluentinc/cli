@@ -45,6 +45,7 @@ const (
 	StartingConsumerMsg      = "Starting Kafka Consumer. Use Ctrl-C to exit."
 	UpdateTopicConfigMsg     = "Updated the following configuration values for topic \"%s\":\n"
 	UpdateTopicConfigRestMsg = "Updated the following configuration values for topic \"%s\" (read-only configs were not updated):\n"
+	OmitTopicCountMsg        = "The topic count will be omitted as Kafka topics for this cluster could not be retrieved: %v"
 
 	// kafka mirror commands
 	RestProxyNotAvailableMsg = "Kafka REST is not enabled: the operation is only supported with Kafka REST proxy."

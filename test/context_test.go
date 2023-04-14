@@ -52,11 +52,11 @@ func (s *CLITestSuite) TestDescribe() {
 	tests := []CLITest{
 		{args: s.contextCreateArgs("0")},
 		{args: "context use 0"},
-		{fixture: "context/describe/0.golden", args: "context describe"},
-		{fixture: "context/describe/1.golden", args: "context describe --api-key"},
-		{fixture: "context/describe/2.golden", args: "context describe --username", exitCode: 1},
-		{fixture: "context/describe/3.golden", args: "context describe --api-key", login: "cloud", exitCode: 1},
-		{fixture: "context/describe/4.golden", args: "context describe --username", login: "cloud"},
+		{args: "context describe", fixture: "context/describe/0.golden"},
+		{args: "context describe --api-key", fixture: "context/describe/1.golden"},
+		{args: "context describe --username", fixture: "context/describe/2.golden", exitCode: 1},
+		{args: "context describe --api-key", login: "cloud", fixture: "context/describe/3.golden", exitCode: 1},
+		{args: "context describe --username", login: "cloud", fixture: "context/describe/4.golden"},
 	}
 
 	for _, tt := range tests {
@@ -133,5 +133,17 @@ func (s *CLITestSuite) TestContextUse() {
 	for _, tt := range tests {
 		tt.workflow = true
 		s.runIntegrationTest(tt)
+	}
+}
+
+func (s *CLITestSuite) TestContextAutocomplete() {
+	tests := []CLITest{
+		{args: s.contextCreateArgs("0")},
+		{args: `__complete context describe ""`, fixture: "context/describe/describe-autocomplete.golden"},
+	}
+
+	for _, test := range tests {
+		test.workflow = true
+		s.runIntegrationTest(test)
 	}
 }
