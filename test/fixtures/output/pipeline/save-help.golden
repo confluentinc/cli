@@ -13,7 +13,7 @@ Save the source code for Stream Designer pipeline "pipe-12345" to "/tmp/pipeline
   $ confluent pipeline save pipe-12345 --sql-file /tmp/pipeline-source-code.sql
 
 Flags:
-      --sql-file string      Path to save the pipeline's source code at. (default "./<pipeline-id>.sql")
+      --sql-file string      Path to save the pipeline's source code at. (default "./<id>.sql")
       --cluster string       Kafka cluster ID.
       --environment string   Environment ID.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")

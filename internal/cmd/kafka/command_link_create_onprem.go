@@ -17,7 +17,7 @@ import (
 
 func (c *linkCommand) newCreateCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create <link>",
+		Use:   "create <name>",
 		Short: "Create a new cluster link.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.createOnPrem,
