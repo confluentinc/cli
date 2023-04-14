@@ -12,6 +12,11 @@ func (s *CLITestSuite) TestFlinkHelp() {
 		{args: "flink compute-pool use -h", fixture: "flink/compute-pool/use-help.golden"},
 		{args: "flink region -h", fixture: "flink/region/help.golden"},
 		{args: "flink region list -h", fixture: "flink/region/list-help.golden"},
+		{args: "flink statement -h", fixture: "flink/statement/help.golden"},
+		{args: "flink statement create -h", fixture: "flink/statement/create-help.golden"},
+		{args: "flink statement delete -h", fixture: "flink/statement/delete-help.golden"},
+		{args: "flink statement describe -h", fixture: "flink/statement/describe-help.golden"},
+		{args: "flink statement list -h", fixture: "flink/statement/list-help.golden"},
 	}
 
 	for _, test := range tests {
@@ -58,5 +63,19 @@ func (s *CLITestSuite) TestFlinkRegion() {
 	for _, test := range tests {
 		test.login = "cloud"
 		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestFlinkStatement() {
+	tests := []CLITest{
+		{args: "flink statement create", fixture: "flink/statement/create.golden"},
+		{args: "flink statement delete", fixture: "flink/statement/delete.golden"},
+		{args: "flink statement describe", fixture: "flink/statement/describe.golden"},
+		{args: "flink statement list", fixture: "flink/statement/list.golden"},
+	}
+
+	for _, tt := range tests {
+		tt.login = "cloud"
+		s.runIntegrationTest(tt)
 	}
 }
