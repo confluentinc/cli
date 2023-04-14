@@ -1,7 +1,7 @@
 Request to activate a pipeline.
 
 Usage:
-  confluent pipeline activate <pipeline-id> [flags]
+  confluent pipeline activate <id> [flags]
 
 Examples:
 Request to activate Stream Designer pipeline "pipe-12345".

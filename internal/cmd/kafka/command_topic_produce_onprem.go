@@ -21,7 +21,7 @@ import (
 
 func (c *authenticatedTopicCommand) newProduceCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "produce <topic>",
+		Use:   "produce <name>",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.produceOnPrem,
 		Short: "Produce messages to a Kafka topic.",

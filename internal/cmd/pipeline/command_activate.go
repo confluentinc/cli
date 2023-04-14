@@ -11,7 +11,7 @@ import (
 
 func (c *command) newActivateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "activate <pipeline-id>",
+		Use:               "activate <id>",
 		Short:             "Request to activate a pipeline.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),

@@ -27,7 +27,7 @@ type quotaValue struct {
 
 func (c *command) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "list <quota-scope>",
+		Use:   "list <scope>",
 		Short: "List Confluent Cloud service quota values by a scope.",
 		Long:  "List Confluent Cloud service quota values by a scope (organization, environment, network, kafka_cluster, service_account, or user_account).",
 		Args:  cobra.ExactArgs(1),

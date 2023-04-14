@@ -28,7 +28,7 @@ type topicData struct {
 
 func (c *authenticatedTopicCommand) newDescribeCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "describe <topic>",
+		Use:   "describe <name>",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.describeOnPrem,
 		Short: "Describe a Kafka topic.",
