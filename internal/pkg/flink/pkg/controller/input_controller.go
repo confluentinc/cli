@@ -3,12 +3,13 @@ package controller
 import (
 	"errors"
 	"fmt"
-	"github.com/confluentinc/flink-sql-client/lexer"
 	"log"
 	"net/http"
 	"os"
 	"reflect"
 	"strings"
+
+	"github.com/confluentinc/flink-sql-client/lexer"
 
 	"github.com/confluentinc/flink-sql-client/autocomplete"
 	components "github.com/confluentinc/flink-sql-client/components"
@@ -132,11 +133,8 @@ func (c *InputController) Prompt() *prompt.Prompt {
 		AddCompleter(autocomplete.GenerateDocsCompleter()).
 		BuildCompleter()
 
-	// We need to disable the live prefix, in case we just submited a statement
-	components.LivePrefixState.IsEnabled = false
-
 	return prompt.New(
-		components.Executor,
+		nil,
 		completer,
 		prompt.OptionTitle("sql-prompt"),
 		prompt.OptionHistory(c.History.Data),
@@ -187,7 +185,6 @@ func (c *InputController) Prompt() *prompt.Prompt {
 		prompt.OptionPreviewSuggestionTextColor(prompt.Blue),
 		prompt.OptionSelectedSuggestionBGColor(prompt.LightGray),
 		prompt.OptionSuggestionBGColor(prompt.DarkGray),
-		prompt.OptionLivePrefix(components.ChangeLivePrefix),
 		prompt.OptionSetLexer(lexer.Lexer),
 		prompt.OptionSetStatementTerminator(func(lastKeyStroke prompt.Key, buffer *prompt.Buffer) bool {
 			text := buffer.Text()

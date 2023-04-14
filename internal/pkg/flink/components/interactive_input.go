@@ -7,37 +7,6 @@ import (
 	"strings"
 )
 
-//go:embed flink_ascii_60_with_text.txt
-var flinkAsciiArt []byte
-
-var LivePrefixState struct {
-	LivePrefix string
-	IsEnabled  bool
-}
-
-var LastStatement = ""
-var AllStatements = ""
-
-func Executor(in string) {
-	if strings.HasSuffix(in, ";") {
-		LastStatement = LastStatement + in
-		LivePrefixState.IsEnabled = false
-		LivePrefixState.LivePrefix = in
-		AllStatements = AllStatements + LastStatement
-		LastStatement = ""
-
-		if IsInputClosingSelect(in) {
-			LivePrefixState.IsEnabled = true
-			LivePrefixState.LivePrefix = ""
-		}
-
-		return
-	}
-	LastStatement = LastStatement + in + " "
-	LivePrefixState.LivePrefix = ""
-	LivePrefixState.IsEnabled = true
-}
-
 func printEmptySpaces(n int) {
 	for i := 0; i < n; i++ {
 		fmt.Print(" ")
@@ -66,24 +35,13 @@ func PrintOptionState(prefix string, state bool, maxCol int) {
 	printEmptySpaces(maxCol - len(prefix+stateMsg))
 	fmt.Print("\n")
 }
-func ChangeLivePrefix() (string, bool) {
-	return LivePrefixState.LivePrefix, LivePrefixState.IsEnabled
-}
+
 func IsInputClosingSelect(input string) bool {
 	return strings.HasPrefix(strings.ToUpper(input), "SELECT") && input[len(input)-1] == ';'
 }
 
 // This prints flinks ascii art, welcome message and shortcuts
 func PrintWelcomeHeader() {
-	// TODO - check terminal's width so we disable printing the ascii art if the terminal is too small
-	// we can use tview or go-prompt for this. Either GetMaxCol from inputController or use tcell like this:
-	/* screen, _ := tcell.NewScreen()
-	   screen.Init()
-
-	   w, h := screen.Size() */
-
-	fmt.Println(string(flinkAsciiArt))
-
 	// Print welcome message
 	fmt.Fprintf(os.Stdout, "Welcome! \n")
 

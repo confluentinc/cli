@@ -125,31 +125,6 @@ func (t *TableController) selectRow() {
 		SetSeparator(' ')
 }
 
-// TODO: these look unused
-//func (t *TableController) basic() {
-//	t.table.SetBorders(false).
-//		SetSelectable(false, false).
-//		SetSeparator(' ')
-//}
-
-//func (t *TableController) separator() {
-//	t.table.SetBorders(false).
-//		SetSelectable(false, false).
-//		SetSeparator(tview.Borders.Vertical)
-//}
-
-//func (t *TableController) selectColumn() {
-//	t.table.SetBorders(false).
-//		SetSelectable(false, true).
-//		SetSeparator(' ')
-//}
-//
-//func (t *TableController) selectCell() {
-//	t.table.SetBorders(false).
-//		SetSelectable(true, true).
-//		SetSeparator(' ')
-//}
-
 func (t *TableController) focus() {
 	t.selectRow()
 	t.appController.TView().SetFocus(t.table)
