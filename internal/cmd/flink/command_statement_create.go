@@ -36,7 +36,7 @@ func (c *command) newStatementCreateCommand() *cobra.Command {
 }
 
 func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
-	environment, err := c.EnvironmentId()
+	environment, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}

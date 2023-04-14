@@ -30,7 +30,7 @@ func (c *command) computePoolList(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	environment, err := c.EnvironmentId()
+	environment, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}
