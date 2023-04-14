@@ -8,7 +8,7 @@ import (
 
 func (c *command) newUseCommand() *cobra.Command {
 	return &cobra.Command{
-		Use:               "use <context>",
+		Use:               "use <name>",
 		Short:             "Use a context.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),

@@ -27,7 +27,7 @@ type configOut struct {
 
 func (c *brokerCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "describe [id]",
+		Use:   "describe [broker-id]",
 		Short: "Describe a Kafka broker.",
 		Long:  "Describe cluster-wide or per-broker configuration values using Confluent Kafka REST.",
 		Args:  cobra.MaximumNArgs(1),
@@ -45,7 +45,7 @@ func (c *brokerCommand) newDescribeCommand() *cobra.Command {
 	}
 
 	cmd.Flags().Bool("all", false, "Get cluster-wide broker configurations (non-default values only).")
-	cmd.Flags().String("config-name", "", "Get a specific configuration value (pair with --all to see a cluster-wide config.")
+	cmd.Flags().String("config-name", "", "Get a specific configuration value (pair with --all to see a cluster-wide config).")
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	pcmd.AddOutputFlag(cmd)
 

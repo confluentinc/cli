@@ -42,7 +42,7 @@ func (s *CLITestSuite) TestCluster() {
 	_ = os.Setenv("XX_FLAG_CLUSTER_REGISTRY_ENABLE", "false")
 }
 
-func (s *CLITestSuite) TestClusterRegistry() {
+func (s *CLITestSuite) TestCluster_Registry() {
 	tests := []CLITest{
 		{args: "cluster register --help", fixture: "cluster/register-list-help.golden"},
 		{args: "cluster register --cluster-name theMdsKSQLCluster --kafka-cluster kafka-GUID --ksql-cluster ksql-name --hosts 10.4.4.4:9004 --protocol PLAIN", fixture: "cluster/register-invalid-protocol.golden", exitCode: 1},
@@ -60,7 +60,7 @@ func (s *CLITestSuite) TestClusterRegistry() {
 	}
 }
 
-func (s *CLITestSuite) TestClusterScopedId() {
+func (s *CLITestSuite) TestCluster_ScopedId() {
 	// everything
 	cpIdURL1 := serveClusterScopedId(&cluster.ScopedId{
 		ID: "crn://md01.example.com/kafka=kafkaCluster1/connect=connectClusterA",

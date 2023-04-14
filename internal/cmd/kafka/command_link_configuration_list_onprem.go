@@ -9,7 +9,7 @@ import (
 
 func (c *linkCommand) newConfigurationListCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "list <link>",
+		Use:   "list <name>",
 		Short: "List cluster link configurations.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.configurationListOnPrem,

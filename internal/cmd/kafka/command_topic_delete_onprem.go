@@ -16,7 +16,7 @@ import (
 
 func (c *authenticatedTopicCommand) newDeleteCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delete <topic>",
+		Use:   "delete <name>",
 		Short: "Delete a Kafka topic.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.deleteOnPrem,
