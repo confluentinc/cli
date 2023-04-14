@@ -19,7 +19,7 @@ type pluginDescribeOut struct {
 
 func (c *pluginCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "describe <plugin-name>",
+		Use:               "describe <name>",
 		Short:             "Describe a connector plugin.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),

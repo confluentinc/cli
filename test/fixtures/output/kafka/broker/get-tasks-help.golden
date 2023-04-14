@@ -1,7 +1,7 @@
 List broker tasks.
 
 Usage:
-  confluent kafka broker get-tasks [broker-id] [flags]
+  confluent kafka broker get-tasks [id] [flags]
 
 Examples:
 List remove-broker tasks for broker 1.

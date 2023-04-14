@@ -31,7 +31,7 @@ type brokerTaskData struct {
 
 func (c *brokerCommand) newGetTasksCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "get-tasks [broker-id]",
+		Use:   "get-tasks [id]",
 		Short: "List broker tasks.",
 		Args:  cobra.MaximumNArgs(1),
 		RunE:  c.getTasks,

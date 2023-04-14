@@ -1,7 +1,7 @@
 Update per-broker or cluster-wide Kafka broker configurations.
 
 Usage:
-  confluent kafka broker update [broker-id] [flags]
+  confluent kafka broker update [id] [flags]
 
 Examples:
 Update configuration values for broker 1.
