@@ -23,7 +23,7 @@ import (
 
 func newProduceCommand(prerunner pcmd.PreRunner, clientId string) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "produce <topic>",
+		Use:         "produce <name>",
 		Short:       "Produce messages to a Kafka topic.",
 		Long:        "Produce messages to a Kafka topic.\n\nWhen using this command, you cannot modify the message header, and the message header will not be printed out.",
 		Args:        cobra.ExactArgs(1),

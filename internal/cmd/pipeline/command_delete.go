@@ -15,7 +15,7 @@ import (
 
 func (c *command) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "delete <pipeline-id>",
+		Use:               "delete <id>",
 		Short:             "Delete a pipeline.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),

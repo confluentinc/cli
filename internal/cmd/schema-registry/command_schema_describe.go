@@ -26,7 +26,7 @@ type schemaOut struct {
 
 func (c *command) newSchemaDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "describe [id]",
+		Use:         "describe [schema-id]",
 		Short:       "Get schema either by schema ID, or by subject/version.",
 		Args:        cobra.MaximumNArgs(1),
 		PreRunE:     c.preDescribe,

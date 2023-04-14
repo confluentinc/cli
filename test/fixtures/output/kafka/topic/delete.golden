@@ -1,6 +1,6 @@
 Error: accepts 1 arg(s), received 0
 Usage:
-  confluent kafka topic delete <topic> [flags]
+  confluent kafka topic delete <name> [flags]
 
 Examples:
 Delete the topics "my_topic" and "my_topic_avro". Use this command carefully as data loss can occur.

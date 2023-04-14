@@ -16,7 +16,7 @@ import (
 
 func (c *linkCommand) newConfigurationUpdateCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update <link>",
+		Use:   "update <name>",
 		Short: "Update cluster link configurations.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.configurationUpdateOnPrem,
