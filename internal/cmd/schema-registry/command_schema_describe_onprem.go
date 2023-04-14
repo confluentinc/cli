@@ -11,7 +11,7 @@ import (
 
 func (c *command) newSchemaDescribeCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "describe [schema-id]",
+		Use:         "describe [id]",
 		Short:       "Get schema either by schema ID, or by subject/version.",
 		Args:        cobra.MaximumNArgs(1),
 		PreRunE:     c.preDescribe,
