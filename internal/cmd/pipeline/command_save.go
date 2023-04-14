@@ -31,7 +31,7 @@ func (c *command) newSaveCommand(enableSourceCode bool) *cobra.Command {
 		Hidden: !enableSourceCode,
 	}
 
-	cmd.Flags().String("sql-file", "", "Path to save the pipeline's source code at. (default \"./<pipeline-id>.sql\")")
+	cmd.Flags().String("sql-file", "", "Path to save the pipeline's source code at. (default \"./<id>.sql\")")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)

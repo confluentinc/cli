@@ -1,6 +1,6 @@
 Error: accepts 1 arg(s), received 0
 Usage:
-  confluent kafka topic describe <topic> [flags]
+  confluent kafka topic describe <name> [flags]
 
 Examples:
 Describe the "my_topic" topic.

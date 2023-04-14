@@ -1,6 +1,6 @@
 package test
 
-func (s *CLITestSuite) TestIAMACL() {
+func (s *CLITestSuite) TestIam_Acl() {
 	tests := []CLITest{
 		{args: "iam acl create --help", fixture: "iam/acl/create-help.golden"},
 		{args: "iam acl delete --help", fixture: "iam/acl/delete-help.golden"},
@@ -13,7 +13,7 @@ func (s *CLITestSuite) TestIAMACL() {
 	}
 }
 
-func (s *CLITestSuite) TestIAMRBACRoleOnPrem() {
+func (s *CLITestSuite) TestIam_RbacRoleOnPrem() {
 	tests := []CLITest{
 		{args: "iam rbac role describe --help", fixture: "iam/rbac/role/describe-help-onprem.golden"},
 		{args: "iam rbac role describe DeveloperRead -o json", fixture: "iam/rbac/role/describe-json-onprem.golden"},
@@ -31,7 +31,7 @@ func (s *CLITestSuite) TestIAMRBACRoleOnPrem() {
 	}
 }
 
-func (s *CLITestSuite) TestIAMRBACRoleCloud() {
+func (s *CLITestSuite) TestIam_RbacRoleCloud() {
 	tests := []CLITest{
 		{args: "iam rbac role describe CloudClusterAdmin -o json", fixture: "iam/rbac/role/describe-json-cloud.golden"},
 		{args: "iam rbac role describe CloudClusterAdmin -o yaml", fixture: "iam/rbac/role/describe-yaml-cloud.golden"},
@@ -48,7 +48,7 @@ func (s *CLITestSuite) TestIAMRBACRoleCloud() {
 	}
 }
 
-func (s *CLITestSuite) TestIAMRBACRoleBindingCRUDCloud() {
+func (s *CLITestSuite) TestIam_RbacRoleBindingCreateDeleteCloud() {
 	tests := []CLITest{
 		{args: "iam rbac role-binding create --help", fixture: "iam/rbac/role-binding/create-help-cloud.golden"},
 		{args: "iam rbac role-binding create --principal User:sa-12345 --role DeveloperRead --resource Topic:payroll --kafka-cluster lkc-1111aaa --current-environment --cloud-cluster lkc-1111aaa", fixture: "iam/rbac/role-binding/create-service-account-developer-read.golden"},
@@ -73,7 +73,7 @@ func (s *CLITestSuite) TestIAMRBACRoleBindingCRUDCloud() {
 	}
 }
 
-func (s *CLITestSuite) TestIAMRBACRoleBindingListCloud() {
+func (s *CLITestSuite) TestIam_RbacRoleBindingListCloud() {
 	tests := []CLITest{
 		{args: "iam rbac role-binding list", fixture: "iam/rbac/role-binding/list-no-principal-nor-role-cloud.golden", exitCode: 1},
 		{args: "iam rbac role-binding list --environment a-595 --cloud-cluster lkc-1111aaa", fixture: "iam/rbac/role-binding/list-no-principal-nor-role-cloud.golden", exitCode: 1},
@@ -102,7 +102,7 @@ func (s *CLITestSuite) TestIAMRBACRoleBindingListCloud() {
 	}
 }
 
-func (s *CLITestSuite) TestIAMRBACRoleBindingCRUDOnPrem() {
+func (s *CLITestSuite) TestIam_RbacRoleBindingCreatDeleteOnPrem() {
 	tests := []CLITest{
 		{args: "iam rbac role-binding create --help", fixture: "iam/rbac/role-binding/create-help-onprem.golden"},
 		{args: "iam rbac role-binding create --principal User:bob --role DeveloperRead --resource Topic:connect-configs --cluster-name theMdsConnectCluster", fixture: "iam/rbac/role-binding/create-cluster-name-onprem.golden"},
@@ -130,7 +130,7 @@ func (s *CLITestSuite) TestIAMRBACRoleBindingCRUDOnPrem() {
 	}
 }
 
-func (s *CLITestSuite) TestIAMRBACRoleBindingListOnPrem() {
+func (s *CLITestSuite) TestIam_RbacRoleBindingListOnPrem() {
 	tests := []CLITest{
 		{args: "iam rbac role-binding list --help", fixture: "iam/rbac/role-binding/list-help-onprem.golden"},
 		{args: "iam rbac role-binding list --kafka-cluster CID", fixture: "iam/rbac/role-binding/list-no-principal-nor-role-onprem.golden", exitCode: 1},
@@ -167,7 +167,7 @@ func (s *CLITestSuite) TestIAMRBACRoleBindingListOnPrem() {
 	}
 }
 
-func (s *CLITestSuite) TestIAMServiceAccount() {
+func (s *CLITestSuite) TestIam_ServiceAccount() {
 	tests := []CLITest{
 		{args: "iam service-account create human-service --description human-output", fixture: "iam/service-account/create.golden"},
 		{args: "iam service-account create json-service --description json-output -o json", fixture: "iam/service-account/create-json.golden"},
@@ -192,7 +192,7 @@ func (s *CLITestSuite) TestIAMServiceAccount() {
 	}
 }
 
-func (s *CLITestSuite) TestIAMUserList() {
+func (s *CLITestSuite) TestIam_UserList() {
 	tests := []CLITest{
 		{args: "iam user list", fixture: "iam/user/list.golden"},
 	}
@@ -203,7 +203,7 @@ func (s *CLITestSuite) TestIAMUserList() {
 	}
 }
 
-func (s *CLITestSuite) TestIAMUserDescribe() {
+func (s *CLITestSuite) TestIam_UserDescribe() {
 	tests := []CLITest{
 		{args: "iam user describe u-0", fixture: "iam/user/resource-not-found.golden", exitCode: 1},
 		{args: "iam user describe u-17", fixture: "iam/user/describe.golden"},
@@ -216,7 +216,7 @@ func (s *CLITestSuite) TestIAMUserDescribe() {
 	}
 }
 
-func (s *CLITestSuite) TestIAMUserDelete() {
+func (s *CLITestSuite) TestIam_UserDelete() {
 	tests := []CLITest{
 		{args: "iam user delete u-2 --force", fixture: "iam/user/delete.golden"},
 		{args: "iam user delete u-2", input: "Bono\n", fixture: "iam/user/delete-prompt.golden"},
@@ -230,7 +230,7 @@ func (s *CLITestSuite) TestIAMUserDelete() {
 	}
 }
 
-func (s *CLITestSuite) TestIAMUserUpdate() {
+func (s *CLITestSuite) TestIam_UserUpdate() {
 	tests := []CLITest{
 		{args: "iam user update u-11aaa --full-name Test", fixture: "iam/user/update.golden"},
 		{args: "iam user update 0 --full-name Test", fixture: "iam/user/bad-resource-id.golden", exitCode: 1},
@@ -243,7 +243,7 @@ func (s *CLITestSuite) TestIAMUserUpdate() {
 	}
 }
 
-func (s *CLITestSuite) TestIAMUserInvitationCreate() {
+func (s *CLITestSuite) TestIam_UserInvitationCreate() {
 	tests := []CLITest{
 		{args: "iam user invitation create miles@confluent.io", fixture: "iam/user/invite.golden"},
 		{args: "iam user invitation create bad-email.com", exitCode: 1, fixture: "iam/user/bad-email.golden"},
@@ -256,7 +256,7 @@ func (s *CLITestSuite) TestIAMUserInvitationCreate() {
 	}
 }
 
-func (s *CLITestSuite) TestIAMUserListInvitation() {
+func (s *CLITestSuite) TestIam_UserListInvitation() {
 	tests := []CLITest{
 		{args: "iam user invitation list", fixture: "iam/user/invitation_list.golden"},
 	}
@@ -267,7 +267,7 @@ func (s *CLITestSuite) TestIAMUserListInvitation() {
 	}
 }
 
-func (s *CLITestSuite) TestIAMProviderCreate() {
+func (s *CLITestSuite) TestIam_ProviderCreate() {
 	tests := []CLITest{
 		{args: "iam provider create Okta --description new-description --jwks-uri https://company.provider.com/oauth2/v1/keys --issuer-uri https://company.provider.com", fixture: "iam/identity-provider/create.golden"},
 	}
@@ -278,7 +278,7 @@ func (s *CLITestSuite) TestIAMProviderCreate() {
 	}
 }
 
-func (s *CLITestSuite) TestIAMProviderDelete() {
+func (s *CLITestSuite) TestIam_ProviderDelete() {
 	tests := []CLITest{
 		{args: "iam provider delete op-55555 --force", fixture: "iam/identity-provider/delete.golden"},
 		{args: "iam provider delete op-55555", input: "identity_provider\n", fixture: "iam/identity-provider/delete-prompt.golden"},
@@ -291,7 +291,7 @@ func (s *CLITestSuite) TestIAMProviderDelete() {
 	}
 }
 
-func (s *CLITestSuite) TestIAMProviderDescribe() {
+func (s *CLITestSuite) TestIam_ProviderDescribe() {
 	tests := []CLITest{
 		{args: "iam provider describe op-12345", fixture: "iam/identity-provider/describe.golden"},
 	}
@@ -302,7 +302,7 @@ func (s *CLITestSuite) TestIAMProviderDescribe() {
 	}
 }
 
-func (s *CLITestSuite) TestIAMProviderUpdate() {
+func (s *CLITestSuite) TestIam_ProviderUpdate() {
 	tests := []CLITest{
 		{args: "iam provider update op-12345 --name new-name --description new-description", fixture: "iam/identity-provider/update.golden"},
 	}
@@ -313,7 +313,7 @@ func (s *CLITestSuite) TestIAMProviderUpdate() {
 	}
 }
 
-func (s *CLITestSuite) TestIAMProviderList() {
+func (s *CLITestSuite) TestIam_ProviderList() {
 	tests := []CLITest{
 		{args: "iam provider list", fixture: "iam/identity-provider/list.golden"},
 	}
@@ -324,7 +324,7 @@ func (s *CLITestSuite) TestIAMProviderList() {
 	}
 }
 
-func (s *CLITestSuite) TestIAMPoolCreate() {
+func (s *CLITestSuite) TestIam_PoolCreate() {
 	tests := []CLITest{
 		{args: `iam pool create testPool --provider op-12345 --description new-description --identity-claim sub --filter "claims.iss=https://company.provider.com"`, fixture: "iam/identity-pool/create.golden"},
 	}
@@ -335,7 +335,7 @@ func (s *CLITestSuite) TestIAMPoolCreate() {
 	}
 }
 
-func (s *CLITestSuite) TestIAMPoolDelete() {
+func (s *CLITestSuite) TestIam_PoolDelete() {
 	tests := []CLITest{
 		{args: "iam pool delete pool-55555 --provider op-12345 --force", fixture: "iam/identity-pool/delete.golden"},
 		{args: "iam pool delete pool-55555 --provider op-12345", input: "identity_pool\n", fixture: "iam/identity-pool/delete-prompt.golden"},
@@ -348,7 +348,7 @@ func (s *CLITestSuite) TestIAMPoolDelete() {
 	}
 }
 
-func (s *CLITestSuite) TestIAMPoolDescribe() {
+func (s *CLITestSuite) TestIam_PoolDescribe() {
 	tests := []CLITest{
 		{args: "iam pool describe pool-12345 --provider op-12345", fixture: "iam/identity-pool/describe.golden"},
 	}
@@ -359,7 +359,7 @@ func (s *CLITestSuite) TestIAMPoolDescribe() {
 	}
 }
 
-func (s *CLITestSuite) TestIAMPoolUpdate() {
+func (s *CLITestSuite) TestIam_PoolUpdate() {
 	tests := []CLITest{
 		{args: `iam pool update pool-12345 --provider op-12345 --name newer-name --description more-descriptive --identity-claim new-sub --filter "claims.iss=https://new-company.new-provider.com"`, fixture: "iam/identity-pool/update.golden"},
 	}
@@ -370,7 +370,7 @@ func (s *CLITestSuite) TestIAMPoolUpdate() {
 	}
 }
 
-func (s *CLITestSuite) TestIAMPoolList() {
+func (s *CLITestSuite) TestIam_PoolList() {
 	tests := []CLITest{
 		{args: "iam pool list --provider op-12345", fixture: "iam/identity-pool/list.golden"},
 	}
@@ -381,7 +381,7 @@ func (s *CLITestSuite) TestIAMPoolList() {
 	}
 }
 
-func (s *CLITestSuite) TestIAMAutocomplete() {
+func (s *CLITestSuite) TestIam_Autocomplete() {
 	tests := []CLITest{
 		{args: `__complete iam pool describe --provider op-12345 ""`, fixture: "iam/identity-pool/describe-autocomplete.golden"},
 		{args: `__complete iam provider describe ""`, fixture: "iam/identity-provider/describe-autocomplete.golden"},

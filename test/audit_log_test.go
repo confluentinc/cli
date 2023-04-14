@@ -8,11 +8,11 @@ import (
 	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 )
 
-func (s *CLITestSuite) TestAuditLogDescribe() {
+func (s *CLITestSuite) TestAuditLog_Describe() {
 	s.runIntegrationTest(CLITest{args: "audit-log describe", login: "cloud", fixture: "audit-log/describe.golden"})
 }
 
-func (s *CLITestSuite) TestAuditLogConfig() {
+func (s *CLITestSuite) TestAuditLog_Config() {
 	tests := []CLITest{
 		{
 			name:    "confluent audit-log config describe --help",
@@ -37,7 +37,7 @@ func (s *CLITestSuite) TestAuditLogConfig() {
 	}
 }
 
-func (s *CLITestSuite) TestAuditLogConfigSpecSerialization() {
+func (s *CLITestSuite) TestAuditLog_ConfigSpecSerialization() {
 	original := LoadFixture(s.T(), "audit-log/config/roundtrip-fixedpoint.golden")
 	originalBytes := []byte(original)
 	spec := mds.AuditLogConfigSpec{}
@@ -57,7 +57,7 @@ func (s *CLITestSuite) TestAuditLogConfigSpecSerialization() {
 	}
 }
 
-func (s *CLITestSuite) TestAuditLogRoute() {
+func (s *CLITestSuite) TestAuditLog_Route() {
 	tests := []CLITest{
 		{
 			name:    "confluent audit-log route list --help",
@@ -77,7 +77,7 @@ func (s *CLITestSuite) TestAuditLogRoute() {
 	}
 }
 
-func (s *CLITestSuite) TestAuditConfigMigrate() {
+func (s *CLITestSuite) TestAuditLog_ConfigMigrate() {
 	migration1 := GetInputFixturePath(s.T(), "audit-log", "config-migration-server1.golden")
 	migration2 := GetInputFixturePath(s.T(), "audit-log", "config-migration-server2.golden")
 
@@ -107,6 +107,6 @@ func (s *CLITestSuite) TestAuditConfigMigrate() {
 	}
 }
 
-func (s *CLITestSuite) TestAuditLogDisabledDescribe() {
+func (s *CLITestSuite) TestAuditLog_DisabledDescribe() {
 	s.runIntegrationTest(CLITest{args: "audit-log describe", login: "cloud", fixture: "audit-log/describe-fail.golden", disableAuditLog: true, exitCode: 1})
 }

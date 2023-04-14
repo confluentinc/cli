@@ -1,7 +1,7 @@
 List ongoing partition reassignments for a given cluster, topic, or partition via Confluent Kafka REST.
 
 Usage:
-  confluent kafka partition reassignment list [id] [flags]
+  confluent kafka partition reassignment list [partition-id] [flags]
 
 Examples:
 List all partition reassignments for the Kafka cluster.
