@@ -55,13 +55,11 @@
           }
         }
       },
-      "schema_registry_clusters": {},
-      "last_org_id": ""
+      "schema_registry_clusters": {}
     }
   },
   "context_states": {
     "my-context": {
-      "auth": null,
       "auth_token": "",
       "auth_refresh_token": ""
     }

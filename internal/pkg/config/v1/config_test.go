@@ -369,9 +369,7 @@ func TestConfig_Save(t *testing.T) {
 			got, _ := os.ReadFile(configFile.Name())
 			want, _ := os.ReadFile(tt.wantFile)
 			wantString := replacePlaceholdersInWant(t, got, want)
-			if utils.NormalizeNewLines(string(got)) != utils.NormalizeNewLines(wantString) {
-				t.Errorf("Config.Save() = %v\n want = %v", utils.NormalizeNewLines(string(got)), utils.NormalizeNewLines(wantString))
-			}
+			require.Equal(t, utils.NormalizeNewLines(wantString), utils.NormalizeNewLines(string(got)))
 			fd, err := os.Stat(configFile.Name())
 			require.NoError(t, err)
 			if runtime.GOOS != "windows" && fd.Mode() != 0600 {
