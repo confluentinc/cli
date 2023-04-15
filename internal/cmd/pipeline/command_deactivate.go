@@ -11,7 +11,7 @@ import (
 
 func (c *command) newDeactivateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "deactivate <pipeline-id>",
+		Use:               "deactivate <id>",
 		Short:             "Request to deactivate a pipeline.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
