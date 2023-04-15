@@ -151,7 +151,7 @@ func (s *CLITestSuite) TestAPIKey() {
 	}
 }
 
-func (s *CLITestSuite) TestAPIKeyDescribe() {
+func (s *CLITestSuite) TestApiKeyDescribe() {
 	resetConfiguration(s.T(), false)
 
 	tests := []CLITest{

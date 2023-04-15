@@ -30,8 +30,8 @@ func (s *CLITestSuite) TestEnvironment() {
 
 func (s *CLITestSuite) TestEnvironmentDescribe() {
 	tests := []CLITest{
-		{args: "environment describe env-123", fixture: "environment/describe.golden"},
-		{args: "environment describe env-123 -o json", fixture: "environment/describe-json.golden"},
+		{args: "environment describe env-12345", fixture: "environment/describe.golden"},
+		{args: "environment describe env-12345 -o json", fixture: "environment/describe-json.golden"},
 	}
 
 	for _, tt := range tests {
