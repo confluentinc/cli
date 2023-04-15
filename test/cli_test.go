@@ -90,7 +90,7 @@ func (s *CLITestSuite) SetupSuite() {
 		testBin += ".exe"
 	}
 
-	s.TestBackend = testserver.StartTestBackend(s.T(), false) // by default do not disable audit-log
+	s.TestBackend = testserver.StartTestBackend(s.T(), true) // by default do not disable audit-log
 	os.Setenv("DISABLE_AUDIT_LOG", "false")
 
 	// Temporarily change $HOME, so the current config file isn't altered.
@@ -112,7 +112,7 @@ func (s *CLITestSuite) runIntegrationTest(tt CLITest) {
 		if isAuditLogDisabled != tt.disableAuditLog {
 			s.TestBackend.Close()
 			os.Setenv("DISABLE_AUDIT_LOG", strconv.FormatBool(tt.disableAuditLog))
-			s.TestBackend = testserver.StartTestBackend(t, tt.disableAuditLog)
+			s.TestBackend = testserver.StartTestBackend(t, !tt.disableAuditLog)
 		}
 
 		if !tt.workflow {

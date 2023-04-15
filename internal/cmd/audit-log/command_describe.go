@@ -6,12 +6,11 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-type describeCmd struct {
+type describeCommand struct {
 	*pcmd.AuthenticatedCLICommand
 }
 
@@ -30,7 +29,7 @@ func newDescribeCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}
 
-	c := &describeCmd{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
+	c := &describeCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 	cmd.RunE = c.describe
 
 	pcmd.AddOutputFlag(cmd)
@@ -38,12 +37,16 @@ func newDescribeCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	return cmd
 }
 
-func (c describeCmd) describe(cmd *cobra.Command, _ []string) error {
-	if v1.GetAuditLog(c.Context.Context) == nil {
-		return errors.New(errors.AuditLogsNotEnabledErrorMsg)
+func (c *describeCommand) describe(cmd *cobra.Command, _ []string) error {
+	user, err := c.Client.Auth.User(context.Background())
+	if err != nil {
+		return err
 	}
 
-	auditLog := c.Context.GetOrganization().GetAuditLog()
+	auditLog := user.GetOrganization().GetAuditLog()
+	if auditLog == nil {
+		return errors.New(errors.AuditLogsNotEnabledErrorMsg)
+	}
 
 	serviceAccount, err := c.Client.User.GetServiceAccount(context.Background(), auditLog.GetServiceAccountId())
 	if err != nil {
