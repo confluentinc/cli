@@ -31,11 +31,6 @@ func (r *FlagResolverImpl) ValueFrom(source string, prompt string, secure bool) 
 		if prompt == "" {
 			return "", ErrNoValueSpecified
 		}
-		if yes, err := r.Prompt.IsPipe(); err != nil {
-			return "", err
-		} else if yes {
-			return "", ErrUnexpectedStdinPipe
-		}
 
 		if _, err := fmt.Fprint(r.Out, prompt); err != nil {
 			return "", err
