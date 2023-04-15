@@ -992,7 +992,8 @@ func handleKafkaRPLinkConfigs(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		link := mux.Vars(r)["link"]
 		if link == "link-dne" {
-			w.WriteHeader(http.StatusForbidden)
+			err := writeResourceNotFoundError(w)
+			require.NoError(t, err)
 			return
 		}
 		switch r.Method {
@@ -1265,7 +1266,8 @@ func handleKafkaBrokerIdConfigs(t *testing.T) http.HandlerFunc {
 		vars := mux.Vars(r)
 		brokerId := vars["broker_id"]
 		if brokerId != "1" && brokerId != "2" {
-			w.WriteHeader(http.StatusForbidden)
+			err := writeResourceNotFoundError(w)
+			require.NoError(t, err)
 			return
 		}
 		configValue1 := "gzip"

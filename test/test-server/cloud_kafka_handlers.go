@@ -15,7 +15,8 @@ func handleKafkaClientQuota(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := mux.Vars(r)["id"]
 		if id != "cq-1234" && id != "cq-4321" {
-			w.WriteHeader(http.StatusForbidden)
+			err := writeResourceNotFoundError(w)
+			require.NoError(t, err)
 			return
 		}
 		switch r.Method {
