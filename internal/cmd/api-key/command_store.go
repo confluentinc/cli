@@ -37,20 +37,12 @@ func (c *command) newStoreCommand() *cobra.Command {
 				Code: "confluent api-key store my-key my-secret",
 			},
 			examples.Example{
-				Text: "Get prompted for both the API key and secret",
-				Code: "confluent api-key store",
-			},
-			examples.Example{
 				Text: "Get prompted for only the API secret",
 				Code: "confluent api-key store my-key",
 			},
 			examples.Example{
-				Text: "Pipe the API secret",
-				Code: "confluent api-key store my-key -",
-			},
-			examples.Example{
-				Text: "Provide the API secret in a file",
-				Code: "confluent api-key store my-key @my-secret.txt",
+				Text: "Get prompted for both the API key and secret",
+				Code: "confluent api-key store",
 			},
 		),
 	}
