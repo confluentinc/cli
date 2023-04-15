@@ -69,6 +69,8 @@ type authState struct {
 // and tweaks certain variables for internal development and testing of the CLIs
 // auth0 server / SSO integration.
 func newState(authURL string, noBrowser bool) (*authState, error) {
+	authURL = strings.TrimSuffix(authURL, "/")
+
 	if authURL == "" {
 		authURL = "https://confluent.cloud"
 	}
