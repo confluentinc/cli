@@ -61,7 +61,6 @@ const (
 	serviceAccountID           = int32(12345)
 	serviceAccountResourceID   = "sa-12345"
 	identityProviderResourceID = "op-12345"
-	identityPoolResourceID     = "pool-12345"
 	deactivatedUserID          = int32(6666)
 	deactivatedResourceID      = "sa-6666"
 

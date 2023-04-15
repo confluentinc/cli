@@ -37,9 +37,14 @@ func handleByokKeyGet(t *testing.T, keyStr string, byokStoreV1 map[string]*byokv
 			require.NoError(t, err)
 			return
 		}
-		byokKey := byokStoreV1[keyStr]
-		err := json.NewEncoder(w).Encode(byokKey)
-		require.NoError(t, err)
+		if byokKey, ok := byokStoreV1[keyStr]; !ok {
+			err := writeResourceNotFoundError(w)
+			require.NoError(t, err)
+			return
+		} else {
+			err := json.NewEncoder(w).Encode(byokKey)
+			require.NoError(t, err)
+		}
 	}
 }
 
