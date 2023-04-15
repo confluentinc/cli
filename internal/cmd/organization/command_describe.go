@@ -29,14 +29,14 @@ func (c *command) newDescribeCommand() *cobra.Command {
 }
 
 func (c *command) describe(cmd *cobra.Command, args []string) error {
-	organization, httpResp, err := c.V2Client.GetOrgOrganization(c.Context.GetOrganization().GetResourceId())
+	organization, httpResp, err := c.V2Client.GetOrgOrganization(c.Context.GetCurrentOrganization())
 	if err != nil {
 		return errors.CatchOrgV2ResourceNotFoundError(err, resource.Organization, httpResp)
 	}
 
 	table := output.NewTable(cmd)
 	table.Add(&out{
-		IsCurrent: organization.GetId() == c.Context.GetOrganization().GetResourceId(),
+		IsCurrent: organization.GetId() == c.Context.GetCurrentOrganization(),
 		Id:        organization.GetId(),
 		Name:      organization.GetDisplayName(),
 	})
