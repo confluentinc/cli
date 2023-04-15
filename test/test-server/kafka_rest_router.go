@@ -245,7 +245,7 @@ func handleKafkaRPTopicConfigs(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			// if topic exists
-			if topicName == "topic-exist" {
+			if topicName == "topic-exist" || topicName == "topic-exist-2" {
 				topicConfigList := cpkafkarestv3.TopicConfigDataList{
 					Data: []cpkafkarestv3.TopicConfigData{
 						{
