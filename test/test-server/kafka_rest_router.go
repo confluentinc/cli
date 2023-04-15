@@ -518,16 +518,14 @@ func handleKafkaRPConfigsAlter(t *testing.T) http.HandlerFunc {
 // Handler for: "/kafka/v3/clusters/{cluster}/topics/{topic}"
 func handleKafkaRPTopic(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
+		topic := mux.Vars(r)["topic"]
+		if topic != "topic-exist" && topic != "topic-exist-2" {
+			require.NoError(t, writeErrorResponse(w, http.StatusNotFound, 40403, "This server does not host this topic-partition."))
+			return
+		}
 		switch r.Method {
 		case http.MethodDelete:
-			if vars["topic"] == "topic-exist" {
-				// Successfully deleted
-				w.WriteHeader(http.StatusNoContent)
-			} else {
-				// topic not found
-				require.NoError(t, writeErrorResponse(w, http.StatusNotFound, 40403, "This server does not host this topic-partition."))
-			}
+			w.WriteHeader(http.StatusNoContent)
 		}
 	}
 }
