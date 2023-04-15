@@ -1265,6 +1265,11 @@ func handleKafkaBrokerIdConfigsName(t *testing.T) http.HandlerFunc {
 func handleKafkaBrokerIdConfigs(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
+		brokerId := vars["broker_id"]
+		if brokerId != "1" && brokerId != "2" {
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
 		configValue1 := "gzip"
 		configValue2 := "SASL/PLAIN"
 		err := json.NewEncoder(w).Encode(cpkafkarestv3.BrokerConfigDataList{

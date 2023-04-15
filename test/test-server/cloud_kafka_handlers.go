@@ -13,10 +13,15 @@ import (
 
 func handleKafkaClientQuota(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		id := mux.Vars(r)["id"]
+		if id != "cq-1234" && id != "cq-4321" {
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
 		switch r.Method {
 		case http.MethodGet:
 			resp := kafkaquotasv1.KafkaQuotasV1ClientQuota{
-				Id: kafkaquotasv1.PtrString("cq-1234"),
+				Id: kafkaquotasv1.PtrString(id),
 				Spec: &kafkaquotasv1.KafkaQuotasV1ClientQuotaSpec{
 					DisplayName: kafkaquotasv1.PtrString("quotaName"),
 					Description: kafkaquotasv1.PtrString("quota description"),
@@ -40,8 +45,7 @@ func handleKafkaClientQuota(t *testing.T) http.HandlerFunc {
 			err = json.NewEncoder(w).Encode(req)
 			require.NoError(t, err)
 		case http.MethodDelete:
-			idStr := mux.Vars(r)["id"]
-			require.Equal(t, "cq-123", idStr)
+			w.WriteHeader(http.StatusNoContent)
 		}
 	}
 }
