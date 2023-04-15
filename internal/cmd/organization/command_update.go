@@ -28,22 +28,20 @@ func (c *command) newUpdateCommand() *cobra.Command {
 }
 
 func (c *command) update(cmd *cobra.Command, args []string) error {
-	id := c.Context.GetOrganization().GetResourceId()
-
 	name, err := cmd.Flags().GetString("name")
 	if err != nil {
 		return err
 	}
 
-	updateOrganization := orgv2.OrgV2Organization{DisplayName: orgv2.PtrString(name)}
-	organization, httpResp, err := c.V2Client.UpdateOrgOrganization(id, updateOrganization)
+	organization := orgv2.OrgV2Organization{DisplayName: orgv2.PtrString(name)}
+	organization, httpResp, err := c.V2Client.UpdateOrgOrganization(c.Context.GetCurrentOrganization(), organization)
 	if err != nil {
 		return errors.CatchOrgV2ResourceNotFoundError(err, resource.Organization, httpResp)
 	}
 
 	table := output.NewTable(cmd)
 	table.Add(&out{
-		IsCurrent: organization.GetId() == id,
+		IsCurrent: organization.GetId() == c.Context.GetCurrentOrganization(),
 		Id:        organization.GetId(),
 		Name:      organization.GetDisplayName(),
 	})

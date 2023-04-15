@@ -31,7 +31,6 @@ type Credentials struct {
 
 	AuthToken        string
 	AuthRefreshToken string
-	OrgResourceId    string
 
 	// Only for Confluent Prerun login
 	PrerunLoginURL        string
@@ -215,7 +214,6 @@ func (h *LoginCredentialsManagerImpl) GetPrerunCredentialsFromConfig(cfg *v1.Con
 			Username:         ctx.GetUser().GetEmail(),
 			AuthToken:        ctx.GetAuthToken(),
 			AuthRefreshToken: ctx.GetAuthRefreshToken(),
-			OrgResourceId:    ctx.GetOrganization().GetResourceId(),
 		}
 		log.CliLogger.Tracef("credentials: %#v", credentials)
 

@@ -58,11 +58,7 @@ var (
 	mockAuth = &ccloudv1mock.Auth{
 		UserFunc: func(_ context.Context) (*ccloudv1.GetMeReply, error) {
 			return &ccloudv1.GetMeReply{
-				User: &ccloudv1.User{
-					Id:        23,
-					Email:     "",
-					FirstName: "",
-				},
+				User:         &ccloudv1.User{Id: 23},
 				Organization: &ccloudv1.Organization{ResourceId: org1Id},
 				Accounts:     []*ccloudv1.Account{{Id: "a-595", Name: "Default"}},
 			}, nil
@@ -120,14 +116,11 @@ var (
 		},
 	}
 	LoginOrganizationManager = &climock.LoginOrganizationManager{
-		GetLoginOrganizationFromArgsFunc: func(cmd *cobra.Command) func() (string, error) {
-			return pauth.NewLoginOrganizationManagerImpl().GetLoginOrganizationFromArgs(cmd)
+		GetLoginOrganizationFromFlagFunc: func(cmd *cobra.Command) func() string {
+			return pauth.NewLoginOrganizationManagerImpl().GetLoginOrganizationFromFlag(cmd)
 		},
-		GetLoginOrganizationFromEnvVarFunc: func(cmd *cobra.Command) func() (string, error) {
-			return pauth.NewLoginOrganizationManagerImpl().GetLoginOrganizationFromEnvVar(cmd)
-		},
-		GetDefaultLoginOrganizationFunc: func() func() (string, error) {
-			return pauth.NewLoginOrganizationManagerImpl().GetDefaultLoginOrganization()
+		GetLoginOrganizationFromEnvironmentVariableFunc: func() func() string {
+			return pauth.NewLoginOrganizationManagerImpl().GetLoginOrganizationFromEnvironmentVariable()
 		},
 	}
 	AuthTokenHandler = &climock.AuthTokenHandler{
@@ -239,47 +232,26 @@ func TestOrgIdOverride(t *testing.T) {
 		},
 	}
 	userInterface := &ccloudv1mock.UserInterface{}
-	type test struct {
-		setEnv     bool
-		setDefault bool
+
+	loginOrganizationManager := &climock.LoginOrganizationManager{
+		GetLoginOrganizationFromFlagFunc: LoginOrganizationManager.GetLoginOrganizationFromFlagFunc,
+		GetLoginOrganizationFromEnvironmentVariableFunc: func() func() string {
+			return func() string { return org2Id }
+		},
 	}
-	tests := []*test{
-		{setEnv: true},
-		{setDefault: true},
-	}
+	loginCmd, cfg := newLoginCmd(auth, userInterface, true, req, mockNetrcHandler, AuthTokenHandler, mockLoginCredentialsManager, loginOrganizationManager)
 
-	for _, tt := range tests {
-		loginOrganizationManager := &climock.LoginOrganizationManager{
-			GetLoginOrganizationFromArgsFunc: LoginOrganizationManager.GetLoginOrganizationFromArgsFunc,
-			GetLoginOrganizationFromEnvVarFunc: func(cmd *cobra.Command) func() (string, error) {
-				if tt.setEnv {
-					return func() (string, error) { return org2Id, nil }
-				} else {
-					return LoginOrganizationManager.GetLoginOrganizationFromEnvVarFunc(cmd)
-				}
-			},
-			GetDefaultLoginOrganizationFunc: func() func() (string, error) {
-				if tt.setDefault {
-					return func() (string, error) { return org2Id, nil }
-				} else {
-					return LoginOrganizationManager.GetDefaultLoginOrganization()
-				}
-			},
-		}
-		loginCmd, cfg := newLoginCmd(auth, userInterface, true, req, mockNetrcHandler, AuthTokenHandler, mockLoginCredentialsManager, loginOrganizationManager)
+	output, err := pcmd.ExecuteCommand(loginCmd)
+	req.NoError(err)
+	req.Empty("", output)
 
-		output, err := pcmd.ExecuteCommand(loginCmd)
-		req.NoError(err)
-		req.Empty("", output)
+	ctx := cfg.Context()
+	req.NotNil(ctx)
+	req.Equal(pauth.GenerateContextName(promptUser, ccloudURL, ""), ctx.Name)
 
-		ctx := cfg.Context()
-		req.NotNil(ctx)
-		req.Equal(pauth.GenerateContextName(promptUser, ccloudURL, ""), ctx.Name)
-
-		req.Equal(testToken2, ctx.GetAuthToken())
-		req.Equal(&ccloudv1.User{Id: 23, Email: promptUser, FirstName: "Cody"}, ctx.GetUser())
-		verifyLoggedInState(t, cfg, true, org2Id)
-	}
+	req.Equal(testToken2, ctx.GetAuthToken())
+	req.Equal(&ccloudv1.User{Id: 23, Email: promptUser, FirstName: "Cody"}, ctx.GetUser())
+	verifyLoggedInState(t, cfg, true, org2Id)
 }
 
 func TestLoginSuccess(t *testing.T) {
@@ -810,9 +782,7 @@ func TestLoginWithExistingContext(t *testing.T) {
 			args:    []string{},
 		},
 		{
-			args: []string{
-				"--url=http://localhost:8090",
-			},
+			args: []string{"--url=http://localhost:8090"},
 		},
 	}
 
@@ -996,8 +966,7 @@ func verifyLoggedInState(t *testing.T, cfg *v1.Config, isCloud bool, orgResource
 	if isCloud {
 		// MDS doesn't set some things like cfg.Auth.User since e.g. an MDS user != an ccloudv1 User
 		req.Equal(&ccloudv1.User{Id: 23, Email: promptUser, FirstName: "Cody"}, ctx.GetUser())
-		req.Equal(orgResourceId, ctx.GetOrganization().GetResourceId())
-		req.Equal(orgResourceId, ctx.Config.GetLastUsedOrgId())
+		req.Equal(orgResourceId, ctx.GetCurrentOrganization())
 	} else {
 		req.Equal("http://localhost:8090", ctx.Platform.Server)
 	}
