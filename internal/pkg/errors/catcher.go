@@ -241,20 +241,20 @@ func CatchClusterConfigurationNotValidError(err error, r *http.Response) error {
 	return err
 }
 
-func CatchApiKeyForbiddenAccessError(err error, operation, key string, r *http.Response) error {
+func CatchApiKeyForbiddenAccessError(err error, operation string, r *http.Response) error {
 	if r != nil && r.StatusCode == http.StatusForbidden || strings.Contains(err.Error(), "Unknown API key") {
-		return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), fmt.Sprintf("error %s API key %s", operation, key), APIKeyNotFoundSuggestions)
+		return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), fmt.Sprintf("error %s API key", operation), APIKeyNotFoundSuggestions)
 	}
 	return CatchCCloudV2Error(err, r)
 }
 
-func CatchByokKeyNotFoundError(err error, key string, r *http.Response) error {
+func CatchByokKeyNotFoundError(err error, r *http.Response) error {
 	if err == nil {
 		return nil
 	}
 
 	if r != nil && r.StatusCode == http.StatusNotFound {
-		return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), fmt.Sprintf("Self-managed key %s not found or access forbidden", key), ByokKeyNotFoundSuggestions)
+		return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), "Self-managed key not found or access forbidden", ByokKeyNotFoundSuggestions)
 	}
 
 	return CatchCCloudV2Error(err, r)

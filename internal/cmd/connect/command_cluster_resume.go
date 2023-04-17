@@ -13,7 +13,7 @@ import (
 
 func (c *clusterCommand) newResumeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "resume <id-1> [id-2] ... [id-n]",
+		Use:               "resume <id-1> [id-2] ... [id-N]",
 		Short:             "Resume connectors.",
 		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgsMultiple),

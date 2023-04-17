@@ -1,7 +1,7 @@
 Pause connectors.
 
 Usage:
-  confluent connect cluster pause <id-1> [id-2] ... [id-n] [flags]
+  confluent connect cluster pause <id-1> [id-2] ... [id-N] [flags]
 
 Examples:
 Pause connectors "lcc-000001" and "lcc-000002":

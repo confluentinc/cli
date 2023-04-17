@@ -13,7 +13,7 @@ import (
 
 func (c *clusterCommand) newPauseCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "pause <id-1> [id-2] ... [id-n]",
+		Use:               "pause <id-1> [id-2] ... [id-N]",
 		Short:             "Pause connectors.",
 		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgsMultiple),

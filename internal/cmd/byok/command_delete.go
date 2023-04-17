@@ -38,7 +38,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	var deleted []string
 	for _, id := range args {
 		if r, err := c.V2Client.DeleteByokKey(id); err != nil {
-			errs = errors.Join(errs, errors.CatchByokKeyNotFoundError(err, id, r))
+			errs = errors.Join(errs, errors.CatchByokKeyNotFoundError(err, r))
 		} else {
 			deleted = append(deleted, id)
 		}

@@ -44,7 +44,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 
 	apiKey, r, err := c.V2Client.GetApiKey(args[0])
 	if err != nil {
-		return errors.CatchApiKeyForbiddenAccessError(err, getOperation, args[0], r)
+		return errors.CatchApiKeyForbiddenAccessError(err, getOperation, r)
 	}
 
 	var ownerId string

@@ -1,7 +1,7 @@
 Resume connectors.
 
 Usage:
-  confluent connect cluster resume <id-1> [id-2] ... [id-n] [flags]
+  confluent connect cluster resume <id-1> [id-2] ... [id-N] [flags]
 
 Examples:
 Resume connectors "lcc-000001" and "lcc-000002":

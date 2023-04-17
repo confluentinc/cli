@@ -39,7 +39,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	var deleted []string
 	for _, id := range args {
 		if r, err := c.V2Client.DeleteApiKey(id); err != nil {
-			errs = errors.Join(errs, errors.CatchApiKeyForbiddenAccessError(err, deleteOperation, id, r))
+			errs = errors.Join(errs, errors.CatchApiKeyForbiddenAccessError(err, deleteOperation, r))
 		} else {
 			deleted = append(deleted, id)
 			if err := c.keystore.DeleteAPIKey(id); err != nil {

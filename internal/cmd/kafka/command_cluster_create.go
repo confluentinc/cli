@@ -152,7 +152,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 	if byok != "" {
 		key, httpResp, err := c.V2Client.GetByokKey(byok)
 		if err != nil {
-			return errors.CatchByokKeyNotFoundError(err, byok, httpResp)
+			return errors.CatchByokKeyNotFoundError(err, httpResp)
 		}
 		keyGlobalObjectReference = &cmkv2.GlobalObjectReference{Id: key.GetId()}
 	}
