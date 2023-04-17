@@ -1,11 +1,5 @@
 [
   {
-    "id": "lcc-111",
-    "name": "az-connector-2",
-    "status": "RUNNING",
-    "type": "Sink"
-  },
-  {
     "id": "lcc-123",
     "name": "az-connector",
     "status": "RUNNING",
