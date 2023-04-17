@@ -83,14 +83,11 @@ var (
 	}
 	orgManagerImpl           = pauth.NewLoginOrganizationManagerImpl()
 	LoginOrganizationManager = &climock.LoginOrganizationManager{
-		GetLoginOrganizationFromArgsFunc: func(cmd *cobra.Command) func() (string, error) {
-			return orgManagerImpl.GetLoginOrganizationFromArgs(cmd)
+		GetLoginOrganizationFromFlagFunc: func(cmd *cobra.Command) func() string {
+			return orgManagerImpl.GetLoginOrganizationFromFlag(cmd)
 		},
-		GetLoginOrganizationFromEnvVarFunc: func(cmd *cobra.Command) func() (string, error) {
-			return orgManagerImpl.GetLoginOrganizationFromEnvVar(cmd)
-		},
-		GetDefaultLoginOrganizationFunc: func() func() (string, error) {
-			return orgManagerImpl.GetDefaultLoginOrganization()
+		GetLoginOrganizationFromEnvironmentVariableFunc: func() func() string {
+			return orgManagerImpl.GetLoginOrganizationFromEnvironmentVariable()
 		},
 	}
 	AuthTokenHandler = &climock.AuthTokenHandler{

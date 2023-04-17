@@ -15,23 +15,9 @@ import (
 var (
 	noContextCfg = new(v1.Config)
 
-	regularOrgContextState = &v1.ContextState{
-		Auth: &v1.AuthConfig{
-			Organization: testserver.RegularOrg,
-		},
-	}
-
-	endOfFreeTrialSuspendedOrgContextState = &v1.ContextState{
-		Auth: &v1.AuthConfig{
-			Organization: testserver.SuspendedOrg(ccloudv1.SuspensionEventType_SUSPENSION_EVENT_END_OF_FREE_TRIAL),
-		},
-	}
-
-	normalSuspendedOrgContextState = &v1.ContextState{
-		Auth: &v1.AuthConfig{
-			Organization: testserver.SuspendedOrg(ccloudv1.SuspensionEventType_SUSPENSION_EVENT_CUSTOMER_INITIATED_ORG_DEACTIVATION),
-		},
-	}
+	regularOrgContextState                 = &v1.ContextState{Auth: &v1.AuthConfig{Organization: testserver.RegularOrg}}
+	endOfFreeTrialSuspendedOrgContextState = &v1.ContextState{Auth: &v1.AuthConfig{Organization: testserver.SuspendedOrg(ccloudv1.SuspensionEventType_SUSPENSION_EVENT_END_OF_FREE_TRIAL)}}
+	normalSuspendedOrgContextState         = &v1.ContextState{Auth: &v1.AuthConfig{Organization: testserver.SuspendedOrg(ccloudv1.SuspensionEventType_SUSPENSION_EVENT_CUSTOMER_INITIATED_ORG_DEACTIVATION)}}
 
 	cloudCfg = func(contextState *v1.ContextState) *v1.Config {
 		return &v1.Config{

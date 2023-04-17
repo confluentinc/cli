@@ -75,7 +75,7 @@ func handleMe(t *testing.T, isAuditLogEnabled bool) http.HandlerFunc {
 			ResourceId: orgResourceId,
 			Name:       "Confluent",
 		}
-		if !isAuditLogEnabled {
+		if isAuditLogEnabled {
 			org.AuditLog = &ccloudv1.AuditLog{
 				ClusterId:        "lkc-ab123",
 				AccountId:        "env-987zy",

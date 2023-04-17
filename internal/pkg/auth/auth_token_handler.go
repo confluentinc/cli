@@ -35,9 +35,6 @@ func (a *AuthTokenHandlerImpl) GetCCloudTokens(clientFactory CCloudClientFactory
 				return token, refreshToken, nil
 			}
 		} else {
-			if orgResourceId == "" {
-				orgResourceId = credentials.OrgResourceId
-			}
 			req := &ccloudv1.AuthenticateRequest{
 				RefreshToken:  credentials.AuthRefreshToken,
 				OrgResourceId: orgResourceId,

@@ -15,6 +15,7 @@ import (
 	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	"github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1"
 
+	"github.com/confluentinc/cli/internal/pkg/auth"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -288,7 +289,11 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(*cobra.Com
 			return err
 		}
 
-		return r.setCCloudClient(command)
+		if err := r.setCCloudClient(command); err != nil {
+			return err
+		}
+
+		return nil
 	}
 }
 
@@ -322,14 +327,18 @@ func (r *PreRun) setAuthenticatedContext(cliCommand *AuthenticatedCLICommand) er
 }
 
 func (r *PreRun) ccloudAutoLogin(netrcMachineName string) error {
-	orgResourceId := r.Config.GetLastUsedOrgId()
+	manager := auth.NewLoginOrganizationManagerImpl()
+	organizationId := auth.GetLoginOrganization(
+		manager.GetLoginOrganizationFromConfigurationFile(r.Config),
+		manager.GetLoginOrganizationFromEnvironmentVariable(),
+	)
 
 	url := pauth.CCloudURL
 	if ctxUrl := r.Config.Context().GetPlatformServer(); ctxUrl != "" {
 		url = ctxUrl
 	}
 
-	credentials, err := r.getCCloudCredentials(netrcMachineName, url, orgResourceId)
+	credentials, err := r.getCCloudCredentials(netrcMachineName, url, organizationId)
 	if err != nil {
 		return err
 	}
@@ -912,8 +921,12 @@ func (r *PreRun) getUpdatedAuthToken(ctx *dynamicconfig.DynamicContext, unsafeTr
 	}
 
 	if r.Config.IsCloudLogin() {
-		orgResourceId := r.Config.GetLastUsedOrgId()
-		return r.AuthTokenHandler.GetCCloudTokens(r.CCloudClientFactory, ctx.Platform.Server, credentials, false, orgResourceId)
+		manager := auth.NewLoginOrganizationManagerImpl()
+		organizationId := auth.GetLoginOrganization(
+			manager.GetLoginOrganizationFromConfigurationFile(r.Config),
+			manager.GetLoginOrganizationFromEnvironmentVariable(),
+		)
+		return r.AuthTokenHandler.GetCCloudTokens(r.CCloudClientFactory, ctx.Platform.Server, credentials, false, organizationId)
 	} else {
 		mdsClientManager := pauth.MDSClientManagerImpl{}
 		client, err := mdsClientManager.GetMDSClient(ctx.Platform.Server, ctx.Platform.CaCertPath, unsafeTrace)

@@ -70,8 +70,7 @@
           "schema_registry_endpoint": "http://some-lsrc-endpoint",
           "schema_registry_credentials": null
         }
-      },
-      "last_org_id": ""
+      }
     }
   },
   "context_states": {

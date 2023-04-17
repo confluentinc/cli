@@ -8,7 +8,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	metricsv2 "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
@@ -114,8 +113,11 @@ func (c *command) clusterDescribe(cmd *cobra.Command, _ []string) error {
 
 	freeSchemasLimit := int(cluster.MaxSchemas)
 	if cluster.Package == essentialsPackageInternal {
-		org := &ccloudv1.Organization{Id: c.Context.GetOrganization().GetId()}
-		prices, err := c.Client.Billing.GetPriceTable(context.Background(), org, streamGovernancePriceTableProductName)
+		user, err := c.Client.Auth.User(context.Background())
+		if err != nil {
+			return err
+		}
+		prices, err := c.Client.Billing.GetPriceTable(context.Background(), user.GetOrganization(), streamGovernancePriceTableProductName)
 		if err == nil {
 			priceKey := getMaxSchemaLimitPriceKey(cluster.Package, cluster.ServiceProvider, cluster.ServiceProviderRegion)
 			freeSchemasLimit = int(prices.GetPriceTable()[schemaRegistryPriceTableName].Prices[priceKey])

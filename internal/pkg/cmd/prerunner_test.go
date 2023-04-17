@@ -425,11 +425,7 @@ func TestPrerun_AutoLogin(t *testing.T) {
 					return &ccloudv1.Client{Auth: &ccloudv1Mock.Auth{
 						UserFunc: func(_ context.Context) (*ccloudv1.GetMeReply, error) {
 							return &ccloudv1.GetMeReply{
-								User: &ccloudv1.User{
-									Id:        23,
-									Email:     "",
-									FirstName: "",
-								},
+								User:         &ccloudv1.User{Id: 23},
 								Organization: &ccloudv1.Organization{ResourceId: "o-123"},
 								Accounts:     []*ccloudv1.Account{{Id: "a-595", Name: "Default"}},
 							}, nil
@@ -549,11 +545,7 @@ func TestPrerun_ReLoginToLastOrgUsed(t *testing.T) {
 			return &ccloudv1.Client{Auth: &ccloudv1Mock.Auth{
 				UserFunc: func(ctx context.Context) (*ccloudv1.GetMeReply, error) {
 					return &ccloudv1.GetMeReply{
-						User: &ccloudv1.User{
-							Id:        23,
-							Email:     "",
-							FirstName: "",
-						},
+						User:         &ccloudv1.User{Id: 23},
 						Organization: &ccloudv1.Organization{ResourceId: "o-123"},
 						Accounts:     []*ccloudv1.Account{{Id: "a-595", Name: "Default"}},
 					}, nil
@@ -600,9 +592,7 @@ func TestPrerun_ReLoginToLastOrgUsed(t *testing.T) {
 	require.NoError(t, err)
 	r.Config = cfg
 
-	root := &cobra.Command{
-		Run: func(cmd *cobra.Command, args []string) {},
-	}
+	root := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
 	rootCmd := pcmd.NewAuthenticatedCLICommand(root, r)
 	root.Flags().CountP("verbose", "v", "Increase verbosity")
 	root.Flags().Bool("unsafe-trace", false, "")
