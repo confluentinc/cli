@@ -19,18 +19,20 @@ func handlePriceTable(t *testing.T) http.HandlerFunc {
 		res := &ccloudv1.GetPriceTableReply{
 			PriceTable: &ccloudv1.PriceTable{
 				PriceTable: map[string]*ccloudv1.UnitPrices{
+					"ClusterLinkingBase": {
+						Prices: map[string]float64{"aws:us-east-1:low:basic:internet": 1},
+						Unit:   "Hour",
+					},
 					"ConnectNumRecords": {
-						Unit: "GB",
 						Prices: map[string]float64{
 							"aws:us-east-1:low:basic:internet":    1,
 							"aws:us-east-1:low:standard:internet": 1,
 						},
+						Unit: "GB",
 					},
-					"ClusterLinkingBase": {
-						Unit: "Hour",
-						Prices: map[string]float64{
-							"aws:us-east-1:low:basic:internet": 1,
-						},
+					"SchemaRegistry": {
+						Prices: map[string]float64{"aws:us-west-2:free:1:max": 1000},
+						Unit:   "Schema-Hour",
 					},
 				},
 			},
