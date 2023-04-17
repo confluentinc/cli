@@ -1,4 +1,4 @@
-     ID    |        Name         |      Description      |          Issuer URI          |                  JWKS URI                    
------------+---------------------+-----------------------+------------------------------+----------------------------------------------
-  op-12345 | identity_provider   | providing identities. | https://company.provider.com | https://company.provider.com/oauth2/v1/keys  
-  op-67890 | identity_provider_2 | providing identities. | https://company.provider.com | https://company.provider.com/oauth2/v1/keys  
+     ID    |       Name        |      Description      |          Issuer URI          |                  JWKS URI                    
+-----------+-------------------+-----------------------+------------------------------+----------------------------------------------
+  op-12345 | identity_provider | providing identities. | https://company.provider.com | https://company.provider.com/oauth2/v1/keys  
+  op-12345 | identity_provider | providing identities. | https://company.provider.com | https://company.provider.com/oauth2/v1/keys  
