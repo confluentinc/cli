@@ -22,7 +22,7 @@ type Context struct {
 	Environments           map[string]*EnvironmentContext    `json:"environments,omitempty"`
 	KafkaClusterContext    *KafkaClusterContext              `json:"kafka_cluster_context"`
 	SchemaRegistryClusters map[string]*SchemaRegistryCluster `json:"schema_registry_clusters"`
-	LastOrgId              string                            `json:"last_org_id"`
+	LastOrgId              string                            `json:"last_org_id,omitempty"`
 	FeatureFlags           *FeatureFlags                     `json:"feature_flags,omitempty"`
 
 	Platform   *Platform     `json:"-"`
@@ -185,6 +185,13 @@ func (c *Context) GetUser() *ccloudv1.User {
 		return auth.User
 	}
 	return nil
+}
+
+func (c *Context) GetCurrentOrganization() string {
+	if c != nil {
+		return c.LastOrgId
+	}
+	return ""
 }
 
 func (c *Context) GetOrganization() *ccloudv1.Organization {

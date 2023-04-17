@@ -5,8 +5,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
-
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -20,9 +18,12 @@ func (c *command) newAddCommand() *cobra.Command {
 }
 
 func (c *command) add(_ *cobra.Command, args []string) error {
-	org := &ccloudv1.Organization{Id: c.Context.GetOrganization().GetId()}
+	user, err := c.Client.Auth.User(context.Background())
+	if err != nil {
+		return err
+	}
 
-	if _, err := c.Client.Billing.ClaimPromoCode(context.Background(), org, args[0]); err != nil {
+	if _, err := c.Client.Billing.ClaimPromoCode(context.Background(), user.GetOrganization(), args[0]); err != nil {
 		return err
 	}
 

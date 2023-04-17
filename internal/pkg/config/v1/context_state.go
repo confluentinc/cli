@@ -13,7 +13,8 @@ const (
 )
 
 type ContextState struct {
-	Auth             *AuthConfig `json:"auth"`
+	// Deprecated
+	Auth             *AuthConfig `json:"auth,omitempty"`
 	AuthToken        string      `json:"auth_token"`
 	AuthRefreshToken string      `json:"auth_refresh_token"`
 	Salt             []byte      `json:"salt,omitempty"`
