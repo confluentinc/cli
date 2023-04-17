@@ -22,12 +22,17 @@ func (c *command) newComputePoolDescribeCommand() *cobra.Command {
 }
 
 func (c *command) computePoolDescribe(cmd *cobra.Command, args []string) error {
+	id := c.Context.GetCurrentFlinkComputePool()
+	if len(args) > 0 {
+		id = args[0]
+	}
+
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}
 
-	computePool, err := c.V2Client.DescribeFlinkComputePool(c.Context.GetCurrentFlinkComputePool(), environmentId)
+	computePool, err := c.V2Client.DescribeFlinkComputePool(id, environmentId)
 	if err != nil {
 		return err
 	}

@@ -24,7 +24,7 @@ func (c *command) newComputePoolListCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) computePoolList(cmd *cobra.Command, args []string) error {
+func (c *command) computePoolList(cmd *cobra.Command, _ []string) error {
 	region, err := cmd.Flags().GetString("region")
 	if err != nil {
 		return err
