@@ -36,6 +36,6 @@ func PrintSuccessfulDeletionMsg(successful []string, resourceType string) {
 	if len(successful) == 1 {
 		output.Printf(errors.DeletedResourceMsg, resourceType, successful[0])
 	} else if len(successful) > 1 {
-		output.Printf(errors.DeletedResourcesMsg, resource.Plural(resourceType), utils.ArrayToCommaDelimitedString(successful, "and"))
+		output.Printf("Deleted %s %s.\n", resource.Plural(resourceType), utils.ArrayToCommaDelimitedString(successful, "and"))
 	}
 }

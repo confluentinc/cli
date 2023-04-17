@@ -131,9 +131,9 @@ func ConfirmDeletionTypeCustomPrompt(cmd *cobra.Command, promptMsg, stringToType
 func ConfirmDeletionYesNo(cmd *cobra.Command, resourceType string, idList []string) (bool, error) {
 	var promptMsg string
 	if len(idList) == 1 {
-		promptMsg = fmt.Sprintf(errors.DeleteResourceConfirmYesNoMsg, resourceType, idList[0])
+		promptMsg = fmt.Sprintf(`Are you sure you want to delete %s "%s"?`, resourceType, idList[0])
 	} else {
-		promptMsg = fmt.Sprintf(errors.DeleteResourcesConfirmYesNoMsg, resourceType, utils.ArrayToCommaDelimitedString(idList, "and"))
+		promptMsg = fmt.Sprintf("Are you sure you want to delete %ss %s?", resourceType, utils.ArrayToCommaDelimitedString(idList, "and"))
 	}
 
 	return ConfirmDeletionYesNoCustomPrompt(cmd, promptMsg)

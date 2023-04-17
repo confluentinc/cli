@@ -119,14 +119,10 @@ const (
 	InvalidChoiceMsg = "%s is not a valid choice"
 
 	// General
-	CreatedResourceMsg             = "Created %s \"%s\".\n"
-	DeletedResourceMsg             = "Deleted %s \"%s\".\n"
-	DeletedResourcesMsg            = "Deleted %s %s.\n"
-	DeleteResourceConfirmMsg       = "Are you sure you want to delete %s \"%s\"?\nTo confirm, type \"%s\". To cancel, press Ctrl-C"
-	DeleteResourceConfirmYesNoMsg  = `Are you sure you want to delete %s "%s"?`
-	DeleteResourcesConfirmYesNoMsg = "Are you sure you want to delete %ss %s?"
-	RequestedDeleteResourceMsg     = "Requested to delete %s \"%s\".\n"
-	UpdatedResourceMsg             = "Updated %s \"%s\".\n"
+	CreatedResourceMsg       = "Created %s \"%s\".\n"
+	DeletedResourceMsg       = "Deleted %s \"%s\".\n"
+	DeleteResourceConfirmMsg = "Are you sure you want to delete %s \"%s\"?\nTo confirm, type \"%s\". To cancel, press Ctrl-C"
+	UpdatedResourceMsg       = "Updated %s \"%s\".\n"
 
 	UpdateSuccessMsg = "Updated the %s of %s \"%s\" to \"%s\".\n"
 
