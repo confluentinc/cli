@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"os"
-	"strings"
 	"testing"
 	"time"
 
@@ -14,20 +13,25 @@ import (
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 )
 
-// Handler for "/api/organizations/"
+// Handler for "/api/organizations/{id}/price_table"
 func handlePriceTable(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		prices := map[string]float64{
-			strings.Join([]string{exampleCloud, exampleRegion, exampleAvailability, exampleClusterType, exampleNetworkType}, ":"): examplePrice,
-		}
-
-		srPrices := map[string]float64{exampleSRPriceKey: exampleSchemaLimit}
-
 		res := &ccloudv1.GetPriceTableReply{
 			PriceTable: &ccloudv1.PriceTable{
 				PriceTable: map[string]*ccloudv1.UnitPrices{
-					exampleMetric:       {Unit: exampleUnit, Prices: prices},
-					exampleSRPriceTable: {Unit: exampleSRPriceUnit, Prices: srPrices},
+					"ConnectNumRecords": {
+						Unit: "GB",
+						Prices: map[string]float64{
+							"aws:us-east-1:low:basic:internet":    1,
+							"aws:us-east-1:low:standard:internet": 1,
+						},
+					},
+					"ClusterLinkingBase": {
+						Unit: "Hour",
+						Prices: map[string]float64{
+							"aws:us-east-1:low:basic:internet": 1,
+						},
+					},
 				},
 			},
 		}
