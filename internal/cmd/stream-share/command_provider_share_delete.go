@@ -16,7 +16,7 @@ func (c *command) newProviderShareDeleteCommand() *cobra.Command {
 		Use:               "delete <id-1> [id-2] ... [id-n]",
 		Short:             "Delete provider shares.",
 		Args:              cobra.MinimumNArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validProviderShareArgs),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validProviderShareArgsMultiple),
 		RunE:              c.deleteProviderShare,
 		Example: examples.BuildExampleString(
 			examples.Example{

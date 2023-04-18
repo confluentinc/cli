@@ -20,7 +20,7 @@ func (c *authenticatedTopicCommand) newDeleteCommand() *cobra.Command {
 		Use:               "delete <topic-1> [topic-2] ... [topic-n]",
 		Short:             "Delete Kafka topics.",
 		Args:              cobra.MinimumNArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgsMultiple),
 		RunE:              c.delete,
 		Example: examples.BuildExampleString(
 			examples.Example{

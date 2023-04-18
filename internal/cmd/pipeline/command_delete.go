@@ -18,7 +18,7 @@ func (c *command) newDeleteCommand() *cobra.Command {
 		Use:               "delete <pipeline-id-1> [pipeline-id-2] ... [pipeline-id-n]",
 		Short:             "Delete pipelines.",
 		Args:              cobra.MinimumNArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgsMultiple),
 		RunE:              c.delete,
 		Example: examples.BuildExampleString(
 			examples.Example{
