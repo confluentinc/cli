@@ -40,7 +40,7 @@ func newContext(name string, platform *Platform, credential *Credential, kafkaCl
 		Credential:             credential,
 		CredentialName:         credential.Name,
 		CurrentEnvironment:     envId,
-		Environments:           map[string]*EnvironmentContext{envId: {}},
+		Environments:           map[string]*EnvironmentContext{},
 		SchemaRegistryClusters: schemaRegistryClusters,
 		State:                  state,
 		Config:                 config,
