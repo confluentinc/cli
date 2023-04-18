@@ -228,7 +228,7 @@ func handleIamServiceAccount(t *testing.T) http.HandlerFunc {
 			var req iamv2.IamV2ServiceAccount
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
-			res := &iamv2.IamV2ServiceAccount{Id: req.Id, Description: req.Description}
+			res := &iamv2.IamV2ServiceAccount{Id: iamv2.PtrString(req.GetId()), Description: req.Description}
 			err = json.NewEncoder(w).Encode(res)
 			require.NoError(t, err)
 		case http.MethodDelete:
