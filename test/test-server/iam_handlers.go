@@ -21,7 +21,7 @@ var (
 	keyStoreV2       = map[string]*apikeysv2.IamV2ApiKey{}
 	keyTime          = apikeysv2.PtrTime(time.Date(1999, time.February, 24, 0, 0, 0, 0, time.UTC))
 	roleBindingStore = []mdsv2.IamV2RoleBinding{
-		buildRoleBinding("pool-12345", "OrganizationAdmin",
+		buildRoleBinding(identityPoolResourceID, "OrganizationAdmin",
 			"crn://confluent.cloud/organization=abc-123/identity-provider="+identityProviderResourceID),
 		buildRoleBinding("u-11aaa", "OrganizationAdmin",
 			"crn://confluent.cloud/organization=abc-123"),
@@ -228,7 +228,7 @@ func handleIamServiceAccount(t *testing.T) http.HandlerFunc {
 			var req iamv2.IamV2ServiceAccount
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
-			res := &iamv2.IamV2ServiceAccount{Id: req.GetId(), Description: req.Description}
+			res := &iamv2.IamV2ServiceAccount{Id: req.Id, Description: req.Description}
 			err = json.NewEncoder(w).Encode(res)
 			require.NoError(t, err)
 		case http.MethodDelete:
@@ -376,7 +376,7 @@ func handleIamRoleBinding(t *testing.T) http.HandlerFunc {
 func handleIamIdentityPool(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := mux.Vars(r)["id"]
-		if id != "pool-12345" && id != "pool-55555" {
+		if id != identityPoolResourceID && id != "pool-55555" {
 			err := writeResourceNotFoundError(w)
 			require.NoError(t, err)
 			return
@@ -417,7 +417,7 @@ func handleIamIdentityPools(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			identityPool := identityproviderv2.IamV2IdentityPool{
-				Id:            identityproviderv2.PtrString("pool-12345"),
+				Id:            identityproviderv2.PtrString(identityPoolResourceID),
 				DisplayName:   identityproviderv2.PtrString("identity_pool"),
 				Description:   identityproviderv2.PtrString("pooling identities."),
 				IdentityClaim: identityproviderv2.PtrString("sub"),

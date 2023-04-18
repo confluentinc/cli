@@ -61,7 +61,6 @@ func handleConnectors(t *testing.T) http.HandlerFunc {
 					Name: "az-connector",
 					Connector: connectv1.ConnectV1ConnectorExpansionStatusConnector{
 						State: "RUNNING",
-						Trace: connectv1.PtrString(""),
 					},
 					Tasks: &[]connectv1.ConnectV1ConnectorExpansionStatusTasks{{Id: 1, State: "RUNNING"}},
 					Type:  "Sink",
@@ -77,7 +76,6 @@ func handleConnectors(t *testing.T) http.HandlerFunc {
 					Name: "az-connector-2",
 					Connector: connectv1.ConnectV1ConnectorExpansionStatusConnector{
 						State: "RUNNING",
-						Trace: connectv1.PtrString(""),
 					},
 					Tasks: &[]connectv1.ConnectV1ConnectorExpansionStatusTasks{{Id: 1, State: "RUNNING"}},
 					Type:  "Sink",

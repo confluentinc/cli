@@ -66,12 +66,12 @@ func (c *clusterCommand) autocompleteConnectors() []string {
 		return nil
 	}
 
-	keys := types.GetSortedKeys(connectors)
+	names := types.GetSortedKeys(connectors)
 
 	suggestions := make([]string, len(connectors))
 	i := 0
-	for _, key := range keys {
-		suggestions[i] = fmt.Sprintf("%s\t%s", connectors[key].Id.GetId(), connectors[key].Info.GetName())
+	for _, name := range names {
+		suggestions[i] = fmt.Sprintf("%s\t%s", connectors[name].Id.GetId(), connectors[name].Info.GetName())
 		i++
 	}
 	return suggestions
