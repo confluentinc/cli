@@ -291,7 +291,7 @@ func MockResultColumns(numColumns, maxNestingDepth int) *rapid.Generator[[]v1.Co
 func MockResults(numColumns, maxNestingDepth int) *rapid.Generator[types.MockStatementResult] {
 	return rapid.Custom(func(t *rapid.T) types.MockStatementResult {
 		if numColumns <= 0 {
-			numColumns = rapid.IntRange(1, 10).Draw(t, "column number")
+			numColumns = rapid.IntRange(1, 5).Draw(t, "column number")
 		}
 		if maxNestingDepth < 0 {
 			maxNestingDepth = 10

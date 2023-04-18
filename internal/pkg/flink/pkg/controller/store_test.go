@@ -31,14 +31,17 @@ func TestStore_ProcessLocalStatement(t *testing.T) {
 	result, err := s.ProcessLocalStatement("SET foo=bar;")
 	assert.Nil(t, err)
 	assert.NotNil(t, result)
+	assert.True(t, result.IsLocalStatement)
 
 	result, err = s.ProcessLocalStatement("RESET;")
 	assert.Nil(t, err)
 	assert.NotNil(t, result)
+	assert.True(t, result.IsLocalStatement)
 
 	result, err = s.ProcessLocalStatement("USE my_database;")
 	assert.Nil(t, err)
 	assert.NotNil(t, result)
+	assert.True(t, result.IsLocalStatement)
 
 	result, err = s.ProcessLocalStatement("SELECT * FROM users;")
 	assert.Nil(t, err)

@@ -39,6 +39,7 @@ type ProcessedStatement struct {
 	ComputePool      string `json:"compute_pool"`
 	Status           PHASE  `json:"status"`
 	StatusDetail     string `json:"status_detail,omitempty"` // Shown at the top before the table
+	IsLocalStatement bool
 	PageToken        string
 	ResultSchema     v1.SqlV1alpha1ResultSchema
 	StatementResults []StatementResultColumn

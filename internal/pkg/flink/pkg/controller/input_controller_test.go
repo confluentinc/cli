@@ -57,3 +57,77 @@ func TestRenderError(t *testing.T) {
 	result = inputController.isSessionValid(err)
 	require.True(t, result)
 }
+
+func TestShouldUseTView(t *testing.T) {
+	tests := []struct {
+		name      string
+		statement types.ProcessedStatement
+		want      bool
+	}{
+		{
+			name:      "local statement should not use TView",
+			statement: types.ProcessedStatement{IsLocalStatement: true},
+			want:      false,
+		},
+		{
+			name:      "statement with no results should not use TView",
+			statement: types.ProcessedStatement{IsLocalStatement: false, StatementResults: []types.StatementResultColumn{}},
+			want:      false,
+		},
+		{
+			name: "statement with one column and two rows should not use TView",
+			statement: types.ProcessedStatement{IsLocalStatement: false, StatementResults: []types.StatementResultColumn{{
+				Name:   "Column 1",
+				Fields: []types.StatementResultField{types.AtomicStatementResultField{}, types.AtomicStatementResultField{}},
+			}}},
+			want: false,
+		},
+		{
+			name: "statement with two columns and one row should not use TView",
+			statement: types.ProcessedStatement{IsLocalStatement: false, StatementResults: []types.StatementResultColumn{
+				{
+					Name:   "Column 1",
+					Fields: []types.StatementResultField{types.AtomicStatementResultField{}},
+				},
+				{
+					Name:   "Column 2",
+					Fields: []types.StatementResultField{types.AtomicStatementResultField{}},
+				},
+			}},
+			want: false,
+		},
+		{
+			name: "statement with two columns and two rows should use TView",
+			statement: types.ProcessedStatement{IsLocalStatement: false, StatementResults: []types.StatementResultColumn{
+				{
+					Name:   "Column 1",
+					Fields: []types.StatementResultField{types.AtomicStatementResultField{}, types.AtomicStatementResultField{}},
+				},
+				{
+					Name:   "Column 2",
+					Fields: []types.StatementResultField{types.AtomicStatementResultField{}, types.AtomicStatementResultField{}},
+				},
+			}},
+			want: true,
+		},
+		{
+			name: "local statement with two columns and two rows should not use TView",
+			statement: types.ProcessedStatement{IsLocalStatement: true, StatementResults: []types.StatementResultColumn{
+				{
+					Name:   "Column 1",
+					Fields: []types.StatementResultField{types.AtomicStatementResultField{}, types.AtomicStatementResultField{}},
+				},
+				{
+					Name:   "Column 2",
+					Fields: []types.StatementResultField{types.AtomicStatementResultField{}, types.AtomicStatementResultField{}},
+				},
+			}},
+			want: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			require.Equal(t, tt.want, shouldUseTView(tt.statement))
+		})
+	}
+}

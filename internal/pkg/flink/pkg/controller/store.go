@@ -87,6 +87,9 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 }
 
 func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError) {
+	if statement.IsLocalStatement {
+		return &statement, nil
+	}
 	// Process remote statements
 	statementResultObj, resp, err := s.client.FetchStatementResults(context.Background(), statement.StatementName, statement.PageToken)
 	err = processHttpErrors(resp, err)

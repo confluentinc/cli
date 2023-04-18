@@ -34,6 +34,14 @@ type InputController struct {
 	store                 StoreInterface
 }
 
+func shouldUseTView(statement types.ProcessedStatement) bool {
+	// only use view for non-local statements, that have more than one row and more than one column
+	if !statement.IsLocalStatement && len(statement.StatementResults) > 1 && len(statement.StatementResults[0].Fields) > 1 {
+		return true
+	}
+	return false
+}
+
 // Actions
 // This is the main function/loop for the app
 func (c *InputController) RunInteractiveInput() {
@@ -60,16 +68,15 @@ func (c *InputController) RunInteractiveInput() {
 			continue
 		}
 
-		// TODO: we need some additional logic here to decide whether we are going to show tview or just plain text
-		// for now we just show tview for all non local statement
-		isLocalStatement := processedStatement.Kind == configOpUse || processedStatement.Kind == configOpSet || processedStatement.Kind == configOpReset
-		if !isLocalStatement {
-			processedStatement, err = c.store.FetchStatementResults(*processedStatement)
-			if err != nil {
-				fmt.Println(err.Error())
-				c.isSessionValid(err)
-				continue
-			}
+		processedStatement, err = c.store.FetchStatementResults(*processedStatement)
+		if err != nil {
+			fmt.Println(err.Error())
+			c.isSessionValid(err)
+			continue
+		}
+
+		// decide if we want to display results using TView or just a plain table
+		if shouldUseTView(*processedStatement) {
 			c.table.SetDataAndFocus(*processedStatement)
 			return
 		}

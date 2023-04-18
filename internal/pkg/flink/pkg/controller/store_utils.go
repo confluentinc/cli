@@ -54,6 +54,7 @@ func (s *Store) processSetStatement(statement string) (*types.ProcessedStatement
 			Kind:             configOpSet,
 			Status:           "Completed",
 			StatementResults: createStatementResults([]string{"Key", "Value"}, lo.MapToSlice(s.Properties, func(key, val string) []string { return []string{key, val} })),
+			IsLocalStatement: true,
 		}, nil
 	}
 	s.Properties[configKey] = configVal
@@ -63,6 +64,7 @@ func (s *Store) processSetStatement(statement string) (*types.ProcessedStatement
 		StatusDetail:     "Config updated successfuly.",
 		Status:           "Completed",
 		StatementResults: createStatementResults([]string{"Key", "Value"}, [][]string{{configKey, configVal}}),
+		IsLocalStatement: true,
 	}, nil
 }
 
@@ -74,9 +76,10 @@ func (s *Store) processResetStatement(statement string) (*types.ProcessedStateme
 	if configKey == "" {
 		s.Properties = make(map[string]string)
 		return &types.ProcessedStatement{
-			Kind:         configOpReset,
-			StatusDetail: "Configuration has been reset successfuly.",
-			Status:       "Completed",
+			Kind:             configOpReset,
+			StatusDetail:     "Configuration has been reset successfuly.",
+			Status:           "Completed",
+			IsLocalStatement: true,
 		}, nil
 	} else {
 		_, keyExists := s.Properties[configKey]
@@ -90,6 +93,7 @@ func (s *Store) processResetStatement(statement string) (*types.ProcessedStateme
 			StatusDetail:     fmt.Sprintf("Config key \"%s\" has been reset successfuly.", configKey),
 			Status:           "Completed",
 			StatementResults: createStatementResults([]string{"Key", "Value"}, lo.MapToSlice(s.Properties, func(key, val string) []string { return []string{key, val} })),
+			IsLocalStatement: true,
 		}, nil
 	}
 }
@@ -106,6 +110,7 @@ func (s *Store) processUseStatement(statement string) (*types.ProcessedStatement
 		StatusDetail:     "Config updated successfuly.",
 		Status:           "Completed",
 		StatementResults: createStatementResults([]string{"Key", "Value"}, [][]string{{configKey, configVal}}),
+		IsLocalStatement: true,
 	}, nil
 }
 
