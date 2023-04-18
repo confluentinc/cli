@@ -280,8 +280,8 @@ func (s *CLITestSuite) TestIAMProviderCreate() {
 
 func (s *CLITestSuite) TestIAMProviderDelete() {
 	tests := []CLITest{
-		{args: "iam provider delete op-55555 --force", fixture: "iam/identity-provider/delete.golden"},
-		{args: "iam provider delete op-55555", input: "identity_provider\n", fixture: "iam/identity-provider/delete-prompt.golden"},
+		{args: "iam provider delete op-12345 --force", fixture: "iam/identity-provider/delete.golden"},
+		{args: "iam provider delete op-12345", input: "identity_provider\n", fixture: "iam/identity-provider/delete-prompt.golden"},
 		{args: "iam provider delete op-1 --force", fixture: "iam/identity-provider/delete-dne.golden", exitCode: 1},
 	}
 
