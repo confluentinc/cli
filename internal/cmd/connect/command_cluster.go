@@ -9,6 +9,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/types"
 )
 
 const clusterType = "connect-cluster"
@@ -65,10 +66,12 @@ func (c *clusterCommand) autocompleteConnectors() []string {
 		return nil
 	}
 
+	keys := types.GetSortedKeys(connectors)
+
 	suggestions := make([]string, len(connectors))
 	i := 0
-	for _, connector := range connectors {
-		suggestions[i] = fmt.Sprintf("%s\t%s", connector.Id.GetId(), connector.Info.GetName())
+	for _, key := range keys {
+		suggestions[i] = fmt.Sprintf("%s\t%s", connectors[key].Id.GetId(), connectors[key].Info.GetName())
 		i++
 	}
 	return suggestions
