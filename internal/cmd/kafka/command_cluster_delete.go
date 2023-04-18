@@ -36,19 +36,8 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	displayName, err := c.validateArgs(cmd, environmentId, args)
-	if err != nil {
+	if err := c.confirmDeletion(cmd, environmentId, args); err != nil {
 		return err
-	}
-
-	if len(args) == 1 {
-		if err := form.ConfirmDeletionWithString(cmd, resource.KafkaCluster, args[0], displayName); err != nil {
-			return err
-		}
-	} else {
-		if ok, err := form.ConfirmDeletionYesNo(cmd, resource.KafkaCluster, args); err != nil || !ok {
-			return err
-		}
 	}
 
 	var errs error
@@ -76,15 +65,15 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *clusterCommand) validateArgs(cmd *cobra.Command, environmentId string, args []string) (string, error) {
+func (c *clusterCommand) confirmDeletion(cmd *cobra.Command, environmentId string, args []string) error {
 	if err := resource.ValidatePrefixes(resource.KafkaCluster, args); err != nil {
-		return "", err
+		return err
 	}
 
 	var displayName string
 	describeFunc := func(id string) error {
 		cluster, _, err := c.V2Client.DescribeKafkaCluster(id, environmentId)
-		if err == nil && displayName == "" { // store the first valid cluster name
+		if err == nil && id == args[0] {
 			displayName = cluster.Spec.GetDisplayName()
 		}
 		return err
@@ -93,8 +82,18 @@ func (c *clusterCommand) validateArgs(cmd *cobra.Command, environmentId string, 
 	err := deletion.ValidateArgsForDeletion(cmd, args, resource.KafkaCluster, describeFunc)
 	if err != nil {
 		PluralClusterEnvironmentSuggestions := "Ensure the clusters you are specifying belong to the currently selected environment with `confluent kafka cluster list`, `confluent environment list`, and `confluent environment use`."
-		err = errors.NewErrorWithSuggestions(err.Error(), PluralClusterEnvironmentSuggestions)
+		return errors.NewErrorWithSuggestions(err.Error(), PluralClusterEnvironmentSuggestions)
 	}
 
-	return displayName, err
+	if len(args) == 1 {
+		if err := form.ConfirmDeletionWithString(cmd, resource.KafkaCluster, args[0], displayName); err != nil {
+			return err
+		}
+	} else {
+		if ok, err := form.ConfirmDeletionYesNo(cmd, resource.KafkaCluster, args); err != nil || !ok {
+			return err
+		}
+	}
+
+	return nil
 }

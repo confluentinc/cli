@@ -46,19 +46,8 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	displayName, err := c.validateArgs(cmd, environmentId, cluster.ID, args)
-	if err != nil {
+	if err := c.confirmDeletion(cmd, environmentId, cluster.ID, args); err != nil {
 		return err
-	}
-
-	if len(args) == 1 {
-		if err := form.ConfirmDeletionWithString(cmd, resource.Pipeline, args[0], displayName); err != nil {
-			return err
-		}
-	} else {
-		if ok, err := form.ConfirmDeletionYesNo(cmd, resource.Pipeline, args); err != nil || !ok {
-			return err
-		}
 	}
 
 	var errs error
@@ -79,15 +68,29 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	return errs
 }
 
-func (c *command) validateArgs(cmd *cobra.Command, environmentId, clusterId string, args []string) (string, error) {
+func (c *command) confirmDeletion(cmd *cobra.Command, environmentId, clusterId string, args []string) error {
 	var displayName string
 	describeFunc := func(id string) error {
 		pipeline, err := c.V2Client.GetSdPipeline(environmentId, clusterId, id)
-		if err == nil && displayName == "" { // store the first valid pipeline name
+		if err == nil && id == args[0] {
 			displayName = pipeline.Spec.GetDisplayName()
 		}
 		return err
 	}
 
-	return displayName, deletion.ValidateArgsForDeletion(cmd, args, resource.Pipeline, describeFunc)
+	if err := deletion.ValidateArgsForDeletion(cmd, args, resource.Pipeline, describeFunc); err != nil {
+		return err
+	}
+
+	if len(args) == 1 {
+		if err := form.ConfirmDeletionWithString(cmd, resource.Pipeline, args[0], displayName); err != nil {
+			return err
+		}
+	} else {
+		if ok, err := form.ConfirmDeletionYesNo(cmd, resource.Pipeline, args); err != nil || !ok {
+			return err
+		}
+	}
+
+	return nil
 }

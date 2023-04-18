@@ -32,19 +32,8 @@ func (c *serviceAccountCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *serviceAccountCommand) delete(cmd *cobra.Command, args []string) error {
-	displayName, err := c.validateArgs(cmd, args)
-	if err != nil {
+	if err := c.confirmDeletion(cmd, args); err != nil {
 		return err
-	}
-
-	if len(args) == 1 {
-		if err := form.ConfirmDeletionWithString(cmd, resource.ServiceAccount, args[0], displayName); err != nil {
-			return err
-		}
-	} else {
-		if ok, err := form.ConfirmDeletionYesNo(cmd, resource.ServiceAccount, args); err != nil || !ok {
-			return err
-		}
 	}
 
 	var errs error
@@ -61,19 +50,33 @@ func (c *serviceAccountCommand) delete(cmd *cobra.Command, args []string) error 
 	return errs
 }
 
-func (c *serviceAccountCommand) validateArgs(cmd *cobra.Command, args []string) (string, error) {
+func (c *serviceAccountCommand) confirmDeletion(cmd *cobra.Command, args []string) error {
 	if err := resource.ValidatePrefixes(resource.ServiceAccount, args); err != nil {
-		return "", err
+		return err
 	}
 
 	var displayName string
 	describeFunc := func(id string) error {
 		serviceAccount, _, err := c.V2Client.GetIamServiceAccount(id)
-		if err == nil && displayName == "" { // store the first valid provider name
+		if err == nil && id == args[0] {
 			displayName = serviceAccount.GetDisplayName()
 		}
 		return err
 	}
 
-	return displayName, deletion.ValidateArgsForDeletion(cmd, args, resource.ServiceAccount, describeFunc)
+	if err := deletion.ValidateArgsForDeletion(cmd, args, resource.ServiceAccount, describeFunc); err != nil {
+		return err
+	}
+
+	if len(args) == 1 {
+		if err := form.ConfirmDeletionWithString(cmd, resource.ServiceAccount, args[0], displayName); err != nil {
+			return err
+		}
+	} else {
+		if ok, err := form.ConfirmDeletionYesNo(cmd, resource.ServiceAccount, args); err != nil || !ok {
+			return err
+		}
+	}
+
+	return nil
 }

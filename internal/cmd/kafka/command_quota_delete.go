@@ -26,19 +26,8 @@ func (c *quotaCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *quotaCommand) delete(cmd *cobra.Command, args []string) error {
-	displayName, err := c.validateArgs(cmd, args)
-	if err != nil {
+	if err := c.confirmDeletion(cmd, args); err != nil {
 		return err
-	}
-
-	if len(args) == 1 {
-		if err := form.ConfirmDeletionWithString(cmd, resource.ClientQuota, args[0], displayName); err != nil {
-			return err
-		}
-	} else {
-		if ok, err := form.ConfirmDeletionYesNo(cmd, resource.ClientQuota, args); err != nil || !ok {
-			return err
-		}
 	}
 
 	var errs error
@@ -55,15 +44,29 @@ func (c *quotaCommand) delete(cmd *cobra.Command, args []string) error {
 	return errs
 }
 
-func (c *quotaCommand) validateArgs(cmd *cobra.Command, args []string) (string, error) {
+func (c *quotaCommand) confirmDeletion(cmd *cobra.Command, args []string) error {
 	var displayName string
 	describeFunc := func(id string) error {
 		quota, err := c.V2Client.DescribeKafkaQuota(id)
-		if err == nil && displayName == "" { // store the first valid user name
+		if err == nil && id == args[0] {
 			displayName = quota.Spec.GetDisplayName()
 		}
 		return err
 	}
 
-	return displayName, deletion.ValidateArgsForDeletion(cmd, args, resource.ClientQuota, describeFunc)
+	if err := deletion.ValidateArgsForDeletion(cmd, args, resource.ClientQuota, describeFunc); err != nil {
+		return err
+	}
+
+	if len(args) == 1 {
+		if err := form.ConfirmDeletionWithString(cmd, resource.ClientQuota, args[0], displayName); err != nil {
+			return err
+		}
+	} else {
+		if ok, err := form.ConfirmDeletionYesNo(cmd, resource.ClientQuota, args); err != nil || !ok {
+			return err
+		}
+	}
+
+	return nil
 }

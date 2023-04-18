@@ -49,19 +49,9 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	connectorIdToName, err := c.validateArgs(cmd, environmentId, kafkaCluster.ID, args)
-	if err != nil {
+	connectorIdToName := make(map[string]string)
+	if err := c.confirmDeletion(cmd, environmentId, kafkaCluster.ID, args, connectorIdToName); err != nil {
 		return err
-	}
-
-	if len(args) == 1 {
-		if err := form.ConfirmDeletionWithString(cmd, resource.Connector, args[0], connectorIdToName[args[0]]); err != nil {
-			return err
-		}
-	} else {
-		if ok, err := form.ConfirmDeletionYesNo(cmd, resource.Connector, args); err != nil || !ok {
-			return err
-		}
 	}
 
 	var errs error
@@ -78,8 +68,7 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	return errs
 }
 
-func (c *clusterCommand) validateArgs(cmd *cobra.Command, environmentId, kafkaClusterId string, args []string) (map[string]string, error) {
-	connectorIdToName := make(map[string]string)
+func (c *clusterCommand) confirmDeletion(cmd *cobra.Command, environmentId, kafkaClusterId string, args []string, connectorIdToName map[string]string) error {
 	describeFunc := func(id string) error {
 		connector, err := c.V2Client.GetConnectorExpansionById(id, environmentId, kafkaClusterId)
 		if err == nil {
@@ -88,5 +77,19 @@ func (c *clusterCommand) validateArgs(cmd *cobra.Command, environmentId, kafkaCl
 		return err
 	}
 
-	return connectorIdToName, deletion.ValidateArgsForDeletion(cmd, args, resource.Connector, describeFunc)
+	if err := deletion.ValidateArgsForDeletion(cmd, args, resource.Connector, describeFunc); err != nil {
+		return err
+	}
+
+	if len(args) == 1 {
+		if err := form.ConfirmDeletionWithString(cmd, resource.Connector, args[0], connectorIdToName[args[0]]); err != nil {
+			return err
+		}
+	} else {
+		if ok, err := form.ConfirmDeletionYesNo(cmd, resource.Connector, args); err != nil || !ok {
+			return err
+		}
+	}
+
+	return nil
 }

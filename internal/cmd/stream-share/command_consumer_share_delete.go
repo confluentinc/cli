@@ -32,11 +32,7 @@ func (c *command) newConsumerShareDeleteCommand() *cobra.Command {
 }
 
 func (c *command) deleteConsumerShare(cmd *cobra.Command, args []string) error {
-	if err := c.validateArgsConsumerShare(cmd, args); err != nil {
-		return err
-	}
-
-	if ok, err := form.ConfirmDeletionYesNo(cmd, resource.ConsumerShare, args); err != nil || !ok {
+	if err := c.confirmDeletionConsumerShare(cmd, args); err != nil {
 		return err
 	}
 
@@ -54,11 +50,19 @@ func (c *command) deleteConsumerShare(cmd *cobra.Command, args []string) error {
 	return errs
 }
 
-func (c *command) validateArgsConsumerShare(cmd *cobra.Command, args []string) error {
+func (c *command) confirmDeletionConsumerShare(cmd *cobra.Command, args []string) error {
 	describeFunc := func(id string) error {
 		_, err := c.V2Client.DescribeConsumerShare(id)
 		return err
 	}
 
-	return deletion.ValidateArgsForDeletion(cmd, args, resource.ConsumerShare, describeFunc)
+	if err := deletion.ValidateArgsForDeletion(cmd, args, resource.ConsumerShare, describeFunc); err != nil {
+		return err
+	}
+
+	if ok, err := form.ConfirmDeletionYesNo(cmd, resource.ConsumerShare, args); err != nil || !ok {
+		return err
+	}
+
+	return nil
 }

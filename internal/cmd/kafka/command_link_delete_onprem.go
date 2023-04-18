@@ -40,18 +40,8 @@ func (c *linkCommand) deleteOnPrem(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if err := c.validateArgsOnPrem(cmd, client, ctx, clusterId, args); err != nil {
+	if err := c.confirmDeletionOnPrem(cmd, client, ctx, clusterId, args); err != nil {
 		return err
-	}
-
-	if len(args) == 1 {
-		if err := form.ConfirmDeletionWithString(cmd, resource.ClusterLink, args[0], args[0]); err != nil {
-			return err
-		}
-	} else {
-		if ok, err := form.ConfirmDeletionYesNo(cmd, resource.ClusterLink, args); err != nil || !ok {
-			return err
-		}
 	}
 
 	var errs error
@@ -68,11 +58,25 @@ func (c *linkCommand) deleteOnPrem(cmd *cobra.Command, args []string) error {
 	return errs
 }
 
-func (c *linkCommand) validateArgsOnPrem(cmd *cobra.Command, client *kafkarestv3.APIClient, ctx context.Context, clusterId string, args []string) error {
+func (c *linkCommand) confirmDeletionOnPrem(cmd *cobra.Command, client *kafkarestv3.APIClient, ctx context.Context, clusterId string, args []string) error {
 	describeFunc := func(id string) error {
 		_, _, err := client.ClusterLinkingV3Api.ListKafkaLinkConfigs(ctx, clusterId, id)
 		return err
 	}
 
-	return deletion.ValidateArgsForDeletion(cmd, args, resource.ClusterLink, describeFunc)
+	if err := deletion.ValidateArgsForDeletion(cmd, args, resource.ClusterLink, describeFunc); err != nil {
+		return err
+	}
+
+	if len(args) == 1 {
+		if err := form.ConfirmDeletionWithString(cmd, resource.ClusterLink, args[0], args[0]); err != nil {
+			return err
+		}
+	} else {
+		if ok, err := form.ConfirmDeletionYesNo(cmd, resource.ClusterLink, args); err != nil || !ok {
+			return err
+		}
+	}
+
+	return nil
 }

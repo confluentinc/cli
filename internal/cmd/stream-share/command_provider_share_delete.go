@@ -32,11 +32,7 @@ func (c *command) newProviderShareDeleteCommand() *cobra.Command {
 }
 
 func (c *command) deleteProviderShare(cmd *cobra.Command, args []string) error {
-	if err := c.validateArgsProviderShare(cmd, args); err != nil {
-		return err
-	}
-
-	if ok, err := form.ConfirmDeletionYesNo(cmd, resource.ProviderShare, args); err != nil || !ok {
+	if err := c.confirmDeletionProviderShare(cmd, args); err != nil {
 		return err
 	}
 
@@ -54,11 +50,19 @@ func (c *command) deleteProviderShare(cmd *cobra.Command, args []string) error {
 	return errs
 }
 
-func (c *command) validateArgsProviderShare(cmd *cobra.Command, args []string) error {
+func (c *command) confirmDeletionProviderShare(cmd *cobra.Command, args []string) error {
 	describeFunc := func(id string) error {
 		_, err := c.V2Client.DescribeProviderShare(id)
 		return err
 	}
 
-	return deletion.ValidateArgsForDeletion(cmd, args, resource.ProviderShare, describeFunc)
+	if err := deletion.ValidateArgsForDeletion(cmd, args, resource.ProviderShare, describeFunc); err != nil {
+		return err
+	}
+
+	if ok, err := form.ConfirmDeletionYesNo(cmd, resource.ProviderShare, args); err != nil || !ok {
+		return err
+	}
+
+	return nil
 }

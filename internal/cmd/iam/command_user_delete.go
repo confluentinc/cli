@@ -25,19 +25,8 @@ func (c *userCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *userCommand) delete(cmd *cobra.Command, args []string) error {
-	fullName, err := c.validateArgs(cmd, args)
-	if err != nil {
+	if err := c.confirmDeletion(cmd, args); err != nil {
 		return err
-	}
-
-	if len(args) == 1 {
-		if err := form.ConfirmDeletionWithString(cmd, resource.User, args[0], fullName); err != nil {
-			return err
-		}
-	} else {
-		if ok, err := form.ConfirmDeletionYesNo(cmd, resource.User, args); err != nil || !ok {
-			return err
-		}
 	}
 
 	var errs error
@@ -54,19 +43,33 @@ func (c *userCommand) delete(cmd *cobra.Command, args []string) error {
 	return errs
 }
 
-func (c *userCommand) validateArgs(cmd *cobra.Command, args []string) (string, error) {
+func (c *userCommand) confirmDeletion(cmd *cobra.Command, args []string) error {
 	if err := resource.ValidatePrefixes(resource.User, args); err != nil {
-		return "", err
+		return err
 	}
 
 	var fullName string
 	describeFunc := func(id string) error {
 		user, err := c.V2Client.GetIamUserById(id)
-		if err == nil && fullName == "" { // store the first valid user name
+		if err == nil && id == args[0] {
 			fullName = user.GetFullName()
 		}
 		return err
 	}
 
-	return fullName, deletion.ValidateArgsForDeletion(cmd, args, resource.User, describeFunc)
+	if err := deletion.ValidateArgsForDeletion(cmd, args, resource.User, describeFunc); err != nil {
+		return err
+	}
+
+	if len(args) == 1 {
+		if err := form.ConfirmDeletionWithString(cmd, resource.User, args[0], fullName); err != nil {
+			return err
+		}
+	} else {
+		if ok, err := form.ConfirmDeletionYesNo(cmd, resource.User, args); err != nil || !ok {
+			return err
+		}
+	}
+
+	return nil
 }

@@ -26,11 +26,7 @@ func (c *command) newDeleteCommand() *cobra.Command {
 }
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
-	if err := c.validateArgs(cmd, args); err != nil {
-		return err
-	}
-
-	if ok, err := form.ConfirmDeletionYesNo(cmd, resource.ByokKey, args); err != nil || !ok {
+	if err := c.confirmDeletion(cmd, args); err != nil {
 		return err
 	}
 
@@ -52,11 +48,19 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *command) validateArgs(cmd *cobra.Command, args []string) error {
+func (c *command) confirmDeletion(cmd *cobra.Command, args []string) error {
 	describeFunc := func(id string) error {
 		_, _, err := c.V2Client.GetByokKey(id)
 		return err
 	}
 
-	return deletion.ValidateArgsForDeletion(cmd, args, resource.ByokKey, describeFunc)
+	if err := deletion.ValidateArgsForDeletion(cmd, args, resource.ByokKey, describeFunc); err != nil {
+		return err
+	}
+
+	if ok, err := form.ConfirmDeletionYesNo(cmd, resource.ByokKey, args); err != nil || !ok {
+		return err
+	}
+
+	return nil
 }

@@ -49,18 +49,8 @@ func (c *authenticatedTopicCommand) deleteOnPrem(cmd *cobra.Command, args []stri
 		return err
 	}
 
-	if err := c.validateArgsOnPrem(cmd, restClient, restContext, clusterId, args); err != nil {
+	if err := c.confirmDeletionOnPrem(cmd, restClient, restContext, clusterId, args); err != nil {
 		return err
-	}
-
-	if len(args) == 1 {
-		if err := form.ConfirmDeletionWithString(cmd, resource.Topic, args[0], args[0]); err != nil {
-			return err
-		}
-	} else {
-		if ok, err := form.ConfirmDeletionYesNo(cmd, resource.Topic, args); err != nil || !ok {
-			return err
-		}
 	}
 
 	var errs error
@@ -77,11 +67,25 @@ func (c *authenticatedTopicCommand) deleteOnPrem(cmd *cobra.Command, args []stri
 	return errs
 }
 
-func (c *authenticatedTopicCommand) validateArgsOnPrem(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restContext context.Context, clusterId string, args []string) error {
+func (c *authenticatedTopicCommand) confirmDeletionOnPrem(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restContext context.Context, clusterId string, args []string) error {
 	describeFunc := func(id string) error {
 		_, _, err := restClient.TopicV3Api.GetKafkaTopic(restContext, clusterId, id)
 		return err
 	}
 
-	return deletion.ValidateArgsForDeletion(cmd, args, resource.Topic, describeFunc)
+	if err := deletion.ValidateArgsForDeletion(cmd, args, resource.Topic, describeFunc); err != nil {
+		return err
+	}
+
+	if len(args) == 1 {
+		if err := form.ConfirmDeletionWithString(cmd, resource.Topic, args[0], args[0]); err != nil {
+			return err
+		}
+	} else {
+		if ok, err := form.ConfirmDeletionYesNo(cmd, resource.Topic, args); err != nil || !ok {
+			return err
+		}
+	}
+
+	return nil
 }

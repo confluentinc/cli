@@ -28,19 +28,8 @@ func (c *command) newDeleteCommand() *cobra.Command {
 }
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
-	displayName, err := c.validateArgs(cmd, args)
-	if err != nil {
+	if err := c.confirmDeletion(cmd, args); err != nil {
 		return err
-	}
-
-	if len(args) == 1 {
-		if err := form.ConfirmDeletionWithString(cmd, resource.Environment, args[0], displayName); err != nil {
-			return err
-		}
-	} else {
-		if ok, err := form.ConfirmDeletionYesNo(cmd, resource.Environment, args); err != nil || !ok {
-			return err
-		}
 	}
 
 	var errs error
@@ -70,15 +59,29 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *command) validateArgs(cmd *cobra.Command, args []string) (string, error) {
+func (c *command) confirmDeletion(cmd *cobra.Command, args []string) error {
 	var displayName string
 	describeFunc := func(id string) error {
 		environment, err := c.V2Client.GetOrgEnvironment(id)
-		if err == nil && displayName == "" { // store the first valid environment name
+		if err == nil && id == args[0] {
 			displayName = environment.GetDisplayName()
 		}
 		return err
 	}
 
-	return displayName, deletion.ValidateArgsForDeletion(cmd, args, resource.Environment, describeFunc)
+	if err := deletion.ValidateArgsForDeletion(cmd, args, resource.Environment, describeFunc); err != nil {
+		return err
+	}
+
+	if len(args) == 1 {
+		if err := form.ConfirmDeletionWithString(cmd, resource.Environment, args[0], displayName); err != nil {
+			return err
+		}
+	} else {
+		if ok, err := form.ConfirmDeletionYesNo(cmd, resource.Environment, args); err != nil || !ok {
+			return err
+		}
+	}
+
+	return nil
 }
