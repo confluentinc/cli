@@ -193,7 +193,7 @@ func (s *CLITestSuite) TestApiKey_EnvironmentNotValid() {
 	s.runIntegrationTest(tt)
 }
 
-func (s *CLITestSuite) TestApiKeyAutocomplete() {
+func (s *CLITestSuite) TestApiKey_Autocomplete() {
 	test := CLITest{args: `__complete api-key describe ""`, login: "cloud", fixture: "api-key/describe-autocomplete.golden"}
 	s.runIntegrationTest(test)
 }
