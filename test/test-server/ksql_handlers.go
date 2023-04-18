@@ -106,7 +106,11 @@ func handleKsqlCluster(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		id := vars["id"]
-
+		if id != "lksqlc-ksql1" && id != "lksqlc-12345" {
+			err := writeResourceNotFoundError(w)
+			require.NoError(t, err)
+			return
+		}
 		switch r.Method {
 		case http.MethodGet:
 			var cluster ksqlv2.KsqldbcmV2Cluster
