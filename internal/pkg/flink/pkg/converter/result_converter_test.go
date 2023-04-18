@@ -3,6 +3,7 @@ package converter
 import (
 	v1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"
 	"github.com/confluentinc/flink-sql-client/pkg/types"
+	"github.com/confluentinc/flink-sql-client/test/generators"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"pgregory.net/rapid"
@@ -23,8 +24,8 @@ func (s *ResultConverterTestSuite) SetupSuite() {
 func (s *ResultConverterTestSuite) TestConvertField() {
 	rapid.Check(s.T(), func(t *rapid.T) {
 		maxNestingDepth := rapid.IntRange(0, 5).Draw(t, "max nesting depth")
-		dataType := types.DataType(maxNestingDepth).Draw(t, "data type")
-		field := types.GetResultItemGeneratorForType(dataType).Draw(t, "a field")
+		dataType := generators.DataType(maxNestingDepth).Draw(t, "data type")
+		field := generators.GetResultItemGeneratorForType(dataType).Draw(t, "a field")
 		resultField := convertToInternalField(field, v1.ColumnDetails{
 			Name: "Test Column",
 			Type: dataType,
@@ -39,8 +40,8 @@ func (s *ResultConverterTestSuite) TestConvertField() {
 }
 
 func (s *ResultConverterTestSuite) TestConvertFieldFailsForMissingDataType() {
-	dataType := types.DataType(0).Example()
-	field := types.GetResultItemGeneratorForType(dataType).Example()
+	dataType := generators.DataType(0).Example()
+	field := generators.GetResultItemGeneratorForType(dataType).Example()
 	resultField := convertToInternalField(field, v1.ColumnDetails{
 		Name: "Test Column",
 	})
@@ -50,8 +51,8 @@ func (s *ResultConverterTestSuite) TestConvertFieldFailsForMissingDataType() {
 }
 
 func (s *ResultConverterTestSuite) TestConvertFieldFailsForEmptyDataType() {
-	dataType := types.DataType(0).Example()
-	field := types.GetResultItemGeneratorForType(dataType).Example()
+	dataType := generators.DataType(0).Example()
+	field := generators.GetResultItemGeneratorForType(dataType).Example()
 	resultField := convertToInternalField(field, v1.ColumnDetails{
 		Name: "Test Column",
 		Type: v1.DataType{},
@@ -71,7 +72,7 @@ func (s *ResultConverterTestSuite) TestConvertFieldFailsIfDataTypesDiffer() {
 		Type:             "ARRAY",
 		ArrayElementType: varcharType,
 	})
-	arrayField := types.GetResultItemGeneratorForType(arrayType).Example()
+	arrayField := generators.GetResultItemGeneratorForType(arrayType).Example()
 	resultField := convertToInternalField(arrayField, v1.ColumnDetails{
 		Name: "Test Column",
 		Type: varcharType,
@@ -84,7 +85,7 @@ func (s *ResultConverterTestSuite) TestConvertFieldFailsIfDataTypesDiffer() {
 func (s *ResultConverterTestSuite) TestConvertResults() {
 	rapid.Check(s.T(), func(t *rapid.T) {
 		numColumns := rapid.IntRange(1, 10).Draw(t, "max nesting depth")
-		results := types.MockResults(numColumns).Draw(t, "mock results")
+		results := generators.MockResults(numColumns, -1).Draw(t, "mock results")
 		statementResults := results.StatementResults.Results.GetData()
 		convertedResults, err := ConvertToInternalResults(statementResults, results.ResultSchema)
 		require.NotNil(s.T(), convertedResults)
@@ -103,7 +104,7 @@ func (s *ResultConverterTestSuite) TestConvertResults() {
 }
 
 func (s *ResultConverterTestSuite) TestConvertResultsFailsWhenSchemaAndResultsDoNotMatch() {
-	results := types.MockResults(5).Example()
+	results := generators.MockResults(5, -1).Example()
 	statementResults := results.StatementResults.GetResults()
 	resultSchema := v1.SqlV1alpha1ResultSchema{Columns: &[]v1.ColumnDetails{}}
 	internalResults, err := ConvertToInternalResults(statementResults.GetData(), resultSchema)

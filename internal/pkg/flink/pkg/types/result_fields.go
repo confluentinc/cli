@@ -133,6 +133,9 @@ func (f AtomicStatementResultField) Format(options *FormatterOptions) string {
 
 func (f AtomicStatementResultField) ToSDKType() v1.SqlV1alpha1ResultItemRowOneOf {
 	val := v1.SqlV1alpha1ResultItemString(f.Value)
+	if f.Type == NULL {
+		return v1.SqlV1alpha1ResultItemRowOneOf{}
+	}
 	return v1.SqlV1alpha1ResultItemRowOneOf{SqlV1alpha1ResultItemString: &val}
 }
 

@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"github.com/confluentinc/flink-sql-client/pkg/types"
 	"net/http"
 	"testing"
 
@@ -19,7 +20,7 @@ func TestInputController_renderError(t *testing.T) {
 		store           StoreInterface
 	}
 	type args struct {
-		err *StatementError
+		err *types.StatementError
 	}
 	tests := []struct {
 		name   string
@@ -44,7 +45,7 @@ func TestRenderError(t *testing.T) {
 	mockAppController := NewMockApplicationControllerInterface(ctrl)
 
 	inputController := &InputController{appController: mockAppController}
-	err := &StatementError{HttpResponseCode: http.StatusUnauthorized}
+	err := &types.StatementError{HttpResponseCode: http.StatusUnauthorized}
 
 	// Test unauthorized error - should exit application
 	mockAppController.EXPECT().ExitApplication().Times(1)
@@ -52,7 +53,7 @@ func TestRenderError(t *testing.T) {
 	require.False(t, result)
 
 	// Test other error
-	err = &StatementError{Msg: "Something went wrong."}
+	err = &types.StatementError{Msg: "Something went wrong."}
 	result = inputController.isSessionValid(err)
 	require.True(t, result)
 }

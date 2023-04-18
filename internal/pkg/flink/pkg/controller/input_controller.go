@@ -9,10 +9,10 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/confluentinc/flink-sql-client/lexer"
-
 	"github.com/confluentinc/flink-sql-client/autocomplete"
-	components "github.com/confluentinc/flink-sql-client/components"
+	"github.com/confluentinc/flink-sql-client/components"
+	"github.com/confluentinc/flink-sql-client/lexer"
+	"github.com/confluentinc/flink-sql-client/pkg/types"
 	"github.com/confluentinc/go-prompt"
 	"github.com/olekukonko/tablewriter"
 )
@@ -38,11 +38,8 @@ type InputController struct {
 // This is the main function/loop for the app
 func (c *InputController) RunInteractiveInput() {
 
-	var statementResult *StatementResult
-	var err *StatementError
 	// We check for statement result and rows so we don't leave GoPrompt in case of errors
-	for c.appController.GetOutputMode() == GoPromptOutput || statementResult == nil || len(statementResult.Rows) == 0 {
-
+	for {
 		// Run interactive input and take over terminal
 		input := c.prompt.Input()
 
@@ -55,27 +52,33 @@ func (c *InputController) RunInteractiveInput() {
 
 		c.History.Append([]string{input})
 
-		statementResult, err = c.store.ProcessStatement(input)
-		renderMsgAndStatus(statementResult)
+		processedStatement, err := c.store.ProcessStatement(input)
+		renderMsgAndStatus(processedStatement)
 		if err != nil {
 			fmt.Println(err.Error())
 			c.isSessionValid(err)
 			continue
 		}
 
-		if c.appController.GetOutputMode() == GoPromptOutput {
-			// Print raw text table
-			printResultToSTDOUT(statementResult)
+		// TODO: we need some additional logic here to decide whether we are going to show tview or just plain text
+		// for now we just show tview for all non local statement
+		isLocalStatement := processedStatement.Kind == configOpUse || processedStatement.Kind == configOpSet || processedStatement.Kind == configOpReset
+		if !isLocalStatement {
+			processedStatement, err = c.store.FetchStatementResults(*processedStatement)
+			if err != nil {
+				fmt.Println(err.Error())
+				c.isSessionValid(err)
+				continue
+			}
+			c.table.SetDataAndFocus(*processedStatement)
+			return
 		}
-	}
 
-	// If output mode is TViewOutput we set the data to be displayed in the interactive table
-	if c.appController.GetOutputMode() == TViewOutput {
-		c.table.SetDataAndFocus(statementResult)
+		printResultToSTDOUT(processedStatement.StatementResults)
 	}
 }
 
-func (c *InputController) isSessionValid(err *StatementError) bool {
+func (c *InputController) isSessionValid(err *types.StatementError) bool {
 	// exit application if user needs to authenticate again
 	if err != nil && err.HttpResponseCode == http.StatusUnauthorized {
 		c.appController.ExitApplication()
@@ -89,7 +92,7 @@ func (c *InputController) setInitialBuffer(s string) {
 	c.prompt = c.Prompt()
 }
 
-func renderMsgAndStatus(statementResult *StatementResult) {
+func renderMsgAndStatus(statementResult *types.ProcessedStatement) {
 	if statementResult == nil {
 		return
 	}
@@ -130,14 +133,27 @@ func (c *InputController) toggleOutputMode() {
 	components.PrintOutputModeState(c.appController.GetOutputMode() == TViewOutput, maxCol)
 }
 
-func printResultToSTDOUT(data *StatementResult) {
-	if len(data.Rows) == 0 {
+func printResultToSTDOUT(statementResults []types.StatementResultColumn) {
+	if len(statementResults) == 0 {
 		return
 	}
 
+	//build matrix
+	header := make([]string, len(statementResults))
+	formattedResults := make([][]string, len(statementResults[0].Fields))
+	for i := range formattedResults {
+		formattedResults[i] = make([]string, len(statementResults))
+	}
+	//fill matrix
+	for colIdx, column := range statementResults {
+		header[colIdx] = column.Name
+		for rowIdx, field := range column.Fields {
+			formattedResults[rowIdx][colIdx] = field.Format(nil)
+		}
+	}
 	rawTable := tablewriter.NewWriter(os.Stdout)
-	rawTable.SetHeader(data.Columns)
-	rawTable.AppendBulk(data.Rows)
+	rawTable.SetHeader(header)
+	rawTable.AppendBulk(formattedResults)
 	rawTable.Render() // Send output
 }
 

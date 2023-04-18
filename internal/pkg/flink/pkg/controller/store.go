@@ -3,12 +3,11 @@ package controller
 import (
 	"context"
 	_ "embed"
-	"encoding/json"
+	"github.com/confluentinc/flink-sql-client/pkg/converter"
+	"github.com/confluentinc/flink-sql-client/pkg/types"
+	"github.com/confluentinc/flink-sql-client/test/generators"
 	"strings"
 )
-
-//go:embed mock_data.json
-var mockData []byte
 
 const (
 	//ops
@@ -28,19 +27,18 @@ const (
 const MOCK_STATEMENTS_OUTPUT_DEMO = true
 
 type StoreInterface interface {
-	ProcessStatement(statement string) (*StatementResult, *StatementError)
+	ProcessStatement(statement string) (*types.ProcessedStatement, *types.StatementError)
+	FetchStatementResults(types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError)
 }
 
 type Store struct {
-	MockData         []StatementResult `json:"data"`
-	index            int
-	Properties       map[string]string
-	StatementResults []StatementResult
-	client           *GatewayClient
-	appOptions       *ApplicationOptions
+	Properties          map[string]string
+	ProcessedStatements []types.ProcessedStatement
+	client              *GatewayClient
+	appOptions          *ApplicationOptions
 }
 
-func (s *Store) ProcessLocalStatement(statement string) (*StatementResult, *StatementError) {
+func (s *Store) ProcessLocalStatement(statement string) (*types.ProcessedStatement, *types.StatementError) {
 	switch statementType := parseStatementType(statement); statementType {
 	case SET_STATEMENT:
 		return s.processSetStatement(statement)
@@ -53,7 +51,7 @@ func (s *Store) ProcessLocalStatement(statement string) (*StatementResult, *Stat
 	}
 }
 
-func (s *Store) ProcessStatement(statement string) (*StatementResult, *StatementError) {
+func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *types.StatementError) {
 	// We trim the statement here once so we don't have to do it in every function
 	statement = strings.TrimSpace(statement)
 
@@ -67,10 +65,9 @@ func (s *Store) ProcessStatement(statement string) (*StatementResult, *Statement
 	if s.appOptions != nil && s.appOptions.MOCK_STATEMENTS_OUTPUT_DEMO {
 
 		if !startsWithValidSQL(statement) {
-			return nil, &StatementError{Msg: "Error: Invalid syntax '" + statement + "'. Please check your statement."}
+			return nil, &types.StatementError{Msg: "Error: Invalid syntax '" + statement + "'. Please check your statement."}
 		} else {
-			s.index++
-			return &s.MockData[s.index%len(s.MockData)], nil
+			return &types.ProcessedStatement{}, nil
 		}
 	}
 
@@ -79,14 +76,47 @@ func (s *Store) ProcessStatement(statement string) (*StatementResult, *Statement
 	err = processHttpErrors(resp, err)
 
 	if err != nil {
-		return nil, &StatementError{Msg: err.Error()}
+		return nil, &types.StatementError{Msg: err.Error()}
 	}
-
-	return &StatementResult{
+	return &types.ProcessedStatement{
 		StatementName: statementObj.Spec.GetStatementName(),
 		StatusDetail:  statementObj.Status.GetDetail(),
-		Status:        PHASE(statementObj.Status.GetPhase()),
+		Status:        types.PHASE(statementObj.Status.GetPhase()),
+		ResultSchema:  statementObj.Status.GetResultSchema(),
 	}, nil
+}
+
+func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError) {
+	// Process remote statements
+	statementResultObj, resp, err := s.client.FetchStatementResults(context.Background(), statement.StatementName, statement.PageToken)
+	err = processHttpErrors(resp, err)
+
+	// TODO: Remove this once we have a real backend
+	if s.appOptions != nil && s.appOptions.MOCK_STATEMENTS_OUTPUT_DEMO {
+		mockResults := generators.MockResults(5, 2).Example()
+		statementResults := mockResults.StatementResults
+		resultSchema := mockResults.ResultSchema
+		convertedResults, err := converter.ConvertToInternalResults(statementResults.Results.GetData(), resultSchema)
+		if err != nil {
+			return nil, &types.StatementError{Msg: err.Error()}
+		}
+		statement.StatementResults = convertedResults
+		return &statement, nil
+	}
+	if err != nil {
+		return nil, &types.StatementError{Msg: err.Error()}
+	}
+
+	results := statementResultObj.GetResults()
+	convertedResults, err := converter.ConvertToInternalResults(results.GetData(), statement.ResultSchema)
+	if err != nil {
+		return nil, &types.StatementError{Msg: err.Error()}
+	}
+
+	statement.StatementResults = convertedResults
+	metadata := statementResultObj.GetMetadata()
+	statement.PageToken = metadata.GetNext()
+	return &statement, nil
 }
 
 func NewStore(client *GatewayClient, appOptions *ApplicationOptions) StoreInterface {
@@ -98,12 +128,9 @@ func NewStore(client *GatewayClient, appOptions *ApplicationOptions) StoreInterf
 
 	store := Store{
 		Properties: defaultProperties,
-		index:      0,
 		client:     client,
 		appOptions: appOptions,
 	}
-	// Opening mock data
-	json.Unmarshal(mockData, &store)
 
 	return &store
 }

@@ -47,6 +47,7 @@ func PrintWelcomeHeader() {
 
 	// Print shortcuts
 	fmt.Fprintf(os.Stdout, "\033[0m%s \033[0;36m%s \033[0m", "[CtrlQ]", "Quit")
-	fmt.Fprintf(os.Stdout, "\033[0m%s \033[0;36m%s \033[0m", "[CtrlS]", "Smart Completion")
-	fmt.Fprintf(os.Stdout, "\033[0m%s \033[0;36m%s \033[0m \n", "[CtrlO]", "Interactive Output")
+	fmt.Fprintf(os.Stdout, "\033[0m%s \033[0;36m%s \033[0m \n", "[CtrlS]", "Smart Completion")
+	// disabled for now
+	//fmt.Fprintf(os.Stdout, "\033[0m%s \033[0;36m%s \033[0m \n", "[CtrlO]", "Interactive Output")
 }

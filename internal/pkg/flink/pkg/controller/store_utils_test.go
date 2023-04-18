@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"sort"
+	"github.com/confluentinc/flink-sql-client/pkg/types"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -88,8 +88,8 @@ func TestProcessSetStatement(t *testing.T) {
 		result, err := s.processSetStatement("set")
 		assert.Nil(t, err)
 		assert.EqualValues(t, "Completed", result.Status)
-		assert.Equal(t, []string{"Key", "Value"}, result.Columns)
-		assert.Equal(t, [][]string{}, result.Rows)
+		expectedResult := createStatementResults([]string{"Key", "Value"}, [][]string{})
+		assert.Equal(t, expectedResult, result.StatementResults)
 
 		// Add some key-value pairs to the config
 		s.Properties["pipeline.name"] = "job1"
@@ -101,26 +101,27 @@ func TestProcessSetStatement(t *testing.T) {
 		assert.Nil(t, err)
 		assert.EqualValues(t, "Completed", result.Status)
 		assert.Equal(t, "Config updated successfuly.", result.StatusDetail)
-		assert.Equal(t, []string{"Key", "Value"}, result.Columns)
-		assert.Equal(t, [][]string{{"location", "USA"}}, result.Rows)
+		expectedResult := createStatementResults([]string{"Key", "Value"}, [][]string{{"location", "USA"}})
+		assert.Equal(t, expectedResult, result.StatementResults)
 	})
 
 	t.Run("should return all keys and values from config if configKey is empty after updates", func(t *testing.T) {
 		result, err := s.processSetStatement("set")
 		assert.Nil(t, err)
 		assert.EqualValues(t, "Completed", result.Status)
-		assert.Equal(t, []string{"Key", "Value"}, result.Columns)
+		expectedKeyValuePairs := map[string]string{"pipeline.name": "job1", "timeout": "30", "location": "USA"}
 
-		// sort both the expected and actual rows to compare equality
-		sort.Slice(result.Rows, func(i, j int) bool {
-			return result.Rows[i][0] < result.Rows[j][0]
-		})
-
-		expectedRows := [][]string{{"pipeline.name", "job1"}, {"timeout", "30"}, {"location", "USA"}}
-		sort.Slice(expectedRows, func(i, j int) bool {
-			return expectedRows[i][0] < expectedRows[j][0]
-		})
-		assert.Equal(t, expectedRows, result.Rows)
+		// check row length matches
+		assert.Equal(t, 2, len(result.StatementResults))
+		assert.Equal(t, len(expectedKeyValuePairs), len(result.StatementResults[0].Fields))
+		// check if all expected key value pairs are in the results
+		for rowIdx := range result.StatementResults[0].Fields {
+			keyCol := result.StatementResults[0]
+			valueCol := result.StatementResults[1]
+			keyField := keyCol.Fields[rowIdx].(types.AtomicStatementResultField)
+			valueField := valueCol.Fields[rowIdx].(types.AtomicStatementResultField)
+			assert.Equal(t, expectedKeyValuePairs[keyField.Value], valueField.Value)
+		}
 	})
 }
 
@@ -140,8 +141,7 @@ func TestProcessResetStatement(t *testing.T) {
 		result, _ := s.processResetStatement("reset")
 		assert.EqualValues(t, "Completed", result.Status)
 		assert.Equal(t, "Configuration has been reset successfuly.", result.StatusDetail)
-		assert.Equal(t, []string(nil), result.Columns)
-		assert.Equal(t, [][]string(nil), result.Rows)
+		assert.Nil(t, result.StatementResults)
 	})
 
 	t.Run("should return an error message if configKey does not exist", func(t *testing.T) {
@@ -156,16 +156,15 @@ func TestProcessResetStatement(t *testing.T) {
 		result, _ := s.processResetStatement("reset pipeline.name")
 		assert.EqualValues(t, "Completed", result.Status)
 		assert.Equal(t, "Config key \"pipeline.name\" has been reset successfuly.", result.StatusDetail)
-		assert.Equal(t, []string{"Key", "Value"}, result.Columns)
-		assert.Equal(t, [][]string{}, result.Rows)
+		expectedResult := createStatementResults([]string{"Key", "Value"}, [][]string{})
+		assert.Equal(t, expectedResult, result.StatementResults)
 	})
 	t.Run("should return all keys and values from config after updates", func(t *testing.T) {
 		result, _ := s.processResetStatement("reset")
 
 		assert.EqualValues(t, "Completed", result.Status)
 		assert.Equal(t, "Configuration has been reset successfuly.", result.StatusDetail)
-		assert.Equal(t, []string(nil), result.Columns)
-		assert.Equal(t, [][]string(nil), result.Rows)
+		assert.Nil(t, result.StatementResults)
 	})
 }
 
@@ -182,11 +181,11 @@ func TestProcessUseStatement(t *testing.T) {
 	t.Run("should update the database name in config", func(t *testing.T) {
 		result, err := s.processUseStatement("use db1")
 		require.Nil(t, err)
-		require.Equal(t, configOpUse, result.Statement)
+		require.Equal(t, configOpUse, result.Kind)
 		require.EqualValues(t, "Completed", result.Status)
 		require.Equal(t, "Config updated successfuly.", result.StatusDetail)
-		require.Equal(t, []string{"Key", "Value"}, result.Columns)
-		require.Equal(t, [][]string{{configKeyDatabase, "db1"}}, result.Rows)
+		expectedResult := createStatementResults([]string{"Key", "Value"}, [][]string{{configKeyDatabase, "db1"}})
+		assert.Equal(t, expectedResult, result.StatementResults)
 	})
 
 	t.Run("should return an error message if catalog name is missing", func(t *testing.T) {
@@ -197,11 +196,11 @@ func TestProcessUseStatement(t *testing.T) {
 	t.Run("should update the catalog name in config", func(t *testing.T) {
 		result, err := s.processUseStatement("use catalog metadata")
 		require.Nil(t, err)
-		require.Equal(t, configOpUse, result.Statement)
+		require.Equal(t, configOpUse, result.Kind)
 		require.EqualValues(t, "Completed", result.Status)
 		require.Equal(t, "Config updated successfuly.", result.StatusDetail)
-		require.Equal(t, []string{"Key", "Value"}, result.Columns)
-		require.Equal(t, [][]string{{configKeyCatalog, "metadata"}}, result.Rows)
+		expectedResult := createStatementResults([]string{"Key", "Value"}, [][]string{{configKeyCatalog, "metadata"}})
+		assert.Equal(t, expectedResult, result.StatementResults)
 	})
 
 	t.Run("should return an error message for invalid syntax", func(t *testing.T) {

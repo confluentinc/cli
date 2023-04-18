@@ -7,6 +7,7 @@ package controller
 import (
 	reflect "reflect"
 
+	types "github.com/confluentinc/flink-sql-client/pkg/types"
 	v2 "github.com/gdamore/tcell/v2"
 	gomock "github.com/golang/mock/gomock"
 )
@@ -75,7 +76,7 @@ func (mr *MockTableControllerInterfaceMockRecorder) HandleCellEvent(arg0 interfa
 }
 
 // SetDataAndFocus mocks base method.
-func (m *MockTableControllerInterface) SetDataAndFocus(arg0 *StatementResult) {
+func (m *MockTableControllerInterface) SetDataAndFocus(arg0 []types.StatementResultColumn) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "SetDataAndFocus", arg0)
 }

@@ -3,6 +3,7 @@ package controller
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/confluentinc/flink-sql-client/pkg/types"
 	"io"
 	"net/http"
 	"regexp"
@@ -14,37 +15,6 @@ import (
 	"github.com/confluentinc/flink-sql-client/config"
 )
 
-type StatementError struct {
-	Msg              string
-	HttpResponseCode int
-}
-
-func (e *StatementError) Error() string {
-	return e.Msg
-}
-
-// Custom Internal type that shall be used internally by the client
-type StatementResult struct {
-	Name          string     `json:"name"`
-	Statement     string     `json:"statement"`
-	StatementName string     `json:"statement_name"`
-	ComputePool   string     `json:"compute_pool"`
-	Status        PHASE      `json:"status"`
-	StatusDetail  string     `json:"status_detail,omitempty"` // Shown at the top before the table
-	Columns       []string   `json:"columns"`
-	Rows          [][]string `json:"rows"`
-}
-
-type PHASE string
-
-const (
-	PENDING   PHASE = "PENDING"   // Results are not available yet
-	RUNNING   PHASE = "RUNNING"   // More results are available (pagination)
-	COMPLETED PHASE = "COMPLETED" // All results were fetched
-	DELETING  PHASE = "DELETING"
-	FAILED    PHASE = "FAILED"
-)
-
 type StatementType string
 
 const (
@@ -54,73 +24,88 @@ const (
 	OTHER_STATEMENT StatementType = "OTHER"
 )
 
-func (s *Store) processSetStatement(statement string) (*StatementResult, *StatementError) {
+func createStatementResults(columnNames []string, rows [][]string) []types.StatementResultColumn {
+	var statementResults []types.StatementResultColumn
+	for _, columnName := range columnNames {
+		statementResults = append(statementResults, types.StatementResultColumn{
+			Name: columnName,
+			Type: types.VARCHAR,
+		})
+	}
+
+	for _, row := range rows {
+		for colIdx, field := range row {
+			statementResults[colIdx].Fields = append(statementResults[colIdx].Fields, types.AtomicStatementResultField{
+				Type:  types.VARCHAR,
+				Value: field,
+			})
+		}
+	}
+	return statementResults
+}
+
+func (s *Store) processSetStatement(statement string) (*types.ProcessedStatement, *types.StatementError) {
 	configKey, configVal, err := parseSetStatement(statement)
 	if err != nil {
-		return nil, err.(*StatementError)
+		return nil, err.(*types.StatementError)
 	}
 	if configKey == "" {
-
-		return &StatementResult{
-			Statement: configOpSet,
-			Status:    "Completed",
-			Columns:   []string{"Key", "Value"},
-			Rows:      lo.MapToSlice(s.Properties, func(key, val string) []string { return []string{key, val} }),
+		return &types.ProcessedStatement{
+			Kind:             configOpSet,
+			Status:           "Completed",
+			StatementResults: createStatementResults([]string{"Key", "Value"}, lo.MapToSlice(s.Properties, func(key, val string) []string { return []string{key, val} })),
 		}, nil
 	}
 	s.Properties[configKey] = configVal
 
-	return &StatementResult{
-		Statement:    configOpSet,
-		StatusDetail: "Config updated successfuly.",
-		Status:       "Completed",
-		Columns:      []string{"Key", "Value"},
-		Rows:         [][]string{{configKey, configVal}},
+	return &types.ProcessedStatement{
+		Kind:             configOpSet,
+		StatusDetail:     "Config updated successfuly.",
+		Status:           "Completed",
+		StatementResults: createStatementResults([]string{"Key", "Value"}, [][]string{{configKey, configVal}}),
 	}, nil
 }
 
-func (s *Store) processResetStatement(statement string) (*StatementResult, *StatementError) {
+func (s *Store) processResetStatement(statement string) (*types.ProcessedStatement, *types.StatementError) {
 	configKey, err := parseResetStatement(statement)
 	if err != nil {
-		return nil, &StatementError{Msg: err.Error()}
+		return nil, &types.StatementError{Msg: err.Error()}
 	}
 	if configKey == "" {
 		s.Properties = make(map[string]string)
-		return &StatementResult{
-			Statement:    configOpReset,
+		return &types.ProcessedStatement{
+			Kind:         configOpReset,
 			StatusDetail: "Configuration has been reset successfuly.",
 			Status:       "Completed",
 		}, nil
 	} else {
 		_, keyExists := s.Properties[configKey]
 		if !keyExists {
-			return nil, &StatementError{Msg: fmt.Sprintf("Error: Config key \"%s\" is currently not set.", configKey)}
+			return nil, &types.StatementError{Msg: fmt.Sprintf("Error: Config key \"%s\" is currently not set.", configKey)}
 		}
 
 		delete(s.Properties, configKey)
-		return &StatementResult{
-			Statement:    configOpReset,
-			StatusDetail: fmt.Sprintf("Config key \"%s\" has been reset successfuly.", configKey),
-			Status:       "Completed",
-			Columns:      []string{"Key", "Value"},
-			Rows:         lo.MapToSlice(s.Properties, func(key, val string) []string { return []string{key, val} }),
+		return &types.ProcessedStatement{
+			Kind:             configOpReset,
+			StatusDetail:     fmt.Sprintf("Config key \"%s\" has been reset successfuly.", configKey),
+			Status:           "Completed",
+			StatementResults: createStatementResults([]string{"Key", "Value"}, lo.MapToSlice(s.Properties, func(key, val string) []string { return []string{key, val} })),
 		}, nil
 	}
 }
 
-func (s *Store) processUseStatement(statement string) (*StatementResult, *StatementError) {
+func (s *Store) processUseStatement(statement string) (*types.ProcessedStatement, *types.StatementError) {
 	configKey, configVal, err := parseUseStatement(statement)
 	if err != nil {
-		return nil, &StatementError{Msg: err.Error()}
+		return nil, &types.StatementError{Msg: err.Error()}
 	}
 
 	s.Properties[configKey] = configVal
-	return &StatementResult{
-		Statement:    configOpUse,
-		StatusDetail: "Config updated successfuly.",
-		Status:       "Completed",
-		Columns:      []string{"Key", "Value"},
-		Rows:         [][]string{{configKey, configVal}},
+	return &types.ProcessedStatement{
+		Kind:             configOpUse,
+		StatusDetail:     "Config updated successfuly.",
+		Status:           "Completed",
+		StatementResults: createStatementResults([]string{"Key", "Value"}, [][]string{{configKey, configVal}}),
 	}, nil
 }
 
@@ -139,7 +124,7 @@ func parseSetStatement(statement string) (string, string, error) {
 
 	indexOfSet := strings.Index(strings.ToUpper(statement), configOpSet)
 	if indexOfSet == -1 {
-		return "", "", &StatementError{Msg: "Error: Invalid syntax for SET. Usage example: SET key=value."}
+		return "", "", &types.StatementError{Msg: "Error: Invalid syntax for SET. Usage example: SET key=value."}
 	}
 	startOfStrAfterSet := indexOfSet + len(configOpSet)
 	// This is the case when the statement is simply "SET", which is used to display current config.
@@ -156,25 +141,25 @@ func parseSetStatement(statement string) (string, string, error) {
 	}
 
 	if !strings.Contains(strAfterSet, "=") {
-		return "", "", &StatementError{Msg: "Error: missing \"=\". Usage example: SET key=value."}
+		return "", "", &types.StatementError{Msg: "Error: missing \"=\". Usage example: SET key=value."}
 	}
 
 	keyValuePair := strings.Split(strAfterSet, "=")
 
 	if len(keyValuePair) != 2 {
-		return "", "", &StatementError{Msg: "Error: \"=\" should only appear once. Usage example: SET key=value."}
+		return "", "", &types.StatementError{Msg: "Error: \"=\" should only appear once. Usage example: SET key=value."}
 	}
 
 	if keyValuePair[0] != "" && keyValuePair[1] == "" {
-		return "", "", &StatementError{Msg: "Error: Value for key not present. If you want to reset a key, use \"RESET key\"."}
+		return "", "", &types.StatementError{Msg: "Error: Value for key not present. If you want to reset a key, use \"RESET key\"."}
 	}
 
 	if keyValuePair[0] == "" && keyValuePair[1] != "" {
-		return "", "", &StatementError{Msg: "Error: Key not present. Usage example: SET key=value."}
+		return "", "", &types.StatementError{Msg: "Error: Key not present. Usage example: SET key=value."}
 	}
 
 	if keyValuePair[0] == "" && keyValuePair[1] == "" {
-		return "", "", &StatementError{Msg: "Error: Key and value not present. Usage example: SET key=value."}
+		return "", "", &types.StatementError{Msg: "Error: Key and value not present. Usage example: SET key=value."}
 	}
 
 	return keyValuePair[0], keyValuePair[1], nil
@@ -194,7 +179,7 @@ func parseUseStatement(statement string) (string, string, error) {
 	statement = removeStatementTerminator(statement)
 	words := strings.Fields(statement)
 	if len(words) < 2 {
-		return "", "", &StatementError{Msg: "Error: Missing database/catalog name: Usage examples: USE DB1 OR USE CATALOG METADATA."}
+		return "", "", &types.StatementError{Msg: "Error: Missing database/catalog name: Usage examples: USE DB1 OR USE CATALOG METADATA."}
 	}
 
 	isFirstWordUse := strings.ToUpper(words[0]) == configOpUse
@@ -203,7 +188,7 @@ func parseUseStatement(statement string) (string, string, error) {
 	if len(words) == 2 && isFirstWordUse {
 		if isSecondWordCatalog {
 			// handle empty catalog name -> "USE CATALOG "
-			return "", "", &StatementError{Msg: "Error: Missing catalog name: Usage example: USE CATALOG METADATA."}
+			return "", "", &types.StatementError{Msg: "Error: Missing catalog name: Usage example: USE CATALOG METADATA."}
 		} else {
 			return configKeyDatabase, words[1], nil
 		}
@@ -214,7 +199,7 @@ func parseUseStatement(statement string) (string, string, error) {
 		return configKeyCatalog, words[2], nil
 	}
 
-	return "", "", &StatementError{Msg: "Invalid syntax for USE. Usage examples: USE CATALOG my_catalog or USE my_database"}
+	return "", "", &types.StatementError{Msg: "Invalid syntax for USE. Usage examples: USE CATALOG my_catalog or USE my_database"}
 }
 
 /* Expected statement: "RESET pipeline.name" */
@@ -222,7 +207,7 @@ func parseResetStatement(statement string) (string, error) {
 	statement = removeStatementTerminator(statement)
 	words := strings.Fields(statement)
 	if len(words) == 0 {
-		return "", &StatementError{Msg: "Error: Invalid syntax for RESET. Usage example: RESET key."}
+		return "", &types.StatementError{Msg: "Error: Invalid syntax for RESET. Usage example: RESET key."}
 	}
 
 	// This is the case where we reset the entire config (e.g. "RESET")
@@ -239,36 +224,36 @@ func parseResetStatement(statement string) (string, error) {
 	}
 
 	if len(words) > 2 {
-		return "", &StatementError{Msg: "Error: too many keys for RESET provided. Usage example: RESET key."}
+		return "", &types.StatementError{Msg: "Error: too many keys for RESET provided. Usage example: RESET key."}
 	}
 
-	return "", &StatementError{Msg: "Error: Invalid syntax for RESET. Usage example: RESET key."}
+	return "", &types.StatementError{Msg: "Error: Invalid syntax for RESET. Usage example: RESET key."}
 }
 
 func processHttpErrors(resp *http.Response, err error) error {
 	if err != nil {
-		return &StatementError{Msg: "Error: " + err.Error()}
+		return &types.StatementError{Msg: "Error: " + err.Error()}
 	}
 
 	if resp != nil && resp.StatusCode >= 400 {
 		if resp.StatusCode == http.StatusUnauthorized {
-			return &StatementError{Msg: "Error: Unauthorized. Please consider running confluent login again.", HttpResponseCode: resp.StatusCode}
+			return &types.StatementError{Msg: "Error: Unauthorized. Please consider running confluent login again.", HttpResponseCode: resp.StatusCode}
 		}
 
 		statementErr := v1.NewError()
 		body, err := io.ReadAll(resp.Body)
 
 		if err != nil {
-			return &StatementError{Msg: fmt.Sprintf("Error: received error with code \"%d\" from server but could not parse it. This is not expected. Please contact support.", resp.StatusCode)}
+			return &types.StatementError{Msg: fmt.Sprintf("Error: received error with code \"%d\" from server but could not parse it. This is not expected. Please contact support.", resp.StatusCode)}
 		}
 
 		err = json.Unmarshal(body, &statementErr)
 
 		if err != nil || statementErr == nil || statementErr.Title == nil || statementErr.Detail == nil {
-			return &StatementError{Msg: fmt.Sprintf("Error: received error with code \"%d\" from server but could not parse it. This is not expected. Please contact support.", resp.StatusCode)}
+			return &types.StatementError{Msg: fmt.Sprintf("Error: received error with code \"%d\" from server but could not parse it. This is not expected. Please contact support.", resp.StatusCode)}
 		}
 
-		return &StatementError{Msg: statementErr.GetTitle() + ": " + statementErr.GetDetail()}
+		return &types.StatementError{Msg: statementErr.GetTitle() + ": " + statementErr.GetDetail()}
 
 	}
 

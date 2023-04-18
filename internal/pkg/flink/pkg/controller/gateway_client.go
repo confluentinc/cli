@@ -39,13 +39,13 @@ func (c *GatewayClient) CreateStatement(ctx context.Context, statement string, p
 	return createdStatement, resp, err
 }
 
-// TODO result handling: https://confluentinc.atlassian.net/wiki/spaces/FLINK/pages/3004703887/WIP+Flink+Gateway+-+Results+handling
-func (c *GatewayClient) FetchStatementResults(envId, statementId string) (*StatementResult, error) {
-	return &StatementResult{
-		Status:  "Completed",
-		Columns: []string{},
-		Rows:    [][]string{{}},
-	}, nil
+func (c *GatewayClient) FetchStatementResults(ctx context.Context, statementId, pageToken string) (v1.SqlV1alpha1StatementResult, *http.Response, error) {
+	fetchResultsRequest := c.client.StatementResultSqlV1alpha1Api.GetSqlV1alpha1StatementResult(ctx, c.envId, statementId)
+	if pageToken != "" {
+		fetchResultsRequest = fetchResultsRequest.PageToken(pageToken)
+	}
+	result, resp, err := fetchResultsRequest.Execute()
+	return result, resp, err
 }
 
 // Set properties default values if not set by the user

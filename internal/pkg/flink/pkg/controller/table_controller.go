@@ -1,9 +1,10 @@
 package controller
 
 import (
+	"github.com/confluentinc/flink-sql-client/pkg/types"
 	"strings"
 
-	clipboard "github.com/atotto/clipboard"
+	"github.com/atotto/clipboard"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
@@ -12,7 +13,7 @@ type TableControllerInterface interface {
 	HandleCellEvent(event *tcell.EventKey) *tcell.EventKey
 	Borders()
 	AppInputCapture(event *tcell.EventKey) *tcell.EventKey
-	SetDataAndFocus(statementResult *StatementResult)
+	SetDataAndFocus(statement types.ProcessedStatement)
 	SetInputController(inputController InputControllerInterface)
 }
 
@@ -22,6 +23,7 @@ type TableController struct {
 	appController   ApplicationControllerInterface
 	InputController InputControllerInterface
 	store           StoreInterface
+	results         types.ProcessedStatement
 }
 
 type TableStyle struct {
@@ -58,63 +60,50 @@ func (t *TableController) Borders() {
 }
 
 // Function to handle shortcuts and keybindings for the whole app
-func (a *TableController) AppInputCapture(event *tcell.EventKey) *tcell.EventKey {
-
+func (t *TableController) AppInputCapture(event *tcell.EventKey) *tcell.EventKey {
 	if event.Key() == tcell.KeyCtrlT {
-		a.Borders()
+		t.Borders()
 		return nil
-		// TODO we have to actually go forward and backwards and not only go to the next mock
-	} else if event.Key() == tcell.KeyCtrlN || event.Key() == tcell.KeyCtrlP {
-		// We send select so we can get the next mock
-		data, err := a.store.ProcessStatement("select ;")
-		if err == nil {
-			a.setData(data)
+	} else if event.Key() == tcell.KeyCtrlN {
+		// fetch new page
+		newResults, err := t.store.FetchStatementResults(t.results)
+		if err != nil {
+			// todo: handle error
 		}
-		return nil
+		t.SetDataAndFocus(*newResults)
+	} else if event.Key() == tcell.KeyCtrlP {
+		// todo: how to go back?
 	} else if event.Key() == tcell.KeyCtrlC {
-		a.onCtrlC()
+		t.onCtrlC()
 		return nil
 	}
 	return event
-
 }
 
 // This function will be changed when we actually use tview
-func (a *TableController) SetDataAndFocus(statementResult *StatementResult) {
-	a.setData(statementResult)
-	a.focus()
+func (t *TableController) SetDataAndFocus(statement types.ProcessedStatement) {
+	t.results = statement
+	t.setData(statement.StatementResults)
+	t.focus()
 }
 
-func (t *TableController) setData(newData *StatementResult) {
+func (t *TableController) setData(statementResults []types.StatementResultColumn) {
 	t.table.Clear()
-
-	// Print header
-	for col, header := range newData.Columns {
-		tableCell := tview.NewTableCell(header).
+	for colIdx, column := range statementResults {
+		// Print header
+		tableCell := tview.NewTableCell(column.Name).
 			SetTextColor(tcell.ColorYellow).
-			SetAlign(tview.AlignCenter).
+			SetAlign(tview.AlignLeft).
 			SetSelectable(false)
-		t.table.SetCell(0, col, tableCell)
-	}
-	// Print content
-	for row, line := range newData.Rows {
-		for column, cell := range line {
+		t.table.SetCell(0, colIdx, tableCell)
+		// Print content
+		for rowIdx, field := range column.Fields {
 			color := tcell.ColorWhite
-			if column == 0 {
-				color = tcell.ColorDarkCyan
-			}
-			align := tview.AlignLeft
-			if column == 0 || column >= 4 {
-				align = tview.AlignRight
-			}
-			tableCell := tview.NewTableCell(cell).
+			tableCell := tview.NewTableCell(tview.Escape(field.Format(nil))).
 				SetTextColor(color).
-				SetAlign(align).
-				SetSelectable(column != 0)
-			if column >= 1 && column <= 3 {
-				tableCell.SetExpansion(1)
-			}
-			t.table.SetCell(row+1, column, tableCell)
+				SetAlign(tview.AlignLeft).
+				SetSelectable(true)
+			t.table.SetCell(rowIdx+1, colIdx, tableCell)
 		}
 	}
 }

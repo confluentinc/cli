@@ -30,7 +30,8 @@ var appShortcuts = []Shortcut{
 	{Key: tcell.KeyCtrlQ, KeyText: "Q", Text: "Quit"},
 	{Key: tcell.KeyCtrlT, KeyText: "T", Text: "Toggle Display Mode"},
 	{Key: tcell.KeyCtrlT, KeyText: "N", Text: "Next Page"},
-	{Key: tcell.KeyCtrlT, KeyText: "P", Text: "Prev Page"},
+	// disabled for now until we know how to go back
+	// {Key: tcell.KeyCtrlT, KeyText: "P", Text: "Prev Page"},
 }
 
 func (s *ShortcutsController) ShortcutHighlighted(added, removed, remaining []string) {

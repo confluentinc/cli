@@ -1,41 +1,79 @@
-package types
+package generators
 
 import (
 	"fmt"
 	v1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"
+	"github.com/confluentinc/flink-sql-client/pkg/types"
 	"pgregory.net/rapid"
 	"strconv"
+	"time"
 )
 
 func GetResultItemGeneratorForType(dataType v1.DataType) *rapid.Generator[v1.SqlV1alpha1ResultItemRowOneOf] {
-	fieldType := NewResultFieldType(dataType)
+	fieldType := types.NewResultFieldType(dataType)
 	switch fieldType {
-	case ARRAY:
+	case types.ARRAY:
 		elementType := dataType.ArrayType.GetArrayElementType()
 		return ArrayResultItem(elementType)
-	case MULTISET:
+	case types.MULTISET:
 		keyType := dataType.MultisetType.GetMultisetElementType()
 		valueType := v1.DataType{IntegerType: &v1.IntegerType{
 			Nullable: false,
 			Type:     "INTEGER",
 		}}
 		return MapResultItem(keyType, valueType)
-	case MAP:
+	case types.MAP:
 		keyType := dataType.MapType.GetKeyType()
 		valueType := dataType.MapType.GetValueType()
 		return MapResultItem(keyType, valueType)
-	case ROW:
+	case types.ROW:
 		elementTypes := dataType.RowType.GetFields()
 		return RowResultItem(elementTypes)
+	case types.NULL:
+		return rapid.SampledFrom([]v1.SqlV1alpha1ResultItemRowOneOf{{}})
 	default:
-		return AtomicResultItem()
+		return AtomicResultItem(fieldType)
 	}
 }
 
+var atomicGenerators = map[types.StatementResultFieldType]*rapid.Generator[string]{
+	types.CHAR:                           rapid.SampledFrom([]string{"Jay", "Yannick", "Gustavo", "Jim", "A string", "Another string", "And another string", "lorem ipsum"}),
+	types.VARCHAR:                        rapid.SampledFrom([]string{"Jay", "Yannick", "Gustavo", "Jim", "A string", "Another string", "And another string", "lorem ipsum"}),
+	types.BOOLEAN:                        rapid.SampledFrom([]string{"TRUE", "FALSE"}),
+	types.BINARY:                         rapid.StringMatching("x'[a-fA-F0-9]+'"),
+	types.VARBINARY:                      rapid.StringMatching("x'[a-fA-F0-9]+'"),
+	types.DECIMAL:                        rapid.StringMatching("\\d{1,5}\\.\\d{1,3}"),
+	types.TINYINT:                        rapid.Custom(func(t *rapid.T) string { return fmt.Sprintf("%d", int(rapid.Int8().Draw(t, "an int"))) }),
+	types.SMALLINT:                       rapid.Custom(func(t *rapid.T) string { return fmt.Sprintf("%d", int(rapid.Int16().Draw(t, "an int"))) }),
+	types.INTEGER:                        rapid.Custom(func(t *rapid.T) string { return fmt.Sprintf("%d", rapid.Int().Draw(t, "an int")) }),
+	types.BIGINT:                         rapid.Custom(func(t *rapid.T) string { return fmt.Sprintf("%d", rapid.Int64().Draw(t, "an int")) }),
+	types.FLOAT:                          rapid.StringMatching("\\d{1,5}\\.\\d{7}E7"),
+	types.DOUBLE:                         rapid.StringMatching("\\d{1,5}\\.\\d{16}E7"),
+	types.DATE:                           Timestamp("2006-01-02"),
+	types.TIME_WITHOUT_TIME_ZONE:         Timestamp("15:04:05.000000"),
+	types.TIMESTAMP_WITHOUT_TIME_ZONE:    Timestamp("2006-01-02 15:04:05.000000"),
+	types.TIMESTAMP_WITH_TIME_ZONE:       Timestamp("2006-01-02 15:04:05.000000"),
+	types.TIMESTAMP_WITH_LOCAL_TIME_ZONE: Timestamp("2006-01-02 15:04:05.000000"),
+	types.INTERVAL_YEAR_MONTH:            rapid.Custom(func(t *rapid.T) string { return "+" + Timestamp("2006-01").Draw(t, "a timestamp") }),
+	types.INTERVAL_DAY_TIME: rapid.Custom(func(t *rapid.T) string {
+		return "+" + rapid.Custom(func(t *rapid.T) string { return fmt.Sprintf("%d", rapid.IntRange(0, 365).Draw(t, "a day")) }).Draw(t, "a day") + Timestamp("15:04:05.000000").Draw(t, "a timestamp")
+	}),
+}
+
+func Timestamp(formatString string) *rapid.Generator[string] {
+	return rapid.Custom(func(t *rapid.T) string {
+		seconds := rapid.IntRange(0, 31536000).Draw(t, "Timestamp")
+		createdAt := time.Now().Add(time.Duration(seconds) * time.Second)
+		formattedDate := createdAt.Format(formatString)
+		return formattedDate
+	})
+}
+
 // AtomicResultItem generates a random atomic field
-func AtomicResultItem() *rapid.Generator[v1.SqlV1alpha1ResultItemRowOneOf] {
+func AtomicResultItem(fieldType types.StatementResultFieldType) *rapid.Generator[v1.SqlV1alpha1ResultItemRowOneOf] {
 	return rapid.Custom(func(t *rapid.T) v1.SqlV1alpha1ResultItemRowOneOf {
-		atomicValue := v1.SqlV1alpha1ResultItemString(rapid.StringMatching("[a-zA-Z]+").Draw(t, "a string"))
+		atomicGenerator := atomicGenerators[fieldType]
+		atomicValue := v1.SqlV1alpha1ResultItemString(atomicGenerator.Draw(t, "an atomic value"))
 		return v1.SqlV1alpha1ResultItemRowOneOf{SqlV1alpha1ResultItemString: &atomicValue}
 	})
 }
@@ -95,48 +133,48 @@ func MockResultRow(columnDetails []v1.ColumnDetails) *rapid.Generator[v1.SqlV1al
 	})
 }
 
-var NonAtomicResultFieldTypes = []StatementResultFieldType{
-	ARRAY,
-	MULTISET,
-	MAP,
-	ROW,
-	NULL,
+var NonAtomicResultFieldTypes = []types.StatementResultFieldType{
+	types.ARRAY,
+	types.MULTISET,
+	types.MAP,
+	types.ROW,
 }
 
-var AtomicResultFieldTypes = []StatementResultFieldType{
-	CHAR,
-	VARCHAR,
-	BOOLEAN,
-	BINARY,
-	VARBINARY,
-	DECIMAL,
-	TINYINT,
-	SMALLINT,
-	INTEGER,
-	BIGINT,
-	FLOAT,
-	DOUBLE,
-	DATE,
-	TIME_WITHOUT_TIME_ZONE,
-	TIMESTAMP_WITHOUT_TIME_ZONE,
-	TIMESTAMP_WITH_TIME_ZONE,
-	TIMESTAMP_WITH_LOCAL_TIME_ZONE,
-	INTERVAL_YEAR_MONTH,
-	INTERVAL_DAY_TIME,
+var AtomicResultFieldTypes = []types.StatementResultFieldType{
+	types.CHAR,
+	types.VARCHAR,
+	types.BOOLEAN,
+	types.BINARY,
+	types.VARBINARY,
+	types.DECIMAL,
+	types.TINYINT,
+	types.SMALLINT,
+	types.INTEGER,
+	types.BIGINT,
+	types.FLOAT,
+	types.DOUBLE,
+	types.DATE,
+	types.TIME_WITHOUT_TIME_ZONE,
+	types.TIMESTAMP_WITHOUT_TIME_ZONE,
+	types.TIMESTAMP_WITH_TIME_ZONE,
+	types.TIMESTAMP_WITH_LOCAL_TIME_ZONE,
+	types.INTERVAL_YEAR_MONTH,
+	types.INTERVAL_DAY_TIME,
+	types.NULL,
 }
 
-func getDataTypeGeneratorForType(fieldType StatementResultFieldType, maxNestingDepth int) *rapid.Generator[v1.DataType] {
+func getDataTypeGeneratorForType(fieldType types.StatementResultFieldType, maxNestingDepth int) *rapid.Generator[v1.DataType] {
 	if maxNestingDepth <= 0 {
 		return AtomicDataType()
 	}
 	switch fieldType {
-	case ARRAY:
+	case types.ARRAY:
 		return ArrayDataType(maxNestingDepth - 1)
-	case MULTISET:
+	case types.MULTISET:
 		return MultisetDataType(maxNestingDepth - 1)
-	case MAP:
+	case types.MAP:
 		return MapDataType(maxNestingDepth - 1)
-	case ROW:
+	case types.ROW:
 		return RowDataType(maxNestingDepth - 1)
 	default:
 		return AtomicDataType()
@@ -217,8 +255,8 @@ func RowDataType(maxNestingDepth int) *rapid.Generator[v1.DataType] {
 	})
 }
 
-func GenResultFieldType() *rapid.Generator[StatementResultFieldType] {
-	return rapid.Custom(func(t *rapid.T) StatementResultFieldType {
+func GenResultFieldType() *rapid.Generator[types.StatementResultFieldType] {
+	return rapid.Custom(func(t *rapid.T) types.StatementResultFieldType {
 		// this should about even the chances for an atomic vs. non-atomic field
 		shouldGenAtomic := rapid.Bool().Draw(t, "bool")
 		if shouldGenAtomic {
@@ -236,28 +274,32 @@ func DataType(maxNestingDepth int) *rapid.Generator[v1.DataType] {
 	})
 }
 
-func MockResultColumns(numColumns int) *rapid.Generator[[]v1.ColumnDetails] {
+func MockResultColumns(numColumns, maxNestingDepth int) *rapid.Generator[[]v1.ColumnDetails] {
 	return rapid.Custom(func(t *rapid.T) []v1.ColumnDetails {
 		var columnDetails []v1.ColumnDetails
 		for i := 0; i < numColumns; i++ {
-			maxNestingDepth := 5
+			dataType := DataType(maxNestingDepth).Draw(t, "column type")
 			columnDetails = append(columnDetails, v1.ColumnDetails{
-				Name: fmt.Sprintf("Column %v", i+1),
-				Type: DataType(maxNestingDepth).Draw(t, "column type"),
+				Name: string(types.NewResultFieldType(dataType)),
+				Type: dataType,
 			})
 		}
 		return columnDetails
 	})
 }
 
-func MockResults(numColumns int) *rapid.Generator[MockStatementResult] {
-	return rapid.Custom(func(t *rapid.T) MockStatementResult {
+func MockResults(numColumns, maxNestingDepth int) *rapid.Generator[types.MockStatementResult] {
+	return rapid.Custom(func(t *rapid.T) types.MockStatementResult {
 		if numColumns <= 0 {
 			numColumns = rapid.IntRange(1, 10).Draw(t, "column number")
 		}
-		columnDetails := MockResultColumns(numColumns).Draw(t, "column details")
+		if maxNestingDepth < 0 {
+			maxNestingDepth = 10
+		}
+		columnDetails := MockResultColumns(numColumns, maxNestingDepth).Draw(t, "column details")
 		resultData := rapid.SliceOfN(MockResultRow(columnDetails), 20, 50).Draw(t, "result data")
-		return MockStatementResult{
+
+		return types.MockStatementResult{
 			ResultSchema: v1.SqlV1alpha1ResultSchema{Columns: &columnDetails},
 			StatementResults: v1.SqlV1alpha1StatementResult{
 				Results: &v1.SqlV1alpha1StatementResultResults{Data: &resultData},
