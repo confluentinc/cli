@@ -11,7 +11,6 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/keystore"
 	presource "github.com/confluentinc/cli/internal/pkg/resource"
@@ -91,7 +90,12 @@ func (c *command) getAllUsers() ([]*ccloudv1.User, error) {
 		return nil, err
 	}
 
-	if auditLog := v1.GetAuditLog(c.Context.Context); auditLog != nil {
+	user, err := c.Client.Auth.User(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
+	if auditLog := user.GetOrganization().GetAuditLog(); auditLog != nil {
 		serviceAccount, err := c.Client.User.GetServiceAccount(context.Background(), auditLog.GetServiceAccountId())
 		if err != nil {
 			// ignore 403s so we can still get other users

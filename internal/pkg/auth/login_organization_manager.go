@@ -1,60 +1,57 @@
-//go:generate go run github.com/travisjeffery/mocker/cmd/mocker --dst ../../../mock/login_organization_manager.go --pkg mock --selfpkg github.com/confluentinc/cli login_organization_manager.go LoginOrganizationManager
+//go:generate mocker --dst ../../../mock/login_organization_manager.go --pkg mock --selfpkg github.com/confluentinc/cli login_organization_manager.go LoginOrganizationManager --prefix ""
 package auth
 
 import (
 	"os"
 
-	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/errors"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
 type LoginOrganizationManager interface {
-	GetLoginOrganizationFromArgs(*cobra.Command) func() (string, error)
-	GetLoginOrganizationFromEnvVar(*cobra.Command) func() (string, error)
-	GetDefaultLoginOrganization() func() (string, error)
+	GetLoginOrganizationFromFlag(*cobra.Command) func() string
+	GetLoginOrganizationFromEnvironmentVariable() func() string
+	GetLoginOrganizationFromConfigurationFile(cfg *v1.Config) func() string
 }
 
 type LoginOrganizationManagerImpl struct{}
 
-func GetLoginOrganization(getOrgFuncs ...func() (string, error)) (string, error) {
-	var multiErr error
+func GetLoginOrganization(getOrgFuncs ...func() string) string {
 	for _, getFunc := range getOrgFuncs {
-		orgResourceId, err := getFunc()
-		if err == nil && orgResourceId != "" {
-			return orgResourceId, nil
-		} else if err != nil {
-			multiErr = multierror.Append(multiErr, err)
+		if id := getFunc(); id != "" {
+			return id
 		}
 	}
-	return "", multiErr
+
+	// An empty organization ID is interpreted as the default organization by the login API
+	return ""
 }
 
 func NewLoginOrganizationManagerImpl() *LoginOrganizationManagerImpl {
 	return &LoginOrganizationManagerImpl{}
 }
 
-func (h *LoginOrganizationManagerImpl) GetLoginOrganizationFromArgs(cmd *cobra.Command) func() (string, error) {
-	return func() (string, error) {
-		return cmd.Flags().GetString("organization-id")
+func (h *LoginOrganizationManagerImpl) GetLoginOrganizationFromFlag(cmd *cobra.Command) func() string {
+	return func() string {
+		organizationId, _ := cmd.Flags().GetString("organization-id")
+		return organizationId
 	}
 }
 
-func (h *LoginOrganizationManagerImpl) GetLoginOrganizationFromEnvVar(cmd *cobra.Command) func() (string, error) {
-	return func() (string, error) {
-		orgResourceId := os.Getenv(ConfluentCloudOrganizationId)
-		if orgResourceId != "" {
-			log.CliLogger.Warnf(errors.FoundOrganizationIdMsg, orgResourceId, ConfluentCloudOrganizationId)
+func (h *LoginOrganizationManagerImpl) GetLoginOrganizationFromEnvironmentVariable() func() string {
+	return func() string {
+		organizationId := os.Getenv(ConfluentCloudOrganizationId)
+		if organizationId != "" {
+			log.CliLogger.Debugf(`Found default organization ID "%s" from environment variable "%s"`, organizationId, ConfluentCloudOrganizationId)
 		}
-		return orgResourceId, nil
+		return organizationId
 	}
 }
 
-func (h *LoginOrganizationManagerImpl) GetDefaultLoginOrganization() func() (string, error) {
-	return func() (string, error) {
-		// empty org resource id will be interpreted as the default org by the login API
-		return "", nil
+func (h *LoginOrganizationManagerImpl) GetLoginOrganizationFromConfigurationFile(cfg *v1.Config) func() string {
+	return func() string {
+		return cfg.Context().GetCurrentOrganization()
 	}
 }
