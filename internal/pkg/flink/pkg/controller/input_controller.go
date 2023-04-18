@@ -24,25 +24,37 @@ type InputControllerInterface interface {
 }
 
 type InputController struct {
-	History         *History
-	appController   ApplicationControllerInterface
-	smartCompletion bool
-	table           TableControllerInterface
-	p               *prompt.Prompt
-	store           StoreInterface
+	History               *History
+	InitialBuffer         string
+	appController         ApplicationControllerInterface
+	smartCompletion       bool
+	reverseISearchEnabled bool
+	table                 TableControllerInterface
+	prompt                *prompt.Prompt
+	store                 StoreInterface
 }
 
 // Actions
-//  This is the main function/loop for the app
+// This is the main function/loop for the app
 func (c *InputController) RunInteractiveInput() {
 
 	var statementResult *StatementResult
 	var err *StatementError
 	// We check for statement result and rows so we don't leave GoPrompt in case of errors
 	for c.appController.GetOutputMode() == GoPromptOutput || statementResult == nil || len(statementResult.Rows) == 0 {
+
 		// Run interactive input and take over terminal
-		input := c.p.Input()
+		input := c.prompt.Input()
+
+		if c.reverseISearchEnabled {
+			searchResult := c.reverseISearch()
+			c.reverseISearchEnabled = false
+			c.setInitialBuffer(searchResult)
+			continue
+		}
+
 		c.History.Append([]string{input})
+
 		statementResult, err = c.store.ProcessStatement(input)
 		renderMsgAndStatus(statementResult)
 		if err != nil {
@@ -72,6 +84,11 @@ func (c *InputController) isSessionValid(err *StatementError) bool {
 	return true
 }
 
+func (c *InputController) setInitialBuffer(s string) {
+	c.InitialBuffer = s
+	c.prompt = c.Prompt()
+}
+
 func renderMsgAndStatus(statementResult *StatementResult) {
 	if statementResult == nil {
 		return
@@ -79,7 +96,7 @@ func renderMsgAndStatus(statementResult *StatementResult) {
 	if statementResult.StatusDetail != "" {
 		fmt.Println(statementResult.StatusDetail)
 	} else {
-		fmt.Println("Statement successfully submited. No details returned from server.")
+		fmt.Println("Statement successfully submitted. No details returned from server.")
 	}
 	if statementResult.StatementName != "" {
 		fmt.Println("Statement ID: " + statementResult.StatementName)
@@ -140,13 +157,10 @@ func (c *InputController) Prompt() *prompt.Prompt {
 		prompt.OptionHistory(c.History.Data),
 		prompt.OptionSwitchKeyBindMode(prompt.EmacsKeyBind),
 		prompt.OptionSetExitCheckerOnInput(func(input string, breakline bool) bool {
-			if input == "" {
-				return false
-			} else if components.IsInputClosingSelect(input) && breakline {
+			if (components.IsInputClosingSelect(input) && breakline) || c.reverseISearchEnabled {
 				return true
-			} else {
-				return false
 			}
+			return false
 		}),
 		prompt.OptionAddASCIICodeBind(),
 		prompt.OptionAddKeyBind(prompt.KeyBind{
@@ -173,6 +187,12 @@ func (c *InputController) Prompt() *prompt.Prompt {
 				c.toggleOutputMode()
 			},
 		}),
+		prompt.OptionAddKeyBind(prompt.KeyBind{
+			Key: prompt.ControlR,
+			Fn: func(b *prompt.Buffer) {
+				c.reverseISearchEnabled = true
+			},
+		}),
 		prompt.OptionAddASCIICodeBind(prompt.ASCIICodeBind{
 			ASCIICode: []byte{0x1b, 0x62},
 			Fn:        prompt.GoLeftWord,
@@ -181,6 +201,7 @@ func (c *InputController) Prompt() *prompt.Prompt {
 			ASCIICode: []byte{0x1b, 0x66},
 			Fn:        prompt.GoRightWord,
 		}),
+		prompt.OptionInitialBufferText(c.InitialBuffer),
 		prompt.OptionPrefixTextColor(prompt.Yellow),
 		prompt.OptionPreviewSuggestionTextColor(prompt.Blue),
 		prompt.OptionSelectedSuggestionBGColor(prompt.LightGray),
@@ -202,10 +223,74 @@ func (c *InputController) getSmartCompletion() bool {
 	return c.smartCompletion
 }
 
+func reverseISearchLivePrefix(livePrefixState *ReverseISearchLivePrefixState) func() (prefix string, useLivePrefix bool) {
+	return func() (prefix string, useLivePrefix bool) {
+		return livePrefixState.LivePrefix, livePrefixState.IsEnable
+	}
+}
+
+func (c *InputController) reverseISearch() string {
+
+	writer := prompt.NewStdoutWriter()
+
+	livePrefixState := &ReverseISearchLivePrefixState{
+		LivePrefix: reverseISearch,
+		IsEnable:   true,
+	}
+
+	searchState := &SearchState{
+		index:        len(c.History.Data),
+		currentMatch: "",
+	}
+
+	in := prompt.New(
+		func(s string) {},
+		reverseISearchCompleter(c.History.Data, writer, searchState, livePrefixState),
+		prompt.OptionSetExitCheckerOnInput(func(input string, lineBreak bool) bool {
+			return !c.reverseISearchEnabled
+		}),
+		prompt.OptionAddKeyBind(prompt.KeyBind{
+			Key: prompt.ControlC,
+			Fn:  c.exitFromSearch,
+		}),
+		prompt.OptionAddKeyBind(prompt.KeyBind{
+			Key: prompt.ControlM,
+			Fn:  c.exitFromSearch,
+		}),
+		prompt.OptionAddKeyBind(prompt.KeyBind{
+			Key: prompt.ControlQ,
+			Fn:  c.exitFromSearch,
+		}),
+		prompt.OptionAddKeyBind(prompt.KeyBind{
+			Key: prompt.ControlR,
+			Fn:  c.exitFromSearch,
+		}),
+		prompt.OptionWriter(writer),
+		prompt.OptionTitle("bck-i-search"),
+		prompt.OptionLivePrefix(reverseISearchLivePrefix(livePrefixState)),
+		prompt.OptionHistory(c.History.Data),
+		prompt.OptionPrefixTextColor(prompt.White),
+		prompt.OptionSetStatementTerminator(func(lastKeyStroke prompt.Key, buffer *prompt.Buffer) bool {
+			if lastKeyStroke == prompt.ControlM {
+				livePrefixState.LivePrefix = ""
+				return true
+			}
+			return false
+		}),
+	)
+	in.Run()
+	return searchState.currentMatch
+}
+
+func (c *InputController) exitFromSearch(buffer *prompt.Buffer) {
+	buffer.DeleteBeforeCursor(9999)
+	c.reverseISearchEnabled = false
+}
+
 // This function fetches the current max column width for the terminal
 // In other words, the amount of characters that can be displayed in one line
 func (c *InputController) GetMaxCol() (int, error) {
-	p := c.p
+	p := c.prompt
 	v := reflect.ValueOf(p)
 	if v.Kind() != reflect.Pointer {
 		return -1, errors.New("could not reflect prompt")
@@ -233,12 +318,13 @@ func (c *InputController) GetMaxCol() (int, error) {
 func NewInputController(t TableControllerInterface, a ApplicationControllerInterface, store StoreInterface, history *History) (c InputControllerInterface) {
 	inputController := &InputController{
 		History:         history,
+		InitialBuffer:   "",
 		table:           t,
 		store:           store,
 		appController:   a,
 		smartCompletion: true,
 	}
-	inputController.p = inputController.Prompt()
+	inputController.prompt = inputController.Prompt()
 	components.PrintWelcomeHeader()
 
 	return inputController

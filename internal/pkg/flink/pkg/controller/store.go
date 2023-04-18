@@ -67,7 +67,7 @@ func (s *Store) ProcessStatement(statement string) (*StatementResult, *Statement
 	if s.appOptions != nil && s.appOptions.MOCK_STATEMENTS_OUTPUT_DEMO {
 
 		if !startsWithValidSQL(statement) {
-			return nil, &StatementError{Msg: "Error: Invalid syntax. Please check your statement."}
+			return nil, &StatementError{Msg: "Error: Invalid syntax '" + statement + "'. Please check your statement."}
 		} else {
 			s.index++
 			return &s.MockData[s.index%len(s.MockData)], nil
