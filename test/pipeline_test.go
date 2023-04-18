@@ -31,6 +31,8 @@ func (s *CLITestSuite) TestPipeline() {
 		{args: "pipeline delete --help", fixture: "pipeline/delete-help.golden"},
 		{args: "pipeline delete pipe-12345 --force", fixture: "pipeline/delete.golden"},
 		{args: "pipeline delete pipe-12345", input: "testPipeline\n", fixture: "pipeline/delete-prompt.golden"},
+		{args: "pipeline delete pipe-12345 pipe-12346", fixture: "pipeline/delete-multiple-fail.golden", exitCode: 1},
+		{args: "pipeline delete pipe-12345 pipe-54321", input: "y\n", fixture: "pipeline/delete-multiple-success.golden"},
 		{args: "pipeline activate --help", fixture: "pipeline/activate-help.golden"},
 		{args: "pipeline activate pipeline-12345", fixture: "pipeline/activate.golden"},
 		{args: "pipeline deactivate --help", fixture: "pipeline/deactivate-help.golden"},
