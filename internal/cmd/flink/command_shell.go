@@ -4,6 +4,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	client "github.com/confluentinc/flink-sql-client"
+	application "github.com/confluentinc/flink-sql-client/pkg/controller"
 	"github.com/spf13/cobra"
 )
 
@@ -19,7 +20,6 @@ func (c *command) newStartFlinkSqlClientCommand() *cobra.Command {
 			},
 		),
 	}
-
 	cmd.Flags().String("compute-pool", "", "Flink compute pool ID.")
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -33,8 +33,10 @@ func (c *command) startFlinkSqlClient(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	resourceId := c.Context.GetOrganization().GetResourceId()
+	ctx := c.Context.Config.Context()
+	kafkaClusterId := ctx.KafkaClusterContext.GetActiveKafkaClusterId()
 
-	client.StartApp(c.EnvironmentId(), computePool, c.AuthToken(), nil)
-
+	client.StartApp(c.EnvironmentId(), resourceId, kafkaClusterId, computePool, c.AuthToken(), &application.ApplicationOptions{MOCK_STATEMENTS_OUTPUT_DEMO: true})
 	return nil
 }
