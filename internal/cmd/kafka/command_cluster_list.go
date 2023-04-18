@@ -46,7 +46,7 @@ func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
 			clusters = append(clusters, clustersOfEnvironment...)
 		}
 	} else {
-		environmentId, err := c.EnvironmentId()
+		environmentId, err := c.Context.EnvironmentId()
 		if err != nil {
 			return err
 		}

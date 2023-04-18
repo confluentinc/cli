@@ -253,11 +253,11 @@ func (ld *launchDarklyManager) contextToLDUser(ctx *dynamicconfig.DynamicContext
 		userBuilder = lduser.NewUserBuilder(key).Anonymous(true)
 	}
 	// org info
-	if id := ctx.GetOrganization().GetResourceId(); id != "" {
+	if id := ctx.GetCurrentOrganization(); id != "" {
 		setCustomAttribute(custom, "org.resource_id", ldvalue.String(id))
 	}
 	// environment (account) info
-	if id := ctx.GetEnvironment().GetId(); id != "" {
+	if id := ctx.GetCurrentEnvironment(); id != "" {
 		setCustomAttribute(custom, "environment.id", ldvalue.String(id))
 	}
 	customValueMap := custom.Build()

@@ -11,8 +11,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/hashicorp/go-version"
 
-	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
-
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -29,12 +27,12 @@ const (
 
 var ver, _ = version.NewVersion("1.0.0")
 
-const signupSuggestion = `If you need a Confluent Cloud account, sign up with "confluent cloud-signup".`
+const signupSuggestion = "If you need a Confluent Cloud account, sign up with `confluent cloud-signup`."
 
 var (
 	RequireCloudLoginErr = errors.NewErrorWithSuggestions(
 		"you must log in to Confluent Cloud to use this command",
-		"Log in with \"confluent login\".\n"+signupSuggestion,
+		"Log in with `confluent login`.\n"+signupSuggestion,
 	)
 	RequireCloudLoginOrgUnsuspendedErr = errors.NewErrorWithSuggestions(
 		"you must unsuspend your organization to use this command",
@@ -46,23 +44,23 @@ var (
 	)
 	RequireCloudLoginOrOnPremErr = errors.NewErrorWithSuggestions(
 		"you must log in to use this command",
-		"Log in with \"confluent login\".\n"+signupSuggestion,
+		"Log in with `confluent login`.\n"+signupSuggestion,
 	)
 	RequireNonAPIKeyCloudLoginErr = errors.NewErrorWithSuggestions(
 		"you must log in to Confluent Cloud with a username and password to use this command",
-		"Log in with \"confluent login\".\n"+signupSuggestion,
+		"Log in with `confluent login`.\n"+signupSuggestion,
 	)
 	RequireNonAPIKeyCloudLoginOrOnPremLoginErr = errors.NewErrorWithSuggestions(
 		"you must log in to Confluent Cloud with a username and password or log in to Confluent Platform to use this command",
-		"Log in with \"confluent login\" or \"confluent login --url <mds-url>\".\n"+signupSuggestion,
+		"Log in with `confluent login` or `confluent login --url <mds-url>`.\n"+signupSuggestion,
 	)
 	RequireNonCloudLogin = errors.NewErrorWithSuggestions(
 		"you must log out of Confluent Cloud to use this command",
-		"Log out with \"confluent logout\".\n",
+		"Log out with `confluent logout`.\n",
 	)
 	RequireOnPremLoginErr = errors.NewErrorWithSuggestions(
 		"you must log in to Confluent Platform to use this command",
-		`Log in with "confluent login --url <mds-url>".`,
+		"Log in with `confluent login --url <mds-url>`.",
 	)
 	RequireUpdatesEnabledErr = errors.NewErrorWithSuggestions(
 		"you must enable updates to use this command",
@@ -94,32 +92,32 @@ type Config struct {
 	IsTest  bool              `json:"-"`
 	Version *pversion.Version `json:"-"`
 
-	overwrittenAccount     *ccloudv1.Account
-	overwrittenCurrContext string
-	overwrittenActiveKafka string
+	overwrittenCurrentContext      string
+	overwrittenCurrentEnvironment  string
+	overwrittenCurrentKafkaCluster string
 }
 
-func (c *Config) SetOverwrittenAccount(acct *ccloudv1.Account) {
-	if c.overwrittenAccount == nil {
-		c.overwrittenAccount = acct
+func (c *Config) SetOverwrittenCurrentContext(context string) {
+	if context == "" {
+		context = emptyFieldIndicator
+	}
+	if c.overwrittenCurrentContext == "" {
+		c.overwrittenCurrentContext = context
 	}
 }
 
-func (c *Config) SetOverwrittenCurrContext(contextName string) {
-	if contextName == "" {
-		contextName = emptyFieldIndicator
-	}
-	if c.overwrittenCurrContext == "" {
-		c.overwrittenCurrContext = contextName
+func (c *Config) SetOverwrittenCurrentEnvironment(environmentId string) {
+	if c.overwrittenCurrentEnvironment == "" {
+		c.overwrittenCurrentEnvironment = environmentId
 	}
 }
 
-func (c *Config) SetOverwrittenActiveKafka(clusterId string) {
+func (c *Config) SetOverwrittenCurrentKafkaCluster(clusterId string) {
 	if clusterId == "" {
 		clusterId = emptyFieldIndicator
 	}
-	if c.overwrittenActiveKafka == "" {
-		c.overwrittenActiveKafka = clusterId
+	if c.overwrittenCurrentKafkaCluster == "" {
+		c.overwrittenCurrentKafkaCluster = clusterId
 	}
 }
 
@@ -207,7 +205,7 @@ func (c *Config) Load() error {
 // Save writes the CLI config to disk.
 func (c *Config) Save() error {
 	tempKafka := c.resolveOverwrittenKafka()
-	tempAccount := c.resolveOverwrittenAccount()
+	tempEnvironment := c.resolveOverwrittenCurrentEnvironment()
 	tempContext := c.resolveOverwrittenContext()
 	var tempAuthToken string
 	var tempAuthRefreshToken string
@@ -241,7 +239,7 @@ func (c *Config) Save() error {
 	}
 
 	c.restoreOverwrittenContext(tempContext)
-	c.restoreOverwrittenAccount(tempAccount)
+	c.restoreOverwrittenEnvironment(tempEnvironment)
 	c.restoreOverwrittenKafka(tempKafka)
 	c.restoreOverwrittenAuthToken(tempAuthToken)
 	c.restoreOverwrittenAuthRefreshToken(tempAuthRefreshToken)
@@ -285,35 +283,32 @@ func (c *Config) encryptContextStateTokens(tempAuthToken, tempAuthRefreshToken s
 func (c *Config) resolveOverwrittenKafka() string {
 	ctx := c.Context()
 	var tempKafka string
-	if c.overwrittenActiveKafka != "" && ctx != nil && ctx.KafkaClusterContext != nil {
-		if c.overwrittenActiveKafka == emptyFieldIndicator {
-			c.overwrittenActiveKafka = ""
+	if c.overwrittenCurrentKafkaCluster != "" && ctx != nil && ctx.KafkaClusterContext != nil {
+		if c.overwrittenCurrentKafkaCluster == emptyFieldIndicator {
+			c.overwrittenCurrentKafkaCluster = ""
 		}
 		tempKafka = ctx.KafkaClusterContext.GetActiveKafkaClusterId()
-		ctx.KafkaClusterContext.SetActiveKafkaCluster(c.overwrittenActiveKafka)
+		ctx.KafkaClusterContext.SetActiveKafkaCluster(c.overwrittenCurrentKafkaCluster)
 	}
 	return tempKafka
 }
 
 // Restore the flag cluster back into the struct so that it is used for any execution after Save()
 func (c *Config) restoreOverwrittenKafka(tempKafka string) {
-	ctx := c.Context()
 	if tempKafka != "" {
-		ctx.KafkaClusterContext.SetActiveKafkaCluster(tempKafka)
+		c.Context().KafkaClusterContext.SetActiveKafkaCluster(tempKafka)
 	}
 }
 
 func (c *Config) restoreOverwrittenAuthToken(tempAuthToken string) {
-	ctx := c.Context()
 	if tempAuthToken != "" {
-		ctx.GetState().AuthToken = tempAuthToken
+		c.Context().GetState().AuthToken = tempAuthToken
 	}
 }
 
 func (c *Config) restoreOverwrittenAuthRefreshToken(tempAuthRefreshToken string) {
-	ctx := c.Context()
 	if tempAuthRefreshToken != "" {
-		ctx.GetState().AuthRefreshToken = tempAuthRefreshToken
+		c.Context().GetState().AuthRefreshToken = tempAuthRefreshToken
 	}
 }
 
@@ -321,12 +316,12 @@ func (c *Config) restoreOverwrittenAuthRefreshToken(tempAuthRefreshToken string)
 // Return the overwriting flag context value so that it can be restored after writing the file
 func (c *Config) resolveOverwrittenContext() string {
 	var tempContext string
-	if c.overwrittenCurrContext != "" && c != nil {
-		if c.overwrittenCurrContext == emptyFieldIndicator {
-			c.overwrittenCurrContext = ""
+	if c.overwrittenCurrentContext != "" && c != nil {
+		if c.overwrittenCurrentContext == emptyFieldIndicator {
+			c.overwrittenCurrentContext = ""
 		}
 		tempContext = c.CurrentContext
-		c.CurrentContext = c.overwrittenCurrContext
+		c.CurrentContext = c.overwrittenCurrentContext
 	}
 	return tempContext
 }
@@ -340,21 +335,19 @@ func (c *Config) restoreOverwrittenContext(tempContext string) {
 
 // Switch the initial config account back into the struct so that it is saved and not the flag value
 // Return the overwriting flag account value so that it can be restored after writing the file
-func (c *Config) resolveOverwrittenAccount() *ccloudv1.Account {
-	ctx := c.Context()
-	var tempAccount *ccloudv1.Account
-	if c.overwrittenAccount != nil && ctx != nil && ctx.State != nil && ctx.State.Auth != nil {
-		tempAccount = ctx.GetEnvironment()
-		ctx.State.Auth.Account = c.overwrittenAccount
+func (c *Config) resolveOverwrittenCurrentEnvironment() string {
+	var tempEnvironment string
+	if c.overwrittenCurrentEnvironment != "" {
+		tempEnvironment = c.Context().GetCurrentEnvironment()
+		c.Context().SetCurrentEnvironment(c.overwrittenCurrentEnvironment)
 	}
-	return tempAccount
+	return tempEnvironment
 }
 
 // Restore the flag account back into the struct so that it is used for any execution after Save()
-func (c *Config) restoreOverwrittenAccount(tempAccount *ccloudv1.Account) {
-	ctx := c.Context()
-	if tempAccount != nil {
-		ctx.State.Auth.Account = tempAccount
+func (c *Config) restoreOverwrittenEnvironment(id string) {
+	if id != "" {
+		c.Context().SetCurrentEnvironment(id)
 	}
 }
 
@@ -426,7 +419,7 @@ func (c *Config) FindContext(name string) (*Context, error) {
 	return context, nil
 }
 
-func (c *Config) AddContext(name, platformName, credentialName string, kafkaClusters map[string]*KafkaClusterConfig, kafka string, schemaRegistryClusters map[string]*SchemaRegistryCluster, state *ContextState, orgResourceId string) error {
+func (c *Config) AddContext(name, platformName, credentialName string, kafkaClusters map[string]*KafkaClusterConfig, kafka string, schemaRegistryClusters map[string]*SchemaRegistryCluster, state *ContextState, orgResourceId, envId string) error {
 	if _, ok := c.Contexts[name]; ok {
 		return fmt.Errorf(errors.ContextAlreadyExistsErrorMsg, name)
 	}
@@ -441,7 +434,7 @@ func (c *Config) AddContext(name, platformName, credentialName string, kafkaClus
 		return fmt.Errorf(errors.PlatformNotFoundErrorMsg, platformName)
 	}
 
-	ctx, err := newContext(name, platform, credential, kafkaClusters, kafka, schemaRegistryClusters, state, c, orgResourceId)
+	ctx, err := newContext(name, platform, credential, kafkaClusters, kafka, schemaRegistryClusters, state, c, orgResourceId, envId)
 	if err != nil {
 		return err
 	}
@@ -462,28 +455,9 @@ func (c *Config) CreateContext(name, bootstrapURL, apiKey, apiSecret string) err
 		Key:    apiKey,
 		Secret: apiSecret,
 	}
-	apiKeys := map[string]*APIKeyPair{
-		apiKey: apiKeyPair,
-	}
-	kafkaClusterCfg := &KafkaClusterConfig{
-		ID:        "anonymous-id",
-		Name:      "anonymous-cluster",
-		Bootstrap: bootstrapURL,
-		APIKeys:   apiKeys,
-		APIKey:    apiKey,
-	}
-	kafkaClusters := map[string]*KafkaClusterConfig{
-		kafkaClusterCfg.ID: kafkaClusterCfg,
-	}
-	platform := &Platform{Server: bootstrapURL}
-
-	// Inject credential and platforms name for now, until users can provide custom names.
-	platform.Name = strings.TrimPrefix(platform.Server, "https://")
 
 	// Hardcoded for now, since username/password isn't implemented yet.
 	credential := &Credential{
-		Username:       "",
-		Password:       "",
 		APIKeyPair:     apiKeyPair,
 		CredentialType: APIKey,
 	}
@@ -501,11 +475,26 @@ func (c *Config) CreateContext(name, bootstrapURL, apiKey, apiSecret string) err
 		return err
 	}
 
+	// Inject credential and platforms name for now, until users can provide custom names.
+	platform := &Platform{
+		Server: bootstrapURL,
+		Name:   strings.TrimPrefix(bootstrapURL, "https://"),
+	}
+
 	if err := c.SavePlatform(platform); err != nil {
 		return err
 	}
 
-	return c.AddContext(name, platform.Name, credential.Name, kafkaClusters, kafkaClusterCfg.ID, nil, nil, "")
+	kafkaClusterCfg := &KafkaClusterConfig{
+		ID:        "anonymous-id",
+		Name:      "anonymous-cluster",
+		Bootstrap: bootstrapURL,
+		APIKeys:   map[string]*APIKeyPair{apiKey: apiKeyPair},
+		APIKey:    apiKey,
+	}
+	kafkaClusters := map[string]*KafkaClusterConfig{kafkaClusterCfg.ID: kafkaClusterCfg}
+
+	return c.AddContext(name, platform.Name, credential.Name, kafkaClusters, kafkaClusterCfg.ID, nil, nil, "", "")
 }
 
 // UseContext sets the current context, if it exists.
@@ -726,13 +715,6 @@ func (c *Config) isOrgSuspended() bool {
 
 func (c *Config) isLoginBlockedByOrgSuspension() bool {
 	return utils.IsLoginBlockedByOrgSuspension(c.Context().GetSuspensionStatus())
-}
-
-func (c *Config) GetLastUsedOrgId() string {
-	if ctx := c.Context(); ctx != nil && ctx.LastOrgId != "" {
-		return ctx.LastOrgId
-	}
-	return os.Getenv("CONFLUENT_CLOUD_ORGANIZATION_ID")
 }
 
 func (c *Config) GetCloudClientV2(unsafeTrace bool) *ccloudv2.Client {

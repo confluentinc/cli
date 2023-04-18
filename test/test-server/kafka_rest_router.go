@@ -151,7 +151,7 @@ func handleKafkaRPTopics(t *testing.T) http.HandlerFunc {
 				"kind": "KafkaTopicList",
 				"metadata": {"self": "http://localhost:9391/v3/clusters/cluster-1/topics","next": null},
 				"data": [
-				  {
+					{
 					"kind": "KafkaTopic",
 					"metadata": {"self": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1","resource_name": "crn:///kafka=cluster-1/topic=topic-1"},
 					"cluster_id": "cluster-1",
@@ -161,8 +161,8 @@ func handleKafkaRPTopics(t *testing.T) http.HandlerFunc {
 					"partitions": {"related": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1/partitions"},
 					"configs": {"related": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1/configs"},
 					"partition_reassignments": {"related": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1/partitions/-/reassignments"}
-				  },
-				  {
+					},
+					{
 					"kind": "KafkaTopic",
 					"metadata": {"self": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-2","resource_name": "crn:///kafka=cluster-1/topic=topic-2"},
 					"cluster_id": "cluster-1",
@@ -172,7 +172,7 @@ func handleKafkaRPTopics(t *testing.T) http.HandlerFunc {
 					"partitions": {"related": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-2/partitions"},
 					"configs": {"related": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-2/configs"},
 					"partition_reassignments": {"related": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-2/partitions/-/reassignments"}
-				  }
+					}
 				]
 			}`
 			_, err := io.WriteString(w, response)
@@ -250,16 +250,16 @@ func handleKafkaRPTopicConfigs(t *testing.T) http.HandlerFunc {
 					Data: []cpkafkarestv3.TopicConfigData{
 						{
 							Name:  "cleanup.policy",
-							Value: stringPtr("delete"),
+							Value: cpkafkarestv3.PtrString("delete"),
 						},
 						{
 							Name:       "compression.type",
-							Value:      stringPtr("producer"),
+							Value:      cpkafkarestv3.PtrString("producer"),
 							IsReadOnly: true,
 						},
 						{
 							Name:  "retention.ms",
-							Value: stringPtr("604800000"),
+							Value: cpkafkarestv3.PtrString("604800000"),
 						},
 					},
 				}
@@ -272,11 +272,11 @@ func handleKafkaRPTopicConfigs(t *testing.T) http.HandlerFunc {
 					Data: []cpkafkarestv3.TopicConfigData{
 						{
 							Name:  "compression.type",
-							Value: stringPtr("gzip"),
+							Value: cpkafkarestv3.PtrString("gzip"),
 						},
 						{
 							Name:  "retention.ms",
-							Value: stringPtr("1"),
+							Value: cpkafkarestv3.PtrString("1"),
 						},
 					},
 				}
@@ -505,6 +505,8 @@ func handleKafkaRPConfigsAlter(t *testing.T) http.HandlerFunc {
 				}
 				// No error
 				w.WriteHeader(http.StatusNoContent)
+			} else if topicName == "topic1" {
+				w.WriteHeader(http.StatusOK)
 			} else { // topic-not-exist
 				// not found
 				require.NoError(t, writeErrorResponse(w, http.StatusNotFound, 40403, "This server does not host this topic-partition."))
@@ -631,7 +633,7 @@ func handleKafkaRPLink(t *testing.T) http.HandlerFunc {
 			err := json.NewEncoder(w).Encode(cpkafkarestv3.ListLinksResponseData{
 				Kind:            "",
 				Metadata:        cpkafkarestv3.ResourceMetadata{},
-				SourceClusterId: stringPtr("cluster-1"),
+				SourceClusterId: cpkafkarestv3.PtrString("cluster-1"),
 				LinkName:        "link-1",
 				LinkId:          "LINKID1",
 				TopicsNames:     []string{"link-1-topic-1", "link-1-topic-2"},
@@ -1616,8 +1618,4 @@ func writeErrorResponse(responseWriter http.ResponseWriter, statusCode int, erro
 	}`, errorCode, message)
 	_, err := io.WriteString(responseWriter, errorResponseBody)
 	return err
-}
-
-func stringPtr(s string) *string {
-	return &s
 }

@@ -107,6 +107,8 @@ func handleCmkCluster(t *testing.T) http.HandlerFunc {
 			handleCmkKafkaClusterDescribeDedicated(t)(w, r)
 		case "lkc-describe-dedicated-pending":
 			handleCmkKafkaClusterDescribeDedicatedPending(t)(w, r)
+		case "lkc-describe-dedicated-provisioning":
+			handleCmkKafkaClusterDescribeDedicatedProvisioning(t)(w, r)
 		case "lkc-describe-dedicated-with-encryption":
 			handleCmkKafkaClusterDescribeDedicatedWithEncryption(t)(w, r)
 		case "lkc-describe-infinite":
@@ -155,6 +157,20 @@ func handleCmkKafkaClusterDescribeDedicatedPending(t *testing.T) http.HandlerFun
 		id := vars["id"]
 		cluster := getCmkDedicatedDescribeCluster(id, "kafka-cluster", 2)
 		cluster.Status.Cku = cmkv2.PtrInt32(1)
+		err := json.NewEncoder(w).Encode(cluster)
+		require.NoError(t, err)
+	}
+}
+
+// Handler for GET "/cmk/v2/clusters/lkc-describe-dedicated-provisioning"
+func handleCmkKafkaClusterDescribeDedicatedProvisioning(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		id := vars["id"]
+		cluster := getCmkDedicatedDescribeCluster(id, "kafka-cluster", 1)
+		cluster.Status.Phase = "PROVISIONING"
+		cluster.Spec.KafkaBootstrapEndpoint = cmkv2.PtrString("")
+		cluster.Spec.HttpEndpoint = cmkv2.PtrString("")
 		err := json.NewEncoder(w).Encode(cluster)
 		require.NoError(t, err)
 	}

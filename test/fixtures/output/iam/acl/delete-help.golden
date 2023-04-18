@@ -1,4 +1,4 @@
-Delete a Kafka ACL. This command only works with centralized ACLs.
+Delete a centralized ACL.
 
 Usage:
   confluent iam acl delete [flags]
@@ -6,7 +6,7 @@ Usage:
 Examples:
 Delete an ACL that granted the specified user access to the "test" topic in the specified cluster.
 
-  $ confluent iam acl delete --kafka-cluster <kafka-cluster-id> --allow --principal User:Jane --topic test --operation write --host *
+  $ confluent iam acl delete --kafka-cluster <kafka-cluster-id> --allow --principal User:Jane --topic test --operation write --host "*"
 
 Flags:
       --kafka-cluster string      REQUIRED: Kafka cluster ID for scope of ACL commands.

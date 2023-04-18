@@ -1,7 +1,7 @@
 Save a Stream Designer pipeline's source code to a local file.
 
 Usage:
-  confluent pipeline save <pipeline-id> [flags]
+  confluent pipeline save <id> [flags]
 
 Examples:
 Save the source code for Stream Designer pipeline "pipe-12345" to the default file at "./pipe-12345.sql".

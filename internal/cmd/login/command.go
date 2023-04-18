@@ -108,10 +108,7 @@ func (c *command) login(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *command) loginCCloud(cmd *cobra.Command, url string) error {
-	orgResourceId, err := c.getOrgResourceId(cmd)
-	if err != nil {
-		return err
-	}
+	orgResourceId := c.getOrgResourceId(cmd)
 
 	noBrowser, err := cmd.Flags().GetBool("no-browser")
 	if err != nil {
@@ -146,14 +143,14 @@ func (c *command) loginCCloud(cmd *cobra.Command, url string) error {
 		return err
 	}
 
-	currentEnv, currentOrg, err := pauth.PersistCCloudCredentialsToConfig(c.Config.Config, client, url, credentials, save)
+	currentEnvironment, currentOrg, err := pauth.PersistCCloudCredentialsToConfig(c.Config.Config, client, url, credentials, save)
 	if err != nil {
 		return err
 	}
 
 	output.Printf(errors.LoggedInAsMsgWithOrg, credentials.Username, currentOrg.GetResourceId(), currentOrg.GetName())
-	if currentEnv != nil {
-		log.CliLogger.Debugf(errors.LoggedInUsingEnvMsg, currentEnv.GetId(), currentEnv.GetName())
+	if currentEnvironment != "" {
+		log.CliLogger.Debugf(errors.LoggedInUsingEnvMsg, currentEnvironment)
 	}
 
 	// if org is at the end of free trial, print instruction about how to add payment method to unsuspend the org.
@@ -210,6 +207,7 @@ func (c *command) getCCloudCredentials(cmd *cobra.Command, url, orgResourceId st
 	if prompt {
 		return pauth.GetLoginCredentials(c.loginCredentialsManager.GetCloudCredentialsFromPrompt(orgResourceId))
 	}
+
 	filterParams := netrc.NetrcMachineParams{
 		IsCloud: true,
 		URL:     url,
@@ -405,10 +403,9 @@ func validateURL(url string, isCCloud bool) (string, string, error) {
 	return url, strings.Join(msg, " and "), nil
 }
 
-func (c *command) getOrgResourceId(cmd *cobra.Command) (string, error) {
+func (c *command) getOrgResourceId(cmd *cobra.Command) string {
 	return pauth.GetLoginOrganization(
-		c.loginOrganizationManager.GetLoginOrganizationFromArgs(cmd),
-		c.loginOrganizationManager.GetLoginOrganizationFromEnvVar(cmd),
-		c.loginOrganizationManager.GetDefaultLoginOrganization(),
+		c.loginOrganizationManager.GetLoginOrganizationFromFlag(cmd),
+		c.loginOrganizationManager.GetLoginOrganizationFromEnvironmentVariable(),
 	)
 }

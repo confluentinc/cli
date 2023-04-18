@@ -1,4 +1,4 @@
-Create a Kafka ACL. This command only works with centralized ACLs.
+Create a centralized ACL.
 
 Usage:
   confluent iam acl create [flags]
@@ -10,7 +10,7 @@ Create an ACL that grants the specified user "read" permission to the specified 
 
 Create an ACL that grants the specified user "write" permission on all topics in the specified Kafka cluster:
 
-  $ confluent iam acl create --allow --principal User:User1 --operation write --topic '*' --kafka-cluster <kafka-cluster-id>
+  $ confluent iam acl create --allow --principal User:User1 --operation write --topic "*" --kafka-cluster <kafka-cluster-id>
 
 Create an ACL that assigns a group "read" access to all topics that use the specified prefix in the specified Kafka cluster:
 

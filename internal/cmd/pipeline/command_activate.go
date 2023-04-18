@@ -11,10 +11,11 @@ import (
 
 func (c *command) newActivateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "activate <pipeline-id>",
-		Short: "Request to activate a pipeline.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  c.activate,
+		Use:               "activate <pipeline-id>",
+		Short:             "Request to activate a pipeline.",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		RunE:              c.activate,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Request to activate Stream Designer pipeline "pipe-12345".`,
@@ -36,9 +37,9 @@ func (c *command) activate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	updatePipeline := streamdesignerv1.SdV1PipelineUpdate{Spec: &streamdesignerv1.SdV1PipelineSpecUpdate{Activated: streamdesignerv1.PtrBool(true)}}
+	updatePipeline := streamdesignerv1.SdV1Pipeline{Spec: &streamdesignerv1.SdV1PipelineSpec{Activated: streamdesignerv1.PtrBool(true)}}
 
-	environmentId, err := c.EnvironmentId()
+	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}

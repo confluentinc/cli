@@ -8,7 +8,7 @@ const (
 	// auth commands
 	LoggedInAsMsg                 = "Logged in as \"%s\".\n"
 	LoggedInAsMsgWithOrg          = "Logged in as \"%s\" for organization \"%s\" (\"%s\").\n"
-	LoggedInUsingEnvMsg           = "Using environment \"%s\" (\"%s\").\n"
+	LoggedInUsingEnvMsg           = "Using environment \"%s\".\n"
 	LoggedOutMsg                  = "You are now logged out."
 	WroteCredentialsToKeychainMsg = "Wrote login credentials to keychain\n"
 	RemoveNetrcCredentialsMsg     = "Removed credentials for user \"%s\" from netrc file \"%s\"\n"
@@ -18,9 +18,8 @@ const (
 		StopNonInteractiveMsg + ".\n"
 	FoundNetrcCredMsg = "Found credentials for user \"%s\" from netrc file \"%s\" " +
 		StopNonInteractiveMsg + ".\n"
-	FoundOrganizationIdMsg = "Found default organization id for user \"%s\" from environment variable \"%s\".\n"
 	RemainingFreeCreditMsg = "Free credits: $%.2f USD remaining\n" +
-		"You are currently using a free trial version of Confluent Cloud. Add a payment method with \"confluent admin payment update\" to avoid an interruption in service once your trial ends.\n"
+		"You are currently using a free trial version of Confluent Cloud. Add a payment method with `confluent admin payment update` to avoid an interruption in service once your trial ends.\n"
 	CloudSignUpMsg     = "Success! Welcome to Confluent Cloud.\n"
 	FreeTrialSignUpMsg = "Congratulations! You now have $%.2f USD to spend during the first 60 days. No credit card is required.\n"
 
@@ -30,9 +29,6 @@ const (
 	// connector commands
 	PausedConnectorMsg  = "Paused connector \"%s\".\n"
 	ResumedConnectorMsg = "Resumed connector \"%s\".\n"
-
-	// environment commands
-	UsingEnvMsg = "Now using \"%s\" as the default (active) environment.\n"
 
 	// kafka cluster commands
 	UseKafkaClusterMsg               = "Set Kafka cluster \"%s\" as the active cluster for environment \"%s\".\n"
@@ -48,12 +44,13 @@ const (
 	StartingConsumerMsg      = "Starting Kafka Consumer. Use Ctrl-C to exit."
 	UpdateTopicConfigMsg     = "Updated the following configuration values for topic \"%s\":\n"
 	UpdateTopicConfigRestMsg = "Updated the following configuration values for topic \"%s\" (read-only configs were not updated):\n"
+	OmitTopicCountMsg        = "The topic count will be omitted as Kafka topics for this cluster could not be retrieved: %v"
 
 	// kafka mirror commands
 	RestProxyNotAvailableMsg = "Kafka REST is not enabled: the operation is only supported with Kafka REST proxy."
 
 	// kafka REST proxy
-	MDSTokenNotFoundMsg = "No session token found, please enter user credentials. To avoid being prompted, run \"confluent login\"."
+	MDSTokenNotFoundMsg = "No session token found, please enter user credentials. To avoid being prompted, run `confluent login`."
 
 	// ksql commands
 	EndPointNotPopulatedMsg   = "Endpoint not yet populated. To obtain the endpoint, use `confluent ksql cluster describe`."

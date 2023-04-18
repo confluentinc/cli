@@ -27,6 +27,7 @@ var (
 		{Id: "not-595", Name: "other"},
 		{Id: "env-123", Name: "env123"},
 		{Id: SRApiEnvId, Name: "srUpdate"},
+		{Id: "env-987zy", Name: "confluent-audit-log"},
 	}
 	keyIndex      = int32(3)
 	resourceIdMap = map[int32]string{auditLogServiceAccountID: auditLogServiceAccountResourceID, serviceAccountID: serviceAccountResourceID}
@@ -48,15 +49,6 @@ var (
 )
 
 const (
-	exampleAvailability = "low"
-	exampleCloud        = "aws"
-	exampleClusterType  = "basic"
-	exampleMetric       = "ConnectNumRecords"
-	exampleNetworkType  = "internet"
-	examplePrice        = 1
-	exampleRegion       = "us-east-1"
-	exampleUnit         = "GB"
-
 	serviceAccountID           = int32(12345)
 	serviceAccountResourceID   = "sa-12345"
 	identityProviderResourceID = "op-12345"
@@ -68,11 +60,6 @@ const (
 	auditLogServiceAccountResourceID = "sa-1337"
 
 	PromoTestCode = "PromoTestCode"
-
-	exampleSRPriceKey   = "aws:us-west-2:free:1:max"
-	exampleSRPriceTable = "SchemaRegistry"
-	exampleSRPriceUnit  = "Schema-Hour"
-	exampleSchemaLimit  = 1000
 )
 
 // Handler for: "/api/me"
@@ -83,8 +70,12 @@ func handleMe(t *testing.T, isAuditLogEnabled bool) http.HandlerFunc {
 			orgResourceId = "abc-123"
 		}
 
-		org := &ccloudv1.Organization{Id: 42, ResourceId: orgResourceId, Name: "Confluent"}
-		if !isAuditLogEnabled {
+		org := &ccloudv1.Organization{
+			Id:         42,
+			ResourceId: orgResourceId,
+			Name:       "Confluent",
+		}
+		if isAuditLogEnabled {
 			org.AuditLog = &ccloudv1.AuditLog{
 				ClusterId:        "lkc-ab123",
 				AccountId:        "env-987zy",
@@ -93,8 +84,7 @@ func handleMe(t *testing.T, isAuditLogEnabled bool) http.HandlerFunc {
 			}
 		}
 
-		isOrgOnMarketplace := os.Getenv("IS_ORG_ON_MARKETPLACE") == "true"
-		if isOrgOnMarketplace {
+		if os.Getenv("IS_ORG_ON_MARKETPLACE") == "true" {
 			org.Marketplace = &ccloudv1.Marketplace{Partner: ccloudv1.MarketplacePartner_AWS}
 		}
 
@@ -163,57 +153,6 @@ func handleLoginRealm(t *testing.T) http.HandlerFunc {
 		}
 		err := json.NewEncoder(w).Encode(res)
 		require.NoError(t, err)
-	}
-}
-
-// Handler for: "/api/accounts/{id}"
-func handleEnvironment(t *testing.T) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		envId := vars["id"]
-		if env := isValidEnvironmentId(environments, envId); env != nil {
-			switch r.Method {
-			case http.MethodGet: // called by `environment use`
-				b, err := ccstructs.MarshalJSONToBytes(&ccloudv1.GetAccountReply{Account: env})
-				require.NoError(t, err)
-				_, err = io.WriteString(w, string(b))
-				require.NoError(t, err)
-			case http.MethodPut: // called by `environment create`
-				req := &ccloudv1.CreateAccountRequest{}
-				err := ccstructs.UnmarshalJSON(r.Body, req)
-				require.NoError(t, err)
-				env.Name = req.Account.Name
-				b, err := ccstructs.MarshalJSONToBytes(&ccloudv1.CreateAccountReply{Account: env})
-				require.NoError(t, err)
-				_, err = io.WriteString(w, string(b))
-				require.NoError(t, err)
-			}
-		} else {
-			// env not found
-			w.WriteHeader(http.StatusNotFound)
-		}
-	}
-}
-
-// Handler for: "/api/accounts" Post
-func handleEnvironments(t *testing.T) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodPost {
-			req := &ccloudv1.CreateAccountRequest{}
-			err := ccstructs.UnmarshalJSON(r.Body, req)
-			require.NoError(t, err)
-
-			createAccountReply := &ccloudv1.CreateAccountReply{
-				Account: &ccloudv1.Account{
-					Id:   "a-5555",
-					Name: req.Account.Name,
-				},
-			}
-			b, err := ccstructs.MarshalJSONToBytes(createAccountReply)
-			require.NoError(t, err)
-			_, err = io.WriteString(w, string(b))
-			require.NoError(t, err)
-		}
 	}
 }
 

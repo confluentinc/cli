@@ -14,10 +14,11 @@ import (
 
 func (c *mirrorCommand) newFailoverCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "failover <destination-topic-1> [destination-topic-2] ... [destination-topic-N] --link my-link",
-		Short: "Failover mirror topics.",
-		Args:  cobra.MinimumNArgs(1),
-		RunE:  c.failover,
+		Use:               "failover <destination-topic-1> [destination-topic-2] ... [destination-topic-N]",
+		Short:             "Failover mirror topics.",
+		Args:              cobra.MinimumNArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgsMultiple),
+		RunE:              c.failover,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Failover mirror topics "my-topic-1" and "my-topic-2":`,
@@ -26,7 +27,7 @@ func (c *mirrorCommand) newFailoverCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String(linkFlagName, "", "The name of the cluster link.")
+	pcmd.AddLinkFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().Bool(dryrunFlagName, false, "If set, does not actually create the link, but simply validates it.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -57,7 +58,7 @@ func (c *mirrorCommand) failover(cmd *cobra.Command, args []string) error {
 		return errors.New(errors.RestProxyNotAvailableMsg)
 	}
 
-	lkc, err := getKafkaClusterLkcId(c.AuthenticatedStateFlagCommand)
+	lkc, err := getKafkaClusterLkcId(c.AuthenticatedCLICommand)
 	if err != nil {
 		return err
 	}

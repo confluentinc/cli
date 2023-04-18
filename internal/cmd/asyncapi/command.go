@@ -14,6 +14,7 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 	}
 
 	cmd.AddCommand(newExportCommand(prerunner))
+	cmd.AddCommand(newImportCommand(prerunner))
 
 	return cmd
 }

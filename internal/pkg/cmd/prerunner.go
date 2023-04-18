@@ -15,6 +15,7 @@ import (
 	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	"github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1"
 
+	"github.com/confluentinc/cli/internal/pkg/auth"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -74,52 +75,20 @@ type AuthenticatedCLICommand struct {
 	State             *v1.ContextState
 }
 
-type AuthenticatedStateFlagCommand struct {
-	*AuthenticatedCLICommand
-}
-
-type StateFlagCommand struct {
-	*CLICommand
-}
-
 type HasAPIKeyCLICommand struct {
 	*CLICommand
 }
 
 func NewAuthenticatedCLICommand(cmd *cobra.Command, prerunner PreRunner) *AuthenticatedCLICommand {
 	c := &AuthenticatedCLICommand{CLICommand: NewCLICommand(cmd, prerunner)}
-	cmd.PersistentPreRunE = prerunner.Authenticated(c)
-	c.Command = cmd
-	return c
-}
-
-// Returns AuthenticatedStateFlagCommand used for cloud authenticated commands that require (or have child commands that require) state flags (i.e. cluster, environment, context)
-func NewAuthenticatedStateFlagCommand(cmd *cobra.Command, prerunner PreRunner) *AuthenticatedStateFlagCommand {
-	c := &AuthenticatedStateFlagCommand{NewAuthenticatedCLICommand(cmd, prerunner)}
-	cmd.PersistentPreRunE = Chain(prerunner.Authenticated(c.AuthenticatedCLICommand), prerunner.ParseFlagsIntoContext(c.AuthenticatedCLICommand))
-	c.Command = cmd
-	return c
-}
-
-// Returns AuthenticatedStateFlagCommand used for mds authenticated commands that require (or have child commands that require) state flags (i.e. context)
-func NewAuthenticatedWithMDSStateFlagCommand(cmd *cobra.Command, prerunner PreRunner) *AuthenticatedStateFlagCommand {
-	c := &AuthenticatedStateFlagCommand{NewAuthenticatedWithMDSCLICommand(cmd, prerunner)}
-	cmd.PersistentPreRunE = Chain(prerunner.AuthenticatedWithMDS(c.AuthenticatedCLICommand), prerunner.ParseFlagsIntoContext(c.AuthenticatedCLICommand))
-	c.Command = cmd
-	return c
-}
-
-// Returns StateFlagCommand used for non-authenticated commands that require (or have child commands that require) state flags (i.e. cluster, environment, context)
-func NewAnonymousStateFlagCommand(cmd *cobra.Command, prerunner PreRunner) *StateFlagCommand {
-	c := &StateFlagCommand{NewAnonymousCLICommand(cmd, prerunner)}
-	cmd.PersistentPreRunE = Chain(prerunner.Anonymous(c.CLICommand, false), prerunner.AnonymousParseFlagsIntoContext(c.CLICommand))
+	cmd.PersistentPreRunE = Chain(prerunner.Authenticated(c), prerunner.ParseFlagsIntoContext(c))
 	c.Command = cmd
 	return c
 }
 
 func NewAuthenticatedWithMDSCLICommand(cmd *cobra.Command, prerunner PreRunner) *AuthenticatedCLICommand {
 	c := &AuthenticatedCLICommand{CLICommand: NewCLICommand(cmd, prerunner)}
-	cmd.PersistentPreRunE = prerunner.AuthenticatedWithMDS(c)
+	cmd.PersistentPreRunE = Chain(prerunner.AuthenticatedWithMDS(c), prerunner.ParseFlagsIntoContext(c))
 	c.Command = cmd
 	return c
 }
@@ -133,7 +102,7 @@ func NewHasAPIKeyCLICommand(cmd *cobra.Command, prerunner PreRunner) *HasAPIKeyC
 
 func NewAnonymousCLICommand(cmd *cobra.Command, prerunner PreRunner) *CLICommand {
 	c := NewCLICommand(cmd, prerunner)
-	cmd.PersistentPreRunE = prerunner.Anonymous(c, false)
+	cmd.PersistentPreRunE = Chain(prerunner.Anonymous(c, false), prerunner.AnonymousParseFlagsIntoContext(c))
 	c.Command = cmd
 	return c
 }
@@ -146,18 +115,6 @@ func NewCLICommand(cmd *cobra.Command, prerunner PreRunner) *CLICommand {
 	}
 }
 
-func (s *AuthenticatedStateFlagCommand) AddCommand(cmd *cobra.Command) {
-	s.AuthenticatedCLICommand.AddCommand(cmd)
-}
-
-func (c *AuthenticatedCLICommand) AddCommand(cmd *cobra.Command) {
-	c.Command.AddCommand(cmd)
-}
-
-func (s *StateFlagCommand) AddCommand(cmd *cobra.Command) {
-	s.Command.AddCommand(cmd)
-}
-
 func (c *AuthenticatedCLICommand) GetKafkaREST() (*KafkaREST, error) {
 	return (*c.KafkaRESTProvider)()
 }
@@ -166,20 +123,13 @@ func (c *AuthenticatedCLICommand) AuthToken() string {
 	return c.Context.GetAuthToken()
 }
 
-func (c *AuthenticatedCLICommand) EnvironmentId() (string, error) {
-	if c.Context.GetEnvironment() == nil {
-		return "", errors.NewErrorWithSuggestions(errors.NoEnvironmentFoundErrorMsg, errors.NoEnvironmentFoundSuggestions)
-	}
-	return c.Context.GetEnvironment().GetId(), nil
-}
-
 func (h *HasAPIKeyCLICommand) AddCommand(cmd *cobra.Command) {
 	cmd.PersistentPreRunE = h.PersistentPreRunE
 	h.Command.AddCommand(cmd)
 }
 
 // Anonymous provides PreRun operations for commands that may be run without a logged-in user
-func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(cmd *cobra.Command, args []string) error {
+func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		// Wait for a potential auto-login in the Authenticated PreRun function before checking run requirements.
 		if !willAuthenticate {
@@ -293,7 +243,7 @@ func IsFlagRequired(flag *pflag.Flag) bool {
 }
 
 // Authenticated provides PreRun operations for commands that require a logged-in Confluent Cloud user.
-func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra.Command, args []string) error {
+func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		if err := r.Anonymous(command.CLICommand, true)(cmd, args); err != nil {
 			return err
@@ -339,18 +289,22 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 			return err
 		}
 
-		return r.setCCloudClient(command)
+		if err := r.setCCloudClient(command); err != nil {
+			return err
+		}
+
+		return nil
 	}
 }
 
-func (r *PreRun) ParseFlagsIntoContext(command *AuthenticatedCLICommand) func(cmd *cobra.Command, args []string) error {
+func (r *PreRun) ParseFlagsIntoContext(command *AuthenticatedCLICommand) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		ctx := command.Context
 		return ctx.ParseFlagsIntoContext(cmd, command.Client)
 	}
 }
 
-func (r *PreRun) AnonymousParseFlagsIntoContext(command *CLICommand) func(cmd *cobra.Command, args []string) error {
+func (r *PreRun) AnonymousParseFlagsIntoContext(command *CLICommand) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		return command.Config.Context().ParseFlagsIntoContext(cmd, nil)
 	}
@@ -373,14 +327,18 @@ func (r *PreRun) setAuthenticatedContext(cliCommand *AuthenticatedCLICommand) er
 }
 
 func (r *PreRun) ccloudAutoLogin(netrcMachineName string) error {
-	orgResourceId := r.Config.GetLastUsedOrgId()
+	manager := auth.NewLoginOrganizationManagerImpl()
+	organizationId := auth.GetLoginOrganization(
+		manager.GetLoginOrganizationFromConfigurationFile(r.Config),
+		manager.GetLoginOrganizationFromEnvironmentVariable(),
+	)
 
 	url := pauth.CCloudURL
 	if ctxUrl := r.Config.Context().GetPlatformServer(); ctxUrl != "" {
 		url = ctxUrl
 	}
 
-	credentials, err := r.getCCloudCredentials(netrcMachineName, url, orgResourceId)
+	credentials, err := r.getCCloudCredentials(netrcMachineName, url, organizationId)
 	if err != nil {
 		return err
 	}
@@ -398,7 +356,7 @@ func (r *PreRun) ccloudAutoLogin(netrcMachineName string) error {
 
 	log.CliLogger.Debug(errors.AutoLoginMsg)
 	log.CliLogger.Debugf(errors.LoggedInAsMsgWithOrg, credentials.Username, currentOrg.ResourceId, currentOrg.Name)
-	log.CliLogger.Debugf(errors.LoggedInUsingEnvMsg, currentEnv.GetId(), currentEnv.GetName())
+	log.CliLogger.Debugf(errors.LoggedInUsingEnvMsg, currentEnv)
 
 	return nil
 }
@@ -456,7 +414,7 @@ func (r *PreRun) setCCloudClient(c *AuthenticatedCLICommand) error {
 		if err != nil {
 			return nil, err
 		}
-		environmentId, err := c.EnvironmentId()
+		environmentId, err := c.Context.EnvironmentId()
 		if err != nil {
 			return nil, err
 		}
@@ -562,7 +520,7 @@ func (r *PreRun) createCCloudClient(ctx *dynamicconfig.DynamicContext, ver *vers
 }
 
 // Authenticated provides PreRun operations for commands that require a logged-in MDS user.
-func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(cmd *cobra.Command, args []string) error {
+func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		if err := r.Anonymous(command.CLICommand, true)(cmd, args); err != nil {
 			return err
@@ -701,7 +659,7 @@ func (r *PreRun) createMDSClient(ctx *dynamicconfig.DynamicContext, ver *version
 
 // InitializeOnPremKafkaRest provides PreRun operations for on-prem commands that require a Kafka REST Proxy client. (ccloud RP commands use Authenticated prerun)
 // Initializes a default KafkaRestClient
-func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) func(cmd *cobra.Command, args []string) error {
+func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		// pass mds token as bearer token otherwise use http basic auth
 		// no error means user is logged in with mds and has valid token; on an error we try http basic auth since mds is not needed for RP commands
@@ -962,8 +920,12 @@ func (r *PreRun) getUpdatedAuthToken(ctx *dynamicconfig.DynamicContext, unsafeTr
 	}
 
 	if r.Config.IsCloudLogin() {
-		orgResourceId := r.Config.GetLastUsedOrgId()
-		return r.AuthTokenHandler.GetCCloudTokens(r.CCloudClientFactory, ctx.Platform.Server, credentials, false, orgResourceId)
+		manager := auth.NewLoginOrganizationManagerImpl()
+		organizationId := auth.GetLoginOrganization(
+			manager.GetLoginOrganizationFromConfigurationFile(r.Config),
+			manager.GetLoginOrganizationFromEnvironmentVariable(),
+		)
+		return r.AuthTokenHandler.GetCCloudTokens(r.CCloudClientFactory, ctx.Platform.Server, credentials, false, organizationId)
 	} else {
 		mdsClientManager := pauth.MDSClientManagerImpl{}
 		client, err := mdsClientManager.GetMDSClient(ctx.Platform.Server, ctx.Platform.CaCertPath, unsafeTrace)

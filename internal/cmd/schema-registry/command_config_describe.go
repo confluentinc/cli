@@ -2,7 +2,6 @@ package schemaregistry
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/spf13/cobra"
@@ -13,7 +12,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 type configOut struct {
@@ -29,11 +27,11 @@ func (c *command) newConfigDescribeCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Describe the configuration of subject "payments".`,
-				Code: fmt.Sprintf("%s schema-registry config describe --subject payments", pversion.CLIName),
+				Code: "confluent schema-registry config describe --subject payments",
 			},
 			examples.Example{
 				Text: "Describe the top-level configuration.",
-				Code: fmt.Sprintf("%s schema-registry config describe", pversion.CLIName),
+				Code: "confluent schema-registry config describe",
 			},
 		),
 	}

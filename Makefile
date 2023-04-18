@@ -59,8 +59,8 @@ S3_STAG_PATH=s3://confluent.cloud/$(S3_STAG_FOLDER_NAME)
 
 .PHONY: clean
 clean:
-	@for dir in bin dist docs legal release-notes; do \
-		[ -d $$dir ] && rm -r $$dir || true ; \
+	for dir in bin dist docs legal release-notes; do \
+		[ -d $$dir ] && rm -r $$dir || true; \
 	done
 
 .PHONY: lint
@@ -69,7 +69,7 @@ lint: lint-go lint-cli
 .PHONY: lint-go
 lint-go:
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.51.1 && \
-	golangci-lint run --enable dupword,exportloopref,gci,gocritic,gofmt,goimports,gomoddirectives,govet,ineffassign,misspell,nakedret,nolintlint,nonamedreturns,prealloc,predeclared,tenv,unconvert,unparam,unused,usestdlibvars,whitespace --timeout=10m
+	golangci-lint run --timeout=10m
 	@echo "✅  golangci-lint"
 
 .PHONY: lint-cli

@@ -23,13 +23,17 @@ func (c *mirrorCommand) newListCommand() *cobra.Command {
 		RunE:  c.list,
 		Example: examples.BuildExampleString(
 			examples.Example{
+				Text: "List all mirror topics in the cluster:",
+				Code: "confluent kafka mirror list --cluster lkc-1234",
+			},
+			examples.Example{
 				Text: `List all active mirror topics under "my-link":`,
 				Code: "confluent kafka mirror list --link my-link --mirror-status active",
 			},
 		),
 	}
 
-	cmd.Flags().String(linkFlagName, "", "Cluster link name. If not specified, list all mirror topics in the cluster.")
+	pcmd.AddLinkFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String(mirrorStatusFlagName, "", "Mirror topic status. Can be one of [active, failed, paused, stopped, pending_stopped]. If not specified, list all mirror topics.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -58,7 +62,7 @@ func (c *mirrorCommand) list(cmd *cobra.Command, _ []string) error {
 		return errors.New(errors.RestProxyNotAvailableMsg)
 	}
 
-	lkc, err := getKafkaClusterLkcId(c.AuthenticatedStateFlagCommand)
+	lkc, err := getKafkaClusterLkcId(c.AuthenticatedCLICommand)
 	if err != nil {
 		return err
 	}

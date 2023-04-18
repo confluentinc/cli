@@ -15,9 +15,9 @@ import (
 func getTestConsumerShare() cdxv1.CdxV1ConsumerShare {
 	expiresAt, _ := time.Parse(time.RFC3339, "2022-07-22T22:08:41+00:00")
 	return cdxv1.CdxV1ConsumerShare{
-		Id:                       stringToPtr("ss-12345"),
-		ProviderUserName:         stringToPtr("provider"),
-		ProviderOrganizationName: stringPtr("provider org"),
+		Id:                       cdxv1.PtrString("ss-12345"),
+		ProviderUserName:         cdxv1.PtrString("provider"),
+		ProviderOrganizationName: cdxv1.PtrString("provider org"),
 		Status:                   &cdxv1.CdxV1ConsumerShareStatus{Phase: "active"},
 		InviteExpiresAt:          &expiresAt,
 	}
@@ -25,14 +25,14 @@ func getTestConsumerShare() cdxv1.CdxV1ConsumerShare {
 
 func getTestConsumerSharedResource() cdxv1.CdxV1ConsumerSharedResource {
 	return cdxv1.CdxV1ConsumerSharedResource{
-		Id: stringToPtr("sr-12345"),
+		Id: cdxv1.PtrString("sr-12345"),
 	}
 }
 
 func getTestAWSNetwork() *cdxv1.CdxV1AwsNetwork {
 	return &cdxv1.CdxV1AwsNetwork{
 		Kind:                       "AwsNetwork",
-		PrivateLinkEndpointService: stringToPtr("com.amazonaws.vpce.us-west-2.vpce-svc-0000000000"),
+		PrivateLinkEndpointService: cdxv1.PtrString("com.amazonaws.vpce.us-west-2.vpce-svc-0000000000"),
 	}
 }
 
@@ -41,11 +41,11 @@ func getTestProviderShare() cdxv1.CdxV1ProviderShare {
 	redeemedAt, _ := time.Parse(time.RFC3339, "2022-07-21T22:08:41+00:00")
 	expiresAt, _ := time.Parse(time.RFC3339, "2022-07-22T22:08:41+00:00")
 	return cdxv1.CdxV1ProviderShare{
-		Id:                       stringToPtr("ss-12345"),
-		ConsumerUserName:         stringToPtr("consumer"),
-		ConsumerOrganizationName: stringToPtr("consumer org"),
+		Id:                       cdxv1.PtrString("ss-12345"),
+		ConsumerUserName:         cdxv1.PtrString("consumer"),
+		ConsumerOrganizationName: cdxv1.PtrString("consumer org"),
 		Status:                   &cdxv1.CdxV1ProviderShareStatus{Phase: "active"},
-		DeliveryMethod:           stringToPtr("email"),
+		DeliveryMethod:           cdxv1.PtrString("email"),
 		RedeemedAt:               &redeemedAt,
 		InvitedAt:                &invitedAt,
 		InviteExpiresAt:          &expiresAt,
@@ -127,13 +127,13 @@ func handleStreamSharingConsumerShare(t *testing.T) http.HandlerFunc {
 func handleStreamSharingRedeemToken(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		response := cdxv1.CdxV1RedeemTokenResponse{
-			Id:                   stringPtr("ss-12345"),
-			ApiKey:               stringPtr("00000000000000000000"),
-			Secret:               stringPtr("00000000000000000000"),
-			KafkaBootstrapUrl:    stringPtr("pkc-00000.us-east1.gcp.confluent.cloud:9092"),
-			SchemaRegistryUrl:    stringToPtr("https://psrc-xyz123.us-west-2.aws.cpdev.cloud"),
-			SchemaRegistryApiKey: stringPtr("00000000000000000000"),
-			SchemaRegistrySecret: stringPtr("00000000000000000000"),
+			Id:                   cdxv1.PtrString("ss-12345"),
+			ApiKey:               cdxv1.PtrString("00000000000000000000"),
+			Secret:               cdxv1.PtrString("00000000000000000000"),
+			KafkaBootstrapUrl:    cdxv1.PtrString("pkc-00000.us-east1.gcp.confluent.cloud:9092"),
+			SchemaRegistryUrl:    cdxv1.PtrString("https://psrc-xyz123.us-west-2.aws.cpdev.cloud"),
+			SchemaRegistryApiKey: cdxv1.PtrString("00000000000000000000"),
+			SchemaRegistrySecret: cdxv1.PtrString("00000000000000000000"),
 			Resources: &[]cdxv1.CdxV1RedeemTokenResponseResourcesOneOf{
 				{
 					CdxV1SharedTopic: &cdxv1.CdxV1SharedTopic{
@@ -171,7 +171,7 @@ func handleConsumerSharedResources(t *testing.T) http.HandlerFunc {
 func handlePrivateLinkNetworkConfig(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		network := cdxv1.CdxV1Network{
-			DnsDomain:       stringToPtr("abc123.us-west-2.aws.stag.cpdev.cloud"),
+			DnsDomain:       cdxv1.PtrString("abc123.us-west-2.aws.stag.cpdev.cloud"),
 			Zones:           &[]string{"usw2-az1", "usw2-az3", "usw2-az2"},
 			ZonalSubdomains: &map[string]string{"usw2-az2": "usw2-az2.abc123.us-west-2.aws.stag.cpdev.cloud"},
 			Cloud:           &cdxv1.CdxV1NetworkCloudOneOf{CdxV1AwsNetwork: getTestAWSNetwork()},

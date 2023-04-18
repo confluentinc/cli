@@ -7,8 +7,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
-
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -39,9 +37,12 @@ func (c *command) newListCommand() *cobra.Command {
 }
 
 func (c *command) list(cmd *cobra.Command, _ []string) error {
-	org := &ccloudv1.Organization{Id: c.Context.GetOrganization().GetId()}
+	user, err := c.Client.Auth.User(context.Background())
+	if err != nil {
+		return err
+	}
 
-	codes, err := c.Client.Billing.GetClaimedPromoCodes(context.Background(), org, true)
+	codes, err := c.Client.Billing.GetClaimedPromoCodes(context.Background(), user.GetOrganization(), true)
 	if err != nil {
 		return err
 	}

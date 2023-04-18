@@ -13,7 +13,7 @@ import (
 )
 
 func (d *DynamicContext) FetchCluster(clusterId string) (*v1.KafkaClusterConfig, error) {
-	environmentId, err := d.AuthenticatedEnvId()
+	environmentId, err := d.EnvironmentId()
 	if err != nil {
 		return nil, err
 	}

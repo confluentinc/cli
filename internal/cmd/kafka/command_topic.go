@@ -25,7 +25,7 @@ type hasAPIKeyTopicCommand struct {
 }
 
 type authenticatedTopicCommand struct {
-	*pcmd.AuthenticatedStateFlagCommand
+	*pcmd.AuthenticatedCLICommand
 	prerunner pcmd.PreRunner
 	clientID  string
 }
@@ -42,7 +42,7 @@ func newTopicCommand(cfg *v1.Config, prerunner pcmd.PreRunner, clientID string) 
 	}
 
 	if cfg.IsCloudLogin() {
-		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)
+		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedCLICommand(cmd, prerunner)
 
 		cmd.AddCommand(newConsumeCommand(prerunner, clientID))
 		cmd.AddCommand(c.newCreateCommand())
@@ -52,7 +52,7 @@ func newTopicCommand(cfg *v1.Config, prerunner pcmd.PreRunner, clientID string) 
 		cmd.AddCommand(newProduceCommand(prerunner, clientID))
 		cmd.AddCommand(c.newUpdateCommand())
 	} else {
-		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner)
+		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)
 		c.PersistentPreRunE = prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand)
 
 		cmd.AddCommand(c.newConsumeCommandOnPrem())
@@ -146,7 +146,7 @@ func (c *authenticatedTopicCommand) getNumPartitions(topicName string) (int, err
 }
 
 func (c *authenticatedTopicCommand) provisioningClusterCheck(lkc string) error {
-	environmentId, err := c.EnvironmentId()
+	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}

@@ -63,7 +63,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, _ []string) error {
 		Config: userConfigs,
 	}
 
-	environmentId, err := c.EnvironmentId()
+	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}

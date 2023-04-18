@@ -6,8 +6,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
-
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -38,13 +36,17 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	user, err := c.Client.Auth.User(context.Background())
+	if err != nil {
+		return err
+	}
+
 	stripeToken, err := utils.NewStripeToken(f.Responses["card number"].(string), f.Responses["expiration"].(string), f.Responses["cvc"].(string), f.Responses["name"].(string), c.isTest)
 	if err != nil {
 		return err
 	}
 
-	org := &ccloudv1.Organization{Id: c.Context.GetOrganization().GetId()}
-	if err := c.Client.Billing.UpdatePaymentInfo(context.Background(), org, stripeToken.ID); err != nil {
+	if err := c.Client.Billing.UpdatePaymentInfo(context.Background(), user.GetOrganization(), stripeToken.ID); err != nil {
 		return err
 	}
 

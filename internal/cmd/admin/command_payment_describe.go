@@ -22,15 +22,18 @@ func (c *command) newDescribeCommand() *cobra.Command {
 }
 
 func (c *command) describe(cmd *cobra.Command, _ []string) error {
-	org := &ccloudv1.Organization{Id: c.Context.GetOrganization().GetId()}
-	marketplace := c.Context.GetOrganization().GetMarketplace()
-
-	card, err := c.Client.Billing.GetPaymentInfo(context.Background(), org)
+	user, err := c.Client.Auth.User(context.Background())
 	if err != nil {
 		return err
 	}
 
-	if marketplace != nil && marketplace.GetPartner() != ccloudv1.MarketplacePartner_UNKNOWN {
+	card, err := c.Client.Billing.GetPaymentInfo(context.Background(), user.GetOrganization())
+	if err != nil {
+		return err
+	}
+
+	marketplace := user.GetOrganization().GetMarketplace()
+	if marketplace.GetPartner() != ccloudv1.MarketplacePartner_UNKNOWN {
 		output.Printf("Organization is currently linked to %s Marketplace account.\n", marketplace.GetPartner())
 	}
 
