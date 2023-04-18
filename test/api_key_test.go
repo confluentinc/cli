@@ -59,7 +59,6 @@ func (s *CLITestSuite) TestApiKey() {
 
 		// delete API key that is in use
 		{args: "api-key delete MYKEY5 --force", fixture: "api-key/24.golden"},
-		{args: "api-key delete MYKEY5", input: "y\n", fixture: "api-key/24-prompt.golden"},
 		{args: "api-key list --resource lkc-other1", fixture: "api-key/25.golden"},
 
 		// store an API key for kafka cluster
@@ -167,6 +166,23 @@ func (s *CLITestSuite) TestApiKeyDescribe() {
 	}
 }
 
+func (s *CLITestSuite) TestApiKeyDelete() {
+	tests := []CLITest{
+		// delete multiple API keys
+		{args: "api-key delete MYKEY6 MYKEY17 MYKEY18", fixture: "api-key/delete/1.golden", exitCode: 1},
+		{args: "api-key delete MYKEY7 MYKEY8 MYKEY19", input: "y\n", fixture: "api-key/delete/3.golden", exitCode: 1},
+		{args: "api-key delete MYKEY7 MYKEY8", input: "y\n", fixture: "api-key/delete/4.golden"},
+		{args: "api-key delete MYKEY17 MYKEY18", fixture: "api-key/delete/5.golden", exitCode: 1},
+	}
+
+	resetConfiguration(s.T(), false)
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestApiKeyCreate_ServiceAccountNotValid() {
 	tt := CLITest{args: "api-key create --resource lkc-ab123 --service-account sa-123456", login: "cloud", fixture: "api-key/55.golden", exitCode: 1}
 	s.runIntegrationTest(tt)
@@ -177,7 +193,7 @@ func (s *CLITestSuite) TestApiKey_EnvironmentNotValid() {
 	s.runIntegrationTest(tt)
 }
 
-func (s *CLITestSuite) TestApiKeyAutocomplete() {
+func (s *CLITestSuite) TestApiKey_Autocomplete() {
 	test := CLITest{args: `__complete api-key describe ""`, login: "cloud", fixture: "api-key/describe-autocomplete.golden"}
 	s.runIntegrationTest(test)
 }
