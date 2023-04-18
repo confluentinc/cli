@@ -166,7 +166,7 @@ func (s *CLITestSuite) TestApiKeyDescribe() {
 	}
 }
 
-func (s *CLITestSuite) TestAPIKeyDelete() {
+func (s *CLITestSuite) TestApiKeyDelete() {
 	tests := []CLITest{
 		// delete multiple API keys
 		{args: "api-key delete MYKEY6 MYKEY17 MYKEY18", fixture: "api-key/delete/1.golden", exitCode: 1},
