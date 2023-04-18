@@ -209,7 +209,7 @@ const (
 	KsqlDBTerminateClusterErrorMsg = `failed to terminate ksqlDB cluster "%s" due to "%s"`
 
 	// local commands
-	ConfluentLocalStartedErrorMsg    = "Confluent local container has been created"
+	ConfluentLocalStartedErrorMsg    = "Confluent local container has already been created"
 	ConfluentLocalStartedSuggestions = "Continue your experience with Confluent local running `confluent local kafka produce` and `confluent local kafka consume`.\n" +
 		"To stop Confluent local container, run `confluent local kafka stop`."
 	FailedToReadPortsErrorMsg    = "failed to read local ports from config"
