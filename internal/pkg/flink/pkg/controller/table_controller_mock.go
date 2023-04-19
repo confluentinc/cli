@@ -49,34 +49,8 @@ func (mr *MockTableControllerInterfaceMockRecorder) AppInputCapture(arg0 interfa
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AppInputCapture", reflect.TypeOf((*MockTableControllerInterface)(nil).AppInputCapture), arg0)
 }
 
-// Borders mocks base method.
-func (m *MockTableControllerInterface) Borders() {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "Borders")
-}
-
-// Borders indicates an expected call of Borders.
-func (mr *MockTableControllerInterfaceMockRecorder) Borders() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Borders", reflect.TypeOf((*MockTableControllerInterface)(nil).Borders))
-}
-
-// HandleCellEvent mocks base method.
-func (m *MockTableControllerInterface) HandleCellEvent(arg0 *v2.EventKey) *v2.EventKey {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "HandleCellEvent", arg0)
-	ret0, _ := ret[0].(*v2.EventKey)
-	return ret0
-}
-
-// HandleCellEvent indicates an expected call of HandleCellEvent.
-func (mr *MockTableControllerInterfaceMockRecorder) HandleCellEvent(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HandleCellEvent", reflect.TypeOf((*MockTableControllerInterface)(nil).HandleCellEvent), arg0)
-}
-
 // SetDataAndFocus mocks base method.
-func (m *MockTableControllerInterface) SetDataAndFocus(arg0 []types.StatementResultColumn) {
+func (m *MockTableControllerInterface) SetDataAndFocus(arg0 types.ProcessedStatement) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "SetDataAndFocus", arg0)
 }

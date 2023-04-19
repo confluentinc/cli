@@ -1,8 +1,10 @@
 package controller
 
 import (
-	"github.com/confluentinc/flink-sql-client/pkg/types"
 	"strings"
+	"unicode"
+
+	"github.com/confluentinc/flink-sql-client/pkg/types"
 
 	"github.com/atotto/clipboard"
 	"github.com/gdamore/tcell/v2"
@@ -10,8 +12,6 @@ import (
 )
 
 type TableControllerInterface interface {
-	HandleCellEvent(event *tcell.EventKey) *tcell.EventKey
-	Borders()
 	AppInputCapture(event *tcell.EventKey) *tcell.EventKey
 	SetDataAndFocus(statement types.ProcessedStatement)
 	SetInputController(inputController InputControllerInterface)
@@ -19,15 +19,10 @@ type TableControllerInterface interface {
 
 type TableController struct {
 	table           *tview.Table
-	tableStyle      TableStyle
 	appController   ApplicationControllerInterface
 	InputController InputControllerInterface
 	store           StoreInterface
 	results         types.ProcessedStatement
-}
-
-type TableStyle struct {
-	borders bool
 }
 
 func NewTableController(tableRef *tview.Table, store StoreInterface, appController ApplicationControllerInterface) TableControllerInterface {
@@ -43,39 +38,35 @@ func (t *TableController) SetInputController(inputController InputControllerInte
 	t.InputController = inputController
 }
 
-func (t *TableController) HandleCellEvent(event *tcell.EventKey) *tcell.EventKey {
-	if event.Key() == tcell.KeyEscape {
-		// Here we suspend outpude mode/tview aand run the interactive input again
-		t.appController.SuspendOutputMode(t.InputController.RunInteractiveInput)
-
-		return nil
-	}
-
-	return event
-}
-
-func (t *TableController) Borders() {
-	t.tableStyle.borders = !t.tableStyle.borders
-	t.table.SetBorders(t.tableStyle.borders)
-}
-
-// Function to handle shortcuts and keybindings for the whole app
+// Function to handle shortcuts and keybindings for TView
 func (t *TableController) AppInputCapture(event *tcell.EventKey) *tcell.EventKey {
-	if event.Key() == tcell.KeyCtrlT {
-		t.Borders()
-		return nil
-	} else if event.Key() == tcell.KeyCtrlN {
-		// fetch new page
-		newResults, err := t.store.FetchStatementResults(t.results)
-		if err != nil {
-			// todo: handle error
+	if event.Key() == tcell.KeyRune {
+		char := unicode.ToUpper(event.Rune())
+		switch char {
+		case 'Q':
+			t.appController.SuspendOutputMode(t.InputController.RunInteractiveInput)
+			return nil
+		case 'N':
+			// fetch new page
+			newResults, err := t.store.FetchStatementResults(t.results)
+			if err != nil {
+				// todo: handle error when we know which kinds of error to expect from backend - we'll have a ticket
+			}
+			t.SetDataAndFocus(*newResults)
+			return nil
 		}
-		t.SetDataAndFocus(*newResults)
-	} else if event.Key() == tcell.KeyCtrlP {
-		// todo: how to go back?
-	} else if event.Key() == tcell.KeyCtrlC {
-		t.onCtrlC()
-		return nil
+	} else {
+		switch event.Key() {
+		case tcell.KeyCtrlC:
+			t.onCtrlC()
+			return nil
+		case tcell.KeyEscape:
+			t.appController.SuspendOutputMode(t.InputController.RunInteractiveInput)
+			return nil
+		case tcell.KeyCtrlQ:
+			t.appController.SuspendOutputMode(t.InputController.RunInteractiveInput)
+			return nil
+		}
 	}
 	return event
 }

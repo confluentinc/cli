@@ -26,20 +26,15 @@ type Shortcut struct {
 
 // Keyboard shortcuts shown at the bottom.
 var appShortcuts = []Shortcut{
-	{Key: tcell.KeyEscape, KeyText: "Esc", Text: "Return to input"},
 	{Key: tcell.KeyCtrlQ, KeyText: "Q", Text: "Quit"},
-	{Key: tcell.KeyCtrlT, KeyText: "T", Text: "Toggle Display Mode"},
 	{Key: tcell.KeyCtrlT, KeyText: "N", Text: "Next Page"},
-	// disabled for now until we know how to go back
-	// {Key: tcell.KeyCtrlT, KeyText: "P", Text: "Prev Page"},
 }
 
 func (s *ShortcutsController) ShortcutHighlighted(added, removed, remaining []string) {
 	index, _ := strconv.Atoi(added[0])
 	switch appShortcuts[index].Text {
-	case "Toggle Display Mode":
-		s.tableController.Borders()
 	case "Quit":
+		// Todo - go back to input mode
 		s.appController.ExitApplication()
 	}
 }

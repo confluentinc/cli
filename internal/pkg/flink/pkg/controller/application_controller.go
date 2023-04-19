@@ -116,7 +116,6 @@ func StartApp(envId, orgResourceId, kafkaClusterId, computePoolId, authToken str
 	tableController.SetInputController(inputController)
 
 	// Event handlers
-	table.SetInputCapture(tableController.HandleCellEvent)
 	app.SetInputCapture(tableController.AppInputCapture)
 	shortcuts.SetHighlightedFunc(shortcutsController.ShortcutHighlighted)
 	interactiveOutput := components.InteractiveOutput(table, shortcuts)
