@@ -24,7 +24,7 @@ func (s *CLITestSuite) TestBYOK() {
 	}
 }
 
-func(s *CLITestSuite) TestByokDelete() {
+func (s *CLITestSuite) TestByokDelete() {
 	tests := []CLITest{
 		{args: "byok delete cck-001", input: "y\n", fixture: "byok/delete/success.golden"},
 		{args: "byok delete cck-404", fixture: "byok/delete/fail.golden", exitCode: 1},
