@@ -58,7 +58,7 @@ func (s *CLITestSuite) TestApiKey() {
 		{args: "api-key list --resource lkc-other1", fixture: "api-key/23.golden"},
 
 		// delete API key that is in use
-		{args: "api-key delete MYKEY5 --force", fixture: "api-key/24.golden"},
+		{args: "api-key delete MYKEY5 --force", fixture: "api-key/delete/success.golden"},
 		{args: "api-key list --resource lkc-other1", fixture: "api-key/25.golden"},
 
 		// store an API key for kafka cluster
@@ -169,10 +169,9 @@ func (s *CLITestSuite) TestApiKeyDescribe() {
 func (s *CLITestSuite) TestApiKeyDelete() {
 	tests := []CLITest{
 		// delete multiple API keys
-		{args: "api-key delete MYKEY6 MYKEY17 MYKEY18", fixture: "api-key/delete/1.golden", exitCode: 1},
-		{args: "api-key delete MYKEY7 MYKEY8 MYKEY19", input: "y\n", fixture: "api-key/delete/3.golden", exitCode: 1},
-		{args: "api-key delete MYKEY7 MYKEY8", input: "y\n", fixture: "api-key/delete/4.golden"},
-		{args: "api-key delete MYKEY17 MYKEY18", fixture: "api-key/delete/5.golden", exitCode: 1},
+		{args: "api-key delete MYKEY7 MYKEY8 MYKEY19", fixture: "api-key/delete/multiple-fail.golden", exitCode: 1},
+		{args: "api-key delete MYKEY6 MYKEY17 MYKEY18", fixture: "api-key/delete/multiple-fail-plural.golden", exitCode: 1},
+		{args: "api-key delete MYKEY7 MYKEY8", input: "y\n", fixture: "api-key/delete/multiple-success.golden"},
 	}
 
 	resetConfiguration(s.T(), false)
