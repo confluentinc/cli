@@ -92,9 +92,6 @@ func StartApp(envId, orgResourceId, kafkaClusterId, computePoolId, authToken str
 	// Client used to communicate with the gateway
 	client := NewGatewayClient(envId, orgResourceId, kafkaClusterId, computePoolId, authToken, appOptions)
 
-	// Store used to process statements and store local properties
-	store := NewStore(client, appOptions)
-
 	// Load history of previous commands from cache file
 	history := LoadHistory()
 
@@ -106,6 +103,9 @@ func StartApp(envId, orgResourceId, kafkaClusterId, computePoolId, authToken str
 	// Instantiate Application Controller - this is the top level controller that will be passed down to all other controllers
 	// and should be used for functions that are not specific to a component
 	appController := NewApplicationController(app, history)
+
+	// Store used to process statements and store local properties
+	store := NewStore(client, appOptions, appController)
 
 	// Instantiate Component Controllers
 	tableController := NewTableController(table, store, appController)

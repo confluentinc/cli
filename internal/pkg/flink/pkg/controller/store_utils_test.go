@@ -1,8 +1,9 @@
 package controller
 
 import (
-	"github.com/confluentinc/flink-sql-client/pkg/types"
 	"testing"
+
+	"github.com/confluentinc/flink-sql-client/pkg/types"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -77,7 +78,7 @@ func TestRemoveWhiteSpaces(t *testing.T) {
 func TestProcessSetStatement(t *testing.T) {
 	// Create a new store
 	client := NewGatewayClient("envId", "orgResourceId", "kafkaClusterId", "computePoolId", "authToken", nil)
-	s := NewStore(client, nil).(*Store)
+	s := NewStore(client, nil, nil).(*Store)
 
 	t.Run("should return an error message if statement is invalid", func(t *testing.T) {
 		_, err := s.processSetStatement("se key=value")
@@ -128,7 +129,7 @@ func TestProcessSetStatement(t *testing.T) {
 func TestProcessResetStatement(t *testing.T) {
 	// Create a new store
 	client := NewGatewayClient("envId", "orgResourceId", "kafkaClusterId", "computePoolId", "authToken", nil)
-	s := NewStore(client, nil).(*Store)
+	s := NewStore(client, nil, nil).(*Store)
 
 	t.Run("should return an error message if statement is invalid", func(t *testing.T) {
 		_, err := s.processResetStatement("res key")
@@ -171,7 +172,7 @@ func TestProcessResetStatement(t *testing.T) {
 func TestProcessUseStatement(t *testing.T) {
 	// Create a new store
 	client := NewGatewayClient("envId", "orgResourceId", "kafkaClusterId", "computePoolId", "authToken", nil)
-	s := NewStore(client, nil).(*Store)
+	s := NewStore(client, nil, nil).(*Store)
 
 	t.Run("should return an error message if statement is invalid", func(t *testing.T) {
 		_, err := s.processUseStatement("us")
@@ -222,5 +223,6 @@ func TestParseStatementType(t *testing.T) {
 	require.Equal(t, SET_STATEMENT, parseStatementType("set ..."))
 	require.Equal(t, USE_STATEMENT, parseStatementType("use ..."))
 	require.Equal(t, RESET_STATEMENT, parseStatementType("reset ..."))
+	require.Equal(t, EXIT_STATEMENT, parseStatementType("exit;"))
 	require.Equal(t, OTHER_STATEMENT, parseStatementType("Some other statement"))
 }

@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	v1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"
+	gomock "github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 )
@@ -26,7 +27,8 @@ func TestStoreTestSuite(t *testing.T) {
 func TestStore_ProcessLocalStatement(t *testing.T) {
 	// Create a new store
 	client := NewGatewayClient("envId", "orgResourceId", "kafkaClusterId", "computePoolId", "authToken", nil)
-	s := NewStore(client, nil).(*Store)
+	mockAppController := NewMockApplicationControllerInterface(gomock.NewController(t))
+	s := NewStore(client, nil, mockAppController).(*Store)
 
 	result, err := s.ProcessLocalStatement("SET foo=bar;")
 	assert.Nil(t, err)
@@ -44,6 +46,11 @@ func TestStore_ProcessLocalStatement(t *testing.T) {
 	assert.True(t, result.IsLocalStatement)
 
 	result, err = s.ProcessLocalStatement("SELECT * FROM users;")
+	assert.Nil(t, err)
+	assert.Nil(t, result)
+
+	mockAppController.EXPECT().ExitApplication().Times(1)
+	result, err = s.ProcessLocalStatement("EXIT;")
 	assert.Nil(t, err)
 	assert.Nil(t, result)
 }
@@ -93,6 +100,23 @@ func (s *StoreTestSuite) TestIsResetStatement() {
 	assert.False(s.T(), false, statementStartsWithOp("should be false", configOpReset))
 	assert.False(s.T(), false, statementStartsWithOp("USE", configOpReset))
 	assert.False(s.T(), false, statementStartsWithOp("RESETTING", configOpReset))
+}
+
+func (s *StoreTestSuite) TestIsExitStatement() {
+	assert.True(s.T(), true, statementStartsWithOp("EXIT", configOpExit))
+	assert.True(s.T(), true, statementStartsWithOp("EXIT ;", configOpExit))
+	assert.True(s.T(), true, statementStartsWithOp("exit   ;", configOpExit))
+	assert.True(s.T(), true, statementStartsWithOp("exiT   ", configOpExit))
+	assert.True(s.T(), true, statementStartsWithOp("Exit   ", configOpExit))
+	assert.True(s.T(), true, statementStartsWithOp("eXit   ", configOpExit))
+	assert.True(s.T(), true, statementStartsWithOp("exit", configOpExit))
+	assert.True(s.T(), true, statementStartsWithOp("exit ", configOpExit))
+
+	assert.False(s.T(), false, statementStartsWithOp("exits", configOpReset))
+	assert.False(s.T(), false, statementStartsWithOp("", configOpReset))
+	assert.False(s.T(), false, statementStartsWithOp("should be false", configOpReset))
+	assert.False(s.T(), false, statementStartsWithOp("exitt;", configOpReset))
+	assert.False(s.T(), false, statementStartsWithOp("exi", configOpReset))
 }
 
 func (s *StoreTestSuite) TestParseSETStatement() {

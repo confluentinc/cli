@@ -3,10 +3,11 @@ package controller
 import (
 	"context"
 	_ "embed"
+	"strings"
+
 	"github.com/confluentinc/flink-sql-client/pkg/converter"
 	"github.com/confluentinc/flink-sql-client/pkg/types"
 	"github.com/confluentinc/flink-sql-client/test/generators"
-	"strings"
 )
 
 const (
@@ -14,6 +15,7 @@ const (
 	configOpSet               = "SET"
 	configOpUse               = "USE"
 	configOpReset             = "RESET"
+	configOpExit              = "EXIT"
 	configOpUseCatalog        = "CATALOG"
 	configStatementTerminator = ";"
 
@@ -34,6 +36,7 @@ type StoreInterface interface {
 type Store struct {
 	Properties          map[string]string
 	ProcessedStatements []types.ProcessedStatement
+	appController       ApplicationControllerInterface
 	client              *GatewayClient
 	appOptions          *ApplicationOptions
 }
@@ -46,6 +49,9 @@ func (s *Store) ProcessLocalStatement(statement string) (*types.ProcessedStateme
 		return s.processResetStatement(statement)
 	case USE_STATEMENT:
 		return s.processUseStatement(statement)
+	case EXIT_STATEMENT:
+		s.appController.ExitApplication()
+		return nil, nil
 	default:
 		return nil, nil
 	}
@@ -122,7 +128,7 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 	return &statement, nil
 }
 
-func NewStore(client *GatewayClient, appOptions *ApplicationOptions) StoreInterface {
+func NewStore(client *GatewayClient, appOptions *ApplicationOptions, appController ApplicationControllerInterface) StoreInterface {
 	defaultProperties := make(map[string]string)
 
 	if appOptions != nil && appOptions.DEFAULT_PROPERTIES != nil {
@@ -130,9 +136,10 @@ func NewStore(client *GatewayClient, appOptions *ApplicationOptions) StoreInterf
 	}
 
 	store := Store{
-		Properties: defaultProperties,
-		client:     client,
-		appOptions: appOptions,
+		Properties:    defaultProperties,
+		client:        client,
+		appOptions:    appOptions,
+		appController: appController,
 	}
 
 	return &store

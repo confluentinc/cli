@@ -3,11 +3,12 @@ package controller
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/confluentinc/flink-sql-client/pkg/types"
 	"io"
 	"net/http"
 	"regexp"
 	"strings"
+
+	"github.com/confluentinc/flink-sql-client/pkg/types"
 
 	v1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"
 	"github.com/samber/lo"
@@ -21,6 +22,7 @@ const (
 	SET_STATEMENT   StatementType = configOpSet
 	USE_STATEMENT   StatementType = configOpUse
 	RESET_STATEMENT StatementType = configOpReset
+	EXIT_STATEMENT  StatementType = configOpExit
 	OTHER_STATEMENT StatementType = "OTHER"
 )
 
@@ -307,6 +309,8 @@ func parseStatementType(statement string) StatementType {
 		return USE_STATEMENT
 	} else if statementStartsWithOp(statement, string(RESET_STATEMENT)) {
 		return RESET_STATEMENT
+	} else if statementStartsWithOp(statement, string(EXIT_STATEMENT)) {
+		return EXIT_STATEMENT
 	} else {
 		return OTHER_STATEMENT
 	}
