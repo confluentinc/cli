@@ -288,15 +288,16 @@ func MockResultColumns(numColumns, maxNestingDepth int) *rapid.Generator[[]v1.Co
 	})
 }
 
-func MockResults(numColumns, maxNestingDepth int) *rapid.Generator[types.MockStatementResult] {
+func MockResults(maxNumColumns, maxNestingDepth int) *rapid.Generator[types.MockStatementResult] {
 	return rapid.Custom(func(t *rapid.T) types.MockStatementResult {
-		if numColumns <= 0 {
-			numColumns = rapid.IntRange(1, 5).Draw(t, "column number")
+		if maxNumColumns <= 0 {
+			maxNumColumns = 10
 		}
 		if maxNestingDepth < 0 {
 			maxNestingDepth = 10
 		}
-		columnDetails := MockResultColumns(numColumns, maxNestingDepth).Draw(t, "column details")
+		maxNumColumns = rapid.IntRange(1, maxNumColumns).Draw(t, "column number")
+		columnDetails := MockResultColumns(maxNumColumns, maxNestingDepth).Draw(t, "column details")
 		resultData := rapid.SliceOfN(MockResultRow(columnDetails), 20, 50).Draw(t, "result data")
 
 		return types.MockStatementResult{
