@@ -1,12 +1,15 @@
 package iam
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	pacl "github.com/confluentinc/cli/internal/pkg/acl"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *aclCommand) newDeleteCommand() *cobra.Command {
@@ -46,9 +49,9 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		return c.handleACLError(cmd, err, response)
 	}
 
-	promptMsg := pacl.DeleteACLConfirmMsg
+	promptMsg := fmt.Sprintf(pacl.DeleteACLConfirmMsg, "ACL")
 	if len(bindings) > 1 {
-		promptMsg = pacl.DeleteACLsConfirmMsg
+		promptMsg = fmt.Sprintf(pacl.DeleteACLConfirmMsg, resource.Plural("ACL"))
 	}
 	if ok, err := form.ConfirmDeletionYesNoCustomPrompt(cmd, promptMsg); err != nil || !ok {
 		return err

@@ -1,6 +1,8 @@
 package kafka
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	pacl "github.com/confluentinc/cli/internal/pkg/acl"
@@ -72,7 +74,7 @@ func (c *aclCommand) deleteOnPrem(cmd *cobra.Command, _ []string) error {
 		return errors.NewErrorWithSuggestions("ACL matching these parameters not found", ValidACLSuggestion)
 	}
 
-	promptMsg := pacl.DeleteACLConfirmMsg
+	promptMsg := fmt.Sprintf(pacl.DeleteACLConfirmMsg, "ACL")
 	if ok, err := form.ConfirmDeletionYesNoCustomPrompt(cmd, promptMsg); err != nil || !ok {
 		return err
 	}

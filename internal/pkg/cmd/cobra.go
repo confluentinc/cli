@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -54,7 +56,7 @@ func FullParentName(c *cobra.Command) string {
 	}
 
 	for c.HasParent() {
-		name = c.Parent().Name() + " " + name
+		name = fmt.Sprintf("%s %s", c.Parent().Name(), name)
 		c = c.Parent()
 	}
 

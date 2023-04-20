@@ -47,7 +47,7 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 			errs = errors.Join(errs, errors.CatchKafkaNotFoundError(err, id, r))
 		} else {
 			deleted = append(deleted, id)
-			if err := c.Context.RemoveKafkaClusterConfig(id); err != nil {
+			if err := c.deletePostProcess(id); err != nil {
 				errs = errors.Join(errs, err)
 			}
 		}
@@ -96,4 +96,8 @@ func (c *clusterCommand) confirmDeletion(cmd *cobra.Command, environmentId strin
 	}
 
 	return nil
+}
+
+func (c *clusterCommand) deletePostProcess(id string) error {
+	return c.Context.RemoveKafkaClusterConfig(id)
 }

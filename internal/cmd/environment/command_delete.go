@@ -36,18 +36,12 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	var deleted []string
 	for _, id := range args {
 		if err := c.V2Client.DeleteOrgEnvironment(id); err != nil {
-			errs = errors.Join(err)
+			errs = errors.Join(errs, err)
 		} else {
 			deleted = append(deleted, id)
-			if id == c.Context.GetCurrentEnvironment() {
-				c.Context.SetCurrentEnvironment("")
-
-				if err := c.Config.Save(); err != nil {
-					errs = errors.Join(errs, errors.Wrap(err, errors.EnvSwitchErrorMsg))
-				}
+			if err := c.deletePostProcess(id); err != nil {
+				errs = errors.Join(errs, err)
 			}
-			c.Context.DeleteEnvironment(id)
-			_ = c.Config.Save()
 		}
 	}
 	deletion.PrintSuccessfulDeletionMsg(deleted, resource.Environment)
@@ -84,4 +78,19 @@ func (c *command) confirmDeletion(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
+}
+
+func (c *command) deletePostProcess(id string) error {
+	var err error
+	if id == c.Context.GetCurrentEnvironment() {
+		c.Context.SetCurrentEnvironment("")
+
+		if err2 := c.Config.Save(); err2 != nil {
+			err = errors.Wrap(err2, errors.EnvSwitchErrorMsg)
+		}
+	}
+	c.Context.DeleteEnvironment(id)
+	_ = c.Config.Save()
+
+	return err
 }
