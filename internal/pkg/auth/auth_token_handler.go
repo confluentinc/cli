@@ -81,10 +81,10 @@ func (a *AuthTokenHandlerImpl) GetCCloudTokens(clientFactory CCloudClientFactory
 }
 
 func (a *AuthTokenHandlerImpl) getCCloudSSOToken(client *ccloudv1.Client, noBrowser bool, email, orgResourceId string) (string, string, error) {
+	isOkta := types.Contains([]string{"fedramp", "fedramp-internal"}, sso.GetCCloudEnvFromBaseUrl(client.BaseURL))
+
 	var auth0ConnectionName string
-	if types.Contains([]string{"fedramp", "fedramp-internal"}, sso.GetCCloudEnvFromBaseUrl(client.BaseURL)) {
-		auth0ConnectionName = ""
-	} else {
+	if !isOkta {
 		userSSO, err := a.getCCloudUserSSO(client, email, orgResourceId)
 		if err != nil {
 			log.CliLogger.Debugf("unable to obtain user SSO info: %v", err)
@@ -103,7 +103,12 @@ func (a *AuthTokenHandlerImpl) getCCloudSSOToken(client *ccloudv1.Client, noBrow
 
 	req := &ccloudv1.AuthenticateRequest{IdToken: idToken}
 
-	res, err := client.Auth.Login(context.Background(), req)
+	var res *ccloudv1.AuthenticateReply
+	if isOkta {
+		res, err = client.Auth.OktaLogin(context.Background(), req)
+	} else {
+		res, err = client.Auth.Login(context.Background(), req)
+	}
 	if err != nil {
 		return "", "", err
 	}

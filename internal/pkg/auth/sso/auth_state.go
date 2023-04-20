@@ -21,12 +21,12 @@ var (
 
 	ssoConfigs = map[string]ssoConfig{
 		"cpd": {
-			ssoProviderDomain:     "login-cpd.confluent-dev.io",
+			ssoProviderDomain:     "login-cpd.confluent-dev.io/oauth",
 			ssoProviderIdentifier: "https://confluent-cpd.auth0.com/api/v2/",
 			ssoProviderScope:      "email%20openid%20offline_access",
 		},
 		"devel": {
-			ssoProviderDomain:     "login.confluent-dev.io",
+			ssoProviderDomain:     "login.confluent-dev.io/oauth",
 			ssoProviderIdentifier: "https://confluent-dev.auth0.com/api/v2/",
 			ssoProviderScope:      "email%20openid%20offline_access",
 		},
@@ -36,17 +36,17 @@ var (
 			ssoProviderIDP:    "0oa7fi3wpt9LC2ONd1d7",
 		},
 		"stag": {
-			ssoProviderDomain:     "login-stag.confluent-dev.io",
+			ssoProviderDomain:     "login-stag.confluent-dev.io/oauth",
 			ssoProviderIdentifier: "https://confluent-stag.auth0.com/api/v2/",
 			ssoProviderScope:      "email%20openid%20offline_access",
 		},
 		"prod": {
-			ssoProviderDomain:     "login.confluent.io",
+			ssoProviderDomain:     "login.confluent.io/oauth",
 			ssoProviderIdentifier: "https://confluent.auth0.com/api/v2/",
 			ssoProviderScope:      "email%20openid%20offline_access",
 		},
 		"test": {
-			ssoProviderDomain:     "test.com",
+			ssoProviderDomain:     "test.com/oauth",
 			ssoProviderIdentifier: "https://test.auth0.com/api/v2/",
 			ssoProviderScope:      "email%20openid%20offline_access",
 		},
@@ -203,7 +203,7 @@ func (s *authState) saveOAuthTokenResponse(data map[string]any) error {
 }
 
 func (s *authState) getOAuthTokenResponse(payload *strings.Reader) (map[string]any, error) {
-	url := s.SSOProviderHost + "/oauth/token"
+	url := s.SSOProviderHost + "/token"
 	log.CliLogger.Debugf("Oauth token request URL: %s", url)
 	log.CliLogger.Debug("Oauth token request payload: ", payload)
 	req, err := http.NewRequest(http.MethodPost, url, payload)
