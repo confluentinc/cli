@@ -1,6 +1,7 @@
 package pipeline
 
 import (
+	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -50,11 +51,11 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	var errs error
+	errs := &multierror.Error{ErrorFormat: errors.CustomMultierrorList}
 	var deleted []string
 	for _, id := range args {
 		if err := c.V2Client.DeleteSdPipeline(environmentId, cluster.ID, id); err != nil {
-			errs = errors.Join(errs, err)
+			errs = multierror.Append(errs, err)
 		} else {
 			deleted = append(deleted, id)
 		}
@@ -65,7 +66,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		output.Printf("Requested to delete pipelines %s.\n", utils.ArrayToCommaDelimitedString(deleted, "and"))
 	}
 
-	return errs
+	return errs.ErrorOrNil()
 }
 
 func (c *command) confirmDeletion(cmd *cobra.Command, environmentId, clusterId string, args []string) error {

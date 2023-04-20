@@ -1,6 +1,7 @@
 package connect
 
 import (
+	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -54,18 +55,18 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	var errs error
+	errs := &multierror.Error{ErrorFormat: errors.CustomMultierrorList}
 	var deleted []string
 	for _, id := range args {
 		if _, err := c.V2Client.DeleteConnector(connectorIdToName[id], environmentId, kafkaCluster.ID); err != nil {
-			errs = errors.Join(errs, err)
+			errs = multierror.Append(errs, err)
 		} else {
 			deleted = append(deleted, id)
 		}
 	}
 	deletion.PrintSuccessfulDeletionMsg(deleted, resource.Connector)
 
-	return errs
+	return errs.ErrorOrNil()
 }
 
 func (c *clusterCommand) confirmDeletion(cmd *cobra.Command, environmentId, kafkaClusterId string, args []string, connectorIdToName map[string]string) error {

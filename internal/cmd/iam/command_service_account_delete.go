@@ -1,6 +1,7 @@
 package iam
 
 import (
+	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -36,18 +37,18 @@ func (c *serviceAccountCommand) delete(cmd *cobra.Command, args []string) error 
 		return err
 	}
 
-	var errs error
+	errs := &multierror.Error{ErrorFormat: errors.CustomMultierrorList}
 	var deleted []string
 	for _, id := range args {
 		if err := c.V2Client.DeleteIamServiceAccount(id); err != nil {
-			errs = errors.Join(errs, errors.Errorf(errors.DeleteResourceErrorMsg, resource.ServiceAccount, id, err))
+			errs = multierror.Append(errs, errors.Errorf(errors.DeleteResourceErrorMsg, resource.ServiceAccount, id, err))
 		} else {
 			deleted = append(deleted, id)
 		}
 	}
 	deletion.PrintSuccessfulDeletionMsg(deleted, resource.ServiceAccount)
 
-	return errs
+	return errs.ErrorOrNil()
 }
 
 func (c *serviceAccountCommand) confirmDeletion(cmd *cobra.Command, args []string) error {

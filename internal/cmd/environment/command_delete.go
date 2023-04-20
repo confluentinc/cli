@@ -3,6 +3,7 @@ package environment
 import (
 	"fmt"
 
+	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -32,21 +33,21 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	var errs error
+	errs := &multierror.Error{ErrorFormat: errors.CustomMultierrorList}
 	var deleted []string
 	for _, id := range args {
 		if err := c.V2Client.DeleteOrgEnvironment(id); err != nil {
-			errs = errors.Join(errs, err)
+			errs = multierror.Append(errs, err)
 		} else {
 			deleted = append(deleted, id)
 			if err := c.deletePostProcess(id); err != nil {
-				errs = errors.Join(errs, err)
+				errs = multierror.Append(errs, err)
 			}
 		}
 	}
 	deletion.PrintSuccessfulDeletionMsg(deleted, resource.Environment)
 
-	if errs != nil {
+	if errs.ErrorOrNil() != nil {
 		return errors.NewErrorWithSuggestions(errs.Error(), fmt.Sprintf(errors.ListResourceSuggestions, resource.Environment, pcmd.FullParentName(cmd)))
 	}
 

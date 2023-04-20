@@ -1,6 +1,7 @@
 package context
 
 import (
+	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -29,18 +30,18 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	var errs error
+	errs := &multierror.Error{ErrorFormat: errors.CustomMultierrorList}
 	var deleted []string
 	for _, id := range args {
 		if err := c.Config.DeleteContext(id); err != nil {
-			errs = errors.Join(errs, err)
+			errs = multierror.Append(errs, err)
 		} else {
 			deleted = append(deleted, id)
 		}
 	}
 	deletion.PrintSuccessfulDeletionMsg(deleted, resource.Context)
 
-	return errs
+	return errs.ErrorOrNil()
 }
 
 func (c *command) confirmDeletion(cmd *cobra.Command, args []string) error {

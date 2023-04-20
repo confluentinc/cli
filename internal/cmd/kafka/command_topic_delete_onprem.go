@@ -3,6 +3,7 @@ package kafka
 import (
 	"context"
 
+	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
@@ -53,18 +54,18 @@ func (c *authenticatedTopicCommand) deleteOnPrem(cmd *cobra.Command, args []stri
 		return err
 	}
 
-	var errs error
+	errs := &multierror.Error{ErrorFormat: errors.CustomMultierrorList}
 	var deleted []string
 	for _, id := range args {
 		if r, err := restClient.TopicV3Api.DeleteKafkaTopic(restContext, clusterId, id); err != nil {
-			errs = errors.Join(errs, kafkarest.NewError(restClient.GetConfig().BasePath, err, r))
+			errs = multierror.Append(errs, kafkarest.NewError(restClient.GetConfig().BasePath, err, r))
 		} else {
 			deleted = append(deleted, id)
 		}
 	}
 	deletion.PrintSuccessfulDeletionMsg(deleted, resource.Topic)
 
-	return errs
+	return errs.ErrorOrNil()
 }
 
 func (c *authenticatedTopicCommand) confirmDeletionOnPrem(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restContext context.Context, clusterId string, args []string) error {

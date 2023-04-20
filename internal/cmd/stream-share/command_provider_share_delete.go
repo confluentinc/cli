@@ -1,6 +1,7 @@
 package streamshare
 
 import (
+	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -36,18 +37,18 @@ func (c *command) deleteProviderShare(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	var errs error
+	errs := &multierror.Error{ErrorFormat: errors.CustomMultierrorList}
 	var deleted []string
 	for _, id := range args {
 		if err := c.V2Client.DeleteProviderShare(id); err != nil {
-			errs = errors.Join(errs, err)
+			errs = multierror.Append(errs, err)
 		} else {
 			deleted = append(deleted, id)
 		}
 	}
 	deletion.PrintSuccessfulDeletionMsg(deleted, resource.ProviderShare)
 
-	return errs
+	return errs.ErrorOrNil()
 }
 
 func (c *command) confirmDeletionProviderShare(cmd *cobra.Command, args []string) error {

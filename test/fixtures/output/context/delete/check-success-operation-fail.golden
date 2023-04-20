@@ -1,3 +1,4 @@
 Are you sure you want to delete contexts "5", "5", and "5"? (y/n): Deleted context "5".
-Error: context "5" does not exist
-context "5" does not exist
+Error: 2 errors occurred:
+	* context "5" does not exist
+	* context "5" does not exist

@@ -1,6 +1,7 @@
 package kafka
 
 import (
+	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -40,21 +41,21 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	var errs error
+	errs := &multierror.Error{ErrorFormat: errors.CustomMultierrorList}
 	var deleted []string
 	for _, id := range args {
 		if r, err := c.V2Client.DeleteKafkaCluster(id, environmentId); err != nil {
-			errs = errors.Join(errs, errors.CatchKafkaNotFoundError(err, id, r))
+			errs = multierror.Append(errs, errors.CatchKafkaNotFoundError(err, id, r))
 		} else {
 			deleted = append(deleted, id)
 			if err := c.deletePostProcess(id); err != nil {
-				errs = errors.Join(errs, err)
+				errs = multierror.Append(errs, err)
 			}
 		}
 	}
 	deletion.PrintSuccessfulDeletionMsg(deleted, resource.KafkaCluster)
 
-	if errs != nil {
+	if errs.ErrorOrNil() != nil {
 		if len(args)-len(deleted) > 1 {
 			return errors.NewErrorWithSuggestions(errs.Error(), "Ensure the clusters are not associated with any active Connect clusters.")
 		} else {

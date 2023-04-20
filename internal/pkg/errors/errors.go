@@ -1,27 +1,35 @@
 package errors
 
 import (
-	"errors"
+	"fmt"
 
-	perrors "github.com/pkg/errors"
+	"github.com/pkg/errors"
 )
 
 func New(msg string) error {
-	return perrors.New(msg)
+	return errors.New(msg)
 }
 
 func Wrap(err error, msg string) error {
-	return perrors.Wrap(err, msg)
+	return errors.Wrap(err, msg)
 }
 
 func Wrapf(err error, fmt string, args ...any) error {
-	return perrors.Wrapf(err, fmt, args...)
+	return errors.Wrapf(err, fmt, args...)
 }
 
 func Errorf(fmt string, args ...any) error {
-	return perrors.Errorf(fmt, args...)
+	return errors.Errorf(fmt, args...)
 }
 
-func Join(errs ...error) error {
-	return errors.Join(errs...)
+func CustomMultierrorList(errors []error) string {
+	if len(errors) == 1 {
+		return errors[0].Error()
+	}
+
+	errString := fmt.Sprintf("%d errors occurred:", len(errors))
+	for _, err := range errors {
+		errString = fmt.Sprintf("%s\n\t* %v", errString, err)
+	}
+	return errString
 }

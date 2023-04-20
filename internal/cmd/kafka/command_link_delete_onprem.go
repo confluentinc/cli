@@ -3,6 +3,7 @@ package kafka
 import (
 	"context"
 
+	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
@@ -44,18 +45,18 @@ func (c *linkCommand) deleteOnPrem(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	var errs error
+	errs := &multierror.Error{ErrorFormat: errors.CustomMultierrorList}
 	var deleted []string
 	for _, id := range args {
 		if r, err := client.ClusterLinkingV3Api.DeleteKafkaLink(ctx, clusterId, id, nil); err != nil {
-			errs = errors.Join(errs, handleOpenApiError(r, err, client))
+			errs = multierror.Append(errs, handleOpenApiError(r, err, client))
 		} else {
 			deleted = append(deleted, id)
 		}
 	}
 	deletion.PrintSuccessfulDeletionMsg(deleted, resource.ClusterLink)
 
-	return errs
+	return errs.ErrorOrNil()
 }
 
 func (c *linkCommand) confirmDeletionOnPrem(cmd *cobra.Command, client *kafkarestv3.APIClient, ctx context.Context, clusterId string, args []string) error {

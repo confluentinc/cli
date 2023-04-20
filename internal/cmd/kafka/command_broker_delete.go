@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/antihax/optional"
+	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
@@ -48,12 +49,12 @@ func (c *brokerCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	var errs error
+	errs := &multierror.Error{ErrorFormat: errors.CustomMultierrorList}
 	var deleted []string
 	opts := kafkarestv3.ClustersClusterIdBrokersBrokerIdDeleteOpts{ShouldShutdown: optional.NewBool(true)}
 	for _, id := range args {
 		if _, resp, err := restClient.BrokerV3Api.ClustersClusterIdBrokersBrokerIdDelete(restContext, clusterId, brokerIdToNumId[id], &opts); err != nil {
-			errs = errors.Join(errs, kafkarest.NewError(restClient.GetConfig().BasePath, err, resp))
+			errs = multierror.Append(errs, kafkarest.NewError(restClient.GetConfig().BasePath, err, resp))
 		} else {
 			deleted = append(deleted, id)
 		}
@@ -64,7 +65,7 @@ func (c *brokerCommand) delete(cmd *cobra.Command, args []string) error {
 		output.Printf("Started deletion of brokers %s. To monitor a remove-broker task run `confluent kafka broker get-tasks <id> --task-type remove-broker`.\n", utils.ArrayToCommaDelimitedString(deleted, "and"))
 	}
 
-	return nil
+	return errs.ErrorOrNil()
 }
 
 func (c *brokerCommand) confirmDeletion(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restContext context.Context, clusterId string, args []string, brokerIdToNumId map[string]int32) error {
