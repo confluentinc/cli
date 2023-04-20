@@ -23,22 +23,32 @@ var (
 		"cpd": {
 			ssoProviderDomain:     "login-cpd.confluent-dev.io",
 			ssoProviderIdentifier: "https://confluent-cpd.auth0.com/api/v2/",
+			ssoProviderScope:      "email%20openid%20offline_access",
 		},
 		"devel": {
 			ssoProviderDomain:     "login.confluent-dev.io",
 			ssoProviderIdentifier: "https://confluent-dev.auth0.com/api/v2/",
+			ssoProviderScope:      "email%20openid%20offline_access",
+		},
+		"fedramp-internal": {
+			ssoProviderDomain: "confluent-infra-us-gov.oktapreview.com/oauth2/v1",
+			ssoProviderScope:  "openid+profile+email+offline_access",
+			ssoProviderIDP:    "0oa7fi3wpt9LC2ONd1d7",
 		},
 		"stag": {
 			ssoProviderDomain:     "login-stag.confluent-dev.io",
 			ssoProviderIdentifier: "https://confluent-stag.auth0.com/api/v2/",
+			ssoProviderScope:      "email%20openid%20offline_access",
 		},
 		"prod": {
 			ssoProviderDomain:     "login.confluent.io",
 			ssoProviderIdentifier: "https://confluent.auth0.com/api/v2/",
+			ssoProviderScope:      "email%20openid%20offline_access",
 		},
 		"test": {
 			ssoProviderDomain:     "test.com",
 			ssoProviderIdentifier: "https://test.auth0.com/api/v2/",
+			ssoProviderScope:      "email%20openid%20offline_access",
 		},
 	}
 )
@@ -46,6 +56,8 @@ var (
 type ssoConfig struct {
 	ssoProviderDomain     string
 	ssoProviderIdentifier string
+	ssoProviderScope      string
+	ssoProviderIDP        string
 }
 
 /*
@@ -63,6 +75,8 @@ type authState struct {
 	SSOProviderClientID           string
 	SSOProviderCallbackUrl        string
 	SSOProviderIdentifier         string
+	SSOProviderScope              string
+	SSOProviderIDP                string
 }
 
 // InitState generates various auth0 related codes and hashes
@@ -84,6 +98,8 @@ func newState(authURL string, noBrowser bool) (*authState, error) {
 		env = "devel"
 	} else if authURL == "https://stag.cpdev.cloud" {
 		env = "stag"
+	} else if authURL == "https://infra.confluentgov-internal.com" {
+		env = "fedramp-internal"
 	} else if authURL == testserver.TestCloudUrl.String() {
 		env = "test"
 	} else {
@@ -95,6 +111,8 @@ func newState(authURL string, noBrowser bool) (*authState, error) {
 	state.SSOProviderHost = "https://" + ssoConfigs[env].ssoProviderDomain
 	state.SSOProviderClientID = GetAuth0CCloudClientIdFromBaseUrl(authURL)
 	state.SSOProviderIdentifier = ssoConfigs[env].ssoProviderIdentifier
+	state.SSOProviderScope = ssoConfigs[env].ssoProviderScope
+	state.SSOProviderIDP = ssoConfigs[env].ssoProviderIDP
 
 	if !noBrowser {
 		// if we're not using the no browser flow, the callback will always be localhost regardless of environment
@@ -215,11 +233,15 @@ func (s *authState) getAuthorizationCodeUrl(ssoProviderConnectionName string) st
 		"&code_challenge_method=S256" +
 		"&client_id=" + s.SSOProviderClientID +
 		"&redirect_uri=" + s.SSOProviderCallbackUrl +
-		"&scope=email%20openid%20offline_access" +
-		"&audience=" + s.SSOProviderIdentifier +
+		"&scope=" + s.SSOProviderScope +
 		"&state=" + s.SSOProviderState
+
+	if s.SSOProviderIdentifier != "" {
+		url += "&audience=" + s.SSOProviderIdentifier
+	}
 	if ssoProviderConnectionName != "" {
 		url += "&connection=" + ssoProviderConnectionName
 	}
+
 	return url
 }
