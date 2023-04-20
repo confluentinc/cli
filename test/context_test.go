@@ -27,10 +27,17 @@ func (s *CLITestSuite) TestContextDelete() {
 
 	tests := []CLITest{
 		{args: s.contextCreateArgs("0")},
+		{args: s.contextCreateArgs("2")},
+		{args: s.contextCreateArgs("3")},
+		{args: s.contextCreateArgs("4")},
+		{args: s.contextCreateArgs("5")},
 		{args: s.contextCreateArgs("0-prompt")},
-		{args: "context delete 0 --force", fixture: "context/delete/0.golden"},
-		{args: "context delete 0-prompt", input: "y\n", fixture: "context/delete/0-prompt.golden"},
-		{args: "context delete 1 --force", fixture: "context/delete/1.golden", exitCode: 1},
+		{args: "context delete 0 --force", fixture: "context/delete/success.golden"},
+		{args: "context delete 0-prompt", input: "y\n", fixture: "context/delete/success-prompt.golden"},
+		{args: "context delete 1", fixture: "context/delete/fail.golden", exitCode: 1},
+		{args: "context delete 2 3 7 8 9", fixture: "context/delete/multiple-fail.golden", exitCode: 1},
+		{args: "context delete 2 3 4", input: "y\n", fixture: "context/delete/multiple-success.golden"},
+		{args: "context delete 5 5 5", input: "y\n", fixture: "context/delete/check-success-operation-fail.golden", exitCode: 1},
 	}
 
 	for _, tt := range tests {

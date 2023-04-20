@@ -14,9 +14,6 @@ func (s *CLITestSuite) TestBYOK() {
 		{args: "byok create https://a-vault.vault.azure.net/keys/a-key/00000000000000000000000000000000 --tenant 00000000-0000-0000-0000-000000000000 --key-vault /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/a-resourcegroups/providers/Microsoft.KeyVault/vaults/a-vault", fixture: "byok/create_2.golden"},
 		{args: "byok create https://a-vault.vault.azure.net/keys/a-key/00000000000000000000000000000000 --tenant 00000000-0000-0000-0000-000000000000", fixture: "byok/create_3.golden", exitCode: 1},
 		{args: "byok create https://a-vault.vault.azure.net/keys/a-key/00000000000000000000000000000000", fixture: "byok/create_4.golden", exitCode: 1},
-		// delete tests
-		{args: "byok delete cck-001", input: "y\n", fixture: "byok/delete_1.golden"},
-		{args: "byok delete cck-404", fixture: "byok/delete_2.golden", exitCode: 1},
 	}
 
 	resetConfiguration(s.T(), false)
@@ -24,6 +21,22 @@ func (s *CLITestSuite) TestBYOK() {
 	for _, tt := range tests {
 		tt.workflow = true
 		s.runIntegrationTest(tt)
+	}
+}
+
+func (s *CLITestSuite) TestByokDelete() {
+	tests := []CLITest{
+		{args: "byok delete cck-001", input: "y\n", fixture: "byok/delete/success.golden"},
+		{args: "byok delete cck-404", fixture: "byok/delete/fail.golden", exitCode: 1},
+		{args: "byok delete cck-002 cck-006 cck-007 cck-100", fixture: "byok/delete/multiple-fail.golden", exitCode: 1},
+		{args: "byok delete cck-002 cck-003", input: "y\n", fixture: "byok/delete/multiple-success.golden"},
+	}
+
+	resetConfiguration(s.T(), false)
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
 	}
 }
 
