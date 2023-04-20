@@ -29,7 +29,7 @@ func (c *Client) CreateFlinkComputePool(computePool flinkv2.FcpmV2ComputePool) (
 }
 
 func (c *Client) DescribeFlinkComputePool(id, environment string) (flinkv2.FcpmV2ComputePool, error) {
-	req := c.FlinkClient.ComputePoolsFcpmV2Api.GetFcpmV2ComputePool(c.cmkApiContext(), id).Environment(environment)
+	req := c.FlinkClient.ComputePoolsFcpmV2Api.GetFcpmV2ComputePool(c.flinkApiContext(), id).Environment(environment)
 	res, r, err := c.FlinkClient.ComputePoolsFcpmV2Api.GetFcpmV2ComputePoolExecute(req)
 	return res, errors.CatchCCloudV2Error(err, r)
 }
