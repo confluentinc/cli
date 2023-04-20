@@ -1,0 +1,4 @@
+Error: pipeline "pipe-12346" not found
+
+Suggestions:
+    List available pipelines with `confluent pipeline list`.
