@@ -40,7 +40,7 @@ func (c *quotaCommand) delete(cmd *cobra.Command, args []string) error {
 			deleted = append(deleted, id)
 		}
 	}
-	deletion.PrintSuccessfulDeletionMsg(deleted, resource.ClientQuota)
+	deletion.PrintSuccessMsg(deleted, resource.ClientQuota)
 
 	return errs.ErrorOrNil()
 }
@@ -55,7 +55,7 @@ func (c *quotaCommand) confirmDeletion(cmd *cobra.Command, args []string) error 
 		return err
 	}
 
-	if err := deletion.ValidateArgsForDeletion(cmd, args, resource.ClientQuota, describeFunc); err != nil {
+	if err := deletion.ValidateArgs(cmd, args, resource.ClientQuota, describeFunc); err != nil {
 		return err
 	}
 

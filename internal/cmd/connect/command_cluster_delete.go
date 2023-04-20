@@ -64,7 +64,7 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 			deleted = append(deleted, id)
 		}
 	}
-	deletion.PrintSuccessfulDeletionMsg(deleted, resource.Connector)
+	deletion.PrintSuccessMsg(deleted, resource.Connector)
 
 	return errs.ErrorOrNil()
 }
@@ -78,7 +78,7 @@ func (c *clusterCommand) confirmDeletion(cmd *cobra.Command, environmentId, kafk
 		return err
 	}
 
-	if err := deletion.ValidateArgsForDeletion(cmd, args, resource.Connector, describeFunc); err != nil {
+	if err := deletion.ValidateArgs(cmd, args, resource.Connector, describeFunc); err != nil {
 		return err
 	}
 

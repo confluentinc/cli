@@ -56,7 +56,7 @@ func (c *linkCommand) delete(cmd *cobra.Command, args []string) error {
 			deleted = append(deleted, id)
 		}
 	}
-	deletion.PrintSuccessfulDeletionMsg(deleted, resource.ClusterLink)
+	deletion.PrintSuccessMsg(deleted, resource.ClusterLink)
 
 	return errs.ErrorOrNil()
 }
@@ -67,7 +67,7 @@ func (c *linkCommand) confirmDeletion(cmd *cobra.Command, kafkaREST *pcmd.KafkaR
 		return err
 	}
 
-	if err := deletion.ValidateArgsForDeletion(cmd, args, resource.ClusterLink, describeFunc); err != nil {
+	if err := deletion.ValidateArgs(cmd, args, resource.ClusterLink, describeFunc); err != nil {
 		return err
 	}
 

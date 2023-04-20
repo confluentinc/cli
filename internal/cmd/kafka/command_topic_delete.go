@@ -73,7 +73,7 @@ func (c *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 			deleted = append(deleted, id)
 		}
 	}
-	deletion.PrintSuccessfulDeletionMsg(deleted, resource.Topic)
+	deletion.PrintSuccessMsg(deleted, resource.Topic)
 
 	return errs.ErrorOrNil()
 }
@@ -84,7 +84,7 @@ func (c *authenticatedTopicCommand) confirmDeletion(cmd *cobra.Command, kafkaRES
 		return err
 	}
 
-	if err := deletion.ValidateArgsForDeletion(cmd, args, resource.Topic, describeFunc); err != nil {
+	if err := deletion.ValidateArgs(cmd, args, resource.Topic, describeFunc); err != nil {
 		return err
 	}
 

@@ -40,7 +40,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 			deleted = append(deleted, id)
 		}
 	}
-	deletion.PrintSuccessfulDeletionMsg(deleted, resource.ByokKey)
+	deletion.PrintSuccessMsg(deleted, resource.ByokKey)
 
 	if errs.ErrorOrNil() != nil {
 		return errors.NewErrorWithSuggestions(errs.Error(), errors.ByokKeyNotFoundSuggestions)
@@ -55,7 +55,7 @@ func (c *command) confirmDeletion(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if err := deletion.ValidateArgsForDeletion(cmd, args, resource.ByokKey, describeFunc); err != nil {
+	if err := deletion.ValidateArgs(cmd, args, resource.ByokKey, describeFunc); err != nil {
 		return err
 	}
 

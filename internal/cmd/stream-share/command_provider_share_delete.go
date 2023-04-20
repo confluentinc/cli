@@ -46,7 +46,7 @@ func (c *command) deleteProviderShare(cmd *cobra.Command, args []string) error {
 			deleted = append(deleted, id)
 		}
 	}
-	deletion.PrintSuccessfulDeletionMsg(deleted, resource.ProviderShare)
+	deletion.PrintSuccessMsg(deleted, resource.ProviderShare)
 
 	return errs.ErrorOrNil()
 }
@@ -57,7 +57,7 @@ func (c *command) confirmDeletionProviderShare(cmd *cobra.Command, args []string
 		return err
 	}
 
-	if err := deletion.ValidateArgsForDeletion(cmd, args, resource.ProviderShare, describeFunc); err != nil {
+	if err := deletion.ValidateArgs(cmd, args, resource.ProviderShare, describeFunc); err != nil {
 		return err
 	}
 

@@ -83,7 +83,7 @@ func (c *brokerCommand) confirmDeletion(cmd *cobra.Command, restClient *kafkares
 		return err
 	}
 
-	if err := deletion.ValidateArgsForDeletion(cmd, args, "broker", describeFunc); err != nil {
+	if err := deletion.ValidateArgs(cmd, args, "broker", describeFunc); err != nil {
 		return err
 	}
 

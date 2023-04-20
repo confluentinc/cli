@@ -46,7 +46,7 @@ func (c *command) deleteConsumerShare(cmd *cobra.Command, args []string) error {
 			deleted = append(deleted, id)
 		}
 	}
-	deletion.PrintSuccessfulDeletionMsg(deleted, resource.ConsumerShare)
+	deletion.PrintSuccessMsg(deleted, resource.ConsumerShare)
 
 	return errs.ErrorOrNil()
 }
@@ -57,7 +57,7 @@ func (c *command) confirmDeletionConsumerShare(cmd *cobra.Command, args []string
 		return err
 	}
 
-	if err := deletion.ValidateArgsForDeletion(cmd, args, resource.ConsumerShare, describeFunc); err != nil {
+	if err := deletion.ValidateArgs(cmd, args, resource.ConsumerShare, describeFunc); err != nil {
 		return err
 	}
 

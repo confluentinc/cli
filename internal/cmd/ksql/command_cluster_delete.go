@@ -71,7 +71,7 @@ func (c *ksqlCommand) delete(cmd *cobra.Command, args []string) error {
 			deleted = append(deleted, id)
 		}
 	}
-	deletion.PrintSuccessfulDeletionMsg(deleted, resource.KsqlCluster)
+	deletion.PrintSuccessMsg(deleted, resource.KsqlCluster)
 
 	return errs.ErrorOrNil()
 }
@@ -116,7 +116,7 @@ func (c *ksqlCommand) confirmDeletion(cmd *cobra.Command, environmentId string, 
 		return err
 	}
 
-	if err := deletion.ValidateArgsForDeletion(cmd, args, resource.KsqlCluster, describeFunc); err != nil {
+	if err := deletion.ValidateArgs(cmd, args, resource.KsqlCluster, describeFunc); err != nil {
 		return err
 	}
 

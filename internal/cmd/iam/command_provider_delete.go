@@ -46,7 +46,7 @@ func (c *identityProviderCommand) delete(cmd *cobra.Command, args []string) erro
 			deleted = append(deleted, id)
 		}
 	}
-	deletion.PrintSuccessfulDeletionMsg(deleted, resource.IdentityProvider)
+	deletion.PrintSuccessMsg(deleted, resource.IdentityProvider)
 
 	return errs.ErrorOrNil()
 }
@@ -61,7 +61,7 @@ func (c *identityProviderCommand) confirmDeletion(cmd *cobra.Command, args []str
 		return err
 	}
 
-	if err := deletion.ValidateArgsForDeletion(cmd, args, resource.IdentityProvider, describeFunc); err != nil {
+	if err := deletion.ValidateArgs(cmd, args, resource.IdentityProvider, describeFunc); err != nil {
 		return err
 	}
 

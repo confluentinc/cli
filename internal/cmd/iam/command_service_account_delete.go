@@ -46,7 +46,7 @@ func (c *serviceAccountCommand) delete(cmd *cobra.Command, args []string) error 
 			deleted = append(deleted, id)
 		}
 	}
-	deletion.PrintSuccessfulDeletionMsg(deleted, resource.ServiceAccount)
+	deletion.PrintSuccessMsg(deleted, resource.ServiceAccount)
 
 	return errs.ErrorOrNil()
 }
@@ -65,7 +65,7 @@ func (c *serviceAccountCommand) confirmDeletion(cmd *cobra.Command, args []strin
 		return err
 	}
 
-	if err := deletion.ValidateArgsForDeletion(cmd, args, resource.ServiceAccount, describeFunc); err != nil {
+	if err := deletion.ValidateArgs(cmd, args, resource.ServiceAccount, describeFunc); err != nil {
 		return err
 	}
 

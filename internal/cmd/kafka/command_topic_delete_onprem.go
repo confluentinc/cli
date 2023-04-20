@@ -63,7 +63,7 @@ func (c *authenticatedTopicCommand) deleteOnPrem(cmd *cobra.Command, args []stri
 			deleted = append(deleted, id)
 		}
 	}
-	deletion.PrintSuccessfulDeletionMsg(deleted, resource.Topic)
+	deletion.PrintSuccessMsg(deleted, resource.Topic)
 
 	return errs.ErrorOrNil()
 }
@@ -74,7 +74,7 @@ func (c *authenticatedTopicCommand) confirmDeletionOnPrem(cmd *cobra.Command, re
 		return err
 	}
 
-	if err := deletion.ValidateArgsForDeletion(cmd, args, resource.Topic, describeFunc); err != nil {
+	if err := deletion.ValidateArgs(cmd, args, resource.Topic, describeFunc); err != nil {
 		return err
 	}
 

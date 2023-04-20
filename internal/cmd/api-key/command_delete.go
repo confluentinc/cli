@@ -44,7 +44,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 			}
 		}
 	}
-	deletion.PrintSuccessfulDeletionMsg(deleted, resource.ApiKey)
+	deletion.PrintSuccessMsg(deleted, resource.ApiKey)
 
 	if errs.ErrorOrNil() != nil {
 		return errors.NewErrorWithSuggestions(errs.Error(), errors.APIKeyNotFoundSuggestions)
@@ -59,7 +59,7 @@ func (c *command) confirmDeletion(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if err := deletion.ValidateArgsForDeletion(cmd, args, resource.ApiKey, describeFunc); err != nil {
+	if err := deletion.ValidateArgs(cmd, args, resource.ApiKey, describeFunc); err != nil {
 		return err
 	}
 

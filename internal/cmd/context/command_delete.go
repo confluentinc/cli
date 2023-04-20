@@ -39,7 +39,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 			deleted = append(deleted, id)
 		}
 	}
-	deletion.PrintSuccessfulDeletionMsg(deleted, resource.Context)
+	deletion.PrintSuccessMsg(deleted, resource.Context)
 
 	return errs.ErrorOrNil()
 }
@@ -50,7 +50,7 @@ func (c *command) confirmDeletion(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if err := deletion.ValidateArgsForDeletion(cmd, args, resource.Context, describeFunc); err != nil {
+	if err := deletion.ValidateArgs(cmd, args, resource.Context, describeFunc); err != nil {
 		return err
 	}
 

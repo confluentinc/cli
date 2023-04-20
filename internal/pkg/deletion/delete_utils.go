@@ -12,7 +12,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-func ValidateArgsForDeletion(cmd *cobra.Command, args []string, resourceType string, callDescribeEndpoint func(string) error) error {
+func ValidateArgs(cmd *cobra.Command, args []string, resourceType string, callDescribeEndpoint func(string) error) error {
 	var invalidArgs []string
 	for _, arg := range args {
 		if err := callDescribeEndpoint(arg); err != nil {
@@ -32,7 +32,9 @@ func ValidateArgsForDeletion(cmd *cobra.Command, args []string, resourceType str
 	return nil
 }
 
-func PrintSuccessfulDeletionMsg(successful []string, resourceType string) {
+
+
+func PrintSuccessMsg(successful []string, resourceType string) {
 	if len(successful) == 1 {
 		output.Printf(errors.DeletedResourceMsg, resourceType, successful[0])
 	} else if len(successful) > 1 {
