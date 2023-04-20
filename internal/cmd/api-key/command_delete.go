@@ -1,23 +1,22 @@
 package apikey
 
 import (
-	"fmt"
-
+	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/deletion"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
-	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *command) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "delete <api-key>",
-		Short:             "Delete an API key.",
-		Args:              cobra.ExactArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		Use:               "delete <api-key-1> [api-key-2] ... [api-key-n]",
+		Short:             "Delete API keys.",
+		Args:              cobra.MinimumNArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgsMultiple),
 		RunE:              c.delete,
 	}
 
@@ -28,17 +27,49 @@ func (c *command) newDeleteCommand() *cobra.Command {
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
 	c.setKeyStoreIfNil()
-	apiKey := args[0]
 
-	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmYesNoMsg, resource.ApiKey, apiKey)
-	if ok, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil || !ok {
+	if err := c.confirmDeletion(cmd, args); err != nil {
 		return err
 	}
-	httpResp, err := c.V2Client.DeleteApiKey(apiKey)
-	if err != nil {
-		return errors.CatchApiKeyForbiddenAccessError(err, deleteOperation, httpResp)
+
+	errs := &multierror.Error{ErrorFormat: errors.CustomMultierrorList}
+	var deleted []string
+	for _, id := range args {
+		if r, err := c.V2Client.DeleteApiKey(id); err != nil {
+			errs = multierror.Append(errs, errors.CatchApiKeyForbiddenAccessError(err, deleteOperation, r))
+		} else {
+			deleted = append(deleted, id)
+			if err := c.deletePostProcess(id); err != nil {
+				errs = multierror.Append(errs, err)
+			}
+		}
+	}
+	deletion.PrintSuccessMsg(deleted, resource.ApiKey)
+
+	if errs.ErrorOrNil() != nil {
+		return errors.NewErrorWithSuggestions(errs.Error(), errors.APIKeyNotFoundSuggestions)
 	}
 
-	output.Printf(errors.DeletedResourceMsg, resource.ApiKey, apiKey)
-	return c.keystore.DeleteAPIKey(apiKey)
+	return nil
+}
+
+func (c *command) confirmDeletion(cmd *cobra.Command, args []string) error {
+	describeFunc := func(id string) error {
+		_, _, err := c.V2Client.GetApiKey(id)
+		return err
+	}
+
+	if err := deletion.ValidateArgs(cmd, args, resource.ApiKey, describeFunc); err != nil {
+		return err
+	}
+
+	if ok, err := form.ConfirmDeletionYesNo(cmd, resource.ApiKey, args); err != nil || !ok {
+		return err
+	}
+
+	return nil
+}
+
+func (c *command) deletePostProcess(id string) error {
+	return c.keystore.DeleteAPIKey(id)
 }
