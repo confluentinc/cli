@@ -12,6 +12,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/auth/sso"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/types"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -80,16 +81,22 @@ func (a *AuthTokenHandlerImpl) GetCCloudTokens(clientFactory CCloudClientFactory
 }
 
 func (a *AuthTokenHandlerImpl) getCCloudSSOToken(client *ccloudv1.Client, noBrowser bool, email, orgResourceId string) (string, string, error) {
-	userSSO, err := a.getCCloudUserSSO(client, email, orgResourceId)
-	if err != nil {
-		log.CliLogger.Debugf("unable to obtain user SSO info: %v", err)
-		return "", "", errors.Errorf(errors.FailedToObtainedUserSSOErrorMsg, email)
-	}
-	if userSSO == "" {
-		return "", "", errors.Errorf(errors.NonSSOUserErrorMsg, email)
+	var auth0ConnectionName string
+	if types.Contains([]string{"fedramp", "fedramp-internal"}, sso.GetCCloudEnvFromBaseUrl(client.BaseURL)) {
+		auth0ConnectionName = ""
+	} else {
+		userSSO, err := a.getCCloudUserSSO(client, email, orgResourceId)
+		if err != nil {
+			log.CliLogger.Debugf("unable to obtain user SSO info: %v", err)
+			return "", "", errors.Errorf(errors.FailedToObtainedUserSSOErrorMsg, email)
+		}
+		if userSSO == "" {
+			return "", "", errors.Errorf(errors.NonSSOUserErrorMsg, email)
+		}
+		auth0ConnectionName = userSSO
 	}
 
-	idToken, refreshToken, err := sso.Login(client.BaseURL, noBrowser, userSSO)
+	idToken, refreshToken, err := sso.Login(client.BaseURL, noBrowser, auth0ConnectionName)
 	if err != nil {
 		return "", "", err
 	}
