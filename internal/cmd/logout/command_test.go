@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
-	ccloudv1Mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
+	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
 	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	mdsMock "github.com/confluentinc/mds-sdk-go-public/mdsv1/mock"
 
@@ -129,7 +129,7 @@ func TestRemoveNetrcCredentials(t *testing.T) {
 	cfg := v1.AuthenticatedCloudConfigMock()
 	contextName := cfg.Context().GetNetrcMachineName()
 	// run login command
-	auth := &ccloudv1Mock.Auth{
+	auth := &ccloudv1mock.Auth{
 		LoginFunc: func(_ context.Context, _ *ccloudv1.AuthenticateRequest) (*ccloudv1.AuthenticateReply, error) {
 			return &ccloudv1.AuthenticateReply{Token: testToken}, nil
 		},
@@ -145,7 +145,7 @@ func TestRemoveNetrcCredentials(t *testing.T) {
 			}, nil
 		},
 	}
-	userInterface := &ccloudv1Mock.UserInterface{}
+	userInterface := &ccloudv1mock.UserInterface{}
 	loginCmd, _ := newLoginCmd(auth, userInterface, true, req, mockNetrcHandler, AuthTokenHandler, mockLoginCredentialsManager, LoginOrganizationManager)
 	_, err := pcmd.ExecuteCommand(loginCmd)
 	req.NoError(err)
@@ -157,7 +157,7 @@ func TestRemoveNetrcCredentials(t *testing.T) {
 	req.Equal(exist, false)
 }
 
-func newLoginCmd(auth *ccloudv1Mock.Auth, userInterface *ccloudv1Mock.UserInterface, isCloud bool, req *require.Assertions, netrcHandler netrc.NetrcHandler, authTokenHandler pauth.AuthTokenHandler, loginCredentialsManager pauth.LoginCredentialsManager, loginOrganizationManager pauth.LoginOrganizationManager) (*cobra.Command, *v1.Config) {
+func newLoginCmd(auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInterface, isCloud bool, req *require.Assertions, netrcHandler netrc.NetrcHandler, authTokenHandler pauth.AuthTokenHandler, loginCredentialsManager pauth.LoginCredentialsManager, loginOrganizationManager pauth.LoginOrganizationManager) (*cobra.Command, *v1.Config) {
 	cfg := v1.New()
 	var mdsClient *mds.APIClient
 	if !isCloud {
@@ -179,7 +179,7 @@ func newLoginCmd(auth *ccloudv1Mock.Auth, userInterface *ccloudv1Mock.UserInterf
 			return &ccloudv1.Client{Params: &ccloudv1.Params{HttpClient: new(http.Client)}, Auth: auth, User: userInterface}
 		},
 		JwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloudv1.Client {
-			return &ccloudv1.Client{Growth: &ccloudv1Mock.Growth{
+			return &ccloudv1.Client{Growth: &ccloudv1mock.Growth{
 				GetFreeTrialInfoFunc: func(_ context.Context, orgId int32) ([]*ccloudv1.GrowthPromoCodeClaim, error) {
 					var claims []*ccloudv1.GrowthPromoCodeClaim
 					return claims, nil

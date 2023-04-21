@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
-	ccloudv1Mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
+	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
 	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
@@ -422,7 +422,7 @@ func TestPrerun_AutoLogin(t *testing.T) {
 			r.Config = cfg
 			r.CCloudClientFactory = &climock.CCloudClientFactory{
 				JwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloudv1.Client {
-					return &ccloudv1.Client{Auth: &ccloudv1Mock.Auth{
+					return &ccloudv1.Client{Auth: &ccloudv1mock.Auth{
 						UserFunc: func(_ context.Context) (*ccloudv1.GetMeReply, error) {
 							return &ccloudv1.GetMeReply{
 								User:         &ccloudv1.User{Id: 23},
@@ -542,7 +542,7 @@ func TestPrerun_ReLoginToLastOrgUsed(t *testing.T) {
 	r := getPreRunBase()
 	r.CCloudClientFactory = &climock.CCloudClientFactory{
 		JwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloudv1.Client {
-			return &ccloudv1.Client{Auth: &ccloudv1Mock.Auth{
+			return &ccloudv1.Client{Auth: &ccloudv1mock.Auth{
 				UserFunc: func(ctx context.Context) (*ccloudv1.GetMeReply, error) {
 					return &ccloudv1.GetMeReply{
 						User:         &ccloudv1.User{Id: 23},
