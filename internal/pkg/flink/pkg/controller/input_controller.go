@@ -32,6 +32,7 @@ type InputController struct {
 	table                 TableControllerInterface
 	prompt                *prompt.Prompt
 	store                 StoreInterface
+	authenticated         func() error
 }
 
 func shouldUseTView(statement types.ProcessedStatement) bool {
@@ -50,6 +51,14 @@ func (c *InputController) RunInteractiveInput() {
 	for {
 		// Run interactive input and take over terminal
 		input := c.prompt.Input()
+
+		// Upon receiving user input, we check if user is authenticated and possibly a refresh the CCloud SSO token
+
+		if authErr := c.authenticated(); authErr != nil {
+			fmt.Println(authErr.Error())
+			c.appController.ExitApplication()
+			continue
+		}
 
 		if c.reverseISearchEnabled {
 			searchResult := c.reverseISearch()
@@ -333,7 +342,7 @@ func (c *InputController) GetMaxCol() (int, error) {
 	return int(maxCol), nil
 }
 
-func NewInputController(t TableControllerInterface, a ApplicationControllerInterface, store StoreInterface, history *History) (c InputControllerInterface) {
+func NewInputController(t TableControllerInterface, a ApplicationControllerInterface, store StoreInterface, authenticated func() error, history *History) (c InputControllerInterface) {
 	inputController := &InputController{
 		History:         history,
 		InitialBuffer:   "",
@@ -341,6 +350,7 @@ func NewInputController(t TableControllerInterface, a ApplicationControllerInter
 		store:           store,
 		appController:   a,
 		smartCompletion: true,
+		authenticated:   authenticated,
 	}
 	inputController.prompt = inputController.Prompt()
 	components.PrintWelcomeHeader()

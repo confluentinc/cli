@@ -11,6 +11,7 @@ func main() {
 		"lkc-y39kdo",
 		"lfcp-xyz67",
 		"authToken",
+		authenticated,
 		&application.ApplicationOptions{
 			FLINK_GATEWAY_URL:        "https://flink.us-west-2.aws.devel.cpdev.cloud",
 			HTTP_CLIENT_UNSAFE_TRACE: false,

@@ -88,7 +88,7 @@ func NewApplicationController(app *tview.Application, history *History) Applicat
 	}
 }
 
-func StartApp(envId, orgResourceId, kafkaClusterId, computePoolId, authToken string, appOptions *ApplicationOptions) {
+func StartApp(envId, orgResourceId, kafkaClusterId, computePoolId, authToken string, authenticated func() error, appOptions *ApplicationOptions) {
 	// Client used to communicate with the gateway
 	client := NewGatewayClient(envId, orgResourceId, kafkaClusterId, computePoolId, authToken, appOptions)
 
@@ -109,7 +109,7 @@ func StartApp(envId, orgResourceId, kafkaClusterId, computePoolId, authToken str
 
 	// Instantiate Component Controllers
 	tableController := NewTableController(table, store, appController)
-	inputController := NewInputController(tableController, appController, store, history)
+	inputController := NewInputController(tableController, appController, store, authenticated, history)
 	shortcutsController := NewShortcutsController(shortcuts, appController, tableController)
 
 	// Pass input controller to table controller - input and output view interact with each other and that it easier
