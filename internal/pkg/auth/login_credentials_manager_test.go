@@ -151,7 +151,7 @@ func (suite *LoginCredentialsManagerTestSuite) SetupSuite() {
 			},
 		},
 	}
-	suite.netrcHandler = &mock.MockNetrcHandler{
+	suite.netrcHandler = &mock.NetrcHandler{
 		GetMatchingNetrcMachineFunc: func(params netrc.NetrcMachineParams) (*netrc.Machine, error) {
 			if params.IsCloud {
 				if params.IsSSO {
@@ -257,6 +257,8 @@ func (suite *LoginCredentialsManagerTestSuite) TestGetConfluentCredentialsFromEn
 }
 
 func (suite *LoginCredentialsManagerTestSuite) TestCCloudUsernamePasswordGetCredentialsFromNetrc() {
+	cmd := &cobra.Command{}
+	cmd.Flags().Bool("save", false, "test")
 	creds, err := suite.loginCredentialsManager.GetCredentialsFromNetrc(netrc.NetrcMachineParams{
 		IsCloud: true,
 		IsSSO:   false,
@@ -266,6 +268,8 @@ func (suite *LoginCredentialsManagerTestSuite) TestCCloudUsernamePasswordGetCred
 }
 
 func (suite *LoginCredentialsManagerTestSuite) TestCCloudSSOGetCCloudCredentialsFromNetrc() {
+	cmd := &cobra.Command{}
+	cmd.Flags().Bool("save", false, "test")
 	creds, err := suite.loginCredentialsManager.GetCredentialsFromNetrc(netrc.NetrcMachineParams{
 		IsCloud: true,
 		IsSSO:   true,
@@ -336,7 +340,7 @@ func (suite *LoginCredentialsManagerTestSuite) TestGetConfluentPrerunCredentials
 	var params netrc.NetrcMachineParams
 
 	// no cacertpath
-	netrcHandler := &mock.MockNetrcHandler{
+	netrcHandler := &mock.NetrcHandler{
 		GetMatchingNetrcMachineFunc: func(_ netrc.NetrcMachineParams) (*netrc.Machine, error) {
 			return confluentNetrcPrerunMachine, nil
 		},
@@ -350,7 +354,7 @@ func (suite *LoginCredentialsManagerTestSuite) TestGetConfluentPrerunCredentials
 	suite.compareCredentials(netrcPrerunCredentials, creds)
 
 	// with cacertpath
-	netrcHandler = &mock.MockNetrcHandler{
+	netrcHandler = &mock.NetrcHandler{
 		GetMatchingNetrcMachineFunc: func(_ netrc.NetrcMachineParams) (*netrc.Machine, error) {
 			return confluentNetrcPrerunMachineWithCaCertPath, nil
 		},
@@ -365,7 +369,7 @@ func (suite *LoginCredentialsManagerTestSuite) TestGetConfluentPrerunCredentials
 }
 
 func (suite *LoginCredentialsManagerTestSuite) TestGetCredentialsFunction() {
-	noCredentialsNetrcHandler := &mock.MockNetrcHandler{
+	noCredentialsNetrcHandler := &mock.NetrcHandler{
 		GetMatchingNetrcMachineFunc: func(params netrc.NetrcMachineParams) (*netrc.Machine, error) {
 			return nil, nil
 		},
@@ -374,6 +378,8 @@ func (suite *LoginCredentialsManagerTestSuite) TestGetCredentialsFunction() {
 		},
 	}
 
+	cmd := &cobra.Command{}
+	cmd.Flags().Bool("save", false, "test")
 	// No credentials in env var and netrc so should look for prompt
 	loginCredentialsManager := NewLoginCredentialsManager(noCredentialsNetrcHandler, suite.prompt, suite.ccloudClient)
 	creds, err := GetLoginCredentials(
