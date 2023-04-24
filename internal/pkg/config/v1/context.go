@@ -147,6 +147,72 @@ func (c *Context) IsCloud(isTest bool) bool {
 	return false
 }
 
+func (c *Context) GetAuth() *AuthConfig {
+	if c.State != nil {
+		return c.State.Auth
+	}
+	return nil
+}
+
+func (c *Context) GetUser() *orgv1.User {
+	if auth := c.GetAuth(); auth != nil {
+		return auth.User
+	}
+	return nil
+}
+
+func (c *Context) GetOrganization() *orgv1.Organization {
+	if auth := c.GetAuth(); auth != nil {
+		return auth.Organization
+	}
+	return nil
+}
+
+func (c *Context) GetSuspensionStatus() *orgv1.SuspensionStatus {
+	return c.GetOrganization().GetSuspensionStatus()
+}
+
+func (c *Context) GetEnvironment() *orgv1.Account {
+	if auth := c.GetAuth(); auth != nil {
+		return auth.Account
+	}
+	return nil
+}
+
+func (c *Context) GetAuthToken() string {
+	if c.State != nil {
+		return c.State.AuthToken
+	}
+	return ""
+}
+
+func (c *Context) GetAuthRefreshToken() string {
+	if c.State != nil {
+		return c.State.AuthRefreshToken
+	}
+	return ""
+}
+
+func (c *Context) GetLDFlags(client LaunchDarklyClient) map[string]interface{} {
+	if c.FeatureFlags == nil {
+		return map[string]interface{}{}
+	}
+
+	switch client {
+	case CcloudDevelLaunchDarklyClient, CcloudStagLaunchDarklyClient, CcloudProdLaunchDarklyClient:
+		return c.FeatureFlags.CcloudValues
+	default:
+		return c.FeatureFlags.Values
+	}
+}
+
+func (c *Context) GetNetrcMachineName() string {
+	if c != nil {
+		return c.NetrcMachineName
+	}
+	return ""
+}
+
 func printApiKeysDictErrorMessage(missingKey, mismatchKey, missingSecret bool, cluster *KafkaClusterConfig, contextName string) {
 	var problems []string
 	if missingKey {

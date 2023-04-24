@@ -1,6 +1,7 @@
 package test
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -8,19 +9,22 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/confluentinc/cli/internal/pkg/auth"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 var (
-	urlPlaceHolder     		= "<URL_PLACEHOLDER>"
-	savedToNetrcOutput 		= fmt.Sprintf(errors.WroteCredentialsToNetrcMsg, "/tmp/netrc_test")
-	loggedInAsOutput   		= fmt.Sprintf(errors.LoggedInAsMsg, "good@user.com")
+	urlPlaceHolder          = "<URL_PLACEHOLDER>"
+	savedToNetrcOutput      = fmt.Sprintf(errors.WroteCredentialsToNetrcMsg, "/tmp/netrc_test")
+	loggedInAsOutput        = fmt.Sprintf(errors.LoggedInAsMsg, "good@user.com")
+	urlPlaceHolder          = "<URL_PLACEHOLDER>"
+	passwordPlaceholder     = "<PASSWORD_PLACEHOLDER>"
+	loggedInAsOutput        = fmt.Sprintf(errors.LoggedInAsMsg, "good@user.com")
 	loggedInAsWithOrgOutput = fmt.Sprintf(errors.LoggedInAsMsgWithOrg, "good@user.com", "abc-123", "Confluent")
-	loggedInEnvOutput  		= fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default")
+	loggedInEnvOutput       = fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default")
 )
 
 func (s *CLITestSuite) TestCcloudLoginUseKafkaAuthKafkaErrors() {
@@ -82,13 +86,13 @@ func (s *CLITestSuite) TestSaveUsernamePassword() {
 	}{
 		{
 			true,
-			"login/netrc-save-ccloud-username-password.golden",
+			"login/config-save-ccloud-username-password.golden",
 			s.TestBackend.GetCloudUrl(),
 			testBin,
 		},
 		{
 			false,
-			"login/netrc-save-mds-username-password.golden",
+			"login/config-save-mds-username-password.golden",
 			s.TestBackend.GetMdsUrl(),
 			testBin,
 		},
@@ -99,25 +103,18 @@ func (s *CLITestSuite) TestSaveUsernamePassword() {
 		s.T().Fatalf("problems recovering caller information")
 	}
 
-	netrcInput := filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "login", "netrc")
 	for _, tt := range tests {
-		// store existing credentials in netrc to check that they are not corrupted
-		originalNetrc, err := ioutil.ReadFile(netrcInput)
-		s.NoError(err)
-		err = ioutil.WriteFile(netrc.NetrcIntegrationTestFile, originalNetrc, 0600)
-		s.NoError(err)
-
+		configFile := filepath.Join(os.Getenv("HOME"), ".confluent", "config.json")
 		// run the login command with --save flag and check output
 		var env []string
 		if tt.isCloud {
-			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", auth.ConfluentCloudPassword)}
+			env = []string{fmt.Sprintf("%s=good@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
 		} else {
-			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentPlatformUsername), fmt.Sprintf("%s=pass1", auth.ConfluentPlatformPassword)}
+			env = []string{fmt.Sprintf("%s=good@user.com", pauth.ConfluentPlatformUsername), fmt.Sprintf("%s=pass1", pauth.ConfluentPlatformPassword)}
 		}
 
 		// TODO: add save test using stdin input
 		output := runCommand(s.T(), tt.bin, env, "login -vvv --save --url "+tt.loginURL, 0)
-		s.Contains(output, savedToNetrcOutput)
 		if tt.isCloud {
 			s.Contains(output, loggedInAsWithOrgOutput)
 			s.Contains(output, loggedInEnvOutput)
@@ -126,64 +123,57 @@ func (s *CLITestSuite) TestSaveUsernamePassword() {
 		}
 
 		// check netrc file result
-		got, err := ioutil.ReadFile(netrc.NetrcIntegrationTestFile)
+		got, err := os.ReadFile(configFile)
 		s.NoError(err)
 		wantFile := filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", tt.want)
 		s.NoError(err)
 		wantBytes, err := ioutil.ReadFile(wantFile)
 		s.NoError(err)
-		want := strings.Replace(string(wantBytes), urlPlaceHolder, tt.loginURL, 1)
-		s.Equal(utils.NormalizeNewLines(want), utils.NormalizeNewLines(string(got)))
+		want := strings.Replace(string(wantBytes), urlPlaceHolder, tt.loginURL, -1)
+		data := v1.Config{}
+		err = json.Unmarshal(got, &data)
+		s.NoError(err)
+		want = strings.Replace(want, passwordPlaceholder, data.SavedCredentials["login-good@user.com-"+tt.loginURL].EncryptedPassword, -1)
+		require.Contains(s.T(), utils.NormalizeNewLines(string(got)), utils.NormalizeNewLines(string(want)))
 	}
 	_ = os.Remove(netrc.NetrcIntegrationTestFile)
 }
 
 func (s *CLITestSuite) TestUpdateNetrcPassword() {
-	_, callerFileName, _, ok := runtime.Caller(0)
-	if !ok {
-		s.T().Fatalf("problems recovering caller information")
-	}
-
 	tests := []struct {
-		input    string
 		isCloud  bool
-		want     string
 		loginURL string
 		bin      string
 	}{
 		{
-			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "login", "netrc-old-password-ccloud"),
 			true,
-			"login/netrc-save-ccloud-username-password.golden",
 			s.TestBackend.GetCloudUrl(),
 			testBin,
 		},
 		{
-			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "login", "netrc-old-password-mds"),
 			false,
-			"login/netrc-save-mds-username-password.golden",
 			s.TestBackend.GetMdsUrl(),
 			testBin,
 		},
 	}
 
 	for _, tt := range tests {
-		// store existing credential + the user credential to be updated
-		originalNetrc, err := ioutil.ReadFile(tt.input)
-		s.NoError(err)
-		originalNetrcString := strings.Replace(string(originalNetrc), urlPlaceHolder, tt.loginURL, 1)
-		err = ioutil.WriteFile(netrc.NetrcIntegrationTestFile, []byte(originalNetrcString), 0600)
-		s.NoError(err)
-
 		// run the login command with --save flag and check output
 		var env []string
 		if tt.isCloud {
-			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", auth.ConfluentCloudPassword)}
+			env = []string{fmt.Sprintf("%s=good@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
 		} else {
-			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentPlatformUsername), fmt.Sprintf("%s=pass1", auth.ConfluentPlatformPassword)}
+			env = []string{fmt.Sprintf("%s=good@user.com", pauth.ConfluentPlatformUsername), fmt.Sprintf("%s=pass1", pauth.ConfluentPlatformPassword)}
 		}
+
+		configFile := filepath.Join(os.Getenv("HOME"), ".confluent", "config.json")
+		old, err := os.ReadFile(configFile)
+		s.NoError(err)
+		oldData := v1.Config{}
+		err = json.Unmarshal(old, &oldData)
+		s.NoError(err)
+
 		output := runCommand(s.T(), tt.bin, env, "login -vvv --save --url "+tt.loginURL, 0)
-		s.Contains(output, savedToNetrcOutput)
 		if tt.isCloud {
 			s.Contains(output, loggedInAsWithOrgOutput)
 			s.Contains(output, loggedInEnvOutput)
@@ -191,15 +181,13 @@ func (s *CLITestSuite) TestUpdateNetrcPassword() {
 			s.Contains(output, loggedInAsOutput)
 		}
 
-		// check netrc file result
-		got, err := ioutil.ReadFile(netrc.NetrcIntegrationTestFile)
+		got, err := os.ReadFile(configFile)
 		s.NoError(err)
-		wantFile := filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", tt.want)
+		data := v1.Config{}
+		err = json.Unmarshal(got, &data)
 		s.NoError(err)
-		wantBytes, err := ioutil.ReadFile(wantFile)
-		s.NoError(err)
-		want := strings.Replace(string(wantBytes), urlPlaceHolder, tt.loginURL, 1)
-		s.Equal(utils.NormalizeNewLines(want), utils.NormalizeNewLines(string(got)))
+
+		s.NotEqual(oldData.SavedCredentials, data.SavedCredentials)
 	}
 	_ = os.Remove(netrc.NetrcIntegrationTestFile)
 }

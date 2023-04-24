@@ -240,7 +240,7 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(cmd *cobra
 			if _, ok := setContextErr.(*errors.NotLoggedInError); ok { //nolint:gosimple // false positive
 				var netrcMachineName string
 				if ctx := command.Config.Context(); ctx != nil {
-					netrcMachineName = ctx.NetrcMachineName
+					netrcMachineName = ctx.GetNetrcMachineName()
 				}
 
 				if err := r.ccloudAutoLogin(cmd, netrcMachineName); err != nil {
@@ -308,8 +308,9 @@ func (r *PreRun) ccloudAutoLogin(cmd *cobra.Command, netrcMachineName string) er
 		log.CliLogger.Debug("Non-interactive login failed: no credentials")
 		return nil
 	}
-	client := r.CCloudClientFactory.JwtHTTPClientFactory(context.Background(), token, pauth.CCloudURL)
-	currentEnv, currentOrg, err := pauth.PersistCCloudLoginToConfig(r.Config, credentials.Username, pauth.CCloudURL, token, client)
+
+	client := r.CCloudClientFactory.JwtHTTPClientFactory(context.Background(), credentials.AuthToken, pauth.CCloudURL)
+	currentEnv, currentOrg, err := pauth.PersistCCloudCredentialsToConfig(r.Config, client, pauth.CCloudURL, credentials, false)
 	if err != nil {
 		return err
 	}
@@ -319,15 +320,18 @@ func (r *PreRun) ccloudAutoLogin(cmd *cobra.Command, netrcMachineName string) er
 	return nil
 }
 
-func (r *PreRun) getCCloudTokenAndCredentials(cmd *cobra.Command, netrcMachineName, orgResourceId string) (string, *pauth.Credentials, error) {
-	netrcFilterParams := netrc.NetrcMachineParams{
+func (r *PreRun) getCCloudCredentials(cmd *cobra.Command, netrcMachineName, orgResourceId string) (*pauth.Credentials, error) {
+	filterParams := netrc.NetrcMachineParams{
 		Name:    netrcMachineName,
 		IsCloud: true,
 	}
 
 	credentials, err := pauth.GetLoginCredentials(
 		r.LoginCredentialsManager.GetCloudCredentialsFromEnvVar(cmd, orgResourceId),
-		r.LoginCredentialsManager.GetCredentialsFromNetrc(cmd, netrcFilterParams),
+		r.LoginCredentialsManager.GetCredentialsFromKeychain(r.Config, true, filterParams.Name, pauth.CCloudURL),
+		r.LoginCredentialsManager.GetPrerunCredentialsFromConfig(r.Config),
+		r.LoginCredentialsManager.GetCredentialsFromNetrc(cmd, filterParams),
+		r.LoginCredentialsManager.GetCredentialsFromConfig(r.Config, filterParams),
 	)
 	if err != nil {
 		log.CliLogger.Debugf("Prerun login getting credentials failed: %v", err.Error())
@@ -460,7 +464,7 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(cmd
 			if _, ok := setContextErr.(*errors.NotLoggedInError); ok { //nolint:gosimple // false positive
 				var netrcMachineName string
 				if ctx := command.Config.Context(); ctx != nil {
-					netrcMachineName = ctx.NetrcMachineName
+					netrcMachineName = ctx.GetNetrcMachineName()
 				}
 
 				if err := r.confluentAutoLogin(cmd, netrcMachineName); err != nil {
@@ -506,7 +510,7 @@ func (r *PreRun) confluentAutoLogin(cmd *cobra.Command, netrcMachineName string)
 		log.CliLogger.Debug("Non-interactive login failed: no credentials")
 		return nil
 	}
-	err = pauth.PersistConfluentLoginToConfig(r.Config, credentials.Username, credentials.PrerunLoginURL, token, credentials.PrerunLoginCaCertPath, false)
+	err = pauth.PersistConfluentLoginToConfig(r.Config, credentials, credentials.PrerunLoginURL, token, credentials.PrerunLoginCaCertPath, false, false)
 	if err != nil {
 		return err
 	}
@@ -516,14 +520,14 @@ func (r *PreRun) confluentAutoLogin(cmd *cobra.Command, netrcMachineName string)
 }
 
 func (r *PreRun) getConfluentTokenAndCredentials(cmd *cobra.Command, netrcMachineName string) (string, *pauth.Credentials, error) {
-	netrcMachineParams := netrc.NetrcMachineParams{
+	filterParams := netrc.NetrcMachineParams{
 		Name:    netrcMachineName,
 		IsCloud: false,
 	}
 
 	credentials, err := pauth.GetLoginCredentials(
 		r.LoginCredentialsManager.GetOnPremPrerunCredentialsFromEnvVar(cmd),
-		r.LoginCredentialsManager.GetOnPremPrerunCredentialsFromNetrc(cmd, netrcMachineParams),
+		r.LoginCredentialsManager.GetOnPremPrerunCredentialsFromNetrc(cmd, filterParams),
 	)
 	if err != nil {
 		return "", nil, err
@@ -766,12 +770,16 @@ func (r *PreRun) updateToken(tokenError error, cmd *cobra.Command, ctx *DynamicC
 	return nil
 }
 
-func (r *PreRun) getUpdatedAuthToken(cmd *cobra.Command, ctx *DynamicContext) (string, error) {
-	params := netrc.NetrcMachineParams{
+func (r *PreRun) getUpdatedAuthToken(ctx *dynamicconfig.DynamicContext, unsafeTrace bool) (string, string, error) {
+	filterParams := netrc.NetrcMachineParams{
 		IsCloud: r.Config.IsCloudLogin(),
-		Name:    ctx.Name,
+		Name:    ctx.GetNetrcMachineName(),
 	}
-	credentials, err := pauth.GetLoginCredentials(r.LoginCredentialsManager.GetCredentialsFromNetrc(cmd, params))
+	credentials, err := pauth.GetLoginCredentials(
+		r.LoginCredentialsManager.GetPrerunCredentialsFromConfig(ctx.Config),
+		r.LoginCredentialsManager.GetCredentialsFromNetrc(filterParams),
+		r.LoginCredentialsManager.GetCredentialsFromConfig(r.Config, filterParams),
+	)
 	if err != nil {
 		return "", err
 	}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"runtime"
 	"strings"
 
 	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
@@ -13,6 +14,8 @@ import (
 
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/keychain"
+	"github.com/confluentinc/cli/internal/pkg/secret"
 )
 
 const (
@@ -48,11 +51,19 @@ func GetEnvWithFallback(current, deprecated string) string {
 	return ""
 }
 
-func PersistLogoutToConfig(config *v1.Config) error {
+func PersistLogout(config *v1.Config) error {
 	ctx := config.Context()
 	if ctx == nil {
 		return nil
 	}
+
+	if runtime.GOOS == "darwin" && !config.IsTest {
+		if err := keychain.Delete(config.IsCloudLogin(), ctx.GetNetrcMachineName()); err != nil {
+			return err
+		}
+	}
+
+	delete(ctx.Config.SavedCredentials, ctx.Name)
 	err := ctx.DeleteUserAuth()
 	if err != nil {
 		return err
@@ -61,34 +72,32 @@ func PersistLogoutToConfig(config *v1.Config) error {
 	return config.Save()
 }
 
-func PersistConfluentLoginToConfig(config *v1.Config, username string, url string, token string, caCertPath string, isLegacyContext bool) error {
-	state := &v1.ContextState{
-		Auth:      nil,
-		AuthToken: token,
-	}
+func PersistConfluentLoginToConfig(config *v1.Config, credentials *Credentials, url, token, caCertPath string, isLegacyContext, save bool) error {
+	username := credentials.Username
+	state := &v1.ContextState{AuthToken: token}
 	var ctxName string
 	if isLegacyContext {
 		ctxName = GenerateContextName(username, url, "")
 	} else {
 		ctxName = GenerateContextName(username, url, caCertPath)
 	}
-	return addOrUpdateContext(config, ctxName, username, url, state, caCertPath, "")
+	return addOrUpdateContext(config, false, credentials, ctxName, url, state, caCertPath, "", save)
 }
 
-func PersistCCloudLoginToConfig(config *v1.Config, email string, url string, token string, client *ccloud.Client) (*orgv1.Account, *orgv1.Organization, error) {
-	ctxName := GenerateCloudContextName(email, url)
+func PersistCCloudCredentialsToConfig(config *v1.Config, client *ccloud.Client, url string, credentials *Credentials, save bool) (*orgv1.Account, *orgv1.Organization, error) {
+	ctxName := GenerateCloudContextName(credentials.Username, url)
 	user, err := getCCloudUser(client)
 	if err != nil {
 		return nil, nil, err
 	}
 	state := getCCloudContextState(config, ctxName, token, user)
 
-	err = addOrUpdateContext(config, ctxName, email, url, state, "", user.Organization.ResourceId)
+	err = addOrUpdateContext(config, true, credentials, ctxName, url, state, "", user.GetOrganization().GetResourceId(), save)
 	return state.Auth.Account, user.Organization, err
 }
 
-func addOrUpdateContext(config *v1.Config, ctxName string, username string, url string, state *v1.ContextState, caCertPath, orgResourceId string) error {
-	credName := generateCredentialName(username)
+func addOrUpdateContext(config *v1.Config, isCloud bool, credentials *Credentials, ctxName, url string, state *v1.ContextState, caCertPath, orgResourceId string, save bool) error {
+	credName := generateCredentialName(credentials.Username)
 	platform := &v1.Platform{
 		Name:       strings.TrimPrefix(url, "https://"),
 		Server:     url,
@@ -96,7 +105,7 @@ func addOrUpdateContext(config *v1.Config, ctxName string, username string, url 
 	}
 	credential := &v1.Credential{
 		Name:     credName,
-		Username: username,
+		Username: credentials.Username,
 		// don't save password if they entered it interactively.
 	}
 
@@ -107,6 +116,46 @@ func addOrUpdateContext(config *v1.Config, ctxName string, username string, url 
 	if err := config.SaveCredential(credential); err != nil {
 		return err
 	}
+
+	if save && !credentials.IsSSO {
+		salt, err := secret.GenerateRandomBytes(secret.SaltLength)
+		if err != nil {
+			return err
+		}
+		nonce, err := secret.GenerateRandomBytes(secret.NonceLength)
+		if err != nil {
+			return err
+		}
+
+		encryptedPassword, err := secret.Encrypt(credentials.Username, credentials.Password, salt, nonce)
+		if err != nil {
+			return err
+		}
+
+		loginCredential := &v1.LoginCredential{
+			IsCloud:           isCloud,
+			Url:               url,
+			Username:          credentials.Username,
+			EncryptedPassword: encryptedPassword,
+			Salt:              salt,
+			Nonce:             nonce,
+		}
+		if err := config.SaveLoginCredential(ctxName, loginCredential); err != nil {
+			return err
+		}
+	}
+
+	stateSalt, err := secret.GenerateRandomBytes(secret.SaltLength)
+	if err != nil {
+		return err
+	}
+	stateNonce, err := secret.GenerateRandomBytes(secret.NonceLength)
+	if err != nil {
+		return err
+	}
+
+	state.Salt = stateSalt
+	state.Nonce = stateNonce
 
 	if ctx, ok := config.Contexts[ctxName]; ok {
 		config.ContextStates[ctxName] = state

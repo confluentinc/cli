@@ -62,5 +62,13 @@
       "auth_token": ""
     }
   },
-  "current_context": "my-context"
+  "current_context": "my-context",
+  "saved_credentials": {
+    "my-context": {
+      "is_cloud": true,
+      "url": "",
+      "username": "test-user",
+      "encrypted_password": "encrypted-password"
+    }
+  }
 }
