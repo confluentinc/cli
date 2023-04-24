@@ -90,7 +90,7 @@ func TestProcessSetStatement(t *testing.T) {
 		assert.Nil(t, err)
 		assert.EqualValues(t, "Completed", result.Status)
 		expectedResult := createStatementResults([]string{"Key", "Value"}, [][]string{})
-		assert.Equal(t, expectedResult, result.StatementResults)
+		assert.Equal(t, &expectedResult, result.StatementResults)
 
 		// Add some key-value pairs to the config
 		s.Properties["pipeline.name"] = "job1"
@@ -103,7 +103,7 @@ func TestProcessSetStatement(t *testing.T) {
 		assert.EqualValues(t, "Completed", result.Status)
 		assert.Equal(t, "Config updated successfuly.", result.StatusDetail)
 		expectedResult := createStatementResults([]string{"Key", "Value"}, [][]string{{"location", "USA"}})
-		assert.Equal(t, expectedResult, result.StatementResults)
+		assert.Equal(t, &expectedResult, result.StatementResults)
 	})
 
 	t.Run("should return all keys and values from config if configKey is empty after updates", func(t *testing.T) {
@@ -112,15 +112,13 @@ func TestProcessSetStatement(t *testing.T) {
 		assert.EqualValues(t, "Completed", result.Status)
 		expectedKeyValuePairs := map[string]string{"pipeline.name": "job1", "timeout": "30", "location": "USA"}
 
-		// check row length matches
-		assert.Equal(t, 2, len(result.StatementResults))
-		assert.Equal(t, len(expectedKeyValuePairs), len(result.StatementResults[0].Fields))
+		// check row and column lengths match
+		assert.Equal(t, 2, len(result.StatementResults.Headers))
+		assert.Equal(t, len(expectedKeyValuePairs), len(result.StatementResults.Rows))
 		// check if all expected key value pairs are in the results
-		for rowIdx := range result.StatementResults[0].Fields {
-			keyCol := result.StatementResults[0]
-			valueCol := result.StatementResults[1]
-			keyField := keyCol.Fields[rowIdx].(types.AtomicStatementResultField)
-			valueField := valueCol.Fields[rowIdx].(types.AtomicStatementResultField)
+		for _, row := range result.StatementResults.Rows {
+			keyField := row.Fields[0].(types.AtomicStatementResultField)
+			valueField := row.Fields[1].(types.AtomicStatementResultField)
 			assert.Equal(t, expectedKeyValuePairs[keyField.Value], valueField.Value)
 		}
 	})
@@ -158,7 +156,7 @@ func TestProcessResetStatement(t *testing.T) {
 		assert.EqualValues(t, "Completed", result.Status)
 		assert.Equal(t, "Config key \"pipeline.name\" has been reset successfuly.", result.StatusDetail)
 		expectedResult := createStatementResults([]string{"Key", "Value"}, [][]string{})
-		assert.Equal(t, expectedResult, result.StatementResults)
+		assert.Equal(t, &expectedResult, result.StatementResults)
 	})
 	t.Run("should return all keys and values from config after updates", func(t *testing.T) {
 		result, _ := s.processResetStatement("reset")
@@ -186,7 +184,7 @@ func TestProcessUseStatement(t *testing.T) {
 		require.EqualValues(t, "Completed", result.Status)
 		require.Equal(t, "Config updated successfuly.", result.StatusDetail)
 		expectedResult := createStatementResults([]string{"Key", "Value"}, [][]string{{configKeyDatabase, "db1"}})
-		assert.Equal(t, expectedResult, result.StatementResults)
+		assert.Equal(t, &expectedResult, result.StatementResults)
 	})
 
 	t.Run("should return an error message if catalog name is missing", func(t *testing.T) {
@@ -201,7 +199,7 @@ func TestProcessUseStatement(t *testing.T) {
 		require.EqualValues(t, "Completed", result.Status)
 		require.Equal(t, "Config updated successfuly.", result.StatusDetail)
 		expectedResult := createStatementResults([]string{"Key", "Value"}, [][]string{{configKeyCatalog, "metadata"}})
-		assert.Equal(t, expectedResult, result.StatementResults)
+		assert.Equal(t, &expectedResult, result.StatementResults)
 	})
 
 	t.Run("should return an error message for invalid syntax", func(t *testing.T) {

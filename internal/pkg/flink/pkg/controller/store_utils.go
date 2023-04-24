@@ -26,24 +26,22 @@ const (
 	OTHER_STATEMENT StatementType = "OTHER"
 )
 
-func createStatementResults(columnNames []string, rows [][]string) []types.StatementResultColumn {
-	var statementResults []types.StatementResultColumn
-	for _, columnName := range columnNames {
-		statementResults = append(statementResults, types.StatementResultColumn{
-			Name: columnName,
-			Type: types.VARCHAR,
-		})
-	}
-
+func createStatementResults(columnNames []string, rows [][]string) types.StatementResults {
+	var statementResultRows []types.StatementResultRow
 	for _, row := range rows {
-		for colIdx, field := range row {
-			statementResults[colIdx].Fields = append(statementResults[colIdx].Fields, types.AtomicStatementResultField{
+		var statementResultRow types.StatementResultRow
+		for _, field := range row {
+			statementResultRow.Fields = append(statementResultRow.Fields, types.AtomicStatementResultField{
 				Type:  types.VARCHAR,
 				Value: field,
 			})
 		}
+		statementResultRows = append(statementResultRows, statementResultRow)
 	}
-	return statementResults
+	return types.StatementResults{
+		Headers: columnNames,
+		Rows:    statementResultRows,
+	}
 }
 
 func (s *Store) processSetStatement(statement string) (*types.ProcessedStatement, *types.StatementError) {
@@ -52,20 +50,22 @@ func (s *Store) processSetStatement(statement string) (*types.ProcessedStatement
 		return nil, err.(*types.StatementError)
 	}
 	if configKey == "" {
+		statementResults := createStatementResults([]string{"Key", "Value"}, lo.MapToSlice(s.Properties, func(key, val string) []string { return []string{key, val} }))
 		return &types.ProcessedStatement{
 			Kind:             configOpSet,
 			Status:           "Completed",
-			StatementResults: createStatementResults([]string{"Key", "Value"}, lo.MapToSlice(s.Properties, func(key, val string) []string { return []string{key, val} })),
+			StatementResults: &statementResults,
 			IsLocalStatement: true,
 		}, nil
 	}
 	s.Properties[configKey] = configVal
 
+	statementResults := createStatementResults([]string{"Key", "Value"}, [][]string{{configKey, configVal}})
 	return &types.ProcessedStatement{
 		Kind:             configOpSet,
 		StatusDetail:     "Config updated successfuly.",
 		Status:           "Completed",
-		StatementResults: createStatementResults([]string{"Key", "Value"}, [][]string{{configKey, configVal}}),
+		StatementResults: &statementResults,
 		IsLocalStatement: true,
 	}, nil
 }
@@ -90,11 +90,12 @@ func (s *Store) processResetStatement(statement string) (*types.ProcessedStateme
 		}
 
 		delete(s.Properties, configKey)
+		statementResults := createStatementResults([]string{"Key", "Value"}, lo.MapToSlice(s.Properties, func(key, val string) []string { return []string{key, val} }))
 		return &types.ProcessedStatement{
 			Kind:             configOpReset,
 			StatusDetail:     fmt.Sprintf("Config key \"%s\" has been reset successfuly.", configKey),
 			Status:           "Completed",
-			StatementResults: createStatementResults([]string{"Key", "Value"}, lo.MapToSlice(s.Properties, func(key, val string) []string { return []string{key, val} })),
+			StatementResults: &statementResults,
 			IsLocalStatement: true,
 		}, nil
 	}
@@ -107,11 +108,12 @@ func (s *Store) processUseStatement(statement string) (*types.ProcessedStatement
 	}
 
 	s.Properties[configKey] = configVal
+	statementResults := createStatementResults([]string{"Key", "Value"}, [][]string{{configKey, configVal}})
 	return &types.ProcessedStatement{
 		Kind:             configOpUse,
 		StatusDetail:     "Config updated successfuly.",
 		Status:           "Completed",
-		StatementResults: createStatementResults([]string{"Key", "Value"}, [][]string{{configKey, configVal}}),
+		StatementResults: &statementResults,
 		IsLocalStatement: true,
 	}, nil
 }

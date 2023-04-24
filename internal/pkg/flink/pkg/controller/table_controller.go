@@ -78,17 +78,23 @@ func (t *TableController) SetDataAndFocus(statement types.ProcessedStatement) {
 	t.focus()
 }
 
-func (t *TableController) setData(statementResults []types.StatementResultColumn) {
+func (t *TableController) setData(statementResults *types.StatementResults) {
+	if statementResults == nil {
+		return
+	}
 	t.table.Clear()
-	for colIdx, column := range statementResults {
-		// Print header
-		tableCell := tview.NewTableCell(column.Name).
+	// Print header
+	for colIdx, column := range statementResults.Headers {
+		tableCell := tview.NewTableCell(column).
 			SetTextColor(tcell.ColorYellow).
 			SetAlign(tview.AlignLeft).
 			SetSelectable(false)
 		t.table.SetCell(0, colIdx, tableCell)
-		// Print content
-		for rowIdx, field := range column.Fields {
+	}
+
+	// Print content
+	for rowIdx, row := range statementResults.Rows {
+		for colIdx, field := range row.Fields {
 			color := tcell.ColorWhite
 			tableCell := tview.NewTableCell(tview.Escape(field.Format(nil))).
 				SetTextColor(color).

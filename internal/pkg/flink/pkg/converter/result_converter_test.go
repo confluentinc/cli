@@ -90,14 +90,14 @@ func (s *ResultConverterTestSuite) TestConvertResults() {
 		convertedResults, err := ConvertToInternalResults(statementResults, results.ResultSchema)
 		require.NotNil(s.T(), convertedResults)
 		require.NoError(s.T(), err)
-		require.True(s.T(), len(convertedResults) > 0)
-		require.Equal(s.T(), len(statementResults), len(convertedResults[0].Fields)) // row number should match
-		for rowIdx := range convertedResults[0].Fields {
+		require.True(s.T(), len(convertedResults.Headers) > 0)
+		require.Equal(s.T(), len(statementResults), len(convertedResults.Rows)) // row number should match
+		for rowIdx, row := range convertedResults.Rows {
 			rowItem := statementResults[rowIdx].GetRow()
 			items := rowItem.Items
-			require.Equal(s.T(), len(items), len(convertedResults)) // column number for this row should match
-			for colIdx, column := range convertedResults {
-				require.Equal(s.T(), items[colIdx], column.Fields[rowIdx].ToSDKType()) // fields should match
+			require.Equal(s.T(), len(items), len(convertedResults.Headers)) // column number for this row should match
+			for colIdx, field := range row.Fields {
+				require.Equal(s.T(), items[colIdx], field.ToSDKType()) // fields should match
 			}
 		}
 	})

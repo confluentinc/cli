@@ -18,24 +18,30 @@ func convertToInternalField(field v1.SqlV1alpha1ResultItemRowOneOf, details v1.C
 	}
 }
 
-func ConvertToInternalResults(results []v1.SqlV1alpha1ResultItem, resultSchema v1.SqlV1alpha1ResultSchema) ([]types.StatementResultColumn, error) {
-	var convertedResults []types.StatementResultColumn
+func ConvertToInternalResults(results []v1.SqlV1alpha1ResultItem, resultSchema v1.SqlV1alpha1ResultSchema) (*types.StatementResults, error) {
+	var header []string
 	for _, column := range resultSchema.GetColumns() {
-		convertedResults = append(convertedResults, types.StatementResultColumn{
-			Name: column.GetName(),
-			Type: types.NewResultFieldType(column.GetType()),
-		})
+		header = append(header, column.GetName())
 	}
 
+	var convertedResults []types.StatementResultRow
 	for _, result := range results {
 		row := result.GetRow()
 		if len(row.Items) != len(resultSchema.GetColumns()) {
 			return nil, errors.New("given result row does not match the provided schema")
 		}
+
+		var convertedFields []types.StatementResultField
 		for idx, field := range row.Items {
 			columnSchema := resultSchema.GetColumns()[idx]
-			convertedResults[idx].Fields = append(convertedResults[idx].Fields, convertToInternalField(field, columnSchema))
+			convertedFields = append(convertedFields, convertToInternalField(field, columnSchema))
 		}
+		convertedResults = append(convertedResults, types.StatementResultRow{
+			Fields: convertedFields,
+		})
 	}
-	return convertedResults, nil
+	return &types.StatementResults{
+		Headers: header,
+		Rows:    convertedResults,
+	}, nil
 }

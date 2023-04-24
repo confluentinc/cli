@@ -2,9 +2,12 @@ package types
 
 import v1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"
 
-type StatementResultColumn struct {
-	Name   string
-	Type   StatementResultFieldType
+type StatementResults struct {
+	Headers []string
+	Rows    []StatementResultRow
+}
+
+type StatementResultRow struct {
 	Fields []StatementResultField
 }
 
@@ -42,5 +45,5 @@ type ProcessedStatement struct {
 	IsLocalStatement bool
 	PageToken        string
 	ResultSchema     v1.SqlV1alpha1ResultSchema
-	StatementResults []StatementResultColumn
+	StatementResults *StatementResults
 }

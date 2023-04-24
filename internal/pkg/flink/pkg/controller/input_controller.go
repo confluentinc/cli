@@ -36,7 +36,7 @@ type InputController struct {
 
 func shouldUseTView(statement types.ProcessedStatement) bool {
 	// only use view for non-local statements, that have more than one row and more than one column
-	if !statement.IsLocalStatement && len(statement.StatementResults) > 1 && len(statement.StatementResults[0].Fields) > 1 {
+	if !statement.IsLocalStatement && len(statement.StatementResults.Headers) > 1 && len(statement.StatementResults.Rows) > 1 {
 		return true
 	}
 	return false
@@ -140,26 +140,21 @@ func (c *InputController) toggleOutputMode() {
 	components.PrintOutputModeState(c.appController.GetOutputMode() == TViewOutput, maxCol)
 }
 
-func printResultToSTDOUT(statementResults []types.StatementResultColumn) {
-	if len(statementResults) == 0 {
+func printResultToSTDOUT(statementResults *types.StatementResults) {
+	if statementResults == nil || len(statementResults.Headers) == 0 || len(statementResults.Rows) == 0 {
 		return
 	}
 
-	//build matrix
-	header := make([]string, len(statementResults))
-	formattedResults := make([][]string, len(statementResults[0].Fields))
-	for i := range formattedResults {
-		formattedResults[i] = make([]string, len(statementResults))
-	}
-	//fill matrix
-	for colIdx, column := range statementResults {
-		header[colIdx] = column.Name
-		for rowIdx, field := range column.Fields {
-			formattedResults[rowIdx][colIdx] = field.Format(nil)
+	var formattedResults [][]string
+	for _, row := range statementResults.Rows {
+		var formattedRow []string
+		for _, field := range row.Fields {
+			formattedRow = append(formattedRow, field.Format(nil))
 		}
+		formattedResults = append(formattedResults, formattedRow)
 	}
 	rawTable := tablewriter.NewWriter(os.Stdout)
-	rawTable.SetHeader(header)
+	rawTable.SetHeader(statementResults.Headers)
 	rawTable.AppendBulk(formattedResults)
 	rawTable.Render() // Send output
 }

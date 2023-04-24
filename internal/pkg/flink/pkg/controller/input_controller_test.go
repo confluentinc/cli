@@ -71,56 +71,38 @@ func TestShouldUseTView(t *testing.T) {
 		},
 		{
 			name:      "statement with no results should not use TView",
-			statement: types.ProcessedStatement{IsLocalStatement: false, StatementResults: []types.StatementResultColumn{}},
+			statement: types.ProcessedStatement{IsLocalStatement: false, StatementResults: &types.StatementResults{}},
 			want:      false,
 		},
 		{
 			name: "statement with one column and two rows should not use TView",
-			statement: types.ProcessedStatement{IsLocalStatement: false, StatementResults: []types.StatementResultColumn{{
-				Name:   "Column 1",
-				Fields: []types.StatementResultField{types.AtomicStatementResultField{}, types.AtomicStatementResultField{}},
-			}}},
+			statement: types.ProcessedStatement{IsLocalStatement: false, StatementResults: &types.StatementResults{
+				Headers: []string{"Column 1"},
+				Rows:    []types.StatementResultRow{{Fields: []types.StatementResultField{types.AtomicStatementResultField{}}}, {Fields: []types.StatementResultField{types.AtomicStatementResultField{}}}},
+			}},
 			want: false,
 		},
 		{
 			name: "statement with two columns and one row should not use TView",
-			statement: types.ProcessedStatement{IsLocalStatement: false, StatementResults: []types.StatementResultColumn{
-				{
-					Name:   "Column 1",
-					Fields: []types.StatementResultField{types.AtomicStatementResultField{}},
-				},
-				{
-					Name:   "Column 2",
-					Fields: []types.StatementResultField{types.AtomicStatementResultField{}},
-				},
+			statement: types.ProcessedStatement{IsLocalStatement: false, StatementResults: &types.StatementResults{
+				Headers: []string{"Column 1", "Column 2"},
+				Rows:    []types.StatementResultRow{{Fields: []types.StatementResultField{types.AtomicStatementResultField{}}}},
 			}},
 			want: false,
 		},
 		{
 			name: "statement with two columns and two rows should use TView",
-			statement: types.ProcessedStatement{IsLocalStatement: false, StatementResults: []types.StatementResultColumn{
-				{
-					Name:   "Column 1",
-					Fields: []types.StatementResultField{types.AtomicStatementResultField{}, types.AtomicStatementResultField{}},
-				},
-				{
-					Name:   "Column 2",
-					Fields: []types.StatementResultField{types.AtomicStatementResultField{}, types.AtomicStatementResultField{}},
-				},
+			statement: types.ProcessedStatement{IsLocalStatement: false, StatementResults: &types.StatementResults{
+				Headers: []string{"Column 1", "Column 2"},
+				Rows:    []types.StatementResultRow{{Fields: []types.StatementResultField{types.AtomicStatementResultField{}}}, {Fields: []types.StatementResultField{types.AtomicStatementResultField{}}}},
 			}},
 			want: true,
 		},
 		{
 			name: "local statement with two columns and two rows should not use TView",
-			statement: types.ProcessedStatement{IsLocalStatement: true, StatementResults: []types.StatementResultColumn{
-				{
-					Name:   "Column 1",
-					Fields: []types.StatementResultField{types.AtomicStatementResultField{}, types.AtomicStatementResultField{}},
-				},
-				{
-					Name:   "Column 2",
-					Fields: []types.StatementResultField{types.AtomicStatementResultField{}, types.AtomicStatementResultField{}},
-				},
+			statement: types.ProcessedStatement{IsLocalStatement: true, StatementResults: &types.StatementResults{
+				Headers: []string{"Column 1", "Column 2"},
+				Rows:    []types.StatementResultRow{{Fields: []types.StatementResultField{types.AtomicStatementResultField{}}}, {Fields: []types.StatementResultField{types.AtomicStatementResultField{}}}},
 			}},
 			want: false,
 		},
