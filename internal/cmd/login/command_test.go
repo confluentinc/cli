@@ -96,7 +96,12 @@ var (
 				}, nil
 			}
 		},
-		GetCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
+		GetSsoCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
+			return func() (*pauth.Credentials, error) {
+				return nil, nil
+			}
+		},
+		GetCredentialsFromConfigFunc: func(_ *v1.Config, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
@@ -106,7 +111,12 @@ var (
 				return nil, nil
 			}
 		},
-		SetCloudClientFunc: func(arg0 *ccloudv1.Client) {
+		GetCredentialsFromKeychainFunc: func(_ *v1.Config, _ bool, _, _ string) func() (*pauth.Credentials, error) {
+			return func() (*pauth.Credentials, error) {
+				return nil, nil
+			}
+		},
+		SetCloudClientFunc: func(arg0 *ccloud.Client) {
 		},
 	}
 	LoginOrganizationManager = &climock.LoginOrganizationManager{
@@ -134,11 +144,8 @@ var (
 			return testToken1, nil
 		},
 	}
-	mockNetrcHandler = &pmock.MockNetrcHandler{
+	mockNetrcHandler = &pmock.NetrcHandler{
 		GetFileNameFunc: func() string { return netrcFile },
-		WriteNetrcCredentialsFunc: func(isCloud bool, ctxName, username, password string) error {
-			return nil
-		},
 		RemoveNetrcCredentialsFunc: func(isCloud bool, ctxName string) (string, error) {
 			return "", nil
 		},
@@ -173,7 +180,12 @@ func TestCredentialsOverride(t *testing.T) {
 				return envCreds, nil
 			}
 		},
-		GetCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
+		GetSsoCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
+			return func() (*pauth.Credentials, error) {
+				return nil, nil
+			}
+		},
+		GetCredentialsFromConfigFunc: func(_ *v1.Config, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
@@ -188,7 +200,12 @@ func TestCredentialsOverride(t *testing.T) {
 				return nil, nil
 			}
 		},
-		SetCloudClientFunc: func(_ *ccloudv1.Client) {},
+		GetCredentialsFromKeychainFunc: func(_ *v1.Config, _ bool, _, _ string) func() (*pauth.Credentials, error) {
+			return func() (*pauth.Credentials, error) {
+				return nil, nil
+			}
+		},
+		SetCloudClientFunc: func(_ *ccloud.Client) {},
 	}
 	loginCmd, cfg := newLoginCmd(auth, userInterface, true, req, mockNetrcHandler, AuthTokenHandler, mockLoginCredentialsManager, LoginOrganizationManager)
 
@@ -396,7 +413,7 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			loginCredentialsManager := &climock.LoginCredentialsManager{
+			loginCredentialsManager := &cliMock.LoginCredentialsManager{
 				GetCloudCredentialsFromEnvVarFunc: func(_ string) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return nil, nil
@@ -423,7 +440,12 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 						}, nil
 					}
 				},
-				GetCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
+				GetSsoCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
+					return func() (*pauth.Credentials, error) {
+						return nil, nil
+					}
+				},
+				GetCredentialsFromConfigFunc: func(_ *v1.Config, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return nil, nil
 					}
@@ -433,7 +455,12 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 						return nil, nil
 					}
 				},
-				SetCloudClientFunc: func(_ *ccloudv1.Client) {},
+				GetCredentialsFromKeychainFunc: func(_ *v1.Config, _ bool, _, _ string) func() (*pauth.Credentials, error) {
+					return func() (*pauth.Credentials, error) {
+						return nil, nil
+					}
+				},
+				SetCloudClientFunc: func(_ *ccloud.Client) {},
 			}
 			if tt.setNetrcUser {
 				loginCredentialsManager.GetCredentialsFromNetrcFunc = func(_ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
@@ -494,7 +521,7 @@ func TestPromptLoginFlag(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mockLoginCredentialsManager := &climock.LoginCredentialsManager{
+			mockLoginCredentialsManager := &cliMock.LoginCredentialsManager{
 				GetCloudCredentialsFromEnvVarFunc: func(_ string) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return wrongCreds, nil
@@ -548,15 +575,20 @@ func TestPromptLoginFlag(t *testing.T) {
 
 func TestLoginFail(t *testing.T) {
 	req := require.New(t)
-	mockLoginCredentialsManager := &climock.LoginCredentialsManager{
+	mockLoginCredentialsManager := &cliMock.LoginCredentialsManager{
 		GetCloudCredentialsFromEnvVarFunc: func(_ string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, errors.New("DO NOT RETURN THIS ERR")
 			}
 		},
-		GetCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
+		GetSsoCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, errors.New("DO NOT RETURN THIS ERR")
+			}
+		},
+		GetCredentialsFromConfigFunc: func(_ *v1.Config, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
+			return func() (*pauth.Credentials, error) {
+				return nil, nil
 			}
 		},
 		GetCredentialsFromNetrcFunc: func(_ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
@@ -569,7 +601,12 @@ func TestLoginFail(t *testing.T) {
 				return nil, &ccloudv1.InvalidLoginError{}
 			}
 		},
-		SetCloudClientFunc: func(_ *ccloudv1.Client) {},
+		GetCredentialsFromKeychainFunc: func(_ *v1.Config, _ bool, _, _ string) func() (*pauth.Credentials, error) {
+			return func() (*pauth.Credentials, error) {
+				return nil, nil
+			}
+		},
+		SetCloudClientFunc: func(_ *ccloud.Client) {},
 	}
 	loginCmd, _ := newLoginCmd(mockAuth, mockUserInterface, true, req, mockNetrcHandler, AuthTokenHandler, mockLoginCredentialsManager, LoginOrganizationManager)
 	_, err := pcmd.ExecuteCommand(loginCmd)

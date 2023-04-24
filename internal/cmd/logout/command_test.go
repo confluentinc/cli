@@ -33,7 +33,7 @@ const (
 )
 
 var (
-	mockLoginCredentialsManager = &climock.LoginCredentialsManager{
+	mockLoginCredentialsManager = &cliMock.LoginCredentialsManager{
 		GetCloudCredentialsFromEnvVarFunc: func(orgResourceId string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
@@ -60,7 +60,7 @@ var (
 				}, nil
 			}
 		},
-		GetCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
+		GetSsoCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
@@ -70,7 +70,17 @@ var (
 				return nil, nil
 			}
 		},
-		SetCloudClientFunc: func(_ *ccloudv1.Client) {},
+		GetCredentialsFromKeychainFunc: func(_ *v1.Config, _ bool, _, _ string) func() (*pauth.Credentials, error) {
+			return func() (*pauth.Credentials, error) {
+				return nil, nil
+			}
+		},
+		GetCredentialsFromConfigFunc: func(_ *v1.Config, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
+			return func() (*pauth.Credentials, error) {
+				return nil, nil
+			}
+		},
+		SetCloudClientFunc: func(_ *ccloud.Client) {},
 	}
 	orgManagerImpl           = pauth.NewLoginOrganizationManagerImpl()
 	LoginOrganizationManager = &climock.LoginOrganizationManager{
@@ -92,11 +102,8 @@ var (
 			return testToken, nil
 		},
 	}
-	mockNetrcHandler = &pmock.MockNetrcHandler{
+	mockNetrcHandler = &pmock.NetrcHandler{
 		GetFileNameFunc: func() string { return netrcFile },
-		WriteNetrcCredentialsFunc: func(_ bool, _, _, _ string) error {
-			return nil
-		},
 		RemoveNetrcCredentialsFunc: func(_ bool, _ string) (string, error) {
 			return "", nil
 		},
@@ -125,7 +132,7 @@ func TestRemoveNetrcCredentials(t *testing.T) {
 	req := require.New(t)
 	clearCCloudDeprecatedEnvVar(req)
 	cfg := v1.AuthenticatedCloudConfigMock()
-	contextName := cfg.Context().NetrcMachineName
+	contextName := cfg.Context().GetNetrcMachineName()
 	// run login command
 	auth := &ccloudv1Mock.Auth{
 		LoginFunc: func(_ context.Context, _ *ccloudv1.AuthenticateRequest) (*ccloudv1.AuthenticateReply, error) {
