@@ -207,6 +207,13 @@ func (c *Context) GetLDFlags(client LaunchDarklyClient) map[string]interface{} {
 	}
 }
 
+func (c *Context) GetNetrcMachineName() string {
+	if c != nil {
+		return c.NetrcMachineName
+	}
+	return ""
+}
+
 func printApiKeysDictErrorMessage(missingKey, mismatchKey, missingSecret bool, cluster *KafkaClusterConfig, contextName string) {
 	var problems []string
 	if missingKey {

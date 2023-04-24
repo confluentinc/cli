@@ -2,6 +2,7 @@
   "version": "1.0.0",
   "disable_update_check": false,
   "disable_updates": false,
+  "disable_plugins": false,
   "no_browser": false,
   "platforms": {
     "http://127.0.0.1:1024": {
@@ -50,7 +51,8 @@
                     "api_secret": "def-secret-456"
                   }
                 },
-                "api_key": "abc-key-123"
+                "api_key": "abc-key-123",
+                "last_update": "0001-01-01T00:00:00Z"
               }
             }
           }
@@ -81,10 +83,6 @@
           {
             "id": "acc-123",
             "name": "test-env"
-          },
-          {
-            "id": "env-flag",
-            "name": "test-env2"
           }
         ],
         "organization": {

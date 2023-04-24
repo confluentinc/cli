@@ -29,7 +29,7 @@ Flags:
       --no-browser               Do not open a browser window when authenticating via Single Sign-On (SSO).
       --organization-id string   The Confluent Cloud organization to log in to. If empty, log in to the default organization.
       --prompt                   Bypass non-interactive login and prompt for login credentials.
-      --save                     Save username/password (non-SSO) credentials to the .netrc file in your $HOME directory. Use the flag to get automatically logged back in when your token expires, after one hour for Confluent Cloud or after six hours for Confluent Platform.
+      --save                     Save username and encrypted password (non-SSO credentials) to the configuration file in your $HOME directory, and to macOS keychain if applicable. You will be automatically logged back in when your token expires, after one hour for Confluent Cloud or after six hours for Confluent Platform.
 
 Global Flags:
   -h, --help            Show help for this command.
