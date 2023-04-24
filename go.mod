@@ -96,7 +96,7 @@ require (
 	github.com/chromedp/cdproto v0.0.0-20230220211738-2b1ec77315c9 // indirect
 	github.com/chromedp/sysutil v1.0.0 // indirect
 	github.com/cloudflare/circl v1.1.0 // indirect
-	github.com/confluentinc/go-prompt v0.2.6 // indirect
+	github.com/confluentinc/go-prompt v0.2.14 // indirect
 	github.com/confluentinc/proto-go-setter v0.3.0 // indirect
 	github.com/envoyproxy/protoc-gen-validate v0.9.1 // indirect
 	github.com/gdamore/encoding v1.0.0 // indirect

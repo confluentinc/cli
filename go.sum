@@ -136,8 +136,8 @@ github.com/confluentinc/go-editor v0.11.0 h1:fcEALYHj7xV/fRSp54/IHi2DS4GlZMJWVgr
 github.com/confluentinc/go-editor v0.11.0/go.mod h1:nEjwqdqx8S7ZGjXsDvRgawsA04Fu2P/KAtA8fa5afMI=
 github.com/confluentinc/go-netrc v0.0.0-20220321173724-4d50f36ff450 h1:YJq9ZRhj049uo3hX7V8imJid+FJEBFyRmVcdruhU3y4=
 github.com/confluentinc/go-netrc v0.0.0-20220321173724-4d50f36ff450/go.mod h1:GGVB1yDj9YYQTxoo5vTRGWuQKccGN00bvyit4O5jznI=
-github.com/confluentinc/go-prompt v0.2.6 h1:loK/II++s0HCte3q61VGePGskLchwRndGQIAGoxeZEk=
-github.com/confluentinc/go-prompt v0.2.6/go.mod h1:4/tf63YzhSsiXnsKosCmv1H0ivpXVezZHaMpSVB+DXw=
+github.com/confluentinc/go-prompt v0.2.14 h1:N6I+Pke5Dl2PYsF8I5HCenPMPsGu8ZEHebP2mtZnTxM=
+github.com/confluentinc/go-prompt v0.2.14/go.mod h1:4/tf63YzhSsiXnsKosCmv1H0ivpXVezZHaMpSVB+DXw=
 github.com/confluentinc/go-ps1 v1.0.2 h1:+4cKOzWs3AWmxL2s96oHu0QutZESDRXECnhFzm2ic4o=
 github.com/confluentinc/go-ps1 v1.0.2/go.mod h1:qmgG9xQgFd4u7/CS6eA9nNP8eQqOtXuRHmZ4+w7Vprs=
 github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.3.14 h1:/ifiYRgvbtzTrMxsntzAc2NFXsZxfCpjHZG03X9BDxw=

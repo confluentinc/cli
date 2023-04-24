@@ -6,14 +6,18 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	client "github.com/confluentinc/flink-sql-client"
 	application "github.com/confluentinc/flink-sql-client/pkg/controller"
+
 	"github.com/spf13/cobra"
 )
 
-func (c *command) newStartFlinkSqlClientCommand() *cobra.Command {
+func (c *command) newStartFlinkSqlClientCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "shell",
 		Short: "Start Flink interactive SQL client.",
-		RunE:  c.startFlinkSqlClient,
+		//RunE:  c.startFlinkSqlClient,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return c.startFlinkSqlClient(prerunner, cmd, args)
+		},
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Start Flink interactive SQL client.",
@@ -30,10 +34,16 @@ func (c *command) newStartFlinkSqlClientCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) startFlinkSqlClient(cmd *cobra.Command, args []string) error {
+func (c *command) authenticated(authenticated func(*cobra.Command, []string) error, cmd *cobra.Command) func() error {
+	return func() error {
+		return authenticated(cmd, nil)
+	}
+}
+
+func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Command, args []string) error {
 	resourceId := c.Context.GetOrganization().GetResourceId()
 
-	//Compute pool can be set as a flag or as default in the context
+	// Compute pool can be set as a flag or as default in the context
 	computePool, err := cmd.Flags().GetString("compute-pool")
 	if computePool == "" || err != nil {
 		if c.Context.GetCurrentFlinkComputePool() == "" {
@@ -57,12 +67,14 @@ func (c *command) startFlinkSqlClient(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	client.StartApp(enviromentId, resourceId, kafkaClusterId, computePool, c.AuthToken(), &application.ApplicationOptions{
-		FLINK_GATEWAY_URL:        "https://flink.us-west-2.aws.devel.cpdev.cloud",
-		HTTP_CLIENT_UNSAFE_TRACE: true,
-		DEFAULT_PROPERTIES: map[string]string{
-			"execution.runtime-mode": "streaming",
-		},
-	})
+	client.StartApp(enviromentId, resourceId, kafkaClusterId, computePool, c.AuthToken(),
+		c.authenticated(prerunner.Authenticated(c.AuthenticatedCLICommand), cmd),
+		&application.ApplicationOptions{
+			FLINK_GATEWAY_URL:        "https://flink.us-west-2.aws.devel.cpdev.cloud",
+			HTTP_CLIENT_UNSAFE_TRACE: true,
+			DEFAULT_PROPERTIES: map[string]string{
+				"execution.runtime-mode": "streaming",
+			},
+		})
 	return nil
 }
