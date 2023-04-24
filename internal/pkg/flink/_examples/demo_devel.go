@@ -9,7 +9,7 @@ func main() {
 		"env-g99xx1",
 		"570ce633-4dec-4c01-8087-3417050055b0",
 		"lkc-y39kdo",
-		"compute123",
+		"lfcp-xyz67",
 		"authToken",
 		&application.ApplicationOptions{
 			FLINK_GATEWAY_URL:        "https://flink.us-west-2.aws.devel.cpdev.cloud",

@@ -20,7 +20,7 @@ const (
 	configStatementTerminator = ";"
 
 	//keys
-	configKeyCatalog          = "default_catalog"
+	configKeyCatalog          = "catalog"
 	configKeyDatabase         = "default_database"
 	configKeyOrgResourceId    = "org-resource-id"
 	configKeyExecutionRuntime = "execution.runtime-mode"
