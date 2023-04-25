@@ -14,7 +14,6 @@ func (c *command) newStartFlinkSqlClientCommand(prerunner pcmd.PreRunner) *cobra
 	cmd := &cobra.Command{
 		Use:   "shell",
 		Short: "Start Flink interactive SQL client.",
-		//RunE:  c.startFlinkSqlClient,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return c.startFlinkSqlClient(prerunner, cmd, args)
 		},
@@ -68,6 +67,7 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 	}
 
 	client.StartApp(enviromentId, resourceId, kafkaClusterId, computePool, c.AuthToken(),
+		c.authenticated(prerunner.Authenticated(c.AuthenticatedCLICommand), cmd),
 		&application.ApplicationOptions{
 			FLINK_GATEWAY_URL:        "https://flink.us-west-2.aws.devel.cpdev.cloud",
 			HTTP_CLIENT_UNSAFE_TRACE: true,
