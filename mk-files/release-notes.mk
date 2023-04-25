@@ -19,6 +19,7 @@ release-notes:
 
 	rm -rf $(DIR)
 
+# TODO: go run cmd/releasenotes/main.go 3.10.0.json s3
 .PHONY: publish-release-notes-to-s3
 publish-release-notes-to-s3:
 	$(aws-authenticate); \
