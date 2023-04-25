@@ -385,6 +385,7 @@ func handleLaunchDarkly(t *testing.T) http.HandlerFunc {
 			"testBool":                               true,
 			"testString":                             "string",
 			"testInt":                                1,
+			"testAnotherInt":                         99,
 			"testJson":                               map[string]any{"key": "val"},
 			"cli.deprecation_notices":                []map[string]any{},
 			"cli.client_quotas.enable":               true,
