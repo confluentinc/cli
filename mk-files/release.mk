@@ -75,24 +75,27 @@ endif
 .PHONY: gorelease
 gorelease:
 	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
-	$(aws-authenticate) && \
-	echo "BUILDING FOR DARWIN, WINDOWS, AND ALPINE LINUX" && \
+	
+	# $(aws-authenticate) && \
+
 	go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
-	VERSION=$(VERSION) GITHUB_TOKEN=$(token) S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli GOEXPERIMENT=boringcrypto DRY_RUN=$(DRY_RUN) goreleaser release --clean -f .goreleaser.yml --release-notes release-notes/latest-release.rst --timeout 60m; \
-	rm -f CLIEVCodeSigningCertificate2.pfx && \
-	echo "BUILDING FOR GLIBC LINUX" && \
+	VERSION=$(VERSION) GOEXPERIMENT=boringcrypto DRY_RUN=$(DRY_RUN) goreleaser release --clean --split --timeout 60m && \
 	scripts/build_linux_glibc.sh && \
-	$(call dry-run,aws s3 cp dist/confluent_$(VERSION_NO_V)_linux_amd64.tar.gz $(S3_STAG_PATH)/confluent-cli/archives/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_linux_amd64.tar.gz) && \
-	$(call dry-run,aws s3 cp dist/confluent_$(VERSION_NO_V)_linux_arm64.tar.gz $(S3_STAG_PATH)/confluent-cli/archives/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_linux_arm64.tar.gz) && \
-	$(aws-authenticate) && \
-	$(call dry-run,aws s3 cp dist/confluent_linux_amd64_v1/confluent $(S3_STAG_PATH)/confluent-cli/binaries/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_linux_amd64) && \
-	$(call dry-run,aws s3 cp dist/confluent_linux_arm64/confluent $(S3_STAG_PATH)/confluent-cli/binaries/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_linux_arm64) && \
-	cat dist/confluent_$(VERSION_NO_V)_checksums_linux.txt >> dist/confluent_$(VERSION_NO_V)_checksums.txt && \
-	cat dist/confluent_$(VERSION_NO_V)_checksums_linux_arm64.txt >> dist/confluent_$(VERSION_NO_V)_checksums.txt && \
-	$(call dry-run,aws s3 cp dist/confluent_$(VERSION_NO_V)_checksums.txt $(S3_STAG_PATH)/confluent-cli/archives/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_checksums.txt) && \
-	$(call dry-run,aws s3 cp dist/confluent_$(VERSION_NO_V)_checksums.txt $(S3_STAG_PATH)/confluent-cli/binaries/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_checksums.txt) && \
-	echo "UPLOADING LINUX BUILDS TO GITHUB" && \
-	make upload-linux-build-to-github
+	GITHUB_TOKEN=$(token) S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli DRY_RUN=$(DRY_RUN) goreleaser continue --merge --release-notes release-notes/latest-release
+
+	rm -f CLIEVCodeSigningCertificate2.pfx
+
+	# $(call dry-run,aws s3 cp dist/confluent_$(VERSION_NO_V)_linux_amd64.tar.gz $(S3_STAG_PATH)/confluent-cli/archives/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_linux_amd64.tar.gz) && \
+	# $(call dry-run,aws s3 cp dist/confluent_$(VERSION_NO_V)_linux_arm64.tar.gz $(S3_STAG_PATH)/confluent-cli/archives/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_linux_arm64.tar.gz) && \
+	# $(aws-authenticate) && \
+	# $(call dry-run,aws s3 cp dist/confluent_linux_amd64_v1/confluent $(S3_STAG_PATH)/confluent-cli/binaries/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_linux_amd64) && \
+	# $(call dry-run,aws s3 cp dist/confluent_linux_arm64/confluent $(S3_STAG_PATH)/confluent-cli/binaries/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_linux_arm64) && \
+	# cat dist/confluent_$(VERSION_NO_V)_checksums_linux.txt >> dist/confluent_$(VERSION_NO_V)_checksums.txt && \
+	# cat dist/confluent_$(VERSION_NO_V)_checksums_linux_arm64.txt >> dist/confluent_$(VERSION_NO_V)_checksums.txt && \
+	# $(call dry-run,aws s3 cp dist/confluent_$(VERSION_NO_V)_checksums.txt $(S3_STAG_PATH)/confluent-cli/archives/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_checksums.txt) && \
+	# $(call dry-run,aws s3 cp dist/confluent_$(VERSION_NO_V)_checksums.txt $(S3_STAG_PATH)/confluent-cli/binaries/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_checksums.txt) && \
+	# echo "UPLOADING LINUX BUILDS TO GITHUB" && \
+	# make upload-linux-build-to-github
 	
 
 # Current goreleaser still has some shortcomings for the our use, and the target patches those issues

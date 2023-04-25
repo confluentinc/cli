@@ -1,5 +1,8 @@
 project_name: confluent
 
+partial:
+  by: target
+
 builds:
   - binary: confluent
     id: confluent-alpine-amd64
