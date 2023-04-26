@@ -101,7 +101,7 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 		// Variable that controls how often we poll a pending statement
 		const retries = 10
 		const waitTime = time.Second * 1
-		statement, err := s.waitForPendingStatement(statement.StatementName, retries, waitTime)
+		updatedStatement, err := s.waitForPendingStatement(statement.StatementName, retries, waitTime)
 
 		// Check for errors
 		if err != nil {
@@ -109,10 +109,11 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 		}
 
 		// Check for failed or cancelled statements
-		statementStatus = statement.Status
+		statementStatus = updatedStatement.Status
 		if statementStatus != types.COMPLETED && statementStatus != types.RUNNING {
 			return nil, &types.StatementError{Msg: fmt.Sprintf("Error: Can't fetch results. Statement phase is: %s", statementStatus)}
 		}
+		statement = *updatedStatement
 	}
 	// Process remote statements that are now running or completed
 	statementResultObj, resp, err := s.client.GetStatementResults(context.Background(), statement.StatementName, statement.PageToken)
