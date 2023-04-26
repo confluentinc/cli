@@ -29,6 +29,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	defer file.Close()
 
 	version := strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))
 
