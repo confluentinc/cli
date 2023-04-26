@@ -2,11 +2,12 @@ package generators
 
 import (
 	"fmt"
+	"strconv"
+	"time"
+
 	v1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"
 	"github.com/confluentinc/flink-sql-client/pkg/types"
 	"pgregory.net/rapid"
-	"strconv"
-	"time"
 )
 
 func GetResultItemGeneratorForType(dataType v1.DataType) *rapid.Generator[v1.SqlV1alpha1ResultItemRowOneOf] {
@@ -307,4 +308,19 @@ func MockResults(maxNumColumns, maxNestingDepth int) *rapid.Generator[types.Mock
 			},
 		}
 	})
+}
+
+// TODO - This was only used for debugging/testing as gateway as broken
+func ShowTablesSchema() v1.SqlV1alpha1ResultSchema {
+	var columnDetails []v1.ColumnDetails
+	dataType := v1.VarcharTypeAsDataType(&v1.VarcharType{
+		Nullable: false,
+		Type:     "VARCHAR",
+	})
+	columnDetails = append(columnDetails, v1.ColumnDetails{
+		Name: "Table Name",
+		Type: dataType,
+	})
+
+	return v1.SqlV1alpha1ResultSchema{Columns: &columnDetails}
 }

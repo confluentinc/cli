@@ -43,9 +43,20 @@ func shouldUseTView(statement types.ProcessedStatement) bool {
 	return false
 }
 
+type ResultsFetchState string
+
+const (
+	UNEXECUTED ResultsFetchState = "UNEXECUTED"
+	CANCELED   ResultsFetchState = "CANCELED"
+	COMPLETED  ResultsFetchState = "COMPLETED"
+)
+
 // Actions
 // This is the main function/loop for the app
 func (c *InputController) RunInteractiveInput() {
+
+	// Create a channel to receive OS signals
+	resultsFetch := UNEXECUTED
 
 	// We check for statement result and rows so we don't leave GoPrompt in case of errors
 	for {
@@ -53,7 +64,6 @@ func (c *InputController) RunInteractiveInput() {
 		input := c.prompt.Input()
 
 		// Upon receiving user input, we check if user is authenticated and possibly a refresh the CCloud SSO token
-
 		if authErr := c.authenticated(); authErr != nil {
 			fmt.Println(authErr.Error())
 			c.appController.ExitApplication()
@@ -77,21 +87,76 @@ func (c *InputController) RunInteractiveInput() {
 			continue
 		}
 
-		processedStatement, err = c.store.FetchStatementResults(*processedStatement)
-		if err != nil {
-			fmt.Println(err.Error())
-			c.isSessionValid(err)
+		// Wait for results to be there or for the user to cancel the query
+		select {
+		case <-c.termChan(&resultsFetch):
+			fmt.Println("Aborting results fetching...")
+			resultsFetch = CANCELED
 			continue
+		case out := <-c.resultsChan(processedStatement, &resultsFetch):
+			resultsFetch = COMPLETED
+			if out == "continue" {
+				continue
+			} else {
+				return
+			}
 		}
-
-		// decide if we want to display results using TView or just a plain table
-		if shouldUseTView(*processedStatement) {
-			c.table.SetDataAndFocus(*processedStatement)
-			return
-		}
-
-		printResultToSTDOUT(processedStatement.StatementResults)
 	}
+}
+
+func (c *InputController) termChan(resultsFetch *ResultsFetchState) chan bool {
+	ch := make(chan bool, 1)
+	go func() {
+		for {
+			if *resultsFetch == COMPLETED {
+				return
+			}
+			var buf [1]byte
+			os.Stdin.Read(buf[:])
+			buf[0] = byte(strings.ToLower(string(buf[0]))[0])
+			pressedKey := prompt.Key(buf[0])
+
+			switch pressedKey {
+			case prompt.ControlC:
+				fallthrough
+			case prompt.ControlD:
+				fallthrough
+			case prompt.ControlQ:
+				fallthrough
+			case prompt.Escape:
+				// esc
+				ch <- true
+				return
+			}
+		}
+	}()
+	return ch
+}
+
+func (c *InputController) resultsChan(processedStatement *types.ProcessedStatement, resultsFetch *ResultsFetchState) chan string {
+	ch := make(chan string, 1)
+	go func() {
+		processedStatement, err := c.store.FetchStatementResults(*processedStatement)
+		if *resultsFetch != CANCELED {
+			if err != nil {
+				fmt.Println(err.Error())
+				c.isSessionValid(err)
+				ch <- "continue"
+				return
+			}
+
+			// decide if we want to display results using TView or just a plain table
+			if shouldUseTView(*processedStatement) {
+				c.table.SetDataAndFocus(*processedStatement)
+				ch <- "return"
+				return
+			}
+
+			printResultToSTDOUT(processedStatement.StatementResults)
+			ch <- "continue"
+		}
+	}()
+	return ch
 }
 
 func (c *InputController) isSessionValid(err *types.StatementError) bool {

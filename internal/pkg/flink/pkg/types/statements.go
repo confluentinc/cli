@@ -1,6 +1,8 @@
 package types
 
-import v1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"
+import (
+	v1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"
+)
 
 type StatementResults struct {
 	Headers []string
@@ -46,4 +48,13 @@ type ProcessedStatement struct {
 	PageToken        string
 	ResultSchema     v1.SqlV1alpha1ResultSchema
 	StatementResults *StatementResults
+}
+
+func NewProcessedStatement(statementObj v1.SqlV1alpha1Statement) *ProcessedStatement {
+	return &ProcessedStatement{
+		StatementName: statementObj.Spec.GetStatementName(),
+		StatusDetail:  statementObj.Status.GetDetail(),
+		Status:        PHASE(statementObj.Status.GetPhase()),
+		ResultSchema:  statementObj.Status.GetResultSchema(),
+	}
 }

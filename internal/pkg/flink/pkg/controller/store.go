@@ -3,7 +3,9 @@ package controller
 import (
 	"context"
 	_ "embed"
+	"fmt"
 	"strings"
+	"time"
 
 	"github.com/confluentinc/flink-sql-client/pkg/converter"
 	"github.com/confluentinc/flink-sql-client/pkg/types"
@@ -37,7 +39,7 @@ type Store struct {
 	Properties          map[string]string
 	ProcessedStatements []types.ProcessedStatement
 	appController       ApplicationControllerInterface
-	client              *GatewayClient
+	client              GatewayClientInterface
 	appOptions          *ApplicationOptions
 }
 
@@ -84,24 +86,40 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 	if err != nil {
 		return nil, &types.StatementError{Msg: err.Error()}
 	}
-	return &types.ProcessedStatement{
-		StatementName: statementObj.Spec.GetStatementName(),
-		StatusDetail:  statementObj.Status.GetDetail(),
-		Status:        types.PHASE(statementObj.Status.GetPhase()),
-		ResultSchema:  statementObj.Status.GetResultSchema(),
-	}, nil
+	return types.NewProcessedStatement(statementObj), nil
 }
 
 func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError) {
+	demoMode := s.appOptions != nil && s.appOptions.MOCK_STATEMENTS_OUTPUT_DEMO
+	// Process local statements
 	if statement.IsLocalStatement {
 		return &statement, nil
 	}
-	// Process remote statements
-	statementResultObj, resp, err := s.client.FetchStatementResults(context.Background(), statement.StatementName, statement.PageToken)
+
+	statementStatus := statement.Status
+	if statementStatus != types.COMPLETED && statementStatus != types.RUNNING && !demoMode {
+		// Variable that controls how often we poll a pending statement
+		const retries = 10
+		const waitTime = time.Second * 1
+		statement, err := s.waitForPendingStatement(statement.StatementName, retries, waitTime)
+
+		// Check for errors
+		if err != nil {
+			return nil, &types.StatementError{Msg: err.Error()}
+		}
+
+		// Check for failed or cancelled statements
+		statementStatus = statement.Status
+		if statementStatus != types.COMPLETED && statementStatus != types.RUNNING {
+			return nil, &types.StatementError{Msg: fmt.Sprintf("Error: Can't fetch results. Statement phase is: %s", statementStatus)}
+		}
+	}
+	// Process remote statements that are now running or completed
+	statementResultObj, resp, err := s.client.GetStatementResults(context.Background(), statement.StatementName, statement.PageToken)
 	err = processHttpErrors(resp, err)
 
 	// TODO: Remove this once we have a real backend
-	if s.appOptions != nil && s.appOptions.MOCK_STATEMENTS_OUTPUT_DEMO {
+	if demoMode {
 		mockResults := generators.MockResults(5, 2).Example()
 		statementResults := mockResults.StatementResults
 		resultSchema := mockResults.ResultSchema
@@ -119,7 +137,7 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 	results := statementResultObj.GetResults()
 	convertedResults, err := converter.ConvertToInternalResults(results.GetData(), statement.ResultSchema)
 	if err != nil {
-		return nil, &types.StatementError{Msg: err.Error()}
+		return nil, &types.StatementError{Msg: "Error: " + err.Error()}
 	}
 
 	statement.StatementResults = convertedResults
@@ -128,7 +146,31 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 	return &statement, nil
 }
 
-func NewStore(client *GatewayClient, appOptions *ApplicationOptions, appController ApplicationControllerInterface) StoreInterface {
+func (s *Store) waitForPendingStatement(statementName string, retries int, waitTime time.Duration) (*types.ProcessedStatement, error) {
+
+	for i := 0; i < retries; i++ {
+		statementObj, httpResponse, err := s.client.GetStatement(context.Background(), statementName)
+
+		if err != nil {
+			return nil, err
+		}
+
+		if httpResponse.StatusCode < 200 || httpResponse.StatusCode >= 300 {
+			return nil, &types.StatementError{Msg: "Error: " + statementObj.Status.GetDetail()}
+		}
+
+		phase := types.PHASE(statementObj.Status.GetPhase())
+		if phase != types.PENDING {
+			return types.NewProcessedStatement(statementObj), nil
+		}
+
+		time.Sleep(waitTime)
+	}
+
+	return nil, &types.StatementError{Msg: fmt.Sprintf("Error: Statement is still pending after %d retries", retries)}
+}
+
+func NewStore(client GatewayClientInterface, appOptions *ApplicationOptions, appController ApplicationControllerInterface) StoreInterface {
 	defaultProperties := make(map[string]string)
 
 	if appOptions != nil && appOptions.DEFAULT_PROPERTIES != nil {

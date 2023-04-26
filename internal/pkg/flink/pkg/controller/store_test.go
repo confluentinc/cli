@@ -5,11 +5,15 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"testing"
+	"time"
 
 	v1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"
+	v1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"
+	"github.com/confluentinc/flink-sql-client/pkg/types"
 	gomock "github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -24,7 +28,7 @@ func TestStoreTestSuite(t *testing.T) {
 	suite.Run(t, new(StoreTestSuite))
 }
 
-func TestStore_ProcessLocalStatement(t *testing.T) {
+func TestStoreProcessLocalStatement(t *testing.T) {
 	// Create a new store
 	client := NewGatewayClient("envId", "orgResourceId", "kafkaClusterId", "computePoolId", "authToken", nil)
 	mockAppController := NewMockApplicationControllerInterface(gomock.NewController(t))
@@ -53,6 +57,49 @@ func TestStore_ProcessLocalStatement(t *testing.T) {
 	result, err = s.ProcessLocalStatement("EXIT;")
 	assert.Nil(t, err)
 	assert.Nil(t, result)
+}
+
+func TestWaitForPendingStatement(t *testing.T) {
+	statementName := "statementName"
+	retries := 10
+	waitTime := time.Millisecond * 1
+
+	client := NewMockGatewayClientInterface(gomock.NewController(t))
+	s := &Store{
+		client: client,
+	}
+
+	// Test case 1: Statement is not pending
+	statementObj := v1alpha1.SqlV1alpha1Statement{
+		Status: &v1.SqlV1alpha1StatementStatus{
+			Phase: "COMPLETED",
+		},
+	}
+	httpRes := http.Response{StatusCode: 200}
+	client.EXPECT().GetStatement(gomock.Any(), statementName).Return(statementObj, &httpRes, nil).Times(1)
+
+	processedStatement, err := s.waitForPendingStatement(statementName, retries, waitTime)
+	assert.Nil(t, err)
+	assert.NotNil(t, processedStatement)
+	assert.Equal(t, types.NewProcessedStatement(statementObj), processedStatement)
+
+	// Test case 2: Statement is pending
+	statementObj = v1alpha1.SqlV1alpha1Statement{
+		Status: &v1.SqlV1alpha1StatementStatus{
+			Phase: "PENDING",
+		},
+	}
+	client.EXPECT().GetStatement(gomock.Any(), statementName).Return(statementObj, &httpRes, nil).Times(retries)
+	processedStatement, err = s.waitForPendingStatement(statementName, retries, waitTime)
+	assert.EqualError(t, err, fmt.Sprintf("Error: Statement is still pending after %d retries", retries))
+	assert.Nil(t, processedStatement)
+
+	// Test case 3: GetStatement returns error
+	err = errors.New("couldn't get statement!")
+	client.EXPECT().GetStatement(gomock.Any(), statementName).Return(statementObj, nil, err).Times(1)
+	_, err = s.waitForPendingStatement(statementName, retries, waitTime)
+	assert.EqualError(t, err, err.Error())
+
 }
 
 func (s *StoreTestSuite) TestIsSETStatement() {

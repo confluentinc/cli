@@ -7,3 +7,4 @@ package controller
 //go:generate mockgen -destination input_controller_mock.go -package=controller github.com/confluentinc/flink-sql-client/pkg/controller InputControllerInterface
 //go:generate mockgen -destination table_controller_mock.go -package=controller github.com/confluentinc/flink-sql-client/pkg/controller TableControllerInterface
 //go:generate mockgen -destination store_mock.go -package=controller github.com/confluentinc/flink-sql-client/pkg/controller StoreInterface
+//go:generate mockgen -destination gateway_client_mock.go -package=controller github.com/confluentinc/flink-sql-client/pkg/controller GatewayClientInterface

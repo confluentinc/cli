@@ -9,6 +9,12 @@ import (
 	v1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"
 )
 
+type GatewayClientInterface interface {
+	CreateStatement(ctx context.Context, statement string, properties map[string]string) (v1.SqlV1alpha1Statement, *http.Response, error)
+	GetStatement(ctx context.Context, statementName string) (v1.SqlV1alpha1Statement, *http.Response, error)
+	GetStatementResults(ctx context.Context, statementId, pageToken string) (v1.SqlV1alpha1StatementResult, *http.Response, error)
+}
+
 type GatewayClient struct {
 	authToken         string
 	envId             string
@@ -34,12 +40,20 @@ func (c *GatewayClient) CreateStatement(ctx context.Context, statement string, p
 
 	ctx = context.WithValue(ctx, v1.ContextAccessToken, c.authToken)
 	req := c.client.StatementsSqlV1alpha1Api.CreateSqlV1alpha1Statement(ctx, c.envId).SqlV1alpha1Statement(statementObj)
+
 	createdStatement, resp, err := req.Execute()
 
 	return createdStatement, resp, err
 }
 
-func (c *GatewayClient) FetchStatementResults(ctx context.Context, statementId, pageToken string) (v1.SqlV1alpha1StatementResult, *http.Response, error) {
+func (c *GatewayClient) GetStatement(ctx context.Context, statementName string) (v1.SqlV1alpha1Statement, *http.Response, error) {
+	ctx = context.WithValue(ctx, v1.ContextAccessToken, c.authToken)
+	createdStatement, resp, err := c.client.StatementsSqlV1alpha1Api.GetSqlV1alpha1Statement(ctx, c.envId, statementName).Execute()
+
+	return createdStatement, resp, err
+}
+
+func (c *GatewayClient) GetStatementResults(ctx context.Context, statementId, pageToken string) (v1.SqlV1alpha1StatementResult, *http.Response, error) {
 	fetchResultsRequest := c.client.StatementResultSqlV1alpha1Api.GetSqlV1alpha1StatementResult(ctx, c.envId, statementId)
 	if pageToken != "" {
 		fetchResultsRequest = fetchResultsRequest.PageToken(pageToken)
@@ -67,7 +81,7 @@ func (c *GatewayClient) propsDefault(properties map[string]string) map[string]st
 	return properties
 }
 
-func NewGatewayClient(envId, orgResourceId, kafkaClusterId, computePoolId, authToken string, appOptions *ApplicationOptions) *GatewayClient {
+func NewGatewayClient(envId, orgResourceId, kafkaClusterId, computePoolId, authToken string, appOptions *ApplicationOptions) GatewayClientInterface {
 	cfg := v1.NewConfiguration()
 	unsafeTrace := false
 	defaultProperties := make(map[string]string)
@@ -82,7 +96,7 @@ func NewGatewayClient(envId, orgResourceId, kafkaClusterId, computePoolId, authT
 
 	cfg.Debug = unsafeTrace
 
-	return &GatewayClient{
+	client := &GatewayClient{
 		envId:             envId,
 		orgResourceId:     orgResourceId,
 		kafkaClusterId:    kafkaClusterId,
@@ -91,4 +105,6 @@ func NewGatewayClient(envId, orgResourceId, kafkaClusterId, computePoolId, authT
 		defaultProperties: defaultProperties,
 		client:            v1.NewAPIClient(cfg),
 	}
+
+	return client
 }
