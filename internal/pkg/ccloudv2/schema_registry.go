@@ -65,7 +65,8 @@ func (c *Client) GetSchemaRegistryClusterById(clusterId, environment string) (sr
 }
 
 func (c *Client) GetStreamGovernanceRegionById(regionId string) (srcmv2.SrcmV2Region, error) {
-	region, httpResp, err := c.SchemaRegistryClient.RegionsSrcmV2Api.GetSrcmV2Region(c.SchemaRegistryApiContext(), regionId).Execute()
+	req := c.SchemaRegistryClient.RegionsSrcmV2Api.GetSrcmV2Region(c.SchemaRegistryApiContext(), regionId)
+	region, httpResp, err := c.SchemaRegistryClient.RegionsSrcmV2Api.GetSrcmV2RegionExecute(req)
 	return region, errors.CatchCCloudV2Error(err, httpResp)
 }
 
