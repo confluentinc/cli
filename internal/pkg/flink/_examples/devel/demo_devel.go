@@ -14,7 +14,7 @@ func main() {
 		func() error { return nil },
 		&application.ApplicationOptions{
 			FLINK_GATEWAY_URL:        "https://flink.us-west-2.aws.devel.cpdev.cloud",
-			HTTP_CLIENT_UNSAFE_TRACE: true,
+			HTTP_CLIENT_UNSAFE_TRACE: false,
 			DEFAULT_PROPERTIES: map[string]string{
 				"execution.runtime-mode": "streaming",
 			},

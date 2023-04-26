@@ -128,7 +128,9 @@ func MockResultRow(columnDetails []v1.ColumnDetails) *rapid.Generator[v1.SqlV1al
 		for _, column := range columnDetails {
 			items = append(items, GetResultItemGeneratorForType(column.GetType()).Draw(t, "a field"))
 		}
+		op := rapid.Int32Range(0, 3).Draw(t, "an operation")
 		return v1.SqlV1alpha1ResultItem{
+			Op:  &op,
 			Row: v1.SqlV1alpha1ResultItemRow{Items: items},
 		}
 	})
@@ -308,6 +310,56 @@ func MockResults(maxNumColumns, maxNestingDepth int) *rapid.Generator[types.Mock
 			},
 		}
 	})
+}
+
+func MockCount(count int) types.MockStatementResult {
+	var columnDetails []v1.ColumnDetails
+	dataType := v1.IntegerTypeAsDataType(&v1.IntegerType{
+		Nullable: false,
+		Type:     "INTEGER",
+	})
+	columnDetails = append(columnDetails, v1.ColumnDetails{
+		Name: "Count",
+		Type: dataType,
+	})
+
+	var resultData []v1.SqlV1alpha1ResultItem
+	if count == 0 {
+		str := v1.SqlV1alpha1ResultItemString(fmt.Sprintf("%v", count))
+		op := int32(0)
+		item := v1.SqlV1alpha1ResultItem{
+			Op: &op,
+			Row: v1.SqlV1alpha1ResultItemRow{Items: []v1.SqlV1alpha1ResultItemRowOneOf{
+				{SqlV1alpha1ResultItemString: &str},
+			}},
+		}
+		resultData = append(resultData, item)
+	} else {
+		updateBefore := int32(1)
+		valBefore := v1.SqlV1alpha1ResultItemString(fmt.Sprintf("%v", count-1))
+		resultData = append(resultData, v1.SqlV1alpha1ResultItem{
+			Op: &updateBefore,
+			Row: v1.SqlV1alpha1ResultItemRow{Items: []v1.SqlV1alpha1ResultItemRowOneOf{
+				{SqlV1alpha1ResultItemString: &valBefore},
+			}},
+		})
+
+		updateAfter := int32(2)
+		valAfter := v1.SqlV1alpha1ResultItemString(fmt.Sprintf("%v", count))
+		resultData = append(resultData, v1.SqlV1alpha1ResultItem{
+			Op: &updateAfter,
+			Row: v1.SqlV1alpha1ResultItemRow{Items: []v1.SqlV1alpha1ResultItemRowOneOf{
+				{SqlV1alpha1ResultItemString: &valAfter},
+			}},
+		})
+	}
+
+	return types.MockStatementResult{
+		ResultSchema: v1.SqlV1alpha1ResultSchema{Columns: &columnDetails},
+		StatementResults: v1.SqlV1alpha1StatementResult{
+			Results: &v1.SqlV1alpha1StatementResultResults{Data: &resultData},
+		},
+	}
 }
 
 // TODO - This was only used for debugging/testing as gateway as broken

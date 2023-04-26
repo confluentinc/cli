@@ -1,4 +1,4 @@
-package converter
+package results
 
 import (
 	v1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"

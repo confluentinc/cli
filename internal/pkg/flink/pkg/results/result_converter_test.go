@@ -1,4 +1,4 @@
-package converter
+package results
 
 import (
 	v1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"
@@ -88,16 +88,18 @@ func (s *ResultConverterTestSuite) TestConvertResults() {
 		results := generators.MockResults(numColumns, -1).Draw(t, "mock results")
 		statementResults := results.StatementResults.Results.GetData()
 		convertedResults, err := ConvertToInternalResults(statementResults, results.ResultSchema)
-		require.NotNil(s.T(), convertedResults)
-		require.NoError(s.T(), err)
-		require.True(s.T(), len(convertedResults.Headers) > 0)
-		require.Equal(s.T(), len(statementResults), len(convertedResults.Rows)) // row number should match
+		require.NotNil(t, convertedResults)
+		require.NoError(t, err)
+		require.True(t, len(convertedResults.Headers) > 0)
+		require.Equal(t, len(statementResults), len(convertedResults.Rows)) // row number should match
 		for rowIdx, row := range convertedResults.Rows {
+			op := statementResults[rowIdx].GetOp()
 			rowItem := statementResults[rowIdx].GetRow()
 			items := rowItem.Items
-			require.Equal(s.T(), len(items), len(convertedResults.Headers)) // column number for this row should match
+			require.Equal(t, types.StatementResultOperation(op), row.Operation)
+			require.Equal(t, len(items), len(convertedResults.Headers)) // column number for this row should match
 			for colIdx, field := range row.Fields {
-				require.Equal(s.T(), items[colIdx], field.ToSDKType()) // fields should match
+				require.Equal(t, items[colIdx], field.ToSDKType()) // fields should match
 			}
 		}
 	})

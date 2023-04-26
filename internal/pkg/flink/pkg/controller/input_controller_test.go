@@ -70,6 +70,16 @@ func TestShouldUseTView(t *testing.T) {
 			want:      false,
 		},
 		{
+			name:      "local statement should not use TView even if unbounded",
+			statement: types.ProcessedStatement{PageToken: "NOT_EMPTY", IsLocalStatement: true},
+			want:      false,
+		},
+		{
+			name:      "non-local unbounded statement should always use TView",
+			statement: types.ProcessedStatement{PageToken: "NOT_EMPTY", IsLocalStatement: false, StatementResults: &types.StatementResults{}},
+			want:      true,
+		},
+		{
 			name:      "statement with no results should not use TView",
 			statement: types.ProcessedStatement{IsLocalStatement: false, StatementResults: &types.StatementResults{}},
 			want:      false,

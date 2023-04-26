@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/confluentinc/flink-sql-client/pkg/converter"
+	"github.com/confluentinc/flink-sql-client/pkg/results"
 	"github.com/confluentinc/flink-sql-client/pkg/types"
 	"github.com/confluentinc/flink-sql-client/test/generators"
 )
@@ -36,11 +36,11 @@ type StoreInterface interface {
 }
 
 type Store struct {
-	Properties          map[string]string
-	ProcessedStatements []types.ProcessedStatement
-	appController       ApplicationControllerInterface
-	client              GatewayClientInterface
-	appOptions          *ApplicationOptions
+	Properties    map[string]string
+	appController ApplicationControllerInterface
+	client        GatewayClientInterface
+	appOptions    *ApplicationOptions
+	mockCount     int
 }
 
 func (s *Store) ProcessLocalStatement(statement string) (*types.ProcessedStatement, *types.StatementError) {
@@ -99,8 +99,8 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 	statementStatus := statement.Status
 	if statementStatus != types.COMPLETED && statementStatus != types.RUNNING && !demoMode {
 		// Variable that controls how often we poll a pending statement
-		const retries = 10
-		const waitTime = time.Second * 1
+		const retries = 30
+		const waitTime = time.Second * 2
 		updatedStatement, err := s.waitForPendingStatement(statement.StatementName, retries, waitTime)
 
 		// Check for errors
@@ -121,22 +121,24 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 
 	// TODO: Remove this once we have a real backend
 	if demoMode {
-		mockResults := generators.MockResults(5, 2).Example()
+		mockResults := generators.MockCount(s.mockCount)
+		s.mockCount++
 		statementResults := mockResults.StatementResults
 		resultSchema := mockResults.ResultSchema
-		convertedResults, err := converter.ConvertToInternalResults(statementResults.Results.GetData(), resultSchema)
+		convertedResults, err := results.ConvertToInternalResults(statementResults.Results.GetData(), resultSchema)
 		if err != nil {
 			return nil, &types.StatementError{Msg: err.Error()}
 		}
 		statement.StatementResults = convertedResults
+		statement.PageToken = "TEST"
 		return &statement, nil
 	}
 	if err != nil {
 		return nil, &types.StatementError{Msg: err.Error()}
 	}
 
-	results := statementResultObj.GetResults()
-	convertedResults, err := converter.ConvertToInternalResults(results.GetData(), statement.ResultSchema)
+	statementResults := statementResultObj.GetResults()
+	convertedResults, err := results.ConvertToInternalResults(statementResults.GetData(), statement.ResultSchema)
 	if err != nil {
 		return nil, &types.StatementError{Msg: "Error: " + err.Error()}
 	}

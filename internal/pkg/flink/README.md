@@ -18,7 +18,7 @@ make deps
 Run prototype
 
 ```
-go run _examples/demo_main.go
+go run _examples/main/demo_main.go
 ```
 
 #### Run demo in devel
@@ -27,7 +27,7 @@ We have can run our client against a deployed gateway service running in our dev
 
 ````
 make deps
-go run _examples/demo_devel.go
+go run _examples/devel/demo_devel.go
 ````
 
 Set up credentials for kafka and send your statement(temporary and will eventually not be necessary):
@@ -66,4 +66,4 @@ curl --location --request DELETE 'http://localhost:8080/apis/sql/v1alpha1/orgs/o
 --header 'Accept: application/json'
 ````
 
-Please note that there is no guarantee that this will be up and running at all times. If you want to change the parameters used to initialize the client (like gateway address, environment, Kafka cluster, extra properties, and so on), you can edit them in the [demo_devel.go](./_examples/demo_devel.go) file.
+Please note that there is no guarantee that this will be up and running at all times. If you want to change the parameters used to initialize the client (like gateway address, environment, Kafka cluster, extra properties, and so on), you can edit them in the [demo_devel.go](./_examples/devel/demo_devel.go) file.

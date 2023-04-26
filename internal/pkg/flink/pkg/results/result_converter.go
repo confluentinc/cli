@@ -1,4 +1,4 @@
-package converter
+package results
 
 import (
 	"errors"
@@ -37,7 +37,8 @@ func ConvertToInternalResults(results []v1.SqlV1alpha1ResultItem, resultSchema v
 			convertedFields = append(convertedFields, convertToInternalField(field, columnSchema))
 		}
 		convertedResults = append(convertedResults, types.StatementResultRow{
-			Fields: convertedFields,
+			Operation: types.StatementResultOperation(int8(*result.Op)),
+			Fields:    convertedFields,
 		})
 	}
 	return &types.StatementResults{

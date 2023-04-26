@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
 
@@ -19,23 +18,23 @@ type ShortcutsController struct {
 }
 
 type Shortcut struct {
-	Key     tcell.Key
 	KeyText string
 	Text    string
 }
 
 // Keyboard shortcuts shown at the bottom.
 var appShortcuts = []Shortcut{
-	{Key: tcell.KeyCtrlQ, KeyText: "Q", Text: "Quit"},
-	{Key: tcell.KeyCtrlT, KeyText: "N", Text: "Next Page"},
+	{KeyText: "Q", Text: "Quit"},
+	//{KeyText: "N", Text: "Next Page"},
+	{KeyText: "M", Text: "Toggle Result Mode"},
+	{KeyText: "R", Text: "Toggle Auto Refresh"},
 }
 
 func (s *ShortcutsController) ShortcutHighlighted(added, removed, remaining []string) {
 	index, _ := strconv.Atoi(added[0])
-	switch appShortcuts[index].Text {
-	case "Quit":
-		// Todo - go back to input mode
-		s.appController.ExitApplication()
+	action := s.tableController.GetActionForShortcut(appShortcuts[index].KeyText)
+	if action != nil {
+		action()
 	}
 }
 

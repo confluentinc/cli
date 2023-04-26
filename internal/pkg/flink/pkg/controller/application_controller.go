@@ -109,7 +109,7 @@ func StartApp(envId, orgResourceId, kafkaClusterId, computePoolId, authToken str
 
 	// Instantiate Component Controllers
 	tableController := NewTableController(table, store, appController)
-	inputController := NewInputController(tableController, appController, store, authenticated, history)
+	inputController := NewInputController(tableController, appController, store, authenticated, history, appOptions)
 	shortcutsController := NewShortcutsController(shortcuts, appController, tableController)
 
 	// Pass input controller to table controller - input and output view interact with each other and that it easier

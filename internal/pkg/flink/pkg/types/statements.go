@@ -2,6 +2,7 @@ package types
 
 import (
 	v1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"
+	"strings"
 )
 
 type StatementResults struct {
@@ -9,8 +10,58 @@ type StatementResults struct {
 	Rows    []StatementResultRow
 }
 
+func (s *StatementResults) GetHeaders() []string {
+	if s == nil {
+		return []string{}
+	}
+	return s.Headers
+}
+
+func (s *StatementResults) GetRows() []StatementResultRow {
+	if s == nil {
+		return []StatementResultRow{}
+	}
+	return s.Rows
+}
+
 type StatementResultRow struct {
-	Fields []StatementResultField
+	Operation StatementResultOperation
+	Fields    []StatementResultField
+}
+
+func (r StatementResultRow) GetRowKey() string {
+	rowKey := strings.Builder{}
+	for _, field := range r.Fields {
+		rowKey.WriteString(field.Format(nil))
+	}
+	return rowKey.String()
+}
+
+const (
+	INSERT        StatementResultOperation = 0
+	UPDATE_BEFORE StatementResultOperation = 1
+	UPDATE_AFTER  StatementResultOperation = 2
+	DELETE        StatementResultOperation = 3
+)
+
+type StatementResultOperation int8
+
+func (s StatementResultOperation) IsInsertOperation() bool {
+	return s == INSERT || s == UPDATE_AFTER
+}
+
+func (s StatementResultOperation) String() string {
+	switch s {
+	case INSERT:
+		return "+I"
+	case UPDATE_BEFORE:
+		return "-U"
+	case UPDATE_AFTER:
+		return "+U"
+	case DELETE:
+		return "-D"
+	}
+	return ""
 }
 
 type MockStatementResult struct {

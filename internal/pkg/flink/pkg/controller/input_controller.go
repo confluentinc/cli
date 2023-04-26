@@ -12,9 +12,12 @@ import (
 	"github.com/confluentinc/flink-sql-client/autocomplete"
 	"github.com/confluentinc/flink-sql-client/components"
 	"github.com/confluentinc/flink-sql-client/lexer"
+	"github.com/confluentinc/flink-sql-client/pkg/results"
 	"github.com/confluentinc/flink-sql-client/pkg/types"
+	"github.com/confluentinc/flink-sql-client/test/generators"
 	"github.com/confluentinc/go-prompt"
 	"github.com/olekukonko/tablewriter"
+	"pgregory.net/rapid"
 )
 
 type InputControllerInterface interface {
@@ -33,14 +36,18 @@ type InputController struct {
 	prompt                *prompt.Prompt
 	store                 StoreInterface
 	authenticated         func() error
+	appOptions            *ApplicationOptions
 }
 
 func shouldUseTView(statement types.ProcessedStatement) bool {
 	// only use view for non-local statements, that have more than one row and more than one column
-	if !statement.IsLocalStatement && len(statement.StatementResults.Headers) > 1 && len(statement.StatementResults.Rows) > 1 {
+	if statement.IsLocalStatement {
+		return false
+	}
+	if statement.PageToken != "" {
 		return true
 	}
-	return false
+	return len(statement.StatementResults.Headers) > 1 && len(statement.StatementResults.Rows) > 1
 }
 
 type ResultsFetchState string
@@ -145,9 +152,19 @@ func (c *InputController) resultsChan(processedStatement *types.ProcessedStateme
 				return
 			}
 
+			demoMode := c.appOptions != nil && c.appOptions.MOCK_STATEMENTS_OUTPUT_DEMO
+			if demoMode {
+				if rapid.Bool().Example() {
+					mockExample := generators.MockResults(5, 2).Example()
+					statementresults, _ := results.ConvertToInternalResults(*mockExample.StatementResults.Results.Data, mockExample.ResultSchema)
+					processedStatement.StatementResults = statementresults
+					processedStatement.PageToken = ""
+				}
+			}
+
 			// decide if we want to display results using TView or just a plain table
 			if shouldUseTView(*processedStatement) {
-				c.table.SetDataAndFocus(*processedStatement)
+				c.table.Init(*processedStatement)
 				ch <- "return"
 				return
 			}
@@ -407,7 +424,7 @@ func (c *InputController) GetMaxCol() (int, error) {
 	return int(maxCol), nil
 }
 
-func NewInputController(t TableControllerInterface, a ApplicationControllerInterface, store StoreInterface, authenticated func() error, history *History) (c InputControllerInterface) {
+func NewInputController(t TableControllerInterface, a ApplicationControllerInterface, store StoreInterface, authenticated func() error, history *History, appOptions *ApplicationOptions) (c InputControllerInterface) {
 	inputController := &InputController{
 		History:         history,
 		InitialBuffer:   "",
@@ -416,6 +433,7 @@ func NewInputController(t TableControllerInterface, a ApplicationControllerInter
 		appController:   a,
 		smartCompletion: true,
 		authenticated:   authenticated,
+		appOptions:      appOptions,
 	}
 	inputController.prompt = inputController.Prompt()
 	components.PrintWelcomeHeader()

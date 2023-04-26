@@ -49,16 +49,16 @@ func (mr *MockTableControllerInterfaceMockRecorder) AppInputCapture(arg0 interfa
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AppInputCapture", reflect.TypeOf((*MockTableControllerInterface)(nil).AppInputCapture), arg0)
 }
 
-// SetDataAndFocus mocks base method.
-func (m *MockTableControllerInterface) SetDataAndFocus(arg0 types.ProcessedStatement) {
+// Init mocks base method.
+func (m *MockTableControllerInterface) Init(arg0 types.ProcessedStatement) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetDataAndFocus", arg0)
+	m.ctrl.Call(m, "Init", arg0)
 }
 
-// SetDataAndFocus indicates an expected call of SetDataAndFocus.
-func (mr *MockTableControllerInterfaceMockRecorder) SetDataAndFocus(arg0 interface{}) *gomock.Call {
+// Init indicates an expected call of Init.
+func (mr *MockTableControllerInterfaceMockRecorder) Init(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetDataAndFocus", reflect.TypeOf((*MockTableControllerInterface)(nil).SetDataAndFocus), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Init", reflect.TypeOf((*MockTableControllerInterface)(nil).Init), arg0)
 }
 
 // SetInputController mocks base method.
