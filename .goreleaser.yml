@@ -1,8 +1,5 @@
 project_name: confluent
 
-partial:
-  by: target
-
 builds:
   - binary: confluent
     id: confluent-alpine-amd64
@@ -115,6 +112,18 @@ builds:
       post:
         - cmd: scripts/gon_filepath_editor.sh {{ .Path }} arm64
         - cmd: gon dist/gon_confluent_arm64.hcl
+  - builder: prebuilt
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - arm64
+    goamd64:
+      - v1
+    
+    prebuilt:
+      path: dist/confluent_{{ .Os }}_{{ .Arch }}_{{ with .Amd64 }}_v1{{ end }}/confluent
+
 
 release:
   disable: "{{.Env.DRY_RUN}}"

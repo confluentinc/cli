@@ -57,16 +57,16 @@ endef
 # The glibc container doesn't need to publish to S3 so it doesn't need to $(caasenv-authenticate)
 .PHONY: gorelease-linux-glibc
 gorelease-linux-glibc:
-	brew install goreleaser/tap/goreleaser-pro && \
+	go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
 	VERSION=$(VERSION) GOEXPERIMENT=boringcrypto goreleaser release --clean -f .goreleaser-linux-glibc.yml
 
 .PHONY: gorelease-linux-glibc-arm64
 gorelease-linux-glibc-arm64:
 ifneq (,$(findstring x86_64,$(shell uname -m)))
-	brew install goreleaser/tap/goreleaser-pro && \
+	go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
 	VERSION=$(VERSION) CGO_ENABLED=1 CC=aarch64-linux-gnu-gcc CXX=aarch64-linux-gnu-g++ GOEXPERIMENT=boringcrypto goreleaser release --clean -f .goreleaser-linux-glibc-arm64.yml
 else
-	brew install goreleaser/tap/goreleaser-pro && \
+	go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
 	VERSION=$(VERSION) GOEXPERIMENT=boringcrypto goreleaser release --clean -f .goreleaser-linux-glibc-arm64.yml
 endif
 
@@ -76,11 +76,11 @@ endif
 gorelease:
 	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
 	
-	$(aws-authenticate) && \
-	brew install goreleaser/tap/goreleaser-pro && \
-	GORELEASER_KEY=$(GORELEASER_KEY) VERSION=$(VERSION) GOEXPERIMENT=boringcrypto DRY_RUN=$(DRY_RUN) goreleaser release --clean --split --timeout 60m && \
+	# $(aws-authenticate) && \
+
+	GORELEASER_KEY=$(GORELEASER_KEY) VERSION=$(VERSION) GOEXPERIMENT=boringcrypto DRY_RUN=$(DRY_RUN) goreleaser release --clean --prepare --timeout 60m && \
 	scripts/build_linux_glibc.sh && \
-	GITHUB_TOKEN=$(token) S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli DRY_RUN=$(DRY_RUN) goreleaser continue --merge --release-notes release-notes/latest-release
+	GORELEASER_KEY=$(GORELEASER_KEY) GITHUB_TOKEN=$(token) S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli DRY_RUN=$(DRY_RUN) goreleaser continue --release-notes release-notes/latest-release
 
 	rm -f CLIEVCodeSigningCertificate2.pfx
 
