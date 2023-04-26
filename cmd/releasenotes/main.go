@@ -53,7 +53,7 @@ func main() {
 }
 
 func docs(r *releaseNotes) string {
-	title := fmt.Sprintf("[%s] Confluent CLI v%s Release Notes", time.Now().Format("1/2/2006"), r.version)
+	title := fmt.Sprintf("[%s] Confluent CLI v%s Release Notes", r.date.Format("1/2/2006"), r.version)
 
 	out := underline(title, "=") + "\n"
 	out += "\n"
@@ -93,7 +93,7 @@ func github(r *releaseNotes) string {
 }
 
 func s3(r *releaseNotes) string {
-	title := fmt.Sprintf("[%s] Confluent CLI v%s Release Notes", time.Now().Format("1/2/2006"), r.version)
+	title := fmt.Sprintf("[%s] Confluent CLI v%s Release Notes", r.date.Format("1/2/2006"), r.version)
 
 	out := underline(title, "=") + "\n"
 	out += "\n"
