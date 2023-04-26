@@ -53,7 +53,7 @@ func main() {
 }
 
 func docs(r *releaseNotes) string {
-	title := fmt.Sprintf("[%s] Confluent CLI v%s Release Notes", time.Now().Format("1/2/2006"), "3.10.0")
+	title := fmt.Sprintf("[%s] Confluent CLI v%s Release Notes", time.Now().Format("1/2/2006"), r.version)
 
 	out := underline(title, "=") + "\n"
 	out += "\n"
