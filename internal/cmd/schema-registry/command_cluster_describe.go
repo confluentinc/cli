@@ -61,7 +61,7 @@ func (c *command) clusterDescribe(cmd *cobra.Command, _ []string) error {
 	var numSchemas string
 	var availableSchemas string
 	var srClient *srsdk.APIClient
-	ctx := context.Background()
+	var ctx context.Context
 
 	// Collect the parameters
 	environmentId, err := c.Context.EnvironmentId()
