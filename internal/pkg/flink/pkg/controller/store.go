@@ -180,14 +180,17 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 }
 
 func (s *Store) DeleteStatement(statementName string) {
-	httpResponse, err := s.client.DeleteStatement(context.Background(), statementName)
+	demoMode := s.appOptions != nil && s.appOptions.MOCK_STATEMENTS_OUTPUT_DEMO
+	if !demoMode {
+		httpResponse, err := s.client.DeleteStatement(context.Background(), statementName)
 
-	if err != nil {
-		log.Print(err.Error())
-	}
+		if err != nil {
+			log.Print(err.Error())
+		}
 
-	if httpResponse.StatusCode < 200 || httpResponse.StatusCode >= 300 {
-		log.Printf("Error: " + httpResponse.Body.Close().Error() + httpResponse.Status)
+		if httpResponse.StatusCode < 200 || httpResponse.StatusCode >= 300 {
+			log.Printf("Error: " + httpResponse.Body.Close().Error() + httpResponse.Status)
+		}
 	}
 }
 

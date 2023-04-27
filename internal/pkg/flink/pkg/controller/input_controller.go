@@ -225,6 +225,7 @@ func (c *InputController) toggleOutputMode() {
 
 func printResultToSTDOUT(statementResults *types.StatementResults) {
 	if statementResults == nil || len(statementResults.Headers) == 0 || len(statementResults.Rows) == 0 {
+		fmt.Println("\nThe server returned empty rows for this statement.")
 		return
 	}
 

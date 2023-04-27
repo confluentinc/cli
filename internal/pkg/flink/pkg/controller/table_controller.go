@@ -187,10 +187,14 @@ func (t *TableController) renderTitle() {
 		mode = "Table mode"
 	}
 
-	if t.isAutoRefreshRunning() {
-		t.table.SetTitle(fmt.Sprintf("%s (auto refresh %vs)", mode, defaultRefreshInterval/1000))
+	if t.statement.PageToken == "" {
+		t.table.SetTitle(fmt.Sprintf("%s (completed)", mode))
 	} else {
-		t.table.SetTitle(fmt.Sprintf("%s (auto refresh disabled)", mode))
+		if t.isAutoRefreshRunning() {
+			t.table.SetTitle(fmt.Sprintf("%s (auto refresh %vs)", mode, defaultRefreshInterval/1000))
+		} else {
+			t.table.SetTitle(fmt.Sprintf("%s (auto refresh disabled)", mode))
+		}
 	}
 }
 
