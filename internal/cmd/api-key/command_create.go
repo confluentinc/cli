@@ -1,7 +1,6 @@
 package apikey
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 
@@ -168,14 +167,14 @@ func (c *command) catchServiceAccountNotValidError(err error, r *http.Response, 
 	}
 
 	if err.Error() == "error creating api key: service account is not valid" || err.Error() == "403 Forbidden" {
-		user, err := c.Client.Auth.User(context.Background())
+		user, err := c.Client.Auth.User()
 		if err != nil {
 			return err
 		}
 		auditLog := user.GetOrganization().GetAuditLog()
 
 		if clusterId == auditLog.GetClusterId() {
-			auditLogServiceAccount, err2 := c.Client.User.GetServiceAccount(context.Background(), auditLog.GetServiceAccountId())
+			auditLogServiceAccount, err2 := c.Client.User.GetServiceAccount(auditLog.GetServiceAccountId())
 			if err2 != nil {
 				return err
 			}

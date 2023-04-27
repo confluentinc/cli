@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"testing"
@@ -124,7 +123,7 @@ func (suite *LoginCredentialsManagerTestSuite) SetupSuite() {
 	suite.ccloudClient = &ccloudv1.Client{
 		Params: params,
 		User: &ccloudv1mock.UserInterface{
-			LoginRealmFunc: func(ctx context.Context, req *ccloudv1.GetLoginRealmRequest) (*ccloudv1.GetLoginRealmReply, error) {
+			LoginRealmFunc: func(req *ccloudv1.GetLoginRealmRequest) (*ccloudv1.GetLoginRealmReply, error) {
 				if req.Email == "test+sso@confluent.io" {
 					return &ccloudv1.GetLoginRealmReply{IsSso: true, Realm: "ccloud-local"}, nil
 				}
