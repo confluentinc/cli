@@ -73,7 +73,7 @@ func (c *command) listSchemas(cmd *cobra.Command, srClient *srsdk.APIClient, ctx
 		return err
 	}
 
-	opts := &srsdk.GetSchemasOpts{SubjectPrefix: optional.NewString(subjectPrefix), Deleted: optional.NewBool(showDeleted)}
+	opts := &srsdk.GetSchemasOpts{SubjectPrefix: optional.NewString(subjectPrefix), Deleted: optional.NewBool(all)}
 	schemas, _, err := srClient.DefaultApi.GetSchemas(ctx, opts)
 	if err != nil {
 		return err
