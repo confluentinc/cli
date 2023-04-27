@@ -1,9 +1,10 @@
 package controller
 
 import (
+	"testing"
+
 	"github.com/confluentinc/flink-sql-client/pkg/types"
 	"github.com/rivo/tview"
-	"testing"
 
 	"github.com/confluentinc/flink-sql-client/components"
 	"github.com/gdamore/tcell/v2"
@@ -29,6 +30,7 @@ func TestAppInputCapture(t *testing.T) {
 		mockAppController.EXPECT().SuspendOutputMode(gomock.Any()).Times(1)
 		tviewApp := tview.NewApplication()
 		mockAppController.EXPECT().TView().Return(tviewApp).Times(1)
+		mockStore.EXPECT().DeleteStatement(gomock.Any()).Times(1)
 
 		// When
 		result := tableController.AppInputCapture(input)
@@ -50,6 +52,7 @@ func TestAppInputCapture(t *testing.T) {
 		mockAppController.EXPECT().SuspendOutputMode(gomock.Any()).Times(1)
 		tviewApp := tview.NewApplication()
 		mockAppController.EXPECT().TView().Return(tviewApp).Times(1)
+		mockStore.EXPECT().DeleteStatement(gomock.Any()).Times(1)
 
 		// When
 		result := tableController.AppInputCapture(input)
@@ -71,6 +74,7 @@ func TestAppInputCapture(t *testing.T) {
 		mockAppController.EXPECT().SuspendOutputMode(gomock.Any()).Times(1)
 		tviewApp := tview.NewApplication()
 		mockAppController.EXPECT().TView().Return(tviewApp).Times(1)
+		mockStore.EXPECT().DeleteStatement(gomock.Any()).Times(1)
 
 		// When
 		result := tableController.AppInputCapture(input)

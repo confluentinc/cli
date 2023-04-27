@@ -5,6 +5,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
+	"net/http"
+	"os"
+	"reflect"
+	"strings"
+
 	"github.com/confluentinc/flink-sql-client/autocomplete"
 	"github.com/confluentinc/flink-sql-client/components"
 	"github.com/confluentinc/flink-sql-client/lexer"
@@ -13,12 +19,7 @@ import (
 	"github.com/confluentinc/flink-sql-client/test/generators"
 	"github.com/confluentinc/go-prompt"
 	"github.com/olekukonko/tablewriter"
-	"log"
-	"net/http"
-	"os"
 	"pgregory.net/rapid"
-	"reflect"
-	"strings"
 )
 
 type InputControllerInterface interface {
@@ -95,7 +96,10 @@ func (c *InputController) RunInteractiveInput() {
 
 		// Wait for results to be there or for the user to cancel the query
 		ctx, cancelWaitPendingStatement := context.WithCancel(context.Background())
-		cancelListenToUserInput := c.listenToUserInput(cancelWaitPendingStatement)
+		cancelListenToUserInput := c.listenToUserInput(func() {
+			c.store.DeleteStatement(processedStatement.StatementName)
+			cancelWaitPendingStatement()
+		})
 
 		processedStatement, err = c.store.WaitPendingStatement(ctx, *processedStatement)
 		if err != nil {

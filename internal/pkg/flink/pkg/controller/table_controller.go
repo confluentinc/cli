@@ -56,6 +56,7 @@ func (t *TableController) SetInputController(inputController InputControllerInte
 
 func (t *TableController) exitTViewMode() {
 	t.stopAutoRefresh()
+	t.store.DeleteStatement(t.statement.StatementName)
 	t.appController.SuspendOutputMode(t.InputController.RunInteractiveInput)
 }
 

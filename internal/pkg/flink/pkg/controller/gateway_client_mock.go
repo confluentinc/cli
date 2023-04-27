@@ -52,6 +52,21 @@ func (mr *MockGatewayClientInterfaceMockRecorder) CreateStatement(arg0, arg1, ar
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateStatement", reflect.TypeOf((*MockGatewayClientInterface)(nil).CreateStatement), arg0, arg1, arg2)
 }
 
+// DeleteStatement mocks base method.
+func (m *MockGatewayClientInterface) DeleteStatement(arg0 context.Context, arg1 string) (*http.Response, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteStatement", arg0, arg1)
+	ret0, _ := ret[0].(*http.Response)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteStatement indicates an expected call of DeleteStatement.
+func (mr *MockGatewayClientInterfaceMockRecorder) DeleteStatement(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteStatement", reflect.TypeOf((*MockGatewayClientInterface)(nil).DeleteStatement), arg0, arg1)
+}
+
 // GetStatement mocks base method.
 func (m *MockGatewayClientInterface) GetStatement(arg0 context.Context, arg1 string) (v1alpha1.SqlV1alpha1Statement, *http.Response, error) {
 	m.ctrl.T.Helper()

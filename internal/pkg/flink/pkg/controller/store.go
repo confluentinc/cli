@@ -4,6 +4,7 @@ import (
 	"context"
 	_ "embed"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -33,6 +34,7 @@ const MOCK_STATEMENTS_OUTPUT_DEMO = true
 type StoreInterface interface {
 	ProcessStatement(statement string) (*types.ProcessedStatement, *types.StatementError)
 	FetchStatementResults(types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError)
+	DeleteStatement(statementName string)
 	WaitPendingStatement(ctx context.Context, statement types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError)
 }
 
@@ -175,6 +177,18 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 	metadata := statementResultObj.GetMetadata()
 	statement.PageToken = metadata.GetNext()
 	return &statement, nil
+}
+
+func (s *Store) DeleteStatement(statementName string) {
+	httpResponse, err := s.client.DeleteStatement(context.Background(), statementName)
+
+	if err != nil {
+		log.Print(err.Error())
+	}
+
+	if httpResponse.StatusCode < 200 || httpResponse.StatusCode >= 300 {
+		log.Printf("Error: " + httpResponse.Body.Close().Error() + httpResponse.Status)
+	}
 }
 
 func (s *Store) waitForPendingStatement(ctx context.Context, statementName string, retries int, waitTime time.Duration) (*types.ProcessedStatement, error) {

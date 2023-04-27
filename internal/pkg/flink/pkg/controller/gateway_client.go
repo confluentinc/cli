@@ -11,6 +11,7 @@ import (
 
 type GatewayClientInterface interface {
 	CreateStatement(ctx context.Context, statement string, properties map[string]string) (v1.SqlV1alpha1Statement, *http.Response, error)
+	DeleteStatement(ctx context.Context, statementName string) (*http.Response, error)
 	GetStatement(ctx context.Context, statementName string) (v1.SqlV1alpha1Statement, *http.Response, error)
 	GetStatementResults(ctx context.Context, statementId, pageToken string) (v1.SqlV1alpha1StatementResult, *http.Response, error)
 }

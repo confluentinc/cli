@@ -35,6 +35,18 @@ func (m *MockStoreInterface) EXPECT() *MockStoreInterfaceMockRecorder {
 	return m.recorder
 }
 
+// DeleteStatement mocks base method.
+func (m *MockStoreInterface) DeleteStatement(arg0 string) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "DeleteStatement", arg0)
+}
+
+// DeleteStatement indicates an expected call of DeleteStatement.
+func (mr *MockStoreInterfaceMockRecorder) DeleteStatement(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteStatement", reflect.TypeOf((*MockStoreInterface)(nil).DeleteStatement), arg0)
+}
+
 // FetchStatementResults mocks base method.
 func (m *MockStoreInterface) FetchStatementResults(arg0 types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError) {
 	m.ctrl.T.Helper()
