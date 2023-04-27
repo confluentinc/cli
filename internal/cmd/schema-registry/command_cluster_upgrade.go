@@ -60,6 +60,11 @@ func (c *command) clusterUpgrade(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	_, err = getPackageInternalName(packageDisplayName)
+	if err != nil {
+		return err
+	}
+
 	if strings.EqualFold(clusterSpec.GetPackage(), packageDisplayName) {
 		output.ErrPrintf(errors.SRInvalidPackageUpgrade, environmentId, packageDisplayName)
 		return nil
