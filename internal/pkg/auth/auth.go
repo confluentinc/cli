@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"runtime"
@@ -87,7 +86,7 @@ func PersistConfluentLoginToConfig(config *v1.Config, credentials *Credentials, 
 func PersistCCloudCredentialsToConfig(config *v1.Config, client *ccloudv1.Client, url string, credentials *Credentials, save bool) (string, *ccloudv1.Organization, error) {
 	ctxName := GenerateCloudContextName(credentials.Username, url)
 
-	user, err := client.Auth.User(context.Background())
+	user, err := client.Auth.User()
 	if err != nil {
 		return "", nil, err
 	}
