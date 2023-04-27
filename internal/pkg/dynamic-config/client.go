@@ -1,7 +1,6 @@
 package dynamicconfig
 
 import (
-	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -53,8 +52,8 @@ func (d *DynamicContext) FetchAPIKeyError(apiKey string, clusterID string) error
 	return &errors.UnconfiguredAPISecretError{APIKey: apiKey, ClusterID: clusterID}
 }
 
-func (d *DynamicContext) FetchSchemaRegistryByEnvironmentId(context context.Context, accountId string) (*ccloudv1.SchemaRegistryCluster, error) {
-	existingClusters, err := d.Client.SchemaRegistry.GetSchemaRegistryClusters(context, &ccloudv1.SchemaRegistryCluster{
+func (d *DynamicContext) FetchSchemaRegistryByEnvironmentId(accountId string) (*ccloudv1.SchemaRegistryCluster, error) {
+	existingClusters, err := d.Client.SchemaRegistry.GetSchemaRegistryClusters(&ccloudv1.SchemaRegistryCluster{
 		AccountId: accountId,
 		Name:      "account schema-registry",
 	})
@@ -67,8 +66,8 @@ func (d *DynamicContext) FetchSchemaRegistryByEnvironmentId(context context.Cont
 	return nil, errors.NewSRNotEnabledError()
 }
 
-func (d *DynamicContext) FetchSchemaRegistryById(context context.Context, id string, accountId string) (*ccloudv1.SchemaRegistryCluster, error) {
-	existingCluster, err := d.Client.SchemaRegistry.GetSchemaRegistryCluster(context, &ccloudv1.SchemaRegistryCluster{
+func (d *DynamicContext) FetchSchemaRegistryById(id, accountId string) (*ccloudv1.SchemaRegistryCluster, error) {
+	existingCluster, err := d.Client.SchemaRegistry.GetSchemaRegistryCluster(&ccloudv1.SchemaRegistryCluster{
 		Id:        id,
 		AccountId: accountId,
 	})
