@@ -40,7 +40,7 @@ func (a *AuthTokenHandlerImpl) GetCCloudTokens(clientFactory CCloudClientFactory
 				RefreshToken:  credentials.AuthRefreshToken,
 				OrgResourceId: orgResourceId,
 			}
-			if res, err := client.Auth.Login(context.Background(), req); err == nil {
+			if res, err := client.Auth.Login(req); err == nil {
 				return res.GetToken(), res.GetRefreshToken(), nil
 			}
 		}
@@ -67,7 +67,7 @@ func (a *AuthTokenHandlerImpl) GetCCloudTokens(clientFactory CCloudClientFactory
 		OrgResourceId: orgResourceId,
 	}
 
-	res, err := client.Auth.Login(context.Background(), req)
+	res, err := client.Auth.Login(req)
 	if err != nil {
 		return "", "", err
 	}
@@ -105,9 +105,9 @@ func (a *AuthTokenHandlerImpl) getCCloudSSOToken(client *ccloudv1.Client, noBrow
 
 	var res *ccloudv1.AuthenticateReply
 	if isOkta {
-		res, err = client.Auth.OktaLogin(context.Background(), req)
+		res, err = client.Auth.OktaLogin(req)
 	} else {
-		res, err = client.Auth.Login(context.Background(), req)
+		res, err = client.Auth.Login(req)
 	}
 	if err != nil {
 		return "", "", err
@@ -123,7 +123,7 @@ func (a *AuthTokenHandlerImpl) getCCloudUserSSO(client *ccloudv1.Client, email, 
 		ClientId:      auth0ClientId,
 		OrgResourceId: orgResourceId,
 	}
-	loginRealmReply, err := client.User.LoginRealm(context.Background(), req)
+	loginRealmReply, err := client.User.LoginRealm(req)
 	if err != nil {
 		return "", err
 	}
@@ -144,7 +144,7 @@ func (a *AuthTokenHandlerImpl) refreshCCloudSSOToken(client *ccloudv1.Client, re
 		OrgResourceId: orgResourceId,
 	}
 
-	res, err := client.Auth.Login(context.Background(), req)
+	res, err := client.Auth.Login(req)
 	if err != nil {
 		return "", "", err
 	}
@@ -163,7 +163,7 @@ func (a *AuthTokenHandlerImpl) GetConfluentToken(mdsClient *mds.APIClient, crede
 }
 
 func (a *AuthTokenHandlerImpl) checkSSOEmailMatchesLogin(client *ccloudv1.Client, loginEmail string) error {
-	getMeReply, err := client.Auth.User(context.Background())
+	getMeReply, err := client.Auth.User()
 	if err != nil {
 		return err
 	}

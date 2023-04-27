@@ -2,7 +2,6 @@
 package auth
 
 import (
-	"context"
 	"os"
 	"runtime"
 	"strings"
@@ -304,7 +303,7 @@ func (h *LoginCredentialsManagerImpl) isSSOUser(email, orgId string) bool {
 		ClientId:      auth0ClientId,
 		OrgResourceId: orgId,
 	}
-	res, err := h.client.User.LoginRealm(context.Background(), req)
+	res, err := h.client.User.LoginRealm(req)
 	// Fine to ignore non-nil err for this request: e.g. what if this fails due to invalid/malicious
 	// email, we want to silently continue and give the illusion of password prompt.
 	return err == nil && res.GetIsSso()

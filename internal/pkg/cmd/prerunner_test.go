@@ -423,7 +423,7 @@ func TestPrerun_AutoLogin(t *testing.T) {
 			r.CCloudClientFactory = &climock.CCloudClientFactory{
 				JwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloudv1.Client {
 					return &ccloudv1.Client{Auth: &ccloudv1mock.Auth{
-						UserFunc: func(_ context.Context) (*ccloudv1.GetMeReply, error) {
+						UserFunc: func() (*ccloudv1.GetMeReply, error) {
 							return &ccloudv1.GetMeReply{
 								User:         &ccloudv1.User{Id: 23},
 								Organization: &ccloudv1.Organization{ResourceId: "o-123"},
@@ -543,7 +543,7 @@ func TestPrerun_ReLoginToLastOrgUsed(t *testing.T) {
 	r.CCloudClientFactory = &climock.CCloudClientFactory{
 		JwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloudv1.Client {
 			return &ccloudv1.Client{Auth: &ccloudv1mock.Auth{
-				UserFunc: func(ctx context.Context) (*ccloudv1.GetMeReply, error) {
+				UserFunc: func() (*ccloudv1.GetMeReply, error) {
 					return &ccloudv1.GetMeReply{
 						User:         &ccloudv1.User{Id: 23},
 						Organization: &ccloudv1.Organization{ResourceId: "o-123"},

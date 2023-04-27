@@ -1,8 +1,6 @@
 package connect
 
 import (
-	"context"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -37,7 +35,7 @@ func (c *eventCommand) describe(cmd *cobra.Command, _ []string) error {
 		return errors.New(errors.ConnectLogEventsNotEnabledErrorMsg)
 	}
 
-	serviceAccount, err := c.Client.User.GetServiceAccount(context.Background(), auditLog.GetServiceAccountId())
+	serviceAccount, err := c.Client.User.GetServiceAccount(auditLog.GetServiceAccountId())
 	if err != nil {
 		return err
 	}
