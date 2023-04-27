@@ -53,12 +53,28 @@ func (c *GatewayClient) GetStatement(ctx context.Context, statementName string) 
 	return createdStatement, resp, err
 }
 
+func (c *GatewayClient) DeleteStatement(ctx context.Context, statementName string) (*http.Response, error) {
+	ctx = context.WithValue(ctx, v1.ContextAccessToken, c.authToken)
+	resp, err := c.client.StatementsSqlV1alpha1Api.DeleteSqlV1alpha1Statement(ctx, c.envId, statementName).Execute()
+
+	return resp, err
+}
+
 func (c *GatewayClient) GetStatementResults(ctx context.Context, statementId, pageToken string) (v1.SqlV1alpha1StatementResult, *http.Response, error) {
 	fetchResultsRequest := c.client.StatementResultSqlV1alpha1Api.GetSqlV1alpha1StatementResult(ctx, c.envId, statementId)
 	if pageToken != "" {
 		fetchResultsRequest = fetchResultsRequest.PageToken(pageToken)
 	}
 	result, resp, err := fetchResultsRequest.Execute()
+
+	metadata := result.GetMetadata()
+	newPageToken := metadata.GetNext()
+	// TODO: workaround for gateway bug remove once fixed
+	if pageToken != "" && pageToken == newPageToken {
+		result.Metadata.Next = nil
+		result.Results.Data = nil
+	}
+
 	return result, resp, err
 }
 

@@ -53,7 +53,7 @@ func (s *Store) processSetStatement(statement string) (*types.ProcessedStatement
 		statementResults := createStatementResults([]string{"Key", "Value"}, lo.MapToSlice(s.Properties, func(key, val string) []string { return []string{key, val} }))
 		return &types.ProcessedStatement{
 			Kind:             configOpSet,
-			Status:           "Completed",
+			Status:           types.COMPLETED,
 			StatementResults: &statementResults,
 			IsLocalStatement: true,
 		}, nil
@@ -64,7 +64,7 @@ func (s *Store) processSetStatement(statement string) (*types.ProcessedStatement
 	return &types.ProcessedStatement{
 		Kind:             configOpSet,
 		StatusDetail:     "Config updated successfuly.",
-		Status:           "Completed",
+		Status:           types.COMPLETED,
 		StatementResults: &statementResults,
 		IsLocalStatement: true,
 	}, nil
@@ -80,7 +80,7 @@ func (s *Store) processResetStatement(statement string) (*types.ProcessedStateme
 		return &types.ProcessedStatement{
 			Kind:             configOpReset,
 			StatusDetail:     "Configuration has been reset successfuly.",
-			Status:           "Completed",
+			Status:           types.COMPLETED,
 			IsLocalStatement: true,
 		}, nil
 	} else {
@@ -94,7 +94,7 @@ func (s *Store) processResetStatement(statement string) (*types.ProcessedStateme
 		return &types.ProcessedStatement{
 			Kind:             configOpReset,
 			StatusDetail:     fmt.Sprintf("Config key \"%s\" has been reset successfuly.", configKey),
-			Status:           "Completed",
+			Status:           types.COMPLETED,
 			StatementResults: &statementResults,
 			IsLocalStatement: true,
 		}, nil
@@ -112,7 +112,7 @@ func (s *Store) processUseStatement(statement string) (*types.ProcessedStatement
 	return &types.ProcessedStatement{
 		Kind:             configOpUse,
 		StatusDetail:     "Config updated successfuly.",
-		Status:           "Completed",
+		Status:           types.COMPLETED,
 		StatementResults: &statementResults,
 		IsLocalStatement: true,
 	}, nil

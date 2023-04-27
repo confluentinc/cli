@@ -1,23 +1,25 @@
 package controller
 
 import (
+	"bufio"
+	"context"
 	"errors"
 	"fmt"
+	"github.com/confluentinc/flink-sql-client/pkg/results"
+	"github.com/confluentinc/flink-sql-client/test/generators"
 	"log"
 	"net/http"
 	"os"
+	"pgregory.net/rapid"
 	"reflect"
 	"strings"
 
 	"github.com/confluentinc/flink-sql-client/autocomplete"
 	"github.com/confluentinc/flink-sql-client/components"
 	"github.com/confluentinc/flink-sql-client/lexer"
-	"github.com/confluentinc/flink-sql-client/pkg/results"
 	"github.com/confluentinc/flink-sql-client/pkg/types"
-	"github.com/confluentinc/flink-sql-client/test/generators"
 	"github.com/confluentinc/go-prompt"
 	"github.com/olekukonko/tablewriter"
-	"pgregory.net/rapid"
 )
 
 type InputControllerInterface interface {
@@ -53,17 +55,15 @@ func shouldUseTView(statement types.ProcessedStatement) bool {
 type ResultsFetchState string
 
 const (
-	UNEXECUTED ResultsFetchState = "UNEXECUTED"
-	CANCELED   ResultsFetchState = "CANCELED"
-	COMPLETED  ResultsFetchState = "COMPLETED"
+	PENDING   ResultsFetchState = "PENDING"
+	STARTED   ResultsFetchState = "STARTED"
+	CANCELED  ResultsFetchState = "CANCELED"
+	COMPLETED ResultsFetchState = "COMPLETED"
 )
 
 // Actions
 // This is the main function/loop for the app
 func (c *InputController) RunInteractiveInput() {
-
-	// Create a channel to receive OS signals
-	resultsFetch := UNEXECUTED
 
 	// We check for statement result and rows so we don't leave GoPrompt in case of errors
 	for {
@@ -95,63 +95,26 @@ func (c *InputController) RunInteractiveInput() {
 		}
 
 		// Wait for results to be there or for the user to cancel the query
-		select {
-		case <-c.termChan(&resultsFetch):
-			fmt.Println("Aborting results fetching...")
-			resultsFetch = CANCELED
+		ctx, cancelWaitPendingStatement := context.WithCancel(context.Background())
+		cancelListenToUserInput := c.listenToUserInput(cancelWaitPendingStatement)
+
+		processedStatement, err = c.store.WaitPendingStatement(ctx, *processedStatement)
+		if err != nil {
+			cancelListenToUserInput()
+			fmt.Println(err.Error())
+			c.isSessionValid(err)
 			continue
-		case out := <-c.resultsChan(processedStatement, &resultsFetch):
-			resultsFetch = COMPLETED
-			if out == "continue" {
-				continue
-			} else {
-				return
-			}
 		}
-	}
-}
 
-func (c *InputController) termChan(resultsFetch *ResultsFetchState) chan bool {
-	ch := make(chan bool, 1)
-	go func() {
-		for {
-			if *resultsFetch == COMPLETED {
-				return
-			}
-			var buf [1]byte
-			os.Stdin.Read(buf[:])
-			buf[0] = byte(strings.ToLower(string(buf[0]))[0])
-			pressedKey := prompt.Key(buf[0])
-
-			switch pressedKey {
-			case prompt.ControlC:
-				fallthrough
-			case prompt.ControlD:
-				fallthrough
-			case prompt.ControlQ:
-				fallthrough
-			case prompt.Escape:
-				// esc
-				ch <- true
-				return
-			}
+		processedStatement, err = c.store.FetchStatementResults(*processedStatement)
+		cancelListenToUserInput()
+		if err != nil {
+			fmt.Println(err.Error())
+			continue
 		}
-	}()
-	return ch
-}
 
-func (c *InputController) resultsChan(processedStatement *types.ProcessedStatement, resultsFetch *ResultsFetchState) chan string {
-	ch := make(chan string, 1)
-	go func() {
-		processedStatement, err := c.store.FetchStatementResults(*processedStatement)
-		if *resultsFetch != CANCELED {
-			if err != nil {
-				fmt.Println(err.Error())
-				c.isSessionValid(err)
-				ch <- "continue"
-				return
-			}
-
+		// decide if we want to display results using TView or just a plain table
+		if shouldUseTView(*processedStatement) {
 			demoMode := c.appOptions != nil && c.appOptions.MOCK_STATEMENTS_OUTPUT_DEMO
 			if demoMode {
 				if rapid.Bool().Example() {
@@ -161,19 +124,73 @@ func (c *InputController) resultsChan(processedStatement *types.ProcessedStateme
 					processedStatement.PageToken = ""
 				}
 			}
+			c.table.Init(*processedStatement)
+			return
+		}
 
-			// decide if we want to display results using TView or just a plain table
-			if shouldUseTView(*processedStatement) {
-				c.table.Init(*processedStatement)
-				ch <- "return"
-				return
+		printResultToSTDOUT(processedStatement.StatementResults)
+	}
+}
+
+func readByteFromStdin() *byte {
+	reader := bufio.NewReader(os.Stdin)
+
+	// Create a channel to receive input from os.Stdin
+	input := make(chan byte)
+
+	// Start a goroutine to read input from os.Stdin and send it to the input channel
+	go func() {
+		for {
+			b, err := reader.ReadByte()
+			if err != nil {
+				break
 			}
+			input <- b
+		}
+		close(input)
+	}()
 
-			printResultToSTDOUT(processedStatement.StatementResults)
-			ch <- "continue"
+	// Check for input availability (non-blocking)
+	select {
+	case b := <-input:
+		return &b
+	default:
+		return nil
+	}
+}
+
+func (c *InputController) listenToUserInput(cancelFunc context.CancelFunc) context.CancelFunc {
+	ctx, cancelListenToUserInput := context.WithCancel(context.Background())
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				input := readByteFromStdin()
+				if input == nil {
+					continue
+				}
+				pressedKey := prompt.Key(*input)
+
+				switch pressedKey {
+				case prompt.ControlC:
+					fallthrough
+				case prompt.ControlD:
+					fallthrough
+				case prompt.ControlQ:
+					fallthrough
+				case prompt.Escape:
+					// esc
+					cancelFunc()
+					return
+				}
+			}
 		}
 	}()
-	return ch
+	return func() {
+		cancelListenToUserInput()
+	}
 }
 
 func (c *InputController) isSessionValid(err *types.StatementError) bool {

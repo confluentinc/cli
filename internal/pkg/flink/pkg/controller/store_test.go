@@ -3,6 +3,7 @@ package controller
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -59,7 +60,7 @@ func TestStoreProcessLocalStatement(t *testing.T) {
 	assert.Nil(t, result)
 }
 
-func TestWaitForPendingStatement(t *testing.T) {
+func TestWaitForPendingStatement3(t *testing.T) {
 	statementName := "statementName"
 	retries := 10
 	waitTime := time.Millisecond * 1
@@ -78,28 +79,116 @@ func TestWaitForPendingStatement(t *testing.T) {
 	httpRes := http.Response{StatusCode: 200}
 	client.EXPECT().GetStatement(gomock.Any(), statementName).Return(statementObj, &httpRes, nil).Times(1)
 
-	processedStatement, err := s.waitForPendingStatement(statementName, retries, waitTime)
+	processedStatement, err := s.waitForPendingStatement(context.Background(), statementName, retries, waitTime)
 	assert.Nil(t, err)
 	assert.NotNil(t, processedStatement)
 	assert.Equal(t, types.NewProcessedStatement(statementObj), processedStatement)
+}
+
+func TestWaitForPendingTimesout(t *testing.T) {
+	statementName := "statementName"
+	retries := 10
+	waitTime := time.Millisecond * 1
+	httpRes := http.Response{StatusCode: 200}
+	client := NewMockGatewayClientInterface(gomock.NewController(t))
+	s := &Store{
+		client: client,
+	}
 
 	// Test case 2: Statement is pending
-	statementObj = v1alpha1.SqlV1alpha1Statement{
+	statementObj := v1alpha1.SqlV1alpha1Statement{
 		Status: &v1.SqlV1alpha1StatementStatus{
 			Phase: "PENDING",
 		},
 	}
 	client.EXPECT().GetStatement(gomock.Any(), statementName).Return(statementObj, &httpRes, nil).Times(retries)
-	processedStatement, err = s.waitForPendingStatement(statementName, retries, waitTime)
+	processedStatement, err := s.waitForPendingStatement(context.Background(), statementName, retries, waitTime)
 	assert.EqualError(t, err, fmt.Sprintf("Error: Statement is still pending after %d retries", retries))
 	assert.Nil(t, processedStatement)
+}
 
-	// Test case 3: GetStatement returns error
-	err = errors.New("couldn't get statement!")
-	client.EXPECT().GetStatement(gomock.Any(), statementName).Return(statementObj, nil, err).Times(1)
-	_, err = s.waitForPendingStatement(statementName, retries, waitTime)
-	assert.EqualError(t, err, err.Error())
+func TestWaitForPendingEventuallyCompletes(t *testing.T) {
+	statementName := "statementName"
+	retries := 10
+	waitTime := time.Millisecond * 1
+	httpRes := http.Response{StatusCode: 200}
+	client := NewMockGatewayClientInterface(gomock.NewController(t))
+	s := &Store{
+		client: client,
+	}
 
+	// Test case 2: Statement is pending
+	statementObj := v1alpha1.SqlV1alpha1Statement{
+		Status: &v1.SqlV1alpha1StatementStatus{
+			Phase: "PENDING",
+		},
+	}
+
+	statementObjCompleted := v1alpha1.SqlV1alpha1Statement{
+		Status: &v1.SqlV1alpha1StatementStatus{
+			Phase: "COMPLETED",
+		},
+	}
+	client.EXPECT().GetStatement(gomock.Any(), statementName).Return(statementObj, &httpRes, nil).Times(retries - 1)
+	client.EXPECT().GetStatement(gomock.Any(), statementName).Return(statementObjCompleted, &httpRes, nil).Times(1)
+
+	processedStatement, err := s.waitForPendingStatement(context.Background(), statementName, retries, waitTime)
+	assert.Nil(t, err)
+	assert.NotNil(t, processedStatement)
+	assert.Equal(t, types.NewProcessedStatement(statementObjCompleted), processedStatement)
+}
+
+func TestWaitForPendingStatementErrors(t *testing.T) {
+	statementName := "statementName"
+	retries := 10
+	waitTime := time.Millisecond * 1
+	client := NewMockGatewayClientInterface(gomock.NewController(t))
+	s := &Store{
+		client: client,
+	}
+	statementObj := v1alpha1.SqlV1alpha1Statement{
+		Status: &v1.SqlV1alpha1StatementStatus{
+			Phase: "COMPLETED",
+		},
+	}
+
+	expectedErr := errors.New("couldn't get statement!")
+	client.EXPECT().GetStatement(gomock.Any(), statementName).Return(statementObj, nil, expectedErr).Times(1)
+	_, err := s.waitForPendingStatement(context.Background(), statementName, retries, waitTime)
+	assert.EqualError(t, err, expectedErr.Error())
+}
+
+func TestCancelPendingStatement(t *testing.T) {
+	statementName := "statementName"
+	retries := 10
+	waitTime := time.Second * 1
+	ctx, cancelFunc := context.WithCancel(context.Background())
+
+	client := NewMockGatewayClientInterface(gomock.NewController(t))
+	s := &Store{
+		client: client,
+	}
+
+	statementObj := v1alpha1.SqlV1alpha1Statement{
+		Status: &v1.SqlV1alpha1StatementStatus{
+			Phase: "PENDING",
+		},
+	}
+	httpRes := http.Response{StatusCode: 200}
+
+	expectedErr := &types.StatementError{Msg: "Error: Statement was canceled by the user."}
+	client.EXPECT().GetStatement(gomock.Any(), statementName).Return(statementObj, &httpRes, nil).AnyTimes()
+
+	// Schedule routine to cancel context
+	go func() {
+		time.Sleep(time.Millisecond * 20)
+		cancelFunc()
+	}()
+
+	res, err := s.waitForPendingStatement(ctx, statementName, retries, waitTime)
+
+	assert.Nil(t, res)
+	assert.EqualError(t, err, expectedErr.Error())
 }
 
 func (s *StoreTestSuite) TestIsSETStatement() {

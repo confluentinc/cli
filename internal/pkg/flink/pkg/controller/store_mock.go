@@ -5,6 +5,7 @@
 package controller
 
 import (
+	context "context"
 	reflect "reflect"
 
 	types "github.com/confluentinc/flink-sql-client/pkg/types"
@@ -62,4 +63,19 @@ func (m *MockStoreInterface) ProcessStatement(arg0 string) (*types.ProcessedStat
 func (mr *MockStoreInterfaceMockRecorder) ProcessStatement(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ProcessStatement", reflect.TypeOf((*MockStoreInterface)(nil).ProcessStatement), arg0)
+}
+
+// WaitPendingStatement mocks base method.
+func (m *MockStoreInterface) WaitPendingStatement(arg0 context.Context, arg1 types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "WaitPendingStatement", arg0, arg1)
+	ret0, _ := ret[0].(*types.ProcessedStatement)
+	ret1, _ := ret[1].(*types.StatementError)
+	return ret0, ret1
+}
+
+// WaitPendingStatement indicates an expected call of WaitPendingStatement.
+func (mr *MockStoreInterfaceMockRecorder) WaitPendingStatement(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WaitPendingStatement", reflect.TypeOf((*MockStoreInterface)(nil).WaitPendingStatement), arg0, arg1)
 }

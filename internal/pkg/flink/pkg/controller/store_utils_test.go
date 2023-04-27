@@ -88,7 +88,7 @@ func TestProcessSetStatement(t *testing.T) {
 	t.Run("should return all keys and values from config if configKey is empty", func(t *testing.T) {
 		result, err := s.processSetStatement("set")
 		assert.Nil(t, err)
-		assert.EqualValues(t, "Completed", result.Status)
+		assert.EqualValues(t, types.COMPLETED, result.Status)
 		expectedResult := createStatementResults([]string{"Key", "Value"}, [][]string{})
 		assert.Equal(t, &expectedResult, result.StatementResults)
 
@@ -100,7 +100,7 @@ func TestProcessSetStatement(t *testing.T) {
 	t.Run("should update config for valid configKey", func(t *testing.T) {
 		result, err := s.processSetStatement("set location=USA")
 		assert.Nil(t, err)
-		assert.EqualValues(t, "Completed", result.Status)
+		assert.EqualValues(t, types.COMPLETED, result.Status)
 		assert.Equal(t, "Config updated successfuly.", result.StatusDetail)
 		expectedResult := createStatementResults([]string{"Key", "Value"}, [][]string{{"location", "USA"}})
 		assert.Equal(t, &expectedResult, result.StatementResults)
@@ -109,7 +109,7 @@ func TestProcessSetStatement(t *testing.T) {
 	t.Run("should return all keys and values from config if configKey is empty after updates", func(t *testing.T) {
 		result, err := s.processSetStatement("set")
 		assert.Nil(t, err)
-		assert.EqualValues(t, "Completed", result.Status)
+		assert.EqualValues(t, types.COMPLETED, result.Status)
 		expectedKeyValuePairs := map[string]string{"pipeline.name": "job1", "timeout": "30", "location": "USA"}
 
 		// check row and column lengths match
@@ -138,7 +138,7 @@ func TestProcessResetStatement(t *testing.T) {
 		s.Properties["pipeline.name"] = "job1"
 		s.Properties["timeout"] = "30"
 		result, _ := s.processResetStatement("reset")
-		assert.EqualValues(t, "Completed", result.Status)
+		assert.EqualValues(t, types.COMPLETED, result.Status)
 		assert.Equal(t, "Configuration has been reset successfuly.", result.StatusDetail)
 		assert.Nil(t, result.StatementResults)
 	})
@@ -153,7 +153,7 @@ func TestProcessResetStatement(t *testing.T) {
 	t.Run("should reset config for valid configKey", func(t *testing.T) {
 		s.Properties["pipeline.name"] = "job1"
 		result, _ := s.processResetStatement("reset pipeline.name")
-		assert.EqualValues(t, "Completed", result.Status)
+		assert.EqualValues(t, types.COMPLETED, result.Status)
 		assert.Equal(t, "Config key \"pipeline.name\" has been reset successfuly.", result.StatusDetail)
 		expectedResult := createStatementResults([]string{"Key", "Value"}, [][]string{})
 		assert.Equal(t, &expectedResult, result.StatementResults)
@@ -161,7 +161,7 @@ func TestProcessResetStatement(t *testing.T) {
 	t.Run("should return all keys and values from config after updates", func(t *testing.T) {
 		result, _ := s.processResetStatement("reset")
 
-		assert.EqualValues(t, "Completed", result.Status)
+		assert.EqualValues(t, types.COMPLETED, result.Status)
 		assert.Equal(t, "Configuration has been reset successfuly.", result.StatusDetail)
 		assert.Nil(t, result.StatementResults)
 	})
@@ -181,7 +181,7 @@ func TestProcessUseStatement(t *testing.T) {
 		result, err := s.processUseStatement("use db1")
 		require.Nil(t, err)
 		require.Equal(t, configOpUse, result.Kind)
-		require.EqualValues(t, "Completed", result.Status)
+		require.EqualValues(t, types.COMPLETED, result.Status)
 		require.Equal(t, "Config updated successfuly.", result.StatusDetail)
 		expectedResult := createStatementResults([]string{"Key", "Value"}, [][]string{{configKeyDatabase, "db1"}})
 		assert.Equal(t, &expectedResult, result.StatementResults)
@@ -196,7 +196,7 @@ func TestProcessUseStatement(t *testing.T) {
 		result, err := s.processUseStatement("use catalog metadata")
 		require.Nil(t, err)
 		require.Equal(t, configOpUse, result.Kind)
-		require.EqualValues(t, "Completed", result.Status)
+		require.EqualValues(t, types.COMPLETED, result.Status)
 		require.Equal(t, "Config updated successfuly.", result.StatusDetail)
 		expectedResult := createStatementResults([]string{"Key", "Value"}, [][]string{{configKeyCatalog, "metadata"}})
 		assert.Equal(t, &expectedResult, result.StatementResults)

@@ -3,11 +3,12 @@ package controller
 import (
 	"context"
 	"fmt"
-	"github.com/confluentinc/flink-sql-client/pkg/results"
 	"strings"
 	"sync"
 	"time"
 	"unicode"
+
+	"github.com/confluentinc/flink-sql-client/pkg/results"
 
 	"github.com/confluentinc/flink-sql-client/pkg/types"
 
