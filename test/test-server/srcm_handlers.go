@@ -27,7 +27,71 @@ const (
 	cloudRegion2       = "gcp"
 	nameRegion2        = "us-central1"
 	displayNameRegion2 = "Iowa (us-central1)"
+
+	srClusterId  = "lsrc-1234"
+	httpEndpoint = "https://sr-endpoint"
+	status       = "PROVISIONED"
+	packageType  = "essentials"
 )
+
+func handleSchemaRegistryClusters(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		if r.Method == http.MethodPost {
+			req := new(srcm.SrcmV2Cluster)
+			err := json.NewDecoder(r.Body).Decode(req)
+			require.NoError(t, err)
+
+			sgCluster := getSchemaRegistryCluster(srClusterId, req.Spec.GetPackage(), httpEndpoint, SRApiEnvId, idRegion1, status)
+			err = json.NewEncoder(w).Encode(sgCluster)
+			require.NoError(t, err)
+		} else if r.Method == http.MethodGet {
+			sgClusterList := getSchemaRegistryClusterList()
+			err := json.NewEncoder(w).Encode(sgClusterList)
+			require.NoError(t, err)
+		}
+	}
+}
+
+func handleSchemaRegistryCluster(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		id := mux.Vars(r)["id"]
+
+		sgCluster := getSchemaRegistryCluster(id, packageType, httpEndpoint, SRApiEnvId, idRegion1, status)
+		err := json.NewEncoder(w).Encode(sgCluster)
+		require.NoError(t, err)
+	}
+}
+
+func getSchemaRegistryCluster(id, packageType, endpoint, envId, idRegion1, status string) srcm.SrcmV2Cluster {
+	return srcm.SrcmV2Cluster{
+		Id: &id,
+		Spec: &srcm.SrcmV2ClusterSpec{
+			DisplayName:  &id,
+			Package:      &packageType,
+			HttpEndpoint: &endpoint,
+			Environment: &srcm.GlobalObjectReference{
+				Id: envId,
+			},
+			Region: &srcm.GlobalObjectReference{
+				Id: idRegion1,
+			},
+		},
+		Status: &srcm.SrcmV2ClusterStatus{
+			Phase: status,
+		},
+	}
+}
+
+func getSchemaRegistryClusterList() srcm.SrcmV2ClusterList {
+	srcmClusterList := srcm.SrcmV2ClusterList{
+		Data: []srcm.SrcmV2Cluster{
+			getSchemaRegistryCluster(srClusterId, packageType, httpEndpoint, SRApiEnvId, idRegion1, status)},
+	}
+
+	return srcmClusterList
+}
 
 func handleSchemaRegistryRegions(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
