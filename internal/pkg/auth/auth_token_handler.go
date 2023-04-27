@@ -81,7 +81,7 @@ func (a *AuthTokenHandlerImpl) GetCCloudTokens(clientFactory CCloudClientFactory
 }
 
 func (a *AuthTokenHandlerImpl) getCCloudSSOToken(client *ccloudv1.Client, noBrowser bool, email, orgResourceId string) (string, string, error) {
-	isOkta := types.Contains([]string{"fedramp", "fedramp-internal"}, sso.GetCCloudEnvFromBaseUrl(client.BaseURL))
+	isOkta := sso.GetCCloudEnvFromBaseUrl(client.BaseURL) == "fedramp-internal"
 
 	var auth0ConnectionName string
 	if !isOkta {
