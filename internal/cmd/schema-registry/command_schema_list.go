@@ -68,7 +68,7 @@ func (c *command) listSchemas(cmd *cobra.Command, srClient *srsdk.APIClient, ctx
 		return err
 	}
 
-	showDeleted, err := cmd.Flags().GetBool("all")
+	all, err := cmd.Flags().GetBool("all")
 	if err != nil {
 		return err
 	}
