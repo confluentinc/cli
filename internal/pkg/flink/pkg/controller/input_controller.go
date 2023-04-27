@@ -5,21 +5,20 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/confluentinc/flink-sql-client/autocomplete"
+	"github.com/confluentinc/flink-sql-client/components"
+	"github.com/confluentinc/flink-sql-client/lexer"
 	"github.com/confluentinc/flink-sql-client/pkg/results"
+	"github.com/confluentinc/flink-sql-client/pkg/types"
 	"github.com/confluentinc/flink-sql-client/test/generators"
+	"github.com/confluentinc/go-prompt"
+	"github.com/olekukonko/tablewriter"
 	"log"
 	"net/http"
 	"os"
 	"pgregory.net/rapid"
 	"reflect"
 	"strings"
-
-	"github.com/confluentinc/flink-sql-client/autocomplete"
-	"github.com/confluentinc/flink-sql-client/components"
-	"github.com/confluentinc/flink-sql-client/lexer"
-	"github.com/confluentinc/flink-sql-client/pkg/types"
-	"github.com/confluentinc/go-prompt"
-	"github.com/olekukonko/tablewriter"
 )
 
 type InputControllerInterface interface {
@@ -132,46 +131,20 @@ func (c *InputController) RunInteractiveInput() {
 	}
 }
 
-func readByteFromStdin() *byte {
-	reader := bufio.NewReader(os.Stdin)
-
-	// Create a channel to receive input from os.Stdin
-	input := make(chan byte)
-
-	// Start a goroutine to read input from os.Stdin and send it to the input channel
-	go func() {
-		for {
-			b, err := reader.ReadByte()
-			if err != nil {
-				break
-			}
-			input <- b
-		}
-		close(input)
-	}()
-
-	// Check for input availability (non-blocking)
-	select {
-	case b := <-input:
-		return &b
-	default:
-		return nil
-	}
-}
-
 func (c *InputController) listenToUserInput(cancelFunc context.CancelFunc) context.CancelFunc {
 	ctx, cancelListenToUserInput := context.WithCancel(context.Background())
+	reader := bufio.NewReader(os.Stdin)
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
 				return
 			default:
-				input := readByteFromStdin()
-				if input == nil {
+				input, err := reader.ReadByte()
+				if err != nil {
 					continue
 				}
-				pressedKey := prompt.Key(*input)
+				pressedKey := prompt.Key(input)
 
 				switch pressedKey {
 				case prompt.ControlC:
@@ -188,9 +161,7 @@ func (c *InputController) listenToUserInput(cancelFunc context.CancelFunc) conte
 			}
 		}
 	}()
-	return func() {
-		cancelListenToUserInput()
-	}
+	return cancelListenToUserInput
 }
 
 func (c *InputController) isSessionValid(err *types.StatementError) bool {

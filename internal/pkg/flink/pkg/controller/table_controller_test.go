@@ -27,6 +27,8 @@ func TestAppInputCapture(t *testing.T) {
 		tableController.SetInputController(mockInputController)
 		input := tcell.NewEventKey(tcell.KeyRune, 'Q', tcell.ModNone)
 		mockAppController.EXPECT().SuspendOutputMode(gomock.Any()).Times(1)
+		tviewApp := tview.NewApplication()
+		mockAppController.EXPECT().TView().Return(tviewApp).Times(1)
 
 		// When
 		result := tableController.AppInputCapture(input)
@@ -46,6 +48,8 @@ func TestAppInputCapture(t *testing.T) {
 		tableController.SetInputController(mockInputController)
 		input := tcell.NewEventKey(tcell.KeyCtrlQ, rune(0), tcell.ModNone)
 		mockAppController.EXPECT().SuspendOutputMode(gomock.Any()).Times(1)
+		tviewApp := tview.NewApplication()
+		mockAppController.EXPECT().TView().Return(tviewApp).Times(1)
 
 		// When
 		result := tableController.AppInputCapture(input)
@@ -65,6 +69,8 @@ func TestAppInputCapture(t *testing.T) {
 		tableController.SetInputController(mockInputController)
 		input := tcell.NewEventKey(tcell.KeyEscape, rune(0), tcell.ModNone)
 		mockAppController.EXPECT().SuspendOutputMode(gomock.Any()).Times(1)
+		tviewApp := tview.NewApplication()
+		mockAppController.EXPECT().TView().Return(tviewApp).Times(1)
 
 		// When
 		result := tableController.AppInputCapture(input)

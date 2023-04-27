@@ -80,7 +80,6 @@ func (t *TableController) GetActionForShortcut(shortcut string) func() {
 				t.hasUserDisabledAutoFetch = true
 				t.stopAutoRefresh()
 			}
-			t.renderTable()
 		}
 	}
 	return nil
@@ -116,6 +115,7 @@ func (t *TableController) stopAutoRefresh() {
 		t.cancelFetch()
 		t.cancelFetch = nil
 	}
+	t.renderTable()
 }
 
 func (t *TableController) startAutoRefresh(statement types.ProcessedStatement, refreshInterval uint) {
@@ -125,6 +125,7 @@ func (t *TableController) startAutoRefresh(statement types.ProcessedStatement, r
 	fetchCtx, cancelFetch := context.WithCancel(context.Background())
 	t.cancelFetch = cancelFetch
 	t.refreshResults(fetchCtx, statement, refreshInterval)
+	t.renderTable()
 }
 
 func (t *TableController) isAutoRefreshRunning() bool {
@@ -167,9 +168,8 @@ func (t *TableController) Init(statement types.ProcessedStatement) {
 	// if unbounded result start refreshing results in the background
 	if statement.PageToken != "" && !t.hasUserDisabledAutoFetch {
 		t.startAutoRefresh(statement, defaultRefreshInterval)
-	} else {
-		t.renderTable()
 	}
+	t.renderTable()
 }
 
 func (t *TableController) renderTable() {
