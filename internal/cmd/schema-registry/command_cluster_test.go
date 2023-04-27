@@ -82,9 +82,6 @@ func (suite *ClusterTestSuite) SetupTest() {
 		CreateSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *ccloudv1.SchemaRegistryClusterConfig) (*ccloudv1.SchemaRegistryCluster, error) {
 			return suite.srCluster, nil
 		},
-		// GetSchemaRegistryClustersFunc: func(ctx context.Context, clusterConfig *ccloudv1.SchemaRegistryCluster) ([]*ccloudv1.SchemaRegistryCluster, error) {
-		// 	return []*ccloudv1.SchemaRegistryCluster{suite.srCluster}, nil
-		// },
 	}
 	suite.metricsApi = &metricsmock.Version2Api{
 		V2MetricsDatasetQueryPostFunc: func(_ context.Context, _ string) metricsv2.ApiV2MetricsDatasetQueryPostRequest {

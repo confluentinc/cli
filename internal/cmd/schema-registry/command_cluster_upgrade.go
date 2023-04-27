@@ -49,9 +49,6 @@ func (c *command) clusterUpgrade(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	if len(clusters) == 0 {
-		return errors.NewSRNotEnabledError()
-	}
 	cluster := clusters[0]
 	clusterSpec := cluster.GetSpec()
 
