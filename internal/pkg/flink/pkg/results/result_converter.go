@@ -37,7 +37,7 @@ func ConvertToInternalResults(results []v1.SqlV1alpha1ResultItem, resultSchema v
 			convertedFields = append(convertedFields, convertToInternalField(field, columnSchema))
 		}
 		convertedResults = append(convertedResults, types.StatementResultRow{
-			Operation: types.StatementResultOperation(int8(*result.Op)),
+			Operation: types.StatementResultOperation(int8(result.GetOp())),
 			Fields:    convertedFields,
 		})
 	}
