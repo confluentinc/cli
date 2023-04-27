@@ -12,6 +12,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/auth/sso"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/types"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -39,7 +40,7 @@ func (a *AuthTokenHandlerImpl) GetCCloudTokens(clientFactory CCloudClientFactory
 				RefreshToken:  credentials.AuthRefreshToken,
 				OrgResourceId: orgResourceId,
 			}
-			if res, err := client.Auth.Login(context.Background(), req); err == nil {
+			if res, err := client.Auth.Login(req); err == nil {
 				return res.GetToken(), res.GetRefreshToken(), nil
 			}
 		}
@@ -66,7 +67,7 @@ func (a *AuthTokenHandlerImpl) GetCCloudTokens(clientFactory CCloudClientFactory
 		OrgResourceId: orgResourceId,
 	}
 
-	res, err := client.Auth.Login(context.Background(), req)
+	res, err := client.Auth.Login(req)
 	if err != nil {
 		return "", "", err
 	}
@@ -80,23 +81,34 @@ func (a *AuthTokenHandlerImpl) GetCCloudTokens(clientFactory CCloudClientFactory
 }
 
 func (a *AuthTokenHandlerImpl) getCCloudSSOToken(client *ccloudv1.Client, noBrowser bool, email, orgResourceId string) (string, string, error) {
-	userSSO, err := a.getCCloudUserSSO(client, email, orgResourceId)
-	if err != nil {
-		log.CliLogger.Debugf("unable to obtain user SSO info: %v", err)
-		return "", "", errors.Errorf(errors.FailedToObtainedUserSSOErrorMsg, email)
-	}
-	if userSSO == "" {
-		return "", "", errors.Errorf(errors.NonSSOUserErrorMsg, email)
+	isOkta := types.Contains([]string{"fedramp", "fedramp-internal"}, sso.GetCCloudEnvFromBaseUrl(client.BaseURL))
+
+	var auth0ConnectionName string
+	if !isOkta {
+		userSSO, err := a.getCCloudUserSSO(client, email, orgResourceId)
+		if err != nil {
+			log.CliLogger.Debugf("unable to obtain user SSO info: %v", err)
+			return "", "", errors.Errorf(errors.FailedToObtainedUserSSOErrorMsg, email)
+		}
+		if userSSO == "" {
+			return "", "", errors.Errorf(errors.NonSSOUserErrorMsg, email)
+		}
+		auth0ConnectionName = userSSO
 	}
 
-	idToken, refreshToken, err := sso.Login(client.BaseURL, noBrowser, userSSO)
+	idToken, refreshToken, err := sso.Login(client.BaseURL, noBrowser, auth0ConnectionName)
 	if err != nil {
 		return "", "", err
 	}
 
 	req := &ccloudv1.AuthenticateRequest{IdToken: idToken}
 
-	res, err := client.Auth.Login(context.Background(), req)
+	var res *ccloudv1.AuthenticateReply
+	if isOkta {
+		res, err = client.Auth.OktaLogin(req)
+	} else {
+		res, err = client.Auth.Login(req)
+	}
 	if err != nil {
 		return "", "", err
 	}
@@ -111,7 +123,7 @@ func (a *AuthTokenHandlerImpl) getCCloudUserSSO(client *ccloudv1.Client, email, 
 		ClientId:      auth0ClientId,
 		OrgResourceId: orgResourceId,
 	}
-	loginRealmReply, err := client.User.LoginRealm(context.Background(), req)
+	loginRealmReply, err := client.User.LoginRealm(req)
 	if err != nil {
 		return "", err
 	}
@@ -132,7 +144,7 @@ func (a *AuthTokenHandlerImpl) refreshCCloudSSOToken(client *ccloudv1.Client, re
 		OrgResourceId: orgResourceId,
 	}
 
-	res, err := client.Auth.Login(context.Background(), req)
+	res, err := client.Auth.Login(req)
 	if err != nil {
 		return "", "", err
 	}
@@ -151,7 +163,7 @@ func (a *AuthTokenHandlerImpl) GetConfluentToken(mdsClient *mds.APIClient, crede
 }
 
 func (a *AuthTokenHandlerImpl) checkSSOEmailMatchesLogin(client *ccloudv1.Client, loginEmail string) error {
-	getMeReply, err := client.Auth.User(context.Background())
+	getMeReply, err := client.Auth.User()
 	if err != nil {
 		return err
 	}

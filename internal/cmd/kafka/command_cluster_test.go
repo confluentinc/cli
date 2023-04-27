@@ -107,7 +107,7 @@ func (suite *KafkaClusterTestSuite) SetupTest() {
 		},
 	}
 	suite.envMetadataMock = &ccloudv1mock.EnvironmentMetadata{
-		GetFunc: func(_ context.Context) ([]*ccloudv1.CloudMetadata, error) {
+		GetFunc: func() ([]*ccloudv1.CloudMetadata, error) {
 			cloudMeta := &ccloudv1.CloudMetadata{
 				Id: cloudId,
 				Regions: []*ccloudv1.Region{{
