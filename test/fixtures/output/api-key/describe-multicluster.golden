@@ -1,4 +1,4 @@
-  Current |       Key        |      Description       |  Owner  |   Owner Email    |  Resource Type  | Resource |       Created         
-----------+------------------+------------------------+---------+------------------+-----------------+----------+-----------------------
-          | MULTICLUSTERKEY1 | works for two clusters | u-44ddd | mhe@confluent.io | kafka           | lkc-abc  | 1999-02-24T00:00:00Z  
-          | MULTICLUSTERKEY1 | works for two clusters | u-44ddd | mhe@confluent.io | schema-registry | lsrc-abc | 1999-02-24T00:00:00Z  
+  Current |       Key        |      Description       |  Owner  |   Owner Email    |  Resource Type  | Resource  |       Created         
+----------+------------------+------------------------+---------+------------------+-----------------+-----------+-----------------------
+          | MULTICLUSTERKEY1 | works for two clusters | u-44ddd | mhe@confluent.io | kafka           | lkc-abc   | 1999-02-24T00:00:00Z  
+          | MULTICLUSTERKEY1 | works for two clusters | u-44ddd | mhe@confluent.io | schema-registry | lsrc-1234 | 1999-02-24T00:00:00Z  

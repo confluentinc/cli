@@ -67,7 +67,7 @@ func fillKeyStoreV2() {
 			Resource: &apikeysv2.ObjectReference{Id: "lkc-abc", Kind: apikeysv2.PtrString("Cluster")},
 			Resources: &[]apikeysv2.ObjectReference{
 				{Id: "lkc-abc", Kind: apikeysv2.PtrString("Cluster")},
-				{Id: "lsrc-abc", Kind: apikeysv2.PtrString("SchemaRegistry")},
+				{Id: "lsrc-1234", Kind: apikeysv2.PtrString("SchemaRegistry")},
 			},
 			Owner:       &apikeysv2.ObjectReference{Id: "u-44ddd"},
 			Description: apikeysv2.PtrString("works for two clusters"),
@@ -93,7 +93,7 @@ func fillKeyStoreV2() {
 			Resource: &apikeysv2.ObjectReference{Id: "lkc-abc", Kind: apikeysv2.PtrString("Cluster")},
 			Resources: &[]apikeysv2.ObjectReference{
 				{Id: "lkc-abc", Kind: apikeysv2.PtrString("Cluster")},
-				{Id: "lsrc-abc", Kind: apikeysv2.PtrString("SchemaRegistry")},
+				{Id: "lsrc-1234", Kind: apikeysv2.PtrString("SchemaRegistry")},
 			},
 			Owner:       &apikeysv2.ObjectReference{Id: "sa-12345"},
 			Description: apikeysv2.PtrString("works for two clusters and owned by service account"),
