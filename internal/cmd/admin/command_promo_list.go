@@ -1,7 +1,6 @@
 package admin
 
 import (
-	"context"
 	"fmt"
 	"time"
 
@@ -37,12 +36,12 @@ func (c *command) newListCommand() *cobra.Command {
 }
 
 func (c *command) list(cmd *cobra.Command, _ []string) error {
-	user, err := c.Client.Auth.User(context.Background())
+	user, err := c.Client.Auth.User()
 	if err != nil {
 		return err
 	}
 
-	codes, err := c.Client.Billing.GetClaimedPromoCodes(context.Background(), user.GetOrganization(), true)
+	codes, err := c.Client.Billing.GetClaimedPromoCodes(user.GetOrganization(), true)
 	if err != nil {
 		return err
 	}

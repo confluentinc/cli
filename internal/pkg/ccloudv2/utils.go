@@ -24,7 +24,11 @@ type NullableString interface {
 	IsSet() bool
 }
 
-var Hostnames = []string{"confluent.cloud", "cpdev.cloud"}
+var Hostnames = []string{
+	"confluent.cloud",
+	"confluentgov-internal.com",
+	"cpdev.cloud",
+}
 
 func IsCCloudURL(url string, isTest bool) bool {
 	for _, hostname := range Hostnames {
