@@ -43,7 +43,7 @@ func (c *command) newSchemaListCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("subject-prefix", "", "List schemas for subjects with a given prefix.")
-	cmd.Flags().Bool("deleted", false, "Include soft-deleted schemas.")
+	cmd.Flags().Bool("all", false, "Include soft-deleted schemas.")
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddApiSecretFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -68,7 +68,7 @@ func (c *command) listSchemas(cmd *cobra.Command, srClient *srsdk.APIClient, ctx
 		return err
 	}
 
-	showDeleted, err := cmd.Flags().GetBool("deleted")
+	showDeleted, err := cmd.Flags().GetBool("all")
 	if err != nil {
 		return err
 	}
