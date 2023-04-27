@@ -97,6 +97,11 @@ func (c *Client) GetSchemaRegistryClustersByEnvironment(environment string) ([]s
 			return nil, err
 		}
 	}
+
+	if len(list) == 0 {
+		return nil, errors.NewSRNotEnabledError()
+	}
+
 	return list, nil
 }
 
