@@ -88,13 +88,13 @@ func Decrypt(username, encrypted string, salt, nonce []byte) (string, error) {
 		return "", err
 	}
 
+	if len(nonce) != NonceLength {
+		return "", errors.New(errors.IncorrectNonceLengthErrorMsg)
+	}
 	decryptedPassword, err := aesgcm.Open(nil, nonce, cipherText, []byte(username))
 	if err != nil {
 		return "", err
 	}
 
-	if len(nonce) != NonceLength {
-		return "", errors.New(errors.IncorrectNonceLengthErrorMsg)
-	}
 	return string(decryptedPassword), nil
 }
