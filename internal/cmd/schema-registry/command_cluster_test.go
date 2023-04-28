@@ -14,6 +14,8 @@ import (
 	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
 	metricsv2 "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2"
 	metricsmock "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2/mock"
+	srcmv2 "github.com/confluentinc/ccloud-sdk-go-v2/srcm/v2"
+	srcmv2mock "github.com/confluentinc/ccloud-sdk-go-v2/srcm/v2/mock"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 	srMock "github.com/confluentinc/schema-registry-sdk-go/mock"
 
@@ -31,12 +33,15 @@ var queryTime = time.Date(2019, 12, 19, 16, 1, 0, 0, time.UTC)
 
 type ClusterTestSuite struct {
 	suite.Suite
-	conf         *v1.Config
-	kafkaCluster *ccstructs.KafkaCluster
-	srCluster    *ccloudv1.SchemaRegistryCluster
-	srMock       *ccloudv1mock.SchemaRegistry
-	srClientMock *srsdk.APIClient
-	metricsApi   *metricsmock.Version2Api
+	conf            *v1.Config
+	kafkaCluster    *ccstructs.KafkaCluster
+	srCluster       *ccloudv1.SchemaRegistryCluster
+	srcmCluster     *srcmv2.SrcmV2Cluster
+	srMock          *ccloudv1mock.SchemaRegistry
+	srClientMock    *srsdk.APIClient
+	srcmClusterMock *srcmv2mock.ClustersSrcmV2Api
+	srcmRegionMock  *srcmv2mock.RegionsSrcmV2Api
+	metricsApi      *metricsmock.Version2Api
 }
 
 func (suite *ClusterTestSuite) SetupSuite() {
@@ -50,6 +55,9 @@ func (suite *ClusterTestSuite) SetupSuite() {
 	}
 	suite.srCluster = &ccloudv1.SchemaRegistryCluster{
 		Id: srClusterID,
+	}
+	suite.srcmCluster = &srcmv2.SrcmV2Cluster{
+		Id: srcmv2.PtrString(srClusterID),
 	}
 	suite.srClientMock = &srsdk.APIClient{
 		DefaultApi: &srMock.DefaultApi{
@@ -74,9 +82,6 @@ func (suite *ClusterTestSuite) SetupTest() {
 		CreateSchemaRegistryClusterFunc: func(_ *ccloudv1.SchemaRegistryClusterConfig) (*ccloudv1.SchemaRegistryCluster, error) {
 			return suite.srCluster, nil
 		},
-		GetSchemaRegistryClustersFunc: func(_ *ccloudv1.SchemaRegistryCluster) ([]*ccloudv1.SchemaRegistryCluster, error) {
-			return []*ccloudv1.SchemaRegistryCluster{suite.srCluster}, nil
-		},
 	}
 	suite.metricsApi = &metricsmock.Version2Api{
 		V2MetricsDatasetQueryPostFunc: func(_ context.Context, _ string) metricsv2.ApiV2MetricsDatasetQueryPostRequest {
@@ -93,6 +98,22 @@ func (suite *ClusterTestSuite) SetupTest() {
 			return resp, nil, nil
 		},
 	}
+	suite.srcmClusterMock = &srcmv2mock.ClustersSrcmV2Api{
+		ListSrcmV2ClustersFunc: func(_ context.Context) srcmv2.ApiListSrcmV2ClustersRequest {
+			return srcmv2.ApiListSrcmV2ClustersRequest{}
+		},
+		ListSrcmV2ClustersExecuteFunc: func(_ srcmv2.ApiListSrcmV2ClustersRequest) (srcmv2.SrcmV2ClusterList, *http.Response, error) {
+			return srcmv2.SrcmV2ClusterList{Data: []srcmv2.SrcmV2Cluster{*suite.srcmCluster}}, nil, nil
+		},
+	}
+	suite.srcmRegionMock = &srcmv2mock.RegionsSrcmV2Api{
+		GetSrcmV2RegionFunc: func(_ context.Context, _ string) srcmv2.ApiGetSrcmV2RegionRequest {
+			return srcmv2.ApiGetSrcmV2RegionRequest{}
+		},
+		GetSrcmV2RegionExecuteFunc: func(_ srcmv2.ApiGetSrcmV2RegionRequest) (srcmv2.SrcmV2Region, *http.Response, error) {
+			return srcmv2.SrcmV2Region{Id: srcmv2.PtrString("region")}, nil, nil
+		},
+	}
 }
 
 func (suite *ClusterTestSuite) newCMD() *cobra.Command {
@@ -100,7 +121,11 @@ func (suite *ClusterTestSuite) newCMD() *cobra.Command {
 		SchemaRegistry: suite.srMock,
 	}
 	v2Client := &ccloudv2.Client{
-		AuthToken:     "auth-token",
+		AuthToken: "auth-token",
+		SchemaRegistryClient: &srcmv2.APIClient{
+			ClustersSrcmV2Api: suite.srcmClusterMock,
+			RegionsSrcmV2Api:  suite.srcmRegionMock,
+		},
 		MetricsClient: &metricsv2.APIClient{Version2Api: suite.metricsApi},
 	}
 	return New(suite.conf, climock.NewPreRunnerMock(client, v2Client, nil, nil, suite.conf), suite.srClientMock)
@@ -121,7 +146,7 @@ func (suite *ClusterTestSuite) TestDescribeSR() {
 	err := cmd.Execute()
 	req := require.New(suite.T())
 	req.Nil(err)
-	req.True(suite.srMock.GetSchemaRegistryClustersCalled())
+	req.True(suite.srcmClusterMock.ListSrcmV2ClustersCalled())
 	req.True(suite.metricsApi.V2MetricsDatasetQueryPostCalled())
 	req.True(suite.metricsApi.V2MetricsDatasetQueryPostExecuteCalled())
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"strconv"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -13,6 +14,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -32,6 +34,7 @@ type clusterOut struct {
 }
 
 const (
+	defaultSchemaLimitEssentials          = 1000
 	defaultSchemaLimitAdvanced            = 20000
 	streamGovernancePriceTableProductName = "stream-governance"
 	schemaRegistryPriceTableName          = "SchemaRegistry"
@@ -68,10 +71,24 @@ func (c *command) clusterDescribe(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	cluster, err := c.Context.FetchSchemaRegistryByEnvironmentId(environmentId)
+	clusters, err := c.V2Client.GetSchemaRegistryClustersByEnvironment(environmentId)
 	if err != nil {
 		return err
 	}
+
+	if len(clusters) == 0 {
+		return errors.NewSRNotEnabledError()
+	}
+
+	cluster := clusters[0]
+	clusterSpec := cluster.GetSpec()
+	regionSpec := cluster.Spec.GetRegion()
+	streamGovernanceRegion, err := c.V2Client.GetStreamGovernanceRegionById(regionSpec.GetId())
+	if err != nil {
+		return err
+	}
+	streamGovernanceRegionSpec := streamGovernanceRegion.GetSpec()
+
 	// Retrieve SR compatibility and Mode if API key is set up in user's config.json file
 	srClusterHasAPIKey, err := c.Context.CheckSchemaRegistryHasAPIKey(cmd)
 	if err != nil {
@@ -104,22 +121,23 @@ func (c *command) clusterDescribe(cmd *cobra.Command, _ []string) error {
 		mode = "<Requires API Key>"
 	}
 
-	query := schemaCountQueryFor(cluster.Id)
+	query := schemaCountQueryFor(clusters[0].GetId())
 	metricsResponse, httpResp, err := c.V2Client.MetricsDatasetQuery("cloud", query)
 	unmarshalErr := ccloudv2.UnmarshalFlatQueryResponseIfDataSchemaMatchError(err, metricsResponse, httpResp)
 	if unmarshalErr != nil {
 		return unmarshalErr
 	}
 
-	freeSchemasLimit := int(cluster.MaxSchemas)
-	if cluster.Package == essentialsPackageInternal {
+	freeSchemasLimit := defaultSchemaLimitEssentials
+	if strings.ToLower(clusterSpec.GetPackage()) == essentialsPackage {
 		user, err := c.Client.Auth.User()
 		if err != nil {
 			return err
 		}
 		prices, err := c.Client.Billing.GetPriceTable(user.GetOrganization(), streamGovernancePriceTableProductName)
 		if err == nil {
-			priceKey := getMaxSchemaLimitPriceKey(cluster.Package, cluster.ServiceProvider, cluster.ServiceProviderRegion)
+			internalPackageName, _ := getPackageInternalName(clusterSpec.GetPackage())
+			priceKey := getMaxSchemaLimitPriceKey(streamGovernanceRegionSpec.GetCloud(), streamGovernanceRegionSpec.GetRegionName(), internalPackageName)
 			freeSchemasLimit = int(prices.GetPriceTable()[schemaRegistryPriceTableName].Prices[priceKey])
 		}
 	} else {
@@ -146,12 +164,12 @@ func (c *command) clusterDescribe(cmd *cobra.Command, _ []string) error {
 
 	table := output.NewTable(cmd)
 	table.Add(&clusterOut{
-		Name:                  cluster.Name,
-		ClusterId:             cluster.Id,
-		EndpointUrl:           cluster.Endpoint,
-		ServiceProvider:       cluster.ServiceProvider,
-		ServiceProviderRegion: cluster.ServiceProviderRegion,
-		Package:               getPackageDisplayName(cluster.Package),
+		Name:                  clusterSpec.GetDisplayName(),
+		ClusterId:             cluster.GetId(),
+		EndpointUrl:           clusterSpec.GetHttpEndpoint(),
+		ServiceProvider:       streamGovernanceRegionSpec.GetCloud(),
+		ServiceProviderRegion: streamGovernanceRegionSpec.GetRegionName(),
+		Package:               clusterSpec.GetPackage(),
 		UsedSchemas:           numSchemas,
 		AvailableSchemas:      availableSchemas,
 		FreeSchemasLimit:      freeSchemasLimit,
@@ -179,6 +197,6 @@ func schemaCountQueryFor(schemaRegistryId string) metricsv2.QueryRequest {
 	return *req
 }
 
-func getMaxSchemaLimitPriceKey(sgPackage, serviceProvider, serviceProviderRegion string) string {
-	return fmt.Sprintf("%s:%s:%s:1:max", serviceProvider, serviceProviderRegion, sgPackage)
+func getMaxSchemaLimitPriceKey(serviceProvider, serviceProviderRegion, streamGovernancePackage string) string {
+	return fmt.Sprintf("%s:%s:%s:1:max", strings.ToLower(serviceProvider), serviceProviderRegion, streamGovernancePackage)
 }

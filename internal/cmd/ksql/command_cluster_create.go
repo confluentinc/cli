@@ -86,7 +86,7 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string) error {
 	}
 
 	srCluster, _ := c.Context.FetchSchemaRegistryByEnvironmentId(environmentId)
-	if srCluster != nil {
+	if _, ok := srCluster.GetIdOk(); ok {
 		output.ErrPrintln(errors.SchemaRegistryRoleBindingRequiredForKsqlWarning)
 	}
 
