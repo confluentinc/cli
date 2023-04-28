@@ -15,11 +15,11 @@ import (
 
 const (
 	// test region 1
-	idRegion1          = "sgreg-1"
+	idRegion1          = "sgreg-23"
 	packageTypeRegion1 = "advanced"
 	cloudRegion1       = "aws"
 	nameRegion1        = "us-west-2"
-	displayNameRegion1 = "Ohio (us-east-2)"
+	displayNameRegion1 = "Oregon (us-west-2)"
 
 	// test region 2
 	idRegion2          = "sgreg-2"
@@ -28,8 +28,8 @@ const (
 	nameRegion2        = "us-central1"
 	displayNameRegion2 = "Iowa (us-central1)"
 
-	srClusterId = "lsrc-1234"
-	status      = "PROVISIONED"
+	srClusterId     = "lsrc-1234"
+	srClusterStatus = "PROVISIONED"
 )
 
 func (c *CloudV2Router) HandleSchemaRegistryClusters(t *testing.T) http.HandlerFunc {
@@ -48,7 +48,7 @@ func (c *CloudV2Router) HandleSchemaRegistryClusters(t *testing.T) http.HandlerF
 			req := new(srcmv2.SrcmV2Cluster)
 			err := json.NewDecoder(r.Body).Decode(req)
 			require.NoError(t, err)
-			sgCluster := getSchemaRegistryCluster(srClusterId, req.Spec.GetPackage(), endpoint, SRApiEnvId, idRegion1, status)
+			sgCluster := getSchemaRegistryCluster(req.Spec.GetPackage(), endpoint)
 			err = json.NewEncoder(w).Encode(sgCluster)
 			require.NoError(t, err)
 		} else if r.Method == http.MethodGet {
@@ -67,35 +67,35 @@ func handleSchemaRegistryCluster(t *testing.T) http.HandlerFunc {
 			err := json.NewDecoder(r.Body).Decode(req)
 			require.NoError(t, err)
 			packageType := req.Spec.GetPackage()
-			sgCluster := getSchemaRegistryCluster(srClusterId, packageType, "https://sr-endpoint", SRApiEnvId, idRegion1, status)
+			sgCluster := getSchemaRegistryCluster(packageType, "https://sr-endpoint")
 			err = json.NewEncoder(w).Encode(sgCluster)
 			require.NoError(t, err)
 		case http.MethodDelete:
 			w.WriteHeader(http.StatusNoContent)
 		case http.MethodGet:
-			sgCluster := getSchemaRegistryCluster(srClusterId, packageTypeRegion2, "https://sr-endpoint", SRApiEnvId, idRegion1, status)
+			sgCluster := getSchemaRegistryCluster(packageTypeRegion2, "https://sr-endpoint")
 			err := json.NewEncoder(w).Encode(sgCluster)
 			require.NoError(t, err)
 		}
 	}
 }
 
-func getSchemaRegistryCluster(id, packageType, endpoint, envId, idRegion1, status string) srcmv2.SrcmV2Cluster {
+func getSchemaRegistryCluster(packageType, endpoint string) srcmv2.SrcmV2Cluster {
 	return srcmv2.SrcmV2Cluster{
-		Id: &id,
+		Id: srcmv2.PtrString(srClusterId),
 		Spec: &srcmv2.SrcmV2ClusterSpec{
 			DisplayName:  srcmv2.PtrString("account schema-registry"),
 			Package:      &packageType,
 			HttpEndpoint: &endpoint,
 			Environment: &srcmv2.GlobalObjectReference{
-				Id: envId,
+				Id: SRApiEnvId,
 			},
 			Region: &srcmv2.GlobalObjectReference{
 				Id: idRegion1,
 			},
 		},
 		Status: &srcmv2.SrcmV2ClusterStatus{
-			Phase: status,
+			Phase: srClusterStatus,
 		},
 	}
 }
@@ -103,7 +103,7 @@ func getSchemaRegistryCluster(id, packageType, endpoint, envId, idRegion1, statu
 func getSchemaRegistryClusterList(httpEndpoint string) srcmv2.SrcmV2ClusterList {
 	srcmClusterList := srcmv2.SrcmV2ClusterList{
 		Data: []srcmv2.SrcmV2Cluster{
-			getSchemaRegistryCluster(srClusterId, packageTypeRegion2, httpEndpoint, SRApiEnvId, idRegion1, status)},
+			getSchemaRegistryCluster(packageTypeRegion2, httpEndpoint)},
 	}
 
 	return srcmClusterList

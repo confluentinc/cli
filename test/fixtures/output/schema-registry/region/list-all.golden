@@ -1,4 +1,4 @@
-    ID    |        Name        | Cloud | Region Name |  Packages   
-----------+--------------------+-------+-------------+-------------
-  sgreg-1 | Ohio (us-east-2)   | aws   | us-west-2   | advanced    
-  sgreg-2 | Iowa (us-central1) | gcp   | us-central1 | essentials  
+     ID    |        Name        | Cloud | Region Name |  Packages   
+-----------+--------------------+-------+-------------+-------------
+  sgreg-23 | Oregon (us-west-2) | aws   | us-west-2   | advanced    
+  sgreg-2  | Iowa (us-central1) | gcp   | us-central1 | essentials  
