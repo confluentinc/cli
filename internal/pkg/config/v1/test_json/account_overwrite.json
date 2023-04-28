@@ -94,9 +94,19 @@
           "name": "test-org"
         }
       },
-      "auth_token": "abc123",
-      "auth_refresh_token": ""
+      "auth_token": "AUTH_TOKEN_PLACEHOLDER",
+      "auth_refresh_token": "AUTH_REFRESH_TOKEN_PLACEHOLDER",
+      "salt": "SALT_PLACEHOLDER",
+      "nonce": "NONCE_PLACEHOLDER"
     }
   },
-  "current_context": "my-context"
+  "current_context": "my-context",
+  "saved_credentials": {
+    "my-context": {
+      "is_cloud": true,
+      "url": "",
+      "username": "test-user",
+      "encrypted_password": "encrypted-password"
+    }
+  }
 }
