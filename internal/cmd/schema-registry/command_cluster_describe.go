@@ -130,7 +130,7 @@ func (c *command) clusterDescribe(cmd *cobra.Command, _ []string) error {
 
 	freeSchemasLimit := defaultSchemaLimitEssentials
 	if strings.ToLower(clusterSpec.GetPackage()) == essentialsPackage {
-		user, err := c.Client.Auth.User(context.Background())
+		user, err := c.Client.Auth.User()
 		if err != nil {
 			return err
 		}
