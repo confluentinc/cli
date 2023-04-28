@@ -1,7 +1,6 @@
 package apikey
 
 import (
-	"context"
 	"fmt"
 	"time"
 
@@ -174,7 +173,7 @@ func (c *command) getEmail(resourceId string, resourceIdToUserIdMap map[string]i
 
 	userId := resourceIdToUserIdMap[resourceId]
 
-	if user, err := c.Client.Auth.User(context.Background()); err == nil {
+	if user, err := c.Client.Auth.User(); err == nil {
 		if auditLog := user.GetOrganization().GetAuditLog(); auditLog != nil && auditLog.GetServiceAccountId() == userId {
 			return "<auditlog service account>"
 		}

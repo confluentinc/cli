@@ -1,7 +1,6 @@
 package schemaregistry
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -40,14 +39,12 @@ func (c *command) newClusterDeleteCommand() *cobra.Command {
 }
 
 func (c *command) clusterDelete(cmd *cobra.Command, _ []string) error {
-	ctx := context.Background()
-
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}
 
-	cluster, err := c.Context.FetchSchemaRegistryByEnvironmentId(ctx, environmentId)
+	cluster, err := c.Context.FetchSchemaRegistryByEnvironmentId(environmentId)
 	if err != nil {
 		return err
 	}
@@ -57,7 +54,7 @@ func (c *command) clusterDelete(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	err = c.Client.SchemaRegistry.DeleteSchemaRegistryCluster(ctx, cluster)
+	err = c.Client.SchemaRegistry.DeleteSchemaRegistryCluster(cluster)
 	if err != nil {
 		return err
 	}

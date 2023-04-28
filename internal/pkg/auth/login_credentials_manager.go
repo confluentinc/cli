@@ -2,7 +2,6 @@
 package auth
 
 import (
-	"context"
 	"os"
 	"runtime"
 	"strings"
@@ -20,6 +19,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/netrc"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/secret"
+	"github.com/confluentinc/cli/internal/pkg/types"
 )
 
 type Credentials struct {
@@ -301,6 +301,11 @@ func (h *LoginCredentialsManagerImpl) isSSOUser(email, orgId string) bool {
 	if h.client == nil {
 		return false
 	}
+
+	if email != "" && types.Contains([]string{"fedramp", "fedramp-internal"}, sso.GetCCloudEnvFromBaseUrl(h.client.BaseURL)) {
+		return true
+	}
+
 	auth0ClientId := sso.GetAuth0CCloudClientIdFromBaseUrl(h.client.BaseURL)
 	log.CliLogger.Tracef("h.client.BaseURL: %s", h.client.BaseURL)
 	log.CliLogger.Tracef("auth0ClientId: %s", auth0ClientId)
@@ -309,7 +314,7 @@ func (h *LoginCredentialsManagerImpl) isSSOUser(email, orgId string) bool {
 		ClientId:      auth0ClientId,
 		OrgResourceId: orgId,
 	}
-	res, err := h.client.User.LoginRealm(context.Background(), req)
+	res, err := h.client.User.LoginRealm(req)
 	// Fine to ignore non-nil err for this request: e.g. what if this fails due to invalid/malicious
 	// email, we want to silently continue and give the illusion of password prompt.
 	return err == nil && res.GetIsSso()
