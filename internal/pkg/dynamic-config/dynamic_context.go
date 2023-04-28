@@ -157,10 +157,14 @@ func (d *DynamicContext) SchemaRegistryCluster(cmd *cobra.Command) (*v1.SchemaRe
 		cluster = d.SchemaRegistryClusters[environmentId]
 		if cluster == nil || missingDetails(cluster) {
 			srClusters, err := d.V2Client.GetSchemaRegistryClustersByEnvironment(environmentId)
-			if err != nil || len(srClusters) == 0 {
+			if err != nil {
 				return nil, errors.CatchResourceNotFoundError(err, resource)
 			}
-			cluster = makeSRCluster(&srClusters[0])
+			if len(srClusters) != 0 {
+				cluster = makeSRCluster(&srClusters[0])
+			} else {
+				cluster = nil
+			}
 			clusterChanged = true
 		}
 	}
