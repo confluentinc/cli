@@ -3,6 +3,7 @@ package asyncapi
 import (
 	"context"
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/types"
 	"os"
 	"strings"
 	"time"
@@ -51,6 +52,7 @@ type flags struct {
 	schemaRegistryApiSecret string
 	valueFormat             string
 	schemaContext           string
+	topics                  []string
 }
 
 // messageOffset is 5, as the schema ID is stored at the [1:5] bytes of a message as meta info (when valid)
@@ -76,6 +78,7 @@ func newExportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.Flags().String("schema-registry-api-key", "", "API key for Schema Registry.")
 	cmd.Flags().String("schema-registry-api-secret", "", "API secret for Schema Registry.")
 	cmd.Flags().String("schema-context", "default", "Use a specific schema context.")
+	cmd.Flags().StringSlice("topics", nil, "A comma-separated list of topics to export.")
 	pcmd.AddValueFormatFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -104,7 +107,13 @@ func (c *command) export(cmd *cobra.Command, _ []string) error {
 		schemaContextPrefix = fmt.Sprintf(":.%s:", flags.schemaContext)
 	}
 	channelCount := 0
+
+	topicsSpecified := types.NewSet(flags.topics...)
 	for _, topic := range accountDetails.topics {
+		// Only use user-specified topics if parameter passed
+		if len(topicsSpecified) > 0 && !topicsSpecified.Contains(topic.GetTopicName()) {
+			continue
+		}
 		for _, subject := range accountDetails.subjects {
 			if subject != schemaContextPrefix+topic.GetTopicName()+"-value" || strings.HasPrefix(topic.GetTopicName(), "_") {
 				// Avoid internal topics or if subject does not follow topic naming strategy
@@ -389,6 +398,10 @@ func getFlags(cmd *cobra.Command) (*flags, error) {
 	if err != nil {
 		return nil, err
 	}
+	topics, err := cmd.Flags().GetStringSlice("topics")
+	if err != nil {
+		return nil, err
+	}
 	return &flags{
 		file:                    file,
 		groupId:                 groupId,
@@ -399,6 +412,7 @@ func getFlags(cmd *cobra.Command) (*flags, error) {
 		schemaRegistryApiSecret: schemaRegistryApiSecret,
 		valueFormat:             valueFormat,
 		schemaContext:           schemaContext,
+		topics:                  topics,
 	}, nil
 }
 
