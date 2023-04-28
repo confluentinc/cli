@@ -1,7 +1,6 @@
 package dynamicconfig
 
 import (
-	"context"
 	"fmt"
 	"time"
 
@@ -146,7 +145,7 @@ func (d *DynamicContext) SchemaRegistryCluster(cmd *cobra.Command) (*v1.SchemaRe
 			}
 		}
 		if cluster == nil || missingDetails(cluster) {
-			srCluster, err := d.FetchSchemaRegistryById(context.Background(), resource, environmentId)
+			srCluster, err := d.FetchSchemaRegistryById(resource, environmentId)
 			if err != nil {
 				return nil, errors.CatchResourceNotFoundError(err, resource)
 			}
@@ -156,7 +155,7 @@ func (d *DynamicContext) SchemaRegistryCluster(cmd *cobra.Command) (*v1.SchemaRe
 	} else {
 		cluster = d.SchemaRegistryClusters[environmentId]
 		if cluster == nil || missingDetails(cluster) {
-			srCluster, err := d.FetchSchemaRegistryByEnvironmentId(context.Background(), environmentId)
+			srCluster, err := d.FetchSchemaRegistryByEnvironmentId(environmentId)
 			if err != nil {
 				return nil, errors.CatchResourceNotFoundError(err, resource)
 			}
