@@ -184,15 +184,13 @@ func TestPreRun_TokenExpires(t *testing.T) {
 	r := getPreRunBase()
 	r.Config = cfg
 
-	root := &cobra.Command{
-		Run: func(cmd *cobra.Command, args []string) {},
-	}
-	rootCmd := pcmd.NewAnonymousCLICommand(root, r)
+	root := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
+	rootCmd := pcmd.NewAuthenticatedCLICommand(root, r)
 	root.Flags().CountP("verbose", "v", "Increase verbosity")
 	root.Flags().Bool("unsafe-trace", false, "")
 
 	_, err := pcmd.ExecuteCommand(rootCmd.Command)
-	require.NoError(t, err)
+	require.Error(t, err)
 
 	// Check auth is nil for now, until there is a better to create a fake logged in user and check if it's logged out
 	require.Nil(t, cfg.Context().State.Auth)
@@ -252,7 +250,10 @@ func Test_UpdateToken(t *testing.T) {
 
 			cfg.Context().State.AuthToken = tt.authToken
 
-			mockLoginCredentialsManager := &climock.LoginCredentialsManager{
+			r := getPreRunBase()
+			r.Config = cfg
+
+			r.LoginCredentialsManager = &climock.LoginCredentialsManager{
 				GetPrerunCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return nil, nil
@@ -273,22 +274,35 @@ func Test_UpdateToken(t *testing.T) {
 						return &pauth.Credentials{Username: "username", Password: "password"}, nil
 					}
 				},
+				GetCloudCredentialsFromEnvVarFunc: func(_ string) func() (*pauth.Credentials, error) {
+					return func() (*pauth.Credentials, error) {
+						return nil, nil
+					}
+				},
+				GetOnPremPrerunCredentialsFromEnvVarFunc: func() func() (*pauth.Credentials, error) {
+					return func() (*pauth.Credentials, error) {
+						return nil, nil
+					}
+				},
+				GetOnPremPrerunCredentialsFromNetrcFunc: func(_ *cobra.Command, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
+					return func() (*pauth.Credentials, error) {
+						return nil, nil
+					}
+				},
 			}
 
-			r := getPreRunBase()
-			r.Config = cfg
-			r.LoginCredentialsManager = mockLoginCredentialsManager
-
-			root := &cobra.Command{
-				Run: func(cmd *cobra.Command, args []string) {},
+			root := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
+			var rootCmd *pcmd.AuthenticatedCLICommand
+			if tt.isCloud {
+				rootCmd = pcmd.NewAuthenticatedCLICommand(root, r)
+			} else {
+				rootCmd = pcmd.NewAuthenticatedWithMDSCLICommand(root, r)
 			}
-			rootCmd := pcmd.NewAnonymousCLICommand(root, r)
 			root.Flags().CountP("verbose", "v", "Increase verbosity")
 			root.Flags().Bool("unsafe-trace", false, "")
 
-			_, err := pcmd.ExecuteCommand(rootCmd.Command)
-			require.NoError(t, err)
-			require.True(t, mockLoginCredentialsManager.GetCredentialsFromConfigCalled())
+			_, err := pcmd.ExecuteCommand(rootCmd.Command, "--unsafe-trace")
+			require.Error(t, err)
 		})
 	}
 }
