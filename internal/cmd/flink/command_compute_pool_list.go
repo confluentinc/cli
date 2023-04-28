@@ -15,7 +15,7 @@ func (c *command) newComputePoolListCommand() *cobra.Command {
 		RunE:  c.computePoolList,
 	}
 
-	pcmd.AddRegionFlag(cmd, c.AuthenticatedCLICommand)
+	c.addRegionFlag(cmd)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
