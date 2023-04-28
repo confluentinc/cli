@@ -3,6 +3,7 @@ package asyncapi
 import (
 	"context"
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/types"
 	"os"
 	"strings"
 	"time"
@@ -107,15 +108,10 @@ func (c *command) export(cmd *cobra.Command, _ []string) error {
 	}
 	channelCount := 0
 
-	topicMap := make(map[string]struct{})
-	for _, topic := range flags.topics {
-		topicMap[topic] = struct{}{}
-	}
-	topicsSpecified := len(topicMap) > 0
-
+	topicsSpecified := types.NewSet(flags.topics...)
 	for _, topic := range accountDetails.topics {
 		// Only use user-specified topics if parameter passed
-		if _, ok := topicMap[topic.GetTopicName()]; topicsSpecified && !ok {
+		if len(topicsSpecified) > 0 && !topicsSpecified.Contains(topic.GetTopicName()) {
 			continue
 		}
 		for _, subject := range accountDetails.subjects {
