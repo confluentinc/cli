@@ -4,6 +4,9 @@ require (
 	github.com/antihax/optional v1.0.0
 	github.com/aws/aws-sdk-go v1.42.47
 	github.com/brianstrauch/cobra-shell v0.2.4
+	github.com/aws/aws-sdk-go v1.43.31
+	github.com/billgraziano/dpapi v0.4.0
+	github.com/brianstrauch/cobra-shell v0.4.0
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/confluentinc/bincover v0.2.0
 	github.com/confluentinc/cc-structs/kafka/billing v0.1071.0
@@ -60,6 +63,7 @@ require (
 	github.com/mattn/go-isatty v0.0.14
 	github.com/mitchellh/golicense v0.2.0
 	github.com/olekukonko/tablewriter v0.0.5
+	github.com/panta/machineid v1.0.2
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v1.3.0
@@ -140,7 +144,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sts v1.11.1 // indirect
 	github.com/aws/smithy-go v1.9.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
-	github.com/billgraziano/dpapi v0.4.0 // indirect
 	github.com/bkielbasa/cyclop v1.2.0 // indirect
 	github.com/blakesmith/ar v0.0.0-20190502131153-809d4375e1fb // indirect
 	github.com/blizzy78/varnamelen v0.5.0 // indirect
@@ -172,9 +175,10 @@ require (
 	github.com/confluentinc/cire-obelisk v0.357.0 // indirect
 	github.com/confluentinc/proto-go-setter v0.0.0-20201026155413-c6ceb267ee65 // indirect
 	github.com/confluentinc/protoc-gen-ccloud v0.0.4 // indirect
-	github.com/cpuguy83/go-md2man/v2 v2.0.1 // indirect
-	github.com/daixiang0/gci v0.2.9 // indirect
-	github.com/denis-tingajkin/go-header v0.4.2 // indirect
+	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
+	github.com/curioswitch/go-reassign v0.1.2 // indirect
+	github.com/daixiang0/gci v0.6.3 // indirect
+	github.com/denis-tingaikin/go-header v0.4.3 // indirect
 	github.com/dghubble/go-twitter v0.0.0-20211115160449-93a8679adecb // indirect
 	github.com/dghubble/oauth1 v0.7.1 // indirect
 	github.com/dgryski/go-minhash v0.0.0-20170608043002-7fe510aff544 // indirect
@@ -308,6 +312,11 @@ require (
 	github.com/nishanths/exhaustive v0.7.11 // indirect
 	github.com/nishanths/predeclared v0.2.1 // indirect
 	github.com/pelletier/go-toml v1.9.4 // indirect
+	github.com/nishanths/exhaustive v0.8.1 // indirect
+	github.com/nishanths/predeclared v0.2.2 // indirect
+	github.com/otiai10/copy v1.6.0 // indirect
+	github.com/pelletier/go-toml v1.9.5 // indirect
+	github.com/pelletier/go-toml/v2 v2.0.2 // indirect
 	github.com/phayes/checkstyle v0.0.0-20170904204023-bfd46e6a821d // indirect
 	github.com/pkg/term v1.2.0-beta.2 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
