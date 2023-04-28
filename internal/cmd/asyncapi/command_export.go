@@ -3,7 +3,6 @@ package asyncapi
 import (
 	"context"
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/types"
 	"os"
 	"strings"
 	"time"
@@ -25,6 +24,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/serdes"
+	"github.com/confluentinc/cli/internal/pkg/types"
 )
 
 type command struct {
