@@ -1,9 +1,11 @@
 package schemaregistry
 
 import (
-	"context"
+	"strings"
 
 	"github.com/spf13/cobra"
+
+	srcmv2 "github.com/confluentinc/ccloud-sdk-go-v2/srcm/v2"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -37,37 +39,53 @@ func (c *command) newClusterUpgradeCommand() *cobra.Command {
 }
 
 func (c *command) clusterUpgrade(cmd *cobra.Command, _ []string) error {
-	packageDisplayName, err := cmd.Flags().GetString("package")
-	if err != nil {
-		return err
-	}
-
-	packageInternalName, err := getPackageInternalName(packageDisplayName)
-	if err != nil {
-		return err
-	}
-
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}
 
-	ctx := context.Background()
-	cluster, err := c.Context.FetchSchemaRegistryByEnvironmentId(ctx, environmentId)
+	clusters, err := c.V2Client.GetSchemaRegistryClustersByEnvironment(environmentId)
 	if err != nil {
 		return err
 	}
 
-	if packageInternalName == cluster.Package {
+	cluster := clusters[0]
+	clusterSpec := cluster.GetSpec()
+
+	packageDisplayName, err := cmd.Flags().GetString("package")
+	if err != nil {
+		return err
+	}
+
+	_, err = getPackageInternalName(packageDisplayName)
+	if err != nil {
+		return err
+	}
+
+	if strings.EqualFold(clusterSpec.GetPackage(), packageDisplayName) {
 		output.ErrPrintf(errors.SRInvalidPackageUpgrade, environmentId, packageDisplayName)
 		return nil
 	}
-	cluster.Package = packageInternalName
 
-	if _, err := c.Client.SchemaRegistry.UpdateSchemaRegistryCluster(ctx, cluster); err != nil {
+	clusterUpdateRequest := createClusterUpdateRequest(packageDisplayName, environmentId)
+	_, err = c.V2Client.UpgradeSchemaRegistryCluster(*clusterUpdateRequest, cluster.GetId())
+	if err != nil {
 		return err
 	}
 
 	output.Printf(errors.SchemaRegistryClusterUpgradedMsg, environmentId, packageDisplayName)
 	return nil
+}
+
+func createClusterUpdateRequest(packageType, environmentId string) *srcmv2.SrcmV2ClusterUpdate {
+	newClusterUpdateRequest := srcmv2.NewSrcmV2ClusterUpdateWithDefaults()
+	spec := srcmv2.NewSrcmV2ClusterSpecUpdateWithDefaults()
+	envObjectReference := srcmv2.NewGlobalObjectReferenceWithDefaults()
+	envObjectReference.SetId(environmentId)
+
+	spec.SetPackage(packageType)
+	spec.SetEnvironment(*envObjectReference)
+	newClusterUpdateRequest.SetSpec(*spec)
+
+	return newClusterUpdateRequest
 }
