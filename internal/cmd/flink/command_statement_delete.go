@@ -17,7 +17,7 @@ func (c *command) newStatementDeleteCommand() *cobra.Command {
 		Use:   "delete <name>",
 		Short: "Delete a Flink SQL statement.",
 		Args:  cobra.ExactArgs(1),
-		RunE:  c.statementCreate,
+		RunE:  c.statementDelete,
 	}
 
 	pcmd.AddForceFlag(cmd)

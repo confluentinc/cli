@@ -10,7 +10,7 @@ func (c *command) newStatementListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List Flink SQL statements.",
-		RunE:  c.statementCreate,
+		RunE:  c.statementList,
 	}
 
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
