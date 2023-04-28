@@ -10,8 +10,8 @@ require (
 	github.com/chromedp/chromedp v0.9.1
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20230117212759-138da0e5aa56
-	github.com/confluentinc/ccloud-sdk-go-v2-internal/flink v0.0.9
-	github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway v0.0.7
+	github.com/confluentinc/ccloud-sdk-go-v2-internal/flink v0.0.11
+	github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway v0.0.9
 	github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/byok v0.0.1
 	github.com/confluentinc/ccloud-sdk-go-v2/cdx v0.0.5
