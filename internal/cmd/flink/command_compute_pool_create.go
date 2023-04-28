@@ -39,7 +39,7 @@ func (c *command) computePoolCreate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	cfu, err := cmd.Flags().GetUint32("csu")
+	cfu, err := cmd.Flags().GetUint32("cfu")
 	if err != nil {
 		return err
 	}
