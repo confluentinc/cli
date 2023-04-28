@@ -269,8 +269,8 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(*cobra.Com
 			return err
 		}
 
-		if err := r.ValidateToken(command.Config); err != nil {
-			if err := r.updateToken(err, command.Config.Context(), unsafeTrace); err != nil {
+		if tokenErr := r.ValidateToken(command.Config); tokenErr != nil {
+			if err := r.updateToken(tokenErr, command.Config.Context(), unsafeTrace); err != nil {
 				return err
 			}
 		}
@@ -549,8 +549,8 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(*co
 			return err
 		}
 
-		if err := r.ValidateToken(command.Config); err != nil {
-			if err := r.updateToken(err, command.Config.Context(), unsafeTrace); err != nil {
+		if tokenErr := r.ValidateToken(command.Config); tokenErr != nil {
+			if err := r.updateToken(tokenErr, command.Config.Context(), unsafeTrace); err != nil {
 				return err
 			}
 		}
@@ -804,8 +804,8 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(*cobra.Command, []
 				return err
 			}
 
-			if err := r.ValidateToken(command.Config); err != nil {
-				if err := r.updateToken(err, command.Config.Context(), unsafeTrace); err != nil {
+			if tokenErr := r.ValidateToken(command.Config); tokenErr != nil {
+				if err := r.updateToken(tokenErr, command.Config.Context(), unsafeTrace); err != nil {
 					return err
 				}
 			}
@@ -872,18 +872,18 @@ func (r *PreRun) ValidateToken(config *dynamicconfig.DynamicConfig) error {
 	return r.JWTValidator.Validate(ctx.Context)
 }
 
-func (r *PreRun) updateToken(tokenError error, ctx *dynamicconfig.DynamicContext, unsafeTrace bool) error {
+func (r *PreRun) updateToken(tokenErr error, ctx *dynamicconfig.DynamicContext, unsafeTrace bool) error {
 	log.CliLogger.Debug("Updating auth tokens")
 	token, refreshToken, err := r.getUpdatedAuthToken(ctx, unsafeTrace)
 	if err != nil || token == "" {
 		log.CliLogger.Debug("Failed to update auth tokens")
 		_ = ctx.DeleteUserAuth()
 
-		if _, ok := tokenError.(*ccloudv1.InvalidTokenError); ok {
-			tokenError = new(ccloudv1.InvalidTokenError)
+		if _, ok := tokenErr.(*ccloudv1.InvalidTokenError); ok {
+			tokenErr = new(ccloudv1.InvalidTokenError)
 		}
 
-		return tokenError
+		return tokenErr
 	}
 
 	log.CliLogger.Debug("Successfully updated auth tokens")
