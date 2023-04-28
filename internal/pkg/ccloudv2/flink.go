@@ -29,7 +29,7 @@ func (c *Client) CreateFlinkComputePool(computePool flinkv2.FcpmV2ComputePool) (
 }
 
 func (c *Client) DescribeFlinkComputePool(id, environment string) (flinkv2.FcpmV2ComputePool, error) {
-	req := c.FlinkClient.ComputePoolsFcpmV2Api.GetFcpmV2ComputePool(c.cmkApiContext(), id).Environment(environment)
+	req := c.FlinkClient.ComputePoolsFcpmV2Api.GetFcpmV2ComputePool(c.flinkApiContext(), id).Environment(environment)
 	res, r, err := c.FlinkClient.ComputePoolsFcpmV2Api.GetFcpmV2ComputePoolExecute(req)
 	return res, errors.CatchCCloudV2Error(err, r)
 }
@@ -55,7 +55,7 @@ func (c *Client) ListFlinkComputePools(specRegion, environment string) ([]flinkv
 }
 
 func (c *Client) executeListComputePools(specRegion, environment, pageToken string) (flinkv2.FcpmV2ComputePoolList, *http.Response, error) {
-	req := c.FlinkClient.ComputePoolsFcpmV2Api.ListFcpmV2ComputePools(c.cmkApiContext()).SpecRegion(specRegion).Environment(environment).PageSize(ccloudV2ListPageSize)
+	req := c.FlinkClient.ComputePoolsFcpmV2Api.ListFcpmV2ComputePools(c.flinkApiContext()).SpecRegion(specRegion).Environment(environment).PageSize(ccloudV2ListPageSize)
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
 	}
