@@ -53,13 +53,13 @@ func (d *DynamicContext) FetchAPIKeyError(apiKey string, clusterID string) error
 	return &errors.UnconfiguredAPISecretError{APIKey: apiKey, ClusterID: clusterID}
 }
 
-func (d *DynamicContext) FetchSchemaRegistryByEnvironmentId(context context.Context, accountId string) (*srcmv2.SrcmV2Cluster, error) {
+func (d *DynamicContext) FetchSchemaRegistryByEnvironmentId(context context.Context, accountId string) (srcmv2.SrcmV2Cluster, error) {
 	existingClusters, err := d.V2Client.GetSchemaRegistryClustersByEnvironment(accountId)
 	if err != nil {
-		return nil, err
+		return srcmv2.SrcmV2Cluster{}, err
 	}
 	if len(existingClusters) > 0 {
-		return &existingClusters[0], nil
+		return existingClusters[0], nil
 	}
-	return nil, errors.NewSRNotEnabledError()
+	return srcmv2.SrcmV2Cluster{}, errors.NewSRNotEnabledError()
 }

@@ -49,6 +49,10 @@ func (c *command) clusterDelete(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	if len(clusters) == 0 {
+		return errors.NewSRNotEnabledError()
+	}
+
 	promptMsg := fmt.Sprintf(`Are you sure you want to delete %s "%s" for %s "%s"?`, resource.SchemaRegistryCluster, clusters[0].GetId(), resource.Environment, environmentId)
 	if ok, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil || !ok {
 		return err

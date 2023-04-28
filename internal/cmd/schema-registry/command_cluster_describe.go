@@ -14,6 +14,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -73,6 +74,10 @@ func (c *command) clusterDescribe(cmd *cobra.Command, _ []string) error {
 	clusters, err := c.V2Client.GetSchemaRegistryClustersByEnvironment(environmentId)
 	if err != nil {
 		return err
+	}
+
+	if len(clusters) == 0 {
+		return errors.NewSRNotEnabledError()
 	}
 
 	cluster := clusters[0]
