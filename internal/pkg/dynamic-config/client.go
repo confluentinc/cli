@@ -1,7 +1,6 @@
 package dynamicconfig
 
 import (
-	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -53,7 +52,7 @@ func (d *DynamicContext) FetchAPIKeyError(apiKey string, clusterID string) error
 	return &errors.UnconfiguredAPISecretError{APIKey: apiKey, ClusterID: clusterID}
 }
 
-func (d *DynamicContext) FetchSchemaRegistryByEnvironmentId(context context.Context, accountId string) (srcmv2.SrcmV2Cluster, error) {
+func (d *DynamicContext) FetchSchemaRegistryByEnvironmentId(accountId string) (srcmv2.SrcmV2Cluster, error) {
 	existingClusters, err := d.V2Client.GetSchemaRegistryClustersByEnvironment(accountId)
 	if err != nil {
 		return srcmv2.SrcmV2Cluster{}, err

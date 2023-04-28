@@ -1,7 +1,6 @@
 package schemaregistry
 
 import (
-	"context"
 	"fmt"
 	"strings"
 
@@ -54,7 +53,6 @@ func (c *command) newClusterEnableCommand() *cobra.Command {
 }
 
 func (c *command) clusterEnable(cmd *cobra.Command, _ []string) error {
-	ctx := context.Background()
 	// Collect the parameters
 	cloud, err := cmd.Flags().GetString("cloud")
 	if err != nil {
@@ -100,10 +98,10 @@ func (c *command) clusterEnable(cmd *cobra.Command, _ []string) error {
 	}
 
 	var out *enableOut
-	newCluster, err := c.Client.SchemaRegistry.CreateSchemaRegistryCluster(ctx, clusterConfig)
+	newCluster, err := c.Client.SchemaRegistry.CreateSchemaRegistryCluster(clusterConfig)
 	if err != nil {
 		// If it already exists, return the existing one
-		existingCluster, getExistingErr := c.Context.FetchSchemaRegistryByEnvironmentId(ctx, environmentId)
+		existingCluster, getExistingErr := c.Context.FetchSchemaRegistryByEnvironmentId(environmentId)
 		if getExistingErr != nil {
 			// Propagate CreateSchemaRegistryCluster error.
 			return err

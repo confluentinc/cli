@@ -134,7 +134,7 @@ func (c *command) clusterDescribe(cmd *cobra.Command, _ []string) error {
 		if err != nil {
 			return err
 		}
-		prices, err := c.Client.Billing.GetPriceTable(context.Background(), user.GetOrganization(), streamGovernancePriceTableProductName)
+		prices, err := c.Client.Billing.GetPriceTable(user.GetOrganization(), streamGovernancePriceTableProductName)
 		if err == nil {
 			internalPackageName, _ := getPackageInternalName(clusterSpec.GetPackage())
 			priceKey := getMaxSchemaLimitPriceKey(streamGovernanceRegionSpec.GetCloud(), streamGovernanceRegionSpec.GetRegionName(), internalPackageName)

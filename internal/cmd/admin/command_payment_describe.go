@@ -1,8 +1,6 @@
 package admin
 
 import (
-	"context"
-
 	"github.com/spf13/cobra"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
@@ -22,12 +20,12 @@ func (c *command) newDescribeCommand() *cobra.Command {
 }
 
 func (c *command) describe(cmd *cobra.Command, _ []string) error {
-	user, err := c.Client.Auth.User(context.Background())
+	user, err := c.Client.Auth.User()
 	if err != nil {
 		return err
 	}
 
-	card, err := c.Client.Billing.GetPaymentInfo(context.Background(), user.GetOrganization())
+	card, err := c.Client.Billing.GetPaymentInfo(user.GetOrganization())
 	if err != nil {
 		return err
 	}

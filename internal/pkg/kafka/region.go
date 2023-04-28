@@ -1,8 +1,6 @@
 package kafka
 
 import (
-	"context"
-
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 )
 
@@ -14,7 +12,7 @@ type region struct {
 }
 
 func ListRegions(client *ccloudv1.Client, cloud string) ([]*region, error) {
-	metadataList, err := client.EnvironmentMetadata.Get(context.Background())
+	metadataList, err := client.EnvironmentMetadata.Get()
 	if err != nil {
 		return nil, err
 	}

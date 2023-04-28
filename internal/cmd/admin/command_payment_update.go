@@ -1,7 +1,6 @@
 package admin
 
 import (
-	"context"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -36,7 +35,7 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	user, err := c.Client.Auth.User(context.Background())
+	user, err := c.Client.Auth.User()
 	if err != nil {
 		return err
 	}
@@ -46,7 +45,7 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	if err := c.Client.Billing.UpdatePaymentInfo(context.Background(), user.GetOrganization(), stripeToken.ID); err != nil {
+	if err := c.Client.Billing.UpdatePaymentInfo(user.GetOrganization(), stripeToken.ID); err != nil {
 		return err
 	}
 
