@@ -67,15 +67,6 @@ func (c *GatewayClient) GetStatementResults(ctx context.Context, statementId, pa
 		fetchResultsRequest = fetchResultsRequest.PageToken(pageToken)
 	}
 	result, resp, err := fetchResultsRequest.Execute()
-
-	metadata := result.GetMetadata()
-	newPageToken := metadata.GetNext()
-	// TODO: workaround for gateway bug remove once fixed
-	if pageToken != "" && pageToken == newPageToken {
-		result.Metadata.Next = nil
-		result.Results.Data = nil
-	}
-
 	return result, resp, err
 }
 

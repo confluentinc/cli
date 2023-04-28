@@ -148,7 +148,6 @@ func (t *TableController) refreshResults(ctx context.Context, statement types.Pr
 
 				newResults, err := t.store.FetchStatementResults(statement)
 				if err != nil {
-					t.stopAutoRefresh()
 					continue
 				}
 				statement = *newResults

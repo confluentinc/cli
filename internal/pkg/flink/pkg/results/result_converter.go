@@ -4,6 +4,7 @@ import (
 	"errors"
 	v1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"
 	"github.com/confluentinc/flink-sql-client/pkg/types"
+	"net/url"
 )
 
 func convertToInternalField(field v1.SqlV1alpha1ResultItemRowOneOf, details v1.ColumnDetails) types.StatementResultField {
@@ -45,4 +46,19 @@ func ConvertToInternalResults(results []v1.SqlV1alpha1ResultItem, resultSchema v
 		Headers: header,
 		Rows:    convertedResults,
 	}, nil
+}
+
+func ExtractPageToken(nextUrl string) (string, error) {
+	if nextUrl == "" {
+		return "", nil
+	}
+	myUrl, err := url.Parse(nextUrl)
+	if err != nil {
+		return "", err
+	}
+	params, err := url.ParseQuery(myUrl.RawQuery)
+	if err != nil {
+		return "", err
+	}
+	return params.Get("page_token"), nil
 }

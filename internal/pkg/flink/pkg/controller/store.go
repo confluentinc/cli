@@ -172,10 +172,14 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 	if err != nil {
 		return nil, &types.StatementError{Msg: "Error: " + err.Error()}
 	}
-
 	statement.StatementResults = convertedResults
-	metadata := statementResultObj.GetMetadata()
-	statement.PageToken = metadata.GetNext()
+
+	statementMetadata := statementResultObj.GetMetadata()
+	extractedToken, err := results.ExtractPageToken(statementMetadata.GetNext())
+	if err != nil {
+		return nil, &types.StatementError{Msg: "Error: " + err.Error()}
+	}
+	statement.PageToken = extractedToken
 	return &statement, nil
 }
 

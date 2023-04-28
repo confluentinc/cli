@@ -113,3 +113,9 @@ func (s *ResultConverterTestSuite) TestConvertResultsFailsWhenSchemaAndResultsDo
 	require.Nil(s.T(), internalResults)
 	require.Error(s.T(), err)
 }
+
+func (s *ResultConverterTestSuite) TestExtractPageToken() {
+	token, err := ExtractPageToken("https://devel.cpdev.cloud/some/results?page_token=eyJWZX")
+	require.Equal(s.T(), "eyJWZX", token)
+	require.Nil(s.T(), err)
+}
