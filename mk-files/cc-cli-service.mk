@@ -1,6 +1,12 @@
 update-db:
 	$(eval DIR=$(shell mktemp -d))
 	$(eval CC_CLI_SERVICE=$(DIR)/cc-cli-service)
+
+	@platform=($(CONFLUENT_HOME)/share/java/confluent-control-center/control-center-*.jar) && \
+	if ! [ -f "$${platform}" ]; then \
+		echo "check that CONFLUENT_HOME points to a valid Confluent Platform installation"; \
+		exit 1; \
+	fi
 	
 	version=$$(cat release-notes/version.txt) && \
 	git clone git@github.com:confluentinc/cc-cli-service.git $(CC_CLI_SERVICE) && \
