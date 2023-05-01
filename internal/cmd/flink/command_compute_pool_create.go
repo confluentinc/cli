@@ -74,9 +74,9 @@ func (c *command) computePoolCreate(cmd *cobra.Command, args []string) error {
 
 	table := output.NewTable(cmd)
 	table.Add(&computePoolOut{
-		Current: computePool.GetId() == c.Context.GetCurrentFlinkComputePool(),
-		Id:      computePool.GetId(),
-		Name:    computePool.Spec.GetDisplayName(),
+		IsCurrent: computePool.GetId() == c.Context.GetCurrentFlinkComputePool(),
+		Id:        computePool.GetId(),
+		Name:      computePool.Spec.GetDisplayName(),
 	})
 	return table.Print()
 }

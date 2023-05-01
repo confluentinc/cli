@@ -43,9 +43,9 @@ func (c *command) computePoolList(cmd *cobra.Command, _ []string) error {
 	list := output.NewList(cmd)
 	for _, computePool := range computePools {
 		list.Add(&computePoolOut{
-			Current: computePool.GetId() == c.Context.GetCurrentFlinkComputePool(),
-			Id:      computePool.GetId(),
-			Name:    computePool.Spec.GetDisplayName(),
+			IsCurrent: computePool.GetId() == c.Context.GetCurrentFlinkComputePool(),
+			Id:        computePool.GetId(),
+			Name:      computePool.Spec.GetDisplayName(),
 		})
 	}
 	return list.Print()

@@ -6,9 +6,9 @@ import (
 )
 
 type computePoolOut struct {
-	Current bool   `human:"Is Current" serialized:"is_current"`
-	Id      string `human:"ID" serialized:"id"`
-	Name    string `human:"Name" serialized:"name"`
+	IsCurrent bool   `human:"Current" serialized:"is_current"`
+	Id        string `human:"ID" serialized:"id"`
+	Name      string `human:"Name" serialized:"name"`
 }
 
 func (c *command) newComputePoolCommand() *cobra.Command {
