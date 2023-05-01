@@ -1,6 +1,6 @@
 SHELL              := /bin/bash
 ALL_SRC            := $(shell find . -name "*.go" | grep -v -e vendor)
-GORELEASER_VERSION := v1.16.3-0.20230323115904-f82a32cd3a59
+GORELEASER_VERSION := v1.17.2
 
 .PHONY: build # compile natively based on the system
 build:
