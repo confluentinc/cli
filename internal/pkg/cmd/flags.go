@@ -178,7 +178,12 @@ func AutocompleteEnvironments(v1Client *ccloudv1.Client, v2Client *ccloudv2.Clie
 		suggestions[i] = fmt.Sprintf("%s\t%s", environment.GetId(), environment.GetDisplayName())
 	}
 
-	if auditLog := v1.GetAuditLog(ctx.Context); auditLog != nil {
+	user, err := v1Client.Auth.User()
+	if err != nil {
+		return nil
+	}
+
+	if auditLog := user.GetOrganization().GetAuditLog(); auditLog != nil {
 		environment, err := v2Client.GetOrgEnvironment(auditLog.GetAccountId())
 		if err != nil {
 			return nil

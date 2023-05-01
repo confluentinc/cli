@@ -15,6 +15,7 @@ import (
 	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	"github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1"
 
+	"github.com/confluentinc/cli/internal/pkg/auth"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -171,18 +172,6 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(*cob
 		r.notifyIfUpdateAvailable(cmd, command.Version.Version)
 		r.warnIfConfluentLocal(cmd)
 
-		if r.Config != nil {
-			ctx := command.Config.Context()
-			err := r.ValidateToken(command.Config, unsafeTrace)
-			switch err.(type) {
-			case *ccloudv1.ExpiredTokenError:
-				if err := ctx.DeleteUserAuth(); err != nil {
-					return err
-				}
-				output.ErrPrintln(errors.TokenExpiredMsg)
-			}
-		}
-
 		LabelRequiredFlags(cmd)
 
 		return nil
@@ -280,15 +269,21 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(*cobra.Com
 			return err
 		}
 
-		if err := r.ValidateToken(command.Config, unsafeTrace); err != nil {
-			return err
+		if tokenErr := r.ValidateToken(command.Config); tokenErr != nil {
+			if err := r.updateToken(tokenErr, command.Config.Context(), unsafeTrace); err != nil {
+				return err
+			}
 		}
 
 		if err := r.setV2Clients(command); err != nil {
 			return err
 		}
 
-		return r.setCCloudClient(command)
+		if err := r.setCCloudClient(command); err != nil {
+			return err
+		}
+
+		return nil
 	}
 }
 
@@ -322,14 +317,18 @@ func (r *PreRun) setAuthenticatedContext(cliCommand *AuthenticatedCLICommand) er
 }
 
 func (r *PreRun) ccloudAutoLogin(netrcMachineName string) error {
-	orgResourceId := r.Config.GetLastUsedOrgId()
+	manager := auth.NewLoginOrganizationManagerImpl()
+	organizationId := auth.GetLoginOrganization(
+		manager.GetLoginOrganizationFromConfigurationFile(r.Config),
+		manager.GetLoginOrganizationFromEnvironmentVariable(),
+	)
 
 	url := pauth.CCloudURL
 	if ctxUrl := r.Config.Context().GetPlatformServer(); ctxUrl != "" {
 		url = ctxUrl
 	}
 
-	credentials, err := r.getCCloudCredentials(netrcMachineName, url, orgResourceId)
+	credentials, err := r.getCCloudCredentials(netrcMachineName, url, organizationId)
 	if err != nil {
 		return err
 	}
@@ -550,7 +549,13 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(*co
 			return err
 		}
 
-		return r.ValidateToken(command.Config, unsafeTrace)
+		if tokenErr := r.ValidateToken(command.Config); tokenErr != nil {
+			if err := r.updateToken(tokenErr, command.Config.Context(), unsafeTrace); err != nil {
+				return err
+			}
+		}
+
+		return nil
 	}
 }
 
@@ -799,8 +804,10 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(*cobra.Command, []
 				return err
 			}
 
-			if err := r.ValidateToken(command.Config, unsafeTrace); err != nil {
-				return err
+			if tokenErr := r.ValidateToken(command.Config); tokenErr != nil {
+				if err := r.updateToken(tokenErr, command.Config.Context(), unsafeTrace); err != nil {
+					return err
+				}
 			}
 
 			client, err := r.createCCloudClient(ctx, command.Version)
@@ -854,7 +861,7 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(*cobra.Command, []
 	}
 }
 
-func (r *PreRun) ValidateToken(config *dynamicconfig.DynamicConfig, unsafeTrace bool) error {
+func (r *PreRun) ValidateToken(config *dynamicconfig.DynamicConfig) error {
 	if config == nil {
 		return new(errors.NotLoggedInError)
 	}
@@ -862,39 +869,25 @@ func (r *PreRun) ValidateToken(config *dynamicconfig.DynamicConfig, unsafeTrace 
 	if ctx == nil {
 		return new(errors.NotLoggedInError)
 	}
-	err := r.JWTValidator.Validate(ctx.Context)
-	if err == nil {
-		return nil
-	}
-	switch err.(type) {
-	case *ccloudv1.InvalidTokenError:
-		return r.updateToken(new(ccloudv1.InvalidTokenError), ctx, unsafeTrace)
-	case *ccloudv1.ExpiredTokenError:
-		return r.updateToken(new(ccloudv1.ExpiredTokenError), ctx, unsafeTrace)
-	}
-	if err.Error() == errors.MalformedJWTNoExprErrorMsg {
-		return r.updateToken(errors.New(errors.MalformedJWTNoExprErrorMsg), ctx, unsafeTrace)
-	} else {
-		return r.updateToken(err, ctx, unsafeTrace)
-	}
+	return r.JWTValidator.Validate(ctx.Context)
 }
 
-func (r *PreRun) updateToken(tokenError error, ctx *dynamicconfig.DynamicContext, unsafeTrace bool) error {
-	if ctx == nil {
-		log.CliLogger.Debug("Dynamic context is nil. Cannot attempt to update auth token.")
-		return tokenError
-	}
+func (r *PreRun) updateToken(tokenErr error, ctx *dynamicconfig.DynamicContext, unsafeTrace bool) error {
 	log.CliLogger.Debug("Updating auth tokens")
 	token, refreshToken, err := r.getUpdatedAuthToken(ctx, unsafeTrace)
 	if err != nil || token == "" {
 		log.CliLogger.Debug("Failed to update auth tokens")
-		return tokenError
+		_ = ctx.DeleteUserAuth()
+
+		if _, ok := tokenErr.(*ccloudv1.InvalidTokenError); ok {
+			tokenErr = new(ccloudv1.InvalidTokenError)
+		}
+
+		return tokenErr
 	}
+
 	log.CliLogger.Debug("Successfully updated auth tokens")
-	if err := ctx.UpdateAuthTokens(token, refreshToken); err != nil {
-		return tokenError
-	}
-	return nil
+	return ctx.UpdateAuthTokens(token, refreshToken)
 }
 
 func (r *PreRun) getUpdatedAuthToken(ctx *dynamicconfig.DynamicContext, unsafeTrace bool) (string, string, error) {
@@ -912,8 +905,12 @@ func (r *PreRun) getUpdatedAuthToken(ctx *dynamicconfig.DynamicContext, unsafeTr
 	}
 
 	if r.Config.IsCloudLogin() {
-		orgResourceId := r.Config.GetLastUsedOrgId()
-		return r.AuthTokenHandler.GetCCloudTokens(r.CCloudClientFactory, ctx.Platform.Server, credentials, false, orgResourceId)
+		manager := auth.NewLoginOrganizationManagerImpl()
+		organizationId := auth.GetLoginOrganization(
+			manager.GetLoginOrganizationFromConfigurationFile(r.Config),
+			manager.GetLoginOrganizationFromEnvironmentVariable(),
+		)
+		return r.AuthTokenHandler.GetCCloudTokens(r.CCloudClientFactory, ctx.Platform.Server, credentials, false, organizationId)
 	} else {
 		mdsClientManager := pauth.MDSClientManagerImpl{}
 		client, err := mdsClientManager.GetMDSClient(ctx.Platform.Server, ctx.Platform.CaCertPath, unsafeTrace)

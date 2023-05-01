@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
 
 	streamdesignerv1 "github.com/confluentinc/ccloud-sdk-go-v2/stream-designer/v1"
@@ -16,13 +17,18 @@ func handlePipeline(t *testing.T) http.HandlerFunc {
 	CreatedAt := time.Date(2022, 10, 4, 6, 0, 0, 0, time.UTC)
 	UpdatedAt := time.Date(2022, 10, 6, 6, 0, 0, 0, time.UTC)
 	return func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodDelete:
-			w.WriteHeader(http.StatusAccepted)
+		id := mux.Vars(r)["id"]
+		if id != "pipe-12345" && id != "pipe-54321" {
+			err := writeResourceNotFoundError(w)
+			require.NoError(t, err)
+			return
+		}
 
+		w.WriteHeader(http.StatusAccepted)
+		switch r.Method {
 		case http.MethodGet:
 			pipeline := &streamdesignerv1.SdV1Pipeline{
-				Id: streamdesignerv1.PtrString("pipe-12345"),
+				Id: streamdesignerv1.PtrString(id),
 				Spec: &streamdesignerv1.SdV1PipelineSpec{
 					DisplayName:         streamdesignerv1.PtrString("testPipeline"),
 					Description:         streamdesignerv1.PtrString("description"),
@@ -41,18 +47,15 @@ func handlePipeline(t *testing.T) http.HandlerFunc {
 					UpdatedAt: &UpdatedAt,
 				},
 			}
-
-			w.WriteHeader(http.StatusAccepted)
 			err := json.NewEncoder(w).Encode(pipeline)
 			require.NoError(t, err)
-
 		case http.MethodPatch:
 			var body streamdesignerv1.SdV1Pipeline
 			err := json.NewDecoder(r.Body).Decode(&body)
 			require.NoError(t, err)
 
 			pipeline := &streamdesignerv1.SdV1Pipeline{
-				Id: streamdesignerv1.PtrString("pipe-12345"),
+				Id: streamdesignerv1.PtrString(id),
 				Spec: &streamdesignerv1.SdV1PipelineSpec{
 					DisplayName:         streamdesignerv1.PtrString("testPipeline"),
 					Description:         streamdesignerv1.PtrString("description"),
@@ -105,8 +108,6 @@ func handlePipeline(t *testing.T) http.HandlerFunc {
 					}
 				}
 			}
-
-			w.WriteHeader(http.StatusAccepted)
 			err = json.NewEncoder(w).Encode(pipeline)
 			require.NoError(t, err)
 		}

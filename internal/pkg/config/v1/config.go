@@ -716,13 +716,6 @@ func (c *Config) isLoginBlockedByOrgSuspension() bool {
 	return utils.IsLoginBlockedByOrgSuspension(c.Context().GetSuspensionStatus())
 }
 
-func (c *Config) GetLastUsedOrgId() string {
-	if ctx := c.Context(); ctx != nil && ctx.LastOrgId != "" {
-		return ctx.LastOrgId
-	}
-	return os.Getenv("CONFLUENT_CLOUD_ORGANIZATION_ID")
-}
-
 func (c *Config) GetCloudClientV2(unsafeTrace bool) *ccloudv2.Client {
 	ctx := c.Context()
 	return ccloudv2.NewClient(ctx.GetPlatformServer(), c.IsTest, ctx.GetAuthToken(), c.Version.UserAgent, unsafeTrace)

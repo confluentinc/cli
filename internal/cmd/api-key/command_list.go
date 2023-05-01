@@ -172,8 +172,11 @@ func (c *command) getEmail(resourceId string, resourceIdToUserIdMap map[string]i
 	}
 
 	userId := resourceIdToUserIdMap[resourceId]
-	if auditLog := v1.GetAuditLog(c.Context.Context); auditLog != nil && auditLog.GetServiceAccountId() == userId {
-		return "<auditlog service account>"
+
+	if user, err := c.Client.Auth.User(); err == nil {
+		if auditLog := user.GetOrganization().GetAuditLog(); auditLog != nil && auditLog.GetServiceAccountId() == userId {
+			return "<auditlog service account>"
+		}
 	}
 
 	if user, ok := usersMap[userId]; ok {

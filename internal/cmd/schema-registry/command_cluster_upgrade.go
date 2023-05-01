@@ -1,8 +1,6 @@
 package schemaregistry
 
 import (
-	"context"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -52,8 +50,7 @@ func (c *command) clusterUpgrade(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	ctx := context.Background()
-	cluster, err := c.Context.FetchSchemaRegistryByEnvironmentId(ctx, environmentId)
+	cluster, err := c.Context.FetchSchemaRegistryByEnvironmentId(environmentId)
 	if err != nil {
 		return err
 	}
@@ -64,7 +61,7 @@ func (c *command) clusterUpgrade(cmd *cobra.Command, _ []string) error {
 	}
 	cluster.Package = packageInternalName
 
-	if _, err := c.Client.SchemaRegistry.UpdateSchemaRegistryCluster(ctx, cluster); err != nil {
+	if _, err := c.Client.SchemaRegistry.UpdateSchemaRegistryCluster(cluster); err != nil {
 		return err
 	}
 

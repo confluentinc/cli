@@ -1,7 +1,6 @@
 package kafka
 
 import (
-	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -142,12 +141,12 @@ func parsePrincipal(principal string) (string, error) {
 }
 
 func (c *aclCommand) getAllUsers() ([]*ccloud.User, error) {
-	serviceAccounts, err := c.Client.User.GetServiceAccounts(context.Background())
+	serviceAccounts, err := c.Client.User.GetServiceAccounts()
 	if err != nil {
 		return nil, err
 	}
 
-	adminUsers, err := c.Client.User.List(context.Background())
+	adminUsers, err := c.Client.User.List()
 	if err != nil {
 		return nil, err
 	}

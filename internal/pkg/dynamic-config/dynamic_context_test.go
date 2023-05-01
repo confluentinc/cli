@@ -155,7 +155,7 @@ func TestDynamicContext_ParseFlagsIntoContext(t *testing.T) {
 
 func buildCcloudMockClient() *ccloudv1.Client {
 	client := pmock.NewClientMock()
-	client.Account = &ccloudv1mock.AccountInterface{ListFunc: func(_ context.Context, _ *ccloudv1.Account) ([]*ccloudv1.Account, error) {
+	client.Account = &ccloudv1mock.AccountInterface{ListFunc: func(_ *ccloudv1.Account) ([]*ccloudv1.Account, error) {
 		return []*ccloudv1.Account{{Id: apiEnvironment}}, nil
 	}}
 	return client

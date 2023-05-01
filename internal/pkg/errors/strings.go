@@ -18,7 +18,6 @@ const (
 		StopNonInteractiveMsg + ".\n"
 	FoundNetrcCredMsg = "Found credentials for user \"%s\" from netrc file \"%s\" " +
 		StopNonInteractiveMsg + ".\n"
-	FoundOrganizationIdMsg = "Found default organization id for user \"%s\" from environment variable \"%s\".\n"
 	RemainingFreeCreditMsg = "Free credits: $%.2f USD remaining\n" +
 		"You are currently using a free trial version of Confluent Cloud. Add a payment method with `confluent admin payment update` to avoid an interruption in service once your trial ends.\n"
 	CloudSignUpMsg     = "Success! Welcome to Confluent Cloud.\n"
@@ -88,7 +87,6 @@ const (
 	NoMajorVersionUpdateMsg = "No major version updates are available.\n"
 
 	// cmd package
-	TokenExpiredMsg      = "Your token has expired. You are now logged out."
 	NotifyMajorUpdateMsg = "A major version update is available for %s from (current: %s, latest: %s).\nTo view release notes and install the update, please run `%s update --major`.\n\n"
 	NotifyMinorUpdateMsg = "A minor version update is available for %s from (current: %s, latest: %s).\nTo view release notes and install the update, please run `%s update`.\n\n"
 	AutoLoginMsg         = "Successful auto log in with non-interactive credentials.\n"
