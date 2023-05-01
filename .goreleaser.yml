@@ -120,10 +120,8 @@ builds:
       - arm64
     goamd64:
       - v1
-    
     prebuilt:
       path: dist/confluent_{{ .Os }}_{{ .Arch }}_{{ with .Amd64 }}_v1{{ end }}/confluent
-
 
 release:
   disable: "{{.Env.DRY_RUN}}"
