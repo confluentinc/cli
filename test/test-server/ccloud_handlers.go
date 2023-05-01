@@ -49,15 +49,6 @@ var (
 )
 
 const (
-	exampleAvailability = "low"
-	exampleCloud        = "aws"
-	exampleClusterType  = "basic"
-	exampleMetric       = "ConnectNumRecords"
-	exampleNetworkType  = "internet"
-	examplePrice        = 1
-	exampleRegion       = "us-east-1"
-	exampleUnit         = "GB"
-
 	serviceAccountID           = int32(12345)
 	serviceAccountResourceID   = "sa-12345"
 	identityProviderResourceID = "op-12345"
@@ -69,11 +60,6 @@ const (
 	auditLogServiceAccountResourceID = "sa-1337"
 
 	PromoTestCode = "PromoTestCode"
-
-	exampleSRPriceKey   = "aws:us-west-2:free:1:max"
-	exampleSRPriceTable = "SchemaRegistry"
-	exampleSRPriceUnit  = "Schema-Hour"
-	exampleSchemaLimit  = 1000
 )
 
 // Handler for: "/api/me"
@@ -89,7 +75,7 @@ func handleMe(t *testing.T, isAuditLogEnabled bool) http.HandlerFunc {
 			ResourceId: orgResourceId,
 			Name:       "Confluent",
 		}
-		if !isAuditLogEnabled {
+		if isAuditLogEnabled {
 			org.AuditLog = &ccloudv1.AuditLog{
 				ClusterId:        "lkc-ab123",
 				AccountId:        "env-987zy",

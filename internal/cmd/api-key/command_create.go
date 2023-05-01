@@ -1,7 +1,6 @@
 package apikey
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 
@@ -167,17 +166,22 @@ func (c *command) catchServiceAccountNotValidError(err error, r *http.Response, 
 		return nil
 	}
 
-	auditLog := c.Context.GetOrganization().GetAuditLog()
-
-	isInvalid := err.Error() == "error creating api key: service account is not valid" || err.Error() == "403 Forbidden"
-	if isInvalid && clusterId == auditLog.GetClusterId() {
-		auditLogServiceAccount, err2 := c.Client.User.GetServiceAccount(context.Background(), auditLog.GetServiceAccountId())
-		if err2 != nil {
+	if err.Error() == "error creating api key: service account is not valid" || err.Error() == "403 Forbidden" {
+		user, err := c.Client.Auth.User()
+		if err != nil {
 			return err
 		}
+		auditLog := user.GetOrganization().GetAuditLog()
 
-		if serviceAccountId != auditLogServiceAccount.GetResourceId() {
-			return fmt.Errorf(`API keys for audit logs (limit of 2) must be created using the predefined service account, "%s"`, auditLogServiceAccount.GetResourceId())
+		if clusterId == auditLog.GetClusterId() {
+			auditLogServiceAccount, err2 := c.Client.User.GetServiceAccount(auditLog.GetServiceAccountId())
+			if err2 != nil {
+				return err
+			}
+
+			if serviceAccountId != auditLogServiceAccount.GetResourceId() {
+				return fmt.Errorf(`API keys for audit logs (limit of 2) must be created using the predefined service account, "%s"`, auditLogServiceAccount.GetResourceId())
+			}
 		}
 	}
 

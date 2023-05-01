@@ -19,7 +19,7 @@ update-db:
 	a=$$(ls | grep up | tail -n 2 | head -n 1) && \
 	b=$$(ls | grep up | tail -n 1) && \
 	sed -i "" "s/v[0-9]*\.[0-9]*\.[0-9]*/v$${version}/" $$a && \
-	diff=$$(diff -u $$a $$b) && \
+	diff=$$(diff -u $$a $$b); [ $$? -lt 2 ] && \
 	body=$$(echo -e "\`\`\`diff$${diff}\n\n\`\`\`") && \
 	if [ "$${diff}" = "" ]; then \
 		body="No changes."; \

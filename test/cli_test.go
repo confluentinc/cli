@@ -6,7 +6,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"reflect"
 	"regexp"
 	"runtime"
 	"strconv"
@@ -91,7 +90,7 @@ func (s *CLITestSuite) SetupSuite() {
 		testBin += ".exe"
 	}
 
-	s.TestBackend = testserver.StartTestBackend(s.T(), false) // by default do not disable audit-log
+	s.TestBackend = testserver.StartTestBackend(s.T(), true) // by default do not disable audit-log
 	os.Setenv("DISABLE_AUDIT_LOG", "false")
 
 	// Temporarily change $HOME, so the current config file isn't altered.
@@ -113,7 +112,7 @@ func (s *CLITestSuite) runIntegrationTest(tt CLITest) {
 		if isAuditLogDisabled != tt.disableAuditLog {
 			s.TestBackend.Close()
 			os.Setenv("DISABLE_AUDIT_LOG", strconv.FormatBool(tt.disableAuditLog))
-			s.TestBackend = testserver.StartTestBackend(t, tt.disableAuditLog)
+			s.TestBackend = testserver.StartTestBackend(t, !tt.disableAuditLog)
 		}
 
 		if !tt.workflow {
@@ -203,8 +202,8 @@ func (s *CLITestSuite) validateTestOutput(tt CLITest, t *testing.T, output strin
 		expected := utils.NormalizeNewLines(LoadFixture(t, tt.fixture))
 		if tt.regex {
 			require.Regexp(t, expected, actual)
-		} else if !reflect.DeepEqual(actual, expected) {
-			t.Fatalf("\n   actual:\n%s\nexpected:\n%s", actual, expected)
+		} else {
+			require.Equal(t, expected, actual)
 		}
 	}
 	if tt.wantFunc != nil {

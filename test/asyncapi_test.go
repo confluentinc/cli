@@ -17,6 +17,8 @@ func (s *CLITestSuite) TestAsyncApiExport() {
 		// Spec Generated
 		{args: "asyncapi export --schema-registry-api-key ASYNCAPIKEY --schema-registry-api-secret ASYNCAPISECRET", fixture: "asyncapi/export-success.golden", useKafka: "lkc-asyncapi", authKafka: "true", workflow: true},
 		{args: "asyncapi export --schema-registry-api-key ASYNCAPIKEY --schema-registry-api-secret ASYNCAPISECRET --schema-context dev --file asyncapi-with-context.yaml", useKafka: "lkc-asyncapi", authKafka: "true", workflow: true},
+		{args: "asyncapi export --schema-registry-api-key ASYNCAPIKEY --schema-registry-api-secret ASYNCAPISECRET --topics topic1 --file asyncapi-topic-specified.yaml", fixture: "asyncapi/export-topic-specified.golden", useKafka: "lkc-asyncapi", authKafka: "true", workflow: true},
+		{args: "asyncapi export --schema-registry-api-key ASYNCAPIKEY --schema-registry-api-secret ASYNCAPISECRET --topics topic2 --file asyncapi-no-topics.yaml", fixture: "asyncapi/export-no-topics.golden", useKafka: "lkc-asyncapi", authKafka: "true", workflow: true},
 	}
 	resetConfiguration(s.T(), false)
 	for _, test := range tests {
@@ -24,7 +26,7 @@ func (s *CLITestSuite) TestAsyncApiExport() {
 		s.runIntegrationTest(test)
 	}
 
-	for _, filename := range []string{"asyncapi-spec.yaml", "asyncapi-with-context.yaml"} {
+	for _, filename := range []string{"asyncapi-spec.yaml", "asyncapi-with-context.yaml", "asyncapi-topic-specified.yaml", "asyncapi-no-topics.yaml"} {
 		require.FileExists(s.T(), filename)
 		defer os.Remove(filename)
 
