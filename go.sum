@@ -94,8 +94,8 @@ github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20230427001341-5f8d2cce5a
 github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20230427001341-5f8d2cce5ad9/go.mod h1:Ja+ScdwUPpLwPDi/jI4FU2hI4Ncu3o4A4nxo05ehXHQ=
 github.com/confluentinc/ccloud-sdk-go-v2-internal/flink v0.0.11 h1:KA2OsRdXWd6lt+nTkj8ZV/wKCazF4P7lffm9lEFqBtY=
 github.com/confluentinc/ccloud-sdk-go-v2-internal/flink v0.0.11/go.mod h1:9rvR6g38fD621nvoggQVWOE3V6lD5RrA3uRAXP1oSi4=
-github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway v0.0.9 h1:O+uv+OwZNTI2YN1kd2qhTRWrEVfeHnHJk0rPtFCpqeM=
-github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway v0.0.9/go.mod h1:ajf3w9C+MEMBcGM3cda7ZNR9HM59UdBesec6lhbgKqY=
+github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway v0.0.12 h1:BqNR01eL6+UKpeSujCztxlTnG2pUDrMP0VM5jh+vu7g=
+github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway v0.0.12/go.mod h1:ajf3w9C+MEMBcGM3cda7ZNR9HM59UdBesec6lhbgKqY=
 github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0 h1:8fWyLwMuy8ec0MVF5Avd54UvbIxhDFhZzanHBVwgxdw=
 github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0/go.mod h1:wNa9Qg2e2v/+PQsUyKh+qB22hhLkPR6Ahy6rP+1jmGI=
 github.com/confluentinc/ccloud-sdk-go-v2/byok v0.0.1 h1:hk8Uc28S2dPd/few2yJKYY3FqTRuVO14qq4fhWrXwdw=
@@ -134,6 +134,8 @@ github.com/confluentinc/confluent-kafka-go v1.9.3-RC3 h1:urDeBIsNr0hgRf3nZn66SHt
 github.com/confluentinc/confluent-kafka-go v1.9.3-RC3/go.mod h1:NlSjbxG73kJM0iKUC6/CDbMnY3H4WF6e+YFBlfLffi8=
 github.com/confluentinc/flink-sql-client v0.107.0 h1:qw3OSNtK7xnAfrFsQxkN88O453mknvWvaoOjTxZ80SE=
 github.com/confluentinc/flink-sql-client v0.107.0/go.mod h1:PurgvWuQP/sIvsmrncTHrxT7HEr9JHoWNHDmkYai3rY=
+github.com/confluentinc/flink-sql-client v0.123.0 h1:WGAVghIjJAaVY9kUPEpWS/ly+B5PqUHBe+lM35FRAWk=
+github.com/confluentinc/flink-sql-client v0.123.0/go.mod h1:PurgvWuQP/sIvsmrncTHrxT7HEr9JHoWNHDmkYai3rY=
 github.com/confluentinc/go-editor v0.11.0 h1:fcEALYHj7xV/fRSp54/IHi2DS4GlZMJWVgrYvi/llvU=
 github.com/confluentinc/go-editor v0.11.0/go.mod h1:nEjwqdqx8S7ZGjXsDvRgawsA04Fu2P/KAtA8fa5afMI=
 github.com/confluentinc/go-netrc v0.0.0-20220321173724-4d50f36ff450 h1:YJq9ZRhj049uo3hX7V8imJid+FJEBFyRmVcdruhU3y4=
