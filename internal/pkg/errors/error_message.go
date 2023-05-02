@@ -419,7 +419,6 @@ const (
 	NoKafkaForDescribeSuggestions = "You must provide the cluster ID argument or set an active Kafka cluster in your context with `ccloud kafka cluster use`."
 	NoAPISecretStoredErrorMsg     = `no API secret for API key "%s" of resource "%s" stored in local CLI state`
 	NoAPISecretStoredSuggestions  = "Store the API secret with `confluent api-key store %s --resource %s`."
-	InvalidCkuErrorMsg            = "cku must be greater than 1 for multi-zone dedicated cluster"
 
 	// Kafka REST Proxy errors
 	InternalServerErrorMsg            = "internal server error"
