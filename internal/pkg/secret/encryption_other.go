@@ -20,8 +20,6 @@ import (
 const (
 	iterationNumber = 10000
 	keyLength       = 32
-	SaltLength      = 24
-	NonceLength     = 12
 )
 
 func GenerateRandomBytes(n int) ([]byte, error) {
