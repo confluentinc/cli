@@ -152,5 +152,5 @@ require (
 )
 
 replace (
-	github.com/confluentinc/ccloud-sdk-go-v2/cmk => ../ccloud-sdk-go-v2-internal/cmk
+	github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.8.0 => github.com/confluentinc/ccloud-sdk-go-v2-internal/cmk v0.0.16
 )
