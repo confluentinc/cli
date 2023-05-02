@@ -39,6 +39,7 @@ type InputController struct {
 	store                 StoreInterface
 	authenticated         func() error
 	appOptions            *ApplicationOptions
+	shouldExit            bool
 }
 
 func shouldUseTView(statement types.ProcessedStatement) bool {
@@ -69,6 +70,10 @@ func (c *InputController) RunInteractiveInput() {
 	for {
 		// Run interactive input and take over terminal
 		input := c.prompt.Input()
+
+		if c.shouldExit {
+			c.appController.ExitApplication()
+		}
 
 		// Upon receiving user input, we check if user is authenticated and possibly a refresh the CCloud SSO token
 		if authErr := c.authenticated(); authErr != nil {
@@ -259,7 +264,7 @@ func (c *InputController) Prompt() *prompt.Prompt {
 		prompt.OptionHistory(c.History.Data),
 		prompt.OptionSwitchKeyBindMode(prompt.EmacsKeyBind),
 		prompt.OptionSetExitCheckerOnInput(func(input string, breakline bool) bool {
-			if (components.IsInputClosingSelect(input) && breakline) || c.reverseISearchEnabled {
+			if (components.IsInputClosingSelect(input) && breakline) || c.reverseISearchEnabled || c.shouldExit {
 				return true
 			}
 			return false
@@ -268,13 +273,13 @@ func (c *InputController) Prompt() *prompt.Prompt {
 		prompt.OptionAddKeyBind(prompt.KeyBind{
 			Key: prompt.ControlD,
 			Fn: func(b *prompt.Buffer) {
-				c.appController.ExitApplication()
+				c.shouldExit = true
 			},
 		}),
 		prompt.OptionAddKeyBind(prompt.KeyBind{
 			Key: prompt.ControlQ,
 			Fn: func(b *prompt.Buffer) {
-				c.appController.ExitApplication()
+				c.shouldExit = true
 			},
 		}),
 		prompt.OptionAddKeyBind(prompt.KeyBind{
@@ -427,6 +432,7 @@ func NewInputController(t TableControllerInterface, a ApplicationControllerInter
 		smartCompletion: true,
 		authenticated:   authenticated,
 		appOptions:      appOptions,
+		shouldExit:      false,
 	}
 	inputController.prompt = inputController.Prompt()
 	components.PrintWelcomeHeader()
