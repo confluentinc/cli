@@ -89,7 +89,7 @@ func TestExamplesWordLexer(t *testing.T) {
 
 			if isKeyWord {
 				require.Equalf(t, element.Color, config.HIGHLIGHT_COLOR, "wrong colour for element: %s", element.Text)
-			} else if isInvertedCommasWord(element.Text) {
+			} else if wrappedInInvertedCommasOrBackticks(element.Text) {
 				require.Equalf(t, element.Color, prompt.Yellow, "wrong colour for element: %s", element.Text)
 			} else {
 				require.Equalf(t, element.Color, prompt.White, "wrong colour for element: %s", element.Text)
@@ -138,11 +138,31 @@ func TestWordLexerForRandomStatements(t *testing.T) {
 
 			if isKeyWord {
 				require.Equalf(t, element.Color, config.HIGHLIGHT_COLOR, "wrong colour for element: %s", element.Text)
-			} else if isInvertedCommasWord(element.Text) {
+			} else if wrappedInInvertedCommasOrBackticks(element.Text) {
 				require.Equalf(t, element.Color, prompt.Yellow, "wrong colour for element: %s", element.Text)
 			} else {
 				require.Equalf(t, element.Color, prompt.White, "wrong colour for element: %s", element.Text)
 			}
 		}
 	})
+}
+
+func TestIsInvertedCommasWord(t *testing.T) {
+	tables := []struct {
+		word     string
+		expected bool
+	}{
+		{"'hello'", true},
+		{"`world`", true},
+		{"hello", false},
+		{"'hello", false},
+		{"hello'", false},
+	}
+
+	for _, table := range tables {
+		result := wrappedInInvertedCommasOrBackticks(table.word)
+		if result != table.expected {
+			t.Errorf("Expected isInvertedCommasWord(%v) to be %v, but got %v", table.word, table.expected, result)
+		}
+	}
 }
