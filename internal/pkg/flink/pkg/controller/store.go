@@ -191,9 +191,10 @@ func (s *Store) DeleteStatement(statementName string) {
 
 		if err != nil {
 			log.Print(err.Error())
+			return
 		}
 
-		if httpResponse.StatusCode < 200 || httpResponse.StatusCode >= 300 {
+		if httpResponse != nil && (httpResponse.StatusCode < 200 || httpResponse.StatusCode >= 300) {
 			log.Printf("Error: " + httpResponse.Body.Close().Error() + httpResponse.Status)
 		}
 	}
