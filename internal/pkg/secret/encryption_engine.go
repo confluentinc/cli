@@ -12,6 +12,11 @@ import (
 	"golang.org/x/crypto/pbkdf2"
 )
 
+const (
+	SaltLength  = 24
+	NonceLength = 12
+)
+
 // Encryption Engine performs Encryption, Decryption and Hash operations.
 type EncryptionEngine interface {
 	Encrypt(plainText string, key []byte, algo string) (string, string, error)
