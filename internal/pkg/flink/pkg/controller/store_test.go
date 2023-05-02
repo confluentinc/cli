@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/stretchr/testify/require"
 	"io"
 	"net/http"
 	"testing"
@@ -527,4 +528,52 @@ func generateCloserFromObject(obj interface{}) io.ReadCloser {
 	buf := bytes.NewReader(bts)
 	reader := bufio.NewReader(buf)
 	return io.NopCloser(reader)
+}
+
+func (s *StoreTestSuite) TestDeleteStatement() {
+	ctrl := gomock.NewController(s.T())
+	defer ctrl.Finish()
+
+	// create objects
+	client := NewMockGatewayClientInterface(ctrl)
+	mockAppController := NewMockApplicationControllerInterface(ctrl)
+	store := NewStore(client, nil, mockAppController).(*Store)
+
+	statementName := "TEST_STATEMENT"
+	client.EXPECT().DeleteStatement(gomock.Any(), statementName).Return(nil, nil)
+
+	wasStatementDeleted := store.DeleteStatement(statementName)
+	require.True(s.T(), wasStatementDeleted)
+}
+
+func (s *StoreTestSuite) TestDeleteStatementFailsOnError() {
+	ctrl := gomock.NewController(s.T())
+	defer ctrl.Finish()
+
+	// create objects
+	client := NewMockGatewayClientInterface(ctrl)
+	mockAppController := NewMockApplicationControllerInterface(ctrl)
+	store := NewStore(client, nil, mockAppController).(*Store)
+
+	statementName := "TEST_STATEMENT"
+	client.EXPECT().DeleteStatement(gomock.Any(), statementName).Return(nil, errors.New("test error"))
+
+	wasStatementDeleted := store.DeleteStatement(statementName)
+	require.False(s.T(), wasStatementDeleted)
+}
+
+func (s *StoreTestSuite) TestDeleteStatementFailsOn404() {
+	ctrl := gomock.NewController(s.T())
+	defer ctrl.Finish()
+
+	// create objects
+	client := NewMockGatewayClientInterface(ctrl)
+	mockAppController := NewMockApplicationControllerInterface(ctrl)
+	store := NewStore(client, nil, mockAppController).(*Store)
+
+	statementName := "TEST_STATEMENT"
+	client.EXPECT().DeleteStatement(gomock.Any(), statementName).Return(&http.Response{StatusCode: 404}, nil)
+
+	wasStatementDeleted := store.DeleteStatement(statementName)
+	require.False(s.T(), wasStatementDeleted)
 }

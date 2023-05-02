@@ -35,7 +35,7 @@ const MOCK_STATEMENTS_OUTPUT_DEMO = true
 type StoreInterface interface {
 	ProcessStatement(statement string) (*types.ProcessedStatement, *types.StatementError)
 	FetchStatementResults(types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError)
-	DeleteStatement(statementName string)
+	DeleteStatement(statementName string) bool
 	WaitPendingStatement(ctx context.Context, statement types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError)
 }
 
@@ -184,20 +184,22 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 	return &statement, nil
 }
 
-func (s *Store) DeleteStatement(statementName string) {
+func (s *Store) DeleteStatement(statementName string) bool {
 	demoMode := s.appOptions != nil && s.appOptions.MOCK_STATEMENTS_OUTPUT_DEMO
 	if !demoMode {
 		httpResponse, err := s.client.DeleteStatement(context.Background(), statementName)
 
 		if err != nil {
 			log.Print(err.Error())
-			return
+			return false
 		}
 
 		if httpResponse != nil && (httpResponse.StatusCode < 200 || httpResponse.StatusCode >= 300) {
-			log.Printf("Error: " + httpResponse.Body.Close().Error() + httpResponse.Status)
+			log.Printf("DeleteStatement returned unexpected status code: %v, with status: %s\n", httpResponse.StatusCode, httpResponse.Status)
+			return false
 		}
 	}
+	return true
 }
 
 func (s *Store) waitForPendingStatement(ctx context.Context, statementName string, retries int, waitTime time.Duration) (*types.ProcessedStatement, error) {

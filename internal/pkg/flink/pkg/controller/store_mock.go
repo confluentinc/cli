@@ -36,9 +36,11 @@ func (m *MockStoreInterface) EXPECT() *MockStoreInterfaceMockRecorder {
 }
 
 // DeleteStatement mocks base method.
-func (m *MockStoreInterface) DeleteStatement(arg0 string) {
+func (m *MockStoreInterface) DeleteStatement(arg0 string) bool {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "DeleteStatement", arg0)
+	ret := m.ctrl.Call(m, "DeleteStatement", arg0)
+	ret0, _ := ret[0].(bool)
+	return ret0
 }
 
 // DeleteStatement indicates an expected call of DeleteStatement.
