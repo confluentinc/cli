@@ -34,7 +34,8 @@ type TableController struct {
 	hasUserDisabledTableMode     bool
 	hasUserDisabledAutoFetch     bool
 	cancelFetch                  context.CancelFunc
-	lock                         sync.Mutex
+	tableLock                    sync.Mutex
+	cancelLock                   sync.RWMutex
 }
 
 const maxResultsCapacity int = 1000
@@ -81,6 +82,7 @@ func (t *TableController) GetActionForShortcut(shortcut string) func() {
 				t.hasUserDisabledAutoFetch = true
 				t.stopAutoRefresh()
 			}
+			t.renderTable()
 		}
 	}
 	return nil
@@ -111,25 +113,33 @@ func (t *TableController) AppInputCapture(event *tcell.EventKey) *tcell.EventKey
 	return event
 }
 
+func (t *TableController) setRefreshCancelFunc(cancelFunc context.CancelFunc) {
+	t.cancelLock.Lock()
+	defer t.cancelLock.Unlock()
+
+	t.cancelFetch = cancelFunc
+}
+
 func (t *TableController) stopAutoRefresh() {
 	if t.isAutoRefreshRunning() {
 		t.cancelFetch()
-		t.cancelFetch = nil
+		t.setRefreshCancelFunc(nil)
 	}
-	t.renderTable()
 }
 
 func (t *TableController) startAutoRefresh(statement types.ProcessedStatement, refreshInterval uint) {
-	if t.isAutoRefreshRunning() {
+	if statement.PageToken == "" || t.isAutoRefreshRunning() {
 		return
 	}
 	fetchCtx, cancelFetch := context.WithCancel(context.Background())
-	t.cancelFetch = cancelFetch
+	t.setRefreshCancelFunc(cancelFetch)
 	t.refreshResults(fetchCtx, statement, refreshInterval)
-	t.renderTable()
 }
 
 func (t *TableController) isAutoRefreshRunning() bool {
+	t.cancelLock.RLock()
+	defer t.cancelLock.RUnlock()
+
 	return t.cancelFetch != nil
 }
 
@@ -140,20 +150,22 @@ func (t *TableController) refreshResults(ctx context.Context, statement types.Pr
 			case <-ctx.Done():
 				return
 			default:
-				// don't fetch if we have a next page token or the refresh interval is < min
-				if statement.PageToken == "" || refreshInterval < minRefreshInterval {
-					t.stopAutoRefresh()
-					continue
-				}
+				t.renderTable()
+				t.appController.TView().Draw()
 
 				newResults, err := t.store.FetchStatementResults(statement)
 				if err != nil {
 					continue
 				}
+
+				// don't fetch if we have a next page token or the refresh interval is < min
+				if newResults.PageToken == "" || refreshInterval < minRefreshInterval {
+					t.stopAutoRefresh()
+					continue
+				}
+
 				statement = *newResults
 				t.materializedStatementResults.AppendAll(newResults.StatementResults.GetRows())
-				t.renderTable()
-				t.appController.TView().Draw()
 				time.Sleep(time.Millisecond * time.Duration(refreshInterval))
 			}
 		}
@@ -168,16 +180,18 @@ func (t *TableController) Init(statement types.ProcessedStatement) {
 	// if unbounded result start refreshing results in the background
 	if statement.PageToken != "" && !t.hasUserDisabledAutoFetch {
 		t.startAutoRefresh(statement, defaultRefreshInterval)
+	} else {
+		t.renderTable()
 	}
-	t.renderTable()
 }
 
 func (t *TableController) renderTable() {
-	t.lock.Lock()
+	t.tableLock.Lock()
+	defer t.tableLock.Unlock()
+
 	t.renderTitle()
 	t.renderData()
 	t.focus()
-	t.lock.Unlock()
 }
 
 func (t *TableController) renderTitle() {
