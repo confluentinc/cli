@@ -1,7 +1,6 @@
 package kafka
 
 import (
-	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -20,7 +19,7 @@ import (
 )
 
 type aclCommand struct {
-	*pcmd.AuthenticatedStateFlagCommand
+	*pcmd.AuthenticatedCLICommand
 }
 
 func newAclCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
@@ -29,7 +28,7 @@ func newAclCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 		Short: "Manage Kafka ACLs.",
 	}
 
-	c := &aclCommand{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
+	c := &aclCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 
 	if cfg.IsCloudLogin() {
 		cmd.AddCommand(c.newCreateCommand())
@@ -142,12 +141,12 @@ func parsePrincipal(principal string) (string, error) {
 }
 
 func (c *aclCommand) getAllUsers() ([]*ccloud.User, error) {
-	serviceAccounts, err := c.Client.User.GetServiceAccounts(context.Background())
+	serviceAccounts, err := c.Client.User.GetServiceAccounts()
 	if err != nil {
 		return nil, err
 	}
 
-	adminUsers, err := c.Client.User.List(context.Background())
+	adminUsers, err := c.Client.User.List()
 	if err != nil {
 		return nil, err
 	}
@@ -172,7 +171,7 @@ func (c *aclCommand) mapResourceIdToUserId(users []*ccloud.User) map[string]int3
 }
 
 func (c *aclCommand) provisioningClusterCheck(lkc string) error {
-	environmentId, err := c.EnvironmentId()
+	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}

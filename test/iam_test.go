@@ -280,8 +280,8 @@ func (s *CLITestSuite) TestIAMProviderCreate() {
 
 func (s *CLITestSuite) TestIAMProviderDelete() {
 	tests := []CLITest{
-		{args: "iam provider delete op-55555 --force", fixture: "iam/identity-provider/delete.golden"},
-		{args: "iam provider delete op-55555", input: "identity_provider\n", fixture: "iam/identity-provider/delete-prompt.golden"},
+		{args: "iam provider delete op-12345 --force", fixture: "iam/identity-provider/delete.golden"},
+		{args: "iam provider delete op-12345", input: "identity_provider\n", fixture: "iam/identity-provider/delete-prompt.golden"},
 		{args: "iam provider delete op-1 --force", fixture: "iam/identity-provider/delete-dne.golden", exitCode: 1},
 	}
 
@@ -373,6 +373,20 @@ func (s *CLITestSuite) TestIAMPoolUpdate() {
 func (s *CLITestSuite) TestIAMPoolList() {
 	tests := []CLITest{
 		{args: "iam pool list --provider op-12345", fixture: "iam/identity-pool/list.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestIAMAutocomplete() {
+	tests := []CLITest{
+		{args: `__complete iam pool describe --provider op-12345 ""`, fixture: "iam/identity-pool/describe-autocomplete.golden"},
+		{args: `__complete iam provider describe ""`, fixture: "iam/identity-provider/describe-autocomplete.golden"},
+		{args: `__complete iam service-account describe ""`, fixture: "iam/service-account/describe-autocomplete.golden"},
+		{args: `__complete iam user describe ""`, fixture: "iam/user/describe-autocomplete.golden"},
 	}
 
 	for _, test := range tests {

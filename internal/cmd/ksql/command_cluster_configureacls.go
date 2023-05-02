@@ -1,7 +1,6 @@
 package ksql
 
 import (
-	"context"
 	"fmt"
 	"strconv"
 
@@ -46,7 +45,7 @@ func (c *ksqlCommand) configureACLs(cmd *cobra.Command, args []string) error {
 
 	ksqlCluster := args[0]
 
-	environmentId, err := c.EnvironmentId()
+	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}
@@ -100,7 +99,7 @@ func (c *ksqlCommand) configureACLs(cmd *cobra.Command, args []string) error {
 }
 
 func (c *ksqlCommand) getServiceAccount(cluster *ksqlv2.KsqldbcmV2Cluster) (string, error) {
-	users, err := c.Client.User.GetServiceAccounts(context.Background())
+	users, err := c.Client.User.GetServiceAccounts()
 	if err != nil {
 		return "", err
 	}

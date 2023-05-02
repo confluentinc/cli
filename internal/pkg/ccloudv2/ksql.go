@@ -2,6 +2,7 @@ package ccloudv2
 
 import (
 	"context"
+	"net/http"
 
 	ksqlv2 "github.com/confluentinc/ccloud-sdk-go-v2/ksql/v2"
 
@@ -22,9 +23,32 @@ func (c *Client) ksqlApiContext() context.Context {
 	return context.WithValue(context.Background(), ksqlv2.ContextAccessToken, c.AuthToken)
 }
 
-func (c *Client) ListKsqlClusters(environmentId string) (ksqlv2.KsqldbcmV2ClusterList, error) {
-	clusters, resp, err := c.KsqlClient.ClustersKsqldbcmV2Api.ListKsqldbcmV2Clusters(c.ksqlApiContext()).Environment(environmentId).Execute()
-	return clusters, errors.CatchCCloudV2Error(err, resp)
+func (c *Client) ListKsqlClusters(environmentId string) ([]ksqlv2.KsqldbcmV2Cluster, error) {
+	var list []ksqlv2.KsqldbcmV2Cluster
+
+	done := false
+	pageToken := ""
+	for !done {
+		page, httpResp, err := c.executeListKsqlClusters(pageToken, environmentId)
+		if err != nil {
+			return nil, errors.CatchCCloudV2Error(err, httpResp)
+		}
+		list = append(list, page.GetData()...)
+
+		pageToken, done, err = extractNextPageToken(page.GetMetadata().Next)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return list, nil
+}
+
+func (c *Client) executeListKsqlClusters(pageToken, environmentId string) (ksqlv2.KsqldbcmV2ClusterList, *http.Response, error) {
+	req := c.KsqlClient.ClustersKsqldbcmV2Api.ListKsqldbcmV2Clusters(c.ksqlApiContext()).Environment(environmentId).PageSize(ccloudV2ListPageSize)
+	if pageToken != "" {
+		req = req.PageToken(pageToken)
+	}
+	return c.KsqlClient.ClustersKsqldbcmV2Api.ListKsqldbcmV2ClustersExecute(req)
 }
 
 func (c *Client) DeleteKsqlCluster(clusterId, environmentId string) error {

@@ -56,13 +56,9 @@ var (
 		Password: envPassword,
 	}
 	mockAuth = &ccloudv1mock.Auth{
-		UserFunc: func(_ context.Context) (*ccloudv1.GetMeReply, error) {
+		UserFunc: func() (*ccloudv1.GetMeReply, error) {
 			return &ccloudv1.GetMeReply{
-				User: &ccloudv1.User{
-					Id:        23,
-					Email:     "",
-					FirstName: "",
-				},
+				User:         &ccloudv1.User{Id: 23},
 				Organization: &ccloudv1.Organization{ResourceId: org1Id},
 				Accounts:     []*ccloudv1.Account{{Id: "a-595", Name: "Default"}},
 			}, nil
@@ -96,7 +92,7 @@ var (
 				}, nil
 			}
 		},
-		GetSsoCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
+		GetSsoCredentialsFromConfigFunc: func(_ *v1.Config, _ string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
@@ -120,14 +116,11 @@ var (
 		},
 	}
 	LoginOrganizationManager = &climock.LoginOrganizationManager{
-		GetLoginOrganizationFromArgsFunc: func(cmd *cobra.Command) func() (string, error) {
-			return pauth.NewLoginOrganizationManagerImpl().GetLoginOrganizationFromArgs(cmd)
+		GetLoginOrganizationFromFlagFunc: func(cmd *cobra.Command) func() string {
+			return pauth.NewLoginOrganizationManagerImpl().GetLoginOrganizationFromFlag(cmd)
 		},
-		GetLoginOrganizationFromEnvVarFunc: func(cmd *cobra.Command) func() (string, error) {
-			return pauth.NewLoginOrganizationManagerImpl().GetLoginOrganizationFromEnvVar(cmd)
-		},
-		GetDefaultLoginOrganizationFunc: func() func() (string, error) {
-			return pauth.NewLoginOrganizationManagerImpl().GetDefaultLoginOrganization()
+		GetLoginOrganizationFromEnvironmentVariableFunc: func() func() string {
+			return pauth.NewLoginOrganizationManagerImpl().GetLoginOrganizationFromEnvironmentVariable()
 		},
 	}
 	AuthTokenHandler = &climock.AuthTokenHandler{
@@ -160,10 +153,10 @@ var (
 func TestCredentialsOverride(t *testing.T) {
 	req := require.New(t)
 	auth := &ccloudv1mock.Auth{
-		LoginFunc: func(_ context.Context, _ *ccloudv1.AuthenticateRequest) (*ccloudv1.AuthenticateReply, error) {
+		LoginFunc: func(_ *ccloudv1.AuthenticateRequest) (*ccloudv1.AuthenticateReply, error) {
 			return &ccloudv1.AuthenticateReply{Token: testToken1}, nil
 		},
-		UserFunc: func(_ context.Context) (*ccloudv1.GetMeReply, error) {
+		UserFunc: func() (*ccloudv1.GetMeReply, error) {
 			return &ccloudv1.GetMeReply{
 				User: &ccloudv1.User{
 					Id:        23,
@@ -182,7 +175,7 @@ func TestCredentialsOverride(t *testing.T) {
 				return envCreds, nil
 			}
 		},
-		GetSsoCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
+		GetSsoCredentialsFromConfigFunc: func(_ *v1.Config, _ string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
@@ -226,7 +219,7 @@ func TestCredentialsOverride(t *testing.T) {
 func TestOrgIdOverride(t *testing.T) {
 	req := require.New(t)
 	auth := &ccloudv1mock.Auth{
-		UserFunc: func(ctx context.Context) (*ccloudv1.GetMeReply, error) {
+		UserFunc: func() (*ccloudv1.GetMeReply, error) {
 			return &ccloudv1.GetMeReply{
 				User: &ccloudv1.User{
 					Id:        23,
@@ -239,57 +232,36 @@ func TestOrgIdOverride(t *testing.T) {
 		},
 	}
 	userInterface := &ccloudv1mock.UserInterface{}
-	type test struct {
-		setEnv     bool
-		setDefault bool
+
+	loginOrganizationManager := &climock.LoginOrganizationManager{
+		GetLoginOrganizationFromFlagFunc: LoginOrganizationManager.GetLoginOrganizationFromFlagFunc,
+		GetLoginOrganizationFromEnvironmentVariableFunc: func() func() string {
+			return func() string { return org2Id }
+		},
 	}
-	tests := []*test{
-		{setEnv: true},
-		{setDefault: true},
-	}
+	loginCmd, cfg := newLoginCmd(auth, userInterface, true, req, mockNetrcHandler, AuthTokenHandler, mockLoginCredentialsManager, loginOrganizationManager)
 
-	for _, tt := range tests {
-		loginOrganizationManager := &climock.LoginOrganizationManager{
-			GetLoginOrganizationFromArgsFunc: LoginOrganizationManager.GetLoginOrganizationFromArgsFunc,
-			GetLoginOrganizationFromEnvVarFunc: func(cmd *cobra.Command) func() (string, error) {
-				if tt.setEnv {
-					return func() (string, error) { return org2Id, nil }
-				} else {
-					return LoginOrganizationManager.GetLoginOrganizationFromEnvVarFunc(cmd)
-				}
-			},
-			GetDefaultLoginOrganizationFunc: func() func() (string, error) {
-				if tt.setDefault {
-					return func() (string, error) { return org2Id, nil }
-				} else {
-					return LoginOrganizationManager.GetDefaultLoginOrganization()
-				}
-			},
-		}
-		loginCmd, cfg := newLoginCmd(auth, userInterface, true, req, mockNetrcHandler, AuthTokenHandler, mockLoginCredentialsManager, loginOrganizationManager)
+	output, err := pcmd.ExecuteCommand(loginCmd)
+	req.NoError(err)
+	req.Empty("", output)
 
-		output, err := pcmd.ExecuteCommand(loginCmd)
-		req.NoError(err)
-		req.Empty("", output)
+	ctx := cfg.Context()
+	req.NotNil(ctx)
+	req.Equal(pauth.GenerateContextName(promptUser, ccloudURL, ""), ctx.Name)
 
-		ctx := cfg.Context()
-		req.NotNil(ctx)
-		req.Equal(pauth.GenerateContextName(promptUser, ccloudURL, ""), ctx.Name)
-
-		req.Equal(testToken2, ctx.GetAuthToken())
-		req.Equal(&ccloudv1.User{Id: 23, Email: promptUser, FirstName: "Cody"}, ctx.GetUser())
-		verifyLoggedInState(t, cfg, true, org2Id)
-	}
+	req.Equal(testToken2, ctx.GetAuthToken())
+	req.Equal(&ccloudv1.User{Id: 23, Email: promptUser, FirstName: "Cody"}, ctx.GetUser())
+	verifyLoggedInState(t, cfg, true, org2Id)
 }
 
 func TestLoginSuccess(t *testing.T) {
 	req := require.New(t)
 	org2 := false
 	auth := &ccloudv1mock.Auth{
-		LoginFunc: func(_ context.Context, _ *ccloudv1.AuthenticateRequest) (*ccloudv1.AuthenticateReply, error) {
+		LoginFunc: func(_ *ccloudv1.AuthenticateRequest) (*ccloudv1.AuthenticateReply, error) {
 			return &ccloudv1.AuthenticateReply{Token: testToken1}, nil
 		},
-		UserFunc: func(_ context.Context) (*ccloudv1.GetMeReply, error) {
+		UserFunc: func() (*ccloudv1.GetMeReply, error) {
 			org := org1Id
 			if org2 {
 				org = org2Id
@@ -442,7 +414,7 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 						}, nil
 					}
 				},
-				GetSsoCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
+				GetSsoCredentialsFromConfigFunc: func(_ *v1.Config, _ string) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return nil, nil
 					}
@@ -583,7 +555,7 @@ func TestLoginFail(t *testing.T) {
 				return nil, errors.New("DO NOT RETURN THIS ERR")
 			}
 		},
-		GetSsoCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
+		GetSsoCredentialsFromConfigFunc: func(_ *v1.Config, _ string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, errors.New("DO NOT RETURN THIS ERR")
 			}
@@ -784,10 +756,10 @@ func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *v1.Co
 func TestLoginWithExistingContext(t *testing.T) {
 	req := require.New(t)
 	auth := &ccloudv1mock.Auth{
-		LoginFunc: func(_ context.Context, _ *ccloudv1.AuthenticateRequest) (*ccloudv1.AuthenticateReply, error) {
+		LoginFunc: func(_ *ccloudv1.AuthenticateRequest) (*ccloudv1.AuthenticateReply, error) {
 			return &ccloudv1.AuthenticateReply{Token: testToken1}, nil
 		},
-		UserFunc: func(_ context.Context) (*ccloudv1.GetMeReply, error) {
+		UserFunc: func() (*ccloudv1.GetMeReply, error) {
 			return &ccloudv1.GetMeReply{
 				User: &ccloudv1.User{
 					Id:        23,
@@ -810,9 +782,7 @@ func TestLoginWithExistingContext(t *testing.T) {
 			args:    []string{},
 		},
 		{
-			args: []string{
-				"--url=http://localhost:8090",
-			},
+			args: []string{"--url=http://localhost:8090"},
 		},
 	}
 
@@ -952,9 +922,8 @@ func newLoginCmd(auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInterf
 		},
 		JwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloudv1.Client {
 			return &ccloudv1.Client{Growth: &ccloudv1mock.Growth{
-				GetFreeTrialInfoFunc: func(_ context.Context, orgId int32) ([]*ccloudv1.GrowthPromoCodeClaim, error) {
-					var claims []*ccloudv1.GrowthPromoCodeClaim
-					return claims, nil
+				GetFreeTrialInfoFunc: func(_ int32) ([]*ccloudv1.GrowthPromoCodeClaim, error) {
+					return []*ccloudv1.GrowthPromoCodeClaim{}, nil
 				},
 			}, Auth: auth, User: userInterface}
 		},
@@ -996,8 +965,7 @@ func verifyLoggedInState(t *testing.T, cfg *v1.Config, isCloud bool, orgResource
 	if isCloud {
 		// MDS doesn't set some things like cfg.Auth.User since e.g. an MDS user != an ccloudv1 User
 		req.Equal(&ccloudv1.User{Id: 23, Email: promptUser, FirstName: "Cody"}, ctx.GetUser())
-		req.Equal(orgResourceId, ctx.GetOrganization().GetResourceId())
-		req.Equal(orgResourceId, ctx.Config.GetLastUsedOrgId())
+		req.Equal(orgResourceId, ctx.GetCurrentOrganization())
 	} else {
 		req.Equal("http://localhost:8090", ctx.Platform.Server)
 	}

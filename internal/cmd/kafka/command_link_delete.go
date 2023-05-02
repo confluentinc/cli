@@ -15,10 +15,11 @@ import (
 
 func (c *linkCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delete <link>",
-		Short: "Delete a cluster link.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  c.delete,
+		Use:               "delete <link>",
+		Short:             "Delete a cluster link.",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		RunE:              c.delete,
 	}
 
 	pcmd.AddForceFlag(cmd)
@@ -40,7 +41,7 @@ func (c *linkCommand) delete(cmd *cobra.Command, args []string) error {
 		return errors.New(errors.RestProxyNotAvailableMsg)
 	}
 
-	clusterId, err := getKafkaClusterLkcId(c.AuthenticatedStateFlagCommand)
+	clusterId, err := getKafkaClusterLkcId(c.AuthenticatedCLICommand)
 	if err != nil {
 		return err
 	}

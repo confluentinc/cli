@@ -249,6 +249,23 @@ After running the command manually to ensure the output is correct, the content 
 
 Now, run `make integration-test INTEGRATION_TEST_ARGS="-run TestCLI/TestConfigDescribe"` and verify that it works!
 
+#### Add Autocompletion
+
+Add support for autocompletion using `ValidArgsFunction` if applicable (for example, if the command takes resource IDs or resource names as arguments):
+
+```go
+func (c *command) newDescribeCommand() *cobra.Command {
+    return &cobra.Command{
+        Use:               "describe",
+        Args:              cobra.ExactArgs(1),
+        ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+        RunE:              c.describe,
+    }
+}
+```
+
+See the [Autocompletion](internal/pkg/cmd/AUTOCOMPLETION.md) resource for implementation details.
+
 ### Opening a PR
 
 That's it! As you can see, the process of adding a new CLI command is pretty straightforward. You can open a PR if:

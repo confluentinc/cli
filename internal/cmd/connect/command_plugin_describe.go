@@ -1,7 +1,6 @@
 package connect
 
 import (
-	"fmt"
 	"sort"
 
 	"github.com/spf13/cobra"
@@ -10,7 +9,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
 type pluginDescribeOut struct {
@@ -29,7 +27,7 @@ func (c *pluginCommand) newDescribeCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Describe the required connector configuration parameters for connector plugin "MySource".`,
-				Code: fmt.Sprintf("%s connect plugin describe MySource", version.CLIName),
+				Code: "confluent connect plugin describe MySource",
 			},
 		),
 	}
@@ -50,7 +48,7 @@ func (c *pluginCommand) describe(cmd *cobra.Command, args []string) error {
 
 	config := map[string]string{"connector.class": args[0]}
 
-	environmentId, err := c.EnvironmentId()
+	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}

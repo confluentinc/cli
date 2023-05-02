@@ -47,7 +47,7 @@ func (c *Client) ListIamRoleBindings(crnPattern, principal, roleName string) ([]
 		}
 		list = append(list, page.GetData()...)
 
-		pageToken, done, err = extractMdsNextPageToken(page.GetMetadata().Next)
+		pageToken, done, err = extractNextPageToken(page.GetMetadata().Next)
 		if err != nil {
 			return nil, err
 		}
@@ -68,13 +68,4 @@ func (c *Client) executeListIamV2RoleBindings(crnPattern, principal, roleName, p
 		req = req.PageToken(pageToken)
 	}
 	return c.MdsClient.RoleBindingsIamV2Api.ListIamV2RoleBindingsExecute(req)
-}
-
-func extractMdsNextPageToken(nextPageUrlStringNullable mdsv2.NullableString) (string, bool, error) {
-	if !nextPageUrlStringNullable.IsSet() || nextPageUrlStringNullable.Get() == nil {
-		return "", true, nil
-	}
-	nextPageUrlString := *nextPageUrlStringNullable.Get()
-	pageToken, err := extractPageToken(nextPageUrlString)
-	return pageToken, false, err
 }

@@ -55,7 +55,7 @@ type roleBindingOptions struct {
 }
 
 type roleBindingCommand struct {
-	*pcmd.AuthenticatedStateFlagCommand
+	*pcmd.AuthenticatedCLICommand
 	cfg *v1.Config
 }
 
@@ -83,9 +83,9 @@ func newRoleBindingCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Comm
 	c := &roleBindingCommand{cfg: cfg}
 
 	if cfg.IsOnPremLogin() {
-		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner)
+		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)
 	} else {
-		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)
+		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedCLICommand(cmd, prerunner)
 	}
 
 	cmd.AddCommand(c.newCreateCommand())
@@ -517,11 +517,11 @@ func (c *roleBindingCommand) parseV2RoleBinding(cmd *cobra.Command) (*mdsv2.IamV
 }
 
 func (c *roleBindingCommand) parseV2BaseCrnPattern(cmd *cobra.Command) (string, error) {
-	orgResourceId := c.State.Auth.Account.GetOrgResourceId()
+	orgResourceId := c.Context.GetCurrentOrganization()
 	crnPattern := "crn://confluent.cloud/organization=" + orgResourceId
 
 	if cmd.Flags().Changed("current-environment") {
-		environmentId, err := c.EnvironmentId()
+		environmentId, err := c.Context.EnvironmentId()
 		if err != nil {
 			return "", err
 		}

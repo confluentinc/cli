@@ -35,7 +35,7 @@ type SubjectTestSuite struct {
 func (suite *SubjectTestSuite) SetupSuite() {
 	suite.conf = v1.AuthenticatedCloudConfigMock()
 	ctx := suite.conf.Context()
-	srCluster := ctx.SchemaRegistryClusters[ctx.GetEnvironment().GetId()]
+	srCluster := ctx.SchemaRegistryClusters[ctx.GetCurrentEnvironment()]
 	srCluster.SrCredentials = &v1.APIKeyPair{Key: "key", Secret: "secret"}
 	cluster := ctx.KafkaClusterContext.GetActiveKafkaClusterConfig()
 	suite.kafkaCluster = &ccstructs.KafkaCluster{
@@ -50,10 +50,10 @@ func (suite *SubjectTestSuite) SetupSuite() {
 
 func (suite *SubjectTestSuite) SetupTest() {
 	suite.srMothershipMock = &ccloudv1mock.SchemaRegistry{
-		CreateSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *ccloudv1.SchemaRegistryClusterConfig) (*ccloudv1.SchemaRegistryCluster, error) {
+		CreateSchemaRegistryClusterFunc: func(_ *ccloudv1.SchemaRegistryClusterConfig) (*ccloudv1.SchemaRegistryCluster, error) {
 			return suite.srCluster, nil
 		},
-		GetSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *ccloudv1.SchemaRegistryCluster) (*ccloudv1.SchemaRegistryCluster, error) {
+		GetSchemaRegistryClusterFunc: func(_ *ccloudv1.SchemaRegistryCluster) (*ccloudv1.SchemaRegistryCluster, error) {
 			return nil, nil
 		},
 	}

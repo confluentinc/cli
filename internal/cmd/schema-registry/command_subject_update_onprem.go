@@ -8,7 +8,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
 func (c *command) newSubjectUpdateCommandOnPrem() *cobra.Command {
@@ -21,11 +20,11 @@ func (c *command) newSubjectUpdateCommandOnPrem() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Update subject-level compatibility of subject "payments".`,
-				Code: fmt.Sprintf("%s schema-registry subject update payments --compatibility backward %s", version.CLIName, OnPremAuthenticationMsg),
+				Code: fmt.Sprintf("confluent schema-registry subject update payments --compatibility backward %s", OnPremAuthenticationMsg),
 			},
 			examples.Example{
 				Text: `Update subject-level mode of subject "payments".`,
-				Code: fmt.Sprintf("%s schema-registry subject update payments --mode readwrite %s", version.CLIName, OnPremAuthenticationMsg),
+				Code: fmt.Sprintf("confluent schema-registry subject update payments --mode readwrite %s", OnPremAuthenticationMsg),
 			},
 		),
 	}

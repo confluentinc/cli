@@ -1,16 +1,12 @@
 package schemaregistry
 
 import (
-	"context"
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
 func (c *command) newClusterUpgradeCommand() *cobra.Command {
@@ -23,7 +19,7 @@ func (c *command) newClusterUpgradeCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Upgrade Schema Registry to the "advanced" package for environment "env-12345".`,
-				Code: fmt.Sprintf("%s schema-registry cluster upgrade --package advanced --environment env-12345", version.CLIName),
+				Code: "confluent schema-registry cluster upgrade --package advanced --environment env-12345",
 			},
 		),
 	}
@@ -49,13 +45,12 @@ func (c *command) clusterUpgrade(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	environmentId, err := c.EnvironmentId()
+	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}
 
-	ctx := context.Background()
-	cluster, err := c.Context.FetchSchemaRegistryByEnvironmentId(ctx, environmentId)
+	cluster, err := c.Context.FetchSchemaRegistryByEnvironmentId(environmentId)
 	if err != nil {
 		return err
 	}
@@ -66,7 +61,7 @@ func (c *command) clusterUpgrade(cmd *cobra.Command, _ []string) error {
 	}
 	cluster.Package = packageInternalName
 
-	if _, err := c.Client.SchemaRegistry.UpdateSchemaRegistryCluster(ctx, cluster); err != nil {
+	if _, err := c.Client.SchemaRegistry.UpdateSchemaRegistryCluster(cluster); err != nil {
 		return err
 	}
 

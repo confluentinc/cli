@@ -1,7 +1,6 @@
 package ksql
 
 import (
-	"context"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -55,7 +54,7 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	environmentId, err := c.EnvironmentId()
+	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}
@@ -86,7 +85,7 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string) error {
 		output.ErrPrintln(errors.EndPointNotPopulatedMsg)
 	}
 
-	srCluster, _ := c.Context.FetchSchemaRegistryByEnvironmentId(context.Background(), environmentId)
+	srCluster, _ := c.Context.FetchSchemaRegistryByEnvironmentId(environmentId)
 	if srCluster != nil {
 		output.ErrPrintln(errors.SchemaRegistryRoleBindingRequiredForKsqlWarning)
 	}

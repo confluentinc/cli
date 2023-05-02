@@ -1,38 +1,46 @@
 package sso
 
 import (
+	"net/url"
 	"strings"
 
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
 var auth0ClientIds = map[string]string{
-	"prod":  "oX2nvSKl5jvBKVgwehZfvR4K8RhsZIEs",
-	"stag":  "8RxQmZEYtEDah4MTIIzl4hGGeFwdJS6w",
-	"devel": "sPhOuMMVRSFFR7HfB606KLxf1RAU4SXg",
-	"cpd":   "7rG4pmRbnMn5mIsEBLAP941IE1x2rNqC",
-	"test":  "00000000000000000000000000000000",
+	"cpd":              "7rG4pmRbnMn5mIsEBLAP941IE1x2rNqC",
+	"devel":            "sPhOuMMVRSFFR7HfB606KLxf1RAU4SXg",
+	"fedramp-internal": "0oa7c9gkc6bHBD2OW1d7",
+	"prod":             "oX2nvSKl5jvBKVgwehZfvR4K8RhsZIEs",
+	"stag":             "8RxQmZEYtEDah4MTIIzl4hGGeFwdJS6w",
+	"test":             "00000000000000000000000000000000",
 }
 
 func GetAuth0CCloudClientIdFromBaseUrl(baseUrl string) string {
-	if baseUrl == "" {
-		baseUrl = "https://confluent.cloud"
-	}
-
-	var env string
-	if baseUrl == "https://confluent.cloud" {
-		env = "prod"
-	} else if strings.HasSuffix(baseUrl, "priv.cpdev.cloud") {
-		env = "cpd"
-	} else if baseUrl == "https://devel.cpdev.cloud" {
-		env = "devel"
-	} else if baseUrl == "https://stag.cpdev.cloud" {
-		env = "stag"
-	} else if baseUrl == testserver.TestCloudUrl.String() {
-		env = "test"
-	} else {
-		return ""
-	}
-
+	env := GetCCloudEnvFromBaseUrl(baseUrl)
 	return auth0ClientIds[env]
+}
+
+func GetCCloudEnvFromBaseUrl(baseUrl string) string {
+	u, err := url.Parse(baseUrl)
+	if err != nil {
+		return "prod"
+	}
+
+	if strings.HasSuffix(u.Host, "priv.cpdev.cloud") {
+		return "cpd"
+	}
+
+	switch u.Host {
+	case "stag.cpdev.cloud":
+		return "stag"
+	case "devel.cpdev.cloud":
+		return "devel"
+	case "infra.confluentgov-internal.com":
+		return "fedramp-internal"
+	case testserver.TestCloudUrl.Host:
+		return "test"
+	default:
+		return "prod"
+	}
 }

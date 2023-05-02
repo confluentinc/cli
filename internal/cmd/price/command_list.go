@@ -1,7 +1,6 @@
 package price
 
 import (
-	"context"
 	"fmt"
 	"strings"
 
@@ -160,14 +159,17 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *command) listRows(filters []string, metric string, legacy bool) ([]row, error) {
-	org := &ccloudv1.Organization{Id: c.Context.GetOrganization().GetId()}
-
-	kafkaPricesReply, err := c.Client.Billing.GetPriceTable(context.Background(), org, "kafka")
+	user, err := c.Client.Auth.User()
 	if err != nil {
 		return nil, err
 	}
 
-	clusterLinkPricesReply, err := c.Client.Billing.GetPriceTable(context.Background(), org, "cluster-link")
+	kafkaPricesReply, err := c.Client.Billing.GetPriceTable(user.GetOrganization(), "kafka")
+	if err != nil {
+		return nil, err
+	}
+
+	clusterLinkPricesReply, err := c.Client.Billing.GetPriceTable(user.GetOrganization(), "cluster-link")
 	if err != nil {
 		return nil, err
 	}

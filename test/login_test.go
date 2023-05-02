@@ -26,7 +26,7 @@ var (
 	passwordPlaceholder     = "<PASSWORD_PLACEHOLDER>"
 	loggedInAsOutput        = fmt.Sprintf(errors.LoggedInAsMsg, "good@user.com")
 	loggedInAsWithOrgOutput = fmt.Sprintf(errors.LoggedInAsMsgWithOrg, "good@user.com", "abc-123", "Confluent")
-	loggedInEnvOutput       = fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default")
+	loggedInEnvOutput       = fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595")
 )
 
 func (s *CLITestSuite) TestLogin_Help() {
@@ -66,7 +66,7 @@ func (s *CLITestSuite) TestLogin_VariousOrgSuspensionStatus() {
 		env := []string{fmt.Sprintf("%s=end-of-free-trial-suspended@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
 		output := runCommand(t, testBin, env, args, 0, "")
 		require.Contains(t, output, fmt.Sprintf(errors.LoggedInAsMsgWithOrg, "end-of-free-trial-suspended@user.com", "abc-123", "Confluent"))
-		require.Contains(t, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
+		require.Contains(t, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595"))
 		require.Contains(t, output, fmt.Sprintf(errors.EndOfFreeTrialErrorMsg, "test-org"))
 	})
 }
@@ -85,17 +85,17 @@ func (s *CLITestSuite) TestCcloudErrors() {
 		env := []string{fmt.Sprintf("%s=expired@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
 		output := runCommand(t, testBin, env, args, 0, "")
 		require.Contains(t, output, fmt.Sprintf(errors.LoggedInAsMsgWithOrg, "expired@user.com", "abc-123", "Confluent"))
-		require.Contains(t, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
+		require.Contains(t, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595"))
 		output = runCommand(t, testBin, []string{}, "kafka cluster list", 1, "")
-		require.Contains(t, output, errors.TokenExpiredMsg)
-		require.Contains(t, output, errors.NotLoggedInErrorMsg)
+		require.Contains(t, output, errors.ExpiredTokenErrorMsg)
+		require.Contains(t, output, errors.ComposeSuggestionsMessage(errors.ExpiredTokenSuggestions))
 	})
 
 	s.T().Run("malformed token", func(t *testing.T) {
 		env := []string{fmt.Sprintf("%s=malformed@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
 		output := runCommand(t, testBin, env, args, 0, "")
 		require.Contains(t, output, fmt.Sprintf(errors.LoggedInAsMsgWithOrg, "malformed@user.com", "abc-123", "Confluent"))
-		require.Contains(t, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
+		require.Contains(t, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595"))
 
 		output = runCommand(t, testBin, []string{}, "kafka cluster list", 1, "")
 		require.Contains(t, output, errors.CorruptedTokenErrorMsg)
@@ -108,7 +108,7 @@ func (s *CLITestSuite) TestCcloudErrors() {
 		require.Contains(t, output, errors.LoggedOutMsg)
 		output = runCommand(t, testBin, env, args, 0, "")
 		require.Contains(t, output, fmt.Sprintf(errors.LoggedInAsMsgWithOrg, "invalid@user.com", "abc-123", "Confluent"))
-		require.Contains(t, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
+		require.Contains(t, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595"))
 
 		output = runCommand(t, testBin, []string{}, "kafka cluster list", 1, "")
 		require.Contains(t, output, errors.CorruptedTokenErrorMsg)

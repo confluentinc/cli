@@ -8,6 +8,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
+	"fmt"
 	"os"
 	"strconv"
 
@@ -91,7 +92,7 @@ func Decrypt(username, encrypted string, salt, nonce []byte) (string, error) {
 	}
 	decryptedPassword, err := aesgcm.Open(nil, nonce, cipherText, []byte(username))
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("CLI does not have write permission for `/etc/machine-id`, or `~/.confluent/config.json` is corrupted: %w", err)
 	}
 
 	return string(decryptedPassword), nil

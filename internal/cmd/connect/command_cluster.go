@@ -9,12 +9,13 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/types"
 )
 
 const clusterType = "connect-cluster"
 
 type clusterCommand struct {
-	*pcmd.AuthenticatedStateFlagCommand
+	*pcmd.AuthenticatedCLICommand
 }
 
 func newClusterCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
@@ -27,7 +28,7 @@ func newClusterCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command 
 	c := new(clusterCommand)
 
 	if cfg.IsCloudLogin() {
-		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)
+		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedCLICommand(cmd, prerunner)
 		cmd.AddCommand(c.newCreateCommand())
 		cmd.AddCommand(c.newDeleteCommand())
 		cmd.AddCommand(c.newDescribeCommand())
@@ -36,7 +37,7 @@ func newClusterCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command 
 		cmd.AddCommand(c.newResumeCommand())
 		cmd.AddCommand(c.newUpdateCommand())
 	} else {
-		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner)
+		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)
 		cmd.AddCommand(c.newListCommandOnPrem())
 	}
 
@@ -48,6 +49,10 @@ func (c *clusterCommand) validArgs(cmd *cobra.Command, args []string) []string {
 		return nil
 	}
 
+	return c.validArgsMultiple(cmd, args)
+}
+
+func (c *clusterCommand) validArgsMultiple(cmd *cobra.Command, args []string) []string {
 	if err := c.PersistentPreRunE(cmd, args); err != nil {
 		return nil
 	}
@@ -61,10 +66,12 @@ func (c *clusterCommand) autocompleteConnectors() []string {
 		return nil
 	}
 
+	names := types.GetSortedKeys(connectors)
+
 	suggestions := make([]string, len(connectors))
 	i := 0
-	for _, connector := range connectors {
-		suggestions[i] = fmt.Sprintf("%s\t%s", connector.Id.GetId(), connector.Info.GetName())
+	for _, name := range names {
+		suggestions[i] = fmt.Sprintf("%s\t%s", connectors[name].Id.GetId(), connectors[name].Info.GetName())
 		i++
 	}
 	return suggestions
@@ -76,7 +83,7 @@ func (c *clusterCommand) fetchConnectors() (map[string]connectv1.ConnectV1Connec
 		return nil, err
 	}
 
-	environmentId, err := c.EnvironmentId()
+	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return nil, err
 	}

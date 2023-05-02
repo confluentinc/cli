@@ -1,6 +1,7 @@
 package pipeline
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
@@ -45,8 +46,7 @@ var (
 )
 
 type command struct {
-	*pcmd.AuthenticatedStateFlagCommand
-	prerunner pcmd.PreRunner
+	*pcmd.AuthenticatedCLICommand
 }
 
 func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
@@ -56,10 +56,7 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
-	c := &command{
-		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner),
-		prerunner:                     prerunner,
-	}
+	c := &command{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 
 	dc := dynamicconfig.New(cfg, nil, nil)
 	_ = dc.ParseFlagsIntoConfig(cmd)
@@ -108,4 +105,43 @@ func printTable(cmd *cobra.Command, pipeline streamdesignerv1.SdV1Pipeline) erro
 	}
 
 	return table.Print()
+}
+
+func (c *command) validArgs(cmd *cobra.Command, args []string) []string {
+	if len(args) > 0 {
+		return nil
+	}
+
+	if err := c.PersistentPreRunE(cmd, args); err != nil {
+		return nil
+	}
+
+	return c.autocompletePipelines()
+}
+
+func (c *command) autocompletePipelines() []string {
+	pipelines, err := c.getPipelines()
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(pipelines))
+	for i, pipeline := range pipelines {
+		suggestions[i] = fmt.Sprintf("%s\t%s", pipeline.GetId(), pipeline.Spec.GetDisplayName())
+	}
+	return suggestions
+}
+
+func (c *command) getPipelines() ([]streamdesignerv1.SdV1Pipeline, error) {
+	cluster, err := c.Context.GetKafkaClusterForCommand()
+	if err != nil {
+		return nil, err
+	}
+
+	environmentId, err := c.Context.EnvironmentId()
+	if err != nil {
+		return nil, err
+	}
+
+	return c.V2Client.ListPipelines(environmentId, cluster.ID)
 }

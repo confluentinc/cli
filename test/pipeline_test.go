@@ -32,18 +32,18 @@ func (s *CLITestSuite) TestPipeline() {
 		{args: "pipeline delete pipe-12345 --force", fixture: "pipeline/delete.golden"},
 		{args: "pipeline delete pipe-12345", input: "testPipeline\n", fixture: "pipeline/delete-prompt.golden"},
 		{args: "pipeline activate --help", fixture: "pipeline/activate-help.golden"},
-		{args: "pipeline activate pipeline-12345", fixture: "pipeline/activate.golden"},
+		{args: "pipeline activate pipe-12345", fixture: "pipeline/activate.golden"},
 		{args: "pipeline deactivate --help", fixture: "pipeline/deactivate-help.golden"},
-		{args: "pipeline deactivate pipeline-12345", fixture: "pipeline/deactivate.golden"},
-		{args: "pipeline deactivate pipeline-12345 --retained-topics topic1", fixture: "pipeline/deactivate.golden"},
+		{args: "pipeline deactivate pipe-12345", fixture: "pipeline/deactivate.golden"},
+		{args: "pipeline deactivate pipe-12345 --retained-topics topic1", fixture: "pipeline/deactivate.golden"},
 		{args: "pipeline update --help", fixture: "pipeline/update-help.golden"},
-		{args: "pipeline update pipeline-12345 --name newName --description newDescription", fixture: "pipeline/update-with-new-name-and-desc.golden"},
-		{args: "pipeline update pipeline-12345 --name newName --description newDescription -o json", fixture: "pipeline/update-with-json-output.golden"},
-		{args: "pipeline update pipeline-12345 --activation-privilege", fixture: "pipeline/update-activation-privilege.golden"},
-		{args: "pipeline update pipeline-12345 --activation-privilege=true", fixture: "pipeline/update-activation-privilege.golden"},
-		{args: "pipeline update pipeline-12345 --activation-privilege=false", fixture: "pipeline/update.golden"},
-		{args: fmt.Sprintf("pipeline update pipeline-12345 --sql-file %s", testPipelineSourceCode), fixture: "pipeline/update.golden"},
-		{args: `pipeline update pipeline-12345 --secret name1=value-with,and= --secret name2=value-with\"and\' --secret name3=`, fixture: "pipeline/update-with-secret-names.golden"},
+		{args: "pipeline update pipe-12345 --name newName --description newDescription", fixture: "pipeline/update-with-new-name-and-desc.golden"},
+		{args: "pipeline update pipe-12345 --name newName --description newDescription -o json", fixture: "pipeline/update-with-json-output.golden"},
+		{args: "pipeline update pipe-12345 --activation-privilege", fixture: "pipeline/update-activation-privilege.golden"},
+		{args: "pipeline update pipe-12345 --activation-privilege=true", fixture: "pipeline/update-activation-privilege.golden"},
+		{args: "pipeline update pipe-12345 --activation-privilege=false", fixture: "pipeline/update.golden"},
+		{args: fmt.Sprintf("pipeline update pipe-12345 --sql-file %s", testPipelineSourceCode), fixture: "pipeline/update.golden"},
+		{args: `pipeline update pipe-12345 --secret name1=value-with,and= --secret name2=value-with\"and\' --secret name3=`, fixture: "pipeline/update-with-secret-names.golden"},
 	}
 
 	for _, tt := range tests {
@@ -51,4 +51,9 @@ func (s *CLITestSuite) TestPipeline() {
 		tt.useKafka = "lkc-12345"
 		s.runIntegrationTest(tt)
 	}
+}
+
+func (s *CLITestSuite) TestPipelineAutocomplete() {
+	test := CLITest{args: `__complete pipeline describe ""`, login: "cloud", useKafka: "lkc-12345", fixture: "pipeline/describe-autocomplete.golden"}
+	s.runIntegrationTest(test)
 }

@@ -8,7 +8,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	metricsv2 "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
@@ -62,14 +61,14 @@ func (c *command) clusterDescribe(cmd *cobra.Command, _ []string) error {
 	var numSchemas string
 	var availableSchemas string
 	var srClient *srsdk.APIClient
-	ctx := context.Background()
+	var ctx context.Context
 
 	// Collect the parameters
-	environmentId, err := c.EnvironmentId()
+	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}
-	cluster, err := c.Context.FetchSchemaRegistryByEnvironmentId(ctx, environmentId)
+	cluster, err := c.Context.FetchSchemaRegistryByEnvironmentId(environmentId)
 	if err != nil {
 		return err
 	}
@@ -114,8 +113,11 @@ func (c *command) clusterDescribe(cmd *cobra.Command, _ []string) error {
 
 	freeSchemasLimit := int(cluster.MaxSchemas)
 	if cluster.Package == essentialsPackageInternal {
-		org := &ccloudv1.Organization{Id: c.Context.GetOrganization().GetId()}
-		prices, err := c.Client.Billing.GetPriceTable(context.Background(), org, streamGovernancePriceTableProductName)
+		user, err := c.Client.Auth.User()
+		if err != nil {
+			return err
+		}
+		prices, err := c.Client.Billing.GetPriceTable(user.GetOrganization(), streamGovernancePriceTableProductName)
 		if err == nil {
 			priceKey := getMaxSchemaLimitPriceKey(cluster.Package, cluster.ServiceProvider, cluster.ServiceProviderRegion)
 			freeSchemasLimit = int(prices.GetPriceTable()[schemaRegistryPriceTableName].Prices[priceKey])

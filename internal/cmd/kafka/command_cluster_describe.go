@@ -12,6 +12,7 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
+	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 )
@@ -36,7 +37,7 @@ type describeStruct struct {
 	ByokKeyId          string `human:"BYOK Key ID" serialized:"byok_key_id"`
 	EncryptionKeyId    string `human:"Encryption Key ID" serialized:"encryption_key_id"`
 	RestEndpoint       string `human:"REST Endpoint" serialized:"rest_endpoint"`
-	TopicCount         int    `human:"Topic Count" serialized:"topic_count"`
+	TopicCount         int    `human:"Topic Count,omitempty" serialized:"topic_count"`
 }
 
 func (c *clusterCommand) newDescribeCommand() *cobra.Command {
@@ -64,10 +65,10 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 	}
 
 	ctx := c.Context.Config.Context()
-	c.Context.Config.SetOverwrittenActiveKafka(ctx.KafkaClusterContext.GetActiveKafkaClusterId())
+	c.Context.Config.SetOverwrittenCurrentKafkaCluster(ctx.KafkaClusterContext.GetActiveKafkaClusterId())
 	ctx.KafkaClusterContext.SetActiveKafkaCluster(lkc)
 
-	environmentId, err := c.EnvironmentId()
+	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}
@@ -101,8 +102,9 @@ func (c *clusterCommand) outputKafkaClusterDescription(cmd *cobra.Command, clust
 
 	if getTopicCount {
 		topicCount, err := c.getTopicCountForKafkaCluster(cluster)
+		// topicCount is 0 when err != nil, and will be omitted by `omitempty`
 		if err != nil {
-			return err
+			log.CliLogger.Infof(errors.OmitTopicCountMsg, err)
 		}
 		out.TopicCount = topicCount
 	}
@@ -178,9 +180,9 @@ func (c *clusterCommand) getTopicCountForKafkaCluster(cluster *cmkv2.CmkV2Cluste
 		return 0, err
 	}
 
-	topics, httpResp, err := kafkaREST.CloudClient.ListKafkaTopics(cluster.GetId())
+	topics, r, err := kafkaREST.CloudClient.ListKafkaTopics(cluster.GetId())
 	if err != nil {
-		return 0, kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+		return 0, kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, r)
 	}
 
 	return len(topics.Data), nil
