@@ -27,6 +27,7 @@ const (
 	configKeyDatabase         = "default_database"
 	configKeyOrgResourceId    = "org-resource-id"
 	configKeyExecutionRuntime = "execution.runtime-mode"
+	configKeyStatementOwner   = "statement-owner"
 )
 
 const MOCK_STATEMENTS_OUTPUT_DEMO = true

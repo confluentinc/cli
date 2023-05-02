@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"net/http"
+	"os/user"
 
 	"github.com/google/uuid"
 
@@ -84,6 +85,13 @@ func (c *GatewayClient) propsDefault(properties map[string]string) map[string]st
 	}
 	if _, ok := properties[configKeyExecutionRuntime]; !ok {
 		properties[configKeyExecutionRuntime] = "streaming"
+	}
+
+	currentUser, _ := user.Current()
+
+	// TODO: consider removing configKeyStatementOwner when shipping to customers
+	if _, ok := properties[configKeyStatementOwner]; !ok && currentUser != nil {
+		properties[configKeyStatementOwner] = currentUser.Username
 	}
 
 	return properties
