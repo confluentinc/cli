@@ -3,26 +3,19 @@ package flink
 import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/examples"
 	client "github.com/confluentinc/flink-sql-client"
 	"github.com/confluentinc/flink-sql-client/pkg/types"
 
 	"github.com/spf13/cobra"
 )
 
-func (c *command) newStartFlinkSqlClientCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func (c *command) newShellCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "shell",
 		Short: "Start Flink interactive SQL client.",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return c.startFlinkSqlClient(prerunner, cmd, args)
 		},
-		Example: examples.BuildExampleString(
-			examples.Example{
-				Text: "Start Flink interactive SQL client.",
-				Code: `confluent flink shell"`,
-			},
-		),
 	}
 	cmd.Flags().String("compute-pool", "", "Flink compute pool ID.")
 	cmd.Flags().String("kafka-cluster", "", "Kafka cluster ID.")
@@ -34,6 +27,10 @@ func (c *command) newStartFlinkSqlClientCommand(prerunner pcmd.PreRunner) *cobra
 }
 
 func (c *command) authenticated(authenticated func(*cobra.Command, []string) error, cmd *cobra.Command) func() error {
+	// TODO - Check if token was updated by another terminal session by reloading context
+	//cfg, err := load.LoadAndMigrate(v1.New())
+	//auth := cfg.Context().State.AuthToken
+
 	return func() error {
 		return authenticated(cmd, nil)
 	}
@@ -52,10 +49,10 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		}
 	}
 
-	kafkaClusterId, err := cmd.Flags().GetString("kafka-cluster")
-	if kafkaClusterId == "" || err != nil {
+	kafkaCluster, err := cmd.Flags().GetString("kafka-cluster")
+	if kafkaCluster == "" || err != nil {
 		if c.Context.KafkaClusterContext.GetActiveKafkaClusterId() != "" {
-			kafkaClusterId = c.Context.KafkaClusterContext.GetActiveKafkaClusterId()
+			kafkaCluster = c.Context.KafkaClusterContext.GetActiveKafkaClusterId()
 		}
 	}
 
