@@ -77,7 +77,7 @@ builds:
         - cmd: az keyvault secret download --file CLIEVCodeSigningCertificate2.pfx --name CLIEVCodeSigningCertificate2 --subscription cc-prod --vault-name CLICodeSigningKeyVault --encoding base64
         - cmd: xattr -dr com.apple.quarantine ./lib/osslsigncode
       post:
-        - cmd: cp /Users/mhe/documents/github/cli/dist/confluent_windows_amd64_v1/confluent.exe /Users/mhe/git/go/src/github.com/confluentinc/cli/dist/confluent-windows-amd64_windows_amd64/confluent.exe
+        - cmd: cp /Users/mhe/documents/github/cli/dist/confluent_windows_amd64_v1/confluent.exe /Users/mhe/git/go/src/github.com/confluentinc/cli/dist/confluent-windows-amd64_windows_amd64_v1/confluent.exe
         - cmd: ./lib/osslsigncode sign -n "Confluent CLI" -i "https://confluent.io" -pkcs12 CLIEVCodeSigningCertificate2.pfx -in dist/confluent-windows-amd64_windows_amd64/confluent.exe -out dist/confluent-windows-amd64_windows_amd64/confluent.exe
         - cmd: rm CLIEVCodeSigningCertificate2.pfx
   - binary: confluent
