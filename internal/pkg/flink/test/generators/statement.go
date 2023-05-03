@@ -1,8 +1,9 @@
-package lexer
+package generators
 
 import (
-	"github.com/samber/lo"
 	"strings"
+
+	"github.com/samber/lo"
 
 	"github.com/confluentinc/flink-sql-client/config"
 	"golang.org/x/exp/maps"
@@ -37,7 +38,7 @@ func RandomSQLSentence() *rapid.Generator[SQLSentence] {
 		tokens := append(words, regularWords...)
 		shuffled := FisherYatesShuffle(tokens).Draw(t, "shuffled")
 		splitTokens := rapid.SliceOfNDistinct(
-			rapid.SampledFrom(maps.Keys(SpecialSplitTokens)),
+			rapid.SampledFrom(maps.Keys(config.SpecialSplitTokens)),
 			len(shuffled)+1,
 			len(shuffled)+1,
 			rapid.ID[int32],

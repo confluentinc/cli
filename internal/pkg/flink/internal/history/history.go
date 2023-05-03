@@ -1,4 +1,4 @@
-package controller
+package history
 
 import (
 	"encoding/json"

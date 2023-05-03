@@ -1,4 +1,4 @@
-package controller
+package store
 
 import (
 	"context"
@@ -6,6 +6,8 @@ import (
 	"os/user"
 
 	v1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"
+	"github.com/confluentinc/flink-sql-client/pkg/types"
+
 	"github.com/google/uuid"
 )
 
@@ -97,7 +99,7 @@ func (c *GatewayClient) propsDefault(properties map[string]string) map[string]st
 	return properties
 }
 
-func NewGatewayClient(envId, orgResourceId, kafkaClusterId, computePoolId, authToken string, appOptions *ApplicationOptions) GatewayClientInterface {
+func NewGatewayClient(envId, orgResourceId, kafkaClusterId, computePoolId, authToken string, appOptions *types.ApplicationOptions) GatewayClientInterface {
 	cfg := v1.NewConfiguration()
 	unsafeTrace := false
 	defaultProperties := make(map[string]string)

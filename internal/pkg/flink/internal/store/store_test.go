@@ -1,4 +1,4 @@
-package controller
+package store
 
 import (
 	"bufio"
@@ -15,7 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	v1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"
-	v1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"
+
 	"github.com/confluentinc/flink-sql-client/pkg/types"
 	"github.com/confluentinc/flink-sql-client/test/mock"
 	gomock "github.com/golang/mock/gomock"
@@ -25,7 +25,6 @@ import (
 
 type StoreTestSuite struct {
 	suite.Suite
-	store StoreInterface
 }
 
 func TestStoreTestSuite(t *testing.T) {
@@ -36,7 +35,7 @@ func TestStoreProcessLocalStatement(t *testing.T) {
 	// Create a new store
 	client := NewGatewayClient("envId", "orgResourceId", "kafkaClusterId", "computePoolId", "authToken", nil)
 	mockAppController := mock.NewMockApplicationControllerInterface(gomock.NewController(t))
-	s := NewStore(client, nil, mockAppController).(*Store)
+	s := NewStore(client, mockAppController.ExitApplication, nil).(*Store)
 
 	result, err := s.ProcessLocalStatement("SET foo=bar;")
 	assert.Nil(t, err)
@@ -74,7 +73,7 @@ func TestWaitForPendingStatement3(t *testing.T) {
 	}
 
 	// Test case 1: Statement is not pending
-	statementObj := v1alpha1.SqlV1alpha1Statement{
+	statementObj := v1.SqlV1alpha1Statement{
 		Status: &v1.SqlV1alpha1StatementStatus{
 			Phase: "COMPLETED",
 		},
@@ -99,7 +98,7 @@ func TestWaitForPendingTimesout(t *testing.T) {
 	}
 
 	// Test case 2: Statement is pending
-	statementObj := v1alpha1.SqlV1alpha1Statement{
+	statementObj := v1.SqlV1alpha1Statement{
 		Status: &v1.SqlV1alpha1StatementStatus{
 			Phase: "PENDING",
 		},
@@ -121,13 +120,13 @@ func TestWaitForPendingEventuallyCompletes(t *testing.T) {
 	}
 
 	// Test case 2: Statement is pending
-	statementObj := v1alpha1.SqlV1alpha1Statement{
+	statementObj := v1.SqlV1alpha1Statement{
 		Status: &v1.SqlV1alpha1StatementStatus{
 			Phase: "PENDING",
 		},
 	}
 
-	statementObjCompleted := v1alpha1.SqlV1alpha1Statement{
+	statementObjCompleted := v1.SqlV1alpha1Statement{
 		Status: &v1.SqlV1alpha1StatementStatus{
 			Phase: "COMPLETED",
 		},
@@ -149,7 +148,7 @@ func TestWaitForPendingStatementErrors(t *testing.T) {
 	s := &Store{
 		client: client,
 	}
-	statementObj := v1alpha1.SqlV1alpha1Statement{
+	statementObj := v1.SqlV1alpha1Statement{
 		Status: &v1.SqlV1alpha1StatementStatus{
 			Phase: "COMPLETED",
 		},
@@ -172,7 +171,7 @@ func TestCancelPendingStatement(t *testing.T) {
 		client: client,
 	}
 
-	statementObj := v1alpha1.SqlV1alpha1Statement{
+	statementObj := v1.SqlV1alpha1Statement{
 		Status: &v1.SqlV1alpha1StatementStatus{
 			Phase: "PENDING",
 		},
@@ -539,7 +538,7 @@ func (s *StoreTestSuite) TestDeleteStatement() {
 	// create objects
 	client := mock.NewMockGatewayClientInterface(ctrl)
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
-	store := NewStore(client, nil, mockAppController).(*Store)
+	store := NewStore(client, mockAppController.ExitApplication, nil)
 
 	statementName := "TEST_STATEMENT"
 	client.EXPECT().DeleteStatement(gomock.Any(), statementName).Return(nil, nil)
@@ -555,7 +554,7 @@ func (s *StoreTestSuite) TestDeleteStatementFailsOnError() {
 	// create objects
 	client := mock.NewMockGatewayClientInterface(ctrl)
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
-	store := NewStore(client, nil, mockAppController).(*Store)
+	store := NewStore(client, mockAppController.ExitApplication, nil).(*Store)
 
 	statementName := "TEST_STATEMENT"
 	client.EXPECT().DeleteStatement(gomock.Any(), statementName).Return(nil, errors.New("test error"))
@@ -571,7 +570,7 @@ func (s *StoreTestSuite) TestDeleteStatementFailsOn404() {
 	// create objects
 	client := mock.NewMockGatewayClientInterface(ctrl)
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
-	store := NewStore(client, nil, mockAppController).(*Store)
+	store := NewStore(client, mockAppController.ExitApplication, nil)
 
 	statementName := "TEST_STATEMENT"
 	client.EXPECT().DeleteStatement(gomock.Any(), statementName).Return(&http.Response{StatusCode: 404}, nil)

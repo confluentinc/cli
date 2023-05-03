@@ -1,4 +1,4 @@
-package controller
+package store
 
 import (
 	"testing"

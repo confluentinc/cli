@@ -1,9 +1,11 @@
-package controller
+package store
 
 import (
+	"testing"
+
+	"github.com/confluentinc/flink-sql-client/pkg/types"
 	"github.com/stretchr/testify/assert"
 	"pgregory.net/rapid"
-	"testing"
 )
 
 func TestGatewayClientHasOrgIdInDefaultHeader(s *testing.T) {
@@ -14,7 +16,7 @@ func TestGatewayClientHasOrgIdInDefaultHeader(s *testing.T) {
 		kafkaClusterId := rapid.StringMatching("cmk-[a-zA-Z0-9]{3,3}").Draw(t, "Kafka Cluster Id")
 		computePoolId := rapid.StringMatching("flcp-[a-zA-Z0-9]{3,3}").Draw(t, "Compute Pool Id")
 		authToken := rapid.StringN(1, -1, -1).Draw(t, "Auth Token")
-		options := &ApplicationOptions{
+		options := &types.ApplicationOptions{
 			FLINK_GATEWAY_URL:        "https://flink.us-west-2.aws.devel.cpdev.cloud",
 			HTTP_CLIENT_UNSAFE_TRACE: false,
 			DEFAULT_PROPERTIES: map[string]string{

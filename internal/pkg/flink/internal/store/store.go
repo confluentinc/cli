@@ -1,4 +1,4 @@
-package controller
+package store
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/confluentinc/flink-sql-client/pkg/results"
+	"github.com/confluentinc/flink-sql-client/internal/results"
 	"github.com/confluentinc/flink-sql-client/pkg/types"
 	"github.com/confluentinc/flink-sql-client/test/generators"
 )
@@ -40,11 +40,11 @@ type StoreInterface interface {
 }
 
 type Store struct {
-	Properties    map[string]string
-	appController ApplicationControllerInterface
-	client        GatewayClientInterface
-	appOptions    *ApplicationOptions
-	mockCount     int
+	Properties      map[string]string
+	exitApplication func()
+	client          GatewayClientInterface
+	demoMode        bool
+	mockCount       int
 }
 
 func (s *Store) ProcessLocalStatement(statement string) (*types.ProcessedStatement, *types.StatementError) {
@@ -56,7 +56,7 @@ func (s *Store) ProcessLocalStatement(statement string) (*types.ProcessedStateme
 	case USE_STATEMENT:
 		return s.processUseStatement(statement)
 	case EXIT_STATEMENT:
-		s.appController.ExitApplication()
+		s.exitApplication()
 		return nil, nil
 	default:
 		return nil, nil
@@ -74,7 +74,7 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 	}
 
 	// TODO: Remove this once we have a real backend
-	if s.appOptions != nil && s.appOptions.MOCK_STATEMENTS_OUTPUT_DEMO {
+	if s.demoMode {
 
 		if !startsWithValidSQL(statement) {
 			return nil, &types.StatementError{Msg: "Error: Invalid syntax '" + statement + "'. Please check your statement."}
@@ -95,10 +95,9 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 
 func (s *Store) WaitPendingStatement(ctx context.Context, statement types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError) {
 	// Process local statements
-	demoMode := s.appOptions != nil && s.appOptions.MOCK_STATEMENTS_OUTPUT_DEMO
 
 	statementStatus := statement.Status
-	if statementStatus != types.COMPLETED && statementStatus != types.RUNNING && !demoMode {
+	if statementStatus != types.COMPLETED && statementStatus != types.RUNNING && !s.demoMode {
 		// Variable that controls how often we poll a pending statement
 		const retries = 30
 		const waitTime = time.Second * 2
@@ -121,14 +120,13 @@ func (s *Store) WaitPendingStatement(ctx context.Context, statement types.Proces
 }
 
 func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError) {
-	demoMode := s.appOptions != nil && s.appOptions.MOCK_STATEMENTS_OUTPUT_DEMO
 	// Process local statements
 	if statement.IsLocalStatement {
 		return &statement, nil
 	}
 
 	statementStatus := statement.Status
-	if statementStatus != types.COMPLETED && statementStatus != types.RUNNING && !demoMode {
+	if statementStatus != types.COMPLETED && statementStatus != types.RUNNING && !s.demoMode {
 		// Variable that controls how often we poll a pending statement
 		const retries = 30
 		const waitTime = time.Second * 2
@@ -151,7 +149,7 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 	err = processHttpErrors(resp, err)
 
 	// TODO: Remove this once we have a real backend
-	if demoMode {
+	if s.demoMode {
 		mockResults := generators.MockCount(s.mockCount)
 		s.mockCount++
 		statementResults := mockResults.StatementResults
@@ -185,8 +183,8 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 }
 
 func (s *Store) DeleteStatement(statementName string) bool {
-	demoMode := s.appOptions != nil && s.appOptions.MOCK_STATEMENTS_OUTPUT_DEMO
-	if !demoMode {
+
+	if !s.demoMode {
 		httpResponse, err := s.client.DeleteStatement(context.Background(), statementName)
 
 		if err != nil {
@@ -229,18 +227,21 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 	return nil, &types.StatementError{Msg: fmt.Sprintf("Error: Statement is still pending after %d retries", retries)}
 }
 
-func NewStore(client GatewayClientInterface, appOptions *ApplicationOptions, appController ApplicationControllerInterface) StoreInterface {
+func NewStore(client GatewayClientInterface, exitApplication func(), appOptions *types.ApplicationOptions) StoreInterface {
 	defaultProperties := make(map[string]string)
-
-	if appOptions != nil && appOptions.DEFAULT_PROPERTIES != nil {
-		defaultProperties = appOptions.DEFAULT_PROPERTIES
+	if appOptions != nil {
+		if appOptions.DEFAULT_PROPERTIES != nil {
+			defaultProperties = appOptions.DEFAULT_PROPERTIES
+		}
+	} else {
+		appOptions = &types.ApplicationOptions{} // Initialize empty/default options
 	}
 
 	store := Store{
-		Properties:    defaultProperties,
-		client:        client,
-		appOptions:    appOptions,
-		appController: appController,
+		Properties:      defaultProperties,
+		client:          client,
+		demoMode:        appOptions.MOCK_STATEMENTS_OUTPUT_DEMO,
+		exitApplication: exitApplication,
 	}
 
 	return &store

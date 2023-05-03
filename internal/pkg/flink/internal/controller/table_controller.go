@@ -8,7 +8,8 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/confluentinc/flink-sql-client/pkg/results"
+	"github.com/confluentinc/flink-sql-client/internal/results"
+	"github.com/confluentinc/flink-sql-client/internal/store"
 
 	"github.com/confluentinc/flink-sql-client/pkg/types"
 
@@ -28,7 +29,7 @@ type TableController struct {
 	table                        *tview.Table
 	appController                ApplicationControllerInterface
 	runInteractiveInput          func()
-	store                        StoreInterface
+	store                        store.StoreInterface
 	statement                    types.ProcessedStatement
 	materializedStatementResults results.MaterializedStatementResults
 	hasUserDisabledTableMode     bool
@@ -42,7 +43,7 @@ const maxResultsCapacity int = 1000
 const defaultRefreshInterval uint = 1000 // in milliseconds
 const minRefreshInterval uint = 100      // in milliseconds
 
-func NewTableController(tableRef *tview.Table, store StoreInterface, appController ApplicationControllerInterface) TableControllerInterface {
+func NewTableController(tableRef *tview.Table, store store.StoreInterface, appController ApplicationControllerInterface) TableControllerInterface {
 	controller := &TableController{
 		table:         tableRef,
 		appController: appController,

@@ -1,10 +1,11 @@
-package lexer
+package highlighting
 
 import (
 	"strings"
 	"testing"
 
 	"github.com/confluentinc/flink-sql-client/config"
+	"github.com/confluentinc/flink-sql-client/test/generators"
 	prompt "github.com/confluentinc/go-prompt"
 	"github.com/stretchr/testify/require"
 	"pgregory.net/rapid"
@@ -102,7 +103,7 @@ func TestExamplesWordLexer(t *testing.T) {
 func TestSplitWithSeparators(t *testing.T) {
 	rapid.Check(t, func(t *rapid.T) {
 		// given
-		sentence := RandomSQLSentence().Draw(t, "line")
+		sentence := generators.RandomSQLSentence().Draw(t, "line")
 		// when
 		tokens := splitWithSeparators(sentence.Text)
 		// then
@@ -113,7 +114,7 @@ func TestSplitWithSeparators(t *testing.T) {
 func TestSplitWithSeparatorsDoesNotIncludeEmptyString(t *testing.T) {
 	rapid.Check(t, func(t *rapid.T) {
 		// given
-		sentence := RandomSQLSentence().Draw(t, "line")
+		sentence := generators.RandomSQLSentence().Draw(t, "line")
 		// when
 		tokens := splitWithSeparators(sentence.Text)
 		// then
@@ -124,7 +125,7 @@ func TestSplitWithSeparatorsDoesNotIncludeEmptyString(t *testing.T) {
 func TestWordLexerForRandomStatements(t *testing.T) {
 	// given
 	rapid.Check(t, func(t *rapid.T) {
-		randomStatement := RandomSQLSentence().Draw(t, "randomStatement")
+		randomStatement := generators.RandomSQLSentence().Draw(t, "randomStatement")
 
 		// when
 		elements := Lexer(randomStatement.Text)

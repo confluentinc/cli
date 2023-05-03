@@ -4,22 +4,18 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/confluentinc/flink-sql-client/internal/history"
 	"github.com/confluentinc/flink-sql-client/pkg/types"
 	"github.com/confluentinc/flink-sql-client/test/mock"
 
-	"github.com/confluentinc/go-prompt"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 )
 
 func TestInputController_renderError(t *testing.T) {
 	type fields struct {
-		History         History
-		appController   *ApplicationController
-		smartCompletion bool
-		table           *TableController
-		p               *prompt.Prompt
-		store           StoreInterface
+		History       history.History
+		appController *ApplicationController
 	}
 	type args struct {
 		err *types.StatementError

@@ -11,10 +11,12 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/confluentinc/flink-sql-client/autocomplete"
 	"github.com/confluentinc/flink-sql-client/components"
-	"github.com/confluentinc/flink-sql-client/lexer"
-	"github.com/confluentinc/flink-sql-client/pkg/results"
+	"github.com/confluentinc/flink-sql-client/internal/autocomplete"
+	lexer "github.com/confluentinc/flink-sql-client/internal/highlighting"
+	"github.com/confluentinc/flink-sql-client/internal/history"
+	"github.com/confluentinc/flink-sql-client/internal/results"
+	"github.com/confluentinc/flink-sql-client/internal/store"
 	"github.com/confluentinc/flink-sql-client/pkg/types"
 	"github.com/confluentinc/flink-sql-client/test/generators"
 	"github.com/confluentinc/go-prompt"
@@ -29,16 +31,16 @@ type InputControllerInterface interface {
 }
 
 type InputController struct {
-	History               *History
+	History               *history.History
 	InitialBuffer         string
 	appController         ApplicationControllerInterface
 	smartCompletion       bool
 	reverseISearchEnabled bool
 	table                 TableControllerInterface
 	prompt                *prompt.Prompt
-	store                 StoreInterface
+	store                 store.StoreInterface
 	authenticated         func() error
-	appOptions            *ApplicationOptions
+	appOptions            *types.ApplicationOptions
 	shouldExit            bool
 }
 
@@ -423,7 +425,7 @@ func (c *InputController) GetMaxCol() (int, error) {
 	return int(maxCol), nil
 }
 
-func NewInputController(t TableControllerInterface, a ApplicationControllerInterface, store StoreInterface, authenticated func() error, history *History, appOptions *ApplicationOptions) (c InputControllerInterface) {
+func NewInputController(t TableControllerInterface, a ApplicationControllerInterface, store store.StoreInterface, authenticated func() error, history *history.History, appOptions *types.ApplicationOptions) (c InputControllerInterface) {
 	inputController := &InputController{
 		History:         history,
 		InitialBuffer:   "",

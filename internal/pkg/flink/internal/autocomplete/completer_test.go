@@ -1,10 +1,11 @@
 package autocomplete
 
 import (
-	"github.com/confluentinc/flink-sql-client/lexer"
-	"github.com/confluentinc/go-prompt"
 	"strings"
 	"testing"
+
+	"github.com/confluentinc/flink-sql-client/test/generators"
+	"github.com/confluentinc/go-prompt"
 
 	"github.com/stretchr/testify/require"
 	"pgregory.net/rapid"
@@ -57,7 +58,7 @@ More about this: https://confluentinc.atlassian.net/jira/software/projects/KFS/b
 func TestNoLineBreaksInAutocompletion(t *testing.T) {
 	// given
 	rapid.Check(t, func(t *rapid.T) {
-		randomStatement := lexer.RandomSQLSentence().Example()
+		randomStatement := generators.RandomSQLSentence().Example()
 		buffer := prompt.NewBuffer()
 
 		// when
