@@ -64,7 +64,7 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		return err
 	}
 
-	client.StartApp(enviromentId, resourceId, kafkaClusterId, computePool, c.AuthToken(),
+	client.StartApp(enviromentId, resourceId, kafkaCluster, computePool, c.AuthToken,
 		c.authenticated(prerunner.Authenticated(c.AuthenticatedCLICommand), cmd),
 		&types.ApplicationOptions{
 			FLINK_GATEWAY_URL:        "https://flink.us-west-2.aws.devel.cpdev.cloud",

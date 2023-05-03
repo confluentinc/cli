@@ -132,8 +132,8 @@ github.com/confluentinc/ccloud-sdk-go-v2/stream-designer v0.3.0 h1:zI59UpVm88hQn
 github.com/confluentinc/ccloud-sdk-go-v2/stream-designer v0.3.0/go.mod h1:29HYKS91pkCre55OPNGRIWpkKSBLUDlzXbrxZ291Xhk=
 github.com/confluentinc/confluent-kafka-go v1.9.3-RC3 h1:urDeBIsNr0hgRf3nZn66SHtdBO/4DmEDSsMWquaolmo=
 github.com/confluentinc/confluent-kafka-go v1.9.3-RC3/go.mod h1:NlSjbxG73kJM0iKUC6/CDbMnY3H4WF6e+YFBlfLffi8=
-github.com/confluentinc/flink-sql-client v0.130.0 h1:+hP/xbC/mW4IXkewaLvc8suVzoVJJfqC7rcXX3uULns=
-github.com/confluentinc/flink-sql-client v0.130.0/go.mod h1:PurgvWuQP/sIvsmrncTHrxT7HEr9JHoWNHDmkYai3rY=
+github.com/confluentinc/flink-sql-client v0.131.0 h1:6brjv7ei1UmdMTvpRNNLLsw/+Ja6R36YMhvcNEPfM7g=
+github.com/confluentinc/flink-sql-client v0.131.0/go.mod h1:PurgvWuQP/sIvsmrncTHrxT7HEr9JHoWNHDmkYai3rY=
 github.com/confluentinc/go-editor v0.11.0 h1:fcEALYHj7xV/fRSp54/IHi2DS4GlZMJWVgrYvi/llvU=
 github.com/confluentinc/go-editor v0.11.0/go.mod h1:nEjwqdqx8S7ZGjXsDvRgawsA04Fu2P/KAtA8fa5afMI=
 github.com/confluentinc/go-netrc v0.0.0-20220321173724-4d50f36ff450 h1:YJq9ZRhj049uo3hX7V8imJid+FJEBFyRmVcdruhU3y4=
