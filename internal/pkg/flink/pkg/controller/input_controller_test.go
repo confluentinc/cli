@@ -1,9 +1,11 @@
 package controller
 
 import (
-	"github.com/confluentinc/flink-sql-client/pkg/types"
 	"net/http"
 	"testing"
+
+	"github.com/confluentinc/flink-sql-client/pkg/types"
+	"github.com/confluentinc/flink-sql-client/test/mock"
 
 	"github.com/confluentinc/go-prompt"
 	"github.com/golang/mock/gomock"
@@ -42,7 +44,7 @@ func TestInputController_renderError(t *testing.T) {
 
 func TestRenderError(t *testing.T) {
 	ctrl := gomock.NewController(t)
-	mockAppController := NewMockApplicationControllerInterface(ctrl)
+	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
 
 	inputController := &InputController{appController: mockAppController}
 	err := &types.StatementError{HttpResponseCode: http.StatusUnauthorized}

@@ -5,9 +5,8 @@ import (
 	"net/http"
 	"os/user"
 
-	"github.com/google/uuid"
-
 	v1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"
+	"github.com/google/uuid"
 )
 
 type GatewayClientInterface interface {
@@ -64,6 +63,7 @@ func (c *GatewayClient) DeleteStatement(ctx context.Context, statementName strin
 
 func (c *GatewayClient) GetStatementResults(ctx context.Context, statementId, pageToken string) (v1.SqlV1alpha1StatementResult, *http.Response, error) {
 	fetchResultsRequest := c.client.StatementResultSqlV1alpha1Api.GetSqlV1alpha1StatementResult(ctx, c.envId, statementId)
+
 	if pageToken != "" {
 		fetchResultsRequest = fetchResultsRequest.PageToken(pageToken)
 	}

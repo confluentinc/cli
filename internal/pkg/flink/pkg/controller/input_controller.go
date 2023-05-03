@@ -225,7 +225,7 @@ func (c *InputController) toggleOutputMode() {
 		return
 	}
 
-	components.PrintOutputModeState(c.appController.GetOutputMode() == TViewOutput, maxCol)
+	components.PrintOutputModeState(c.appController.GetOutputMode() == types.TViewOutput, maxCol)
 }
 
 func printResultToSTDOUT(statementResults *types.StatementResults) {

@@ -7,15 +7,16 @@ import (
 	"github.com/rivo/tview"
 
 	"github.com/confluentinc/flink-sql-client/components"
+	"github.com/confluentinc/flink-sql-client/test/mock"
 	"github.com/gdamore/tcell/v2"
 	gomock "github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestAppInputCapture(t *testing.T) {
-	mockAppController := NewMockApplicationControllerInterface(gomock.NewController(t))
-	mockInputController := NewMockInputControllerInterface(gomock.NewController(t))
-	mockStore := NewMockStoreInterface(gomock.NewController(t))
+	mockAppController := mock.NewMockApplicationControllerInterface(gomock.NewController(t))
+	mockInputController := mock.NewMockInputControllerInterface(gomock.NewController(t))
+	mockStore := mock.NewMockStoreInterface(gomock.NewController(t))
 
 	t.Run("Test Q", func(t *testing.T) {
 		// Given
@@ -25,7 +26,7 @@ func TestAppInputCapture(t *testing.T) {
 			appController: mockAppController,
 			store:         mockStore,
 		}
-		tableController.SetInputController(mockInputController)
+		tableController.SetRunInteractiveInputCallback(mockInputController.RunInteractiveInput)
 		input := tcell.NewEventKey(tcell.KeyRune, 'Q', tcell.ModNone)
 		mockAppController.EXPECT().SuspendOutputMode(gomock.Any()).Times(1)
 		tviewApp := tview.NewApplication()
@@ -47,7 +48,7 @@ func TestAppInputCapture(t *testing.T) {
 			appController: mockAppController,
 			store:         mockStore,
 		}
-		tableController.SetInputController(mockInputController)
+		tableController.SetRunInteractiveInputCallback(mockInputController.RunInteractiveInput)
 		input := tcell.NewEventKey(tcell.KeyCtrlQ, rune(0), tcell.ModNone)
 		mockAppController.EXPECT().SuspendOutputMode(gomock.Any()).Times(1)
 		tviewApp := tview.NewApplication()
@@ -69,7 +70,7 @@ func TestAppInputCapture(t *testing.T) {
 			appController: mockAppController,
 			store:         mockStore,
 		}
-		tableController.SetInputController(mockInputController)
+		tableController.SetRunInteractiveInputCallback(mockInputController.RunInteractiveInput)
 		input := tcell.NewEventKey(tcell.KeyEscape, rune(0), tcell.ModNone)
 		mockAppController.EXPECT().SuspendOutputMode(gomock.Any()).Times(1)
 		tviewApp := tview.NewApplication()
@@ -107,7 +108,7 @@ func TestAppInputCapture(t *testing.T) {
 			appController: mockAppController,
 			store:         mockStore,
 		}
-		tableController.SetInputController(mockInputController)
+		tableController.SetRunInteractiveInputCallback(mockInputController.RunInteractiveInput)
 		input := tcell.NewEventKey(tcell.KeyCtrlC, rune(0), tcell.ModNone)
 		result := tableController.AppInputCapture(input)
 		assert.Nil(t, result)
@@ -122,7 +123,7 @@ func TestAppInputCapture(t *testing.T) {
 			appController: mockAppController,
 			store:         mockStore,
 		}
-		tableController.SetInputController(mockInputController)
+		tableController.SetRunInteractiveInputCallback(mockInputController.RunInteractiveInput)
 		input := tcell.NewEventKey(tcell.KeyRune, 'M', tcell.ModNone)
 		tviewApp := tview.NewApplication()
 		mockAppController.EXPECT().TView().Return(tviewApp).AnyTimes()
@@ -148,7 +149,7 @@ func TestAppInputCapture(t *testing.T) {
 			appController: mockAppController,
 			store:         mockStore,
 		}
-		tableController.SetInputController(mockInputController)
+		tableController.SetRunInteractiveInputCallback(mockInputController.RunInteractiveInput)
 		input := tcell.NewEventKey(tcell.KeyRune, 'R', tcell.ModNone)
 		tviewApp := tview.NewApplication()
 		mockAppController.EXPECT().TView().Return(tviewApp).AnyTimes()
@@ -174,7 +175,7 @@ func TestAppInputCapture(t *testing.T) {
 			appController: mockAppController,
 			store:         mockStore,
 		}
-		tableController.SetInputController(mockInputController)
+		tableController.SetRunInteractiveInputCallback(mockInputController.RunInteractiveInput)
 		input := tcell.NewEventKey(tcell.KeyF1, rune(0), tcell.ModNone)
 		result := tableController.AppInputCapture(input)
 		assert.NotNil(t, result)

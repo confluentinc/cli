@@ -20,14 +20,14 @@ import (
 type TableControllerInterface interface {
 	AppInputCapture(event *tcell.EventKey) *tcell.EventKey
 	Init(statement types.ProcessedStatement)
-	SetInputController(inputController InputControllerInterface)
+	SetRunInteractiveInputCallback(func())
 	GetActionForShortcut(shortcut string) func()
 }
 
 type TableController struct {
 	table                        *tview.Table
 	appController                ApplicationControllerInterface
-	InputController              InputControllerInterface
+	runInteractiveInput          func()
 	store                        StoreInterface
 	statement                    types.ProcessedStatement
 	materializedStatementResults results.MaterializedStatementResults
@@ -51,14 +51,14 @@ func NewTableController(tableRef *tview.Table, store StoreInterface, appControll
 	return controller
 }
 
-func (t *TableController) SetInputController(inputController InputControllerInterface) {
-	t.InputController = inputController
+func (t *TableController) SetRunInteractiveInputCallback(runInteractiveInput func()) {
+	t.runInteractiveInput = runInteractiveInput
 }
 
 func (t *TableController) exitTViewMode() {
 	t.stopAutoRefresh()
 	t.store.DeleteStatement(t.statement.StatementName)
-	t.appController.SuspendOutputMode(t.InputController.RunInteractiveInput)
+	t.appController.SuspendOutputMode(t.runInteractiveInput)
 }
 
 func (t *TableController) GetActionForShortcut(shortcut string) func() {

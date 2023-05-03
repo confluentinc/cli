@@ -7,15 +7,17 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/stretchr/testify/require"
 	"io"
 	"net/http"
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
 	v1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"
 	v1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"
 	"github.com/confluentinc/flink-sql-client/pkg/types"
+	"github.com/confluentinc/flink-sql-client/test/mock"
 	gomock "github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -33,7 +35,7 @@ func TestStoreTestSuite(t *testing.T) {
 func TestStoreProcessLocalStatement(t *testing.T) {
 	// Create a new store
 	client := NewGatewayClient("envId", "orgResourceId", "kafkaClusterId", "computePoolId", "authToken", nil)
-	mockAppController := NewMockApplicationControllerInterface(gomock.NewController(t))
+	mockAppController := mock.NewMockApplicationControllerInterface(gomock.NewController(t))
 	s := NewStore(client, nil, mockAppController).(*Store)
 
 	result, err := s.ProcessLocalStatement("SET foo=bar;")
@@ -66,7 +68,7 @@ func TestWaitForPendingStatement3(t *testing.T) {
 	retries := 10
 	waitTime := time.Millisecond * 1
 
-	client := NewMockGatewayClientInterface(gomock.NewController(t))
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
 	s := &Store{
 		client: client,
 	}
@@ -91,7 +93,7 @@ func TestWaitForPendingTimesout(t *testing.T) {
 	retries := 10
 	waitTime := time.Millisecond * 1
 	httpRes := http.Response{StatusCode: 200}
-	client := NewMockGatewayClientInterface(gomock.NewController(t))
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
 	s := &Store{
 		client: client,
 	}
@@ -113,7 +115,7 @@ func TestWaitForPendingEventuallyCompletes(t *testing.T) {
 	retries := 10
 	waitTime := time.Millisecond * 1
 	httpRes := http.Response{StatusCode: 200}
-	client := NewMockGatewayClientInterface(gomock.NewController(t))
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
 	s := &Store{
 		client: client,
 	}
@@ -143,7 +145,7 @@ func TestWaitForPendingStatementErrors(t *testing.T) {
 	statementName := "statementName"
 	retries := 10
 	waitTime := time.Millisecond * 1
-	client := NewMockGatewayClientInterface(gomock.NewController(t))
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
 	s := &Store{
 		client: client,
 	}
@@ -165,7 +167,7 @@ func TestCancelPendingStatement(t *testing.T) {
 	waitTime := time.Second * 1
 	ctx, cancelFunc := context.WithCancel(context.Background())
 
-	client := NewMockGatewayClientInterface(gomock.NewController(t))
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
 	s := &Store{
 		client: client,
 	}
@@ -535,8 +537,8 @@ func (s *StoreTestSuite) TestDeleteStatement() {
 	defer ctrl.Finish()
 
 	// create objects
-	client := NewMockGatewayClientInterface(ctrl)
-	mockAppController := NewMockApplicationControllerInterface(ctrl)
+	client := mock.NewMockGatewayClientInterface(ctrl)
+	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
 	store := NewStore(client, nil, mockAppController).(*Store)
 
 	statementName := "TEST_STATEMENT"
@@ -551,8 +553,8 @@ func (s *StoreTestSuite) TestDeleteStatementFailsOnError() {
 	defer ctrl.Finish()
 
 	// create objects
-	client := NewMockGatewayClientInterface(ctrl)
-	mockAppController := NewMockApplicationControllerInterface(ctrl)
+	client := mock.NewMockGatewayClientInterface(ctrl)
+	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
 	store := NewStore(client, nil, mockAppController).(*Store)
 
 	statementName := "TEST_STATEMENT"
@@ -567,8 +569,8 @@ func (s *StoreTestSuite) TestDeleteStatementFailsOn404() {
 	defer ctrl.Finish()
 
 	// create objects
-	client := NewMockGatewayClientInterface(ctrl)
-	mockAppController := NewMockApplicationControllerInterface(ctrl)
+	client := mock.NewMockGatewayClientInterface(ctrl)
+	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
 	store := NewStore(client, nil, mockAppController).(*Store)
 
 	statementName := "TEST_STATEMENT"

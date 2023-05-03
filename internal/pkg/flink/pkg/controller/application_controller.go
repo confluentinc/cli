@@ -7,6 +7,7 @@ import (
 	"github.com/gdamore/tcell/v2"
 
 	"github.com/confluentinc/flink-sql-client/components"
+	"github.com/confluentinc/flink-sql-client/pkg/types"
 	"github.com/rivo/tview"
 )
 
@@ -19,24 +20,17 @@ var (
 	InteractiveTable TableMode = "interactive"
 )
 
-type OutputMode string
-
-var (
-	GoPromptOutput OutputMode = "goprompt"
-	TViewOutput    OutputMode = "tview"
-)
-
 type ApplicationControllerInterface interface {
 	SuspendOutputMode(callback func())
 	ToggleOutputMode()
-	GetOutputMode() OutputMode
+	GetOutputMode() types.OutputMode
 	ExitApplication()
 	TView() *tview.Application
 }
 
 type ApplicationController struct {
 	app        *tview.Application
-	outputMode OutputMode
+	outputMode types.OutputMode
 	history    *History
 }
 
@@ -58,10 +52,10 @@ func (a *ApplicationController) SuspendOutputMode(cb func()) {
 }
 
 func (a *ApplicationController) ToggleOutputMode() {
-	if a.outputMode == TViewOutput {
-		a.outputMode = GoPromptOutput
+	if a.outputMode == types.TViewOutput {
+		a.outputMode = types.GoPromptOutput
 	} else {
-		a.outputMode = TViewOutput
+		a.outputMode = types.TViewOutput
 	}
 }
 
@@ -72,7 +66,7 @@ func (a *ApplicationController) ExitApplication() {
 	os.Exit(0)
 }
 
-func (a *ApplicationController) GetOutputMode() OutputMode {
+func (a *ApplicationController) GetOutputMode() types.OutputMode {
 	return a.outputMode
 }
 
@@ -83,7 +77,7 @@ func (a *ApplicationController) TView() *tview.Application {
 func NewApplicationController(app *tview.Application, history *History) ApplicationControllerInterface {
 	return &ApplicationController{
 		app:        app,
-		outputMode: TViewOutput,
+		outputMode: types.TViewOutput,
 		history:    history,
 	}
 }
@@ -112,8 +106,8 @@ func StartApp(envId, orgResourceId, kafkaClusterId, computePoolId, authToken str
 	inputController := NewInputController(tableController, appController, store, authenticated, history, appOptions)
 	shortcutsController := NewShortcutsController(shortcuts, appController, tableController)
 
-	// Pass input controller to table controller - input and output view interact with each other and that it easier
-	tableController.SetInputController(inputController)
+	// Pass RunInteractiveInputFunc to table controller so the user can come back from the output view
+	tableController.SetRunInteractiveInputCallback(inputController.RunInteractiveInput)
 
 	// Event handlers
 	app.SetInputCapture(tableController.AppInputCapture)
