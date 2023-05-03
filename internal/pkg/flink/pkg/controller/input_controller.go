@@ -243,6 +243,7 @@ func printResultToSTDOUT(statementResults *types.StatementResults) {
 		formattedResults = append(formattedResults, formattedRow)
 	}
 	rawTable := tablewriter.NewWriter(os.Stdout)
+	rawTable.SetAutoFormatHeaders(false)
 	rawTable.SetHeader(statementResults.Headers)
 	rawTable.AppendBulk(formattedResults)
 	rawTable.Render() // Send output
