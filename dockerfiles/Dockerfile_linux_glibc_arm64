@@ -2,7 +2,7 @@ FROM --platform=linux/arm64/v8 050879227952.dkr.ecr.us-west-1.amazonaws.com/conf
 
 COPY . /go/src/github.com/confluentinc/cli/
 
-RUN export GO_VERSION=1.20 && \
+RUN export GO_VERSION=1.18 && \
     wget "https://go.dev/dl/go${GO_VERSION}.linux-arm64.tar.gz" && \
     sudo tar -C /usr/local -xzf "go${GO_VERSION}.linux-arm64.tar.gz"
 
