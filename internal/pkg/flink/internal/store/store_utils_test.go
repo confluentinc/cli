@@ -77,7 +77,7 @@ func TestRemoveWhiteSpaces(t *testing.T) {
 
 func TestProcessSetStatement(t *testing.T) {
 	// Create a new store
-	client := NewGatewayClient("envId", "orgResourceId", "kafkaClusterId", "computePoolId", "authToken", nil)
+	client := NewGatewayClient("envId", "orgResourceId", "kafkaClusterId", "computePoolId", func() string { return "authToken" }, nil)
 	s := NewStore(client, nil, nil).(*Store)
 
 	t.Run("should return an error message if statement is invalid", func(t *testing.T) {
@@ -126,7 +126,7 @@ func TestProcessSetStatement(t *testing.T) {
 
 func TestProcessResetStatement(t *testing.T) {
 	// Create a new store
-	client := NewGatewayClient("envId", "orgResourceId", "kafkaClusterId", "computePoolId", "authToken", nil)
+	client := NewGatewayClient("envId", "orgResourceId", "kafkaClusterId", "computePoolId", func() string { return "authToken" }, nil)
 	s := NewStore(client, nil, nil).(*Store)
 
 	t.Run("should return an error message if statement is invalid", func(t *testing.T) {
@@ -169,7 +169,7 @@ func TestProcessResetStatement(t *testing.T) {
 
 func TestProcessUseStatement(t *testing.T) {
 	// Create a new store
-	client := NewGatewayClient("envId", "orgResourceId", "kafkaClusterId", "computePoolId", "authToken", nil)
+	client := NewGatewayClient("envId", "orgResourceId", "kafkaClusterId", "computePoolId", func() string { return "authToken" }, nil)
 	s := NewStore(client, nil, nil).(*Store)
 
 	t.Run("should return an error message if statement is invalid", func(t *testing.T) {

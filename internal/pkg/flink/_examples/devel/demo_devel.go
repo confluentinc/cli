@@ -19,7 +19,7 @@ func main() {
 		"d07e2cb7-52df-451b-bf4b-b8bd81e0d20c",
 		"playback",
 		"lfcp-10vygz",
-		"authToken",
+		func() string { return "authToken" },
 		func() error { return nil },
 		&types.ApplicationOptions{
 			FLINK_GATEWAY_URL:        "https://flink.us-west-2.aws.devel.cpdev.cloud",

@@ -14,7 +14,7 @@ import (
 
 var once sync.Once
 
-func StartApp(envId, orgResourceId, kafkaClusterId, computePoolId, authToken string, authenticated func() error, appOptions *types.ApplicationOptions) {
+func StartApp(envId, orgResourceId, kafkaClusterId, computePoolId string, authToken func() string, authenticated func() error, appOptions *types.ApplicationOptions) {
 	// Client used to communicate with the gateway
 	client := store.NewGatewayClient(envId, orgResourceId, kafkaClusterId, computePoolId, authToken, appOptions)
 

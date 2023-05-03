@@ -19,7 +19,7 @@ type GatewayClientInterface interface {
 }
 
 type GatewayClient struct {
-	authToken         string
+	authToken         func() string
 	envId             string
 	orgResourceId     string
 	kafkaClusterId    string
@@ -41,7 +41,7 @@ func (c *GatewayClient) CreateStatement(ctx context.Context, statement string, p
 		},
 	}
 
-	ctx = context.WithValue(ctx, v1.ContextAccessToken, c.authToken)
+	ctx = context.WithValue(ctx, v1.ContextAccessToken, c.authToken())
 	req := c.client.StatementsSqlV1alpha1Api.CreateSqlV1alpha1Statement(ctx, c.envId).SqlV1alpha1Statement(statementObj)
 
 	createdStatement, resp, err := req.Execute()
@@ -50,14 +50,14 @@ func (c *GatewayClient) CreateStatement(ctx context.Context, statement string, p
 }
 
 func (c *GatewayClient) GetStatement(ctx context.Context, statementName string) (v1.SqlV1alpha1Statement, *http.Response, error) {
-	ctx = context.WithValue(ctx, v1.ContextAccessToken, c.authToken)
+	ctx = context.WithValue(ctx, v1.ContextAccessToken, c.authToken())
 	createdStatement, resp, err := c.client.StatementsSqlV1alpha1Api.GetSqlV1alpha1Statement(ctx, c.envId, statementName).Execute()
 
 	return createdStatement, resp, err
 }
 
 func (c *GatewayClient) DeleteStatement(ctx context.Context, statementName string) (*http.Response, error) {
-	ctx = context.WithValue(ctx, v1.ContextAccessToken, c.authToken)
+	ctx = context.WithValue(ctx, v1.ContextAccessToken, c.authToken())
 	resp, err := c.client.StatementsSqlV1alpha1Api.DeleteSqlV1alpha1Statement(ctx, c.envId, statementName).Execute()
 
 	return resp, err
@@ -99,7 +99,7 @@ func (c *GatewayClient) propsDefault(properties map[string]string) map[string]st
 	return properties
 }
 
-func NewGatewayClient(envId, orgResourceId, kafkaClusterId, computePoolId, authToken string, appOptions *types.ApplicationOptions) GatewayClientInterface {
+func NewGatewayClient(envId, orgResourceId, kafkaClusterId, computePoolId string, authToken func() string, appOptions *types.ApplicationOptions) GatewayClientInterface {
 	cfg := v1.NewConfiguration()
 	unsafeTrace := false
 	defaultProperties := make(map[string]string)

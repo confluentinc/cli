@@ -33,7 +33,7 @@ func TestStoreTestSuite(t *testing.T) {
 
 func TestStoreProcessLocalStatement(t *testing.T) {
 	// Create a new store
-	client := NewGatewayClient("envId", "orgResourceId", "kafkaClusterId", "computePoolId", "authToken", nil)
+	client := NewGatewayClient("envId", "orgResourceId", "kafkaClusterId", "computePoolId", func() string { return "authToken" }, nil)
 	mockAppController := mock.NewMockApplicationControllerInterface(gomock.NewController(t))
 	s := NewStore(client, mockAppController.ExitApplication, nil).(*Store)
 

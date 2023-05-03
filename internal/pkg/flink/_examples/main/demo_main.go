@@ -11,5 +11,5 @@ func authenticated() error {
 }
 
 func main() {
-	app.StartApp("envId", "orgResourceId", "kafkaClusterId", "computePoolId", "authToken", authenticated, &types.ApplicationOptions{MOCK_STATEMENTS_OUTPUT_DEMO: true})
+	app.StartApp("envId", "orgResourceId", "kafkaClusterId", "computePoolId", func() string { return "authToken" }, authenticated, &types.ApplicationOptions{MOCK_STATEMENTS_OUTPUT_DEMO: true})
 }
