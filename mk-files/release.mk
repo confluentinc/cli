@@ -62,7 +62,6 @@ gorelease:
 	$(aws-authenticate) && \
 	echo "BUILDING FOR DARWIN, WINDOWS, AND ALPINE LINUX" && \
 	GO111MODULE=off go get -u github.com/inconshreveable/mousetrap && \
-	go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
 	VERSION=$(VERSION) GITHUB_TOKEN=$(token) S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli GOEXPERIMENT=boringcrypto DRY_RUN=$(DRY_RUN) goreleaser release --clean -f .goreleaser.yml --release-notes release-notes/latest-release.rst --timeout 60m; \
 	rm -f CLIEVCodeSigningCertificate2.pfx && \
 	echo "BUILDING FOR GLIBC LINUX" && \
