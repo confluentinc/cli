@@ -43,7 +43,7 @@ func getInstallation(cmd *cobra.Command, noPrompt bool) (*installation, error) {
 	}
 
 	if len(installations) == 0 {
-		return nil, errors.NewErrorWithSuggestions("unable to detect Confluent Platform installation", "Pass the component directory and worker configuration files to the `--component-dir` and `--worker-configs` flags.")
+		return nil, errors.NewErrorWithSuggestions("unable to detect Confluent Platform installation", "Pass the plugin directory and worker configuration files to the `--plugin-dir` and `--worker-configs` flags.")
 	} else if noPrompt {
 		return &installations[0], nil
 	} else if len(installations) == 1 {
@@ -158,31 +158,31 @@ func hasArchiveInstallation(dir string) bool {
 	return utils.DoesPathExist(filepath.Join(dir, filepath.FromSlash("share/java/confluent-common")))
 }
 
-func chooseComponentDir(ins *installation, noPrompt bool) (string, error) {
-	var defaultComponentDir string
+func choosePluginDir(ins *installation, noPrompt bool) (string, error) {
+	var defaultPluginDir string
 	switch ins.Type {
 	case archiveInstallation:
-		defaultComponentDir = filepath.Join(ins.Path, "share/confluent-hub-components")
+		defaultPluginDir = filepath.Join(ins.Path, "share/confluent-hub-components")
 	case packageInstallation:
-		defaultComponentDir = "/usr/share/confluent-hub-components"
+		defaultPluginDir = "/usr/share/confluent-hub-components"
 	default:
 		return "", errors.Errorf("unexpected installation type: %s", ins.Type)
 	}
 
 	if noPrompt {
-		return defaultComponentDir, nil
+		return defaultPluginDir, nil
 	}
 
 	f := form.New(form.Field{
 		ID:        "confirm",
-		Prompt:    fmt.Sprintf("Do you want to install this plugin into %s?", defaultComponentDir),
+		Prompt:    fmt.Sprintf("Do you want to install this plugin into %s?", defaultPluginDir),
 		IsYesOrNo: true,
 	})
 	if err := f.Prompt(form.NewPrompt(os.Stdin)); err != nil {
 		return "", err
 	}
 	if f.Responses["confirm"].(bool) {
-		return defaultComponentDir, nil
+		return defaultPluginDir, nil
 	}
 
 	f = form.New(form.Field{
@@ -196,10 +196,10 @@ func chooseComponentDir(ins *installation, noPrompt bool) (string, error) {
 	inputDir := f.Responses["directory"].(string)
 	inputDir, err := filepath.Abs(inputDir)
 	if err != nil {
-		return "", errors.Errorf(`failed to determine absolute path to component directory "%s": %v`, inputDir, err)
+		return "", err
 	}
 	if !utils.DoesPathExist(inputDir) {
-		return "", errors.Errorf(`component directory "%s" does not exist`, inputDir)
+		return "", errors.Errorf(`plugin directory "%s" does not exist`, inputDir)
 	}
 
 	return inputDir, nil
@@ -359,7 +359,7 @@ func chooseWorkerConfigs(cmd *cobra.Command, ins *installation, noPrompt bool) (
 	return result, nil
 }
 
-func updateWorkerConfig(componentDir string, workerConfigPath string, dryRun bool) error {
+func updateWorkerConfig(pluginDir string, workerConfigPath string, dryRun bool) error {
 	pluginPathProperty := "plugin.path"
 
 	workerConfig, err := properties.LoadFile(workerConfigPath, properties.UTF8)
@@ -369,13 +369,13 @@ func updateWorkerConfig(componentDir string, workerConfigPath string, dryRun boo
 	pluginPath := workerConfig.GetString(pluginPathProperty, "")
 	pluginPathElements := regexp.MustCompile(" *, *").Split(pluginPath, -1)
 	for _, pluginPathElement := range pluginPathElements {
-		if pluginPathElement == componentDir {
-			// Component directory is already included in the worker's plugin.path
+		if pluginPathElement == pluginDir {
+			// The plugin directory is already included in the worker's plugin.path
 			// No further action required on our part
 			return nil
 		}
 	}
-	newPluginPath := strings.Join(append(pluginPathElements, componentDir), ", ")
+	newPluginPath := strings.Join(append(pluginPathElements, pluginDir), ", ")
 	if _, _, err = workerConfig.Set(pluginPathProperty, newPluginPath); err != nil {
 		return errors.Errorf("failed to update %s property to %s for worker config %s: %v", pluginPathProperty, newPluginPath, workerConfigPath, err)
 	}

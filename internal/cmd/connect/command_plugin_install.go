@@ -50,7 +50,7 @@ const (
 func (c *pluginCommand) newInstallCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "install <plugin>",
-		Short: "Install a Confluent Hub plugin.",
+		Short: "Install a Connect plugin.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.install,
 		Example: examples.BuildExampleString(
@@ -62,8 +62,8 @@ func (c *pluginCommand) newInstallCommand() *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 	}
 
-	cmd.Flags().String("component-dir", "", "The plugin installation directory. Defaults to $share/confluent-hub-components for archive deployment, and to /usr/share/confluent-hub-components for deb/rpm deployment.")
-	cmd.Flags().StringSlice("worker-configs", []string{}, "Comma-delineated list of paths to one or more Kafka Connect worker configuration files. Each worker file will be updated to load plugins from the component directory in addition to any preexisting directories.")
+	cmd.Flags().String("plugin-dir", "", "The plugin installation directory. Defaults to $share/confluent-hub-components for archive deployment, and to /usr/share/confluent-hub-components for deb/rpm deployment.")
+	cmd.Flags().StringSlice("worker-configs", []string{}, "Comma-delineated list of paths to one or more Kafka Connect worker configuration files. Each worker file will be updated to load plugins from the plugin directory in addition to any preexisting directories.")
 	cmd.Flags().Bool("dry-run", false, "Simulate an operation without making any changes.")
 	cmd.Flags().Bool("no-prompt", false, "Proceed without asking for user input.")
 
@@ -94,34 +94,34 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 		pluginManifest = remoteManifest
 	}
 
-	// Select component-dir
+	// Select plugin-dir
 	var ins *installation
 	noPrompt, err := cmd.Flags().GetBool("no-prompt")
 	if err != nil {
 		return err
 	}
 
-	componentDir, err := getComponentDirFromFlag(cmd)
+	pluginDir, err := getPluginDirFromFlag(cmd)
 	if err != nil {
 		return err
 	}
 
-	if componentDir == "" {
+	if pluginDir == "" {
 		ins, err = getInstallation(cmd, noPrompt)
 		if err != nil {
 			return err
 		}
-		componentDir, err = chooseComponentDir(ins, noPrompt)
+		pluginDir, err = choosePluginDir(ins, noPrompt)
 		if err != nil {
 			return err
 		}
 	}
 
 	// Check for, and possibly remove, existing installation
-	if previousInstallations, err := existingPluginInstallation(componentDir, pluginManifest); err != nil {
+	if previousInstallations, err := existingPluginInstallation(pluginDir, pluginManifest); err != nil {
 		return err
 	} else if len(previousInstallations) > 0 {
-		output.Println("A version of this component is already installed.")
+		output.Println("A version of this plugin is already installed.")
 		for _, previousInstallation := range previousInstallations {
 			if err := uninstall(previousInstallation, noPrompt); err != nil {
 				return err
@@ -143,11 +143,11 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 		output.Println("Skipping installation of connector onto worker as part of dry run mode.")
 	} else {
 		if utils.DoesPathExist(args[0]) {
-			if err := installFromLocal(pluginManifest, args[0], componentDir); err != nil {
+			if err := installFromLocal(pluginManifest, args[0], pluginDir); err != nil {
 				return err
 			}
 		} else {
-			if err := installFromRemote(pluginManifest, componentDir); err != nil {
+			if err := installFromRemote(pluginManifest, pluginDir); err != nil {
 				return err
 			}
 		}
@@ -174,14 +174,14 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 
 	for _, workerConfig := range workerConfigs {
 		output.Printf("Updating worker config at %s\n", workerConfig)
-		updateWorkerConfig(componentDir, workerConfig, dryRun)
+		updateWorkerConfig(pluginDir, workerConfig, dryRun)
 	}
 
 	return nil
 }
 
 func parsePluginId(plugin string) (string, string, string, error) {
-	parsePluginErrorMsg := "component not found"
+	parsePluginErrorMsg := "plugin not found"
 	parsePluginSuggestions := "Provide either a path to a local file or a plugin id from Confluent Hub with the format: `<owner>/<name>:<version>`."
 
 	ownerNameSplit := strings.Split(plugin, "/")
@@ -262,36 +262,36 @@ func getRemoteManifest(owner, name, version string) (*manifest, error) {
 	return pluginManifest, nil
 }
 
-func getComponentDirFromFlag(cmd *cobra.Command) (string, error) {
-	if cmd.Flags().Changed("component-dir") {
-		componentDir, err := cmd.Flags().GetString("component-dir")
+func getPluginDirFromFlag(cmd *cobra.Command) (string, error) {
+	if cmd.Flags().Changed("plugin-dir") {
+		pluginDir, err := cmd.Flags().GetString("plugin-dir")
 		if err != nil {
 			return "", err
 		}
 
-		if componentDir, err = filepath.Abs(componentDir); err != nil {
-			return "", errors.Errorf(`failed to determine absolute path to component directory "%s": %v`, componentDir, err)
+		if pluginDir, err = filepath.Abs(pluginDir); err != nil {
+			return "", err
 		}
 
-		if !utils.DoesPathExist(componentDir) {
-			return "", errors.Errorf(`component directory "%s" does not exist`, componentDir)
+		if !utils.DoesPathExist(pluginDir) {
+			return "", errors.Errorf(`plugin directory "%s" does not exist`, pluginDir)
 		}
 
-		return componentDir, nil
+		return pluginDir, nil
 	}
 
 	return "", nil
 }
 
-func existingPluginInstallation(componentDir string, pluginManifest *manifest) ([]string, error) {
+func existingPluginInstallation(pluginDir string, pluginManifest *manifest) ([]string, error) {
 	// Bundled installations
-	if utils.DoesPathExist(filepath.Join(componentDir, pluginManifest.Name)) {
-		return nil, errors.New("unable to install component because it's already bundled")
+	if utils.DoesPathExist(filepath.Join(pluginDir, pluginManifest.Name)) {
+		return nil, errors.New("unable to install plugin because it is already bundled")
 	}
 
 	// Other previous installations
-	immediateDirectory := filepath.Join(componentDir, fmt.Sprintf("%s-%s", pluginManifest.Owner.Username, pluginManifest.Name))
-	uberJar := filepath.Join(componentDir, fmt.Sprintf("%s-%s.jar", pluginManifest.Name, pluginManifest.Version))
+	immediateDirectory := filepath.Join(pluginDir, fmt.Sprintf("%s-%s", pluginManifest.Owner.Username, pluginManifest.Name))
+	uberJar := filepath.Join(pluginDir, fmt.Sprintf("%s-%s.jar", pluginManifest.Name, pluginManifest.Version))
 
 	var installations []string
 	if utils.DoesPathExist(immediateDirectory) {
@@ -304,13 +304,13 @@ func existingPluginInstallation(componentDir string, pluginManifest *manifest) (
 	return installations, nil
 }
 
-func uninstall(pathToComponent string, noPrompt bool) error {
+func uninstall(pathToPlugin string, noPrompt bool) error {
 	if noPrompt {
-		fmt.Printf("Automatically uninstalling existing version of the component located at %s", pathToComponent)
+		output.Printf("Automatically uninstalling existing version of the plugin located at %s\n", pathToPlugin)
 	} else {
 		f := form.New(form.Field{
 			ID:        "confirm",
-			Prompt:    fmt.Sprintf("Do you want to uninstall an existing version of this component located at %s?", pathToComponent),
+			Prompt:    fmt.Sprintf("Do you want to uninstall an existing version of this plugin located at %s?", pathToPlugin),
 			IsYesOrNo: true,
 		})
 		if err := f.Prompt(form.NewPrompt(os.Stdin)); err != nil {
@@ -320,20 +320,20 @@ func uninstall(pathToComponent string, noPrompt bool) error {
 			return errors.New("previous versions must be uninstalled to continue")
 		}
 	}
-	return os.RemoveAll(pathToComponent)
+	return os.RemoveAll(pathToPlugin)
 }
 
-func installFromLocal(pluginManifest *manifest, archivePath, componentDir string) error {
+func installFromLocal(pluginManifest *manifest, archivePath, pluginDir string) error {
 	zipReader, err := zip.OpenReader(archivePath)
 	if err != nil {
 		return errors.Errorf("failed to open local archive file %s: %v", archivePath, err)
 	}
 	defer zipReader.Close()
 
-	return unzipPlugin(pluginManifest, zipReader.File, componentDir)
+	return unzipPlugin(pluginManifest, zipReader.File, pluginDir)
 }
 
-func installFromRemote(pluginManifest *manifest, componentDir string) error {
+func installFromRemote(pluginManifest *manifest, pluginDir string) error {
 	r, err := http.Get(pluginManifest.Archive.Url)
 	if err != nil {
 		return err
@@ -349,7 +349,7 @@ func installFromRemote(pluginManifest *manifest, componentDir string) error {
 		return err
 	}
 
-	checksumErrorMsg := "%s checksum for downloaded archive (%s) does not match checksum in manifest (%s) for component %s"
+	checksumErrorMsg := "%s checksum for downloaded archive (%s) does not match checksum in manifest (%s) for plugin %s"
 	calculatedMd5Checksum := fmt.Sprintf("%x", md5.Sum(archive))
 	if calculatedMd5Checksum != pluginManifest.Archive.Md5 {
 		return errors.Errorf(checksumErrorMsg, "md5", calculatedMd5Checksum, pluginManifest.Archive.Md5, pluginManifest.Name)
@@ -364,11 +364,11 @@ func installFromRemote(pluginManifest *manifest, componentDir string) error {
 		return errors.Errorf("failed to open remote archive file %s: %v", archive, err)
 	}
 
-	return unzipPlugin(pluginManifest, zipReader.File, componentDir)
+	return unzipPlugin(pluginManifest, zipReader.File, pluginDir)
 }
 
-func unzipPlugin(pluginManifest *manifest, zipFiles []*zip.File, componentDir string) error {
-	relativeInstallationDir := filepath.Join(componentDir, fmt.Sprintf("%s-%s", pluginManifest.Owner.Username, pluginManifest.Name))
+func unzipPlugin(pluginManifest *manifest, zipFiles []*zip.File, pluginDir string) error {
+	relativeInstallationDir := filepath.Join(pluginDir, fmt.Sprintf("%s-%s", pluginManifest.Owner.Username, pluginManifest.Name))
 	installationDir, err := filepath.Abs(relativeInstallationDir)
 	if err != nil {
 		return errors.Errorf("failed to resolve absolute path for directory %s: %v", relativeInstallationDir, err)
@@ -423,7 +423,7 @@ func checkLicenseAcceptance(pluginManifest *manifest, noPrompt bool) error {
 				return err
 			}
 			if !f.Responses["confirm"].(bool) {
-				return errors.New("you must accept all license agreements for a component in order to install it")
+				return errors.New("you must accept all license agreements for this plugin in order to install it")
 			}
 		}
 	}
