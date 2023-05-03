@@ -5,7 +5,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	client "github.com/confluentinc/flink-sql-client"
-	application "github.com/confluentinc/flink-sql-client/pkg/controller"
+	"github.com/confluentinc/flink-sql-client/pkg/types"
 
 	"github.com/spf13/cobra"
 )
@@ -54,9 +54,7 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 
 	kafkaClusterId, err := cmd.Flags().GetString("kafka-cluster")
 	if kafkaClusterId == "" || err != nil {
-		if c.Context.KafkaClusterContext.GetActiveKafkaClusterId() == "" {
-			return errors.NewErrorWithSuggestions("No Kafka Cluster set", "Please set a Kafka cluster to be used. You can either set a default Kafka cluster \"confluent kafka cluster use lkc-12345\" or pass the flag \"--kafka-cluster lkc-12345\".")
-		} else {
+		if c.Context.KafkaClusterContext.GetActiveKafkaClusterId() != "" {
 			kafkaClusterId = c.Context.KafkaClusterContext.GetActiveKafkaClusterId()
 		}
 	}
@@ -68,9 +66,9 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 
 	client.StartApp(enviromentId, resourceId, kafkaClusterId, computePool, c.AuthToken(),
 		c.authenticated(prerunner.Authenticated(c.AuthenticatedCLICommand), cmd),
-		&application.ApplicationOptions{
+		&types.ApplicationOptions{
 			FLINK_GATEWAY_URL:        "https://flink.us-west-2.aws.devel.cpdev.cloud",
-			HTTP_CLIENT_UNSAFE_TRACE: true,
+			HTTP_CLIENT_UNSAFE_TRACE: false,
 			DEFAULT_PROPERTIES: map[string]string{
 				"execution.runtime-mode": "streaming",
 			},
