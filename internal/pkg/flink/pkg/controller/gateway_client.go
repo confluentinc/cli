@@ -111,6 +111,7 @@ func NewGatewayClient(envId, orgResourceId, kafkaClusterId, computePoolId, authT
 	}
 
 	cfg.Debug = unsafeTrace
+	cfg.DefaultHeader["Org-Id"] = orgResourceId
 
 	client := &GatewayClient{
 		envId:             envId,
