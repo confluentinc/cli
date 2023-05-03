@@ -64,6 +64,18 @@ func (t *Table) Print() error {
 }
 
 func (t *Table) PrintWithAutoWrap(auto bool) error {
+	return t.printCore(t.writer, auto)
+}
+
+
+func (t *Table) PrintString() (string, error) {
+	tableStr := &strings.Builder{}
+	err := t.printCore(tableStr, true)
+
+	return tableStr.String(), err
+}
+
+func (t *Table) printCore(writer io.Writer, auto bool) error {
 	if !t.isMap() {
 		if t.format.IsSerialized() {
 			for i := range t.objects {
@@ -120,14 +132,14 @@ func (t *Table) PrintWithAutoWrap(auto bool) error {
 			if err != nil {
 				return err
 			}
-			_, err = t.writer.Write(pretty.Pretty(out))
+			_, err = writer.Write(pretty.Pretty(out))
 			return err
 		case YAML:
 			out, err := yaml.Marshal(v)
 			if err != nil {
 				return err
 			}
-			_, err = t.writer.Write(out)
+			_, err = writer.Write(out)
 			return err
 		}
 	}
@@ -139,11 +151,11 @@ func (t *Table) PrintWithAutoWrap(auto bool) error {
 		isEmpty = len(t.objects[0].(map[string]string)) == 0
 	}
 	if isEmpty {
-		_, err := fmt.Fprintln(t.writer, "None found.")
+		_, err := fmt.Fprintln(writer, "None found.")
 		return err
 	}
 
-	w := tablewriter.NewWriter(t.writer)
+	w := tablewriter.NewWriter(writer)
 	w.SetAutoWrapText(auto)
 
 	if t.isList {
