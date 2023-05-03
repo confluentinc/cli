@@ -352,9 +352,9 @@ func chooseWorkerConfigs(cmd *cobra.Command, ins *installation, noPrompt bool) (
 		}
 	}
 
-	var result []string
-	for _, workerConfig := range filteredWorkerConfigs {
-		result = append(result, workerConfig.Path)
+	result := make([]string, len(filteredWorkerConfigs))
+	for i, workerConfig := range filteredWorkerConfigs {
+		result[i] = workerConfig.Path
 	}
 	return result, nil
 }

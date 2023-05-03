@@ -40,12 +40,6 @@ type manifest struct {
 	} `json:"license"`
 }
 
-type componentId struct {
-	Owner   string
-	Name    string
-	Version string
-}
-
 const (
 	archiveInstallation = "ARCHIVE"
 	packageInstallation = "PACKAGE"
@@ -149,11 +143,11 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 		output.Println("Skipping installation of connector onto worker as part of dry run mode.")
 	} else {
 		if utils.DoesPathExist(args[0]) {
-			if err := installFromLocal(pluginManifest, args[0], componentDir, noPrompt); err != nil {
+			if err := installFromLocal(pluginManifest, args[0], componentDir); err != nil {
 				return err
 			}
 		} else {
-			if err := installFromRemote(pluginManifest, componentDir, noPrompt); err != nil {
+			if err := installFromRemote(pluginManifest, componentDir); err != nil {
 				return err
 			}
 		}
@@ -235,7 +229,7 @@ func getLocalManifest(archivePath string) (*manifest, error) {
 			return pluginManifest, nil
 		}
 	}
-	
+
 	return nil, errors.Errorf("failed to find manifest file inside local archive file %s", archivePath)
 }
 
@@ -264,7 +258,7 @@ func getRemoteManifest(owner, name, version string) (*manifest, error) {
 	if err := json.Unmarshal(body, &pluginManifest); err != nil {
 		return nil, err
 	}
-	
+
 	return pluginManifest, nil
 }
 
@@ -329,7 +323,7 @@ func uninstall(pathToComponent string, noPrompt bool) error {
 	return os.RemoveAll(pathToComponent)
 }
 
-func installFromLocal(pluginManifest *manifest, archivePath, componentDir string, noPrompt bool) error {
+func installFromLocal(pluginManifest *manifest, archivePath, componentDir string) error {
 	zipReader, err := zip.OpenReader(archivePath)
 	if err != nil {
 		return errors.Errorf("failed to open local archive file %s: %v", archivePath, err)
@@ -339,7 +333,7 @@ func installFromLocal(pluginManifest *manifest, archivePath, componentDir string
 	return unzipPlugin(pluginManifest, zipReader.File, componentDir)
 }
 
-func installFromRemote(pluginManifest *manifest, componentDir string, noPrompt bool) error {
+func installFromRemote(pluginManifest *manifest, componentDir string) error {
 	r, err := http.Get(pluginManifest.Archive.Url)
 	if err != nil {
 		return err
