@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"bufio"
 	"context"
 	"errors"
 	"fmt"
@@ -10,6 +9,9 @@ import (
 	"os"
 	"reflect"
 	"strings"
+	"time"
+
+	"github.com/confluentinc/flink-sql-client/internal/reverseisearch"
 
 	"github.com/confluentinc/flink-sql-client/internal/reverseisearch"
 
@@ -105,17 +107,17 @@ func (c *InputController) RunInteractiveInput() {
 
 		// Wait for results to be there or for the user to cancel the query
 		ctx, cancelWaitPendingStatement := context.WithCancel(context.Background())
-		cancelListenToUserInput := c.listenToUserInput(func() {
+
+		in := prompt.NewStandardInputParser()
+		in.Setup()
+		cancelListenToUserInput := c.listenToUserInput(in, func() {
 			go c.store.DeleteStatement(processedStatement.StatementName)
 			cancelWaitPendingStatement()
 		})
 
-		statementName := processedStatement.StatementName
 		processedStatement, err = c.store.WaitPendingStatement(ctx, *processedStatement)
 		if err != nil {
-			if err.HttpResponseCode == 499 {
-				go c.store.DeleteStatement(statementName)
-			}
+			in.TearDown()
 			cancelListenToUserInput()
 			fmt.Println(err.Error())
 			c.isSessionValid(err)
@@ -123,6 +125,7 @@ func (c *InputController) RunInteractiveInput() {
 		}
 
 		processedStatement, err = c.store.FetchStatementResults(*processedStatement)
+		in.TearDown()
 		cancelListenToUserInput()
 		if err != nil {
 			fmt.Println(err.Error())
@@ -154,34 +157,35 @@ func (c *InputController) RunInteractiveInput() {
 	}
 }
 
-func (c *InputController) listenToUserInput(cancelFunc context.CancelFunc) context.CancelFunc {
+func (c *InputController) listenToUserInput(in *prompt.PosixParser, cancelFunc context.CancelFunc) context.CancelFunc {
 	ctx, cancelListenToUserInput := context.WithCancel(context.Background())
-	reader := bufio.NewReader(os.Stdin)
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
 				return
 			default:
-				input, err := reader.ReadByte()
-				if err != nil {
-					continue
-				}
-				pressedKey := prompt.Key(input)
+				if b, err := in.Read(); err == nil && !(len(b) == 1 && b[0] == 0) {
+					if err != nil {
+						continue
+					}
+					pressedKey := prompt.Key(b[0])
 
-				switch pressedKey {
-				case prompt.ControlC:
-					fallthrough
-				case prompt.ControlD:
-					fallthrough
-				case prompt.ControlQ:
-					fallthrough
-				case prompt.Escape:
-					// esc
-					cancelFunc()
-					return
+					switch pressedKey {
+					case prompt.ControlC:
+						fallthrough
+					case prompt.ControlD:
+						fallthrough
+					case prompt.ControlQ:
+						fallthrough
+					case prompt.Escape:
+						// esc
+						cancelFunc()
+						return
+					}
 				}
 			}
+			time.Sleep(10 * time.Millisecond)
 		}
 	}()
 	return cancelListenToUserInput
