@@ -63,7 +63,7 @@ func (c *pluginCommand) newInstallCommand() *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 	}
 
-	cmd.Flags().String("plugin-directory", "", "The plugin installation directory. Defaults to $share/confluent-hub-components for archive deployment, and to `/usr/share/confluent-hub-components` for deb/rpm deployment.")
+	cmd.Flags().String("plugin-directory", "", "The plugin installation directory.")
 	cmd.Flags().StringSlice("worker-configs", []string{}, "A comma-separated list of paths to one or more Kafka Connect worker configuration files. Each worker file will be updated to load plugins from the plugin directory in addition to any preexisting directories.")
 	cmd.Flags().Bool("dry-run", false, "Simulate an operation without making any changes.")
 	cmd.Flags().Bool("force", false, "Proceed without user input.")
