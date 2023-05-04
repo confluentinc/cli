@@ -119,12 +119,17 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 	}
 
 	// Check for, and possibly remove, existing installation
+	dryRun, err := cmd.Flags().GetBool("dry-run")
+	if err != nil {
+		return err
+	}
+
 	if previousInstallations, err := existingPluginInstallation(pluginDir, pluginManifest); err != nil {
 		return err
 	} else if len(previousInstallations) > 0 {
 		output.Println("A version of this plugin is already installed.")
 		for _, previousInstallation := range previousInstallations {
-			if err := uninstall(previousInstallation, force); err != nil {
+			if err := uninstall(previousInstallation, dryRun, force); err != nil {
 				return err
 			}
 		}
@@ -132,11 +137,6 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 
 	// Install
 	if err := checkLicenseAcceptance(pluginManifest, force); err != nil {
-		return err
-	}
-
-	dryRun, err := cmd.Flags().GetBool("dry-run")
-	if err != nil {
 		return err
 	}
 
@@ -305,7 +305,11 @@ func existingPluginInstallation(pluginDir string, pluginManifest *manifest) ([]s
 	return installations, nil
 }
 
-func uninstall(pathToPlugin string, force bool) error {
+func uninstall(pathToPlugin string, dryRun, force bool) error {
+	if dryRun {
+		output.Println("Dry run: skipping uninstallation of the existing version.")
+		return nil
+	}
 	if force {
 		output.Printf("Uninstalling the existing version of the plugin located at \"%s\".\n", pathToPlugin)
 	} else {
