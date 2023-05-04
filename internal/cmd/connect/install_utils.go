@@ -36,7 +36,7 @@ type listOut struct {
 	Description string `human:"Description"`
 }
 
-func getInstallation(cmd *cobra.Command, noPrompt bool) (*installation, error) {
+func getInstallation(cmd *cobra.Command, force bool) (*installation, error) {
 	installations, err := findInstallationDirectories()
 	if err != nil {
 		return nil, err
@@ -44,7 +44,8 @@ func getInstallation(cmd *cobra.Command, noPrompt bool) (*installation, error) {
 
 	if len(installations) == 0 {
 		return nil, errors.NewErrorWithSuggestions("unable to detect Confluent Platform installation", "Pass the plugin directory and worker configuration files to the `--plugin-dir` and `--worker-configs` flags.")
-	} else if noPrompt {
+	} else if force {
+		output.Printf("Using the Confluent Platform installation at \"%s\".\n", installations[0].Path)
 		return &installations[0], nil
 	} else if len(installations) == 1 {
 		output.Printf("Using the only available Confluent Platform installation at \"%s\".\n", installations[0].Path)
@@ -158,7 +159,7 @@ func hasArchiveInstallation(dir string) bool {
 	return utils.DoesPathExist(filepath.Join(dir, filepath.FromSlash("share/java/confluent-common")))
 }
 
-func choosePluginDir(ins *installation, noPrompt bool) (string, error) {
+func choosePluginDir(ins *installation, force bool) (string, error) {
 	var defaultPluginDir string
 	switch ins.Type {
 	case archiveInstallation:
@@ -169,7 +170,8 @@ func choosePluginDir(ins *installation, noPrompt bool) (string, error) {
 		return "", errors.Errorf(unexpectedInstallationErrorMsg, ins.Type)
 	}
 
-	if noPrompt {
+	if force {
+		output.Printf("Using \"%s\" as the plugin installation directory.\n", defaultPluginDir)
 		return defaultPluginDir, nil
 	}
 
@@ -285,7 +287,7 @@ func runningWorkerConfigLocations() ([]WorkerConfig, error) {
 	return result, nil
 }
 
-func chooseWorkerConfigs(cmd *cobra.Command, ins *installation, noPrompt bool) ([]string, error) {
+func chooseWorkerConfigs(cmd *cobra.Command, ins *installation, force bool) ([]string, error) {
 	var workerConfigs []WorkerConfig
 
 	if standardWorkerConfigs, err := standardWorkerConfigLocations(ins); err != nil {
@@ -309,22 +311,27 @@ func chooseWorkerConfigs(cmd *cobra.Command, ins *installation, noPrompt bool) (
 	}
 
 	var filteredWorkerConfigs []WorkerConfig
-	if noPrompt || len(workerConfigs) == 0 {
+	if len(workerConfigs) == 0 {
+		output.Println("No worker config files found.")
+		return filteredWorkerConfigs, nil
+	}
+
+	output.Println("Detected the following worker config files:")
+	list := output.NewList(cmd)
+	for i, workerConfig := range workerConfigs {
+		list.Add(&listOut{
+			Number:      strconv.Itoa(i + 1),
+			Path:        workerConfig.Path,
+			Description: workerConfig.Use,
+		})
+	}
+	if err := list.Print(); err != nil {
+		return nil, err
+	}
+
+	if force {
 		filteredWorkerConfigs = workerConfigs
 	} else {
-		output.Println("Detected the following worker config files:")
-		list := output.NewList(cmd)
-		for i, workerConfig := range workerConfigs {
-			list.Add(&listOut{
-				Number:      strconv.Itoa(i + 1),
-				Path:        workerConfig.Path,
-				Description: workerConfig.Use,
-			})
-		}
-		if err := list.Print(); err != nil {
-			return nil, err
-		}
-
 		f := form.New(form.Field{
 			ID:        "confirm",
 			Prompt:    "Do you want to update all detected config files?",

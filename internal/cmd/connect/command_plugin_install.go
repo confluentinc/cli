@@ -66,7 +66,7 @@ func (c *pluginCommand) newInstallCommand() *cobra.Command {
 	cmd.Flags().String("plugin-dir", "", "The plugin installation directory. Defaults to $share/confluent-hub-components for archive deployment, and to /usr/share/confluent-hub-components for deb/rpm deployment.")
 	cmd.Flags().StringSlice("worker-configs", []string{}, "Comma-delineated list of paths to one or more Kafka Connect worker configuration files. Each worker file will be updated to load plugins from the plugin directory in addition to any preexisting directories.")
 	cmd.Flags().Bool("dry-run", false, "Simulate an operation without making any changes.")
-	cmd.Flags().Bool("no-prompt", false, "Proceed without asking for user input.")
+	cmd.Flags().Bool("force", false, "Proceed without user input.")
 
 	return cmd
 }
@@ -97,7 +97,7 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 
 	// Select plugin-dir
 	var ins *installation
-	noPrompt, err := cmd.Flags().GetBool("no-prompt")
+	force, err := cmd.Flags().GetBool("force")
 	if err != nil {
 		return err
 	}
@@ -108,11 +108,11 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 	}
 
 	if pluginDir == "" {
-		ins, err = getInstallation(cmd, noPrompt)
+		ins, err = getInstallation(cmd, force)
 		if err != nil {
 			return err
 		}
-		pluginDir, err = choosePluginDir(ins, noPrompt)
+		pluginDir, err = choosePluginDir(ins, force)
 		if err != nil {
 			return err
 		}
@@ -124,14 +124,14 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 	} else if len(previousInstallations) > 0 {
 		output.Println("A version of this plugin is already installed.")
 		for _, previousInstallation := range previousInstallations {
-			if err := uninstall(previousInstallation, noPrompt); err != nil {
+			if err := uninstall(previousInstallation, force); err != nil {
 				return err
 			}
 		}
 	}
 
 	// Install
-	if err := checkLicenseAcceptance(pluginManifest, noPrompt); err != nil {
+	if err := checkLicenseAcceptance(pluginManifest, force); err != nil {
 		return err
 	}
 
@@ -162,12 +162,12 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 
 	if len(workerConfigs) == 0 {
 		if ins == nil {
-			ins, err = getInstallation(cmd, noPrompt)
+			ins, err = getInstallation(cmd, force)
 			if err != nil {
 				return err
 			}
 		}
-		workerConfigs, err = chooseWorkerConfigs(cmd, ins, noPrompt)
+		workerConfigs, err = chooseWorkerConfigs(cmd, ins, force)
 		if err != nil {
 			return err
 		}
@@ -305,9 +305,9 @@ func existingPluginInstallation(pluginDir string, pluginManifest *manifest) ([]s
 	return installations, nil
 }
 
-func uninstall(pathToPlugin string, noPrompt bool) error {
-	if noPrompt {
-		output.Printf("Uninstalling existing version of the plugin located at %s\n", pathToPlugin)
+func uninstall(pathToPlugin string, force bool) error {
+	if force {
+		output.Printf("Uninstalling the existing version of the plugin located at \"%s\".\n", pathToPlugin)
 	} else {
 		f := form.New(form.Field{
 			ID:        "confirm",
@@ -411,9 +411,9 @@ func unzipPlugin(pluginManifest *manifest, zipFiles []*zip.File, pluginDir strin
 	return nil
 }
 
-func checkLicenseAcceptance(pluginManifest *manifest, noPrompt bool) error {
+func checkLicenseAcceptance(pluginManifest *manifest, force bool) error {
 	for _, license := range pluginManifest.License {
-		if noPrompt {
+		if force {
 			output.Printf("Implicitly agreeing to license:\n%s\n%s\n", license.Name, license.Url)
 		} else {
 			f := form.New(form.Field{
