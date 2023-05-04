@@ -235,7 +235,7 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 		time.Sleep(waitTime)
 
 		// exponential backoff
-		waitTime = waitTime * 11 / 10
+		waitTime = (waitTime * 105) / 100
 	}
 
 	var errorsMsg string
