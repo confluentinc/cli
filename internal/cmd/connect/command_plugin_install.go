@@ -63,8 +63,8 @@ func (c *pluginCommand) newInstallCommand() *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 	}
 
-	cmd.Flags().String("plugin-dir", "", "The plugin installation directory. Defaults to $share/confluent-hub-components for archive deployment, and to /usr/share/confluent-hub-components for deb/rpm deployment.")
-	cmd.Flags().StringSlice("worker-configs", []string{}, "Comma-delineated list of paths to one or more Kafka Connect worker configuration files. Each worker file will be updated to load plugins from the plugin directory in addition to any preexisting directories.")
+	cmd.Flags().String("plugin-directory", "", "The plugin installation directory. Defaults to $share/confluent-hub-components for archive deployment, and to `/usr/share/confluent-hub-components` for deb/rpm deployment.")
+	cmd.Flags().StringSlice("worker-configs", []string{}, "A comma-separated list of paths to one or more Kafka Connect worker configuration files. Each worker file will be updated to load plugins from the plugin directory in addition to any preexisting directories.")
 	cmd.Flags().Bool("dry-run", false, "Simulate an operation without making any changes.")
 	cmd.Flags().Bool("force", false, "Proceed without user input.")
 
@@ -95,7 +95,7 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 		pluginManifest = remoteManifest
 	}
 
-	// Select plugin-dir
+	// Select plugin-directory
 	var ins *installation
 	force, err := cmd.Flags().GetBool("force")
 	if err != nil {
@@ -266,8 +266,8 @@ func getRemoteManifest(owner, name, version string) (*manifest, error) {
 }
 
 func getPluginDirFromFlag(cmd *cobra.Command) (string, error) {
-	if cmd.Flags().Changed("plugin-dir") {
-		pluginDir, err := cmd.Flags().GetString("plugin-dir")
+	if cmd.Flags().Changed("plugin-directory") {
+		pluginDir, err := cmd.Flags().GetString("plugin-directory")
 		if err != nil {
 			return "", err
 		}
