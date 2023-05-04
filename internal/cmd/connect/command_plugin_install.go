@@ -72,6 +72,13 @@ func (c *pluginCommand) newInstallCommand() *cobra.Command {
 }
 
 func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
+	dryRun, err := cmd.Flags().GetBool("dry-run")
+	if err != nil {
+		return err
+	}
+	if dryRun {
+		output.Println("[DRY RUN] Performing a dry run of this command.")
+	}
 	// Verify that the argument corresponds to a valid plugin
 	var pluginManifest *manifest
 	if utils.DoesPathExist(args[0]) {
@@ -96,7 +103,6 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 	}
 
 	// Select plugin-directory
-	var ins *installation
 	force, err := cmd.Flags().GetBool("force")
 	if err != nil {
 		return err
@@ -107,6 +113,7 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	var ins *installation
 	if pluginDir == "" {
 		ins, err = getInstallation(cmd, force)
 		if err != nil {
@@ -119,15 +126,10 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 	}
 
 	// Check for, and possibly remove, existing installation
-	dryRun, err := cmd.Flags().GetBool("dry-run")
-	if err != nil {
-		return err
-	}
-
 	if previousInstallations, err := existingPluginInstallation(pluginDir, pluginManifest); err != nil {
 		return err
 	} else if len(previousInstallations) > 0 {
-		output.Println("A version of this plugin is already installed.")
+		output.Printf("\nA version of this plugin is already installed.\n")
 		for _, previousInstallation := range previousInstallations {
 			if err := uninstall(previousInstallation, dryRun, force); err != nil {
 				return err
@@ -141,7 +143,7 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 	}
 
 	if dryRun {
-		output.Println("Dry run: skipping installation of plugin.")
+		output.Println("[DRY RUN] Skipping plugin installation.")
 	} else {
 		if utils.DoesPathExist(args[0]) {
 			if err := installFromLocal(pluginManifest, args[0], pluginDir); err != nil {
@@ -173,11 +175,22 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	if len(workerConfigs) > 0 {
+		updateWorkerMsg := "\nAdding plugin installation directory to the plugin path in the following files:"
+		for _, workerConfig := range workerConfigs {
+			updateWorkerMsg = fmt.Sprintf("%s\n\t* %v", updateWorkerMsg, workerConfig)
+		}
+		output.Println(updateWorkerMsg)
+	}
+
 	for _, workerConfig := range workerConfigs {
-		output.Printf("Updating worker config at %s\n", workerConfig)
 		if err := updateWorkerConfig(pluginDir, workerConfig, dryRun); err != nil {
 			return err
 		}
+	}
+
+	if dryRun {
+		output.Println("\n[DRY RUN] Dry run successfully completed. All requirements are met; you may proceed with the installation.")
 	}
 
 	return nil
@@ -308,10 +321,6 @@ func existingPluginInstallation(pluginDir string, pluginManifest *manifest) ([]s
 }
 
 func uninstall(pathToPlugin string, dryRun, force bool) error {
-	if dryRun {
-		output.Println("Dry run: skipping uninstallation of the existing version.")
-		return nil
-	}
 	if force {
 		output.Printf("Uninstalling the existing version of the plugin located at \"%s\".\n", pathToPlugin)
 	} else {
@@ -326,6 +335,10 @@ func uninstall(pathToPlugin string, dryRun, force bool) error {
 		if !f.Responses["confirm"].(bool) {
 			return errors.New("previous versions must be uninstalled to continue")
 		}
+	}
+	if dryRun {
+		output.Println("[DRY RUN] Skipping uninstallation of the existing version.")
+		return nil
 	}
 	return os.RemoveAll(pathToPlugin)
 }
@@ -420,11 +433,11 @@ func unzipPlugin(pluginManifest *manifest, zipFiles []*zip.File, pluginDir strin
 func checkLicenseAcceptance(pluginManifest *manifest, force bool) error {
 	for _, license := range pluginManifest.License {
 		if force {
-			output.Printf("Implicitly agreeing to license:\n%s\n%s\n", license.Name, license.Url)
+			output.Printf("\nImplicitly agreeing to the following license:\n%s\n%s\n", license.Name, license.Url)
 		} else {
 			f := form.New(form.Field{
 				ID:        "confirm",
-				Prompt:    fmt.Sprintf("License:\n%s\n%s\nI agree to this software license agreement. ", license.Name, license.Url),
+				Prompt:    fmt.Sprintf("\nLicense:\n%s\n%s\nI agree to this software license agreement. ", license.Name, license.Url),
 				IsYesOrNo: true,
 			})
 			if err := f.Prompt(form.NewPrompt(os.Stdin)); err != nil {

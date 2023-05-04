@@ -45,10 +45,10 @@ func getInstallation(cmd *cobra.Command, force bool) (*installation, error) {
 	if len(installations) == 0 {
 		return nil, errors.NewErrorWithSuggestions("unable to detect Confluent Platform installation", "Pass the plugin directory and worker configuration files to the `--plugin-directory` and `--worker-configs` flags.")
 	} else if force {
-		output.Printf("Using the Confluent Platform installation at \"%s\".\n", installations[0].Path)
+		output.Printf("\nUsing the Confluent Platform installation at \"%s\".\n", installations[0].Path)
 		return &installations[0], nil
 	} else if len(installations) == 1 {
-		output.Printf("Using the only available Confluent Platform installation at \"%s\".\n", installations[0].Path)
+		output.Printf("\nUsing the only available Confluent Platform installation at \"%s\".\n", installations[0].Path)
 		return &installations[0], nil
 	} else {
 		list := output.NewList(cmd)
@@ -64,9 +64,10 @@ func getInstallation(cmd *cobra.Command, force bool) (*installation, error) {
 			return nil, err
 		}
 
+		promptMsg := "\nThe plugin can be installed in any of the following Confluent Platform installations. Enter the number corresponding to the installation you would like to use:\n%sTo cancel, press Ctrl-C"
 		f := form.New(form.Field{
 			ID:     "installation",
-			Prompt: fmt.Sprintf("Enter the number corresponding to the Confluent Platform installation you would like to use.\n%sTo cancel, press Ctrl-C", listStr),
+			Prompt: fmt.Sprintf(promptMsg, listStr),
 			Regex:  `^\d$`,
 		})
 		if err := f.Prompt(form.NewPrompt(os.Stdin)); err != nil {
@@ -189,7 +190,7 @@ func choosePluginDir(ins *installation, force bool) (string, error) {
 
 	f = form.New(form.Field{
 		ID:     "directory",
-		Prompt: "Specify installation directory",
+		Prompt: "Specify plugin installation directory. To cancel, press Ctrl-C",
 	})
 	if err := f.Prompt(form.NewPrompt(os.Stdin)); err != nil {
 		return "", err
@@ -291,7 +292,7 @@ func chooseWorkerConfigs(cmd *cobra.Command, ins *installation, force bool) ([]s
 	var workerConfigs []WorkerConfig
 
 	if standardWorkerConfigs, err := standardWorkerConfigLocations(ins); err != nil {
-		return nil, errors.Wrap(err, "could not infer possible worker config file locations from standard candidates")
+		return nil, errors.Wrap(err, "could not infer possible worker configuration file locations from standard candidates")
 	} else {
 		for _, workerConfig := range standardWorkerConfigs {
 			if utils.DoesPathExist(workerConfig.Path) {
@@ -301,7 +302,7 @@ func chooseWorkerConfigs(cmd *cobra.Command, ins *installation, force bool) ([]s
 	}
 
 	if runningWorkerConfigs, err := runningWorkerConfigLocations(); err != nil {
-		return nil, errors.Wrap(err, "could not infer possible worker config file locations from running processes")
+		return nil, errors.Wrap(err, "could not infer possible worker configuration file locations from running processes")
 	} else {
 		for _, workerConfig := range runningWorkerConfigs {
 			if utils.DoesPathExist(workerConfig.Path) {
@@ -312,11 +313,11 @@ func chooseWorkerConfigs(cmd *cobra.Command, ins *installation, force bool) ([]s
 
 	var filteredWorkerConfigs []WorkerConfig
 	if len(workerConfigs) == 0 {
-		output.Println("No worker config files found.")
+		output.Println("No worker configuration files found.")
 		return []string{}, nil
 	}
 
-	output.Println("Detected the following worker config files:")
+	output.Println("\nDetected the following worker configuration files:")
 	list := output.NewList(cmd)
 	for i, workerConfig := range workerConfigs {
 		list.Add(&listOut{
@@ -346,7 +347,7 @@ func chooseWorkerConfigs(cmd *cobra.Command, ins *installation, force bool) ([]s
 			for i, workerConfig := range workerConfigs {
 				f := form.New(form.Field{
 					ID:        "confirm",
-					Prompt:    fmt.Sprintf(`Do you want to update config file "%d"?`, i+1),
+					Prompt:    fmt.Sprintf(`Do you want to update config file %d?`, i+1),
 					IsYesOrNo: true,
 				})
 				if err := f.Prompt(form.NewPrompt(os.Stdin)); err != nil {
@@ -371,37 +372,36 @@ func updateWorkerConfig(pluginDir string, workerConfigPath string, dryRun bool) 
 
 	workerConfig, err := properties.LoadFile(workerConfigPath, properties.UTF8)
 	if err != nil {
-		return errors.Wrapf(err, `failed to parse worker config file "%s"`, workerConfigPath)
+		return errors.Wrapf(err, `failed to parse worker configuration file "%s"`, workerConfigPath)
 	}
 	pluginPath := workerConfig.GetString(pluginPathProperty, "")
 	pluginPathElements := regexp.MustCompile(" *, *").Split(pluginPath, -1)
 	for _, pluginPathElement := range pluginPathElements {
 		if pluginPathElement == pluginDir {
-			// The plugin directory is already included in the worker's plugin.path
-			// No further action required on our part
+			output.Printf("This plugin is already in the plugin path for worker configuration file \"%s\".\n", workerConfigPath)
 			return nil
 		}
 	}
 	newPluginPath := strings.Join(append(pluginPathElements, pluginDir), ", ")
 	if _, _, err = workerConfig.Set(pluginPathProperty, newPluginPath); err != nil {
-		return errors.Wrapf(err, `failed to update %s property to "%s" for worker config "%s"`, pluginPathProperty, newPluginPath, workerConfigPath)
+		return errors.Wrapf(err, `failed to update %s property to "%s" for worker configuration "%s"`, pluginPathProperty, newPluginPath, workerConfigPath)
 	}
 	fileInfo, err := os.Stat(workerConfigPath)
 	if err != nil {
 		return err
 	}
 	if dryRun {
-		output.Printf("Dry run: skipping update of worker config \"%s\".\n", workerConfigPath)
+		output.Printf("[DRY RUN] Skipping update of worker configuration file \"%s\".\n", workerConfigPath)
 		return nil
 	}
 	workerConfigFile, err := os.OpenFile(workerConfigPath, os.O_TRUNC|os.O_RDWR, fileInfo.Mode())
 	if err != nil {
-		return errors.Wrapf(err, `failed to open worker config file "%s" before updating with new %s value "%s"`, workerConfigPath, pluginPathProperty, newPluginPath)
+		return errors.Wrapf(err, `failed to open worker configuration file "%s" before updating with new %s value "%s"`, workerConfigPath, pluginPathProperty, newPluginPath)
 	}
 	defer workerConfigFile.Close()
 	// NOTE: This currently changes the comment spacing and removes empty lines
 	if _, err = workerConfig.WriteFormattedComment(workerConfigFile, properties.UTF8); err != nil {
-		return errors.Wrapf(err, `failed to update worker config file "%s" with new %s value "%s"`, workerConfigPath, pluginPathProperty, newPluginPath)
+		return errors.Wrapf(err, `failed to update worker configuration file "%s" with new %s value "%s"`, workerConfigPath, pluginPathProperty, newPluginPath)
 	}
 	return nil
 }
