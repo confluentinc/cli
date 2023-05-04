@@ -67,7 +67,6 @@ func (t *Table) PrintWithAutoWrap(auto bool) error {
 	return t.printCore(t.writer, auto)
 }
 
-
 func (t *Table) PrintString() (string, error) {
 	tableStr := &strings.Builder{}
 	err := t.printCore(tableStr, true)
