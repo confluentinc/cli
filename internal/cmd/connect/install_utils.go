@@ -313,7 +313,7 @@ func chooseWorkerConfigs(cmd *cobra.Command, ins *installation, force bool) ([]s
 	var filteredWorkerConfigs []WorkerConfig
 	if len(workerConfigs) == 0 {
 		output.Println("No worker config files found.")
-		return filteredWorkerConfigs, nil
+		return []string{}, nil
 	}
 
 	output.Println("Detected the following worker config files:")
