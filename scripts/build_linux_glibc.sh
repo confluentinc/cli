@@ -20,4 +20,5 @@ fi
 docker container create --name cli-linux-glibc-arm64-builder cli-linux-glibc-arm64-builder-image
 docker container cp cli-linux-glibc-arm64-builder:/cli/dist/. ./dist/
 docker container rm cli-linux-glibc-arm64-builder
+
 rm -rf vendor
