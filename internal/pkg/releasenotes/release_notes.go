@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/google/go-github/v50/github"
@@ -136,21 +137,12 @@ func (r *ReleaseNotes) ReadFromGithub() error {
 	}
 	client := github.NewClient(oauth2.NewClient(ctx, oauth2.StaticTokenSource(&oauth2.Token{AccessToken: githubToken})))
 
-	latestRelease, _, err := client.Repositories.GetLatestRelease(ctx, owner, repo)
-	if err != nil {
-		return err
-	}
-
+	// Fetch the 30 latest tags, find the greatest version number
 	tags, _, err := client.Repositories.ListTags(ctx, owner, repo, nil)
 	if err != nil {
 		return err
 	}
-	var latestReleaseTagSha string
-	for _, tag := range tags {
-		if tag.GetName() == latestRelease.GetTagName() {
-			latestReleaseTagSha = tag.GetCommit().GetSHA()
-		}
-	}
+	sort.Sort(sort.Reverse(byVersion(tags)))
 
 	done := false
 	page := 1
@@ -163,7 +155,7 @@ func (r *ReleaseNotes) ReadFromGithub() error {
 		}
 
 		for _, commit := range commits {
-			if commit.GetSHA() == latestReleaseTagSha {
+			if commit.GetSHA() == tags[0].GetCommit().GetSHA() {
 				done = true
 				break
 			}
@@ -183,7 +175,7 @@ func (r *ReleaseNotes) ReadFromGithub() error {
 		page++
 	}
 
-	latestVersion, err := version.NewSemver(latestRelease.GetTagName())
+	latestVersion, err := version.NewSemver(tags[0].GetName())
 	if err != nil {
 		return err
 	}
