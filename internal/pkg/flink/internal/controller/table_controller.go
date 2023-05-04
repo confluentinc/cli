@@ -58,7 +58,7 @@ func (t *TableController) SetRunInteractiveInputCallback(runInteractiveInput fun
 
 func (t *TableController) exitTViewMode() {
 	t.stopAutoRefresh()
-	t.store.DeleteStatement(t.statement.StatementName)
+	go t.store.DeleteStatement(t.statement.StatementName)
 	t.appController.SuspendOutputMode(t.runInteractiveInput)
 }
 

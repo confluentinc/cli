@@ -105,7 +105,7 @@ func (c *InputController) RunInteractiveInput() {
 		// Wait for results to be there or for the user to cancel the query
 		ctx, cancelWaitPendingStatement := context.WithCancel(context.Background())
 		cancelListenToUserInput := c.listenToUserInput(func() {
-			c.store.DeleteStatement(processedStatement.StatementName)
+			go c.store.DeleteStatement(processedStatement.StatementName)
 			cancelWaitPendingStatement()
 		})
 
