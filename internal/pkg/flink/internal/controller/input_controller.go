@@ -13,8 +13,6 @@ import (
 
 	"github.com/confluentinc/flink-sql-client/internal/reverseisearch"
 
-	"github.com/confluentinc/flink-sql-client/internal/reverseisearch"
-
 	"github.com/confluentinc/flink-sql-client/components"
 	"github.com/confluentinc/flink-sql-client/internal/autocomplete"
 	lexer "github.com/confluentinc/flink-sql-client/internal/highlighting"
