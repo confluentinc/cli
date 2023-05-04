@@ -250,7 +250,7 @@ func getLocalManifest(archivePath string) (*manifest, error) {
 }
 
 func getRemoteManifest(owner, name, version string) (*manifest, error) {
-	manifestUrl := fmt.Sprintf("%s/%s/%s", "https://api.hub.confluent.io/api/plugins", owner, name)
+	manifestUrl := fmt.Sprintf("https://api.hub.confluent.io/api/plugins/%s/%s", owner, name)
 	if version != "latest" {
 		manifestUrl = fmt.Sprintf("%s/versions/%s", manifestUrl, version)
 	}
