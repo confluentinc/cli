@@ -28,6 +28,7 @@ func (c *pluginCommand) newListCommand() *cobra.Command {
 				Code: "confluent connect plugin list --cluster lkc-123456",
 			},
 		),
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
