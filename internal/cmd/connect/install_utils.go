@@ -43,7 +43,7 @@ func getInstallation(cmd *cobra.Command, force bool) (*installation, error) {
 	}
 
 	if len(installations) == 0 {
-		return nil, errors.NewErrorWithSuggestions("unable to detect Confluent Platform installation", "Pass the plugin directory and worker configuration files to the `--plugin-directory` and `--worker-configs` flags.")
+		return nil, errors.NewErrorWithSuggestions("unable to detect a Confluent Platform installation", "Pass the plugin directory and worker configuration files with `--plugin-directory` and `--worker-configs`.")
 	} else if force {
 		output.Printf("\nUsing the Confluent Platform installation at \"%s\".\n", installations[0].Path)
 		return &installations[0], nil
@@ -347,7 +347,7 @@ func chooseWorkerConfigs(cmd *cobra.Command, ins *installation, force bool) ([]s
 			for i, workerConfig := range workerConfigs {
 				f := form.New(form.Field{
 					ID:        "confirm",
-					Prompt:    fmt.Sprintf(`Do you want to update config file %d?`, i+1),
+					Prompt:    fmt.Sprintf(`Do you want to update worker configuration file %d?`, i+1),
 					IsYesOrNo: true,
 				})
 				if err := f.Prompt(form.NewPrompt(os.Stdin)); err != nil {
