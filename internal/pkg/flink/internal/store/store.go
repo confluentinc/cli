@@ -100,7 +100,7 @@ func (s *Store) WaitPendingStatement(ctx context.Context, statement types.Proces
 	statementStatus := statement.Status
 	if statementStatus != types.COMPLETED && statementStatus != types.RUNNING && !s.demoMode {
 		// Variable that controls how often we poll a pending statement
-		const retries = 40
+		const retries = 100
 		const initialWaitTime = time.Millisecond * 300
 		updatedStatement, err := s.waitForPendingStatement(ctx, statement.StatementName, retries, initialWaitTime)
 

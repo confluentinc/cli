@@ -46,7 +46,7 @@ Send your statement:
 And you should see something like this:
 
 ````
-Statement successfully submited. No details returned from server.
+Statement successfully submited.
 Statement ID: 2091b94c-0508-43eb-8052-5cf34d864279
 Status: PENDING.
 ````

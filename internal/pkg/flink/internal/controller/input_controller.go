@@ -5,12 +5,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/confluentinc/flink-sql-client/internal/reverseisearch"
 	"log"
 	"net/http"
 	"os"
 	"reflect"
 	"strings"
+
+	"github.com/confluentinc/flink-sql-client/internal/reverseisearch"
 
 	"github.com/confluentinc/flink-sql-client/components"
 	"github.com/confluentinc/flink-sql-client/internal/autocomplete"
@@ -207,7 +208,7 @@ func renderMsgAndStatus(statementResult *types.ProcessedStatement) {
 	if statementResult.StatusDetail != "" {
 		fmt.Println(statementResult.StatusDetail)
 	} else {
-		fmt.Println("Statement successfully submitted. No details returned from server.")
+		fmt.Println("Statement successfully submitted.")
 	}
 	if statementResult.StatementName != "" {
 		fmt.Println("Statement ID: " + statementResult.StatementName)
@@ -444,7 +445,7 @@ func NewInputController(t TableControllerInterface, a ApplicationControllerInter
 		table:           t,
 		store:           store,
 		appController:   a,
-		smartCompletion: true,
+		smartCompletion: false,
 		authenticated:   authenticated,
 		appOptions:      appOptions,
 		shouldExit:      false,
