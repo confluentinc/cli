@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/confluentinc/flink-sql-client/internal/reverseisearch"
 	"log"
 	"net/http"
 	"os"
@@ -333,7 +334,7 @@ func (c *InputController) getSmartCompletion() bool {
 	return c.smartCompletion
 }
 
-func reverseISearchLivePrefix(livePrefixState *ReverseISearchLivePrefixState) func() (prefix string, useLivePrefix bool) {
+func reverseISearchLivePrefix(livePrefixState *reverseisearch.LivePrefixState) func() (prefix string, useLivePrefix bool) {
 	return func() (prefix string, useLivePrefix bool) {
 		return livePrefixState.LivePrefix, livePrefixState.IsEnable
 	}
@@ -343,19 +344,19 @@ func (c *InputController) reverseISearch() string {
 
 	writer := prompt.NewStdoutWriter()
 
-	livePrefixState := &ReverseISearchLivePrefixState{
-		LivePrefix: reverseISearch,
+	livePrefixState := &reverseisearch.LivePrefixState{
+		LivePrefix: reverseisearch.BckISearch,
 		IsEnable:   true,
 	}
 
-	searchState := &SearchState{
-		index:        len(c.History.Data),
-		currentMatch: "",
+	searchState := &reverseisearch.SearchState{
+		CurrentIndex: len(c.History.Data) - 1,
+		CurrentMatch: "",
 	}
 
 	in := prompt.New(
 		func(s string) {},
-		reverseISearchCompleter(c.History.Data, writer, searchState, livePrefixState),
+		reverseisearch.SearchCompleter(c.History.Data, writer, searchState, livePrefixState),
 		prompt.OptionSetExitCheckerOnInput(func(input string, lineBreak bool) bool {
 			return !c.reverseISearchEnabled
 		}),
@@ -373,7 +374,7 @@ func (c *InputController) reverseISearch() string {
 		}),
 		prompt.OptionAddKeyBind(prompt.KeyBind{
 			Key: prompt.ControlR,
-			Fn:  c.exitFromSearch,
+			Fn:  reverseisearch.NextResult(writer, c.History.Data, searchState, livePrefixState),
 		}),
 		prompt.OptionWriter(writer),
 		prompt.OptionTitle("bck-i-search"),
@@ -389,7 +390,7 @@ func (c *InputController) reverseISearch() string {
 		}),
 	)
 	in.Run()
-	return searchState.currentMatch
+	return searchState.CurrentMatch
 }
 
 func (c *InputController) exitFromSearch(buffer *prompt.Buffer) {
