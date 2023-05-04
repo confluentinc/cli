@@ -175,7 +175,9 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 
 	for _, workerConfig := range workerConfigs {
 		output.Printf("Updating worker config at %s\n", workerConfig)
-		updateWorkerConfig(pluginDir, workerConfig, dryRun)
+		if err := updateWorkerConfig(pluginDir, workerConfig, dryRun); err != nil {
+			return err
+		}
 	}
 
 	return nil
