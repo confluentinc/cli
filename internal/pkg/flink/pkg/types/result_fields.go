@@ -3,6 +3,7 @@ package types
 import (
 	"fmt"
 	v1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"
+	"math"
 	"strings"
 )
 
@@ -109,7 +110,14 @@ func NewResultFieldType(obj v1.DataType) StatementResultFieldType {
 }
 
 type FormatterOptions struct {
-	// todo window size etc.
+	MaxCharCountToDisplay int
+}
+
+func (f *FormatterOptions) GetMaxCharCountToDisplay() int {
+	if f == nil {
+		return math.MaxInt32
+	}
+	return f.MaxCharCountToDisplay
 }
 
 type StatementResultField interface {
@@ -128,6 +136,10 @@ func (f AtomicStatementResultField) GetType() StatementResultFieldType {
 }
 
 func (f AtomicStatementResultField) Format(options *FormatterOptions) string {
+	maxValueLen := options.GetMaxCharCountToDisplay()
+	if len(f.Value) > maxValueLen {
+		return f.Value[:maxValueLen] + "..."
+	}
 	return f.Value
 }
 

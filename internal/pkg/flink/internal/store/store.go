@@ -5,6 +5,7 @@ import (
 	_ "embed"
 	"fmt"
 	"log"
+	"net/http"
 	"strings"
 	"time"
 
@@ -99,13 +100,12 @@ func (s *Store) WaitPendingStatement(ctx context.Context, statement types.Proces
 	statementStatus := statement.Status
 	if statementStatus != types.COMPLETED && statementStatus != types.RUNNING && !s.demoMode {
 		// Variable that controls how often we poll a pending statement
-		const retries = 30
-		const waitTime = time.Second * 2
-		updatedStatement, err := s.waitForPendingStatement(ctx, statement.StatementName, retries, waitTime)
+		const retries = 40
+		const initialWaitTime = time.Millisecond * 300
+		updatedStatement, err := s.waitForPendingStatement(ctx, statement.StatementName, retries, initialWaitTime)
 
-		// Check for errors
 		if err != nil {
-			return nil, &types.StatementError{Msg: err.Error()}
+			return nil, err
 		}
 
 		// Check for failed or cancelled statements
@@ -129,12 +129,11 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 	if statementStatus != types.COMPLETED && statementStatus != types.RUNNING && !s.demoMode {
 		// Variable that controls how often we poll a pending statement
 		const retries = 30
-		const waitTime = time.Second * 2
+		const waitTime = time.Millisecond * 300
 		updatedStatement, err := s.waitForPendingStatement(context.Background(), statement.StatementName, retries, waitTime)
 
-		// Check for errors
 		if err != nil {
-			return nil, &types.StatementError{Msg: err.Error()}
+			return nil, err
 		}
 
 		// Check for failed or cancelled statements
@@ -188,7 +187,7 @@ func (s *Store) DeleteStatement(statementName string) bool {
 		httpResponse, err := s.client.DeleteStatement(context.Background(), statementName)
 
 		if err != nil {
-			log.Print(err.Error())
+			log.Printf("Failed to delete the statement: %s", err.Error())
 			return false
 		}
 
@@ -200,31 +199,50 @@ func (s *Store) DeleteStatement(statementName string) bool {
 	return true
 }
 
-func (s *Store) waitForPendingStatement(ctx context.Context, statementName string, retries int, waitTime time.Duration) (*types.ProcessedStatement, error) {
+func (s *Store) waitForPendingStatement(ctx context.Context, statementName string, retries int, waitTime time.Duration) (*types.ProcessedStatement, *types.StatementError) {
+	var capturedErrors []string
 	for i := 0; i < retries; i++ {
 		select {
 		case <-ctx.Done():
-			return nil, &types.StatementError{Msg: "Error: Statement was canceled by the user."}
+			return nil, &types.StatementError{Msg: "Error: Statement was canceled by the user.", HttpResponseCode: 499}
 		default:
 			statementObj, httpResponse, err := s.client.GetStatement(context.Background(), statementName)
 
 			if err != nil {
-				return nil, err
+				return nil, &types.StatementError{Msg: "Error: " + err.Error()}
 			}
 
-			if httpResponse.StatusCode < 200 || httpResponse.StatusCode >= 300 {
-				return nil, &types.StatementError{Msg: "Error: " + statementObj.Status.GetDetail()}
+			if httpResponse.StatusCode == http.StatusRequestTimeout ||
+				httpResponse.StatusCode == http.StatusTooEarly ||
+				httpResponse.StatusCode == http.StatusInternalServerError ||
+				httpResponse.StatusCode == http.StatusServiceUnavailable ||
+				httpResponse.StatusCode == http.StatusGatewayTimeout {
+				capturedErrors = append(capturedErrors, statementObj.Status.GetDetail())
+			} else if httpResponse.StatusCode < 200 || httpResponse.StatusCode >= 300 {
+				return nil, &types.StatementError{Msg: "Error: " + statementObj.Status.GetDetail(), HttpResponseCode: httpResponse.StatusCode}
+			} else {
+				phase := types.PHASE(statementObj.Status.GetPhase())
+				if phase != types.PENDING {
+					return types.NewProcessedStatement(statementObj), nil
+				}
 			}
-
-			phase := types.PHASE(statementObj.Status.GetPhase())
-			if phase != types.PENDING {
-				return types.NewProcessedStatement(statementObj), nil
-			}
-			time.Sleep(waitTime)
 		}
+
+		if len(capturedErrors) > 5 {
+			break
+		}
+
+		time.Sleep(waitTime)
+
+		// exponential backoff
+		waitTime = waitTime * 11 / 10
 	}
 
-	return nil, &types.StatementError{Msg: fmt.Sprintf("Error: Statement is still pending after %d retries", retries)}
+	var errorsMsg string
+	if len(capturedErrors) > 0 {
+		errorsMsg = fmt.Sprintf(" Captured retriable errors: %s", strings.Join(capturedErrors, "; "))
+	}
+	return nil, &types.StatementError{Msg: fmt.Sprintf("Error: Statement is still pending after %d retries.%s", retries, errorsMsg)}
 }
 
 func NewStore(client GatewayClientInterface, exitApplication func(), appOptions *types.ApplicationOptions) StoreInterface {

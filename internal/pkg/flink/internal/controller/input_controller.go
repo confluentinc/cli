@@ -109,8 +109,12 @@ func (c *InputController) RunInteractiveInput() {
 			cancelWaitPendingStatement()
 		})
 
+		statementName := processedStatement.StatementName
 		processedStatement, err = c.store.WaitPendingStatement(ctx, *processedStatement)
 		if err != nil {
+			if err.HttpResponseCode == 499 {
+				go c.store.DeleteStatement(statementName)
+			}
 			cancelListenToUserInput()
 			fmt.Println(err.Error())
 			c.isSessionValid(err)
@@ -130,8 +134,8 @@ func (c *InputController) RunInteractiveInput() {
 			if demoMode {
 				if rapid.Bool().Example() {
 					mockExample := generators.MockResults(5, 2).Example()
-					statementresults, _ := results.ConvertToInternalResults(*mockExample.StatementResults.Results.Data, mockExample.ResultSchema)
-					processedStatement.StatementResults = statementresults
+					statementResults, _ := results.ConvertToInternalResults(*mockExample.StatementResults.Results.Data, mockExample.ResultSchema)
+					processedStatement.StatementResults = statementResults
 					processedStatement.PageToken = ""
 				}
 			}
@@ -140,6 +144,12 @@ func (c *InputController) RunInteractiveInput() {
 		}
 
 		printResultToSTDOUT(processedStatement.StatementResults)
+		// We already printed the results using plain text and will delete the statement. When using TView this will happen upon leaving the interactive view.
+		// TODO - this is currently used only to save system resources, To be removed once the API Server becomes scalable.
+		// We want to maintain a "completed" statement in the backend
+		if !processedStatement.IsLocalStatement {
+			go c.store.DeleteStatement(processedStatement.StatementName)
+		}
 	}
 }
 
@@ -237,11 +247,12 @@ func printResultToSTDOUT(statementResults *types.StatementResults) {
 		return
 	}
 
+	formatterOptions := &types.FormatterOptions{MaxCharCountToDisplay: 77}
 	var formattedResults [][]string
 	for _, row := range statementResults.Rows {
 		var formattedRow []string
 		for _, field := range row.Fields {
-			formattedRow = append(formattedRow, field.Format(nil))
+			formattedRow = append(formattedRow, field.Format(formatterOptions))
 		}
 		formattedResults = append(formattedResults, formattedRow)
 	}

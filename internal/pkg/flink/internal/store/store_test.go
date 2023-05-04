@@ -105,7 +105,7 @@ func TestWaitForPendingTimesout(t *testing.T) {
 	}
 	client.EXPECT().GetStatement(gomock.Any(), statementName).Return(statementObj, &httpRes, nil).Times(retries)
 	processedStatement, err := s.waitForPendingStatement(context.Background(), statementName, retries, waitTime)
-	assert.EqualError(t, err, fmt.Sprintf("Error: Statement is still pending after %d retries", retries))
+	assert.EqualError(t, err, fmt.Sprintf("Error: Statement is still pending after %d retries.", retries))
 	assert.Nil(t, processedStatement)
 }
 
@@ -157,7 +157,7 @@ func TestWaitForPendingStatementErrors(t *testing.T) {
 	expectedErr := errors.New("couldn't get statement!")
 	client.EXPECT().GetStatement(gomock.Any(), statementName).Return(statementObj, nil, expectedErr).Times(1)
 	_, err := s.waitForPendingStatement(context.Background(), statementName, retries, waitTime)
-	assert.EqualError(t, err, expectedErr.Error())
+	assert.EqualError(t, err, "Error: "+expectedErr.Error())
 }
 
 func TestCancelPendingStatement(t *testing.T) {

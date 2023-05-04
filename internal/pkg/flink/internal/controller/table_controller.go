@@ -37,6 +37,7 @@ type TableController struct {
 	cancelFetch                  context.CancelFunc
 	tableLock                    sync.Mutex
 	cancelLock                   sync.RWMutex
+	formatterOptions             *types.FormatterOptions
 }
 
 const maxResultsCapacity int = 1000
@@ -178,6 +179,7 @@ func (t *TableController) Init(statement types.ProcessedStatement) {
 	t.materializedStatementResults = results.NewMaterializedStatementResults(statement.StatementResults.GetHeaders(), maxResultsCapacity)
 	t.materializedStatementResults.SetTableMode(!t.hasUserDisabledTableMode)
 	t.materializedStatementResults.AppendAll(statement.StatementResults.GetRows())
+	t.formatterOptions = &types.FormatterOptions{MaxCharCountToDisplay: 77}
 	// if unbounded result start refreshing results in the background
 	if statement.PageToken != "" && !t.hasUserDisabledAutoFetch {
 		t.startAutoRefresh(statement, defaultRefreshInterval)
@@ -230,7 +232,7 @@ func (t *TableController) renderData() {
 		row := iterator.GetNext()
 		for colIdx, field := range row.Fields {
 			color := tcell.ColorWhite
-			tableCell := tview.NewTableCell(tview.Escape(field.Format(nil))).
+			tableCell := tview.NewTableCell(tview.Escape(field.Format(t.formatterOptions))).
 				SetTextColor(color).
 				SetAlign(tview.AlignLeft)
 			t.table.SetCell(rowIdx, colIdx, tableCell)

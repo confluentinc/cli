@@ -47,7 +47,7 @@ func StartApp(envId, orgResourceId, kafkaClusterId, computePoolId string, authTo
 	interactiveOutput := components.InteractiveOutput(table, shortcuts)
 	rootLayout := components.RootLayout(interactiveOutput)
 
-	// We start tview and then suspend it immediately so we intialize all components
+	// We start tview and then suspend it immediately so we initialize all components
 	app.SetAfterDrawFunc(func(screen tcell.Screen) {
 		if !screen.HasPendingEvent() {
 			once.Do(func() {

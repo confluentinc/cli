@@ -119,3 +119,25 @@ func (s *ResultConverterTestSuite) TestExtractPageToken() {
 	require.Equal(s.T(), "eyJWZX", token)
 	require.Nil(s.T(), err)
 }
+
+func (s *ResultConverterTestSuite) TestFormatField() {
+	rapid.Check(s.T(), func(t *rapid.T) {
+		atomicDataType := generators.AtomicDataType().Draw(t, "atomic data type")
+		atomicField := generators.GetResultItemGeneratorForType(atomicDataType).Draw(t, "atomic result field")
+		convertedField := convertToInternalField(atomicField, v1.ColumnDetails{
+			Name: "Test_Column",
+			Type: atomicDataType,
+		})
+
+		val := "NULL"
+		if types.NewResultFieldType(atomicDataType) != types.NULL {
+			val = string(*atomicField.SqlV1alpha1ResultItemString)
+		}
+
+		require.Equal(s.T(), val, convertedField.Format(nil))
+		maxDisplayableCharCount := rapid.IntRange(1, 3).Draw(t, "max displayable chars")
+		if len(val) > maxDisplayableCharCount {
+			require.Equal(s.T(), val[:maxDisplayableCharCount]+"...", convertedField.Format(&types.FormatterOptions{MaxCharCountToDisplay: maxDisplayableCharCount}))
+		}
+	})
+}
