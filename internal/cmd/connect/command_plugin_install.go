@@ -129,7 +129,7 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 	if previousInstallations, err := existingPluginInstallation(pluginDir, pluginManifest); err != nil {
 		return err
 	} else if len(previousInstallations) > 0 {
-		output.Printf("\nA version of this plugin is already installed.\n")
+		output.Print("\nA version of this plugin is already installed.\n")
 		for _, previousInstallation := range previousInstallations {
 			if err := uninstall(previousInstallation, dryRun, force); err != nil {
 				return err
