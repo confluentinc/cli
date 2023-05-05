@@ -76,11 +76,10 @@ endif
 gorelease:
 	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
 	
-	# rm -rf prebuilt/ && \
-	# mkdir prebuilt/ && \
-	# scripts/build_linux_glibc.sh && \
-
 	$(aws-authenticate) && \
+	rm -rf prebuilt/ && \
+	mkdir prebuilt/ && \
+	scripts/build_linux_glibc.sh && \
 	GORELEASER_KEY=$(GORELEASER_KEY) VERSION=$(VERSION) GOEXPERIMENT=boringcrypto S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli GITHUB_TOKEN=$(token) DRY_RUN=$(DRY_RUN) goreleaser release --clean --release-notes release-notes/latest-release.rst --timeout 60m
 
 # Current goreleaser still has some shortcomings for the our use, and the target patches those issues
