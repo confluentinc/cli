@@ -26,8 +26,10 @@ import (
 type manifest struct {
 	Owner struct {
 		Username string `json:"username"`
+		Name     string `json:"name"`
 	} `json:"owner"`
 	Name    string `json:"name"`
+	Title   string `json:"title"`
 	Version string `json:"version"`
 	Archive struct {
 		Url  string `json:"url"`
@@ -115,7 +117,7 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 
 	var ins *installation
 	if pluginDir == "" {
-		ins, err = getInstallation(cmd, force)
+		ins, err = getConfluentPlatformInstallation(cmd, force)
 		if err != nil {
 			return err
 		}
@@ -129,7 +131,7 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 	if previousInstallations, err := existingPluginInstallation(pluginDir, pluginManifest); err != nil {
 		return err
 	} else if len(previousInstallations) > 0 {
-		output.Printf("\nA version of this plugin is already installed.\n")
+		output.Printf("\nA version of this plugin is already installed and must be removed to continue.\n")
 		for _, previousInstallation := range previousInstallations {
 			if err := uninstall(previousInstallation, dryRun, force); err != nil {
 				return err
@@ -142,6 +144,7 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	output.Printf("\nInstalling %s %s, provided by %s\n", pluginManifest.Title, pluginManifest.Version, pluginManifest.Owner.Name)
 	if dryRun {
 		output.Println("[DRY RUN] Skipping plugin installation.")
 	} else {
@@ -164,7 +167,7 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 
 	if len(workerConfigs) == 0 {
 		if ins == nil {
-			ins, err = getInstallation(cmd, force)
+			ins, err = getConfluentPlatformInstallation(cmd, force)
 			if err != nil {
 				return err
 			}

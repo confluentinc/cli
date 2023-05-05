@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -36,7 +37,7 @@ type listOut struct {
 	Description string `human:"Description"`
 }
 
-func getInstallation(cmd *cobra.Command, force bool) (*installation, error) {
+func getConfluentPlatformInstallation(cmd *cobra.Command, force bool) (*installation, error) {
 	installations, err := findInstallationDirectories()
 	if err != nil {
 		return nil, err
@@ -149,7 +150,9 @@ func findInstallationDirectories() ([]installation, error) {
 		result = append(result, ins)
 	}
 
-	return result, nil
+	unique := compactDuplicateInstallations(result)
+
+	return unique, nil
 }
 
 func hasArchiveInstallation(dir string) bool {
@@ -158,6 +161,40 @@ func hasArchiveInstallation(dir string) bool {
 	}
 
 	return utils.DoesPathExist(filepath.Join(dir, filepath.FromSlash("share/java/confluent-common")))
+}
+
+func compactDuplicateInstallations(installations []installation) []installation {
+	if len(installations) == 0 {
+		return []installation{}
+	}
+
+	sort.SliceStable(installations, func(i, j int) bool {
+		if installations[i].Type == installations[j].Type {
+			return installations[i].Path < installations[j].Path
+		}
+		return installations[i].Type < installations[j].Type
+	})
+
+	equalInstallations := func(i, j int) bool {
+		return (installations[i].Type == installations[j].Type) && (installations[i].Path == installations[j].Path)
+	}
+
+	var uniqueInstallations []installation
+	i := 0
+	for j, ins := range installations {
+		if j == i {
+			continue
+		}
+		if equalInstallations(i, j) {
+			installations[i].Use = fmt.Sprintf("%s, %s", installations[i].Use, ins.Use)
+		} else {
+			uniqueInstallations = append(uniqueInstallations, installations[i])
+			i = j
+		}
+	}
+	uniqueInstallations = append(uniqueInstallations, installations[i])
+
+	return uniqueInstallations
 }
 
 func choosePluginDir(ins *installation, force bool) (string, error) {
