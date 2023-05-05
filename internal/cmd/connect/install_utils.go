@@ -134,17 +134,17 @@ func findInstallationDirectories() ([]installation, error) {
 	}
 	cliDirectory := filepath.Dir(cliPath)
 	cliUse := "CLI Installation Directory"
-	if hasArchiveInstallation(cliDirectory) {
-		ins := installation{
-			Type: archiveInstallation,
-			Path: cliDirectory,
-			Use:  cliUse,
-		}
-		result = append(result, ins)
-	} else if filepath.ToSlash(cliDirectory) == "/usr/bin" && hasPackageInstallation {
+	if filepath.ToSlash(cliDirectory) == "/usr/bin" && hasPackageInstallation {
 		ins := installation{
 			Type: packageInstallation,
 			Path: filepath.FromSlash("/"),
+			Use:  cliUse,
+		}
+		result = append(result, ins)
+	} else if filepath.Base(cliDirectory) == "bin" && hasArchiveInstallation(filepath.Dir(cliDirectory)) {
+		ins := installation{
+			Type: archiveInstallation,
+			Path: filepath.Dir(cliDirectory),
 			Use:  cliUse,
 		}
 		result = append(result, ins)
