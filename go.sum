@@ -134,12 +134,16 @@ github.com/confluentinc/confluent-kafka-go v1.9.3-RC3 h1:urDeBIsNr0hgRf3nZn66SHt
 github.com/confluentinc/confluent-kafka-go v1.9.3-RC3/go.mod h1:NlSjbxG73kJM0iKUC6/CDbMnY3H4WF6e+YFBlfLffi8=
 github.com/confluentinc/flink-sql-client v0.142.0 h1:UxA0vt8p7YpiaQC/y6YgHHIAGmhaUGooiBeC3ZA3p6E=
 github.com/confluentinc/flink-sql-client v0.142.0/go.mod h1:lg2HVueB8Cd7rKsZzvV4v64s8EVDpPCnVbOrJiyQ4SE=
+github.com/confluentinc/flink-sql-client v0.144.0 h1:lG0rSmoBvN7X8iKf3yGPh+9tmT89t/Jb3OE0QHdnTP0=
+github.com/confluentinc/flink-sql-client v0.144.0/go.mod h1:7VSKHbPLYnzNhJmakQDm3e3ha/qGjgNr5Ovt6v3nUg4=
 github.com/confluentinc/go-editor v0.11.0 h1:fcEALYHj7xV/fRSp54/IHi2DS4GlZMJWVgrYvi/llvU=
 github.com/confluentinc/go-editor v0.11.0/go.mod h1:nEjwqdqx8S7ZGjXsDvRgawsA04Fu2P/KAtA8fa5afMI=
 github.com/confluentinc/go-netrc v0.0.0-20220321173724-4d50f36ff450 h1:YJq9ZRhj049uo3hX7V8imJid+FJEBFyRmVcdruhU3y4=
 github.com/confluentinc/go-netrc v0.0.0-20220321173724-4d50f36ff450/go.mod h1:GGVB1yDj9YYQTxoo5vTRGWuQKccGN00bvyit4O5jznI=
 github.com/confluentinc/go-prompt v0.2.15 h1:ezhJVrVeUnGWfcahttuKR6rToKzEAqF0T37OJDXFpfY=
 github.com/confluentinc/go-prompt v0.2.15/go.mod h1:0/96NuLIRbdbXGLYHfGlr5tRv3ilxVfz5M5ZqnCs1ps=
+github.com/confluentinc/go-prompt v0.2.16 h1:cwKYRjp2nAcZV5fKEyMqUCegVcSt7p9nvOfOyvM/WjU=
+github.com/confluentinc/go-prompt v0.2.16/go.mod h1:0/96NuLIRbdbXGLYHfGlr5tRv3ilxVfz5M5ZqnCs1ps=
 github.com/confluentinc/go-ps1 v1.0.2 h1:+4cKOzWs3AWmxL2s96oHu0QutZESDRXECnhFzm2ic4o=
 github.com/confluentinc/go-ps1 v1.0.2/go.mod h1:qmgG9xQgFd4u7/CS6eA9nNP8eQqOtXuRHmZ4+w7Vprs=
 github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.3.14 h1:/ifiYRgvbtzTrMxsntzAc2NFXsZxfCpjHZG03X9BDxw=
