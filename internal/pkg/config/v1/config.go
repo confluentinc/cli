@@ -9,8 +9,6 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/confluentinc/cli/internal/pkg/log"
-
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/google/uuid"
 	"github.com/hashicorp/go-version"
@@ -19,8 +17,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/secret"
-	"github.com/confluentinc/cli/internal/pkg/utils"
-	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 const (
