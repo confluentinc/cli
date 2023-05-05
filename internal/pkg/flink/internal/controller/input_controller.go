@@ -149,7 +149,7 @@ func (c *InputController) RunInteractiveInput() {
 		// We already printed the results using plain text and will delete the statement. When using TView this will happen upon leaving the interactive view.
 		// TODO - this is currently used only to save system resources, To be removed once the API Server becomes scalable.
 		// We want to maintain a "completed" statement in the backend
-		if !processedStatement.IsLocalStatement {
+		if !processedStatement.IsLocalStatement && processedStatement.Status != types.RUNNING {
 			go c.store.DeleteStatement(processedStatement.StatementName)
 		}
 	}

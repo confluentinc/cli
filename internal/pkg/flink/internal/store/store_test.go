@@ -578,3 +578,101 @@ func (s *StoreTestSuite) TestDeleteStatementFailsOn404() {
 	wasStatementDeleted := store.DeleteStatement(statementName)
 	require.False(s.T(), wasStatementDeleted)
 }
+
+func (s *StoreTestSuite) TestFetchResultsNoRetryWithCompletedStatement() {
+	ctrl := gomock.NewController(s.T())
+	defer ctrl.Finish()
+
+	// create objects
+	client := mock.NewMockGatewayClientInterface(ctrl)
+	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
+	store := NewStore(client, mockAppController.ExitApplication, nil)
+
+	statement := types.ProcessedStatement{
+		StatementName: "TEST_STATEMENT",
+		Status:        types.COMPLETED,
+	}
+	statementResultObj := v1.SqlV1alpha1StatementResult{
+		Metadata: v1.ResultListMeta{},
+		Results:  &v1.SqlV1alpha1StatementResultResults{},
+	}
+	client.EXPECT().GetStatementResults(gomock.Any(), statement.StatementName, statement.PageToken).Return(statementResultObj, nil, nil)
+
+	statementResults, err := store.FetchStatementResults(statement)
+	require.NotNil(s.T(), statementResults)
+	require.Nil(s.T(), err)
+}
+
+func (s *StoreTestSuite) TestFetchResultsRetryWithRunningStatement() {
+	ctrl := gomock.NewController(s.T())
+	defer ctrl.Finish()
+
+	// create objects
+	client := mock.NewMockGatewayClientInterface(ctrl)
+	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
+	store := NewStore(client, mockAppController.ExitApplication, nil)
+
+	statement := types.ProcessedStatement{
+		StatementName: "TEST_STATEMENT",
+		Status:        types.RUNNING,
+	}
+	statementResultObj := v1.SqlV1alpha1StatementResult{
+		Metadata: v1.ResultListMeta{},
+		Results:  &v1.SqlV1alpha1StatementResultResults{},
+	}
+	client.EXPECT().GetStatementResults(gomock.Any(), statement.StatementName, statement.PageToken).Return(statementResultObj, nil, nil).Times(5)
+
+	statementResults, err := store.FetchStatementResults(statement)
+	require.NotNil(s.T(), statementResults)
+	require.Nil(s.T(), err)
+}
+
+func (s *StoreTestSuite) TestFetchResultsNoRetryWhenPageTokenExists() {
+	ctrl := gomock.NewController(s.T())
+	defer ctrl.Finish()
+
+	// create objects
+	client := mock.NewMockGatewayClientInterface(ctrl)
+	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
+	store := NewStore(client, mockAppController.ExitApplication, nil)
+
+	statement := types.ProcessedStatement{
+		StatementName: "TEST_STATEMENT",
+		Status:        types.RUNNING,
+	}
+	nextPage := "https://devel.cpdev.cloud/some/results?page_token=eyJWZX"
+	statementResultObj := v1.SqlV1alpha1StatementResult{
+		Metadata: v1.ResultListMeta{Next: &nextPage},
+		Results:  &v1.SqlV1alpha1StatementResultResults{},
+	}
+	client.EXPECT().GetStatementResults(gomock.Any(), statement.StatementName, statement.PageToken).Return(statementResultObj, nil, nil)
+
+	statementResults, err := store.FetchStatementResults(statement)
+	require.NotNil(s.T(), statementResults)
+	require.Nil(s.T(), err)
+}
+
+func (s *StoreTestSuite) TestFetchResultsNoRetryWhenResultsExist() {
+	ctrl := gomock.NewController(s.T())
+	defer ctrl.Finish()
+
+	// create objects
+	client := mock.NewMockGatewayClientInterface(ctrl)
+	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
+	store := NewStore(client, mockAppController.ExitApplication, nil)
+
+	statement := types.ProcessedStatement{
+		StatementName: "TEST_STATEMENT",
+		Status:        types.RUNNING,
+	}
+	op := int32(0)
+	statementResultObj := v1.SqlV1alpha1StatementResult{
+		Metadata: v1.ResultListMeta{},
+		Results:  &v1.SqlV1alpha1StatementResultResults{Data: &[]v1.SqlV1alpha1ResultItem{{Op: &op}}},
+	}
+	client.EXPECT().GetStatementResults(gomock.Any(), statement.StatementName, statement.PageToken).Return(statementResultObj, nil, nil)
+
+	statementResults, err := store.FetchStatementResults(statement)
+	require.NotNil(s.T(), statementResults)
+	require.Nil(s.T(), err)
+}

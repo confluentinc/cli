@@ -4,6 +4,7 @@ import (
 	"context"
 	_ "embed"
 	"fmt"
+	"github.com/confluentinc/flink-sql-client/test/generators"
 	"log"
 	"net/http"
 	"strings"
@@ -11,7 +12,6 @@ import (
 
 	"github.com/confluentinc/flink-sql-client/internal/results"
 	"github.com/confluentinc/flink-sql-client/pkg/types"
-	"github.com/confluentinc/flink-sql-client/test/generators"
 )
 
 const (
@@ -125,28 +125,6 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 		return &statement, nil
 	}
 
-	statementStatus := statement.Status
-	if statementStatus != types.COMPLETED && statementStatus != types.RUNNING && !s.demoMode {
-		// Variable that controls how often we poll a pending statement
-		const retries = 30
-		const waitTime = time.Millisecond * 300
-		updatedStatement, err := s.waitForPendingStatement(context.Background(), statement.StatementName, retries, waitTime)
-
-		if err != nil {
-			return nil, err
-		}
-
-		// Check for failed or cancelled statements
-		statementStatus = updatedStatement.Status
-		if statementStatus != types.COMPLETED && statementStatus != types.RUNNING {
-			return nil, &types.StatementError{Msg: fmt.Sprintf("Error: Can't fetch results. Statement phase is: %s", statementStatus)}
-		}
-		statement = *updatedStatement
-	}
-	// Process remote statements that are now running or completed
-	statementResultObj, resp, err := s.client.GetStatementResults(context.Background(), statement.StatementName, statement.PageToken)
-	err = processHttpErrors(resp, err)
-
 	// TODO: Remove this once we have a real backend
 	if s.demoMode {
 		mockResults := generators.MockCount(s.mockCount)
@@ -161,23 +139,36 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 		statement.PageToken = "TEST"
 		return &statement, nil
 	}
-	if err != nil {
-		return nil, &types.StatementError{Msg: err.Error()}
-	}
 
-	statementResults := statementResultObj.GetResults()
-	convertedResults, err := results.ConvertToInternalResults(statementResults.GetData(), statement.ResultSchema)
-	if err != nil {
-		return nil, &types.StatementError{Msg: "Error: " + err.Error()}
-	}
-	statement.StatementResults = convertedResults
+	// Process remote statements that are now running or completed
+	runningNoTokenRetries := 5
+	for i := 0; i < runningNoTokenRetries; i++ {
+		// TODO: we need to retry a few times on transient errors
+		statementResultObj, resp, err := s.client.GetStatementResults(context.Background(), statement.StatementName, statement.PageToken)
 
-	statementMetadata := statementResultObj.GetMetadata()
-	extractedToken, err := results.ExtractPageToken(statementMetadata.GetNext())
-	if err != nil {
-		return nil, &types.StatementError{Msg: "Error: " + err.Error()}
+		err = processHttpErrors(resp, err)
+		if err != nil {
+			return nil, &types.StatementError{Msg: err.Error()}
+		}
+
+		statementResults := statementResultObj.GetResults()
+		convertedResults, err := results.ConvertToInternalResults(statementResults.GetData(), statement.ResultSchema)
+		if err != nil {
+			return nil, &types.StatementError{Msg: "Error: " + err.Error()}
+		}
+		statement.StatementResults = convertedResults
+
+		statementMetadata := statementResultObj.GetMetadata()
+		extractedToken, err := results.ExtractPageToken(statementMetadata.GetNext())
+		if err != nil {
+			return nil, &types.StatementError{Msg: "Error: " + err.Error()}
+		}
+		statement.PageToken = extractedToken
+		if statement.Status == types.COMPLETED || statement.PageToken != "" || len(statementResults.GetData()) > 0 {
+			// We try a few times to get non-empty token for RUNNING statements
+			break
+		}
 	}
-	statement.PageToken = extractedToken
 	return &statement, nil
 }
 
