@@ -178,7 +178,7 @@ func TestCancelPendingStatement(t *testing.T) {
 	}
 	httpRes := http.Response{StatusCode: 200}
 
-	expectedErr := &types.StatementError{Msg: "Error: Statement was canceled by the user."}
+	expectedErr := &types.StatementError{Msg: "Result retrieval aborted. Statement will be deleted."}
 	client.EXPECT().GetStatement(gomock.Any(), statementName).Return(statementObj, &httpRes, nil).AnyTimes()
 
 	// Schedule routine to cancel context

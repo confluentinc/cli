@@ -62,7 +62,7 @@ type ResultsFetchState string
 const (
 	PENDING   ResultsFetchState = "PENDING"
 	STARTED   ResultsFetchState = "STARTED"
-	CANCELED  ResultsFetchState = "CANCELED"
+	CANCELLED ResultsFetchState = "CANCELLED"
 	COMPLETED ResultsFetchState = "COMPLETED"
 )
 
@@ -207,16 +207,24 @@ func renderMsgAndStatus(statementResult *types.ProcessedStatement) {
 	if statementResult == nil {
 		return
 	}
-	if statementResult.StatusDetail != "" {
-		fmt.Println(statementResult.StatusDetail)
+
+	if statementResult.IsLocalStatement {
+		if statementResult.Status != "FAILED" {
+			fmt.Println("Statement successfully submitted.\n ")
+		} else {
+			fmt.Println("Error: Couldn't process statement. Please check your statement and try again.")
+		}
 	} else {
-		fmt.Println("Statement successfully submitted.")
-	}
-	if statementResult.StatementName != "" {
-		fmt.Println("Statement ID: " + statementResult.StatementName)
-	}
-	if statementResult.Status != "" {
-		fmt.Println("Current status: " + statementResult.Status + ".")
+
+		if statementResult.StatementName != "" {
+			fmt.Println("Statement ID: " + statementResult.StatementName)
+		}
+		if statementResult.Status != "FAILED" {
+			fmt.Println("Statement successfully submitted. ")
+			fmt.Println("Fetching results...\n ")
+		} else {
+			fmt.Println("Error: Statement submission failed. There could a problem with the server right now. Check your statement and try again.")
+		}
 	}
 }
 

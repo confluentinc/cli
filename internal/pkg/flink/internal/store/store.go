@@ -204,7 +204,7 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 	for i := 0; i < retries; i++ {
 		select {
 		case <-ctx.Done():
-			return nil, &types.StatementError{Msg: "Error: Statement was canceled by the user.", HttpResponseCode: 499}
+			return nil, &types.StatementError{Msg: "Result retrieval aborted. Statement will be deleted.", HttpResponseCode: 499}
 		default:
 			statementObj, httpResponse, err := s.client.GetStatement(context.Background(), statementName)
 
