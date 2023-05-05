@@ -61,8 +61,8 @@ builds:
     hooks:
       post:
         - cmd: make download-licenses
-        - cmd: scripts/gon_filepath_editor.sh {{ .Path }} amd64
-        - cmd: gon dist/gon_confluent_amd64.hcl
+        # - cmd: scripts/gon_filepath_editor.sh {{ .Path }} amd64
+        # - cmd: gon dist/gon_confluent_amd64.hcl
   - id: confluent-darwin-arm64
     binary: confluent
     main: cmd/confluent/main.go
@@ -80,10 +80,10 @@ builds:
       - darwin
     goarch:
       - arm64
-    hooks:
-      post:
-        - cmd: scripts/gon_filepath_editor.sh {{ .Path }} arm64
-        - cmd: gon dist/gon_confluent_arm64.hcl
+    # hooks:
+    #   post:
+    #     - cmd: scripts/gon_filepath_editor.sh {{ .Path }} arm64
+    #     - cmd: gon dist/gon_confluent_arm64.hcl
   - id: confluent-linux
     builder: prebuilt
     goos:
@@ -115,14 +115,14 @@ builds:
       - windows
     goarch:
       - amd64
-    hooks:
-      pre:
-        - cmd: az login
-        - cmd: az keyvault secret download --file CLIEVCodeSigningCertificate2.pfx --name CLIEVCodeSigningCertificate2 --subscription cc-prod --vault-name CLICodeSigningKeyVault --encoding base64
-        - cmd: xattr -dr com.apple.quarantine ./lib/osslsigncode
-      post:
-        - cmd: ./lib/osslsigncode sign -n "Confluent CLI" -i "https://confluent.io" -pkcs12 CLIEVCodeSigningCertificate2.pfx -in {{ .Path }} -out {{ .Path }}
-        - cmd: rm CLIEVCodeSigningCertificate2.pfx
+    # hooks:
+    #   pre:
+    #     - cmd: az login
+    #     - cmd: az keyvault secret download --file CLIEVCodeSigningCertificate2.pfx --name CLIEVCodeSigningCertificate2 --subscription cc-prod --vault-name CLICodeSigningKeyVault --encoding base64
+    #     - cmd: xattr -dr com.apple.quarantine ./lib/osslsigncode
+    #   post:
+    #     - cmd: ./lib/osslsigncode sign -n "Confluent CLI" -i "https://confluent.io" -pkcs12 CLIEVCodeSigningCertificate2.pfx -in {{ .Path }} -out {{ .Path }}
+    #     - cmd: rm CLIEVCodeSigningCertificate2.pfx
 
 release:
   disable: "{{.Env.DRY_RUN}}"
@@ -189,3 +189,18 @@ blobs:
     region: us-west-2
     folder: "{{ .Env.S3FOLDER }}/archives/{{ .Version }}"
     disable: "{{ .Env.DRY_RUN }}" 
+
+brews:
+  - name: cli
+    ids:
+      - archive
+    tap:
+      owner: confluentinc
+      name: homebrew-tap
+      branch: "cli-{{ .Version }}"
+      pull_request:
+        enabled: true
+    homepage: https://docs.confluent.io/confluent-cli/current/overview.html
+    description: CLI for Confluent Cloud and Confluent Platform
+    skip_upload: true
+    test: system "#{bin}/confluent version"
