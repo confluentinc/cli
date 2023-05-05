@@ -20,12 +20,4 @@ release:
   disable: true
 
 archives:
-  - id: binary
-    format: binary
-  - id: archive
-    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
-    format: tar.gz
-    wrap_in_directory: "{{ .ProjectName }}"
-    files:
-      - LICENSE
-      - legal/**/*
+  - format: binary
