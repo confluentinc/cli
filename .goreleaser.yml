@@ -189,3 +189,12 @@ blobs:
     region: us-west-2
     folder: "{{ .Env.S3FOLDER }}/archives/{{ .Version }}"
     disable: "{{ .Env.DRY_RUN }}" 
+
+dockers:
+  - ids:
+      - confluent-alpine-amd64
+    image_templates:
+      - "confluentinc/confluent-cli:latest"
+      - "confluentinc/confluent-cli:{{ .Tag }}"
+    skip_push: "{{ .Env.DRY_RUN }}"
+    dockerfile: "dockerfiles/Dockerfile"
