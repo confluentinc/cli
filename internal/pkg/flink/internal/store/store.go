@@ -169,6 +169,7 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 			// We try a few times to get non-empty token for RUNNING statements
 			break
 		}
+		time.Sleep(time.Millisecond * 300)
 	}
 	return &statement, nil
 }
