@@ -77,7 +77,7 @@ gorelease:
 	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
 	
 	$(aws-authenticate) && \
-	if [ -d dist/ ]; rm -r dist/; fi && \
+	rm -rf dist && \
 	mkdir dist/ && \
 	scripts/build_linux_glibc.sh && \
 	GORELEASER_KEY=$(GORELEASER_KEY) VERSION=$(VERSION) GOEXPERIMENT=boringcrypto S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli GITHUB_TOKEN=$(token) DRY_RUN=$(DRY_RUN) goreleaser release --release-notes release-notes/latest-release --timeout 60m
