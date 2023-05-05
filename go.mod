@@ -30,7 +30,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/srcm v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/stream-designer v0.3.0
 	github.com/confluentinc/confluent-kafka-go v1.9.3-RC3
-	github.com/confluentinc/flink-sql-client v0.131.0
+	github.com/confluentinc/flink-sql-client v0.142.0
 	github.com/confluentinc/go-editor v0.11.0
 	github.com/confluentinc/go-netrc v0.0.0-20220321173724-4d50f36ff450
 	github.com/confluentinc/go-ps1 v1.0.2
@@ -96,7 +96,7 @@ require (
 	github.com/chromedp/cdproto v0.0.0-20230220211738-2b1ec77315c9 // indirect
 	github.com/chromedp/sysutil v1.0.0 // indirect
 	github.com/cloudflare/circl v1.1.0 // indirect
-	github.com/confluentinc/go-prompt v0.2.14 // indirect
+	github.com/confluentinc/go-prompt v0.2.15 // indirect
 	github.com/confluentinc/proto-go-setter v0.3.0 // indirect
 	github.com/envoyproxy/protoc-gen-validate v0.9.1 // indirect
 	github.com/gdamore/encoding v1.0.0 // indirect
