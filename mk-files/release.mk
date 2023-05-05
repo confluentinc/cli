@@ -55,10 +55,10 @@ define copy-stag-content-to-prod
 endef
 
 # The glibc container doesn't need to publish to S3 so it doesn't need to $(caasenv-authenticate)
-.PHONY: gorelease-linux-glibc
-gorelease-linux-glibc:
+.PHONY: gorelease-linux-glibc-amd64
+gorelease-linux-glibc-amd64:
 	go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
-	VERSION=$(VERSION) GOEXPERIMENT=boringcrypto goreleaser release --clean -f .goreleaser-linux-glibc.yml
+	VERSION=$(VERSION) GOEXPERIMENT=boringcrypto goreleaser release --clean -f .goreleaser-linux-glibc-amd64.yml
 
 .PHONY: gorelease-linux-glibc-arm64
 gorelease-linux-glibc-arm64:
