@@ -141,10 +141,11 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 	}
 
 	// Process remote statements that are now running or completed
+	pageToken := statement.PageToken
 	runningNoTokenRetries := 5
 	for i := 0; i < runningNoTokenRetries; i++ {
 		// TODO: we need to retry a few times on transient errors
-		statementResultObj, resp, err := s.client.GetStatementResults(context.Background(), statement.StatementName, statement.PageToken)
+		statementResultObj, resp, err := s.client.GetStatementResults(context.Background(), statement.StatementName, pageToken)
 
 		err = processHttpErrors(resp, err)
 		if err != nil {
