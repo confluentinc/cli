@@ -194,7 +194,7 @@ dockers:
   - ids:
       - confluent-alpine-amd64
     image_templates:
+      - "confluentinc/confluent-cli:{{ .Version }}"
       - "confluentinc/confluent-cli:latest"
-      - "confluentinc/confluent-cli:{{ .Tag }}"
     skip_push: "{{ .Env.DRY_RUN }}"
     dockerfile: "dockerfiles/Dockerfile"
