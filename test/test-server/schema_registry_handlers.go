@@ -371,7 +371,27 @@ func handleSRSubjectConfig(t *testing.T) http.HandlerFunc {
 			err = json.NewEncoder(w).Encode(srsdk.ConfigUpdateRequest{Compatibility: req.Compatibility})
 			require.NoError(t, err)
 		case http.MethodGet:
-			res := srsdk.Config{CompatibilityLevel: "FORWARD"}
+			res := srsdk.Config{
+				CompatibilityLevel: "FORWARD",
+				CompatibilityGroup: "application.version",
+				DefaultRuleSet: srsdk.RuleSet{
+					DomainRules: []srsdk.Rule{
+						{
+							Name: "checkSsnLen",
+							Kind: "CONDITION",
+							Mode: "WRITE",
+							Type: "CEL",
+							Expr: "size(message.ssn) == 9",
+						},
+					},
+				},
+				DefaultMetadata: srsdk.Metadata{
+					Properties: map[string]string{
+						"owner": "Bob Jones",
+						"email": "bob@acme.com",
+					},
+				},
+			}
 			err := json.NewEncoder(w).Encode(res)
 			require.NoError(t, err)
 		}

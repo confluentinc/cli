@@ -1,0 +1,8 @@
+{
+  "properties": {
+    "owner": "Bob Jones",
+    "email": "bob@acme.com"
+  },
+  "application.version": "v1"
+}
+
