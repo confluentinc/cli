@@ -2,9 +2,8 @@ module github.com/confluentinc/cli
 
 require (
 	github.com/antihax/optional v1.0.0
-	github.com/aws/aws-sdk-go v1.43.31
-	github.com/billgraziano/dpapi v0.4.0
-	github.com/brianstrauch/cobra-shell v0.4.0
+	github.com/aws/aws-sdk-go v1.42.47
+	github.com/brianstrauch/cobra-shell v0.2.4
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/confluentinc/bincover v0.2.0
 	github.com/confluentinc/cc-structs/kafka/billing v0.1071.0
@@ -61,7 +60,6 @@ require (
 	github.com/mattn/go-isatty v0.0.14
 	github.com/mitchellh/golicense v0.2.0
 	github.com/olekukonko/tablewriter v0.0.5
-	github.com/panta/machineid v1.0.2
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v1.3.0
@@ -80,7 +78,11 @@ require (
 	gopkg.in/square/go-jose.v2 v2.6.0
 )
 
-require github.com/keybase/go-keychain v0.0.0-20230307172405-3e4884637dd1
+require (
+	github.com/billgraziano/dpapi v0.4.0
+	github.com/keybase/go-keychain v0.0.0-20230307172405-3e4884637dd1
+	github.com/panta/machineid v1.0.2
+)
 
 require (
 	4d63.com/gochecknoglobals v0.1.0 // indirect
@@ -175,8 +177,8 @@ require (
 	github.com/confluentinc/cire-obelisk v0.357.0 // indirect
 	github.com/confluentinc/proto-go-setter v0.0.0-20201026155413-c6ceb267ee65 // indirect
 	github.com/confluentinc/protoc-gen-ccloud v0.0.4 // indirect
-	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
-	github.com/daixiang0/gci v0.6.3 // indirect
+	github.com/cpuguy83/go-md2man/v2 v2.0.1 // indirect
+	github.com/daixiang0/gci v0.2.9 // indirect
 	github.com/denis-tingajkin/go-header v0.4.2 // indirect
 	github.com/dghubble/go-twitter v0.0.0-20211115160449-93a8679adecb // indirect
 	github.com/dghubble/oauth1 v0.7.1 // indirect
@@ -251,7 +253,6 @@ require (
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hashicorp/hcl2 v0.0.0-20181111172936-0467c0c38ca2 // indirect
-	github.com/hexops/gotextdiff v1.0.3 // indirect
 	github.com/hhatto/gorst v0.0.0-20181029133204-ca9f730cac5b // indirect
 	github.com/huandu/xstrings v1.3.2 // indirect
 	github.com/iancoleman/orderedmap v0.2.0 // indirect
@@ -309,10 +310,9 @@ require (
 	github.com/muesli/roff v0.1.0 // indirect
 	github.com/nakabonne/nestif v0.3.1 // indirect
 	github.com/nbutton23/zxcvbn-go v0.0.0-20210217022336-fa2cb2858354 // indirect
-	github.com/nishanths/exhaustive v0.8.1 // indirect
-	github.com/nishanths/predeclared v0.2.2 // indirect
-	github.com/otiai10/copy v1.6.0 // indirect
-	github.com/pelletier/go-toml v1.9.5 // indirect
+	github.com/nishanths/exhaustive v0.7.11 // indirect
+	github.com/nishanths/predeclared v0.2.1 // indirect
+	github.com/pelletier/go-toml v1.9.4 // indirect
 	github.com/phayes/checkstyle v0.0.0-20170904204023-bfd46e6a821d // indirect
 	github.com/pkg/term v1.2.0-beta.2 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
@@ -370,9 +370,6 @@ require (
 	github.com/zclconf/go-cty v0.0.0-20180815031001-58bb2bc0302a // indirect
 	gitlab.com/bosi/decorder v0.2.1 // indirect
 	go.opencensus.io v0.23.0 // indirect
-	go.uber.org/atomic v1.9.0 // indirect
-	go.uber.org/multierr v1.7.0 // indirect
-	go.uber.org/zap v1.19.0 // indirect
 	gocloud.dev v0.24.0 // indirect
 	golang.org/x/exp v0.0.0-20200331195152-e8c3332aa8e5 // indirect
 	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4 // indirect

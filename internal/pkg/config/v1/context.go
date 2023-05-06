@@ -180,6 +180,13 @@ func (c *Context) GetEnvironment() *orgv1.Account {
 	return nil
 }
 
+func (c *Context) GetState() *ContextState {
+	if c != nil {
+		return c.State
+	}
+	return nil
+}
+
 func (c *Context) GetAuthToken() string {
 	if c.State != nil {
 		return c.State.AuthToken

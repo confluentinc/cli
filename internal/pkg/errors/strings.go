@@ -18,6 +18,7 @@ const (
 	WroteCredentialsToKeychainMsg = "Wrote login credentials to keychain\n"
 	RemoveNetrcCredentialsMsg     = "Removed credentials for user \"%s\" from netrc file \"%s\"\n"
 	RemoveKeychainCredentialsMsg  = "Removed credentials for user \"%s\" from keychain\n"
+	KafkaClusterDeletedMsg        = "Deleted Kafka cluster \"%s\".\n"
 	StopNonInteractiveMsg         = "(remove these credentials or use the `--prompt` flag to bypass non-interactive login)"
 	FoundEnvCredMsg               = "Found credentials for user \"%s\" from environment variables \"%s\" and \"%s\" " +
 		StopNonInteractiveMsg + ".\n"
@@ -116,9 +117,8 @@ const (
 	TokenExpiredMsg        = "Your token has expired. You are now logged out."
 	NotifyMajorUpdateMsg   = "A major version update is available for %s from (current: %s, latest: %s).\nTo view release notes and install the update, please run `%s update --major`.\n\n"
 	NotifyMinorUpdateMsg   = "A minor version update is available for %s from (current: %s, latest: %s).\nTo view release notes and install the update, please run `%s update`.\n\n"
-	LocalCommandDevOnlyMsg = "The local commands are intended for a single-node development environment only,\n" +
-		"NOT for production usage. https://docs.confluent.io/current/cli/index.html\n"
-	AutoLoginMsg = "Successful auto log in with non-interactive credentials.\n"
+	LocalCommandDevOnlyMsg = "The local commands are intended for a single-node development environment only,\nNOT for production usage. https://docs.confluent.io/current/cli/index.html"
+	AutoLoginMsg           = "Successful auto log in with non-interactive credentials.\n"
 
 	// config package
 	APIKeyMissingMsg     = "API key missing"

@@ -19,7 +19,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/keychain"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
@@ -302,8 +301,8 @@ func (c *command) getConfluentCredentials(cmd *cobra.Command, url string) (*paut
 	}
 
 	netrcFilterParams := netrc.NetrcMachineParams{
-		IgnoreCert: true,
-		URL:        url,
+		IsCloud: false,
+		URL:     url,
 	}
 	ctx := c.Config.Config.Context()
 	if strings.Contains(ctx.GetNetrcMachineName(), url) {

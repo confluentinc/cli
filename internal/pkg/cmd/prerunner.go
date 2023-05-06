@@ -356,7 +356,7 @@ func (r *PreRun) setAuthenticatedContext(cliCommand *AuthenticatedCLICommand) er
 
 func (r *PreRun) ccloudAutoLogin(cmd *cobra.Command, netrcMachineName string) error {
 	orgResourceId := r.Config.GetLastUsedOrgId()
-	credentials, err := r.getCCloudCredentials(cmd, netrcMachineName, orgResourceId)
+	credentials, err := r.getCCloudCredentials(netrcMachineName, orgResourceId)
 	if err != nil {
 		return err
 	}
@@ -881,7 +881,7 @@ func (r *PreRun) updateToken(tokenError error, cmd *cobra.Command, ctx *dynamicc
 	return nil
 }
 
-func (r *PreRun) getUpdatedAuthToken(ctx *dynamicconfig.DynamicContext, unsafeTrace bool) (string, string, error) {
+func (r *PreRun) getUpdatedAuthToken(cmd *cobra.Command, ctx *dynamicconfig.DynamicContext) (string, string, error) {
 	filterParams := netrc.NetrcMachineParams{
 		IsCloud: r.Config.IsCloudLogin(),
 		Name:    ctx.GetNetrcMachineName(),
