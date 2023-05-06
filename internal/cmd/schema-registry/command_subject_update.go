@@ -68,7 +68,7 @@ func (c *command) subjectUpdate(cmd *cobra.Command, args []string) error {
 	}
 
 	if compatibility != "" {
-		return c.updateCompatibility(subject, compatibility, cmd, srClient, ctx)
+		return c.updateCompatibility(cmd, subject, compatibility, srClient, ctx)
 	}
 
 	if mode != "" {
@@ -78,44 +78,39 @@ func (c *command) subjectUpdate(cmd *cobra.Command, args []string) error {
 	return errors.New(errors.CompatibilityOrModeErrorMsg)
 }
 
-func (c *command) updateCompatibility(subject, compatibility string, cmd *cobra.Command, srClient *srsdk.APIClient, ctx context.Context) error {
+func (c *command) updateCompatibility(cmd *cobra.Command, subject, compatibility string, srClient *srsdk.APIClient, ctx context.Context) error {
 	compatibilityGroup, err := cmd.Flags().GetString("compatibility-group")
 	if err != nil {
 		return err
 	}
 
-	metadataPath, err := cmd.Flags().GetString("metadata-defaults")
+	var defaultMetadata srsdk.Metadata
+	var overrideMetadata srsdk.Metadata
+	var defaultRuleset srsdk.RuleSet
+	var overrideRuleset srsdk.RuleSet
+
+	metadataDefaultsPath, err := cmd.Flags().GetString("metadata-defaults")
 	if err != nil {
 		return err
 	}
-	defaultMetadata, err := readMetadata(metadataPath)
+	rulesetDefaultPath, err := cmd.Flags().GetString("ruleset-defaults")
+	if err != nil {
+		return err
+	}
+	err = readMetadataAndRuleset(metadataDefaultsPath, &defaultMetadata, rulesetDefaultPath, &defaultRuleset)
 	if err != nil {
 		return err
 	}
 
-	metadataPath, err = cmd.Flags().GetString("metadata-overrides")
+	metadataOverridesPath, err := cmd.Flags().GetString("metadata-overrides")
 	if err != nil {
 		return err
 	}
-	overrideMetadata, err := readMetadata(metadataPath)
+	rulesetOverridesPath, err := cmd.Flags().GetString("ruleset-overrides")
 	if err != nil {
 		return err
 	}
-
-	rulesetPath, err := cmd.Flags().GetString("ruleset-defaults")
-	if err != nil {
-		return err
-	}
-	defaultRuleSet, err := readRuleset(rulesetPath)
-	if err != nil {
-		return err
-	}
-
-	rulesetPath, err = cmd.Flags().GetString("ruleset-overrides")
-	if err != nil {
-		return err
-	}
-	overrideRuleSet, err := readRuleset(rulesetPath)
+	err = readMetadataAndRuleset(metadataOverridesPath, &overrideMetadata, rulesetOverridesPath, &overrideRuleset)
 	if err != nil {
 		return err
 	}
@@ -123,10 +118,10 @@ func (c *command) updateCompatibility(subject, compatibility string, cmd *cobra.
 	updateReq := srsdk.ConfigUpdateRequest{
 		Compatibility:      compatibility,
 		CompatibilityGroup: compatibilityGroup,
-		DefaultMetadata:    *defaultMetadata,
-		OverrideMetadata:   *overrideMetadata,
-		DefaultRuleSet:     *defaultRuleSet,
-		OverrideRuleSet:    *overrideRuleSet,
+		DefaultMetadata:    defaultMetadata,
+		OverrideMetadata:   overrideMetadata,
+		DefaultRuleSet:     defaultRuleset,
+		OverrideRuleSet:    overrideRuleset,
 	}
 
 	if _, httpResp, err := srClient.DefaultApi.UpdateSubjectLevelConfig(ctx, subject, updateReq); err != nil {

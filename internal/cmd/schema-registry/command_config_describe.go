@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/spf13/cobra"
+	"github.com/tidwall/pretty"
 
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
@@ -104,10 +105,10 @@ func describeSchemaConfig(cmd *cobra.Command, srClient *srsdk.APIClient, ctx con
 	table := output.NewTable(cmd)
 	table.Add(&configOut{CompatibilityLevel: config.CompatibilityLevel,
 		CompatibilityGroup: config.CompatibilityGroup,
-		DefaultMetadata:    string(defaultMetadata),
-		OverrideMetadata:   string(overrideMetadata),
-		DefaultRuleSet:     string(defaultRuleSet),
-		OverrideRuleSet:    string(overrideRuleSet),
+		DefaultMetadata:    string(pretty.Pretty(defaultMetadata)),
+		OverrideMetadata:   string(pretty.Pretty(overrideMetadata)),
+		DefaultRuleSet:     string(pretty.Pretty(defaultRuleSet)),
+		OverrideRuleSet:    string(pretty.Pretty(overrideRuleSet)),
 	})
-	return table.Print()
+	return table.PrintWithAutoWrap(false)
 }

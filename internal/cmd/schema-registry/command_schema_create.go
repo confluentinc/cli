@@ -108,20 +108,17 @@ func (c *command) schemaCreate(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	var metadata srsdk.Metadata
+	var ruleset srsdk.RuleSet
 	metadataPath, err := cmd.Flags().GetString("metadata")
 	if err != nil {
 		return err
 	}
-	metadata, err := readMetadata(metadataPath)
-	if err != nil {
-		return err
-	}
-
 	rulesetPath, err := cmd.Flags().GetString("ruleset")
 	if err != nil {
 		return err
 	}
-	ruleset, err := readRuleset(rulesetPath)
+	err = readMetadataAndRuleset(metadataPath, &metadata, rulesetPath, &ruleset)
 	if err != nil {
 		return err
 	}
@@ -135,8 +132,8 @@ func (c *command) schemaCreate(cmd *cobra.Command, _ []string) error {
 		Schema:     string(schema),
 		SchemaType: schemaType,
 		References: refs,
-		Metadata:   *metadata,
-		RuleSet:    *ruleset,
+		Metadata:   metadata,
+		RuleSet:    ruleset,
 	}
 	response, _, err := srClient.DefaultApi.Register(ctx, subject, request,
 		&srsdk.RegisterOpts{Normalize: optional.NewBool(normalize)})
@@ -152,30 +149,25 @@ func (c *command) schemaCreate(cmd *cobra.Command, _ []string) error {
 	return nil
 }
 
-func readMetadata(metadataPath string) (*srsdk.Metadata, error) {
-	var metadata srsdk.Metadata
+func readMetadataAndRuleset(metadataPath string, metadata *srsdk.Metadata, rulesetPath string, ruleset *srsdk.RuleSet) error {
 	if metadataPath != "" {
 		metadataBlob, err := os.ReadFile(metadataPath)
 		if err != nil {
-			return nil, err
+			return err
 		}
-		if err := json.Unmarshal(metadataBlob, &metadata); err != nil {
-			return nil, err
+		if err := json.Unmarshal(metadataBlob, metadata); err != nil {
+			return err
 		}
 	}
-	return &metadata, nil
-}
 
-func readRuleset(rulesetPath string) (*srsdk.RuleSet, error) {
-	var ruleSet srsdk.RuleSet
 	if rulesetPath != "" {
 		rulesetBlob, err := os.ReadFile(rulesetPath)
 		if err != nil {
-			return nil, err
+			return err
 		}
-		if err := json.Unmarshal(rulesetBlob, &ruleSet); err != nil {
-			return nil, err
+		if err := json.Unmarshal(rulesetBlob, ruleset); err != nil {
+			return err
 		}
 	}
-	return &ruleSet, nil
+	return nil
 }

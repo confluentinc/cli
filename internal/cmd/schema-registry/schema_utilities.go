@@ -45,13 +45,13 @@ func RegisterSchemaWithAuth(cmd *cobra.Command, schemaCfg *RegisterSchemaConfigs
 	if schemaCfg.Normalize {
 		registerOpts.Normalize = optional.NewBool(true)
 	}
-	response, _, err := srClient.DefaultApi.Register(ctx, schemaCfg.Subject,
-		srsdk.RegisterSchemaRequest{Schema: string(schema),
-			SchemaType: schemaCfg.SchemaType,
-			References: schemaCfg.Refs,
-			Metadata:   schemaCfg.Metadata,
-			RuleSet:    schemaCfg.RuleSet,
-		}, &registerOpts)
+	request := srsdk.RegisterSchemaRequest{Schema: string(schema),
+		SchemaType: schemaCfg.SchemaType,
+		References: schemaCfg.Refs,
+		Metadata:   schemaCfg.Metadata,
+		RuleSet:    schemaCfg.RuleSet,
+	}
+	response, _, err := srClient.DefaultApi.Register(ctx, schemaCfg.Subject, request, &registerOpts)
 	if err != nil {
 		return nil, err
 	}

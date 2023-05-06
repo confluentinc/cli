@@ -63,7 +63,7 @@ func (c *command) subjectUpdateOnPrem(cmd *cobra.Command, args []string) error {
 	}
 
 	if compatibility != "" {
-		return c.updateCompatibility(subject, compatibility, cmd, srClient, ctx)
+		return c.updateCompatibility(cmd, subject, compatibility, srClient, ctx)
 	}
 
 	if mode != "" {

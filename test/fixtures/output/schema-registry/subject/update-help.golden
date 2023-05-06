@@ -8,7 +8,7 @@ Update subject-level compatibility of subject "payments".
 
   $ confluent schema-registry subject update payments --compatibility backward
 
-Update subject-level compatibility of subject "payments" and set compatibility group to "application.version"
+Update subject-level compatibility of subject "payments" and set compatibility group to "application.version".
 
   $ confluent schema-registry subject update payments --compatibility backward --compatibility-group application.version
 

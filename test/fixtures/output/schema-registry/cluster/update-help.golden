@@ -8,6 +8,10 @@ Update top-level compatibility of Schema Registry.
 
   $ confluent schema-registry cluster update --compatibility backward
 
+Update top-level compatibility of Schema Registry and set compatibility group to "application.version".
+
+  $ confluent schema-registry cluster update --compatibility backward --compatibility-group application.version
+
 Update top-level mode of Schema Registry.
 
   $ confluent schema-registry cluster update --mode readwrite

@@ -82,38 +82,33 @@ func (c *command) updateTopLevelCompatibility(cmd *cobra.Command) error {
 		return err
 	}
 
-	metadataPath, err := cmd.Flags().GetString("metadata-defaults")
+	var defaultMetadata srsdk.Metadata
+	var overrideMetadata srsdk.Metadata
+	var defaultRuleset srsdk.RuleSet
+	var overrideRuleset srsdk.RuleSet
+
+	metadataDefaultsPath, err := cmd.Flags().GetString("metadata-defaults")
 	if err != nil {
 		return err
 	}
-	defaultMetadata, err := readMetadata(metadataPath)
+	rulesetDefaultPath, err := cmd.Flags().GetString("ruleset-defaults")
+	if err != nil {
+		return err
+	}
+	err = readMetadataAndRuleset(metadataDefaultsPath, &defaultMetadata, rulesetDefaultPath, &defaultRuleset)
 	if err != nil {
 		return err
 	}
 
-	metadataPath, err = cmd.Flags().GetString("metadata-overrides")
+	metadataOverridesPath, err := cmd.Flags().GetString("metadata-overrides")
 	if err != nil {
 		return err
 	}
-	overrideMetadata, err := readMetadata(metadataPath)
+	rulesetOverridesPath, err := cmd.Flags().GetString("ruleset-overrides")
 	if err != nil {
 		return err
 	}
-
-	rulesetPath, err := cmd.Flags().GetString("ruleset-defaults")
-	if err != nil {
-		return err
-	}
-	defaultRuleSet, err := readRuleset(rulesetPath)
-	if err != nil {
-		return err
-	}
-
-	rulesetPath, err = cmd.Flags().GetString("ruleset-overrides")
-	if err != nil {
-		return err
-	}
-	overrideRuleSet, err := readRuleset(rulesetPath)
+	err = readMetadataAndRuleset(metadataOverridesPath, &overrideMetadata, rulesetOverridesPath, &overrideRuleset)
 	if err != nil {
 		return err
 	}
@@ -121,10 +116,10 @@ func (c *command) updateTopLevelCompatibility(cmd *cobra.Command) error {
 	updateReq := srsdk.ConfigUpdateRequest{
 		Compatibility:      strings.ToUpper(compatibility),
 		CompatibilityGroup: compatibilityGroup,
-		DefaultMetadata:    *defaultMetadata,
-		OverrideMetadata:   *overrideMetadata,
-		DefaultRuleSet:     *defaultRuleSet,
-		OverrideRuleSet:    *overrideRuleSet,
+		DefaultMetadata:    defaultMetadata,
+		OverrideMetadata:   overrideMetadata,
+		DefaultRuleSet:     defaultRuleset,
+		OverrideRuleSet:    overrideRuleset,
 	}
 
 	if _, _, err := srClient.DefaultApi.UpdateTopLevelConfig(ctx, updateReq); err != nil {
