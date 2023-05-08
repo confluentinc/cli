@@ -46,9 +46,20 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *c
 func addCompatibilityFlag(cmd *cobra.Command) {
 	compatibilities := []string{"backward", "backward_transitive", "forward", "forward_transitive", "full", "full_transitive", "none"}
 	cmd.Flags().String("compatibility", "", fmt.Sprintf("Can be %s.", utils.ArrayToCommaDelimitedString(compatibilities, "or")))
+	cmd.Flags().String("compatibility-group", "", "The name of the compatibility group.")
+	cmd.Flags().String("metadata-defaults", "", "The path to the schema metadata defaults file.")
+	cmd.Flags().String("metadata-overrides", "", "The path to the schema metadata overrides file.")
+	cmd.Flags().String("ruleset-defaults", "", "The path to the schema ruleset defaults file.")
+	cmd.Flags().String("ruleset-overrides", "", "The path to the schema ruleset overrides file.")
+
 	pcmd.RegisterFlagCompletionFunc(cmd, "compatibility", func(_ *cobra.Command, _ []string) []string {
 		return compatibilities
 	})
+
+	cobra.CheckErr(cmd.MarkFlagFilename("metadata-defaults", "json"))
+	cobra.CheckErr(cmd.MarkFlagFilename("metadata-overrides", "json"))
+	cobra.CheckErr(cmd.MarkFlagFilename("ruleset-defaults", "json"))
+	cobra.CheckErr(cmd.MarkFlagFilename("ruleset-overrides", "json"))
 }
 
 func addModeFlag(cmd *cobra.Command) {

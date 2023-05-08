@@ -26,6 +26,10 @@ func (c *command) newSubjectUpdateCommand() *cobra.Command {
 				Code: "confluent schema-registry subject update payments --compatibility backward",
 			},
 			examples.Example{
+				Text: `Update subject-level compatibility of subject "payments" and set compatibility group to "application.version".`,
+				Code: "confluent schema-registry subject update payments --compatibility backward --compatibility-group application.version",
+			},
+			examples.Example{
 				Text: `Update subject-level mode of subject "payments".`,
 				Code: "confluent schema-registry subject update payments --mode readwrite",
 			},
@@ -64,7 +68,7 @@ func (c *command) subjectUpdate(cmd *cobra.Command, args []string) error {
 	}
 
 	if compatibility != "" {
-		return c.updateCompatibility(subject, compatibility, srClient, ctx)
+		return c.updateCompatibility(cmd, subject, compatibility, srClient, ctx)
 	}
 
 	if mode != "" {
@@ -74,9 +78,13 @@ func (c *command) subjectUpdate(cmd *cobra.Command, args []string) error {
 	return errors.New(errors.CompatibilityOrModeErrorMsg)
 }
 
-func (c *command) updateCompatibility(subject, compatibility string, srClient *srsdk.APIClient, ctx context.Context) error {
-	updateReq := srsdk.ConfigUpdateRequest{Compatibility: compatibility}
-	if _, httpResp, err := srClient.DefaultApi.UpdateSubjectLevelConfig(ctx, subject, updateReq); err != nil {
+func (c *command) updateCompatibility(cmd *cobra.Command, subject, compatibility string, srClient *srsdk.APIClient, ctx context.Context) error {
+	updateReq, err := c.getConfigUpdateRequest(cmd)
+	if err != nil {
+		return err
+	}
+
+	if _, httpResp, err := srClient.DefaultApi.UpdateSubjectLevelConfig(ctx, subject, *updateReq); err != nil {
 		return errors.CatchSchemaNotFoundError(err, httpResp)
 	}
 

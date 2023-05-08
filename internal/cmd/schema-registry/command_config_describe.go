@@ -2,9 +2,11 @@ package schemaregistry
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 
 	"github.com/spf13/cobra"
+	"github.com/tidwall/pretty"
 
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
@@ -15,7 +17,12 @@ import (
 )
 
 type configOut struct {
-	CompatibilityLevel string `human:"Compatibility Level" serialized:"compatibility_level"`
+	CompatibilityLevel string `human:"Compatibility Level,omitempty" serialized:"compatibility_level,omitempty"`
+	CompatibilityGroup string `human:"Compatibility Group,omitempty" serialized:"compatibility_group,omitempty"`
+	DefaultMetadata    string `human:"Metadata Defaults,omitempty" serialized:"metadata_defaults,omitempty"`
+	OverrideMetadata   string `human:"Metadata Overrides,omitempty" serialized:"metadata_overrides,omitempty"`
+	DefaultRuleSet     string `human:"Ruleset Defaults,omitempty" serialized:"ruleset_defaults,omitempty"`
+	OverrideRuleSet    string `human:"Ruleset Overrides,omitempty" serialized:"ruleset_overrides,omitempty"`
 }
 
 func (c *command) newConfigDescribeCommand() *cobra.Command {
@@ -75,7 +82,33 @@ func describeSchemaConfig(cmd *cobra.Command, srClient *srsdk.APIClient, ctx con
 		}
 	}
 
+	defaultMetadata, err := json.Marshal(config.DefaultMetadata)
+	if err != nil {
+		return err
+	}
+
+	overrideMetadata, err := json.Marshal(config.OverrideMetadata)
+	if err != nil {
+		return err
+	}
+
+	defaultRuleSet, err := json.Marshal(config.DefaultRuleSet)
+	if err != nil {
+		return err
+	}
+
+	overrideRuleSet, err := json.Marshal(config.OverrideRuleSet)
+	if err != nil {
+		return err
+	}
+
 	table := output.NewTable(cmd)
-	table.Add(&configOut{CompatibilityLevel: config.CompatibilityLevel})
-	return table.Print()
+	table.Add(&configOut{CompatibilityLevel: config.CompatibilityLevel,
+		CompatibilityGroup: config.CompatibilityGroup,
+		DefaultMetadata:    string(pretty.Pretty(defaultMetadata)),
+		OverrideMetadata:   string(pretty.Pretty(overrideMetadata)),
+		DefaultRuleSet:     string(pretty.Pretty(defaultRuleSet)),
+		OverrideRuleSet:    string(pretty.Pretty(overrideRuleSet)),
+	})
+	return table.PrintWithAutoWrap(false)
 }
