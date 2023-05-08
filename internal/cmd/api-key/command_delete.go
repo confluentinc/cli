@@ -1,7 +1,6 @@
 package apikey
 
 import (
-	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -32,24 +31,19 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	errs := &multierror.Error{ErrorFormat: errors.CustomMultierrorList}
-	var deleted []string
-	for _, id := range args {
+	deleted, err := deletion.DeleteResources(args, func(id string) error {
 		if r, err := c.V2Client.DeleteApiKey(id); err != nil {
-			errs = multierror.Append(errs, errors.CatchApiKeyForbiddenAccessError(err, deleteOperation, r))
-		} else {
-			deleted = append(deleted, id)
-			if err := c.deletePostProcess(id); err != nil {
-				errs = multierror.Append(errs, err)
-			}
+			return errors.CatchApiKeyForbiddenAccessError(err, deleteOperation, r)
 		}
-	}
+		return nil
+	}, func(id string) error {
+		return c.keystore.DeleteAPIKey(id)
+	})
 	deletion.PrintSuccessMsg(deleted, resource.ApiKey)
 
-	if errs.ErrorOrNil() != nil {
-		return errors.NewErrorWithSuggestions(errs.Error(), errors.APIKeyNotFoundSuggestions)
+	if err != nil {
+		return errors.NewErrorWithSuggestions(err.Error(), errors.APIKeyNotFoundSuggestions)
 	}
-
 	return nil
 }
 
@@ -68,8 +62,4 @@ func (c *command) confirmDeletion(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
-}
-
-func (c *command) deletePostProcess(id string) error {
-	return c.keystore.DeleteAPIKey(id)
 }

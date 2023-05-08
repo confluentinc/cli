@@ -3,6 +3,7 @@ package deletion
 import (
 	"fmt"
 
+	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -32,7 +33,26 @@ func ValidateArgs(cmd *cobra.Command, args []string, resourceType string, callDe
 	return nil
 }
 
+func DefaultPostProcess(_ string) error {
+	return nil
+}
 
+func DeleteResources(args []string, callDeleteEndpoint func(string) error, postProcess func(string) error) ([]string, error) {
+	errs := &multierror.Error{ErrorFormat: errors.CustomMultierrorList}
+	var deleted []string
+	for _, id := range args {
+		if err := callDeleteEndpoint(id); err != nil {
+			errs = multierror.Append(errs, err)
+		} else {
+			deleted = append(deleted, id)
+			if err := postProcess(id); err != nil {
+				errs = multierror.Append(errs, err)
+			}
+		}
+	}
+
+	return deleted, errs.ErrorOrNil()
+}
 
 func PrintSuccessMsg(successful []string, resourceType string) {
 	if len(successful) == 1 {

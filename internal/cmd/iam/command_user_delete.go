@@ -1,7 +1,6 @@
 package iam
 
 import (
-	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -30,18 +29,15 @@ func (c *userCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	errs := &multierror.Error{ErrorFormat: errors.CustomMultierrorList}
-	var deleted []string
-	for _, id := range args {
+	deleted, err := deletion.DeleteResources(args, func(id string) error {
 		if err := c.V2Client.DeleteIamUser(id); err != nil {
-			errs = multierror.Append(errs, errors.Errorf(errors.DeleteResourceErrorMsg, resource.User, id, err))
-		} else {
-			deleted = append(deleted, id)
+			return errors.Errorf(errors.DeleteResourceErrorMsg, resource.User, id, err)
 		}
-	}
+		return nil
+	}, deletion.DefaultPostProcess)
 	deletion.PrintSuccessMsg(deleted, resource.User)
 
-	return errs.ErrorOrNil()
+	return err
 }
 
 func (c *userCommand) confirmDeletion(cmd *cobra.Command, args []string) error {

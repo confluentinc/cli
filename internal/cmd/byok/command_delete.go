@@ -1,7 +1,6 @@
 package byok
 
 import (
-	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -31,21 +30,17 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	errs := &multierror.Error{ErrorFormat: errors.CustomMultierrorList}
-	var deleted []string
-	for _, id := range args {
+	deleted, err := deletion.DeleteResources(args, func(id string) error {
 		if r, err := c.V2Client.DeleteByokKey(id); err != nil {
-			errs = multierror.Append(errs, errors.CatchByokKeyNotFoundError(err, r))
-		} else {
-			deleted = append(deleted, id)
+			return errors.CatchByokKeyNotFoundError(err, r)
 		}
-	}
+		return nil
+	}, deletion.DefaultPostProcess)
 	deletion.PrintSuccessMsg(deleted, resource.ByokKey)
 
-	if errs.ErrorOrNil() != nil {
-		return errors.NewErrorWithSuggestions(errs.Error(), errors.ByokKeyNotFoundSuggestions)
+	if err != nil {
+		return errors.NewErrorWithSuggestions(err.Error(), errors.ByokKeyNotFoundSuggestions)
 	}
-
 	return nil
 }
 

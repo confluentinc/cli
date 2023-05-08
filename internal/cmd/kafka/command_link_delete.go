@@ -1,7 +1,6 @@
 package kafka
 
 import (
-	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -47,18 +46,15 @@ func (c *linkCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	errs := &multierror.Error{ErrorFormat: errors.CustomMultierrorList}
-	var deleted []string
-	for _, id := range args {
+	deleted, err := deletion.DeleteResources(args, func(id string) error {
 		if r, err := kafkaREST.CloudClient.DeleteKafkaLink(clusterId, id); err != nil {
-			errs = multierror.Append(errs, kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, r))
-		} else {
-			deleted = append(deleted, id)
+			return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, r)
 		}
-	}
+		return nil
+	}, deletion.DefaultPostProcess)
 	deletion.PrintSuccessMsg(deleted, resource.ClusterLink)
 
-	return errs.ErrorOrNil()
+	return err
 }
 
 func (c *linkCommand) confirmDeletion(cmd *cobra.Command, kafkaREST *pcmd.KafkaREST, clusterId string, args []string) error {

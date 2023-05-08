@@ -1,12 +1,10 @@
 package pipeline
 
 import (
-	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/deletion"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -51,22 +49,19 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	errs := &multierror.Error{ErrorFormat: errors.CustomMultierrorList}
-	var deleted []string
-	for _, id := range args {
+	deleted, err := deletion.DeleteResources(args, func(id string) error {
 		if err := c.V2Client.DeleteSdPipeline(environmentId, cluster.ID, id); err != nil {
-			errs = multierror.Append(errs, err)
-		} else {
-			deleted = append(deleted, id)
+			return err
 		}
-	}
+		return nil
+	}, deletion.DefaultPostProcess)
 	if len(deleted) == 1 {
 		output.Printf("Requested to delete pipeline \"%s\".\n", deleted[0])
 	} else if len(deleted) > 1 {
 		output.Printf("Requested to delete pipelines %s.\n", utils.ArrayToCommaDelimitedString(deleted, "and"))
 	}
 
-	return errs.ErrorOrNil()
+	return err
 }
 
 func (c *command) confirmDeletion(cmd *cobra.Command, environmentId, clusterId string, args []string) error {

@@ -1,12 +1,10 @@
 package kafka
 
 import (
-	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/deletion"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 )
@@ -31,18 +29,15 @@ func (c *quotaCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	errs := &multierror.Error{ErrorFormat: errors.CustomMultierrorList}
-	var deleted []string
-	for _, id := range args {
+	deleted, err := deletion.DeleteResources(args, func(id string) error {
 		if err := c.V2Client.DeleteKafkaQuota(id); err != nil {
-			errs = multierror.Append(errs, err)
-		} else {
-			deleted = append(deleted, id)
+			return err
 		}
-	}
+		return nil
+	}, deletion.DefaultPostProcess)
 	deletion.PrintSuccessMsg(deleted, resource.ClientQuota)
 
-	return errs.ErrorOrNil()
+	return err
 }
 
 func (c *quotaCommand) confirmDeletion(cmd *cobra.Command, args []string) error {

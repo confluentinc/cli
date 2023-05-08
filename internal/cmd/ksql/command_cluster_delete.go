@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/dghubble/sling"
-	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 	"golang.org/x/oauth2"
 
@@ -51,29 +50,25 @@ func (c *ksqlCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	errs := &multierror.Error{ErrorFormat: errors.CustomMultierrorList}
-	var deleted []string
-	for _, id := range args {
+	deleted, err := deletion.DeleteResources(args, func(id string) error {
 		// When deleting a cluster we need to remove all the associated topics. This operation will succeed only if cluster
 		// is UP and provisioning didn't fail. If provisioning failed we can't connect to the ksql server, so we can't delete
 		// the topics.
 		cluster := idToCluster[id]
 		if c.getClusterStatus(&cluster) == "PROVISIONED" {
 			if err := c.deleteTopics(cluster.GetId(), cluster.Status.GetHttpEndpoint()); err != nil {
-				errs = multierror.Append(errs, err)
-				continue
+				return err
 			}
 		}
 
 		if err := c.V2Client.DeleteKsqlCluster(id, environmentId); err != nil {
-			errs = multierror.Append(errs, err)
-		} else {
-			deleted = append(deleted, id)
+			return err
 		}
-	}
+		return nil
+	}, deletion.DefaultPostProcess)
 	deletion.PrintSuccessMsg(deleted, resource.KsqlCluster)
 
-	return errs.ErrorOrNil()
+	return err
 }
 
 func (c *ksqlCommand) deleteTopics(clusterId, endpoint string) error {

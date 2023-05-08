@@ -1,7 +1,6 @@
 package kafka
 
 import (
-	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -41,25 +40,21 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	errs := &multierror.Error{ErrorFormat: errors.CustomMultierrorList}
-	var deleted []string
-	for _, id := range args {
+	deleted, err := deletion.DeleteResources(args, func(id string) error {
 		if r, err := c.V2Client.DeleteKafkaCluster(id, environmentId); err != nil {
-			errs = multierror.Append(errs, errors.CatchKafkaNotFoundError(err, id, r))
-		} else {
-			deleted = append(deleted, id)
-			if err := c.deletePostProcess(id); err != nil {
-				errs = multierror.Append(errs, err)
-			}
+			return errors.CatchKafkaNotFoundError(err, id, r)
 		}
-	}
+		return nil
+	}, func(id string) error {
+		return c.Context.RemoveKafkaClusterConfig(id)
+	})
 	deletion.PrintSuccessMsg(deleted, resource.KafkaCluster)
 
-	if errs.ErrorOrNil() != nil {
+	if err != nil {
 		if len(args)-len(deleted) > 1 {
-			return errors.NewErrorWithSuggestions(errs.Error(), "Ensure the clusters are not associated with any active Connect clusters.")
+			return errors.NewErrorWithSuggestions(err.Error(), "Ensure the clusters are not associated with any active Connect clusters.")
 		} else {
-			return errors.NewErrorWithSuggestions(errs.Error(), "Ensure the cluster is not associated with any active Connect clusters.")
+			return errors.NewErrorWithSuggestions(err.Error(), "Ensure the cluster is not associated with any active Connect clusters.")
 		}
 	}
 
@@ -97,8 +92,4 @@ func (c *clusterCommand) confirmDeletion(cmd *cobra.Command, environmentId strin
 	}
 
 	return nil
-}
-
-func (c *clusterCommand) deletePostProcess(id string) error {
-	return c.Context.RemoveKafkaClusterConfig(id)
 }

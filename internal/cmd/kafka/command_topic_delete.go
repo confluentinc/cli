@@ -3,7 +3,6 @@ package kafka
 import (
 	"fmt"
 
-	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
@@ -59,23 +58,20 @@ func (c *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 		return err
 	}
 
-	errs := &multierror.Error{ErrorFormat: errors.CustomMultierrorList}
-	var deleted []string
-	for _, id := range args {
+	deleted, err := deletion.DeleteResources(args, func(id string) error {
 		if r, err := kafkaREST.CloudClient.DeleteKafkaTopic(kafkaClusterConfig.ID, id); err != nil {
 			restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err)
 			if parseErr == nil && restErr.Code == ccloudv2.UnknownTopicOrPartitionErrorCode {
-				errs = multierror.Append(errs, fmt.Errorf(errors.UnknownTopicErrorMsg, id))
+				return fmt.Errorf(errors.UnknownTopicErrorMsg, id)
 			} else {
-				errs = multierror.Append(errs, kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, r))
+				return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, r)
 			}
-		} else {
-			deleted = append(deleted, id)
 		}
-	}
+		return nil
+	}, deletion.DefaultPostProcess)
 	deletion.PrintSuccessMsg(deleted, resource.Topic)
 
-	return errs.ErrorOrNil()
+	return err
 }
 
 func (c *authenticatedTopicCommand) confirmDeletion(cmd *cobra.Command, kafkaREST *pcmd.KafkaREST, clusterId string, args []string) error {
