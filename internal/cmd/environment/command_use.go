@@ -1,11 +1,14 @@
 package environment
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *command) newUseCommand() *cobra.Command {
@@ -26,7 +29,7 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 	id := args[0]
 
 	if _, err := c.V2Client.GetOrgEnvironment(id); err != nil {
-		return errors.NewErrorWithSuggestions(err.Error(), "List available environments with `confluent environment list`.")
+		return errors.NewErrorWithSuggestions(err.Error(), fmt.Sprintf(errors.ListResourceSuggestions, resource.Environment, pcmd.FullParentName(cmd)))
 	}
 
 	c.Context.SetCurrentEnvironment(id)

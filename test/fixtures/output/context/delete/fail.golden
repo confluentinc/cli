@@ -1,0 +1,4 @@
+Error: context "1" not found
+
+Suggestions:
+    List available contexts with `confluent context list`.

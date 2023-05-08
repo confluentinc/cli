@@ -7,20 +7,20 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/deletion"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
-	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *authenticatedTopicCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "delete <topic>",
-		Short:             "Delete a Kafka topic.",
-		Args:              cobra.ExactArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		Use:               "delete <topic-1> [topic-2] ... [topic-n]",
+		Short:             "Delete Kafka topics.",
+		Args:              cobra.MinimumNArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgsMultiple),
 		RunE:              c.delete,
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -40,8 +40,6 @@ func (c *authenticatedTopicCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) error {
-	topicName := args[0]
-
 	kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
@@ -56,27 +54,45 @@ func (c *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 		return err
 	}
 
-	// Check if topic exists
-	if _, err := kafkaREST.CloudClient.ListKafkaTopicConfigs(kafkaClusterConfig.ID, topicName); err != nil {
+	if err := c.confirmDeletion(cmd, kafkaREST, kafkaClusterConfig.ID, args); err != nil {
 		return err
 	}
 
-	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.Topic, topicName, topicName)
-	if _, err := form.ConfirmDeletion(cmd, promptMsg, topicName); err != nil {
-		return err
-	}
-
-	httpResp, err := kafkaREST.CloudClient.DeleteKafkaTopic(kafkaClusterConfig.ID, topicName)
-	if err != nil {
-		restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err)
-		if parseErr == nil {
-			if restErr.Code == ccloudv2.UnknownTopicOrPartitionErrorCode {
-				return fmt.Errorf(errors.UnknownTopicErrorMsg, topicName)
+	deleted, err := deletion.DeleteResources(args, func(id string) error {
+		if r, err := kafkaREST.CloudClient.DeleteKafkaTopic(kafkaClusterConfig.ID, id); err != nil {
+			restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err)
+			if parseErr == nil && restErr.Code == ccloudv2.UnknownTopicOrPartitionErrorCode {
+				return fmt.Errorf(errors.UnknownTopicErrorMsg, id)
+			} else {
+				return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, r)
 			}
 		}
-		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+		return nil
+	}, deletion.DefaultPostProcess)
+	deletion.PrintSuccessMsg(deleted, resource.Topic)
+
+	return err
+}
+
+func (c *authenticatedTopicCommand) confirmDeletion(cmd *cobra.Command, kafkaREST *pcmd.KafkaREST, clusterId string, args []string) error {
+	describeFunc := func(id string) error {
+		_, err := kafkaREST.CloudClient.ListKafkaTopicConfigs(clusterId, id)
+		return err
 	}
 
-	output.Printf(errors.DeletedResourceMsg, resource.Topic, topicName)
+	if err := deletion.ValidateArgs(cmd, args, resource.Topic, describeFunc); err != nil {
+		return err
+	}
+
+	if len(args) == 1 {
+		if err := form.ConfirmDeletionWithString(cmd, resource.Topic, args[0], args[0]); err != nil {
+			return err
+		}
+	} else {
+		if ok, err := form.ConfirmDeletionYesNo(cmd, resource.Topic, args); err != nil || !ok {
+			return err
+		}
+	}
+
 	return nil
 }
