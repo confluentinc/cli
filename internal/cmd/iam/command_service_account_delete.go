@@ -66,11 +66,11 @@ func (c *serviceAccountCommand) confirmDeletion(cmd *cobra.Command, args []strin
 	}
 
 	if len(args) == 1 {
-		if err := form.ConfirmDeletionWithString(cmd, resource.ServiceAccount, args[0], displayName); err != nil {
+		if err := form.ConfirmDeletionWithString(cmd, deletion.DefaultPromptString(resource.ServiceAccount, args[0], displayName), displayName); err != nil {
 			return err
 		}
 	} else {
-		if ok, err := form.ConfirmDeletionYesNo(cmd, resource.ServiceAccount, args); err != nil || !ok {
+		if ok, err := form.ConfirmDeletionYesNo(cmd, deletion.DefaultYesNoPromptString(resource.ServiceAccount, args)); err != nil || !ok {
 			return err
 		}
 	}

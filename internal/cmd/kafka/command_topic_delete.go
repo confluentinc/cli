@@ -85,11 +85,11 @@ func (c *authenticatedTopicCommand) confirmDeletion(cmd *cobra.Command, kafkaRES
 	}
 
 	if len(args) == 1 {
-		if err := form.ConfirmDeletionWithString(cmd, resource.Topic, args[0], args[0]); err != nil {
+		if err := form.ConfirmDeletionWithString(cmd, deletion.DefaultPromptString(resource.Topic, args[0], args[0]), args[0]); err != nil {
 			return err
 		}
 	} else {
-		if ok, err := form.ConfirmDeletionYesNo(cmd, resource.Topic, args); err != nil || !ok {
+		if ok, err := form.ConfirmDeletionYesNo(cmd, deletion.DefaultYesNoPromptString(resource.Topic, args)); err != nil || !ok {
 			return err
 		}
 	}

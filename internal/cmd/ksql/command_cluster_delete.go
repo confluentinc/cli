@@ -116,11 +116,12 @@ func (c *ksqlCommand) confirmDeletion(cmd *cobra.Command, environmentId string, 
 	}
 
 	if len(args) == 1 {
-		if err := form.ConfirmDeletionWithString(cmd, resource.KsqlCluster, args[0], idToCluster[args[0]].Spec.GetDisplayName()); err != nil {
+		displayName := idToCluster[args[0]].Spec.GetDisplayName()
+		if err := form.ConfirmDeletionWithString(cmd, deletion.DefaultPromptString(resource.KsqlCluster, args[0], displayName), displayName); err != nil {
 			return err
 		}
 	} else {
-		if ok, err := form.ConfirmDeletionYesNo(cmd, resource.KsqlCluster, args); err != nil || !ok {
+		if ok, err := form.ConfirmDeletionYesNo(cmd, deletion.DefaultYesNoPromptString(resource.KsqlCluster, args)); err != nil || !ok {
 			return err
 		}
 	}

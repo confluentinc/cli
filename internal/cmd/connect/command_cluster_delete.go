@@ -78,11 +78,12 @@ func (c *clusterCommand) confirmDeletion(cmd *cobra.Command, environmentId, kafk
 	}
 
 	if len(args) == 1 {
-		if err := form.ConfirmDeletionWithString(cmd, resource.Connector, args[0], connectorIdToName[args[0]]); err != nil {
+		displayName := connectorIdToName[args[0]]
+		if err := form.ConfirmDeletionWithString(cmd, deletion.DefaultPromptString(resource.Connector, args[0], displayName), displayName); err != nil {
 			return err
 		}
 	} else {
-		if ok, err := form.ConfirmDeletionYesNo(cmd, resource.Connector, args); err != nil || !ok {
+		if ok, err := form.ConfirmDeletionYesNo(cmd, deletion.DefaultYesNoPromptString(resource.Connector, args)); err != nil || !ok {
 			return err
 		}
 	}

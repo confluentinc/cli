@@ -9,7 +9,6 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 /*
@@ -72,12 +71,7 @@ func (f *Form) Prompt(prompt Prompt) error {
 	return nil
 }
 
-func ConfirmDeletionWithString(cmd *cobra.Command, resourceType, id, stringToType string) error {
-	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resourceType, id, stringToType)
-	return ConfirmDeletionTypeCustomPrompt(cmd, promptMsg, stringToType)
-}
-
-func ConfirmDeletionTypeCustomPrompt(cmd *cobra.Command, promptMsg, stringToType string) error {
+func ConfirmDeletionWithString(cmd *cobra.Command, promptMsg, stringToType string) error {
 	if force, err := cmd.Flags().GetBool("force"); err != nil {
 		return err
 	} else if force {
@@ -98,18 +92,7 @@ func ConfirmDeletionTypeCustomPrompt(cmd *cobra.Command, promptMsg, stringToType
 	return errors.NewErrorWithSuggestions(fmt.Sprintf(`input does not match "%s"`, stringToType), DeleteResourceConfirmSuggestions)
 }
 
-func ConfirmDeletionYesNo(cmd *cobra.Command, resourceType string, idList []string) (bool, error) {
-	var promptMsg string
-	if len(idList) == 1 {
-		promptMsg = fmt.Sprintf(`Are you sure you want to delete %s "%s"?`, resourceType, idList[0])
-	} else {
-		promptMsg = fmt.Sprintf("Are you sure you want to delete %ss %s?", resourceType, utils.ArrayToCommaDelimitedString(idList, "and"))
-	}
-
-	return ConfirmDeletionYesNoCustomPrompt(cmd, promptMsg)
-}
-
-func ConfirmDeletionYesNoCustomPrompt(cmd *cobra.Command, promptMsg string) (bool, error) {
+func ConfirmDeletionYesNo(cmd *cobra.Command, promptMsg string) (bool, error) {
 	if force, err := cmd.Flags().GetBool("force"); err != nil {
 		return false, err
 	} else if force {

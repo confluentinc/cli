@@ -40,7 +40,7 @@ func (c *command) exporterDeleteOnPrem(cmd *cobra.Command, args []string) error 
 	}
 
 	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.SchemaExporter, info.Name, info.Name)
-	if err := form.ConfirmDeletionTypeCustomPrompt(cmd, promptMsg, info.Name); err != nil {
+	if err := form.ConfirmDeletionWithString(cmd, promptMsg, info.Name); err != nil {
 		return err
 	}
 

@@ -68,11 +68,11 @@ func (c *linkCommand) confirmDeletion(cmd *cobra.Command, kafkaREST *pcmd.KafkaR
 	}
 
 	if len(args) == 1 {
-		if err := form.ConfirmDeletionWithString(cmd, resource.ClusterLink, args[0], args[0]); err != nil {
+		if err := form.ConfirmDeletionWithString(cmd, deletion.DefaultPromptString(resource.ClusterLink, args[0], args[0]), args[0]); err != nil {
 			return err
 		}
 	} else {
-		if ok, err := form.ConfirmDeletionYesNo(cmd, resource.ClusterLink, args); err != nil || !ok {
+		if ok, err := form.ConfirmDeletionYesNo(cmd, deletion.DefaultYesNoPromptString(resource.ClusterLink, args)); err != nil || !ok {
 			return err
 		}
 	}

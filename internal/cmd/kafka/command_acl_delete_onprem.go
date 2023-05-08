@@ -75,7 +75,7 @@ func (c *aclCommand) deleteOnPrem(cmd *cobra.Command, _ []string) error {
 	}
 
 	promptMsg := fmt.Sprintf(pacl.DeleteACLConfirmMsg, "ACL")
-	if ok, err := form.ConfirmDeletionYesNoCustomPrompt(cmd, promptMsg); err != nil || !ok {
+	if ok, err := form.ConfirmDeletionYesNo(cmd, promptMsg); err != nil || !ok {
 		return err
 	}
 

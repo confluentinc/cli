@@ -57,7 +57,7 @@ func (c *command) confirmDeletion(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if ok, err := form.ConfirmDeletionYesNo(cmd, resource.ApiKey, args); err != nil || !ok {
+	if ok, err := form.ConfirmDeletionYesNo(cmd, deletion.DefaultYesNoPromptString(resource.ApiKey, args)); err != nil || !ok {
 		return err
 	}
 

@@ -79,11 +79,11 @@ func (c *command) confirmDeletion(cmd *cobra.Command, environmentId, clusterId s
 	}
 
 	if len(args) == 1 {
-		if err := form.ConfirmDeletionWithString(cmd, resource.Pipeline, args[0], displayName); err != nil {
+		if err := form.ConfirmDeletionWithString(cmd, deletion.DefaultPromptString(resource.Pipeline, args[0], displayName), displayName); err != nil {
 			return err
 		}
 	} else {
-		if ok, err := form.ConfirmDeletionYesNo(cmd, resource.Pipeline, args); err != nil || !ok {
+		if ok, err := form.ConfirmDeletionYesNo(cmd, deletion.DefaultYesNoPromptString(resource.Pipeline, args)); err != nil || !ok {
 			return err
 		}
 	}

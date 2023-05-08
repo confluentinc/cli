@@ -75,11 +75,11 @@ func (c *command) confirmDeletion(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(args) == 1 {
-		if err := form.ConfirmDeletionWithString(cmd, resource.Environment, args[0], displayName); err != nil {
+		if err := form.ConfirmDeletionWithString(cmd, deletion.DefaultPromptString(resource.Environment, args[0], displayName), displayName); err != nil {
 			return err
 		}
 	} else {
-		if ok, err := form.ConfirmDeletionYesNo(cmd, resource.Environment, args); err != nil || !ok {
+		if ok, err := form.ConfirmDeletionYesNo(cmd, deletion.DefaultYesNoPromptString(resource.Environment, args)); err != nil || !ok {
 			return err
 		}
 	}

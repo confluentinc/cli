@@ -82,7 +82,7 @@ func (c *brokerCommand) confirmDeletion(cmd *cobra.Command, restClient *kafkares
 		return err
 	}
 
-	if ok, err := form.ConfirmDeletionYesNo(cmd, "broker", args); err != nil || !ok {
+	if ok, err := form.ConfirmDeletionYesNo(cmd, deletion.DefaultYesNoPromptString("broker", args)); err != nil || !ok {
 		return err
 	}
 

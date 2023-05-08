@@ -61,11 +61,11 @@ func (c *identityProviderCommand) confirmDeletion(cmd *cobra.Command, args []str
 	}
 
 	if len(args) == 1 {
-		if err := form.ConfirmDeletionWithString(cmd, resource.IdentityProvider, args[0], displayName); err != nil {
+		if err := form.ConfirmDeletionWithString(cmd, deletion.DefaultPromptString(resource.IdentityProvider, args[0], displayName), displayName); err != nil {
 			return err
 		}
 	} else {
-		if ok, err := form.ConfirmDeletionYesNo(cmd, resource.IdentityProvider, args); err != nil || !ok {
+		if ok, err := form.ConfirmDeletionYesNo(cmd, deletion.DefaultYesNoPromptString(resource.IdentityProvider, args)); err != nil || !ok {
 			return err
 		}
 	}

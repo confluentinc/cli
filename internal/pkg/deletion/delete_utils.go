@@ -61,3 +61,18 @@ func PrintSuccessMsg(successful []string, resourceType string) {
 		output.Printf("Deleted %s %s.\n", resource.Plural(resourceType), utils.ArrayToCommaDelimitedString(successful, "and"))
 	}
 }
+
+func DefaultPromptString(resourceType, id, stringToType string) string {
+	return fmt.Sprintf(errors.DeleteResourceConfirmMsg, resourceType, id, stringToType)
+}
+
+func DefaultYesNoPromptString(resourceType string, idList []string) string {
+	var promptMsg string
+	if len(idList) == 1 {
+		promptMsg = fmt.Sprintf(`Are you sure you want to delete %s "%s"?`, resourceType, idList[0])
+	} else {
+		promptMsg = fmt.Sprintf("Are you sure you want to delete %ss %s?", resourceType, utils.ArrayToCommaDelimitedString(idList, "and"))
+	}
+
+	return promptMsg
+}

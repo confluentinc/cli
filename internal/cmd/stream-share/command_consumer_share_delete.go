@@ -56,7 +56,7 @@ func (c *command) confirmDeletionConsumerShare(cmd *cobra.Command, args []string
 		return err
 	}
 
-	if ok, err := form.ConfirmDeletionYesNo(cmd, resource.ConsumerShare, args); err != nil || !ok {
+	if ok, err := form.ConfirmDeletionYesNo(cmd, deletion.DefaultYesNoPromptString(resource.ConsumerShare, args)); err != nil || !ok {
 		return err
 	}
 

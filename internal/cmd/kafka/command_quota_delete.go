@@ -55,11 +55,11 @@ func (c *quotaCommand) confirmDeletion(cmd *cobra.Command, args []string) error 
 	}
 
 	if len(args) == 1 {
-		if err := form.ConfirmDeletionWithString(cmd, resource.ClientQuota, args[0], displayName); err != nil {
+		if err := form.ConfirmDeletionWithString(cmd, deletion.DefaultPromptString(resource.ClientQuota, args[0], displayName), displayName); err != nil {
 			return err
 		}
 	} else {
-		if ok, err := form.ConfirmDeletionYesNo(cmd, resource.ClientQuota, args); err != nil || !ok {
+		if ok, err := form.ConfirmDeletionYesNo(cmd, deletion.DefaultYesNoPromptString(resource.ClientQuota, args)); err != nil || !ok {
 			return err
 		}
 	}
