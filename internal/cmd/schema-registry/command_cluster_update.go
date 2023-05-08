@@ -72,14 +72,28 @@ func (c *command) updateTopLevelCompatibility(cmd *cobra.Command) error {
 		return err
 	}
 
-	compatibility, err := cmd.Flags().GetString("compatibility")
+	updateReq, err := c.getConfigUpdateRequest(cmd)
 	if err != nil {
 		return err
 	}
 
+	if _, _, err := srClient.DefaultApi.UpdateTopLevelConfig(ctx, *updateReq); err != nil {
+		return err
+	}
+
+	output.Printf(errors.UpdatedToLevelCompatibilityMsg, updateReq.Compatibility)
+	return nil
+}
+
+func (c *command) getConfigUpdateRequest(cmd *cobra.Command) (*srsdk.ConfigUpdateRequest, error) {
+	compatibility, err := cmd.Flags().GetString("compatibility")
+	if err != nil {
+		return nil, err
+	}
+
 	compatibilityGroup, err := cmd.Flags().GetString("compatibility-group")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	var defaultMetadata srsdk.Metadata
@@ -89,31 +103,31 @@ func (c *command) updateTopLevelCompatibility(cmd *cobra.Command) error {
 
 	metadataDefaultsPath, err := cmd.Flags().GetString("metadata-defaults")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	rulesetDefaultPath, err := cmd.Flags().GetString("ruleset-defaults")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	err = readMetadataAndRuleset(metadataDefaultsPath, &defaultMetadata, rulesetDefaultPath, &defaultRuleset)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	metadataOverridesPath, err := cmd.Flags().GetString("metadata-overrides")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	rulesetOverridesPath, err := cmd.Flags().GetString("ruleset-overrides")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	err = readMetadataAndRuleset(metadataOverridesPath, &overrideMetadata, rulesetOverridesPath, &overrideRuleset)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	updateReq := srsdk.ConfigUpdateRequest{
+	updateReq := &srsdk.ConfigUpdateRequest{
 		Compatibility:      strings.ToUpper(compatibility),
 		CompatibilityGroup: compatibilityGroup,
 		DefaultMetadata:    defaultMetadata,
@@ -121,13 +135,7 @@ func (c *command) updateTopLevelCompatibility(cmd *cobra.Command) error {
 		DefaultRuleSet:     defaultRuleset,
 		OverrideRuleSet:    overrideRuleset,
 	}
-
-	if _, _, err := srClient.DefaultApi.UpdateTopLevelConfig(ctx, updateReq); err != nil {
-		return err
-	}
-
-	output.Printf(errors.UpdatedToLevelCompatibilityMsg, updateReq.Compatibility)
-	return nil
+	return updateReq, nil
 }
 
 func (c *command) updateTopLevelMode(cmd *cobra.Command) error {

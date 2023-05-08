@@ -45,7 +45,8 @@ func RegisterSchemaWithAuth(cmd *cobra.Command, schemaCfg *RegisterSchemaConfigs
 	if schemaCfg.Normalize {
 		registerOpts.Normalize = optional.NewBool(true)
 	}
-	request := srsdk.RegisterSchemaRequest{Schema: string(schema),
+	request := srsdk.RegisterSchemaRequest{
+		Schema:     string(schema),
 		SchemaType: schemaCfg.SchemaType,
 		References: schemaCfg.Refs,
 		Metadata:   schemaCfg.Metadata,

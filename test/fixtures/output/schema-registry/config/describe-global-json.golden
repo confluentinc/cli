@@ -1,7 +1,7 @@
 {
   "compatibility_level": "FULL",
-  "metadata_defaults": "{}",
-  "metadata_overrides": "{}",
-  "ruleset_defaults": "{}",
-  "ruleset_overrides": "{}"
+  "metadata_defaults": "{}\n",
+  "metadata_overrides": "{}\n",
+  "ruleset_defaults": "{}\n",
+  "ruleset_overrides": "{}\n"
 }
