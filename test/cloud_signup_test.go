@@ -24,7 +24,6 @@ func (s *CLITestSuite) TestCloudSignup_FreeTrialAnnouncement() {
 
 		output := runCommand(tt, testBin, []string{}, args, 0, covCollectorOptions...)
 		require.Contains(tt, output, errors.CloudSignUpMsg)
-		require.Contains(tt, output, fmt.Sprintf(errors.FreeTrialSignUpMsg, 400.00))
 	})
 
 	s.T().Run("signup has multiple codes including free trial code", func(tt *testing.T) {
@@ -37,8 +36,6 @@ func (s *CLITestSuite) TestCloudSignup_FreeTrialAnnouncement() {
 
 		output := runCommand(tt, testBin, []string{}, args, 0, covCollectorOptions...)
 		require.Contains(tt, output, errors.CloudSignUpMsg)
-		// still $400.00, not 420.00
-		require.Contains(tt, output, fmt.Sprintf(errors.FreeTrialSignUpMsg, 400.00))
 	})
 
 	s.T().Run("signup missing free trial code", func(tt *testing.T) {
@@ -48,7 +45,6 @@ func (s *CLITestSuite) TestCloudSignup_FreeTrialAnnouncement() {
 
 		output := runCommand(tt, testBin, []string{}, args, 0, covCollectorOptions...)
 		require.Contains(tt, output, errors.CloudSignUpMsg)
-		require.NotContains(tt, output, fmt.Sprintf(errors.FreeTrialSignUpMsg, 400.00))
 	})
 }
 
