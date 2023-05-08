@@ -1,7 +1,7 @@
 package kafka
 
 import (
-	"fmt"
+	"context"
 	"strconv"
 
 	"github.com/antihax/optional"
@@ -10,16 +10,18 @@ import (
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/deletion"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
+	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *brokerCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delete <id>",
-		Short: "Delete a Kafka broker.",
-		Args:  cobra.ExactArgs(1),
+		Use:   "delete <id-1> [id-2] ... [id-n]",
+		Short: "Delete Kafka brokers.",
+		Args:  cobra.MinimumNArgs(1),
 		RunE:  c.delete,
 	}
 
@@ -30,13 +32,6 @@ func (c *brokerCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *brokerCommand) delete(cmd *cobra.Command, args []string) error {
-	brokerIdStr := args[0]
-	i, err := strconv.ParseInt(brokerIdStr, 10, 32)
-	if err != nil {
-		return err
-	}
-	brokerId := int32(i)
-
 	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err
@@ -47,17 +42,49 @@ func (c *brokerCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmYesNoMsg, "broker", brokerIdStr)
-	if ok, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil || !ok {
+	brokerIdToNumId := make(map[string]int32)
+	if err := c.confirmDeletion(cmd, restClient, restContext, clusterId, args, brokerIdToNumId); err != nil {
 		return err
 	}
 
 	opts := kafkarestv3.ClustersClusterIdBrokersBrokerIdDeleteOpts{ShouldShutdown: optional.NewBool(true)}
-	_, resp, err := restClient.BrokerV3Api.ClustersClusterIdBrokersBrokerIdDelete(restContext, clusterId, brokerId, &opts)
-	if err != nil {
-		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
+	deleted, err := deletion.DeleteResources(args, func(id string) error {
+		if _, resp, err := restClient.BrokerV3Api.ClustersClusterIdBrokersBrokerIdDelete(restContext, clusterId, brokerIdToNumId[id], &opts); err != nil {
+			return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
+		}
+		return nil
+	}, deletion.DefaultPostProcess)
+	if len(deleted) == 1 {
+		output.Printf("Started deletion of broker %[1]s. To monitor the remove-broker task run `confluent kafka broker get-tasks %[1]s --task-type remove-broker`.\n", deleted[0])
+	} else if len(deleted) > 1 {
+		output.Printf("Started deletion of brokers %s. To monitor a remove-broker task run `confluent kafka broker get-tasks <id> --task-type remove-broker`.\n", utils.ArrayToCommaDelimitedString(deleted, "and"))
 	}
 
-	fmt.Printf("Started deletion of broker %d. To monitor the remove-broker task run `confluent kafka broker get-tasks %d --task-type remove-broker`.", brokerId, brokerId)
+	return err
+}
+
+func (c *brokerCommand) confirmDeletion(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restContext context.Context, clusterId string, args []string, brokerIdToNumId map[string]int32) error {
+	describeFunc := func(id string) error {
+		i, err := strconv.ParseInt(id, 10, 32)
+		if err != nil {
+			return err
+		}
+		numId := int32(i)
+
+		_, _, err = restClient.ConfigsV3Api.ClustersClusterIdBrokersBrokerIdConfigsGet(restContext, clusterId, numId)
+		if err == nil {
+			brokerIdToNumId[id] = numId
+		}
+		return err
+	}
+
+	if err := deletion.ValidateArgs(cmd, args, "broker", describeFunc); err != nil {
+		return err
+	}
+
+	if ok, err := form.ConfirmDeletionYesNo(cmd, "broker", args); err != nil || !ok {
+		return err
+	}
+
 	return nil
 }

@@ -1,24 +1,21 @@
 package streamshare
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/deletion"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
-	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *command) newConsumerShareDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "delete <id>",
-		Short:             "Delete a consumer share.",
-		Args:              cobra.ExactArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validConsumerShareArgs),
+		Use:               "delete <id-1> [id-2] ... [id-n]",
+		Short:             "Delete consumer shares.",
+		Args:              cobra.MinimumNArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validConsumerShareArgsMultiple),
 		RunE:              c.deleteConsumerShare,
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -34,21 +31,34 @@ func (c *command) newConsumerShareDeleteCommand() *cobra.Command {
 }
 
 func (c *command) deleteConsumerShare(cmd *cobra.Command, args []string) error {
-	shareId := args[0]
-
-	if _, err := c.V2Client.DescribeConsumerShare(shareId); err != nil {
+	if err := c.confirmDeletionConsumerShare(cmd, args); err != nil {
 		return err
 	}
 
-	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmYesNoMsg, resource.ConsumerShare, shareId)
-	if ok, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil || !ok {
+	deleted, err := deletion.DeleteResources(args, func(id string) error {
+		if err := c.V2Client.DeleteConsumerShare(id); err != nil {
+			return err
+		}
+		return nil
+	}, deletion.DefaultPostProcess)
+	deletion.PrintSuccessMsg(deleted, resource.ConsumerShare)
+
+	return err
+}
+
+func (c *command) confirmDeletionConsumerShare(cmd *cobra.Command, args []string) error {
+	describeFunc := func(id string) error {
+		_, err := c.V2Client.DescribeConsumerShare(id)
 		return err
 	}
 
-	if err := c.V2Client.DeleteConsumerShare(shareId); err != nil {
+	if err := deletion.ValidateArgs(cmd, args, resource.ConsumerShare, describeFunc); err != nil {
 		return err
 	}
 
-	output.Printf(errors.DeletedResourceMsg, resource.ConsumerShare, shareId)
+	if ok, err := form.ConfirmDeletionYesNo(cmd, resource.ConsumerShare, args); err != nil || !ok {
+		return err
+	}
+
 	return nil
 }
