@@ -1,23 +1,21 @@
 package iam
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/deletion"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
-	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
-func (c userCommand) newDeleteCommand() *cobra.Command {
+func (c *userCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "delete <id>",
-		Short:             "Delete a user from your organization.",
-		Args:              cobra.ExactArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		Use:               "delete <id-1> [id-2] ... [id-n]",
+		Short:             "Delete users from your organization.",
+		Args:              cobra.MinimumNArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgsMultiple),
 		RunE:              c.delete,
 	}
 
@@ -26,26 +24,49 @@ func (c userCommand) newDeleteCommand() *cobra.Command {
 	return cmd
 }
 
-func (c userCommand) delete(cmd *cobra.Command, args []string) error {
-	resourceId := args[0]
-	if resource.LookupType(resourceId) != resource.User {
-		return fmt.Errorf(errors.BadResourceIDErrorMsg, resource.UserPrefix)
-	}
-
-	user, err := c.V2Client.GetIamUserById(resourceId)
-	if err != nil {
+func (c *userCommand) delete(cmd *cobra.Command, args []string) error {
+	if err := c.confirmDeletion(cmd, args); err != nil {
 		return err
 	}
 
-	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.User, resourceId, user.GetFullName())
-	if _, err := form.ConfirmDeletion(cmd, promptMsg, user.GetFullName()); err != nil {
+	deleted, err := deletion.DeleteResources(args, func(id string) error {
+		if err := c.V2Client.DeleteIamUser(id); err != nil {
+			return errors.Errorf(errors.DeleteResourceErrorMsg, resource.User, id, err)
+		}
+		return nil
+	}, deletion.DefaultPostProcess)
+	deletion.PrintSuccessMsg(deleted, resource.User)
+
+	return err
+}
+
+func (c *userCommand) confirmDeletion(cmd *cobra.Command, args []string) error {
+	if err := resource.ValidatePrefixes(resource.User, args); err != nil {
 		return err
 	}
 
-	if err := c.V2Client.DeleteIamUser(resourceId); err != nil {
-		return errors.Errorf(errors.DeleteResourceErrorMsg, resource.User, resourceId, err)
+	var fullName string
+	describeFunc := func(id string) error {
+		user, err := c.V2Client.GetIamUserById(id)
+		if err == nil && id == args[0] {
+			fullName = user.GetFullName()
+		}
+		return err
 	}
 
-	output.Printf(errors.DeletedResourceMsg, resource.User, resourceId)
+	if err := deletion.ValidateArgs(cmd, args, resource.User, describeFunc); err != nil {
+		return err
+	}
+
+	if len(args) == 1 {
+		if err := form.ConfirmDeletionWithString(cmd, deletion.DefaultPromptString(resource.User, args[0], fullName), fullName); err != nil {
+			return err
+		}
+	} else {
+		if ok, err := form.ConfirmDeletionYesNo(cmd, deletion.DefaultYesNoPromptString(resource.User, args)); err != nil || !ok {
+			return err
+		}
+	}
+
 	return nil
 }
