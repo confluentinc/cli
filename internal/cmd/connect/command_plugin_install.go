@@ -345,7 +345,7 @@ func uninstall(pathToPlugin string, dryRun, force bool) error {
 		}
 	}
 	if dryRun {
-		output.Println("[DRY RUN] Skipping uninstallation of the existing version.")
+		output.Println("[DRY RUN] Success.")
 		return nil
 	}
 	return os.RemoveAll(pathToPlugin)
