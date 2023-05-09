@@ -6,7 +6,7 @@ require (
 	github.com/atotto/clipboard v0.1.4
 	github.com/bradleyjkemp/cupaloy v2.3.0+incompatible
 	github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway v0.0.8
-	github.com/confluentinc/go-prompt v0.2.16
+	github.com/confluentinc/go-prompt v0.2.17
 	github.com/gdamore/tcell/v2 v2.5.4
 	github.com/google/uuid v1.3.0
 	github.com/olekukonko/tablewriter v0.0.5
@@ -27,7 +27,7 @@ require (
 	github.com/mattn/go-isatty v0.0.12 // indirect
 	github.com/mattn/go-runewidth v0.0.14 // indirect
 	github.com/mattn/go-tty v0.0.3 // indirect
-	github.com/pkg/term v1.1.0 // indirect
+	github.com/pkg/term v1.2.0-beta.2 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rivo/uniseg v0.4.2 // indirect
 	golang.org/x/net v0.0.0-20220722155237-a158d28d115b // indirect
