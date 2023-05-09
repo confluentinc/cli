@@ -1,9 +1,9 @@
---- cli/Makefile	2023-03-31 16:37:17.842362310 -0700
+--- cli/Makefile	2023-05-05 09:20:15.874939333 -0700
 +++ debian/Makefile	2023-03-31 13:35:33.741910522 -0700
 @@ -1,121 +1,130 @@
 -SHELL              := /bin/bash
 -ALL_SRC            := $(shell find . -name "*.go" | grep -v -e vendor)
--GORELEASER_VERSION := v1.16.3-0.20230323115904-f82a32cd3a59
+-GORELEASER_VERSION := v1.17.2
 -
 -.PHONY: build # compile natively based on the system
 -build:
@@ -63,7 +63,7 @@
  
 -.PHONY: clean
 -clean:
--	for dir in bin dist docs legal release-notes; do \
+-	for dir in bin dist docs legal prebuilt release-notes; do \
 -		[ -d $$dir ] && rm -r $$dir || true; \
 -	done
 +ifndef VERSION

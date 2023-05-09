@@ -1,8 +1,7 @@
-//go:generate go run github.com/travisjeffery/mocker/cmd/mocker --dst ../../../mock/login_credentials_manager.go --pkg mock --selfpkg github.com/confluentinc/cli login_credentials_manager.go LoginCredentialsManager
+//go:generate mocker --dst ../../../mock/login_credentials_manager.go --pkg mock --selfpkg github.com/confluentinc/cli login_credentials_manager.go LoginCredentialsManager --prefix ""
 package auth
 
 import (
-	"context"
 	"os"
 	"runtime"
 	"strings"
@@ -20,6 +19,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/netrc"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/secret"
+	"github.com/confluentinc/cli/internal/pkg/types"
 )
 
 type Credentials struct {
@@ -68,7 +68,7 @@ func GetLoginCredentials(credentialsFuncs ...func() (*Credentials, error)) (*Cre
 type LoginCredentialsManager interface {
 	GetCloudCredentialsFromEnvVar(orgResourceId string) func() (*Credentials, error)
 	GetOnPremCredentialsFromEnvVar() func() (*Credentials, error)
-	GetSsoCredentialsFromConfig(cfg *v1.Config) func() (*Credentials, error)
+	GetSsoCredentialsFromConfig(cfg *v1.Config, url string) func() (*Credentials, error)
 	GetCredentialsFromConfig(cfg *v1.Config, filterParams netrc.NetrcMachineParams) func() (*Credentials, error)
 	GetCredentialsFromKeychain(cfg *v1.Config, isCloud bool, ctxName string, url string) func() (*Credentials, error)
 	GetCredentialsFromNetrc(filterParams netrc.NetrcMachineParams) func() (*Credentials, error)
@@ -179,22 +179,33 @@ func (h *LoginCredentialsManagerImpl) GetCredentialsFromConfig(cfg *v1.Config, f
 		if err != nil {
 			return nil, err
 		}
+
 		credentials := &Credentials{
 			Username: loginCredential.Username,
 			Password: password,
 			Salt:     loginCredential.Salt,
 			Nonce:    loginCredential.Nonce,
 		}
-		return credentials, err
+		return credentials, nil
 	}
 }
 
-func (h *LoginCredentialsManagerImpl) GetSsoCredentialsFromConfig(cfg *v1.Config) func() (*Credentials, error) {
+func (h *LoginCredentialsManagerImpl) GetSsoCredentialsFromConfig(cfg *v1.Config, url string) func() (*Credentials, error) {
 	return func() (*Credentials, error) {
-		credentials, _ := h.GetPrerunCredentialsFromConfig(cfg)()
+		ctx := cfg.Context()
 
-		// For `confluent login`, only retrieve credentials from the config file if SSO (prevents a breaking change)
-		if credentials != nil && credentials.IsSSO {
+		if ctx.GetPlatformServer() != url {
+			return nil, nil
+		}
+
+		credentials := &Credentials{
+			IsSSO:            ctx.GetUser().GetAuthType() == ccloudv1.AuthType_AUTH_TYPE_SSO || ctx.GetUser().GetSocialConnection() != "",
+			Username:         ctx.GetUser().GetEmail(),
+			AuthToken:        ctx.GetAuthToken(),
+			AuthRefreshToken: ctx.GetAuthRefreshToken(),
+		}
+
+		if credentials.IsSSO {
 			return credentials, nil
 		}
 
@@ -290,6 +301,11 @@ func (h *LoginCredentialsManagerImpl) isSSOUser(email, orgId string) bool {
 	if h.client == nil {
 		return false
 	}
+
+	if email != "" && types.Contains([]string{"fedramp", "fedramp-internal"}, sso.GetCCloudEnvFromBaseUrl(h.client.BaseURL)) {
+		return true
+	}
+
 	auth0ClientId := sso.GetAuth0CCloudClientIdFromBaseUrl(h.client.BaseURL)
 	log.CliLogger.Tracef("h.client.BaseURL: %s", h.client.BaseURL)
 	log.CliLogger.Tracef("auth0ClientId: %s", auth0ClientId)
@@ -298,7 +314,7 @@ func (h *LoginCredentialsManagerImpl) isSSOUser(email, orgId string) bool {
 		ClientId:      auth0ClientId,
 		OrgResourceId: orgId,
 	}
-	res, err := h.client.User.LoginRealm(context.Background(), req)
+	res, err := h.client.User.LoginRealm(req)
 	// Fine to ignore non-nil err for this request: e.g. what if this fails due to invalid/malicious
 	// email, we want to silently continue and give the illusion of password prompt.
 	return err == nil && res.GetIsSso()

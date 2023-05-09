@@ -55,10 +55,10 @@ define copy-stag-content-to-prod
 endef
 
 # The glibc container doesn't need to publish to S3 so it doesn't need to $(caasenv-authenticate)
-.PHONY: gorelease-linux-glibc
-gorelease-linux-glibc:
+.PHONY: gorelease-linux-glibc-amd64
+gorelease-linux-glibc-amd64:
 	go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
-	VERSION=$(VERSION) GOEXPERIMENT=boringcrypto goreleaser release --clean -f .goreleaser-linux-glibc.yml
+	VERSION=$(VERSION) GOEXPERIMENT=boringcrypto goreleaser release --clean -f .goreleaser-linux-glibc-amd64.yml
 
 .PHONY: gorelease-linux-glibc-arm64
 gorelease-linux-glibc-arm64:
@@ -78,30 +78,13 @@ gorelease:
 	$(eval CLI_RELEASE=$(DIR)/cli-release)
 
 	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
-
-	git clone git@github.com:confluentinc/cli-release.git $(CLI_RELEASE) && \
 	$(aws-authenticate) && \
-	echo "BUILDING FOR DARWIN, WINDOWS, AND ALPINE LINUX" && \
-	go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
-	go run cmd/releasenotes/main.go $(CLI_RELEASE)/release-notes/$(VERSION_NO_V).json github > $(DIR)/release.txt && \
-	VERSION=$(VERSION) GITHUB_TOKEN=$(token) S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli GOEXPERIMENT=boringcrypto DRY_RUN=$(DRY_RUN) goreleaser release --clean -f .goreleaser.yml --release-notes $(DIR)/release.txt --timeout 60m; \
-	rm -f CLIEVCodeSigningCertificate2.pfx && \
-	echo "BUILDING FOR GLIBC LINUX" && \
+	rm -rf prebuilt/ && \
+	mkdir prebuilt/ && \
 	scripts/build_linux_glibc.sh && \
-	$(call dry-run,aws s3 cp dist/confluent_$(VERSION_NO_V)_linux_amd64.tar.gz $(S3_STAG_PATH)/confluent-cli/archives/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_linux_amd64.tar.gz) && \
-	$(call dry-run,aws s3 cp dist/confluent_$(VERSION_NO_V)_linux_arm64.tar.gz $(S3_STAG_PATH)/confluent-cli/archives/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_linux_arm64.tar.gz) && \
-	$(aws-authenticate) && \
-	$(call dry-run,aws s3 cp dist/confluent_linux_amd64_v1/confluent $(S3_STAG_PATH)/confluent-cli/binaries/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_linux_amd64) && \
-	$(call dry-run,aws s3 cp dist/confluent_linux_arm64/confluent $(S3_STAG_PATH)/confluent-cli/binaries/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_linux_arm64) && \
-	cat dist/confluent_$(VERSION_NO_V)_checksums_linux.txt >> dist/confluent_$(VERSION_NO_V)_checksums.txt && \
-	cat dist/confluent_$(VERSION_NO_V)_checksums_linux_arm64.txt >> dist/confluent_$(VERSION_NO_V)_checksums.txt && \
-	$(call dry-run,aws s3 cp dist/confluent_$(VERSION_NO_V)_checksums.txt $(S3_STAG_PATH)/confluent-cli/archives/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_checksums.txt) && \
-	$(call dry-run,aws s3 cp dist/confluent_$(VERSION_NO_V)_checksums.txt $(S3_STAG_PATH)/confluent-cli/binaries/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_checksums.txt) && \
-	echo "UPLOADING LINUX BUILDS TO GITHUB" && \
-	make upload-linux-build-to-github
-
-	rm -rf $(DIR)
-	
+	git clone git@github.com:confluentinc/cli-release.git $(CLI_RELEASE) && \
+	go run cmd/releasenotes/main.go $(CLI_RELEASE)/release-notes/$(VERSION_NO_V).json github > $(DIR)/release-notes.txt && \
+	GORELEASER_KEY=$(GORELEASER_KEY) VERSION=$(VERSION) GOEXPERIMENT=boringcrypto S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli GITHUB_TOKEN=$(token) DRY_RUN=$(DRY_RUN) goreleaser release --clean --release-notes $(DIR)/release-notes.txt --timeout 60m
 
 # Current goreleaser still has some shortcomings for the our use, and the target patches those issues
 # As new goreleaser versions allow more customization, we may be able to reduce the work for this make target
@@ -169,14 +152,3 @@ download-licenses:
 publish-installer:
 	$(aws-authenticate) && \
 	$(call dry-run,aws s3 cp install.sh $(S3_BUCKET_PATH)/confluent-cli/install.sh --acl public-read)
-
-.PHONY: upload-linux-build-to-github
-## upload local copy of glibc linux build to github
-upload-linux-build-to-github:
-	$(call dry-run,gh release upload $(VERSION) dist/confluent_$(VERSION_NO_V)_linux_amd64.tar.gz) && \
-	$(call dry-run,gh release upload $(VERSION) dist/confluent_$(VERSION_NO_V)_linux_arm64.tar.gz) && \
-	mv dist/confluent_linux_amd64_v1/confluent dist/confluent_linux_amd64_v1/confluent_$(VERSION_NO_V)_linux_amd64 && \
-	mv dist/confluent_linux_arm64/confluent dist/confluent_linux_arm64/confluent_$(VERSION_NO_V)_linux_arm64 && \
-	$(call dry-run,gh release upload $(VERSION) dist/confluent_linux_amd64_v1/confluent_$(VERSION_NO_V)_linux_amd64) && \
-	$(call dry-run,gh release upload $(VERSION) dist/confluent_linux_arm64/confluent_$(VERSION_NO_V)_linux_arm64) && \
-	$(call dry-run,gh release upload $(VERSION) --clobber dist/confluent_$(VERSION_NO_V)_checksums.txt)
