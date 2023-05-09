@@ -64,7 +64,7 @@ func (c *pluginCommand) newInstallCommand() *cobra.Command {
 
 	cmd.Flags().String("plugin-directory", "", "The plugin installation directory.")
 	cmd.Flags().StringSlice("worker-configs", []string{}, "A comma-separated list of paths to one or more Kafka Connect worker configuration files. Each worker file will be updated to load plugins from the plugin directory in addition to any preexisting directories.")
-	cmd.Flags().Bool("dry-run", false, "Simulate an operation without making any changes.")
+	pcmd.AddDryRunFlag(cmd)
 	cmd.Flags().Bool("force", false, "Proceed without user input.")
 
 	cmd.MarkFlagDirname("plugin-directory")
