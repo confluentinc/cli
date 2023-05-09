@@ -167,11 +167,11 @@ func hasArchiveInstallation(dir string) bool {
 func compactDuplicateInstallations(installations []installation) []installation {
 	var uniqueInstallations []installation
 
-	s := types.NewSet()
+	set := types.NewSet()
 	for _, ins := range installations {
 		typePathStr := fmt.Sprintf("type=%s,path=%s", ins.Type, ins.Path)
-		if !s.Contains(typePathStr) {
-			s.Add(typePathStr)
+		if !set.Contains(typePathStr) {
+			set.Add(typePathStr)
 			uniqueInstallations = append(uniqueInstallations, ins)
 		}
 	}
