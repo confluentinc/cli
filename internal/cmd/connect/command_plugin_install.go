@@ -43,9 +43,6 @@ type manifest struct {
 }
 
 const (
-	archiveInstallation = "ARCHIVE"
-	packageInstallation = "PACKAGE"
-
 	invalidDirectoryErrorMsg       = `plugin directory "%s" does not exist`
 	unexpectedInstallationErrorMsg = "unexpected installation type: %s"
 )

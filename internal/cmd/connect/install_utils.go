@@ -97,7 +97,7 @@ func findInstallationDirectories() ([]installation, error) {
 	confluentHome := os.Getenv("CONFLUENT_HOME")
 	if confluentHome != "" && hasArchiveInstallation(confluentHome) {
 		ins := installation{
-			Type: archiveInstallation,
+			Type: "ARCHIVE",
 			Path: confluentHome,
 			Use:  "$CONFLUENT_HOME",
 		}
@@ -111,7 +111,7 @@ func findInstallationDirectories() ([]installation, error) {
 	}
 	if hasArchiveInstallation(currentDirectory) {
 		ins := installation{
-			Type: archiveInstallation,
+			Type: "ARCHIVE",
 			Path: currentDirectory,
 			Use:  "Current Directory",
 		}
@@ -121,7 +121,7 @@ func findInstallationDirectories() ([]installation, error) {
 	// standard rpm/deb
 	if hasPackageInstallation {
 		ins := installation{
-			Type: packageInstallation,
+			Type: "PACKAGE",
 			Path: filepath.FromSlash("/"),
 			Use:  "Installed RPM/DEB Package",
 		}
@@ -137,14 +137,14 @@ func findInstallationDirectories() ([]installation, error) {
 	cliUse := "CLI Installation Directory"
 	if filepath.ToSlash(cliDirectory) == "/usr/bin" && hasPackageInstallation {
 		ins := installation{
-			Type: packageInstallation,
+			Type: "PACKAGE",
 			Path: filepath.FromSlash("/"),
 			Use:  cliUse,
 		}
 		result = append(result, ins)
 	} else if filepath.Base(cliDirectory) == "bin" && hasArchiveInstallation(filepath.Dir(cliDirectory)) {
 		ins := installation{
-			Type: archiveInstallation,
+			Type: "ARCHIVE",
 			Path: filepath.Dir(cliDirectory),
 			Use:  cliUse,
 		}
@@ -182,9 +182,9 @@ func compactDuplicateInstallations(installations []installation) []installation 
 func choosePluginDir(ins *installation, force bool) (string, error) {
 	var defaultPluginDir string
 	switch ins.Type {
-	case archiveInstallation:
+	case "ARCHIVE":
 		defaultPluginDir = filepath.Join(ins.Path, "share/confluent-hub-components")
-	case packageInstallation:
+	case "PACKAGE":
 		defaultPluginDir = "/usr/share/confluent-hub-components"
 	default:
 		return "", errors.Errorf(unexpectedInstallationErrorMsg, ins.Type)
@@ -235,7 +235,7 @@ func standardWorkerConfigLocations(ins *installation) ([]WorkerConfig, error) {
 		"/etc/schema-registry/connect-avro-standalone.properties",
 	}
 	switch ins.Type {
-	case archiveInstallation:
+	case "ARCHIVE":
 		var result []WorkerConfig
 		for _, workerConfigLocation := range workerConfigLocations {
 			workerConfigPath := filepath.Join(ins.Path, filepath.FromSlash(workerConfigLocation))
@@ -258,7 +258,7 @@ func standardWorkerConfigLocations(ins *installation) ([]WorkerConfig, error) {
 			}
 		}
 		return result, nil
-	case packageInstallation:
+	case "PACKAGE":
 		var result []WorkerConfig
 		for _, workerConfigLocation := range workerConfigLocations {
 			result = append(result, WorkerConfig{Path: filepath.FromSlash(workerConfigLocation), Use: "Standard"})
