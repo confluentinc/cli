@@ -86,8 +86,8 @@ func (s *CLITestSuite) TestConnectPlugin() {
 }
 
 func (s *CLITestSuite) TestConnectPluginInstall() {
-	s.setupConfluentPlatform()
-	defer s.teardownConfluentPlatform()
+	s.zipManifest()
+	defer s.deleteZip()
 
 	confluentHomeEmpty := "test/fixtures/input/connect/confluent-empty"
 	confluentHome733 := "test/fixtures/input/connect/confluent-7.3.3"
@@ -121,7 +121,7 @@ func (s *CLITestSuite) TestConnect_Autocomplete() {
 	}
 }
 
-func (s *CLITestSuite) setupConfluentPlatform() {
+func (s *CLITestSuite) zipManifest() {
 	req := require.New(s.T())
 
 	zipFile, err := os.Create("test/fixtures/input/connect/test-plugin.zip")
@@ -138,40 +138,11 @@ func (s *CLITestSuite) setupConfluentPlatform() {
 	req.NoError(err)
 	_, err = io.Copy(zipManifest, manifestFile)
 	req.NoError(err)
-
-	err = os.MkdirAll("test/fixtures/input/connect/confluent-7.3.3/share/confluent-hub-components", 0755)
-	req.NoError(err)
-	err = os.MkdirAll("test/fixtures/input/connect/confluent-7.3.3/share/java/confluent-common", 0755)
-	req.NoError(err)
-	err = os.MkdirAll("test/fixtures/input/connect/confluent-7.3.3/etc/kafka", 0755)
-	req.NoError(err)
-	err = os.MkdirAll("test/fixtures/input/connect/confluent-empty/share/confluent-hub-components", 0755)
-	req.NoError(err)
-	err = os.MkdirAll("test/fixtures/input/connect/confluent-empty/share/java/confluent-common", 0755)
-	req.NoError(err)
-
-	connectDistributedFile, err := os.OpenFile("test/fixtures/input/connect/confluent-7.3.3/etc/kafka/connect-distributed.properties", os.O_CREATE|os.O_RDWR, 0644)
-	req.NoError(err)
-	defer connectDistributedFile.Close()
-	_, err = connectDistributedFile.WriteString("plugin.path = /usr/share/java")
-	req.NoError(err)
-
-	connectStandaloneFile, err := os.OpenFile("test/fixtures/input/connect/confluent-7.3.3/etc/kafka/connect-standalone.properties", os.O_CREATE|os.O_RDWR, 0644)
-	req.NoError(err)
-	defer connectStandaloneFile.Close()
-	_, err = connectStandaloneFile.WriteString("plugin.path = /usr/share/java")
-	req.NoError(err)
 }
 
-func (s *CLITestSuite) teardownConfluentPlatform() {
+func (s *CLITestSuite) deleteZip() {
 	req := require.New(s.T())
 
 	err := os.Remove("test/fixtures/input/connect/test-plugin.zip")
-	req.NoError(err)
-
-	err = os.RemoveAll("test/fixtures/input/connect/confluent-7.3.3")
-	req.NoError(err)
-
-	err = os.RemoveAll("test/fixtures/input/connect/confluent-empty")
 	req.NoError(err)
 }
