@@ -1,4 +1,4 @@
 Error: plugin not found
 
 Suggestions:
-    Provide either a path to a local file or a plugin id from Confluent Hub with the format: `<owner>/<name>:<version>`.
+    Provide a path to a local file or provide a plugin ID from Confluent Hub with the format: `<owner>/<name>:<version>`.

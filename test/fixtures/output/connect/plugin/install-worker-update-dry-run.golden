@@ -22,4 +22,4 @@ Adding plugin installation directory to the plugin path in the following files:
 [DRY RUN] Skipping update of worker configuration file "test/fixtures/input/connect/confluent-7.3.3/etc/kafka/connect-distributed.properties".
 [DRY RUN] Skipping update of worker configuration file "test/fixtures/input/connect/confluent-7.3.3/etc/kafka/connect-standalone.properties".
 
-[DRY RUN] Dry run successfully completed. All requirements are met; you may proceed with the installation.
+[DRY RUN] Success. All requirements are met and you may proceed with the installation.

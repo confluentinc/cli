@@ -11,4 +11,4 @@ Installing Integration Test Plugin 0.1.0, provided by Confluent, Inc.
 [DRY RUN] Skipping plugin installation.
 No worker configuration files found.
 
-[DRY RUN] Dry run successfully completed. All requirements are met; you may proceed with the installation.
+[DRY RUN] Success. All requirements are met and you may proceed with the installation.

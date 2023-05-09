@@ -115,7 +115,7 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 	} else if len(previousInstallations) > 0 {
 		output.Println("\nA version of this plugin is already installed and must be removed to continue.")
 		for _, previousInstallation := range previousInstallations {
-			if err := uninstall(previousInstallation, dryRun, force); err != nil {
+			if err := replacePluginInstallation(previousInstallation, dryRun, force); err != nil {
 				return err
 			}
 		}
@@ -268,14 +268,19 @@ func getRemoteManifest(owner, name, version string) (*manifest, error) {
 		return nil, err
 	}
 
-	if r.StatusCode != http.StatusOK {
-		return nil, errors.New("failed to read manifest file from Confuent Hub")
-	}
-
 	defer r.Body.Close()
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		return nil, err
+	}
+
+	if r.StatusCode != http.StatusOK {
+		response := make(map[string]interface{})
+		_ = json.Unmarshal(body, &response)
+		if errorMessage, ok := response["message"]; ok {
+			return nil, errors.Errorf("failed to read manifest file from Confluent Hub: %s", errorMessage)
+		}
+		return nil, errors.Errorf("failed to read manifest file from Confluent Hub")
 	}
 
 	pluginManifest := new(manifest)
@@ -287,24 +292,24 @@ func getRemoteManifest(owner, name, version string) (*manifest, error) {
 }
 
 func getPluginDirFromFlag(cmd *cobra.Command) (string, error) {
-	if cmd.Flags().Changed("plugin-directory") {
-		pluginDir, err := cmd.Flags().GetString("plugin-directory")
-		if err != nil {
-			return "", err
-		}
-
-		if pluginDir, err = filepath.Abs(pluginDir); err != nil {
-			return "", err
-		}
-
-		if !utils.DoesPathExist(pluginDir) {
-			return "", errors.Errorf(invalidDirectoryErrorMsg, pluginDir)
-		}
-
-		return pluginDir, nil
+	if !cmd.Flags().Changed("plugin-directory") {
+		return "", nil
 	}
 
-	return "", nil
+	pluginDir, err := cmd.Flags().GetString("plugin-directory")
+	if err != nil {
+		return "", err
+	}
+
+	if pluginDir, err = filepath.Abs(pluginDir); err != nil {
+		return "", err
+	}
+
+	if !utils.DoesPathExist(pluginDir) {
+		return "", errors.Errorf(invalidDirectoryErrorMsg, pluginDir)
+	}
+
+	return pluginDir, nil
 }
 
 func existingPluginInstallation(pluginDir string, pluginManifest *manifest) ([]string, error) {
@@ -328,7 +333,7 @@ func existingPluginInstallation(pluginDir string, pluginManifest *manifest) ([]s
 	return installations, nil
 }
 
-func uninstall(pathToPlugin string, dryRun, force bool) error {
+func replacePluginInstallation(pathToPlugin string, dryRun, force bool) error {
 	if force {
 		output.Printf("Uninstalling the existing version of the plugin located at \"%s\".\n", pathToPlugin)
 	} else {
