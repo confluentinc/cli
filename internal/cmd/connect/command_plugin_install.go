@@ -175,7 +175,7 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 	}
 
 	if dryRun {
-		output.Println("\n[DRY RUN] Dry run successfully completed. All requirements are met; you may proceed with the installation.")
+		output.Println("\n[DRY RUN] Success. All requirements are met and you may proceed with the installation.")
 	}
 
 	return nil
