@@ -67,6 +67,8 @@ func (c *pluginCommand) newInstallCommand() *cobra.Command {
 	cmd.Flags().Bool("dry-run", false, "Simulate an operation without making any changes.")
 	cmd.Flags().Bool("force", false, "Proceed without user input.")
 
+	cmd.MarkFlagDirname("plugin-directory")
+
 	return cmd
 }
 
@@ -78,35 +80,18 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 	if dryRun {
 		output.Println("[DRY RUN] Performing a dry run of this command.")
 	}
-	// Verify that the argument corresponds to a valid plugin
-	var pluginManifest *manifest
-	if utils.DoesPathExist(args[0]) {
-		// if installing plugin from local archive
-		localManifest, err := getLocalManifest(args[0])
-		if err != nil {
-			return err
-		}
-		pluginManifest = localManifest
-	} else {
-		// if installing plugin from Confluent Hub
-		owner, name, version, err := parsePluginId(args[0])
-		if err != nil {
-			return err
-		}
 
-		remoteManifest, err := getRemoteManifest(owner, name, version)
-		if err != nil {
-			return err
-		}
-		pluginManifest = remoteManifest
+	pluginManifest, err := getManifest(args[0])
+	if err != nil {
+		return err
 	}
 
-	// Select plugin-directory
 	force, err := cmd.Flags().GetBool("force")
 	if err != nil {
 		return err
 	}
 
+	// Select plugin-directory
 	pluginDir, err := getPluginDirFromFlag(cmd)
 	if err != nil {
 		return err
@@ -210,6 +195,29 @@ func parsePluginId(plugin string) (string, string, string, error) {
 	}
 
 	return ownerNameSplit[0], nameVersionSplit[0], nameVersionSplit[1], nil
+}
+
+func getManifest(id string) (*manifest, error) {
+	if utils.DoesPathExist(id) {
+		// if installing plugin from local archive
+		localManifest, err := getLocalManifest(id)
+		if err != nil {
+			return nil, err
+		}
+		return localManifest, nil
+	} else {
+		// if installing plugin from Confluent Hub
+		owner, name, version, err := parsePluginId(id)
+		if err != nil {
+			return nil, err
+		}
+
+		remoteManifest, err := getRemoteManifest(owner, name, version)
+		if err != nil {
+			return nil, err
+		}
+		return remoteManifest, nil
+	}
 }
 
 func getLocalManifest(archivePath string) (*manifest, error) {
