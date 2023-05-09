@@ -1,8 +1,10 @@
 update-db:
 	$(eval DIR=$(shell mktemp -d))
+	$(eval CLI_RELEASE=$(DIR)/cli-release)
 	$(eval CC_CLI_SERVICE=$(DIR)/cc-cli-service)
 	
-	version=$$(cat release-notes/version.txt) && \
+	git clone git@github.com:confluentinc/cli-release.git $(CLI_RELEASE) && \
+	version=$$(ls $(CLI_RELEASE)/release-notes | sed -e s/.json$$// | sort --version-sort | tail -1) && \
 	git clone git@github.com:confluentinc/cc-cli-service.git $(CC_CLI_SERVICE) && \
 	cd $(CC_CLI_SERVICE) && \
 	make db-local-reset && \
