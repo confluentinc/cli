@@ -1,5 +1,14 @@
 package test
 
+import (
+	"archive/zip"
+	"fmt"
+	"io"
+	"os"
+
+	"github.com/stretchr/testify/require"
+)
+
 func (s *CLITestSuite) TestConnect() {
 	// TODO: add --config flag to all commands or ENVVAR instead of using standard config file location
 	tests := []CLITest{
@@ -76,6 +85,30 @@ func (s *CLITestSuite) TestConnectPlugin() {
 	}
 }
 
+func (s *CLITestSuite) TestConnectPluginInstall() {
+	s.zipManifest()
+	defer s.deleteZip()
+
+	confluentHomeEmpty := "test/fixtures/input/connect/confluent-empty"
+	confluentHome733 := "test/fixtures/input/connect/confluent-7.3.3"
+
+	tests := []CLITest{
+		{args: "connect plugin install test/fixtures/input/connect/test-plugin.zip --dry-run --force", env: []string{"CONFLUENT_HOME=" + confluentHomeEmpty}, fixture: "connect/plugin/install-dry-run.golden"},
+		{args: "connect plugin install test/fixtures/input/connect/test-plugin.zip", env: []string{"CONFLUENT_HOME=test"}, fixture: "connect/plugin/install-platform-not-found.golden", exitCode: 1},
+		{args: "connect plugin install bad-id-format", fixture: "connect/plugin/install-plugin-not-found.golden", exitCode: 1},
+		{args: fmt.Sprintf("connect plugin install test/fixtures/input/connect/test-plugin.zip --plugin-directory %s/share/confluent-hub-components --dry-run --force", confluentHomeEmpty), env: []string{"CONFLUENT_HOME=" + confluentHomeEmpty}},
+		{args: "connect plugin install test/fixtures/input/connect/test-plugin.zip --dry-run --force", env: []string{"CONFLUENT_HOME=" + confluentHome733}, fixture: "connect/plugin/install-worker-update-dry-run.golden"},
+		{args: fmt.Sprintf("connect plugin install test/fixtures/input/connect/test-plugin.zip --plugin-directory %[1]s/share/confluent-hub-components --worker-configs %[1]s/etc/kafka/connect-distributed.properties,%[1]s/etc/kafka/connect-standalone.properties --dry-run --force", confluentHome733), fixture: "connect/plugin/install-all-flags-dry-run.golden"},
+		{args: fmt.Sprintf("connect plugin install test/fixtures/input/connect/test-plugin.zip --plugin-directory %[1]s/share/confluent-hub-components --worker-configs %[1]s/etc/kafka/connect-distributed.properties,%[1]s/etc/kafka/connect-standalone.properties --dry-run", confluentHome733), input: "y\n", fixture: "connect/plugin/install-all-flags-dry-run-accept.golden"},
+		{args: fmt.Sprintf("connect plugin install test/fixtures/input/connect/test-plugin.zip --plugin-directory %[1]s/share/confluent-hub-components --worker-configs %[1]s/etc/kafka/connect-distributed.properties,%[1]s/etc/kafka/connect-standalone.properties --dry-run", confluentHome733), input: "n\n", fixture: "connect/plugin/install-all-flags-dry-run-refuse.golden", exitCode: 1},
+	}
+
+	for _, tt := range tests {
+		tt.login = "platform"
+		s.runIntegrationTest(tt)
+	}
+}
+
 func (s *CLITestSuite) TestConnect_Autocomplete() {
 	tests := []CLITest{
 		{args: `__complete connect cluster describe ""`, useKafka: "lkc-123", fixture: "connect/cluster/describe-autocomplete.golden"},
@@ -86,4 +119,30 @@ func (s *CLITestSuite) TestConnect_Autocomplete() {
 		test.login = "cloud"
 		s.runIntegrationTest(test)
 	}
+}
+
+func (s *CLITestSuite) zipManifest() {
+	req := require.New(s.T())
+
+	zipFile, err := os.Create("test/fixtures/input/connect/test-plugin.zip")
+	req.NoError(err)
+	defer zipFile.Close()
+	writer := zip.NewWriter(zipFile)
+	defer writer.Close()
+
+	manifestFile, err := os.Open("test/fixtures/input/connect/manifest.json")
+	req.NoError(err)
+	defer manifestFile.Close()
+
+	zipManifest, err := writer.Create("test-plugin/manifest.json")
+	req.NoError(err)
+	_, err = io.Copy(zipManifest, manifestFile)
+	req.NoError(err)
+}
+
+func (s *CLITestSuite) deleteZip() {
+	req := require.New(s.T())
+
+	err := os.Remove("test/fixtures/input/connect/test-plugin.zip")
+	req.NoError(err)
 }
