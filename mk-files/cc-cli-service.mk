@@ -16,8 +16,10 @@ update-db:
 	git add . && \
 	git commit -m "update db for v$${version}" && \
 	cd db/migrations/ && \
-	a=$$(ls | grep up | tail -n 2 | head -n 1) && \
-	b=$$(ls | grep up | tail -n 1) && \
+	a=$$(ls | sed -n "s/[0-9]*_v\(.*\).up.sql/\1/p" | sort --version-sort | grep $${version} -B 1 | head -1) && \
+	b=$$(ls | sed -n "s/[0-9]*_v\(.*\).up.sql/\1/p" | sort --version-sort | grep $${version}) && \
+	a=$$(ls | grep "v$${a}.up.sql") && \
+	b=$$(ls | grep "v$${b}.up.sql") && \
 	sed -i "" "s/v[0-9]*\.[0-9]*\.[0-9]*/v$${version}/" $$a && \
 	diff=$$(diff -u $$a $$b); [ $$? -lt 2 ] && \
 	body=$$(echo -e "\`\`\`diff$${diff}\n\n\`\`\`") && \
