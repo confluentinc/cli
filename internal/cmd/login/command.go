@@ -116,6 +116,8 @@ func (c *Command) loginCCloud(cmd *cobra.Command, url string) error {
 	}
 
 	client := c.ccloudClientFactory.JwtHTTPClientFactory(context.Background(), token, url)
+	credentials.AuthToken = token
+	credentials.AuthRefreshToken = refreshToken
 
 	save, err := cmd.Flags().GetBool("save")
 	if err != nil {

@@ -259,7 +259,7 @@ func (suite *LoginCredentialsManagerTestSuite) TestGetConfluentCredentialsFromEn
 func (suite *LoginCredentialsManagerTestSuite) TestCCloudUsernamePasswordGetCredentialsFromNetrc() {
 	cmd := &cobra.Command{}
 	cmd.Flags().Bool("save", false, "test")
-	creds, err := suite.loginCredentialsManager.GetCredentialsFromNetrc(netrc.NetrcMachineParams{
+	creds, err := suite.loginCredentialsManager.GetCredentialsFromNetrc(cmd, netrc.NetrcMachineParams{
 		IsCloud: true,
 		IsSSO:   false,
 	})()
@@ -270,7 +270,7 @@ func (suite *LoginCredentialsManagerTestSuite) TestCCloudUsernamePasswordGetCred
 func (suite *LoginCredentialsManagerTestSuite) TestCCloudSSOGetCCloudCredentialsFromNetrc() {
 	cmd := &cobra.Command{}
 	cmd.Flags().Bool("save", false, "test")
-	creds, err := suite.loginCredentialsManager.GetCredentialsFromNetrc(netrc.NetrcMachineParams{
+	creds, err := suite.loginCredentialsManager.GetCredentialsFromNetrc(cmd, netrc.NetrcMachineParams{
 		IsCloud: true,
 		IsSSO:   true,
 	})()

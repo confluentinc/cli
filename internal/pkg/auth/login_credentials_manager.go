@@ -10,10 +10,9 @@ import (
 
 	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+	ccloud "github.com/confluentinc/ccloud-sdk-go-v1"
 
 	"github.com/spf13/cobra"
-
-	"github.com/confluentinc/ccloud-sdk-go-v1"
 
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -33,7 +32,8 @@ type Credentials struct {
 	Salt     []byte
 	Nonce    []byte
 
-	AuthToken string
+	AuthToken        string
+	AuthRefreshToken string
 
 	// Only for Confluent Prerun login
 	PrerunLoginURL        string
@@ -377,9 +377,6 @@ func matchLoginCredentialWithFilter(loginCredential *v1.LoginCredential, filterP
 		return false
 	}
 	if loginCredential.Url != filterParams.URL {
-		return false
-	}
-	if loginCredential.IsCloud != filterParams.IsCloud {
 		return false
 	}
 	if filterParams.Name != "" && !strings.Contains(filterParams.Name, loginCredential.Username) {

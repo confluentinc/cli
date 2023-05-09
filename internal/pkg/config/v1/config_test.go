@@ -36,38 +36,6 @@ var (
 	kafkaClusterID  = "anonymous-id"
 	contextName     = "my-context"
 	accountID       = "acc-123"
-	cloudPlatforms  = []string{
-		"devel.cpdev.cloud",
-		"stag.cpdev.cloud",
-		"confluent.cloud",
-		"premium-oryx.gcp.priv.cpdev.cloud",
-	}
-	account = &orgv1.Account{
-		Id:   accountID,
-		Name: "test-env",
-	}
-	regularOrgContextState = &ContextState{
-		Auth: &AuthConfig{
-			User: &orgv1.User{
-				Id:    123,
-				Email: "test-user@email",
-			},
-			Account: account,
-			Accounts: []*orgv1.Account{
-				account,
-			},
-			Organization: testserver.RegularOrg,
-		},
-		AuthToken:        "eyJ.eyJ.abc",
-		AuthRefreshToken: "v1.abc",
-	}
-	suspendedOrgContextState = func(eventType orgv1.SuspensionEventType) *ContextState {
-		return &ContextState{
-			Auth: &AuthConfig{
-				Organization: testserver.SuspendedOrg(eventType),
-			},
-		}
-	}
 )
 
 type TestInputs struct {
@@ -108,9 +76,9 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 	account := &orgv1.Account{
 		Id:   accountID,
 		Name: "test-env",
+	}
 	savedCredentials := map[string]*LoginCredential{
 		contextName: &LoginCredential{
-			IsCloud:           isCloud,
 			Username:          "test-user",
 			EncryptedPassword: "encrypted-password",
 		},
@@ -135,7 +103,8 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 				Name: "test-org",
 			},
 		},
-		AuthToken: "abc123",
+		AuthToken:        "eyJ.eyJ.abc",
+		AuthRefreshToken: "v1.abc",
 	}
 	twoEnvState := &ContextState{
 		Auth: &AuthConfig{
@@ -153,7 +122,8 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 				Name: "test-org",
 			},
 		},
-		AuthToken: "abc123",
+		AuthToken:        "eyJ.eyJ.abc",
+		AuthRefreshToken: "v1.abc",
 	}
 	testInputs.kafkaClusters = map[string]*KafkaClusterConfig{
 		kafkaClusterID: {
@@ -360,7 +330,7 @@ func TestConfig_Load(t *testing.T) {
 			tt.want.IsTest = c.IsTest
 
 			if !t.Failed() && !reflect.DeepEqual(c, tt.want) {
-				t.Errorf("Config.Load() = %+v, want %+v", c, tt.want)
+				t.Errorf("Config.Load() =\n%+v, want \n%+v", c, tt.want)
 			}
 		})
 	}
@@ -425,7 +395,6 @@ func TestConfig_Save(t *testing.T) {
 			ctx := tt.config.Context()
 			tt.config.SavedCredentials = map[string]*LoginCredential{
 				contextName: &LoginCredential{
-					IsCloud:           tt.isCloud,
 					Username:          "test-user",
 					EncryptedPassword: "encrypted-password",
 				},
@@ -478,7 +447,6 @@ func TestConfig_SaveWithAccountOverwrite(t *testing.T) {
 			tt.config.Filename = configFile.Name()
 			tt.config.SavedCredentials = map[string]*LoginCredential{
 				contextName: &LoginCredential{
-					IsCloud:           true,
 					Username:          "test-user",
 					EncryptedPassword: "encrypted-password",
 				},

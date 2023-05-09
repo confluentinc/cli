@@ -91,7 +91,6 @@
   "current_context": "my-context",
   "saved_credentials": {
     "my-context": {
-      "is_cloud": false,
       "url": "",
       "username": "test-user",
       "encrypted_password": "encrypted-password"

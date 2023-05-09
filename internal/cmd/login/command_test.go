@@ -180,7 +180,7 @@ func TestCredentialsOverride(t *testing.T) {
 	}
 	user := &sdkMock.User{}
 	mockLoginCredentialsManager := &cliMock.LoginCredentialsManager{
-		GetCloudCredentialsFromEnvVarFunc: func(_ string) func() (*pauth.Credentials, error) {
+		GetCloudCredentialsFromEnvVarFunc: func(_ *cobra.Command, _ string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return envCreds, nil
 			}
@@ -596,7 +596,7 @@ func TestLoginFail(t *testing.T) {
 				return nil, nil
 			}
 		},
-		GetCredentialsFromNetrcFunc: func(_ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
+		GetCredentialsFromNetrcFunc: func(_ *cobra.Command, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, errors.New("DO NOT RETURN THIS ERR")
 			}
@@ -778,7 +778,7 @@ func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *v1.Co
 			return mdsClient, nil
 		},
 	}
-	loginCmd := New(prerunner, nil, mdsClientManager, mockNetrcHandler, mockLoginCredentialsManager, mockAuthTokenHandler, true)
+	loginCmd := New(cfg, prerunner, nil, mdsClientManager, mockNetrcHandler, mockLoginCredentialsManager, mockAuthTokenHandler)
 	loginCmd.loginOrganizationManager = mockLoginOrganizationManager
 	loginCmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 
@@ -975,7 +975,7 @@ func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, isCloud bool, req *requ
 		},
 	}
 	prerunner := cliMock.NewPreRunnerMock(ccloudClientFactory.AnonHTTPClientFactory(ccloudURL), mdsClient, nil, cfg)
-	loginCmd := New(prerunner, ccloudClientFactory, mdsClientManager, netrcHandler, loginCredentialsManager, authTokenHandler, true)
+	loginCmd := New(cfg, prerunner, ccloudClientFactory, mdsClientManager, netrcHandler, loginCredentialsManager, authTokenHandler)
 	loginCmd.loginOrganizationManager = loginOrganizationManager
 	return loginCmd, cfg
 }
@@ -1042,6 +1042,7 @@ func TestIsCCloudURL_False(t *testing.T) {
 		"https://example.com",
 	} {
 		c := new(Command)
+		c.cfg = &v1.Config{IsTest: true}
 		isCCloud := c.isCCloudURL(url)
 		require.False(t, isCCloud, url+" should return false")
 	}

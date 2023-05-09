@@ -170,6 +170,7 @@ func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, isCloud bool, req *requ
 	authTokenHandler pauth.AuthTokenHandler, loginCredentialsManager pauth.LoginCredentialsManager,
 	loginOrganizationManager pauth.LoginOrganizationManager) (*login.Command, *v1.Config) {
 	cfg := v1.New(new(config.Params))
+	cfg.IsTest = true
 	var mdsClient *mds.APIClient
 	if !isCloud {
 		mdsConfig := mds.NewConfiguration()
@@ -199,7 +200,7 @@ func newLoginCmd(auth *sdkMock.Auth, user *sdkMock.User, isCloud bool, req *requ
 		},
 	}
 	prerunner := cliMock.NewPreRunnerMock(ccloudClientFactory.AnonHTTPClientFactory(ccloudURL), mdsClient, nil, cfg)
-	loginCmd := login.New(prerunner, ccloudClientFactory, mdsClientManager, netrcHandler, loginCredentialsManager, authTokenHandler, true)
+	loginCmd := login.New(cfg, prerunner, ccloudClientFactory, mdsClientManager, netrcHandler, loginCredentialsManager, authTokenHandler)
 	return loginCmd, cfg
 }
 

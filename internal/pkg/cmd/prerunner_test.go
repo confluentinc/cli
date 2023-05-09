@@ -842,11 +842,6 @@ func TestInitializeOnPremKafkaRest(t *testing.T) {
 	cmd.SetOut(buf)
 	t.Run("InitializeOnPremKafkaRest_InvalidMdsToken", func(t *testing.T) {
 		mockLoginCredentialsManager := &cliMock.LoginCredentialsManager{
-			GetOnPremPrerunCredentialsFromEnvVarFunc: func() func() (*pauth.Credentials, error) {
-				return func() (*pauth.Credentials, error) {
-					return nil, nil
-				}
-			},
 			GetOnPremPrerunCredentialsFromNetrcFunc: func(_ *cobra.Command, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
 				return func() (*pauth.Credentials, error) {
 					return nil, nil
