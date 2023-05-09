@@ -1,0 +1,13 @@
+{
+  "name" : "integration-test-plugin",
+  "version" : "0.1.0",
+  "title" : "Integration Test Plugin",
+  "owner" : {
+    "username" : "confluentinc",
+    "name" : "Confluent, Inc."
+  },
+  "license" : [ {
+    "name" : "Example License 1.0",
+    "url" : "url-to-license-goes-here"
+  } ]
+}

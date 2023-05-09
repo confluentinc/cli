@@ -30,6 +30,7 @@ func (c *pluginCommand) newDescribeCommand() *cobra.Command {
 				Code: "confluent connect plugin describe MySource",
 			},
 		),
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
