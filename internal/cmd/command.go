@@ -101,7 +101,7 @@ func NewConfluentCommand(cfg *v1.Config, isTest bool, ver *pversion.Version) *co
 	cmd.AddCommand(kafka.New(cfg, prerunner, ver.ClientID))
 	cmd.AddCommand(ksql.New(cfg, prerunner))
 	cmd.AddCommand(local.New(prerunner))
-	cmd.AddCommand(login.New(prerunner, ccloudClientFactory, mdsClientManager, netrcHandler, loginCredentialsManager, authTokenHandler, isTest).Command)
+	cmd.AddCommand(login.New(cfg, prerunner, ccloudClientFactory, mdsClientManager, netrcHandler, loginCredentialsManager, authTokenHandler).Command)
 	cmd.AddCommand(logout.New(cfg, prerunner, netrcHandler).Command)
 	cmd.AddCommand(price.New(prerunner))
 	cmd.AddCommand(prompt.New(cfg))

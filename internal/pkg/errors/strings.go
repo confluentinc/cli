@@ -18,6 +18,7 @@ const (
 	WroteCredentialsToKeychainMsg = "Wrote login credentials to keychain\n"
 	RemoveNetrcCredentialsMsg     = "Removed credentials for user \"%s\" from netrc file \"%s\"\n"
 	RemoveKeychainCredentialsMsg  = "Removed credentials for user \"%s\" from keychain\n"
+	KafkaClusterDeletedMsg        = "Deleted Kafka cluster \"%s\".\n"
 	StopNonInteractiveMsg         = "(remove these credentials or use the `--prompt` flag to bypass non-interactive login)"
 	FoundEnvCredMsg               = "Found credentials for user \"%s\" from environment variables \"%s\" and \"%s\" " +
 		StopNonInteractiveMsg + ".\n"

@@ -310,7 +310,7 @@ func (r *PreRun) ccloudAutoLogin(cmd *cobra.Command, netrcMachineName string) er
 	}
 
 	client := r.CCloudClientFactory.JwtHTTPClientFactory(context.Background(), credentials.AuthToken, pauth.CCloudURL)
-	currentEnv, currentOrg, err := pauth.PersistCCloudCredentialsToConfig(r.Config, client, pauth.CCloudURL, credentials, false)
+	currentEnv, currentOrg, err := pauth.PersistCCloudLoginToConfig(r.Config, credentials, pauth.CCloudURL, client, false)
 	if err != nil {
 		return err
 	}
@@ -320,7 +320,7 @@ func (r *PreRun) ccloudAutoLogin(cmd *cobra.Command, netrcMachineName string) er
 	return nil
 }
 
-func (r *PreRun) getCCloudCredentials(cmd *cobra.Command, netrcMachineName, orgResourceId string) (*pauth.Credentials, error) {
+func (r *PreRun) getCCloudTokenAndCredentials(cmd *cobra.Command, netrcMachineName, orgResourceId string) (string, *pauth.Credentials, error) {
 	filterParams := netrc.NetrcMachineParams{
 		Name:    netrcMachineName,
 		IsCloud: true,
@@ -770,14 +770,14 @@ func (r *PreRun) updateToken(tokenError error, cmd *cobra.Command, ctx *DynamicC
 	return nil
 }
 
-func (r *PreRun) getUpdatedAuthToken(ctx *dynamicconfig.DynamicContext, unsafeTrace bool) (string, string, error) {
+func (r *PreRun) getUpdatedAuthToken(cmd *cobra.Command, ctx *DynamicContext) (string, error) {
 	filterParams := netrc.NetrcMachineParams{
 		IsCloud: r.Config.IsCloudLogin(),
 		Name:    ctx.GetNetrcMachineName(),
 	}
 	credentials, err := pauth.GetLoginCredentials(
 		r.LoginCredentialsManager.GetPrerunCredentialsFromConfig(ctx.Config),
-		r.LoginCredentialsManager.GetCredentialsFromNetrc(filterParams),
+		r.LoginCredentialsManager.GetCredentialsFromNetrc(cmd, filterParams),
 		r.LoginCredentialsManager.GetCredentialsFromConfig(r.Config, filterParams),
 	)
 	if err != nil {

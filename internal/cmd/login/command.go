@@ -15,7 +15,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/keychain"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
@@ -25,16 +24,16 @@ import (
 
 type Command struct {
 	*pcmd.CLICommand
+	cfg                      *v1.Config
 	ccloudClientFactory      pauth.CCloudClientFactory
 	mdsClientManager         pauth.MDSClientManager
 	netrcHandler             netrc.NetrcHandler
 	loginCredentialsManager  pauth.LoginCredentialsManager
 	loginOrganizationManager pauth.LoginOrganizationManager
 	authTokenHandler         pauth.AuthTokenHandler
-	isTest                   bool
 }
 
-func New(prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCloudClientFactory, mdsClientManager pauth.MDSClientManager, netrcHandler netrc.NetrcHandler, loginCredentialsManager pauth.LoginCredentialsManager, authTokenHandler pauth.AuthTokenHandler, isTest bool) *Command {
+func New(cfg *v1.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCloudClientFactory, mdsClientManager pauth.MDSClientManager, netrcHandler netrc.NetrcHandler, loginCredentialsManager pauth.LoginCredentialsManager, authTokenHandler pauth.AuthTokenHandler) *Command {
 	cmd := &cobra.Command{
 		Use:   "login",
 		Short: "Log in to Confluent Cloud or Confluent Platform.",
@@ -55,13 +54,13 @@ func New(prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCloudClientFactory
 
 	c := &Command{
 		CLICommand:               pcmd.NewAnonymousCLICommand(cmd, prerunner),
+		cfg:                      cfg,
 		mdsClientManager:         mdsClientManager,
 		ccloudClientFactory:      ccloudClientFactory,
 		netrcHandler:             netrcHandler,
 		loginCredentialsManager:  loginCredentialsManager,
 		loginOrganizationManager: pauth.NewLoginOrganizationManagerImpl(),
 		authTokenHandler:         authTokenHandler,
-		isTest:                   isTest,
 	}
 
 	cmd.RunE = pcmd.NewCLIRunE(c.login)
@@ -123,7 +122,7 @@ func (c *Command) loginCCloud(cmd *cobra.Command, url string) error {
 		return err
 	}
 
-	currentEnv, currentOrg, err := pauth.PersistCCloudCredentialsToConfig(c.Config.Config, client, url, credentials, save)
+	currentEnv, currentOrg, err := pauth.PersistCCloudLoginToConfig(c.Config.Config, credentials, url, client, save)
 	if err != nil {
 		return err
 	}
@@ -133,14 +132,13 @@ func (c *Command) loginCCloud(cmd *cobra.Command, url string) error {
 		credentials.Password = refreshToken
 	}
 
-	if err := c.saveLoginToNetrc(cmd, true, credentials); err != nil {
-		return err
-	}
-
 	log.CliLogger.Debugf(errors.LoggedInAsMsgWithOrg, credentials.Username, currentOrg.ResourceId, currentOrg.Name)
 	log.CliLogger.Debugf(errors.LoggedInUsingEnvMsg, currentEnv.Id, currentEnv.Name)
 
-	return err
+	if save && runtime.GOOS == "darwin" && !c.cfg.IsTest {
+		return c.saveLoginToKeychain(cmd, true, url, credentials)
+	}
+	return nil
 }
 
 // Order of precedence: env vars > netrc > prompt
@@ -168,11 +166,11 @@ func (c *Command) getCCloudCredentials(cmd *cobra.Command, url, orgResourceId st
 	}
 
 	return pauth.GetLoginCredentials(
-		c.loginCredentialsManager.GetCloudCredentialsFromEnvVar(orgResourceId),
+		c.loginCredentialsManager.GetCloudCredentialsFromEnvVar(cmd, orgResourceId),
 		c.loginCredentialsManager.GetSsoCredentialsFromConfig(c.cfg),
 		c.loginCredentialsManager.GetCredentialsFromKeychain(c.cfg, true, filterParams.Name, url),
 		c.loginCredentialsManager.GetCredentialsFromConfig(c.cfg, filterParams),
-		c.loginCredentialsManager.GetCredentialsFromNetrc(filterParams),
+		c.loginCredentialsManager.GetCredentialsFromNetrc(cmd, filterParams),
 		c.loginCredentialsManager.GetCloudCredentialsFromPrompt(cmd, orgResourceId),
 	)
 }
@@ -275,7 +273,7 @@ func (c *Command) getConfluentCredentials(cmd *cobra.Command, url string) (*paut
 		c.loginCredentialsManager.GetOnPremCredentialsFromEnvVar(cmd),
 		c.loginCredentialsManager.GetCredentialsFromKeychain(c.cfg, false, netrcFilterParams.Name, url),
 		c.loginCredentialsManager.GetCredentialsFromConfig(c.cfg, netrcFilterParams),
-		c.loginCredentialsManager.GetCredentialsFromNetrc(netrcFilterParams),
+		c.loginCredentialsManager.GetCredentialsFromNetrc(cmd, netrcFilterParams),
 		c.loginCredentialsManager.GetOnPremCredentialsFromPrompt(cmd),
 	)
 }
@@ -305,7 +303,7 @@ func (c *Command) getURL(cmd *cobra.Command) (string, error) {
 	return pauth.CCloudURL, nil
 }
 
-func (c *command) saveLoginToKeychain(cmd *cobra.Command, isCloud bool, url string, credentials *pauth.Credentials) error {
+func (c *Command) saveLoginToKeychain(cmd *cobra.Command, isCloud bool, url string, credentials *pauth.Credentials) error {
 	if credentials.IsSSO {
 		utils.ErrPrintln(cmd, "The `--save` flag was ignored since SSO credentials are not stored locally.")
 		return nil
@@ -374,7 +372,7 @@ func (c *Command) isCCloudURL(url string) bool {
 			return true
 		}
 	}
-	if c.isTest {
+	if c.cfg.IsTest {
 		return strings.Contains(url, testserver.TestCloudURL.Host)
 	}
 	return false

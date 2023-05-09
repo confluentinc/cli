@@ -46,10 +46,11 @@ type NetrcHandler interface {
 }
 
 type NetrcMachineParams struct {
-	IsCloud bool
-	IsSSO   bool
-	Name    string
-	URL     string
+	IgnoreCert bool
+	IsCloud    bool
+	IsSSO      bool
+	Name       string
+	URL        string
 }
 
 type Machine struct {

@@ -81,22 +81,22 @@ func PersistConfluentLoginToConfig(config *v1.Config, credentials *Credentials, 
 	} else {
 		ctxName = GenerateContextName(username, url, caCertPath)
 	}
-	return addOrUpdateContext(config, false, credentials, ctxName, url, state, caCertPath, "", save)
+	return addOrUpdateContext(config, credentials, ctxName, url, state, caCertPath, "", save)
 }
 
-func PersistCCloudCredentialsToConfig(config *v1.Config, client *ccloud.Client, url string, credentials *Credentials, save bool) (*orgv1.Account, *orgv1.Organization, error) {
+func PersistCCloudLoginToConfig(config *v1.Config, credentials *Credentials, url string, client *ccloud.Client, save bool) (*orgv1.Account, *orgv1.Organization, error) {
 	ctxName := GenerateCloudContextName(credentials.Username, url)
 	user, err := getCCloudUser(client)
 	if err != nil {
 		return nil, nil, err
 	}
-	state := getCCloudContextState(config, ctxName, token, user)
+	state := getCCloudContextState(config, ctxName, credentials.AuthToken, user)
 
-	err = addOrUpdateContext(config, true, credentials, ctxName, url, state, "", user.GetOrganization().GetResourceId(), save)
+	err = addOrUpdateContext(config, credentials, ctxName, url, state, "", user.GetOrganization().GetResourceId(), save)
 	return state.Auth.Account, user.Organization, err
 }
 
-func addOrUpdateContext(config *v1.Config, isCloud bool, credentials *Credentials, ctxName, url string, state *v1.ContextState, caCertPath, orgResourceId string, save bool) error {
+func addOrUpdateContext(config *v1.Config, credentials *Credentials, ctxName, url string, state *v1.ContextState, caCertPath, orgResourceId string, save bool) error {
 	credName := generateCredentialName(credentials.Username)
 	platform := &v1.Platform{
 		Name:       strings.TrimPrefix(url, "https://"),
@@ -133,7 +133,6 @@ func addOrUpdateContext(config *v1.Config, isCloud bool, credentials *Credential
 		}
 
 		loginCredential := &v1.LoginCredential{
-			IsCloud:           isCloud,
 			Url:               url,
 			Username:          credentials.Username,
 			EncryptedPassword: encryptedPassword,

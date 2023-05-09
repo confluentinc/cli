@@ -9,19 +9,20 @@ import (
 	"strings"
 
 	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
-
-	"github.com/confluentinc/cli/internal/pkg/sso"
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/keychain"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
 	"github.com/confluentinc/cli/internal/pkg/secret"
+	"github.com/confluentinc/cli/internal/pkg/sso"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -31,6 +32,8 @@ type Credentials struct {
 	IsSSO    bool
 	Salt     []byte
 	Nonce    []byte
+
+	AuthToken string
 
 	// Only for Confluent Prerun login
 	PrerunLoginURL        string
@@ -62,18 +65,17 @@ func GetLoginCredentials(credentialsFuncs ...func() (*Credentials, error)) (*Cre
 }
 
 type LoginCredentialsManager interface {
-	GetCloudCredentialsFromEnvVar(orgResourceId string) func() (*Credentials, error)
-	GetOnPremCredentialsFromEnvVar() func() (*Credentials, error)
+	GetCloudCredentialsFromEnvVar(cmd *cobra.Command, orgResourceId string) func() (*Credentials, error)
+	GetOnPremCredentialsFromEnvVar(cmd *cobra.Command) func() (*Credentials, error)
 	GetSsoCredentialsFromConfig(cfg *v1.Config) func() (*Credentials, error)
 	GetCredentialsFromConfig(cfg *v1.Config, filterParams netrc.NetrcMachineParams) func() (*Credentials, error)
 	GetCredentialsFromKeychain(cfg *v1.Config, isCloud bool, ctxName string, url string) func() (*Credentials, error)
-	GetCredentialsFromNetrc(filterParams netrc.NetrcMachineParams) func() (*Credentials, error)
-	GetCloudCredentialsFromPrompt(cmd *cobra.Command, orgResourceId string) func() (*Credentials, error)
-	GetOnPremCredentialsFromEnvVar(cmd *cobra.Command) func() (*Credentials, error)
-	GetOnPremCredentialsFromPrompt(cmd *cobra.Command) func() (*Credentials, error)
 	GetCredentialsFromNetrc(cmd *cobra.Command, filterParams netrc.NetrcMachineParams) func() (*Credentials, error)
+	GetCloudCredentialsFromPrompt(cmd *cobra.Command, orgResourceId string) func() (*Credentials, error)
+	GetOnPremCredentialsFromPrompt(cmd *cobra.Command) func() (*Credentials, error)
 
 	// Only for Confluent Prerun login
+	GetPrerunCredentialsFromConfig(cfg *v1.Config) func() (*Credentials, error)
 	GetOnPremPrerunCredentialsFromEnvVar(*cobra.Command) func() (*Credentials, error)
 	GetOnPremPrerunCredentialsFromNetrc(*cobra.Command, netrc.NetrcMachineParams) func() (*Credentials, error)
 
@@ -208,11 +210,9 @@ func (h *LoginCredentialsManagerImpl) GetPrerunCredentialsFromConfig(cfg *v1.Con
 		}
 
 		credentials := &Credentials{
-			IsSSO:            ctx.GetUser().GetAuthType() == orgv1.AuthType_AUTH_TYPE_SSO || ctx.GetUser().GetSocialConnection() != "",
-			Username:         ctx.GetUser().GetEmail(),
-			AuthToken:        ctx.GetAuthToken(),
-			AuthRefreshToken: ctx.GetAuthRefreshToken(),
-			OrgResourceId:    ctx.GetOrganization().GetResourceId(),
+			IsSSO:     ctx.GetUser().GetAuthType() == orgv1.AuthType_AUTH_TYPE_SSO || ctx.GetUser().GetSocialConnection() != "",
+			Username:  ctx.GetUser().GetEmail(),
+			AuthToken: ctx.GetAuthToken(),
 		}
 		log.CliLogger.Tracef("credentials: %#v", credentials)
 

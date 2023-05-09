@@ -164,7 +164,11 @@ func (c *command) signup(cmd *cobra.Command, prompt form.Prompt, client *ccloud.
 
 		utils.Println(cmd, "Success! Welcome to Confluent Cloud.")
 		authorizedClient := c.clientFactory.JwtHTTPClientFactory(context.Background(), token, client.BaseURL)
-		_, currentOrg, err := pauth.PersistCCloudLoginToConfig(c.Config.Config, fEmailName.Responses["email"].(string), client.BaseURL, token, authorizedClient)
+		credentials := &pauth.Credentials{
+			Username:  fEmailName.Responses["email"].(string),
+			AuthToken: token,
+		}
+		_, currentOrg, err := pauth.PersistCCloudLoginToConfig(c.Config.Config, credentials, client.BaseURL, authorizedClient, false)
 		if err != nil {
 			utils.Println(cmd, "Failed to persist login to local config. Run `confluent login` to log in using the new credentials.")
 			return nil

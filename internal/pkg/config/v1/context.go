@@ -5,6 +5,8 @@ import (
 	"os"
 	"strings"
 
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
@@ -193,17 +195,11 @@ func (c *Context) GetAuthRefreshToken() string {
 	return ""
 }
 
-func (c *Context) GetLDFlags(client LaunchDarklyClient) map[string]interface{} {
-	if c.FeatureFlags == nil {
-		return map[string]interface{}{}
+func (c *Context) GetState() *ContextState {
+	if c != nil {
+		return c.State
 	}
-
-	switch client {
-	case CcloudDevelLaunchDarklyClient, CcloudStagLaunchDarklyClient, CcloudProdLaunchDarklyClient:
-		return c.FeatureFlags.CcloudValues
-	default:
-		return c.FeatureFlags.Values
-	}
+	return nil
 }
 
 func (c *Context) GetNetrcMachineName() string {
