@@ -344,11 +344,19 @@ func uninstall(pathToPlugin string, dryRun, force bool) error {
 			return errors.New("previous versions must be uninstalled to continue")
 		}
 	}
+
+	err := os.RemoveAll(pathToPlugin)
+	if err != nil {
+		return err
+	}
+
 	if dryRun {
 		output.Println("[DRY RUN] Success.")
 		return nil
 	}
-	return os.RemoveAll(pathToPlugin)
+
+	output.Println("Success.")
+	return nil
 }
 
 func installFromLocal(pluginManifest *manifest, archivePath, pluginDir string) error {
@@ -445,7 +453,7 @@ func checkLicenseAcceptance(pluginManifest *manifest, force bool) error {
 		} else {
 			f := form.New(form.Field{
 				ID:        "confirm",
-				Prompt:    fmt.Sprintf("\nLicense:\n%s\n%s\nI agree to this software license agreement. ", license.Name, license.Url),
+				Prompt:    fmt.Sprintf("\nLicense:\n%s\n%s\nI agree to this software license agreement.", license.Name, license.Url),
 				IsYesOrNo: true,
 			})
 			if err := f.Prompt(form.NewPrompt(os.Stdin)); err != nil {
