@@ -15,7 +15,8 @@ func (s Set) Add(key string) {
 }
 
 func (s Set) Contains(key string) bool {
-	return s[key]
+	_, ok := s[key]
+	return ok
 }
 
 func (s Set) Slice() []string {
