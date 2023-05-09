@@ -97,13 +97,13 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	var ins *installation
+	var installation *platformInstallation
 	if pluginDir == "" {
-		ins, err = getConfluentPlatformInstallation(cmd, force)
+		installation, err = getConfluentPlatformInstallation(cmd, force)
 		if err != nil {
 			return err
 		}
-		pluginDir, err = choosePluginDir(ins, force)
+		pluginDir, err = choosePluginDir(installation, force)
 		if err != nil {
 			return err
 		}
@@ -148,13 +148,13 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(workerConfigs) == 0 {
-		if ins == nil {
-			ins, err = getConfluentPlatformInstallation(cmd, force)
+		if installation == nil {
+			installation, err = getConfluentPlatformInstallation(cmd, force)
 			if err != nil {
 				return err
 			}
 		}
-		workerConfigs, err = chooseWorkerConfigs(cmd, ins, force)
+		workerConfigs, err = chooseWorkerConfigs(cmd, installation, force)
 		if err != nil {
 			return err
 		}

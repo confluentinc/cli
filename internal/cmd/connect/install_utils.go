@@ -20,7 +20,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-type installation struct {
+type platformInstallation struct {
 	Type string
 	Path string
 	Use  string
@@ -37,7 +37,7 @@ type listOut struct {
 	Description string `human:"Description"`
 }
 
-func getConfluentPlatformInstallation(cmd *cobra.Command, force bool) (*installation, error) {
+func getConfluentPlatformInstallation(cmd *cobra.Command, force bool) (*platformInstallation, error) {
 	installations, err := findInstallationDirectories()
 	if err != nil {
 		return nil, err
@@ -83,25 +83,25 @@ func getConfluentPlatformInstallation(cmd *cobra.Command, force bool) (*installa
 	}
 }
 
-func findInstallationDirectories() ([]installation, error) {
+func findInstallationDirectories() ([]platformInstallation, error) {
 	// Check in descending order of precedence:
 	//   - $CONFLUENT_HOME
 	//   - current directory
 	//   - standard rpm/deb
 	//   - based on the client
 
-	var result []installation
+	var result []platformInstallation
 	hasPackageInstallation := utils.DoesPathExist(filepath.FromSlash("/usr/bin/connect-distributed"))
 
 	// $CONFLUENT_HOME
 	confluentHome := os.Getenv("CONFLUENT_HOME")
 	if confluentHome != "" && hasArchiveInstallation(confluentHome) {
-		ins := installation{
+		installation := platformInstallation{
 			Type: "ARCHIVE",
 			Path: confluentHome,
 			Use:  "$CONFLUENT_HOME",
 		}
-		result = append(result, ins)
+		result = append(result, installation)
 	}
 
 	// current directory
@@ -110,22 +110,22 @@ func findInstallationDirectories() ([]installation, error) {
 		return nil, errors.Wrap(err, "unable to determine current working directory")
 	}
 	if hasArchiveInstallation(currentDirectory) {
-		ins := installation{
+		installation := platformInstallation{
 			Type: "ARCHIVE",
 			Path: currentDirectory,
 			Use:  "Current Directory",
 		}
-		result = append(result, ins)
+		result = append(result, installation)
 	}
 
 	// standard rpm/deb
 	if hasPackageInstallation {
-		ins := installation{
+		installation := platformInstallation{
 			Type: "PACKAGE",
 			Path: filepath.FromSlash("/"),
 			Use:  "Installed RPM/DEB Package",
 		}
-		result = append(result, ins)
+		result = append(result, installation)
 	}
 
 	// based on the client
@@ -136,19 +136,19 @@ func findInstallationDirectories() ([]installation, error) {
 	cliDirectory := filepath.Dir(cliPath)
 	cliUse := "CLI Installation Directory"
 	if filepath.ToSlash(cliDirectory) == "/usr/bin" && hasPackageInstallation {
-		ins := installation{
+		installation := platformInstallation{
 			Type: "PACKAGE",
 			Path: filepath.FromSlash("/"),
 			Use:  cliUse,
 		}
-		result = append(result, ins)
+		result = append(result, installation)
 	} else if filepath.Base(cliDirectory) == "bin" && hasArchiveInstallation(filepath.Dir(cliDirectory)) {
-		ins := installation{
+		installation := platformInstallation{
 			Type: "ARCHIVE",
 			Path: filepath.Dir(cliDirectory),
 			Use:  cliUse,
 		}
-		result = append(result, ins)
+		result = append(result, installation)
 	}
 
 	unique := compactDuplicateInstallations(result)
@@ -164,30 +164,30 @@ func hasArchiveInstallation(dir string) bool {
 	return utils.DoesPathExist(filepath.Join(dir, filepath.FromSlash("share/java/confluent-common")))
 }
 
-func compactDuplicateInstallations(installations []installation) []installation {
-	var uniqueInstallations []installation
+func compactDuplicateInstallations(installations []platformInstallation) []platformInstallation {
+	var uniqueInstallations []platformInstallation
 
 	set := types.NewSet()
-	for _, ins := range installations {
-		typePathStr := fmt.Sprintf("type=%s,path=%s", ins.Type, ins.Path)
+	for _, installation := range installations {
+		typePathStr := fmt.Sprintf("type=%s,path=%s", installation.Type, installation.Path)
 		if !set.Contains(typePathStr) {
 			set.Add(typePathStr)
-			uniqueInstallations = append(uniqueInstallations, ins)
+			uniqueInstallations = append(uniqueInstallations, installation)
 		}
 	}
 
 	return uniqueInstallations
 }
 
-func choosePluginDir(ins *installation, force bool) (string, error) {
+func choosePluginDir(installation *platformInstallation, force bool) (string, error) {
 	var defaultPluginDir string
-	switch ins.Type {
+	switch installation.Type {
 	case "ARCHIVE":
-		defaultPluginDir = filepath.Join(ins.Path, "share/confluent-hub-components")
+		defaultPluginDir = filepath.Join(installation.Path, "share/confluent-hub-components")
 	case "PACKAGE":
 		defaultPluginDir = "/usr/share/confluent-hub-components"
 	default:
-		return "", errors.Errorf(unexpectedInstallationErrorMsg, ins.Type)
+		return "", errors.Errorf(unexpectedInstallationErrorMsg, installation.Type)
 	}
 
 	if force {
@@ -227,18 +227,18 @@ func choosePluginDir(ins *installation, force bool) (string, error) {
 	return inputDir, nil
 }
 
-func standardWorkerConfigLocations(ins *installation) ([]WorkerConfig, error) {
+func standardWorkerConfigLocations(installation *platformInstallation) ([]WorkerConfig, error) {
 	workerConfigLocations := []string{
 		"/etc/kafka/connect-distributed.properties",
 		"/etc/kafka/connect-standalone.properties",
 		"/etc/schema-registry/connect-avro-distributed.properties",
 		"/etc/schema-registry/connect-avro-standalone.properties",
 	}
-	switch ins.Type {
+	switch installation.Type {
 	case "ARCHIVE":
 		var result []WorkerConfig
 		for _, workerConfigLocation := range workerConfigLocations {
-			workerConfigPath := filepath.Join(ins.Path, filepath.FromSlash(workerConfigLocation))
+			workerConfigPath := filepath.Join(installation.Path, filepath.FromSlash(workerConfigLocation))
 			result = append(result, WorkerConfig{Path: workerConfigPath, Use: "Standard"})
 		}
 		confluentCurrentDir := os.Getenv("CONFLUENT_CURRENT")
@@ -265,7 +265,7 @@ func standardWorkerConfigLocations(ins *installation) ([]WorkerConfig, error) {
 		}
 		return result, nil
 	default:
-		return nil, errors.New(fmt.Sprintf(unexpectedInstallationErrorMsg, ins.Type))
+		return nil, errors.New(fmt.Sprintf(unexpectedInstallationErrorMsg, installation.Type))
 	}
 }
 
@@ -307,10 +307,10 @@ func runningWorkerConfigLocations() ([]WorkerConfig, error) {
 	return result, nil
 }
 
-func chooseWorkerConfigs(cmd *cobra.Command, ins *installation, force bool) ([]string, error) {
+func chooseWorkerConfigs(cmd *cobra.Command, installation *platformInstallation, force bool) ([]string, error) {
 	var workerConfigs []WorkerConfig
 
-	if standardWorkerConfigs, err := standardWorkerConfigLocations(ins); err != nil {
+	if standardWorkerConfigs, err := standardWorkerConfigLocations(installation); err != nil {
 		return nil, errors.Wrap(err, "could not infer possible worker configuration file locations from standard candidates")
 	} else {
 		for _, workerConfig := range standardWorkerConfigs {
