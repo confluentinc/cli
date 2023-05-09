@@ -4,13 +4,6 @@ COPY . /go/src/github.com/confluentinc/cli/
 
 COPY .netrc /root/.netrc
 RUN chmod 600 /root/.netrc
-RUN export GO_VERSION=1.17.6 && \
-    wget "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" && \
-    sudo tar -C /usr/local -xzf "go${GO_VERSION}.linux-amd64.tar.gz"
-
-ENV PATH=${PATH}:/usr/local/go/bin:/root/go/bin
-
-RUN go install github.com/goreleaser/goreleaser@v1.4.1
 
 RUN cd /go/src/github.com/confluentinc/cli && \
     make gorelease-linux-glibc
