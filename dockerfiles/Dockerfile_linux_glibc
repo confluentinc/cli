@@ -4,7 +4,7 @@ COPY . /go/src/github.com/confluentinc/cli/
 
 COPY .netrc /root/.netrc
 RUN chmod 600 /root/.netrc
-RUN export GO_VERSION=$(cat /cli/.go-version) && \
+RUN export GO_VERSION=1.17.6 && \
     wget "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" && \
     sudo tar -C /usr/local -xzf "go${GO_VERSION}.linux-amd64.tar.gz"
 
