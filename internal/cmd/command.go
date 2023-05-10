@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/confluentinc/cli/internal/cmd/billing"
 	"os"
 	"strings"
 
@@ -126,6 +127,7 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 	cmd.AddCommand(secret.New(prerunner, flagResolver, secrets.NewPasswordProtectionPlugin()))
 	cmd.AddCommand(shell.New(cmd, func() *cobra.Command { return NewConfluentCommand(cfg) }))
 	cmd.AddCommand(version.New(prerunner, cfg.Version))
+	cmd.AddCommand(billing.New(prerunner))
 
 	dc := dynamicconfig.New(cfg, nil, nil)
 	_ = dc.ParseFlagsIntoConfig(cmd)
