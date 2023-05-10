@@ -1,6 +1,8 @@
 package plugin
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -42,13 +44,24 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		output.ErrPrintln("Please run `confluent plugin -h` for information on how to make plugins discoverable by the CLI.")
 	}
 
+	home, err := os.UserHomeDir()
+	if err != nil {
+		home = ""
+	}
+
 	list := output.NewList(cmd)
 	var overshadowedPlugins, nameConflictPlugins []*out
 	for name, paths := range pluginMap {
+		path := paths[0]
+		if home != "" && strings.HasPrefix(path, home) {
+			path = filepath.Join("~", strings.TrimPrefix(path, home))
+		}
+
 		pluginInfo := &out{
 			PluginName: strings.ReplaceAll(strings.ReplaceAll(name, "-", " "), "_", "-"),
-			FilePath:   paths[0],
+			FilePath:   path,
 		}
+
 		args := strings.Split(pluginInfo.PluginName, " ")
 		if cmd, _, _ := cmd.Root().Find(args[1:]); cmd.CommandPath() == pluginInfo.PluginName {
 			nameConflictPlugins = append(nameConflictPlugins, pluginInfo)
