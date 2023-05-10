@@ -324,6 +324,7 @@ func (r *PreRun) getCCloudTokenAndCredentials(cmd *cobra.Command, netrcMachineNa
 	filterParams := netrc.NetrcMachineParams{
 		Name:    netrcMachineName,
 		IsCloud: true,
+		URL:     pauth.CCloudURL,
 	}
 
 	credentials, err := pauth.GetLoginCredentials(

@@ -123,7 +123,7 @@ func (c *Command) loginCCloud(cmd *cobra.Command, url string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("im saving creds.", credentials.Username)
+
 	currentEnv, currentOrg, err := pauth.PersistCCloudLoginToConfig(c.Config.Config, credentials, url, client, save)
 	if err != nil {
 		return err
