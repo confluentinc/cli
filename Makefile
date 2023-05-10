@@ -62,7 +62,7 @@ DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 HOSTNAME := $(shell id -u -n)@$(shell hostname)
 RESOLVED_PATH=github.com/confluentinc/cli/cmd/confluent
 RDKAFKA_VERSION = 1.8.2
-RDKAFKA_PATH := $(shell find $(HOME)/git/go/1.17.6/pkg/mod/github.com/confluentinc -name confluent-kafka-go@v$(RDKAFKA_VERSION))/kafka/librdkafka_vendor
+RDKAFKA_PATH := $(shell find $(HOME)/git/go/1.17.5/pkg/mod/github.com/confluentinc -name confluent-kafka-go@v$(RDKAFKA_VERSION))/kafka/librdkafka_vendor
 
 S3_BUCKET_PATH=s3://confluent.cloud
 S3_STAG_FOLDER_NAME=cli-release-stag
