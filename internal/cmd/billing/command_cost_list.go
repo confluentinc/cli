@@ -77,7 +77,7 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 			Unit:              cost.GetUnit(),
 		}
 
-		// these fields amy be empty at times, so we don't want to use 0 default value if it's empty
+		// These fields may be empty depending on the line type, so casting floats as strings as to avoid zero-value
 		if price, ok := cost.GetPriceOk(); ok {
 			out.Price = fmt.Sprintf("%.8f", *price)
 		}
