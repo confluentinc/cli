@@ -184,7 +184,9 @@ func (s *CLITestSuite) TestCcloudErrors() {
 
 	s.T().Run("invalid jwt", func(tt *testing.T) {
 		env := []string{fmt.Sprintf("%s=invalid@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
-		output := runCommand(tt, testBin, env, args, 0)
+		output := runCommand(tt, testBin, env, "logout", 0)
+		require.Contains(tt, output, errors.LoggedOutMsg)
+		output = runCommand(tt, testBin, env, args, 0)
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInAsMsgWithOrg, "invalid@user.com", "abc-123", "Confluent"))
 		require.Contains(tt, output, fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default"))
 

@@ -23,7 +23,7 @@ type LoginCredentialsManager struct {
 	GetOnPremCredentialsFromEnvVarFunc func(cmd *github_com_spf13_cobra.Command) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
 
 	lockGetSsoCredentialsFromConfig sync.Mutex
-	GetSsoCredentialsFromConfigFunc func(cfg *github_com_confluentinc_cli_internal_pkg_config_v1.Config) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
+	GetSsoCredentialsFromConfigFunc func(cfg *github_com_confluentinc_cli_internal_pkg_config_v1.Config, filterParams github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
 
 	lockGetCredentialsFromConfig sync.Mutex
 	GetCredentialsFromConfigFunc func(cfg *github_com_confluentinc_cli_internal_pkg_config_v1.Config, filterParams github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
@@ -41,7 +41,7 @@ type LoginCredentialsManager struct {
 	GetOnPremCredentialsFromPromptFunc func(cmd *github_com_spf13_cobra.Command) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
 
 	lockGetPrerunCredentialsFromConfig sync.Mutex
-	GetPrerunCredentialsFromConfigFunc func(cfg *github_com_confluentinc_cli_internal_pkg_config_v1.Config) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
+	GetPrerunCredentialsFromConfigFunc func(cfg *github_com_confluentinc_cli_internal_pkg_config_v1.Config, filterParams github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
 
 	lockGetOnPremPrerunCredentialsFromEnvVar sync.Mutex
 	GetOnPremPrerunCredentialsFromEnvVarFunc func(arg0 *github_com_spf13_cobra.Command) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error)
@@ -61,7 +61,8 @@ type LoginCredentialsManager struct {
 			Cmd *github_com_spf13_cobra.Command
 		}
 		GetSsoCredentialsFromConfig []struct {
-			Cfg *github_com_confluentinc_cli_internal_pkg_config_v1.Config
+			Cfg          *github_com_confluentinc_cli_internal_pkg_config_v1.Config
+			FilterParams github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams
 		}
 		GetCredentialsFromConfig []struct {
 			Cfg          *github_com_confluentinc_cli_internal_pkg_config_v1.Config
@@ -85,7 +86,8 @@ type LoginCredentialsManager struct {
 			Cmd *github_com_spf13_cobra.Command
 		}
 		GetPrerunCredentialsFromConfig []struct {
-			Cfg *github_com_confluentinc_cli_internal_pkg_config_v1.Config
+			Cfg          *github_com_confluentinc_cli_internal_pkg_config_v1.Config
+			FilterParams github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams
 		}
 		GetOnPremPrerunCredentialsFromEnvVar []struct {
 			Arg0 *github_com_spf13_cobra.Command
@@ -180,7 +182,7 @@ func (m *LoginCredentialsManager) GetOnPremCredentialsFromEnvVarCalls() []struct
 }
 
 // GetSsoCredentialsFromConfig mocks base method by wrapping the associated func.
-func (m *LoginCredentialsManager) GetSsoCredentialsFromConfig(cfg *github_com_confluentinc_cli_internal_pkg_config_v1.Config) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error) {
+func (m *LoginCredentialsManager) GetSsoCredentialsFromConfig(cfg *github_com_confluentinc_cli_internal_pkg_config_v1.Config, filterParams github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error) {
 	m.lockGetSsoCredentialsFromConfig.Lock()
 	defer m.lockGetSsoCredentialsFromConfig.Unlock()
 
@@ -189,14 +191,16 @@ func (m *LoginCredentialsManager) GetSsoCredentialsFromConfig(cfg *github_com_co
 	}
 
 	call := struct {
-		Cfg *github_com_confluentinc_cli_internal_pkg_config_v1.Config
+		Cfg          *github_com_confluentinc_cli_internal_pkg_config_v1.Config
+		FilterParams github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams
 	}{
-		Cfg: cfg,
+		Cfg:          cfg,
+		FilterParams: filterParams,
 	}
 
 	m.calls.GetSsoCredentialsFromConfig = append(m.calls.GetSsoCredentialsFromConfig, call)
 
-	return m.GetSsoCredentialsFromConfigFunc(cfg)
+	return m.GetSsoCredentialsFromConfigFunc(cfg, filterParams)
 }
 
 // GetSsoCredentialsFromConfigCalled returns true if GetSsoCredentialsFromConfig was called at least once.
@@ -209,7 +213,8 @@ func (m *LoginCredentialsManager) GetSsoCredentialsFromConfigCalled() bool {
 
 // GetSsoCredentialsFromConfigCalls returns the calls made to GetSsoCredentialsFromConfig.
 func (m *LoginCredentialsManager) GetSsoCredentialsFromConfigCalls() []struct {
-	Cfg *github_com_confluentinc_cli_internal_pkg_config_v1.Config
+	Cfg          *github_com_confluentinc_cli_internal_pkg_config_v1.Config
+	FilterParams github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams
 } {
 	m.lockGetSsoCredentialsFromConfig.Lock()
 	defer m.lockGetSsoCredentialsFromConfig.Unlock()
@@ -426,7 +431,7 @@ func (m *LoginCredentialsManager) GetOnPremCredentialsFromPromptCalls() []struct
 }
 
 // GetPrerunCredentialsFromConfig mocks base method by wrapping the associated func.
-func (m *LoginCredentialsManager) GetPrerunCredentialsFromConfig(cfg *github_com_confluentinc_cli_internal_pkg_config_v1.Config) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error) {
+func (m *LoginCredentialsManager) GetPrerunCredentialsFromConfig(cfg *github_com_confluentinc_cli_internal_pkg_config_v1.Config, filterParams github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams) func() (*github_com_confluentinc_cli_internal_pkg_auth.Credentials, error) {
 	m.lockGetPrerunCredentialsFromConfig.Lock()
 	defer m.lockGetPrerunCredentialsFromConfig.Unlock()
 
@@ -435,14 +440,16 @@ func (m *LoginCredentialsManager) GetPrerunCredentialsFromConfig(cfg *github_com
 	}
 
 	call := struct {
-		Cfg *github_com_confluentinc_cli_internal_pkg_config_v1.Config
+		Cfg          *github_com_confluentinc_cli_internal_pkg_config_v1.Config
+		FilterParams github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams
 	}{
-		Cfg: cfg,
+		Cfg:          cfg,
+		FilterParams: filterParams,
 	}
 
 	m.calls.GetPrerunCredentialsFromConfig = append(m.calls.GetPrerunCredentialsFromConfig, call)
 
-	return m.GetPrerunCredentialsFromConfigFunc(cfg)
+	return m.GetPrerunCredentialsFromConfigFunc(cfg, filterParams)
 }
 
 // GetPrerunCredentialsFromConfigCalled returns true if GetPrerunCredentialsFromConfig was called at least once.
@@ -455,7 +462,8 @@ func (m *LoginCredentialsManager) GetPrerunCredentialsFromConfigCalled() bool {
 
 // GetPrerunCredentialsFromConfigCalls returns the calls made to GetPrerunCredentialsFromConfig.
 func (m *LoginCredentialsManager) GetPrerunCredentialsFromConfigCalls() []struct {
-	Cfg *github_com_confluentinc_cli_internal_pkg_config_v1.Config
+	Cfg          *github_com_confluentinc_cli_internal_pkg_config_v1.Config
+	FilterParams github_com_confluentinc_cli_internal_pkg_netrc.NetrcMachineParams
 } {
 	m.lockGetPrerunCredentialsFromConfig.Lock()
 	defer m.lockGetPrerunCredentialsFromConfig.Unlock()

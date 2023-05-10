@@ -123,7 +123,7 @@ func (c *Command) loginCCloud(cmd *cobra.Command, url string) error {
 	if err != nil {
 		return err
 	}
-
+	fmt.Println("im saving creds.", credentials.Username)
 	currentEnv, currentOrg, err := pauth.PersistCCloudLoginToConfig(c.Config.Config, credentials, url, client, save)
 	if err != nil {
 		return err
@@ -169,7 +169,7 @@ func (c *Command) getCCloudCredentials(cmd *cobra.Command, url, orgResourceId st
 
 	return pauth.GetLoginCredentials(
 		c.loginCredentialsManager.GetCloudCredentialsFromEnvVar(cmd, orgResourceId),
-		c.loginCredentialsManager.GetSsoCredentialsFromConfig(c.cfg),
+		c.loginCredentialsManager.GetSsoCredentialsFromConfig(c.cfg, filterParams),
 		c.loginCredentialsManager.GetCredentialsFromKeychain(c.cfg, true, filterParams.Name, url),
 		c.loginCredentialsManager.GetCredentialsFromConfig(c.cfg, filterParams),
 		c.loginCredentialsManager.GetCredentialsFromNetrc(cmd, filterParams),

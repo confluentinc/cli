@@ -329,7 +329,7 @@ func (r *PreRun) getCCloudTokenAndCredentials(cmd *cobra.Command, netrcMachineNa
 	credentials, err := pauth.GetLoginCredentials(
 		r.LoginCredentialsManager.GetCloudCredentialsFromEnvVar(cmd, orgResourceId),
 		r.LoginCredentialsManager.GetCredentialsFromKeychain(r.Config, true, filterParams.Name, pauth.CCloudURL),
-		r.LoginCredentialsManager.GetPrerunCredentialsFromConfig(r.Config),
+		r.LoginCredentialsManager.GetPrerunCredentialsFromConfig(r.Config, filterParams),
 		r.LoginCredentialsManager.GetCredentialsFromNetrc(cmd, filterParams),
 		r.LoginCredentialsManager.GetCredentialsFromConfig(r.Config, filterParams),
 	)
@@ -776,7 +776,7 @@ func (r *PreRun) getUpdatedAuthToken(cmd *cobra.Command, ctx *DynamicContext) (s
 		Name:    ctx.GetNetrcMachineName(),
 	}
 	credentials, err := pauth.GetLoginCredentials(
-		r.LoginCredentialsManager.GetPrerunCredentialsFromConfig(ctx.Config),
+		r.LoginCredentialsManager.GetPrerunCredentialsFromConfig(ctx.Config, filterParams),
 		r.LoginCredentialsManager.GetCredentialsFromNetrc(cmd, filterParams),
 		r.LoginCredentialsManager.GetCredentialsFromConfig(r.Config, filterParams),
 	)

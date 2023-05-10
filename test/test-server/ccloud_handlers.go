@@ -77,11 +77,11 @@ func (c *CloudRouter) HandleMe(t *testing.T, isAuditLogEnabled bool) func(http.R
 		b, err := utilv1.MarshalJSONToBytes(&flowv1.GetMeReply{
 			User: &orgv1.User{
 				Id:         23,
-				Email:      "cody@confluent.io",
+				Email:      "cody@confluent.i",
 				FirstName:  "Cody",
 				ResourceId: "u-11aaa",
 			},
-			Accounts: environments,
+			Accounts:     environments,
 			Organization: org,
 		})
 		require.NoError(t, err)
@@ -867,14 +867,14 @@ func (c *CloudRouter) HandleConnector() func(http.ResponseWriter, *http.Request)
 	}
 }
 
-//Handler for: ""/api/accounts/{env}/clusters/{cluster}/connectors/{connector}/pause"
+// Handler for: ""/api/accounts/{env}/clusters/{cluster}/connectors/{connector}/pause"
 func (c *CloudRouter) HandleConnectorPause() func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	}
 }
 
-//Handler for: ""/api/accounts/{env}/clusters/{cluster}/connectors/{connector}/resume"
+// Handler for: ""/api/accounts/{env}/clusters/{cluster}/connectors/{connector}/resume"
 func (c *CloudRouter) HandleConnectorResume() func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)

@@ -67,7 +67,7 @@ func GetLoginCredentials(credentialsFuncs ...func() (*Credentials, error)) (*Cre
 type LoginCredentialsManager interface {
 	GetCloudCredentialsFromEnvVar(cmd *cobra.Command, orgResourceId string) func() (*Credentials, error)
 	GetOnPremCredentialsFromEnvVar(cmd *cobra.Command) func() (*Credentials, error)
-	GetSsoCredentialsFromConfig(cfg *v1.Config) func() (*Credentials, error)
+	GetSsoCredentialsFromConfig(cfg *v1.Config, filterParams netrc.NetrcMachineParams) func() (*Credentials, error)
 	GetCredentialsFromConfig(cfg *v1.Config, filterParams netrc.NetrcMachineParams) func() (*Credentials, error)
 	GetCredentialsFromKeychain(cfg *v1.Config, isCloud bool, ctxName string, url string) func() (*Credentials, error)
 	GetCredentialsFromNetrc(cmd *cobra.Command, filterParams netrc.NetrcMachineParams) func() (*Credentials, error)
@@ -75,7 +75,7 @@ type LoginCredentialsManager interface {
 	GetOnPremCredentialsFromPrompt(cmd *cobra.Command) func() (*Credentials, error)
 
 	// Only for Confluent Prerun login
-	GetPrerunCredentialsFromConfig(cfg *v1.Config) func() (*Credentials, error)
+	GetPrerunCredentialsFromConfig(cfg *v1.Config, filterParams netrc.NetrcMachineParams) func() (*Credentials, error)
 	GetOnPremPrerunCredentialsFromEnvVar(*cobra.Command) func() (*Credentials, error)
 	GetOnPremPrerunCredentialsFromNetrc(*cobra.Command, netrc.NetrcMachineParams) func() (*Credentials, error)
 
@@ -189,9 +189,9 @@ func (h *LoginCredentialsManagerImpl) GetCredentialsFromConfig(cfg *v1.Config, f
 	}
 }
 
-func (h *LoginCredentialsManagerImpl) GetSsoCredentialsFromConfig(cfg *v1.Config) func() (*Credentials, error) {
+func (h *LoginCredentialsManagerImpl) GetSsoCredentialsFromConfig(cfg *v1.Config, filterParams netrc.NetrcMachineParams) func() (*Credentials, error) {
 	return func() (*Credentials, error) {
-		credentials, _ := h.GetPrerunCredentialsFromConfig(cfg)()
+		credentials, _ := h.GetPrerunCredentialsFromConfig(cfg, filterParams)()
 
 		// For `confluent login`, only retrieve credentials from the config file if SSO (prevents a breaking change)
 		if credentials != nil && credentials.IsSSO {
@@ -202,20 +202,24 @@ func (h *LoginCredentialsManagerImpl) GetSsoCredentialsFromConfig(cfg *v1.Config
 	}
 }
 
-func (h *LoginCredentialsManagerImpl) GetPrerunCredentialsFromConfig(cfg *v1.Config) func() (*Credentials, error) {
+func (h *LoginCredentialsManagerImpl) GetPrerunCredentialsFromConfig(cfg *v1.Config, filterParams netrc.NetrcMachineParams) func() (*Credentials, error) {
 	return func() (*Credentials, error) {
 		ctx := cfg.Context()
 		if ctx == nil {
 			return nil, nil
 		}
 
+		if !strings.Contains(filterParams.Name, ctx.GetUser().GetEmail()) {
+			return nil, nil
+		}
+
 		credentials := &Credentials{
-			IsSSO:     ctx.GetUser().GetAuthType() == orgv1.AuthType_AUTH_TYPE_SSO || ctx.GetUser().GetSocialConnection() != "",
-			Username:  ctx.GetUser().GetEmail(),
-			AuthToken: ctx.GetAuthToken(),
+			IsSSO:            ctx.GetUser().GetAuthType() == orgv1.AuthType_AUTH_TYPE_SSO || ctx.GetUser().GetSocialConnection() != "",
+			Username:         ctx.GetUser().GetEmail(),
+			AuthToken:        ctx.GetAuthToken(),
+			AuthRefreshToken: ctx.GetAuthRefreshToken(),
 		}
 		log.CliLogger.Tracef("credentials: %#v", credentials)
-
 		return credentials, nil
 	}
 }
