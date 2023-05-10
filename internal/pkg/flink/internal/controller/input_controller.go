@@ -163,10 +163,7 @@ func (c *InputController) listenToUserInput(in *prompt.PosixParser, cancelFunc c
 			case <-ctx.Done():
 				return
 			default:
-				if b, err := in.Read(); err == nil && !(len(b) == 1 && b[0] == 0) {
-					if err != nil {
-						continue
-					}
+				if b, err := in.Read(); err == nil && len(b) > 0 {
 					pressedKey := prompt.Key(b[0])
 
 					switch pressedKey {

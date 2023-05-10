@@ -136,10 +136,6 @@ func (f AtomicStatementResultField) GetType() StatementResultFieldType {
 }
 
 func (f AtomicStatementResultField) Format(options *FormatterOptions) string {
-	maxValueLen := options.GetMaxCharCountToDisplay()
-	if len(f.Value) > maxValueLen {
-		return f.Value[:maxValueLen] + "..."
-	}
 	return f.Value
 }
 

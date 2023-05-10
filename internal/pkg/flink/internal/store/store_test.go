@@ -677,6 +677,12 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWhenResultsExist() {
 	require.Nil(s.T(), err)
 }
 
+func (s *StoreTestSuite) TestExtractPageToken() {
+	token, err := extractPageToken("https://devel.cpdev.cloud/some/results?page_token=eyJWZX")
+	require.Equal(s.T(), "eyJWZX", token)
+	require.Nil(s.T(), err)
+}
+
 func hoursToSeconds(hours float32) int {
 	return int(hours * 60 * 60)
 }

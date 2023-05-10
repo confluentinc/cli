@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -162,7 +163,7 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 		statement.StatementResults = convertedResults
 
 		statementMetadata := statementResultObj.GetMetadata()
-		extractedToken, err := results.ExtractPageToken(statementMetadata.GetNext())
+		extractedToken, err := extractPageToken(statementMetadata.GetNext())
 		if err != nil {
 			return nil, &types.StatementError{Msg: "Error: " + err.Error()}
 		}
@@ -238,6 +239,21 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 		errorsMsg = fmt.Sprintf(" Captured retriable errors: %s", strings.Join(capturedErrors, "; "))
 	}
 	return nil, &types.StatementError{Msg: fmt.Sprintf("Error: Statement is still pending after %d retries.%s", retries, errorsMsg)}
+}
+
+func extractPageToken(nextUrl string) (string, error) {
+	if nextUrl == "" {
+		return "", nil
+	}
+	myUrl, err := url.Parse(nextUrl)
+	if err != nil {
+		return "", err
+	}
+	params, err := url.ParseQuery(myUrl.RawQuery)
+	if err != nil {
+		return "", err
+	}
+	return params.Get("page_token"), nil
 }
 
 func NewStore(client GatewayClientInterface, exitApplication func(), appOptions *types.ApplicationOptions) StoreInterface {

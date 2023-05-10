@@ -179,7 +179,7 @@ func (t *TableController) Init(statement types.ProcessedStatement) {
 	t.materializedStatementResults = results.NewMaterializedStatementResults(statement.StatementResults.GetHeaders(), maxResultsCapacity)
 	t.materializedStatementResults.SetTableMode(!t.hasUserDisabledTableMode)
 	t.materializedStatementResults.AppendAll(statement.StatementResults.GetRows())
-	t.formatterOptions = &types.FormatterOptions{MaxCharCountToDisplay: 77}
+	t.formatterOptions = &types.FormatterOptions{MaxCharCountToDisplay: 80}
 	// if unbounded result start refreshing results in the background
 	if statement.PageToken != "" && !t.hasUserDisabledAutoFetch {
 		t.startAutoRefresh(statement, defaultRefreshInterval)
@@ -221,7 +221,8 @@ func (t *TableController) renderData() {
 		tableCell := tview.NewTableCell(column).
 			SetTextColor(tcell.ColorYellow).
 			SetAlign(tview.AlignLeft).
-			SetSelectable(false)
+			SetSelectable(false).
+			SetMaxWidth(t.formatterOptions.GetMaxCharCountToDisplay())
 		t.table.SetCell(0, colIdx, tableCell)
 	}
 
@@ -234,7 +235,8 @@ func (t *TableController) renderData() {
 			color := tcell.ColorWhite
 			tableCell := tview.NewTableCell(tview.Escape(field.Format(t.formatterOptions))).
 				SetTextColor(color).
-				SetAlign(tview.AlignLeft)
+				SetAlign(tview.AlignLeft).
+				SetMaxWidth(t.formatterOptions.GetMaxCharCountToDisplay())
 			t.table.SetCell(rowIdx, colIdx, tableCell)
 		}
 		rowIdx++
