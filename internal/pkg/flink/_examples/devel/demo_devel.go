@@ -14,6 +14,8 @@ func main() {
 	engagement := "VOUPSZQWODCAU7X6:b3P8sfTFNo54IeZCLPznNjmpnFxzoyjJ0VqTkGsDUKIwJWqK7H14QmDMhr0FMPyE"
 	engagementCoreMetrics := "KBIHCYSML52E4DME:AiNdyjhWs9oL2kIc0XoUusHPygeW01gJMkUiKCxrhNpZ78ow2j8EBP8EZ+jUr0hD"
 	engagementPersonalization := "KG3K2LCJEVD6T7YH:jBaU6oiBEAV25fhOzQb/UEnVW6qmEqLdJpfiTjdSHSDUdsJUWlnxk/v7RoKgldHA"
+	generator := "ODZPNNZ7VG53GGSW:yyESkAz0NpuMWYqfMDnR+blFXqbssjrIszpem4EC+rFbyiGITSrPXsX6KTS0oYZi"
+	generatorSpaTV := "LP3IM5JSUYMZWTRD:OtjtKb3LbktK+tuyupPwQqKK2IZqgckramG3Yi1+gKXF7ZAj2VueowHcXOIJXZdr"
 	app.StartApp(
 		"env-okyxpp",
 		"d07e2cb7-52df-451b-bf4b-b8bd81e0d20c",
@@ -31,10 +33,12 @@ func main() {
 					"website:" + integrationWebsite + ";lkc-rkmkgp:" + integrationWebsite + ";" +
 					"qos_metrics:" + qosQosMetrics + ";lkc-zn7n9y:" + qosQosMetrics + ";" +
 					"core_metrics:" + engagementCoreMetrics + ";lkc-30p0m0:" + engagementCoreMetrics + ";" +
-					"personalization:" + engagementPersonalization + ";lkc-n0m096:" + engagementPersonalization,
+					"personalization:" + engagementPersonalization + ";lkc-n0m096:" + engagementPersonalization + ";" +
+					"spatv:" + generatorSpaTV + ";lkc-j06opm:" + generatorSpaTV,
 				"confluent.schema_registry.keys": "integration:" + integration + ";" +
 					"qos:" + qos + ";" +
-					"engagement:" + engagement,
+					"engagement:" + engagement + ";" +
+					"generator:" + generator,
 			},
 		})
 }
