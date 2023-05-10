@@ -4,11 +4,12 @@ import (
 	"context"
 	_ "embed"
 	"fmt"
-	"github.com/confluentinc/flink-sql-client/test/generators"
 	"log"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/confluentinc/flink-sql-client/test/generators"
 
 	"github.com/confluentinc/flink-sql-client/internal/results"
 	"github.com/confluentinc/flink-sql-client/pkg/types"
@@ -28,6 +29,7 @@ const (
 	configKeyDatabase         = "default_database"
 	configKeyOrgResourceId    = "org-resource-id"
 	configKeyExecutionRuntime = "execution.runtime-mode"
+	configKeyLocalTimeZone    = "table.local-time-zone"
 	configKeyStatementOwner   = "statement-owner"
 )
 
