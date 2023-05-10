@@ -58,14 +58,14 @@ func (suite *CostTestSuite) newCmd(conf *v1.Config) *cobra.Command {
 		CostsBillingV1Api: suite.billingCostMock,
 	}
 	prerunner := climock.NewPreRunnerMock(nil, &ccloudv2.Client{BillingClient: billingClient, AuthToken: "auth-token"}, nil, nil, conf)
-	return newCostCommand(prerunner)
+	return New(prerunner)
 }
 
 func (suite *CostTestSuite) TestListCosts() {
 	suite.T().Run("valid arguments", func(t *testing.T) {
 
 		cmd := suite.newCmd(v1.AuthenticatedCloudConfigMock())
-		cmd.SetArgs([]string{"list", "2021-01-01", "2021-02-01"})
+		cmd.SetArgs([]string{"cost", "list", "2021-01-01", "2021-02-01"})
 		err := cmd.Execute()
 		req := require.New(suite.T())
 		req.Nil(err)
@@ -76,7 +76,7 @@ func (suite *CostTestSuite) TestListCosts() {
 
 	suite.T().Run("missing argument", func(t *testing.T) {
 		cmd := suite.newCmd(v1.AuthenticatedCloudConfigMock())
-		cmd.SetArgs([]string{"list", "2021-01-01"})
+		cmd.SetArgs([]string{"cost", "list", "2021-01-01"})
 		err := cmd.Execute()
 		req := require.New(suite.T())
 		req.Error(err)
@@ -87,7 +87,7 @@ func (suite *CostTestSuite) TestListCosts() {
 
 	suite.T().Run("wrong arg format", func(t *testing.T) {
 		cmd := suite.newCmd(v1.AuthenticatedCloudConfigMock())
-		cmd.SetArgs([]string{"list", "20-01-01", "2020-0-01"})
+		cmd.SetArgs([]string{"cost", "list", "20-01-01", "2020-0-01"})
 		err := cmd.Execute()
 		req := require.New(suite.T())
 		req.Error(err)

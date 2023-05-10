@@ -9,11 +9,11 @@ import (
 func New(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "billing",
-		Short:       "Managing Confluent Cloud Billing.",
+		Short:       "Manage Confluent Cloud Billing.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}
+	c := &commandCost{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
+	c.Command.AddCommand(c.newCostCommand())
 
-	cmd.AddCommand(newCostCommand(prerunner))
-
-	return cmd
+	return c.Command
 }

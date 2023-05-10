@@ -10,7 +10,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-type command struct {
+type commandList struct {
 	*pcmd.AuthenticatedCLICommand
 }
 
@@ -31,7 +31,7 @@ type costOut struct {
 	Amount              string `human:"Amount" serialized:"amount"`
 }
 
-func (c *command) newListCostCommand() *cobra.Command {
+func (c *commandList) newCostListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "list <start-date> <end-date>",
 		Example: "list 2023-01-01 2023-01-10",
@@ -46,18 +46,25 @@ func (c *command) newListCostCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) list(cmd *cobra.Command, args []string) error {
+func (c *commandList) checkDateFormat(date string) error {
+	_, err := time.Parse("2006-01-02", date)
+	if err != nil {
+		return fmt.Errorf("expected format should look like: 2022-01-01")
+	}
+}
+
+func (c *commandList) list(cmd *cobra.Command, args []string) error {
 	startDate := args[0]
 	endDate := args[1]
 
-	_, err := time.Parse("2006-01-02", startDate)
+	err := c.checkDateFormat(startDate)
 	if err != nil {
-		return fmt.Errorf("invalid start date format, expected format should look like: 2022-01-01")
+		return fmt.Errorf("invalid start date: %s", err.Error())
 	}
 
-	_, err = time.Parse("2006-01-02", endDate)
+	err = c.checkDateFormat(endDate)
 	if err != nil {
-		return fmt.Errorf("invalid end date format, expected format should look like: 2022-01-01")
+		return fmt.Errorf("invalid end date: %s", err.Error())
 	}
 
 	costs, err := c.V2Client.ListBillingCosts(startDate, endDate)
