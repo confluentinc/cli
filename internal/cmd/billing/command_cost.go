@@ -2,22 +2,15 @@ package billing
 
 import (
 	"github.com/spf13/cobra"
-
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
-type commandCost struct {
-	*pcmd.AuthenticatedCLICommand
-}
-
-func (c *commandCost) newCostCommand() *cobra.Command {
+func (c *command) newCostCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "cost",
-		Short: "Manage Confluent Cloud Billing Costs.",
+		Short: "List Confluent Cloud billing costs.",
 	}
 
-	cl := &commandList{c.AuthenticatedCLICommand}
-	cmd.AddCommand(cl.newCostListCommand())
+	cmd.AddCommand(c.newCostListCommand())
 
 	return cmd
 }

@@ -10,10 +10,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-type commandList struct {
-	*pcmd.AuthenticatedCLICommand
-}
-
 type costOut struct {
 	StartDate           string `human:"Start Date" serialized:"start_date"`
 	EndDate             string `human:"End Date" serialized:"end_date"`
@@ -31,7 +27,7 @@ type costOut struct {
 	Amount              string `human:"Amount" serialized:"amount"`
 }
 
-func (c *commandList) newCostListCommand() *cobra.Command {
+func (c *command) newCostListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "list <start-date> <end-date>",
 		Example: "list 2023-01-01 2023-01-10",
@@ -46,14 +42,15 @@ func (c *commandList) newCostListCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *commandList) checkDateFormat(date string) error {
-	_, err := time.Parse("2006-01-02", date)
-	if err != nil {
+func (c *command) checkDateFormat(date string) error {
+	if _, err := time.Parse("2006-01-02", date); err != nil {
 		return fmt.Errorf("expected format should look like: 2022-01-01")
 	}
+
+	return nil
 }
 
-func (c *commandList) list(cmd *cobra.Command, args []string) error {
+func (c *command) list(cmd *cobra.Command, args []string) error {
 	startDate := args[0]
 	endDate := args[1]
 

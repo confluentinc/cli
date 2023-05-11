@@ -1,0 +1,4 @@
+      Start Date      |      End Date       | Granularity |  Line Type  | Product | Resource ID | Resource Display Name | Environment ID | Network Access Type |   Price    | Unit | Original Amount | Discount Amount |   Amount     
+----------------------+---------------------+-------------+-------------+---------+-------------+-----------------------+----------------+---------------------+------------+------+-----------------+-----------------+--------------
+  2023-01-01 00:00:00 | 2023-01-02 00:00:00 | DAILY       | LINE_TYPE_1 | KAFKA   | lkc-123     | kafka_1               | env-123        | INTERNET            | 0.12300000 | GB   |     70.00000000 |     20.00000000 | 50.00000000  
+  2023-01-01 00:00:00 | 2023-02-03 00:00:00 | DAILY       | LINE_TYPE_2 | KAFKA   | lkc-123     | kafka_4               | env-123        | INTERNET            | 0.33400000 | GB   |     70.00000000 |     20.00000000 | 50.00000000  
