@@ -2,6 +2,7 @@ package price
 
 import (
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -259,7 +260,7 @@ func printTable(cmd *cobra.Command, rows []row) error {
 				ClusterType:  formatClusterTypeHuman[row.clusterType],
 				Availability: formatAvailability[row.availability],
 				NetworkType:  formatNetworkType[row.networkType],
-				Price:        formatPrice(row.price, row.unit),
+				Price:        utils.FormatPrice(row.price, row.unit),
 			})
 		} else {
 			list.Add(&serializedOut{
