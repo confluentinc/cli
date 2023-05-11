@@ -73,7 +73,7 @@ require (
 	github.com/xeipuuv/gojsonschema v1.2.0
 	golang.org/x/crypto v0.9.0
 	golang.org/x/exp v0.0.0-20230307190834-24139beb5833
-	golang.org/x/oauth2 v0.7.0
+	golang.org/x/oauth2 v0.8.0
 	golang.org/x/term v0.8.0
 	golang.org/x/text v0.9.0
 	gopkg.in/launchdarkly/go-sdk-common.v2 v2.5.1
