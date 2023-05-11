@@ -1,6 +1,6 @@
---- cli/Makefile	2023-05-05 09:20:15.874939333 -0700
+--- cli/Makefile	2023-05-05 13:52:14.246574940 -0700
 +++ debian/Makefile	2023-03-31 13:35:33.741910522 -0700
-@@ -1,121 +1,130 @@
+@@ -1,120 +1,130 @@
 -SHELL              := /bin/bash
 -ALL_SRC            := $(shell find . -name "*.go" | grep -v -e vendor)
 -GORELEASER_VERSION := v1.17.2
@@ -43,7 +43,6 @@
 -	TAGS=$(TAGS) CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) VERSION=$(VERSION) GOEXPERIMENT=boringcrypto goreleaser build -f .goreleaser-build.yml --clean --single-target --snapshot
 -
 -include ./mk-files/cc-cli-service.mk
--include ./mk-files/dockerhub.mk
 -include ./mk-files/semver.mk
 -include ./mk-files/docs.mk
 -include ./mk-files/dry-run.mk
