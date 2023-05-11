@@ -42,7 +42,7 @@ func (c *describeCommand) describe(cmd *cobra.Command, _ []string) error {
 	}
 
 	auditLog := user.GetOrganization().GetAuditLog()
-	if auditLog == nil || auditLog.GetServiceAccountId() == 0 {
+	if auditLog.GetServiceAccountId() == 0 {
 		return errors.New(errors.AuditLogsNotEnabledErrorMsg)
 	}
 
