@@ -2,6 +2,7 @@ package billing
 
 import (
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -21,7 +22,6 @@ type costOut struct {
 	EnvironmentId       string `human:"Environment ID" serialized:"environment_id"`
 	NetworkAccessType   string `human:"Network Access Type" serialized:"network_access_type"`
 	Price               string `human:"Price" serialized:"price"`
-	Unit                string `human:"Unit" serialized:"unit"`
 	OriginalAmount      string `human:"Original Amount" serialized:"original_amount"`
 	DiscountAmount      string `human:"Discount Amount" serialized:"discount_amount"`
 	Amount              string `human:"Amount" serialized:"amount"`
@@ -78,12 +78,11 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 			LineType:          cost.GetLineType(),
 			Product:           cost.GetProduct(),
 			NetworkAccessType: cost.GetNetworkAccessType(),
-			Unit:              cost.GetUnit(),
 		}
 
 		// These fields may be empty depending on the line type, so casting floats as strings as to avoid zero-value
 		if price, ok := cost.GetPriceOk(); ok {
-			out.Price = fmt.Sprintf("%.8f", *price)
+			out.Price = utils.FormatPrice(*price, cost.GetUnit())
 		}
 
 		if originalAmount, ok := cost.GetOriginalAmountOk(); ok {
