@@ -171,8 +171,8 @@ func (c *command) catchServiceAccountNotValidError(err error, r *http.Response, 
 		if err != nil {
 			return err
 		}
-		auditLog := user.GetOrganization().GetAuditLog()
 
+		auditLog := user.GetOrganization().GetAuditLog()
 		if clusterId == auditLog.GetClusterId() {
 			auditLogServiceAccount, err2 := c.Client.User.GetServiceAccount(auditLog.GetServiceAccountId())
 			if err2 != nil {
