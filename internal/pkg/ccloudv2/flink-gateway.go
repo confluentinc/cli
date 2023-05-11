@@ -21,12 +21,6 @@ func (c *Client) flinkGatewayApiContext() context.Context {
 	return context.WithValue(context.Background(), flinkgatewayv1alpha1.ContextAccessToken, c.AuthToken)
 }
 
-func (c *Client) CreateStatement(environmentId string, statement flinkgatewayv1alpha1.SqlV1alpha1Statement) (flinkgatewayv1alpha1.SqlV1alpha1Statement, error) {
-	req := c.FlinkGatewayClient.StatementsSqlV1alpha1Api.CreateSqlV1alpha1Statement(c.flinkGatewayApiContext(), environmentId).SqlV1alpha1Statement(statement)
-	resp, r, err := c.FlinkGatewayClient.StatementsSqlV1alpha1Api.CreateSqlV1alpha1StatementExecute(req)
-	return resp, errors.CatchCCloudV2Error(err, r)
-}
-
 func (c *Client) DeleteStatement(environmentId, statementName string) error {
 	req := c.FlinkGatewayClient.StatementsSqlV1alpha1Api.DeleteSqlV1alpha1Statement(c.flinkGatewayApiContext(), environmentId, statementName)
 	r, err := c.FlinkGatewayClient.StatementsSqlV1alpha1Api.DeleteSqlV1alpha1StatementExecute(req)

@@ -16,9 +16,7 @@ func (c *command) newStatementCommand() *cobra.Command {
 		Short: "Manage Flink SQL statements.",
 	}
 
-	cmd.AddCommand(c.newStatementCreateCommand())
 	cmd.AddCommand(c.newStatementDeleteCommand())
-	cmd.AddCommand(c.newStatementDescribeCommand())
 	cmd.AddCommand(c.newStatementListCommand())
 
 	return cmd
