@@ -90,7 +90,7 @@ func (c *command) getAllUsers() ([]*ccloudv1.User, error) {
 		return nil, err
 	}
 
-	if auditLog := user.GetOrganization().GetAuditLog(); auditLog != nil {
+	if auditLog := user.GetOrganization().GetAuditLog().GetServiceAccountId() != 0 {
 		serviceAccount, err := c.Client.User.GetServiceAccount(auditLog.GetServiceAccountId())
 		if err != nil {
 			// ignore 403s so we can still get other users
