@@ -43,7 +43,7 @@ publish-docs: docs
 	fi && \
 	$(call dry-run,gh pr create -B $${base} --title "chore: update CLI docs for v$(CLEAN_VERSION)" --body "")
 
-	# rm -rf $(DIR)
+	rm -rf $(DIR)
 
 # NB: When releasing a new version, the -post branch is updated to the current state of the .x branch,
 # whether the -post branch exists or not. The `git checkout -B ...` handles this behavior.
