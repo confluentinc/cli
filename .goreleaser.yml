@@ -197,7 +197,6 @@ dockers:
     image_templates:
       - "confluentinc/confluent-cli:{{ .Version }}-amd64"
       - "confluentinc/confluent-cli:latest-amd64"
-    skip_push: true
     dockerfile: "dockerfiles/Dockerfile"
   - ids:
       - confluent-alpine-arm64
@@ -205,7 +204,6 @@ dockers:
     image_templates:
       - "confluentinc/confluent-cli:{{ .Version }}-arm64"
       - "confluentinc/confluent-cli:latest-arm64"
-    skip_push: true
     dockerfile: "dockerfiles/Dockerfile"
 
 docker_manifests:
