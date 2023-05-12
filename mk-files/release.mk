@@ -19,8 +19,6 @@ release: check-branch tag-release
 	make release-to-prod
 	$(call print-boxed-message,"PUBLISHING DOCS")
 	make publish-docs
-	$(call print-boxed-message,"PUBLISHING NEW DOCKER HUB IMAGES")
-	make publish-dockerhub
 
 .PHONY: check-branch
 check-branch:
@@ -83,7 +81,7 @@ gorelease:
 	mkdir prebuilt/ && \
 	scripts/build_linux_glibc.sh && \
 	git clone git@github.com:confluentinc/cli-release.git $(CLI_RELEASE) && \
-	go run cmd/releasenotes/main.go $(CLI_RELEASE)/release-notes/$(VERSION_NO_V).json github > $(DIR)/release-notes.txt && \
+	go run $(CLI_RELEASE)/cmd/releasenotes/formatter/main.go $(CLI_RELEASE)/release-notes/$(VERSION_NO_V).json github > $(DIR)/release-notes.txt && \
 	GORELEASER_KEY=$(GORELEASER_KEY) VERSION=$(VERSION) GOEXPERIMENT=boringcrypto S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli GITHUB_TOKEN=$(token) DRY_RUN=$(DRY_RUN) goreleaser release --clean --release-notes $(DIR)/release-notes.txt --timeout 60m
 
 # Current goreleaser still has some shortcomings for the our use, and the target patches those issues
