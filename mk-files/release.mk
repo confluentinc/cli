@@ -19,8 +19,6 @@ release: check-branch tag-release
 	make release-to-prod
 	$(call print-boxed-message,"PUBLISHING DOCS")
 	make publish-docs
-	$(call print-boxed-message,"PUBLISHING NEW DOCKER HUB IMAGES")
-	make publish-dockerhub
 
 .PHONY: check-branch
 check-branch:
