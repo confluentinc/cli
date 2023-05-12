@@ -28,7 +28,7 @@ publish-docs: docs
 	git checkout -b publish-docs-v$(CLEAN_VERSION) && \
 	cd - && \
 	git clone git@github.com:confluentinc/cli-release.git $(CLI_RELEASE) && \
-	go run cmd/releasenotes/main.go $(CLI_RELEASE)/release-notes/$(CLEAN_VERSION).json docs > $(DIR)/release-notes.rst && \
+	go run $(CLI_RELEASE)/cmd/releasenotes/formatter/main.go $(CLI_RELEASE)/release-notes/$(CLEAN_VERSION).json docs > $(DIR)/release-notes.rst && \
 	$(SED) -i "10r $(DIR)/release-notes.rst" $(DOCS_CONFLUENT_CLI)/release-notes.rst && \
 	cd $(DOCS_CONFLUENT_CLI) && \
 	rm -rf command-reference && \
