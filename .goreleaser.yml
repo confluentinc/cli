@@ -198,6 +198,8 @@ dockers:
       - "confluentinc/confluent-cli:{{ .Version }}-amd64"
       - "confluentinc/confluent-cli:latest-amd64"
     dockerfile: "dockerfiles/Dockerfile"
+    build_flag_templates:
+      - --platform=linux/amd64
   - ids:
       - confluent-alpine-arm64
     goarch: arm64
@@ -205,6 +207,8 @@ dockers:
       - "confluentinc/confluent-cli:{{ .Version }}-arm64"
       - "confluentinc/confluent-cli:latest-arm64"
     dockerfile: "dockerfiles/Dockerfile"
+    build_flag_templates:
+      - --platform=linux/arm64
 
 docker_manifests:
   - name_template: "confluentinc/confluent-cli:{{ .Version }}"
