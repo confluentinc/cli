@@ -1,0 +1,60 @@
+..
+   WARNING: This documentation is auto-generated from the confluentinc/cli repository and should not be manually edited.
+
+.. _confluent_kafka_broker_describe:
+
+confluent kafka broker describe
+-------------------------------
+
+Description
+~~~~~~~~~~~
+
+Describe cluster-wide or per-broker configuration values using Confluent Kafka REST.
+
+::
+
+  confluent kafka broker describe [id] [flags]
+
+Flags
+~~~~~
+
+::
+
+      --all                       Get cluster-wide broker configurations (non-default values only).
+      --config-name string        Get a specific configuration value (pair with --all to see a cluster-wide config.
+      --url string                Base URL of REST Proxy Endpoint of Kafka Cluster (include /kafka for embedded Rest Proxy). Must set flag or CONFLUENT_REST_URL.
+      --ca-cert-path string       Path to a PEM-encoded CA to verify the Confluent REST Proxy.
+      --client-cert-path string   Path to client cert to be verified by Confluent REST Proxy, include for mTLS authentication.
+      --client-key-path string    Path to client private key, include for mTLS authentication.
+      --no-authentication         Include if requests should be made without authentication headers, and user will not be prompted for credentials.
+      --prompt                    Bypass use of available login credentials and prompt for Kafka Rest credentials.
+  -o, --output string             Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags
+~~~~~~~~~~~~
+
+::
+
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Examples
+~~~~~~~~
+
+Describe the "min.insync.replicas" configuration for broker 1.
+
+::
+
+  confluent kafka broker describe 1 --config-name min.insync.replicas
+
+Describe the non-default cluster-wide broker configuration values.
+
+::
+
+  confluent kafka broker describe --all
+
+See Also
+~~~~~~~~
+
+* :ref:`confluent_kafka_broker` - Manage Kafka brokers.

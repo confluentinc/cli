@@ -22,11 +22,18 @@ docs:
 .PHONY: publish-docs
 publish-docs: docs
 	$(eval DIR=$(shell mktemp -d))
+	$(eval CLI_RELEASE=$(DIR)/cli-release)
 	$(eval DOCS_CONFLUENT_CLI=$(DIR)/docs-confluent-cli)
 
 	git clone git@github.com:confluentinc/docs-confluent-cli.git $(DOCS_CONFLUENT_CLI) && \
 	cd $(DOCS_CONFLUENT_CLI) && \
-	git checkout publish-docs-v$(CLEAN_VERSION) && \
+	git checkout -b publish-docs-v$(CLEAN_VERSION)
+
+	# cd - && \
+	# git clone git@github.com:confluentinc/cli-release.git $(CLI_RELEASE) && \
+	# go run cmd/releasenotes/main.go $(CLI_RELEASE)/release-notes/$(CLEAN_VERSION).json docs > $(DOCS_CONFLUENT_CLI)/release-notes.rst && \
+	# cd $(DOCS_CONFLUENT_CLI) && \
+
 	rm -rf command-reference && \
 	cp -R ~/git/go/src/github.com/confluentinc/cli/docs command-reference && \
 	[ ! -f "command-reference/kafka/topic/confluent_kafka_topic_consume.rst" ] || sed -i '' 's/default "confluent_cli_consumer_[^"]*"/default "confluent_cli_consumer_<randomly-generated-id>"/' command-reference/kafka/topic/confluent_kafka_topic_consume.rst || exit 1 && \
@@ -39,7 +46,7 @@ publish-docs: docs
 	fi && \
 	$(call dry-run,gh pr create -B $${base} --title "chore: update CLI docs for v$(CLEAN_VERSION)" --body "")
 
-	rm -rf $(DIR)
+	# rm -rf $(DIR)
 
 # NB: When releasing a new version, the -post branch is updated to the current state of the .x branch,
 # whether the -post branch exists or not. The `git checkout -B ...` handles this behavior.

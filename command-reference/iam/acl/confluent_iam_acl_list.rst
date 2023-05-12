@@ -1,0 +1,67 @@
+..
+   WARNING: This documentation is auto-generated from the confluentinc/cli repository and should not be manually edited.
+
+.. _confluent_iam_acl_list:
+
+confluent iam acl list
+----------------------
+
+Description
+~~~~~~~~~~~
+
+List centralized ACLs for a resource.
+
+::
+
+  confluent iam acl list [flags]
+
+Flags
+~~~~~
+
+::
+
+      --kafka-cluster string      REQUIRED: Kafka cluster ID for scope of ACL commands.
+      --principal string          Principal for this operation with User: or Group: prefix.
+      --operation string          Set ACL Operation to: (all, alter, alter-configs, cluster-action, create, delete, describe, describe-configs, idempotent-write, read, write).
+      --host string               Set host for access. Only IP addresses are supported. (default "*")
+      --allow                     ACL permission to allow access.
+      --deny                      ACL permission to restrict access to resource.
+      --cluster-scope             Set the cluster resource. With this option the ACL grants
+                                  access to the provided operations on the Kafka cluster itself.
+      --consumer-group string     Set the Consumer Group resource.
+      --transactional-id string   Set the TransactionalID resource.
+      --topic string              Set the topic resource. With this option the ACL grants the provided
+                                  operations on the topics that start with that prefix, depending on whether
+                                  the --prefix option was also passed.
+      --prefix                    Set to match all resource names prefixed with this value.
+      --context string            CLI context name.
+  -o, --output string             Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags
+~~~~~~~~~~~~
+
+::
+
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Examples
+~~~~~~~~
+
+List all the ACLs for the specified Kafka cluster:
+
+::
+
+  confluent iam acl list --kafka-cluster <kafka-cluster-id>
+
+List all the ACLs for the specified cluster that include "allow" permissions for user "Jane":
+
+::
+
+  confluent iam acl list --kafka-cluster <kafka-cluster-id> --allow --principal User:Jane
+
+See Also
+~~~~~~~~
+
+* :ref:`confluent_iam_acl` - Manage centralized ACLs.

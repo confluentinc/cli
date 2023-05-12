@@ -1,0 +1,89 @@
+..
+   WARNING: This documentation is auto-generated from the confluentinc/cli repository and should not be manually edited.
+
+.. _confluent_login:
+
+confluent login
+---------------
+
+Description
+~~~~~~~~~~~
+
+Confluent Cloud:
+
+Log in to Confluent Cloud using your email and password, or using single sign-on (SSO) credentials.
+
+Email and password login can be accomplished non-interactively using the ``CONFLUENT_CLOUD_EMAIL`` and ``CONFLUENT_CLOUD_PASSWORD`` environment variables.
+
+Email and password can also be stored locally for non-interactive re-authentication with the ``--save`` flag.
+
+SSO login can be accomplished headlessly using the ``--no-browser`` flag, but non-interactive login is not natively supported. Authentication tokens last 8 hours and are automatically refreshed with CLI client usage. If the client is not used for more than 8 hours, you have to log in again.
+
+Log in to a specific Confluent Cloud organization using the ``--organization-id`` flag, or by setting the environment variable ``CONFLUENT_CLOUD_ORGANIZATION_ID``.
+
+Confluent Platform:
+
+Log in to Confluent Platform with your username and password, the ``--url`` flag to identify the location of your Metadata Service (MDS), and the ``--ca-cert-path`` flag to identify your self-signed certificate chain.
+
+Login can be accomplished non-interactively using the ``CONFLUENT_PLATFORM_USERNAME``, ``CONFLUENT_PLATFORM_PASSWORD``, ``CONFLUENT_PLATFORM_MDS_URL``, and ``CONFLUENT_PLATFORM_CA_CERT_PATH`` environment variables.
+
+In a non-interactive login, ``CONFLUENT_PLATFORM_MDS_URL`` replaces the ``--url`` flag, and ``CONFLUENT_PLATFORM_CA_CERT_PATH`` replaces the ``--ca-cert-path`` flag.
+
+Even with the environment variables set, you can force an interactive login using the ``--prompt`` flag.
+
+::
+
+  confluent login [flags]
+
+Flags
+~~~~~
+
+::
+
+      --url string               Metadata Service (MDS) URL, for on-prem deployments.
+      --ca-cert-path string      Self-signed certificate chain in PEM format, for on-prem deployments.
+      --no-browser               Do not open a browser window when authenticating via Single Sign-On (SSO).
+      --organization-id string   The Confluent Cloud organization to log in to. If empty, log in to the default organization.
+      --prompt                   Bypass non-interactive login and prompt for login credentials.
+      --save                     Save username and encrypted password (non-SSO credentials) to the configuration file in your $HOME directory, and to macOS keychain if applicable. You will be automatically logged back in when your token expires, after one hour for Confluent Cloud or after six hours for Confluent Platform.
+
+Global Flags
+~~~~~~~~~~~~
+
+::
+
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Examples
+~~~~~~~~
+
+Log in to Confluent Cloud.
+
+::
+
+  confluent login
+
+Log in to a specific organization in Confluent Cloud.
+
+::
+
+  confluent login --organization-id 00000000-0000-0000-0000-000000000000
+
+Log in to Confluent Platform with a MDS URL.
+
+::
+
+  confluent login --url http://localhost:8090
+
+Log in to Confluent Platform with a MDS URL and CA certificate.
+
+::
+
+  confluent login --url https://localhost:8090 --ca-cert-path certs/my-cert.crt
+
+See Also
+~~~~~~~~
+
+* :ref:`confluent-ref` - Confluent CLI.

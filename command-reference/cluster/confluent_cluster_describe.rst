@@ -1,0 +1,48 @@
+..
+   WARNING: This documentation is auto-generated from the confluentinc/cli repository and should not be manually edited.
+
+.. _confluent_cluster_describe:
+
+confluent cluster describe
+--------------------------
+
+Description
+~~~~~~~~~~~
+
+Describe a Kafka cluster. Environment variable ``CONFLUENT_PLATFORM_MDS_URL`` can replace the ``--url`` flag, and ``CONFLUENT_PLATFORM_CA_CERT_PATH`` can replace the ``--ca-cert-path`` flag.
+
+::
+
+  confluent cluster describe [flags]
+
+Flags
+~~~~~
+
+::
+
+      --url string            URL to a Confluent cluster.
+      --ca-cert-path string   Self-signed certificate chain in PEM format.
+  -o, --output string         Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags
+~~~~~~~~~~~~
+
+::
+
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Examples
+~~~~~~~~
+
+Discover the cluster ID and Kafka ID for Connect.
+
+::
+
+  confluent cluster describe --url http://localhost:8083
+
+See Also
+~~~~~~~~
+
+* :ref:`confluent_cluster` - Retrieve metadata about Confluent Platform clusters.
