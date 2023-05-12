@@ -34,6 +34,11 @@ func (c *command) newSubjectUpdateCommandOnPrem() *cobra.Command {
 	}
 
 	addCompatibilityFlag(cmd)
+	addCompatibilityGroupFlag(cmd)
+	addMetadataDefaultsFlag(cmd)
+	addMetadataOverridesFlag(cmd)
+	addRulesetDefaultsFlag(cmd)
+	addRulesetOverridesFlag(cmd)
 	addModeFlag(cmd)
 	cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
 	pcmd.AddContextFlag(cmd, c.CLICommand)

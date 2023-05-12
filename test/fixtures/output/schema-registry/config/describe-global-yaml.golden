@@ -1,9 +1,5 @@
 compatibility_level: FULL
-metadata_defaults: |
-  {}
-metadata_overrides: |
-  {}
-ruleset_defaults: |
-  {}
-ruleset_overrides: |
-  {}
+metadata_defaults: '{}'
+metadata_overrides: '{}'
+ruleset_defaults: '{}'
+ruleset_overrides: '{}'

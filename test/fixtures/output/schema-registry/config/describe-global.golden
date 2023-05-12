@@ -1,11 +1,7 @@
 +---------------------+------+
 | Compatibility Level | FULL |
 | Metadata Defaults   | {}   |
-|                     |      |
 | Metadata Overrides  | {}   |
-|                     |      |
 | Ruleset Defaults    | {}   |
-|                     |      |
 | Ruleset Overrides   | {}   |
-|                     |      |
 +---------------------+------+

@@ -114,12 +114,15 @@ func (c *command) schemaCreate(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
+	if err = read(metadataPath, &metadata); err != nil {
+		return err
+	}
+
 	rulesetPath, err := cmd.Flags().GetString("ruleset")
 	if err != nil {
 		return err
 	}
-	err = readMetadataAndRuleset(metadataPath, &metadata, rulesetPath, &ruleset)
-	if err != nil {
+	if err = read(rulesetPath, &ruleset); err != nil {
 		return err
 	}
 
@@ -149,23 +152,13 @@ func (c *command) schemaCreate(cmd *cobra.Command, _ []string) error {
 	return nil
 }
 
-func readMetadataAndRuleset(metadataPath string, metadata *srsdk.Metadata, rulesetPath string, ruleset *srsdk.RuleSet) error {
-	if metadataPath != "" {
-		metadataBlob, err := os.ReadFile(metadataPath)
+func read(path string, v any) error {
+	if path != "" {
+		file, err := os.Open(path)
 		if err != nil {
 			return err
 		}
-		if err := json.Unmarshal(metadataBlob, metadata); err != nil {
-			return err
-		}
-	}
-
-	if rulesetPath != "" {
-		rulesetBlob, err := os.ReadFile(rulesetPath)
-		if err != nil {
-			return err
-		}
-		if err := json.Unmarshal(rulesetBlob, ruleset); err != nil {
+		if err := json.NewDecoder(file).Decode(v); err != nil {
 			return err
 		}
 	}

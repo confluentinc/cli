@@ -37,6 +37,11 @@ func (c *command) newSubjectUpdateCommand() *cobra.Command {
 	}
 
 	addCompatibilityFlag(cmd)
+	addCompatibilityGroupFlag(cmd)
+	addMetadataDefaultsFlag(cmd)
+	addMetadataOverridesFlag(cmd)
+	addRulesetDefaultsFlag(cmd)
+	addRulesetOverridesFlag(cmd)
 	addModeFlag(cmd)
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddApiSecretFlag(cmd)
@@ -84,7 +89,7 @@ func (c *command) updateCompatibility(cmd *cobra.Command, subject, compatibility
 		return err
 	}
 
-	if _, httpResp, err := srClient.DefaultApi.UpdateSubjectLevelConfig(ctx, subject, *updateReq); err != nil {
+	if _, httpResp, err := srClient.DefaultApi.UpdateSubjectLevelConfig(ctx, subject, updateReq); err != nil {
 		return errors.CatchSchemaNotFoundError(err, httpResp)
 	}
 

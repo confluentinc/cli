@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/tidwall/pretty"
@@ -19,10 +20,10 @@ import (
 type configOut struct {
 	CompatibilityLevel string `human:"Compatibility Level,omitempty" serialized:"compatibility_level,omitempty"`
 	CompatibilityGroup string `human:"Compatibility Group,omitempty" serialized:"compatibility_group,omitempty"`
-	DefaultMetadata    string `human:"Metadata Defaults,omitempty" serialized:"metadata_defaults,omitempty"`
-	OverrideMetadata   string `human:"Metadata Overrides,omitempty" serialized:"metadata_overrides,omitempty"`
-	DefaultRuleSet     string `human:"Ruleset Defaults,omitempty" serialized:"ruleset_defaults,omitempty"`
-	OverrideRuleSet    string `human:"Ruleset Overrides,omitempty" serialized:"ruleset_overrides,omitempty"`
+	MetadataDefaults   string `human:"Metadata Defaults,omitempty" serialized:"metadata_defaults,omitempty"`
+	MetadataOverrides  string `human:"Metadata Overrides,omitempty" serialized:"metadata_overrides,omitempty"`
+	RulesetDefaults    string `human:"Ruleset Defaults,omitempty" serialized:"ruleset_defaults,omitempty"`
+	RulesetOverrides   string `human:"Ruleset Overrides,omitempty" serialized:"ruleset_overrides,omitempty"`
 }
 
 func (c *command) newConfigDescribeCommand() *cobra.Command {
@@ -92,23 +93,28 @@ func describeSchemaConfig(cmd *cobra.Command, srClient *srsdk.APIClient, ctx con
 		return err
 	}
 
-	defaultRuleSet, err := json.Marshal(config.DefaultRuleSet)
+	defaultRuleset, err := json.Marshal(config.DefaultRuleSet)
 	if err != nil {
 		return err
 	}
 
-	overrideRuleSet, err := json.Marshal(config.OverrideRuleSet)
+	overrideRuleset, err := json.Marshal(config.OverrideRuleSet)
 	if err != nil {
 		return err
 	}
 
 	table := output.NewTable(cmd)
-	table.Add(&configOut{CompatibilityLevel: config.CompatibilityLevel,
+	table.Add(&configOut{
+		CompatibilityLevel: config.CompatibilityLevel,
 		CompatibilityGroup: config.CompatibilityGroup,
-		DefaultMetadata:    string(pretty.Pretty(defaultMetadata)),
-		OverrideMetadata:   string(pretty.Pretty(overrideMetadata)),
-		DefaultRuleSet:     string(pretty.Pretty(defaultRuleSet)),
-		OverrideRuleSet:    string(pretty.Pretty(overrideRuleSet)),
+		MetadataDefaults:   prettyString(defaultMetadata),
+		MetadataOverrides:  prettyString(overrideMetadata),
+		RulesetDefaults:    prettyString(defaultRuleset),
+		RulesetOverrides:   prettyString(overrideRuleset),
 	})
 	return table.PrintWithAutoWrap(false)
+}
+
+func prettyString(str []byte) string {
+	return strings.TrimSuffix(string(pretty.Pretty(str)), "\n")
 }

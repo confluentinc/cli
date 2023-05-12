@@ -87,12 +87,15 @@ func (c *command) schemaCreateOnPrem(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
+	if err = read(metadataPath, &metadata); err != nil {
+		return err
+	}
+
 	rulesetPath, err := cmd.Flags().GetString("ruleset")
 	if err != nil {
 		return err
 	}
-	err = readMetadataAndRuleset(metadataPath, &metadata, rulesetPath, &ruleset)
-	if err != nil {
+	if err = read(rulesetPath, &ruleset); err != nil {
 		return err
 	}
 

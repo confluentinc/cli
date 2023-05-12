@@ -26,7 +26,7 @@ func (c *command) newClusterUpdateCommand() *cobra.Command {
 				Code: "confluent schema-registry cluster update --compatibility backward",
 			},
 			examples.Example{
-				Text: `Update top-level compatibility of Schema Registry and set compatibility group to "application.version".`,
+				Text: `Update the top-level compatibility of Schema Registry and set the compatibility group to "application.version".`,
 				Code: "confluent schema-registry cluster update --compatibility backward --compatibility-group application.version",
 			},
 			examples.Example{
@@ -37,6 +37,11 @@ func (c *command) newClusterUpdateCommand() *cobra.Command {
 	}
 
 	addCompatibilityFlag(cmd)
+	addCompatibilityGroupFlag(cmd)
+	addMetadataDefaultsFlag(cmd)
+	addMetadataOverridesFlag(cmd)
+	addRulesetDefaultsFlag(cmd)
+	addRulesetOverridesFlag(cmd)
 	addModeFlag(cmd)
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddApiSecretFlag(cmd)
@@ -77,7 +82,7 @@ func (c *command) updateTopLevelCompatibility(cmd *cobra.Command) error {
 		return err
 	}
 
-	if _, _, err := srClient.DefaultApi.UpdateTopLevelConfig(ctx, *updateReq); err != nil {
+	if _, _, err := srClient.DefaultApi.UpdateTopLevelConfig(ctx, updateReq); err != nil {
 		return err
 	}
 
@@ -85,15 +90,16 @@ func (c *command) updateTopLevelCompatibility(cmd *cobra.Command) error {
 	return nil
 }
 
-func (c *command) getConfigUpdateRequest(cmd *cobra.Command) (*srsdk.ConfigUpdateRequest, error) {
+func (c *command) getConfigUpdateRequest(cmd *cobra.Command) (srsdk.ConfigUpdateRequest, error) {
+	var updateReq srsdk.ConfigUpdateRequest
 	compatibility, err := cmd.Flags().GetString("compatibility")
 	if err != nil {
-		return nil, err
+		return updateReq, err
 	}
 
 	compatibilityGroup, err := cmd.Flags().GetString("compatibility-group")
 	if err != nil {
-		return nil, err
+		return updateReq, err
 	}
 
 	var defaultMetadata srsdk.Metadata
@@ -103,31 +109,37 @@ func (c *command) getConfigUpdateRequest(cmd *cobra.Command) (*srsdk.ConfigUpdat
 
 	metadataDefaultsPath, err := cmd.Flags().GetString("metadata-defaults")
 	if err != nil {
-		return nil, err
+		return updateReq, err
 	}
-	rulesetDefaultPath, err := cmd.Flags().GetString("ruleset-defaults")
-	if err != nil {
-		return nil, err
-	}
-	err = readMetadataAndRuleset(metadataDefaultsPath, &defaultMetadata, rulesetDefaultPath, &defaultRuleset)
-	if err != nil {
-		return nil, err
+	if err = read(metadataDefaultsPath, &defaultMetadata); err != nil {
+		return updateReq, err
 	}
 
 	metadataOverridesPath, err := cmd.Flags().GetString("metadata-overrides")
 	if err != nil {
-		return nil, err
+		return updateReq, err
 	}
-	rulesetOverridesPath, err := cmd.Flags().GetString("ruleset-overrides")
-	if err != nil {
-		return nil, err
-	}
-	err = readMetadataAndRuleset(metadataOverridesPath, &overrideMetadata, rulesetOverridesPath, &overrideRuleset)
-	if err != nil {
-		return nil, err
+	if err = read(metadataOverridesPath, &overrideMetadata); err != nil {
+		return updateReq, err
 	}
 
-	updateReq := &srsdk.ConfigUpdateRequest{
+	rulesetDefaultPath, err := cmd.Flags().GetString("ruleset-defaults")
+	if err != nil {
+		return updateReq, err
+	}
+	if err = read(rulesetDefaultPath, &defaultRuleset); err != nil {
+		return updateReq, err
+	}
+
+	rulesetOverridesPath, err := cmd.Flags().GetString("ruleset-overrides")
+	if err != nil {
+		return updateReq, err
+	}
+	if err = read(rulesetOverridesPath, &overrideRuleset); err != nil {
+		return updateReq, err
+	}
+
+	updateReq = srsdk.ConfigUpdateRequest{
 		Compatibility:      strings.ToUpper(compatibility),
 		CompatibilityGroup: compatibilityGroup,
 		DefaultMetadata:    defaultMetadata,
