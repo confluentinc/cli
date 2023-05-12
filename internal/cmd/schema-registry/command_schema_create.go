@@ -161,8 +161,6 @@ func read(path string, v any) error {
 	if err != nil {
 		return err
 	}
-	if err := json.NewDecoder(file).Decode(v); err != nil {
-		return err
-	}
-	return nil
+
+	return json.NewDecoder(file).Decode(v)
 }
