@@ -83,19 +83,12 @@ func (c *command) schemaCreateOnPrem(cmd *cobra.Command, _ []string) error {
 
 	var metadata srsdk.Metadata
 	var ruleset srsdk.RuleSet
-	metadataPath, err := cmd.Flags().GetString("metadata")
-	if err != nil {
-		return err
-	}
-	if err = read(metadataPath, &metadata); err != nil {
+
+	if err := readPathFlag(cmd, "metadata", &metadata); err != nil {
 		return err
 	}
 
-	rulesetPath, err := cmd.Flags().GetString("ruleset")
-	if err != nil {
-		return err
-	}
-	if err = read(rulesetPath, &ruleset); err != nil {
+	if err := readPathFlag(cmd, "ruleset", &ruleset); err != nil {
 		return err
 	}
 
@@ -111,7 +104,7 @@ func (c *command) schemaCreateOnPrem(cmd *cobra.Command, _ []string) error {
 		Subject:    subject,
 		Refs:       refs,
 		Metadata:   metadata,
-		RuleSet:    ruleset,
+		Ruleset:    ruleset,
 		Normalize:  normalize,
 	}
 	_, _, err = c.registerSchemaOnPrem(cmd, schemaCfg)

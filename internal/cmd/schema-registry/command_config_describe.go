@@ -107,14 +107,14 @@ func describeSchemaConfig(cmd *cobra.Command, srClient *srsdk.APIClient, ctx con
 	table.Add(&configOut{
 		CompatibilityLevel: config.CompatibilityLevel,
 		CompatibilityGroup: config.CompatibilityGroup,
-		MetadataDefaults:   prettyString(defaultMetadata),
-		MetadataOverrides:  prettyString(overrideMetadata),
-		RulesetDefaults:    prettyString(defaultRuleset),
-		RulesetOverrides:   prettyString(overrideRuleset),
+		MetadataDefaults:   prettyJson(defaultMetadata),
+		MetadataOverrides:  prettyJson(overrideMetadata),
+		RulesetDefaults:    prettyJson(defaultRuleset),
+		RulesetOverrides:   prettyJson(overrideRuleset),
 	})
 	return table.PrintWithAutoWrap(false)
 }
 
-func prettyString(str []byte) string {
+func prettyJson(str []byte) string {
 	return strings.TrimSuffix(string(pretty.Pretty(str)), "\n")
 }

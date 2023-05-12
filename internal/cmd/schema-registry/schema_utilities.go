@@ -31,7 +31,7 @@ type RegisterSchemaConfigs struct {
 	SchemaPath  *string
 	Refs        []srsdk.SchemaReference
 	Metadata    srsdk.Metadata
-	RuleSet     srsdk.RuleSet
+	Ruleset     srsdk.RuleSet
 	Normalize   bool
 }
 
@@ -50,7 +50,7 @@ func RegisterSchemaWithAuth(cmd *cobra.Command, schemaCfg *RegisterSchemaConfigs
 		SchemaType: schemaCfg.SchemaType,
 		References: schemaCfg.Refs,
 		Metadata:   schemaCfg.Metadata,
-		RuleSet:    schemaCfg.RuleSet,
+		RuleSet:    schemaCfg.Ruleset,
 	}
 	response, _, err := srClient.DefaultApi.Register(ctx, schemaCfg.Subject, request, &opts)
 	if err != nil {

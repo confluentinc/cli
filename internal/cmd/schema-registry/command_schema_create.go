@@ -91,17 +91,16 @@ func (c *command) schemaCreate(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
+	schema, err := os.ReadFile(schemaPath)
+	if err != nil {
+		return err
+	}
 
 	schemaType, err := cmd.Flags().GetString("type")
 	if err != nil {
 		return err
 	}
 	schemaType = strings.ToUpper(schemaType)
-
-	schema, err := os.ReadFile(schemaPath)
-	if err != nil {
-		return err
-	}
 
 	refs, err := ReadSchemaRefs(cmd)
 	if err != nil {
@@ -110,19 +109,12 @@ func (c *command) schemaCreate(cmd *cobra.Command, _ []string) error {
 
 	var metadata srsdk.Metadata
 	var ruleset srsdk.RuleSet
-	metadataPath, err := cmd.Flags().GetString("metadata")
-	if err != nil {
-		return err
-	}
-	if err = read(metadataPath, &metadata); err != nil {
+
+	if err := readPathFlag(cmd, "metadata", &metadata); err != nil {
 		return err
 	}
 
-	rulesetPath, err := cmd.Flags().GetString("ruleset")
-	if err != nil {
-		return err
-	}
-	if err = read(rulesetPath, &ruleset); err != nil {
+	if err := readPathFlag(cmd, "ruleset", &ruleset); err != nil {
 		return err
 	}
 
@@ -138,8 +130,8 @@ func (c *command) schemaCreate(cmd *cobra.Command, _ []string) error {
 		Metadata:   metadata,
 		RuleSet:    ruleset,
 	}
-	response, _, err := srClient.DefaultApi.Register(ctx, subject, request,
-		&srsdk.RegisterOpts{Normalize: optional.NewBool(normalize)})
+	opts := &srsdk.RegisterOpts{Normalize: optional.NewBool(normalize)}
+	response, _, err := srClient.DefaultApi.Register(ctx, subject, request, opts)
 	if err != nil {
 		return err
 	}
@@ -152,15 +144,27 @@ func (c *command) schemaCreate(cmd *cobra.Command, _ []string) error {
 	return nil
 }
 
+func readPathFlag(cmd *cobra.Command, flag string, v any) error {
+	path, err := cmd.Flags().GetString(flag)
+	if err != nil {
+		return err
+	}
+	if path == "" {
+		return nil
+	}
+	if err := read(path, v); err != nil {
+		return err
+	}
+	return nil
+}
+
 func read(path string, v any) error {
-	if path != "" {
-		file, err := os.Open(path)
-		if err != nil {
-			return err
-		}
-		if err := json.NewDecoder(file).Decode(v); err != nil {
-			return err
-		}
+	file, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	if err := json.NewDecoder(file).Decode(v); err != nil {
+		return err
 	}
 	return nil
 }

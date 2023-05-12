@@ -102,50 +102,34 @@ func (c *command) getConfigUpdateRequest(cmd *cobra.Command) (srsdk.ConfigUpdate
 		return updateReq, err
 	}
 
-	var defaultMetadata srsdk.Metadata
-	var overrideMetadata srsdk.Metadata
-	var defaultRuleset srsdk.RuleSet
-	var overrideRuleset srsdk.RuleSet
+	var metadataDefaults srsdk.Metadata
+	var metadataOverrides srsdk.Metadata
+	var rulesetDefaults srsdk.RuleSet
+	var rulesetOverrides srsdk.RuleSet
 
-	metadataDefaultsPath, err := cmd.Flags().GetString("metadata-defaults")
-	if err != nil {
-		return updateReq, err
-	}
-	if err = read(metadataDefaultsPath, &defaultMetadata); err != nil {
+	if err := readPathFlag(cmd, "metadata-defaults", &metadataDefaults); err != nil {
 		return updateReq, err
 	}
 
-	metadataOverridesPath, err := cmd.Flags().GetString("metadata-overrides")
-	if err != nil {
-		return updateReq, err
-	}
-	if err = read(metadataOverridesPath, &overrideMetadata); err != nil {
+	if err := readPathFlag(cmd, "metadata-overrides", &metadataOverrides); err != nil {
 		return updateReq, err
 	}
 
-	rulesetDefaultPath, err := cmd.Flags().GetString("ruleset-defaults")
-	if err != nil {
-		return updateReq, err
-	}
-	if err = read(rulesetDefaultPath, &defaultRuleset); err != nil {
+	if err := readPathFlag(cmd, "ruleset-defaults", &rulesetDefaults); err != nil {
 		return updateReq, err
 	}
 
-	rulesetOverridesPath, err := cmd.Flags().GetString("ruleset-overrides")
-	if err != nil {
-		return updateReq, err
-	}
-	if err = read(rulesetOverridesPath, &overrideRuleset); err != nil {
+	if err := readPathFlag(cmd, "ruleset-overrides", &rulesetOverrides); err != nil {
 		return updateReq, err
 	}
 
 	updateReq = srsdk.ConfigUpdateRequest{
 		Compatibility:      strings.ToUpper(compatibility),
 		CompatibilityGroup: compatibilityGroup,
-		DefaultMetadata:    defaultMetadata,
-		OverrideMetadata:   overrideMetadata,
-		DefaultRuleSet:     defaultRuleset,
-		OverrideRuleSet:    overrideRuleset,
+		DefaultMetadata:    metadataDefaults,
+		OverrideMetadata:   metadataOverrides,
+		DefaultRuleSet:     rulesetDefaults,
+		OverrideRuleSet:    rulesetOverrides,
 	}
 	return updateReq, nil
 }
