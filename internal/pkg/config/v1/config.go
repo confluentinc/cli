@@ -133,6 +133,24 @@ func New() *Config {
 	}
 }
 
+func (c *Config) DecryptContextStates() error {
+	for _, context := range c.Contexts {
+		state := c.ContextStates[context.Name]
+		if state != nil {
+			err := state.DecryptContextStateAuthToken(context.Name)
+			if err != nil {
+				return err
+			}
+			err = state.DecryptContextStateAuthRefreshToken(context.Name)
+			if err != nil {
+				return err
+			}
+		}
+		context.State = state
+	}
+	return c.Validate()
+}
+
 // Load reads the CLI config from disk.
 // Save a default version if none exists yet.
 func (c *Config) Load() error {
@@ -184,19 +202,7 @@ func (c *Config) Load() error {
 			return errors.NewCorruptedConfigError(errors.MissingKafkaClusterContextErrorMsg, context.Name, c.Filename)
 		}
 		context.KafkaClusterContext.Context = context
-
-		state := c.ContextStates[context.Name]
-		if state != nil {
-			err = state.DecryptContextStateAuthToken(context.Name)
-			if err != nil {
-				return err
-			}
-			err = state.DecryptContextStateAuthRefreshToken(context.Name)
-			if err != nil {
-				return err
-			}
-		}
-		context.State = state
+		context.State = c.ContextStates[context.Name]
 	}
 	return c.Validate()
 }

@@ -114,7 +114,7 @@ func APICredentialConfigMock() *Config {
 
 func UnauthenticatedCloudConfigMock() *Config {
 	c := AuthenticatedCloudConfigMock()
-	c.Contexts = nil
+	c.CurrentContext = ""
 	return c
 }
 
