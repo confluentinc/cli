@@ -1,0 +1,38 @@
+..
+   WARNING: This documentation is auto-generated from the confluentinc/cli repository and should not be manually edited.
+
+.. _confluent_environment_delete:
+
+confluent environment delete
+----------------------------
+
+Description
+~~~~~~~~~~~
+
+Delete a Confluent Cloud environment and all its resources.
+
+::
+
+  confluent environment delete <id> [flags]
+
+Flags
+~~~~~
+
+::
+
+      --context string   CLI context name.
+      --force            Skip the deletion confirmation prompt.
+
+Global Flags
+~~~~~~~~~~~~
+
+::
+
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+See Also
+~~~~~~~~
+
+* :ref:`confluent_environment` - Manage and select Confluent Cloud environments.

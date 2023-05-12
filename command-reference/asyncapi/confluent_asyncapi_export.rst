@@ -1,0 +1,48 @@
+..
+   WARNING: This documentation is auto-generated from the confluentinc/cli repository and should not be manually edited.
+
+.. _confluent_asyncapi_export:
+
+confluent asyncapi export
+-------------------------
+
+Description
+~~~~~~~~~~~
+
+Export an AsyncAPI specification for a Kafka cluster and Schema Registry.
+
+::
+
+  confluent asyncapi export [flags]
+
+Flags
+~~~~~
+
+::
+
+      --file string                         Output file name. (default "asyncapi-spec.yaml")
+      --group-id string                     Consumer Group ID for getting messages. (default "consumerApplication")
+      --consume-examples                    Consume messages from topics for populating examples.
+      --spec-version string                 Version number of the output file. (default "1.0.0")
+      --kafka-api-key string                Kafka cluster API key.
+      --schema-registry-api-key string      API key for Schema Registry.
+      --schema-registry-api-secret string   API secret for Schema Registry.
+      --schema-context string               Use a specific schema context. (default "default")
+      --topics strings                      A comma-separated list of topics to export.
+      --value-format string                 Format of message value as "string", "avro", "jsonschema", or "protobuf". Note that schema references are not supported for avro. (default "string")
+      --cluster string                      Kafka cluster ID.
+      --environment string                  Environment ID.
+
+Global Flags
+~~~~~~~~~~~~
+
+::
+
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+See Also
+~~~~~~~~
+
+* :ref:`confluent_asyncapi` - Manage AsyncAPI document tooling.

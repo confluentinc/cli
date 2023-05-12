@@ -1,12 +1,10 @@
 STAGING_BRANCH_REGEX="s/\([0-9]*\.[0-9]*\.\)[0-9]*/\1x/"
 STAGING_BRANCH=$(shell echo $(CLEAN_VERSION) | sed $(STAGING_BRANCH_REGEX))
 
-# The sed -i option operates differently on Mac vs Linux
-OS:=$(shell uname)
-ifeq ($(OS),Darwin)
-SED_OPTION_INPLACE=-i ''
+ifeq ($(shell uname),Darwin)
+SED ?= gsed
 else
-SED_OPTION_INPLACE=-i
+SED ?= sed
 endif
 
 NEXT_MINOR_VERSION = $(word 1,$(split_version)).$(shell expr $(word 2,$(split_version)) + 1).0
@@ -22,14 +20,20 @@ docs:
 .PHONY: publish-docs
 publish-docs: docs
 	$(eval DIR=$(shell mktemp -d))
+	$(eval CLI_RELEASE=$(DIR)/cli-release)
 	$(eval DOCS_CONFLUENT_CLI=$(DIR)/docs-confluent-cli)
 
 	git clone git@github.com:confluentinc/docs-confluent-cli.git $(DOCS_CONFLUENT_CLI) && \
 	cd $(DOCS_CONFLUENT_CLI) && \
-	git checkout publish-docs-v$(CLEAN_VERSION) && \
+	git checkout -b publish-docs-v$(CLEAN_VERSION) && \
+	cd - && \
+	git clone git@github.com:confluentinc/cli-release.git $(CLI_RELEASE) && \
+	go run cmd/releasenotes/main.go $(CLI_RELEASE)/release-notes/$(CLEAN_VERSION).json docs > $(DIR)/release-notes.rst && \
+	$(SED) -i "10r $(DIR)/release-notes.rst" $(DOCS_CONFLUENT_CLI)/release-notes.rst && \
+	cd $(DOCS_CONFLUENT_CLI) && \
 	rm -rf command-reference && \
 	cp -R ~/git/go/src/github.com/confluentinc/cli/docs command-reference && \
-	[ ! -f "command-reference/kafka/topic/confluent_kafka_topic_consume.rst" ] || sed -i '' 's/default "confluent_cli_consumer_[^"]*"/default "confluent_cli_consumer_<randomly-generated-id>"/' command-reference/kafka/topic/confluent_kafka_topic_consume.rst || exit 1 && \
+	[ ! -f "command-reference/kafka/topic/confluent_kafka_topic_consume.rst" ] || $(SED) -i 's/default "confluent_cli_consumer_[^"]*"/default "confluent_cli_consumer_<randomly-generated-id>"/' command-reference/kafka/topic/confluent_kafka_topic_consume.rst || exit 1 && \
 	git add . && \
 	git commit --allow-empty -m "[ci skip] chore: update CLI docs for v$(CLEAN_VERSION)" && \
 	$(call dry-run,git push origin publish-docs-v$(CLEAN_VERSION)) && \
@@ -39,7 +43,7 @@ publish-docs: docs
 	fi && \
 	$(call dry-run,gh pr create -B $${base} --title "chore: update CLI docs for v$(CLEAN_VERSION)" --body "")
 
-	rm -rf $(DIR)
+	# rm -rf $(DIR)
 
 # NB: When releasing a new version, the -post branch is updated to the current state of the .x branch,
 # whether the -post branch exists or not. The `git checkout -B ...` handles this behavior.
@@ -64,24 +68,24 @@ release-docs:
 	$(call dry-run,git push -u origin $(CURRENT_SHORT_MINOR_VERSION)-post) && \
 	if [[ $(CLEAN_VERSION) == *.0 ]]; then \
 		git checkout master && \
-		sed $(SED_OPTION_INPLACE) 's/export RELEASE_VERSION=.*/export RELEASE_VERSION=$(NEXT_MINOR_VERSION)-SNAPSHOT/g' settings.sh && \
-		sed $(SED_OPTION_INPLACE) 's/export PUBLIC_VERSION=.*/export PUBLIC_VERSION=$(SHORT_NEXT_MINOR_VERSION)/g' settings.sh && \
-		sed $(SED_OPTION_INPLACE) "s/^version = '.*'/version = \'$(SHORT_NEXT_MINOR_VERSION)\'/g" conf.py && \
-		sed $(SED_OPTION_INPLACE) "s/^release = '.*'/release = \'$(NEXT_MINOR_VERSION)-SNAPSHOT\'/g" conf.py && \
+		$(SED) -i 's/export RELEASE_VERSION=.*/export RELEASE_VERSION=$(NEXT_MINOR_VERSION)-SNAPSHOT/g' settings.sh && \
+		$(SED) -i 's/export PUBLIC_VERSION=.*/export PUBLIC_VERSION=$(SHORT_NEXT_MINOR_VERSION)/g' settings.sh && \
+		$(SED) -i "s/^version = '.*'/version = \'$(SHORT_NEXT_MINOR_VERSION)\'/g" conf.py && \
+		$(SED) -i "s/^release = '.*'/release = \'$(NEXT_MINOR_VERSION)-SNAPSHOT\'/g" conf.py && \
 		git commit -am "[ci skip] chore: update settings.sh and conf.py due to $(CLEAN_VERSION) release" && \
 		$(call dry-run,git push); \
 	fi && \
 	git checkout $(STAGING_BRANCH) && \
-	sed $(SED_OPTION_INPLACE) 's/export RELEASE_VERSION=.*/export RELEASE_VERSION=$(NEXT_PATCH_VERSION)-SNAPSHOT/g' settings.sh && \
-	sed $(SED_OPTION_INPLACE) 's/export PUBLIC_VERSION=.*/export PUBLIC_VERSION=$(CURRENT_SHORT_MINOR_VERSION)/g' settings.sh && \
-	sed $(SED_OPTION_INPLACE) "s/^version = '.*'/version = \'$(CURRENT_SHORT_MINOR_VERSION)\'/g" conf.py && \
-	sed $(SED_OPTION_INPLACE) "s/^release = '.*'/release = \'$(NEXT_PATCH_VERSION)-SNAPSHOT\'/g" conf.py && \
+	$(SED) -i 's/export RELEASE_VERSION=.*/export RELEASE_VERSION=$(NEXT_PATCH_VERSION)-SNAPSHOT/g' settings.sh && \
+	$(SED) -i 's/export PUBLIC_VERSION=.*/export PUBLIC_VERSION=$(CURRENT_SHORT_MINOR_VERSION)/g' settings.sh && \
+	$(SED) -i "s/^version = '.*'/version = \'$(CURRENT_SHORT_MINOR_VERSION)\'/g" conf.py && \
+	$(SED) -i "s/^release = '.*'/release = \'$(NEXT_PATCH_VERSION)-SNAPSHOT\'/g" conf.py && \
 	git commit -am "[ci skip] chore: update settings.sh and conf.py due to $(CLEAN_VERSION) release" && \
 	git checkout $(CURRENT_SHORT_MINOR_VERSION)-post && \
-	sed $(SED_OPTION_INPLACE) 's/export RELEASE_VERSION=.*/export RELEASE_VERSION=$(CLEAN_VERSION)/g' settings.sh && \
-	sed $(SED_OPTION_INPLACE) 's/export PUBLIC_VERSION=.*/export PUBLIC_VERSION=$(CURRENT_SHORT_MINOR_VERSION)/g' settings.sh && \
-	sed $(SED_OPTION_INPLACE) "s/^version = '.*'/version = \'$(CURRENT_SHORT_MINOR_VERSION)\'/g" conf.py && \
-	sed $(SED_OPTION_INPLACE) "s/^release = '.*'/release = \'$(CLEAN_VERSION)\'/g" conf.py && \
+	$(SED) -i 's/export RELEASE_VERSION=.*/export RELEASE_VERSION=$(CLEAN_VERSION)/g' settings.sh && \
+	$(SED) -i 's/export PUBLIC_VERSION=.*/export PUBLIC_VERSION=$(CURRENT_SHORT_MINOR_VERSION)/g' settings.sh && \
+	$(SED) -i "s/^version = '.*'/version = \'$(CURRENT_SHORT_MINOR_VERSION)\'/g" conf.py && \
+	$(SED) -i "s/^release = '.*'/release = \'$(CLEAN_VERSION)\'/g" conf.py && \
 	git commit -am "[ci skip] chore: update settings.sh and conf.py due to $(CLEAN_VERSION) release" && \
 	git checkout $(STAGING_BRANCH) && \
 	git merge -s ours -m "Merge branch '$(CURRENT_SHORT_MINOR_VERSION)-post' into $(STAGING_BRANCH)" $(CURRENT_SHORT_MINOR_VERSION)-post && \

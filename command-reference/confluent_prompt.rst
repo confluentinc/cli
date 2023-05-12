@@ -1,0 +1,110 @@
+..
+   WARNING: This documentation is auto-generated from the confluentinc/cli repository and should not be manually edited.
+
+.. _confluent_prompt:
+
+confluent prompt
+----------------
+
+Description
+~~~~~~~~~~~
+
+Use this command to add ``confluent`` information to your terminal prompt.
+
+Bash:
+
+::
+
+	export PS1='$(confluent prompt) '$PS1
+
+ZSH:
+
+::
+
+	setopt prompt_subst
+	export PS1='$(confluent prompt) '$PS1
+
+You can customize the prompt by calling passing the ``--format`` flag, for example ``-f '(confluent|%C)'``.
+To make this permanent, you must add the above lines to your Bash or ZSH profile.
+
+Formatting Tokens
+~~~~~~~~~~~~~~~~~
+
+This command comes with a number of formatting tokens. What follows is a list of all tokens:
+
+* %a - The current Kafka API key in use. E.g., "ABCDEF1234567890"
+* %C - The name of the current context in use. E.g., "dev-app1", "stag-dc1", "prod"
+* %e - The ID of the current environment in use. E.g., "a-4567"
+* %k - The ID of the current Kafka cluster in use. E.g., "lkc-abc123"
+* %K - The name of the current Kafka cluster in use. E.g., "prod-us-west-2-iot"
+* %u - The current user or credentials in use. E.g., "joe@montana.com"
+
+Style
+~~~~~
+
+The style of the text can be changed with a combination of functions, colors, and attributes.
+
+Functions:
+
+* fgcolor - Change the foreground color.
+* bgcolor - Change the background color.
+* attr    - Change a text attribute.
+
+Colors:
+
+* black
+* blue
+* cyan
+* green
+* magenta
+* red
+* white
+* yellow
+
+Text Attributes:
+
+* bold
+* invert
+* italicize
+* underline
+
+Examples
+~~~~~~~~
+
+* {{fgcolor "blue" "this text is blue"}}
+* {{bgcolor "blue" "this text has a blue background"}}
+* {{attr "bold" "this text is bold"}}
+
+Use a vertical bar to separate further attributes:
+
+* {{fgcolor "red" "this text is red and bold" | attr "bold"}}
+
+We can use tokens and colors in the same format string:
+
+* ({{fgcolor "blue" "confluent"}} | {{fgcolor "red" "%C"}})
+
+::
+
+  confluent prompt [flags]
+
+Flags
+~~~~~
+
+::
+
+  -f, --format string   The format string to use. See the help for details. (default "(confluent|%C)")
+  -t, --timeout int     The maximum execution time in milliseconds. (default 200)
+
+Global Flags
+~~~~~~~~~~~~
+
+::
+
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+See Also
+~~~~~~~~
+
+* :ref:`confluent-ref` - Confluent CLI.

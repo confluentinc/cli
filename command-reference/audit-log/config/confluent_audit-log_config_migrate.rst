@@ -1,0 +1,48 @@
+..
+   WARNING: This documentation is auto-generated from the confluentinc/cli repository and should not be manually edited.
+
+.. _confluent_audit-log_config_migrate:
+
+confluent audit-log config migrate
+----------------------------------
+
+Description
+~~~~~~~~~~~
+
+Migrate legacy audit log configurations. Use ``--combine`` to read in multiple Kafka broker ``server.properties`` files, combine the values of their ``confluent.security.event.router.config`` properties, and output a combined configuration suitable for centralized audit log management. This is sent to standard output along with any warnings to standard error.
+
+::
+
+  confluent audit-log config migrate [flags]
+
+Flags
+~~~~~
+
+::
+
+      --combine stringToString      A comma-separated list of k=v pairs, where keys are Kafka cluster IDs, and values are the path to that cluster's server.properties file. (default [])
+      --bootstrap-servers strings   A comma-separated list of public brokers ("hostname:port") in the Kafka cluster that will receive audit log events.
+      --authority string            The CRN authority to use in all route patterns.
+
+Global Flags
+~~~~~~~~~~~~
+
+::
+
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Examples
+~~~~~~~~
+
+Combine two audit log configuration files for clusters 'clusterA' and 'clusterB' with the following bootstrap servers and authority.
+
+::
+
+  confluent audit-log config migrate --combine clusterA=/tmp/cluster/server.properties,clusterB=/tmp/cluster/server.properties --bootstrap-servers logs.example.com:9092,logs.example.com:9093 --authority mds.example.com
+
+See Also
+~~~~~~~~
+
+* :ref:`confluent_audit-log_config` - Manage the audit log configuration specification.
