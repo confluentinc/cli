@@ -8,17 +8,26 @@ Update top-level compatibility of Schema Registry.
 
   $ confluent schema-registry cluster update --compatibility backward
 
+Update the top-level compatibility of Schema Registry and set the compatibility group to "application.version".
+
+  $ confluent schema-registry cluster update --compatibility backward --compatibility-group application.version
+
 Update top-level mode of Schema Registry.
 
   $ confluent schema-registry cluster update --mode readwrite
 
 Flags:
-      --compatibility string   Can be "backward", "backward_transitive", "forward", "forward_transitive", "full", "full_transitive", or "none".
-      --mode string            Can be "readwrite", "readonly", or "import".
-      --api-key string         API key.
-      --api-secret string      API key secret.
-      --context string         CLI context name.
-      --environment string     Environment ID.
+      --compatibility string         Can be "backward", "backward_transitive", "forward", "forward_transitive", "full", "full_transitive", or "none".
+      --compatibility-group string   The name of the compatibility group.
+      --metadata-defaults string     The path to the schema metadata defaults file.
+      --metadata-overrides string    The path to the schema metadata overrides file.
+      --ruleset-defaults string      The path to the schema ruleset defaults file.
+      --ruleset-overrides string     The path to the schema ruleset overrides file.
+      --mode string                  Can be "readwrite", "readonly", or "import".
+      --api-key string               API key.
+      --api-secret string            API key secret.
+      --context string               CLI context name.
+      --environment string           Environment ID.
 
 Global Flags:
   -h, --help            Show help for this command.
