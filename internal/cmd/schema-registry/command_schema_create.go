@@ -1,9 +1,11 @@
 package schemaregistry
 
 import (
+	"encoding/json"
 	"os"
 	"strings"
 
+	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
@@ -54,6 +56,9 @@ func (c *command) newSchemaCreateCommand() *cobra.Command {
 	cmd.Flags().String("subject", "", SubjectUsage)
 	pcmd.AddSchemaTypeFlag(cmd)
 	cmd.Flags().String("references", "", "The path to the references file.")
+	cmd.Flags().String("metadata", "", "The path to metadata file.")
+	cmd.Flags().String("ruleset", "", "The path to schema ruleset file.")
+	cmd.Flags().Bool("normalize", false, "Alphabetize the list of schema fields.")
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddApiSecretFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -62,6 +67,8 @@ func (c *command) newSchemaCreateCommand() *cobra.Command {
 
 	cobra.CheckErr(cmd.MarkFlagFilename("schema", "avsc", "json", "proto"))
 	cobra.CheckErr(cmd.MarkFlagFilename("references", "json"))
+	cobra.CheckErr(cmd.MarkFlagFilename("metadata", "json"))
+	cobra.CheckErr(cmd.MarkFlagFilename("ruleset", "json"))
 
 	cobra.CheckErr(cmd.MarkFlagRequired("schema"))
 	cobra.CheckErr(cmd.MarkFlagRequired("subject"))
@@ -101,7 +108,38 @@ func (c *command) schemaCreate(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	response, _, err := srClient.DefaultApi.Register(ctx, subject, srsdk.RegisterSchemaRequest{Schema: string(schema), SchemaType: schemaType, References: refs})
+	var metadata srsdk.Metadata
+	var ruleset srsdk.RuleSet
+	metadataPath, err := cmd.Flags().GetString("metadata")
+	if err != nil {
+		return err
+	}
+	if err = read(metadataPath, &metadata); err != nil {
+		return err
+	}
+
+	rulesetPath, err := cmd.Flags().GetString("ruleset")
+	if err != nil {
+		return err
+	}
+	if err = read(rulesetPath, &ruleset); err != nil {
+		return err
+	}
+
+	normalize, err := cmd.Flags().GetBool("normalize")
+	if err != nil {
+		return err
+	}
+
+	request := srsdk.RegisterSchemaRequest{
+		Schema:     string(schema),
+		SchemaType: schemaType,
+		References: refs,
+		Metadata:   metadata,
+		RuleSet:    ruleset,
+	}
+	response, _, err := srClient.DefaultApi.Register(ctx, subject, request,
+		&srsdk.RegisterOpts{Normalize: optional.NewBool(normalize)})
 	if err != nil {
 		return err
 	}
@@ -111,5 +149,18 @@ func (c *command) schemaCreate(cmd *cobra.Command, _ []string) error {
 	}
 
 	output.Printf(errors.RegisteredSchemaMsg, response.Id)
+	return nil
+}
+
+func read(path string, v any) error {
+	if path != "" {
+		file, err := os.Open(path)
+		if err != nil {
+			return err
+		}
+		if err := json.NewDecoder(file).Decode(v); err != nil {
+			return err
+		}
+	}
 	return nil
 }
