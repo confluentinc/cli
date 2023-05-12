@@ -222,7 +222,7 @@ func (s *authState) getOAuthTokenResponse(payload *strings.Reader) (map[string]a
 	return data, nil
 }
 
-func (s *authState) getAuthorizationCodeUrl(ssoProviderConnectionName string) string {
+func (s *authState) getAuthorizationCodeUrl(ssoProviderConnectionName string, isOkta bool) string {
 	url := s.SSOProviderHost + "/authorize?" +
 		"response_type=code" +
 		"&code_challenge=" + s.CodeChallenge +
@@ -235,7 +235,10 @@ func (s *authState) getAuthorizationCodeUrl(ssoProviderConnectionName string) st
 	if s.SSOProviderIdentifier != "" {
 		url += "&audience=" + s.SSOProviderIdentifier
 	}
-	if ssoProviderConnectionName != "" {
+
+	if isOkta {
+		url += "&idp=" + ssoProviderConnectionName
+	} else {
 		url += "&connection=" + ssoProviderConnectionName
 	}
 

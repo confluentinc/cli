@@ -160,13 +160,9 @@ func (a *AuthTokenHandlerImpl) checkSSOEmailMatchesLogin(client *ccloudv1.Client
 }
 
 func login(client *ccloudv1.Client, req *ccloudv1.AuthenticateRequest) (*ccloudv1.AuthenticateReply, error) {
-	if isOkta(client) {
+	if sso.IsOkta(client.BaseURL) {
 		return client.Auth.OktaLogin(req)
 	} else {
 		return client.Auth.Login(req)
 	}
-}
-
-func isOkta(client *ccloudv1.Client) bool {
-	return sso.GetCCloudEnvFromBaseUrl(client.BaseURL) == "fedramp-internal"
 }
