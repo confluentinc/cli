@@ -152,10 +152,8 @@ func readPathFlag(cmd *cobra.Command, flag string, v any) error {
 	if path == "" {
 		return nil
 	}
-	if err := read(path, v); err != nil {
-		return err
-	}
-	return nil
+
+	return read(path, v)
 }
 
 func read(path string, v any) error {
