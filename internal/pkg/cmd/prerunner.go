@@ -15,7 +15,6 @@ import (
 	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	"github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1"
 
-	"github.com/confluentinc/cli/internal/pkg/auth"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -233,6 +232,9 @@ func IsFlagRequired(flag *pflag.Flag) bool {
 // Authenticated provides PreRun operations for commands that require a logged-in Confluent Cloud user.
 func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
+		if err := r.Config.DecryptContextStates(); err != nil {
+			return err
+		}
 		if err := r.Anonymous(command.CLICommand, true)(cmd, args); err != nil {
 			return err
 		}
@@ -289,6 +291,10 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(*cobra.Com
 
 func (r *PreRun) ParseFlagsIntoContext(command *AuthenticatedCLICommand) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
+		if err := r.Config.DecryptContextStates(); err != nil {
+			return err
+		}
+
 		ctx := command.Context
 		return ctx.ParseFlagsIntoContext(cmd, command.Client)
 	}
@@ -317,8 +323,8 @@ func (r *PreRun) setAuthenticatedContext(cliCommand *AuthenticatedCLICommand) er
 }
 
 func (r *PreRun) ccloudAutoLogin(netrcMachineName string) error {
-	manager := auth.NewLoginOrganizationManagerImpl()
-	organizationId := auth.GetLoginOrganization(
+	manager := pauth.NewLoginOrganizationManagerImpl()
+	organizationId := pauth.GetLoginOrganization(
 		manager.GetLoginOrganizationFromConfigurationFile(r.Config),
 		manager.GetLoginOrganizationFromEnvironmentVariable(),
 	)
@@ -513,6 +519,10 @@ func (r *PreRun) createCCloudClient(ctx *dynamicconfig.DynamicContext, ver *vers
 // Authenticated provides PreRun operations for commands that require a logged-in MDS user.
 func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
+		if err := r.Config.DecryptContextStates(); err != nil {
+			return err
+		}
+
 		if err := r.Anonymous(command.CLICommand, true)(cmd, args); err != nil {
 			return err
 		}
@@ -658,6 +668,10 @@ func (r *PreRun) createMDSClient(ctx *dynamicconfig.DynamicContext, ver *version
 // Initializes a default KafkaRestClient
 func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
+		if err := r.Config.DecryptContextStates(); err != nil {
+			return err
+		}
+
 		// pass mds token as bearer token otherwise use http basic auth
 		// no error means user is logged in with mds and has valid token; on an error we try http basic auth since mds is not needed for RP commands
 		err := r.AuthenticatedWithMDS(command)(cmd, args)
@@ -779,6 +793,10 @@ func createOnPremKafkaRestClient(ctx *dynamicconfig.DynamicContext, caCertPath s
 // HasAPIKey provides PreRun operations for commands that require an API key.
 func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
+		if err := r.Config.DecryptContextStates(); err != nil {
+			return err
+		}
+
 		if err := r.Anonymous(command.CLICommand, false)(cmd, args); err != nil {
 			return err
 		}
@@ -905,8 +923,8 @@ func (r *PreRun) getUpdatedAuthToken(ctx *dynamicconfig.DynamicContext, unsafeTr
 	}
 
 	if r.Config.IsCloudLogin() {
-		manager := auth.NewLoginOrganizationManagerImpl()
-		organizationId := auth.GetLoginOrganization(
+		manager := pauth.NewLoginOrganizationManagerImpl()
+		organizationId := pauth.GetLoginOrganization(
 			manager.GetLoginOrganizationFromConfigurationFile(r.Config),
 			manager.GetLoginOrganizationFromEnvironmentVariable(),
 		)
