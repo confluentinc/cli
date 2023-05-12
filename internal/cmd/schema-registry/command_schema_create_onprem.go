@@ -7,6 +7,8 @@ import (
 
 	"github.com/spf13/cobra"
 
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
@@ -31,12 +33,17 @@ func (c *command) newSchemaCreateCommandOnPrem() *cobra.Command {
 	cmd.Flags().String("subject", "", SubjectUsage)
 	pcmd.AddSchemaTypeFlag(cmd)
 	cmd.Flags().String("references", "", "The path to the references file.")
+	cmd.Flags().String("metadata", "", "The path to metadata file.")
+	cmd.Flags().String("ruleset", "", "The path to schema ruleset file.")
+	cmd.Flags().Bool("normalize", false, "Alphabetize the list of schema fields.")
 	cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagFilename("schema", "avsc", "json", "proto"))
 	cobra.CheckErr(cmd.MarkFlagFilename("references", "json"))
+	cobra.CheckErr(cmd.MarkFlagFilename("metadata", "json"))
+	cobra.CheckErr(cmd.MarkFlagFilename("ruleset", "json"))
 
 	cobra.CheckErr(cmd.MarkFlagRequired("schema"))
 	cobra.CheckErr(cmd.MarkFlagRequired("subject"))
@@ -74,12 +81,31 @@ func (c *command) schemaCreateOnPrem(cmd *cobra.Command, _ []string) error {
 		_ = os.RemoveAll(dir)
 	}()
 
+	var metadata srsdk.Metadata
+	var ruleset srsdk.RuleSet
+
+	if err := readPathFlag(cmd, "metadata", &metadata); err != nil {
+		return err
+	}
+
+	if err := readPathFlag(cmd, "ruleset", &ruleset); err != nil {
+		return err
+	}
+
+	normalize, err := cmd.Flags().GetBool("normalize")
+	if err != nil {
+		return err
+	}
+
 	schemaCfg := &RegisterSchemaConfigs{
 		SchemaDir:  dir,
 		SchemaType: schemaType,
 		SchemaPath: &schemaPath,
 		Subject:    subject,
 		Refs:       refs,
+		Metadata:   metadata,
+		Ruleset:    ruleset,
+		Normalize:  normalize,
 	}
 	_, _, err = c.registerSchemaOnPrem(cmd, schemaCfg)
 	return err
