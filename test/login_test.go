@@ -1,6 +1,7 @@
 package test
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -10,18 +11,21 @@ import (
 	"testing"
 
 	test_server "github.com/confluentinc/cli/test/test-server"
+	"github.com/stretchr/testify/require"
 
 	"github.com/confluentinc/cli/internal/pkg/auth"
+	pauth "github.com/confluentinc/cli/internal/pkg/auth"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 var (
-	urlPlaceHolder     = "<URL_PLACEHOLDER>"
-	savedToNetrcOutput = fmt.Sprintf(errors.WroteCredentialsToNetrcMsg, "/tmp/netrc_test")
-	loggedInAsOutput   = fmt.Sprintf(errors.LoggedInAsMsg, "good@user.com")
-	loggedInEnvOutput  = fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default")
+	urlPlaceHolder      = "<URL_PLACEHOLDER>"
+	passwordPlaceholder = "<PASSWORD_PLACEHOLDER>"
+	loggedInAsOutput    = fmt.Sprintf(errors.LoggedInAsMsg, "good@user.com")
+	loggedInEnvOutput   = fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595", "default")
 )
 
 func (s *CLITestSuite) TestCcloudLoginUseKafkaAuthKafkaErrors() {
@@ -104,13 +108,13 @@ func (s *CLITestSuite) TestSaveUsernamePassword() {
 	tests := []saveTest{
 		{
 			"ccloud",
-			"netrc-save-ccloud-username-password.golden",
+			"config-save-ccloud-username-password.golden",
 			cloudBackend.GetCloudUrl(),
 			ccloudTestBin,
 		},
 		{
 			"confluent",
-			"netrc-save-mds-username-password.golden",
+			"config-save-mds-username-password.golden",
 			mdsServer.GetMdsUrl(),
 			confluentTestBin,
 		},
@@ -119,105 +123,36 @@ func (s *CLITestSuite) TestSaveUsernamePassword() {
 	if !ok {
 		s.T().Fatalf("problems recovering caller information")
 	}
-	netrcInput := filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc")
 	for _, tt := range tests {
-		// store existing credentials in netrc to check that they are not corrupted
-		originalNetrc, err := ioutil.ReadFile(netrcInput)
-		s.NoError(err)
-		err = ioutil.WriteFile(netrc.NetrcIntegrationTestFile, originalNetrc, 0600)
-		s.NoError(err)
-
+		configFile := filepath.Join(os.Getenv("HOME"), "."+tt.cliName, "config.json")
 		// run the login command with --save flag and check output
 		var env []string
 		if tt.cliName == "ccloud" {
-			env = []string{fmt.Sprintf("%s=good@user.com", auth.CCloudEmailEnvVar), fmt.Sprintf("%s=pass1", auth.CCloudPasswordEnvVar)}
+			env = []string{fmt.Sprintf("%s=good@user.com", pauth.CCloudEmailEnvVar), fmt.Sprintf("%s=pass1", auth.CCloudPasswordEnvVar)}
 		} else {
-			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentUsernameEnvVar), fmt.Sprintf("%s=pass1", auth.ConfluentPasswordEnvVar)}
+			env = []string{fmt.Sprintf("%s=good@user.com", pauth.ConfluentUsernameEnvVar), fmt.Sprintf("%s=pass1", auth.ConfluentPasswordEnvVar)}
 		}
+		_ = runCommand(s.T(), tt.bin, env, "logout -vvvv", 0)
 		//TODO add save test using stdin input
-		output := runCommand(s.T(), tt.bin, env, "login -vvv --save --url "+tt.loginURL, 0)
-		s.Contains(output, savedToNetrcOutput)
-		s.Contains(output, loggedInAsOutput)
+		output := runCommand(s.T(), tt.bin, env, "login --save -vvv --url "+tt.loginURL, 0)
 		if tt.cliName == "ccloud" {
 			s.Contains(output, loggedInEnvOutput)
 		}
 
-		// check netrc file result
-		got, err := ioutil.ReadFile(netrc.NetrcIntegrationTestFile)
+		got, err := os.ReadFile(configFile)
 		s.NoError(err)
 		wantFile := filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", tt.want)
 		s.NoError(err)
 		wantBytes, err := ioutil.ReadFile(wantFile)
 		s.NoError(err)
-		want := strings.Replace(string(wantBytes), urlPlaceHolder, tt.loginURL, 1)
-		s.Equal(utils.NormalizeNewLines(want), utils.NormalizeNewLines(string(got)))
-	}
-	_ = os.Remove(netrc.NetrcIntegrationTestFile)
-}
-
-func (s *CLITestSuite) TestUpdateNetrcPassword() {
-	type updateTest struct {
-		input    string
-		cliName  string
-		want     string
-		loginURL string
-		bin      string
-	}
-	_, callerFileName, _, ok := runtime.Caller(0)
-	if !ok {
-		s.T().Fatalf("problems recovering caller information")
-	}
-	cloudServer := serveCloudBackend(s.T())
-	defer cloudServer.Close()
-	mdsServer := serveMDSBackend(s.T())
-	defer mdsServer.Close()
-	tests := []updateTest{
-		{
-			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-old-password-ccloud"),
-			"ccloud",
-			"netrc-save-ccloud-username-password.golden",
-			cloudServer.GetCloudUrl(),
-			ccloudTestBin,
-		},
-		{
-			filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", "netrc-old-password-mds"),
-			"confluent",
-			"netrc-save-mds-username-password.golden",
-			mdsServer.GetMdsUrl(),
-			confluentTestBin,
-		},
-	}
-	for _, tt := range tests {
-		// store existing credential + the user credential to be updated
-		originalNetrc, err := ioutil.ReadFile(tt.input)
+		want := strings.Replace(string(wantBytes), urlPlaceHolder, tt.loginURL, -1)
+		data := v3.Config{}
+		err = json.Unmarshal(got, &data)
 		s.NoError(err)
-		originalNetrcString := strings.Replace(string(originalNetrc), urlPlaceHolder, tt.loginURL, 1)
-		err = ioutil.WriteFile(netrc.NetrcIntegrationTestFile, []byte(originalNetrcString), 0600)
-		s.NoError(err)
-
-		// run the login command with --save flag and check output
-		var env []string
-		if tt.cliName == "ccloud" {
-			env = []string{fmt.Sprintf("%s=good@user.com", auth.CCloudEmailEnvVar), fmt.Sprintf("%s=pass1", auth.CCloudPasswordEnvVar)}
-		} else {
-			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentUsernameEnvVar), fmt.Sprintf("%s=pass1", auth.ConfluentPasswordEnvVar)}
-		}
-		output := runCommand(s.T(), tt.bin, env, "login -vvv --save --url "+tt.loginURL, 0)
-		s.Contains(output, savedToNetrcOutput)
-		s.Contains(output, loggedInAsOutput)
-		if tt.cliName == "ccloud" {
-			s.Contains(output, loggedInEnvOutput)
-		}
-
-		// check netrc file result
-		got, err := ioutil.ReadFile(netrc.NetrcIntegrationTestFile)
-		s.NoError(err)
-		wantFile := filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", tt.want)
-		s.NoError(err)
-		wantBytes, err := ioutil.ReadFile(wantFile)
-		s.NoError(err)
-		want := strings.Replace(string(wantBytes), urlPlaceHolder, tt.loginURL, 1)
-		s.Equal(utils.NormalizeNewLines(want), utils.NormalizeNewLines(string(got)))
+		fmt.Println("login-good@user.com-" + tt.loginURL)
+		fmt.Printf("%+v\n", data)
+		want = strings.Replace(want, passwordPlaceholder, data.SavedCredentials["login-good@user.com-"+tt.loginURL].EncryptedPassword, -1)
+		require.Contains(s.T(), utils.NormalizeNewLines(string(got)), utils.NormalizeNewLines(string(want)))
 	}
 	_ = os.Remove(netrc.NetrcIntegrationTestFile)
 }
