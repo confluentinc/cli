@@ -3,7 +3,6 @@ package auth
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"strings"
 
@@ -332,7 +331,6 @@ func matchLoginCredentialWithFilter(loginCredential *v2.LoginCredential, filterP
 	if loginCredential.Url != filterParams.URL {
 		return false
 	}
-	fmt.Println("trying to match? params ctx name:", filterParams.CtxName)
 	if filterParams.CtxName != "" && !strings.Contains(filterParams.CtxName, loginCredential.Username) {
 		return false
 	}

@@ -128,7 +128,6 @@ func (c *Config) Load() error {
 		if context.PlatformName == "" {
 			return errors.NewCorruptedConfigError(errors.UnspecifiedPlatformErrorMsg, context.Name, c.CLIName, c.Filename, c.Logger)
 		}
-		context.State = c.ContextStates[context.Name]
 		context.Credential = c.Credentials[context.CredentialName]
 		context.Platform = c.Platforms[context.PlatformName]
 		context.Logger = c.Logger
@@ -136,6 +135,18 @@ func (c *Config) Load() error {
 		if context.KafkaClusterContext == nil {
 			return errors.NewCorruptedConfigError(errors.MissingKafkaClusterContextErrorMsg, context.Name, c.CLIName, c.Filename, c.Logger)
 		}
+		state := c.ContextStates[context.Name]
+		if state != nil {
+			err = state.DecryptContextStateAuthToken(context.Name)
+			if err != nil {
+				return err
+			}
+			err = state.DecryptContextStateAuthRefreshToken(context.Name)
+			if err != nil {
+				return err
+			}
+		}
+		context.State = state
 		context.KafkaClusterContext.Context = context
 	}
 	err = c.Validate()
