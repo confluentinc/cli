@@ -5,6 +5,8 @@ import (
 	"os"
 	"strings"
 
+	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
+
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -115,6 +117,55 @@ func (c *Context) GetCurrentEnvironmentId() string {
 		return ""
 	}
 	return c.State.Auth.Account.Id
+}
+
+func (c *Context) GetAuth() *v1.AuthConfig {
+	if c.State != nil {
+		return c.State.Auth
+	}
+	return nil
+}
+
+func (c *Context) GetUser() *orgv1.User {
+	if auth := c.GetAuth(); auth != nil {
+		return auth.User
+	}
+	return nil
+}
+
+func (c *Context) GetOrganization() *orgv1.Organization {
+	if auth := c.GetAuth(); auth != nil {
+		return auth.Organization
+	}
+	return nil
+}
+
+func (c *Context) GetEnvironment() *orgv1.Account {
+	if auth := c.GetAuth(); auth != nil {
+		return auth.Account
+	}
+	return nil
+}
+
+func (c *Context) GetAuthToken() string {
+	if c.State != nil {
+		return c.State.AuthToken
+	}
+	return ""
+}
+
+func (c *Context) GetAuthRefreshToken() string {
+	if c.State != nil {
+		return c.State.AuthRefreshToken
+	}
+	return ""
+}
+
+func (c *Context) GetState() *v2.ContextState {
+	if c != nil {
+		return c.State
+	}
+	return nil
 }
 
 func (c *Context) UpdateAuthToken(token string) error {
