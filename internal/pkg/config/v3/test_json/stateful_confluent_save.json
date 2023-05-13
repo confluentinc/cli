@@ -31,28 +31,23 @@
   "contexts": {
     "my-context": {
       "name": "my-context",
-      "netrc_machine_name": "",
       "platform": "http://test",
       "credential": "username-test-user",
       "kafka_cluster_context": {
-        "environment_context": true,
-        "kafka_environment_contexts": {
-          "acc-123": {
-            "active_kafka": "anonymous-id",
-            "kafka_cluster_infos": {
-              "anonymous-id": {
-                "id": "anonymous-id",
-                "name": "anonymous-cluster",
-                "bootstrap_servers": "http://test",
-                "api_keys": {
-                  "abc-key-123": {
-                    "api_key": "abc-key-123",
-                    "api_secret": "def-secret-456"
-                  }
-                },
-                "api_key": "abc-key-123"
+        "environment_context": false,
+        "active_kafka": "anonymous-id",
+        "kafka_cluster_configs": {
+          "anonymous-id": {
+            "id": "anonymous-id",
+            "name": "anonymous-cluster",
+            "bootstrap_servers": "http://test",
+            "api_keys": {
+              "abc-key-123": {
+                "api_key": "abc-key-123",
+                "api_secret": "def-secret-456"
               }
-            }
+            },
+            "api_key": "abc-key-123"
           }
         }
       },
@@ -80,10 +75,6 @@
           {
             "id": "acc-123",
             "name": "test-env"
-          },
-          {
-            "id": "env-flag",
-            "name": "test-env2"
           }
         ],
         "organization": {
@@ -104,5 +95,6 @@
       "username": "test-user",
       "encrypted_password": "encrypted-password"
     }
-  }
+  },
+  "is_test": true
 }

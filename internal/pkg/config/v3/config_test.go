@@ -1,12 +1,15 @@
 package v3
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
 	"runtime"
+	"strings"
 	"testing"
 
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -29,6 +32,13 @@ var (
 	kafkaClusterID  = "anonymous-id"
 	contextName     = "my-context"
 	accountID       = "acc-123"
+)
+
+const (
+	authTokenPlaceholder        = "AUTH_TOKEN_PLACEHOLDER"
+	authRefreshTokenPlaceholder = "AUTH_REFRESH_TOKEN_PLACEHOLDER"
+	saltPlaceholder             = "SALT_PLACEHOLDER"
+	noncePlaceholder            = "NONCE_PLACEHOLDER"
 )
 
 type TestInputs struct {
@@ -63,6 +73,12 @@ func SetupTestInputs(cliName string) *TestInputs {
 		APIKeyPair:     nil,
 		CredentialType: 0,
 	}
+	savedCredentials := map[string]*v2.LoginCredential{
+		contextName: &v2.LoginCredential{
+			Username:          "test-user",
+			EncryptedPassword: "encrypted-password",
+		},
+	}
 	account := &orgv1.Account{
 		Id:   accountID,
 		Name: "test-env",
@@ -87,7 +103,8 @@ func SetupTestInputs(cliName string) *TestInputs {
 				Name: "test-org",
 			},
 		},
-		AuthToken: "abc123",
+		AuthToken:        "eyJ.eyJ.abc",
+		AuthRefreshToken: "v1.abc",
 	}
 	twoEnvState := &v2.ContextState{
 		Auth: &v1.AuthConfig{
@@ -105,7 +122,8 @@ func SetupTestInputs(cliName string) *TestInputs {
 				Name: "test-org",
 			},
 		},
-		AuthToken: "abc123",
+		AuthToken:        "eyJ.eyJ.abc",
+		AuthRefreshToken: "v1.abc",
 	}
 	testInputs.kafkaClusters = map[string]*v1.KafkaClusterConfig{
 		kafkaClusterID: {
@@ -138,6 +156,7 @@ func SetupTestInputs(cliName string) *TestInputs {
 		},
 		State:  state,
 		Logger: log.New(),
+		Config: &Config{SavedCredentials: savedCredentials},
 	}
 	statelessContext := &Context{
 		Name:                   contextName,
@@ -148,6 +167,7 @@ func SetupTestInputs(cliName string) *TestInputs {
 		SchemaRegistryClusters: map[string]*v2.SchemaRegistryCluster{},
 		State:                  &v2.ContextState{},
 		Logger:                 log.New(),
+		Config:                 &Config{SavedCredentials: savedCredentials},
 	}
 	twoEnvStatefulContext := &Context{
 		Name:           contextName,
@@ -164,8 +184,10 @@ func SetupTestInputs(cliName string) *TestInputs {
 		},
 		State:  twoEnvState,
 		Logger: log.New(),
+		Config: &Config{SavedCredentials: savedCredentials},
 	}
 	testInputs.statefulConfig = &Config{
+		IsTest: true,
 		BaseConfig: &config.BaseConfig{
 			Params: &config.Params{
 				CLIName:    cliName,
@@ -188,9 +210,11 @@ func SetupTestInputs(cliName string) *TestInputs {
 		ContextStates: map[string]*v2.ContextState{
 			contextName: state,
 		},
-		CurrentContext: contextName,
+		CurrentContext:   contextName,
+		SavedCredentials: savedCredentials,
 	}
 	testInputs.statelessConfig = &Config{
+		IsTest: true,
 		BaseConfig: &config.BaseConfig{
 			Params: &config.Params{
 				CLIName:    cliName,
@@ -211,9 +235,10 @@ func SetupTestInputs(cliName string) *TestInputs {
 			contextName: statelessContext,
 		},
 		ContextStates: map[string]*v2.ContextState{
-			contextName: {},
+			contextName: &v2.ContextState{},
 		},
-		CurrentContext: contextName,
+		CurrentContext:   contextName,
+		SavedCredentials: savedCredentials,
 	}
 	testInputs.twoEnvStatefulConfig = &Config{
 		BaseConfig: &config.BaseConfig{
@@ -300,6 +325,7 @@ func TestConfig_Load(t *testing.T) {
 				Credentials:        map[string]*v2.Credential{},
 				Contexts:           map[string]*Context{},
 				ContextStates:      map[string]*v2.ContextState{},
+				SavedCredentials:   map[string]*v2.LoginCredential{},
 			},
 			file: "test_json/load_disable_update.json",
 		},
@@ -321,7 +347,7 @@ func TestConfig_Load(t *testing.T) {
 			// Get around automatically assigned anonymous id
 			tt.want.AnonymousId = c.AnonymousId
 			if !t.Failed() && !reflect.DeepEqual(c, tt.want) {
-				t.Errorf("Config.Load() = %+v, want %+v", c, tt.want)
+				t.Errorf("Config.Load() = %+v\n, want %+v\n", c, tt.want)
 			}
 		})
 	}
@@ -342,7 +368,7 @@ func TestConfig_Save(t *testing.T) {
 		{
 			name:     "save confluent config with state to file",
 			config:   testConfigsConfluent.statefulConfig,
-			wantFile: "test_json/stateful_confluent.json",
+			wantFile: "test_json/stateful_confluent_save.json",
 		},
 		{
 			name:     "save stateless confluent config to file",
@@ -352,7 +378,7 @@ func TestConfig_Save(t *testing.T) {
 		{
 			name:     "save ccloud config with state to file",
 			config:   testConfigsCcloud.statefulConfig,
-			wantFile: "test_json/stateful_ccloud.json",
+			wantFile: "test_json/stateful_ccloud_save.json",
 		},
 		{
 			name:     "save stateless ccloud config to file",
@@ -362,13 +388,13 @@ func TestConfig_Save(t *testing.T) {
 		{
 			name:           "save stateless ccloud config with kafka overwrite to file",
 			config:         testConfigsCcloud.statefulConfig,
-			wantFile:       "test_json/stateful_ccloud.json",
+			wantFile:       "test_json/stateful_ccloud_save.json",
 			kafkaOverwrite: "lkc-clusterFlag",
 		},
 		{
 			name:           "save stateless ccloud config with kafka and context overwrite to file",
 			config:         testConfigsCcloud.statefulConfig,
-			wantFile:       "test_json/stateful_ccloud.json",
+			wantFile:       "test_json/stateful_ccloud_save.json",
 			kafkaOverwrite: "lkc-clusterFlag",
 		},
 	}
@@ -377,6 +403,12 @@ func TestConfig_Save(t *testing.T) {
 			configFile, _ := ioutil.TempFile("", "TestConfig_Save.json")
 			tt.config.Filename = configFile.Name()
 			ctx := tt.config.Context()
+			tt.config.SavedCredentials = map[string]*v2.LoginCredential{
+				contextName: &v2.LoginCredential{
+					Username:          "test-user",
+					EncryptedPassword: "encrypted-password",
+				},
+			}
 			if tt.kafkaOverwrite != "" {
 				tt.config.SetOverwrittenActiveKafka(ctx.KafkaClusterContext.GetActiveKafkaClusterId())
 				ctx.KafkaClusterContext.SetActiveKafkaCluster(tt.kafkaOverwrite)
@@ -388,11 +420,10 @@ func TestConfig_Save(t *testing.T) {
 			if err := tt.config.Save(); (err != nil) != tt.wantErr {
 				t.Errorf("Config.Save() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			got, _ := ioutil.ReadFile(configFile.Name())
-			want, _ := ioutil.ReadFile(tt.wantFile)
-			if utils.NormalizeNewLines(string(got)) != utils.NormalizeNewLines(string(want)) {
-				t.Errorf("Config.Save() = %v\n want = %v", utils.NormalizeNewLines(string(got)), utils.NormalizeNewLines(string(want)))
-			}
+			got, _ := os.ReadFile(configFile.Name())
+			want, _ := os.ReadFile(tt.wantFile)
+			wantString := replacePlaceholdersInWant(t, got, want)
+			require.Equal(t, utils.NormalizeNewLines(wantString), utils.NormalizeNewLines(string(got)))
 			fd, err := os.Stat(configFile.Name())
 			require.NoError(t, err)
 			if runtime.GOOS != "windows" && fd.Mode() != 0600 {
@@ -401,6 +432,18 @@ func TestConfig_Save(t *testing.T) {
 			os.Remove(configFile.Name())
 		})
 	}
+}
+
+func replacePlaceholdersInWant(t *testing.T, got []byte, want []byte) string {
+	data := Config{}
+	err := json.Unmarshal(got, &data)
+	require.NoError(t, err)
+	wantString := strings.Replace(string(want), authTokenPlaceholder, data.ContextStates[contextName].AuthToken, -1)
+	wantString = strings.Replace(wantString, authRefreshTokenPlaceholder, data.ContextStates[contextName].AuthRefreshToken, -1)
+	saltString := base64.RawStdEncoding.EncodeToString(data.ContextStates[contextName].Salt)
+	wantString = strings.Replace(wantString, saltPlaceholder, saltString, -1)
+	nonceString := base64.RawStdEncoding.EncodeToString(data.ContextStates[contextName].Nonce)
+	return strings.Replace(wantString, noncePlaceholder, nonceString, -1)
 }
 
 func TestConfig_SaveWithAccountOverwrite(t *testing.T) {
@@ -423,6 +466,12 @@ func TestConfig_SaveWithAccountOverwrite(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			configFile, _ := ioutil.TempFile("", "TestConfig_Save.json")
 			tt.config.Filename = configFile.Name()
+			tt.config.SavedCredentials = map[string]*v2.LoginCredential{
+				contextName: &v2.LoginCredential{
+					Username:          "test-user",
+					EncryptedPassword: "encrypted-password",
+				},
+			}
 			if tt.accountOverwrite != nil {
 				tt.config.SetOverwrittenAccount(tt.config.Context().State.Auth.Account)
 				tt.config.Context().State.Auth.Account = tt.accountOverwrite
@@ -432,9 +481,10 @@ func TestConfig_SaveWithAccountOverwrite(t *testing.T) {
 			}
 			got, _ := ioutil.ReadFile(configFile.Name())
 			got = append(got, '\n') //account for extra newline at the end of the json file
-			want, _ := ioutil.ReadFile(tt.wantFile)
-			if utils.NormalizeNewLines(string(got)) != utils.NormalizeNewLines(string(want)) {
-				t.Errorf("Config.Save() = %v\n want = %v", utils.NormalizeNewLines(string(got)), utils.NormalizeNewLines(string(want)))
+			want, _ := os.ReadFile(tt.wantFile)
+			wantString := replacePlaceholdersInWant(t, got, want)
+			if utils.NormalizeNewLines(string(got)) != utils.NormalizeNewLines(wantString) {
+				t.Errorf("Config.Save() = %v\n want = %v", utils.NormalizeNewLines(string(got)), utils.NormalizeNewLines(wantString))
 			}
 			fd, err := os.Stat(configFile.Name())
 			require.NoError(t, err)

@@ -31,7 +31,6 @@
   "contexts": {
     "my-context": {
       "name": "my-context",
-      "netrc_machine_name": "",
       "platform": "http://test",
       "credential": "username-test-user",
       "kafka_cluster_context": {
@@ -80,10 +79,6 @@
           {
             "id": "acc-123",
             "name": "test-env"
-          },
-          {
-            "id": "env-flag",
-            "name": "test-env2"
           }
         ],
         "organization": {
@@ -104,5 +99,6 @@
       "username": "test-user",
       "encrypted_password": "encrypted-password"
     }
-  }
+  },
+  "is_test": true
 }

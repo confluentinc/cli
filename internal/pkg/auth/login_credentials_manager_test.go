@@ -154,7 +154,7 @@ func (suite *LoginCredentialsManagerTestSuite) SetupSuite() {
 		},
 	}
 	suite.logger = log.New()
-	suite.netrcHandler = &mock.MockNetrcHandler{
+	suite.netrcHandler = &mock.NetrcHandler{
 		GetMatchingNetrcMachineFunc: func(params netrc.GetMatchingNetrcMachineParams) (*netrc.Machine, error) {
 			if params.CLIName == "ccloud" {
 				if params.IsSSO {
@@ -338,7 +338,7 @@ func (suite *LoginCredentialsManagerTestSuite) TestGetConfluentPrerunCredentials
 
 func (suite *LoginCredentialsManagerTestSuite) TestGetConfluentPrerunCredentialsFromNetrc() {
 	// no cacertpath
-	netrcHandler := &mock.MockNetrcHandler{
+	netrcHandler := &mock.NetrcHandler{
 		GetMatchingNetrcMachineFunc: func(params netrc.GetMatchingNetrcMachineParams) (*netrc.Machine, error) {
 			return confluentNetrcPrerunMachine, nil
 		},
@@ -352,7 +352,7 @@ func (suite *LoginCredentialsManagerTestSuite) TestGetConfluentPrerunCredentials
 	suite.compareCredentials(netrcPrerunCredentials, creds)
 
 	// with cacertpath
-	netrcHandler = &mock.MockNetrcHandler{
+	netrcHandler = &mock.NetrcHandler{
 		GetMatchingNetrcMachineFunc: func(params netrc.GetMatchingNetrcMachineParams) (*netrc.Machine, error) {
 			return confluentNetrcPrerunMachineWithCaCertPath, nil
 		},
@@ -367,7 +367,7 @@ func (suite *LoginCredentialsManagerTestSuite) TestGetConfluentPrerunCredentials
 }
 
 func (suite *LoginCredentialsManagerTestSuite) TestGetCredentialsFunction() {
-	noCredentialsNetrcHandler := &mock.MockNetrcHandler{
+	noCredentialsNetrcHandler := &mock.NetrcHandler{
 		GetMatchingNetrcMachineFunc: func(params netrc.GetMatchingNetrcMachineParams) (*netrc.Machine, error) {
 			return nil, nil
 		},
