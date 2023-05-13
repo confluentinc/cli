@@ -3,10 +3,15 @@ package auth
 
 import (
 	"context"
+	"fmt"
 	"os"
+	"strings"
 
 	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
 
+	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
+	"github.com/confluentinc/cli/internal/pkg/secret"
 	"github.com/confluentinc/cli/internal/pkg/sso"
 
 	"github.com/spf13/cobra"
@@ -24,6 +29,11 @@ type Credentials struct {
 	Username string
 	Password string
 	IsSSO    bool
+	Salt     []byte
+	Nonce    []byte
+
+	AuthToken        string
+	AuthRefreshToken string
 
 	// Only for Confluent Prerun login
 	PrerunLoginURL        string
@@ -59,6 +69,7 @@ type LoginCredentialsManager interface {
 	GetCCloudCredentialsFromPrompt(cmd *cobra.Command) func() (*Credentials, error)
 	GetConfluentCredentialsFromEnvVar(cmd *cobra.Command) func() (*Credentials, error)
 	GetConfluentCredentialsFromPrompt(cmd *cobra.Command) func() (*Credentials, error)
+	GetCredentialsFromConfig(cfg *v3.Config, filterParams netrc.GetMatchingNetrcMachineParams) func() (*Credentials, error)
 	GetCredentialsFromNetrc(cmd *cobra.Command, filterParams netrc.GetMatchingNetrcMachineParams) func() (*Credentials, error)
 
 	// Only for Confluent Prerun login
@@ -136,6 +147,38 @@ func (h *LoginCredentialsManagerImpl) GetConfluentCredentialsFromEnvVar(cmd *cob
 		deprecatedPassword: ConfluentPasswordDeprecatedEnvVar,
 	}
 	return h.getCredentialsFromEnvVarFunc(cmd, envVars)
+}
+
+func (h *LoginCredentialsManagerImpl) GetCredentialsFromConfig(cfg *v3.Config, filterParams netrc.GetMatchingNetrcMachineParams) func() (*Credentials, error) {
+	return func() (*Credentials, error) {
+		var loginCredential *v2.LoginCredential
+		ctx := cfg.Context()
+		if ctx == nil {
+			for _, item := range cfg.SavedCredentials {
+				if matchLoginCredentialWithFilter(item, filterParams) {
+					loginCredential = item
+				}
+			}
+		} else if matchLoginCredentialWithFilter(cfg.SavedCredentials[ctx.Name], filterParams) {
+			loginCredential = cfg.SavedCredentials[ctx.Name]
+		}
+
+		if loginCredential == nil {
+			return nil, nil
+		}
+
+		password, err := secret.Decrypt(loginCredential.Username, loginCredential.EncryptedPassword, loginCredential.Salt, loginCredential.Nonce)
+		if err != nil {
+			return nil, err
+		}
+		credentials := &Credentials{
+			Username: loginCredential.Username,
+			Password: password,
+			Salt:     loginCredential.Salt,
+			Nonce:    loginCredential.Nonce,
+		}
+		return credentials, err
+	}
 }
 
 func (h *LoginCredentialsManagerImpl) GetCredentialsFromNetrc(cmd *cobra.Command, filterParams netrc.GetMatchingNetrcMachineParams) func() (*Credentials, error) {
@@ -284,4 +327,18 @@ func (h *LoginCredentialsManagerImpl) GetConfluentPrerunCredentialsFromNetrc(cmd
 
 func (h *LoginCredentialsManagerImpl) SetCCloudClient(client *ccloud.Client) {
 	h.client = client
+}
+
+func matchLoginCredentialWithFilter(loginCredential *v2.LoginCredential, filterParams netrc.GetMatchingNetrcMachineParams) bool {
+	if loginCredential == nil {
+		return false
+	}
+	if loginCredential.Url != filterParams.URL {
+		return false
+	}
+	fmt.Println("trying to match? params ctx name:", filterParams.CtxName)
+	if filterParams.CtxName != "" && !strings.Contains(filterParams.CtxName, loginCredential.Username) {
+		return false
+	}
+	return true
 }

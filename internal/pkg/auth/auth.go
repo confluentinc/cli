@@ -3,8 +3,9 @@ package auth
 import (
 	"context"
 	"fmt"
-	"github.com/dghubble/sling"
 	"strings"
+
+	"github.com/dghubble/sling"
 
 	"github.com/confluentinc/ccloud-sdk-go-v1"
 
@@ -14,6 +15,7 @@ import (
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/secret"
 )
 
 const (
@@ -38,6 +40,9 @@ func PersistLogoutToConfig(config *v3.Config) error {
 	if ctx == nil {
 		return nil
 	}
+
+	delete(ctx.Config.SavedCredentials, ctx.Name)
+
 	err := ctx.DeleteUserAuth()
 	if err != nil {
 		return err
@@ -46,7 +51,8 @@ func PersistLogoutToConfig(config *v3.Config) error {
 	return config.Save()
 }
 
-func PersistConfluentLoginToConfig(config *v3.Config, username string, url string, token string, caCertPath string, isLegacyContext bool) error {
+func PersistConfluentLoginToConfig(config *v3.Config, credentials *Credentials, url string, token string, caCertPath string, isLegacyContext, save bool) error {
+	username := credentials.Username
 	state := &v2.ContextState{
 		Auth:      nil,
 		AuthToken: token,
@@ -57,24 +63,24 @@ func PersistConfluentLoginToConfig(config *v3.Config, username string, url strin
 	} else {
 		ctxName = GenerateContextName(username, url, caCertPath)
 	}
-	return addOrUpdateContext(config, ctxName, username, url, state, caCertPath)
+	return addOrUpdateContext(config, credentials, ctxName, url, state, caCertPath, save)
 }
 
-func PersistCCloudLoginToConfig(config *v3.Config, email string, url string, token string, client *ccloud.Client) (*orgv1.Account, error) {
-	ctxName := GenerateCloudContextName(email, url)
-	state, err := getCCloudContextState(config, ctxName, email, url, token, client)
+func PersistCCloudLoginToConfig(config *v3.Config, credentials *Credentials, url string, token string, client *ccloud.Client, save bool) (*orgv1.Account, error) {
+	ctxName := GenerateCloudContextName(credentials.Username, url)
+	state, err := getCCloudContextState(config, ctxName, credentials.Username, url, token, client)
 	if err != nil {
 		return nil, err
 	}
-	err = addOrUpdateContext(config, ctxName, email, url, state, "")
+	err = addOrUpdateContext(config, credentials, ctxName, url, state, "", save)
 	if err != nil {
 		return nil, err
 	}
 	return state.Auth.Account, nil
 }
 
-func addOrUpdateContext(config *v3.Config, ctxName string, username string, url string, state *v2.ContextState, caCertPath string) error {
-	credName := generateCredentialName(username)
+func addOrUpdateContext(config *v3.Config, credentials *Credentials, ctxName, url string, state *v2.ContextState, caCertPath string, save bool) error {
+	credName := generateCredentialName(credentials.Username)
 	platform := &v2.Platform{
 		Name:       strings.TrimPrefix(url, "https://"),
 		Server:     url,
@@ -82,7 +88,7 @@ func addOrUpdateContext(config *v3.Config, ctxName string, username string, url 
 	}
 	credential := &v2.Credential{
 		Name:     credName,
-		Username: username,
+		Username: credentials.Username,
 		// don't save password if they entered it interactively.
 	}
 	err := config.SavePlatform(platform)
@@ -93,6 +99,46 @@ func addOrUpdateContext(config *v3.Config, ctxName string, username string, url 
 	if err != nil {
 		return err
 	}
+
+	if save && !credentials.IsSSO {
+		salt, err := secret.GenerateRandomBytes(secret.SaltLength)
+		if err != nil {
+			return err
+		}
+		nonce, err := secret.GenerateRandomBytes(secret.NonceLength)
+		if err != nil {
+			return err
+		}
+
+		encryptedPassword, err := secret.Encrypt(credentials.Username, credentials.Password, salt, nonce)
+		if err != nil {
+			return err
+		}
+
+		loginCredential := &v2.LoginCredential{
+			Url:               url,
+			Username:          credentials.Username,
+			EncryptedPassword: encryptedPassword,
+			Salt:              salt,
+			Nonce:             nonce,
+		}
+		if err := config.SaveLoginCredential(ctxName, loginCredential); err != nil {
+			return err
+		}
+	}
+
+	stateSalt, err := secret.GenerateRandomBytes(secret.SaltLength)
+	if err != nil {
+		return err
+	}
+	stateNonce, err := secret.GenerateRandomBytes(secret.NonceLength)
+	if err != nil {
+		return err
+	}
+
+	state.Salt = stateSalt
+	state.Nonce = stateNonce
+
 	if ctx, ok := config.Contexts[ctxName]; ok {
 		config.ContextStates[ctxName] = state
 		ctx.State = state
