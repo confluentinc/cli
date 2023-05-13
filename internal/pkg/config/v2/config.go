@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"reflect"
 
 	"github.com/google/uuid"
 	"github.com/hashicorp/go-version"
@@ -152,7 +153,7 @@ func (c *Config) Validate() error {
 		if _, ok := c.ContextStates[context.Name]; !ok {
 			c.ContextStates[context.Name] = new(ContextState)
 		}
-		if *c.ContextStates[context.Name] != *context.State {
+		if !reflect.DeepEqual(*c.ContextStates[context.Name], *context.State) {
 			return errors.NewCorruptedConfigError(errors.ContextStateMismatchErrorMsg, context.Name, c.CLIName, c.Filename, c.Logger)
 		}
 	}

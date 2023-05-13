@@ -13,6 +13,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/analytics"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
@@ -21,6 +22,7 @@ import (
 
 type Command struct {
 	*pcmd.CLICommand
+	cfg             *v3.Config
 	cliName         string
 	logger          *log.Logger
 	analyticsClient analytics.Client
@@ -32,11 +34,12 @@ type Command struct {
 	authTokenHandler        pauth.AuthTokenHandler
 }
 
-func New(cliName string, prerunner pcmd.PreRunner, log *log.Logger, ccloudClientFactory pauth.CCloudClientFactory,
+func New(cliName string, cfg *v3.Config, prerunner pcmd.PreRunner, log *log.Logger, ccloudClientFactory pauth.CCloudClientFactory,
 	mdsClientManager pauth.MDSClientManager, analyticsClient analytics.Client, netrcHandler netrc.NetrcHandler,
 	loginCredentialsManager pauth.LoginCredentialsManager, authTokenHandler pauth.AuthTokenHandler) *Command {
 	cmd := &Command{
 		cliName:                 cliName,
+		cfg:                     cfg,
 		logger:                  log,
 		analyticsClient:         analyticsClient,
 		mdsClientManager:        mdsClientManager,
@@ -80,7 +83,7 @@ func (a *Command) init(prerunner pcmd.PreRunner) {
 	}
 	loginCmd.Flags().Bool("no-browser", false, "Do not open browser when authenticating via Single Sign-On.")
 	loginCmd.Flags().Bool("prompt", false, "Bypass non-interactive login and prompt for login credentials.")
-	loginCmd.Flags().Bool("save", false, "Save login credentials or refresh token (in the case of SSO) to local netrc file.")
+	loginCmd.Flags().Bool("save", false, "Save username and encrypted password (non-SSO credentials) to the configuration file in your $HOME directory, and to macOS keychain if applicable.")
 	loginCmd.Flags().SortFlags = false
 	cliLoginCmd := pcmd.NewAnonymousCLICommand(loginCmd, prerunner)
 	a.CLICommand = cliLoginCmd
@@ -92,12 +95,12 @@ func (a *Command) login(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	credentials, err := a.getCCloudCredentials(cmd, url)
+	noBrowser, err := cmd.Flags().GetBool("no-browser")
 	if err != nil {
 		return err
 	}
 
-	noBrowser, err := cmd.Flags().GetBool("no-browser")
+	credentials, err := a.getCCloudCredentials(cmd, url)
 	if err != nil {
 		return err
 	}
@@ -109,8 +112,15 @@ func (a *Command) login(cmd *cobra.Command, _ []string) error {
 	}
 
 	client = a.ccloudClientFactory.JwtHTTPClientFactory(context.Background(), token, url)
+	credentials.AuthToken = token
+	credentials.AuthRefreshToken = refreshToken
 
-	currentEnv, err := pauth.PersistCCloudLoginToConfig(a.Config.Config, credentials.Username, url, token, client)
+	save, err := cmd.Flags().GetBool("save")
+	if err != nil {
+		return err
+	}
+
+	currentEnv, err := pauth.PersistCCloudLoginToConfig(a.Config.Config, credentials, url, token, client, save)
 	if err != nil {
 		return err
 	}
@@ -118,10 +128,6 @@ func (a *Command) login(cmd *cobra.Command, _ []string) error {
 	// If refresh token is available, we want to save that in the place of password
 	if refreshToken != "" {
 		credentials.Password = refreshToken
-	}
-	err = a.saveLoginToNetrc(cmd, credentials)
-	if err != nil {
-		return err
 	}
 
 	a.logger.Debugf(errors.LoggedInAsMsg, credentials.Username)
@@ -144,13 +150,14 @@ func (a *Command) getCCloudCredentials(cmd *cobra.Command, url string) (*pauth.C
 	if promptOnly {
 		return pauth.GetLoginCredentials(a.loginCredentialsManager.GetCCloudCredentialsFromPrompt(cmd))
 	}
-	netrcFilterParams := netrc.GetMatchingNetrcMachineParams{
+	filterParams := netrc.GetMatchingNetrcMachineParams{
 		CLIName: a.cliName,
 		URL:     url,
 	}
 	return pauth.GetLoginCredentials(
 		a.loginCredentialsManager.GetCCloudCredentialsFromEnvVar(cmd),
-		a.loginCredentialsManager.GetCredentialsFromNetrc(cmd, netrcFilterParams),
+		a.loginCredentialsManager.GetCredentialsFromConfig(a.cfg, filterParams),
+		a.loginCredentialsManager.GetCredentialsFromNetrc(cmd, filterParams),
 		a.loginCredentialsManager.GetCCloudCredentialsFromPrompt(cmd),
 	)
 }
@@ -201,12 +208,12 @@ func (a *Command) loginMDS(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	err = pauth.PersistConfluentLoginToConfig(a.Config.Config, credentials.Username, url, token, caCertPath, isLegacyContext)
+	save, err := cmd.Flags().GetBool("save")
 	if err != nil {
 		return err
 	}
 
-	err = a.saveLoginToNetrc(cmd, credentials)
+	err = pauth.PersistConfluentLoginToConfig(a.Config.Config, credentials, url, token, caCertPath, isLegacyContext, save)
 	if err != nil {
 		return err
 	}
@@ -246,13 +253,14 @@ func (a *Command) getConfluentCredentials(cmd *cobra.Command, url string) (*paut
 	if promptOnly {
 		return pauth.GetLoginCredentials(a.loginCredentialsManager.GetConfluentCredentialsFromPrompt(cmd))
 	}
-	netrcFilterParams := netrc.GetMatchingNetrcMachineParams{
+	filterParams := netrc.GetMatchingNetrcMachineParams{
 		CLIName: a.cliName,
 		URL:     url,
 	}
 	return pauth.GetLoginCredentials(
 		a.loginCredentialsManager.GetConfluentCredentialsFromEnvVar(cmd),
-		a.loginCredentialsManager.GetCredentialsFromNetrc(cmd, netrcFilterParams),
+		a.loginCredentialsManager.GetCredentialsFromConfig(a.cfg, filterParams),
+		a.loginCredentialsManager.GetCredentialsFromNetrc(cmd, filterParams),
 		a.loginCredentialsManager.GetConfluentCredentialsFromPrompt(cmd),
 	)
 }
@@ -286,21 +294,6 @@ func (a *Command) getURL(cmd *cobra.Command) (string, error) {
 		utils.ErrPrintf(cmd, errors.UsingLoginURLDefaults, errMsg)
 	}
 	return url, nil
-}
-
-func (a *Command) saveLoginToNetrc(cmd *cobra.Command, credentials *pauth.Credentials) error {
-	saveToNetrc, err := cmd.Flags().GetBool("save")
-	if err != nil {
-		return err
-	}
-	if saveToNetrc {
-		err = a.netrcHandler.WriteNetrcCredentials(a.Config.CLIName, credentials.IsSSO, a.Config.Config.Context().Name, credentials.Username, credentials.Password)
-		if err != nil {
-			return err
-		}
-		utils.ErrPrintf(cmd, errors.WroteCredentialsToNetrcMsg, a.netrcHandler.GetFileName())
-	}
-	return nil
 }
 
 func validateURL(url string, cli string) (string, bool, string) {

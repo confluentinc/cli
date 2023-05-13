@@ -367,8 +367,8 @@ func (r *PreRun) ccloudAutoLogin(cmd *cobra.Command) error {
 		r.Logger.Debug("Non-interactive login failed: no credentials")
 		return nil
 	}
-	client := r.CCloudClientFactory.JwtHTTPClientFactory(context.Background(), token, pauth.CCloudURL)
-	currentEnv, err := pauth.PersistCCloudLoginToConfig(r.Config, credentials.Username, pauth.CCloudURL, token, client)
+	client := r.CCloudClientFactory.JwtHTTPClientFactory(context.Background(), credentials.AuthToken, pauth.CCloudURL)
+	currentEnv, err := pauth.PersistCCloudLoginToConfig(r.Config, credentials, pauth.CCloudURL, credentials.AuthToken, client, false)
 	if err != nil {
 		return err
 	}
@@ -380,13 +380,14 @@ func (r *PreRun) ccloudAutoLogin(cmd *cobra.Command) error {
 
 func (r *PreRun) getCCloudTokenAndCredentials(cmd *cobra.Command) (string, *pauth.Credentials, error) {
 	url := pauth.CCloudURL
-	netrcFilterParams := netrc.GetMatchingNetrcMachineParams{
+	filterParams := netrc.GetMatchingNetrcMachineParams{
 		CLIName: r.CLIName,
 		URL:     url,
 	}
 	credentials, err := pauth.GetLoginCredentials(
 		r.LoginCredentialsManager.GetCCloudCredentialsFromEnvVar(cmd),
-		r.LoginCredentialsManager.GetCredentialsFromNetrc(cmd, netrcFilterParams),
+		r.LoginCredentialsManager.GetCredentialsFromConfig(r.Config, filterParams),
+		r.LoginCredentialsManager.GetCredentialsFromNetrc(cmd, filterParams),
 	)
 	if err != nil {
 		r.Logger.Debug("Prerun login getting credentials failed: ", err.Error())
@@ -568,7 +569,7 @@ func (r *PreRun) confluentAutoLogin(cmd *cobra.Command) error {
 		r.Logger.Debug("Non-interactive login failed: no credentials")
 		return nil
 	}
-	err = pauth.PersistConfluentLoginToConfig(r.Config, credentials.Username, credentials.PrerunLoginURL, token, credentials.PrerunLoginCaCertPath, false)
+	err = pauth.PersistConfluentLoginToConfig(r.Config, credentials, credentials.PrerunLoginURL, token, credentials.PrerunLoginCaCertPath, false, false)
 	if err != nil {
 		return err
 	}
@@ -824,11 +825,14 @@ func (r *PreRun) updateToken(tokenError error, cmd *cobra.Command, ctx *DynamicC
 }
 
 func (r *PreRun) getUpdatedAuthToken(cmd *cobra.Command, ctx *DynamicContext) (string, error) {
-	params := netrc.GetMatchingNetrcMachineParams{
+	filterParams := netrc.GetMatchingNetrcMachineParams{
 		CLIName: r.CLIName,
 		CtxName: ctx.Name,
 	}
-	credentials, err := pauth.GetLoginCredentials(r.LoginCredentialsManager.GetCredentialsFromNetrc(cmd, params))
+	credentials, err := pauth.GetLoginCredentials(
+		r.LoginCredentialsManager.GetCredentialsFromNetrc(cmd, filterParams),
+		r.LoginCredentialsManager.GetCredentialsFromConfig(r.Config, filterParams),
+	)
 	if err != nil {
 		return "", err
 	}

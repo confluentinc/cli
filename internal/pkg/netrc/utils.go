@@ -14,12 +14,12 @@ type MachineContextInfo struct {
 }
 
 func ParseNetrcMachineName(machineName string) (*MachineContextInfo, error) {
-	if !strings.HasPrefix(machineName, netrcCredentialsPrefix) {
+	if !strings.HasPrefix(machineName, localCredentialsPrefix) {
 		return nil, errors.New("Incorrect machine name format")
 	}
 
 	// example: machinename = confluent-cli:ccloud-username-password:login-caas-team+integ-cli@confluent.io-https://devel.cpdev.cloud
-	credTypeAndContextNameString := suffixFromIndex(machineName, len(netrcCredentialsPrefix)+1)
+	credTypeAndContextNameString := suffixFromIndex(machineName, len(localCredentialsPrefix)+1)
 
 	// credTypeAndContextName = ccloud-username-password:login-caas-team+integ-cli@confluent.io-https://devel.cpdev.cloud
 	credType, contextNameString, err := extractCredentialType(credTypeAndContextNameString)

@@ -378,13 +378,13 @@ func TestGetMachineNameRegex(t *testing.T) {
 				CtxName: ccloudCtxName,
 			},
 			matchNames: []string{
-				getNetrcMachineName("ccloud", true, ccloudCtxName),
-				getNetrcMachineName("ccloud", false, ccloudCtxName),
+				GetLocalCredentialName("ccloud", true, ccloudCtxName),
+				GetLocalCredentialName("ccloud", false, ccloudCtxName),
 			},
 			nonMatchNames: []string{
-				getNetrcMachineName("ccloud", false, "login-csreesangkom@confleunt.io-"+"https://wassup"),
-				getNetrcMachineName("ccloud", true, "login-csreesangkom@confleunt.io-"+"https://wassup"),
-				getNetrcMachineName("confluent", false, ccloudCtxName),
+				GetLocalCredentialName("ccloud", false, "login-csreesangkom@confleunt.io-"+"https://wassup"),
+				GetLocalCredentialName("ccloud", true, "login-csreesangkom@confleunt.io-"+"https://wassup"),
+				GetLocalCredentialName("confluent", false, ccloudCtxName),
 			},
 		},
 		{
@@ -395,12 +395,12 @@ func TestGetMachineNameRegex(t *testing.T) {
 				URL:     url,
 			},
 			matchNames: []string{
-				getNetrcMachineName("ccloud", true, "login-csreesangkom@confleunt.io-"+url),
+				GetLocalCredentialName("ccloud", true, "login-csreesangkom@confleunt.io-"+url),
 			},
 			nonMatchNames: []string{
-				getNetrcMachineName("ccloud", false, "login-csreesangkom@confleunt.io-"+url),
-				getNetrcMachineName("ccloud", false, "login-csreesangkom@confleunt.io-"+"https://wassup"),
-				getNetrcMachineName("confluent", false, "login-csreesangkom@confleunt.io-"+url),
+				GetLocalCredentialName("ccloud", false, "login-csreesangkom@confleunt.io-"+url),
+				GetLocalCredentialName("ccloud", false, "login-csreesangkom@confleunt.io-"+"https://wassup"),
+				GetLocalCredentialName("confluent", false, "login-csreesangkom@confleunt.io-"+url),
 			},
 		},
 		{
@@ -411,12 +411,12 @@ func TestGetMachineNameRegex(t *testing.T) {
 				URL:     url,
 			},
 			matchNames: []string{
-				getNetrcMachineName("ccloud", true, "login-csreesangkom@confleunt.io-"+url),
-				getNetrcMachineName("ccloud", false, "login-csreesangkom@confleunt.io-"+url),
+				GetLocalCredentialName("ccloud", true, "login-csreesangkom@confleunt.io-"+url),
+				GetLocalCredentialName("ccloud", false, "login-csreesangkom@confleunt.io-"+url),
 			},
 			nonMatchNames: []string{
-				getNetrcMachineName("ccloud", false, "login-csreesangkom@confleunt.io-"+"https://wassup"),
-				getNetrcMachineName("confluent", false, "login-csreesangkom@confleunt.io-"+url),
+				GetLocalCredentialName("ccloud", false, "login-csreesangkom@confleunt.io-"+"https://wassup"),
+				GetLocalCredentialName("confluent", false, "login-csreesangkom@confleunt.io-"+url),
 			},
 		},
 		{
@@ -426,11 +426,11 @@ func TestGetMachineNameRegex(t *testing.T) {
 				CtxName: confluentCtxName,
 			},
 			matchNames: []string{
-				getNetrcMachineName("confluent", false, confluentCtxName),
+				GetLocalCredentialName("confluent", false, confluentCtxName),
 			},
 			nonMatchNames: []string{
-				getNetrcMachineName("confluent", false, "login-csreesangkom@confleunt.io-"+"https://wassup"),
-				getNetrcMachineName("ccloud", false, confluentCtxName),
+				GetLocalCredentialName("confluent", false, "login-csreesangkom@confleunt.io-"+"https://wassup"),
+				GetLocalCredentialName("ccloud", false, confluentCtxName),
 			},
 		},
 		{
@@ -441,11 +441,11 @@ func TestGetMachineNameRegex(t *testing.T) {
 				URL:     url,
 			},
 			matchNames: []string{
-				getNetrcMachineName("confluent", false, "login-csreesangkom@confleunt.io-"+url),
+				GetLocalCredentialName("confluent", false, "login-csreesangkom@confleunt.io-"+url),
 			},
 			nonMatchNames: []string{
-				getNetrcMachineName("confluent", false, "login-csreesangkom@confleunt.io-"+"https://wassup"),
-				getNetrcMachineName("ccloud", false, "login-csreesangkom@confleunt.io-"+url),
+				GetLocalCredentialName("confluent", false, "login-csreesangkom@confleunt.io-"+"https://wassup"),
+				GetLocalCredentialName("ccloud", false, "login-csreesangkom@confleunt.io-"+url),
 			},
 		},
 		{
@@ -455,12 +455,12 @@ func TestGetMachineNameRegex(t *testing.T) {
 				CtxName: specialCharsCtxName,
 			},
 			matchNames: []string{
-				getNetrcMachineName("ccloud", false, specialCharsCtxName),
-				getNetrcMachineName("ccloud", true, specialCharsCtxName),
+				GetLocalCredentialName("ccloud", false, specialCharsCtxName),
+				GetLocalCredentialName("ccloud", true, specialCharsCtxName),
 			},
 			nonMatchNames: []string{
-				getNetrcMachineName("ccloud", false, ccloudCtxName),
-				getNetrcMachineName("ccloud", true, ccloudCtxName),
+				GetLocalCredentialName("ccloud", false, ccloudCtxName),
+				GetLocalCredentialName("ccloud", true, ccloudCtxName),
 			},
 		},
 		{
@@ -470,10 +470,10 @@ func TestGetMachineNameRegex(t *testing.T) {
 				CtxName: specialCharsCtxName,
 			},
 			matchNames: []string{
-				getNetrcMachineName("confluent", false, specialCharsCtxName),
+				GetLocalCredentialName("confluent", false, specialCharsCtxName),
 			},
 			nonMatchNames: []string{
-				getNetrcMachineName("confluent", false, ccloudCtxName),
+				GetLocalCredentialName("confluent", false, ccloudCtxName),
 			},
 		},
 	}

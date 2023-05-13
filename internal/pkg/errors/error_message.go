@@ -220,7 +220,7 @@ const (
 	NonSSOUserErrorMsg               = "tried to obtain SSO token for non SSO user \"%s\""
 	NoCredentialsFoundErrorMsg       = "no credentials found"
 	NoURLEnvVarErrorMsg              = "no URL env var"
-	InvalidInputFormatErrorMsg       = "\"%s\" is not of valid format for field \"%s\""
+	InvalidInputFormatErrorMsg       = `"%s" is not of valid format for field "%s"`
 
 	// cmd package
 	FindKafkaNoClientErrorMsg = "unable to obtain Kafka cluster information for cluster \"%s\": no client"
@@ -256,6 +256,7 @@ const (
 	CredentialNotFoundErrorMsg         = "credential \"%s\" not found"
 	PlatformNotFoundErrorMsg           = "platform \"%s\" not found"
 	NoNameCredentialErrorMsg           = "credential must have a name"
+	SavedCredentialNoContextErrorMsg   = "saved credential must match a context"
 	NoNamePlatformErrorMsg             = "platform must have a name"
 	UnspecifiedPlatformErrorMsg        = "context \"%s\" has corrupted platform"
 	UnspecifiedCredentialErrorMsg      = "context \"%s\" has corrupted credentials"
@@ -305,6 +306,7 @@ const (
 	InvalidJSONFileFormatErrorMsg      = "invalid json file format"
 	InvalidFilePathErrorMsg            = "invalid file path \"%s\""
 	UnsupportedFileFormatErrorMsg      = "unsupported file format for file \"%s\""
+	IncorrectNonceLengthErrorMsg       = `incorrect nonce length from ~/.confluent/config.json passed into encryption`
 
 	// sso package
 	StartHTTPServerErrorMsg            = "unable to start HTTP server"

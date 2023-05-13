@@ -138,7 +138,7 @@ func NewConfluentCommand(cliName string, isTest bool, ver *pversion.Version) *co
 	cli.AddCommand(completion.New(cli, cliName))
 	cli.AddCommand(config.New(cliName, prerunner, analyticsClient))
 	cli.AddCommand(kafka.New(isAPIKeyLogin, cliName, prerunner, logger.Named("kafka"), ver.ClientID, serverCompleter, analyticsClient))
-	cli.AddCommand(login.New(cliName, prerunner, logger, ccloudClientFactory, mdsClientManager, analyticsClient, netrcHandler, loginCredentialsManager, authTokenHandler).Command)
+	cli.AddCommand(login.New(cliName, cfg, prerunner, logger, ccloudClientFactory, mdsClientManager, analyticsClient, netrcHandler, loginCredentialsManager, authTokenHandler).Command)
 	cli.AddCommand(logout.New(cliName, prerunner, analyticsClient, netrcHandler).Command)
 	cli.AddCommand(version.New(cliName, prerunner, ver))
 

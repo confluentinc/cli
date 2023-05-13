@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"reflect"
 
 	orgv1 "github.com/confluentinc/cc-structs/kafka/org/v1"
 	"github.com/google/uuid"
@@ -15,6 +16,7 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/secret"
 )
 
 const (
@@ -27,15 +29,16 @@ var Version, _ = version.NewVersion("3.0.0")
 // Config represents the CLI configuration.
 type Config struct {
 	*config.BaseConfig
-	DisableUpdateCheck     bool                        `json:"disable_update_check"`
-	DisableUpdates         bool                        `json:"disable_updates"`
-	NoBrowser              bool                        `json:"no_browser" hcl:"no_browser"`
-	Platforms              map[string]*v2.Platform     `json:"platforms,omitempty"`
-	Credentials            map[string]*v2.Credential   `json:"credentials,omitempty"`
-	Contexts               map[string]*Context         `json:"contexts,omitempty"`
-	ContextStates          map[string]*v2.ContextState `json:"context_states,omitempty"`
-	CurrentContext         string                      `json:"current_context"`
-	AnonymousId            string                      `json:"anonymous_id,omitempty"`
+	DisableUpdateCheck     bool                           `json:"disable_update_check"`
+	DisableUpdates         bool                           `json:"disable_updates"`
+	NoBrowser              bool                           `json:"no_browser" hcl:"no_browser"`
+	Platforms              map[string]*v2.Platform        `json:"platforms,omitempty"`
+	Credentials            map[string]*v2.Credential      `json:"credentials,omitempty"`
+	Contexts               map[string]*Context            `json:"contexts,omitempty"`
+	ContextStates          map[string]*v2.ContextState    `json:"context_states,omitempty"`
+	CurrentContext         string                         `json:"current_context"`
+	AnonymousId            string                         `json:"anonymous_id,omitempty"`
+	SavedCredentials       map[string]*v2.LoginCredential `json:"saved_credentials,omitempty"`
 	overwrittenAccount     *orgv1.Account
 	overwrittenCurrContext string
 	overwrittenActiveKafka string
@@ -78,6 +81,7 @@ func New(params *config.Params) *Config {
 	c.Credentials = map[string]*v2.Credential{}
 	c.Contexts = map[string]*Context{}
 	c.ContextStates = map[string]*v2.ContextState{}
+	c.SavedCredentials = make(map[string]*v2.LoginCredential)
 	c.AnonymousId = uuid.New().String()
 	return c
 }
@@ -144,6 +148,18 @@ func (c *Config) Save() error {
 	tempKafka := c.resolveOverwrittenKafka()
 	tempAccount := c.resolveOverwrittenAccount()
 	tempContext := c.resolveOverwrittenContext()
+	var tempAuthToken string
+	var tempAuthRefreshToken string
+
+	if c.Context() != nil {
+		tempAuthToken = c.Context().GetState().AuthToken
+		tempAuthRefreshToken = c.Context().GetState().AuthRefreshToken
+		err := c.encryptContextStateTokens(tempAuthToken, tempAuthRefreshToken)
+		if err != nil {
+			return err
+		}
+	}
+
 	err := c.Validate()
 	if err != nil {
 		return err
@@ -168,7 +184,53 @@ func (c *Config) Save() error {
 	c.restoreOverwrittenContext(tempContext)
 	c.restoreOverwrittenAccount(tempAccount)
 	c.restoreOverwrittenKafka(tempKafka)
+	c.restoreOverwrittenAuthToken(tempAuthToken)
+	c.restoreOverwrittenAuthRefreshToken(tempAuthRefreshToken)
 	return nil
+}
+
+func (c *Config) encryptContextStateTokens(tempAuthToken, tempAuthRefreshToken string) error {
+	if c.Context().GetState().Salt == nil || c.Context().GetState().Nonce == nil {
+		salt, err := secret.GenerateRandomBytes(secret.SaltLength)
+		if err != nil {
+			return err
+		}
+		nonce, err := secret.GenerateRandomBytes(secret.NonceLength)
+		if err != nil {
+			return err
+		}
+		c.Context().GetState().Salt = salt
+		c.Context().GetState().Nonce = nonce
+	}
+	if tempAuthToken != "" {
+		encryptedAuthToken, err := secret.Encrypt(c.Context().Name, tempAuthToken, c.Context().GetState().Salt, c.Context().GetState().Nonce)
+		if err != nil {
+			return err
+		}
+		c.Context().GetState().AuthToken = encryptedAuthToken
+	}
+	if tempAuthRefreshToken != "" {
+		encryptedAuthRefreshToken, err := secret.Encrypt(c.Context().Name, tempAuthRefreshToken, c.Context().GetState().Salt, c.Context().GetState().Nonce)
+		if err != nil {
+			return err
+		}
+		c.Context().State.AuthRefreshToken = encryptedAuthRefreshToken
+	}
+	return nil
+}
+
+func (c *Config) restoreOverwrittenAuthToken(tempAuthToken string) {
+	ctx := c.Context()
+	if tempAuthToken != "" {
+		ctx.GetState().AuthToken = tempAuthToken
+	}
+}
+
+func (c *Config) restoreOverwrittenAuthRefreshToken(tempAuthRefreshToken string) {
+	ctx := c.Context()
+	if tempAuthRefreshToken != "" {
+		ctx.GetState().AuthRefreshToken = tempAuthRefreshToken
+	}
 }
 
 // If active Kafka cluster has been overwritten by flag value; if so, replace with previous active kafka
@@ -264,7 +326,7 @@ func (c *Config) Validate() error {
 		if _, ok := c.ContextStates[context.Name]; !ok {
 			c.ContextStates[context.Name] = new(v2.ContextState)
 		}
-		if *c.ContextStates[context.Name] != *context.State {
+		if !reflect.DeepEqual(*c.ContextStates[context.Name], *context.State) {
 			c.Logger.Trace(fmt.Sprintf("state of context %s in config does not match actual state of context", context.Name))
 			return errors.NewCorruptedConfigError(errors.ContextStateMismatchErrorMsg, context.Name, c.CLIName, c.Filename, c.Logger)
 		}
@@ -355,6 +417,14 @@ func (c *Config) SaveCredential(credential *v2.Credential) error {
 		return errors.New(errors.NoNameCredentialErrorMsg)
 	}
 	c.Credentials[credential.Name] = credential
+	return c.Save()
+}
+
+func (c *Config) SaveLoginCredential(ctxName string, loginCredential *v2.LoginCredential) error {
+	if ctxName == "" {
+		return errors.New(errors.SavedCredentialNoContextErrorMsg)
+	}
+	c.SavedCredentials[ctxName] = loginCredential
 	return c.Save()
 }
 
