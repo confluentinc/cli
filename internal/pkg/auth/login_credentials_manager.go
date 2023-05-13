@@ -8,21 +8,17 @@ import (
 	"strings"
 
 	flowv1 "github.com/confluentinc/cc-structs/kafka/flow/v1"
-
+	ccloud "github.com/confluentinc/ccloud-sdk-go-v1"
 	v2 "github.com/confluentinc/cli/internal/pkg/config/v2"
 	v3 "github.com/confluentinc/cli/internal/pkg/config/v3"
-	"github.com/confluentinc/cli/internal/pkg/secret"
-	"github.com/confluentinc/cli/internal/pkg/sso"
-
-	"github.com/spf13/cobra"
-
-	"github.com/confluentinc/ccloud-sdk-go-v1"
-
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
+	"github.com/confluentinc/cli/internal/pkg/secret"
+	"github.com/confluentinc/cli/internal/pkg/sso"
 	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/spf13/cobra"
 )
 
 type Credentials struct {

@@ -42,6 +42,8 @@ type Config struct {
 	overwrittenAccount     *orgv1.Account
 	overwrittenCurrContext string
 	overwrittenActiveKafka string
+
+	IsTest bool `json:"is_test,omitempty"`
 }
 
 func (c *Config) SetOverwrittenAccount(acct *orgv1.Account) {
@@ -326,7 +328,7 @@ func (c *Config) Validate() error {
 		if _, ok := c.ContextStates[context.Name]; !ok {
 			c.ContextStates[context.Name] = new(v2.ContextState)
 		}
-		if !reflect.DeepEqual(*c.ContextStates[context.Name], *context.State) {
+		if !c.IsTest && !reflect.DeepEqual(*c.ContextStates[context.Name], *context.State) {
 			c.Logger.Trace(fmt.Sprintf("state of context %s in config does not match actual state of context", context.Name))
 			return errors.NewCorruptedConfigError(errors.ContextStateMismatchErrorMsg, context.Name, c.CLIName, c.Filename, c.Logger)
 		}

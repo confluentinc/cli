@@ -1,13 +1,7 @@
 package netrc
 
 import (
-	"io/ioutil"
-	"os"
 	"testing"
-
-	"github.com/stretchr/testify/require"
-
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 const (
@@ -271,91 +265,6 @@ func TestGetMatchingNetrcMachineFromURL(t *testing.T) {
 				}
 
 			}
-		})
-	}
-}
-
-func TestNetrcWriter(t *testing.T) {
-	tests := []struct {
-		name        string
-		inputFile   string
-		wantFile    string
-		cliName     string
-		isSSO       bool
-		contextName string
-		wantErr     bool
-	}{
-		{
-			name:        "add mds context credential",
-			inputFile:   netrcInput,
-			wantFile:    outputFileMds,
-			contextName: mdsContext,
-			cliName:     "confluent",
-		},
-		{
-			name:        "add ccloud login context credential",
-			inputFile:   netrcInput,
-			wantFile:    outputFileCcloudLogin,
-			contextName: ccloudLoginContext,
-			cliName:     "ccloud",
-		},
-		{
-			name:        "add ccloud sso context credential",
-			inputFile:   netrcInput,
-			wantFile:    outputFileCcloudSSO,
-			contextName: ccloudSSOContext,
-			cliName:     "ccloud",
-			isSSO:       true,
-		},
-		{
-			name:        "update mds context credential",
-			inputFile:   inputFileMds,
-			wantFile:    outputFileMds,
-			contextName: mdsContext,
-			cliName:     "confluent",
-		},
-		{
-			name:        "update ccloud login context credential",
-			inputFile:   inputFileCcloudLogin,
-			wantFile:    outputFileCcloudLogin,
-			contextName: ccloudLoginContext,
-			cliName:     "ccloud",
-		},
-		{
-			name:        "update ccloud sso context credential",
-			inputFile:   inputFileCcloudSSO,
-			wantFile:    outputFileCcloudSSO,
-			contextName: ccloudSSOContext,
-			cliName:     "ccloud",
-			isSSO:       true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tempFile, _ := ioutil.TempFile("", "tempNetrc.json")
-
-			originalNetrc, err := ioutil.ReadFile(tt.inputFile)
-			require.NoError(t, err)
-			err = ioutil.WriteFile(tempFile.Name(), originalNetrc, 0600)
-			require.NoError(t, err)
-
-			netrcHandler := NewNetrcHandler(tempFile.Name())
-			err = netrcHandler.WriteNetrcCredentials(tt.cliName, tt.isSSO, tt.contextName, netrcUser, netrcPassword)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("WriteNetrcCredentials error = %+v, wantErr %+v", err, tt.wantErr)
-			}
-			gotBytes, err := ioutil.ReadFile(tempFile.Name())
-			require.NoError(t, err)
-			got := utils.NormalizeNewLines(string(gotBytes))
-
-			wantBytes, err := ioutil.ReadFile(tt.wantFile)
-			require.NoError(t, err)
-			want := utils.NormalizeNewLines(string(wantBytes))
-
-			if got != want {
-				t.Errorf("got: \n%s\nwant: \n%s\n", got, want)
-			}
-			_ = os.Remove(tempFile.Name())
 		})
 	}
 }

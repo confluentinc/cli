@@ -59,7 +59,7 @@ const (
 )
 
 var (
-	mockLoginCredentialsManager = &cliMock.MockLoginCredentialsManager{
+	LoginCredentialsManager = &cliMock.LoginCredentialsManager{
 		GetCCloudCredentialsFromEnvVarFunc: func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
@@ -115,7 +115,7 @@ func getPreRunBase() *pcmd.PreRun {
 			},
 		},
 		Analytics:               cliMock.NewDummyAnalyticsMock(),
-		LoginCredentialsManager: mockLoginCredentialsManager,
+		LoginCredentialsManager: LoginCredentialsManager,
 		JWTValidator:            pcmd.NewJWTValidator(log.New()),
 		AuthTokenHandler:        mockAuthTokenHandler,
 	}
@@ -322,7 +322,7 @@ func Test_UpdateToken(t *testing.T) {
 
 			cfg.Context().State.AuthToken = tt.authToken
 
-			mockLoginCredentialsManager := &cliMock.MockLoginCredentialsManager{
+			LoginCredentialsManager := &cliMock.LoginCredentialsManager{
 				GetCredentialsFromNetrcFunc: func(cmd *cobra.Command, filterParams netrc.GetMatchingNetrcMachineParams) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return &pauth.Credentials{Username: "username", Password: "password"}, nil
@@ -333,7 +333,7 @@ func Test_UpdateToken(t *testing.T) {
 			r := getPreRunBase()
 			r.CLIName = tt.cliName
 			r.Config = cfg
-			r.LoginCredentialsManager = mockLoginCredentialsManager
+			r.LoginCredentialsManager = LoginCredentialsManager
 
 			root := &cobra.Command{
 				Run: func(cmd *cobra.Command, args []string) {},
@@ -343,7 +343,7 @@ func Test_UpdateToken(t *testing.T) {
 
 			_, err := pcmd.ExecuteCommand(rootCmd.Command)
 			require.NoError(t, err)
-			require.True(t, mockLoginCredentialsManager.GetCredentialsFromNetrcCalled())
+			require.True(t, LoginCredentialsManager.GetCredentialsFromNetrcCalled())
 		})
 	}
 }
@@ -487,7 +487,7 @@ func TestPrerun_AutoLogin(t *testing.T) {
 			var ccloudNetrcCalled bool
 			var confluentEnvVarCalled bool
 			var confluentNetrcCalled bool
-			r.LoginCredentialsManager = &cliMock.MockLoginCredentialsManager{
+			r.LoginCredentialsManager = &cliMock.LoginCredentialsManager{
 				GetCCloudCredentialsFromEnvVarFunc: func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						ccloudEnvVarCalled = true
@@ -577,7 +577,7 @@ func TestPrerun_AutoLoginNotTriggeredIfLoggedIn(t *testing.T) {
 
 			var envVarCalled bool
 			var netrcCalled bool
-			mockLoginCredentialsManager := &cliMock.MockLoginCredentialsManager{
+			LoginCredentialsManager := &cliMock.LoginCredentialsManager{
 				GetCCloudCredentialsFromEnvVarFunc: func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						envVarCalled = true
@@ -595,7 +595,7 @@ func TestPrerun_AutoLoginNotTriggeredIfLoggedIn(t *testing.T) {
 			r := getPreRunBase()
 			r.CLIName = tt.cliName
 			r.Config = cfg
-			r.LoginCredentialsManager = mockLoginCredentialsManager
+			r.LoginCredentialsManager = LoginCredentialsManager
 
 			root := &cobra.Command{
 				Run: func(cmd *cobra.Command, args []string) {},
@@ -874,7 +874,7 @@ func TestInitializeOnPremKafkaRest(t *testing.T) {
 	buf := new(bytes.Buffer)
 	cmd.SetOut(buf)
 	t.Run("InitializeOnPremKafkaRest_InvalidMdsToken", func(t *testing.T) {
-		mockLoginCredentialsManager := &cliMock.MockLoginCredentialsManager{
+		LoginCredentialsManager := &cliMock.LoginCredentialsManager{
 			GetConfluentPrerunCredentialsFromNetrcFunc: func(cmd *cobra.Command) func() (*pauth.Credentials, error) {
 				return func() (*pauth.Credentials, error) {
 					return nil, nil
@@ -891,7 +891,7 @@ func TestInitializeOnPremKafkaRest(t *testing.T) {
 				}
 			},
 		}
-		r.LoginCredentialsManager = mockLoginCredentialsManager
+		r.LoginCredentialsManager = LoginCredentialsManager
 		err := r.InitializeOnPremKafkaRest(cmd)(cmd.Command, []string{})
 		require.NoError(t, err)
 		kafkaRest, err := cmd.GetKafkaREST()
