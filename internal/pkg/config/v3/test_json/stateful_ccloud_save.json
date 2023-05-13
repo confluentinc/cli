@@ -34,20 +34,24 @@
       "platform": "http://test",
       "credential": "username-test-user",
       "kafka_cluster_context": {
-        "environment_context": false,
-        "active_kafka": "anonymous-id",
-        "kafka_cluster_configs": {
-          "anonymous-id": {
-            "id": "anonymous-id",
-            "name": "anonymous-cluster",
-            "bootstrap_servers": "http://test",
-            "api_keys": {
-              "abc-key-123": {
-                "api_key": "abc-key-123",
-                "api_secret": "def-secret-456"
+        "environment_context": true,
+        "kafka_environment_contexts": {
+          "acc-123": {
+            "active_kafka": "anonymous-id",
+            "kafka_cluster_infos": {
+              "anonymous-id": {
+                "id": "anonymous-id",
+                "name": "anonymous-cluster",
+                "bootstrap_servers": "http://test",
+                "api_keys": {
+                  "abc-key-123": {
+                    "api_key": "abc-key-123",
+                    "api_secret": "def-secret-456"
+                  }
+                },
+                "api_key": "abc-key-123"
               }
-            },
-            "api_key": "abc-key-123"
+            }
           }
         }
       },
@@ -82,8 +86,10 @@
           "name": "test-org"
         }
       },
-      "auth_token": "eyJ.eyJ.abc",
-      "auth_refresh_token": "v1.abc"
+      "auth_token": "AUTH_TOKEN_PLACEHOLDER",
+      "auth_refresh_token": "AUTH_REFRESH_TOKEN_PLACEHOLDER",
+      "salt": "SALT_PLACEHOLDER",
+      "nonce": "NONCE_PLACEHOLDER"
     }
   },
   "current_context": "my-context",

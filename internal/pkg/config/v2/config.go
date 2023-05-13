@@ -34,6 +34,8 @@ type Config struct {
 	ContextStates      map[string]*ContextState `json:"context_states,omitempty"`
 	CurrentContext     string                   `json:"current_context"`
 	AnonymousId        string                   `json:"anonymous_id,omitempty"`
+
+	IsTest bool `json:"is_test,omitempty"`
 }
 
 // NewBaseConfig initializes a new Config object
@@ -153,7 +155,7 @@ func (c *Config) Validate() error {
 		if _, ok := c.ContextStates[context.Name]; !ok {
 			c.ContextStates[context.Name] = new(ContextState)
 		}
-		if !reflect.DeepEqual(*c.ContextStates[context.Name], *context.State) {
+		if !c.IsTest && !reflect.DeepEqual(*c.ContextStates[context.Name], *context.State) {
 			return errors.NewCorruptedConfigError(errors.ContextStateMismatchErrorMsg, context.Name, c.CLIName, c.Filename, c.Logger)
 		}
 	}
