@@ -35,7 +35,7 @@ An important part of a good command line tool are shortcuts. To add custom short
 
 https://stackoverflow.com/questions/6205157/how-to-set-keyboard-shortcuts-to-jump-to-beginning-end-of-line
 
-As an example, I've added [option + arrow navigation](./main.go#L29) in the current example.
+We have a couple of examples in the codebase.
 
 #### Inspirations for testing tview - we prob won't test this though
 

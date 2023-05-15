@@ -36,14 +36,13 @@ func StartApp(envId, orgResourceId, kafkaClusterId, computePoolId string, authTo
 	// Instantiate Component Controllers
 	tableController := controller.NewTableController(table, store, appController)
 	inputController := controller.NewInputController(tableController, appController, store, authenticated, history, appOptions)
-	shortcutsController := controller.NewShortcutsController(shortcuts, appController, tableController)
 
 	// Pass RunInteractiveInputFunc to table controller so the user can come back from the output view
 	tableController.SetRunInteractiveInputCallback(inputController.RunInteractiveInput)
 
 	// Event handlers
 	app.SetInputCapture(tableController.AppInputCapture)
-	shortcuts.SetHighlightedFunc(shortcutsController.ShortcutHighlighted)
+
 	interactiveOutput := components.InteractiveOutput(table, shortcuts)
 	rootLayout := components.RootLayout(interactiveOutput)
 
@@ -57,7 +56,7 @@ func StartApp(envId, orgResourceId, kafkaClusterId, computePoolId string, authTo
 	})
 
 	// Start the application.
-	if err := appController.TView().SetRoot(rootLayout, true).EnableMouse(true).Run(); err != nil {
+	if err := appController.TView().SetRoot(rootLayout, true).EnableMouse(false).Run(); err != nil {
 		panic(err)
 	}
 }
