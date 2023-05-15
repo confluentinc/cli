@@ -38,7 +38,6 @@ require (
 	github.com/emicklei/go-restful v2.9.6+incompatible // indirect
 	github.com/fatih/color v1.12.0
 	github.com/gliderlabs/ssh v0.3.0 // indirect
-	github.com/go-test/deep v1.1.0 // indirect
 	github.com/go-yaml/yaml v2.1.0+incompatible
 	github.com/gobuffalo/flect v0.1.3
 	github.com/gogo/protobuf v1.3.1
