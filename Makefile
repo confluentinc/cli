@@ -40,7 +40,6 @@ cli-builder:
 	TAGS=$(TAGS) CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) VERSION=$(VERSION) GOEXPERIMENT=boringcrypto goreleaser build -f .goreleaser-build.yml --clean --single-target --snapshot
 
 include ./mk-files/cc-cli-service.mk
-include ./mk-files/dockerhub.mk
 include ./mk-files/semver.mk
 include ./mk-files/docs.mk
 include ./mk-files/dry-run.mk

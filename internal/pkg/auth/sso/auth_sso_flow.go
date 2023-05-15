@@ -18,10 +18,12 @@ func Login(authURL string, noBrowser bool, connectionName string) (string, strin
 		return "", "", err
 	}
 
+	isOkta := IsOkta(authURL)
+
 	if noBrowser {
 		// no browser flag does not need to launch the server
 		// it prints the url and has the user copy this into their browser instead
-		url := state.getAuthorizationCodeUrl(connectionName)
+		url := state.getAuthorizationCodeUrl(connectionName, isOkta)
 		fmt.Printf(errors.NoBrowserSSOInstructionsMsg, url)
 
 		// wait for the user to paste the code
@@ -49,7 +51,7 @@ func Login(authURL string, noBrowser bool, connectionName string) (string, strin
 		}
 
 		// Get authorization code for making subsequent token request
-		err := browser.OpenURL(state.getAuthorizationCodeUrl(connectionName))
+		err := browser.OpenURL(state.getAuthorizationCodeUrl(connectionName, isOkta))
 		if err != nil {
 			return "", "", errors.Wrap(err, errors.OpenWebBrowserErrorMsg)
 		}
