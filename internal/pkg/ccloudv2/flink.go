@@ -27,14 +27,20 @@ func (c *Client) CreateFlinkComputePool(computePool flinkv2.FcpmV2ComputePool) (
 	return res, errors.CatchCCloudV2Error(err, r)
 }
 
+func (c *Client) DeleteFlinkComputePool(id, environment string) error {
+	req := c.FlinkClient.ComputePoolsFcpmV2Api.DeleteFcpmV2ComputePool(c.flinkApiContext(), id).Environment(environment)
+	r, err := c.FlinkClient.ComputePoolsFcpmV2Api.DeleteFcpmV2ComputePoolExecute(req)
+	return errors.CatchCCloudV2Error(err, r)
+}
+
 func (c *Client) DescribeFlinkComputePool(id, environment string) (flinkv2.FcpmV2ComputePool, error) {
 	req := c.FlinkClient.ComputePoolsFcpmV2Api.GetFcpmV2ComputePool(c.flinkApiContext(), id).Environment(environment)
 	res, r, err := c.FlinkClient.ComputePoolsFcpmV2Api.GetFcpmV2ComputePoolExecute(req)
 	return res, errors.CatchCCloudV2Error(err, r)
 }
 
-func (c *Client) ListFlinkComputePools(specRegion, environment string) ([]flinkv2.FcpmV2ComputePool, error) {
-	req := c.FlinkClient.ComputePoolsFcpmV2Api.ListFcpmV2ComputePools(c.flinkApiContext()).SpecRegion(specRegion).Environment(environment).PageSize(ccloudV2ListPageSize)
+func (c *Client) ListFlinkComputePools(environment, specRegion string) ([]flinkv2.FcpmV2ComputePool, error) {
+	req := c.FlinkClient.ComputePoolsFcpmV2Api.ListFcpmV2ComputePools(c.flinkApiContext()).Environment(environment).SpecRegion(specRegion).PageSize(ccloudV2ListPageSize)
 	res, r, err := c.FlinkClient.ComputePoolsFcpmV2Api.ListFcpmV2ComputePoolsExecute(req)
 	return res.GetData(), errors.CatchCCloudV2Error(err, r)
 }
@@ -46,4 +52,10 @@ func (c *Client) ListFlinkRegions(cloud string) ([]flinkv2.FcpmV2Region, error) 
 	}
 	res, r, err := c.FlinkClient.RegionsFcpmV2Api.ListFcpmV2RegionsExecute(req)
 	return res.GetData(), errors.CatchCCloudV2Error(err, r)
+}
+
+func (c *Client) UpdateFlinkComputePool(id string, update flinkv2.FcpmV2ComputePoolUpdate) (flinkv2.FcpmV2ComputePool, error) {
+	req := c.FlinkClient.ComputePoolsFcpmV2Api.UpdateFcpmV2ComputePool(c.flinkApiContext(), id).FcpmV2ComputePoolUpdate(update)
+	res, r, err := c.FlinkClient.ComputePoolsFcpmV2Api.UpdateFcpmV2ComputePoolExecute(req)
+	return res, errors.CatchCCloudV2Error(err, r)
 }

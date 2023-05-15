@@ -25,17 +25,17 @@ func (c *command) newComputePoolListCommand() *cobra.Command {
 }
 
 func (c *command) computePoolList(cmd *cobra.Command, _ []string) error {
-	region, err := cmd.Flags().GetString("region")
-	if err != nil {
-		return err
-	}
-
 	environment, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}
 
-	computePools, err := c.V2Client.ListFlinkComputePools(region, environment)
+	region, err := cmd.Flags().GetString("region")
+	if err != nil {
+		return err
+	}
+
+	computePools, err := c.V2Client.ListFlinkComputePools(environment, region)
 	if err != nil {
 		return err
 	}
