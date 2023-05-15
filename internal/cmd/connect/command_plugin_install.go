@@ -24,22 +24,28 @@ import (
 )
 
 type manifest struct {
-	Owner struct {
-		Username string `json:"username"`
-		Name     string `json:"name"`
-	} `json:"owner"`
-	Name    string `json:"name"`
-	Title   string `json:"title"`
-	Version string `json:"version"`
-	Archive struct {
-		Url  string `json:"url"`
-		Md5  string `json:"md5"`
-		Sha1 string `json:"sha1"`
-	} `json:"archive"`
-	License []struct {
-		Name string `json:"name"`
-		Url  string `json:"url"`
-	} `json:"license"`
+	Name    string    `json:"name"`
+	Title   string    `json:"title"`
+	Version string    `json:"version"`
+	Owner   owner     `json:"owner"`
+	Archive archive   `json:"archive"`
+	License []license `json:"license"`
+}
+
+type owner struct {
+	Username string `json:"username"`
+	Name     string `json:"name"`
+}
+
+type archive struct {
+	Url  string `json:"url"`
+	Md5  string `json:"md5"`
+	Sha1 string `json:"sha1"`
+}
+
+type license struct {
+	Name string `json:"name"`
+	Url  string `json:"url"`
 }
 
 const (
