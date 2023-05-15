@@ -122,6 +122,11 @@ func (c *KafkaRestClient) ListKafkaLinks(clusterId string) (kafkarestv3.ListLink
 	return c.ClusterLinkingV3Api.ListKafkaLinksExecute(req)
 }
 
+func (c *KafkaRestClient) ListKafkaMirrorTopicsUnderLink(clusterId, linkName string) (kafkarestv3.ListMirrorTopicsResponseDataList, *http.Response, error) {
+	req := c.ClusterLinkingV3Api.ListKafkaMirrorTopicsUnderLink(c.context(), clusterId, linkName)
+	return c.ClusterLinkingV3Api.ListKafkaMirrorTopicsUnderLinkExecute(req)
+}
+
 func (c *KafkaRestClient) UpdateKafkaLinkConfigBatch(clusterId, linkName string, data kafkarestv3.AlterConfigBatchRequestData) (*http.Response, error) {
 	req := c.ClusterLinkingV3Api.UpdateKafkaLinkConfigBatch(c.context(), clusterId, linkName).AlterConfigBatchRequestData(data)
 	return c.ClusterLinkingV3Api.UpdateKafkaLinkConfigBatchExecute(req)
