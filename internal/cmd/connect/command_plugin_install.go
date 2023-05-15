@@ -73,7 +73,7 @@ func (c *pluginCommand) newInstallCommand() *cobra.Command {
 	pcmd.AddDryRunFlag(cmd)
 	cmd.Flags().Bool("force", false, "Proceed without user input.")
 
-	cmd.MarkFlagDirname("plugin-directory")
+	cobra.CheckErr(cmd.MarkFlagDirname("plugin-directory"))
 
 	return cmd
 }
