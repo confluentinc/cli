@@ -53,6 +53,6 @@ smoke-tests:
 	password=$$(vault kv get -field password v1/devel/kv/cli/system-tests/test-user-password) && \
 	email="cli-team+system-tests@confluent.io" && \
 	echo -e "$${email}\n$${password}\n" | HOME=$$(mktemp -d) ./bin/confluent login && \
-	go install github.com/confluentinc/cli-plugins/confluent-login-headless_sso && \
+	go install github.com/confluentinc/cli-plugins/confluent-login-headless_sso@latest && \
 	email="cli-team+system-tests+sso@confluent.io" && \
 	HOME=$$(mktemp -d) ./bin/confluent login headless-sso --provider okta --email $${email} --password $${password}
