@@ -5,10 +5,10 @@ aws ecr get-login-password --region us-west-1 | docker login --username AWS --pa
 go mod vendor
 
 # Build linux/amd64
-docker build . -f ./dockerfiles/Dockerfile_linux_glibc -t cli-linux-glibc-builder-image
-docker container create --name cli-linux-glibc-builder cli-linux-glibc-builder-image
-docker container cp cli-linux-glibc-builder:/cli/dist/. ./dist/
-docker container rm cli-linux-glibc-builder
+docker build . -f ./dockerfiles/Dockerfile_linux_glibc_amd64 -t cli-linux-glibc-amd64-builder-image
+docker container create --name cli-linux-glibc-amd64-builder cli-linux-glibc-amd64-builder-image
+docker container cp cli-linux-glibc-amd64-builder:/cli/dist/. ./prebuilt/
+docker container rm cli-linux-glibc-amd64-builder
 
 # Build linux/arm64
 architecture=$(uname -m)
@@ -18,6 +18,7 @@ else
   docker build . -f ./dockerfiles/Dockerfile_linux_glibc_arm64 -t cli-linux-glibc-arm64-builder-image
 fi
 docker container create --name cli-linux-glibc-arm64-builder cli-linux-glibc-arm64-builder-image
-docker container cp cli-linux-glibc-arm64-builder:/cli/dist/. ./dist/
+docker container cp cli-linux-glibc-arm64-builder:/cli/dist/. ./prebuilt/
 docker container rm cli-linux-glibc-arm64-builder
+
 rm -rf vendor

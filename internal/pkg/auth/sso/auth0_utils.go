@@ -44,3 +44,7 @@ func GetCCloudEnvFromBaseUrl(baseUrl string) string {
 		return "prod"
 	}
 }
+
+func IsOkta(url string) bool {
+	return GetCCloudEnvFromBaseUrl(url) == "fedramp-internal"
+}

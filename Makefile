@@ -1,6 +1,6 @@
 SHELL              := /bin/bash
 ALL_SRC            := $(shell find . -name "*.go" | grep -v -e vendor)
-GORELEASER_VERSION := v1.16.3-0.20230323115904-f82a32cd3a59
+GORELEASER_VERSION := v1.17.2
 
 .PHONY: build # compile natively based on the system
 build:
@@ -40,7 +40,6 @@ cli-builder:
 	TAGS=$(TAGS) CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) VERSION=$(VERSION) GOEXPERIMENT=boringcrypto goreleaser build -f .goreleaser-build.yml --clean --single-target --snapshot
 
 include ./mk-files/cc-cli-service.mk
-include ./mk-files/dockerhub.mk
 include ./mk-files/semver.mk
 include ./mk-files/docs.mk
 include ./mk-files/dry-run.mk
@@ -59,7 +58,7 @@ S3_STAG_PATH=s3://confluent.cloud/$(S3_STAG_FOLDER_NAME)
 
 .PHONY: clean
 clean:
-	for dir in bin dist docs legal release-notes; do \
+	for dir in bin dist docs legal prebuilt release-notes; do \
 		[ -d $$dir ] && rm -r $$dir || true; \
 	done
 

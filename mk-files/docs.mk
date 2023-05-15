@@ -25,20 +25,19 @@ publish-docs: docs
 	$(eval DOCS_CONFLUENT_CLI=$(DIR)/docs-confluent-cli)
 
 	git clone git@github.com:confluentinc/docs-confluent-cli.git $(DOCS_CONFLUENT_CLI) && \
-	version=$$(cat release-notes/version.txt) && \
 	cd $(DOCS_CONFLUENT_CLI) && \
-	git checkout publish-docs-v$${version} && \
+	git checkout publish-docs-v$(CLEAN_VERSION) && \
 	rm -rf command-reference && \
 	cp -R ~/git/go/src/github.com/confluentinc/cli/docs command-reference && \
 	[ ! -f "command-reference/kafka/topic/confluent_kafka_topic_consume.rst" ] || sed -i '' 's/default "confluent_cli_consumer_[^"]*"/default "confluent_cli_consumer_<randomly-generated-id>"/' command-reference/kafka/topic/confluent_kafka_topic_consume.rst || exit 1 && \
 	git add . && \
-	git commit --allow-empty -m "[ci skip] chore: update CLI docs for v$${version}" && \
-	$(call dry-run,git push origin publish-docs-v$${version}) && \
+	git commit --allow-empty -m "[ci skip] chore: update CLI docs for v$(CLEAN_VERSION)" && \
+	$(call dry-run,git push origin publish-docs-v$(CLEAN_VERSION)) && \
 	base="master" && \
-	if [[ $${version} != *.0 ]]; then \
+	if [[ $(CLEAN_VERSION) != *.0 ]]; then \
 		base=$(STAGING_BRANCH); \
 	fi && \
-	$(call dry-run,gh pr create -B $${base} --title "chore: update CLI docs for v$${version}" --body "")
+	$(call dry-run,gh pr create -B $${base} --title "chore: update CLI docs for v$(CLEAN_VERSION)" --body "")
 
 	rm -rf $(DIR)
 
@@ -54,17 +53,16 @@ release-docs:
 	$(eval DOCS_CONFLUENT_CLI=$(DIR)/docs-confluent-cli)
 
 	git clone git@github.com:confluentinc/docs-confluent-cli.git $(DOCS_CONFLUENT_CLI) && \
-	version=$$(cat release-notes/version.txt) && \
 	cd $(DOCS_CONFLUENT_CLI) && \
 	git fetch && \
-	if [[ $${version} == *.0 ]]; then \
+	if [[ $(CLEAN_VERSION) == *.0 ]]; then \
 		git checkout master && \
 		git checkout -b $(STAGING_BRANCH) && \
 		$(call dry-run,git push -u origin $(STAGING_BRANCH)); \
 	fi && \
 	git checkout -B $(CURRENT_SHORT_MINOR_VERSION)-post origin/$(STAGING_BRANCH) && \
 	$(call dry-run,git push -u origin $(CURRENT_SHORT_MINOR_VERSION)-post) && \
-	if [[ $${version} == *.0 ]]; then \
+	if [[ $(CLEAN_VERSION) == *.0 ]]; then \
 		git checkout master && \
 		sed $(SED_OPTION_INPLACE) 's/export RELEASE_VERSION=.*/export RELEASE_VERSION=$(NEXT_MINOR_VERSION)-SNAPSHOT/g' settings.sh && \
 		sed $(SED_OPTION_INPLACE) 's/export PUBLIC_VERSION=.*/export PUBLIC_VERSION=$(SHORT_NEXT_MINOR_VERSION)/g' settings.sh && \

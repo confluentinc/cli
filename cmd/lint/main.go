@@ -231,6 +231,7 @@ var vocabWords = []string{
 	"readonly",
 	"readwrite",
 	"recv",
+	"ruleset",
 	"sasl",
 	"schemas",
 	"signup",

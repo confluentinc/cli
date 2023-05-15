@@ -67,7 +67,7 @@ func (suite *SchemaTestSuite) SetupSuite() {
 func (suite *SchemaTestSuite) SetupTest() {
 	suite.srClientMock = &srsdk.APIClient{
 		DefaultApi: &srMock.DefaultApi{
-			RegisterFunc: func(_ context.Context, _ string, _ srsdk.RegisterSchemaRequest) (srsdk.RegisterSchemaResponse, *http.Response, error) {
+			RegisterFunc: func(_ context.Context, _ string, _ srsdk.RegisterSchemaRequest, _ *srsdk.RegisterOpts) (srsdk.RegisterSchemaResponse, *http.Response, error) {
 				return srsdk.RegisterSchemaResponse{Id: id}, nil, nil
 			},
 			GetSchemaFunc: func(_ context.Context, _ int32, _ *srsdk.GetSchemaOpts) (srsdk.SchemaString, *http.Response, error) {
