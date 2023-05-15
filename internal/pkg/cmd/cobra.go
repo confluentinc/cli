@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -44,4 +46,19 @@ func RegisterFlagCompletionFunc(cmd *cobra.Command, flag string, f func(*cobra.C
 	_ = cmd.RegisterFlagCompletionFunc(flag, func(cmd *cobra.Command, args []string, _ string) ([]string, cobra.ShellCompDirective) {
 		return f(cmd, args), cobra.ShellCompDirectiveNoFileComp
 	})
+}
+
+func FullParentName(c *cobra.Command) string {
+	var name string
+	if c.HasParent() {
+		name = c.Parent().Name()
+		c = c.Parent()
+	}
+
+	for c.HasParent() {
+		name = fmt.Sprintf("%s %s", c.Parent().Name(), name)
+		c = c.Parent()
+	}
+
+	return name
 }
