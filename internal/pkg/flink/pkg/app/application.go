@@ -56,7 +56,7 @@ func StartApp(envId, orgResourceId, kafkaClusterId, computePoolId string, authTo
 	})
 
 	// Start the application.
-	if err := appController.TView().SetRoot(rootLayout, true).EnableMouse(false).Run(); err != nil {
+	if err := appController.StartTView(rootLayout); err != nil {
 		panic(err)
 	}
 }

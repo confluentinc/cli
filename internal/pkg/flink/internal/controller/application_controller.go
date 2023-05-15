@@ -23,12 +23,15 @@ type ApplicationControllerInterface interface {
 	GetOutputMode() types.OutputMode
 	ExitApplication()
 	TView() *tview.Application
+	ShowTableView()
+	StartTView(layout tview.Primitive) error
 }
 
 type ApplicationController struct {
 	app        *tview.Application
 	outputMode types.OutputMode
 	history    *history.History
+	tableView  tview.Primitive
 }
 
 func (a *ApplicationController) SuspendOutputMode(cb func()) {
@@ -60,6 +63,15 @@ func (a *ApplicationController) GetOutputMode() types.OutputMode {
 
 func (a *ApplicationController) TView() *tview.Application {
 	return a.app
+}
+
+func (a *ApplicationController) StartTView(layout tview.Primitive) error {
+	a.tableView = layout
+	return a.app.SetRoot(layout, true).EnableMouse(false).Run()
+}
+
+func (a *ApplicationController) ShowTableView() {
+	a.app.SetRoot(a.tableView, true).EnableMouse(false)
 }
 
 func NewApplicationController(app *tview.Application, history *history.History) ApplicationControllerInterface {

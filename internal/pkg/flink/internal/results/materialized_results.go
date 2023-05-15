@@ -5,22 +5,46 @@ import (
 	"sync"
 )
 
-type materializedStatementResultsIterator struct {
+type MaterializedStatementResultsIterator struct {
 	isTableMode bool
 	iterator    *types.ListElement[types.StatementResultRow]
 	lock        sync.RWMutex
 }
 
-func (i *materializedStatementResultsIterator) HasNext() bool {
+func (i *MaterializedStatementResultsIterator) HasReachedEnd() bool {
 	i.lock.RLock()
 	defer i.lock.RUnlock()
 
-	return i.iterator != nil
+	return i.iterator == nil
 }
 
-func (i *materializedStatementResultsIterator) GetNext() *types.StatementResultRow {
+func (i *MaterializedStatementResultsIterator) GetNext() *types.StatementResultRow {
+	row := i.Value()
+
 	i.lock.Lock()
 	defer i.lock.Unlock()
+
+	i.iterator = i.iterator.Next()
+	return row
+}
+
+func (i *MaterializedStatementResultsIterator) GetPrev() *types.StatementResultRow {
+	row := i.Value()
+
+	i.lock.Lock()
+	defer i.lock.Unlock()
+
+	i.iterator = i.iterator.Prev()
+	return row
+}
+
+func (i *MaterializedStatementResultsIterator) Value() *types.StatementResultRow {
+	i.lock.Lock()
+	defer i.lock.Unlock()
+
+	if i.iterator == nil || i.iterator.Value() == nil {
+		return nil
+	}
 
 	row := i.iterator.Value()
 	if !i.isTableMode {
@@ -30,8 +54,20 @@ func (i *materializedStatementResultsIterator) GetNext() *types.StatementResultR
 		}
 		row.Fields = append([]types.StatementResultField{operationField}, row.Fields...)
 	}
-	i.iterator = i.iterator.Next()
 	return row
+}
+
+func (i *MaterializedStatementResultsIterator) Move(stepsToMove int) *types.StatementResultRow {
+	for !i.HasReachedEnd() && stepsToMove != 0 {
+		if stepsToMove < 0 {
+			i.GetPrev()
+			stepsToMove++
+		} else {
+			i.GetNext()
+			stepsToMove--
+		}
+	}
+	return i.Value()
 }
 
 type MaterializedStatementResults struct {
@@ -55,15 +91,21 @@ func NewMaterializedStatementResults(headers []string, maxCapacity int) Material
 	}
 }
 
-func (s *MaterializedStatementResults) Iterator() materializedStatementResultsIterator {
+func (s *MaterializedStatementResults) Iterator(startFromBack bool) MaterializedStatementResultsIterator {
 	s.lock.RLock()
 	defer s.lock.RUnlock()
 
-	iterator := s.table.Front()
+	list := s.table
 	if !s.isTableMode {
-		iterator = s.changelog.Front()
+		list = s.changelog
 	}
-	return materializedStatementResultsIterator{
+
+	iterator := list.Front()
+	if startFromBack {
+		iterator = list.Back()
+	}
+
+	return MaterializedStatementResultsIterator{
 		isTableMode: s.isTableMode,
 		iterator:    iterator,
 	}
