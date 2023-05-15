@@ -117,7 +117,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		return errors.NewErrorWithSuggestions(errors.EmptyResponseErrorMsg, errors.InternalServerErrorSuggestions)
 	}
 
-	readOnlyConfigs := types.NewSet()
+	readOnlyConfigs := types.NewSet[string]()
 	configsValues := make(map[string]string)
 	for _, conf := range configsResp.Data {
 		if conf.IsReadOnly {

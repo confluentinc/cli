@@ -167,7 +167,7 @@ func hasArchiveInstallation(dir string) bool {
 func compactDuplicateInstallations(installations []platformInstallation) []platformInstallation {
 	var uniqueInstallations []platformInstallation
 
-	set := types.NewSet()
+	set := types.NewSet[string]()
 	for _, installation := range installations {
 		typePathStr := fmt.Sprintf("type=%s,path=%s", installation.Type, installation.Path)
 		if !set.Contains(typePathStr) {
