@@ -26,7 +26,12 @@ func (c *command) statementList(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	statements, err := c.V2Client.ListStatements(environment)
+	client, err := c.GetFlinkGatewayClient()
+	if err != nil {
+		return err
+	}
+
+	statements, err := client.ListStatements(environment)
 	if err != nil {
 		return err
 	}
