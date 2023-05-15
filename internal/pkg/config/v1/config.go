@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"strings"
 
 	"github.com/google/uuid"
@@ -134,7 +135,8 @@ func New() *Config {
 }
 
 func (c *Config) DecryptContextStates() error {
-	for _, context := range c.Contexts {
+	if c.CurrentContext != "" {
+		context := c.Contexts[c.CurrentContext]
 		state := c.ContextStates[context.Name]
 		if state != nil {
 			err := state.DecryptContextStateAuthToken(context.Name)
@@ -265,14 +267,18 @@ func (c *Config) encryptContextStateTokens(tempAuthToken, tempAuthRefreshToken s
 		c.Context().GetState().Salt = salt
 		c.Context().GetState().Nonce = nonce
 	}
-	if tempAuthToken != "" {
+
+	reg1 := regexp.MustCompile(authTokenRegex)
+	if tempAuthToken != "" && reg1.MatchString(tempAuthToken) {
 		encryptedAuthToken, err := secret.Encrypt(c.Context().Name, tempAuthToken, c.Context().GetState().Salt, c.Context().GetState().Nonce)
 		if err != nil {
 			return err
 		}
 		c.Context().GetState().AuthToken = encryptedAuthToken
 	}
-	if tempAuthRefreshToken != "" {
+
+	reg2 := regexp.MustCompile(authRefreshTokenRegex)
+	if tempAuthRefreshToken != "" && reg2.MatchString(tempAuthRefreshToken) {
 		encryptedAuthRefreshToken, err := secret.Encrypt(c.Context().Name, tempAuthRefreshToken, c.Context().GetState().Salt, c.Context().GetState().Nonce)
 		if err != nil {
 			return err
