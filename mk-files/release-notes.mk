@@ -51,7 +51,7 @@ publish-release-notes-to-docs-repos:
 	cp release-notes/ccloud/release-notes.rst $(CCLOUD_DOCS_DIR)
 	cp release-notes/confluent/release-notes.rst $(CONFLUENT_DOCS_DIR)
 	$(warning SUBMITTING PRs to docs repos)
-	for repo in $(CCLOUD_DOCS_DIR) $(CONFLUENT_DOCS_DIR); do \
+	for repo in $(CONFLUENT_DOCS_DIR); do \
 		cd $${repo} || exit 1; \
 		git add . || exit 1; \
 		git diff --cached --exit-code > /dev/null && echo "nothing to update" && exit 0; \

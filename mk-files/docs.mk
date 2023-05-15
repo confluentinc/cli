@@ -40,8 +40,6 @@ docs: clean-docs
 
 .PHONY: publish-docs
 publish-docs: docs clone-docs-repos
-	echo -n "Publish ccloud docs? (y/n) "; read line; \
-	if [ $$line = "y" ] || [ $$line = "Y" ]; then make publish-docs-internal REPO_DIR=$(CCLOUD_DOCS_DIR) CLI_NAME=ccloud; fi; \
 	echo -n "Publish confluent docs? (y/n) "; read line; \
 	if [ $$line = "y" ] || [ $$line = "Y" ]; then make publish-docs-internal REPO_DIR=$(CONFLUENT_DOCS_DIR) CLI_NAME=confluent; fi;
 
@@ -73,7 +71,7 @@ release-docs: clone-docs-repos cut-docs-branches update-settings-and-conf
 .PHONY: cut-docs-branches
 cut-docs-branches:
 	if [[ "$(BUMP)" == "patch" ]]; then \
-		for repo in $(CCLOUD_DOCS_DIR) $(CONFLUENT_DOCS_DIR) ; do \
+		for repo in $(CONFLUENT_DOCS_DIR) ; do \
 			cd $${repo} && \
 			git fetch && \
 			git checkout $(MINOR_BRANCH) && \
@@ -82,7 +80,7 @@ cut-docs-branches:
 			cd .. ; \
 		done ; \
 	else \
-		for repo in $(CCLOUD_DOCS_DIR) $(CONFLUENT_DOCS_DIR) ; do \
+		for repo in $(CONFLUENT_DOCS_DIR) ; do \
 			cd $${repo} && \
 			git fetch && \
 			git checkout $(DOCS_BASE_BRANCH) && \
@@ -98,7 +96,7 @@ cut-docs-branches:
 .PHONY: update-settings-and-conf
 update-settings-and-conf:
 	if [[ "$(BUMP)" != "patch" ]]; then \
-		for repo in $(CCLOUD_DOCS_DIR) $(CONFLUENT_DOCS_DIR) ; do \
+		for repo in $(CONFLUENT_DOCS_DIR) ; do \
 			cd $${repo} && \
 			git fetch && \
 			git checkout master && \
@@ -110,7 +108,7 @@ update-settings-and-conf:
 			cd .. ; \
 		done ; \
 	fi
-	for repo in $(CCLOUD_DOCS_DIR) $(CONFLUENT_DOCS_DIR) ; do \
+	for repo in $(CONFLUENT_DOCS_DIR) ; do \
 		cd $${repo} && \
 		git fetch && \
 		git checkout $(MINOR_BRANCH) && \
