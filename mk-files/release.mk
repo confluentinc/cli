@@ -24,7 +24,6 @@ release-to-stag:
 
 .PHONY: release-to-prod
 release-to-prod:
-	@$(caasenv-authenticate) && \
 	$(call copy-stag-content-to-prod,archives,$(CLEAN_VERSION)); \
 	$(call copy-stag-content-to-prod,binaries,$(CLEAN_VERSION)); \
 	$(call copy-stag-content-to-prod,archives,latest)
@@ -86,7 +85,6 @@ set-acls:
 # Also, we first re-upload the checksums file because we concatenate the Alpine checksums to the checksums file after goreleaser has already published it (without the Alpine checksums) to S3
 .PHONY: rename-archives-checksums
 rename-archives-checksums:
-	$(caasenv-authenticate); \
 	for binary in ccloud confluent; do \
 		folder=$(S3_STAG_PATH)/$${binary}-cli/archives/$(CLEAN_VERSION); \
 		aws s3 cp dist/$${binary}/$${binary}_$(VERSION_NO_V)_checksums.txt $${folder}/$${binary}_$(CLEAN_VERSION)_checksums.txt;\
@@ -119,7 +117,6 @@ endef
 # second argument: S3 folder destination for latest archives
 define copy-archives-checksums-to-latest
 	$(eval TEMP_DIR=$(shell mktemp -d))
-	$(caasenv-authenticate); \
 	for binary in ccloud confluent; do \
 		version_checksums=$${binary}_v$(CLEAN_VERSION)_checksums.txt; \
 		latest_checksums=$${binary}_latest_checksums.txt; \
