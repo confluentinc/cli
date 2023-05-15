@@ -64,11 +64,15 @@ func (c *pluginCommand) newInstallCommand() *cobra.Command {
 				Text: "Install the latest release of the Datagen connector onto your local Confluent Platform environment.",
 				Code: "confluent connect plugin install confluentinc/kafka-connect-datagen:latest",
 			},
+			examples.Example{
+				Text: "Install the latest release of the Datagen connector in a user specified directory and update one worker-config file.",
+				Code: "confluent connect plugin install confluentinc/kafka-connect-datagen:latest --plugin-directory $CONFLUENT_HOME/plugins --worker-configs $CONFLUENT_HOME/etc/kafka/connect-distributed.properties",
+			},
 		),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 	}
 
-	cmd.Flags().String("plugin-directory", "", "The plugin installation directory.")
+	cmd.Flags().String("plugin-directory", "", "The plugin installation directory. If not specified, a default will be selected based on your Confluent Platform installation.")
 	cmd.Flags().StringSlice("worker-configs", []string{}, "A comma-separated list of paths to one or more Kafka Connect worker configuration files. Each worker file will be updated to load plugins from the plugin directory in addition to any preexisting directories.")
 	pcmd.AddDryRunFlag(cmd)
 	cmd.Flags().Bool("force", false, "Proceed without user input.")
