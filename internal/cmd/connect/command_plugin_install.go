@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -267,40 +266,6 @@ func getLocalManifest(archivePath string) (*manifest, error) {
 	return nil, errors.Errorf(`failed to find manifest file inside local archive file "%s"`, archivePath)
 }
 
-func getRemoteManifest(owner, name, version string) (*manifest, error) {
-	manifestUrl := fmt.Sprintf("https://api.hub.confluent.io/api/plugins/%s/%s", owner, name)
-	if version != "latest" {
-		manifestUrl = fmt.Sprintf("%s/versions/%s", manifestUrl, version)
-	}
-
-	r, err := http.Get(manifestUrl)
-	if err != nil {
-		return nil, err
-	}
-
-	defer r.Body.Close()
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	if r.StatusCode != http.StatusOK {
-		response := make(map[string]interface{})
-		_ = json.Unmarshal(body, &response)
-		if errorMessage, ok := response["message"]; ok {
-			return nil, errors.Errorf("failed to read manifest file from Confluent Hub: %s", errorMessage)
-		}
-		return nil, errors.Errorf("failed to read manifest file from Confluent Hub")
-	}
-
-	pluginManifest := new(manifest)
-	if err := json.Unmarshal(body, &pluginManifest); err != nil {
-		return nil, err
-	}
-
-	return pluginManifest, nil
-}
-
 func getPluginDirFromFlag(cmd *cobra.Command) (string, error) {
 	if !cmd.Flags().Changed("plugin-directory") {
 		return "", nil
@@ -385,17 +350,7 @@ func installFromLocal(pluginManifest *manifest, archivePath, pluginDir string) e
 }
 
 func installFromRemote(pluginManifest *manifest, pluginDir string) error {
-	r, err := http.Get(pluginManifest.Archive.Url)
-	if err != nil {
-		return err
-	}
-
-	if r.StatusCode != http.StatusOK {
-		return errors.New("failed to retrieve archive from Confuent Hub")
-	}
-	defer r.Body.Close()
-
-	archive, err := io.ReadAll(r.Body)
+	archive, err := getRemoteArchive(pluginManifest)
 	if err != nil {
 		return err
 	}
