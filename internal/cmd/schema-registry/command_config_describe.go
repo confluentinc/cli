@@ -83,35 +83,45 @@ func describeSchemaConfig(cmd *cobra.Command, srClient *srsdk.APIClient, ctx con
 		}
 	}
 
-	defaultMetadata, err := json.Marshal(config.DefaultMetadata)
-	if err != nil {
-		return err
+	configOut := &configOut{
+		CompatibilityLevel: config.CompatibilityLevel,
+		CompatibilityGroup: config.CompatibilityGroup,
 	}
 
-	overrideMetadata, err := json.Marshal(config.OverrideMetadata)
-	if err != nil {
-		return err
+	if config.DefaultMetadata != nil {
+		defaultMetadata, err := json.Marshal(config.DefaultMetadata)
+		if err != nil {
+			return err
+		}
+		configOut.MetadataDefaults = prettyJson(defaultMetadata)
 	}
 
-	defaultRuleset, err := json.Marshal(config.DefaultRuleSet)
-	if err != nil {
-		return err
+	if config.OverrideMetadata != nil {
+		overrideMetadata, err := json.Marshal(config.OverrideMetadata)
+		if err != nil {
+			return err
+		}
+		configOut.MetadataDefaults = prettyJson(overrideMetadata)
 	}
 
-	overrideRuleset, err := json.Marshal(config.OverrideRuleSet)
-	if err != nil {
-		return err
+	if config.DefaultRuleSet != nil {
+		defaultRuleset, err := json.Marshal(config.DefaultRuleSet)
+		if err != nil {
+			return err
+		}
+		configOut.MetadataDefaults = prettyJson(defaultRuleset)
+	}
+
+	if config.OverrideRuleSet != nil {
+		overrideRuleset, err := json.Marshal(config.OverrideRuleSet)
+		if err != nil {
+			return err
+		}
+		configOut.MetadataDefaults = prettyJson(overrideRuleset)
 	}
 
 	table := output.NewTable(cmd)
-	table.Add(&configOut{
-		CompatibilityLevel: config.CompatibilityLevel,
-		CompatibilityGroup: config.CompatibilityGroup,
-		MetadataDefaults:   prettyJson(defaultMetadata),
-		MetadataOverrides:  prettyJson(overrideMetadata),
-		RulesetDefaults:    prettyJson(defaultRuleset),
-		RulesetOverrides:   prettyJson(overrideRuleset),
-	})
+	table.Add(configOut)
 	return table.PrintWithAutoWrap(false)
 }
 

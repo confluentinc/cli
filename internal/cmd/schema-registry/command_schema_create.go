@@ -107,30 +107,44 @@ func (c *command) schemaCreate(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	var metadata srsdk.Metadata
-	var ruleset srsdk.RuleSet
-
-	if err := readPathFlag(cmd, "metadata", &metadata); err != nil {
-		return err
+	request := srsdk.RegisterSchemaRequest{
+		Schema:     string(schema),
+		SchemaType: schemaType,
+		References: refs,
 	}
 
-	if err := readPathFlag(cmd, "ruleset", &ruleset); err != nil {
+	metadataPath, err := cmd.Flags().GetString("metadata")
+	if err != nil {
 		return err
+	}
+	if metadataPath != "" {
+		var metadata srsdk.Metadata
+		err := read(metadataPath, &metadata)
+		if err != nil {
+			return err
+		}
+		request.Metadata = &metadata
+	}
+
+	rulesetPath, err := cmd.Flags().GetString("ruleset")
+	if err != nil {
+		return err
+	}
+	if rulesetPath != "" {
+		var ruleset srsdk.RuleSet
+		err := read(rulesetPath, &ruleset)
+		if err != nil {
+			return err
+		}
+		request.RuleSet = &ruleset
 	}
 
 	normalize, err := cmd.Flags().GetBool("normalize")
 	if err != nil {
 		return err
 	}
-
-	request := srsdk.RegisterSchemaRequest{
-		Schema:     string(schema),
-		SchemaType: schemaType,
-		References: refs,
-		Metadata:   metadata,
-		RuleSet:    ruleset,
-	}
 	opts := &srsdk.RegisterOpts{Normalize: optional.NewBool(normalize)}
+
 	response, _, err := srClient.DefaultApi.Register(ctx, subject, request, opts)
 	if err != nil {
 		return err
@@ -142,18 +156,6 @@ func (c *command) schemaCreate(cmd *cobra.Command, _ []string) error {
 
 	output.Printf(errors.RegisteredSchemaMsg, response.Id)
 	return nil
-}
-
-func readPathFlag(cmd *cobra.Command, flag string, v any) error {
-	path, err := cmd.Flags().GetString(flag)
-	if err != nil {
-		return err
-	}
-	if path == "" {
-		return nil
-	}
-
-	return read(path, v)
 }
 
 func read(path string, v any) error {
