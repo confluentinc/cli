@@ -47,7 +47,7 @@ func main() {
 }
 
 func buildWhitelist() []string {
-	whitelist := types.NewSet()
+	whitelist := types.NewSet[string]()
 
 	for _, os := range []string{"darwin", "linux", "windows"} {
 		whitelist.Add(os)
