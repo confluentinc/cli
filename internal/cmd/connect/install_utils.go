@@ -21,9 +21,13 @@ import (
 )
 
 type platformInstallation struct {
+	Location platformLocation
+	Use      string
+}
+
+type platformLocation struct {
 	Type string
 	Path string
-	Use  string
 }
 
 type WorkerConfig struct {
@@ -46,17 +50,17 @@ func getConfluentPlatformInstallation(cmd *cobra.Command, force bool) (*platform
 	if len(installations) == 0 {
 		return nil, errors.NewErrorWithSuggestions("unable to detect a Confluent Platform installation", "Pass the plugin directory and worker configuration files with `--plugin-directory` and `--worker-configs`.")
 	} else if force {
-		output.Printf("\nUsing the Confluent Platform installation at \"%s\".\n", installations[0].Path)
+		output.Printf("\nUsing the Confluent Platform installation at \"%s\".\n", installations[0].Location.Path)
 		return &installations[0], nil
 	} else if len(installations) == 1 {
-		output.Printf("\nUsing the only available Confluent Platform installation at \"%s\".\n", installations[0].Path)
+		output.Printf("\nUsing the only available Confluent Platform installation at \"%s\".\n", installations[0].Location.Path)
 		return &installations[0], nil
 	} else {
 		list := output.NewList(cmd)
 		for i, installation := range installations {
 			list.Add(&listOut{
 				Number:      strconv.Itoa(i + 1),
-				Path:        installation.Path,
+				Path:        installation.Location.Path,
 				Description: installation.Use,
 			})
 		}
@@ -97,9 +101,11 @@ func findInstallationDirectories() ([]platformInstallation, error) {
 	confluentHome := os.Getenv("CONFLUENT_HOME")
 	if confluentHome != "" && hasArchiveInstallation(confluentHome) {
 		installation := platformInstallation{
-			Type: "ARCHIVE",
-			Path: confluentHome,
-			Use:  "$CONFLUENT_HOME",
+			Location: platformLocation{
+				Type: "ARCHIVE",
+				Path: confluentHome,
+			},
+			Use: "$CONFLUENT_HOME",
 		}
 		result = append(result, installation)
 	}
@@ -111,9 +117,11 @@ func findInstallationDirectories() ([]platformInstallation, error) {
 	}
 	if hasArchiveInstallation(currentDirectory) {
 		installation := platformInstallation{
-			Type: "ARCHIVE",
-			Path: currentDirectory,
-			Use:  "Current Directory",
+			Location: platformLocation{
+				Type: "ARCHIVE",
+				Path: currentDirectory,
+			},
+			Use: "Current Directory",
 		}
 		result = append(result, installation)
 	}
@@ -121,9 +129,11 @@ func findInstallationDirectories() ([]platformInstallation, error) {
 	// standard rpm/deb
 	if hasPackageInstallation {
 		installation := platformInstallation{
-			Type: "PACKAGE",
-			Path: filepath.FromSlash("/"),
-			Use:  "Installed RPM/DEB Package",
+			Location: platformLocation{
+				Type: "PACKAGE",
+				Path: filepath.FromSlash("/"),
+			},
+			Use: "Installed RPM/DEB Package",
 		}
 		result = append(result, installation)
 	}
@@ -137,16 +147,20 @@ func findInstallationDirectories() ([]platformInstallation, error) {
 	cliUse := "CLI Installation Directory"
 	if filepath.ToSlash(cliDirectory) == "/usr/bin" && hasPackageInstallation {
 		installation := platformInstallation{
-			Type: "PACKAGE",
-			Path: filepath.FromSlash("/"),
-			Use:  cliUse,
+			Location: platformLocation{
+				Type: "PACKAGE",
+				Path: filepath.FromSlash("/"),
+			},
+			Use: cliUse,
 		}
 		result = append(result, installation)
 	} else if filepath.Base(cliDirectory) == "bin" && hasArchiveInstallation(filepath.Dir(cliDirectory)) {
 		installation := platformInstallation{
-			Type: "ARCHIVE",
-			Path: filepath.Dir(cliDirectory),
-			Use:  cliUse,
+			Location: platformLocation{
+				Type: "ARCHIVE",
+				Path: filepath.Dir(cliDirectory),
+			},
+			Use: cliUse,
 		}
 		result = append(result, installation)
 	}
@@ -167,11 +181,10 @@ func hasArchiveInstallation(dir string) bool {
 func compactDuplicateInstallations(installations []platformInstallation) []platformInstallation {
 	var uniqueInstallations []platformInstallation
 
-	set := types.NewSet[string]()
+	set := types.NewSet[platformLocation]()
 	for _, installation := range installations {
-		typePathStr := fmt.Sprintf("type=%s,path=%s", installation.Type, installation.Path)
-		if !set.Contains(typePathStr) {
-			set.Add(typePathStr)
+		if !set.Contains(installation.Location) {
+			set.Add(installation.Location)
 			uniqueInstallations = append(uniqueInstallations, installation)
 		}
 	}
@@ -181,13 +194,13 @@ func compactDuplicateInstallations(installations []platformInstallation) []platf
 
 func choosePluginDir(installation *platformInstallation, force bool) (string, error) {
 	var defaultPluginDir string
-	switch installation.Type {
+	switch installation.Location.Type {
 	case "ARCHIVE":
-		defaultPluginDir = filepath.Join(installation.Path, "share/confluent-hub-components")
+		defaultPluginDir = filepath.Join(installation.Location.Path, "share/confluent-hub-components")
 	case "PACKAGE":
 		defaultPluginDir = "/usr/share/confluent-hub-components"
 	default:
-		return "", errors.Errorf(unexpectedInstallationErrorMsg, installation.Type)
+		return "", errors.Errorf(unexpectedInstallationErrorMsg, installation.Location.Type)
 	}
 
 	if force {
@@ -234,11 +247,11 @@ func standardWorkerConfigLocations(installation *platformInstallation) ([]Worker
 		"/etc/schema-registry/connect-avro-distributed.properties",
 		"/etc/schema-registry/connect-avro-standalone.properties",
 	}
-	switch installation.Type {
+	switch installation.Location.Type {
 	case "ARCHIVE":
 		var result []WorkerConfig
 		for _, workerConfigLocation := range workerConfigLocations {
-			workerConfigPath := filepath.Join(installation.Path, filepath.FromSlash(workerConfigLocation))
+			workerConfigPath := filepath.Join(installation.Location.Path, filepath.FromSlash(workerConfigLocation))
 			result = append(result, WorkerConfig{Path: workerConfigPath, Use: "Standard"})
 		}
 		confluentCurrentDir := os.Getenv("CONFLUENT_CURRENT")
@@ -265,7 +278,7 @@ func standardWorkerConfigLocations(installation *platformInstallation) ([]Worker
 		}
 		return result, nil
 	default:
-		return nil, errors.New(fmt.Sprintf(unexpectedInstallationErrorMsg, installation.Type))
+		return nil, errors.New(fmt.Sprintf(unexpectedInstallationErrorMsg, installation.Location.Type))
 	}
 }
 
