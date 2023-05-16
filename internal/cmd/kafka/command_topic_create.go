@@ -36,7 +36,7 @@ func (c *authenticatedTopicCommand) newCreateCommand() *cobra.Command {
 
 	cmd.Flags().Uint32("partitions", 0, "Number of topic partitions.")
 	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the topic being created.`)
-	cmd.Flags().Bool("dry-run", false, "Run the command without committing changes to Kafka.")
+	pcmd.AddDryRunFlag(cmd)
 	cmd.Flags().Bool("if-not-exists", false, "Exit gracefully if topic already exists.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
