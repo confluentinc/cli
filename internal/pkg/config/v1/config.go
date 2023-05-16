@@ -62,10 +62,6 @@ var (
 		"you must log in to Confluent Platform to use this command",
 		"Log in with `confluent login --url <mds-url>`.",
 	)
-	RequireUpdatesEnabledErr = errors.NewErrorWithSuggestions(
-		"you must enable updates to use this command",
-		"WARNING: To guarantee compatibility, enabling updates is not recommended for Confluent Platform users.\n"+`In ~/.confluent/config.json, set "disable_updates": false`,
-	)
 )
 
 // Config represents the CLI configuration.
@@ -73,7 +69,7 @@ type Config struct {
 	*config.BaseConfig
 
 	DisableUpdateCheck  bool                        `json:"disable_update_check"`
-	DisableUpdates      bool                        `json:"disable_updates"`
+	DisableUpdates      bool                        `json:"disable_updates,omitempty"`
 	DisablePlugins      bool                        `json:"disable_plugins"`
 	DisablePluginsOnce  bool                        `json:"disable_plugins_once,omitempty"`
 	DisableFeatureFlags bool                        `json:"disable_feature_flags"`
@@ -666,13 +662,6 @@ func (c *Config) CheckIsNonAPIKeyCloudLoginOrOnPremLogin() error {
 func (c *Config) CheckIsNonCloudLogin() error {
 	if c.isCloud() {
 		return RequireNonCloudLogin
-	}
-	return nil
-}
-
-func (c *Config) CheckAreUpdatesEnabled() error {
-	if c.DisableUpdates {
-		return RequireUpdatesEnabledErr
 	}
 	return nil
 }
