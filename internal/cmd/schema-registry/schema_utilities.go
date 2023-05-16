@@ -30,8 +30,8 @@ type RegisterSchemaConfigs struct {
 	SchemaType  string
 	SchemaPath  *string
 	Refs        []srsdk.SchemaReference
-	Metadata    srsdk.Metadata
-	Ruleset     srsdk.RuleSet
+	Metadata    *srsdk.Metadata
+	Ruleset     *srsdk.RuleSet
 	Normalize   bool
 }
 

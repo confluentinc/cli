@@ -102,35 +102,59 @@ func (c *command) getConfigUpdateRequest(cmd *cobra.Command) (srsdk.ConfigUpdate
 		return updateReq, err
 	}
 
-	var metadataDefaults srsdk.Metadata
-	var metadataOverrides srsdk.Metadata
-	var rulesetDefaults srsdk.RuleSet
-	var rulesetOverrides srsdk.RuleSet
-
-	if err := readPathFlag(cmd, "metadata-defaults", &metadataDefaults); err != nil {
-		return updateReq, err
-	}
-
-	if err := readPathFlag(cmd, "metadata-overrides", &metadataOverrides); err != nil {
-		return updateReq, err
-	}
-
-	if err := readPathFlag(cmd, "ruleset-defaults", &rulesetDefaults); err != nil {
-		return updateReq, err
-	}
-
-	if err := readPathFlag(cmd, "ruleset-overrides", &rulesetOverrides); err != nil {
-		return updateReq, err
-	}
-
 	updateReq = srsdk.ConfigUpdateRequest{
 		Compatibility:      strings.ToUpper(compatibility),
 		CompatibilityGroup: compatibilityGroup,
-		DefaultMetadata:    metadataDefaults,
-		OverrideMetadata:   metadataOverrides,
-		DefaultRuleSet:     rulesetDefaults,
-		OverrideRuleSet:    rulesetOverrides,
 	}
+
+	metadataDefaults, err := cmd.Flags().GetString("metadata-defaults")
+	if err != nil {
+		return srsdk.ConfigUpdateRequest{}, err
+	}
+	if metadataDefaults != "" {
+		updateReq.DefaultMetadata = new(srsdk.Metadata)
+		err := read(metadataDefaults, updateReq.DefaultMetadata)
+		if err != nil {
+			return srsdk.ConfigUpdateRequest{}, err
+		}
+	}
+
+	metadataOverrides, err := cmd.Flags().GetString("metadata-overrides")
+	if err != nil {
+		return srsdk.ConfigUpdateRequest{}, err
+	}
+	if metadataOverrides != "" {
+		updateReq.OverrideMetadata = new(srsdk.Metadata)
+		err := read(metadataOverrides, updateReq.OverrideMetadata)
+		if err != nil {
+			return srsdk.ConfigUpdateRequest{}, err
+		}
+	}
+
+	rulesetDefaults, err := cmd.Flags().GetString("ruleset-defaults")
+	if err != nil {
+		return srsdk.ConfigUpdateRequest{}, err
+	}
+	if rulesetDefaults != "" {
+		updateReq.DefaultRuleSet = new(srsdk.RuleSet)
+		err := read(rulesetDefaults, updateReq.DefaultRuleSet)
+		if err != nil {
+			return srsdk.ConfigUpdateRequest{}, err
+		}
+	}
+
+	rulesetOverrides, err := cmd.Flags().GetString("ruleset-overrides")
+	if err != nil {
+		return srsdk.ConfigUpdateRequest{}, err
+	}
+	if rulesetOverrides != "" {
+		updateReq.OverrideRuleSet = new(srsdk.RuleSet)
+		err := read(rulesetOverrides, updateReq.OverrideRuleSet)
+		if err != nil {
+			return srsdk.ConfigUpdateRequest{}, err
+		}
+	}
+
 	return updateReq, nil
 }
 
