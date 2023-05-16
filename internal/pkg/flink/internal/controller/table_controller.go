@@ -65,7 +65,10 @@ func (t *TableController) SetRunInteractiveInputCallback(runInteractiveInput fun
 func (t *TableController) exitTViewMode() {
 	t.stopAutoRefresh()
 	go t.store.DeleteStatement(t.statement.StatementName)
-	t.appController.SuspendOutputMode(t.runInteractiveInput)
+	t.appController.SuspendOutputMode(func() {
+		fmt.Println("Result retrieval aborted. Statement will be deleted.")
+		t.runInteractiveInput()
+	})
 }
 
 func (t *TableController) GetActionForShortcut(shortcut string) func() {

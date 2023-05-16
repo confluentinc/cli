@@ -1,11 +1,12 @@
 package controller
 
 import (
+	"strconv"
+	"testing"
+
 	"github.com/confluentinc/flink-sql-client/internal/results"
 	"github.com/stretchr/testify/suite"
 	"pgregory.net/rapid"
-	"strconv"
-	"testing"
 
 	"github.com/confluentinc/flink-sql-client/pkg/types"
 	"github.com/rivo/tview"

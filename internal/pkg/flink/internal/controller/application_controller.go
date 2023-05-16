@@ -34,9 +34,10 @@ type ApplicationController struct {
 	tableView  tview.Primitive
 }
 
-func (a *ApplicationController) SuspendOutputMode(cb func()) {
+// preFunc will, if defined, before the main function is executed. Both are executed after tview is suspended.
+func (a *ApplicationController) SuspendOutputMode(callback func()) {
 	a.ToggleOutputMode()
-	a.app.Suspend(cb)
+	a.app.Suspend(callback)
 	// InteractiveInput has already set the data to be displayed in the table
 	// Now we just need to render it
 	a.app.ForceDraw()
