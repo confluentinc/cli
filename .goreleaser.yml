@@ -197,7 +197,7 @@ dockers:
     image_templates:
       - "confluentinc/confluent-cli:{{ .Version }}-amd64"
       - "confluentinc/confluent-cli:latest-amd64"
-    dockerfile: "dockerfiles/Dockerfile"
+    dockerfile: "docker/Dockerfile"
     build_flag_templates:
       - --platform=linux/amd64
   - ids:
@@ -206,7 +206,7 @@ dockers:
     image_templates:
       - "confluentinc/confluent-cli:{{ .Version }}-arm64"
       - "confluentinc/confluent-cli:latest-arm64"
-    dockerfile: "dockerfiles/Dockerfile"
+    dockerfile: "docker/Dockerfile"
     build_flag_templates:
       - --platform=linux/arm64
 

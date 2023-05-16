@@ -21,7 +21,7 @@ for tag in ${arm64_tags[@]}; do
     number_part=$(cut -f2 -d'-' <<< $tag) && \
     integer_tag=$(printf "%.0f" $number_part) && \
     incremented_tag+="arm64-$(($integer_tag + 1)).0" && \
-    docker build --no-cache -f ./dockerfiles/Dockerfile_linux_glibc_arm64_base -t "050879227952.dkr.ecr.us-west-1.amazonaws.com/confluentinc/cli-ubuntu-base-arm64:$incremented_tag" . && \
+    docker build --no-cache -f ./docker/Dockerfile_linux_glibc_arm64_base -t "050879227952.dkr.ecr.us-west-1.amazonaws.com/confluentinc/cli-ubuntu-base-arm64:$incremented_tag" . && \
     docker tag "050879227952.dkr.ecr.us-west-1.amazonaws.com/confluentinc/cli-ubuntu-base-arm64:$incremented_tag" "050879227952.dkr.ecr.us-west-1.amazonaws.com/confluentinc/cli-ubuntu-base-arm64:arm64-latest" && \
     new_tags+="docker push 050879227952.dkr.ecr.us-west-1.amazonaws.com/confluentinc/cli-ubuntu-base-arm64:$incremented_tag\n" && \
     new_tags+="docker push 050879227952.dkr.ecr.us-west-1.amazonaws.com/confluentinc/cli-ubuntu-base-arm64:arm64-latest\n"

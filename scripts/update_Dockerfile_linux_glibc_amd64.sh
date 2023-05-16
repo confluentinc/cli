@@ -20,7 +20,7 @@ for tag in ${amd64_tags[@]}; do
   if [ $tag != "latest" ]; then
     integer_tag=$(printf "%.0f" $tag) && \
     incremented_tag+="$(($integer_tag + 1)).0" && \
-    docker build --no-cache -f ./dockerfiles/Dockerfile_linux_glibc_amd64_base -t "050879227952.dkr.ecr.us-west-1.amazonaws.com/confluentinc/cli-centos-base-amd64:$incremented_tag" . && \
+    docker build --no-cache -f ./docker/Dockerfile_linux_glibc_amd64_base -t "050879227952.dkr.ecr.us-west-1.amazonaws.com/confluentinc/cli-centos-base-amd64:$incremented_tag" . && \
     docker tag "050879227952.dkr.ecr.us-west-1.amazonaws.com/confluentinc/cli-centos-base-amd64:$incremented_tag" "050879227952.dkr.ecr.us-west-1.amazonaws.com/confluentinc/cli-centos-base-amd64:latest" && \
     new_tags+="050879227952.dkr.ecr.us-west-1.amazonaws.com/confluentinc/cli-centos-base-amd64:$incremented_tag\n" && \
     new_tags+="050879227952.dkr.ecr.us-west-1.amazonaws.com/confluentinc/cli-centos-base-amd64:latest\n"
