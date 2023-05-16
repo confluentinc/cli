@@ -81,17 +81,6 @@ func (c *command) schemaCreateOnPrem(cmd *cobra.Command, _ []string) error {
 		_ = os.RemoveAll(dir)
 	}()
 
-	var metadata srsdk.Metadata
-	var ruleset srsdk.RuleSet
-
-	if err := readPathFlag(cmd, "metadata", &metadata); err != nil {
-		return err
-	}
-
-	if err := readPathFlag(cmd, "ruleset", &ruleset); err != nil {
-		return err
-	}
-
 	normalize, err := cmd.Flags().GetBool("normalize")
 	if err != nil {
 		return err
@@ -103,10 +92,35 @@ func (c *command) schemaCreateOnPrem(cmd *cobra.Command, _ []string) error {
 		SchemaPath: &schemaPath,
 		Subject:    subject,
 		Refs:       refs,
-		Metadata:   metadata,
-		Ruleset:    ruleset,
 		Normalize:  normalize,
 	}
+
+	metadataPath, err := cmd.Flags().GetString("metadata")
+	if err != nil {
+		return err
+	}
+	if metadataPath != "" {
+		var metadata srsdk.Metadata
+		err := read(metadataPath, &metadata)
+		if err != nil {
+			return err
+		}
+		schemaCfg.Metadata = &metadata
+	}
+
+	rulesetPath, err := cmd.Flags().GetString("ruleset")
+	if err != nil {
+		return err
+	}
+	if rulesetPath != "" {
+		var ruleset srsdk.RuleSet
+		err := read(rulesetPath, &ruleset)
+		if err != nil {
+			return err
+		}
+		schemaCfg.Ruleset = &ruleset
+	}
+
 	_, _, err = c.registerSchemaOnPrem(cmd, schemaCfg)
 	return err
 }

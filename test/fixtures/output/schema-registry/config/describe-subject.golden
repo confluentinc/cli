@@ -2,13 +2,6 @@
 | Compatibility Level | FORWARD                                |
 | Compatibility Group | application.version                    |
 | Metadata Defaults   | {                                      |
-|                     |   "properties": {                      |
-|                     |     "email": "bob@acme.com",           |
-|                     |     "owner": "Bob Jones"               |
-|                     |   }                                    |
-|                     | }                                      |
-| Metadata Overrides  | {}                                     |
-| Ruleset Defaults    | {                                      |
 |                     |   "domainRules": [                     |
 |                     |     {                                  |
 |                     |       "name": "checkSsnLen",           |
@@ -19,5 +12,4 @@
 |                     |     }                                  |
 |                     |   ]                                    |
 |                     | }                                      |
-| Ruleset Overrides   | {}                                     |
 +---------------------+----------------------------------------+
