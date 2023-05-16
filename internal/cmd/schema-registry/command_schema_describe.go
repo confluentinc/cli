@@ -112,7 +112,7 @@ func describeById(id string, srClient *srsdk.APIClient, ctx context.Context) err
 		return err
 	}
 
-	return printSchema(schemaID, schemaString.Schema, schemaString.SchemaType, schemaString.References)
+	return printSchema(schemaID, schemaString.Schema, schemaString.SchemaType, schemaString.References, schemaString.Metadata, schemaString.RuleSet)
 }
 
 func describeBySubject(cmd *cobra.Command, srClient *srsdk.APIClient, ctx context.Context) error {
@@ -131,7 +131,7 @@ func describeBySubject(cmd *cobra.Command, srClient *srsdk.APIClient, ctx contex
 		return errors.CatchSchemaNotFoundError(err, httpResp)
 	}
 
-	return printSchema(int64(schema.Id), schema.Schema, schema.SchemaType, schema.References)
+	return printSchema(int64(schema.Id), schema.Schema, schema.SchemaType, schema.References, schema.Metadata, schema.Ruleset)
 }
 
 func describeGraph(cmd *cobra.Command, id string, srClient *srsdk.APIClient, ctx context.Context) error {
@@ -219,7 +219,7 @@ func traverseDAG(srClient *srsdk.APIClient, ctx context.Context, visited map[str
 	return root, schemaGraph, nil
 }
 
-func printSchema(schemaID int64, schema, schemaType string, refs []srsdk.SchemaReference) error {
+func printSchema(schemaID int64, schema, schemaType string, refs []srsdk.SchemaReference, metadata *srsdk.Metadata, ruleset *srsdk.RuleSet) error {
 	output.Printf("Schema ID: %d\n", schemaID)
 
 	if schemaType != "" {
@@ -244,6 +244,24 @@ func printSchema(schemaID int64, schema, schemaType string, refs []srsdk.SchemaR
 		for i := 0; i < len(refs); i++ {
 			output.Printf("\t%s -> %s %d\n", refs[i].Name, refs[i].Subject, refs[i].Version)
 		}
+	}
+
+	if metadata != nil {
+		output.Println("Metadata:")
+		metadataJson, err := json.Marshal(*metadata)
+		if err != nil {
+			return err
+		}
+		output.Println(prettyJson(metadataJson))
+	}
+
+	if ruleset != nil {
+		output.Println("Ruleset:")
+		rulesetJson, err := json.Marshal(*ruleset)
+		if err != nil {
+			return err
+		}
+		output.Println(prettyJson(rulesetJson))
 	}
 	return nil
 }
