@@ -269,6 +269,8 @@ release:
   ids:
     - archive
     - archive-alpine
+    - binary
+    - binary-alpine
   disable: "{{.Env.DRY_RUN}}"
 
 blobs:
