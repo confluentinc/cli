@@ -1,38 +1,3 @@
-update-db:
-	$(eval DIR=$(shell mktemp -d))
-	$(eval CLI_RELEASE=$(DIR)/cli-release)
-	$(eval CC_CLI_SERVICE=$(DIR)/cc-cli-service)
-	
-	git clone git@github.com:confluentinc/cli-release.git $(CLI_RELEASE) && \
-	version=$$(ls $(CLI_RELEASE)/release-notes | sed -e s/.json$$// | sort --version-sort | tail -1) && \
-	git clone git@github.com:confluentinc/cc-cli-service.git $(CC_CLI_SERVICE) && \
-	cd $(CC_CLI_SERVICE) && \
-	make db-local-reset && \
-	git checkout -b update-db-v$${version} && \
-	make db-migrate-create NAME=v$${version} && \
-	cd - && \
-	echo -e "BEGIN;\n\nDELETE FROM whitelist WHERE version = 'v$${version}';\n\nCOMMIT;\n" > $$(find $(CC_CLI_SERVICE)/db/migrations/ -name "*_v$${version}.down.sql") && \
-	go run -ldflags "-X main.version=v$${version}" cmd/usage/main.go > $$(find $(CC_CLI_SERVICE)/db/migrations/ -name "*_v$${version}.up.sql") && \
-	cd $(CC_CLI_SERVICE) && \
-	make db-migrate-up && \
-	git add . && \
-	git commit -m "update db for v$${version}" && \
-	cd db/migrations/ && \
-	a=$$(ls | sed -n "s/[0-9]*_v\(.*\).up.sql/\1/p" | sort --version-sort | grep $${version} -B 1 | head -1) && \
-	b=$$(ls | sed -n "s/[0-9]*_v\(.*\).up.sql/\1/p" | sort --version-sort | grep $${version}) && \
-	a=$$(ls | grep "v$${a}.up.sql") && \
-	b=$$(ls | grep "v$${b}.up.sql") && \
-	sed -i "" "s/v[0-9]*\.[0-9]*\.[0-9]*/v$${version}/" $$a && \
-	diff=$$(diff -u $$a $$b); [ $$? -lt 2 ] && \
-	body=$$(echo -e "\`\`\`diff$${diff}\n\n\`\`\`") && \
-	if [ "$${diff}" = "" ]; then \
-		body="No changes."; \
-	fi && \
-	$(call dry-run,git push origin update-db-v$${version}) && \
-	$(call dry-run,gh pr create -B master --title "Update DB for v$${version}" --body "$${body}")
-
-	rm -rf $(DIR)
-
 promote:
 	$(eval DIR=$(shell mktemp -d))
 	$(eval CC_CLI_SERVICE=$(DIR)/cc-cli-service)
