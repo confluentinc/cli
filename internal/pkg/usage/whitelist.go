@@ -7,7 +7,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/types"
 )
 
-func WhitelistCommandsAndFlags(cmd *cobra.Command, whitelist types.Set) {
+func WhitelistCommandsAndFlags(cmd *cobra.Command, whitelist types.Set[string]) {
 	whitelist.Add(cmd.Name())
 	cmd.Flags().VisitAll(func(flag *pflag.Flag) {
 		whitelist.Add(flag.Name)
