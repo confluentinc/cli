@@ -113,30 +113,28 @@ func (c *command) schemaCreate(cmd *cobra.Command, _ []string) error {
 		References: refs,
 	}
 
-	metadataPath, err := cmd.Flags().GetString("metadata")
+	metadata, err := cmd.Flags().GetString("metadata")
 	if err != nil {
 		return err
 	}
-	if metadataPath != "" {
-		var metadata srsdk.Metadata
-		err := read(metadataPath, &metadata)
+	if metadata != "" {
+		request.Metadata = new(srsdk.Metadata)
+		err := read(metadata, request.Metadata)
 		if err != nil {
 			return err
 		}
-		request.Metadata = &metadata
 	}
 
-	rulesetPath, err := cmd.Flags().GetString("ruleset")
+	ruleset, err := cmd.Flags().GetString("ruleset")
 	if err != nil {
 		return err
 	}
-	if rulesetPath != "" {
-		var ruleset srsdk.RuleSet
-		err := read(rulesetPath, &ruleset)
+	if ruleset != "" {
+		request.RuleSet = new(srsdk.RuleSet)
+		err := read(ruleset, request.RuleSet)
 		if err != nil {
 			return err
 		}
-		request.RuleSet = &ruleset
 	}
 
 	normalize, err := cmd.Flags().GetBool("normalize")

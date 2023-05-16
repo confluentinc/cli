@@ -95,30 +95,28 @@ func (c *command) schemaCreateOnPrem(cmd *cobra.Command, _ []string) error {
 		Normalize:  normalize,
 	}
 
-	metadataPath, err := cmd.Flags().GetString("metadata")
+	metadata, err := cmd.Flags().GetString("metadata")
 	if err != nil {
 		return err
 	}
-	if metadataPath != "" {
-		var metadata srsdk.Metadata
-		err := read(metadataPath, &metadata)
+	if metadata != "" {
+		schemaCfg.Metadata = new(srsdk.Metadata)
+		err := read(metadata, schemaCfg.Metadata)
 		if err != nil {
 			return err
 		}
-		schemaCfg.Metadata = &metadata
 	}
 
-	rulesetPath, err := cmd.Flags().GetString("ruleset")
+	ruleset, err := cmd.Flags().GetString("ruleset")
 	if err != nil {
 		return err
 	}
-	if rulesetPath != "" {
-		var ruleset srsdk.RuleSet
-		err := read(rulesetPath, &ruleset)
+	if ruleset != "" {
+		schemaCfg.Ruleset = new(srsdk.RuleSet)
+		err := read(ruleset, schemaCfg.Ruleset)
 		if err != nil {
 			return err
 		}
-		schemaCfg.Ruleset = &ruleset
 	}
 
 	_, _, err = c.registerSchemaOnPrem(cmd, schemaCfg)
