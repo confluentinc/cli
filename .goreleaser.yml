@@ -135,7 +135,7 @@ builds:
     goamd64:
       - v1
     prebuilt:
-      path: "prebuilt/confluent_{{ .Os }}_{{ .Arch }}{{ with .Amd64 }}_{{ . }}{{ end }}/confluent"
+      path: "prebuilt/confluent-{{ .Os }}-{{ .Arch }}_{{ .Os }}_{{ .Arch }}{{ with .Amd64 }}_{{ . }}{{ end }}/confluent"
   - id: confluent-linux-homebrew
     builder: prebuilt
     goos:
@@ -146,7 +146,7 @@ builds:
     goamd64:
       - v1
     prebuilt:
-      path: "prebuilt/homebrew/confluent_{{ .Os }}_{{ .Arch }}{{ with .Amd64 }}_{{ . }}{{ end }}/confluent"
+      path: "prebuilt/confluent-{{ .Os }}-{{ .Arch }-homebrew_{{ .Os }}_{{ .Arch }}{{ with .Amd64 }}_{{ . }}{{ end }}/confluent"
   - id: confluent-windows-amd64
     binary: confluent
     main: cmd/confluent/main.go
@@ -265,7 +265,7 @@ brews:
       branch: "cli-{{ .Version }}"
       pull_request:
         enabled: true
-    url_template: "https://s3.us-west-2.amazonaws.com/confluent.cloud/confluent-cli/archives/{{ .Version }}/{{ .ArtifactName }}"
+    url_template: "{{ .Env.S3FOLDER }}/archives/{{ .Version }}/{{ .ArtifactName }}"
     homepage: https://docs.confluent.io/confluent-cli/current/overview.html
     description: CLI for Confluent Cloud and Confluent Platform
     skip_upload: true
