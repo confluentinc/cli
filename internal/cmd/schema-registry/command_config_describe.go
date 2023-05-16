@@ -101,7 +101,7 @@ func describeSchemaConfig(cmd *cobra.Command, srClient *srsdk.APIClient, ctx con
 		if err != nil {
 			return err
 		}
-		configOut.MetadataDefaults = prettyJson(overrideMetadata)
+		configOut.MetadataOverrides = prettyJson(overrideMetadata)
 	}
 
 	if config.DefaultRuleSet != nil {
@@ -109,7 +109,7 @@ func describeSchemaConfig(cmd *cobra.Command, srClient *srsdk.APIClient, ctx con
 		if err != nil {
 			return err
 		}
-		configOut.MetadataDefaults = prettyJson(defaultRuleset)
+		configOut.RulesetDefaults = prettyJson(defaultRuleset)
 	}
 
 	if config.OverrideRuleSet != nil {
@@ -117,7 +117,7 @@ func describeSchemaConfig(cmd *cobra.Command, srClient *srsdk.APIClient, ctx con
 		if err != nil {
 			return err
 		}
-		configOut.MetadataDefaults = prettyJson(overrideRuleset)
+		configOut.RulesetOverrides = prettyJson(overrideRuleset)
 	}
 
 	table := output.NewTable(cmd)
