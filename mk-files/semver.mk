@@ -19,10 +19,14 @@ split_version := $(subst .,$(_space),$(CLEAN_VERSION))
 
 .PHONY: tag-release
 tag-release:
-	# Delete tag from the remote in case it already exists
-	git tag -d v$$(cat release-notes/version.txt) || true
-	$(call dry-run,git push -d origin v$$(cat release-notes/version.txt)) || true
+	$(eval DIR=$(shell mktemp -d))
+	$(eval CLI_RELEASE=$(DIR)/cli-release)
+	
+	git clone git@github.com:confluentinc/cli-release.git $(CLI_RELEASE) && \
+	version=$$(ls $(CLI_RELEASE)/release-notes | sed -e s/.json$$// | sort --version-sort | tail -1) && \
+	git tag -d v$${version} || true && \
+	$(call dry-run,git push -d origin v$${version}) || true && \
+	git tag v$${version} && \
+	$(call dry-run,git push origin v$${version})
 
-	# Add tag to the remote
-	git tag v$$(cat release-notes/version.txt)
-	$(call dry-run,git push origin v$$(cat release-notes/version.txt))
+	rm -rf $(DIR)

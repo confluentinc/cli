@@ -3,7 +3,7 @@ ARCHIVE_TYPES=darwin_amd64.tar.gz darwin_arm64.tar.gz linux_amd64.tar.gz linux_a
 # If you set up your laptop following https://github.com/confluentinc/cc-documentation/blob/master/Operations/Laptop%20Setup.md
 # then assuming caas.sh lives here should be fine
 define aws-authenticate
-	source ~/git/go/src/github.com/confluentinc/cc-dotfiles/caas.sh && AWS_PROFILE=cc-production-1/prod-administrator aws sts get-caller-identity
+	$(call dry-run,assume cc-production-1/prod-administrator)
 endef
 
 
@@ -19,8 +19,6 @@ release: check-branch tag-release
 	make release-to-prod
 	$(call print-boxed-message,"PUBLISHING DOCS")
 	make publish-docs
-	$(call print-boxed-message,"PUBLISHING NEW DOCKER HUB IMAGES")
-	make publish-dockerhub
 
 .PHONY: check-branch
 check-branch:
@@ -74,13 +72,17 @@ endif
 # Uploading linux glibc files because its goreleaser file has set release disabled
 .PHONY: gorelease
 gorelease:
+	$(eval DIR=$(shell mktemp -d))
+	$(eval CLI_RELEASE=$(DIR)/cli-release)
+
 	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
-	
 	$(aws-authenticate) && \
 	rm -rf prebuilt/ && \
 	mkdir prebuilt/ && \
 	scripts/build_linux_glibc.sh && \
-	GORELEASER_KEY=$(GORELEASER_KEY) VERSION=$(VERSION) GOEXPERIMENT=boringcrypto S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli GITHUB_TOKEN=$(token) DRY_RUN=$(DRY_RUN) goreleaser release --clean --release-notes release-notes/latest-release.rst --timeout 60m
+	git clone git@github.com:confluentinc/cli-release.git $(CLI_RELEASE) && \
+	go run $(CLI_RELEASE)/cmd/releasenotes/formatter/main.go $(CLI_RELEASE)/release-notes/$(VERSION_NO_V).json github > $(DIR)/release-notes.txt && \
+	GORELEASER_KEY=$(GORELEASER_KEY) VERSION=$(VERSION) GOEXPERIMENT=boringcrypto S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli GITHUB_TOKEN=$(token) DRY_RUN=$(DRY_RUN) goreleaser release --clean --release-notes $(DIR)/release-notes.txt --timeout 60m
 
 # Current goreleaser still has some shortcomings for the our use, and the target patches those issues
 # As new goreleaser versions allow more customization, we may be able to reduce the work for this make target
