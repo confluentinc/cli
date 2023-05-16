@@ -252,6 +252,20 @@ func handleSRById(t *testing.T) http.HandlerFunc {
 		case 1004:
 			schema.Schema = "schema2"
 			schema.References = []srsdk.SchemaReference{}
+		case 1005:
+			schema.Schema = `{"schema":1}`
+			schema.References = []srsdk.SchemaReference{}
+			schema.Ruleset = &srsdk.RuleSet{
+				DomainRules: []srsdk.Rule{
+					{
+						Name: "checkSsnLen",
+						Kind: "CONDITION",
+						Mode: "WRITE",
+						Type: "CEL",
+						Expr: "size(message.ssn) == 9",
+					},
+				},
+			}
 		default:
 			schema.Schema = `{"schema":1}`
 			schema.References = []srsdk.SchemaReference{{
@@ -259,6 +273,7 @@ func handleSRById(t *testing.T) http.HandlerFunc {
 				Subject: "payment",
 				Version: 1,
 			}}
+			schema.Ruleset = nil
 		}
 		err = json.NewEncoder(w).Encode(schema)
 		require.NoError(t, err)
