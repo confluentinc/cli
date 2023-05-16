@@ -5,7 +5,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	"github.com/confluentinc/cli/internal/pkg/deletion"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/resource"
@@ -40,13 +39,13 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	deleted, err := deletion.DeleteResources(args, func(id string) error {
+	deleted, err := resource.Delete(args, func(id string) error {
 		if r, err := c.V2Client.DeleteKafkaCluster(id, environmentId); err != nil {
 			return errors.CatchKafkaNotFoundError(err, id, r)
 		}
 		return nil
 	}, c.postProcess)
-	deletion.PrintSuccessMsg(deleted, resource.KafkaCluster)
+	resource.PrintDeleteSuccessMsg(deleted, resource.KafkaCluster)
 
 	if err != nil {
 		if len(args)-len(deleted) > 1 {
@@ -73,18 +72,18 @@ func (c *clusterCommand) confirmDeletion(cmd *cobra.Command, environmentId strin
 		return err
 	}
 
-	err := deletion.ValidateArgs(cmd, args, resource.KafkaCluster, describeFunc)
+	err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.KafkaCluster, describeFunc)
 	if err != nil {
 		PluralClusterEnvironmentSuggestions := "Ensure the clusters you are specifying belong to the currently selected environment with `confluent kafka cluster list`, `confluent environment list`, and `confluent environment use`."
 		return errors.NewErrorWithSuggestions(err.Error(), PluralClusterEnvironmentSuggestions)
 	}
 
 	if len(args) == 1 {
-		if err := form.ConfirmDeletionWithString(cmd, deletion.DefaultPromptString(resource.KafkaCluster, args[0], displayName), displayName); err != nil {
+		if err := form.ConfirmDeletionWithString(cmd, form.DefaultPromptString(resource.KafkaCluster, args[0], displayName), displayName); err != nil {
 			return err
 		}
 	} else {
-		if ok, err := form.ConfirmDeletionYesNo(cmd, deletion.DefaultYesNoPromptString(resource.KafkaCluster, args)); err != nil || !ok {
+		if ok, err := form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.KafkaCluster, args)); err != nil || !ok {
 			return err
 		}
 	}

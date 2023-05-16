@@ -4,7 +4,6 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/deletion"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/resource"
@@ -35,13 +34,13 @@ func (c *identityProviderCommand) delete(cmd *cobra.Command, args []string) erro
 		return err
 	}
 
-	deleted, err := deletion.DeleteResources(args, func(id string) error {
+	deleted, err := resource.Delete(args, func(id string) error {
 		if err := c.V2Client.DeleteIdentityProvider(id); err != nil {
 			return err
 		}
 		return nil
-	}, deletion.DefaultPostProcess)
-	deletion.PrintSuccessMsg(deleted, resource.IdentityProvider)
+	}, resource.DefaultPostProcess)
+	resource.PrintDeleteSuccessMsg(deleted, resource.IdentityProvider)
 
 	return err
 }
@@ -56,16 +55,16 @@ func (c *identityProviderCommand) confirmDeletion(cmd *cobra.Command, args []str
 		return err
 	}
 
-	if err := deletion.ValidateArgs(cmd, args, resource.IdentityProvider, describeFunc); err != nil {
+	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.IdentityProvider, describeFunc); err != nil {
 		return err
 	}
 
 	if len(args) == 1 {
-		if err := form.ConfirmDeletionWithString(cmd, deletion.DefaultPromptString(resource.IdentityProvider, args[0], displayName), displayName); err != nil {
+		if err := form.ConfirmDeletionWithString(cmd, form.DefaultPromptString(resource.IdentityProvider, args[0], displayName), displayName); err != nil {
 			return err
 		}
 	} else {
-		if ok, err := form.ConfirmDeletionYesNo(cmd, deletion.DefaultYesNoPromptString(resource.IdentityProvider, args)); err != nil || !ok {
+		if ok, err := form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.IdentityProvider, args)); err != nil || !ok {
 			return err
 		}
 	}

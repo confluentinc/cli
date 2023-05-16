@@ -10,10 +10,10 @@ import (
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/deletion"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -48,12 +48,12 @@ func (c *brokerCommand) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	opts := kafkarestv3.ClustersClusterIdBrokersBrokerIdDeleteOpts{ShouldShutdown: optional.NewBool(true)}
-	deleted, err := deletion.DeleteResources(args, func(id string) error {
+	deleted, err := resource.Delete(args, func(id string) error {
 		if _, resp, err := restClient.BrokerV3Api.ClustersClusterIdBrokersBrokerIdDelete(restContext, clusterId, brokerIdToNumId[id], &opts); err != nil {
 			return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 		}
 		return nil
-	}, deletion.DefaultPostProcess)
+	}, resource.DefaultPostProcess)
 	if len(deleted) == 1 {
 		output.Printf("Started deletion of broker %[1]s. To monitor the remove-broker task run `confluent kafka broker get-tasks %[1]s --task-type remove-broker`.\n", deleted[0])
 	} else if len(deleted) > 1 {
@@ -78,11 +78,11 @@ func (c *brokerCommand) confirmDeletion(cmd *cobra.Command, restClient *kafkares
 		return err
 	}
 
-	if err := deletion.ValidateArgs(cmd, args, "broker", describeFunc); err != nil {
+	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, "broker", describeFunc); err != nil {
 		return err
 	}
 
-	if ok, err := form.ConfirmDeletionYesNo(cmd, deletion.DefaultYesNoPromptString("broker", args)); err != nil || !ok {
+	if ok, err := form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString("broker", args)); err != nil || !ok {
 		return err
 	}
 

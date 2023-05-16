@@ -13,7 +13,6 @@ import (
 
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/deletion"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -50,7 +49,7 @@ func (c *ksqlCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	deleted, err := deletion.DeleteResources(args, func(id string) error {
+	deleted, err := resource.Delete(args, func(id string) error {
 		// When deleting a cluster we need to remove all the associated topics. This operation will succeed only if cluster
 		// is UP and provisioning didn't fail. If provisioning failed we can't connect to the ksql server, so we can't delete
 		// the topics.
@@ -65,8 +64,8 @@ func (c *ksqlCommand) delete(cmd *cobra.Command, args []string) error {
 			return err
 		}
 		return nil
-	}, deletion.DefaultPostProcess)
-	deletion.PrintSuccessMsg(deleted, resource.KsqlCluster)
+	}, resource.DefaultPostProcess)
+	resource.PrintDeleteSuccessMsg(deleted, resource.KsqlCluster)
 
 	return err
 }
@@ -111,17 +110,17 @@ func (c *ksqlCommand) confirmDeletion(cmd *cobra.Command, environmentId string, 
 		return err
 	}
 
-	if err := deletion.ValidateArgs(cmd, args, resource.KsqlCluster, describeFunc); err != nil {
+	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.KsqlCluster, describeFunc); err != nil {
 		return err
 	}
 
 	if len(args) == 1 {
 		displayName := idToCluster[args[0]].Spec.GetDisplayName()
-		if err := form.ConfirmDeletionWithString(cmd, deletion.DefaultPromptString(resource.KsqlCluster, args[0], displayName), displayName); err != nil {
+		if err := form.ConfirmDeletionWithString(cmd, form.DefaultPromptString(resource.KsqlCluster, args[0], displayName), displayName); err != nil {
 			return err
 		}
 	} else {
-		if ok, err := form.ConfirmDeletionYesNo(cmd, deletion.DefaultYesNoPromptString(resource.KsqlCluster, args)); err != nil || !ok {
+		if ok, err := form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.KsqlCluster, args)); err != nil || !ok {
 			return err
 		}
 	}

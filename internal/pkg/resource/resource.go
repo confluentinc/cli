@@ -1,9 +1,13 @@
 package resource
 
 import (
+	"fmt"
 	"strings"
 
+	"github.com/hashicorp/go-multierror"
+
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -106,6 +110,26 @@ func ValidatePrefixes(resourceType string, args []string) error {
 	return nil
 }
 
+func ValidateArgs(fullParentCommand string, args []string, resourceType string, callDescribeEndpoint func(string) error) error {
+	var invalidArgs []string
+	for _, arg := range args {
+		if err := callDescribeEndpoint(arg); err != nil {
+			invalidArgs = append(invalidArgs, arg)
+		}
+	}
+
+	if len(invalidArgs) != 0 {
+		NotFoundErrorMsg := `%s %s not found`
+		invalidArgsErrMsg := fmt.Sprintf(NotFoundErrorMsg, resourceType, utils.ArrayToCommaDelimitedString(invalidArgs, "and"))
+		if len(invalidArgs) > 1 {
+			invalidArgsErrMsg = fmt.Sprintf(NotFoundErrorMsg, Plural(resourceType), utils.ArrayToCommaDelimitedString(invalidArgs, "and"))
+		}
+		return errors.NewErrorWithSuggestions(invalidArgsErrMsg, fmt.Sprintf(errors.ListResourceSuggestions, resourceType, fullParentCommand))
+	}
+
+	return nil
+}
+
 func Plural(resource string) string {
 	if resource == "" {
 		return ""
@@ -121,4 +145,33 @@ func Plural(resource string) string {
 	}
 
 	return resource + "s"
+}
+
+func DefaultPostProcess(_ string) error {
+	return nil
+}
+
+func Delete(args []string, callDeleteEndpoint func(string) error, postProcess func(string) error) ([]string, error) {
+	errs := &multierror.Error{ErrorFormat: errors.CustomMultierrorList}
+	var deleted []string
+	for _, id := range args {
+		if err := callDeleteEndpoint(id); err != nil {
+			errs = multierror.Append(errs, err)
+		} else {
+			deleted = append(deleted, id)
+			if err := postProcess(id); err != nil {
+				errs = multierror.Append(errs, err)
+			}
+		}
+	}
+
+	return deleted, errs.ErrorOrNil()
+}
+
+func PrintDeleteSuccessMsg(successful []string, resourceType string) {
+	if len(successful) == 1 {
+		output.Printf(errors.DeletedResourceMsg, resourceType, successful[0])
+	} else if len(successful) > 1 {
+		output.Printf("Deleted %s %s.\n", Plural(resourceType), utils.ArrayToCommaDelimitedString(successful, "and"))
+	}
 }

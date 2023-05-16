@@ -7,7 +7,6 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/deletion"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
@@ -58,7 +57,7 @@ func (c *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 		return err
 	}
 
-	deleted, err := deletion.DeleteResources(args, func(id string) error {
+	deleted, err := resource.Delete(args, func(id string) error {
 		if r, err := kafkaREST.CloudClient.DeleteKafkaTopic(kafkaClusterConfig.ID, id); err != nil {
 			restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err)
 			if parseErr == nil && restErr.Code == ccloudv2.UnknownTopicOrPartitionErrorCode {
@@ -68,8 +67,8 @@ func (c *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 			}
 		}
 		return nil
-	}, deletion.DefaultPostProcess)
-	deletion.PrintSuccessMsg(deleted, resource.Topic)
+	}, resource.DefaultPostProcess)
+	resource.PrintDeleteSuccessMsg(deleted, resource.Topic)
 
 	return err
 }
@@ -80,16 +79,16 @@ func (c *authenticatedTopicCommand) confirmDeletion(cmd *cobra.Command, kafkaRES
 		return err
 	}
 
-	if err := deletion.ValidateArgs(cmd, args, resource.Topic, describeFunc); err != nil {
+	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.Topic, describeFunc); err != nil {
 		return err
 	}
 
 	if len(args) == 1 {
-		if err := form.ConfirmDeletionWithString(cmd, deletion.DefaultPromptString(resource.Topic, args[0], args[0]), args[0]); err != nil {
+		if err := form.ConfirmDeletionWithString(cmd, form.DefaultPromptString(resource.Topic, args[0], args[0]), args[0]); err != nil {
 			return err
 		}
 	} else {
-		if ok, err := form.ConfirmDeletionYesNo(cmd, deletion.DefaultYesNoPromptString(resource.Topic, args)); err != nil || !ok {
+		if ok, err := form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.Topic, args)); err != nil || !ok {
 			return err
 		}
 	}

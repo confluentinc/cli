@@ -4,7 +4,6 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/deletion"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/resource"
@@ -35,13 +34,13 @@ func (c *command) deleteConsumerShare(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	deleted, err := deletion.DeleteResources(args, func(id string) error {
+	deleted, err := resource.Delete(args, func(id string) error {
 		if err := c.V2Client.DeleteConsumerShare(id); err != nil {
 			return err
 		}
 		return nil
-	}, deletion.DefaultPostProcess)
-	deletion.PrintSuccessMsg(deleted, resource.ConsumerShare)
+	}, resource.DefaultPostProcess)
+	resource.PrintDeleteSuccessMsg(deleted, resource.ConsumerShare)
 
 	return err
 }
@@ -52,11 +51,11 @@ func (c *command) confirmDeletionConsumerShare(cmd *cobra.Command, args []string
 		return err
 	}
 
-	if err := deletion.ValidateArgs(cmd, args, resource.ConsumerShare, describeFunc); err != nil {
+	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.ConsumerShare, describeFunc); err != nil {
 		return err
 	}
 
-	if ok, err := form.ConfirmDeletionYesNo(cmd, deletion.DefaultYesNoPromptString(resource.ConsumerShare, args)); err != nil || !ok {
+	if ok, err := form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.ConsumerShare, args)); err != nil || !ok {
 		return err
 	}
 

@@ -9,6 +9,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 /*
@@ -92,6 +93,10 @@ func ConfirmDeletionWithString(cmd *cobra.Command, promptMsg, stringToType strin
 	return errors.NewErrorWithSuggestions(fmt.Sprintf(`input does not match "%s"`, stringToType), DeleteResourceConfirmSuggestions)
 }
 
+func DefaultPromptString(resourceType, id, stringToType string) string {
+	return fmt.Sprintf(errors.DeleteResourceConfirmMsg, resourceType, id, stringToType)
+}
+
 func ConfirmDeletionYesNo(cmd *cobra.Command, promptMsg string) (bool, error) {
 	if force, err := cmd.Flags().GetBool("force"); err != nil {
 		return false, err
@@ -106,6 +111,17 @@ func ConfirmDeletionYesNo(cmd *cobra.Command, promptMsg string) (bool, error) {
 	}
 
 	return f.Responses["confirm"].(bool), nil
+}
+
+func DefaultYesNoPromptString(resourceType string, idList []string) string {
+	var promptMsg string
+	if len(idList) == 1 {
+		promptMsg = fmt.Sprintf(`Are you sure you want to delete %s "%s"?`, resourceType, idList[0])
+	} else {
+		promptMsg = fmt.Sprintf("Are you sure you want to delete %ss %s?", resourceType, utils.ArrayToCommaDelimitedString(idList, "and"))
+	}
+
+	return promptMsg
 }
 
 func ConfirmEnter() error {

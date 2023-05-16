@@ -4,7 +4,6 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/deletion"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -49,12 +48,12 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	deleted, err := deletion.DeleteResources(args, func(id string) error {
+	deleted, err := resource.Delete(args, func(id string) error {
 		if err := c.V2Client.DeleteSdPipeline(environmentId, cluster.ID, id); err != nil {
 			return err
 		}
 		return nil
-	}, deletion.DefaultPostProcess)
+	}, resource.DefaultPostProcess)
 	if len(deleted) == 1 {
 		output.Printf("Requested to delete pipeline \"%s\".\n", deleted[0])
 	} else if len(deleted) > 1 {
@@ -74,16 +73,16 @@ func (c *command) confirmDeletion(cmd *cobra.Command, environmentId, clusterId s
 		return err
 	}
 
-	if err := deletion.ValidateArgs(cmd, args, resource.Pipeline, describeFunc); err != nil {
+	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.Pipeline, describeFunc); err != nil {
 		return err
 	}
 
 	if len(args) == 1 {
-		if err := form.ConfirmDeletionWithString(cmd, deletion.DefaultPromptString(resource.Pipeline, args[0], displayName), displayName); err != nil {
+		if err := form.ConfirmDeletionWithString(cmd, form.DefaultPromptString(resource.Pipeline, args[0], displayName), displayName); err != nil {
 			return err
 		}
 	} else {
-		if ok, err := form.ConfirmDeletionYesNo(cmd, deletion.DefaultYesNoPromptString(resource.Pipeline, args)); err != nil || !ok {
+		if ok, err := form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.Pipeline, args)); err != nil || !ok {
 			return err
 		}
 	}

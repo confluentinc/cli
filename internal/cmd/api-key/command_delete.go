@@ -4,7 +4,6 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/deletion"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/resource"
@@ -31,13 +30,13 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	deleted, err := deletion.DeleteResources(args, func(id string) error {
+	deleted, err := resource.Delete(args, func(id string) error {
 		if r, err := c.V2Client.DeleteApiKey(id); err != nil {
 			return errors.CatchApiKeyForbiddenAccessError(err, deleteOperation, r)
 		}
 		return nil
 	}, c.postProcess)
-	deletion.PrintSuccessMsg(deleted, resource.ApiKey)
+	resource.PrintDeleteSuccessMsg(deleted, resource.ApiKey)
 
 	if err != nil {
 		return errors.NewErrorWithSuggestions(err.Error(), errors.APIKeyNotFoundSuggestions)
@@ -51,11 +50,11 @@ func (c *command) confirmDeletion(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if err := deletion.ValidateArgs(cmd, args, resource.ApiKey, describeFunc); err != nil {
+	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.ApiKey, describeFunc); err != nil {
 		return err
 	}
 
-	if ok, err := form.ConfirmDeletionYesNo(cmd, deletion.DefaultYesNoPromptString(resource.ApiKey, args)); err != nil || !ok {
+	if ok, err := form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.ApiKey, args)); err != nil || !ok {
 		return err
 	}
 
