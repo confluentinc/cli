@@ -28,7 +28,7 @@ type manifest struct {
 	Version string    `json:"version"`
 	Owner   owner     `json:"owner"`
 	Archive archive   `json:"archive"`
-	License []license `json:"license"`
+	Licenses []license `json:"license"`
 }
 
 type owner struct {
@@ -409,7 +409,7 @@ func unzipPlugin(pluginManifest *manifest, zipFiles []*zip.File, pluginDir strin
 }
 
 func checkLicenseAcceptance(pluginManifest *manifest, force bool) error {
-	for _, license := range pluginManifest.License {
+	for _, license := range pluginManifest.Licenses {
 		if force {
 			output.Printf("\nImplicitly agreeing to the following license:\n%s\n%s\n", license.Name, license.Url)
 		} else {
