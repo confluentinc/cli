@@ -1,0 +1,18 @@
+Schema ID: 1005
+Type: AVRO
+Schema:
+{
+    "schema": 1
+}
+Ruleset:
+{
+  "domainRules": [
+    {
+      "name": "checkSsnLen",
+      "kind": "CONDITION",
+      "mode": "WRITE",
+      "type": "CEL",
+      "expr": "size(message.ssn) == 9"
+    }
+  ]
+}
