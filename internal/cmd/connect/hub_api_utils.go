@@ -52,7 +52,7 @@ func getRemoteArchive(pluginManifest *manifest) ([]byte, error) {
 	if r.StatusCode != http.StatusOK {
 		return nil, errors.New("failed to retrieve archive from Confuent Hub")
 	}
-	defer r.Body.Close()
 
+	defer r.Body.Close()
 	return io.ReadAll(r.Body)
 }
