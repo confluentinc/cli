@@ -7,7 +7,6 @@
 |                     |     "owner": "Bob Jones"               |
 |                     |   }                                    |
 |                     | }                                      |
-| Metadata Overrides  | {}                                     |
 | Ruleset Defaults    | {                                      |
 |                     |   "domainRules": [                     |
 |                     |     {                                  |
@@ -19,5 +18,4 @@
 |                     |     }                                  |
 |                     |   ]                                    |
 |                     | }                                      |
-| Ruleset Overrides   | {}                                     |
 +---------------------+----------------------------------------+

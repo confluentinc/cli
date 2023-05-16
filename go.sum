@@ -134,6 +134,10 @@ github.com/confluentinc/proto-go-setter v0.3.0 h1:6BhgpDV5rWdEa+6LsnQWGV1udFboCa
 github.com/confluentinc/proto-go-setter v0.3.0/go.mod h1:WJkmDZf4f/nxGzjYJ+o3AsXI2hk64gLM5XlZrmlzs1s=
 github.com/confluentinc/schema-registry-sdk-go v0.0.21 h1:Y26jNZnUW+J9tecaDTtPq0KzQz9IrIkRnzKTxXX+OnY=
 github.com/confluentinc/schema-registry-sdk-go v0.0.21/go.mod h1:rz5jgOSmMgeVGCzqsI01SdpmGtkb1nFYtfh67SyzZL4=
+github.com/confluentinc/schema-registry-sdk-go v0.0.22 h1:qoF1Q4iCTb+9ckotiG2reyEPhbDtor8R3bmoz8S0eT8=
+github.com/confluentinc/schema-registry-sdk-go v0.0.22/go.mod h1:rz5jgOSmMgeVGCzqsI01SdpmGtkb1nFYtfh67SyzZL4=
+github.com/confluentinc/schema-registry-sdk-go v0.0.23 h1:KUc2Z1qDOUqpVgwQa1xmhDZvQf/zYTFRf6++C8znZw8=
+github.com/confluentinc/schema-registry-sdk-go v0.0.23/go.mod h1:rz5jgOSmMgeVGCzqsI01SdpmGtkb1nFYtfh67SyzZL4=
 github.com/cpuguy83/go-md2man/v2 v2.0.2/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/davecgh/go-spew v0.0.0-20151105211317-5215b55f46b2/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
