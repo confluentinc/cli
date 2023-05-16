@@ -41,7 +41,7 @@ publish-docs: docs
 	if [[ $(CLEAN_VERSION) != *.0 ]]; then \
 		base=$(STAGING_BRANCH); \
 	fi && \
-	$(call dry-run,gh pr create -B $${base} --title "chore: update CLI docs for v$(CLEAN_VERSION)" --body "")
+	$(call dry-run,gh pr create --base $${base} --title "chore: update CLI docs for v$(CLEAN_VERSION)" --body "")
 
 	rm -rf $(DIR)
 

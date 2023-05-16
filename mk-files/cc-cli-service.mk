@@ -14,6 +14,6 @@ promote:
 	done && \
 	git commit -am "promote devel and prod" && \
 	$(call dry-run,git push origin promote-$$(cat $(DIR)/stag.txt)) && \
-	$(call dry-run,gh pr create -B master --title "Promote devel and prod" --body "")
+	$(call dry-run,gh pr create --base master --title "Promote devel and prod" --body "")
 
 	rm -rf $(DIR)
