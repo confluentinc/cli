@@ -268,5 +268,4 @@ brews:
     url_template: "{{ .Env.S3FOLDER }}/archives/{{ .Version }}/{{ .ArtifactName }}"
     homepage: https://docs.confluent.io/confluent-cli/current/overview.html
     description: CLI for Confluent Cloud and Confluent Platform
-    skip_upload: true
     test: system "#{bin}/confluent version"
