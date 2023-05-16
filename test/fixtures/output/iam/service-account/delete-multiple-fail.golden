@@ -1,0 +1,4 @@
+Error: service account "sa-67890" not found
+
+Suggestions:
+    List available service accounts with `confluent iam service-account list`.
