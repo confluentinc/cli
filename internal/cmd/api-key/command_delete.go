@@ -36,9 +36,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 			return errors.CatchApiKeyForbiddenAccessError(err, deleteOperation, r)
 		}
 		return nil
-	}, func(id string) error {
-		return c.keystore.DeleteAPIKey(id)
-	})
+	}, c.postProcess)
 	deletion.PrintSuccessMsg(deleted, resource.ApiKey)
 
 	if err != nil {
@@ -62,4 +60,8 @@ func (c *command) confirmDeletion(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
+}
+
+func (c *command) postProcess(id string) error {
+	return c.keystore.DeleteAPIKey(id)
 }

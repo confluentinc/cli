@@ -37,21 +37,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 			return err
 		}
 		return nil
-	}, func(id string) error {
-		var err error
-		if id == c.Context.GetCurrentEnvironment() {
-			c.Context.SetCurrentEnvironment("")
-
-			err = c.Config.Save()
-			if err != nil {
-				err = errors.Wrap(err, errors.EnvSwitchErrorMsg)
-			}
-		}
-		c.Context.DeleteEnvironment(id)
-		_ = c.Config.Save()
-
-		return err
-	})
+	}, c.postProcess)
 	deletion.PrintSuccessMsg(deleted, resource.Environment)
 
 	if err != nil {
@@ -85,4 +71,20 @@ func (c *command) confirmDeletion(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
+}
+
+func (c *command) postProcess(id string) error {
+	var err error
+	if id == c.Context.GetCurrentEnvironment() {
+		c.Context.SetCurrentEnvironment("")
+
+		err = c.Config.Save()
+		if err != nil {
+			err = errors.Wrap(err, errors.EnvSwitchErrorMsg)
+		}
+	}
+	c.Context.DeleteEnvironment(id)
+	_ = c.Config.Save()
+
+	return err
 }
