@@ -1,6 +1,7 @@
 module github.com/confluentinc/cli
 
 require (
+	github.com/Azure/go-autorest/autorest/adal v0.9.23 // indirect
 	github.com/DataDog/zstd v1.4.1 // indirect
 	github.com/Shopify/sarama v1.23.1
 	github.com/anmitsu/go-shlex v0.0.0-20200514113438-38f4b401e2be // indirect
@@ -76,7 +77,7 @@ require (
 	github.com/spf13/cobra v1.1.3
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.7.1
-	github.com/stretchr/testify v1.7.0
+	github.com/stretchr/testify v1.8.2
 	github.com/stripe/stripe-go v70.15.0+incompatible
 	github.com/tidwall/gjson v1.6.5
 	github.com/tidwall/pretty v1.0.2
@@ -84,7 +85,7 @@ require (
 	github.com/travisjeffery/mocker v1.1.0
 	github.com/xeipuuv/gojsonschema v1.2.0
 	github.com/xtgo/uuid v0.0.0-20140804021211-a0b114877d4c // indirect
-	golang.org/x/crypto v0.0.0-20210506145944-38f3c27a63bf
+	golang.org/x/crypto v0.6.0
 	golang.org/x/oauth2 v0.0.0-20210427180440-81ed05c6b58c
 	gonum.org/v1/netlib v0.0.0-20200317120129-c5a04cffd98a // indirect
 	gopkg.in/jcmturner/goidentity.v3 v3.0.0 // indirect

@@ -5,7 +5,7 @@ RUN apk update --no-cache && \
     apk add --no-cache bash && \
     apk add --no-cache bash-completion
 
-RUN curl -L --http1.1 https://cnfl.io/ccloud-cli | sh -s -- -b /bin
+RUN curl -L --http1.1 https://cnfl.io/ccloud-cli | sh -s -- v1.43.2 -b /bin
 
 RUN chmod +x /bin/ccloud
 
