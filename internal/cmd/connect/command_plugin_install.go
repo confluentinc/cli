@@ -209,11 +209,7 @@ func parsePluginId(plugin string) (string, string, string, error) {
 func getManifest(id string) (*manifest, error) {
 	if utils.DoesPathExist(id) {
 		// if installing plugin from local archive
-		localManifest, err := getLocalManifest(id)
-		if err != nil {
-			return nil, err
-		}
-		return localManifest, nil
+		return getLocalManifest(id)
 	} else {
 		// if installing plugin from Confluent Hub
 		owner, name, version, err := parsePluginId(id)
