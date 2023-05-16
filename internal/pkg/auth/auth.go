@@ -69,7 +69,7 @@ func PersistConfluentLoginToConfig(config *v3.Config, credentials *Credentials, 
 
 func PersistCCloudLoginToConfig(config *v3.Config, credentials *Credentials, url string, token string, client *ccloud.Client, save bool) (*orgv1.Account, error) {
 	ctxName := GenerateCloudContextName(credentials.Username, url)
-	state, err := getCCloudContextState(config, ctxName, credentials.Username, url, token, client)
+	state, err := getCCloudContextState(config, ctxName, token, client)
 	if err != nil {
 		return nil, err
 	}
