@@ -235,15 +235,6 @@ func (s *CLITestSuite) TestSchemaRegistry() {
 			fixture: "schema-registry/exporter/update.golden",
 		},
 		{
-			args:    fmt.Sprintf(`schema-registry exporter delete myexporter --api-key key --api-secret secret --environment %s --force`, testserver.SRApiEnvId),
-			fixture: "schema-registry/exporter/delete.golden",
-		},
-		{
-			args:    fmt.Sprintf(`schema-registry exporter delete myexporter --api-key key --api-secret secret --environment %s`, testserver.SRApiEnvId),
-			input:   "myexporter\n",
-			fixture: "schema-registry/exporter/delete-prompt.golden",
-		},
-		{
 			args:    fmt.Sprintf(`schema-registry exporter get-status myexporter --api-key key --api-secret secret --environment %s`, testserver.SRApiEnvId),
 			fixture: "schema-registry/exporter/get-status.golden",
 		},
@@ -286,6 +277,29 @@ func (s *CLITestSuite) TestSchemaRegistry() {
 		{
 			args:    "schema-registry region list --package advanced",
 			fixture: "schema-registry/region/list-filter-package.golden",
+		},
+	}
+
+	for _, tt := range tests {
+		tt.login = "cloud"
+		s.runIntegrationTest(tt)
+	}
+}
+
+func (s *CLITestSuite) TestSchemaRegistryExporterDelete() {
+	tests := []CLITest{
+		{
+			args:    fmt.Sprintf(`schema-registry exporter delete myexporter --api-key key --api-secret secret --environment %s --force`, testserver.SRApiEnvId),
+			fixture: "schema-registry/exporter/delete.golden",
+		},
+		{
+			args:    fmt.Sprintf(`schema-registry exporter delete myexporter myexporter2 --api-key key --api-secret secret --environment %s --force`, testserver.SRApiEnvId),
+			fixture: "schema-registry/exporter/delete-multiple-success.golden",
+		},
+		{
+			args:    fmt.Sprintf(`schema-registry exporter delete myexporter --api-key key --api-secret secret --environment %s`, testserver.SRApiEnvId),
+			input:   "myexporter\n",
+			fixture: "schema-registry/exporter/delete-prompt.golden",
 		},
 	}
 
