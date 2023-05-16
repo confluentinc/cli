@@ -24,10 +24,8 @@ release-to-stag:
 
 .PHONY: release-to-prod
 release-to-prod:
-	@$(caasenv-authenticate) && \
 	$(call copy-stag-content-to-prod,archives,$(CLEAN_VERSION)); \
 	$(call copy-stag-content-to-prod,binaries,$(CLEAN_VERSION)); \
-	$(call copy-stag-content-to-prod,archives,latest)
 	$(call print-boxed-message,"VERIFYING PROD RELEASE CONTENT")
 	make verify-prod
 	$(call print-boxed-message,"PROD RELEASE COMPLETED AND VERIFIED!")
@@ -51,7 +49,6 @@ gorelease-alpine:
 .PHONY: gorelease
 gorelease:
 	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
-	$(caasenv-authenticate) && \
 	GO111MODULE=off go get -u github.com/inconshreveable/mousetrap && \
 	GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_STAG_FOLDER_NAME)/ccloud-cli goreleaser release --rm-dist -f .goreleaser-ccloud.yml && \
 	GOPRIVATE=github.com/confluentinc GONOSUMDB=github.com/confluentinc,github.com/golangci/go-misc VERSION=$(VERSION) HOSTNAME="$(HOSTNAME)" S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli goreleaser release --rm-dist -f .goreleaser-confluent.yml && \
@@ -74,7 +71,6 @@ goreleaser-patches:
 # Dummy metadata is used as a hack because S3 does not allow copying files to the same place without any changes (--acl change doesn't count)
 .PHONY: set-acls
 set-acls:
-	$(caasenv-authenticate) && \
 	for binary in ccloud confluent; do \
 		for file_type in binaries archives; do \
 			folder_path=$${binary}-cli/$${file_type}/$(VERSION_NO_V); \
@@ -88,7 +84,6 @@ set-acls:
 # Also, we first re-upload the checksums file because we concatenate the Alpine checksums to the checksums file after goreleaser has already published it (without the Alpine checksums) to S3
 .PHONY: rename-archives-checksums
 rename-archives-checksums:
-	$(caasenv-authenticate); \
 	for binary in ccloud confluent; do \
 		folder=$(S3_STAG_PATH)/$${binary}-cli/archives/$(CLEAN_VERSION); \
 		aws s3 cp dist/$${binary}/$${binary}_$(VERSION_NO_V)_checksums.txt $${folder}/$${binary}_$(CLEAN_VERSION)_checksums.txt;\
@@ -106,7 +101,6 @@ copy-stag-archives-to-latest:
 # first argument: S3 folder of archives we want to copy from
 # second argument: S3 folder destination for latest archives
 define copy-archives-files-to-latest
-	$(caasenv-authenticate); \
 	for binary in ccloud confluent; do \
 		archives_folder=$1/$${binary}-cli/archives/$(CLEAN_VERSION); \
 		latest_folder=$2/$${binary}-cli/archives/latest; \
@@ -122,7 +116,6 @@ endef
 # second argument: S3 folder destination for latest archives
 define copy-archives-checksums-to-latest
 	$(eval TEMP_DIR=$(shell mktemp -d))
-	$(caasenv-authenticate); \
 	for binary in ccloud confluent; do \
 		version_checksums=$${binary}_v$(CLEAN_VERSION)_checksums.txt; \
 		latest_checksums=$${binary}_latest_checksums.txt; \
@@ -146,6 +139,5 @@ download-licenses:
 .PHONY: publish-installers
 ## Publish install scripts to S3. You MUST re-run this if/when you update any install script.
 publish-installers:
-	$(caasenv-authenticate) && \
 	aws s3 cp install-ccloud.sh $(S3_BUCKET_PATH)/ccloud-cli/install.sh --acl public-read && \
 	aws s3 cp install-confluent.sh $(S3_BUCKET_PATH)/confluent-cli/install.sh --acl public-read

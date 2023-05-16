@@ -51,7 +51,7 @@ publish-release-notes-to-docs-repos:
 	cp release-notes/ccloud/release-notes.rst $(CCLOUD_DOCS_DIR)
 	cp release-notes/confluent/release-notes.rst $(CONFLUENT_DOCS_DIR)
 	$(warning SUBMITTING PRs to docs repos)
-	for repo in $(CCLOUD_DOCS_DIR) $(CONFLUENT_DOCS_DIR); do \
+	for repo in $(CONFLUENT_DOCS_DIR); do \
 		cd $${repo} || exit 1; \
 		git add . || exit 1; \
 		git diff --cached --exit-code > /dev/null && echo "nothing to update" && exit 0; \
@@ -62,7 +62,6 @@ publish-release-notes-to-docs-repos:
 
 .PHONY: publish-release-notes-to-s3
 publish-release-notes-to-s3:
-	$(caasenv-authenticate); \
 	aws s3 cp release-notes/ccloud/latest-release.rst $(S3_BUCKET_PATH)/ccloud-cli/release-notes/$(BUMPED_VERSION:v%=%)/release-notes.rst --acl public-read; \
     aws s3 cp release-notes/confluent/latest-release.rst $(S3_BUCKET_PATH)/confluent-cli/release-notes/$(BUMPED_VERSION:v%=%)/release-notes.rst --acl public-read
 
