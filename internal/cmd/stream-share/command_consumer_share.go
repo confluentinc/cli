@@ -40,6 +40,10 @@ func (c *command) validConsumerShareArgs(cmd *cobra.Command, args []string) []st
 		return nil
 	}
 
+	return c.validConsumerShareArgsMultiple(cmd, args)
+}
+
+func (c *command) validConsumerShareArgsMultiple(cmd *cobra.Command, args []string) []string {
 	if err := c.PersistentPreRunE(cmd, args); err != nil {
 		return nil
 	}

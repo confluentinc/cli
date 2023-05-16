@@ -5,12 +5,14 @@ import (
 
 	"github.com/spf13/cobra"
 
+	pacl "github.com/confluentinc/cli/internal/pkg/acl"
 	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 const ValidACLSuggestion = "To check for valid ACLs, use `confluent kafka acl list`"
@@ -95,11 +97,11 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		count += len(aclDataList.Data)
 	}
 
-	promptMsg := errors.DeleteACLConfirmMsg
+	promptMsg := fmt.Sprintf(pacl.DeleteACLConfirmMsg, "ACL")
 	if count > 1 {
-		promptMsg = errors.DeleteACLsConfirmMsg
+		promptMsg = fmt.Sprintf(pacl.DeleteACLConfirmMsg, resource.Plural("ACL"))
 	}
-	if ok, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil || !ok {
+	if ok, err := form.ConfirmDeletionYesNo(cmd, promptMsg); err != nil || !ok {
 		return err
 	}
 
