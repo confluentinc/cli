@@ -1,7 +1,8 @@
 project_name: confluent
 
 builds:
-  - binary: confluent
+  - id: confluent-linux-amd64
+    binary: confluent
     main: cmd/confluent/main.go
     flags:
       - -mod=vendor
@@ -15,7 +16,8 @@ builds:
       - linux
     goarch:
       - amd64
-  - binary: confluent-homebrew
+  - id: confluent-linux-amd64-homebrew
+    binary: confluent
     main: cmd/confluent/main.go
     flags:
       - -mod=vendor

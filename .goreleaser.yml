@@ -22,27 +22,6 @@ builds:
       - linux
     goarch:
       - amd64
-  - id: confluent-alpine-amd64-homebrew
-    binary: confluent
-    main: cmd/confluent/main.go
-    flags:
-      - -mod=readonly
-      - -tags=musl
-    ldflags:
-      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.disableUpdates=true
-    gcflags:
-      - all=-trimpath={{.Env.HOME}}/git
-    asmflags:
-      - all=-trimpath={{.Env.HOME}}/git
-    env:
-      - CGO_ENABLED=1
-      - CC=x86_64-linux-musl-gcc
-      - CXX=x86_64-linux-musl-g++
-      - CGO_LDFLAGS=${CGO_LDFLAGS} -static
-    goos:
-      - linux
-    goarch:
-      - amd64
   - id: confluent-alpine-arm64
     binary: confluent
     main: cmd/confluent/main.go
@@ -51,27 +30,6 @@ builds:
       - -tags=musl
     ldflags:
       - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}}
-    gcflags:
-      - all=-trimpath={{.Env.HOME}}/git
-    asmflags:
-      - all=-trimpath={{.Env.HOME}}/git
-    env:
-      - CGO_ENABLED=1
-      - CC=aarch64-linux-musl-gcc
-      - CXX=aarch64-linux-musl-g++
-      - CGO_LDFLAGS=${CGO_LDFLAGS} -static
-    goos:
-      - linux
-    goarch:
-      - arm64
-  - id: confluent-alpine-arm64-homebrew
-    binary: confluent
-    main: cmd/confluent/main.go
-    flags:
-      - -mod=readonly
-      - -tags=musl
-    ldflags:
-      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.disableUpdates=true
     gcflags:
       - all=-trimpath={{.Env.HOME}}/git
     asmflags:
@@ -178,6 +136,17 @@ builds:
       - v1
     prebuilt:
       path: "prebuilt/confluent_{{ .Os }}_{{ .Arch }}{{ with .Amd64 }}_{{ . }}{{ end }}/confluent"
+  - id: confluent-linux-homebrew
+    builder: prebuilt
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - arm64
+    goamd64:
+      - v1
+    prebuilt:
+      path: "prebuilt/homebrew/confluent_{{ .Os }}_{{ .Arch }}{{ with .Amd64 }}_{{ . }}{{ end }}/confluent"
   - id: confluent-windows-amd64
     binary: confluent
     main: cmd/confluent/main.go
@@ -206,66 +175,11 @@ builds:
       post:
         - cmd: ./lib/osslsigncode sign -n "Confluent CLI" -i "https://confluent.io" -pkcs12 CLIEVCodeSigningCertificate2.pfx -in {{ .Path }} -out {{ .Path }}
         - cmd: rm CLIEVCodeSigningCertificate2.pfx
-  - id: confluent-windows-amd64-homebrew
-    binary: confluent
-    main: cmd/confluent/main.go
-    flags:
-      - -mod=readonly
-    ldflags:
-      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.disableUpdates=true -buildmode=exe
-    gcflags:
-      - all=-trimpath={{.Env.HOME}}/git
-    asmflags:
-      - all=-trimpath={{.Env.HOME}}/git
-    env:
-      - CGO_ENABLED=1
-      - CC=x86_64-w64-mingw32-gcc
-      - CXX=x86_64-w64-mingw32-g++
-      - CGO_LDFLAGS=${CGO_LDFLAGS} -static
-    goos:
-      - windows
-    goarch:
-      - amd64
-    hooks:
-      pre:
-        - cmd: az login
-        - cmd: az keyvault secret download --file CLIEVCodeSigningCertificate2.pfx --name CLIEVCodeSigningCertificate2 --subscription cc-prod --vault-name CLICodeSigningKeyVault --encoding base64
-        - cmd: xattr -dr com.apple.quarantine ./lib/osslsigncode
-      post:
-        - cmd: ./lib/osslsigncode sign -n "Confluent CLI" -i "https://confluent.io" -pkcs12 CLIEVCodeSigningCertificate2.pfx -in {{ .Path }} -out {{ .Path }}
-        - cmd: rm CLIEVCodeSigningCertificate2.pfx
 
 release:
   disable: "{{.Env.DRY_RUN}}"
 
 archives:
-  - id: binary-alpine
-    format: binary
-    builds:
-      - confluent-alpine-amd64
-      - confluent-alpine-arm64
-    name_template: "{{ .ProjectName }}_{{ .Version }}_alpine_{{ .Arch }}"
-    rlcp: true
-  - id: archive-alpine
-    format: tar.gz
-    builds:
-      - confluent-alpine-amd64
-      - confluent-alpine-arm64
-    name_template: "{{ .ProjectName }}_{{ .Version }}_alpine_{{ .Arch }}"
-    rlcp: true
-    wrap_in_directory: "{{ .ProjectName }}"
-    files:
-      - LICENSE
-      - legal/**/*
-  - id: binary
-    format: binary
-    builds:
-      - confluent-darwin-amd64
-      - confluent-darwin-arm64
-      - confluent-linux
-      - confluent-windows-amd64
-    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
-    rlcp: true
   - id: archive
     format: tar.gz
     builds:
@@ -282,6 +196,45 @@ archives:
     files:
       - LICENSE
       - legal/**/*
+  - id: archive-alpine
+    format: tar.gz
+    builds:
+      - confluent-alpine-amd64
+      - confluent-alpine-arm64
+    name_template: "{{ .ProjectName }}_{{ .Version }}_alpine_{{ .Arch }}"
+    rlcp: true
+    wrap_in_directory: "{{ .ProjectName }}"
+    files:
+      - LICENSE
+      - legal/**/*
+  - id: archive-homebrew
+    format: tar.gz
+    builds:
+      - confluent-darwin-amd64-homebrew
+      - confluent-darwin-arm64-homebrew
+      - confluent-linux-homebrew
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    rlcp: true
+    wrap_in_directory: "{{ .ProjectName }}"
+    files:
+      - LICENSE
+      - legal/**/*
+  - id: binary
+    format: binary
+    builds:
+      - confluent-darwin-amd64
+      - confluent-darwin-arm64
+      - confluent-linux
+      - confluent-windows-amd64
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    rlcp: true
+  - id: binary-alpine
+    format: binary
+    builds:
+      - confluent-alpine-amd64
+      - confluent-alpine-arm64
+    name_template: "{{ .ProjectName }}_{{ .Version }}_alpine_{{ .Arch }}"
+    rlcp: true
     
 blobs:
   - ids:
@@ -293,8 +246,9 @@ blobs:
     folder: "{{ .Env.S3FOLDER }}/binaries/{{ .Version }}"
     disable: "{{ .Env.DRY_RUN }}" 
   - ids:
-    - archive-alpine
     - archive
+    - archive-alpine
+    - archive-homebrew
     provider: s3
     bucket: confluent.cloud
     region: us-west-2
@@ -304,13 +258,14 @@ blobs:
 brews:
   - name: cli
     ids:
-      - archive
+      - archive-homebrew
     tap:
       owner: confluentinc
       name: homebrew-tap
       branch: "cli-{{ .Version }}"
       pull_request:
         enabled: true
+    url_template: "https://s3.us-west-2.amazonaws.com/confluent.cloud/confluent-cli/archives/{{ .Version }}/{{ .ArtifactName }}"
     homepage: https://docs.confluent.io/confluent-cli/current/overview.html
     description: CLI for Confluent Cloud and Confluent Platform
     skip_upload: true
