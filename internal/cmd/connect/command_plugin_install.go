@@ -217,11 +217,7 @@ func getManifest(id string) (*manifest, error) {
 			return nil, err
 		}
 
-		remoteManifest, err := getRemoteManifest(owner, name, version)
-		if err != nil {
-			return nil, err
-		}
-		return remoteManifest, nil
+		return getRemoteManifest(owner, name, version)
 	}
 }
 
