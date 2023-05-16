@@ -176,9 +176,6 @@ builds:
         - cmd: ./lib/osslsigncode sign -n "Confluent CLI" -i "https://confluent.io" -pkcs12 CLIEVCodeSigningCertificate2.pfx -in {{ .Path }} -out {{ .Path }}
         - cmd: rm CLIEVCodeSigningCertificate2.pfx
 
-release:
-  disable: "{{.Env.DRY_RUN}}"
-
 archives:
   - id: archive
     format: tar.gz
@@ -236,25 +233,6 @@ archives:
     name_template: "{{ .ProjectName }}_{{ .Version }}_alpine_{{ .Arch }}"
     rlcp: true
     
-blobs:
-  - ids:
-    - binary-alpine
-    - binary
-    provider: s3
-    bucket: confluent.cloud
-    region: us-west-2
-    folder: "{{ .Env.S3FOLDER }}/binaries/{{ .Version }}"
-    disable: "{{ .Env.DRY_RUN }}" 
-  - ids:
-    - archive
-    - archive-alpine
-    - archive-homebrew
-    provider: s3
-    bucket: confluent.cloud
-    region: us-west-2
-    folder: "{{ .Env.S3FOLDER }}/archives/{{ .Version }}"
-    disable: "{{ .Env.DRY_RUN }}" 
-
 dockers:
   - ids:
       - confluent-alpine-amd64
@@ -287,6 +265,37 @@ docker_manifests:
       - "confluentinc/confluent-cli:latest-arm64"
     skip_push: "{{ .Env.DRY_RUN }}"
 
+release:
+  ids:
+    - archive
+    - archive-alpine
+  disable: "{{.Env.DRY_RUN}}"
+
+blobs:
+  - ids:
+    - binary
+    - binary-alpine
+    provider: s3
+    bucket: confluent.cloud
+    region: us-west-2
+    folder: "{{ .Env.S3FOLDER }}/binaries/{{ .Version }}"
+    disable: "{{ .Env.DRY_RUN }}"
+  - ids:
+    - archive
+    - archive-alpine
+    provider: s3
+    bucket: confluent.cloud
+    region: us-west-2
+    folder: "{{ .Env.S3FOLDER }}/archives/{{ .Version }}"
+    disable: "{{ .Env.DRY_RUN }}"
+  - ids:
+    - archive-homebrew
+    provider: s3
+    bucket: confluent.cloud
+    region: us-west-2
+    folder: "{{ .Env.S3FOLDER }}/homebrew/{{ .Version }}"
+    disable: "{{ .Env.DRY_RUN }}"
+
 brews:
   - name: cli
     ids:
@@ -297,7 +306,8 @@ brews:
       branch: "cli-{{ .Version }}"
       pull_request:
         enabled: true
-    url_template: "{{ .Env.S3FOLDER }}/archives/{{ .Version }}/{{ .ArtifactName }}"
+    url_template: "{{ .Env.S3FOLDER }}/homebrew/{{ .Version }}/{{ .ArtifactName }}"
     homepage: https://docs.confluent.io/confluent-cli/current/overview.html
     description: CLI for Confluent Cloud and Confluent Platform
+    skip_upload: "{{ .Env.DRY_RUN }}"
     test: system "#{bin}/confluent version"
