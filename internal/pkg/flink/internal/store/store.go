@@ -31,6 +31,7 @@ const (
 	configKeyOrgResourceId    = "org-resource-id"
 	configKeyExecutionRuntime = "execution.runtime-mode"
 	configKeyLocalTimeZone    = "table.local-time-zone"
+	configKeyResultsTimeout   = "table.results-timeout"
 	configKeyStatementOwner   = "statement-owner"
 )
 
@@ -103,9 +104,8 @@ func (s *Store) WaitPendingStatement(ctx context.Context, statement types.Proces
 	statementStatus := statement.Status
 	if statementStatus != types.COMPLETED && statementStatus != types.RUNNING && !s.demoMode {
 		// Variable that controls how often we poll a pending statement
-		const retries = 100
-		const initialWaitTime = time.Millisecond * 300
-		updatedStatement, err := s.waitForPendingStatement(ctx, statement.StatementName, retries, initialWaitTime)
+
+		updatedStatement, err := s.waitForPendingStatement(ctx, statement.StatementName, timeout(s.Properties))
 
 		if err != nil {
 			return nil, err
@@ -195,9 +195,14 @@ func (s *Store) DeleteStatement(statementName string) bool {
 	return true
 }
 
-func (s *Store) waitForPendingStatement(ctx context.Context, statementName string, retries int, waitTime time.Duration) (*types.ProcessedStatement, *types.StatementError) {
+func (s *Store) waitForPendingStatement(ctx context.Context, statementName string, timeout time.Duration) (*types.ProcessedStatement, *types.StatementError) {
+	retries := 0
+	waitTime := calcWaitTime(retries)
+	elapsedWaitTime := time.Millisecond * 300
+	// Variable used to we inform the user every 5 seconds that we're still fetching for results (waiting for them to be ready)
+	lastProgressUpdateTime := time.Second * 0
 	var capturedErrors []string
-	for i := 0; i < retries; i++ {
+	for {
 		select {
 		case <-ctx.Done():
 			return nil, &types.StatementError{Msg: "Result retrieval aborted. Statement will be deleted.", HttpResponseCode: 499}
@@ -228,17 +233,28 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 			break
 		}
 
+		lastProgressUpdateTime += waitTime
+		elapsedWaitTime += waitTime
 		time.Sleep(waitTime)
 
-		// exponential backoff
-		waitTime = (waitTime * 105) / 100
+		if lastProgressUpdateTime.Seconds() > 5 {
+			lastProgressUpdateTime = time.Second * 0
+			fmt.Printf("Fetching results... (Timeout %d/%d) \n", int(elapsedWaitTime.Seconds()), int(timeout.Seconds()))
+		}
+		waitTime = calcWaitTime(retries)
+
+		if elapsedWaitTime > timeout {
+			break
+		}
+		retries++
 	}
 
 	var errorsMsg string
 	if len(capturedErrors) > 0 {
 		errorsMsg = fmt.Sprintf(" Captured retriable errors: %s", strings.Join(capturedErrors, "; "))
 	}
-	return nil, &types.StatementError{Msg: fmt.Sprintf("Error: Statement is still pending after %d retries.%s", retries, errorsMsg)}
+
+	return nil, &types.StatementError{Msg: fmt.Sprintf("Error: Statement is still pending after %f seconds.%s \n\nIf you want to increase the timeout for the client, you can run \"SET table.results-timeout=1200;\" to adjust the maximum timeout in seconds.", timeout.Seconds(), errorsMsg)}
 }
 
 func extractPageToken(nextUrl string) (string, error) {

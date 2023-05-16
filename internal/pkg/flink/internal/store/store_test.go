@@ -16,6 +16,7 @@ import (
 
 	v1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"
 
+	"github.com/confluentinc/flink-sql-client/config"
 	"github.com/confluentinc/flink-sql-client/pkg/types"
 	"github.com/confluentinc/flink-sql-client/test/mock"
 	gomock "github.com/golang/mock/gomock"
@@ -64,8 +65,6 @@ func TestStoreProcessLocalStatement(t *testing.T) {
 
 func TestWaitForPendingStatement3(t *testing.T) {
 	statementName := "statementName"
-	retries := 10
-	waitTime := time.Millisecond * 1
 
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
 	s := &Store{
@@ -81,7 +80,7 @@ func TestWaitForPendingStatement3(t *testing.T) {
 	httpRes := http.Response{StatusCode: 200}
 	client.EXPECT().GetStatement(gomock.Any(), statementName).Return(statementObj, &httpRes, nil).Times(1)
 
-	processedStatement, err := s.waitForPendingStatement(context.Background(), statementName, retries, waitTime)
+	processedStatement, err := s.waitForPendingStatement(context.Background(), statementName, time.Duration(10))
 	assert.Nil(t, err)
 	assert.NotNil(t, processedStatement)
 	assert.Equal(t, types.NewProcessedStatement(statementObj), processedStatement)
@@ -89,8 +88,8 @@ func TestWaitForPendingStatement3(t *testing.T) {
 
 func TestWaitForPendingTimesout(t *testing.T) {
 	statementName := "statementName"
-	retries := 10
-	waitTime := time.Millisecond * 1
+	timeout := time.Duration(10) * time.Millisecond
+
 	httpRes := http.Response{StatusCode: 200}
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
 	s := &Store{
@@ -103,16 +102,16 @@ func TestWaitForPendingTimesout(t *testing.T) {
 			Phase: "PENDING",
 		},
 	}
-	client.EXPECT().GetStatement(gomock.Any(), statementName).Return(statementObj, &httpRes, nil).Times(retries)
-	processedStatement, err := s.waitForPendingStatement(context.Background(), statementName, retries, waitTime)
-	assert.EqualError(t, err, fmt.Sprintf("Error: Statement is still pending after %d retries.", retries))
+	client.EXPECT().GetStatement(gomock.Any(), statementName).Return(statementObj, &httpRes, nil).AnyTimes()
+	processedStatement, err := s.waitForPendingStatement(context.Background(), statementName, timeout)
+
+	assert.EqualError(t, err, fmt.Sprintf("Error: Statement is still pending after %f seconds. \n\nIf you want to increase the timeout for the client, you can run \"SET table.results-timeout=1200;\" to adjust the maximum timeout in seconds.", timeout.Seconds()))
 	assert.Nil(t, processedStatement)
 }
 
 func TestWaitForPendingEventuallyCompletes(t *testing.T) {
 	statementName := "statementName"
-	retries := 10
-	waitTime := time.Millisecond * 1
+
 	httpRes := http.Response{StatusCode: 200}
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
 	s := &Store{
@@ -131,10 +130,10 @@ func TestWaitForPendingEventuallyCompletes(t *testing.T) {
 			Phase: "COMPLETED",
 		},
 	}
-	client.EXPECT().GetStatement(gomock.Any(), statementName).Return(statementObj, &httpRes, nil).Times(retries - 1)
+	client.EXPECT().GetStatement(gomock.Any(), statementName).Return(statementObj, &httpRes, nil).Times(3)
 	client.EXPECT().GetStatement(gomock.Any(), statementName).Return(statementObjCompleted, &httpRes, nil).Times(1)
 
-	processedStatement, err := s.waitForPendingStatement(context.Background(), statementName, retries, waitTime)
+	processedStatement, err := s.waitForPendingStatement(context.Background(), statementName, time.Duration(10)*time.Second)
 	assert.Nil(t, err)
 	assert.NotNil(t, processedStatement)
 	assert.Equal(t, types.NewProcessedStatement(statementObjCompleted), processedStatement)
@@ -142,7 +141,6 @@ func TestWaitForPendingEventuallyCompletes(t *testing.T) {
 
 func TestWaitForPendingStatementErrors(t *testing.T) {
 	statementName := "statementName"
-	retries := 10
 	waitTime := time.Millisecond * 1
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
 	s := &Store{
@@ -156,13 +154,12 @@ func TestWaitForPendingStatementErrors(t *testing.T) {
 
 	expectedErr := errors.New("couldn't get statement!")
 	client.EXPECT().GetStatement(gomock.Any(), statementName).Return(statementObj, nil, expectedErr).Times(1)
-	_, err := s.waitForPendingStatement(context.Background(), statementName, retries, waitTime)
+	_, err := s.waitForPendingStatement(context.Background(), statementName, waitTime)
 	assert.EqualError(t, err, "Error: "+expectedErr.Error())
 }
 
 func TestCancelPendingStatement(t *testing.T) {
 	statementName := "statementName"
-	retries := 10
 	waitTime := time.Second * 1
 	ctx, cancelFunc := context.WithCancel(context.Background())
 
@@ -187,7 +184,7 @@ func TestCancelPendingStatement(t *testing.T) {
 		cancelFunc()
 	}()
 
-	res, err := s.waitForPendingStatement(ctx, statementName, retries, waitTime)
+	res, err := s.waitForPendingStatement(ctx, statementName, waitTime)
 
 	assert.Nil(t, res)
 	assert.EqualError(t, err, expectedErr.Error())
@@ -683,40 +680,57 @@ func (s *StoreTestSuite) TestExtractPageToken() {
 	require.Nil(s.T(), err)
 }
 
-func hoursToSeconds(hours float32) int {
-	return int(hours * 60 * 60)
+func TestCalcWaitTime(t *testing.T) {
+	// Define test cases
+	testCases := []struct {
+		retries          int
+		expectedWaitTime time.Duration
+	}{
+		{0, config.InitialWaitTime},
+		{3, config.InitialWaitTime + time.Duration(config.WaitTimeIncrease*0)*time.Millisecond},
+		{7, config.InitialWaitTime + time.Duration(config.WaitTimeIncrease*0)*time.Millisecond},
+		{10, config.InitialWaitTime + time.Duration(config.WaitTimeIncrease*1)*time.Millisecond},
+		{15, config.InitialWaitTime + time.Duration(config.WaitTimeIncrease*1)*time.Millisecond},
+		{32, config.InitialWaitTime + time.Duration(config.WaitTimeIncrease*3)*time.Millisecond},
+	}
+
+	for _, testCase := range testCases {
+		waitTime := calcWaitTime(testCase.retries)
+		require.Equal(t, testCase.expectedWaitTime, waitTime, fmt.Sprintf("For retries=%d, expected wait time=%v, but got %v",
+			testCase.retries, testCase.expectedWaitTime, waitTime))
+	}
 }
 
-func TestFormatUTCOffsetToTimezone(t *testing.T) {
-
+func TestTimeout(t *testing.T) {
 	testCases := []struct {
-		offsetSeconds int
-		expected      string
+		name       string
+		properties map[string]string
+		expected   time.Duration
 	}{
 		{
-			offsetSeconds: hoursToSeconds(5.5),
-			expected:      "UTC+05:30",
+			name: "results-timeout property set",
+			properties: map[string]string{
+				configKeyResultsTimeout: "10", // timeout in seconds
+			},
+			expected: 10 * time.Second,
 		},
 		{
-			offsetSeconds: hoursToSeconds(-6),
-			expected:      "UTC-06:00",
+			name:       "results-timeout property not set",
+			properties: map[string]string{},
+			expected:   config.DefaultTimeoutDuration,
 		},
 		{
-			offsetSeconds: hoursToSeconds(0),
-			expected:      "UTC+00:00",
-		},
-		{
-			offsetSeconds: hoursToSeconds(-2.25),
-			expected:      "UTC-02:15",
-		},
-		{
-			offsetSeconds: hoursToSeconds(3.75),
-			expected:      "UTC+03:45",
+			name: "invalid results-timeout property",
+			properties: map[string]string{
+				configKeyResultsTimeout: "abc", // invalid duration
+			},
+			expected: config.DefaultTimeoutDuration,
 		},
 	}
 
+	// Iterate over test cases and run the function for each input, comparing output to expected value
 	for _, tc := range testCases {
-		actual := formatUTCOffsetToTimezone(tc.offsetSeconds)
-		require.Equal(t, tc.expected, actual)
+		result := timeout(tc.properties)
+		require.Equal(t, tc.expected, result, tc.name)
 	}
 }

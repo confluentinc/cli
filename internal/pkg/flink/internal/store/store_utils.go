@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -337,4 +338,32 @@ func formatUTCOffsetToTimezone(offsetSeconds int) string {
 	formattedTimezone := fmt.Sprintf("UTC%s%s", sign, offsetStr)
 
 	return formattedTimezone
+}
+
+// This increases function calculates a wait time that starts at 300 ms and increases 300 ms every 10 retries.
+// This should provide a better UX than exponential backoff. He're are two simulations in an excel sheet
+// Exponantial: https://docs.google.com/spreadsheets/d/14lHRcC_NGoF4KBtA_lrEivv05XYc3nNo5jaIvsHpgi0/edit?usp=sharing
+// Discrete: https://docs.google.com/spreadsheets/d/1fMIOBIDbhZ6zH6bLq9iJXRs8jBLdA7beHef4vOW__tw/edit?usp=sharing
+func calcWaitTime(retries int) time.Duration {
+	waitTime := config.InitialWaitTime + time.Duration(config.WaitTimeIncrease*(retries/10))*time.Millisecond
+
+	return waitTime
+}
+
+// Function to extract timeout for waiting for results.
+// We either use the value set by user using set or use a default value of 10 minutes (as of today)
+func timeout(properties map[string]string) time.Duration {
+	timeout, ok := properties[configKeyResultsTimeout]
+
+	if ok {
+		timeoutInSeconds, err := strconv.Atoi(timeout)
+		if err == nil {
+			// TODO - check for error when setting the property so user knows he hasn't set the results-timeout property properly
+			return time.Duration(timeoutInSeconds) * time.Second
+		} else {
+			return config.DefaultTimeoutDuration
+		}
+	} else {
+		return config.DefaultTimeoutDuration
+	}
 }

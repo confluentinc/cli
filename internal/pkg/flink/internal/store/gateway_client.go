@@ -75,7 +75,12 @@ func (c *GatewayClient) GetStatementResults(ctx context.Context, statementId, pa
 
 // Set properties default values if not set by the user
 // We probably want to refactor the keys names and where they are stored. Maybe also the default values.
-func (c *GatewayClient) propsDefault(properties map[string]string) map[string]string {
+func (c *GatewayClient) propsDefault(propsWithoutDefault map[string]string) map[string]string {
+	properties := make(map[string]string)
+	for key, value := range propsWithoutDefault {
+		properties[key] = value
+	}
+
 	if _, ok := properties[configKeyCatalog]; !ok {
 		properties[configKeyCatalog] = c.envId
 	}
@@ -98,6 +103,9 @@ func (c *GatewayClient) propsDefault(properties map[string]string) map[string]st
 	if _, ok := properties[configKeyStatementOwner]; !ok && currentUser != nil {
 		properties[configKeyStatementOwner] = currentUser.Username
 	}
+
+	// Here we delete locally used properties before sending it to the backend
+	delete(properties, configKeyResultsTimeout)
 
 	return properties
 }

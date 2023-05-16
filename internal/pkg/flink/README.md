@@ -69,6 +69,14 @@ curl --location --request DELETE 'http://localhost:8080/apis/sql/v1alpha1/orgs/o
 Please note that there is no guarantee that this will be up and running at all times. If you want to change the parameters used to initialize the client (like gateway address, environment, Kafka cluster, extra properties, and so on), you can edit them in the [demo_devel.go](./_examples/devel/demo_devel.go) file.
 
 
+#### Local properties
+
+We'll add a couple of local properties to configure the client which aren't flink related and will only exist in the client. We'll for now document these here until we have a official documentation for the client.
+
+| Property | Description | Default |
+| table.results-timeout | the total amount of time in seconds to wait before timing out the request waiting for results to be ready | 780 (13 min) |
+
+
 #### Building for other operation systems
 
 You can build the `./demo_main` executable with the command `go build ./_examples/devel/demo_main.go`.
