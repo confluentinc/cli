@@ -19,6 +19,8 @@ func (s *CLITestSuite) TestKSQL() {
 		{args: "ksql cluster delete --help", fixture: "ksql/cluster/delete-help.golden"},
 		{args: "ksql cluster delete lksqlc-12345 --force", fixture: "ksql/cluster/delete-result.golden"},
 		{args: "ksql cluster delete lksqlc-12345", input: "account ksql\n", fixture: "ksql/cluster/delete-result-prompt.golden"},
+		{args: "ksql cluster delete lksqlc-12345 lksqlc-12346", fixture: "ksql/cluster/delete-multiple-fail.golden", exitCode: 1},
+		{args: "ksql cluster delete lksqlc-12345 lksqlc-ksql1", input: "y\n", fixture: "ksql/cluster/delete-multiple-success.golden"},
 		{args: "ksql cluster describe --help", fixture: "ksql/cluster/describe-help.golden"},
 		{args: "ksql cluster describe lksqlc-12345 -o json", fixture: "ksql/cluster/describe-result-json.golden"},
 		{args: "ksql cluster describe lksqlc-12345 -o yaml", fixture: "ksql/cluster/describe-result-yaml.golden"},
