@@ -83,7 +83,7 @@ func describeSchemaConfig(cmd *cobra.Command, srClient *srsdk.APIClient, ctx con
 		}
 	}
 
-	configOut := &configOut{
+	out := &configOut{
 		CompatibilityLevel: config.CompatibilityLevel,
 		CompatibilityGroup: config.CompatibilityGroup,
 	}
@@ -93,7 +93,7 @@ func describeSchemaConfig(cmd *cobra.Command, srClient *srsdk.APIClient, ctx con
 		if err != nil {
 			return err
 		}
-		configOut.MetadataDefaults = prettyJson(defaultMetadata)
+		out.MetadataDefaults = prettyJson(defaultMetadata)
 	}
 
 	if config.OverrideMetadata != nil {
@@ -101,7 +101,7 @@ func describeSchemaConfig(cmd *cobra.Command, srClient *srsdk.APIClient, ctx con
 		if err != nil {
 			return err
 		}
-		configOut.MetadataOverrides = prettyJson(overrideMetadata)
+		out.MetadataOverrides = prettyJson(overrideMetadata)
 	}
 
 	if config.DefaultRuleSet != nil {
@@ -109,7 +109,7 @@ func describeSchemaConfig(cmd *cobra.Command, srClient *srsdk.APIClient, ctx con
 		if err != nil {
 			return err
 		}
-		configOut.RulesetDefaults = prettyJson(defaultRuleset)
+		out.RulesetDefaults = prettyJson(defaultRuleset)
 	}
 
 	if config.OverrideRuleSet != nil {
@@ -117,11 +117,11 @@ func describeSchemaConfig(cmd *cobra.Command, srClient *srsdk.APIClient, ctx con
 		if err != nil {
 			return err
 		}
-		configOut.RulesetOverrides = prettyJson(overrideRuleset)
+		out.RulesetOverrides = prettyJson(overrideRuleset)
 	}
 
 	table := output.NewTable(cmd)
-	table.Add(configOut)
+	table.Add(out)
 	return table.PrintWithAutoWrap(false)
 }
 

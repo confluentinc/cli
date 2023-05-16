@@ -91,18 +91,17 @@ func (c *command) updateTopLevelCompatibility(cmd *cobra.Command) error {
 }
 
 func (c *command) getConfigUpdateRequest(cmd *cobra.Command) (srsdk.ConfigUpdateRequest, error) {
-	var updateReq srsdk.ConfigUpdateRequest
 	compatibility, err := cmd.Flags().GetString("compatibility")
 	if err != nil {
-		return updateReq, err
+		return srsdk.ConfigUpdateRequest{}, err
 	}
 
 	compatibilityGroup, err := cmd.Flags().GetString("compatibility-group")
 	if err != nil {
-		return updateReq, err
+		return srsdk.ConfigUpdateRequest{}, err
 	}
 
-	updateReq = srsdk.ConfigUpdateRequest{
+	updateReq := srsdk.ConfigUpdateRequest{
 		Compatibility:      strings.ToUpper(compatibility),
 		CompatibilityGroup: compatibilityGroup,
 	}
