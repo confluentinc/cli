@@ -15,6 +15,20 @@ builds:
       - linux
     goarch:
       - arm64
+  - binary: confluent-homebrew
+    main: cmd/confluent/main.go
+    flags:
+      - -mod=vendor
+    ldflags:
+      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.disableUpdates=true
+    gcflags:
+      - all=-trimpath={{.Env.HOME}}/git
+    asmflags:
+      - all=-trimpath={{.Env.HOME}}/git
+    goos:
+      - linux
+    goarch:
+      - arm64
 
 release:
   disable: true

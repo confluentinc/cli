@@ -73,7 +73,7 @@ type Config struct {
 	*config.BaseConfig
 
 	DisableUpdateCheck  bool                        `json:"disable_update_check"`
-	DisableUpdates      bool                        `json:"disable_updates"`
+	DisableUpdates      bool                        `json:"disable_updates,omitempty"`
 	DisablePlugins      bool                        `json:"disable_plugins"`
 	DisablePluginsOnce  bool                        `json:"disable_plugins_once,omitempty"`
 	DisableFeatureFlags bool                        `json:"disable_feature_flags"`
