@@ -76,9 +76,5 @@ func UnmarshalFlatQueryResponseIfDataSchemaMatchError(err error, metricsResponse
 }
 
 func IsDataMatchesMoreThanOneSchemaError(err error) bool {
-	dataSchemaMatchError := "Data matches more than one schema in oneOf(QueryResponse)"
-	if err != nil && err.Error() == dataSchemaMatchError {
-		return true
-	}
-	return false
+	return err != nil && err.Error() == "Data matches more than one schema in oneOf(QueryResponse)"
 }
