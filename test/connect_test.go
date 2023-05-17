@@ -89,8 +89,8 @@ func (s *CLITestSuite) TestConnectPluginInstall() {
 	s.zipManifest()
 	defer s.deleteZip()
 
-	confluentHome733          := "test/fixtures/input/connect/confluent-7.3.3"
-	confluentHomeEmpty        := "test/fixtures/input/connect/confluent-empty"
+	confluentHome733 := "test/fixtures/input/connect/confluent-7.3.3"
+	confluentHomeEmpty := "test/fixtures/input/connect/confluent-empty"
 	confluentHomePriorInstall := "test/fixtures/input/connect/confluent-prior-install"
 
 	//nolint:dupword
