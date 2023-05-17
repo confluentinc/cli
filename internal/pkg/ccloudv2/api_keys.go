@@ -25,18 +25,15 @@ func (c *Client) apiKeysApiContext() context.Context {
 }
 
 func (c *Client) CreateApiKey(iamV2ApiKey apikeysv2.IamV2ApiKey) (apikeysv2.IamV2ApiKey, *http.Response, error) {
-	req := c.ApiKeysClient.APIKeysIamV2Api.CreateIamV2ApiKey(c.apiKeysApiContext()).IamV2ApiKey(iamV2ApiKey)
-	return c.ApiKeysClient.APIKeysIamV2Api.CreateIamV2ApiKeyExecute(req)
+	return c.ApiKeysClient.APIKeysIamV2Api.CreateIamV2ApiKey(c.apiKeysApiContext()).IamV2ApiKey(iamV2ApiKey).Execute()
 }
 
 func (c *Client) DeleteApiKey(id string) (*http.Response, error) {
-	req := c.ApiKeysClient.APIKeysIamV2Api.DeleteIamV2ApiKey(c.apiKeysApiContext(), id)
-	return c.ApiKeysClient.APIKeysIamV2Api.DeleteIamV2ApiKeyExecute(req)
+	return c.ApiKeysClient.APIKeysIamV2Api.DeleteIamV2ApiKey(c.apiKeysApiContext(), id).Execute()
 }
 
 func (c *Client) GetApiKey(id string) (apikeysv2.IamV2ApiKey, *http.Response, error) {
-	req := c.ApiKeysClient.APIKeysIamV2Api.GetIamV2ApiKey(c.apiKeysApiContext(), id)
-	apiKey, httpResp, err := c.ApiKeysClient.APIKeysIamV2Api.GetIamV2ApiKeyExecute(req)
+	apiKey, httpResp, err := c.ApiKeysClient.APIKeysIamV2Api.GetIamV2ApiKey(c.apiKeysApiContext(), id).Execute()
 	if err == nil {
 		return apiKey, httpResp, nil
 	}
@@ -56,8 +53,7 @@ func (c *Client) GetApiKey(id string) (apikeysv2.IamV2ApiKey, *http.Response, er
 }
 
 func (c *Client) UpdateApiKey(id string, iamV2ApiKeyUpdate apikeysv2.IamV2ApiKeyUpdate) (apikeysv2.IamV2ApiKey, *http.Response, error) {
-	req := c.ApiKeysClient.APIKeysIamV2Api.UpdateIamV2ApiKey(c.apiKeysApiContext(), id).IamV2ApiKeyUpdate(iamV2ApiKeyUpdate)
-	return c.ApiKeysClient.APIKeysIamV2Api.UpdateIamV2ApiKeyExecute(req)
+	return c.ApiKeysClient.APIKeysIamV2Api.UpdateIamV2ApiKey(c.apiKeysApiContext(), id).IamV2ApiKeyUpdate(iamV2ApiKeyUpdate).Execute()
 }
 
 func (c *Client) ListApiKeys(owner, resource string) ([]apikeysv2.IamV2ApiKey, error) {
@@ -85,5 +81,5 @@ func (c *Client) executeListApiKeys(owner, resource, pageToken string) (apikeysv
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
 	}
-	return c.ApiKeysClient.APIKeysIamV2Api.ListIamV2ApiKeysExecute(req)
+	return req.Execute()
 }

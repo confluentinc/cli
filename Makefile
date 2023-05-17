@@ -1,5 +1,3 @@
-SHELL              := /bin/bash
-ALL_SRC            := $(shell find . -name "*.go" | grep -v -e vendor)
 GORELEASER_VERSION := v1.17.2
 
 .PHONY: build # compile natively based on the system
@@ -37,7 +35,7 @@ endif
 .PHONY: cli-builder
 cli-builder:
 	go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
-	TAGS=$(TAGS) CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) VERSION=$(VERSION) GOEXPERIMENT=boringcrypto goreleaser build -f .goreleaser-build.yml --clean --single-target --snapshot
+	TAGS=$(TAGS) CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) GOEXPERIMENT=boringcrypto goreleaser build --config .goreleaser-build.yml --clean --single-target --snapshot
 
 include ./mk-files/cc-cli-service.mk
 include ./mk-files/semver.mk

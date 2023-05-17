@@ -48,7 +48,7 @@ func (c *Client) executeListKsqlClusters(pageToken, environmentId string) (ksqlv
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
 	}
-	return c.KsqlClient.ClustersKsqldbcmV2Api.ListKsqldbcmV2ClustersExecute(req)
+	return req.Execute()
 }
 
 func (c *Client) DeleteKsqlCluster(clusterId, environmentId string) error {
