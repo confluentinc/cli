@@ -16,7 +16,6 @@ const (
 	RequireNonAPIKeyCloudLoginOrOnPremLogin = "non-api-key-cloud-login-or-on-prem-login"
 	RequireNonCloudLogin                    = "non-cloud-login"
 	RequireOnPremLogin                      = "on-prem-login"
-	RequireUpdatesEnabled                   = "updates-enabled"
 )
 
 // ErrIfMissingRunRequirement returns an error when a command or its parent doesn't meet a requirement;
@@ -44,8 +43,6 @@ func ErrIfMissingRunRequirement(cmd *cobra.Command, cfg *v1.Config) error {
 			f = cfg.CheckIsNonCloudLogin
 		case RequireOnPremLogin:
 			f = cfg.CheckIsOnPremLogin
-		case RequireUpdatesEnabled:
-			f = cfg.CheckAreUpdatesEnabled
 		}
 
 		if err := f(); err != nil {
