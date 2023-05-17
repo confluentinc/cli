@@ -41,7 +41,7 @@ type listOut struct {
 	Description string `human:"Description"`
 }
 
-func getConfluentPlatformInstallation(cmd *cobra.Command, prompt *form.RealPrompt, force bool) (*platformInstallation, error) {
+func getConfluentPlatformInstallation(cmd *cobra.Command, prompt form.Prompt, force bool) (*platformInstallation, error) {
 	installations, err := findInstallationDirectories()
 	if err != nil {
 		return nil, err
@@ -192,7 +192,7 @@ func compactDuplicateInstallations(installations []platformInstallation) []platf
 	return uniqueInstallations
 }
 
-func choosePluginDir(installation *platformInstallation, prompt *form.RealPrompt, force bool) (string, error) {
+func choosePluginDir(installation *platformInstallation, prompt form.Prompt, force bool) (string, error) {
 	var defaultPluginDir string
 	switch installation.Location.Type {
 	case "ARCHIVE":
@@ -320,7 +320,7 @@ func runningWorkerConfigLocations() ([]WorkerConfig, error) {
 	return result, nil
 }
 
-func chooseWorkerConfigs(cmd *cobra.Command, installation *platformInstallation, prompt *form.RealPrompt, force bool) ([]string, error) {
+func chooseWorkerConfigs(cmd *cobra.Command, installation *platformInstallation, prompt form.Prompt, force bool) ([]string, error) {
 	var workerConfigs []WorkerConfig
 
 	if standardWorkerConfigs, err := standardWorkerConfigLocations(installation); err != nil {

@@ -50,7 +50,6 @@ type license struct {
 
 const (
 	invalidDirectoryErrorMsg       = `plugin directory "%s" does not exist`
-	invalidWorkerConfigErrorMsg    = `worker config file "%s" does not exist`
 	unexpectedInstallationErrorMsg = "unexpected installation type: %s"
 )
 
@@ -283,10 +282,6 @@ func getPluginDirFromFlag(cmd *cobra.Command) (string, error) {
 }
 
 func getWorkerConfigsFromFlag(cmd *cobra.Command) ([]string, error) {
-	if !cmd.Flags().Changed("worker-configs") {
-		return nil, nil
-	}
-
 	workerConfigs, err := cmd.Flags().GetStringSlice("worker-configs")
 	if err != nil {
 		return nil, err
@@ -299,7 +294,7 @@ func getWorkerConfigsFromFlag(cmd *cobra.Command) ([]string, error) {
 		}
 
 		if !utils.DoesPathExist(workerConfig) {
-			errs = multierror.Append(errs, errors.Errorf(invalidWorkerConfigErrorMsg, workerConfig))
+			errs = multierror.Append(errs, errors.Errorf(`worker config file "%s" does not exist`, workerConfig))
 		}
 	}
 
@@ -327,7 +322,7 @@ func existingPluginInstallation(pluginDir string, pluginManifest *manifest) ([]s
 	return installations, nil
 }
 
-func replacePluginInstallation(pathToPlugin string, prompt *form.RealPrompt, dryRun, force bool) error {
+func replacePluginInstallation(pathToPlugin string, prompt form.Prompt, dryRun, force bool) error {
 	if force {
 		output.Printf("Uninstalling the existing version of the plugin located at \"%s\".\n", pathToPlugin)
 	} else {
@@ -435,7 +430,7 @@ func unzipPlugin(pluginManifest *manifest, zipFiles []*zip.File, pluginDir strin
 	return nil
 }
 
-func checkLicenseAcceptance(pluginManifest *manifest, prompt *form.RealPrompt, force bool) error {
+func checkLicenseAcceptance(pluginManifest *manifest, prompt form.Prompt, force bool) error {
 	for _, license := range pluginManifest.Licenses {
 		if force {
 			output.Printf("\nImplicitly agreeing to the following license:\n%s\n%s\n", license.Name, license.Url)
