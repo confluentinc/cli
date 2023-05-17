@@ -178,6 +178,11 @@ func (s *CLITestSuite) TestSchemaRegistry() {
 			fixture: "schema-registry/schema/describe-refs-id.golden",
 		},
 		{
+			name:    "schema-registry schema describe 1005",
+			args:    fmt.Sprintf(`schema-registry schema describe 1005 --api-key key --api-secret secret --environment %s`, testserver.SRApiEnvId),
+			fixture: "schema-registry/schema/describe-with-ruleset.golden",
+		},
+		{
 			name:    "schema-registry schema describe --subject lvl0 --version 1 --show-references",
 			args:    fmt.Sprintf(`schema-registry schema describe --subject lvl0 --version 1 --show-references --api-key key --api-secret secret --environment %s`, testserver.SRApiEnvId),
 			fixture: "schema-registry/schema/describe-refs-subject.golden",

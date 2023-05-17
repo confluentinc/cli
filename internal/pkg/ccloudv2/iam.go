@@ -27,24 +27,20 @@ func (c *Client) iamApiContext() context.Context {
 // iam service-account api calls
 
 func (c *Client) CreateIamServiceAccount(serviceAccount iamv2.IamV2ServiceAccount) (iamv2.IamV2ServiceAccount, *http.Response, error) {
-	req := c.IamClient.ServiceAccountsIamV2Api.CreateIamV2ServiceAccount(c.iamApiContext()).IamV2ServiceAccount(serviceAccount)
-	return c.IamClient.ServiceAccountsIamV2Api.CreateIamV2ServiceAccountExecute(req)
+	return c.IamClient.ServiceAccountsIamV2Api.CreateIamV2ServiceAccount(c.iamApiContext()).IamV2ServiceAccount(serviceAccount).Execute()
 }
 
 func (c *Client) DeleteIamServiceAccount(id string) error {
-	req := c.IamClient.ServiceAccountsIamV2Api.DeleteIamV2ServiceAccount(c.iamApiContext(), id)
-	httpResp, err := c.IamClient.ServiceAccountsIamV2Api.DeleteIamV2ServiceAccountExecute(req)
+	httpResp, err := c.IamClient.ServiceAccountsIamV2Api.DeleteIamV2ServiceAccount(c.iamApiContext(), id).Execute()
 	return errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) GetIamServiceAccount(id string) (iamv2.IamV2ServiceAccount, *http.Response, error) {
-	req := c.IamClient.ServiceAccountsIamV2Api.GetIamV2ServiceAccount(c.iamApiContext(), id)
-	return c.IamClient.ServiceAccountsIamV2Api.GetIamV2ServiceAccountExecute(req)
+	return c.IamClient.ServiceAccountsIamV2Api.GetIamV2ServiceAccount(c.iamApiContext(), id).Execute()
 }
 
 func (c *Client) UpdateIamServiceAccount(id string, update iamv2.IamV2ServiceAccountUpdate) (iamv2.IamV2ServiceAccount, *http.Response, error) {
-	req := c.IamClient.ServiceAccountsIamV2Api.UpdateIamV2ServiceAccount(c.iamApiContext(), id).IamV2ServiceAccountUpdate(update)
-	return c.IamClient.ServiceAccountsIamV2Api.UpdateIamV2ServiceAccountExecute(req)
+	return c.IamClient.ServiceAccountsIamV2Api.UpdateIamV2ServiceAccount(c.iamApiContext(), id).IamV2ServiceAccountUpdate(update).Execute()
 }
 
 func (c *Client) ListIamServiceAccounts() ([]iamv2.IamV2ServiceAccount, error) {
@@ -72,32 +68,28 @@ func (c *Client) executeListServiceAccounts(pageToken string) (iamv2.IamV2Servic
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
 	}
-	return c.IamClient.ServiceAccountsIamV2Api.ListIamV2ServiceAccountsExecute(req)
+	return req.Execute()
 }
 
 // iam user api calls
 
 func (c *Client) DeleteIamUser(id string) error {
-	req := c.IamClient.UsersIamV2Api.DeleteIamV2User(c.iamApiContext(), id)
-	httpResp, err := c.IamClient.UsersIamV2Api.DeleteIamV2UserExecute(req)
+	httpResp, err := c.IamClient.UsersIamV2Api.DeleteIamV2User(c.iamApiContext(), id).Execute()
 	return errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) UpdateIamUser(id string, update iamv2.IamV2UserUpdate) (iamv2.IamV2User, error) {
-	req := c.IamClient.UsersIamV2Api.UpdateIamV2User(c.iamApiContext(), id).IamV2UserUpdate(update)
-	resp, httpResp, err := c.IamClient.UsersIamV2Api.UpdateIamV2UserExecute(req)
+	resp, httpResp, err := c.IamClient.UsersIamV2Api.UpdateIamV2User(c.iamApiContext(), id).IamV2UserUpdate(update).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) GetIamUserById(id string) (iamv2.IamV2User, error) {
-	req := c.IamClient.UsersIamV2Api.GetIamV2User(c.iamApiContext(), id)
-	resp, httpResp, err := c.IamClient.UsersIamV2Api.GetIamV2UserExecute(req)
+	resp, httpResp, err := c.IamClient.UsersIamV2Api.GetIamV2User(c.iamApiContext(), id).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) GetIamUserByEmail(email string) (iamv2.IamV2User, error) {
-	req := c.IamClient.UsersIamV2Api.ListIamV2Users(c.iamApiContext())
-	resp, httpResp, err := c.IamClient.UsersIamV2Api.ListIamV2UsersExecute(req)
+	resp, httpResp, err := c.IamClient.UsersIamV2Api.ListIamV2Users(c.iamApiContext()).Execute()
 	if err != nil {
 		return iamv2.IamV2User{}, errors.CatchCCloudV2Error(err, httpResp)
 	}
@@ -134,26 +126,23 @@ func (c *Client) executeListUsers(pageToken string) (iamv2.IamV2UserList, *http.
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
 	}
-	return c.IamClient.UsersIamV2Api.ListIamV2UsersExecute(req)
+	return req.Execute()
 }
 
 // iam user invitation api calls
 
 func (c *Client) CreateIamInvitation(invitation iamv2.IamV2Invitation) (iamv2.IamV2Invitation, error) {
-	req := c.IamClient.InvitationsIamV2Api.CreateIamV2Invitation(c.iamApiContext()).IamV2Invitation(invitation)
-	resp, httpResp, err := c.IamClient.InvitationsIamV2Api.CreateIamV2InvitationExecute(req)
+	resp, httpResp, err := c.IamClient.InvitationsIamV2Api.CreateIamV2Invitation(c.iamApiContext()).IamV2Invitation(invitation).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) DeleteIamInvitation(id string) error {
-	req := c.IamClient.InvitationsIamV2Api.DeleteIamV2Invitation(c.iamApiContext(), id)
-	httpResp, err := c.IamClient.InvitationsIamV2Api.DeleteIamV2InvitationExecute(req)
+	httpResp, err := c.IamClient.InvitationsIamV2Api.DeleteIamV2Invitation(c.iamApiContext(), id).Execute()
 	return errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) GetIamInvitation(id string) (iamv2.IamV2Invitation, error) {
-	req := c.IamClient.InvitationsIamV2Api.GetIamV2Invitation(c.iamApiContext(), id)
-	resp, httpResp, err := c.IamClient.InvitationsIamV2Api.GetIamV2InvitationExecute(req)
+	resp, httpResp, err := c.IamClient.InvitationsIamV2Api.GetIamV2Invitation(c.iamApiContext(), id).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
@@ -182,5 +171,5 @@ func (c *Client) executeListInvitations(pageToken string) (iamv2.IamV2Invitation
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
 	}
-	return c.IamClient.InvitationsIamV2Api.ListIamV2InvitationsExecute(req)
+	return req.Execute()
 }

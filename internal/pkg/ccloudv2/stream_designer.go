@@ -47,29 +47,22 @@ func (c *Client) executeListPipelines(envId, clusterId, pageToken string) (strea
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
 	}
-
-	resp, httpResp, err := c.StreamDesignerClient.PipelinesSdV1Api.ListSdV1PipelinesExecute(req)
+	resp, httpResp, err := req.Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) CreatePipeline(createPipeline streamdesignerv1.SdV1Pipeline) (streamdesignerv1.SdV1Pipeline, error) {
-	req := c.StreamDesignerClient.PipelinesSdV1Api.CreateSdV1Pipeline(c.sdApiContext()).SdV1Pipeline(createPipeline)
-	resp, httpResp, err := c.StreamDesignerClient.PipelinesSdV1Api.CreateSdV1PipelineExecute(req)
+	resp, httpResp, err := c.StreamDesignerClient.PipelinesSdV1Api.CreateSdV1Pipeline(c.sdApiContext()).SdV1Pipeline(createPipeline).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) DeleteSdPipeline(envId, clusterId, id string) error {
-	req := c.StreamDesignerClient.PipelinesSdV1Api.DeleteSdV1Pipeline(c.sdApiContext(), id)
-	req = req.Environment(envId).SpecKafkaCluster(clusterId)
-
-	httpResp, err := c.StreamDesignerClient.PipelinesSdV1Api.DeleteSdV1PipelineExecute(req)
+	httpResp, err := c.StreamDesignerClient.PipelinesSdV1Api.DeleteSdV1Pipeline(c.sdApiContext(), id).Environment(envId).SpecKafkaCluster(clusterId).Execute()
 	return errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) GetSdPipeline(envId, clusterId, id string) (streamdesignerv1.SdV1Pipeline, error) {
-	req := c.StreamDesignerClient.PipelinesSdV1Api.GetSdV1Pipeline(c.sdApiContext(), id).Environment(envId).SpecKafkaCluster(clusterId)
-
-	resp, httpResp, err := c.StreamDesignerClient.PipelinesSdV1Api.GetSdV1PipelineExecute(req)
+	resp, httpResp, err := c.StreamDesignerClient.PipelinesSdV1Api.GetSdV1Pipeline(c.sdApiContext(), id).Environment(envId).SpecKafkaCluster(clusterId).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
@@ -77,8 +70,6 @@ func (c *Client) UpdateSdPipeline(envId, clusterId, id string, update streamdesi
 	update.Spec.SetEnvironment(streamdesignerv1.ObjectReference{Id: envId})
 	update.Spec.SetKafkaCluster(streamdesignerv1.ObjectReference{Id: clusterId})
 
-	req := c.StreamDesignerClient.PipelinesSdV1Api.UpdateSdV1Pipeline(c.sdApiContext(), id).SdV1Pipeline(update)
-
-	resp, httpResp, err := c.StreamDesignerClient.PipelinesSdV1Api.UpdateSdV1PipelineExecute(req)
+	resp, httpResp, err := c.StreamDesignerClient.PipelinesSdV1Api.UpdateSdV1Pipeline(c.sdApiContext(), id).SdV1Pipeline(update).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
