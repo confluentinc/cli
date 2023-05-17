@@ -37,7 +37,7 @@ func NewVersion(version, commit, buildDate string) *Version {
 }
 
 func (v *Version) IsReleased() bool {
-	return v.Version != "0.0.0" && !strings.Contains(v.Version, "SNAPSHOT")
+	return v.Version != "0.0.0" && !strings.Contains(v.Version, "dirty") && !strings.Contains(v.Version, "-g") && !strings.Contains(v.Version, "SNAPSHOT")
 }
 
 // String returns the version in a standardized format
