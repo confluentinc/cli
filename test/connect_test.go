@@ -93,14 +93,26 @@ func (s *CLITestSuite) TestConnectPluginInstall() {
 	confluentHome733 := "test/fixtures/input/connect/confluent-7.3.3"
 
 	tests := []CLITest{
-		{args: "connect plugin install test/fixtures/input/connect/test-plugin.zip --dry-run --force", env: []string{"CONFLUENT_HOME=" + confluentHomeEmpty}, fixture: "connect/plugin/install-dry-run.golden"},
-		{args: "connect plugin install test/fixtures/input/connect/test-plugin.zip", env: []string{"CONFLUENT_HOME=test"}, fixture: "connect/plugin/install-platform-not-found.golden", exitCode: 1},
-		{args: "connect plugin install bad-id-format", fixture: "connect/plugin/install-plugin-not-found.golden", exitCode: 1},
-		{args: fmt.Sprintf("connect plugin install test/fixtures/input/connect/test-plugin.zip --plugin-directory %s/share/confluent-hub-components --dry-run --force", confluentHomeEmpty), env: []string{"CONFLUENT_HOME=" + confluentHomeEmpty}},
-		{args: "connect plugin install test/fixtures/input/connect/test-plugin.zip --dry-run --force", env: []string{"CONFLUENT_HOME=" + confluentHome733}, fixture: "connect/plugin/install-worker-update-dry-run.golden"},
-		{args: fmt.Sprintf("connect plugin install test/fixtures/input/connect/test-plugin.zip --plugin-directory %[1]s/share/confluent-hub-components --worker-configs %[1]s/etc/kafka/connect-distributed.properties,%[1]s/etc/kafka/connect-standalone.properties --dry-run --force", confluentHome733), fixture: "connect/plugin/install-all-flags-dry-run.golden"},
-		{args: fmt.Sprintf("connect plugin install test/fixtures/input/connect/test-plugin.zip --plugin-directory %[1]s/share/confluent-hub-components --worker-configs %[1]s/etc/kafka/connect-distributed.properties,%[1]s/etc/kafka/connect-standalone.properties --dry-run", confluentHome733), input: "y\n", fixture: "connect/plugin/install-all-flags-dry-run-accept.golden"},
-		{args: fmt.Sprintf("connect plugin install test/fixtures/input/connect/test-plugin.zip --plugin-directory %[1]s/share/confluent-hub-components --worker-configs %[1]s/etc/kafka/connect-distributed.properties,%[1]s/etc/kafka/connect-standalone.properties --dry-run", confluentHome733), input: "n\n", fixture: "connect/plugin/install-all-flags-dry-run-refuse.golden", exitCode: 1},
+		{args: "connect plugin install test/fixtures/input/connect/test-plugin.zip --dry-run", env: []string{"CONFLUENT_HOME=" + confluentHome733}, input: "y\ny\ny\n", fixture: "connect/plugin/install/interactive.golden"},
+		{args: "connect plugin install test/fixtures/input/connect/test-plugin.zip --dry-run", env: []string{"CONFLUENT_HOME=" + confluentHome733}, input: "y\ny\nn\ny\nn\n", fixture: "connect/plugin/install/interactive-select-workers.golden"},
+		{args: "connect plugin install test/fixtures/input/connect/test-plugin.zip --dry-run", env: []string{"CONFLUENT_HOME=" + confluentHomeEmpty}, input: "y\ny\n", fixture: "connect/plugin/install/interactive-no-workers.golden"},
+		{args: "connect plugin install test/fixtures/input/connect/test-plugin.zip --dry-run", env: []string{"CONFLUENT_HOME=" + confluentHome733}, input: fmt.Sprintf("n\n%s/share\ny\ny\n", confluentHomeEmpty), fixture: "connect/plugin/install/interactive-select-plugin-directory.golden"},
+		{args: "connect plugin install test/fixtures/input/connect/test-plugin.zip --dry-run", env: []string{"CONFLUENT_HOME=" + confluentHome733}, input: "n\n/directory-dne\ny\ny\n", fixture: "connect/plugin/install/interactive-select-plugin-directory-fail.golden", exitCode: 1},
+		{args: "connect plugin install test/fixtures/input/connect/test-plugin.zip --dry-run", env: []string{"CONFLUENT_HOME=" + confluentHome733}, input: "y\nn\n", fixture: "connect/plugin/install/interactive-decline-license.golden", exitCode: 1},
+		{args: "connect plugin install test/fixtures/input/connect/test-plugin.zip --dry-run --force", env: []string{"CONFLUENT_HOME=" + confluentHome733}, fixture: "connect/plugin/install/force.golden"},
+
+		{args: fmt.Sprintf("connect plugin install test/fixtures/input/connect/test-plugin.zip --plugin-directory %s/share/confluent-hub-components --dry-run", confluentHome733), env: []string{"CONFLUENT_HOME=" + confluentHome733}, input: "y\ny\n", fixture: "connect/plugin/install/plugin-directory-flag.golden"},
+		{args: fmt.Sprintf("connect plugin install test/fixtures/input/connect/test-plugin.zip --plugin-directory %s/share/confluent-hub-components --dry-run --force", confluentHome733), env: []string{"CONFLUENT_HOME=" + confluentHome733}, fixture: "connect/plugin/install/plugin-directory-flag-force.golden"},
+		{args: fmt.Sprintf("connect plugin install test/fixtures/input/connect/test-plugin.zip --worker-configs %[1]s/etc/kafka/connect-distributed.properties,%[1]s/etc/kafka/connect-standalone.properties --dry-run", confluentHome733), input: "y\ny\n", fixture: "connect/plugin/install/worker-configs-flag.golden"},
+		{args: fmt.Sprintf("connect plugin install test/fixtures/input/connect/test-plugin.zip --worker-configs %[1]s/etc/kafka/connect-distributed.properties,%[1]s/etc/kafka/connect-standalone.properties --dry-run --force", confluentHome733), fixture: "connect/plugin/install/worker-configs-flag-force.golden"},
+		{args: fmt.Sprintf("connect plugin install test/fixtures/input/connect/test-plugin.zip --plugin-directory %[1]s/share/confluent-hub-components --worker-configs %[1]s/etc/kafka/connect-distributed.properties,%[1]s/etc/kafka/connect-standalone.properties --dry-run", confluentHome733), input: "y\n", fixture: "connect/plugin/install/both-flags.golden"},
+		{args: fmt.Sprintf("connect plugin install test/fixtures/input/connect/test-plugin.zip --plugin-directory %[1]s/share/confluent-hub-components --worker-configs %[1]s/etc/kafka/connect-distributed.properties,%[1]s/etc/kafka/connect-standalone.properties --dry-run --force", confluentHome733), fixture: "connect/plugin/install/both-flags-force.golden"},
+
+		{args: "connect plugin install bad-id-format", fixture: "connect/plugin/install/plugin-not-found.golden", exitCode: 1},
+		{args: "connect plugin install test/fixtures/input/connect/test-plugin.zip", env: []string{"CONFLUENT_HOME=test"}, fixture: "connect/plugin/install/platform-not-found.golden", exitCode: 1},
+		{args: "connect plugin install test/fixtures/input/connect/test-plugin.zip --plugin-directory /directory-dne", fixture: "connect/plugin/install/plugin-directory-not-found.golden", exitCode: 1},
+		{args: "connect plugin install test/fixtures/input/connect/test-plugin.zip --worker-configs /dne.properties", fixture: "connect/plugin/install/worker-config-not-found.golden", exitCode: 1},
+		{args: "connect plugin install test/fixtures/input/connect/test-plugin.zip --worker-configs /dne.properties,/dne2.properties", fixture: "connect/plugin/install/worker-config-multiple-not-found.golden", exitCode: 1},
 	}
 
 	for _, tt := range tests {

@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -49,6 +50,7 @@ type license struct {
 
 const (
 	invalidDirectoryErrorMsg       = `plugin directory "%s" does not exist`
+	invalidWorkerConfigErrorMsg    = `worker config file "%s" does not exist`
 	unexpectedInstallationErrorMsg = "unexpected installation type: %s"
 )
 
@@ -100,19 +102,25 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// Select plugin-directory
+	// Parse plugin & worker flags
 	pluginDir, err := getPluginDirFromFlag(cmd)
 	if err != nil {
 		return err
 	}
 
+	workerConfigs, err := getWorkerConfigsFromFlag(cmd)
+	if err != nil {
+		return err
+	}
+
 	var installation *platformInstallation
+	prompt := form.NewPrompt(os.Stdin)
 	if pluginDir == "" {
-		installation, err = getConfluentPlatformInstallation(cmd, force)
+		installation, err = getConfluentPlatformInstallation(cmd, prompt, force)
 		if err != nil {
 			return err
 		}
-		pluginDir, err = choosePluginDir(installation, force)
+		pluginDir, err = choosePluginDir(installation, prompt, force)
 		if err != nil {
 			return err
 		}
@@ -124,14 +132,14 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 	} else if len(previousInstallations) > 0 {
 		output.Println("\nA version of this plugin is already installed and must be removed to continue.")
 		for _, previousInstallation := range previousInstallations {
-			if err := replacePluginInstallation(previousInstallation, dryRun, force); err != nil {
+			if err := replacePluginInstallation(previousInstallation, prompt, dryRun, force); err != nil {
 				return err
 			}
 		}
 	}
 
 	// Install
-	if err := checkLicenseAcceptance(pluginManifest, force); err != nil {
+	if err := checkLicenseAcceptance(pluginManifest, prompt, force); err != nil {
 		return err
 	}
 
@@ -151,19 +159,14 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 	}
 
 	// Select and update worker-configs
-	workerConfigs, err := cmd.Flags().GetStringSlice("worker-configs")
-	if err != nil {
-		return err
-	}
-
 	if len(workerConfigs) == 0 {
 		if installation == nil {
-			installation, err = getConfluentPlatformInstallation(cmd, force)
+			installation, err = getConfluentPlatformInstallation(cmd, prompt, force)
 			if err != nil {
 				return err
 			}
 		}
-		workerConfigs, err = chooseWorkerConfigs(cmd, installation, force)
+		workerConfigs, err = chooseWorkerConfigs(cmd, installation, prompt, force)
 		if err != nil {
 			return err
 		}
@@ -279,6 +282,30 @@ func getPluginDirFromFlag(cmd *cobra.Command) (string, error) {
 	return pluginDir, nil
 }
 
+func getWorkerConfigsFromFlag(cmd *cobra.Command) ([]string, error) {
+	if !cmd.Flags().Changed("worker-configs") {
+		return nil, nil
+	}
+
+	workerConfigs, err := cmd.Flags().GetStringSlice("worker-configs")
+	if err != nil {
+		return nil, err
+	}
+
+	var errs *multierror.Error
+	for _, workerConfig := range workerConfigs {
+		if workerConfig, err = filepath.Abs(workerConfig); err != nil {
+			errs = multierror.Append(errs, err)
+		}
+
+		if !utils.DoesPathExist(workerConfig) {
+			errs = multierror.Append(errs, errors.Errorf(invalidWorkerConfigErrorMsg, workerConfig))
+		}
+	}
+
+	return workerConfigs, errs.ErrorOrNil()
+}
+
 func existingPluginInstallation(pluginDir string, pluginManifest *manifest) ([]string, error) {
 	// Bundled installations
 	if utils.DoesPathExist(filepath.Join(pluginDir, pluginManifest.Name)) {
@@ -300,7 +327,7 @@ func existingPluginInstallation(pluginDir string, pluginManifest *manifest) ([]s
 	return installations, nil
 }
 
-func replacePluginInstallation(pathToPlugin string, dryRun, force bool) error {
+func replacePluginInstallation(pathToPlugin string, prompt *form.RealPrompt, dryRun, force bool) error {
 	if force {
 		output.Printf("Uninstalling the existing version of the plugin located at \"%s\".\n", pathToPlugin)
 	} else {
@@ -309,7 +336,7 @@ func replacePluginInstallation(pathToPlugin string, dryRun, force bool) error {
 			Prompt:    fmt.Sprintf("Do you want to uninstall an existing version of this plugin located at %s?", pathToPlugin),
 			IsYesOrNo: true,
 		})
-		if err := f.Prompt(form.NewPrompt(os.Stdin)); err != nil {
+		if err := f.Prompt(prompt); err != nil {
 			return err
 		}
 		if !f.Responses["confirm"].(bool) {
@@ -408,7 +435,7 @@ func unzipPlugin(pluginManifest *manifest, zipFiles []*zip.File, pluginDir strin
 	return nil
 }
 
-func checkLicenseAcceptance(pluginManifest *manifest, force bool) error {
+func checkLicenseAcceptance(pluginManifest *manifest, prompt *form.RealPrompt, force bool) error {
 	for _, license := range pluginManifest.Licenses {
 		if force {
 			output.Printf("\nImplicitly agreeing to the following license:\n%s\n%s\n", license.Name, license.Url)
@@ -418,7 +445,7 @@ func checkLicenseAcceptance(pluginManifest *manifest, force bool) error {
 				Prompt:    fmt.Sprintf("\nLicense:\n%s\n%s\nI agree to this software license agreement.", license.Name, license.Url),
 				IsYesOrNo: true,
 			})
-			if err := f.Prompt(form.NewPrompt(os.Stdin)); err != nil {
+			if err := f.Prompt(prompt); err != nil {
 				return err
 			}
 			if !f.Responses["confirm"].(bool) {

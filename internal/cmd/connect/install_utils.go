@@ -41,7 +41,7 @@ type listOut struct {
 	Description string `human:"Description"`
 }
 
-func getConfluentPlatformInstallation(cmd *cobra.Command, force bool) (*platformInstallation, error) {
+func getConfluentPlatformInstallation(cmd *cobra.Command, prompt *form.RealPrompt, force bool) (*platformInstallation, error) {
 	installations, err := findInstallationDirectories()
 	if err != nil {
 		return nil, err
@@ -76,7 +76,7 @@ func getConfluentPlatformInstallation(cmd *cobra.Command, force bool) (*platform
 			Prompt: fmt.Sprintf(promptMsg, listStr),
 			Regex:  `^\d$`,
 		})
-		if err := f.Prompt(form.NewPrompt(os.Stdin)); err != nil {
+		if err := f.Prompt(prompt); err != nil {
 			return nil, err
 		}
 		choice, err := strconv.Atoi(f.Responses["installation"].(string))
@@ -192,7 +192,7 @@ func compactDuplicateInstallations(installations []platformInstallation) []platf
 	return uniqueInstallations
 }
 
-func choosePluginDir(installation *platformInstallation, force bool) (string, error) {
+func choosePluginDir(installation *platformInstallation, prompt *form.RealPrompt, force bool) (string, error) {
 	var defaultPluginDir string
 	switch installation.Location.Type {
 	case "ARCHIVE":
@@ -213,7 +213,7 @@ func choosePluginDir(installation *platformInstallation, force bool) (string, er
 		Prompt:    fmt.Sprintf(`Do you want to install this plugin into "%s"?`, defaultPluginDir),
 		IsYesOrNo: true,
 	})
-	if err := f.Prompt(form.NewPrompt(os.Stdin)); err != nil {
+	if err := f.Prompt(prompt); err != nil {
 		return "", err
 	}
 	if f.Responses["confirm"].(bool) {
@@ -224,7 +224,7 @@ func choosePluginDir(installation *platformInstallation, force bool) (string, er
 		ID:     "directory",
 		Prompt: "Specify plugin installation directory. To cancel, press Ctrl-C",
 	})
-	if err := f.Prompt(form.NewPrompt(os.Stdin)); err != nil {
+	if err := f.Prompt(prompt); err != nil {
 		return "", err
 	}
 
@@ -320,7 +320,7 @@ func runningWorkerConfigLocations() ([]WorkerConfig, error) {
 	return result, nil
 }
 
-func chooseWorkerConfigs(cmd *cobra.Command, installation *platformInstallation, force bool) ([]string, error) {
+func chooseWorkerConfigs(cmd *cobra.Command, installation *platformInstallation, prompt *form.RealPrompt, force bool) ([]string, error) {
 	var workerConfigs []WorkerConfig
 
 	if standardWorkerConfigs, err := standardWorkerConfigLocations(installation); err != nil {
@@ -370,7 +370,7 @@ func chooseWorkerConfigs(cmd *cobra.Command, installation *platformInstallation,
 			Prompt:    "Do you want to update all detected config files?",
 			IsYesOrNo: true,
 		})
-		if err := f.Prompt(form.NewPrompt(os.Stdin)); err != nil {
+		if err := f.Prompt(prompt); err != nil {
 			return nil, err
 		}
 		if f.Responses["confirm"].(bool) {
@@ -382,7 +382,7 @@ func chooseWorkerConfigs(cmd *cobra.Command, installation *platformInstallation,
 					Prompt:    fmt.Sprintf(`Do you want to update worker configuration file %d?`, i+1),
 					IsYesOrNo: true,
 				})
-				if err := f.Prompt(form.NewPrompt(os.Stdin)); err != nil {
+				if err := f.Prompt(prompt); err != nil {
 					return nil, err
 				}
 				if f.Responses["confirm"].(bool) {
