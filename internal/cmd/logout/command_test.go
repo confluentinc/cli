@@ -33,7 +33,7 @@ const (
 )
 
 var (
-	mockLoginCredentialsManager = &cliMock.LoginCredentialsManager{
+	mockLoginCredentialsManager = &climock.LoginCredentialsManager{
 		GetCloudCredentialsFromEnvVarFunc: func(orgResourceId string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
@@ -80,7 +80,7 @@ var (
 				return nil, nil
 			}
 		},
-		SetCloudClientFunc: func(_ *ccloud.Client) {},
+		SetCloudClientFunc: func(_ *ccloudv1.Client) {},
 	}
 	orgManagerImpl           = pauth.NewLoginOrganizationManagerImpl()
 	LoginOrganizationManager = &climock.LoginOrganizationManager{

@@ -14,8 +14,7 @@ import (
 )
 
 const (
-	NetrcIntegrationTestFile = "netrc_test"
-
+	NetrcIntegrationTestFile     = "netrc_test"
 	localCredentialsPrefix       = "confluent-cli"
 	localCredentialStringFormat  = localCredentialsPrefix + ":%s:%s"
 	mdsUsernamePasswordString    = "mds-username-password"
@@ -68,20 +67,12 @@ func (n *NetrcHandlerImpl) RemoveNetrcCredentials(isCloud bool, ctxName string) 
 		return "", err
 	}
 
-	// machineName could be either sso: confluent-cli:ccloud-sso-refresh-token:login-cli-mock-email@confluent.io-http://test
-	// or non-sso: confluent-cli:ccloud-username-password:login-cli-mock-email@confluent.io-http://test
-	var user string
-	found := false
-	for _, isSSO := range []bool{true, false} {
-		machineName := GetLocalCredentialName(isCloud, isSSO, ctxName)
-		machine := netrcFile.FindMachine(machineName)
-		if machine != nil {
-			found = true
-			err := removeCredentials(machineName, netrcFile, n.FileName)
-			if err != nil {
-				return "", err
-			}
-			user = machine.Login
+	machineName := GetLocalCredentialName(isCloud, ctxName)
+	machine := netrcFile.FindMachine(machineName)
+	if machine != nil {
+		err := removeCredentials(machineName, netrcFile, n.FileName)
+		if err != nil {
+			return "", err
 		}
 		return machine.Login, nil
 	} else {
@@ -143,7 +134,7 @@ func getNetrc(filename string) (*gonetrc.Netrc, error) {
 	return n, nil
 }
 
-func GetLocalCredentialName(isCloud bool, isSSO bool, ctxName string) string {
+func GetLocalCredentialName(isCloud bool, ctxName string) string {
 	credType := mdsUsernamePassword
 	if isCloud {
 		credType = ccloudUsernamePassword
@@ -221,7 +212,7 @@ func (n *NetrcHandlerImpl) CheckCredentialExist(isCloud bool, ctxName string) (b
 		return false, err
 	}
 
-	name := getNetrcMachineName(isCloud, ctxName)
+	name := GetLocalCredentialName(isCloud, ctxName)
 	return netrcFile.FindMachine(name) != nil, nil
 }
 

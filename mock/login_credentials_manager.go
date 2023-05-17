@@ -525,7 +525,7 @@ func (m *LoginCredentialsManager) GetOnPremPrerunCredentialsFromNetrcCalls() []s
 }
 
 // SetCloudClient mocks base method by wrapping the associated func.
-func (m *LoginCredentialsManager) SetCloudClient(client *github_com_confluentinc_ccloud_sdk_go_v1.Client) {
+func (m *LoginCredentialsManager) SetCloudClient(client *github_com_confluentinc_ccloud_sdk_go_v1_public.Client) {
 	m.lockSetCloudClient.Lock()
 	defer m.lockSetCloudClient.Unlock()
 
@@ -554,7 +554,7 @@ func (m *LoginCredentialsManager) SetCloudClientCalled() bool {
 
 // SetCloudClientCalls returns the calls made to SetCloudClient.
 func (m *LoginCredentialsManager) SetCloudClientCalls() []struct {
-	Client *github_com_confluentinc_ccloud_sdk_go_v1.Client
+	Client *github_com_confluentinc_ccloud_sdk_go_v1_public.Client
 } {
 	m.lockSetCloudClient.Lock()
 	defer m.lockSetCloudClient.Unlock()

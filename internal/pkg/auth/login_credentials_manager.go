@@ -368,7 +368,7 @@ func (h *LoginCredentialsManagerImpl) GetCredentialsFromKeychain(cfg *v1.Config,
 	}
 }
 
-func (h *LoginCredentialsManagerImpl) SetCloudClient(client *ccloud.Client) {
+func (h *LoginCredentialsManagerImpl) SetCloudClient(client *ccloudv1.Client) {
 	h.client = client
 }
 

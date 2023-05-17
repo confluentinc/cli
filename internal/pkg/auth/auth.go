@@ -90,7 +90,7 @@ func PersistCCloudCredentialsToConfig(config *v1.Config, client *ccloudv1.Client
 	}
 	state := getCCloudContextState(config, ctxName, credentials.AuthToken, credentials.AuthRefreshToken, user)
 
-	err = addOrUpdateContext(config, ctxName, credentials.Username, url, state, "", user.GetOrganization().GetResourceId(), save)
+	err = addOrUpdateContext(config, true, credentials, ctxName, url, state, "", user.GetOrganization().GetResourceId(), save)
 	return state.Auth.Account, user.GetOrganization(), err
 }
 

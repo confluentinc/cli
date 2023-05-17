@@ -18,7 +18,7 @@ const (
 )
 
 func Write(isCloud bool, ctxName, url, username, password string) error {
-	service := netrc.GetLocalCredentialName(isCloud, false, ctxName)
+	service := netrc.GetLocalCredentialName(isCloud, ctxName)
 
 	item := keychain.NewGenericPassword(service, url, fmt.Sprintf("%s-%s", username, url), []byte(username+separator+password), accessGroup)
 	item.SetSynchronizable(keychain.SynchronizableNo)
@@ -33,7 +33,7 @@ func Write(isCloud bool, ctxName, url, username, password string) error {
 }
 
 func Delete(isCloud bool, ctxName string) error {
-	service := netrc.GetLocalCredentialName(isCloud, false, ctxName)
+	service := netrc.GetLocalCredentialName(isCloud, ctxName)
 
 	item := keychain.NewItem()
 	item.SetSecClass(keychain.SecClassGenericPassword)
@@ -69,7 +69,7 @@ func Read(isCloud bool, ctxName, url string) (string, string, error) {
 	item.SetReturnData(true)
 
 	if ctxName != "" {
-		service := netrc.GetLocalCredentialName(isCloud, false, ctxName)
+		service := netrc.GetLocalCredentialName(isCloud, ctxName)
 		item.SetService(service)
 	}
 
