@@ -344,14 +344,14 @@ func replacePluginInstallation(pathToPlugin string, prompt *form.RealPrompt, dry
 		}
 	}
 
-	err := os.RemoveAll(pathToPlugin)
-	if err != nil {
-		return err
-	}
-
 	if dryRun {
 		output.Println("[DRY RUN] Success.")
 		return nil
+	}
+
+	err := os.RemoveAll(pathToPlugin)
+	if err != nil {
+		return err
 	}
 
 	output.Println("Success.")

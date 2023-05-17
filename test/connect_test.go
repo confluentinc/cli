@@ -89,8 +89,9 @@ func (s *CLITestSuite) TestConnectPluginInstall() {
 	s.zipManifest()
 	defer s.deleteZip()
 
-	confluentHomeEmpty := "test/fixtures/input/connect/confluent-empty"
-	confluentHome733 := "test/fixtures/input/connect/confluent-7.3.3"
+	confluentHome733          := "test/fixtures/input/connect/confluent-7.3.3"
+	confluentHomeEmpty        := "test/fixtures/input/connect/confluent-empty"
+	confluentHomePriorInstall := "test/fixtures/input/connect/confluent-prior-install"
 
 	tests := []CLITest{
 		{args: "connect plugin install test/fixtures/input/connect/test-plugin.zip --dry-run", env: []string{"CONFLUENT_HOME=" + confluentHome733}, input: "y\ny\ny\n", fixture: "connect/plugin/install/interactive.golden"},
@@ -100,6 +101,9 @@ func (s *CLITestSuite) TestConnectPluginInstall() {
 		{args: "connect plugin install test/fixtures/input/connect/test-plugin.zip --dry-run", env: []string{"CONFLUENT_HOME=" + confluentHome733}, input: "n\n/directory-dne\ny\ny\n", fixture: "connect/plugin/install/interactive-select-plugin-directory-fail.golden", exitCode: 1},
 		{args: "connect plugin install test/fixtures/input/connect/test-plugin.zip --dry-run", env: []string{"CONFLUENT_HOME=" + confluentHome733}, input: "y\nn\n", fixture: "connect/plugin/install/interactive-decline-license.golden", exitCode: 1},
 		{args: "connect plugin install test/fixtures/input/connect/test-plugin.zip --dry-run --force", env: []string{"CONFLUENT_HOME=" + confluentHome733}, fixture: "connect/plugin/install/force.golden"},
+		{args: "connect plugin install test/fixtures/input/connect/test-plugin.zip --dry-run", env: []string{"CONFLUENT_HOME=" + confluentHomePriorInstall}, input: "y\ny\ny\ny\n", fixture: "connect/plugin/install/interactive-uninstall-prior.golden"},
+		{args: "connect plugin install test/fixtures/input/connect/test-plugin.zip --dry-run", env: []string{"CONFLUENT_HOME=" + confluentHomePriorInstall}, input: "y\nn\n", fixture: "connect/plugin/install/interactive-decline-uninstall-prior.golden", exitCode: 1},
+		{args: "connect plugin install test/fixtures/input/connect/test-plugin.zip --dry-run --force", env: []string{"CONFLUENT_HOME=" + confluentHomePriorInstall}, fixture: "connect/plugin/install/uninstall-prior-force.golden"},
 
 		{args: fmt.Sprintf("connect plugin install test/fixtures/input/connect/test-plugin.zip --plugin-directory %s/share/confluent-hub-components --dry-run", confluentHome733), env: []string{"CONFLUENT_HOME=" + confluentHome733}, input: "y\ny\n", fixture: "connect/plugin/install/plugin-directory-flag.golden"},
 		{args: fmt.Sprintf("connect plugin install test/fixtures/input/connect/test-plugin.zip --plugin-directory %s/share/confluent-hub-components --dry-run --force", confluentHome733), env: []string{"CONFLUENT_HOME=" + confluentHome733}, fixture: "connect/plugin/install/plugin-directory-flag-force.golden"},
