@@ -30,7 +30,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/srcm v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/stream-designer v0.3.0
 	github.com/confluentinc/confluent-kafka-go v1.9.3-RC3
-	github.com/confluentinc/flink-sql-client v0.148.0
+	github.com/confluentinc/flink-sql-client v0.163.0
 	github.com/confluentinc/go-editor v0.11.0
 	github.com/confluentinc/go-netrc v0.0.0-20220321173724-4d50f36ff450
 	github.com/confluentinc/go-ps1 v1.0.2
