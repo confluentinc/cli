@@ -1,0 +1,13 @@
+[DRY RUN] Performing a dry run of this command.
+
+Using the only available Confluent Platform installation at "test/fixtures/input/connect/confluent-empty".
+Do you want to install this plugin into "test/fixtures/input/connect/confluent-empty/share/confluent-hub-components"? (y/n): 
+License:
+Example License 1.0
+url-to-license-goes-here
+I agree to this software license agreement. (y/n): 
+Installing Integration Test Plugin 0.1.0, provided by Confluent, Inc.
+[DRY RUN] Skipping plugin installation.
+No worker configuration files found.
+
+[DRY RUN] Success. All requirements are met and you may proceed with the installation.
