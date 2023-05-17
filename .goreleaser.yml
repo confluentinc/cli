@@ -310,5 +310,5 @@ brews:
     url_template: "{{ .Env.S3FOLDER }}/homebrew/{{ .Version }}/{{ .ArtifactName }}"
     homepage: https://docs.confluent.io/confluent-cli/current/overview.html
     description: CLI for Confluent Cloud and Confluent Platform
-    skip_upload: "{{ .Env.DRY_RUN }}"
+    skip_upload: true
     test: system "#{bin}/confluent version"
