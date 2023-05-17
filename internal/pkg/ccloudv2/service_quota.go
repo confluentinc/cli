@@ -48,5 +48,5 @@ func (c *Client) executeListAppliedQuotas(pageToken, quotaScope, kafkaCluster, e
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
 	}
-	return c.ServiceQuotaClient.AppliedQuotasServiceQuotaV1Api.ListServiceQuotaV1AppliedQuotasExecute(req)
+	return req.Execute()
 }

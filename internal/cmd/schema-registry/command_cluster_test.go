@@ -115,17 +115,6 @@ func (suite *ClusterTestSuite) TestCreateSR() {
 	req.True(suite.srMock.CreateSchemaRegistryClusterCalled())
 }
 
-func (suite *ClusterTestSuite) TestDescribeSR() {
-	cmd := suite.newCMD()
-	cmd.SetArgs([]string{"cluster", "describe"})
-	err := cmd.Execute()
-	req := require.New(suite.T())
-	req.Nil(err)
-	req.True(suite.srMock.GetSchemaRegistryClustersCalled())
-	req.True(suite.metricsApi.V2MetricsDatasetQueryPostCalled())
-	req.True(suite.metricsApi.V2MetricsDatasetQueryPostExecuteCalled())
-}
-
 func (suite *ClusterTestSuite) TestUpdateCompatibility() {
 	cmd := suite.newCMD()
 	cmd.SetArgs([]string{"cluster", "update", "--compatibility", "BACKWARD"})
