@@ -24,11 +24,11 @@ import (
 )
 
 type manifest struct {
-	Name    string    `json:"name"`
-	Title   string    `json:"title"`
-	Version string    `json:"version"`
-	Owner   owner     `json:"owner"`
-	Archive archive   `json:"archive"`
+	Name     string    `json:"name"`
+	Title    string    `json:"title"`
+	Version  string    `json:"version"`
+	Owner    owner     `json:"owner"`
+	Archive  archive   `json:"archive"`
 	Licenses []license `json:"license"`
 }
 
