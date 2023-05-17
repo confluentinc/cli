@@ -1,7 +1,7 @@
 [DRY RUN] Performing a dry run of this command.
 
-Using the Confluent Platform installation at "/Users/sgagniere/confluent-7.3.3".
-Using "/Users/sgagniere/confluent-7.3.3/share/confluent-hub-components" as the plugin installation directory.
+Using the Confluent Platform installation at "test/fixtures/input/connect/confluent-7.3.3".
+Using "test/fixtures/input/connect/confluent-7.3.3/share/confluent-hub-components" as the plugin installation directory.
 
 Implicitly agreeing to the following license:
 Example License 1.0
