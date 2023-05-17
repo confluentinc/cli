@@ -80,7 +80,6 @@ builds:
       - amd64
     hooks:
       post:
-        - cmd: make download-licenses
         - cmd: scripts/gon_filepath_editor.sh {{ .Path }} amd64
         - cmd: gon dist/gon_confluent_amd64.hcl
   - id: confluent-darwin-arm64
