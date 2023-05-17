@@ -200,8 +200,8 @@ func (s *authState) saveOAuthTokenResponse(data map[string]any) error {
 
 func (s *authState) getOAuthTokenResponse(payload *strings.Reader) (map[string]any, error) {
 	url := s.SSOProviderHost + "/token"
-	log.CliLogger.Debugf("Oauth token request URL: %s", url)
-	log.CliLogger.Debug("Oauth token request payload: ", payload)
+	log.CliLogger.Debugf("OAuth token request URL: %s", url)
+	log.CliLogger.Debug("OAuth token request payload: ", payload)
 	req, err := http.NewRequest(http.MethodPost, url, payload)
 	if err != nil {
 		return nil, errors.Wrap(err, errors.ConstructOAuthRequestErrorMsg)

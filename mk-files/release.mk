@@ -41,7 +41,6 @@ release-to-prod:
 	$(aws-authenticate) && \
 	$(call copy-stag-content-to-prod,archives,$(CLEAN_VERSION)); \
 	$(call copy-stag-content-to-prod,binaries,$(CLEAN_VERSION)); \
-	$(call copy-stag-content-to-prod,homebrew,$(CLEAN_VERSION)); \
 	$(call copy-stag-content-to-prod,archives,latest)
 	$(call print-boxed-message,"VERIFYING PROD RELEASE CONTENT")
 	make verify-prod
@@ -57,16 +56,16 @@ endef
 .PHONY: gorelease-linux-glibc-amd64
 gorelease-linux-glibc-amd64:
 	go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
-	VERSION=$(VERSION) GOEXPERIMENT=boringcrypto goreleaser release --clean -f .goreleaser-linux-glibc-amd64.yml
+	GOEXPERIMENT=boringcrypto goreleaser release --clean --config .goreleaser-linux-glibc-amd64.yml
 
 .PHONY: gorelease-linux-glibc-arm64
 gorelease-linux-glibc-arm64:
 ifneq (,$(findstring x86_64,$(shell uname -m)))
 	go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
-	VERSION=$(VERSION) CGO_ENABLED=1 CC=aarch64-linux-gnu-gcc CXX=aarch64-linux-gnu-g++ GOEXPERIMENT=boringcrypto goreleaser release --clean -f .goreleaser-linux-glibc-arm64.yml
+	CGO_ENABLED=1 CC=aarch64-linux-gnu-gcc CXX=aarch64-linux-gnu-g++ GOEXPERIMENT=boringcrypto goreleaser release --clean --config .goreleaser-linux-glibc-arm64.yml
 else
 	go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
-	VERSION=$(VERSION) GOEXPERIMENT=boringcrypto goreleaser release --clean -f .goreleaser-linux-glibc-arm64.yml
+	GOEXPERIMENT=boringcrypto goreleaser release --clean --config .goreleaser-linux-glibc-arm64.yml
 endif
 
 # This builds the Darwin, Windows and Linux binaries using goreleaser on the host computer. Goreleaser takes care of uploading the resulting binaries/archives/checksums to S3.
@@ -83,7 +82,7 @@ gorelease:
 	scripts/build_linux_glibc.sh && \
 	git clone git@github.com:confluentinc/cli-release.git $(CLI_RELEASE) && \
 	go run $(CLI_RELEASE)/cmd/releasenotes/formatter/main.go $(CLI_RELEASE)/release-notes/$(VERSION_NO_V).json github > $(DIR)/release-notes.txt && \
-	GORELEASER_KEY=$(GORELEASER_KEY) VERSION=$(VERSION) GOEXPERIMENT=boringcrypto S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli GITHUB_TOKEN=$(token) DRY_RUN=$(DRY_RUN) goreleaser release --clean --release-notes $(DIR)/release-notes.txt --timeout 60m
+	GORELEASER_KEY=$(GORELEASER_KEY) GOEXPERIMENT=boringcrypto S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli GITHUB_TOKEN=$(token) DRY_RUN=$(DRY_RUN) goreleaser release --clean --release-notes $(DIR)/release-notes.txt --timeout 60m
 
 # Current goreleaser still has some shortcomings for the our use, and the target patches those issues
 # As new goreleaser versions allow more customization, we may be able to reduce the work for this make target
@@ -97,7 +96,7 @@ goreleaser-patches:
 .PHONY: set-acls
 set-acls:
 	$(aws-authenticate) && \
-	for file_type in archives binaries homebrew; do \
+	for file_type in archives binaries; do \
 		folder_path=confluent-cli/$${file_type}/$(VERSION_NO_V); \
 		echo "SETTING ACLS: $${folder_path}"; \
 		$(call dry-run,aws s3 cp $(S3_STAG_PATH)/$${folder_path} $(S3_STAG_PATH)/$${folder_path} --acl public-read --metadata dummy=dummy --recursive) || exit 1; \

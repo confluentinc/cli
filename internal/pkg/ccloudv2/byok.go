@@ -24,18 +24,15 @@ func (c *Client) byokApiContext() context.Context {
 }
 
 func (c *Client) CreateByokKey(key byokv1.ByokV1Key) (byokv1.ByokV1Key, *http.Response, error) {
-	req := c.ByokClient.KeysByokV1Api.CreateByokV1Key(c.byokApiContext()).ByokV1Key(key)
-	return c.ByokClient.KeysByokV1Api.CreateByokV1KeyExecute(req)
+	return c.ByokClient.KeysByokV1Api.CreateByokV1Key(c.byokApiContext()).ByokV1Key(key).Execute()
 }
 
 func (c *Client) GetByokKey(keyId string) (byokv1.ByokV1Key, *http.Response, error) {
-	req := c.ByokClient.KeysByokV1Api.GetByokV1Key(c.byokApiContext(), keyId)
-	return c.ByokClient.KeysByokV1Api.GetByokV1KeyExecute(req)
+	return c.ByokClient.KeysByokV1Api.GetByokV1Key(c.byokApiContext(), keyId).Execute()
 }
 
 func (c *Client) DeleteByokKey(keyId string) (*http.Response, error) {
-	req := c.ByokClient.KeysByokV1Api.DeleteByokV1Key(c.byokApiContext(), keyId)
-	return c.ByokClient.KeysByokV1Api.DeleteByokV1KeyExecute(req)
+	return c.ByokClient.KeysByokV1Api.DeleteByokV1Key(c.byokApiContext(), keyId).Execute()
 }
 
 func (c *Client) ListByokKeys(provider string, state string) ([]byokv1.ByokV1Key, error) {
@@ -59,7 +56,7 @@ func (c *Client) ListByokKeys(provider string, state string) ([]byokv1.ByokV1Key
 }
 
 func (c *Client) executeListByokKeys(pageToken string, provider string, state string) (byokv1.ByokV1KeyList, *http.Response, error) {
-	req := c.ByokClient.KeysByokV1Api.ListByokV1Keys(c.byokApiContext())
+	req := c.ByokClient.KeysByokV1Api.ListByokV1Keys(c.byokApiContext()).PageSize(ccloudV2ListPageSize)
 	if provider != "" {
 		req = req.Provider(provider)
 	}
@@ -69,6 +66,5 @@ func (c *Client) executeListByokKeys(pageToken string, provider string, state st
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
 	}
-	req = req.PageSize(ccloudV2ListPageSize)
-	return c.ByokClient.KeysByokV1Api.ListByokV1KeysExecute(req)
+	return req.Execute()
 }
