@@ -2,6 +2,8 @@ package flink
 
 import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/config/load"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	client "github.com/confluentinc/flink-sql-client"
 	"github.com/confluentinc/flink-sql-client/pkg/types"
@@ -27,11 +29,14 @@ func (c *command) newShellCommand(prerunner pcmd.PreRunner) *cobra.Command {
 }
 
 func (c *command) authenticated(authenticated func(*cobra.Command, []string) error, cmd *cobra.Command) func() error {
-	// TODO - Check if token was updated by another terminal session by reloading context
-	//cfg, err := load.LoadAndMigrate(v1.New())
-	//auth := cfg.Context().State.AuthToken
-
 	return func() error {
+		cfg, err := load.LoadAndMigrate(v1.New())
+		if err != nil {
+			return err
+		}
+		auth := cfg.Context().State.AuthToken
+		authRefreshToken := cfg.Context().State.AuthRefreshToken
+		c.Context.UpdateAuthTokens(auth, authRefreshToken)
 		return authenticated(cmd, nil)
 	}
 }
