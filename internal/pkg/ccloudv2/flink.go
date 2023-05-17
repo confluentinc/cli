@@ -2,6 +2,7 @@ package ccloudv2
 
 import (
 	"context"
+	"net/http"
 
 	flinkv2 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
