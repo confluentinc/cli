@@ -102,7 +102,6 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// Parse plugin & worker flags
 	pluginDir, err := getPluginDirFromFlag(cmd)
 	if err != nil {
 		return err
