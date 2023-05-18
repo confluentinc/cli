@@ -119,7 +119,6 @@ func getMirrorTopicNames(kafkaREST *pcmd.KafkaREST, clusterId, linkName string) 
 	}
 
 	mirrorTopicNames := make([]string, len(listMirrorTopicsResponseDataList.GetData()))
-
 	for i, data := range listMirrorTopicsResponseDataList.GetData() {
 		mirrorTopicNames[i] = data.GetMirrorTopicName()
 	}
