@@ -4,11 +4,4 @@ builds:
   - binary: confluent
     main: cmd/confluent/main.go
     flags:
-      - -mod=readonly
       - -tags={{.Env.TAGS}}
-    ldflags:
-      - -s -w -X main.version={{.Version}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}}
-    gcflags:
-      - all=-trimpath={{.Env.HOME}}/git
-    asmflags:
-      - all=-trimpath={{.Env.HOME}}/git
