@@ -275,7 +275,7 @@ func (c *Config) encryptContextStateTokens(tempAuthToken, tempAuthRefreshToken s
 		c.Context().GetState().AuthToken = encryptedAuthToken
 	}
 
-	if tempAuthRefreshToken != "" && regexp.MustCompile(authRefreshTokenRegex).MatchString(tempAuthRefreshToken) {
+	if regexp.MustCompile(authRefreshTokenRegex).MatchString(tempAuthRefreshToken) {
 		encryptedAuthRefreshToken, err := secret.Encrypt(c.Context().Name, tempAuthRefreshToken, c.Context().GetState().Salt, c.Context().GetState().Nonce)
 		if err != nil {
 			return err
