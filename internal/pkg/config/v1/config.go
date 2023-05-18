@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"strings"
 
 	"github.com/google/uuid"
@@ -133,6 +134,25 @@ func New() *Config {
 	}
 }
 
+func (c *Config) DecryptContextStates() error {
+	if c.CurrentContext != "" {
+		context := c.Context()
+		state := c.ContextStates[context.Name]
+		if state != nil {
+			err := state.DecryptContextStateAuthToken(context.Name)
+			if err != nil {
+				return err
+			}
+			err = state.DecryptContextStateAuthRefreshToken(context.Name)
+			if err != nil {
+				return err
+			}
+		}
+		context.State = state
+	}
+	return c.Validate()
+}
+
 // Load reads the CLI config from disk.
 // Save a default version if none exists yet.
 func (c *Config) Load() error {
@@ -184,19 +204,7 @@ func (c *Config) Load() error {
 			return errors.NewCorruptedConfigError(errors.MissingKafkaClusterContextErrorMsg, context.Name, c.Filename)
 		}
 		context.KafkaClusterContext.Context = context
-
-		state := c.ContextStates[context.Name]
-		if state != nil {
-			err = state.DecryptContextStateAuthToken(context.Name)
-			if err != nil {
-				return err
-			}
-			err = state.DecryptContextStateAuthRefreshToken(context.Name)
-			if err != nil {
-				return err
-			}
-		}
-		context.State = state
+		context.State = c.ContextStates[context.Name]
 	}
 	return c.Validate()
 }
@@ -259,14 +267,18 @@ func (c *Config) encryptContextStateTokens(tempAuthToken, tempAuthRefreshToken s
 		c.Context().GetState().Salt = salt
 		c.Context().GetState().Nonce = nonce
 	}
-	if tempAuthToken != "" {
+
+	reg1 := regexp.MustCompile(authTokenRegex)
+	if tempAuthToken != "" && reg1.MatchString(tempAuthToken) {
 		encryptedAuthToken, err := secret.Encrypt(c.Context().Name, tempAuthToken, c.Context().GetState().Salt, c.Context().GetState().Nonce)
 		if err != nil {
 			return err
 		}
 		c.Context().GetState().AuthToken = encryptedAuthToken
 	}
-	if tempAuthRefreshToken != "" {
+
+	reg2 := regexp.MustCompile(authRefreshTokenRegex)
+	if tempAuthRefreshToken != "" && reg2.MatchString(tempAuthRefreshToken) {
 		encryptedAuthRefreshToken, err := secret.Encrypt(c.Context().Name, tempAuthRefreshToken, c.Context().GetState().Salt, c.Context().GetState().Nonce)
 		if err != nil {
 			return err

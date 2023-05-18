@@ -15,7 +15,6 @@ import (
 	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	"github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1"
 
-	"github.com/confluentinc/cli/internal/pkg/auth"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -233,6 +232,9 @@ func IsFlagRequired(flag *pflag.Flag) bool {
 // Authenticated provides PreRun operations for commands that require a logged-in Confluent Cloud user.
 func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
+		if err := r.Config.DecryptContextStates(); err != nil {
+			return err
+		}
 		if err := r.Anonymous(command.CLICommand, true)(cmd, args); err != nil {
 			return err
 		}
@@ -317,8 +319,8 @@ func (r *PreRun) setAuthenticatedContext(cliCommand *AuthenticatedCLICommand) er
 }
 
 func (r *PreRun) ccloudAutoLogin(netrcMachineName string) error {
-	manager := auth.NewLoginOrganizationManagerImpl()
-	organizationId := auth.GetLoginOrganization(
+	manager := pauth.NewLoginOrganizationManagerImpl()
+	organizationId := pauth.GetLoginOrganization(
 		manager.GetLoginOrganizationFromConfigurationFile(r.Config),
 		manager.GetLoginOrganizationFromEnvironmentVariable(),
 	)
@@ -513,6 +515,10 @@ func (r *PreRun) createCCloudClient(ctx *dynamicconfig.DynamicContext, ver *vers
 // Authenticated provides PreRun operations for commands that require a logged-in MDS user.
 func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
+		if err := r.Config.DecryptContextStates(); err != nil {
+			return err
+		}
+
 		if err := r.Anonymous(command.CLICommand, true)(cmd, args); err != nil {
 			return err
 		}
@@ -779,6 +785,10 @@ func createOnPremKafkaRestClient(ctx *dynamicconfig.DynamicContext, caCertPath s
 // HasAPIKey provides PreRun operations for commands that require an API key.
 func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
+		if err := r.Config.DecryptContextStates(); err != nil {
+			return err
+		}
+
 		if err := r.Anonymous(command.CLICommand, false)(cmd, args); err != nil {
 			return err
 		}
@@ -905,8 +915,8 @@ func (r *PreRun) getUpdatedAuthToken(ctx *dynamicconfig.DynamicContext, unsafeTr
 	}
 
 	if r.Config.IsCloudLogin() {
-		manager := auth.NewLoginOrganizationManagerImpl()
-		organizationId := auth.GetLoginOrganization(
+		manager := pauth.NewLoginOrganizationManagerImpl()
+		organizationId := pauth.GetLoginOrganization(
 			manager.GetLoginOrganizationFromConfigurationFile(r.Config),
 			manager.GetLoginOrganizationFromEnvironmentVariable(),
 		)
