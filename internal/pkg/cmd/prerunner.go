@@ -291,10 +291,6 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(*cobra.Com
 
 func (r *PreRun) ParseFlagsIntoContext(command *AuthenticatedCLICommand) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		if err := r.Config.DecryptContextStates(); err != nil {
-			return err
-		}
-
 		ctx := command.Context
 		return ctx.ParseFlagsIntoContext(cmd, command.Client)
 	}
@@ -668,10 +664,6 @@ func (r *PreRun) createMDSClient(ctx *dynamicconfig.DynamicContext, ver *version
 // Initializes a default KafkaRestClient
 func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		if err := r.Config.DecryptContextStates(); err != nil {
-			return err
-		}
-
 		// pass mds token as bearer token otherwise use http basic auth
 		// no error means user is logged in with mds and has valid token; on an error we try http basic auth since mds is not needed for RP commands
 		err := r.AuthenticatedWithMDS(command)(cmd, args)

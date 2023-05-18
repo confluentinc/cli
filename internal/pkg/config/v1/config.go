@@ -136,7 +136,7 @@ func New() *Config {
 
 func (c *Config) DecryptContextStates() error {
 	if c.CurrentContext != "" {
-		context := c.Contexts[c.CurrentContext]
+		context := c.Context()
 		state := c.ContextStates[context.Name]
 		if state != nil {
 			err := state.DecryptContextStateAuthToken(context.Name)
