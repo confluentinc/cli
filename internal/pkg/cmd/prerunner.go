@@ -232,10 +232,11 @@ func IsFlagRequired(flag *pflag.Flag) bool {
 // Authenticated provides PreRun operations for commands that require a logged-in Confluent Cloud user.
 func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		if err := r.Config.DecryptContextStates(); err != nil {
+		if err := r.Anonymous(command.CLICommand, true)(cmd, args); err != nil {
 			return err
 		}
-		if err := r.Anonymous(command.CLICommand, true)(cmd, args); err != nil {
+
+		if err := r.Config.DecryptContextStates(); err != nil {
 			return err
 		}
 
@@ -515,11 +516,11 @@ func (r *PreRun) createCCloudClient(ctx *dynamicconfig.DynamicContext, ver *vers
 // Authenticated provides PreRun operations for commands that require a logged-in MDS user.
 func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		if err := r.Config.DecryptContextStates(); err != nil {
+		if err := r.Anonymous(command.CLICommand, true)(cmd, args); err != nil {
 			return err
 		}
 
-		if err := r.Anonymous(command.CLICommand, true)(cmd, args); err != nil {
+		if err := r.Config.DecryptContextStates(); err != nil {
 			return err
 		}
 
@@ -785,11 +786,11 @@ func createOnPremKafkaRestClient(ctx *dynamicconfig.DynamicContext, caCertPath s
 // HasAPIKey provides PreRun operations for commands that require an API key.
 func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		if err := r.Config.DecryptContextStates(); err != nil {
+		if err := r.Anonymous(command.CLICommand, false)(cmd, args); err != nil {
 			return err
 		}
 
-		if err := r.Anonymous(command.CLICommand, false)(cmd, args); err != nil {
+		if err := r.Config.DecryptContextStates(); err != nil {
 			return err
 		}
 

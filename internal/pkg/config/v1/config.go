@@ -135,8 +135,7 @@ func New() *Config {
 }
 
 func (c *Config) DecryptContextStates() error {
-	if c.CurrentContext != "" {
-		context := c.Context()
+	if context := c.Context(); context != nil {
 		state := c.ContextStates[context.Name]
 		if state != nil {
 			err := state.DecryptContextStateAuthToken(context.Name)
@@ -268,8 +267,7 @@ func (c *Config) encryptContextStateTokens(tempAuthToken, tempAuthRefreshToken s
 		c.Context().GetState().Nonce = nonce
 	}
 
-	reg1 := regexp.MustCompile(authTokenRegex)
-	if tempAuthToken != "" && reg1.MatchString(tempAuthToken) {
+	if tempAuthToken != "" && regexp.MustCompile(authTokenRegex).MatchString(tempAuthToken) {
 		encryptedAuthToken, err := secret.Encrypt(c.Context().Name, tempAuthToken, c.Context().GetState().Salt, c.Context().GetState().Nonce)
 		if err != nil {
 			return err
@@ -277,8 +275,7 @@ func (c *Config) encryptContextStateTokens(tempAuthToken, tempAuthRefreshToken s
 		c.Context().GetState().AuthToken = encryptedAuthToken
 	}
 
-	reg2 := regexp.MustCompile(authRefreshTokenRegex)
-	if tempAuthRefreshToken != "" && reg2.MatchString(tempAuthRefreshToken) {
+	if tempAuthRefreshToken != "" && regexp.MustCompile(authRefreshTokenRegex).MatchString(tempAuthRefreshToken) {
 		encryptedAuthRefreshToken, err := secret.Encrypt(c.Context().Name, tempAuthRefreshToken, c.Context().GetState().Salt, c.Context().GetState().Nonce)
 		if err != nil {
 			return err
