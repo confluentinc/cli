@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -33,12 +34,11 @@ type command struct {
 	client  update.Client
 }
 
-func New(prerunner pcmd.PreRunner, version *pversion.Version, client update.Client) *cobra.Command {
+func New(cfg *v1.Config, prerunner pcmd.PreRunner, client update.Client) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "update",
-		Short:       fmt.Sprintf("Update the %s.", pversion.FullCLIName),
-		Args:        cobra.NoArgs,
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireUpdatesEnabled},
+		Use:   "update",
+		Short: fmt.Sprintf("Update the %s.", pversion.FullCLIName),
+		Args:  cobra.NoArgs,
 	}
 
 	cmd.Flags().BoolP("yes", "y", false, "Update without prompting.")
@@ -47,7 +47,7 @@ func New(prerunner pcmd.PreRunner, version *pversion.Version, client update.Clie
 
 	c := &command{
 		CLICommand: pcmd.NewAnonymousCLICommand(cmd, prerunner),
-		version:    version,
+		version:    cfg.Version,
 		client:     client,
 	}
 	cmd.RunE = c.update
