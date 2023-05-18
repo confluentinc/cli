@@ -15,7 +15,6 @@ import (
 	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	"github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1"
 
-	"github.com/confluentinc/cli/internal/pkg/auth"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -237,6 +236,10 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(*cobra.Com
 			return err
 		}
 
+		if err := r.Config.DecryptContextStates(); err != nil {
+			return err
+		}
+
 		setContextErr := r.setAuthenticatedContext(command)
 		if setContextErr != nil {
 			if _, ok := setContextErr.(*errors.NotLoggedInError); ok {
@@ -317,8 +320,8 @@ func (r *PreRun) setAuthenticatedContext(cliCommand *AuthenticatedCLICommand) er
 }
 
 func (r *PreRun) ccloudAutoLogin(netrcMachineName string) error {
-	manager := auth.NewLoginOrganizationManagerImpl()
-	organizationId := auth.GetLoginOrganization(
+	manager := pauth.NewLoginOrganizationManagerImpl()
+	organizationId := pauth.GetLoginOrganization(
 		manager.GetLoginOrganizationFromConfigurationFile(r.Config),
 		manager.GetLoginOrganizationFromEnvironmentVariable(),
 	)
@@ -514,6 +517,10 @@ func (r *PreRun) createCCloudClient(ctx *dynamicconfig.DynamicContext, ver *vers
 func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		if err := r.Anonymous(command.CLICommand, true)(cmd, args); err != nil {
+			return err
+		}
+
+		if err := r.Config.DecryptContextStates(); err != nil {
 			return err
 		}
 
@@ -783,6 +790,10 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(*cobra.Command, []
 			return err
 		}
 
+		if err := r.Config.DecryptContextStates(); err != nil {
+			return err
+		}
+
 		ctx := command.Config.Context()
 		if ctx == nil {
 			return new(errors.NotLoggedInError)
@@ -905,8 +916,8 @@ func (r *PreRun) getUpdatedAuthToken(ctx *dynamicconfig.DynamicContext, unsafeTr
 	}
 
 	if r.Config.IsCloudLogin() {
-		manager := auth.NewLoginOrganizationManagerImpl()
-		organizationId := auth.GetLoginOrganization(
+		manager := pauth.NewLoginOrganizationManagerImpl()
+		organizationId := pauth.GetLoginOrganization(
 			manager.GetLoginOrganizationFromConfigurationFile(r.Config),
 			manager.GetLoginOrganizationFromEnvironmentVariable(),
 		)
