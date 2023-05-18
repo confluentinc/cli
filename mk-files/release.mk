@@ -94,7 +94,7 @@ goreleaser-patches:
 .PHONY: set-acls
 set-acls:
 	$(aws-authenticate) && \
-	for file_type in binaries archives; do \
+	for file_type in archives binaries; do \
 		folder_path=confluent-cli/$${file_type}/$(VERSION_NO_V); \
 		echo "SETTING ACLS: $${folder_path}"; \
 		$(call dry-run,aws s3 cp $(S3_STAG_PATH)/$${folder_path} $(S3_STAG_PATH)/$${folder_path} --acl public-read --metadata dummy=dummy --recursive) || exit 1; \
