@@ -94,7 +94,10 @@ func (a *AuthTokenHandlerImpl) getCCloudSSOToken(client *ccloudv1.Client, noBrow
 		return "", "", err
 	}
 
-	req := &ccloudv1.AuthenticateRequest{IdToken: idToken}
+	req := &ccloudv1.AuthenticateRequest{
+		IdToken:       idToken,
+		OrgResourceId: orgResourceId,
+	}
 	res, err := login(client, req)
 	if err != nil {
 		return "", "", err
