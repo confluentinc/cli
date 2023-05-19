@@ -6,5 +6,5 @@ sign {
 }
 
 zip {
-  output_path = "./dist/confluent-darwin-amd64-homebrew_darwin_amd64_v1/confluent_signed.zip"
+  output_path = "./dist/confluent-darwin-amd64_darwin_amd64_v1/confluent_signed.zip"
 }
