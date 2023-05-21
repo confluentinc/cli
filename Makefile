@@ -4,15 +4,15 @@ GORELEASER_VERSION := v1.17.2
 .PHONY: build 
 build:
 ifneq "" "$(findstring NT,$(shell uname))" # windows
-	CC=gcc CXX=g++ make cli-builder
+	CC=gcc CXX=g++ $(MAKE) cli-builder
 else ifneq (,$(findstring Linux,$(shell uname)))
     ifneq (,$(findstring musl,$(shell ldd --version))) # linux (musl)
-		CC=gcc CXX=g++ TAGS=musl make cli-builder
+		CC=gcc CXX=g++ TAGS=musl $(MAKE) cli-builder
     else # linux (glibc)
-		CC=gcc CXX=g++ make cli-builder
+		CC=gcc CXX=g++ $(MAKE) cli-builder
     endif
 else # darwin
-	make cli-builder
+	$(MAKE) cli-builder
 endif
 
 # Cross-compile from darwin to any of the OS/Arch pairs below
@@ -20,17 +20,17 @@ endif
 cross-build:
 ifeq ($(GOARCH),arm64)
     ifeq ($(GOOS),linux) # linux/arm64
-		CGO_ENABLED=1 CC=aarch64-linux-musl-gcc CXX=aarch64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl make cli-builder
+		CGO_ENABLED=1 CC=aarch64-linux-musl-gcc CXX=aarch64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl $(MAKE) cli-builder
     else # darwin/arm64
-		CGO_ENABLED=1 make cli-builder
+		CGO_ENABLED=1 $(MAKE) cli-builder
     endif
 else
     ifeq ($(GOOS),windows) # windows/amd64
-		CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ CGO_LDFLAGS="-static" make cli-builder
+		CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ CGO_LDFLAGS="-static" $(MAKE) cli-builder
     else ifeq ($(GOOS),linux) # linux/amd64
-		CGO_ENABLED=1 CC=x86_64-linux-musl-gcc CXX=x86_64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl make cli-builder
+		CGO_ENABLED=1 CC=x86_64-linux-musl-gcc CXX=x86_64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl $(MAKE) cli-builder
     else # darwin/amd64
-		CGO_ENABLED=1 make cli-builder
+		CGO_ENABLED=1 $(MAKE) cli-builder
     endif
 endif
 
