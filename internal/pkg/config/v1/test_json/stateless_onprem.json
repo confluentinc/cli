@@ -1,7 +1,6 @@
 {
   "version": "1.0.0",
   "disable_update_check": false,
-  "disable_updates": false,
   "disable_plugins": false,
   "disable_feature_flags": false,
   "no_browser": false,

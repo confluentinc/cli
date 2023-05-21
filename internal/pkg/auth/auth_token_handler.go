@@ -80,20 +80,16 @@ func (a *AuthTokenHandlerImpl) GetCCloudTokens(clientFactory CCloudClientFactory
 }
 
 func (a *AuthTokenHandlerImpl) getCCloudSSOToken(client *ccloudv1.Client, noBrowser bool, email, orgResourceId string) (string, string, error) {
-	var auth0ConnectionName string
-	if !isOkta(client) {
-		userSSO, err := a.getCCloudUserSSO(client, email, orgResourceId)
-		if err != nil {
-			log.CliLogger.Debugf("unable to obtain user SSO info: %v", err)
-			return "", "", errors.Errorf(errors.FailedToObtainedUserSSOErrorMsg, email)
-		}
-		if userSSO == "" {
-			return "", "", errors.Errorf(errors.NonSSOUserErrorMsg, email)
-		}
-		auth0ConnectionName = userSSO
+	connectionName, err := a.getSsoConnectionName(client, email, orgResourceId)
+	if err != nil {
+		log.CliLogger.Debugf("unable to obtain user SSO info: %v", err)
+		return "", "", errors.Errorf(errors.FailedToObtainedUserSSOErrorMsg, email)
+	}
+	if connectionName == "" {
+		return "", "", errors.Errorf(errors.NonSSOUserErrorMsg, email)
 	}
 
-	idToken, refreshToken, err := sso.Login(client.BaseURL, noBrowser, auth0ConnectionName)
+	idToken, refreshToken, err := sso.Login(client.BaseURL, noBrowser, connectionName)
 	if err != nil {
 		return "", "", err
 	}
@@ -107,19 +103,18 @@ func (a *AuthTokenHandlerImpl) getCCloudSSOToken(client *ccloudv1.Client, noBrow
 	return res.GetToken(), refreshToken, err
 }
 
-func (a *AuthTokenHandlerImpl) getCCloudUserSSO(client *ccloudv1.Client, email, orgResourceId string) (string, error) {
-	auth0ClientId := sso.GetAuth0CCloudClientIdFromBaseUrl(client.BaseURL)
+func (a *AuthTokenHandlerImpl) getSsoConnectionName(client *ccloudv1.Client, email, orgResourceId string) (string, error) {
 	req := &ccloudv1.GetLoginRealmRequest{
 		Email:         email,
-		ClientId:      auth0ClientId,
+		ClientId:      sso.GetAuth0CCloudClientIdFromBaseUrl(client.BaseURL),
 		OrgResourceId: orgResourceId,
 	}
 	loginRealmReply, err := client.User.LoginRealm(req)
 	if err != nil {
 		return "", err
 	}
-	if loginRealmReply.IsSso {
-		return loginRealmReply.Realm, nil
+	if loginRealmReply.GetIsSso() {
+		return loginRealmReply.GetRealm(), nil
 	}
 	return "", nil
 }
@@ -165,13 +160,9 @@ func (a *AuthTokenHandlerImpl) checkSSOEmailMatchesLogin(client *ccloudv1.Client
 }
 
 func login(client *ccloudv1.Client, req *ccloudv1.AuthenticateRequest) (*ccloudv1.AuthenticateReply, error) {
-	if isOkta(client) {
+	if sso.IsOkta(client.BaseURL) {
 		return client.Auth.OktaLogin(req)
 	} else {
 		return client.Auth.Login(req)
 	}
-}
-
-func isOkta(client *ccloudv1.Client) bool {
-	return sso.GetCCloudEnvFromBaseUrl(client.BaseURL) == "fedramp-internal"
 }
