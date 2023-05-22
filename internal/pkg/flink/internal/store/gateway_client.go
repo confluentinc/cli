@@ -64,6 +64,7 @@ func (c *GatewayClient) DeleteStatement(ctx context.Context, statementName strin
 }
 
 func (c *GatewayClient) GetStatementResults(ctx context.Context, statementId, pageToken string) (v1.SqlV1alpha1StatementResult, *http.Response, error) {
+	ctx = context.WithValue(ctx, v1.ContextAccessToken, c.authToken())
 	fetchResultsRequest := c.client.StatementResultSqlV1alpha1Api.GetSqlV1alpha1StatementResult(ctx, c.envId, statementId)
 
 	if pageToken != "" {
