@@ -248,9 +248,8 @@ func getBinaryName(version, os, arch string) string {
 func findChecksum(content, binary string) (string, error) {
 	for _, line := range strings.Split(content, "\n") {
 		x := strings.Split(line, "  ")
-		checksum, name := x[0], x[1]
-		if name == binary {
-			return checksum, nil
+		if len(x) == 2 && x[1] == binary {
+			return x[0], nil
 		}
 	}
 	return "", fmt.Errorf("checksum not found for %s", binary)
