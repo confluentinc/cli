@@ -23,7 +23,7 @@ release: check-branch tag-release
 .PHONY: check-branch
 check-branch:
 	if [ $(shell git rev-parse --abbrev-ref HEAD) != main ] ; then \
-		@echo -n "WARNING: Current branch \"$(shell git rev-parse --abbrev-ref HEAD)\" is not the default release branch \"main\"!  Do you want to proceed? (y/n): "; \
+		echo -n "WARNING: Current branch \"$(shell git rev-parse --abbrev-ref HEAD)\" is not the default release branch \"main\"!  Do you want to proceed? (y/n): "; \
 		read line; if [ $$line != "y" ] && [ $$line != "Y" ]; then echo "Release cancelled."; exit 0; fi; \
 	fi
 
