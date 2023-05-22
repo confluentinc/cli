@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/http/httputil"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
 type Manifest struct {
@@ -45,9 +47,25 @@ func (c *Client) GetRemoteManifest(owner, name, version string) (*Manifest, erro
 		return nil, err
 	}
 
+	if c.Debug {
+		dump, err := httputil.DumpRequestOut(req, true)
+		if err != nil {
+			return nil, err
+		}
+		log.CliLogger.Tracef("\n%s\n", string(dump))
+	}
+
 	r, err := c.Client.Do(req)
 	if err != nil {
 		return nil, err
+	}
+
+	if c.Debug {
+		dump, err := httputil.DumpResponse(r, true)
+		if err != nil {
+			return nil, err
+		}
+		log.CliLogger.Tracef("\n%s\n", string(dump))
 	}
 
 	defer r.Body.Close()
@@ -77,6 +95,14 @@ func (c *Client) GetRemoteArchive(pluginManifest *Manifest) ([]byte, error) {
 	req, err := http.NewRequest(http.MethodGet, pluginManifest.Archive.Url, nil)
 	if err != nil {
 		return nil, err
+	}
+
+	if c.Debug {
+		dump, err := httputil.DumpRequestOut(req, true)
+		if err != nil {
+			return nil, err
+		}
+		log.CliLogger.Tracef("\n%s\n", string(dump))
 	}
 
 	r, err := c.Client.Do(req)
