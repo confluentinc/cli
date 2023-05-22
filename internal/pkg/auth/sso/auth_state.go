@@ -33,7 +33,6 @@ var (
 		"fedramp-internal": {
 			ssoProviderDomain: "confluent-infra-us-gov.oktapreview.com/oauth2/v1",
 			ssoProviderScope:  "openid+profile+email+offline_access",
-			ssoProviderIDP:    "0oa7fi3wpt9LC2ONd1d7",
 		},
 		"stag": {
 			ssoProviderDomain:     "login-stag.confluent-dev.io/oauth",
@@ -57,7 +56,6 @@ type ssoConfig struct {
 	ssoProviderDomain     string
 	ssoProviderIdentifier string
 	ssoProviderScope      string
-	ssoProviderIDP        string
 }
 
 /*
@@ -76,7 +74,6 @@ type authState struct {
 	SSOProviderCallbackUrl        string
 	SSOProviderIdentifier         string
 	SSOProviderScope              string
-	SSOProviderIDP                string
 }
 
 // InitState generates various auth0 related codes and hashes
@@ -112,7 +109,6 @@ func newState(authURL string, noBrowser bool) (*authState, error) {
 	state.SSOProviderClientID = GetAuth0CCloudClientIdFromBaseUrl(authURL)
 	state.SSOProviderIdentifier = ssoConfigs[env].ssoProviderIdentifier
 	state.SSOProviderScope = ssoConfigs[env].ssoProviderScope
-	state.SSOProviderIDP = ssoConfigs[env].ssoProviderIDP
 
 	if !noBrowser {
 		// if we're not using the no browser flow, the callback will always be localhost regardless of environment
@@ -204,8 +200,8 @@ func (s *authState) saveOAuthTokenResponse(data map[string]any) error {
 
 func (s *authState) getOAuthTokenResponse(payload *strings.Reader) (map[string]any, error) {
 	url := s.SSOProviderHost + "/token"
-	log.CliLogger.Debugf("Oauth token request URL: %s", url)
-	log.CliLogger.Debug("Oauth token request payload: ", payload)
+	log.CliLogger.Debugf("OAuth token request URL: %s", url)
+	log.CliLogger.Debug("OAuth token request payload: ", payload)
 	req, err := http.NewRequest(http.MethodPost, url, payload)
 	if err != nil {
 		return nil, errors.Wrap(err, errors.ConstructOAuthRequestErrorMsg)
@@ -226,7 +222,7 @@ func (s *authState) getOAuthTokenResponse(payload *strings.Reader) (map[string]a
 	return data, nil
 }
 
-func (s *authState) getAuthorizationCodeUrl(ssoProviderConnectionName string) string {
+func (s *authState) getAuthorizationCodeUrl(ssoProviderConnectionName string, isOkta bool) string {
 	url := s.SSOProviderHost + "/authorize?" +
 		"response_type=code" +
 		"&code_challenge=" + s.CodeChallenge +
@@ -239,7 +235,10 @@ func (s *authState) getAuthorizationCodeUrl(ssoProviderConnectionName string) st
 	if s.SSOProviderIdentifier != "" {
 		url += "&audience=" + s.SSOProviderIdentifier
 	}
-	if ssoProviderConnectionName != "" {
+
+	if isOkta {
+		url += "&idp=" + ssoProviderConnectionName
+	} else {
 		url += "&connection=" + ssoProviderConnectionName
 	}
 

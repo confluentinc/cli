@@ -1,25 +1,12 @@
-.PHONY: release-notes
-release-notes:
-	$(eval DIR=$(shell mktemp -d))
-	$(eval DOCS_CONFLUENT_CLI=$(DIR)/docs-confluent-cli)
-
-	git clone git@github.com:confluentinc/docs-confluent-cli.git $(DOCS_CONFLUENT_CLI) && \
-	go run -ldflags '-X main.releaseNotesPath=$(DOCS_CONFLUENT_CLI)' cmd/releasenotes/main.go && \
-	version=$$(cat release-notes/version.txt) && \
-	cd $(DOCS_CONFLUENT_CLI) && \
-	if [[ $${version} != *.0 ]]; then \
-		git checkout $$(echo $${version} | sed $(STAGING_BRANCH_REGEX)); \
-	fi && \
-	git checkout -b publish-docs-v$${version} && \
-	cd - && \
-	cp release-notes/release-notes.rst $(DOCS_CONFLUENT_CLI) && \
-	cd $(DOCS_CONFLUENT_CLI) && \
-	git commit -am "New release notes for v$${version}" && \
-	$(call dry-run,git push -u origin publish-docs-v$${version})
-
-	rm -rf $(DIR)
-
 .PHONY: publish-release-notes-to-s3
 publish-release-notes-to-s3:
-	$(aws-authenticate); \
-    $(call dry-run,aws s3 cp release-notes/latest-release.rst $(S3_BUCKET_PATH)/confluent-cli/release-notes/$$(cat release-notes/version.txt)/release-notes.rst --acl public-read)
+	$(eval DIR=$(shell mktemp -d))
+	$(eval CLI_RELEASE=$(DIR)/cli-release)
+
+	git clone git@github.com:confluentinc/cli-release.git $(CLI_RELEASE) && \
+	version=$$(ls $(CLI_RELEASE)/release-notes | sed -e s/.json$$// | sort --version-sort | tail -1) && \
+	go run $(CLI_RELEASE)/cmd/releasenotes/formatter/main.go $(CLI_RELEASE)/release-notes/$${version}.json s3 > $(DIR)/release.txt && \
+	$(aws-authenticate) && \
+    $(call dry-run,aws s3 cp $(DIR)/release.txt $(S3_BUCKET_PATH)/confluent-cli/release-notes/$${version}/release-notes.rst --acl public-read)
+
+	rm -rf $(DIR)

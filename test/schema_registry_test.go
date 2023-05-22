@@ -10,6 +10,8 @@ func (s *CLITestSuite) TestSchemaRegistry() {
 	// TODO: add --config flag to all commands or ENVVAR instead of using standard config file location
 	schemaPath := GetInputFixturePath(s.T(), "schema-registry", "schema-example.json")
 	exporterConfigPath := GetInputFixturePath(s.T(), "schema-registry", "schema-exporter-config.txt")
+	metadataPath := GetInputFixturePath(s.T(), "schema-registry", "schema-metadata.json")
+	rulesetPath := GetInputFixturePath(s.T(), "schema-registry", "schema-ruleset.json")
 
 	tests := []CLITest{
 		{args: "schema-registry --help", fixture: "schema-registry/help.golden"},
@@ -103,6 +105,11 @@ func (s *CLITestSuite) TestSchemaRegistry() {
 			fixture: "schema-registry/schema/create.golden",
 		},
 		{
+			name:    "schema-registry schema create with metadata and ruleset",
+			args:    fmt.Sprintf(`schema-registry schema create --subject payments --schema %s --metadata %s --ruleset %s --api-key key --api-secret secret --environment %s`, schemaPath, metadataPath, rulesetPath, testserver.SRApiEnvId),
+			fixture: "schema-registry/schema/create.golden",
+		},
+		{
 			name:    "schema-registry compatibility validate",
 			args:    fmt.Sprintf(`schema-registry compatibility validate --subject payments --version 1 --schema %s --api-key key --api-secret secret --environment %s`, schemaPath, testserver.SRApiEnvId),
 			fixture: "schema-registry/compatibility/validate.golden",
@@ -171,6 +178,11 @@ func (s *CLITestSuite) TestSchemaRegistry() {
 			fixture: "schema-registry/schema/describe-refs-id.golden",
 		},
 		{
+			name:    "schema-registry schema describe 1005",
+			args:    fmt.Sprintf(`schema-registry schema describe 1005 --api-key key --api-secret secret --environment %s`, testserver.SRApiEnvId),
+			fixture: "schema-registry/schema/describe-with-ruleset.golden",
+		},
+		{
 			name:    "schema-registry schema describe --subject lvl0 --version 1 --show-references",
 			args:    fmt.Sprintf(`schema-registry schema describe --subject lvl0 --version 1 --show-references --api-key key --api-secret secret --environment %s`, testserver.SRApiEnvId),
 			fixture: "schema-registry/schema/describe-refs-subject.golden",
@@ -198,6 +210,11 @@ func (s *CLITestSuite) TestSchemaRegistry() {
 		{
 			name:    "schema-registry subject update compatibility",
 			args:    fmt.Sprintf(`schema-registry subject update testSubject --compatibility BACKWARD --api-key key --api-secret secret --environment %s`, testserver.SRApiEnvId),
+			fixture: "schema-registry/subject/update-compatibility.golden",
+		},
+		{
+			name:    "schema-registry subject update compatibility with metadata and ruleset",
+			args:    fmt.Sprintf(`schema-registry subject update testSubject --compatibility BACKWARD --compatibility-group application.version --metadata-defaults %s --ruleset-defaults %s --api-key key --api-secret secret --environment %s`, metadataPath, rulesetPath, testserver.SRApiEnvId),
 			fixture: "schema-registry/subject/update-compatibility.golden",
 		},
 		{

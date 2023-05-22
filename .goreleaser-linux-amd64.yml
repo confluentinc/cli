@@ -1,0 +1,39 @@
+project_name: confluent
+
+builds:
+  - id: confluent-linux-amd64
+    binary: confluent
+    main: cmd/confluent/main.go
+    flags:
+      - -mod=vendor
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}}
+    gcflags:
+      - all=-trimpath={{.Env.HOME}}/git
+    asmflags:
+      - all=-trimpath={{.Env.HOME}}/git
+    goos:
+      - linux
+    goarch:
+      - amd64
+  - id: confluent-linux-amd64-homebrew
+    binary: confluent
+    main: cmd/confluent/main.go
+    flags:
+      - -mod=vendor
+    ldflags:
+      - -s -w -X main.version={{.Env.VERSION}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.disableUpdates=true
+    gcflags:
+      - all=-trimpath={{.Env.HOME}}/git
+    asmflags:
+      - all=-trimpath={{.Env.HOME}}/git
+    goos:
+      - linux
+    goarch:
+      - amd64
+
+release:
+  disable: true
+
+archives:
+  - format: binary

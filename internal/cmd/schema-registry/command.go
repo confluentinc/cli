@@ -51,6 +51,30 @@ func addCompatibilityFlag(cmd *cobra.Command) {
 	})
 }
 
+func addCompatibilityGroupFlag(cmd *cobra.Command) {
+	cmd.Flags().String("compatibility-group", "", "The name of the compatibility group.")
+}
+
+func addMetadataDefaultsFlag(cmd *cobra.Command) {
+	cmd.Flags().String("metadata-defaults", "", "The path to the schema metadata defaults file.")
+	cobra.CheckErr(cmd.MarkFlagFilename("metadata-defaults", "json"))
+}
+
+func addMetadataOverridesFlag(cmd *cobra.Command) {
+	cmd.Flags().String("metadata-overrides", "", "The path to the schema metadata overrides file.")
+	cobra.CheckErr(cmd.MarkFlagFilename("metadata-overrides", "json"))
+}
+
+func addRulesetDefaultsFlag(cmd *cobra.Command) {
+	cmd.Flags().String("ruleset-defaults", "", "The path to the schema ruleset defaults file.")
+	cobra.CheckErr(cmd.MarkFlagFilename("ruleset-defaults", "json"))
+}
+
+func addRulesetOverridesFlag(cmd *cobra.Command) {
+	cmd.Flags().String("ruleset-overrides", "", "The path to the schema ruleset overrides file.")
+	cobra.CheckErr(cmd.MarkFlagFilename("ruleset-overrides", "json"))
+}
+
 func addModeFlag(cmd *cobra.Command) {
 	modes := []string{"readwrite", "readonly", "import"}
 	cmd.Flags().String("mode", "", fmt.Sprintf("Can be %s.", utils.ArrayToCommaDelimitedString(modes, "or")))
