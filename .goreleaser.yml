@@ -57,7 +57,8 @@ builds:
     hooks:
       post:
         - cmd: make download-licenses
-        - cmd: gon scripts/gon_confluent_darwin_amd64.hcl
+        - cmd: bash scripts/gon_filepath_editor.sh {{ .Path }} amd64
+        - cmd: gon dist/gon_confluent_darwin_amd64.hcl
           output: true
   - id: confluent-darwin-amd64-homebrew
     binary: confluent
@@ -76,7 +77,8 @@ builds:
       - amd64
     hooks:
       post:
-        - cmd: gon scripts/gon_confluent_darwin_amd64_homebrew.hcl
+        - cmd: bash scripts/gon_filepath_editor.sh {{ .Path }} amd64_homebrew
+        - cmd: gon dist/gon_confluent_darwin_amd64_homebrew.hcl
           output: true
   - id: confluent-darwin-arm64
     binary: confluent
@@ -95,7 +97,8 @@ builds:
       - arm64
     hooks:
       post:
-        - cmd: gon scripts/gon_confluent_darwin_arm64.hcl
+        - cmd: bash scripts/gon_filepath_editor.sh {{ .Path }} arm64
+        - cmd: gon dist/gon_confluent_darwin_arm64.hcl
           output: true
   - id: confluent-darwin-arm64-homebrew
     binary: confluent
@@ -116,7 +119,8 @@ builds:
       - arm64
     hooks:
       post:
-        - cmd: gon scripts/gon_confluent_darwin_arm64_homebrew.hcl
+        - cmd: bash scripts/gon_filepath_editor.sh {{ .Path }} arm64_homebrew
+        - cmd: gon dist/gon_confluent_darwin_arm64_homebrew.hcl
           output: true
   - id: confluent-linux
     builder: prebuilt
@@ -296,5 +300,5 @@ brews:
     url_template: "{{ .Env.S3FOLDER }}/archives/{{ .Version }}/{{ .ArtifactName }}"
     homepage: https://docs.confluent.io/confluent-cli/current/overview.html
     description: CLI for Confluent Cloud and Confluent Platform
-    skip_upload: true
+    skip_upload: "{{ .Env.DRY_RUN }}"
     test: system "#{bin}/confluent version"

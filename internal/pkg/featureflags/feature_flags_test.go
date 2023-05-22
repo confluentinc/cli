@@ -40,7 +40,7 @@ func (suite *LaunchDarklyTestSuite) TestFlags() {
 	defer server.Close()
 	ld := launchDarklyManager{
 		cliClient: sling.New().Base(server.GetCloudUrl() + "/ldapi/sdk/eval/1234/"),
-		version:   version.NewVersion("v1.2", "", ""),
+		version:   version.NewVersion("1.2", "", ""),
 	}
 	ctx := dynamicconfig.NewDynamicContext(v1.AuthenticatedCloudConfigMock().Context(), nil, nil)
 	req := require.New(suite.T())
@@ -90,7 +90,7 @@ func (suite *LaunchDarklyTestSuite) TestJsonVariation() {
 
 func (suite *LaunchDarklyTestSuite) TestContextToLDUser() {
 	req := require.New(suite.T())
-	ld := launchDarklyManager{version: version.NewVersion("v1.2", "", "")}
+	ld := launchDarklyManager{version: version.NewVersion("1.2", "", "")}
 
 	user := ld.contextToLDUser(suite.ctx)
 	resourceId, _ := user.GetCustom("user.resource_id")
