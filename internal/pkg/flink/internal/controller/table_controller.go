@@ -8,12 +8,12 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/confluentinc/flink-sql-client/components"
+	"github.com/confluentinc/cli/internal/pkg/flink/components"
 
-	"github.com/confluentinc/flink-sql-client/internal/results"
-	"github.com/confluentinc/flink-sql-client/internal/store"
+	"github.com/confluentinc/cli/internal/pkg/flink/internal/results"
+	"github.com/confluentinc/cli/internal/pkg/flink/internal/store"
 
-	"github.com/confluentinc/flink-sql-client/pkg/types"
+	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
 
 	"github.com/atotto/clipboard"
 	"github.com/gdamore/tcell/v2"

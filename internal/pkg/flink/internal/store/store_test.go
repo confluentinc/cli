@@ -16,9 +16,9 @@ import (
 
 	v1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"
 
-	"github.com/confluentinc/flink-sql-client/config"
-	"github.com/confluentinc/flink-sql-client/pkg/types"
-	"github.com/confluentinc/flink-sql-client/test/mock"
+	"github.com/confluentinc/cli/internal/pkg/flink/config"
+	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
+	"github.com/confluentinc/cli/internal/pkg/flink/test/mock"
 	gomock "github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"

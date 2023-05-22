@@ -1,4 +1,4 @@
-module github.com/confluentinc/flink-sql-client
+module github.com/confluentinc/cli/internal/pkg/flink
 
 go 1.20
 

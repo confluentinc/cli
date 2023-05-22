@@ -3,11 +3,11 @@ package app
 import (
 	"sync"
 
-	"github.com/confluentinc/flink-sql-client/components"
-	"github.com/confluentinc/flink-sql-client/internal/controller"
-	"github.com/confluentinc/flink-sql-client/internal/history"
-	"github.com/confluentinc/flink-sql-client/internal/store"
-	"github.com/confluentinc/flink-sql-client/pkg/types"
+	"github.com/confluentinc/cli/internal/pkg/flink/components"
+	"github.com/confluentinc/cli/internal/pkg/flink/internal/controller"
+	"github.com/confluentinc/cli/internal/pkg/flink/internal/history"
+	"github.com/confluentinc/cli/internal/pkg/flink/internal/store"
+	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )

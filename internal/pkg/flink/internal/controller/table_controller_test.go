@@ -4,15 +4,15 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/confluentinc/flink-sql-client/internal/results"
+	"github.com/confluentinc/cli/internal/pkg/flink/internal/results"
 	"github.com/stretchr/testify/suite"
 	"pgregory.net/rapid"
 
-	"github.com/confluentinc/flink-sql-client/pkg/types"
+	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
 	"github.com/rivo/tview"
 
-	"github.com/confluentinc/flink-sql-client/components"
-	"github.com/confluentinc/flink-sql-client/test/mock"
+	"github.com/confluentinc/cli/internal/pkg/flink/components"
+	"github.com/confluentinc/cli/internal/pkg/flink/test/mock"
 	"github.com/gdamore/tcell/v2"
 	gomock "github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"

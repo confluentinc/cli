@@ -10,12 +10,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/confluentinc/flink-sql-client/pkg/types"
+	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
 
 	v1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"
 	"github.com/samber/lo"
 
-	"github.com/confluentinc/flink-sql-client/config"
+	"github.com/confluentinc/cli/internal/pkg/flink/config"
 )
 
 type StatementType string

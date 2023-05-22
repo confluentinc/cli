@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/confluentinc/flink-sql-client/config"
-	"github.com/confluentinc/flink-sql-client/test/generators"
+	"github.com/confluentinc/cli/internal/pkg/flink/config"
+	"github.com/confluentinc/cli/internal/pkg/flink/test/generators"
 	prompt "github.com/confluentinc/go-prompt"
 	"github.com/stretchr/testify/require"
 	"pgregory.net/rapid"

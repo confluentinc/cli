@@ -1,7 +1,7 @@
 package results
 
 import (
-	"github.com/confluentinc/flink-sql-client/pkg/types"
+	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
 	"sync"
 )
 

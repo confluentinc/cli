@@ -3,7 +3,7 @@ package results
 import (
 	"errors"
 	v1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"
-	"github.com/confluentinc/flink-sql-client/pkg/types"
+	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
 )
 
 func convertToInternalField(field v1.SqlV1alpha1ResultItemRowOneOf, details v1.ColumnDetails) types.StatementResultField {

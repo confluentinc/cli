@@ -10,10 +10,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/confluentinc/flink-sql-client/test/generators"
+	"github.com/confluentinc/cli/internal/pkg/flink/test/generators"
 
-	"github.com/confluentinc/flink-sql-client/internal/results"
-	"github.com/confluentinc/flink-sql-client/pkg/types"
+	"github.com/confluentinc/cli/internal/pkg/flink/internal/results"
+	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
 )
 
 const (

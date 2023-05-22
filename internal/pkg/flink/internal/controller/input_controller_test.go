@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/confluentinc/flink-sql-client/internal/history"
-	"github.com/confluentinc/flink-sql-client/pkg/types"
-	"github.com/confluentinc/flink-sql-client/test/mock"
+	"github.com/confluentinc/cli/internal/pkg/flink/internal/history"
+	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
+	"github.com/confluentinc/cli/internal/pkg/flink/test/mock"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"

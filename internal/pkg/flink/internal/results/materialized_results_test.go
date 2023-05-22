@@ -1,8 +1,8 @@
 package results
 
 import (
-	"github.com/confluentinc/flink-sql-client/pkg/types"
-	"github.com/confluentinc/flink-sql-client/test/generators"
+	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
+	"github.com/confluentinc/cli/internal/pkg/flink/test/generators"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"pgregory.net/rapid"

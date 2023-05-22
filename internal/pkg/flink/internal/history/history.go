@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/confluentinc/flink-sql-client/config"
+	"github.com/confluentinc/cli/internal/pkg/flink/config"
 )
 
 const HISTORY_FILE_NAME = "statements_history.json"

@@ -3,8 +3,8 @@ package controller
 import (
 	"os"
 
-	"github.com/confluentinc/flink-sql-client/internal/history"
-	"github.com/confluentinc/flink-sql-client/pkg/types"
+	"github.com/confluentinc/cli/internal/pkg/flink/internal/history"
+	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
 	"github.com/rivo/tview"
 )
 

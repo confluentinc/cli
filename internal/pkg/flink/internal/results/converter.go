@@ -2,7 +2,7 @@ package results
 
 import (
 	v1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"
-	"github.com/confluentinc/flink-sql-client/pkg/types"
+	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
 )
 
 var nullField = types.AtomicStatementResultField{
