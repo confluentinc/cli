@@ -14,7 +14,7 @@ import (
 
 // Injected from linker flags like `go build -ldflags "-X main.version=$VERSION" -X ...`
 var (
-	version        = "v0.0.0"
+	version        = "0.0.0"
 	commit         = ""
 	date           = ""
 	disableUpdates = "false"
