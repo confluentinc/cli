@@ -78,7 +78,7 @@ func newExportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.Flags().String("schema-registry-api-key", "", "API key for Schema Registry.")
 	cmd.Flags().String("schema-registry-api-secret", "", "API secret for Schema Registry.")
 	cmd.Flags().String("schema-context", "default", "Use a specific schema context.")
-	cmd.Flags().StringSlice("topics", nil, "A comma-separated list of topics to export.")
+	cmd.Flags().StringSlice("topics", nil, "A comma-separated list of topics to export. Supports prefixes ending in wildcard (*).")
 	pcmd.AddValueFormatFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -108,12 +108,22 @@ func (c *command) export(cmd *cobra.Command, _ []string) error {
 	}
 	channelCount := 0
 
-	topicsSpecified := types.NewSet(flags.topics...)
+	topicsSpecified := types.NewSet()
+	var prefixesSpecified []string
+	// Split user-specified topics into topics/topic prefixes
+	for _, userTopic := range flags.topics {
+		if userTopic[len(userTopic)-1:] == "*" {
+			prefixesSpecified = append(prefixesSpecified, userTopic)
+		} else {
+			topicsSpecified.Add(userTopic)
+		}
+	}
+
 	for _, topic := range accountDetails.topics {
-		// Only use user-specified topics if parameter passed
-		if len(topicsSpecified) > 0 && !topicsSpecified.Contains(topic.GetTopicName()) {
+		if !topicMatch(topic.GetTopicName(), topicsSpecified, prefixesSpecified) {
 			continue
 		}
+
 		for _, subject := range accountDetails.subjects {
 			if subject != schemaContextPrefix+topic.GetTopicName()+"-value" || strings.HasPrefix(topic.GetTopicName(), "_") {
 				// Avoid internal topics or if subject does not follow topic naming strategy
@@ -574,4 +584,22 @@ func createConsumer(broker string, clusterCreds *v1.APIKeyPair, groupId string) 
 		return nil, fmt.Errorf("failed to create Kafka consumer: %v", err)
 	}
 	return consumer, nil
+}
+
+// Check if topic matches user-specified topics/prefixes. True if user didn't specify
+func topicMatch(topic string, topics types.Set, prefixes []string) bool {
+	if len(topics) == 0 && len(prefixes) == 0 {
+		return true
+	}
+
+	if topics.Contains(topic) {
+		return true
+	}
+
+	for _, prefix := range prefixes {
+		if strings.HasPrefix(topic, prefix[:len(prefix)-1]) {
+			return true
+		}
+	}
+	return false
 }
