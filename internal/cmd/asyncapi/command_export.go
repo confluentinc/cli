@@ -112,6 +112,9 @@ func (c *command) export(cmd *cobra.Command, _ []string) error {
 	var prefixesSpecified []string
 	// Split user-specified topics into topics/topic prefixes
 	for _, userTopic := range flags.topics {
+		if len(userTopic) == 0 {
+			continue
+		}
 		if userTopic[len(userTopic)-1:] == "*" {
 			prefixesSpecified = append(prefixesSpecified, userTopic)
 		} else {
