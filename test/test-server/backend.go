@@ -13,6 +13,7 @@ var (
 	TestCloudUrl          = url.URL{Scheme: "http", Host: "127.0.0.1:1024"}
 	TestKafkaRestProxyUrl = url.URL{Scheme: "http", Host: "127.0.0.1:1025"}
 	TestV2CloudUrl        = url.URL{Scheme: "http", Host: "127.0.0.1:2048"}
+	TestHubUrl            = url.URL{Scheme: "http", Host: "127.0.0.1:4096"}
 )
 
 // TestBackend consists of the servers for necessary mocked backend services

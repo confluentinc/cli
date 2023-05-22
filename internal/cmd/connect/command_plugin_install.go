@@ -19,34 +19,10 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
+	"github.com/confluentinc/cli/internal/pkg/hub"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
-
-type manifest struct {
-	Name     string    `json:"name"`
-	Title    string    `json:"title"`
-	Version  string    `json:"version"`
-	Owner    owner     `json:"owner"`
-	Archive  archive   `json:"archive"`
-	Licenses []license `json:"license"`
-}
-
-type owner struct {
-	Username string `json:"username"`
-	Name     string `json:"name"`
-}
-
-type archive struct {
-	Url  string `json:"url"`
-	Md5  string `json:"md5"`
-	Sha1 string `json:"sha1"`
-}
-
-type license struct {
-	Name string `json:"name"`
-	Url  string `json:"url"`
-}
 
 const (
 	invalidDirectoryErrorMsg       = `plugin directory "%s" does not exist`
@@ -91,7 +67,7 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 		output.Println("[DRY RUN] Performing a dry run of this command.")
 	}
 
-	pluginManifest, err := getManifest(args[0])
+	pluginManifest, err := c.getManifest(args[0])
 	if err != nil {
 		return err
 	}
@@ -150,7 +126,7 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 				return err
 			}
 		} else {
-			if err := installFromRemote(pluginManifest, pluginDir); err != nil {
+			if err := c.installFromRemote(pluginManifest, pluginDir); err != nil {
 				return err
 			}
 		}
@@ -207,7 +183,7 @@ func parsePluginId(plugin string) (string, string, string, error) {
 	return ownerNameSplit[0], nameVersionSplit[0], nameVersionSplit[1], nil
 }
 
-func getManifest(id string) (*manifest, error) {
+func (c *pluginCommand) getManifest(id string) (*hub.Manifest, error) {
 	if utils.DoesPathExist(id) {
 		// if installing plugin from local archive
 		return getLocalManifest(id)
@@ -218,11 +194,11 @@ func getManifest(id string) (*manifest, error) {
 			return nil, err
 		}
 
-		return getRemoteManifest(owner, name, version)
+		return c.HubClient.GetRemoteManifest(owner, name, version)
 	}
 }
 
-func getLocalManifest(archivePath string) (*manifest, error) {
+func getLocalManifest(archivePath string) (*hub.Manifest, error) {
 	zipReader, err := zip.OpenReader(archivePath)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to open local archive file %s", archivePath)
@@ -247,7 +223,7 @@ func getLocalManifest(archivePath string) (*manifest, error) {
 				return nil, err
 			}
 
-			pluginManifest := new(manifest)
+			pluginManifest := new(hub.Manifest)
 			if err := json.Unmarshal(jsonByteArr, &pluginManifest); err != nil {
 				return nil, err
 			}
@@ -300,7 +276,7 @@ func getWorkerConfigsFromFlag(cmd *cobra.Command) ([]string, error) {
 	return workerConfigs, errs.ErrorOrNil()
 }
 
-func existingPluginInstallation(pluginDir string, pluginManifest *manifest) ([]string, error) {
+func existingPluginInstallation(pluginDir string, pluginManifest *hub.Manifest) ([]string, error) {
 	// Bundled installations
 	if utils.DoesPathExist(filepath.Join(pluginDir, pluginManifest.Name)) {
 		return nil, errors.New("unable to install plugin because it is already bundled")
@@ -352,7 +328,7 @@ func replacePluginInstallation(pathToPlugin string, prompt form.Prompt, dryRun, 
 	return nil
 }
 
-func installFromLocal(pluginManifest *manifest, archivePath, pluginDir string) error {
+func installFromLocal(pluginManifest *hub.Manifest, archivePath, pluginDir string) error {
 	zipReader, err := zip.OpenReader(archivePath)
 	if err != nil {
 		return errors.Wrapf(err, "failed to open local archive file %s", archivePath)
@@ -362,8 +338,8 @@ func installFromLocal(pluginManifest *manifest, archivePath, pluginDir string) e
 	return unzipPlugin(pluginManifest, zipReader.File, pluginDir)
 }
 
-func installFromRemote(pluginManifest *manifest, pluginDir string) error {
-	archive, err := getRemoteArchive(pluginManifest)
+func (c *pluginCommand) installFromRemote(pluginManifest *hub.Manifest, pluginDir string) error {
+	archive, err := c.HubClient.GetRemoteArchive(pluginManifest)
 	if err != nil {
 		return err
 	}
@@ -386,7 +362,7 @@ func installFromRemote(pluginManifest *manifest, pluginDir string) error {
 	return unzipPlugin(pluginManifest, zipReader.File, pluginDir)
 }
 
-func unzipPlugin(pluginManifest *manifest, zipFiles []*zip.File, pluginDir string) error {
+func unzipPlugin(pluginManifest *hub.Manifest, zipFiles []*zip.File, pluginDir string) error {
 	relativeInstallationDir := filepath.Join(pluginDir, fmt.Sprintf("%s-%s", pluginManifest.Owner.Username, pluginManifest.Name))
 	installationDir, err := filepath.Abs(relativeInstallationDir)
 	if err != nil {
@@ -429,7 +405,7 @@ func unzipPlugin(pluginManifest *manifest, zipFiles []*zip.File, pluginDir strin
 	return nil
 }
 
-func checkLicenseAcceptance(pluginManifest *manifest, prompt form.Prompt, force bool) error {
+func checkLicenseAcceptance(pluginManifest *hub.Manifest, prompt form.Prompt, force bool) error {
 	for _, license := range pluginManifest.Licenses {
 		if force {
 			output.Printf("\nImplicitly agreeing to the following license:\n%s\n%s\n", license.Name, license.Url)

@@ -23,6 +23,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/featureflags"
 	"github.com/confluentinc/cli/internal/pkg/form"
+	"github.com/confluentinc/cli/internal/pkg/hub"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -70,6 +71,7 @@ type AuthenticatedCLICommand struct {
 	V2Client          *ccloudv2.Client
 	MDSClient         *mds.APIClient
 	MDSv2Client       *mdsv2alpha1.APIClient
+	HubClient         *hub.Client
 	KafkaRESTProvider *KafkaRESTProvider
 	Context           *dynamicconfig.DynamicContext
 	State             *v1.ContextState
@@ -283,6 +285,10 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(*cobra.Com
 			return err
 		}
 
+		if err := r.setHubClient(command); err != nil {
+			return err
+		}
+
 		return nil
 	}
 }
@@ -465,6 +471,16 @@ func (r *PreRun) setV2Clients(cliCmd *AuthenticatedCLICommand) error {
 	cliCmd.V2Client = v2Client
 	cliCmd.Context.V2Client = v2Client
 	cliCmd.Config.V2Client = v2Client
+	return nil
+}
+
+func (r *PreRun) setHubClient(cliCmd *AuthenticatedCLICommand) error {
+	unsafeTrace, err := cliCmd.Flags().GetBool("unsafe-trace")
+	if err != nil {
+		return err
+	}
+
+	cliCmd.HubClient = hub.NewClient(cliCmd.Config.IsTest, unsafeTrace)
 	return nil
 }
 
