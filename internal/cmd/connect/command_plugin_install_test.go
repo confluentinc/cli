@@ -131,7 +131,7 @@ func TestUnzipPlugin(t *testing.T) {
 	require.NoError(t, err)
 
 	manifest := &ccstructs.Manifest{
-		Name: "unit-test-plugin",
+		Name:    "unit-test-plugin",
 		Version: "0.0.0",
 		Owner: ccstructs.Owner{
 			Username: "confluentinc",
