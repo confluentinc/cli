@@ -3,7 +3,7 @@ ARCHIVE_TYPES=darwin_amd64.tar.gz darwin_arm64.tar.gz linux_amd64.tar.gz linux_a
 # If you set up your laptop following https://github.com/confluentinc/cc-documentation/blob/master/Operations/Laptop%20Setup.md
 # then assuming caas.sh lives here should be fine
 define aws-authenticate
-	$(call dry-run,assume cc-production-1/prod-administrator)
+	$(call dry-run,export AWS_PROFILE=cc-production-1/prod-administrator)
 endef
 
 
