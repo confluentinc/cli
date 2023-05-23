@@ -1,18 +1,18 @@
 .PHONY: verify-stag
 verify-stag:
-	OVERRIDE_S3_FOLDER=$(S3_STAG_FOLDER_NAME) make verify-archive-installer
-	$(call dry-run,OVERRIDE_S3_FOLDER=$(S3_STAG_FOLDER_NAME) make smoke-tests)
-	VERIFY_BIN_FOLDER=$(S3_STAG_PATH) make verify-binaries
+	OVERRIDE_S3_FOLDER=$(S3_STAG_FOLDER_NAME) $(MAKE) verify-archive-installer
+	$(call dry-run,OVERRIDE_S3_FOLDER=$(S3_STAG_FOLDER_NAME) $(MAKE) smoke-tests)
+	VERIFY_BIN_FOLDER=$(S3_STAG_PATH) $(MAKE) verify-binaries
 
 .PHONY: verify-prod
 verify-prod:
-	OVERRIDE_S3_FOLDER="" make verify-archive-installer
-	VERIFY_BIN_FOLDER=$(S3_BUCKET_PATH) make verify-binaries
+	OVERRIDE_S3_FOLDER="" $(MAKE) verify-archive-installer
+	VERIFY_BIN_FOLDER=$(S3_BUCKET_PATH) $(MAKE) verify-binaries
 
 .PHONY: verify-archive-installer
 verify-archive-installer:
-	OVERRIDE_S3_FOLDER=$(OVERRIDE_S3_FOLDER) ARCHIVES_VERSION="" make test-installer
-	OVERRIDE_S3_FOLDER=$(OVERRIDE_S3_FOLDER) ARCHIVES_VERSION=v$(CLEAN_VERSION) make test-installer
+	OVERRIDE_S3_FOLDER=$(OVERRIDE_S3_FOLDER) ARCHIVES_VERSION="" $(MAKE) test-installer
+	OVERRIDE_S3_FOLDER=$(OVERRIDE_S3_FOLDER) ARCHIVES_VERSION=v$(CLEAN_VERSION) $(MAKE) test-installer
 	@echo "*** ARCHIVES VERIFICATION PASSED!!! ***"
 
 # if ARCHIVES_VERSION is empty, latest folder will be tested
