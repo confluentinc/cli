@@ -95,7 +95,7 @@ func (c *GatewayClient) propsDefault(propsWithoutDefault map[string]string) map[
 		properties[configKeyExecutionRuntime] = "streaming"
 	}
 	if _, ok := properties[configKeyLocalTimeZone]; !ok {
-		properties[configKeyExecutionRuntime] = getLocalTimezone()
+		properties[configKeyLocalTimeZone] = getLocalTimezone()
 	}
 
 	currentUser, _ := user.Current()
