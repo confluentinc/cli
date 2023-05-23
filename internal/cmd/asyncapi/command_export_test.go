@@ -18,3 +18,24 @@ func TestHandlePrimitiveSchemas(t *testing.T) {
 func TestMsgName(t *testing.T) {
 	require.Equal(t, "TopicNameMessage", msgName("topic name"))
 }
+
+func TestTopicMatch(t *testing.T) {
+	userTopicInput := []string{"topic1", "test*"}
+
+	got := topicMatch("topic1", userTopicInput)
+	want := true
+	require.Equal(t, want, got)
+
+	got = topicMatch("test_topic", userTopicInput)
+	want = true
+	require.Equal(t, want, got)
+
+	got = topicMatch("topic2", userTopicInput)
+	want = false
+	require.Equal(t, want, got)
+
+	// User not setting --topics
+	got = topicMatch("topic2", []string{})
+	want = true
+	require.Equal(t, want, got)
+}
