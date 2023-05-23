@@ -10,7 +10,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/flink/config"
 )
 
-const HISTORY_FILE_NAME = "statements_history.json"
+const HISTORY_FILE_NAME = "flink_statements_history.json"
 
 type History struct {
 	Data          []string `json:"data"`

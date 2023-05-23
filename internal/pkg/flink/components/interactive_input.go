@@ -17,21 +17,16 @@ func PrintOutputModeState(outputMode bool, maxCol int) {
 	PrintOptionState(msgPrefix, outputMode, maxCol)
 }
 
-func PrintOptionState(prefix string, state bool, maxCol int) {
+func PrintOptionState(prefix string, isEnabled bool, maxCol int) {
 	stateMsg := "disabled"
-	if state {
+	if isEnabled {
 		stateMsg = "enabled"
 	}
 
 	fmt.Fprintf(os.Stdout, "\n\033[0m%s\033[0;36m%s\033[0m", prefix, stateMsg)
 
 	// This prints to the console the exact amount of empty characters to fill the line might have autocompletions before
-	strings.Repeat(" ", maxCol-len(prefix+stateMsg))
-	fmt.Print("\n")
-}
-
-func IsInputClosingSelect(input string) bool {
-	return strings.HasPrefix(strings.ToUpper(input), "SELECT") && input[len(input)-1] == ';'
+	fmt.Println(strings.Repeat(" ", maxCol-len(prefix+stateMsg)))
 }
 
 // This prints flinks ascii art, welcome message and shortcuts
@@ -42,6 +37,4 @@ func PrintWelcomeHeader() {
 	// Print shortcuts
 	fmt.Fprintf(os.Stdout, "\033[0m%s \033[0;36m%s \033[0m", "[CtrlQ]", "Quit")
 	fmt.Fprintf(os.Stdout, "\033[0m%s \033[0;36m%s \033[0m \n", "[CtrlS]", "Smart Completion")
-	// disabled for now
-	//fmt.Fprintf(os.Stdout, "\033[0m%s \033[0;36m%s \033[0m \n", "[CtrlO]", "Interactive Output")
 }

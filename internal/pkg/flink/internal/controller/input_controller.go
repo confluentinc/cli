@@ -304,7 +304,7 @@ func (c *InputController) Prompt() *prompt.Prompt {
 		prompt.OptionHistory(c.History.Data),
 		prompt.OptionSwitchKeyBindMode(prompt.EmacsKeyBind),
 		prompt.OptionSetExitCheckerOnInput(func(input string, breakline bool) bool {
-			if (components.IsInputClosingSelect(input) && breakline) || c.reverseISearchEnabled || c.shouldExit {
+			if c.reverseISearchEnabled || c.shouldExit {
 				return true
 			}
 			return false

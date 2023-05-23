@@ -74,9 +74,7 @@ func (t *TableController) exitTViewMode() {
 func (t *TableController) GetActionForShortcut(shortcut string) func() {
 	switch shortcut {
 	case "Q":
-		return func() {
-			t.exitTViewMode()
-		}
+		return t.exitTViewMode
 	case "M":
 		return func() {
 			t.hasUserDisabledTableMode = !t.hasUserDisabledTableMode

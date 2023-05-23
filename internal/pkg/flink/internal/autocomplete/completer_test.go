@@ -35,7 +35,6 @@ func TestFailingBasicAutoCompletion(t *testing.T) {
 	input := "non-existing-statement"
 	buffer := prompt.NewBuffer()
 	buffer.InsertText(input, false, true)
-	//buffer.CursorRight(2)
 
 	expected := prompt.Suggest{Text: "SELECT", Description: "Select data from a database"}
 	completer := NewCompleterBuilder(mockGetSmartCompletion).

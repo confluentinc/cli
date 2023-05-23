@@ -56,6 +56,7 @@ func RandomSQLSentence() *rapid.Generator[SQLSentence] {
 func FisherYatesShuffle[T any](src []T) *rapid.Generator[[]T] {
 	return rapid.Custom(func(t *rapid.T) []T {
 		slice := append([]T(nil), src...)
+
 		for i := len(slice) - 1; i > 0; i-- {
 			j := rapid.IntRange(0, i).Draw(t, "j")
 			slice[i], slice[j] = slice[j], slice[i]

@@ -14,14 +14,14 @@ var codeSnippets []byte
 var snippetSuggestions []prompt.Suggest
 
 func loadSnippetSuggestions() {
-	var payload map[string]interface{}
+	var payload map[string]any
 	err := json.Unmarshal(codeSnippets, &payload)
 	if err != nil {
 		log.Printf("Couldn't unmarshal code snippets. Error: %v\n", err)
 	}
 
 	for _, value := range payload {
-		arr := value.([]interface{})
+		arr := value.([]any)
 		for _, example := range arr {
 			snippetSuggestions = append(snippetSuggestions, prompt.Suggest{Text: example.(string)})
 		}
