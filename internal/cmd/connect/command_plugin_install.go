@@ -108,7 +108,7 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 	} else if len(previousInstallations) > 0 {
 		output.Println("\nA version of this plugin is already installed and must be removed to continue.")
 		for _, previousInstallation := range previousInstallations {
-			if err := replacePluginInstallation(previousInstallation, prompt, dryRun, force); err != nil {
+			if err := removePluginInstallation(previousInstallation, prompt, dryRun, force); err != nil {
 				return err
 			}
 		}
@@ -299,7 +299,7 @@ func existingPluginInstallation(pluginDir string, pluginManifest *ccstructs.Mani
 	return installations, nil
 }
 
-func replacePluginInstallation(pathToPlugin string, prompt form.Prompt, dryRun, force bool) error {
+func removePluginInstallation(pathToPlugin string, prompt form.Prompt, dryRun, force bool) error {
 	if force {
 		output.Printf("Uninstalling the existing version of the plugin located at \"%s\".\n", pathToPlugin)
 	} else {
