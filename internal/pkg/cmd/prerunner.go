@@ -22,6 +22,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/featureflags"
 	"github.com/confluentinc/cli/internal/pkg/form"
+	"github.com/confluentinc/cli/internal/pkg/hub"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -69,6 +70,7 @@ type AuthenticatedCLICommand struct {
 	V2Client          *ccloudv2.Client
 	MDSClient         *mds.APIClient
 	MDSv2Client       *mdsv2alpha1.APIClient
+	HubClient         *hub.Client
 	KafkaRESTProvider *KafkaRESTProvider
 	Context           *dynamicconfig.DynamicContext
 	State             *v1.ContextState
@@ -471,6 +473,16 @@ func (r *PreRun) setV2Clients(cliCmd *AuthenticatedCLICommand) error {
 	return nil
 }
 
+func (r *PreRun) setHubClient(cliCmd *AuthenticatedCLICommand) error {
+	unsafeTrace, err := cliCmd.Flags().GetBool("unsafe-trace")
+	if err != nil {
+		return err
+	}
+
+	cliCmd.HubClient = hub.NewClient(cliCmd.Config.IsTest, unsafeTrace)
+	return nil
+}
+
 func getKafkaRestEndpoint(ctx *dynamicconfig.DynamicContext) (string, string, error) {
 	config, err := ctx.GetKafkaClusterForCommand()
 	if err != nil {
@@ -560,6 +572,10 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(*co
 			if err := r.updateToken(tokenErr, command.Config.Context(), unsafeTrace); err != nil {
 				return err
 			}
+		}
+
+		if err := r.setHubClient(command); err != nil {
+			return err
 		}
 
 		return nil
