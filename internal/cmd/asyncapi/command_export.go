@@ -24,7 +24,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/serdes"
-	"github.com/confluentinc/cli/internal/pkg/types"
 )
 
 type command struct {
@@ -107,20 +106,6 @@ func (c *command) export(cmd *cobra.Command, _ []string) error {
 		schemaContextPrefix = fmt.Sprintf(":.%s:", flags.schemaContext)
 	}
 	channelCount := 0
-
-	topicsSpecified := types.NewSet()
-	var prefixesSpecified []string
-	// Split user-specified topics into topics/topic prefixes
-	for _, userTopic := range flags.topics {
-		if len(userTopic) == 0 {
-			continue
-		}
-		if userTopic[len(userTopic)-1:] == "*" {
-			prefixesSpecified = append(prefixesSpecified, userTopic)
-		} else {
-			topicsSpecified.Add(userTopic)
-		}
-	}
 
 	for _, topic := range accountDetails.topics {
 		if !topicMatch(topic.GetTopicName(), flags.topics) {
