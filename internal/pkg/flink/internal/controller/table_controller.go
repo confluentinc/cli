@@ -39,13 +39,14 @@ type TableController struct {
 	cancelFetch                          context.CancelFunc
 	tableLock                            sync.Mutex
 	cancelLock                           sync.RWMutex
-	formatterOptions                     *types.FormatterOptions
 	isRowViewOpen                        bool
+	tableWidth                           int
 }
 
 const maxResultsCapacity int = 1000
 const defaultRefreshInterval uint = 1000 // in milliseconds
 const minRefreshInterval uint = 100      // in milliseconds
+const minColumnWidth int = 4             // min characters displayed in a column
 
 func NewTableController(table *tview.Table, store store.StoreInterface, appController ApplicationControllerInterface) TableControllerInterface {
 	return &TableController{
@@ -225,7 +226,6 @@ func (t *TableController) Init(statement types.ProcessedStatement) {
 	t.materializedStatementResults = results.NewMaterializedStatementResults(statement.StatementResults.GetHeaders(), maxResultsCapacity)
 	t.materializedStatementResults.SetTableMode(!t.hasUserDisabledTableMode)
 	t.materializedStatementResults.Append(statement.StatementResults.GetRows()...)
-	t.formatterOptions = &types.FormatterOptions{MaxCharCountToDisplay: 80}
 	// if unbounded result start refreshing results in the background
 	if statement.PageToken != "" && !t.hasUserDisabledAutoFetch {
 		t.startAutoRefresh(statement, defaultRefreshInterval)
@@ -280,16 +280,27 @@ func (t *TableController) rowSelectionHandler(row, col int) {
 	t.selectedRowIdx = row
 }
 
+func max(a, b int) int {
+	if a >= b {
+		return a
+	}
+	return b
+}
+
 func (t *TableController) renderData() {
 	t.table.Clear()
 	t.table.SetSelectionChangedFunc(t.rowSelectionHandler)
+
+	columnWidths := make([]int, len(t.materializedStatementResults.GetHeaders()))
+
 	// Print header
 	for colIdx, column := range t.materializedStatementResults.GetHeaders() {
+		columnWidths[colIdx] = max(len(column), columnWidths[colIdx])
+
 		tableCell := tview.NewTableCell(column).
 			SetTextColor(tcell.ColorYellow).
 			SetAlign(tview.AlignLeft).
-			SetSelectable(false).
-			SetMaxWidth(t.formatterOptions.GetMaxCharCountToDisplay())
+			SetSelectable(false)
 		t.table.SetCell(0, colIdx, tableCell)
 	}
 
@@ -300,14 +311,36 @@ func (t *TableController) renderData() {
 		row := iterator.GetNext()
 		for colIdx, field := range row.Fields {
 			color := tcell.ColorWhite
-			tableCell := tview.NewTableCell(tview.Escape(field.Format(t.formatterOptions))).
+			formattedField := field.Format(nil)
+			columnWidths[colIdx] = max(len(formattedField), columnWidths[colIdx])
+
+			tableCell := tview.NewTableCell(tview.Escape(formattedField)).
 				SetTextColor(color).
-				SetAlign(tview.AlignLeft).
-				SetMaxWidth(t.formatterOptions.GetMaxCharCountToDisplay())
+				SetAlign(tview.AlignLeft)
 			t.table.SetCell(rowIdx, colIdx, tableCell)
 		}
 		rowIdx++
 	}
+
+	// add callback function for after draw (gets triggered on any render event, such as screen size update)
+	t.table.SetDrawFunc(func(screen tcell.Screen, x, y, width, height int) (int, int, int, int) {
+		// check if the table width has changed
+		newX, newY, newWidth, newHeight := t.table.GetInnerRect()
+		hasTableWidthChanged := t.tableWidth != newWidth
+		t.tableWidth = newWidth
+		if !hasTableWidthChanged {
+			return newX, newY, newWidth, newHeight
+		}
+
+		// check if space needed fits screen, if it doesn't truncate the column
+		truncatedColumnWidths := results.GetTruncatedColumnWidths(columnWidths, newWidth)
+		for rowIdx = 0; rowIdx < t.table.GetRowCount(); rowIdx++ {
+			for colIdx := 0; colIdx < t.table.GetColumnCount(); colIdx++ {
+				t.table.GetCell(rowIdx, colIdx).SetMaxWidth(max(truncatedColumnWidths[colIdx], minColumnWidth))
+			}
+		}
+		return newX, newY, newWidth, newHeight
+	})
 }
 
 func (t *TableController) selectLastRow() {

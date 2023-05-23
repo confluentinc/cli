@@ -265,18 +265,28 @@ func (c *InputController) printResultToSTDOUT(statementResults *types.StatementR
 		// set a default size on error
 		windowSize = 100
 	}
-
 	fixedPadding := 4                                          // table border left and right
 	variablePadding := (len(statementResults.Headers) - 1) * 3 // column separator
 	totalAvailableChars := windowSize - fixedPadding - variablePadding
-	charsPerColumn := totalAvailableChars / len(statementResults.Headers) // distribute chars evenly
-	formatterOptions := &types.FormatterOptions{MaxCharCountToDisplay: charsPerColumn}
 
+	columnWidths := make([]int, len(statementResults.Headers))
+	columnWidthSum := 0
+	for _, row := range statementResults.Rows {
+		for colIdx, field := range row.Fields {
+			formattedField := field.Format(nil)
+			if len(formattedField) > columnWidths[colIdx] {
+				columnWidthSum -= columnWidths[colIdx]
+				columnWidthSum += len(formattedField)
+				columnWidths[colIdx] = len(formattedField)
+			}
+		}
+	}
+	columnWidths = results.GetTruncatedColumnWidths(columnWidths, totalAvailableChars)
 	formattedResults := make([][]string, len(statementResults.Rows))
 	for rowIdx, row := range statementResults.Rows {
 		formattedRow := make([]string, len(row.Fields))
 		for colIdx, field := range row.Fields {
-			formattedRow[colIdx] = field.Format(formatterOptions)
+			formattedRow[colIdx] = field.Format(&types.FormatterOptions{MaxCharCountToDisplay: columnWidths[colIdx]})
 		}
 		formattedResults[rowIdx] = formattedRow
 	}
