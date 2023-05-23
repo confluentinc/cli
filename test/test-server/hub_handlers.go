@@ -53,7 +53,7 @@ func handleHubPlugin(t *testing.T) http.HandlerFunc {
 			if utils.DoesPathExist(archivePath) {
 				archive, err := os.ReadFile(archivePath)
 				require.NoError(t, err)
-	
+
 				responseManifest.Archive = ccstructs.Archive{
 					Url:  fmt.Sprintf("%s/api/plugins/confluentinc/integration-test-plugin/versions/0.1.0/confluentinc-integration-test-plugin.zip", TestHubUrl.String()),
 					Md5:  fmt.Sprintf("%x", md5.Sum(archive)),
@@ -91,7 +91,7 @@ func handleHubPluginVersion(t *testing.T) http.HandlerFunc {
 			if utils.DoesPathExist(archivePath) {
 				archive, err := os.ReadFile(archivePath)
 				require.NoError(t, err)
-	
+
 				responseManifest.Archive = ccstructs.Archive{
 					Url:  fmt.Sprintf("%s/api/plugins/confluentinc/integration-test-plugin/versions/0.1.0/confluentinc-integration-test-plugin.zip", TestHubUrl.String()),
 					Md5:  fmt.Sprintf("%x", md5.Sum(archive)),
@@ -120,7 +120,8 @@ func handleHubPluginArchive(t *testing.T) http.HandlerFunc {
 		case http.MethodGet:
 			archive, err := os.ReadFile(archivePath)
 			require.NoError(t, err)
-			w.Write(archive)
+			_, err = w.Write(archive)
+			require.NoError(t, err)
 		default:
 			w.WriteHeader(http.StatusNoContent)
 		}
