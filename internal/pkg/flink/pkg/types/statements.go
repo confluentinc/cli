@@ -1,8 +1,9 @@
 package types
 
 import (
-	v1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"
 	"strings"
+
+	v1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"
 )
 
 type StatementResults struct {

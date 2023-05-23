@@ -2,7 +2,8 @@
 
 The following command runs the tests and generates a coverage report in the `coverage` folder.
 ```
-make test-coverage
+go test -coverprofile=coverage.out ./... && \
+go tool cover -html=coverage.out -o coverage.html
 ```
 You can then open the coverage.html file from the repository root in your browser to see the coverage report for each file.
 
@@ -10,20 +11,10 @@ You can then open the coverage.html file from the repository root in your browse
 We have generated mocked as we need them. We have a make target for controllers, store and client. You can look at the mock_generator.go file as an exampple if you need to mock other things.
 
 ```
-make generate-mocks
+go generate test/mock/mock_generator.go
 ```
 
 More info on how to generate mocks: https://github.com/golang/mock
-#### Interacting with Clipboard in interactive mode
-
-We use currently using https://github.com/atotto/clipboard to copy and write to the clipboard. It works for window, mac and linux. For the latter however, it requires 'xclip' or 'xsel' command to be installed. It doesn't seem to exist a workaround for now. One of the reasons to pick this lib, is because it's already being used in our current CLI, where this client will get integrated.
-
-Quoted from [here](https://github.com/d-tsuji/clipboard):
-Unfortunately, I don't think it's feasible for Linux to build clipboard library, since the library needs to be referenced as a daemon in order to keep the clipboard data. This approach is the same for xclip and xsel.
-
-Go has an approach to running its own programs as external processes, such as VividCortex/godaemon and sevlyar/go-daemon. But these cannot be incorporated as a library, of course. xclip and xsel can also be achieved because they are completed as binaries, not libraries.
-
-So it turns out that it is not possible to achieve clipboard in Linux as a library.
 
 #### Adding custom shortcuts to the client
 

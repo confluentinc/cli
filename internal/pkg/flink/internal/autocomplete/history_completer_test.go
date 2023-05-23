@@ -1,11 +1,13 @@
 package autocomplete
 
 import (
-	"github.com/confluentinc/go-prompt"
-	"github.com/stretchr/testify/require"
 	"testing"
 
+
 	"github.com/bradleyjkemp/cupaloy"
+	"github.com/stretchr/testify/require"
+
+	"github.com/confluentinc/go-prompt"
 )
 
 func TestHistorySnapshot(t *testing.T) {

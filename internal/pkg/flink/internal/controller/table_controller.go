@@ -8,16 +8,13 @@ import (
 	"time"
 	"unicode"
 
-	"github.com/confluentinc/cli/internal/pkg/flink/components"
-
-	"github.com/confluentinc/cli/internal/pkg/flink/internal/results"
-	"github.com/confluentinc/cli/internal/pkg/flink/internal/store"
-
-	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
-
-	"github.com/atotto/clipboard"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+
+	"github.com/confluentinc/cli/internal/pkg/flink/components"
+	"github.com/confluentinc/cli/internal/pkg/flink/internal/results"
+	"github.com/confluentinc/cli/internal/pkg/flink/internal/store"
+	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
 )
 
 type TableControllerInterface interface {
@@ -106,9 +103,6 @@ func (t *TableController) inputHandlerTableView(event *tcell.EventKey) *tcell.Ev
 		return nil
 	} else {
 		switch event.Key() {
-		case tcell.KeyCtrlC:
-			t.onCtrlC()
-			return nil
 		case tcell.KeyEscape:
 			t.exitTViewMode()
 			return nil
@@ -330,17 +324,4 @@ func (t *TableController) selectLastRow() {
 
 func (t *TableController) focusTable() {
 	t.appController.TView().SetFocus(t.table)
-}
-
-func (t *TableController) onCtrlC() {
-	rowIndex, _ := t.table.GetSelection()
-	columnCount := t.table.GetColumnCount()
-
-	var row []string
-	for i := 0; i < columnCount; i++ {
-		row = append(row, t.table.GetCell(rowIndex, i).Text)
-	}
-	clipboardValue := strings.Join(row, ", ")
-
-	clipboard.WriteAll(clipboardValue)
 }

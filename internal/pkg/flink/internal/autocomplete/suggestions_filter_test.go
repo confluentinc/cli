@@ -1,10 +1,14 @@
 package autocomplete
 
 import (
-	"github.com/confluentinc/go-prompt"
+	"testing"
+
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-	"testing"
+
+	"github.com/confluentinc/go-prompt"
 )
 
 type SuggestionFilterTestSuite struct {

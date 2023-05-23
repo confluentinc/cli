@@ -4,11 +4,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/confluentinc/cli/internal/pkg/flink/test/generators"
-	"github.com/confluentinc/go-prompt"
-
 	"github.com/stretchr/testify/require"
 	"pgregory.net/rapid"
+
+	"github.com/confluentinc/go-prompt"
+
+	"github.com/confluentinc/cli/internal/pkg/flink/test/generators"
 )
 
 func mockGetSmartCompletion() bool {

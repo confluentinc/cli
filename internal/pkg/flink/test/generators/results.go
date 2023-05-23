@@ -5,9 +5,11 @@ import (
 	"strconv"
 	"time"
 
-	v1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"
-	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
 	"pgregory.net/rapid"
+
+	v1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"
+
+	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
 )
 
 func GetResultItemGeneratorForType(dataType v1.DataType) *rapid.Generator[v1.SqlV1alpha1ResultItemRowOneOf] {

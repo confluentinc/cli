@@ -3,13 +3,14 @@ package app
 import (
 	"sync"
 
+	"github.com/gdamore/tcell/v2"
+	"github.com/rivo/tview"
+
 	"github.com/confluentinc/cli/internal/pkg/flink/components"
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/controller"
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/history"
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/store"
 	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
 )
 
 var once sync.Once

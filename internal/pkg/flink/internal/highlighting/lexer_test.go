@@ -4,11 +4,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/confluentinc/cli/internal/pkg/flink/config"
-	"github.com/confluentinc/cli/internal/pkg/flink/test/generators"
-	prompt "github.com/confluentinc/go-prompt"
 	"github.com/stretchr/testify/require"
 	"pgregory.net/rapid"
+
+	prompt "github.com/confluentinc/go-prompt"
+
+	"github.com/confluentinc/cli/internal/pkg/flink/config"
+	"github.com/confluentinc/cli/internal/pkg/flink/test/generators"
 )
 
 func TestLexer(t *testing.T) {
@@ -54,7 +56,6 @@ func TestIsLexerCaseInsensitive(t *testing.T) {
 		require.Equal(t, element.Color, uppercase[i].Color)
 		require.Equal(t, strings.ToUpper(element.Text), uppercase[i].Text)
 	}
-
 }
 
 func TestExamplesWordLexer(t *testing.T) {
@@ -77,8 +78,7 @@ func TestExamplesWordLexer(t *testing.T) {
 
 	// when
 	for _, statement := range statements {
-
-		//then
+		// then
 		elements := Lexer(statement)
 
 		for _, element := range elements {
@@ -96,7 +96,6 @@ func TestExamplesWordLexer(t *testing.T) {
 				require.Equalf(t, element.Color, prompt.White, "wrong colour for element: %s", element.Text)
 			}
 		}
-
 	}
 }
 

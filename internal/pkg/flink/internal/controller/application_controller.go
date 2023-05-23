@@ -3,9 +3,10 @@ package controller
 import (
 	"os"
 
+	"github.com/rivo/tview"
+
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/history"
 	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
-	"github.com/rivo/tview"
 )
 
 // Tview application.

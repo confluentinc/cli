@@ -3,9 +3,10 @@ package store
 import (
 	"testing"
 
-	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
 	"github.com/stretchr/testify/assert"
 	"pgregory.net/rapid"
+
+	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
 )
 
 func TestGatewayClientHasOrgIdInDefaultHeader(s *testing.T) {

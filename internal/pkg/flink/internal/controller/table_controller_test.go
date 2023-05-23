@@ -4,18 +4,17 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/confluentinc/cli/internal/pkg/flink/internal/results"
+	"github.com/gdamore/tcell/v2"
+	gomock "github.com/golang/mock/gomock"
+	"github.com/rivo/tview"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"pgregory.net/rapid"
 
-	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
-	"github.com/rivo/tview"
-
 	"github.com/confluentinc/cli/internal/pkg/flink/components"
+	"github.com/confluentinc/cli/internal/pkg/flink/internal/results"
+	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
 	"github.com/confluentinc/cli/internal/pkg/flink/test/mock"
-	"github.com/gdamore/tcell/v2"
-	gomock "github.com/golang/mock/gomock"
-	"github.com/stretchr/testify/assert"
 )
 
 type TableControllerTestSuite struct {
@@ -219,7 +218,7 @@ func (s *TableControllerTestSuite) TestEnter() {
 	// Then
 	assert.Nil(s.T(), result)
 	assert.True(s.T(), tableController.isRowViewOpen)
-	assert.Equal(s.T(), 10, tableController.selectedRowIdx) //header row is at 0 and last row at 10
+	assert.Equal(s.T(), 10, tableController.selectedRowIdx) // header row is at 0 and last row at 10
 	// last row should be selected
 	assert.Equal(s.T(), &types.StatementResultRow{
 		Operation: types.INSERT,

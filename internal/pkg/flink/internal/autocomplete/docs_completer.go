@@ -26,7 +26,7 @@ func loadSnippetSuggestions() {
 			snippetSuggestions = append(snippetSuggestions, prompt.Suggest{Text: example.(string)})
 		}
 	}
-	//sort result to make order deterministic
+	// sort result to make order deterministic
 	sort.Slice(snippetSuggestions, func(i, j int) bool {
 		return snippetSuggestions[i].Text < snippetSuggestions[j].Text
 	})

@@ -1,10 +1,13 @@
 package autocomplete
 
 import (
-	"github.com/confluentinc/go-prompt"
 	"testing"
 
+	"github.com/confluentinc/go-prompt"
+
 	"github.com/bradleyjkemp/cupaloy"
+
+	"github.com/confluentinc/go-prompt"
 )
 
 func TestSelectExampleAutoCompletionSnapshot(t *testing.T) {

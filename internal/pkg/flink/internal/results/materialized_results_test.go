@@ -1,13 +1,18 @@
 package results
 
 import (
-	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
-	"github.com/confluentinc/cli/internal/pkg/flink/test/generators"
+	"strconv"
+	"testing"
+
+	"strconv"
+	"testing"
+
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"pgregory.net/rapid"
-	"strconv"
-	"testing"
+
+	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
+	"github.com/confluentinc/cli/internal/pkg/flink/test/generators"
 )
 
 type MaterializedStatementResultsTestSuite struct {

@@ -10,12 +10,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
-
-	v1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"
 	"github.com/samber/lo"
 
+	v1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"
+
 	"github.com/confluentinc/cli/internal/pkg/flink/config"
+	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
 )
 
 type StatementType string
@@ -65,7 +65,7 @@ func (s *Store) processSetStatement(statement string) (*types.ProcessedStatement
 	statementResults := createStatementResults([]string{"Key", "Value"}, [][]string{{configKey, configVal}})
 	return &types.ProcessedStatement{
 		Kind:             configOpSet,
-		StatusDetail:     "Config updated successfuly.",
+		StatusDetail:     "Config updated successfully.",
 		Status:           types.COMPLETED,
 		StatementResults: &statementResults,
 		IsLocalStatement: true,
@@ -81,7 +81,7 @@ func (s *Store) processResetStatement(statement string) (*types.ProcessedStateme
 		s.Properties = make(map[string]string)
 		return &types.ProcessedStatement{
 			Kind:             configOpReset,
-			StatusDetail:     "Configuration has been reset successfuly.",
+			StatusDetail:     "Configuration has been reset successfully.",
 			Status:           types.COMPLETED,
 			IsLocalStatement: true,
 		}, nil
@@ -95,7 +95,7 @@ func (s *Store) processResetStatement(statement string) (*types.ProcessedStateme
 		statementResults := createStatementResults([]string{"Key", "Value"}, lo.MapToSlice(s.Properties, func(key, val string) []string { return []string{key, val} }))
 		return &types.ProcessedStatement{
 			Kind:             configOpReset,
-			StatusDetail:     fmt.Sprintf("Config key \"%s\" has been reset successfuly.", configKey),
+			StatusDetail:     fmt.Sprintf("Config key \"%s\" has been reset successfully.", configKey),
 			Status:           types.COMPLETED,
 			StatementResults: &statementResults,
 			IsLocalStatement: true,
@@ -113,7 +113,7 @@ func (s *Store) processUseStatement(statement string) (*types.ProcessedStatement
 	statementResults := createStatementResults([]string{"Key", "Value"}, [][]string{{configKey, configVal}})
 	return &types.ProcessedStatement{
 		Kind:             configOpUse,
-		StatusDetail:     "Config updated successfuly.",
+		StatusDetail:     "Config updated successfully.",
 		Status:           types.COMPLETED,
 		StatementResults: &statementResults,
 		IsLocalStatement: true,
@@ -195,7 +195,7 @@ func parseUseStatement(statement string) (string, string, error) {
 
 	isFirstWordUse := strings.ToUpper(words[0]) == configOpUse
 	isSecondWordCatalog := strings.ToUpper(words[1]) == configOpUseCatalog
-	//handle "USE database_name" statement
+	// handle "USE database_name" statement
 	if len(words) == 2 && isFirstWordUse {
 		if isSecondWordCatalog {
 			// handle empty catalog name -> "USE CATALOG "
@@ -205,7 +205,7 @@ func parseUseStatement(statement string) (string, string, error) {
 		}
 	}
 
-	//handle "USE CATALOG catalog_name" statement
+	// handle "USE CATALOG catalog_name" statement
 	if len(words) == 3 && isFirstWordUse && isSecondWordCatalog {
 		return configKeyCatalog, words[2], nil
 	}
@@ -265,7 +265,6 @@ func processHttpErrors(resp *http.Response, err error) error {
 		}
 
 		return &types.StatementError{Msg: statementErr.GetTitle() + ": " + statementErr.GetDetail()}
-
 	}
 
 	return nil
@@ -342,7 +341,7 @@ func formatUTCOffsetToTimezone(offsetSeconds int) string {
 
 // This increases function calculates a wait time that starts at 300 ms and increases 300 ms every 10 retries.
 // This should provide a better UX than exponential backoff. He're are two simulations in an excel sheet
-// Exponantial: https://docs.google.com/spreadsheets/d/14lHRcC_NGoF4KBtA_lrEivv05XYc3nNo5jaIvsHpgi0/edit?usp=sharing
+// Exponential: https://docs.google.com/spreadsheets/d/14lHRcC_NGoF4KBtA_lrEivv05XYc3nNo5jaIvsHpgi0/edit?usp=sharing
 // Discrete: https://docs.google.com/spreadsheets/d/1fMIOBIDbhZ6zH6bLq9iJXRs8jBLdA7beHef4vOW__tw/edit?usp=sharing
 func calcWaitTime(retries int) time.Duration {
 	waitTime := config.InitialWaitTime + time.Duration(config.WaitTimeIncrease*(retries/10))*time.Millisecond

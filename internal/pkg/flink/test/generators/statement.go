@@ -4,10 +4,10 @@ import (
 	"strings"
 
 	"github.com/samber/lo"
-
-	"github.com/confluentinc/cli/internal/pkg/flink/config"
 	"golang.org/x/exp/maps"
 	"pgregory.net/rapid"
+
+	"github.com/confluentinc/cli/internal/pkg/flink/config"
 )
 
 type RandomStatement struct {

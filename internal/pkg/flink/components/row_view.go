@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
 	"github.com/rivo/tview"
+
+	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
 )
 
 // Keyboard shortcuts shown at the bottom.

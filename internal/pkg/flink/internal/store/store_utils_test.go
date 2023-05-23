@@ -3,10 +3,10 @@ package store
 import (
 	"testing"
 
-	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
 )
 
 func TestRemoveStatementTerminator(t *testing.T) {
@@ -101,7 +101,7 @@ func TestProcessSetStatement(t *testing.T) {
 		result, err := s.processSetStatement("set location=USA")
 		assert.Nil(t, err)
 		assert.EqualValues(t, types.COMPLETED, result.Status)
-		assert.Equal(t, "Config updated successfuly.", result.StatusDetail)
+		assert.Equal(t, "Config updated successfully.", result.StatusDetail)
 		expectedResult := createStatementResults([]string{"Key", "Value"}, [][]string{{"location", "USA"}})
 		assert.Equal(t, &expectedResult, result.StatementResults)
 	})
@@ -139,7 +139,7 @@ func TestProcessResetStatement(t *testing.T) {
 		s.Properties["timeout"] = "30"
 		result, _ := s.processResetStatement("reset")
 		assert.EqualValues(t, types.COMPLETED, result.Status)
-		assert.Equal(t, "Configuration has been reset successfuly.", result.StatusDetail)
+		assert.Equal(t, "Configuration has been reset successfully.", result.StatusDetail)
 		assert.Nil(t, result.StatementResults)
 	})
 
@@ -154,7 +154,7 @@ func TestProcessResetStatement(t *testing.T) {
 		s.Properties["pipeline.name"] = "job1"
 		result, _ := s.processResetStatement("reset pipeline.name")
 		assert.EqualValues(t, types.COMPLETED, result.Status)
-		assert.Equal(t, "Config key \"pipeline.name\" has been reset successfuly.", result.StatusDetail)
+		assert.Equal(t, "Config key \"pipeline.name\" has been reset successfully.", result.StatusDetail)
 		expectedResult := createStatementResults([]string{"Key", "Value"}, [][]string{})
 		assert.Equal(t, &expectedResult, result.StatementResults)
 	})
@@ -162,7 +162,7 @@ func TestProcessResetStatement(t *testing.T) {
 		result, _ := s.processResetStatement("reset")
 
 		assert.EqualValues(t, types.COMPLETED, result.Status)
-		assert.Equal(t, "Configuration has been reset successfuly.", result.StatusDetail)
+		assert.Equal(t, "Configuration has been reset successfully.", result.StatusDetail)
 		assert.Nil(t, result.StatementResults)
 	})
 }
@@ -182,7 +182,7 @@ func TestProcessUseStatement(t *testing.T) {
 		require.Nil(t, err)
 		require.Equal(t, configOpUse, result.Kind)
 		require.EqualValues(t, types.COMPLETED, result.Status)
-		require.Equal(t, "Config updated successfuly.", result.StatusDetail)
+		require.Equal(t, "Config updated successfully.", result.StatusDetail)
 		expectedResult := createStatementResults([]string{"Key", "Value"}, [][]string{{configKeyDatabase, "db1"}})
 		assert.Equal(t, &expectedResult, result.StatementResults)
 	})
@@ -197,7 +197,7 @@ func TestProcessUseStatement(t *testing.T) {
 		require.Nil(t, err)
 		require.Equal(t, configOpUse, result.Kind)
 		require.EqualValues(t, types.COMPLETED, result.Status)
-		require.Equal(t, "Config updated successfuly.", result.StatusDetail)
+		require.Equal(t, "Config updated successfully.", result.StatusDetail)
 		expectedResult := createStatementResults([]string{"Key", "Value"}, [][]string{{configKeyCatalog, "metadata"}})
 		assert.Equal(t, &expectedResult, result.StatementResults)
 	})
@@ -230,7 +230,6 @@ func hoursToSeconds(hours float32) int {
 }
 
 func TestFormatUTCOffsetToTimezone(t *testing.T) {
-
 	testCases := []struct {
 		offsetSeconds int
 		expected      string

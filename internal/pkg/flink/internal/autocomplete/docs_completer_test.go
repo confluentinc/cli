@@ -1,10 +1,12 @@
 package autocomplete
 
 import (
-	"github.com/bradleyjkemp/cupaloy"
-	"github.com/confluentinc/go-prompt"
-	"github.com/stretchr/testify/suite"
 	"testing"
+
+	"github.com/bradleyjkemp/cupaloy"
+	"github.com/stretchr/testify/suite"
+
+	"github.com/confluentinc/go-prompt"
 )
 
 type DocsCompleterTestSuite struct {

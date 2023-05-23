@@ -3,8 +3,9 @@ package highlighting
 import (
 	"strings"
 
-	"github.com/confluentinc/cli/internal/pkg/flink/config"
 	prompt "github.com/confluentinc/go-prompt"
+
+	"github.com/confluentinc/cli/internal/pkg/flink/config"
 )
 
 type Word struct {

@@ -23,7 +23,6 @@ type LivePrefixState struct {
 // `bck-i-search: ` string. It always returns an empty []prompt.Suggest, because we are not using the built-in suggest.
 func SearchCompleter(history []string, writer prompt.ConsoleWriter, searchState *SearchState, livePrefix *LivePrefixState) prompt.Completer {
 	return func(document prompt.Document) []prompt.Suggest {
-
 		// User selected the command or key binding for next match
 		if document.LastKeyStroke() == prompt.Escape || document.LastKeyStroke() == prompt.ControlR {
 			return []prompt.Suggest{}
@@ -83,7 +82,6 @@ func updateLivePrefix(match string, substr string, livePrefix *LivePrefixState) 
 // 2. (EraseLine + up) * #suggestions-1 -> To clear previous suggestions minus first line
 // 3. EraseLine + move cursor at beginning of line + 1 -> First line with '>'
 func clearCurrentSuggestion(writer prompt.ConsoleWriter, searchState *SearchState) {
-
 	// 1. EraseLine + up -> To clear `bck-i-search: ` line
 	writer.EraseLine()
 	writer.CursorUp(1)

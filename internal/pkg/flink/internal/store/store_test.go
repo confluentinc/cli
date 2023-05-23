@@ -12,16 +12,16 @@ import (
 	"testing"
 	"time"
 
+	gomock "github.com/golang/mock/gomock"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 
 	v1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"
 
 	"github.com/confluentinc/cli/internal/pkg/flink/config"
 	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
 	"github.com/confluentinc/cli/internal/pkg/flink/test/mock"
-	gomock "github.com/golang/mock/gomock"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/suite"
 )
 
 type StoreTestSuite struct {
@@ -376,7 +376,6 @@ func (s *StoreTestSuite) TestParseUSEStatementError() {
 	_, _, err = parseUseStatement("USE CATALOG DATABASE DB2;")
 	assert.NotNil(s.T(), err)
 	assert.Equal(s.T(), "Invalid syntax for USE. Usage examples: USE CATALOG my_catalog or USE my_database", err.Error())
-
 }
 
 func (s *StoreTestSuite) TestParseResetStatement() {

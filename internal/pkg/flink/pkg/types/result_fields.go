@@ -2,9 +2,10 @@ package types
 
 import (
 	"fmt"
-	v1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"
 	"math"
 	"strings"
+
+	v1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"
 )
 
 const (

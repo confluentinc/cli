@@ -2,10 +2,11 @@ package autocomplete
 
 import (
 	"fmt"
-	"github.com/confluentinc/go-prompt"
 	"regexp"
 	"strings"
 	"unicode"
+
+	"github.com/confluentinc/go-prompt"
 )
 
 func getLastWord(phrase string) string {
@@ -45,9 +46,9 @@ func SuggestFromPrefix(suggestions []prompt.Suggest, prefix string) []prompt.Sug
 	if prefix == "" {
 		return suggestions
 	}
-	//ignore line breaks
+	// ignore line breaks
 	prefix = strings.ReplaceAll(prefix, "\n", " ")
-	//ignore case
+	// ignore case
 	prefix = strings.ToUpper(prefix)
 	lastWord := getLastWord(prefix)
 	lastWord = strings.ToUpper(lastWord)
@@ -57,9 +58,9 @@ func SuggestFromPrefix(suggestions []prompt.Suggest, prefix string) []prompt.Sug
 	for _, suggestion := range suggestions {
 		cleanedText := strings.ToUpper(suggestion.Text)
 		if strings.HasPrefix(cleanedText, prefix) {
-			//only attach a diff of the suggestion and the prefix and include the last word if it was not complete
+			// only attach a diff of the suggestion and the prefix and include the last word if it was not complete
 			text := suggestion.Text[len(prefix):]
-			startOfLastWord := strings.LastIndex(prefix, lastWord) //should never be -1 because last word is part of prefix
+			startOfLastWord := strings.LastIndex(prefix, lastWord) // should never be -1 because last word is part of prefix
 			if !isLastWordComplete && startOfLastWord != -1 {
 				text = suggestion.Text[startOfLastWord:]
 			}
@@ -78,7 +79,7 @@ func SuggestNextWord(suggestions []prompt.Suggest, prefix string) []prompt.Sugge
 	if strings.TrimSpace(prefix) == "" {
 		return nextWordSuggestions
 	}
-	//ignore case
+	// ignore case
 	prefix = strings.ToUpper(prefix)
 	lastWord := getLastWord(prefix)
 	lastWord = strings.ToUpper(lastWord)
@@ -87,7 +88,7 @@ func SuggestNextWord(suggestions []prompt.Suggest, prefix string) []prompt.Sugge
 	suggestionSet := map[string]bool{}
 	pattern := fmt.Sprintf("\\b%s", regexp.QuoteMeta(lastWord))
 	regex, err := regexp.Compile(pattern)
-	//avoid crashing the client on regex failure
+	// avoid crashing the client on regex failure
 	if err != nil {
 		return nextWordSuggestions
 	}
@@ -104,7 +105,7 @@ func SuggestNextWord(suggestions []prompt.Suggest, prefix string) []prompt.Sugge
 		if !isLastWordComplete {
 			completeLastWord = getNextWord(suggestion.Text[startOfLastWord:]) + " "
 			startOfNextWord = startOfLastWord + len(completeLastWord)
-			//make sure to not step out of bounds if this is the last word
+			// make sure to not step out of bounds if this is the last word
 			if startOfNextWord > len(suggestion.Text) {
 				startOfNextWord = len(suggestion.Text)
 			}
@@ -120,7 +121,7 @@ func SuggestNextWord(suggestions []prompt.Suggest, prefix string) []prompt.Sugge
 			")", "",
 			"(", "",
 		)
-		//filter out duplicated suggestions
+		// filter out duplicated suggestions
 		suggestionKey := replacer.Replace(strings.TrimSpace(completeLastWord + nextWord))
 		_, suggestionExists := suggestionSet[suggestionKey]
 		suggestionSet[suggestionKey] = true

@@ -5,7 +5,6 @@ import (
 )
 
 func InteractiveOutput(table *tview.Table, shortcuts *tview.TextView) tview.Primitive {
-
 	return tview.NewFlex().
 		SetDirection(tview.FlexRow).
 		AddItem(

@@ -10,14 +10,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/confluentinc/cli/internal/pkg/flink/test/generators"
-
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/results"
 	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
+	"github.com/confluentinc/cli/internal/pkg/flink/test/generators"
 )
 
 const (
-	//ops
+	// ops
 	configOpSet               = "SET"
 	configOpUse               = "USE"
 	configOpReset             = "RESET"
@@ -25,7 +24,7 @@ const (
 	configOpUseCatalog        = "CATALOG"
 	configStatementTerminator = ";"
 
-	//keys
+	// keys
 	configKeyCatalog          = "catalog"
 	configKeyDatabase         = "default_database"
 	configKeyOrgResourceId    = "org-resource-id"
@@ -80,7 +79,6 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 
 	// TODO: Remove this once we have a real backend
 	if s.demoMode {
-
 		if !startsWithValidSQL(statement) {
 			return nil, &types.StatementError{Msg: "Error: Invalid syntax '" + statement + "'. Please check your statement."}
 		} else {
@@ -178,7 +176,6 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 }
 
 func (s *Store) DeleteStatement(statementName string) bool {
-
 	if !s.demoMode {
 		httpResponse, err := s.client.DeleteStatement(context.Background(), statementName)
 

@@ -11,19 +11,20 @@ import (
 	"strings"
 	"time"
 
-	"github.com/confluentinc/cli/internal/pkg/flink/internal/reverseisearch"
+	"github.com/olekukonko/tablewriter"
+	"pgregory.net/rapid"
+
+	"github.com/confluentinc/go-prompt"
 
 	"github.com/confluentinc/cli/internal/pkg/flink/components"
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/autocomplete"
 	lexer "github.com/confluentinc/cli/internal/pkg/flink/internal/highlighting"
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/history"
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/results"
+	"github.com/confluentinc/cli/internal/pkg/flink/internal/reverseisearch"
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/store"
 	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
 	"github.com/confluentinc/cli/internal/pkg/flink/test/generators"
-	"github.com/confluentinc/go-prompt"
-	"github.com/olekukonko/tablewriter"
-	"pgregory.net/rapid"
 )
 
 type InputControllerInterface interface {
@@ -69,7 +70,6 @@ const (
 // Actions
 // This is the main function/loop for the app
 func (c *InputController) RunInteractiveInput() {
-
 	// We check for statement result and rows so we don't leave GoPrompt in case of errors
 	for {
 		// We save and restore the stdinState to avoid any terminal settings/shortcut bindings/Signals that can be caught and handled
@@ -218,7 +218,6 @@ func renderMsgAndStatus(statementResult *types.ProcessedStatement) {
 			fmt.Println("Error: Couldn't process statement. Please check your statement and try again.")
 		}
 	} else {
-
 		if statementResult.StatementName != "" {
 			fmt.Println("Statement ID: " + statementResult.StatementName)
 		}
@@ -270,7 +269,7 @@ func (c *InputController) printResultToSTDOUT(statementResults *types.StatementR
 	fixedPadding := 4                                          // table border left and right
 	variablePadding := (len(statementResults.Headers) - 1) * 3 // column separator
 	totalAvailableChars := windowSize - fixedPadding - variablePadding
-	charsPerColumn := totalAvailableChars / len(statementResults.Headers) //distribute chars evenly
+	charsPerColumn := totalAvailableChars / len(statementResults.Headers) // distribute chars evenly
 	formatterOptions := &types.FormatterOptions{MaxCharCountToDisplay: charsPerColumn}
 
 	var formattedResults [][]string
@@ -377,7 +376,6 @@ func reverseISearchLivePrefix(livePrefixState *reverseisearch.LivePrefixState) f
 }
 
 func (c *InputController) reverseISearch() string {
-
 	writer := prompt.NewStdoutWriter()
 
 	livePrefixState := &reverseisearch.LivePrefixState{
