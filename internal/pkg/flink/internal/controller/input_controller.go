@@ -151,7 +151,7 @@ func (c *InputController) RunInteractiveInput() {
 			return
 		}
 
-		printResultToSTDOUT(processedStatement.StatementResults)
+		c.printResultToSTDOUT(processedStatement.StatementResults)
 		// We already printed the results using plain text and will delete the statement. When using TView this will happen upon leaving the interactive view.
 		// TODO - this is currently used only to save system resources, To be removed once the API Server becomes scalable.
 		// We want to maintain a "completed" statement in the backend
@@ -255,13 +255,24 @@ func (c *InputController) toggleOutputMode() {
 	components.PrintOutputModeState(c.appController.GetOutputMode() == types.TViewOutput, maxCol)
 }
 
-func printResultToSTDOUT(statementResults *types.StatementResults) {
+func (c *InputController) printResultToSTDOUT(statementResults *types.StatementResults) {
 	if statementResults == nil || len(statementResults.Headers) == 0 || len(statementResults.Rows) == 0 {
 		fmt.Println("\nThe server returned empty rows for this statement.")
 		return
 	}
 
-	formatterOptions := &types.FormatterOptions{MaxCharCountToDisplay: 77}
+	windowSize, err := c.GetMaxCol()
+	if err != nil {
+		// set a default size on error
+		windowSize = 100
+	}
+
+	fixedPadding := 4                                          // table border left and right
+	variablePadding := (len(statementResults.Headers) - 1) * 3 // column separator
+	totalAvailableChars := windowSize - fixedPadding - variablePadding
+	charsPerColumn := totalAvailableChars / len(statementResults.Headers) //distribute chars evenly
+	formatterOptions := &types.FormatterOptions{MaxCharCountToDisplay: charsPerColumn}
+
 	var formattedResults [][]string
 	for _, row := range statementResults.Rows {
 		var formattedRow []string

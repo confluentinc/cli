@@ -136,6 +136,9 @@ func (f AtomicStatementResultField) GetType() StatementResultFieldType {
 }
 
 func (f AtomicStatementResultField) Format(options *FormatterOptions) string {
+	if options != nil {
+		return truncateString(f.Value, options.GetMaxCharCountToDisplay())
+	}
 	return f.Value
 }
 
@@ -161,12 +164,16 @@ func (f ArrayStatementResultField) Format(options *FormatterOptions) string {
 	sb := strings.Builder{}
 	sb.WriteString("[")
 	for idx, item := range f.Values {
-		sb.WriteString(item.Format(options))
+		sb.WriteString(item.Format(nil))
 		if idx != len(f.Values)-1 {
 			sb.WriteString(", ")
 		}
 	}
 	sb.WriteString("]")
+
+	if options != nil {
+		return truncateString(sb.String(), options.GetMaxCharCountToDisplay())
+	}
 	return sb.String()
 }
 
@@ -198,12 +205,16 @@ func (f MapStatementResultField) Format(options *FormatterOptions) string {
 	sb := strings.Builder{}
 	sb.WriteString("{")
 	for idx, entry := range f.Entries {
-		sb.WriteString(fmt.Sprintf("%s=%s", entry.Key.Format(options), entry.Value.Format(options)))
+		sb.WriteString(fmt.Sprintf("%s=%s", entry.Key.Format(nil), entry.Value.Format(nil)))
 		if idx != len(f.Entries)-1 {
 			sb.WriteString(", ")
 		}
 	}
 	sb.WriteString("}")
+
+	if options != nil {
+		return truncateString(sb.String(), options.GetMaxCharCountToDisplay())
+	}
 	return sb.String()
 }
 
@@ -232,12 +243,16 @@ func (f RowStatementResultField) Format(options *FormatterOptions) string {
 	sb := strings.Builder{}
 	sb.WriteString("(")
 	for idx, item := range f.Values {
-		sb.WriteString(item.Format(options))
+		sb.WriteString(item.Format(nil))
 		if idx != len(f.Values)-1 {
 			sb.WriteString(", ")
 		}
 	}
 	sb.WriteString(")")
+
+	if options != nil {
+		return truncateString(sb.String(), options.GetMaxCharCountToDisplay())
+	}
 	return sb.String()
 }
 
@@ -247,4 +262,14 @@ func (f RowStatementResultField) ToSDKType() v1.SqlV1alpha1ResultItemRowOneOf {
 		rowItems = append(rowItems, value.ToSDKType())
 	}
 	return v1.SqlV1alpha1ResultItemRowOneOf{SqlV1alpha1ResultItemRow: &v1.SqlV1alpha1ResultItemRow{Items: rowItems}}
+}
+
+func truncateString(str string, maxCharCountToDisplay int) string {
+	if len(str) > maxCharCountToDisplay {
+		if maxCharCountToDisplay <= 3 {
+			return "..."
+		}
+		return str[:maxCharCountToDisplay-3] + "..."
+	}
+	return str
 }

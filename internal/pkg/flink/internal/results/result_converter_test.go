@@ -1,6 +1,7 @@
 package results
 
 import (
+	"fmt"
 	v1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"
 	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
 	"github.com/confluentinc/cli/internal/pkg/flink/test/generators"
@@ -112,4 +113,299 @@ func (s *ResultConverterTestSuite) TestConvertResultsFailsWhenSchemaAndResultsDo
 	internalResults, err := ConvertToInternalResults(statementResults.GetData(), resultSchema)
 	require.Nil(s.T(), internalResults)
 	require.Error(s.T(), err)
+}
+
+func (s *ResultConverterTestSuite) TestFormatAtomicField() {
+	rapid.Check(s.T(), func(t *rapid.T) {
+		atomicDataType := generators.AtomicDataType().Draw(t, "atomic data type")
+		atomicField := generators.GetResultItemGeneratorForType(atomicDataType).Draw(t, "atomic result field")
+		convertedField := convertToInternalField(atomicField, v1.ColumnDetails{
+			Name: "Test_Column",
+			Type: atomicDataType,
+		})
+
+		val := "NULL"
+		if types.NewResultFieldType(atomicDataType) != types.NULL {
+			val = string(*atomicField.SqlV1alpha1ResultItemString)
+		}
+
+		require.Equal(s.T(), val, convertedField.Format(nil))
+		maxDisplayableCharCount := rapid.IntRange(-3, 20).Draw(t, "max displayable chars")
+		if len(val) > maxDisplayableCharCount {
+			if maxDisplayableCharCount <= 3 {
+				require.Equal(s.T(), "...", convertedField.Format(&types.FormatterOptions{MaxCharCountToDisplay: maxDisplayableCharCount}))
+			} else {
+				require.Equal(s.T(), val[:maxDisplayableCharCount-3]+"...", convertedField.Format(&types.FormatterOptions{MaxCharCountToDisplay: maxDisplayableCharCount}))
+			}
+		} else {
+			require.Equal(s.T(), val, convertedField.Format(&types.FormatterOptions{MaxCharCountToDisplay: maxDisplayableCharCount}))
+		}
+	})
+}
+
+func (s *ResultConverterTestSuite) TestFormatArrayField() {
+	arrayField := types.ArrayStatementResultField{
+		Type:        types.ARRAY,
+		ElementType: types.VARCHAR,
+		Values: []types.StatementResultField{
+			types.AtomicStatementResultField{
+				Type:  types.VARCHAR,
+				Value: "Test",
+			},
+			types.AtomicStatementResultField{
+				Type:  types.VARCHAR,
+				Value: "Hello",
+			},
+			types.AtomicStatementResultField{
+				Type:  types.VARCHAR,
+				Value: "World",
+			},
+		},
+	}
+
+	testCases := []struct {
+		expected string
+		options  *types.FormatterOptions
+	}{
+		{
+			expected: "[Test, Hello, World]",
+			options:  nil,
+		},
+		{
+			expected: "...",
+			options:  &types.FormatterOptions{MaxCharCountToDisplay: 0},
+		},
+		{
+			expected: "[...",
+			options:  &types.FormatterOptions{MaxCharCountToDisplay: 4},
+		},
+		{
+			expected: "[Test, ...",
+			options:  &types.FormatterOptions{MaxCharCountToDisplay: 10},
+		},
+		{
+			expected: "[Test, Hello, Wo...",
+			options:  &types.FormatterOptions{MaxCharCountToDisplay: 19},
+		},
+		{
+			expected: "[Test, Hello, World]",
+			options:  &types.FormatterOptions{MaxCharCountToDisplay: 20},
+		},
+	}
+
+	for idx, testCase := range testCases {
+		fmt.Println(fmt.Sprintf("Evaluating test case #%v", idx))
+		formattedField := arrayField.Format(testCase.options)
+		if testCase.options.GetMaxCharCountToDisplay() >= 3 {
+			require.True(s.T(), len(formattedField) <= testCase.options.GetMaxCharCountToDisplay())
+		}
+		require.Equal(s.T(), testCase.expected, formattedField)
+	}
+}
+
+func (s *ResultConverterTestSuite) TestFormatMapField() {
+	mapField := types.MapStatementResultField{
+		Type:      types.ARRAY,
+		KeyType:   types.VARCHAR,
+		ValueType: types.VARCHAR,
+		Entries: []types.MapStatementResultFieldEntry{
+			{
+				Key: types.AtomicStatementResultField{
+					Type:  types.VARCHAR,
+					Value: "Key1",
+				},
+				Value: types.AtomicStatementResultField{
+					Type:  types.VARCHAR,
+					Value: "Value1",
+				},
+			},
+			{
+				Key: types.AtomicStatementResultField{
+					Type:  types.VARCHAR,
+					Value: "Key2",
+				},
+				Value: types.AtomicStatementResultField{
+					Type:  types.VARCHAR,
+					Value: "Value2",
+				},
+			},
+		},
+	}
+
+	testCases := []struct {
+		expected string
+		options  *types.FormatterOptions
+	}{
+		{
+			expected: "{Key1=Value1, Key2=Value2}",
+			options:  nil,
+		},
+		{
+			expected: "...",
+			options:  &types.FormatterOptions{MaxCharCountToDisplay: 0},
+		},
+		{
+			expected: "{Key1=Va...",
+			options:  &types.FormatterOptions{MaxCharCountToDisplay: 11},
+		},
+		{
+			expected: "{Key1=Value1, ...",
+			options:  &types.FormatterOptions{MaxCharCountToDisplay: 17},
+		},
+		{
+			expected: "{Key1=Value1, Key2=Val...",
+			options:  &types.FormatterOptions{MaxCharCountToDisplay: 25},
+		},
+		{
+			expected: "{Key1=Value1, Key2=Value2}",
+			options:  &types.FormatterOptions{MaxCharCountToDisplay: 26},
+		},
+	}
+
+	for idx, testCase := range testCases {
+		fmt.Println(fmt.Sprintf("Evaluating test case #%v", idx))
+		formattedField := mapField.Format(testCase.options)
+		if testCase.options.GetMaxCharCountToDisplay() >= 3 {
+			require.True(s.T(), len(formattedField) <= testCase.options.GetMaxCharCountToDisplay())
+		}
+		require.Equal(s.T(), testCase.expected, formattedField)
+	}
+}
+
+func (s *ResultConverterTestSuite) TestFormatRowField() {
+	arrayField := types.RowStatementResultField{
+		Type:         types.ARRAY,
+		ElementTypes: []types.StatementResultFieldType{types.VARCHAR, types.VARCHAR, types.VARCHAR},
+		Values: []types.StatementResultField{
+			types.AtomicStatementResultField{
+				Type:  types.VARCHAR,
+				Value: "Test",
+			},
+			types.AtomicStatementResultField{
+				Type:  types.VARCHAR,
+				Value: "Hello",
+			},
+			types.AtomicStatementResultField{
+				Type:  types.VARCHAR,
+				Value: "World",
+			},
+		},
+	}
+
+	testCases := []struct {
+		expected string
+		options  *types.FormatterOptions
+	}{
+		{
+			expected: "(Test, Hello, World)",
+			options:  nil,
+		},
+		{
+			expected: "...",
+			options:  &types.FormatterOptions{MaxCharCountToDisplay: 0},
+		},
+		{
+			expected: "(...",
+			options:  &types.FormatterOptions{MaxCharCountToDisplay: 4},
+		},
+		{
+			expected: "(Test, ...",
+			options:  &types.FormatterOptions{MaxCharCountToDisplay: 10},
+		},
+		{
+			expected: "(Test, Hello, Wo...",
+			options:  &types.FormatterOptions{MaxCharCountToDisplay: 19},
+		},
+		{
+			expected: "(Test, Hello, World)",
+			options:  &types.FormatterOptions{MaxCharCountToDisplay: 20},
+		},
+	}
+
+	for idx, testCase := range testCases {
+		fmt.Println(fmt.Sprintf("Evaluating test case #%v", idx))
+		formattedField := arrayField.Format(testCase.options)
+		if testCase.options.GetMaxCharCountToDisplay() >= 3 {
+			require.True(s.T(), len(formattedField) <= testCase.options.GetMaxCharCountToDisplay())
+		}
+		require.Equal(s.T(), testCase.expected, formattedField)
+	}
+}
+
+func (s *ResultConverterTestSuite) TestFormatNestedField() {
+	mapField := types.MapStatementResultField{
+		Type:      types.ARRAY,
+		KeyType:   types.VARCHAR,
+		ValueType: types.VARCHAR,
+		Entries: []types.MapStatementResultFieldEntry{
+			{
+				Key: types.AtomicStatementResultField{
+					Type:  types.VARCHAR,
+					Value: "Key1",
+				},
+				Value: types.AtomicStatementResultField{
+					Type:  types.VARCHAR,
+					Value: "Value1",
+				},
+			},
+			{
+				Key: types.AtomicStatementResultField{
+					Type:  types.VARCHAR,
+					Value: "Key2",
+				},
+				Value: types.AtomicStatementResultField{
+					Type:  types.VARCHAR,
+					Value: "Value2",
+				},
+			},
+		},
+	}
+
+	field := types.ArrayStatementResultField{
+		Type:        types.ARRAY,
+		ElementType: types.MAP,
+		Values: []types.StatementResultField{
+			mapField,
+			mapField,
+		},
+	}
+
+	testCases := []struct {
+		expected string
+		options  *types.FormatterOptions
+	}{
+		{
+			expected: "[{Key1=Value1, Key2=Value2}, {Key1=Value1, Key2=Value2}]",
+			options:  nil,
+		},
+		{
+			expected: "...",
+			options:  &types.FormatterOptions{MaxCharCountToDisplay: 0},
+		},
+		{
+			expected: "[...",
+			options:  &types.FormatterOptions{MaxCharCountToDisplay: 4},
+		},
+		{
+			expected: "[{Key1=Value1,...",
+			options:  &types.FormatterOptions{MaxCharCountToDisplay: 17},
+		},
+		{
+			expected: "[{Key1=Value1, Key2=Value2}, {Key1=Value1, Key2=Valu...",
+			options:  &types.FormatterOptions{MaxCharCountToDisplay: 55},
+		},
+		{
+			expected: "[{Key1=Value1, Key2=Value2}, {Key1=Value1, Key2=Value2}]",
+			options:  &types.FormatterOptions{MaxCharCountToDisplay: 56},
+		},
+	}
+
+	for idx, testCase := range testCases {
+		fmt.Println(fmt.Sprintf("Evaluating test case #%v", idx))
+		formattedField := field.Format(testCase.options)
+		if testCase.options.GetMaxCharCountToDisplay() >= 3 {
+			require.True(s.T(), len(formattedField) <= testCase.options.GetMaxCharCountToDisplay())
+		}
+		require.Equal(s.T(), testCase.expected, formattedField)
+	}
 }
