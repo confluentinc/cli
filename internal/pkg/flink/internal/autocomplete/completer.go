@@ -8,7 +8,7 @@ func combineCompleters(getSmartCompletion func() bool, completers ...prompt.Comp
 	return func(d prompt.Document) []prompt.Suggest {
 		suggestions := []prompt.Suggest{}
 
-		if !(getSmartCompletion()) {
+		if !getSmartCompletion() {
 			return suggestions
 		}
 
@@ -30,13 +30,13 @@ func NewCompleterBuilder(isSmartCompletionEnabled func() bool) *completerBuilder
 	}
 }
 
-func (a *completerBuilder) AddCompleter(completer prompt.Completer) *completerBuilder {
-	if a.completer == nil {
-		a.completer = combineCompleters(a.isSmartCompletionEnabled, completer)
+func (c *completerBuilder) AddCompleter(completer prompt.Completer) *completerBuilder {
+	if c.completer == nil {
+		c.completer = combineCompleters(c.isSmartCompletionEnabled, completer)
 	} else {
-		a.completer = combineCompleters(a.isSmartCompletionEnabled, a.completer, completer)
+		c.completer = combineCompleters(c.isSmartCompletionEnabled, c.completer, completer)
 	}
-	return a
+	return c
 }
 
 func (a *completerBuilder) BuildCompleter() prompt.Completer {
