@@ -7,36 +7,12 @@ import (
 	"net/http"
 	"net/http/httputil"
 
+	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
-type Manifest struct {
-	Name     string    `json:"name"`
-	Title    string    `json:"title"`
-	Version  string    `json:"version"`
-	Owner    Owner     `json:"owner"`
-	Archive  Archive   `json:"archive"`
-	Licenses []License `json:"license"`
-}
-
-type Owner struct {
-	Username string `json:"username"`
-	Name     string `json:"name"`
-}
-
-type Archive struct {
-	Url  string `json:"url"`
-	Md5  string `json:"md5"`
-	Sha1 string `json:"sha1"`
-}
-
-type License struct {
-	Name string `json:"name"`
-	Url  string `json:"url"`
-}
-
-func (c *Client) GetRemoteManifest(owner, name, version string) (*Manifest, error) {
+func (c *Client) GetRemoteManifest(owner, name, version string) (*ccstructs.Manifest, error) {
 	manifestUrl := fmt.Sprintf("%s/api/plugins/%s/%s", c.URL, owner, name)
 	if version != "latest" {
 		manifestUrl = fmt.Sprintf("%s/versions/%s", manifestUrl, version)
@@ -83,7 +59,7 @@ func (c *Client) GetRemoteManifest(owner, name, version string) (*Manifest, erro
 		return nil, errors.Errorf("failed to read manifest file from Confluent Hub")
 	}
 
-	pluginManifest := new(Manifest)
+	pluginManifest := new(ccstructs.Manifest)
 	if err := json.Unmarshal(body, &pluginManifest); err != nil {
 		return nil, err
 	}
@@ -91,7 +67,7 @@ func (c *Client) GetRemoteManifest(owner, name, version string) (*Manifest, erro
 	return pluginManifest, nil
 }
 
-func (c *Client) GetRemoteArchive(pluginManifest *Manifest) ([]byte, error) {
+func (c *Client) GetRemoteArchive(pluginManifest *ccstructs.Manifest) ([]byte, error) {
 	req, err := http.NewRequest(http.MethodGet, pluginManifest.Archive.Url, nil)
 	if err != nil {
 		return nil, err

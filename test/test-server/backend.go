@@ -24,6 +24,7 @@ type TestBackend struct {
 	kafkaRestProxy *httptest.Server
 	mds            *httptest.Server
 	sr             *httptest.Server
+	hub            *httptest.Server
 }
 
 func StartTestBackend(t *testing.T, isAuditLogEnabled bool) *TestBackend {
@@ -35,6 +36,7 @@ func StartTestBackend(t *testing.T, isAuditLogEnabled bool) *TestBackend {
 		kafkaRestProxy: newTestCloudServer(NewKafkaRestProxyRouter(t), TestKafkaRestProxyUrl.Host),
 		mds:            httptest.NewServer(NewMdsRouter(t)),
 		sr:             httptest.NewServer(NewSRRouter(t)),
+		hub:            newTestCloudServer(NewHubRouter(t), TestHubUrl.Host),
 	}
 
 	cloudRouter.srApiUrl = backend.sr.URL
@@ -82,6 +84,9 @@ func (b *TestBackend) Close() {
 	}
 	if b.sr != nil {
 		b.sr.Close()
+	}
+	if b.hub != nil {
+		b.hub.Close()
 	}
 }
 

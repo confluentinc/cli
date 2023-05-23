@@ -1,3 +1,4 @@
+Beginning installation.
 Error: 2 errors occurred:
 	* invalid operation value: FAKE
 	* exactly one of `--cluster-scope`, `--consumer-group`, `--topic`, `--transactional-id` must be set

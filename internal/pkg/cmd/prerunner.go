@@ -285,10 +285,6 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(*cobra.Com
 			return err
 		}
 
-		if err := r.setHubClient(command); err != nil {
-			return err
-		}
-
 		return nil
 	}
 }
@@ -569,6 +565,10 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(*co
 			if err := r.updateToken(tokenErr, command.Config.Context(), unsafeTrace); err != nil {
 				return err
 			}
+		}
+
+		if err := r.setHubClient(command); err != nil {
+			return err
 		}
 
 		return nil

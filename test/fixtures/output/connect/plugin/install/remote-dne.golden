@@ -1,0 +1,2 @@
+[DRY RUN] Performing a dry run of this command.
+Error: failed to read manifest file from Confluent Hub: resource not found
