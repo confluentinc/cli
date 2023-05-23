@@ -78,7 +78,7 @@ func newExportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.Flags().String("schema-registry-api-key", "", "API key for Schema Registry.")
 	cmd.Flags().String("schema-registry-api-secret", "", "API secret for Schema Registry.")
 	cmd.Flags().String("schema-context", "default", "Use a specific schema context.")
-	cmd.Flags().StringSlice("topics", nil, "A comma-separated list of topics to export. Supports prefixes ending in wildcard (*).")
+	cmd.Flags().StringSlice("topics", nil, "A comma-separated list of topics to export. Supports prefixes ending with a wildcard (*).")
 	pcmd.AddValueFormatFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -123,7 +123,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) error {
 	}
 
 	for _, topic := range accountDetails.topics {
-		if !topicMatch(topic.GetTopicName(), topicsSpecified, prefixesSpecified) {
+		if !topicMatch(topic.GetTopicName(), flags.topics) {
 			continue
 		}
 
@@ -590,17 +590,13 @@ func createConsumer(broker string, clusterCreds *v1.APIKeyPair, groupId string) 
 }
 
 // Check if topic matches user-specified topics/prefixes. True if user didn't specify
-func topicMatch(topic string, topics types.Set, prefixes []string) bool {
-	if len(topics) == 0 && len(prefixes) == 0 {
+func topicMatch(topic string, userTopics []string) bool {
+	if len(userTopics) == 0 {
 		return true
 	}
 
-	if topics.Contains(topic) {
-		return true
-	}
-
-	for _, prefix := range prefixes {
-		if strings.HasPrefix(topic, prefix[:len(prefix)-1]) {
+	for _, userTopic := range userTopics {
+		if strings.HasSuffix(userTopic, "*") && strings.HasPrefix(topic, userTopic[:len(userTopic)-1]) || userTopic == topic {
 			return true
 		}
 	}
