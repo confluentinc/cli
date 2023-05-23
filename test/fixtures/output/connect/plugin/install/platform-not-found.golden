@@ -1,0 +1,5 @@
+Beginning installation.
+Error: unable to detect a Confluent Platform installation
+
+Suggestions:
+    Pass the plugin directory and worker configuration files with `--plugin-directory` and `--worker-configs`.
