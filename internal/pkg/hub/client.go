@@ -14,7 +14,7 @@ type Client struct {
 	Client *http.Client
 }
 
-func NewClient(isTest bool, unsafeTrace bool) *Client {
+func NewClient(isTest, unsafeTrace bool) *Client {
 	url := "https://api.hub.confluent.io"
 	if isTest {
 		url = testserver.TestHubUrl.String()
