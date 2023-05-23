@@ -72,8 +72,14 @@ func (c *InputController) RunInteractiveInput() {
 
 	// We check for statement result and rows so we don't leave GoPrompt in case of errors
 	for {
+		// We save and restore the stdinState to avoid any terminal settings/shortcut bindings/Signals that can be caught and handled
+		// to be unconfigured by GoPrompt. This change is smart for multiple purposes but
+		// it was first introduced due to a bug where CtrlC stopped working after executing GoPrompt.
+		// Ref: https://confluentinc.atlassian.net/jira/software/projects/KFS/boards/691?selectedIssue=KFS-808
+		stdinState := getStdin()
 		// Run interactive input and take over terminal
 		input := c.prompt.Input()
+		restoreStdin(stdinState)
 
 		if c.shouldExit {
 			c.appController.ExitApplication()
