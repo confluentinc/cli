@@ -51,8 +51,6 @@ smoke-tests:
 	export VAULT_ADDR=https://vault.cireops.gcp.internal.confluent.cloud && \
 	vault login -method=oidc -path=okta && \
 	password=$$(vault kv get -field password v1/devel/kv/cli/system-tests/test-user-password) && \
-	email="cli-team+system-tests@confluent.io" && \
-	echo -e "$${email}\n$${password}\n" | HOME=$$(mktemp -d) ./bin/confluent login && \
+	echo -e "cli-team+system-tests@confluent.io\n$${password}\n" | HOME=$$(mktemp -d) ./bin/confluent login && \
 	go install github.com/confluentinc/cli-plugins/confluent-login-headless_sso@latest && \
-	email="cli-team+system-tests+sso@confluent.io" && \
-	HOME=$$(mktemp -d) ./bin/confluent login headless-sso --provider okta --email $${email} --password $${password}
+	HOME=$$(mktemp -d) ./bin/confluent login headless-sso --provider okta --email cli-team+system-tests+sso@confluent.io --password $${password}
