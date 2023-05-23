@@ -42,7 +42,7 @@ func (c *authenticatedTopicCommand) newUpdateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides with form "key=value".`)
-	cmd.Flags().Bool("dry-run", false, "Run the command without committing changes to Kafka.")
+	pcmd.AddDryRunFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -117,7 +117,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		return errors.NewErrorWithSuggestions(errors.EmptyResponseErrorMsg, errors.InternalServerErrorSuggestions)
 	}
 
-	readOnlyConfigs := types.NewSet()
+	readOnlyConfigs := types.NewSet[string]()
 	configsValues := make(map[string]string)
 	for _, conf := range configsResp.Data {
 		if conf.IsReadOnly {
