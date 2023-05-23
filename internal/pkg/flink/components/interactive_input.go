@@ -7,12 +7,6 @@ import (
 	"strings"
 )
 
-func printEmptySpaces(n int) {
-	for i := 0; i < n; i++ {
-		fmt.Print(" ")
-	}
-}
-
 func PrintSmartCompletionState(smartCompletion bool, maxCol int) {
 	msgPrefix := "Smart Completion is now "
 	PrintOptionState(msgPrefix, smartCompletion, maxCol)
@@ -32,7 +26,7 @@ func PrintOptionState(prefix string, state bool, maxCol int) {
 	fmt.Fprintf(os.Stdout, "\n\033[0m%s\033[0;36m%s\033[0m", prefix, stateMsg)
 
 	// This prints to the console the exact amount of empty characters to fill the line might have autocompletions before
-	printEmptySpaces(maxCol - len(prefix+stateMsg))
+	strings.Repeat(" ", maxCol-len(prefix+stateMsg))
 	fmt.Print("\n")
 }
 
