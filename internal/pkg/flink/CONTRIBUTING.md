@@ -25,10 +25,6 @@ Go has an approach to running its own programs as external processes, such as Vi
 
 So it turns out that it is not possible to achieve clipboard in Linux as a library.
 
-#### Debugging in VS Code
-
-The current settings.json should allow you to debug the application. [You might have to install delve for that.](https://www.rookout.com/blog/golang-debugging-tutorial/#:~:text=To%20install%20Delve%20on%20VS,you%20get%20started%20with%20debugging)
-
 #### Adding custom shortcuts to the client
 
 An important part of a good command line tool are shortcuts. To add custom shortcuts with go-prompt, you can take a look here at:
