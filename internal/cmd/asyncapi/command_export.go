@@ -24,7 +24,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/serdes"
-	"github.com/confluentinc/cli/internal/pkg/types"
 )
 
 type command struct {
@@ -78,7 +77,7 @@ func newExportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.Flags().String("schema-registry-api-key", "", "API key for Schema Registry.")
 	cmd.Flags().String("schema-registry-api-secret", "", "API secret for Schema Registry.")
 	cmd.Flags().String("schema-context", "default", "Use a specific schema context.")
-	cmd.Flags().StringSlice("topics", nil, "A comma-separated list of topics to export.")
+	cmd.Flags().StringSlice("topics", nil, "A comma-separated list of topics to export. Supports prefixes ending with a wildcard (*).")
 	pcmd.AddValueFormatFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -108,12 +107,11 @@ func (c *command) export(cmd *cobra.Command, _ []string) error {
 	}
 	channelCount := 0
 
-	topicsSpecified := types.NewSet(flags.topics...)
 	for _, topic := range accountDetails.topics {
-		// Only use user-specified topics if parameter passed
-		if len(topicsSpecified) > 0 && !topicsSpecified.Contains(topic.GetTopicName()) {
+		if !topicMatch(topic.GetTopicName(), flags.topics) {
 			continue
 		}
+
 		for _, subject := range accountDetails.subjects {
 			if subject != schemaContextPrefix+topic.GetTopicName()+"-value" || strings.HasPrefix(topic.GetTopicName(), "_") {
 				// Avoid internal topics or if subject does not follow topic naming strategy
@@ -574,4 +572,18 @@ func createConsumer(broker string, clusterCreds *v1.APIKeyPair, groupId string) 
 		return nil, fmt.Errorf("failed to create Kafka consumer: %v", err)
 	}
 	return consumer, nil
+}
+
+// Check if topic matches user-specified topics/prefixes. True if user didn't specify
+func topicMatch(topic string, userTopics []string) bool {
+	if len(userTopics) == 0 {
+		return true
+	}
+
+	for _, userTopic := range userTopics {
+		if strings.HasSuffix(userTopic, "*") && strings.HasPrefix(topic, userTopic[:len(userTopic)-1]) || userTopic == topic {
+			return true
+		}
+	}
+	return false
 }
