@@ -10,7 +10,7 @@ Create a topic named "my_topic" with default options.
 Flags:
       --partitions uint32    Number of topic partitions.
       --config strings       A comma-separated list of configuration overrides ("key=value") for the topic being created.
-      --dry-run              Run the command without committing changes to Kafka.
+      --dry-run              Run the command without committing changes.
       --if-not-exists        Exit gracefully if topic already exists.
       --cluster string       Kafka cluster ID.
       --context string       CLI context name.
