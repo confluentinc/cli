@@ -346,7 +346,7 @@ func (c *pluginCommand) installFromRemote(pluginManifest *ccstructs.Manifest, pl
 		return err
 	}
 
-	checksumErrorMsg := "%s checksum for downloaded archive (%s) does not match checksum in manifest (%s) for plugin \"%s\""
+	checksumErrorMsg := `%s checksum for downloaded archive (%s) does not match checksum in manifest (%s) for plugin "%s"`
 	calculatedMd5Checksum := fmt.Sprintf("%x", md5.Sum(archive))
 	if calculatedMd5Checksum != pluginManifest.Archive.Md5 {
 		return errors.Errorf(checksumErrorMsg, "md5", calculatedMd5Checksum, pluginManifest.Archive.Md5, pluginManifest.Name)
