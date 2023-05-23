@@ -15,7 +15,7 @@ func TestHistorySnapshot(t *testing.T) {
 	buffer.InsertText(input, false, true)
 
 	completer := NewCompleterBuilder(mockGetSmartCompletion).
-		AddCompleter(GenerateHistoryCompleter(&history)).
+		AddCompleter(GenerateHistoryCompleter(history)).
 		BuildCompleter()
 
 	suggestions := completer(*buffer.Document())
