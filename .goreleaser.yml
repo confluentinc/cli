@@ -297,7 +297,7 @@ brews:
       branch: "cli-{{ .Version }}"
       pull_request:
         enabled: true
-    url_template: "{{ .Env.S3FOLDER }}/archives/{{ .Version }}/{{ .ArtifactName }}"
+    url_template: "https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/archives/{{ .Version }}/{{ .ArtifactName }}"
     homepage: https://docs.confluent.io/confluent-cli/current/overview.html
     description: CLI for Confluent Cloud and Confluent Platform
     skip_upload: "{{ .Env.DRY_RUN }}"
