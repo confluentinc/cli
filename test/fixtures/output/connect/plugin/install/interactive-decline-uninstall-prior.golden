@@ -1,0 +1,6 @@
+[DRY RUN] Beginning installation.
+
+Using the only available Confluent Platform installation at "test/fixtures/input/connect/confluent-prior-install".
+Do you want to install this plugin into "test/fixtures/input/connect/confluent-prior-install/share/confluent-hub-components"? (y/n): 
+A version of this plugin is already installed and must be removed to continue.
+Do you want to uninstall an existing version of this plugin located at test/fixtures/input/connect/confluent-prior-install/share/confluent-hub-components/confluentinc-integration-test-plugin? (y/n): Error: previous versions must be uninstalled to continue

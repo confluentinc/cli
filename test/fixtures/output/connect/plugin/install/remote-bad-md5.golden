@@ -1,0 +1,8 @@
+Beginning installation.
+
+Using the only available Confluent Platform installation at "test/fixtures/input/connect/confluent-7.3.3".
+Do you want to install this plugin into "test/fixtures/input/connect/confluent-7.3.3/share/confluent-hub-components"? (y/n): 
+License: Example License 1.0 (url-to-license-goes-here)
+I agree to this software license agreement. (y/n): 
+Installing Integration Test Plugin 0.1.0, provided by Confluent, Inc.
+Error: MD5 checksum for downloaded archive (7a920f4187137251171abcd7c7dd9844) does not match checksum in manifest (12345) for plugin "integration-test-plugin"
