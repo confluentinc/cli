@@ -94,35 +94,34 @@ func (t *TableController) GetActionForShortcut(shortcut string) func() {
 }
 
 func (t *TableController) inputHandlerTableView(event *tcell.EventKey) *tcell.EventKey {
-	if event.Key() == tcell.KeyRune {
+	switch event.Key() {
+	case tcell.KeyRune:
 		char := unicode.ToUpper(event.Rune())
 		action := t.GetActionForShortcut(string(char))
 		if action != nil {
 			action()
 		}
 		return nil
-	} else {
-		switch event.Key() {
-		case tcell.KeyEscape:
-			t.exitTViewMode()
-			return nil
-		case tcell.KeyCtrlQ:
-			t.exitTViewMode()
-			return nil
-		case tcell.KeyEnter:
-			if !t.isAutoRefreshRunning() {
-				row := t.materializedStatementResultsIterator.Value()
-				t.showRowView(row)
-				t.isRowViewOpen = true
-			}
-			return nil
+	case tcell.KeyEscape:
+		t.exitTViewMode()
+		return nil
+	case tcell.KeyCtrlQ:
+		t.exitTViewMode()
+		return nil
+	case tcell.KeyEnter:
+		if !t.isAutoRefreshRunning() {
+			row := t.materializedStatementResultsIterator.Value()
+			t.showRowView(row)
+			t.isRowViewOpen = true
 		}
+		return nil
 	}
 	return event
 }
 
 func (t *TableController) inputHandlerRowView(event *tcell.EventKey) *tcell.EventKey {
-	if event.Key() == tcell.KeyRune {
+	switch event.Key() {
+	case tcell.KeyRune:
 		char := unicode.ToUpper(event.Rune())
 		switch char {
 		case 'Q':
@@ -131,16 +130,13 @@ func (t *TableController) inputHandlerRowView(event *tcell.EventKey) *tcell.Even
 			t.isRowViewOpen = false
 		}
 		return nil
-	} else {
-		switch event.Key() {
-		case tcell.KeyCtrlQ:
-			fallthrough
-		case tcell.KeyEscape:
-			t.appController.ShowTableView()
-			t.focusTable()
-			t.isRowViewOpen = false
-			return nil
-		}
+	case tcell.KeyCtrlQ:
+		fallthrough
+	case tcell.KeyEscape:
+		t.appController.ShowTableView()
+		t.focusTable()
+		t.isRowViewOpen = false
+		return nil
 	}
 	return event
 }
