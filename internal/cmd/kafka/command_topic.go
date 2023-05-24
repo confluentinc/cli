@@ -134,7 +134,7 @@ func (c *authenticatedTopicCommand) getNumPartitions(topicName string) (int, err
 		return 0, err
 	}
 
-	partitionsResp, httpResp, err := kafkaREST.CloudClient.ListKafkaPartitions(kafkaClusterConfig.ID, topicName)
+	topicResp, httpResp, err := kafkaREST.CloudClient.GetKafkaTopic(kafkaClusterConfig.ID, topicName)
 	if err != nil {
 		if restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err); parseErr == nil && restErr.Code == ccloudv2.UnknownTopicOrPartitionErrorCode {
 			return 0, fmt.Errorf(errors.UnknownTopicErrorMsg, topicName)
@@ -142,7 +142,7 @@ func (c *authenticatedTopicCommand) getNumPartitions(topicName string) (int, err
 		return 0, kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
-	return len(partitionsResp.Data), nil
+	return int(topicResp.PartitionsCount), nil
 }
 
 func (c *authenticatedTopicCommand) provisioningClusterCheck(lkc string) error {

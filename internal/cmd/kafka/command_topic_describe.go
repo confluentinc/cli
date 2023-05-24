@@ -71,7 +71,7 @@ func (c *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 	list.Add(&topicConfigurationOut{
 		Name:     numPartitionsKey,
 		Value:    strconv.Itoa(numPartitions),
-		ReadOnly: true,
+		ReadOnly: false,
 	})
 	return list.Print()
 }
