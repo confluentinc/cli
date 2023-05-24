@@ -19,6 +19,11 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/types"
 )
 
+const (
+	updateTopicConfigRestMsg    = "Updated the following configuration values for topic \"%s\"%s:\n"
+	readOnlyConfigNotUpdatedMsg = "(read-only configs were not updated)"
+)
+
 type topicConfigurationOut struct {
 	Name     string `human:"Name" serialized:"name"`
 	Value    string `human:"Value" serialized:"value"`
@@ -140,7 +145,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		configsValues[conf.Name] = conf.GetValue()
 	}
 
-	var readOnlyConfigNotUpdatedMsg string
+	var readOnlyConfigNotUpdatedString string
 	list := output.NewList(cmd)
 	for _, config := range kafkaRestConfigs.Data {
 		list.Add(&topicConfigurationOut{
@@ -149,13 +154,13 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 			ReadOnly: readOnlyConfigs[config.Name],
 		})
 		if readOnlyConfigs[config.Name] {
-			readOnlyConfigNotUpdatedMsg = fmt.Sprintf(" %s", errors.ReadOnlyConfigNotUpdatedMsg)
+			readOnlyConfigNotUpdatedString = fmt.Sprintf(" %s", errors.ReadOnlyConfigNotUpdatedMsg)
 		}
 	}
 
 	// Write current state of relevant config settings
 	if output.GetFormat(cmd) == output.Human {
-		output.ErrPrintf(errors.UpdateTopicConfigRestMsg, topicName, readOnlyConfigNotUpdatedMsg)
+		output.ErrPrintf(updateTopicConfigRestMsg, topicName, readOnlyConfigNotUpdatedString)
 	}
 
 	return list.Print()
