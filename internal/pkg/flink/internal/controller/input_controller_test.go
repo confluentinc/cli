@@ -7,36 +7,9 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
-	"github.com/confluentinc/cli/internal/pkg/flink/internal/history"
 	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
 	"github.com/confluentinc/cli/internal/pkg/flink/test/mock"
 )
-
-func TestInputController_renderError(t *testing.T) {
-	type fields struct {
-		History       history.History
-		appController *ApplicationController
-	}
-	type args struct {
-		err *types.StatementError
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			c := &InputController{
-				appController: tt.fields.appController,
-			}
-			require.Equal(t, tt.want, c.isSessionValid(tt.args.err))
-		})
-	}
-}
 
 func TestRenderError(t *testing.T) {
 	ctrl := gomock.NewController(t)
@@ -86,7 +59,10 @@ func TestShouldUseTView(t *testing.T) {
 			name: "statement with one column and two rows should not use TView",
 			statement: types.ProcessedStatement{IsLocalStatement: false, StatementResults: &types.StatementResults{
 				Headers: []string{"Column 1"},
-				Rows:    []types.StatementResultRow{{Fields: []types.StatementResultField{types.AtomicStatementResultField{}}}, {Fields: []types.StatementResultField{types.AtomicStatementResultField{}}}},
+				Rows: []types.StatementResultRow{
+					{Fields: []types.StatementResultField{types.AtomicStatementResultField{}}},
+					{Fields: []types.StatementResultField{types.AtomicStatementResultField{}}},
+				},
 			}},
 			want: false,
 		},
@@ -102,7 +78,10 @@ func TestShouldUseTView(t *testing.T) {
 			name: "statement with two columns and two rows should use TView",
 			statement: types.ProcessedStatement{IsLocalStatement: false, StatementResults: &types.StatementResults{
 				Headers: []string{"Column 1", "Column 2"},
-				Rows:    []types.StatementResultRow{{Fields: []types.StatementResultField{types.AtomicStatementResultField{}}}, {Fields: []types.StatementResultField{types.AtomicStatementResultField{}}}},
+				Rows: []types.StatementResultRow{
+					{Fields: []types.StatementResultField{types.AtomicStatementResultField{}}},
+					{Fields: []types.StatementResultField{types.AtomicStatementResultField{}}},
+				},
 			}},
 			want: true,
 		},
@@ -110,7 +89,10 @@ func TestShouldUseTView(t *testing.T) {
 			name: "local statement with two columns and two rows should not use TView",
 			statement: types.ProcessedStatement{IsLocalStatement: true, StatementResults: &types.StatementResults{
 				Headers: []string{"Column 1", "Column 2"},
-				Rows:    []types.StatementResultRow{{Fields: []types.StatementResultField{types.AtomicStatementResultField{}}}, {Fields: []types.StatementResultField{types.AtomicStatementResultField{}}}},
+				Rows: []types.StatementResultRow{
+					{Fields: []types.StatementResultField{types.AtomicStatementResultField{}}},
+					{Fields: []types.StatementResultField{types.AtomicStatementResultField{}}},
+				},
 			}},
 			want: false,
 		},

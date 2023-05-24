@@ -52,8 +52,7 @@ func TestFailingBasicAutoCompletion(t *testing.T) {
 Line breaks in suggestions breaks go-prompt render/formatting when you go through suggestions.
 Apart from that, they're not properly formatted for visualization.
 This test makes sure that we don't generate suggestions with line breaks.
-This could be remove if we eventually handle this formatting problems over at go-prompt
-More about this: https://confluentinc.atlassian.net/jira/software/projects/KFS/boards/691?selectedIssue=KFS-606
+This could be removed if we eventually handle this formatting problem over at go-prompt
 */
 func TestNoLineBreaksInAutocompletion(t *testing.T) {
 	// given

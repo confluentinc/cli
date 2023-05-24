@@ -3,7 +3,6 @@ package autocomplete
 import (
 	"testing"
 
-
 	"github.com/bradleyjkemp/cupaloy"
 	"github.com/stretchr/testify/require"
 

@@ -76,9 +76,7 @@ func TestHistorySave(t *testing.T) {
 func TestAppendHistory(t *testing.T) {
 	// Create a History instance for testing
 	history := &History{
-		confluentPath: "",
-		historyPath:   "",
-		Data:          []string{"statement1"},
+		Data: []string{"statement1"},
 	}
 
 	// Append statements to history with correct format

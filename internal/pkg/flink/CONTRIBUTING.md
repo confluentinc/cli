@@ -8,7 +8,7 @@ go tool cover -html=coverage.out -o coverage.html
 You can then open the coverage.html file from the repository root in your browser to see the coverage report for each file.
 
 ### Generating Mocks
-We have generated mocked as we need them. We have a make target for controllers, store and client. You can look at the mock_generator.go file as an exampple if you need to mock other things.
+We have generated mocked as we need them. We have a make target for controllers, store and client. You can look at the mock_generator.go file as an example if you need to mock other things.
 
 ```
 go generate test/mock/mock_generator.go
@@ -23,8 +23,3 @@ An important part of a good command line tool are shortcuts. To add custom short
 https://stackoverflow.com/questions/6205157/how-to-set-keyboard-shortcuts-to-jump-to-beginning-end-of-line
 
 We have a couple of examples in the codebase.
-
-#### Inspirations for testing tview - we prob won't test this though
-
-https://github.com/rivo/tview/pull/441
-https://github.com/rivo/tview/pull/5/

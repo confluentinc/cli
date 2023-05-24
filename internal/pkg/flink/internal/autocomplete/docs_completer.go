@@ -11,9 +11,8 @@ import (
 
 //go:embed code_snippets.json
 var codeSnippets []byte
-var snippetSuggestions []prompt.Suggest
 
-func loadSnippetSuggestions() {
+func loadSnippetSuggestions(snippetSuggestions []prompt.Suggest) {
 	var payload map[string]any
 	err := json.Unmarshal(codeSnippets, &payload)
 	if err != nil {
@@ -33,10 +32,13 @@ func loadSnippetSuggestions() {
 }
 
 func GenerateDocsCompleter() prompt.Completer {
-	loadSnippetSuggestions()
-	return docsCompleter
+	var snippetSuggestions []prompt.Suggest
+	loadSnippetSuggestions(snippetSuggestions)
+	return docsCompleter(snippetSuggestions)
 }
 
-func docsCompleter(in prompt.Document) []prompt.Suggest {
-	return SuggestNextWord(snippetSuggestions, in.TextBeforeCursor())
+func docsCompleter(snippetSuggestions []prompt.Suggest) prompt.Completer {
+	return func(in prompt.Document) []prompt.Suggest {
+		return SuggestNextWord(snippetSuggestions, in.TextBeforeCursor())
+	}
 }

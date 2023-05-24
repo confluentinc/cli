@@ -25,9 +25,7 @@ type completerBuilder struct {
 }
 
 func NewCompleterBuilder(isSmartCompletionEnabled func() bool) *completerBuilder {
-	return &completerBuilder{
-		isSmartCompletionEnabled: isSmartCompletionEnabled,
-	}
+	return &completerBuilder{isSmartCompletionEnabled: isSmartCompletionEnabled}
 }
 
 func (c *completerBuilder) AddCompleter(completer prompt.Completer) *completerBuilder {

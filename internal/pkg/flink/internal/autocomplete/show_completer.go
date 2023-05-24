@@ -12,9 +12,6 @@ func ShowCompleter(in prompt.Document) []prompt.Suggest {
 		{Text: "SHOW TABLES FROM db1;", Description: "Lists all tables from a database"},
 		{Text: "SHOW COLUMNS FROM Orders;", Description: "Lists all columns of a table"},
 		{Text: "SHOW VIEWS;", Description: "Lists all views"},
-		// {Text: "SHOW FUNCTIONS;", Description: "Used to list catalogs"}, still not supported
-		// {Text: "SHOW MODULES;", Description: "Used to list catalogs"}, still not supported
-		// {Text: "SHOW JARS;", Description: "Used to list catalogs"}, still not supported
 		{Text: "SHOW CURRENT CATALOG;", Description: "Displays the current catalog"},
 		{Text: "SHOW CURRENT DATABASE;", Description: "Displays the current database"},
 		{Text: "SHOW CREATE TABLE;", Description: "Displays the CREATE TABLE statement for a table"},

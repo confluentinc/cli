@@ -20,15 +20,14 @@ type History struct {
 
 func LoadHistory() (history *History) {
 	historyPath, history := initPath(history)
-	history = loadFromPath(historyPath, history)
 
-	return history
+	return loadFromPath(historyPath, history)
 }
 
 func loadFromPath(historyPath string, history *History) *History {
 	jsonFile, err := os.ReadFile(historyPath)
 	if errors.Is(err, os.ErrNotExist) {
-		log.Printf("Couldn't load past statements: file doesn't exist: %s. Error: "+err.Error(), historyPath)
+		log.Printf("Couldn't load past statements: file doesn't exist: %s. Error: %v", historyPath, err)
 		return history
 	}
 

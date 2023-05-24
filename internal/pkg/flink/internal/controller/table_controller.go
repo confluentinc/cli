@@ -46,13 +46,13 @@ const maxResultsCapacity int = 1000
 const defaultRefreshInterval uint = 1000 // in milliseconds
 const minRefreshInterval uint = 100      // in milliseconds
 
-func NewTableController(tableRef *tview.Table, store store.StoreInterface, appController ApplicationControllerInterface) TableControllerInterface {
-	controller := &TableController{
-		table:         tableRef,
+func NewTableController(table *tview.Table, store store.StoreInterface, appController ApplicationControllerInterface) TableControllerInterface {
+
+	return &TableController{
+		table:         table,
 		appController: appController,
 		store:         store,
 	}
-	return controller
 }
 
 func (t *TableController) SetRunInteractiveInputCallback(runInteractiveInput func()) {
@@ -156,7 +156,7 @@ func (t *TableController) showRowView(row *types.StatementResultRow) {
 		sb.WriteString(fmt.Sprintf("[yellow]%s:\n[white]%s\n\n", tview.Escape(headers[rowIdx]), tview.Escape(field.Format(nil))))
 	}
 	textView := tview.NewTextView().SetText(sb.String())
-	// mouse needs to be disabled, otherwise selection won't work
+	// mouse needs to be disabled, otherwise selecting text with the cursor won't work
 	t.appController.TView().SetRoot(components.CreateRowView(textView), true).EnableMouse(false)
 	t.appController.TView().SetFocus(textView)
 }
@@ -179,9 +179,9 @@ func (t *TableController) startAutoRefresh(statement types.ProcessedStatement, r
 	if statement.PageToken == "" || t.isAutoRefreshRunning() {
 		return
 	}
-	fetchCtx, cancelFetch := context.WithCancel(context.Background())
-	t.setRefreshCancelFunc(cancelFetch)
-	t.refreshResults(fetchCtx, statement, refreshInterval)
+	ctx, cancel := context.WithCancel(context.Background())
+	t.setRefreshCancelFunc(cancel)
+	t.refreshResults(ctx, statement, refreshInterval)
 }
 
 func (t *TableController) isAutoRefreshRunning() bool {
@@ -250,15 +250,18 @@ func (t *TableController) renderTitle() {
 		mode = " Table mode"
 	}
 
+	var state string
 	if t.statement.PageToken == "" {
-		t.table.SetTitle(fmt.Sprintf("%s (completed) ", mode))
+		state = " (completed) "
 	} else {
 		if t.isAutoRefreshRunning() {
-			t.table.SetTitle(fmt.Sprintf("%s (auto refresh %vs) ", mode, defaultRefreshInterval/1000))
+			state = fmt.Sprintf(" (auto refresh %vs) ", defaultRefreshInterval/1000)
 		} else {
-			t.table.SetTitle(fmt.Sprintf("%s (auto refresh disabled) ", mode))
+			state = " (auto refresh disabled) "
 		}
 	}
+
+	t.table.SetTitle(mode + state)
 }
 
 func (t *TableController) rowSelectionHandler(row, col int) {

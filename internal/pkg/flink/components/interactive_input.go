@@ -29,7 +29,6 @@ func PrintOptionState(prefix string, isEnabled bool, maxCol int) {
 	fmt.Println(strings.Repeat(" ", maxCol-len(prefix+stateMsg)))
 }
 
-// This prints flinks ascii art, welcome message and shortcuts
 func PrintWelcomeHeader() {
 	// Print welcome message
 	fmt.Fprintf(os.Stdout, "Welcome! \n")

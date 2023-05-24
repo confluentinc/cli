@@ -53,7 +53,7 @@ func Lexer(line string) []prompt.LexerElement {
 
 		_, isKeyword := config.SQLKeywords[strings.ToUpper(strings.TrimSpace(word))]
 		if isKeyword {
-			element.Color = config.HIGHLIGHT_COLOR
+			element.Color = config.HighlightColor
 		} else if wrappedInInvertedCommasOrBackticks(word) {
 			element.Color = prompt.Yellow
 		} else {
