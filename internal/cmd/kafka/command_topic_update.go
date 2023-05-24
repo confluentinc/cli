@@ -6,7 +6,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	v3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
+	kafkav3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
+
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -111,7 +112,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 	configsValues := make(map[string]string)
 
 	if hasNumPartitionsChanged {
-		updateNumPartitionsInt, err := strconv.Atoi(updateNumPartitions)
+		updateNumPartitionsInt, err := strconv.ParseInt(updateNumPartitions, 10, 32)
 		if err != nil {
 			return err
 		}
@@ -120,7 +121,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 			return err
 		}
 		configsValues[numPartitionsKey] = fmt.Sprint(updateResp.PartitionsCount)
-		partitionsKafkaRestConfig := v3.AlterConfigBatchRequestDataData{Name: numPartitionsKey}
+		partitionsKafkaRestConfig := kafkav3.AlterConfigBatchRequestDataData{Name: numPartitionsKey}
 		kafkaRestConfigs.Data = append(kafkaRestConfigs.Data, partitionsKafkaRestConfig)
 	}
 
@@ -139,11 +140,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		configsValues[conf.Name] = conf.GetValue()
 	}
 
-	// Write current state of relevant config settings
-	if output.GetFormat(cmd) == output.Human {
-		output.ErrPrintf(errors.UpdateTopicConfigRestMsg, topicName)
-	}
-
+	var readOnlyConfigNotUpdatedMsg string
 	list := output.NewList(cmd)
 	for _, config := range kafkaRestConfigs.Data {
 		list.Add(&topicConfigurationOut{
@@ -151,6 +148,15 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 			Value:    configsValues[config.Name],
 			ReadOnly: readOnlyConfigs[config.Name],
 		})
+		if readOnlyConfigs[config.Name] {
+			readOnlyConfigNotUpdatedMsg = fmt.Sprintf(" %s", errors.ReadOnlyConfigNotUpdatedMsg)
+		}
 	}
+
+	// Write current state of relevant config settings
+	if output.GetFormat(cmd) == output.Human {
+		output.ErrPrintf(errors.UpdateTopicConfigRestMsg, topicName, readOnlyConfigNotUpdatedMsg)
+	}
+
 	return list.Print()
 }

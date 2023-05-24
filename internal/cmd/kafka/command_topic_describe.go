@@ -1,7 +1,7 @@
 package kafka
 
 import (
-	"strconv"
+	"fmt"
 
 	"github.com/spf13/cobra"
 
@@ -70,7 +70,7 @@ func (c *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 	}
 	list.Add(&topicConfigurationOut{
 		Name:     numPartitionsKey,
-		Value:    strconv.Itoa(numPartitions),
+		Value:    fmt.Sprint(numPartitions),
 		ReadOnly: false,
 	})
 	return list.Print()
