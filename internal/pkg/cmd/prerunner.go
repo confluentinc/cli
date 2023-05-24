@@ -470,13 +470,13 @@ func (r *PreRun) setV2Clients(cliCmd *AuthenticatedCLICommand) error {
 	return nil
 }
 
-func (r *PreRun) setHubClient(cliCmd *AuthenticatedCLICommand) error {
-	unsafeTrace, err := cliCmd.Flags().GetBool("unsafe-trace")
+func (c *AuthenticatedCLICommand) InitializeHubClient() error {
+	unsafeTrace, err := c.Flags().GetBool("unsafe-trace")
 	if err != nil {
 		return err
 	}
 
-	cliCmd.HubClient = hub.NewClient(cliCmd.Config.IsTest, unsafeTrace)
+	c.HubClient = hub.NewClient(c.Config.IsTest, unsafeTrace)
 	return nil
 }
 
@@ -565,10 +565,6 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(*co
 			if err := r.updateToken(tokenErr, command.Config.Context(), unsafeTrace); err != nil {
 				return err
 			}
-		}
-
-		if err := r.setHubClient(command); err != nil {
-			return err
 		}
 
 		return nil

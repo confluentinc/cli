@@ -70,6 +70,10 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 		output.Println(beginStr)
 	}
 
+	if err := c.InitializeHubClient(); err != nil {
+		return err
+	}
+
 	pluginManifest, err := c.getManifest(args[0])
 	if err != nil {
 		return err
