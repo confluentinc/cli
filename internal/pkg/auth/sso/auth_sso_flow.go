@@ -50,7 +50,8 @@ func Login(authURL string, noBrowser bool, connectionName string) (string, strin
 		}
 
 		// Get authorization code for making subsequent token request
-		if err := browser.OpenURL(state.getAuthorizationCodeUrl(connectionName, isOkta)); err != nil {
+		url := state.getAuthorizationCodeUrl(connectionName, isOkta)
+		if err := browser.OpenURL(url); err != nil {
 			return "", "", errors.Wrap(err, errors.OpenWebBrowserErrorMsg)
 		}
 
