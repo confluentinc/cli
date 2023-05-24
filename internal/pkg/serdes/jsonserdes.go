@@ -44,8 +44,7 @@ func (jsonProvider *JsonSerializationProvider) encode(str string) ([]byte, error
 
 	// Compact Json string, i.e. remove redundant space, etc.
 	compactedBuffer := new(bytes.Buffer)
-	err = json.Compact(compactedBuffer, data)
-	if err != nil {
+	if err := json.Compact(compactedBuffer, data); err != nil {
 		return nil, err
 	}
 	return compactedBuffer.Bytes(), nil
@@ -87,8 +86,7 @@ func (jsonProvider *JsonDeserializationProvider) decode(data []byte) (string, er
 
 	// Compact Json string, i.e. remove redundant space, etc.
 	compactedBuffer := new(bytes.Buffer)
-	err = json.Compact(compactedBuffer, data)
-	if err != nil {
+	if err := json.Compact(compactedBuffer, data); err != nil {
 		return "", err
 	}
 	return compactedBuffer.String(), nil
@@ -102,8 +100,7 @@ func parseSchema(schemaPath string, referencePathMap map[string]string) (*gojson
 			return nil, err
 		}
 		referenceLoader := gojsonschema.NewStringLoader(string(refSchema))
-		err = sl.AddSchema("/"+referenceName, referenceLoader)
-		if err != nil {
+		if err := sl.AddSchema("/"+referenceName, referenceLoader); err != nil {
 			return nil, err
 		}
 	}

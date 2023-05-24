@@ -25,11 +25,10 @@ const (
 
 func GenerateRandomBytes(n int) ([]byte, error) {
 	b := make([]byte, n)
-	_, err := rand.Read(b)
-	if err != nil {
+	if _, err := rand.Read(b); err != nil {
 		return []byte{}, err
 	}
-	return b, err
+	return b, nil
 }
 
 func DeriveEncryptionKey(salt []byte) ([]byte, error) {
@@ -38,8 +37,7 @@ func DeriveEncryptionKey(salt []byte) ([]byte, error) {
 		return []byte{}, err
 	}
 	userId := strconv.Itoa(os.Getuid())
-	encryptionKey := pbkdf2.Key([]byte(machineId+userId), salt, iterationNumber, keyLength, sha256.New)
-	return encryptionKey, nil
+	return pbkdf2.Key([]byte(machineId+userId), salt, iterationNumber, keyLength, sha256.New), nil
 }
 
 func Encrypt(username, password string, salt, nonce []byte) (string, error) {

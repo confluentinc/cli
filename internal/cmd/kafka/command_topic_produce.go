@@ -154,8 +154,7 @@ func (c *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 		if err != nil {
 			return err
 		}
-		err = producer.Produce(msg, deliveryChan)
-		if err != nil {
+		if err := producer.Produce(msg, deliveryChan); err != nil {
 			isProduceToCompactedTopicError, err := errors.CatchProduceToCompactedTopicError(err, topic)
 			if isProduceToCompactedTopicError {
 				scanErr = err
@@ -340,8 +339,7 @@ func (c *hasAPIKeyTopicCommand) initSchemaAndGetInfo(cmd *cobra.Command, topic s
 		}
 	}
 
-	err = serializationProvider.LoadSchema(schemaPath, referencePathMap)
-	if err != nil {
+	if err := serializationProvider.LoadSchema(schemaPath, referencePathMap); err != nil {
 		return nil, nil, errors.NewWrapErrorWithSuggestions(err, "failed to load schema", errors.FailedToLoadSchemaSuggestions)
 	}
 

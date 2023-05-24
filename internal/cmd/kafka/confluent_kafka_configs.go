@@ -295,8 +295,7 @@ func setConsumerDebugOption(configMap *ckafka.ConfigMap) error {
 }
 
 func newProducerWithOverwrittenConfigs(configMap *ckafka.ConfigMap, configPath string, configStrings []string) (*ckafka.Producer, error) {
-	err := overwriteKafkaClientConfigs(configMap, configPath, configStrings)
-	if err != nil {
+	if err := overwriteKafkaClientConfigs(configMap, configPath, configStrings); err != nil {
 		return nil, err
 	}
 
@@ -304,8 +303,7 @@ func newProducerWithOverwrittenConfigs(configMap *ckafka.ConfigMap, configPath s
 }
 
 func newConsumerWithOverwrittenConfigs(configMap *ckafka.ConfigMap, configPath string, configStrings []string) (*ckafka.Consumer, error) {
-	err := overwriteKafkaClientConfigs(configMap, configPath, configStrings)
-	if err != nil {
+	if err := overwriteKafkaClientConfigs(configMap, configPath, configStrings); err != nil {
 		return nil, err
 	}
 

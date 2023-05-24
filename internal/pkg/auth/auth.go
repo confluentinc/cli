@@ -63,8 +63,7 @@ func PersistLogout(config *v1.Config) error {
 	}
 
 	delete(ctx.Config.SavedCredentials, ctx.Name)
-	err := ctx.DeleteUserAuth()
-	if err != nil {
+	if err := ctx.DeleteUserAuth(); err != nil {
 		return err
 	}
 	ctx.Config.CurrentContext = ""
@@ -226,8 +225,7 @@ func GetBearerToken(authenticatedState *v1.ContextState, server, clusterId strin
 
 	// Configure and send post request with session token to Auth Service to get access token
 	responses := new(response)
-	_, err := sling.New().Add("content", "application/json").Add("Content-Type", "application/json").Add("Authorization", bearerSessionToken).BodyJSON(clusterIds).Post(accessTokenEndpoint).ReceiveSuccess(responses)
-	if err != nil {
+	if _, err := sling.New().Add("content", "application/json").Add("Content-Type", "application/json").Add("Authorization", bearerSessionToken).BodyJSON(clusterIds).Post(accessTokenEndpoint).ReceiveSuccess(responses); err != nil {
 		return "", err
 	}
 	return responses.Token, nil

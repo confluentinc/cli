@@ -125,8 +125,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) error {
 					currentTopic:   topic,
 					currentSubject: subject,
 				}
-				err := c.getChannelDetails(accountDetails, flags)
-				if err != nil {
+				if err := c.getChannelDetails(accountDetails, flags); err != nil {
 					if err.Error() == protobufErrorMessage {
 						log.CliLogger.Info(err.Error())
 						continue
@@ -163,8 +162,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *command) getChannelDetails(details *accountDetails, flags *flags) error {
-	err := details.getSchemaDetails()
-	if err != nil {
+	if err := details.getSchemaDetails(); err != nil {
 		if err.Error() == protobufErrorMessage {
 			return err
 		}
@@ -174,6 +172,7 @@ func (c *command) getChannelDetails(details *accountDetails, flags *flags) error
 		log.CliLogger.Warnf("Failed to get tags: %v", err)
 	}
 	details.channelDetails.example = nil
+	var err error
 	if flags.consumeExamples {
 		details.channelDetails.example, err = c.getMessageExamples(details.consumer, details.channelDetails.currentTopic.GetTopicName(), details.channelDetails.contentType, details.srClient, flags.valueFormat)
 		if err != nil {
@@ -198,14 +197,13 @@ func (c *command) getChannelDetails(details *accountDetails, flags *flags) error
 
 func (c *command) getAccountDetails(flags *flags) (*accountDetails, error) {
 	details := new(accountDetails)
-	err := c.getClusterDetails(details, flags)
-	if err != nil {
+	if err := c.getClusterDetails(details, flags); err != nil {
 		return nil, err
 	}
-	err = c.getSchemaRegistry(details, flags)
-	if err != nil {
+	if err := c.getSchemaRegistry(details, flags); err != nil {
 		return nil, err
 	}
+	var err error
 	details.subjects, _, err = details.srClient.DefaultApi.List(details.srContext, nil)
 	if err != nil {
 		return nil, err
@@ -242,8 +240,7 @@ func handlePanic() {
 
 func (c command) getMessageExamples(consumer *ckgo.Consumer, topicName, contentType string, srClient *schemaregistry.APIClient, valueFormatFlag string) (any, error) {
 	defer handlePanic()
-	err := consumer.Subscribe(topicName, nil)
-	if err != nil {
+	if err := consumer.Subscribe(topicName, nil); err != nil {
 		return nil, fmt.Errorf(`failed to subscribe to topic "%s": %v`, topicName, err)
 	}
 	message, err := consumer.ReadMessage(10 * time.Second)
@@ -275,8 +272,7 @@ func (c command) getMessageExamples(consumer *ckgo.Consumer, topicName, contentT
 		}
 		// Message body is encoded after 5 bytes of meta information.
 		value = value[messageOffset:]
-		err = deserializationProvider.LoadSchema(schemaPath, referencePathMap)
-		if err != nil {
+		if err := deserializationProvider.LoadSchema(schemaPath, referencePathMap); err != nil {
 			return nil, err
 		}
 	}
