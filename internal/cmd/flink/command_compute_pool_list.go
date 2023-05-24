@@ -19,8 +19,6 @@ func (c *command) newComputePoolListCommand() *cobra.Command {
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	cobra.CheckErr(cmd.MarkFlagRequired("region"))
-
 	return cmd
 }
 
