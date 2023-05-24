@@ -48,7 +48,7 @@ restore-latest-archives: restore-latest-archives-warn
 	$(MAKE) copy-prod-archives-to-stag-latest
 	$(aws-authenticate); \
 	$(call copy-stag-content-to-prod,archives,latest)
-	@echo "Verifying latest archives with: $(MAKE) test-installer"
+	@echo "Verifying latest archives with: make test-installer"
 	$(MAKE) test-installer
 
 .PHONY: copy-prod-archives-to-stag-latest
