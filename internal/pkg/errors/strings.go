@@ -3,7 +3,7 @@ package errors
 const (
 	// api-key command
 	StoredAPIKeyMsg = "Stored API secret for API key \"%s\".\n"
-	UseAPIKeyMsg    = "Set API Key \"%s\" as the active API key for \"%s\".\n"
+	UseAPIKeyMsg    = "Using API Key \"%s\".\n"
 
 	// auth commands
 	LoggedInAsMsg                 = "Logged in as \"%s\".\n"
@@ -125,6 +125,7 @@ const (
 	DeleteACLsConfirmMsg          = "Are you sure you want to delete the ACLs corresponding to these parameters?"
 	RequestedDeleteResourceMsg    = "Requested to delete %s \"%s\".\n"
 	UpdatedResourceMsg            = "Updated %s \"%s\".\n"
+	UsingResourceMsg              = "Using %s \"%s\".\n"
 
 	UpdateSuccessMsg = "Updated the %s of %s \"%s\" to \"%s\".\n"
 
