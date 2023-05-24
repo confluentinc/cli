@@ -100,6 +100,8 @@ github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas v0.4.0 h1:T9e7lNj/VjxE89+t
 github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas v0.4.0/go.mod h1:7gqwWFIyj2MAGpL/kf6SGXm/pi2Z6qpMJIjKlgEEhhg=
 github.com/confluentinc/ccloud-sdk-go-v2/kafkarest v0.12.0 h1:5D50OXNqFs3Zk859KuovNxLGXEJ7dkoAVJvjoG5qVT8=
 github.com/confluentinc/ccloud-sdk-go-v2/kafkarest v0.12.0/go.mod h1:UZB+e0EXNFKNT8yPIHcQMDy0QvNvJzL55VOEnM9bMoY=
+github.com/confluentinc/ccloud-sdk-go-v2/kafkarest v0.13.0 h1:T+o8qhde3p4sc5Sm1i26VDhZYWINvR8Y0BzimDcTU0k=
+github.com/confluentinc/ccloud-sdk-go-v2/kafkarest v0.13.0/go.mod h1:UZB+e0EXNFKNT8yPIHcQMDy0QvNvJzL55VOEnM9bMoY=
 github.com/confluentinc/ccloud-sdk-go-v2/ksql v0.2.0 h1:g6OHa1iW3HO3N/YiTAL9Q6Y7rdjMBAjOPYK37akTt0M=
 github.com/confluentinc/ccloud-sdk-go-v2/ksql v0.2.0/go.mod h1:0LAvd4VqlaRwKU4yvDEkVCtV43yNezt56+hBe9Lmg7Q=
 github.com/confluentinc/ccloud-sdk-go-v2/mds v0.4.0 h1:jIXXhGi+Xn+XYFCErnMvd035QijbYXla1Bo8W7V7lFM=
