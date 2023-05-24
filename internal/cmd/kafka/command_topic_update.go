@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	kafkav3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
+	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -121,7 +121,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 			return err
 		}
 		configsValues[numPartitionsKey] = fmt.Sprint(updateResp.PartitionsCount)
-		partitionsKafkaRestConfig := kafkav3.AlterConfigBatchRequestDataData{Name: numPartitionsKey}
+		partitionsKafkaRestConfig := kafkarestv3.AlterConfigBatchRequestDataData{Name: numPartitionsKey}
 		kafkaRestConfigs.Data = append(kafkaRestConfigs.Data, partitionsKafkaRestConfig)
 	}
 
