@@ -35,6 +35,7 @@ func (c *Client) GetRemoteManifest(owner, name, version string) (*ccstructs.Mani
 	if err != nil {
 		return nil, err
 	}
+	defer r.Body.Close()
 
 	if c.Debug {
 		dump, err := httputil.DumpResponse(r, true)
@@ -44,7 +45,6 @@ func (c *Client) GetRemoteManifest(owner, name, version string) (*ccstructs.Mani
 		log.CliLogger.Tracef("\n%s\n", string(dump))
 	}
 
-	defer r.Body.Close()
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		return nil, err
@@ -85,11 +85,11 @@ func (c *Client) GetRemoteArchive(pluginManifest *ccstructs.Manifest) ([]byte, e
 	if err != nil {
 		return nil, err
 	}
+	defer r.Body.Close()
 
 	if r.StatusCode != http.StatusOK {
 		return nil, errors.New("failed to retrieve archive from Confuent Hub")
 	}
 
-	defer r.Body.Close()
 	return io.ReadAll(r.Body)
 }

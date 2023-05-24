@@ -64,7 +64,7 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if dryRun {
-		output.Println("[DRY RUN] Performing a dry run of this command.")
+		output.Println("[DRY RUN] Beginning installation.")
 	} else {
 		output.Println("Beginning installation.")
 	}
@@ -349,11 +349,11 @@ func (c *pluginCommand) installFromRemote(pluginManifest *ccstructs.Manifest, pl
 	checksumErrorMsg := "%s checksum for downloaded archive (%s) does not match checksum in manifest (%s) for plugin \"%s\""
 	calculatedMd5Checksum := fmt.Sprintf("%x", md5.Sum(archive))
 	if calculatedMd5Checksum != pluginManifest.Archive.Md5 {
-		return errors.Errorf(checksumErrorMsg, "md5", calculatedMd5Checksum, pluginManifest.Archive.Md5, pluginManifest.Name)
+		return errors.Errorf(checksumErrorMsg, "MD5", calculatedMd5Checksum, pluginManifest.Archive.Md5, pluginManifest.Name)
 	}
 	calculatedSha1Checksum := fmt.Sprintf("%x", sha1.Sum(archive))
 	if calculatedSha1Checksum != pluginManifest.Archive.Sha1 {
-		return errors.Errorf(checksumErrorMsg, "sha1", calculatedSha1Checksum, pluginManifest.Archive.Sha1, pluginManifest.Name)
+		return errors.Errorf(checksumErrorMsg, "SHA1", calculatedSha1Checksum, pluginManifest.Archive.Sha1, pluginManifest.Name)
 	}
 
 	zipReader, err := zip.NewReader(bytes.NewReader(archive), int64(len(archive)))
@@ -414,7 +414,7 @@ func checkLicenseAcceptance(pluginManifest *ccstructs.Manifest, prompt form.Prom
 		} else {
 			f := form.New(form.Field{
 				ID:        "confirm",
-				Prompt:    fmt.Sprintf("\nLicense:\n%s\n%s\nI agree to this software license agreement.", license.Name, license.Url),
+				Prompt:    fmt.Sprintf("\nLicense: %s (%s)\nI agree to this software license agreement.", license.Name, license.Url),
 				IsYesOrNo: true,
 			})
 			if err := f.Prompt(prompt); err != nil {

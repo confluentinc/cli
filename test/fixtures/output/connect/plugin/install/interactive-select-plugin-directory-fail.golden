@@ -1,4 +1,4 @@
-[DRY RUN] Performing a dry run of this command.
+[DRY RUN] Beginning installation.
 
 Using the only available Confluent Platform installation at "test/fixtures/input/connect/confluent-7.3.3".
 Do you want to install this plugin into "test/fixtures/input/connect/confluent-7.3.3/share/confluent-hub-components"? (y/n): Specify plugin installation directory. To cancel, press Ctrl-C: Error: plugin directory "/directory-dne" does not exist
