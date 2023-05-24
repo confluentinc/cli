@@ -1,3 +1,4 @@
+SHELL := /bin/bash
 GORELEASER_VERSION := v1.17.2
 
 # Compile natively based on the current system
