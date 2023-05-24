@@ -423,7 +423,6 @@ func updateWorkerConfig(pluginDir string, workerConfigPath string, dryRun bool) 
 		return err
 	}
 	if dryRun {
-		output.Printf("[DRY RUN] Skipping update of worker configuration file \"%s\".\n", workerConfigPath)
 		return nil
 	}
 	workerConfigFile, err := os.OpenFile(workerConfigPath, os.O_TRUNC|os.O_RDWR, fileInfo.Mode())

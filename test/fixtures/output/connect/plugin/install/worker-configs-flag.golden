@@ -4,13 +4,10 @@ Using the only available Confluent Platform installation at "test/fixtures/input
 Do you want to install this plugin into "test/fixtures/input/connect/confluent-7.3.3/share/confluent-hub-components"? (y/n): 
 License: Example License 1.0 (url-to-license-goes-here)
 I agree to this software license agreement. (y/n): 
-Installing Integration Test Plugin 0.1.0, provided by Confluent, Inc.
-[DRY RUN] Skipping plugin installation.
+[DRY RUN] Installing Integration Test Plugin 0.1.0, provided by Confluent, Inc.
 
-Adding plugin installation directory to the plugin path in the following files:
+[DRY RUN] Adding plugin installation directory to the plugin path in the following files:
 	* test/fixtures/input/connect/confluent-7.3.3/etc/kafka/connect-distributed.properties
 	* test/fixtures/input/connect/confluent-7.3.3/etc/kafka/connect-standalone.properties
-[DRY RUN] Skipping update of worker configuration file "test/fixtures/input/connect/confluent-7.3.3/etc/kafka/connect-distributed.properties".
-[DRY RUN] Skipping update of worker configuration file "test/fixtures/input/connect/confluent-7.3.3/etc/kafka/connect-standalone.properties".
 
-[DRY RUN] Success. All requirements are met and you may proceed with the installation.
+[DRY RUN] Installed Integration Test Plugin 0.1.0.

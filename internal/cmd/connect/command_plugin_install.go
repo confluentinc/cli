@@ -63,10 +63,11 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	beginStr := "Beginning installation."
 	if dryRun {
-		output.Println("[DRY RUN] Beginning installation.")
+		output.Println(addDryRunPrefix(beginStr))
 	} else {
-		output.Println("Beginning installation.")
+		output.Println(beginStr)
 	}
 
 	pluginManifest, err := c.getManifest(args[0])
@@ -119,10 +120,12 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	output.Printf("\nInstalling %s %s, provided by %s\n", pluginManifest.Title, pluginManifest.Version, pluginManifest.Owner.Name)
+	output.Print("\n")
+	installStr := fmt.Sprintf("Installing %s %s, provided by %s\n", pluginManifest.Title, pluginManifest.Version, pluginManifest.Owner.Name)
 	if dryRun {
-		output.Println("[DRY RUN] Skipping plugin installation.")
+		output.Printf(addDryRunPrefix(installStr))
 	} else {
+		output.Print(installStr)
 		if utils.DoesPathExist(args[0]) {
 			if err := installFromLocal(pluginManifest, args[0], pluginDir); err != nil {
 				return err
@@ -149,7 +152,11 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(workerConfigs) > 0 {
-		updateWorkerMsg := "\nAdding plugin installation directory to the plugin path in the following files:"
+		output.Print("\n")
+		updateWorkerMsg := "Adding plugin installation directory to the plugin path in the following files:"
+		if dryRun {
+			updateWorkerMsg = addDryRunPrefix(updateWorkerMsg)
+		}
 		for _, workerConfig := range workerConfigs {
 			updateWorkerMsg = fmt.Sprintf("%s\n\t* %v", updateWorkerMsg, workerConfig)
 		}
@@ -162,9 +169,12 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	output.Print("\n")
+	successStr := fmt.Sprintf("Installed %s %s.", pluginManifest.Title, pluginManifest.Version)
 	if dryRun {
-		output.Println("\n[DRY RUN] Success. All requirements are met and you may proceed with the installation.")
+		successStr = addDryRunPrefix(successStr)
 	}
+	output.Println(successStr)
 
 	return nil
 }
@@ -316,8 +326,9 @@ func removePluginInstallation(pathToPlugin string, prompt form.Prompt, dryRun, f
 		}
 	}
 
+	uninstallStr := "Successfully removed existing version."
 	if dryRun {
-		output.Println("[DRY RUN] Success.")
+		output.Println(addDryRunPrefix(uninstallStr))
 		return nil
 	}
 
@@ -326,7 +337,7 @@ func removePluginInstallation(pathToPlugin string, prompt form.Prompt, dryRun, f
 		return err
 	}
 
-	output.Println("Success.")
+	output.Println(uninstallStr)
 	return nil
 }
 
@@ -427,4 +438,8 @@ func checkLicenseAcceptance(pluginManifest *ccstructs.Manifest, prompt form.Prom
 	}
 
 	return nil
+}
+
+func addDryRunPrefix(msg string) string {
+	return fmt.Sprintf("[DRY RUN] %s", msg)
 }

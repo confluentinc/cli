@@ -7,8 +7,7 @@ Implicitly agreeing to the following license:
 Example License 1.0
 url-to-license-goes-here
 
-Installing Integration Test Plugin 0.1.0, provided by Confluent, Inc.
-[DRY RUN] Skipping plugin installation.
+[DRY RUN] Installing Integration Test Plugin 0.1.0, provided by Confluent, Inc.
 
 Detected the following worker configuration files:
     |                                         Path                                         | Description  
@@ -16,10 +15,8 @@ Detected the following worker configuration files:
   1 | test/fixtures/input/connect/confluent-7.3.3/etc/kafka/connect-distributed.properties | Standard     
   2 | test/fixtures/input/connect/confluent-7.3.3/etc/kafka/connect-standalone.properties  | Standard     
 
-Adding plugin installation directory to the plugin path in the following files:
+[DRY RUN] Adding plugin installation directory to the plugin path in the following files:
 	* test/fixtures/input/connect/confluent-7.3.3/etc/kafka/connect-distributed.properties
 	* test/fixtures/input/connect/confluent-7.3.3/etc/kafka/connect-standalone.properties
-[DRY RUN] Skipping update of worker configuration file "test/fixtures/input/connect/confluent-7.3.3/etc/kafka/connect-distributed.properties".
-[DRY RUN] Skipping update of worker configuration file "test/fixtures/input/connect/confluent-7.3.3/etc/kafka/connect-standalone.properties".
 
-[DRY RUN] Success. All requirements are met and you may proceed with the installation.
+[DRY RUN] Installed Integration Test Plugin 0.1.0.
