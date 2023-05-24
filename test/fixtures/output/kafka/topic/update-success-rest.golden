@@ -1,4 +1,4 @@
-Updated the following configuration values for topic "topic-exist-rest" (read-only configs were not updated):
+Updated the following configuration values for topic "topic-exist-rest":
         Name       | Value | Read-Only  
 -------------------+-------+------------
   compression.type | gzip  | false      
