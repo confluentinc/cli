@@ -83,7 +83,7 @@ gorelease:
 	GORELEASER_KEY=$(GORELEASER_KEY) GOEXPERIMENT=boringcrypto S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli GITHUB_TOKEN=$(token) DRY_RUN=$(DRY_RUN) goreleaser release --clean --release-notes $(DIR)/release-notes.txt --timeout 60m
 
 # Current goreleaser still has some shortcomings for the our use, and the target patches those issues
-# As new goreleaser versions allow more customization, we may be able to reduce the work for this $(MAKE) target
+# As new goreleaser versions allow more customization, we may be able to reduce the work for this make target
 .PHONY: goreleaser-patches
 goreleaser-patches:
 	$(MAKE) set-acls
