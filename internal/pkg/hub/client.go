@@ -21,8 +21,8 @@ func NewClient(isTest, unsafeTrace bool) *Client {
 	}
 
 	return &Client{
-		URL:   url,
-		Debug: unsafeTrace,
+		URL:    url,
+		Debug:  unsafeTrace,
 		Client: &http.Client{Timeout: 5 * time.Second},
 	}
 }

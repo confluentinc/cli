@@ -142,7 +142,8 @@ func TestUnzipPlugin(t *testing.T) {
 	require.NoError(t, err)
 	defer zipReader.Close()
 
-	unzipPlugin(manifest, zipReader.File, tempDir)
+	err = unzipPlugin(manifest, zipReader.File, tempDir)
+	require.NoError(t, err)
 	require.True(t, utils.DoesPathExist(fmt.Sprintf("%s/confluentinc-unit-test-plugin/test-plugin/manifest.json", tempDir)))
 }
 
