@@ -43,9 +43,7 @@ func (suite *SubjectTestSuite) SetupSuite() {
 		Name:       cluster.Name,
 		Enterprise: true,
 	}
-	suite.srCluster = &ccloudv1.SchemaRegistryCluster{
-		Id: srClusterID,
-	}
+	suite.srCluster = &ccloudv1.SchemaRegistryCluster{Id: "sr"}
 }
 
 func (suite *SubjectTestSuite) SetupTest() {
