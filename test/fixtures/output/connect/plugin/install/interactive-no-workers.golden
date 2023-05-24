@@ -1,10 +1,9 @@
-[DRY RUN] Beginning installation.
-
 Using the only available Confluent Platform installation at "test/fixtures/input/connect/confluent-empty".
 Do you want to install this plugin into "test/fixtures/input/connect/confluent-empty/share/confluent-hub-components"? (y/n): 
 License: Example License 1.0 (url-to-license-goes-here)
 I agree to this software license agreement. (y/n): 
 [DRY RUN] Installing Integration Test Plugin 0.1.0, provided by Confluent, Inc.
+
 No worker configuration files found.
 
 [DRY RUN] Installed Integration Test Plugin 0.1.0.

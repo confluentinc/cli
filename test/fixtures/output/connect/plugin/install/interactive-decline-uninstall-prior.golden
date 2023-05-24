@@ -1,5 +1,3 @@
-[DRY RUN] Beginning installation.
-
 Using the only available Confluent Platform installation at "test/fixtures/input/connect/confluent-prior-install".
 Do you want to install this plugin into "test/fixtures/input/connect/confluent-prior-install/share/confluent-hub-components"? (y/n): 
 A version of this plugin is already installed and must be removed to continue.

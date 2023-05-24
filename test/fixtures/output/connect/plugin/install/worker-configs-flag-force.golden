@@ -1,5 +1,3 @@
-[DRY RUN] Beginning installation.
-
 Using the Confluent Platform installation at "test/fixtures/input/connect/confluent-7.3.3".
 Using "test/fixtures/input/connect/confluent-7.3.3/share/confluent-hub-components" as the plugin installation directory.
 

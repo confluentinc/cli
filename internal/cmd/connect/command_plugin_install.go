@@ -63,12 +63,6 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	beginStr := "Beginning installation."
-	if dryRun {
-		output.Println(addDryRunPrefix(beginStr))
-	} else {
-		output.Println(beginStr)
-	}
 
 	if err := c.InitializeHubClient(); err != nil {
 		return err
@@ -124,8 +118,7 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	output.Print("\n")
-	installStr := fmt.Sprintf("Installing %s %s, provided by %s\n", pluginManifest.Title, pluginManifest.Version, pluginManifest.Owner.Name)
+	installStr := fmt.Sprintf("Installing %s %s, provided by %s\n\n", pluginManifest.Title, pluginManifest.Version, pluginManifest.Owner.Name)
 	if dryRun {
 		output.Printf(addDryRunPrefix(installStr))
 	} else {
@@ -156,7 +149,6 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(workerConfigs) > 0 {
-		output.Print("\n")
 		updateWorkerMsg := "Adding plugin installation directory to the plugin path in the following files:"
 		if dryRun {
 			updateWorkerMsg = addDryRunPrefix(updateWorkerMsg)
@@ -173,12 +165,11 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	output.Print("\n")
-	successStr := fmt.Sprintf("Installed %s %s.", pluginManifest.Title, pluginManifest.Version)
+	successStr := fmt.Sprintf("Installed %s %s.\n", pluginManifest.Title, pluginManifest.Version)
 	if dryRun {
 		successStr = addDryRunPrefix(successStr)
 	}
-	output.Println(successStr)
+	output.Printf("\n%s", successStr)
 
 	return nil
 }
@@ -440,6 +431,7 @@ func checkLicenseAcceptance(pluginManifest *cpstructs.Manifest, prompt form.Prom
 			}
 		}
 	}
+	output.Print("\n")
 
 	return nil
 }

@@ -50,10 +50,10 @@ func getConfluentPlatformInstallation(cmd *cobra.Command, prompt form.Prompt, fo
 	if len(installations) == 0 {
 		return nil, errors.NewErrorWithSuggestions("unable to detect a Confluent Platform installation", "Pass the plugin directory and worker configuration files with `--plugin-directory` and `--worker-configs`.")
 	} else if force {
-		output.Printf("\nUsing the Confluent Platform installation at \"%s\".\n", installations[0].Location.Path)
+		output.Printf("Using the Confluent Platform installation at \"%s\".\n", installations[0].Location.Path)
 		return &installations[0], nil
 	} else if len(installations) == 1 {
-		output.Printf("\nUsing the only available Confluent Platform installation at \"%s\".\n", installations[0].Location.Path)
+		output.Printf("Using the only available Confluent Platform installation at \"%s\".\n", installations[0].Location.Path)
 		return &installations[0], nil
 	} else {
 		list := output.NewList(cmd)
@@ -70,7 +70,7 @@ func getConfluentPlatformInstallation(cmd *cobra.Command, prompt form.Prompt, fo
 			return nil, err
 		}
 
-		promptMsg := "\nThe plugin can be installed in any of the following Confluent Platform installations. Enter the number corresponding to the installation you would like to use:\n%sTo cancel, press Ctrl-C"
+		promptMsg := "The plugin can be installed in any of the following Confluent Platform installations. Enter the number corresponding to the installation you would like to use:\n%sTo cancel, press Ctrl-C"
 		f := form.New(form.Field{
 			ID:     "installation",
 			Prompt: fmt.Sprintf(promptMsg, listStr),
@@ -349,7 +349,7 @@ func chooseWorkerConfigs(cmd *cobra.Command, installation *platformInstallation,
 		return []string{}, nil
 	}
 
-	output.Println("\nDetected the following worker configuration files:")
+	output.Println("Detected the following worker configuration files:")
 	list := output.NewList(cmd)
 	for i, workerConfig := range workerConfigs {
 		list.Add(&listOut{
