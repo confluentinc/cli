@@ -6,8 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
-
+	v3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -83,8 +82,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		return err
 	}
 
-	// num.partitions is read-only but requires special handling
-	_, hasNumPartitionsChanged := configMap[numPartitionsKey]
+	updateNumPartitions, hasNumPartitionsChanged := configMap[numPartitionsKey]
 	if hasNumPartitionsChanged {
 		delete(configMap, numPartitionsKey)
 	}
@@ -109,6 +107,23 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		return nil
 	}
 
+	readOnlyConfigs := types.NewSet()
+	configsValues := make(map[string]string)
+
+	if hasNumPartitionsChanged {
+		updateNumPartitionsInt, err := strconv.Atoi(updateNumPartitions)
+		if err != nil {
+			return err
+		}
+		updateResp, err := kafkaREST.CloudClient.UpdateKafkaTopicPartitionCount(kafkaClusterConfig.ID, topicName, int32(updateNumPartitionsInt))
+		if err != nil {
+			return err
+		}
+		configsValues[numPartitionsKey] = fmt.Sprint(updateResp.PartitionsCount)
+		partitionsKafkaRestConfig := v3.AlterConfigBatchRequestDataData{Name: numPartitionsKey}
+		kafkaRestConfigs.Data = append(kafkaRestConfigs.Data, partitionsKafkaRestConfig)
+	}
+
 	configsResp, err := kafkaREST.CloudClient.ListKafkaTopicConfigs(kafkaClusterConfig.ID, topicName)
 	if err != nil {
 		return err
@@ -117,26 +132,11 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		return errors.NewErrorWithSuggestions(errors.EmptyResponseErrorMsg, errors.InternalServerErrorSuggestions)
 	}
 
-	readOnlyConfigs := types.NewSet()
-	configsValues := make(map[string]string)
 	for _, conf := range configsResp.Data {
 		if conf.IsReadOnly {
 			readOnlyConfigs.Add(conf.Name)
 		}
 		configsValues[conf.Name] = conf.GetValue()
-	}
-
-	if hasNumPartitionsChanged {
-		numPartitions, err := c.getNumPartitions(topicName)
-		if err != nil {
-			return err
-		}
-
-		readOnlyConfigs.Add(numPartitionsKey)
-		configsValues[numPartitionsKey] = strconv.Itoa(numPartitions)
-		// Add num.partitions back into kafkaRestConfig for sorting & output
-		partitionsKafkaRestConfig := kafkarestv3.AlterConfigBatchRequestDataData{Name: numPartitionsKey}
-		kafkaRestConfigs.Data = append(kafkaRestConfigs.Data, partitionsKafkaRestConfig)
 	}
 
 	// Write current state of relevant config settings
