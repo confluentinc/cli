@@ -23,13 +23,17 @@ func (v *Version) MarshalJSON() ([]byte, error) {
 
 func (v *Version) UnmarshalJSON(data []byte) error {
 	var s string
-	err := json.Unmarshal(data, &s)
-	if err != nil {
+	if err := json.Unmarshal(data, &s); err != nil {
 		return err
 	}
 
-	v.Version, err = version.NewVersion(s)
-	return err
+	version, err := version.NewVersion(s)
+	if err != nil {
+		return err
+	}
+	v.Version = version
+	
+	return nil
 }
 
 func NewBaseConfig(ver *version.Version) *BaseConfig {

@@ -64,9 +64,7 @@ func (suite *KSQLTestSuite) SetupTest() {
 			KafkaCluster: &ksqlv2.ObjectReference{
 				Id: suite.conf.Context().KafkaClusterContext.GetActiveKafkaClusterId(),
 			},
-			CredentialIdentity: &ksqlv2.ObjectReference{
-				Id: serviceAcctResourceID,
-			},
+			CredentialIdentity: &ksqlv2.ObjectReference{Id: serviceAcctResourceID},
 			UseDetailedProcessingLog: &useDetailedProcessingLog,
 		},
 		Status: &ksqlv2.KsqldbcmV2ClusterStatus{
