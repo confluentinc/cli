@@ -10,7 +10,7 @@ import (
 
 	"github.com/confluentinc/properties"
 
-	"github.com/confluentinc/cli/internal/pkg/ccstructs"
+	"github.com/confluentinc/cli/internal/pkg/cpstructs"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -130,10 +130,10 @@ func TestUnzipPlugin(t *testing.T) {
 	err = newTestZip(archivePath)
 	require.NoError(t, err)
 
-	manifest := &ccstructs.Manifest{
+	manifest := &cpstructs.Manifest{
 		Name:    "unit-test-plugin",
 		Version: "0.0.0",
-		Owner: ccstructs.Owner{
+		Owner: cpstructs.Owner{
 			Username: "confluentinc",
 		},
 	}

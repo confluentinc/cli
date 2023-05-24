@@ -12,22 +12,22 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
 
-	"github.com/confluentinc/cli/internal/pkg/ccstructs"
+	"github.com/confluentinc/cli/internal/pkg/cpstructs"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 const archivePath = "test/fixtures/input/connect/test-plugin.zip"
 
-func newManifest() *ccstructs.Manifest {
-	return &ccstructs.Manifest{
+func newManifest() *cpstructs.Manifest {
+	return &cpstructs.Manifest{
 		Name:    "integration-test-plugin",
 		Title:   "Integration Test Plugin",
 		Version: "0.1.0",
-		Owner: ccstructs.Owner{
+		Owner: cpstructs.Owner{
 			Username: "confluentinc",
 			Name:     "Confluent, Inc.",
 		},
-		Licenses: []ccstructs.License{
+		Licenses: []cpstructs.License{
 			{
 				Name: "Example License 1.0",
 				Url:  "url-to-license-goes-here",
@@ -54,7 +54,7 @@ func handleHubPlugin(t *testing.T) http.HandlerFunc {
 				archive, err := os.ReadFile(archivePath)
 				require.NoError(t, err)
 
-				responseManifest.Archive = ccstructs.Archive{
+				responseManifest.Archive = cpstructs.Archive{
 					Url:  fmt.Sprintf("%s/api/plugins/confluentinc/integration-test-plugin/versions/0.1.0/confluentinc-integration-test-plugin.zip", TestHubUrl.String()),
 					Md5:  fmt.Sprintf("%x", md5.Sum(archive)),
 					Sha1: fmt.Sprintf("%x", sha1.Sum(archive)),
@@ -92,7 +92,7 @@ func handleHubPluginVersion(t *testing.T) http.HandlerFunc {
 				archive, err := os.ReadFile(archivePath)
 				require.NoError(t, err)
 
-				responseManifest.Archive = ccstructs.Archive{
+				responseManifest.Archive = cpstructs.Archive{
 					Url:  fmt.Sprintf("%s/api/plugins/confluentinc/integration-test-plugin/versions/0.1.0/confluentinc-integration-test-plugin.zip", TestHubUrl.String()),
 					Md5:  fmt.Sprintf("%x", md5.Sum(archive)),
 					Sha1: fmt.Sprintf("%x", sha1.Sum(archive)),

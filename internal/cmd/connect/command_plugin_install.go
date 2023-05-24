@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/ccstructs"
+	"github.com/confluentinc/cli/internal/pkg/cpstructs"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
@@ -195,7 +195,7 @@ func parsePluginId(plugin string) (string, string, string, error) {
 	return ownerNameSplit[0], nameVersionSplit[0], nameVersionSplit[1], nil
 }
 
-func (c *pluginCommand) getManifest(id string) (*ccstructs.Manifest, error) {
+func (c *pluginCommand) getManifest(id string) (*cpstructs.Manifest, error) {
 	if utils.DoesPathExist(id) {
 		// if installing plugin from local archive
 		return getLocalManifest(id)
@@ -210,7 +210,7 @@ func (c *pluginCommand) getManifest(id string) (*ccstructs.Manifest, error) {
 	}
 }
 
-func getLocalManifest(archivePath string) (*ccstructs.Manifest, error) {
+func getLocalManifest(archivePath string) (*cpstructs.Manifest, error) {
 	zipReader, err := zip.OpenReader(archivePath)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to open local archive file %s", archivePath)
@@ -235,7 +235,7 @@ func getLocalManifest(archivePath string) (*ccstructs.Manifest, error) {
 				return nil, err
 			}
 
-			pluginManifest := new(ccstructs.Manifest)
+			pluginManifest := new(cpstructs.Manifest)
 			if err := json.Unmarshal(jsonByteArr, &pluginManifest); err != nil {
 				return nil, err
 			}
@@ -288,7 +288,7 @@ func getWorkerConfigsFromFlag(cmd *cobra.Command) ([]string, error) {
 	return workerConfigs, errs.ErrorOrNil()
 }
 
-func existingPluginInstallation(pluginDir string, pluginManifest *ccstructs.Manifest) ([]string, error) {
+func existingPluginInstallation(pluginDir string, pluginManifest *cpstructs.Manifest) ([]string, error) {
 	// Bundled installations
 	if utils.DoesPathExist(filepath.Join(pluginDir, pluginManifest.Name)) {
 		return nil, errors.New("unable to install plugin because it is already bundled")
@@ -341,7 +341,7 @@ func removePluginInstallation(pathToPlugin string, prompt form.Prompt, dryRun, f
 	return nil
 }
 
-func installFromLocal(pluginManifest *ccstructs.Manifest, archivePath, pluginDir string) error {
+func installFromLocal(pluginManifest *cpstructs.Manifest, archivePath, pluginDir string) error {
 	zipReader, err := zip.OpenReader(archivePath)
 	if err != nil {
 		return errors.Wrapf(err, "failed to open local archive file %s", archivePath)
@@ -351,7 +351,7 @@ func installFromLocal(pluginManifest *ccstructs.Manifest, archivePath, pluginDir
 	return unzipPlugin(pluginManifest, zipReader.File, pluginDir)
 }
 
-func (c *pluginCommand) installFromRemote(pluginManifest *ccstructs.Manifest, pluginDir string) error {
+func (c *pluginCommand) installFromRemote(pluginManifest *cpstructs.Manifest, pluginDir string) error {
 	archive, err := c.HubClient.GetRemoteArchive(pluginManifest)
 	if err != nil {
 		return err
@@ -375,7 +375,7 @@ func (c *pluginCommand) installFromRemote(pluginManifest *ccstructs.Manifest, pl
 	return unzipPlugin(pluginManifest, zipReader.File, pluginDir)
 }
 
-func unzipPlugin(pluginManifest *ccstructs.Manifest, zipFiles []*zip.File, pluginDir string) error {
+func unzipPlugin(pluginManifest *cpstructs.Manifest, zipFiles []*zip.File, pluginDir string) error {
 	relativeInstallationDir := filepath.Join(pluginDir, fmt.Sprintf("%s-%s", pluginManifest.Owner.Username, pluginManifest.Name))
 	installationDir, err := filepath.Abs(relativeInstallationDir)
 	if err != nil {
@@ -418,7 +418,7 @@ func unzipPlugin(pluginManifest *ccstructs.Manifest, zipFiles []*zip.File, plugi
 	return nil
 }
 
-func checkLicenseAcceptance(pluginManifest *ccstructs.Manifest, prompt form.Prompt, force bool) error {
+func checkLicenseAcceptance(pluginManifest *cpstructs.Manifest, prompt form.Prompt, force bool) error {
 	for _, license := range pluginManifest.Licenses {
 		if force {
 			output.Printf("\nImplicitly agreeing to the following license:\n%s\n%s\n", license.Name, license.Url)

@@ -1,4 +1,4 @@
-package ccstructs
+package cpstructs
 
 type Manifest struct {
 	Name     string    `json:"name"`
