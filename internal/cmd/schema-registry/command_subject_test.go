@@ -43,9 +43,7 @@ func (suite *SubjectTestSuite) SetupSuite() {
 		Name:       cluster.Name,
 		Enterprise: true,
 	}
-	suite.srCluster = &ccloudv1.SchemaRegistryCluster{
-		Id: srClusterID,
-	}
+	suite.srCluster = &ccloudv1.SchemaRegistryCluster{Id: srClusterID}
 }
 
 func (suite *SubjectTestSuite) SetupTest() {
@@ -80,8 +78,7 @@ func (suite *SubjectTestSuite) newCMD() *cobra.Command {
 	client := &ccloudv1.Client{
 		SchemaRegistry: suite.srMothershipMock,
 	}
-	cmd := New(suite.conf, climock.NewPreRunnerMock(client, nil, nil, nil, suite.conf), suite.srClientMock)
-	return cmd
+	return New(suite.conf, climock.NewPreRunnerMock(client, nil, nil, nil, suite.conf), suite.srClientMock)
 }
 
 func (suite *SubjectTestSuite) TestSubjectList() {

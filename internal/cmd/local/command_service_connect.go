@@ -410,8 +410,7 @@ func formatJSONResponse(res *http.Response) (string, error) {
 
 	buf := new(bytes.Buffer)
 	if len(out) > 0 {
-		err = json.Indent(buf, out, "", "  ")
-		if err != nil {
+		if err := json.Indent(buf, out, "", "  "); err != nil {
 			return "", err
 		}
 	}

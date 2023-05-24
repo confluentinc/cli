@@ -296,9 +296,7 @@ func TestPrefixedKey_URLFor(t *testing.T) {
 		},
 		{
 			name: "with empty prefix and with version prefix",
-			fields: fields{
-				VersionPrefixed: true,
-			},
+			fields: fields{VersionPrefixed: true},
 			args: args{
 				name:    "fancy-cli",
 				version: "0.1.2",

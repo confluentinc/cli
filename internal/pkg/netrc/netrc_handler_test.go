@@ -156,9 +156,7 @@ func TestGetMatchingNetrcMachineNameFromURL(t *testing.T) {
 		{
 			name: "ccloud login no url",
 			want: ccloudDiffURLMachine,
-			params: NetrcMachineParams{
-				IsCloud: true,
-			},
+			params: NetrcMachineParams{IsCloud: true},
 			file: netrcFilePath,
 		},
 		{
@@ -172,9 +170,7 @@ func TestGetMatchingNetrcMachineNameFromURL(t *testing.T) {
 		},
 		{
 			name: "No file error",
-			params: NetrcMachineParams{
-				IsCloud: false,
-			},
+			params: NetrcMachineParams{IsCloud: false},
 			wantErr: true,
 			file:    "wrong-file",
 		},

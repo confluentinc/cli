@@ -48,9 +48,7 @@ func (suite *ClusterTestSuite) SetupSuite() {
 		Name:       cluster.Name,
 		Enterprise: true,
 	}
-	suite.srCluster = &ccloudv1.SchemaRegistryCluster{
-		Id: srClusterID,
-	}
+	suite.srCluster = &ccloudv1.SchemaRegistryCluster{Id: srClusterID}
 	suite.srClientMock = &srsdk.APIClient{
 		DefaultApi: &srMock.DefaultApi{
 			GetTopLevelConfigFunc: func(_ context.Context) (srsdk.Config, *http.Response, error) {

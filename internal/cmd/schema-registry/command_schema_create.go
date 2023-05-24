@@ -119,8 +119,7 @@ func (c *command) schemaCreate(cmd *cobra.Command, _ []string) error {
 	}
 	if metadata != "" {
 		request.Metadata = new(srsdk.Metadata)
-		err := read(metadata, request.Metadata)
-		if err != nil {
+		if err := read(metadata, request.Metadata); err != nil {
 			return err
 		}
 	}
@@ -131,8 +130,7 @@ func (c *command) schemaCreate(cmd *cobra.Command, _ []string) error {
 	}
 	if ruleset != "" {
 		request.RuleSet = new(srsdk.RuleSet)
-		err := read(ruleset, request.RuleSet)
-		if err != nil {
+		if err := read(ruleset, request.RuleSet); err != nil {
 			return err
 		}
 	}

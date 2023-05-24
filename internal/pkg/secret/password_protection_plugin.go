@@ -76,19 +76,16 @@ func (c *PasswordProtectionSuite) CreateMasterKey(passphrase string, localSecure
 	}
 
 	// save the master key salt
-	_, _, err = secureConfigProps.Set(MetadataMEKSalt, salt)
-	if err != nil {
+	if _, _, err := secureConfigProps.Set(MetadataMEKSalt, salt); err != nil {
 		return "", err
 	}
 
 	now := c.Clock.Now()
-	_, _, err = secureConfigProps.Set(MetadataKeyTimestamp, now.String())
-	if err != nil {
+	if _, _, err := secureConfigProps.Set(MetadataKeyTimestamp, now.String()); err != nil {
 		return "", err
 	}
 
-	err = WritePropertiesFile(localSecureConfigPath, secureConfigProps, true)
-	if err != nil {
+	if err := WritePropertiesFile(localSecureConfigPath, secureConfigProps, true); err != nil {
 		return "", err
 	}
 
@@ -139,8 +136,7 @@ func (c *PasswordProtectionSuite) EncryptConfigFileSecrets(configFilePath string
 	configProps.DisableExpansion = true
 
 	// Encrypt the secrets with DEK. Save the encrypted secrets in secure config file.
-	err = c.encryptConfigValues(configProps, localSecureConfigPath, configFilePath, remoteSecureConfigPath)
-	if err != nil {
+	if err := c.encryptConfigValues(configProps, localSecureConfigPath, configFilePath, remoteSecureConfigPath); err != nil {
 		return err
 	}
 
@@ -203,8 +199,7 @@ func (c *PasswordProtectionSuite) DecryptConfigFileSecrets(configFilePath string
 					log.CliLogger.Debug(err)
 					return errors.Errorf(errors.DecryptConfigErrorMsg, key)
 				}
-				_, _, err = configProps.Set(key, plainSecret)
-				if err != nil {
+				if _, _, err := configProps.Set(key, plainSecret); err != nil {
 					return err
 				}
 			} else {
@@ -294,20 +289,16 @@ func (c *PasswordProtectionSuite) RotateDataKey(masterPassphrase string, localSe
 
 	// Save new DEK and re-encrypted ciphers.
 	now := c.Clock.Now()
-	_, _, err = secureConfigProps.Set(MetadataKeyTimestamp, now.String())
-	if err != nil {
+	if _, _, err := secureConfigProps.Set(MetadataKeyTimestamp, now.String()); err != nil {
 		return err
 	}
-	_, _, err = secureConfigProps.Set(MetadataDataKey, wrappedNewDK)
-	if err != nil {
+	if _, _, err := secureConfigProps.Set(MetadataDataKey, wrappedNewDK); err != nil {
 		return err
 	}
-	_, _, err = secureConfigProps.Set(MetadataDEKSalt, salt)
-	if err != nil {
+	if _, _, err := secureConfigProps.Set(MetadataDEKSalt, salt); err != nil {
 		return err
 	}
-	err = WritePropertiesFile(localSecureConfigPath, secureConfigProps, true)
-	if err != nil {
+	if err := WritePropertiesFile(localSecureConfigPath, secureConfigProps, true); err != nil {
 		return err
 	}
 
@@ -376,23 +367,19 @@ func (c *PasswordProtectionSuite) RotateMasterKey(oldPassphrase string, newPassp
 
 	// Save DEK
 	now := c.Clock.Now()
-	_, _, err = secureConfigProps.Set(MetadataKeyTimestamp, now.String())
-	if err != nil {
+	if _, _, err := secureConfigProps.Set(MetadataKeyTimestamp, now.String()); err != nil {
 		return "", err
 	}
-	_, _, err = secureConfigProps.Set(MetadataDataKey, newEncodedDataKey)
-	if err != nil {
+	if _, _, err := secureConfigProps.Set(MetadataDataKey, newEncodedDataKey); err != nil {
 		return "", err
 	}
 
 	// save the master key salt
-	_, _, err = secureConfigProps.Set(MetadataMEKSalt, salt)
-	if err != nil {
+	if _, _, err := secureConfigProps.Set(MetadataMEKSalt, salt); err != nil {
 		return "", err
 	}
 
-	err = WritePropertiesFile(localSecureConfigPath, secureConfigProps, true)
-	if err != nil {
+	if err := WritePropertiesFile(localSecureConfigPath, secureConfigProps, true); err != nil {
 		return "", err
 	}
 
@@ -414,12 +401,7 @@ func (c *PasswordProtectionSuite) AddEncryptedPasswords(configFilePath string, l
 		return errors.New(errors.EmptyNewConfigListErrorMsg)
 	}
 
-	err = c.encryptConfigValues(newConfigProps, localSecureConfigPath, configFilePath, remoteSecureConfigPath)
-	if err != nil {
-		return err
-	}
-
-	return err
+	return c.encryptConfigValues(newConfigProps, localSecureConfigPath, configFilePath, remoteSecureConfigPath)
 }
 
 // This function updates a the value of existing keys in the configFilePath property file. The original 'value' is
@@ -443,9 +425,7 @@ func (c *PasswordProtectionSuite) UpdateEncryptedPasswords(configFilePath string
 	}
 	configProps.DisableExpansion = true
 
-	err = c.encryptConfigValues(newConfigProps, localSecureConfigPath, configFilePath, remoteSecureConfigPath)
-
-	return err
+	return c.encryptConfigValues(newConfigProps, localSecureConfigPath, configFilePath, remoteSecureConfigPath)
 }
 
 func (c *PasswordProtectionSuite) RemoveEncryptedPasswords(configFilePath string, localSecureConfigPath string, removeConfigs string) error {
@@ -473,8 +453,7 @@ func (c *PasswordProtectionSuite) RemoveEncryptedPasswords(configFilePath string
 			pathKey = strings.ReplaceAll(pathKey, "\\.", ".")
 		}
 		// Check if config is removed from secrets files
-		_, ok := secureConfigProps.Get(pathKey)
-		if !ok {
+		if _, ok := secureConfigProps.Get(pathKey); !ok {
 			return errors.Errorf(errors.ConfigKeyNotEncryptedErrorMsg, key)
 		}
 		secureConfigProps.Delete(pathKey)
@@ -493,8 +472,7 @@ func (c *PasswordProtectionSuite) RemoveEncryptedPasswords(configFilePath string
 		return err
 	}
 
-	err = WritePropertiesFile(localSecureConfigPath, secureConfigProps, true)
-	return err
+	return WritePropertiesFile(localSecureConfigPath, secureConfigProps, true)
 }
 
 // Helper Functions
@@ -530,9 +508,7 @@ func (c *PasswordProtectionSuite) wrapDataKey(engine EncryptionEngine, dataKey [
 		return "", err
 	}
 
-	encodedDataKey := c.formatCipherValue(wrappedDataKey, iv)
-
-	return encodedDataKey, nil
+	return c.formatCipherValue(wrappedDataKey, iv), nil
 }
 
 func (c *PasswordProtectionSuite) loadCipherSuiteFromLocalFile(localSecureConfigPath string) (*Cipher, error) {
@@ -603,31 +579,25 @@ func (c *PasswordProtectionSuite) fetchSecureConfigProps(localSecureConfigPath s
 
 	// Add DEK Metadata to secureConfigProps
 	now := c.Clock.Now()
-	_, _, err = secureConfigProps.Set(MetadataKeyTimestamp, now.String())
-	if err != nil {
+	if _, _, err := secureConfigProps.Set(MetadataKeyTimestamp, now.String()); err != nil {
 		return nil, nil, err
 	}
-	_, _, err = secureConfigProps.Set(MetadataKeyEnvVar, ConfluentKeyEnvVar)
-	if err != nil {
+	if _, _, err := secureConfigProps.Set(MetadataKeyEnvVar, ConfluentKeyEnvVar); err != nil {
 		return nil, nil, err
 	}
-	_, _, err = secureConfigProps.Set(MetadataKeyLength, strconv.Itoa(cipherSuites.KeyLength))
-	if err != nil {
+	if _, _, err := secureConfigProps.Set(MetadataKeyLength, strconv.Itoa(cipherSuites.KeyLength)); err != nil {
 		return nil, nil, err
 	}
-	_, _, err = secureConfigProps.Set(MetadataKeyIterations, strconv.Itoa(cipherSuites.Iterations))
-	if err != nil {
+	if _, _, err := secureConfigProps.Set(MetadataKeyIterations, strconv.Itoa(cipherSuites.Iterations)); err != nil {
 		return nil, nil, err
 	}
-	_, _, err = secureConfigProps.Set(MetadataDEKSalt, cipherSuites.SaltDEK)
-	if err != nil {
+	if _, _, err := secureConfigProps.Set(MetadataDEKSalt, cipherSuites.SaltDEK); err != nil {
 		return nil, nil, err
 	}
-	_, _, err = secureConfigProps.Set(MetadataDataKey, cipherSuites.EncryptedDataKey)
-	if err != nil {
+	if _, _, err := secureConfigProps.Set(MetadataDataKey, cipherSuites.EncryptedDataKey); err != nil {
 		return nil, nil, err
 	}
-	return secureConfigProps, cipherSuites, err
+	return secureConfigProps, cipherSuites, nil
 }
 
 func (c *PasswordProtectionSuite) loadMasterKey() (string, error) {
@@ -682,13 +652,11 @@ func (c *PasswordProtectionSuite) encryptConfigValues(matchProps *properties.Pro
 		}
 	}
 
-	err = SaveConfiguration(configFilePath, configProps, true)
-	if err != nil {
+	if err := SaveConfiguration(configFilePath, configProps, true); err != nil {
 		return err
 	}
 
-	err = WritePropertiesFile(localSecureConfigPath, secureConfigProps, true)
-	if err != nil {
+	if err := WritePropertiesFile(localSecureConfigPath, secureConfigProps, true); err != nil {
 		return err
 	}
 
