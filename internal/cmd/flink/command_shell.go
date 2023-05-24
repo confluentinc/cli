@@ -5,8 +5,8 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/config/load"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	client "github.com/confluentinc/flink-sql-client"
-	"github.com/confluentinc/flink-sql-client/pkg/types"
+	client "github.com/confluentinc/cli/internal/pkg/flink"
+	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
 
 	"github.com/spf13/cobra"
 )
