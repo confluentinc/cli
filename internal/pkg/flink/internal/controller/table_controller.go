@@ -213,7 +213,7 @@ func (t *TableController) refreshResults(ctx context.Context, statement types.Pr
 				}
 
 				statement = *newResults
-				t.materializedStatementResults.AppendAll(newResults.StatementResults.GetRows())
+				t.materializedStatementResults.Append(newResults.StatementResults.GetRows()...)
 				time.Sleep(time.Millisecond * time.Duration(refreshInterval))
 			}
 		}
@@ -224,7 +224,7 @@ func (t *TableController) Init(statement types.ProcessedStatement) {
 	t.statement = statement
 	t.materializedStatementResults = results.NewMaterializedStatementResults(statement.StatementResults.GetHeaders(), maxResultsCapacity)
 	t.materializedStatementResults.SetTableMode(!t.hasUserDisabledTableMode)
-	t.materializedStatementResults.AppendAll(statement.StatementResults.GetRows())
+	t.materializedStatementResults.Append(statement.StatementResults.GetRows()...)
 	t.formatterOptions = &types.FormatterOptions{MaxCharCountToDisplay: 80}
 	// if unbounded result start refreshing results in the background
 	if statement.PageToken != "" && !t.hasUserDisabledAutoFetch {

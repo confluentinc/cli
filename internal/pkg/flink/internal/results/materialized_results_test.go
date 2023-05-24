@@ -33,7 +33,7 @@ func (s *MaterializedStatementResultsTestSuite) TestChangelogMode() {
 		// test if in changelog mode all the rows are there and in the correct order
 		materializedStatementResults := NewMaterializedStatementResults(convertedResults.GetHeaders(), 100)
 		materializedStatementResults.SetTableMode(false)
-		materializedStatementResults.AppendAll(convertedResults.GetRows())
+		materializedStatementResults.Append(convertedResults.GetRows()...)
 		// in changelog mode we have an additional column "Operation"
 		require.Equal(t, append([]string{"Operation"}, convertedResults.GetHeaders()...), materializedStatementResults.GetHeaders())
 		require.Equal(t, len(convertedResults.GetRows()), materializedStatementResults.Size())

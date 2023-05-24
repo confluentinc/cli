@@ -112,43 +112,39 @@ func (s *MaterializedStatementResults) Iterator(startFromBack bool) Materialized
 	}
 }
 
-func (s *MaterializedStatementResults) Append(row types.StatementResultRow) {
+func (s *MaterializedStatementResults) Append(rows ...types.StatementResultRow) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	s.changelog.PushBack(row)
+	for _, row := range rows {
+		s.changelog.PushBack(row)
 
-	rowKey := row.GetRowKey()
-	if row.Operation.IsInsertOperation() {
-		listPtr := s.table.PushBack(row)
-		s.cache[rowKey] = listPtr
-	} else {
-		listPtr, ok := s.cache[rowKey]
-		if ok {
-			s.table.Remove(listPtr)
-			delete(s.cache, rowKey)
-		}
-	}
-
-	// if we are now over the capacity we need to remove some records
-	if s.changelog.Len() > s.maxCapacity {
-		removedRow := s.changelog.RemoveFront()
-
-		removedRowKey := removedRow.GetRowKey()
-		// we only care about insert events, delete events have already been handled on arrival
+		rowKey := row.GetRowKey()
 		if row.Operation.IsInsertOperation() {
-			listPtr, ok := s.cache[removedRowKey]
+			listPtr := s.table.PushBack(row)
+			s.cache[rowKey] = listPtr
+		} else {
+			listPtr, ok := s.cache[rowKey]
 			if ok {
 				s.table.Remove(listPtr)
-				delete(s.cache, removedRowKey)
+				delete(s.cache, rowKey)
 			}
 		}
-	}
-}
 
-func (s *MaterializedStatementResults) AppendAll(rows []types.StatementResultRow) {
-	for _, row := range rows {
-		s.Append(row)
+		// if we are now over the capacity we need to remove some records
+		if s.changelog.Len() > s.maxCapacity {
+			removedRow := s.changelog.RemoveFront()
+
+			removedRowKey := removedRow.GetRowKey()
+			// we only care about insert events, delete events have already been handled on arrival
+			if row.Operation.IsInsertOperation() {
+				listPtr, ok := s.cache[removedRowKey]
+				if ok {
+					s.table.Remove(listPtr)
+					delete(s.cache, removedRowKey)
+				}
+			}
+		}
 	}
 }
 
