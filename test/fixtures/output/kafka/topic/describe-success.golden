@@ -2,5 +2,5 @@
 -------------------+-----------+------------
   cleanup.policy   | delete    | false      
   compression.type | producer  | true       
-  num.partitions   |         3 | true       
+  num.partitions   |         3 | false      
   retention.ms     | 604800000 | false      

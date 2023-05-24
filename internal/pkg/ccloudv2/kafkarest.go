@@ -178,3 +178,13 @@ func (c *KafkaRestClient) DeleteKafkaTopic(clusterId, topicName string) (*http.R
 func (c *KafkaRestClient) ListKafkaTopics(clusterId string) (kafkarestv3.TopicDataList, *http.Response, error) {
 	return c.TopicV3Api.ListKafkaTopics(c.context(), clusterId).Execute()
 }
+
+func (c *KafkaRestClient) UpdateKafkaTopicPartitionCount(clusterId, topicName string, newPartitionCount int32) (kafkarestv3.TopicData, error) {
+	updatePartitionCountRequestData := *kafkarestv3.NewUpdatePartitionCountRequestData(newPartitionCount)
+	resp, httpResp, err := c.TopicV3Api.UpdatePartitionCountKafkaTopic(c.context(), clusterId, topicName).UpdatePartitionCountRequestData(updatePartitionCountRequestData).Execute()
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
+}
+
+func (c *KafkaRestClient) GetKafkaTopic(clusterId, topicName string) (kafkarestv3.TopicData, *http.Response, error) {
+	return c.TopicV3Api.GetKafkaTopic(c.context(), clusterId, topicName).Execute()
+}
