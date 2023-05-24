@@ -82,8 +82,7 @@ func (c *authenticatedTopicCommand) produceOnPrem(cmd *cobra.Command, args []str
 	defer producer.Close()
 	log.CliLogger.Tracef("Create producer succeeded")
 
-	err = c.refreshOAuthBearerToken(cmd, producer)
-	if err != nil {
+	if err := c.refreshOAuthBearerToken(cmd, producer); err != nil {
 		return err
 	}
 
@@ -94,8 +93,7 @@ func (c *authenticatedTopicCommand) produceOnPrem(cmd *cobra.Command, args []str
 	defer adminClient.Close()
 
 	topicName := args[0]
-	err = c.validateTopic(adminClient, topicName)
-	if err != nil {
+	if err := c.validateTopic(adminClient, topicName); err != nil {
 		return err
 	}
 
@@ -181,8 +179,7 @@ func (c *authenticatedTopicCommand) produceOnPrem(cmd *cobra.Command, args []str
 		if err != nil {
 			return err
 		}
-		err = producer.Produce(msg, deliveryChan)
-		if err != nil {
+		if err := producer.Produce(msg, deliveryChan); err != nil {
 			output.ErrPrintf(errors.FailedToProduceErrorMsg, msg.TopicPartition.Offset, err)
 		}
 

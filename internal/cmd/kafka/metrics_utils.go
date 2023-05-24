@@ -71,8 +71,7 @@ func (c *clusterCommand) validateClusterLoad(clusterId string, isLatestMetric bo
 		return errors.Errorf("could not retrieve cluster load metrics to validate request to shrink cluster, please try again in a few minutes: %v", err)
 	}
 
-	err = ccloudv2.UnmarshalFlatQueryResponseIfDataSchemaMatchError(err, clusterLoadResponse, httpResp)
-	if err != nil {
+	if err := ccloudv2.UnmarshalFlatQueryResponseIfDataSchemaMatchError(err, clusterLoadResponse, httpResp); err != nil {
 		return err
 	}
 	maxClusterLoad := maxApiDataValue(clusterLoadResponse.FlatQueryResponse.GetData())

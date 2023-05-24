@@ -61,8 +61,7 @@ func NewError(url string, err error, httpResp *http.Response) error {
 func ParseOpenAPIErrorCloud(err error) (*V3Error, error) {
 	if openAPIError, ok := err.(cckafkarestv3.GenericOpenAPIError); ok {
 		var decodedError V3Error
-		err = json.Unmarshal(openAPIError.Body(), &decodedError)
-		if err != nil {
+		if err := json.Unmarshal(openAPIError.Body(), &decodedError); err != nil {
 			return nil, err
 		}
 		return &decodedError, nil
@@ -79,8 +78,7 @@ func kafkaRestHttpError(httpResp *http.Response) error {
 func parseOpenAPIError(err error) (*V3Error, error) {
 	if openAPIError, ok := err.(kafkarestv3.GenericOpenAPIError); ok {
 		var decodedError V3Error
-		err = json.Unmarshal(openAPIError.Body(), &decodedError)
-		if err != nil {
+		if err := json.Unmarshal(openAPIError.Body(), &decodedError); err != nil {
 			return nil, err
 		}
 		return &decodedError, nil

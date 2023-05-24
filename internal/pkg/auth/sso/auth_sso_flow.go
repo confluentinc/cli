@@ -45,26 +45,23 @@ func Login(authURL string, noBrowser bool, connectionName string) (string, strin
 		// we need to start a background HTTP server to support the authorization code flow with PKCE
 		// described at https://auth0.com/docs/flows/guides/auth-code-pkce/call-api-auth-code-pkce
 		server := newServer(state)
-		err = server.startServer()
-		if err != nil {
+		if err := server.startServer(); err != nil {
 			return "", "", errors.Wrap(err, errors.StartHTTPServerErrorMsg)
 		}
 
 		// Get authorization code for making subsequent token request
-		err := browser.OpenURL(state.getAuthorizationCodeUrl(connectionName, isOkta))
-		if err != nil {
+		url := state.getAuthorizationCodeUrl(connectionName, isOkta)
+		if err := browser.OpenURL(url); err != nil {
 			return "", "", errors.Wrap(err, errors.OpenWebBrowserErrorMsg)
 		}
 
-		err = server.awaitAuthorizationCode(30 * time.Second)
-		if err != nil {
+		if err = server.awaitAuthorizationCode(30 * time.Second); err != nil {
 			return "", "", err
 		}
 	}
 
 	// Exchange authorization code for OAuth token from SSO provider
-	err = state.getOAuthToken()
-	if err != nil {
+	if err := state.getOAuthToken(); err != nil {
 		return "", "", err
 	}
 

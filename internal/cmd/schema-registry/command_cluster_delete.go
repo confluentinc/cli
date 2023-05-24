@@ -54,8 +54,7 @@ func (c *command) clusterDelete(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	err = c.Client.SchemaRegistry.DeleteSchemaRegistryCluster(cluster)
-	if err != nil {
+	if err := c.Client.SchemaRegistry.DeleteSchemaRegistryCluster(cluster); err != nil {
 		return err
 	}
 
