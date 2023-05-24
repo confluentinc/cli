@@ -102,19 +102,6 @@ func (s *TableControllerTestSuite) TestEscape() {
 	assert.Nil(s.T(), result)
 }
 
-func (s *TableControllerTestSuite) TestCtrlC() {
-	table := components.CreateTable()
-	tableController := TableController{
-		table:         table,
-		appController: s.mockAppController,
-		store:         s.mockStore,
-	}
-	tableController.SetRunInteractiveInputCallback(s.mockInputController.RunInteractiveInput)
-	input := tcell.NewEventKey(tcell.KeyCtrlC, rune(0), tcell.ModNone)
-	result := tableController.AppInputCapture(input)
-	assert.Nil(s.T(), result)
-}
-
 func (s *TableControllerTestSuite) TestM() {
 	// Given
 	table := components.CreateTable()

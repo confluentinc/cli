@@ -3,8 +3,6 @@ package autocomplete
 import (
 	"testing"
 
-	"github.com/confluentinc/go-prompt"
-
 	"github.com/bradleyjkemp/cupaloy"
 
 	"github.com/confluentinc/go-prompt"
