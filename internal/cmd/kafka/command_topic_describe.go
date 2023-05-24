@@ -58,7 +58,7 @@ func (c *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 		return err
 	}
 
-	topicData, httpResp, err := kafkaREST.CloudClient.GetKafkaTopic(kafkaClusterConfig.ID, topicName)
+	topic, httpResp, err := kafkaREST.CloudClient.GetKafkaTopic(kafkaClusterConfig.ID, topicName)
 	if err != nil {
 		if restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err); parseErr == nil && restErr.Code == ccloudv2.UnknownTopicOrPartitionErrorCode {
 			return fmt.Errorf(errors.UnknownTopicErrorMsg, topicName)
@@ -76,7 +76,7 @@ func (c *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 	}
 	list.Add(&topicConfigurationOut{
 		Name:     numPartitionsKey,
-		Value:    fmt.Sprint(topicData.PartitionsCount),
+		Value:    fmt.Sprint(topic.PartitionsCount),
 		ReadOnly: false,
 	})
 	return list.Print()
