@@ -188,8 +188,7 @@ func jsonConfigsToAuditLogConfigSpecs(clusterConfigs map[string]string) (map[str
 	clusterAuditLogConfigSpecs := make(map[string]*mds.AuditLogConfigSpec)
 	for clusterId, auditConfig := range clusterConfigs {
 		var spec mds.AuditLogConfigSpec
-		err := json.Unmarshal([]byte(auditConfig), &spec)
-		if err != nil {
+		if err := json.Unmarshal([]byte(auditConfig), &spec); err != nil {
 			return nil, fmt.Errorf(warn.MalformedConfigErrorMsg, clusterId, err.Error())
 		}
 		clusterAuditLogConfigSpecs[clusterId] = &spec
@@ -213,9 +212,7 @@ func combineDestinationTopics(specs map[string]*mds.AuditLogConfigSpec, newSpec 
 				if destination.RetentionMs != newTopics[topicName].RetentionMs {
 					topicRetentionDiscrepancies[topicName] = retentionTime
 				}
-				newTopics[topicName] = mds.AuditLogConfigDestinationConfig{
-					RetentionMs: retentionTime,
-				}
+				newTopics[topicName] = mds.AuditLogConfigDestinationConfig{RetentionMs: retentionTime}
 			} else {
 				newTopics[topicName] = destination
 			}
@@ -248,9 +245,7 @@ func setDefaultTopic(newSpec *mds.AuditLogConfigSpec, defaultTopicName string) {
 	}
 
 	if _, ok := newSpec.Destinations.Topics[defaultTopicName]; !ok {
-		newSpec.Destinations.Topics[defaultTopicName] = mds.AuditLogConfigDestinationConfig{
-			RetentionMs: DefaultRetentionMs,
-		}
+		newSpec.Destinations.Topics[defaultTopicName] = mds.AuditLogConfigDestinationConfig{RetentionMs: DefaultRetentionMs}
 	}
 }
 

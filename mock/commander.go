@@ -125,8 +125,7 @@ func (c *Commander) HasAPIKey(command *pcmd.HasAPIKeyCLICommand) func(*cobra.Com
 // UseKafkaRest - The PreRun function registered by the mock prerunner for UseKafkaRestCLICommand
 func (c *Commander) InitializeOnPremKafkaRest(command *pcmd.AuthenticatedCLICommand) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		err := c.AuthenticatedWithMDS(command)(cmd, args)
-		if err != nil {
+		if err := c.AuthenticatedWithMDS(command)(cmd, args); err != nil {
 			return err
 		}
 		command.KafkaRESTProvider = c.KafkaRESTProvider
