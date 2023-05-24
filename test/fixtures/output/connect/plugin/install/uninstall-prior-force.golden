@@ -1,0 +1,17 @@
+[DRY RUN] Beginning installation.
+
+Using the Confluent Platform installation at "test/fixtures/input/connect/confluent-prior-install".
+Using "test/fixtures/input/connect/confluent-prior-install/share/confluent-hub-components" as the plugin installation directory.
+
+A version of this plugin is already installed and must be removed to continue.
+Uninstalling the existing version of the plugin located at "test/fixtures/input/connect/confluent-prior-install/share/confluent-hub-components/confluentinc-integration-test-plugin".
+[DRY RUN] Successfully removed existing version.
+
+Implicitly agreeing to the following license:
+Example License 1.0
+url-to-license-goes-here
+
+[DRY RUN] Installing Integration Test Plugin 0.1.0, provided by Confluent, Inc.
+No worker configuration files found.
+
+[DRY RUN] Installed Integration Test Plugin 0.1.0.
