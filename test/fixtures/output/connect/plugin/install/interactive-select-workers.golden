@@ -1,6 +1,6 @@
 Using the only available Confluent Platform installation at "test/fixtures/input/connect/confluent-7.3.3".
 Do you want to install this plugin into "test/fixtures/input/connect/confluent-7.3.3/share/confluent-hub-components"? (y/n): 
-License: Example License 1.0 (url-to-license-goes-here)
+License: Apache License 2.0 (https://www.apache.org/licenses/LICENSE-2.0)
 I agree to this software license agreement. (y/n): 
 [DRY RUN] Installing Integration Test Plugin 0.1.0, provided by Confluent, Inc.
 

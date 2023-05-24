@@ -29,8 +29,8 @@ func newManifest() *cpstructs.Manifest {
 		},
 		Licenses: []cpstructs.License{
 			{
-				Name: "Example License 1.0",
-				Url:  "url-to-license-goes-here",
+				Name: "Apache License 2.0",
+				Url:  "https://www.apache.org/licenses/LICENSE-2.0",
 			},
 		},
 	}

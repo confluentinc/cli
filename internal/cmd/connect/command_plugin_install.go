@@ -416,7 +416,7 @@ func unzipPlugin(pluginManifest *cpstructs.Manifest, zipFiles []*zip.File, plugi
 func checkLicenseAcceptance(pluginManifest *cpstructs.Manifest, prompt form.Prompt, force bool) error {
 	for _, license := range pluginManifest.Licenses {
 		if force {
-			output.Printf("\nImplicitly agreeing to the following license:\n%s\n%s\n", license.Name, license.Url)
+			output.Printf("\nImplicitly agreeing to the following license: %s (%s)\n", license.Name, license.Url)
 		} else {
 			f := form.New(form.Field{
 				ID:        "confirm",

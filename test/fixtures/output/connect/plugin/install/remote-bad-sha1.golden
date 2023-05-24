@@ -1,7 +1,7 @@
 Using the only available Confluent Platform installation at "test/fixtures/input/connect/confluent-7.3.3".
 Do you want to install this plugin into "test/fixtures/input/connect/confluent-7.3.3/share/confluent-hub-components"? (y/n): 
-License: Example License 1.0 (url-to-license-goes-here)
+License: Apache License 2.0 (https://www.apache.org/licenses/LICENSE-2.0)
 I agree to this software license agreement. (y/n): 
 Installing Integration Test Plugin 0.1.0, provided by Confluent, Inc.
 
-Error: SHA1 checksum for downloaded archive (4e049d340ab3f8ad397d96e06bcbf3e390fe0e94) does not match checksum in manifest (12345) for plugin "integration-test-plugin"
+Error: SHA1 checksum for downloaded archive (7751a5d9f5dc52f886ba5bbd7bb544fa8dc97f29) does not match checksum in manifest (12345) for plugin "integration-test-plugin"

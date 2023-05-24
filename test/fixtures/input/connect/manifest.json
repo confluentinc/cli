@@ -7,7 +7,7 @@
     "name" : "Confluent, Inc."
   },
   "license" : [ {
-    "name" : "Example License 1.0",
-    "url" : "url-to-license-goes-here"
+    "name" : "Apache License 2.0",
+    "url" : "https://www.apache.org/licenses/LICENSE-2.0"
   } ]
 }
