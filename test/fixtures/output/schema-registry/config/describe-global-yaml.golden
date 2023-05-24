@@ -1,1 +1,8 @@
 compatibility_level: FULL
+metadata_defaults: |-
+  {
+    "properties": {
+      "email": "bob@acme.com",
+      "owner": "Bob Jones"
+    }
+  }

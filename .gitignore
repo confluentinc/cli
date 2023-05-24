@@ -1,6 +1,7 @@
 dist/
 docs/
 legal/
+prebuilt/
 release-notes/
 
 # Editor configurations

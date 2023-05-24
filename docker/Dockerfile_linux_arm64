@@ -8,6 +8,6 @@ RUN export GO_VERSION=$(cat /cli/.go-version) && \
 
 ENV PATH=${PATH}:/usr/local/go/bin:/root/go/bin
 
-RUN cd /cli && make gorelease-linux-glibc-arm64
+RUN cd /cli && make gorelease-linux-arm64
 
 RUN cd /cli && rename 's/checksums/checksums_linux_arm64/' dist/*.txt

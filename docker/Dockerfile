@@ -1,4 +1,4 @@
-FROM amd64/alpine:latest
+FROM alpine:latest
 
 ENV USER=confluent
 ENV UID=2358
@@ -22,7 +22,7 @@ RUN apk update --no-cache && \
     apk add --no-cache bash && \
     apk add --no-cache bash-completion
 
-RUN curl -L --http1.1 https://cnfl.io/cli | sh -s -- -b /bin
+COPY confluent /bin
 
 RUN chmod +x /bin/confluent
 RUN chown $USER:$USER /bin/confluent

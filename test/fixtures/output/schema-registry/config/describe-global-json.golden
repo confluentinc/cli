@@ -1,3 +1,4 @@
 {
-  "compatibility_level": "FULL"
+  "compatibility_level": "FULL",
+  "metadata_defaults": "{\n  \"properties\": {\n    \"email\": \"bob@acme.com\",\n    \"owner\": \"Bob Jones\"\n  }\n}"
 }

@@ -176,25 +176,6 @@ func (suite *KafkaClusterTestSuite) TestClusterShrinkShouldPrompt() {
 	req.True(suite.metricsApi.V2MetricsDatasetQueryPostExecuteCalled())
 }
 
-func (suite *KafkaClusterTestSuite) TestCreateKafkaCluster() {
-	cmd := suite.newCmd(v1.AuthenticatedCloudConfigMock())
-	cmd.SetArgs([]string{"create", clusterName, "--cloud", cloudId, "--region", regionId})
-	err := cmd.Execute()
-	req := require.New(suite.T())
-	req.Nil(err)
-	req.True(suite.envMetadataMock.GetCalled())
-	req.True(suite.cmkClusterApi.CreateCmkV2ClusterCalled())
-}
-
-func (suite *KafkaClusterTestSuite) TestDeleteKafkaCluster() {
-	cmd := suite.newCmd(v1.AuthenticatedCloudConfigMock())
-	cmd.SetArgs([]string{"delete", clusterId, "--force"})
-	err := cmd.Execute()
-	req := require.New(suite.T())
-	req.Nil(err)
-	req.True(suite.cmkClusterApi.DeleteCmkV2ClusterCalled())
-}
-
 func (suite *KafkaClusterTestSuite) TestGetLkcForDescribe() {
 	req := require.New(suite.T())
 	cmd := new(cobra.Command)

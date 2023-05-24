@@ -148,7 +148,7 @@ func TestGetAuthorizationUrl(t *testing.T) {
 	state, _ := newState("https://devel.cpdev.cloud", false)
 
 	// test get auth code url
-	authCodeUrlDevel := state.getAuthorizationCodeUrl("foo")
+	authCodeUrlDevel := state.getAuthorizationCodeUrl("foo", false)
 	expectedUri := "/authorize?" +
 		"response_type=code" +
 		"&code_challenge=" + state.CodeChallenge +
