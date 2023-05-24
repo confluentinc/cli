@@ -154,7 +154,7 @@ func (t *TableController) showRowView(row *types.StatementResultRow) {
 	headers := t.materializedStatementResults.GetHeaders()
 	sb := strings.Builder{}
 	for rowIdx, field := range row.Fields {
-		sb.WriteString(fmt.Sprintf("[yellow]%s:\n[white]%s\n\n", tview.Escape(headers[rowIdx]), tview.Escape(field.Format(nil))))
+		sb.WriteString(fmt.Sprintf("[yellow]%s:\n[white]%s\n\n", tview.Escape(headers[rowIdx]), tview.Escape(field.ToString())))
 	}
 	textView := tview.NewTextView().SetText(sb.String())
 	// mouse needs to be disabled, otherwise selecting text with the cursor won't work
@@ -311,7 +311,7 @@ func (t *TableController) renderData() {
 		row := iterator.GetNext()
 		for colIdx, field := range row.Fields {
 			color := tcell.ColorWhite
-			formattedField := field.Format(nil)
+			formattedField := field.ToString()
 			columnWidths[colIdx] = max(len(formattedField), columnWidths[colIdx])
 
 			tableCell := tview.NewTableCell(tview.Escape(formattedField)).

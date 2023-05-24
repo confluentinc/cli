@@ -273,7 +273,7 @@ func (c *InputController) printResultToSTDOUT(statementResults *types.StatementR
 	columnWidthSum := 0
 	for _, row := range statementResults.Rows {
 		for colIdx, field := range row.Fields {
-			formattedField := field.Format(nil)
+			formattedField := field.ToString()
 			if len(formattedField) > columnWidths[colIdx] {
 				columnWidthSum -= columnWidths[colIdx]
 				columnWidthSum += len(formattedField)
@@ -286,7 +286,7 @@ func (c *InputController) printResultToSTDOUT(statementResults *types.StatementR
 	for rowIdx, row := range statementResults.Rows {
 		formattedRow := make([]string, len(row.Fields))
 		for colIdx, field := range row.Fields {
-			formattedRow[colIdx] = field.Format(&types.FormatterOptions{MaxCharCountToDisplay: columnWidths[colIdx]})
+			formattedRow[colIdx] = results.TruncateString(field.ToString(), columnWidths[colIdx])
 		}
 		formattedResults[rowIdx] = formattedRow
 	}

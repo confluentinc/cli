@@ -51,3 +51,13 @@ func GetTruncatedColumnWidths(columnWidths []int, maxCharacters int) []int {
 
 	return newColumns
 }
+
+func TruncateString(str string, maxCharCountToDisplay int) string {
+	if len(str) > maxCharCountToDisplay {
+		if maxCharCountToDisplay <= 3 {
+			return "..."
+		}
+		return str[:maxCharCountToDisplay-3] + "..."
+	}
+	return str
+}
