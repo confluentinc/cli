@@ -32,7 +32,7 @@ func (v *Version) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	v.Version = version
-	
+
 	return nil
 }
 
