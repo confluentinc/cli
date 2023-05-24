@@ -27,9 +27,13 @@ func (v *Version) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	var err error
-	v.Version, err = version.NewVersion(s)
-	return err
+	version, err := version.NewVersion(s)
+	if err != nil {
+		return err
+	}
+	v.Version = version
+	
+	return nil
 }
 
 func NewBaseConfig(ver *version.Version) *BaseConfig {
