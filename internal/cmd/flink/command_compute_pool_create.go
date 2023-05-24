@@ -77,6 +77,7 @@ func (c *command) computePoolCreate(cmd *cobra.Command, args []string) error {
 		IsCurrent: computePool.GetId() == c.Context.GetCurrentFlinkComputePool(),
 		Id:        computePool.GetId(),
 		Name:      computePool.Spec.GetDisplayName(),
+		Region:    computePool.Spec.GetRegion(),
 	})
 	return table.Print()
 }

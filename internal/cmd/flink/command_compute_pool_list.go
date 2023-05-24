@@ -44,6 +44,7 @@ func (c *command) computePoolList(cmd *cobra.Command, _ []string) error {
 			IsCurrent: computePool.GetId() == c.Context.GetCurrentFlinkComputePool(),
 			Id:        computePool.GetId(),
 			Name:      computePool.Spec.GetDisplayName(),
+			Region:    computePool.Spec.GetRegion(),
 		})
 	}
 	return list.Print()
