@@ -7,7 +7,8 @@ This package contains Flink SQL Client to be used with Confluent Cloud and other
 Install dependencies
 
 ```
-make deps
+go mod download
+go mod verify
 ```
 
 Run prototype

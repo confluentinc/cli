@@ -1,3 +1,7 @@
+### Run tests
+
+You can either run tests for the whole app by running `make deps` from the root directory or `go test ./...` from a specific package.
+
 ### Run test converage
 
 The following command runs the tests and generates a coverage report in the `coverage` folder.

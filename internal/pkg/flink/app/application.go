@@ -13,9 +13,9 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
 )
 
-var once sync.Once
-
 func StartApp(envId, orgResourceId, kafkaClusterId, computePoolId string, authToken func() string, authenticated func() error, appOptions *types.ApplicationOptions) {
+	var once sync.Once
+
 	// Client used to communicate with the gateway
 	client := store.NewGatewayClient(envId, orgResourceId, kafkaClusterId, computePoolId, authToken, appOptions)
 

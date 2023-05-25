@@ -5,7 +5,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/config/load"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	client "github.com/confluentinc/cli/internal/pkg/flink"
+	client "github.com/confluentinc/cli/internal/pkg/flink/app"
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
 
 	"github.com/spf13/cobra"
