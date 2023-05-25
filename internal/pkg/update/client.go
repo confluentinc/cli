@@ -197,8 +197,7 @@ func (c *client) UpdateBinary(cliName, version, path string, noVerify bool) erro
 		return errors.Wrapf(err, errors.GetTempDirErrorMsg, cliName)
 	}
 	defer func() {
-		err = c.fs.RemoveAll(downloadDir)
-		if err != nil {
+		if err := c.fs.RemoveAll(downloadDir); err != nil {
 			log.CliLogger.Warnf("unable to clean up temp download dir %s: %s", downloadDir, err)
 		}
 	}()

@@ -50,8 +50,7 @@ func Delete(isCloud bool, ctxName string) error {
 	for _, entry := range results {
 		if strings.Contains(ctxName, entry.Account) {
 			username, _, _ := parseCredentialsFromKeychain(entry.Data)
-			err := keychain.DeleteGenericPasswordItem(service, entry.Account)
-			if err != nil {
+			if err := keychain.DeleteGenericPasswordItem(service, entry.Account); err != nil {
 				return err
 			}
 
