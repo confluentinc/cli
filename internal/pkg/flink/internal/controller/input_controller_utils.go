@@ -10,7 +10,7 @@ import (
 func getStdin() *term.State {
 	state, err := term.GetState(int(os.Stdin.Fd()))
 	if err != nil {
-		log.CliLogger.Warn("Couldn't get stdin state with term.GetState. Error: %v \n", err)
+		log.CliLogger.Warnf("Couldn't get stdin state with term.GetState. Error: %v \n", err)
 		return nil
 	}
 	return state

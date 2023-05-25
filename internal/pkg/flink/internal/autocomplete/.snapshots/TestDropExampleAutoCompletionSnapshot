@@ -1,6 +1,6 @@
 ([]prompt.Suggest) (len=1) {
   (prompt.Suggest) {
-    Text: (string) (len=18) "DROP TABLE Orders;",
+    Text: (string) (len=11) "DROP TABLE ",
     Description: (string) (len=82) "Drop a table/view/function from current or specified Catalog or the catalog itself"
   }
 }

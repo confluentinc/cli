@@ -467,7 +467,7 @@ func NewInputController(t TableControllerInterface, a ApplicationControllerInter
 		table:           t,
 		store:           store,
 		appController:   a,
-		smartCompletion: false,
+		smartCompletion: true,
 		authenticated:   authenticated,
 		appOptions:      appOptions,
 		shouldExit:      false,
