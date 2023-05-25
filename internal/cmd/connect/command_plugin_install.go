@@ -332,8 +332,7 @@ func removePluginInstallation(pathToPlugin string, prompt form.Prompt, dryRun, f
 		return nil
 	}
 
-	err := os.RemoveAll(pathToPlugin)
-	if err != nil {
+	if err := os.RemoveAll(pathToPlugin); err != nil {
 		return err
 	}
 
