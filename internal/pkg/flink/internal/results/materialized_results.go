@@ -113,11 +113,29 @@ func (s *MaterializedStatementResults) Iterator(startFromBack bool) Materialized
 	}
 }
 
-func (s *MaterializedStatementResults) Append(rows ...types.StatementResultRow) {
+func (s *MaterializedStatementResults) cleanup() {
+	if s.changelog.Len() > s.maxCapacity {
+		removedRow := s.changelog.RemoveFront()
+		removedRowKey := removedRow.GetRowKey()
+
+		listPtr, ok := s.cache[removedRowKey]
+		if ok {
+			s.table.Remove(listPtr)
+			delete(s.cache, removedRowKey)
+		}
+	}
+}
+
+func (s *MaterializedStatementResults) Append(rows ...types.StatementResultRow) bool {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
+	allValuesInserted := true
 	for _, row := range rows {
+		if len(row.Fields) != len(s.headers) {
+			allValuesInserted = false
+			continue
+		}
 		s.changelog.PushBack(row)
 
 		rowKey := row.GetRowKey()
@@ -133,20 +151,9 @@ func (s *MaterializedStatementResults) Append(rows ...types.StatementResultRow) 
 		}
 
 		// if we are now over the capacity we need to remove some records
-		if s.changelog.Len() > s.maxCapacity {
-			removedRow := s.changelog.RemoveFront()
-
-			removedRowKey := removedRow.GetRowKey()
-			// we only care about insert events, delete events have already been handled on arrival
-			if row.Operation.IsInsertOperation() {
-				listPtr, ok := s.cache[removedRowKey]
-				if ok {
-					s.table.Remove(listPtr)
-					delete(s.cache, removedRowKey)
-				}
-			}
-		}
+		s.cleanup()
 	}
+	return allValuesInserted
 }
 
 func (s *MaterializedStatementResults) Size() int {

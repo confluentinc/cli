@@ -143,6 +143,35 @@ func (s *MaterializedStatementResultsTestSuite) TestMaxCapacity() {
 	require.Equal(s.T(), 1, materializedStatementResults.Size())
 }
 
+func (s *MaterializedStatementResultsTestSuite) TestOnlyAllowAppendWithSameSchema() {
+	invalidHeaders := []string{"Count"}
+	row := types.StatementResultRow{
+		Operation: types.INSERT,
+		Fields: []types.StatementResultField{
+			types.AtomicStatementResultField{
+				Type:  types.INTEGER,
+				Value: "0",
+			},
+			types.AtomicStatementResultField{
+				Type:  types.INTEGER,
+				Value: "0",
+			},
+		},
+	}
+	materializedStatementResults := NewMaterializedStatementResults(invalidHeaders, 1)
+	materializedStatementResults.SetTableMode(true)
+	valuesInserted := materializedStatementResults.Append(row)
+	require.False(s.T(), valuesInserted)
+	require.Empty(s.T(), materializedStatementResults.Size())
+
+	validHeaders := []string{"Count", "Count2"}
+	materializedStatementResults = NewMaterializedStatementResults(validHeaders, 1)
+	materializedStatementResults.SetTableMode(true)
+	valuesInserted = materializedStatementResults.Append(row)
+	require.True(s.T(), valuesInserted)
+	require.Equal(s.T(), 1, materializedStatementResults.Size())
+}
+
 func (s *MaterializedStatementResultsTestSuite) TestIteratorForwardResetThenBackward() {
 	headers := []string{"Count"}
 	materializedStatementResults := NewMaterializedStatementResults(headers, 10)
