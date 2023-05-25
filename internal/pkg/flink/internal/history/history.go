@@ -3,9 +3,10 @@ package history
 import (
 	"encoding/json"
 	"errors"
-	"log"
 	"os"
 	"path/filepath"
+
+	"github.com/confluentinc/cli/internal/pkg/log"
 
 	"github.com/confluentinc/cli/internal/pkg/flink/config"
 )
@@ -29,17 +30,17 @@ func loadFromPath(history *History) *History {
 	}
 	jsonFile, err := os.ReadFile(history.historyPath)
 	if errors.Is(err, os.ErrNotExist) {
-		log.Printf("Couldn't load past statements: file doesn't exist: %s. Error: %v", history.historyPath, err)
+		log.CliLogger.Warnf("Couldn't load past statements: file doesn't exist: %s. Error: %v", history.historyPath, err)
 		return history
 	}
 
 	if err != nil {
-		log.Printf("Couldn't load past statements history: unable to read file Error: " + err.Error())
+		log.CliLogger.Warnf("Couldn't load past statements history: unable to read file Error: " + err.Error())
 	}
 
 	err = json.Unmarshal(jsonFile, history)
 	if err != nil {
-		log.Printf("Couldn't load past statements history. Error: " + err.Error())
+		log.CliLogger.Warnf("Couldn't load past statements history. Error: " + err.Error())
 	}
 	return history
 }
@@ -47,7 +48,7 @@ func loadFromPath(history *History) *History {
 func initPath() *History {
 	home, osHomedirErr := os.UserHomeDir()
 	if osHomedirErr != nil {
-		log.Printf("Couldn't get homedir with os.UserHomeDir(). Error: " + osHomedirErr.Error())
+		log.CliLogger.Warnf("Couldn't get homedir with os.UserHomeDir(). Error: " + osHomedirErr.Error())
 		return nil
 	}
 
@@ -74,25 +75,25 @@ func (history *History) Save() {
 	// Convert struct to JSON
 	b, err := json.Marshal(history)
 	if err != nil {
-		log.Printf("Couldn't save past statements history: couldn't marhsal history. Error: " + err.Error())
+		log.CliLogger.Warnf("Couldn't save past statements history: couldn't marhsal history. Error: " + err.Error())
 	}
 
 	if err := os.Mkdir(history.confluentPath, os.ModePerm); err != nil {
 		if !errors.Is(err, os.ErrExist) {
-			log.Printf("Couldn't save past statements history: couldn't create directory. Error: " + err.Error())
+			log.CliLogger.Warnf("Couldn't save past statements history: couldn't create directory. Error: " + err.Error())
 		}
 	}
 
 	// Write JSON to file
 	f, err := os.Create(history.historyPath)
 	if err != nil {
-		log.Printf("Couldn't save past statements history: couldn't create file. Error: " + err.Error())
+		log.CliLogger.Warnf("Couldn't save past statements history: couldn't create file. Error: " + err.Error())
 	}
 	defer f.Close()
 
 	_, err = f.Write(b)
 	if err != nil {
-		log.Printf("Couldn't save past statements history: couldn't write to file. Error: " + err.Error())
+		log.CliLogger.Warnf("Couldn't save past statements history: couldn't write to file. Error: " + err.Error())
 	}
 }
 

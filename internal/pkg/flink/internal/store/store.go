@@ -4,15 +4,17 @@ import (
 	"context"
 	_ "embed"
 	"fmt"
-	"log"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
 
+	"github.com/confluentinc/cli/internal/pkg/log"
+
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/results"
 	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
 	"github.com/confluentinc/cli/internal/pkg/flink/test/generators"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 const (
@@ -180,12 +182,12 @@ func (s *Store) DeleteStatement(statementName string) bool {
 		httpResponse, err := s.client.DeleteStatement(context.Background(), statementName)
 
 		if err != nil {
-			log.Printf("Failed to delete the statement: %s", err.Error())
+			log.CliLogger.Warnf("Failed to delete the statement: %v", err)
 			return false
 		}
 
 		if httpResponse != nil && (httpResponse.StatusCode < 200 || httpResponse.StatusCode >= 300) {
-			log.Printf("DeleteStatement returned unexpected status code: %v, with status: %s\n", httpResponse.StatusCode, httpResponse.Status)
+			log.CliLogger.Warnf("DeleteStatement returned unexpected status code: %v, with status: %s\n", httpResponse.StatusCode, httpResponse.Status)
 			return false
 		}
 	}
@@ -236,7 +238,7 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 
 		if lastProgressUpdateTime.Seconds() > 5 {
 			lastProgressUpdateTime = time.Second * 0
-			fmt.Printf("Fetching results... (Timeout %d/%d) \n", int(elapsedWaitTime.Seconds()), int(timeout.Seconds()))
+			output.Printf("Fetching results... (Timeout %d/%d) \n", int(elapsedWaitTime.Seconds()), int(timeout.Seconds()))
 		}
 		waitTime = calcWaitTime(retries)
 

@@ -3,12 +3,13 @@ package controller
 import (
 	"context"
 	"errors"
-	"log"
 	"net/http"
 	"os"
 	"reflect"
 	"strings"
 	"time"
+
+	"github.com/confluentinc/cli/internal/pkg/log"
 
 	"github.com/olekukonko/tablewriter"
 	"pgregory.net/rapid"
@@ -234,7 +235,7 @@ func (c *InputController) toggleSmartCompletion() {
 
 	maxCol, err := c.GetMaxCol()
 	if err != nil {
-		log.Println(err)
+		log.CliLogger.Error(err)
 		return
 	}
 
@@ -246,7 +247,7 @@ func (c *InputController) toggleOutputMode() {
 
 	maxCol, err := c.GetMaxCol()
 	if err != nil {
-		log.Println(err)
+		log.CliLogger.Error(err)
 		return
 	}
 

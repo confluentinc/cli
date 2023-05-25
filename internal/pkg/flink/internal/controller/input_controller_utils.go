@@ -1,16 +1,16 @@
 package controller
 
 import (
-	"log"
 	"os"
 
+	"github.com/confluentinc/cli/internal/pkg/log"
 	"golang.org/x/term"
 )
 
 func getStdin() *term.State {
 	state, err := term.GetState(int(os.Stdin.Fd()))
 	if err != nil {
-		log.Println("Couldn't get stdin state with term.GetState" + err.Error())
+		log.CliLogger.Warn("Couldn't get stdin state with term.GetState. Error: %v \n", err)
 		return nil
 	}
 	return state

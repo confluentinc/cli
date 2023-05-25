@@ -3,9 +3,10 @@ package autocomplete
 import (
 	_ "embed"
 	"encoding/json"
-	"log"
+
 	"sort"
 
+	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/go-prompt"
 )
 
@@ -17,7 +18,7 @@ func loadSnippetSuggestions() []prompt.Suggest {
 	var payload map[string]any
 	err := json.Unmarshal(codeSnippets, &payload)
 	if err != nil {
-		log.Printf("Couldn't unmarshal code snippets. Error: %v\n", err)
+		log.CliLogger.Warn("Couldn't unmarshal code snippets. Error: %v\n", err)
 	}
 
 	for _, value := range payload {
