@@ -21,23 +21,25 @@ When opening a PR, please make sure to follow our [contribution guide](CONTRIBUT
 
 The Confluent CLI is available to install for macOS, Linux, and Windows.
 
+#### Homebrew
+
+Install the latest version of `confluent` to `/usr/local/bin`:
+
+    brew install confluentinc/tap/cli
+
 #### Scripted installation
 
 Install the latest version of `confluent` to `/usr/local/bin`:
 
     curl -sL https://raw.githubusercontent.com/confluentinc/cli/main/install.sh | sh -s -- -b /usr/local/bin
 
-#### macOS
+Print a complete list of versions available for download:
 
-1. Download the latest macOS tar.gz file for your architecture type from https://github.com/confluentinc/cli/releases/latest
-2. Unzip the file: `tar -xvf confluent_X.X.X_darwin_XXXXX.tar.gz`
-3. Move `confluent` to a folder in your `$PATH`, such as `/usr/local/bin`
+    curl -sL https://raw.githubusercontent.com/confluentinc/cli/main/install.sh | sh -s -- -l
 
-#### Linux
+Install `confluent` v3.6.0 to `/usr/local/bin`:
 
-1. Download the latest Linux tar.gz file for your architecture type from https://github.com/confluentinc/cli/releases/latest
-2. Unzip the file: `tar -xvf confluent_X.X.X_linux_XXXXX.tar.gz`
-3. Move `confluent` to a folder in your `$PATH`
+    curl -sL https://raw.githubusercontent.com/confluentinc/cli/main/install.sh | sh -s -- -b /usr/local/bin 3.6.0
 
 #### Windows
 
@@ -55,19 +57,9 @@ Pull `confluent` v3.6.0:
 
     docker pull confluentinc/confluent-cli:3.6.0
 
-#### Install a Specific Version
-
-Print a complete list of versions available for download:
-
-    curl -sL https://raw.githubusercontent.com/confluentinc/cli/main/install.sh | sh -s -- -l
-
-Install `confluent` v3.6.0 to `/usr/local/bin`:
-
-    curl -sL https://raw.githubusercontent.com/confluentinc/cli/main/install.sh | sh -s -- -b /usr/local/bin 3.6.0
-
 ### Building from Source
 
-    make build
+    make
     dist/confluent_$(go env GOOS)_$(go env GOARCH)/confluent -h
 
 #### Cross Compile for Other Platforms

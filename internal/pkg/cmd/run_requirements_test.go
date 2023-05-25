@@ -58,10 +58,6 @@ var (
 		}},
 		CurrentContext: "on-prem",
 	}
-
-	updatesDisabledCfg = &v1.Config{DisableUpdates: true}
-
-	updatesEnabledCfg = &v1.Config{DisableUpdates: false}
 )
 
 func TestErrIfMissingRunRequirement_NoError(t *testing.T) {
@@ -78,7 +74,6 @@ func TestErrIfMissingRunRequirement_NoError(t *testing.T) {
 		{RequireNonAPIKeyCloudLoginOrOnPremLogin, nonAPIKeyCloudCfg},
 		{RequireNonAPIKeyCloudLoginOrOnPremLogin, onPremCfg},
 		{RequireOnPremLogin, onPremCfg},
-		{RequireUpdatesEnabled, updatesEnabledCfg},
 	} {
 		cmd := &cobra.Command{Annotations: map[string]string{RunRequirement: test.req}}
 		err := ErrIfMissingRunRequirement(cmd, test.cfg)
@@ -103,7 +98,6 @@ func TestErrIfMissingRunRequirement_Error(t *testing.T) {
 		{RequireNonAPIKeyCloudLoginOrOnPremLogin, apiKeyCloudCfg, v1.RequireNonAPIKeyCloudLoginOrOnPremLoginErr},
 		{RequireNonAPIKeyCloudLoginOrOnPremLogin, apiKeyCloudCfg, v1.RequireNonAPIKeyCloudLoginOrOnPremLoginErr},
 		{RequireOnPremLogin, cloudCfg(regularOrgContextState), v1.RequireOnPremLoginErr},
-		{RequireUpdatesEnabled, updatesDisabledCfg, v1.RequireUpdatesEnabledErr},
 	} {
 		cmd := &cobra.Command{Annotations: map[string]string{RunRequirement: test.req}}
 		err := ErrIfMissingRunRequirement(cmd, test.cfg)

@@ -1,13 +1,10 @@
-source = ["path/to/file"]
+source = ["path/to/confluent"]
 bundle_id = "io.confluent.cli.confluent"
-
-apple_id {
-}
 
 sign {
   application_identity = "Developer ID Application: Confluent, Inc."
 }
 
 zip {
-  output_path = "./dist/confluent_darwin_arm64/confluent_signed.zip"
+  output_path = "path/to/confluent_signed.zip"
 }

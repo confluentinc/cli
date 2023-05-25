@@ -12,9 +12,7 @@ import (
 	"github.com/hashicorp/go-version"
 	"github.com/stretchr/testify/require"
 
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	pio "github.com/confluentinc/cli/internal/pkg/io"
-	pmock "github.com/confluentinc/cli/internal/pkg/mock"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -401,62 +399,17 @@ func TestPublicRepo_DownloadVersion(t *testing.T) {
 		fields    fields
 		args      args
 		wantPath  string
-		wantBytes int64
+		wantBytes int
 		wantErr   bool
 	}{
 		{
-			name: "should err if unable to download",
-			fields: fields{
-				Endpoint: NewMockPublicS3Error().URL,
-			},
+			name:    "should err if unable to download",
+			fields:  fields{Endpoint: NewMockPublicS3Error().URL},
 			wantErr: true,
 		},
 		{
-			name: "should err if unable to open/create file at path",
-			fields: fields{
-				Endpoint: NewMockPublicS3(ListVersionsPublicFixture, "/confluent-cli/0.47.0/confluent_0.47.0_darwin_amd64", "", req).URL,
-				FileSystem: &pmock.PassThroughFileSystem{
-					Mock: &pmock.FileSystem{
-						CopyFunc: func(_ io.Writer, _ io.Reader) (int64, error) {
-							return 0, errors.New("you no can do that")
-						},
-					},
-					FS: &pio.RealFileSystem{},
-				},
-			},
-			args: args{
-				name:        "confluent",
-				version:     "0.47.0",
-				downloadDir: downloadDir,
-			},
-			wantErr: true,
-		},
-		{
-			name: "should err if unable to write/copy file to path",
-			fields: fields{
-				Endpoint: NewMockPublicS3(ListVersionsPublicFixture, "/confluent-cli/0.47.0/confluent_0.47.0_darwin_amd64", "", req).URL,
-				FileSystem: &pmock.PassThroughFileSystem{
-					Mock: &pmock.FileSystem{
-						CreateFunc: func(name string) (pio.File, error) {
-							return nil, errors.New("you no can do that")
-						},
-					},
-					FS: &pio.RealFileSystem{},
-				},
-			},
-			args: args{
-				name:        "confluent",
-				version:     "0.47.0",
-				downloadDir: downloadDir,
-			},
-			wantErr: true,
-		},
-		{
-			name: "should download version",
-			fields: fields{
-				Endpoint: NewMockPublicS3(ListVersionsPublicFixture,
-					"/confluent-cli/0.47.0/confluent_0.47.0_darwin_amd64", "", req).URL,
-			},
+			name:   "should download version",
+			fields: fields{Endpoint: NewMockPublicS3(ListVersionsPublicFixture, "/confluent-cli/0.47.0/confluent_0.47.0_darwin_amd64", "", req).URL},
 			args: args{
 				name:        "confluent",
 				version:     "0.47.0",
@@ -471,9 +424,7 @@ func TestPublicRepo_DownloadVersion(t *testing.T) {
 			// Need to inject these so tests pass in different environments (e.g., CI)
 			goos := "darwin"
 			goarch := "amd64"
-			r := NewPublicRepo(&PublicRepoParams{
-				S3BinPrefixFmt: "%s-cli",
-			})
+			r := NewPublicRepo(&PublicRepoParams{S3BinPrefixFmt: "%s-cli"})
 			r.endpoint = tt.fields.Endpoint
 			r.goos = goos
 			r.goarch = goarch
@@ -481,16 +432,13 @@ func TestPublicRepo_DownloadVersion(t *testing.T) {
 				r.fs = tt.fields.FileSystem
 			}
 
-			downloadPath, downloadedBytes, err := r.DownloadVersion(tt.args.name, tt.args.version, tt.args.downloadDir)
+			payload, err := r.DownloadVersion(tt.args.name, tt.args.version, tt.args.downloadDir)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("PublicRepo.DownloadVersion() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !strings.HasSuffix(downloadPath, tt.wantPath) {
-				t.Errorf("PublicRepo.DownloadVersion() downloadPath = %v, wantPath %v", downloadPath, tt.wantPath)
-			}
-			if downloadedBytes != tt.wantBytes {
-				t.Errorf("PublicRepo.DownloadVersion() downloadedBytes = %v, wantBytes %v", downloadedBytes, tt.wantBytes)
+			if len(payload) != tt.wantBytes {
+				t.Errorf("PublicRepo.DownloadVersion() downloadedBytes = %v, wantBytes %v", len(payload), tt.wantBytes)
 			}
 		})
 	}

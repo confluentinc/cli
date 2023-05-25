@@ -1,4 +1,4 @@
-//go:generate go run github.com/travisjeffery/mocker/cmd/mocker --prefix "" --dst mock/repository.go --pkg mock --selfpkg github.com/confluentinc/cli repository.go Repository
+//go:generate mocker --prefix "" --dst mock/repository.go --pkg mock --selfpkg github.com/confluentinc/cli repository.go Repository
 package update
 
 import (
@@ -13,7 +13,7 @@ type Repository interface {
 	GetAvailableReleaseNotesVersions(name string) (version.Collection, error)
 	// Downloads the versioned package to download dir to downloadDir.
 	// Returns the full path to the downloaded package, the download size in bytes, or an error if one occurred.
-	DownloadVersion(name, version, downloadDir string) (downloadPath string, downloadedBytes int64, err error)
+	DownloadVersion(name, version, downloadDir string) ([]byte, error)
 	DownloadReleaseNotes(name, version string) (string, error)
 	DownloadChecksums(name, version string) (string, error)
 }
