@@ -5,7 +5,7 @@ Usage:
 
 Available Commands:
   create      Create a Kafka cluster.
-  delete      Delete a Kafka cluster.
+  delete      Delete Kafka clusters.
   describe    Describe a Kafka cluster.
   list        List Kafka clusters.
   update      Update a Kafka cluster.
