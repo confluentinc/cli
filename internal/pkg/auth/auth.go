@@ -236,8 +236,7 @@ func GetJwtTokenForV2Client(authenticatedState *v1.ContextState, server string) 
 	accessTokenEndpoint := strings.Trim(server, "/") + "/api/access_tokens"
 
 	responses := new(response)
-	_, err := sling.New().Add("content", "application/json").Add("Content-Type", "application/json").Add("Authorization", bearerSessionToken).Body(strings.NewReader("{}")).Post(accessTokenEndpoint).ReceiveSuccess(responses)
-	if err != nil {
+	if _, err := sling.New().Add("content", "application/json").Add("Content-Type", "application/json").Add("Authorization", bearerSessionToken).Body(strings.NewReader("{}")).Post(accessTokenEndpoint).ReceiveSuccess(responses); err != nil {
 		return "", err
 	}
 	if responses.Error != "" {

@@ -65,8 +65,13 @@ func maxApiDataValue(metricsData []metricsv2.Point) metricsv2.Point {
 }
 
 func (c *clusterCommand) validateClusterLoad(clusterId string, isLatestMetric bool) error {
+	client, err := c.GetMetricsClient()
+	if err != nil {
+		return err
+	}
+
 	query := getMetricsApiRequest(ClusterLoadMetricName, "MAX", clusterId, isLatestMetric)
-	clusterLoadResponse, httpResp, err := c.V2Client.MetricsDatasetQuery("cloud", query)
+	clusterLoadResponse, httpResp, err := client.MetricsDatasetQuery("cloud", query)
 	if err != nil && !ccloudv2.IsDataMatchesMoreThanOneSchemaError(err) || clusterLoadResponse == nil {
 		return errors.Errorf("could not retrieve cluster load metrics to validate request to shrink cluster, please try again in a few minutes: %v", err)
 	}
@@ -74,9 +79,11 @@ func (c *clusterCommand) validateClusterLoad(clusterId string, isLatestMetric bo
 	if err := ccloudv2.UnmarshalFlatQueryResponseIfDataSchemaMatchError(err, clusterLoadResponse, httpResp); err != nil {
 		return err
 	}
+
 	maxClusterLoad := maxApiDataValue(clusterLoadResponse.FlatQueryResponse.GetData())
 	if maxClusterLoad.Value >= 0.7 {
 		return fmt.Errorf("Cluster Load was %f percent at %s.\nRecommended cluster load should be less than 70 percent", maxClusterLoad.Value*100, maxClusterLoad.Timestamp.In(time.Local))
 	}
+
 	return nil
 }
