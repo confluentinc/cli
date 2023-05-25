@@ -304,6 +304,21 @@ func getCmkDedicatedDescribeCluster(id string, name string, cku int32) *cmkv2.Cm
 	}
 }
 
+func getCmkUnknownDescribeCluster(id, name string) *cmkv2.CmkV2Cluster {
+	return &cmkv2.CmkV2Cluster{
+		Spec: &cmkv2.CmkV2ClusterSpec{
+			DisplayName:            cmkv2.PtrString(name),
+			Cloud:                  cmkv2.PtrString("aws"),
+			Region:                 cmkv2.PtrString("us-west-2"),
+			KafkaBootstrapEndpoint: cmkv2.PtrString("SASL_SSL://kafka-endpoint"),
+			HttpEndpoint:           cmkv2.PtrString(TestKafkaRestProxyUrl.String()),
+			Availability:           cmkv2.PtrString("SINGLE_ZONE"),
+		},
+		Id:     cmkv2.PtrString(id),
+		Status: &cmkv2.CmkV2ClusterStatus{Phase: "PROVISIONED"},
+	}
+}
+
 func buildUser(id int32, email, firstName, lastName, resourceId string) *ccloudv1.User {
 	return &ccloudv1.User{
 		Id:         id,
