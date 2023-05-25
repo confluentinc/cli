@@ -23,6 +23,52 @@ func TestResultFormatterTestSuite(t *testing.T) {
 	suite.Run(t, new(ResultFormatterTestSuite))
 }
 
+func (s *ResultFormatterTestSuite) TestGetTruncatedColumnWidthsShouldMaxOutAvailableSpace() {
+	rapid.Check(s.T(), func(t *rapid.T) {
+		columnWidths := rapid.SliceOfN(rapid.IntRange(0, 40), 1, 10).Draw(t, "column widths")
+		maxCharacters := rapid.IntRange(40, 150).Draw(t, "max characters")
+		truncatedColumnWidths := GetTruncatedColumnWidths(columnWidths, maxCharacters)
+
+		if maxCharacters >= sum(columnWidths) {
+			// no truncation occurred -> columns should not have changed
+			require.Equal(t, columnWidths, truncatedColumnWidths)
+		} else {
+			// truncation occurred -> check if available space is maxed out
+			require.Equal(t, maxCharacters, sum(truncatedColumnWidths))
+		}
+	})
+}
+
+func (s *ResultFormatterTestSuite) TestGetTruncatedColumnWidthsShouldNotAssignColumnsMoreThanTheyNeed() {
+	rapid.Check(s.T(), func(t *rapid.T) {
+		columnWidths := rapid.SliceOfN(rapid.IntRange(0, 40), 1, 10).Draw(t, "column widths")
+		maxCharacters := rapid.IntRange(40, 150).Draw(t, "max characters")
+		truncatedColumnWidths := GetTruncatedColumnWidths(columnWidths, maxCharacters)
+
+		for colIdx, truncatedColumnWidth := range truncatedColumnWidths {
+			require.LessOrEqual(t, truncatedColumnWidth, columnWidths[colIdx])
+		}
+	})
+}
+
+func (s *ResultFormatterTestSuite) TestGetTruncatedColumnWidthsDistributesLeftoverSpaceGreedily() {
+	testCases := []struct {
+		columnWidths                  []int
+		maxCharacters                 int
+		expectedTruncatedColumnWidths []int
+	}{
+		{columnWidths: []int{20, 20, 20}, maxCharacters: 30, expectedTruncatedColumnWidths: []int{10, 10, 10}},
+		{columnWidths: []int{10, 20, 20}, maxCharacters: 30, expectedTruncatedColumnWidths: []int{10, 10, 10}},
+		{columnWidths: []int{8, 20, 20}, maxCharacters: 30, expectedTruncatedColumnWidths: []int{8, 12, 10}},
+		{columnWidths: []int{1, 18, 20}, maxCharacters: 30, expectedTruncatedColumnWidths: []int{1, 18, 11}},
+	}
+
+	for idx, tc := range testCases {
+		output.Println(fmt.Sprintf("Evaluating test case #%v", idx))
+		require.Equal(s.T(), tc.expectedTruncatedColumnWidths, GetTruncatedColumnWidths(tc.columnWidths, tc.maxCharacters))
+	}
+}
+
 func (s *ResultFormatterTestSuite) TestFormatAtomicField() {
 	rapid.Check(s.T(), func(t *rapid.T) {
 		atomicDataType := generators.AtomicDataType().Draw(t, "atomic data type")
