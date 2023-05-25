@@ -21,10 +21,10 @@ import (
 type StatementType string
 
 const (
-	SET_STATEMENT   StatementType = configOpSet
-	USE_STATEMENT   StatementType = configOpUse
-	RESET_STATEMENT StatementType = configOpReset
-	EXIT_STATEMENT  StatementType = configOpExit
+	SET_STATEMENT   StatementType = config.ConfigOpSet
+	USE_STATEMENT   StatementType = config.ConfigOpUse
+	RESET_STATEMENT StatementType = config.ConfigOpReset
+	EXIT_STATEMENT  StatementType = config.ConfigOpExit
 	OTHER_STATEMENT StatementType = "OTHER"
 )
 
@@ -54,7 +54,7 @@ func (s *Store) processSetStatement(statement string) (*types.ProcessedStatement
 	if configKey == "" {
 		statementResults := createStatementResults([]string{"Key", "Value"}, lo.MapToSlice(s.Properties, func(key, val string) []string { return []string{key, val} }))
 		return &types.ProcessedStatement{
-			Kind:             configOpSet,
+			Kind:             config.ConfigOpSet,
 			Status:           types.COMPLETED,
 			StatementResults: &statementResults,
 			IsLocalStatement: true,
@@ -64,7 +64,7 @@ func (s *Store) processSetStatement(statement string) (*types.ProcessedStatement
 
 	statementResults := createStatementResults([]string{"Key", "Value"}, [][]string{{configKey, configVal}})
 	return &types.ProcessedStatement{
-		Kind:             configOpSet,
+		Kind:             config.ConfigOpSet,
 		StatusDetail:     "Config updated successfully.",
 		Status:           types.COMPLETED,
 		StatementResults: &statementResults,
@@ -80,7 +80,7 @@ func (s *Store) processResetStatement(statement string) (*types.ProcessedStateme
 	if configKey == "" {
 		s.Properties = make(map[string]string)
 		return &types.ProcessedStatement{
-			Kind:             configOpReset,
+			Kind:             config.ConfigOpReset,
 			StatusDetail:     "Configuration has been reset successfully.",
 			Status:           types.COMPLETED,
 			IsLocalStatement: true,
@@ -94,7 +94,7 @@ func (s *Store) processResetStatement(statement string) (*types.ProcessedStateme
 		delete(s.Properties, configKey)
 		statementResults := createStatementResults([]string{"Key", "Value"}, lo.MapToSlice(s.Properties, func(key, val string) []string { return []string{key, val} }))
 		return &types.ProcessedStatement{
-			Kind:             configOpReset,
+			Kind:             config.ConfigOpReset,
 			StatusDetail:     fmt.Sprintf("Config key \"%s\" has been reset successfully.", configKey),
 			Status:           types.COMPLETED,
 			StatementResults: &statementResults,
@@ -112,7 +112,7 @@ func (s *Store) processUseStatement(statement string) (*types.ProcessedStatement
 	s.Properties[configKey] = configVal
 	statementResults := createStatementResults([]string{"Key", "Value"}, [][]string{{configKey, configVal}})
 	return &types.ProcessedStatement{
-		Kind:             configOpUse,
+		Kind:             config.ConfigOpUse,
 		StatusDetail:     "Config updated successfully.",
 		Status:           types.COMPLETED,
 		StatementResults: &statementResults,
@@ -133,11 +133,11 @@ Steps to parse:
 func parseSetStatement(statement string) (string, string, error) {
 	statement = removeStatementTerminator(statement)
 
-	indexOfSet := strings.Index(strings.ToUpper(statement), configOpSet)
+	indexOfSet := strings.Index(strings.ToUpper(statement), config.ConfigOpSet)
 	if indexOfSet == -1 {
 		return "", "", &types.StatementError{Msg: "Error: Invalid syntax for SET. Usage example: SET key=value."}
 	}
-	startOfStrAfterSet := indexOfSet + len(configOpSet)
+	startOfStrAfterSet := indexOfSet + len(config.ConfigOpSet)
 	// This is the case when the statement is simply "SET", which is used to display current config.
 	if startOfStrAfterSet >= len(statement) {
 		return "", "", nil
@@ -193,21 +193,21 @@ func parseUseStatement(statement string) (string, string, error) {
 		return "", "", &types.StatementError{Msg: "Error: Missing database/catalog name: Usage examples: USE DB1 OR USE CATALOG METADATA."}
 	}
 
-	isFirstWordUse := strings.ToUpper(words[0]) == configOpUse
-	isSecondWordCatalog := strings.ToUpper(words[1]) == configOpUseCatalog
+	isFirstWordUse := strings.ToUpper(words[0]) == config.ConfigOpUse
+	isSecondWordCatalog := strings.ToUpper(words[1]) == config.ConfigOpUseCatalog
 	// handle "USE database_name" statement
 	if len(words) == 2 && isFirstWordUse {
 		if isSecondWordCatalog {
 			// handle empty catalog name -> "USE CATALOG "
 			return "", "", &types.StatementError{Msg: "Error: Missing catalog name: Usage example: USE CATALOG METADATA."}
 		} else {
-			return configKeyDatabase, words[1], nil
+			return config.ConfigKeyDatabase, words[1], nil
 		}
 	}
 
 	// handle "USE CATALOG catalog_name" statement
 	if len(words) == 3 && isFirstWordUse && isSecondWordCatalog {
-		return configKeyCatalog, words[2], nil
+		return config.ConfigKeyCatalog, words[2], nil
 	}
 
 	return "", "", &types.StatementError{Msg: "Invalid syntax for USE. Usage examples: USE CATALOG my_catalog or USE my_database"}
@@ -227,7 +227,7 @@ func parseResetStatement(statement string) (string, error) {
 	}
 
 	if len(words) == 2 {
-		isFirstWordReset := strings.ToUpper(words[0]) == configOpReset
+		isFirstWordReset := strings.ToUpper(words[0]) == config.ConfigOpReset
 		key := strings.ToLower(words[1])
 		if isFirstWordReset {
 			return key, nil
@@ -286,8 +286,8 @@ func startsWithValidSQL(statement string) bool {
 
 // Removes leading, trailling spaces, and semicolon from end, if present
 func removeStatementTerminator(s string) string {
-	for strings.HasSuffix(s, configStatementTerminator) {
-		s = strings.TrimSuffix(s, configStatementTerminator)
+	for strings.HasSuffix(s, config.ConfigStatementTerminator) {
+		s = strings.TrimSuffix(s, config.ConfigStatementTerminator)
 	}
 	return s
 }
@@ -352,7 +352,7 @@ func calcWaitTime(retries int) time.Duration {
 // Function to extract timeout for waiting for results.
 // We either use the value set by user using set or use a default value of 10 minutes (as of today)
 func timeout(properties map[string]string) time.Duration {
-	timeout, ok := properties[configKeyResultsTimeout]
+	timeout, ok := properties[config.ConfigKeyResultsTimeout]
 
 	if ok {
 		timeoutInSeconds, err := strconv.Atoi(timeout)

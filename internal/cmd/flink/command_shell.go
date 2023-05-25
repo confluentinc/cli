@@ -122,6 +122,7 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 			DEFAULT_PROPERTIES: map[string]string{
 				"execution.runtime-mode": "streaming",
 			},
+			USER_AGENT: c.Version.UserAgent,
 		})
 	return nil
 }

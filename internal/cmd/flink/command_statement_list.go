@@ -21,17 +21,12 @@ func (c *command) newStatementListCommand() *cobra.Command {
 }
 
 func (c *command) statementList(cmd *cobra.Command, args []string) error {
-	environment, err := c.Context.EnvironmentId()
-	if err != nil {
-		return err
-	}
-
 	client, err := c.GetFlinkGatewayClient()
 	if err != nil {
 		return err
 	}
 
-	statements, err := client.ListStatements(environment)
+	statements, err := client.ListStatements()
 	if err != nil {
 		return err
 	}

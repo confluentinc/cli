@@ -4,36 +4,17 @@ import (
 	"context"
 	_ "embed"
 	"fmt"
-	"net/http"
 	"net/url"
 	"strings"
 	"time"
 
 	"github.com/confluentinc/cli/internal/pkg/log"
 
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/results"
 	"github.com/confluentinc/cli/internal/pkg/flink/test/generators"
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
 	"github.com/confluentinc/cli/internal/pkg/output"
-)
-
-const (
-	// ops
-	configOpSet               = "SET"
-	configOpUse               = "USE"
-	configOpReset             = "RESET"
-	configOpExit              = "EXIT"
-	configOpUseCatalog        = "CATALOG"
-	configStatementTerminator = ";"
-
-	// keys
-	configKeyCatalog          = "catalog"
-	configKeyDatabase         = "default_database"
-	configKeyOrgResourceId    = "org-resource-id"
-	configKeyExecutionRuntime = "execution.runtime-mode"
-	configKeyLocalTimeZone    = "table.local-time-zone"
-	configKeyResultsTimeout   = "table.results-timeout"
-	configKeyStatementOwner   = "statement-owner"
 )
 
 const MOCK_STATEMENTS_OUTPUT_DEMO = true
@@ -48,7 +29,7 @@ type StoreInterface interface {
 type Store struct {
 	Properties      map[string]string
 	exitApplication func()
-	client          GatewayClientInterface
+	client          ccloudv2.GatewayClientInterface
 	demoMode        bool
 	mockCount       int
 }
@@ -89,9 +70,7 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 	}
 
 	// Process remote statements
-	statementObj, resp, err := s.client.CreateStatement(context.Background(), statement, s.Properties)
-	err = processHttpErrors(resp, err)
-
+	statementObj, err := s.client.CreateStatement(context.Background(), statement, s.Properties)
 	if err != nil {
 		return nil, &types.StatementError{Msg: err.Error()}
 	}
@@ -148,9 +127,7 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 	runningNoTokenRetries := 5
 	for i := 0; i < runningNoTokenRetries; i++ {
 		// TODO: we need to retry a few times on transient errors
-		statementResultObj, resp, err := s.client.GetStatementResults(context.Background(), statement.StatementName, pageToken)
-
-		err = processHttpErrors(resp, err)
+		statementResultObj, err := s.client.GetStatementResults(context.Background(), statement.StatementName, pageToken)
 		if err != nil {
 			return nil, &types.StatementError{Msg: err.Error()}
 		}
@@ -179,15 +156,9 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 
 func (s *Store) DeleteStatement(statementName string) bool {
 	if !s.demoMode {
-		httpResponse, err := s.client.DeleteStatement(context.Background(), statementName)
-
+		err := s.client.DeleteStatement(statementName)
 		if err != nil {
 			log.CliLogger.Warnf("Failed to delete the statement: %v", err)
-			return false
-		}
-
-		if httpResponse != nil && (httpResponse.StatusCode < 200 || httpResponse.StatusCode >= 300) {
-			log.CliLogger.Warnf("DeleteStatement returned unexpected status code: %v, with status: %s\n", httpResponse.StatusCode, httpResponse.Status)
 			return false
 		}
 	}
@@ -206,25 +177,14 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 		case <-ctx.Done():
 			return nil, &types.StatementError{Msg: "Result retrieval aborted. Statement will be deleted.", HttpResponseCode: 499}
 		default:
-			statementObj, httpResponse, err := s.client.GetStatement(context.Background(), statementName)
-
+			statementObj, err := s.client.GetStatement(statementName)
 			if err != nil {
 				return nil, &types.StatementError{Msg: "Error: " + err.Error()}
 			}
 
-			if httpResponse.StatusCode == http.StatusRequestTimeout ||
-				httpResponse.StatusCode == http.StatusTooEarly ||
-				httpResponse.StatusCode == http.StatusInternalServerError ||
-				httpResponse.StatusCode == http.StatusServiceUnavailable ||
-				httpResponse.StatusCode == http.StatusGatewayTimeout {
-				capturedErrors = append(capturedErrors, statementObj.Status.GetDetail())
-			} else if httpResponse.StatusCode < 200 || httpResponse.StatusCode >= 300 {
-				return nil, &types.StatementError{Msg: "Error: " + statementObj.Status.GetDetail(), HttpResponseCode: httpResponse.StatusCode}
-			} else {
-				phase := types.PHASE(statementObj.Status.GetPhase())
-				if phase != types.PENDING {
-					return types.NewProcessedStatement(statementObj), nil
-				}
+			phase := types.PHASE(statementObj.Status.GetPhase())
+			if phase != types.PENDING {
+				return types.NewProcessedStatement(statementObj), nil
 			}
 		}
 
@@ -271,7 +231,7 @@ func extractPageToken(nextUrl string) (string, error) {
 	return params.Get("page_token"), nil
 }
 
-func NewStore(client GatewayClientInterface, exitApplication func(), appOptions *types.ApplicationOptions) StoreInterface {
+func NewStore(client ccloudv2.GatewayClientInterface, exitApplication func(), appOptions *types.ApplicationOptions) StoreInterface {
 	defaultProperties := make(map[string]string)
 	if appOptions != nil {
 		if appOptions.DEFAULT_PROPERTIES != nil {

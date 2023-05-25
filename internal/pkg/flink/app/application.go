@@ -6,6 +6,7 @@ import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/flink/components"
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/controller"
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/history"
@@ -17,7 +18,15 @@ func StartApp(envId, orgResourceId, kafkaClusterId, computePoolId string, authTo
 	var once sync.Once
 
 	// Client used to communicate with the gateway
-	client := store.NewGatewayClient(envId, orgResourceId, kafkaClusterId, computePoolId, authToken, appOptions)
+	client := ccloudv2.NewFlinkGatewayClient(
+		appOptions.FLINK_GATEWAY_URL,
+		appOptions.USER_AGENT,
+		appOptions.HTTP_CLIENT_UNSAFE_TRACE,
+		authToken,
+		envId,
+		orgResourceId,
+		kafkaClusterId,
+		computePoolId)
 
 	// Load history of previous commands from cache file
 	history := history.LoadHistory()
