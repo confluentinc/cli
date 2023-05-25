@@ -271,8 +271,9 @@ func handleKafkaRPTopicConfigs(t *testing.T) http.HandlerFunc {
 				topicConfigList := cpkafkarestv3.TopicConfigDataList{
 					Data: []cpkafkarestv3.TopicConfigData{
 						{
-							Name:  "compression.type",
-							Value: cpkafkarestv3.PtrString("gzip"),
+							Name:       "compression.type",
+							Value:      cpkafkarestv3.PtrString("producer"),
+							IsReadOnly: true,
 						},
 						{
 							Name:  "retention.ms",
@@ -519,13 +520,21 @@ func handleKafkaRPConfigsAlter(t *testing.T) http.HandlerFunc {
 func handleKafkaRPTopic(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		topic := mux.Vars(r)["topic"]
-		if topic != "topic-exist" && topic != "topic-exist-2" {
+		if topic != "topic-exist" && topic != "topic-exist-2" && topic != "topic-exist-rest" {
 			require.NoError(t, writeErrorResponse(w, http.StatusNotFound, 40403, "This server does not host this topic-partition."))
 			return
 		}
 		switch r.Method {
 		case http.MethodDelete:
 			w.WriteHeader(http.StatusNoContent)
+		case http.MethodGet:
+			data := cckafkarestv3.TopicData{PartitionsCount: 3}
+			err := json.NewEncoder(w).Encode(data)
+			require.NoError(t, err)
+		case http.MethodPatch:
+			data := cckafkarestv3.TopicData{PartitionsCount: 6}
+			err := json.NewEncoder(w).Encode(data)
+			require.NoError(t, err)
 		}
 	}
 }
