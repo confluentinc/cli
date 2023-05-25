@@ -285,36 +285,30 @@ func (t *TableController) renderData() {
 	t.table.Clear()
 	t.table.SetSelectionChangedFunc(t.rowSelectionHandler)
 
-	columnWidths := make([]int, len(t.materializedStatementResults.GetHeaders()))
+	_, _, tableWidth, _ := t.table.GetInnerRect()
+	t.tableWidth = tableWidth
+	columnWidths := t.materializedStatementResults.GetMaxWidthPerColum()
 
 	// Print header
 	for colIdx, column := range t.materializedStatementResults.GetHeaders() {
-		columnWidths[colIdx] = lo.Max([]int{len(column), columnWidths[colIdx]})
-
 		tableCell := tview.NewTableCell(column).
 			SetTextColor(tcell.ColorYellow).
 			SetAlign(tview.AlignLeft).
-			SetSelectable(false)
+			SetSelectable(false).
+			SetMaxWidth(columnWidths[colIdx])
 		t.table.SetCell(0, colIdx, tableCell)
 	}
 
-	rowIdx := 1
-	iterator := t.materializedStatementResults.Iterator(false)
 	// Print content
-	for !iterator.HasReachedEnd() {
-		row := iterator.GetNext()
+	t.materializedStatementResults.ForEach(func(rowIdx int, row *types.StatementResultRow) {
 		for colIdx, field := range row.Fields {
-			color := tcell.ColorWhite
-			formattedField := field.ToString()
-			columnWidths[colIdx] = lo.Max([]int{len(formattedField), columnWidths[colIdx]})
-
-			tableCell := tview.NewTableCell(tview.Escape(formattedField)).
-				SetTextColor(color).
-				SetAlign(tview.AlignLeft)
-			t.table.SetCell(rowIdx, colIdx, tableCell)
+			tableCell := tview.NewTableCell(tview.Escape(field.ToString())).
+				SetTextColor(tcell.ColorWhite).
+				SetAlign(tview.AlignLeft).
+				SetMaxWidth(columnWidths[colIdx])
+			t.table.SetCell(rowIdx+1, colIdx, tableCell)
 		}
-		rowIdx++
-	}
+	})
 
 	// add callback function for after draw (gets triggered on any render event, such as screen size update)
 	t.table.SetDrawFunc(func(screen tcell.Screen, x, y, width, height int) (int, int, int, int) {
@@ -328,7 +322,7 @@ func (t *TableController) renderData() {
 
 		// check if space needed fits screen, if it doesn't truncate the column
 		truncatedColumnWidths := results.GetTruncatedColumnWidths(columnWidths, newWidth)
-		for rowIdx = 0; rowIdx < t.table.GetRowCount(); rowIdx++ {
+		for rowIdx := 0; rowIdx < t.table.GetRowCount(); rowIdx++ {
 			for colIdx := 0; colIdx < t.table.GetColumnCount(); colIdx++ {
 				t.table.GetCell(rowIdx, colIdx).SetMaxWidth(lo.Max([]int{truncatedColumnWidths[colIdx], minColumnWidth}))
 			}

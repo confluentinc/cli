@@ -1,6 +1,7 @@
 package results
 
 import (
+	"github.com/samber/lo"
 	"sync"
 
 	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
@@ -179,4 +180,33 @@ func (s *MaterializedStatementResults) GetHeaders() []string {
 		return s.headers
 	}
 	return append([]string{"Operation"}, s.headers...)
+}
+
+func (s *MaterializedStatementResults) ForEach(f func(rowIdx int, row *types.StatementResultRow)) {
+	s.lock.RLock()
+	defer s.lock.RUnlock()
+
+	iterator := s.Iterator(false)
+	rowIdx := 0
+	for !iterator.HasReachedEnd() {
+		f(rowIdx, iterator.GetNext())
+		rowIdx++
+	}
+}
+
+func (s *MaterializedStatementResults) GetMaxWidthPerColum() []int {
+	s.lock.RLock()
+	defer s.lock.RUnlock()
+
+	columnWidths := make([]int, len(s.GetHeaders()))
+	for colIdx, column := range s.GetHeaders() {
+		columnWidths[colIdx] = lo.Max([]int{len(column), columnWidths[colIdx]})
+	}
+
+	s.ForEach(func(rowIdx int, row *types.StatementResultRow) {
+		for colIdx, field := range row.Fields {
+			columnWidths[colIdx] = lo.Max([]int{len(field.ToString()), columnWidths[colIdx]})
+		}
+	})
+	return columnWidths
 }

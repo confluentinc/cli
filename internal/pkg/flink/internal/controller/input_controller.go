@@ -3,7 +3,6 @@ package controller
 import (
 	"context"
 	"errors"
-	"github.com/samber/lo"
 	"net/http"
 	"os"
 	"reflect"
@@ -270,25 +269,22 @@ func (c *InputController) printResultToSTDOUT(statementResults *types.StatementR
 	variablePadding := (len(statementResults.Headers) - 1) * 3 // column separator
 	totalAvailableChars := windowSize - fixedPadding - variablePadding
 
-	columnWidths := make([]int, len(statementResults.Headers))
-	for _, row := range statementResults.Rows {
-		for colIdx, field := range row.Fields {
-			columnWidths[colIdx] = lo.Max([]int{len(field.ToString()), columnWidths[colIdx]})
-		}
-	}
+	materializedStatementResults := results.NewMaterializedStatementResults(statementResults.GetHeaders(), maxResultsCapacity)
+	materializedStatementResults.Append(statementResults.GetRows()...)
+	columnWidths := materializedStatementResults.GetMaxWidthPerColum()
 	columnWidths = results.GetTruncatedColumnWidths(columnWidths, totalAvailableChars)
-	formattedResults := make([][]string, len(statementResults.Rows))
-	for rowIdx, row := range statementResults.Rows {
+
+	rawTable := tablewriter.NewWriter(os.Stdout)
+	rawTable.SetAutoFormatHeaders(false)
+	rawTable.SetHeader(statementResults.Headers)
+	// add actual row data
+	materializedStatementResults.ForEach(func(rowIdx int, row *types.StatementResultRow) {
 		formattedRow := make([]string, len(row.Fields))
 		for colIdx, field := range row.Fields {
 			formattedRow[colIdx] = results.TruncateString(field.ToString(), columnWidths[colIdx])
 		}
-		formattedResults[rowIdx] = formattedRow
-	}
-	rawTable := tablewriter.NewWriter(os.Stdout)
-	rawTable.SetAutoFormatHeaders(false)
-	rawTable.SetHeader(statementResults.Headers)
-	rawTable.AppendBulk(formattedResults)
+		rawTable.Append(formattedRow)
+	})
 	rawTable.Render() // Send output
 }
 
