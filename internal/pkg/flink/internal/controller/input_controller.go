@@ -160,7 +160,7 @@ func (c *InputController) RunInteractiveInput() {
 	}
 }
 
-func (c *InputController) listenToUserInput(in *prompt.PosixParser, cancelFunc context.CancelFunc) context.CancelFunc {
+func (c *InputController) listenToUserInput(in prompt.ConsoleParser, cancelFunc context.CancelFunc) context.CancelFunc {
 	ctx, cancelListenToUserInput := context.WithCancel(context.Background())
 	go func() {
 		for {
