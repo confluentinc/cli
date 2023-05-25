@@ -15,6 +15,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/results"
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/store"
 	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 type TableControllerInterface interface {
@@ -62,7 +63,7 @@ func (t *TableController) exitTViewMode() {
 	t.stopAutoRefresh()
 	go t.store.DeleteStatement(t.statement.StatementName)
 	t.appController.SuspendOutputMode(func() {
-		fmt.Println("Result retrieval aborted. Statement will be deleted.")
+		output.Println("Result retrieval aborted. Statement will be deleted.")
 		t.runInteractiveInput()
 	})
 }

@@ -1,9 +1,9 @@
 package components
 
 import (
-	"fmt"
-	"os"
 	"strings"
+
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 func PrintSmartCompletionState(smartCompletion bool, maxCol int) {
@@ -22,17 +22,17 @@ func PrintOptionState(prefix string, isEnabled bool, maxCol int) {
 		stateMsg = "enabled"
 	}
 
-	fmt.Fprintf(os.Stdout, "\n\033[0m%s\033[0;36m%s\033[0m", prefix, stateMsg)
+	output.Printf("\n\033[0m%s\033[0;36m%s\033[0m", prefix, stateMsg)
 
 	// This prints to the console the exact amount of empty characters to fill the line might have autocompletions before
-	fmt.Println(strings.Repeat(" ", maxCol-len(prefix+stateMsg)))
+	output.Println(strings.Repeat(" ", maxCol-len(prefix+stateMsg)))
 }
 
 func PrintWelcomeHeader() {
 	// Print welcome message
-	fmt.Fprintf(os.Stdout, "Welcome! \n")
+	output.Printf("Welcome! \n")
 
 	// Print shortcuts
-	fmt.Fprintf(os.Stdout, "\033[0m%s \033[0;36m%s \033[0m", "[CtrlQ]", "Quit")
-	fmt.Fprintf(os.Stdout, "\033[0m%s \033[0;36m%s \033[0m \n", "[CtrlS]", "Smart Completion")
+	output.Printf("\033[0m%s \033[0;36m%s \033[0m", "[CtrlQ]", "Quit")
+	output.Printf("\033[0m%s \033[0;36m%s \033[0m \n", "[CtrlS]", "Smart Completion")
 }

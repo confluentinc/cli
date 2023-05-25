@@ -3,7 +3,6 @@ package controller
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -25,6 +24,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/store"
 	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
 	"github.com/confluentinc/cli/internal/pkg/flink/test/generators"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 type InputControllerInterface interface {
@@ -86,7 +86,7 @@ func (c *InputController) RunInteractiveInput() {
 
 		// Upon receiving user input, we check if user is authenticated and possibly a refresh the CCloud SSO token
 		if authErr := c.authenticated(); authErr != nil {
-			fmt.Println(authErr.Error())
+			output.Println(authErr.Error())
 			c.appController.ExitApplication()
 			continue
 		}
@@ -103,7 +103,7 @@ func (c *InputController) RunInteractiveInput() {
 		processedStatement, err := c.store.ProcessStatement(input)
 		renderMsgAndStatus(processedStatement)
 		if err != nil {
-			fmt.Println(err.Error())
+			output.Println(err.Error())
 			c.isSessionValid(err)
 			continue
 		}
@@ -122,7 +122,7 @@ func (c *InputController) RunInteractiveInput() {
 		if err != nil {
 			_ = in.TearDown()
 			cancelListenToUserInput()
-			fmt.Println(err.Error())
+			output.Println(err.Error())
 			c.isSessionValid(err)
 			continue
 		}
@@ -131,7 +131,7 @@ func (c *InputController) RunInteractiveInput() {
 		_ = in.TearDown()
 		cancelListenToUserInput()
 		if err != nil {
-			fmt.Println(err.Error())
+			output.Println(err.Error())
 			continue
 		}
 
@@ -212,19 +212,19 @@ func renderMsgAndStatus(statementResult *types.ProcessedStatement) {
 
 	if statementResult.IsLocalStatement {
 		if statementResult.Status != "FAILED" {
-			fmt.Println("Statement successfully submitted.\n ")
+			output.Println("Statement successfully submitted.\n ")
 		} else {
-			fmt.Println("Error: Couldn't process statement. Please check your statement and try again.")
+			output.Println("Error: Couldn't process statement. Please check your statement and try again.")
 		}
 	} else {
 		if statementResult.StatementName != "" {
-			fmt.Println("Statement ID: " + statementResult.StatementName)
+			output.Println("Statement ID: " + statementResult.StatementName)
 		}
 		if statementResult.Status != "FAILED" {
-			fmt.Println("Statement successfully submitted. ")
-			fmt.Println("Fetching results...\n ")
+			output.Println("Statement successfully submitted. ")
+			output.Println("Fetching results...\n ")
 		} else {
-			fmt.Println("Error: Statement submission failed. There could a problem with the server right now. Check your statement and try again.")
+			output.Println("Error: Statement submission failed. There could a problem with the server right now. Check your statement and try again.")
 		}
 	}
 }
@@ -255,7 +255,7 @@ func (c *InputController) toggleOutputMode() {
 
 func (c *InputController) printResultToSTDOUT(statementResults *types.StatementResults) {
 	if statementResults == nil || len(statementResults.Headers) == 0 || len(statementResults.Rows) == 0 {
-		fmt.Println("\nThe server returned empty rows for this statement.")
+		output.Println("\nThe server returned empty rows for this statement.")
 		return
 	}
 
