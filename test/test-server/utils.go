@@ -304,7 +304,7 @@ func getCmkDedicatedDescribeCluster(id string, name string, cku int32) *cmkv2.Cm
 	}
 }
 
-func getCmkUnknownDescribeCluster(id string, name string) *cmkv2.CmkV2Cluster {
+func getCmkUnknownDescribeCluster(id, name string) *cmkv2.CmkV2Cluster {
 	return &cmkv2.CmkV2Cluster{
 		Spec: &cmkv2.CmkV2ClusterSpec{
 			DisplayName:            cmkv2.PtrString(name),
@@ -314,7 +314,7 @@ func getCmkUnknownDescribeCluster(id string, name string) *cmkv2.CmkV2Cluster {
 			HttpEndpoint:           cmkv2.PtrString(TestKafkaRestProxyUrl.String()),
 			Availability:           cmkv2.PtrString("SINGLE_ZONE"),
 		},
-		Id: cmkv2.PtrString(id),
+		Id:     cmkv2.PtrString(id),
 		Status: &cmkv2.CmkV2ClusterStatus{Phase: "PROVISIONED"},
 	}
 }
