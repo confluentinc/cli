@@ -20,6 +20,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -64,6 +65,12 @@ func newExportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Short: "Export an AsyncAPI specification.",
 		Long:  "Export an AsyncAPI specification for a Kafka cluster and Schema Registry.",
 		Args:  cobra.NoArgs,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: `Export an AsyncAPI specification with topic "my-topic" and all topics starting with "prefix-".`,
+				Code: `confluent asyncapi export --topics "my-topic,prefix-*"`,
+			},
+		),
 	}
 
 	c := &command{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
@@ -113,32 +120,31 @@ func (c *command) export(cmd *cobra.Command, _ []string) error {
 		}
 
 		for _, subject := range accountDetails.subjects {
-			if subject != schemaContextPrefix+topic.GetTopicName()+"-value" || strings.HasPrefix(topic.GetTopicName(), "_") {
+			if subject != fmt.Sprintf("%s%s-value", schemaContextPrefix, topic.GetTopicName()) || strings.HasPrefix(topic.GetTopicName(), "_") {
 				// Avoid internal topics or if subject does not follow topic naming strategy
 				continue
-			} else {
-				// Subject and Topic matches
-				// Reset channel details
-				accountDetails.channelDetails = channelDetails{
-					currentTopic:   topic,
-					currentSubject: subject,
+			}
+			// Subject and Topic matches
+			// Reset channel details
+			accountDetails.channelDetails = channelDetails{
+				currentTopic:   topic,
+				currentSubject: subject,
+			}
+			err := c.getChannelDetails(accountDetails, flags)
+			if err != nil {
+				if err.Error() == protobufErrorMessage {
+					log.CliLogger.Info(err.Error())
+					continue
 				}
-				err := c.getChannelDetails(accountDetails, flags)
-				if err != nil {
-					if err.Error() == protobufErrorMessage {
-						log.CliLogger.Info(err.Error())
-						continue
-					}
-					return err
-				}
-				channelCount++
-				messages[msgName(topic.GetTopicName())] = spec.Message{
-					OneOf1: &spec.MessageOneOf1{MessageEntity: accountDetails.buildMessageEntity()},
-				}
-				reflector, err = addChannel(reflector, accountDetails.channelDetails)
-				if err != nil {
-					return err
-				}
+				return err
+			}
+			channelCount++
+			messages[msgName(topic.GetTopicName())] = spec.Message{
+				OneOf1: &spec.MessageOneOf1{MessageEntity: accountDetails.buildMessageEntity()},
+			}
+			reflector, err = addChannel(reflector, accountDetails.channelDetails)
+			if err != nil {
+				return err
 			}
 		}
 	}
@@ -581,7 +587,7 @@ func topicMatch(topic string, userTopics []string) bool {
 	}
 
 	for _, userTopic := range userTopics {
-		if strings.HasSuffix(userTopic, "*") && strings.HasPrefix(topic, userTopic[:len(userTopic)-1]) || userTopic == topic {
+		if strings.HasSuffix(userTopic, "*") && strings.HasPrefix(topic, strings.TrimSuffix(userTopic, "*")) || userTopic == topic {
 			return true
 		}
 	}
