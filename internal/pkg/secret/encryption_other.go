@@ -10,7 +10,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"os"
-	"strconv"
 
 	"github.com/panta/machineid"
 	"golang.org/x/crypto/pbkdf2"
@@ -36,8 +35,8 @@ func DeriveEncryptionKey(salt []byte) ([]byte, error) {
 	if err != nil {
 		return []byte{}, err
 	}
-	userId := strconv.Itoa(os.Getuid())
-	return pbkdf2.Key([]byte(machineId+userId), salt, iterationNumber, keyLength, sha256.New), nil
+	pwd := []byte(fmt.Sprintf("%s%d", machineId, os.Getuid()))
+	return pbkdf2.Key(pwd, salt, iterationNumber, keyLength, sha256.New), nil
 }
 
 func Encrypt(username, password string, salt, nonce []byte) (string, error) {
