@@ -279,7 +279,7 @@ func startsWithValidSQL(statement string) bool {
 
 	words := strings.Fields(statement)
 	firstWord := strings.ToUpper(words[0])
-	_, exists := config.SQLKeywords[firstWord]
+	exists := config.SQLKeywords.Contains(firstWord)
 
 	return exists
 }
