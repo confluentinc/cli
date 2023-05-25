@@ -95,7 +95,7 @@ func (c *quotaCommand) getUpdatedPrincipals(cmd *cobra.Command, updatePrincipals
 		if err != nil {
 			return nil, err
 		}
-		remove := types.NewSet()
+		remove := types.NewSet[string]()
 		for _, p := range removePrincipals {
 			remove.Add(p)
 		}
