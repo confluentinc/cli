@@ -1,8 +1,8 @@
 [
   {
     "name": "compression.type",
-    "value": "gzip",
-    "read_only": false
+    "value": "producer",
+    "read_only": true
   },
   {
     "name": "retention.ms",
