@@ -1,5 +1,7 @@
 package results
 
+import "github.com/samber/lo"
+
 type truncatedColumn struct {
 	idx            int
 	truncatedChars int
@@ -20,17 +22,9 @@ func distributeLeftoverCharacters(columnWidths []int, truncatedColumns []truncat
 	}
 }
 
-func sum(values []int) int {
-	valuesSum := 0
-	for _, col := range values {
-		valuesSum += col
-	}
-	return valuesSum
-}
-
 func GetTruncatedColumnWidths(columnWidths []int, maxCharacters int) []int {
 	numColumns := len(columnWidths)
-	if numColumns == 0 || sum(columnWidths) <= maxCharacters {
+	if numColumns == 0 || lo.Sum(columnWidths) <= maxCharacters {
 		return columnWidths
 	}
 

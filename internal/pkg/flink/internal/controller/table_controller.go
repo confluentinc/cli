@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"fmt"
+	"github.com/samber/lo"
 	"strings"
 	"sync"
 	"time"
@@ -280,13 +281,6 @@ func (t *TableController) rowSelectionHandler(row, col int) {
 	t.selectedRowIdx = row
 }
 
-func max(a, b int) int {
-	if a >= b {
-		return a
-	}
-	return b
-}
-
 func (t *TableController) renderData() {
 	t.table.Clear()
 	t.table.SetSelectionChangedFunc(t.rowSelectionHandler)
@@ -295,7 +289,7 @@ func (t *TableController) renderData() {
 
 	// Print header
 	for colIdx, column := range t.materializedStatementResults.GetHeaders() {
-		columnWidths[colIdx] = max(len(column), columnWidths[colIdx])
+		columnWidths[colIdx] = lo.Max([]int{len(column), columnWidths[colIdx]})
 
 		tableCell := tview.NewTableCell(column).
 			SetTextColor(tcell.ColorYellow).
@@ -312,7 +306,7 @@ func (t *TableController) renderData() {
 		for colIdx, field := range row.Fields {
 			color := tcell.ColorWhite
 			formattedField := field.ToString()
-			columnWidths[colIdx] = max(len(formattedField), columnWidths[colIdx])
+			columnWidths[colIdx] = lo.Max([]int{len(formattedField), columnWidths[colIdx]})
 
 			tableCell := tview.NewTableCell(tview.Escape(formattedField)).
 				SetTextColor(color).
@@ -336,7 +330,7 @@ func (t *TableController) renderData() {
 		truncatedColumnWidths := results.GetTruncatedColumnWidths(columnWidths, newWidth)
 		for rowIdx = 0; rowIdx < t.table.GetRowCount(); rowIdx++ {
 			for colIdx := 0; colIdx < t.table.GetColumnCount(); colIdx++ {
-				t.table.GetCell(rowIdx, colIdx).SetMaxWidth(max(truncatedColumnWidths[colIdx], minColumnWidth))
+				t.table.GetCell(rowIdx, colIdx).SetMaxWidth(lo.Max([]int{truncatedColumnWidths[colIdx], minColumnWidth}))
 			}
 		}
 		return newX, newY, newWidth, newHeight

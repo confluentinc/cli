@@ -2,6 +2,7 @@ package results
 
 import (
 	"fmt"
+	"github.com/samber/lo"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -29,12 +30,12 @@ func (s *ResultFormatterTestSuite) TestGetTruncatedColumnWidthsShouldMaxOutAvail
 		maxCharacters := rapid.IntRange(40, 150).Draw(t, "max characters")
 		truncatedColumnWidths := GetTruncatedColumnWidths(columnWidths, maxCharacters)
 
-		if maxCharacters >= sum(columnWidths) {
+		if maxCharacters >= lo.Sum(columnWidths) {
 			// no truncation occurred -> columns should not have changed
 			require.Equal(t, columnWidths, truncatedColumnWidths)
 		} else {
 			// truncation occurred -> check if available space is maxed out
-			require.Equal(t, maxCharacters, sum(truncatedColumnWidths))
+			require.Equal(t, maxCharacters, lo.Sum(truncatedColumnWidths))
 		}
 	})
 }

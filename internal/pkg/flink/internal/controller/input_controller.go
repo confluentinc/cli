@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"errors"
+	"github.com/samber/lo"
 	"net/http"
 	"os"
 	"reflect"
@@ -272,7 +273,7 @@ func (c *InputController) printResultToSTDOUT(statementResults *types.StatementR
 	columnWidths := make([]int, len(statementResults.Headers))
 	for _, row := range statementResults.Rows {
 		for colIdx, field := range row.Fields {
-			columnWidths[colIdx] = max(len(field.ToString()), columnWidths[colIdx])
+			columnWidths[colIdx] = lo.Max([]int{len(field.ToString()), columnWidths[colIdx]})
 		}
 	}
 	columnWidths = results.GetTruncatedColumnWidths(columnWidths, totalAvailableChars)
