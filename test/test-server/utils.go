@@ -315,9 +315,7 @@ func getCmkUnknownDescribeCluster(id string, name string) *cmkv2.CmkV2Cluster {
 			Availability:           cmkv2.PtrString("SINGLE_ZONE"),
 		},
 		Id: cmkv2.PtrString(id),
-		Status: &cmkv2.CmkV2ClusterStatus{
-			Phase: "PROVISIONED",
-		},
+		Status: &cmkv2.CmkV2ClusterStatus{Phase: "PROVISIONED"},
 	}
 }
 
