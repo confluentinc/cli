@@ -81,8 +81,7 @@ func (c *roleBindingCommand) create(cmd *cobra.Command, _ []string) error {
 			return err
 		}
 
-		_, err = c.V2Client.CreateIamRoleBinding(createRoleBinding)
-		if err != nil {
+		if _, err := c.V2Client.CreateIamRoleBinding(createRoleBinding); err != nil {
 			return err
 		}
 

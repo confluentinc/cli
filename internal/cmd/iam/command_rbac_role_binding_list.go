@@ -119,8 +119,7 @@ func (c *roleBindingCommand) list(cmd *cobra.Command, _ []string) error {
 		if err != nil {
 			return err
 		}
-		err = c.ccloudList(cmd, listRoleBinding)
-		return err
+		return c.ccloudList(cmd, listRoleBinding)
 	} else {
 		options, err := c.parseCommon(cmd)
 		if err != nil {
