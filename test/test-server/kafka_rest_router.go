@@ -271,8 +271,9 @@ func handleKafkaRPTopicConfigs(t *testing.T) http.HandlerFunc {
 				topicConfigList := cpkafkarestv3.TopicConfigDataList{
 					Data: []cpkafkarestv3.TopicConfigData{
 						{
-							Name:  "compression.type",
-							Value: cpkafkarestv3.PtrString("gzip"),
+							Name:       "compression.type",
+							Value:      cpkafkarestv3.PtrString("producer"),
+							IsReadOnly: true,
 						},
 						{
 							Name:  "retention.ms",

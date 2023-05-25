@@ -5,8 +5,11 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -55,9 +58,12 @@ func (c *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 		return err
 	}
 
-	numPartitions, err := c.getNumPartitions(topicName)
+	topic, httpResp, err := kafkaREST.CloudClient.GetKafkaTopic(kafkaClusterConfig.ID, topicName)
 	if err != nil {
-		return err
+		if restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err); parseErr == nil && restErr.Code == ccloudv2.UnknownTopicOrPartitionErrorCode {
+			return fmt.Errorf(errors.UnknownTopicErrorMsg, topicName)
+		}
+		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
 	list := output.NewList(cmd)
@@ -70,7 +76,7 @@ func (c *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) 
 	}
 	list.Add(&topicConfigurationOut{
 		Name:     numPartitionsKey,
-		Value:    fmt.Sprint(numPartitions),
+		Value:    fmt.Sprint(topic.PartitionsCount),
 		ReadOnly: false,
 	})
 	return list.Print()

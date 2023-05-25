@@ -1,5 +1,5 @@
-Updated the following configuration values for topic "topic-exist-rest":
-        Name       | Value | Read-Only  
--------------------+-------+------------
-  compression.type | gzip  | false      
-  retention.ms     |     1 | false      
+Updated the following configuration values for topic "topic-exist-rest" (read-only configs were not updated):
+        Name       |  Value   | Read-Only  
+-------------------+----------+------------
+  compression.type | producer | true       
+  retention.ms     |        1 | false      
