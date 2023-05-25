@@ -19,6 +19,8 @@ func (s *CLITestSuite) TestAsyncApiExport() {
 		{args: "asyncapi export --schema-registry-api-key ASYNCAPIKEY --schema-registry-api-secret ASYNCAPISECRET --schema-context dev --file asyncapi-with-context.yaml", useKafka: "lkc-asyncapi", authKafka: "true", workflow: true},
 		{args: "asyncapi export --schema-registry-api-key ASYNCAPIKEY --schema-registry-api-secret ASYNCAPISECRET --topics topic1 --file asyncapi-topic-specified.yaml", fixture: "asyncapi/export-topic-specified.golden", useKafka: "lkc-asyncapi", authKafka: "true", workflow: true},
 		{args: "asyncapi export --schema-registry-api-key ASYNCAPIKEY --schema-registry-api-secret ASYNCAPISECRET --topics topic2 --file asyncapi-no-topics.yaml", fixture: "asyncapi/export-no-topics.golden", useKafka: "lkc-asyncapi", authKafka: "true", workflow: true},
+		{args: `asyncapi export --schema-registry-api-key ASYNCAPIKEY --schema-registry-api-secret ASYNCAPISECRET --topics "topic*" --file asyncapi-topic-specified.yaml`, fixture: "asyncapi/export-topic-specified.golden", useKafka: "lkc-asyncapi", authKafka: "true", workflow: true},
+		{args: `asyncapi export --schema-registry-api-key ASYNCAPIKEY --schema-registry-api-secret ASYNCAPISECRET --topics "no*" --file asyncapi-no-topics.yaml`, fixture: "asyncapi/export-no-topics.golden", useKafka: "lkc-asyncapi", authKafka: "true", workflow: true},
 	}
 	resetConfiguration(s.T(), false)
 	for _, test := range tests {
