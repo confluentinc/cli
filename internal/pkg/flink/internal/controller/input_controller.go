@@ -270,15 +270,9 @@ func (c *InputController) printResultToSTDOUT(statementResults *types.StatementR
 	totalAvailableChars := windowSize - fixedPadding - variablePadding
 
 	columnWidths := make([]int, len(statementResults.Headers))
-	columnWidthSum := 0
 	for _, row := range statementResults.Rows {
 		for colIdx, field := range row.Fields {
-			formattedField := field.ToString()
-			if len(formattedField) > columnWidths[colIdx] {
-				columnWidthSum -= columnWidths[colIdx]
-				columnWidthSum += len(formattedField)
-				columnWidths[colIdx] = len(formattedField)
-			}
+			columnWidths[colIdx] = max(len(field.ToString()), columnWidths[colIdx])
 		}
 	}
 	columnWidths = results.GetTruncatedColumnWidths(columnWidths, totalAvailableChars)
