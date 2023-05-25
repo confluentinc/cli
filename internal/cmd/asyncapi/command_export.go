@@ -172,25 +172,27 @@ func (c *command) getChannelDetails(details *accountDetails, flags *flags) error
 		log.CliLogger.Warnf("Failed to get tags: %v", err)
 	}
 	details.channelDetails.example = nil
-	var err error
 	if flags.consumeExamples {
-		details.channelDetails.example, err = c.getMessageExamples(details.consumer, details.channelDetails.currentTopic.GetTopicName(), details.channelDetails.contentType, details.srClient, flags.valueFormat)
+		example, err := c.getMessageExamples(details.consumer, details.channelDetails.currentTopic.GetTopicName(), details.channelDetails.contentType, details.srClient, flags.valueFormat)
 		if err != nil {
 			log.CliLogger.Warn(err)
 		}
+		details.channelDetails.example = example
 	}
-	details.channelDetails.bindings, err = c.getBindings(details.clusterId, details.channelDetails.currentTopic.GetTopicName())
+	bindings, err := c.getBindings(details.clusterId, details.channelDetails.currentTopic.GetTopicName())
 	if err != nil {
 		log.CliLogger.Warnf("Bindings not found: %v", err)
 	}
+	details.channelDetails.bindings = bindings
 	if err := details.getTopicDescription(); err != nil {
 		log.CliLogger.Warnf("Failed to get topic description: %v", err)
 	}
 	// x-messageCompatibility
-	details.channelDetails.mapOfMessageCompat, err = getMessageCompatibility(details.srClient, details.srContext, details.channelDetails.currentSubject)
+	mapOfMessageCompat, err := getMessageCompatibility(details.srClient, details.srContext, details.channelDetails.currentSubject)
 	if err != nil {
 		log.CliLogger.Warnf("Failed to get subject's compatibility type: %v", err)
 	}
+	details.channelDetails.mapOfMessageCompat = mapOfMessageCompat
 	output.Printf("Added topic \"%s\".\n", details.channelDetails.currentTopic.GetTopicName())
 	return nil
 }
