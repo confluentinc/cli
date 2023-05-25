@@ -1,4 +1,6 @@
 *                   @confluentinc/cli
+internal/pkg/ccloudv2/flink.go @confluentinc/cli @confluentinc/cloud-surfaces
+internal/pkg/ccloudv2/flink_gateway.go @confluentinc/cli @confluentinc/cloud-surfaces
 internal/pkg/flink/ @confluentinc/cloud-surfaces
 go.mod @confluentinc/cli @confluentinc/cloud-surfaces
 go.sum @confluentinc/cli @confluentinc/cloud-surfaces
