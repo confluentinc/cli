@@ -112,7 +112,7 @@ func (c *InputController) RunInteractiveInput() {
 		ctx, cancelWaitPendingStatement := context.WithCancel(context.Background())
 
 		in := prompt.NewStandardInputParser()
-		in.Setup()
+		_ = in.Setup()
 		cancelListenToUserInput := c.listenToUserInput(in, func() {
 			go c.store.DeleteStatement(processedStatement.StatementName)
 			cancelWaitPendingStatement()
@@ -120,7 +120,7 @@ func (c *InputController) RunInteractiveInput() {
 
 		processedStatement, err = c.store.WaitPendingStatement(ctx, *processedStatement)
 		if err != nil {
-			in.TearDown()
+			_ = in.TearDown()
 			cancelListenToUserInput()
 			fmt.Println(err.Error())
 			c.isSessionValid(err)
@@ -128,7 +128,7 @@ func (c *InputController) RunInteractiveInput() {
 		}
 
 		processedStatement, err = c.store.FetchStatementResults(*processedStatement)
-		in.TearDown()
+		_ = in.TearDown()
 		cancelListenToUserInput()
 		if err != nil {
 			fmt.Println(err.Error())
@@ -271,13 +271,13 @@ func (c *InputController) printResultToSTDOUT(statementResults *types.StatementR
 	charsPerColumn := totalAvailableChars / len(statementResults.Headers) // distribute chars evenly
 	formatterOptions := &types.FormatterOptions{MaxCharCountToDisplay: charsPerColumn}
 
-	var formattedResults [][]string
-	for _, row := range statementResults.Rows {
-		var formattedRow []string
-		for _, field := range row.Fields {
-			formattedRow = append(formattedRow, field.Format(formatterOptions))
+	formattedResults := make([][]string, len(statementResults.Rows))
+	for rowIdx, row := range statementResults.Rows {
+		formattedRow := make([]string, len(row.Fields))
+		for colIdx, field := range row.Fields {
+			formattedRow[colIdx] = field.Format(formatterOptions)
 		}
-		formattedResults = append(formattedResults, formattedRow)
+		formattedResults[rowIdx] = formattedRow
 	}
 	rawTable := tablewriter.NewWriter(os.Stdout)
 	rawTable.SetAutoFormatHeaders(false)
@@ -368,8 +368,8 @@ func (c *InputController) getSmartCompletion() bool {
 	return c.smartCompletion
 }
 
-func reverseISearchLivePrefix(livePrefixState *reverseisearch.LivePrefixState) func() (prefix string, useLivePrefix bool) {
-	return func() (prefix string, useLivePrefix bool) {
+func reverseISearchLivePrefix(livePrefixState *reverseisearch.LivePrefixState) func() (string, bool) {
+	return func() (string, bool) {
 		return livePrefixState.LivePrefix, livePrefixState.IsEnable
 	}
 }
@@ -459,7 +459,7 @@ func (c *InputController) GetMaxCol() (int, error) {
 	return int(maxCol), nil
 }
 
-func NewInputController(t TableControllerInterface, a ApplicationControllerInterface, store store.StoreInterface, authenticated func() error, history *history.History, appOptions *types.ApplicationOptions) (c InputControllerInterface) {
+func NewInputController(t TableControllerInterface, a ApplicationControllerInterface, store store.StoreInterface, authenticated func() error, history *history.History, appOptions *types.ApplicationOptions) InputControllerInterface {
 	inputController := &InputController{
 		History:         history,
 		InitialBuffer:   "",

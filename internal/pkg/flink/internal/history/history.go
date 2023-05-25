@@ -18,16 +18,18 @@ type History struct {
 	historyPath   string
 }
 
-func LoadHistory() (history *History) {
-	historyPath, history := initPath(history)
-
-	return loadFromPath(historyPath, history)
+func LoadHistory() *History {
+	history := initPath()
+	return loadFromPath(history)
 }
 
-func loadFromPath(historyPath string, history *History) *History {
-	jsonFile, err := os.ReadFile(historyPath)
+func loadFromPath(history *History) *History {
+	if history == nil {
+		return nil
+	}
+	jsonFile, err := os.ReadFile(history.historyPath)
 	if errors.Is(err, os.ErrNotExist) {
-		log.Printf("Couldn't load past statements: file doesn't exist: %s. Error: %v", historyPath, err)
+		log.Printf("Couldn't load past statements: file doesn't exist: %s. Error: %v", history.historyPath, err)
 		return history
 	}
 
@@ -35,21 +37,18 @@ func loadFromPath(historyPath string, history *History) *History {
 		log.Printf("Couldn't load past statements history: unable to read file Error: " + err.Error())
 	}
 
-	err = json.Unmarshal(jsonFile, &history)
+	err = json.Unmarshal(jsonFile, history)
 	if err != nil {
 		log.Printf("Couldn't load past statements history. Error: " + err.Error())
 	}
 	return history
 }
 
-func initPath(history *History) (string, *History) {
-	if history == nil {
-		history = &History{}
-	}
-
+func initPath() *History {
 	home, osHomedirErr := os.UserHomeDir()
 	if osHomedirErr != nil {
 		log.Printf("Couldn't get homedir with os.UserHomeDir(). Error: " + osHomedirErr.Error())
+		return nil
 	}
 
 	confluentDir := os.Getenv(config.CONFLUENT_HOME_DIR_ENV_VAR)
@@ -59,10 +58,11 @@ func initPath(history *History) (string, *History) {
 	confluentPath := filepath.Join(home, confluentDir)
 	historyPath := filepath.Join(confluentPath, HISTORY_FILE_NAME)
 
-	history.confluentPath = confluentPath
-	history.historyPath = historyPath
-
-	return historyPath, history
+	return &History{
+		Data:          nil,
+		confluentPath: confluentPath,
+		historyPath:   historyPath,
+	}
 }
 
 func (history *History) Save() {

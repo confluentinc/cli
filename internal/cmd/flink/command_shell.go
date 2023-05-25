@@ -37,7 +37,10 @@ func (c *command) authenticated(authenticated func(*cobra.Command, []string) err
 		}
 		auth := cfg.Context().State.AuthToken
 		authRefreshToken := cfg.Context().State.AuthRefreshToken
-		c.Context.UpdateAuthTokens(auth, authRefreshToken)
+		err = c.Context.UpdateAuthTokens(auth, authRefreshToken)
+		if err != nil {
+			return err
+		}
 		return authenticated(cmd, nil)
 	}
 }

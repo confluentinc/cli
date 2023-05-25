@@ -39,7 +39,7 @@ func SearchCompleter(history []string, writer prompt.ConsoleWriter, searchState 
 // NextResult will update console text with the next match from the history.
 func NextResult(writer prompt.ConsoleWriter, history []string, searchState *SearchState, livePrefix *LivePrefixState) func(buffer *prompt.Buffer) {
 	return func(buffer *prompt.Buffer) {
-		searchState.CurrentIndex = searchState.CurrentIndex - 1
+		searchState.CurrentIndex--
 		updateSuggestion(history, buffer.Text(), writer, searchState, livePrefix)
 	}
 }

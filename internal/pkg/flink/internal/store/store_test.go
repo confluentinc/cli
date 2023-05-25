@@ -77,7 +77,7 @@ func TestWaitForPendingStatement3(t *testing.T) {
 			Phase: "COMPLETED",
 		},
 	}
-	httpRes := http.Response{StatusCode: 200}
+	httpRes := http.Response{StatusCode: http.StatusOK}
 	client.EXPECT().GetStatement(gomock.Any(), statementName).Return(statementObj, &httpRes, nil).Times(1)
 
 	processedStatement, err := s.waitForPendingStatement(context.Background(), statementName, time.Duration(10))
@@ -90,7 +90,7 @@ func TestWaitForPendingTimesout(t *testing.T) {
 	statementName := "statementName"
 	timeout := time.Duration(10) * time.Millisecond
 
-	httpRes := http.Response{StatusCode: 200}
+	httpRes := http.Response{StatusCode: http.StatusOK}
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
 	s := &Store{
 		client: client,
@@ -112,7 +112,7 @@ func TestWaitForPendingTimesout(t *testing.T) {
 func TestWaitForPendingEventuallyCompletes(t *testing.T) {
 	statementName := "statementName"
 
-	httpRes := http.Response{StatusCode: 200}
+	httpRes := http.Response{StatusCode: http.StatusOK}
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
 	s := &Store{
 		client: client,
@@ -173,7 +173,7 @@ func TestCancelPendingStatement(t *testing.T) {
 			Phase: "PENDING",
 		},
 	}
-	httpRes := http.Response{StatusCode: 200}
+	httpRes := http.Response{StatusCode: http.StatusOK}
 
 	expectedErr := &types.StatementError{Msg: "Result retrieval aborted. Statement will be deleted."}
 	client.EXPECT().GetStatement(gomock.Any(), statementName).Return(statementObj, &httpRes, nil).AnyTimes()
@@ -458,7 +458,7 @@ func (s *StoreTestSuite) TestParseResetStatementError() {
 func (s *StoreTestSuite) TestProccessHttpErrors() {
 	// given
 	res := &http.Response{
-		StatusCode: 401,
+		StatusCode: http.StatusUnauthorized,
 		Body:       generateCloserFromObject(v1.NewError()),
 	}
 
@@ -474,7 +474,7 @@ func (s *StoreTestSuite) TestProccessHttpErrors() {
 	detail := "you should provide a table for select"
 	statementErr := &v1.Error{Title: &title, Detail: &detail}
 	res = &http.Response{
-		StatusCode: 400,
+		StatusCode: http.StatusBadRequest,
 		Body:       generateCloserFromObject(statementErr),
 	}
 
@@ -487,7 +487,7 @@ func (s *StoreTestSuite) TestProccessHttpErrors() {
 
 	// given
 	res = &http.Response{
-		StatusCode: 500,
+		StatusCode: http.StatusInternalServerError,
 		Body:       generateCloserFromObject(nil),
 	}
 
@@ -500,7 +500,7 @@ func (s *StoreTestSuite) TestProccessHttpErrors() {
 
 	// given
 	res = &http.Response{
-		StatusCode: 201,
+		StatusCode: http.StatusCreated,
 		Body:       generateCloserFromObject(nil),
 	}
 
@@ -569,7 +569,7 @@ func (s *StoreTestSuite) TestDeleteStatementFailsOn404() {
 	store := NewStore(client, mockAppController.ExitApplication, nil)
 
 	statementName := "TEST_STATEMENT"
-	client.EXPECT().DeleteStatement(gomock.Any(), statementName).Return(&http.Response{StatusCode: 404}, nil)
+	client.EXPECT().DeleteStatement(gomock.Any(), statementName).Return(&http.Response{StatusCode: http.StatusNotFound}, nil)
 
 	wasStatementDeleted := store.DeleteStatement(statementName)
 	require.False(s.T(), wasStatementDeleted)

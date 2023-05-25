@@ -197,7 +197,7 @@ func (s *ResultConverterTestSuite) TestFormatArrayField() {
 	}
 
 	for idx, testCase := range testCases {
-		fmt.Println(fmt.Sprintf("Evaluating test case #%v", idx))
+		fmt.Printf("Evaluating test case #%v\n", idx)
 		formattedField := arrayField.Format(testCase.options)
 		if testCase.options.GetMaxCharCountToDisplay() >= 3 {
 			require.True(s.T(), len(formattedField) <= testCase.options.GetMaxCharCountToDisplay())
@@ -266,7 +266,7 @@ func (s *ResultConverterTestSuite) TestFormatMapField() {
 	}
 
 	for idx, testCase := range testCases {
-		fmt.Println(fmt.Sprintf("Evaluating test case #%v", idx))
+		fmt.Printf("Evaluating test case #%v\n", idx)
 		formattedField := mapField.Format(testCase.options)
 		if testCase.options.GetMaxCharCountToDisplay() >= 3 {
 			require.True(s.T(), len(formattedField) <= testCase.options.GetMaxCharCountToDisplay())
@@ -326,7 +326,7 @@ func (s *ResultConverterTestSuite) TestFormatRowField() {
 	}
 
 	for idx, testCase := range testCases {
-		fmt.Println(fmt.Sprintf("Evaluating test case #%v", idx))
+		fmt.Printf("Evaluating test case #%v\n", idx)
 		formattedField := arrayField.Format(testCase.options)
 		if testCase.options.GetMaxCharCountToDisplay() >= 3 {
 			require.True(s.T(), len(formattedField) <= testCase.options.GetMaxCharCountToDisplay())
@@ -404,7 +404,7 @@ func (s *ResultConverterTestSuite) TestFormatNestedField() {
 	}
 
 	for idx, testCase := range testCases {
-		fmt.Println(fmt.Sprintf("Evaluating test case #%v", idx))
+		fmt.Printf("Evaluating test case #%v\n", idx)
 		formattedField := field.Format(testCase.options)
 		if testCase.options.GetMaxCharCountToDisplay() >= 3 {
 			require.True(s.T(), len(formattedField) <= testCase.options.GetMaxCharCountToDisplay())

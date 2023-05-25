@@ -192,7 +192,10 @@ func AtomicDataType() *rapid.Generator[v1.DataType] {
 		resultFieldType := rapid.SampledFrom(AtomicResultFieldTypes).Draw(t, "atomic result field type")
 		dataTypeJson := fmt.Sprintf(`{"type": "%s"}`, string(resultFieldType))
 		dataType := v1.NewNullableDataType(nil)
-		dataType.UnmarshalJSON([]byte(dataTypeJson))
+		err := dataType.UnmarshalJSON([]byte(dataTypeJson))
+		if err != nil {
+			return v1.DataType{}
+		}
 		return *dataType.Get()
 	})
 }

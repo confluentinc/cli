@@ -29,8 +29,8 @@ const (
 )
 
 func createStatementResults(columnNames []string, rows [][]string) types.StatementResults {
-	var statementResultRows []types.StatementResultRow
-	for _, row := range rows {
+	statementResultRows := make([]types.StatementResultRow, len(rows))
+	for idx, row := range rows {
 		var statementResultRow types.StatementResultRow
 		for _, field := range row {
 			statementResultRow.Fields = append(statementResultRow.Fields, types.AtomicStatementResultField{
@@ -38,7 +38,7 @@ func createStatementResults(columnNames []string, rows [][]string) types.Stateme
 				Value: field,
 			})
 		}
-		statementResultRows = append(statementResultRows, statementResultRow)
+		statementResultRows[idx] = statementResultRow
 	}
 	return types.StatementResults{
 		Headers: columnNames,
@@ -270,7 +270,7 @@ func processHttpErrors(resp *http.Response, err error) error {
 	return nil
 }
 
-// Used to to help mocking answers for now - will be removed in the future
+// Used to help mocking answers for now - will be removed in the future
 //  Or replaced with a call to a /validate endpoint
 func startsWithValidSQL(statement string) bool {
 	if statement == "" {

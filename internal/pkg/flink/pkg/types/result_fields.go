@@ -179,9 +179,9 @@ func (f ArrayStatementResultField) Format(options *FormatterOptions) string {
 }
 
 func (f ArrayStatementResultField) ToSDKType() v1.SqlV1alpha1ResultItemRowOneOf {
-	var items []v1.SqlV1alpha1ResultItemRowOneOf
-	for _, item := range f.Values {
-		items = append(items, item.ToSDKType())
+	items := make([]v1.SqlV1alpha1ResultItemRowOneOf, len(f.Values))
+	for idx, item := range f.Values {
+		items[idx] = item.ToSDKType()
 	}
 	return v1.SqlV1alpha1ResultItemRowOneOf{SqlV1alpha1ResultItemRow: &v1.SqlV1alpha1ResultItemRow{Items: items}}
 }
@@ -220,12 +220,12 @@ func (f MapStatementResultField) Format(options *FormatterOptions) string {
 }
 
 func (f MapStatementResultField) ToSDKType() v1.SqlV1alpha1ResultItemRowOneOf {
-	var mapItems []v1.SqlV1alpha1ResultItemRowOneOf
-	for _, entry := range f.Entries {
+	mapItems := make([]v1.SqlV1alpha1ResultItemRowOneOf, len(f.Entries))
+	for idx, entry := range f.Entries {
 		var keyValuePair []v1.SqlV1alpha1ResultItemRowOneOf
 		keyValuePair = append(keyValuePair, entry.Key.ToSDKType(), entry.Value.ToSDKType())
 		resultItemRowOneOf := v1.SqlV1alpha1ResultItemRowOneOf{SqlV1alpha1ResultItemRow: &v1.SqlV1alpha1ResultItemRow{Items: keyValuePair}}
-		mapItems = append(mapItems, resultItemRowOneOf)
+		mapItems[idx] = resultItemRowOneOf
 	}
 	return v1.SqlV1alpha1ResultItemRowOneOf{SqlV1alpha1ResultItemRow: &v1.SqlV1alpha1ResultItemRow{Items: mapItems}}
 }
@@ -258,9 +258,9 @@ func (f RowStatementResultField) Format(options *FormatterOptions) string {
 }
 
 func (f RowStatementResultField) ToSDKType() v1.SqlV1alpha1ResultItemRowOneOf {
-	var rowItems []v1.SqlV1alpha1ResultItemRowOneOf
-	for _, value := range f.Values {
-		rowItems = append(rowItems, value.ToSDKType())
+	rowItems := make([]v1.SqlV1alpha1ResultItemRowOneOf, len(f.Values))
+	for idx, value := range f.Values {
+		rowItems[idx] = value.ToSDKType()
 	}
 	return v1.SqlV1alpha1ResultItemRowOneOf{SqlV1alpha1ResultItemRow: &v1.SqlV1alpha1ResultItemRow{Items: rowItems}}
 }

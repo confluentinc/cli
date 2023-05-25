@@ -47,7 +47,6 @@ const defaultRefreshInterval uint = 1000 // in milliseconds
 const minRefreshInterval uint = 100      // in milliseconds
 
 func NewTableController(table *tview.Table, store store.StoreInterface, appController ApplicationControllerInterface) TableControllerInterface {
-
 	return &TableController{
 		table:         table,
 		appController: appController,

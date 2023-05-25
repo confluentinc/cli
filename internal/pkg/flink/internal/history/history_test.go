@@ -34,7 +34,7 @@ func TestLoadHistory(t *testing.T) {
 	history.historyPath = tmpFile
 
 	// Reload history
-	history = loadFromPath(history.historyPath, history)
+	history = loadFromPath(history)
 	require.NotNil(t, history, "Expected non-nil history object after reloading history")
 	require.NotEmpty(t, history.confluentPath, "Expected non-empty confluent path after reloading history")
 	require.NotEmpty(t, history.historyPath, "Expected non-empty history path after reloading history")
