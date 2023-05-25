@@ -83,7 +83,7 @@ func TestExamplesWordLexer(t *testing.T) {
 
 		for _, element := range elements {
 			element.Text = strings.ToUpper(element.Text)
-			_, isKeyWord := config.SQLKeywords[element.Text]
+			isKeyWord := config.SQLKeywords.Contains(element.Text)
 			if len(element.Text) == 0 {
 				t.Errorf("Empty element in statement: %s", element.Text)
 			}
@@ -131,7 +131,7 @@ func TestWordLexerForRandomStatements(t *testing.T) {
 
 		for _, element := range elements {
 			element.Text = strings.ToUpper(element.Text)
-			_, isKeyWord := config.SQLKeywords[element.Text]
+			isKeyWord := config.SQLKeywords.Contains(element.Text)
 			if len(element.Text) == 0 {
 				t.Errorf("Empty element in statement: %s", element.Text)
 			}

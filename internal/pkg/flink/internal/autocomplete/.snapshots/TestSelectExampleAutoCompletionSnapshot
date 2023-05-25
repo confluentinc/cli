@@ -1,6 +1,6 @@
 ([]prompt.Suggest) (len=1) {
   (prompt.Suggest) {
-    Text: (string) (len=38) "SELECT * FROM Orders WHERE amount = 2;",
+    Text: (string) (len=7) "SELECT ",
     Description: (string) (len=27) "Select data from a database"
   }
 }

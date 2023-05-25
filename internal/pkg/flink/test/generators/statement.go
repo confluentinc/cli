@@ -23,7 +23,7 @@ type SQLSentence struct {
 func RandomSQLSentence() *rapid.Generator[SQLSentence] {
 	return rapid.Custom(func(t *rapid.T) SQLSentence {
 		words := rapid.SliceOfNDistinct(
-			rapid.SampledFrom(maps.Keys(config.SQLKeywords)),
+			rapid.SampledFrom(config.SQLKeywords.Slice()),
 			1,
 			10,
 			rapid.ID[string],

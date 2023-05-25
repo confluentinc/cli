@@ -7,8 +7,8 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
-	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
 	"github.com/confluentinc/cli/internal/pkg/flink/test/mock"
+	"github.com/confluentinc/cli/internal/pkg/flink/types"
 )
 
 func TestRenderError(t *testing.T) {

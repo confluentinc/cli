@@ -7,7 +7,7 @@ package mock
 import (
 	reflect "reflect"
 
-	types "github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
+	types "github.com/confluentinc/cli/internal/pkg/flink/types"
 	gomock "github.com/golang/mock/gomock"
 	tview "github.com/rivo/tview"
 )

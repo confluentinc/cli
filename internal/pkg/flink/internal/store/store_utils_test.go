@@ -1,12 +1,14 @@
 package store
 
 import (
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
+	"github.com/confluentinc/cli/internal/pkg/flink/config"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
+	"github.com/confluentinc/cli/internal/pkg/flink/types"
 )
 
 func TestRemoveStatementTerminator(t *testing.T) {
@@ -77,7 +79,7 @@ func TestRemoveWhiteSpaces(t *testing.T) {
 
 func TestProcessSetStatement(t *testing.T) {
 	// Create a new store
-	client := NewGatewayClient("envId", "orgResourceId", "kafkaClusterId", "computePoolId", func() string { return "authToken" }, nil)
+	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, func() string { return "authToken" }, "envId", "orgResourceId", "kafkaClusterId", "computePoolId")
 	s := NewStore(client, nil, nil).(*Store)
 
 	t.Run("should return an error message if statement is invalid", func(t *testing.T) {
@@ -126,7 +128,7 @@ func TestProcessSetStatement(t *testing.T) {
 
 func TestProcessResetStatement(t *testing.T) {
 	// Create a new store
-	client := NewGatewayClient("envId", "orgResourceId", "kafkaClusterId", "computePoolId", func() string { return "authToken" }, nil)
+	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, func() string { return "authToken" }, "envId", "orgResourceId", "kafkaClusterId", "computePoolId")
 	s := NewStore(client, nil, nil).(*Store)
 
 	t.Run("should return an error message if statement is invalid", func(t *testing.T) {
@@ -169,7 +171,7 @@ func TestProcessResetStatement(t *testing.T) {
 
 func TestProcessUseStatement(t *testing.T) {
 	// Create a new store
-	client := NewGatewayClient("envId", "orgResourceId", "kafkaClusterId", "computePoolId", func() string { return "authToken" }, nil)
+	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, func() string { return "authToken" }, "envId", "orgResourceId", "kafkaClusterId", "computePoolId")
 	s := NewStore(client, nil, nil).(*Store)
 
 	t.Run("should return an error message if statement is invalid", func(t *testing.T) {
@@ -180,10 +182,10 @@ func TestProcessUseStatement(t *testing.T) {
 	t.Run("should update the database name in config", func(t *testing.T) {
 		result, err := s.processUseStatement("use db1")
 		require.Nil(t, err)
-		require.Equal(t, configOpUse, result.Kind)
+		require.Equal(t, config.ConfigOpUse, result.Kind)
 		require.EqualValues(t, types.COMPLETED, result.Status)
 		require.Equal(t, "Config updated successfully.", result.StatusDetail)
-		expectedResult := createStatementResults([]string{"Key", "Value"}, [][]string{{configKeyDatabase, "db1"}})
+		expectedResult := createStatementResults([]string{"Key", "Value"}, [][]string{{config.ConfigKeyDatabase, "db1"}})
 		assert.Equal(t, &expectedResult, result.StatementResults)
 	})
 
@@ -195,10 +197,10 @@ func TestProcessUseStatement(t *testing.T) {
 	t.Run("should update the catalog name in config", func(t *testing.T) {
 		result, err := s.processUseStatement("use catalog metadata")
 		require.Nil(t, err)
-		require.Equal(t, configOpUse, result.Kind)
+		require.Equal(t, config.ConfigOpUse, result.Kind)
 		require.EqualValues(t, types.COMPLETED, result.Status)
 		require.Equal(t, "Config updated successfully.", result.StatusDetail)
-		expectedResult := createStatementResults([]string{"Key", "Value"}, [][]string{{configKeyCatalog, "metadata"}})
+		expectedResult := createStatementResults([]string{"Key", "Value"}, [][]string{{config.ConfigKeyCatalog, "metadata"}})
 		assert.Equal(t, &expectedResult, result.StatementResults)
 	})
 

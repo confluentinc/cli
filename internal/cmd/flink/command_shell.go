@@ -5,8 +5,8 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/config/load"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	client "github.com/confluentinc/cli/internal/pkg/flink"
-	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
+	client "github.com/confluentinc/cli/internal/pkg/flink/app"
+	"github.com/confluentinc/cli/internal/pkg/flink/types"
 
 	"github.com/spf13/cobra"
 )
@@ -122,6 +122,7 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 			DEFAULT_PROPERTIES: map[string]string{
 				"execution.runtime-mode": "streaming",
 			},
+			USER_AGENT: c.Version.UserAgent,
 		})
 	return nil
 }

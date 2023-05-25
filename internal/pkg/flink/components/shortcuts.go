@@ -2,17 +2,14 @@ package components
 
 import (
 	"fmt"
+	"strings"
 
+	"github.com/confluentinc/cli/internal/pkg/flink/types"
 	"github.com/rivo/tview"
 )
 
-type Shortcut struct {
-	KeyText string
-	Text    string
-}
-
 // Keyboard shortcuts shown at the bottom.
-var appShortcuts = []Shortcut{
+var appShortcuts = []types.Shortcut{
 	{KeyText: "Q", Text: "Quit"},
 	{KeyText: "M", Text: "Toggle Result Mode"},
 	{KeyText: "R", Text: "Toggle Auto Refresh"},
@@ -24,9 +21,15 @@ func Shortcuts() *tview.TextView {
 		SetRegions(true).
 		SetWrap(false)
 
-	for index, shortcut := range appShortcuts {
-		fmt.Fprintf(shortcutsRef, `[[white]%s] ["%d"][darkcyan]%s[white][""]  `, shortcut.KeyText, index, shortcut.Text)
-	}
+	shortcutsRef.SetText(formatShortcuts(appShortcuts))
 
 	return shortcutsRef
+}
+
+func formatShortcuts(appShortcuts []types.Shortcut) string {
+	sb := strings.Builder{}
+	for index, shortcut := range appShortcuts {
+		sb.WriteString(fmt.Sprintf(`[[white]%s] ["%d"][darkcyan]%s[white][""]  `, shortcut.KeyText, index, shortcut.Text))
+	}
+	return sb.String()
 }

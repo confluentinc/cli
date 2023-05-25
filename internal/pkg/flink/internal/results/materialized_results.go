@@ -4,7 +4,7 @@ import (
 	"github.com/samber/lo"
 	"sync"
 
-	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
+	"github.com/confluentinc/cli/internal/pkg/flink/types"
 )
 
 type MaterializedStatementResultsIterator struct {

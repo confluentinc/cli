@@ -12,11 +12,11 @@
     Description: (string) (len=38) "Lists all tables from current database"
   },
   (prompt.Suggest) {
-    Text: (string) (len=21) "SHOW TABLES FROM db1;",
+    Text: (string) (len=18) "SHOW TABLES FROM ;",
     Description: (string) (len=32) "Lists all tables from a database"
   },
   (prompt.Suggest) {
-    Text: (string) (len=25) "SHOW COLUMNS FROM Orders;",
+    Text: (string) (len=19) "SHOW COLUMNS FROM ;",
     Description: (string) (len=28) "Lists all columns of a table"
   },
   (prompt.Suggest) {

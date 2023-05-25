@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"io"
 	"net/http"
 	"testing"
@@ -20,8 +21,8 @@ import (
 	v1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"
 
 	"github.com/confluentinc/cli/internal/pkg/flink/config"
-	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
 	"github.com/confluentinc/cli/internal/pkg/flink/test/mock"
+	"github.com/confluentinc/cli/internal/pkg/flink/types"
 )
 
 type StoreTestSuite struct {
@@ -34,7 +35,7 @@ func TestStoreTestSuite(t *testing.T) {
 
 func TestStoreProcessLocalStatement(t *testing.T) {
 	// Create a new store
-	client := NewGatewayClient("envId", "orgResourceId", "kafkaClusterId", "computePoolId", func() string { return "authToken" }, nil)
+	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, func() string { return "authToken" }, "envId", "orgResourceId", "kafkaClusterId", "computePoolId")
 	mockAppController := mock.NewMockApplicationControllerInterface(gomock.NewController(t))
 	s := NewStore(client, mockAppController.ExitApplication, nil).(*Store)
 
@@ -77,8 +78,7 @@ func TestWaitForPendingStatement3(t *testing.T) {
 			Phase: "COMPLETED",
 		},
 	}
-	httpRes := http.Response{StatusCode: http.StatusOK}
-	client.EXPECT().GetStatement(gomock.Any(), statementName).Return(statementObj, &httpRes, nil).Times(1)
+	client.EXPECT().GetStatement(statementName).Return(statementObj, nil).Times(1)
 
 	processedStatement, err := s.waitForPendingStatement(context.Background(), statementName, time.Duration(10))
 	assert.Nil(t, err)
@@ -90,7 +90,6 @@ func TestWaitForPendingTimesout(t *testing.T) {
 	statementName := "statementName"
 	timeout := time.Duration(10) * time.Millisecond
 
-	httpRes := http.Response{StatusCode: http.StatusOK}
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
 	s := &Store{
 		client: client,
@@ -102,7 +101,7 @@ func TestWaitForPendingTimesout(t *testing.T) {
 			Phase: "PENDING",
 		},
 	}
-	client.EXPECT().GetStatement(gomock.Any(), statementName).Return(statementObj, &httpRes, nil).AnyTimes()
+	client.EXPECT().GetStatement(statementName).Return(statementObj, nil).AnyTimes()
 	processedStatement, err := s.waitForPendingStatement(context.Background(), statementName, timeout)
 
 	assert.EqualError(t, err, fmt.Sprintf("Error: Statement is still pending after %f seconds. \n\nIf you want to increase the timeout for the client, you can run \"SET table.results-timeout=1200;\" to adjust the maximum timeout in seconds.", timeout.Seconds()))
@@ -112,7 +111,6 @@ func TestWaitForPendingTimesout(t *testing.T) {
 func TestWaitForPendingEventuallyCompletes(t *testing.T) {
 	statementName := "statementName"
 
-	httpRes := http.Response{StatusCode: http.StatusOK}
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
 	s := &Store{
 		client: client,
@@ -130,8 +128,8 @@ func TestWaitForPendingEventuallyCompletes(t *testing.T) {
 			Phase: "COMPLETED",
 		},
 	}
-	client.EXPECT().GetStatement(gomock.Any(), statementName).Return(statementObj, &httpRes, nil).Times(3)
-	client.EXPECT().GetStatement(gomock.Any(), statementName).Return(statementObjCompleted, &httpRes, nil).Times(1)
+	client.EXPECT().GetStatement(statementName).Return(statementObj, nil).Times(3)
+	client.EXPECT().GetStatement(statementName).Return(statementObjCompleted, nil).Times(1)
 
 	processedStatement, err := s.waitForPendingStatement(context.Background(), statementName, time.Duration(10)*time.Second)
 	assert.Nil(t, err)
@@ -153,7 +151,7 @@ func TestWaitForPendingStatementErrors(t *testing.T) {
 	}
 
 	expectedErr := errors.New("couldn't get statement!")
-	client.EXPECT().GetStatement(gomock.Any(), statementName).Return(statementObj, nil, expectedErr).Times(1)
+	client.EXPECT().GetStatement(statementName).Return(statementObj, expectedErr).Times(1)
 	_, err := s.waitForPendingStatement(context.Background(), statementName, waitTime)
 	assert.EqualError(t, err, "Error: "+expectedErr.Error())
 }
@@ -173,10 +171,9 @@ func TestCancelPendingStatement(t *testing.T) {
 			Phase: "PENDING",
 		},
 	}
-	httpRes := http.Response{StatusCode: http.StatusOK}
 
 	expectedErr := &types.StatementError{Msg: "Result retrieval aborted. Statement will be deleted."}
-	client.EXPECT().GetStatement(gomock.Any(), statementName).Return(statementObj, &httpRes, nil).AnyTimes()
+	client.EXPECT().GetStatement(statementName).Return(statementObj, nil).AnyTimes()
 
 	// Schedule routine to cancel context
 	go func() {
@@ -191,67 +188,67 @@ func TestCancelPendingStatement(t *testing.T) {
 }
 
 func (s *StoreTestSuite) TestIsSETStatement() {
-	assert.True(s.T(), true, statementStartsWithOp("SET", configOpSet))
-	assert.True(s.T(), true, statementStartsWithOp("SET key", configOpSet))
-	assert.True(s.T(), true, statementStartsWithOp("SET key=value", configOpSet))
-	assert.True(s.T(), true, statementStartsWithOp("    SET key=value", configOpSet))
-	assert.True(s.T(), true, statementStartsWithOp("    SET   ", configOpSet))
-	assert.True(s.T(), true, statementStartsWithOp("    set   ", configOpSet))
-	assert.True(s.T(), true, statementStartsWithOp("    SET key=value", configOpSet))
+	assert.True(s.T(), true, statementStartsWithOp("SET", config.ConfigOpSet))
+	assert.True(s.T(), true, statementStartsWithOp("SET key", config.ConfigOpSet))
+	assert.True(s.T(), true, statementStartsWithOp("SET key=value", config.ConfigOpSet))
+	assert.True(s.T(), true, statementStartsWithOp("    SET key=value", config.ConfigOpSet))
+	assert.True(s.T(), true, statementStartsWithOp("    SET   ", config.ConfigOpSet))
+	assert.True(s.T(), true, statementStartsWithOp("    set   ", config.ConfigOpSet))
+	assert.True(s.T(), true, statementStartsWithOp("    SET key=value", config.ConfigOpSet))
 
-	assert.False(s.T(), false, statementStartsWithOp("SETting", configOpSet))
-	assert.False(s.T(), false, statementStartsWithOp("", configOpSet))
-	assert.False(s.T(), false, statementStartsWithOp("should be false", configOpSet))
-	assert.False(s.T(), false, statementStartsWithOp("USE", configOpSet))
-	assert.False(s.T(), false, statementStartsWithOp("SETTING", configOpSet))
+	assert.False(s.T(), false, statementStartsWithOp("SETting", config.ConfigOpSet))
+	assert.False(s.T(), false, statementStartsWithOp("", config.ConfigOpSet))
+	assert.False(s.T(), false, statementStartsWithOp("should be false", config.ConfigOpSet))
+	assert.False(s.T(), false, statementStartsWithOp("USE", config.ConfigOpSet))
+	assert.False(s.T(), false, statementStartsWithOp("SETTING", config.ConfigOpSet))
 }
 
 func (s *StoreTestSuite) TestIsUSEStatement() {
-	assert.True(s.T(), statementStartsWithOp("USE", configOpUse))
-	assert.True(s.T(), statementStartsWithOp("USE catalog", configOpUse))
-	assert.True(s.T(), statementStartsWithOp("USE CATALOG cat", configOpUse))
-	assert.True(s.T(), statementStartsWithOp("use CATALOG cat", configOpUse))
-	assert.True(s.T(), statementStartsWithOp("USE   ", configOpUse))
-	assert.True(s.T(), statementStartsWithOp("use   ", configOpUse))
-	assert.True(s.T(), statementStartsWithOp("USE CATALOG cat", configOpUse))
+	assert.True(s.T(), statementStartsWithOp("USE", config.ConfigOpUse))
+	assert.True(s.T(), statementStartsWithOp("USE catalog", config.ConfigOpUse))
+	assert.True(s.T(), statementStartsWithOp("USE CATALOG cat", config.ConfigOpUse))
+	assert.True(s.T(), statementStartsWithOp("use CATALOG cat", config.ConfigOpUse))
+	assert.True(s.T(), statementStartsWithOp("USE   ", config.ConfigOpUse))
+	assert.True(s.T(), statementStartsWithOp("use   ", config.ConfigOpUse))
+	assert.True(s.T(), statementStartsWithOp("USE CATALOG cat", config.ConfigOpUse))
 
-	assert.False(s.T(), statementStartsWithOp("SET", configOpUse))
-	assert.False(s.T(), statementStartsWithOp("USES", configOpUse))
-	assert.False(s.T(), statementStartsWithOp("", configOpUse))
-	assert.False(s.T(), statementStartsWithOp("should be false", configOpUse))
+	assert.False(s.T(), statementStartsWithOp("SET", config.ConfigOpUse))
+	assert.False(s.T(), statementStartsWithOp("USES", config.ConfigOpUse))
+	assert.False(s.T(), statementStartsWithOp("", config.ConfigOpUse))
+	assert.False(s.T(), statementStartsWithOp("should be false", config.ConfigOpUse))
 }
 
 func (s *StoreTestSuite) TestIsResetStatement() {
-	assert.True(s.T(), true, statementStartsWithOp("RESET", configOpReset))
-	assert.True(s.T(), true, statementStartsWithOp("RESET key", configOpReset))
-	assert.True(s.T(), true, statementStartsWithOp("RESET key=value", configOpReset))
-	assert.True(s.T(), true, statementStartsWithOp("RESET key=value", configOpReset))
-	assert.True(s.T(), true, statementStartsWithOp("RESET   ", configOpReset))
-	assert.True(s.T(), true, statementStartsWithOp("reset   ", configOpReset))
-	assert.True(s.T(), true, statementStartsWithOp("RESET key=value", configOpReset))
+	assert.True(s.T(), true, statementStartsWithOp("RESET", config.ConfigOpReset))
+	assert.True(s.T(), true, statementStartsWithOp("RESET key", config.ConfigOpReset))
+	assert.True(s.T(), true, statementStartsWithOp("RESET key=value", config.ConfigOpReset))
+	assert.True(s.T(), true, statementStartsWithOp("RESET key=value", config.ConfigOpReset))
+	assert.True(s.T(), true, statementStartsWithOp("RESET   ", config.ConfigOpReset))
+	assert.True(s.T(), true, statementStartsWithOp("reset   ", config.ConfigOpReset))
+	assert.True(s.T(), true, statementStartsWithOp("RESET key=value", config.ConfigOpReset))
 
-	assert.False(s.T(), false, statementStartsWithOp("RESETting", configOpReset))
-	assert.False(s.T(), false, statementStartsWithOp("", configOpReset))
-	assert.False(s.T(), false, statementStartsWithOp("should be false", configOpReset))
-	assert.False(s.T(), false, statementStartsWithOp("USE", configOpReset))
-	assert.False(s.T(), false, statementStartsWithOp("RESETTING", configOpReset))
+	assert.False(s.T(), false, statementStartsWithOp("RESETting", config.ConfigOpReset))
+	assert.False(s.T(), false, statementStartsWithOp("", config.ConfigOpReset))
+	assert.False(s.T(), false, statementStartsWithOp("should be false", config.ConfigOpReset))
+	assert.False(s.T(), false, statementStartsWithOp("USE", config.ConfigOpReset))
+	assert.False(s.T(), false, statementStartsWithOp("RESETTING", config.ConfigOpReset))
 }
 
 func (s *StoreTestSuite) TestIsExitStatement() {
-	assert.True(s.T(), true, statementStartsWithOp("EXIT", configOpExit))
-	assert.True(s.T(), true, statementStartsWithOp("EXIT ;", configOpExit))
-	assert.True(s.T(), true, statementStartsWithOp("exit   ;", configOpExit))
-	assert.True(s.T(), true, statementStartsWithOp("exiT   ", configOpExit))
-	assert.True(s.T(), true, statementStartsWithOp("Exit   ", configOpExit))
-	assert.True(s.T(), true, statementStartsWithOp("eXit   ", configOpExit))
-	assert.True(s.T(), true, statementStartsWithOp("exit", configOpExit))
-	assert.True(s.T(), true, statementStartsWithOp("exit ", configOpExit))
+	assert.True(s.T(), true, statementStartsWithOp("EXIT", config.ConfigOpExit))
+	assert.True(s.T(), true, statementStartsWithOp("EXIT ;", config.ConfigOpExit))
+	assert.True(s.T(), true, statementStartsWithOp("exit   ;", config.ConfigOpExit))
+	assert.True(s.T(), true, statementStartsWithOp("exiT   ", config.ConfigOpExit))
+	assert.True(s.T(), true, statementStartsWithOp("Exit   ", config.ConfigOpExit))
+	assert.True(s.T(), true, statementStartsWithOp("eXit   ", config.ConfigOpExit))
+	assert.True(s.T(), true, statementStartsWithOp("exit", config.ConfigOpExit))
+	assert.True(s.T(), true, statementStartsWithOp("exit ", config.ConfigOpExit))
 
-	assert.False(s.T(), false, statementStartsWithOp("exits", configOpReset))
-	assert.False(s.T(), false, statementStartsWithOp("", configOpReset))
-	assert.False(s.T(), false, statementStartsWithOp("should be false", configOpReset))
-	assert.False(s.T(), false, statementStartsWithOp("exitt;", configOpReset))
-	assert.False(s.T(), false, statementStartsWithOp("exi", configOpReset))
+	assert.False(s.T(), false, statementStartsWithOp("exits", config.ConfigOpReset))
+	assert.False(s.T(), false, statementStartsWithOp("", config.ConfigOpReset))
+	assert.False(s.T(), false, statementStartsWithOp("should be false", config.ConfigOpReset))
+	assert.False(s.T(), false, statementStartsWithOp("exitt;", config.ConfigOpReset))
+	assert.False(s.T(), false, statementStartsWithOp("exi", config.ConfigOpReset))
 }
 
 func (s *StoreTestSuite) TestParseSETStatement() {
@@ -336,11 +333,11 @@ func (s *StoreTestSuite) TestParseSETStatementerror() {
 
 func (s *StoreTestSuite) TestParseUSEStatement() {
 	key, value, _ := parseUseStatement("USE CATALOG c;")
-	assert.Equal(s.T(), configKeyCatalog, key)
+	assert.Equal(s.T(), config.ConfigKeyCatalog, key)
 	assert.Equal(s.T(), "c", value)
 
 	key, value, _ = parseUseStatement("use   catalog   \nc   ")
-	assert.Equal(s.T(), configKeyCatalog, key)
+	assert.Equal(s.T(), config.ConfigKeyCatalog, key)
 	assert.Equal(s.T(), "c", value)
 
 	key, value, _ = parseUseStatement("use   catalog     ")
@@ -352,7 +349,7 @@ func (s *StoreTestSuite) TestParseUSEStatement() {
 	assert.Equal(s.T(), "", value)
 
 	key, value, _ = parseUseStatement("use     db   ")
-	assert.Equal(s.T(), configKeyDatabase, key)
+	assert.Equal(s.T(), config.ConfigKeyDatabase, key)
 	assert.Equal(s.T(), "db", value)
 
 	key, value, _ = parseUseStatement("dAtaBaSe  db   ")
@@ -360,7 +357,7 @@ func (s *StoreTestSuite) TestParseUSEStatement() {
 	assert.Equal(s.T(), "", value)
 
 	key, value, _ = parseUseStatement("use     \ndatabase_name   ")
-	assert.Equal(s.T(), configKeyDatabase, key)
+	assert.Equal(s.T(), config.ConfigKeyDatabase, key)
 	assert.Equal(s.T(), "database_name", value)
 }
 
@@ -537,7 +534,7 @@ func (s *StoreTestSuite) TestDeleteStatement() {
 	store := NewStore(client, mockAppController.ExitApplication, nil)
 
 	statementName := "TEST_STATEMENT"
-	client.EXPECT().DeleteStatement(gomock.Any(), statementName).Return(nil, nil)
+	client.EXPECT().DeleteStatement(statementName).Return(nil)
 
 	wasStatementDeleted := store.DeleteStatement(statementName)
 	require.True(s.T(), wasStatementDeleted)
@@ -553,23 +550,7 @@ func (s *StoreTestSuite) TestDeleteStatementFailsOnError() {
 	store := NewStore(client, mockAppController.ExitApplication, nil).(*Store)
 
 	statementName := "TEST_STATEMENT"
-	client.EXPECT().DeleteStatement(gomock.Any(), statementName).Return(nil, errors.New("test error"))
-
-	wasStatementDeleted := store.DeleteStatement(statementName)
-	require.False(s.T(), wasStatementDeleted)
-}
-
-func (s *StoreTestSuite) TestDeleteStatementFailsOn404() {
-	ctrl := gomock.NewController(s.T())
-	defer ctrl.Finish()
-
-	// create objects
-	client := mock.NewMockGatewayClientInterface(ctrl)
-	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
-	store := NewStore(client, mockAppController.ExitApplication, nil)
-
-	statementName := "TEST_STATEMENT"
-	client.EXPECT().DeleteStatement(gomock.Any(), statementName).Return(&http.Response{StatusCode: http.StatusNotFound}, nil)
+	client.EXPECT().DeleteStatement(statementName).Return(errors.New("test error"))
 
 	wasStatementDeleted := store.DeleteStatement(statementName)
 	require.False(s.T(), wasStatementDeleted)
@@ -592,7 +573,7 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWithCompletedStatement() {
 		Metadata: v1.ResultListMeta{},
 		Results:  &v1.SqlV1alpha1StatementResultResults{},
 	}
-	client.EXPECT().GetStatementResults(gomock.Any(), statement.StatementName, statement.PageToken).Return(statementResultObj, nil, nil)
+	client.EXPECT().GetStatementResults(gomock.Any(), statement.StatementName, statement.PageToken).Return(statementResultObj, nil)
 
 	statementResults, err := store.FetchStatementResults(statement)
 	require.NotNil(s.T(), statementResults)
@@ -616,7 +597,7 @@ func (s *StoreTestSuite) TestFetchResultsRetryWithRunningStatement() {
 		Metadata: v1.ResultListMeta{},
 		Results:  &v1.SqlV1alpha1StatementResultResults{},
 	}
-	client.EXPECT().GetStatementResults(gomock.Any(), statement.StatementName, statement.PageToken).Return(statementResultObj, nil, nil).Times(5)
+	client.EXPECT().GetStatementResults(gomock.Any(), statement.StatementName, statement.PageToken).Return(statementResultObj, nil).Times(5)
 
 	statementResults, err := store.FetchStatementResults(statement)
 	require.NotNil(s.T(), statementResults)
@@ -641,7 +622,7 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWhenPageTokenExists() {
 		Metadata: v1.ResultListMeta{Next: &nextPage},
 		Results:  &v1.SqlV1alpha1StatementResultResults{},
 	}
-	client.EXPECT().GetStatementResults(gomock.Any(), statement.StatementName, statement.PageToken).Return(statementResultObj, nil, nil)
+	client.EXPECT().GetStatementResults(gomock.Any(), statement.StatementName, statement.PageToken).Return(statementResultObj, nil)
 
 	statementResults, err := store.FetchStatementResults(statement)
 	require.NotNil(s.T(), statementResults)
@@ -666,7 +647,7 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWhenResultsExist() {
 		Metadata: v1.ResultListMeta{},
 		Results:  &v1.SqlV1alpha1StatementResultResults{Data: &[]v1.SqlV1alpha1ResultItem{{Op: &op}}},
 	}
-	client.EXPECT().GetStatementResults(gomock.Any(), statement.StatementName, statement.PageToken).Return(statementResultObj, nil, nil)
+	client.EXPECT().GetStatementResults(gomock.Any(), statement.StatementName, statement.PageToken).Return(statementResultObj, nil)
 
 	statementResults, err := store.FetchStatementResults(statement)
 	require.NotNil(s.T(), statementResults)
@@ -709,7 +690,7 @@ func TestTimeout(t *testing.T) {
 		{
 			name: "results-timeout property set",
 			properties: map[string]string{
-				configKeyResultsTimeout: "10", // timeout in seconds
+				config.ConfigKeyResultsTimeout: "10", // timeout in seconds
 			},
 			expected: 10 * time.Second,
 		},
@@ -721,7 +702,7 @@ func TestTimeout(t *testing.T) {
 		{
 			name: "invalid results-timeout property",
 			properties: map[string]string{
-				configKeyResultsTimeout: "abc", // invalid duration
+				config.ConfigKeyResultsTimeout: "abc", // invalid duration
 			},
 			expected: config.DefaultTimeoutDuration,
 		},

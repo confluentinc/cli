@@ -8,8 +8,8 @@ import (
 	"github.com/stretchr/testify/suite"
 	"pgregory.net/rapid"
 
-	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
 	"github.com/confluentinc/cli/internal/pkg/flink/test/generators"
+	"github.com/confluentinc/cli/internal/pkg/flink/types"
 )
 
 type MaterializedStatementResultsTestSuite struct {

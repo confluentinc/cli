@@ -1,3 +1,7 @@
+### Run tests
+
+You can either run tests for the whole app by running `make deps` from the root directory or `go test ./...` from a specific package.
+
 ### Run test converage
 
 The following command runs the tests and generates a coverage report in the `coverage` folder.
@@ -23,3 +27,13 @@ An important part of a good command line tool are shortcuts. To add custom short
 https://stackoverflow.com/questions/6205157/how-to-set-keyboard-shortcuts-to-jump-to-beginning-end-of-line
 
 We have a couple of examples in the codebase.
+
+### We have Snapshot tests for some components
+
+You can learn more about it here: https://github.com/bradleyjkemp/cupaloy
+
+When failing, you might need to review your snapshots and update them if they look good. You can easily do that by running:
+
+```
+UPDATE_SNAPSHOTS=true go test ./...
+```

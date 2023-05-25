@@ -21,7 +21,7 @@ func TestBasicSelectAutoCompletion(t *testing.T) {
 	buffer := prompt.NewBuffer()
 	buffer.InsertText(input, false, true)
 
-	expected := prompt.Suggest{Text: "SELECT * FROM Orders WHERE amount = 2;", Description: "Select data from a database"}
+	expected := prompt.Suggest{Text: "SELECT ", Description: "Select data from a database"}
 	completer := NewCompleterBuilder(mockGetSmartCompletion).
 		AddCompleter(ExamplesCompleter).
 		AddCompleter(SetCompleter).

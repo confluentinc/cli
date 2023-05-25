@@ -9,8 +9,8 @@ import (
 
 	v1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"
 
-	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
 	"github.com/confluentinc/cli/internal/pkg/flink/test/generators"
+	"github.com/confluentinc/cli/internal/pkg/flink/types"
 )
 
 type ResultConverterTestSuite struct {

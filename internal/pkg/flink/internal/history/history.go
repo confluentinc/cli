@@ -30,7 +30,7 @@ func loadFromPath(history *History) *History {
 	}
 	jsonFile, err := os.ReadFile(history.historyPath)
 	if errors.Is(err, os.ErrNotExist) {
-		log.CliLogger.Warnf("Couldn't load past statements: file doesn't exist: %s. Error: %v", history.historyPath, err)
+		log.CliLogger.Warnf("Couldn't load past statements: file doesn't exist: %s. This is expected if that's the first time you're using the Flink SQL Client! Error: %v", history.historyPath, err)
 		return history
 	}
 
