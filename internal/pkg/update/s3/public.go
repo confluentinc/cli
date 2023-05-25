@@ -127,8 +127,7 @@ func (r *PublicRepo) getListBucketResultFromDir(s3DirPrefix string) (*ListBucket
 			return nil, err
 		}
 		var result ListBucketResult
-		err = xml.Unmarshal(body, &result)
-		if err != nil {
+		if err := xml.Unmarshal(body, &result); err != nil {
 			return nil, err
 		}
 		results = append(results, result)

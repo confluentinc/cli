@@ -71,8 +71,7 @@ func (protoProvider *ProtoDeserializationProvider) decode(data []byte) (string, 
 	data = data[1:]
 
 	// Convert from binary format to proto message type.
-	err := proto.Unmarshal(data, protoProvider.message)
-	if err != nil {
+	if err := proto.Unmarshal(data, protoProvider.message); err != nil {
 		return "", errors.New(errors.ProtoDocumentInvalidErrorMsg)
 	}
 
@@ -108,7 +107,5 @@ func parseMessage(schemaPath string, referencePathMap map[string]string) (proto.
 	// We're always using the outermost first message.
 	messageDescriptor := messageDescriptors[0]
 	messageFactory := dynamic.NewMessageFactoryWithDefaults()
-	message := messageFactory.NewMessage(messageDescriptor)
-
-	return message, nil
+	return messageFactory.NewMessage(messageDescriptor), nil
 }
