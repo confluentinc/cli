@@ -42,6 +42,10 @@ type listOut struct {
 }
 
 func getConfluentPlatformInstallation(cmd *cobra.Command, prompt form.Prompt, force bool) (*platformInstallation, error) {
+	if cmd.Flags().Changed("confluent-platform") {
+		return getPlatformInstallationFromFlag(cmd)
+	}
+
 	installations, err := findInstallationDirectories()
 	if err != nil {
 		return nil, err
@@ -85,6 +89,24 @@ func getConfluentPlatformInstallation(cmd *cobra.Command, prompt form.Prompt, fo
 		}
 		return &installations[choice-1], nil
 	}
+}
+
+func getPlatformInstallationFromFlag(cmd *cobra.Command) (*platformInstallation, error) {
+	specifiedDirectory, err := cmd.Flags().GetString("confluent-platform")
+	if err != nil {
+		return nil, err
+	}
+
+	if !hasArchiveInstallation(specifiedDirectory) {
+		return nil, errors.New("the directory specified with `--confluent-platform` does not correspond to a valid archive installation")
+	}
+
+	return &platformInstallation{
+		Location: platformLocation{
+			Type: "ARCHIVE",
+			Path: specifiedDirectory,
+		},
+	}, nil
 }
 
 func findInstallationDirectories() ([]platformInstallation, error) {

@@ -50,6 +50,7 @@ func (c *pluginCommand) newInstallCommand() *cobra.Command {
 
 	cmd.Flags().String("plugin-directory", "", "The plugin installation directory. If not specified, a default will be selected based on your Confluent Platform installation.")
 	cmd.Flags().StringSlice("worker-configs", []string{}, "A comma-separated list of paths to one or more Kafka Connect worker configuration files. Each worker file will be updated to load plugins from the plugin directory in addition to any preexisting directories.")
+	cmd.Flags().String("confluent-platform", "", "The path to a Confluent Platform archive installation. If not specified, this command will search for Confluent Platform installations in common locations.")
 	pcmd.AddDryRunFlag(cmd)
 	cmd.Flags().Bool("force", false, "Proceed without user input.")
 
@@ -76,6 +77,10 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 	force, err := cmd.Flags().GetBool("force")
 	if err != nil {
 		return err
+	}
+
+	if cmd.Flags().Changed("plugin-directory") && cmd.Flags().Changed("worker-configs") && cmd.Flags().Changed("confluent-platform") {
+		return errors.New("at most two of `--plugin-directory`, `--worker-configs`, and `--confluent-platform` may be set")
 	}
 
 	pluginDir, err := getPluginDirFromFlag(cmd)
