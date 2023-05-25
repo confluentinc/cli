@@ -3,22 +3,22 @@ ARCHIVE_TYPES=darwin_amd64.tar.gz darwin_arm64.tar.gz linux_amd64.tar.gz linux_a
 # If you set up your laptop following https://github.com/confluentinc/cc-documentation/blob/master/Operations/Laptop%20Setup.md
 # then assuming caas.sh lives here should be fine
 define aws-authenticate
-	$(call dry-run,assume cc-production-1/prod-administrator)
+	$(call dry-run,export AWS_PROFILE=cc-production-1/prod-administrator)
 endef
 
 
 .PHONY: release
 release: check-branch tag-release
 	$(call print-boxed-message,"RELEASING TO STAGING FOLDER $(S3_STAG_PATH)")
-	make release-to-stag
+	$(MAKE) release-to-stag
 	$(call print-boxed-message,"PUBLISHING RELEASE NOTES TO S3 $(S3_BUCKET_PATH)")
-	make publish-release-notes-to-s3
+	$(MAKE) publish-release-notes-to-s3
 	$(call print-boxed-message,"PUBLISHING INSTALLER TO S3 $(S3_BUCKET_PATH)")
-	make publish-installer
+	$(MAKE) publish-installer
 	$(call print-boxed-message,"RELEASING TO PROD FOLDER $(S3_BUCKET_PATH)")
-	make release-to-prod
+	$(MAKE) release-to-prod
 	$(call print-boxed-message,"PUBLISHING DOCS")
-	make publish-docs
+	$(MAKE) publish-docs
 
 .PHONY: check-branch
 check-branch:
@@ -29,11 +29,11 @@ check-branch:
 
 .PHONY: release-to-stag
 release-to-stag:
-	make gorelease
-	make goreleaser-patches
-	make copy-stag-archives-to-latest
+	$(MAKE) gorelease
+	$(MAKE) goreleaser-patches
+	$(MAKE) copy-stag-archives-to-latest
 	$(call print-boxed-message,"VERIFYING STAGING RELEASE CONTENT")
-	make verify-stag
+	$(MAKE) verify-stag
 	$(call print-boxed-message,"STAGING RELEASE COMPLETED AND VERIFIED!")
 
 .PHONY: release-to-prod
@@ -43,7 +43,7 @@ release-to-prod:
 	$(call copy-stag-content-to-prod,binaries,$(CLEAN_VERSION)); \
 	$(call copy-stag-content-to-prod,archives,latest)
 	$(call print-boxed-message,"VERIFYING PROD RELEASE CONTENT")
-	make verify-prod
+	$(MAKE) verify-prod
 	$(call print-boxed-message,"PROD RELEASE COMPLETED AND VERIFIED!")
 
 define copy-stag-content-to-prod
@@ -86,7 +86,7 @@ gorelease:
 # As new goreleaser versions allow more customization, we may be able to reduce the work for this make target
 .PHONY: goreleaser-patches
 goreleaser-patches:
-	make set-acls
+	$(MAKE) set-acls
 
 # goreleaser does not yet support setting ACLs for cloud storage
 # We have to set `public-read` manually by copying the file in place
