@@ -99,9 +99,9 @@ func (c *InputController) RunInteractiveInput() {
 			continue
 		}
 
+		processedStatement, err := c.store.ProcessStatement(input)
 		c.History.Append([]string{input})
 
-		processedStatement, err := c.store.ProcessStatement(input)
 		renderMsgAndStatus(processedStatement)
 		if err != nil {
 			output.Println(err.Error())
@@ -303,6 +303,11 @@ func (c *InputController) Prompt() *prompt.Prompt {
 		prompt.OptionHistory(c.History.Data),
 		prompt.OptionSwitchKeyBindMode(prompt.EmacsKeyBind),
 		prompt.OptionSetExitCheckerOnInput(func(input string, breakline bool) bool {
+			// We add exit\n here because we also want to exit without the need of adding semicolon, which is the default flow for all statements
+			if input == "exit\n" {
+				c.shouldExit = true
+			}
+
 			if c.reverseISearchEnabled || c.shouldExit {
 				return true
 			}
