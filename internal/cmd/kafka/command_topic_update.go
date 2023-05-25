@@ -116,9 +116,9 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		if err != nil {
 			return err
 		}
-		updateResp, err := kafkaREST.CloudClient.UpdateKafkaTopicPartitionCount(kafkaClusterConfig.ID, topicName, int32(updateNumPartitionsInt))
+		updateResp, r, err := kafkaREST.CloudClient.UpdateKafkaTopicPartitionCount(kafkaClusterConfig.ID, topicName, kafkarestv3.UpdatePartitionCountRequestData{PartitionsCount: int32(updateNumPartitionsInt)})
 		if err != nil {
-			return err
+			return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, r)
 		}
 		configsValues[numPartitionsKey] = fmt.Sprint(updateResp.PartitionsCount)
 		partitionsKafkaRestConfig := kafkarestv3.AlterConfigBatchRequestDataData{Name: numPartitionsKey}
