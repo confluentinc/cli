@@ -1,7 +1,6 @@
 package components
 
 import (
-	_ "embed"
 	"fmt"
 	"os"
 	"strings"
