@@ -1,8 +1,8 @@
 package flinksqlclient
 
 import (
-	"github.com/confluentinc/cli/internal/pkg/flink/pkg/app"
-	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
+	"github.com/confluentinc/cli/internal/pkg/flink/app"
+	"github.com/confluentinc/cli/internal/pkg/flink/types"
 )
 
 func StartApp(envId, resourceId, kafkaClusterId, computePoolId string, authToken func() string, authenticated func() error, appOptions *types.ApplicationOptions) {

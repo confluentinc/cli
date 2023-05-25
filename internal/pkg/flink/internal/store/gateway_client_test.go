@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"pgregory.net/rapid"
 
-	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
+	"github.com/confluentinc/cli/internal/pkg/flink/types"
 )
 
 func TestGatewayClientHasOrgIdInDefaultHeader(s *testing.T) {

@@ -12,8 +12,8 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/results"
-	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
 	"github.com/confluentinc/cli/internal/pkg/flink/test/generators"
+	"github.com/confluentinc/cli/internal/pkg/flink/types"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 

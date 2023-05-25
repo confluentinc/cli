@@ -6,7 +6,7 @@ import (
 
 	"github.com/rivo/tview"
 
-	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
+	"github.com/confluentinc/cli/internal/pkg/flink/types"
 )
 
 // Keyboard shortcuts shown at the bottom.

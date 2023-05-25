@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/confluentinc/cli/internal/pkg/flink/pkg/app"
-	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
+	"github.com/confluentinc/cli/internal/pkg/flink/app"
+	"github.com/confluentinc/cli/internal/pkg/flink/types"
 )
 
 func main() {

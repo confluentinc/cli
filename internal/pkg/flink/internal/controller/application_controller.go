@@ -6,7 +6,7 @@ import (
 	"github.com/rivo/tview"
 
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/history"
-	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
+	"github.com/confluentinc/cli/internal/pkg/flink/types"
 )
 
 // Tview application.

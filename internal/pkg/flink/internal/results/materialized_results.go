@@ -3,7 +3,7 @@ package results
 import (
 	"sync"
 
-	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
+	"github.com/confluentinc/cli/internal/pkg/flink/types"
 )
 
 type MaterializedStatementResultsIterator struct {

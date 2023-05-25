@@ -8,7 +8,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	types "github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
+	types "github.com/confluentinc/cli/internal/pkg/flink/types"
 	gomock "github.com/golang/mock/gomock"
 )
 

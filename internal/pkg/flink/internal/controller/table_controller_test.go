@@ -13,8 +13,8 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/flink/components"
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/results"
-	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
 	"github.com/confluentinc/cli/internal/pkg/flink/test/mock"
+	"github.com/confluentinc/cli/internal/pkg/flink/types"
 )
 
 type TableControllerTestSuite struct {

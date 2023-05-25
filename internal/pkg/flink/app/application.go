@@ -10,7 +10,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/controller"
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/history"
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/store"
-	"github.com/confluentinc/cli/internal/pkg/flink/pkg/types"
+	"github.com/confluentinc/cli/internal/pkg/flink/types"
 )
 
 var once sync.Once
