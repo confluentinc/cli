@@ -5,6 +5,7 @@ import (
 
 	flinkv2 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink/v2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -14,6 +15,12 @@ func (c *command) newComputePoolCreateCommand() *cobra.Command {
 		Short: "Create a Flink compute pool.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.computePoolCreate,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: `Create Flink compute pool "my-compute-pool" in AWS with 2 CFUs.`,
+				Code: "confluent flink compute-pool create my-compute-pool --cloud aws --region us-west-2 --cfu 2",
+			},
+		),
 	}
 
 	pcmd.AddCloudFlag(cmd)

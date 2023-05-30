@@ -1,9 +1,12 @@
 package flink
 
 import (
+	"strings"
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -19,6 +22,12 @@ func (c *command) newRegionListCommand() *cobra.Command {
 		Short: "List Flink regions.",
 		Args:  cobra.NoArgs,
 		RunE:  c.regionList,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: "List the available Flink AWS regions.",
+				Code: "confluent flink region list --cloud aws",
+			},
+		),
 	}
 
 	pcmd.AddCloudFlag(cmd)
@@ -33,7 +42,7 @@ func (c *command) regionList(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	regions, err := c.V2Client.ListFlinkRegions(cloud)
+	regions, err := c.V2Client.ListFlinkRegions(strings.ToUpper(cloud))
 	if err != nil {
 		return err
 	}

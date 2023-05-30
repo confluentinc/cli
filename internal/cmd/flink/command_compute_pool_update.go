@@ -5,15 +5,22 @@ import (
 
 	flinkv2 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink/v2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 func (c *command) newComputePoolUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update <id>",
+		Use:   "update [id]",
 		Short: "Update a Flink compute pool.",
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.MaximumNArgs(1),
 		RunE:  c.computePoolUpdate,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: `Update Flink compute pool "my-compute-pool" to 2 CFUs.`,
+				Code: "confluent flink compute-pool update my-compute-pool --cfu 2",
+			},
+		),
 	}
 
 	cmd.Flags().Int32("cfu", 1, "Number of Confluent Flink Units (CFU).")
