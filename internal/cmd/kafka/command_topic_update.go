@@ -19,6 +19,11 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/types"
 )
 
+const (
+	updateTopicConfigRestMsg    = "Updated the following configuration values for topic \"%s\"%s:\n"
+	readOnlyConfigNotUpdatedMsg = "(read-only configs were not updated)"
+)
+
 type topicConfigurationOut struct {
 	Name     string `human:"Name" serialized:"name"`
 	Value    string `human:"Value" serialized:"value"`
@@ -83,8 +88,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		return err
 	}
 
-	// num.partitions is read-only but requires special handling
-	_, hasNumPartitionsChanged := configMap[numPartitionsKey]
+	updateNumPartitions, hasNumPartitionsChanged := configMap[numPartitionsKey]
 	if hasNumPartitionsChanged {
 		delete(configMap, numPartitionsKey)
 	}
@@ -109,6 +113,23 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		return nil
 	}
 
+	readOnlyConfigs := types.NewSet[string]()
+	configsValues := make(map[string]string)
+
+	if hasNumPartitionsChanged {
+		updateNumPartitionsInt, err := strconv.ParseInt(updateNumPartitions, 10, 32)
+		if err != nil {
+			return err
+		}
+		updateResp, r, err := kafkaREST.CloudClient.UpdateKafkaTopicPartitionCount(kafkaClusterConfig.ID, topicName, kafkarestv3.UpdatePartitionCountRequestData{PartitionsCount: int32(updateNumPartitionsInt)})
+		if err != nil {
+			return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, r)
+		}
+		configsValues[numPartitionsKey] = fmt.Sprint(updateResp.PartitionsCount)
+		partitionsKafkaRestConfig := kafkarestv3.AlterConfigBatchRequestDataData{Name: numPartitionsKey}
+		kafkaRestConfigs.Data = append(kafkaRestConfigs.Data, partitionsKafkaRestConfig)
+	}
+
 	configsResp, err := kafkaREST.CloudClient.ListKafkaTopicConfigs(kafkaClusterConfig.ID, topicName)
 	if err != nil {
 		return err
@@ -117,8 +138,6 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		return errors.NewErrorWithSuggestions(errors.EmptyResponseErrorMsg, errors.InternalServerErrorSuggestions)
 	}
 
-	readOnlyConfigs := types.NewSet[string]()
-	configsValues := make(map[string]string)
 	for _, conf := range configsResp.Data {
 		if conf.IsReadOnly {
 			readOnlyConfigs.Add(conf.Name)
@@ -126,24 +145,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		configsValues[conf.Name] = conf.GetValue()
 	}
 
-	if hasNumPartitionsChanged {
-		numPartitions, err := c.getNumPartitions(topicName)
-		if err != nil {
-			return err
-		}
-
-		readOnlyConfigs.Add(numPartitionsKey)
-		configsValues[numPartitionsKey] = strconv.Itoa(numPartitions)
-		// Add num.partitions back into kafkaRestConfig for sorting & output
-		partitionsKafkaRestConfig := kafkarestv3.AlterConfigBatchRequestDataData{Name: numPartitionsKey}
-		kafkaRestConfigs.Data = append(kafkaRestConfigs.Data, partitionsKafkaRestConfig)
-	}
-
-	// Write current state of relevant config settings
-	if output.GetFormat(cmd) == output.Human {
-		output.ErrPrintf(errors.UpdateTopicConfigRestMsg, topicName)
-	}
-
+	var readOnlyConfigNotUpdatedString string
 	list := output.NewList(cmd)
 	for _, config := range kafkaRestConfigs.Data {
 		list.Add(&topicConfigurationOut{
@@ -151,6 +153,15 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 			Value:    configsValues[config.Name],
 			ReadOnly: readOnlyConfigs[config.Name],
 		})
+		if readOnlyConfigs[config.Name] {
+			readOnlyConfigNotUpdatedString = fmt.Sprintf(" %s", errors.ReadOnlyConfigNotUpdatedMsg)
+		}
 	}
+
+	// Write current state of relevant config settings
+	if output.GetFormat(cmd) == output.Human {
+		output.ErrPrintf(updateTopicConfigRestMsg, topicName, readOnlyConfigNotUpdatedString)
+	}
+
 	return list.Print()
 }
