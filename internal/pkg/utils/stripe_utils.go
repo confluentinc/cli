@@ -19,9 +19,7 @@ func setStripeKey(isTest bool) {
 	} else {
 		stripe.Key = stripeLiveKey
 	}
-	stripe.DefaultLeveledLogger = &stripe.LeveledLogger{
-		Level: 0,
-	}
+	stripe.DefaultLeveledLogger = &stripe.LeveledLogger{Level: 0}
 }
 
 func NewStripeToken(cardNumber, expiration, cvc, name string, isTest bool) (*stripe.Token, error) {

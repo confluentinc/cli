@@ -126,8 +126,7 @@ func (ld *launchDarklyManager) IntVariation(key string, ctx *dynamicconfig.Dynam
 }
 
 func (ld *launchDarklyManager) JsonVariation(key string, ctx *dynamicconfig.DynamicContext, client v1.LaunchDarklyClient, shouldCache bool, defaultVal any) any {
-	flagVal := ld.generalVariation(key, ctx, client, shouldCache, defaultVal)
-	return flagVal
+	return ld.generalVariation(key, ctx, client, shouldCache, defaultVal)
 }
 
 func (ld *launchDarklyManager) generalVariation(key string, ctx *dynamicconfig.DynamicContext, client v1.LaunchDarklyClient, shouldCache bool, defaultVal any) any {

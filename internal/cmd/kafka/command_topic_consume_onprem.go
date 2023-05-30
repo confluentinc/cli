@@ -107,8 +107,7 @@ func (c *authenticatedTopicCommand) consumeOnPrem(cmd *cobra.Command, args []str
 	}
 	log.CliLogger.Tracef("Create consumer succeeded")
 
-	err = c.refreshOAuthBearerToken(cmd, consumer)
-	if err != nil {
+	if err := c.refreshOAuthBearerToken(cmd, consumer); err != nil {
 		return err
 	}
 
@@ -119,8 +118,7 @@ func (c *authenticatedTopicCommand) consumeOnPrem(cmd *cobra.Command, args []str
 	defer adminClient.Close()
 
 	topicName := args[0]
-	err = c.validateTopic(adminClient, topicName)
-	if err != nil {
+	if err := c.validateTopic(adminClient, topicName); err != nil {
 		return err
 	}
 
