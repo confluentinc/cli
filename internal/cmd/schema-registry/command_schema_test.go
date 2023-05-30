@@ -59,15 +59,13 @@ func (suite *SchemaTestSuite) SetupSuite() {
 		Name:       cluster.Name,
 		Enterprise: true,
 	}
-	suite.srCluster = &ccloudv1.SchemaRegistryCluster{
-		Id: srClusterID,
-	}
+	suite.srCluster = &ccloudv1.SchemaRegistryCluster{Id: "sr"}
 }
 
 func (suite *SchemaTestSuite) SetupTest() {
 	suite.srClientMock = &srsdk.APIClient{
 		DefaultApi: &srMock.DefaultApi{
-			RegisterFunc: func(_ context.Context, _ string, _ srsdk.RegisterSchemaRequest) (srsdk.RegisterSchemaResponse, *http.Response, error) {
+			RegisterFunc: func(_ context.Context, _ string, _ srsdk.RegisterSchemaRequest, _ *srsdk.RegisterOpts) (srsdk.RegisterSchemaResponse, *http.Response, error) {
 				return srsdk.RegisterSchemaResponse{Id: id}, nil, nil
 			},
 			GetSchemaFunc: func(_ context.Context, _ int32, _ *srsdk.GetSchemaOpts) (srsdk.SchemaString, *http.Response, error) {

@@ -12,7 +12,6 @@ import (
 	kafkaquotas "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
 	ksql "github.com/confluentinc/ccloud-sdk-go-v2/ksql/v2"
 	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
-	metricsv2 "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2"
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 	servicequotav1 "github.com/confluentinc/ccloud-sdk-go-v2/service-quota/v1"
 	srcm "github.com/confluentinc/ccloud-sdk-go-v2/srcm/v2"
@@ -24,7 +23,6 @@ import (
 // Client represents a Confluent Cloud Client as defined by ccloud-sdk-go-v2
 type Client struct {
 	AuthToken string
-	JwtToken  string
 
 	ApiKeysClient          *apikeysv2.APIClient
 	ByokClient             *byokv1.APIClient
@@ -37,7 +35,6 @@ type Client struct {
 	KsqlClient             *ksql.APIClient
 	KafkaQuotasClient      *kafkaquotas.APIClient
 	MdsClient              *mdsv2.APIClient
-	MetricsClient          *metricsv2.APIClient
 	OrgClient              *orgv2.APIClient
 	SchemaRegistryClient   *srcm.APIClient
 	StreamDesignerClient   *streamdesignerv1.APIClient
@@ -64,7 +61,6 @@ func NewClient(baseUrl string, isTest bool, authToken, userAgent string, unsafeT
 		KsqlClient:             newKsqlClient(url, userAgent, unsafeTrace),
 		KafkaQuotasClient:      newKafkaQuotasClient(url, userAgent, unsafeTrace),
 		MdsClient:              newMdsClient(url, userAgent, unsafeTrace),
-		MetricsClient:          newMetricsClient(baseUrl, userAgent, unsafeTrace, isTest),
 		OrgClient:              newOrgClient(url, userAgent, unsafeTrace),
 		SchemaRegistryClient:   newSchemaRegistryClient(url, userAgent, unsafeTrace),
 		StreamDesignerClient:   newStreamDesignerClient(url, userAgent, unsafeTrace),

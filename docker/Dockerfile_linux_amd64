@@ -8,6 +8,6 @@ RUN export GO_VERSION=$(cat /cli/.go-version) && \
 
 ENV PATH=${PATH}:/usr/local/go/bin:/root/go/bin
 
-RUN cd /cli && make gorelease-linux-glibc
+RUN cd /cli && make gorelease-linux-amd64
 
 RUN cd /cli && for file in dist/*.txt; do mv -v "$file" "${file/checksums/checksums_linux}"; done;

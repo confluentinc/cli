@@ -121,11 +121,15 @@ func (c *command) clusterDescribe(cmd *cobra.Command, _ []string) error {
 		mode = "<Requires API Key>"
 	}
 
-	query := schemaCountQueryFor(clusters[0].GetId())
-	metricsResponse, httpResp, err := c.V2Client.MetricsDatasetQuery("cloud", query)
-	unmarshalErr := ccloudv2.UnmarshalFlatQueryResponseIfDataSchemaMatchError(err, metricsResponse, httpResp)
-	if unmarshalErr != nil {
-		return unmarshalErr
+	client, err := c.GetMetricsClient()
+	if err != nil {
+		return err
+	}
+
+	query := schemaCountQueryFor(cluster.Id)
+	metricsResponse, httpResp, err := client.MetricsDatasetQuery("cloud", query)
+	if err := ccloudv2.UnmarshalFlatQueryResponseIfDataSchemaMatchError(err, metricsResponse, httpResp); err != nil {
+		return err
 	}
 
 	freeSchemasLimit := defaultSchemaLimitEssentials

@@ -35,34 +35,38 @@ func (c *Client) CreateSchemaRegistryCluster(srCluster srcmv2.SrcmV2Cluster) (sr
 	return createdCluster, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) ListSchemaRegistryRegions(cloud, packageType string) ([]srcmv2.SrcmV2Region, error) {
-	regionListRequest := c.SchemaRegistryClient.RegionsSrcmV2Api.ListSrcmV2Regions(c.SchemaRegistryApiContext())
+func (c *Client) ListSchemaRegistryRegions(cloud, packageType string) ([]srcm.SrcmV2Region, error) {
+	var list []srcm.SrcmV2Region
 
-	if cloud != "" {
-		regionListRequest = regionListRequest.SpecCloud(cloud)
-	}
-
-	if packageType != "" {
-		regionListRequest = regionListRequest.SpecPackages([]string{packageType})
-	}
-
-	var regionList []srcmv2.SrcmV2Region
 	done := false
 	pageToken := ""
 	for !done {
-		regionListRequest = regionListRequest.PageToken(pageToken)
-		regionPage, httpResp, err := c.SchemaRegistryClient.RegionsSrcmV2Api.ListSrcmV2RegionsExecute(regionListRequest)
+		page, httpResp, err := c.executeListSchemaRegistryRegions(cloud, packageType, pageToken)
 		if err != nil {
 			return nil, errors.CatchCCloudV2Error(err, httpResp)
 		}
-		regionList = append(regionList, regionPage.GetData()...)
+		list = append(list, page.GetData()...)
 
-		pageToken, done, err = extractNextPageToken(regionPage.GetMetadata().Next)
+		pageToken, done, err = extractNextPageToken(page.GetMetadata().Next)
 		if err != nil {
 			return nil, err
 		}
 	}
-	return regionList, nil
+	return list, nil
+}
+
+func (c *Client) executeListSchemaRegistryRegions(cloud, packageType, pageToken string) (srcm.SrcmV2RegionList, *http.Response, error) {
+	req := c.SchemaRegistryClient.RegionsSrcmV2Api.ListSrcmV2Regions(c.SchemaRegistryApiContext())
+	if cloud != "" {
+		req = req.SpecCloud(cloud)
+	}
+	if packageType != "" {
+		req = req.SpecPackages([]string{packageType})
+	}
+	if pageToken != "" {
+		req = req.PageToken(pageToken)
+	}
+	return req.Execute()
 }
 
 func (c *Client) GetSchemaRegistryClusterById(clusterId, environment string) (srcmv2.SrcmV2Cluster, error) {
