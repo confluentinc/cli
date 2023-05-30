@@ -40,6 +40,7 @@ func newLinkCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 		cmd.AddCommand(c.newConfigurationCommand(cfg))
 		cmd.AddCommand(c.newCreateCommandOnPrem())
 		cmd.AddCommand(c.newDeleteCommandOnPrem())
+		cmd.AddCommand(c.newDescribeCommandOnPrem())
 		cmd.AddCommand(c.newListCommandOnPrem())
 	}
 
