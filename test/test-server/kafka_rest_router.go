@@ -637,13 +637,14 @@ func handleKafkaRPLink(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			err := json.NewEncoder(w).Encode(cpkafkarestv3.ListLinksResponseData{
+			err := json.NewEncoder(w).Encode(cckafkarestv3.ListLinksResponseData{
 				Kind:            "",
-				Metadata:        cpkafkarestv3.ResourceMetadata{},
-				SourceClusterId: cpkafkarestv3.PtrString("cluster-1"),
+				Metadata:        cckafkarestv3.ResourceMetadata{},
+				SourceClusterId: *cckafkarestv3.NewNullableString(cckafkarestv3.PtrString("lkc-describe-topic")),
 				LinkName:        "link-1",
 				LinkId:          "LINKID1",
-				TopicsNames:     []string{"link-1-topic-1", "link-1-topic-2"},
+				TopicsNames:     &[]string{"link-1-topic-1", "link-1-topic-2"},
+				LinkState:       cckafkarestv3.PtrString("AVAILABLE"),
 			})
 			require.NoError(t, err)
 		case http.MethodDelete:
