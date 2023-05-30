@@ -1,11 +1,12 @@
-Update a Flink compute pool.
+Delete a Flink SQL statement.
 
 Usage:
-  confluent flink compute-pool update <id> [flags]
+  confluent flink statement delete <name> [flags]
 
 Flags:
+      --force                Skip the deletion confirmation prompt.
       --environment string   Environment ID.
-  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+      --context string       CLI context name.
 
 Global Flags:
   -h, --help            Show help for this command.

@@ -1,7 +1,7 @@
-Update a Flink compute pool.
+Choose a Flink compute pool to be used in subsequent commands which support passing a compute pool with the `--compute-pool` flag.
 
 Usage:
-  confluent flink compute-pool update <id> [flags]
+  confluent flink compute-pool use <id> [flags]
 
 Flags:
       --environment string   Environment ID.

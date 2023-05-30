@@ -1,13 +1,15 @@
-Update a Flink compute pool.
+Manage Flink SQL statements.
 
 Usage:
-  confluent flink compute-pool update <id> [flags]
+  confluent flink statement [command]
 
-Flags:
-      --environment string   Environment ID.
-  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+Available Commands:
+  delete      Delete a Flink SQL statement.
+  list        List Flink SQL statements.
 
 Global Flags:
   -h, --help            Show help for this command.
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent flink statement [command] --help" for more information about a command.
