@@ -22,6 +22,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/featureflags"
 	"github.com/confluentinc/cli/internal/pkg/form"
+	"github.com/confluentinc/cli/internal/pkg/hub"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -70,6 +71,7 @@ type AuthenticatedCLICommand struct {
 	V2Client          *ccloudv2.Client
 	MDSClient         *mds.APIClient
 	MDSv2Client       *mdsv2alpha1.APIClient
+	HubClient         *hub.Client
 	KafkaRESTProvider *KafkaRESTProvider
 	metricsClient     *ccloudv2.MetricsClient
 	Context           *dynamicconfig.DynamicContext
@@ -485,6 +487,16 @@ func (r *PreRun) setV2Clients(c *AuthenticatedCLICommand) error {
 	c.Context.V2Client = v2Client
 	c.Config.V2Client = v2Client
 
+	return nil
+}
+
+func (c *AuthenticatedCLICommand) InitializeHubClient() error {
+	unsafeTrace, err := c.Flags().GetBool("unsafe-trace")
+	if err != nil {
+		return err
+	}
+
+	c.HubClient = hub.NewClient(c.Config.IsTest, unsafeTrace)
 	return nil
 }
 
