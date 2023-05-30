@@ -226,8 +226,7 @@ func GetBearerToken(authenticatedState *v1.ContextState, server, clusterId strin
 
 	// Configure and send post request with session token to Auth Service to get access token
 	responses := new(response)
-	_, err := sling.New().Add("content", "application/json").Add("Content-Type", "application/json").Add("Authorization", bearerSessionToken).BodyJSON(clusterIds).Post(accessTokenEndpoint).ReceiveSuccess(responses)
-	if err != nil {
+	if _, err := sling.New().Add("content", "application/json").Add("Content-Type", "application/json").Add("Authorization", bearerSessionToken).BodyJSON(clusterIds).Post(accessTokenEndpoint).ReceiveSuccess(responses); err != nil {
 		return "", err
 	}
 	return responses.Token, nil
@@ -238,8 +237,7 @@ func GetJwtTokenForV2Client(authenticatedState *v1.ContextState, server string) 
 	accessTokenEndpoint := strings.Trim(server, "/") + "/api/access_tokens"
 
 	responses := new(response)
-	_, err := sling.New().Add("content", "application/json").Add("Content-Type", "application/json").Add("Authorization", bearerSessionToken).Body(strings.NewReader("{}")).Post(accessTokenEndpoint).ReceiveSuccess(responses)
-	if err != nil {
+	if _, err := sling.New().Add("content", "application/json").Add("Content-Type", "application/json").Add("Authorization", bearerSessionToken).Body(strings.NewReader("{}")).Post(accessTokenEndpoint).ReceiveSuccess(responses); err != nil {
 		return "", err
 	}
 	if responses.Error != "" {

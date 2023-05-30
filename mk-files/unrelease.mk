@@ -1,15 +1,15 @@
 .PHONY: unrelease-prod
 unrelease-prod: unrelease-warn
-	make delete-archives-and-binaries # needs to be run before version tag is reverted
-	make delete-release-notes # needs to be run before version tag is reverted
-	make reset-tag-and-commit
-	make restore-latest-archives # needs to be run after version tag is reverted
+	$(MAKE) delete-archives-and-binaries # needs to be run before version tag is reverted
+	$(MAKE) delete-release-notes # needs to be run before version tag is reverted
+	$(MAKE) reset-tag-and-commit
+	$(MAKE) restore-latest-archives # needs to be run after version tag is reverted
 
 .PHONY: unrelease-stag
 unrelease-stag: unrelease-warn
-	make delete-release-notes
-	make reset-tag-and-commit
-	make clean-staging-folder
+	$(MAKE) delete-release-notes
+	$(MAKE) reset-tag-and-commit
+	$(MAKE) clean-staging-folder
 
 .PHONY: reset-tag-and-commit
 reset-tag-and-commit:
@@ -45,17 +45,17 @@ endef
 
 .PHONY: restore-latest-archives
 restore-latest-archives: restore-latest-archives-warn
-	make copy-prod-archives-to-stag-latest
+	$(MAKE) copy-prod-archives-to-stag-latest
 	$(aws-authenticate); \
 	$(call copy-stag-content-to-prod,archives,latest)
 	@echo "Verifying latest archives with: make test-installer"
-	make test-installer
+	$(MAKE) test-installer
 
 .PHONY: copy-prod-archives-to-stag-latest
 copy-prod-archives-to-stag-latest:
 	$(call copy-archives-files-to-latest,$(S3_BUCKET_PATH),$(S3_STAG_PATH))
 	$(call copy-archives-checksums-to-latest,$(S3_BUCKET_PATH),$(S3_STAG_PATH))
-	OVERRIDE_S3_FOLDER=$(S3_STAG_FOLDER_NAME) ARCHIVES_VERSION="" make test-installer
+	OVERRIDE_S3_FOLDER=$(S3_STAG_FOLDER_NAME) ARCHIVES_VERSION="" $(MAKE) test-installer
 
 .PHONY: restore-latest-archives-warn
 restore-latest-archives-warn:
