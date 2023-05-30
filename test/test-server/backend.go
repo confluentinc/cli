@@ -27,16 +27,18 @@ type TestBackend struct {
 
 func StartTestBackend(t *testing.T, isAuditLogEnabled bool) *TestBackend {
 	cloudRouter := NewCloudRouter(t, isAuditLogEnabled)
+	cloudV2Router := NewV2Router(t)
 
 	backend := &TestBackend{
 		cloud:          newTestCloudServer(cloudRouter, TestCloudUrl.Host),
-		v2Api:          newTestCloudServer(NewV2Router(t), TestV2CloudUrl.Host),
+		v2Api:          newTestCloudServer(cloudV2Router, TestV2CloudUrl.Host),
 		kafkaRestProxy: newTestCloudServer(NewKafkaRestProxyRouter(t), TestKafkaRestProxyUrl.Host),
 		mds:            httptest.NewServer(NewMdsRouter(t)),
 		sr:             httptest.NewServer(NewSRRouter(t)),
 	}
 
 	cloudRouter.srApiUrl = backend.sr.URL
+	cloudV2Router.srApiUrl = backend.sr.URL
 
 	return backend
 }
