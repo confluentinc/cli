@@ -1,9 +1,9 @@
 [
   {
-    "id": "sgreg-1",
-    "name": "Ohio (us-east-2)",
+    "id": "sgreg-23",
+    "name": "Oregon (us-west-2)",
     "cloud": "aws",
-    "region_name": "us-east-2",
+    "region_name": "us-west-2",
     "packages": ["advanced"]
   },
   {

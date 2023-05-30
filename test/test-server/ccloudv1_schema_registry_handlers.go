@@ -47,30 +47,6 @@ func (c *CloudRouter) HandleSchemaRegistries(t *testing.T) http.HandlerFunc {
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(b))
 			require.NoError(t, err)
-		case http.MethodGet:
-			b, err := ccloudv1.MarshalJSONToBytes(&ccloudv1.GetSchemaRegistryClustersReply{Clusters: []*ccloudv1.SchemaRegistryCluster{srCluster}})
-			require.NoError(t, err)
-			_, err = io.WriteString(w, string(b))
-			require.NoError(t, err)
 		}
-	}
-}
-
-// Handler for: "/api/schema_registries/{id}"
-func handleSchemaRegistry(t *testing.T) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		q := r.URL.Query()
-		id := q.Get("id")
-		accountId := q.Get("account_id")
-		srCluster := &ccloudv1.SchemaRegistryCluster{
-			Id:        id,
-			AccountId: accountId,
-			Name:      "account schema-registry",
-			Endpoint:  "SASL_SSL://sr-endpoint",
-		}
-		b, err := ccloudv1.MarshalJSONToBytes(&ccloudv1.GetSchemaRegistryClusterReply{Cluster: srCluster})
-		require.NoError(t, err)
-		_, err = io.WriteString(w, string(b))
-		require.NoError(t, err)
 	}
 }
