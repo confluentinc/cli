@@ -12,7 +12,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
@@ -125,28 +124,6 @@ func (c *hasAPIKeyTopicCommand) validateTopic(client *ckafka.AdminClient, topic 
 
 	log.CliLogger.Tracef("validateTopic succeeded")
 	return nil
-}
-
-func (c *authenticatedTopicCommand) getNumPartitions(topicName string) (int, error) {
-	kafkaREST, err := c.GetKafkaREST()
-	if err != nil {
-		return 0, err
-	}
-
-	kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand()
-	if err != nil {
-		return 0, err
-	}
-
-	partitionsResp, httpResp, err := kafkaREST.CloudClient.ListKafkaPartitions(kafkaClusterConfig.ID, topicName)
-	if err != nil {
-		if restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err); parseErr == nil && restErr.Code == ccloudv2.UnknownTopicOrPartitionErrorCode {
-			return 0, fmt.Errorf(errors.UnknownTopicErrorMsg, topicName)
-		}
-		return 0, kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
-	}
-
-	return len(partitionsResp.Data), nil
 }
 
 func (c *authenticatedTopicCommand) provisioningClusterCheck(lkc string) error {

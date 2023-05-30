@@ -85,6 +85,7 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka cluster describe lkc-describe-dedicated-provisioning", fixture: "kafka/cluster-describe-dedicated-provisioning.golden"},
 
 		{args: "kafka cluster describe lkc-unknown", fixture: "kafka/48.golden", exitCode: 1},
+		{args: "kafka cluster describe lkc-unknown-type", fixture: "kafka/describe-unknown-cluster-type.golden"},
 
 		{args: "kafka acl list --cluster lkc-acls", fixture: "kafka/acl/list-cloud.golden"},
 		{args: "kafka acl list --cluster lkc-acls -o json", fixture: "kafka/acl/list-json-cloud.golden"},
@@ -126,6 +127,7 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka topic update topic-exist-rest --config retention.ms=1,compression.type=gzip --dry-run", useKafka: "lkc-describe-topic", fixture: "kafka/topic/update-success-dry-run.golden"},
 		{args: "kafka topic update topic-exist-rest --config retention.ms=1,compression.type=gzip -o json", useKafka: "lkc-describe-topic", fixture: "kafka/topic/update-success-rest-json.golden"},
 		{args: "kafka topic update topic-exist-rest --config retention.ms=1,compression.type=gzip -o yaml", useKafka: "lkc-describe-topic", fixture: "kafka/topic/update-success-rest-yaml.golden"},
+		{args: "kafka topic update topic-exist-rest --config num.partitions=6", useKafka: "lkc-describe-topic", fixture: "kafka/topic/update-success-rest-partitions-count.golden"},
 
 		// Cluster linking
 		{args: "kafka link create my_link --source-cluster lkc-describe-topic --source-bootstrap-server myhost:1234 --config-file " + getCreateLinkConfigFile(), fixture: "kafka/link/create-link.golden", useKafka: "lkc-describe-topic"},
