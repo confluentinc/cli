@@ -5,6 +5,8 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+
+	"github.com/hashicorp/go-version"
 )
 
 type Version struct {
@@ -28,16 +30,20 @@ func NewVersion(version, commit, buildDate string) *Version {
 	return &Version{
 		Binary:    CLIName,
 		Name:      FullCLIName,
-		Version:   version,
+		Version:   fmt.Sprintf("v%s", version),
 		Commit:    commit,
 		BuildDate: buildDate,
-		UserAgent: fmt.Sprintf("%s/%s (https://confluent.io; support@confluent.io)", dashDelimitedName, version),
-		ClientID:  fmt.Sprintf("%s_%s", dashDelimitedName, version),
+		UserAgent: fmt.Sprintf("%s/v%s (https://confluent.io; support@confluent.io)", dashDelimitedName, version),
+		ClientID:  fmt.Sprintf("%s_v%s", dashDelimitedName, version),
 	}
 }
 
 func (v *Version) IsReleased() bool {
-	return v.Version != "0.0.0" && !strings.Contains(v.Version, "dirty") && !strings.Contains(v.Version, "-g") && !strings.Contains(v.Version, "SNAPSHOT")
+	semver, err := version.NewSemver(v.Version)
+	if err != nil {
+		return false
+	}
+	return semver.GreaterThan(version.Must(version.NewSemver("v0.0.0"))) && semver.Prerelease() == ""
 }
 
 // String returns the version in a standardized format

@@ -133,10 +133,13 @@ func getCmkClusterType(cluster *cmkv2.CmkV2Cluster) string {
 	if isStandard(cluster) {
 		return ccstructs.Sku_name[3]
 	}
+	if isDedicated(cluster) {
+		return ccstructs.Sku_name[4]
+	}
 	if isEnterprise(cluster) {
 		return ccstructs.Sku_name[6]
 	}
-	return ccstructs.Sku_name[4]
+	return ccstructs.Sku_name[0] // UNKNOWN
 }
 
 func getCmkClusterSize(cluster *cmkv2.CmkV2Cluster) int32 {
