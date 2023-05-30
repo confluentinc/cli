@@ -18,3 +18,12 @@ func TestHandlePrimitiveSchemas(t *testing.T) {
 func TestMsgName(t *testing.T) {
 	require.Equal(t, "TopicNameMessage", msgName("topic name"))
 }
+
+func TestTopicMatch(t *testing.T) {
+	userTopics := []string{"topic1", "test*"}
+
+	require.True(t, topicMatch("topic1", userTopics))
+	require.True(t, topicMatch("test_topic", userTopics))
+	require.False(t, topicMatch("topic2", userTopics))
+	require.True(t, topicMatch("topic2", []string{}))
+}
