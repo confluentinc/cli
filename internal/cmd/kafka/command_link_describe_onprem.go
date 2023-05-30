@@ -16,10 +16,9 @@ func (c *linkCommand) newDescribeCommandOnPrem() *cobra.Command {
 		RunE:              c.describeOnPrem,
 	}
 
-	pcmd.AddForceFlag(cmd)
-	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
+	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	pcmd.AddContextFlag(cmd, c.CLICommand)
-	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }

@@ -165,6 +165,7 @@ func (s *CLITestSuite) TestKafka() {
 	tests = []CLITest{
 		{args: "kafka acl create -h", fixture: "kafka/acl/onprem-create-help.golden"},
 		{args: "kafka acl list -h", fixture: "kafka/acl/onprem-list-help.golden"},
+		{args: fmt.Sprintf("kafka link describe link-1 --url %s", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/link/describe-onprem.golden"},
 	}
 
 	resetConfiguration(s.T(), false)
