@@ -35,8 +35,8 @@ func (c *Client) CreateSchemaRegistryCluster(srCluster srcmv2.SrcmV2Cluster) (sr
 	return createdCluster, errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) ListSchemaRegistryRegions(cloud, packageType string) ([]srcm.SrcmV2Region, error) {
-	var list []srcm.SrcmV2Region
+func (c *Client) ListSchemaRegistryRegions(cloud, packageType string) ([]srcmv2.SrcmV2Region, error) {
+	var list []srcmv2.SrcmV2Region
 
 	done := false
 	pageToken := ""
@@ -55,7 +55,7 @@ func (c *Client) ListSchemaRegistryRegions(cloud, packageType string) ([]srcm.Sr
 	return list, nil
 }
 
-func (c *Client) executeListSchemaRegistryRegions(cloud, packageType, pageToken string) (srcm.SrcmV2RegionList, *http.Response, error) {
+func (c *Client) executeListSchemaRegistryRegions(cloud, packageType, pageToken string) (srcmv2.SrcmV2RegionList, *http.Response, error) {
 	req := c.SchemaRegistryClient.RegionsSrcmV2Api.ListSrcmV2Regions(c.SchemaRegistryApiContext())
 	if cloud != "" {
 		req = req.SpecCloud(cloud)

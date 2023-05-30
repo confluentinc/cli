@@ -126,7 +126,7 @@ func (c *command) clusterDescribe(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	query := schemaCountQueryFor(cluster.Id)
+	query := schemaCountQueryFor(cluster.GetId())
 	metricsResponse, httpResp, err := client.MetricsDatasetQuery("cloud", query)
 	if err := ccloudv2.UnmarshalFlatQueryResponseIfDataSchemaMatchError(err, metricsResponse, httpResp); err != nil {
 		return err
@@ -140,7 +140,10 @@ func (c *command) clusterDescribe(cmd *cobra.Command, _ []string) error {
 		}
 		prices, err := c.Client.Billing.GetPriceTable(user.GetOrganization(), streamGovernancePriceTableProductName)
 		if err == nil {
-			internalPackageName, _ := getPackageInternalName(clusterSpec.GetPackage())
+			internalPackageName, err := getPackageInternalName(clusterSpec.GetPackage())
+			if err != nil {
+				return err
+			}
 			priceKey := getMaxSchemaLimitPriceKey(streamGovernanceRegionSpec.GetCloud(), streamGovernanceRegionSpec.GetRegionName(), internalPackageName)
 			freeSchemasLimit = int(prices.GetPriceTable()[schemaRegistryPriceTableName].Prices[priceKey])
 		}
