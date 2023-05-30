@@ -18,7 +18,7 @@ func (c *command) newComputePoolCreateCommand() *cobra.Command {
 
 	pcmd.AddCloudFlag(cmd)
 	c.addRegionFlag(cmd)
-	cmd.Flags().Uint32("cfu", 1, "Number of Confluent Flink Units (CFU).")
+	cmd.Flags().Int32("cfu", 1, "Number of Confluent Flink Units (CFU).")
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
@@ -39,7 +39,7 @@ func (c *command) computePoolCreate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	cfu, err := cmd.Flags().GetUint32("cfu")
+	cfu, err := cmd.Flags().GetInt32("cfu")
 	if err != nil {
 		return err
 	}
@@ -59,7 +59,7 @@ func (c *command) computePoolCreate(cmd *cobra.Command, args []string) error {
 		Cloud:       flinkv2.PtrString(cloud),
 		Region:      flinkv2.PtrString(region),
 		Config:      &flinkv2.FcpmV2ComputePoolSpecConfigOneOf{FcpmV2Standard: &flinkv2.FcpmV2Standard{Kind: "Standard"}},
-		MaxCfu:      flinkv2.PtrInt32(int32(cfu)),
+		MaxCfu:      flinkv2.PtrInt32(cfu),
 		Environment: &flinkv2.GlobalObjectReference{
 			Id:           environmentId,
 			Related:      environment.Metadata.GetSelf(),
