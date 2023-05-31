@@ -117,6 +117,7 @@ func RequireFlagUsageRealWords(flag *pflag.Flag, cmd *cobra.Command) error {
 	if usage == "" {
 		return nil
 	}
+
 	for _, w := range strings.Split(usage, " ") {
 		if ok := vocab.Spell(w); !ok {
 			issue := fmt.Errorf("flag usage should consist of delimited real english words for --%s on `%s` - unknown '%s' in '%s'", flag.Name, FullCommand(cmd), w, usage)

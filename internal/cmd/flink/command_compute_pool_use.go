@@ -12,8 +12,8 @@ import (
 func (c *command) newComputePoolUseCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "use <id>",
-		Short:             "Choose a Flink compute pool to be used in subsequent commands.",
-		Long:              "Choose a Flink compute pool to be used in subsequent commands which support passing a compute pool with the `--compute-pool` flag.",
+		Short:             "Use a compute pool in subsequent commands.",
+		Long:              "Choose a compute pool to be used in subsequent commands which support passing a compute pool with the `--compute-pool` flag.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.computePoolUse,

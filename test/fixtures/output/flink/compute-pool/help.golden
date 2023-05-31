@@ -9,7 +9,7 @@ Available Commands:
   describe    Describe a Flink compute pool.
   list        List Flink compute pools.
   update      Update a Flink compute pool.
-  use         Choose a Flink compute pool to be used in subsequent commands.
+  use         Use a Flink compute pool in subsequent commands.
 
 Global Flags:
   -h, --help            Show help for this command.

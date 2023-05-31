@@ -12,8 +12,8 @@ import (
 func (c *command) newUseCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "use <id>",
-		Short:             "Choose a Confluent Cloud environment to be used in subsequent commands.",
-		Long:              "Choose a Confluent Cloud environment to be used in subsequent commands which support passing an environment with the `--environment` flag.",
+		Short:             "Use an environment in subsequent commands.",
+		Long:              "Choose an environment to be used in subsequent commands which support passing an environment with the `--environment` flag.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.use,
