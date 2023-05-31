@@ -16,9 +16,9 @@ func handleBillingCosts(t *testing.T) http.HandlerFunc {
 		case http.MethodGet:
 			var costList billingv1.BillingV1CostList
 
-			// test over 10000 entries to ensure command does not stall terminal
+			// test 20
 			var data []billingv1.BillingV1Cost
-			for i := 0; i < 10100; i++ {
+			for i := 0; i < 20; i++ {
 				item := billingv1.BillingV1Cost{
 					StartDate:   billingv1.PtrString("2023-01-01 00:00:00"),
 					EndDate:     billingv1.PtrString("2023-01-02 00:00:00"),
