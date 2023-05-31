@@ -15,8 +15,8 @@ type GatewayClientInterface interface {
 	DeleteStatement(statementName string) error
 	GetStatement(statementName string) (flinkgatewayv1alpha1.SqlV1alpha1Statement, error)
 	ListStatements() ([]flinkgatewayv1alpha1.SqlV1alpha1Statement, error)
-	CreateStatement(ctx context.Context, statement string, properties map[string]string) (flinkgatewayv1alpha1.SqlV1alpha1Statement, error)
-	GetStatementResults(ctx context.Context, statementId, pageToken string) (flinkgatewayv1alpha1.SqlV1alpha1StatementResult, error)
+	CreateStatement(statement string, properties map[string]string) (flinkgatewayv1alpha1.SqlV1alpha1Statement, error)
+	GetStatementResults(statementId, pageToken string) (flinkgatewayv1alpha1.SqlV1alpha1StatementResult, error)
 }
 
 type FlinkGatewayClient struct {
@@ -67,7 +67,7 @@ func (c *FlinkGatewayClient) ListStatements() ([]flinkgatewayv1alpha1.SqlV1alpha
 	return resp.GetData(), errors.CatchCCloudV2Error(err, r)
 }
 
-func (c *FlinkGatewayClient) CreateStatement(ctx context.Context, statement string, properties map[string]string) (flinkgatewayv1alpha1.SqlV1alpha1Statement, error) {
+func (c *FlinkGatewayClient) CreateStatement(statement string, properties map[string]string) (flinkgatewayv1alpha1.SqlV1alpha1Statement, error) {
 	statementName := uuid.New().String()[:20]
 	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
 		Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
@@ -77,13 +77,13 @@ func (c *FlinkGatewayClient) CreateStatement(ctx context.Context, statement stri
 			Properties:    &properties,
 		},
 	}
-	req := c.StatementsSqlV1alpha1Api.CreateSqlV1alpha1Statement(ctx, c.envId).SqlV1alpha1Statement(statementObj)
+	req := c.StatementsSqlV1alpha1Api.CreateSqlV1alpha1Statement(c.flinkGatewayApiContext(), c.envId).SqlV1alpha1Statement(statementObj)
 	createdStatement, r, err := req.Execute()
 	return createdStatement, errors.CatchCCloudV2Error(err, r)
 }
 
-func (c *FlinkGatewayClient) GetStatementResults(ctx context.Context, statementId, pageToken string) (flinkgatewayv1alpha1.SqlV1alpha1StatementResult, error) {
-	fetchResultsRequest := c.StatementResultSqlV1alpha1Api.GetSqlV1alpha1StatementResult(ctx, c.envId, statementId)
+func (c *FlinkGatewayClient) GetStatementResults(statementId, pageToken string) (flinkgatewayv1alpha1.SqlV1alpha1StatementResult, error) {
+	fetchResultsRequest := c.StatementResultSqlV1alpha1Api.GetSqlV1alpha1StatementResult(c.flinkGatewayApiContext(), c.envId, statementId)
 	if pageToken != "" {
 		fetchResultsRequest = fetchResultsRequest.PageToken(pageToken)
 	}

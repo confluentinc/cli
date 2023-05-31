@@ -70,7 +70,7 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 	}
 
 	// Process remote statements
-	statementObj, err := s.client.CreateStatement(context.Background(), statement, s.Properties)
+	statementObj, err := s.client.CreateStatement(statement, s.Properties)
 	if err != nil {
 		return nil, &types.StatementError{Msg: err.Error()}
 	}
@@ -127,7 +127,7 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 	runningNoTokenRetries := 5
 	for i := 0; i < runningNoTokenRetries; i++ {
 		// TODO: we need to retry a few times on transient errors
-		statementResultObj, err := s.client.GetStatementResults(context.Background(), statement.StatementName, pageToken)
+		statementResultObj, err := s.client.GetStatementResults(statement.StatementName, pageToken)
 		if err != nil {
 			return nil, &types.StatementError{Msg: err.Error()}
 		}

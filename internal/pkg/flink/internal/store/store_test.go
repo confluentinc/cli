@@ -573,7 +573,7 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWithCompletedStatement() {
 		Metadata: v1.ResultListMeta{},
 		Results:  &v1.SqlV1alpha1StatementResultResults{},
 	}
-	client.EXPECT().GetStatementResults(gomock.Any(), statement.StatementName, statement.PageToken).Return(statementResultObj, nil)
+	client.EXPECT().GetStatementResults(statement.StatementName, statement.PageToken).Return(statementResultObj, nil)
 
 	statementResults, err := store.FetchStatementResults(statement)
 	require.NotNil(s.T(), statementResults)
@@ -597,7 +597,7 @@ func (s *StoreTestSuite) TestFetchResultsRetryWithRunningStatement() {
 		Metadata: v1.ResultListMeta{},
 		Results:  &v1.SqlV1alpha1StatementResultResults{},
 	}
-	client.EXPECT().GetStatementResults(gomock.Any(), statement.StatementName, statement.PageToken).Return(statementResultObj, nil).Times(5)
+	client.EXPECT().GetStatementResults(statement.StatementName, statement.PageToken).Return(statementResultObj, nil).Times(5)
 
 	statementResults, err := store.FetchStatementResults(statement)
 	require.NotNil(s.T(), statementResults)
@@ -622,7 +622,7 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWhenPageTokenExists() {
 		Metadata: v1.ResultListMeta{Next: &nextPage},
 		Results:  &v1.SqlV1alpha1StatementResultResults{},
 	}
-	client.EXPECT().GetStatementResults(gomock.Any(), statement.StatementName, statement.PageToken).Return(statementResultObj, nil)
+	client.EXPECT().GetStatementResults(statement.StatementName, statement.PageToken).Return(statementResultObj, nil)
 
 	statementResults, err := store.FetchStatementResults(statement)
 	require.NotNil(s.T(), statementResults)
@@ -647,7 +647,7 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWhenResultsExist() {
 		Metadata: v1.ResultListMeta{},
 		Results:  &v1.SqlV1alpha1StatementResultResults{Data: &[]v1.SqlV1alpha1ResultItem{{Op: &op}}},
 	}
-	client.EXPECT().GetStatementResults(gomock.Any(), statement.StatementName, statement.PageToken).Return(statementResultObj, nil)
+	client.EXPECT().GetStatementResults(statement.StatementName, statement.PageToken).Return(statementResultObj, nil)
 
 	statementResults, err := store.FetchStatementResults(statement)
 	require.NotNil(s.T(), statementResults)
