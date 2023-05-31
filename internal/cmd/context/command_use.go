@@ -9,7 +9,8 @@ import (
 func (c *command) newUseCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:               "use <context>",
-		Short:             "Use a context.",
+		Short:             "Choose a context to be used in subsequent commands.",
+		Long:              "Choose a context to be used in subsequent commands which support passing a context with the `--context` flag.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.use,
@@ -17,12 +18,10 @@ func (c *command) newUseCommand() *cobra.Command {
 }
 
 func (c *command) use(cmd *cobra.Command, args []string) error {
-	name := args[0]
-
-	if err := c.Config.UseContext(name); err != nil {
+	if err := c.Config.UseContext(args[0]); err != nil {
 		return err
 	}
 
-	cmd.Printf("Using context \"%s\".\n", name)
+	cmd.Printf("Using context \"%s\".\n", args[0])
 	return nil
 }
