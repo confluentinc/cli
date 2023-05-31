@@ -217,6 +217,13 @@ func (c *Context) GetCurrentEnvironment() string {
 	return ""
 }
 
+func (c *Context) GetCurrentEnvironmentContext() *EnvironmentContext {
+	if id := c.GetCurrentEnvironment(); id != "" {
+		return c.Environments[id]
+	}
+	return nil
+}
+
 func (c *Context) SetCurrentEnvironment(id string) {
 	c.CurrentEnvironment = id
 
@@ -238,6 +245,40 @@ func (c *Context) AddEnvironment(id string) {
 
 func (c *Context) DeleteEnvironment(id string) {
 	delete(c.Environments, id)
+}
+
+func (c *Context) GetCurrentFlinkComputePool() string {
+	if ctx := c.GetCurrentEnvironmentContext(); ctx != nil {
+		return ctx.CurrentFlinkComputePool
+	}
+	return ""
+}
+
+func (c *Context) SetCurrentFlinkComputePool(id string) error {
+	ctx := c.GetCurrentEnvironmentContext()
+	if ctx == nil {
+		return fmt.Errorf("no environment found")
+	}
+
+	ctx.CurrentFlinkComputePool = id
+	return nil
+}
+
+func (c *Context) GetCurrentIdentityPool() string {
+	if ctx := c.GetCurrentEnvironmentContext(); ctx != nil {
+		return ctx.CurrentIdentityPool
+	}
+	return ""
+}
+
+func (c *Context) SetCurrentIdentityPool(id string) error {
+	ctx := c.GetCurrentEnvironmentContext()
+	if ctx == nil {
+		return fmt.Errorf("no environment found")
+	}
+
+	ctx.CurrentIdentityPool = id
+	return nil
 }
 
 func (c *Context) GetAuthToken() string {
