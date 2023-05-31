@@ -148,7 +148,8 @@ func (c *AuthenticatedCLICommand) GetFlinkGatewayClient() (*ccloudv2.FlinkGatewa
 			ctx.GetCurrentEnvironment(),
 			ctx.GetCurrentOrganization(),
 			ctx.KafkaClusterContext.GetActiveKafkaClusterId(),
-			ctx.GetCurrentFlinkComputePool())
+			ctx.GetCurrentFlinkComputePool(),
+			ctx.GetCurrentIdentityPool())
 	}
 
 	return c.flinkGatewayClient, nil

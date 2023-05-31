@@ -25,7 +25,12 @@ func (c *command) newComputePoolUseCommand() *cobra.Command {
 }
 
 func (c *command) computePoolUse(cmd *cobra.Command, args []string) error {
-	if err := c.Context.SetCurrentFlinkComputePool(args[0]); err != nil {
+	id := args[0]
+	if _, err := c.V2Client.DescribeFlinkComputePool(id, c.Context.GetCurrentEnvironment()); err != nil {
+		return errors.NewErrorWithSuggestions(err.Error(), "List available compute pools with `confluent flink compute-pool list`.")
+	}
+
+	if err := c.Context.SetCurrentFlinkComputePool(id); err != nil {
 		return err
 	}
 	if err := c.Config.Save(); err != nil {

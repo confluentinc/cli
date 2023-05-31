@@ -81,7 +81,11 @@ func (c *InputController) RunInteractiveInput() {
 		input := c.prompt.Input()
 		restoreStdin(stdinState)
 
-		if c.shouldExit {
+		// If the user presses CtrlD then go prompt returns and empty input
+		// This is the only way go-prompt returns an empty input since we have a multiline prompt
+		// The custom CtrlD keybind we have is only trigered if there's something in the buffer
+		// due go-prompt always exiting on CtrlD. By modifying go-prompt we could also fix this
+		if c.shouldExit || input == "" {
 			c.appController.ExitApplication()
 		}
 

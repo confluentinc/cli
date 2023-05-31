@@ -2,21 +2,21 @@ package ccloudv2
 
 import (
 	"context"
-	"fmt"
+	"os/user"
+
 	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"
+
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/flink/config"
 	"github.com/google/uuid"
-	"os/user"
-	"time"
 )
 
 type GatewayClientInterface interface {
 	DeleteStatement(statementName string) error
 	GetStatement(statementName string) (flinkgatewayv1alpha1.SqlV1alpha1Statement, error)
 	ListStatements() ([]flinkgatewayv1alpha1.SqlV1alpha1Statement, error)
-	CreateStatement(ctx context.Context, statement string, properties map[string]string) (flinkgatewayv1alpha1.SqlV1alpha1Statement, error)
-	GetStatementResults(ctx context.Context, statementId, pageToken string) (flinkgatewayv1alpha1.SqlV1alpha1StatementResult, error)
+	CreateStatement(statement string, properties map[string]string) (flinkgatewayv1alpha1.SqlV1alpha1Statement, error)
+	GetStatementResults(statementId, pageToken string) (flinkgatewayv1alpha1.SqlV1alpha1StatementResult, error)
 }
 
 type FlinkGatewayClient struct {
@@ -26,9 +26,10 @@ type FlinkGatewayClient struct {
 	orgResourceId  string
 	kafkaClusterId string
 	computePoolId  string
+	identityPoolId string
 }
 
-func NewFlinkGatewayClient(url, userAgent string, unsafeTrace bool, authToken func() string, envId, orgResourceId, kafkaClusterId, computePoolId string) *FlinkGatewayClient {
+func NewFlinkGatewayClient(url, userAgent string, unsafeTrace bool, authToken func() string, envId, orgResourceId, kafkaClusterId, computePoolId, identityPoolId string) *FlinkGatewayClient {
 	cfg := flinkgatewayv1alpha1.NewConfiguration()
 	cfg.Debug = unsafeTrace
 	cfg.HTTPClient = newRetryableHttpClient(unsafeTrace)
@@ -42,6 +43,7 @@ func NewFlinkGatewayClient(url, userAgent string, unsafeTrace bool, authToken fu
 		orgResourceId:  orgResourceId,
 		kafkaClusterId: kafkaClusterId,
 		computePoolId:  computePoolId,
+		identityPoolId: identityPoolId,
 	}
 }
 
@@ -67,23 +69,26 @@ func (c *FlinkGatewayClient) ListStatements() ([]flinkgatewayv1alpha1.SqlV1alpha
 	return resp.GetData(), errors.CatchCCloudV2Error(err, r)
 }
 
-func (c *FlinkGatewayClient) CreateStatement(ctx context.Context, statement string, properties map[string]string) (flinkgatewayv1alpha1.SqlV1alpha1Statement, error) {
+func (c *FlinkGatewayClient) CreateStatement(statement string, properties map[string]string) (flinkgatewayv1alpha1.SqlV1alpha1Statement, error) {
 	statementName := uuid.New().String()[:20]
+	properties = c.propsDefault(properties)
+
 	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
 		Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
-			StatementName: &statementName,
-			Statement:     &statement,
-			ComputePoolId: &c.computePoolId,
-			Properties:    &properties,
+			StatementName:  &statementName,
+			Statement:      &statement,
+			ComputePoolId:  &c.computePoolId,
+			IdentityPoolId: &c.identityPoolId,
+			Properties:     &properties,
 		},
 	}
-	req := c.StatementsSqlV1alpha1Api.CreateSqlV1alpha1Statement(ctx, c.envId).SqlV1alpha1Statement(statementObj)
+	req := c.StatementsSqlV1alpha1Api.CreateSqlV1alpha1Statement(c.flinkGatewayApiContext(), c.envId).SqlV1alpha1Statement(statementObj)
 	createdStatement, r, err := req.Execute()
 	return createdStatement, errors.CatchCCloudV2Error(err, r)
 }
 
-func (c *FlinkGatewayClient) GetStatementResults(ctx context.Context, statementId, pageToken string) (flinkgatewayv1alpha1.SqlV1alpha1StatementResult, error) {
-	fetchResultsRequest := c.StatementResultSqlV1alpha1Api.GetSqlV1alpha1StatementResult(ctx, c.envId, statementId)
+func (c *FlinkGatewayClient) GetStatementResults(statementId, pageToken string) (flinkgatewayv1alpha1.SqlV1alpha1StatementResult, error) {
+	fetchResultsRequest := c.StatementResultSqlV1alpha1Api.GetSqlV1alpha1StatementResult(c.flinkGatewayApiContext(), c.envId, statementId)
 	if pageToken != "" {
 		fetchResultsRequest = fetchResultsRequest.PageToken(pageToken)
 	}
@@ -111,9 +116,6 @@ func (c *FlinkGatewayClient) propsDefault(propsWithoutDefault map[string]string)
 	if _, ok := properties[config.ConfigKeyExecutionRuntime]; !ok {
 		properties[config.ConfigKeyExecutionRuntime] = "streaming"
 	}
-	if _, ok := properties[config.ConfigKeyLocalTimeZone]; !ok {
-		properties[config.ConfigKeyLocalTimeZone] = getLocalTimezone()
-	}
 
 	currentUser, _ := user.Current()
 
@@ -126,24 +128,4 @@ func (c *FlinkGatewayClient) propsDefault(propsWithoutDefault map[string]string)
 	delete(properties, config.ConfigKeyResultsTimeout)
 
 	return properties
-}
-
-// This returns the local timezone as a custom timezone along with the offset to UTC
-// Example: UTC+02:00 or UTC-08:00
-func getLocalTimezone() string {
-	_, offsetSeconds := time.Now().Zone()
-	return formatUTCOffsetToTimezone(offsetSeconds)
-}
-
-func formatUTCOffsetToTimezone(offsetSeconds int) string {
-	timeOffset := time.Duration(offsetSeconds) * time.Second
-	sign := "+"
-	if offsetSeconds < 0 {
-		sign = "-"
-		timeOffset *= -1
-	}
-	offsetStr := fmt.Sprintf("%02d:%02d", int(timeOffset.Hours()), int(timeOffset.Minutes())%60)
-	formattedTimezone := fmt.Sprintf("UTC%s%s", sign, offsetStr)
-
-	return formattedTimezone
 }

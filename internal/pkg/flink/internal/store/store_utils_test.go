@@ -1,9 +1,10 @@
 package store
 
 import (
+	"testing"
+
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/flink/config"
-	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -79,7 +80,7 @@ func TestRemoveWhiteSpaces(t *testing.T) {
 
 func TestProcessSetStatement(t *testing.T) {
 	// Create a new store
-	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, func() string { return "authToken" }, "envId", "orgResourceId", "kafkaClusterId", "computePoolId")
+	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, func() string { return "authToken" }, "envId", "orgResourceId", "kafkaClusterId", "computePoolId", "identityPoolId")
 	s := NewStore(client, nil, nil).(*Store)
 
 	t.Run("should return an error message if statement is invalid", func(t *testing.T) {
@@ -100,7 +101,7 @@ func TestProcessSetStatement(t *testing.T) {
 	})
 
 	t.Run("should update config for valid configKey", func(t *testing.T) {
-		result, err := s.processSetStatement("set location=USA")
+		result, err := s.processSetStatement("set 'location'='USA'")
 		assert.Nil(t, err)
 		assert.EqualValues(t, types.COMPLETED, result.Status)
 		assert.Equal(t, "Config updated successfully.", result.StatusDetail)
@@ -128,7 +129,7 @@ func TestProcessSetStatement(t *testing.T) {
 
 func TestProcessResetStatement(t *testing.T) {
 	// Create a new store
-	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, func() string { return "authToken" }, "envId", "orgResourceId", "kafkaClusterId", "computePoolId")
+	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, func() string { return "authToken" }, "envId", "orgResourceId", "kafkaClusterId", "computePoolId", "identityPoolId")
 	s := NewStore(client, nil, nil).(*Store)
 
 	t.Run("should return an error message if statement is invalid", func(t *testing.T) {
@@ -146,7 +147,7 @@ func TestProcessResetStatement(t *testing.T) {
 	})
 
 	t.Run("should return an error message if configKey does not exist", func(t *testing.T) {
-		result, err := s.processResetStatement("reset location")
+		result, err := s.processResetStatement("reset 'location'")
 		assert.NotNil(t, err)
 		assert.Equal(t, "Error: Config key \"location\" is currently not set.", err.Error())
 		assert.Nil(t, result)
@@ -154,7 +155,7 @@ func TestProcessResetStatement(t *testing.T) {
 
 	t.Run("should reset config for valid configKey", func(t *testing.T) {
 		s.Properties["pipeline.name"] = "job1"
-		result, _ := s.processResetStatement("reset pipeline.name")
+		result, _ := s.processResetStatement("reset 'pipeline.name'")
 		assert.EqualValues(t, types.COMPLETED, result.Status)
 		assert.Equal(t, "Config key \"pipeline.name\" has been reset successfully.", result.StatusDetail)
 		expectedResult := createStatementResults([]string{"Key", "Value"}, [][]string{})
@@ -171,7 +172,7 @@ func TestProcessResetStatement(t *testing.T) {
 
 func TestProcessUseStatement(t *testing.T) {
 	// Create a new store
-	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, func() string { return "authToken" }, "envId", "orgResourceId", "kafkaClusterId", "computePoolId")
+	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, func() string { return "authToken" }, "envId", "orgResourceId", "kafkaClusterId", "computePoolId", "identityPoolId")
 	s := NewStore(client, nil, nil).(*Store)
 
 	t.Run("should return an error message if statement is invalid", func(t *testing.T) {
