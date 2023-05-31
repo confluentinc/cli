@@ -21,6 +21,7 @@ func main() {
 		"d07e2cb7-52df-451b-bf4b-b8bd81e0d20c",
 		"playback",
 		"lfcp-10vygz",
+		"idp-id-123",
 		func() string { return "authToken" },
 		func() error { return nil },
 		&types.ApplicationOptions{

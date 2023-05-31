@@ -7,11 +7,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"io"
 	"net/http"
 	"testing"
 	"time"
+
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 
 	gomock "github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -35,7 +36,7 @@ func TestStoreTestSuite(t *testing.T) {
 
 func TestStoreProcessLocalStatement(t *testing.T) {
 	// Create a new store
-	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, func() string { return "authToken" }, "envId", "orgResourceId", "kafkaClusterId", "computePoolId")
+	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, func() string { return "authToken" }, "envId", "orgResourceId", "kafkaClusterId", "computePoolId", "identityPoolId")
 	mockAppController := mock.NewMockApplicationControllerInterface(gomock.NewController(t))
 	s := NewStore(client, mockAppController.ExitApplication, nil).(*Store)
 

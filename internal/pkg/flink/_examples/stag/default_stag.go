@@ -13,6 +13,7 @@ func main() {
 		"4d86a35c-ede5-4767-b82d-0b426e565d67",
 		"cluster",
 		"lfcp-8qndv5",
+		"idp-id-123",
 		func() string { return "authToken" },
 		func() error { return nil },
 		&types.ApplicationOptions{

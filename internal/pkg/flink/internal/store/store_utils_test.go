@@ -1,9 +1,10 @@
 package store
 
 import (
+	"testing"
+
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/flink/config"
-	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -79,7 +80,7 @@ func TestRemoveWhiteSpaces(t *testing.T) {
 
 func TestProcessSetStatement(t *testing.T) {
 	// Create a new store
-	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, func() string { return "authToken" }, "envId", "orgResourceId", "kafkaClusterId", "computePoolId")
+	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, func() string { return "authToken" }, "envId", "orgResourceId", "kafkaClusterId", "computePoolId", "identityPoolId")
 	s := NewStore(client, nil, nil).(*Store)
 
 	t.Run("should return an error message if statement is invalid", func(t *testing.T) {
@@ -128,7 +129,7 @@ func TestProcessSetStatement(t *testing.T) {
 
 func TestProcessResetStatement(t *testing.T) {
 	// Create a new store
-	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, func() string { return "authToken" }, "envId", "orgResourceId", "kafkaClusterId", "computePoolId")
+	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, func() string { return "authToken" }, "envId", "orgResourceId", "kafkaClusterId", "computePoolId", "identityPoolId")
 	s := NewStore(client, nil, nil).(*Store)
 
 	t.Run("should return an error message if statement is invalid", func(t *testing.T) {
@@ -171,7 +172,7 @@ func TestProcessResetStatement(t *testing.T) {
 
 func TestProcessUseStatement(t *testing.T) {
 	// Create a new store
-	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, func() string { return "authToken" }, "envId", "orgResourceId", "kafkaClusterId", "computePoolId")
+	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, func() string { return "authToken" }, "envId", "orgResourceId", "kafkaClusterId", "computePoolId", "identityPoolId")
 	s := NewStore(client, nil, nil).(*Store)
 
 	t.Run("should return an error message if statement is invalid", func(t *testing.T) {

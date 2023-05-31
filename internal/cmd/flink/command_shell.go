@@ -20,6 +20,7 @@ func (c *command) newShellCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		},
 	}
 	cmd.Flags().String("compute-pool", "", "Flink compute pool ID.")
+	cmd.Flags().String("identity-pool", "", "Identity pool ID.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -49,16 +50,32 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 
 	// Compute pool can be set as a flag or as default in the context
 	computePoolId, err := cmd.Flags().GetString("compute-pool")
-	if computePoolId == "" || err != nil {
+	if err != nil {
+		return err
+	}
+	if computePoolId == "" {
 		if c.Context.GetCurrentFlinkComputePool() == "" {
 			return errors.NewErrorWithSuggestions("No compute pool set", "Please set a compute pool to be used. You can either set a default persitent compute pool \"confluent flink compute-pool use lfc-123\" or pass the flag \"--compute-pool lfcp-12345\".")
-		} else {
-			computePoolId = c.Context.GetCurrentFlinkComputePool()
 		}
+		computePoolId = c.Context.GetCurrentFlinkComputePool()
+	}
+
+	identityPool, err := cmd.Flags().GetString("identity-pool")
+	if err != nil {
+		return err
+	}
+	if identityPool == "" {
+		if c.Context.GetCurrentIdentityPool() == "" {
+			return errors.NewErrorWithSuggestions("no identity pool set", "Set a persistent identity pool with `confluent iam pool use` or pass the `--identity-pool` flag.")
+		}
+		identityPool = c.Context.GetCurrentIdentityPool()
 	}
 
 	kafkaClusterId, err := cmd.Flags().GetString("kafka-cluster")
-	if kafkaClusterId == "" || err != nil {
+	if err != nil {
+		return err
+	}
+	if kafkaClusterId == "" {
 		if c.Context.KafkaClusterContext.GetActiveKafkaClusterId() != "" {
 			kafkaClusterId = c.Context.KafkaClusterContext.GetActiveKafkaClusterId()
 		}
@@ -85,7 +102,7 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		return err
 	}
 
-	client.StartApp(environmentId, resourceId, kafkaClusterId, computePoolId, c.AuthToken,
+	client.StartApp(environmentId, resourceId, kafkaClusterId, computePoolId, identityPoolId, c.AuthToken,
 		c.authenticated(prerunner.Authenticated(c.AuthenticatedCLICommand), cmd),
 		&types.ApplicationOptions{
 			FLINK_GATEWAY_URL:        parsedUrl.String(),

@@ -14,7 +14,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
 )
 
-func StartApp(envId, orgResourceId, kafkaClusterId, computePoolId string, authToken func() string, authenticated func() error, appOptions *types.ApplicationOptions) {
+func StartApp(envId, orgResourceId, kafkaClusterId, computePoolId, identityPool string, authToken func() string, authenticated func() error, appOptions *types.ApplicationOptions) {
 	var once sync.Once
 
 	// Client used to communicate with the gateway
@@ -26,7 +26,9 @@ func StartApp(envId, orgResourceId, kafkaClusterId, computePoolId string, authTo
 		envId,
 		orgResourceId,
 		kafkaClusterId,
-		computePoolId)
+		computePoolId,
+		identityPool,
+	)
 
 	// Load history of previous commands from cache file
 	history := history.LoadHistory()

@@ -1,8 +1,11 @@
 package config
 
-import "github.com/confluentinc/cli/internal/pkg/types"
+import (
+	"github.com/confluentinc/cli/internal/pkg/types"
+)
 
 // These are all Flink SQL reserved keywords extracted from https://nightlies.apache.org/flink/flink-docs-release-1.16/docs/dev/table/sql/overview/
+
 var SQLKeywords = types.NewSet(
 	"USE",
 	"SHOW",
