@@ -3,8 +3,9 @@ package flink
 import (
 	"fmt"
 
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/spf13/cobra"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
 type statementOut struct {

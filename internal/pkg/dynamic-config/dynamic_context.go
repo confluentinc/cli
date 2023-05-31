@@ -53,7 +53,9 @@ func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, client *cclou
 	if computePool, _ := cmd.Flags().GetString("compute-pool"); computePool != "" {
 		ctx := d.Config.Context()
 		d.Config.SetOverwrittenFlinkComputePool(ctx.GetCurrentFlinkComputePool())
-		ctx.SetCurrentFlinkComputePool(computePool)
+		if err := ctx.SetCurrentFlinkComputePool(computePool); err != nil {
+			return err
+		}
 	}
 
 	return nil
