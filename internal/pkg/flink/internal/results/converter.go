@@ -11,27 +11,27 @@ var nullField = types.AtomicStatementResultField{
 	Value: "NULL",
 }
 
-type SDKToStatementResultFieldConverter func(any) types.StatementResultField
+type SDKToStatementResultFieldConverter func(v1.SqlV1alpha1ResultItemRowOneOf) types.StatementResultField
 
 func GetConverterForType(dataType v1.DataType) SDKToStatementResultFieldConverter {
 	fieldType := types.NewResultFieldType(dataType)
 	switch fieldType {
 	case types.ARRAY:
-		elementType := dataType.GetElementType()
+		elementType := dataType.ArrayType.GetArrayElementType()
 		return toArrayStatementResultFieldConverter(elementType)
 	case types.MULTISET:
-		keyType := dataType.GetElementType()
-		valueType := v1.DataType{
+		keyType := dataType.MultisetType.GetMultisetElementType()
+		valueType := v1.DataType{IntegerType: &v1.IntegerType{
 			Nullable: false,
 			Type:     "INTEGER",
-		}
+		}}
 		return toMapStatementResultFieldConverter(fieldType, keyType, valueType)
 	case types.MAP:
-		keyType := dataType.GetKeyType()
-		valueType := dataType.GetValueType()
+		keyType := dataType.MapType.GetKeyType()
+		valueType := dataType.MapType.GetValueType()
 		return toMapStatementResultFieldConverter(fieldType, keyType, valueType)
 	case types.ROW:
-		elementTypes := dataType.GetFields()
+		elementTypes := dataType.RowType.GetFields()
 		return toRowStatementResultFieldConverter(elementTypes)
 	default:
 		return toAtomicStatementResultFieldConverter(fieldType)
@@ -39,27 +39,25 @@ func GetConverterForType(dataType v1.DataType) SDKToStatementResultFieldConverte
 }
 
 func toAtomicStatementResultFieldConverter(fieldType types.StatementResultFieldType) SDKToStatementResultFieldConverter {
-	return func(field any) types.StatementResultField {
-		atomicField, ok := field.(string)
-		if !ok {
+	return func(field v1.SqlV1alpha1ResultItemRowOneOf) types.StatementResultField {
+		if field.SqlV1alpha1ResultItemString == nil {
 			return nullField
 		}
 		return types.AtomicStatementResultField{
 			Type:  fieldType,
-			Value: atomicField,
+			Value: string(*field.SqlV1alpha1ResultItemString),
 		}
 	}
 }
 
 func toArrayStatementResultFieldConverter(elementType v1.DataType) SDKToStatementResultFieldConverter {
 	toStatementResultFieldConverter := GetConverterForType(elementType)
-	return func(field any) types.StatementResultField {
-		arrayField, ok := field.([]any)
-		if !ok {
+	return func(field v1.SqlV1alpha1ResultItemRowOneOf) types.StatementResultField {
+		if field.SqlV1alpha1ResultItemRow == nil {
 			return nullField
 		}
 		var values []types.StatementResultField
-		for _, item := range arrayField {
+		for _, item := range field.SqlV1alpha1ResultItemRow.Items {
 			values = append(values, toStatementResultFieldConverter(item))
 		}
 		return types.ArrayStatementResultField{
@@ -73,20 +71,18 @@ func toArrayStatementResultFieldConverter(elementType v1.DataType) SDKToStatemen
 func toMapStatementResultFieldConverter(fieldType types.StatementResultFieldType, keyType, valueType v1.DataType) SDKToStatementResultFieldConverter {
 	keyToStatementResultFieldConverter := GetConverterForType(keyType)
 	valueToStatementResultFieldConverter := GetConverterForType(valueType)
-	return func(field any) types.StatementResultField {
-		mapField, ok := field.([]any)
-		if !ok {
+	return func(field v1.SqlV1alpha1ResultItemRowOneOf) types.StatementResultField {
+		if field.SqlV1alpha1ResultItemRow == nil {
 			return nullField
 		}
 		var entries []types.MapStatementResultFieldEntry
-		for _, mapEntry := range mapField {
-			mapEntry, ok := mapEntry.([]any)
-			if !ok || len(mapEntry) != 2 {
+		for _, mapEntry := range field.SqlV1alpha1ResultItemRow.Items {
+			if mapEntry.SqlV1alpha1ResultItemRow == nil || len(mapEntry.SqlV1alpha1ResultItemRow.Items) != 2 {
 				return nullField
 			}
 
-			key := mapEntry[0]
-			value := mapEntry[1]
+			key := mapEntry.SqlV1alpha1ResultItemRow.Items[0]
+			value := mapEntry.SqlV1alpha1ResultItemRow.Items[1]
 			entry := types.MapStatementResultFieldEntry{
 				Key:   keyToStatementResultFieldConverter(key),
 				Value: valueToStatementResultFieldConverter(value),
@@ -103,15 +99,14 @@ func toMapStatementResultFieldConverter(fieldType types.StatementResultFieldType
 }
 
 func toRowStatementResultFieldConverter(elementTypes []v1.RowFieldType) SDKToStatementResultFieldConverter {
-	return func(field any) types.StatementResultField {
-		rowField, ok := field.([]any)
-		if !ok || len(rowField) != len(elementTypes) {
+	return func(field v1.SqlV1alpha1ResultItemRowOneOf) types.StatementResultField {
+		if field.SqlV1alpha1ResultItemRow == nil || len(field.SqlV1alpha1ResultItemRow.Items) != len(elementTypes) {
 			return nullField
 		}
 		var elementResultFieldTypes []types.StatementResultFieldType
 		var values []types.StatementResultField
-		for idx, item := range rowField {
-			elementType := elementTypes[idx].GetFieldType()
+		for idx, item := range field.SqlV1alpha1ResultItemRow.Items {
+			elementType := elementTypes[idx].GetType()
 			toStatementResultFieldConverter := GetConverterForType(elementType)
 			convertedElement := toStatementResultFieldConverter(item)
 			elementResultFieldTypes = append(elementResultFieldTypes, convertedElement.GetType())

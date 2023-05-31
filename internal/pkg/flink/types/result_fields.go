@@ -38,56 +38,76 @@ const (
 type StatementResultFieldType string
 
 func NewResultFieldType(obj v1.DataType) StatementResultFieldType {
-	switch obj.Type {
-	case "CHAR":
-		return CHAR
-	case "VARCHAR":
-		return VARCHAR
-	case "BOOLEAN":
-		return BOOLEAN
-	case "BINARY":
-		return BINARY
-	case "VARBINARY":
-		return VARBINARY
-	case "DECIMAL":
-		return DECIMAL
-	case "TINYINT":
-		return TINYINT
-	case "SMALLINT":
-		return SMALLINT
-	case "INTEGER":
-		return INTEGER
-	case "BIGINT":
-		return BIGINT
-	case "FLOAT":
-		return FLOAT
-	case "DOUBLE":
-		return DOUBLE
-	case "DATE":
-		return DATE
-	case "TIME_WITHOUT_TIME_ZONE":
-		return TIME_WITHOUT_TIME_ZONE
-	case "TIMESTAMP_WITHOUT_TIME_ZONE":
-		return TIMESTAMP_WITHOUT_TIME_ZONE
-	case "TIMESTAMP_WITH_TIME_ZONE":
-		return TIMESTAMP_WITH_TIME_ZONE
-	case "TIMESTAMP_WITH_LOCAL_TIME_ZONE":
-		return TIMESTAMP_WITH_LOCAL_TIME_ZONE
-	case "INTERVAL_YEAR_MONTH":
-		return INTERVAL_YEAR_MONTH
-	case "INTERVAL_DAY_TIME":
-		return INTERVAL_DAY_TIME
-	case "ARRAY":
+	if obj.ArrayType != nil {
 		return ARRAY
-	case "MULTISET":
-		return MULTISET
-	case "MAP":
-		return MAP
-	case "ROW":
-		return ROW
-	default:
-		return NULL
 	}
+	if obj.BigIntType != nil {
+		return BIGINT
+	}
+	if obj.BinaryType != nil {
+		return BINARY
+	}
+	if obj.BooleanType != nil {
+		return BOOLEAN
+	}
+	if obj.CharType != nil {
+		return CHAR
+	}
+	if obj.DateType != nil {
+		return DATE
+	}
+	if obj.DecimalType != nil {
+		return DECIMAL
+	}
+	if obj.DoubleType != nil {
+		return DOUBLE
+	}
+	if obj.FloatType != nil {
+		return FLOAT
+	}
+	if obj.IntegerType != nil {
+		return INTEGER
+	}
+	if obj.IntervalDayTimeType != nil {
+		return INTERVAL_DAY_TIME
+	}
+	if obj.IntervalYearMonthType != nil {
+		return INTERVAL_YEAR_MONTH
+	}
+	if obj.MapType != nil {
+		return MAP
+	}
+	if obj.MultisetType != nil {
+		return MULTISET
+	}
+	if obj.RowType != nil {
+		return ROW
+	}
+	if obj.SmallIntType != nil {
+		return SMALLINT
+	}
+	if obj.TimeWithoutTimeZoneType != nil {
+		return TIME_WITHOUT_TIME_ZONE
+	}
+	if obj.TimestampWithLocalTimeZoneType != nil {
+		return TIMESTAMP_WITH_LOCAL_TIME_ZONE
+	}
+	if obj.TimestampWithTimeZoneType != nil {
+		return TIMESTAMP_WITH_TIME_ZONE
+	}
+	if obj.TimestampWithoutTimeZoneType != nil {
+		return TIMESTAMP_WITHOUT_TIME_ZONE
+	}
+	if obj.TinyIntType != nil {
+		return TINYINT
+	}
+	if obj.VarbinaryType != nil {
+		return VARBINARY
+	}
+	if obj.VarcharType != nil {
+		return VARCHAR
+	}
+	return NULL
 }
 
 type FormatterOptions struct {
@@ -104,7 +124,7 @@ func (f *FormatterOptions) GetMaxCharCountToDisplay() int {
 type StatementResultField interface {
 	GetType() StatementResultFieldType
 	Format(*FormatterOptions) string
-	ToSDKType() any
+	ToSDKType() v1.SqlV1alpha1ResultItemRowOneOf
 }
 
 type AtomicStatementResultField struct {
@@ -123,11 +143,12 @@ func (f AtomicStatementResultField) Format(options *FormatterOptions) string {
 	return f.Value
 }
 
-func (f AtomicStatementResultField) ToSDKType() any {
+func (f AtomicStatementResultField) ToSDKType() v1.SqlV1alpha1ResultItemRowOneOf {
+	val := v1.SqlV1alpha1ResultItemString(f.Value)
 	if f.Type == NULL {
-		return nil
+		return v1.SqlV1alpha1ResultItemRowOneOf{}
 	}
-	return f.Value
+	return v1.SqlV1alpha1ResultItemRowOneOf{SqlV1alpha1ResultItemString: &val}
 }
 
 type ArrayStatementResultField struct {
@@ -157,12 +178,12 @@ func (f ArrayStatementResultField) Format(options *FormatterOptions) string {
 	return sb.String()
 }
 
-func (f ArrayStatementResultField) ToSDKType() any {
-	items := make([]any, len(f.Values))
+func (f ArrayStatementResultField) ToSDKType() v1.SqlV1alpha1ResultItemRowOneOf {
+	items := make([]v1.SqlV1alpha1ResultItemRowOneOf, len(f.Values))
 	for idx, item := range f.Values {
 		items[idx] = item.ToSDKType()
 	}
-	return items
+	return v1.SqlV1alpha1ResultItemRowOneOf{SqlV1alpha1ResultItemRow: &v1.SqlV1alpha1ResultItemRow{Items: items}}
 }
 
 type MapStatementResultFieldEntry struct {
@@ -198,12 +219,15 @@ func (f MapStatementResultField) Format(options *FormatterOptions) string {
 	return sb.String()
 }
 
-func (f MapStatementResultField) ToSDKType() any {
-	mapItems := make([]any, len(f.Entries))
+func (f MapStatementResultField) ToSDKType() v1.SqlV1alpha1ResultItemRowOneOf {
+	mapItems := make([]v1.SqlV1alpha1ResultItemRowOneOf, len(f.Entries))
 	for idx, entry := range f.Entries {
-		mapItems[idx] = []any{entry.Key.ToSDKType(), entry.Value.ToSDKType()}
+		var keyValuePair []v1.SqlV1alpha1ResultItemRowOneOf
+		keyValuePair = append(keyValuePair, entry.Key.ToSDKType(), entry.Value.ToSDKType())
+		resultItemRowOneOf := v1.SqlV1alpha1ResultItemRowOneOf{SqlV1alpha1ResultItemRow: &v1.SqlV1alpha1ResultItemRow{Items: keyValuePair}}
+		mapItems[idx] = resultItemRowOneOf
 	}
-	return mapItems
+	return v1.SqlV1alpha1ResultItemRowOneOf{SqlV1alpha1ResultItemRow: &v1.SqlV1alpha1ResultItemRow{Items: mapItems}}
 }
 
 type RowStatementResultField struct {
@@ -233,12 +257,12 @@ func (f RowStatementResultField) Format(options *FormatterOptions) string {
 	return sb.String()
 }
 
-func (f RowStatementResultField) ToSDKType() any {
-	rowItems := make([]any, len(f.Values))
+func (f RowStatementResultField) ToSDKType() v1.SqlV1alpha1ResultItemRowOneOf {
+	rowItems := make([]v1.SqlV1alpha1ResultItemRowOneOf, len(f.Values))
 	for idx, value := range f.Values {
 		rowItems[idx] = value.ToSDKType()
 	}
-	return rowItems
+	return v1.SqlV1alpha1ResultItemRowOneOf{SqlV1alpha1ResultItemRow: &v1.SqlV1alpha1ResultItemRow{Items: rowItems}}
 }
 
 func truncateString(str string, maxCharCountToDisplay int) string {
