@@ -22,20 +22,17 @@ func (c *Client) flinkApiContext() context.Context {
 }
 
 func (c *Client) CreateFlinkComputePool(computePool flinkv2.FcpmV2ComputePool) (flinkv2.FcpmV2ComputePool, error) {
-	req := c.FlinkClient.ComputePoolsFcpmV2Api.CreateFcpmV2ComputePool(c.flinkApiContext()).FcpmV2ComputePool(computePool)
-	res, r, err := req.Execute()
+	res, r, err := c.FlinkClient.ComputePoolsFcpmV2Api.CreateFcpmV2ComputePool(c.flinkApiContext()).FcpmV2ComputePool(computePool).Execute()
 	return res, errors.CatchCCloudV2Error(err, r)
 }
 
 func (c *Client) DeleteFlinkComputePool(id, environment string) error {
-	req := c.FlinkClient.ComputePoolsFcpmV2Api.DeleteFcpmV2ComputePool(c.flinkApiContext(), id).Environment(environment)
-	r, err := req.Execute()
+	r, err := c.FlinkClient.ComputePoolsFcpmV2Api.DeleteFcpmV2ComputePool(c.flinkApiContext(), id).Environment(environment).Execute()
 	return errors.CatchCCloudV2Error(err, r)
 }
 
 func (c *Client) DescribeFlinkComputePool(id, environment string) (flinkv2.FcpmV2ComputePool, error) {
-	req := c.FlinkClient.ComputePoolsFcpmV2Api.GetFcpmV2ComputePool(c.flinkApiContext(), id).Environment(environment)
-	res, r, err := req.Execute()
+	res, r, err := c.FlinkClient.ComputePoolsFcpmV2Api.GetFcpmV2ComputePool(c.flinkApiContext(), id).Environment(environment).Execute()
 	return res, errors.CatchCCloudV2Error(err, r)
 }
 
@@ -54,7 +51,6 @@ func (c *Client) ListFlinkRegions(cloud string) ([]flinkv2.FcpmV2Region, error) 
 }
 
 func (c *Client) UpdateFlinkComputePool(id string, update flinkv2.FcpmV2ComputePoolUpdate) (flinkv2.FcpmV2ComputePool, error) {
-	req := c.FlinkClient.ComputePoolsFcpmV2Api.UpdateFcpmV2ComputePool(c.flinkApiContext(), id).FcpmV2ComputePoolUpdate(update)
-	res, r, err := req.Execute()
+	res, r, err := c.FlinkClient.ComputePoolsFcpmV2Api.UpdateFcpmV2ComputePool(c.flinkApiContext(), id).FcpmV2ComputePoolUpdate(update).Execute()
 	return res, errors.CatchCCloudV2Error(err, r)
 }
