@@ -30,8 +30,8 @@ func (c *FlinkGatewayClient) flinkGatewayApiContext() context.Context {
 	return context.WithValue(context.Background(), flinkgatewayv1alpha1.ContextAccessToken, c.authToken)
 }
 
-func (c *FlinkGatewayClient) DeleteStatement(environmentId, statementName string) error {
-	r, err := c.StatementsSqlV1alpha1Api.DeleteSqlV1alpha1Statement(c.flinkGatewayApiContext(), environmentId, statementName).Execute()
+func (c *FlinkGatewayClient) DeleteStatement(environmentId, statementName, orgId string) error {
+	r, err := c.StatementsSqlV1alpha1Api.DeleteSqlV1alpha1Statement(c.flinkGatewayApiContext(), environmentId, statementName).OrgId(orgId).Execute()
 	return errors.CatchCCloudV2Error(err, r)
 }
 
