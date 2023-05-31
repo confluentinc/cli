@@ -7,7 +7,6 @@ import (
 	"io"
 	"net/http"
 	"os/exec"
-	"path/filepath"
 	"runtime"
 	"sort"
 	"strings"
@@ -227,7 +226,7 @@ func (r *PublicRepo) parseMatchedReleaseNotesVersion(name, key string) (bool, *v
 	return true, ver
 }
 
-func (r *PublicRepo) DownloadVersion(name, version, downloadDir string) (string, int64, error) {
+func (r *PublicRepo) DownloadVersion(name, version, downloadDir string) ([]byte, error) {
 	objectKey, _ := NewPrefixedKey(fmt.Sprintf(r.S3BinPrefixFmt, name), "_", true)
 	objectKey.goos = r.goos
 	objectKey.goarch = r.goarch
@@ -237,25 +236,11 @@ func (r *PublicRepo) DownloadVersion(name, version, downloadDir string) (string,
 
 	resp, err := r.getHttpResponse(downloadVersion)
 	if err != nil {
-		return "", 0, err
+		return nil, err
 	}
 	defer resp.Body.Close()
 
-	binName := fmt.Sprintf("%s-v%s-%s-%s", name, version, r.goos, r.goarch)
-	downloadBinPath := filepath.Join(downloadDir, binName)
-
-	downloadBin, err := r.fs.Create(downloadBinPath)
-	if err != nil {
-		return "", 0, err
-	}
-	defer downloadBin.Close()
-
-	bytes, err := r.fs.Copy(downloadBin, resp.Body)
-	if err != nil {
-		return "", 0, err
-	}
-
-	return downloadBinPath, bytes, nil
+	return io.ReadAll(resp.Body)
 }
 
 func (r *PublicRepo) DownloadReleaseNotes(name, version string) (string, error) {

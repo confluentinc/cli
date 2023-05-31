@@ -1,0 +1,4 @@
+Updated the following configuration values for topic "topic-exist-rest":
+       Name      | Value | Read-Only  
+-----------------+-------+------------
+  num.partitions |     6 | false      
