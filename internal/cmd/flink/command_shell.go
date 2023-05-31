@@ -21,7 +21,6 @@ func (c *command) newShellCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	}
 	cmd.Flags().String("compute-pool", "", "Flink compute pool ID.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
-	cmd.Flags().Bool("demo-devel", false, "Start client against the hardcoded demo devel pod.")
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
