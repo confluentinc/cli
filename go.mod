@@ -11,7 +11,7 @@ require (
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20230427001341-5f8d2cce5ad9
 	github.com/confluentinc/ccloud-sdk-go-v2-internal/flink v0.0.11
-	github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway v0.0.13
+	github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway v0.0.16
 	github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/byok v0.0.1
 	github.com/confluentinc/ccloud-sdk-go-v2/cdx v0.0.5

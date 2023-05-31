@@ -12,28 +12,28 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
 )
 
-func GetResultItemGeneratorForType(dataType v1.DataType) *rapid.Generator[v1.SqlV1alpha1ResultItemRowOneOf] {
+func GetResultItemGeneratorForType(dataType v1.DataType) *rapid.Generator[any] {
 	fieldType := types.NewResultFieldType(dataType)
 	switch fieldType {
 	case types.ARRAY:
-		elementType := dataType.ArrayType.GetArrayElementType()
+		elementType := dataType.GetElementType()
 		return ArrayResultItem(elementType)
 	case types.MULTISET:
-		keyType := dataType.MultisetType.GetMultisetElementType()
-		valueType := v1.DataType{IntegerType: &v1.IntegerType{
+		keyType := dataType.GetElementType()
+		valueType := v1.DataType{
 			Nullable: false,
 			Type:     "INTEGER",
-		}}
+		}
 		return MapResultItem(keyType, valueType)
 	case types.MAP:
-		keyType := dataType.MapType.GetKeyType()
-		valueType := dataType.MapType.GetValueType()
+		keyType := dataType.GetKeyType()
+		valueType := dataType.GetValueType()
 		return MapResultItem(keyType, valueType)
 	case types.ROW:
-		elementTypes := dataType.RowType.GetFields()
+		elementTypes := dataType.GetFields()
 		return RowResultItem(elementTypes)
 	case types.NULL:
-		return rapid.SampledFrom([]v1.SqlV1alpha1ResultItemRowOneOf{{}})
+		return rapid.SampledFrom([]any{nil})
 	default:
 		return AtomicResultItem(fieldType)
 	}
@@ -73,67 +73,64 @@ func Timestamp(formatString string) *rapid.Generator[string] {
 }
 
 // AtomicResultItem generates a random atomic field
-func AtomicResultItem(fieldType types.StatementResultFieldType) *rapid.Generator[v1.SqlV1alpha1ResultItemRowOneOf] {
-	return rapid.Custom(func(t *rapid.T) v1.SqlV1alpha1ResultItemRowOneOf {
+func AtomicResultItem(fieldType types.StatementResultFieldType) *rapid.Generator[any] {
+	return rapid.Custom(func(t *rapid.T) any {
 		atomicGenerator := atomicGenerators[fieldType]
-		atomicValue := v1.SqlV1alpha1ResultItemString(atomicGenerator.Draw(t, "an atomic value"))
-		return v1.SqlV1alpha1ResultItemRowOneOf{SqlV1alpha1ResultItemString: &atomicValue}
+		return atomicGenerator.Draw(t, "an atomic value")
 	})
 }
 
 // ArrayResultItem generates a random ARRAY field
-func ArrayResultItem(elementDataType v1.DataType) *rapid.Generator[v1.SqlV1alpha1ResultItemRowOneOf] {
-	return rapid.Custom(func(t *rapid.T) v1.SqlV1alpha1ResultItemRowOneOf {
-		var arrayItems []v1.SqlV1alpha1ResultItemRowOneOf
+func ArrayResultItem(elementDataType v1.DataType) *rapid.Generator[any] {
+	return rapid.Custom(func(t *rapid.T) any {
+		var arrayItems []any
 		arraySize := rapid.IntRange(1, 3).Draw(t, "array size")
 		elementGenerator := GetResultItemGeneratorForType(elementDataType)
 		for i := 0; i < arraySize; i++ {
 			arrayItems = append(arrayItems, elementGenerator.Draw(t, "an array item"))
 		}
-		return v1.SqlV1alpha1ResultItemRowOneOf{SqlV1alpha1ResultItemRow: &v1.SqlV1alpha1ResultItemRow{Items: arrayItems}}
+		return arrayItems
 	})
 }
 
 // MapResultItem generates a random MAP field
-func MapResultItem(keyType, valueType v1.DataType) *rapid.Generator[v1.SqlV1alpha1ResultItemRowOneOf] {
-	return rapid.Custom(func(t *rapid.T) v1.SqlV1alpha1ResultItemRowOneOf {
-		var mapItems []v1.SqlV1alpha1ResultItemRowOneOf
+func MapResultItem(keyType, valueType v1.DataType) *rapid.Generator[any] {
+	return rapid.Custom(func(t *rapid.T) any {
+		var mapItems []any
 		arraySize := rapid.IntRange(1, 3).Draw(t, "map size")
 		keyGenerator := GetResultItemGeneratorForType(keyType)
 		valueGenerator := GetResultItemGeneratorForType(valueType)
 		for i := 0; i < arraySize; i++ {
-			var keyValuePair []v1.SqlV1alpha1ResultItemRowOneOf
+			var keyValuePair []any
 			keyValuePair = append(keyValuePair, keyGenerator.Draw(t, "key"), valueGenerator.Draw(t, "value"))
-			entry := v1.SqlV1alpha1ResultItemRowOneOf{SqlV1alpha1ResultItemRow: &v1.SqlV1alpha1ResultItemRow{Items: keyValuePair}}
-			mapItems = append(mapItems, entry)
+			mapItems = append(mapItems, keyValuePair)
 		}
-		return v1.SqlV1alpha1ResultItemRowOneOf{SqlV1alpha1ResultItemRow: &v1.SqlV1alpha1ResultItemRow{Items: mapItems}}
+		return mapItems
 	})
 }
 
 // RowResultItem generates a random ROW field
-func RowResultItem(fieldTypes []v1.RowFieldType) *rapid.Generator[v1.SqlV1alpha1ResultItemRowOneOf] {
-	return rapid.Custom(func(t *rapid.T) v1.SqlV1alpha1ResultItemRowOneOf {
-		var arrayItems []v1.SqlV1alpha1ResultItemRowOneOf
+func RowResultItem(fieldTypes []v1.RowFieldType) *rapid.Generator[any] {
+	return rapid.Custom(func(t *rapid.T) any {
+		var arrayItems []any
 		for i := range fieldTypes {
-			generator := GetResultItemGeneratorForType(fieldTypes[i].GetType())
+			generator := GetResultItemGeneratorForType(fieldTypes[i].GetFieldType())
 			arrayItems = append(arrayItems, generator.Draw(t, "an array item"))
 		}
-		return v1.SqlV1alpha1ResultItemRowOneOf{SqlV1alpha1ResultItemRow: &v1.SqlV1alpha1ResultItemRow{Items: arrayItems}}
+		return arrayItems
 	})
 }
 
 // MockResultRow creates a row with random fields adhering to the provided column schema
-func MockResultRow(columnDetails []v1.ColumnDetails) *rapid.Generator[v1.SqlV1alpha1ResultItem] {
-	return rapid.Custom(func(t *rapid.T) v1.SqlV1alpha1ResultItem {
-		var items []v1.SqlV1alpha1ResultItemRowOneOf
+func MockResultRow(columnDetails []v1.ColumnDetails) *rapid.Generator[any] {
+	return rapid.Custom(func(t *rapid.T) any {
+		var items []any
 		for _, column := range columnDetails {
 			items = append(items, GetResultItemGeneratorForType(column.GetType()).Draw(t, "a field"))
 		}
-		op := rapid.Int32Range(0, 3).Draw(t, "an operation")
-		return v1.SqlV1alpha1ResultItem{
-			Op:  &op,
-			Row: v1.SqlV1alpha1ResultItemRow{Items: items},
+		return map[string]any{
+			"op":  rapid.Int32Range(0, 3).Draw(t, "an operation"),
+			"row": items,
 		}
 	})
 }
@@ -205,11 +202,11 @@ func ArrayDataType(maxNestingDepth int) *rapid.Generator[v1.DataType] {
 	return rapid.Custom(func(t *rapid.T) v1.DataType {
 		resultFieldType := GenResultFieldType().Draw(t, "result field type")
 		elementType := getDataTypeGeneratorForType(resultFieldType, maxNestingDepth).Draw(t, "element type")
-		return v1.ArrayTypeAsDataType(&v1.ArrayType{
-			Nullable:         false,
-			Type:             "ARRAY",
-			ArrayElementType: elementType,
-		})
+		return v1.DataType{
+			Nullable:    false,
+			Type:        "ARRAY",
+			ElementType: &elementType,
+		}
 	})
 }
 
@@ -220,12 +217,12 @@ func MapDataType(maxNestingDepth int) *rapid.Generator[v1.DataType] {
 		resultFieldValueType := GenResultFieldType().Draw(t, "result field type")
 		keyType := getDataTypeGeneratorForType(resultFieldKeyType, maxNestingDepth).Draw(t, "element type")
 		valueType := getDataTypeGeneratorForType(resultFieldValueType, maxNestingDepth).Draw(t, "element type")
-		return v1.MapTypeAsDataType(&v1.MapType{
+		return v1.DataType{
 			Nullable:  false,
 			Type:      "MAP",
-			KeyType:   keyType,
-			ValueType: valueType,
-		})
+			KeyType:   &keyType,
+			ValueType: &valueType,
+		}
 	})
 }
 
@@ -234,11 +231,11 @@ func MultisetDataType(maxNestingDepth int) *rapid.Generator[v1.DataType] {
 	return rapid.Custom(func(t *rapid.T) v1.DataType {
 		resultFieldType := GenResultFieldType().Draw(t, "result field type")
 		elementType := getDataTypeGeneratorForType(resultFieldType, maxNestingDepth).Draw(t, "element type")
-		return v1.MultisetTypeAsDataType(&v1.MultisetType{
-			Nullable:            false,
-			Type:                "MULTISET",
-			MultisetElementType: elementType,
-		})
+		return v1.DataType{
+			Nullable:    false,
+			Type:        "MULTISET",
+			ElementType: &elementType,
+		}
 	})
 }
 
@@ -251,15 +248,15 @@ func RowDataType(maxNestingDepth int) *rapid.Generator[v1.DataType] {
 			resultFieldType := GenResultFieldType().Draw(t, "result field type")
 			elementType := getDataTypeGeneratorForType(resultFieldType, maxNestingDepth).Draw(t, "element type")
 			fieldTypes = append(fieldTypes, v1.RowFieldType{
-				Name: strconv.Itoa(i),
-				Type: elementType,
+				Name:      strconv.Itoa(i),
+				FieldType: elementType,
 			})
 		}
-		return v1.RowTypeAsDataType(&v1.RowType{
+		return v1.DataType{
 			Nullable: false,
 			Type:     "ROW",
-			Fields:   fieldTypes,
-		})
+			Fields:   &fieldTypes,
+		}
 	})
 }
 
@@ -319,43 +316,33 @@ func MockResults(maxNumColumns, maxNestingDepth int) *rapid.Generator[types.Mock
 
 func MockCount(count int) types.MockStatementResult {
 	var columnDetails []v1.ColumnDetails
-	dataType := v1.IntegerTypeAsDataType(&v1.IntegerType{
+	dataType := v1.DataType{
 		Nullable: false,
 		Type:     "INTEGER",
-	})
+	}
 	columnDetails = append(columnDetails, v1.ColumnDetails{
 		Name: "Count",
 		Type: dataType,
 	})
 
-	var resultData []v1.SqlV1alpha1ResultItem
+	var resultData []any
 	if count == 0 {
-		str := v1.SqlV1alpha1ResultItemString(fmt.Sprintf("%v", count))
-		op := int32(0)
-		item := v1.SqlV1alpha1ResultItem{
-			Op: &op,
-			Row: v1.SqlV1alpha1ResultItemRow{Items: []v1.SqlV1alpha1ResultItemRowOneOf{
-				{SqlV1alpha1ResultItemString: &str},
-			}},
+		item := map[string]any{
+			"op":  int32(0),
+			"row": []any{fmt.Sprintf("%v", count)},
 		}
 		resultData = append(resultData, item)
 	} else {
-		updateBefore := int32(1)
-		valBefore := v1.SqlV1alpha1ResultItemString(fmt.Sprintf("%v", count-1))
-		resultData = append(resultData, v1.SqlV1alpha1ResultItem{
-			Op: &updateBefore,
-			Row: v1.SqlV1alpha1ResultItemRow{Items: []v1.SqlV1alpha1ResultItemRowOneOf{
-				{SqlV1alpha1ResultItemString: &valBefore},
-			}},
+		// update before
+		resultData = append(resultData, map[string]any{
+			"op":  int32(1),
+			"row": []any{fmt.Sprintf("%v", count-1)},
 		})
 
-		updateAfter := int32(2)
-		valAfter := v1.SqlV1alpha1ResultItemString(fmt.Sprintf("%v", count))
-		resultData = append(resultData, v1.SqlV1alpha1ResultItem{
-			Op: &updateAfter,
-			Row: v1.SqlV1alpha1ResultItemRow{Items: []v1.SqlV1alpha1ResultItemRowOneOf{
-				{SqlV1alpha1ResultItemString: &valAfter},
-			}},
+		// update after
+		resultData = append(resultData, map[string]any{
+			"op":  int32(2),
+			"row": []any{fmt.Sprintf("%v", count)},
 		})
 	}
 
@@ -370,10 +357,10 @@ func MockCount(count int) types.MockStatementResult {
 // TODO - This was only used for debugging/testing as gateway as broken
 func ShowTablesSchema() v1.SqlV1alpha1ResultSchema {
 	var columnDetails []v1.ColumnDetails
-	dataType := v1.VarcharTypeAsDataType(&v1.VarcharType{
+	dataType := v1.DataType{
 		Nullable: false,
 		Type:     "VARCHAR",
-	})
+	}
 	columnDetails = append(columnDetails, v1.ColumnDetails{
 		Name: "Table Name",
 		Type: dataType,
