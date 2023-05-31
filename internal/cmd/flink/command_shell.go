@@ -7,8 +7,8 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	client "github.com/confluentinc/cli/internal/pkg/flink/app"
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
-
 	"github.com/spf13/cobra"
+	"net/url"
 )
 
 func (c *command) newShellCommand(prerunner pcmd.PreRunner) *cobra.Command {
@@ -48,32 +48,48 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 	resourceId := c.Context.GetOrganization().GetResourceId()
 
 	// Compute pool can be set as a flag or as default in the context
-	computePool, err := cmd.Flags().GetString("compute-pool")
-	if computePool == "" || err != nil {
+	computePoolId, err := cmd.Flags().GetString("compute-pool")
+	if computePoolId == "" || err != nil {
 		if c.Context.GetCurrentFlinkComputePool() == "" {
 			return errors.NewErrorWithSuggestions("No compute pool set", "Please set a compute pool to be used. You can either set a default persitent compute pool \"confluent flink compute-pool use lfc-123\" or pass the flag \"--compute-pool lfcp-12345\".")
 		} else {
-			computePool = c.Context.GetCurrentFlinkComputePool()
+			computePoolId = c.Context.GetCurrentFlinkComputePool()
 		}
 	}
 
-	kafkaCluster, err := cmd.Flags().GetString("kafka-cluster")
-	if kafkaCluster == "" || err != nil {
+	kafkaClusterId, err := cmd.Flags().GetString("kafka-cluster")
+	if kafkaClusterId == "" || err != nil {
 		if c.Context.KafkaClusterContext.GetActiveKafkaClusterId() != "" {
-			kafkaCluster = c.Context.KafkaClusterContext.GetActiveKafkaClusterId()
+			kafkaClusterId = c.Context.KafkaClusterContext.GetActiveKafkaClusterId()
 		}
 	}
 
-	enviromentId, err := c.Context.EnvironmentId()
+	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}
 
-	client.StartApp(enviromentId, resourceId, kafkaCluster, computePool, c.AuthToken,
+	computePool, err := c.V2Client.DescribeFlinkComputePool(computePoolId, environmentId)
+	if err != nil {
+		return err
+	}
+
+	parsedUrl, err := url.Parse(computePool.Spec.GetHttpEndpoint())
+	if err != nil {
+		return err
+	}
+	parsedUrl.Path = ""
+
+	unsafeTrace, err := c.Command.Flags().GetBool("unsafe-trace")
+	if err != nil {
+		return err
+	}
+
+	client.StartApp(environmentId, resourceId, kafkaClusterId, computePoolId, c.AuthToken,
 		c.authenticated(prerunner.Authenticated(c.AuthenticatedCLICommand), cmd),
 		&types.ApplicationOptions{
-			FLINK_GATEWAY_URL:        "https://flink.us-west-2.aws.devel.cpdev.cloud",
-			HTTP_CLIENT_UNSAFE_TRACE: false,
+			FLINK_GATEWAY_URL:        parsedUrl.String(),
+			HTTP_CLIENT_UNSAFE_TRACE: unsafeTrace,
 			DEFAULT_PROPERTIES: map[string]string{
 				"execution.runtime-mode": "streaming",
 			},
