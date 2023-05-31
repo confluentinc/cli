@@ -6,9 +6,12 @@ require (
 	github.com/antihax/optional v1.0.0
 	github.com/aws/aws-sdk-go v1.44.271
 	github.com/billgraziano/dpapi v0.4.0
+	github.com/bradleyjkemp/cupaloy v2.3.0+incompatible
 	github.com/brianstrauch/cobra-shell v0.4.0
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20230427001341-5f8d2cce5ad9
+	github.com/confluentinc/ccloud-sdk-go-v2-internal/flink v0.0.11
+	github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway v0.0.16
 	github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0
 	github.com/confluentinc/ccloud-sdk-go-v2/byok v0.0.1
 	github.com/confluentinc/ccloud-sdk-go-v2/cdx v0.0.5
@@ -29,6 +32,7 @@ require (
 	github.com/confluentinc/confluent-kafka-go v1.9.3-RC3
 	github.com/confluentinc/go-editor v0.11.0
 	github.com/confluentinc/go-netrc v0.0.0-20220321173724-4d50f36ff450
+	github.com/confluentinc/go-prompt v0.2.17
 	github.com/confluentinc/go-ps1 v1.0.2
 	github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.3.14
 	github.com/confluentinc/mds-sdk-go-public/mdsv1 v0.0.0-20230117192233-7e6d894d74a9
@@ -38,9 +42,11 @@ require (
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dghubble/sling v1.4.1
 	github.com/fatih/color v1.15.0
+	github.com/gdamore/tcell/v2 v2.6.0
 	github.com/go-yaml/yaml v2.1.0+incompatible
 	github.com/gobuffalo/flect v1.0.2
 	github.com/gogo/protobuf v1.3.2
+	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.3
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/google/uuid v1.3.0
@@ -62,6 +68,8 @@ require (
 	github.com/panta/machineid v1.0.2
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
 	github.com/pkg/errors v0.9.1
+	github.com/rivo/tview v0.0.0-20230511053024-822bd067b165
+	github.com/samber/lo v1.38.1
 	github.com/sevlyar/retag v0.0.0-20190429052747-c3f10e304082
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/pflag v1.0.5
@@ -80,6 +88,7 @@ require (
 	gopkg.in/launchdarkly/go-sdk-common.v2 v2.5.1
 	gopkg.in/square/go-jose.v2 v2.6.0
 	k8s.io/apimachinery v0.27.2
+	pgregory.net/rapid v0.5.7
 )
 
 require (
@@ -89,9 +98,9 @@ require (
 	github.com/c-bata/go-prompt v0.2.6 // indirect
 	github.com/confluentinc/proto-go-setter v0.3.0 // indirect
 	github.com/envoyproxy/protoc-gen-validate v0.9.1 // indirect
+	github.com/gdamore/encoding v1.0.0 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
 	github.com/gogo/googleapis v1.4.1 // indirect
-	github.com/golang/mock v1.4.4 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
@@ -100,6 +109,7 @@ require (
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
+	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/lyft/protoc-gen-star v0.6.2 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
