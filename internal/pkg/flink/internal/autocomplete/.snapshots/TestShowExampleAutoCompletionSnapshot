@@ -1,0 +1,6 @@
+([]prompt.Suggest) (len=1) {
+  (prompt.Suggest) {
+    Text: (string) (len=12) "SHOW TABLES;",
+    Description: (string) (len=82) "Used to list different flink objects such as catalogs, databases, tables and more."
+  }
+}
