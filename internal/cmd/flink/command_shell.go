@@ -50,15 +50,15 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 	resourceId := c.Context.GetOrganization().GetResourceId()
 
 	// Compute pool can be set as a flag or as default in the context
-	computePoolId, err := cmd.Flags().GetString("compute-pool")
+	computePool, err := cmd.Flags().GetString("compute-pool")
 	if err != nil {
 		return err
 	}
-	if computePoolId == "" {
+	if computePool == "" {
 		if c.Context.GetCurrentFlinkComputePool() == "" {
 			return errors.NewErrorWithSuggestions("No compute pool set", "Please set a compute pool to be used. You can either set a default persitent compute pool \"confluent flink compute-pool use lfc-123\" or pass the flag \"--compute-pool lfcp-12345\".")
 		}
-		computePoolId = c.Context.GetCurrentFlinkComputePool()
+		computePool = c.Context.GetCurrentFlinkComputePool()
 	}
 
 	identityPool, err := cmd.Flags().GetString("identity-pool")
@@ -72,13 +72,13 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		identityPool = c.Context.GetCurrentIdentityPool()
 	}
 
-	kafkaClusterId, err := cmd.Flags().GetString("kafka-cluster")
+	cluster, err := cmd.Flags().GetString("cluster")
 	if err != nil {
 		return err
 	}
-	if kafkaClusterId == "" {
+	if cluster == "" {
 		if c.Context.KafkaClusterContext.GetActiveKafkaClusterId() != "" {
-			kafkaClusterId = c.Context.KafkaClusterContext.GetActiveKafkaClusterId()
+			cluster = c.Context.KafkaClusterContext.GetActiveKafkaClusterId()
 		}
 	}
 
@@ -87,12 +87,12 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		return err
 	}
 
-	computePool, err := c.V2Client.DescribeFlinkComputePool(computePoolId, environmentId)
+	flinkComputePool, err := c.V2Client.DescribeFlinkComputePool(computePool, environmentId)
 	if err != nil {
 		return err
 	}
 
-	parsedUrl, err := url.Parse(computePool.Spec.GetHttpEndpoint())
+	parsedUrl, err := url.Parse(flinkComputePool.Spec.GetHttpEndpoint())
 	if err != nil {
 		return err
 	}
@@ -103,15 +103,13 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		return err
 	}
 
-	client.StartApp(environmentId, resourceId, kafkaClusterId, computePoolId, identityPool, c.AuthToken,
+	client.StartApp(environmentId, resourceId, cluster, computePool, identityPool, c.AuthToken,
 		c.authenticated(prerunner.Authenticated(c.AuthenticatedCLICommand), cmd),
 		&types.ApplicationOptions{
 			FLINK_GATEWAY_URL:        parsedUrl.String(),
 			HTTP_CLIENT_UNSAFE_TRACE: unsafeTrace,
-			DEFAULT_PROPERTIES: map[string]string{
-				"execution.runtime-mode": "streaming",
-			},
-			USER_AGENT: c.Version.UserAgent,
+			DEFAULT_PROPERTIES:       map[string]string{"execution.runtime-mode": "streaming"},
+			USER_AGENT:               c.Version.UserAgent,
 		})
 	return nil
 }
