@@ -8,7 +8,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
 )
 
-func convertToInternalField(field any, details v1.ColumnDetails) types.StatementResultField {
+func convertToInternalField(field v1.SqlV1alpha1ResultItemRowOneOf, details v1.ColumnDetails) types.StatementResultField {
 	converter := GetConverterForType(details.GetType())
 	if converter != nil {
 		return converter(field)
@@ -20,7 +20,7 @@ func convertToInternalField(field any, details v1.ColumnDetails) types.Statement
 	}
 }
 
-func ConvertToInternalResults(results []any, resultSchema v1.SqlV1alpha1ResultSchema) (*types.StatementResults, error) {
+func ConvertToInternalResults(results []v1.SqlV1alpha1ResultItem, resultSchema v1.SqlV1alpha1ResultSchema) (*types.StatementResults, error) {
 	header := make([]string, len(resultSchema.GetColumns()))
 	for idx, column := range resultSchema.GetColumns() {
 		header[idx] = column.GetName()
@@ -28,25 +28,18 @@ func ConvertToInternalResults(results []any, resultSchema v1.SqlV1alpha1ResultSc
 
 	convertedResults := make([]types.StatementResultRow, len(results))
 	for rowIdx, result := range results {
-		resultItem, ok := result.(map[string]any)
-		if !ok {
-			return nil, errors.New("given result item does not match op/row schema")
-		}
-
-		items, _ := resultItem["row"].([]any)
-		if len(items) != len(resultSchema.GetColumns()) {
+		row := result.GetRow()
+		if len(row.Items) != len(resultSchema.GetColumns()) {
 			return nil, errors.New("given result row does not match the provided schema")
 		}
 
-		convertedFields := make([]types.StatementResultField, len(items))
-		for colIdx, field := range items {
+		convertedFields := make([]types.StatementResultField, len(row.Items))
+		for colIdx, field := range row.Items {
 			columnSchema := resultSchema.GetColumns()[colIdx]
 			convertedFields[colIdx] = convertToInternalField(field, columnSchema)
 		}
-
-		op, ok := resultItem["op"].(int32)
 		convertedResults[rowIdx] = types.StatementResultRow{
-			Operation: types.StatementResultOperation(op),
+			Operation: types.StatementResultOperation(int8(result.GetOp())),
 			Fields:    convertedFields,
 		}
 	}
