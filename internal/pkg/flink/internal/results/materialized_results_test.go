@@ -143,6 +143,35 @@ func (s *MaterializedStatementResultsTestSuite) TestMaxCapacity() {
 	require.Equal(s.T(), 1, materializedStatementResults.Size())
 }
 
+func (s *MaterializedStatementResultsTestSuite) TestOnlyAllowAppendWithSameSchema() {
+	invalidHeaders := []string{"Count"}
+	row := types.StatementResultRow{
+		Operation: types.INSERT,
+		Fields: []types.StatementResultField{
+			types.AtomicStatementResultField{
+				Type:  types.INTEGER,
+				Value: "0",
+			},
+			types.AtomicStatementResultField{
+				Type:  types.INTEGER,
+				Value: "0",
+			},
+		},
+	}
+	materializedStatementResults := NewMaterializedStatementResults(invalidHeaders, 1)
+	materializedStatementResults.SetTableMode(true)
+	valuesInserted := materializedStatementResults.Append(row)
+	require.False(s.T(), valuesInserted)
+	require.Empty(s.T(), materializedStatementResults.Size())
+
+	validHeaders := []string{"Count", "Count2"}
+	materializedStatementResults = NewMaterializedStatementResults(validHeaders, 1)
+	materializedStatementResults.SetTableMode(true)
+	valuesInserted = materializedStatementResults.Append(row)
+	require.True(s.T(), valuesInserted)
+	require.Equal(s.T(), 1, materializedStatementResults.Size())
+}
+
 func (s *MaterializedStatementResultsTestSuite) TestIteratorForwardResetThenBackward() {
 	headers := []string{"Count"}
 	materializedStatementResults := NewMaterializedStatementResults(headers, 10)
@@ -305,4 +334,81 @@ func (s *MaterializedStatementResultsTestSuite) TestIteratorMoveDoesNotWorkOnceE
 			},
 		},
 	}, iterator.Value())
+}
+
+func (s *MaterializedStatementResultsTestSuite) TestForEach() {
+	headers := []string{"Count"}
+	materializedStatementResults := NewMaterializedStatementResults(headers, 10)
+	materializedStatementResults.SetTableMode(true)
+
+	for i := 0; i < 10; i++ {
+		materializedStatementResults.Append(types.StatementResultRow{
+			Operation: types.INSERT,
+			Fields: []types.StatementResultField{
+				types.AtomicStatementResultField{
+					Type:  types.INTEGER,
+					Value: strconv.Itoa(i),
+				},
+			},
+		})
+	}
+
+	idx := 0
+	materializedStatementResults.ForEach(func(rowIdx int, row *types.StatementResultRow) {
+		expectedRow := &types.StatementResultRow{
+			Operation: types.INSERT,
+			Fields: []types.StatementResultField{
+				types.AtomicStatementResultField{
+					Type:  types.INTEGER,
+					Value: strconv.Itoa(idx),
+				},
+			},
+		}
+
+		require.Equal(s.T(), idx, rowIdx)
+		require.Equal(s.T(), expectedRow, row)
+		idx++
+	})
+}
+
+func (s *MaterializedStatementResultsTestSuite) TestGetColumnWidths() {
+	headers := []string{"1234", "12"}
+	materializedStatementResults := NewMaterializedStatementResults(headers, 10)
+	materializedStatementResults.SetTableMode(true)
+	materializedStatementResults.Append(types.StatementResultRow{
+		Operation: types.INSERT,
+		Fields: []types.StatementResultField{
+			types.AtomicStatementResultField{
+				Type:  types.VARCHAR,
+				Value: "12345",
+			},
+			types.AtomicStatementResultField{
+				Type:  types.VARCHAR,
+				Value: "1",
+			},
+		},
+	})
+
+	require.Equal(s.T(), []int{5, 2}, materializedStatementResults.GetMaxWidthPerColum())
+}
+
+func (s *MaterializedStatementResultsTestSuite) TestGetColumnWidthsChangelogMode() {
+	headers := []string{"1234", "12"}
+	materializedStatementResults := NewMaterializedStatementResults(headers, 10)
+	materializedStatementResults.SetTableMode(false)
+	materializedStatementResults.Append(types.StatementResultRow{
+		Operation: types.INSERT,
+		Fields: []types.StatementResultField{
+			types.AtomicStatementResultField{
+				Type:  types.VARCHAR,
+				Value: "12345",
+			},
+			types.AtomicStatementResultField{
+				Type:  types.VARCHAR,
+				Value: "1",
+			},
+		},
+	})
+
+	require.Equal(s.T(), []int{len("Operation"), 5, 2}, materializedStatementResults.GetMaxWidthPerColum())
 }
