@@ -1,6 +1,9 @@
 package flink
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/spf13/cobra"
 
 	flinkv2 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink/v2"
@@ -24,13 +27,15 @@ func (c *command) newComputePoolCreateCommand() *cobra.Command {
 	}
 
 	pcmd.AddCloudFlag(cmd)
-	c.addRegionFlag(cmd)
+	cmd.Flags().String("region", "", `Cloud region for compute pool (use "confluent flink region list" to see all).`)
 	cmd.Flags().Int32("cfu", 1, "Number of Confluent Flink Units (CFU).")
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("cloud"))
 	cobra.CheckErr(cmd.MarkFlagRequired("region"))
+
+	pcmd.RegisterFlagCompletionFunc(cmd, "region", c.autocompleteRegions)
 
 	return cmd
 }
@@ -84,7 +89,32 @@ func (c *command) computePoolCreate(cmd *cobra.Command, args []string) error {
 		IsCurrent: computePool.GetId() == c.Context.GetCurrentFlinkComputePool(),
 		Id:        computePool.GetId(),
 		Name:      computePool.Spec.GetDisplayName(),
+		Cfu:       computePool.Spec.GetMaxCfu(),
 		Region:    computePool.Spec.GetRegion(),
+		Status:    computePool.Status.GetPhase(),
 	})
 	return table.Print()
+}
+
+func (c *command) autocompleteRegions(cmd *cobra.Command, args []string) []string {
+	if err := c.PersistentPreRunE(cmd, args); err != nil {
+		return nil
+	}
+
+	cloud, err := cmd.Flags().GetString("cloud")
+	if err != nil {
+		return nil
+	}
+
+	regions, err := c.V2Client.ListFlinkRegions(strings.ToUpper(cloud))
+	fmt.Println(regions, err)
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(regions))
+	for i, region := range regions {
+		suggestions[i] = region.GetRegionName()
+	}
+	return suggestions
 }

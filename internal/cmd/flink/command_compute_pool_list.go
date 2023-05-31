@@ -15,7 +15,6 @@ func (c *command) newComputePoolListCommand() *cobra.Command {
 		RunE:  c.computePoolList,
 	}
 
-	c.addRegionFlag(cmd)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
@@ -28,12 +27,7 @@ func (c *command) computePoolList(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	region, err := cmd.Flags().GetString("region")
-	if err != nil {
-		return err
-	}
-
-	computePools, err := c.V2Client.ListFlinkComputePools(environment, region)
+	computePools, err := c.V2Client.ListFlinkComputePools(environment)
 	if err != nil {
 		return err
 	}
@@ -44,7 +38,9 @@ func (c *command) computePoolList(cmd *cobra.Command, _ []string) error {
 			IsCurrent: computePool.GetId() == c.Context.GetCurrentFlinkComputePool(),
 			Id:        computePool.GetId(),
 			Name:      computePool.Spec.GetDisplayName(),
+			Cfu:       computePool.Spec.GetMaxCfu(),
 			Region:    computePool.Spec.GetRegion(),
+			Status:    computePool.Status.GetPhase(),
 		})
 	}
 	return list.Print()

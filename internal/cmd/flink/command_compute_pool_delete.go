@@ -13,10 +13,11 @@ import (
 
 func (c *command) newComputePoolDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delete <id>",
-		Short: "Delete a Flink compute pool.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  c.computePoolDelete,
+		Use:               "delete <id>",
+		Short:             "Delete a Flink compute pool.",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		RunE:              c.computePoolDelete,
 	}
 
 	pcmd.AddForceFlag(cmd)
@@ -47,5 +48,15 @@ func (c *command) computePoolDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	output.Printf(errors.DeletedResourceMsg, resource.FlinkStatement, args[0])
+
+	if computePool.GetId() == c.Context.GetCurrentFlinkComputePool() {
+		if err := c.Context.SetCurrentFlinkComputePool(""); err != nil {
+			return err
+		}
+		if err := c.Config.Save(); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
