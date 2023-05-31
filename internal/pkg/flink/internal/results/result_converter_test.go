@@ -68,15 +68,15 @@ func (s *ResultConverterTestSuite) TestConvertFieldFailsForEmptyDataType() {
 }
 
 func (s *ResultConverterTestSuite) TestConvertFieldFailsIfDataTypesDiffer() {
-	varcharType := v1.VarcharTypeAsDataType(&v1.VarcharType{
+	varcharType := v1.DataType{
 		Nullable: false,
 		Type:     "VARCHAR",
-	})
-	arrayType := v1.ArrayTypeAsDataType(&v1.ArrayType{
-		Nullable:         false,
-		Type:             "ARRAY",
-		ArrayElementType: varcharType,
-	})
+	}
+	arrayType := v1.DataType{
+		Nullable:    false,
+		Type:        "ARRAY",
+		ElementType: &varcharType,
+	}
 	arrayField := generators.GetResultItemGeneratorForType(arrayType).Example()
 	resultField := convertToInternalField(arrayField, v1.ColumnDetails{
 		Name: "Test Column",
@@ -98,9 +98,13 @@ func (s *ResultConverterTestSuite) TestConvertResults() {
 		require.True(t, len(convertedResults.Headers) > 0)
 		require.Equal(t, len(statementResults), len(convertedResults.Rows)) // row number should match
 		for rowIdx, row := range convertedResults.Rows {
-			op := statementResults[rowIdx].GetOp()
-			rowItem := statementResults[rowIdx].GetRow()
-			items := rowItem.Items
+			expectedResultItem, ok := statementResults[rowIdx].(map[string]any)
+			require.True(t, ok)
+			op, ok := expectedResultItem["op"].(int32)
+			require.True(t, ok)
+			items, ok := expectedResultItem["row"].([]any)
+			require.True(t, ok)
+
 			require.Equal(t, types.StatementResultOperation(op), row.Operation)
 			require.Equal(t, len(items), len(convertedResults.Headers)) // column number for this row should match
 			for colIdx, field := range row.Fields {
@@ -130,7 +134,9 @@ func (s *ResultConverterTestSuite) TestFormatAtomicField() {
 
 		val := "NULL"
 		if types.NewResultFieldType(atomicDataType) != types.NULL {
-			val = string(*atomicField.SqlV1alpha1ResultItemString)
+			var ok bool
+			val, ok = atomicField.(string)
+			require.True(s.T(), ok)
 		}
 
 		require.Equal(s.T(), val, convertedField.Format(nil))

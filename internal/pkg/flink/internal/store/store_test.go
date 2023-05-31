@@ -680,10 +680,9 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWhenResultsExist() {
 		StatementName: "TEST_STATEMENT",
 		Status:        types.RUNNING,
 	}
-	op := int32(0)
 	statementResultObj := v1.SqlV1alpha1StatementResult{
 		Metadata: v1.ResultListMeta{},
-		Results:  &v1.SqlV1alpha1StatementResultResults{Data: &[]v1.SqlV1alpha1ResultItem{{Op: &op}}},
+		Results:  &v1.SqlV1alpha1StatementResultResults{Data: &[]any{map[string]any{"op": 0}}},
 	}
 	client.EXPECT().GetStatementResults(statement.StatementName, statement.PageToken).Return(statementResultObj, nil)
 
