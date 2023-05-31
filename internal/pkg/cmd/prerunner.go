@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 
@@ -66,14 +67,15 @@ type KafkaRESTProvider func() (*KafkaREST, error)
 
 type AuthenticatedCLICommand struct {
 	*CLICommand
-	Client            *ccloudv1.Client
-	V2Client          *ccloudv2.Client
-	MDSClient         *mds.APIClient
-	MDSv2Client       *mdsv2alpha1.APIClient
-	KafkaRESTProvider *KafkaRESTProvider
-	metricsClient     *ccloudv2.MetricsClient
-	Context           *dynamicconfig.DynamicContext
-	State             *v1.ContextState
+	Client             *ccloudv1.Client
+	V2Client           *ccloudv2.Client
+	MDSClient          *mds.APIClient
+	MDSv2Client        *mdsv2alpha1.APIClient
+	KafkaRESTProvider  *KafkaRESTProvider
+	flinkGatewayClient *ccloudv2.FlinkGatewayClient
+	metricsClient      *ccloudv2.MetricsClient
+	Context            *dynamicconfig.DynamicContext
+	State              *v1.ContextState
 }
 
 type HasAPIKeyCLICommand struct {
@@ -118,6 +120,41 @@ func NewCLICommand(cmd *cobra.Command, prerunner PreRunner) *CLICommand {
 
 func (c *AuthenticatedCLICommand) GetKafkaREST() (*KafkaREST, error) {
 	return (*c.KafkaRESTProvider)()
+}
+
+func (c *AuthenticatedCLICommand) GetFlinkGatewayClient() (*ccloudv2.FlinkGatewayClient, error) {
+	ctx := c.Config.Context()
+
+	if c.flinkGatewayClient == nil {
+		computePool, err := c.V2Client.DescribeFlinkComputePool(ctx.GetCurrentFlinkComputePool(), ctx.GetCurrentEnvironment())
+		if err != nil {
+			return nil, err
+		}
+
+		u, err := url.Parse(computePool.Spec.GetHttpEndpoint())
+		if err != nil {
+			return nil, err
+		}
+		u.Path = ""
+
+		unsafeTrace, err := c.Command.Flags().GetBool("unsafe-trace")
+		if err != nil {
+			return nil, err
+		}
+
+		c.flinkGatewayClient = ccloudv2.NewFlinkGatewayClient(
+			u.String(),
+			c.Version.UserAgent,
+			unsafeTrace,
+			c.AuthToken,
+			ctx.GetCurrentEnvironment(),
+			ctx.GetCurrentOrganization(),
+			ctx.KafkaClusterContext.GetActiveKafkaClusterId(),
+			ctx.GetCurrentFlinkComputePool(),
+			ctx.GetCurrentIdentityPool())
+	}
+
+	return c.flinkGatewayClient, nil
 }
 
 func (c *AuthenticatedCLICommand) GetMetricsClient() (*ccloudv2.MetricsClient, error) {
