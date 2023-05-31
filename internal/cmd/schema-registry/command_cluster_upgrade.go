@@ -73,10 +73,8 @@ func (c *command) clusterUpgrade(cmd *cobra.Command, _ []string) error {
 
 	clusterUpdateRequest := &srcmv2.SrcmV2ClusterUpdate{
 		Spec: &srcmv2.SrcmV2ClusterSpecUpdate{
-			Package: srcmv2.PtrString(packageDisplayName),
-			Environment: &srcmv2.GlobalObjectReference{
-				Id: environmentId,
-			},
+			Package:     srcmv2.PtrString(packageDisplayName),
+			Environment: &srcmv2.GlobalObjectReference{Id: environmentId},
 		},
 	}
 
