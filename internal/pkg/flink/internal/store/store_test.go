@@ -39,7 +39,7 @@ func TestStoreProcessLocalStatement(t *testing.T) {
 	mockAppController := mock.NewMockApplicationControllerInterface(gomock.NewController(t))
 	s := NewStore(client, mockAppController.ExitApplication, nil).(*Store)
 
-	result, err := s.ProcessLocalStatement("SET foo=bar;")
+	result, err := s.ProcessLocalStatement("SET 'foo'='bar';")
 	assert.Nil(t, err)
 	assert.NotNil(t, result)
 	assert.True(t, result.IsLocalStatement)
@@ -252,35 +252,35 @@ func (s *StoreTestSuite) TestIsExitStatement() {
 }
 
 func (s *StoreTestSuite) TestParseSETStatement() {
-	key, value, _ := parseSetStatement("SET key=value")
+	key, value, _ := parseSetStatement("SET 'key'='value'")
 	assert.Equal(s.T(), "key", key)
 	assert.Equal(s.T(), "value", value)
 
-	key, value, _ = parseSetStatement("SET key=value;")
+	key, value, _ = parseSetStatement("SET 'key'='value';")
 	assert.Equal(s.T(), "key", key)
 	assert.Equal(s.T(), "value", value)
 
-	key, value, _ = parseSetStatement("set key=value    ;")
+	key, value, _ = parseSetStatement("set 'key'='value'    ;")
 	assert.Equal(s.T(), "key", key)
 	assert.Equal(s.T(), "value", value)
 
-	key, value, _ = parseSetStatement("set key = value    ")
+	key, value, _ = parseSetStatement("set 'key' = 'value'    ")
 	assert.Equal(s.T(), "key", key)
 	assert.Equal(s.T(), "value", value)
 
-	key, value, _ = parseSetStatement("set key     =    value    ")
+	key, value, _ = parseSetStatement("set 'key'     =    'value'    ")
 	assert.Equal(s.T(), "key", key)
 	assert.Equal(s.T(), "value", value)
 
-	key, value, _ = parseSetStatement("set key= value    ")
+	key, value, _ = parseSetStatement("set 'key    '= '		va  lue'    ")
 	assert.Equal(s.T(), "key", key)
 	assert.Equal(s.T(), "value", value)
 
-	key, value, _ = parseSetStatement("set key =value    ")
+	key, value, _ = parseSetStatement("set 'key' ='value'    ")
 	assert.Equal(s.T(), "key", key)
 	assert.Equal(s.T(), "value", value)
 
-	key, value, _ = parseSetStatement("set key		 =value    ")
+	key, value, _ = parseSetStatement("set 'key'		 ='value'    ")
 	assert.Equal(s.T(), "key", key)
 	assert.Equal(s.T(), "value", value)
 
@@ -296,39 +296,59 @@ func (s *StoreTestSuite) TestParseSETStatement() {
 	assert.Equal(s.T(), "", key)
 	assert.Equal(s.T(), "", value)
 
-	key, value, _ = parseSetStatement("sET key	")
+	key, value, _ = parseSetStatement("sET 'key'	")
 	assert.Equal(s.T(), "", key)
 	assert.Equal(s.T(), "", value)
 
-	key, value, _ = parseSetStatement("sET = value	")
+	key, value, _ = parseSetStatement("sET = 'value'	")
 	assert.Equal(s.T(), "", key)
 	assert.Equal(s.T(), "", value)
 
-	key, value, _ = parseSetStatement("sET key= \nvalue	")
+	key, value, _ = parseSetStatement("sET 'key'= \n'value'	")
 	assert.Equal(s.T(), "key", key)
 	assert.Equal(s.T(), "value", value)
+
+	key, value, _ = parseSetStatement("set key= \nvalue	")
+	assert.Equal(s.T(), "", key)
+	assert.Equal(s.T(), "", value)
+
+	key, value, _ = parseSetStatement("set 'key'= \nvalue	")
+	assert.Equal(s.T(), "", key)
+	assert.Equal(s.T(), "", value)
+
+	key, value, _ = parseSetStatement("set key= \n'value'	")
+	assert.Equal(s.T(), "", key)
+	assert.Equal(s.T(), "", value)
+
+	key, value, _ = parseSetStatement("set 'key= \nvalue'	")
+	assert.Equal(s.T(), "", key)
+	assert.Equal(s.T(), "", value)
 }
 
 func (s *StoreTestSuite) TestParseSETStatementerror() {
 	_, _, err := parseSetStatement("SET key")
 	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: missing \"=\". Usage example: SET key=value.", err.Error())
+	assert.Equal(s.T(), "Error: missing \"=\". Usage example: SET 'key'='value'.", err.Error())
 
 	_, _, err = parseSetStatement("SET =")
 	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: Key and value not present. Usage example: SET key=value.", err.Error())
+	assert.Equal(s.T(), "Error: Key and value not present. Usage example: SET 'key'='value'.", err.Error())
 
 	_, _, err = parseSetStatement("SET key=")
 	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: Value for key not present. If you want to reset a key, use \"RESET key\".", err.Error())
+	assert.Equal(s.T(), "Error: Value for key not present. If you want to reset a key, use \"RESET 'key'\".", err.Error())
 
 	_, _, err = parseSetStatement("SET =value")
 	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: Key not present. Usage example: SET key=value.", err.Error())
+	assert.Equal(s.T(), "Error: Key not present. Usage example: SET 'key'='value'.", err.Error())
 
 	_, _, err = parseSetStatement("SET ass=value=as")
 	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: \"=\" should only appear once. Usage example: SET key=value.", err.Error())
+	assert.Equal(s.T(), "Error: \"=\" should only appear once. Usage example: SET 'key'='value'.", err.Error())
+
+	_, _, err = parseSetStatement("SET key=value")
+	assert.NotNil(s.T(), err)
+	assert.Equal(s.T(), "Error: Key and value must be enclosed by single quotes ''. Usage example: SET 'key'='value'.", err.Error())
 }
 
 func (s *StoreTestSuite) TestParseUSEStatement() {
@@ -376,80 +396,97 @@ func (s *StoreTestSuite) TestParseUSEStatementError() {
 }
 
 func (s *StoreTestSuite) TestParseResetStatement() {
-	key, err := parseResetStatement("RESET key")
+	key, err := parseResetStatement("RESET 'key'")
 	assert.Equal(s.T(), "key", key)
 	assert.Nil(s.T(), err)
 
-	key, _ = parseResetStatement("RESET key.key;")
+	key, err = parseResetStatement("RESET 'key.key';")
 	assert.Equal(s.T(), "key.key", key)
 	assert.Nil(s.T(), err)
 
-	key, _ = parseResetStatement("RESET KEY.key;")
+	key, err = parseResetStatement("RESET 'KEY.key';")
 	assert.Equal(s.T(), "key.key", key)
 	assert.Nil(s.T(), err)
 
-	key, _ = parseResetStatement("reset key    ;")
+	key, err = parseResetStatement("reset 'key'    ;")
 	assert.Equal(s.T(), "key", key)
 	assert.Nil(s.T(), err)
 
-	key, _ = parseResetStatement("reset key   ")
+	key, err = parseResetStatement("reset 'key'   ")
 	assert.Equal(s.T(), "key", key)
 	assert.Nil(s.T(), err)
 
-	key, _ = parseResetStatement("reset key;;;;")
+	key, err = parseResetStatement("reset 'key';;;;")
 	assert.Equal(s.T(), "key", key)
 	assert.Nil(s.T(), err)
 
-	key, _ = parseResetStatement("reset")
+	key, err = parseResetStatement("reset")
 	assert.Equal(s.T(), "", key)
 	assert.Nil(s.T(), err)
 
-	key, _ = parseResetStatement("RESET")
+	key, err = parseResetStatement("RESET")
 	assert.Equal(s.T(), "", key)
 	assert.Nil(s.T(), err)
 
-	key, _ = parseResetStatement("reSET 	")
+	key, err = parseResetStatement("reSET 	")
 	assert.Equal(s.T(), "", key)
 	assert.Nil(s.T(), err)
 
-	key, _ = parseResetStatement("reSET key	")
+	key, err = parseResetStatement("reSET 'key'	")
 	assert.Equal(s.T(), "key", key)
 	assert.Nil(s.T(), err)
 
-	key, _ = parseResetStatement("resET KEY ")
+	key, err = parseResetStatement("resET 'KEY' ")
 	assert.Equal(s.T(), "key", key)
 	assert.Nil(s.T(), err)
 
-	key, _ = parseResetStatement("resET key;;;")
+	key, err = parseResetStatement("resET 'key';;;")
 	assert.Equal(s.T(), "key", key)
 	assert.Nil(s.T(), err)
+
+	key, err = parseResetStatement("reset key;")
+	assert.Equal(s.T(), "", key)
+	assert.Error(s.T(), err)
+
+	key, err = parseResetStatement("reset key';")
+	assert.Equal(s.T(), "", key)
+	assert.Error(s.T(), err)
+
+	key, err = parseResetStatement("reset 'key;")
+	assert.Equal(s.T(), "", key)
+	assert.Error(s.T(), err)
 }
 
 func (s *StoreTestSuite) TestParseResetStatementError() {
 	key, err := parseResetStatement(" ")
 	assert.Equal(s.T(), "", key)
 	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: Invalid syntax for RESET. Usage example: RESET key.", err.Error())
+	assert.Equal(s.T(), "Error: Invalid syntax for RESET. Usage example: RESET 'key'.", err.Error())
 
 	key, err = parseResetStatement("RESET key key2")
 	assert.Equal(s.T(), "", key)
 	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: too many keys for RESET provided. Usage example: RESET key.", err.Error())
+	assert.Equal(s.T(), "Error: too many keys for RESET provided. Usage example: RESET 'key'.", err.Error())
 
 	key, err = parseResetStatement("RESET key key2 key3")
 	assert.Equal(s.T(), "", key)
 	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: too many keys for RESET provided. Usage example: RESET key.", err.Error())
+	assert.Equal(s.T(), "Error: too many keys for RESET provided. Usage example: RESET 'key'.", err.Error())
 
 	key, err = parseResetStatement("RESET key;; key key3")
 	assert.Equal(s.T(), "", key)
 	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: too many keys for RESET provided. Usage example: RESET key.", err.Error())
+	assert.Equal(s.T(), "Error: too many keys for RESET provided. Usage example: RESET 'key'.", err.Error())
 
 	key, err = parseResetStatement("RESET key key;;; key3")
 	assert.Equal(s.T(), "", key)
 	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: too many keys for RESET provided. Usage example: RESET key.", err.Error())
+	assert.Equal(s.T(), "Error: too many keys for RESET provided. Usage example: RESET 'key'.", err.Error())
+
+	key, err = parseResetStatement("RESET key;")
+	assert.Equal(s.T(), "", key)
+	assert.NotNil(s.T(), err)
+	assert.Equal(s.T(), "Error: Invalid syntax for RESET, key must be enclosed by single quotes ''. Usage example: RESET 'key'.", err.Error())
 }
 
 func (s *StoreTestSuite) TestProccessHttpErrors() {

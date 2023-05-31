@@ -121,21 +121,22 @@ func (s *Store) processUseStatement(statement string) (*types.ProcessedStatement
 }
 
 /*
-Expected statement: "SET key=value"
+Expected statement: "SET 'key'='value'"
 Steps to parse:
 1. Remove the semicolon if present
-2. Extract the substring after SET: "SET key=value" -> "key=value"
+2. Extract the substring after SET: "SET 'key'='value'" -> "'key'='value'"
 3. Replace all whitespaces from this substring
-4. Then split the substring by the equals sign: "key=value" -> ["key", "value"]
+4. Then split the substring by the equals sign: "'key'='value'" -> ["'key'", "'value'"]
 5. If the resulting array length is not equal to two or the extracted key is empty, return directly
-6. Otherwise, return the extracted key and value (value is allowed to be empty)
+6. If key and value are not enclosed by single quotes, return error
+7. Otherwise, return the extracted key and value (value is allowed to be empty)
 */
 func parseSetStatement(statement string) (string, string, error) {
 	statement = removeStatementTerminator(statement)
 
 	indexOfSet := strings.Index(strings.ToUpper(statement), config.ConfigOpSet)
 	if indexOfSet == -1 {
-		return "", "", &types.StatementError{Msg: "Error: Invalid syntax for SET. Usage example: SET key=value."}
+		return "", "", &types.StatementError{Msg: "Error: Invalid syntax for SET. Usage example: SET 'key'='value'."}
 	}
 	startOfStrAfterSet := indexOfSet + len(config.ConfigOpSet)
 	// This is the case when the statement is simply "SET", which is used to display current config.
@@ -152,28 +153,33 @@ func parseSetStatement(statement string) (string, string, error) {
 	}
 
 	if !strings.Contains(strAfterSet, "=") {
-		return "", "", &types.StatementError{Msg: "Error: missing \"=\". Usage example: SET key=value."}
+		return "", "", &types.StatementError{Msg: "Error: missing \"=\". Usage example: SET 'key'='value'."}
 	}
 
 	keyValuePair := strings.Split(strAfterSet, "=")
 
 	if len(keyValuePair) != 2 {
-		return "", "", &types.StatementError{Msg: "Error: \"=\" should only appear once. Usage example: SET key=value."}
+		return "", "", &types.StatementError{Msg: "Error: \"=\" should only appear once. Usage example: SET 'key'='value'."}
 	}
 
 	if keyValuePair[0] != "" && keyValuePair[1] == "" {
-		return "", "", &types.StatementError{Msg: "Error: Value for key not present. If you want to reset a key, use \"RESET key\"."}
+		return "", "", &types.StatementError{Msg: "Error: Value for key not present. If you want to reset a key, use \"RESET 'key'\"."}
 	}
 
 	if keyValuePair[0] == "" && keyValuePair[1] != "" {
-		return "", "", &types.StatementError{Msg: "Error: Key not present. Usage example: SET key=value."}
+		return "", "", &types.StatementError{Msg: "Error: Key not present. Usage example: SET 'key'='value'."}
 	}
 
 	if keyValuePair[0] == "" && keyValuePair[1] == "" {
-		return "", "", &types.StatementError{Msg: "Error: Key and value not present. Usage example: SET key=value."}
+		return "", "", &types.StatementError{Msg: "Error: Key and value not present. Usage example: SET 'key'='value'."}
 	}
 
-	return keyValuePair[0], keyValuePair[1], nil
+	if !strings.HasPrefix(keyValuePair[0], "'") || !strings.HasSuffix(keyValuePair[0], "'") ||
+		!strings.HasPrefix(keyValuePair[1], "'") || !strings.HasSuffix(keyValuePair[1], "'") {
+		return "", "", &types.StatementError{Msg: "Error: Key and value must be enclosed by single quotes ''. Usage example: SET 'key'='value'."}
+	}
+
+	return strings.ReplaceAll(keyValuePair[0], "'", ""), strings.ReplaceAll(keyValuePair[1], "'", ""), nil
 }
 
 /*
@@ -218,7 +224,7 @@ func parseResetStatement(statement string) (string, error) {
 	statement = removeStatementTerminator(statement)
 	words := strings.Fields(statement)
 	if len(words) == 0 {
-		return "", &types.StatementError{Msg: "Error: Invalid syntax for RESET. Usage example: RESET key."}
+		return "", &types.StatementError{Msg: "Error: Invalid syntax for RESET. Usage example: RESET 'key'."}
 	}
 
 	// This is the case where we reset the entire config (e.g. "RESET")
@@ -226,19 +232,21 @@ func parseResetStatement(statement string) (string, error) {
 		return "", nil
 	}
 
-	if len(words) == 2 {
-		isFirstWordReset := strings.ToUpper(words[0]) == config.ConfigOpReset
-		key := strings.ToLower(words[1])
-		if isFirstWordReset {
-			return key, nil
-		}
-	}
-
 	if len(words) > 2 {
-		return "", &types.StatementError{Msg: "Error: too many keys for RESET provided. Usage example: RESET key."}
+		return "", &types.StatementError{Msg: "Error: too many keys for RESET provided. Usage example: RESET 'key'."}
 	}
 
-	return "", &types.StatementError{Msg: "Error: Invalid syntax for RESET. Usage example: RESET key."}
+	isFirstWordReset := strings.ToUpper(words[0]) == config.ConfigOpReset
+	key := strings.ToLower(words[1])
+	if !isFirstWordReset {
+		return "", &types.StatementError{Msg: "Error: Invalid syntax for RESET. Usage example: RESET 'key'."}
+	}
+
+	if !strings.HasPrefix(key, "'") || !strings.HasSuffix(key, "'") {
+		return "", &types.StatementError{Msg: "Error: Invalid syntax for RESET, key must be enclosed by single quotes ''. Usage example: RESET 'key'."}
+	}
+
+	return strings.ReplaceAll(key, "'", ""), nil
 }
 
 func processHttpErrors(resp *http.Response, err error) error {
