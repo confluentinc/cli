@@ -123,6 +123,8 @@ func handleCmkCluster(t *testing.T) http.HandlerFunc {
 			handleCmkKafkaDedicatedClusterShrinkMulti(t)(w, r)
 		case "lkc-unknown":
 			handleCmkKafkaUnknown(t)(w, r)
+		case "lkc-unknown-type":
+			handleCmkKafkaUnknownType(t)(w, r)
 		default:
 			handleCmkKafkaClusterGetListDeleteDescribe(t)(w, r)
 		}
@@ -306,6 +308,17 @@ func handleCmkKafkaDedicatedClusterShrinkMulti(t *testing.T) http.HandlerFunc {
 func handleCmkKafkaUnknown(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, _ *http.Request) {
 		err := writeResourceNotFoundError(w)
+		require.NoError(t, err)
+	}
+}
+
+// Handler for GET "/cmk/v2/clusters/lkc-unknown-type"
+func handleCmkKafkaUnknownType(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		id := vars["id"]
+		cluster := getCmkUnknownDescribeCluster(id, "kafka-cluster")
+		err := json.NewEncoder(w).Encode(cluster)
 		require.NoError(t, err)
 	}
 }

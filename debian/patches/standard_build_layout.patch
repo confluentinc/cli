@@ -1,6 +1,7 @@
---- cli/Makefile	2023-05-17 09:58:42.375289527 -0700
+--- cli/Makefile	2023-05-23 15:11:15.472753760 -0700
 +++ debian/Makefile	2023-05-12 09:01:07.702951301 -0700
-@@ -1,120 +1,130 @@
+@@ -1,121 +1,130 @@
+-SHELL := /bin/bash
 -GORELEASER_VERSION := v1.17.2
 +SHELL=/bin/bash
  
@@ -8,15 +9,15 @@
 -.PHONY: build 
 -build:
 -ifneq "" "$(findstring NT,$(shell uname))" # windows
--	CC=gcc CXX=g++ make cli-builder
+-	CC=gcc CXX=g++ $(MAKE) cli-builder
 -else ifneq (,$(findstring Linux,$(shell uname)))
 -    ifneq (,$(findstring musl,$(shell ldd --version))) # linux (musl)
--		CC=gcc CXX=g++ TAGS=musl make cli-builder
+-		CC=gcc CXX=g++ TAGS=musl $(MAKE) cli-builder
 -    else # linux (glibc)
--		CC=gcc CXX=g++ make cli-builder
+-		CC=gcc CXX=g++ $(MAKE) cli-builder
 -    endif
 -else # darwin
--	make cli-builder
+-	$(MAKE) cli-builder
 -endif
 -
 -# Cross-compile from darwin to any of the OS/Arch pairs below
@@ -24,9 +25,9 @@
 -cross-build:
 -ifeq ($(GOARCH),arm64)
 -    ifeq ($(GOOS),linux) # linux/arm64
--		CGO_ENABLED=1 CC=aarch64-linux-musl-gcc CXX=aarch64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl make cli-builder
+-		CGO_ENABLED=1 CC=aarch64-linux-musl-gcc CXX=aarch64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl $(MAKE) cli-builder
 -    else # darwin/arm64
--		CGO_ENABLED=1 make cli-builder
+-		CGO_ENABLED=1 $(MAKE) cli-builder
 -    endif
 +ifndef VERSION
 +	VERSION=$(CLI_VERSION)
@@ -52,11 +53,11 @@
 +SYSCONFDIR=$(PREFIX)/etc/$(PACKAGE_TITLE)
  else
 -    ifeq ($(GOOS),windows) # windows/amd64
--		CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ CGO_LDFLAGS="-static" make cli-builder
+-		CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ CGO_LDFLAGS="-static" $(MAKE) cli-builder
 -    else ifeq ($(GOOS),linux) # linux/amd64
--		CGO_ENABLED=1 CC=x86_64-linux-musl-gcc CXX=x86_64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl make cli-builder
+-		CGO_ENABLED=1 CC=x86_64-linux-musl-gcc CXX=x86_64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl $(MAKE) cli-builder
 -    else # darwin/amd64
--		CGO_ENABLED=1 make cli-builder
+-		CGO_ENABLED=1 $(MAKE) cli-builder
 -    endif
 -endif
 -

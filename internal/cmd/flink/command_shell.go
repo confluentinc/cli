@@ -1,6 +1,8 @@
 package flink
 
 import (
+	"net/url"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config/load"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -8,7 +10,6 @@ import (
 	client "github.com/confluentinc/cli/internal/pkg/flink/app"
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
 	"github.com/spf13/cobra"
-	"net/url"
 )
 
 func (c *command) newShellCommand(prerunner pcmd.PreRunner) *cobra.Command {
@@ -102,7 +103,7 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		return err
 	}
 
-	client.StartApp(environmentId, resourceId, kafkaClusterId, computePoolId, identityPoolId, c.AuthToken,
+	client.StartApp(environmentId, resourceId, kafkaClusterId, computePoolId, identityPool, c.AuthToken,
 		c.authenticated(prerunner.Authenticated(c.AuthenticatedCLICommand), cmd),
 		&types.ApplicationOptions{
 			FLINK_GATEWAY_URL:        parsedUrl.String(),

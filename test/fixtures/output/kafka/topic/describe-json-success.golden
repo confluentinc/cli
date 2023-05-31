@@ -12,7 +12,7 @@
   {
     "name": "num.partitions",
     "value": "3",
-    "read_only": true
+    "read_only": false
   },
   {
     "name": "retention.ms",

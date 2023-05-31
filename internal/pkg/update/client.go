@@ -2,17 +2,17 @@
 package update
 
 import (
-	"crypto/sha256"
+	"bytes"
+	"encoding/hex"
 	"fmt"
-	"io"
 	"os"
-	"path/filepath"
 	"runtime"
 	"strings"
 	"time"
 	"unicode"
 
 	"github.com/hashicorp/go-version"
+	"github.com/inconshreveable/go-update"
 	"github.com/jonboulle/clockwork"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -26,7 +26,6 @@ type Client interface {
 	GetLatestReleaseNotes(cliName, currentVersion string) (string, []string, error)
 	PromptToDownload(cliName, currVersion, latestVersion string, releaseNotes string, confirm bool) bool
 	UpdateBinary(cliName, version, path string, noVerify bool) error
-	VerifyChecksum(newBin, cliName, version string) error
 }
 
 type client struct {
@@ -191,45 +190,6 @@ func (c *client) PromptToDownload(cliName, currVersion, latestVersion, releaseNo
 	}
 }
 
-func (c *client) VerifyChecksum(newBin, cliName, version string) error {
-	// Step 1: Compute actual hash of downloaded file
-
-	f, err := os.Open(newBin)
-	if err != nil {
-		return errors.Wrap(err, "failed to open new binary file for checksum verification")
-	}
-
-	defer f.Close()
-	h := sha256.New()
-	if _, err := io.Copy(h, f); err != nil {
-		return errors.Wrap(err, "failed to load new binary file for checksum verification")
-	}
-
-	actualHash := fmt.Sprintf("%x", h.Sum(nil))
-
-	// Step 2: Download expected checksum
-
-	allChecksumsForVersion, err := c.Repository.DownloadChecksums(cliName, version)
-	if err != nil {
-		return errors.Wrapf(err, "failed to download checksums file")
-	}
-
-	log.CliLogger.Tracef("Actual hash of new binary: %s", actualHash)
-
-	// Step 3: Check if checksums match
-
-	// Don't filter checksums for the current platform, just
-	// check if any platform's checksum is a match (this is arguably better
-	// in case we add more platforms in the future)
-	if !strings.Contains(allChecksumsForVersion, actualHash) {
-		return errors.Errorf("checksum verification failed: new file's checksum is: %s, but not found in the list of valid checksums:\n%s", actualHash, allChecksumsForVersion)
-	}
-
-	log.CliLogger.Tracef("Checksum verification succeeded")
-
-	return nil
-}
-
 // UpdateBinary replaces the named binary at path with the desired version
 func (c *client) UpdateBinary(cliName, version, path string, noVerify bool) error {
 	downloadDir, err := c.fs.MkdirTemp("", cliName)
@@ -246,62 +206,53 @@ func (c *client) UpdateBinary(cliName, version, path string, noVerify bool) erro
 	fmt.Fprintf(c.Out, "Downloading %s version %s...\n", cliName, version)
 	startTime := c.clock.Now()
 
-	newBin, bytes, err := c.Repository.DownloadVersion(cliName, version, downloadDir)
+	payload, err := c.Repository.DownloadVersion(cliName, version, downloadDir)
 	if err != nil {
 		return errors.Wrapf(err, errors.DownloadVersionErrorMsg, cliName, version, downloadDir)
 	}
 
-	mb := float64(bytes) / 1024.0 / 1024.0
+	mb := float64(len(payload)) / 1024.0 / 1024.0
 	timeSpent := c.clock.Now().Sub(startTime).Seconds()
 	fmt.Fprintf(c.Out, "Done. Downloaded %.2f MB in %.0f seconds. (%.2f MB/s)\n", mb, timeSpent, mb/timeSpent)
 
+	opts := update.Options{}
 	if !noVerify {
-		if err := c.VerifyChecksum(newBin, cliName, version); err != nil {
-			return errors.Wrapf(err, "checksum verification failed for new binary")
+		content, err := c.Repository.DownloadChecksums(cliName, version)
+		if err != nil {
+			return errors.Wrapf(err, "failed to download checksums file")
+		}
+
+		binary := getBinaryName(version, runtime.GOOS, runtime.GOARCH)
+		checksum, err := findChecksum(content, binary)
+		if err != nil {
+			return err
+		}
+
+		opts.Checksum = make([]byte, len(checksum)/2)
+		if _, err := hex.Decode(opts.Checksum, []byte(checksum)); err != nil {
+			return err
 		}
 	}
 
-	// On Windows, we have to move the old binary out of the way first, then copy the new one into place,
-	// because Windows doesn't support directly overwriting a running binary.
-	// Note, this should _only_ be done on Windows; on unix platforms, cross-device moves can fail (e.g.
-	// binary is on another device than the system tmp dir); but on such platforms we don't need to do moves anyway
+	return update.Apply(bytes.NewReader(payload), opts)
+}
 
-	newPath := filepath.Join(filepath.Dir(path), cliName)
+func getBinaryName(version, os, arch string) string {
+	name := fmt.Sprintf("confluent_%s_%s_%s", version, os, arch)
+	if os == "windows" {
+		name += ".exe"
+	}
+	return name
+}
 
-	if c.OS == "windows" {
-		newPath += ".exe"
-
-		// The old version will get deleted automatically eventually as we put it in the system's or user's temp dir
-		previousVersionBinary := filepath.Join(downloadDir, cliName+".old")
-		err = c.fs.Move(path, previousVersionBinary)
-		if err != nil {
-			return errors.Wrapf(err, errors.MoveFileErrorMsg, path, previousVersionBinary)
-		}
-		err = c.copyFile(newBin, newPath)
-		if err != nil {
-			// If we moved the old binary out of the way but couldn't put the new one in place,
-			// attempt to restore the old binary to where it was before bailing
-			restoreErr := c.fs.Move(previousVersionBinary, path)
-			if restoreErr != nil {
-				// Warning: this is a bad case where the user will need to re-download the CLI.  However,
-				// we shouldn't reach here since if the Move succeeded in one direction it's likely to work
-				// in the opposite direction as well
-				return errors.Wrapf(restoreErr, errors.MoveRestoreErrorMsg, previousVersionBinary, path)
-			}
-			return errors.Wrapf(err, errors.CopyErrorMsg, newBin, newPath)
-		}
-	} else {
-		err = c.copyFile(newBin, newPath)
-		if err != nil {
-			return errors.Wrapf(err, errors.CopyErrorMsg, newBin, newPath)
+func findChecksum(content, binary string) (string, error) {
+	for _, line := range strings.Split(content, "\n") {
+		x := strings.Split(line, "  ")
+		if len(x) == 2 && x[1] == binary {
+			return x[0], nil
 		}
 	}
-
-	if err := c.fs.Chmod(newPath, 0755); err != nil {
-		return errors.Wrapf(err, errors.ChmodErrorMsg, newPath)
-	}
-
-	return nil
+	return "", fmt.Errorf("checksum not found for %s", binary)
 }
 
 func (c *client) readCheckFile() (bool, error) {
@@ -340,30 +291,4 @@ func (c *client) touchCheckFile() error {
 		return err
 	}
 	return nil
-}
-
-// copyFile copies from src to dst until either EOF is reached
-// on src or an error occurs. It verifies src exists and removes
-// the dst if it exists.
-func (c *client) copyFile(src, dst string) error {
-	cleanSrc := filepath.Clean(src)
-	cleanDst := filepath.Clean(dst)
-	if cleanSrc == cleanDst {
-		return nil
-	}
-	sf, err := c.fs.Open(cleanSrc)
-	if err != nil {
-		return err
-	}
-	defer sf.Close()
-	if err := c.fs.Remove(cleanDst); err != nil && !os.IsNotExist(err) {
-		return err
-	}
-	df, err := c.fs.Create(cleanDst)
-	if err != nil {
-		return err
-	}
-	defer df.Close()
-	_, err = c.fs.Copy(df, sf)
-	return err
 }
