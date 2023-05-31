@@ -26,10 +26,10 @@ func (s *CLITestSuite) TestFlinkHelp() {
 func (s *CLITestSuite) TestFlinkComputePool() {
 	tests := []CLITest{
 		{args: "flink compute-pool create my-compute-pool --cloud aws --region us-west-2", fixture: "flink/compute-pool/create.golden"},
-		{args: "flink compute-pool delete lfcpc-12345", fixture: "flink/compute-pool/delete.golden"},
-		{args: "flink compute-pool describe lfcpc-12345", fixture: "flink/compute-pool/describe.golden"},
+		{args: "flink compute-pool delete lfcp-123456 --force", fixture: "flink/compute-pool/delete.golden"},
+		{args: "flink compute-pool describe lfcp-123456", fixture: "flink/compute-pool/describe.golden"},
 		{args: "flink compute-pool list", fixture: "flink/compute-pool/list.golden"},
-		{args: "flink compute-pool update lfcpc-12345", fixture: "flink/compute-pool/update.golden"},
+		{args: "flink compute-pool update lfcp-123456 --cfu 2", fixture: "flink/compute-pool/update.golden"},
 	}
 
 	for _, test := range tests {
@@ -40,9 +40,10 @@ func (s *CLITestSuite) TestFlinkComputePool() {
 
 func (s *CLITestSuite) TestFlinkComputePoolUse() {
 	tests := []CLITest{
-		{args: "flink compute-pool use lfcpc-12345", login: "cloud", fixture: "flink/compute-pool/use.golden"},
+		{args: "flink compute-pool use lfcp-123456", login: "cloud", fixture: "flink/compute-pool/use.golden"},
 		{args: "flink compute-pool describe", fixture: "flink/compute-pool/describe-after-use.golden"},
-		{args: "flink compute-pool update", fixture: "flink/compute-pool/update-after-use.golden"},
+		{args: "flink compute-pool list", fixture: "flink/compute-pool/list-after-use.golden"},
+		{args: "flink compute-pool update --cfu 2", fixture: "flink/compute-pool/update-after-use.golden"},
 	}
 
 	for _, test := range tests {
@@ -66,7 +67,7 @@ func (s *CLITestSuite) TestFlinkRegion() {
 
 func (s *CLITestSuite) TestFlinkStatement() {
 	tests := []CLITest{
-		{args: "flink statement delete", fixture: "flink/statement/delete.golden"},
+		{args: "flink statement delete --force", fixture: "flink/statement/delete.golden"},
 		{args: "flink statement list", fixture: "flink/statement/list.golden"},
 	}
 

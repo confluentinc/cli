@@ -1,5 +1,5 @@
 +---------+-------------------+
-| Current | false             |
+| Current | true              |
 | ID      | lfcp-123456       |
 | Name    | my-compute-pool-1 |
 | CFU     |                 2 |

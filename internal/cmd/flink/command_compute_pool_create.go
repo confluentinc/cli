@@ -1,7 +1,6 @@
 package flink
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -107,7 +106,6 @@ func (c *command) autocompleteRegions(cmd *cobra.Command, args []string) []strin
 	}
 
 	regions, err := c.V2Client.ListFlinkRegions(strings.ToUpper(cloud))
-	fmt.Println(regions, err)
 	if err != nil {
 		return nil
 	}
