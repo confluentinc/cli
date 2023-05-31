@@ -19,9 +19,9 @@ func StartApp(envId, orgResourceId, kafkaClusterId, computePoolId, identityPool 
 
 	// Client used to communicate with the gateway
 	client := ccloudv2.NewFlinkGatewayClient(
-		appOptions.FLINK_GATEWAY_URL,
-		appOptions.USER_AGENT,
-		appOptions.HTTP_CLIENT_UNSAFE_TRACE,
+		appOptions.FlinkGatewayUrl,
+		appOptions.UserAgent,
+		appOptions.UnsafeTrace,
 		authToken,
 		envId,
 		orgResourceId,

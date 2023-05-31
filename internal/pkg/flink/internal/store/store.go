@@ -13,7 +13,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/flink/config"
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/results"
-	"github.com/confluentinc/cli/internal/pkg/flink/test/generators"
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -31,8 +30,6 @@ type Store struct {
 	Properties      map[string]string
 	exitApplication func()
 	client          ccloudv2.GatewayClientInterface
-	demoMode        bool
-	mockCount       int
 }
 
 func (s *Store) ProcessLocalStatement(statement string) (*types.ProcessedStatement, *types.StatementError) {
@@ -61,15 +58,6 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 		return result, sErr
 	}
 
-	// TODO: Remove this once we have a real backend
-	if s.demoMode {
-		if !startsWithValidSQL(statement) {
-			return nil, &types.StatementError{Msg: "Error: Invalid syntax '" + statement + "'. Please check your statement."}
-		} else {
-			return &types.ProcessedStatement{}, nil
-		}
-	}
-
 	// Process remote statements
 	statementObj, err := s.client.CreateStatement(statement, propsWithLocalTimezone(s.Properties))
 	if err != nil {
@@ -82,7 +70,7 @@ func (s *Store) WaitPendingStatement(ctx context.Context, statement types.Proces
 	// Process local statements
 
 	statementStatus := statement.Status
-	if statementStatus != types.COMPLETED && statementStatus != types.RUNNING && !s.demoMode {
+	if statementStatus != types.COMPLETED && statementStatus != types.RUNNING {
 		// Variable that controls how often we poll a pending statement
 
 		updatedStatement, err := s.waitForPendingStatement(ctx, statement.StatementName, timeout(s.Properties))
@@ -105,21 +93,6 @@ func (s *Store) WaitPendingStatement(ctx context.Context, statement types.Proces
 func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError) {
 	// Process local statements
 	if statement.IsLocalStatement {
-		return &statement, nil
-	}
-
-	// TODO: Remove this once we have a real backend
-	if s.demoMode {
-		mockResults := generators.MockCount(s.mockCount)
-		s.mockCount++
-		statementResults := mockResults.StatementResults
-		resultSchema := mockResults.ResultSchema
-		convertedResults, err := results.ConvertToInternalResults(statementResults.Results.GetData(), resultSchema)
-		if err != nil {
-			return nil, &types.StatementError{Msg: err.Error()}
-		}
-		statement.StatementResults = convertedResults
-		statement.PageToken = "TEST"
 		return &statement, nil
 	}
 
@@ -156,12 +129,10 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 }
 
 func (s *Store) DeleteStatement(statementName string) bool {
-	if !s.demoMode {
-		err := s.client.DeleteStatement(statementName)
-		if err != nil {
-			log.CliLogger.Warnf("Failed to delete the statement: %v", err)
-			return false
-		}
+	err := s.client.DeleteStatement(statementName)
+	if err != nil {
+		log.CliLogger.Warnf("Failed to delete the statement: %v", err)
+		return false
 	}
 	return true
 }
@@ -235,8 +206,8 @@ func extractPageToken(nextUrl string) (string, error) {
 func NewStore(client ccloudv2.GatewayClientInterface, exitApplication func(), appOptions *types.ApplicationOptions) StoreInterface {
 	defaultProperties := make(map[string]string)
 	if appOptions != nil {
-		if appOptions.DEFAULT_PROPERTIES != nil {
-			defaultProperties = appOptions.DEFAULT_PROPERTIES
+		if appOptions.DefaultProperties != nil {
+			defaultProperties = appOptions.DefaultProperties
 		}
 	} else {
 		appOptions = &types.ApplicationOptions{} // Initialize empty/default options
@@ -245,7 +216,6 @@ func NewStore(client ccloudv2.GatewayClientInterface, exitApplication func(), ap
 	store := Store{
 		Properties:      defaultProperties,
 		client:          client,
-		demoMode:        appOptions.MOCK_STATEMENTS_OUTPUT_DEMO,
 		exitApplication: exitApplication,
 	}
 

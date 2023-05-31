@@ -12,7 +12,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 
 	"github.com/olekukonko/tablewriter"
-	"pgregory.net/rapid"
 
 	"github.com/confluentinc/go-prompt"
 
@@ -23,7 +22,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/results"
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/reverseisearch"
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/store"
-	"github.com/confluentinc/cli/internal/pkg/flink/test/generators"
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -142,15 +140,6 @@ func (c *InputController) RunInteractiveInput() {
 
 		// decide if we want to display results using TView or just a plain table
 		if shouldUseTView(*processedStatement) {
-			demoMode := c.appOptions != nil && c.appOptions.MOCK_STATEMENTS_OUTPUT_DEMO
-			if demoMode {
-				if rapid.Bool().Example() {
-					mockExample := generators.MockResults(5, 2).Example()
-					statementResults, _ := results.ConvertToInternalResults(*mockExample.StatementResults.Results.Data, mockExample.ResultSchema)
-					processedStatement.StatementResults = statementResults
-					processedStatement.PageToken = ""
-				}
-			}
 			c.table.Init(*processedStatement)
 			return
 		}

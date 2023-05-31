@@ -106,10 +106,10 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 	client.StartApp(environmentId, resourceId, cluster, computePool, identityPool, c.AuthToken,
 		c.authenticated(prerunner.Authenticated(c.AuthenticatedCLICommand), cmd),
 		&types.ApplicationOptions{
-			FLINK_GATEWAY_URL:        parsedUrl.String(),
-			HTTP_CLIENT_UNSAFE_TRACE: unsafeTrace,
-			DEFAULT_PROPERTIES:       map[string]string{"execution.runtime-mode": "streaming"},
-			USER_AGENT:               c.Version.UserAgent,
+			FlinkGatewayUrl:   parsedUrl.String(),
+			UnsafeTrace:       unsafeTrace,
+			DefaultProperties: map[string]string{"execution.runtime-mode": "streaming"},
+			UserAgent:         c.Version.UserAgent,
 		})
 	return nil
 }
