@@ -31,11 +31,10 @@ func NewDynamicContext(context *v1.Context, client *ccloudv1.Client, v2Client *c
 	}
 }
 
-// Parse "--environment" and "--cluster" flag values into config struct
 func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, client *ccloudv1.Client) error {
 	if environment, _ := cmd.Flags().GetString("environment"); environment != "" {
 		if d.Credential.CredentialType == v1.APIKey {
-			return errors.New(errors.EnvironmentFlagWithApiLoginErrorMsg)
+			return errors.New("`--environment` flag should not be passed for API key context")
 		}
 		ctx := d.Config.Context()
 		d.Config.SetOverwrittenCurrentEnvironment(ctx.CurrentEnvironment)
@@ -44,11 +43,19 @@ func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, client *cclou
 
 	if cluster, _ := cmd.Flags().GetString("cluster"); cluster != "" {
 		if d.Credential.CredentialType == v1.APIKey {
-			return errors.New(errors.ClusterFlagWithApiLoginErrorMsg)
+			return errors.New("`--cluster` flag should not be passed for API key context, cluster is inferred")
 		}
 		ctx := d.Config.Context()
 		d.Config.SetOverwrittenCurrentKafkaCluster(ctx.KafkaClusterContext.GetActiveKafkaClusterId())
 		ctx.KafkaClusterContext.SetActiveKafkaCluster(cluster)
+	}
+
+	if computePool, _ := cmd.Flags().GetString("compute-pool"); computePool != "" {
+		ctx := d.Config.Context()
+		d.Config.SetOverwrittenFlinkComputePool(ctx.GetCurrentFlinkComputePool())
+		if err := ctx.SetCurrentFlinkComputePool(computePool); err != nil {
+			return err
+		}
 	}
 
 	return nil
