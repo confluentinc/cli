@@ -50,7 +50,7 @@ var flagRules = []linter.FlagRule{
 	linter.FlagFilter(linter.RequireStringSlicePrefix, linter.ExcludeFlag("property")),
 
 	linter.FlagFilter(linter.RequireFlagUsageMessage, linter.ExcludeFlag("key-deserializer", "value-deserializer")),
-	linter.RequireFlagUsageRealWords,
+	linter.RequireFlagUsageRealWords(properNouns),
 	linter.RequireFlagUsageCapitalized(properNouns),
 	linter.FlagFilter(
 		linter.RequireFlagUsageEndWithPunctuation,
