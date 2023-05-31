@@ -126,7 +126,12 @@ func (c *AuthenticatedCLICommand) GetFlinkGatewayClient() (*ccloudv2.FlinkGatewa
 	ctx := c.Config.Context()
 
 	if c.flinkGatewayClient == nil {
-		computePool, err := c.V2Client.DescribeFlinkComputePool(ctx.GetCurrentFlinkComputePool(), ctx.GetCurrentEnvironment())
+		computePoolId := ctx.GetCurrentFlinkComputePool()
+		if computePoolId == "" {
+			return nil, errors.NewErrorWithSuggestions("no compute pool selected", "Select a compute pool with `confluent flink compute-pool use` or `--compute-pool`.")
+		}
+
+		computePool, err := c.V2Client.DescribeFlinkComputePool(computePoolId, ctx.GetCurrentEnvironment())
 		if err != nil {
 			return nil, err
 		}

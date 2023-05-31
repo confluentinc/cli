@@ -21,6 +21,7 @@ func (c *command) newStatementDeleteCommand() *cobra.Command {
 	}
 
 	pcmd.AddForceFlag(cmd)
+	c.addComputePoolFlag(cmd)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
@@ -38,13 +39,12 @@ func (c *command) statementDelete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	statement, err := client.GetStatement(environmentId, args[0], c.Context.LastOrgId)
-	if err != nil {
+	if _, err := client.GetStatement(environmentId, args[0], c.Context.LastOrgId); err != nil {
 		return err
 	}
 
 	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmYesNoMsg, resource.FlinkStatement, args[0])
-	if ok, err := form.ConfirmDeletion(cmd, promptMsg, statement.Spec.GetStatementName()); err != nil || !ok {
+	if ok, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil || !ok {
 		return err
 	}
 

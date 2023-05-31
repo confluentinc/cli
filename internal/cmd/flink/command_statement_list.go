@@ -13,6 +13,7 @@ func (c *command) newStatementListCommand() *cobra.Command {
 		RunE:  c.statementList,
 	}
 
+	c.addComputePoolFlag(cmd)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -30,7 +31,7 @@ func (c *command) statementList(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	
+
 	statements, err := client.ListStatements(environmentId, c.Context.LastOrgId)
 	if err != nil {
 		return err

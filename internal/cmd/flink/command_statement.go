@@ -1,6 +1,11 @@
 package flink
 
-import "github.com/spf13/cobra"
+import (
+	"fmt"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/spf13/cobra"
+)
 
 type statementOut struct {
 	Name         string `human:"Name" serialized:"name"`
@@ -20,4 +25,30 @@ func (c *command) newStatementCommand() *cobra.Command {
 	cmd.AddCommand(c.newStatementListCommand())
 
 	return cmd
+}
+
+func (c *command) addComputePoolFlag(cmd *cobra.Command) {
+	cmd.Flags().String("compute-pool", "", "Flink compute pool ID.")
+
+	pcmd.RegisterFlagCompletionFunc(cmd, "compute-pool", func(cmd *cobra.Command, args []string) []string {
+		if err := c.PersistentPreRunE(cmd, args); err != nil {
+			return nil
+		}
+
+		environmentId, err := c.Context.EnvironmentId()
+		if err != nil {
+			return nil
+		}
+
+		computePools, err := c.V2Client.ListFlinkComputePools(environmentId)
+		if err != nil {
+			return nil
+		}
+
+		suggestions := make([]string, len(computePools))
+		for i, computePool := range computePools {
+			suggestions[i] = fmt.Sprintf("%s\t%s", computePool.GetId(), computePool.Spec.GetDisplayName())
+		}
+		return suggestions
+	})
 }
