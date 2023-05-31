@@ -269,25 +269,26 @@ func (c *InputController) printResultToSTDOUT(statementResults *types.StatementR
 		// set a default size on error
 		windowSize = 100
 	}
-
 	fixedPadding := 4                                          // table border left and right
 	variablePadding := (len(statementResults.Headers) - 1) * 3 // column separator
 	totalAvailableChars := windowSize - fixedPadding - variablePadding
-	charsPerColumn := totalAvailableChars / len(statementResults.Headers) // distribute chars evenly
-	formatterOptions := &types.FormatterOptions{MaxCharCountToDisplay: charsPerColumn}
 
-	formattedResults := make([][]string, len(statementResults.Rows))
-	for rowIdx, row := range statementResults.Rows {
-		formattedRow := make([]string, len(row.Fields))
-		for colIdx, field := range row.Fields {
-			formattedRow[colIdx] = field.Format(formatterOptions)
-		}
-		formattedResults[rowIdx] = formattedRow
-	}
+	materializedStatementResults := results.NewMaterializedStatementResults(statementResults.GetHeaders(), maxResultsCapacity)
+	materializedStatementResults.Append(statementResults.GetRows()...)
+	columnWidths := materializedStatementResults.GetMaxWidthPerColum()
+	columnWidths = results.GetTruncatedColumnWidths(columnWidths, totalAvailableChars)
+
 	rawTable := tablewriter.NewWriter(os.Stdout)
 	rawTable.SetAutoFormatHeaders(false)
 	rawTable.SetHeader(statementResults.Headers)
-	rawTable.AppendBulk(formattedResults)
+	// add actual row data
+	materializedStatementResults.ForEach(func(rowIdx int, row *types.StatementResultRow) {
+		formattedRow := make([]string, len(row.Fields))
+		for colIdx, field := range row.Fields {
+			formattedRow[colIdx] = results.TruncateString(field.ToString(), columnWidths[colIdx])
+		}
+		rawTable.Append(formattedRow)
+	})
 	rawTable.Render() // Send output
 }
 

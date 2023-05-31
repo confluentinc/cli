@@ -33,7 +33,7 @@ type StatementResultRow struct {
 func (r StatementResultRow) GetRowKey() string {
 	rowKey := strings.Builder{}
 	for _, field := range r.Fields {
-		rowKey.WriteString(field.Format(nil))
+		rowKey.WriteString(field.ToString())
 	}
 	return rowKey.String()
 }

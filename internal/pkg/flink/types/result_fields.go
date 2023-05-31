@@ -2,7 +2,6 @@ package types
 
 import (
 	"fmt"
-	"math"
 	"strings"
 
 	v1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"
@@ -110,20 +109,9 @@ func NewResultFieldType(obj v1.DataType) StatementResultFieldType {
 	return NULL
 }
 
-type FormatterOptions struct {
-	MaxCharCountToDisplay int
-}
-
-func (f *FormatterOptions) GetMaxCharCountToDisplay() int {
-	if f == nil {
-		return math.MaxInt32
-	}
-	return f.MaxCharCountToDisplay
-}
-
 type StatementResultField interface {
 	GetType() StatementResultFieldType
-	Format(*FormatterOptions) string
+	ToString() string
 	ToSDKType() v1.SqlV1alpha1ResultItemRowOneOf
 }
 
@@ -136,10 +124,7 @@ func (f AtomicStatementResultField) GetType() StatementResultFieldType {
 	return f.Type
 }
 
-func (f AtomicStatementResultField) Format(options *FormatterOptions) string {
-	if options != nil {
-		return truncateString(f.Value, options.GetMaxCharCountToDisplay())
-	}
+func (f AtomicStatementResultField) ToString() string {
 	return f.Value
 }
 
@@ -161,20 +146,16 @@ func (f ArrayStatementResultField) GetType() StatementResultFieldType {
 	return f.Type
 }
 
-func (f ArrayStatementResultField) Format(options *FormatterOptions) string {
+func (f ArrayStatementResultField) ToString() string {
 	sb := strings.Builder{}
 	sb.WriteString("[")
 	for idx, item := range f.Values {
-		sb.WriteString(item.Format(nil))
+		sb.WriteString(item.ToString())
 		if idx != len(f.Values)-1 {
 			sb.WriteString(", ")
 		}
 	}
 	sb.WriteString("]")
-
-	if options != nil {
-		return truncateString(sb.String(), options.GetMaxCharCountToDisplay())
-	}
 	return sb.String()
 }
 
@@ -202,20 +183,16 @@ func (f MapStatementResultField) GetType() StatementResultFieldType {
 	return f.Type
 }
 
-func (f MapStatementResultField) Format(options *FormatterOptions) string {
+func (f MapStatementResultField) ToString() string {
 	sb := strings.Builder{}
 	sb.WriteString("{")
 	for idx, entry := range f.Entries {
-		sb.WriteString(fmt.Sprintf("%s=%s", entry.Key.Format(nil), entry.Value.Format(nil)))
+		sb.WriteString(fmt.Sprintf("%s=%s", entry.Key.ToString(), entry.Value.ToString()))
 		if idx != len(f.Entries)-1 {
 			sb.WriteString(", ")
 		}
 	}
 	sb.WriteString("}")
-
-	if options != nil {
-		return truncateString(sb.String(), options.GetMaxCharCountToDisplay())
-	}
 	return sb.String()
 }
 
@@ -240,20 +217,16 @@ func (f RowStatementResultField) GetType() StatementResultFieldType {
 	return f.Type
 }
 
-func (f RowStatementResultField) Format(options *FormatterOptions) string {
+func (f RowStatementResultField) ToString() string {
 	sb := strings.Builder{}
 	sb.WriteString("(")
 	for idx, item := range f.Values {
-		sb.WriteString(item.Format(nil))
+		sb.WriteString(item.ToString())
 		if idx != len(f.Values)-1 {
 			sb.WriteString(", ")
 		}
 	}
 	sb.WriteString(")")
-
-	if options != nil {
-		return truncateString(sb.String(), options.GetMaxCharCountToDisplay())
-	}
 	return sb.String()
 }
 
@@ -263,14 +236,4 @@ func (f RowStatementResultField) ToSDKType() v1.SqlV1alpha1ResultItemRowOneOf {
 		rowItems[idx] = value.ToSDKType()
 	}
 	return v1.SqlV1alpha1ResultItemRowOneOf{SqlV1alpha1ResultItemRow: &v1.SqlV1alpha1ResultItemRow{Items: rowItems}}
-}
-
-func truncateString(str string, maxCharCountToDisplay int) string {
-	if len(str) > maxCharCountToDisplay {
-		if maxCharCountToDisplay <= 3 {
-			return "..."
-		}
-		return str[:maxCharCountToDisplay-3] + "..."
-	}
-	return str
 }
