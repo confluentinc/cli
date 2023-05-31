@@ -108,8 +108,8 @@ func (c *command) clusterEnable(cmd *cobra.Command, _ []string) error {
 		}
 
 		out = &enableOut{
-			Id:          existingCluster.Id,
-			EndpointUrl: existingCluster.Endpoint,
+			Id:          existingCluster.GetId(),
+			EndpointUrl: existingCluster.Spec.GetHttpEndpoint(),
 		}
 	} else {
 		out = &enableOut{
