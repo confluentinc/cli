@@ -283,9 +283,7 @@ func setCmkClusterConfig(typeString string, cku int32, encryptionKeyID string) *
 			CmkV2Standard: &cmkv2.CmkV2Standard{Kind: "Standard"},
 		}
 	case skuEnterprise:
-		return &cmkv2.CmkV2ClusterSpecConfigOneOf{
-			CmkV2Enterprise: &cmkv2.CmkV2Enterprise{Kind: "Enterprise"},
-		}
+		return &cmkv2.CmkV2ClusterSpecConfigOneOf{CmkV2Enterprise: &cmkv2.CmkV2Enterprise{Kind: "Enterprise"}}
 	case skuDedicated:
 		var encryptionPtr *string
 		if encryptionKeyID != "" {
