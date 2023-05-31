@@ -22,6 +22,7 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/connect"
 	"github.com/confluentinc/cli/internal/cmd/context"
 	"github.com/confluentinc/cli/internal/cmd/environment"
+	"github.com/confluentinc/cli/internal/cmd/flink"
 	"github.com/confluentinc/cli/internal/cmd/iam"
 	"github.com/confluentinc/cli/internal/cmd/kafka"
 	"github.com/confluentinc/cli/internal/cmd/ksql"
@@ -109,6 +110,7 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 	cmd.AddCommand(context.New(prerunner, flagResolver))
 	cmd.AddCommand(connect.New(cfg, prerunner))
 	cmd.AddCommand(environment.New(prerunner))
+	cmd.AddCommand(flink.New(prerunner))
 	cmd.AddCommand(iam.New(cfg, prerunner))
 	cmd.AddCommand(kafka.New(cfg, prerunner, cfg.Version.ClientID))
 	cmd.AddCommand(ksql.New(cfg, prerunner))
