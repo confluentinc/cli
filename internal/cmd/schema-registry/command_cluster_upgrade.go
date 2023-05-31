@@ -66,12 +66,20 @@ func (c *command) clusterUpgrade(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	if strings.EqualFold(clusterSpec.GetPackage(), packageDisplayName) {
+	if strings.ToLower(clusterSpec.GetPackage()) == packageDisplayName {
 		output.ErrPrintf(errors.SRInvalidPackageUpgrade, environmentId, packageDisplayName)
 		return nil
 	}
 
-	clusterUpdateRequest := createClusterUpdateRequest(packageDisplayName, environmentId)
+	clusterUpdateRequest := &srcmv2.SrcmV2ClusterUpdate{
+		Spec: &srcmv2.SrcmV2ClusterSpecUpdate{
+			Package: srcmv2.PtrString(packageDisplayName),
+			Environment: &srcmv2.GlobalObjectReference{
+				Id: environmentId,
+			},
+		},
+	}
+
 	_, err = c.V2Client.UpgradeSchemaRegistryCluster(*clusterUpdateRequest, cluster.GetId())
 	if err != nil {
 		return err
@@ -79,17 +87,4 @@ func (c *command) clusterUpgrade(cmd *cobra.Command, _ []string) error {
 
 	output.Printf(errors.SchemaRegistryClusterUpgradedMsg, environmentId, packageDisplayName)
 	return nil
-}
-
-func createClusterUpdateRequest(packageType, environmentId string) *srcmv2.SrcmV2ClusterUpdate {
-	newClusterUpdateRequest := srcmv2.NewSrcmV2ClusterUpdateWithDefaults()
-	spec := srcmv2.NewSrcmV2ClusterSpecUpdateWithDefaults()
-	envObjectReference := srcmv2.NewGlobalObjectReferenceWithDefaults()
-	envObjectReference.SetId(environmentId)
-
-	spec.SetPackage(packageType)
-	spec.SetEnvironment(*envObjectReference)
-	newClusterUpdateRequest.SetSpec(*spec)
-
-	return newClusterUpdateRequest
 }

@@ -24,14 +24,12 @@ func (c *Client) SchemaRegistryApiContext() context.Context {
 }
 
 func (c *Client) GetStreamGovernanceRegionById(regionId string) (srcmv2.SrcmV2Region, error) {
-	req := c.SchemaRegistryClient.RegionsSrcmV2Api.GetSrcmV2Region(c.SchemaRegistryApiContext(), regionId)
-	region, httpResp, err := c.SchemaRegistryClient.RegionsSrcmV2Api.GetSrcmV2RegionExecute(req)
+	region, httpResp, err := c.SchemaRegistryClient.RegionsSrcmV2Api.GetSrcmV2Region(c.SchemaRegistryApiContext(), regionId).Execute()
 	return region, errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) CreateSchemaRegistryCluster(srCluster srcmv2.SrcmV2Cluster) (srcmv2.SrcmV2Cluster, error) {
-	req := c.SchemaRegistryClient.ClustersSrcmV2Api.CreateSrcmV2Cluster(c.SchemaRegistryApiContext()).SrcmV2Cluster(srCluster)
-	createdCluster, httpResp, err := c.SchemaRegistryClient.ClustersSrcmV2Api.CreateSrcmV2ClusterExecute(req)
+	createdCluster, httpResp, err := c.SchemaRegistryClient.ClustersSrcmV2Api.CreateSrcmV2Cluster(c.SchemaRegistryApiContext()).SrcmV2Cluster(srCluster).Execute()
 	return createdCluster, errors.CatchCCloudV2Error(err, httpResp)
 }
 
