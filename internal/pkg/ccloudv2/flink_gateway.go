@@ -34,12 +34,12 @@ func (c *FlinkGatewayClient) DeleteStatement(environmentId, statementName string
 	return errors.CatchCCloudV2Error(err, r)
 }
 
-func (c *FlinkGatewayClient) GetStatement(environmentId, statementName string) (flinkgatewayv1alpha1.SqlV1alpha1Statement, error) {
-	res, r, err := c.StatementsSqlV1alpha1Api.GetSqlV1alpha1Statement(c.flinkGatewayApiContext(), environmentId, statementName).Execute()
+func (c *FlinkGatewayClient) GetStatement(environmentId, statementName, orgId string) (flinkgatewayv1alpha1.SqlV1alpha1Statement, error) {
+	res, r, err := c.StatementsSqlV1alpha1Api.GetSqlV1alpha1Statement(c.flinkGatewayApiContext(), environmentId, statementName).OrgId(orgId).Execute()
 	return res, errors.CatchCCloudV2Error(err, r)
 }
 
-func (c *FlinkGatewayClient) ListStatements(environmentId string) ([]flinkgatewayv1alpha1.SqlV1alpha1Statement, error) {
-	res, r, err := c.StatementsSqlV1alpha1Api.ListSqlV1alpha1Statements(c.flinkGatewayApiContext(), environmentId).PageSize(ccloudV2ListPageSize).Execute()
+func (c *FlinkGatewayClient) ListStatements(environmentId, orgId string) ([]flinkgatewayv1alpha1.SqlV1alpha1Statement, error) {
+	res, r, err := c.StatementsSqlV1alpha1Api.ListSqlV1alpha1Statements(c.flinkGatewayApiContext(), environmentId).OrgId(orgId).PageSize(ccloudV2ListPageSize).Execute()
 	return res.GetData(), errors.CatchCCloudV2Error(err, r)
 }

@@ -38,7 +38,7 @@ func (c *command) statementDelete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	statement, err := client.GetStatement(environmentId, args[0])
+	statement, err := client.GetStatement(environmentId, args[0], c.Context.LastOrgId)
 	if err != nil {
 		return err
 	}
