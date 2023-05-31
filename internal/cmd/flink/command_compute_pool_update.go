@@ -3,7 +3,7 @@ package flink
 import (
 	"github.com/spf13/cobra"
 
-	flinkv2 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink/v2"
+	flinkv2 "github.com/confluentinc/ccloud-sdk-go-v2/flink/v2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"

@@ -80,8 +80,6 @@ github.com/cncf/xds/go v0.0.0-20211001041855-01bcc9b48dfe/go.mod h1:eXthEFrGJvWH
 github.com/cncf/xds/go v0.0.0-20211011173535-cb28da3451f1/go.mod h1:eXthEFrGJvWHgFFCl3hGmgk+/aYT6PnTQLykKQRLhEs=
 github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20230427001341-5f8d2cce5ad9 h1:SPb0hN0B/XCUvaeaxferqVb9X5xFGaMKBAlP3HVW+MQ=
 github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20230427001341-5f8d2cce5ad9/go.mod h1:Ja+ScdwUPpLwPDi/jI4FU2hI4Ncu3o4A4nxo05ehXHQ=
-github.com/confluentinc/ccloud-sdk-go-v2-internal/flink v0.0.13 h1:H1rQ7OdG1oYgJzTDDhqUSKpiXKl7dCbhvr7YwvV4mhY=
-github.com/confluentinc/ccloud-sdk-go-v2-internal/flink v0.0.13/go.mod h1:9rvR6g38fD621nvoggQVWOE3V6lD5RrA3uRAXP1oSi4=
 github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway v0.0.16 h1:mPwR25O2VNhE79lBagOqPhZiuy+a4PWI/+sB1811Uzw=
 github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway v0.0.16/go.mod h1:ajf3w9C+MEMBcGM3cda7ZNR9HM59UdBesec6lhbgKqY=
 github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0 h1:8fWyLwMuy8ec0MVF5Avd54UvbIxhDFhZzanHBVwgxdw=
@@ -96,6 +94,8 @@ github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.8.0 h1:n0F+4nIBXGOy7uDSw9i7tuBv1
 github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.8.0/go.mod h1:357Zo3HvVAe5iQgUFxUbQPAKJasGm8vFMkOB+krVmR8=
 github.com/confluentinc/ccloud-sdk-go-v2/connect v0.3.0 h1:hnYc/T55dGEqhFBYJIGBfSCMhyhT78U31kqEj9vdS94=
 github.com/confluentinc/ccloud-sdk-go-v2/connect v0.3.0/go.mod h1:vzL/maQvg76G8BMXM9Mx0FNrXI1ctdBr46/EbZ0VJso=
+github.com/confluentinc/ccloud-sdk-go-v2/flink v0.1.0 h1:2tOz0wHRGxW/4avqa3lCPlY6g6DL8x3t591S08rhub0=
+github.com/confluentinc/ccloud-sdk-go-v2/flink v0.1.0/go.mod h1:x+8kpYsJHRlvGuIB/tV0afPNyjKst3MsNOE6XsjgAl0=
 github.com/confluentinc/ccloud-sdk-go-v2/iam v0.10.0 h1:AV0bGk01bGfKzNq5IVqRi2iEc6YTeBbl//IYvQ/j8ag=
 github.com/confluentinc/ccloud-sdk-go-v2/iam v0.10.0/go.mod h1:2Lm82ly9Yh5LLhp8OTnUGqjz4JdIXAZ5a0/u9T+rGGU=
 github.com/confluentinc/ccloud-sdk-go-v2/identity-provider v0.2.0 h1:9TT8UCFRc5zUdsE7UgMz7hqN+2KYnIkBcAKCaiZJrXw=

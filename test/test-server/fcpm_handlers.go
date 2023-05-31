@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	flinkv2 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink/v2"
+	flinkv2 "github.com/confluentinc/ccloud-sdk-go-v2/flink/v2"
 )
 
 // Handler for: "/fcpm/v2/regions"

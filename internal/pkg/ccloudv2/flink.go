@@ -3,7 +3,7 @@ package ccloudv2
 import (
 	"context"
 
-	flinkv2 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink/v2"
+	flinkv2 "github.com/confluentinc/ccloud-sdk-go-v2/flink/v2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
