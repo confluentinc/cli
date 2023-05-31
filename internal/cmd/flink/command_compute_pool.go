@@ -40,12 +40,12 @@ func (c *command) validArgs(cmd *cobra.Command, args []string) []string {
 		return nil
 	}
 
-	environment, err := c.Context.EnvironmentId()
+	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return nil
 	}
 
-	computePools, err := c.V2Client.ListFlinkComputePools(environment)
+	computePools, err := c.V2Client.ListFlinkComputePools(environmentId)
 	if err != nil {
 		return nil
 	}

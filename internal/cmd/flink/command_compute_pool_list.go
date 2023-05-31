@@ -22,12 +22,12 @@ func (c *command) newComputePoolListCommand() *cobra.Command {
 }
 
 func (c *command) computePoolList(cmd *cobra.Command, _ []string) error {
-	environment, err := c.Context.EnvironmentId()
+	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}
 
-	computePools, err := c.V2Client.ListFlinkComputePools(environment)
+	computePools, err := c.V2Client.ListFlinkComputePools(environmentId)
 	if err != nil {
 		return err
 	}

@@ -69,12 +69,12 @@ func (c *clusterCommand) validArgs(cmd *cobra.Command, args []string) []string {
 		return nil
 	}
 
-	environment, err := c.Context.EnvironmentId()
+	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return nil
 	}
 
-	clusters, err := c.V2Client.ListKafkaClusters(environment)
+	clusters, err := c.V2Client.ListKafkaClusters(environmentId)
 	if err != nil {
 		return nil
 	}
