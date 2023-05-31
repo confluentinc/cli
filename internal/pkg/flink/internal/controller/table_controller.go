@@ -288,6 +288,7 @@ func (t *TableController) renderData() {
 	_, _, tableWidth, _ := t.table.GetInnerRect()
 	t.tableWidth = tableWidth
 	columnWidths := t.materializedStatementResults.GetMaxWidthPerColum()
+	truncatedColumnWidths := results.GetTruncatedColumnWidths(columnWidths, tableWidth)
 
 	// Print header
 	for colIdx, column := range t.materializedStatementResults.GetHeaders() {
@@ -295,7 +296,7 @@ func (t *TableController) renderData() {
 			SetTextColor(tcell.ColorYellow).
 			SetAlign(tview.AlignLeft).
 			SetSelectable(false).
-			SetMaxWidth(columnWidths[colIdx])
+			SetMaxWidth(truncatedColumnWidths[colIdx])
 		t.table.SetCell(0, colIdx, tableCell)
 	}
 
@@ -305,7 +306,7 @@ func (t *TableController) renderData() {
 			tableCell := tview.NewTableCell(tview.Escape(field.ToString())).
 				SetTextColor(tcell.ColorWhite).
 				SetAlign(tview.AlignLeft).
-				SetMaxWidth(columnWidths[colIdx])
+				SetMaxWidth(truncatedColumnWidths[colIdx])
 			t.table.SetCell(rowIdx+1, colIdx, tableCell)
 		}
 	})
@@ -321,7 +322,7 @@ func (t *TableController) renderData() {
 		}
 
 		// check if space needed fits screen, if it doesn't truncate the column
-		truncatedColumnWidths := results.GetTruncatedColumnWidths(columnWidths, newWidth)
+		truncatedColumnWidths = results.GetTruncatedColumnWidths(columnWidths, newWidth)
 		for rowIdx := 0; rowIdx < t.table.GetRowCount(); rowIdx++ {
 			for colIdx := 0; colIdx < t.table.GetColumnCount(); colIdx++ {
 				t.table.GetCell(rowIdx, colIdx).SetMaxWidth(lo.Max([]int{truncatedColumnWidths[colIdx], minColumnWidth}))
