@@ -23,12 +23,12 @@ func (c *command) newCreateCommand(enableSourceCode bool) *cobra.Command {
 		RunE:  c.create,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Create a new Stream Designer pipeline with KSQL and Schema Registry clusters",
-				Code: `confluent pipeline create --name test-pipeline --description "this is a test pipeline" --ksql-cluster lksqlc-12345 --use-schema-registry`,
+				Text: `Create a Stream Designer pipeline named "my-pipeline".`,
+				Code: `confluent pipeline create --name my-pipeline --description "example pipeline"`,
 			},
 			examples.Example{
-				Text: "Create a new Stream Designer pipeline with just Name and Description",
-				Code: `confluent pipeline create --name test-pipeline --description "this is a test pipeline"`,
+				Text: "Create a Stream Designer pipeline with a KSQL and Schema Registry cluster.",
+				Code: `confluent pipeline create --name my-pipeline --description "example pipeline" --ksql-cluster lksqlc-12345 --use-schema-registry`,
 			},
 		),
 	}
