@@ -1,0 +1,4 @@
+The local commands are intended for a single-node development environment only, NOT for production usage. See more: https:\/\/docs.confluent.io\/current\/cli\/index.html
+
+Started Confluent Local container [a-zA-Z0-9]*.
+Continue your experience with Confluent Local running `confluent local kafka topic produce` and `confluent local kafka topic consume`.
