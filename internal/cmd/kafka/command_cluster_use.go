@@ -14,8 +14,8 @@ import (
 func (c *clusterCommand) newUseCommand(cfg *v1.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "use <id>",
-		Short:             "Use a cluster in subsequent commands.",
-		Long:              "Choose a cluster to be used in subsequent commands which support passing a cluster with the `--cluster` flag.",
+		Short:             "Use a Kafka cluster in subsequent commands.",
+		Long:              "Choose a Kafka cluster to be used in subsequent commands which support passing a cluster with the `--cluster` flag.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.use,
