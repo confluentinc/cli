@@ -33,7 +33,7 @@ func (c *command) statementList(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	statements, err := client.ListStatements(environmentId, c.Context.LastOrgId)
+	statements, err := client.ListStatements(environmentId)
 	if err != nil {
 		return err
 	}

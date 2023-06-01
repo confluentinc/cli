@@ -40,7 +40,7 @@ func (c *command) statementDelete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if _, err := client.GetStatement(environmentId, args[0], c.Context.LastOrgId); err != nil {
+	if _, err := client.GetStatement(environmentId, args[0]); err != nil {
 		return err
 	}
 
@@ -49,7 +49,7 @@ func (c *command) statementDelete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if err := client.DeleteStatement(environmentId, args[0], c.Context.LastOrgId); err != nil {
+	if err := client.DeleteStatement(environmentId, args[0]); err != nil {
 		return err
 	}
 
