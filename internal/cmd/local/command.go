@@ -1,8 +1,6 @@
 package local
 
 import (
-	"runtime"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -18,10 +16,6 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 		Short: "Manage a local Confluent Platform development environment.",
 		Long:  "Try out Confluent Platform by running a single-node instance locally on your machine. These commands require Docker to run.",
 		Args:  cobra.NoArgs,
-	}
-
-	if runtime.GOOS == "windows" {
-		cmd.Hidden = true
 	}
 
 	c := &command{pcmd.NewAnonymousCLICommand(cmd, prerunner)}

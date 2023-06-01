@@ -3,6 +3,8 @@ package local
 import (
 	"context"
 	"fmt"
+	"io"
+	"os"
 	"runtime"
 	"strconv"
 
@@ -41,16 +43,15 @@ func (c *command) kafkaStart(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// pull the image from ecr. it will be public so no creds needed?
-	// out, err := cli.ImagePull(ctx, imageName, types.ImagePullOptions{})
-	// if err != nil {
-	// 	return err
-	// }
-	// defer out.Close()
-	// io.Copy(os.Stdout, out)
-	// log.CliLogger.Tracef("Pull confluent-local image success")
+	out, err := dockerClient.ImagePull(context.Background(), confluentLocalImageName, types.ImagePullOptions{})
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+	io.Copy(os.Stdout, out)
+	log.CliLogger.Tracef("Pull confluent-local image success")
 
-	err = c.prepareValidPorts()
+	err = c.prepareAndSaveLocalPorts()
 	if err != nil {
 		return err
 	}
@@ -63,7 +64,7 @@ func (c *command) kafkaStart(cmd *cobra.Command, args []string) error {
 	natKafkaRestPort := nat.Port(ports.KafkaRestPort + "/tcp")
 	natPlaintextPort := nat.Port(ports.PlaintextPort + "/tcp")
 	config := &container.Config{
-		Image:    imageName,
+		Image:    confluentLocalImageName,
 		Hostname: "broker",
 		Cmd:      strslice.StrSlice{"bash", "-c", "'/etc/confluent/docker/run'"},
 		ExposedPorts: nat.PortSet{
@@ -89,7 +90,7 @@ func (c *command) kafkaStart(cmd *cobra.Command, args []string) error {
 		},
 	}
 
-	createResp, err := dockerClient.ContainerCreate(context.Background(), config, hostConfig, nil, platform, "confluent-local")
+	createResp, err := dockerClient.ContainerCreate(context.Background(), config, hostConfig, nil, platform, confluentLocalContainerName)
 	if err != nil {
 		return errors.CatchContainerNameInUseError(err)
 	}
@@ -100,11 +101,11 @@ func (c *command) kafkaStart(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	output.Printf("Started Confluent Local container %v.\nContinue your experience with Confluent Local running `confluent local kafka topic produce` and `confluent local kafka topic consume`.\n", getShortenedContainerId(createResp.ID))
+	output.Printf("Started Confluent Local container %v.\nContinue your experience with Confluent Local running `confluent local kafka topic create test` and `confluent local kafka topic produce test`.\n", getShortenedContainerId(createResp.ID))
 	return nil
 }
 
-func (c *command) prepareValidPorts() error {
+func (c *command) prepareAndSaveLocalPorts() error {
 	if c.Config.LocalPorts != nil {
 		return nil
 	}
@@ -163,9 +164,4 @@ func getContainerEnvironmentWithPorts(ports *v1.LocalPorts) []string {
 		fmt.Sprintf("KAFKA_REST_BOOTSTRAP_SERVERS=broker:%s", ports.BrokerPort),
 		fmt.Sprintf("KAFKA_REST_LISTENERS=http://0.0.0.0:%s", ports.KafkaRestPort),
 	}
-}
-
-func checkIsDockerRunning(dockerClient *client.Client) error {
-	_, err := dockerClient.Info(context.Background())
-	return err
 }

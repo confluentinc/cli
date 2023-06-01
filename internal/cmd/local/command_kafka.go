@@ -1,14 +1,18 @@
 package local
 
 import (
+	"context"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/docker/docker/client"
 	"github.com/spf13/cobra"
 )
 
-const imageName = "523370736235.dkr.ecr.us-west-2.amazonaws.com/confluentinc/kafka-local:latest" // to be removed
-
 const (
-	localhostPrefix = "http://localhost:%s"
-	localhost       = "localhost"
+	confluentLocalImageName     = "confluentinc/confluent-local:latest"
+	confluentLocalContainerName = "confluent-local"
+	localhostPrefix             = "http://localhost:%s"
+	localhost                   = "localhost"
 )
 
 func (c *command) newKafkaCommand() *cobra.Command {
@@ -27,4 +31,13 @@ func (c *command) newKafkaCommand() *cobra.Command {
 func getShortenedContainerId(id string) string {
 	containerIdShortLength := 10
 	return id[:containerIdShortLength]
+}
+
+func checkIsDockerRunning(dockerClient *client.Client) error {
+	_, err := dockerClient.Info(context.Background())
+	if err != nil {
+		return errors.NewErrorWithSuggestions(err.Error(), errors.InstallAndStartDockerSuggestion)
+	}
+
+	return nil
 }

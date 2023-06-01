@@ -211,9 +211,10 @@ const (
 	// local commands
 	ConfluentLocalStartedErrorMsg    = "Confluent Local container has already been created"
 	ConfluentLocalStartedSuggestions = "Continue your experience with Confluent Local running `confluent local kafka produce` and `confluent local kafka consume`.\n" +
-		"To stop Confluent Local container, run `confluent local kafka stop`."
-	FailedToReadPortsErrorMsg    = "failed to read local ports from config"
-	FailedToReadPortsSuggestions = "Restart Confluent Local with `confluent local kafka stop` and `confluent local kafka start`"
+		"To stop Confluent Local container, run `confluent local kafka stop` or `docker container rm confluent-local -f`."
+	FailedToReadPortsErrorMsg       = "failed to read local ports from config"
+	FailedToReadPortsSuggestions    = "Restart Confluent Local with `confluent local kafka stop` and `confluent local kafka start`"
+	InstallAndStartDockerSuggestion = "Make sure Docker is installed following the guide: `https://docs.docker.com/engine/install/` and Docker daemon is running."
 
 	// schema-registry commands
 	InvalidSchemaRegistryLocationErrorMsg    = "invalid input for flag `--geo`"

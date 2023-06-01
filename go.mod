@@ -39,9 +39,8 @@ require (
 	github.com/confluentinc/schema-registry-sdk-go v0.0.23
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dghubble/sling v1.4.1
-	github.com/docker/docker v23.0.1+incompatible
+	github.com/docker/docker v24.0.2+incompatible
 	github.com/docker/go-connections v0.4.0
-	github.com/fatih/color v1.15.0
 	github.com/go-yaml/yaml v2.1.0+incompatible
 	github.com/gobuffalo/flect v1.0.2
 	github.com/gogo/protobuf v1.3.2
@@ -64,6 +63,7 @@ require (
 	github.com/mattn/go-isatty v0.0.19
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/opencontainers/image-spec v1.0.2
+	github.com/ory/dockertest v3.3.5+incompatible
 	github.com/panta/machineid v1.0.2
 	github.com/phayes/freeport v0.0.0-20220201140144-74d24b5ae9f5
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
@@ -92,43 +92,41 @@ require (
 	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 // indirect
 	github.com/Microsoft/go-winio v0.6.0 // indirect
 	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
-	github.com/ProtonMail/go-crypto v0.0.0-20230217124315-7d5c6f04bbb8 // indirect
-	github.com/bufbuild/protocompile v0.4.0 // indirect
-	github.com/c-bata/go-prompt v0.2.6 // indirect
-	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
-	github.com/chromedp/cdproto v0.0.0-20230220211738-2b1ec77315c9 // indirect
-	github.com/chromedp/sysutil v1.0.0 // indirect
-	github.com/cloudflare/circl v1.1.0 // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/alecthomas/units v0.0.0-20190717042225-c3de453c63f4 // indirect
 	github.com/bufbuild/protocompile v0.4.0 // indirect
 	github.com/c-bata/go-prompt v0.2.6 // indirect
+	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
 	github.com/confluentinc/proto-go-setter v0.3.0 // indirect
 	github.com/containerd/continuity v0.3.0 // indirect
 	github.com/docker/distribution v2.8.1+incompatible // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/envoyproxy/protoc-gen-validate v0.9.1 // indirect
+	github.com/fatih/color v1.15.0 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
 	github.com/gogo/googleapis v1.4.1 // indirect
 	github.com/golang/mock v1.4.4 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
+	github.com/gotestyourself/gotestyourself v2.2.0+incompatible // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
+	github.com/lib/pq v1.10.9 // indirect
 	github.com/lyft/protoc-gen-star v0.6.2 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-runewidth v0.0.14 // indirect
 	github.com/mattn/go-tty v0.0.4 // indirect
+	github.com/moby/term v0.5.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
+	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/runc v1.1.4 // indirect
-	github.com/ory/dockertest v3.3.5+incompatible // indirect
 	github.com/pkg/term v1.2.0-beta.2 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rivo/uniseg v0.4.3 // indirect
@@ -157,6 +155,8 @@ require (
 	gopkg.in/launchdarkly/go-jsonstream.v1 v1.0.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
+	gotest.tools v2.2.0+incompatible // indirect
+	gotest.tools/v3 v3.4.0 // indirect
 	k8s.io/api v0.26.1 // indirect
 	k8s.io/klog/v2 v2.90.1 // indirect
 	k8s.io/utils v0.0.0-20230209194617-a36077c30491 // indirect
