@@ -14,7 +14,7 @@ func (c *command) newStatementDeleteCommand() *cobra.Command {
 		Use:               "delete <name-1> [name-2] ... [name-n]",
 		Short:             "Delete Flink SQL statements.",
 		Args:              cobra.MinimumNArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validStatementArgs),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validStatementArgsMultiple),
 		RunE:              c.statementDelete,
 	}
 
