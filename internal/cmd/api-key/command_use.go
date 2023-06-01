@@ -14,8 +14,8 @@ import (
 func (c *command) newUseCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "use <api-key>",
-		Short:             "Set the active API key for use in other commands.",
-		Long:              "Set the active API key for use in any command which supports passing an API key with the `--api-key` flag.",
+		Short:             "Use an API key in subsequent commands.",
+		Long:              "Choose an API key to be used in subsequent commands which support passing an API key with the `--api-key` flag.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.use,
