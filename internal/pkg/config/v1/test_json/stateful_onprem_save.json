@@ -29,6 +29,7 @@
       "credential_type": 0
     }
   },
+  "current_context": "my-context",
   "contexts": {
     "my-context": {
       "name": "my-context",
@@ -85,7 +86,6 @@
       "nonce": "NONCE_PLACEHOLDER"
     }
   },
-  "current_context": "my-context",
   "saved_credentials": {
     "my-context": {
       "is_cloud": false,

@@ -9,6 +9,8 @@ import (
 	"github.com/iancoleman/strcase"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+
+	"github.com/confluentinc/cli/internal/pkg/types"
 )
 
 type FlagRule func(flag *pflag.Flag, cmd *cobra.Command) error
@@ -111,19 +113,22 @@ func RequireFlagKebabCase(flag *pflag.Flag, cmd *cobra.Command) error {
 	return nil
 }
 
-func RequireFlagUsageRealWords(flag *pflag.Flag, cmd *cobra.Command) error {
-	var issues *multierror.Error
-	usage := strings.TrimRight(alphanumeric.ReplaceAllString(flag.Usage, " "), " ") // Remove any punctuation before checking spelling
-	if usage == "" {
-		return nil
-	}
-	for _, w := range strings.Split(usage, " ") {
-		if ok := vocab.Spell(w); !ok {
-			issue := fmt.Errorf("flag usage should consist of delimited real english words for --%s on `%s` - unknown '%s' in '%s'", flag.Name, FullCommand(cmd), w, usage)
-			issues = multierror.Append(issues, issue)
+func RequireFlagUsageRealWords(properNouns []string) FlagRule {
+	return func(flag *pflag.Flag, cmd *cobra.Command) error {
+		var issues *multierror.Error
+		usage := strings.TrimRight(alphanumeric.ReplaceAllString(flag.Usage, " "), " ") // Remove any punctuation before checking spelling
+		if usage == "" {
+			return nil
 		}
+
+		for _, w := range strings.Split(usage, " ") {
+			if ok := vocab.Spell(w); !ok && !types.Contains(properNouns, w) {
+				issue := fmt.Errorf("flag usage should consist of delimited real english words for --%s on `%s` - unknown '%s' in '%s'", flag.Name, FullCommand(cmd), w, usage)
+				issues = multierror.Append(issues, issue)
+			}
+		}
+		return issues.ErrorOrNil()
 	}
-	return issues.ErrorOrNil()
 }
 
 func RequireStringSlicePrefix(flag *pflag.Flag, cmd *cobra.Command) error {
