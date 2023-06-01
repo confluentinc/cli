@@ -55,10 +55,8 @@ blocks:
       jobs:
         - name: Docker check
           commands:
-            - brew install --cask docker
             - brew install docker-machine docker
             - export PATH="$PATH:/Applications/Docker.app/Contents/Resources/bin/"
-            - open --background -a Docker
             - docker ps
         - name: darwin/amd64
           commands:
