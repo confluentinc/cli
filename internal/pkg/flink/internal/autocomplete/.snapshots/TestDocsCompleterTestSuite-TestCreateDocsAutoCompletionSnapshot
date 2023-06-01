@@ -1,0 +1,34 @@
+([]prompt.Suggest) (len=8) {
+  (prompt.Suggest) {
+    Text: (string) (len=12) "CREATE TABLE",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=8) "Create a",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=9) "Creates a",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=16) "CREATE TEMPORARY",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=11) "CREATE VIEW",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=15) "CREATE DATABASE",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=18) "CREATE [TEMPORARY]",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=11) "create view",
+    Description: (string) ""
+  }
+}
