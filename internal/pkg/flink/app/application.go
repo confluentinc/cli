@@ -14,21 +14,8 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
 )
 
-func StartApp(envId, orgResourceId, kafkaClusterId, computePoolId, identityPool string, authToken func() string, authenticated func() error, appOptions *types.ApplicationOptions) {
+func StartApp(client ccloudv2.GatewayClientInterface, authenticated func() error, appOptions types.ApplicationOptions) {
 	var once sync.Once
-
-	// Client used to communicate with the gateway
-	client := ccloudv2.NewFlinkGatewayClient(
-		appOptions.FlinkGatewayUrl,
-		appOptions.UserAgent,
-		appOptions.UnsafeTrace,
-		authToken,
-		envId,
-		orgResourceId,
-		kafkaClusterId,
-		computePoolId,
-		identityPool,
-	)
 
 	// Load history of previous commands from cache file
 	history := history.LoadHistory()
@@ -43,11 +30,11 @@ func StartApp(envId, orgResourceId, kafkaClusterId, computePoolId, identityPool 
 	appController := controller.NewApplicationController(app, history)
 
 	// Store used to process statements and store local properties
-	store := store.NewStore(client, appController.ExitApplication, appOptions)
+	store := store.NewStore(client, appController.ExitApplication, &appOptions)
 
 	// Instantiate Component Controllers
 	tableController := controller.NewTableController(table, store, appController)
-	inputController := controller.NewInputController(tableController, appController, store, authenticated, history, appOptions)
+	inputController := controller.NewInputController(tableController, appController, store, authenticated, history, &appOptions)
 
 	// Pass RunInteractiveInputFunc to table controller so the user can come back from the output view
 	tableController.SetRunInteractiveInputCallback(inputController.RunInteractiveInput)

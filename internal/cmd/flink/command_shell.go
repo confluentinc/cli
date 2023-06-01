@@ -103,13 +103,23 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		return err
 	}
 
-	client.StartApp(environmentId, resourceId, cluster, computePool, identityPool, c.AuthToken,
+	flinkGatewayClient, err := c.GetFlinkGatewayClient()
+	if err != nil {
+		return err
+	}
+
+	client.StartApp(flinkGatewayClient,
 		c.authenticated(prerunner.Authenticated(c.AuthenticatedCLICommand), cmd),
-		&types.ApplicationOptions{
+		types.ApplicationOptions{
+			DefaultProperties: map[string]string{"execution.runtime-mode": "streaming"},
 			FlinkGatewayUrl:   parsedUrl.String(),
 			UnsafeTrace:       unsafeTrace,
-			DefaultProperties: map[string]string{"execution.runtime-mode": "streaming"},
 			UserAgent:         c.Version.UserAgent,
+			EnvId:             environmentId,
+			OrgResourceId:     resourceId,
+			KafkaClusterId:    cluster,
+			ComputePoolId:     computePool,
+			IdentityPoolId:    identityPool,
 		})
 	return nil
 }

@@ -5,4 +5,72 @@ type ApplicationOptions struct {
 	FlinkGatewayUrl   string
 	UnsafeTrace       bool
 	UserAgent         string
+	EnvId             string
+	OrgResourceId     string
+	KafkaClusterId    string
+	ComputePoolId     string
+	IdentityPoolId    string
+}
+
+func (a *ApplicationOptions) GetDefaultProperties() map[string]string {
+	if a != nil {
+		return a.DefaultProperties
+	}
+	return map[string]string{}
+}
+
+func (a *ApplicationOptions) GetFlinkGatewayUrl() string {
+	if a != nil {
+		return a.FlinkGatewayUrl
+	}
+	return ""
+}
+
+func (a *ApplicationOptions) GetUnsafeTrace() bool {
+	if a != nil {
+		return a.UnsafeTrace
+	}
+	return false
+}
+
+func (a *ApplicationOptions) GetUserAgent() string {
+	if a != nil {
+		return a.UserAgent
+	}
+	return ""
+}
+
+func (a *ApplicationOptions) GetEnvId() string {
+	if a != nil {
+		return a.EnvId
+	}
+	return ""
+}
+
+func (a *ApplicationOptions) GetOrgResourceId() string {
+	if a != nil {
+		return a.OrgResourceId
+	}
+	return ""
+}
+
+func (a *ApplicationOptions) GetKafkaClusterId() string {
+	if a != nil {
+		return a.KafkaClusterId
+	}
+	return ""
+}
+
+func (a *ApplicationOptions) GetComputePoolId() string {
+	if a != nil {
+		return a.ComputePoolId
+	}
+	return ""
+}
+
+func (a *ApplicationOptions) GetIdentityPoolId() string {
+	if a != nil {
+		return a.IdentityPoolId
+	}
+	return ""
 }

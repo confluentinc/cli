@@ -30,6 +30,7 @@ type Store struct {
 	Properties      map[string]string
 	exitApplication func()
 	client          ccloudv2.GatewayClientInterface
+	appOptions      *types.ApplicationOptions
 }
 
 func (s *Store) ProcessLocalStatement(statement string) (*types.ProcessedStatement, *types.StatementError) {
@@ -59,7 +60,13 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 	}
 
 	// Process remote statements
-	statementObj, err := s.client.CreateStatement(statement, propsWithLocalTimezone(s.Properties))
+	statementObj, err := s.client.CreateStatement(
+		s.appOptions.GetEnvId(),
+		s.appOptions.GetComputePoolId(),
+		s.appOptions.GetIdentityPoolId(),
+		statement,
+		s.propsDefault(s.Properties),
+	)
 	if err != nil {
 		return nil, &types.StatementError{Msg: err.Error()}
 	}
@@ -101,7 +108,7 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 	runningNoTokenRetries := 5
 	for i := 0; i < runningNoTokenRetries; i++ {
 		// TODO: we need to retry a few times on transient errors
-		statementResultObj, err := s.client.GetStatementResults(statement.StatementName, pageToken)
+		statementResultObj, err := s.client.GetStatementResults(s.appOptions.GetEnvId(), statement.StatementName, pageToken)
 		if err != nil {
 			return nil, &types.StatementError{Msg: err.Error()}
 		}
@@ -129,7 +136,7 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 }
 
 func (s *Store) DeleteStatement(statementName string) bool {
-	err := s.client.DeleteStatement(statementName)
+	err := s.client.DeleteStatement(s.appOptions.GetEnvId(), statementName)
 	if err != nil {
 		log.CliLogger.Warnf("Failed to delete the statement: %v", err)
 		return false
@@ -149,7 +156,7 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 		case <-ctx.Done():
 			return nil, &types.StatementError{Msg: "Result retrieval aborted. Statement will be deleted.", HttpResponseCode: 499}
 		default:
-			statementObj, err := s.client.GetStatement(statementName)
+			statementObj, err := s.client.GetStatement(s.appOptions.GetEnvId(), statementName)
 			if err != nil {
 				return nil, &types.StatementError{Msg: "Error: " + err.Error()}
 			}
@@ -204,22 +211,12 @@ func extractPageToken(nextUrl string) (string, error) {
 }
 
 func NewStore(client ccloudv2.GatewayClientInterface, exitApplication func(), appOptions *types.ApplicationOptions) StoreInterface {
-	defaultProperties := make(map[string]string)
-	if appOptions != nil {
-		if appOptions.DefaultProperties != nil {
-			defaultProperties = appOptions.DefaultProperties
-		}
-	} else {
-		appOptions = &types.ApplicationOptions{} // Initialize empty/default options
-	}
-
-	store := Store{
-		Properties:      defaultProperties,
+	return &Store{
+		Properties:      appOptions.GetDefaultProperties(),
 		client:          client,
 		exitApplication: exitApplication,
+		appOptions:      appOptions,
 	}
-
-	return &store
 }
 
 // Set timezone default value if not set by the user
@@ -232,6 +229,36 @@ func propsWithLocalTimezone(propsWithoutDefault map[string]string) map[string]st
 	if _, ok := properties[config.ConfigKeyLocalTimeZone]; !ok {
 		properties[config.ConfigKeyLocalTimeZone] = getLocalTimezone()
 	}
+
+	return properties
+}
+
+// Set properties default values if not set by the user
+// We probably want to refactor the keys names and where they are stored. Maybe also the default values.
+func (s *Store) propsDefault(propsWithoutDefault map[string]string) map[string]string {
+	properties := make(map[string]string)
+	for key, value := range propsWithoutDefault {
+		properties[key] = value
+	}
+
+	if _, ok := properties[config.ConfigKeyCatalog]; !ok {
+		properties[config.ConfigKeyCatalog] = s.appOptions.GetEnvId()
+	}
+	if _, ok := properties[config.ConfigKeyDatabase]; !ok {
+		properties[config.ConfigKeyDatabase] = s.appOptions.GetKafkaClusterId()
+	}
+	if _, ok := properties[config.ConfigKeyOrgResourceId]; !ok {
+		properties[config.ConfigKeyOrgResourceId] = s.appOptions.GetOrgResourceId()
+	}
+	if _, ok := properties[config.ConfigKeyExecutionRuntime]; !ok {
+		properties[config.ConfigKeyExecutionRuntime] = "streaming"
+	}
+	if _, ok := properties[config.ConfigKeyLocalTimeZone]; !ok {
+		properties[config.ConfigKeyLocalTimeZone] = getLocalTimezone()
+	}
+
+	// Here we delete locally used properties before sending it to the backend
+	delete(properties, config.ConfigKeyResultsTimeout)
 
 	return properties
 }

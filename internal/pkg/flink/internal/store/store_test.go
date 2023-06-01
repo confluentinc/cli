@@ -36,7 +36,7 @@ func TestStoreTestSuite(t *testing.T) {
 
 func TestStoreProcessLocalStatement(t *testing.T) {
 	// Create a new store
-	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, func() string { return "authToken" }, "envId", "orgResourceId", "kafkaClusterId", "computePoolId", "identityPoolId")
+	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, "authToken", "orgResourceId")
 	mockAppController := mock.NewMockApplicationControllerInterface(gomock.NewController(t))
 	s := NewStore(client, mockAppController.ExitApplication, nil).(*Store)
 
@@ -69,8 +69,12 @@ func TestWaitForPendingStatement3(t *testing.T) {
 	statementName := "statementName"
 
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
+	appOptions := types.ApplicationOptions{
+		EnvId: "envId",
+	}
 	s := &Store{
-		client: client,
+		client:     client,
+		appOptions: &appOptions,
 	}
 
 	// Test case 1: Statement is not pending
@@ -79,7 +83,7 @@ func TestWaitForPendingStatement3(t *testing.T) {
 			Phase: "COMPLETED",
 		},
 	}
-	client.EXPECT().GetStatement(statementName).Return(statementObj, nil).Times(1)
+	client.EXPECT().GetStatement("envId", statementName).Return(statementObj, nil).Times(1)
 
 	processedStatement, err := s.waitForPendingStatement(context.Background(), statementName, time.Duration(10))
 	assert.Nil(t, err)
@@ -92,8 +96,12 @@ func TestWaitForPendingTimesout(t *testing.T) {
 	timeout := time.Duration(10) * time.Millisecond
 
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
+	appOptions := types.ApplicationOptions{
+		EnvId: "envId",
+	}
 	s := &Store{
-		client: client,
+		client:     client,
+		appOptions: &appOptions,
 	}
 
 	// Test case 2: Statement is pending
@@ -102,7 +110,7 @@ func TestWaitForPendingTimesout(t *testing.T) {
 			Phase: "PENDING",
 		},
 	}
-	client.EXPECT().GetStatement(statementName).Return(statementObj, nil).AnyTimes()
+	client.EXPECT().GetStatement("envId", statementName).Return(statementObj, nil).AnyTimes()
 	processedStatement, err := s.waitForPendingStatement(context.Background(), statementName, timeout)
 
 	assert.EqualError(t, err, fmt.Sprintf("Error: Statement is still pending after %f seconds. \n\nIf you want to increase the timeout for the client, you can run \"SET table.results-timeout=1200;\" to adjust the maximum timeout in seconds.", timeout.Seconds()))
@@ -113,8 +121,12 @@ func TestWaitForPendingEventuallyCompletes(t *testing.T) {
 	statementName := "statementName"
 
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
+	appOptions := types.ApplicationOptions{
+		EnvId: "envId",
+	}
 	s := &Store{
-		client: client,
+		client:     client,
+		appOptions: &appOptions,
 	}
 
 	// Test case 2: Statement is pending
@@ -129,8 +141,8 @@ func TestWaitForPendingEventuallyCompletes(t *testing.T) {
 			Phase: "COMPLETED",
 		},
 	}
-	client.EXPECT().GetStatement(statementName).Return(statementObj, nil).Times(3)
-	client.EXPECT().GetStatement(statementName).Return(statementObjCompleted, nil).Times(1)
+	client.EXPECT().GetStatement("envId", statementName).Return(statementObj, nil).Times(3)
+	client.EXPECT().GetStatement("envId", statementName).Return(statementObjCompleted, nil).Times(1)
 
 	processedStatement, err := s.waitForPendingStatement(context.Background(), statementName, time.Duration(10)*time.Second)
 	assert.Nil(t, err)
@@ -142,8 +154,12 @@ func TestWaitForPendingStatementErrors(t *testing.T) {
 	statementName := "statementName"
 	waitTime := time.Millisecond * 1
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
+	appOptions := types.ApplicationOptions{
+		EnvId: "envId",
+	}
 	s := &Store{
-		client: client,
+		client:     client,
+		appOptions: &appOptions,
 	}
 	statementObj := v1.SqlV1alpha1Statement{
 		Status: &v1.SqlV1alpha1StatementStatus{
@@ -152,7 +168,7 @@ func TestWaitForPendingStatementErrors(t *testing.T) {
 	}
 
 	expectedErr := errors.New("couldn't get statement!")
-	client.EXPECT().GetStatement(statementName).Return(statementObj, expectedErr).Times(1)
+	client.EXPECT().GetStatement("envId", statementName).Return(statementObj, expectedErr).Times(1)
 	_, err := s.waitForPendingStatement(context.Background(), statementName, waitTime)
 	assert.EqualError(t, err, "Error: "+expectedErr.Error())
 }
@@ -163,8 +179,12 @@ func TestCancelPendingStatement(t *testing.T) {
 	ctx, cancelFunc := context.WithCancel(context.Background())
 
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
+	appOptions := types.ApplicationOptions{
+		EnvId: "envId",
+	}
 	s := &Store{
-		client: client,
+		client:     client,
+		appOptions: &appOptions,
 	}
 
 	statementObj := v1.SqlV1alpha1Statement{
@@ -174,7 +194,7 @@ func TestCancelPendingStatement(t *testing.T) {
 	}
 
 	expectedErr := &types.StatementError{Msg: "Result retrieval aborted. Statement will be deleted."}
-	client.EXPECT().GetStatement(statementName).Return(statementObj, nil).AnyTimes()
+	client.EXPECT().GetStatement("envId", statementName).Return(statementObj, nil).AnyTimes()
 
 	// Schedule routine to cancel context
 	go func() {
@@ -569,10 +589,13 @@ func (s *StoreTestSuite) TestDeleteStatement() {
 	// create objects
 	client := mock.NewMockGatewayClientInterface(ctrl)
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
-	store := NewStore(client, mockAppController.ExitApplication, nil)
+	appOptions := types.ApplicationOptions{
+		EnvId: "envId",
+	}
+	store := NewStore(client, mockAppController.ExitApplication, &appOptions)
 
 	statementName := "TEST_STATEMENT"
-	client.EXPECT().DeleteStatement(statementName).Return(nil)
+	client.EXPECT().DeleteStatement("envId", statementName).Return(nil)
 
 	wasStatementDeleted := store.DeleteStatement(statementName)
 	require.True(s.T(), wasStatementDeleted)
@@ -585,10 +608,13 @@ func (s *StoreTestSuite) TestDeleteStatementFailsOnError() {
 	// create objects
 	client := mock.NewMockGatewayClientInterface(ctrl)
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
-	store := NewStore(client, mockAppController.ExitApplication, nil).(*Store)
+	appOptions := types.ApplicationOptions{
+		EnvId: "envId",
+	}
+	store := NewStore(client, mockAppController.ExitApplication, &appOptions)
 
 	statementName := "TEST_STATEMENT"
-	client.EXPECT().DeleteStatement(statementName).Return(errors.New("test error"))
+	client.EXPECT().DeleteStatement("envId", statementName).Return(errors.New("test error"))
 
 	wasStatementDeleted := store.DeleteStatement(statementName)
 	require.False(s.T(), wasStatementDeleted)
@@ -601,7 +627,10 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWithCompletedStatement() {
 	// create objects
 	client := mock.NewMockGatewayClientInterface(ctrl)
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
-	store := NewStore(client, mockAppController.ExitApplication, nil)
+	appOptions := types.ApplicationOptions{
+		EnvId: "envId",
+	}
+	store := NewStore(client, mockAppController.ExitApplication, &appOptions)
 
 	statement := types.ProcessedStatement{
 		StatementName: "TEST_STATEMENT",
@@ -611,7 +640,7 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWithCompletedStatement() {
 		Metadata: v1.ResultListMeta{},
 		Results:  &v1.SqlV1alpha1StatementResultResults{},
 	}
-	client.EXPECT().GetStatementResults(statement.StatementName, statement.PageToken).Return(statementResultObj, nil)
+	client.EXPECT().GetStatementResults("envId", statement.StatementName, statement.PageToken).Return(statementResultObj, nil)
 
 	statementResults, err := store.FetchStatementResults(statement)
 	require.NotNil(s.T(), statementResults)
@@ -625,7 +654,10 @@ func (s *StoreTestSuite) TestFetchResultsRetryWithRunningStatement() {
 	// create objects
 	client := mock.NewMockGatewayClientInterface(ctrl)
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
-	store := NewStore(client, mockAppController.ExitApplication, nil)
+	appOptions := types.ApplicationOptions{
+		EnvId: "envId",
+	}
+	store := NewStore(client, mockAppController.ExitApplication, &appOptions)
 
 	statement := types.ProcessedStatement{
 		StatementName: "TEST_STATEMENT",
@@ -635,7 +667,7 @@ func (s *StoreTestSuite) TestFetchResultsRetryWithRunningStatement() {
 		Metadata: v1.ResultListMeta{},
 		Results:  &v1.SqlV1alpha1StatementResultResults{},
 	}
-	client.EXPECT().GetStatementResults(statement.StatementName, statement.PageToken).Return(statementResultObj, nil).Times(5)
+	client.EXPECT().GetStatementResults("envId", statement.StatementName, statement.PageToken).Return(statementResultObj, nil).Times(5)
 
 	statementResults, err := store.FetchStatementResults(statement)
 	require.NotNil(s.T(), statementResults)
@@ -649,7 +681,10 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWhenPageTokenExists() {
 	// create objects
 	client := mock.NewMockGatewayClientInterface(ctrl)
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
-	store := NewStore(client, mockAppController.ExitApplication, nil)
+	appOptions := types.ApplicationOptions{
+		EnvId: "envId",
+	}
+	store := NewStore(client, mockAppController.ExitApplication, &appOptions)
 
 	statement := types.ProcessedStatement{
 		StatementName: "TEST_STATEMENT",
@@ -660,7 +695,7 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWhenPageTokenExists() {
 		Metadata: v1.ResultListMeta{Next: &nextPage},
 		Results:  &v1.SqlV1alpha1StatementResultResults{},
 	}
-	client.EXPECT().GetStatementResults(statement.StatementName, statement.PageToken).Return(statementResultObj, nil)
+	client.EXPECT().GetStatementResults("envId", statement.StatementName, statement.PageToken).Return(statementResultObj, nil)
 
 	statementResults, err := store.FetchStatementResults(statement)
 	require.NotNil(s.T(), statementResults)
@@ -674,7 +709,10 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWhenResultsExist() {
 	// create objects
 	client := mock.NewMockGatewayClientInterface(ctrl)
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
-	store := NewStore(client, mockAppController.ExitApplication, nil)
+	appOptions := types.ApplicationOptions{
+		EnvId: "envId",
+	}
+	store := NewStore(client, mockAppController.ExitApplication, &appOptions)
 
 	statement := types.ProcessedStatement{
 		StatementName: "TEST_STATEMENT",
@@ -685,7 +723,7 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWhenResultsExist() {
 		Metadata: v1.ResultListMeta{},
 		Results:  &v1.SqlV1alpha1StatementResultResults{Data: &[]v1.SqlV1alpha1ResultItem{{Op: &op}}},
 	}
-	client.EXPECT().GetStatementResults(statement.StatementName, statement.PageToken).Return(statementResultObj, nil)
+	client.EXPECT().GetStatementResults("envId", statement.StatementName, statement.PageToken).Return(statementResultObj, nil)
 
 	statementResults, err := store.FetchStatementResults(statement)
 	require.NotNil(s.T(), statementResults)

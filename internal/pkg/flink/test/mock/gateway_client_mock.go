@@ -35,75 +35,75 @@ func (m *MockGatewayClientInterface) EXPECT() *MockGatewayClientInterfaceMockRec
 }
 
 // CreateStatement mocks base method.
-func (m *MockGatewayClientInterface) CreateStatement(statement string, properties map[string]string) (v1alpha1.SqlV1alpha1Statement, error) {
+func (m *MockGatewayClientInterface) CreateStatement(environmentId, computePoolId, identityPoolId, statement string, properties map[string]string) (v1alpha1.SqlV1alpha1Statement, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateStatement", statement, properties)
+	ret := m.ctrl.Call(m, "CreateStatement", environmentId, computePoolId, identityPoolId, statement, properties)
 	ret0, _ := ret[0].(v1alpha1.SqlV1alpha1Statement)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateStatement indicates an expected call of CreateStatement.
-func (mr *MockGatewayClientInterfaceMockRecorder) CreateStatement(statement, properties interface{}) *gomock.Call {
+func (mr *MockGatewayClientInterfaceMockRecorder) CreateStatement(environmentId, computePoolId, identityPoolId, statement, properties interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateStatement", reflect.TypeOf((*MockGatewayClientInterface)(nil).CreateStatement), statement, properties)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateStatement", reflect.TypeOf((*MockGatewayClientInterface)(nil).CreateStatement), environmentId, computePoolId, identityPoolId, statement, properties)
 }
 
 // DeleteStatement mocks base method.
-func (m *MockGatewayClientInterface) DeleteStatement(statementName string) error {
+func (m *MockGatewayClientInterface) DeleteStatement(environmentId, statementName string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteStatement", statementName)
+	ret := m.ctrl.Call(m, "DeleteStatement", environmentId, statementName)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteStatement indicates an expected call of DeleteStatement.
-func (mr *MockGatewayClientInterfaceMockRecorder) DeleteStatement(statementName interface{}) *gomock.Call {
+func (mr *MockGatewayClientInterfaceMockRecorder) DeleteStatement(environmentId, statementName interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteStatement", reflect.TypeOf((*MockGatewayClientInterface)(nil).DeleteStatement), statementName)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteStatement", reflect.TypeOf((*MockGatewayClientInterface)(nil).DeleteStatement), environmentId, statementName)
 }
 
 // GetStatement mocks base method.
-func (m *MockGatewayClientInterface) GetStatement(statementName string) (v1alpha1.SqlV1alpha1Statement, error) {
+func (m *MockGatewayClientInterface) GetStatement(environmentId, statementName string) (v1alpha1.SqlV1alpha1Statement, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetStatement", statementName)
+	ret := m.ctrl.Call(m, "GetStatement", environmentId, statementName)
 	ret0, _ := ret[0].(v1alpha1.SqlV1alpha1Statement)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetStatement indicates an expected call of GetStatement.
-func (mr *MockGatewayClientInterfaceMockRecorder) GetStatement(statementName interface{}) *gomock.Call {
+func (mr *MockGatewayClientInterfaceMockRecorder) GetStatement(environmentId, statementName interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStatement", reflect.TypeOf((*MockGatewayClientInterface)(nil).GetStatement), statementName)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStatement", reflect.TypeOf((*MockGatewayClientInterface)(nil).GetStatement), environmentId, statementName)
 }
 
 // GetStatementResults mocks base method.
-func (m *MockGatewayClientInterface) GetStatementResults(statementId, pageToken string) (v1alpha1.SqlV1alpha1StatementResult, error) {
+func (m *MockGatewayClientInterface) GetStatementResults(environmentId, statementId, pageToken string) (v1alpha1.SqlV1alpha1StatementResult, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetStatementResults", statementId, pageToken)
+	ret := m.ctrl.Call(m, "GetStatementResults", environmentId, statementId, pageToken)
 	ret0, _ := ret[0].(v1alpha1.SqlV1alpha1StatementResult)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetStatementResults indicates an expected call of GetStatementResults.
-func (mr *MockGatewayClientInterfaceMockRecorder) GetStatementResults(statementId, pageToken interface{}) *gomock.Call {
+func (mr *MockGatewayClientInterfaceMockRecorder) GetStatementResults(environmentId, statementId, pageToken interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStatementResults", reflect.TypeOf((*MockGatewayClientInterface)(nil).GetStatementResults), statementId, pageToken)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStatementResults", reflect.TypeOf((*MockGatewayClientInterface)(nil).GetStatementResults), environmentId, statementId, pageToken)
 }
 
 // ListStatements mocks base method.
-func (m *MockGatewayClientInterface) ListStatements() ([]v1alpha1.SqlV1alpha1Statement, error) {
+func (m *MockGatewayClientInterface) ListStatements(environmentId string) ([]v1alpha1.SqlV1alpha1Statement, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListStatements")
+	ret := m.ctrl.Call(m, "ListStatements", environmentId)
 	ret0, _ := ret[0].([]v1alpha1.SqlV1alpha1Statement)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ListStatements indicates an expected call of ListStatements.
-func (mr *MockGatewayClientInterfaceMockRecorder) ListStatements() *gomock.Call {
+func (mr *MockGatewayClientInterfaceMockRecorder) ListStatements(environmentId interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListStatements", reflect.TypeOf((*MockGatewayClientInterface)(nil).ListStatements))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListStatements", reflect.TypeOf((*MockGatewayClientInterface)(nil).ListStatements), environmentId)
 }
