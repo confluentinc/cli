@@ -56,7 +56,7 @@ blocks:
         - name: Docker check
           commands:
             - brew install docker
-            - systemctl start docker
+            - sudo dockerd
             - docker images
         - name: darwin/amd64
           commands:
