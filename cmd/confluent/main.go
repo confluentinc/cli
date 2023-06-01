@@ -14,19 +14,24 @@ import (
 
 // Injected from linker flags like `go build -ldflags "-X main.version=$VERSION" -X ...`
 var (
-	version = "v0.0.0"
-	commit  = ""
-	date    = ""
-	isTest  = "false"
+	version        = "0.0.0"
+	commit         = ""
+	date           = ""
+	disableUpdates = "false"
+	isTest         = "false"
 )
 
 func main() {
 	cfg, err := load.LoadAndMigrate(v1.New())
 	cobra.CheckErr(err)
 
+	disableUpdates, err := strconv.ParseBool(disableUpdates)
+	cobra.CheckErr(err)
+
 	isTest, err := strconv.ParseBool(isTest)
 	cobra.CheckErr(err)
 
+	cfg.DisableUpdates = disableUpdates
 	cfg.IsTest = isTest
 	cfg.Version = pversion.NewVersion(version, commit, date)
 

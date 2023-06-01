@@ -39,12 +39,13 @@ const (
 	RestProxyNotAvailable = "Operation not supported: REST proxy is not available.\n"
 
 	// kafka topic commands
-	StartingProducerMsg      = "Starting Kafka Producer. Use Ctrl-C or Ctrl-D to exit."
-	StoppingConsumerMsg      = "Stopping Consumer."
-	StartingConsumerMsg      = "Starting Kafka Consumer. Use Ctrl-C to exit."
-	UpdateTopicConfigMsg     = "Updated the following configuration values for topic \"%s\":\n"
-	UpdateTopicConfigRestMsg = "Updated the following configuration values for topic \"%s\" (read-only configs were not updated):\n"
-	OmitTopicCountMsg        = "The topic count will be omitted as Kafka topics for this cluster could not be retrieved: %v"
+	StartingProducerMsg         = "Starting Kafka Producer. Use Ctrl-C or Ctrl-D to exit."
+	StoppingConsumerMsg         = "Stopping Consumer."
+	StartingConsumerMsg         = "Starting Kafka Consumer. Use Ctrl-C to exit."
+	UpdateTopicConfigMsg        = "Updated the following configuration values for topic \"%s\":\n"
+	UpdateTopicConfigRestMsg    = "Updated the following configuration values for topic \"%s\"%s:\n"
+	ReadOnlyConfigNotUpdatedMsg = "(read-only configs were not updated)"
+	OmitTopicCountMsg           = "The topic count will be omitted as Kafka topics for this cluster could not be retrieved: %v"
 
 	// kafka mirror commands
 	RestProxyNotAvailableMsg = "Kafka REST is not enabled: the operation is only supported with Kafka REST proxy."
@@ -81,7 +82,6 @@ const (
 	NoMajorVersionUpdateMsg = "No major version updates are available.\n"
 
 	// cmd package
-	TokenExpiredMsg      = "Your token has expired. You are now logged out."
 	NotifyMajorUpdateMsg = "A major version update is available for %s from (current: %s, latest: %s).\nTo view release notes and install the update, please run `%s update --major`.\n\n"
 	NotifyMinorUpdateMsg = "A minor version update is available for %s from (current: %s, latest: %s).\nTo view release notes and install the update, please run `%s update`.\n\n"
 	AutoLoginMsg         = "Successful auto log in with non-interactive credentials.\n"
@@ -120,6 +120,7 @@ const (
 	DeleteACLsConfirmMsg          = "Are you sure you want to delete the ACLs corresponding to these parameters?"
 	RequestedDeleteResourceMsg    = "Requested to delete %s \"%s\".\n"
 	UpdatedResourceMsg            = "Updated %s \"%s\".\n"
+	UsingResourceMsg              = "Using %s \"%s\".\n"
 
 	UpdateSuccessMsg = "Updated the %s of %s \"%s\" to \"%s\".\n"
 

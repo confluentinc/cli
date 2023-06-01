@@ -20,6 +20,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -51,6 +52,7 @@ type flags struct {
 	schemaRegistryApiSecret string
 	valueFormat             string
 	schemaContext           string
+	topics                  []string
 }
 
 // messageOffset is 5, as the schema ID is stored at the [1:5] bytes of a message as meta info (when valid)
@@ -63,6 +65,12 @@ func newExportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Short: "Export an AsyncAPI specification.",
 		Long:  "Export an AsyncAPI specification for a Kafka cluster and Schema Registry.",
 		Args:  cobra.NoArgs,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: `Export an AsyncAPI specification with topic "my-topic" and all topics starting with "prefix-".`,
+				Code: `confluent asyncapi export --topics "my-topic,prefix-*"`,
+			},
+		),
 	}
 
 	c := &command{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
@@ -76,6 +84,7 @@ func newExportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.Flags().String("schema-registry-api-key", "", "API key for Schema Registry.")
 	cmd.Flags().String("schema-registry-api-secret", "", "API secret for Schema Registry.")
 	cmd.Flags().String("schema-context", "default", "Use a specific schema context.")
+	cmd.Flags().StringSlice("topics", nil, "A comma-separated list of topics to export. Supports prefixes ending with a wildcard (*).")
 	pcmd.AddValueFormatFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -104,34 +113,38 @@ func (c *command) export(cmd *cobra.Command, _ []string) error {
 		schemaContextPrefix = fmt.Sprintf(":.%s:", flags.schemaContext)
 	}
 	channelCount := 0
+
 	for _, topic := range accountDetails.topics {
+		if !topicMatch(topic.GetTopicName(), flags.topics) {
+			continue
+		}
+
 		for _, subject := range accountDetails.subjects {
-			if subject != schemaContextPrefix+topic.GetTopicName()+"-value" || strings.HasPrefix(topic.GetTopicName(), "_") {
+			if subject != fmt.Sprintf("%s%s-value", schemaContextPrefix, topic.GetTopicName()) || strings.HasPrefix(topic.GetTopicName(), "_") {
 				// Avoid internal topics or if subject does not follow topic naming strategy
 				continue
-			} else {
-				// Subject and Topic matches
-				// Reset channel details
-				accountDetails.channelDetails = channelDetails{
-					currentTopic:   topic,
-					currentSubject: subject,
+			}
+			// Subject and Topic matches
+			// Reset channel details
+			accountDetails.channelDetails = channelDetails{
+				currentTopic:   topic,
+				currentSubject: subject,
+			}
+			err := c.getChannelDetails(accountDetails, flags)
+			if err != nil {
+				if err.Error() == protobufErrorMessage {
+					log.CliLogger.Info(err.Error())
+					continue
 				}
-				err := c.getChannelDetails(accountDetails, flags)
-				if err != nil {
-					if err.Error() == protobufErrorMessage {
-						log.CliLogger.Info(err.Error())
-						continue
-					}
-					return err
-				}
-				channelCount++
-				messages[msgName(topic.GetTopicName())] = spec.Message{
-					OneOf1: &spec.MessageOneOf1{MessageEntity: accountDetails.buildMessageEntity()},
-				}
-				reflector, err = addChannel(reflector, accountDetails.channelDetails)
-				if err != nil {
-					return err
-				}
+				return err
+			}
+			channelCount++
+			messages[msgName(topic.GetTopicName())] = spec.Message{
+				OneOf1: &spec.MessageOneOf1{MessageEntity: accountDetails.buildMessageEntity()},
+			}
+			reflector, err = addChannel(reflector, accountDetails.channelDetails)
+			if err != nil {
+				return err
 			}
 		}
 	}
@@ -389,6 +402,10 @@ func getFlags(cmd *cobra.Command) (*flags, error) {
 	if err != nil {
 		return nil, err
 	}
+	topics, err := cmd.Flags().GetStringSlice("topics")
+	if err != nil {
+		return nil, err
+	}
 	return &flags{
 		file:                    file,
 		groupId:                 groupId,
@@ -399,6 +416,7 @@ func getFlags(cmd *cobra.Command) (*flags, error) {
 		schemaRegistryApiSecret: schemaRegistryApiSecret,
 		valueFormat:             valueFormat,
 		schemaContext:           schemaContext,
+		topics:                  topics,
 	}, nil
 }
 
@@ -560,4 +578,18 @@ func createConsumer(broker string, clusterCreds *v1.APIKeyPair, groupId string) 
 		return nil, fmt.Errorf("failed to create Kafka consumer: %v", err)
 	}
 	return consumer, nil
+}
+
+// Check if topic matches user-specified topics/prefixes. True if user didn't specify
+func topicMatch(topic string, userTopics []string) bool {
+	if len(userTopics) == 0 {
+		return true
+	}
+
+	for _, userTopic := range userTopics {
+		if strings.HasSuffix(userTopic, "*") && strings.HasPrefix(topic, strings.TrimSuffix(userTopic, "*")) || userTopic == topic {
+			return true
+		}
+	}
+	return false
 }

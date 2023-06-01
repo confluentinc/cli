@@ -1,7 +1,6 @@
 package pipeline
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"regexp"
@@ -97,7 +96,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	}
 
 	// validate sr id
-	srCluster, err := c.Context.FetchSchemaRegistryByEnvironmentId(context.Background(), environmentId)
+	srCluster, err := c.Context.FetchSchemaRegistryByEnvironmentId(environmentId)
 	if err != nil {
 		// ignore if the SR is not enabled
 		if !strings.Contains(err.Error(), "Schema Registry not enabled") {
@@ -139,7 +138,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	}
 
 	// add Schema Registry Cluster if its provisioned
-	if srCluster != nil {
+	if _, ok := srCluster.GetIdOk(); ok {
 		createPipeline.Spec.StreamGovernanceCluster = &streamdesignerv1.ObjectReference{Id: srCluster.GetId()}
 	}
 

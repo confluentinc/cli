@@ -1,46 +1,46 @@
-SHELL              := /bin/bash
-ALL_SRC            := $(shell find . -name "*.go" | grep -v -e vendor)
-GORELEASER_VERSION := v1.16.3-0.20230323115904-f82a32cd3a59
+SHELL := /bin/bash
+GORELEASER_VERSION := v1.17.2
 
-.PHONY: build # compile natively based on the system
+# Compile natively based on the current system
+.PHONY: build 
 build:
-ifneq "" "$(findstring NT,$(shell uname))" # build for Windows
-	CC=gcc CXX=g++ make cli-builder
+ifneq "" "$(findstring NT,$(shell uname))" # windows
+	CC=gcc CXX=g++ $(MAKE) cli-builder
 else ifneq (,$(findstring Linux,$(shell uname)))
-    ifneq (,$(findstring musl,$(shell ldd --version))) # build for musl Linux
-		CC=gcc CXX=g++ TAGS=musl make cli-builder
-    else # build for glibc Linux
-		CC=gcc CXX=g++ make cli-builder
+    ifneq (,$(findstring musl,$(shell ldd --version))) # linux (musl)
+		CC=gcc CXX=g++ TAGS=musl $(MAKE) cli-builder
+    else # linux (glibc)
+		CC=gcc CXX=g++ $(MAKE) cli-builder
     endif
-else # build for Darwin
-	make cli-builder
+else # darwin
+	$(MAKE) cli-builder
 endif
 
-.PHONY: cross-build # cross-compile from Darwin/amd64 machine to Win64, Linux64 and Darwin/arm64
+# Cross-compile from darwin to any of the OS/Arch pairs below
+.PHONY: cross-build
 cross-build:
 ifeq ($(GOARCH),arm64)
-    ifeq ($(GOOS),linux)
-		CGO_ENABLED=1 CC=aarch64-linux-musl-gcc CXX=aarch64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl make cli-builder
-    else # build for darwin/arm64
-		CGO_ENABLED=1 make cli-builder
+    ifeq ($(GOOS),linux) # linux/arm64
+		CGO_ENABLED=1 CC=aarch64-linux-musl-gcc CXX=aarch64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl $(MAKE) cli-builder
+    else # darwin/arm64
+		CGO_ENABLED=1 $(MAKE) cli-builder
     endif
-else # build for amd64 arch
-    ifeq ($(GOOS),windows)
-		CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ CGO_LDFLAGS="-static" make cli-builder
-    else ifeq ($(GOOS),linux) 
-		CGO_ENABLED=1 CC=x86_64-linux-musl-gcc CXX=x86_64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl make cli-builder
-    else # build for Darwin/amd64
-		CGO_ENABLED=1 make cli-builder
+else
+    ifeq ($(GOOS),windows) # windows/amd64
+		CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ CGO_LDFLAGS="-static" $(MAKE) cli-builder
+    else ifeq ($(GOOS),linux) # linux/amd64
+		CGO_ENABLED=1 CC=x86_64-linux-musl-gcc CXX=x86_64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl $(MAKE) cli-builder
+    else # darwin/amd64
+		CGO_ENABLED=1 $(MAKE) cli-builder
     endif
 endif
 
 .PHONY: cli-builder
 cli-builder:
 	go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
-	TAGS=$(TAGS) CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) VERSION=$(VERSION) GOEXPERIMENT=boringcrypto goreleaser build -f .goreleaser-build.yml --clean --single-target --snapshot
+	TAGS=$(TAGS) CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) GOEXPERIMENT=boringcrypto goreleaser build --config .goreleaser-build.yml --clean --single-target --snapshot
 
 include ./mk-files/cc-cli-service.mk
-include ./mk-files/dockerhub.mk
 include ./mk-files/semver.mk
 include ./mk-files/docs.mk
 include ./mk-files/dry-run.mk
@@ -59,7 +59,7 @@ S3_STAG_PATH=s3://confluent.cloud/$(S3_STAG_FOLDER_NAME)
 
 .PHONY: clean
 clean:
-	for dir in bin dist docs legal release-notes; do \
+	for dir in bin dist docs legal prebuilt release-notes; do \
 		[ -d $$dir ] && rm -r $$dir || true; \
 	done
 

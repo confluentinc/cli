@@ -67,7 +67,7 @@ func (c *command) createEmailInvite(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	srCluster, err := c.Context.FetchSchemaRegistryByEnvironmentId(cmd.Context(), environment)
+	srCluster, err := c.Context.FetchSchemaRegistryByEnvironmentId(environment)
 	if err != nil {
 		return err
 	}
@@ -75,11 +75,11 @@ func (c *command) createEmailInvite(cmd *cobra.Command, _ []string) error {
 	deliveryMethod := "Email"
 	resources := []string{
 		fmt.Sprintf("crn://confluent.cloud/organization=%s/environment=%s/schema-registry=%s/kafka=%s/topic=%s",
-			c.Context.GetCurrentOrganization(), environment, srCluster.Id, cluster, topic),
+			c.Context.GetCurrentOrganization(), environment, srCluster.GetId(), cluster, topic),
 	}
 	for _, subject := range schemaRegistrySubjects {
 		resources = append(resources, fmt.Sprintf("crn://confluent.cloud/organization=%s/environment=%s/schema-registry=%s/subject=%s",
-			c.Context.GetCurrentOrganization(), environment, srCluster.Id, subject))
+			c.Context.GetCurrentOrganization(), environment, srCluster.GetId(), subject))
 	}
 
 	shareReq := cdxv1.CdxV1CreateProviderShareRequest{

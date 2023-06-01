@@ -170,7 +170,7 @@ func (c *command) loginCCloud(cmd *cobra.Command, url string) error {
 }
 
 func (c *command) printRemainingFreeCredit(client *ccloudv1.Client, currentOrg *ccloudv1.Organization) {
-	promoCodeClaims, err := client.Growth.GetFreeTrialInfo(context.Background(), currentOrg.Id)
+	promoCodeClaims, err := client.Growth.GetFreeTrialInfo(currentOrg.Id)
 	if err != nil {
 		log.CliLogger.Warnf("Failed to get free trial info: %v", err)
 		return
@@ -219,7 +219,7 @@ func (c *command) getCCloudCredentials(cmd *cobra.Command, url, orgResourceId st
 
 	return pauth.GetLoginCredentials(
 		c.loginCredentialsManager.GetCloudCredentialsFromEnvVar(orgResourceId),
-		c.loginCredentialsManager.GetSsoCredentialsFromConfig(c.cfg),
+		c.loginCredentialsManager.GetSsoCredentialsFromConfig(c.cfg, url),
 		c.loginCredentialsManager.GetCredentialsFromKeychain(c.cfg, true, filterParams.Name, url),
 		c.loginCredentialsManager.GetCredentialsFromConfig(c.cfg, filterParams),
 		c.loginCredentialsManager.GetCredentialsFromNetrc(filterParams),

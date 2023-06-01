@@ -11,7 +11,7 @@
           | MYKEY3             |                                | u-44ddd  | mhe@confluent.io      | kafka           | lkc-bob      | 1999-02-24T00:00:00Z  
           | MYKEY4             | my-cool-app                    | u-44ddd  | mhe@confluent.io      | kafka           | lkc-cool1    | 1999-02-24T00:00:00Z  
           | MYKEY6             | my-ksql-app                    | u-44ddd  | mhe@confluent.io      | ksql            | lksqlc-ksql1 | 1999-02-24T00:00:00Z  
-          | MYKEY7             |                                | u-44ddd  | mhe@confluent.io      | schema-registry | lsrc-1       | 1999-02-24T00:00:00Z  
+          | MYKEY7             |                                | u-44ddd  | mhe@confluent.io      | schema-registry | lsrc-1234    | 1999-02-24T00:00:00Z  
           | MYKEY8             |                                | u-44ddd  | mhe@confluent.io      | cloud           |              | 1999-02-24T00:00:00Z  
           | MYKEY9             |                                | sa-12345 | <service account>     | kafka           | lkc-cool1    | 1999-02-24T00:00:00Z  
           | SERVICEACCOUNTKEY1 |                                | sa-12345 | <service account>     | kafka           | lkc-bob      | 1999-02-24T00:00:00Z  

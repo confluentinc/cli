@@ -111,7 +111,7 @@ func (suite *KSQLTestSuite) SetupTest() {
 		},
 	}
 	suite.userc = &ccloudv1mock.UserInterface{
-		GetServiceAccountsFunc: func(_ context.Context) ([]*ccloudv1.User, error) {
+		GetServiceAccountsFunc: func() ([]*ccloudv1.User, error) {
 			return []*ccloudv1.User{suite.serviceAcct}, nil
 		},
 	}

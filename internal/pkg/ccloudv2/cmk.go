@@ -26,8 +26,7 @@ func (c *Client) cmkApiContext() context.Context {
 }
 
 func (c *Client) CreateKafkaCluster(cluster cmkv2.CmkV2Cluster) (cmkv2.CmkV2Cluster, *http.Response, error) {
-	req := c.CmkClient.ClustersCmkV2Api.CreateCmkV2Cluster(c.cmkApiContext()).CmkV2Cluster(cluster)
-	return c.CmkClient.ClustersCmkV2Api.CreateCmkV2ClusterExecute(req)
+	return c.CmkClient.ClustersCmkV2Api.CreateCmkV2Cluster(c.cmkApiContext()).CmkV2Cluster(cluster).Execute()
 }
 
 func (c *Client) DescribeKafkaCluster(clusterId, environment string) (cmkv2.CmkV2Cluster, *http.Response, error) {
@@ -36,14 +35,12 @@ func (c *Client) DescribeKafkaCluster(clusterId, environment string) (cmkv2.CmkV
 }
 
 func (c *Client) UpdateKafkaCluster(clusterId string, update cmkv2.CmkV2ClusterUpdate) (cmkv2.CmkV2Cluster, error) {
-	req := c.CmkClient.ClustersCmkV2Api.UpdateCmkV2Cluster(c.cmkApiContext(), clusterId).CmkV2ClusterUpdate(update)
-	resp, httpResp, err := c.CmkClient.ClustersCmkV2Api.UpdateCmkV2ClusterExecute(req)
+	resp, httpResp, err := c.CmkClient.ClustersCmkV2Api.UpdateCmkV2Cluster(c.cmkApiContext(), clusterId).CmkV2ClusterUpdate(update).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) DeleteKafkaCluster(clusterId, environment string) (*http.Response, error) {
-	req := c.CmkClient.ClustersCmkV2Api.DeleteCmkV2Cluster(c.cmkApiContext(), clusterId).Environment(environment)
-	return c.CmkClient.ClustersCmkV2Api.DeleteCmkV2ClusterExecute(req)
+	return c.CmkClient.ClustersCmkV2Api.DeleteCmkV2Cluster(c.cmkApiContext(), clusterId).Environment(environment).Execute()
 }
 
 func (c *Client) ListKafkaClusters(environment string) ([]cmkv2.CmkV2Cluster, error) {
@@ -71,5 +68,5 @@ func (c *Client) executeListClusters(pageToken, environment string) (cmkv2.CmkV2
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
 	}
-	return c.CmkClient.ClustersCmkV2Api.ListCmkV2ClustersExecute(req)
+	return req.Execute()
 }

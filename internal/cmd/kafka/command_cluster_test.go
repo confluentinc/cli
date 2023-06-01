@@ -22,7 +22,6 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	climock "github.com/confluentinc/cli/mock"
 )
 
 const (
@@ -58,24 +57,6 @@ var cmkByokCluster = cmkv2.CmkV2Cluster{
 	},
 }
 
-var cmkExpandCluster = cmkv2.CmkV2Cluster{
-	Spec: &cmkv2.CmkV2ClusterSpec{
-		Environment: &cmkv2.EnvScopedObjectReference{
-			Id: environmentId,
-		},
-		DisplayName:  cmkv2.PtrString("gcp-shrink-test"),
-		Cloud:        cmkv2.PtrString("gcp"),
-		Region:       cmkv2.PtrString("us-central1"),
-		Config:       setCmkClusterConfig("dedicated", 3, ""),
-		Availability: cmkv2.PtrString(lowAvailability),
-	},
-	Id: cmkv2.PtrString("lkc-xyz"),
-	Status: &cmkv2.CmkV2ClusterStatus{
-		Cku:   cmkv2.PtrInt32(3),
-		Phase: "PROVISIONED",
-	},
-}
-
 type KafkaClusterTestSuite struct {
 	suite.Suite
 	conf            *v1.Config
@@ -107,7 +88,7 @@ func (suite *KafkaClusterTestSuite) SetupTest() {
 		},
 	}
 	suite.envMetadataMock = &ccloudv1mock.EnvironmentMetadata{
-		GetFunc: func(_ context.Context) ([]*ccloudv1.CloudMetadata, error) {
+		GetFunc: func() ([]*ccloudv1.CloudMetadata, error) {
 			cloudMeta := &ccloudv1.CloudMetadata{
 				Id: cloudId,
 				Regions: []*ccloudv1.Region{{
@@ -140,59 +121,6 @@ func (suite *KafkaClusterTestSuite) SetupTest() {
 			return resp, nil, nil
 		},
 	}
-}
-
-func (suite *KafkaClusterTestSuite) newCmd(conf *v1.Config) *cobra.Command {
-	client := &ccloudv1.Client{
-		EnvironmentMetadata: suite.envMetadataMock,
-	}
-	v2Client := &ccloudv2.Client{
-		AuthToken:     "auth-token",
-		CmkClient:     &cmkv2.APIClient{ClustersCmkV2Api: suite.cmkClusterApi},
-		MetricsClient: &metricsv2.APIClient{Version2Api: suite.metricsApi},
-	}
-	prerunner := climock.NewPreRunnerMock(client, v2Client, nil, nil, conf)
-	return newClusterCommand(conf, prerunner)
-}
-
-func (suite *KafkaClusterTestSuite) TestClusterShrinkShouldPrompt() {
-	req := require.New(suite.T())
-	suite.cmkClusterApi = &cmkmock.ClustersCmkV2Api{
-		GetCmkV2ClusterFunc: func(ctx context.Context, _ string) cmkv2.ApiGetCmkV2ClusterRequest {
-			return cmkv2.ApiGetCmkV2ClusterRequest{}
-		},
-		GetCmkV2ClusterExecuteFunc: func(req cmkv2.ApiGetCmkV2ClusterRequest) (cmkv2.CmkV2Cluster, *http.Response, error) {
-			return cmkExpandCluster, nil, nil
-		},
-	}
-	// Set variable for Metrics API mock
-	shouldError = false
-	shouldPrompt = true
-	cmd := suite.newCmd(v1.AuthenticatedCloudConfigMock())
-	cmd.SetArgs([]string{"update", clusterName, "--cku", "2"})
-	err := cmd.Execute()
-	req.Contains(err.Error(), "cluster resize error: failed to read your confirmation")
-	req.True(suite.metricsApi.V2MetricsDatasetQueryPostCalled())
-	req.True(suite.metricsApi.V2MetricsDatasetQueryPostExecuteCalled())
-}
-
-func (suite *KafkaClusterTestSuite) TestCreateKafkaCluster() {
-	cmd := suite.newCmd(v1.AuthenticatedCloudConfigMock())
-	cmd.SetArgs([]string{"create", clusterName, "--cloud", cloudId, "--region", regionId})
-	err := cmd.Execute()
-	req := require.New(suite.T())
-	req.Nil(err)
-	req.True(suite.envMetadataMock.GetCalled())
-	req.True(suite.cmkClusterApi.CreateCmkV2ClusterCalled())
-}
-
-func (suite *KafkaClusterTestSuite) TestDeleteKafkaCluster() {
-	cmd := suite.newCmd(v1.AuthenticatedCloudConfigMock())
-	cmd.SetArgs([]string{"delete", clusterId, "--force"})
-	err := cmd.Execute()
-	req := require.New(suite.T())
-	req.Nil(err)
-	req.True(suite.cmkClusterApi.DeleteCmkV2ClusterCalled())
 }
 
 func (suite *KafkaClusterTestSuite) TestGetLkcForDescribe() {

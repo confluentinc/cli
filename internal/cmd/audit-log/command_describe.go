@@ -1,8 +1,6 @@
 package auditlog
 
 import (
-	"context"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -38,17 +36,17 @@ func newDescribeCommand(prerunner pcmd.PreRunner) *cobra.Command {
 }
 
 func (c *describeCommand) describe(cmd *cobra.Command, _ []string) error {
-	user, err := c.Client.Auth.User(context.Background())
+	user, err := c.Client.Auth.User()
 	if err != nil {
 		return err
 	}
 
 	auditLog := user.GetOrganization().GetAuditLog()
-	if auditLog == nil {
+	if auditLog.GetServiceAccountId() == 0 {
 		return errors.New(errors.AuditLogsNotEnabledErrorMsg)
 	}
 
-	serviceAccount, err := c.Client.User.GetServiceAccount(context.Background(), auditLog.GetServiceAccountId())
+	serviceAccount, err := c.Client.User.GetServiceAccount(auditLog.GetServiceAccountId())
 	if err != nil {
 		return err
 	}

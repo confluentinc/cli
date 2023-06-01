@@ -67,7 +67,7 @@ func fillKeyStoreV2() {
 			Resource: &apikeysv2.ObjectReference{Id: "lkc-abc", Kind: apikeysv2.PtrString("Cluster")},
 			Resources: &[]apikeysv2.ObjectReference{
 				{Id: "lkc-abc", Kind: apikeysv2.PtrString("Cluster")},
-				{Id: "lsrc-abc", Kind: apikeysv2.PtrString("SchemaRegistry")},
+				{Id: "lsrc-1234", Kind: apikeysv2.PtrString("SchemaRegistry")},
 			},
 			Owner:       &apikeysv2.ObjectReference{Id: "u-44ddd"},
 			Description: apikeysv2.PtrString("works for two clusters"),
@@ -93,7 +93,7 @@ func fillKeyStoreV2() {
 			Resource: &apikeysv2.ObjectReference{Id: "lkc-abc", Kind: apikeysv2.PtrString("Cluster")},
 			Resources: &[]apikeysv2.ObjectReference{
 				{Id: "lkc-abc", Kind: apikeysv2.PtrString("Cluster")},
-				{Id: "lsrc-abc", Kind: apikeysv2.PtrString("SchemaRegistry")},
+				{Id: "lsrc-1234", Kind: apikeysv2.PtrString("SchemaRegistry")},
 			},
 			Owner:       &apikeysv2.ObjectReference{Id: "sa-12345"},
 			Description: apikeysv2.PtrString("works for two clusters and owned by service account"),
@@ -301,6 +301,21 @@ func getCmkDedicatedDescribeCluster(id string, name string, cku int32) *cmkv2.Cm
 			Phase: "PROVISIONED",
 			Cku:   cmkv2.PtrInt32(cku),
 		},
+	}
+}
+
+func getCmkUnknownDescribeCluster(id, name string) *cmkv2.CmkV2Cluster {
+	return &cmkv2.CmkV2Cluster{
+		Spec: &cmkv2.CmkV2ClusterSpec{
+			DisplayName:            cmkv2.PtrString(name),
+			Cloud:                  cmkv2.PtrString("aws"),
+			Region:                 cmkv2.PtrString("us-west-2"),
+			KafkaBootstrapEndpoint: cmkv2.PtrString("SASL_SSL://kafka-endpoint"),
+			HttpEndpoint:           cmkv2.PtrString(TestKafkaRestProxyUrl.String()),
+			Availability:           cmkv2.PtrString("SINGLE_ZONE"),
+		},
+		Id:     cmkv2.PtrString(id),
+		Status: &cmkv2.CmkV2ClusterStatus{Phase: "PROVISIONED"},
 	}
 }
 

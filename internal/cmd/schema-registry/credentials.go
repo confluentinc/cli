@@ -131,11 +131,11 @@ func GetSchemaRegistryClientWithApiKey(cmd *cobra.Command, cfg *dynamicconfig.Dy
 			if srCluster, ok := ctx.SchemaRegistryClusters[environmentId]; ok {
 				srConfig.BasePath = srCluster.SchemaRegistryEndpoint
 			} else {
-				srCluster, err := ctx.FetchSchemaRegistryByEnvironmentId(srCtx, environmentId)
+				srCluster, err := ctx.FetchSchemaRegistryByEnvironmentId(environmentId)
 				if err != nil {
 					return nil, nil, err
 				}
-				srConfig.BasePath = srCluster.Endpoint
+				srConfig.BasePath = srCluster.Spec.GetHttpEndpoint()
 			}
 		} else {
 			srConfig.BasePath = schemaRegistryEndpoint

@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -128,19 +127,6 @@ func AutocompleteClusters(environmentId string, client *ccloudv2.Client) []strin
 	return suggestions
 }
 
-func AutocompleteCmkClusters(environmentId string, client *ccloudv2.Client) []string {
-	clusters, err := client.ListKafkaClusters(environmentId)
-	if err != nil {
-		return nil
-	}
-
-	suggestions := make([]string, len(clusters))
-	for i, cluster := range clusters {
-		suggestions[i] = fmt.Sprintf("%s\t%s", cluster.GetId(), cluster.Spec.GetDisplayName())
-	}
-	return suggestions
-}
-
 func AddContextFlag(cmd *cobra.Command, command *CLICommand) {
 	cmd.Flags().String("context", "", "CLI context name.")
 
@@ -179,12 +165,12 @@ func AutocompleteEnvironments(v1Client *ccloudv1.Client, v2Client *ccloudv2.Clie
 		suggestions[i] = fmt.Sprintf("%s\t%s", environment.GetId(), environment.GetDisplayName())
 	}
 
-	user, err := v1Client.Auth.User(context.Background())
+	user, err := v1Client.Auth.User()
 	if err != nil {
 		return nil
 	}
 
-	if auditLog := user.GetOrganization().GetAuditLog(); auditLog != nil {
+	if auditLog := user.GetOrganization().GetAuditLog(); auditLog.GetServiceAccountId() != 0 {
 		environment, err := v2Client.GetOrgEnvironment(auditLog.GetAccountId())
 		if err != nil {
 			return nil

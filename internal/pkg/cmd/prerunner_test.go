@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
-	ccloudv1Mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
+	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
 	krsdk "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
@@ -184,15 +184,13 @@ func TestPreRun_TokenExpires(t *testing.T) {
 	r := getPreRunBase()
 	r.Config = cfg
 
-	root := &cobra.Command{
-		Run: func(cmd *cobra.Command, args []string) {},
-	}
-	rootCmd := pcmd.NewAnonymousCLICommand(root, r)
+	root := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
+	rootCmd := pcmd.NewAuthenticatedCLICommand(root, r)
 	root.Flags().CountP("verbose", "v", "Increase verbosity")
 	root.Flags().Bool("unsafe-trace", false, "")
 
 	_, err := pcmd.ExecuteCommand(rootCmd.Command)
-	require.NoError(t, err)
+	require.Error(t, err)
 
 	// Check auth is nil for now, until there is a better to create a fake logged in user and check if it's logged out
 	require.Nil(t, cfg.Context().State.Auth)
@@ -252,7 +250,10 @@ func Test_UpdateToken(t *testing.T) {
 
 			cfg.Context().State.AuthToken = tt.authToken
 
-			mockLoginCredentialsManager := &climock.LoginCredentialsManager{
+			r := getPreRunBase()
+			r.Config = cfg
+
+			r.LoginCredentialsManager = &climock.LoginCredentialsManager{
 				GetPrerunCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return nil, nil
@@ -273,22 +274,35 @@ func Test_UpdateToken(t *testing.T) {
 						return &pauth.Credentials{Username: "username", Password: "password"}, nil
 					}
 				},
+				GetCloudCredentialsFromEnvVarFunc: func(_ string) func() (*pauth.Credentials, error) {
+					return func() (*pauth.Credentials, error) {
+						return nil, nil
+					}
+				},
+				GetOnPremPrerunCredentialsFromEnvVarFunc: func() func() (*pauth.Credentials, error) {
+					return func() (*pauth.Credentials, error) {
+						return nil, nil
+					}
+				},
+				GetOnPremPrerunCredentialsFromNetrcFunc: func(_ *cobra.Command, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
+					return func() (*pauth.Credentials, error) {
+						return nil, nil
+					}
+				},
 			}
 
-			r := getPreRunBase()
-			r.Config = cfg
-			r.LoginCredentialsManager = mockLoginCredentialsManager
-
-			root := &cobra.Command{
-				Run: func(cmd *cobra.Command, args []string) {},
+			root := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
+			var rootCmd *pcmd.AuthenticatedCLICommand
+			if tt.isCloud {
+				rootCmd = pcmd.NewAuthenticatedCLICommand(root, r)
+			} else {
+				rootCmd = pcmd.NewAuthenticatedWithMDSCLICommand(root, r)
 			}
-			rootCmd := pcmd.NewAnonymousCLICommand(root, r)
 			root.Flags().CountP("verbose", "v", "Increase verbosity")
 			root.Flags().Bool("unsafe-trace", false, "")
 
-			_, err := pcmd.ExecuteCommand(rootCmd.Command)
-			require.NoError(t, err)
-			require.True(t, mockLoginCredentialsManager.GetCredentialsFromConfigCalled())
+			_, err := pcmd.ExecuteCommand(rootCmd.Command, "--unsafe-trace")
+			require.Error(t, err)
 		})
 	}
 }
@@ -422,8 +436,8 @@ func TestPrerun_AutoLogin(t *testing.T) {
 			r.Config = cfg
 			r.CCloudClientFactory = &climock.CCloudClientFactory{
 				JwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloudv1.Client {
-					return &ccloudv1.Client{Auth: &ccloudv1Mock.Auth{
-						UserFunc: func(_ context.Context) (*ccloudv1.GetMeReply, error) {
+					return &ccloudv1.Client{Auth: &ccloudv1mock.Auth{
+						UserFunc: func() (*ccloudv1.GetMeReply, error) {
 							return &ccloudv1.GetMeReply{
 								User:         &ccloudv1.User{Id: 23},
 								Organization: &ccloudv1.Organization{ResourceId: "o-123"},
@@ -542,8 +556,8 @@ func TestPrerun_ReLoginToLastOrgUsed(t *testing.T) {
 	r := getPreRunBase()
 	r.CCloudClientFactory = &climock.CCloudClientFactory{
 		JwtHTTPClientFactoryFunc: func(ctx context.Context, jwt, baseURL string) *ccloudv1.Client {
-			return &ccloudv1.Client{Auth: &ccloudv1Mock.Auth{
-				UserFunc: func(ctx context.Context) (*ccloudv1.GetMeReply, error) {
+			return &ccloudv1.Client{Auth: &ccloudv1mock.Auth{
+				UserFunc: func() (*ccloudv1.GetMeReply, error) {
 					return &ccloudv1.GetMeReply{
 						User:         &ccloudv1.User{Id: 23},
 						Organization: &ccloudv1.Organization{ResourceId: "o-123"},
@@ -790,51 +804,4 @@ func TestInitializeOnPremKafkaRest(t *testing.T) {
 	r.Config.Context().State.AuthToken = ""
 	buf := new(bytes.Buffer)
 	c.SetOut(buf)
-}
-
-func TestConvertToMetricsBaseURL(t *testing.T) {
-	tests := []struct {
-		name        string
-		inputUrl    string
-		expectedUrl string
-	}{
-		{
-			"test exact url",
-			"https://api.telemetry.confluent.cloud/",
-			"https://api.telemetry.confluent.cloud/",
-		},
-		{
-			"test dev url",
-			"https://devel.cpdev.cloud",
-			"https://devel-sandbox-api.telemetry.aws.confluent.cloud/",
-		},
-		{
-			"test cpd url",
-			"https://nearby-asp.gcp.priv.cpdev.cloud",
-			"https://devel-sandbox-api.telemetry.aws.confluent.cloud/",
-		},
-		{
-			"test stag url",
-			"https://stag.cpdev.cloud",
-			"https://stag-sandbox-api.telemetry.aws.confluent.cloud/",
-		},
-		{
-			"test prod url",
-			"https://confluent.cloud",
-			"https://api.telemetry.confluent.cloud/",
-		},
-		{
-			"test prod url",
-			"https://confluent.cloud/",
-			"https://api.telemetry.confluent.cloud/",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := pcmd.ConvertToMetricsBaseURL(tt.inputUrl)
-			if got != tt.expectedUrl {
-				t.Errorf("got = %v, want %v", got, tt.expectedUrl)
-			}
-		})
-	}
 }

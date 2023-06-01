@@ -1,34 +1,3 @@
-update-db:
-	$(eval DIR=$(shell mktemp -d))
-	$(eval CC_CLI_SERVICE=$(DIR)/cc-cli-service)
-	
-	version=$$(cat release-notes/version.txt) && \
-	git clone git@github.com:confluentinc/cc-cli-service.git $(CC_CLI_SERVICE) && \
-	cd $(CC_CLI_SERVICE) && \
-	make db-local-reset && \
-	git checkout -b update-db-v$${version} && \
-	make db-migrate-create NAME=v$${version} && \
-	cd - && \
-	echo -e "BEGIN;\n\nDELETE FROM whitelist WHERE version = 'v$${version}';\n\nCOMMIT;\n" > $$(find $(CC_CLI_SERVICE)/db/migrations/ -name "*_v$${version}.down.sql") && \
-	go run -ldflags "-X main.version=v$${version}" cmd/usage/main.go > $$(find $(CC_CLI_SERVICE)/db/migrations/ -name "*_v$${version}.up.sql") && \
-	cd $(CC_CLI_SERVICE) && \
-	make db-migrate-up && \
-	git add . && \
-	git commit -m "update db for v$${version}" && \
-	cd db/migrations/ && \
-	a=$$(ls | grep up | tail -n 2 | head -n 1) && \
-	b=$$(ls | grep up | tail -n 1) && \
-	sed -i "" "s/v[0-9]*\.[0-9]*\.[0-9]*/v$${version}/" $$a && \
-	diff=$$(diff -u $$a $$b) && \
-	body=$$(echo -e "\`\`\`diff$${diff}\n\n\`\`\`") && \
-	if [ "$${diff}" = "" ]; then \
-		body="No changes."; \
-	fi && \
-	$(call dry-run,git push origin update-db-v$${version}) && \
-	$(call dry-run,gh pr create -B master --title "Update DB for v$${version}" --body "$${body}")
-
-	rm -rf $(DIR)
-
 promote:
 	$(eval DIR=$(shell mktemp -d))
 	$(eval CC_CLI_SERVICE=$(DIR)/cc-cli-service)
@@ -45,6 +14,6 @@ promote:
 	done && \
 	git commit -am "promote devel and prod" && \
 	$(call dry-run,git push origin promote-$$(cat $(DIR)/stag.txt)) && \
-	$(call dry-run,gh pr create -B master --title "Promote devel and prod" --body "")
+	$(call dry-run,gh pr create --base master --title "Promote devel and prod" --body "")
 
 	rm -rf $(DIR)

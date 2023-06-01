@@ -43,10 +43,10 @@ type SchemaTestSuite struct {
 func (suite *SchemaTestSuite) SetupSuite() {
 	suite.conf = v1.AuthenticatedCloudConfigMock()
 	suite.srMothershipMock = &ccloudv1mock.SchemaRegistry{
-		CreateSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *ccloudv1.SchemaRegistryClusterConfig) (*ccloudv1.SchemaRegistryCluster, error) {
+		CreateSchemaRegistryClusterFunc: func(_ *ccloudv1.SchemaRegistryClusterConfig) (*ccloudv1.SchemaRegistryCluster, error) {
 			return suite.srCluster, nil
 		},
-		GetSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *ccloudv1.SchemaRegistryCluster) (*ccloudv1.SchemaRegistryCluster, error) {
+		GetSchemaRegistryClusterFunc: func(_ *ccloudv1.SchemaRegistryCluster) (*ccloudv1.SchemaRegistryCluster, error) {
 			return nil, nil
 		},
 	}
@@ -59,15 +59,13 @@ func (suite *SchemaTestSuite) SetupSuite() {
 		Name:       cluster.Name,
 		Enterprise: true,
 	}
-	suite.srCluster = &ccloudv1.SchemaRegistryCluster{
-		Id: srClusterID,
-	}
+	suite.srCluster = &ccloudv1.SchemaRegistryCluster{Id: "sr"}
 }
 
 func (suite *SchemaTestSuite) SetupTest() {
 	suite.srClientMock = &srsdk.APIClient{
 		DefaultApi: &srMock.DefaultApi{
-			RegisterFunc: func(_ context.Context, _ string, _ srsdk.RegisterSchemaRequest) (srsdk.RegisterSchemaResponse, *http.Response, error) {
+			RegisterFunc: func(_ context.Context, _ string, _ srsdk.RegisterSchemaRequest, _ *srsdk.RegisterOpts) (srsdk.RegisterSchemaResponse, *http.Response, error) {
 				return srsdk.RegisterSchemaResponse{Id: id}, nil, nil
 			},
 			GetSchemaFunc: func(_ context.Context, _ int32, _ *srsdk.GetSchemaOpts) (srsdk.SchemaString, *http.Response, error) {

@@ -1,7 +1,6 @@
 {
   "version": "1.0.0",
   "disable_update_check": false,
-  "disable_updates": false,
   "disable_plugins": false,
   "disable_feature_flags": false,
   "no_browser": false,
@@ -30,6 +29,7 @@
       "credential_type": 0
     }
   },
+  "current_context": "my-context",
   "contexts": {
     "my-context": {
       "name": "my-context",
@@ -64,7 +64,6 @@
       "auth_refresh_token": ""
     }
   },
-  "current_context": "my-context",
   "saved_credentials": {
     "my-context": {
       "is_cloud": false,

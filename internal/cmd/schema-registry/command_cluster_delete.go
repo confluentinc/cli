@@ -1,7 +1,6 @@
 package schemaregistry
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -40,27 +39,33 @@ func (c *command) newClusterDeleteCommand() *cobra.Command {
 }
 
 func (c *command) clusterDelete(cmd *cobra.Command, _ []string) error {
-	ctx := context.Background()
-
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}
 
-	cluster, err := c.Context.FetchSchemaRegistryByEnvironmentId(ctx, environmentId)
+	clusters, err := c.V2Client.GetSchemaRegistryClustersByEnvironment(environmentId)
 	if err != nil {
 		return err
 	}
 
-	promptMsg := fmt.Sprintf(`Are you sure you want to delete %s "%s" for %s "%s"?`, resource.SchemaRegistryCluster, cluster.Id, resource.Environment, environmentId)
+	if len(clusters) == 0 {
+		return errors.NewSRNotEnabledError()
+	}
+
+	promptMsg := fmt.Sprintf(`Are you sure you want to delete %s "%s" for %s "%s"?`, resource.SchemaRegistryCluster, clusters[0].GetId(), resource.Environment, environmentId)
 	if ok, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil || !ok {
 		return err
 	}
 
-	err = c.Client.SchemaRegistry.DeleteSchemaRegistryCluster(ctx, cluster)
+	err = c.V2Client.DeleteSchemaRegistryCluster(clusters[0].GetId(), environmentId)
 	if err != nil {
 		return err
 	}
+
+	ctx := c.Config.Context()
+	ctx.SchemaRegistryClusters[environmentId] = nil
+	_ = ctx.Save()
 
 	output.Printf(errors.SchemaRegistryClusterDeletedMsg, environmentId)
 	return nil

@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"strings"
 
 	"github.com/google/uuid"
@@ -62,10 +63,6 @@ var (
 		"you must log in to Confluent Platform to use this command",
 		"Log in with `confluent login --url <mds-url>`.",
 	)
-	RequireUpdatesEnabledErr = errors.NewErrorWithSuggestions(
-		"you must enable updates to use this command",
-		"WARNING: To guarantee compatibility, enabling updates is not recommended for Confluent Platform users.\n"+`In ~/.confluent/config.json, set "disable_updates": false`,
-	)
 )
 
 // Config represents the CLI configuration.
@@ -73,16 +70,16 @@ type Config struct {
 	*config.BaseConfig
 
 	DisableUpdateCheck  bool                        `json:"disable_update_check"`
-	DisableUpdates      bool                        `json:"disable_updates"`
+	DisableUpdates      bool                        `json:"disable_updates,omitempty"`
 	DisablePlugins      bool                        `json:"disable_plugins"`
 	DisablePluginsOnce  bool                        `json:"disable_plugins_once,omitempty"`
 	DisableFeatureFlags bool                        `json:"disable_feature_flags"`
 	NoBrowser           bool                        `json:"no_browser"`
 	Platforms           map[string]*Platform        `json:"platforms,omitempty"`
 	Credentials         map[string]*Credential      `json:"credentials,omitempty"`
+	CurrentContext      string                      `json:"current_context"`
 	Contexts            map[string]*Context         `json:"contexts,omitempty"`
 	ContextStates       map[string]*ContextState    `json:"context_states,omitempty"`
-	CurrentContext      string                      `json:"current_context"`
 	AnonymousId         string                      `json:"anonymous_id,omitempty"`
 	SavedCredentials    map[string]*LoginCredential `json:"saved_credentials,omitempty"`
 	LocalPorts          *LocalPorts                 `json:"local_ports,omitempty"`
@@ -92,9 +89,10 @@ type Config struct {
 	IsTest  bool              `json:"-"`
 	Version *pversion.Version `json:"-"`
 
-	overwrittenCurrentContext      string
-	overwrittenCurrentEnvironment  string
-	overwrittenCurrentKafkaCluster string
+	overwrittenCurrentContext          string
+	overwrittenCurrentEnvironment      string
+	overwrittenCurrentFlinkComputePool string
+	overwrittenCurrentKafkaCluster     string
 }
 
 func (c *Config) SetOverwrittenCurrentContext(context string) {
@@ -109,6 +107,12 @@ func (c *Config) SetOverwrittenCurrentContext(context string) {
 func (c *Config) SetOverwrittenCurrentEnvironment(environmentId string) {
 	if c.overwrittenCurrentEnvironment == "" {
 		c.overwrittenCurrentEnvironment = environmentId
+	}
+}
+
+func (c *Config) SetOverwrittenFlinkComputePool(computePoolId string) {
+	if c.overwrittenCurrentFlinkComputePool == "" {
+		c.overwrittenCurrentFlinkComputePool = computePoolId
 	}
 }
 
@@ -132,6 +136,24 @@ func New() *Config {
 		AnonymousId:      uuid.New().String(),
 		Version:          new(pversion.Version),
 	}
+}
+
+func (c *Config) DecryptContextStates() error {
+	if context := c.Context(); context != nil {
+		state := c.ContextStates[context.Name]
+		if state != nil {
+			err := state.DecryptContextStateAuthToken(context.Name)
+			if err != nil {
+				return err
+			}
+			err = state.DecryptContextStateAuthRefreshToken(context.Name)
+			if err != nil {
+				return err
+			}
+		}
+		context.State = state
+	}
+	return c.Validate()
 }
 
 // Load reads the CLI config from disk.
@@ -185,19 +207,7 @@ func (c *Config) Load() error {
 			return errors.NewCorruptedConfigError(errors.MissingKafkaClusterContextErrorMsg, context.Name, c.Filename)
 		}
 		context.KafkaClusterContext.Context = context
-
-		state := c.ContextStates[context.Name]
-		if state != nil {
-			err = state.DecryptContextStateAuthToken(context.Name)
-			if err != nil {
-				return err
-			}
-			err = state.DecryptContextStateAuthRefreshToken(context.Name)
-			if err != nil {
-				return err
-			}
-		}
-		context.State = state
+		context.State = c.ContextStates[context.Name]
 	}
 	return c.Validate()
 }
@@ -260,14 +270,16 @@ func (c *Config) encryptContextStateTokens(tempAuthToken, tempAuthRefreshToken s
 		c.Context().GetState().Salt = salt
 		c.Context().GetState().Nonce = nonce
 	}
-	if tempAuthToken != "" {
+
+	if regexp.MustCompile(authTokenRegex).MatchString(tempAuthToken) {
 		encryptedAuthToken, err := secret.Encrypt(c.Context().Name, tempAuthToken, c.Context().GetState().Salt, c.Context().GetState().Nonce)
 		if err != nil {
 			return err
 		}
 		c.Context().GetState().AuthToken = encryptedAuthToken
 	}
-	if tempAuthRefreshToken != "" {
+
+	if regexp.MustCompile(authRefreshTokenRegex).MatchString(tempAuthRefreshToken) {
 		encryptedAuthRefreshToken, err := secret.Encrypt(c.Context().Name, tempAuthRefreshToken, c.Context().GetState().Salt, c.Context().GetState().Nonce)
 		if err != nil {
 			return err
@@ -667,13 +679,6 @@ func (c *Config) CheckIsNonAPIKeyCloudLoginOrOnPremLogin() error {
 func (c *Config) CheckIsNonCloudLogin() error {
 	if c.isCloud() {
 		return RequireNonCloudLogin
-	}
-	return nil
-}
-
-func (c *Config) CheckAreUpdatesEnabled() error {
-	if c.DisableUpdates {
-		return RequireUpdatesEnabledErr
 	}
 	return nil
 }

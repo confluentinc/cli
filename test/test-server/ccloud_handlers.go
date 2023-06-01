@@ -129,9 +129,9 @@ func handleLogin(t *testing.T) http.HandlerFunc {
 		case "expired@user.com":
 			res.Token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1MzAxMjQ4NTcsImV4cCI6MTUzMDAzODQ1NywiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoianJvY2tldEBleGFtcGxlLmNvbSJ9.Y2ui08GPxxuV9edXUBq-JKr1VPpMSnhjSFySczCby7Y"
 		case "malformed@user.com":
-			res.Token = "malformed"
+			res.Token = "eyJ.eyJ.malformed"
 		case "invalid@user.com":
-			res.Token = "invalid"
+			res.Token = "eyJ.eyJ.invalid"
 		default:
 			res.Token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1NjE2NjA4NTcsImV4cCI6MjUzMzg2MDM4NDU3LCJhdWQiOiJ3d3cuZXhhbXBsZS5jb20iLCJzdWIiOiJqcm9ja2V0QGV4YW1wbGUuY29tIn0.G6IgrFm5i0mN7Lz9tkZQ2tZvuZ2U7HKnvxMuZAooPmE"
 			res.Organization = RegularOrg
@@ -371,6 +371,7 @@ func handleLaunchDarkly(t *testing.T) http.HandlerFunc {
 			"testBool":                               true,
 			"testString":                             "string",
 			"testInt":                                1,
+			"testAnotherInt":                         99,
 			"testJson":                               map[string]any{"key": "val"},
 			"cli.deprecation_notices":                []map[string]any{},
 			"cli.client_quotas.enable":               true,

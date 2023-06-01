@@ -1,7 +1,6 @@
 package pipeline
 
 import (
-	"context"
 	"fmt"
 	"os"
 
@@ -157,7 +156,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 			return err
 		}
 		if updateSchemaRegistry {
-			srCluster, err := c.Context.FetchSchemaRegistryByEnvironmentId(context.Background(), environmentId)
+			srCluster, err := c.Context.FetchSchemaRegistryByEnvironmentId(environmentId)
 			if err != nil {
 				return err
 			}
