@@ -57,7 +57,7 @@ blocks:
           commands:
             - brew install docker docker-machine
             - sudo ln -s ~/Library/Containers/com.docker.docker/Data/docker.raw.sock /var/run/docker.sock
-            - export DOCKER_HOST=unix:///var/run/docker.sock
+            - export DOCKER_HOST=unix:///Users/$(whoami)/Library/Containers/com.docker.docker/Data/docker.raw.sock
             - docker ps
         - name: darwin/amd64
           commands:
