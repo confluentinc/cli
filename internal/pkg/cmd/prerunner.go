@@ -497,11 +497,10 @@ func (r *PreRun) setCCloudClient(c *AuthenticatedCLICommand) error {
 			if err != nil {
 				return nil, err
 			}
-
 			kafkaRest := &KafkaREST{
 				Context:     context.WithValue(context.Background(), kafkarestv3.ContextAccessToken, bearerToken),
 				CloudClient: ccloudv2.NewKafkaRestClient(restEndpoint, r.Version.UserAgent, unsafeTrace, bearerToken),
-				Client:      createKafkaRESTClient(restEndpoint, unsafeTrace),
+				Client:      CreateKafkaRESTClient(restEndpoint, unsafeTrace),
 			}
 
 			return kafkaRest, nil
@@ -1025,7 +1024,6 @@ func (r *PreRun) shouldCheckForUpdates(cmd *cobra.Command) bool {
 func (r *PreRun) warnIfConfluentLocal(cmd *cobra.Command) {
 	if strings.HasPrefix(cmd.CommandPath(), "confluent local") {
 		output.ErrPrintln("The local commands are intended for a single-node development environment only, NOT for production usage. See more: https://docs.confluent.io/current/cli/index.html")
-		output.ErrPrintln("As of Confluent Platform 8.0, Java 8 is no longer supported.")
 		output.ErrPrintln()
 	}
 }
@@ -1054,7 +1052,7 @@ func (r *PreRun) createMDSv2Client(ctx *dynamicconfig.DynamicContext, ver *versi
 	return mdsv2alpha1.NewAPIClient(mdsv2Config)
 }
 
-func createKafkaRESTClient(kafkaRestURL string, unsafeTrace bool) *kafkarestv3.APIClient {
+func CreateKafkaRESTClient(kafkaRestURL string, unsafeTrace bool) *kafkarestv3.APIClient {
 	cfg := kafkarestv3.NewConfiguration()
 	cfg.HTTPClient = utils.DefaultClient()
 	cfg.Debug = unsafeTrace
