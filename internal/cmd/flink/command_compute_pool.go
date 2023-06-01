@@ -3,6 +3,8 @@ package flink
 import (
 	"fmt"
 
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/featureflags"
 	"github.com/spf13/cobra"
 )
 
@@ -15,18 +17,21 @@ type computePoolOut struct {
 	Status    string `human:"Status" serialized:"status"`
 }
 
-func (c *command) newComputePoolCommand() *cobra.Command {
+func (c *command) newComputePoolCommand(cfg *v1.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "compute-pool",
 		Short: "Manage Flink compute pools.",
 	}
 
-	cmd.AddCommand(c.newComputePoolCreateCommand())
-	cmd.AddCommand(c.newComputePoolDeleteCommand())
 	cmd.AddCommand(c.newComputePoolDescribeCommand())
 	cmd.AddCommand(c.newComputePoolListCommand())
 	cmd.AddCommand(c.newComputePoolUpdateCommand())
 	cmd.AddCommand(c.newComputePoolUseCommand())
+
+	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.flink.open_preview", c.Context, v1.CliLaunchDarklyClient, true, false) {
+		cmd.AddCommand(c.newComputePoolCreateCommand())
+		cmd.AddCommand(c.newComputePoolDeleteCommand())
+	}
 
 	return cmd
 }

@@ -134,7 +134,7 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 		cmd.AddCommand(streamshare.New(cfg, prerunner))
 	}
 	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.flink", dc.Context(), v1.CliLaunchDarklyClient, true, false) {
-		cmd.AddCommand(flink.New(prerunner))
+		cmd.AddCommand(flink.New(cfg, prerunner))
 	}
 	if !cfg.DisableUpdates {
 		cmd.AddCommand(update.New(cfg, prerunner, updateClient))
