@@ -20,7 +20,7 @@ blocks:
       jobs:
         - name: Docker check
           commands:
-            - docker images
+            - docker ps
         - name: linux/amd64
           commands:
             # Set up Go
@@ -55,9 +55,8 @@ blocks:
       jobs:
         - name: Docker check
           commands:
-            - brew install docker
-            - open --background -a docker
-            - docker images
+            - brew install --cask docker
+            - docker ps
         - name: darwin/amd64
           commands:
             # Set up Go
