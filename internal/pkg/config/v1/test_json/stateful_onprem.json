@@ -29,6 +29,7 @@
       "credential_type": 0
     }
   },
+  "current_context": "my-context",
   "contexts": {
     "my-context": {
       "name": "my-context",
@@ -83,7 +84,6 @@
       "auth_refresh_token": "v1.abc"
     }
   },
-  "current_context": "my-context",
   "saved_credentials": {
     "my-context": {
       "is_cloud": false,

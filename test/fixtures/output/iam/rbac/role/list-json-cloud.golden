@@ -480,5 +480,326 @@
         ]
       }
     ]
+  },
+  {
+    "name": "CCloudRoleBindingAdmin",
+    "policies": [
+      {
+        "bindingScope": "root",
+        "bindWithResource": false,
+        "allowedOperations": [
+          {
+            "resourceType": "SecurityMetadata",
+            "operations": ["Describe", "Alter"]
+          },
+          {
+            "resourceType": "Organization",
+            "operations": ["AlterAccess", "DescribeAccess"]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "CloudClusterAdmin",
+    "policies": [
+      {
+        "bindingScope": "cluster",
+        "bindWithResource": false,
+        "allowedOperations": [
+          {
+            "resourceType": "Topic",
+            "operations": ["All"]
+          },
+          {
+            "resourceType": "KsqlCluster",
+            "operations": ["All"]
+          },
+          {
+            "resourceType": "Subject",
+            "operations": ["All"]
+          },
+          {
+            "resourceType": "Connector",
+            "operations": ["All"]
+          },
+          {
+            "resourceType": "NetworkAccess",
+            "operations": ["All"]
+          },
+          {
+            "resourceType": "ClusterMetric",
+            "operations": ["All"]
+          },
+          {
+            "resourceType": "Cluster",
+            "operations": ["All"]
+          },
+          {
+            "resourceType": "ClusterApiKey",
+            "operations": ["All"]
+          },
+          {
+            "resourceType": "SecurityMetadata",
+            "operations": ["Describe", "Alter"]
+          }
+        ]
+      },
+      {
+        "bindingScope": "organization",
+        "bindWithResource": false,
+        "allowedOperations": [
+          {
+            "resourceType": "SupportPlan",
+            "operations": ["Describe"]
+          },
+          {
+            "resourceType": "User",
+            "operations": ["Describe", "Invite"]
+          },
+          {
+            "resourceType": "ServiceAccount",
+            "operations": ["Describe"]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "EnvironmentAdmin",
+    "policies": [
+      {
+        "bindingScope": "ENVIRONMENT",
+        "bindWithResource": false,
+        "allowedOperations": [
+          {
+            "resourceType": "SecurityMetadata",
+            "operations": ["Describe", "Alter"]
+          },
+          {
+            "resourceType": "ClusterApiKey",
+            "operations": ["All"]
+          },
+          {
+            "resourceType": "Connector",
+            "operations": ["All"]
+          },
+          {
+            "resourceType": "NetworkAccess",
+            "operations": ["All"]
+          },
+          {
+            "resourceType": "KsqlCluster",
+            "operations": ["All"]
+          },
+          {
+            "resourceType": "Environment",
+            "operations": [
+              "Alter",
+              "Delete",
+              "AlterAccess",
+              "CreateKafkaCluster",
+              "DescribeAccess"
+            ]
+          },
+          {
+            "resourceType": "Subject",
+            "operations": ["All"]
+          },
+          {
+            "resourceType": "NetworkConfig",
+            "operations": ["All"]
+          },
+          {
+            "resourceType": "ClusterMetric",
+            "operations": ["All"]
+          },
+          {
+            "resourceType": "Cluster",
+            "operations": ["All"]
+          },
+          {
+            "resourceType": "SchemaRegistry",
+            "operations": ["All"]
+          },
+          {
+            "resourceType": "NetworkRegion",
+            "operations": ["All"]
+          },
+          {
+            "resourceType": "Deployment",
+            "operations": ["All"]
+          },
+          {
+            "resourceType": "Topic",
+            "operations": ["All"]
+          }
+        ]
+      },
+      {
+        "bindingScope": "organization",
+        "bindWithResource": false,
+        "allowedOperations": [
+          {
+            "resourceType": "User",
+            "operations": ["Describe", "Invite"]
+          },
+          {
+            "resourceType": "ServiceAccount",
+            "operations": ["Describe"]
+          },
+          {
+            "resourceType": "SupportPlan",
+            "operations": ["Describe"]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "OrganizationAdmin",
+    "policies": [
+      {
+        "bindingScope": "organization",
+        "bindWithResource": false,
+        "allowedOperations": [
+          {
+            "resourceType": "Topic",
+            "operations": ["All"]
+          },
+          {
+            "resourceType": "NetworkConfig",
+            "operations": ["All"]
+          },
+          {
+            "resourceType": "SecurityMetadata",
+            "operations": ["Describe", "Alter"]
+          },
+          {
+            "resourceType": "Billing",
+            "operations": ["All"]
+          },
+          {
+            "resourceType": "ClusterApiKey",
+            "operations": ["All"]
+          },
+          {
+            "resourceType": "Deployment",
+            "operations": ["All"]
+          },
+          {
+            "resourceType": "SchemaRegistry",
+            "operations": ["All"]
+          },
+          {
+            "resourceType": "KsqlCluster",
+            "operations": ["All"]
+          },
+          {
+            "resourceType": "CloudApiKey",
+            "operations": ["All"]
+          },
+          {
+            "resourceType": "NetworkAccess",
+            "operations": ["All"]
+          },
+          {
+            "resourceType": "SecuritySSO",
+            "operations": ["All"]
+          },
+          {
+            "resourceType": "SupportPlan",
+            "operations": ["All"]
+          },
+          {
+            "resourceType": "Connector",
+            "operations": ["All"]
+          },
+          {
+            "resourceType": "ClusterMetric",
+            "operations": ["All"]
+          },
+          {
+            "resourceType": "ServiceAccount",
+            "operations": ["All"]
+          },
+          {
+            "resourceType": "Subject",
+            "operations": ["All"]
+          },
+          {
+            "resourceType": "Cluster",
+            "operations": ["All"]
+          },
+          {
+            "resourceType": "Environment",
+            "operations": ["All"]
+          },
+          {
+            "resourceType": "NetworkRegion",
+            "operations": ["All"]
+          },
+          {
+            "resourceType": "Organization",
+            "operations": [
+              "Alter",
+              "CreateEnvironment",
+              "AlterAccess",
+              "DescribeAccess"
+            ]
+          },
+          {
+            "resourceType": "User",
+            "operations": ["All"]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "ResourceOwner",
+    "policies": [
+      {
+        "bindingScope": "cloud-cluster",
+        "bindWithResource": false,
+        "allowedOperations": [
+          {
+            "resourceType": "CloudCluster",
+            "operations": ["Describe"]
+          }
+        ]
+      },
+      {
+        "bindingScope": "cluster",
+        "bindWithResource": true,
+        "allowedOperations": [
+          {
+            "resourceType": "Topic",
+            "operations": [
+              "Create",
+              "Delete",
+              "Read",
+              "Write",
+              "Describe",
+              "DescribeConfigs",
+              "Alter",
+              "AlterConfigs",
+              "DescribeAccess",
+              "AlterAccess"
+            ]
+          },
+          {
+            "resourceType": "Group",
+            "operations": [
+              "Read",
+              "Describe",
+              "Delete",
+              "DescribeAccess",
+              "AlterAccess"
+            ]
+          }
+        ]
+      }
+    ]
   }
 ]
