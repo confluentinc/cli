@@ -56,10 +56,8 @@ blocks:
         - name: Docker check
           commands:
             - brew install docker docker-machine
-            - docker-machine create default
-            - docker-machine env default
-            - eval $(docker-machine env default)
-            - docker-machine start default
+            - sudo ln -s ~/Library/Containers/com.docker.docker/Data/docker.raw.sock /var/run/docker.sock
+            - export DOCKER_HOST=unix:///var/run/docker.sock
             - docker ps
         - name: darwin/amd64
           commands:
