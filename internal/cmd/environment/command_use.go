@@ -14,7 +14,8 @@ import (
 func (c *command) newUseCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "use <id>",
-		Short:             "Switch to the specified Confluent Cloud environment.",
+		Short:             "Use an environment in subsequent commands.",
+		Long:              "Choose a Confluent Cloud environment to be used in subsequent commands which support passing an environment with the `--environment` flag.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.use,
@@ -37,6 +38,6 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	output.Printf("Now using \"%s\" as the default (active) environment.\n", id)
+	output.Printf(errors.UsingResourceMsg, resource.Environment, id)
 	return nil
 }

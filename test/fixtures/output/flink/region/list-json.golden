@@ -1,0 +1,12 @@
+[
+  {
+    "id": "eu-west-1",
+    "name": "Europe (eu-west-1)",
+    "cloud": "AWS"
+  },
+  {
+    "id": "europe-west3-a",
+    "name": "Frankfurt (europe-west3-a)",
+    "cloud": "GCP"
+  }
+]

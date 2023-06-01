@@ -1,6 +1,8 @@
 package kafka
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -71,6 +73,19 @@ func (c *clusterCommand) validArgsMultiple(cmd *cobra.Command, args []string) []
 		return nil
 	}
 
-	environmentId, _ := c.Context.EnvironmentId()
-	return pcmd.AutocompleteCmkClusters(environmentId, c.V2Client)
+	environmentId, err := c.Context.EnvironmentId()
+	if err != nil {
+		return nil
+	}
+
+	clusters, err := c.V2Client.ListKafkaClusters(environmentId)
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(clusters))
+	for i, cluster := range clusters {
+		suggestions[i] = fmt.Sprintf("%s\t%s", cluster.GetId(), cluster.Spec.GetDisplayName())
+	}
+	return suggestions
 }
