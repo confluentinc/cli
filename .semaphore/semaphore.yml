@@ -55,8 +55,9 @@ blocks:
       jobs:
         - name: Docker check
           commands:
-            - brew install docker-machine docker
+            - brew install docker-compose colima docker
             - export PATH="$PATH:/Applications/Docker.app/Contents/Resources/bin/"
+            - colima start
             - docker ps
         - name: darwin/amd64
           commands:
