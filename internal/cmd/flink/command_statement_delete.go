@@ -14,10 +14,11 @@ import (
 
 func (c *command) newStatementDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delete <name>",
-		Short: "Delete a Flink SQL statement.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  c.statementDelete,
+		Use:               "delete <name>",
+		Short:             "Delete a Flink SQL statement.",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validStatementArgs),
+		RunE:              c.statementDelete,
 	}
 
 	pcmd.AddForceFlag(cmd)

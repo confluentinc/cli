@@ -53,3 +53,34 @@ func (c *command) addComputePoolFlag(cmd *cobra.Command) {
 		return suggestions
 	})
 }
+
+func (c *command) validStatementArgs(cmd *cobra.Command, args []string) []string {
+	if len(args) > 0 {
+		return nil
+	}
+
+	if err := c.PersistentPreRunE(cmd, args); err != nil {
+		return nil
+	}
+
+	environmentId, err := c.Context.EnvironmentId()
+	if err != nil {
+		return nil
+	}
+
+	client, err := c.GetFlinkGatewayClient()
+	if err != nil {
+		return nil
+	}
+
+	statements, err := client.ListStatements(environmentId, c.Context.LastOrgId)
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(statements))
+	for i, statement := range statements {
+		suggestions[i] = fmt.Sprintf("%s\t%s", statement.Spec.GetStatementName(), statement.Spec.GetStatement())
+	}
+	return suggestions
+}

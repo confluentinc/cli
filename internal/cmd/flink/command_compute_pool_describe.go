@@ -13,7 +13,7 @@ func (c *command) newComputePoolDescribeCommand() *cobra.Command {
 		Use:               "describe [id]",
 		Short:             "Describe a Flink compute pool.",
 		Args:              cobra.MaximumNArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validComputePoolArgs),
 		RunE:              c.computePoolDescribe,
 	}
 

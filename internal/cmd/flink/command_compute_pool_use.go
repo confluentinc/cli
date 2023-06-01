@@ -15,7 +15,7 @@ func (c *command) newComputePoolUseCommand() *cobra.Command {
 		Short:             "Use a Flink compute pool in subsequent commands.",
 		Long:              "Choose a Flink compute pool to be used in subsequent commands which support passing a compute pool with the `--compute-pool` flag.",
 		Args:              cobra.ExactArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validComputePoolArgs),
 		RunE:              c.computePoolUse,
 	}
 

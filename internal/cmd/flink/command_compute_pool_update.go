@@ -16,7 +16,7 @@ func (c *command) newComputePoolUpdateCommand() *cobra.Command {
 		Use:               "update [id]",
 		Short:             "Update a Flink compute pool.",
 		Args:              cobra.MaximumNArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validComputePoolArgs),
 		RunE:              c.computePoolUpdate,
 		Example: examples.BuildExampleString(
 			examples.Example{

@@ -31,7 +31,7 @@ func (c *command) newComputePoolCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) validArgs(cmd *cobra.Command, args []string) []string {
+func (c *command) validComputePoolArgs(cmd *cobra.Command, args []string) []string {
 	if len(args) > 0 {
 		return nil
 	}

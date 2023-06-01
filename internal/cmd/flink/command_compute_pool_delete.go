@@ -17,7 +17,7 @@ func (c *command) newComputePoolDeleteCommand() *cobra.Command {
 		Use:               "delete <id>",
 		Short:             "Delete a Flink compute pool.",
 		Args:              cobra.ExactArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validComputePoolArgs),
 		RunE:              c.computePoolDelete,
 	}
 
