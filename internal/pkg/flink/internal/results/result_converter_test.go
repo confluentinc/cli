@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"pgregory.net/rapid"
 
-	v1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
+	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
 
 	"github.com/confluentinc/cli/internal/pkg/flink/test/generators"
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
@@ -26,7 +26,7 @@ func (s *ResultConverterTestSuite) TestConvertField() {
 		maxNestingDepth := rapid.IntRange(0, 5).Draw(t, "max nesting depth")
 		dataType := generators.DataType(maxNestingDepth).Draw(t, "data type")
 		field := generators.GetResultItemGeneratorForType(dataType).Draw(t, "a field")
-		resultField := convertToInternalField(field, v1.ColumnDetails{
+		resultField := convertToInternalField(field, flinkgatewayv1alpha1.ColumnDetails{
 			Name: "Test Column",
 			Type: dataType,
 		})
@@ -42,7 +42,7 @@ func (s *ResultConverterTestSuite) TestConvertField() {
 func (s *ResultConverterTestSuite) TestConvertFieldFailsForMissingDataType() {
 	dataType := generators.DataType(0).Example()
 	field := generators.GetResultItemGeneratorForType(dataType).Example()
-	resultField := convertToInternalField(field, v1.ColumnDetails{
+	resultField := convertToInternalField(field, flinkgatewayv1alpha1.ColumnDetails{
 		Name: "Test Column",
 	})
 	require.NotNil(s.T(), resultField)
@@ -53,9 +53,9 @@ func (s *ResultConverterTestSuite) TestConvertFieldFailsForMissingDataType() {
 func (s *ResultConverterTestSuite) TestConvertFieldFailsForEmptyDataType() {
 	dataType := generators.DataType(0).Example()
 	field := generators.GetResultItemGeneratorForType(dataType).Example()
-	resultField := convertToInternalField(field, v1.ColumnDetails{
+	resultField := convertToInternalField(field, flinkgatewayv1alpha1.ColumnDetails{
 		Name: "Test Column",
-		Type: v1.DataType{},
+		Type: flinkgatewayv1alpha1.DataType{},
 	})
 	require.NotNil(s.T(), resultField)
 	require.Equal(s.T(), types.NULL, resultField.GetType())
@@ -63,17 +63,17 @@ func (s *ResultConverterTestSuite) TestConvertFieldFailsForEmptyDataType() {
 }
 
 func (s *ResultConverterTestSuite) TestConvertFieldFailsIfDataTypesDiffer() {
-	varcharType := v1.DataType{
+	varcharType := flinkgatewayv1alpha1.DataType{
 		Nullable: false,
 		Type:     "VARCHAR",
 	}
-	arrayType := v1.DataType{
+	arrayType := flinkgatewayv1alpha1.DataType{
 		Nullable:    false,
 		Type:        "ARRAY",
 		ElementType: &varcharType,
 	}
 	arrayField := generators.GetResultItemGeneratorForType(arrayType).Example()
-	resultField := convertToInternalField(arrayField, v1.ColumnDetails{
+	resultField := convertToInternalField(arrayField, flinkgatewayv1alpha1.ColumnDetails{
 		Name: "Test Column",
 		Type: varcharType,
 	})
@@ -112,7 +112,7 @@ func (s *ResultConverterTestSuite) TestConvertResults() {
 func (s *ResultConverterTestSuite) TestConvertResultsFailsWhenSchemaAndResultsDoNotMatch() {
 	results := generators.MockResults(5, -1).Example()
 	statementResults := results.StatementResults.GetResults()
-	resultSchema := v1.SqlV1alpha1ResultSchema{Columns: &[]v1.ColumnDetails{}}
+	resultSchema := flinkgatewayv1alpha1.SqlV1alpha1ResultSchema{Columns: &[]flinkgatewayv1alpha1.ColumnDetails{}}
 	internalResults, err := ConvertToInternalResults(statementResults.GetData(), resultSchema)
 	require.Nil(s.T(), internalResults)
 	require.Error(s.T(), err)

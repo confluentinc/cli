@@ -3,12 +3,12 @@ package results
 import (
 	"errors"
 
-	v1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
+	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
 
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
 )
 
-func convertToInternalField(field any, details v1.ColumnDetails) types.StatementResultField {
+func convertToInternalField(field any, details flinkgatewayv1alpha1.ColumnDetails) types.StatementResultField {
 	converter := GetConverterForType(details.GetType())
 	if converter != nil {
 		return converter(field)
@@ -20,7 +20,7 @@ func convertToInternalField(field any, details v1.ColumnDetails) types.Statement
 	}
 }
 
-func ConvertToInternalResults(results []any, resultSchema v1.SqlV1alpha1ResultSchema) (*types.StatementResults, error) {
+func ConvertToInternalResults(results []any, resultSchema flinkgatewayv1alpha1.SqlV1alpha1ResultSchema) (*types.StatementResults, error) {
 	header := make([]string, len(resultSchema.GetColumns()))
 	for idx, column := range resultSchema.GetColumns() {
 		header[idx] = column.GetName()

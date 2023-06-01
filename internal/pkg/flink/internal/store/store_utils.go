@@ -12,7 +12,7 @@ import (
 
 	"github.com/samber/lo"
 
-	v1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
+	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
 
 	"github.com/confluentinc/cli/internal/pkg/flink/config"
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
@@ -259,7 +259,7 @@ func processHttpErrors(resp *http.Response, err error) error {
 			return &types.StatementError{Msg: "Error: Unauthorized. Please consider running confluent login again.", HttpResponseCode: resp.StatusCode}
 		}
 
-		statementErr := v1.NewError()
+		statementErr := flinkgatewayv1alpha1.NewError()
 		body, err := io.ReadAll(resp.Body)
 
 		if err != nil {

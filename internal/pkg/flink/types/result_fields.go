@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	v1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
+	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
 )
 
 const (
@@ -36,7 +36,7 @@ const (
 
 type StatementResultFieldType string
 
-func NewResultFieldType(obj v1.DataType) StatementResultFieldType {
+func NewResultFieldType(obj flinkgatewayv1alpha1.DataType) StatementResultFieldType {
 	switch obj.Type {
 	case "CHAR":
 		return CHAR

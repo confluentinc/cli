@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"pgregory.net/rapid"
 
-	v1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
+	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
 
 	"github.com/confluentinc/cli/internal/pkg/flink/test/generators"
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
@@ -74,7 +74,7 @@ func (s *ResultFormatterTestSuite) TestFormatAtomicField() {
 	rapid.Check(s.T(), func(t *rapid.T) {
 		atomicDataType := generators.AtomicDataType().Draw(t, "atomic data type")
 		atomicField := generators.GetResultItemGeneratorForType(atomicDataType).Draw(t, "atomic result field")
-		convertedField := convertToInternalField(atomicField, v1.ColumnDetails{
+		convertedField := convertToInternalField(atomicField, flinkgatewayv1alpha1.ColumnDetails{
 			Name: "Test_Column",
 			Type: atomicDataType,
 		})

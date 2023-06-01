@@ -3,7 +3,7 @@ package types
 import (
 	"strings"
 
-	v1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
+	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
 )
 
 type StatementResults struct {
@@ -66,8 +66,8 @@ func (s StatementResultOperation) String() string {
 }
 
 type MockStatementResult struct {
-	ResultSchema     v1.SqlV1alpha1ResultSchema
-	StatementResults v1.SqlV1alpha1StatementResult
+	ResultSchema     flinkgatewayv1alpha1.SqlV1alpha1ResultSchema
+	StatementResults flinkgatewayv1alpha1.SqlV1alpha1StatementResult
 }
 
 type StatementError struct {
@@ -98,11 +98,11 @@ type ProcessedStatement struct {
 	StatusDetail     string `json:"status_detail,omitempty"` // Shown at the top before the table
 	IsLocalStatement bool
 	PageToken        string
-	ResultSchema     v1.SqlV1alpha1ResultSchema
+	ResultSchema     flinkgatewayv1alpha1.SqlV1alpha1ResultSchema
 	StatementResults *StatementResults
 }
 
-func NewProcessedStatement(statementObj v1.SqlV1alpha1Statement) *ProcessedStatement {
+func NewProcessedStatement(statementObj flinkgatewayv1alpha1.SqlV1alpha1Statement) *ProcessedStatement {
 	return &ProcessedStatement{
 		StatementName: statementObj.Spec.GetStatementName(),
 		StatusDetail:  statementObj.Status.GetDetail(),

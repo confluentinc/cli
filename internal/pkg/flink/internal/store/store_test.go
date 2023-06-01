@@ -17,7 +17,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	v1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
+	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/flink/config"
@@ -78,8 +78,8 @@ func TestWaitForPendingStatement3(t *testing.T) {
 	}
 
 	// Test case 1: Statement is not pending
-	statementObj := v1.SqlV1alpha1Statement{
-		Status: &v1.SqlV1alpha1StatementStatus{
+	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
+		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
 			Phase: "COMPLETED",
 		},
 	}
@@ -106,8 +106,8 @@ func TestWaitForPendingTimesout(t *testing.T) {
 	}
 
 	// Test case 2: Statement is pending
-	statementObj := v1.SqlV1alpha1Statement{
-		Status: &v1.SqlV1alpha1StatementStatus{
+	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
+		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
 			Phase: "PENDING",
 		},
 	}
@@ -132,14 +132,14 @@ func TestWaitForPendingEventuallyCompletes(t *testing.T) {
 	}
 
 	// Test case 2: Statement is pending
-	statementObj := v1.SqlV1alpha1Statement{
-		Status: &v1.SqlV1alpha1StatementStatus{
+	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
+		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
 			Phase: "PENDING",
 		},
 	}
 
-	statementObjCompleted := v1.SqlV1alpha1Statement{
-		Status: &v1.SqlV1alpha1StatementStatus{
+	statementObjCompleted := flinkgatewayv1alpha1.SqlV1alpha1Statement{
+		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
 			Phase: "COMPLETED",
 		},
 	}
@@ -164,8 +164,8 @@ func TestWaitForPendingStatementErrors(t *testing.T) {
 		client:     client,
 		appOptions: &appOptions,
 	}
-	statementObj := v1.SqlV1alpha1Statement{
-		Status: &v1.SqlV1alpha1StatementStatus{
+	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
+		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
 			Phase: "COMPLETED",
 		},
 	}
@@ -191,8 +191,8 @@ func TestCancelPendingStatement(t *testing.T) {
 		appOptions: &appOptions,
 	}
 
-	statementObj := v1.SqlV1alpha1Statement{
-		Status: &v1.SqlV1alpha1StatementStatus{
+	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
+		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
 			Phase: "PENDING",
 		},
 	}
@@ -518,7 +518,7 @@ func (s *StoreTestSuite) TestProccessHttpErrors() {
 	// given
 	res := &http.Response{
 		StatusCode: http.StatusUnauthorized,
-		Body:       generateCloserFromObject(v1.NewError()),
+		Body:       generateCloserFromObject(flinkgatewayv1alpha1.NewError()),
 	}
 
 	// when
@@ -531,7 +531,7 @@ func (s *StoreTestSuite) TestProccessHttpErrors() {
 	// given
 	title := "Invalid syntax"
 	detail := "you should provide a table for select"
-	statementErr := &v1.Error{Title: &title, Detail: &detail}
+	statementErr := &flinkgatewayv1alpha1.Error{Title: &title, Detail: &detail}
 	res = &http.Response{
 		StatusCode: http.StatusBadRequest,
 		Body:       generateCloserFromObject(statementErr),
@@ -643,9 +643,9 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWithCompletedStatement() {
 		StatementName: "TEST_STATEMENT",
 		Status:        types.COMPLETED,
 	}
-	statementResultObj := v1.SqlV1alpha1StatementResult{
-		Metadata: v1.ResultListMeta{},
-		Results:  &v1.SqlV1alpha1StatementResultResults{},
+	statementResultObj := flinkgatewayv1alpha1.SqlV1alpha1StatementResult{
+		Metadata: flinkgatewayv1alpha1.ResultListMeta{},
+		Results:  &flinkgatewayv1alpha1.SqlV1alpha1StatementResultResults{},
 	}
 	client.EXPECT().GetStatementResults("orgId", "envId", statement.StatementName, statement.PageToken).Return(statementResultObj, nil)
 
@@ -671,9 +671,9 @@ func (s *StoreTestSuite) TestFetchResultsRetryWithRunningStatement() {
 		StatementName: "TEST_STATEMENT",
 		Status:        types.RUNNING,
 	}
-	statementResultObj := v1.SqlV1alpha1StatementResult{
-		Metadata: v1.ResultListMeta{},
-		Results:  &v1.SqlV1alpha1StatementResultResults{},
+	statementResultObj := flinkgatewayv1alpha1.SqlV1alpha1StatementResult{
+		Metadata: flinkgatewayv1alpha1.ResultListMeta{},
+		Results:  &flinkgatewayv1alpha1.SqlV1alpha1StatementResultResults{},
 	}
 	client.EXPECT().GetStatementResults("orgId", "envId", statement.StatementName, statement.PageToken).Return(statementResultObj, nil).Times(5)
 
@@ -700,9 +700,9 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWhenPageTokenExists() {
 		Status:        types.RUNNING,
 	}
 	nextPage := "https://devel.cpdev.cloud/some/results?page_token=eyJWZX"
-	statementResultObj := v1.SqlV1alpha1StatementResult{
-		Metadata: v1.ResultListMeta{Next: &nextPage},
-		Results:  &v1.SqlV1alpha1StatementResultResults{},
+	statementResultObj := flinkgatewayv1alpha1.SqlV1alpha1StatementResult{
+		Metadata: flinkgatewayv1alpha1.ResultListMeta{Next: &nextPage},
+		Results:  &flinkgatewayv1alpha1.SqlV1alpha1StatementResultResults{},
 	}
 	client.EXPECT().GetStatementResults("orgId", "envId", statement.StatementName, statement.PageToken).Return(statementResultObj, nil)
 
@@ -728,9 +728,9 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWhenResultsExist() {
 		StatementName: "TEST_STATEMENT",
 		Status:        types.RUNNING,
 	}
-	statementResultObj := v1.SqlV1alpha1StatementResult{
-		Metadata: v1.ResultListMeta{},
-		Results:  &v1.SqlV1alpha1StatementResultResults{Data: &[]any{map[string]any{"op": 0}}},
+	statementResultObj := flinkgatewayv1alpha1.SqlV1alpha1StatementResult{
+		Metadata: flinkgatewayv1alpha1.ResultListMeta{},
+		Results:  &flinkgatewayv1alpha1.SqlV1alpha1StatementResultResults{Data: &[]any{map[string]any{"op": 0}}},
 	}
 	client.EXPECT().GetStatementResults("orgId", "envId", statement.StatementName, statement.PageToken).Return(statementResultObj, nil)
 
