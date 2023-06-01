@@ -1,22 +1,19 @@
 package flink
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
-	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *command) newStatementDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "delete <name>",
-		Short:             "Delete a Flink SQL statement.",
-		Args:              cobra.ExactArgs(1),
+		Use:               "delete <name-1> [name-2] ... [name-n]",
+		Short:             "Delete Flink SQL statements.",
+		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validStatementArgs),
 		RunE:              c.statementDelete,
 	}
@@ -40,19 +37,34 @@ func (c *command) statementDelete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if _, err := client.GetStatement(environmentId, args[0], c.Context.LastOrgId); err != nil {
+	if err := c.confirmDeletionStatement(cmd, client, environmentId, args); err != nil {
 		return err
 	}
 
-	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmYesNoMsg, resource.FlinkStatement, args[0])
-	if ok, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil || !ok {
+	deleted, err := resource.Delete(args, func(id string) error {
+		if err := client.DeleteStatement(environmentId, id, c.Context.LastOrgId); err != nil {
+			return err
+		}
+		return nil
+	}, resource.DefaultPostProcess)
+	resource.PrintDeleteSuccessMsg(deleted, resource.FlinkStatement)
+
+	return err
+}
+
+func (c *command) confirmDeletionStatement(cmd *cobra.Command, client *ccloudv2.FlinkGatewayClient, environmentId string, args []string) error {
+	describeFunc := func(id string) error {
+		_, err := client.GetStatement(environmentId, id, c.Context.LastOrgId)
 		return err
 	}
 
-	if err := client.DeleteStatement(environmentId, args[0], c.Context.LastOrgId); err != nil {
+	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.FlinkStatement, describeFunc); err != nil {
 		return err
 	}
 
-	output.Printf(errors.DeletedResourceMsg, resource.FlinkStatement, args[0])
+	if ok, err := form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.FlinkStatement, args)); err != nil || !ok {
+		return err
+	}
+
 	return nil
 }
