@@ -1,0 +1,19 @@
+Manage Flink compute pools.
+
+Usage:
+  confluent flink compute-pool [command]
+
+Available Commands:
+  create      Create a Flink compute pool.
+  delete      Delete a Flink compute pool.
+  describe    Describe a Flink compute pool.
+  list        List Flink compute pools.
+  update      Update a Flink compute pool.
+  use         Use a Flink compute pool in subsequent commands.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent flink compute-pool [command] --help" for more information about a command.

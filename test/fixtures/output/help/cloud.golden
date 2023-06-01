@@ -14,6 +14,7 @@ Available Commands:
   connect         Manage Kafka Connect.
   context         Manage CLI configuration contexts.
   environment     Manage and select Confluent Cloud environments.
+  flink           Manage Apache Flink.
   help            Help about any command
   iam             Manage RBAC and IAM permissions.
   kafka           Manage Apache Kafka.
