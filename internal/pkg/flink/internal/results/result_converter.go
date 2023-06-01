@@ -33,7 +33,7 @@ func ConvertToInternalResults(results []any, resultSchema v1.SqlV1alpha1ResultSc
 			return nil, errors.New("given result item does not match op/row schema")
 		}
 
-		items := resultItem["row"].([]any)
+		items, _ := resultItem["row"].([]any)
 		if len(items) != len(resultSchema.GetColumns()) {
 			return nil, errors.New("given result row does not match the provided schema")
 		}
@@ -44,7 +44,7 @@ func ConvertToInternalResults(results []any, resultSchema v1.SqlV1alpha1ResultSc
 			convertedFields[colIdx] = convertToInternalField(field, columnSchema)
 		}
 
-		op := resultItem["op"].(int32)
+		op, _ := resultItem["op"].(int32)
 		convertedResults[rowIdx] = types.StatementResultRow{
 			Operation: types.StatementResultOperation(op),
 			Fields:    convertedFields,
