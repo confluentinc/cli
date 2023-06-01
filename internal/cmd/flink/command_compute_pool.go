@@ -3,9 +3,10 @@ package flink
 import (
 	"fmt"
 
+	"github.com/spf13/cobra"
+
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/featureflags"
-	"github.com/spf13/cobra"
 )
 
 type computePoolOut struct {
