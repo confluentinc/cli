@@ -61,6 +61,7 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 
 	// Process remote statements
 	statementObj, err := s.client.CreateStatement(
+		s.appOptions.GetOrgResourceId(),
 		s.appOptions.GetEnvId(),
 		s.appOptions.GetComputePoolId(),
 		s.appOptions.GetIdentityPoolId(),
@@ -108,7 +109,7 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 	runningNoTokenRetries := 5
 	for i := 0; i < runningNoTokenRetries; i++ {
 		// TODO: we need to retry a few times on transient errors
-		statementResultObj, err := s.client.GetStatementResults(s.appOptions.GetEnvId(), statement.StatementName, pageToken)
+		statementResultObj, err := s.client.GetStatementResults(s.appOptions.GetOrgResourceId(), s.appOptions.GetEnvId(), statement.StatementName, pageToken)
 		if err != nil {
 			return nil, &types.StatementError{Msg: err.Error()}
 		}
@@ -136,7 +137,7 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 }
 
 func (s *Store) DeleteStatement(statementName string) bool {
-	err := s.client.DeleteStatement(s.appOptions.GetEnvId(), statementName)
+	err := s.client.DeleteStatement(s.appOptions.GetOrgResourceId(), s.appOptions.GetEnvId(), statementName)
 	if err != nil {
 		log.CliLogger.Warnf("Failed to delete the statement: %v", err)
 		return false
@@ -156,7 +157,7 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 		case <-ctx.Done():
 			return nil, &types.StatementError{Msg: "Result retrieval aborted. Statement will be deleted.", HttpResponseCode: 499}
 		default:
-			statementObj, err := s.client.GetStatement(s.appOptions.GetEnvId(), statementName)
+			statementObj, err := s.client.GetStatement(s.appOptions.GetOrgResourceId(), s.appOptions.GetEnvId(), statementName)
 			if err != nil {
 				return nil, &types.StatementError{Msg: "Error: " + err.Error()}
 			}

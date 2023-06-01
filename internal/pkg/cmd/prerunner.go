@@ -152,7 +152,6 @@ func (c *AuthenticatedCLICommand) GetFlinkGatewayClient() (*ccloudv2.FlinkGatewa
 			c.Version.UserAgent,
 			unsafeTrace,
 			ctx.GetAuthToken(),
-			ctx.GetCurrentOrganization(),
 		)
 	}
 

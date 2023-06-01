@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"pgregory.net/rapid"
 
-	v1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"
+	v1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
 
 	"github.com/confluentinc/cli/internal/pkg/flink/test/generators"
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
@@ -81,7 +81,7 @@ func (s *ResultFormatterTestSuite) TestFormatAtomicField() {
 
 		val := "NULL"
 		if types.NewResultFieldType(atomicDataType) != types.NULL {
-			val = string(*atomicField.SqlV1alpha1ResultItemString)
+			val, _ = atomicField.(string)
 		}
 
 		require.Equal(s.T(), val, convertedField.ToString())

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	v1 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink-gateway/v1alpha1"
+	v1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
 )
 
 const (
@@ -37,82 +37,62 @@ const (
 type StatementResultFieldType string
 
 func NewResultFieldType(obj v1.DataType) StatementResultFieldType {
-	if obj.ArrayType != nil {
-		return ARRAY
-	}
-	if obj.BigIntType != nil {
-		return BIGINT
-	}
-	if obj.BinaryType != nil {
-		return BINARY
-	}
-	if obj.BooleanType != nil {
-		return BOOLEAN
-	}
-	if obj.CharType != nil {
+	switch obj.Type {
+	case "CHAR":
 		return CHAR
-	}
-	if obj.DateType != nil {
-		return DATE
-	}
-	if obj.DecimalType != nil {
-		return DECIMAL
-	}
-	if obj.DoubleType != nil {
-		return DOUBLE
-	}
-	if obj.FloatType != nil {
-		return FLOAT
-	}
-	if obj.IntegerType != nil {
-		return INTEGER
-	}
-	if obj.IntervalDayTimeType != nil {
-		return INTERVAL_DAY_TIME
-	}
-	if obj.IntervalYearMonthType != nil {
-		return INTERVAL_YEAR_MONTH
-	}
-	if obj.MapType != nil {
-		return MAP
-	}
-	if obj.MultisetType != nil {
-		return MULTISET
-	}
-	if obj.RowType != nil {
-		return ROW
-	}
-	if obj.SmallIntType != nil {
-		return SMALLINT
-	}
-	if obj.TimeWithoutTimeZoneType != nil {
-		return TIME_WITHOUT_TIME_ZONE
-	}
-	if obj.TimestampWithLocalTimeZoneType != nil {
-		return TIMESTAMP_WITH_LOCAL_TIME_ZONE
-	}
-	if obj.TimestampWithTimeZoneType != nil {
-		return TIMESTAMP_WITH_TIME_ZONE
-	}
-	if obj.TimestampWithoutTimeZoneType != nil {
-		return TIMESTAMP_WITHOUT_TIME_ZONE
-	}
-	if obj.TinyIntType != nil {
-		return TINYINT
-	}
-	if obj.VarbinaryType != nil {
-		return VARBINARY
-	}
-	if obj.VarcharType != nil {
+	case "VARCHAR":
 		return VARCHAR
+	case "BOOLEAN":
+		return BOOLEAN
+	case "BINARY":
+		return BINARY
+	case "VARBINARY":
+		return VARBINARY
+	case "DECIMAL":
+		return DECIMAL
+	case "TINYINT":
+		return TINYINT
+	case "SMALLINT":
+		return SMALLINT
+	case "INTEGER":
+		return INTEGER
+	case "BIGINT":
+		return BIGINT
+	case "FLOAT":
+		return FLOAT
+	case "DOUBLE":
+		return DOUBLE
+	case "DATE":
+		return DATE
+	case "TIME_WITHOUT_TIME_ZONE":
+		return TIME_WITHOUT_TIME_ZONE
+	case "TIMESTAMP_WITHOUT_TIME_ZONE":
+		return TIMESTAMP_WITHOUT_TIME_ZONE
+	case "TIMESTAMP_WITH_TIME_ZONE":
+		return TIMESTAMP_WITH_TIME_ZONE
+	case "TIMESTAMP_WITH_LOCAL_TIME_ZONE":
+		return TIMESTAMP_WITH_LOCAL_TIME_ZONE
+	case "INTERVAL_YEAR_MONTH":
+		return INTERVAL_YEAR_MONTH
+	case "INTERVAL_DAY_TIME":
+		return INTERVAL_DAY_TIME
+	case "ARRAY":
+		return ARRAY
+	case "MULTISET":
+		return MULTISET
+	case "MAP":
+		return MAP
+	case "ROW":
+		return ROW
+	default:
+		return NULL
 	}
-	return NULL
 }
 
 type StatementResultField interface {
 	GetType() StatementResultFieldType
 	ToString() string
-	ToSDKType() v1.SqlV1alpha1ResultItemRowOneOf
+	ToSDKType() any
 }
 
 type AtomicStatementResultField struct {
@@ -128,12 +108,11 @@ func (f AtomicStatementResultField) ToString() string {
 	return f.Value
 }
 
-func (f AtomicStatementResultField) ToSDKType() v1.SqlV1alpha1ResultItemRowOneOf {
-	val := v1.SqlV1alpha1ResultItemString(f.Value)
+func (f AtomicStatementResultField) ToSDKType() any {
 	if f.Type == NULL {
-		return v1.SqlV1alpha1ResultItemRowOneOf{}
+		return nil
 	}
-	return v1.SqlV1alpha1ResultItemRowOneOf{SqlV1alpha1ResultItemString: &val}
+	return f.Value
 }
 
 type ArrayStatementResultField struct {
@@ -159,12 +138,12 @@ func (f ArrayStatementResultField) ToString() string {
 	return sb.String()
 }
 
-func (f ArrayStatementResultField) ToSDKType() v1.SqlV1alpha1ResultItemRowOneOf {
-	items := make([]v1.SqlV1alpha1ResultItemRowOneOf, len(f.Values))
+func (f ArrayStatementResultField) ToSDKType() any {
+	items := make([]any, len(f.Values))
 	for idx, item := range f.Values {
 		items[idx] = item.ToSDKType()
 	}
-	return v1.SqlV1alpha1ResultItemRowOneOf{SqlV1alpha1ResultItemRow: &v1.SqlV1alpha1ResultItemRow{Items: items}}
+	return items
 }
 
 type MapStatementResultFieldEntry struct {
@@ -196,15 +175,12 @@ func (f MapStatementResultField) ToString() string {
 	return sb.String()
 }
 
-func (f MapStatementResultField) ToSDKType() v1.SqlV1alpha1ResultItemRowOneOf {
-	mapItems := make([]v1.SqlV1alpha1ResultItemRowOneOf, len(f.Entries))
+func (f MapStatementResultField) ToSDKType() any {
+	mapItems := make([]any, len(f.Entries))
 	for idx, entry := range f.Entries {
-		var keyValuePair []v1.SqlV1alpha1ResultItemRowOneOf
-		keyValuePair = append(keyValuePair, entry.Key.ToSDKType(), entry.Value.ToSDKType())
-		resultItemRowOneOf := v1.SqlV1alpha1ResultItemRowOneOf{SqlV1alpha1ResultItemRow: &v1.SqlV1alpha1ResultItemRow{Items: keyValuePair}}
-		mapItems[idx] = resultItemRowOneOf
+		mapItems[idx] = []any{entry.Key.ToSDKType(), entry.Value.ToSDKType()}
 	}
-	return v1.SqlV1alpha1ResultItemRowOneOf{SqlV1alpha1ResultItemRow: &v1.SqlV1alpha1ResultItemRow{Items: mapItems}}
+	return mapItems
 }
 
 type RowStatementResultField struct {
@@ -230,10 +206,10 @@ func (f RowStatementResultField) ToString() string {
 	return sb.String()
 }
 
-func (f RowStatementResultField) ToSDKType() v1.SqlV1alpha1ResultItemRowOneOf {
-	rowItems := make([]v1.SqlV1alpha1ResultItemRowOneOf, len(f.Values))
+func (f RowStatementResultField) ToSDKType() any {
+	rowItems := make([]any, len(f.Values))
 	for idx, value := range f.Values {
 		rowItems[idx] = value.ToSDKType()
 	}
-	return v1.SqlV1alpha1ResultItemRowOneOf{SqlV1alpha1ResultItemRow: &v1.SqlV1alpha1ResultItemRow{Items: rowItems}}
+	return rowItems
 }
