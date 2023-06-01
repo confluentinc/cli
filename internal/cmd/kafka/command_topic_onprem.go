@@ -26,7 +26,7 @@ func getClusterIdForRestRequests(client *kafkarestv3.APIClient, ctx context.Cont
 }
 
 // validate that a topic exists before attempting to produce/consume messages
-func (c *authenticatedTopicCommand) validateTopic(adminClient *ckafka.AdminClient, topic string) error {
+func ValidateTopic(adminClient *ckafka.AdminClient, topic string) error {
 	timeout := 10 * time.Second
 	metadata, err := adminClient.GetMetadata(nil, true, int(timeout.Milliseconds()))
 	if err != nil {
