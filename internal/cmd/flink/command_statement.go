@@ -36,21 +36,7 @@ func (c *command) addComputePoolFlag(cmd *cobra.Command) {
 			return nil
 		}
 
-		environmentId, err := c.Context.EnvironmentId()
-		if err != nil {
-			return nil
-		}
-
-		computePools, err := c.V2Client.ListFlinkComputePools(environmentId)
-		if err != nil {
-			return nil
-		}
-
-		suggestions := make([]string, len(computePools))
-		for i, computePool := range computePools {
-			suggestions[i] = fmt.Sprintf("%s\t%s", computePool.GetId(), computePool.Spec.GetDisplayName())
-		}
-		return suggestions
+		return c.autocompleteComputePools()
 	})
 }
 

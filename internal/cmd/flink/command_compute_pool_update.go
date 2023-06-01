@@ -30,6 +30,8 @@ func (c *command) newComputePoolUpdateCommand() *cobra.Command {
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
+	cobra.CheckErr(cmd.MarkFlagRequired("cfu"))
+
 	return cmd
 }
 

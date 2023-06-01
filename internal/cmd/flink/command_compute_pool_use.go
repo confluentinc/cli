@@ -26,6 +26,15 @@ func (c *command) newComputePoolUseCommand() *cobra.Command {
 }
 
 func (c *command) computePoolUse(cmd *cobra.Command, args []string) error {
+	environmentId, err := c.Context.EnvironmentId()
+	if err != nil {
+		return err
+	}
+
+	if _, err := c.V2Client.DescribeFlinkComputePool(args[0], environmentId); err != nil {
+		return err
+	}
+
 	if err := c.Context.SetCurrentFlinkComputePool(args[0]); err != nil {
 		return err
 	}

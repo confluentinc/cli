@@ -45,6 +45,10 @@ func (c *command) validComputePoolArgs(cmd *cobra.Command, args []string) []stri
 		return nil
 	}
 
+	return c.autocompleteComputePools()
+}
+
+func (c *command) autocompleteComputePools() []string {
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return nil
