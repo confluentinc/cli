@@ -79,6 +79,9 @@ func (b *TestBackend) Close() {
 	if b.kafkaRestProxy != nil {
 		b.kafkaRestProxy.Close()
 	}
+	if b.flinkGateway != nil {
+		b.flinkGateway.Close()
+	}
 	if b.mds != nil {
 		b.mds.Close()
 	}
