@@ -5,11 +5,12 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/confluentinc/cli/internal/pkg/types"
 	"github.com/hashicorp/go-multierror"
 	"github.com/iancoleman/strcase"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+
+	"github.com/confluentinc/cli/internal/pkg/types"
 )
 
 type FlagRule func(flag *pflag.Flag, cmd *cobra.Command) error
