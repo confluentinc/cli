@@ -78,8 +78,7 @@ func (suite *SubjectTestSuite) newCMD() *cobra.Command {
 	client := &ccloudv1.Client{
 		SchemaRegistry: suite.srMothershipMock,
 	}
-	cmd := New(suite.conf, climock.NewPreRunnerMock(client, nil, nil, nil, suite.conf), suite.srClientMock)
-	return cmd
+	return New(suite.conf, climock.NewPreRunnerMock(client, nil, nil, nil, suite.conf), suite.srClientMock)
 }
 
 func (suite *SubjectTestSuite) TestSubjectList() {
