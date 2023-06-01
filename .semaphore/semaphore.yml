@@ -55,6 +55,7 @@ blocks:
       jobs:
         - name: Docker check
           commands:
+            - brew install docker
             - docker images
         - name: darwin/amd64
           commands:
