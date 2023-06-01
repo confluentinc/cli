@@ -55,6 +55,7 @@ blocks:
       jobs:
         - name: Docker check
           commands:
+            - brew install --cask docker
             - find . -name Docker.app
             - export PATH="$PATH:Docker.app/Contents/Resources/bin/"
             - docker ps
