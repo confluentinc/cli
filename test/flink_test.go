@@ -13,9 +13,7 @@ func (s *CLITestSuite) TestFlinkHelp() {
 		{args: "flink region -h", fixture: "flink/region/help.golden"},
 		{args: "flink region list -h", fixture: "flink/region/list-help.golden"},
 		{args: "flink statement -h", fixture: "flink/statement/help.golden"},
-		{args: "flink statement create -h", fixture: "flink/statement/create-help.golden"},
 		{args: "flink statement delete -h", fixture: "flink/statement/delete-help.golden"},
-		{args: "flink statement describe -h", fixture: "flink/statement/describe-help.golden"},
 		{args: "flink statement list -h", fixture: "flink/statement/list-help.golden"},
 	}
 
@@ -25,13 +23,13 @@ func (s *CLITestSuite) TestFlinkHelp() {
 	}
 }
 
-func (s *CLITestSuite) TestComputePool() {
+func (s *CLITestSuite) TestFlinkComputePool() {
 	tests := []CLITest{
-		{args: "flink compute-pool create --cloud aws --region us-west-2", fixture: "flink/compute-pool/create.golden"},
-		{args: "flink compute-pool delete lfcpc-12345", fixture: "flink/compute-pool/delete.golden"},
-		{args: "flink compute-pool describe lfcpc-12345", fixture: "flink/compute-pool/describe.golden"},
+		{args: "flink compute-pool create my-compute-pool --cloud aws --region us-west-2", fixture: "flink/compute-pool/create.golden"},
+		{args: "flink compute-pool delete lfcp-123456 --force", fixture: "flink/compute-pool/delete.golden"},
+		{args: "flink compute-pool describe lfcp-123456", fixture: "flink/compute-pool/describe.golden"},
 		{args: "flink compute-pool list", fixture: "flink/compute-pool/list.golden"},
-		{args: "flink compute-pool update lfcpc-12345", fixture: "flink/compute-pool/update.golden"},
+		{args: "flink compute-pool update lfcp-123456 --cfu 2", fixture: "flink/compute-pool/update.golden"},
 	}
 
 	for _, test := range tests {
@@ -40,11 +38,12 @@ func (s *CLITestSuite) TestComputePool() {
 	}
 }
 
-func (s *CLITestSuite) TestComputePoolUse() {
+func (s *CLITestSuite) TestFlinkComputePoolUse() {
 	tests := []CLITest{
-		{args: "flink compute-pool use lfcpc-12345", login: "cloud", fixture: "flink/compute-pool/use.golden"},
+		{args: "flink compute-pool use lfcp-123456", login: "cloud", fixture: "flink/compute-pool/use.golden"},
 		{args: "flink compute-pool describe", fixture: "flink/compute-pool/describe-after-use.golden"},
-		{args: "flink compute-pool update", fixture: "flink/compute-pool/update-after-use.golden"},
+		{args: "flink compute-pool list", fixture: "flink/compute-pool/list-after-use.golden"},
+		{args: "flink compute-pool update --cfu 2", fixture: "flink/compute-pool/update-after-use.golden"},
 	}
 
 	for _, test := range tests {
@@ -68,10 +67,8 @@ func (s *CLITestSuite) TestFlinkRegion() {
 
 func (s *CLITestSuite) TestFlinkStatement() {
 	tests := []CLITest{
-		{args: "flink statement create", fixture: "flink/statement/create.golden"},
-		{args: "flink statement delete", fixture: "flink/statement/delete.golden"},
-		{args: "flink statement describe", fixture: "flink/statement/describe.golden"},
-		{args: "flink statement list", fixture: "flink/statement/list.golden"},
+		{args: "flink statement delete my-statement --compute-pool lfcp-123456 --force", fixture: "flink/statement/delete.golden"},
+		{args: "flink statement list --compute-pool lfcp-123456", fixture: "flink/statement/list.golden"},
 	}
 
 	for _, tt := range tests {

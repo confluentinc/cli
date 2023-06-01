@@ -4,13 +4,14 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 )
 
 type command struct {
 	*pcmd.AuthenticatedCLICommand
 }
 
-func New(prerunner pcmd.PreRunner) *cobra.Command {
+func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "flink",
 		Short:       "Manage Apache Flink.",
@@ -19,7 +20,7 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 
 	c := &command{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 
-	cmd.AddCommand(c.newComputePoolCommand())
+	cmd.AddCommand(c.newComputePoolCommand(cfg))
 	cmd.AddCommand(c.newRegionCommand())
 	cmd.AddCommand(c.newStatementCommand())
 	cmd.AddCommand(c.newShellCommand(prerunner))

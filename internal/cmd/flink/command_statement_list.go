@@ -1,9 +1,10 @@
 package flink
 
 import (
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/spf13/cobra"
 )
 
 func (c *command) newStatementListCommand() *cobra.Command {
@@ -13,6 +14,7 @@ func (c *command) newStatementListCommand() *cobra.Command {
 		RunE:  c.statementList,
 	}
 
+	c.addComputePoolFlag(cmd)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -26,7 +28,12 @@ func (c *command) statementList(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	statements, err := client.ListStatements()
+	environmentId, err := c.Context.EnvironmentId()
+	if err != nil {
+		return err
+	}
+
+	statements, err := client.ListStatements(environmentId)
 	if err != nil {
 		return err
 	}

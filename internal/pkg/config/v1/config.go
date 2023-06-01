@@ -88,9 +88,10 @@ type Config struct {
 	IsTest  bool              `json:"-"`
 	Version *pversion.Version `json:"-"`
 
-	overwrittenCurrentContext      string
-	overwrittenCurrentEnvironment  string
-	overwrittenCurrentKafkaCluster string
+	overwrittenCurrentContext          string
+	overwrittenCurrentEnvironment      string
+	overwrittenCurrentFlinkComputePool string
+	overwrittenCurrentKafkaCluster     string
 }
 
 func (c *Config) SetOverwrittenCurrentContext(context string) {
@@ -105,6 +106,12 @@ func (c *Config) SetOverwrittenCurrentContext(context string) {
 func (c *Config) SetOverwrittenCurrentEnvironment(environmentId string) {
 	if c.overwrittenCurrentEnvironment == "" {
 		c.overwrittenCurrentEnvironment = environmentId
+	}
+}
+
+func (c *Config) SetOverwrittenFlinkComputePool(computePoolId string) {
+	if c.overwrittenCurrentFlinkComputePool == "" {
+		c.overwrittenCurrentFlinkComputePool = computePoolId
 	}
 }
 

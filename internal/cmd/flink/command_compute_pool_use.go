@@ -11,11 +11,12 @@ import (
 
 func (c *command) newComputePoolUseCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "use <id>",
-		Short: "Choose a Flink compute pool to be used in subsequent commands.",
-		Long:  "Choose a Flink compute pool to be used in subsequent commands which support passing a compute pool with the `--compute-pool` flag.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  c.computePoolUse,
+		Use:               "use <id>",
+		Short:             "Use a Flink compute pool in subsequent commands.",
+		Long:              "Choose a Flink compute pool to be used in subsequent commands which support passing a compute pool with the `--compute-pool` flag.",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validComputePoolArgs),
+		RunE:              c.computePoolUse,
 	}
 
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -25,12 +26,16 @@ func (c *command) newComputePoolUseCommand() *cobra.Command {
 }
 
 func (c *command) computePoolUse(cmd *cobra.Command, args []string) error {
-	id := args[0]
-	if _, err := c.V2Client.DescribeFlinkComputePool(id, c.Context.GetCurrentEnvironment()); err != nil {
-		return errors.NewErrorWithSuggestions(err.Error(), "List available compute pools with `confluent flink compute-pool list`.")
+	environmentId, err := c.Context.EnvironmentId()
+	if err != nil {
+		return err
 	}
 
-	if err := c.Context.SetCurrentFlinkComputePool(id); err != nil {
+	if _, err := c.V2Client.DescribeFlinkComputePool(args[0], environmentId); err != nil {
+		return err
+	}
+
+	if err := c.Context.SetCurrentFlinkComputePool(args[0]); err != nil {
 		return err
 	}
 	if err := c.Config.Save(); err != nil {

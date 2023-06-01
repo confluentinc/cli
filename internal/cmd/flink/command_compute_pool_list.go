@@ -15,27 +15,19 @@ func (c *command) newComputePoolListCommand() *cobra.Command {
 		RunE:  c.computePoolList,
 	}
 
-	c.addRegionFlag(cmd)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
-
-	cobra.CheckErr(cmd.MarkFlagRequired("region"))
 
 	return cmd
 }
 
 func (c *command) computePoolList(cmd *cobra.Command, _ []string) error {
-	environment, err := c.Context.EnvironmentId()
+	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}
 
-	region, err := cmd.Flags().GetString("region")
-	if err != nil {
-		return err
-	}
-
-	computePools, err := c.V2Client.ListFlinkComputePools(environment, region)
+	computePools, err := c.V2Client.ListFlinkComputePools(environmentId)
 	if err != nil {
 		return err
 	}
@@ -46,6 +38,9 @@ func (c *command) computePoolList(cmd *cobra.Command, _ []string) error {
 			IsCurrent: computePool.GetId() == c.Context.GetCurrentFlinkComputePool(),
 			Id:        computePool.GetId(),
 			Name:      computePool.Spec.GetDisplayName(),
+			Cfu:       computePool.Spec.GetMaxCfu(),
+			Region:    computePool.Spec.GetRegion(),
+			Status:    computePool.Status.GetPhase(),
 		})
 	}
 	return list.Print()

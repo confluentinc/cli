@@ -2,9 +2,9 @@ package ccloudv2
 
 import (
 	"context"
-	"net/http"
 
-	flinkv2 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink/v2"
+	flinkv2 "github.com/confluentinc/ccloud-sdk-go-v2/flink/v2"
+
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
@@ -23,35 +23,23 @@ func (c *Client) flinkApiContext() context.Context {
 }
 
 func (c *Client) CreateFlinkComputePool(computePool flinkv2.FcpmV2ComputePool) (flinkv2.FcpmV2ComputePool, error) {
-	req := c.FlinkClient.ComputePoolsFcpmV2Api.CreateFcpmV2ComputePool(c.flinkApiContext()).FcpmV2ComputePool(computePool)
-	res, r, err := c.FlinkClient.ComputePoolsFcpmV2Api.CreateFcpmV2ComputePoolExecute(req)
+	res, r, err := c.FlinkClient.ComputePoolsFcpmV2Api.CreateFcpmV2ComputePool(c.flinkApiContext()).FcpmV2ComputePool(computePool).Execute()
 	return res, errors.CatchCCloudV2Error(err, r)
 }
 
 func (c *Client) DeleteFlinkComputePool(id, environment string) error {
-	req := c.FlinkClient.ComputePoolsFcpmV2Api.DeleteFcpmV2ComputePool(c.flinkApiContext(), id).Environment(environment)
-	r, err := c.FlinkClient.ComputePoolsFcpmV2Api.DeleteFcpmV2ComputePoolExecute(req)
+	r, err := c.FlinkClient.ComputePoolsFcpmV2Api.DeleteFcpmV2ComputePool(c.flinkApiContext(), id).Environment(environment).Execute()
 	return errors.CatchCCloudV2Error(err, r)
 }
 
 func (c *Client) DescribeFlinkComputePool(id, environment string) (flinkv2.FcpmV2ComputePool, error) {
-	req := c.FlinkClient.ComputePoolsFcpmV2Api.GetFcpmV2ComputePool(c.flinkApiContext(), id).Environment(environment)
-	res, r, err := c.FlinkClient.ComputePoolsFcpmV2Api.GetFcpmV2ComputePoolExecute(req)
+	res, r, err := c.FlinkClient.ComputePoolsFcpmV2Api.GetFcpmV2ComputePool(c.flinkApiContext(), id).Environment(environment).Execute()
 	return res, errors.CatchCCloudV2Error(err, r)
 }
 
-func (c *Client) ListFlinkComputePools(environment, specRegion string) ([]flinkv2.FcpmV2ComputePool, error) {
-	req := c.FlinkClient.ComputePoolsFcpmV2Api.ListFcpmV2ComputePools(c.flinkApiContext()).Environment(environment).SpecRegion(specRegion).PageSize(ccloudV2ListPageSize)
-	res, r, err := c.FlinkClient.ComputePoolsFcpmV2Api.ListFcpmV2ComputePoolsExecute(req)
+func (c *Client) ListFlinkComputePools(environment string) ([]flinkv2.FcpmV2ComputePool, error) {
+	res, r, err := c.FlinkClient.ComputePoolsFcpmV2Api.ListFcpmV2ComputePools(c.flinkApiContext()).Environment(environment).PageSize(ccloudV2ListPageSize).Execute()
 	return res.GetData(), errors.CatchCCloudV2Error(err, r)
-}
-
-func (c *Client) executeListComputePools(specRegion, environment, pageToken string) (flinkv2.FcpmV2ComputePoolList, *http.Response, error) {
-	req := c.FlinkClient.ComputePoolsFcpmV2Api.ListFcpmV2ComputePools(c.flinkApiContext()).SpecRegion(specRegion).Environment(environment).PageSize(ccloudV2ListPageSize)
-	if pageToken != "" {
-		req = req.PageToken(pageToken)
-	}
-	return c.FlinkClient.ComputePoolsFcpmV2Api.ListFcpmV2ComputePoolsExecute(req)
 }
 
 func (c *Client) ListFlinkRegions(cloud string) ([]flinkv2.FcpmV2Region, error) {
@@ -59,12 +47,11 @@ func (c *Client) ListFlinkRegions(cloud string) ([]flinkv2.FcpmV2Region, error) 
 	if cloud != "" {
 		req = req.Cloud(cloud)
 	}
-	res, r, err := c.FlinkClient.RegionsFcpmV2Api.ListFcpmV2RegionsExecute(req)
+	res, r, err := req.Execute()
 	return res.GetData(), errors.CatchCCloudV2Error(err, r)
 }
 
 func (c *Client) UpdateFlinkComputePool(id string, update flinkv2.FcpmV2ComputePoolUpdate) (flinkv2.FcpmV2ComputePool, error) {
-	req := c.FlinkClient.ComputePoolsFcpmV2Api.UpdateFcpmV2ComputePool(c.flinkApiContext(), id).FcpmV2ComputePoolUpdate(update)
-	res, r, err := c.FlinkClient.ComputePoolsFcpmV2Api.UpdateFcpmV2ComputePoolExecute(req)
+	res, r, err := c.FlinkClient.ComputePoolsFcpmV2Api.UpdateFcpmV2ComputePool(c.flinkApiContext(), id).FcpmV2ComputePoolUpdate(update).Execute()
 	return res, errors.CatchCCloudV2Error(err, r)
 }

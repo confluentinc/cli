@@ -130,10 +130,13 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 
 	dc := dynamicconfig.New(cfg, nil, nil)
 	_ = dc.ParseFlagsIntoConfig(cmd)
+
 	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.cdx", dc.Context(), v1.CliLaunchDarklyClient, true, false) {
 		cmd.AddCommand(streamshare.New(cfg, prerunner))
 	}
-
+	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.flink", dc.Context(), v1.CliLaunchDarklyClient, true, false) {
+		cmd.AddCommand(flink.New(cfg, prerunner))
+	}
 	if !cfg.DisableUpdates {
 		cmd.AddCommand(update.New(cfg, prerunner, updateClient))
 	}
