@@ -3,9 +3,10 @@ package local
 import (
 	"context"
 
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/docker/docker/client"
 	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 const (
