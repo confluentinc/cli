@@ -57,7 +57,7 @@ blocks:
           commands:
             - brew install --cask docker
             - find . -name Docker.app
-            - export PATH="$PATH:Docker.app/Contents/Resources/bin/"
+            - export PATH="$PATH:/Applications/Docker.app/Contents/Resources/bin/"
             - docker ps
         - name: darwin/amd64
           commands:
