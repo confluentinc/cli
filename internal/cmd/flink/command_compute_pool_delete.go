@@ -39,7 +39,7 @@ func (c *command) computePoolDelete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.FlinkStatement, computePool.GetId(), computePool.Spec.GetDisplayName())
+	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.FlinkComputePool, computePool.GetId(), computePool.Spec.GetDisplayName())
 	if ok, err := form.ConfirmDeletion(cmd, promptMsg, computePool.Spec.GetDisplayName()); err != nil || !ok {
 		return err
 	}
