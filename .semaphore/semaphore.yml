@@ -55,6 +55,8 @@ blocks:
       jobs:
         - name: Docker check
           commands:
+            - cd Docker.app
+            - ls
             - export PATH="$PATH:Docker.app/Contents/Resources/bin/"
             - docker ps
         - name: darwin/amd64
