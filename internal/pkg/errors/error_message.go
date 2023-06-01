@@ -472,10 +472,6 @@ const (
 		"To store an existing API key, use `confluent api-key store --resource %s`."
 	FailedToReadInputErrorMsg = "failed to read input"
 
-	// Flag parsing errors
-	EnvironmentFlagWithApiLoginErrorMsg = "`--environment` flag should not be passed for API key context"
-	ClusterFlagWithApiLoginErrorMsg     = "`--cluster` flag should not be passed for API key context, cluster is inferred"
-
 	// Partition command errors
 	SpecifyPartitionIdWithTopicErrorMsg = "must specify topic along with partition ID"
 
