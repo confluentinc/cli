@@ -1,0 +1,4 @@
+        ID       |            Name            | Cloud  
+-----------------+----------------------------+--------
+  eu-west-1      | Europe (eu-west-1)         | AWS    
+  europe-west3-a | Frankfurt (europe-west3-a) | GCP    

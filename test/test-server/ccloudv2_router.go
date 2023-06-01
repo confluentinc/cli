@@ -6,6 +6,11 @@ import (
 	"github.com/gorilla/mux"
 )
 
+type CloudV2Router struct {
+	*mux.Router
+	srApiUrl string
+}
+
 var ccloudV2Routes = []route{
 	{"/byok/v1/keys", handleByokKeys},
 	{"/byok/v1/keys/{id}", handleByokKey},
@@ -27,6 +32,9 @@ var ccloudV2Routes = []route{
 	{"/connect/v1/environments/{env}/clusters/{clusters}/connectors/{connector}/config", handleConnectorConfig},
 	{"/connect/v1/environments/{env}/clusters/{clusters}/connectors/{connector}/pause", handleConnectorPause},
 	{"/connect/v1/environments/{env}/clusters/{clusters}/connectors/{connector}/resume", handleConnectorResume},
+	{"/fcpm/v2/compute-pools", handleFcpmComputePools},
+	{"/fcpm/v2/compute-pools/{id}", handleFcpmComputePoolsId},
+	{"/fcpm/v2/regions", handleFcpmRegions},
 	{"/iam/v2/api-keys", handleIamApiKeys},
 	{"/iam/v2/api-keys/{id}", handleIamApiKey},
 	{"/iam/v2/identity-providers", handleIamIdentityProviders},
@@ -52,18 +60,21 @@ var ccloudV2Routes = []route{
 	{"/sd/v1/pipelines/{id}", handlePipeline},
 	{"/service-quota/v1/applied-quotas", handleAppliedQuotas},
 	{"/service-quota/v2/applied-quotas", handleAppliedQuotas},
+	{"/srcm/v2/clusters/{id}", handleSchemaRegistryCluster},
 	{"/srcm/v2/regions", handleSchemaRegistryRegions},
 	{"/srcm/v2/regions/{id}", handleSchemaRegistryRegion},
 	{"/v2/metrics/cloud/query", handleMetricsQuery},
 }
 
-func NewV2Router(t *testing.T) *mux.Router {
-	router := mux.NewRouter()
+func NewV2Router(t *testing.T) *CloudV2Router {
+	router := &CloudV2Router{Router: mux.NewRouter()}
 	router.Use(defaultHeaderMiddleware)
 
 	for _, route := range ccloudV2Routes {
 		router.HandleFunc(route.path, route.handler(t))
 	}
+
+	router.HandleFunc("/srcm/v2/clusters", router.HandleSchemaRegistryClusters(t))
 
 	return router
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+	srcmv2 "github.com/confluentinc/ccloud-sdk-go-v2/srcm/v2"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -31,11 +32,10 @@ func NewDynamicContext(context *v1.Context, client *ccloudv1.Client, v2Client *c
 	}
 }
 
-// Parse "--environment" and "--cluster" flag values into config struct
 func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, client *ccloudv1.Client) error {
 	if environment, _ := cmd.Flags().GetString("environment"); environment != "" {
 		if d.Credential.CredentialType == v1.APIKey {
-			return errors.New(errors.EnvironmentFlagWithApiLoginErrorMsg)
+			return errors.New("`--environment` flag should not be passed for API key context")
 		}
 		ctx := d.Config.Context()
 		d.Config.SetOverwrittenCurrentEnvironment(ctx.CurrentEnvironment)
@@ -44,11 +44,19 @@ func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, client *cclou
 
 	if cluster, _ := cmd.Flags().GetString("cluster"); cluster != "" {
 		if d.Credential.CredentialType == v1.APIKey {
-			return errors.New(errors.ClusterFlagWithApiLoginErrorMsg)
+			return errors.New("`--cluster` flag should not be passed for API key context, cluster is inferred")
 		}
 		ctx := d.Config.Context()
 		d.Config.SetOverwrittenCurrentKafkaCluster(ctx.KafkaClusterContext.GetActiveKafkaClusterId())
 		ctx.KafkaClusterContext.SetActiveKafkaCluster(cluster)
+	}
+
+	if computePool, _ := cmd.Flags().GetString("compute-pool"); computePool != "" {
+		ctx := d.Config.Context()
+		d.Config.SetOverwrittenFlinkComputePool(ctx.GetCurrentFlinkComputePool())
+		if err := ctx.SetCurrentFlinkComputePool(computePool); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -145,21 +153,25 @@ func (d *DynamicContext) SchemaRegistryCluster(cmd *cobra.Command) (*v1.SchemaRe
 			}
 		}
 		if cluster == nil || missingDetails(cluster) {
-			srCluster, err := d.FetchSchemaRegistryById(resource, environmentId)
+			srCluster, err := d.V2Client.GetSchemaRegistryClusterById(resource, environmentId)
 			if err != nil {
 				return nil, errors.CatchResourceNotFoundError(err, resource)
 			}
-			cluster = makeSRCluster(srCluster)
+			cluster = makeSRCluster(&srCluster)
 			clusterChanged = true
 		}
 	} else {
 		cluster = d.SchemaRegistryClusters[environmentId]
 		if cluster == nil || missingDetails(cluster) {
-			srCluster, err := d.FetchSchemaRegistryByEnvironmentId(environmentId)
+			srClusters, err := d.V2Client.GetSchemaRegistryClustersByEnvironment(environmentId)
 			if err != nil {
 				return nil, errors.CatchResourceNotFoundError(err, resource)
 			}
-			cluster = makeSRCluster(srCluster)
+			if len(srClusters) != 0 {
+				cluster = makeSRCluster(&srClusters[0])
+			} else {
+				cluster = nil
+			}
 			clusterChanged = true
 		}
 	}
@@ -253,10 +265,11 @@ func missingDetails(cluster *v1.SchemaRegistryCluster) bool {
 	return cluster.SchemaRegistryEndpoint == "" || cluster.Id == ""
 }
 
-func makeSRCluster(cluster *ccloudv1.SchemaRegistryCluster) *v1.SchemaRegistryCluster {
+func makeSRCluster(cluster *srcmv2.SrcmV2Cluster) *v1.SchemaRegistryCluster {
+	clusterSpec := cluster.GetSpec()
 	return &v1.SchemaRegistryCluster{
 		Id:                     cluster.GetId(),
-		SchemaRegistryEndpoint: cluster.GetEndpoint(),
+		SchemaRegistryEndpoint: clusterSpec.GetHttpEndpoint(),
 		SrCredentials:          nil, // For now.
 	}
 }
