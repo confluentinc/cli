@@ -58,7 +58,11 @@ func handleFcpmComputePoolsId(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var computePool flinkv2.FcpmV2ComputePool
 		id := mux.Vars(r)["id"]
-
+		if id != "lfcp-123456" && id != "lfcp-222222" {
+			err := writeResourceNotFoundError(w)
+			require.NoError(t, err)
+			return
+		}
 		switch r.Method {
 		case http.MethodGet:
 			computePool = flinkv2.FcpmV2ComputePool{
@@ -70,6 +74,9 @@ func handleFcpmComputePoolsId(t *testing.T) http.HandlerFunc {
 					Region:       flinkv2.PtrString("us-west-2"),
 				},
 				Status: &flinkv2.FcpmV2ComputePoolStatus{Phase: "PROVISIONED"},
+			}
+			if id == "lfcp-222222" {
+				computePool.Spec.DisplayName = flinkv2.PtrString("my-compute-pool-2")
 			}
 		case http.MethodPatch:
 			update := new(flinkv2.FcpmV2ComputePool)

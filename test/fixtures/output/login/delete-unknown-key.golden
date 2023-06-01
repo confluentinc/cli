@@ -1,4 +1,4 @@
-Are you sure you want to delete API key "UNKNOWN"? (y/n): Error: error deleting API key: resource not found: 403 Forbidden
+Error: API key "UNKNOWN" not found
 
 Suggestions:
-    Ensure the API key exists and has not been deleted, or create a new API key via `confluent api-key create`.
+    List available API keys with `confluent api-key list`.
