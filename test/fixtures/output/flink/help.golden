@@ -6,6 +6,7 @@ Usage:
 Available Commands:
   compute-pool Manage Flink compute pools.
   region       List Flink regions.
+  shell        Start Flink interactive SQL client.
   statement    Manage Flink SQL statements.
 
 Global Flags:

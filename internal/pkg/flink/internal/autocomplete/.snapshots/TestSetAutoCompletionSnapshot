@@ -1,0 +1,10 @@
+([]prompt.Suggest) (len=2) {
+  (prompt.Suggest) {
+    Text: (string) (len=36) "SET 'table.results-timeout' = '600';",
+    Description: (string) (len=102) "Total amount of time in seconds to wait before timing out the request waiting for results to be ready."
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=47) "SET 'table.local-time-zone;' = 'Europe/Berlin';",
+    Description: (string) (len=58) "Used to modify the configuration or list the configuration"
+  }
+}
