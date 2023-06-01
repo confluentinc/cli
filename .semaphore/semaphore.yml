@@ -57,6 +57,7 @@ blocks:
           commands:
             - brew install docker-machine docker
             - export PATH="$PATH:/Applications/Docker.app/Contents/Resources/bin/"
+            - docker-machine start default
             - eval $(docker-machine env default)
             - docker ps
         - name: darwin/amd64
