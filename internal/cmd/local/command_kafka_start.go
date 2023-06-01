@@ -100,7 +100,7 @@ func (c *command) kafkaStart(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	output.Printf("Started Confluent local container %v.\nContinue your experience with Confluent local running `confluent local kafka topic produce` and `confluent local kafka topic consume`.\n", getShortenedContainerId(createResp.ID))
+	output.Printf("Started Confluent Local container %v.\nContinue your experience with Confluent Local running `confluent local kafka topic produce` and `confluent local kafka topic consume`.\n", getShortenedContainerId(createResp.ID))
 	return nil
 }
 
