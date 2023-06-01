@@ -9,7 +9,7 @@ Available Commands:
   describe    Describe a Kafka cluster.
   list        List Kafka clusters.
   update      Update a Kafka cluster.
-  use         Make the Kafka cluster active for use in other commands.
+  use         Use a Kafka cluster in subsequent commands.
 
 Global Flags:
   -h, --help            Show help for this command.
