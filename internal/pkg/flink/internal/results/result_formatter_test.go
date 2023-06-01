@@ -2,9 +2,9 @@ package results
 
 import (
 	"fmt"
-	"github.com/samber/lo"
 	"testing"
 
+	"github.com/samber/lo"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"pgregory.net/rapid"

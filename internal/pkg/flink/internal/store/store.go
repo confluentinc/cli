@@ -8,12 +8,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/confluentinc/cli/internal/pkg/log"
-
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/flink/config"
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/results"
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
+	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -218,20 +217,6 @@ func NewStore(client ccloudv2.GatewayClientInterface, exitApplication func(), ap
 		exitApplication: exitApplication,
 		appOptions:      appOptions,
 	}
-}
-
-// Set timezone default value if not set by the user
-func propsWithLocalTimezone(propsWithoutDefault map[string]string) map[string]string {
-	properties := make(map[string]string)
-	for key, value := range propsWithoutDefault {
-		properties[key] = value
-	}
-
-	if _, ok := properties[config.ConfigKeyLocalTimeZone]; !ok {
-		properties[config.ConfigKeyLocalTimeZone] = getLocalTimezone()
-	}
-
-	return properties
 }
 
 // Set properties default values if not set by the user

@@ -2,10 +2,12 @@ package ccloudv2
 
 import (
 	"context"
+
+	"github.com/google/uuid"
+
 	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/google/uuid"
 )
 
 type GatewayClientInterface interface {

@@ -1,8 +1,9 @@
 package results
 
 import (
-	"github.com/samber/lo"
 	"sync"
+
+	"github.com/samber/lo"
 
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
 )

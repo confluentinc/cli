@@ -3,13 +3,14 @@ package flink
 import (
 	"net/url"
 
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config/load"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	client "github.com/confluentinc/cli/internal/pkg/flink/app"
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
-	"github.com/spf13/cobra"
 )
 
 func (c *command) newShellCommand(prerunner pcmd.PreRunner) *cobra.Command {
@@ -17,7 +18,7 @@ func (c *command) newShellCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Use:   "shell",
 		Short: "Start Flink interactive SQL client.",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return c.startFlinkSqlClient(prerunner, cmd, args)
+			return c.startFlinkSqlClient(prerunner, cmd)
 		},
 	}
 	cmd.Flags().String("compute-pool", "", "Flink compute pool ID.")
@@ -46,7 +47,7 @@ func (c *command) authenticated(authenticated func(*cobra.Command, []string) err
 	}
 }
 
-func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Command, args []string) error {
+func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Command) error {
 	resourceId := c.Context.GetOrganization().GetResourceId()
 
 	// Compute pool can be set as a flag or as default in the context

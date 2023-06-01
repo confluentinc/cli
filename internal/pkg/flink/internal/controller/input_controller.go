@@ -9,8 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/confluentinc/cli/internal/pkg/log"
-
 	"github.com/olekukonko/tablewriter"
 
 	"github.com/confluentinc/go-prompt"
@@ -23,6 +21,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/reverseisearch"
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/store"
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
+	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 

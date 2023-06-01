@@ -6,9 +6,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/confluentinc/cli/internal/pkg/log"
-
 	"github.com/confluentinc/cli/internal/pkg/flink/config"
+	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
 const HISTORY_FILE_NAME = "flink_statements_history.json"

@@ -3,8 +3,9 @@ package controller
 import (
 	"os"
 
-	"github.com/confluentinc/cli/internal/pkg/log"
 	"golang.org/x/term"
+
+	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
 func getStdin() *term.State {

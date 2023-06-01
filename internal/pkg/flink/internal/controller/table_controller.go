@@ -3,7 +3,6 @@ package controller
 import (
 	"context"
 	"fmt"
-	"github.com/samber/lo"
 	"strings"
 	"sync"
 	"time"
@@ -11,6 +10,7 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
+	"github.com/samber/lo"
 
 	"github.com/confluentinc/cli/internal/pkg/flink/components"
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/results"

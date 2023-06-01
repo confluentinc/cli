@@ -12,8 +12,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
-
 	gomock "github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -21,6 +19,7 @@ import (
 
 	v1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
 
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/flink/config"
 	"github.com/confluentinc/cli/internal/pkg/flink/test/mock"
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
