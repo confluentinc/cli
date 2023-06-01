@@ -1,7 +1,6 @@
 package ccloudv2
 
 import (
-	flinkv2 "github.com/confluentinc/ccloud-sdk-go-v2-internal/flink/v2"
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	byokv1 "github.com/confluentinc/ccloud-sdk-go-v2/byok/v1"
 	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
