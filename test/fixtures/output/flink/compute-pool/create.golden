@@ -1,0 +1,8 @@
++---------+-----------------+
+| Current | false           |
+| ID      | lfcp-123456     |
+| Name    | my-compute-pool |
+| CFU     |               1 |
+| Region  | us-west-2       |
+| Status  | PROVISIONING    |
++---------+-----------------+
