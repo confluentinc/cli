@@ -55,12 +55,9 @@ blocks:
       jobs:
         - name: Docker check
           commands:
-            - brew install docker docker-machine
-            - ls /var/run
-            - sudo ln -s ~/Library/Containers/com.docker.docker/Data/docker.raw.sock /var/run/docker.sock
-            - export DOCKER_HOST=unix:///Users/$(whoami)/Library/Containers/com.docker.docker/Data/docker.raw.sock
-            - sudo ln -sf $HOME/Library/Containers/com.docker.docker/Data/s60 /var/run/docker.sock
-            - DOCKER_HOST=unix:///var/run/docker.sock docker ps
+            # - brew install docker docker-machine
+            - brew install --cask docker
+            - open --background -a /Applications/Docker.app
             - docker ps
         - name: darwin/amd64
           commands:
