@@ -57,7 +57,7 @@ blocks:
           commands:
             - brew install docker docker-machine
             # - sudo ln -s ~/Library/Containers/com.docker.docker/Data/docker.raw.sock /var/run/docker.sock
-            - export DOCKER_HOST=unix:///Users/$(whoami)/Library/Containers/com.docker.docker/Data/docker.raw.sock
+            # - export DOCKER_HOST=unix:///Users/$(whoami)/Library/Containers/com.docker.docker/Data/docker.raw.sock
             - export PATH=/usr/local/share/zsh/site-functions:$PATH
             - find . -name docker.sock
             - find . -name docker.raw.sock
