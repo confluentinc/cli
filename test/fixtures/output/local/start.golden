@@ -1,0 +1,7 @@
+The local commands are intended for a single-node development environment only, NOT for production usage. See more: https:\/\/docs.confluent.io\/current\/cli\/index.html
+
+Pulling from confluentinc/confluent-local","id":"latest"
+Digest: sha256:[a-zA-Z0-9]*.
+Status: Image is up to date for confluentinc/confluent-local:Latest
+Started Confluent Local container [a-zA-Z0-9]*.
+To continue your Confluent Local experience, run `confluent local kafka topic create test` and `confluent local kafka topic produce test`.

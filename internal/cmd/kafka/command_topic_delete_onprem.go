@@ -1,9 +1,12 @@
 package kafka
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -38,7 +41,6 @@ func (c *authenticatedTopicCommand) newDeleteCommandOnPrem() *cobra.Command {
 }
 
 func (c *authenticatedTopicCommand) deleteOnPrem(cmd *cobra.Command, args []string) error {
-	// Parse arguments
 	topicName := args[0]
 	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
@@ -49,6 +51,10 @@ func (c *authenticatedTopicCommand) deleteOnPrem(cmd *cobra.Command, args []stri
 		return err
 	}
 
+	return DeleteTopic(cmd, restClient, restContext, topicName, clusterId)
+}
+
+func DeleteTopic(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restContext context.Context, topicName, clusterId string) error {
 	if _, resp, err := restClient.TopicV3Api.GetKafkaTopic(restContext, clusterId, topicName); err != nil {
 		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 	}
