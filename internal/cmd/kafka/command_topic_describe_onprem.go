@@ -1,7 +1,11 @@
 package kafka
 
 import (
+	"context"
+
 	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -10,7 +14,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-type partitionData struct {
+type PartitionData struct {
 	TopicName              string  `human:"Topic" json:"topic" yaml:"topic"`
 	PartitionId            int32   `human:"Partition" json:"partition" yaml:"partition"`
 	LeaderBrokerId         int32   `human:"Leader" json:"leader" yaml:"leader"`
@@ -18,11 +22,11 @@ type partitionData struct {
 	InSyncReplicaBrokerIds []int32 `human:"ISR" json:"isr" yaml:"isr"`
 }
 
-type topicData struct {
+type TopicData struct {
 	TopicName         string            `json:"topic_name" yaml:"topic_name"`
 	PartitionCount    int               `json:"partition_count" yaml:"partition_count"`
 	ReplicationFactor int               `json:"replication_factor" yaml:"replication_factor"`
-	Partitions        []*partitionData  `json:"partitions" yaml:"partitions"`
+	Partitions        []*PartitionData  `json:"partitions" yaml:"partitions"`
 	Configs           map[string]string `json:"config" yaml:"config"`
 }
 
@@ -63,6 +67,10 @@ func (c *authenticatedTopicCommand) describeOnPrem(cmd *cobra.Command, args []st
 		return err
 	}
 
+	return DescribeTopicWithRestClient(cmd, restClient, restContext, topicName, clusterId)
+}
+
+func DescribeTopicWithRestClient(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restContext context.Context, topicName, clusterId string) error {
 	// Get partitions
 	partitionsResp, resp, err := restClient.PartitionV3Api.ListKafkaPartitions(restContext, clusterId, topicName)
 	if err != nil {
@@ -70,10 +78,10 @@ func (c *authenticatedTopicCommand) describeOnPrem(cmd *cobra.Command, args []st
 	} else if partitionsResp.Data == nil {
 		return errors.NewErrorWithSuggestions(errors.InternalServerErrorMsg, errors.InternalServerErrorSuggestions)
 	}
-	topic := &topicData{
+	topic := &TopicData{
 		TopicName:      topicName,
 		PartitionCount: len(partitionsResp.Data),
-		Partitions:     make([]*partitionData, len(partitionsResp.Data)),
+		Partitions:     make([]*PartitionData, len(partitionsResp.Data)),
 	}
 	for i, partitionResp := range partitionsResp.Data {
 		// For each partition, get replicas
@@ -83,7 +91,7 @@ func (c *authenticatedTopicCommand) describeOnPrem(cmd *cobra.Command, args []st
 		} else if replicasResp.Data == nil {
 			return errors.NewErrorWithSuggestions(errors.InternalServerErrorMsg, errors.InternalServerErrorSuggestions)
 		}
-		topic.Partitions[i] = &partitionData{
+		topic.Partitions[i] = &PartitionData{
 			TopicName:              topicName,
 			PartitionId:            partitionResp.PartitionId,
 			ReplicaBrokerIds:       make([]int32, len(replicasResp.Data)),
