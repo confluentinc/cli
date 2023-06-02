@@ -24,6 +24,10 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
+var (
+	statusBlacklist = []string{"Pulling fs layer", "Waiting", "Downloading", "Download complete", "Verifying Checksum", "Extracting", "Pull complete"}
+)
+
 type imagePullOut struct {
 	Status string `json:"status"`
 }
@@ -65,7 +69,13 @@ func (c *command) kafkaStart(cmd *cobra.Command, args []string) error {
 		if err := json.Unmarshal([]byte(ss), &output); err != nil {
 			continue
 		}
-		if len(output.Status) > 18 { // filter out lines such as "Extracing" and "Pulling"
+		var inBlacklist bool
+		for _, s := range statusBlacklist {
+			if output.Status == s {
+				inBlacklist = true
+			}
+		}
+		if !inBlacklist {
 			fmt.Printf("%v\n", output.Status)
 		}
 	}
