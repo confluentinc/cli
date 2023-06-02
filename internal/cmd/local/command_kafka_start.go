@@ -2,11 +2,12 @@ package local
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
-	"os"
 	"runtime"
 	"strconv"
+	"strings"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -22,6 +23,10 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
+
+type imagePullOut struct {
+	Status string `json:"status"`
+}
 
 func (c *command) newKafkaStartCommand() *cobra.Command {
 	return &cobra.Command{
@@ -48,10 +53,21 @@ func (c *command) kafkaStart(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	defer out.Close()
-	_, err = io.Copy(os.Stdout, out)
+
+	buf := new(strings.Builder)
+	_, err = io.Copy(buf, out)
 	if err != nil {
 		return err
 	}
+
+	for _, ss := range strings.Split(buf.String(), "\n") {
+		var output imagePullOut
+		if err := json.Unmarshal([]byte(ss), &output); err != nil {
+			continue
+		}
+		fmt.Printf("Status\t%v\n", output.Status)
+	}
+
 	log.CliLogger.Tracef("Pull confluent-local image success")
 
 	if err := c.prepareAndSaveLocalPorts(); err != nil {
