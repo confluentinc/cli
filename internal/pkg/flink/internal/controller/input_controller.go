@@ -121,6 +121,9 @@ func (c *InputController) RunInteractiveInput() {
 		})
 
 		processedStatement, err = c.store.WaitPendingStatement(ctx, *processedStatement)
+		if processedStatement != nil && processedStatement.StatusDetail != "" {
+			output.Printf("Status detail: %s\n", processedStatement.StatusDetail)
+		}
 		if err != nil {
 			_ = in.TearDown()
 			cancelListenToUserInput()
@@ -198,27 +201,32 @@ func (c *InputController) setInitialBuffer(s string) {
 	c.prompt = c.Prompt()
 }
 
-func renderMsgAndStatus(statementResult *types.ProcessedStatement) {
-	if statementResult == nil {
+func renderMsgAndStatus(processedStatement *types.ProcessedStatement) {
+	if processedStatement == nil {
 		return
 	}
 
-	if statementResult.IsLocalStatement {
-		if statementResult.Status != "FAILED" {
+	if processedStatement.IsLocalStatement {
+		if processedStatement.Status != "FAILED" {
 			output.Println("Statement successfully submitted.\n ")
 		} else {
 			output.Println("Error: Couldn't process statement. Please check your statement and try again.")
 		}
 	} else {
-		if statementResult.StatementName != "" {
-			output.Println("Statement ID: " + statementResult.StatementName)
+		if processedStatement.StatementName != "" {
+			output.Println("Statement ID: " + processedStatement.StatementName)
 		}
-		if statementResult.Status != "FAILED" {
+		if processedStatement.Status != "FAILED" {
 			output.Println("Statement successfully submitted. ")
 			output.Println("Fetching results...\n ")
 		} else {
 			output.Println("Error: Statement submission failed. There could a problem with the server right now. Check your statement and try again.")
 		}
+	}
+
+	// print status detail message if available
+	if processedStatement.StatusDetail != "" {
+		output.Printf("Status detail: %s\n", processedStatement.StatusDetail)
 	}
 }
 
