@@ -18,6 +18,9 @@ blocks:
     dependencies: []
     task:
       jobs:
+        - name: Docker check
+          commands:
+            - docker ps
         - name: linux/amd64
           commands:
             # Set up Go
