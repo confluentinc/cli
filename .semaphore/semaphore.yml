@@ -61,6 +61,7 @@ blocks:
             - export PATH=/usr/local/share/zsh/site-functions:$PATH
             - find . -name docker.sock
             - find . -name docker.raw.sock
+            - ls -l /var/run/docker.sock
             - sudo ln -sf $HOME/Library/Containers/com.docker.docker/Data/s60 /var/run/docker.sock
             - whereis docker
             - docker ps
