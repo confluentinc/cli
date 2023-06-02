@@ -59,6 +59,7 @@ blocks:
             # - brew tap homebrew/core
             - sudo chgrp -R admin /usr/local
             - sudo chmod -R g+w /usr/local
+            - brew update
             - brew install docker
             # - sudo ln -s ~/Library/Containers/com.docker.docker/Data/docker.raw.sock /var/run/docker.sock
             # - export DOCKER_HOST=unix:///Users/$(whoami)/Library/Containers/com.docker.docker/Data/docker.raw.sock
