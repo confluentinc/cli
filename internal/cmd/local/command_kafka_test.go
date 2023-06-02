@@ -1,6 +1,7 @@
 package local
 
 import (
+	"runtime"
 	"testing"
 
 	"github.com/ory/dockertest"
@@ -8,6 +9,10 @@ import (
 )
 
 func TestStartContainer(t *testing.T) {
+	if runtime.GOOS == "darwin" {
+		s.T().Skip()
+	}
+
 	req := require.New(t)
 	pool, err := dockertest.NewPool("")
 	req.NoError(err)
