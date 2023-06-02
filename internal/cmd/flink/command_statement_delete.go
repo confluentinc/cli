@@ -42,7 +42,7 @@ func (c *command) statementDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	deleted, err := resource.Delete(args, func(id string) error {
-		if err := client.DeleteStatement(environmentId, id, c.Context.LastOrgId); err != nil {
+		if err := client.DeleteStatement(c.Context.LastOrgId, environmentId, id); err != nil {
 			return err
 		}
 		return nil
@@ -54,7 +54,7 @@ func (c *command) statementDelete(cmd *cobra.Command, args []string) error {
 
 func (c *command) confirmDeletionStatement(cmd *cobra.Command, client *ccloudv2.FlinkGatewayClient, environmentId string, args []string) error {
 	describeFunc := func(id string) error {
-		_, err := client.GetStatement(environmentId, id, c.Context.LastOrgId)
+		_, err := client.GetStatement(c.Context.LastOrgId, environmentId, id)
 		return err
 	}
 
