@@ -22,22 +22,22 @@ func (suite *KafkaRestTestSuite) TestSetServerURL() {
 	cmd.Flags().CountP("verbose", "v", "verbosity")
 	client := kafkarestv3.NewAPIClient(kafkarestv3.NewConfiguration())
 
-	setServerURL(&cmd, client, "localhost:8090")
+	SetServerURL(&cmd, client, "localhost:8090")
 	req.Equal("http://localhost:8090/v3", client.GetConfig().BasePath)
 
-	setServerURL(&cmd, client, "localhost:8090/kafka/v3/")
+	SetServerURL(&cmd, client, "localhost:8090/kafka/v3/")
 	req.Equal("http://localhost:8090/kafka/v3", client.GetConfig().BasePath)
 
-	setServerURL(&cmd, client, "localhost:8090/")
+	SetServerURL(&cmd, client, "localhost:8090/")
 	req.Equal("http://localhost:8090/v3", client.GetConfig().BasePath)
 
 	_ = cmd.Flags().Set("client-cert-path", "path")
-	setServerURL(&cmd, client, "localhost:8090/kafka")
+	SetServerURL(&cmd, client, "localhost:8090/kafka")
 	req.Equal("https://localhost:8090/kafka/v3", client.GetConfig().BasePath)
 
 	_ = cmd.Flags().Set("client-cert-path", "")
 	_ = cmd.Flags().Set("ca-cert-path", "path")
-	setServerURL(&cmd, client, "localhost:8090/kafka")
+	SetServerURL(&cmd, client, "localhost:8090/kafka")
 	req.Equal("https://localhost:8090/kafka/v3", client.GetConfig().BasePath)
 }
 
