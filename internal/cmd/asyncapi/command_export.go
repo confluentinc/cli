@@ -209,11 +209,11 @@ func (c *command) getAccountDetails(flags *flags) (*accountDetails, error) {
 	if err := c.getSchemaRegistry(details, flags); err != nil {
 		return nil, err
 	}
-	var err error
-	details.subjects, _, err = details.srClient.DefaultApi.List(details.srContext, nil)
+	subjects, _, err := details.srClient.DefaultApi.List(details.srContext, nil)
 	if err != nil {
 		return nil, err
 	}
+	details.subjects = subjects
 	// Create Consumer
 	if flags.consumeExamples {
 		details.consumer, err = createConsumer(details.broker, details.clusterCreds, flags.groupId)

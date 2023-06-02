@@ -234,8 +234,7 @@ func consumeMessage(e *ckafka.Message, h *GroupHandler) error {
 		if h.Properties.FullHeader {
 			headers = getFullHeaders(e.Headers)
 		}
-		_, err = fmt.Fprintf(h.Out, "%% Headers: %v\n", headers)
-		if err != nil {
+		if _, err := fmt.Fprintf(h.Out, "%% Headers: %v\n", headers); err != nil {
 			return err
 		}
 	}

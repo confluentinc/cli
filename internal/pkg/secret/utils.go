@@ -262,7 +262,6 @@ func writePropertiesConfig(path string, configs *properties.Properties, addSecur
 	}
 	configProps.DisableExpansion = true
 	configs, err = convertPropertiesJAAS(configs, configProps, Update)
-
 	if err != nil {
 		return err
 	}

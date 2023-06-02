@@ -136,11 +136,7 @@ func (c *PasswordProtectionSuite) EncryptConfigFileSecrets(configFilePath string
 	configProps.DisableExpansion = true
 
 	// Encrypt the secrets with DEK. Save the encrypted secrets in secure config file.
-	if err := c.encryptConfigValues(configProps, localSecureConfigPath, configFilePath, remoteSecureConfigPath); err != nil {
-		return err
-	}
-
-	return err
+	return c.encryptConfigValues(configProps, localSecureConfigPath, configFilePath, remoteSecureConfigPath)
 }
 
 // This function decrypts all the passwords in configFilePath properties files and stores the decrypted passwords in outputFilePath.
