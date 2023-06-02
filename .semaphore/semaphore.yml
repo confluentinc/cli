@@ -55,14 +55,10 @@ blocks:
       jobs:
         - name: Docker check
           commands:
-            # - brew install --cask docker virtualbox
-            # - brew install docker-machine
-            # - docker-machine create --driver virtualbox default
-            # - docker-machine restart
-            # - eval "$(docker-machine env default)"
             - brew install --cask docker
             - export PATH=/Applications:$PATH
-            - open --background -a Docker
+            - whereis docker
+            - open --background -a docker
             - docker ps
         - name: darwin/amd64
           commands:
