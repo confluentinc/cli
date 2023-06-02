@@ -51,8 +51,7 @@ func (c *configCommand) update(cmd *cobra.Command, _ []string) error {
 	}
 
 	fileSpec := mds.AuditLogConfigSpec{}
-	err = json.Unmarshal(data, &fileSpec)
-	if err != nil {
+	if err := json.Unmarshal(data, &fileSpec); err != nil {
 		return err
 	}
 	putSpec := &fileSpec

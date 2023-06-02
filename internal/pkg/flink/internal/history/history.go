@@ -37,8 +37,7 @@ func loadFromPath(history *History) *History {
 		log.CliLogger.Warnf("Couldn't load past statements history: unable to read file Error: " + err.Error())
 	}
 
-	err = json.Unmarshal(jsonFile, history)
-	if err != nil {
+	if err := json.Unmarshal(jsonFile, history); err != nil {
 		log.CliLogger.Warnf("Couldn't load past statements history. Error: " + err.Error())
 	}
 	return history
@@ -90,8 +89,7 @@ func (history *History) Save() {
 	}
 	defer f.Close()
 
-	_, err = f.Write(b)
-	if err != nil {
+	if _, err := f.Write(b); err != nil {
 		log.CliLogger.Warnf("Couldn't save past statements history: couldn't write to file. Error: " + err.Error())
 	}
 }

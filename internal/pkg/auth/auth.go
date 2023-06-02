@@ -63,8 +63,7 @@ func PersistLogout(config *v1.Config) error {
 	}
 
 	delete(ctx.Config.SavedCredentials, ctx.Name)
-	err := ctx.DeleteUserAuth()
-	if err != nil {
+	if err := ctx.DeleteUserAuth(); err != nil {
 		return err
 	}
 	ctx.Config.CurrentContext = ""
