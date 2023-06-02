@@ -59,9 +59,7 @@ blocks:
             # - sudo ln -s ~/Library/Containers/com.docker.docker/Data/docker.raw.sock /var/run/docker.sock
             # - export DOCKER_HOST=unix:///Users/$(whoami)/Library/Containers/com.docker.docker/Data/docker.raw.sock
             - export PATH=/usr/local/share/zsh/site-functions:$PATH
-            - find . -name docker.sock
-            - find . -name docker.raw.sock
-            - ls -l /var/run/docker.sock
+            - sudo service docker start
             - sudo ln -sf $HOME/Library/Containers/com.docker.docker/Data/s60 /var/run/docker.sock
             - whereis docker
             - docker ps
