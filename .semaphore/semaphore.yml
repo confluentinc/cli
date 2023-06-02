@@ -55,11 +55,13 @@ blocks:
       jobs:
         - name: Docker check
           commands:
-            - brew install --cask docker virtualbox
-            - brew install docker-machine
-            - docker-machine create --driver virtualbox default
-            - docker-machine restart
-            - eval "$(docker-machine env default)"
+            # - brew install --cask docker virtualbox
+            # - brew install docker-machine
+            # - docker-machine create --driver virtualbox default
+            # - docker-machine restart
+            # - eval "$(docker-machine env default)"
+            - brew install docker
+            - brew install colima
             - docker ps
         - name: darwin/amd64
           commands:
