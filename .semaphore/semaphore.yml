@@ -56,9 +56,11 @@ blocks:
         - name: Docker check
           commands:
             - brew install docker docker-machine
+            - cd ~
+            - find . -name docker.raw.sock
+            - find . -name docker.sock
             - sudo ln -s ~/Library/Containers/com.docker.docker/Data/docker.raw.sock /var/run/docker.sock
             - export DOCKER_HOST=unix:///Users/$(whoami)/Library/Containers/com.docker.docker/Data/docker.raw.sock
-            - ls $HOME/Library/Containers/com.docker.docker/Data
             - sudo ln -sf $HOME/Library/Containers/com.docker.docker/Data/s60 /var/run/docker.sock
             - DOCKER_HOST=unix:///var/run/docker.sock docker ps
             - docker ps
