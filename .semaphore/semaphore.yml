@@ -55,10 +55,11 @@ blocks:
       jobs:
         - name: Docker check
           commands:
+            - brew install docker docker-machine
+            - sudo ln -s ~/Library/Containers/com.docker.docker/Data/docker.raw.sock /var/run/docker.sock
+            - export DOCKER_HOST=unix:///Users/$(whoami)/Library/Containers/com.docker.docker/Data/docker.raw.sock
             - brew install --cask docker
-            - export PATH=/Applications:$PATH
-            - whereis docker
-            - open --background -a docker
+            - open --background -a Docker && docker ps
             - docker ps
         - name: darwin/amd64
           commands:
