@@ -33,7 +33,7 @@ func (c *command) newKafkaTopicDescribeCommand() *cobra.Command {
 func (c *command) kafkaTopicDescribe(cmd *cobra.Command, args []string) error {
 	restClient, clusterId, err := initKafkaRest(c.CLICommand, cmd)
 	if err != nil {
-		return err
+		return errors.NewErrorWithSuggestions(err.Error(), kafkaRESTNotReadySuggestion)
 	}
 
 	err = kafka.DescribeTopicWithRestClient(cmd, restClient, context.Background(), args[0], clusterId)
