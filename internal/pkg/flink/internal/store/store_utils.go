@@ -21,11 +21,11 @@ import (
 type StatementType string
 
 const (
-	SET_STATEMENT   StatementType = config.ConfigOpSet
-	USE_STATEMENT   StatementType = config.ConfigOpUse
-	RESET_STATEMENT StatementType = config.ConfigOpReset
-	EXIT_STATEMENT  StatementType = config.ConfigOpExit
-	OTHER_STATEMENT StatementType = "OTHER"
+	SetStatement   StatementType = config.ConfigOpSet
+	UseStatement   StatementType = config.ConfigOpUse
+	ResetStatement StatementType = config.ConfigOpReset
+	ExitStatement  StatementType = config.ConfigOpExit
+	OtherStatement StatementType = "OTHER"
 )
 
 func createStatementResults(columnNames []string, rows [][]string) types.StatementResults {
@@ -314,16 +314,16 @@ func statementStartsWithOp(statement string, op string) bool {
 }
 
 func parseStatementType(statement string) StatementType {
-	if statementStartsWithOp(statement, string(SET_STATEMENT)) {
-		return SET_STATEMENT
-	} else if statementStartsWithOp(statement, string(USE_STATEMENT)) {
-		return USE_STATEMENT
-	} else if statementStartsWithOp(statement, string(RESET_STATEMENT)) {
-		return RESET_STATEMENT
-	} else if statementStartsWithOp(statement, string(EXIT_STATEMENT)) {
-		return EXIT_STATEMENT
+	if statementStartsWithOp(statement, string(SetStatement)) {
+		return SetStatement
+	} else if statementStartsWithOp(statement, string(UseStatement)) {
+		return UseStatement
+	} else if statementStartsWithOp(statement, string(ResetStatement)) {
+		return ResetStatement
+	} else if statementStartsWithOp(statement, string(ExitStatement)) {
+		return ExitStatement
 	} else {
-		return OTHER_STATEMENT
+		return OtherStatement
 	}
 }
 
