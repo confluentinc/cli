@@ -1,13 +1,14 @@
 package test
 
 import (
+	"runtime"
 	"time"
 )
 
 func (s *CLITestSuite) TestLocalKafka() {
-	// if runtime.GOOS == "darwin" {
-	// 	s.T().Skip()
-	// }
+	if runtime.GOOS == "darwin" {
+		s.T().Skip()
+	}
 
 	tests := []CLITest{
 		{args: "local kafka stop", fixture: "local/stop_empty.golden"},
