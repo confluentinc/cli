@@ -65,7 +65,9 @@ func (c *command) kafkaStart(cmd *cobra.Command, args []string) error {
 		if err := json.Unmarshal([]byte(ss), &output); err != nil {
 			continue
 		}
-		fmt.Printf("Status\t%v\n", output.Status)
+		if len(output.Status) > 18 { // filter out lines such as "Extracing" and "Pulling"
+			fmt.Printf("%v\n", output.Status)
+		}
 	}
 
 	log.CliLogger.Tracef("Pull confluent-local image success")
