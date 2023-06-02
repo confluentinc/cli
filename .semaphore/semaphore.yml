@@ -59,6 +59,8 @@ blocks:
             - sudo ln -s ~/Library/Containers/com.docker.docker/Data/docker.raw.sock /var/run/docker.sock
             - export DOCKER_HOST=unix:///Users/$(whoami)/Library/Containers/com.docker.docker/Data/docker.raw.sock
             - ls ~/Library/Containers/com.docker.docker/Data
+            - ls $HOME/Library/Containers/com.docker.docker/Data
+            - sudo ln -sf $HOME/Library/Containers/com.docker.docker/Data/s60 /var/run/docker.sock
             - DOCKER_HOST=unix:///var/run/docker.sock docker ps
             - docker ps
         - name: darwin/amd64
