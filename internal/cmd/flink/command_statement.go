@@ -45,6 +45,10 @@ func (c *command) validStatementArgs(cmd *cobra.Command, args []string) []string
 		return nil
 	}
 
+	return c.validStatementArgsMultiple(cmd, args)
+}
+
+func (c *command) validStatementArgsMultiple(cmd *cobra.Command, args []string) []string {
 	if err := c.PersistentPreRunE(cmd, args); err != nil {
 		return nil
 	}
