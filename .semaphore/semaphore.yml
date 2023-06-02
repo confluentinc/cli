@@ -60,9 +60,8 @@ blocks:
             # - docker-machine create --driver virtualbox default
             # - docker-machine restart
             # - eval "$(docker-machine env default)"
-            - brew install docker
-            - brew install colima
-            - colima start
+            - brew install --cask docker
+            - open --background -a Docker
             - docker ps
         - name: darwin/amd64
           commands:
