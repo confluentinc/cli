@@ -62,6 +62,7 @@ blocks:
             # - eval "$(docker-machine env default)"
             - brew install docker
             - brew install colima
+            - colima start
             - docker ps
         - name: darwin/amd64
           commands:
