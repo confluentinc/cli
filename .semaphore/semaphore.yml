@@ -59,6 +59,7 @@ blocks:
             - cd ~
             - find . -name docker.raw.sock
             - find . -name docker.sock
+            - ls ~/Library/Containers
             - sudo ln -s ~/Library/Containers/com.docker.docker/Data/docker.raw.sock /var/run/docker.sock
             - export DOCKER_HOST=unix:///Users/$(whoami)/Library/Containers/com.docker.docker/Data/docker.raw.sock
             - sudo ln -sf $HOME/Library/Containers/com.docker.docker/Data/s60 /var/run/docker.sock
