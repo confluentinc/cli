@@ -55,8 +55,9 @@ blocks:
       jobs:
         - name: Docker check
           commands:
-            - rm -fr $(brew --repo homebrew/core)
-            - brew tap homebrew/core
+            # - rm -fr $(brew --repo homebrew/core)
+            # - brew tap homebrew/core
+            - brew doctor
             - brew install docker
             # - sudo ln -s ~/Library/Containers/com.docker.docker/Data/docker.raw.sock /var/run/docker.sock
             # - export DOCKER_HOST=unix:///Users/$(whoami)/Library/Containers/com.docker.docker/Data/docker.raw.sock
