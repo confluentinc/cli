@@ -61,6 +61,7 @@ blocks:
             # - docker-machine restart
             # - eval "$(docker-machine env default)"
             - brew install --cask docker
+            - export PATH=/Applications:$PATH
             - open --background -a Docker
             - docker ps
         - name: darwin/amd64
