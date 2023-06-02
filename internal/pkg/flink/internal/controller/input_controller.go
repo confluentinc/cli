@@ -220,6 +220,11 @@ func renderMsgAndStatus(statementResult *types.ProcessedStatement) {
 			output.Println("Error: Statement submission failed. There could a problem with the server right now. Check your statement and try again.")
 		}
 	}
+
+	// print status detail message if available
+	if statementResult.StatusDetail != "" {
+		output.Printf("Status detail: %s\n", statementResult.StatusDetail)
+	}
 }
 
 func (c *InputController) toggleSmartCompletion() {
