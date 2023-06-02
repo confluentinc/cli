@@ -30,9 +30,7 @@ type Scope struct {
 }
 
 func newScopedIdService(userAgent string) *ScopedIdService {
-	return &ScopedIdService{
-		userAgent: userAgent,
-	}
+	return &ScopedIdService{userAgent: userAgent}
 }
 
 func (s *ScopedIdService) DescribeCluster(url string, caCertPath string) (*ScopedId, error) {

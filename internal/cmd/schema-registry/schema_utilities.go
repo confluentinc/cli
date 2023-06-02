@@ -79,8 +79,7 @@ func ReadSchemaRefs(cmd *cobra.Command) ([]srsdk.SchemaReference, error) {
 		if err != nil {
 			return nil, err
 		}
-		err = json.Unmarshal(refBlob, &refs)
-		if err != nil {
+		if err := json.Unmarshal(refBlob, &refs); err != nil {
 			return nil, err
 		}
 	}
@@ -96,12 +95,10 @@ func StoreSchemaReferences(schemaDir string, refs []srsdk.SchemaReference, srCli
 			if err != nil {
 				return nil, err
 			}
-			err = os.MkdirAll(filepath.Dir(tempStorePath), 0755)
-			if err != nil {
+			if err := os.MkdirAll(filepath.Dir(tempStorePath), 0755); err != nil {
 				return nil, err
 			}
-			err = os.WriteFile(tempStorePath, []byte(schema.Schema), 0644)
-			if err != nil {
+			if err := os.WriteFile(tempStorePath, []byte(schema.Schema), 0644); err != nil {
 				return nil, err
 			}
 		}
@@ -137,8 +134,7 @@ func SetSchemaPathRef(schemaString srsdk.SchemaString, dir string, subject strin
 
 	if !utils.FileExists(tempStorePath) || !utils.FileExists(tempRefStorePath) {
 		// TODO: add handler for writing schema failure
-		err := os.WriteFile(tempStorePath, []byte(schemaString.Schema), 0644)
-		if err != nil {
+		if err := os.WriteFile(tempStorePath, []byte(schemaString.Schema), 0644); err != nil {
 			return "", nil, err
 		}
 
@@ -146,8 +142,7 @@ func SetSchemaPathRef(schemaString srsdk.SchemaString, dir string, subject strin
 		if err != nil {
 			return "", nil, err
 		}
-		err = os.WriteFile(tempRefStorePath, refBytes, 0644)
-		if err != nil {
+		if err := os.WriteFile(tempRefStorePath, refBytes, 0644); err != nil {
 			return "", nil, err
 		}
 		references = schemaString.References
@@ -156,8 +151,7 @@ func SetSchemaPathRef(schemaString srsdk.SchemaString, dir string, subject strin
 		if err != nil {
 			return "", nil, err
 		}
-		err = json.Unmarshal(refBlob, &references)
-		if err != nil {
+		if err := json.Unmarshal(refBlob, &references); err != nil {
 			return "", nil, err
 		}
 	}

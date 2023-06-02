@@ -50,8 +50,7 @@ func (c *serviceAccountCommand) delete(cmd *cobra.Command, args []string) error 
 		return err
 	}
 
-	err = c.V2Client.DeleteIamServiceAccount(serviceAccountId)
-	if err != nil {
+	if err := c.V2Client.DeleteIamServiceAccount(serviceAccountId); err != nil {
 		return errors.Errorf(errors.DeleteResourceErrorMsg, resource.ServiceAccount, serviceAccountId, err)
 	}
 
