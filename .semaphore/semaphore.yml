@@ -60,6 +60,7 @@ blocks:
             - sudo ln -s ~/Library/Containers/com.docker.docker/Data/docker.raw.sock /var/run/docker.sock
             - export DOCKER_HOST=unix:///Users/$(whoami)/Library/Containers/com.docker.docker/Data/docker.raw.sock
             - export PATH=/usr/local/share/zsh/site-functions:$PATH
+            - whereis docker
             - docker ps
         - name: darwin/amd64
           commands:
