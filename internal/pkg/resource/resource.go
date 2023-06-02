@@ -8,6 +8,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/types"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -75,6 +76,9 @@ var resourceToPrefix = map[string]string{
 	User:                  UserPrefix,
 }
 
+// Singular words ending w/ these suffixes generally add an extra -es syllable in their plural forms
+var pluralExtraSyllableSuffix = types.NewSet("s", "x", "z", "ch", "sh")
+
 func LookupType(resourceId string) string {
 	if resourceId == "cloud" {
 		return Cloud
@@ -137,11 +141,8 @@ func Plural(resource string) string {
 		return ""
 	}
 
-	if last := string(resource[len(resource)-1]); last == "s" || last == "x" || last == "z" {
-		return resource + "es"
-	}
-	if len(resource) > 1 {
-		if lastTwo := resource[len(resource)-2:]; lastTwo == "ch" || lastTwo == "sh" {
+	for suffix := range pluralExtraSyllableSuffix {
+		if strings.HasSuffix(resource, suffix) {
 			return resource + "es"
 		}
 	}
