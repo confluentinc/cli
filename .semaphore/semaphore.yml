@@ -55,18 +55,11 @@ blocks:
       jobs:
         - name: Docker check
           commands:
-            # - rm -fr $(brew --repo homebrew/core)
-            # - brew tap homebrew/core
-            - sudo chgrp -R admin /usr/local
-            - sudo chmod -R g+w /usr/local
-            - brew update
-            - brew install docker
-            # - sudo ln -s ~/Library/Containers/com.docker.docker/Data/docker.raw.sock /var/run/docker.sock
-            # - export DOCKER_HOST=unix:///Users/$(whoami)/Library/Containers/com.docker.docker/Data/docker.raw.sock
-            - export PATH=/usr/local/share/zsh/site-functions:$PATH
-            - export DOCKER_HOST=unix:///Users/$(whoami)/Library/Containers/com.docker.docker/Data/docker.raw.sock
-            - brew services start docker
-            - sudo ln -sf $HOME/Library/Containers/com.docker.docker/Data/s60 /var/run/docker.sock
+            - brew install --cask docker virtualbox
+            - brew install docker-machine
+            - docker-machine create --driver virtualbox default
+            - docker-machine restart
+            - eval "$(docker-machine env default)"
             - docker ps
         - name: darwin/amd64
           commands:
