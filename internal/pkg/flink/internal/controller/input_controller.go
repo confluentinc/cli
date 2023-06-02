@@ -121,7 +121,7 @@ func (c *InputController) RunInteractiveInput() {
 		})
 
 		processedStatement, err = c.store.WaitPendingStatement(ctx, *processedStatement)
-		if processedStatement.StatusDetail != "" {
+		if processedStatement != nil && processedStatement.StatusDetail != "" {
 			output.Printf("Status detail: %s\n", processedStatement.StatusDetail)
 		}
 		if err != nil {
