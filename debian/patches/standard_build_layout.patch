@@ -1,4 +1,4 @@
---- cli/Makefile	2023-05-23 15:11:15.472753760 -0700
+--- cli/Makefile	2023-06-01 12:00:04.208255647 -0700
 +++ debian/Makefile	2023-05-12 09:01:07.702951301 -0700
 @@ -1,121 +1,130 @@
 -SHELL := /bin/bash
@@ -153,9 +153,9 @@
 -unit-test:
 -ifdef CI
 -	go install gotest.tools/gotestsum@v1.8.2 && \
--	gotestsum --junitfile unit-test-report.xml -- -v -race -coverprofile coverage.out $$(go list ./... | grep -v test)
+-	gotestsum --junitfile unit-test-report.xml -- -v -race -coverprofile coverage.out $$(go list ./... | grep -v github.com/confluentinc/cli/test)
 -else
--	go test -v $$(go list ./... | grep -v test) $(UNIT_TEST_ARGS)
+-	go test -v $$(go list ./... | grep -v github.com/confluentinc/cli/test) $(UNIT_TEST_ARGS)
 -endif
 +	chown -R root:root $(DESTDIR)$(PREFIX)
  
@@ -183,7 +183,7 @@
 -	export GOCOVERDIR=test/coverage && \
 -	if [ -d $${GOCOVERDIR} ]; then rm -r $${GOCOVERDIR}; fi && \
 -	mkdir $${GOCOVERDIR} && \
--	gotestsum --junitfile integration-test-report.xml -- -v -race $$(go list ./... | grep test) && \
+-	gotestsum --junitfile integration-test-report.xml -- -v -race $$(go list ./... | grep github.com/confluentinc/cli/test) && \
 -	go tool covdata textfmt -i $${GOCOVERDIR} -o test/coverage.out
 +RPM_VERSION=$(shell echo $(VERSION) | sed -e 's/-alpha[0-9]*//' -e 's/-beta[0-9]*//' -e 's/-rc[0-9]*//' -e 's/-SNAPSHOT//' -e 's/-cp[0-9]*//' -e 's/-hotfix[0-9]*//' -e 's/-[0-9]*//')
 +
@@ -199,7 +199,7 @@
 +	RPM_RELEASE_POSTFIX_UNDERSCORE=_$(RPM_RELEASE_POSTFIX)
 +	RPM_RELEASE_ID=0.$(REVISION).$(RPM_RELEASE_POSTFIX)
  else
--	go test -v $$(go list ./... | grep test) $(INTEGRATION_TEST_ARGS)
+-	go test -v $$(go list ./... | grep github.com/confluentinc/cli/test) $(INTEGRATION_TEST_ARGS)
 +	RPM_RELEASE_ID=$(REVISION)
  endif
  

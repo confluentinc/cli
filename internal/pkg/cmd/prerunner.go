@@ -147,7 +147,12 @@ func (c *AuthenticatedCLICommand) GetFlinkGatewayClient() (*ccloudv2.FlinkGatewa
 			return nil, err
 		}
 
-		c.flinkGatewayClient = ccloudv2.NewFlinkGatewayClient(u.String(), c.Version.UserAgent, unsafeTrace, ctx.GetAuthToken())
+		c.flinkGatewayClient = ccloudv2.NewFlinkGatewayClient(
+			u.String(),
+			c.Version.UserAgent,
+			unsafeTrace,
+			ctx.GetAuthToken(),
+		)
 	}
 
 	return c.flinkGatewayClient, nil

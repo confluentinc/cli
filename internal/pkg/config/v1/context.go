@@ -263,6 +263,23 @@ func (c *Context) SetCurrentFlinkComputePool(id string) error {
 	return nil
 }
 
+func (c *Context) GetCurrentIdentityPool() string {
+	if ctx := c.GetCurrentEnvironmentContext(); ctx != nil {
+		return ctx.CurrentIdentityPool
+	}
+	return ""
+}
+
+func (c *Context) SetCurrentIdentityPool(id string) error {
+	ctx := c.GetCurrentEnvironmentContext()
+	if ctx == nil {
+		return fmt.Errorf("no environment found")
+	}
+
+	ctx.CurrentIdentityPool = id
+	return nil
+}
+
 func (c *Context) GetAuthToken() string {
 	if state := c.GetState(); state != nil {
 		return state.AuthToken
