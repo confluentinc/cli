@@ -7,6 +7,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/cmd/kafka"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 )
 
@@ -35,5 +36,10 @@ func (c *command) kafkaTopicDescribe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return kafka.DescribeTopicWithRestClient(cmd, restClient, context.Background(), args[0], clusterId)
+	err = kafka.DescribeTopicWithRestClient(cmd, restClient, context.Background(), args[0], clusterId)
+	if err != nil {
+		return errors.NewErrorWithSuggestions(err.Error(), kafkaRESTNotReadySuggestion)
+	}
+
+	return nil
 }

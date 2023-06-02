@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/cmd/kafka"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 )
 
@@ -34,7 +35,7 @@ func (c *command) newKafkaTopicCreateCommand() *cobra.Command {
 func (c *command) kafkaTopicCreate(cmd *cobra.Command, args []string) error {
 	restClient, clusterId, err := initKafkaRest(c.CLICommand, cmd)
 	if err != nil {
-		return err
+		return errors.NewErrorWithSuggestions(err.Error(), kafkaRESTNotReadySuggestion)
 	}
 
 	return kafka.CreateTopicWithRestClient(cmd, restClient, context.Background(), args[0], clusterId)

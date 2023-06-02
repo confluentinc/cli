@@ -50,6 +50,8 @@ func (c *command) kafkaStop(cmd *cobra.Command, args []string) error {
 				return err
 			}
 			log.CliLogger.Tracef("Confluent Local container removed")
+
+			output.Printf(errors.ConfluentLocalThankYouMsg)
 		}
 	}
 
@@ -57,6 +59,6 @@ func (c *command) kafkaStop(cmd *cobra.Command, args []string) error {
 	if err := c.Config.Save(); err != nil {
 		return errors.Wrap(err, "failed to remove local ports from config")
 	}
-	output.Printf(errors.ConfluentLocalThankYouMsg)
+
 	return nil
 }

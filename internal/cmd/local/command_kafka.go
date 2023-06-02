@@ -14,6 +14,7 @@ const (
 	confluentLocalContainerName = "confluent-local"
 	localhostPrefix             = "http://localhost:%s"
 	localhost                   = "localhost"
+	kafkaRESTNotReadySuggestion = "Kafka REST connection may not be ready yet. Rerunning the command is suppposed to solve the issue."
 )
 
 func (c *command) newKafkaCommand() *cobra.Command {
