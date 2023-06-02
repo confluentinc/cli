@@ -220,11 +220,11 @@ func TestStartsWithValidSQL(t *testing.T) {
 }
 
 func TestParseStatementType(t *testing.T) {
-	require.Equal(t, SET_STATEMENT, parseStatementType("set ..."))
-	require.Equal(t, USE_STATEMENT, parseStatementType("use ..."))
-	require.Equal(t, RESET_STATEMENT, parseStatementType("reset ..."))
-	require.Equal(t, EXIT_STATEMENT, parseStatementType("exit;"))
-	require.Equal(t, OTHER_STATEMENT, parseStatementType("Some other statement"))
+	require.Equal(t, SetStatement, parseStatementType("set ..."))
+	require.Equal(t, UseStatement, parseStatementType("use ..."))
+	require.Equal(t, ResetStatement, parseStatementType("reset ..."))
+	require.Equal(t, ExitStatement, parseStatementType("exit;"))
+	require.Equal(t, OtherStatement, parseStatementType("Some other statement"))
 }
 
 func hoursToSeconds(hours float32) int {

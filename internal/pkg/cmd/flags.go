@@ -290,8 +290,8 @@ func AutocompleteIdentityProviders(client *ccloudv2.Client) []string {
 	return suggestions
 }
 
-func AutocompleteIdentityPools(client *ccloudv2.Client, providerID string) []string {
-	identityPools, err := client.ListIdentityPools(providerID)
+func AutocompleteIdentityPools(client *ccloudv2.Client, providerId string) []string {
+	identityPools, err := client.ListIdentityPools(providerId)
 	if err != nil {
 		return nil
 	}
