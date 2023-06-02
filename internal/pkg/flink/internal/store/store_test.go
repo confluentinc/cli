@@ -654,7 +654,7 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWithCompletedStatement() {
 	require.Nil(s.T(), err)
 }
 
-func (s *StoreTestSuite) TestFetchResultsRetryWithRunningStatement() {
+func (s *StoreTestSuite) TestFetchResultsNoRetryWithRunningStatement() {
 	ctrl := gomock.NewController(s.T())
 	defer ctrl.Finish()
 
@@ -675,7 +675,7 @@ func (s *StoreTestSuite) TestFetchResultsRetryWithRunningStatement() {
 		Metadata: flinkgatewayv1alpha1.ResultListMeta{},
 		Results:  &flinkgatewayv1alpha1.SqlV1alpha1StatementResultResults{},
 	}
-	client.EXPECT().GetStatementResults("orgId", "envId", statement.StatementName, statement.PageToken).Return(statementResultObj, nil).Times(5)
+	client.EXPECT().GetStatementResults("orgId", "envId", statement.StatementName, statement.PageToken).Return(statementResultObj, nil)
 
 	statementResults, err := store.FetchStatementResults(statement)
 	require.NotNil(s.T(), statementResults)
