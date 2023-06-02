@@ -67,15 +67,15 @@ func (c *FlinkGatewayClient) CreateStatement(orgId, environmentId, computePoolId
 			Properties:     &properties,
 		},
 	}
-	createdStatement, r, err := c.StatementsSqlV1alpha1Api.CreateSqlV1alpha1Statement(c.flinkGatewayApiContext(), environmentId).SqlV1alpha1Statement(statementObj).OrgId(orgId).Execute()
-	return createdStatement, errors.CatchCCloudV2Error(err, r)
+	res, r, err := c.StatementsSqlV1alpha1Api.CreateSqlV1alpha1Statement(c.flinkGatewayApiContext(), environmentId).SqlV1alpha1Statement(statementObj).OrgId(orgId).Execute()
+	return res, errors.CatchCCloudV2Error(err, r)
 }
 
 func (c *FlinkGatewayClient) GetStatementResults(orgId, environmentId, statementId, pageToken string) (flinkgatewayv1alpha1.SqlV1alpha1StatementResult, error) {
-	fetchResultsRequest := c.StatementResultSqlV1alpha1Api.GetSqlV1alpha1StatementResult(c.flinkGatewayApiContext(), environmentId, statementId).OrgId(orgId)
+	req := c.StatementResultSqlV1alpha1Api.GetSqlV1alpha1StatementResult(c.flinkGatewayApiContext(), environmentId, statementId).OrgId(orgId)
 	if pageToken != "" {
-		fetchResultsRequest = fetchResultsRequest.PageToken(pageToken)
+		req = req.PageToken(pageToken)
 	}
-	result, r, err := fetchResultsRequest.Execute()
-	return result, errors.CatchCCloudV2Error(err, r)
+	res, r, err := req.Execute()
+	return res, errors.CatchCCloudV2Error(err, r)
 }
