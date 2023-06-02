@@ -58,13 +58,7 @@ const (
 	KsqlDBNotBackedByKafkaMsg = "The ksqlDB cluster \"%s\" is backed by \"%s\" which is not the current Kafka cluster \"%s\".\nTo switch to the correct cluster, use `confluent kafka cluster use %s`.\n"
 
 	// local commands
-	AvailableServicesMsg       = "Available Services:\n%s\n"
-	UsingConfluentCurrentMsg   = "Using CONFLUENT_CURRENT: %s\n"
-	AvailableConnectPluginsMsg = "Available Connect Plugins:\n%s\n"
-	StartingServiceMsg         = "Starting %s\n"
-	StoppingServiceMsg         = "Stopping %s\n"
-	ServiceStatusMsg           = "%s is [%s]\n"
-	DestroyDeletingMsg         = "Deleting: %s\n"
+	ConfluentLocalThankYouMsg = "Thank you for using Confluent Local.\n"
 
 	// schema-registry commands
 	UpdatedToLevelCompatibilityMsg      = "Successfully updated Top Level compatibility to \"%s\"\n"
