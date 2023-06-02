@@ -104,34 +104,24 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 	}
 
 	// Process remote statements that are now running or completed
-	pageToken := statement.PageToken
-	runningNoTokenRetries := 5
-	for i := 0; i < runningNoTokenRetries; i++ {
-		// TODO: we need to retry a few times on transient errors
-		statementResultObj, err := s.client.GetStatementResults(s.appOptions.GetOrgResourceId(), s.appOptions.GetEnvId(), statement.StatementName, pageToken)
-		if err != nil {
-			return nil, &types.StatementError{Msg: err.Error()}
-		}
-
-		statementResults := statementResultObj.GetResults()
-		convertedResults, err := results.ConvertToInternalResults(statementResults.GetData(), statement.ResultSchema)
-		if err != nil {
-			return nil, &types.StatementError{Msg: "Error: " + err.Error()}
-		}
-		statement.StatementResults = convertedResults
-
-		statementMetadata := statementResultObj.GetMetadata()
-		extractedToken, err := extractPageToken(statementMetadata.GetNext())
-		if err != nil {
-			return nil, &types.StatementError{Msg: "Error: " + err.Error()}
-		}
-		statement.PageToken = extractedToken
-		if statement.Status == types.COMPLETED || statement.PageToken != "" || len(statementResults.GetData()) > 0 {
-			// We try a few times to get non-empty token for RUNNING statements
-			break
-		}
-		time.Sleep(time.Millisecond * 300)
+	statementResultObj, err := s.client.GetStatementResults(s.appOptions.GetOrgResourceId(), s.appOptions.GetEnvId(), statement.StatementName, statement.PageToken)
+	if err != nil {
+		return nil, &types.StatementError{Msg: err.Error()}
 	}
+
+	statementResults := statementResultObj.GetResults()
+	convertedResults, err := results.ConvertToInternalResults(statementResults.GetData(), statement.ResultSchema)
+	if err != nil {
+		return nil, &types.StatementError{Msg: "Error: " + err.Error()}
+	}
+	statement.StatementResults = convertedResults
+
+	statementMetadata := statementResultObj.GetMetadata()
+	extractedToken, err := extractPageToken(statementMetadata.GetNext())
+	if err != nil {
+		return nil, &types.StatementError{Msg: "Error: " + err.Error()}
+	}
+	statement.PageToken = extractedToken
 	return &statement, nil
 }
 
