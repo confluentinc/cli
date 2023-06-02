@@ -33,8 +33,8 @@ func (c *command) newKafkaTopicDeleteCommand() *cobra.Command {
 func (c *command) kafkaTopicDelete(cmd *cobra.Command, args []string) error {
 	restClient, clusterId, err := initKafkaRest(c.CLICommand, cmd)
 	if err != nil {
-		return errors.NewErrorWithSuggestions(err.Error(), kafkaRESTNotReadySuggestion)
+		return errors.NewErrorWithSuggestions(err.Error(), kafkaRestNotReadySuggestion)
 	}
 
-	return kafka.DeleteTopicWithRestClient(cmd, restClient, context.Background(), args[0], clusterId)
+	return kafka.DeleteTopic(cmd, restClient, context.Background(), args[0], clusterId)
 }

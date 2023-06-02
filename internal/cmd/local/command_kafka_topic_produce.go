@@ -35,7 +35,7 @@ func (c *command) newKafkaTopicProduceCommand() *cobra.Command {
 	cmd.Flags().Bool("parse-key", false, "Parse key from the message.")
 	cmd.Flags().String("delimiter", ":", "The delimiter separating each key and value.")
 	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the producer client.`)
-	cmd.Flags().String("config-file", "", "The path to the configuration file (in JSON or avro format) for the producer client.")
+	cmd.Flags().String("config-file", "", "The path to the configuration file for the producer client, in JSON or avro format.")
 
 	cobra.CheckErr(cmd.MarkFlagFilename("config-file", "avsc", "json"))
 

@@ -10,11 +10,11 @@ import (
 )
 
 const (
-	confluentLocalImageName     = "confluentinc/confluent-local:latest"
+	dockerImageName             = "confluentinc/confluent-local:latest"
 	confluentLocalContainerName = "confluent-local"
 	localhostPrefix             = "http://localhost:%s"
 	localhost                   = "localhost"
-	kafkaRESTNotReadySuggestion = "Kafka REST connection may not be ready yet. Rerunning the command is suppposed to solve the issue."
+	kafkaRestNotReadySuggestion = "Kafka REST connection is not ready. Re-running the command may solve the issue."
 )
 
 func (c *command) newKafkaCommand() *cobra.Command {
@@ -25,7 +25,7 @@ func (c *command) newKafkaCommand() *cobra.Command {
 
 	cmd.AddCommand(c.newKafkaStartCommand())
 	cmd.AddCommand(c.newKafkaStopCommand())
-	cmd.AddCommand(c.newTopicCommand())
+	cmd.AddCommand(c.newKafkaTopicCommand())
 
 	return cmd
 }

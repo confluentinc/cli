@@ -39,7 +39,7 @@ func (c *command) kafkaStop(cmd *cobra.Command, args []string) error {
 	}
 
 	for _, container := range containers {
-		if container.Image == confluentLocalImageName {
+		if container.Image == dockerImageName {
 			log.CliLogger.Tracef("Stopping Confluent Local container " + getShortenedContainerId(container.ID))
 			noWaitTimeout := 0 // to not wait for the container to exit gracefully
 			if err := dockerClient.ContainerStop(context.Background(), container.ID, containertypes.StopOptions{Timeout: &noWaitTimeout}); err != nil {
@@ -51,7 +51,7 @@ func (c *command) kafkaStop(cmd *cobra.Command, args []string) error {
 			}
 			log.CliLogger.Tracef("Confluent Local container removed")
 
-			output.Printf(errors.ConfluentLocalThankYouMsg)
+			output.Printf("Stopped Confluent Local container %v.\n", getShortenedContainerId(container.ID))
 		}
 	}
 

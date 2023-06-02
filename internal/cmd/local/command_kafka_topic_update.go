@@ -34,8 +34,8 @@ func (c *command) newKafkaTopicUpdateCommand() *cobra.Command {
 func (c *command) kafkaTopicUpdate(cmd *cobra.Command, args []string) error {
 	restClient, clusterId, err := initKafkaRest(c.CLICommand, cmd)
 	if err != nil {
-		return errors.NewErrorWithSuggestions(err.Error(), kafkaRESTNotReadySuggestion)
+		return errors.NewErrorWithSuggestions(err.Error(), kafkaRestNotReadySuggestion)
 	}
 
-	return kafka.UpdateTopicWithRestClient(cmd, restClient, context.Background(), args[0], clusterId)
+	return kafka.UpdateTopic(cmd, restClient, context.Background(), args[0], clusterId)
 }

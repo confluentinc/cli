@@ -67,10 +67,10 @@ func (c *authenticatedTopicCommand) describeOnPrem(cmd *cobra.Command, args []st
 		return err
 	}
 
-	return DescribeTopicWithRestClient(cmd, restClient, restContext, topicName, clusterId)
+	return DescribeTopic(cmd, restClient, restContext, topicName, clusterId)
 }
 
-func DescribeTopicWithRestClient(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restContext context.Context, topicName, clusterId string) error {
+func DescribeTopic(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restContext context.Context, topicName, clusterId string) error {
 	// Get partitions
 	partitionsResp, resp, err := restClient.PartitionV3Api.ListKafkaPartitions(restContext, clusterId, topicName)
 	if err != nil {

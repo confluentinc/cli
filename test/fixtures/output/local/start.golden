@@ -4,4 +4,4 @@ The local commands are intended for a single-node development environment only, 
 {"status":"Digest: sha256:[a-zA-Z0-9]*."}
 {"status":"Status: Image is up to date for confluentinc/confluent-local:latest"}
 Started Confluent Local container [a-zA-Z0-9]*.
-Continue your experience with Confluent Local running `confluent local kafka topic create test` and `confluent local kafka topic produce test`.
+To continue your Confluent Local experience, run `confluent local kafka topic create test` and `confluent local kafka topic produce test`.

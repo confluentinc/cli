@@ -21,6 +21,7 @@ var commandRules = []linter.CommandRule{
 	linter.Filter(linter.RequireSingular("Name"),
 		linter.ExcludeCommand("kafka client-config create nodejs")),
 
+	linter.RequireCapitalizeProperNouns("Short", properNouns),
 	linter.RequireEndWithPunctuation("Short", false),
 	linter.Filter(linter.RequireNotTitleCase("Short", properNouns)),
 	linter.RequireStartWithCapital("Short"),

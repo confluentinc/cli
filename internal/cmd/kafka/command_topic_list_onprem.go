@@ -49,10 +49,10 @@ func (c *authenticatedTopicCommand) listOnPrem(cmd *cobra.Command, _ []string) e
 		return err
 	}
 
-	return ListTopicsWithRestClient(cmd, restClient, restContext, clusterId)
+	return ListTopics(cmd, restClient, restContext, clusterId)
 }
 
-func ListTopicsWithRestClient(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restContext context.Context, clusterId string) error {
+func ListTopics(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restContext context.Context, clusterId string) error {
 	topicList, resp, err := restClient.TopicV3Api.ListKafkaTopics(restContext, clusterId)
 	if err != nil {
 		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)

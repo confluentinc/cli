@@ -57,9 +57,6 @@ const (
 	EndPointNotPopulatedMsg   = "Endpoint not yet populated. To obtain the endpoint, use `confluent ksql cluster describe`."
 	KsqlDBNotBackedByKafkaMsg = "The ksqlDB cluster \"%s\" is backed by \"%s\" which is not the current Kafka cluster \"%s\".\nTo switch to the correct cluster, use `confluent kafka cluster use %s`.\n"
 
-	// local commands
-	ConfluentLocalThankYouMsg = "Thank you for using Confluent Local.\n"
-
 	// schema-registry commands
 	UpdatedToLevelCompatibilityMsg      = "Successfully updated Top Level compatibility to \"%s\"\n"
 	UpdatedTopLevelModeMsg              = "Successfully updated Top Level mode to \"%s\"\n"

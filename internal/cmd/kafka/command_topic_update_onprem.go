@@ -54,10 +54,10 @@ func (c *authenticatedTopicCommand) updateOnPrem(cmd *cobra.Command, args []stri
 		return err
 	}
 
-	return UpdateTopicWithRestClient(cmd, restClient, restContext, topicName, clusterId)
+	return UpdateTopic(cmd, restClient, restContext, topicName, clusterId)
 }
 
-func UpdateTopicWithRestClient(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restContext context.Context, topicName, clusterId string) error {
+func UpdateTopic(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restContext context.Context, topicName, clusterId string) error {
 	// Update Config
 	configs, err := cmd.Flags().GetStringSlice("config") // handle config parsing errors
 	if err != nil {

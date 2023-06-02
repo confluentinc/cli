@@ -43,7 +43,7 @@ func (c *command) kafkaStart(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	out, err := dockerClient.ImagePull(context.Background(), confluentLocalImageName, types.ImagePullOptions{})
+	out, err := dockerClient.ImagePull(context.Background(), dockerImageName, types.ImagePullOptions{})
 	if err != nil {
 		return err
 	}
@@ -54,8 +54,7 @@ func (c *command) kafkaStart(cmd *cobra.Command, args []string) error {
 	}
 	log.CliLogger.Tracef("Pull confluent-local image success")
 
-	err = c.prepareAndSaveLocalPorts()
-	if err != nil {
+	if err := c.prepareAndSaveLocalPorts(); err != nil {
 		return err
 	}
 
@@ -67,7 +66,7 @@ func (c *command) kafkaStart(cmd *cobra.Command, args []string) error {
 	natKafkaRestPort := nat.Port(ports.KafkaRestPort + "/tcp")
 	natPlaintextPort := nat.Port(ports.PlaintextPort + "/tcp")
 	config := &container.Config{
-		Image:    confluentLocalImageName,
+		Image:    dockerImageName,
 		Hostname: "broker",
 		Cmd:      strslice.StrSlice{"bash", "-c", "'/etc/confluent/docker/run'"},
 		ExposedPorts: nat.PortSet{
@@ -76,21 +75,20 @@ func (c *command) kafkaStart(cmd *cobra.Command, args []string) error {
 		},
 		Env: getContainerEnvironmentWithPorts(ports),
 	}
-	hostConfig := &container.HostConfig{
-		PortBindings: nat.PortMap{
-			natKafkaRestPort: []nat.PortBinding{
-				{
-					HostIP:   localhost,
-					HostPort: ports.KafkaRestPort,
-				},
-			},
-			natPlaintextPort: []nat.PortBinding{
-				{
-					HostIP:   localhost,
-					HostPort: ports.PlaintextPort,
-				},
+	hostConfig := &container.HostConfig{PortBindings: nat.PortMap{
+		natKafkaRestPort: []nat.PortBinding{
+			{
+				HostIP:   localhost,
+				HostPort: ports.KafkaRestPort,
 			},
 		},
+		natPlaintextPort: []nat.PortBinding{
+			{
+				HostIP:   localhost,
+				HostPort: ports.PlaintextPort,
+			},
+		},
+	},
 	}
 
 	createResp, err := dockerClient.ContainerCreate(context.Background(), config, hostConfig, nil, platform, confluentLocalContainerName)
@@ -104,7 +102,7 @@ func (c *command) kafkaStart(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	output.Printf("Started Confluent Local container %v.\nContinue your experience with Confluent Local running `confluent local kafka topic create test` and `confluent local kafka topic produce test`.\n", getShortenedContainerId(createResp.ID))
+	output.Printf("Started Confluent Local container %v.\nTo continue your Confluent Local experience, run `confluent local kafka topic create test` and `confluent local kafka topic produce test`.\n", getShortenedContainerId(createResp.ID))
 	return nil
 }
 
