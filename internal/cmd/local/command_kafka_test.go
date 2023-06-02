@@ -10,7 +10,7 @@ import (
 
 func TestStartContainer(t *testing.T) {
 	if runtime.GOOS == "darwin" {
-		s.T().Skip()
+		return
 	}
 
 	req := require.New(t)
