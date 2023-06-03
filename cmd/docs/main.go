@@ -68,6 +68,18 @@ func removeUnreleasedDocs() {
 	if err := os.RemoveAll(filepath.Join("docs", "stream-share")); err != nil {
 		panic(err)
 	}
+
+	if err := removeLineFromFile(`\s{3}flink/index\n`, filepath.Join("docs", "index.rst")); err != nil {
+		panic(err)
+	}
+
+	if err := removeLineFromFile("\\s{7}:ref:`confluent_flink`\\s+.+\\s+\n", filepath.Join("docs", "overview.rst")); err != nil {
+		panic(err)
+	}
+
+	if err := os.RemoveAll(filepath.Join("docs", "flink")); err != nil {
+		panic(err)
+	}
 }
 
 func removeLineFromFile(line, file string) error {
