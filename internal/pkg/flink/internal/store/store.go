@@ -34,13 +34,13 @@ type Store struct {
 
 func (s *Store) ProcessLocalStatement(statement string) (*types.ProcessedStatement, *types.StatementError) {
 	switch statementType := parseStatementType(statement); statementType {
-	case SET_STATEMENT:
+	case SetStatement:
 		return s.processSetStatement(statement)
-	case RESET_STATEMENT:
+	case ResetStatement:
 		return s.processResetStatement(statement)
-	case USE_STATEMENT:
+	case UseStatement:
 		return s.processUseStatement(statement)
-	case EXIT_STATEMENT:
+	case ExitStatement:
 		s.exitApplication()
 		return nil, nil
 	default:

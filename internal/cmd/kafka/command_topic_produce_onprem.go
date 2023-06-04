@@ -1,7 +1,6 @@
 package kafka
 
 import (
-	"bufio"
 	"fmt"
 	"os"
 	"os/signal"
@@ -47,7 +46,7 @@ func (c *authenticatedTopicCommand) newProduceCommandOnPrem() *cobra.Command {
 	cmd.Flags().Bool("parse-key", false, "Parse key from the message.")
 	cmd.Flags().String("delimiter", ":", "The delimiter separating each key and value.")
 	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the producer client.`)
-	cmd.Flags().String("config-file", "", "The path to the configuration file (in json or avro format) for the producer client.")
+	cmd.Flags().String("config-file", "", "The path to the configuration file for the producer client, in JSON or avro format.")
 	cmd.Flags().String("schema-registry-endpoint", "", "The URL of the Schema Registry cluster.")
 	pcmd.AddOutputFlag(cmd)
 
@@ -93,7 +92,7 @@ func (c *authenticatedTopicCommand) produceOnPrem(cmd *cobra.Command, args []str
 	defer adminClient.Close()
 
 	topicName := args[0]
-	if err := c.validateTopic(adminClient, topicName); err != nil {
+	if err := ValidateTopic(adminClient, topicName); err != nil {
 		return err
 	}
 
@@ -137,28 +136,8 @@ func (c *authenticatedTopicCommand) produceOnPrem(cmd *cobra.Command, args []str
 
 	output.ErrPrintln(errors.StartingProducerMsg)
 
-	// Line reader for producer input.
-	scanner := bufio.NewScanner(os.Stdin)
-	// On-prem Kafka messageMaxBytes: using the same value of cloud. TODO: allow larger sizes if customers request
-	// https://github.com/confluentinc/cc-spec-kafka/blob/9f0af828d20e9339aeab6991f32d8355eb3f0776/plugins/kafka/kafka.go#L43.
-	const maxScanTokenSize = 1024*1024*2 + 12
-	scanner.Buffer(nil, maxScanTokenSize)
-	input := make(chan string, 1)
-	// Avoid blocking in for loop so ^C or ^D can exit immediately.
 	var scanErr error
-	scan := func() {
-		hasNext := scanner.Scan()
-		if !hasNext {
-			// Actual error.
-			if scanner.Err() != nil {
-				scanErr = scanner.Err()
-			}
-			// Otherwise just EOF.
-			close(input)
-		} else {
-			input <- scanner.Text()
-		}
-	}
+	input, scan := PrepareInputChannel(&scanErr)
 
 	signals := make(chan os.Signal, 1) // Trap SIGINT to trigger a shutdown.
 	signal.Notify(signals, os.Interrupt)
@@ -175,7 +154,7 @@ func (c *authenticatedTopicCommand) produceOnPrem(cmd *cobra.Command, args []str
 			continue
 		}
 
-		msg, err := getProduceMessage(cmd, metaInfo, topicName, data, serializationProvider)
+		msg, err := GetProduceMessage(cmd, metaInfo, topicName, data, serializationProvider)
 		if err != nil {
 			return err
 		}

@@ -21,7 +21,8 @@ func (c *command) newShellCommand(prerunner pcmd.PreRunner) *cobra.Command {
 			return c.startFlinkSqlClient(prerunner, cmd)
 		},
 	}
-	cmd.Flags().String("compute-pool", "", "Flink compute pool ID.")
+
+	c.addComputePoolFlag(cmd)
 	cmd.Flags().String("identity-pool", "", "Identity pool ID.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -56,7 +57,7 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 	}
 	if computePool == "" {
 		if c.Context.GetCurrentFlinkComputePool() == "" {
-			return errors.NewErrorWithSuggestions("No compute pool set", "Please set a compute pool to be used. You can either set a default persitent compute pool \"confluent flink compute-pool use lfc-123\" or pass the flag \"--compute-pool lfcp-12345\".")
+			return errors.NewErrorWithSuggestions("no compute pool selected", "Select a compute pool with `confluent flink compute-pool use` or `--compute-pool`.")
 		}
 		computePool = c.Context.GetCurrentFlinkComputePool()
 	}

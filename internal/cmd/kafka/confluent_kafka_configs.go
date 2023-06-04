@@ -22,9 +22,9 @@ type kafkaClientConfigs struct {
 	configurations map[string]string
 }
 
-type partitionFilter struct {
-	changed bool
-	index   int32
+type PartitionFilter struct {
+	Changed bool
+	Index   int32
 }
 
 func getCommonConfig(kafka *configv1.KafkaClusterConfig, clientID string) *ckafka.ConfigMap {
@@ -47,7 +47,7 @@ func getProducerConfigMap(kafka *configv1.KafkaClusterConfig, clientID string) (
 	if err := configMap.SetKey("request.timeout.ms", "10000"); err != nil {
 		return nil, err
 	}
-	if err := setProducerDebugOption(configMap); err != nil {
+	if err := SetProducerDebugOption(configMap); err != nil {
 		return nil, err
 	}
 	return configMap, nil
@@ -64,7 +64,7 @@ func getConsumerConfigMap(group string, kafka *configv1.KafkaClusterConfig, clie
 	if err := configMap.SetKey("partition.assignment.strategy", "cooperative-sticky"); err != nil {
 		return nil, err
 	}
-	if err := setConsumerDebugOption(configMap); err != nil {
+	if err := SetConsumerDebugOption(configMap); err != nil {
 		return nil, err
 	}
 	return configMap, nil
@@ -98,7 +98,7 @@ func getOnPremProducerConfigMap(cmd *cobra.Command, clientID string) (*ckafka.Co
 		return nil, err
 	}
 
-	if err := setProducerDebugOption(configMap); err != nil {
+	if err := SetProducerDebugOption(configMap); err != nil {
 		return nil, err
 	}
 
@@ -133,7 +133,7 @@ func getOnPremConsumerConfigMap(cmd *cobra.Command, clientID string) (*ckafka.Co
 		return nil, err
 	}
 
-	if err := setConsumerDebugOption(configMap); err != nil {
+	if err := SetConsumerDebugOption(configMap); err != nil {
 		return nil, err
 	}
 
@@ -238,7 +238,7 @@ func promptForSASLAuth(cmd *cobra.Command) (string, string, error) {
 	return f.Responses["username"].(string), f.Responses["password"].(string), nil
 }
 
-func getOffsetWithFallback(cmd *cobra.Command) (ckafka.Offset, error) {
+func GetOffsetWithFallback(cmd *cobra.Command) (ckafka.Offset, error) {
 	if cmd.Flags().Changed("offset") {
 		offset, err := cmd.Flags().GetInt64("offset")
 		if err != nil {
@@ -261,11 +261,11 @@ func getOffsetWithFallback(cmd *cobra.Command) (ckafka.Offset, error) {
 	}
 }
 
-func getPartitionsByIndex(partitions []ckafka.TopicPartition, partitionFilter partitionFilter) []ckafka.TopicPartition {
-	if partitionFilter.changed {
+func getPartitionsByIndex(partitions []ckafka.TopicPartition, partitionFilter PartitionFilter) []ckafka.TopicPartition {
+	if partitionFilter.Changed {
 		for _, partition := range partitions {
-			if partition.Partition == partitionFilter.index {
-				log.CliLogger.Debugf("Consuming from partition: %d", partitionFilter.index)
+			if partition.Partition == partitionFilter.Index {
+				log.CliLogger.Debugf("Consuming from partition: %d", partitionFilter.Index)
 				return []ckafka.TopicPartition{partition}
 			}
 		}
@@ -274,7 +274,7 @@ func getPartitionsByIndex(partitions []ckafka.TopicPartition, partitionFilter pa
 	return partitions
 }
 
-func setProducerDebugOption(configMap *ckafka.ConfigMap) error {
+func SetProducerDebugOption(configMap *ckafka.ConfigMap) error {
 	switch log.CliLogger.Level {
 	case log.DEBUG:
 		return configMap.Set("debug=broker, topic, msg, protocol")
@@ -284,7 +284,7 @@ func setProducerDebugOption(configMap *ckafka.ConfigMap) error {
 	return nil
 }
 
-func setConsumerDebugOption(configMap *ckafka.ConfigMap) error {
+func SetConsumerDebugOption(configMap *ckafka.ConfigMap) error {
 	switch log.CliLogger.Level {
 	case log.DEBUG:
 		return configMap.Set("debug=broker, topic, msg, protocol, consumer, cgrp, fetch")
@@ -295,7 +295,7 @@ func setConsumerDebugOption(configMap *ckafka.ConfigMap) error {
 }
 
 func newProducerWithOverwrittenConfigs(configMap *ckafka.ConfigMap, configPath string, configStrings []string) (*ckafka.Producer, error) {
-	if err := overwriteKafkaClientConfigs(configMap, configPath, configStrings); err != nil {
+	if err := OverwriteKafkaClientConfigs(configMap, configPath, configStrings); err != nil {
 		return nil, err
 	}
 
@@ -303,14 +303,14 @@ func newProducerWithOverwrittenConfigs(configMap *ckafka.ConfigMap, configPath s
 }
 
 func newConsumerWithOverwrittenConfigs(configMap *ckafka.ConfigMap, configPath string, configStrings []string) (*ckafka.Consumer, error) {
-	if err := overwriteKafkaClientConfigs(configMap, configPath, configStrings); err != nil {
+	if err := OverwriteKafkaClientConfigs(configMap, configPath, configStrings); err != nil {
 		return nil, err
 	}
 
 	return ckafka.NewConsumer(configMap)
 }
 
-func overwriteKafkaClientConfigs(configMap *ckafka.ConfigMap, configPath string, configs []string) error {
+func OverwriteKafkaClientConfigs(configMap *ckafka.ConfigMap, configPath string, configs []string) error {
 	configurations := make(map[string]string)
 	if configPath != "" {
 		configFile, err := os.Open(configPath)

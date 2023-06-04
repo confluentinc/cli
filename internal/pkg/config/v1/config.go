@@ -82,6 +82,7 @@ type Config struct {
 	ContextStates       map[string]*ContextState    `json:"context_states,omitempty"`
 	AnonymousId         string                      `json:"anonymous_id,omitempty"`
 	SavedCredentials    map[string]*LoginCredential `json:"saved_credentials,omitempty"`
+	LocalPorts          *LocalPorts                 `json:"local_ports,omitempty"`
 
 	// The following configurations are not persisted between runs
 
