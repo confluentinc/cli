@@ -41,7 +41,7 @@ func (c *pluginCommand) newInstallCommand() *cobra.Command {
 				Code: "confluent connect plugin install confluentinc/kafka-connect-datagen:latest",
 			},
 			examples.Example{
-				Text: "Install the latest release of the Datagen connector in a user specified directory and update one worker-config file.",
+				Text: "Install the latest version of the Datagen connector in a user specified directory and update one worker-config file.",
 				Code: "confluent connect plugin install confluentinc/kafka-connect-datagen:latest --plugin-directory $CONFLUENT_HOME/plugins --worker-configs $CONFLUENT_HOME/etc/kafka/connect-distributed.properties",
 			},
 		),
