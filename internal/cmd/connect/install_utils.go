@@ -187,9 +187,7 @@ func findInstallationDirectories() ([]platformInstallation, error) {
 		result = append(result, installation)
 	}
 
-	unique := compactDuplicateInstallations(result)
-
-	return unique, nil
+	return compactDuplicateInstallations(result), nil
 }
 
 func hasArchiveInstallation(dir string) bool {
