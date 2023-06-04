@@ -1,6 +1,6 @@
 package testserver
 
-import (
+/*import (
 	"crypto/md5"
 	"crypto/sha1"
 	"encoding/json"
@@ -126,4 +126,4 @@ func handleHubPluginArchive(t *testing.T) http.HandlerFunc {
 			w.WriteHeader(http.StatusNoContent)
 		}
 	}
-}
+}*/

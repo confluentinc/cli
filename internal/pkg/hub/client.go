@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/go-retryablehttp"
 
 	"github.com/confluentinc/cli/internal/pkg/log"
-	testserver "github.com/confluentinc/cli/test/test-server"
+	// testserver "github.com/confluentinc/cli/test/test-server"
 )
 
 type Client struct {
@@ -17,9 +17,9 @@ type Client struct {
 
 func NewClient(isTest, unsafeTrace bool) *Client {
 	url := "https://api.hub.confluent.io"
-	if isTest {
+	/*if isTest {
 		url = testserver.TestHubUrl.String()
-	}
+	}*/
 
 	client := retryablehttp.NewClient()
 	client.Logger = log.NewLeveledLogger(unsafeTrace)
