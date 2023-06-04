@@ -2,7 +2,6 @@ package kafka
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/spf13/cobra"
 
@@ -52,7 +51,7 @@ func (c *authenticatedTopicCommand) deleteOnPrem(cmd *cobra.Command, args []stri
 }
 
 func DeleteTopic(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restContext context.Context, args []string, clusterId string) error {
-	if err := c.confirmDeletionOnPrem(cmd, restClient, restContext, clusterId, args); err != nil {
+	if err := confirmDeletionOnPrem(cmd, restClient, restContext, clusterId, args); err != nil {
 		return err
 	}
 
@@ -67,7 +66,7 @@ func DeleteTopic(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restCont
 	return err
 }
 
-func (c *authenticatedTopicCommand) confirmDeletionOnPrem(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restContext context.Context, clusterId string, args []string) error {
+func confirmDeletionOnPrem(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restContext context.Context, clusterId string, args []string) error {
 	describeFunc := func(id string) error {
 		_, _, err := restClient.TopicV3Api.GetKafkaTopic(restContext, clusterId, id)
 		return err
