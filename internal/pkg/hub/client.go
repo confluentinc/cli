@@ -7,7 +7,6 @@ import (
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
-// Client represents a Confluent Cloud Client as defined by ccloud-sdk-go-v2
 type Client struct {
 	URL    string
 	Debug  bool
