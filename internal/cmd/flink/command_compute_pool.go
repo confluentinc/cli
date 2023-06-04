@@ -45,6 +45,10 @@ func (c *command) validComputePoolArgs(cmd *cobra.Command, args []string) []stri
 		return nil
 	}
 
+	return c.validComputePoolArgsMultiple(cmd, args)
+}
+
+func (c *command) validComputePoolArgsMultiple(cmd *cobra.Command, args []string) []string {
 	if err := c.PersistentPreRunE(cmd, args); err != nil {
 		return nil
 	}

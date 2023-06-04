@@ -2,26 +2,23 @@ package kafka
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
-	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *authenticatedTopicCommand) newDeleteCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delete <topic>",
-		Short: "Delete a Kafka topic.",
-		Args:  cobra.ExactArgs(1),
+		Use:   "delete <topic-1> [topic-2] ... [topic-n]",
+		Short: "Delete Kafka topics.",
+		Args:  cobra.MinimumNArgs(1),
 		RunE:  c.deleteOnPrem,
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -41,7 +38,6 @@ func (c *authenticatedTopicCommand) newDeleteCommandOnPrem() *cobra.Command {
 }
 
 func (c *authenticatedTopicCommand) deleteOnPrem(cmd *cobra.Command, args []string) error {
-	topicName := args[0]
 	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err
@@ -51,23 +47,44 @@ func (c *authenticatedTopicCommand) deleteOnPrem(cmd *cobra.Command, args []stri
 		return err
 	}
 
-	return DeleteTopic(cmd, restClient, restContext, topicName, clusterId)
+	return DeleteTopic(cmd, restClient, restContext, args, clusterId)
 }
 
-func DeleteTopic(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restContext context.Context, topicName, clusterId string) error {
-	if _, resp, err := restClient.TopicV3Api.GetKafkaTopic(restContext, clusterId, topicName); err != nil {
-		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
-	}
-
-	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.Topic, topicName, topicName)
-	if _, err := form.ConfirmDeletion(cmd, promptMsg, topicName); err != nil {
+func DeleteTopic(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restContext context.Context, args []string, clusterId string) error {
+	if err := confirmDeletionOnPrem(cmd, restClient, restContext, clusterId, args); err != nil {
 		return err
 	}
 
-	if resp, err := restClient.TopicV3Api.DeleteKafkaTopic(restContext, clusterId, topicName); err != nil {
-		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
+	deleted, err := resource.Delete(args, func(id string) error {
+		if r, err := restClient.TopicV3Api.DeleteKafkaTopic(restContext, clusterId, id); err != nil {
+			return kafkarest.NewError(restClient.GetConfig().BasePath, err, r)
+		}
+		return nil
+	}, resource.DefaultPostProcess)
+	resource.PrintDeleteSuccessMsg(deleted, resource.Topic)
+
+	return err
+}
+
+func confirmDeletionOnPrem(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restContext context.Context, clusterId string, args []string) error {
+	describeFunc := func(id string) error {
+		_, _, err := restClient.TopicV3Api.GetKafkaTopic(restContext, clusterId, id)
+		return err
 	}
 
-	output.Printf(errors.DeletedResourceMsg, resource.Topic, topicName)
+	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.Topic, describeFunc); err != nil {
+		return err
+	}
+
+	if len(args) == 1 {
+		if err := form.ConfirmDeletionWithString(cmd, form.DefaultPromptString(resource.Topic, args[0], args[0]), args[0]); err != nil {
+			return err
+		}
+	} else {
+		if ok, err := form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.Topic, args)); err != nil || !ok {
+			return err
+		}
+	}
+
 	return nil
 }
