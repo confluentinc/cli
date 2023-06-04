@@ -2,8 +2,10 @@ package hub
 
 import (
 	"net/http"
-	"time"
 
+	"github.com/hashicorp/go-retryablehttp"
+
+	"github.com/confluentinc/cli/internal/pkg/log"
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
@@ -19,9 +21,12 @@ func NewClient(isTest, unsafeTrace bool) *Client {
 		url = testserver.TestHubUrl.String()
 	}
 
+	client := retryablehttp.NewClient()
+	client.Logger = log.NewLeveledLogger(unsafeTrace)
+
 	return &Client{
 		URL:    url,
 		Debug:  unsafeTrace,
-		Client: &http.Client{Timeout: 5 * time.Second},
+		Client: client.StandardClient(),
 	}
 }
