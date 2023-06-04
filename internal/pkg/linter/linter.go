@@ -17,8 +17,7 @@ type Linter struct {
 func (l *Linter) Lint(cmd *cobra.Command) error {
 	var issues *multierror.Error
 
-	err := l.lintRules(cmd)
-	if err != nil {
+	if err := l.lintRules(cmd); err != nil {
 		issues = multierror.Append(issues, err)
 	}
 

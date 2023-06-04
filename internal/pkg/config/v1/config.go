@@ -142,12 +142,10 @@ func (c *Config) DecryptContextStates() error {
 	if context := c.Context(); context != nil {
 		state := c.ContextStates[context.Name]
 		if state != nil {
-			err := state.DecryptContextStateAuthToken(context.Name)
-			if err != nil {
+			if err := state.DecryptContextStateAuthToken(context.Name); err != nil {
 				return err
 			}
-			err = state.DecryptContextStateAuthRefreshToken(context.Name)
-			if err != nil {
+			if err := state.DecryptContextStateAuthRefreshToken(context.Name); err != nil {
 				return err
 			}
 		}
@@ -223,8 +221,7 @@ func (c *Config) Save() error {
 	if c.Context() != nil {
 		tempAuthToken = c.Context().GetState().AuthToken
 		tempAuthRefreshToken = c.Context().GetState().AuthRefreshToken
-		err := c.encryptContextStateTokens(tempAuthToken, tempAuthRefreshToken)
-		if err != nil {
+		if err := c.encryptContextStateTokens(tempAuthToken, tempAuthRefreshToken); err != nil {
 			return err
 		}
 	}
@@ -375,8 +372,7 @@ func (c *Config) Validate() error {
 	// 1. Has no hanging references between the context and the config.
 	// 2. Is mapped by name correctly in the config.
 	for _, context := range c.Contexts {
-		err := context.validate()
-		if err != nil {
+		if err := context.validate(); err != nil {
 			log.CliLogger.Trace("context validation error")
 			return err
 		}

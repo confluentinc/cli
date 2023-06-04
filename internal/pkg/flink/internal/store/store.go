@@ -136,8 +136,7 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 }
 
 func (s *Store) DeleteStatement(statementName string) bool {
-	err := s.client.DeleteStatement(s.appOptions.GetOrgResourceId(), s.appOptions.GetEnvId(), statementName)
-	if err != nil {
+	if err := s.client.DeleteStatement(s.appOptions.GetOrgResourceId(), s.appOptions.GetEnvId(), statementName); err != nil {
 		log.CliLogger.Warnf("Failed to delete the statement: %v", err)
 		return false
 	}

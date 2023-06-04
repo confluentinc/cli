@@ -174,8 +174,7 @@ func (c *command) asyncapiImport(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	for topicName, topicDetails := range spec.Channels {
-		err := c.addChannelToCluster(details, spec, topicName, topicDetails.Bindings.Kafka, flagsImp.overwrite)
-		if err != nil {
+		if err := c.addChannelToCluster(details, spec, topicName, topicDetails.Bindings.Kafka, flagsImp.overwrite); err != nil {
 			if err.Error() == parseErrorMessage {
 				output.Printf("WARNING: topic \"%s\" is already present and `--overwrite` is not set.\n", topicName)
 			} else {
@@ -423,8 +422,7 @@ func addSchemaTags(details *accountDetails, components Components, topicName str
 			})
 			tagNames = append(tagNames, tag.Name)
 		}
-		err := addTagsUtil(details, tagDefConfigs, tagConfigs)
-		if err != nil {
+		if err := addTagsUtil(details, tagDefConfigs, tagConfigs); err != nil {
 			return err
 		}
 		output.Printf("Tag(s) %s added to schema \"%d\".\n", utils.ArrayToCommaDelimitedString(tagNames, "and"), schemaId)
@@ -454,8 +452,7 @@ func addTopicTags(details *accountDetails, subscribe Operation, topicName string
 		})
 		tagNames = append(tagNames, tag.Name)
 	}
-	err := addTagsUtil(details, tagDefConfigs, tagConfigs)
-	if err != nil {
+	if err := addTagsUtil(details, tagDefConfigs, tagConfigs); err != nil {
 		return err
 	}
 	output.Printf("Tag(s) %s added to Kafka topic \"%s\".\n", utils.ArrayToCommaDelimitedString(tagNames, "and"), topicName)

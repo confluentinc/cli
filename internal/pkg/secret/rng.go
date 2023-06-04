@@ -31,8 +31,7 @@ func (s *cryptoSource) Int63() int64 {
 
 func (s *cryptoSource) Uint64() uint64 {
 	var v uint64
-	err := binary.Read(crand.Reader, binary.BigEndian, &v)
-	if err != nil {
+	if err := binary.Read(crand.Reader, binary.BigEndian, &v); err != nil {
 		log.CliLogger.Error(err)
 	}
 	return v
