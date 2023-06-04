@@ -37,7 +37,7 @@ func (c *pluginCommand) newInstallCommand() *cobra.Command {
 		RunE:  c.install,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Install the latest release of the Datagen connector onto your local Confluent Platform environment.",
+				Text: "Install the latest version of the Datagen connector into your local Confluent Platform environment.",
 				Code: "confluent connect plugin install confluentinc/kafka-connect-datagen:latest",
 			},
 			examples.Example{
