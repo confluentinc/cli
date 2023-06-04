@@ -109,7 +109,7 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 	}
 
 	// Check for, and possibly remove, existing installation
-	previousInstallations, err := existingPluginInstallation(pluginDir, pluginManifest);
+	previousInstallations, err := existingPluginInstallation(pluginDir, pluginManifest)
 	if err != nil {
 		return err
 	}
