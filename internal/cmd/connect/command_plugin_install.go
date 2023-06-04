@@ -230,13 +230,8 @@ func getLocalManifest(archivePath string) (*cpstructs.Manifest, error) {
 			}
 			defer manifestFile.Close()
 
-			jsonByteArr, err := io.ReadAll(manifestFile)
-			if err != nil {
-				return nil, err
-			}
-
 			pluginManifest := new(cpstructs.Manifest)
-			if err := json.Unmarshal(jsonByteArr, &pluginManifest); err != nil {
+			if err := json.NewDecoder(manifestFile).Decode(&pluginManifest); err != nil {
 				return nil, err
 			}
 
