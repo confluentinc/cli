@@ -66,6 +66,15 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	force, err := cmd.Flags().GetBool("force")
+	if err != nil {
+		return err
+	}
+
+	if cmd.Flags().Changed("plugin-directory") && cmd.Flags().Changed("worker-configs") && cmd.Flags().Changed("confluent-platform") {
+		return errors.New("at most two of `--plugin-directory`, `--worker-configs`, and `--confluent-platform` may be set")
+	}
+
 	client, err := c.GetHubClient()
 	if err != nil {
 		return err
@@ -74,15 +83,6 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 	pluginManifest, err := c.getManifest(client, args[0])
 	if err != nil {
 		return err
-	}
-
-	force, err := cmd.Flags().GetBool("force")
-	if err != nil {
-		return err
-	}
-
-	if cmd.Flags().Changed("plugin-directory") && cmd.Flags().Changed("worker-configs") && cmd.Flags().Changed("confluent-platform") {
-		return errors.New("at most two of `--plugin-directory`, `--worker-configs`, and `--confluent-platform` may be set")
 	}
 
 	pluginDir, err := getPluginDirFromFlag(cmd)
@@ -109,15 +109,13 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 	}
 
 	// Check for, and possibly remove, existing installation
-	if previousInstallations, err := existingPluginInstallation(pluginDir, pluginManifest); err != nil {
+	previousInstallations, err := existingPluginInstallation(pluginDir, pluginManifest);
+	if err != nil {
 		return err
-	} else if len(previousInstallations) > 0 {
-		output.Println("\nA version of this plugin is already installed and must be removed to continue.")
-		for _, previousInstallation := range previousInstallations {
-			if err := removePluginInstallation(previousInstallation, prompt, dryRun, force); err != nil {
-				return err
-			}
-		}
+	}
+
+	if err := removePluginInstallations(previousInstallations, prompt, dryRun, force); err != nil {
+		return err
 	}
 
 	// Install
@@ -125,20 +123,8 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	installStr := fmt.Sprintf("Installing %s %s, provided by %s\n\n", pluginManifest.Title, pluginManifest.Version, pluginManifest.Owner.Name)
-	if dryRun {
-		output.Printf(addDryRunPrefix(installStr))
-	} else {
-		output.Print(installStr)
-		if utils.DoesPathExist(args[0]) {
-			if err := installFromLocal(pluginManifest, args[0], pluginDir); err != nil {
-				return err
-			}
-		} else {
-			if err := c.installFromRemote(client, pluginManifest, pluginDir); err != nil {
-				return err
-			}
-		}
+	if err := c.installPlugin(client, pluginManifest, args[0], pluginDir, dryRun); err != nil {
+		return err
 	}
 
 	// Select and update worker-configs
@@ -155,21 +141,8 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	if len(workerConfigs) > 0 {
-		updateWorkerMsg := "Adding plugin installation directory to the plugin path in the following files:"
-		if dryRun {
-			updateWorkerMsg = addDryRunPrefix(updateWorkerMsg)
-		}
-		for _, workerConfig := range workerConfigs {
-			updateWorkerMsg = fmt.Sprintf("%s\n\t* %v", updateWorkerMsg, workerConfig)
-		}
-		output.Println(updateWorkerMsg)
-	}
-
-	for _, workerConfig := range workerConfigs {
-		if err := updateWorkerConfig(pluginDir, workerConfig, dryRun); err != nil {
-			return err
-		}
+	if err := updateWorkerConfigs(pluginDir, workerConfigs, dryRun); err != nil {
+		return err
 	}
 
 	successStr := fmt.Sprintf("Installed %s %s.\n", pluginManifest.Title, pluginManifest.Version)
@@ -306,34 +279,58 @@ func existingPluginInstallation(pluginDir string, pluginManifest *cpstructs.Mani
 	return installations, nil
 }
 
-func removePluginInstallation(pathToPlugin string, prompt form.Prompt, dryRun, force bool) error {
-	if force {
-		output.Printf("Uninstalling the existing version of the plugin located at \"%s\".\n", pathToPlugin)
-	} else {
-		f := form.New(form.Field{
-			ID:        "confirm",
-			Prompt:    fmt.Sprintf("Do you want to uninstall an existing version of this plugin located at %s?", pathToPlugin),
-			IsYesOrNo: true,
-		})
-		if err := f.Prompt(prompt); err != nil {
+func removePluginInstallations(previousInstallations []string, prompt form.Prompt, dryRun, force bool) error {
+	if len(previousInstallations) > 0 {
+		output.Println("\nA version of this plugin is already installed and must be removed to continue.")
+	}
+
+	for _, previousInstallation := range previousInstallations {
+		if force {
+			output.Printf("Uninstalling the existing version of the plugin located at \"%s\".\n", previousInstallation)
+		} else {
+			f := form.New(form.Field{
+				ID:        "confirm",
+				Prompt:    fmt.Sprintf("Do you want to uninstall an existing version of this plugin located at %s?", previousInstallation),
+				IsYesOrNo: true,
+			})
+			if err := f.Prompt(prompt); err != nil {
+				return err
+			}
+			if !f.Responses["confirm"].(bool) {
+				return errors.New("previous versions must be uninstalled to continue")
+			}
+		}
+
+		uninstallStr := "Successfully removed existing version."
+		if dryRun {
+			output.Println(addDryRunPrefix(uninstallStr))
+			return nil
+		}
+
+		if err := os.RemoveAll(previousInstallation); err != nil {
 			return err
 		}
-		if !f.Responses["confirm"].(bool) {
-			return errors.New("previous versions must be uninstalled to continue")
-		}
-	}
 
-	uninstallStr := "Successfully removed existing version."
+		output.Println(uninstallStr)
+	}
+	return nil
+}
+
+func (c *pluginCommand) installPlugin(client *hub.Client, pluginManifest *cpstructs.Manifest, archivePath, pluginDir string, dryRun bool) error {
+	installStr := fmt.Sprintf("Installing %s %s, provided by %s\n\n", pluginManifest.Title, pluginManifest.Version, pluginManifest.Owner.Name)
 	if dryRun {
-		output.Println(addDryRunPrefix(uninstallStr))
+		output.Printf(addDryRunPrefix(installStr))
 		return nil
 	}
+	output.Print(installStr)
 
-	if err := os.RemoveAll(pathToPlugin); err != nil {
+	if utils.DoesPathExist(archivePath) {
+		if err := installFromLocal(pluginManifest, archivePath, pluginDir); err != nil {
+			return err
+		}
+	} else if err := c.installFromRemote(client, pluginManifest, pluginDir); err != nil {
 		return err
 	}
-
-	output.Println(uninstallStr)
 	return nil
 }
 
@@ -439,4 +436,24 @@ func checkLicenseAcceptance(pluginManifest *cpstructs.Manifest, prompt form.Prom
 
 func addDryRunPrefix(msg string) string {
 	return fmt.Sprintf("[DRY RUN] %s", msg)
+}
+
+func updateWorkerConfigs(pluginDir string, workerConfigs []string, dryRun bool) error {
+	if len(workerConfigs) > 0 {
+		updateWorkerMsg := "Adding plugin installation directory to the plugin path in the following files:"
+		if dryRun {
+			updateWorkerMsg = addDryRunPrefix(updateWorkerMsg)
+		}
+		for _, workerConfig := range workerConfigs {
+			updateWorkerMsg = fmt.Sprintf("%s\n\t* %v", updateWorkerMsg, workerConfig)
+		}
+		output.Println(updateWorkerMsg)
+	}
+
+	for _, workerConfig := range workerConfigs {
+		if err := updateWorkerConfig(pluginDir, workerConfig, dryRun); err != nil {
+			return err
+		}
+	}
+	return nil
 }
