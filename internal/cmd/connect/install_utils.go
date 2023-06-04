@@ -226,7 +226,7 @@ func choosePluginDir(installation *platformInstallation, prompt form.Prompt, for
 	}
 
 	if force {
-		output.Printf("Using \"%s\" as the plugin installation directory.\n", defaultPluginDir)
+		output.Printf("Using \"%s\" as the plugin installation directory.\n\n", defaultPluginDir)
 		return defaultPluginDir, nil
 	}
 
@@ -239,6 +239,7 @@ func choosePluginDir(installation *platformInstallation, prompt form.Prompt, for
 		return "", err
 	}
 	if f.Responses["confirm"].(bool) {
+		output.Print("\n")
 		return defaultPluginDir, nil
 	}
 
@@ -259,6 +260,7 @@ func choosePluginDir(installation *platformInstallation, prompt form.Prompt, for
 		return "", errors.Errorf(invalidDirectoryErrorMsg, inputDir)
 	}
 
+	output.Print("\n")
 	return inputDir, nil
 }
 

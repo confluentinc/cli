@@ -281,7 +281,7 @@ func existingPluginInstallation(pluginDir string, pluginManifest *cpstructs.Mani
 
 func removePluginInstallations(previousInstallations []string, prompt form.Prompt, dryRun, force bool) error {
 	if len(previousInstallations) > 0 {
-		output.Println("\nA version of this plugin is already installed and must be removed to continue.")
+		output.Println("A version of this plugin is already installed and must be removed to continue.")
 	}
 
 	for _, previousInstallation := range previousInstallations {
@@ -301,7 +301,7 @@ func removePluginInstallations(previousInstallations []string, prompt form.Promp
 			}
 		}
 
-		uninstallStr := "Successfully removed existing version."
+		uninstallStr := "Successfully removed existing version.\n"
 		if dryRun {
 			output.Println(addDryRunPrefix(uninstallStr))
 			return nil
@@ -312,6 +312,10 @@ func removePluginInstallations(previousInstallations []string, prompt form.Promp
 		}
 
 		output.Println(uninstallStr)
+	}
+
+	if len(previousInstallations) > 0 {
+		output.Print("\n")
 	}
 	return nil
 }
@@ -325,13 +329,10 @@ func (c *pluginCommand) installPlugin(client *hub.Client, pluginManifest *cpstru
 	output.Print(installStr)
 
 	if utils.DoesPathExist(archivePath) {
-		if err := installFromLocal(pluginManifest, archivePath, pluginDir); err != nil {
-			return err
-		}
-	} else if err := c.installFromRemote(client, pluginManifest, pluginDir); err != nil {
-		return err
+		return installFromLocal(pluginManifest, archivePath, pluginDir)
 	}
-	return nil
+
+	return c.installFromRemote(client, pluginManifest, pluginDir)
 }
 
 func installFromLocal(pluginManifest *cpstructs.Manifest, archivePath, pluginDir string) error {
@@ -414,11 +415,11 @@ func unzipPlugin(pluginManifest *cpstructs.Manifest, zipFiles []*zip.File, plugi
 func checkLicenseAcceptance(pluginManifest *cpstructs.Manifest, prompt form.Prompt, force bool) error {
 	for _, license := range pluginManifest.Licenses {
 		if force {
-			output.Printf("\nImplicitly agreeing to the following license: %s (%s)\n", license.Name, license.Url)
+			output.Printf("Implicitly agreeing to the following license: %s (%s)\n", license.Name, license.Url)
 		} else {
 			f := form.New(form.Field{
 				ID:        "confirm",
-				Prompt:    fmt.Sprintf("\nLicense: %s (%s)\nI agree to this software license agreement.", license.Name, license.Url),
+				Prompt:    fmt.Sprintf("License: %s (%s)\nI agree to this software license agreement.", license.Name, license.Url),
 				IsYesOrNo: true,
 			})
 			if err := f.Prompt(prompt); err != nil {
