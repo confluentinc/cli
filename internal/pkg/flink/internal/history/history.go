@@ -51,9 +51,9 @@ func initPath() *History {
 		return nil
 	}
 
-	confluentDir := os.Getenv(config.CONFLUENT_HOME_DIR_ENV_VAR)
+	confluentDir := os.Getenv(config.HomeConfluentPathEnvVar)
 	if confluentDir == "" {
-		confluentDir = config.CONFLUENT_HOME_DIR_DEFAULT
+		confluentDir = config.HomeConfluentPathDefault
 	}
 	confluentPath := filepath.Join(home, confluentDir)
 	historyPath := filepath.Join(confluentPath, HISTORY_FILE_NAME)

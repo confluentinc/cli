@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/featureflags"
 )
 
@@ -29,7 +30,9 @@ func (c *command) newComputePoolCommand(cfg *v1.Config) *cobra.Command {
 	cmd.AddCommand(c.newComputePoolUpdateCommand())
 	cmd.AddCommand(c.newComputePoolUseCommand())
 
-	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.flink.open_preview", c.Context, v1.CliLaunchDarklyClient, true, false) {
+	dc := dynamicconfig.New(cfg, nil, nil)
+	_ = dc.ParseFlagsIntoConfig(cmd)
+	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.flink.open_preview", dc.Context(), v1.CliLaunchDarklyClient, true, false) {
 		cmd.AddCommand(c.newComputePoolCreateCommand())
 		cmd.AddCommand(c.newComputePoolDeleteCommand())
 	}

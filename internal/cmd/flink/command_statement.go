@@ -40,14 +40,6 @@ func (c *command) addComputePoolFlag(cmd *cobra.Command) {
 	})
 }
 
-func (c *command) validStatementArgs(cmd *cobra.Command, args []string) []string {
-	if len(args) > 0 {
-		return nil
-	}
-
-	return c.validStatementArgsMultiple(cmd, args)
-}
-
 func (c *command) validStatementArgsMultiple(cmd *cobra.Command, args []string) []string {
 	if err := c.PersistentPreRunE(cmd, args); err != nil {
 		return nil
