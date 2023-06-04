@@ -14,7 +14,7 @@ Install the latest version of the Datagen connector in a user specified director
 
 Flags:
       --plugin-directory string     The plugin installation directory. If not specified, a default will be selected based on your Confluent Platform installation.
-      --worker-configs strings      A comma-separated list of paths to one or more Kafka Connect worker configuration files. Each worker file will be updated to load plugins from the plugin directory in addition to any pre-existing directories.
+      --worker-configs strings      A comma-separated list of paths to one or more Kafka Connect worker configuration files. Each worker file will be updated to load plugins from the plugin directory in addition to any prior directories.
       --confluent-platform string   The path to a Confluent Platform archive installation. By default, this command will search for Confluent Platform installations in common locations.
       --dry-run                     Run the command without committing changes.
       --force                       Proceed without user input.
