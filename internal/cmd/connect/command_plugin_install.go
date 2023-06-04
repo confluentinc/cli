@@ -20,6 +20,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
+	"github.com/confluentinc/cli/internal/pkg/hub"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
@@ -65,11 +66,12 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if err := c.InitializeHubClient(); err != nil {
+	client, err := c.GetHubClient()
+	if err != nil {
 		return err
 	}
 
-	pluginManifest, err := c.getManifest(args[0])
+	pluginManifest, err := c.getManifest(client, args[0])
 	if err != nil {
 		return err
 	}
@@ -133,7 +135,7 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 				return err
 			}
 		} else {
-			if err := c.installFromRemote(pluginManifest, pluginDir); err != nil {
+			if err := c.installFromRemote(client, pluginManifest, pluginDir); err != nil {
 				return err
 			}
 		}
@@ -195,7 +197,7 @@ func parsePluginId(plugin string) (string, string, string, error) {
 	return ownerNameSplit[0], nameVersionSplit[0], nameVersionSplit[1], nil
 }
 
-func (c *pluginCommand) getManifest(id string) (*cpstructs.Manifest, error) {
+func (c *pluginCommand) getManifest(client *hub.Client, id string) (*cpstructs.Manifest, error) {
 	if utils.DoesPathExist(id) {
 		// if installing plugin from local archive
 		return getLocalManifest(id)
@@ -206,7 +208,7 @@ func (c *pluginCommand) getManifest(id string) (*cpstructs.Manifest, error) {
 			return nil, err
 		}
 
-		return c.HubClient.GetRemoteManifest(owner, name, version)
+		return client.GetRemoteManifest(owner, name, version)
 	}
 }
 
@@ -345,8 +347,8 @@ func installFromLocal(pluginManifest *cpstructs.Manifest, archivePath, pluginDir
 	return unzipPlugin(pluginManifest, zipReader.File, pluginDir)
 }
 
-func (c *pluginCommand) installFromRemote(pluginManifest *cpstructs.Manifest, pluginDir string) error {
-	archive, err := c.HubClient.GetRemoteArchive(pluginManifest)
+func (c *pluginCommand) installFromRemote(client *hub.Client, pluginManifest *cpstructs.Manifest, pluginDir string) error {
+	archive, err := client.GetRemoteArchive(pluginManifest)
 	if err != nil {
 		return err
 	}

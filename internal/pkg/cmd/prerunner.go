@@ -528,14 +528,17 @@ func (r *PreRun) setV2Clients(c *AuthenticatedCLICommand) error {
 	return nil
 }
 
-func (c *AuthenticatedCLICommand) InitializeHubClient() error {
-	unsafeTrace, err := c.Flags().GetBool("unsafe-trace")
-	if err != nil {
-		return err
+func (c *AuthenticatedCLICommand) GetHubClient() (*hub.Client, error) {
+	if c.HubClient == nil {
+		unsafeTrace, err := c.Flags().GetBool("unsafe-trace")
+		if err != nil {
+			return nil, err
+		}
+
+		c.HubClient = hub.NewClient(c.Config.IsTest, unsafeTrace)
 	}
 
-	c.HubClient = hub.NewClient(c.Config.IsTest, unsafeTrace)
-	return nil
+	return c.HubClient, nil
 }
 
 func getKafkaRestEndpoint(ctx *dynamicconfig.DynamicContext) (string, string, error) {
