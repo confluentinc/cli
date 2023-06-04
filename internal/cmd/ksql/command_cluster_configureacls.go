@@ -28,7 +28,7 @@ func (c *ksqlCommand) newConfigureAclsCommand() *cobra.Command {
 		RunE:              c.configureACLs,
 	}
 
-	cmd.Flags().Bool("dry-run", false, "If specified, print the ACLs that will be set and exit.")
+	pcmd.AddDryRunFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
