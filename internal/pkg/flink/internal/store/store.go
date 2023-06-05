@@ -68,20 +68,16 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 		s.propsDefault(s.Properties),
 	)
 	if err != nil {
-		return nil, &types.StatementError{Msg: err.Error()}
+		status := statementObj.GetStatus()
+		return nil, &types.StatementError{Msg: err.Error(), FailureMessage: status.GetDetail()}
 	}
 	return types.NewProcessedStatement(statementObj), nil
 }
 
 func (s *Store) WaitPendingStatement(ctx context.Context, statement types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError) {
-	// Process local statements
-
 	statementStatus := statement.Status
 	if statementStatus != types.COMPLETED && statementStatus != types.RUNNING {
-		// Variable that controls how often we poll a pending statement
-
 		updatedStatement, err := s.waitForPendingStatement(ctx, statement.StatementName, timeout(s.Properties))
-
 		if err != nil {
 			return nil, err
 		}
@@ -89,7 +85,10 @@ func (s *Store) WaitPendingStatement(ctx context.Context, statement types.Proces
 		// Check for failed or cancelled statements
 		statementStatus = updatedStatement.Status
 		if statementStatus != types.COMPLETED && statementStatus != types.RUNNING {
-			return nil, &types.StatementError{Msg: fmt.Sprintf("Can't fetch results. Statement phase is: %s", statementStatus)}
+			return nil, &types.StatementError{
+				Msg:            fmt.Sprintf("Can't fetch results. Statement phase is: %s", statementStatus),
+				FailureMessage: updatedStatement.StatusDetail,
+			}
 		}
 		statement = *updatedStatement
 	}
@@ -157,13 +156,19 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 			return nil, &types.StatementError{Msg: "Result retrieval aborted. Statement will be deleted.", HttpResponseCode: 499}
 		default:
 			statementObj, err := s.client.GetStatement(s.appOptions.GetOrgResourceId(), s.appOptions.GetEnvId(), statementName)
+			status := statementObj.GetStatus()
 			if err != nil {
-				return nil, &types.StatementError{Msg: err.Error()}
+				return nil, &types.StatementError{Msg: err.Error(), FailureMessage: status.GetDetail()}
 			}
 
-			phase := types.PHASE(statementObj.Status.GetPhase())
+			phase := types.PHASE(status.GetPhase())
 			if phase != types.PENDING {
 				return types.NewProcessedStatement(statementObj), nil
+			}
+
+			// if status.detail is filled we encountered a retryable server response
+			if status.GetDetail() != "" {
+				capturedErrors = append(capturedErrors, status.GetDetail())
 			}
 		}
 
@@ -189,10 +194,14 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 
 	var errorsMsg string
 	if len(capturedErrors) > 0 {
-		errorsMsg = fmt.Sprintf(" Captured retriable errors: %s", strings.Join(capturedErrors, "; "))
+		errorsMsg = fmt.Sprintf("Captured retriable errors: %s", strings.Join(capturedErrors, "; "))
 	}
 
-	return nil, &types.StatementError{Msg: fmt.Sprintf("Statement is still pending after %f seconds.%s \n\nIf you want to increase the timeout for the client, you can run \"SET table.results-timeout=1200;\" to adjust the maximum timeout in seconds.", timeout.Seconds(), errorsMsg)}
+	return nil, &types.StatementError{
+		Msg: fmt.Sprintf("Statement is still pending after %f seconds.\n If you want to increase the timeout for the client, you can run \"SET table.results-timeout=1200;\" to adjust the maximum timeout in seconds.",
+			timeout.Seconds()),
+		FailureMessage: errorsMsg,
+	}
 }
 
 func extractPageToken(nextUrl string) (string, error) {

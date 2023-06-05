@@ -74,6 +74,7 @@ type MockStatementResult struct {
 type StatementError struct {
 	Msg              string
 	HttpResponseCode int
+	FailureMessage   string
 }
 
 func (e *StatementError) Error() string {
@@ -83,7 +84,10 @@ func (e *StatementError) Error() string {
 	if e.Msg == "" {
 		return "Error"
 	}
-	return fmt.Sprintf("Error: %s", e.Msg)
+	if e.FailureMessage == "" {
+		return fmt.Sprintf("Error: %s", e.Msg)
+	}
+	return fmt.Sprintf("Error: %s \n Error details: %s", e.Msg, e.FailureMessage)
 }
 
 type PHASE string

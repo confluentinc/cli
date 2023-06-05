@@ -77,10 +77,12 @@ func TestWaitForPendingStatement3(t *testing.T) {
 		appOptions: &appOptions,
 	}
 
+	statusDetailMessage := "Test status detail message"
 	// Test case 1: Statement is not pending
 	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
 		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
-			Phase: "COMPLETED",
+			Phase:  "COMPLETED",
+			Detail: &statusDetailMessage,
 		},
 	}
 	client.EXPECT().GetStatement("orgId", "envId", statementName).Return(statementObj, nil).Times(1)
@@ -105,16 +107,21 @@ func TestWaitForPendingTimesout(t *testing.T) {
 		appOptions: &appOptions,
 	}
 
-	// Test case 2: Statement is pending
+	statusDetailMessage := "Test status detail message"
 	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
 		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
-			Phase: "PENDING",
+			Phase:  "PENDING",
+			Detail: &statusDetailMessage,
 		},
+	}
+	expectedError := &types.StatementError{
+		Msg:            fmt.Sprintf("Statement is still pending after %f seconds.\n If you want to increase the timeout for the client, you can run \"SET table.results-timeout=1200;\" to adjust the maximum timeout in seconds.", timeout.Seconds()),
+		FailureMessage: fmt.Sprintf("Captured retriable errors: %s", statusDetailMessage),
 	}
 	client.EXPECT().GetStatement("orgId", "envId", statementName).Return(statementObj, nil).AnyTimes()
 	processedStatement, err := s.waitForPendingStatement(context.Background(), statementName, timeout)
 
-	assert.EqualError(t, err, fmt.Sprintf("Error: Statement is still pending after %f seconds. \n\nIf you want to increase the timeout for the client, you can run \"SET table.results-timeout=1200;\" to adjust the maximum timeout in seconds.", timeout.Seconds()))
+	assert.Equal(t, expectedError, err)
 	assert.Nil(t, processedStatement)
 }
 
@@ -131,16 +138,19 @@ func TestWaitForPendingEventuallyCompletes(t *testing.T) {
 		appOptions: &appOptions,
 	}
 
-	// Test case 2: Statement is pending
+	transientStatusDetailMessage := "Transient status detail message"
 	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
 		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
-			Phase: "PENDING",
+			Phase:  "PENDING",
+			Detail: &transientStatusDetailMessage,
 		},
 	}
 
+	finalStatusDetailMessage := "Final status detail message"
 	statementObjCompleted := flinkgatewayv1alpha1.SqlV1alpha1Statement{
 		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
-			Phase: "COMPLETED",
+			Phase:  "COMPLETED",
+			Detail: &finalStatusDetailMessage,
 		},
 	}
 	client.EXPECT().GetStatement("orgId", "envId", statementName).Return(statementObj, nil).Times(3)
@@ -164,16 +174,22 @@ func TestWaitForPendingStatementErrors(t *testing.T) {
 		client:     client,
 		appOptions: &appOptions,
 	}
+	statusDetailMessage := "Test status detail message"
 	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
 		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
-			Phase: "COMPLETED",
+			Phase:  "COMPLETED",
+			Detail: &statusDetailMessage,
 		},
 	}
 
-	expectedErr := errors.New("couldn't get statement!")
-	client.EXPECT().GetStatement("orgId", "envId", statementName).Return(statementObj, expectedErr).Times(1)
+	returnedError := errors.New("couldn't get statement!")
+	expectedError := &types.StatementError{
+		Msg:            returnedError.Error(),
+		FailureMessage: statusDetailMessage,
+	}
+	client.EXPECT().GetStatement("orgId", "envId", statementName).Return(statementObj, returnedError).Times(1)
 	_, err := s.waitForPendingStatement(context.Background(), statementName, waitTime)
-	assert.EqualError(t, err, fmt.Sprintf("Error: %s", expectedErr.Error()))
+	assert.Equal(t, expectedError, err)
 }
 
 func TestCancelPendingStatement(t *testing.T) {
@@ -798,4 +814,233 @@ func TestTimeout(t *testing.T) {
 		result := timeout(tc.properties)
 		require.Equal(t, tc.expected, result, tc.name)
 	}
+}
+
+func (s *StoreTestSuite) TestProcessStatement() {
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
+	appOptions := &types.ApplicationOptions{
+		OrgResourceId:  "orgId",
+		EnvId:          "envId",
+		ComputePoolId:  "computePoolId",
+		IdentityPoolId: "identityPoolId",
+	}
+	store := Store{
+		Properties: map[string]string{
+			"TestProp": "TestVal",
+		},
+		client:     client,
+		appOptions: appOptions,
+	}
+
+	statusDetailMessage := "Test status detail message"
+	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
+		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+			Phase:  "PENDING",
+			Detail: &statusDetailMessage,
+		},
+	}
+
+	statement := "SELECT * FROM table"
+	client.EXPECT().CreateStatement("orgId",
+		"envId",
+		"computePoolId",
+		"identityPoolId",
+		statement,
+		store.propsDefault(store.Properties)).
+		Return(statementObj, nil)
+
+	processedStatement, err := store.ProcessStatement(statement)
+	require.Nil(s.T(), err)
+	require.Equal(s.T(), types.NewProcessedStatement(statementObj), processedStatement)
+}
+
+func (s *StoreTestSuite) TestProcessStatementFailsOnError() {
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
+	appOptions := &types.ApplicationOptions{
+		OrgResourceId:  "orgId",
+		EnvId:          "envId",
+		ComputePoolId:  "computePoolId",
+		IdentityPoolId: "identityPoolId",
+	}
+	store := Store{
+		Properties: map[string]string{
+			"TestProp": "TestVal",
+		},
+		client:     client,
+		appOptions: appOptions,
+	}
+
+	statusDetailMessage := "Test status detail message"
+	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
+		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+			Detail: &statusDetailMessage,
+		},
+	}
+
+	statement := "SELECT * FROM table"
+	client.EXPECT().CreateStatement("orgId",
+		"envId",
+		"computePoolId",
+		"identityPoolId",
+		statement,
+		store.propsDefault(store.Properties)).
+		Return(statementObj, errors.New("Test error"))
+	expectedError := &types.StatementError{
+		Msg:            "Test error",
+		FailureMessage: "Test status detail message",
+	}
+
+	processedStatement, err := store.ProcessStatement(statement)
+	require.Nil(s.T(), processedStatement)
+	require.Equal(s.T(), expectedError, err)
+}
+
+func (s *StoreTestSuite) TestWaitPendingStatement() {
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
+	appOptions := &types.ApplicationOptions{
+		OrgResourceId: "orgId",
+		EnvId:         "envId",
+	}
+	store := Store{
+		Properties: map[string]string{
+			"TestProp": "TestVal",
+		},
+		client:     client,
+		appOptions: appOptions,
+	}
+
+	statementName := "Test Statement"
+	statusDetailMessage := "Test status detail message"
+	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
+		Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
+			StatementName: &statementName,
+		},
+		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+			Phase:  "COMPLETED",
+			Detail: &statusDetailMessage,
+		},
+	}
+	client.EXPECT().GetStatement("orgId", "envId", statementName).Return(statementObj, nil).Times(1)
+
+	processedStatement, err := store.WaitPendingStatement(context.Background(), types.ProcessedStatement{
+		StatementName: statementName,
+		Status:        types.PENDING,
+	})
+	require.Nil(s.T(), err)
+	require.Equal(s.T(), types.NewProcessedStatement(statementObj), processedStatement)
+}
+
+func (s *StoreTestSuite) TestWaitPendingStatementNoWaitForCompletedStatement() {
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
+	store := Store{
+		Properties: map[string]string{
+			"TestProp": "TestVal",
+		},
+		client: client,
+	}
+
+	statement := types.ProcessedStatement{
+		Status: types.PHASE("COMPLETED"),
+	}
+
+	processedStatement, err := store.WaitPendingStatement(context.Background(), statement)
+	require.Nil(s.T(), err)
+	require.Equal(s.T(), &statement, processedStatement)
+}
+
+func (s *StoreTestSuite) TestWaitPendingStatementNoWaitForRunningStatement() {
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
+	store := Store{
+		Properties: map[string]string{
+			"TestProp": "TestVal",
+		},
+		client: client,
+	}
+
+	statement := types.ProcessedStatement{
+		Status: types.PHASE("RUNNING"),
+	}
+
+	processedStatement, err := store.WaitPendingStatement(context.Background(), statement)
+	require.Nil(s.T(), err)
+	require.Equal(s.T(), &statement, processedStatement)
+}
+
+func (s *StoreTestSuite) TestWaitPendingStatementFailsOnWaitError() {
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
+	appOptions := &types.ApplicationOptions{
+		OrgResourceId: "orgId",
+		EnvId:         "envId",
+	}
+	store := Store{
+		Properties: map[string]string{
+			"TestProp": "TestVal",
+		},
+		client:     client,
+		appOptions: appOptions,
+	}
+
+	statementName := "Test Statement"
+	statusDetailMessage := "Test status detail message"
+	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
+		Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
+			StatementName: &statementName,
+		},
+		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+			Detail: &statusDetailMessage,
+		},
+	}
+	returnedErr := errors.New("test error")
+	client.EXPECT().GetStatement("orgId", "envId", statementName).Return(statementObj, returnedErr).Times(1)
+	expectedError := &types.StatementError{
+		Msg:            returnedErr.Error(),
+		FailureMessage: statusDetailMessage,
+	}
+
+	processedStatement, err := store.WaitPendingStatement(context.Background(), types.ProcessedStatement{
+		StatementName: statementName,
+		Status:        types.PENDING,
+	})
+	require.Nil(s.T(), processedStatement)
+	require.Equal(s.T(), expectedError, err)
+}
+
+func (s *StoreTestSuite) TestWaitPendingStatementFailsOnNonCompletedOrRunningStatementPhase() {
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
+	appOptions := &types.ApplicationOptions{
+		OrgResourceId: "orgId",
+		EnvId:         "envId",
+	}
+	store := Store{
+		Properties: map[string]string{
+			"TestProp": "TestVal",
+		},
+		client:     client,
+		appOptions: appOptions,
+	}
+
+	statementName := "Test Statement"
+	statusDetailMessage := "Test status detail message"
+	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
+		Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
+			StatementName: &statementName,
+		},
+		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+			Phase:  "FAILED",
+			Detail: &statusDetailMessage,
+		},
+	}
+	expectedError := &types.StatementError{
+		Msg:            fmt.Sprintf("Can't fetch results. Statement phase is: %s", statementObj.Status.Phase),
+		FailureMessage: statusDetailMessage,
+	}
+
+	client.EXPECT().GetStatement("orgId", "envId", statementName).Return(statementObj, nil)
+
+	processedStatement, err := store.WaitPendingStatement(context.Background(), types.ProcessedStatement{
+		StatementName: statementName,
+		Status:        types.PENDING,
+	})
+	require.Nil(s.T(), processedStatement)
+	require.Equal(s.T(), expectedError, err)
 }
