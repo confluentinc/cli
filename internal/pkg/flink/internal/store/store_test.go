@@ -1078,7 +1078,7 @@ func (s *StoreTestSuite) TestWaitPendingStatementFetchesExceptionOnFailedStateme
 	}
 	expectedError := &types.StatementError{
 		Msg:            fmt.Sprintf("Can't fetch results. Statement phase is: %s", statementObj.Status.Phase),
-		FailureMessage: exception2,
+		FailureMessage: exception1,
 	}
 
 	client.EXPECT().GetStatement("orgId", "envId", statementName).Return(statementObj, nil)
@@ -1126,9 +1126,9 @@ func (s *StoreTestSuite) TestGetStatusDetail() {
 
 	client.EXPECT().GetExceptions("orgId", "envId", statementName).Return(exceptionsResponse, nil).Times(2)
 
-	require.Equal(s.T(), exception2, store.getStatusDetail(statementObj))
+	require.Equal(s.T(), exception1, store.getStatusDetail(statementObj))
 	statementObj.Status.Phase = "FAILING"
-	require.Equal(s.T(), exception2, store.getStatusDetail(statementObj))
+	require.Equal(s.T(), exception1, store.getStatusDetail(statementObj))
 }
 
 func (s *StoreTestSuite) TestGetStatusDetailReturnsWhenStatusNoFailedOrFailing() {

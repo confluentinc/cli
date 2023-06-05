@@ -221,12 +221,12 @@ func (s *Store) getStatusDetail(statementObj flinkgatewayv1alpha1.SqlV1alpha1Sta
 	// if the statement is in FAILED or FAILING phase and the status detail field is empty we show the latest exception instead
 	exceptionsResponse, _ := s.client.GetExceptions(s.appOptions.GetOrgResourceId(), s.appOptions.GetEnvId(), statementObj.Spec.GetStatementName())
 	exceptions := exceptionsResponse.GetData()
-	if len(exceptions) == 0 {
+	if len(exceptions) < 1 {
 		return status.GetDetail()
 	}
 
-	// is the list sorted?
-	return exceptions[len(exceptions)-1].GetStacktrace()
+	// most recent exception is on top of the returned list
+	return exceptions[0].GetStacktrace()
 }
 
 func extractPageToken(nextUrl string) (string, error) {
