@@ -16,6 +16,7 @@ type GatewayClientInterface interface {
 	ListStatements(orgId, environmentId string) ([]flinkgatewayv1alpha1.SqlV1alpha1Statement, error)
 	CreateStatement(orgId, environmentId, computePoolId, identityPoolId, statement string, properties map[string]string) (flinkgatewayv1alpha1.SqlV1alpha1Statement, error)
 	GetStatementResults(orgId, environmentId, statementId, pageToken string) (flinkgatewayv1alpha1.SqlV1alpha1StatementResult, error)
+	GetExceptions(orgId, environmentId, statementId string) (flinkgatewayv1alpha1.SqlV1alpha1StatementExceptionList, error)
 }
 
 type FlinkGatewayClient struct {
@@ -78,4 +79,9 @@ func (c *FlinkGatewayClient) GetStatementResults(orgId, environmentId, statement
 	}
 	res, r, err := req.Execute()
 	return res, errors.CatchCCloudV2Error(err, r)
+}
+
+func (c *FlinkGatewayClient) GetExceptions(orgId, environmentId, statementId string) (flinkgatewayv1alpha1.SqlV1alpha1StatementExceptionList, error) {
+	result, r, err := c.StatementExceptionsSqlV1alpha1Api.GetSqlV1alpha1StatementExceptions(c.flinkGatewayApiContext(), environmentId, statementId).OrgId(orgId).Execute()
+	return result, errors.CatchCCloudV2Error(err, r)
 }
