@@ -348,20 +348,20 @@ func (c *command) checkLegacyContextCACertPath(cmd *cobra.Command, contextName s
 }
 
 func (c *command) getURL(cmd *cobra.Command) (string, error) {
-	usGov, err := cmd.Flags().GetBool("us-gov")
-	if err != nil {
-		return "", err
-	}
-	if usGov {
-		return "https://confluentgov.com", nil
-	}
-
 	url, err := cmd.Flags().GetString("url")
 	if err != nil {
 		return "", err
 	}
 	if url != "" {
 		return url, nil
+	}
+
+	usGov, err := cmd.Flags().GetBool("us-gov")
+	if err != nil {
+		return "", err
+	}
+	if usGov {
+		return "https://confluentgov.com", nil
 	}
 
 	if url := pauth.GetEnvWithFallback(pauth.ConfluentPlatformMDSURL, pauth.DeprecatedConfluentPlatformMDSURL); url != "" {
