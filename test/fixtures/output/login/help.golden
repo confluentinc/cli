@@ -42,6 +42,7 @@ Log in to Confluent Platform with a MDS URL and CA certificate.
 
 Flags:
       --url string               Metadata Service (MDS) URL, for on-prem deployments.
+      --us-gov                   Log in to the Confluent Cloud US Gov environment.
       --ca-cert-path string      Self-signed certificate chain in PEM format, for on-prem deployments.
       --no-browser               Do not open a browser window when authenticating via Single Sign-On (SSO).
       --organization-id string   The Confluent Cloud organization to log in to. If empty, log in to the default organization.
