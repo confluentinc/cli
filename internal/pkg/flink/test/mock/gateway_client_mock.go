@@ -63,6 +63,21 @@ func (mr *MockGatewayClientInterfaceMockRecorder) DeleteStatement(orgId, environ
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteStatement", reflect.TypeOf((*MockGatewayClientInterface)(nil).DeleteStatement), orgId, environmentId, statementName)
 }
 
+// GetExceptions mocks base method.
+func (m *MockGatewayClientInterface) GetExceptions(orgId, environmentId, statementId string) (v1alpha1.SqlV1alpha1StatementExceptionList, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetExceptions", orgId, environmentId, statementId)
+	ret0, _ := ret[0].(v1alpha1.SqlV1alpha1StatementExceptionList)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetExceptions indicates an expected call of GetExceptions.
+func (mr *MockGatewayClientInterfaceMockRecorder) GetExceptions(orgId, environmentId, statementId interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetExceptions", reflect.TypeOf((*MockGatewayClientInterface)(nil).GetExceptions), orgId, environmentId, statementId)
+}
+
 // GetStatement mocks base method.
 func (m *MockGatewayClientInterface) GetStatement(orgId, environmentId, statementName string) (v1alpha1.SqlV1alpha1Statement, error) {
 	m.ctrl.T.Helper()

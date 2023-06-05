@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"strings"
 
 	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
@@ -73,10 +74,20 @@ type MockStatementResult struct {
 type StatementError struct {
 	Msg              string
 	HttpResponseCode int
+	FailureMessage   string
 }
 
 func (e *StatementError) Error() string {
-	return e.Msg
+	if e == nil {
+		return ""
+	}
+	if e.Msg == "" {
+		return "Error"
+	}
+	if e.FailureMessage == "" {
+		return fmt.Sprintf("Error: %s", e.Msg)
+	}
+	return fmt.Sprintf("Error: %s \nError details: %s", e.Msg, e.FailureMessage)
 }
 
 type PHASE string
@@ -87,6 +98,7 @@ const (
 	COMPLETED PHASE = "COMPLETED" // All results were fetched
 	DELETING  PHASE = "DELETING"
 	FAILED    PHASE = "FAILED"
+	FAILING   PHASE = "FAILING"
 )
 
 // Custom Internal type that shall be used internally by the client
