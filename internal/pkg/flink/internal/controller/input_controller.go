@@ -128,6 +128,10 @@ func (c *InputController) RunInteractiveInput() {
 			c.isSessionValid(err)
 			continue
 		}
+		// print status detail message if available
+		if processedStatement.StatusDetail != "" {
+			output.Printf("Status detail: %s\n", processedStatement.StatusDetail)
+		}
 
 		processedStatement, err = c.store.FetchStatementResults(*processedStatement)
 		_ = in.TearDown()
@@ -219,6 +223,11 @@ func renderMsgAndStatus(processedStatement *types.ProcessedStatement) {
 		} else {
 			output.Println("Error: Statement submission failed. There could a problem with the server right now. Check your statement and try again.")
 		}
+	}
+
+	// print status detail message if available
+	if processedStatement.StatusDetail != "" {
+		output.Printf("Status detail: %s\n", processedStatement.StatusDetail)
 	}
 }
 
