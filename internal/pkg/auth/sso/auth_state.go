@@ -30,18 +30,26 @@ var (
 			ssoProviderIdentifier: "https://confluent-dev.auth0.com/api/v2/",
 			ssoProviderScope:      "email%20openid%20offline_access",
 		},
-		"fedramp-internal": {
+		"devel-us-gov": {
+			ssoProviderDomain: "confluent-devel-us-gov.oktapreview.com/oauth2/v1",
+			ssoProviderScope:  "openid+profile+email+offline_access",
+		},
+		"infra-us-gov": {
 			ssoProviderDomain: "confluent-infra-us-gov.oktapreview.com/oauth2/v1",
+			ssoProviderScope:  "openid+profile+email+offline_access",
+		},
+		"prod": {
+			ssoProviderDomain:     "login.confluent.io/oauth",
+			ssoProviderIdentifier: "https://confluent.auth0.com/api/v2/",
+			ssoProviderScope:      "email%20openid%20offline_access",
+		},
+		"prod-us-gov": {
+			ssoProviderDomain: "confluent-prod-us-gov.oktapreview.com/oauth2/v1",
 			ssoProviderScope:  "openid+profile+email+offline_access",
 		},
 		"stag": {
 			ssoProviderDomain:     "login-stag.confluent-dev.io/oauth",
 			ssoProviderIdentifier: "https://confluent-stag.auth0.com/api/v2/",
-			ssoProviderScope:      "email%20openid%20offline_access",
-		},
-		"prod": {
-			ssoProviderDomain:     "login.confluent.io/oauth",
-			ssoProviderIdentifier: "https://confluent.auth0.com/api/v2/",
 			ssoProviderScope:      "email%20openid%20offline_access",
 		},
 		"test": {
@@ -95,8 +103,12 @@ func newState(authURL string, noBrowser bool) (*authState, error) {
 		env = "devel"
 	} else if authURL == "https://stag.cpdev.cloud" {
 		env = "stag"
+	} else if authURL == "https://confluentgov.com" {
+		env = "prod-us-gov"
 	} else if authURL == "https://infra.confluentgov-internal.com" {
-		env = "fedramp-internal"
+		env = "infra-us-gov"
+	} else if authURL == "https://devel.confluentgov-internal.com" {
+		env = "devel-us-gov"
 	} else if authURL == testserver.TestCloudUrl.String() {
 		env = "test"
 	} else {

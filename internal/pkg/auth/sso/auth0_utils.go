@@ -4,16 +4,19 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/confluentinc/cli/internal/pkg/types"
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
 var auth0ClientIds = map[string]string{
-	"cpd":              "7rG4pmRbnMn5mIsEBLAP941IE1x2rNqC",
-	"devel":            "sPhOuMMVRSFFR7HfB606KLxf1RAU4SXg",
-	"fedramp-internal": "0oa7c9gkc6bHBD2OW1d7",
-	"prod":             "oX2nvSKl5jvBKVgwehZfvR4K8RhsZIEs",
-	"stag":             "8RxQmZEYtEDah4MTIIzl4hGGeFwdJS6w",
-	"test":             "00000000000000000000000000000000",
+	"cpd":          "7rG4pmRbnMn5mIsEBLAP941IE1x2rNqC",
+	"devel":        "sPhOuMMVRSFFR7HfB606KLxf1RAU4SXg",
+	"infra-us-gov": "0oa7c9gkc6bHBD2OW1d7",
+	"prod-us-gov":  "TODO",
+	"devel-us-gov": "TODO",
+	"prod":         "oX2nvSKl5jvBKVgwehZfvR4K8RhsZIEs",
+	"stag":         "8RxQmZEYtEDah4MTIIzl4hGGeFwdJS6w",
+	"test":         "00000000000000000000000000000000",
 }
 
 func GetAuth0CCloudClientIdFromBaseUrl(baseUrl string) string {
@@ -36,8 +39,12 @@ func GetCCloudEnvFromBaseUrl(baseUrl string) string {
 		return "stag"
 	case "devel.cpdev.cloud":
 		return "devel"
+	case "confluentgov.com":
+		return "prod-us-gov"
 	case "infra.confluentgov-internal.com":
-		return "fedramp-internal"
+		return "infra-us-gov"
+	case "devel.confluentgov-internal.com":
+		return "devel-us-gov"
 	case testserver.TestCloudUrl.Host:
 		return "test"
 	default:
@@ -46,5 +53,5 @@ func GetCCloudEnvFromBaseUrl(baseUrl string) string {
 }
 
 func IsOkta(url string) bool {
-	return GetCCloudEnvFromBaseUrl(url) == "fedramp-internal"
+	return types.Contains([]string{"prod-us-gov", "infra-us-gov", "devel-us-gov"}, GetCCloudEnvFromBaseUrl(url))
 }
