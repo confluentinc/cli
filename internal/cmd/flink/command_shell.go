@@ -116,7 +116,7 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 			FlinkGatewayUrl:   parsedUrl.String(),
 			UnsafeTrace:       unsafeTrace,
 			UserAgent:         c.Version.UserAgent,
-			EnvId:             environmentId,
+			EnvironmentId:     environmentId,
 			OrgResourceId:     resourceId,
 			KafkaClusterId:    cluster,
 			ComputePoolId:     computePool,

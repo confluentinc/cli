@@ -61,7 +61,7 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 	// Process remote statements
 	statementObj, err := s.client.CreateStatement(
 		s.appOptions.GetOrgResourceId(),
-		s.appOptions.GetEnvId(),
+		s.appOptions.GetEnvironmentId(),
 		s.appOptions.GetComputePoolId(),
 		s.appOptions.GetIdentityPoolId(),
 		statement,
@@ -104,7 +104,7 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 	}
 
 	// Process remote statements that are now running or completed
-	statementResultObj, err := s.client.GetStatementResults(s.appOptions.GetOrgResourceId(), s.appOptions.GetEnvId(), statement.StatementName, statement.PageToken)
+	statementResultObj, err := s.client.GetStatementResults(s.appOptions.GetOrgResourceId(), s.appOptions.GetEnvironmentId(), statement.StatementName, statement.PageToken)
 	if err != nil {
 		return nil, &types.StatementError{Msg: err.Error()}
 	}
@@ -126,7 +126,7 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 }
 
 func (s *Store) DeleteStatement(statementName string) bool {
-	err := s.client.DeleteStatement(s.appOptions.GetOrgResourceId(), s.appOptions.GetEnvId(), statementName)
+	err := s.client.DeleteStatement(s.appOptions.GetOrgResourceId(), s.appOptions.GetEnvironmentId(), statementName)
 	if err != nil {
 		log.CliLogger.Warnf("Failed to delete the statement: %v", err)
 		return false
@@ -146,7 +146,7 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 		case <-ctx.Done():
 			return nil, &types.StatementError{Msg: "Result retrieval aborted. Statement will be deleted.", HttpResponseCode: 499}
 		default:
-			statementObj, err := s.client.GetStatement(s.appOptions.GetOrgResourceId(), s.appOptions.GetEnvId(), statementName)
+			statementObj, err := s.client.GetStatement(s.appOptions.GetOrgResourceId(), s.appOptions.GetEnvironmentId(), statementName)
 			if err != nil {
 				return nil, &types.StatementError{Msg: "Error: " + err.Error()}
 			}
@@ -218,7 +218,7 @@ func (s *Store) propsDefault(propsWithoutDefault map[string]string) map[string]s
 	}
 
 	if _, ok := properties[config.ConfigKeyCatalog]; !ok {
-		properties[config.ConfigKeyCatalog] = s.appOptions.GetEnvId()
+		properties[config.ConfigKeyCatalog] = s.appOptions.GetEnvironmentId()
 	}
 	if _, ok := properties[config.ConfigKeyDatabase]; !ok {
 		properties[config.ConfigKeyDatabase] = s.appOptions.GetKafkaClusterId()

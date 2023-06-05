@@ -70,7 +70,7 @@ func TestWaitForPendingStatement3(t *testing.T) {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
 	appOptions := types.ApplicationOptions{
 		OrgResourceId: "orgId",
-		EnvId:         "envId",
+		EnvironmentId: "envId",
 	}
 	s := &Store{
 		client:     client,
@@ -98,7 +98,7 @@ func TestWaitForPendingTimesout(t *testing.T) {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
 	appOptions := types.ApplicationOptions{
 		OrgResourceId: "orgId",
-		EnvId:         "envId",
+		EnvironmentId: "envId",
 	}
 	s := &Store{
 		client:     client,
@@ -124,7 +124,7 @@ func TestWaitForPendingEventuallyCompletes(t *testing.T) {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
 	appOptions := types.ApplicationOptions{
 		OrgResourceId: "orgId",
-		EnvId:         "envId",
+		EnvironmentId: "envId",
 	}
 	s := &Store{
 		client:     client,
@@ -158,7 +158,7 @@ func TestWaitForPendingStatementErrors(t *testing.T) {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
 	appOptions := types.ApplicationOptions{
 		OrgResourceId: "orgId",
-		EnvId:         "envId",
+		EnvironmentId: "envId",
 	}
 	s := &Store{
 		client:     client,
@@ -184,7 +184,7 @@ func TestCancelPendingStatement(t *testing.T) {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
 	appOptions := types.ApplicationOptions{
 		OrgResourceId: "orgId",
-		EnvId:         "envId",
+		EnvironmentId: "envId",
 	}
 	s := &Store{
 		client:     client,
@@ -595,7 +595,7 @@ func (s *StoreTestSuite) TestDeleteStatement() {
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
 	appOptions := types.ApplicationOptions{
 		OrgResourceId: "orgId",
-		EnvId:         "envId",
+		EnvironmentId: "envId",
 	}
 	store := NewStore(client, mockAppController.ExitApplication, &appOptions)
 
@@ -615,7 +615,7 @@ func (s *StoreTestSuite) TestDeleteStatementFailsOnError() {
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
 	appOptions := types.ApplicationOptions{
 		OrgResourceId: "orgId",
-		EnvId:         "envId",
+		EnvironmentId: "envId",
 	}
 	store := NewStore(client, mockAppController.ExitApplication, &appOptions)
 
@@ -635,7 +635,7 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWithCompletedStatement() {
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
 	appOptions := types.ApplicationOptions{
 		OrgResourceId: "orgId",
-		EnvId:         "envId",
+		EnvironmentId: "envId",
 	}
 	store := NewStore(client, mockAppController.ExitApplication, &appOptions)
 
@@ -663,7 +663,7 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWithRunningStatement() {
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
 	appOptions := types.ApplicationOptions{
 		OrgResourceId: "orgId",
-		EnvId:         "envId",
+		EnvironmentId: "envId",
 	}
 	store := NewStore(client, mockAppController.ExitApplication, &appOptions)
 
@@ -691,7 +691,7 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWhenPageTokenExists() {
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
 	appOptions := types.ApplicationOptions{
 		OrgResourceId: "orgId",
-		EnvId:         "envId",
+		EnvironmentId: "envId",
 	}
 	store := NewStore(client, mockAppController.ExitApplication, &appOptions)
 
@@ -720,7 +720,7 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWhenResultsExist() {
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
 	appOptions := types.ApplicationOptions{
 		OrgResourceId: "orgId",
-		EnvId:         "envId",
+		EnvironmentId: "envId",
 	}
 	store := NewStore(client, mockAppController.ExitApplication, &appOptions)
 
