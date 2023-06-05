@@ -3,7 +3,6 @@ package connect
 import (
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -14,6 +13,7 @@ import (
 	"github.com/confluentinc/properties"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/exec"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/types"
@@ -304,14 +304,10 @@ func standardWorkerConfigLocations(installation *platformInstallation) ([]Worker
 	}
 }
 
-func runningWorkerConfigLocations() ([]WorkerConfig, error) {
-	re := regexp.MustCompile(`org\.apache\.kafka\.connect\.cli\.Connect(Distributed|Standalone)`)
+func runningWorkerConfigLocations(searchProcessCmd exec.Command) ([]WorkerConfig, error) {
+	re := regexp.MustCompile(workerProcessRegexStr)
 
-	command := `ps ax |
-					grep -E '` + re.String() + `'|
-					grep -v grep;
-				test ${PIPESTATUS[0]} -eq 0`
-	out, err := exec.Command("/bin/bash", "-c", command).Output()
+	out, err := searchProcessCmd.Output()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to run shell command to locate running Connect worker processes")
 	}
@@ -355,7 +351,14 @@ func chooseWorkerConfigs(cmd *cobra.Command, installation *platformInstallation,
 		}
 	}
 
-	if runningWorkerConfigs, err := runningWorkerConfigLocations(); err != nil {
+	re := regexp.MustCompile(workerProcessRegexStr)
+	commandStr := `ps ax |
+					grep -E '` + re.String() + `'|
+					grep -v grep;
+				test ${PIPESTATUS[0]} -eq 0`
+	searchProcessCmd := exec.NewCommand("/bin/bash", "-c", commandStr)
+
+	if runningWorkerConfigs, err := runningWorkerConfigLocations(searchProcessCmd); err != nil {
 		return nil, errors.Wrap(err, "could not infer possible worker configuration file locations from running processes")
 	} else {
 		for _, workerConfig := range runningWorkerConfigs {

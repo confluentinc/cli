@@ -28,6 +28,7 @@ import (
 const (
 	invalidDirectoryErrorMsg       = `plugin directory "%s" does not exist`
 	unexpectedInstallationErrorMsg = "unexpected installation type: %s"
+	workerProcessRegexStr          = `org\.apache\.kafka\.connect\.cli\.Connect(Distributed|Standalone)`
 )
 
 func (c *pluginCommand) newInstallCommand() *cobra.Command {
