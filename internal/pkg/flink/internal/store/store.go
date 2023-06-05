@@ -89,7 +89,7 @@ func (s *Store) WaitPendingStatement(ctx context.Context, statement types.Proces
 		// Check for failed or cancelled statements
 		statementStatus = updatedStatement.Status
 		if statementStatus != types.COMPLETED && statementStatus != types.RUNNING {
-			return nil, &types.StatementError{Msg: fmt.Sprintf("Error: Can't fetch results. Statement phase is: %s", statementStatus)}
+			return nil, &types.StatementError{Msg: fmt.Sprintf("Can't fetch results. Statement phase is: %s", statementStatus)}
 		}
 		statement = *updatedStatement
 	}
@@ -116,14 +116,14 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 		statementResults := statementResultObj.GetResults()
 		convertedResults, err := results.ConvertToInternalResults(statementResults.GetData(), statement.ResultSchema)
 		if err != nil {
-			return nil, &types.StatementError{Msg: "Error: " + err.Error()}
+			return nil, &types.StatementError{Msg: err.Error()}
 		}
 		statement.StatementResults = convertedResults
 
 		statementMetadata := statementResultObj.GetMetadata()
 		extractedToken, err := extractPageToken(statementMetadata.GetNext())
 		if err != nil {
-			return nil, &types.StatementError{Msg: "Error: " + err.Error()}
+			return nil, &types.StatementError{Msg: err.Error()}
 		}
 		statement.PageToken = extractedToken
 		if statement.Status == types.COMPLETED || statement.PageToken != "" || len(statementResults.GetData()) > 0 {
@@ -158,7 +158,7 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 		default:
 			statementObj, err := s.client.GetStatement(s.appOptions.GetOrgResourceId(), s.appOptions.GetEnvId(), statementName)
 			if err != nil {
-				return nil, &types.StatementError{Msg: "Error: " + err.Error()}
+				return nil, &types.StatementError{Msg: err.Error()}
 			}
 
 			phase := types.PHASE(statementObj.Status.GetPhase())
@@ -192,7 +192,7 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 		errorsMsg = fmt.Sprintf(" Captured retriable errors: %s", strings.Join(capturedErrors, "; "))
 	}
 
-	return nil, &types.StatementError{Msg: fmt.Sprintf("Error: Statement is still pending after %f seconds.%s \n\nIf you want to increase the timeout for the client, you can run \"SET table.results-timeout=1200;\" to adjust the maximum timeout in seconds.", timeout.Seconds(), errorsMsg)}
+	return nil, &types.StatementError{Msg: fmt.Sprintf("Statement is still pending after %f seconds.%s \n\nIf you want to increase the timeout for the client, you can run \"SET table.results-timeout=1200;\" to adjust the maximum timeout in seconds.", timeout.Seconds(), errorsMsg)}
 }
 
 func extractPageToken(nextUrl string) (string, error) {

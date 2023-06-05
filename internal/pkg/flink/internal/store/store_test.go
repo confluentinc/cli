@@ -173,7 +173,7 @@ func TestWaitForPendingStatementErrors(t *testing.T) {
 	expectedErr := errors.New("couldn't get statement!")
 	client.EXPECT().GetStatement("orgId", "envId", statementName).Return(statementObj, expectedErr).Times(1)
 	_, err := s.waitForPendingStatement(context.Background(), statementName, waitTime)
-	assert.EqualError(t, err, "Error: "+expectedErr.Error())
+	assert.EqualError(t, err, fmt.Sprintf("Error: %s", expectedErr.Error()))
 }
 
 func TestCancelPendingStatement(t *testing.T) {
@@ -417,7 +417,7 @@ func (s *StoreTestSuite) TestParseUSEStatementError() {
 
 	_, _, err = parseUseStatement("USE CATALOG DATABASE DB2;")
 	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Invalid syntax for USE. Usage examples: USE CATALOG my_catalog or USE my_database", err.Error())
+	assert.Equal(s.T(), "Error: Invalid syntax for USE. Usage examples: USE CATALOG my_catalog or USE my_database", err.Error())
 }
 
 func (s *StoreTestSuite) TestParseResetStatement() {
@@ -542,7 +542,7 @@ func (s *StoreTestSuite) TestProccessHttpErrors() {
 
 	// expect
 	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Invalid syntax: you should provide a table for select", err.Error())
+	assert.Equal(s.T(), "Error: Invalid syntax: you should provide a table for select", err.Error())
 
 	// given
 	res = &http.Response{
