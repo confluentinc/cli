@@ -87,7 +87,7 @@ func (e *StatementError) Error() string {
 	if e.FailureMessage == "" {
 		return fmt.Sprintf("Error: %s", e.Msg)
 	}
-	return fmt.Sprintf("Error: %s \n Error details: %s", e.Msg, e.FailureMessage)
+	return fmt.Sprintf("Error: %s \nError details: %s", e.Msg, e.FailureMessage)
 }
 
 type PHASE string
