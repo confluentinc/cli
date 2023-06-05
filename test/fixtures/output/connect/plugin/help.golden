@@ -1,4 +1,4 @@
-Show plugins and their configurations.
+Manage Connect plugins.
 
 Usage:
   confluent connect plugin [command]
