@@ -1044,3 +1044,185 @@ func (s *StoreTestSuite) TestWaitPendingStatementFailsOnNonCompletedOrRunningSta
 	require.Nil(s.T(), processedStatement)
 	require.Equal(s.T(), expectedError, err)
 }
+
+func (s *StoreTestSuite) TestWaitPendingStatementFetchesExceptionOnFailedStatementWithEmptyStatusDetail() {
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
+	appOptions := &types.ApplicationOptions{
+		OrgResourceId: "orgId",
+		EnvId:         "envId",
+	}
+	store := Store{
+		Properties: map[string]string{
+			"TestProp": "TestVal",
+		},
+		client:     client,
+		appOptions: appOptions,
+	}
+
+	statementName := "Test Statement"
+	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
+		Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
+			StatementName: &statementName,
+		},
+		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+			Phase: "FAILED",
+		},
+	}
+	exception1 := "Exception 1"
+	exception2 := "Exception 2"
+	exceptionsResponse := flinkgatewayv1alpha1.SqlV1alpha1StatementExceptionList{
+		Data: []flinkgatewayv1alpha1.SqlV1alpha1StatementException{
+			{Stacktrace: &exception1},
+			{Stacktrace: &exception2},
+		},
+	}
+	expectedError := &types.StatementError{
+		Msg:            fmt.Sprintf("Can't fetch results. Statement phase is: %s", statementObj.Status.Phase),
+		FailureMessage: exception2,
+	}
+
+	client.EXPECT().GetStatement("orgId", "envId", statementName).Return(statementObj, nil)
+	client.EXPECT().GetExceptions("orgId", "envId", statementName).Return(exceptionsResponse, nil)
+
+	processedStatement, err := store.WaitPendingStatement(context.Background(), types.ProcessedStatement{
+		StatementName: statementName,
+		Status:        types.PENDING,
+	})
+	require.Nil(s.T(), processedStatement)
+	require.Equal(s.T(), expectedError, err)
+}
+
+func (s *StoreTestSuite) TestGetStatusDetail() {
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
+	appOptions := &types.ApplicationOptions{
+		OrgResourceId: "orgId",
+		EnvId:         "envId",
+	}
+	store := Store{
+		Properties: map[string]string{
+			"TestProp": "TestVal",
+		},
+		client:     client,
+		appOptions: appOptions,
+	}
+
+	statementName := "Test Statement"
+	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
+		Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
+			StatementName: &statementName,
+		},
+		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+			Phase: "FAILED",
+		},
+	}
+	exception1 := "Exception 1"
+	exception2 := "Exception 2"
+	exceptionsResponse := flinkgatewayv1alpha1.SqlV1alpha1StatementExceptionList{
+		Data: []flinkgatewayv1alpha1.SqlV1alpha1StatementException{
+			{Stacktrace: &exception1},
+			{Stacktrace: &exception2},
+		},
+	}
+
+	client.EXPECT().GetExceptions("orgId", "envId", statementName).Return(exceptionsResponse, nil).Times(2)
+
+	require.Equal(s.T(), exception2, store.getStatusDetail(statementObj))
+	statementObj.Status.Phase = "FAILING"
+	require.Equal(s.T(), exception2, store.getStatusDetail(statementObj))
+}
+
+func (s *StoreTestSuite) TestGetStatusDetailReturnsWhenStatusNoFailedOrFailing() {
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
+	appOptions := &types.ApplicationOptions{
+		OrgResourceId: "orgId",
+		EnvId:         "envId",
+	}
+	store := Store{
+		Properties: map[string]string{
+			"TestProp": "TestVal",
+		},
+		client:     client,
+		appOptions: appOptions,
+	}
+
+	statementName := "Test Statement"
+	testStatusDetailMessage := "Test Status Detail Message"
+	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
+		Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
+			StatementName: &statementName,
+		},
+		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+			Phase:  "PENDING",
+			Detail: &testStatusDetailMessage,
+		},
+	}
+
+	require.Equal(s.T(), testStatusDetailMessage, store.getStatusDetail(statementObj))
+	statementObj.Status.Phase = "COMPLETED"
+	require.Equal(s.T(), testStatusDetailMessage, store.getStatusDetail(statementObj))
+	statementObj.Status.Phase = "RUNNING"
+	require.Equal(s.T(), testStatusDetailMessage, store.getStatusDetail(statementObj))
+	statementObj.Status.Phase = "DELETED"
+	require.Equal(s.T(), testStatusDetailMessage, store.getStatusDetail(statementObj))
+}
+
+func (s *StoreTestSuite) TestGetStatusDetailReturnsWhenStatusDetailFilled() {
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
+	appOptions := &types.ApplicationOptions{
+		OrgResourceId: "orgId",
+		EnvId:         "envId",
+	}
+	store := Store{
+		Properties: map[string]string{
+			"TestProp": "TestVal",
+		},
+		client:     client,
+		appOptions: appOptions,
+	}
+
+	statementName := "Test Statement"
+	testStatusDetailMessage := "Test Status Detail Message"
+	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
+		Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
+			StatementName: &statementName,
+		},
+		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+			Phase:  "FAILED",
+			Detail: &testStatusDetailMessage,
+		},
+	}
+
+	require.Equal(s.T(), testStatusDetailMessage, store.getStatusDetail(statementObj))
+}
+
+func (s *StoreTestSuite) TestGetStatusDetailReturnsEmptyWhenNoExceptionsAvailable() {
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
+	appOptions := &types.ApplicationOptions{
+		OrgResourceId: "orgId",
+		EnvId:         "envId",
+	}
+	store := Store{
+		Properties: map[string]string{
+			"TestProp": "TestVal",
+		},
+		client:     client,
+		appOptions: appOptions,
+	}
+
+	statementName := "Test Statement"
+	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
+		Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
+			StatementName: &statementName,
+		},
+		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+			Phase: "FAILED",
+		},
+	}
+	exceptionsResponse := flinkgatewayv1alpha1.SqlV1alpha1StatementExceptionList{
+		Data: []flinkgatewayv1alpha1.SqlV1alpha1StatementException{},
+	}
+
+	client.EXPECT().GetExceptions("orgId", "envId", statementName).Return(exceptionsResponse, nil)
+
+	require.Equal(s.T(), "", store.getStatusDetail(statementObj))
+}
