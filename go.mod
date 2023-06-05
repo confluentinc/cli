@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/antihax/optional v1.0.0
-	github.com/aws/aws-sdk-go v1.44.271
+	github.com/aws/aws-sdk-go v1.44.274
 	github.com/billgraziano/dpapi v0.4.0
 	github.com/bradleyjkemp/cupaloy v2.3.0+incompatible
 	github.com/brianstrauch/cobra-shell v0.4.0
@@ -32,7 +32,7 @@ require (
 	github.com/confluentinc/confluent-kafka-go v1.9.3-RC3
 	github.com/confluentinc/go-editor v0.11.0
 	github.com/confluentinc/go-netrc v0.0.0-20220321173724-4d50f36ff450
-	github.com/confluentinc/go-prompt v0.2.17
+	github.com/confluentinc/go-prompt v0.2.18
 	github.com/confluentinc/go-ps1 v1.0.2
 	github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3 v0.3.14
 	github.com/confluentinc/mds-sdk-go-public/mdsv1 v0.0.0-20230117192233-7e6d894d74a9
@@ -73,7 +73,7 @@ require (
 	github.com/sevlyar/retag v0.0.0-20190429052747-c3f10e304082
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/pflag v1.0.5
-	github.com/stretchr/testify v1.8.3
+	github.com/stretchr/testify v1.8.4
 	github.com/stripe/stripe-go v70.15.0+incompatible
 	github.com/swaggest/go-asyncapi v0.8.0
 	github.com/tidwall/gjson v1.14.4
@@ -88,7 +88,7 @@ require (
 	gopkg.in/launchdarkly/go-sdk-common.v2 v2.5.1
 	gopkg.in/square/go-jose.v2 v2.6.0
 	k8s.io/apimachinery v0.27.2
-	pgregory.net/rapid v0.5.7
+	pgregory.net/rapid v0.6.1
 )
 
 require (
