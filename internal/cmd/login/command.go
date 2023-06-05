@@ -353,7 +353,7 @@ func (c *command) getURL(cmd *cobra.Command) (string, error) {
 		return "", err
 	}
 	if usGov {
-		return "confluentgov.com", nil
+		return "https://confluentgov.com", nil
 	}
 
 	url, err := cmd.Flags().GetString("url")
