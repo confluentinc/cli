@@ -63,11 +63,11 @@ func removeUnreleasedDocs() {
 }
 
 func removeUnreleasedCommands(command string) {
-	if err := removeLineFromFile(fmt.Sprintf(`\s{3}%v/index\n`, command), filepath.Join("docs", "index.rst")); err != nil {
+	if err := removeLineFromFile(fmt.Sprintf(`\s{3}%s/index\n`, command), filepath.Join("docs", "index.rst")); err != nil {
 		panic(err)
 	}
 
-	if err := removeLineFromFile(fmt.Sprintf("\\s{7}:ref:`confluent_%v`\\s+.+\\s+\n", command), filepath.Join("docs", "overview.rst")); err != nil {
+	if err := removeLineFromFile(fmt.Sprintf("\\s{7}:ref:`confluent_%s`\\s+.+\\s+\n", command), filepath.Join("docs", "overview.rst")); err != nil {
 		panic(err)
 	}
 
