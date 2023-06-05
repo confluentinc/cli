@@ -654,7 +654,7 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWithCompletedStatement() {
 	require.Nil(s.T(), err)
 }
 
-func (s *StoreTestSuite) TestFetchResultsNoRetryWithRunningStatement() {
+func (s *StoreTestSuite) TestFetchResultsWithRunningStatement() {
 	ctrl := gomock.NewController(s.T())
 	defer ctrl.Finish()
 
