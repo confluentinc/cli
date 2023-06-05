@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"strings"
 
 	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
@@ -76,7 +77,13 @@ type StatementError struct {
 }
 
 func (e *StatementError) Error() string {
-	return e.Msg
+	if e == nil {
+		return ""
+	}
+	if e.Msg == "" {
+		return "Error"
+	}
+	return fmt.Sprintf("Error: %s", e.Msg)
 }
 
 type PHASE string
