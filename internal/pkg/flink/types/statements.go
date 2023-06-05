@@ -98,6 +98,7 @@ const (
 	COMPLETED PHASE = "COMPLETED" // All results were fetched
 	DELETING  PHASE = "DELETING"
 	FAILED    PHASE = "FAILED"
+	FAILING   PHASE = "FAILING"
 )
 
 // Custom Internal type that shall be used internally by the client

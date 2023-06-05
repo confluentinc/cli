@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/flink/config"
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/results"
@@ -68,8 +69,8 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 		s.propsDefault(s.Properties),
 	)
 	if err != nil {
-		status := statementObj.GetStatus()
-		return nil, &types.StatementError{Msg: err.Error(), FailureMessage: status.GetDetail()}
+		statusDetail := s.getStatusDetail(statementObj)
+		return nil, &types.StatementError{Msg: err.Error(), FailureMessage: statusDetail}
 	}
 	return types.NewProcessedStatement(statementObj), nil
 }
@@ -156,19 +157,19 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 			return nil, &types.StatementError{Msg: "Result retrieval aborted. Statement will be deleted.", HttpResponseCode: 499}
 		default:
 			statementObj, err := s.client.GetStatement(s.appOptions.GetOrgResourceId(), s.appOptions.GetEnvId(), statementName)
-			status := statementObj.GetStatus()
+			statusDetail := s.getStatusDetail(statementObj)
 			if err != nil {
-				return nil, &types.StatementError{Msg: err.Error(), FailureMessage: status.GetDetail()}
+				return nil, &types.StatementError{Msg: err.Error(), FailureMessage: statusDetail}
 			}
 
-			phase := types.PHASE(status.GetPhase())
+			phase := types.PHASE(statementObj.Status.GetPhase())
 			if phase != types.PENDING {
 				return types.NewProcessedStatement(statementObj), nil
 			}
 
 			// if status.detail is filled we encountered a retryable server response
-			if status.GetDetail() != "" {
-				capturedErrors = append(capturedErrors, status.GetDetail())
+			if statusDetail != "" {
+				capturedErrors = append(capturedErrors, statusDetail)
 			}
 		}
 
@@ -202,6 +203,28 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 			timeout.Seconds()),
 		FailureMessage: errorsMsg,
 	}
+}
+
+func (s *Store) getStatusDetail(statementObj flinkgatewayv1alpha1.SqlV1alpha1Statement) string {
+	status := statementObj.GetStatus()
+	phase := types.PHASE(status.GetPhase())
+	if phase != types.FAILED && phase != types.FAILING {
+		return status.GetDetail()
+	}
+
+	if status.GetDetail() != "" {
+		return status.GetDetail()
+	}
+
+	// if the statement is in FAILED or FAILING phase and the status detail field is empty we show the latest exception instead
+	exceptionsResponse, _ := s.client.GetExceptions(s.appOptions.GetOrgResourceId(), s.appOptions.GetEnvId(), statementObj.Spec.GetStatementName())
+	exceptions := exceptionsResponse.GetData()
+	if len(exceptions) == 0 {
+		return status.GetDetail()
+	}
+
+	// is the list sorted?
+	return exceptions[len(exceptions)-1].GetStacktrace()
 }
 
 func extractPageToken(nextUrl string) (string, error) {
