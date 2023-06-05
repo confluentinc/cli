@@ -112,14 +112,14 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 	statementResults := statementResultObj.GetResults()
 	convertedResults, err := results.ConvertToInternalResults(statementResults.GetData(), statement.ResultSchema)
 	if err != nil {
-		return nil, &types.StatementError{Msg: fmt.Sprintf("Error: %v", err.Error())}
+		return nil, &types.StatementError{Msg: fmt.Sprintf("Error: %v", err)}
 	}
 	statement.StatementResults = convertedResults
 
 	statementMetadata := statementResultObj.GetMetadata()
 	extractedToken, err := extractPageToken(statementMetadata.GetNext())
 	if err != nil {
-		return nil, &types.StatementError{Msg: fmt.Sprintf("Error: %v", err.Error())}
+		return nil, &types.StatementError{Msg: fmt.Sprintf("Error: %v", err)}
 	}
 	statement.PageToken = extractedToken
 	return &statement, nil
@@ -148,7 +148,7 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 		default:
 			statementObj, err := s.client.GetStatement(s.appOptions.GetOrgResourceId(), s.appOptions.GetEnvironmentId(), statementName)
 			if err != nil {
-				return nil, &types.StatementError{Msg: fmt.Sprintf("Error: %v", err.Error())}
+				return nil, &types.StatementError{Msg: fmt.Sprintf("Error: %v", err)}
 			}
 
 			phase := types.PHASE(statementObj.Status.GetPhase())
