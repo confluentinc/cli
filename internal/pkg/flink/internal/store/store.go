@@ -164,7 +164,9 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 
 			phase := types.PHASE(statementObj.Status.GetPhase())
 			if phase != types.PENDING {
-				return types.NewProcessedStatement(statementObj), nil
+				processedStatement := types.NewProcessedStatement(statementObj)
+				processedStatement.StatusDetail = statusDetail
+				return processedStatement, nil
 			}
 
 			// if status.detail is filled we encountered a retryable server response
