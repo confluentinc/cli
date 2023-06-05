@@ -50,7 +50,7 @@ func handleBillingCosts(t *testing.T) http.HandlerFunc {
 				LineType:       billingv1.PtrString("SUPPORT"),
 				Product:        billingv1.PtrString("SUPPORT_PREMIER"),
 				Price:          nil,
-				Amount:         nil,
+				Amount:         billingv1.PtrFloat64(70.0),
 				DiscountAmount: nil,
 				OriginalAmount: billingv1.PtrFloat64(70.0),
 			}

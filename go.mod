@@ -104,8 +104,6 @@ require (
 	github.com/bufbuild/protocompile v0.4.0 // indirect
 	github.com/c-bata/go-prompt v0.2.6 // indirect
 	github.com/cenkalti/backoff v2.2.1+incompatible // indirect
-	github.com/chromedp/cdproto v0.0.0-20230220211738-2b1ec77315c9 // indirect
-	github.com/chromedp/sysutil v1.0.0 // indirect
 	github.com/confluentinc/ccloud-sdk-go-v2/billing v0.3.0
 	github.com/confluentinc/proto-go-setter v0.3.0 // indirect
 	github.com/containerd/continuity v0.3.0 // indirect

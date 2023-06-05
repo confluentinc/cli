@@ -2,7 +2,7 @@ package billing
 
 import (
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	"github.com/confluentinc/cli/internal/pkg/billing"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -12,19 +12,19 @@ import (
 )
 
 type costOut struct {
-	StartDate           string `human:"Start Date" serialized:"start_date"`
-	EndDate             string `human:"End Date" serialized:"end_date"`
-	Granularity         string `human:"Granularity" serialized:"granularity"`
-	LineType            string `human:"Line Type" serialized:"line_type"`
-	Product             string `human:"Product" serialized:"product"`
-	ResourceId          string `human:"Resource ID" serialized:"resource_id"`
-	ResourceDisplayName string `human:"Resource Display Name" serialized:"resource_display_name"`
-	EnvironmentId       string `human:"Environment ID" serialized:"environment_id"`
-	NetworkAccessType   string `human:"Network Access Type" serialized:"network_access_type"`
-	Price               string `human:"Price" serialized:"price"`
-	OriginalAmount      string `human:"Original Amount" serialized:"original_amount"`
-	DiscountAmount      string `human:"Discount Amount" serialized:"discount_amount"`
-	Amount              string `human:"Amount" serialized:"amount"`
+	StartDate           string  `human:"Start Date" serialized:"start_date"`
+	EndDate             string  `human:"End Date" serialized:"end_date"`
+	Granularity         string  `human:"Granularity" serialized:"granularity"`
+	LineType            string  `human:"Line Type" serialized:"line_type"`
+	Product             string  `human:"Product" serialized:"product,omitempty"`
+	ResourceId          string  `human:"Resource ID" serialized:"resource_id,omitempty"`
+	ResourceDisplayName string  `human:"Resource Display Name" serialized:"resource_display_name,omitempty"`
+	EnvironmentId       string  `human:"Environment ID" serialized:"environment_id,omitempty"`
+	NetworkAccessType   string  `human:"Network Access Type" serialized:"network_access_type,omitempty"`
+	Price               string  `human:"Price" serialized:"price,omitempty"`
+	OriginalAmount      float64 `human:"Original Amount" serialized:"original_amount"`
+	DiscountAmount      float64 `human:"Discount Amount" serialized:"discount_amount,omitempty"`
+	Amount              float64 `human:"Amount" serialized:"amount,omitempty"`
 }
 
 func (c *command) newCostListCommand() *cobra.Command {
@@ -82,19 +82,18 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 
 		// These fields may be empty depending on the line type, so casting floats as strings as to avoid zero-value
 		if price, ok := cost.GetPriceOk(); ok {
-			out.Price = utils.FormatPrice(*price, cost.GetUnit())
+			out.Price = billing.FormatPrice(*price, cost.GetUnit())
 		}
 
 		if originalAmount, ok := cost.GetOriginalAmountOk(); ok {
-
-			out.OriginalAmount = fmt.Sprintf("%.8f", *originalAmount)
+			out.OriginalAmount = *originalAmount
 		}
 
 		if discountAmount, ok := cost.GetDiscountAmountOk(); ok {
-			out.DiscountAmount = fmt.Sprintf("%.8f", *discountAmount)
+			out.DiscountAmount = *discountAmount
 		}
 		if amount, ok := cost.GetAmountOk(); ok {
-			out.Amount = fmt.Sprintf("%.8f", *amount)
+			out.Amount = *amount
 		}
 
 		if resource, ok := cost.GetResourceOk(); ok {

@@ -10,9 +10,9 @@
     "environment_id": "env-123",
     "network_access_type": "INTERNET",
     "price": "$0.123 USD/GB",
-    "original_amount": "70.00000000",
-    "discount_amount": "20.00000000",
-    "amount": "50.00000000"
+    "original_amount": 70,
+    "discount_amount": 20,
+    "amount": 50
   },
   {
     "start_date": "2023-01-01 00:00:00",
@@ -25,9 +25,9 @@
     "environment_id": "env-123",
     "network_access_type": "INTERNET",
     "price": "$0.123 USD/GB",
-    "original_amount": "70.00000000",
-    "discount_amount": "20.00000000",
-    "amount": "50.00000000"
+    "original_amount": 70,
+    "discount_amount": 20,
+    "amount": 50
   },
   {
     "start_date": "2023-01-01 00:00:00",
@@ -40,9 +40,9 @@
     "environment_id": "env-123",
     "network_access_type": "INTERNET",
     "price": "$0.123 USD/GB",
-    "original_amount": "70.00000000",
-    "discount_amount": "20.00000000",
-    "amount": "50.00000000"
+    "original_amount": 70,
+    "discount_amount": 20,
+    "amount": 50
   },
   {
     "start_date": "2023-01-01 00:00:00",
@@ -55,9 +55,9 @@
     "environment_id": "env-123",
     "network_access_type": "INTERNET",
     "price": "$0.123 USD/GB",
-    "original_amount": "70.00000000",
-    "discount_amount": "20.00000000",
-    "amount": "50.00000000"
+    "original_amount": 70,
+    "discount_amount": 20,
+    "amount": 50
   },
   {
     "start_date": "2023-01-01 00:00:00",
@@ -70,9 +70,9 @@
     "environment_id": "env-123",
     "network_access_type": "INTERNET",
     "price": "$0.123 USD/GB",
-    "original_amount": "70.00000000",
-    "discount_amount": "20.00000000",
-    "amount": "50.00000000"
+    "original_amount": 70,
+    "discount_amount": 20,
+    "amount": 50
   },
   {
     "start_date": "2023-01-01 00:00:00",
@@ -85,9 +85,9 @@
     "environment_id": "env-123",
     "network_access_type": "INTERNET",
     "price": "$0.123 USD/GB",
-    "original_amount": "70.00000000",
-    "discount_amount": "20.00000000",
-    "amount": "50.00000000"
+    "original_amount": 70,
+    "discount_amount": 20,
+    "amount": 50
   },
   {
     "start_date": "2023-01-01 00:00:00",
@@ -100,9 +100,9 @@
     "environment_id": "env-123",
     "network_access_type": "INTERNET",
     "price": "$0.123 USD/GB",
-    "original_amount": "70.00000000",
-    "discount_amount": "20.00000000",
-    "amount": "50.00000000"
+    "original_amount": 70,
+    "discount_amount": 20,
+    "amount": 50
   },
   {
     "start_date": "2023-01-01 00:00:00",
@@ -115,9 +115,9 @@
     "environment_id": "env-123",
     "network_access_type": "INTERNET",
     "price": "$0.123 USD/GB",
-    "original_amount": "70.00000000",
-    "discount_amount": "20.00000000",
-    "amount": "50.00000000"
+    "original_amount": 70,
+    "discount_amount": 20,
+    "amount": 50
   },
   {
     "start_date": "2023-01-01 00:00:00",
@@ -130,9 +130,9 @@
     "environment_id": "env-123",
     "network_access_type": "INTERNET",
     "price": "$0.123 USD/GB",
-    "original_amount": "70.00000000",
-    "discount_amount": "20.00000000",
-    "amount": "50.00000000"
+    "original_amount": 70,
+    "discount_amount": 20,
+    "amount": 50
   },
   {
     "start_date": "2023-01-01 00:00:00",
@@ -145,9 +145,9 @@
     "environment_id": "env-123",
     "network_access_type": "INTERNET",
     "price": "$0.123 USD/GB",
-    "original_amount": "70.00000000",
-    "discount_amount": "20.00000000",
-    "amount": "50.00000000"
+    "original_amount": 70,
+    "discount_amount": 20,
+    "amount": 50
   },
   {
     "start_date": "2023-01-01 00:00:00",
@@ -160,9 +160,9 @@
     "environment_id": "env-123",
     "network_access_type": "INTERNET",
     "price": "$0.123 USD/GB",
-    "original_amount": "70.00000000",
-    "discount_amount": "20.00000000",
-    "amount": "50.00000000"
+    "original_amount": 70,
+    "discount_amount": 20,
+    "amount": 50
   },
   {
     "start_date": "2023-01-01 00:00:00",
@@ -175,9 +175,9 @@
     "environment_id": "env-123",
     "network_access_type": "INTERNET",
     "price": "$0.123 USD/GB",
-    "original_amount": "70.00000000",
-    "discount_amount": "20.00000000",
-    "amount": "50.00000000"
+    "original_amount": 70,
+    "discount_amount": 20,
+    "amount": 50
   },
   {
     "start_date": "2023-01-01 00:00:00",
@@ -190,9 +190,9 @@
     "environment_id": "env-123",
     "network_access_type": "INTERNET",
     "price": "$0.123 USD/GB",
-    "original_amount": "70.00000000",
-    "discount_amount": "20.00000000",
-    "amount": "50.00000000"
+    "original_amount": 70,
+    "discount_amount": 20,
+    "amount": 50
   },
   {
     "start_date": "2023-01-01 00:00:00",
@@ -205,9 +205,9 @@
     "environment_id": "env-123",
     "network_access_type": "INTERNET",
     "price": "$0.123 USD/GB",
-    "original_amount": "70.00000000",
-    "discount_amount": "20.00000000",
-    "amount": "50.00000000"
+    "original_amount": 70,
+    "discount_amount": 20,
+    "amount": 50
   },
   {
     "start_date": "2023-01-01 00:00:00",
@@ -220,9 +220,9 @@
     "environment_id": "env-123",
     "network_access_type": "INTERNET",
     "price": "$0.123 USD/GB",
-    "original_amount": "70.00000000",
-    "discount_amount": "20.00000000",
-    "amount": "50.00000000"
+    "original_amount": 70,
+    "discount_amount": 20,
+    "amount": 50
   },
   {
     "start_date": "2023-01-01 00:00:00",
@@ -235,9 +235,9 @@
     "environment_id": "env-123",
     "network_access_type": "INTERNET",
     "price": "$0.123 USD/GB",
-    "original_amount": "70.00000000",
-    "discount_amount": "20.00000000",
-    "amount": "50.00000000"
+    "original_amount": 70,
+    "discount_amount": 20,
+    "amount": 50
   },
   {
     "start_date": "2023-01-01 00:00:00",
@@ -250,9 +250,9 @@
     "environment_id": "env-123",
     "network_access_type": "INTERNET",
     "price": "$0.123 USD/GB",
-    "original_amount": "70.00000000",
-    "discount_amount": "20.00000000",
-    "amount": "50.00000000"
+    "original_amount": 70,
+    "discount_amount": 20,
+    "amount": 50
   },
   {
     "start_date": "2023-01-01 00:00:00",
@@ -265,9 +265,9 @@
     "environment_id": "env-123",
     "network_access_type": "INTERNET",
     "price": "$0.123 USD/GB",
-    "original_amount": "70.00000000",
-    "discount_amount": "20.00000000",
-    "amount": "50.00000000"
+    "original_amount": 70,
+    "discount_amount": 20,
+    "amount": 50
   },
   {
     "start_date": "2023-01-01 00:00:00",
@@ -280,9 +280,9 @@
     "environment_id": "env-123",
     "network_access_type": "INTERNET",
     "price": "$0.123 USD/GB",
-    "original_amount": "70.00000000",
-    "discount_amount": "20.00000000",
-    "amount": "50.00000000"
+    "original_amount": 70,
+    "discount_amount": 20,
+    "amount": 50
   },
   {
     "start_date": "2023-01-01 00:00:00",
@@ -295,9 +295,9 @@
     "environment_id": "env-123",
     "network_access_type": "INTERNET",
     "price": "$0.123 USD/GB",
-    "original_amount": "70.00000000",
-    "discount_amount": "20.00000000",
-    "amount": "50.00000000"
+    "original_amount": 70,
+    "discount_amount": 20,
+    "amount": 50
   },
   {
     "start_date": "2023-01-01 00:00:00",
@@ -305,13 +305,7 @@
     "granularity": "DAILY",
     "line_type": "SUPPORT",
     "product": "SUPPORT_PREMIER",
-    "resource_id": "",
-    "resource_display_name": "",
-    "environment_id": "",
-    "network_access_type": "",
-    "price": "",
-    "original_amount": "70.00000000",
-    "discount_amount": "",
-    "amount": ""
+    "original_amount": 70,
+    "amount": 70
   }
 ]

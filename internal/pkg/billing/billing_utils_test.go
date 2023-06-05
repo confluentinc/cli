@@ -1,4 +1,4 @@
-package utils
+package billing
 
 import (
 	"github.com/stretchr/testify/assert"
