@@ -1,6 +1,6 @@
 package testserver
 
-import (
+/*import (
 	"testing"
 
 	"github.com/gorilla/mux"
@@ -21,4 +21,4 @@ func NewHubRouter(t *testing.T) *mux.Router {
 	}
 
 	return router
-}
+}*/

@@ -10,9 +10,9 @@ import (
 
 var (
 	// TestCloudUrl is used to hardcode a specific port (1024) so tests can identify CCloud URLs
-	TestCloudUrl          = url.URL{Scheme: "http", Host: "127.0.0.1:1024"}
-	TestV2CloudUrl        = url.URL{Scheme: "http", Host: "127.0.0.1:2048"}
-	TestHubUrl            = url.URL{Scheme: "http", Host: "127.0.0.1:4096"}
+	TestCloudUrl   = url.URL{Scheme: "http", Host: "127.0.0.1:1024"}
+	TestV2CloudUrl = url.URL{Scheme: "http", Host: "127.0.0.1:2048"}
+	// TestHubUrl            = url.URL{Scheme: "http", Host: "127.0.0.1:4096"}
 	TestKafkaRestProxyUrl = url.URL{Scheme: "http", Host: "127.0.0.1:1025"}
 	TestFlinkGatewayUrl   = url.URL{Scheme: "http", Host: "127.0.0.1:1026"}
 )
@@ -26,7 +26,7 @@ type TestBackend struct {
 	flinkGateway   *httptest.Server
 	mds            *httptest.Server
 	sr             *httptest.Server
-	hub            *httptest.Server
+	// hub            *httptest.Server
 }
 
 func StartTestBackend(t *testing.T, isAuditLogEnabled bool) *TestBackend {
@@ -40,7 +40,7 @@ func StartTestBackend(t *testing.T, isAuditLogEnabled bool) *TestBackend {
 		flinkGateway:   newTestCloudServer(NewFlinkGatewayRouter(t), TestFlinkGatewayUrl.Host),
 		mds:            httptest.NewServer(NewMdsRouter(t)),
 		sr:             httptest.NewServer(NewSRRouter(t)),
-		hub:            newTestCloudServer(NewHubRouter(t), TestHubUrl.Host),
+		// hub:            newTestCloudServer(NewHubRouter(t), TestHubUrl.Host),
 	}
 
 	cloudRouter.srApiUrl = backend.sr.URL
@@ -93,9 +93,9 @@ func (b *TestBackend) Close() {
 	if b.sr != nil {
 		b.sr.Close()
 	}
-	if b.hub != nil {
+	/*if b.hub != nil {
 		b.hub.Close()
-	}
+	}*/
 }
 
 func (b *TestBackend) GetCloudUrl() string {

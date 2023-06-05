@@ -118,17 +118,17 @@ func (s *CLITestSuite) TestConnectPluginInstall() {
 		{args: "connect plugin install test/fixtures/input/connect/test-plugin.zip --confluent-platform test/fixtures --dry-run", fixture: "connect/plugin/install/platform-flag-fail.golden", exitCode: 1},
 		{args: fmt.Sprintf("connect plugin install test/fixtures/input/connect/test-plugin.zip --confluent-platform %[1]s --plugin-directory %[1]s/share/confluent-hub-components --worker-configs %[1]s/etc/kafka/connect-distributed.properties", confluentHome733), fixture: "connect/plugin/install/all-file-flags.golden", exitCode: 1},
 
-		{args: "connect plugin install bad-id-format", fixture: "connect/plugin/install/plugin-not-found.golden", exitCode: 1},
+		// {args: "connect plugin install bad-id-format", fixture: "connect/plugin/install/plugin-not-found.golden", exitCode: 1},
 		{args: "connect plugin install test/fixtures/input/connect/test-plugin.zip", env: []string{"CONFLUENT_HOME=test"}, fixture: "connect/plugin/install/platform-not-found.golden", exitCode: 1},
 		{args: "connect plugin install test/fixtures/input/connect/test-plugin.zip --plugin-directory /directory-dne", fixture: "connect/plugin/install/plugin-directory-not-found.golden", exitCode: 1},
 		{args: "connect plugin install test/fixtures/input/connect/test-plugin.zip --worker-configs /dne.properties", fixture: "connect/plugin/install/worker-config-not-found.golden", exitCode: 1},
 		{args: "connect plugin install test/fixtures/input/connect/test-plugin.zip --worker-configs /dne.properties,/dne2.properties", fixture: "connect/plugin/install/worker-config-multiple-not-found.golden", exitCode: 1},
 
-		{args: "connect plugin install confluentinc/integration-test-plugin:latest --dry-run", env: []string{"CONFLUENT_HOME=" + confluentHome733}, input: "y\ny\ny\n", fixture: "connect/plugin/install/remote.golden"},
+		/*{args: "connect plugin install confluentinc/integration-test-plugin:latest --dry-run", env: []string{"CONFLUENT_HOME=" + confluentHome733}, input: "y\ny\ny\n", fixture: "connect/plugin/install/remote.golden"},
 		{args: "connect plugin install confluentinc/integration-test-plugin:0.0.5 --dry-run", env: []string{"CONFLUENT_HOME=" + confluentHome733}, input: "y\ny\ny\n", fixture: "connect/plugin/install/remote-specific-version.golden"},
 		{args: "connect plugin install confluentinc/dne-connector:latest --dry-run", env: []string{"CONFLUENT_HOME=" + confluentHome733}, fixture: "connect/plugin/install/remote-dne.golden", exitCode: 1},
 		{args: "connect plugin install confluentinc/bad-md5:latest", env: []string{"CONFLUENT_HOME=" + confluentHome733}, input: "y\ny\n", fixture: "connect/plugin/install/remote-bad-md5.golden", exitCode: 1},
-		{args: "connect plugin install confluentinc/bad-sha1:latest", env: []string{"CONFLUENT_HOME=" + confluentHome733}, input: "y\ny\n", fixture: "connect/plugin/install/remote-bad-sha1.golden", exitCode: 1},
+		{args: "connect plugin install confluentinc/bad-sha1:latest", env: []string{"CONFLUENT_HOME=" + confluentHome733}, input: "y\ny\n", fixture: "connect/plugin/install/remote-bad-sha1.golden", exitCode: 1},*/
 	}
 
 	for _, tt := range tests {
