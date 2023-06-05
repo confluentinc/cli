@@ -5,7 +5,7 @@ type ApplicationOptions struct {
 	FlinkGatewayUrl   string
 	UnsafeTrace       bool
 	UserAgent         string
-	EnvId             string
+	EnvironmentId     string
 	OrgResourceId     string
 	KafkaClusterId    string
 	ComputePoolId     string
@@ -40,9 +40,9 @@ func (a *ApplicationOptions) GetUserAgent() string {
 	return ""
 }
 
-func (a *ApplicationOptions) GetEnvId() string {
+func (a *ApplicationOptions) GetEnvironmentId() string {
 	if a != nil {
-		return a.EnvId
+		return a.EnvironmentId
 	}
 	return ""
 }

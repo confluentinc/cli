@@ -61,7 +61,7 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 	// Process remote statements
 	statementObj, err := s.client.CreateStatement(
 		s.appOptions.GetOrgResourceId(),
-		s.appOptions.GetEnvId(),
+		s.appOptions.GetEnvironmentId(),
 		s.appOptions.GetComputePoolId(),
 		s.appOptions.GetIdentityPoolId(),
 		statement,
@@ -104,39 +104,29 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 	}
 
 	// Process remote statements that are now running or completed
-	pageToken := statement.PageToken
-	runningNoTokenRetries := 5
-	for i := 0; i < runningNoTokenRetries; i++ {
-		// TODO: we need to retry a few times on transient errors
-		statementResultObj, err := s.client.GetStatementResults(s.appOptions.GetOrgResourceId(), s.appOptions.GetEnvId(), statement.StatementName, pageToken)
-		if err != nil {
-			return nil, &types.StatementError{Msg: err.Error()}
-		}
-
-		statementResults := statementResultObj.GetResults()
-		convertedResults, err := results.ConvertToInternalResults(statementResults.GetData(), statement.ResultSchema)
-		if err != nil {
-			return nil, &types.StatementError{Msg: "Error: " + err.Error()}
-		}
-		statement.StatementResults = convertedResults
-
-		statementMetadata := statementResultObj.GetMetadata()
-		extractedToken, err := extractPageToken(statementMetadata.GetNext())
-		if err != nil {
-			return nil, &types.StatementError{Msg: "Error: " + err.Error()}
-		}
-		statement.PageToken = extractedToken
-		if statement.Status == types.COMPLETED || statement.PageToken != "" || len(statementResults.GetData()) > 0 {
-			// We try a few times to get non-empty token for RUNNING statements
-			break
-		}
-		time.Sleep(time.Millisecond * 300)
+	statementResultObj, err := s.client.GetStatementResults(s.appOptions.GetOrgResourceId(), s.appOptions.GetEnvironmentId(), statement.StatementName, statement.PageToken)
+	if err != nil {
+		return nil, &types.StatementError{Msg: err.Error()}
 	}
+
+	statementResults := statementResultObj.GetResults()
+	convertedResults, err := results.ConvertToInternalResults(statementResults.GetData(), statement.ResultSchema)
+	if err != nil {
+		return nil, &types.StatementError{Msg: fmt.Sprintf("Error: %v", err)}
+	}
+	statement.StatementResults = convertedResults
+
+	statementMetadata := statementResultObj.GetMetadata()
+	extractedToken, err := extractPageToken(statementMetadata.GetNext())
+	if err != nil {
+		return nil, &types.StatementError{Msg: fmt.Sprintf("Error: %v", err)}
+	}
+	statement.PageToken = extractedToken
 	return &statement, nil
 }
 
 func (s *Store) DeleteStatement(statementName string) bool {
-	err := s.client.DeleteStatement(s.appOptions.GetOrgResourceId(), s.appOptions.GetEnvId(), statementName)
+	err := s.client.DeleteStatement(s.appOptions.GetOrgResourceId(), s.appOptions.GetEnvironmentId(), statementName)
 	if err != nil {
 		log.CliLogger.Warnf("Failed to delete the statement: %v", err)
 		return false
@@ -156,9 +146,9 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 		case <-ctx.Done():
 			return nil, &types.StatementError{Msg: "Result retrieval aborted. Statement will be deleted.", HttpResponseCode: 499}
 		default:
-			statementObj, err := s.client.GetStatement(s.appOptions.GetOrgResourceId(), s.appOptions.GetEnvId(), statementName)
+			statementObj, err := s.client.GetStatement(s.appOptions.GetOrgResourceId(), s.appOptions.GetEnvironmentId(), statementName)
 			if err != nil {
-				return nil, &types.StatementError{Msg: "Error: " + err.Error()}
+				return nil, &types.StatementError{Msg: fmt.Sprintf("Error: %v", err)}
 			}
 
 			phase := types.PHASE(statementObj.Status.GetPhase())
@@ -228,7 +218,7 @@ func (s *Store) propsDefault(propsWithoutDefault map[string]string) map[string]s
 	}
 
 	if _, ok := properties[config.ConfigKeyCatalog]; !ok {
-		properties[config.ConfigKeyCatalog] = s.appOptions.GetEnvId()
+		properties[config.ConfigKeyCatalog] = s.appOptions.GetEnvironmentId()
 	}
 	if _, ok := properties[config.ConfigKeyDatabase]; !ok {
 		properties[config.ConfigKeyDatabase] = s.appOptions.GetKafkaClusterId()
