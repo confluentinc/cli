@@ -42,7 +42,7 @@ func (c *Client) ListFlinkComputePools(environment, specRegion string) ([]flinkv
 	if specRegion != "" {
 		req = req.SpecRegion(specRegion)
 	}
-	res, r, err := req.Execute()
+	res, httpResp, err := req.Execute()
 	return res.GetData(), errors.CatchCCloudV2Error(err, r)
 }
 
