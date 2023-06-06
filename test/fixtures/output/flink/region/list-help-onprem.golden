@@ -1,9 +1,15 @@
-Describe the resources and operations allowed for a role.
+List Flink regions.
 
 Usage:
-  confluent iam rbac role describe <name> [flags]
+  confluent flink region list [flags]
+
+Examples:
+List the available Flink AWS regions.
+
+  $ confluent flink region list --cloud aws
 
 Flags:
+      --cloud string    Specify the cloud provider as "aws", "azure", or "gcp".
   -o, --output string   Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:

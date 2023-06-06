@@ -1,10 +1,11 @@
-Describe the resources and operations allowed for a role.
+Create a new Confluent Cloud environment.
 
 Usage:
-  confluent iam rbac role describe <name> [flags]
+  confluent environment create <name> [flags]
 
 Flags:
-  -o, --output string   Specify the output format as "human", "json", or "yaml". (default "human")
+      --context string   CLI context name.
+  -o, --output string    Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
   -h, --help            Show help for this command.

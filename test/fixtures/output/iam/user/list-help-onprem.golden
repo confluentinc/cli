@@ -1,7 +1,7 @@
-Describe the resources and operations allowed for a role.
+List an organization's users.
 
 Usage:
-  confluent iam rbac role describe <name> [flags]
+  confluent iam user list [flags]
 
 Flags:
   -o, --output string   Specify the output format as "human", "json", or "yaml". (default "human")

@@ -1,9 +1,10 @@
-Describe the resources and operations allowed for a role.
+Delete a Kafka client quota.
 
 Usage:
-  confluent iam rbac role describe <name> [flags]
+  confluent kafka quota delete <id> [flags]
 
 Flags:
+      --force           Skip the deletion confirmation prompt.
   -o, --output string   Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:

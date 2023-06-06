@@ -1,9 +1,10 @@
-Describe the resources and operations allowed for a role.
+Update the current Confluent Cloud organization.
 
 Usage:
-  confluent iam rbac role describe <name> [flags]
+  confluent organization update [flags]
 
 Flags:
+      --name string     REQUIRED: Name of the Confluent Cloud organization.
   -o, --output string   Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:

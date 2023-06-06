@@ -1,10 +1,11 @@
-Describe the resources and operations allowed for a role.
+List the routes that match either the queried resource or its sub-resources.
 
 Usage:
-  confluent iam rbac role describe <name> [flags]
+  confluent audit-log route list [flags]
 
 Flags:
-  -o, --output string   Specify the output format as "human", "json", or "yaml". (default "human")
+      --resource string   REQUIRED: The Confluent resource name (CRN) that is the subject of the query.
+      --context string    CLI context name.
 
 Global Flags:
   -h, --help            Show help for this command.

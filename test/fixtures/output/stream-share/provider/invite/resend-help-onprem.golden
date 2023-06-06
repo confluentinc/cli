@@ -1,7 +1,12 @@
-Describe the resources and operations allowed for a role.
+Resend an email invite.
 
 Usage:
-  confluent iam rbac role describe <name> [flags]
+  confluent stream-share provider invite resend [flags]
+
+Examples:
+Resend the previously sent email invite for stream share "ss-12345":
+
+  $ confluent stream-share provider invite resend ss-12345
 
 Flags:
   -o, --output string   Specify the output format as "human", "json", or "yaml". (default "human")

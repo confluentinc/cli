@@ -1,0 +1,20 @@
+Redeem a stream share token.
+
+Usage:
+  confluent stream-share consumer redeem <token> [flags]
+
+Examples:
+Redeem a stream share token:
+
+  $ confluent stream-share consumer redeem DBBG8xGRfh85ePuk4x5BaENvb25vaGsydXdhejRVNp-pOzCWOLF85LzqcZCq1lVe8OQxSJqQo8XgUMRbtVs5fqbpM5BUKhnHAUcd3C5ip_yWfd3BFRlMVxGQwYo75aSQDb44ACdoAcgjwLH_9YVbk4GJoK-BtZtlpjYSTAIBbhvbFWWOU1bcFyW3HetlyzTIlIjG_UkSKFfDZ_5YNNuw0CBLZQf14J36b4QpSLe05jx9s695tINCm-dyPLX8_pUIqA2ekEZyf86pE7Azh7NBZz00uGZ0FrRl_ir9UvHF1uZ9sID6aZc=
+
+Flags:
+      --aws-account-id string          Consumer's AWS account ID for PrivateLink access.
+      --azure-subscription-id string   Consumer's Azure subscription ID for PrivateLink access.
+      --gcp-project-id string          Consumer's GCP project ID for Private Service Connect access.
+  -o, --output string                  Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

@@ -1,10 +1,10 @@
-Describe the resources and operations allowed for a role.
+Prints the audit log configuration spec object, where "spec" refers to the JSON blob that describes audit log routing rules.
 
 Usage:
-  confluent iam rbac role describe <name> [flags]
+  confluent audit-log config describe [flags]
 
 Flags:
-  -o, --output string   Specify the output format as "human", "json", or "yaml". (default "human")
+      --context string   CLI context name.
 
 Global Flags:
   -h, --help            Show help for this command.

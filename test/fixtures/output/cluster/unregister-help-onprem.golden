@@ -1,10 +1,11 @@
-Describe the resources and operations allowed for a role.
+Unregister cluster from the MDS cluster registry.
 
 Usage:
-  confluent iam rbac role describe <name> [flags]
+  confluent cluster unregister [flags]
 
 Flags:
-  -o, --output string   Specify the output format as "human", "json", or "yaml". (default "human")
+      --cluster-name string   REQUIRED: Cluster Name.
+      --context string        CLI context name.
 
 Global Flags:
   -h, --help            Show help for this command.

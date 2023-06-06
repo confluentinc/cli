@@ -1,7 +1,12 @@
-Describe the resources and operations allowed for a role.
+Describe a Kafka topic.
 
 Usage:
-  confluent iam rbac role describe <name> [flags]
+  confluent local kafka topic describe <topic> [flags]
+
+Examples:
+Describe the "test" topic.
+
+  $ confluent local kafka topic describe test
 
 Flags:
   -o, --output string   Specify the output format as "human", "json", or "yaml". (default "human")

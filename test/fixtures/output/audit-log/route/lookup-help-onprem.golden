@@ -1,10 +1,10 @@
-Describe the resources and operations allowed for a role.
+Return the single route that describes how audit log messages using this CRN would be routed, with all defaults populated.
 
 Usage:
-  confluent iam rbac role describe <name> [flags]
+  confluent audit-log route lookup <crn> [flags]
 
 Flags:
-  -o, --output string   Specify the output format as "human", "json", or "yaml". (default "human")
+      --context string   CLI context name.
 
 Global Flags:
   -h, --help            Show help for this command.

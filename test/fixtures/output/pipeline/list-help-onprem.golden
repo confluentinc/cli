@@ -1,10 +1,12 @@
-Describe the resources and operations allowed for a role.
+Display pipelines in the current environment and cluster.
 
 Usage:
-  confluent iam rbac role describe <name> [flags]
+  confluent pipeline list [flags]
 
 Flags:
-  -o, --output string   Specify the output format as "human", "json", or "yaml". (default "human")
+  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+      --cluster string       Kafka cluster ID.
+      --environment string   Environment ID.
 
 Global Flags:
   -h, --help            Show help for this command.

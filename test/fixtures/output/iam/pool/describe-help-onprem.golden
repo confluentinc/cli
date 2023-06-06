@@ -1,10 +1,11 @@
-Describe the resources and operations allowed for a role.
+Describe an identity pool.
 
 Usage:
-  confluent iam rbac role describe <name> [flags]
+  confluent iam pool describe <id> [flags]
 
 Flags:
-  -o, --output string   Specify the output format as "human", "json", or "yaml". (default "human")
+      --provider string   REQUIRED: ID of this pool's identity provider.
+  -o, --output string     Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
   -h, --help            Show help for this command.

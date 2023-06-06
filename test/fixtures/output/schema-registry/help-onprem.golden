@@ -1,10 +1,10 @@
-Describe the resources and operations allowed for a role.
+Manage Schema Registry.
 
 Usage:
-  confluent iam rbac role describe <name> [flags]
+  confluent schema-registry [flags]
 
-Flags:
-  -o, --output string   Specify the output format as "human", "json", or "yaml". (default "human")
+Aliases:
+  schema-registry, sr
 
 Global Flags:
   -h, --help            Show help for this command.

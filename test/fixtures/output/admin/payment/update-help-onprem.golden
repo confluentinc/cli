@@ -1,10 +1,7 @@
-Describe the resources and operations allowed for a role.
+Update the active payment method.
 
 Usage:
-  confluent iam rbac role describe <name> [flags]
-
-Flags:
-  -o, --output string   Specify the output format as "human", "json", or "yaml". (default "human")
+  confluent admin payment update [flags]
 
 Global Flags:
   -h, --help            Show help for this command.

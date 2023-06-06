@@ -1,10 +1,10 @@
-Describe the resources and operations allowed for a role.
+Manage which auditable events are logged, and where the event logs are sent.
 
 Usage:
-  confluent iam rbac role describe <name> [flags]
+  confluent audit-log [flags]
 
-Flags:
-  -o, --output string   Specify the output format as "human", "json", or "yaml". (default "human")
+Aliases:
+  audit-log, al
 
 Global Flags:
   -h, --help            Show help for this command.

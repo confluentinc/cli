@@ -1,10 +1,7 @@
-Describe the resources and operations allowed for a role.
+Manage consumer shares.
 
 Usage:
-  confluent iam rbac role describe <name> [flags]
-
-Flags:
-  -o, --output string   Specify the output format as "human", "json", or "yaml". (default "human")
+  confluent stream-share consumer share [flags]
 
 Global Flags:
   -h, --help            Show help for this command.

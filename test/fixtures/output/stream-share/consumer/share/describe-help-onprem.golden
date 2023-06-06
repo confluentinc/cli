@@ -1,7 +1,12 @@
-Describe the resources and operations allowed for a role.
+Describe a consumer share.
 
 Usage:
-  confluent iam rbac role describe <name> [flags]
+  confluent stream-share consumer share describe <id> [flags]
+
+Examples:
+Describe consumer share "ss-12345":
+
+  $ confluent stream-share consumer share describe ss-12345
 
 Flags:
   -o, --output string   Specify the output format as "human", "json", or "yaml". (default "human")

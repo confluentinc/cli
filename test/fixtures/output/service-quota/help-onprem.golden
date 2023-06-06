@@ -1,10 +1,7 @@
-Describe the resources and operations allowed for a role.
+Look up Confluent Cloud service quota limits.
 
 Usage:
-  confluent iam rbac role describe <name> [flags]
-
-Flags:
-  -o, --output string   Specify the output format as "human", "json", or "yaml". (default "human")
+  confluent service-quota [flags]
 
 Global Flags:
   -h, --help            Show help for this command.

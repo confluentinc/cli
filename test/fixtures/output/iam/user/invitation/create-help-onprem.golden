@@ -1,10 +1,7 @@
-Describe the resources and operations allowed for a role.
+Invite a user to join your organization.
 
 Usage:
-  confluent iam rbac role describe <name> [flags]
-
-Flags:
-  -o, --output string   Specify the output format as "human", "json", or "yaml". (default "human")
+  confluent iam user invitation create <email> [flags]
 
 Global Flags:
   -h, --help            Show help for this command.

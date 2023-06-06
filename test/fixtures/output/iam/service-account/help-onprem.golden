@@ -1,10 +1,10 @@
-Describe the resources and operations allowed for a role.
+Manage service accounts.
 
 Usage:
-  confluent iam rbac role describe <name> [flags]
+  confluent iam service-account [flags]
 
-Flags:
-  -o, --output string   Specify the output format as "human", "json", or "yaml". (default "human")
+Aliases:
+  service-account, sa
 
 Global Flags:
   -h, --help            Show help for this command.

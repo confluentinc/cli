@@ -1,10 +1,10 @@
-Describe the resources and operations allowed for a role.
+Manage Kafka consumer groups.
 
 Usage:
-  confluent iam rbac role describe <name> [flags]
+  confluent kafka consumer-group [flags]
 
-Flags:
-  -o, --output string   Specify the output format as "human", "json", or "yaml". (default "human")
+Aliases:
+  consumer-group, cg
 
 Global Flags:
   -h, --help            Show help for this command.

@@ -1,10 +1,7 @@
-Describe the resources and operations allowed for a role.
+Return the routing rules that determine which auditable events are logged, and where.
 
 Usage:
-  confluent iam rbac role describe <name> [flags]
-
-Flags:
-  -o, --output string   Specify the output format as "human", "json", or "yaml". (default "human")
+  confluent audit-log route [flags]
 
 Global Flags:
   -h, --help            Show help for this command.

@@ -1,10 +1,10 @@
-Describe the resources and operations allowed for a role.
+Edit the audit-log config spec object interactively, using the $EDITOR specified in your environment (for example, vim).
 
 Usage:
-  confluent iam rbac role describe <name> [flags]
+  confluent audit-log config edit [flags]
 
 Flags:
-  -o, --output string   Specify the output format as "human", "json", or "yaml". (default "human")
+      --context string   CLI context name.
 
 Global Flags:
   -h, --help            Show help for this command.

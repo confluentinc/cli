@@ -1,10 +1,10 @@
-Describe the resources and operations allowed for a role.
+Choose an API key to be used in subsequent commands which support passing an API key with the `--api-key` flag.
 
 Usage:
-  confluent iam rbac role describe <name> [flags]
+  confluent api-key use <api-key> [flags]
 
 Flags:
-  -o, --output string   Specify the output format as "human", "json", or "yaml". (default "human")
+      --resource string   REQUIRED: The resource ID.
 
 Global Flags:
   -h, --help            Show help for this command.

@@ -1,10 +1,10 @@
-Describe the resources and operations allowed for a role.
+Delete an API key.
 
 Usage:
-  confluent iam rbac role describe <name> [flags]
+  confluent api-key delete <api-key> [flags]
 
 Flags:
-  -o, --output string   Specify the output format as "human", "json", or "yaml". (default "human")
+      --force   Skip the deletion confirmation prompt.
 
 Global Flags:
   -h, --help            Show help for this command.

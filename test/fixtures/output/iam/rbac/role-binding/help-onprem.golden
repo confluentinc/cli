@@ -1,10 +1,10 @@
-Describe the resources and operations allowed for a role.
+Manage Role-Based Access Control (RBAC) and Identity and Access Management (IAM) role bindings.
 
 Usage:
-  confluent iam rbac role describe <name> [flags]
+  confluent iam rbac role-binding [flags]
 
-Flags:
-  -o, --output string   Specify the output format as "human", "json", or "yaml". (default "human")
+Aliases:
+  role-binding, rb
 
 Global Flags:
   -h, --help            Show help for this command.

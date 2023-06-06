@@ -4,8 +4,7 @@ Usage:
   confluent iam rbac role list [flags]
 
 Flags:
-  -o, --output string    Specify the output format as "human", "json", or "yaml". (default "human")
-      --context string   CLI context name.
+  -o, --output string   Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
   -h, --help            Show help for this command.

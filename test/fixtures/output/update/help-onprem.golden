@@ -1,10 +1,12 @@
-Describe the resources and operations allowed for a role.
+Update the Confluent CLI.
 
 Usage:
-  confluent iam rbac role describe <name> [flags]
+  confluent update [flags]
 
 Flags:
-  -o, --output string   Specify the output format as "human", "json", or "yaml". (default "human")
+  -y, --yes         Update without prompting.
+      --major       Allow major version updates.
+      --no-verify   Skip checksum verification of new binary.
 
 Global Flags:
   -h, --help            Show help for this command.

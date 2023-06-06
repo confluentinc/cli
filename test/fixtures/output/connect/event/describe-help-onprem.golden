@@ -1,7 +1,7 @@
-Describe the resources and operations allowed for a role.
+Describe the Connect log events configuration.
 
 Usage:
-  confluent iam rbac role describe <name> [flags]
+  confluent connect event describe [flags]
 
 Flags:
   -o, --output string   Specify the output format as "human", "json", or "yaml". (default "human")

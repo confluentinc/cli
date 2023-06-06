@@ -1,9 +1,11 @@
-Describe the resources and operations allowed for a role.
+Describe a context or a specific context field.
 
 Usage:
-  confluent iam rbac role describe <name> [flags]
+  confluent context describe [context] [flags]
 
 Flags:
+      --api-key         Get the API key for a context.
+      --username        Get the username for a context.
   -o, --output string   Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:

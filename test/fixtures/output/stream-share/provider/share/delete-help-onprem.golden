@@ -1,10 +1,15 @@
-Describe the resources and operations allowed for a role.
+Delete a provider share.
 
 Usage:
-  confluent iam rbac role describe <name> [flags]
+  confluent stream-share provider share delete <id> [flags]
+
+Examples:
+Delete provider share "ss-12345":
+
+  $ confluent stream-share provider share delete ss-12345
 
 Flags:
-  -o, --output string   Specify the output format as "human", "json", or "yaml". (default "human")
+      --force   Skip the deletion confirmation prompt.
 
 Global Flags:
   -h, --help            Show help for this command.
