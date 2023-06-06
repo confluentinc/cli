@@ -219,7 +219,7 @@ func (s *Store) getStatusDetail(statementObj flinkgatewayv1alpha1.SqlV1alpha1Sta
 	exceptionsResponse, _ := s.client.GetExceptions(s.appOptions.GetEnvId(), statementObj.Spec.GetStatementName(), s.appOptions.GetOrgResourceId())
 	exceptions := exceptionsResponse.GetData()
 	if len(exceptions) < 1 {
-		return status.GetDetail()
+		return ""
 	}
 
 	// most recent exception is on top of the returned list
