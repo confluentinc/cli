@@ -1,0 +1,9 @@
+Describe the active payment method.
+
+Usage:
+  confluent admin payment describe [flags]
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

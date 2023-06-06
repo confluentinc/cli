@@ -1,0 +1,25 @@
+Validate that a schema is compatible against a given subject version.
+
+Usage:
+  confluent schema-registry compatibility validate [flags]
+
+Examples:
+Validate the compatibility of schema "payments" against the latest version of subject "records".
+
+  $ confluent schema-registry compatibility validate --schema payments.avro --type avro --subject records --version latest --ca-location <ca-file-location> --schema-registry-endpoint <schema-registry-endpoint>
+
+Flags:
+      --subject string                    Subject of the schema.
+      --version string                    Version of the schema. Can be a specific version or "latest".
+      --schema string                     The path to the schema file.
+      --type string                       Specify the schema type as "avro", "json", or "protobuf".
+      --references string                 The path to the references file.
+      --ca-location string                File or directory path to CA certificate(s) to authenticate the Schema Registry client.
+      --schema-registry-endpoint string   The URL of the Schema Registry cluster.
+      --context string                    CLI context name.
+  -o, --output string                     Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

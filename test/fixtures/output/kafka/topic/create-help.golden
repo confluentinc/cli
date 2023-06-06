@@ -1,0 +1,23 @@
+Create a Kafka topic.
+
+Usage:
+  confluent kafka topic create <topic> [flags]
+
+Examples:
+Create a topic named "my_topic" with default options.
+
+  $ confluent kafka topic create my_topic
+
+Flags:
+      --partitions uint32    Number of topic partitions.
+      --config strings       A comma-separated list of configuration overrides ("key=value") for the topic being created.
+      --dry-run              Run the command without committing changes to Kafka.
+      --if-not-exists        Exit gracefully if topic already exists.
+      --cluster string       Kafka cluster ID.
+      --context string       CLI context name.
+      --environment string   Environment ID.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

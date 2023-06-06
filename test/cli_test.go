@@ -240,8 +240,17 @@ func resetConfiguration(t *testing.T, arePluginsEnabled bool) {
 	require.NoError(t, err)
 }
 
-func writeFixture(t *testing.T, fixture string, content string) {
-	if err := os.WriteFile(FixturePath(t, fixture), []byte(content), 0644); err != nil {
+func writeFixture(t *testing.T, fixture, content string) {
+	path := fixturePath(t, fixture)
+
+	dir := filepath.Dir(path)
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
 		t.Fatal(err)
 	}
 }
