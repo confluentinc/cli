@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"strings"
 
 	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
@@ -120,5 +121,12 @@ func NewProcessedStatement(statementObj flinkgatewayv1alpha1.SqlV1alpha1Statemen
 		StatusDetail:  statementObj.Status.GetDetail(),
 		Status:        PHASE(statementObj.Status.GetPhase()),
 		ResultSchema:  statementObj.Status.GetResultSchema(),
+	}
+}
+
+func (s ProcessedStatement) PrintStatusDetail() {
+	// print status detail message if available
+	if s.StatusDetail != "" {
+		output.Println(s.StatusDetail)
 	}
 }
