@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"github.com/confluentinc/go-prompt"
 	"os"
 
 	"golang.org/x/term"
@@ -8,10 +9,26 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
+func getConsoleParser() prompt.ConsoleParser {
+	consoleParser := prompt.NewStandardInputParser()
+	err := consoleParser.Setup()
+	if err != nil {
+		log.CliLogger.Warnf("Couldn't setup console parser. Error: %v\n", err)
+	}
+	return consoleParser
+}
+
+func tearDownConsoleParser(consoleParser prompt.ConsoleParser) {
+	err := consoleParser.TearDown()
+	if err != nil {
+		log.CliLogger.Warnf("Couldn't tear down console parser. Error: %v\n", err)
+	}
+}
+
 func getStdin() *term.State {
 	state, err := term.GetState(int(os.Stdin.Fd()))
 	if err != nil {
-		log.CliLogger.Warnf("Couldn't get stdin state with term.GetState. Error: %v \n", err)
+		log.CliLogger.Warnf("Couldn't get stdin state with term.GetState. Error: %v\n", err)
 		return nil
 	}
 	return state

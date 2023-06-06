@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"errors"
+	"golang.org/x/term"
 	"net/http"
 	"os"
 	"reflect"
@@ -43,6 +44,8 @@ type InputController struct {
 	authenticated         func() error
 	appOptions            *types.ApplicationOptions
 	shouldExit            bool
+	stdin                 *term.State
+	consoleParser         prompt.ConsoleParser
 }
 
 func shouldUseTView(statement types.ProcessedStatement) bool {
@@ -70,13 +73,8 @@ const (
 func (c *InputController) RunInteractiveInput() {
 	// We check for statement result and rows so we don't leave GoPrompt in case of errors
 	for {
-		// We save and restore the stdinState to avoid any terminal settings/shortcut bindings/Signals that can be caught and handled
-		// to be unconfigured by GoPrompt. This change is smart for multiple purposes but
-		// it was first introduced due to a bug where CtrlC stopped working after executing GoPrompt.
-		stdinState := getStdin()
 		// Run interactive input and take over terminal
 		input := c.prompt.Input()
-		restoreStdin(stdinState)
 
 		// If the user presses CtrlD then go prompt returns and empty input
 		// This is the only way go-prompt returns an empty input since we have a multiline prompt
@@ -113,16 +111,13 @@ func (c *InputController) RunInteractiveInput() {
 		// Wait for results to be there or for the user to cancel the query
 		ctx, cancelWaitPendingStatement := context.WithCancel(context.Background())
 
-		in := prompt.NewStandardInputParser()
-		_ = in.Setup()
-		cancelListenToUserInput := c.listenToUserInput(in, func() {
+		cancelListenToUserInput := c.listenToUserInput(c.consoleParser, func() {
 			go c.store.DeleteStatement(processedStatement.StatementName)
 			cancelWaitPendingStatement()
 		})
 
 		processedStatement, err = c.store.WaitPendingStatement(ctx, *processedStatement)
 		if err != nil {
-			_ = in.TearDown()
 			cancelListenToUserInput()
 			output.Println(err.Error())
 			c.isSessionValid(err)
@@ -130,7 +125,6 @@ func (c *InputController) RunInteractiveInput() {
 		}
 
 		processedStatement, err = c.store.FetchStatementResults(*processedStatement)
-		_ = in.TearDown()
 		cancelListenToUserInput()
 		if err != nil {
 			output.Println(err.Error())
@@ -458,6 +452,11 @@ func (c *InputController) GetMaxCol() (int, error) {
 	return int(maxCol), nil
 }
 
+func (c *InputController) tearDown() {
+	tearDownConsoleParser(c.consoleParser)
+	restoreStdin(c.stdin)
+}
+
 func NewInputController(t TableControllerInterface, a ApplicationControllerInterface, store store.StoreInterface, authenticated func() error, history *history.History, appOptions *types.ApplicationOptions) InputControllerInterface {
 	inputController := &InputController{
 		History:         history,
@@ -469,7 +468,10 @@ func NewInputController(t TableControllerInterface, a ApplicationControllerInter
 		authenticated:   authenticated,
 		appOptions:      appOptions,
 		shouldExit:      false,
+		stdin:           getStdin(),
+		consoleParser:   getConsoleParser(),
 	}
+	a.AddCleanupFunction(inputController.tearDown)
 	inputController.prompt = inputController.Prompt()
 	components.PrintWelcomeHeader()
 
