@@ -60,14 +60,7 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 	}
 
 	// Process remote statements
-	statementObj, err := s.client.CreateStatement(
-		s.appOptions.GetOrgResourceId(),
-		s.appOptions.GetEnvId(),
-		s.appOptions.GetComputePoolId(),
-		s.appOptions.GetIdentityPoolId(),
-		statement,
-		s.propsDefault(s.Properties),
-	)
+	statementObj, err := s.client.CreateStatement(statement, s.appOptions.GetComputePoolId(), s.appOptions.GetIdentityPoolId(), s.propsDefault(s.Properties), s.appOptions.GetEnvId(), s.appOptions.GetOrgResourceId())
 	if err != nil {
 		statusDetail := s.getStatusDetail(statementObj)
 		return nil, &types.StatementError{Msg: err.Error(), FailureMessage: statusDetail}
@@ -108,7 +101,7 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 	runningNoTokenRetries := 5
 	for i := 0; i < runningNoTokenRetries; i++ {
 		// TODO: we need to retry a few times on transient errors
-		statementResultObj, err := s.client.GetStatementResults(s.appOptions.GetOrgResourceId(), s.appOptions.GetEnvId(), statement.StatementName, pageToken)
+		statementResultObj, err := s.client.GetStatementResults(s.appOptions.GetEnvId(), statement.StatementName, s.appOptions.GetOrgResourceId(), pageToken)
 		if err != nil {
 			return nil, &types.StatementError{Msg: err.Error()}
 		}
@@ -136,7 +129,7 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 }
 
 func (s *Store) DeleteStatement(statementName string) bool {
-	err := s.client.DeleteStatement(s.appOptions.GetOrgResourceId(), s.appOptions.GetEnvId(), statementName)
+	err := s.client.DeleteStatement(s.appOptions.GetEnvId(), statementName, s.appOptions.GetOrgResourceId())
 	if err != nil {
 		log.CliLogger.Warnf("Failed to delete the statement: %v", err)
 		return false
@@ -156,7 +149,7 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 		case <-ctx.Done():
 			return nil, &types.StatementError{Msg: "Result retrieval aborted. Statement will be deleted.", HttpResponseCode: 499}
 		default:
-			statementObj, err := s.client.GetStatement(s.appOptions.GetOrgResourceId(), s.appOptions.GetEnvId(), statementName)
+			statementObj, err := s.client.GetStatement(s.appOptions.GetEnvId(), statementName, s.appOptions.GetOrgResourceId())
 			statusDetail := s.getStatusDetail(statementObj)
 			if err != nil {
 				return nil, &types.StatementError{Msg: err.Error(), FailureMessage: statusDetail}
@@ -219,7 +212,7 @@ func (s *Store) getStatusDetail(statementObj flinkgatewayv1alpha1.SqlV1alpha1Sta
 	}
 
 	// if the statement is in FAILED or FAILING phase and the status detail field is empty we show the latest exception instead
-	exceptionsResponse, _ := s.client.GetExceptions(s.appOptions.GetOrgResourceId(), s.appOptions.GetEnvId(), statementObj.Spec.GetStatementName())
+	exceptionsResponse, _ := s.client.GetExceptions(s.appOptions.GetEnvId(), statementObj.Spec.GetStatementName(), s.appOptions.GetOrgResourceId())
 	exceptions := exceptionsResponse.GetData()
 	if len(exceptions) < 1 {
 		return status.GetDetail()

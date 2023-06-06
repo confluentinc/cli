@@ -35,7 +35,7 @@ func (m *MockGatewayClientInterface) EXPECT() *MockGatewayClientInterfaceMockRec
 }
 
 // CreateStatement mocks base method.
-func (m *MockGatewayClientInterface) CreateStatement(orgId, environmentId, computePoolId, identityPoolId, statement string, properties map[string]string) (v1alpha1.SqlV1alpha1Statement, error) {
+func (m *MockGatewayClientInterface) CreateStatement(statement, computePoolId, identityPoolId string, properties map[string]string, environmentId, orgId string) (v1alpha1.SqlV1alpha1Statement, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateStatement", orgId, environmentId, computePoolId, identityPoolId, statement, properties)
 	ret0, _ := ret[0].(v1alpha1.SqlV1alpha1Statement)
@@ -50,7 +50,7 @@ func (mr *MockGatewayClientInterfaceMockRecorder) CreateStatement(orgId, environ
 }
 
 // DeleteStatement mocks base method.
-func (m *MockGatewayClientInterface) DeleteStatement(orgId, environmentId, statementName string) error {
+func (m *MockGatewayClientInterface) DeleteStatement(environmentId, statementName, orgId string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteStatement", orgId, environmentId, statementName)
 	ret0, _ := ret[0].(error)
@@ -64,7 +64,7 @@ func (mr *MockGatewayClientInterfaceMockRecorder) DeleteStatement(orgId, environ
 }
 
 // GetExceptions mocks base method.
-func (m *MockGatewayClientInterface) GetExceptions(orgId, environmentId, statementId string) (v1alpha1.SqlV1alpha1StatementExceptionList, error) {
+func (m *MockGatewayClientInterface) GetExceptions(environmentId, statementId, orgId string) (v1alpha1.SqlV1alpha1StatementExceptionList, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetExceptions", orgId, environmentId, statementId)
 	ret0, _ := ret[0].(v1alpha1.SqlV1alpha1StatementExceptionList)
@@ -79,7 +79,7 @@ func (mr *MockGatewayClientInterfaceMockRecorder) GetExceptions(orgId, environme
 }
 
 // GetStatement mocks base method.
-func (m *MockGatewayClientInterface) GetStatement(orgId, environmentId, statementName string) (v1alpha1.SqlV1alpha1Statement, error) {
+func (m *MockGatewayClientInterface) GetStatement(environmentId, statementName, orgId string) (v1alpha1.SqlV1alpha1Statement, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetStatement", orgId, environmentId, statementName)
 	ret0, _ := ret[0].(v1alpha1.SqlV1alpha1Statement)
@@ -94,7 +94,7 @@ func (mr *MockGatewayClientInterfaceMockRecorder) GetStatement(orgId, environmen
 }
 
 // GetStatementResults mocks base method.
-func (m *MockGatewayClientInterface) GetStatementResults(orgId, environmentId, statementId, pageToken string) (v1alpha1.SqlV1alpha1StatementResult, error) {
+func (m *MockGatewayClientInterface) GetStatementResults(environmentId, statementId, orgId, pageToken string) (v1alpha1.SqlV1alpha1StatementResult, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetStatementResults", orgId, environmentId, statementId, pageToken)
 	ret0, _ := ret[0].(v1alpha1.SqlV1alpha1StatementResult)
@@ -109,7 +109,7 @@ func (mr *MockGatewayClientInterfaceMockRecorder) GetStatementResults(orgId, env
 }
 
 // ListStatements mocks base method.
-func (m *MockGatewayClientInterface) ListStatements(orgId, environmentId string) ([]v1alpha1.SqlV1alpha1Statement, error) {
+func (m *MockGatewayClientInterface) ListStatements(environmentId, orgId string) ([]v1alpha1.SqlV1alpha1Statement, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListStatements", orgId, environmentId)
 	ret0, _ := ret[0].([]v1alpha1.SqlV1alpha1Statement)
