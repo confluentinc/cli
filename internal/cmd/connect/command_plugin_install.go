@@ -175,15 +175,15 @@ func (c *pluginCommand) getManifest(client *hub.Client, id string) (*cpstructs.M
 	if utils.DoesPathExist(id) {
 		// if installing plugin from local archive
 		return getLocalManifest(id)
-	} else {
-		// if installing plugin from Confluent Hub
-		owner, name, version, err := parsePluginId(id)
-		if err != nil {
-			return nil, err
-		}
-
-		return client.GetRemoteManifest(owner, name, version)
 	}
+	
+	// if installing plugin from Confluent Hub
+	owner, name, version, err := parsePluginId(id)
+	if err != nil {
+		return nil, err
+	}
+	
+	return client.GetRemoteManifest(owner, name, version)
 }
 
 func getLocalManifest(archivePath string) (*cpstructs.Manifest, error) {
