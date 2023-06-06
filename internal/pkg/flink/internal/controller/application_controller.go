@@ -18,17 +18,6 @@ var (
 	InteractiveTable TableMode = "interactive"
 )
 
-type ApplicationControllerInterface interface {
-	SuspendOutputMode(callback func())
-	ToggleOutputMode()
-	GetOutputMode() types.OutputMode
-	ExitApplication()
-	TView() *tview.Application
-	ShowTableView()
-	StartTView(layout tview.Primitive) error
-	AddCleanupFunction(func())
-}
-
 type ApplicationController struct {
 	app              *tview.Application
 	outputMode       types.OutputMode
@@ -81,11 +70,12 @@ func (a *ApplicationController) ShowTableView() {
 	a.app.SetRoot(a.tableView, true).EnableMouse(false)
 }
 
-func (a *ApplicationController) AddCleanupFunction(cleanupFunction func()) {
+func (a *ApplicationController) AddCleanupFunction(cleanupFunction func()) types.ApplicationControllerInterface {
 	a.cleanupFunctions = append(a.cleanupFunctions, cleanupFunction)
+	return a
 }
 
-func NewApplicationController(app *tview.Application, history *history.History) ApplicationControllerInterface {
+func NewApplicationController(app *tview.Application, history *history.History) types.ApplicationControllerInterface {
 	return &ApplicationController{
 		app:        app,
 		outputMode: types.TViewOutput,
