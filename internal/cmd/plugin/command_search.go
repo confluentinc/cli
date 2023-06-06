@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
@@ -77,7 +78,22 @@ func (c *command) search(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
-	return list.Print()
+	listStr, err := list.PrintString()
+	if err != nil {
+		return err
+	}
 
-	// TODO: Add prompt for installation
+	prompt := form.NewPrompt(os.Stdin)
+	promptMsg := "Enter a single number or a comma-separated list of numbers to install plugins:\n%sTo cancel, press Ctrl-C"
+	f := form.New(form.Field{
+		ID:     "plugin numbers",
+		Prompt: fmt.Sprintf(promptMsg, listStr),
+		Regex:  `^\d$`,
+	})
+	if err := f.Prompt(prompt); err != nil {
+		return err
+	}
+
+	// TODO: Fix prompt regex and handle user input
+	return nil
 }
