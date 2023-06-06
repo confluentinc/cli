@@ -44,7 +44,7 @@ func newProduceCommand(prerunner pcmd.PreRunner, clientId string) *cobra.Command
 	cmd.Flags().Bool("parse-key", false, "Parse key from the message.")
 	cmd.Flags().String("delimiter", ":", "The delimiter separating each key and value.")
 	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the producer client.`)
-	cmd.Flags().String("config-file", "", "The path to the configuration file for the producer client, in JSON or avro format.")
+	pcmd.AddProducerConfigFileFlag(cmd)
 	cmd.Flags().String("schema-registry-endpoint", "", "Endpoint for Schema Registry cluster.")
 	cmd.Flags().String("schema-registry-api-key", "", "Schema registry API key.")
 	cmd.Flags().String("schema-registry-api-secret", "", "Schema registry API key secret.")

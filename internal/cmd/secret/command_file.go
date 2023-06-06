@@ -25,6 +25,10 @@ func (c *command) newFileCommand() *cobra.Command {
 	return cmd
 }
 
+func (c *command) addConfigFileFlag(cmd *cobra.Command) {
+	cmd.Flags().String("config-file", "", "Path to the configuration properties file.")
+}
+
 func (c *command) getConfigFilePath(cmd *cobra.Command) (string, string, string, error) {
 	configFile, err := cmd.Flags().GetString("config-file")
 	if err != nil {
