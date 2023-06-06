@@ -1,6 +1,8 @@
 package types
 
 import (
+	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"strings"
 
 	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
@@ -73,10 +75,26 @@ type MockStatementResult struct {
 type StatementError struct {
 	Msg              string
 	HttpResponseCode int
+	FailureMessage   string
+	Usage            []string
 }
 
 func (e *StatementError) Error() string {
-	return e.Msg
+	if e == nil {
+		return ""
+	}
+	errStr := "Unknown error."
+	if e.Msg != "" {
+		errStr = fmt.Sprintf("Error: %s.", e.Msg)
+	}
+	if len(e.Usage) > 0 {
+		errStr += fmt.Sprintf("\nUsage: %s.", strings.Join(e.Usage, " or "))
+	}
+	if e.FailureMessage != "" {
+		errStr += fmt.Sprintf("\nError details: %s.", e.FailureMessage)
+	}
+
+	return errStr
 }
 
 type PHASE string
@@ -87,6 +105,7 @@ const (
 	COMPLETED PHASE = "COMPLETED" // All results were fetched
 	DELETING  PHASE = "DELETING"
 	FAILED    PHASE = "FAILED"
+	FAILING   PHASE = "FAILING"
 )
 
 // Custom Internal type that shall be used internally by the client
@@ -108,5 +127,12 @@ func NewProcessedStatement(statementObj flinkgatewayv1alpha1.SqlV1alpha1Statemen
 		StatusDetail:  statementObj.Status.GetDetail(),
 		Status:        PHASE(statementObj.Status.GetPhase()),
 		ResultSchema:  statementObj.Status.GetResultSchema(),
+	}
+}
+
+func (s ProcessedStatement) PrintStatusDetail() {
+	// print status detail message if available
+	if s.StatusDetail != "" {
+		output.Printf("%s.\n", s.StatusDetail)
 	}
 }
