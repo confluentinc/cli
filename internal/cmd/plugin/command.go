@@ -60,6 +60,7 @@ Naming collisions with existing CLI commands and other plugins:
 	}
 
 	cmd.AddCommand(c.newListCommand())
+	cmd.AddCommand(c.newSearchCommand())
 
 	return cmd
 }
