@@ -8,9 +8,9 @@
   environment_id: env-123
   network_access_type: INTERNET
   price: $0.123 USD/GB
-  original_amount: 70
-  discount_amount: 20
-  amount: 50
+  original_amount: $70.00
+  discount_amount: $20.00
+  amount: $50.00
 - start_date: "2023-01-01 00:00:00"
   end_date: "2023-01-02 00:00:00"
   granularity: DAILY
@@ -21,13 +21,13 @@
   environment_id: env-123
   network_access_type: INTERNET
   price: $0.123 USD/GB
-  original_amount: 70
-  discount_amount: 20
-  amount: 50
+  original_amount: $70.00
+  discount_amount: $20.00
+  amount: $50.00
 - start_date: "2023-01-01 00:00:00"
   end_date: "2023-01-02 00:00:00"
   granularity: DAILY
   line_type: SUPPORT
   product: SUPPORT_PREMIER
-  original_amount: 70
-  amount: 70
+  original_amount: $70.00
+  amount: $70.00
