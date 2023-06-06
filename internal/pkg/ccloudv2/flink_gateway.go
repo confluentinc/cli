@@ -41,18 +41,18 @@ func (c *FlinkGatewayClient) flinkGatewayApiContext() context.Context {
 }
 
 func (c *FlinkGatewayClient) DeleteStatement(orgId, environmentId, statementName string) error {
-	r, err := c.StatementsSqlV1alpha1Api.DeleteSqlV1alpha1Statement(c.flinkGatewayApiContext(), environmentId, statementName).OrgId(orgId).Execute()
-	return errors.CatchCCloudV2Error(err, r)
+	httpResp, err := c.StatementsSqlV1alpha1Api.DeleteSqlV1alpha1Statement(c.flinkGatewayApiContext(), environmentId, statementName).OrgId(orgId).Execute()
+	return errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *FlinkGatewayClient) GetStatement(orgId, environmentId, statementName string) (flinkgatewayv1alpha1.SqlV1alpha1Statement, error) {
-	resp, r, err := c.StatementsSqlV1alpha1Api.GetSqlV1alpha1Statement(c.flinkGatewayApiContext(), environmentId, statementName).OrgId(orgId).Execute()
-	return resp, errors.CatchCCloudV2Error(err, r)
+	resp, httpResp, err := c.StatementsSqlV1alpha1Api.GetSqlV1alpha1Statement(c.flinkGatewayApiContext(), environmentId, statementName).OrgId(orgId).Execute()
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *FlinkGatewayClient) ListStatements(orgId, environmentId string) ([]flinkgatewayv1alpha1.SqlV1alpha1Statement, error) {
-	resp, r, err := c.StatementsSqlV1alpha1Api.ListSqlV1alpha1Statements(c.flinkGatewayApiContext(), environmentId).OrgId(orgId).PageSize(ccloudV2ListPageSize).Execute()
-	return resp.GetData(), errors.CatchCCloudV2Error(err, r)
+	resp, httpResp, err := c.StatementsSqlV1alpha1Api.ListSqlV1alpha1Statements(c.flinkGatewayApiContext(), environmentId).OrgId(orgId).PageSize(ccloudV2ListPageSize).Execute()
+	return resp.GetData(), errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *FlinkGatewayClient) CreateStatement(orgId, environmentId, computePoolId, identityPoolId, statement string, properties map[string]string) (flinkgatewayv1alpha1.SqlV1alpha1Statement, error) {
@@ -67,8 +67,8 @@ func (c *FlinkGatewayClient) CreateStatement(orgId, environmentId, computePoolId
 			Properties:     &properties,
 		},
 	}
-	res, r, err := c.StatementsSqlV1alpha1Api.CreateSqlV1alpha1Statement(c.flinkGatewayApiContext(), environmentId).SqlV1alpha1Statement(statementObj).OrgId(orgId).Execute()
-	return res, errors.CatchCCloudV2Error(err, r)
+	res, httpResp, err := c.StatementsSqlV1alpha1Api.CreateSqlV1alpha1Statement(c.flinkGatewayApiContext(), environmentId).SqlV1alpha1Statement(statementObj).OrgId(orgId).Execute()
+	return res, errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *FlinkGatewayClient) GetStatementResults(orgId, environmentId, statementId, pageToken string) (flinkgatewayv1alpha1.SqlV1alpha1StatementResult, error) {
@@ -76,6 +76,6 @@ func (c *FlinkGatewayClient) GetStatementResults(orgId, environmentId, statement
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
 	}
-	res, r, err := req.Execute()
-	return res, errors.CatchCCloudV2Error(err, r)
+	res, httpResp, err := req.Execute()
+	return res, errors.CatchCCloudV2Error(err, httpResp)
 }
