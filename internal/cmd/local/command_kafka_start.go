@@ -83,7 +83,9 @@ func (c *command) kafkaStart(cmd *cobra.Command, args []string) error {
 	log.CliLogger.Tracef("Pull confluent-local image success")
 
 	if c.Config.IsTest {
-		c.prepareAndSaveLocalPortsForTest()
+		if err := c.prepareAndSaveLocalPortsForTest(); err != nil {
+			return err
+		}
 	} else {
 		if err := c.prepareAndSaveLocalPorts(); err != nil {
 			return err
