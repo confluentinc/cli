@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/flink/config"
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/results"
@@ -60,28 +61,26 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 
 	// Process remote statements
 	statementObj, err := s.client.CreateStatement(
-		s.appOptions.GetOrgResourceId(),
-		s.appOptions.GetEnvId(),
+		statement,
 		s.appOptions.GetComputePoolId(),
 		s.appOptions.GetIdentityPoolId(),
-		statement,
 		s.propsDefault(s.Properties),
+		s.appOptions.GetEnvId(),
+		s.appOptions.GetOrgResourceId(),
 	)
 	if err != nil {
-		return nil, &types.StatementError{Msg: err.Error()}
+		statusDetail := s.getStatusDetail(statementObj)
+		return nil, &types.StatementError{
+			Msg:            err.Error(),
+			FailureMessage: statusDetail}
 	}
 	return types.NewProcessedStatement(statementObj), nil
 }
 
 func (s *Store) WaitPendingStatement(ctx context.Context, statement types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError) {
-	// Process local statements
-
 	statementStatus := statement.Status
 	if statementStatus != types.COMPLETED && statementStatus != types.RUNNING {
-		// Variable that controls how often we poll a pending statement
-
 		updatedStatement, err := s.waitForPendingStatement(ctx, statement.StatementName, timeout(s.Properties))
-
 		if err != nil {
 			return nil, err
 		}
@@ -89,7 +88,10 @@ func (s *Store) WaitPendingStatement(ctx context.Context, statement types.Proces
 		// Check for failed or cancelled statements
 		statementStatus = updatedStatement.Status
 		if statementStatus != types.COMPLETED && statementStatus != types.RUNNING {
-			return nil, &types.StatementError{Msg: fmt.Sprintf("Error: Can't fetch results. Statement phase is: %s", statementStatus)}
+			return nil, &types.StatementError{
+				Msg:            fmt.Sprintf("Can't fetch results. Statement phase is: %s", statementStatus),
+				FailureMessage: updatedStatement.StatusDetail,
+			}
 		}
 		statement = *updatedStatement
 	}
@@ -108,7 +110,7 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 	runningNoTokenRetries := 5
 	for i := 0; i < runningNoTokenRetries; i++ {
 		// TODO: we need to retry a few times on transient errors
-		statementResultObj, err := s.client.GetStatementResults(s.appOptions.GetOrgResourceId(), s.appOptions.GetEnvId(), statement.StatementName, pageToken)
+		statementResultObj, err := s.client.GetStatementResults(s.appOptions.GetEnvId(), statement.StatementName, s.appOptions.GetOrgResourceId(), pageToken)
 		if err != nil {
 			return nil, &types.StatementError{Msg: err.Error()}
 		}
@@ -116,14 +118,14 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 		statementResults := statementResultObj.GetResults()
 		convertedResults, err := results.ConvertToInternalResults(statementResults.GetData(), statement.ResultSchema)
 		if err != nil {
-			return nil, &types.StatementError{Msg: "Error: " + err.Error()}
+			return nil, &types.StatementError{Msg: err.Error()}
 		}
 		statement.StatementResults = convertedResults
 
 		statementMetadata := statementResultObj.GetMetadata()
 		extractedToken, err := extractPageToken(statementMetadata.GetNext())
 		if err != nil {
-			return nil, &types.StatementError{Msg: "Error: " + err.Error()}
+			return nil, &types.StatementError{Msg: err.Error()}
 		}
 		statement.PageToken = extractedToken
 		if statement.Status == types.COMPLETED || statement.PageToken != "" || len(statementResults.GetData()) > 0 {
@@ -136,7 +138,7 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 }
 
 func (s *Store) DeleteStatement(statementName string) bool {
-	if err := s.client.DeleteStatement(s.appOptions.GetOrgResourceId(), s.appOptions.GetEnvId(), statementName); err != nil {
+	if err := s.client.DeleteStatement(s.appOptions.GetEnvId(), statementName, s.appOptions.GetOrgResourceId()); err != nil {
 		log.CliLogger.Warnf("Failed to delete the statement: %v", err)
 		return false
 	}
@@ -155,14 +157,24 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 		case <-ctx.Done():
 			return nil, &types.StatementError{Msg: "Result retrieval aborted. Statement will be deleted.", HttpResponseCode: 499}
 		default:
-			statementObj, err := s.client.GetStatement(s.appOptions.GetOrgResourceId(), s.appOptions.GetEnvId(), statementName)
+			statementObj, err := s.client.GetStatement(s.appOptions.GetEnvId(), statementName, s.appOptions.GetOrgResourceId())
+			statusDetail := s.getStatusDetail(statementObj)
 			if err != nil {
-				return nil, &types.StatementError{Msg: "Error: " + err.Error()}
+				return nil, &types.StatementError{
+					Msg:            err.Error(),
+					FailureMessage: statusDetail}
 			}
 
 			phase := types.PHASE(statementObj.Status.GetPhase())
 			if phase != types.PENDING {
-				return types.NewProcessedStatement(statementObj), nil
+				processedStatement := types.NewProcessedStatement(statementObj)
+				processedStatement.StatusDetail = statusDetail
+				return processedStatement, nil
+			}
+
+			// if status.detail is filled we encountered a retryable server response
+			if statusDetail != "" {
+				capturedErrors = append(capturedErrors, statusDetail)
 			}
 		}
 
@@ -188,10 +200,36 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 
 	var errorsMsg string
 	if len(capturedErrors) > 0 {
-		errorsMsg = fmt.Sprintf(" Captured retriable errors: %s", strings.Join(capturedErrors, "; "))
+		errorsMsg = fmt.Sprintf("Captured retriable errors: %s", strings.Join(capturedErrors, "; "))
 	}
 
-	return nil, &types.StatementError{Msg: fmt.Sprintf("Error: Statement is still pending after %f seconds.%s \n\nIf you want to increase the timeout for the client, you can run \"SET table.results-timeout=1200;\" to adjust the maximum timeout in seconds.", timeout.Seconds(), errorsMsg)}
+	return nil, &types.StatementError{
+		Msg: fmt.Sprintf("Statement is still pending after %f seconds.\n If you want to increase the timeout for the client, you can run \"SET table.results-timeout=1200;\" to adjust the maximum timeout in seconds.",
+			timeout.Seconds()),
+		FailureMessage: errorsMsg,
+	}
+}
+
+func (s *Store) getStatusDetail(statementObj flinkgatewayv1alpha1.SqlV1alpha1Statement) string {
+	status := statementObj.GetStatus()
+	phase := types.PHASE(status.GetPhase())
+	if phase != types.FAILED && phase != types.FAILING {
+		return status.GetDetail()
+	}
+
+	if status.GetDetail() != "" {
+		return status.GetDetail()
+	}
+
+	// if the statement is in FAILED or FAILING phase and the status detail field is empty we show the latest exception instead
+	exceptionsResponse, _ := s.client.GetExceptions(s.appOptions.GetEnvId(), statementObj.Spec.GetStatementName(), s.appOptions.GetOrgResourceId())
+	exceptions := exceptionsResponse.GetData()
+	if len(exceptions) < 1 {
+		return ""
+	}
+
+	// most recent exception is on top of the returned list
+	return exceptions[0].GetStacktrace()
 }
 
 func extractPageToken(nextUrl string) (string, error) {
