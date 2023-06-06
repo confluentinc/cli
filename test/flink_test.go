@@ -29,6 +29,7 @@ func (s *CLITestSuite) TestFlinkComputePool() {
 		{args: "flink compute-pool delete lfcp-123456 --force", fixture: "flink/compute-pool/delete.golden"},
 		{args: "flink compute-pool describe lfcp-123456", fixture: "flink/compute-pool/describe.golden"},
 		{args: "flink compute-pool list", fixture: "flink/compute-pool/list.golden"},
+		{args: "flink compute-pool list --region us-west-2", fixture: "flink/compute-pool/list-region.golden"},
 		{args: "flink compute-pool update lfcp-123456 --cfu 2", fixture: "flink/compute-pool/update.golden"},
 	}
 
