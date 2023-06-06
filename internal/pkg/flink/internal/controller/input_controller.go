@@ -3,7 +3,6 @@ package controller
 import (
 	"context"
 	"errors"
-	"golang.org/x/term"
 	"net/http"
 	"os"
 	"reflect"
@@ -11,6 +10,7 @@ import (
 	"time"
 
 	"github.com/olekukonko/tablewriter"
+	"golang.org/x/term"
 
 	"github.com/confluentinc/go-prompt"
 

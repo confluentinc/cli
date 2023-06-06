@@ -1,10 +1,11 @@
 package controller
 
 import (
-	"github.com/confluentinc/go-prompt"
 	"os"
 
 	"golang.org/x/term"
+
+	"github.com/confluentinc/go-prompt"
 
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
