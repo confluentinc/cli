@@ -148,7 +148,7 @@ func TestProcessResetStatement(t *testing.T) {
 	t.Run("should return an error message if configKey does not exist", func(t *testing.T) {
 		result, err := s.processResetStatement("reset 'location'")
 		assert.NotNil(t, err)
-		assert.Equal(t, "Error: Config key \"location\" is currently not set.", err.Error())
+		assert.Equal(t, `Error: Config key "location" is not set.`, err.Error())
 		assert.Nil(t, result)
 	})
 
@@ -156,7 +156,7 @@ func TestProcessResetStatement(t *testing.T) {
 		s.Properties["pipeline.name"] = "job1"
 		result, _ := s.processResetStatement("reset 'pipeline.name'")
 		assert.EqualValues(t, types.COMPLETED, result.Status)
-		assert.Equal(t, "Config key \"pipeline.name\" has been reset successfully.", result.StatusDetail)
+		assert.Equal(t, `Config key "pipeline.name" has been reset successfully.`, result.StatusDetail)
 		expectedResult := createStatementResults([]string{"Key", "Value"}, [][]string{})
 		assert.Equal(t, &expectedResult, result.StatementResults)
 	})

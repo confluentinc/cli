@@ -88,14 +88,14 @@ func (s *Store) processResetStatement(statement string) (*types.ProcessedStateme
 	} else {
 		_, keyExists := s.Properties[configKey]
 		if !keyExists {
-			return nil, &types.StatementError{Msg: fmt.Sprintf("Config key \"%s\" is currently not set.", configKey)}
+			return nil, &types.StatementError{Msg: fmt.Sprintf(`Config key "%s" is not set.`, configKey)}
 		}
 
 		delete(s.Properties, configKey)
 		statementResults := createStatementResults([]string{"Key", "Value"}, lo.MapToSlice(s.Properties, func(key, val string) []string { return []string{key, val} }))
 		return &types.ProcessedStatement{
 			Kind:             config.ConfigOpReset,
-			StatusDetail:     fmt.Sprintf("Config key \"%s\" has been reset successfully.", configKey),
+			StatusDetail:     fmt.Sprintf(`Config key "%s" has been reset successfully.`, configKey),
 			Status:           types.COMPLETED,
 			StatementResults: &statementResults,
 			IsLocalStatement: true,
@@ -153,17 +153,17 @@ func parseSetStatement(statement string) (string, string, error) {
 	}
 
 	if !strings.Contains(strAfterSet, "=") {
-		return "", "", &types.StatementError{Msg: "missing \"=\". Usage example: SET 'key'='value'."}
+		return "", "", &types.StatementError{Msg: `missing "=". Usage example: SET 'key'='value'.`}
 	}
 
 	keyValuePair := strings.Split(strAfterSet, "=")
 
 	if len(keyValuePair) != 2 {
-		return "", "", &types.StatementError{Msg: "\"=\" should only appear once. Usage example: SET 'key'='value'."}
+		return "", "", &types.StatementError{Msg: `"=" should only appear once. Usage example: SET 'key'='value'.`}
 	}
 
 	if keyValuePair[0] != "" && keyValuePair[1] == "" {
-		return "", "", &types.StatementError{Msg: "Value for key not present. If you want to reset a key, use \"RESET 'key'\"."}
+		return "", "", &types.StatementError{Msg: `Value for key not present. If you want to reset a key, use "RESET 'key'".`}
 	}
 
 	if keyValuePair[0] == "" && keyValuePair[1] != "" {
@@ -263,13 +263,13 @@ func processHttpErrors(resp *http.Response, err error) error {
 		body, err := io.ReadAll(resp.Body)
 
 		if err != nil {
-			return &types.StatementError{Msg: fmt.Sprintf("received error with code \"%d\" from server but could not parse it. This is not expected. Please contact support.", resp.StatusCode)}
+			return &types.StatementError{Msg: fmt.Sprintf(`received error with code "%d" from server but could not parse it. This is not expected. Please contact support.`, resp.StatusCode)}
 		}
 
 		err = json.Unmarshal(body, &statementErr)
 
 		if err != nil || statementErr == nil || statementErr.Title == nil || statementErr.Detail == nil {
-			return &types.StatementError{Msg: fmt.Sprintf("received error with code \"%d\" from server but could not parse it. This is not expected. Please contact support.", resp.StatusCode)}
+			return &types.StatementError{Msg: fmt.Sprintf(`received error with code "%d" from server but could not parse it. This is not expected. Please contact support.`, resp.StatusCode)}
 		}
 
 		return &types.StatementError{Msg: statementErr.GetTitle() + ": " + statementErr.GetDetail()}
