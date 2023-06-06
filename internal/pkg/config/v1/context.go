@@ -47,8 +47,7 @@ func newContext(name string, platform *Platform, credential *Credential, kafkaCl
 		LastOrgId:              orgResourceId,
 	}
 	ctx.KafkaClusterContext = NewKafkaClusterContext(ctx, kafka, kafkaClusters)
-	err := ctx.validate()
-	if err != nil {
+	if err := ctx.validate(); err != nil {
 		return nil, err
 	}
 	return ctx, nil

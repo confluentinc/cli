@@ -115,8 +115,7 @@ func newState(authURL string, noBrowser bool) (*authState, error) {
 		state.SSOProviderCallbackUrl = ssoProviderCallbackLocalURL
 	}
 
-	err := state.generateCodes()
-	if err != nil {
+	if err := state.generateCodes(); err != nil {
 		return nil, err
 	}
 
@@ -127,23 +126,20 @@ func newState(authURL string, noBrowser bool) (*authState, error) {
 func (s *authState) generateCodes() error {
 	randomBytes := make([]byte, 32)
 
-	_, err := rand.Read(randomBytes)
-	if err != nil {
+	if _, err := rand.Read(randomBytes); err != nil {
 		return errors.Wrap(err, errors.GenerateRandomSSOProviderErrorMsg)
 	}
 
 	s.SSOProviderState = base64.RawURLEncoding.EncodeToString(randomBytes)
 
-	_, err = rand.Read(randomBytes)
-	if err != nil {
+	if _, err := rand.Read(randomBytes); err != nil {
 		return errors.Wrap(err, errors.GenerateRandomCodeVerifierErrorMsg)
 	}
 
 	s.CodeVerifier = base64.RawURLEncoding.EncodeToString(randomBytes)
 
 	hasher := sha256.New()
-	_, err = hasher.Write([]byte(s.CodeVerifier))
-	if err != nil {
+	if _, err := hasher.Write([]byte(s.CodeVerifier)); err != nil {
 		return errors.Wrap(err, errors.ComputeHashErrorMsg)
 	}
 	s.CodeChallenge = base64.RawURLEncoding.EncodeToString(hasher.Sum(nil))
@@ -214,8 +210,7 @@ func (s *authState) getOAuthTokenResponse(payload *strings.Reader) (map[string]a
 	defer res.Body.Close()
 	errorResponseBody, _ := io.ReadAll(res.Body)
 	var data map[string]any
-	err = json.Unmarshal(errorResponseBody, &data)
-	if err != nil {
+	if err := json.Unmarshal(errorResponseBody, &data); err != nil {
 		log.CliLogger.Debugf("Failed oauth token response body: %s", errorResponseBody)
 		return nil, errors.Wrap(err, errors.UnmarshalOAuthTokenErrorMsg)
 	}

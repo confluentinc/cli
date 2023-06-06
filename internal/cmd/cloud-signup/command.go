@@ -24,13 +24,11 @@ func cloudSignup(cmd *cobra.Command, _ []string) error {
 	signupUrl := "https://www.confluent.io/get-started/"
 
 	output.Printf("You will now be redirected to the Confluent Cloud sign up page in your browser. If you are not redirected, please use the following link: %s\n", signupUrl)
-	err := form.ConfirmEnter()
-	if err != nil {
+	if err := form.ConfirmEnter(); err != nil {
 		return err
 	}
 
-	err = browser.OpenURL(signupUrl)
-	if err != nil {
+	if err := browser.OpenURL(signupUrl); err != nil {
 		return errors.Wrap(err, "unable to open web browser for cloud signup")
 	}
 
