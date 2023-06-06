@@ -10,12 +10,13 @@ import (
 )
 
 type Client struct {
-	URL    string
-	Debug  bool
-	Client *http.Client
+	URL       string
+	Debug     bool
+	UserAgent string
+	Client    *http.Client
 }
 
-func NewClient(isTest, unsafeTrace bool) *Client {
+func NewClient(userAgent string, isTest, unsafeTrace bool) *Client {
 	url := "https://api.hub.confluent.io"
 	if isTest {
 		url = testserver.TestHubUrl.String()
@@ -25,8 +26,9 @@ func NewClient(isTest, unsafeTrace bool) *Client {
 	client.Logger = log.NewLeveledLogger(unsafeTrace)
 
 	return &Client{
-		URL:    url,
-		Debug:  unsafeTrace,
-		Client: client.StandardClient(),
+		URL:       url,
+		Debug:     unsafeTrace,
+		UserAgent: userAgent,
+		Client:    client.StandardClient(),
 	}
 }

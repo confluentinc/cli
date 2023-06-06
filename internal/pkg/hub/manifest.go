@@ -28,6 +28,7 @@ func (c *Client) GetRemoteManifest(owner, name, version string) (*cpstructs.Mani
 	if err != nil {
 		return nil, err
 	}
+	req.Header.Add("User-Agent", c.UserAgent)
 
 	if c.Debug {
 		dump, err := httputil.DumpRequestOut(req, true)
@@ -82,6 +83,7 @@ func (c *Client) GetRemoteArchive(pluginManifest *cpstructs.Manifest) ([]byte, e
 	if err != nil {
 		return nil, err
 	}
+	req.Header.Add("User-Agent", c.UserAgent)
 
 	if c.Debug {
 		dump, err := httputil.DumpRequestOut(req, true)

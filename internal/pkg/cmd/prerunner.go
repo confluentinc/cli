@@ -534,7 +534,7 @@ func (c *AuthenticatedCLICommand) GetHubClient() (*hub.Client, error) {
 			return nil, err
 		}
 
-		c.HubClient = hub.NewClient(c.Config.IsTest, unsafeTrace)
+		c.HubClient = hub.NewClient(c.Config.Version.UserAgent, c.Config.IsTest, unsafeTrace)
 	}
 
 	return c.HubClient, nil
