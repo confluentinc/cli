@@ -2,9 +2,11 @@ package ccloudv2
 
 import (
 	"context"
-	billing "github.com/confluentinc/ccloud-sdk-go-v2/billing/v1"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"net/http"
+
+	billing "github.com/confluentinc/ccloud-sdk-go-v2/billing/v1"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 func newBillingClient(url, userAgent string, unsafeTrace bool) *billing.APIClient {

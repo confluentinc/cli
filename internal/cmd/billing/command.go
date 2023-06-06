@@ -13,7 +13,7 @@ type command struct {
 func New(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "billing",
-		Short:       "Manage Confluent Cloud Billing.",
+		Short:       "Manage Confluent Cloud billing.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}
 	c := &command{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}

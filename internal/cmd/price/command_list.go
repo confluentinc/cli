@@ -2,13 +2,13 @@ package price
 
 import (
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/billing"
 	"strings"
 
 	"github.com/spf13/cobra"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
+	"github.com/confluentinc/cli/internal/pkg/billing"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/types"

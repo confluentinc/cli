@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/confluentinc/cli/internal/cmd/billing"
 	"os"
 	"strings"
 
@@ -16,6 +15,7 @@ import (
 	apikey "github.com/confluentinc/cli/internal/cmd/api-key"
 	"github.com/confluentinc/cli/internal/cmd/asyncapi"
 	auditlog "github.com/confluentinc/cli/internal/cmd/audit-log"
+	"github.com/confluentinc/cli/internal/cmd/billing"
 	byok "github.com/confluentinc/cli/internal/cmd/byok"
 	cloudsignup "github.com/confluentinc/cli/internal/cmd/cloud-signup"
 	"github.com/confluentinc/cli/internal/cmd/cluster"

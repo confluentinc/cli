@@ -3,10 +3,12 @@ package testserver
 import (
 	"encoding/json"
 	"fmt"
-	billingv1 "github.com/confluentinc/ccloud-sdk-go-v2/billing/v1"
-	"github.com/stretchr/testify/require"
 	"net/http"
 	"testing"
+
+	"github.com/stretchr/testify/require"
+
+	billingv1 "github.com/confluentinc/ccloud-sdk-go-v2/billing/v1"
 )
 
 // Handler for: "/billing/v1/costs"
@@ -18,7 +20,7 @@ func handleBillingCosts(t *testing.T) http.HandlerFunc {
 
 			// test 20
 			var data []billingv1.BillingV1Cost
-			for i := 0; i < 20; i++ {
+			for i := 0; i < 2; i++ {
 				item := billingv1.BillingV1Cost{
 					StartDate:   billingv1.PtrString("2023-01-01 00:00:00"),
 					EndDate:     billingv1.PtrString("2023-01-02 00:00:00"),
