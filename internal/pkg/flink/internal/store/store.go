@@ -63,7 +63,9 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 	statementObj, err := s.client.CreateStatement(statement, s.appOptions.GetComputePoolId(), s.appOptions.GetIdentityPoolId(), s.propsDefault(s.Properties), s.appOptions.GetEnvId(), s.appOptions.GetOrgResourceId())
 	if err != nil {
 		statusDetail := s.getStatusDetail(statementObj)
-		return nil, &types.StatementError{Msg: err.Error(), FailureMessage: statusDetail}
+		return nil, &types.StatementError{
+			Msg:            err.Error(),
+			FailureMessage: statusDetail}
 	}
 	return types.NewProcessedStatement(statementObj), nil
 }
@@ -152,7 +154,9 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 			statementObj, err := s.client.GetStatement(s.appOptions.GetEnvId(), statementName, s.appOptions.GetOrgResourceId())
 			statusDetail := s.getStatusDetail(statementObj)
 			if err != nil {
-				return nil, &types.StatementError{Msg: err.Error(), FailureMessage: statusDetail}
+				return nil, &types.StatementError{
+					Msg:            err.Error(),
+					FailureMessage: statusDetail}
 			}
 
 			phase := types.PHASE(statementObj.Status.GetPhase())
