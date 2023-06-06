@@ -156,16 +156,15 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 }
 
 func parsePluginId(plugin string) (string, string, string, error) {
-	parsePluginErrorMsg := "plugin not found"
-	parsePluginSuggestions := "Provide a path to a local file or provide a plugin ID from Confluent Hub with the format: `<owner>/<name>:<version>`."
+	err := errors.NewErrorWithSuggestions("plugin not found", "Provide a path to a local file or provide a plugin ID from Confluent Hub with the format: `<owner>/<name>:<version>`.")
 
 	ownerNameSplit := strings.Split(plugin, "/")
 	if len(ownerNameSplit) != 2 || ownerNameSplit[0] == "" {
-		return "", "", "", errors.NewErrorWithSuggestions(parsePluginErrorMsg, parsePluginSuggestions)
+		return "", "", "", err
 	}
 	nameVersionSplit := strings.Split(ownerNameSplit[1], ":")
 	if len(nameVersionSplit) != 2 || nameVersionSplit[0] == "" || nameVersionSplit[1] == "" {
-		return "", "", "", errors.NewErrorWithSuggestions(parsePluginErrorMsg, parsePluginSuggestions)
+		return "", "", "", err
 	}
 
 	return ownerNameSplit[0], nameVersionSplit[0], nameVersionSplit[1], nil
@@ -176,13 +175,13 @@ func (c *pluginCommand) getManifest(client *hub.Client, id string) (*cpstructs.M
 		// if installing plugin from local archive
 		return getLocalManifest(id)
 	}
-	
+
 	// if installing plugin from Confluent Hub
 	owner, name, version, err := parsePluginId(id)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return client.GetRemoteManifest(owner, name, version)
 }
 
