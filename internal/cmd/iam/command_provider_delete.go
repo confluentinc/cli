@@ -34,12 +34,14 @@ func (c *identityProviderCommand) delete(cmd *cobra.Command, args []string) erro
 		return err
 	}
 
-	deleted, err := resource.Delete(args, func(id string) error {
+	deleteFunc := func(id string) error {
 		if err := c.V2Client.DeleteIdentityProvider(id); err != nil {
 			return err
 		}
 		return nil
-	}, resource.DefaultPostProcess)
+	}
+
+	deleted, err := resource.Delete(args, deleteFunc, nil)
 	resource.PrintDeleteSuccessMsg(deleted, resource.IdentityProvider)
 
 	return err

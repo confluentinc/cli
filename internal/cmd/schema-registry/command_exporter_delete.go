@@ -40,12 +40,14 @@ func (c *command) exporterDelete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	deleted, err := resource.Delete(args, func(id string) error {
+	deleteFunc := func(id string) error {
 		if _, err := srClient.DefaultApi.DeleteExporter(ctx, id); err != nil {
 			return err
 		}
 		return nil
-	}, resource.DefaultPostProcess)
+	}
+
+	deleted, err := resource.Delete(args, deleteFunc, nil)
 	resource.PrintDeleteSuccessMsg(deleted, resource.SchemaExporter)
 
 	return err

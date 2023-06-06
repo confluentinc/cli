@@ -57,7 +57,7 @@ func (c *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 		return err
 	}
 
-	deleted, err := resource.Delete(args, func(id string) error {
+	deleteFunc := func(id string) error {
 		if r, err := kafkaREST.CloudClient.DeleteKafkaTopic(kafkaClusterConfig.ID, id); err != nil {
 			restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err)
 			if parseErr == nil && restErr.Code == ccloudv2.UnknownTopicOrPartitionErrorCode {
@@ -67,7 +67,9 @@ func (c *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 			}
 		}
 		return nil
-	}, resource.DefaultPostProcess)
+	}
+
+	deleted, err := resource.Delete(args, deleteFunc, nil)
 	resource.PrintDeleteSuccessMsg(deleted, resource.Topic)
 
 	return err

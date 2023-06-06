@@ -27,12 +27,14 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	deleted, err := resource.Delete(args, func(id string) error {
+	deleteFunc := func(id string) error {
 		if err := c.Config.DeleteContext(id); err != nil {
 			return err
 		}
 		return nil
-	}, resource.DefaultPostProcess)
+	}
+
+	deleted, err := resource.Delete(args, deleteFunc, nil)
 	resource.PrintDeleteSuccessMsg(deleted, resource.Context)
 
 	return err

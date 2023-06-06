@@ -48,12 +48,14 @@ func (c *brokerCommand) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	opts := kafkarestv3.ClustersClusterIdBrokersBrokerIdDeleteOpts{ShouldShutdown: optional.NewBool(true)}
-	deleted, err := resource.Delete(args, func(id string) error {
+	deleteFunc := func(id string) error {
 		if _, resp, err := restClient.BrokerV3Api.ClustersClusterIdBrokersBrokerIdDelete(restContext, clusterId, brokerIdToNumId[id], &opts); err != nil {
 			return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 		}
 		return nil
-	}, resource.DefaultPostProcess)
+	}
+
+	deleted, err := resource.Delete(args, deleteFunc, nil)
 	if len(deleted) == 1 {
 		output.Printf("Started deletion of broker %[1]s. To monitor the remove-broker task run `confluent kafka broker get-tasks %[1]s --task-type remove-broker`.\n", deleted[0])
 	} else if len(deleted) > 1 {

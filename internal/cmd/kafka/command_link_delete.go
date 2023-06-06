@@ -45,12 +45,14 @@ func (c *linkCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	deleted, err := resource.Delete(args, func(id string) error {
+	deleteFunc := func(id string) error {
 		if r, err := kafkaREST.CloudClient.DeleteKafkaLink(clusterId, id); err != nil {
 			return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, r)
 		}
 		return nil
-	}, resource.DefaultPostProcess)
+	}
+
+	deleted, err := resource.Delete(args, deleteFunc, nil)
 	resource.PrintDeleteSuccessMsg(deleted, resource.ClusterLink)
 
 	return err

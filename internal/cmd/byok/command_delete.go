@@ -29,12 +29,14 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	deleted, err := resource.Delete(args, func(id string) error {
+	deleteFunc := func(id string) error {
 		if r, err := c.V2Client.DeleteByokKey(id); err != nil {
 			return errors.CatchByokKeyNotFoundError(err, r)
 		}
 		return nil
-	}, resource.DefaultPostProcess)
+	}
+
+	deleted, err := resource.Delete(args, deleteFunc, nil)
 	resource.PrintDeleteSuccessMsg(deleted, resource.ByokKey)
 
 	if err != nil {

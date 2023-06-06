@@ -49,7 +49,7 @@ func (c *ksqlCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	deleted, err := resource.Delete(args, func(id string) error {
+	deleteFunc := func(id string) error {
 		// When deleting a cluster we need to remove all the associated topics. This operation will succeed only if cluster
 		// is UP and provisioning didn't fail. If provisioning failed we can't connect to the ksql server, so we can't delete
 		// the topics.
@@ -64,7 +64,9 @@ func (c *ksqlCommand) delete(cmd *cobra.Command, args []string) error {
 			return err
 		}
 		return nil
-	}, resource.DefaultPostProcess)
+	}
+
+	deleted, err := resource.Delete(args, deleteFunc, nil)
 	resource.PrintDeleteSuccessMsg(deleted, resource.KsqlCluster)
 
 	return err

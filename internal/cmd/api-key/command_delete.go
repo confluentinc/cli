@@ -30,12 +30,14 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	deleted, err := resource.Delete(args, func(id string) error {
+	deleteFunc := func(id string) error {
 		if r, err := c.V2Client.DeleteApiKey(id); err != nil {
 			return errors.CatchApiKeyForbiddenAccessError(err, deleteOperation, r)
 		}
 		return nil
-	}, c.postProcess)
+	}
+
+	deleted, err := resource.Delete(args, deleteFunc, c.postProcess)
 	resource.PrintDeleteSuccessMsg(deleted, resource.ApiKey)
 
 	if err != nil {

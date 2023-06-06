@@ -55,12 +55,14 @@ func DeleteTopic(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restCont
 		return err
 	}
 
-	deleted, err := resource.Delete(args, func(id string) error {
+	deleteFunc := func(id string) error {
 		if r, err := restClient.TopicV3Api.DeleteKafkaTopic(restContext, clusterId, id); err != nil {
 			return kafkarest.NewError(restClient.GetConfig().BasePath, err, r)
 		}
 		return nil
-	}, resource.DefaultPostProcess)
+	}
+
+	deleted, err := resource.Delete(args, deleteFunc, nil)
 	resource.PrintDeleteSuccessMsg(deleted, resource.Topic)
 
 	return err

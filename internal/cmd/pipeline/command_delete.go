@@ -48,12 +48,14 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	deleted, err := resource.Delete(args, func(id string) error {
+	deleteFunc := func(id string) error {
 		if err := c.V2Client.DeleteSdPipeline(environmentId, cluster.ID, id); err != nil {
 			return err
 		}
 		return nil
-	}, resource.DefaultPostProcess)
+	}
+
+	deleted, err := resource.Delete(args, deleteFunc, nil)
 	if len(deleted) == 1 {
 		output.Printf("Requested to delete pipeline \"%s\".\n", deleted[0])
 	} else if len(deleted) > 1 {
