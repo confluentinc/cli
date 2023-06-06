@@ -103,7 +103,7 @@ func TestProcessSetStatement(t *testing.T) {
 		result, err := s.processSetStatement("set 'location'='USA'")
 		assert.Nil(t, err)
 		assert.EqualValues(t, types.COMPLETED, result.Status)
-		assert.Equal(t, "Config updated successfully.", result.StatusDetail)
+		assert.Equal(t, "Config updated successfully", result.StatusDetail)
 		expectedResult := createStatementResults([]string{"Key", "Value"}, [][]string{{"location", "USA"}})
 		assert.Equal(t, &expectedResult, result.StatementResults)
 	})
@@ -141,14 +141,14 @@ func TestProcessResetStatement(t *testing.T) {
 		s.Properties["timeout"] = "30"
 		result, _ := s.processResetStatement("reset")
 		assert.EqualValues(t, types.COMPLETED, result.Status)
-		assert.Equal(t, "Configuration has been reset successfully.", result.StatusDetail)
+		assert.Equal(t, "Configuration has been reset successfully", result.StatusDetail)
 		assert.Nil(t, result.StatementResults)
 	})
 
 	t.Run("should return an error message if configKey does not exist", func(t *testing.T) {
 		result, err := s.processResetStatement("reset 'location'")
 		assert.NotNil(t, err)
-		assert.Equal(t, "Error: Config key \"location\" is currently not set.", err.Error())
+		assert.Equal(t, `Error: Config key "location" is not set.`, err.Error())
 		assert.Nil(t, result)
 	})
 
@@ -156,7 +156,7 @@ func TestProcessResetStatement(t *testing.T) {
 		s.Properties["pipeline.name"] = "job1"
 		result, _ := s.processResetStatement("reset 'pipeline.name'")
 		assert.EqualValues(t, types.COMPLETED, result.Status)
-		assert.Equal(t, "Config key \"pipeline.name\" has been reset successfully.", result.StatusDetail)
+		assert.Equal(t, `Config key "pipeline.name" has been reset successfully`, result.StatusDetail)
 		expectedResult := createStatementResults([]string{"Key", "Value"}, [][]string{})
 		assert.Equal(t, &expectedResult, result.StatementResults)
 	})
@@ -164,7 +164,7 @@ func TestProcessResetStatement(t *testing.T) {
 		result, _ := s.processResetStatement("reset")
 
 		assert.EqualValues(t, types.COMPLETED, result.Status)
-		assert.Equal(t, "Configuration has been reset successfully.", result.StatusDetail)
+		assert.Equal(t, "Configuration has been reset successfully", result.StatusDetail)
 		assert.Nil(t, result.StatementResults)
 	})
 }
@@ -184,7 +184,7 @@ func TestProcessUseStatement(t *testing.T) {
 		require.Nil(t, err)
 		require.Equal(t, config.ConfigOpUse, result.Kind)
 		require.EqualValues(t, types.COMPLETED, result.Status)
-		require.Equal(t, "Config updated successfully.", result.StatusDetail)
+		require.Equal(t, "Config updated successfully", result.StatusDetail)
 		expectedResult := createStatementResults([]string{"Key", "Value"}, [][]string{{config.ConfigKeyDatabase, "db1"}})
 		assert.Equal(t, &expectedResult, result.StatementResults)
 	})
@@ -199,7 +199,7 @@ func TestProcessUseStatement(t *testing.T) {
 		require.Nil(t, err)
 		require.Equal(t, config.ConfigOpUse, result.Kind)
 		require.EqualValues(t, types.COMPLETED, result.Status)
-		require.Equal(t, "Config updated successfully.", result.StatusDetail)
+		require.Equal(t, "Config updated successfully", result.StatusDetail)
 		expectedResult := createStatementResults([]string{"Key", "Value"}, [][]string{{config.ConfigKeyCatalog, "metadata"}})
 		assert.Equal(t, &expectedResult, result.StatementResults)
 	})
