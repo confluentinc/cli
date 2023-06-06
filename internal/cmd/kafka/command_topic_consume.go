@@ -130,8 +130,7 @@ func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	}
 	defer adminClient.Close()
 
-	err = c.validateTopic(adminClient, topic, cluster)
-	if err != nil {
+	if err := c.validateTopic(adminClient, topic, cluster); err != nil {
 		return err
 	}
 

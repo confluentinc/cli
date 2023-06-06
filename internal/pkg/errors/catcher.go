@@ -49,8 +49,7 @@ func catchTypedErrors(err error) error {
 func parseMDSOpenAPIErrorType1(err error) (*MDSV2Alpha1ErrorType1, error) {
 	if openAPIError, ok := err.(mdsv2alpha1.GenericOpenAPIError); ok {
 		var decodedError MDSV2Alpha1ErrorType1
-		err = json.Unmarshal(openAPIError.Body(), &decodedError)
-		if err != nil {
+		if err := json.Unmarshal(openAPIError.Body(), &decodedError); err != nil {
 			return nil, err
 		}
 		if reflect.DeepEqual(decodedError, MDSV2Alpha1ErrorType1{}) {
@@ -64,8 +63,7 @@ func parseMDSOpenAPIErrorType1(err error) (*MDSV2Alpha1ErrorType1, error) {
 func parseMDSOpenAPIErrorType2(err error) (*MDSV2Alpha1ErrorType2Array, error) {
 	if openAPIError, ok := err.(mdsv2alpha1.GenericOpenAPIError); ok {
 		var decodedError MDSV2Alpha1ErrorType2Array
-		err = json.Unmarshal(openAPIError.Body(), &decodedError)
-		if err != nil {
+		if err := json.Unmarshal(openAPIError.Body(), &decodedError); err != nil {
 			return nil, err
 		}
 		if reflect.DeepEqual(decodedError, MDSV2Alpha1ErrorType2Array{}) {

@@ -23,8 +23,7 @@ func GetCAClient(caCertPath string) (*http.Client, error) {
 	caCertPool.AppendCertsFromPEM(caCert)
 	transport := DefaultTransport()
 	transport.TLSClientConfig.RootCAs = caCertPool
-	client := DefaultClientWithTransport(transport)
-	return client, nil
+	return DefaultClientWithTransport(transport), nil
 }
 
 func SelfSignedCertClientFromPath(caCertPath string) (*http.Client, error) {
@@ -159,7 +158,5 @@ func DefaultClient() *http.Client {
 }
 
 func DefaultClientWithTransport(transport *http.Transport) *http.Client {
-	return &http.Client{
-		Transport: transport,
-	}
+	return &http.Client{Transport: transport}
 }

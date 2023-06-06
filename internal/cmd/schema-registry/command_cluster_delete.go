@@ -58,8 +58,7 @@ func (c *command) clusterDelete(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	err = c.V2Client.DeleteSchemaRegistryCluster(clusters[0].GetId(), environmentId)
-	if err != nil {
+	if err = c.V2Client.DeleteSchemaRegistryCluster(clusters[0].GetId(), environmentId); err != nil {
 		return err
 	}
 

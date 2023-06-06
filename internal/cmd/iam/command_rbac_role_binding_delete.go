@@ -56,8 +56,7 @@ func (c *roleBindingCommand) delete(cmd *cobra.Command, _ []string) error {
 			return err
 		}
 
-		err = c.ccloudDelete(cmd, deleteRoleBinding)
-		if err != nil {
+		if err := c.ccloudDelete(cmd, deleteRoleBinding); err != nil {
 			return err
 		}
 
