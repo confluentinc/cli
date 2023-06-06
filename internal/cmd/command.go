@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/confluentinc/cli/internal/cmd/billing"
 	"os"
 	"strings"
 
@@ -103,6 +104,7 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 	cmd.AddCommand(apikey.New(prerunner, nil, flagResolver))
 	cmd.AddCommand(asyncapi.New(prerunner))
 	cmd.AddCommand(auditlog.New(prerunner))
+	cmd.AddCommand(billing.New(prerunner))
 	cmd.AddCommand(byok.New(prerunner))
 	cmd.AddCommand(cluster.New(prerunner, cfg.Version.UserAgent))
 	cmd.AddCommand(cloudsignup.New())
