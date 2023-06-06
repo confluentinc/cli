@@ -1,24 +1,20 @@
 package iam
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
-	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *identityPoolCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "delete <id>",
-		Short:             "Delete an identity pool.",
-		Args:              cobra.ExactArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		Use:               "delete <id-1> [id-2] ... [id-n]",
+		Short:             "Delete identity pools.",
+		Args:              cobra.MinimumNArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgsMultiple),
 		RunE:              c.delete,
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -42,20 +38,46 @@ func (c *identityPoolCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	pool, err := c.V2Client.GetIdentityPool(args[0], provider)
-	if err != nil {
+	if err := c.confirmDeletion(cmd, provider, args); err != nil {
 		return err
 	}
 
-	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.IdentityPool, args[0], pool.GetDisplayName())
-	if _, err := form.ConfirmDeletion(cmd, promptMsg, pool.GetDisplayName()); err != nil {
+	deleteFunc := func(id string) error {
+		if err := c.V2Client.DeleteIdentityPool(id, provider); err != nil {
+			return err
+		}
+		return nil
+	}
+
+	deleted, err := resource.Delete(args, deleteFunc, nil)
+	resource.PrintDeleteSuccessMsg(deleted, resource.IdentityPool)
+
+	return err
+}
+
+func (c *identityPoolCommand) confirmDeletion(cmd *cobra.Command, provider string, args []string) error {
+	var displayName string
+	describeFunc := func(id string) error {
+		pool, err := c.V2Client.GetIdentityPool(id, provider)
+		if err == nil && id == args[0] {
+			displayName = pool.GetDisplayName()
+		}
 		return err
 	}
 
-	if err := c.V2Client.DeleteIdentityPool(args[0], provider); err != nil {
+	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.IdentityPool, describeFunc); err != nil {
 		return err
 	}
 
-	output.ErrPrintf(errors.DeletedResourceMsg, resource.IdentityPool, args[0])
+	if len(args) == 1 {
+		if err := form.ConfirmDeletionWithString(cmd, form.DefaultPromptString(resource.IdentityPool, args[0], displayName), displayName); err != nil {
+			return err
+		}
+	} else {
+		if ok, err := form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.IdentityPool, args)); err != nil || !ok {
+			return err
+		}
+	}
+
 	return nil
 }
