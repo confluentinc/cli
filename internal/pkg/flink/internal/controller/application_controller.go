@@ -26,13 +26,15 @@ type ApplicationControllerInterface interface {
 	TView() *tview.Application
 	ShowTableView()
 	StartTView(layout tview.Primitive) error
+	AddCleanupFunction(func())
 }
 
 type ApplicationController struct {
-	app        *tview.Application
-	outputMode types.OutputMode
-	history    *history.History
-	tableView  tview.Primitive
+	app              *tview.Application
+	outputMode       types.OutputMode
+	history          *history.History
+	tableView        tview.Primitive
+	cleanupFunctions []func()
 }
 
 // preFunc will, if defined, before the main function is executed. Both are executed after tview is suspended.
@@ -54,6 +56,9 @@ func (a *ApplicationController) ToggleOutputMode() {
 
 // This function should be used to proparly stop the application, cache saving, cleanup and so on
 func (a *ApplicationController) ExitApplication() {
+	for _, cleanupFunction := range a.cleanupFunctions {
+		cleanupFunction()
+	}
 	a.history.Save()
 	a.app.Stop()
 	os.Exit(0)
@@ -74,6 +79,10 @@ func (a *ApplicationController) StartTView(layout tview.Primitive) error {
 
 func (a *ApplicationController) ShowTableView() {
 	a.app.SetRoot(a.tableView, true).EnableMouse(false)
+}
+
+func (a *ApplicationController) AddCleanupFunction(cleanupFunction func()) {
+	a.cleanupFunctions = append(a.cleanupFunctions, cleanupFunction)
 }
 
 func NewApplicationController(app *tview.Application, history *history.History) ApplicationControllerInterface {
