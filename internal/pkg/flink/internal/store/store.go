@@ -72,7 +72,8 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 		statusDetail := s.getStatusDetail(statementObj)
 		return nil, &types.StatementError{
 			Msg:            err.Error(),
-			FailureMessage: statusDetail}
+			FailureMessage: statusDetail,
+		}
 	}
 	return types.NewProcessedStatement(statementObj), nil
 }
