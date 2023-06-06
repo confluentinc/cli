@@ -1,0 +1,15 @@
+Manage consumer actions.
+
+Usage:
+  confluent stream-share consumer [command]
+
+Available Commands:
+  redeem      Redeem a stream share token.
+  share       Manage consumer shares.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent stream-share consumer [command] --help" for more information about a command.

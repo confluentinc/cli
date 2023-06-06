@@ -1,0 +1,22 @@
+Manage CLI configuration contexts. Contexts define the state of a Confluent Cloud or Confluent Platform login.
+
+Usage:
+  confluent context [command]
+
+Aliases:
+  context, ctx
+
+Available Commands:
+  create      Create a new context.
+  delete      Delete a context.
+  describe    Describe a context.
+  list        List all contexts.
+  update      Update a context field.
+  use         Use a context in subsequent commands.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent context [command] --help" for more information about a command.

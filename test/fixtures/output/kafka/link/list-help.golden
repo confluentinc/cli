@@ -1,0 +1,16 @@
+List cluster links if the provided cluster is a destination cluster.
+
+Usage:
+  confluent kafka link list [flags]
+
+Flags:
+      --include-topics       If set, will list mirrored topics for the links returned.
+      --cluster string       Kafka cluster ID.
+      --environment string   Environment ID.
+      --context string       CLI context name.
+  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
