@@ -67,8 +67,7 @@ func Timestamp(formatString string) *rapid.Generator[string] {
 	return rapid.Custom(func(t *rapid.T) string {
 		seconds := rapid.IntRange(0, 31536000).Draw(t, "Timestamp")
 		createdAt := time.Now().Add(time.Duration(seconds) * time.Second)
-		formattedDate := createdAt.Format(formatString)
-		return formattedDate
+		return createdAt.Format(formatString)
 	})
 }
 
@@ -189,8 +188,7 @@ func AtomicDataType() *rapid.Generator[flinkgatewayv1alpha1.DataType] {
 		resultFieldType := rapid.SampledFrom(AtomicResultFieldTypes).Draw(t, "atomic result field type")
 		dataTypeJson := fmt.Sprintf(`{"type": "%s"}`, string(resultFieldType))
 		dataType := flinkgatewayv1alpha1.NewNullableDataType(nil)
-		err := dataType.UnmarshalJSON([]byte(dataTypeJson))
-		if err != nil {
+		if err := dataType.UnmarshalJSON([]byte(dataTypeJson)); err != nil {
 			return flinkgatewayv1alpha1.DataType{}
 		}
 		return *dataType.Get()
@@ -274,8 +272,7 @@ func GenResultFieldType() *rapid.Generator[types.StatementResultFieldType] {
 func DataType(maxNestingDepth int) *rapid.Generator[flinkgatewayv1alpha1.DataType] {
 	return rapid.Custom(func(t *rapid.T) flinkgatewayv1alpha1.DataType {
 		resultFieldType := GenResultFieldType().Draw(t, "result field type")
-		dataType := getDataTypeGeneratorForType(resultFieldType, maxNestingDepth).Draw(t, "data type")
-		return dataType
+		return getDataTypeGeneratorForType(resultFieldType, maxNestingDepth).Draw(t, "data type")
 	})
 }
 

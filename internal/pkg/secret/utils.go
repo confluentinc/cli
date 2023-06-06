@@ -60,19 +60,16 @@ func SaveConfiguration(path string, configuration *properties.Properties, addSec
 func WritePropertiesFile(path string, property *properties.Properties, writeComments bool) error {
 	buf := new(bytes.Buffer)
 	if writeComments {
-		_, err := property.WriteFormattedComment(buf, properties.UTF8)
-		if err != nil {
+		if _, err := property.WriteFormattedComment(buf, properties.UTF8); err != nil {
 			return err
 		}
 	} else {
-		_, err := property.Write(buf, properties.UTF8)
-		if err != nil {
+		if _, err := property.Write(buf, properties.UTF8); err != nil {
 			return err
 		}
 	}
 
-	err := WriteFile(path, buf.Bytes())
-	return err
+	return WriteFile(path, buf.Bytes())
 }
 
 func addSecureConfigProviderProperty(property *properties.Properties) (*properties.Properties, error) {
@@ -84,12 +81,10 @@ func addSecureConfigProviderProperty(property *properties.Properties) (*properti
 		configProviders = configProviders + "," + SecureConfigProvider
 	}
 
-	_, _, err := property.Set(ConfigProviderKey, configProviders)
-	if err != nil {
+	if _, _, err := property.Set(ConfigProviderKey, configProviders); err != nil {
 		return nil, err
 	}
-	_, _, err = property.Set(SecureConfigProviderClassKey, SecureConfigProviderClass)
-	if err != nil {
+	if _, _, err := property.Set(SecureConfigProviderClassKey, SecureConfigProviderClass); err != nil {
 		return nil, err
 	}
 	return property, nil
@@ -120,8 +115,7 @@ func filterProperties(configProps *properties.Properties, configKeys []string, f
 			value, ok := configProps.Get(key)
 			// If key present in config file
 			if ok {
-				_, _, err := matchProps.Set(key, value)
-				if err != nil {
+				if _, _, err := matchProps.Set(key, value); err != nil {
 					return nil, err
 				}
 			} else {
@@ -193,12 +187,10 @@ func convertPropertiesJAAS(props *properties.Properties, originalConfigs *proper
 			origKey := parentKeys[ClassId]
 			origVal, ok := originalConfigs.Get(origKey)
 			if ok {
-				_, _, err = jaasProps.Set(key, value)
-				if err != nil {
+				if _, _, err := jaasProps.Set(key, value); err != nil {
 					return props, nil
 				}
-				_, _, err = jaasOriginal.Set(parentKeys[ClassId]+KeySeparator+parentKeys[ParentId], origVal)
-				if err != nil {
+				if _, _, err := jaasOriginal.Set(parentKeys[ClassId]+KeySeparator+parentKeys[ParentId], origVal); err != nil {
 					return props, nil
 				}
 				props.Delete(key)
@@ -252,8 +244,7 @@ func loadJSONConfig(path string, configKeys []string) (*properties.Properties, e
 		// If key present in config file
 		if gjson.Get(jsonConfig, key).Exists() {
 			configValue := gjson.Get(jsonConfig, key)
-			_, _, err = matchProps.Set(key, configValue.String())
-			if err != nil {
+			if _, _, err := matchProps.Set(key, configValue.String()); err != nil {
 				return nil, err
 			}
 		} else {
@@ -271,14 +262,12 @@ func writePropertiesConfig(path string, configs *properties.Properties, addSecur
 	}
 	configProps.DisableExpansion = true
 	configs, err = convertPropertiesJAAS(configs, configProps, Update)
-
 	if err != nil {
 		return err
 	}
 
 	for key, value := range configs.Map() {
-		_, _, err = configProps.Set(key, value)
-		if err != nil {
+		if _, _, err := configProps.Set(key, value); err != nil {
 			return err
 		}
 	}
@@ -290,8 +279,7 @@ func writePropertiesConfig(path string, configs *properties.Properties, addSecur
 		}
 	}
 
-	err = WritePropertiesFile(path, configProps, true)
-	return err
+	return WritePropertiesFile(path, configProps, true)
 }
 
 func RemovePropertiesConfig(removeConfigs []string, path string) error {
@@ -306,13 +294,11 @@ func RemovePropertiesConfig(removeConfigs []string, path string) error {
 	for _, key := range removeConfigs {
 		// check if config is present
 		if pattern.MatchString(key) {
-			_, _, err = removeJAASConfig.Set(key, "")
-			if err != nil {
+			if _, _, err := removeJAASConfig.Set(key, ""); err != nil {
 				return err
 			}
 		} else {
-			_, ok := configProps.Get(key)
-			if !ok {
+			if _, ok := configProps.Get(key); !ok {
 				return errors.Errorf(errors.ConfigKeyNotPresentErrorMsg, key)
 			}
 			configProps.Delete(key)
@@ -325,14 +311,12 @@ func RemovePropertiesConfig(removeConfigs []string, path string) error {
 	}
 
 	for key, value := range configs.Map() {
-		_, _, err = configProps.Set(key, value)
-		if err != nil {
+		if _, _, err := configProps.Set(key, value); err != nil {
 			return err
 		}
 	}
 
-	err = WritePropertiesFile(path, configProps, true)
-	return err
+	return WritePropertiesFile(path, configProps, true)
 }
 
 func writeJSONConfig(path string, configs *properties.Properties, addSecureConfig bool) error {
@@ -343,8 +327,7 @@ func writeJSONConfig(path string, configs *properties.Properties, addSecureConfi
 
 	if gjson.Get(jsonConfig, ConfigProviderKey).Exists() {
 		configValue := gjson.Get(jsonConfig, ConfigProviderKey)
-		_, _, err = configs.Set(ConfigProviderKey, configValue.String())
-		if err != nil {
+		if _, _, err := configs.Set(ConfigProviderKey, configValue.String()); err != nil {
 			return err
 		}
 	}
@@ -378,8 +361,7 @@ func writeJSONConfig(path string, configs *properties.Properties, addSecureConfi
 	}
 
 	result := pretty.Pretty([]byte(jsonConfig))
-	err = WriteFile(path, result)
-	return err
+	return WriteFile(path, result)
 }
 
 func WriteFile(path string, data []byte) error {

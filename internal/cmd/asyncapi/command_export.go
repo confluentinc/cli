@@ -130,8 +130,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) error {
 				currentTopic:   topic,
 				currentSubject: subject,
 			}
-			err := c.getChannelDetails(accountDetails, flags)
-			if err != nil {
+			if err := c.getChannelDetails(accountDetails, flags); err != nil {
 				if err.Error() == protobufErrorMessage {
 					log.CliLogger.Info(err.Error())
 					continue
@@ -167,8 +166,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *command) getChannelDetails(details *accountDetails, flags *flags) error {
-	err := details.getSchemaDetails()
-	if err != nil {
+	if err := details.getSchemaDetails(); err != nil {
 		if err.Error() == protobufErrorMessage {
 			return err
 		}
@@ -179,41 +177,43 @@ func (c *command) getChannelDetails(details *accountDetails, flags *flags) error
 	}
 	details.channelDetails.example = nil
 	if flags.consumeExamples {
-		details.channelDetails.example, err = c.getMessageExamples(details.consumer, details.channelDetails.currentTopic.GetTopicName(), details.channelDetails.contentType, details.srClient, flags.valueFormat)
+		example, err := c.getMessageExamples(details.consumer, details.channelDetails.currentTopic.GetTopicName(), details.channelDetails.contentType, details.srClient, flags.valueFormat)
 		if err != nil {
 			log.CliLogger.Warn(err)
 		}
+		details.channelDetails.example = example
 	}
-	details.channelDetails.bindings, err = c.getBindings(details.clusterId, details.channelDetails.currentTopic.GetTopicName())
+	bindings, err := c.getBindings(details.clusterId, details.channelDetails.currentTopic.GetTopicName())
 	if err != nil {
 		log.CliLogger.Warnf("Bindings not found: %v", err)
 	}
+	details.channelDetails.bindings = bindings
 	if err := details.getTopicDescription(); err != nil {
 		log.CliLogger.Warnf("Failed to get topic description: %v", err)
 	}
 	// x-messageCompatibility
-	details.channelDetails.mapOfMessageCompat, err = getMessageCompatibility(details.srClient, details.srContext, details.channelDetails.currentSubject)
+	mapOfMessageCompat, err := getMessageCompatibility(details.srClient, details.srContext, details.channelDetails.currentSubject)
 	if err != nil {
 		log.CliLogger.Warnf("Failed to get subject's compatibility type: %v", err)
 	}
+	details.channelDetails.mapOfMessageCompat = mapOfMessageCompat
 	output.Printf("Added topic \"%s\".\n", details.channelDetails.currentTopic.GetTopicName())
 	return nil
 }
 
 func (c *command) getAccountDetails(flags *flags) (*accountDetails, error) {
 	details := new(accountDetails)
-	err := c.getClusterDetails(details, flags)
+	if err := c.getClusterDetails(details, flags); err != nil {
+		return nil, err
+	}
+	if err := c.getSchemaRegistry(details, flags); err != nil {
+		return nil, err
+	}
+	subjects, _, err := details.srClient.DefaultApi.List(details.srContext, nil)
 	if err != nil {
 		return nil, err
 	}
-	err = c.getSchemaRegistry(details, flags)
-	if err != nil {
-		return nil, err
-	}
-	details.subjects, _, err = details.srClient.DefaultApi.List(details.srContext, nil)
-	if err != nil {
-		return nil, err
-	}
+	details.subjects = subjects
 	// Create Consumer
 	if flags.consumeExamples {
 		details.consumer, err = createConsumer(details.broker, details.clusterCreds, flags.groupId)
@@ -246,8 +246,7 @@ func handlePanic() {
 
 func (c command) getMessageExamples(consumer *ckgo.Consumer, topicName, contentType string, srClient *schemaregistry.APIClient, valueFormatFlag string) (any, error) {
 	defer handlePanic()
-	err := consumer.Subscribe(topicName, nil)
-	if err != nil {
+	if err := consumer.Subscribe(topicName, nil); err != nil {
 		return nil, fmt.Errorf(`failed to subscribe to topic "%s": %v`, topicName, err)
 	}
 	message, err := consumer.ReadMessage(10 * time.Second)
@@ -279,8 +278,7 @@ func (c command) getMessageExamples(consumer *ckgo.Consumer, topicName, contentT
 		}
 		// Message body is encoded after 5 bytes of meta information.
 		value = value[messageOffset:]
-		err = deserializationProvider.LoadSchema(schemaPath, referencePathMap)
-		if err != nil {
+		if err := deserializationProvider.LoadSchema(schemaPath, referencePathMap); err != nil {
 			return nil, err
 		}
 	}

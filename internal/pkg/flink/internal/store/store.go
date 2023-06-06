@@ -60,7 +60,14 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 	}
 
 	// Process remote statements
-	statementObj, err := s.client.CreateStatement(statement, s.appOptions.GetComputePoolId(), s.appOptions.GetIdentityPoolId(), s.propsDefault(s.Properties), s.appOptions.GetEnvId(), s.appOptions.GetOrgResourceId())
+	statementObj, err := s.client.CreateStatement(
+		statement,
+		s.appOptions.GetComputePoolId(),
+		s.appOptions.GetIdentityPoolId(),
+		s.propsDefault(s.Properties),
+		s.appOptions.GetEnvId(),
+		s.appOptions.GetOrgResourceId(),
+	)
 	if err != nil {
 		statusDetail := s.getStatusDetail(statementObj)
 		return nil, &types.StatementError{
@@ -131,8 +138,7 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 }
 
 func (s *Store) DeleteStatement(statementName string) bool {
-	err := s.client.DeleteStatement(s.appOptions.GetEnvId(), statementName, s.appOptions.GetOrgResourceId())
-	if err != nil {
+	if err := s.client.DeleteStatement(s.appOptions.GetEnvId(), statementName, s.appOptions.GetOrgResourceId()); err != nil {
 		log.CliLogger.Warnf("Failed to delete the statement: %v", err)
 		return false
 	}

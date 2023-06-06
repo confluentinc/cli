@@ -287,9 +287,7 @@ func startsWithValidSQL(statement string) bool {
 
 	words := strings.Fields(statement)
 	firstWord := strings.ToUpper(words[0])
-	exists := config.SQLKeywords.Contains(firstWord)
-
-	return exists
+	return config.SQLKeywords.Contains(firstWord)
 }
 
 // Removes leading, trailling spaces, and semicolon from end, if present
@@ -342,9 +340,7 @@ func formatUTCOffsetToTimezone(offsetSeconds int) string {
 		timeOffset *= -1
 	}
 	offsetStr := fmt.Sprintf("%02d:%02d", int(timeOffset.Hours()), int(timeOffset.Minutes())%60)
-	formattedTimezone := fmt.Sprintf("UTC%s%s", sign, offsetStr)
-
-	return formattedTimezone
+	return fmt.Sprintf("UTC%s%s", sign, offsetStr)
 }
 
 // This increases function calculates a wait time that starts at 300 ms and increases 300 ms every 10 retries.
@@ -352,9 +348,7 @@ func formatUTCOffsetToTimezone(offsetSeconds int) string {
 // Exponential: https://docs.google.com/spreadsheets/d/14lHRcC_NGoF4KBtA_lrEivv05XYc3nNo5jaIvsHpgi0/edit?usp=sharing
 // Discrete: https://docs.google.com/spreadsheets/d/1fMIOBIDbhZ6zH6bLq9iJXRs8jBLdA7beHef4vOW__tw/edit?usp=sharing
 func calcWaitTime(retries int) time.Duration {
-	waitTime := config.InitialWaitTime + time.Duration(config.WaitTimeIncrease*(retries/10))*time.Millisecond
-
-	return waitTime
+	return config.InitialWaitTime + time.Duration(config.WaitTimeIncrease*(retries/10))*time.Millisecond
 }
 
 // Function to extract timeout for waiting for results.
