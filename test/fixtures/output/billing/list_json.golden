@@ -1,0 +1,41 @@
+[
+  {
+    "start_date": "2023-01-01 00:00:00",
+    "end_date": "2023-01-02 00:00:00",
+    "granularity": "DAILY",
+    "line_type": "LINE_TYPE_1",
+    "product": "KAFKA",
+    "resource_id": "lkc-0",
+    "resource_display_name": "kafka_1",
+    "environment_id": "env-123",
+    "network_access_type": "INTERNET",
+    "price": "$0.123 USD/GB",
+    "original_amount": 70,
+    "discount_amount": 20,
+    "amount": 50
+  },
+  {
+    "start_date": "2023-01-01 00:00:00",
+    "end_date": "2023-01-02 00:00:00",
+    "granularity": "DAILY",
+    "line_type": "LINE_TYPE_1",
+    "product": "KAFKA",
+    "resource_id": "lkc-1",
+    "resource_display_name": "kafka_1",
+    "environment_id": "env-123",
+    "network_access_type": "INTERNET",
+    "price": "$0.123 USD/GB",
+    "original_amount": 70,
+    "discount_amount": 20,
+    "amount": 50
+  },
+  {
+    "start_date": "2023-01-01 00:00:00",
+    "end_date": "2023-01-02 00:00:00",
+    "granularity": "DAILY",
+    "line_type": "SUPPORT",
+    "product": "SUPPORT_PREMIER",
+    "original_amount": 70,
+    "amount": 70
+  }
+]
