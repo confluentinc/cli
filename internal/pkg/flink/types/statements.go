@@ -76,19 +76,25 @@ type StatementError struct {
 	Msg              string
 	HttpResponseCode int
 	FailureMessage   string
+	Usage            []string
 }
 
 func (e *StatementError) Error() string {
 	if e == nil {
 		return ""
 	}
-	if e.Msg == "" {
-		return "Unknown Error"
+	errStr := "Unknown error."
+	if e.Msg != "" {
+		errStr = fmt.Sprintf("Error: %s.", e.Msg)
 	}
-	if e.FailureMessage == "" {
-		return fmt.Sprintf("Error: %s", e.Msg)
+	if len(e.Usage) > 0 {
+		errStr += fmt.Sprintf("\nUsage: %s.", strings.Join(e.Usage, " or "))
 	}
-	return fmt.Sprintf("Error: %s\nError details: %s", e.Msg, e.FailureMessage)
+	if e.FailureMessage != "" {
+		errStr += fmt.Sprintf("\nError details: %s.", e.FailureMessage)
+	}
+
+	return errStr
 }
 
 type PHASE string
@@ -127,6 +133,6 @@ func NewProcessedStatement(statementObj flinkgatewayv1alpha1.SqlV1alpha1Statemen
 func (s ProcessedStatement) PrintStatusDetail() {
 	// print status detail message if available
 	if s.StatusDetail != "" {
-		output.Println(s.StatusDetail)
+		output.Printf("%s.\n", s.StatusDetail)
 	}
 }

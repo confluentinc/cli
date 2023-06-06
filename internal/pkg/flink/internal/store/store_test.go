@@ -369,11 +369,11 @@ func (s *StoreTestSuite) TestParseSETStatement() {
 func (s *StoreTestSuite) TestParseSETStatementerror() {
 	_, _, err := parseSetStatement("SET key")
 	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: missing \"=\". Usage example: SET 'key'='value'.", err.Error())
+	assert.Equal(s.T(), "Error: Missing \"=\".\nUsage: SET 'key'='value'.", err.Error())
 
 	_, _, err = parseSetStatement("SET =")
 	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: Key and value not present. Usage example: SET 'key'='value'.", err.Error())
+	assert.Equal(s.T(), "Error: Key and value not present.\nUsage: SET 'key'='value'.", err.Error())
 
 	_, _, err = parseSetStatement("SET key=")
 	assert.NotNil(s.T(), err)
@@ -381,15 +381,15 @@ func (s *StoreTestSuite) TestParseSETStatementerror() {
 
 	_, _, err = parseSetStatement("SET =value")
 	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: Key not present. Usage example: SET 'key'='value'.", err.Error())
+	assert.Equal(s.T(), "Error: Key not present.\nUsage: SET 'key'='value'.", err.Error())
 
 	_, _, err = parseSetStatement("SET ass=value=as")
 	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: \"=\" should only appear once. Usage example: SET 'key'='value'.", err.Error())
+	assert.Equal(s.T(), "Error: \"=\" should only appear once.\nUsage: SET 'key'='value'.", err.Error())
 
 	_, _, err = parseSetStatement("SET key=value")
 	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: Key and value must be enclosed by single quotes ''. Usage example: SET 'key'='value'.", err.Error())
+	assert.Equal(s.T(), "Error: Key and value must be enclosed by single quotes ''.\nUsage: SET 'key'='value'.", err.Error())
 }
 
 func (s *StoreTestSuite) TestParseUSEStatement() {
@@ -425,15 +425,15 @@ func (s *StoreTestSuite) TestParseUSEStatement() {
 func (s *StoreTestSuite) TestParseUSEStatementError() {
 	_, _, err := parseUseStatement("USE CATALOG ;")
 	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: Missing catalog name: Usage example: USE CATALOG METADATA.", err.Error())
+	assert.Equal(s.T(), "Error: Missing catalog name.\nUsage: USE CATALOG my_catalog.", err.Error())
 
 	_, _, err = parseUseStatement("USE;")
 	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: Missing database/catalog name: Usage examples: USE DB1 OR USE CATALOG METADATA.", err.Error())
+	assert.Equal(s.T(), "Error: Missing database/catalog name.\nUsage: USE CATALOG my_catalog or USE my_database.", err.Error())
 
 	_, _, err = parseUseStatement("USE CATALOG DATABASE DB2;")
 	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: Invalid syntax for USE. Usage examples: USE CATALOG my_catalog or USE my_database", err.Error())
+	assert.Equal(s.T(), "Error: Invalid syntax for USE.\nUsage: USE CATALOG my_catalog or USE my_database.", err.Error())
 }
 
 func (s *StoreTestSuite) TestParseResetStatement() {
@@ -502,32 +502,32 @@ func (s *StoreTestSuite) TestParseResetStatementError() {
 	key, err := parseResetStatement(" ")
 	assert.Equal(s.T(), "", key)
 	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: Invalid syntax for RESET. Usage example: RESET 'key'.", err.Error())
+	assert.Equal(s.T(), "Error: Invalid syntax for RESET.\nUsage: RESET 'key'.", err.Error())
 
 	key, err = parseResetStatement("RESET key key2")
 	assert.Equal(s.T(), "", key)
 	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: too many keys for RESET provided. Usage example: RESET 'key'.", err.Error())
+	assert.Equal(s.T(), "Error: too many keys for RESET provided.\nUsage: RESET 'key'.", err.Error())
 
 	key, err = parseResetStatement("RESET key key2 key3")
 	assert.Equal(s.T(), "", key)
 	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: too many keys for RESET provided. Usage example: RESET 'key'.", err.Error())
+	assert.Equal(s.T(), "Error: too many keys for RESET provided.\nUsage: RESET 'key'.", err.Error())
 
 	key, err = parseResetStatement("RESET key;; key key3")
 	assert.Equal(s.T(), "", key)
 	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: too many keys for RESET provided. Usage example: RESET 'key'.", err.Error())
+	assert.Equal(s.T(), "Error: too many keys for RESET provided.\nUsage: RESET 'key'.", err.Error())
 
 	key, err = parseResetStatement("RESET key key;;; key3")
 	assert.Equal(s.T(), "", key)
 	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: too many keys for RESET provided. Usage example: RESET 'key'.", err.Error())
+	assert.Equal(s.T(), "Error: too many keys for RESET provided.\nUsage: RESET 'key'.", err.Error())
 
 	key, err = parseResetStatement("RESET key;")
 	assert.Equal(s.T(), "", key)
 	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: Invalid syntax for RESET, key must be enclosed by single quotes ''. Usage example: RESET 'key'.", err.Error())
+	assert.Equal(s.T(), "Error: Invalid syntax for RESET, key must be enclosed by single quotes ''.\nUsage: RESET 'key'.", err.Error())
 }
 
 func (s *StoreTestSuite) TestProccessHttpErrors() {
@@ -558,7 +558,7 @@ func (s *StoreTestSuite) TestProccessHttpErrors() {
 
 	// expect
 	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: Invalid syntax: you should provide a table for select", err.Error())
+	assert.Equal(s.T(), "Error: Invalid syntax: you should provide a table for select.", err.Error())
 
 	// given
 	res = &http.Response{
@@ -592,7 +592,7 @@ func (s *StoreTestSuite) TestProccessHttpErrors() {
 	err = processHttpErrors(nil, err)
 
 	// expect
-	assert.Equal(s.T(), "Error: some error", err.Error())
+	assert.Equal(s.T(), "Error: some error.", err.Error())
 }
 
 func generateCloserFromObject(obj interface{}) io.ReadCloser {
