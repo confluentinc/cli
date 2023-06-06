@@ -26,19 +26,13 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-type InputControllerInterface interface {
-	RunInteractiveInput()
-	Prompt() *prompt.Prompt
-	GetMaxCol() (int, error)
-}
-
 type InputController struct {
 	History               *history.History
 	InitialBuffer         string
-	appController         ApplicationControllerInterface
+	appController         types.ApplicationControllerInterface
 	smartCompletion       bool
 	reverseISearchEnabled bool
-	table                 TableControllerInterface
+	table                 types.TableControllerInterface
 	prompt                *prompt.Prompt
 	store                 store.StoreInterface
 	authenticated         func() error
@@ -456,7 +450,7 @@ func (c *InputController) tearDown() {
 	restoreStdin(c.stdin)
 }
 
-func NewInputController(t TableControllerInterface, a ApplicationControllerInterface, store store.StoreInterface, authenticated func() error, history *history.History, appOptions *types.ApplicationOptions) InputControllerInterface {
+func NewInputController(t types.TableControllerInterface, a types.ApplicationControllerInterface, store store.StoreInterface, authenticated func() error, history *history.History, appOptions *types.ApplicationOptions) types.InputControllerInterface {
 	inputController := &InputController{
 		History:         history,
 		InitialBuffer:   "",
