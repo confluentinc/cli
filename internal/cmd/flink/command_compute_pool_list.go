@@ -15,6 +15,7 @@ func (c *command) newComputePoolListCommand() *cobra.Command {
 		RunE:  c.computePoolList,
 	}
 
+	c.addRegionFlag(cmd)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
@@ -27,7 +28,12 @@ func (c *command) computePoolList(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	computePools, err := c.V2Client.ListFlinkComputePools(environmentId)
+	region, err := cmd.Flags().GetString("region")
+	if err != nil {
+		return err
+	}
+
+	computePools, err := c.V2Client.ListFlinkComputePools(environmentId, region)
 	if err != nil {
 		return err
 	}
