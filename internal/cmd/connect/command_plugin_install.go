@@ -148,7 +148,7 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 
 	successStr := fmt.Sprintf("Installed %s %s.\n", pluginManifest.Title, pluginManifest.Version)
 	if dryRun {
-		successStr = addDryRunPrefix(successStr)
+		successStr = utils.AddDryRunPrefix(successStr)
 	}
 	output.Printf("\n%s", successStr)
 
@@ -303,7 +303,7 @@ func removePluginInstallations(previousInstallations []string, prompt form.Promp
 
 		uninstallStr := "Successfully removed existing version.\n"
 		if dryRun {
-			output.Println(addDryRunPrefix(uninstallStr))
+			output.Println(utils.AddDryRunPrefix(uninstallStr))
 			return nil
 		}
 
@@ -323,7 +323,7 @@ func removePluginInstallations(previousInstallations []string, prompt form.Promp
 func (c *pluginCommand) installPlugin(client *hub.Client, pluginManifest *cpstructs.Manifest, archivePath, pluginDir string, dryRun bool) error {
 	installStr := fmt.Sprintf("Installing %s %s, provided by %s\n\n", pluginManifest.Title, pluginManifest.Version, pluginManifest.Owner.Name)
 	if dryRun {
-		output.Printf(addDryRunPrefix(installStr))
+		output.Printf(utils.AddDryRunPrefix(installStr))
 		return nil
 	}
 	output.Print(installStr)
@@ -435,15 +435,11 @@ func checkLicenseAcceptance(pluginManifest *cpstructs.Manifest, prompt form.Prom
 	return nil
 }
 
-func addDryRunPrefix(msg string) string {
-	return fmt.Sprintf("[DRY RUN] %s", msg)
-}
-
 func updateWorkerConfigs(pluginDir string, workerConfigs []string, dryRun bool) error {
 	if len(workerConfigs) > 0 {
 		updateWorkerMsg := "Adding plugin installation directory to the plugin path in the following files:"
 		if dryRun {
-			updateWorkerMsg = addDryRunPrefix(updateWorkerMsg)
+			updateWorkerMsg = utils.AddDryRunPrefix(updateWorkerMsg)
 		}
 		for _, workerConfig := range workerConfigs {
 			updateWorkerMsg = fmt.Sprintf("%s\n\t* %v", updateWorkerMsg, workerConfig)
