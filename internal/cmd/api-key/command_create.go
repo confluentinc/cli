@@ -161,7 +161,7 @@ func (c *command) getCurrentUserId() (string, error) {
 
 // CLI-1544: Warn users if they try to create an API key with the predefined audit log Kafka cluster, but without the
 // predefined audit log service account
-func (c *command) catchServiceAccountNotValidError(err error, r *http.Response, clusterId, serviceAccountId string) error {
+func (c *command) catchServiceAccountNotValidError(err error, httpResp *http.Response, clusterId, serviceAccountId string) error {
 	if err == nil {
 		return nil
 	}
@@ -185,9 +185,9 @@ func (c *command) catchServiceAccountNotValidError(err error, r *http.Response, 
 		}
 	}
 
-	if r == nil {
+	if httpResp == nil {
 		return err
 	}
 
-	return errors.CatchCCloudV2Error(err, r)
+	return errors.CatchCCloudV2Error(err, httpResp)
 }
