@@ -142,3 +142,7 @@ func ArrayToCommaDelimitedString(arr []string, conjunction string) string {
 func Int32Ptr(x int32) *int32 {
 	return &x
 }
+
+func AddDryRunPrefix(msg string) string {
+	return fmt.Sprintf("[DRY RUN] %s", msg)
+}
