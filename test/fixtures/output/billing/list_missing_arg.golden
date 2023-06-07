@@ -1,0 +1,19 @@
+Error: required flag(s) "end-date" not set
+Usage:
+  confluent billing cost list --start-date <start-date> --end-date <end-date> [flags]
+
+Examples:
+List Billing costs from 2023-01-01 to 2023-01-10:
+
+  $ confluent billing list --start-date 2023-01-01 --end-date 2023-01-10
+
+Flags:
+      --start-date string   REQUIRED: Start Date.
+      --end-date string     REQUIRED: End Date.
+  -o, --output string       Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+

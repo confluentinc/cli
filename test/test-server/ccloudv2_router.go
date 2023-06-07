@@ -14,6 +14,7 @@ type CloudV2Router struct {
 var ccloudV2Routes = []route{
 	{"/byok/v1/keys", handleByokKeys},
 	{"/byok/v1/keys/{id}", handleByokKey},
+	{"/billing/v1/costs", handleBillingCosts},
 	{"/cdx/v1/consumer-shared-resources", handleConsumerSharedResources},
 	{"/cdx/v1/consumer-shared-resources/{id}:network", handlePrivateLinkNetworkConfig},
 	{"/cdx/v1/consumer-shares", handleStreamSharingConsumerShares},
