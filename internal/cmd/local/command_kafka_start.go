@@ -82,14 +82,8 @@ func (c *command) kafkaStart(cmd *cobra.Command, args []string) error {
 
 	log.CliLogger.Tracef("Pull confluent-local image success")
 
-	if c.Config.IsTest {
-		if err := c.prepareAndSaveLocalPortsForTest(); err != nil {
-			return err
-		}
-	} else {
-		if err := c.prepareAndSaveLocalPorts(); err != nil {
-			return err
-		}
+	if err := c.prepareAndSaveLocalPorts(c.Config.IsTest); err != nil {
+		return err
 	}
 
 	if c.Config.LocalPorts == nil {
@@ -140,44 +134,34 @@ func (c *command) kafkaStart(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *command) prepareAndSaveLocalPortsForTest() error {
+func (c *command) prepareAndSaveLocalPorts(isTest bool) error {
 	if c.Config.LocalPorts != nil {
 		return nil
 	}
 
-	c.Config.LocalPorts = &v1.LocalPorts{
-		KafkaRestPort:  "2996",
-		PlaintextPort:  "2997",
-		BrokerPort:     "2998",
-		ControllerPort: "2999",
+	if isTest {
+		c.Config.LocalPorts = &v1.LocalPorts{
+			KafkaRestPort:  "2996",
+			PlaintextPort:  "2997",
+			BrokerPort:     "2998",
+			ControllerPort: "2999",
+		}
+	} else {
+		freePorts, err := freeport.GetFreePorts(4)
+		if err != nil {
+			return err
+		}
+
+		c.Config.LocalPorts = &v1.LocalPorts{
+			KafkaRestPort:  strconv.Itoa(freePorts[0]),
+			PlaintextPort:  strconv.Itoa(freePorts[1]),
+			BrokerPort:     strconv.Itoa(freePorts[2]),
+			ControllerPort: strconv.Itoa(freePorts[3]),
+		}
 	}
 
 	if err := c.Config.Save(); err != nil {
-		return errors.Wrap(err, "failed to save local ports to config")
-	}
-
-	return nil
-}
-
-func (c *command) prepareAndSaveLocalPorts() error {
-	if c.Config.LocalPorts != nil {
-		return nil
-	}
-
-	freePorts, err := freeport.GetFreePorts(4)
-	if err != nil {
-		return err
-	}
-
-	c.Config.LocalPorts = &v1.LocalPorts{
-		KafkaRestPort:  strconv.Itoa(freePorts[0]),
-		PlaintextPort:  strconv.Itoa(freePorts[1]),
-		BrokerPort:     strconv.Itoa(freePorts[2]),
-		ControllerPort: strconv.Itoa(freePorts[3]),
-	}
-
-	if err := c.Config.Save(); err != nil {
-		return errors.Wrap(err, "failed to save local ports to config")
+		return errors.Wrap(err, "failed to save local ports to configuration file")
 	}
 
 	return nil
