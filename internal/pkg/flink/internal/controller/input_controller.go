@@ -222,7 +222,6 @@ func renderMsgAndStatus(processedStatement *types.ProcessedStatement) {
 		}
 		processedStatement.PrintStatusDetail()
 	}
-
 }
 
 func (c *InputController) toggleSmartCompletion() {
