@@ -3,6 +3,7 @@ package types
 import (
 	"fmt"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 	"strings"
 
 	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
@@ -85,13 +86,13 @@ func (e *StatementError) Error() string {
 	}
 	errStr := "Error: no message"
 	if e.Msg != "" {
-		errStr = fmt.Sprintf("Error: %s.", e.Msg)
+		errStr = fmt.Sprintf("Error: %s", e.Msg)
 	}
 	if len(e.Usage) > 0 {
-		errStr += fmt.Sprintf("\nUsage: %s.", strings.Join(e.Usage, " or "))
+		errStr += fmt.Sprintf("\nUsage: %s", utils.ArrayToCommaDelimitedString(e.Usage, "or"))
 	}
 	if e.FailureMessage != "" {
-		errStr += fmt.Sprintf("\nError details: %s.", e.FailureMessage)
+		errStr += fmt.Sprintf("\nError details: %s", e.FailureMessage)
 	}
 
 	return errStr

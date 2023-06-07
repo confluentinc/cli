@@ -216,7 +216,7 @@ func parseUseStatement(statement string) (string, string, error) {
 	if len(words) < 2 {
 		return "", "", &types.StatementError{
 			Msg:   "missing database/catalog name",
-			Usage: []string{"USE CATALOG my_catalog or USE my_database"},
+			Usage: []string{"USE CATALOG my_catalog", "USE my_database"},
 		}
 	}
 
@@ -242,7 +242,7 @@ func parseUseStatement(statement string) (string, string, error) {
 
 	return "", "", &types.StatementError{
 		Msg:   "invalid syntax for USE",
-		Usage: []string{"USE CATALOG my_catalog or USE my_database"},
+		Usage: []string{"USE CATALOG my_catalog", "USE my_database"},
 	}
 }
 

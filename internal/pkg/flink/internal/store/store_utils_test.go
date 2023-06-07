@@ -148,7 +148,7 @@ func TestProcessResetStatement(t *testing.T) {
 	t.Run("should return an error message if configKey does not exist", func(t *testing.T) {
 		result, err := s.processResetStatement("reset 'location'")
 		assert.NotNil(t, err)
-		assert.Equal(t, `Error: configuration key "location" is not set.`, err.Error())
+		assert.Equal(t, `Error: configuration key "location" is not set`, err.Error())
 		assert.Nil(t, result)
 	})
 
