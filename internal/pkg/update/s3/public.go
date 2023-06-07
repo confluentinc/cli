@@ -293,9 +293,5 @@ func (r *PublicRepo) getHttpResponse(url string) (*http.Response, error) {
 }
 
 func (r *PublicRepo) getDownloadVersion(s3URL string) string {
-	downloadVersion := fmt.Sprintf("%s/%s", r.endpoint, s3URL)
-	if update.GetOs() == "alpine" {
-		downloadVersion = strings.Replace(downloadVersion, "linux", "alpine", 1)
-	}
-	return downloadVersion
+	return fmt.Sprintf("%s/%s", r.endpoint, s3URL)
 }
