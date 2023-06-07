@@ -29,32 +29,43 @@ type costOut struct {
 
 func (c *command) newCostListCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "list <start-date> <end-date>",
-		Example: "list 2023-01-01 2023-01-10",
+		Use:     "list --start-date <start-date> --end-date <end-date>",
+		Example: "list  --start-date 2023-01-01  --end-date 2023-01-10",
 		Short:   "List Confluent Cloud billing costs.",
 		Long:    "List Confluent Cloud daily aggregated costs for a specific range of dates.",
-		Args:    cobra.ExactArgs(2),
+		Args:    cobra.NoArgs,
 		RunE:    c.list,
 	}
 
-	pcmd.AddOutputFlag(cmd)
+	cmd.Flags().String("start-date", "", "Start Date.")
+	cmd.Flags().String("end-date", "", "End Date.")
 
+	pcmd.AddOutputFlag(cmd)
+	cobra.CheckErr(cmd.MarkFlagRequired("start-date"))
+	cobra.CheckErr(cmd.MarkFlagRequired("end-date"))
 	return cmd
 }
 
 func (c *command) checkDateFormat(date string) error {
 	if _, err := time.Parse("2006-01-02", date); err != nil {
-		return fmt.Errorf("expected format should look like: 2022-01-01")
+		return fmt.Errorf("must be formatted as: YYYY-MM-DD")
 	}
 
 	return nil
 }
 
 func (c *command) list(cmd *cobra.Command, args []string) error {
-	startDate := args[0]
-	endDate := args[1]
+	startDate, err := cmd.Flags().GetString("start-date")
+	if err != nil {
+		return err
+	}
 
-	err := c.checkDateFormat(startDate)
+	endDate, err := cmd.Flags().GetString("end-date")
+	if err != nil {
+		return err
+	}
+
+	err = c.checkDateFormat(startDate)
 	if err != nil {
 		return fmt.Errorf("invalid start date: %s", err.Error())
 	}

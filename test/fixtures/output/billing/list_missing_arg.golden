@@ -1,12 +1,14 @@
-Error: accepts 2 arg(s), received 1
+Error: required flag(s) "end-date" not set
 Usage:
-  confluent billing cost list <start-date> <end-date> [flags]
+  confluent billing cost list --start-date <start-date> --end-date <end-date> [flags]
 
 Examples:
-list 2023-01-01 2023-01-10
+list  --start-date 2023-01-01  --end-date 2023-01-10
 
 Flags:
-  -o, --output string   Specify the output format as "human", "json", or "yaml". (default "human")
+      --start-date string   REQUIRED: Start Date.
+      --end-date string     REQUIRED: End Date.
+  -o, --output string       Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
   -h, --help            Show help for this command.
