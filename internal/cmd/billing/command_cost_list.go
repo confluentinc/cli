@@ -5,12 +5,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/confluentinc/cli/internal/pkg/examples"
-
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/billing"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -91,7 +90,6 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 
 	list := output.NewList(cmd)
 	for _, cost := range costs {
-
 		out := &costOut{
 			Granularity:       cost.GetGranularity(),
 			LineType:          cost.GetLineType(),
