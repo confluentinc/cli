@@ -77,12 +77,11 @@ func TestWaitForPendingStatement3(t *testing.T) {
 		appOptions: &appOptions,
 	}
 
-	statusDetailMessage := "Test status detail message"
 	// Test case 1: Statement is not pending
 	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
 		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
 			Phase:  "COMPLETED",
-			Detail: &statusDetailMessage,
+			Detail: flinkgatewayv1alpha1.PtrString("Test status detail message"),
 		},
 	}
 	client.EXPECT().GetStatement("orgId", "envId", statementName).Return(statementObj, nil).Times(1)
@@ -1142,11 +1141,10 @@ func (s *StoreTestSuite) TestGetStatusDetailReturnsWhenStatusNoFailedOrFailing()
 		appOptions: appOptions,
 	}
 
-	statementName := "Test Statement"
 	testStatusDetailMessage := "Test Status Detail Message"
 	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
 		Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
-			StatementName: &statementName,
+			StatementName: flinkgatewayv1alpha1.PtrString("Test Statement"),
 		},
 		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
 			Phase:  "PENDING",
@@ -1177,11 +1175,10 @@ func (s *StoreTestSuite) TestGetStatusDetailReturnsWhenStatusDetailFilled() {
 		appOptions: appOptions,
 	}
 
-	statementName := "Test Statement"
 	testStatusDetailMessage := "Test Status Detail Message"
 	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
 		Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
-			StatementName: &statementName,
+			StatementName: flinkgatewayv1alpha1.PtrString("Test Statement"),
 		},
 		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
 			Phase:  "FAILED",
