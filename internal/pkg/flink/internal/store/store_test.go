@@ -107,7 +107,7 @@ func TestWaitForPendingTimesout(t *testing.T) {
 		appOptions: &appOptions,
 	}
 
-	statusDetailMessage := "Test status detail message"
+	statusDetailMessage := "test status detail message"
 	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
 		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
 			Phase:  "PENDING",
@@ -115,8 +115,8 @@ func TestWaitForPendingTimesout(t *testing.T) {
 		},
 	}
 	expectedError := &types.StatementError{
-		Msg:            fmt.Sprintf("Statement is still pending after %f seconds.\n If you want to increase the timeout for the client, you can run \"SET table.results-timeout=1200;\" to adjust the maximum timeout in seconds.", timeout.Seconds()),
-		FailureMessage: fmt.Sprintf("Captured retriable errors: %s", statusDetailMessage),
+		Msg:            fmt.Sprintf("statement is still pending after %f seconds. If you want to increase the timeout for the client, you can run \"SET table.results-timeout=1200;\" to adjust the maximum timeout in seconds.", timeout.Seconds()),
+		FailureMessage: fmt.Sprintf("captured retryable errors: %s", statusDetailMessage),
 	}
 	client.EXPECT().GetStatement("orgId", "envId", statementName).Return(statementObj, nil).AnyTimes()
 	processedStatement, err := s.waitForPendingStatement(context.Background(), statementName, timeout)
@@ -182,7 +182,7 @@ func TestWaitForPendingStatementErrors(t *testing.T) {
 		},
 	}
 
-	returnedError := errors.New("couldn't get statement!")
+	returnedError := errors.New("couldn't get statement")
 	expectedError := &types.StatementError{
 		Msg:            returnedError.Error(),
 		FailureMessage: statusDetailMessage,
@@ -213,7 +213,7 @@ func TestCancelPendingStatement(t *testing.T) {
 		},
 	}
 
-	expectedErr := &types.StatementError{Msg: "Result retrieval aborted. Statement will be deleted."}
+	expectedErr := &types.StatementError{Msg: "result retrieval aborted. Statement will be deleted."}
 	client.EXPECT().GetStatement("orgId", "envId", statementName).Return(statementObj, nil).AnyTimes()
 
 	// Schedule routine to cancel context
@@ -369,19 +369,19 @@ func (s *StoreTestSuite) TestParseSETStatement() {
 func (s *StoreTestSuite) TestParseSETStatementerror() {
 	_, _, err := parseSetStatement("SET key")
 	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: Missing \"=\".\nUsage: SET 'key'='value'.", err.Error())
+	assert.Equal(s.T(), "Error: missing \"=\".\nUsage: SET 'key'='value'.", err.Error())
 
 	_, _, err = parseSetStatement("SET =")
 	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: Key and value not present.\nUsage: SET 'key'='value'.", err.Error())
+	assert.Equal(s.T(), "Error: key and value not present.\nUsage: SET 'key'='value'.", err.Error())
 
 	_, _, err = parseSetStatement("SET key=")
 	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: Value for key not present. If you want to reset a key, use \"RESET 'key'\".", err.Error())
+	assert.Equal(s.T(), "Error: value for key not present. If you want to reset a key, use \"RESET 'key'\".", err.Error())
 
 	_, _, err = parseSetStatement("SET =value")
 	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: Key not present.\nUsage: SET 'key'='value'.", err.Error())
+	assert.Equal(s.T(), "Error: key not present.\nUsage: SET 'key'='value'.", err.Error())
 
 	_, _, err = parseSetStatement("SET ass=value=as")
 	assert.NotNil(s.T(), err)
@@ -389,7 +389,7 @@ func (s *StoreTestSuite) TestParseSETStatementerror() {
 
 	_, _, err = parseSetStatement("SET key=value")
 	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: Key and value must be enclosed by single quotes ''.\nUsage: SET 'key'='value'.", err.Error())
+	assert.Equal(s.T(), "Error: key and value must be enclosed by single quotes ''.\nUsage: SET 'key'='value'.", err.Error())
 }
 
 func (s *StoreTestSuite) TestParseUSEStatement() {
@@ -425,15 +425,15 @@ func (s *StoreTestSuite) TestParseUSEStatement() {
 func (s *StoreTestSuite) TestParseUSEStatementError() {
 	_, _, err := parseUseStatement("USE CATALOG ;")
 	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: Missing catalog name.\nUsage: USE CATALOG my_catalog.", err.Error())
+	assert.Equal(s.T(), "Error: missing catalog name.\nUsage: USE CATALOG my_catalog.", err.Error())
 
 	_, _, err = parseUseStatement("USE;")
 	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: Missing database/catalog name.\nUsage: USE CATALOG my_catalog or USE my_database.", err.Error())
+	assert.Equal(s.T(), "Error: missing database/catalog name.\nUsage: USE CATALOG my_catalog or USE my_database.", err.Error())
 
 	_, _, err = parseUseStatement("USE CATALOG DATABASE DB2;")
 	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: Invalid syntax for USE.\nUsage: USE CATALOG my_catalog or USE my_database.", err.Error())
+	assert.Equal(s.T(), "Error: invalid syntax for USE.\nUsage: USE CATALOG my_catalog or USE my_database.", err.Error())
 }
 
 func (s *StoreTestSuite) TestParseResetStatement() {
@@ -502,7 +502,7 @@ func (s *StoreTestSuite) TestParseResetStatementError() {
 	key, err := parseResetStatement(" ")
 	assert.Equal(s.T(), "", key)
 	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: Invalid syntax for RESET.\nUsage: RESET 'key'.", err.Error())
+	assert.Equal(s.T(), "Error: invalid syntax for RESET.\nUsage: RESET 'key'.", err.Error())
 
 	key, err = parseResetStatement("RESET key key2")
 	assert.Equal(s.T(), "", key)
@@ -527,7 +527,7 @@ func (s *StoreTestSuite) TestParseResetStatementError() {
 	key, err = parseResetStatement("RESET key;")
 	assert.Equal(s.T(), "", key)
 	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: Invalid syntax for RESET, key must be enclosed by single quotes ''.\nUsage: RESET 'key'.", err.Error())
+	assert.Equal(s.T(), "Error: invalid syntax for RESET, key must be enclosed by single quotes ''.\nUsage: RESET 'key'.", err.Error())
 }
 
 func (s *StoreTestSuite) TestProccessHttpErrors() {
@@ -542,10 +542,10 @@ func (s *StoreTestSuite) TestProccessHttpErrors() {
 
 	// expect
 	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: Unauthorized. Please consider running confluent login again.", err.Error())
+	assert.Equal(s.T(), "Error: unauthorized. Please consider running confluent login again.", err.Error())
 
 	// given
-	title := "Invalid syntax"
+	title := "invalid syntax"
 	detail := "you should provide a table for select"
 	statementErr := &flinkgatewayv1alpha1.Error{Title: &title, Detail: &detail}
 	res = &http.Response{
@@ -558,7 +558,7 @@ func (s *StoreTestSuite) TestProccessHttpErrors() {
 
 	// expect
 	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: Invalid syntax: you should provide a table for select.", err.Error())
+	assert.Equal(s.T(), "Error: invalid syntax: you should provide a table for select.", err.Error())
 
 	// given
 	res = &http.Response{
@@ -870,12 +870,13 @@ func (s *StoreTestSuite) TestProcessStatementFailsOnError() {
 		appOptions: appOptions,
 	}
 
-	statusDetailMessage := "Test status detail message"
+	statusDetailMessage := "test status detail message"
 	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
 		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
 			Detail: &statusDetailMessage,
 		},
 	}
+	returnedError := errors.New("test error")
 
 	statement := "SELECT * FROM table"
 	client.EXPECT().CreateStatement("orgId",
@@ -884,10 +885,10 @@ func (s *StoreTestSuite) TestProcessStatementFailsOnError() {
 		"identityPoolId",
 		statement,
 		store.propsDefault(store.Properties)).
-		Return(statementObj, errors.New("Test error"))
+		Return(statementObj, returnedError)
 	expectedError := &types.StatementError{
-		Msg:            "Test error",
-		FailureMessage: "Test status detail message",
+		Msg:            returnedError.Error(),
+		FailureMessage: statusDetailMessage,
 	}
 
 	processedStatement, err := store.ProcessStatement(statement)
@@ -1031,7 +1032,7 @@ func (s *StoreTestSuite) TestWaitPendingStatementFailsOnNonCompletedOrRunningSta
 		},
 	}
 	expectedError := &types.StatementError{
-		Msg:            fmt.Sprintf("Can't fetch results. Statement phase is: %s", statementObj.Status.Phase),
+		Msg:            fmt.Sprintf("can't fetch results. Statement phase is: %s", statementObj.Status.Phase),
 		FailureMessage: statusDetailMessage,
 	}
 
@@ -1077,7 +1078,7 @@ func (s *StoreTestSuite) TestWaitPendingStatementFetchesExceptionOnFailedStateme
 		},
 	}
 	expectedError := &types.StatementError{
-		Msg:            fmt.Sprintf("Can't fetch results. Statement phase is: %s", statementObj.Status.Phase),
+		Msg:            fmt.Sprintf("can't fetch results. Statement phase is: %s", statementObj.Status.Phase),
 		FailureMessage: exception1,
 	}
 

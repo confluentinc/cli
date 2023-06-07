@@ -90,7 +90,7 @@ func (s *Store) WaitPendingStatement(ctx context.Context, statement types.Proces
 		statementStatus = updatedStatement.Status
 		if statementStatus != types.COMPLETED && statementStatus != types.RUNNING {
 			return nil, &types.StatementError{
-				Msg:            fmt.Sprintf("Can't fetch results. Statement phase is: %s", statementStatus),
+				Msg:            fmt.Sprintf("can't fetch results. Statement phase is: %s", statementStatus),
 				FailureMessage: updatedStatement.StatusDetail,
 			}
 		}
@@ -146,7 +146,7 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 	for {
 		select {
 		case <-ctx.Done():
-			return nil, &types.StatementError{Msg: "Result retrieval aborted. Statement will be deleted.", HttpResponseCode: 499}
+			return nil, &types.StatementError{Msg: "result retrieval aborted. Statement will be deleted.", HttpResponseCode: 499}
 		default:
 			statementObj, err := s.client.GetStatement(s.appOptions.GetEnvironmentId(), statementName, s.appOptions.GetOrgResourceId())
 			statusDetail := s.getStatusDetail(statementObj)
@@ -191,11 +191,11 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 
 	var errorsMsg string
 	if len(capturedErrors) > 0 {
-		errorsMsg = fmt.Sprintf("Captured retriable errors: %s", strings.Join(capturedErrors, "; "))
+		errorsMsg = fmt.Sprintf("captured retryable errors: %s", strings.Join(capturedErrors, "; "))
 	}
 
 	return nil, &types.StatementError{
-		Msg: fmt.Sprintf("Statement is still pending after %f seconds.\n If you want to increase the timeout for the client, you can run \"SET table.results-timeout=1200;\" to adjust the maximum timeout in seconds.",
+		Msg: fmt.Sprintf("statement is still pending after %f seconds. If you want to increase the timeout for the client, you can run \"SET table.results-timeout=1200;\" to adjust the maximum timeout in seconds.",
 			timeout.Seconds()),
 		FailureMessage: errorsMsg,
 	}

@@ -83,7 +83,7 @@ func (e *StatementError) Error() string {
 	if e == nil {
 		return ""
 	}
-	errStr := "Unknown error."
+	errStr := "Error: no message"
 	if e.Msg != "" {
 		errStr = fmt.Sprintf("Error: %s.", e.Msg)
 	}
