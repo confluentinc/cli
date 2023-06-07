@@ -24,7 +24,7 @@ func TestRenderError(t *testing.T) {
 	require.False(t, result)
 
 	// Test other error
-	err = &types.StatementError{Msg: "Something went wrong."}
+	err = &types.StatementError{Message: "something went wrong."}
 	result = inputController.isSessionValid(err)
 	require.True(t, result)
 }
