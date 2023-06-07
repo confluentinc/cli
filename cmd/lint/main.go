@@ -146,6 +146,7 @@ var properNouns = []string{
 	"Apache",
 	"Async",
 	"AsyncAPI",
+	"Avro",
 	"C#",
 	"C/C++",
 	"CFU",

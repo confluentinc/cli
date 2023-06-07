@@ -10,6 +10,7 @@ import (
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 
 	"github.com/confluentinc/cli/internal/cmd/kafka"
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -39,7 +40,7 @@ func (c *command) newKafkaTopicConsumeCommand() *cobra.Command {
 	cmd.Flags().Bool("timestamp", false, "Print message timestamp in milliseconds.")
 	cmd.Flags().String("delimiter", "\t", "The delimiter separating each key and value.")
 	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the consumer client.`)
-	cmd.Flags().String("config-file", "", "The path to the configuration file for the consumer client, in JSON or avro format.")
+	pcmd.AddConsumerConfigFileFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagFilename("config-file", "avsc", "json"))
 
