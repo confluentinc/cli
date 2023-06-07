@@ -31,17 +31,16 @@ type costOut struct {
 
 func (c *command) newCostListCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use: "list --start-date <start-date> --end-date <end-date>",
-		//Example: "list  --start-date 2023-01-01  --end-date 2023-01-10",
+		Use:   "list --start-date <start-date> --end-date <end-date>",
+		Short: "List Confluent Cloud billing costs.",
+		Long:  "List Confluent Cloud daily aggregated costs for a specific range of dates.",
+		Args:  cobra.NoArgs,
+		RunE:  c.list,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `List Billing costs from 2023-01-01 to 2023-01-10:`,
 				Code: "confluent billing list --start-date 2023-01-01 --end-date 2023-01-10",
 			}),
-		Short: "List Confluent Cloud billing costs.",
-		Long:  "List Confluent Cloud daily aggregated costs for a specific range of dates.",
-		Args:  cobra.NoArgs,
-		RunE:  c.list,
 	}
 
 	cmd.Flags().String("start-date", "", "Start Date.")
@@ -73,13 +72,11 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	err = c.checkDateFormat(startDate)
-	if err != nil {
+	if err = c.checkDateFormat(startDate); err != nil {
 		return fmt.Errorf("invalid start date: %v", err)
 	}
 
-	err = c.checkDateFormat(endDate)
-	if err != nil {
+	if err = c.checkDateFormat(startDate); err != nil {
 		return fmt.Errorf("invalid end date: %v", err)
 	}
 
@@ -97,8 +94,8 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 			NetworkAccessType: cost.GetNetworkAccessType(),
 		}
 		if cost.GetGranularity() == "DAILY" {
-			out.StartDate = strings.Split(cost.GetStartDate(), " ")[0]
-			out.EndDate = strings.Split(cost.GetEndDate(), " ")[0]
+			out.StartDate = strings.TrimSuffix(cost.GetStartDate(), " 00:00:00")
+			out.EndDate = strings.TrimSuffix(cost.GetEndDate(), " 00:00:00")
 		}
 
 		// These fields may be empty depending on the line type, so casting floats as strings as to avoid zero-value

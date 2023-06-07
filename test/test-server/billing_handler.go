@@ -25,7 +25,7 @@ func handleBillingCosts(t *testing.T) http.HandlerFunc {
 				LineType:    billingv1.PtrString("LINE_TYPE_1"),
 				Product:     billingv1.PtrString("KAFKA"),
 				Resource: &billingv1.BillingV1Resource{
-					Id:          billingv1.PtrString(fmt.Sprintf("lkc-%d", i)),
+					Id:          billingv1.PtrString(fmt.Sprintf("lkc-0000%d", i)),
 					DisplayName: billingv1.PtrString("kafka_1"),
 				},
 				NetworkAccessType: billingv1.PtrString("INTERNET"),
