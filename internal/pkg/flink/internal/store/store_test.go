@@ -377,7 +377,7 @@ func (s *StoreTestSuite) TestParseSETStatementerror() {
 
 	_, _, err = parseSetStatement("SET key=")
 	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: value for key not present. If you want to reset a key, use \"RESET 'key'\"", err.Error())
+	assert.Equal(s.T(), "Error: value for key not present\nSuggestion: if you want to reset a key, use \"RESET 'key'\"", err.Error())
 
 	_, _, err = parseSetStatement("SET =value")
 	assert.NotNil(s.T(), err)
@@ -542,7 +542,7 @@ func (s *StoreTestSuite) TestProccessHttpErrors() {
 
 	// expect
 	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: unauthorized. Please consider running confluent login again", err.Error())
+	assert.Equal(s.T(), "Error: unauthorized\nSuggestion: Please run \"confluent login\"", err.Error())
 
 	// given
 	title := "invalid syntax"
@@ -952,15 +952,11 @@ func (s *StoreTestSuite) TestWaitPendingStatementNoWaitForCompletedStatement() {
 func (s *StoreTestSuite) TestWaitPendingStatementNoWaitForRunningStatement() {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
 	store := Store{
-		Properties: map[string]string{
-			"TestProp": "TestVal",
-		},
-		client: client,
+		Properties: map[string]string{"TestProp": "TestVal"},
+		client:     client,
 	}
 
-	statement := types.ProcessedStatement{
-		Status: types.PHASE("RUNNING"),
-	}
+	statement := types.ProcessedStatement{Status: types.PHASE("RUNNING")}
 
 	processedStatement, err := store.WaitPendingStatement(context.Background(), statement)
 	require.Nil(s.T(), err)

@@ -78,6 +78,7 @@ type StatementError struct {
 	HttpResponseCode int
 	FailureMessage   string
 	Usage            []string
+	Suggestion       string
 }
 
 func (e *StatementError) Error() string {
@@ -90,6 +91,9 @@ func (e *StatementError) Error() string {
 	}
 	if len(e.Usage) > 0 {
 		errStr += fmt.Sprintf("\nUsage: %s", utils.ArrayToCommaDelimitedString(e.Usage, "or"))
+	}
+	if e.Suggestion != "" {
+		errStr += fmt.Sprintf("\nSuggestion: %s", e.Suggestion)
 	}
 	if e.FailureMessage != "" {
 		errStr += fmt.Sprintf("\nError details: %s", e.FailureMessage)

@@ -172,7 +172,10 @@ func parseSetStatement(statement string) (string, string, error) {
 	}
 
 	if keyValuePair[0] != "" && keyValuePair[1] == "" {
-		return "", "", &types.StatementError{Message: `value for key not present. If you want to reset a key, use "RESET 'key'"`}
+		return "", "", &types.StatementError{
+			Message:    "value for key not present",
+			Suggestion: `if you want to reset a key, use "RESET 'key'"`,
+		}
 	}
 
 	if keyValuePair[0] == "" && keyValuePair[1] != "" {
@@ -295,7 +298,11 @@ func processHttpErrors(resp *http.Response, err error) error {
 
 	if resp != nil && resp.StatusCode >= 400 {
 		if resp.StatusCode == http.StatusUnauthorized {
-			return &types.StatementError{Message: "unauthorized. Please consider running confluent login again", HttpResponseCode: resp.StatusCode}
+			return &types.StatementError{
+				Message:          "unauthorized",
+				Suggestion:       `Please run "confluent login"`,
+				HttpResponseCode: resp.StatusCode,
+			}
 		}
 
 		statementErr := flinkgatewayv1alpha1.NewError()
