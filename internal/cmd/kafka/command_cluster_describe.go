@@ -180,9 +180,9 @@ func (c *clusterCommand) getTopicCountForKafkaCluster(cluster *cmkv2.CmkV2Cluste
 		return 0, err
 	}
 
-	topics, r, err := kafkaREST.CloudClient.ListKafkaTopics(cluster.GetId())
+	topics, httpResp, err := kafkaREST.CloudClient.ListKafkaTopics(cluster.GetId())
 	if err != nil {
-		return 0, kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, r)
+		return 0, kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
 	return len(topics.Data), nil

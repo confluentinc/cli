@@ -49,15 +49,15 @@ func (c *configCommand) edit(cmd *cobra.Command, _ []string) error {
 	}
 	enc := json.NewEncoder(c.OutOrStdout())
 	enc.SetIndent("", "  ")
-	result, r, err := c.MDSClient.AuditLogConfigurationApi.PutConfig(c.createContext(), putSpec)
+	result, httpResp, err := c.MDSClient.AuditLogConfigurationApi.PutConfig(c.createContext(), putSpec)
 	if err != nil {
-		if r.StatusCode == http.StatusConflict {
+		if httpResp.StatusCode == http.StatusConflict {
 			_ = enc.Encode(result)
 			// We can just ignore this extra error. Why?
 			// We expected a payload we could display as JSON, but got something unexpected.
 			// That's OK though, we'll still handle and show the API error message.
 		}
-		return HandleMdsAuditLogApiError(cmd, err, r)
+		return HandleMdsAuditLogApiError(cmd, err, httpResp)
 	}
 
 	return enc.Encode(result)
