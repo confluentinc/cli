@@ -71,7 +71,7 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 	if err != nil {
 		statusDetail := s.getStatusDetail(statementObj)
 		return nil, &types.StatementError{
-			Msg:            err.Error(),
+			Message:        err.Error(),
 			FailureMessage: statusDetail,
 		}
 	}
@@ -90,7 +90,7 @@ func (s *Store) WaitPendingStatement(ctx context.Context, statement types.Proces
 		statementStatus = updatedStatement.Status
 		if statementStatus != types.COMPLETED && statementStatus != types.RUNNING {
 			return nil, &types.StatementError{
-				Msg:            fmt.Sprintf("can't fetch results. Statement phase is: %s", statementStatus),
+				Message:        fmt.Sprintf("can't fetch results. Statement phase is: %s", statementStatus),
 				FailureMessage: updatedStatement.StatusDetail,
 			}
 		}
@@ -109,20 +109,20 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 	// Process remote statements that are now running or completed
 	statementResultObj, err := s.client.GetStatementResults(s.appOptions.GetEnvironmentId(), statement.StatementName, s.appOptions.GetOrgResourceId(), statement.PageToken)
 	if err != nil {
-		return nil, &types.StatementError{Msg: err.Error()}
+		return nil, &types.StatementError{Message: err.Error()}
 	}
 
 	statementResults := statementResultObj.GetResults()
 	convertedResults, err := results.ConvertToInternalResults(statementResults.GetData(), statement.ResultSchema)
 	if err != nil {
-		return nil, &types.StatementError{Msg: err.Error()}
+		return nil, &types.StatementError{Message: err.Error()}
 	}
 	statement.StatementResults = convertedResults
 
 	statementMetadata := statementResultObj.GetMetadata()
 	extractedToken, err := extractPageToken(statementMetadata.GetNext())
 	if err != nil {
-		return nil, &types.StatementError{Msg: err.Error()}
+		return nil, &types.StatementError{Message: err.Error()}
 	}
 	statement.PageToken = extractedToken
 	return &statement, nil
@@ -146,13 +146,13 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 	for {
 		select {
 		case <-ctx.Done():
-			return nil, &types.StatementError{Msg: "result retrieval aborted. Statement will be deleted.", HttpResponseCode: 499}
+			return nil, &types.StatementError{Message: "result retrieval aborted. Statement will be deleted.", HttpResponseCode: 499}
 		default:
 			statementObj, err := s.client.GetStatement(s.appOptions.GetEnvironmentId(), statementName, s.appOptions.GetOrgResourceId())
 			statusDetail := s.getStatusDetail(statementObj)
 			if err != nil {
 				return nil, &types.StatementError{
-					Msg:            err.Error(),
+					Message:        err.Error(),
 					FailureMessage: statusDetail}
 			}
 
@@ -195,7 +195,7 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 	}
 
 	return nil, &types.StatementError{
-		Msg: fmt.Sprintf("statement is still pending after %f seconds. If you want to increase the timeout for the client, you can run \"SET table.results-timeout=1200;\" to adjust the maximum timeout in seconds.",
+		Message: fmt.Sprintf("statement is still pending after %f seconds. If you want to increase the timeout for the client, you can run \"SET table.results-timeout=1200;\" to adjust the maximum timeout in seconds.",
 			timeout.Seconds()),
 		FailureMessage: errorsMsg,
 	}

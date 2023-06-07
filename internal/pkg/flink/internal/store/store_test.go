@@ -115,7 +115,7 @@ func TestWaitForPendingTimesout(t *testing.T) {
 		},
 	}
 	expectedError := &types.StatementError{
-		Msg:            fmt.Sprintf("statement is still pending after %f seconds. If you want to increase the timeout for the client, you can run \"SET table.results-timeout=1200;\" to adjust the maximum timeout in seconds.", timeout.Seconds()),
+		Message:        fmt.Sprintf("statement is still pending after %f seconds. If you want to increase the timeout for the client, you can run \"SET table.results-timeout=1200;\" to adjust the maximum timeout in seconds.", timeout.Seconds()),
 		FailureMessage: fmt.Sprintf("captured retryable errors: %s", statusDetailMessage),
 	}
 	client.EXPECT().GetStatement("orgId", "envId", statementName).Return(statementObj, nil).AnyTimes()
@@ -184,7 +184,7 @@ func TestWaitForPendingStatementErrors(t *testing.T) {
 
 	returnedError := errors.New("couldn't get statement")
 	expectedError := &types.StatementError{
-		Msg:            returnedError.Error(),
+		Message:        returnedError.Error(),
 		FailureMessage: statusDetailMessage,
 	}
 	client.EXPECT().GetStatement("orgId", "envId", statementName).Return(statementObj, returnedError).Times(1)
@@ -213,7 +213,7 @@ func TestCancelPendingStatement(t *testing.T) {
 		},
 	}
 
-	expectedErr := &types.StatementError{Msg: "result retrieval aborted. Statement will be deleted."}
+	expectedErr := &types.StatementError{Message: "result retrieval aborted. Statement will be deleted."}
 	client.EXPECT().GetStatement("orgId", "envId", statementName).Return(statementObj, nil).AnyTimes()
 
 	// Schedule routine to cancel context
@@ -887,7 +887,7 @@ func (s *StoreTestSuite) TestProcessStatementFailsOnError() {
 		store.propsDefault(store.Properties)).
 		Return(statementObj, returnedError)
 	expectedError := &types.StatementError{
-		Msg:            returnedError.Error(),
+		Message:        returnedError.Error(),
 		FailureMessage: statusDetailMessage,
 	}
 
@@ -994,7 +994,7 @@ func (s *StoreTestSuite) TestWaitPendingStatementFailsOnWaitError() {
 	returnedErr := errors.New("test error")
 	client.EXPECT().GetStatement("orgId", "envId", statementName).Return(statementObj, returnedErr).Times(1)
 	expectedError := &types.StatementError{
-		Msg:            returnedErr.Error(),
+		Message:        returnedErr.Error(),
 		FailureMessage: statusDetailMessage,
 	}
 
@@ -1032,7 +1032,7 @@ func (s *StoreTestSuite) TestWaitPendingStatementFailsOnNonCompletedOrRunningSta
 		},
 	}
 	expectedError := &types.StatementError{
-		Msg:            fmt.Sprintf("can't fetch results. Statement phase is: %s", statementObj.Status.Phase),
+		Message:        fmt.Sprintf("can't fetch results. Statement phase is: %s", statementObj.Status.Phase),
 		FailureMessage: statusDetailMessage,
 	}
 
@@ -1078,7 +1078,7 @@ func (s *StoreTestSuite) TestWaitPendingStatementFetchesExceptionOnFailedStateme
 		},
 	}
 	expectedError := &types.StatementError{
-		Msg:            fmt.Sprintf("can't fetch results. Statement phase is: %s", statementObj.Status.Phase),
+		Message:        fmt.Sprintf("can't fetch results. Statement phase is: %s", statementObj.Status.Phase),
 		FailureMessage: exception1,
 	}
 

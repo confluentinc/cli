@@ -74,7 +74,7 @@ type MockStatementResult struct {
 }
 
 type StatementError struct {
-	Msg              string
+	Message          string
 	HttpResponseCode int
 	FailureMessage   string
 	Usage            []string
@@ -85,8 +85,8 @@ func (e *StatementError) Error() string {
 		return ""
 	}
 	errStr := "Error: no message"
-	if e.Msg != "" {
-		errStr = fmt.Sprintf("Error: %s", e.Msg)
+	if e.Message != "" {
+		errStr = fmt.Sprintf("Error: %s", e.Message)
 	}
 	if len(e.Usage) > 0 {
 		errStr += fmt.Sprintf("\nUsage: %s", utils.ArrayToCommaDelimitedString(e.Usage, "or"))

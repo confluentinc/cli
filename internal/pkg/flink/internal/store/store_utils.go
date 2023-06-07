@@ -75,7 +75,7 @@ func (s *Store) processSetStatement(statement string) (*types.ProcessedStatement
 func (s *Store) processResetStatement(statement string) (*types.ProcessedStatement, *types.StatementError) {
 	configKey, err := parseResetStatement(statement)
 	if err != nil {
-		return nil, &types.StatementError{Msg: err.Error()}
+		return nil, &types.StatementError{Message: err.Error()}
 	}
 	if configKey == "" {
 		s.Properties = make(map[string]string)
@@ -88,7 +88,7 @@ func (s *Store) processResetStatement(statement string) (*types.ProcessedStateme
 	} else {
 		_, keyExists := s.Properties[configKey]
 		if !keyExists {
-			return nil, &types.StatementError{Msg: fmt.Sprintf(`configuration key "%s" is not set`, configKey)}
+			return nil, &types.StatementError{Message: fmt.Sprintf(`configuration key "%s" is not set`, configKey)}
 		}
 
 		delete(s.Properties, configKey)
@@ -106,7 +106,7 @@ func (s *Store) processResetStatement(statement string) (*types.ProcessedStateme
 func (s *Store) processUseStatement(statement string) (*types.ProcessedStatement, *types.StatementError) {
 	configKey, configVal, err := parseUseStatement(statement)
 	if err != nil {
-		return nil, &types.StatementError{Msg: err.Error()}
+		return nil, &types.StatementError{Message: err.Error()}
 	}
 
 	s.Properties[configKey] = configVal
@@ -137,8 +137,8 @@ func parseSetStatement(statement string) (string, string, error) {
 	indexOfSet := strings.Index(strings.ToUpper(statement), config.ConfigOpSet)
 	if indexOfSet == -1 {
 		return "", "", &types.StatementError{
-			Msg:   "invalid syntax for SET",
-			Usage: []string{"SET 'key'='value'"},
+			Message: "invalid syntax for SET",
+			Usage:   []string{"SET 'key'='value'"},
 		}
 	}
 	startOfStrAfterSet := indexOfSet + len(config.ConfigOpSet)
@@ -157,8 +157,8 @@ func parseSetStatement(statement string) (string, string, error) {
 
 	if !strings.Contains(strAfterSet, "=") {
 		return "", "", &types.StatementError{
-			Msg:   `missing "="`,
-			Usage: []string{"SET 'key'='value'"},
+			Message: `missing "="`,
+			Usage:   []string{"SET 'key'='value'"},
 		}
 	}
 
@@ -166,34 +166,34 @@ func parseSetStatement(statement string) (string, string, error) {
 
 	if len(keyValuePair) != 2 {
 		return "", "", &types.StatementError{
-			Msg:   `"=" should only appear once`,
-			Usage: []string{"SET 'key'='value'"},
+			Message: `"=" should only appear once`,
+			Usage:   []string{"SET 'key'='value'"},
 		}
 	}
 
 	if keyValuePair[0] != "" && keyValuePair[1] == "" {
-		return "", "", &types.StatementError{Msg: `value for key not present. If you want to reset a key, use "RESET 'key'"`}
+		return "", "", &types.StatementError{Message: `value for key not present. If you want to reset a key, use "RESET 'key'"`}
 	}
 
 	if keyValuePair[0] == "" && keyValuePair[1] != "" {
 		return "", "", &types.StatementError{
-			Msg:   "key not present",
-			Usage: []string{"SET 'key'='value'"},
+			Message: "key not present",
+			Usage:   []string{"SET 'key'='value'"},
 		}
 	}
 
 	if keyValuePair[0] == "" && keyValuePair[1] == "" {
 		return "", "", &types.StatementError{
-			Msg:   "key and value not present",
-			Usage: []string{"SET 'key'='value'"},
+			Message: "key and value not present",
+			Usage:   []string{"SET 'key'='value'"},
 		}
 	}
 
 	if !strings.HasPrefix(keyValuePair[0], "'") || !strings.HasSuffix(keyValuePair[0], "'") ||
 		!strings.HasPrefix(keyValuePair[1], "'") || !strings.HasSuffix(keyValuePair[1], "'") {
 		return "", "", &types.StatementError{
-			Msg:   "key and value must be enclosed by single quotes ''",
-			Usage: []string{"SET 'key'='value'"},
+			Message: "key and value must be enclosed by single quotes ''",
+			Usage:   []string{"SET 'key'='value'"},
 		}
 	}
 
@@ -215,8 +215,8 @@ func parseUseStatement(statement string) (string, string, error) {
 	words := strings.Fields(statement)
 	if len(words) < 2 {
 		return "", "", &types.StatementError{
-			Msg:   "missing database/catalog name",
-			Usage: []string{"USE CATALOG my_catalog", "USE my_database"},
+			Message: "missing database/catalog name",
+			Usage:   []string{"USE CATALOG my_catalog", "USE my_database"},
 		}
 	}
 
@@ -227,8 +227,8 @@ func parseUseStatement(statement string) (string, string, error) {
 		if isSecondWordCatalog {
 			// handle empty catalog name -> "USE CATALOG "
 			return "", "", &types.StatementError{
-				Msg:   "missing catalog name",
-				Usage: []string{"USE CATALOG my_catalog"},
+				Message: "missing catalog name",
+				Usage:   []string{"USE CATALOG my_catalog"},
 			}
 		} else {
 			return config.ConfigKeyDatabase, words[1], nil
@@ -241,8 +241,8 @@ func parseUseStatement(statement string) (string, string, error) {
 	}
 
 	return "", "", &types.StatementError{
-		Msg:   "invalid syntax for USE",
-		Usage: []string{"USE CATALOG my_catalog", "USE my_database"},
+		Message: "invalid syntax for USE",
+		Usage:   []string{"USE CATALOG my_catalog", "USE my_database"},
 	}
 }
 
@@ -252,8 +252,8 @@ func parseResetStatement(statement string) (string, error) {
 	words := strings.Fields(statement)
 	if len(words) == 0 {
 		return "", &types.StatementError{
-			Msg:   "invalid syntax for RESET",
-			Usage: []string{"RESET 'key'"},
+			Message: "invalid syntax for RESET",
+			Usage:   []string{"RESET 'key'"},
 		}
 	}
 
@@ -264,8 +264,8 @@ func parseResetStatement(statement string) (string, error) {
 
 	if len(words) > 2 {
 		return "", &types.StatementError{
-			Msg:   "too many keys for RESET provided",
-			Usage: []string{"RESET 'key'"},
+			Message: "too many keys for RESET provided",
+			Usage:   []string{"RESET 'key'"},
 		}
 	}
 
@@ -273,15 +273,15 @@ func parseResetStatement(statement string) (string, error) {
 	key := strings.ToLower(words[1])
 	if !isFirstWordReset {
 		return "", &types.StatementError{
-			Msg:   "invalid syntax for RESET",
-			Usage: []string{"RESET 'key'"},
+			Message: "invalid syntax for RESET",
+			Usage:   []string{"RESET 'key'"},
 		}
 	}
 
 	if !strings.HasPrefix(key, "'") || !strings.HasSuffix(key, "'") {
 		return "", &types.StatementError{
-			Msg:   "invalid syntax for RESET, key must be enclosed by single quotes ''",
-			Usage: []string{"RESET 'key'"},
+			Message: "invalid syntax for RESET, key must be enclosed by single quotes ''",
+			Usage:   []string{"RESET 'key'"},
 		}
 	}
 
@@ -290,28 +290,28 @@ func parseResetStatement(statement string) (string, error) {
 
 func processHttpErrors(resp *http.Response, err error) error {
 	if err != nil {
-		return &types.StatementError{Msg: err.Error()}
+		return &types.StatementError{Message: err.Error()}
 	}
 
 	if resp != nil && resp.StatusCode >= 400 {
 		if resp.StatusCode == http.StatusUnauthorized {
-			return &types.StatementError{Msg: "unauthorized. Please consider running confluent login again", HttpResponseCode: resp.StatusCode}
+			return &types.StatementError{Message: "unauthorized. Please consider running confluent login again", HttpResponseCode: resp.StatusCode}
 		}
 
 		statementErr := flinkgatewayv1alpha1.NewError()
 		body, err := io.ReadAll(resp.Body)
 
 		if err != nil {
-			return &types.StatementError{Msg: fmt.Sprintf(`received error with code "%d" from server but could not parse it. This is not expected. Please contact support`, resp.StatusCode)}
+			return &types.StatementError{Message: fmt.Sprintf(`received error with code "%d" from server but could not parse it. This is not expected. Please contact support`, resp.StatusCode)}
 		}
 
 		err = json.Unmarshal(body, &statementErr)
 
 		if err != nil || statementErr == nil || statementErr.Title == nil || statementErr.Detail == nil {
-			return &types.StatementError{Msg: fmt.Sprintf(`received error with code "%d" from server but could not parse it. This is not expected. Please contact support`, resp.StatusCode)}
+			return &types.StatementError{Message: fmt.Sprintf(`received error with code "%d" from server but could not parse it. This is not expected. Please contact support`, resp.StatusCode)}
 		}
 
-		return &types.StatementError{Msg: fmt.Sprintf("%s: %s", statementErr.GetTitle(), statementErr.GetDetail())}
+		return &types.StatementError{Message: fmt.Sprintf("%s: %s", statementErr.GetTitle(), statementErr.GetDetail())}
 	}
 
 	return nil
