@@ -214,7 +214,11 @@ func (s *Store) getStatusDetail(statementObj flinkgatewayv1alpha1.SqlV1alpha1Sta
 	}
 
 	// if the statement is in FAILED or FAILING phase and the status detail field is empty we show the latest exception instead
-	exceptionsResponse, _ := s.client.GetExceptions(s.appOptions.GetEnvironmentId(), statementObj.Spec.GetStatementName(), s.appOptions.GetOrgResourceId())
+	exceptionsResponse, err := s.client.GetExceptions(s.appOptions.GetEnvironmentId(), statementObj.Spec.GetStatementName(), s.appOptions.GetOrgResourceId())
+	if err != nil {
+		return ""
+	}
+
 	exceptions := exceptionsResponse.GetData()
 	if len(exceptions) < 1 {
 		return ""
