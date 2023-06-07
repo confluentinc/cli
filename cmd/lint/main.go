@@ -136,6 +136,7 @@ var flagRules = []linter.FlagRule{
 			"source-api-secret",
 			"source-bootstrap-server",
 			"update-schema-registry",
+			"use-schema-registry",
 		),
 	),
 }
