@@ -221,7 +221,7 @@ func (c *client) UpdateBinary(cliName, version, path string, noVerify bool) erro
 			return errors.Wrapf(err, "failed to download checksums file")
 		}
 
-		binary := getBinaryName(version, runtime.GOOS, runtime.GOARCH)
+		binary := getBinaryName(version, GetOs(), runtime.GOARCH)
 		checksum, err := findChecksum(content, binary)
 		if err != nil {
 			return err

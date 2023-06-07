@@ -59,7 +59,7 @@ func NewPublicRepo(params *PublicRepoParams) *PublicRepo {
 		PublicRepoParams: params,
 		endpoint:         fmt.Sprintf("https://s3-%s.amazonaws.com/%s", params.S3BinRegion, params.S3BinBucket),
 		fs:               &pio.RealFileSystem{},
-		goos:             runtime.GOOS,
+		goos:             update.GetOs(),
 		goarch:           runtime.GOARCH,
 	}
 }
