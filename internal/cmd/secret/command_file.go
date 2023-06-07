@@ -26,7 +26,7 @@ func (c *command) newFileCommand() *cobra.Command {
 }
 
 func (c *command) addConfigFileFlag(cmd *cobra.Command) {
-	cmd.Flags().String("config-file", "", `Path to the configuration properties file, with extension of "json" or "properties".`)
+	cmd.Flags().String("config-file", "", `Path to the configuration properties file. File extension must be one of ".json" or ".properties" (key=value pairs).`)
 }
 
 func (c *command) getConfigFilePath(cmd *cobra.Command) (string, string, string, error) {
