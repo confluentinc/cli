@@ -47,6 +47,12 @@ func handlePipeline(t *testing.T) http.HandlerFunc {
 					UpdatedAt: &UpdatedAt,
 				},
 			}
+
+			// if request to use SR cluster
+			if id == "pipe-11001" {
+				pipeline.Spec.StreamGovernanceCluster = &streamdesignerv1.ObjectReference{Id: "lsrc-1234"}
+			}
+
 			err := json.NewEncoder(w).Encode(pipeline)
 			require.NoError(t, err)
 		case http.MethodPatch:
@@ -184,6 +190,12 @@ func handlePipelines(t *testing.T) http.HandlerFunc {
 					CreatedAt: &CreatedAt,
 					UpdatedAt: &UpdatedAt,
 				},
+			}
+
+			// if request to use SR cluster
+			if body.Spec.StreamGovernanceCluster != nil {
+				pipeline.Spec.StreamGovernanceCluster = &streamdesignerv1.ObjectReference{Id: "lsrc-1234"}
+				pipeline.Id = streamdesignerv1.PtrString("pipe-11001")
 			}
 
 			err = json.NewEncoder(w).Encode(pipeline)

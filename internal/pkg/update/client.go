@@ -57,7 +57,7 @@ func NewClient(params *ClientParams) *client {
 		params.CheckInterval = 24 * time.Hour
 	}
 	if params.OS == "" {
-		params.OS = GetOs()
+		params.OS = runtime.GOOS
 	}
 	return &client{
 		ClientParams: params,
@@ -221,7 +221,7 @@ func (c *client) UpdateBinary(cliName, version, path string, noVerify bool) erro
 			return errors.Wrapf(err, "failed to download checksums file")
 		}
 
-		binary := getBinaryName(version, c.OS, runtime.GOARCH)
+		binary := getBinaryName(version, runtime.GOOS, runtime.GOARCH)
 		checksum, err := findChecksum(content, binary)
 		if err != nil {
 			return err
