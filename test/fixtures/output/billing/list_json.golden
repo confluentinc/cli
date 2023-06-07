@@ -1,7 +1,7 @@
 [
   {
-    "start_date": "2023-01-01 00:00:00",
-    "end_date": "2023-01-02 00:00:00",
+    "start_date": "2023-01-01",
+    "end_date": "2023-01-02",
     "granularity": "DAILY",
     "line_type": "LINE_TYPE_1",
     "product": "KAFKA",
@@ -15,8 +15,8 @@
     "amount": "$50.00"
   },
   {
-    "start_date": "2023-01-01 00:00:00",
-    "end_date": "2023-01-02 00:00:00",
+    "start_date": "2023-01-01",
+    "end_date": "2023-01-02",
     "granularity": "DAILY",
     "line_type": "LINE_TYPE_1",
     "product": "KAFKA",
@@ -30,8 +30,8 @@
     "amount": "$50.00"
   },
   {
-    "start_date": "2023-01-01 00:00:00",
-    "end_date": "2023-01-02 00:00:00",
+    "start_date": "2023-01-01",
+    "end_date": "2023-01-02",
     "granularity": "DAILY",
     "line_type": "SUPPORT",
     "product": "SUPPORT_PREMIER",

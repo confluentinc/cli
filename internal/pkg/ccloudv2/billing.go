@@ -44,12 +44,9 @@ func (c *Client) ListBillingCosts(startDate, endDate string) ([]billing.BillingV
 }
 
 func (c *Client) executeListCosts(startDate, endDate, pageToken string) (billing.BillingV1CostList, *http.Response, error) {
-	req := c.BillingClient.CostsBillingV1Api.ListBillingV1Costs(c.billingApiContext()).
-		PageSize(10000).
-		StartDate(startDate).
-		EndDate(endDate)
+	req := c.BillingClient.CostsBillingV1Api.ListBillingV1Costs(c.billingApiContext()).PageSize(10000).StartDate(startDate).EndDate(endDate)
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
 	}
-	return c.BillingClient.CostsBillingV1Api.ListBillingV1CostsExecute(req)
+	return req.Execute()
 }

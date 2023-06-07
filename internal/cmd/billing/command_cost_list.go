@@ -2,7 +2,10 @@ package billing
 
 import (
 	"fmt"
+	"strings"
 	"time"
+
+	"github.com/confluentinc/cli/internal/pkg/examples"
 
 	"github.com/spf13/cobra"
 
@@ -29,20 +32,26 @@ type costOut struct {
 
 func (c *command) newCostListCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "list --start-date <start-date> --end-date <end-date>",
-		Example: "list  --start-date 2023-01-01  --end-date 2023-01-10",
-		Short:   "List Confluent Cloud billing costs.",
-		Long:    "List Confluent Cloud daily aggregated costs for a specific range of dates.",
-		Args:    cobra.NoArgs,
-		RunE:    c.list,
+		Use: "list --start-date <start-date> --end-date <end-date>",
+		//Example: "list  --start-date 2023-01-01  --end-date 2023-01-10",
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: `List Billing costs from 2023-01-01 to 2023-01-10:`,
+				Code: "confluent billing list --start-date 2023-01-01 --end-date 2023-01-10",
+			}),
+		Short: "List Confluent Cloud billing costs.",
+		Long:  "List Confluent Cloud daily aggregated costs for a specific range of dates.",
+		Args:  cobra.NoArgs,
+		RunE:  c.list,
 	}
 
 	cmd.Flags().String("start-date", "", "Start Date.")
 	cmd.Flags().String("end-date", "", "End Date.")
-
 	pcmd.AddOutputFlag(cmd)
+
 	cobra.CheckErr(cmd.MarkFlagRequired("start-date"))
 	cobra.CheckErr(cmd.MarkFlagRequired("end-date"))
+
 	return cmd
 }
 
@@ -67,12 +76,12 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 
 	err = c.checkDateFormat(startDate)
 	if err != nil {
-		return fmt.Errorf("invalid start date: %s", err.Error())
+		return fmt.Errorf("invalid start date: %v", err)
 	}
 
 	err = c.checkDateFormat(endDate)
 	if err != nil {
-		return fmt.Errorf("invalid end date: %s", err.Error())
+		return fmt.Errorf("invalid end date: %v", err)
 	}
 
 	costs, err := c.V2Client.ListBillingCosts(startDate, endDate)
@@ -82,13 +91,16 @@ func (c *command) list(cmd *cobra.Command, args []string) error {
 
 	list := output.NewList(cmd)
 	for _, cost := range costs {
+
 		out := &costOut{
-			StartDate:         cost.GetStartDate(),
-			EndDate:           cost.GetEndDate(),
 			Granularity:       cost.GetGranularity(),
 			LineType:          cost.GetLineType(),
 			Product:           cost.GetProduct(),
 			NetworkAccessType: cost.GetNetworkAccessType(),
+		}
+		if cost.GetGranularity() == "DAILY" {
+			out.StartDate = strings.Split(cost.GetStartDate(), " ")[0]
+			out.EndDate = strings.Split(cost.GetEndDate(), " ")[0]
 		}
 
 		// These fields may be empty depending on the line type, so casting floats as strings as to avoid zero-value

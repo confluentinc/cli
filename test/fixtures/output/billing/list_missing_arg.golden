@@ -3,7 +3,9 @@ Usage:
   confluent billing cost list --start-date <start-date> --end-date <end-date> [flags]
 
 Examples:
-list  --start-date 2023-01-01  --end-date 2023-01-10
+List Billing costs from 2023-01-01 to 2023-01-10:
+
+  $ confluent billing list --start-date 2023-01-01 --end-date 2023-01-10
 
 Flags:
       --start-date string   REQUIRED: Start Date.
