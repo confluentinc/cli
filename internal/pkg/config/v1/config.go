@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
-	"regexp"
 	"strings"
 
 	"github.com/google/uuid"
@@ -221,8 +220,10 @@ func (c *Config) Save() error {
 	if c.Context() != nil {
 		tempAuthToken = c.Context().GetState().AuthToken
 		tempAuthRefreshToken = c.Context().GetState().AuthRefreshToken
-		if err := c.encryptContextStateTokens(tempAuthToken, tempAuthRefreshToken); err != nil {
-			return err
+		if tempAuthToken != "" || tempAuthRefreshToken != "" {
+			if err := c.encryptContextStateTokens(tempAuthToken, tempAuthRefreshToken); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -268,21 +269,18 @@ func (c *Config) encryptContextStateTokens(tempAuthToken, tempAuthRefreshToken s
 		c.Context().GetState().Nonce = nonce
 	}
 
-	if regexp.MustCompile(authTokenRegex).MatchString(tempAuthToken) {
-		encryptedAuthToken, err := secret.Encrypt(c.Context().Name, tempAuthToken, c.Context().GetState().Salt, c.Context().GetState().Nonce)
-		if err != nil {
-			return err
-		}
-		c.Context().GetState().AuthToken = encryptedAuthToken
+	encryptedAuthToken, err := secret.Encrypt(c.Context().Name, tempAuthToken, c.Context().GetState().Salt, c.Context().GetState().Nonce)
+	if err != nil {
+		return err
 	}
+	c.Context().GetState().AuthToken = encryptedAuthToken
 
-	if regexp.MustCompile(authRefreshTokenRegex).MatchString(tempAuthRefreshToken) {
-		encryptedAuthRefreshToken, err := secret.Encrypt(c.Context().Name, tempAuthRefreshToken, c.Context().GetState().Salt, c.Context().GetState().Nonce)
-		if err != nil {
-			return err
-		}
-		c.Context().State.AuthRefreshToken = encryptedAuthRefreshToken
+	encryptedAuthRefreshToken, err := secret.Encrypt(c.Context().Name, tempAuthRefreshToken, c.Context().GetState().Salt, c.Context().GetState().Nonce)
+	if err != nil {
+		return err
 	}
+	c.Context().State.AuthRefreshToken = encryptedAuthRefreshToken
+
 	return nil
 }
 

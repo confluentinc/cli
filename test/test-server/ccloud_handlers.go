@@ -118,6 +118,9 @@ func handleLogin(t *testing.T) http.HandlerFunc {
 		res := new(ccloudv1.AuthenticateReply)
 
 		switch req.Email {
+		case "":
+			// Refresh auth token
+			res.Token = req.RefreshToken
 		case "incorrect@user.com":
 			w.WriteHeader(http.StatusForbidden)
 		case "suspended@user.com":
@@ -136,6 +139,9 @@ func handleLogin(t *testing.T) http.HandlerFunc {
 			res.Token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1NjE2NjA4NTcsImV4cCI6MjUzMzg2MDM4NDU3LCJhdWQiOiJ3d3cuZXhhbXBsZS5jb20iLCJzdWIiOiJqcm9ja2V0QGV4YW1wbGUuY29tIn0.G6IgrFm5i0mN7Lz9tkZQ2tZvuZ2U7HKnvxMuZAooPmE"
 			res.Organization = RegularOrg
 		}
+
+		// Make it trivial to refresh the auth token
+		res.RefreshToken = res.Token
 
 		err = json.NewEncoder(w).Encode(res)
 		require.NoError(t, err)
