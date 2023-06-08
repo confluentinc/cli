@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 
@@ -19,10 +20,18 @@ import (
 )
 
 type Manifest struct {
+	Number       string
+	Name         string `yaml:"name"`
+	Description  string `yaml:"description"`
+	Requirements string `yaml:"requirements"`
+	Location     string
+}
+
+type manifestOut struct {
 	Number       string `human:"Number" serialized:"number"`
-	Name         string `human:"Name" serialized:"name" yaml:"name"`
-	Description  string `human:"Description" serialized:"description" yaml:"description"`
-	Requirements string `human:"Requirements" serialized:"requirements" yaml:"requirements"`
+	Name         string `human:"Name" serialized:"name"`
+	Description  string `human:"Description" serialized:"description"`
+	Requirements string `human:"Requirements" serialized:"requirements"`
 }
 
 func (c *command) newSearchCommand() *cobra.Command {
@@ -86,21 +95,34 @@ func getPluginInstallDir(cmd *cobra.Command) (string, error) {
 		return "", errors.Errorf(`plugin directory "%s" does not exist`, pluginDir)
 	}
 
-	// Check if the user provided directory is in the PATH env variable
-	pathDirectories := filepath.SplitList(os.Getenv("PATH"))
-	for i := range pathDirectories {
-		absPath, _ := filepath.Abs(pathDirectories[i])
-		pathDirectories[i] = absPath
-	}
-	if !types.Contains(pathDirectories, pluginDir) {
-		output.Printf("WARNING: installation directory \"%s\" may not be in your $PATH.\n\n", pluginDir)
+	if !inPath(pluginDir) {
+		output.Printf("WARNING: failed to find installation directory \"%s\" in your $PATH.\n\n", pluginDir)
 	}
 
 	return pluginDir, nil
 }
 
 func getDefaultPluginInstallDir() (string, error) {
-	return "", nil
+	if runtime.GOOS == "windows" {
+		// TODO: IMPLEMENT THIS BEFORE MERGING
+		return "", nil
+	}
+
+	defaultDir := "/usr/local/bin"
+	if !inPath(defaultDir) {
+		output.Printf("WARNING: failed to find default directory \"%s\" in your $PATH.\n\n", defaultDir)
+	}
+
+	return defaultDir, nil
+}
+
+func inPath(dir string) bool {
+	pathDirectories := filepath.SplitList(os.Getenv("PATH"))
+	for i := range pathDirectories {
+		absPath, _ := filepath.Abs(pathDirectories[i])
+		pathDirectories[i] = absPath
+	}
+	return types.Contains(pathDirectories, dir)
 }
 
 func clonePluginRepo(dir string) error {
@@ -135,6 +157,7 @@ func getPluginManifests(dir string) ([]*Manifest, error) {
 				return nil, err
 			}
 			manifest.Number = strconv.Itoa(len(manifests))
+			manifest.Location = file.Name()
 		}
 	}
 
@@ -144,7 +167,12 @@ func getPluginManifests(dir string) ([]*Manifest, error) {
 func selectPlugins(cmd *cobra.Command, manifests []*Manifest) ([]int, error) {
 	list := output.NewList(cmd)
 	for _, manifest := range manifests {
-		list.Add(manifest)
+		list.Add(&manifestOut{
+			Number:       manifest.Number,
+			Name:         manifest.Name,
+			Description:  manifest.Description,
+			Requirements: manifest.Requirements,
+		})
 	}
 	listStr, err := list.PrintString()
 	if err != nil {
