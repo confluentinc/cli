@@ -40,7 +40,8 @@ func (c *command) newCostListCommand() *cobra.Command {
 			examples.Example{
 				Text: `List Billing costs from 2023-01-01 to 2023-01-10:`,
 				Code: "confluent billing list --start-date 2023-01-01 --end-date 2023-01-10",
-			}),
+			},
+		),
 	}
 
 	cmd.Flags().String("start-date", "", "Start Date.")
