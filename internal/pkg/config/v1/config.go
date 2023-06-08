@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"strings"
 
 	"github.com/google/uuid"
@@ -220,10 +221,8 @@ func (c *Config) Save() error {
 	if c.Context() != nil {
 		tempAuthToken = c.Context().GetState().AuthToken
 		tempAuthRefreshToken = c.Context().GetState().AuthRefreshToken
-		if tempAuthToken != "" || tempAuthRefreshToken != "" {
-			if err := c.encryptContextStateTokens(tempAuthToken, tempAuthRefreshToken); err != nil {
-				return err
-			}
+		if err := c.encryptContextStateTokens(tempAuthToken, tempAuthRefreshToken); err != nil {
+			return err
 		}
 	}
 
@@ -269,17 +268,25 @@ func (c *Config) encryptContextStateTokens(tempAuthToken, tempAuthRefreshToken s
 		c.Context().GetState().Nonce = nonce
 	}
 
-	encryptedAuthToken, err := secret.Encrypt(c.Context().Name, tempAuthToken, c.Context().GetState().Salt, c.Context().GetState().Nonce)
-	if err != nil {
-		return err
+	if regexp.MustCompile(authTokenRegex).MatchString(tempAuthToken) {
+		encryptedAuthToken, err := secret.Encrypt(c.Context().Name, tempAuthToken, c.Context().GetState().Salt, c.Context().GetState().Nonce)
+		if err != nil {
+			return err
+		}
+		c.Context().GetState().AuthToken = encryptedAuthToken
 	}
-	c.Context().GetState().AuthToken = encryptedAuthToken
 
-	encryptedAuthRefreshToken, err := secret.Encrypt(c.Context().Name, tempAuthRefreshToken, c.Context().GetState().Salt, c.Context().GetState().Nonce)
-	if err != nil {
-		return err
+	// The Confluent Gov environment returns a refresh token that does not match `authRefreshTokenRegex` and cannot be distinguished from an already encrypted refresh token.
+	// We prefix encrypted tokens with "AES/GCM/NoPadding" to ensure that they are only encrypted once.
+	isUnencryptedConfluentGov := !strings.HasPrefix(tempAuthRefreshToken, secret.AesGcm) && c.Context().PlatformName == "infra.confluentgov-internal.com"
+
+	if regexp.MustCompile(authRefreshTokenRegex).MatchString(tempAuthRefreshToken) || isUnencryptedConfluentGov {
+		encryptedAuthRefreshToken, err := secret.Encrypt(c.Context().Name, tempAuthRefreshToken, c.Context().GetState().Salt, c.Context().GetState().Nonce)
+		if err != nil {
+			return err
+		}
+		c.Context().State.AuthRefreshToken = encryptedAuthRefreshToken
 	}
-	c.Context().State.AuthRefreshToken = encryptedAuthRefreshToken
 
 	return nil
 }

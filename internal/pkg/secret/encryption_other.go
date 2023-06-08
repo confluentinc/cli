@@ -10,6 +10,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/panta/machineid"
 	"golang.org/x/crypto/pbkdf2"
@@ -60,7 +61,7 @@ func Encrypt(username, password string, salt, nonce []byte) (string, error) {
 	}
 	encryptedPassword := aesgcm.Seal(nil, nonce, []byte(password), []byte(username))
 
-	return base64.RawStdEncoding.EncodeToString(encryptedPassword), nil
+	return AesGcm + ":" + base64.RawStdEncoding.EncodeToString(encryptedPassword), nil
 }
 
 func Decrypt(username, encrypted string, salt, nonce []byte) (string, error) {
@@ -78,6 +79,8 @@ func Decrypt(username, encrypted string, salt, nonce []byte) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
+	encrypted = strings.TrimPrefix(encrypted, AesGcm+":")
 
 	cipherText, err := base64.RawStdEncoding.DecodeString(encrypted)
 	if err != nil {
