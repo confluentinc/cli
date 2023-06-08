@@ -69,12 +69,12 @@ func (c *command) search(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	selections, err := selectPlugins(cmd, manifests)
+	manifests, err = selectPlugins(cmd, manifests)
 	if err != nil {
 		return err
 	}
 
-	return installPlugins(installDir, selections)
+	return installPlugins(installDir, manifests)
 }
 
 func getPluginInstallDir(cmd *cobra.Command) (string, error) {
@@ -157,14 +157,14 @@ func getPluginManifests(dir string) ([]*Manifest, error) {
 				return nil, err
 			}
 			manifest.Number = strconv.Itoa(len(manifests))
-			manifest.Location = file.Name()
+			manifest.Location = fmt.Sprintf("%s/%s", dir, file.Name())
 		}
 	}
 
 	return manifests, nil
 }
 
-func selectPlugins(cmd *cobra.Command, manifests []*Manifest) ([]int, error) {
+func selectPlugins(cmd *cobra.Command, manifests []*Manifest) ([]*Manifest, error) {
 	list := output.NewList(cmd)
 	for _, manifest := range manifests {
 		list.Add(&manifestOut{
@@ -191,7 +191,7 @@ func selectPlugins(cmd *cobra.Command, manifests []*Manifest) ([]int, error) {
 	}
 
 	inputStrings := types.RemoveDuplicates(strings.Split(f.Responses["plugin numbers"].(string), ","))
-	inputNumbers := make([]int, len(inputStrings))
+	selectedManifests := make([]*Manifest, len(inputStrings))
 	for i, inputStr := range inputStrings {
 		num, err := strconv.Atoi(inputStr)
 		if err != nil {
@@ -200,12 +200,13 @@ func selectPlugins(cmd *cobra.Command, manifests []*Manifest) ([]int, error) {
 		if num < 1 || num > len(manifests) {
 			return nil, errors.Errorf(`Input "%s" must be a number between 1 and %d`, inputStr, len(manifests))
 		}
-		inputNumbers[i] = num
+
+		selectedManifests[i] = manifests[num-1]
 	}
 
-	return inputNumbers, nil
+	return selectedManifests, nil
 }
 
-func installPlugins(installDir string, selections []int) error {
+func installPlugins(installDir string, manifests []*Manifest) error {
 	return nil
 }
