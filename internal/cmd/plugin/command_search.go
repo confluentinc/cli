@@ -3,6 +3,7 @@ package plugin
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -33,10 +34,17 @@ func (c *command) newSearchCommand() *cobra.Command {
 		RunE:  c.search,
 	}
 
+	cmd.Flags().String("plugin-directory", "", "The plugin installation directory; this must be a directory in your $PATH. If not specified, a default will be selected based on your OS.")
+
 	return cmd
 }
 
 func (c *command) search(cmd *cobra.Command, _ []string) error {
+	installDir, err := getPluginInstallDir(cmd)
+	if err != nil {
+		return err
+	}
+
 	dir, err := os.MkdirTemp("", "plugin-search")
 	if err != nil {
 		return err
@@ -57,7 +65,42 @@ func (c *command) search(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	return installPlugins(selections)
+	return installPlugins(installDir, selections)
+}
+
+func getPluginInstallDir(cmd *cobra.Command) (string, error) {
+	if !cmd.Flags().Changed("plugin-directory") {
+		return getDefaultPluginInstallDir()
+	}
+
+	pluginDir, err := cmd.Flags().GetString("plugin-directory")
+	if err != nil {
+		return "", err
+	}
+
+	if pluginDir, err = filepath.Abs(pluginDir); err != nil {
+		return "", err
+	}
+
+	if !utils.DoesPathExist(pluginDir) {
+		return "", errors.Errorf(`plugin directory "%s" does not exist`, pluginDir)
+	}
+
+	// Check if the user provided directory is in the PATH env variable
+	pathDirectories := filepath.SplitList(os.Getenv("PATH"))
+	for i := range pathDirectories {
+		absPath, _ := filepath.Abs(pathDirectories[i])
+		pathDirectories[i] = absPath
+	}
+	if !types.Contains(pathDirectories, pluginDir) {
+		output.Printf("WARNING: installation directory \"%s\" may not be in your $PATH.\n\n", pluginDir)
+	}
+
+	return pluginDir, nil
+}
+
+func getDefaultPluginInstallDir() (string, error) {
+	return "", nil
 }
 
 func clonePluginRepo(dir string) error {
@@ -135,6 +178,6 @@ func selectPlugins(cmd *cobra.Command, manifests []*Manifest) ([]int, error) {
 	return inputNumbers, nil
 }
 
-func installPlugins(selections []int) error {
+func installPlugins(installDir string, selections []int) error {
 	return nil
 }
