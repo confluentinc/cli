@@ -1338,7 +1338,6 @@ func TestPasswordProtectionSuite_RotateMasterKey(t *testing.T) {
 func createMasterKey(passphrase string, localSecretsFile string, plugin *PasswordProtectionSuite) error {
 	key, err := plugin.CreateMasterKey(passphrase, localSecretsFile)
 	if err != nil {
-		fmt.Println(err)
 		return err
 	}
 	os.Setenv(ConfluentKeyEnvVar, key)
