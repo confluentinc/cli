@@ -4,14 +4,16 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-yaml/yaml"
 	"github.com/spf13/cobra"
 
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/types"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -31,8 +33,6 @@ func (c *command) newSearchCommand() *cobra.Command {
 		RunE:  c.search,
 	}
 
-	pcmd.AddOutputFlag(cmd)
-
 	return cmd
 }
 
@@ -43,44 +43,69 @@ func (c *command) search(cmd *cobra.Command, _ []string) error {
 	}
 	defer os.RemoveAll(dir)
 
+	if err := clonePluginRepo(dir); err != nil {
+		return err
+	}
+
+	manifests, err := getPluginManifests(dir)
+	if err != nil {
+		return err
+	}
+
+	selections, err := selectPlugins(cmd, manifests)
+	if err != nil {
+		return err
+	}
+
+	return installPlugins(selections)
+}
+
+func clonePluginRepo(dir string) error {
 	cloneOptions := &git.CloneOptions{
 		URL:          "https://github.com/confluentinc/cli-plugins.git",
 		SingleBranch: true, // this should be redundant w/ Depth=1, but specify it just in case
 		Depth:        1,
 	}
-	if _, err := git.PlainClone(dir, false, cloneOptions); err != nil {
-		return err
-	}
+	_, err := git.PlainClone(dir, false, cloneOptions)
 
+	return err
+}
+
+func getPluginManifests(dir string) ([]*Manifest, error) {
 	files, err := os.ReadDir(dir)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	list := output.NewList(cmd)
-	i := 1
+	manifests := []*Manifest{}
 	for _, file := range files {
 		manifestPath := fmt.Sprintf("%s/%s/manifest.yml", dir, file.Name())
 		if file.IsDir() && utils.DoesPathExist(manifestPath) {
 			manifestFile, err := os.ReadFile(manifestPath)
 			if err != nil {
-				return err
+				return nil, err
 			}
 
 			manifest := new(Manifest)
+			manifests = append(manifests, manifest)
 			if err := yaml.Unmarshal(manifestFile, manifest); err != nil {
-				return err
+				return nil, err
 			}
-			manifest.Number = strconv.Itoa(i)
-			i++
-
-			list.Add(manifest)
+			manifest.Number = strconv.Itoa(len(manifests))
 		}
 	}
 
+	return manifests, nil
+}
+
+func selectPlugins(cmd *cobra.Command, manifests []*Manifest) ([]int, error) {
+	list := output.NewList(cmd)
+	for _, manifest := range manifests {
+		list.Add(manifest)
+	}
 	listStr, err := list.PrintString()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	prompt := form.NewPrompt(os.Stdin)
@@ -88,12 +113,28 @@ func (c *command) search(cmd *cobra.Command, _ []string) error {
 	f := form.New(form.Field{
 		ID:     "plugin numbers",
 		Prompt: fmt.Sprintf(promptMsg, listStr),
-		Regex:  `^\d$`,
+		Regex:  `^(?:\d+)(?:,\d+)*$`,
 	})
 	if err := f.Prompt(prompt); err != nil {
-		return err
+		return nil, err
 	}
 
-	// TODO: Fix prompt regex and handle user input
+	inputStrings := types.RemoveDuplicates(strings.Split(f.Responses["plugin numbers"].(string), ","))
+	inputNumbers := make([]int, len(inputStrings))
+	for i, inputStr := range inputStrings {
+		num, err := strconv.Atoi(inputStr)
+		if err != nil {
+			return nil, err
+		}
+		if num < 1 || num > len(manifests) {
+			return nil, errors.Errorf(`Input "%s" must be a number between 1 and %d`, inputStr, len(manifests))
+		}
+		inputNumbers[i] = num
+	}
+
+	return inputNumbers, nil
+}
+
+func installPlugins(selections []int) error {
 	return nil
 }
