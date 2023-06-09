@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/confluentinc/cli/internal/pkg/output"
 	"os"
 	"strconv"
 
@@ -9,6 +10,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config/load"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	ppanic "github.com/confluentinc/cli/internal/pkg/panic"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
@@ -38,6 +40,9 @@ func main() {
 	cmd := pcmd.NewConfluentCommand(cfg)
 
 	if err := pcmd.Execute(cmd, os.Args[1:], cfg); err != nil {
+		if _, ok := err.(*ppanic.Panic); ok {
+			output.ErrPrintln(err.Error())
+		}
 		os.Exit(1)
 	}
 }
