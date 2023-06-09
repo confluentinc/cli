@@ -59,7 +59,7 @@ func (c *command) validStatementArgs(cmd *cobra.Command, args []string) []string
 		return nil
 	}
 
-	statements, err := client.ListStatements(c.Context.LastOrgId, environmentId)
+	statements, err := client.ListStatements(environmentId, c.Context.LastOrgId)
 	if err != nil {
 		return nil
 	}
