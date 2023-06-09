@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"runtime/debug"
 	"strings"
 
 	shell "github.com/brianstrauch/cobra-shell"
@@ -51,6 +52,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/help"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	ppanic "github.com/confluentinc/cli/internal/pkg/panic"
 	pplugin "github.com/confluentinc/cli/internal/pkg/plugin"
 	secrets "github.com/confluentinc/cli/internal/pkg/secret"
 	"github.com/confluentinc/cli/internal/pkg/usage"
@@ -147,7 +149,7 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 	return cmd
 }
 
-func Execute(cmd *cobra.Command, args []string, cfg *v1.Config) error {
+func Execute(cmd *cobra.Command, args []string, cfg *v1.Config) (err error) {
 	if !cfg.DisablePlugins {
 		if plugin := pplugin.FindPlugin(cmd, args, cfg); plugin != nil {
 			return pplugin.ExecPlugin(plugin)
@@ -159,11 +161,41 @@ func Execute(cmd *cobra.Command, args []string, cfg *v1.Config) error {
 	if !cfg.IsTest && cfg.Version.IsReleased() {
 		cmd.PersistentPostRun = u.Collect
 	}
+	defer func() {
+		if r := recover(); r != nil {
+			//TODO: need to uncomment before releasing
+			// if !cfg.Version.IsReleased() {
+			//	panic(r)
+			// }
+			var formattedMsg string
+			switch r.(type) {
+			default:
+				formattedMsg = fmt.Sprintf("Error: %v", r)
+			case error:
+				formattedMsg = strings.ReplaceAll(r.(error).Error(), "runtime error", "Error")
+			}
 
-	err := cmd.Execute()
+			err = &ppanic.Panic{ErrorMsg: formattedMsg}
+			u.PanicCollect(cmd, args)
+			u.Error = cliv1.PtrBool(err != nil)
+			u.StackFrames = ppanic.ParseStack(string(debug.Stack()))
+			if err := reportUsage(cmd, cfg, u); err != nil {
+				output.ErrPrint(errors.DisplaySuggestionsMessage(err))
+			}
+		}
+	}()
+
+	err = cmd.Execute()
 	output.ErrPrint(errors.DisplaySuggestionsMessage(err))
 	u.Error = cliv1.PtrBool(err != nil)
 
+	if err := reportUsage(cmd, cfg, u); err != nil {
+		return err
+	}
+	return err
+}
+
+func reportUsage(cmd *cobra.Command, cfg *v1.Config, u *usage.Usage) error {
 	if cfg.IsCloudLogin() && u.Command != nil && *(u.Command) != "" {
 		unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
 		if err != nil {
@@ -171,8 +203,7 @@ func Execute(cmd *cobra.Command, args []string, cfg *v1.Config) error {
 		}
 		u.Report(cfg.GetCloudClientV2(unsafeTrace))
 	}
-
-	return err
+	return nil
 }
 
 func getLongDescription(cfg *v1.Config) string {
