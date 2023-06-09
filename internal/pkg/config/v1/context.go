@@ -165,6 +165,13 @@ func (c *Context) GetState() *ContextState {
 	return nil
 }
 
+func (c *Context) GetCredential() *Credential {
+	if c != nil {
+		return c.Credential
+	}
+	return nil
+}
+
 func (c *Context) GetAuth() *AuthConfig {
 	if c.GetState() != nil {
 		return c.State.Auth

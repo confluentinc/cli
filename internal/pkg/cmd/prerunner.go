@@ -309,6 +309,10 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(*cobra.Com
 			return err
 		}
 
+		if err := r.Config.DecryptCredentials(); err != nil {
+			return err
+		}
+
 		setContextErr := r.setAuthenticatedContext(command)
 		if setContextErr != nil {
 			if _, ok := setContextErr.(*errors.NotLoggedInError); ok {
@@ -565,6 +569,10 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(*co
 		}
 
 		if err := r.Config.DecryptContextStates(); err != nil {
+			return err
+		}
+
+		if err := r.Config.DecryptCredentials(); err != nil {
 			return err
 		}
 
@@ -834,6 +842,10 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(*cobra.Command, []
 		}
 
 		if err := r.Config.DecryptContextStates(); err != nil {
+			return err
+		}
+
+		if err := r.Config.DecryptCredentials(); err != nil {
 			return err
 		}
 
