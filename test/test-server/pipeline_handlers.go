@@ -50,7 +50,7 @@ func handlePipeline(t *testing.T) http.HandlerFunc {
 
 			// if request to use SR cluster
 			if id == "pipe-11001" {
-				pipeline.Spec.StreamGovernanceCluster = &streamdesignerv1.ObjectReference{Id: "lsrc-1234"}
+				pipeline.Spec.StreamGovernanceCluster = &streamdesignerv1.ObjectReference{Id: "lsrc-12345"}
 			}
 
 			err := json.NewEncoder(w).Encode(pipeline)
@@ -194,7 +194,7 @@ func handlePipelines(t *testing.T) http.HandlerFunc {
 
 			// if request to use SR cluster
 			if body.Spec.StreamGovernanceCluster != nil {
-				pipeline.Spec.StreamGovernanceCluster = &streamdesignerv1.ObjectReference{Id: "lsrc-1234"}
+				pipeline.Spec.StreamGovernanceCluster = &streamdesignerv1.ObjectReference{Id: "lsrc-12345"}
 				pipeline.Id = streamdesignerv1.PtrString("pipe-11001")
 			}
 

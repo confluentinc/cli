@@ -8,7 +8,7 @@ Create a Stream Designer pipeline named "my-pipeline".
 
   $ confluent pipeline create --name my-pipeline --description "example pipeline"
 
-Create a Stream Designer pipeline with a KSQL and Schema Registry cluster.
+Create a Stream Designer pipeline with a KSQL cluster and a Schema Registry cluster.
 
   $ confluent pipeline create --name my-pipeline --description "example pipeline" --ksql-cluster lksqlc-12345 --use-schema-registry
 

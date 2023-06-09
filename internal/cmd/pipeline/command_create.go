@@ -26,7 +26,7 @@ func (c *command) newCreateCommand(enableSourceCode bool) *cobra.Command {
 				Code: `confluent pipeline create --name my-pipeline --description "example pipeline"`,
 			},
 			examples.Example{
-				Text: "Create a Stream Designer pipeline with a KSQL and Schema Registry cluster.",
+				Text: "Create a Stream Designer pipeline with a KSQL cluster and a Schema Registry cluster.",
 				Code: `confluent pipeline create --name my-pipeline --description "example pipeline" --ksql-cluster lksqlc-12345 --use-schema-registry`,
 			},
 		),
