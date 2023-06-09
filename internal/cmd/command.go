@@ -165,20 +165,23 @@ func Execute(cmd *cobra.Command, args []string, cfg *v1.Config) (err error) {
 			// if !cfg.Version.IsReleased() {
 			//	panic(r)
 			// }
+			var formattedMsg string
+			switch r.(type) {
+			default:
+				formattedMsg = fmt.Sprintf("Error: %v", r)
+			case error:
+				formattedMsg = strings.ReplaceAll(r.(error).Error(), "runtime error", "Error")
+			}
+
+			err = &ppanic.Panic{ErrorMsg: formattedMsg}
+			u.PanicCollect(cmd, args)
+			u.Error = cliv1.PtrBool(err != nil)
 			u.StackFrames = ppanic.ParseStack(string(debug.Stack()))
 			if err := reportUsage(cmd, cfg, u); err != nil {
 				output.ErrPrint(errors.DisplaySuggestionsMessage(err))
 			}
-			formattedMsg := strings.ReplaceAll(r.(error).Error(), "runtime error", "Error")
-			err = &ppanic.Panic{ErrorMsg: formattedMsg}
 		}
 	}()
-	//TODO: Remove before release (for testing)
-	// var s []int
-	// fmt.Println(s[0])
-	// go func() {
-	//	 panic("panic!")
-	// }()
 
 	err = cmd.Execute()
 	output.ErrPrint(errors.DisplaySuggestionsMessage(err))
