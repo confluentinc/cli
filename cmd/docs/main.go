@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -57,15 +58,20 @@ func main() {
 
 // removeUnreleasedDocs hides documentation for unreleased features
 func removeUnreleasedDocs() {
-	if err := removeLineFromFile(`\s{3}stream-share/index\n`, filepath.Join("docs", "index.rst")); err != nil {
+	removeUnreleasedCommands("flink")
+	removeUnreleasedCommands("stream-share")
+}
+
+func removeUnreleasedCommands(command string) {
+	if err := removeLineFromFile(fmt.Sprintf(`\s{3}%s/index\n`, command), filepath.Join("docs", "index.rst")); err != nil {
 		panic(err)
 	}
 
-	if err := removeLineFromFile("\\s{7}:ref:`confluent_stream-share`\\s+.+\\s+\n", filepath.Join("docs", "overview.rst")); err != nil {
+	if err := removeLineFromFile(fmt.Sprintf("\\s{7}:ref:`confluent_%s`\\s+.+\\s+\n", command), filepath.Join("docs", "overview.rst")); err != nil {
 		panic(err)
 	}
 
-	if err := os.RemoveAll(filepath.Join("docs", "stream-share")); err != nil {
+	if err := os.RemoveAll(filepath.Join("docs", command)); err != nil {
 		panic(err)
 	}
 }

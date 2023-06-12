@@ -27,15 +27,13 @@ func (c *command) newComputePoolCreateCommand() *cobra.Command {
 	}
 
 	pcmd.AddCloudFlag(cmd)
-	cmd.Flags().String("region", "", `Cloud region for compute pool (use "confluent flink region list" to see all).`)
+	c.addRegionFlag(cmd)
 	cmd.Flags().Int32("cfu", 1, "Number of Confluent Flink Units (CFU).")
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("cloud"))
 	cobra.CheckErr(cmd.MarkFlagRequired("region"))
-
-	pcmd.RegisterFlagCompletionFunc(cmd, "region", c.autocompleteRegions)
 
 	return cmd
 }

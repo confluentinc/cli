@@ -4,6 +4,7 @@ Usage:
   confluent flink compute-pool list [flags]
 
 Flags:
+      --region string        Cloud region for compute pool (use "confluent flink region list" to see all).
       --environment string   Environment ID.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 

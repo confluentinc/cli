@@ -42,9 +42,9 @@ func (c *command) newDescribeCommand() *cobra.Command {
 func (c *command) describe(cmd *cobra.Command, args []string) error {
 	c.setKeyStoreIfNil()
 
-	apiKey, r, err := c.V2Client.GetApiKey(args[0])
+	apiKey, httpResp, err := c.V2Client.GetApiKey(args[0])
 	if err != nil {
-		return errors.CatchApiKeyForbiddenAccessError(err, getOperation, r)
+		return errors.CatchApiKeyForbiddenAccessError(err, getOperation, httpResp)
 	}
 
 	var ownerId string

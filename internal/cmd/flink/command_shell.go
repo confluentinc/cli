@@ -40,8 +40,7 @@ func (c *command) authenticated(authenticated func(*cobra.Command, []string) err
 		}
 		auth := cfg.Context().State.AuthToken
 		authRefreshToken := cfg.Context().State.AuthRefreshToken
-		err = c.Context.UpdateAuthTokens(auth, authRefreshToken)
-		if err != nil {
+		if err := c.Context.UpdateAuthTokens(auth, authRefreshToken); err != nil {
 			return err
 		}
 		return authenticated(cmd, nil)
@@ -117,7 +116,7 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 			FlinkGatewayUrl:   parsedUrl.String(),
 			UnsafeTrace:       unsafeTrace,
 			UserAgent:         c.Version.UserAgent,
-			EnvId:             environmentId,
+			EnvironmentId:     environmentId,
 			OrgResourceId:     resourceId,
 			KafkaClusterId:    cluster,
 			ComputePoolId:     computePool,

@@ -1,4 +1,4 @@
   Current |     ID      |       Name        | CFU |  Region   |   Status     
 ----------+-------------+-------------------+-----+-----------+--------------
-          | lfcp-123456 | my-compute-pool-1 |   1 | us-west-2 | PROVISIONED  
-          | lfcp-222222 | my-compute-pool-2 |   1 | us-west-2 | PROVISIONED  
+          | lfcp-123456 | my-compute-pool-1 |   1 | us-west-1 | PROVISIONED  
+          | lfcp-222222 | my-compute-pool-2 |   2 | us-west-2 | PROVISIONED  

@@ -186,9 +186,7 @@ func handleIamUsers(t *testing.T) http.HandlerFunc {
 					users = []iamv2.IamV2User{}
 				}
 			}
-			res := iamv2.IamV2UserList{
-				Data: users,
-			}
+			res := iamv2.IamV2UserList{Data: users}
 			email := r.URL.Query().Get("email")
 			if email != "" {
 				for _, u := range users {

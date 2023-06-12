@@ -44,7 +44,7 @@ func newProduceCommand(prerunner pcmd.PreRunner, clientId string) *cobra.Command
 	cmd.Flags().Bool("parse-key", false, "Parse key from the message.")
 	cmd.Flags().String("delimiter", ":", "The delimiter separating each key and value.")
 	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the producer client.`)
-	cmd.Flags().String("config-file", "", "The path to the configuration file for the producer client, in JSON or avro format.")
+	pcmd.AddProducerConfigFileFlag(cmd)
 	cmd.Flags().String("schema-registry-endpoint", "", "Endpoint for Schema Registry cluster.")
 	cmd.Flags().String("schema-registry-api-key", "", "Schema registry API key.")
 	cmd.Flags().String("schema-registry-api-secret", "", "Schema registry API key secret.")
@@ -134,8 +134,7 @@ func (c *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 		if err != nil {
 			return err
 		}
-		err = producer.Produce(msg, deliveryChan)
-		if err != nil {
+		if err := producer.Produce(msg, deliveryChan); err != nil {
 			isProduceToCompactedTopicError, err := errors.CatchProduceToCompactedTopicError(err, topic)
 			if isProduceToCompactedTopicError {
 				scanErr = err
@@ -344,8 +343,7 @@ func (c *hasAPIKeyTopicCommand) initSchemaAndGetInfo(cmd *cobra.Command, topic s
 		}
 	}
 
-	err = serializationProvider.LoadSchema(schemaPath, referencePathMap)
-	if err != nil {
+	if err := serializationProvider.LoadSchema(schemaPath, referencePathMap); err != nil {
 		return nil, nil, errors.NewWrapErrorWithSuggestions(err, "failed to load schema", errors.FailedToLoadSchemaSuggestions)
 	}
 

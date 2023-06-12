@@ -31,7 +31,7 @@ func PrintOptionState(prefix string, isEnabled bool, maxCol int) {
 func PrintWelcomeHeader() {
 	// Print welcome message
 	output.Printf("Welcome! \n")
-	output.Printf("To exit, press Ctrl-Q or type \"exit;\". \n\n")
+	output.Printf("To exit, press Ctrl-Q or type \"exit\". \n\n")
 
 	// Print shortcuts
 	output.Printf("\033[0m%s \033[0;36m%s \033[0m", "[Ctrl-Q]", "Quit")

@@ -19,16 +19,9 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-type TableControllerInterface interface {
-	AppInputCapture(event *tcell.EventKey) *tcell.EventKey
-	Init(statement types.ProcessedStatement)
-	SetRunInteractiveInputCallback(func())
-	GetActionForShortcut(shortcut string) func()
-}
-
 type TableController struct {
 	table                                *tview.Table
-	appController                        ApplicationControllerInterface
+	appController                        types.ApplicationControllerInterface
 	runInteractiveInput                  func()
 	store                                store.StoreInterface
 	statement                            types.ProcessedStatement
@@ -49,7 +42,7 @@ const defaultRefreshInterval uint = 1000 // in milliseconds
 const minRefreshInterval uint = 100      // in milliseconds
 const minColumnWidth int = 4             // min characters displayed in a column
 
-func NewTableController(table *tview.Table, store store.StoreInterface, appController ApplicationControllerInterface) TableControllerInterface {
+func NewTableController(table *tview.Table, store store.StoreInterface, appController types.ApplicationControllerInterface) types.TableControllerInterface {
 	return &TableController{
 		table:         table,
 		appController: appController,
