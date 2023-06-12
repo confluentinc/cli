@@ -146,18 +146,18 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 	return cmd
 }
 
-func Execute(cmd *cobra.Command, args []string, cfg *v1.Config) (err error) {
+func Execute(cmd *cobra.Command, args []string, cfg *v1.Config) error {
 	defer func() {
 		if r := recover(); r != nil {
 			//TODO: need to uncomment before releasing
 			// if !cfg.Version.IsReleased() {
 			//	panic(r)
 			// }
-			err = &ppanic.Panic{ErrorMsg: ppanic.FormatPanicMsg(r)}
 			u := ppanic.CollectPanic(cmd, args, cfg)
 			if err := reportUsage(cmd, cfg, u); err != nil {
 				output.ErrPrint(errors.DisplaySuggestionsMessage(err))
 			}
+			cobra.CheckErr(r)
 		}
 	}()
 	if !cfg.DisablePlugins {
@@ -172,13 +172,14 @@ func Execute(cmd *cobra.Command, args []string, cfg *v1.Config) (err error) {
 		cmd.PersistentPostRun = u.Collect
 	}
 
-	err = cmd.Execute()
+	err := cmd.Execute()
 	output.ErrPrint(errors.DisplaySuggestionsMessage(err))
 	u.Error = cliv1.PtrBool(err != nil)
 
 	if err := reportUsage(cmd, cfg, u); err != nil {
 		return err
 	}
+
 	return err
 }
 

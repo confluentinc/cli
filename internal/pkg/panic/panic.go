@@ -1,7 +1,7 @@
 package panic
 
 import (
-	"fmt"
+	"runtime"
 	"runtime/debug"
 	"strings"
 
@@ -15,35 +15,18 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/usage"
 )
 
-type Panic struct {
-	ErrorMsg string
-}
-
-func (p *Panic) Error() string {
-	return p.ErrorMsg
-}
-
 // CollectPanic collects relevant usage data for when panics occur and command execution is not completed.
 func CollectPanic(cmd *cobra.Command, args []string, cfg *v1.Config) *usage.Usage {
-	u := usage.New(cfg.Version.Version)
 	fullCommand, flags, _ := cmd.Find(args)
-	u.Command = cliv1.PtrString(fullCommand.CommandPath())
-	u.Flags = parseFlags(fullCommand, flags)
-	u.Error = cliv1.PtrBool(true)
-	u.StackFrames = parseStack(string(debug.Stack()))
-	return u
-}
-
-// FormatPanicMsg formats the returned value of the recover function when panics occur
-func FormatPanicMsg(panicMsg any) string {
-	var formattedMsg string
-	switch panicMsg.(type) {
-	default:
-		formattedMsg = fmt.Sprintf("Error: %v", panicMsg)
-	case error:
-		formattedMsg = strings.ReplaceAll(panicMsg.(error).Error(), "runtime error", "Error")
+	return &usage.Usage{
+		Os:          cliv1.PtrString(runtime.GOOS),
+		Arch:        cliv1.PtrString(runtime.GOARCH),
+		Version:     cliv1.PtrString(cfg.Version.Version),
+		Command:     cliv1.PtrString(fullCommand.CommandPath()),
+		Flags:       parseFlags(fullCommand, flags),
+		Error:       cliv1.PtrBool(true),
+		StackFrames: parseStack(string(debug.Stack())),
 	}
-	return formattedMsg
 }
 
 // parseFlags collects the flags alongside the panicking command
@@ -65,10 +48,8 @@ func parseFlags(cmd *cobra.Command, flags []string) *[]string {
 
 // parseStack formats the stack trace resulting from a panic to only include line numbers up until panic
 func parseStack(stack string) *[]string {
+	stack = strings.TrimRight(stack, "\n")
 	trace := strings.Split(stack, "\n")
-	if trace[len(trace)-1] == "" {
-		trace = trace[:len(trace)-1]
-	}
 	panicIndex := 0
 	for idx := range trace {
 		trace[idx] = strings.TrimSpace(trace[idx])
@@ -80,7 +61,7 @@ func parseStack(stack string) *[]string {
 
 	var result []string
 	for _, s := range trace {
-		if strings.Contains(s, ".go") {
+		if strings.Contains(s, ".go:") {
 			result = append(result, s)
 		}
 	}
