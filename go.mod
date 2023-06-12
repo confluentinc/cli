@@ -63,7 +63,7 @@ require (
 	github.com/inconshreveable/go-update v0.0.0-20160112193335-8152e7eb6ccf
 	github.com/jhump/protoreflect v1.15.1
 	github.com/jonboulle/clockwork v0.4.0
-	github.com/keybase/go-keychain v0.0.0-20221221221913-9be78f6c498b
+	github.com/keybase/go-keychain v0.0.0-20230523030712-b5615109f100
 	github.com/linkedin/goavro/v2 v2.12.0
 	github.com/mattn/go-isatty v0.0.19
 	github.com/olekukonko/tablewriter v0.0.5
