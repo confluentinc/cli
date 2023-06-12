@@ -34,12 +34,13 @@ const (
 )
 
 var (
-	apiKeyString    = "abc-key-123"
-	apiSecretString = "def-secret-456"
-	kafkaClusterID  = "anonymous-id"
-	contextName     = "my-context"
-	environmentId   = "acc-123"
-	cloudPlatforms  = []string{
+	apiKeyString         = "abc-key-123"
+	apiSecretString      = "def-secret-456"
+	apiKeyCredentialName = "api-key-" + apiKeyString
+	kafkaClusterID       = "anonymous-id"
+	contextName          = "my-context"
+	environmentId        = "acc-123"
+	cloudPlatforms       = []string{
 		"devel.cpdev.cloud",
 		"stag.cpdev.cloud",
 		"confluent.cloud",
@@ -429,12 +430,12 @@ func replacePlaceholdersInWant(t *testing.T, got []byte, want []byte) string {
 	nonceString := base64.RawStdEncoding.EncodeToString(data.ContextStates[contextName].Nonce)
 	wantString = strings.ReplaceAll(wantString, noncePlaceholder, nonceString)
 
-	wantString = strings.ReplaceAll(wantString, apiSecretPlaceholder, data.Credentials["api-key-"+apiKeyString].APIKeyPair.Secret)
+	wantString = strings.ReplaceAll(wantString, apiSecretPlaceholder, data.Credentials[apiKeyCredentialName].APIKeyPair.Secret)
 
-	apiSaltString := base64.RawStdEncoding.EncodeToString(data.Credentials["api-key-"+apiKeyString].APIKeyPair.Salt)
+	apiSaltString := base64.RawStdEncoding.EncodeToString(data.Credentials[apiKeyCredentialName].APIKeyPair.Salt)
 	wantString = strings.ReplaceAll(wantString, apiSaltPlaceholder, apiSaltString)
 
-	apiNonceString := base64.RawStdEncoding.EncodeToString(data.Credentials["api-key-"+apiKeyString].APIKeyPair.Nonce)
+	apiNonceString := base64.RawStdEncoding.EncodeToString(data.Credentials[apiKeyCredentialName].APIKeyPair.Nonce)
 	return strings.ReplaceAll(wantString, apiNoncePlaceholder, apiNonceString)
 }
 
