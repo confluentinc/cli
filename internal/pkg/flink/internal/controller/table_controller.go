@@ -197,6 +197,7 @@ func (t *TableController) refreshResults(ctx context.Context, statement types.Pr
 		for {
 			select {
 			case <-ctx.Done():
+				go t.store.DeleteStatement(statement.StatementName)
 				return
 			default:
 				t.renderTable()
