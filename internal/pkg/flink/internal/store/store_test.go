@@ -212,7 +212,7 @@ func TestCancelPendingStatement(t *testing.T) {
 		},
 	}
 
-	expectedErr := &types.StatementError{Message: "result retrieval aborted. Statement will be deleted."}
+	expectedErr := &types.StatementError{Message: "result retrieval aborted. Statement will be deleted"}
 	client.EXPECT().GetStatement("orgId", "envId", statementName).Return(statementObj, nil).AnyTimes()
 
 	// Schedule routine to cancel context
