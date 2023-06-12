@@ -147,7 +147,7 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 	for {
 		select {
 		case <-ctx.Done():
-			return nil, &types.StatementError{Message: "result retrieval aborted. Statement will be deleted.", HttpResponseCode: 499}
+			return nil, &types.StatementError{Message: "result retrieval aborted. Statement will be deleted", HttpResponseCode: 499}
 		default:
 			statementObj, err := s.client.GetStatement(s.appOptions.GetEnvironmentId(), statementName, s.appOptions.GetOrgResourceId())
 			statusDetail := s.getStatusDetail(statementObj)
