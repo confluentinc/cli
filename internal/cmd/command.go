@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"runtime/debug"
 	"strings"
 
 	shell "github.com/brianstrauch/cobra-shell"
@@ -148,6 +147,19 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 }
 
 func Execute(cmd *cobra.Command, args []string, cfg *v1.Config) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			//TODO: need to uncomment before releasing
+			// if !cfg.Version.IsReleased() {
+			//	panic(r)
+			// }
+			err = &ppanic.Panic{ErrorMsg: ppanic.FormatPanicMsg(r)}
+			u := ppanic.CollectPanic(cmd, args, cfg)
+			if err := reportUsage(cmd, cfg, u); err != nil {
+				output.ErrPrint(errors.DisplaySuggestionsMessage(err))
+			}
+		}
+	}()
 	if !cfg.DisablePlugins {
 		if plugin := pplugin.FindPlugin(cmd, args, cfg); plugin != nil {
 			return pplugin.ExecPlugin(plugin)
@@ -159,29 +171,6 @@ func Execute(cmd *cobra.Command, args []string, cfg *v1.Config) (err error) {
 	if !cfg.IsTest && cfg.Version.IsReleased() {
 		cmd.PersistentPostRun = u.Collect
 	}
-	defer func() {
-		if r := recover(); r != nil {
-			//TODO: need to uncomment before releasing
-			// if !cfg.Version.IsReleased() {
-			//	panic(r)
-			// }
-			var formattedMsg string
-			switch r.(type) {
-			default:
-				formattedMsg = fmt.Sprintf("Error: %v", r)
-			case error:
-				formattedMsg = strings.ReplaceAll(r.(error).Error(), "runtime error", "Error")
-			}
-
-			err = &ppanic.Panic{ErrorMsg: formattedMsg}
-			u.PanicCollect(cmd, args)
-			u.Error = cliv1.PtrBool(err != nil)
-			u.StackFrames = ppanic.ParseStack(string(debug.Stack()))
-			if err := reportUsage(cmd, cfg, u); err != nil {
-				output.ErrPrint(errors.DisplaySuggestionsMessage(err))
-			}
-		}
-	}()
 
 	err = cmd.Execute()
 	output.ErrPrint(errors.DisplaySuggestionsMessage(err))

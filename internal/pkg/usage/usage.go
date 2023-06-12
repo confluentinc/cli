@@ -2,11 +2,9 @@ package usage
 
 import (
 	"runtime"
-	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"golang.org/x/exp/slices"
 
 	cliv1 "github.com/confluentinc/ccloud-sdk-go-v2/cli/v1"
 
@@ -35,25 +33,6 @@ func (u *Usage) Collect(cmd *cobra.Command, _ []string) {
 		}
 	})
 	u.Flags = &flags
-}
-
-// PanicCollect provides the same functionality above but for when panics occur and command execution is not completed.
-func (u *Usage) PanicCollect(cmd *cobra.Command, args []string) {
-	fullCommand, flags, _ := cmd.Find(args)
-	for i := range flags {
-		flags[i] = strings.TrimPrefix(flags[i], "--")
-		flags[i] = strings.TrimPrefix(flags[i], "-")
-	}
-	var formattedFlags []string
-	cmd.Flags().VisitAll(func(flag *pflag.Flag) {
-		if slices.Contains(flags, flag.Name) {
-			formattedFlags = append(formattedFlags, flag.Name)
-		} else if slices.Contains(flags, flag.Shorthand) {
-			formattedFlags = append(formattedFlags, flag.Name)
-		}
-	})
-	u.Command = cliv1.PtrString(fullCommand.CommandPath())
-	u.Flags = &formattedFlags
 }
 
 // Report sends usage data to cc-cli-usage-service.
