@@ -377,8 +377,6 @@ github.com/jstemmer/go-junit-report v0.0.0-20190106144839-af01ea7f8024/go.mod h1
 github.com/jstemmer/go-junit-report v0.9.1/go.mod h1:Brl9GWCQeLvo8nXZwPNNblvFj/XSXhF0NWZEnDohbsk=
 github.com/juju/qthttptest v0.1.1/go.mod h1:aTlAv8TYaflIiTDIQYzxnl1QdPjAg8Q8qJMErpKy6A4=
 github.com/julienschmidt/httprouter v1.3.0/go.mod h1:JR6WtHb+2LUe8TCKY3cZOxFyyO8IZAc4RVcycCCAKdM=
-github.com/keybase/go-keychain v0.0.0-20221221221913-9be78f6c498b h1:k2ZvAPXrDB1Q7fGRdUane+T08K+UaL96qH47Setr/7k=
-github.com/keybase/go-keychain v0.0.0-20221221221913-9be78f6c498b/go.mod h1:TXh6wFVZNh4iuqbymzy4r3obmj8hTPDlLNnoKNIbvJE=
 github.com/keybase/go-keychain v0.0.0-20230523030712-b5615109f100 h1:rG3VnJUnAWyiv7qYmmdOdSapzz6HM+zb9/uRFr0T5EM=
 github.com/keybase/go-keychain v0.0.0-20230523030712-b5615109f100/go.mod h1:qDHUvIjGZJUtdPtuP4WMu5/U4aVWbFw1MhlkJqCGmCQ=
 github.com/kisielk/errcheck v1.1.0/go.mod h1:EZBBE59ingxPouuu3KfxchcWSUPOHkagtvWXihfKN4Q=
