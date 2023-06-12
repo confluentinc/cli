@@ -103,10 +103,8 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 			ID:        kafkaClusterID,
 			Name:      "anonymous-cluster",
 			Bootstrap: "http://test",
-			APIKeys: map[string]*APIKeyPair{
-				apiKeyString: apiCredential.APIKeyPair,
-			},
-			APIKey: apiKeyString,
+			APIKeys:   map[string]*APIKeyPair{apiKeyString: apiCredential.APIKeyPair},
+			APIKey:    apiKeyString,
 		},
 	}
 	testInputs.activeKafka = kafkaClusterID
