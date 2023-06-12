@@ -8,10 +8,3 @@ type Credential struct {
 	APIKeyPair     *APIKeyPair    `json:"api_key_pair"`
 	CredentialType CredentialType `json:"credential_type"`
 }
-
-func (c *Credential) GetAPIKeyPair() *APIKeyPair {
-	if c.APIKeyPair != nil {
-		return c.APIKeyPair
-	}
-	return nil
-}

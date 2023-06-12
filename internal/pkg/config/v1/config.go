@@ -155,14 +155,15 @@ func (c *Config) DecryptContextStates() error {
 }
 
 func (c *Config) DecryptCredentials() error {
-	if c.Credentials != nil {
-		credentials := c.Credentials
+	if credentials := c.Credentials; c.Credentials != nil {
 		for _, credential := range credentials {
-			if err := credential.APIKeyPair.DecryptCredentialAPISecret(); err != nil {
-				return err
+			if apiKeyPair := credential.APIKeyPair; apiKeyPair != nil {
+				if err := apiKeyPair.DecryptCredentialAPISecret(); err != nil {
+					return err
+				}
+				// credential.APIKeyPair = apiKeyPair // may not be needed. This is pointer.
 			}
 		}
-		c.Credentials = credentials
 	}
 	return c.Validate()
 }
@@ -297,9 +298,9 @@ func (c *Config) encryptCredentialsAPISecret(tempAPISecrets map[string]string) e
 			credential.APIKeyPair.Salt = salt
 			credential.APIKeyPair.Nonce = nonce
 		}
-		tempAPISecret := tempAPISecrets[name]
+
 		if !strings.HasPrefix(credential.APIKeyPair.Secret, secret.AesGcm) {
-			encryptedSecret, err := secret.Encrypt(credential.APIKeyPair.Key, tempAPISecret, credential.APIKeyPair.Salt, credential.APIKeyPair.Nonce)
+			encryptedSecret, err := secret.Encrypt(credential.APIKeyPair.Key, tempAPISecrets[name], credential.APIKeyPair.Salt, credential.APIKeyPair.Nonce)
 			if err != nil {
 				return err
 			}
