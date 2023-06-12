@@ -146,9 +146,7 @@ func parseSetStatement(statement string) (string, string, error) {
 	if startOfStrAfterSet >= len(statement) {
 		return "", "", nil
 	}
-	strAfterSet := statement[startOfStrAfterSet:]
-
-	strAfterSet = removeTabNewLineAndWhitesSpaces(strAfterSet)
+	strAfterSet := strings.TrimSpace(statement[startOfStrAfterSet:])
 
 	// This is the case when the statement is simply "SET  " (with empty spaces), which is used to display current config.
 	if strAfterSet == "" {
@@ -171,36 +169,59 @@ func parseSetStatement(statement string) (string, string, error) {
 		}
 	}
 
-	if keyValuePair[0] != "" && keyValuePair[1] == "" {
+	keyWithQuotes := strings.TrimSpace(keyValuePair[0])
+	valueWithQuotes := strings.TrimSpace(keyValuePair[1])
+
+	if keyWithQuotes != "" && valueWithQuotes == "" {
 		return "", "", &types.StatementError{
 			Message:    "value for key not present",
 			Suggestion: `if you want to reset a key, use "RESET 'key'"`,
 		}
 	}
 
-	if keyValuePair[0] == "" && keyValuePair[1] != "" {
+	if keyWithQuotes == "" && valueWithQuotes != "" {
 		return "", "", &types.StatementError{
 			Message: "key not present",
 			Usage:   []string{"SET 'key'='value'"},
 		}
 	}
 
-	if keyValuePair[0] == "" && keyValuePair[1] == "" {
+	if keyWithQuotes == "" && valueWithQuotes == "" {
 		return "", "", &types.StatementError{
 			Message: "key and value not present",
 			Usage:   []string{"SET 'key'='value'"},
 		}
 	}
 
-	if !strings.HasPrefix(keyValuePair[0], "'") || !strings.HasSuffix(keyValuePair[0], "'") ||
-		!strings.HasPrefix(keyValuePair[1], "'") || !strings.HasSuffix(keyValuePair[1], "'") {
+	if !strings.HasPrefix(keyWithQuotes, "'") || !strings.HasSuffix(keyWithQuotes, "'") ||
+		!strings.HasPrefix(valueWithQuotes, "'") || !strings.HasSuffix(valueWithQuotes, "'") {
 		return "", "", &types.StatementError{
-			Message: "key and value must be enclosed by single quotes ''",
+			Message: "key and value must be enclosed by single quotes (')",
 			Usage:   []string{"SET 'key'='value'"},
 		}
 	}
 
-	return strings.ReplaceAll(keyValuePair[0], "'", ""), strings.ReplaceAll(keyValuePair[1], "'", ""), nil
+	// remove quotes
+	key := keyWithQuotes[1 : len(keyWithQuotes)-1]
+	value := valueWithQuotes[1 : len(valueWithQuotes)-1]
+
+	if strings.Contains(key, "'") {
+		return "", "", &types.StatementError{
+			Message:    "key contains single quotes (')",
+			Usage:      []string{"SET 'key'='value'"},
+			Suggestion: `please escape single quotes (') with double quotes (")`,
+		}
+	}
+
+	if strings.Contains(value, "'") {
+		return "", "", &types.StatementError{
+			Message:    "value contains single quotes (')",
+			Usage:      []string{"SET 'key'='value'"},
+			Suggestion: `please escape single quotes (') with double quotes (")`,
+		}
+	}
+
+	return key, value, nil
 }
 
 /*
