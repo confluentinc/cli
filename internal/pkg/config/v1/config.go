@@ -154,6 +154,19 @@ func (c *Config) DecryptContextStates() error {
 	return c.Validate()
 }
 
+func (c *Config) DecryptCredentials() error {
+	if credentials := c.Credentials; c.Credentials != nil {
+		for _, credential := range credentials {
+			if credential.APIKeyPair != nil {
+				if err := credential.APIKeyPair.DecryptSecret(); err != nil {
+					return err
+				}
+			}
+		}
+	}
+	return c.Validate()
+}
+
 // Load reads the CLI config from disk.
 // Save a default version if none exists yet.
 func (c *Config) Load() error {
@@ -217,11 +230,23 @@ func (c *Config) Save() error {
 	tempContext := c.resolveOverwrittenContext()
 	var tempAuthToken string
 	var tempAuthRefreshToken string
+	tempApiSecrets := map[string]string{}
 
 	if c.Context() != nil {
 		tempAuthToken = c.Context().GetState().AuthToken
 		tempAuthRefreshToken = c.Context().GetState().AuthRefreshToken
 		if err := c.encryptContextStateTokens(tempAuthToken, tempAuthRefreshToken); err != nil {
+			return err
+		}
+	}
+
+	if c.Credentials != nil {
+		for name, credential := range c.Credentials {
+			if credential.APIKeyPair != nil {
+				tempApiSecrets[name] = credential.APIKeyPair.Secret
+			}
+		}
+		if err := c.encryptCredentialsAPISecret(tempApiSecrets); err != nil {
 			return err
 		}
 	}
@@ -250,7 +275,37 @@ func (c *Config) Save() error {
 	c.restoreOverwrittenKafka(tempKafka)
 	c.restoreOverwrittenAuthToken(tempAuthToken)
 	c.restoreOverwrittenAuthRefreshToken(tempAuthRefreshToken)
+	c.restoreOverwrittenCredentials(tempApiSecrets)
 
+	return nil
+}
+
+func (c *Config) encryptCredentialsAPISecret(tempApiSecrets map[string]string) error {
+	for name, credential := range c.Credentials {
+		if credential.APIKeyPair == nil {
+			continue
+		}
+		if credential.APIKeyPair.Salt == nil || credential.APIKeyPair.Nonce == nil {
+			salt, err := secret.GenerateRandomBytes(secret.SaltLength)
+			if err != nil {
+				return err
+			}
+			nonce, err := secret.GenerateRandomBytes(secret.NonceLength)
+			if err != nil {
+				return err
+			}
+			credential.APIKeyPair.Salt = salt
+			credential.APIKeyPair.Nonce = nonce
+		}
+
+		if !strings.HasPrefix(credential.APIKeyPair.Secret, secret.AesGcm) {
+			encryptedSecret, err := secret.Encrypt(credential.APIKeyPair.Key, tempApiSecrets[name], credential.APIKeyPair.Salt, credential.APIKeyPair.Nonce)
+			if err != nil {
+				return err
+			}
+			credential.APIKeyPair.Secret = encryptedSecret
+		}
+	}
 	return nil
 }
 
@@ -323,6 +378,14 @@ func (c *Config) restoreOverwrittenAuthToken(tempAuthToken string) {
 func (c *Config) restoreOverwrittenAuthRefreshToken(tempAuthRefreshToken string) {
 	if tempAuthRefreshToken != "" {
 		c.Context().GetState().AuthRefreshToken = tempAuthRefreshToken
+	}
+}
+
+func (c *Config) restoreOverwrittenCredentials(tempApiSecrets map[string]string) {
+	for name, secret := range tempApiSecrets {
+		if secret != "" {
+			c.Credentials[name].APIKeyPair.Secret = secret
+		}
 	}
 }
 
