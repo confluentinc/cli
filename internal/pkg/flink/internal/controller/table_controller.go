@@ -13,6 +13,7 @@ import (
 	"github.com/samber/lo"
 
 	"github.com/confluentinc/cli/internal/pkg/flink/components"
+	"github.com/confluentinc/cli/internal/pkg/flink/config"
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/results"
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/store"
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
@@ -56,9 +57,14 @@ func (t *TableController) SetRunInteractiveInputCallback(runInteractiveInput fun
 
 func (t *TableController) exitTViewMode() {
 	t.stopAutoRefresh()
-	go t.store.DeleteStatement(t.statement.StatementName)
+	// This was used to delete statements after their execution to save system resources, which should not be
+	// an issue anymore. We don't want to remove it completely just yet, but will disable it by default for now.
+	// TODO: remove this completely once we are sure we won't need it in the future
+	if config.ShouldCleanupStatements {
+		go t.store.DeleteStatement(t.statement.StatementName)
+	}
 	t.appController.SuspendOutputMode(func() {
-		output.Println("Result retrieval aborted. Statement will be deleted.")
+		output.Println("Result retrieval aborted.")
 		t.runInteractiveInput()
 	})
 }
