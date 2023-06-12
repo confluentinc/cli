@@ -26,17 +26,21 @@ import (
 const (
 	authTokenPlaceholder        = "AUTH_TOKEN_PLACEHOLDER"
 	authRefreshTokenPlaceholder = "AUTH_REFRESH_TOKEN_PLACEHOLDER"
-	saltPlaceholder             = "SALT_PLACEHOLDER"
-	noncePlaceholder            = "NONCE_PLACEHOLDER"
+	saltPlaceholder             = "SALT_TOKEN_PLACEHOLDER"
+	noncePlaceholder            = "NONCE_TOKEN_PLACEHOLDER"
+	apiSecretPlaceholder        = "API_SECRET_PLACEHOLDER"
+	apiSaltPlaceholder          = "c2FsdHBsYWNlaG9sZGVy"
+	apiNoncePlaceholder         = "bm9uY2VwbGFjZWhvbGRlcg=="
 )
 
 var (
-	apiKeyString    = "abc-key-123"
-	apiSecretString = "def-secret-456"
-	kafkaClusterID  = "anonymous-id"
-	contextName     = "my-context"
-	environmentId   = "acc-123"
-	cloudPlatforms  = []string{
+	apiKeyString         = "abc-key-123"
+	apiSecretString      = "def-secret-456"
+	apiKeyCredentialName = "api-key-" + apiKeyString
+	kafkaClusterID       = "anonymous-id"
+	contextName          = "my-context"
+	environmentId        = "acc-123"
+	cloudPlatforms       = []string{
 		"devel.cpdev.cloud",
 		"stag.cpdev.cloud",
 		"confluent.cloud",
@@ -101,10 +105,7 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 			Name:      "anonymous-cluster",
 			Bootstrap: "http://test",
 			APIKeys: map[string]*APIKeyPair{
-				apiKeyString: {
-					Key:    apiKeyString,
-					Secret: apiSecretString,
-				},
+				apiKeyString: apiCredential.APIKeyPair,
 			},
 			APIKey: apiKeyString,
 		},
@@ -283,6 +284,11 @@ func TestConfig_Load(t *testing.T) {
 			tt.want.AnonymousId = cfg.AnonymousId
 			tt.want.IsTest = cfg.IsTest
 			tt.want.Version = cfg.Version
+			tt.want.Credentials = cfg.Credentials
+			if ctx := tt.want.Contexts["my-context"]; ctx != nil {
+				ctx.Credential = cfg.Contexts["my-context"].Credential
+				ctx.KafkaClusterContext.KafkaClusterConfigs = cfg.Contexts["my-context"].KafkaClusterContext.KafkaClusterConfigs
+			}
 
 			if !t.Failed() && !reflect.DeepEqual(cfg, tt.want) {
 				t.Errorf("Config.Load() =\n%+v, want \n%+v", cfg, tt.want)
@@ -414,12 +420,23 @@ func replacePlaceholdersInWant(t *testing.T, got []byte, want []byte) string {
 	data := &Config{}
 	err := json.Unmarshal(got, data)
 	require.NoError(t, err)
+
 	wantString := strings.ReplaceAll(string(want), authTokenPlaceholder, data.ContextStates[contextName].AuthToken)
 	wantString = strings.ReplaceAll(wantString, authRefreshTokenPlaceholder, data.ContextStates[contextName].AuthRefreshToken)
+
 	saltString := base64.RawStdEncoding.EncodeToString(data.ContextStates[contextName].Salt)
 	wantString = strings.ReplaceAll(wantString, saltPlaceholder, saltString)
+
 	nonceString := base64.RawStdEncoding.EncodeToString(data.ContextStates[contextName].Nonce)
-	return strings.ReplaceAll(wantString, noncePlaceholder, nonceString)
+	wantString = strings.ReplaceAll(wantString, noncePlaceholder, nonceString)
+
+	wantString = strings.ReplaceAll(wantString, apiSecretPlaceholder, data.Credentials[apiKeyCredentialName].APIKeyPair.Secret)
+
+	apiSaltString := base64.RawStdEncoding.EncodeToString(data.Credentials[apiKeyCredentialName].APIKeyPair.Salt)
+	wantString = strings.ReplaceAll(wantString, apiSaltPlaceholder, apiSaltString)
+
+	apiNonceString := base64.RawStdEncoding.EncodeToString(data.Credentials[apiKeyCredentialName].APIKeyPair.Nonce)
+	return strings.ReplaceAll(wantString, apiNoncePlaceholder, apiNonceString)
 }
 
 func TestConfig_OverwrittenKafka(t *testing.T) {
