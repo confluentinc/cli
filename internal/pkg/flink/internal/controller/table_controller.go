@@ -26,6 +26,7 @@ type TableController struct {
 	runInteractiveInput                  func()
 	store                                store.StoreInterface
 	statement                            types.ProcessedStatement
+	statementLock                        sync.RWMutex
 	materializedStatementResults         results.MaterializedStatementResults
 	materializedStatementResultsIterator results.MaterializedStatementResultsIterator
 	selectedRowIdx                       int
@@ -60,8 +61,9 @@ func (t *TableController) exitTViewMode() {
 	// This was used to delete statements after their execution to save system resources, which should not be
 	// an issue anymore. We don't want to remove it completely just yet, but will disable it by default for now.
 	// TODO: remove this completely once we are sure we won't need it in the future
-	if config.ShouldCleanupStatements || t.statement.Status == types.RUNNING {
-		go t.store.DeleteStatement(t.statement.StatementName)
+	statement := t.getStatement()
+	if config.ShouldCleanupStatements || statement.Status == types.RUNNING {
+		go t.store.DeleteStatement(statement.StatementName)
 	}
 	t.appController.SuspendOutputMode(func() {
 		output.Println("Result retrieval aborted.")
@@ -83,7 +85,7 @@ func (t *TableController) GetActionForShortcut(shortcut string) func() {
 		return func() {
 			if t.hasUserDisabledAutoFetch {
 				t.hasUserDisabledAutoFetch = false
-				t.startAutoRefresh(t.statement, defaultRefreshInterval)
+				t.startAutoRefresh(defaultRefreshInterval)
 			} else {
 				t.hasUserDisabledAutoFetch = true
 				t.stopAutoRefresh()
@@ -176,13 +178,13 @@ func (t *TableController) stopAutoRefresh() {
 	}
 }
 
-func (t *TableController) startAutoRefresh(statement types.ProcessedStatement, refreshInterval uint) {
-	if statement.PageToken == "" || t.isAutoRefreshRunning() {
+func (t *TableController) startAutoRefresh(refreshInterval uint) {
+	if t.getStatement().PageToken == "" || t.isAutoRefreshRunning() {
 		return
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	t.setRefreshCancelFunc(cancel)
-	t.refreshResults(ctx, statement, refreshInterval)
+	t.refreshResults(ctx, refreshInterval)
 }
 
 func (t *TableController) isAutoRefreshRunning() bool {
@@ -192,18 +194,17 @@ func (t *TableController) isAutoRefreshRunning() bool {
 	return t.cancelFetch != nil
 }
 
-func (t *TableController) refreshResults(ctx context.Context, statement types.ProcessedStatement, refreshInterval uint) {
+func (t *TableController) refreshResults(ctx context.Context, refreshInterval uint) {
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
-				t.statement = statement
 				return
 			default:
 				t.renderTable()
 				t.appController.TView().Draw()
 
-				newResults, err := t.store.FetchStatementResults(statement)
+				newResults, err := t.store.FetchStatementResults(t.getStatement())
 				if err != nil {
 					continue
 				}
@@ -214,7 +215,7 @@ func (t *TableController) refreshResults(ctx context.Context, statement types.Pr
 					continue
 				}
 
-				statement = *newResults
+				t.setStatement(*newResults)
 				t.materializedStatementResults.Append(newResults.StatementResults.GetRows()...)
 				time.Sleep(time.Millisecond * time.Duration(refreshInterval))
 			}
@@ -223,13 +224,13 @@ func (t *TableController) refreshResults(ctx context.Context, statement types.Pr
 }
 
 func (t *TableController) Init(statement types.ProcessedStatement) {
-	t.statement = statement
+	t.setStatement(statement)
 	t.materializedStatementResults = results.NewMaterializedStatementResults(statement.StatementResults.GetHeaders(), maxResultsCapacity)
 	t.materializedStatementResults.SetTableMode(!t.hasUserDisabledTableMode)
 	t.materializedStatementResults.Append(statement.StatementResults.GetRows()...)
 	// if unbounded result start refreshing results in the background
 	if statement.PageToken != "" && !t.hasUserDisabledAutoFetch {
-		t.startAutoRefresh(statement, defaultRefreshInterval)
+		t.startAutoRefresh(defaultRefreshInterval)
 	} else {
 		t.renderTable()
 	}
@@ -252,7 +253,7 @@ func (t *TableController) renderTitle() {
 	}
 
 	var state string
-	if t.statement.PageToken == "" {
+	if t.getStatement().PageToken == "" {
 		state = " (completed) "
 	} else {
 		if t.isAutoRefreshRunning() {
@@ -345,4 +346,18 @@ func (t *TableController) selectLastRow() {
 
 func (t *TableController) focusTable() {
 	t.appController.TView().SetFocus(t.table)
+}
+
+func (t *TableController) getStatement() types.ProcessedStatement {
+	t.statementLock.RLock()
+	defer t.statementLock.RUnlock()
+
+	return t.statement
+}
+
+func (t *TableController) setStatement(statement types.ProcessedStatement) {
+	t.statementLock.Lock()
+	defer t.statementLock.Unlock()
+
+	t.statement = statement
 }
