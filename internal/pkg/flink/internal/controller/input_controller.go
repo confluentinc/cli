@@ -15,6 +15,7 @@ import (
 	"github.com/confluentinc/go-prompt"
 
 	"github.com/confluentinc/cli/internal/pkg/flink/components"
+	"github.com/confluentinc/cli/internal/pkg/flink/config"
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/autocomplete"
 	lexer "github.com/confluentinc/cli/internal/pkg/flink/internal/highlighting"
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/history"
@@ -133,10 +134,10 @@ func (c *InputController) RunInteractiveInput() {
 		}
 
 		c.printResultToSTDOUT(processedStatement.StatementResults)
-		// We already printed the results using plain text and will delete the statement. When using TView this will happen upon leaving the interactive view.
-		// TODO - this is currently used only to save system resources, To be removed once the API Server becomes scalable.
-		// We want to maintain a "completed" statement in the backend
-		if !processedStatement.IsLocalStatement && processedStatement.Status != types.RUNNING {
+		// This was used to delete statements after their execution to save system resources, which should not be
+		// an issue anymore. We don't want to remove it completely just yet, but will disable it by default for now.
+		// TODO: remove this completely once we are sure we won't need it in the future
+		if config.ShouldCleanupStatements && !processedStatement.IsLocalStatement && processedStatement.Status != types.RUNNING {
 			go c.store.DeleteStatement(processedStatement.StatementName)
 		}
 	}
