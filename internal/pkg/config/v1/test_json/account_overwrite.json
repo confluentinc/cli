@@ -17,7 +17,9 @@
       "password": "",
       "api_key_pair": {
         "api_key": "abc-key-123",
-        "api_secret": "def-secret-456"
+        "api_secret": "API_SECRET_PLACEHOLDER",
+        "salt": "c2FsdHBsYWNlaG9sZGVy",
+        "nonce": "bm9uY2VwbGFjZWhvbGRlcg=="
       },
       "credential_type": 1
     },
@@ -54,7 +56,9 @@
                 "api_keys": {
                   "abc-key-123": {
                     "api_key": "abc-key-123",
-                    "api_secret": "def-secret-456"
+                    "api_secret": "API_SECRET_PLACEHOLDER",
+                    "salt": "c2FsdHBsYWNlaG9sZGVy",
+                    "nonce": "bm9uY2VwbGFjZWhvbGRlcg=="
                   }
                 },
                 "api_key": "abc-key-123",
@@ -87,8 +91,8 @@
       },
       "auth_token": "AUTH_TOKEN_PLACEHOLDER",
       "auth_refresh_token": "AUTH_REFRESH_TOKEN_PLACEHOLDER",
-      "salt": "SALT_PLACEHOLDER",
-      "nonce": "NONCE_PLACEHOLDER"
+      "salt": "SALT_TOKEN_PLACEHOLDER",
+      "nonce": "NONCE_TOKEN_PLACEHOLDER"
     }
   },
   "saved_credentials": {
