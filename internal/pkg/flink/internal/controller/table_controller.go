@@ -64,7 +64,7 @@ func (t *TableController) exitTViewMode() {
 		go t.store.DeleteStatement(t.statement.StatementName)
 	}
 	t.appController.SuspendOutputMode(func() {
-		output.Println("Result retrieval aborted. Statement will be deleted.")
+		output.Println("Result retrieval aborted.")
 		t.runInteractiveInput()
 	})
 }
