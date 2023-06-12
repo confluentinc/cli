@@ -65,7 +65,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		output.Println(credential.Username)
 		return nil
 	}
-	fmt.Println("in-memory", credential.APIKeyPair.Secret)
+
 	return describeContext(cmd, ctx)
 }
 
