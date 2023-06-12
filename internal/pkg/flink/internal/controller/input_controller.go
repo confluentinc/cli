@@ -3,7 +3,6 @@ package controller
 import (
 	"context"
 	"errors"
-	"github.com/confluentinc/cli/internal/pkg/flink/config"
 	"net/http"
 	"os"
 	"reflect"
@@ -16,6 +15,7 @@ import (
 	"github.com/confluentinc/go-prompt"
 
 	"github.com/confluentinc/cli/internal/pkg/flink/components"
+	"github.com/confluentinc/cli/internal/pkg/flink/config"
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/autocomplete"
 	lexer "github.com/confluentinc/cli/internal/pkg/flink/internal/highlighting"
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/history"
