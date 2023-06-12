@@ -34,12 +34,13 @@ const (
 )
 
 var (
-	apiKeyString    = "abc-key-123"
-	apiSecretString = "def-secret-456"
-	kafkaClusterID  = "anonymous-id"
-	contextName     = "my-context"
-	environmentId   = "acc-123"
-	cloudPlatforms  = []string{
+	apiKeyString      = "abc-key-123"
+	apiSecretString   = "def-secret-456"
+	apiCredentialName = fmt.Sprintf("api-key-%s", apiKeyString)
+	kafkaClusterID    = "anonymous-id"
+	contextName       = "my-context"
+	environmentId     = "acc-123"
+	cloudPlatforms    = []string{
 		"devel.cpdev.cloud",
 		"stag.cpdev.cloud",
 		"confluent.cloud",
@@ -427,13 +428,15 @@ func replacePlaceholdersInWant(t *testing.T, got []byte, want []byte) string {
 	nonceString := base64.RawStdEncoding.EncodeToString(data.ContextStates[contextName].Nonce)
 	wantString = strings.ReplaceAll(wantString, noncePlaceholder, nonceString)
 
-	wantString = strings.ReplaceAll(wantString, apiSecretPlaceholder, data.Credentials[apiKeyCredentialName].APIKeyPair.Secret)
+	wantString = strings.ReplaceAll(wantString, apiSecretPlaceholder, data.Credentials[apiCredentialName].APIKeyPair.Secret)
 
-	apiSaltString := base64.RawStdEncoding.EncodeToString(data.Credentials[apiKeyCredentialName].APIKeyPair.Salt)
+	apiSaltString := base64.RawStdEncoding.EncodeToString(data.Credentials[apiCredentialName].APIKeyPair.Salt)
 	wantString = strings.ReplaceAll(wantString, apiSaltPlaceholder, apiSaltString)
 
-	apiNonceString := base64.RawStdEncoding.EncodeToString(data.Credentials[apiKeyCredentialName].APIKeyPair.Nonce)
-	return strings.ReplaceAll(wantString, apiNoncePlaceholder, apiNonceString)
+	apiNonceString := base64.RawStdEncoding.EncodeToString(data.Credentials[apiCredentialName].APIKeyPair.Nonce)
+	wantString = strings.ReplaceAll(wantString, apiNoncePlaceholder, apiNonceString)
+
+	return wantString
 }
 
 func TestConfig_OverwrittenKafka(t *testing.T) {
