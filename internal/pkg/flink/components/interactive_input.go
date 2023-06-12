@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/fatih/color"
 )
 
 func PrintSmartCompletionState(smartCompletion bool, maxCol int) {
@@ -22,7 +23,7 @@ func PrintOptionState(prefix string, isEnabled bool, maxCol int) {
 		stateMsg = "enabled"
 	}
 
-	output.Printf("\n\033[0m%s\033[0;36m%s\033[0m", prefix, stateMsg)
+	output.Printf("\n" + prefix + color.CyanString(stateMsg))
 
 	// This prints to the console the exact amount of empty characters to fill the line might have autocompletions before
 	output.Println(strings.Repeat(" ", maxCol-len(prefix+stateMsg)))
@@ -34,6 +35,6 @@ func PrintWelcomeHeader() {
 	output.Printf("To exit, press Ctrl-Q or type \"exit\". \n\n")
 
 	// Print shortcuts
-	output.Printf("\033[0m%s \033[0;36m%s \033[0m", "[Ctrl-Q]", "Quit")
-	output.Printf("\033[0m%s \033[0;36m%s \033[0m \n", "[Ctrl-S]", "Toggle Smart Completion")
+	output.Printf("[Ctrl-Q] " + color.CyanString("Quit "))
+	output.Printf("[Ctrl-S] " + color.CyanString("Toggle Smart Completion \n"))
 }
