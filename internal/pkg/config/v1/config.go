@@ -161,7 +161,6 @@ func (c *Config) DecryptCredentials() error {
 				if err := apiKeyPair.DecryptCredentialAPISecret(); err != nil {
 					return err
 				}
-				// credential.APIKeyPair = apiKeyPair // may not be needed. This is pointer.
 			}
 		}
 	}
