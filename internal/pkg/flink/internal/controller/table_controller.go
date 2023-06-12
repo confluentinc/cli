@@ -60,7 +60,7 @@ func (t *TableController) exitTViewMode() {
 	// This was used to delete statements after their execution to save system resources, which should not be
 	// an issue anymore. We don't want to remove it completely just yet, but will disable it by default for now.
 	// TODO: remove this completely once we are sure we won't need it in the future
-	if config.ShouldCleanupStatements {
+	if config.ShouldCleanupStatements || t.statement.Status == types.RUNNING {
 		go t.store.DeleteStatement(t.statement.StatementName)
 	}
 	t.appController.SuspendOutputMode(func() {
@@ -197,6 +197,7 @@ func (t *TableController) refreshResults(ctx context.Context, statement types.Pr
 		for {
 			select {
 			case <-ctx.Done():
+				t.statement = statement
 				return
 			default:
 				t.renderTable()
