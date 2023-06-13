@@ -300,7 +300,7 @@ brews:
     url_template: "https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/archives/{{ .Version }}/{{ .ArtifactName }}"
     homepage: https://docs.confluent.io/confluent-cli/current/overview.html
     description: CLI for Confluent Cloud and Confluent Platform
-    skip_upload: "{{ .Env.DRY_RUN }}"
+    skip_upload: true
     test: system "#{bin}/confluent version"
 
 nfpms:
