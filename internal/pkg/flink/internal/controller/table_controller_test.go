@@ -3,11 +3,13 @@ package controller
 import (
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/golang/mock/gomock"
 	"github.com/rivo/tview"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"pgregory.net/rapid"
 
@@ -30,7 +32,6 @@ func TestTableControllerTestSuite(t *testing.T) {
 
 func (s *TableControllerTestSuite) SetupSuite() {
 	ctrl := gomock.NewController(s.T())
-	defer ctrl.Finish()
 	s.mockAppController = mock.NewMockApplicationControllerInterface(ctrl)
 	s.mockInputController = mock.NewMockInputControllerInterface(ctrl)
 	s.mockStore = mock.NewMockStoreInterface(ctrl)
@@ -46,10 +47,7 @@ func (s *TableControllerTestSuite) TestQ() {
 	}
 	tableController.SetRunInteractiveInputCallback(s.mockInputController.RunInteractiveInput)
 	input := tcell.NewEventKey(tcell.KeyRune, 'Q', tcell.ModNone)
-	s.mockAppController.EXPECT().SuspendOutputMode(gomock.Any()).Times(1)
-	tviewApp := tview.NewApplication()
-	s.mockAppController.EXPECT().TView().Return(tviewApp).Times(1)
-	s.mockStore.EXPECT().DeleteStatement(gomock.Any()).Times(1)
+	s.mockAppController.EXPECT().SuspendOutputMode(gomock.Any())
 
 	// When
 	result := tableController.AppInputCapture(input)
@@ -68,10 +66,7 @@ func (s *TableControllerTestSuite) TestCtrlQ() {
 	}
 	tableController.SetRunInteractiveInputCallback(s.mockInputController.RunInteractiveInput)
 	input := tcell.NewEventKey(tcell.KeyCtrlQ, rune(0), tcell.ModNone)
-	s.mockAppController.EXPECT().SuspendOutputMode(gomock.Any()).Times(1)
-	tviewApp := tview.NewApplication()
-	s.mockAppController.EXPECT().TView().Return(tviewApp).Times(1)
-	s.mockStore.EXPECT().DeleteStatement(gomock.Any()).Times(1)
+	s.mockAppController.EXPECT().SuspendOutputMode(gomock.Any())
 
 	// When
 	result := tableController.AppInputCapture(input)
@@ -90,10 +85,7 @@ func (s *TableControllerTestSuite) TestEscape() {
 	}
 	tableController.SetRunInteractiveInputCallback(s.mockInputController.RunInteractiveInput)
 	input := tcell.NewEventKey(tcell.KeyEscape, rune(0), tcell.ModNone)
-	s.mockAppController.EXPECT().SuspendOutputMode(gomock.Any()).Times(1)
-	tviewApp := tview.NewApplication()
-	s.mockAppController.EXPECT().TView().Return(tviewApp).Times(1)
-	s.mockStore.EXPECT().DeleteStatement(gomock.Any()).Times(1)
+	s.mockAppController.EXPECT().SuspendOutputMode(gomock.Any())
 
 	// When
 	result := tableController.AppInputCapture(input)
@@ -105,7 +97,7 @@ func (s *TableControllerTestSuite) TestEscape() {
 func (s *TableControllerTestSuite) TestM() {
 	// Given
 	table := components.CreateTable()
-	mockStatement := types.ProcessedStatement{PageToken: "NOT_EMPTY"}
+	mockStatement := types.ProcessedStatement{}
 	tableController := TableController{
 		table:         table,
 		appController: s.mockAppController,
@@ -114,8 +106,7 @@ func (s *TableControllerTestSuite) TestM() {
 	tableController.SetRunInteractiveInputCallback(s.mockInputController.RunInteractiveInput)
 	input := tcell.NewEventKey(tcell.KeyRune, 'M', tcell.ModNone)
 	tviewApp := tview.NewApplication()
-	s.mockAppController.EXPECT().TView().Return(tviewApp).AnyTimes()
-	s.mockStore.EXPECT().FetchStatementResults(gomock.Any()).Return(&mockStatement, nil).AnyTimes()
+	s.mockAppController.EXPECT().TView().Return(tviewApp).Times(2)
 
 	// When
 	tableController.Init(mockStatement)
@@ -140,18 +131,26 @@ func (s *TableControllerTestSuite) TestR() {
 	tableController.SetRunInteractiveInputCallback(s.mockInputController.RunInteractiveInput)
 	input := tcell.NewEventKey(tcell.KeyRune, 'R', tcell.ModNone)
 	tviewApp := tview.NewApplication()
-	s.mockAppController.EXPECT().TView().Return(tviewApp).AnyTimes()
-	s.mockStore.EXPECT().FetchStatementResults(gomock.Any()).Return(&mockStatement, nil).AnyTimes()
+	// tview needs to be started to unblock calls to Draw()
+	go func() {
+		err := tviewApp.Run()
+		require.NoError(s.T(), err)
+	}()
+	s.mockAppController.EXPECT().TView().Return(tviewApp).Times(3)
+	s.mockStore.EXPECT().FetchStatementResults(mockStatement).Return(&types.ProcessedStatement{}, nil)
 
 	// When
 	tableController.Init(mockStatement)
 	before := tableController.isAutoRefreshRunning()
+	// wait for twice the default refresh interval to allow some time for running the fetch results loop
+	time.Sleep(time.Duration(defaultRefreshInterval*2) * time.Millisecond)
 	result := tableController.AppInputCapture(input)
 	after := tableController.isAutoRefreshRunning()
 
 	// Then
 	assert.Nil(s.T(), result)
 	assert.NotEqual(s.T(), after, before)
+	tviewApp.Stop()
 }
 
 func (s *TableControllerTestSuite) TestDefault() {

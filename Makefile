@@ -40,7 +40,6 @@ cli-builder:
 	go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
 	TAGS=$(TAGS) CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) GOEXPERIMENT=boringcrypto goreleaser build --config .goreleaser-build.yml --clean --single-target --snapshot
 
-include ./mk-files/cc-cli-service.mk
 include ./mk-files/semver.mk
 include ./mk-files/docs.mk
 include ./mk-files/dry-run.mk
