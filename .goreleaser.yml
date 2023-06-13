@@ -266,7 +266,7 @@ release:
     - archive-alpine
     - binary
     - binary-alpine
-  disable: "{{.Env.DRY_RUN}}"
+  disable: "{{ .Env.DRY_RUN }}"
 
 blobs:
   - ids:
@@ -300,5 +300,24 @@ brews:
     url_template: "https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/archives/{{ .Version }}/{{ .ArtifactName }}"
     homepage: https://docs.confluent.io/confluent-cli/current/overview.html
     description: CLI for Confluent Cloud and Confluent Platform
-    skip_upload: "{{ .Env.DRY_RUN }}"
+    skip_upload: true
     test: system "#{bin}/confluent version"
+
+nfpms:
+  - id: nfpm-linux-homebrew
+    builds:
+      - confluent-linux-homebrew
+    vendor: Confluent, Inc.
+    homepage: https://www.confluent.io/
+    maintainer: Confluent CLI Team <cli-team@confluent.io>
+    description: CLI for Confluent Cloud and Confluent Platform
+    license: Confluent Community License 1.0
+    formats:
+      - deb
+      - rpm
+
+furies:
+  - account: confluent-cli
+    skip: "{{ .Env.DRY_RUN }}"
+    ids:
+      - nfpm-linux-homebrew
