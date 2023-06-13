@@ -201,7 +201,7 @@ func renderMsgAndStatus(processedStatement *types.ProcessedStatement) {
 		}
 	} else {
 		if processedStatement.StatementName != "" {
-			output.Println("Statement ID: " + processedStatement.StatementName)
+			output.Printf("Statement name: %s\n", processedStatement.StatementName)
 		}
 		if processedStatement.Status != "FAILED" {
 			output.Println("Statement successfully submitted. ")
