@@ -205,7 +205,10 @@ func (c *createCommand) setKafkaCluster(cmd *cobra.Command, configFile string) (
 			return "", err
 		}
 	}
-
+	err = kafkaCluster.DecryptAPIKeys()
+	if err != nil {
+		return "", err
+	}
 	// replace BROKER_ENDPOINT, CLUSTER_API_KEY, and CLUSTER_API_SECRET templates
 	configFile = replaceTemplates(configFile, map[string]string{
 		brokerEndpointTemplate:   kafkaCluster.Bootstrap,
@@ -298,7 +301,11 @@ func (c *createCommand) getSchemaRegistryCluster(cmd *cobra.Command) (*v1.Schema
 }
 
 func (c *createCommand) validateKafkaCredentials(kafkaCluster *v1.KafkaClusterConfig) error {
-	adminClient, err := ckafka.NewAdminClient(getCommonConfig(kafkaCluster, c.clientId))
+	configMap, err := getCommonConfig(kafkaCluster, c.clientId)
+	if err != nil {
+		return err
+	}
+	adminClient, err := ckafka.NewAdminClient(configMap)
 	if err != nil {
 		return err
 	}
