@@ -1,0 +1,29 @@
+Update configs or information of schema exporter.
+
+Usage:
+  confluent schema-registry exporter update <name> [flags]
+
+Examples:
+Update information of new schema exporter.
+
+  $ confluent schema-registry exporter update my-exporter --subjects my-subject1,my-subject2 --subject-format my-\${subject} --context-type CUSTOM --context-name my-context --ca-location <ca-file-location> --schema-registry-endpoint <schema-registry-endpoint>
+
+Update configs of new schema exporter.
+
+  $ confluent schema-registry exporter update my-exporter --config-file ~/config.txt --ca-location <ca-file-location> --schema-registry-endpoint <schema-registry-endpoint>
+
+Flags:
+      --config-file string                Exporter config file.
+      --subjects strings                  A comma-separated list of exporter subjects.
+      --subject-format string             Exporter subject rename format. The format string can contain ${subject}, which will be replaced with default subject name. (default "${subject}")
+      --context-type string               Exporter context type. One of "AUTO", "CUSTOM" or "NONE". (default "AUTO")
+      --context-name string               Exporter context name.
+      --ca-location string                File or directory path to CA certificate(s) to authenticate the Schema Registry client.
+      --schema-registry-endpoint string   The URL of the Schema Registry cluster.
+      --context string                    CLI context name.
+  -o, --output string                     Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

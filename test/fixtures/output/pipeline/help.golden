@@ -1,0 +1,21 @@
+Manage Stream Designer pipelines.
+
+Usage:
+  confluent pipeline [command]
+
+Available Commands:
+  activate    Request to activate a pipeline.
+  create      Create a new pipeline.
+  deactivate  Request to deactivate a pipeline.
+  delete      Delete a pipeline.
+  describe    Describe a Stream Designer pipeline.
+  list        Display pipelines in the current environment and cluster.
+  save        Save a Stream Designer pipeline's source code to a local file.
+  update      Update an existing pipeline.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent pipeline [command] --help" for more information about a command.

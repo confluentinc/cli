@@ -1,0 +1,36 @@
+Create a new cluster link.
+
+Usage:
+  confluent kafka link create <link> [flags]
+
+Examples:
+Create a cluster link, using a configuration file.
+
+  $ confluent kafka link create my-link --destination-cluster 123456789 --config-file config.txt
+
+Create a cluster link using command line flags.
+
+  $ confluent kafka link create my-link --destination-cluster 123456789 --destination-bootstrap-server my-host:1234 --source-api-key my-key --source-api-secret my-secret
+
+Flags:
+      --destination-cluster string            REQUIRED: Destination cluster ID.
+      --destination-bootstrap-server string   Bootstrap server address of the destination cluster. Can alternatively be set in the config file using key bootstrap.servers.
+      --source-api-key string                 An API key for the source cluster. For links at destination cluster this is used for remote cluster authentication. For links at source cluster this is used for local cluster authentication. If specified, the cluster will use SASL_SSL with PLAIN SASL as its mechanism for authentication. If you wish to use another authentication mechanism, please do NOT specify this flag, and add the security configs in the config file.
+      --source-api-secret string              An API secret for the source cluster. For links at destination cluster this is used for remote cluster authentication. For links at source cluster this is used for local cluster authentication. If specified, the cluster will use SASL_SSL with PLAIN SASL as its mechanism for authentication. If you wish to use another authentication mechanism, please do NOT specify this flag, and add the security configs in the config file.
+      --destination-api-key string            An API key for the destination cluster. This is used for remote cluster authentication links at the source cluster. If specified, the cluster will use SASL_SSL with PLAIN SASL as its mechanism for authentication. If you wish to use another authentication mechanism, please do NOT specify this flag, and add the security configs in the config file.
+      --destination-api-secret string         An API secret for the destination cluster. This is used for remote cluster authentication for links at the source cluster. If specified, the cluster will use SASL_SSL with PLAIN SASL as its mechanism for authentication. If you wish to use another authentication mechanism, please do NOT specify this flag, and add the security configs in the config file.
+      --config-file string                    Name of the file containing link configuration. Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.
+      --dry-run                               Validate a link, but do not create it.
+      --no-validate                           Create a link even if the source cluster cannot be reached.
+      --url string                            Base URL of REST Proxy Endpoint of Kafka Cluster (include /kafka for embedded Rest Proxy). Must set flag or CONFLUENT_REST_URL.
+      --ca-cert-path string                   Path to a PEM-encoded CA to verify the Confluent REST Proxy.
+      --client-cert-path string               Path to client cert to be verified by Confluent REST Proxy, include for mTLS authentication.
+      --client-key-path string                Path to client private key, include for mTLS authentication.
+      --no-authentication                     Include if requests should be made without authentication headers, and user will not be prompted for credentials.
+      --prompt                                Bypass use of available login credentials and prompt for Kafka Rest credentials.
+      --context string                        CLI context name.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
