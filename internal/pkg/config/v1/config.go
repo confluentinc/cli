@@ -246,7 +246,7 @@ func (c *Config) Save() error {
 				tempApiSecrets[name] = credential.APIKeyPair.Secret
 			}
 		}
-		if err := c.encryptCredentialsAPISecret(tempApiSecrets); err != nil {
+		if err := c.encryptCredentialsAPISecret(); err != nil {
 			return err
 		}
 	}
@@ -280,26 +280,13 @@ func (c *Config) Save() error {
 	return nil
 }
 
-func (c *Config) encryptCredentialsAPISecret(tempApiSecrets map[string]string) error {
-	for name, credential := range c.Credentials {
-		if credential.APIKeyPair == nil {
-			continue
-		}
-		if credential.APIKeyPair.Salt == nil || credential.APIKeyPair.Nonce == nil {
-			salt, nonce, err := secret.GenerateSaltAndNonce()
+func (c *Config) encryptCredentialsAPISecret() error {
+	for _, credential := range c.Credentials {
+		if credential.APIKeyPair != nil {
+			err := credential.APIKeyPair.EncryptSecret()
 			if err != nil {
 				return err
 			}
-			credential.APIKeyPair.Salt = salt
-			credential.APIKeyPair.Nonce = nonce
-		}
-
-		if !strings.HasPrefix(credential.APIKeyPair.Secret, secret.AesGcm) {
-			encryptedSecret, err := secret.Encrypt(credential.APIKeyPair.Key, tempApiSecrets[name], credential.APIKeyPair.Salt, credential.APIKeyPair.Nonce)
-			if err != nil {
-				return err
-			}
-			credential.APIKeyPair.Secret = encryptedSecret
 		}
 	}
 	return nil

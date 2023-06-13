@@ -34,7 +34,7 @@ func generateRandomBytes(n int) ([]byte, error) {
 func GenerateSaltAndNonce() ([]byte, []byte, error) {
 	salt, err := generateRandomBytes(SaltLength)
 	if err != nil {
-		return []byte{}, []byte{}, err
+		return nil, nil, err
 	}
 	nonce, err := generateRandomBytes(NonceLength)
 	return salt, nonce, err
