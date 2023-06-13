@@ -45,7 +45,7 @@ func (s *TableControllerTestSuite) TestQ() {
 	}
 	tableController.SetRunInteractiveInputCallback(s.mockInputController.RunInteractiveInput)
 	input := tcell.NewEventKey(tcell.KeyRune, 'Q', tcell.ModNone)
-	s.mockAppController.EXPECT().SuspendOutputMode(gomock.Any()).Times(1)
+	s.mockAppController.EXPECT().SuspendOutputMode(gomock.Any())
 
 	// When
 	result := tableController.AppInputCapture(input)
@@ -64,7 +64,7 @@ func (s *TableControllerTestSuite) TestCtrlQ() {
 	}
 	tableController.SetRunInteractiveInputCallback(s.mockInputController.RunInteractiveInput)
 	input := tcell.NewEventKey(tcell.KeyCtrlQ, rune(0), tcell.ModNone)
-	s.mockAppController.EXPECT().SuspendOutputMode(gomock.Any()).Times(1)
+	s.mockAppController.EXPECT().SuspendOutputMode(gomock.Any())
 
 	// When
 	result := tableController.AppInputCapture(input)
@@ -83,7 +83,7 @@ func (s *TableControllerTestSuite) TestEscape() {
 	}
 	tableController.SetRunInteractiveInputCallback(s.mockInputController.RunInteractiveInput)
 	input := tcell.NewEventKey(tcell.KeyEscape, rune(0), tcell.ModNone)
-	s.mockAppController.EXPECT().SuspendOutputMode(gomock.Any()).Times(1)
+	s.mockAppController.EXPECT().SuspendOutputMode(gomock.Any())
 
 	// When
 	result := tableController.AppInputCapture(input)
