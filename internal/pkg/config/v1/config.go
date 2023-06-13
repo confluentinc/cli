@@ -286,11 +286,7 @@ func (c *Config) encryptCredentialsAPISecret(tempApiSecrets map[string]string) e
 			continue
 		}
 		if credential.APIKeyPair.Salt == nil || credential.APIKeyPair.Nonce == nil {
-			salt, err := secret.GenerateRandomBytes(secret.SaltLength)
-			if err != nil {
-				return err
-			}
-			nonce, err := secret.GenerateRandomBytes(secret.NonceLength)
+			salt, nonce, err := secret.GenerateSaltAndNonce()
 			if err != nil {
 				return err
 			}
@@ -311,11 +307,7 @@ func (c *Config) encryptCredentialsAPISecret(tempApiSecrets map[string]string) e
 
 func (c *Config) encryptContextStateTokens(tempAuthToken, tempAuthRefreshToken string) error {
 	if c.Context().GetState().Salt == nil || c.Context().GetState().Nonce == nil {
-		salt, err := secret.GenerateRandomBytes(secret.SaltLength)
-		if err != nil {
-			return err
-		}
-		nonce, err := secret.GenerateRandomBytes(secret.NonceLength)
+		salt, nonce, err := secret.GenerateSaltAndNonce()
 		if err != nil {
 			return err
 		}
