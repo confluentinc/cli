@@ -302,3 +302,16 @@ brews:
     description: CLI for Confluent Cloud and Confluent Platform
     skip_upload: "{{ .Env.DRY_RUN }}"
     test: system "#{bin}/confluent version"
+
+nfpms:
+  - package_name: confluent-cli
+    builds:
+      - confluent-linux-homebrew
+    vendor: Confluent, Inc.
+    homepage: https://www.confluent.io/
+    maintainer: Confluent CLI Team <cli-team@confluent.io>
+    description: CLI for Confluent Cloud and Confluent Platform
+    license: Confluent Community License 1.0
+    formats:
+      - deb
+      - rpm
