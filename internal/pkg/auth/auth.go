@@ -127,15 +127,10 @@ func addOrUpdateContext(config *v1.Config, isCloud bool, credentials *Credential
 	}
 
 	if save && !credentials.IsSSO {
-		salt, err := secret.GenerateRandomBytes(secret.SaltLength)
+		salt, nonce, err := secret.GenerateSaltAndNonce()
 		if err != nil {
 			return err
 		}
-		nonce, err := secret.GenerateRandomBytes(secret.NonceLength)
-		if err != nil {
-			return err
-		}
-
 		encryptedPassword, err := secret.Encrypt(credentials.Username, credentials.Password, salt, nonce)
 		if err != nil {
 			return err
@@ -154,15 +149,10 @@ func addOrUpdateContext(config *v1.Config, isCloud bool, credentials *Credential
 		}
 	}
 
-	stateSalt, err := secret.GenerateRandomBytes(secret.SaltLength)
+	stateSalt, stateNonce, err := secret.GenerateSaltAndNonce()
 	if err != nil {
 		return err
 	}
-	stateNonce, err := secret.GenerateRandomBytes(secret.NonceLength)
-	if err != nil {
-		return err
-	}
-
 	state.Salt = stateSalt
 	state.Nonce = stateNonce
 

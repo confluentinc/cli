@@ -27,7 +27,11 @@ type PartitionFilter struct {
 	Index   int32
 }
 
-func getCommonConfig(kafka *configv1.KafkaClusterConfig, clientID string) *ckafka.ConfigMap {
+func getCommonConfig(kafka *configv1.KafkaClusterConfig, clientID string) (*ckafka.ConfigMap, error) {
+	err := kafka.DecryptAPIKeys()
+	if err != nil {
+		return nil, err
+	}
 	return &ckafka.ConfigMap{
 		"security.protocol":                     "SASL_SSL",
 		"sasl.mechanism":                        "PLAIN",
@@ -36,11 +40,14 @@ func getCommonConfig(kafka *configv1.KafkaClusterConfig, clientID string) *ckafk
 		"bootstrap.servers":                     kafka.Bootstrap,
 		"sasl.username":                         kafka.APIKey,
 		"sasl.password":                         kafka.APIKeys[kafka.APIKey].Secret,
-	}
+	}, nil
 }
 
 func getProducerConfigMap(kafka *configv1.KafkaClusterConfig, clientID string) (*ckafka.ConfigMap, error) {
-	configMap := getCommonConfig(kafka, clientID)
+	configMap, err := getCommonConfig(kafka, clientID)
+	if err != nil {
+		return nil, err
+	}
 	if err := configMap.SetKey("retry.backoff.ms", "250"); err != nil {
 		return nil, err
 	}
@@ -54,7 +61,10 @@ func getProducerConfigMap(kafka *configv1.KafkaClusterConfig, clientID string) (
 }
 
 func getConsumerConfigMap(group string, kafka *configv1.KafkaClusterConfig, clientID string) (*ckafka.ConfigMap, error) {
-	configMap := getCommonConfig(kafka, clientID)
+	configMap, err := getCommonConfig(kafka, clientID)
+	if err != nil {
+		return nil, err
+	}
 	if err := configMap.SetKey("group.id", group); err != nil {
 		return nil, err
 	}
