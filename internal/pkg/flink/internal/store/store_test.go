@@ -479,7 +479,7 @@ func (s *StoreTestSuite) TestParseResetStatement() {
 	assert.Nil(s.T(), err)
 
 	key, err = parseResetStatement("RESET 'KEY.key';")
-	assert.Equal(s.T(), "key.key", key)
+	assert.Equal(s.T(), "KEY.key", key)
 	assert.Nil(s.T(), err)
 
 	key, err = parseResetStatement("reset 'key'    ;")
@@ -511,7 +511,7 @@ func (s *StoreTestSuite) TestParseResetStatement() {
 	assert.Nil(s.T(), err)
 
 	key, err = parseResetStatement("resET 'KEY' ")
-	assert.Equal(s.T(), "key", key)
+	assert.Equal(s.T(), "KEY", key)
 	assert.Nil(s.T(), err)
 
 	key, err = parseResetStatement("resET 'key';;;")
@@ -529,38 +529,70 @@ func (s *StoreTestSuite) TestParseResetStatement() {
 	key, err = parseResetStatement("reset 'key;")
 	assert.Equal(s.T(), "", key)
 	assert.Error(s.T(), err)
+
+	key, err = parseResetStatement("reset 'key one';")
+	assert.Equal(s.T(), "key one", key)
+	assert.Nil(s.T(), err)
+
+	key, err = parseResetStatement("reset ''key one'';")
+	assert.Equal(s.T(), "", key)
+	assert.Error(s.T(), err)
+
+	key, err = parseResetStatement(`reset '"key one"';`)
+	assert.Equal(s.T(), `"key one"`, key)
+	assert.Nil(s.T(), err)
 }
 
 func (s *StoreTestSuite) TestParseResetStatementError() {
 	key, err := parseResetStatement(" ")
 	assert.Equal(s.T(), "", key)
-	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: invalid syntax for RESET\nUsage: \"RESET 'key'\"", err.Error())
+	assert.Equal(s.T(), &types.StatementError{
+		Message: "invalid syntax for RESET",
+		Usage:   []string{"RESET 'key'"},
+	}, err)
 
 	key, err = parseResetStatement("RESET key key2")
 	assert.Equal(s.T(), "", key)
-	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: too many keys for RESET provided\nUsage: \"RESET 'key'\"", err.Error())
+	assert.Equal(s.T(), &types.StatementError{
+		Message: "invalid syntax for RESET, key must be enclosed by single quotes ''",
+		Usage:   []string{"RESET 'key'"},
+	}, err)
 
 	key, err = parseResetStatement("RESET key key2 key3")
 	assert.Equal(s.T(), "", key)
-	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: too many keys for RESET provided\nUsage: \"RESET 'key'\"", err.Error())
+	assert.Equal(s.T(), &types.StatementError{
+		Message: "invalid syntax for RESET, key must be enclosed by single quotes ''",
+		Usage:   []string{"RESET 'key'"},
+	}, err)
 
 	key, err = parseResetStatement("RESET key;; key key3")
 	assert.Equal(s.T(), "", key)
-	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: too many keys for RESET provided\nUsage: \"RESET 'key'\"", err.Error())
+	assert.Equal(s.T(), &types.StatementError{
+		Message: "invalid syntax for RESET, key must be enclosed by single quotes ''",
+		Usage:   []string{"RESET 'key'"},
+	}, err)
 
 	key, err = parseResetStatement("RESET key key;;; key3")
 	assert.Equal(s.T(), "", key)
-	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: too many keys for RESET provided\nUsage: \"RESET 'key'\"", err.Error())
+	assert.Equal(s.T(), &types.StatementError{
+		Message: "invalid syntax for RESET, key must be enclosed by single quotes ''",
+		Usage:   []string{"RESET 'key'"},
+	}, err)
 
 	key, err = parseResetStatement("RESET key;")
 	assert.Equal(s.T(), "", key)
-	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: invalid syntax for RESET, key must be enclosed by single quotes ''\nUsage: \"RESET 'key'\"", err.Error())
+	assert.Equal(s.T(), &types.StatementError{
+		Message: "invalid syntax for RESET, key must be enclosed by single quotes ''",
+		Usage:   []string{"RESET 'key'"},
+	}, err)
+
+	key, err = parseResetStatement("reset ''key one'';")
+	assert.Equal(s.T(), "", key)
+	assert.Equal(s.T(), &types.StatementError{
+		Message:    "key contains single quotes (')",
+		Usage:      []string{"RESET 'key'"},
+		Suggestion: `please escape single quotes (') with double quotes (")`,
+	}, err)
 }
 
 func (s *StoreTestSuite) TestProccessHttpErrors() {
