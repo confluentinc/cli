@@ -603,7 +603,6 @@ func generateCloserFromObject(obj interface{}) io.ReadCloser {
 
 func (s *StoreTestSuite) TestDeleteStatement() {
 	ctrl := gomock.NewController(s.T())
-	defer ctrl.Finish()
 
 	// create objects
 	client := mock.NewMockGatewayClientInterface(ctrl)
@@ -623,7 +622,6 @@ func (s *StoreTestSuite) TestDeleteStatement() {
 
 func (s *StoreTestSuite) TestDeleteStatementFailsOnError() {
 	ctrl := gomock.NewController(s.T())
-	defer ctrl.Finish()
 
 	// create objects
 	client := mock.NewMockGatewayClientInterface(ctrl)
@@ -643,7 +641,6 @@ func (s *StoreTestSuite) TestDeleteStatementFailsOnError() {
 
 func (s *StoreTestSuite) TestFetchResultsNoRetryWithCompletedStatement() {
 	ctrl := gomock.NewController(s.T())
-	defer ctrl.Finish()
 
 	// create objects
 	client := mock.NewMockGatewayClientInterface(ctrl)
@@ -671,7 +668,6 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWithCompletedStatement() {
 
 func (s *StoreTestSuite) TestFetchResultsWithRunningStatement() {
 	ctrl := gomock.NewController(s.T())
-	defer ctrl.Finish()
 
 	// create objects
 	client := mock.NewMockGatewayClientInterface(ctrl)
@@ -699,7 +695,6 @@ func (s *StoreTestSuite) TestFetchResultsWithRunningStatement() {
 
 func (s *StoreTestSuite) TestFetchResultsNoRetryWhenPageTokenExists() {
 	ctrl := gomock.NewController(s.T())
-	defer ctrl.Finish()
 
 	// create objects
 	client := mock.NewMockGatewayClientInterface(ctrl)
@@ -728,7 +723,6 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWhenPageTokenExists() {
 
 func (s *StoreTestSuite) TestFetchResultsNoRetryWhenResultsExist() {
 	ctrl := gomock.NewController(s.T())
-	defer ctrl.Finish()
 
 	// create objects
 	client := mock.NewMockGatewayClientInterface(ctrl)
