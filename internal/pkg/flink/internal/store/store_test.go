@@ -58,7 +58,7 @@ func TestStoreProcessLocalStatement(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Nil(t, result)
 
-	mockAppController.EXPECT().ExitApplication().Times(1)
+	mockAppController.EXPECT().ExitApplication()
 	result, err = s.ProcessLocalStatement("EXIT;")
 	assert.Nil(t, err)
 	assert.Nil(t, result)
@@ -84,7 +84,7 @@ func TestWaitForPendingStatement3(t *testing.T) {
 			Detail: flinkgatewayv1alpha1.PtrString("Test status detail message"),
 		},
 	}
-	client.EXPECT().GetStatement("orgId", "envId", statementName).Return(statementObj, nil).Times(1)
+	client.EXPECT().GetStatement("orgId", "envId", statementName).Return(statementObj, nil)
 
 	processedStatement, err := s.waitForPendingStatement(context.Background(), statementName, time.Duration(10))
 	assert.Nil(t, err)
@@ -153,7 +153,7 @@ func TestWaitForPendingEventuallyCompletes(t *testing.T) {
 		},
 	}
 	client.EXPECT().GetStatement("orgId", "envId", statementName).Return(statementObj, nil).Times(3)
-	client.EXPECT().GetStatement("orgId", "envId", statementName).Return(statementObjCompleted, nil).Times(1)
+	client.EXPECT().GetStatement("orgId", "envId", statementName).Return(statementObjCompleted, nil)
 
 	processedStatement, err := s.waitForPendingStatement(context.Background(), statementName, time.Duration(10)*time.Second)
 	assert.Nil(t, err)
@@ -186,7 +186,7 @@ func TestWaitForPendingStatementErrors(t *testing.T) {
 		Message:        returnedError.Error(),
 		FailureMessage: statusDetailMessage,
 	}
-	client.EXPECT().GetStatement("orgId", "envId", statementName).Return(statementObj, returnedError).Times(1)
+	client.EXPECT().GetStatement("orgId", "envId", statementName).Return(statementObj, returnedError)
 	_, err := s.waitForPendingStatement(context.Background(), statementName, waitTime)
 	assert.Equal(t, expectedError, err)
 }
@@ -603,7 +603,6 @@ func generateCloserFromObject(obj interface{}) io.ReadCloser {
 
 func (s *StoreTestSuite) TestDeleteStatement() {
 	ctrl := gomock.NewController(s.T())
-	defer ctrl.Finish()
 
 	// create objects
 	client := mock.NewMockGatewayClientInterface(ctrl)
@@ -623,7 +622,6 @@ func (s *StoreTestSuite) TestDeleteStatement() {
 
 func (s *StoreTestSuite) TestDeleteStatementFailsOnError() {
 	ctrl := gomock.NewController(s.T())
-	defer ctrl.Finish()
 
 	// create objects
 	client := mock.NewMockGatewayClientInterface(ctrl)
@@ -643,7 +641,6 @@ func (s *StoreTestSuite) TestDeleteStatementFailsOnError() {
 
 func (s *StoreTestSuite) TestFetchResultsNoRetryWithCompletedStatement() {
 	ctrl := gomock.NewController(s.T())
-	defer ctrl.Finish()
 
 	// create objects
 	client := mock.NewMockGatewayClientInterface(ctrl)
@@ -671,7 +668,6 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWithCompletedStatement() {
 
 func (s *StoreTestSuite) TestFetchResultsWithRunningStatement() {
 	ctrl := gomock.NewController(s.T())
-	defer ctrl.Finish()
 
 	// create objects
 	client := mock.NewMockGatewayClientInterface(ctrl)
@@ -699,7 +695,6 @@ func (s *StoreTestSuite) TestFetchResultsWithRunningStatement() {
 
 func (s *StoreTestSuite) TestFetchResultsNoRetryWhenPageTokenExists() {
 	ctrl := gomock.NewController(s.T())
-	defer ctrl.Finish()
 
 	// create objects
 	client := mock.NewMockGatewayClientInterface(ctrl)
@@ -728,7 +723,6 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWhenPageTokenExists() {
 
 func (s *StoreTestSuite) TestFetchResultsNoRetryWhenResultsExist() {
 	ctrl := gomock.NewController(s.T())
-	defer ctrl.Finish()
 
 	// create objects
 	client := mock.NewMockGatewayClientInterface(ctrl)
@@ -920,7 +914,7 @@ func (s *StoreTestSuite) TestWaitPendingStatement() {
 			Detail: &statusDetailMessage,
 		},
 	}
-	client.EXPECT().GetStatement("orgId", "envId", statementName).Return(statementObj, nil).Times(1)
+	client.EXPECT().GetStatement("orgId", "envId", statementName).Return(statementObj, nil)
 
 	processedStatement, err := store.WaitPendingStatement(context.Background(), types.ProcessedStatement{
 		StatementName: statementName,
@@ -987,7 +981,7 @@ func (s *StoreTestSuite) TestWaitPendingStatementFailsOnWaitError() {
 		},
 	}
 	returnedErr := errors.New("test error")
-	client.EXPECT().GetStatement("orgId", "envId", statementName).Return(statementObj, returnedErr).Times(1)
+	client.EXPECT().GetStatement("orgId", "envId", statementName).Return(statementObj, returnedErr)
 	expectedError := &types.StatementError{
 		Message:        returnedErr.Error(),
 		FailureMessage: statusDetailMessage,
