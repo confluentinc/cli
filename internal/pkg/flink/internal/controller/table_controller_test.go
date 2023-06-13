@@ -1,10 +1,10 @@
 package controller
 
 import (
-	"github.com/confluentinc/cli/internal/pkg/flink/components"
-	"github.com/confluentinc/cli/internal/pkg/flink/internal/results"
-	"github.com/confluentinc/cli/internal/pkg/flink/test/mock"
-	"github.com/confluentinc/cli/internal/pkg/flink/types"
+	"strconv"
+	"testing"
+	"time"
+
 	"github.com/gdamore/tcell/v2"
 	"github.com/golang/mock/gomock"
 	"github.com/rivo/tview"
@@ -12,9 +12,11 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"pgregory.net/rapid"
-	"strconv"
-	"testing"
-	"time"
+
+	"github.com/confluentinc/cli/internal/pkg/flink/components"
+	"github.com/confluentinc/cli/internal/pkg/flink/internal/results"
+	"github.com/confluentinc/cli/internal/pkg/flink/test/mock"
+	"github.com/confluentinc/cli/internal/pkg/flink/types"
 )
 
 type TableControllerTestSuite struct {
