@@ -270,46 +270,48 @@ func parseUseStatement(statement string) (string, string, error) {
 	}
 }
 
-/* Expected statement: "RESET pipeline.name" */
+/* Expected statement: "RESET 'pipeline.name'" */
 func parseResetStatement(statement string) (string, error) {
 	statement = removeStatementTerminator(statement)
-	words := strings.Fields(statement)
-	if len(words) == 0 {
+
+	indexOfReset := strings.Index(strings.ToUpper(statement), config.ConfigOpReset)
+	if indexOfReset == -1 {
 		return "", &types.StatementError{
 			Message: "invalid syntax for RESET",
 			Usage:   []string{"RESET 'key'"},
 		}
 	}
+	startOfStrAfterReset := indexOfReset + len(config.ConfigOpReset)
+	// This is the case where we reset the entire config (e.g. "RESET")
+	if startOfStrAfterReset >= len(statement) {
+		return "", nil
+	}
+	strAfterReset := strings.TrimSpace(statement[startOfStrAfterReset:])
 
-	// This is the case where we reset the entire config (e.g. "RESET")
-	if len(words) == 1 {
+	// This is the case when the statement is simply "RESET  " (with empty spaces), where we reset the entire config
+	if strAfterReset == "" {
 		return "", nil
 	}
 
-	if len(words) > 2 {
-		return "", &types.StatementError{
-			Message: "too many keys for RESET provided",
-			Usage:   []string{"RESET 'key'"},
-		}
-	}
-
-	isFirstWordReset := strings.ToUpper(words[0]) == config.ConfigOpReset
-	key := strings.ToLower(words[1])
-	if !isFirstWordReset {
-		return "", &types.StatementError{
-			Message: "invalid syntax for RESET",
-			Usage:   []string{"RESET 'key'"},
-		}
-	}
-
-	if !strings.HasPrefix(key, "'") || !strings.HasSuffix(key, "'") {
+	if !strings.HasPrefix(strAfterReset, "'") || !strings.HasSuffix(strAfterReset, "'") {
 		return "", &types.StatementError{
 			Message: "invalid syntax for RESET, key must be enclosed by single quotes ''",
 			Usage:   []string{"RESET 'key'"},
 		}
 	}
 
-	return strings.ReplaceAll(key, "'", ""), nil
+	// remove quotes
+	key := strAfterReset[1 : len(strAfterReset)-1]
+
+	if strings.Contains(key, "'") {
+		return "", &types.StatementError{
+			Message:    "key contains single quotes (')",
+			Usage:      []string{"RESET 'key'"},
+			Suggestion: `please escape single quotes (') with double quotes (")`,
+		}
+	}
+
+	return key, nil
 }
 
 func processHttpErrors(resp *http.Response, err error) error {
