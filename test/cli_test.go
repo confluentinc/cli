@@ -36,7 +36,7 @@ type CLITest struct {
 	args string
 	// The set of environment variables to be set when the CLI is run
 	env []string
-	// The login context; either "cloud" or "platform"
+	// The login context; either "cloud" or "onprem"
 	login string
 	// Optional Cloud URL if test does not use default server
 	loginURL string
@@ -140,7 +140,7 @@ func (s *CLITestSuite) runIntegrationTest(tt CLITest) {
 			if *debug {
 				fmt.Println(output)
 			}
-		case "platform":
+		case "onprem":
 			loginURL := s.getLoginURL(false, tt)
 			env := []string{pauth.ConfluentPlatformUsername + "=fake@user.com", pauth.ConfluentPlatformPassword + "=pass1"}
 			output := runCommand(t, testBin, env, "login --url "+loginURL, 0, "")
