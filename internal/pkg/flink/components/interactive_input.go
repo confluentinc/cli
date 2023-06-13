@@ -3,8 +3,9 @@ package components
 import (
 	"strings"
 
-	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/fatih/color"
+
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 func PrintSmartCompletionState(smartCompletion bool, maxCol int) {
@@ -35,6 +36,5 @@ func PrintWelcomeHeader() {
 	output.Printf("To exit, press Ctrl-Q or type \"exit\". \n\n")
 
 	// Print shortcuts
-	output.Printf("[Ctrl-Q] " + color.CyanString("Quit "))
-	output.Printf("[Ctrl-S] " + color.CyanString("Toggle Smart Completion \n"))
+	output.Printf("[Ctrl-Q] %s [Ctrl-S] %s \n", color.CyanString("Quit"), color.CyanString("Toggle Smart Completion"))
 }
