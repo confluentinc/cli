@@ -292,85 +292,105 @@ func (s *StoreTestSuite) TestIsExitStatement() {
 }
 
 func (s *StoreTestSuite) TestParseSetStatement() {
-	key, value, _ := parseSetStatement("SET 'key'='value'")
+	key, value, err := parseSetStatement("SET 'key'='value'")
 	assert.Equal(s.T(), "key", key)
 	assert.Equal(s.T(), "value", value)
+	assert.Nil(s.T(), err)
 
-	key, value, _ = parseSetStatement("SET 'key'='value';")
+	key, value, err = parseSetStatement("SET 'key'='value';")
 	assert.Equal(s.T(), "key", key)
 	assert.Equal(s.T(), "value", value)
+	assert.Nil(s.T(), err)
 
-	key, value, _ = parseSetStatement("set 'key'='value'    ;")
+	key, value, err = parseSetStatement("set 'key'='value'    ;")
 	assert.Equal(s.T(), "key", key)
 	assert.Equal(s.T(), "value", value)
+	assert.Nil(s.T(), err)
 
-	key, value, _ = parseSetStatement("set 'key' = 'value'    ")
+	key, value, err = parseSetStatement("set 'key' = 'value'    ")
 	assert.Equal(s.T(), "key", key)
 	assert.Equal(s.T(), "value", value)
+	assert.Nil(s.T(), err)
 
-	key, value, _ = parseSetStatement("set 'key'     =    'value'    ")
+	key, value, err = parseSetStatement("set 'key'     =    'value'    ")
 	assert.Equal(s.T(), "key", key)
 	assert.Equal(s.T(), "value", value)
+	assert.Nil(s.T(), err)
 
-	key, value, _ = parseSetStatement("set 'key    '= '		va  lue'    ")
+	key, value, err = parseSetStatement("set 'key    '= '		va  lue'    ")
 	assert.Equal(s.T(), "key    ", key)
 	assert.Equal(s.T(), "\t\tva  lue", value)
+	assert.Nil(s.T(), err)
 
-	key, value, _ = parseSetStatement("set 'key' ='value'    ")
+	key, value, err = parseSetStatement("set 'key' ='value'    ")
 	assert.Equal(s.T(), "key", key)
 	assert.Equal(s.T(), "value", value)
+	assert.Nil(s.T(), err)
 
-	key, value, _ = parseSetStatement("set 'key'		 ='value'    ")
+	key, value, err = parseSetStatement("set 'key'		 ='value'    ")
 	assert.Equal(s.T(), "key", key)
 	assert.Equal(s.T(), "value", value)
+	assert.Nil(s.T(), err)
 
-	key, value, _ = parseSetStatement("set")
+	key, value, err = parseSetStatement("set")
 	assert.Equal(s.T(), "", key)
 	assert.Equal(s.T(), "", value)
+	assert.Nil(s.T(), err)
 
-	key, value, _ = parseSetStatement("SET")
+	key, value, err = parseSetStatement("SET")
 	assert.Equal(s.T(), "", key)
 	assert.Equal(s.T(), "", value)
+	assert.Nil(s.T(), err)
 
-	key, value, _ = parseSetStatement("sET 	")
+	key, value, err = parseSetStatement("sET 	")
 	assert.Equal(s.T(), "", key)
 	assert.Equal(s.T(), "", value)
+	assert.Nil(s.T(), err)
 
-	key, value, _ = parseSetStatement("sET 'key'	")
+	key, value, err = parseSetStatement("sET 'key'	")
 	assert.Equal(s.T(), "", key)
 	assert.Equal(s.T(), "", value)
+	assert.Error(s.T(), err)
 
-	key, value, _ = parseSetStatement("sET = 'value'	")
+	key, value, err = parseSetStatement("sET = 'value'	")
 	assert.Equal(s.T(), "", key)
 	assert.Equal(s.T(), "", value)
+	assert.Error(s.T(), err)
 
-	key, value, _ = parseSetStatement("sET 'key'= \n'value'	")
+	key, value, err = parseSetStatement("sET 'key'= \n'value'	")
 	assert.Equal(s.T(), "key", key)
 	assert.Equal(s.T(), "value", value)
+	assert.Nil(s.T(), err)
 
-	key, value, _ = parseSetStatement("set key= \nvalue	")
+	key, value, err = parseSetStatement("set key= \nvalue	")
 	assert.Equal(s.T(), "", key)
 	assert.Equal(s.T(), "", value)
+	assert.Error(s.T(), err)
 
-	key, value, _ = parseSetStatement("set 'key'= \nvalue	")
+	key, value, err = parseSetStatement("set 'key'= \nvalue	")
 	assert.Equal(s.T(), "", key)
 	assert.Equal(s.T(), "", value)
+	assert.Error(s.T(), err)
 
-	key, value, _ = parseSetStatement("set key= \n'value'	")
+	key, value, err = parseSetStatement("set key= \n'value'	")
 	assert.Equal(s.T(), "", key)
 	assert.Equal(s.T(), "", value)
+	assert.Error(s.T(), err)
 
-	key, value, _ = parseSetStatement("set 'key= \nvalue'	")
+	key, value, err = parseSetStatement("set 'key= \nvalue'	")
 	assert.Equal(s.T(), "", key)
 	assert.Equal(s.T(), "", value)
+	assert.Error(s.T(), err)
 
-	key, value, _ = parseSetStatement(`set ''key''=''value''`)
+	key, value, err = parseSetStatement(`set ''key''=''value''`)
 	assert.Equal(s.T(), "", key)
 	assert.Equal(s.T(), "", value)
+	assert.Error(s.T(), err)
 
-	key, value, _ = parseSetStatement(`set '"key"'='"value"'`)
+	key, value, err = parseSetStatement(`set '"key"'='"value"'`)
 	assert.Equal(s.T(), `"key"`, key)
 	assert.Equal(s.T(), `"value"`, value)
+	assert.Nil(s.T(), err)
 }
 
 func (s *StoreTestSuite) TestParseSetStatementError() {
@@ -398,7 +418,7 @@ func (s *StoreTestSuite) TestParseSetStatementError() {
 		Usage:   []string{"SET 'key'='value'"},
 	}, err)
 
-	_, _, err = parseSetStatement("SET ass=value=as")
+	_, _, err = parseSetStatement("SET key=value=as")
 	assert.Equal(s.T(), &types.StatementError{
 		Message: `"=" should only appear once`,
 		Usage:   []string{"SET 'key'='value'"},
