@@ -1,0 +1,38 @@
+Consume messages from a Kafka topic.
+
+Truncated message headers will be printed if they exist.
+
+Usage:
+  confluent kafka topic consume <topic> [flags]
+
+Examples:
+Consume items from the "my_topic" topic and press "Ctrl-C" to exit.
+
+  $ confluent kafka topic consume -b my_topic
+
+Flags:
+      --group string                        Consumer group ID. (default "confluent_cli_consumer_f51c6cb0-034d-4620-9d8a-0d428ae192c6")
+  -b, --from-beginning                      Consume from beginning of the topic.
+      --offset int                          The offset from the beginning to consume from.
+      --partition int32                     The partition to consume from. (default -1)
+      --value-format string                 Format of message value as "string", "avro", "jsonschema", or "protobuf". Note that schema references are not supported for avro. (default "string")
+      --print-key                           Print key of the message.
+      --full-header                         Print complete content of message headers.
+      --delimiter string                    The delimiter separating each key and value. (default "\t")
+      --timestamp                           Print message timestamp in milliseconds.
+      --config strings                      A comma-separated list of configuration overrides ("key=value") for the consumer client.
+      --config-file string                  The path to the configuration file for the consumer client, in JSON or avro format.
+      --schema-registry-context string      The Schema Registry context under which to look up schema ID.
+      --schema-registry-endpoint string     Endpoint for Schema Registry cluster.
+      --schema-registry-api-key string      Schema registry API key.
+      --schema-registry-api-secret string   Schema registry API key secret.
+      --api-key string                      API key.
+      --api-secret string                   API key secret.
+      --cluster string                      Kafka cluster ID.
+      --context string                      CLI context name.
+      --environment string                  Environment ID.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

@@ -1,48 +1,94 @@
 package test
 
-import "runtime"
+import (
+	"fmt"
+	"path/filepath"
+	"strings"
 
-var helpTests = []CLITest{
-	{args: ""},
-	{args: "help"},
-	{args: "-h"},
-	{args: "--help"},
-}
+	"github.com/spf13/cobra"
 
-func (s *CLITestSuite) TestHelp_NoContext() {
-	for _, tt := range helpTests {
-		if runtime.GOOS == "windows" {
-			tt.fixture = "help/no-context-windows.golden"
-		} else {
-			tt.fixture = "help/no-context.golden"
-		}
+	pcmd "github.com/confluentinc/cli/internal/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/version"
+)
 
-		s.runIntegrationTest(tt)
+func (s *CLITestSuite) TestHelp_AllFormats() {
+	tests := []CLITest{
+		{args: ""},
+		{args: "--help"},
+		{args: "-h"},
+		{args: "help"},
+	}
+
+	for _, test := range tests {
+		test.fixture = "help/no-context.golden"
+		test.login = ""
+		s.runIntegrationTest(test)
+
+		test.fixture = "help/cloud.golden"
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+
+		test.fixture = "help/onprem.golden"
+		test.login = "onprem"
+		s.runIntegrationTest(test)
 	}
 }
 
 func (s *CLITestSuite) TestHelp_Cloud() {
-	for _, tt := range helpTests {
-		if runtime.GOOS == "windows" {
-			tt.fixture = "help/cloud-windows.golden"
-		} else {
-			tt.fixture = "help/cloud.golden"
-		}
+	cfg := &v1.Config{
+		CurrentContext:      "Cloud",
+		Contexts:            map[string]*v1.Context{"Cloud": {PlatformName: "https://confluent.cloud"}},
+		IsTest:              true,
+		Version:             new(version.Version),
+		DisableFeatureFlags: true,
+	}
 
-		tt.login = "cloud"
-		s.runIntegrationTest(tt)
+	cmd := pcmd.NewConfluentCommand(cfg)
+	for _, subcommand := range cmd.Commands() {
+		s.testHelp(subcommand, "cloud")
 	}
 }
 
 func (s *CLITestSuite) TestHelp_OnPrem() {
-	for _, tt := range helpTests {
-		if runtime.GOOS == "windows" {
-			tt.fixture = "help/onprem-windows.golden"
-		} else {
-			tt.fixture = "help/onprem.golden"
-		}
+	cfg := &v1.Config{
+		CurrentContext:      "On-Prem",
+		Contexts:            map[string]*v1.Context{"On-Prem": {PlatformName: "https://example.com"}},
+		IsTest:              true,
+		Version:             new(version.Version),
+		DisableFeatureFlags: true,
+	}
 
-		tt.login = "platform"
-		s.runIntegrationTest(tt)
+	cmd := pcmd.NewConfluentCommand(cfg)
+	for _, subcommand := range cmd.Commands() {
+		s.testHelp(subcommand, "onprem")
+	}
+}
+
+func (s *CLITestSuite) testHelp(cmd *cobra.Command, login string) {
+	path := strings.Split(cmd.CommandPath(), " ")[1:]
+	args := append(path, "--help")
+
+	file := "help.golden"
+	if login != "cloud" {
+		file = fmt.Sprintf("help-%s.golden", login)
+	}
+
+	if cmd.HasSubCommands() || len(path) == 1 {
+		path = append(path, file)
+	} else {
+		path[len(path)-1] += "-" + file
+	}
+
+	test := CLITest{
+		args:    strings.Join(args, " "),
+		fixture: filepath.Join(path...),
+		login:   login,
+	}
+
+	s.runIntegrationTest(test)
+
+	for _, subcommand := range cmd.Commands() {
+		s.testHelp(subcommand, login)
 	}
 }
