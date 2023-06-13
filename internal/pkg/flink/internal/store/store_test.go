@@ -227,7 +227,7 @@ func TestCancelPendingStatement(t *testing.T) {
 	assert.EqualError(t, err, expectedErr.Error())
 }
 
-func (s *StoreTestSuite) TestIsSETStatement() {
+func (s *StoreTestSuite) TestIsSetStatement() {
 	assert.True(s.T(), true, statementStartsWithOp("SET", config.ConfigOpSet))
 	assert.True(s.T(), true, statementStartsWithOp("SET key", config.ConfigOpSet))
 	assert.True(s.T(), true, statementStartsWithOp("SET key=value", config.ConfigOpSet))
@@ -243,7 +243,7 @@ func (s *StoreTestSuite) TestIsSETStatement() {
 	assert.False(s.T(), false, statementStartsWithOp("SETTING", config.ConfigOpSet))
 }
 
-func (s *StoreTestSuite) TestIsUSEStatement() {
+func (s *StoreTestSuite) TestIsUseStatement() {
 	assert.True(s.T(), statementStartsWithOp("USE", config.ConfigOpUse))
 	assert.True(s.T(), statementStartsWithOp("USE catalog", config.ConfigOpUse))
 	assert.True(s.T(), statementStartsWithOp("USE CATALOG cat", config.ConfigOpUse))
@@ -291,7 +291,7 @@ func (s *StoreTestSuite) TestIsExitStatement() {
 	assert.False(s.T(), false, statementStartsWithOp("exi", config.ConfigOpReset))
 }
 
-func (s *StoreTestSuite) TestParseSETStatement() {
+func (s *StoreTestSuite) TestParseSetStatement() {
 	key, value, _ := parseSetStatement("SET 'key'='value'")
 	assert.Equal(s.T(), "key", key)
 	assert.Equal(s.T(), "value", value)
@@ -373,7 +373,7 @@ func (s *StoreTestSuite) TestParseSETStatement() {
 	assert.Equal(s.T(), `"value"`, value)
 }
 
-func (s *StoreTestSuite) TestParseSETStatementError() {
+func (s *StoreTestSuite) TestParseSetStatementError() {
 	_, _, err := parseSetStatement("SET key")
 	assert.Equal(s.T(), &types.StatementError{
 		Message: `missing "="`,
@@ -425,7 +425,7 @@ func (s *StoreTestSuite) TestParseSETStatementError() {
 	}, err)
 }
 
-func (s *StoreTestSuite) TestParseUSEStatement() {
+func (s *StoreTestSuite) TestParseUseStatement() {
 	key, value, _ := parseUseStatement("USE CATALOG c;")
 	assert.Equal(s.T(), config.ConfigKeyCatalog, key)
 	assert.Equal(s.T(), "c", value)
@@ -455,7 +455,7 @@ func (s *StoreTestSuite) TestParseUSEStatement() {
 	assert.Equal(s.T(), "database_name", value)
 }
 
-func (s *StoreTestSuite) TestParseUSEStatementError() {
+func (s *StoreTestSuite) TestParseUseStatementError() {
 	_, _, err := parseUseStatement("USE CATALOG ;")
 	assert.NotNil(s.T(), err)
 	assert.Equal(s.T(), "Error: missing catalog name\nUsage: \"USE CATALOG my_catalog\"", err.Error())
