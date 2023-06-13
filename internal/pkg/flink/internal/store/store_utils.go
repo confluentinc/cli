@@ -146,9 +146,7 @@ func parseSetStatement(statement string) (string, string, error) {
 	if startOfStrAfterSet >= len(statement) {
 		return "", "", nil
 	}
-	strAfterSet := statement[startOfStrAfterSet:]
-
-	strAfterSet = removeTabNewLineAndWhitesSpaces(strAfterSet)
+	strAfterSet := strings.TrimSpace(statement[startOfStrAfterSet:])
 
 	// This is the case when the statement is simply "SET  " (with empty spaces), which is used to display current config.
 	if strAfterSet == "" {
@@ -171,36 +169,59 @@ func parseSetStatement(statement string) (string, string, error) {
 		}
 	}
 
-	if keyValuePair[0] != "" && keyValuePair[1] == "" {
+	keyWithQuotes := strings.TrimSpace(keyValuePair[0])
+	valueWithQuotes := strings.TrimSpace(keyValuePair[1])
+
+	if keyWithQuotes != "" && valueWithQuotes == "" {
 		return "", "", &types.StatementError{
 			Message:    "value for key not present",
 			Suggestion: `if you want to reset a key, use "RESET 'key'"`,
 		}
 	}
 
-	if keyValuePair[0] == "" && keyValuePair[1] != "" {
+	if keyWithQuotes == "" && valueWithQuotes != "" {
 		return "", "", &types.StatementError{
 			Message: "key not present",
 			Usage:   []string{"SET 'key'='value'"},
 		}
 	}
 
-	if keyValuePair[0] == "" && keyValuePair[1] == "" {
+	if keyWithQuotes == "" && valueWithQuotes == "" {
 		return "", "", &types.StatementError{
 			Message: "key and value not present",
 			Usage:   []string{"SET 'key'='value'"},
 		}
 	}
 
-	if !strings.HasPrefix(keyValuePair[0], "'") || !strings.HasSuffix(keyValuePair[0], "'") ||
-		!strings.HasPrefix(keyValuePair[1], "'") || !strings.HasSuffix(keyValuePair[1], "'") {
+	if !strings.HasPrefix(keyWithQuotes, "'") || !strings.HasSuffix(keyWithQuotes, "'") ||
+		!strings.HasPrefix(valueWithQuotes, "'") || !strings.HasSuffix(valueWithQuotes, "'") {
 		return "", "", &types.StatementError{
-			Message: "key and value must be enclosed by single quotes ''",
+			Message: "key and value must be enclosed by single quotes (')",
 			Usage:   []string{"SET 'key'='value'"},
 		}
 	}
 
-	return strings.ReplaceAll(keyValuePair[0], "'", ""), strings.ReplaceAll(keyValuePair[1], "'", ""), nil
+	// remove quotes
+	key := keyWithQuotes[1 : len(keyWithQuotes)-1]
+	value := valueWithQuotes[1 : len(valueWithQuotes)-1]
+
+	if strings.Contains(key, "'") {
+		return "", "", &types.StatementError{
+			Message:    "key contains single quotes (')",
+			Usage:      []string{"SET 'key'='value'"},
+			Suggestion: `please escape single quotes (') with double quotes (")`,
+		}
+	}
+
+	if strings.Contains(value, "'") {
+		return "", "", &types.StatementError{
+			Message:    "value contains single quotes (')",
+			Usage:      []string{"SET 'key'='value'"},
+			Suggestion: `please escape single quotes (') with double quotes (")`,
+		}
+	}
+
+	return key, value, nil
 }
 
 /*
@@ -249,46 +270,48 @@ func parseUseStatement(statement string) (string, string, error) {
 	}
 }
 
-/* Expected statement: "RESET pipeline.name" */
+/* Expected statement: "RESET 'pipeline.name'" */
 func parseResetStatement(statement string) (string, error) {
 	statement = removeStatementTerminator(statement)
-	words := strings.Fields(statement)
-	if len(words) == 0 {
+
+	indexOfReset := strings.Index(strings.ToUpper(statement), config.ConfigOpReset)
+	if indexOfReset == -1 {
 		return "", &types.StatementError{
 			Message: "invalid syntax for RESET",
 			Usage:   []string{"RESET 'key'"},
 		}
 	}
+	startOfStrAfterReset := indexOfReset + len(config.ConfigOpReset)
+	// This is the case where we reset the entire config (e.g. "RESET")
+	if startOfStrAfterReset >= len(statement) {
+		return "", nil
+	}
+	strAfterReset := strings.TrimSpace(statement[startOfStrAfterReset:])
 
-	// This is the case where we reset the entire config (e.g. "RESET")
-	if len(words) == 1 {
+	// This is the case when the statement is simply "RESET  " (with empty spaces), where we reset the entire config
+	if strAfterReset == "" {
 		return "", nil
 	}
 
-	if len(words) > 2 {
-		return "", &types.StatementError{
-			Message: "too many keys for RESET provided",
-			Usage:   []string{"RESET 'key'"},
-		}
-	}
-
-	isFirstWordReset := strings.ToUpper(words[0]) == config.ConfigOpReset
-	key := strings.ToLower(words[1])
-	if !isFirstWordReset {
-		return "", &types.StatementError{
-			Message: "invalid syntax for RESET",
-			Usage:   []string{"RESET 'key'"},
-		}
-	}
-
-	if !strings.HasPrefix(key, "'") || !strings.HasSuffix(key, "'") {
+	if !strings.HasPrefix(strAfterReset, "'") || !strings.HasSuffix(strAfterReset, "'") {
 		return "", &types.StatementError{
 			Message: "invalid syntax for RESET, key must be enclosed by single quotes ''",
 			Usage:   []string{"RESET 'key'"},
 		}
 	}
 
-	return strings.ReplaceAll(key, "'", ""), nil
+	// remove quotes
+	key := strAfterReset[1 : len(strAfterReset)-1]
+
+	if strings.Contains(key, "'") {
+		return "", &types.StatementError{
+			Message:    "key contains single quotes (')",
+			Usage:      []string{"RESET 'key'"},
+			Suggestion: `please escape single quotes (') with double quotes (")`,
+		}
+	}
+
+	return key, nil
 }
 
 func processHttpErrors(resp *http.Response, err error) error {
