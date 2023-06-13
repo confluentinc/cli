@@ -418,7 +418,7 @@ func addSchemaTags(details *accountDetails, components Components, topicName str
 			tagConfigs = append(tagConfigs, srsdk.Tag{
 				TypeName:   tag.Name,
 				EntityType: "sr_schema",
-				EntityName: fmt.Sprintf("%s:.:%s", details.srCluster.Id, strconv.Itoa(int(schemaId))),
+				EntityName: fmt.Sprintf("%s:.:%s", details.srCluster.GetId(), strconv.Itoa(int(schemaId))),
 			})
 			tagNames = append(tagNames, tag.Name)
 		}
