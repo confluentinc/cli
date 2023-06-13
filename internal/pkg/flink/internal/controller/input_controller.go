@@ -34,7 +34,7 @@ type InputController struct {
 	smartCompletion       bool
 	reverseISearchEnabled bool
 	table                 types.TableControllerInterface
-	prompt                *prompt.Prompt
+	prompt                prompt.IPrompt
 	store                 store.StoreInterface
 	authenticated         func() error
 	appOptions            *types.ApplicationOptions
@@ -271,7 +271,7 @@ func (c *InputController) printResultToSTDOUT(statementResults *types.StatementR
 	rawTable.Render() // Send output
 }
 
-func (c *InputController) Prompt() *prompt.Prompt {
+func (c *InputController) Prompt() prompt.IPrompt {
 	completer := autocomplete.NewCompleterBuilder(c.getSmartCompletion).
 		AddCompleter(autocomplete.ExamplesCompleter).
 		AddCompleter(autocomplete.SetCompleter).
