@@ -23,12 +23,21 @@ const (
 	keyLength       = 32
 )
 
-func GenerateRandomBytes(n int) ([]byte, error) {
+func generateRandomBytes(n int) ([]byte, error) {
 	b := make([]byte, n)
 	if _, err := rand.Read(b); err != nil {
 		return []byte{}, err
 	}
 	return b, nil
+}
+
+func GenerateSaltAndNonce() ([]byte, []byte, error) {
+	salt, err := generateRandomBytes(SaltLength)
+	if err != nil {
+		return []byte{}, []byte{}, err
+	}
+	nonce, err := generateRandomBytes(NonceLength)
+	return salt, nonce, err
 }
 
 func DeriveEncryptionKey(salt []byte) ([]byte, error) {
