@@ -201,26 +201,29 @@ func parseSetStatement(statement string) (string, string, error) {
 		}
 	}
 
-	// remove quotes
-	key := keyWithQuotes[1 : len(keyWithQuotes)-1]
-	value := valueWithQuotes[1 : len(valueWithQuotes)-1]
+	// remove enclosing quotes
+	keyWithQuotes = keyWithQuotes[1 : len(keyWithQuotes)-1]
+	valueWithQuotes = valueWithQuotes[1 : len(valueWithQuotes)-1]
 
-	if strings.Contains(key, "'") {
+	if containsUnescapedSingleQuote(keyWithQuotes) {
 		return "", "", &types.StatementError{
-			Message:    "key contains single quotes (')",
+			Message:    "key contains unescaped single quotes (')",
 			Usage:      []string{"SET 'key'='value'"},
-			Suggestion: `please escape single quotes (') with double quotes (")`,
+			Suggestion: `please escape all single quotes with another single quote "''key''"`,
 		}
 	}
 
-	if strings.Contains(value, "'") {
+	if containsUnescapedSingleQuote(valueWithQuotes) {
 		return "", "", &types.StatementError{
-			Message:    "value contains single quotes (')",
+			Message:    "value contains unescaped single quotes (')",
 			Usage:      []string{"SET 'key'='value'"},
-			Suggestion: `please escape single quotes (') with double quotes (")`,
+			Suggestion: `please escape all single quotes with another single quote "''key''"`,
 		}
 	}
 
+	// replace escaped quotes
+	key := strings.ReplaceAll(keyWithQuotes, "''", "'")
+	value := strings.ReplaceAll(valueWithQuotes, "''", "'")
 	return key, value, nil
 }
 
@@ -300,17 +303,19 @@ func parseResetStatement(statement string) (string, error) {
 		}
 	}
 
-	// remove quotes
-	key := strAfterReset[1 : len(strAfterReset)-1]
+	// remove enclosing quotes
+	strAfterReset = strAfterReset[1 : len(strAfterReset)-1]
 
-	if strings.Contains(key, "'") {
+	if containsUnescapedSingleQuote(strAfterReset) {
 		return "", &types.StatementError{
-			Message:    "key contains single quotes (')",
+			Message:    "key contains unescaped single quotes (')",
 			Usage:      []string{"RESET 'key'"},
-			Suggestion: `please escape single quotes (') with double quotes (")`,
+			Suggestion: `please escape all single quotes with another single quote "''key''"`,
 		}
 	}
 
+	// replace escaped quotes
+	key := strings.ReplaceAll(strAfterReset, "''", "'")
 	return key, nil
 }
 
@@ -436,4 +441,10 @@ func timeout(properties map[string]string) time.Duration {
 	} else {
 		return config.DefaultTimeoutDuration
 	}
+}
+
+func containsUnescapedSingleQuote(str string) bool {
+	//remove escaped quotes and check if there are still single quotes
+	str = strings.ReplaceAll(str, "''", "")
+	return strings.Contains(str, "'")
 }

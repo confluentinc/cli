@@ -387,9 +387,24 @@ func (s *StoreTestSuite) TestParseSetStatement() {
 	assert.Equal(s.T(), "", value)
 	assert.Error(s.T(), err)
 
-	key, value, err = parseSetStatement(`set '"key"'='"value"'`)
-	assert.Equal(s.T(), `"key"`, key)
-	assert.Equal(s.T(), `"value"`, value)
+	key, value, err = parseSetStatement(`set '''key'''='''value'''`)
+	assert.Equal(s.T(), "'key'", key)
+	assert.Equal(s.T(), "'value'", value)
+	assert.Nil(s.T(), err)
+
+	key, value, err = parseSetStatement(`set ''''key'''='''value'''`)
+	assert.Equal(s.T(), "", key)
+	assert.Equal(s.T(), "", value)
+	assert.Error(s.T(), err)
+
+	key, value, err = parseSetStatement(`set 'key'''='value'`)
+	assert.Equal(s.T(), "key'", key)
+	assert.Equal(s.T(), "value", value)
+	assert.Nil(s.T(), err)
+
+	key, value, err = parseSetStatement(`set 'key'''''='value'`)
+	assert.Equal(s.T(), "key''", key)
+	assert.Equal(s.T(), "value", value)
 	assert.Nil(s.T(), err)
 }
 
@@ -432,16 +447,16 @@ func (s *StoreTestSuite) TestParseSetStatementError() {
 
 	_, _, err = parseSetStatement(`set ''key'''=''value''`)
 	assert.Equal(s.T(), &types.StatementError{
-		Message:    "key contains single quotes (')",
+		Message:    "key contains unescaped single quotes (')",
 		Usage:      []string{"SET 'key'='value'"},
-		Suggestion: `please escape single quotes (') with double quotes (")`,
+		Suggestion: `please escape all single quotes with another single quote "''key''"`,
 	}, err)
 
 	_, _, err = parseSetStatement(`set 'key'=''value''`)
 	assert.Equal(s.T(), &types.StatementError{
-		Message:    "value contains single quotes (')",
+		Message:    "value contains unescaped single quotes (')",
 		Usage:      []string{"SET 'key'='value'"},
-		Suggestion: `please escape single quotes (') with double quotes (")`,
+		Suggestion: `please escape all single quotes with another single quote "''key''"`,
 	}, err)
 }
 
@@ -558,8 +573,20 @@ func (s *StoreTestSuite) TestParseResetStatement() {
 	assert.Equal(s.T(), "", key)
 	assert.Error(s.T(), err)
 
-	key, err = parseResetStatement(`reset '"key one"';`)
-	assert.Equal(s.T(), `"key one"`, key)
+	key, err = parseResetStatement(`reset '''key one''';`)
+	assert.Equal(s.T(), "'key one'", key)
+	assert.Nil(s.T(), err)
+
+	key, err = parseResetStatement(`reset ''''key one''';`)
+	assert.Equal(s.T(), "", key)
+	assert.Error(s.T(), err)
+
+	key, err = parseResetStatement(`reset 'key'' one';`)
+	assert.Equal(s.T(), "key' one", key)
+	assert.Nil(s.T(), err)
+
+	key, err = parseResetStatement(`reset 'key'''' one';`)
+	assert.Equal(s.T(), "key'' one", key)
 	assert.Nil(s.T(), err)
 }
 
@@ -609,9 +636,9 @@ func (s *StoreTestSuite) TestParseResetStatementError() {
 	key, err = parseResetStatement("reset ''key one'';")
 	assert.Equal(s.T(), "", key)
 	assert.Equal(s.T(), &types.StatementError{
-		Message:    "key contains single quotes (')",
+		Message:    "key contains unescaped single quotes (')",
 		Usage:      []string{"RESET 'key'"},
-		Suggestion: `please escape single quotes (') with double quotes (")`,
+		Suggestion: `please escape all single quotes with another single quote "''key''"`,
 	}, err)
 }
 
