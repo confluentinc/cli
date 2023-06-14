@@ -444,7 +444,7 @@ func timeout(properties map[string]string) time.Duration {
 }
 
 func containsUnescapedSingleQuote(str string) bool {
-	//remove escaped quotes and check if there are still single quotes
+	// remove escaped quotes and check if there are still single quotes
 	str = strings.ReplaceAll(str, "''", "")
 	return strings.Contains(str, "'")
 }
