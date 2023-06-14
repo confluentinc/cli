@@ -153,7 +153,7 @@ func TestUnzipPlugin(t *testing.T) {
 	manifest := &cpstructs.Manifest{
 		Name:    "unit-test-plugin",
 		Version: "0.0.0",
-		Owner: cpstructs.Owner{Username: "confluentinc"},
+		Owner:   cpstructs.Owner{Username: "confluentinc"},
 	}
 
 	zipReader, err := zip.OpenReader(archivePath)
