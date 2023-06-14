@@ -80,9 +80,9 @@ func (c *Client) ListConsumerShares(sharedResource string) ([]cdxv1.CdxV1Consume
 	done := false
 	pageToken := ""
 	for !done {
-		page, r, err := c.executeListConsumerShares(sharedResource, pageToken)
+		page, httpResp, err := c.executeListConsumerShares(sharedResource, pageToken)
 		if err != nil {
-			return nil, errors.CatchCCloudV2Error(err, r)
+			return nil, errors.CatchCCloudV2Error(err, httpResp)
 		}
 		list = append(list, page.GetData()...)
 

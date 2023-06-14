@@ -127,19 +127,6 @@ func AutocompleteClusters(environmentId string, client *ccloudv2.Client) []strin
 	return suggestions
 }
 
-func AutocompleteCmkClusters(environmentId string, client *ccloudv2.Client) []string {
-	clusters, err := client.ListKafkaClusters(environmentId)
-	if err != nil {
-		return nil
-	}
-
-	suggestions := make([]string, len(clusters))
-	for i, cluster := range clusters {
-		suggestions[i] = fmt.Sprintf("%s\t%s", cluster.GetId(), cluster.Spec.GetDisplayName())
-	}
-	return suggestions
-}
-
 func AddContextFlag(cmd *cobra.Command, command *CLICommand) {
 	cmd.Flags().String("context", "", "CLI context name.")
 
@@ -249,6 +236,14 @@ func autocompleteMechanisms(protocol string) []string {
 	}
 }
 
+func AddProducerConfigFileFlag(cmd *cobra.Command) {
+	cmd.Flags().String("config-file", "", "The path to the configuration file for the producer client, in JSON or Avro format.")
+}
+
+func AddConsumerConfigFileFlag(cmd *cobra.Command) {
+	cmd.Flags().String("config-file", "", "The path to the configuration file for the consumer client, in JSON or Avro format.")
+}
+
 func AddOutputFlag(cmd *cobra.Command) {
 	AddOutputFlagWithDefaultValue(cmd, output.Human.String())
 }
@@ -303,8 +298,8 @@ func AutocompleteIdentityProviders(client *ccloudv2.Client) []string {
 	return suggestions
 }
 
-func AutocompleteIdentityPools(client *ccloudv2.Client, providerID string) []string {
-	identityPools, err := client.ListIdentityPools(providerID)
+func AutocompleteIdentityPools(client *ccloudv2.Client, providerId string) []string {
+	identityPools, err := client.ListIdentityPools(providerId)
 	if err != nil {
 		return nil
 	}

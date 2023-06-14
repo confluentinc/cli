@@ -18,7 +18,6 @@ var ccloudHandlers = []route{
 	{"/api/organizations/{id}/payment_info", handlePaymentInfo},
 	{"/api/organizations/{id}/price_table", handlePriceTable},
 	{"/api/organizations/{id}/promo_code_claims", handlePromoCodeClaims},
-	{"/api/schema_registries/{id}", handleSchemaRegistry},
 	{"/api/service_accounts", handleServiceAccounts},
 	{"/api/service_accounts/{id}", handleServiceAccount},
 	{"/api/sessions", handleLogin},

@@ -57,7 +57,7 @@ func NewClient(params *ClientParams) *client {
 		params.CheckInterval = 24 * time.Hour
 	}
 	if params.OS == "" {
-		params.OS = runtime.GOOS
+		params.OS = GetOs()
 	}
 	return &client{
 		ClientParams: params,
@@ -197,8 +197,7 @@ func (c *client) UpdateBinary(cliName, version, path string, noVerify bool) erro
 		return errors.Wrapf(err, errors.GetTempDirErrorMsg, cliName)
 	}
 	defer func() {
-		err = c.fs.RemoveAll(downloadDir)
-		if err != nil {
+		if err := c.fs.RemoveAll(downloadDir); err != nil {
 			log.CliLogger.Warnf("unable to clean up temp download dir %s: %s", downloadDir, err)
 		}
 	}()
@@ -222,7 +221,7 @@ func (c *client) UpdateBinary(cliName, version, path string, noVerify bool) erro
 			return errors.Wrapf(err, "failed to download checksums file")
 		}
 
-		binary := getBinaryName(version, runtime.GOOS, runtime.GOARCH)
+		binary := getBinaryName(version, c.OS, runtime.GOARCH)
 		checksum, err := findChecksum(content, binary)
 		if err != nil {
 			return err

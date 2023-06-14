@@ -115,8 +115,8 @@ func (c *Client) ListIdentityPools(providerId string) ([]identityproviderv2.IamV
 	return list, nil
 }
 
-func (c *Client) executeListIdentityPools(providerID string, pageToken string) (identityproviderv2.IamV2IdentityPoolList, *http.Response, error) {
-	req := c.IdentityProviderClient.IdentityPoolsIamV2Api.ListIamV2IdentityPools(c.identityPoolApiContext(), providerID).PageSize(ccloudV2ListPageSize)
+func (c *Client) executeListIdentityPools(providerId, pageToken string) (identityproviderv2.IamV2IdentityPoolList, *http.Response, error) {
+	req := c.IdentityProviderClient.IdentityPoolsIamV2Api.ListIamV2IdentityPools(c.identityPoolApiContext(), providerId).PageSize(ccloudV2ListPageSize)
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
 	}

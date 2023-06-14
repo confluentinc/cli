@@ -13,7 +13,7 @@ func (c *command) newAddCommand() *cobra.Command {
 		RunE:  c.add,
 	}
 
-	cmd.Flags().String("config-file", "", "Path to the configuration properties file.")
+	c.addConfigFileFlag(cmd)
 	cmd.Flags().String("local-secrets-file", "", "Path to the local encrypted configuration properties file.")
 	cmd.Flags().String("remote-secrets-file", "", "Path to the remote encrypted configuration properties file.")
 	cmd.Flags().String("config", "", "List of key/value pairs of configuration properties.")

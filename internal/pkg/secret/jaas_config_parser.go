@@ -96,8 +96,7 @@ func (j *JAASParser) parseConfig(specialChar rune) (string, int, error) {
 			offset = j.tokenizer.Pos().Offset
 		}
 	}
-	err := validateConfig(configName)
-	if err != nil {
+	if err := validateConfig(configName); err != nil {
 		return "", offset, err
 	}
 	return configName, offset, nil
@@ -138,8 +137,7 @@ func (j *JAASParser) ParseJAASConfigurationEntry(jaasConfig string, key string) 
 		return nil, err
 	}
 	j.JaasOriginalConfigKeys.DisableExpansion = true
-	_, _, err = j.JaasOriginalConfigKeys.Set(key+KeySeparator+parentKey, jaasConfig)
-	if err != nil {
+	if _, _, err := j.JaasOriginalConfigKeys.Set(key+KeySeparator+parentKey, jaasConfig); err != nil {
 		return nil, err
 	}
 
@@ -166,12 +164,10 @@ func (j *JAASParser) ConvertPropertiesToJAAS(props *properties.Properties, op st
 		if err != nil {
 			return nil, err
 		}
-		_, _, err = j.JaasOriginalConfigKeys.Set(configKey, jaas)
-		if err != nil {
+		if _, _, err := j.JaasOriginalConfigKeys.Set(configKey, jaas); err != nil {
 			return nil, err
 		}
-		_, _, err = result.Set(keys[ClassId], jaas)
-		if err != nil {
+		if _, _, err := result.Set(keys[ClassId], jaas); err != nil {
 			return nil, err
 		}
 	}
@@ -189,8 +185,7 @@ func (j *JAASParser) parseConfigurationEntry(prefixKey string) (int, int, *prope
 	}
 
 	// Parse Control Flag
-	err = j.parseControlFlag()
-	if err != nil {
+	if err := j.parseControlFlag(); err != nil {
 		return 0, 0, nil, "", err
 	}
 
@@ -218,8 +213,7 @@ func (j *JAASParser) parseConfigurationEntry(prefixKey string) (int, int, *prope
 			return 0, 0, nil, "", err
 		}
 		newKey := prefixKey + KeySeparator + parentKey + KeySeparator + key
-		_, _, err := parsedConfigs.Set(newKey, value)
-		if err != nil {
+		if _, _, err := parsedConfigs.Set(newKey, value); err != nil {
 			return 0, 0, nil, "", err
 		}
 		j.ignoreBackslash()

@@ -7,7 +7,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (c identityPoolCommand) newDescribeCommand() *cobra.Command {
+func (c *identityPoolCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "describe <id>",
 		Short:             "Describe an identity pool.",
@@ -24,7 +24,7 @@ func (c identityPoolCommand) newDescribeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c identityPoolCommand) describe(cmd *cobra.Command, args []string) error {
+func (c *identityPoolCommand) describe(cmd *cobra.Command, args []string) error {
 	provider, err := cmd.Flags().GetString("provider")
 	if err != nil {
 		return err

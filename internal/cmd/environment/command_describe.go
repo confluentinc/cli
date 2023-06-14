@@ -16,9 +16,9 @@ type out struct {
 
 func (c *command) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "describe <id>",
+		Use:               "describe [id]",
 		Short:             "Describe a Confluent Cloud environment.",
-		Args:              cobra.ExactArgs(1),
+		Args:              cobra.MaximumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.describe,
 	}
@@ -30,7 +30,15 @@ func (c *command) newDescribeCommand() *cobra.Command {
 }
 
 func (c *command) describe(cmd *cobra.Command, args []string) error {
-	environment, err := c.V2Client.GetOrgEnvironment(args[0])
+	id := c.Context.GetCurrentEnvironment()
+	if len(args) > 0 {
+		id = args[0]
+	}
+	if id == "" {
+		return errors.NewErrorWithSuggestions("no environment selected", "Select an environment with `confluent environment use` or as an argument.")
+	}
+
+	environment, err := c.V2Client.GetOrgEnvironment(id)
 	if err != nil {
 		return errors.NewErrorWithSuggestions(err.Error(), "List available environments with `confluent environment list`.")
 	}

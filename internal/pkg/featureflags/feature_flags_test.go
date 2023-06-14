@@ -72,7 +72,6 @@ func (suite *LaunchDarklyTestSuite) TestCcloudFlags() {
 
 	boolFlag := ld.BoolVariation("testBool", ctx, v1.CcloudStagLaunchDarklyClient, true, false)
 	req.Equal(true, boolFlag)
-
 }
 
 func (suite *LaunchDarklyTestSuite) TestCcloudFlagsCached() {
@@ -93,7 +92,6 @@ func (suite *LaunchDarklyTestSuite) TestCcloudFlagsCached() {
 	ctx.FeatureFlags.CcloudValues["testInt"] = 123
 	intFlag = ld.IntVariation("testInt", ctx, v1.CcloudStagLaunchDarklyClient, true, 0)
 	req.Equal(123, intFlag)
-
 }
 
 func (suite *LaunchDarklyTestSuite) TestCcloudFlagsCachedExpired() {
@@ -119,7 +117,6 @@ func (suite *LaunchDarklyTestSuite) TestCcloudFlagsCachedExpired() {
 	ctx.FeatureFlags.LastUpdateTime = 0
 	intFlag = ld.IntVariation("testInt", ctx, v1.CcloudStagLaunchDarklyClient, true, 0)
 	req.Equal(1, intFlag)
-
 }
 
 func (suite *LaunchDarklyTestSuite) TestCliFlagsCachedExpired() {
@@ -144,7 +141,6 @@ func (suite *LaunchDarklyTestSuite) TestCliFlagsCachedExpired() {
 	ctx.FeatureFlags.LastUpdateTime = 0
 	boolFlag = ld.BoolVariation("testBool", ctx, v1.CliLaunchDarklyClient, true, false)
 	req.Equal(true, boolFlag)
-
 }
 
 func (suite *LaunchDarklyTestSuite) TestMultipleCcloudFlags() {
@@ -164,7 +160,6 @@ func (suite *LaunchDarklyTestSuite) TestMultipleCcloudFlags() {
 
 	intFlag := ld.IntVariation("testAnotherInt", ctx, v1.CcloudStagLaunchDarklyClient, true, 0)
 	req.Equal(99, intFlag)
-
 }
 
 // Flag variation tests using cached flag values

@@ -13,7 +13,7 @@ func (c *command) newDecryptCommand() *cobra.Command {
 		RunE:  c.decrypt,
 	}
 
-	cmd.Flags().String("config-file", "", "Path to the configuration properties file.")
+	c.addConfigFileFlag(cmd)
 	cmd.Flags().String("local-secrets-file", "", "Path to the local encrypted configuration properties file.")
 	cmd.Flags().String("output-file", "", "Output file path.")
 	cmd.Flags().String("config", "", "List of configuration keys.")
