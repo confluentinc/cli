@@ -6,23 +6,32 @@ import (
 	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 )
 
 type pluginCommand struct {
 	*pcmd.AuthenticatedCLICommand
 }
 
-func newPluginCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func newPluginCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "plugin",
-		Short:       "Show plugins and their configurations.",
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
+		Use:   "plugin",
+		Short: "Manage Connect plugins.",
 	}
 
-	c := &pluginCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
+	c := &pluginCommand{}
+
+	if cfg.IsCloudLogin() {
+		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedCLICommand(cmd, prerunner)
+
+		cmd.AddCommand(c.newListCommand())
+	} else {
+		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)
+
+		cmd.AddCommand(c.newInstallCommand())
+	}
 
 	cmd.AddCommand(c.newDescribeCommand())
-	cmd.AddCommand(c.newListCommand())
 
 	return cmd
 }
