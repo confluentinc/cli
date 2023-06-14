@@ -41,9 +41,9 @@ func (c *command) authenticated(authenticated func(*cobra.Command, []string) err
 			return err
 		}
 
-		auth := cfg.Context().State.AuthToken
+		authToken := cfg.Context().State.AuthToken
 		authRefreshToken := cfg.Context().State.AuthRefreshToken
-		if err := c.Context.UpdateAuthTokens(auth, authRefreshToken); err != nil {
+		if err := c.Context.UpdateAuthTokens(authToken, authRefreshToken); err != nil {
 			return err
 		}
 
@@ -55,17 +55,16 @@ func (c *command) authenticated(authenticated func(*cobra.Command, []string) err
 		if err != nil {
 			return err
 		}
-		jwtToken := flinkGatewayClient.GetAuthToken()
 
-		jwtCtx := &v1.Context{State: &v1.ContextState{AuthToken: jwtToken}}
+		jwtCtx := &v1.Context{State: &v1.ContextState{AuthToken: flinkGatewayClient.AuthToken}}
 		if tokenErr := jwtValidator.Validate(jwtCtx); tokenErr != nil {
 			output.Println("Token expired. Refreshing token...")
-			authToken, err := pauth.GetJwtTokenForV2Client(cfg.Context().GetState(), cfg.Context().GetPlatformServer())
+			flinkGatewayAuthToken, err := pauth.GetJwtTokenForV2Client(cfg.Context().GetState(), cfg.Context().GetPlatformServer())
 			if err != nil {
 				output.Printf("Refreshing token failed. Error: %v\n", err)
 				return err
 			}
-			flinkGatewayClient.SetAuthToken(authToken)
+			flinkGatewayClient.AuthToken = flinkGatewayAuthToken
 		}
 
 		return nil
