@@ -44,7 +44,7 @@ var (
 			ssoProviderScope:      "email%20openid%20offline_access",
 		},
 		"prod-us-gov": {
-			ssoProviderDomain: "confluent-prod-us-gov.oktapreview.com/oauth2/v1",
+			ssoProviderDomain: "confluent-prod-us-gov.okta.com/oauth2/v1",
 			ssoProviderScope:  "openid+profile+email+offline_access",
 		},
 		"stag": {
