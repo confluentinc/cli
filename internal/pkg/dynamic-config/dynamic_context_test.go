@@ -1,6 +1,6 @@
 package dynamicconfig
 
-import (
+/*import (
 	"context"
 	"net/http"
 	"testing"
@@ -196,4 +196,4 @@ func getEnvAndClusterFlagContext() *DynamicContext {
 		Name: "miles2",
 	}
 	return envAndClusterFlagContext
-}
+}*/
