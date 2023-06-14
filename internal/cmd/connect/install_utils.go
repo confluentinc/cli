@@ -52,7 +52,7 @@ func getConfluentPlatformInstallation(cmd *cobra.Command, prompt form.Prompt, fo
 	}
 
 	if len(installations) == 0 {
-		return nil, errors.NewErrorWithSuggestions("unable to detect a Confluent Platform installation", "Pass the plugin directory and worker configuration files with `--plugin-directory` and `--worker-configs`.")
+		return nil, errors.NewErrorWithSuggestions("unable to detect a Confluent Platform installation", "Pass the plugin directory and worker configuration files with `--plugin-directory` and `--worker-configurations`.")
 	} else if force {
 		output.Printf("Using the Confluent Platform installation at \"%s\".\n", installations[0].Location.Path)
 		return &installations[0], nil

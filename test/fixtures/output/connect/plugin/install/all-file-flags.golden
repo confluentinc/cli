@@ -1,1 +1,1 @@
-Error: at most two of `--plugin-directory`, `--worker-configs`, and `--confluent-platform` may be set
+Error: at most two of `--plugin-directory`, `--worker-configurations`, and `--confluent-platform` may be set

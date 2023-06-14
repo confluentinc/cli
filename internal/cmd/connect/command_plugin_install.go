@@ -44,7 +44,7 @@ func (c *pluginCommand) newInstallCommand() *cobra.Command {
 			},
 			examples.Example{
 				Text: "Install the latest version of the Datagen connector in a user-specified directory and update a worker-config file.",
-				Code: "confluent connect plugin install confluentinc/kafka-connect-datagen:latest --plugin-directory $CONFLUENT_HOME/plugins --worker-configs $CONFLUENT_HOME/etc/kafka/connect-distributed.properties",
+				Code: "confluent connect plugin install confluentinc/kafka-connect-datagen:latest --plugin-directory $CONFLUENT_HOME/plugins --worker-configurations $CONFLUENT_HOME/etc/kafka/connect-distributed.properties",
 			},
 		),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
@@ -72,8 +72,8 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if cmd.Flags().Changed("plugin-directory") && cmd.Flags().Changed("worker-configs") && cmd.Flags().Changed("confluent-platform") {
-		return errors.New("at most two of `--plugin-directory`, `--worker-configs`, and `--confluent-platform` may be set")
+	if cmd.Flags().Changed("plugin-directory") && cmd.Flags().Changed("worker-configurations") && cmd.Flags().Changed("confluent-platform") {
+		return errors.New("at most two of `--plugin-directory`, `--worker-configurations`, and `--confluent-platform` may be set")
 	}
 
 	client, err := c.GetHubClient()
@@ -128,7 +128,7 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// Select and update worker-configs
+	// Select and update worker-configurations
 	if len(workerConfigs) == 0 {
 		if installation == nil {
 			installation, err = getConfluentPlatformInstallation(cmd, prompt, force)
@@ -239,7 +239,7 @@ func getPluginDirFromFlag(cmd *cobra.Command) (string, error) {
 }
 
 func getWorkerConfigsFromFlag(cmd *cobra.Command) ([]string, error) {
-	workerConfigs, err := cmd.Flags().GetStringSlice("worker-configs")
+	workerConfigs, err := cmd.Flags().GetStringSlice("worker-configurations")
 	if err != nil {
 		return nil, err
 	}
