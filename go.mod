@@ -4,13 +4,14 @@ go 1.20
 
 require (
 	github.com/antihax/optional v1.0.0
-	github.com/aws/aws-sdk-go v1.44.274
+	github.com/aws/aws-sdk-go v1.44.282
 	github.com/billgraziano/dpapi v0.4.0
 	github.com/bradleyjkemp/cupaloy v2.3.0+incompatible
 	github.com/brianstrauch/cobra-shell v0.4.0
 	github.com/client9/gospell v0.0.0-20160306015952-90dfc71015df
 	github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20230427001341-5f8d2cce5ad9
 	github.com/confluentinc/ccloud-sdk-go-v2/apikeys v0.4.0
+	github.com/confluentinc/ccloud-sdk-go-v2/billing v0.3.0
 	github.com/confluentinc/ccloud-sdk-go-v2/byok v0.0.1
 	github.com/confluentinc/ccloud-sdk-go-v2/cdx v0.0.5
 	github.com/confluentinc/ccloud-sdk-go-v2/cli v0.1.0
@@ -43,6 +44,7 @@ require (
 	github.com/dghubble/sling v1.4.1
 	github.com/docker/docker v24.0.2+incompatible
 	github.com/docker/go-connections v0.4.0
+	github.com/fatih/color v1.15.0
 	github.com/gdamore/tcell/v2 v2.6.0
 	github.com/go-yaml/yaml v2.1.0+incompatible
 	github.com/gobuffalo/flect v1.0.2
@@ -54,7 +56,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/hashicorp/go-hclog v1.5.0
 	github.com/hashicorp/go-multierror v1.1.1
-	github.com/hashicorp/go-retryablehttp v0.7.2
+	github.com/hashicorp/go-retryablehttp v0.7.4
 	github.com/hashicorp/go-version v1.6.0
 	github.com/havoc-io/gopass v0.0.0-20170602182606-9a121bec1ae7
 	github.com/iancoleman/strcase v0.2.0
@@ -62,7 +64,7 @@ require (
 	github.com/inconshreveable/go-update v0.0.0-20160112193335-8152e7eb6ccf
 	github.com/jhump/protoreflect v1.15.1
 	github.com/jonboulle/clockwork v0.4.0
-	github.com/keybase/go-keychain v0.0.0-20221221221913-9be78f6c498b
+	github.com/keybase/go-keychain v0.0.0-20230523030712-b5615109f100
 	github.com/linkedin/goavro/v2 v2.12.0
 	github.com/mattn/go-isatty v0.0.19
 	github.com/olekukonko/tablewriter v0.0.5
@@ -84,15 +86,15 @@ require (
 	github.com/tidwall/pretty v1.2.1
 	github.com/tidwall/sjson v1.2.5
 	github.com/xeipuuv/gojsonschema v1.2.0
-	golang.org/x/crypto v0.9.0
+	golang.org/x/crypto v0.10.0
 	golang.org/x/exp v0.0.0-20230307190834-24139beb5833
-	golang.org/x/oauth2 v0.8.0
-	golang.org/x/term v0.8.0
-	golang.org/x/text v0.9.0
+	golang.org/x/oauth2 v0.9.0
+	golang.org/x/term v0.9.0
+	golang.org/x/text v0.10.0
 	gopkg.in/launchdarkly/go-sdk-common.v2 v2.5.1
 	gopkg.in/square/go-jose.v2 v2.6.0
 	k8s.io/apimachinery v0.27.2
-	pgregory.net/rapid v0.6.1
+	pgregory.net/rapid v1.0.0
 )
 
 require (
@@ -109,7 +111,6 @@ require (
 	github.com/docker/distribution v2.8.1+incompatible // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/envoyproxy/protoc-gen-validate v0.9.1 // indirect
-	github.com/fatih/color v1.15.0 // indirect
 	github.com/gdamore/encoding v1.0.0 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
 	github.com/gogo/googleapis v1.4.1 // indirect
@@ -150,9 +151,9 @@ require (
 	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
 	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616 // indirect
 	golang.org/x/mod v0.9.0 // indirect
-	golang.org/x/net v0.10.0 // indirect
+	golang.org/x/net v0.11.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
-	golang.org/x/sys v0.8.0 // indirect
+	golang.org/x/sys v0.9.0 // indirect
 	golang.org/x/tools v0.7.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20230119192704-9d59e20e5cd1 // indirect

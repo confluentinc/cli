@@ -93,8 +93,7 @@ func NormalizeByteArrayNewLines(raw []byte) []byte {
 
 func ValidateEmail(email string) bool {
 	rgxEmail := regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
-	matched := rgxEmail.MatchString(email)
-	return matched
+	return rgxEmail.MatchString(email)
 }
 
 func Abbreviate(s string, maxLength int) string {

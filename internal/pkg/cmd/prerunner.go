@@ -240,7 +240,7 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(*cob
 
 		command.Version = r.Version
 		r.notifyIfUpdateAvailable(cmd, command.Version.Version)
-		r.warnIfConfluentLocal(cmd)
+		warnIfConfluentLocal(cmd)
 
 		LabelRequiredFlags(cmd)
 
@@ -651,8 +651,7 @@ func (r *PreRun) confluentAutoLogin(cmd *cobra.Command, netrcMachineName string)
 		log.CliLogger.Debug("Non-interactive login failed: no credentials")
 		return nil
 	}
-	err = pauth.PersistConfluentLoginToConfig(r.Config, credentials, credentials.PrerunLoginURL, token, credentials.PrerunLoginCaCertPath, false, false)
-	if err != nil {
+	if err := pauth.PersistConfluentLoginToConfig(r.Config, credentials, credentials.PrerunLoginURL, token, credentials.PrerunLoginCaCertPath, false, false); err != nil {
 		return err
 	}
 	log.CliLogger.Debug(errors.AutoLoginMsg)
@@ -1036,7 +1035,7 @@ func (r *PreRun) shouldCheckForUpdates(cmd *cobra.Command) bool {
 	return true
 }
 
-func (r *PreRun) warnIfConfluentLocal(cmd *cobra.Command) {
+func warnIfConfluentLocal(cmd *cobra.Command) {
 	if strings.HasPrefix(cmd.CommandPath(), "confluent local kafka start") {
 		output.ErrPrintln("The local commands are intended for a single-node development environment only, NOT for production usage. See more: https://docs.confluent.io/current/cli/index.html")
 		output.ErrPrintln()

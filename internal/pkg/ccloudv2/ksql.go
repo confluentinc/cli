@@ -52,26 +52,24 @@ func (c *Client) executeListKsqlClusters(pageToken, environmentId string) (ksqlv
 }
 
 func (c *Client) DeleteKsqlCluster(clusterId, environmentId string) error {
-	resp, err := c.KsqlClient.ClustersKsqldbcmV2Api.DeleteKsqldbcmV2Cluster(c.ksqlApiContext(), clusterId).Environment(environmentId).Execute()
-	return errors.CatchCCloudV2Error(err, resp)
+	httpResp, err := c.KsqlClient.ClustersKsqldbcmV2Api.DeleteKsqldbcmV2Cluster(c.ksqlApiContext(), clusterId).Environment(environmentId).Execute()
+	return errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) DescribeKsqlCluster(clusterId, environmentId string) (ksqlv2.KsqldbcmV2Cluster, error) {
-	cluster, resp, err := c.KsqlClient.ClustersKsqldbcmV2Api.GetKsqldbcmV2Cluster(c.ksqlApiContext(), clusterId).Environment(environmentId).Execute()
-	return cluster, errors.CatchCCloudV2Error(err, resp)
+	res, httpResp, err := c.KsqlClient.ClustersKsqldbcmV2Api.GetKsqldbcmV2Cluster(c.ksqlApiContext(), clusterId).Environment(environmentId).Execute()
+	return res, errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) CreateKsqlCluster(displayName, environmentId, kafkaClusterId, credentialIdentity string, csus int32, useDetailedProcessingLog bool) (ksqlv2.KsqldbcmV2Cluster, error) {
-	cluster := ksqlv2.KsqldbcmV2Cluster{
-		Spec: &ksqlv2.KsqldbcmV2ClusterSpec{
-			DisplayName:              &displayName,
-			UseDetailedProcessingLog: &useDetailedProcessingLog,
-			Csu:                      &csus,
-			KafkaCluster:             &ksqlv2.ObjectReference{Id: kafkaClusterId, Related: "-", ResourceName: "-"},
-			CredentialIdentity:       &ksqlv2.ObjectReference{Id: credentialIdentity, Related: "-", ResourceName: "-"},
-			Environment:              &ksqlv2.ObjectReference{Id: environmentId, Related: "-", ResourceName: "-"},
-		},
-	}
-	created, resp, err := c.KsqlClient.ClustersKsqldbcmV2Api.CreateKsqldbcmV2Cluster(c.ksqlApiContext()).KsqldbcmV2Cluster(cluster).Execute()
-	return created, errors.CatchCCloudV2Error(err, resp)
+	cluster := ksqlv2.KsqldbcmV2Cluster{Spec: &ksqlv2.KsqldbcmV2ClusterSpec{
+		DisplayName:              &displayName,
+		UseDetailedProcessingLog: &useDetailedProcessingLog,
+		Csu:                      &csus,
+		KafkaCluster:             &ksqlv2.ObjectReference{Id: kafkaClusterId, Related: "-", ResourceName: "-"},
+		CredentialIdentity:       &ksqlv2.ObjectReference{Id: credentialIdentity, Related: "-", ResourceName: "-"},
+		Environment:              &ksqlv2.ObjectReference{Id: environmentId, Related: "-", ResourceName: "-"},
+	}}
+	res, httpResp, err := c.KsqlClient.ClustersKsqldbcmV2Api.CreateKsqldbcmV2Cluster(c.ksqlApiContext()).KsqldbcmV2Cluster(cluster).Execute()
+	return res, errors.CatchCCloudV2Error(err, httpResp)
 }

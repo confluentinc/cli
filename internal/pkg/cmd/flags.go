@@ -240,6 +240,14 @@ func autocompleteMechanisms(protocol string) []string {
 	}
 }
 
+func AddProducerConfigFileFlag(cmd *cobra.Command) {
+	cmd.Flags().String("config-file", "", "The path to the configuration file for the producer client, in JSON or Avro format.")
+}
+
+func AddConsumerConfigFileFlag(cmd *cobra.Command) {
+	cmd.Flags().String("config-file", "", "The path to the configuration file for the consumer client, in JSON or Avro format.")
+}
+
 func AddOutputFlag(cmd *cobra.Command) {
 	AddOutputFlagWithDefaultValue(cmd, output.Human.String())
 }

@@ -51,7 +51,7 @@ func newConsumeCommand(prerunner pcmd.PreRunner, clientId string) *cobra.Command
 	cmd.Flags().String("delimiter", "\t", "The delimiter separating each key and value.")
 	cmd.Flags().Bool("timestamp", false, "Print message timestamp in milliseconds.")
 	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the consumer client.`)
-	cmd.Flags().String("config-file", "", "The path to the configuration file for the consumer client, in JSON or avro format.")
+	pcmd.AddConsumerConfigFileFlag(cmd)
 	cmd.Flags().String("schema-registry-context", "", "The Schema Registry context under which to look up schema ID.")
 	cmd.Flags().String("schema-registry-endpoint", "", "Endpoint for Schema Registry cluster.")
 	cmd.Flags().String("schema-registry-api-key", "", "Schema registry API key.")
@@ -130,8 +130,7 @@ func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	}
 	defer adminClient.Close()
 
-	err = c.validateTopic(adminClient, topic, cluster)
-	if err != nil {
+	if err := c.validateTopic(adminClient, topic, cluster); err != nil {
 		return err
 	}
 

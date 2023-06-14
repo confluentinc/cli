@@ -2,12 +2,16 @@ package controller
 
 import (
 	"strconv"
+	"sync"
+	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/golang/mock/gomock"
 	"github.com/rivo/tview"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"pgregory.net/rapid"
 
@@ -22,18 +26,36 @@ type TableControllerTestSuite struct {
 	mockAppController   *mock.MockApplicationControllerInterface
 	mockInputController *mock.MockInputControllerInterface
 	mockStore           *mock.MockStoreInterface
+	dummyTViewApp       *tview.Application
 }
 
 func TestTableControllerTestSuite(t *testing.T) {
 	suite.Run(t, new(TableControllerTestSuite))
 }
 
-func (s *TableControllerTestSuite) SetupSuite() {
+func (s *TableControllerTestSuite) SetupTest() {
 	ctrl := gomock.NewController(s.T())
-	defer ctrl.Finish()
 	s.mockAppController = mock.NewMockApplicationControllerInterface(ctrl)
 	s.mockInputController = mock.NewMockInputControllerInterface(ctrl)
 	s.mockStore = mock.NewMockStoreInterface(ctrl)
+	s.dummyTViewApp = tview.NewApplication()
+}
+
+func (s *TableControllerTestSuite) runWithRealTView(test func(*tview.Application)) {
+	var once sync.Once
+	tviewApp := tview.NewApplication()
+	tviewApp.SetScreen(tcell.NewSimulationScreen(""))
+	err := tviewApp.SetAfterDrawFunc(func(screen tcell.Screen) {
+		if !screen.HasPendingEvent() {
+			once.Do(func() {
+				go func() {
+					test(tviewApp)
+					tviewApp.Stop()
+				}()
+			})
+		}
+	}).SetRoot(tview.NewBox(), true).Run()
+	require.NoError(s.T(), err)
 }
 
 func (s *TableControllerTestSuite) TestQ() {
@@ -46,10 +68,7 @@ func (s *TableControllerTestSuite) TestQ() {
 	}
 	tableController.SetRunInteractiveInputCallback(s.mockInputController.RunInteractiveInput)
 	input := tcell.NewEventKey(tcell.KeyRune, 'Q', tcell.ModNone)
-	s.mockAppController.EXPECT().SuspendOutputMode(gomock.Any()).Times(1)
-	tviewApp := tview.NewApplication()
-	s.mockAppController.EXPECT().TView().Return(tviewApp).Times(1)
-	s.mockStore.EXPECT().DeleteStatement(gomock.Any()).Times(1)
+	s.mockAppController.EXPECT().SuspendOutputMode(gomock.Any())
 
 	// When
 	result := tableController.AppInputCapture(input)
@@ -68,10 +87,7 @@ func (s *TableControllerTestSuite) TestCtrlQ() {
 	}
 	tableController.SetRunInteractiveInputCallback(s.mockInputController.RunInteractiveInput)
 	input := tcell.NewEventKey(tcell.KeyCtrlQ, rune(0), tcell.ModNone)
-	s.mockAppController.EXPECT().SuspendOutputMode(gomock.Any()).Times(1)
-	tviewApp := tview.NewApplication()
-	s.mockAppController.EXPECT().TView().Return(tviewApp).Times(1)
-	s.mockStore.EXPECT().DeleteStatement(gomock.Any()).Times(1)
+	s.mockAppController.EXPECT().SuspendOutputMode(gomock.Any())
 
 	// When
 	result := tableController.AppInputCapture(input)
@@ -90,10 +106,7 @@ func (s *TableControllerTestSuite) TestEscape() {
 	}
 	tableController.SetRunInteractiveInputCallback(s.mockInputController.RunInteractiveInput)
 	input := tcell.NewEventKey(tcell.KeyEscape, rune(0), tcell.ModNone)
-	s.mockAppController.EXPECT().SuspendOutputMode(gomock.Any()).Times(1)
-	tviewApp := tview.NewApplication()
-	s.mockAppController.EXPECT().TView().Return(tviewApp).Times(1)
-	s.mockStore.EXPECT().DeleteStatement(gomock.Any()).Times(1)
+	s.mockAppController.EXPECT().SuspendOutputMode(gomock.Any())
 
 	// When
 	result := tableController.AppInputCapture(input)
@@ -105,7 +118,7 @@ func (s *TableControllerTestSuite) TestEscape() {
 func (s *TableControllerTestSuite) TestM() {
 	// Given
 	table := components.CreateTable()
-	mockStatement := types.ProcessedStatement{PageToken: "NOT_EMPTY"}
+	mockStatement := types.ProcessedStatement{}
 	tableController := TableController{
 		table:         table,
 		appController: s.mockAppController,
@@ -113,9 +126,7 @@ func (s *TableControllerTestSuite) TestM() {
 	}
 	tableController.SetRunInteractiveInputCallback(s.mockInputController.RunInteractiveInput)
 	input := tcell.NewEventKey(tcell.KeyRune, 'M', tcell.ModNone)
-	tviewApp := tview.NewApplication()
-	s.mockAppController.EXPECT().TView().Return(tviewApp).AnyTimes()
-	s.mockStore.EXPECT().FetchStatementResults(gomock.Any()).Return(&mockStatement, nil).AnyTimes()
+	s.mockAppController.EXPECT().TView().Return(tview.NewApplication()).Times(2)
 
 	// When
 	tableController.Init(mockStatement)
@@ -129,29 +140,38 @@ func (s *TableControllerTestSuite) TestM() {
 }
 
 func (s *TableControllerTestSuite) TestR() {
-	// Given
-	table := components.CreateTable()
-	mockStatement := types.ProcessedStatement{PageToken: "NOT_EMPTY"}
-	tableController := TableController{
-		table:         table,
-		appController: s.mockAppController,
-		store:         s.mockStore,
-	}
-	tableController.SetRunInteractiveInputCallback(s.mockInputController.RunInteractiveInput)
-	input := tcell.NewEventKey(tcell.KeyRune, 'R', tcell.ModNone)
-	tviewApp := tview.NewApplication()
-	s.mockAppController.EXPECT().TView().Return(tviewApp).AnyTimes()
-	s.mockStore.EXPECT().FetchStatementResults(gomock.Any()).Return(&mockStatement, nil).AnyTimes()
+	s.runWithRealTView(func(tview *tview.Application) {
+		// Given
+		table := components.CreateTable()
+		mockStatement := types.ProcessedStatement{PageToken: "NOT_EMPTY"}
+		tableController := TableController{
+			table:         table,
+			appController: s.mockAppController,
+			store:         s.mockStore,
+		}
+		tableController.SetRunInteractiveInputCallback(s.mockInputController.RunInteractiveInput)
+		input := tcell.NewEventKey(tcell.KeyRune, 'R', tcell.ModNone)
+		s.mockAppController.EXPECT().TView().Return(tview).AnyTimes()
+		s.mockStore.EXPECT().FetchStatementResults(mockStatement).Return(&mockStatement, nil).AnyTimes()
 
-	// When
-	tableController.Init(mockStatement)
-	before := tableController.isAutoRefreshRunning()
-	result := tableController.AppInputCapture(input)
-	after := tableController.isAutoRefreshRunning()
+		// When
+		tableController.Init(mockStatement)
+		assert.True(s.T(), tableController.isAutoRefreshRunning())
+		assert.Equal(s.T(), running, int(atomic.LoadInt32(&tableController.fetchState)))
 
-	// Then
-	assert.Nil(s.T(), result)
-	assert.NotEqual(s.T(), after, before)
+		done := make(chan bool)
+		// schedule pause
+		go func() {
+			time.Sleep(2 * time.Second)
+			result := tableController.AppInputCapture(input)
+			// Then
+			assert.Nil(s.T(), result)
+			assert.False(s.T(), tableController.isAutoRefreshRunning())
+			assert.Equal(s.T(), paused, int(atomic.LoadInt32(&tableController.fetchState)))
+			done <- true
+		}()
+		<-done
+	})
 }
 
 func (s *TableControllerTestSuite) TestDefault() {
@@ -179,8 +199,7 @@ func (s *TableControllerTestSuite) TestEnter() {
 		store:         s.mockStore,
 	}
 	tableController.SetRunInteractiveInputCallback(s.mockInputController.RunInteractiveInput)
-	tviewApp := tview.NewApplication()
-	s.mockAppController.EXPECT().TView().Return(tviewApp).Times(3)
+	s.mockAppController.EXPECT().TView().Return(tview.NewApplication()).Times(3)
 
 	headers := []string{"Count"}
 	tableController.materializedStatementResults = results.NewMaterializedStatementResults(headers, 10)
@@ -228,9 +247,8 @@ func (s *TableControllerTestSuite) TestQInRowView() {
 		isRowViewOpen: true,
 	}
 	tableController.SetRunInteractiveInputCallback(s.mockInputController.RunInteractiveInput)
-	tviewApp := tview.NewApplication()
 	s.mockAppController.EXPECT().ShowTableView()
-	s.mockAppController.EXPECT().TView().Return(tviewApp)
+	s.mockAppController.EXPECT().TView().Return(tview.NewApplication())
 
 	// When
 	result := tableController.AppInputCapture(tcell.NewEventKey(tcell.KeyRune, 'Q', tcell.ModNone))
@@ -250,9 +268,8 @@ func (s *TableControllerTestSuite) TestCtrlQInRowView() {
 		isRowViewOpen: true,
 	}
 	tableController.SetRunInteractiveInputCallback(s.mockInputController.RunInteractiveInput)
-	tviewApp := tview.NewApplication()
 	s.mockAppController.EXPECT().ShowTableView()
-	s.mockAppController.EXPECT().TView().Return(tviewApp)
+	s.mockAppController.EXPECT().TView().Return(tview.NewApplication())
 
 	// When
 	result := tableController.AppInputCapture(tcell.NewEventKey(tcell.KeyCtrlQ, rune(0), tcell.ModNone))
@@ -272,9 +289,8 @@ func (s *TableControllerTestSuite) TestEscapeInRowView() {
 		isRowViewOpen: true,
 	}
 	tableController.SetRunInteractiveInputCallback(s.mockInputController.RunInteractiveInput)
-	tviewApp := tview.NewApplication()
 	s.mockAppController.EXPECT().ShowTableView()
-	s.mockAppController.EXPECT().TView().Return(tviewApp)
+	s.mockAppController.EXPECT().TView().Return(tview.NewApplication())
 
 	// When
 	result := tableController.AppInputCapture(tcell.NewEventKey(tcell.KeyEscape, rune(0), tcell.ModNone))
@@ -293,8 +309,7 @@ func (s *TableControllerTestSuite) TestSelectRow() {
 		store:         s.mockStore,
 	}
 	tableController.SetRunInteractiveInputCallback(s.mockInputController.RunInteractiveInput)
-	tviewApp := tview.NewApplication()
-	s.mockAppController.EXPECT().TView().Return(tviewApp)
+	s.mockAppController.EXPECT().TView().Return(s.dummyTViewApp)
 
 	headers := []string{"Count"}
 	tableController.materializedStatementResults = results.NewMaterializedStatementResults(headers, 10)
@@ -323,7 +338,7 @@ func (s *TableControllerTestSuite) TestSelectRow() {
 		if rowToSelect >= tableController.table.GetRowCount() {
 			rowToSelect = tableController.table.GetRowCount() - 1
 		}
-		s.mockAppController.EXPECT().TView().Return(tviewApp).Times(3)
+		s.mockAppController.EXPECT().TView().Return(s.dummyTViewApp).Times(3)
 		s.mockAppController.EXPECT().ShowTableView()
 
 		// When
@@ -370,4 +385,62 @@ func (s *TableControllerTestSuite) TestDefaultInRowView() {
 	assert.NotNil(s.T(), result)
 	assert.Equal(s.T(), input, result)
 	assert.True(s.T(), tableController.isRowViewOpen)
+}
+
+func (s *TableControllerTestSuite) TestResultFetchStopsAfterError() {
+	s.runWithRealTView(func(tview *tview.Application) {
+		// Given
+		table := components.CreateTable()
+		mockStatement := types.ProcessedStatement{PageToken: "NOT_EMPTY"}
+		tableController := TableController{
+			table:         table,
+			appController: s.mockAppController,
+			store:         s.mockStore,
+		}
+		tableController.SetRunInteractiveInputCallback(s.mockInputController.RunInteractiveInput)
+		s.mockAppController.EXPECT().TView().Return(tview).Times(4)
+		s.mockStore.EXPECT().FetchStatementResults(mockStatement).Return(&mockStatement, &types.StatementError{Message: "error"})
+
+		// When
+		tableController.Init(mockStatement)
+		assert.True(s.T(), tableController.isAutoRefreshRunning())
+		assert.Equal(s.T(), running, int(atomic.LoadInt32(&tableController.fetchState)))
+		// wait for auto refresh to complete
+		for tableController.isAutoRefreshRunning() {
+			time.Sleep(1 * time.Second)
+		}
+
+		// Then
+		assert.False(s.T(), tableController.isAutoRefreshRunning())
+		assert.Equal(s.T(), failed, int(atomic.LoadInt32(&tableController.fetchState)))
+	})
+}
+
+func (s *TableControllerTestSuite) TestResultFetchStopsAfterNoMorePageToken() {
+	s.runWithRealTView(func(tview *tview.Application) {
+		// Given
+		table := components.CreateTable()
+		mockStatement := types.ProcessedStatement{PageToken: "NOT_EMPTY"}
+		tableController := TableController{
+			table:         table,
+			appController: s.mockAppController,
+			store:         s.mockStore,
+		}
+		tableController.SetRunInteractiveInputCallback(s.mockInputController.RunInteractiveInput)
+		s.mockAppController.EXPECT().TView().Return(tview).Times(4)
+		s.mockStore.EXPECT().FetchStatementResults(mockStatement).Return(&types.ProcessedStatement{}, nil)
+
+		// When
+		tableController.Init(mockStatement)
+		assert.True(s.T(), tableController.isAutoRefreshRunning())
+		assert.Equal(s.T(), running, int(atomic.LoadInt32(&tableController.fetchState)))
+		// wait for auto refresh to complete
+		for tableController.isAutoRefreshRunning() {
+			time.Sleep(1 * time.Second)
+		}
+
+		// Then
+		assert.False(s.T(), tableController.isAutoRefreshRunning())
+		assert.Equal(s.T(), completed, int(atomic.LoadInt32(&tableController.fetchState)))
+	})
 }

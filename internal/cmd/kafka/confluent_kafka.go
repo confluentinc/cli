@@ -195,8 +195,7 @@ func consumeMessage(e *ckafka.Message, h *GroupHandler) error {
 		} else {
 			keyString = string(key)
 		}
-		_, err := fmt.Fprint(h.Out, keyString+h.Properties.Delimiter)
-		if err != nil {
+		if _, err := fmt.Fprint(h.Out, keyString+h.Properties.Delimiter); err != nil {
 			return err
 		}
 	}
@@ -213,8 +212,7 @@ func consumeMessage(e *ckafka.Message, h *GroupHandler) error {
 		}
 		// Message body is encoded after 5 bytes of meta information.
 		value = value[messageOffset:]
-		err = deserializationProvider.LoadSchema(schemaPath, referencePathMap)
-		if err != nil {
+		if err := deserializationProvider.LoadSchema(schemaPath, referencePathMap); err != nil {
 			return err
 		}
 	}
@@ -227,8 +225,7 @@ func consumeMessage(e *ckafka.Message, h *GroupHandler) error {
 		jsonMessage = fmt.Sprintf("Timestamp: %d\t%s", e.Timestamp.UnixMilli(), jsonMessage)
 	}
 
-	_, err = fmt.Fprintln(h.Out, jsonMessage)
-	if err != nil {
+	if _, err := fmt.Fprintln(h.Out, jsonMessage); err != nil {
 		return err
 	}
 
@@ -237,8 +234,7 @@ func consumeMessage(e *ckafka.Message, h *GroupHandler) error {
 		if h.Properties.FullHeader {
 			headers = getFullHeaders(e.Headers)
 		}
-		_, err = fmt.Fprintf(h.Out, "%% Headers: %v\n", headers)
-		if err != nil {
+		if _, err := fmt.Fprintf(h.Out, "%% Headers: %v\n", headers); err != nil {
 			return err
 		}
 	}
@@ -263,8 +259,7 @@ func RunConsumer(consumer *ckafka.Consumer, groupHandler *GroupHandler) error {
 			}
 			switch e := event.(type) {
 			case *ckafka.Message:
-				err := consumeMessage(e, groupHandler)
-				if err != nil {
+				if err := consumeMessage(e, groupHandler); err != nil {
 					return err
 				}
 			case ckafka.Error:
@@ -299,8 +294,7 @@ func (h *GroupHandler) RequestSchema(value []byte) (string, map[string]string, e
 		if err != nil {
 			return "", nil, err
 		}
-		err = os.WriteFile(tempStorePath, []byte(schemaString.Schema), 0644)
-		if err != nil {
+		if err := os.WriteFile(tempStorePath, []byte(schemaString.Schema), 0644); err != nil {
 			return "", nil, err
 		}
 
@@ -308,8 +302,7 @@ func (h *GroupHandler) RequestSchema(value []byte) (string, map[string]string, e
 		if err != nil {
 			return "", nil, err
 		}
-		err = os.WriteFile(tempRefStorePath, refBytes, 0644)
-		if err != nil {
+		if err := os.WriteFile(tempRefStorePath, refBytes, 0644); err != nil {
 			return "", nil, err
 		}
 		references = schemaString.References
@@ -318,8 +311,7 @@ func (h *GroupHandler) RequestSchema(value []byte) (string, map[string]string, e
 		if err != nil {
 			return "", nil, err
 		}
-		err = json.Unmarshal(refBlob, &references)
-		if err != nil {
+		if err := json.Unmarshal(refBlob, &references); err != nil {
 			return "", nil, err
 		}
 	}

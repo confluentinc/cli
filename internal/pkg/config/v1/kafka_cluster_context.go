@@ -132,8 +132,7 @@ func (k *KafkaClusterContext) GetCurrentKafkaEnvContext() *KafkaEnvContext {
 			ActiveKafkaCluster:  "",
 			KafkaClusterConfigs: map[string]*KafkaClusterConfig{},
 		}
-		err := k.Context.Save()
-		if err != nil {
+		if err := k.Context.Save(); err != nil {
 			panic(fmt.Sprintf("Unable to save new KafkaEnvContext to config for context '%s' environment '%s'.", k.Context.Name, curEnv))
 		}
 	}
@@ -145,8 +144,7 @@ func (k *KafkaClusterContext) Validate() {
 	if !k.EnvContext {
 		if k.KafkaClusterConfigs == nil {
 			k.KafkaClusterConfigs = map[string]*KafkaClusterConfig{}
-			err := k.Context.Save()
-			if err != nil {
+			if err := k.Context.Save(); err != nil {
 				panic(fmt.Sprintf("Unable to save new KafkaClusterConfigs map to config for context '%s'.", k.Context.Name))
 			}
 		}
@@ -156,16 +154,14 @@ func (k *KafkaClusterContext) Validate() {
 	} else {
 		if k.KafkaEnvContexts == nil {
 			k.KafkaEnvContexts = map[string]*KafkaEnvContext{}
-			err := k.Context.Save()
-			if err != nil {
+			if err := k.Context.Save(); err != nil {
 				panic(fmt.Sprintf("Unable to save new KafkaEnvContexts map to config for context '%s'.", k.Context.Name))
 			}
 		}
 		for env, kafkaEnvContexts := range k.KafkaEnvContexts {
 			if kafkaEnvContexts.KafkaClusterConfigs == nil {
 				kafkaEnvContexts.KafkaClusterConfigs = map[string]*KafkaClusterConfig{}
-				err := k.Context.Save()
-				if err != nil {
+				if err := k.Context.Save(); err != nil {
 					panic(fmt.Sprintf("Unable to save new KafkaClusterConfigs map to config for context '%s', environment '%s'.", k.Context.Name, env))
 				}
 			}
@@ -184,8 +180,7 @@ func (k *KafkaClusterContext) validateActiveKafka() {
 		if _, ok := k.KafkaClusterConfigs[k.ActiveKafkaCluster]; k.ActiveKafkaCluster != "" && !ok {
 			output.ErrPrintf(errMsg, k.ActiveKafkaCluster, k.Context.Name)
 			k.ActiveKafkaCluster = ""
-			err := k.Context.Save()
-			if err != nil {
+			if err := k.Context.Save(); err != nil {
 				panic(fmt.Sprintf("Unable to reset ActiveKafkaCluster in context '%s'.", k.Context.Name))
 			}
 		}
@@ -194,8 +189,7 @@ func (k *KafkaClusterContext) validateActiveKafka() {
 			if _, ok := kafkaEnvContext.KafkaClusterConfigs[kafkaEnvContext.ActiveKafkaCluster]; kafkaEnvContext.ActiveKafkaCluster != "" && !ok {
 				output.ErrPrintf(errMsg, kafkaEnvContext.ActiveKafkaCluster, k.Context.Name)
 				kafkaEnvContext.ActiveKafkaCluster = ""
-				err := k.Context.Save()
-				if err != nil {
+				if err := k.Context.Save(); err != nil {
 					panic(fmt.Sprintf("Unable to reset ActiveKafkaCluster in context '%s', environment '%s'.", k.Context.Name, env))
 				}
 			}
@@ -209,16 +203,14 @@ func (k *KafkaClusterContext) validateKafkaClusterConfig(cluster *KafkaClusterCo
 	}
 	if cluster.APIKeys == nil {
 		cluster.APIKeys = map[string]*APIKeyPair{}
-		err := k.Context.Save()
-		if err != nil {
+		if err := k.Context.Save(); err != nil {
 			panic(fmt.Sprintf("Unable to save new APIKeys map in context '%s', for cluster '%s'.", k.Context.Name, cluster.ID))
 		}
 	}
 	if _, ok := cluster.APIKeys[cluster.APIKey]; cluster.APIKey != "" && !ok {
 		output.ErrPrintf(errors.CurrentAPIKeyAutofixMsg, cluster.APIKey, cluster.ID, k.Context.Name, cluster.ID)
 		cluster.APIKey = ""
-		err := k.Context.Save()
-		if err != nil {
+		if err := k.Context.Save(); err != nil {
 			panic(fmt.Sprintf("Unable to reset current APIKey for cluster '%s' in context '%s'.", cluster.ID, k.Context.Name))
 		}
 	}
@@ -247,8 +239,7 @@ func (k *KafkaClusterContext) validateApiKeysDict(cluster *KafkaClusterConfig) {
 	}
 	if missingKey || mismatchKey || missingSecret {
 		printApiKeysDictErrorMessage(missingKey, mismatchKey, missingSecret, cluster, k.Context.Name)
-		err := k.Context.Save()
-		if err != nil {
+		if err := k.Context.Save(); err != nil {
 			panic("Unable to save new KafkaEnvContext to config.")
 		}
 	}
