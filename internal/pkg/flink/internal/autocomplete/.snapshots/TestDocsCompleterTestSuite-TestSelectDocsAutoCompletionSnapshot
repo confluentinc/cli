@@ -1,0 +1,146 @@
+([]prompt.Suggest) (len=36) {
+  (prompt.Suggest) {
+    Text: (string) (len=17) "from kafka_table1",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=16) "from MyUserTable",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=6) "from a",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=22) "FROM page_view_source;",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=11) "FROM Orders",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=10) "FROM TABLE",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=9) "FROM Bid;",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=17) "FROM LatestRates;",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=16) "FROM 'timestamp'",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=12) "FROM MyTable",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=5) "FROM ",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=8) "from the",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=17) "FROM source_table",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=7) "FROM t1",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=6) "FROM >",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=15) "FROM LeftTable;",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=13) "FROM MyTable;",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=26) "FROM employee_information;",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=8) "FROM ...",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=12) "FROM Orders,",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=25) "FROM employee_information",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=11) "FROM Ticker",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=12) "FROM Orders;",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=25) "from employee_information",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=21) "FROM <windowed_table>",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=6) "FROM L",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=11) "FROM table1",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=11) "FROM VALUES",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=21) "FROM table_expression",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=6) "FROM |",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=9) "FROM ...;",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=20) "FROM tableExpression",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=11) "from orders",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=12) "from orders;",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=8) "from db1",
+    Description: (string) ""
+  },
+  (prompt.Suggest) {
+    Text: (string) (len=9) "from db1;",
+    Description: (string) ""
+  }
+}

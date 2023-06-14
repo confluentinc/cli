@@ -77,20 +77,22 @@ type Config struct {
 	NoBrowser           bool                        `json:"no_browser"`
 	Platforms           map[string]*Platform        `json:"platforms,omitempty"`
 	Credentials         map[string]*Credential      `json:"credentials,omitempty"`
+	CurrentContext      string                      `json:"current_context"`
 	Contexts            map[string]*Context         `json:"contexts,omitempty"`
 	ContextStates       map[string]*ContextState    `json:"context_states,omitempty"`
-	CurrentContext      string                      `json:"current_context"`
 	AnonymousId         string                      `json:"anonymous_id,omitempty"`
 	SavedCredentials    map[string]*LoginCredential `json:"saved_credentials,omitempty"`
+	LocalPorts          *LocalPorts                 `json:"local_ports,omitempty"`
 
 	// The following configurations are not persisted between runs
 
 	IsTest  bool              `json:"-"`
 	Version *pversion.Version `json:"-"`
 
-	overwrittenCurrentContext      string
-	overwrittenCurrentEnvironment  string
-	overwrittenCurrentKafkaCluster string
+	overwrittenCurrentContext          string
+	overwrittenCurrentEnvironment      string
+	overwrittenCurrentFlinkComputePool string
+	overwrittenCurrentKafkaCluster     string
 }
 
 func (c *Config) SetOverwrittenCurrentContext(context string) {
@@ -105,6 +107,12 @@ func (c *Config) SetOverwrittenCurrentContext(context string) {
 func (c *Config) SetOverwrittenCurrentEnvironment(environmentId string) {
 	if c.overwrittenCurrentEnvironment == "" {
 		c.overwrittenCurrentEnvironment = environmentId
+	}
+}
+
+func (c *Config) SetOverwrittenFlinkComputePool(computePoolId string) {
+	if c.overwrittenCurrentFlinkComputePool == "" {
+		c.overwrittenCurrentFlinkComputePool = computePoolId
 	}
 }
 
@@ -134,12 +142,10 @@ func (c *Config) DecryptContextStates() error {
 	if context := c.Context(); context != nil {
 		state := c.ContextStates[context.Name]
 		if state != nil {
-			err := state.DecryptContextStateAuthToken(context.Name)
-			if err != nil {
+			if err := state.DecryptContextStateAuthToken(context.Name); err != nil {
 				return err
 			}
-			err = state.DecryptContextStateAuthRefreshToken(context.Name)
-			if err != nil {
+			if err := state.DecryptContextStateAuthRefreshToken(context.Name); err != nil {
 				return err
 			}
 		}
@@ -215,8 +221,7 @@ func (c *Config) Save() error {
 	if c.Context() != nil {
 		tempAuthToken = c.Context().GetState().AuthToken
 		tempAuthRefreshToken = c.Context().GetState().AuthRefreshToken
-		err := c.encryptContextStateTokens(tempAuthToken, tempAuthRefreshToken)
-		if err != nil {
+		if err := c.encryptContextStateTokens(tempAuthToken, tempAuthRefreshToken); err != nil {
 			return err
 		}
 	}
@@ -271,13 +276,18 @@ func (c *Config) encryptContextStateTokens(tempAuthToken, tempAuthRefreshToken s
 		c.Context().GetState().AuthToken = encryptedAuthToken
 	}
 
-	if regexp.MustCompile(authRefreshTokenRegex).MatchString(tempAuthRefreshToken) {
+	// The Confluent Gov environment returns a refresh token that does not match `authRefreshTokenRegex` and cannot be distinguished from an already encrypted refresh token.
+	// We prefix encrypted tokens with "AES/GCM/NoPadding" to ensure that they are only encrypted once.
+	isUnencryptedConfluentGov := !strings.HasPrefix(tempAuthRefreshToken, secret.AesGcm) && c.Context().PlatformName == "infra.confluentgov-internal.com"
+
+	if regexp.MustCompile(authRefreshTokenRegex).MatchString(tempAuthRefreshToken) || isUnencryptedConfluentGov {
 		encryptedAuthRefreshToken, err := secret.Encrypt(c.Context().Name, tempAuthRefreshToken, c.Context().GetState().Salt, c.Context().GetState().Nonce)
 		if err != nil {
 			return err
 		}
 		c.Context().State.AuthRefreshToken = encryptedAuthRefreshToken
 	}
+
 	return nil
 }
 
@@ -367,8 +377,7 @@ func (c *Config) Validate() error {
 	// 1. Has no hanging references between the context and the config.
 	// 2. Is mapped by name correctly in the config.
 	for _, context := range c.Contexts {
-		err := context.validate()
-		if err != nil {
+		if err := context.validate(); err != nil {
 			log.CliLogger.Trace("context validation error")
 			return err
 		}

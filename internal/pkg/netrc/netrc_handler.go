@@ -71,8 +71,7 @@ func (n *NetrcHandlerImpl) RemoveNetrcCredentials(isCloud bool, ctxName string) 
 	machineName := GetLocalCredentialName(isCloud, ctxName)
 	machine := netrcFile.FindMachine(machineName)
 	if machine != nil {
-		err := removeCredentials(machineName, netrcFile, n.FileName)
-		if err != nil {
+		if err := removeCredentials(machineName, netrcFile, n.FileName); err != nil {
 			return "", err
 		}
 		return machine.Login, nil
@@ -116,8 +115,7 @@ func removeCredentials(machineName string, netrcFile *gonetrc.Netrc, filename st
 		return err
 	}
 	filemode := info.Mode()
-	err = os.WriteFile(filename, buf, filemode)
-	if err != nil {
+	if err := os.WriteFile(filename, buf, filemode); err != nil {
 		return errors.Wrapf(err, errors.WriteToNetrcFileErrorMsg, filename)
 	}
 	return nil

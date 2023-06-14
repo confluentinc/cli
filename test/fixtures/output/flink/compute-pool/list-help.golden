@@ -1,0 +1,14 @@
+List Flink compute pools.
+
+Usage:
+  confluent flink compute-pool list [flags]
+
+Flags:
+      --region string        Cloud region for compute pool (use "confluent flink region list" to see all).
+      --environment string   Environment ID.
+  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

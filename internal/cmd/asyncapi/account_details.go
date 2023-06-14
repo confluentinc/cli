@@ -87,8 +87,7 @@ func (d *accountDetails) getSchemaDetails() error {
 		return fmt.Errorf("protobuf is not supported")
 	}
 	// JSON or Avro Format
-	err = json.Unmarshal([]byte(schema.Schema), &d.channelDetails.unmarshalledSchema)
-	if err != nil {
+	if err := json.Unmarshal([]byte(schema.Schema), &d.channelDetails.unmarshalledSchema); err != nil {
 		d.channelDetails.unmarshalledSchema, err = handlePrimitiveSchemas(schema.Schema, err)
 		log.CliLogger.Warn(err)
 	}
@@ -120,8 +119,7 @@ func (d *accountDetails) getTopicDescription() error {
 }
 
 func (c *command) countAsyncApiUsage(details *accountDetails) error {
-	_, err := details.srClient.DefaultApi.AsyncapiPut(details.srContext)
-	if err != nil {
+	if _, err := details.srClient.DefaultApi.AsyncapiPut(details.srContext); err != nil {
 		return fmt.Errorf("failed to access AsyncAPI metric endpoint: %v", err)
 	}
 	return nil
