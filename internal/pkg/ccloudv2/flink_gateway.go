@@ -37,6 +37,20 @@ func NewFlinkGatewayClient(url, userAgent string, unsafeTrace bool, authToken st
 	}
 }
 
+func (c *FlinkGatewayClient) SetAuthToken(authToken string) {
+	if c == nil {
+		return
+	}
+	c.authToken = authToken
+}
+
+func (c *FlinkGatewayClient) GetAuthToken() string {
+	if c == nil {
+		return ""
+	}
+	return c.authToken
+}
+
 func (c *FlinkGatewayClient) flinkGatewayApiContext() context.Context {
 	return context.WithValue(context.Background(), flinkgatewayv1alpha1.ContextAccessToken, c.authToken)
 }

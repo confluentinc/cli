@@ -81,7 +81,7 @@ func (c *InputController) RunInteractiveInput() {
 
 		// Upon receiving user input, we check if user is authenticated and possibly a refresh the CCloud SSO token
 		if authErr := c.authenticated(); authErr != nil {
-			output.Println(authErr.Error())
+			output.Printf("Error: %v\n", authErr)
 			c.appController.ExitApplication()
 			continue
 		}
