@@ -96,6 +96,7 @@ var flagRules = []linter.FlagRule{
 			"skip-message-on-error",
 			"source-bootstrap-server",
 			"update-schema-registry",
+			"worker-configurations",
 		),
 	),
 	linter.FlagFilter(
