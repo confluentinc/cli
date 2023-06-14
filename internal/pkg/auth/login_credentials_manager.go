@@ -302,7 +302,7 @@ func (h *LoginCredentialsManagerImpl) isSSOUser(email, orgId string) bool {
 		return false
 	}
 
-	if email != "" && types.Contains([]string{"fedramp", "fedramp-internal"}, sso.GetCCloudEnvFromBaseUrl(h.client.BaseURL)) {
+	if email != "" && types.Contains([]string{"prod-us-gov", "devel-us-gov", "infra-us-gov"}, sso.GetCCloudEnvFromBaseUrl(h.client.BaseURL)) {
 		return true
 	}
 
