@@ -45,6 +45,14 @@ func handleCmkKafkaClusterCreate(t *testing.T) http.HandlerFunc {
 				cluster.Spec.Byok = req.Spec.Byok
 			}
 			cluster.Status.Cku = cmkv2.PtrInt32(1)
+		} else if req.Spec.Config.CmkV2Enterprise != nil {
+			if *req.Spec.Availability == "SINGLE_ZONE" {
+				w.WriteHeader(http.StatusUnprocessableEntity)
+				_, err := io.WriteString(w, `{"errors":[{"status":"422","detail":"Durability must be HIGH for an Enterprise cluster"}]}`)
+				require.NoError(t, err)
+				return
+			}
+			cluster.Spec.Config.CmkV2Enterprise = &cmkv2.CmkV2Enterprise{Kind: "Enterprise"}
 		} else {
 			cluster.Spec.Config.CmkV2Basic = &cmkv2.CmkV2Basic{Kind: "Basic"}
 		}
