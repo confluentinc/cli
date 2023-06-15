@@ -195,20 +195,20 @@ func renderMsgAndStatus(processedStatement *types.ProcessedStatement) {
 	}
 
 	if processedStatement.IsLocalStatement {
-		if processedStatement.Status != "FAILED" {
-			output.Println("Statement successfully submitted.\n ")
+		if processedStatement.Status == "FAILED" {
+			output.Println("Error: Couldn't process statement. Please check your statement and try again")
 		} else {
-			output.Println("Error: Couldn't process statement. Please check your statement and try again.")
+			output.Println("Statement successfully submitted.")
 		}
 	} else {
 		if processedStatement.StatementName != "" {
 			output.Printf("Statement name: %s\n", processedStatement.StatementName)
 		}
-		if processedStatement.Status != "FAILED" {
-			output.Println("Statement successfully submitted. ")
-			output.Println("Fetching results...\n ")
+		if processedStatement.Status == "FAILED" {
+			output.Println("Error: Statement submission failed. There could a problem with the server right now. Check your statement and try again")
 		} else {
-			output.Println("Error: Statement submission failed. There could a problem with the server right now. Check your statement and try again.")
+			output.Println("Statement successfully submitted.")
+			output.Println("Fetching results...")
 		}
 		processedStatement.PrintStatusDetail()
 	}
