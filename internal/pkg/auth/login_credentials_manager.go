@@ -372,6 +372,7 @@ func (h *LoginCredentialsManagerImpl) GetCredentialsFromKeychain(cfg *v1.Config,
 		if runtime.GOOS == "darwin" {
 			username, password, err := keychain.Read(isCloud, ctxName, url)
 			if err == nil && password != "" {
+				log.CliLogger.Debugf(errors.FoundKeychainCredMsg, username)
 				return &Credentials{Username: username, Password: password}, nil
 			}
 			return nil, errors.New(errors.NoValidKeychainCredentialErrorMsg)

@@ -1,12 +1,10 @@
 package s3
 
 import (
-	"bytes"
 	"encoding/xml"
 	"fmt"
 	"io"
 	"net/http"
-	"os/exec"
 	"runtime"
 	"sort"
 	"strings"
@@ -16,6 +14,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	pio "github.com/confluentinc/cli/internal/pkg/io"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/update"
 )
 
 var S3ReleaseNotesFile = "release-notes.rst"
@@ -60,7 +59,7 @@ func NewPublicRepo(params *PublicRepoParams) *PublicRepo {
 		PublicRepoParams: params,
 		endpoint:         fmt.Sprintf("https://s3-%s.amazonaws.com/%s", params.S3BinRegion, params.S3BinBucket),
 		fs:               &pio.RealFileSystem{},
-		goos:             runtime.GOOS,
+		goos:             update.GetOs(),
 		goarch:           runtime.GOARCH,
 	}
 }
@@ -127,8 +126,7 @@ func (r *PublicRepo) getListBucketResultFromDir(s3DirPrefix string) (*ListBucket
 			return nil, err
 		}
 		var result ListBucketResult
-		err = xml.Unmarshal(body, &result)
-		if err != nil {
+		if err := xml.Unmarshal(body, &result); err != nil {
 			return nil, err
 		}
 		results = append(results, result)
@@ -295,13 +293,5 @@ func (r *PublicRepo) getHttpResponse(url string) (*http.Response, error) {
 }
 
 func (r *PublicRepo) getDownloadVersion(s3URL string) string {
-	downloadVersion := fmt.Sprintf("%s/%s", r.endpoint, s3URL)
-	cmd := exec.Command("ldd", "--version")
-	var stderr bytes.Buffer
-	cmd.Stderr = &stderr
-	_ = cmd.Run()
-	if strings.Contains(stderr.String(), "musl") {
-		return strings.Replace(downloadVersion, "linux", "alpine", 1)
-	}
-	return downloadVersion
+	return fmt.Sprintf("%s/%s", r.endpoint, s3URL)
 }

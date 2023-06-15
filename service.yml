@@ -1,6 +1,6 @@
 name: cli
 lang: go
-lang_version: 1.19.5
+lang_version: "1.20"
 git:
   enable: true
 github:

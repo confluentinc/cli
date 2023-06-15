@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 
@@ -22,6 +23,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/featureflags"
 	"github.com/confluentinc/cli/internal/pkg/form"
+	"github.com/confluentinc/cli/internal/pkg/hub"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -66,14 +68,16 @@ type KafkaRESTProvider func() (*KafkaREST, error)
 
 type AuthenticatedCLICommand struct {
 	*CLICommand
-	Client            *ccloudv1.Client
-	V2Client          *ccloudv2.Client
-	MDSClient         *mds.APIClient
-	MDSv2Client       *mdsv2alpha1.APIClient
-	KafkaRESTProvider *KafkaRESTProvider
-	metricsClient     *ccloudv2.MetricsClient
-	Context           *dynamicconfig.DynamicContext
-	State             *v1.ContextState
+	Client             *ccloudv1.Client
+	V2Client           *ccloudv2.Client
+	MDSClient          *mds.APIClient
+	MDSv2Client        *mdsv2alpha1.APIClient
+	HubClient          *hub.Client
+	KafkaRESTProvider  *KafkaRESTProvider
+	flinkGatewayClient *ccloudv2.FlinkGatewayClient
+	metricsClient      *ccloudv2.MetricsClient
+	Context            *dynamicconfig.DynamicContext
+	State              *v1.ContextState
 }
 
 type HasAPIKeyCLICommand struct {
@@ -118,6 +122,42 @@ func NewCLICommand(cmd *cobra.Command, prerunner PreRunner) *CLICommand {
 
 func (c *AuthenticatedCLICommand) GetKafkaREST() (*KafkaREST, error) {
 	return (*c.KafkaRESTProvider)()
+}
+
+func (c *AuthenticatedCLICommand) GetFlinkGatewayClient() (*ccloudv2.FlinkGatewayClient, error) {
+	ctx := c.Config.Context()
+
+	if c.flinkGatewayClient == nil {
+		computePoolId := ctx.GetCurrentFlinkComputePool()
+		if computePoolId == "" {
+			return nil, errors.NewErrorWithSuggestions("no compute pool selected", "Select a compute pool with `confluent flink compute-pool use` or `--compute-pool`.")
+		}
+
+		computePool, err := c.V2Client.DescribeFlinkComputePool(computePoolId, ctx.GetCurrentEnvironment())
+		if err != nil {
+			return nil, err
+		}
+
+		u, err := url.Parse(computePool.Spec.GetHttpEndpoint())
+		if err != nil {
+			return nil, err
+		}
+		u.Path = ""
+
+		unsafeTrace, err := c.Command.Flags().GetBool("unsafe-trace")
+		if err != nil {
+			return nil, err
+		}
+
+		authToken, err := pauth.GetJwtTokenForV2Client(ctx.GetState(), ctx.GetPlatformServer())
+		if err != nil {
+			return nil, err
+		}
+
+		c.flinkGatewayClient = ccloudv2.NewFlinkGatewayClient(u.String(), c.Version.UserAgent, unsafeTrace, authToken)
+	}
+
+	return c.flinkGatewayClient, nil
 }
 
 func (c *AuthenticatedCLICommand) GetMetricsClient() (*ccloudv2.MetricsClient, error) {
@@ -200,7 +240,7 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(*cob
 
 		command.Version = r.Version
 		r.notifyIfUpdateAvailable(cmd, command.Version.Version)
-		r.warnIfConfluentLocal(cmd)
+		warnIfConfluentLocal(cmd)
 
 		LabelRequiredFlags(cmd)
 
@@ -459,11 +499,10 @@ func (r *PreRun) setCCloudClient(c *AuthenticatedCLICommand) error {
 			if err != nil {
 				return nil, err
 			}
-
 			kafkaRest := &KafkaREST{
 				Context:     context.WithValue(context.Background(), kafkarestv3.ContextAccessToken, bearerToken),
 				CloudClient: ccloudv2.NewKafkaRestClient(restEndpoint, r.Version.UserAgent, unsafeTrace, bearerToken),
-				Client:      createKafkaRESTClient(restEndpoint, unsafeTrace),
+				Client:      CreateKafkaRESTClient(restEndpoint, unsafeTrace),
 			}
 
 			return kafkaRest, nil
@@ -486,6 +525,19 @@ func (r *PreRun) setV2Clients(c *AuthenticatedCLICommand) error {
 	c.Config.V2Client = v2Client
 
 	return nil
+}
+
+func (c *AuthenticatedCLICommand) GetHubClient() (*hub.Client, error) {
+	if c.HubClient == nil {
+		unsafeTrace, err := c.Flags().GetBool("unsafe-trace")
+		if err != nil {
+			return nil, err
+		}
+
+		c.HubClient = hub.NewClient(c.Config.Version.UserAgent, c.Config.IsTest, unsafeTrace)
+	}
+
+	return c.HubClient, nil
 }
 
 func getKafkaRestEndpoint(ctx *dynamicconfig.DynamicContext) (string, string, error) {
@@ -599,8 +651,7 @@ func (r *PreRun) confluentAutoLogin(cmd *cobra.Command, netrcMachineName string)
 		log.CliLogger.Debug("Non-interactive login failed: no credentials")
 		return nil
 	}
-	err = pauth.PersistConfluentLoginToConfig(r.Config, credentials, credentials.PrerunLoginURL, token, credentials.PrerunLoginCaCertPath, false, false)
-	if err != nil {
+	if err := pauth.PersistConfluentLoginToConfig(r.Config, credentials, credentials.PrerunLoginURL, token, credentials.PrerunLoginCaCertPath, false, false); err != nil {
 		return err
 	}
 	log.CliLogger.Debug(errors.AutoLoginMsg)
@@ -984,10 +1035,9 @@ func (r *PreRun) shouldCheckForUpdates(cmd *cobra.Command) bool {
 	return true
 }
 
-func (r *PreRun) warnIfConfluentLocal(cmd *cobra.Command) {
-	if strings.HasPrefix(cmd.CommandPath(), "confluent local") {
+func warnIfConfluentLocal(cmd *cobra.Command) {
+	if strings.HasPrefix(cmd.CommandPath(), "confluent local kafka start") {
 		output.ErrPrintln("The local commands are intended for a single-node development environment only, NOT for production usage. See more: https://docs.confluent.io/current/cli/index.html")
-		output.ErrPrintln("As of Confluent Platform 8.0, Java 8 is no longer supported.")
 		output.ErrPrintln()
 	}
 }
@@ -1016,7 +1066,7 @@ func (r *PreRun) createMDSv2Client(ctx *dynamicconfig.DynamicContext, ver *versi
 	return mdsv2alpha1.NewAPIClient(mdsv2Config)
 }
 
-func createKafkaRESTClient(kafkaRestURL string, unsafeTrace bool) *kafkarestv3.APIClient {
+func CreateKafkaRESTClient(kafkaRestURL string, unsafeTrace bool) *kafkarestv3.APIClient {
 	cfg := kafkarestv3.NewConfiguration()
 	cfg.HTTPClient = utils.DefaultClient()
 	cfg.Debug = unsafeTrace

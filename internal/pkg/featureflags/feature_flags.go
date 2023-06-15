@@ -126,8 +126,7 @@ func (ld *launchDarklyManager) IntVariation(key string, ctx *dynamicconfig.Dynam
 }
 
 func (ld *launchDarklyManager) JsonVariation(key string, ctx *dynamicconfig.DynamicContext, client v1.LaunchDarklyClient, shouldCache bool, defaultVal any) any {
-	flagVal := ld.generalVariation(key, ctx, client, shouldCache, defaultVal)
-	return flagVal
+	return ld.generalVariation(key, ctx, client, shouldCache, defaultVal)
 }
 
 func (ld *launchDarklyManager) generalVariation(key string, ctx *dynamicconfig.DynamicContext, client v1.LaunchDarklyClient, shouldCache bool, defaultVal any) any {
@@ -140,7 +139,7 @@ func (ld *launchDarklyManager) generalVariation(key string, ctx *dynamicconfig.D
 	// Check if cached flags are for same auth status (anon or not anon) as current ctx so that we know the values are valid based on targeting
 	var flagVals map[string]any
 	var err error
-	if !areCachedFlagsAvailable(ctx, user, client) {
+	if !areCachedFlagsAvailable(ctx, user, client, key) {
 		flagVals, err = ld.fetchFlags(user, client)
 		if err != nil {
 			log.CliLogger.Debug(err.Error())
@@ -191,7 +190,7 @@ func (ld *launchDarklyManager) fetchFlags(user lduser.User, client v1.LaunchDark
 	return flagVals, nil
 }
 
-func areCachedFlagsAvailable(ctx *dynamicconfig.DynamicContext, user lduser.User, client v1.LaunchDarklyClient) bool {
+func areCachedFlagsAvailable(ctx *dynamicconfig.DynamicContext, user lduser.User, client v1.LaunchDarklyClient, key string) bool {
 	if ctx == nil || ctx.Context == nil || ctx.FeatureFlags == nil {
 		return false
 	}
@@ -205,17 +204,21 @@ func areCachedFlagsAvailable(ctx *dynamicconfig.DynamicContext, user lduser.User
 
 	switch client {
 	case v1.CcloudDevelLaunchDarklyClient, v1.CcloudStagLaunchDarklyClient, v1.CcloudProdLaunchDarklyClient:
-		if len(flags.CcloudValues) == 0 {
+		// for ccloud only single keys are stored, so we need to check if the specific flag is present
+		if _, ok := flags.CcloudValues[key]; !ok {
 			return false
 		}
 	default:
-		if len(flags.Values) == 0 {
+		if _, ok := flags.Values[key]; !ok {
 			return false
 		}
 	}
 
-	timeout := int64(time.Hour.Seconds())
-	return flags.LastUpdateTime+timeout > time.Now().Unix()
+	return cacheExpired(flags)
+}
+
+func cacheExpired(flags *v1.FeatureFlags) bool {
+	return flags.LastUpdateTime+int64(time.Hour.Seconds()) > time.Now().Unix()
 }
 
 func getBase64EncodedUser(user lduser.User) (string, error) {

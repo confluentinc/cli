@@ -37,6 +37,18 @@ func (s *CLITestSuite) TestEnvironmentDescribe() {
 	}
 }
 
+func (s *CLITestSuite) TestEnvironmentUse() {
+	tests := []CLITest{
+		{args: "environment use env-12345", fixture: "environment/use.golden"},
+		{args: "environment describe", fixture: "environment/describe-after-use.golden"},
+	}
+
+	for _, tt := range tests {
+		tt.login = "cloud"
+		s.runIntegrationTest(tt)
+	}
+}
+
 func (s *CLITestSuite) TestEnvironmentAutocomplete() {
 	test := CLITest{args: `__complete environment describe ""`, login: "cloud", fixture: "environment/describe-autocomplete.golden"}
 	s.runIntegrationTest(test)

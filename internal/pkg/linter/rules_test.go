@@ -57,7 +57,7 @@ func TestFlagKebabCase(t *testing.T) {
 
 func TestFlagUsageRealWords(t *testing.T) {
 	req := require.New(t)
-	rule := RequireFlagUsageRealWords
+	rule := RequireFlagUsageRealWords([]string{})
 
 	sampleDic := `6
 fillet

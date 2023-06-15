@@ -1338,7 +1338,6 @@ func TestPasswordProtectionSuite_RotateMasterKey(t *testing.T) {
 func createMasterKey(passphrase string, localSecretsFile string, plugin *PasswordProtectionSuite) error {
 	key, err := plugin.CreateMasterKey(passphrase, localSecretsFile)
 	if err != nil {
-		fmt.Println(err)
 		return err
 	}
 	os.Setenv(ConfluentKeyEnvVar, key)
@@ -1346,8 +1345,7 @@ func createMasterKey(passphrase string, localSecretsFile string, plugin *Passwor
 }
 
 func createNewConfigFile(path string, contents string) error {
-	err := os.WriteFile(path, []byte(contents), 0644)
-	return err
+	return os.WriteFile(path, []byte(contents), 0644)
 }
 
 func validateTextFileContents(path string, expectedFileContent string, req *require.Assertions) {
@@ -1371,13 +1369,11 @@ func validateJSONFileContents(path string, expectedFileContent string, req *requ
 func generateCorruptedData(cipher string) (string, error) {
 	data, _, _ := ParseCipherValue(cipher)
 	randomBytes := make([]byte, 32)
-	_, err := rand.Read(randomBytes)
-	if err != nil {
+	if _, err := rand.Read(randomBytes); err != nil {
 		return "", err
 	}
 	corruptedData := base32.StdEncoding.EncodeToString(randomBytes)[:32]
-	result := strings.Replace(cipher, data, corruptedData, 1)
-	return result, nil
+	return strings.Replace(cipher, data, corruptedData, 1), nil
 }
 
 func corruptEncryptedDEK(localSecureConfigPath string) error {
@@ -1390,13 +1386,11 @@ func corruptEncryptedDEK(localSecureConfigPath string) error {
 	if err != nil {
 		return err
 	}
-	_, _, err = secretsProps.Set(MetadataDataKey, corruptedCipher)
-	if err != nil {
+	if _, _, err := secretsProps.Set(MetadataDataKey, corruptedCipher); err != nil {
 		return err
 	}
 
-	err = WritePropertiesFile(localSecureConfigPath, secretsProps, true)
-	return err
+	return WritePropertiesFile(localSecureConfigPath, secretsProps, true)
 }
 
 func verifyConfigsRemoved(configFilePath string, localSecureConfigPath string, removedConfigs string) error {
@@ -1414,8 +1408,7 @@ func verifyConfigsRemoved(configFilePath string, localSecureConfigPath string, r
 		pathKey := GenerateConfigKey(configFilePath, key)
 
 		// Check if config is removed from secrets files
-		_, ok := secretsProps.Get(pathKey)
-		if ok {
+		if _, ok := secretsProps.Get(pathKey); ok {
 			return fmt.Errorf("failed to remove config from secrets file")
 		}
 	}
@@ -1424,8 +1417,7 @@ func verifyConfigsRemoved(configFilePath string, localSecureConfigPath string, r
 }
 
 func validateUsingDecryption(configFilePath string, localSecureConfigPath string, outputConfigPath string, origConfigs string, plugin *PasswordProtectionSuite) error {
-	err := plugin.DecryptConfigFileSecrets(configFilePath, localSecureConfigPath, outputConfigPath, "")
-	if err != nil {
+	if err := plugin.DecryptConfigFileSecrets(configFilePath, localSecureConfigPath, outputConfigPath, ""); err != nil {
 		return fmt.Errorf("failed to decrypt config file")
 	}
 
@@ -1454,21 +1446,18 @@ func validateUsingDecryption(configFilePath string, localSecureConfigPath string
 }
 
 func setUpDir(masterKeyPassphrase string, secureDir string, configFile string, localSecureConfigPath string, contents string) (*PasswordProtectionSuite, error) {
-	err := os.MkdirAll(secureDir, os.ModePerm)
-	if err != nil {
+	if err := os.MkdirAll(secureDir, os.ModePerm); err != nil {
 		return nil, fmt.Errorf("failed to create password protection directory")
 	}
 	plugin := NewPasswordProtectionPlugin()
 	plugin.Clock = clockwork.NewFakeClock()
 
 	// Set master key
-	err = createMasterKey(masterKeyPassphrase, localSecureConfigPath, plugin)
-	if err != nil {
+	if err := createMasterKey(masterKeyPassphrase, localSecureConfigPath, plugin); err != nil {
 		return nil, fmt.Errorf("failed to create master key")
 	}
 
-	err = createNewConfigFile(configFile, contents)
-	if err != nil {
+	if err := createNewConfigFile(configFile, contents); err != nil {
 		return nil, fmt.Errorf("failed to create config file")
 	}
 

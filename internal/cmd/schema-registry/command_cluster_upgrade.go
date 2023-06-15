@@ -1,7 +1,11 @@
 package schemaregistry
 
 import (
+	"strings"
+
 	"github.com/spf13/cobra"
+
+	srcmv2 "github.com/confluentinc/ccloud-sdk-go-v2/srcm/v2"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -35,33 +39,45 @@ func (c *command) newClusterUpgradeCommand() *cobra.Command {
 }
 
 func (c *command) clusterUpgrade(cmd *cobra.Command, _ []string) error {
-	packageDisplayName, err := cmd.Flags().GetString("package")
-	if err != nil {
-		return err
-	}
-
-	packageInternalName, err := getPackageInternalName(packageDisplayName)
-	if err != nil {
-		return err
-	}
-
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}
 
-	cluster, err := c.Context.FetchSchemaRegistryByEnvironmentId(environmentId)
+	clusters, err := c.V2Client.GetSchemaRegistryClustersByEnvironment(environmentId)
 	if err != nil {
 		return err
 	}
 
-	if packageInternalName == cluster.Package {
+	if len(clusters) == 0 {
+		return errors.NewSRNotEnabledError()
+	}
+
+	cluster := clusters[0]
+	clusterSpec := cluster.GetSpec()
+
+	packageDisplayName, err := cmd.Flags().GetString("package")
+	if err != nil {
+		return err
+	}
+
+	if _, err := getPackageInternalName(packageDisplayName); err != nil {
+		return err
+	}
+
+	if strings.ToLower(clusterSpec.GetPackage()) == packageDisplayName {
 		output.ErrPrintf(errors.SRInvalidPackageUpgrade, environmentId, packageDisplayName)
 		return nil
 	}
-	cluster.Package = packageInternalName
 
-	if _, err := c.Client.SchemaRegistry.UpdateSchemaRegistryCluster(cluster); err != nil {
+	clusterUpdateRequest := &srcmv2.SrcmV2ClusterUpdate{
+		Spec: &srcmv2.SrcmV2ClusterSpecUpdate{
+			Package:     srcmv2.PtrString(packageDisplayName),
+			Environment: &srcmv2.GlobalObjectReference{Id: environmentId},
+		},
+	}
+
+	if _, err := c.V2Client.UpgradeSchemaRegistryCluster(*clusterUpdateRequest, cluster.GetId()); err != nil {
 		return err
 	}
 

@@ -136,11 +136,10 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		if resourceType != resource.KafkaCluster {
 			return errors.Wrap(errors.New(errors.NonKafkaNotImplementedErrorMsg), "`--use` set but ineffective")
 		}
-		err = c.Context.UseAPIKey(userKey.Key, clusterId)
-		if err != nil {
+		if err := c.Context.UseAPIKey(userKey.Key, clusterId); err != nil {
 			return errors.NewWrapErrorWithSuggestions(err, errors.APIKeyUseFailedErrorMsg, fmt.Sprintf(errors.APIKeyUseFailedSuggestions, userKey.Key))
 		}
-		output.Printf(errors.UseAPIKeyMsg, userKey.Key, clusterId)
+		output.Printf(errors.UseAPIKeyMsg, userKey.Key)
 	}
 
 	return nil
@@ -161,7 +160,7 @@ func (c *command) getCurrentUserId() (string, error) {
 
 // CLI-1544: Warn users if they try to create an API key with the predefined audit log Kafka cluster, but without the
 // predefined audit log service account
-func (c *command) catchServiceAccountNotValidError(err error, r *http.Response, clusterId, serviceAccountId string) error {
+func (c *command) catchServiceAccountNotValidError(err error, httpResp *http.Response, clusterId, serviceAccountId string) error {
 	if err == nil {
 		return nil
 	}
@@ -185,9 +184,9 @@ func (c *command) catchServiceAccountNotValidError(err error, r *http.Response, 
 		}
 	}
 
-	if r == nil {
+	if httpResp == nil {
 		return err
 	}
 
-	return errors.CatchCCloudV2Error(err, r)
+	return errors.CatchCCloudV2Error(err, httpResp)
 }

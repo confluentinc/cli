@@ -21,12 +21,11 @@ func getClusterIdForRestRequests(client *kafkarestv3.APIClient, ctx context.Cont
 	if clusters.Data == nil || len(clusters.Data) == 0 {
 		return "", errors.NewErrorWithSuggestions(errors.NoClustersFoundErrorMsg, errors.NoClustersFoundSuggestions)
 	}
-	clusterId := clusters.Data[0].ClusterId
-	return clusterId, nil
+	return clusters.Data[0].ClusterId, nil
 }
 
 // validate that a topic exists before attempting to produce/consume messages
-func (c *authenticatedTopicCommand) validateTopic(adminClient *ckafka.AdminClient, topic string) error {
+func ValidateTopic(adminClient *ckafka.AdminClient, topic string) error {
 	timeout := 10 * time.Second
 	metadata, err := adminClient.GetMetadata(nil, true, int(timeout.Milliseconds()))
 	if err != nil {
