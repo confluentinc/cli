@@ -34,7 +34,7 @@ type InputController struct {
 	smartCompletion       bool
 	reverseISearchEnabled bool
 	table                 types.TableControllerInterface
-	prompt                *prompt.Prompt
+	prompt                prompt.IPrompt
 	store                 store.StoreInterface
 	authenticated         func() error
 	appOptions            *types.ApplicationOptions
@@ -51,7 +51,7 @@ func shouldUseTView(statement types.ProcessedStatement) bool {
 	if statement.PageToken != "" {
 		return true
 	}
-	return len(statement.StatementResults.Headers) > 1 && len(statement.StatementResults.Rows) > 1
+	return len(statement.StatementResults.GetHeaders()) > 1 && len(statement.StatementResults.GetRows()) > 1
 }
 
 type ResultsFetchState string
@@ -77,13 +77,14 @@ func (c *InputController) RunInteractiveInput() {
 		// due go-prompt always exiting on CtrlD. By modifying go-prompt we could also fix this
 		if c.shouldExit || input == "" {
 			c.appController.ExitApplication()
+			return
 		}
 
 		// Upon receiving user input, we check if user is authenticated and possibly a refresh the CCloud SSO token
 		if authErr := c.authenticated(); authErr != nil {
 			output.Println(authErr.Error())
 			c.appController.ExitApplication()
-			continue
+			return
 		}
 
 		if c.reverseISearchEnabled {
@@ -99,15 +100,19 @@ func (c *InputController) RunInteractiveInput() {
 		renderMsgAndStatus(processedStatement)
 		if err != nil {
 			output.Println(err.Error())
-			c.isSessionValid(err)
+			if !c.isSessionValid(err) {
+				c.appController.ExitApplication()
+				return
+			}
 			continue
 		}
 
 		// Wait for results to be there or for the user to cancel the query
 		ctx, cancelWaitPendingStatement := context.WithCancel(context.Background())
 
+		statementName := processedStatement.StatementName
 		cancelListenToUserInput := c.listenToUserInput(c.consoleParser, func() {
-			go c.store.DeleteStatement(processedStatement.StatementName)
+			go c.store.DeleteStatement(statementName)
 			cancelWaitPendingStatement()
 		})
 
@@ -115,7 +120,10 @@ func (c *InputController) RunInteractiveInput() {
 		if err != nil {
 			cancelListenToUserInput()
 			output.Println(err.Error())
-			c.isSessionValid(err)
+			if !c.isSessionValid(err) {
+				c.appController.ExitApplication()
+				return
+			}
 			continue
 		}
 		processedStatement.PrintStatusDetail()
@@ -177,7 +185,6 @@ func (c *InputController) listenToUserInput(in prompt.ConsoleParser, cancelFunc 
 func (c *InputController) isSessionValid(err *types.StatementError) bool {
 	// exit application if user needs to authenticate again
 	if err != nil && err.HttpResponseCode == http.StatusUnauthorized {
-		c.appController.ExitApplication()
 		return false
 	}
 	return true
@@ -194,20 +201,20 @@ func renderMsgAndStatus(processedStatement *types.ProcessedStatement) {
 	}
 
 	if processedStatement.IsLocalStatement {
-		if processedStatement.Status != "FAILED" {
-			output.Println("Statement successfully submitted.\n ")
+		if processedStatement.Status == "FAILED" {
+			output.Println("Error: Couldn't process statement. Please check your statement and try again")
 		} else {
-			output.Println("Error: Couldn't process statement. Please check your statement and try again.")
+			output.Println("Statement successfully submitted.")
 		}
 	} else {
 		if processedStatement.StatementName != "" {
 			output.Printf("Statement name: %s\n", processedStatement.StatementName)
 		}
-		if processedStatement.Status != "FAILED" {
-			output.Println("Statement successfully submitted. ")
-			output.Println("Fetching results...\n ")
+		if processedStatement.Status == "FAILED" {
+			output.Println("Error: Statement submission failed. There could a problem with the server right now. Check your statement and try again")
 		} else {
-			output.Println("Error: Statement submission failed. There could a problem with the server right now. Check your statement and try again.")
+			output.Println("Statement successfully submitted.")
+			output.Println("Fetching results...")
 		}
 		processedStatement.PrintStatusDetail()
 	}
@@ -271,7 +278,7 @@ func (c *InputController) printResultToSTDOUT(statementResults *types.StatementR
 	rawTable.Render() // Send output
 }
 
-func (c *InputController) Prompt() *prompt.Prompt {
+func (c *InputController) Prompt() prompt.IPrompt {
 	completer := autocomplete.NewCompleterBuilder(c.getSmartCompletion).
 		AddCompleter(autocomplete.ExamplesCompleter).
 		AddCompleter(autocomplete.SetCompleter).
