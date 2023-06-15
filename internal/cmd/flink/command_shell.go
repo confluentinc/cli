@@ -12,7 +12,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	client "github.com/confluentinc/cli/internal/pkg/flink/app"
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
-	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 func (c *command) newShellCommand(prerunner pcmd.PreRunner) *cobra.Command {
@@ -58,10 +57,8 @@ func (c *command) authenticated(authenticated func(*cobra.Command, []string) err
 
 		jwtCtx := &v1.Context{State: &v1.ContextState{AuthToken: flinkGatewayClient.AuthToken}}
 		if tokenErr := jwtValidator.Validate(jwtCtx); tokenErr != nil {
-			output.Println("Token expired. Refreshing token...")
 			flinkGatewayAuthToken, err := pauth.GetJwtTokenForV2Client(cfg.Context().GetState(), cfg.Context().GetPlatformServer())
 			if err != nil {
-				output.Printf("Refreshing token failed. Error: %v\n", err)
 				return err
 			}
 			flinkGatewayClient.AuthToken = flinkGatewayAuthToken
