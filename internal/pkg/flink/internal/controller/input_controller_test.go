@@ -114,6 +114,11 @@ func (s *InputControllerTestSuite) TestShouldUseTView() {
 		},
 		{
 			name:      "statement with no results should not use TView",
+			statement: types.ProcessedStatement{IsLocalStatement: false},
+			want:      false,
+		},
+		{
+			name:      "statement with empty results should not use TView",
 			statement: types.ProcessedStatement{IsLocalStatement: false, StatementResults: &types.StatementResults{}},
 			want:      false,
 		},
