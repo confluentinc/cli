@@ -1,15 +1,19 @@
 package controller
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/confluentinc/go-prompt"
 
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/history"
 	"github.com/confluentinc/cli/internal/pkg/flink/test/mock"
@@ -22,6 +26,7 @@ type InputControllerTestSuite struct {
 	mockTableController *mock.MockTableControllerInterface
 	mockPrompt          *mock.MockIPrompt
 	mockStore           *mock.MockStoreInterface
+	mockConsoleParser   *mock.MockConsoleParser
 }
 
 func TestInputControllerTestSuite(t *testing.T) {
@@ -69,6 +74,7 @@ func (s *InputControllerTestSuite) SetupTest() {
 	s.mockTableController = mock.NewMockTableControllerInterface(ctrl)
 	s.mockPrompt = mock.NewMockIPrompt(ctrl)
 	s.mockStore = mock.NewMockStoreInterface(ctrl)
+	s.mockConsoleParser = mock.NewMockConsoleParser(ctrl)
 }
 
 func (s *InputControllerTestSuite) TestRenderError() {
@@ -404,5 +410,110 @@ func (s *InputControllerTestSuite) TestRunInteractiveInputStoresInputInHistory()
 
 	// Then
 	require.Equal(s.T(), fmt.Sprintf("%s\n", statementError.Error()), actual)
+	require.Equal(s.T(), inputController.History.Data, []string{input})
+}
+
+func (s *InputControllerTestSuite) TestRunInteractiveInputPrintsErrorAndContinuesOnWaitPendingStatementError() {
+	// Given
+	inputController := &InputController{
+		appController: s.mockAppController,
+		prompt:        s.mockPrompt,
+		store:         s.mockStore,
+		consoleParser: s.mockConsoleParser,
+		History:       &history.History{},
+		authenticated: func() error {
+			return nil
+		},
+	}
+
+	input := "select 1;"
+	statement := types.ProcessedStatement{
+		StatementName: "test-statement",
+		Status:        types.RUNNING,
+	}
+	statementError := &types.StatementError{Message: "error", FailureMessage: "error details"}
+	s.mockPrompt.EXPECT().Input().Return(input)
+	s.mockStore.EXPECT().ProcessStatement(input).Return(&statement, nil)
+	s.mockConsoleParser.EXPECT().Read().Return(nil, nil).AnyTimes()
+	s.mockStore.EXPECT().WaitPendingStatement(gomock.Any(), statement).Return(nil, statementError)
+
+	// When
+	actual := s.runMainLoop(inputController, true)
+
+	// Then
+	expected := fmt.Sprintf("Statement name: test-statement\nStatement successfully submitted.\nFetching results...\n%s\n", statementError.Error())
+	require.Equal(s.T(), expected, actual)
+	require.Equal(s.T(), inputController.History.Data, []string{input})
+}
+
+func (s *InputControllerTestSuite) TestRunInteractiveInputCancelsAndDeletesStatementOnUserInterrupt() {
+	// Given
+	inputController := &InputController{
+		appController: s.mockAppController,
+		prompt:        s.mockPrompt,
+		store:         s.mockStore,
+		consoleParser: s.mockConsoleParser,
+		History:       &history.History{},
+		authenticated: func() error {
+			return nil
+		},
+	}
+
+	input := "select 1;"
+	statement := types.ProcessedStatement{
+		StatementName: "test-statement",
+		Status:        types.RUNNING,
+	}
+	statementError := &types.StatementError{Message: "result retrieval aborted. Statement will be deleted", HttpResponseCode: 499}
+	s.mockPrompt.EXPECT().Input().Return(input)
+	s.mockStore.EXPECT().ProcessStatement(input).Return(&statement, nil)
+	s.mockConsoleParser.EXPECT().Read().Return([]byte{byte(prompt.ControlC)}, nil)
+	s.mockStore.EXPECT().WaitPendingStatement(gomock.Any(), statement).DoAndReturn(
+		func(ctx context.Context, statement types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError) {
+			time.Sleep(1 * time.Second)
+			return nil, statementError
+		})
+	s.mockStore.EXPECT().DeleteStatement(statement.StatementName)
+
+	// When
+	actual := s.runMainLoop(inputController, true)
+
+	// Then
+	expected := fmt.Sprintf("Statement name: test-statement\nStatement successfully submitted.\nFetching results...\n%s\n", statementError.Error())
+	require.Equal(s.T(), expected, actual)
+	require.Equal(s.T(), inputController.History.Data, []string{input})
+}
+
+func (s *InputControllerTestSuite) TestRunInteractiveInputExitsOn401FromWaitPendingStatement() {
+	// Given
+	inputController := &InputController{
+		appController: s.mockAppController,
+		prompt:        s.mockPrompt,
+		store:         s.mockStore,
+		consoleParser: s.mockConsoleParser,
+		History:       &history.History{},
+		authenticated: func() error {
+			return nil
+		},
+	}
+
+	input := "select 1;"
+	statement := types.ProcessedStatement{
+		StatementName: "test-statement",
+		Status:        types.RUNNING,
+	}
+	statementError := &types.StatementError{Message: "error", HttpResponseCode: 401}
+	s.mockPrompt.EXPECT().Input().Return(input)
+	s.mockStore.EXPECT().ProcessStatement(input).Return(&statement, nil)
+	s.mockConsoleParser.EXPECT().Read().Return(nil, nil).AnyTimes()
+	s.mockStore.EXPECT().WaitPendingStatement(gomock.Any(), statement).Return(nil, statementError)
+	s.mockAppController.EXPECT().ExitApplication()
+
+	// When
+	actual := s.runMainLoop(inputController, false)
+
+	// Then
+	expected := fmt.Sprintf("Statement name: test-statement\nStatement successfully submitted.\nFetching results...\n%s\n", statementError.Error())
+	require.Equal(s.T(), expected, actual)
 	require.Equal(s.T(), inputController.History.Data, []string{input})
 }
