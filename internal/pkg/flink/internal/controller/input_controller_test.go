@@ -28,10 +28,21 @@ type InputControllerTestSuite struct {
 	mockPrompt          *mock.MockIPrompt
 	mockStore           *mock.MockStoreInterface
 	mockConsoleParser   *mock.MockConsoleParser
+	mockReverseISearch  *mock.MockReverseISearch
 }
 
 func TestInputControllerTestSuite(t *testing.T) {
 	suite.Run(t, new(InputControllerTestSuite))
+}
+
+func (s *InputControllerTestSuite) SetupTest() {
+	ctrl := gomock.NewController(s.T())
+	s.mockAppController = mock.NewMockApplicationControllerInterface(ctrl)
+	s.mockTableController = mock.NewMockTableControllerInterface(ctrl)
+	s.mockPrompt = mock.NewMockIPrompt(ctrl)
+	s.mockStore = mock.NewMockStoreInterface(ctrl)
+	s.mockConsoleParser = mock.NewMockConsoleParser(ctrl)
+	s.mockReverseISearch = mock.NewMockReverseISearch(ctrl)
 }
 
 func (s *InputControllerTestSuite) runAndCaptureSTDOUT(test func()) string {
@@ -83,15 +94,6 @@ func (s *InputControllerTestSuite) getStdoutTable(statementResults types.Stateme
 		}
 		rawTable.Render()
 	})
-}
-
-func (s *InputControllerTestSuite) SetupTest() {
-	ctrl := gomock.NewController(s.T())
-	s.mockAppController = mock.NewMockApplicationControllerInterface(ctrl)
-	s.mockTableController = mock.NewMockTableControllerInterface(ctrl)
-	s.mockPrompt = mock.NewMockIPrompt(ctrl)
-	s.mockStore = mock.NewMockStoreInterface(ctrl)
-	s.mockConsoleParser = mock.NewMockConsoleParser(ctrl)
 }
 
 func (s *InputControllerTestSuite) TestRenderError() {
@@ -359,6 +361,36 @@ func (s *InputControllerTestSuite) TestRunInteractiveInputExitsWhenNotAuthentica
 	// Then
 	expected := fmt.Sprintf("%s\n", inputController.authenticated().Error())
 	require.Equal(s.T(), expected, actual)
+}
+
+func (s *InputControllerTestSuite) TestRunInteractiveInputWithBackwardSearch() {
+	// Given
+	inputController := &InputController{
+		appController:         s.mockAppController,
+		prompt:                s.mockPrompt,
+		reverseISearchEnabled: true,
+		History:               &history.History{Data: []string{"select 1;"}},
+		reverseISearch:        s.mockReverseISearch,
+		authenticated: func() error {
+			return nil
+		},
+	}
+
+	searchResult := "search result"
+	buffer := prompt.NewBuffer()
+	s.mockPrompt.EXPECT().Input().Return("select 1;")
+	s.mockReverseISearch.EXPECT().ReverseISearch(inputController.History.Data).Return(searchResult)
+	s.mockPrompt.EXPECT().Buffer().Return(buffer)
+
+	// When
+	actual := s.runMainLoop(inputController, true)
+
+	// Then
+	require.Equal(s.T(), "", actual)
+	require.False(s.T(), inputController.reverseISearchEnabled)
+	require.Equal(s.T(), searchResult, buffer.Text())
+	// buffer should be reset when the next iteration starts
+	require.Equal(s.T(), "", inputController.InitialBuffer)
 }
 
 func (s *InputControllerTestSuite) TestRunInteractiveInputPrintsErrorAndContinuesOnProcessStatementError() {
