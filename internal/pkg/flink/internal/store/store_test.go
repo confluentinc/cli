@@ -227,7 +227,7 @@ func TestCancelPendingStatement(t *testing.T) {
 	assert.EqualError(t, err, expectedErr.Error())
 }
 
-func (s *StoreTestSuite) TestIsSETStatement() {
+func (s *StoreTestSuite) TestIsSetStatement() {
 	assert.True(s.T(), true, statementStartsWithOp("SET", config.ConfigOpSet))
 	assert.True(s.T(), true, statementStartsWithOp("SET key", config.ConfigOpSet))
 	assert.True(s.T(), true, statementStartsWithOp("SET key=value", config.ConfigOpSet))
@@ -243,7 +243,7 @@ func (s *StoreTestSuite) TestIsSETStatement() {
 	assert.False(s.T(), false, statementStartsWithOp("SETTING", config.ConfigOpSet))
 }
 
-func (s *StoreTestSuite) TestIsUSEStatement() {
+func (s *StoreTestSuite) TestIsUseStatement() {
 	assert.True(s.T(), statementStartsWithOp("USE", config.ConfigOpUse))
 	assert.True(s.T(), statementStartsWithOp("USE catalog", config.ConfigOpUse))
 	assert.True(s.T(), statementStartsWithOp("USE CATALOG cat", config.ConfigOpUse))
@@ -291,107 +291,176 @@ func (s *StoreTestSuite) TestIsExitStatement() {
 	assert.False(s.T(), false, statementStartsWithOp("exi", config.ConfigOpReset))
 }
 
-func (s *StoreTestSuite) TestParseSETStatement() {
-	key, value, _ := parseSetStatement("SET 'key'='value'")
+func (s *StoreTestSuite) TestParseSetStatement() {
+	key, value, err := parseSetStatement("SET 'key'='value'")
 	assert.Equal(s.T(), "key", key)
 	assert.Equal(s.T(), "value", value)
+	assert.Nil(s.T(), err)
 
-	key, value, _ = parseSetStatement("SET 'key'='value';")
+	key, value, err = parseSetStatement("SET 'key'='value';")
 	assert.Equal(s.T(), "key", key)
 	assert.Equal(s.T(), "value", value)
+	assert.Nil(s.T(), err)
 
-	key, value, _ = parseSetStatement("set 'key'='value'    ;")
+	key, value, err = parseSetStatement("set 'key'='value'    ;")
 	assert.Equal(s.T(), "key", key)
 	assert.Equal(s.T(), "value", value)
+	assert.Nil(s.T(), err)
 
-	key, value, _ = parseSetStatement("set 'key' = 'value'    ")
+	key, value, err = parseSetStatement("set 'key' = 'value'    ")
 	assert.Equal(s.T(), "key", key)
 	assert.Equal(s.T(), "value", value)
+	assert.Nil(s.T(), err)
 
-	key, value, _ = parseSetStatement("set 'key'     =    'value'    ")
+	key, value, err = parseSetStatement("set 'key'     =    'value'    ")
 	assert.Equal(s.T(), "key", key)
 	assert.Equal(s.T(), "value", value)
+	assert.Nil(s.T(), err)
 
-	key, value, _ = parseSetStatement("set 'key    '= '		va  lue'    ")
+	key, value, err = parseSetStatement("set 'key    '= '		va  lue'    ")
+	assert.Equal(s.T(), "key    ", key)
+	assert.Equal(s.T(), "\t\tva  lue", value)
+	assert.Nil(s.T(), err)
+
+	key, value, err = parseSetStatement("set 'key' ='value'    ")
 	assert.Equal(s.T(), "key", key)
 	assert.Equal(s.T(), "value", value)
+	assert.Nil(s.T(), err)
 
-	key, value, _ = parseSetStatement("set 'key' ='value'    ")
+	key, value, err = parseSetStatement("set 'key'		 ='value'    ")
 	assert.Equal(s.T(), "key", key)
 	assert.Equal(s.T(), "value", value)
+	assert.Nil(s.T(), err)
 
-	key, value, _ = parseSetStatement("set 'key'		 ='value'    ")
+	key, value, err = parseSetStatement("set")
+	assert.Equal(s.T(), "", key)
+	assert.Equal(s.T(), "", value)
+	assert.Nil(s.T(), err)
+
+	key, value, err = parseSetStatement("SET")
+	assert.Equal(s.T(), "", key)
+	assert.Equal(s.T(), "", value)
+	assert.Nil(s.T(), err)
+
+	key, value, err = parseSetStatement("sET 	")
+	assert.Equal(s.T(), "", key)
+	assert.Equal(s.T(), "", value)
+	assert.Nil(s.T(), err)
+
+	key, value, err = parseSetStatement("sET 'key'	")
+	assert.Equal(s.T(), "", key)
+	assert.Equal(s.T(), "", value)
+	assert.Error(s.T(), err)
+
+	key, value, err = parseSetStatement("sET = 'value'	")
+	assert.Equal(s.T(), "", key)
+	assert.Equal(s.T(), "", value)
+	assert.Error(s.T(), err)
+
+	key, value, err = parseSetStatement("sET 'key'= \n'value'	")
 	assert.Equal(s.T(), "key", key)
 	assert.Equal(s.T(), "value", value)
+	assert.Nil(s.T(), err)
 
-	key, value, _ = parseSetStatement("set")
+	key, value, err = parseSetStatement("set key= \nvalue	")
 	assert.Equal(s.T(), "", key)
 	assert.Equal(s.T(), "", value)
+	assert.Error(s.T(), err)
 
-	key, value, _ = parseSetStatement("SET")
+	key, value, err = parseSetStatement("set 'key'= \nvalue	")
 	assert.Equal(s.T(), "", key)
 	assert.Equal(s.T(), "", value)
+	assert.Error(s.T(), err)
 
-	key, value, _ = parseSetStatement("sET 	")
+	key, value, err = parseSetStatement("set key= \n'value'	")
 	assert.Equal(s.T(), "", key)
 	assert.Equal(s.T(), "", value)
+	assert.Error(s.T(), err)
 
-	key, value, _ = parseSetStatement("sET 'key'	")
+	key, value, err = parseSetStatement("set 'key= \nvalue'	")
 	assert.Equal(s.T(), "", key)
 	assert.Equal(s.T(), "", value)
+	assert.Error(s.T(), err)
 
-	key, value, _ = parseSetStatement("sET = 'value'	")
+	key, value, err = parseSetStatement(`set ''key''=''value''`)
 	assert.Equal(s.T(), "", key)
 	assert.Equal(s.T(), "", value)
+	assert.Error(s.T(), err)
 
-	key, value, _ = parseSetStatement("sET 'key'= \n'value'	")
-	assert.Equal(s.T(), "key", key)
+	key, value, err = parseSetStatement(`set '''key'''='''value'''`)
+	assert.Equal(s.T(), "'key'", key)
+	assert.Equal(s.T(), "'value'", value)
+	assert.Nil(s.T(), err)
+
+	key, value, err = parseSetStatement(`set ''''key'''='''value'''`)
+	assert.Equal(s.T(), "", key)
+	assert.Equal(s.T(), "", value)
+	assert.Error(s.T(), err)
+
+	key, value, err = parseSetStatement(`set 'key'''='value'`)
+	assert.Equal(s.T(), "key'", key)
 	assert.Equal(s.T(), "value", value)
+	assert.Nil(s.T(), err)
 
-	key, value, _ = parseSetStatement("set key= \nvalue	")
-	assert.Equal(s.T(), "", key)
-	assert.Equal(s.T(), "", value)
-
-	key, value, _ = parseSetStatement("set 'key'= \nvalue	")
-	assert.Equal(s.T(), "", key)
-	assert.Equal(s.T(), "", value)
-
-	key, value, _ = parseSetStatement("set key= \n'value'	")
-	assert.Equal(s.T(), "", key)
-	assert.Equal(s.T(), "", value)
-
-	key, value, _ = parseSetStatement("set 'key= \nvalue'	")
-	assert.Equal(s.T(), "", key)
-	assert.Equal(s.T(), "", value)
+	key, value, err = parseSetStatement(`set 'key'''''='value'`)
+	assert.Equal(s.T(), "key''", key)
+	assert.Equal(s.T(), "value", value)
+	assert.Nil(s.T(), err)
 }
 
-func (s *StoreTestSuite) TestParseSETStatementerror() {
+func (s *StoreTestSuite) TestParseSetStatementError() {
 	_, _, err := parseSetStatement("SET key")
-	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: missing \"=\"\nUsage: \"SET 'key'='value'\"", err.Error())
+	assert.Equal(s.T(), &types.StatementError{
+		Message: `missing "="`,
+		Usage:   []string{"SET 'key'='value'"},
+	}, err)
 
 	_, _, err = parseSetStatement("SET =")
-	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: key and value not present\nUsage: \"SET 'key'='value'\"", err.Error())
+	assert.Equal(s.T(), &types.StatementError{
+		Message: "key and value not present",
+		Usage:   []string{"SET 'key'='value'"},
+	}, err)
 
 	_, _, err = parseSetStatement("SET key=")
-	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: value for key not present\nSuggestion: if you want to reset a key, use \"RESET 'key'\"", err.Error())
+	assert.Equal(s.T(), &types.StatementError{
+		Message:    "value for key not present",
+		Suggestion: `if you want to reset a key, use "RESET 'key'"`,
+	}, err)
 
 	_, _, err = parseSetStatement("SET =value")
-	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: key not present\nUsage: \"SET 'key'='value'\"", err.Error())
+	assert.Equal(s.T(), &types.StatementError{
+		Message: "key not present",
+		Usage:   []string{"SET 'key'='value'"},
+	}, err)
 
-	_, _, err = parseSetStatement("SET ass=value=as")
-	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: \"=\" should only appear once\nUsage: \"SET 'key'='value'\"", err.Error())
+	_, _, err = parseSetStatement("SET key=value=as")
+	assert.Equal(s.T(), &types.StatementError{
+		Message: `"=" should only appear once`,
+		Usage:   []string{"SET 'key'='value'"},
+	}, err)
 
 	_, _, err = parseSetStatement("SET key=value")
-	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: key and value must be enclosed by single quotes ''\nUsage: \"SET 'key'='value'\"", err.Error())
+	assert.Equal(s.T(), &types.StatementError{
+		Message: "key and value must be enclosed by single quotes (')",
+		Usage:   []string{"SET 'key'='value'"},
+	}, err)
+
+	_, _, err = parseSetStatement(`set ''key'''=''value''`)
+	assert.Equal(s.T(), &types.StatementError{
+		Message:    "key contains unescaped single quotes (')",
+		Usage:      []string{"SET 'key'='value'"},
+		Suggestion: `please escape all single quotes with another single quote "''key''"`,
+	}, err)
+
+	_, _, err = parseSetStatement(`set 'key'=''value''`)
+	assert.Equal(s.T(), &types.StatementError{
+		Message:    "value contains unescaped single quotes (')",
+		Usage:      []string{"SET 'key'='value'"},
+		Suggestion: `please escape all single quotes with another single quote "''key''"`,
+	}, err)
 }
 
-func (s *StoreTestSuite) TestParseUSEStatement() {
+func (s *StoreTestSuite) TestParseUseStatement() {
 	key, value, _ := parseUseStatement("USE CATALOG c;")
 	assert.Equal(s.T(), config.ConfigKeyCatalog, key)
 	assert.Equal(s.T(), "c", value)
@@ -421,7 +490,7 @@ func (s *StoreTestSuite) TestParseUSEStatement() {
 	assert.Equal(s.T(), "database_name", value)
 }
 
-func (s *StoreTestSuite) TestParseUSEStatementError() {
+func (s *StoreTestSuite) TestParseUseStatementError() {
 	_, _, err := parseUseStatement("USE CATALOG ;")
 	assert.NotNil(s.T(), err)
 	assert.Equal(s.T(), "Error: missing catalog name\nUsage: \"USE CATALOG my_catalog\"", err.Error())
@@ -445,7 +514,7 @@ func (s *StoreTestSuite) TestParseResetStatement() {
 	assert.Nil(s.T(), err)
 
 	key, err = parseResetStatement("RESET 'KEY.key';")
-	assert.Equal(s.T(), "key.key", key)
+	assert.Equal(s.T(), "KEY.key", key)
 	assert.Nil(s.T(), err)
 
 	key, err = parseResetStatement("reset 'key'    ;")
@@ -477,7 +546,7 @@ func (s *StoreTestSuite) TestParseResetStatement() {
 	assert.Nil(s.T(), err)
 
 	key, err = parseResetStatement("resET 'KEY' ")
-	assert.Equal(s.T(), "key", key)
+	assert.Equal(s.T(), "KEY", key)
 	assert.Nil(s.T(), err)
 
 	key, err = parseResetStatement("resET 'key';;;")
@@ -495,38 +564,82 @@ func (s *StoreTestSuite) TestParseResetStatement() {
 	key, err = parseResetStatement("reset 'key;")
 	assert.Equal(s.T(), "", key)
 	assert.Error(s.T(), err)
+
+	key, err = parseResetStatement("reset 'key one';")
+	assert.Equal(s.T(), "key one", key)
+	assert.Nil(s.T(), err)
+
+	key, err = parseResetStatement("reset ''key one'';")
+	assert.Equal(s.T(), "", key)
+	assert.Error(s.T(), err)
+
+	key, err = parseResetStatement(`reset '''key one''';`)
+	assert.Equal(s.T(), "'key one'", key)
+	assert.Nil(s.T(), err)
+
+	key, err = parseResetStatement(`reset ''''key one''';`)
+	assert.Equal(s.T(), "", key)
+	assert.Error(s.T(), err)
+
+	key, err = parseResetStatement(`reset 'key'' one';`)
+	assert.Equal(s.T(), "key' one", key)
+	assert.Nil(s.T(), err)
+
+	key, err = parseResetStatement(`reset 'key'''' one';`)
+	assert.Equal(s.T(), "key'' one", key)
+	assert.Nil(s.T(), err)
 }
 
 func (s *StoreTestSuite) TestParseResetStatementError() {
 	key, err := parseResetStatement(" ")
 	assert.Equal(s.T(), "", key)
-	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: invalid syntax for RESET\nUsage: \"RESET 'key'\"", err.Error())
+	assert.Equal(s.T(), &types.StatementError{
+		Message: "invalid syntax for RESET",
+		Usage:   []string{"RESET 'key'"},
+	}, err)
 
 	key, err = parseResetStatement("RESET key key2")
 	assert.Equal(s.T(), "", key)
-	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: too many keys for RESET provided\nUsage: \"RESET 'key'\"", err.Error())
+	assert.Equal(s.T(), &types.StatementError{
+		Message: "invalid syntax for RESET, key must be enclosed by single quotes ''",
+		Usage:   []string{"RESET 'key'"},
+	}, err)
 
 	key, err = parseResetStatement("RESET key key2 key3")
 	assert.Equal(s.T(), "", key)
-	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: too many keys for RESET provided\nUsage: \"RESET 'key'\"", err.Error())
+	assert.Equal(s.T(), &types.StatementError{
+		Message: "invalid syntax for RESET, key must be enclosed by single quotes ''",
+		Usage:   []string{"RESET 'key'"},
+	}, err)
 
 	key, err = parseResetStatement("RESET key;; key key3")
 	assert.Equal(s.T(), "", key)
-	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: too many keys for RESET provided\nUsage: \"RESET 'key'\"", err.Error())
+	assert.Equal(s.T(), &types.StatementError{
+		Message: "invalid syntax for RESET, key must be enclosed by single quotes ''",
+		Usage:   []string{"RESET 'key'"},
+	}, err)
 
 	key, err = parseResetStatement("RESET key key;;; key3")
 	assert.Equal(s.T(), "", key)
-	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: too many keys for RESET provided\nUsage: \"RESET 'key'\"", err.Error())
+	assert.Equal(s.T(), &types.StatementError{
+		Message: "invalid syntax for RESET, key must be enclosed by single quotes ''",
+		Usage:   []string{"RESET 'key'"},
+	}, err)
 
 	key, err = parseResetStatement("RESET key;")
 	assert.Equal(s.T(), "", key)
-	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: invalid syntax for RESET, key must be enclosed by single quotes ''\nUsage: \"RESET 'key'\"", err.Error())
+	assert.Equal(s.T(), &types.StatementError{
+		Message: "invalid syntax for RESET, key must be enclosed by single quotes ''",
+		Usage:   []string{"RESET 'key'"},
+	}, err)
+
+	key, err = parseResetStatement("reset ''key one'';")
+	assert.Equal(s.T(), "", key)
+	assert.Equal(s.T(), &types.StatementError{
+		Message:    "key contains unescaped single quotes (')",
+		Usage:      []string{"RESET 'key'"},
+		Suggestion: `please escape all single quotes with another single quote "''key''"`,
+	}, err)
 }
 
 func (s *StoreTestSuite) TestProccessHttpErrors() {
