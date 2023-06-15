@@ -1,35 +1,80 @@
 package controller
 
 import (
+	"errors"
+	"fmt"
 	"net/http"
+	"os"
 	"testing"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 
+	"github.com/confluentinc/cli/internal/pkg/flink/internal/history"
 	"github.com/confluentinc/cli/internal/pkg/flink/test/mock"
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
 )
 
-func TestRenderError(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
+type InputControllerTestSuite struct {
+	suite.Suite
+	mockAppController   *mock.MockApplicationControllerInterface
+	mockTableController *mock.MockTableControllerInterface
+	mockPrompt          *mock.MockIPrompt
+	mockStore           *mock.MockStoreInterface
+}
 
-	inputController := &InputController{appController: mockAppController}
+func TestInputControllerTestSuite(t *testing.T) {
+	suite.Run(t, new(InputControllerTestSuite))
+}
+
+func (s *InputControllerTestSuite) runAndCaptureSTDOUT(test func()) string {
+	// Redirect STDOUT to a buffer
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	// Run the test
+	test()
+
+	// Close the writer and restore the original STDOUT
+	err := w.Close()
+	require.NoError(s.T(), err)
+	os.Stdout = old
+
+	// Read the output from the buffer
+	output := make(chan string)
+	go func() {
+		buf := make([]byte, 1024)
+		n, _ := r.Read(buf)
+		output <- string(buf[:n])
+	}()
+	return <-output
+}
+
+func (s *InputControllerTestSuite) SetupTest() {
+	ctrl := gomock.NewController(s.T())
+	s.mockAppController = mock.NewMockApplicationControllerInterface(ctrl)
+	s.mockTableController = mock.NewMockTableControllerInterface(ctrl)
+	s.mockPrompt = mock.NewMockIPrompt(ctrl)
+	s.mockStore = mock.NewMockStoreInterface(ctrl)
+}
+
+func (s *InputControllerTestSuite) TestRenderError() {
+	inputController := &InputController{appController: s.mockAppController}
 	err := &types.StatementError{HttpResponseCode: http.StatusUnauthorized}
 
-	// Test unauthorized error - should exit application
-	mockAppController.EXPECT().ExitApplication()
+	// Test unauthorized error
 	result := inputController.isSessionValid(err)
-	require.False(t, result)
+	require.False(s.T(), result)
 
 	// Test other error
 	err = &types.StatementError{Message: "something went wrong."}
 	result = inputController.isSessionValid(err)
-	require.True(t, result)
+	require.True(s.T(), result)
 }
 
-func TestShouldUseTView(t *testing.T) {
+func (s *InputControllerTestSuite) TestShouldUseTView() {
 	tests := []struct {
 		name      string
 		statement types.ProcessedStatement
@@ -98,8 +143,234 @@ func TestShouldUseTView(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+		s.T().Run(tt.name, func(t *testing.T) {
 			require.Equal(t, tt.want, shouldUseTView(tt.statement))
 		})
 	}
+}
+
+func (s *InputControllerTestSuite) TestRenderMsgAndStatusLocalStatements() {
+	tests := []struct {
+		name      string
+		statement *types.ProcessedStatement
+		want      string
+	}{
+		{
+			name:      "nil",
+			statement: nil,
+			want:      "",
+		},
+		{
+			name:      "local failed statement",
+			statement: &types.ProcessedStatement{IsLocalStatement: true, Status: types.FAILED},
+			want:      "Error: Couldn't process statement. Please check your statement and try again\n",
+		},
+		{
+			name:      "local non-failed statement",
+			statement: &types.ProcessedStatement{IsLocalStatement: true, Status: types.RUNNING},
+			want:      "Statement successfully submitted.\n",
+		},
+	}
+	for _, tt := range tests {
+		s.T().Run(tt.name, func(t *testing.T) {
+			actual := s.runAndCaptureSTDOUT(func() {
+				renderMsgAndStatus(tt.statement)
+			})
+			require.Equal(t, tt.want, actual)
+		})
+	}
+}
+
+func (s *InputControllerTestSuite) TestRenderMsgAndStatusNonLocalFailedStatements() {
+	tests := []struct {
+		name      string
+		statement *types.ProcessedStatement
+		want      string
+	}{
+		{
+			name:      "nil",
+			statement: nil,
+			want:      "",
+		},
+		{
+			name:      "statement with name",
+			statement: &types.ProcessedStatement{StatementName: "test-statement", Status: types.FAILED},
+			want:      "Statement name: test-statement\nError: Statement submission failed. There could a problem with the server right now. Check your statement and try again\n",
+		},
+		{
+			name:      "statement with name and status detail",
+			statement: &types.ProcessedStatement{StatementName: "test-statement", Status: types.FAILED, StatusDetail: "status-detail"},
+			want:      "Statement name: test-statement\nError: Statement submission failed. There could a problem with the server right now. Check your statement and try again\nstatus-detail.\n",
+		},
+		{
+			name:      "statement without name",
+			statement: &types.ProcessedStatement{Status: types.FAILED},
+			want:      "Error: Statement submission failed. There could a problem with the server right now. Check your statement and try again\n",
+		},
+		{
+			name:      "statement without name but with status detail",
+			statement: &types.ProcessedStatement{Status: types.FAILED, StatusDetail: "status-detail"},
+			want:      "Error: Statement submission failed. There could a problem with the server right now. Check your statement and try again\nstatus-detail.\n",
+		},
+	}
+	for _, tt := range tests {
+		s.T().Run(tt.name, func(t *testing.T) {
+			actual := s.runAndCaptureSTDOUT(func() {
+				renderMsgAndStatus(tt.statement)
+			})
+			require.Equal(t, tt.want, actual)
+		})
+	}
+}
+
+func (s *InputControllerTestSuite) TestRenderMsgAndStatusNonLocalNonFailedStatements() {
+	tests := []struct {
+		name      string
+		statement *types.ProcessedStatement
+		want      string
+	}{
+		{
+			name:      "nil",
+			statement: nil,
+			want:      "",
+		},
+		{
+			name:      "statement with name",
+			statement: &types.ProcessedStatement{StatementName: "test-statement", Status: types.RUNNING},
+			want:      "Statement name: test-statement\nStatement successfully submitted.\nFetching results...\n",
+		},
+		{
+			name:      "statement with name and status detail",
+			statement: &types.ProcessedStatement{StatementName: "test-statement", Status: types.RUNNING, StatusDetail: "status-detail"},
+			want:      "Statement name: test-statement\nStatement successfully submitted.\nFetching results...\nstatus-detail.\n",
+		},
+		{
+			name:      "statement without name",
+			statement: &types.ProcessedStatement{Status: types.RUNNING},
+			want:      "Statement successfully submitted.\nFetching results...\n",
+		},
+		{
+			name:      "statement without name but with status detail",
+			statement: &types.ProcessedStatement{Status: types.RUNNING, StatusDetail: "status-detail"},
+			want:      "Statement successfully submitted.\nFetching results...\nstatus-detail.\n",
+		},
+	}
+	for _, tt := range tests {
+		s.T().Run(tt.name, func(t *testing.T) {
+			actual := s.runAndCaptureSTDOUT(func() {
+				renderMsgAndStatus(tt.statement)
+			})
+			require.Equal(t, tt.want, actual)
+		})
+	}
+}
+
+func (s *InputControllerTestSuite) TestRunInteractiveInputExitsWhenEmptyPromptReturn() {
+	// Given
+	inputController := &InputController{
+		appController: s.mockAppController,
+		prompt:        s.mockPrompt,
+		shouldExit:    false,
+	}
+
+	s.mockPrompt.EXPECT().Input().Return("")
+	s.mockAppController.EXPECT().ExitApplication()
+
+	// When
+	actual := s.runAndCaptureSTDOUT(inputController.RunInteractiveInput)
+
+	// Then
+	require.Empty(s.T(), actual)
+}
+
+func (s *InputControllerTestSuite) TestRunInteractiveInputExitsWhenShouldExitTrue() {
+	// Given
+	inputController := &InputController{
+		appController: s.mockAppController,
+		prompt:        s.mockPrompt,
+		shouldExit:    true,
+	}
+
+	s.mockPrompt.EXPECT().Input().Return("select 1;")
+	s.mockAppController.EXPECT().ExitApplication()
+
+	// When
+	actual := s.runAndCaptureSTDOUT(inputController.RunInteractiveInput)
+
+	// Then
+	require.Empty(s.T(), actual)
+}
+
+func (s *InputControllerTestSuite) TestRunInteractiveInputExitsWhenNotAuthenticated() {
+	// Given
+	inputController := &InputController{
+		appController: s.mockAppController,
+		prompt:        s.mockPrompt,
+		authenticated: func() error {
+			return errors.New("401 unauthorized")
+		},
+	}
+
+	s.mockPrompt.EXPECT().Input().Return("select 1;")
+	s.mockAppController.EXPECT().ExitApplication()
+
+	// When
+	actual := s.runAndCaptureSTDOUT(inputController.RunInteractiveInput)
+
+	// Then
+	expected := fmt.Sprintf("%s\n", inputController.authenticated().Error())
+	require.Equal(s.T(), expected, actual)
+}
+
+func (s *InputControllerTestSuite) TestRunInteractiveInputPrintsErrorAndContinuesOnProcessStatementError() {
+	// Given
+	inputController := &InputController{
+		appController: s.mockAppController,
+		prompt:        s.mockPrompt,
+		store:         s.mockStore,
+		History:       &history.History{},
+		authenticated: func() error {
+			return nil
+		},
+	}
+
+	input := "select 1;"
+	statementError := &types.StatementError{Message: "error"}
+	s.mockPrompt.EXPECT().Input().Return(input)
+	s.mockStore.EXPECT().ProcessStatement(input).Return(nil, statementError)
+
+	// this makes the loop stop after one iteration
+	s.mockPrompt.EXPECT().Input().Return("")
+	s.mockAppController.EXPECT().ExitApplication()
+
+	// When
+	actual := s.runAndCaptureSTDOUT(inputController.RunInteractiveInput)
+
+	// Then
+	require.Equal(s.T(), fmt.Sprintf("%s\n", statementError.Error()), actual)
+}
+
+func (s *InputControllerTestSuite) TestRunInteractiveInputExitsOn401FromProcessStatement() {
+	// Given
+	inputController := &InputController{
+		appController: s.mockAppController,
+		prompt:        s.mockPrompt,
+		store:         s.mockStore,
+		History:       &history.History{},
+		authenticated: func() error {
+			return nil
+		},
+	}
+
+	input := "select 1;"
+	statementError := &types.StatementError{Message: "error", HttpResponseCode: 401}
+	s.mockPrompt.EXPECT().Input().Return(input)
+	s.mockStore.EXPECT().ProcessStatement(input).Return(nil, statementError)
+	s.mockAppController.EXPECT().ExitApplication()
+
+	// When
+	actual := s.runAndCaptureSTDOUT(inputController.RunInteractiveInput)
+
+	// Then
+	require.Equal(s.T(), fmt.Sprintf("%s\n", statementError.Error()), actual)
 }
