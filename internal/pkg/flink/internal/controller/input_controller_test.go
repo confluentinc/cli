@@ -374,3 +374,32 @@ func (s *InputControllerTestSuite) TestRunInteractiveInputExitsOn401FromProcessS
 	// Then
 	require.Equal(s.T(), fmt.Sprintf("%s\n", statementError.Error()), actual)
 }
+
+func (s *InputControllerTestSuite) TestRunInteractiveInputStoresInputInHistory() {
+	// Given
+	inputController := &InputController{
+		appController: s.mockAppController,
+		prompt:        s.mockPrompt,
+		store:         s.mockStore,
+		History:       &history.History{},
+		authenticated: func() error {
+			return nil
+		},
+	}
+
+	input := "select 1;"
+	statementError := &types.StatementError{Message: "error"}
+	s.mockPrompt.EXPECT().Input().Return(input)
+	s.mockStore.EXPECT().ProcessStatement(input).Return(nil, statementError)
+
+	// this makes the loop stop after one iteration
+	s.mockPrompt.EXPECT().Input().Return("")
+	s.mockAppController.EXPECT().ExitApplication()
+
+	// When
+	actual := s.runAndCaptureSTDOUT(inputController.RunInteractiveInput)
+
+	// Then
+	require.Equal(s.T(), fmt.Sprintf("%s\n", statementError.Error()), actual)
+	require.Equal(s.T(), inputController.History.Data, []string{input})
+}
