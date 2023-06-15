@@ -77,13 +77,14 @@ func (c *InputController) RunInteractiveInput() {
 		// due go-prompt always exiting on CtrlD. By modifying go-prompt we could also fix this
 		if c.shouldExit || input == "" {
 			c.appController.ExitApplication()
+			return
 		}
 
 		// Upon receiving user input, we check if user is authenticated and possibly a refresh the CCloud SSO token
 		if authErr := c.authenticated(); authErr != nil {
 			output.Println(authErr.Error())
 			c.appController.ExitApplication()
-			continue
+			return
 		}
 
 		if c.reverseISearchEnabled {
