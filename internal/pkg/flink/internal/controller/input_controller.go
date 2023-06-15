@@ -34,7 +34,7 @@ type InputController struct {
 	smartCompletion       bool
 	reverseISearchEnabled bool
 	table                 types.TableControllerInterface
-	prompt                *prompt.Prompt
+	prompt                prompt.IPrompt
 	store                 store.StoreInterface
 	authenticated         func() error
 	appOptions            *types.ApplicationOptions
@@ -77,13 +77,14 @@ func (c *InputController) RunInteractiveInput() {
 		// due go-prompt always exiting on CtrlD. By modifying go-prompt we could also fix this
 		if c.shouldExit || input == "" {
 			c.appController.ExitApplication()
+			return
 		}
 
 		// Upon receiving user input, we check if user is authenticated and possibly a refresh the CCloud SSO token
 		if authErr := c.authenticated(); authErr != nil {
 			output.Println(authErr.Error())
 			c.appController.ExitApplication()
-			continue
+			return
 		}
 
 		if c.reverseISearchEnabled {
@@ -194,20 +195,20 @@ func renderMsgAndStatus(processedStatement *types.ProcessedStatement) {
 	}
 
 	if processedStatement.IsLocalStatement {
-		if processedStatement.Status != "FAILED" {
-			output.Println("Statement successfully submitted.\n ")
+		if processedStatement.Status == "FAILED" {
+			output.Println("Error: Couldn't process statement. Please check your statement and try again")
 		} else {
-			output.Println("Error: Couldn't process statement. Please check your statement and try again.")
+			output.Println("Statement successfully submitted.")
 		}
 	} else {
 		if processedStatement.StatementName != "" {
 			output.Printf("Statement name: %s\n", processedStatement.StatementName)
 		}
-		if processedStatement.Status != "FAILED" {
-			output.Println("Statement successfully submitted. ")
-			output.Println("Fetching results...\n ")
+		if processedStatement.Status == "FAILED" {
+			output.Println("Error: Statement submission failed. There could a problem with the server right now. Check your statement and try again")
 		} else {
-			output.Println("Error: Statement submission failed. There could a problem with the server right now. Check your statement and try again.")
+			output.Println("Statement successfully submitted.")
+			output.Println("Fetching results...")
 		}
 		processedStatement.PrintStatusDetail()
 	}
@@ -271,7 +272,7 @@ func (c *InputController) printResultToSTDOUT(statementResults *types.StatementR
 	rawTable.Render() // Send output
 }
 
-func (c *InputController) Prompt() *prompt.Prompt {
+func (c *InputController) Prompt() prompt.IPrompt {
 	completer := autocomplete.NewCompleterBuilder(c.getSmartCompletion).
 		AddCompleter(autocomplete.ExamplesCompleter).
 		AddCompleter(autocomplete.SetCompleter).
