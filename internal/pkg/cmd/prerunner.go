@@ -23,6 +23,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/featureflags"
 	"github.com/confluentinc/cli/internal/pkg/form"
+	"github.com/confluentinc/cli/internal/pkg/hub"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -71,6 +72,7 @@ type AuthenticatedCLICommand struct {
 	V2Client           *ccloudv2.Client
 	MDSClient          *mds.APIClient
 	MDSv2Client        *mdsv2alpha1.APIClient
+	HubClient          *hub.Client
 	KafkaRESTProvider  *KafkaRESTProvider
 	flinkGatewayClient *ccloudv2.FlinkGatewayClient
 	metricsClient      *ccloudv2.MetricsClient
@@ -238,7 +240,7 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(*cob
 
 		command.Version = r.Version
 		r.notifyIfUpdateAvailable(cmd, command.Version.Version)
-		r.warnIfConfluentLocal(cmd)
+		warnIfConfluentLocal(cmd)
 
 		LabelRequiredFlags(cmd)
 
@@ -523,6 +525,19 @@ func (r *PreRun) setV2Clients(c *AuthenticatedCLICommand) error {
 	c.Config.V2Client = v2Client
 
 	return nil
+}
+
+func (c *AuthenticatedCLICommand) GetHubClient() (*hub.Client, error) {
+	if c.HubClient == nil {
+		unsafeTrace, err := c.Flags().GetBool("unsafe-trace")
+		if err != nil {
+			return nil, err
+		}
+
+		c.HubClient = hub.NewClient(c.Config.Version.UserAgent, c.Config.IsTest, unsafeTrace)
+	}
+
+	return c.HubClient, nil
 }
 
 func getKafkaRestEndpoint(ctx *dynamicconfig.DynamicContext) (string, string, error) {
@@ -1020,7 +1035,7 @@ func (r *PreRun) shouldCheckForUpdates(cmd *cobra.Command) bool {
 	return true
 }
 
-func (r *PreRun) warnIfConfluentLocal(cmd *cobra.Command) {
+func warnIfConfluentLocal(cmd *cobra.Command) {
 	if strings.HasPrefix(cmd.CommandPath(), "confluent local kafka start") {
 		output.ErrPrintln("The local commands are intended for a single-node development environment only, NOT for production usage. See more: https://docs.confluent.io/current/cli/index.html")
 		output.ErrPrintln()

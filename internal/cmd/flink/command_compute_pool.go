@@ -5,6 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/featureflags"
@@ -62,7 +63,7 @@ func (c *command) autocompleteComputePools() []string {
 		return nil
 	}
 
-	computePools, err := c.V2Client.ListFlinkComputePools(environmentId)
+	computePools, err := c.V2Client.ListFlinkComputePools(environmentId, "")
 	if err != nil {
 		return nil
 	}
@@ -72,4 +73,9 @@ func (c *command) autocompleteComputePools() []string {
 		suggestions[i] = fmt.Sprintf("%s\t%s", computePool.GetId(), computePool.Spec.GetDisplayName())
 	}
 	return suggestions
+}
+
+func (c *command) addRegionFlag(cmd *cobra.Command) {
+	cmd.Flags().String("region", "", `Cloud region for compute pool (use "confluent flink region list" to see all).`)
+	pcmd.RegisterFlagCompletionFunc(cmd, "region", c.autocompleteRegions)
 }

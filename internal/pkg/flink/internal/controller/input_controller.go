@@ -10,10 +10,12 @@ import (
 	"time"
 
 	"github.com/olekukonko/tablewriter"
+	"golang.org/x/term"
 
 	"github.com/confluentinc/go-prompt"
 
 	"github.com/confluentinc/cli/internal/pkg/flink/components"
+	"github.com/confluentinc/cli/internal/pkg/flink/config"
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/autocomplete"
 	lexer "github.com/confluentinc/cli/internal/pkg/flink/internal/highlighting"
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/history"
@@ -25,24 +27,20 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-type InputControllerInterface interface {
-	RunInteractiveInput()
-	Prompt() *prompt.Prompt
-	GetMaxCol() (int, error)
-}
-
 type InputController struct {
 	History               *history.History
 	InitialBuffer         string
-	appController         ApplicationControllerInterface
+	appController         types.ApplicationControllerInterface
 	smartCompletion       bool
 	reverseISearchEnabled bool
-	table                 TableControllerInterface
+	table                 types.TableControllerInterface
 	prompt                *prompt.Prompt
 	store                 store.StoreInterface
 	authenticated         func() error
 	appOptions            *types.ApplicationOptions
 	shouldExit            bool
+	stdin                 *term.State
+	consoleParser         prompt.ConsoleParser
 }
 
 func shouldUseTView(statement types.ProcessedStatement) bool {
@@ -70,13 +68,8 @@ const (
 func (c *InputController) RunInteractiveInput() {
 	// We check for statement result and rows so we don't leave GoPrompt in case of errors
 	for {
-		// We save and restore the stdinState to avoid any terminal settings/shortcut bindings/Signals that can be caught and handled
-		// to be unconfigured by GoPrompt. This change is smart for multiple purposes but
-		// it was first introduced due to a bug where CtrlC stopped working after executing GoPrompt.
-		stdinState := getStdin()
 		// Run interactive input and take over terminal
 		input := c.prompt.Input()
-		restoreStdin(stdinState)
 
 		// If the user presses CtrlD then go prompt returns and empty input
 		// This is the only way go-prompt returns an empty input since we have a multiline prompt
@@ -113,24 +106,21 @@ func (c *InputController) RunInteractiveInput() {
 		// Wait for results to be there or for the user to cancel the query
 		ctx, cancelWaitPendingStatement := context.WithCancel(context.Background())
 
-		in := prompt.NewStandardInputParser()
-		_ = in.Setup()
-		cancelListenToUserInput := c.listenToUserInput(in, func() {
+		cancelListenToUserInput := c.listenToUserInput(c.consoleParser, func() {
 			go c.store.DeleteStatement(processedStatement.StatementName)
 			cancelWaitPendingStatement()
 		})
 
 		processedStatement, err = c.store.WaitPendingStatement(ctx, *processedStatement)
 		if err != nil {
-			_ = in.TearDown()
 			cancelListenToUserInput()
 			output.Println(err.Error())
 			c.isSessionValid(err)
 			continue
 		}
+		processedStatement.PrintStatusDetail()
 
 		processedStatement, err = c.store.FetchStatementResults(*processedStatement)
-		_ = in.TearDown()
 		cancelListenToUserInput()
 		if err != nil {
 			output.Println(err.Error())
@@ -144,10 +134,10 @@ func (c *InputController) RunInteractiveInput() {
 		}
 
 		c.printResultToSTDOUT(processedStatement.StatementResults)
-		// We already printed the results using plain text and will delete the statement. When using TView this will happen upon leaving the interactive view.
-		// TODO - this is currently used only to save system resources, To be removed once the API Server becomes scalable.
-		// We want to maintain a "completed" statement in the backend
-		if !processedStatement.IsLocalStatement && processedStatement.Status != types.RUNNING {
+		// This was used to delete statements after their execution to save system resources, which should not be
+		// an issue anymore. We don't want to remove it completely just yet, but will disable it by default for now.
+		// TODO: remove this completely once we are sure we won't need it in the future
+		if config.ShouldCleanupStatements && !processedStatement.IsLocalStatement && processedStatement.Status != types.RUNNING {
 			go c.store.DeleteStatement(processedStatement.StatementName)
 		}
 	}
@@ -198,27 +188,28 @@ func (c *InputController) setInitialBuffer(s string) {
 	c.prompt = c.Prompt()
 }
 
-func renderMsgAndStatus(statementResult *types.ProcessedStatement) {
-	if statementResult == nil {
+func renderMsgAndStatus(processedStatement *types.ProcessedStatement) {
+	if processedStatement == nil {
 		return
 	}
 
-	if statementResult.IsLocalStatement {
-		if statementResult.Status != "FAILED" {
+	if processedStatement.IsLocalStatement {
+		if processedStatement.Status != "FAILED" {
 			output.Println("Statement successfully submitted.\n ")
 		} else {
 			output.Println("Error: Couldn't process statement. Please check your statement and try again.")
 		}
 	} else {
-		if statementResult.StatementName != "" {
-			output.Println("Statement ID: " + statementResult.StatementName)
+		if processedStatement.StatementName != "" {
+			output.Printf("Statement name: %s\n", processedStatement.StatementName)
 		}
-		if statementResult.Status != "FAILED" {
+		if processedStatement.Status != "FAILED" {
 			output.Println("Statement successfully submitted. ")
 			output.Println("Fetching results...\n ")
 		} else {
 			output.Println("Error: Statement submission failed. There could a problem with the server right now. Check your statement and try again.")
 		}
+		processedStatement.PrintStatusDetail()
 	}
 }
 
@@ -296,11 +287,6 @@ func (c *InputController) Prompt() *prompt.Prompt {
 		prompt.OptionHistory(c.History.Data),
 		prompt.OptionSwitchKeyBindMode(prompt.EmacsKeyBind),
 		prompt.OptionSetExitCheckerOnInput(func(input string, breakline bool) bool {
-			// We add exit\n here because we also want to exit without the need of adding semicolon, which is the default flow for all statements
-			if input == "exit\n" {
-				c.shouldExit = true
-			}
-
 			if c.reverseISearchEnabled || c.shouldExit {
 				return true
 			}
@@ -354,6 +340,10 @@ func (c *InputController) Prompt() *prompt.Prompt {
 		prompt.OptionSetStatementTerminator(func(lastKeyStroke prompt.Key, buffer *prompt.Buffer) bool {
 			text := buffer.Text()
 			text = strings.TrimSpace(text)
+			// We add exit here because we also want to exit without the need of adding semicolon, which is the default flow for all statements
+			if text == "exit" {
+				return true
+			}
 			if len(text) == 0 || text[len(text)-1] != ';' {
 				return false
 			}
@@ -458,7 +448,12 @@ func (c *InputController) GetMaxCol() (int, error) {
 	return int(maxCol), nil
 }
 
-func NewInputController(t TableControllerInterface, a ApplicationControllerInterface, store store.StoreInterface, authenticated func() error, history *history.History, appOptions *types.ApplicationOptions) InputControllerInterface {
+func (c *InputController) tearDown() {
+	tearDownConsoleParser(c.consoleParser)
+	restoreStdin(c.stdin)
+}
+
+func NewInputController(t types.TableControllerInterface, a types.ApplicationControllerInterface, store store.StoreInterface, authenticated func() error, history *history.History, appOptions *types.ApplicationOptions) types.InputControllerInterface {
 	inputController := &InputController{
 		History:         history,
 		InitialBuffer:   "",
@@ -469,7 +464,10 @@ func NewInputController(t TableControllerInterface, a ApplicationControllerInter
 		authenticated:   authenticated,
 		appOptions:      appOptions,
 		shouldExit:      false,
+		stdin:           getStdin(),
+		consoleParser:   getConsoleParser(),
 	}
+	a.AddCleanupFunction(inputController.tearDown)
 	inputController.prompt = inputController.Prompt()
 	components.PrintWelcomeHeader()
 

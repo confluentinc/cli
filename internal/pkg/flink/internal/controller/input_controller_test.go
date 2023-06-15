@@ -19,12 +19,12 @@ func TestRenderError(t *testing.T) {
 	err := &types.StatementError{HttpResponseCode: http.StatusUnauthorized}
 
 	// Test unauthorized error - should exit application
-	mockAppController.EXPECT().ExitApplication().Times(1)
+	mockAppController.EXPECT().ExitApplication()
 	result := inputController.isSessionValid(err)
 	require.False(t, result)
 
 	// Test other error
-	err = &types.StatementError{Msg: "Something went wrong."}
+	err = &types.StatementError{Message: "something went wrong."}
 	result = inputController.isSessionValid(err)
 	require.True(t, result)
 }

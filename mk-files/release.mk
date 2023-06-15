@@ -8,7 +8,7 @@ endef
 
 
 .PHONY: release
-release: check-branch tag-release
+release: check-branch
 	$(call print-boxed-message,"RELEASING TO STAGING FOLDER $(S3_STAG_PATH)")
 	$(MAKE) release-to-stag
 	$(call print-boxed-message,"PUBLISHING RELEASE NOTES TO S3 $(S3_BUCKET_PATH)")

@@ -80,9 +80,9 @@ func (c *configCommand) update(cmd *cobra.Command, _ []string) error {
 
 	enc := json.NewEncoder(c.OutOrStdout())
 	enc.SetIndent("", "  ")
-	result, r, err := c.MDSClient.AuditLogConfigurationApi.PutConfig(c.createContext(), *putSpec)
+	result, httpResp, err := c.MDSClient.AuditLogConfigurationApi.PutConfig(c.createContext(), *putSpec)
 	if err != nil {
-		if r != nil && r.StatusCode == http.StatusConflict {
+		if httpResp != nil && httpResp.StatusCode == http.StatusConflict {
 			if apiError, ok := err.(mds.GenericOpenAPIError); ok {
 				_ = enc.Encode(apiError.Model())
 				// We can just ignore this extra error. Why?
@@ -90,7 +90,7 @@ func (c *configCommand) update(cmd *cobra.Command, _ []string) error {
 				// That's OK though, we'll still handle and show the API error message.
 			}
 		}
-		return HandleMdsAuditLogApiError(cmd, err, r)
+		return HandleMdsAuditLogApiError(cmd, err, httpResp)
 	}
 
 	return enc.Encode(result)
