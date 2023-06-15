@@ -52,6 +52,17 @@ func (s *InputControllerTestSuite) runAndCaptureSTDOUT(test func()) string {
 	return <-output
 }
 
+func (s *InputControllerTestSuite) runMainLoop(inputController types.InputControllerInterface, stopAfterLoopFinishes bool) string {
+	if stopAfterLoopFinishes {
+		// this makes the loop stop after one iteration
+		s.mockPrompt.EXPECT().Input().Return("")
+		s.mockAppController.EXPECT().ExitApplication()
+	}
+
+	output := s.runAndCaptureSTDOUT(inputController.RunInteractiveInput)
+	return output
+}
+
 func (s *InputControllerTestSuite) SetupTest() {
 	ctrl := gomock.NewController(s.T())
 	s.mockAppController = mock.NewMockApplicationControllerInterface(ctrl)
@@ -277,7 +288,7 @@ func (s *InputControllerTestSuite) TestRunInteractiveInputExitsWhenEmptyPromptRe
 	s.mockAppController.EXPECT().ExitApplication()
 
 	// When
-	actual := s.runAndCaptureSTDOUT(inputController.RunInteractiveInput)
+	actual := s.runMainLoop(inputController, false)
 
 	// Then
 	require.Empty(s.T(), actual)
@@ -295,7 +306,7 @@ func (s *InputControllerTestSuite) TestRunInteractiveInputExitsWhenShouldExitTru
 	s.mockAppController.EXPECT().ExitApplication()
 
 	// When
-	actual := s.runAndCaptureSTDOUT(inputController.RunInteractiveInput)
+	actual := s.runMainLoop(inputController, false)
 
 	// Then
 	require.Empty(s.T(), actual)
@@ -315,7 +326,7 @@ func (s *InputControllerTestSuite) TestRunInteractiveInputExitsWhenNotAuthentica
 	s.mockAppController.EXPECT().ExitApplication()
 
 	// When
-	actual := s.runAndCaptureSTDOUT(inputController.RunInteractiveInput)
+	actual := s.runMainLoop(inputController, false)
 
 	// Then
 	expected := fmt.Sprintf("%s\n", inputController.authenticated().Error())
@@ -339,12 +350,8 @@ func (s *InputControllerTestSuite) TestRunInteractiveInputPrintsErrorAndContinue
 	s.mockPrompt.EXPECT().Input().Return(input)
 	s.mockStore.EXPECT().ProcessStatement(input).Return(nil, statementError)
 
-	// this makes the loop stop after one iteration
-	s.mockPrompt.EXPECT().Input().Return("")
-	s.mockAppController.EXPECT().ExitApplication()
-
 	// When
-	actual := s.runAndCaptureSTDOUT(inputController.RunInteractiveInput)
+	actual := s.runMainLoop(inputController, true)
 
 	// Then
 	require.Equal(s.T(), fmt.Sprintf("%s\n", statementError.Error()), actual)
@@ -369,7 +376,7 @@ func (s *InputControllerTestSuite) TestRunInteractiveInputExitsOn401FromProcessS
 	s.mockAppController.EXPECT().ExitApplication()
 
 	// When
-	actual := s.runAndCaptureSTDOUT(inputController.RunInteractiveInput)
+	actual := s.runMainLoop(inputController, false)
 
 	// Then
 	require.Equal(s.T(), fmt.Sprintf("%s\n", statementError.Error()), actual)
@@ -392,12 +399,8 @@ func (s *InputControllerTestSuite) TestRunInteractiveInputStoresInputInHistory()
 	s.mockPrompt.EXPECT().Input().Return(input)
 	s.mockStore.EXPECT().ProcessStatement(input).Return(nil, statementError)
 
-	// this makes the loop stop after one iteration
-	s.mockPrompt.EXPECT().Input().Return("")
-	s.mockAppController.EXPECT().ExitApplication()
-
 	// When
-	actual := s.runAndCaptureSTDOUT(inputController.RunInteractiveInput)
+	actual := s.runMainLoop(inputController, true)
 
 	// Then
 	require.Equal(s.T(), fmt.Sprintf("%s\n", statementError.Error()), actual)
