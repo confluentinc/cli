@@ -33,13 +33,10 @@ func CollectPanic(cmd *cobra.Command, args []string, cfg *v1.Config) *usage.Usag
 func parseFlags(cmd *cobra.Command, flags []string) *[]string {
 	var formattedFlags []string
 	for i := range flags {
-		flags[i] = strings.TrimPrefix(flags[i], "--")
-		flags[i] = strings.TrimPrefix(flags[i], "-")
+		flags[i] = strings.TrimLeft(flags[i], "-")
 	}
 	cmd.Flags().VisitAll(func(flag *pflag.Flag) {
-		if slices.Contains(flags, flag.Name) {
-			formattedFlags = append(formattedFlags, flag.Name)
-		} else if slices.Contains(flags, flag.Shorthand) {
+		if slices.Contains(flags, flag.Name) || slices.Contains(flags, flag.Shorthand) {
 			formattedFlags = append(formattedFlags, flag.Name)
 		}
 	})
