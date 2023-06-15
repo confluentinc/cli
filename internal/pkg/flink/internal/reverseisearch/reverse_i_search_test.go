@@ -96,6 +96,6 @@ func TestNewLineCount(t *testing.T) {
 			s = s[randomIndex:] + "\n" + s[:randomIndex]
 		}
 
-		assert.Equal(t, newLines, NewLineCount(s))
+		assert.Equal(t, newLines, newLineCount(s))
 	})
 }
