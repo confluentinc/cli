@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/confluentinc/cli/internal/pkg/flink/internal/history"
 	"github.com/confluentinc/cli/internal/pkg/flink/test/mock"
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
 )
@@ -63,8 +64,7 @@ func (s *InputControllerTestSuite) TestRenderError() {
 	inputController := &InputController{appController: s.mockAppController}
 	err := &types.StatementError{HttpResponseCode: http.StatusUnauthorized}
 
-	// Test unauthorized error - should exit application
-	s.mockAppController.EXPECT().ExitApplication()
+	// Test unauthorized error
 	result := inputController.isSessionValid(err)
 	require.False(s.T(), result)
 
@@ -320,4 +320,57 @@ func (s *InputControllerTestSuite) TestRunInteractiveInputExitsWhenNotAuthentica
 	// Then
 	expected := fmt.Sprintf("%s\n", inputController.authenticated().Error())
 	require.Equal(s.T(), expected, actual)
+}
+
+func (s *InputControllerTestSuite) TestRunInteractiveInputPrintsErrorAndContinuesOnProcessStatementError() {
+	// Given
+	inputController := &InputController{
+		appController: s.mockAppController,
+		prompt:        s.mockPrompt,
+		store:         s.mockStore,
+		History:       &history.History{},
+		authenticated: func() error {
+			return nil
+		},
+	}
+
+	input := "select 1;"
+	statementError := &types.StatementError{Message: "error"}
+	s.mockPrompt.EXPECT().Input().Return(input)
+	s.mockStore.EXPECT().ProcessStatement(input).Return(nil, statementError)
+
+	// this makes the loop stop after one iteration
+	s.mockPrompt.EXPECT().Input().Return("")
+	s.mockAppController.EXPECT().ExitApplication()
+
+	// When
+	actual := s.runAndCaptureSTDOUT(inputController.RunInteractiveInput)
+
+	// Then
+	require.Equal(s.T(), fmt.Sprintf("%s\n", statementError.Error()), actual)
+}
+
+func (s *InputControllerTestSuite) TestRunInteractiveInputExitsOn401FromProcessStatement() {
+	// Given
+	inputController := &InputController{
+		appController: s.mockAppController,
+		prompt:        s.mockPrompt,
+		store:         s.mockStore,
+		History:       &history.History{},
+		authenticated: func() error {
+			return nil
+		},
+	}
+
+	input := "select 1;"
+	statementError := &types.StatementError{Message: "error", HttpResponseCode: 401}
+	s.mockPrompt.EXPECT().Input().Return(input)
+	s.mockStore.EXPECT().ProcessStatement(input).Return(nil, statementError)
+	s.mockAppController.EXPECT().ExitApplication()
+
+	// When
+	actual := s.runAndCaptureSTDOUT(inputController.RunInteractiveInput)
+
+	// Then
+	require.Equal(s.T(), fmt.Sprintf("%s\n", statementError.Error()), actual)
 }
