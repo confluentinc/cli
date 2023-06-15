@@ -1,35 +1,80 @@
 package controller
 
 import (
+	"errors"
+	"fmt"
 	"net/http"
+	"os"
 	"testing"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 
 	"github.com/confluentinc/cli/internal/pkg/flink/test/mock"
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
 )
 
-func TestRenderError(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
+type InputControllerTestSuite struct {
+	suite.Suite
+	mockAppController   *mock.MockApplicationControllerInterface
+	mockTableController *mock.MockTableControllerInterface
+	mockPrompt          *mock.MockIPrompt
+	mockStore           *mock.MockStoreInterface
+}
 
-	inputController := &InputController{appController: mockAppController}
+func TestInputControllerTestSuite(t *testing.T) {
+	suite.Run(t, new(InputControllerTestSuite))
+}
+
+func (s *InputControllerTestSuite) runAndCaptureSTDOUT(test func()) string {
+	// Redirect STDOUT to a buffer
+	old := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+
+	// Run the test
+	test()
+
+	// Close the writer and restore the original STDOUT
+	err := w.Close()
+	require.NoError(s.T(), err)
+	os.Stdout = old
+
+	// Read the output from the buffer
+	output := make(chan string)
+	go func() {
+		buf := make([]byte, 1024)
+		n, _ := r.Read(buf)
+		output <- string(buf[:n])
+	}()
+	return <-output
+}
+
+func (s *InputControllerTestSuite) SetupTest() {
+	ctrl := gomock.NewController(s.T())
+	s.mockAppController = mock.NewMockApplicationControllerInterface(ctrl)
+	s.mockTableController = mock.NewMockTableControllerInterface(ctrl)
+	s.mockPrompt = mock.NewMockIPrompt(ctrl)
+	s.mockStore = mock.NewMockStoreInterface(ctrl)
+}
+
+func (s *InputControllerTestSuite) TestRenderError() {
+	inputController := &InputController{appController: s.mockAppController}
 	err := &types.StatementError{HttpResponseCode: http.StatusUnauthorized}
 
 	// Test unauthorized error - should exit application
-	mockAppController.EXPECT().ExitApplication()
+	s.mockAppController.EXPECT().ExitApplication()
 	result := inputController.isSessionValid(err)
-	require.False(t, result)
+	require.False(s.T(), result)
 
 	// Test other error
 	err = &types.StatementError{Message: "something went wrong."}
 	result = inputController.isSessionValid(err)
-	require.True(t, result)
+	require.True(s.T(), result)
 }
 
-func TestShouldUseTView(t *testing.T) {
+func (s *InputControllerTestSuite) TestShouldUseTView() {
 	tests := []struct {
 		name      string
 		statement types.ProcessedStatement
@@ -98,8 +143,65 @@ func TestShouldUseTView(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+		s.T().Run(tt.name, func(t *testing.T) {
 			require.Equal(t, tt.want, shouldUseTView(tt.statement))
 		})
 	}
+}
+
+func (s *InputControllerTestSuite) TestRunInteractiveInputExitsWhenEmptyPromptReturn() {
+	// Given
+	inputController := &InputController{
+		appController: s.mockAppController,
+		prompt:        s.mockPrompt,
+		shouldExit:    false,
+	}
+
+	s.mockPrompt.EXPECT().Input().Return("")
+	s.mockAppController.EXPECT().ExitApplication()
+
+	// When
+	actual := s.runAndCaptureSTDOUT(inputController.RunInteractiveInput)
+
+	// Then
+	require.Empty(s.T(), actual)
+}
+
+func (s *InputControllerTestSuite) TestRunInteractiveInputExitsWhenShouldExitTrue() {
+	// Given
+	inputController := &InputController{
+		appController: s.mockAppController,
+		prompt:        s.mockPrompt,
+		shouldExit:    true,
+	}
+
+	s.mockPrompt.EXPECT().Input().Return("select 1;")
+	s.mockAppController.EXPECT().ExitApplication()
+
+	// When
+	actual := s.runAndCaptureSTDOUT(inputController.RunInteractiveInput)
+
+	// Then
+	require.Empty(s.T(), actual)
+}
+
+func (s *InputControllerTestSuite) TestRunInteractiveInputExitsWhenNotAuthenticated() {
+	// Given
+	inputController := &InputController{
+		appController: s.mockAppController,
+		prompt:        s.mockPrompt,
+		authenticated: func() error {
+			return errors.New("401 unauthorized")
+		},
+	}
+
+	s.mockPrompt.EXPECT().Input().Return("select 1;")
+	s.mockAppController.EXPECT().ExitApplication()
+
+	// When
+	actual := s.runAndCaptureSTDOUT(inputController.RunInteractiveInput)
+
+	// Then
+	expected := fmt.Sprintf("%s\n", inputController.authenticated().Error())
+	require.Equal(s.T(), expected, actual)
 }

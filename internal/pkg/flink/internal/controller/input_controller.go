@@ -34,7 +34,7 @@ type InputController struct {
 	smartCompletion       bool
 	reverseISearchEnabled bool
 	table                 types.TableControllerInterface
-	prompt                *prompt.Prompt
+	prompt                prompt.IPrompt
 	store                 store.StoreInterface
 	authenticated         func() error
 	appOptions            *types.ApplicationOptions
@@ -77,13 +77,14 @@ func (c *InputController) RunInteractiveInput() {
 		// due go-prompt always exiting on CtrlD. By modifying go-prompt we could also fix this
 		if c.shouldExit || input == "" {
 			c.appController.ExitApplication()
+			return
 		}
 
 		// Upon receiving user input, we check if user is authenticated and possibly a refresh the CCloud SSO token
 		if authErr := c.authenticated(); authErr != nil {
 			output.Println(authErr.Error())
 			c.appController.ExitApplication()
-			continue
+			return
 		}
 
 		if c.reverseISearchEnabled {
@@ -271,7 +272,7 @@ func (c *InputController) printResultToSTDOUT(statementResults *types.StatementR
 	rawTable.Render() // Send output
 }
 
-func (c *InputController) Prompt() *prompt.Prompt {
+func (c *InputController) Prompt() prompt.IPrompt {
 	completer := autocomplete.NewCompleterBuilder(c.getSmartCompletion).
 		AddCompleter(autocomplete.ExamplesCompleter).
 		AddCompleter(autocomplete.SetCompleter).
