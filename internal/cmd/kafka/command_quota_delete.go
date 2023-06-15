@@ -1,23 +1,19 @@
 package kafka
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
-	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *quotaCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "delete <id>",
-		Short:             "Delete a Kafka client quota.",
-		Args:              cobra.ExactArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		Use:               "delete <id-1> [id-2] ... [id-n]",
+		Short:             "Delete Kafka client quotas.",
+		Args:              cobra.MinimumNArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgsMultiple),
 		RunE:              c.delete,
 	}
 
@@ -28,19 +24,46 @@ func (c *quotaCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *quotaCommand) delete(cmd *cobra.Command, args []string) error {
-	if _, err := c.V2Client.DescribeKafkaQuota(args[0]); err != nil {
+	if err := c.confirmDeletion(cmd, args); err != nil {
 		return err
 	}
 
-	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.ClientQuota, args[0], args[0])
-	if _, err := form.ConfirmDeletion(cmd, promptMsg, args[0]); err != nil {
+	deleteFunc := func(id string) error {
+		if err := c.V2Client.DeleteKafkaQuota(id); err != nil {
+			return err
+		}
+		return nil
+	}
+
+	deleted, err := resource.Delete(args, deleteFunc, nil)
+	resource.PrintDeleteSuccessMsg(deleted, resource.ClientQuota)
+
+	return err
+}
+
+func (c *quotaCommand) confirmDeletion(cmd *cobra.Command, args []string) error {
+	var displayName string
+	describeFunc := func(id string) error {
+		quota, err := c.V2Client.DescribeKafkaQuota(id)
+		if err == nil && id == args[0] {
+			displayName = quota.Spec.GetDisplayName()
+		}
 		return err
 	}
 
-	if err := c.V2Client.DeleteKafkaQuota(args[0]); err != nil {
+	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.ClientQuota, describeFunc); err != nil {
 		return err
 	}
 
-	output.Printf(errors.DeletedResourceMsg, resource.ClientQuota, args[0])
+	if len(args) == 1 {
+		if err := form.ConfirmDeletionWithString(cmd, form.DefaultPromptString(resource.ClientQuota, args[0], displayName), displayName); err != nil {
+			return err
+		}
+	} else {
+		if ok, err := form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.ClientQuota, args)); err != nil || !ok {
+			return err
+		}
+	}
+
 	return nil
 }

@@ -201,7 +201,7 @@ func CatchOrgV2ResourceNotFoundError(err error, resourceType string, r *http.Res
 	}
 
 	if r != nil && r.StatusCode == http.StatusForbidden {
-		return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), fmt.Sprintf("%s not found or access forbidden", resourceType), fmt.Sprintf(OrgResourceNotFoundSuggestions, resourceType))
+		return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), fmt.Sprintf("%s not found or access forbidden", resourceType), fmt.Sprintf(ListResourceSuggestions, resourceType, resourceType))
 	}
 
 	return CatchCCloudV2Error(err, r)
@@ -216,11 +216,7 @@ func CatchKafkaNotFoundError(err error, clusterId string, r *http.Response) erro
 	}
 
 	if r != nil && r.StatusCode == http.StatusForbidden {
-		suggestions := KafkaClusterInaccessibleSuggestions
-		if r.Request.Method == http.MethodDelete {
-			suggestions = KafkaClusterDeletingSuggestions
-		}
-		return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), fmt.Sprintf(KafkaClusterInaccessibleErrorMsg, clusterId), suggestions)
+		return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), fmt.Sprintf(KafkaClusterInaccessibleErrorMsg, clusterId), KafkaClusterInaccessibleSuggestions)
 	}
 
 	return CatchCCloudV2Error(err, r)
