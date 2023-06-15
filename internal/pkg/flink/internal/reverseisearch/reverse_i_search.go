@@ -9,6 +9,13 @@ import (
 
 const BckISearch = "bck-i-search: "
 
+type ReverseISearch interface {
+	ReverseISearch(history []string) string
+}
+
+type reverseISearch struct {
+}
+
 type SearchState struct {
 	CurrentIndex int
 	CurrentMatch string
@@ -19,9 +26,75 @@ type LivePrefixState struct {
 	IsEnable   bool
 }
 
-// The SearchCompleter is writing on console the suggestions from the history, appending the
+func NewReverseISearch() ReverseISearch {
+	return reverseISearch{}
+}
+
+func reverseISearchLivePrefix(livePrefixState *LivePrefixState) func() (string, bool) {
+	return func() (string, bool) {
+		return livePrefixState.LivePrefix, livePrefixState.IsEnable
+	}
+}
+
+func (r reverseISearch) ReverseISearch(history []string) string {
+	writer := prompt.NewStdoutWriter()
+
+	livePrefixState := &LivePrefixState{
+		LivePrefix: BckISearch,
+		IsEnable:   true,
+	}
+
+	reverseISearchEnabled := true
+	searchState := &SearchState{
+		CurrentIndex: len(history) - 1,
+		CurrentMatch: "",
+	}
+	exitFromSearch := func(buffer *prompt.Buffer) {
+		buffer.DeleteBeforeCursor(9999)
+		reverseISearchEnabled = false
+	}
+	in := prompt.New(
+		func(s string) {},
+		searchCompleter(history, writer, searchState, livePrefixState),
+		prompt.OptionSetExitCheckerOnInput(func(input string, lineBreak bool) bool {
+			return !reverseISearchEnabled
+		}),
+		prompt.OptionAddKeyBind(prompt.KeyBind{
+			Key: prompt.ControlC,
+			Fn:  exitFromSearch,
+		}),
+		prompt.OptionAddKeyBind(prompt.KeyBind{
+			Key: prompt.ControlM,
+			Fn:  exitFromSearch,
+		}),
+		prompt.OptionAddKeyBind(prompt.KeyBind{
+			Key: prompt.ControlQ,
+			Fn:  exitFromSearch,
+		}),
+		prompt.OptionAddKeyBind(prompt.KeyBind{
+			Key: prompt.ControlR,
+			Fn:  nextResult(writer, history, searchState, livePrefixState),
+		}),
+		prompt.OptionWriter(writer),
+		prompt.OptionTitle("bck-i-search"),
+		prompt.OptionLivePrefix(reverseISearchLivePrefix(livePrefixState)),
+		prompt.OptionHistory(history),
+		prompt.OptionPrefixTextColor(prompt.White),
+		prompt.OptionSetStatementTerminator(func(lastKeyStroke prompt.Key, buffer *prompt.Buffer) bool {
+			if lastKeyStroke == prompt.ControlM {
+				livePrefixState.LivePrefix = ""
+				return true
+			}
+			return false
+		}),
+	)
+	in.Run()
+	return searchState.CurrentMatch
+}
+
+// The searchCompleter is writing on console the suggestions from the history, appending the
 // `bck-i-search: ` string. It always returns an empty []prompt.Suggest, because we are not using the built-in suggest.
-func SearchCompleter(history []string, writer prompt.ConsoleWriter, searchState *SearchState, livePrefix *LivePrefixState) prompt.Completer {
+func searchCompleter(history []string, writer prompt.ConsoleWriter, searchState *SearchState, livePrefix *LivePrefixState) prompt.Completer {
 	return func(document prompt.Document) []prompt.Suggest {
 		// User selected the command or key binding for next match
 		if document.LastKeyStroke() == prompt.Escape || document.LastKeyStroke() == prompt.ControlR {
@@ -36,8 +109,8 @@ func SearchCompleter(history []string, writer prompt.ConsoleWriter, searchState 
 	}
 }
 
-// NextResult will update console text with the next match from the history.
-func NextResult(writer prompt.ConsoleWriter, history []string, searchState *SearchState, livePrefix *LivePrefixState) func(buffer *prompt.Buffer) {
+// nextResult will update console text with the next match from the history.
+func nextResult(writer prompt.ConsoleWriter, history []string, searchState *SearchState, livePrefix *LivePrefixState) func(buffer *prompt.Buffer) {
 	return func(buffer *prompt.Buffer) {
 		searchState.CurrentIndex--
 		updateSuggestion(history, buffer.Text(), writer, searchState, livePrefix)
@@ -87,7 +160,7 @@ func clearCurrentSuggestion(writer prompt.ConsoleWriter, searchState *SearchStat
 	writer.CursorUp(1)
 
 	// 2. (EraseLine + up) * #suggestions-1 -> To clear previous suggestions minus first line
-	if lines := NewLineCount(searchState.CurrentMatch); lines > 0 {
+	if lines := newLineCount(searchState.CurrentMatch); lines > 0 {
 		for i := lines; i > 0; i-- {
 			writer.EraseLine()
 			writer.CursorUp(1)
@@ -141,6 +214,6 @@ func search(substr string, s []string, startIndex int) searchResult {
 	return searchResult{-1, "", -1}
 }
 
-func NewLineCount(s string) int {
+func newLineCount(s string) int {
 	return strings.Count(s, "\n")
 }

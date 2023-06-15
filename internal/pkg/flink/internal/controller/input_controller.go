@@ -41,6 +41,7 @@ type InputController struct {
 	shouldExit            bool
 	stdin                 *term.State
 	consoleParser         prompt.ConsoleParser
+	reverseISearch        reverseisearch.ReverseISearch
 }
 
 func shouldUseTView(statement types.ProcessedStatement) bool {
@@ -68,6 +69,12 @@ const (
 func (c *InputController) RunInteractiveInput() {
 	// We check for statement result and rows so we don't leave GoPrompt in case of errors
 	for {
+		// if the initial buffer is not empty, we insert the text
+		if c.InitialBuffer != "" {
+			c.prompt.Buffer().InsertText(c.InitialBuffer, false, true)
+			c.InitialBuffer = ""
+		}
+
 		// Run interactive input and take over terminal
 		input := c.prompt.Input()
 
@@ -75,7 +82,7 @@ func (c *InputController) RunInteractiveInput() {
 		// This is the only way go-prompt returns an empty input since we have a multiline prompt
 		// The custom CtrlD keybind we have is only trigered if there's something in the buffer
 		// due go-prompt always exiting on CtrlD. By modifying go-prompt we could also fix this
-		if c.shouldExit || input == "" {
+		if c.shouldExit || (input == "" && !c.reverseISearchEnabled) {
 			c.appController.ExitApplication()
 			return
 		}
@@ -88,9 +95,9 @@ func (c *InputController) RunInteractiveInput() {
 		}
 
 		if c.reverseISearchEnabled {
-			searchResult := c.reverseISearch()
+			searchResult := c.reverseISearch.ReverseISearch(c.History.Data)
 			c.reverseISearchEnabled = false
-			c.setInitialBuffer(searchResult)
+			c.InitialBuffer = searchResult
 			continue
 		}
 
@@ -188,11 +195,6 @@ func (c *InputController) isSessionValid(err *types.StatementError) bool {
 		return false
 	}
 	return true
-}
-
-func (c *InputController) setInitialBuffer(s string) {
-	c.InitialBuffer = s
-	c.prompt = c.Prompt()
 }
 
 func renderMsgAndStatus(processedStatement *types.ProcessedStatement) {
@@ -364,69 +366,6 @@ func (c *InputController) getSmartCompletion() bool {
 	return c.smartCompletion
 }
 
-func reverseISearchLivePrefix(livePrefixState *reverseisearch.LivePrefixState) func() (string, bool) {
-	return func() (string, bool) {
-		return livePrefixState.LivePrefix, livePrefixState.IsEnable
-	}
-}
-
-func (c *InputController) reverseISearch() string {
-	writer := prompt.NewStdoutWriter()
-
-	livePrefixState := &reverseisearch.LivePrefixState{
-		LivePrefix: reverseisearch.BckISearch,
-		IsEnable:   true,
-	}
-
-	searchState := &reverseisearch.SearchState{
-		CurrentIndex: len(c.History.Data) - 1,
-		CurrentMatch: "",
-	}
-
-	in := prompt.New(
-		func(s string) {},
-		reverseisearch.SearchCompleter(c.History.Data, writer, searchState, livePrefixState),
-		prompt.OptionSetExitCheckerOnInput(func(input string, lineBreak bool) bool {
-			return !c.reverseISearchEnabled
-		}),
-		prompt.OptionAddKeyBind(prompt.KeyBind{
-			Key: prompt.ControlC,
-			Fn:  c.exitFromSearch,
-		}),
-		prompt.OptionAddKeyBind(prompt.KeyBind{
-			Key: prompt.ControlM,
-			Fn:  c.exitFromSearch,
-		}),
-		prompt.OptionAddKeyBind(prompt.KeyBind{
-			Key: prompt.ControlQ,
-			Fn:  c.exitFromSearch,
-		}),
-		prompt.OptionAddKeyBind(prompt.KeyBind{
-			Key: prompt.ControlR,
-			Fn:  reverseisearch.NextResult(writer, c.History.Data, searchState, livePrefixState),
-		}),
-		prompt.OptionWriter(writer),
-		prompt.OptionTitle("bck-i-search"),
-		prompt.OptionLivePrefix(reverseISearchLivePrefix(livePrefixState)),
-		prompt.OptionHistory(c.History.Data),
-		prompt.OptionPrefixTextColor(prompt.White),
-		prompt.OptionSetStatementTerminator(func(lastKeyStroke prompt.Key, buffer *prompt.Buffer) bool {
-			if lastKeyStroke == prompt.ControlM {
-				livePrefixState.LivePrefix = ""
-				return true
-			}
-			return false
-		}),
-	)
-	in.Run()
-	return searchState.CurrentMatch
-}
-
-func (c *InputController) exitFromSearch(buffer *prompt.Buffer) {
-	buffer.DeleteBeforeCursor(9999)
-	c.reverseISearchEnabled = false
-}
-
 // This function fetches the current max column width for the terminal
 // In other words, the amount of characters that can be displayed in one line
 func (c *InputController) GetMaxCol() (int, error) {
@@ -473,6 +412,7 @@ func NewInputController(t types.TableControllerInterface, a types.ApplicationCon
 		shouldExit:      false,
 		stdin:           getStdin(),
 		consoleParser:   getConsoleParser(),
+		reverseISearch:  reverseisearch.NewReverseISearch(),
 	}
 	a.AddCleanupFunction(inputController.tearDown)
 	inputController.prompt = inputController.Prompt()
