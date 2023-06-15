@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/golang/mock/gomock"
+	"github.com/olekukonko/tablewriter"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -66,6 +67,22 @@ func (s *InputControllerTestSuite) runMainLoop(inputController types.InputContro
 
 	output := s.runAndCaptureSTDOUT(inputController.RunInteractiveInput)
 	return output
+}
+
+func (s *InputControllerTestSuite) getStdoutTable(statementResults types.StatementResults) string {
+	return s.runAndCaptureSTDOUT(func() {
+		rawTable := tablewriter.NewWriter(os.Stdout)
+		rawTable.SetAutoFormatHeaders(false)
+		rawTable.SetHeader(statementResults.Headers)
+		for _, statementResultRow := range statementResults.GetRows() {
+			row := make([]string, len(statementResultRow.Fields))
+			for idx, field := range statementResultRow.Fields {
+				row[idx] = field.ToString()
+			}
+			rawTable.Append(row)
+		}
+		rawTable.Render()
+	})
 }
 
 func (s *InputControllerTestSuite) SetupTest() {
@@ -517,5 +534,174 @@ func (s *InputControllerTestSuite) TestRunInteractiveInputExitsOn401FromWaitPend
 
 	// Then
 	expected := fmt.Sprintf("Statement name: test-statement\nStatement successfully submitted.\nFetching results...\n%s\n", statementError.Error())
+	require.Equal(s.T(), expected, actual)
+}
+
+func (s *InputControllerTestSuite) TestRunInteractiveInputPrintsErrorAndContinuesOnFetchStatementResultsError() {
+	// Given
+	inputController := &InputController{
+		appController: s.mockAppController,
+		prompt:        s.mockPrompt,
+		store:         s.mockStore,
+		consoleParser: s.mockConsoleParser,
+		History:       &history.History{},
+		authenticated: func() error {
+			return nil
+		},
+	}
+
+	input := "select 1;"
+	statement := types.ProcessedStatement{
+		StatementName: "test-statement",
+		Status:        types.RUNNING,
+	}
+	completedStatement := types.ProcessedStatement{
+		StatementName: "test-statement",
+		Status:        types.COMPLETED,
+		StatusDetail:  "status-detail",
+	}
+	statementError := &types.StatementError{Message: "error"}
+	s.mockPrompt.EXPECT().Input().Return(input)
+	s.mockStore.EXPECT().ProcessStatement(input).Return(&statement, nil)
+	s.mockConsoleParser.EXPECT().Read().Return(nil, nil).AnyTimes()
+	s.mockStore.EXPECT().WaitPendingStatement(gomock.Any(), statement).Return(&completedStatement, nil)
+	s.mockStore.EXPECT().FetchStatementResults(completedStatement).Return(nil, statementError)
+
+	// When
+	actual := s.runMainLoop(inputController, true)
+
+	// Then
+	expected := fmt.Sprintf("Statement name: test-statement\nStatement successfully submitted.\nFetching results...\n%s.\n%s\n", completedStatement.StatusDetail, statementError.Error())
+	require.Equal(s.T(), expected, actual)
+}
+
+func (s *InputControllerTestSuite) TestRunInteractiveInputShouldOpenTView() {
+	// Given
+	inputController := &InputController{
+		appController: s.mockAppController,
+		table:         s.mockTableController,
+		prompt:        s.mockPrompt,
+		store:         s.mockStore,
+		consoleParser: s.mockConsoleParser,
+		History:       &history.History{},
+		authenticated: func() error {
+			return nil
+		},
+	}
+
+	input := "select 1;"
+	statement := types.ProcessedStatement{
+		StatementName: "test-statement",
+		Status:        types.RUNNING,
+	}
+	completedStatement := types.ProcessedStatement{
+		StatementName: "test-statement",
+		Status:        types.COMPLETED,
+		StatusDetail:  "status-detail",
+		PageToken:     "not-empty",
+	}
+	s.mockPrompt.EXPECT().Input().Return(input)
+	s.mockStore.EXPECT().ProcessStatement(input).Return(&statement, nil)
+	s.mockConsoleParser.EXPECT().Read().Return(nil, nil).AnyTimes()
+	s.mockStore.EXPECT().WaitPendingStatement(gomock.Any(), statement).Return(&completedStatement, nil)
+	s.mockStore.EXPECT().FetchStatementResults(completedStatement).Return(&completedStatement, nil)
+	s.mockTableController.EXPECT().Init(completedStatement)
+
+	// When
+	actual := s.runMainLoop(inputController, false)
+
+	// Then
+	expected := fmt.Sprintf("Statement name: test-statement\nStatement successfully submitted.\nFetching results...\n%s.\n", completedStatement.StatusDetail)
+	require.Equal(s.T(), expected, actual)
+}
+
+func (s *InputControllerTestSuite) TestRunInteractiveInputShouldPrintNoRows() {
+	// Given
+	inputController := &InputController{
+		appController: s.mockAppController,
+		table:         s.mockTableController,
+		prompt:        s.mockPrompt,
+		store:         s.mockStore,
+		consoleParser: s.mockConsoleParser,
+		History:       &history.History{},
+		authenticated: func() error {
+			return nil
+		},
+	}
+
+	input := "select 1;"
+	statement := types.ProcessedStatement{
+		StatementName: "test-statement",
+		Status:        types.RUNNING,
+	}
+	completedStatement := types.ProcessedStatement{
+		StatementName: "test-statement",
+		Status:        types.COMPLETED,
+		StatusDetail:  "status-detail",
+	}
+	s.mockPrompt.EXPECT().Input().Return(input)
+	s.mockStore.EXPECT().ProcessStatement(input).Return(&statement, nil)
+	s.mockConsoleParser.EXPECT().Read().Return(nil, nil).AnyTimes()
+	s.mockStore.EXPECT().WaitPendingStatement(gomock.Any(), statement).Return(&completedStatement, nil)
+	s.mockStore.EXPECT().FetchStatementResults(completedStatement).Return(&completedStatement, nil)
+
+	// When
+	actual := s.runMainLoop(inputController, true)
+
+	// Then
+	expected := fmt.Sprintf("Statement name: test-statement\nStatement successfully submitted.\nFetching results...\n%s.\n\nThe server returned empty rows for this statement.\n", completedStatement.StatusDetail)
+	require.Equal(s.T(), expected, actual)
+}
+
+func (s *InputControllerTestSuite) TestRunInteractiveInputShouldPrintTable() {
+	// Given
+	inputController := &InputController{
+		appController: s.mockAppController,
+		table:         s.mockTableController,
+		prompt:        s.mockPrompt,
+		store:         s.mockStore,
+		consoleParser: s.mockConsoleParser,
+		History:       &history.History{},
+		authenticated: func() error {
+			return nil
+		},
+	}
+
+	input := "select 1;"
+	statement := types.ProcessedStatement{
+		StatementName: "test-statement",
+		Status:        types.RUNNING,
+	}
+	completedStatement := types.ProcessedStatement{
+		StatementName: "test-statement",
+		Status:        types.COMPLETED,
+		StatusDetail:  "status-detail",
+		StatementResults: &types.StatementResults{
+			Headers: []string{"column"},
+			Rows: []types.StatementResultRow{
+				{
+					Operation: 0,
+					Fields: []types.StatementResultField{
+						types.AtomicStatementResultField{
+							Type:  "INTEGER",
+							Value: "0",
+						},
+					},
+				},
+			},
+		},
+	}
+	s.mockPrompt.EXPECT().Input().Return(input)
+	s.mockStore.EXPECT().ProcessStatement(input).Return(&statement, nil)
+	s.mockConsoleParser.EXPECT().Read().Return(nil, nil).AnyTimes()
+	s.mockStore.EXPECT().WaitPendingStatement(gomock.Any(), statement).Return(&completedStatement, nil)
+	s.mockStore.EXPECT().FetchStatementResults(completedStatement).Return(&completedStatement, nil)
+
+	// When
+	actual := s.runMainLoop(inputController, true)
+
+	// Then
+	table := s.getStdoutTable(*completedStatement.StatementResults)
+	expected := fmt.Sprintf("Statement name: test-statement\nStatement successfully submitted.\nFetching results...\n%s.\n%s", completedStatement.StatusDetail, table)
 	require.Equal(s.T(), expected, actual)
 }
