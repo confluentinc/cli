@@ -100,7 +100,10 @@ func (c *InputController) RunInteractiveInput() {
 		renderMsgAndStatus(processedStatement)
 		if err != nil {
 			output.Println(err.Error())
-			c.isSessionValid(err)
+			if !c.isSessionValid(err) {
+				c.appController.ExitApplication()
+				return
+			}
 			continue
 		}
 
@@ -116,7 +119,10 @@ func (c *InputController) RunInteractiveInput() {
 		if err != nil {
 			cancelListenToUserInput()
 			output.Println(err.Error())
-			c.isSessionValid(err)
+			if !c.isSessionValid(err) {
+				c.appController.ExitApplication()
+				return
+			}
 			continue
 		}
 		processedStatement.PrintStatusDetail()
@@ -178,7 +184,6 @@ func (c *InputController) listenToUserInput(in prompt.ConsoleParser, cancelFunc 
 func (c *InputController) isSessionValid(err *types.StatementError) bool {
 	// exit application if user needs to authenticate again
 	if err != nil && err.HttpResponseCode == http.StatusUnauthorized {
-		c.appController.ExitApplication()
 		return false
 	}
 	return true
