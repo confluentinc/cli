@@ -51,7 +51,7 @@ func shouldUseTView(statement types.ProcessedStatement) bool {
 	if statement.PageToken != "" {
 		return true
 	}
-	return len(statement.StatementResults.Headers) > 1 && len(statement.StatementResults.Rows) > 1
+	return len(statement.StatementResults.GetHeaders()) > 1 && len(statement.StatementResults.GetRows()) > 1
 }
 
 type ResultsFetchState string
