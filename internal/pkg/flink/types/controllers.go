@@ -27,7 +27,7 @@ type ApplicationControllerInterface interface {
 
 type InputControllerInterface interface {
 	RunInteractiveInput()
-	Prompt() *prompt.Prompt
+	Prompt() prompt.IPrompt
 	GetMaxCol() (int, error)
 }
 
