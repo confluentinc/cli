@@ -14,9 +14,9 @@ import (
 )
 
 type Manifest struct {
-	Name         string `yaml:"name" human:"Name" serialized:"name"`
+	Name         string `human:"Name" serialized:"name"`
 	Description  string `yaml:"description" human:"Description" serialized:"description"`
-	Requirements string `yaml:"requirements" human:"Requirements" serialized:"requirements"`
+	Dependencies string `yaml:"dependencies" human:"Dependencies" serialized:"dependencies"`
 }
 
 func (c *command) newSearchCommand() *cobra.Command {
@@ -88,6 +88,7 @@ func getPluginManifests(dir string) ([]*Manifest, error) {
 			if err := yaml.Unmarshal(manifestFile, manifest); err != nil {
 				return nil, err
 			}
+			manifest.Name = file.Name()
 		}
 	}
 
