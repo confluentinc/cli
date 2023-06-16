@@ -11,7 +11,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (c *command) newSaveCommand(enableSourceCode bool) *cobra.Command {
+func (c *command) newSaveCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "save <id>",
 		Short:             "Save a Stream Designer pipeline's source code to a local file.",
@@ -28,7 +28,6 @@ func (c *command) newSaveCommand(enableSourceCode bool) *cobra.Command {
 				Code: "confluent pipeline save pipe-12345 --sql-file /tmp/pipeline-source-code.sql",
 			},
 		),
-		Hidden: !enableSourceCode,
 	}
 
 	cmd.Flags().String("sql-file", "", "Path to save the pipeline's source code at. (default \"./<pipeline-id>.sql\")")
