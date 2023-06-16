@@ -53,7 +53,6 @@ func (r reverseISearch) ReverseISearch(history []string) string {
 		buffer.DeleteBeforeCursor(9999)
 		reverseISearchEnabled = false
 		livePrefixState.LivePrefix = ""
-
 	}
 	in := prompt.New(
 		func(s string) {},
