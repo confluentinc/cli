@@ -19,11 +19,13 @@ type Manifest struct {
 	Dependencies string `yaml:"dependencies" human:"Dependencies" serialized:"dependencies"`
 }
 
+const cliPluginsUrl = "https://github.com/confluentinc/cli-plugins.git"
+
 func (c *command) newSearchCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "search",
 		Short: "Search for available Confluent CLI plugins.",
-		Long:  "Search for available Confluent CLI plugins in the Confluent CLI plugin repository.",
+		Long:  "Search for available Confluent CLI plugins in the confluentinc/cli-plugins repository.",
 		Args:  cobra.NoArgs,
 		RunE:  c.search,
 	}
@@ -40,7 +42,7 @@ func (c *command) search(cmd *cobra.Command, _ []string) error {
 	}
 	defer os.RemoveAll(dir)
 
-	_, err = clonePluginRepo(dir, "https://github.com/confluentinc/cli-plugins.git")
+	_, err = clonePluginRepo(dir, cliPluginsUrl)
 	if err != nil {
 		return err
 	}
