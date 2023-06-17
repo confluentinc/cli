@@ -40,7 +40,8 @@ func (c *command) search(cmd *cobra.Command, _ []string) error {
 	}
 	defer os.RemoveAll(dir)
 
-	if err := clonePluginRepo(dir); err != nil {
+	_, err = clonePluginRepo(dir, "https://github.com/confluentinc/cli-plugins.git")
+	if err != nil {
 		return err
 	}
 
@@ -57,15 +58,14 @@ func (c *command) search(cmd *cobra.Command, _ []string) error {
 	return list.Print()
 }
 
-func clonePluginRepo(dir string) error {
+func clonePluginRepo(dir, url string) (*git.Repository, error) {
 	cloneOptions := &git.CloneOptions{
-		URL:          "https://github.com/confluentinc/cli-plugins.git",
+		URL:          url,
 		SingleBranch: true, // this should be redundant w/ Depth=1, but specify it just in case
 		Depth:        1,
 	}
-	_, err := git.PlainClone(dir, false, cloneOptions)
 
-	return err
+	return git.PlainClone(dir, false, cloneOptions)
 }
 
 func getPluginManifests(dir string) ([]*Manifest, error) {
