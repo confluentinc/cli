@@ -4,7 +4,12 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/spf13/cobra"
+
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
+	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
+	"github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1"
+
 	"github.com/confluentinc/cli/internal/pkg/auth"
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -12,9 +17,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/hub"
 	testserver "github.com/confluentinc/cli/test/test-server"
-	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
-	"github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1"
-	"github.com/spf13/cobra"
 )
 
 type AuthenticatedCLICommand struct {
