@@ -12,7 +12,7 @@ var auth0ClientIds = map[string]string{
 	"cpd":          "7rG4pmRbnMn5mIsEBLAP941IE1x2rNqC",
 	"devel":        "sPhOuMMVRSFFR7HfB606KLxf1RAU4SXg",
 	"infra-us-gov": "0oa7c9gkc6bHBD2OW1d7",
-	"prod-us-gov":  "TODO",
+	"prod-us-gov":  "0oa41ih4ms3TVVAT04h7",
 	"devel-us-gov": "TODO",
 	"prod":         "oX2nvSKl5jvBKVgwehZfvR4K8RhsZIEs",
 	"stag":         "8RxQmZEYtEDah4MTIIzl4hGGeFwdJS6w",
