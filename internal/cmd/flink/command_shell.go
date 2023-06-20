@@ -10,10 +10,11 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	client "github.com/confluentinc/cli/internal/pkg/flink/app"
+	"github.com/confluentinc/cli/internal/pkg/flink/test/mock"
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
 )
 
-func (c *command) newShellCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func (c *command) newShellCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "shell",
 		Short: "Start Flink interactive SQL client.",
@@ -28,6 +29,9 @@ func (c *command) newShellCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
+	if cfg.IsTest {
+		cmd.Flags().Bool("fake-mode", false, "Test the application with fake data.")
+	}
 
 	return cmd
 }
@@ -49,6 +53,19 @@ func (c *command) authenticated(authenticated func(*cobra.Command, []string) err
 
 func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Command) error {
 	resourceId := c.Context.GetOrganization().GetResourceId()
+
+	fakeMode, _ := cmd.Flags().GetBool("fake-mode")
+	if fakeMode {
+		flinkGatewayClient := mock.NewFakeFlinkGatewayClient()
+		client.StartApp(flinkGatewayClient,
+			c.authenticated(prerunner.Authenticated(c.AuthenticatedCLICommand), cmd),
+			types.ApplicationOptions{
+				DefaultProperties: map[string]string{"execution.runtime-mode": "streaming"},
+				UserAgent:         c.Version.UserAgent,
+				OrgResourceId:     resourceId,
+			})
+		return nil
+	}
 
 	// Compute pool can be set as a flag or as default in the context
 	computePool, err := cmd.Flags().GetString("compute-pool")
