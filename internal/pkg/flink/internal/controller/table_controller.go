@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"context"
 	"fmt"
 	"strings"
 	"sync"
@@ -31,9 +30,7 @@ type TableController struct {
 	materializedStatementResults         results.MaterializedStatementResults
 	materializedStatementResultsIterator results.MaterializedStatementResultsIterator
 	selectedRowIdx                       int
-	cancelFetch                          context.CancelFunc
 	tableLock                            sync.Mutex
-	cancelLock                           sync.RWMutex
 	isRowViewOpen                        bool
 	tableWidth                           int
 	fetchState                           int32
@@ -42,10 +39,10 @@ type TableController struct {
 type fetchState int32
 
 const (
-	completed fetchState = iota
-	failed
-	paused
-	running
+	paused    fetchState = iota // auto fetch was paused
+	completed                   // arrived at last page, fetch is completed
+	failed                      // fetching next page failed
+	running                     // auto fetch is running
 
 	maxResultsCapacity     int  = 1000
 	defaultRefreshInterval uint = 1000 // in milliseconds
@@ -73,7 +70,6 @@ func (t *TableController) getFetchState() fetchState {
 }
 
 func (t *TableController) exitTViewMode() {
-	t.stopAutoRefresh()
 	t.setFetchState(paused)
 	// This was used to delete statements after their execution to save system resources, which should not be
 	// an issue anymore. We don't want to remove it completely just yet, but will disable it by default for now.
@@ -88,25 +84,29 @@ func (t *TableController) exitTViewMode() {
 	})
 }
 
+func (t *TableController) toggleTableMode() {
+	t.materializedStatementResults.SetTableMode(!t.materializedStatementResults.IsTableMode())
+	t.renderTable()
+}
+
+func (t *TableController) toggleAutoRefresh() {
+	if t.isAutoRefreshRunning() {
+		t.setFetchState(paused)
+		t.renderTable()
+		return
+	}
+
+	t.startAutoRefresh(defaultRefreshInterval)
+}
+
 func (t *TableController) GetActionForShortcut(shortcut string) func() {
 	switch shortcut {
 	case "Q":
 		return t.exitTViewMode
 	case "M":
-		return func() {
-			t.materializedStatementResults.SetTableMode(!t.materializedStatementResults.IsTableMode())
-			t.renderTable()
-		}
+		return t.toggleTableMode
 	case "R":
-		return func() {
-			if t.isAutoRefreshRunning() {
-				t.stopAutoRefresh()
-				t.setFetchState(paused)
-			} else {
-				t.startAutoRefresh(defaultRefreshInterval)
-			}
-			t.renderTable()
-		}
+		return t.toggleAutoRefresh
 	}
 	return nil
 }
@@ -179,67 +179,59 @@ func (t *TableController) showRowView(row *types.StatementResultRow) {
 	t.appController.TView().SetFocus(textView)
 }
 
-func (t *TableController) setRefreshCancelFunc(cancelFunc context.CancelFunc) {
-	t.cancelLock.Lock()
-	defer t.cancelLock.Unlock()
-
-	t.cancelFetch = cancelFunc
-}
-
-func (t *TableController) stopAutoRefresh() {
-	if t.isAutoRefreshRunning() {
-		t.cancelFetch()
-		t.setRefreshCancelFunc(nil)
-	}
-}
-
 func (t *TableController) startAutoRefresh(refreshInterval uint) {
-	if t.getStatement().PageToken == "" || t.isAutoRefreshRunning() {
-		return
+	if t.isAutoRefreshStartAllowed() {
+		t.setFetchState(running)
+		t.refreshResults(refreshInterval)
 	}
-	ctx, cancel := context.WithCancel(context.Background())
-	t.setFetchState(running)
-	t.setRefreshCancelFunc(cancel)
-	t.refreshResults(ctx, refreshInterval)
 }
 
 func (t *TableController) isAutoRefreshRunning() bool {
-	t.cancelLock.RLock()
-	defer t.cancelLock.RUnlock()
-
-	return t.cancelFetch != nil
+	return t.getFetchState() == running
 }
 
-func (t *TableController) refreshResults(ctx context.Context, refreshInterval uint) {
+func (t *TableController) isAutoRefreshStartAllowed() bool {
+	return t.getFetchState() == paused || t.getFetchState() == failed
+}
+
+func (t *TableController) refreshResults(refreshInterval uint) {
 	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				t.appController.TView().QueueUpdateDraw(t.renderTable)
-				return
-			default:
-				t.appController.TView().QueueUpdateDraw(t.renderTable)
-
-				newResults, err := t.store.FetchStatementResults(t.getStatement())
-				if err != nil {
-					t.stopAutoRefresh()
-					t.setFetchState(failed)
-					continue
-				}
-
-				t.setStatement(*newResults)
-				// stop fetching once we're at the last page
-				if newResults.PageToken == "" {
-					t.stopAutoRefresh()
-					t.setFetchState(completed)
-					continue
-				}
-
-				t.materializedStatementResults.Append(newResults.StatementResults.GetRows()...)
-				time.Sleep(time.Millisecond * time.Duration(refreshInterval))
-			}
+		for t.isAutoRefreshRunning() {
+			t.fetchNextPage()
+			t.appController.TView().QueueUpdateDraw(t.renderTable)
+			time.Sleep(time.Millisecond * time.Duration(refreshInterval))
 		}
 	}()
+}
+
+func (t *TableController) fetchNextPage() {
+	// don't fetch if we're already at the last page, otherwise we would fetch the first page again
+	if t.getFetchState() == completed {
+		return
+	}
+
+	// fetch
+	newResults, err := t.store.FetchStatementResults(t.getStatement())
+	if err != nil {
+		t.setFetchState(failed)
+		return
+	}
+
+	// update data
+	t.setStatement(*newResults)
+	t.materializedStatementResults.Append(newResults.StatementResults.GetRows()...)
+	if newResults.PageToken == "" {
+		t.setFetchState(completed)
+		return
+	}
+
+	// if auto refresh is not running we set the state to paused
+	if !t.isAutoRefreshRunning() {
+		t.setFetchState(paused)
+		return
+	}
+
+	t.setFetchState(running)
 }
 
 func (t *TableController) Init(statement types.ProcessedStatement) {
@@ -251,6 +243,7 @@ func (t *TableController) Init(statement types.ProcessedStatement) {
 	if statement.PageToken != "" {
 		t.startAutoRefresh(defaultRefreshInterval)
 	} else {
+		t.setFetchState(completed)
 		t.renderTable()
 	}
 }
