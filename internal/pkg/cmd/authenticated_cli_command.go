@@ -74,12 +74,12 @@ func (c *AuthenticatedCLICommand) GetFlinkGatewayClient() (*ccloudv2.FlinkGatewa
 			return nil, err
 		}
 
-		authToken, err := auth.GetJwtTokenForV2Client(ctx.GetState(), ctx.GetPlatformServer())
+		dataplaneToken, err := auth.GetDataplaneToken(ctx.GetState(), ctx.GetPlatformServer(), map[string]any{})
 		if err != nil {
 			return nil, err
 		}
 
-		c.flinkGatewayClient = ccloudv2.NewFlinkGatewayClient(u.String(), c.Version.UserAgent, unsafeTrace, authToken)
+		c.flinkGatewayClient = ccloudv2.NewFlinkGatewayClient(u.String(), c.Version.UserAgent, unsafeTrace, dataplaneToken)
 	}
 
 	return c.flinkGatewayClient, nil
@@ -120,12 +120,12 @@ func (c *AuthenticatedCLICommand) GetMetricsClient() (*ccloudv2.MetricsClient, e
 			return nil, err
 		}
 
-		authToken, err := auth.GetJwtTokenForV2Client(ctx.GetState(), ctx.GetPlatformServer())
+		dataplaneToken, err := auth.GetDataplaneToken(ctx.GetState(), ctx.GetPlatformServer(), map[string]any{})
 		if err != nil {
 			return nil, err
 		}
 
-		c.metricsClient = ccloudv2.NewMetricsClient(url, c.Version.UserAgent, unsafeTrace, authToken)
+		c.metricsClient = ccloudv2.NewMetricsClient(url, c.Version.UserAgent, unsafeTrace, dataplaneToken)
 	}
 
 	return c.metricsClient, nil
