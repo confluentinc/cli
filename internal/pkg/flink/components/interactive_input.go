@@ -5,6 +5,7 @@ import (
 
 	"github.com/fatih/color"
 
+	"github.com/confluentinc/cli/internal/pkg/flink/config"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -36,5 +37,6 @@ func PrintWelcomeHeader() {
 	output.Printf("To exit, press Ctrl-Q or type \"exit\". \n\n")
 
 	// Print shortcuts
-	output.Printf("[Ctrl-Q] %s [Ctrl-S] %s \n", color.CyanString("Quit"), color.CyanString("Toggle Smart Completion"))
+	c := color.New(config.AccentColor)
+	output.Printf("[Ctrl-Q] %s [Ctrl-S] %s \n", c.Sprint("Quit"), c.Sprint("Toggle Smart Completion"))
 }
