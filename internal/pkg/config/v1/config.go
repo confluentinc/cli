@@ -17,6 +17,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/secret"
+	"github.com/confluentinc/cli/internal/pkg/types"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
@@ -278,7 +279,12 @@ func (c *Config) encryptContextStateTokens(tempAuthToken, tempAuthRefreshToken s
 
 	// The Confluent Gov environment returns a refresh token that does not match `authRefreshTokenRegex` and cannot be distinguished from an already encrypted refresh token.
 	// We prefix encrypted tokens with "AES/GCM/NoPadding" to ensure that they are only encrypted once.
-	isUnencryptedConfluentGov := !strings.HasPrefix(tempAuthRefreshToken, secret.AesGcm) && c.Context().PlatformName == "infra.confluentgov-internal.com"
+	environments := []string{
+		"confluentgov.com",
+		"devel.confluentgov-internal.com",
+		"infra.confluentgov-internal.com",
+	}
+	isUnencryptedConfluentGov := !strings.HasPrefix(tempAuthRefreshToken, secret.AesGcm) && types.Contains(environments, c.Context().PlatformName)
 
 	if regexp.MustCompile(authRefreshTokenRegex).MatchString(tempAuthRefreshToken) || isUnencryptedConfluentGov {
 		encryptedAuthRefreshToken, err := secret.Encrypt(c.Context().Name, tempAuthRefreshToken, c.Context().GetState().Salt, c.Context().GetState().Nonce)
