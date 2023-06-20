@@ -383,3 +383,188 @@ func (s *TableControllerTestSuite) TestResultFetchStopsAfterNoMorePageToken() {
 		assert.Equal(s.T(), completed, tableController.getFetchState())
 	})
 }
+
+func (s *TableControllerTestSuite) TestFetchNextPageSetsFailedState() {
+	// Given
+	table := components.CreateTable()
+	mockStatement := types.ProcessedStatement{PageToken: "NOT_EMPTY"}
+	tableController := TableController{
+		table:         table,
+		appController: s.mockAppController,
+		store:         s.mockStore,
+	}
+	tableController.setStatement(mockStatement)
+	s.mockStore.EXPECT().FetchStatementResults(mockStatement).Return(nil, &types.StatementError{})
+
+	// When
+	assert.Equal(s.T(), paused, tableController.getFetchState())
+	tableController.fetchNextPage()
+
+	// Then
+	assert.Equal(s.T(), failed, tableController.getFetchState())
+}
+
+func (s *TableControllerTestSuite) TestFetchNextPageSetsCompletedState() {
+	// Given
+	table := components.CreateTable()
+	mockStatement := types.ProcessedStatement{PageToken: "NOT_EMPTY"}
+	tableController := TableController{
+		table:         table,
+		appController: s.mockAppController,
+		store:         s.mockStore,
+	}
+	tableController.setStatement(mockStatement)
+	s.mockStore.EXPECT().FetchStatementResults(mockStatement).Return(&types.ProcessedStatement{}, nil)
+
+	// When
+	assert.Equal(s.T(), paused, tableController.getFetchState())
+	tableController.fetchNextPage()
+
+	// Then
+	assert.Equal(s.T(), completed, tableController.getFetchState())
+}
+
+func (s *TableControllerTestSuite) TestFetchNextPageReturnsWhenAlreadyCompleted() {
+	// Given
+	table := components.CreateTable()
+	tableController := TableController{
+		table:         table,
+		appController: s.mockAppController,
+		store:         s.mockStore,
+	}
+	tableController.setFetchState(completed)
+
+	// When
+	assert.Equal(s.T(), completed, tableController.getFetchState())
+	tableController.fetchNextPage()
+
+	// Then
+	assert.Equal(s.T(), completed, tableController.getFetchState())
+}
+
+func (s *TableControllerTestSuite) TestFetchNextPageChangesFailedToPausedState() {
+	// Given
+	table := components.CreateTable()
+	mockStatement := types.ProcessedStatement{PageToken: "NOT_EMPTY"}
+	tableController := TableController{
+		table:         table,
+		appController: s.mockAppController,
+		store:         s.mockStore,
+	}
+	tableController.setFetchState(failed)
+	tableController.setStatement(mockStatement)
+	s.mockStore.EXPECT().FetchStatementResults(mockStatement).Return(&mockStatement, nil)
+
+	// When
+	assert.Equal(s.T(), failed, tableController.getFetchState())
+	tableController.fetchNextPage()
+
+	// Then
+	assert.Equal(s.T(), paused, tableController.getFetchState())
+}
+
+func (s *TableControllerTestSuite) TestFetchNextPagePreservesRunningState() {
+	// Given
+	table := components.CreateTable()
+	mockStatement := types.ProcessedStatement{PageToken: "NOT_EMPTY"}
+	tableController := TableController{
+		table:         table,
+		appController: s.mockAppController,
+		store:         s.mockStore,
+	}
+	tableController.setFetchState(running)
+	tableController.setStatement(mockStatement)
+	s.mockStore.EXPECT().FetchStatementResults(mockStatement).Return(&mockStatement, nil)
+
+	// When
+	assert.Equal(s.T(), running, tableController.getFetchState())
+	tableController.fetchNextPage()
+
+	// Then
+	assert.Equal(s.T(), running, tableController.getFetchState())
+}
+
+func (s *TableControllerTestSuite) TestFetchNextPageOnUserInput() {
+	s.runWithRealTView(func(tview *tview.Application) {
+		// Given
+		table := components.CreateTable()
+		mockStatement := types.ProcessedStatement{PageToken: "NOT_EMPTY"}
+		tableController := TableController{
+			table:         table,
+			appController: s.mockAppController,
+			store:         s.mockStore,
+		}
+		input := tcell.NewEventKey(tcell.KeyRune, 'N', tcell.ModNone)
+		s.mockAppController.EXPECT().TView().Return(tview).Times(2)
+		s.mockStore.EXPECT().FetchStatementResults(mockStatement).Return(&mockStatement, nil)
+		s.mockStore.EXPECT().FetchStatementResults(mockStatement).Return(&types.ProcessedStatement{}, nil)
+
+		// When
+		tableController.setFetchState(completed) // need to manually set this so auto refresh doesn't start
+		tableController.Init(mockStatement)
+		tableController.setFetchState(paused)
+		assert.False(s.T(), tableController.isAutoRefreshRunning())
+		assert.Equal(s.T(), paused, tableController.getFetchState())
+
+		// Then
+		// First N returns statement with page token
+		assert.Nil(s.T(), tableController.AppInputCapture(input))
+		assert.False(s.T(), tableController.isAutoRefreshRunning())
+		assert.Equal(s.T(), paused, tableController.getFetchState())
+
+		// Second N returns statement with empty page token, so state should be completed
+		assert.Nil(s.T(), tableController.AppInputCapture(input))
+		assert.False(s.T(), tableController.isAutoRefreshRunning())
+		assert.Equal(s.T(), completed, tableController.getFetchState())
+	})
+}
+
+func (s *TableControllerTestSuite) TestJumpToLiveResultsOnUserInput() {
+	s.runWithRealTView(func(tview *tview.Application) {
+		// Given
+		table := components.CreateTable()
+		mockStatement := types.ProcessedStatement{
+			StatementResults: &types.StatementResults{
+				Headers: []string{"Test"},
+				Rows: []types.StatementResultRow{{
+					Operation: 0,
+					Fields: []types.StatementResultField{
+						types.AtomicStatementResultField{
+							Type:  "INTEGER",
+							Value: "1",
+						},
+					},
+				}},
+			},
+			PageToken: "NOT_EMPTY",
+		}
+		tableController := TableController{
+			table:         table,
+			appController: s.mockAppController,
+			store:         s.mockStore,
+		}
+		input := tcell.NewEventKey(tcell.KeyRune, 'L', tcell.ModNone)
+		s.mockAppController.EXPECT().TView().Return(tview).Times(2)
+		s.mockStore.EXPECT().FetchStatementResults(mockStatement).Return(&mockStatement, nil)
+		s.mockStore.EXPECT().FetchStatementResults(mockStatement).Return(&mockStatement, nil)
+		s.mockStore.EXPECT().FetchStatementResults(mockStatement).Return(&types.ProcessedStatement{PageToken: "LAST"}, nil)
+
+		// When
+		tableController.setFetchState(completed) // need to manually set this so auto refresh doesn't start
+		tableController.Init(mockStatement)
+		tableController.setFetchState(paused)
+		assert.False(s.T(), tableController.isAutoRefreshRunning())
+		assert.Equal(s.T(), paused, tableController.getFetchState())
+
+		// Then
+		assert.Nil(s.T(), tableController.AppInputCapture(input))
+		// wait for auto refresh to complete
+		for tableController.getStatement().PageToken != "LAST" {
+			time.Sleep(1 * time.Second)
+		}
+
+		assert.False(s.T(), tableController.isAutoRefreshRunning())
+		assert.Equal(s.T(), paused, tableController.getFetchState())
+		assert.Equal(s.T(), types.ProcessedStatement{PageToken: "LAST"}, tableController.getStatement())
+	})
+}

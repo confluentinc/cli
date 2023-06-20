@@ -113,6 +113,30 @@ func (t *TableController) toggleAutoRefreshAndRender() {
 	t.startAutoRefresh(defaultRefreshInterval)
 }
 
+func (t *TableController) fetchNextPageAndRender() {
+	t.fetchNextPage()
+	t.renderTable()
+}
+
+func (t *TableController) hasMoreResults() bool {
+	return len(t.getStatement().StatementResults.GetRows()) > 0 && t.getFetchState() != failed && t.getFetchState() != completed
+}
+
+func (t *TableController) goToLastPageAndRender() {
+	go func() {
+		// fetch next pages until we receive no results (which means we are at the last page)
+		for {
+			t.fetchNextPage()
+			if !t.hasMoreResults() {
+				break
+			}
+			// minimal wait to avoid rate limiting
+			time.Sleep(time.Millisecond * 50)
+		}
+		t.appController.TView().QueueUpdateDraw(t.renderTable)
+	}()
+}
+
 func (t *TableController) getActionForShortcut(shortcut string) func() {
 	switch shortcut {
 	case "Q":
@@ -121,6 +145,10 @@ func (t *TableController) getActionForShortcut(shortcut string) func() {
 		return t.toggleTableModeAndRender
 	case "R":
 		return t.toggleAutoRefreshAndRender
+	case "N":
+		return t.fetchNextPageAndRender
+	case "L":
+		return t.goToLastPageAndRender
 	}
 	return nil
 }
