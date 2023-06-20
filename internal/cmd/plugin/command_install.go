@@ -1,6 +1,7 @@
 package plugin
 
 import (
+	"io/fs"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -73,12 +74,28 @@ func getPluginInstallDir(cmd *cobra.Command) (string, error) {
 }
 
 func getDefaultPluginInstallDir() (string, error) {
+	// Windows: CLI installation directory
+	// Unix:    /usr/local/bin
+	defaultDir := "/usr/local/bin"
 	if runtime.GOOS == "windows" {
-		// TODO: IMPLEMENT THIS BEFORE MERGING
-		return "", nil
+		cliPath, err := os.Executable()
+		if err != nil {
+			return "", err
+		}
+
+		// Check if the path is a symlink, since os.Executable does not always return
+		// the actual path if the process is started from a symlink
+		file, err := os.Lstat(cliPath)
+		if err != nil {
+			return "", err
+		}
+		if file.Mode()&fs.ModeSymlink != 0 {
+			return "", errors.NewErrorWithSuggestions("unable to select a suitable default installation directory", "Pass an installation directory in your $PATH with the `--plugin-directory` flag.")
+		}
+
+		defaultDir = filepath.Dir(cliPath)
 	}
 
-	defaultDir := "/usr/local/bin"
 	if !inPath(defaultDir) {
 		output.Printf("WARNING: failed to find default directory \"%s\" in your $PATH.\n\n", defaultDir)
 	}
