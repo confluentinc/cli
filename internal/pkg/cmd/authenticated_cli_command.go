@@ -74,7 +74,7 @@ func (c *AuthenticatedCLICommand) GetFlinkGatewayClient() (*ccloudv2.FlinkGatewa
 			return nil, err
 		}
 
-		authToken, err := auth.GetJwtTokenForV2Client(ctx.GetState(), ctx.GetPlatformServer())
+		authToken, err := auth.GetDataplaneToken(ctx.GetState(), ctx.GetPlatformServer(), map[string]any{})
 		if err != nil {
 			return nil, err
 		}
@@ -120,7 +120,7 @@ func (c *AuthenticatedCLICommand) GetMetricsClient() (*ccloudv2.MetricsClient, e
 			return nil, err
 		}
 
-		authToken, err := auth.GetJwtTokenForV2Client(ctx.GetState(), ctx.GetPlatformServer())
+		authToken, err := auth.GetDataplaneToken(ctx.GetState(), ctx.GetPlatformServer(), map[string]any{})
 		if err != nil {
 			return nil, err
 		}

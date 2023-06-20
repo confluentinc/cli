@@ -353,7 +353,7 @@ func (r *PreRun) setCCloudClient(c *AuthenticatedCLICommand) error {
 				return nil, err
 			}
 
-			bearerToken, err := pauth.GetBearerToken(state, ctx.Platform.Server, lkc)
+			bearerToken, err := pauth.GetDataplaneToken(state, ctx.Platform.Server, map[string]any{"clusterIds": lkc})
 			if err != nil {
 				return nil, err
 			}

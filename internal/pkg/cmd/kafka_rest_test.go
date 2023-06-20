@@ -16,7 +16,7 @@ type KafkaRestTestSuite struct {
 func (suite *KafkaRestTestSuite) TestInvalidGetBearerToken() {
 	req := suite.Require()
 	emptyState := v1.ContextState{}
-	_, err := pauth.GetBearerToken(&emptyState, "invalidhost", "lkc-123")
+	_, err := pauth.GetDataplaneToken(&emptyState, "invalidhost", map[string][]string{"clusterIds": {"lkc-123"}})
 	req.NotNil(err)
 }
 
