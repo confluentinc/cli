@@ -22,7 +22,7 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 
 	cmd.AddCommand(c.newComputePoolCommand(cfg))
 	cmd.AddCommand(c.newRegionCommand())
-	cmd.AddCommand(c.newShellCommand(prerunner))
+	cmd.AddCommand(c.newShellCommand(cfg, prerunner))
 	cmd.AddCommand(c.newStatementCommand())
 
 	return cmd
