@@ -149,7 +149,7 @@ func (c *AuthenticatedCLICommand) GetFlinkGatewayClient() (*ccloudv2.FlinkGatewa
 			return nil, err
 		}
 
-		authToken, err := pauth.GetJwtTokenForV2Client(ctx.GetState(), ctx.GetPlatformServer())
+		authToken, err := pauth.GetDataplaneToken(ctx.GetState(), ctx.GetPlatformServer(), map[string]any{})
 		if err != nil {
 			return nil, err
 		}
@@ -178,7 +178,7 @@ func (c *AuthenticatedCLICommand) GetMetricsClient() (*ccloudv2.MetricsClient, e
 			return nil, err
 		}
 
-		authToken, err := pauth.GetJwtTokenForV2Client(ctx.GetState(), ctx.GetPlatformServer())
+		authToken, err := pauth.GetDataplaneToken(ctx.GetState(), ctx.GetPlatformServer(), map[string]any{})
 		if err != nil {
 			return nil, err
 		}
@@ -495,7 +495,7 @@ func (r *PreRun) setCCloudClient(c *AuthenticatedCLICommand) error {
 				return nil, err
 			}
 
-			bearerToken, err := pauth.GetBearerToken(state, ctx.Platform.Server, lkc)
+			bearerToken, err := pauth.GetDataplaneToken(state, ctx.Platform.Server, map[string]any{"clusterIds": lkc})
 			if err != nil {
 				return nil, err
 			}
