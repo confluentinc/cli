@@ -338,7 +338,7 @@ func (s *TableControllerTestSuite) TestResultFetchStopsAfterError() {
 			appController: s.mockAppController,
 			store:         s.mockStore,
 		}
-		s.mockAppController.EXPECT().TView().Return(tview).Times(4)
+		s.mockAppController.EXPECT().TView().Return(tview).Times(2)
 		s.mockStore.EXPECT().FetchStatementResults(mockStatement).Return(&mockStatement, &types.StatementError{Message: "error"})
 
 		// When
@@ -366,7 +366,7 @@ func (s *TableControllerTestSuite) TestResultFetchStopsAfterNoMorePageToken() {
 			appController: s.mockAppController,
 			store:         s.mockStore,
 		}
-		s.mockAppController.EXPECT().TView().Return(tview).Times(4)
+		s.mockAppController.EXPECT().TView().Return(tview).Times(2)
 		s.mockStore.EXPECT().FetchStatementResults(mockStatement).Return(&types.ProcessedStatement{}, nil)
 
 		// When
