@@ -50,10 +50,10 @@ func (mr *MockInputControllerInterfaceMockRecorder) GetMaxCol() *gomock.Call {
 }
 
 // Prompt mocks base method.
-func (m *MockInputControllerInterface) Prompt() *prompt.Prompt {
+func (m *MockInputControllerInterface) Prompt() prompt.IPrompt {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Prompt")
-	ret0, _ := ret[0].(*prompt.Prompt)
+	ret0, _ := ret[0].(prompt.IPrompt)
 	return ret0
 }
 
