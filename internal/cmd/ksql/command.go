@@ -83,11 +83,12 @@ func (c *ksqlCommand) checkProvisioningFailed(clusterId, endpoint string) (bool,
 	if err != nil {
 		return false, err
 	}
-	bearerToken, err := pauth.GetBearerToken(state, ctx.Platform.Server, clusterId)
+
+	dataplaneToken, err := pauth.GetDataplaneToken(state, ctx.Platform.Server, map[string][]string{"clusterIds": {clusterId}})
 	if err != nil {
 		return false, err
 	}
-	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: bearerToken})
+	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: dataplaneToken})
 
 	slingClient := sling.New().Client(oauth2.NewClient(context.Background(), ts)).Base(endpoint)
 	var failure map[string]any
