@@ -3,7 +3,6 @@ package controller
 import (
 	"strconv"
 	"sync"
-	"sync/atomic"
 	"testing"
 	"time"
 
@@ -130,7 +129,7 @@ func (s *TableControllerTestSuite) TestToggleRefreshResultsOnUserInput() {
 		// When
 		tableController.Init(mockStatement)
 		assert.True(s.T(), tableController.isAutoRefreshRunning())
-		assert.Equal(s.T(), running, int(atomic.LoadInt32(&tableController.fetchState)))
+		assert.Equal(s.T(), running, tableController.getFetchState())
 
 		done := make(chan bool)
 		// schedule pause
@@ -140,7 +139,7 @@ func (s *TableControllerTestSuite) TestToggleRefreshResultsOnUserInput() {
 			// Then
 			assert.Nil(s.T(), result)
 			assert.False(s.T(), tableController.isAutoRefreshRunning())
-			assert.Equal(s.T(), paused, int(atomic.LoadInt32(&tableController.fetchState)))
+			assert.Equal(s.T(), paused, tableController.getFetchState())
 			done <- true
 		}()
 		<-done
@@ -345,7 +344,7 @@ func (s *TableControllerTestSuite) TestResultFetchStopsAfterError() {
 		// When
 		tableController.Init(mockStatement)
 		assert.True(s.T(), tableController.isAutoRefreshRunning())
-		assert.Equal(s.T(), running, int(atomic.LoadInt32(&tableController.fetchState)))
+		assert.Equal(s.T(), running, tableController.getFetchState())
 		// wait for auto refresh to complete
 		for tableController.isAutoRefreshRunning() {
 			time.Sleep(1 * time.Second)
@@ -353,7 +352,7 @@ func (s *TableControllerTestSuite) TestResultFetchStopsAfterError() {
 
 		// Then
 		assert.False(s.T(), tableController.isAutoRefreshRunning())
-		assert.Equal(s.T(), failed, int(atomic.LoadInt32(&tableController.fetchState)))
+		assert.Equal(s.T(), failed, tableController.getFetchState())
 	})
 }
 
@@ -373,7 +372,7 @@ func (s *TableControllerTestSuite) TestResultFetchStopsAfterNoMorePageToken() {
 		// When
 		tableController.Init(mockStatement)
 		assert.True(s.T(), tableController.isAutoRefreshRunning())
-		assert.Equal(s.T(), running, int(atomic.LoadInt32(&tableController.fetchState)))
+		assert.Equal(s.T(), running, tableController.getFetchState())
 		// wait for auto refresh to complete
 		for tableController.isAutoRefreshRunning() {
 			time.Sleep(1 * time.Second)
@@ -381,6 +380,6 @@ func (s *TableControllerTestSuite) TestResultFetchStopsAfterNoMorePageToken() {
 
 		// Then
 		assert.False(s.T(), tableController.isAutoRefreshRunning())
-		assert.Equal(s.T(), completed, int(atomic.LoadInt32(&tableController.fetchState)))
+		assert.Equal(s.T(), completed, tableController.getFetchState())
 	})
 }

@@ -39,15 +39,16 @@ type TableController struct {
 	fetchState                           int32
 }
 
+type fetchState int32
+
 const (
-	completed = iota
+	completed fetchState = iota
 	failed
 	paused
 	running
 
 	maxResultsCapacity     int  = 1000
 	defaultRefreshInterval uint = 1000 // in milliseconds
-	minRefreshInterval     uint = 100  // in milliseconds
 	minColumnWidth         int  = 4    // min characters displayed in a column
 )
 
@@ -63,8 +64,17 @@ func (t *TableController) SetRunInteractiveInputCallback(runInteractiveInput fun
 	t.runInteractiveInput = runInteractiveInput
 }
 
+func (t *TableController) setFetchState(state fetchState) {
+	atomic.StoreInt32(&t.fetchState, int32(state))
+}
+
+func (t *TableController) getFetchState() fetchState {
+	return fetchState(atomic.LoadInt32(&t.fetchState))
+}
+
 func (t *TableController) exitTViewMode() {
-	t.stopAutoRefresh(paused)
+	t.stopAutoRefresh()
+	t.setFetchState(paused)
 	// This was used to delete statements after their execution to save system resources, which should not be
 	// an issue anymore. We don't want to remove it completely just yet, but will disable it by default for now.
 	// TODO: remove this completely once we are sure we won't need it in the future
@@ -90,7 +100,8 @@ func (t *TableController) GetActionForShortcut(shortcut string) func() {
 	case "R":
 		return func() {
 			if t.isAutoRefreshRunning() {
-				t.stopAutoRefresh(paused)
+				t.stopAutoRefresh()
+				t.setFetchState(paused)
 			} else {
 				t.startAutoRefresh(defaultRefreshInterval)
 			}
@@ -175,11 +186,10 @@ func (t *TableController) setRefreshCancelFunc(cancelFunc context.CancelFunc) {
 	t.cancelFetch = cancelFunc
 }
 
-func (t *TableController) stopAutoRefresh(stopReason int32) {
+func (t *TableController) stopAutoRefresh() {
 	if t.isAutoRefreshRunning() {
 		t.cancelFetch()
 		t.setRefreshCancelFunc(nil)
-		atomic.StoreInt32(&t.fetchState, stopReason)
 	}
 }
 
@@ -188,7 +198,7 @@ func (t *TableController) startAutoRefresh(refreshInterval uint) {
 		return
 	}
 	ctx, cancel := context.WithCancel(context.Background())
-	atomic.StoreInt32(&t.fetchState, running)
+	t.setFetchState(running)
 	t.setRefreshCancelFunc(cancel)
 	t.refreshResults(ctx, refreshInterval)
 }
@@ -212,14 +222,16 @@ func (t *TableController) refreshResults(ctx context.Context, refreshInterval ui
 
 				newResults, err := t.store.FetchStatementResults(t.getStatement())
 				if err != nil {
-					t.stopAutoRefresh(failed)
+					t.stopAutoRefresh()
+					t.setFetchState(failed)
 					continue
 				}
 
 				t.setStatement(*newResults)
-				// don't fetch if we have a next page token or the refresh interval is < min
-				if newResults.PageToken == "" || refreshInterval < minRefreshInterval {
-					t.stopAutoRefresh(completed)
+				// stop fetching once we're at the last page
+				if newResults.PageToken == "" {
+					t.stopAutoRefresh()
+					t.setFetchState(completed)
 					continue
 				}
 
@@ -260,7 +272,7 @@ func (t *TableController) renderTitle() {
 	}
 
 	var state string
-	switch atomic.LoadInt32(&t.fetchState) {
+	switch t.getFetchState() {
 	case completed:
 		state = "completed"
 	case failed:
@@ -269,6 +281,8 @@ func (t *TableController) renderTitle() {
 		state = "auto refresh paused"
 	case running:
 		state = fmt.Sprintf("auto refresh %vs", defaultRefreshInterval/1000)
+	default:
+		state = "unknown error"
 	}
 
 	t.table.SetTitle(fmt.Sprintf(" %s (%s) ", mode, state))
