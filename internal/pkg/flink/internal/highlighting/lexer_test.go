@@ -89,7 +89,7 @@ func TestExamplesWordLexer(t *testing.T) {
 			}
 
 			if isKeyWord {
-				require.Equalf(t, element.Color, config.HighlightColor, "wrong colour for element: %s", element.Text)
+				require.Equalf(t, element.Color, config.PromptAccentColor, "wrong colour for element: %s", element.Text)
 			} else if wrappedInInvertedCommasOrBackticks(element.Text) {
 				require.Equalf(t, element.Color, prompt.Yellow, "wrong colour for element: %s", element.Text)
 			} else {
@@ -137,7 +137,7 @@ func TestWordLexerForRandomStatements(t *testing.T) {
 			}
 
 			if isKeyWord {
-				require.Equalf(t, element.Color, config.HighlightColor, "wrong colour for element: %s", element.Text)
+				require.Equalf(t, element.Color, config.PromptAccentColor, "wrong colour for element: %s", element.Text)
 			} else if wrappedInInvertedCommasOrBackticks(element.Text) {
 				require.Equalf(t, element.Color, prompt.Yellow, "wrong colour for element: %s", element.Text)
 			} else {
