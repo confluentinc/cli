@@ -79,7 +79,7 @@ func (c *ksqlCommand) deleteTopics(clusterId, endpoint string) error {
 		return err
 	}
 
-	bearerToken, err := pauth.GetBearerToken(state, ctx.Platform.Server, clusterId)
+	bearerToken, err := pauth.GetDataplaneToken(state, ctx.Platform.Server, map[string][]string{"clusterIds": {clusterId}})
 	if err != nil {
 		return err
 	}
