@@ -353,13 +353,13 @@ func (r *PreRun) setCCloudClient(c *AuthenticatedCLICommand) error {
 				return nil, err
 			}
 
-			bearerToken, err := pauth.GetDataplaneToken(state, ctx.Platform.Server, map[string]any{"clusterIds": lkc})
+			dataplaneToken, err := pauth.GetDataplaneToken(state, ctx.Platform.Server, map[string]any{"clusterIds": lkc})
 			if err != nil {
 				return nil, err
 			}
 			kafkaRest := &KafkaREST{
-				Context:     context.WithValue(context.Background(), kafkarestv3.ContextAccessToken, bearerToken),
-				CloudClient: ccloudv2.NewKafkaRestClient(restEndpoint, r.Version.UserAgent, unsafeTrace, bearerToken),
+				Context:     context.WithValue(context.Background(), kafkarestv3.ContextAccessToken, dataplaneToken),
+				CloudClient: ccloudv2.NewKafkaRestClient(restEndpoint, r.Version.UserAgent, unsafeTrace, dataplaneToken),
 				Client:      CreateKafkaRESTClient(restEndpoint, unsafeTrace),
 			}
 

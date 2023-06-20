@@ -79,12 +79,12 @@ func (c *ksqlCommand) deleteTopics(clusterId, endpoint string) error {
 		return err
 	}
 
-	bearerToken, err := pauth.GetDataplaneToken(state, ctx.Platform.Server, map[string][]string{"clusterIds": {clusterId}})
+	dataplaneToken, err := pauth.GetDataplaneToken(state, ctx.Platform.Server, map[string][]string{"clusterIds": {clusterId}})
 	if err != nil {
 		return err
 	}
+	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: dataplaneToken})
 
-	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: bearerToken})
 	client := sling.New().Client(oauth2.NewClient(context.Background(), ts)).Base(endpoint)
 	request := map[string][]string{"deleteTopicList": {".*"}}
 	response, err := client.Post("/ksql/terminate").BodyJSON(&request).ReceiveSuccess(nil)
