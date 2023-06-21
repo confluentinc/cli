@@ -14,7 +14,7 @@ type command struct {
 }
 
 func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
-	ctx := dynamicconfig.NewDynamicContext(cfg.Context(), nil, nil)
+	ctx := dynamicconfig.NewDynamicContext(cfg.Context(), nil)
 
 	cmd := &cobra.Command{
 		Use:         "stream-share",
