@@ -359,7 +359,7 @@ func (s *InputControllerTestSuite) TestRunInteractiveInputExitsWhenNotAuthentica
 	actual := s.runMainLoop(inputController, false)
 
 	// Then
-	expected := fmt.Sprintf("%s\n", inputController.authenticated().Error())
+	expected := fmt.Sprintf("Error: %s\n", inputController.authenticated().Error())
 	require.Equal(s.T(), expected, actual)
 }
 
