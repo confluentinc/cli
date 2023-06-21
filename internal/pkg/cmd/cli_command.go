@@ -9,22 +9,19 @@ import (
 
 type CLICommand struct {
 	*cobra.Command
-	Config    *dynamicconfig.DynamicConfig
-	Version   *version.Version
-	prerunner PreRunner
+	Config  *dynamicconfig.DynamicConfig
+	Version *version.Version
 }
 
-func NewCLICommand(cmd *cobra.Command, prerunner PreRunner) *CLICommand {
+func NewCLICommand(cmd *cobra.Command) *CLICommand {
 	return &CLICommand{
-		Config:    &dynamicconfig.DynamicConfig{},
-		Command:   cmd,
-		prerunner: prerunner,
+		Command: cmd,
+		Config:  &dynamicconfig.DynamicConfig{},
 	}
 }
 
 func NewAnonymousCLICommand(cmd *cobra.Command, prerunner PreRunner) *CLICommand {
-	c := NewCLICommand(cmd, prerunner)
+	c := NewCLICommand(cmd)
 	cmd.PersistentPreRunE = Chain(prerunner.Anonymous(c, false), prerunner.AnonymousParseFlagsIntoContext(c))
-	c.Command = cmd
 	return c
 }
