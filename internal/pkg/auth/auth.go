@@ -213,7 +213,7 @@ func generateCredentialName(username string) string {
 	return fmt.Sprintf("username-%s", username)
 }
 
-func GetDataplaneToken(authenticatedState *v1.ContextState, server string, body any) (string, error) {
+func GetDataplaneToken(authenticatedState *v1.ContextState, server string) (string, error) {
 	endpoint := strings.Trim(server, "/") + "/api/access_tokens"
 
 	res := &struct {
@@ -221,7 +221,7 @@ func GetDataplaneToken(authenticatedState *v1.ContextState, server string, body 
 		Error string `json:"error"`
 	}{}
 
-	if _, err := sling.New().Add("content", "application/json").Add("Content-Type", "application/json").Add("Authorization", "Bearer "+authenticatedState.AuthToken).BodyJSON(body).Post(endpoint).ReceiveSuccess(res); err != nil {
+	if _, err := sling.New().Add("Content-Type", "application/json").Add("Authorization", "Bearer "+authenticatedState.AuthToken).Post(endpoint).BodyJSON(map[string]any{}).ReceiveSuccess(res); err != nil {
 		return "", err
 	}
 	if res.Error != "" {
