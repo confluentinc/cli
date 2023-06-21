@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	pauth "github.com/confluentinc/cli/internal/pkg/auth"
+	"github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config/load"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -57,11 +57,11 @@ func (c *command) authenticated(authenticated func(*cobra.Command, []string) err
 
 		jwtCtx := &v1.Context{State: &v1.ContextState{AuthToken: flinkGatewayClient.AuthToken}}
 		if tokenErr := jwtValidator.Validate(jwtCtx); tokenErr != nil {
-			flinkGatewayAuthToken, err := pauth.GetJwtTokenForV2Client(cfg.Context().GetState(), cfg.Context().GetPlatformServer())
+			dataplaneToken, err := auth.GetDataplaneToken(cfg.Context().GetState(), cfg.Context().GetPlatformServer(), map[string]any{})
 			if err != nil {
 				return err
 			}
-			flinkGatewayClient.AuthToken = flinkGatewayAuthToken
+			flinkGatewayClient.AuthToken = dataplaneToken
 		}
 
 		return nil
