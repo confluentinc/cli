@@ -63,8 +63,7 @@ func PersistLogout(config *v1.Config) error {
 	}
 
 	delete(ctx.Config.SavedCredentials, ctx.Name)
-	err := ctx.DeleteUserAuth()
-	if err != nil {
+	if err := ctx.DeleteUserAuth(); err != nil {
 		return err
 	}
 	ctx.Config.CurrentContext = ""
@@ -214,34 +213,19 @@ func generateCredentialName(username string) string {
 	return fmt.Sprintf("username-%s", username)
 }
 
-type response struct {
-	Error string `json:"error"`
-	Token string `json:"token"`
-}
+func GetDataplaneToken(authenticatedState *v1.ContextState, server string) (string, error) {
+	endpoint := strings.Trim(server, "/") + "/api/access_tokens"
 
-func GetBearerToken(authenticatedState *v1.ContextState, server, clusterId string) (string, error) {
-	bearerSessionToken := "Bearer " + authenticatedState.AuthToken
-	accessTokenEndpoint := strings.Trim(server, "/") + "/api/access_tokens"
-	clusterIds := map[string][]string{"clusterIds": {clusterId}}
+	res := &struct {
+		Token string `json:"token"`
+		Error string `json:"error"`
+	}{}
 
-	// Configure and send post request with session token to Auth Service to get access token
-	responses := new(response)
-	if _, err := sling.New().Add("content", "application/json").Add("Content-Type", "application/json").Add("Authorization", bearerSessionToken).BodyJSON(clusterIds).Post(accessTokenEndpoint).ReceiveSuccess(responses); err != nil {
+	if _, err := sling.New().Add("Content-Type", "application/json").Add("Authorization", "Bearer "+authenticatedState.AuthToken).Post(endpoint).BodyJSON(map[string]any{}).ReceiveSuccess(res); err != nil {
 		return "", err
 	}
-	return responses.Token, nil
-}
-
-func GetJwtTokenForV2Client(authenticatedState *v1.ContextState, server string) (string, error) {
-	bearerSessionToken := "Bearer " + authenticatedState.AuthToken
-	accessTokenEndpoint := strings.Trim(server, "/") + "/api/access_tokens"
-
-	responses := new(response)
-	if _, err := sling.New().Add("content", "application/json").Add("Content-Type", "application/json").Add("Authorization", bearerSessionToken).Body(strings.NewReader("{}")).Post(accessTokenEndpoint).ReceiveSuccess(responses); err != nil {
-		return "", err
+	if res.Error != "" {
+		return "", errors.New(res.Error)
 	}
-	if responses.Error != "" {
-		return "", errors.New(responses.Error)
-	}
-	return responses.Token, nil
+	return res.Token, nil
 }

@@ -5,6 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config/load"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -32,19 +33,38 @@ func (c *command) newShellCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	return cmd
 }
 
-func (c *command) authenticated(authenticated func(*cobra.Command, []string) error, cmd *cobra.Command) func() error {
+func (c *command) authenticated(authenticated func(*cobra.Command, []string) error, cmd *cobra.Command, jwtValidator pcmd.JWTValidator) func() error {
 	return func() error {
 		cfg, err := load.LoadAndMigrate(v1.New())
 		if err != nil {
 			return err
 		}
-		auth := cfg.Context().State.AuthToken
+
+		authToken := cfg.Context().State.AuthToken
 		authRefreshToken := cfg.Context().State.AuthRefreshToken
-		err = c.Context.UpdateAuthTokens(auth, authRefreshToken)
+		if err := c.Context.UpdateAuthTokens(authToken, authRefreshToken); err != nil {
+			return err
+		}
+
+		if err := authenticated(cmd, nil); err != nil {
+			return err
+		}
+
+		flinkGatewayClient, err := c.GetFlinkGatewayClient()
 		if err != nil {
 			return err
 		}
-		return authenticated(cmd, nil)
+
+		jwtCtx := &v1.Context{State: &v1.ContextState{AuthToken: flinkGatewayClient.AuthToken}}
+		if tokenErr := jwtValidator.Validate(jwtCtx); tokenErr != nil {
+			dataplaneToken, err := auth.GetDataplaneToken(cfg.Context().GetState(), cfg.Context().GetPlatformServer())
+			if err != nil {
+				return err
+			}
+			flinkGatewayClient.AuthToken = dataplaneToken
+		}
+
+		return nil
 	}
 }
 
@@ -110,14 +130,16 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		return err
 	}
 
+	jwtValidator := pcmd.NewJWTValidator()
+
 	client.StartApp(flinkGatewayClient,
-		c.authenticated(prerunner.Authenticated(c.AuthenticatedCLICommand), cmd),
+		c.authenticated(prerunner.Authenticated(c.AuthenticatedCLICommand), cmd, jwtValidator),
 		types.ApplicationOptions{
 			DefaultProperties: map[string]string{"execution.runtime-mode": "streaming"},
 			FlinkGatewayUrl:   parsedUrl.String(),
 			UnsafeTrace:       unsafeTrace,
 			UserAgent:         c.Version.UserAgent,
-			EnvId:             environmentId,
+			EnvironmentId:     environmentId,
 			OrgResourceId:     resourceId,
 			KafkaClusterId:    cluster,
 			ComputePoolId:     computePool,

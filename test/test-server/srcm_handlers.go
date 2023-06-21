@@ -87,16 +87,10 @@ func getSchemaRegistryCluster(packageType, endpoint string) srcmv2.SrcmV2Cluster
 			DisplayName:  srcmv2.PtrString("account schema-registry"),
 			Package:      &packageType,
 			HttpEndpoint: &endpoint,
-			Environment: &srcmv2.GlobalObjectReference{
-				Id: SRApiEnvId,
-			},
-			Region: &srcmv2.GlobalObjectReference{
-				Id: idRegion1,
-			},
+			Environment:  &srcmv2.GlobalObjectReference{Id: SRApiEnvId},
+			Region:       &srcmv2.GlobalObjectReference{Id: idRegion1},
 		},
-		Status: &srcmv2.SrcmV2ClusterStatus{
-			Phase: srClusterStatus,
-		},
+		Status: &srcmv2.SrcmV2ClusterStatus{Phase: srClusterStatus},
 	}
 }
 

@@ -15,6 +15,7 @@ import (
 	apikey "github.com/confluentinc/cli/internal/cmd/api-key"
 	"github.com/confluentinc/cli/internal/cmd/asyncapi"
 	auditlog "github.com/confluentinc/cli/internal/cmd/audit-log"
+	"github.com/confluentinc/cli/internal/cmd/billing"
 	byok "github.com/confluentinc/cli/internal/cmd/byok"
 	cloudsignup "github.com/confluentinc/cli/internal/cmd/cloud-signup"
 	"github.com/confluentinc/cli/internal/cmd/cluster"
@@ -104,6 +105,7 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 	cmd.AddCommand(apikey.New(prerunner, nil, flagResolver))
 	cmd.AddCommand(asyncapi.New(prerunner))
 	cmd.AddCommand(auditlog.New(prerunner))
+	cmd.AddCommand(billing.New(prerunner))
 	cmd.AddCommand(byok.New(prerunner))
 	cmd.AddCommand(cluster.New(prerunner, cfg.Version.UserAgent))
 	cmd.AddCommand(cloudsignup.New())
@@ -118,7 +120,7 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 	cmd.AddCommand(login.New(cfg, prerunner, ccloudClientFactory, mdsClientManager, netrcHandler, loginCredentialsManager, loginOrganizationManager, authTokenHandler))
 	cmd.AddCommand(logout.New(cfg, prerunner, netrcHandler))
 	cmd.AddCommand(organization.New(prerunner))
-	cmd.AddCommand(pipeline.New(cfg, prerunner))
+	cmd.AddCommand(pipeline.New(prerunner))
 	cmd.AddCommand(plugin.New(cfg, prerunner))
 	cmd.AddCommand(price.New(prerunner))
 	cmd.AddCommand(prompt.New(cfg))

@@ -11,10 +11,12 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (c *command) newSaveCommand(enableSourceCode bool) *cobra.Command {
+const sqlFileTemplate = "./<pipeline-id>.sql"
+
+func (c *command) newSaveCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "save <id>",
-		Short:             "Save a Stream Designer pipeline's source code to a local file.",
+		Short:             "Save the source code of a Stream Designer pipeline locally.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.save,
@@ -28,10 +30,9 @@ func (c *command) newSaveCommand(enableSourceCode bool) *cobra.Command {
 				Code: "confluent pipeline save pipe-12345 --sql-file /tmp/pipeline-source-code.sql",
 			},
 		),
-		Hidden: !enableSourceCode,
 	}
 
-	cmd.Flags().String("sql-file", "", "Path to save the pipeline's source code at. (default \"./<pipeline-id>.sql\")")
+	cmd.Flags().String("sql-file", sqlFileTemplate, `Path to save the pipeline's source code at.`)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -59,8 +60,11 @@ func (c *command) save(cmd *cobra.Command, args []string) error {
 
 	path := args[0] + ".sql"
 
-	sqlFile, _ := cmd.Flags().GetString("sql-file")
-	if sqlFile != "" {
+	sqlFile, err := cmd.Flags().GetString("sql-file")
+	if err != nil {
+		return err
+	}
+	if sqlFile != "" && sqlFile != sqlFileTemplate {
 		path = getPath(sqlFile)
 	}
 

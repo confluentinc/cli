@@ -17,26 +17,30 @@ func handleFcpmComputePools(t *testing.T) http.HandlerFunc {
 
 		switch r.Method {
 		case http.MethodGet:
-			v = flinkv2.FcpmV2ComputePoolList{Data: []flinkv2.FcpmV2ComputePool{
-				{
-					Id: flinkv2.PtrString("lfcp-123456"),
-					Spec: &flinkv2.FcpmV2ComputePoolSpec{
-						DisplayName: flinkv2.PtrString("my-compute-pool-1"),
-						MaxCfu:      flinkv2.PtrInt32(1),
-						Region:      flinkv2.PtrString("us-west-2"),
-					},
-					Status: &flinkv2.FcpmV2ComputePoolStatus{Phase: "PROVISIONED"},
+			usWest1 := flinkv2.FcpmV2ComputePool{
+				Id: flinkv2.PtrString("lfcp-123456"),
+				Spec: &flinkv2.FcpmV2ComputePoolSpec{
+					DisplayName: flinkv2.PtrString("my-compute-pool-1"),
+					MaxCfu:      flinkv2.PtrInt32(1),
+					Region:      flinkv2.PtrString("us-west-1"),
 				},
-				{
-					Id: flinkv2.PtrString("lfcp-222222"),
-					Spec: &flinkv2.FcpmV2ComputePoolSpec{
-						DisplayName: flinkv2.PtrString("my-compute-pool-2"),
-						MaxCfu:      flinkv2.PtrInt32(1),
-						Region:      flinkv2.PtrString("us-west-2"),
-					},
-					Status: &flinkv2.FcpmV2ComputePoolStatus{Phase: "PROVISIONED"},
+				Status: &flinkv2.FcpmV2ComputePoolStatus{Phase: "PROVISIONED"},
+			}
+			usWest2 := flinkv2.FcpmV2ComputePool{
+				Id: flinkv2.PtrString("lfcp-222222"),
+				Spec: &flinkv2.FcpmV2ComputePoolSpec{
+					DisplayName: flinkv2.PtrString("my-compute-pool-2"),
+					MaxCfu:      flinkv2.PtrInt32(2),
+					Region:      flinkv2.PtrString("us-west-2"),
 				},
-			}}
+				Status: &flinkv2.FcpmV2ComputePoolStatus{Phase: "PROVISIONED"},
+			}
+
+			computePools := []flinkv2.FcpmV2ComputePool{usWest1, usWest2}
+			if r.URL.Query().Get("spec.region") == "us-west-2" {
+				computePools = []flinkv2.FcpmV2ComputePool{usWest2}
+			}
+			v = flinkv2.FcpmV2ComputePoolList{Data: computePools}
 		case http.MethodPost:
 			create := new(flinkv2.FcpmV2ComputePool)
 			err := json.NewDecoder(r.Body).Decode(create)

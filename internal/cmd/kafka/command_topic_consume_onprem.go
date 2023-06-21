@@ -50,7 +50,7 @@ func (c *authenticatedTopicCommand) newConsumeCommandOnPrem() *cobra.Command {
 	cmd.Flags().Bool("timestamp", false, "Print message timestamp in milliseconds.")
 	cmd.Flags().String("delimiter", "\t", "The delimiter separating each key and value.")
 	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the consumer client.`)
-	cmd.Flags().String("config-file", "", "The path to the configuration file for the consumer client, in JSON or avro format.")
+	pcmd.AddConsumerConfigFileFlag(cmd)
 	cmd.Flags().String("schema-registry-endpoint", "", "The URL of the Schema Registry cluster.")
 
 	cobra.CheckErr(cmd.MarkFlagFilename("config-file", "avsc", "json"))
@@ -106,8 +106,7 @@ func (c *authenticatedTopicCommand) consumeOnPrem(cmd *cobra.Command, args []str
 	}
 	log.CliLogger.Tracef("Create consumer succeeded")
 
-	err = c.refreshOAuthBearerToken(cmd, consumer)
-	if err != nil {
+	if err := c.refreshOAuthBearerToken(cmd, consumer); err != nil {
 		return err
 	}
 
@@ -118,8 +117,7 @@ func (c *authenticatedTopicCommand) consumeOnPrem(cmd *cobra.Command, args []str
 	defer adminClient.Close()
 
 	topicName := args[0]
-	err = ValidateTopic(adminClient, topicName)
-	if err != nil {
+	if err := ValidateTopic(adminClient, topicName); err != nil {
 		return err
 	}
 

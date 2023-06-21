@@ -8,6 +8,7 @@ import (
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
+	"github.com/confluentinc/cli/internal/pkg/billing"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/types"
@@ -259,7 +260,7 @@ func printTable(cmd *cobra.Command, rows []row) error {
 				ClusterType:  formatClusterTypeHuman[row.clusterType],
 				Availability: formatAvailability[row.availability],
 				NetworkType:  formatNetworkType[row.networkType],
-				Price:        formatPrice(row.price, row.unit),
+				Price:        billing.FormatPrice(row.price, row.unit),
 			})
 		} else {
 			list.Add(&serializedOut{
@@ -272,22 +273,4 @@ func printTable(cmd *cobra.Command, rows []row) error {
 		}
 	}
 	return list.Print()
-}
-
-func formatPrice(price float64, unit string) string {
-	priceStr := fmt.Sprint(price)
-
-	// Require >= 2 digits after the decimal
-	if strings.Contains(priceStr, ".") {
-		// Extend the remainder if needed
-		r := strings.Split(priceStr, ".")
-		for len(r[1]) < 2 {
-			r[1] += "0"
-		}
-		priceStr = strings.Join(r, ".")
-	} else {
-		priceStr += ".00"
-	}
-
-	return fmt.Sprintf("$%s USD/%s", priceStr, unit)
 }

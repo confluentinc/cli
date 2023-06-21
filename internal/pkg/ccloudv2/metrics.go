@@ -52,8 +52,7 @@ func UnmarshalFlatQueryResponseIfDataSchemaMatchError(err error, metricsResponse
 			return err
 		}
 		var resBody flatQueryResponse
-		err = json.Unmarshal(body, &resBody)
-		if err != nil {
+		if err := json.Unmarshal(body, &resBody); err != nil {
 			return err
 		}
 

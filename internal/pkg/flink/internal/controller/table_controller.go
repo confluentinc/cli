@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 	"unicode"
 
@@ -13,43 +14,44 @@ import (
 	"github.com/samber/lo"
 
 	"github.com/confluentinc/cli/internal/pkg/flink/components"
+	"github.com/confluentinc/cli/internal/pkg/flink/config"
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/results"
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/store"
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-type TableControllerInterface interface {
-	AppInputCapture(event *tcell.EventKey) *tcell.EventKey
-	Init(statement types.ProcessedStatement)
-	SetRunInteractiveInputCallback(func())
-	GetActionForShortcut(shortcut string) func()
-}
-
 type TableController struct {
 	table                                *tview.Table
-	appController                        ApplicationControllerInterface
+	appController                        types.ApplicationControllerInterface
 	runInteractiveInput                  func()
 	store                                store.StoreInterface
 	statement                            types.ProcessedStatement
+	statementLock                        sync.RWMutex
 	materializedStatementResults         results.MaterializedStatementResults
 	materializedStatementResultsIterator results.MaterializedStatementResultsIterator
 	selectedRowIdx                       int
-	hasUserDisabledTableMode             bool
-	hasUserDisabledAutoFetch             bool
 	cancelFetch                          context.CancelFunc
 	tableLock                            sync.Mutex
 	cancelLock                           sync.RWMutex
 	isRowViewOpen                        bool
 	tableWidth                           int
+	fetchState                           int32
 }
 
-const maxResultsCapacity int = 1000
-const defaultRefreshInterval uint = 1000 // in milliseconds
-const minRefreshInterval uint = 100      // in milliseconds
-const minColumnWidth int = 4             // min characters displayed in a column
+const (
+	completed = iota
+	failed
+	paused
+	running
 
-func NewTableController(table *tview.Table, store store.StoreInterface, appController ApplicationControllerInterface) TableControllerInterface {
+	maxResultsCapacity     int  = 1000
+	defaultRefreshInterval uint = 1000 // in milliseconds
+	minRefreshInterval     uint = 100  // in milliseconds
+	minColumnWidth         int  = 4    // min characters displayed in a column
+)
+
+func NewTableController(table *tview.Table, store store.StoreInterface, appController types.ApplicationControllerInterface) types.TableControllerInterface {
 	return &TableController{
 		table:         table,
 		appController: appController,
@@ -62,10 +64,16 @@ func (t *TableController) SetRunInteractiveInputCallback(runInteractiveInput fun
 }
 
 func (t *TableController) exitTViewMode() {
-	t.stopAutoRefresh()
-	go t.store.DeleteStatement(t.statement.StatementName)
+	t.stopAutoRefresh(paused)
+	// This was used to delete statements after their execution to save system resources, which should not be
+	// an issue anymore. We don't want to remove it completely just yet, but will disable it by default for now.
+	// TODO: remove this completely once we are sure we won't need it in the future
+	statement := t.getStatement()
+	if config.ShouldCleanupStatements || statement.Status == types.RUNNING {
+		go t.store.DeleteStatement(statement.StatementName)
+	}
 	t.appController.SuspendOutputMode(func() {
-		output.Println("Result retrieval aborted. Statement will be deleted.")
+		output.Println("Result retrieval aborted.")
 		t.runInteractiveInput()
 	})
 }
@@ -76,18 +84,15 @@ func (t *TableController) GetActionForShortcut(shortcut string) func() {
 		return t.exitTViewMode
 	case "M":
 		return func() {
-			t.hasUserDisabledTableMode = !t.hasUserDisabledTableMode
-			t.materializedStatementResults.SetTableMode(!t.hasUserDisabledTableMode)
+			t.materializedStatementResults.SetTableMode(!t.materializedStatementResults.IsTableMode())
 			t.renderTable()
 		}
 	case "R":
 		return func() {
-			if t.hasUserDisabledAutoFetch {
-				t.hasUserDisabledAutoFetch = false
-				t.startAutoRefresh(t.statement, defaultRefreshInterval)
+			if t.isAutoRefreshRunning() {
+				t.stopAutoRefresh(paused)
 			} else {
-				t.hasUserDisabledAutoFetch = true
-				t.stopAutoRefresh()
+				t.startAutoRefresh(defaultRefreshInterval)
 			}
 			t.renderTable()
 		}
@@ -170,20 +175,22 @@ func (t *TableController) setRefreshCancelFunc(cancelFunc context.CancelFunc) {
 	t.cancelFetch = cancelFunc
 }
 
-func (t *TableController) stopAutoRefresh() {
+func (t *TableController) stopAutoRefresh(stopReason int32) {
 	if t.isAutoRefreshRunning() {
 		t.cancelFetch()
 		t.setRefreshCancelFunc(nil)
+		atomic.StoreInt32(&t.fetchState, stopReason)
 	}
 }
 
-func (t *TableController) startAutoRefresh(statement types.ProcessedStatement, refreshInterval uint) {
-	if statement.PageToken == "" || t.isAutoRefreshRunning() {
+func (t *TableController) startAutoRefresh(refreshInterval uint) {
+	if t.getStatement().PageToken == "" || t.isAutoRefreshRunning() {
 		return
 	}
 	ctx, cancel := context.WithCancel(context.Background())
+	atomic.StoreInt32(&t.fetchState, running)
 	t.setRefreshCancelFunc(cancel)
-	t.refreshResults(ctx, statement, refreshInterval)
+	t.refreshResults(ctx, refreshInterval)
 }
 
 func (t *TableController) isAutoRefreshRunning() bool {
@@ -193,28 +200,29 @@ func (t *TableController) isAutoRefreshRunning() bool {
 	return t.cancelFetch != nil
 }
 
-func (t *TableController) refreshResults(ctx context.Context, statement types.ProcessedStatement, refreshInterval uint) {
+func (t *TableController) refreshResults(ctx context.Context, refreshInterval uint) {
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
+				t.appController.TView().QueueUpdateDraw(t.renderTable)
 				return
 			default:
-				t.renderTable()
-				t.appController.TView().Draw()
+				t.appController.TView().QueueUpdateDraw(t.renderTable)
 
-				newResults, err := t.store.FetchStatementResults(statement)
+				newResults, err := t.store.FetchStatementResults(t.getStatement())
 				if err != nil {
+					t.stopAutoRefresh(failed)
 					continue
 				}
 
+				t.setStatement(*newResults)
 				// don't fetch if we have a next page token or the refresh interval is < min
 				if newResults.PageToken == "" || refreshInterval < minRefreshInterval {
-					t.stopAutoRefresh()
+					t.stopAutoRefresh(completed)
 					continue
 				}
 
-				statement = *newResults
 				t.materializedStatementResults.Append(newResults.StatementResults.GetRows()...)
 				time.Sleep(time.Millisecond * time.Duration(refreshInterval))
 			}
@@ -223,13 +231,13 @@ func (t *TableController) refreshResults(ctx context.Context, statement types.Pr
 }
 
 func (t *TableController) Init(statement types.ProcessedStatement) {
-	t.statement = statement
+	t.setStatement(statement)
 	t.materializedStatementResults = results.NewMaterializedStatementResults(statement.StatementResults.GetHeaders(), maxResultsCapacity)
-	t.materializedStatementResults.SetTableMode(!t.hasUserDisabledTableMode)
+	t.materializedStatementResults.SetTableMode(true)
 	t.materializedStatementResults.Append(statement.StatementResults.GetRows()...)
 	// if unbounded result start refreshing results in the background
-	if statement.PageToken != "" && !t.hasUserDisabledAutoFetch {
-		t.startAutoRefresh(statement, defaultRefreshInterval)
+	if statement.PageToken != "" {
+		t.startAutoRefresh(defaultRefreshInterval)
 	} else {
 		t.renderTable()
 	}
@@ -246,23 +254,24 @@ func (t *TableController) renderTable() {
 }
 
 func (t *TableController) renderTitle() {
-	mode := " Changelog mode"
+	mode := "Changelog mode"
 	if t.materializedStatementResults.IsTableMode() {
-		mode = " Table mode"
+		mode = "Table mode"
 	}
 
 	var state string
-	if t.statement.PageToken == "" {
-		state = " (completed) "
-	} else {
-		if t.isAutoRefreshRunning() {
-			state = fmt.Sprintf(" (auto refresh %vs) ", defaultRefreshInterval/1000)
-		} else {
-			state = " (auto refresh disabled) "
-		}
+	switch atomic.LoadInt32(&t.fetchState) {
+	case completed:
+		state = "completed"
+	case failed:
+		state = "auto refresh failed"
+	case paused:
+		state = "auto refresh paused"
+	case running:
+		state = fmt.Sprintf("auto refresh %vs", defaultRefreshInterval/1000)
 	}
 
-	t.table.SetTitle(mode + state)
+	t.table.SetTitle(fmt.Sprintf(" %s (%s) ", mode, state))
 }
 
 func (t *TableController) rowSelectionHandler(row, col int) {
@@ -345,4 +354,18 @@ func (t *TableController) selectLastRow() {
 
 func (t *TableController) focusTable() {
 	t.appController.TView().SetFocus(t.table)
+}
+
+func (t *TableController) getStatement() types.ProcessedStatement {
+	t.statementLock.RLock()
+	defer t.statementLock.RUnlock()
+
+	return t.statement
+}
+
+func (t *TableController) setStatement(statement types.ProcessedStatement) {
+	t.statementLock.Lock()
+	defer t.statementLock.Unlock()
+
+	t.statement = statement
 }

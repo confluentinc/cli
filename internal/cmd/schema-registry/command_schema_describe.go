@@ -29,7 +29,6 @@ func (c *command) newSchemaDescribeCommand() *cobra.Command {
 		Use:         "describe [id]",
 		Short:       "Get schema either by schema ID, or by subject/version.",
 		Args:        cobra.MaximumNArgs(1),
-		PreRunE:     c.preDescribe,
 		RunE:        c.schemaDescribe,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		Example: examples.BuildExampleString(
@@ -55,7 +54,7 @@ func (c *command) newSchemaDescribeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) preDescribe(cmd *cobra.Command, args []string) error {
+func (c *command) schemaDescribe(cmd *cobra.Command, args []string) error {
 	subject, err := cmd.Flags().GetString("subject")
 	if err != nil {
 		return err
@@ -72,10 +71,6 @@ func (c *command) preDescribe(cmd *cobra.Command, args []string) error {
 		return errors.New(errors.SchemaOrSubjectErrorMsg)
 	}
 
-	return nil
-}
-
-func (c *command) schemaDescribe(cmd *cobra.Command, args []string) error {
 	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
