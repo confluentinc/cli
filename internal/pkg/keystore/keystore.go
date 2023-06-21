@@ -41,6 +41,10 @@ func (c *ConfigKeyStore) StoreAPIKey(key *v1.APIKeyPair, clusterId string) error
 		return err
 	}
 	kcc.APIKeys[key.Key] = key
+	err = kcc.EncryptAPIKeys()
+	if err != nil {
+		return err
+	}
 	return c.Config.Save()
 }
 
