@@ -84,7 +84,7 @@ func (c *ksqlCommand) checkProvisioningFailed(clusterId, endpoint string) (bool,
 		return false, err
 	}
 
-	dataplaneToken, err := pauth.GetDataplaneToken(state, ctx.Platform.Server, map[string][]string{"clusterIds": {clusterId}})
+	dataplaneToken, err := pauth.GetDataplaneToken(state, ctx.Platform.Server)
 	if err != nil {
 		return false, err
 	}
