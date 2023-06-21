@@ -67,7 +67,7 @@ func (c *ksqlCommand) getClusterStatus(cluster *ksqlv2.KsqldbcmV2Cluster) string
 	if cluster.Status.GetIsPaused() {
 		status = "PAUSED"
 	} else if status == "PROVISIONED" {
-		provisioningFailed, err := c.checkProvisioningFailed(cluster.GetId(), cluster.Status.GetHttpEndpoint())
+		provisioningFailed, err := c.checkProvisioningFailed(cluster.Status.GetHttpEndpoint())
 		if err != nil {
 			status = "UNKNOWN"
 		} else if provisioningFailed {
@@ -77,14 +77,14 @@ func (c *ksqlCommand) getClusterStatus(cluster *ksqlv2.KsqldbcmV2Cluster) string
 	return status
 }
 
-func (c *ksqlCommand) checkProvisioningFailed(clusterId, endpoint string) (bool, error) {
+func (c *ksqlCommand) checkProvisioningFailed(endpoint string) (bool, error) {
 	ctx := c.Config.Context()
 	state, err := ctx.AuthenticatedState()
 	if err != nil {
 		return false, err
 	}
 
-	dataplaneToken, err := pauth.GetDataplaneToken(state, ctx.Platform.Server, map[string][]string{"clusterIds": {clusterId}})
+	dataplaneToken, err := pauth.GetDataplaneToken(state, ctx.Platform.Server)
 	if err != nil {
 		return false, err
 	}
