@@ -49,6 +49,11 @@ func outputErr(s string) {
 	output.Println(c.Sprintf(s))
 }
 
+func outputErrf(s string, args ...any) {
+	c := color.New(config.ErrorColor)
+	output.Printf(c.Sprint(s), args...)
+}
+
 func outputInfo(s string) {
 	c := color.New(config.InfoColor)
 	output.Println(c.Sprint(s))
