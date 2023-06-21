@@ -1,11 +1,13 @@
 package plugin
 
 import (
+	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"runtime"
 
+	"github.com/go-yaml/yaml"
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -45,7 +47,12 @@ func (c *command) install(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return installPlugins(args[0], dir, installDir)
+	manifest, err := getPluginManifest(args[0], dir)
+	if err != nil {
+		return err
+	}
+
+	return installPlugin(manifest, dir, installDir)
 }
 
 func getPluginInstallDir(cmd *cobra.Command) (string, error) {
@@ -112,6 +119,55 @@ func inPath(dir string) bool {
 	return types.Contains(pathDirectories, dir)
 }
 
-func installPlugins(pluginName, repoDir, installDir string) error {
+func getPluginManifest(pluginName, dir string) (*Manifest, error) {
+	files, err := os.ReadDir(dir)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, file := range files {
+		if file.Name() != pluginName || !file.IsDir() {
+			continue
+		}
+
+		manifestPath := fmt.Sprintf("%s/%s/manifest.yml", dir, file.Name())
+		if !utils.DoesPathExist(manifestPath) {
+			return nil, errors.Errorf("manifest not found for plugin %s", pluginName)
+		}
+
+		manifestFile, err := os.ReadFile(manifestPath)
+		if err != nil {
+			return nil, err
+		}
+
+		manifest := new(Manifest)
+		if err := yaml.Unmarshal(manifestFile, manifest); err != nil {
+			return nil, err
+		}
+		manifest.Name = file.Name()
+
+		return manifest, nil
+	}
+
+	return nil, errors.Errorf("plugin %s not found", pluginName)
+}
+
+func installPlugin(manifest *Manifest, repoDir, installDir string) error {
+	language, _, err := getLanguage(manifest)
+	if err != nil {
+		return err
+	}
+
+	if !types.Contains(supportedLanguages, language) {
+		return errors.Errorf("installation of plugins using %s is not yet supported", language)
+	}
+
+	switch language {
+	case "Python":
+		installPythonPlugin(manifest.Name, repoDir, installDir)
+	case "Go":
+		// todo
+	}
+
 	return nil
 }

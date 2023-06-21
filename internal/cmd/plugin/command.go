@@ -59,6 +59,7 @@ Naming collisions with existing CLI commands and other plugins:
 		cfg:        cfg,
 	}
 
+	cmd.AddCommand(c.newInstallCommand())
 	cmd.AddCommand(c.newListCommand())
 	cmd.AddCommand(c.newSearchCommand())
 
