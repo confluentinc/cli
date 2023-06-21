@@ -283,11 +283,12 @@ func (c *InputController) printResultToSTDOUT(statementResults *types.StatementR
 
 func (c *InputController) Prompt() prompt.IPrompt {
 	completer := autocomplete.NewCompleterBuilder(c.getSmartCompletion).
-		AddCompleter(autocomplete.ExamplesCompleter).
+		AddCompleter(autocomplete.LSPCompleter).
+		/* AddCompleter(autocomplete.ExamplesCompleter).
 		AddCompleter(autocomplete.SetCompleter).
 		AddCompleter(autocomplete.ShowCompleter).
 		AddCompleter(autocomplete.GenerateHistoryCompleter(c.History.Data)).
-		AddCompleter(autocomplete.GenerateDocsCompleter()).
+		AddCompleter(autocomplete.GenerateDocsCompleter()). */
 		BuildCompleter()
 
 	return prompt.New(
