@@ -84,7 +84,7 @@ func TestWaitForPendingStatement3(t *testing.T) {
 			Detail: flinkgatewayv1alpha1.PtrString("Test status detail message"),
 		},
 	}
-	client.EXPECT().GetStatement("orgId", "envId", statementName).Return(statementObj, nil)
+	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, nil)
 
 	processedStatement, err := s.waitForPendingStatement(context.Background(), statementName, time.Duration(10))
 	assert.Nil(t, err)
@@ -117,7 +117,7 @@ func TestWaitForPendingTimesout(t *testing.T) {
 		Message:        fmt.Sprintf("statement is still pending after %f seconds. If you want to increase the timeout for the client, you can run \"SET table.results-timeout=1200;\" to adjust the maximum timeout in seconds.", timeout.Seconds()),
 		FailureMessage: fmt.Sprintf("captured retryable errors: %s", statusDetailMessage),
 	}
-	client.EXPECT().GetStatement("orgId", "envId", statementName).Return(statementObj, nil).AnyTimes()
+	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, nil).AnyTimes()
 	processedStatement, err := s.waitForPendingStatement(context.Background(), statementName, timeout)
 
 	assert.Equal(t, expectedError, err)
@@ -152,8 +152,8 @@ func TestWaitForPendingEventuallyCompletes(t *testing.T) {
 			Detail: &finalStatusDetailMessage,
 		},
 	}
-	client.EXPECT().GetStatement("orgId", "envId", statementName).Return(statementObj, nil).Times(3)
-	client.EXPECT().GetStatement("orgId", "envId", statementName).Return(statementObjCompleted, nil)
+	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, nil).Times(3)
+	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObjCompleted, nil)
 
 	processedStatement, err := s.waitForPendingStatement(context.Background(), statementName, time.Duration(10)*time.Second)
 	assert.Nil(t, err)
@@ -186,7 +186,7 @@ func TestWaitForPendingStatementErrors(t *testing.T) {
 		Message:        returnedError.Error(),
 		FailureMessage: statusDetailMessage,
 	}
-	client.EXPECT().GetStatement("orgId", "envId", statementName).Return(statementObj, returnedError)
+	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, returnedError)
 	_, err := s.waitForPendingStatement(context.Background(), statementName, waitTime)
 	assert.Equal(t, expectedError, err)
 }
@@ -213,7 +213,7 @@ func TestCancelPendingStatement(t *testing.T) {
 	}
 
 	expectedErr := &types.StatementError{Message: "result retrieval aborted. Statement will be deleted"}
-	client.EXPECT().GetStatement("orgId", "envId", statementName).Return(statementObj, nil).AnyTimes()
+	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, nil).AnyTimes()
 
 	// Schedule routine to cancel context
 	go func() {
@@ -227,7 +227,7 @@ func TestCancelPendingStatement(t *testing.T) {
 	assert.EqualError(t, err, expectedErr.Error())
 }
 
-func (s *StoreTestSuite) TestIsSETStatement() {
+func (s *StoreTestSuite) TestIsSetStatement() {
 	assert.True(s.T(), true, statementStartsWithOp("SET", config.ConfigOpSet))
 	assert.True(s.T(), true, statementStartsWithOp("SET key", config.ConfigOpSet))
 	assert.True(s.T(), true, statementStartsWithOp("SET key=value", config.ConfigOpSet))
@@ -243,7 +243,7 @@ func (s *StoreTestSuite) TestIsSETStatement() {
 	assert.False(s.T(), false, statementStartsWithOp("SETTING", config.ConfigOpSet))
 }
 
-func (s *StoreTestSuite) TestIsUSEStatement() {
+func (s *StoreTestSuite) TestIsUseStatement() {
 	assert.True(s.T(), statementStartsWithOp("USE", config.ConfigOpUse))
 	assert.True(s.T(), statementStartsWithOp("USE catalog", config.ConfigOpUse))
 	assert.True(s.T(), statementStartsWithOp("USE CATALOG cat", config.ConfigOpUse))
@@ -291,107 +291,176 @@ func (s *StoreTestSuite) TestIsExitStatement() {
 	assert.False(s.T(), false, statementStartsWithOp("exi", config.ConfigOpReset))
 }
 
-func (s *StoreTestSuite) TestParseSETStatement() {
-	key, value, _ := parseSetStatement("SET 'key'='value'")
+func (s *StoreTestSuite) TestParseSetStatement() {
+	key, value, err := parseSetStatement("SET 'key'='value'")
 	assert.Equal(s.T(), "key", key)
 	assert.Equal(s.T(), "value", value)
+	assert.Nil(s.T(), err)
 
-	key, value, _ = parseSetStatement("SET 'key'='value';")
+	key, value, err = parseSetStatement("SET 'key'='value';")
 	assert.Equal(s.T(), "key", key)
 	assert.Equal(s.T(), "value", value)
+	assert.Nil(s.T(), err)
 
-	key, value, _ = parseSetStatement("set 'key'='value'    ;")
+	key, value, err = parseSetStatement("set 'key'='value'    ;")
 	assert.Equal(s.T(), "key", key)
 	assert.Equal(s.T(), "value", value)
+	assert.Nil(s.T(), err)
 
-	key, value, _ = parseSetStatement("set 'key' = 'value'    ")
+	key, value, err = parseSetStatement("set 'key' = 'value'    ")
 	assert.Equal(s.T(), "key", key)
 	assert.Equal(s.T(), "value", value)
+	assert.Nil(s.T(), err)
 
-	key, value, _ = parseSetStatement("set 'key'     =    'value'    ")
+	key, value, err = parseSetStatement("set 'key'     =    'value'    ")
 	assert.Equal(s.T(), "key", key)
 	assert.Equal(s.T(), "value", value)
+	assert.Nil(s.T(), err)
 
-	key, value, _ = parseSetStatement("set 'key    '= '		va  lue'    ")
+	key, value, err = parseSetStatement("set 'key    '= '		va  lue'    ")
+	assert.Equal(s.T(), "key    ", key)
+	assert.Equal(s.T(), "\t\tva  lue", value)
+	assert.Nil(s.T(), err)
+
+	key, value, err = parseSetStatement("set 'key' ='value'    ")
 	assert.Equal(s.T(), "key", key)
 	assert.Equal(s.T(), "value", value)
+	assert.Nil(s.T(), err)
 
-	key, value, _ = parseSetStatement("set 'key' ='value'    ")
+	key, value, err = parseSetStatement("set 'key'		 ='value'    ")
 	assert.Equal(s.T(), "key", key)
 	assert.Equal(s.T(), "value", value)
+	assert.Nil(s.T(), err)
 
-	key, value, _ = parseSetStatement("set 'key'		 ='value'    ")
+	key, value, err = parseSetStatement("set")
+	assert.Equal(s.T(), "", key)
+	assert.Equal(s.T(), "", value)
+	assert.Nil(s.T(), err)
+
+	key, value, err = parseSetStatement("SET")
+	assert.Equal(s.T(), "", key)
+	assert.Equal(s.T(), "", value)
+	assert.Nil(s.T(), err)
+
+	key, value, err = parseSetStatement("sET 	")
+	assert.Equal(s.T(), "", key)
+	assert.Equal(s.T(), "", value)
+	assert.Nil(s.T(), err)
+
+	key, value, err = parseSetStatement("sET 'key'	")
+	assert.Equal(s.T(), "", key)
+	assert.Equal(s.T(), "", value)
+	assert.Error(s.T(), err)
+
+	key, value, err = parseSetStatement("sET = 'value'	")
+	assert.Equal(s.T(), "", key)
+	assert.Equal(s.T(), "", value)
+	assert.Error(s.T(), err)
+
+	key, value, err = parseSetStatement("sET 'key'= \n'value'	")
 	assert.Equal(s.T(), "key", key)
 	assert.Equal(s.T(), "value", value)
+	assert.Nil(s.T(), err)
 
-	key, value, _ = parseSetStatement("set")
+	key, value, err = parseSetStatement("set key= \nvalue	")
 	assert.Equal(s.T(), "", key)
 	assert.Equal(s.T(), "", value)
+	assert.Error(s.T(), err)
 
-	key, value, _ = parseSetStatement("SET")
+	key, value, err = parseSetStatement("set 'key'= \nvalue	")
 	assert.Equal(s.T(), "", key)
 	assert.Equal(s.T(), "", value)
+	assert.Error(s.T(), err)
 
-	key, value, _ = parseSetStatement("sET 	")
+	key, value, err = parseSetStatement("set key= \n'value'	")
 	assert.Equal(s.T(), "", key)
 	assert.Equal(s.T(), "", value)
+	assert.Error(s.T(), err)
 
-	key, value, _ = parseSetStatement("sET 'key'	")
+	key, value, err = parseSetStatement("set 'key= \nvalue'	")
 	assert.Equal(s.T(), "", key)
 	assert.Equal(s.T(), "", value)
+	assert.Error(s.T(), err)
 
-	key, value, _ = parseSetStatement("sET = 'value'	")
+	key, value, err = parseSetStatement(`set ''key''=''value''`)
 	assert.Equal(s.T(), "", key)
 	assert.Equal(s.T(), "", value)
+	assert.Error(s.T(), err)
 
-	key, value, _ = parseSetStatement("sET 'key'= \n'value'	")
-	assert.Equal(s.T(), "key", key)
+	key, value, err = parseSetStatement(`set '''key'''='''value'''`)
+	assert.Equal(s.T(), "'key'", key)
+	assert.Equal(s.T(), "'value'", value)
+	assert.Nil(s.T(), err)
+
+	key, value, err = parseSetStatement(`set ''''key'''='''value'''`)
+	assert.Equal(s.T(), "", key)
+	assert.Equal(s.T(), "", value)
+	assert.Error(s.T(), err)
+
+	key, value, err = parseSetStatement(`set 'key'''='value'`)
+	assert.Equal(s.T(), "key'", key)
 	assert.Equal(s.T(), "value", value)
+	assert.Nil(s.T(), err)
 
-	key, value, _ = parseSetStatement("set key= \nvalue	")
-	assert.Equal(s.T(), "", key)
-	assert.Equal(s.T(), "", value)
-
-	key, value, _ = parseSetStatement("set 'key'= \nvalue	")
-	assert.Equal(s.T(), "", key)
-	assert.Equal(s.T(), "", value)
-
-	key, value, _ = parseSetStatement("set key= \n'value'	")
-	assert.Equal(s.T(), "", key)
-	assert.Equal(s.T(), "", value)
-
-	key, value, _ = parseSetStatement("set 'key= \nvalue'	")
-	assert.Equal(s.T(), "", key)
-	assert.Equal(s.T(), "", value)
+	key, value, err = parseSetStatement(`set 'key'''''='value'`)
+	assert.Equal(s.T(), "key''", key)
+	assert.Equal(s.T(), "value", value)
+	assert.Nil(s.T(), err)
 }
 
-func (s *StoreTestSuite) TestParseSETStatementerror() {
+func (s *StoreTestSuite) TestParseSetStatementError() {
 	_, _, err := parseSetStatement("SET key")
-	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: missing \"=\"\nUsage: \"SET 'key'='value'\"", err.Error())
+	assert.Equal(s.T(), &types.StatementError{
+		Message: `missing "="`,
+		Usage:   []string{"SET 'key'='value'"},
+	}, err)
 
 	_, _, err = parseSetStatement("SET =")
-	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: key and value not present\nUsage: \"SET 'key'='value'\"", err.Error())
+	assert.Equal(s.T(), &types.StatementError{
+		Message: "key and value not present",
+		Usage:   []string{"SET 'key'='value'"},
+	}, err)
 
 	_, _, err = parseSetStatement("SET key=")
-	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: value for key not present\nSuggestion: if you want to reset a key, use \"RESET 'key'\"", err.Error())
+	assert.Equal(s.T(), &types.StatementError{
+		Message:    "value for key not present",
+		Suggestion: `if you want to reset a key, use "RESET 'key'"`,
+	}, err)
 
 	_, _, err = parseSetStatement("SET =value")
-	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: key not present\nUsage: \"SET 'key'='value'\"", err.Error())
+	assert.Equal(s.T(), &types.StatementError{
+		Message: "key not present",
+		Usage:   []string{"SET 'key'='value'"},
+	}, err)
 
-	_, _, err = parseSetStatement("SET ass=value=as")
-	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: \"=\" should only appear once\nUsage: \"SET 'key'='value'\"", err.Error())
+	_, _, err = parseSetStatement("SET key=value=as")
+	assert.Equal(s.T(), &types.StatementError{
+		Message: `"=" should only appear once`,
+		Usage:   []string{"SET 'key'='value'"},
+	}, err)
 
 	_, _, err = parseSetStatement("SET key=value")
-	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: key and value must be enclosed by single quotes ''\nUsage: \"SET 'key'='value'\"", err.Error())
+	assert.Equal(s.T(), &types.StatementError{
+		Message: "key and value must be enclosed by single quotes (')",
+		Usage:   []string{"SET 'key'='value'"},
+	}, err)
+
+	_, _, err = parseSetStatement(`set ''key'''=''value''`)
+	assert.Equal(s.T(), &types.StatementError{
+		Message:    "key contains unescaped single quotes (')",
+		Usage:      []string{"SET 'key'='value'"},
+		Suggestion: `please escape all single quotes with another single quote "''key''"`,
+	}, err)
+
+	_, _, err = parseSetStatement(`set 'key'=''value''`)
+	assert.Equal(s.T(), &types.StatementError{
+		Message:    "value contains unescaped single quotes (')",
+		Usage:      []string{"SET 'key'='value'"},
+		Suggestion: `please escape all single quotes with another single quote "''key''"`,
+	}, err)
 }
 
-func (s *StoreTestSuite) TestParseUSEStatement() {
+func (s *StoreTestSuite) TestParseUseStatement() {
 	key, value, _ := parseUseStatement("USE CATALOG c;")
 	assert.Equal(s.T(), config.ConfigKeyCatalog, key)
 	assert.Equal(s.T(), "c", value)
@@ -421,7 +490,7 @@ func (s *StoreTestSuite) TestParseUSEStatement() {
 	assert.Equal(s.T(), "database_name", value)
 }
 
-func (s *StoreTestSuite) TestParseUSEStatementError() {
+func (s *StoreTestSuite) TestParseUseStatementError() {
 	_, _, err := parseUseStatement("USE CATALOG ;")
 	assert.NotNil(s.T(), err)
 	assert.Equal(s.T(), "Error: missing catalog name\nUsage: \"USE CATALOG my_catalog\"", err.Error())
@@ -445,7 +514,7 @@ func (s *StoreTestSuite) TestParseResetStatement() {
 	assert.Nil(s.T(), err)
 
 	key, err = parseResetStatement("RESET 'KEY.key';")
-	assert.Equal(s.T(), "key.key", key)
+	assert.Equal(s.T(), "KEY.key", key)
 	assert.Nil(s.T(), err)
 
 	key, err = parseResetStatement("reset 'key'    ;")
@@ -477,7 +546,7 @@ func (s *StoreTestSuite) TestParseResetStatement() {
 	assert.Nil(s.T(), err)
 
 	key, err = parseResetStatement("resET 'KEY' ")
-	assert.Equal(s.T(), "key", key)
+	assert.Equal(s.T(), "KEY", key)
 	assert.Nil(s.T(), err)
 
 	key, err = parseResetStatement("resET 'key';;;")
@@ -495,38 +564,82 @@ func (s *StoreTestSuite) TestParseResetStatement() {
 	key, err = parseResetStatement("reset 'key;")
 	assert.Equal(s.T(), "", key)
 	assert.Error(s.T(), err)
+
+	key, err = parseResetStatement("reset 'key one';")
+	assert.Equal(s.T(), "key one", key)
+	assert.Nil(s.T(), err)
+
+	key, err = parseResetStatement("reset ''key one'';")
+	assert.Equal(s.T(), "", key)
+	assert.Error(s.T(), err)
+
+	key, err = parseResetStatement(`reset '''key one''';`)
+	assert.Equal(s.T(), "'key one'", key)
+	assert.Nil(s.T(), err)
+
+	key, err = parseResetStatement(`reset ''''key one''';`)
+	assert.Equal(s.T(), "", key)
+	assert.Error(s.T(), err)
+
+	key, err = parseResetStatement(`reset 'key'' one';`)
+	assert.Equal(s.T(), "key' one", key)
+	assert.Nil(s.T(), err)
+
+	key, err = parseResetStatement(`reset 'key'''' one';`)
+	assert.Equal(s.T(), "key'' one", key)
+	assert.Nil(s.T(), err)
 }
 
 func (s *StoreTestSuite) TestParseResetStatementError() {
 	key, err := parseResetStatement(" ")
 	assert.Equal(s.T(), "", key)
-	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: invalid syntax for RESET\nUsage: \"RESET 'key'\"", err.Error())
+	assert.Equal(s.T(), &types.StatementError{
+		Message: "invalid syntax for RESET",
+		Usage:   []string{"RESET 'key'"},
+	}, err)
 
 	key, err = parseResetStatement("RESET key key2")
 	assert.Equal(s.T(), "", key)
-	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: too many keys for RESET provided\nUsage: \"RESET 'key'\"", err.Error())
+	assert.Equal(s.T(), &types.StatementError{
+		Message: "invalid syntax for RESET, key must be enclosed by single quotes ''",
+		Usage:   []string{"RESET 'key'"},
+	}, err)
 
 	key, err = parseResetStatement("RESET key key2 key3")
 	assert.Equal(s.T(), "", key)
-	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: too many keys for RESET provided\nUsage: \"RESET 'key'\"", err.Error())
+	assert.Equal(s.T(), &types.StatementError{
+		Message: "invalid syntax for RESET, key must be enclosed by single quotes ''",
+		Usage:   []string{"RESET 'key'"},
+	}, err)
 
 	key, err = parseResetStatement("RESET key;; key key3")
 	assert.Equal(s.T(), "", key)
-	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: too many keys for RESET provided\nUsage: \"RESET 'key'\"", err.Error())
+	assert.Equal(s.T(), &types.StatementError{
+		Message: "invalid syntax for RESET, key must be enclosed by single quotes ''",
+		Usage:   []string{"RESET 'key'"},
+	}, err)
 
 	key, err = parseResetStatement("RESET key key;;; key3")
 	assert.Equal(s.T(), "", key)
-	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: too many keys for RESET provided\nUsage: \"RESET 'key'\"", err.Error())
+	assert.Equal(s.T(), &types.StatementError{
+		Message: "invalid syntax for RESET, key must be enclosed by single quotes ''",
+		Usage:   []string{"RESET 'key'"},
+	}, err)
 
 	key, err = parseResetStatement("RESET key;")
 	assert.Equal(s.T(), "", key)
-	assert.NotNil(s.T(), err)
-	assert.Equal(s.T(), "Error: invalid syntax for RESET, key must be enclosed by single quotes ''\nUsage: \"RESET 'key'\"", err.Error())
+	assert.Equal(s.T(), &types.StatementError{
+		Message: "invalid syntax for RESET, key must be enclosed by single quotes ''",
+		Usage:   []string{"RESET 'key'"},
+	}, err)
+
+	key, err = parseResetStatement("reset ''key one'';")
+	assert.Equal(s.T(), "", key)
+	assert.Equal(s.T(), &types.StatementError{
+		Message:    "key contains unescaped single quotes (')",
+		Usage:      []string{"RESET 'key'"},
+		Suggestion: `please escape all single quotes with another single quote "''key''"`,
+	}, err)
 }
 
 func (s *StoreTestSuite) TestProccessHttpErrors() {
@@ -614,7 +727,7 @@ func (s *StoreTestSuite) TestDeleteStatement() {
 	store := NewStore(client, mockAppController.ExitApplication, &appOptions)
 
 	statementName := "TEST_STATEMENT"
-	client.EXPECT().DeleteStatement("orgId", "envId", statementName).Return(nil)
+	client.EXPECT().DeleteStatement("envId", statementName, "orgId").Return(nil)
 
 	wasStatementDeleted := store.DeleteStatement(statementName)
 	require.True(s.T(), wasStatementDeleted)
@@ -633,7 +746,7 @@ func (s *StoreTestSuite) TestDeleteStatementFailsOnError() {
 	store := NewStore(client, mockAppController.ExitApplication, &appOptions)
 
 	statementName := "TEST_STATEMENT"
-	client.EXPECT().DeleteStatement("orgId", "envId", statementName).Return(errors.New("test error"))
+	client.EXPECT().DeleteStatement("envId", statementName, "orgId").Return(errors.New("test error"))
 
 	wasStatementDeleted := store.DeleteStatement(statementName)
 	require.False(s.T(), wasStatementDeleted)
@@ -659,7 +772,7 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWithCompletedStatement() {
 		Metadata: flinkgatewayv1alpha1.ResultListMeta{},
 		Results:  &flinkgatewayv1alpha1.SqlV1alpha1StatementResultResults{},
 	}
-	client.EXPECT().GetStatementResults("orgId", "envId", statement.StatementName, statement.PageToken).Return(statementResultObj, nil)
+	client.EXPECT().GetStatementResults("envId", statement.StatementName, "orgId", statement.PageToken).Return(statementResultObj, nil)
 
 	statementResults, err := store.FetchStatementResults(statement)
 	require.NotNil(s.T(), statementResults)
@@ -686,7 +799,7 @@ func (s *StoreTestSuite) TestFetchResultsWithRunningStatement() {
 		Metadata: flinkgatewayv1alpha1.ResultListMeta{},
 		Results:  &flinkgatewayv1alpha1.SqlV1alpha1StatementResultResults{},
 	}
-	client.EXPECT().GetStatementResults("orgId", "envId", statement.StatementName, statement.PageToken).Return(statementResultObj, nil)
+	client.EXPECT().GetStatementResults("envId", statement.StatementName, "orgId", statement.PageToken).Return(statementResultObj, nil)
 
 	statementResults, err := store.FetchStatementResults(statement)
 	require.NotNil(s.T(), statementResults)
@@ -714,7 +827,7 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWhenPageTokenExists() {
 		Metadata: flinkgatewayv1alpha1.ResultListMeta{Next: &nextPage},
 		Results:  &flinkgatewayv1alpha1.SqlV1alpha1StatementResultResults{},
 	}
-	client.EXPECT().GetStatementResults("orgId", "envId", statement.StatementName, statement.PageToken).Return(statementResultObj, nil)
+	client.EXPECT().GetStatementResults("envId", statement.StatementName, "orgId", statement.PageToken).Return(statementResultObj, nil)
 
 	statementResults, err := store.FetchStatementResults(statement)
 	require.NotNil(s.T(), statementResults)
@@ -741,7 +854,7 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWhenResultsExist() {
 		Metadata: flinkgatewayv1alpha1.ResultListMeta{},
 		Results:  &flinkgatewayv1alpha1.SqlV1alpha1StatementResultResults{Data: &[]any{map[string]any{"op": 0}}},
 	}
-	client.EXPECT().GetStatementResults("orgId", "envId", statement.StatementName, statement.PageToken).Return(statementResultObj, nil)
+	client.EXPECT().GetStatementResults("envId", statement.StatementName, "orgId", statement.PageToken).Return(statementResultObj, nil)
 
 	statementResults, err := store.FetchStatementResults(statement)
 	require.NotNil(s.T(), statementResults)
@@ -834,12 +947,7 @@ func (s *StoreTestSuite) TestProcessStatement() {
 	}
 
 	statement := "SELECT * FROM table"
-	client.EXPECT().CreateStatement("orgId",
-		"envId",
-		"computePoolId",
-		"identityPoolId",
-		statement,
-		store.propsDefault(store.Properties)).
+	client.EXPECT().CreateStatement(statement, "computePoolId", "identityPoolId", store.propsDefault(store.Properties), "envId", "orgId").
 		Return(statementObj, nil)
 
 	processedStatement, err := store.ProcessStatement(statement)
@@ -872,12 +980,7 @@ func (s *StoreTestSuite) TestProcessStatementFailsOnError() {
 	returnedError := errors.New("test error")
 
 	statement := "SELECT * FROM table"
-	client.EXPECT().CreateStatement("orgId",
-		"envId",
-		"computePoolId",
-		"identityPoolId",
-		statement,
-		store.propsDefault(store.Properties)).
+	client.EXPECT().CreateStatement(statement, "computePoolId", "identityPoolId", store.propsDefault(store.Properties), "envId", "orgId").
 		Return(statementObj, returnedError)
 	expectedError := &types.StatementError{
 		Message:        returnedError.Error(),
@@ -914,7 +1017,7 @@ func (s *StoreTestSuite) TestWaitPendingStatement() {
 			Detail: &statusDetailMessage,
 		},
 	}
-	client.EXPECT().GetStatement("orgId", "envId", statementName).Return(statementObj, nil)
+	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, nil)
 
 	processedStatement, err := store.WaitPendingStatement(context.Background(), types.ProcessedStatement{
 		StatementName: statementName,
@@ -981,7 +1084,7 @@ func (s *StoreTestSuite) TestWaitPendingStatementFailsOnWaitError() {
 		},
 	}
 	returnedErr := errors.New("test error")
-	client.EXPECT().GetStatement("orgId", "envId", statementName).Return(statementObj, returnedErr)
+	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, returnedErr)
 	expectedError := &types.StatementError{
 		Message:        returnedErr.Error(),
 		FailureMessage: statusDetailMessage,
@@ -1025,7 +1128,7 @@ func (s *StoreTestSuite) TestWaitPendingStatementFailsOnNonCompletedOrRunningSta
 		FailureMessage: statusDetailMessage,
 	}
 
-	client.EXPECT().GetStatement("orgId", "envId", statementName).Return(statementObj, nil)
+	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, nil)
 
 	processedStatement, err := store.WaitPendingStatement(context.Background(), types.ProcessedStatement{
 		StatementName: statementName,
@@ -1071,8 +1174,8 @@ func (s *StoreTestSuite) TestWaitPendingStatementFetchesExceptionOnFailedStateme
 		FailureMessage: exception1,
 	}
 
-	client.EXPECT().GetStatement("orgId", "envId", statementName).Return(statementObj, nil)
-	client.EXPECT().GetExceptions("orgId", "envId", statementName).Return(exceptionsResponse, nil)
+	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, nil)
+	client.EXPECT().GetExceptions("envId", statementName, "orgId").Return(exceptionsResponse, nil)
 
 	processedStatement, err := store.WaitPendingStatement(context.Background(), types.ProcessedStatement{
 		StatementName: statementName,
@@ -1114,7 +1217,7 @@ func (s *StoreTestSuite) TestGetStatusDetail() {
 		},
 	}
 
-	client.EXPECT().GetExceptions("orgId", "envId", statementName).Return(exceptionsResponse, nil).Times(2)
+	client.EXPECT().GetExceptions("envId", statementName, "orgId").Return(exceptionsResponse, nil).Times(2)
 
 	require.Equal(s.T(), exception1, store.getStatusDetail(statementObj))
 	statementObj.Status.Phase = "FAILING"
@@ -1210,7 +1313,7 @@ func (s *StoreTestSuite) TestGetStatusDetailReturnsEmptyWhenNoExceptionsAvailabl
 		Data: []flinkgatewayv1alpha1.SqlV1alpha1StatementException{},
 	}
 
-	client.EXPECT().GetExceptions("orgId", "envId", statementName).Return(exceptionsResponse, nil)
+	client.EXPECT().GetExceptions("envId", statementName, "orgId").Return(exceptionsResponse, nil)
 
 	require.Equal(s.T(), "", store.getStatusDetail(statementObj))
 }
