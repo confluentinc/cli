@@ -29,7 +29,7 @@ type completerBuilder struct {
 }
 
 func NewCompleterBuilder(isSmartCompletionEnabled func() bool) *completerBuilder {
-	LSP = sqls.Serve("", "config.yml", true)
+	LSP = sqls.Serve("log.txt", "config.yml", false)
 	return &completerBuilder{isSmartCompletionEnabled: isSmartCompletionEnabled}
 }
 

@@ -7,8 +7,6 @@ import (
 	lspInternal "github.com/lighttiger2505/sqls/pkg/lsp"
 )
 
-//var version int = 2
-
 func LSPCompleter(in prompt.Document) []prompt.Suggest {
 	didChange(in.Text)
 	textBeforeCursor := in.TextBeforeCursor()
@@ -43,7 +41,6 @@ func lspCompletionToSuggest(completion lspInternal.CompletionItem) prompt.Sugges
 
 func didChange(newText string) {
 	var resp interface{}
-	//version++
 
 	didchangeParams := lspInternal.DidChangeTextDocumentParams{
 		TextDocument: lspInternal.VersionedTextDocumentIdentifier{
@@ -59,8 +56,6 @@ func didChange(newText string) {
 
 	if err != nil {
 		fmt.Printf("Error sending request: %v\n", err)
-	} else {
-		fmt.Println("response didChange: ", resp)
 	}
 }
 
@@ -78,8 +73,6 @@ func completion(position lspInternal.Position) []lspInternal.CompletionItem {
 
 	if err != nil {
 		fmt.Printf("Error sending request: %v\n", err)
-	} else {
-		fmt.Println("response completion: ", resp)
 	}
 
 	// add proper return type

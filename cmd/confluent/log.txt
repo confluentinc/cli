@@ -1,0 +1,14 @@
+2023/06/21 14:23:09 db worker: start
+2023/06/21 14:23:09 db worker: Update db chache primary complete
+2023/06/21 14:24:00 db worker: start
+2023/06/21 14:24:00 db worker: Update db chache primary complete
+2023/06/21 14:24:49 db worker: start
+2023/06/21 14:24:49 db worker: Update db chache primary complete
+2023/06/21 14:30:09 db worker: start
+2023/06/21 14:30:53 db worker: Update db chache primary complete
+2023/06/21 14:31:45 db worker: start
+2023/06/21 14:31:45 db worker: Update db chache primary complete
+2023/06/21 14:36:55 db worker: start
+2023/06/21 14:36:55 db worker: Update db chache primary complete
+2023/06/21 14:38:17 db worker: start
+2023/06/21 14:38:17 db worker: Update db chache primary complete
