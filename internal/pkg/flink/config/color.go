@@ -12,4 +12,4 @@ const AccentColor = color.FgCyan
 
 const InfoColor = color.FgWhite
 const ErrorColor = color.FgHiRed
-const WarnColor = color.FgCyan
+const WarnColor = color.FgHiYellow
