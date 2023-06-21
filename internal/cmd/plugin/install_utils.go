@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/go-version"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/exec"
 )
 
 var supportedLanguages = []string{"Python", "Go"}
@@ -60,5 +61,16 @@ func installPythonPlugin(name, repoDir, installDir string) error {
 	if !found {
 		return errors.Errorf("unable to find .py file for plugin %s", name)
 	}
+	return nil
+}
+
+func installGoPlugin(name string) error {
+	packageName := fmt.Sprintf("github.com/confluentinc/cli-plugins/%s@latest", name)
+	installCmd := exec.NewCommand("go", "install", packageName)
+
+	if _, err := installCmd.Output(); err != nil {
+		return errors.Wrap(err, "failed to run go install command")
+	}
+
 	return nil
 }

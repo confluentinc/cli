@@ -166,7 +166,7 @@ func installPlugin(manifest *Manifest, repoDir, installDir string) error {
 	case "Python":
 		installPythonPlugin(manifest.Name, repoDir, installDir)
 	case "Go":
-		// todo
+		installGoPlugin(manifest.Name)
 	}
 
 	return nil
