@@ -9,6 +9,7 @@ import (
 
 	prompt "github.com/confluentinc/go-prompt"
 
+	"github.com/confluentinc/cli/internal/pkg/color"
 	"github.com/confluentinc/cli/internal/pkg/flink/config"
 	"github.com/confluentinc/cli/internal/pkg/flink/test/generators"
 )
@@ -89,7 +90,7 @@ func TestExamplesWordLexer(t *testing.T) {
 			}
 
 			if isKeyWord {
-				require.Equalf(t, element.Color, config.PromptAccentColor, "wrong colour for element: %s", element.Text)
+				require.Equalf(t, element.Color, color.PromptAccentColor, "wrong colour for element: %s", element.Text)
 			} else if wrappedInInvertedCommasOrBackticks(element.Text) {
 				require.Equalf(t, element.Color, prompt.Yellow, "wrong colour for element: %s", element.Text)
 			} else {
@@ -137,7 +138,7 @@ func TestWordLexerForRandomStatements(t *testing.T) {
 			}
 
 			if isKeyWord {
-				require.Equalf(t, element.Color, config.PromptAccentColor, "wrong colour for element: %s", element.Text)
+				require.Equalf(t, element.Color, color.PromptAccentColor, "wrong colour for element: %s", element.Text)
 			} else if wrappedInInvertedCommasOrBackticks(element.Text) {
 				require.Equalf(t, element.Color, prompt.Yellow, "wrong colour for element: %s", element.Text)
 			} else {

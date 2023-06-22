@@ -198,7 +198,6 @@ func (c *InputController) isSessionValid(err *types.StatementError) bool {
 }
 
 func renderMsgAndStatus(processedStatement *types.ProcessedStatement) {
-
 	if processedStatement == nil {
 		return
 	}

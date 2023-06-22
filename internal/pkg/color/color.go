@@ -1,4 +1,4 @@
-package config
+package color
 
 import (
 	"github.com/fatih/color"
