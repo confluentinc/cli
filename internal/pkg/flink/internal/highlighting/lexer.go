@@ -5,6 +5,7 @@ import (
 
 	prompt "github.com/confluentinc/go-prompt"
 
+	"github.com/confluentinc/cli/internal/pkg/color"
 	"github.com/confluentinc/cli/internal/pkg/flink/config"
 )
 
@@ -53,7 +54,7 @@ func Lexer(line string) []prompt.LexerElement {
 
 		isKeyword := config.SQLKeywords.Contains(strings.ToUpper(strings.TrimSpace(word)))
 		if isKeyword {
-			element.Color = config.HighlightColor
+			element.Color = color.PromptAccentColor
 		} else if wrappedInInvertedCommasOrBackticks(word) {
 			element.Color = prompt.Yellow
 		} else {
