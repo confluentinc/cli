@@ -3,15 +3,17 @@ package plugin
 import (
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/hashicorp/go-version"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/exec"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-var supportedLanguages = []string{"Python", "Go"}
+var supportedLanguages = []string{"python", "go"}
 
 func getLanguage(manifest *Manifest) (string, *version.Version, error) {
 	if manifest == nil {
@@ -22,7 +24,7 @@ func getLanguage(manifest *Manifest) (string, *version.Version, error) {
 		return "", nil, nil
 	}
 
-	dependencySlice := strings.Split(manifest.Dependencies, " ")
+	dependencySlice := strings.Split(strings.ToLower(manifest.Dependencies), " ")
 	if len(dependencySlice) == 1 {
 		return dependencySlice[0], nil, nil
 	}
@@ -33,6 +35,43 @@ func getLanguage(manifest *Manifest) (string, *version.Version, error) {
 	}
 
 	return dependencySlice[0], ver, nil
+}
+
+func checkPythonVersion(ver *version.Version) error {
+	versionCmd := exec.NewCommand("python", "--version")
+
+	_, err := versionCmd.Output()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func checkGoVersion(ver *version.Version) error {
+	versionCmd := exec.NewCommand("go", "version")
+
+	out, err := versionCmd.Output()
+	if err != nil {
+		return err
+	}
+
+	re := regexp.MustCompile(`go[1-9]\.[0-9]+[\.0-9]*`)
+	for _, word := range strings.Split(string(out), " ") {
+		if re.MatchString(word) {
+			installedVer, err := version.NewVersion(strings.TrimPrefix(word, "go"))
+			if err != nil {
+				return err
+			}
+			if installedVer.LessThan(ver) {
+				output.ErrPrintf("[WARN] Installed Go version %s is less than the required version %s.\n", installedVer, ver)
+			}
+
+			break
+		}
+	}
+
+	return nil
 }
 
 func installPythonPlugin(name, repoDir, installDir string) error {

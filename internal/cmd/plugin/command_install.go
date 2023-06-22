@@ -153,7 +153,7 @@ func getPluginManifest(pluginName, dir string) (*Manifest, error) {
 }
 
 func installPlugin(manifest *Manifest, repoDir, installDir string) error {
-	language, _, err := getLanguage(manifest)
+	language, ver, err := getLanguage(manifest)
 	if err != nil {
 		return err
 	}
@@ -163,10 +163,16 @@ func installPlugin(manifest *Manifest, repoDir, installDir string) error {
 	}
 
 	switch language {
-	case "Python":
-		installPythonPlugin(manifest.Name, repoDir, installDir)
-	case "Go":
-		installGoPlugin(manifest.Name)
+	case "python":
+		if err := checkPythonVersion(ver); err != nil {
+			return err
+		}
+		return installPythonPlugin(manifest.Name, repoDir, installDir)
+	case "go":
+		if err := checkGoVersion(ver); err != nil {
+			return err
+		}
+		return installGoPlugin(manifest.Name)
 	}
 
 	return nil
