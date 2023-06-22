@@ -204,7 +204,8 @@ func renderMsgAndStatus(processedStatement *types.ProcessedStatement) {
 
 	if processedStatement.IsLocalStatement {
 		if processedStatement.Status == "FAILED" {
-			outputErr("Error: Couldn't process statement. Please check your statement and try again.")
+			err := types.StatementError{Message: "couldn't process statement, please check your statement and try again"}
+			outputErr(err.Error())
 		} else {
 			outputInfo("Statement successfully submitted.")
 		}
@@ -213,7 +214,8 @@ func renderMsgAndStatus(processedStatement *types.ProcessedStatement) {
 			outputInfof("Statement name: %s\n", processedStatement.StatementName)
 		}
 		if processedStatement.Status == "FAILED" {
-			outputErr("Error: Statement submission failed. There could a problem with the server right now. Check your statement and try again.")
+			err := types.StatementError{Message: "statement submission failed"}
+			outputErr(err.Error())
 		} else {
 			outputInfo("Statement successfully submitted.")
 			outputInfo("Fetching results...")

@@ -204,7 +204,7 @@ func (s *InputControllerTestSuite) TestRenderMsgAndStatusLocalStatements() {
 		{
 			name:      "local failed statement",
 			statement: &types.ProcessedStatement{IsLocalStatement: true, Status: types.FAILED},
-			want:      "Error: Couldn't process statement. Please check your statement and try again.\n",
+			want:      "Error: couldn't process statement, please check your statement and try again\n",
 		},
 		{
 			name:      "local non-failed statement",
@@ -236,22 +236,22 @@ func (s *InputControllerTestSuite) TestRenderMsgAndStatusNonLocalFailedStatement
 		{
 			name:      "statement with name",
 			statement: &types.ProcessedStatement{StatementName: "test-statement", Status: types.FAILED},
-			want:      "Statement name: test-statement\nError: Statement submission failed. There could a problem with the server right now. Check your statement and try again.\n",
+			want:      "Statement name: test-statement\nError: statement submission failed\n",
 		},
 		{
 			name:      "statement with name and status detail",
 			statement: &types.ProcessedStatement{StatementName: "test-statement", Status: types.FAILED, StatusDetail: "status-detail"},
-			want:      "Statement name: test-statement\nError: Statement submission failed. There could a problem with the server right now. Check your statement and try again.\nstatus-detail.\n",
+			want:      "Statement name: test-statement\nError: statement submission failed\nstatus-detail.\n",
 		},
 		{
 			name:      "statement without name",
 			statement: &types.ProcessedStatement{Status: types.FAILED},
-			want:      "Error: Statement submission failed. There could a problem with the server right now. Check your statement and try again.\n",
+			want:      "Error: statement submission failed\n",
 		},
 		{
 			name:      "statement without name but with status detail",
 			statement: &types.ProcessedStatement{Status: types.FAILED, StatusDetail: "status-detail"},
-			want:      "Error: Statement submission failed. There could a problem with the server right now. Check your statement and try again.\nstatus-detail.\n",
+			want:      "Error: statement submission failed\nstatus-detail.\n",
 		},
 	}
 	for _, tt := range tests {
