@@ -334,8 +334,7 @@ func (c *command) getClusterDetails(details *accountDetails, flags *flags) error
 		return fmt.Errorf(`failed to find Kafka cluster: %v`, err)
 	}
 
-	err = clusterConfig.DecryptAPIKeys()
-	if err != nil {
+	if err := clusterConfig.DecryptAPIKeys(); err != nil {
 		return err
 	}
 
