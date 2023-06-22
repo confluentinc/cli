@@ -205,8 +205,7 @@ func (c *createCommand) setKafkaCluster(cmd *cobra.Command, configFile string) (
 			return "", err
 		}
 	}
-	err = kafkaCluster.DecryptAPIKeys()
-	if err != nil {
+	if err := kafkaCluster.DecryptAPIKeys(); err != nil {
 		return "", err
 	}
 	// replace BROKER_ENDPOINT, CLUSTER_API_KEY, and CLUSTER_API_SECRET templates
