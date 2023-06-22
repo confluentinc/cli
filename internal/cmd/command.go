@@ -151,10 +151,9 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 func Execute(cmd *cobra.Command, args []string, cfg *v1.Config) error {
 	defer func() {
 		if r := recover(); r != nil {
-			//TODO: need to uncomment before releasing
-			// if !cfg.Version.IsReleased() {
-			//	panic(r)
-			// }
+			if !cfg.Version.IsReleased() {
+				panic(r)
+			}
 			u := ppanic.CollectPanic(cmd, args, cfg)
 			if err := reportUsage(cmd, cfg, u); err != nil {
 				output.ErrPrint(errors.DisplaySuggestionsMessage(err))
