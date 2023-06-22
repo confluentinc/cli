@@ -66,9 +66,11 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(*cob
 			}
 		}
 
-		if err := command.Config.InitDynamicConfig(cmd, r.Config); err != nil {
+		command.Config.Config = r.Config
+		if err := command.Config.ParseFlagsIntoConfig(cmd); err != nil {
 			return err
 		}
+
 		// check Feature Flag "cli.disable" for commands run from cloud context (except for on-prem login)
 		// check for commands that require cloud auth (since cloud context might not be active until auto-login)
 		// check for cloud login (since it is not executed from cloud context)
