@@ -35,5 +35,4 @@ type TableControllerInterface interface {
 	AppInputCapture(event *tcell.EventKey) *tcell.EventKey
 	Init(statement ProcessedStatement)
 	SetRunInteractiveInputCallback(func())
-	GetActionForShortcut(shortcut string) func()
 }
