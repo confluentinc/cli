@@ -34,6 +34,7 @@ type TableController struct {
 	isRowViewOpen                        bool
 	tableWidth                           int
 	fetchState                           int32
+	numRowsToScroll                      int
 }
 
 type fetchState int32
@@ -177,6 +178,17 @@ func (t *TableController) closeRowView() {
 }
 
 func (t *TableController) inputHandlerTableView(event *tcell.EventKey) *tcell.EventKey {
+	switch event.Modifiers() {
+	case tcell.ModAlt:
+		switch event.Key() {
+		case tcell.KeyUp:
+			t.table.Select(t.selectedRowIdx-t.numRowsToScroll, 0)
+		case tcell.KeyDown:
+			t.table.Select(t.selectedRowIdx+t.numRowsToScroll, 0)
+		}
+		return nil
+	}
+
 	switch event.Key() {
 	case tcell.KeyRune:
 		char := unicode.ToUpper(event.Rune())
@@ -302,13 +314,16 @@ func (t *TableController) renderTitle() {
 
 func (t *TableController) rowSelectionHandler(row, col int) {
 	// table title (-1) and header row (0) are not selectable
-	if row <= 0 {
-		row = 1
+	if row <= 0 && t.table.GetRowCount() > 2 {
+		t.table.Select(1, 0)
+		return
 	}
 	// check if selected row is out of bounds
-	if row >= t.table.GetRowCount() {
-		row = t.table.GetRowCount() - 1
+	if row >= t.table.GetRowCount() && t.table.GetRowCount()-1 >= 0 {
+		t.table.Select(t.table.GetRowCount()-1, 0)
+		return
 	}
+
 	if !t.isAutoRefreshRunning() {
 		stepsToMove := row - t.selectedRowIdx
 		t.materializedStatementResultsIterator.Move(stepsToMove)
@@ -352,6 +367,8 @@ func (t *TableController) renderData() {
 		newX, newY, newWidth, newHeight := t.table.GetInnerRect()
 		hasTableWidthChanged := t.tableWidth != newWidth
 		t.tableWidth = newWidth
+		// minus 2 because of the header row and because we want to go to the first row we can still see
+		t.numRowsToScroll = newHeight - 2
 		if !hasTableWidthChanged {
 			return newX, newY, newWidth, newHeight
 		}

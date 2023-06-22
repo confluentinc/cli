@@ -568,3 +568,115 @@ func (s *TableControllerTestSuite) TestJumpToLiveResultsOnUserInput() {
 		assert.Equal(s.T(), types.ProcessedStatement{PageToken: "LAST"}, tableController.getStatement())
 	})
 }
+
+func (s *TableControllerTestSuite) TestFastScroll() {
+	// Given
+	table := components.CreateTable()
+	tableController := TableController{
+		table:         table,
+		appController: s.mockAppController,
+		store:         s.mockStore,
+	}
+	s.mockAppController.EXPECT().TView().Return(s.dummyTViewApp)
+
+	headers := []string{"Count"}
+	tableController.materializedStatementResults = results.NewMaterializedStatementResults(headers, 10)
+	tableController.materializedStatementResults.SetTableMode(true)
+	for i := 0; i < 10; i++ {
+		tableController.materializedStatementResults.Append(types.StatementResultRow{
+			Operation: types.INSERT,
+			Fields: []types.StatementResultField{
+				types.AtomicStatementResultField{
+					Type:  types.INTEGER,
+					Value: strconv.Itoa(i),
+				},
+			},
+		})
+	}
+	tableController.renderTable()
+	tableController.numRowsToScroll = 9
+	// last row should be selected at the start
+	assert.Equal(s.T(), 10, tableController.selectedRowIdx)
+	assert.Equal(s.T(), &types.StatementResultRow{
+		Operation: types.INSERT,
+		Fields: []types.StatementResultField{
+			types.AtomicStatementResultField{
+				Type:  types.INTEGER,
+				Value: strconv.Itoa(9),
+			},
+		},
+	}, tableController.materializedStatementResultsIterator.Value())
+
+	// fast scroll up
+	assert.Nil(s.T(), tableController.AppInputCapture(tcell.NewEventKey(tcell.KeyUp, rune(0), tcell.ModAlt)))
+	// first row should be selected
+	assert.Equal(s.T(), 1, tableController.selectedRowIdx)
+	assert.Equal(s.T(), &types.StatementResultRow{
+		Operation: types.INSERT,
+		Fields: []types.StatementResultField{
+			types.AtomicStatementResultField{
+				Type:  types.INTEGER,
+				Value: strconv.Itoa(0),
+			},
+		},
+	}, tableController.materializedStatementResultsIterator.Value())
+
+	// fast scroll down
+	assert.Nil(s.T(), tableController.AppInputCapture(tcell.NewEventKey(tcell.KeyDown, rune(0), tcell.ModAlt)))
+	// last row should be selected again
+	assert.Equal(s.T(), 10, tableController.selectedRowIdx)
+	assert.Equal(s.T(), &types.StatementResultRow{
+		Operation: types.INSERT,
+		Fields: []types.StatementResultField{
+			types.AtomicStatementResultField{
+				Type:  types.INTEGER,
+				Value: strconv.Itoa(9),
+			},
+		},
+	}, tableController.materializedStatementResultsIterator.Value())
+}
+
+func (s *TableControllerTestSuite) TestFastScrollDown() {
+	// Given
+	table := components.CreateTable()
+	tableController := TableController{
+		table:         table,
+		appController: s.mockAppController,
+		store:         s.mockStore,
+	}
+	s.mockAppController.EXPECT().TView().Return(s.dummyTViewApp)
+
+	headers := []string{"Count"}
+	tableController.materializedStatementResults = results.NewMaterializedStatementResults(headers, 10)
+	tableController.materializedStatementResults.SetTableMode(true)
+	for i := 0; i < 10; i++ {
+		tableController.materializedStatementResults.Append(types.StatementResultRow{
+			Operation: types.INSERT,
+			Fields: []types.StatementResultField{
+				types.AtomicStatementResultField{
+					Type:  types.INTEGER,
+					Value: strconv.Itoa(i),
+				},
+			},
+		})
+	}
+	tableController.renderTable()
+	tableController.numRowsToScroll = 9
+
+	// When
+	result := tableController.AppInputCapture(tcell.NewEventKey(tcell.KeyUp, rune(0), tcell.ModAlt))
+
+	// Then
+	assert.Nil(s.T(), result)
+	// check if correct is selected
+	assert.Equal(s.T(), 1, tableController.selectedRowIdx)
+	assert.Equal(s.T(), &types.StatementResultRow{
+		Operation: types.INSERT,
+		Fields: []types.StatementResultField{
+			types.AtomicStatementResultField{
+				Type:  types.INTEGER,
+				Value: strconv.Itoa(0),
+			},
+		},
+	}, tableController.materializedStatementResultsIterator.Value())
+}
