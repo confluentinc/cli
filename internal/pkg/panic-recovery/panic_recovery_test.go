@@ -1,4 +1,4 @@
-package panic
+package panic_recovery
 
 import (
 	"testing"
@@ -11,14 +11,14 @@ func TestParseStack(t *testing.T) {
 				~/.goenv/versions/1.20.4/src/runtime/debug/stack.go:24 +0x65
 				github.com/confluentinc/cli/internal/cmd.Execute.func1()
 				~/cli/internal/cmd/command.go:157 +0x198
-				panic({0x1019356e0, 0xc0004ba990})
-				~/.goenv/versions/1.20.4/src/runtime/panic.go:884 +0x213
+				panic-recovery({0x1019356e0, 0xc0004ba990})
+				~/.goenv/versions/1.20.4/src/runtime/panic-recovery.go:884 +0x213
 				github.com/confluentinc/cli/internal/cmd.Execute(0xc000004600, {0xc000040050?, 0x101d1b4c0?, 0x28?}, 0xc0002c62c0)
 				~/cli/internal/cmd/command.go:172 +0x17c
 				main.main()
 				~/cli/cmd/confluent/main.go:40 +0x3f4`
 	formattedTrace := []string{
-		"~/.goenv/versions/1.20.4/src/runtime/panic.go:884 +0x213",
+		"~/.goenv/versions/1.20.4/src/runtime/panic-recovery.go:884 +0x213",
 		"~/cli/internal/cmd/command.go:172 +0x17c",
 		"~/cli/cmd/confluent/main.go:40 +0x3f4",
 	}

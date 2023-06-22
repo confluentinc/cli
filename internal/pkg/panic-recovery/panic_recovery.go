@@ -1,4 +1,4 @@
-package panic
+package panic_recovery
 
 import (
 	"runtime"
@@ -43,14 +43,14 @@ func parseFlags(cmd *cobra.Command, flags []string) *[]string {
 	return &formattedFlags
 }
 
-// parseStack formats the stack trace resulting from a panic to only include line numbers up until panic
+// parseStack formats the stack trace resulting from a panic-recovery to only include line numbers up until panic-recovery
 func parseStack(stack string) *[]string {
 	stack = strings.TrimRight(stack, "\n")
 	trace := strings.Split(stack, "\n")
 	panicIndex := 0
 	for idx := range trace {
 		trace[idx] = strings.TrimSpace(trace[idx])
-		if strings.Contains(trace[idx], "panic.go") {
+		if strings.Contains(trace[idx], "panic-recovery.go") {
 			panicIndex = idx
 		}
 	}
