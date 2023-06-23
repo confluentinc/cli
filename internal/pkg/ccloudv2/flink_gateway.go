@@ -21,7 +21,7 @@ type GatewayClientInterface interface {
 
 type FlinkGatewayClient struct {
 	*flinkgatewayv1alpha1.APIClient
-	authToken string
+	AuthToken string
 }
 
 func NewFlinkGatewayClient(url, userAgent string, unsafeTrace bool, authToken string) *FlinkGatewayClient {
@@ -33,12 +33,12 @@ func NewFlinkGatewayClient(url, userAgent string, unsafeTrace bool, authToken st
 
 	return &FlinkGatewayClient{
 		APIClient: flinkgatewayv1alpha1.NewAPIClient(cfg),
-		authToken: authToken,
+		AuthToken: authToken,
 	}
 }
 
 func (c *FlinkGatewayClient) flinkGatewayApiContext() context.Context {
-	return context.WithValue(context.Background(), flinkgatewayv1alpha1.ContextAccessToken, c.authToken)
+	return context.WithValue(context.Background(), flinkgatewayv1alpha1.ContextAccessToken, c.AuthToken)
 }
 
 func (c *FlinkGatewayClient) DeleteStatement(environmentId, statementName, orgId string) error {

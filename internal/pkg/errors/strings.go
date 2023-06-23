@@ -107,7 +107,8 @@ const (
 	PromptToDownloadDescriptionMsg = "New version of %s is available\n" +
 		"Current Version: %s\n" +
 		"Latest Version:  %s\n" +
-		"%s\n\n\n"
+		"\n" +
+		"%s"
 	InvalidChoiceMsg = "%s is not a valid choice"
 
 	// General

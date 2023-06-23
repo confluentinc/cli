@@ -10,9 +10,6 @@ import (
 	streamdesignerv1 "github.com/confluentinc/ccloud-sdk-go-v2/stream-designer/v1"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
-	launchdarkly "github.com/confluentinc/cli/internal/pkg/featureflags"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -49,7 +46,7 @@ type command struct {
 	*pcmd.AuthenticatedCLICommand
 }
 
-func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
+func New(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "pipeline",
 		Short:       "Manage Stream Designer pipelines.",
@@ -58,18 +55,14 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 
 	c := &command{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 
-	dc := dynamicconfig.New(cfg, nil, nil)
-	_ = dc.ParseFlagsIntoConfig(cmd)
-	enableSourceCode := launchdarkly.Manager.BoolVariation("cli.stream_designer.source_code.enable", dc.Context(), v1.CliLaunchDarklyClient, true, false)
-
 	cmd.AddCommand(c.newActivateCommand())
-	cmd.AddCommand(c.newCreateCommand(enableSourceCode))
+	cmd.AddCommand(c.newCreateCommand())
 	cmd.AddCommand(c.newDeactivateCommand())
 	cmd.AddCommand(c.newDeleteCommand())
 	cmd.AddCommand(c.newDescribeCommand())
 	cmd.AddCommand(c.newListCommand())
-	cmd.AddCommand(c.newSaveCommand(enableSourceCode))
-	cmd.AddCommand(c.newUpdateCommand(enableSourceCode))
+	cmd.AddCommand(c.newSaveCommand())
+	cmd.AddCommand(c.newUpdateCommand())
 
 	return cmd
 }

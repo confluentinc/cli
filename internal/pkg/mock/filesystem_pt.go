@@ -9,7 +9,7 @@ import (
 )
 
 // PassThroughFileSystem is useful for optionally mocking some methods
-// We have to check whether Mock.<Name>Func is nil because our mocks panic if called with nil func
+// We have to check whether Mock.<Name>Func is nil because our mocks panic-recovery if called with nil func
 type PassThroughFileSystem struct {
 	Mock *FileSystem
 	FS   pio.FileSystem

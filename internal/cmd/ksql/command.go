@@ -67,7 +67,7 @@ func (c *ksqlCommand) getClusterStatus(cluster *ksqlv2.KsqldbcmV2Cluster) string
 	if cluster.Status.GetIsPaused() {
 		status = "PAUSED"
 	} else if status == "PROVISIONED" {
-		provisioningFailed, err := c.checkProvisioningFailed(cluster.GetId(), cluster.Status.GetHttpEndpoint())
+		provisioningFailed, err := c.checkProvisioningFailed(cluster.Status.GetHttpEndpoint())
 		if err != nil {
 			status = "UNKNOWN"
 		} else if provisioningFailed {
@@ -77,17 +77,18 @@ func (c *ksqlCommand) getClusterStatus(cluster *ksqlv2.KsqldbcmV2Cluster) string
 	return status
 }
 
-func (c *ksqlCommand) checkProvisioningFailed(clusterId, endpoint string) (bool, error) {
+func (c *ksqlCommand) checkProvisioningFailed(endpoint string) (bool, error) {
 	ctx := c.Config.Context()
 	state, err := ctx.AuthenticatedState()
 	if err != nil {
 		return false, err
 	}
-	bearerToken, err := pauth.GetBearerToken(state, ctx.Platform.Server, clusterId)
+
+	dataplaneToken, err := pauth.GetDataplaneToken(state, ctx.Platform.Server)
 	if err != nil {
 		return false, err
 	}
-	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: bearerToken})
+	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: dataplaneToken})
 
 	slingClient := sling.New().Client(oauth2.NewClient(context.Background(), ts)).Base(endpoint)
 	var failure map[string]any
