@@ -14,6 +14,8 @@ var appShortcuts = []types.Shortcut{
 	{KeyText: "Q", Text: "Quit"},
 	{KeyText: "M", Text: "Toggle Result Mode"},
 	{KeyText: "R", Text: "Toggle Auto Refresh"},
+	{KeyText: "L", Text: "Live results"},
+	{KeyText: "Opt/Alt + ▲▼", Text: "Fast scroll"},
 }
 
 func Shortcuts() *tview.TextView {

@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"context"
 	"fmt"
 	"strings"
 	"sync"
@@ -31,23 +30,23 @@ type TableController struct {
 	materializedStatementResults         results.MaterializedStatementResults
 	materializedStatementResultsIterator results.MaterializedStatementResultsIterator
 	selectedRowIdx                       int
-	cancelFetch                          context.CancelFunc
 	tableLock                            sync.Mutex
-	cancelLock                           sync.RWMutex
 	isRowViewOpen                        bool
 	tableWidth                           int
 	fetchState                           int32
+	numRowsToScroll                      int
 }
 
+type fetchState int32
+
 const (
-	completed = iota
-	failed
-	paused
-	running
+	paused    fetchState = iota // auto fetch was paused
+	completed                   // arrived at last page, fetch is completed
+	failed                      // fetching next page failed
+	running                     // auto fetch is running
 
 	maxResultsCapacity     int  = 1000
 	defaultRefreshInterval uint = 1000 // in milliseconds
-	minRefreshInterval     uint = 100  // in milliseconds
 	minColumnWidth         int  = 4    // min characters displayed in a column
 )
 
@@ -59,12 +58,34 @@ func NewTableController(table *tview.Table, store store.StoreInterface, appContr
 	}
 }
 
+// Function to handle shortcuts and keybindings for TView
+func (t *TableController) AppInputCapture(event *tcell.EventKey) *tcell.EventKey {
+	if t.isRowViewOpen {
+		return t.inputHandlerRowView(event)
+	}
+	return t.inputHandlerTableView(event)
+}
+
+func (t *TableController) Init(statement types.ProcessedStatement) {
+	t.setStatement(statement)
+	t.materializedStatementResults = results.NewMaterializedStatementResults(statement.StatementResults.GetHeaders(), maxResultsCapacity)
+	t.materializedStatementResults.SetTableMode(true)
+	t.materializedStatementResults.Append(statement.StatementResults.GetRows()...)
+	// if unbounded result start refreshing results in the background
+	if statement.PageToken != "" {
+		t.startAutoRefresh(defaultRefreshInterval)
+	} else {
+		t.setFetchState(completed)
+		t.renderTable()
+	}
+}
+
 func (t *TableController) SetRunInteractiveInputCallback(runInteractiveInput func()) {
 	t.runInteractiveInput = runInteractiveInput
 }
 
 func (t *TableController) exitTViewMode() {
-	t.stopAutoRefresh(paused)
+	t.setFetchState(paused)
 	// This was used to delete statements after their execution to save system resources, which should not be
 	// an issue anymore. We don't want to remove it completely just yet, but will disable it by default for now.
 	// TODO: remove this completely once we are sure we won't need it in the future
@@ -78,33 +99,100 @@ func (t *TableController) exitTViewMode() {
 	})
 }
 
-func (t *TableController) GetActionForShortcut(shortcut string) func() {
+func (t *TableController) toggleTableModeAndRender() {
+	t.materializedStatementResults.SetTableMode(!t.materializedStatementResults.IsTableMode())
+	t.renderTable()
+}
+
+func (t *TableController) toggleAutoRefreshAndRender() {
+	if t.isAutoRefreshRunning() {
+		t.setFetchState(paused)
+		t.renderTable()
+		return
+	}
+
+	t.startAutoRefresh(defaultRefreshInterval)
+}
+
+func (t *TableController) fetchNextPageAndRender() {
+	t.fetchNextPage()
+	t.renderTable()
+}
+
+func (t *TableController) hasMoreResults() bool {
+	return len(t.getStatement().StatementResults.GetRows()) > 0 && t.getFetchState() != failed && t.getFetchState() != completed
+}
+
+func (t *TableController) goToLastPageAndRender() {
+	go func() {
+		// fetch next pages until we receive no results (which means we are at the last page)
+		for {
+			t.fetchNextPage()
+			if !t.hasMoreResults() {
+				break
+			}
+			// minimal wait to avoid rate limiting
+			time.Sleep(time.Millisecond * 50)
+		}
+		t.appController.TView().QueueUpdateDraw(t.renderTable)
+	}()
+}
+
+func (t *TableController) getActionForShortcut(shortcut string) func() {
 	switch shortcut {
 	case "Q":
 		return t.exitTViewMode
 	case "M":
-		return func() {
-			t.materializedStatementResults.SetTableMode(!t.materializedStatementResults.IsTableMode())
-			t.renderTable()
-		}
+		return t.toggleTableModeAndRender
 	case "R":
-		return func() {
-			if t.isAutoRefreshRunning() {
-				t.stopAutoRefresh(paused)
-			} else {
-				t.startAutoRefresh(defaultRefreshInterval)
-			}
-			t.renderTable()
-		}
+		return t.toggleAutoRefreshAndRender
+	case "N":
+		return t.fetchNextPageAndRender
+	case "L":
+		return t.goToLastPageAndRender
 	}
 	return nil
 }
 
+func (t *TableController) openRowView() {
+	if !t.isAutoRefreshRunning() {
+		row := t.materializedStatementResultsIterator.Value()
+		t.isRowViewOpen = true
+
+		headers := t.materializedStatementResults.GetHeaders()
+		sb := strings.Builder{}
+		for rowIdx, field := range row.Fields {
+			sb.WriteString(fmt.Sprintf("[yellow]%s:\n[white]%s\n\n", tview.Escape(headers[rowIdx]), tview.Escape(field.ToString())))
+		}
+		textView := tview.NewTextView().SetText(sb.String())
+		// mouse needs to be disabled, otherwise selecting text with the cursor won't work
+		t.appController.TView().SetRoot(components.CreateRowView(textView), true).EnableMouse(false)
+		t.appController.TView().SetFocus(textView)
+	}
+}
+
+func (t *TableController) closeRowView() {
+	t.appController.ShowTableView()
+	t.appController.TView().SetFocus(t.table)
+	t.isRowViewOpen = false
+}
+
 func (t *TableController) inputHandlerTableView(event *tcell.EventKey) *tcell.EventKey {
+	switch event.Modifiers() {
+	case tcell.ModAlt:
+		switch event.Key() {
+		case tcell.KeyUp:
+			t.table.Select(t.selectedRowIdx-t.numRowsToScroll, 0)
+		case tcell.KeyDown:
+			t.table.Select(t.selectedRowIdx+t.numRowsToScroll, 0)
+		}
+		return nil
+	}
+
 	switch event.Key() {
 	case tcell.KeyRune:
 		char := unicode.ToUpper(event.Rune())
-		action := t.GetActionForShortcut(string(char))
+		action := t.getActionForShortcut(string(char))
 		if action != nil {
 			action()
 		}
@@ -116,11 +204,7 @@ func (t *TableController) inputHandlerTableView(event *tcell.EventKey) *tcell.Ev
 		t.exitTViewMode()
 		return nil
 	case tcell.KeyEnter:
-		if !t.isAutoRefreshRunning() {
-			row := t.materializedStatementResultsIterator.Value()
-			t.showRowView(row)
-			t.isRowViewOpen = true
-		}
+		t.openRowView()
 		return nil
 	}
 	return event
@@ -132,114 +216,66 @@ func (t *TableController) inputHandlerRowView(event *tcell.EventKey) *tcell.Even
 		char := unicode.ToUpper(event.Rune())
 		switch char {
 		case 'Q':
-			t.appController.ShowTableView()
-			t.focusTable()
-			t.isRowViewOpen = false
+			t.closeRowView()
 		}
 		return nil
 	case tcell.KeyCtrlQ:
 		fallthrough
 	case tcell.KeyEscape:
-		t.appController.ShowTableView()
-		t.focusTable()
-		t.isRowViewOpen = false
+		t.closeRowView()
 		return nil
 	}
 	return event
 }
 
-// Function to handle shortcuts and keybindings for TView
-func (t *TableController) AppInputCapture(event *tcell.EventKey) *tcell.EventKey {
-	if t.isRowViewOpen {
-		return t.inputHandlerRowView(event)
-	}
-	return t.inputHandlerTableView(event)
+func (t *TableController) isAutoRefreshRunning() bool {
+	return t.getFetchState() == running
 }
 
-func (t *TableController) showRowView(row *types.StatementResultRow) {
-	headers := t.materializedStatementResults.GetHeaders()
-	sb := strings.Builder{}
-	for rowIdx, field := range row.Fields {
-		sb.WriteString(fmt.Sprintf("[yellow]%s:\n[white]%s\n\n", tview.Escape(headers[rowIdx]), tview.Escape(field.ToString())))
-	}
-	textView := tview.NewTextView().SetText(sb.String())
-	// mouse needs to be disabled, otherwise selecting text with the cursor won't work
-	t.appController.TView().SetRoot(components.CreateRowView(textView), true).EnableMouse(false)
-	t.appController.TView().SetFocus(textView)
+func (t *TableController) isAutoRefreshStartAllowed() bool {
+	return t.getFetchState() == paused || t.getFetchState() == failed
 }
 
-func (t *TableController) setRefreshCancelFunc(cancelFunc context.CancelFunc) {
-	t.cancelLock.Lock()
-	defer t.cancelLock.Unlock()
-
-	t.cancelFetch = cancelFunc
-}
-
-func (t *TableController) stopAutoRefresh(stopReason int32) {
-	if t.isAutoRefreshRunning() {
-		t.cancelFetch()
-		t.setRefreshCancelFunc(nil)
-		atomic.StoreInt32(&t.fetchState, stopReason)
+func (t *TableController) fetchNextPage() {
+	// don't fetch if we're already at the last page, otherwise we would fetch the first page again
+	if t.getFetchState() == completed {
+		return
 	}
+
+	// fetch
+	newResults, err := t.store.FetchStatementResults(t.getStatement())
+	if err != nil {
+		t.setFetchState(failed)
+		return
+	}
+
+	// update data
+	t.setStatement(*newResults)
+	t.materializedStatementResults.Append(newResults.StatementResults.GetRows()...)
+	if newResults.PageToken == "" {
+		t.setFetchState(completed)
+		return
+	}
+
+	// if auto refresh is not running we set the state to paused
+	if !t.isAutoRefreshRunning() {
+		t.setFetchState(paused)
+		return
+	}
+
+	t.setFetchState(running)
 }
 
 func (t *TableController) startAutoRefresh(refreshInterval uint) {
-	if t.getStatement().PageToken == "" || t.isAutoRefreshRunning() {
-		return
-	}
-	ctx, cancel := context.WithCancel(context.Background())
-	atomic.StoreInt32(&t.fetchState, running)
-	t.setRefreshCancelFunc(cancel)
-	t.refreshResults(ctx, refreshInterval)
-}
-
-func (t *TableController) isAutoRefreshRunning() bool {
-	t.cancelLock.RLock()
-	defer t.cancelLock.RUnlock()
-
-	return t.cancelFetch != nil
-}
-
-func (t *TableController) refreshResults(ctx context.Context, refreshInterval uint) {
-	go func() {
-		for {
-			select {
-			case <-ctx.Done():
+	if t.isAutoRefreshStartAllowed() {
+		t.setFetchState(running)
+		go func() {
+			for t.isAutoRefreshRunning() {
+				t.fetchNextPage()
 				t.appController.TView().QueueUpdateDraw(t.renderTable)
-				return
-			default:
-				t.appController.TView().QueueUpdateDraw(t.renderTable)
-
-				newResults, err := t.store.FetchStatementResults(t.getStatement())
-				if err != nil {
-					t.stopAutoRefresh(failed)
-					continue
-				}
-
-				t.setStatement(*newResults)
-				// don't fetch if we have a next page token or the refresh interval is < min
-				if newResults.PageToken == "" || refreshInterval < minRefreshInterval {
-					t.stopAutoRefresh(completed)
-					continue
-				}
-
-				t.materializedStatementResults.Append(newResults.StatementResults.GetRows()...)
 				time.Sleep(time.Millisecond * time.Duration(refreshInterval))
 			}
-		}
-	}()
-}
-
-func (t *TableController) Init(statement types.ProcessedStatement) {
-	t.setStatement(statement)
-	t.materializedStatementResults = results.NewMaterializedStatementResults(statement.StatementResults.GetHeaders(), maxResultsCapacity)
-	t.materializedStatementResults.SetTableMode(true)
-	t.materializedStatementResults.Append(statement.StatementResults.GetRows()...)
-	// if unbounded result start refreshing results in the background
-	if statement.PageToken != "" {
-		t.startAutoRefresh(defaultRefreshInterval)
-	} else {
-		t.renderTable()
+		}()
 	}
 }
 
@@ -250,7 +286,7 @@ func (t *TableController) renderTable() {
 	t.renderTitle()
 	t.renderData()
 	t.selectLastRow()
-	t.focusTable()
+	t.appController.TView().SetFocus(t.table)
 }
 
 func (t *TableController) renderTitle() {
@@ -260,7 +296,7 @@ func (t *TableController) renderTitle() {
 	}
 
 	var state string
-	switch atomic.LoadInt32(&t.fetchState) {
+	switch t.getFetchState() {
 	case completed:
 		state = "completed"
 	case failed:
@@ -269,6 +305,8 @@ func (t *TableController) renderTitle() {
 		state = "auto refresh paused"
 	case running:
 		state = fmt.Sprintf("auto refresh %vs", defaultRefreshInterval/1000)
+	default:
+		state = "unknown error"
 	}
 
 	t.table.SetTitle(fmt.Sprintf(" %s (%s) ", mode, state))
@@ -276,13 +314,16 @@ func (t *TableController) renderTitle() {
 
 func (t *TableController) rowSelectionHandler(row, col int) {
 	// table title (-1) and header row (0) are not selectable
-	if row <= 0 {
-		row = 1
+	if row <= 0 && t.table.GetRowCount() > 2 {
+		t.table.Select(1, 0)
+		return
 	}
 	// check if selected row is out of bounds
-	if row >= t.table.GetRowCount() {
-		row = t.table.GetRowCount() - 1
+	if row >= t.table.GetRowCount() && t.table.GetRowCount()-1 >= 0 {
+		t.table.Select(t.table.GetRowCount()-1, 0)
+		return
 	}
+
 	if !t.isAutoRefreshRunning() {
 		stepsToMove := row - t.selectedRowIdx
 		t.materializedStatementResultsIterator.Move(stepsToMove)
@@ -326,6 +367,8 @@ func (t *TableController) renderData() {
 		newX, newY, newWidth, newHeight := t.table.GetInnerRect()
 		hasTableWidthChanged := t.tableWidth != newWidth
 		t.tableWidth = newWidth
+		// minus 2 because of the header row and because we want to go to the first row we can still see
+		t.numRowsToScroll = newHeight - 2
 		if !hasTableWidthChanged {
 			return newX, newY, newWidth, newHeight
 		}
@@ -352,10 +395,6 @@ func (t *TableController) selectLastRow() {
 	t.table.ScrollToEnd()
 }
 
-func (t *TableController) focusTable() {
-	t.appController.TView().SetFocus(t.table)
-}
-
 func (t *TableController) getStatement() types.ProcessedStatement {
 	t.statementLock.RLock()
 	defer t.statementLock.RUnlock()
@@ -368,4 +407,12 @@ func (t *TableController) setStatement(statement types.ProcessedStatement) {
 	defer t.statementLock.Unlock()
 
 	t.statement = statement
+}
+
+func (t *TableController) setFetchState(state fetchState) {
+	atomic.StoreInt32(&t.fetchState, int32(state))
+}
+
+func (t *TableController) getFetchState() fetchState {
+	return fetchState(atomic.LoadInt32(&t.fetchState))
 }
