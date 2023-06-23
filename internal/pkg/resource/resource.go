@@ -16,6 +16,7 @@ const (
 	Context               = "context"
 	Environment           = "environment"
 	FlinkComputePool      = "Flink compute pool"
+	FlinkIamBinding       = "Flink IAM binding"
 	FlinkStatement        = "Flink SQL statement"
 	IdentityPool          = "identity pool"
 	IdentityProvider      = "identity provider"
