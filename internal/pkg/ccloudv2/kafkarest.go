@@ -107,6 +107,10 @@ func (c *KafkaRestClient) DeleteKafkaLink(clusterId, linkName string) (*http.Res
 	return c.ClusterLinkingV3Api.DeleteKafkaLink(c.context(), clusterId, linkName).Execute()
 }
 
+func (c *KafkaRestClient) GetKafkaLink(clusterId, linkName string) (kafkarestv3.ListLinksResponseData, *http.Response, error) {
+	return c.ClusterLinkingV3Api.GetKafkaLink(c.context(), clusterId, linkName).Execute()
+}
+
 func (c *KafkaRestClient) ListKafkaLinkConfigs(clusterId, linkName string) (kafkarestv3.ListLinkConfigsResponseDataList, *http.Response, error) {
 	return c.ClusterLinkingV3Api.ListKafkaLinkConfigs(c.context(), clusterId, linkName).Execute()
 }
