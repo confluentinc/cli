@@ -36,7 +36,7 @@ func (c *command) install(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	dir, err := os.MkdirTemp("", "plugin-search")
+	dir, err := os.MkdirTemp("", "plugin-install")
 	if err != nil {
 		return err
 	}
@@ -164,14 +164,10 @@ func installPlugin(manifest *Manifest, repoDir, installDir string) error {
 
 	switch language {
 	case "python":
-		if err := checkPythonVersion(ver); err != nil {
-			return err
-		}
+		checkPythonVersion(ver)
 		return installPythonPlugin(manifest.Name, repoDir, installDir)
 	case "go":
-		if err := checkGoVersion(ver); err != nil {
-			return err
-		}
+		checkGoVersion(ver)
 		return installGoPlugin(manifest.Name)
 	}
 

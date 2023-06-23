@@ -15,6 +15,12 @@ import (
 
 var supportedLanguages = []string{"python", "go"}
 
+const (
+	programNotFoundMsg      = "[WARN] Unable to find %s. Check that it is installed in a directory in your $PATH.\n"
+	unableToParseVersionMsg = "[WARN] Unable to parse %s version.\n"
+	insufficientVersionMsg  = "[WARN] Installed %s version %s is less than the required version %s.\n"
+)
+
 func getLanguage(manifest *Manifest) (string, *version.Version, error) {
 	if manifest == nil {
 		return "", nil, nil
@@ -37,23 +43,38 @@ func getLanguage(manifest *Manifest) (string, *version.Version, error) {
 	return dependencySlice[0], ver, nil
 }
 
-func checkPythonVersion(ver *version.Version) error {
+func checkPythonVersion(ver *version.Version) {
 	versionCmd := exec.NewCommand("python", "--version")
 
-	_, err := versionCmd.Output()
+	out, err := versionCmd.Output()
 	if err != nil {
-		return err
+		output.ErrPrintf(programNotFoundMsg, "Python")
+		return
 	}
 
-	return nil
+	re := regexp.MustCompile(`[1-9]\.[0-9]+[\.0-9]*`)
+	for _, word := range strings.Split(string(out), " ") {
+		if re.MatchString(word) {
+			installedVer, err := version.NewVersion(strings.Trim(word, " \n"))
+			if err != nil {
+				output.ErrPrintf(unableToParseVersionMsg, "Python")
+				return
+			}
+			if installedVer.LessThan(ver) {
+				output.ErrPrintf(insufficientVersionMsg, "Python", installedVer, ver)
+				return
+			}
+		}
+	}
 }
 
-func checkGoVersion(ver *version.Version) error {
+func checkGoVersion(ver *version.Version) {
 	versionCmd := exec.NewCommand("go", "version")
 
 	out, err := versionCmd.Output()
 	if err != nil {
-		return err
+		output.ErrPrintf(programNotFoundMsg, "Go")
+		return
 	}
 
 	re := regexp.MustCompile(`go[1-9]\.[0-9]+[\.0-9]*`)
@@ -61,17 +82,15 @@ func checkGoVersion(ver *version.Version) error {
 		if re.MatchString(word) {
 			installedVer, err := version.NewVersion(strings.TrimPrefix(word, "go"))
 			if err != nil {
-				return err
+				output.ErrPrintf(unableToParseVersionMsg, "Go")
+				return
 			}
 			if installedVer.LessThan(ver) {
-				output.ErrPrintf("[WARN] Installed Go version %s is less than the required version %s.\n", installedVer, ver)
+				output.ErrPrintf(insufficientVersionMsg, "Go", installedVer, ver)
+				return
 			}
-
-			break
 		}
 	}
-
-	return nil
 }
 
 func installPythonPlugin(name, repoDir, installDir string) error {
