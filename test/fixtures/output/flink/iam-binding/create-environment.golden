@@ -1,0 +1,7 @@
++--------------+-----------+
+| ID           | fiam-123  |
+| Region       | us-west-2 |
+| Cloud        | aws       |
+| Environment  | env-123   |
+| IdentityPool | pool-1234 |
++--------------+-----------+
