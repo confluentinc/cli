@@ -84,7 +84,7 @@ func TestWaitForPendingStatement3(t *testing.T) {
 			Detail: flinkgatewayv1alpha1.PtrString("Test status detail message"),
 		},
 	}
-	client.EXPECT().GetStatement("orgId", "envId", statementName).Return(statementObj, nil)
+	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, nil)
 
 	processedStatement, err := s.waitForPendingStatement(context.Background(), statementName, time.Duration(10))
 	assert.Nil(t, err)
@@ -117,7 +117,7 @@ func TestWaitForPendingTimesout(t *testing.T) {
 		Message:        fmt.Sprintf("statement is still pending after %f seconds. If you want to increase the timeout for the client, you can run \"SET table.results-timeout=1200;\" to adjust the maximum timeout in seconds.", timeout.Seconds()),
 		FailureMessage: fmt.Sprintf("captured retryable errors: %s", statusDetailMessage),
 	}
-	client.EXPECT().GetStatement("orgId", "envId", statementName).Return(statementObj, nil).AnyTimes()
+	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, nil).AnyTimes()
 	processedStatement, err := s.waitForPendingStatement(context.Background(), statementName, timeout)
 
 	assert.Equal(t, expectedError, err)
@@ -152,8 +152,8 @@ func TestWaitForPendingEventuallyCompletes(t *testing.T) {
 			Detail: &finalStatusDetailMessage,
 		},
 	}
-	client.EXPECT().GetStatement("orgId", "envId", statementName).Return(statementObj, nil).Times(3)
-	client.EXPECT().GetStatement("orgId", "envId", statementName).Return(statementObjCompleted, nil)
+	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, nil).Times(3)
+	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObjCompleted, nil)
 
 	processedStatement, err := s.waitForPendingStatement(context.Background(), statementName, time.Duration(10)*time.Second)
 	assert.Nil(t, err)
@@ -186,7 +186,7 @@ func TestWaitForPendingStatementErrors(t *testing.T) {
 		Message:        returnedError.Error(),
 		FailureMessage: statusDetailMessage,
 	}
-	client.EXPECT().GetStatement("orgId", "envId", statementName).Return(statementObj, returnedError)
+	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, returnedError)
 	_, err := s.waitForPendingStatement(context.Background(), statementName, waitTime)
 	assert.Equal(t, expectedError, err)
 }
@@ -213,7 +213,7 @@ func TestCancelPendingStatement(t *testing.T) {
 	}
 
 	expectedErr := &types.StatementError{Message: "result retrieval aborted. Statement will be deleted"}
-	client.EXPECT().GetStatement("orgId", "envId", statementName).Return(statementObj, nil).AnyTimes()
+	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, nil).AnyTimes()
 
 	// Schedule routine to cancel context
 	go func() {
@@ -727,7 +727,7 @@ func (s *StoreTestSuite) TestDeleteStatement() {
 	store := NewStore(client, mockAppController.ExitApplication, &appOptions)
 
 	statementName := "TEST_STATEMENT"
-	client.EXPECT().DeleteStatement("orgId", "envId", statementName).Return(nil)
+	client.EXPECT().DeleteStatement("envId", statementName, "orgId").Return(nil)
 
 	wasStatementDeleted := store.DeleteStatement(statementName)
 	require.True(s.T(), wasStatementDeleted)
@@ -746,7 +746,7 @@ func (s *StoreTestSuite) TestDeleteStatementFailsOnError() {
 	store := NewStore(client, mockAppController.ExitApplication, &appOptions)
 
 	statementName := "TEST_STATEMENT"
-	client.EXPECT().DeleteStatement("orgId", "envId", statementName).Return(errors.New("test error"))
+	client.EXPECT().DeleteStatement("envId", statementName, "orgId").Return(errors.New("test error"))
 
 	wasStatementDeleted := store.DeleteStatement(statementName)
 	require.False(s.T(), wasStatementDeleted)
@@ -772,7 +772,7 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWithCompletedStatement() {
 		Metadata: flinkgatewayv1alpha1.ResultListMeta{},
 		Results:  &flinkgatewayv1alpha1.SqlV1alpha1StatementResultResults{},
 	}
-	client.EXPECT().GetStatementResults("orgId", "envId", statement.StatementName, statement.PageToken).Return(statementResultObj, nil)
+	client.EXPECT().GetStatementResults("envId", statement.StatementName, "orgId", statement.PageToken).Return(statementResultObj, nil)
 
 	statementResults, err := store.FetchStatementResults(statement)
 	require.NotNil(s.T(), statementResults)
@@ -799,7 +799,7 @@ func (s *StoreTestSuite) TestFetchResultsWithRunningStatement() {
 		Metadata: flinkgatewayv1alpha1.ResultListMeta{},
 		Results:  &flinkgatewayv1alpha1.SqlV1alpha1StatementResultResults{},
 	}
-	client.EXPECT().GetStatementResults("orgId", "envId", statement.StatementName, statement.PageToken).Return(statementResultObj, nil)
+	client.EXPECT().GetStatementResults("envId", statement.StatementName, "orgId", statement.PageToken).Return(statementResultObj, nil)
 
 	statementResults, err := store.FetchStatementResults(statement)
 	require.NotNil(s.T(), statementResults)
@@ -827,7 +827,7 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWhenPageTokenExists() {
 		Metadata: flinkgatewayv1alpha1.ResultListMeta{Next: &nextPage},
 		Results:  &flinkgatewayv1alpha1.SqlV1alpha1StatementResultResults{},
 	}
-	client.EXPECT().GetStatementResults("orgId", "envId", statement.StatementName, statement.PageToken).Return(statementResultObj, nil)
+	client.EXPECT().GetStatementResults("envId", statement.StatementName, "orgId", statement.PageToken).Return(statementResultObj, nil)
 
 	statementResults, err := store.FetchStatementResults(statement)
 	require.NotNil(s.T(), statementResults)
@@ -854,7 +854,7 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWhenResultsExist() {
 		Metadata: flinkgatewayv1alpha1.ResultListMeta{},
 		Results:  &flinkgatewayv1alpha1.SqlV1alpha1StatementResultResults{Data: &[]any{map[string]any{"op": 0}}},
 	}
-	client.EXPECT().GetStatementResults("orgId", "envId", statement.StatementName, statement.PageToken).Return(statementResultObj, nil)
+	client.EXPECT().GetStatementResults("envId", statement.StatementName, "orgId", statement.PageToken).Return(statementResultObj, nil)
 
 	statementResults, err := store.FetchStatementResults(statement)
 	require.NotNil(s.T(), statementResults)
@@ -947,12 +947,7 @@ func (s *StoreTestSuite) TestProcessStatement() {
 	}
 
 	statement := "SELECT * FROM table"
-	client.EXPECT().CreateStatement("orgId",
-		"envId",
-		"computePoolId",
-		"identityPoolId",
-		statement,
-		store.propsDefault(store.Properties)).
+	client.EXPECT().CreateStatement(statement, "computePoolId", "identityPoolId", store.propsDefault(store.Properties), "envId", "orgId").
 		Return(statementObj, nil)
 
 	processedStatement, err := store.ProcessStatement(statement)
@@ -985,12 +980,7 @@ func (s *StoreTestSuite) TestProcessStatementFailsOnError() {
 	returnedError := errors.New("test error")
 
 	statement := "SELECT * FROM table"
-	client.EXPECT().CreateStatement("orgId",
-		"envId",
-		"computePoolId",
-		"identityPoolId",
-		statement,
-		store.propsDefault(store.Properties)).
+	client.EXPECT().CreateStatement(statement, "computePoolId", "identityPoolId", store.propsDefault(store.Properties), "envId", "orgId").
 		Return(statementObj, returnedError)
 	expectedError := &types.StatementError{
 		Message:        returnedError.Error(),
@@ -1027,7 +1017,7 @@ func (s *StoreTestSuite) TestWaitPendingStatement() {
 			Detail: &statusDetailMessage,
 		},
 	}
-	client.EXPECT().GetStatement("orgId", "envId", statementName).Return(statementObj, nil)
+	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, nil)
 
 	processedStatement, err := store.WaitPendingStatement(context.Background(), types.ProcessedStatement{
 		StatementName: statementName,
@@ -1094,7 +1084,7 @@ func (s *StoreTestSuite) TestWaitPendingStatementFailsOnWaitError() {
 		},
 	}
 	returnedErr := errors.New("test error")
-	client.EXPECT().GetStatement("orgId", "envId", statementName).Return(statementObj, returnedErr)
+	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, returnedErr)
 	expectedError := &types.StatementError{
 		Message:        returnedErr.Error(),
 		FailureMessage: statusDetailMessage,
@@ -1138,7 +1128,7 @@ func (s *StoreTestSuite) TestWaitPendingStatementFailsOnNonCompletedOrRunningSta
 		FailureMessage: statusDetailMessage,
 	}
 
-	client.EXPECT().GetStatement("orgId", "envId", statementName).Return(statementObj, nil)
+	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, nil)
 
 	processedStatement, err := store.WaitPendingStatement(context.Background(), types.ProcessedStatement{
 		StatementName: statementName,
@@ -1184,8 +1174,8 @@ func (s *StoreTestSuite) TestWaitPendingStatementFetchesExceptionOnFailedStateme
 		FailureMessage: exception1,
 	}
 
-	client.EXPECT().GetStatement("orgId", "envId", statementName).Return(statementObj, nil)
-	client.EXPECT().GetExceptions("orgId", "envId", statementName).Return(exceptionsResponse, nil)
+	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, nil)
+	client.EXPECT().GetExceptions("envId", statementName, "orgId").Return(exceptionsResponse, nil)
 
 	processedStatement, err := store.WaitPendingStatement(context.Background(), types.ProcessedStatement{
 		StatementName: statementName,
@@ -1227,7 +1217,7 @@ func (s *StoreTestSuite) TestGetStatusDetail() {
 		},
 	}
 
-	client.EXPECT().GetExceptions("orgId", "envId", statementName).Return(exceptionsResponse, nil).Times(2)
+	client.EXPECT().GetExceptions("envId", statementName, "orgId").Return(exceptionsResponse, nil).Times(2)
 
 	require.Equal(s.T(), exception1, store.getStatusDetail(statementObj))
 	statementObj.Status.Phase = "FAILING"
@@ -1323,7 +1313,7 @@ func (s *StoreTestSuite) TestGetStatusDetailReturnsEmptyWhenNoExceptionsAvailabl
 		Data: []flinkgatewayv1alpha1.SqlV1alpha1StatementException{},
 	}
 
-	client.EXPECT().GetExceptions("orgId", "envId", statementName).Return(exceptionsResponse, nil)
+	client.EXPECT().GetExceptions("envId", statementName, "orgId").Return(exceptionsResponse, nil)
 
 	require.Equal(s.T(), "", store.getStatusDetail(statementObj))
 }
