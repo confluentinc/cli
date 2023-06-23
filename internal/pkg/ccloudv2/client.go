@@ -2,11 +2,13 @@ package ccloudv2
 
 import (
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
+	billingv1 "github.com/confluentinc/ccloud-sdk-go-v2/billing/v1"
 	byokv1 "github.com/confluentinc/ccloud-sdk-go-v2/byok/v1"
 	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
 	cliv1 "github.com/confluentinc/ccloud-sdk-go-v2/cli/v1"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
+	flinkv2 "github.com/confluentinc/ccloud-sdk-go-v2/flink/v2"
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 	identityproviderv2 "github.com/confluentinc/ccloud-sdk-go-v2/identity-provider/v2"
 	kafkaquotas "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
@@ -30,6 +32,7 @@ type Client struct {
 	CliClient              *cliv1.APIClient
 	CmkClient              *cmkv2.APIClient
 	ConnectClient          *connectv1.APIClient
+	FlinkClient            *flinkv2.APIClient
 	IamClient              *iamv2.APIClient
 	IdentityProviderClient *identityproviderv2.APIClient
 	KsqlClient             *ksql.APIClient
@@ -39,6 +42,7 @@ type Client struct {
 	SchemaRegistryClient   *srcm.APIClient
 	StreamDesignerClient   *streamdesignerv1.APIClient
 	ServiceQuotaClient     *servicequotav1.APIClient
+	BillingClient          *billingv1.APIClient
 }
 
 func NewClient(baseUrl string, isTest bool, authToken, userAgent string, unsafeTrace bool) *Client {
@@ -56,6 +60,7 @@ func NewClient(baseUrl string, isTest bool, authToken, userAgent string, unsafeT
 		CliClient:              newCliClient(url, userAgent, unsafeTrace),
 		CmkClient:              newCmkClient(url, userAgent, unsafeTrace),
 		ConnectClient:          newConnectClient(url, userAgent, unsafeTrace),
+		FlinkClient:            newFlinkClient(url, userAgent, unsafeTrace),
 		IamClient:              newIamClient(url, userAgent, unsafeTrace),
 		IdentityProviderClient: newIdentityProviderClient(url, userAgent, unsafeTrace),
 		KsqlClient:             newKsqlClient(url, userAgent, unsafeTrace),
@@ -65,5 +70,6 @@ func NewClient(baseUrl string, isTest bool, authToken, userAgent string, unsafeT
 		SchemaRegistryClient:   newSchemaRegistryClient(url, userAgent, unsafeTrace),
 		StreamDesignerClient:   newStreamDesignerClient(url, userAgent, unsafeTrace),
 		ServiceQuotaClient:     newServiceQuotaClient(url, userAgent, unsafeTrace),
+		BillingClient:          newBillingClient(url, userAgent, unsafeTrace),
 	}
 }

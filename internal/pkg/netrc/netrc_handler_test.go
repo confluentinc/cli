@@ -7,8 +7,6 @@ import (
 const (
 	netrcFilePath          = "test_files/netrc"
 	netrcInput             = "test_files/netrc-input"
-	outputFileMds          = "test_files/output-mds"
-	outputFileCcloudLogin  = "test_files/output-ccloud-login"
 	inputFileMds           = "test_files/input-mds"
 	inputFileCcloudLogin   = "test_files/input-ccloud-login"
 	mdsContext             = "login-mds-user-http://test"
@@ -154,12 +152,10 @@ func TestGetMatchingNetrcMachineNameFromURL(t *testing.T) {
 			file: netrcFilePath,
 		},
 		{
-			name: "ccloud login no url",
-			want: ccloudDiffURLMachine,
-			params: NetrcMachineParams{
-				IsCloud: true,
-			},
-			file: netrcFilePath,
+			name:   "ccloud login no url",
+			want:   ccloudDiffURLMachine,
+			params: NetrcMachineParams{IsCloud: true},
+			file:   netrcFilePath,
 		},
 		{
 			name: "confluent login with url",
@@ -171,10 +167,8 @@ func TestGetMatchingNetrcMachineNameFromURL(t *testing.T) {
 			file: netrcFilePath,
 		},
 		{
-			name: "No file error",
-			params: NetrcMachineParams{
-				IsCloud: false,
-			},
+			name:    "No file error",
+			params:  NetrcMachineParams{IsCloud: false},
 			wantErr: true,
 			file:    "wrong-file",
 		},

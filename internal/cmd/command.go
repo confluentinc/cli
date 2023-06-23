@@ -15,6 +15,7 @@ import (
 	apikey "github.com/confluentinc/cli/internal/cmd/api-key"
 	"github.com/confluentinc/cli/internal/cmd/asyncapi"
 	auditlog "github.com/confluentinc/cli/internal/cmd/audit-log"
+	"github.com/confluentinc/cli/internal/cmd/billing"
 	byok "github.com/confluentinc/cli/internal/cmd/byok"
 	cloudsignup "github.com/confluentinc/cli/internal/cmd/cloud-signup"
 	"github.com/confluentinc/cli/internal/cmd/cluster"
@@ -22,6 +23,7 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/connect"
 	"github.com/confluentinc/cli/internal/cmd/context"
 	"github.com/confluentinc/cli/internal/cmd/environment"
+	"github.com/confluentinc/cli/internal/cmd/flink"
 	"github.com/confluentinc/cli/internal/cmd/iam"
 	"github.com/confluentinc/cli/internal/cmd/kafka"
 	"github.com/confluentinc/cli/internal/cmd/ksql"
@@ -49,6 +51,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/help"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	ppanic "github.com/confluentinc/cli/internal/pkg/panic-recovery"
 	pplugin "github.com/confluentinc/cli/internal/pkg/plugin"
 	secrets "github.com/confluentinc/cli/internal/pkg/secret"
 	"github.com/confluentinc/cli/internal/pkg/usage"
@@ -102,6 +105,7 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 	cmd.AddCommand(apikey.New(prerunner, nil, flagResolver))
 	cmd.AddCommand(asyncapi.New(prerunner))
 	cmd.AddCommand(auditlog.New(prerunner))
+	cmd.AddCommand(billing.New(prerunner))
 	cmd.AddCommand(byok.New(prerunner))
 	cmd.AddCommand(cluster.New(prerunner, cfg.Version.UserAgent))
 	cmd.AddCommand(cloudsignup.New())
@@ -116,7 +120,7 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 	cmd.AddCommand(login.New(cfg, prerunner, ccloudClientFactory, mdsClientManager, netrcHandler, loginCredentialsManager, loginOrganizationManager, authTokenHandler))
 	cmd.AddCommand(logout.New(cfg, prerunner, netrcHandler))
 	cmd.AddCommand(organization.New(prerunner))
-	cmd.AddCommand(pipeline.New(cfg, prerunner))
+	cmd.AddCommand(pipeline.New(prerunner))
 	cmd.AddCommand(plugin.New(cfg, prerunner))
 	cmd.AddCommand(price.New(prerunner))
 	cmd.AddCommand(prompt.New(cfg))
@@ -128,10 +132,13 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 
 	dc := dynamicconfig.New(cfg, nil, nil)
 	_ = dc.ParseFlagsIntoConfig(cmd)
+
 	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.cdx", dc.Context(), v1.CliLaunchDarklyClient, true, false) {
 		cmd.AddCommand(streamshare.New(cfg, prerunner))
 	}
-
+	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.flink", dc.Context(), v1.CliLaunchDarklyClient, true, false) {
+		cmd.AddCommand(flink.New(cfg, prerunner))
+	}
 	if !cfg.DisableUpdates {
 		cmd.AddCommand(update.New(cfg, prerunner, updateClient))
 	}
@@ -142,6 +149,18 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 }
 
 func Execute(cmd *cobra.Command, args []string, cfg *v1.Config) error {
+	defer func() {
+		if r := recover(); r != nil {
+			if !cfg.Version.IsReleased() {
+				panic(r)
+			}
+			u := ppanic.CollectPanic(cmd, args, cfg)
+			if err := reportUsage(cmd, cfg, u); err != nil {
+				output.ErrPrint(errors.DisplaySuggestionsMessage(err))
+			}
+			cobra.CheckErr(r)
+		}
+	}()
 	if !cfg.DisablePlugins {
 		if plugin := pplugin.FindPlugin(cmd, args, cfg); plugin != nil {
 			return pplugin.ExecPlugin(plugin)
@@ -158,6 +177,14 @@ func Execute(cmd *cobra.Command, args []string, cfg *v1.Config) error {
 	output.ErrPrint(errors.DisplaySuggestionsMessage(err))
 	u.Error = cliv1.PtrBool(err != nil)
 
+	if err := reportUsage(cmd, cfg, u); err != nil {
+		return err
+	}
+
+	return err
+}
+
+func reportUsage(cmd *cobra.Command, cfg *v1.Config, u *usage.Usage) error {
 	if cfg.IsCloudLogin() && u.Command != nil && *(u.Command) != "" {
 		unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
 		if err != nil {
@@ -165,8 +192,7 @@ func Execute(cmd *cobra.Command, args []string, cfg *v1.Config) error {
 		}
 		u.Report(cfg.GetCloudClientV2(unsafeTrace))
 	}
-
-	return err
+	return nil
 }
 
 func getLongDescription(cfg *v1.Config) string {

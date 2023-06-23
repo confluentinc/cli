@@ -17,7 +17,9 @@
       "password": "",
       "api_key_pair": {
         "api_key": "abc-key-123",
-        "api_secret": "def-secret-456"
+        "api_secret": "API_SECRET_PLACEHOLDER",
+        "salt": "c2FsdHBsYWNlaG9sZGVy",
+        "nonce": "bm9uY2VwbGFjZWhvbGRlcg=="
       },
       "credential_type": 1
     },
@@ -29,6 +31,7 @@
       "credential_type": 0
     }
   },
+  "current_context": "my-context",
   "contexts": {
     "my-context": {
       "name": "my-context",
@@ -46,7 +49,9 @@
             "api_keys": {
               "abc-key-123": {
                 "api_key": "abc-key-123",
-                "api_secret": "def-secret-456"
+                "api_secret": "API_SECRET_PLACEHOLDER",
+                "salt": "c2FsdHBsYWNlaG9sZGVy",
+                "nonce": "bm9uY2VwbGFjZWhvbGRlcg=="
               }
             },
             "api_key": "abc-key-123",
@@ -63,7 +68,6 @@
       "auth_refresh_token": ""
     }
   },
-  "current_context": "my-context",
   "saved_credentials": {
     "my-context": {
       "is_cloud": true,

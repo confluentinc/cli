@@ -7,7 +7,7 @@ go mod vendor
 # Build linux/amd64
 docker build . --file ./docker/Dockerfile_linux_amd64 --tag cli-linux-amd64-builder-image
 docker container create --name cli-linux-amd64-builder cli-linux-amd64-builder-image
-docker container cp cli-linux-amd64-builder:/cli/dist/. ./prebuilt/
+docker container cp cli-linux-amd64-builder:/cli/prebuilt/. ./prebuilt/
 docker container rm cli-linux-amd64-builder
 
 # Build linux/arm64
@@ -18,7 +18,7 @@ else
   docker build . --file ./docker/Dockerfile_linux_arm64 --tag cli-linux-arm64-builder-image
 fi
 docker container create --name cli-linux-arm64-builder cli-linux-arm64-builder-image
-docker container cp cli-linux-arm64-builder:/cli/dist/. ./prebuilt/
+docker container cp cli-linux-arm64-builder:/cli/prebuilt/. ./prebuilt/
 docker container rm cli-linux-arm64-builder
 
 rm -rf vendor

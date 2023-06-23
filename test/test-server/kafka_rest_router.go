@@ -1102,7 +1102,7 @@ type partitionOffsets struct {
 func handleKafkaRPLag(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		fmt.Println(vars)
+
 		switch r.Method {
 		case http.MethodGet:
 			if vars["consumer_group_id"] == "consumer-group-1" {

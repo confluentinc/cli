@@ -40,7 +40,6 @@ cli-builder:
 	go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
 	TAGS=$(TAGS) CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) GOEXPERIMENT=boringcrypto goreleaser build --config .goreleaser-build.yml --clean --single-target --snapshot
 
-include ./mk-files/cc-cli-service.mk
 include ./mk-files/semver.mk
 include ./mk-files/docs.mk
 include ./mk-files/dry-run.mk
@@ -87,9 +86,9 @@ cmd/lint/en_US.dic:
 unit-test:
 ifdef CI
 	go install gotest.tools/gotestsum@v1.8.2 && \
-	gotestsum --junitfile unit-test-report.xml -- -v -race -coverprofile coverage.out $$(go list ./... | grep -v test)
+	gotestsum --junitfile unit-test-report.xml -- -v -race -coverprofile coverage.out $$(go list ./... | grep -v github.com/confluentinc/cli/test)
 else
-	go test -v $$(go list ./... | grep -v test) $(UNIT_TEST_ARGS)
+	go test -v $$(go list ./... | grep -v github.com/confluentinc/cli/test) $(UNIT_TEST_ARGS)
 endif
 
 .PHONY: build-for-integration-test
@@ -107,10 +106,10 @@ ifdef CI
 	export GOCOVERDIR=test/coverage && \
 	if [ -d $${GOCOVERDIR} ]; then rm -r $${GOCOVERDIR}; fi && \
 	mkdir $${GOCOVERDIR} && \
-	gotestsum --junitfile integration-test-report.xml -- -v -race $$(go list ./... | grep test) && \
+	gotestsum --junitfile integration-test-report.xml -- -v -race $$(go list ./... | grep github.com/confluentinc/cli/test) && \
 	go tool covdata textfmt -i $${GOCOVERDIR} -o test/coverage.out
 else
-	go test -v $$(go list ./... | grep test) $(INTEGRATION_TEST_ARGS)
+	go test -v $$(go list ./... | grep github.com/confluentinc/cli/test) $(INTEGRATION_TEST_ARGS)
 endif
 
 .PHONY: test

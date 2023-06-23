@@ -41,8 +41,8 @@ func (s *CLITestSuite) TestApiKey() {
 		{args: "api-key list --resource lksqlc-ksql1", fixture: "api-key/15.golden"},
 
 		// create API key for schema registry cluster
-		{args: "api-key create --resource lsrc-1", fixture: "api-key/16.golden"}, // MYKEY7
-		{args: "api-key list --resource lsrc-1", fixture: "api-key/17.golden"},
+		{args: "api-key create --resource lsrc-1234", fixture: "api-key/16.golden"}, // MYKEY7
+		{args: "api-key list --resource lsrc-1234", fixture: "api-key/17.golden"},
 
 		// create cloud API key
 		{args: "api-key create --resource cloud", fixture: "api-key/18.golden"}, // MYKEY8
@@ -120,6 +120,8 @@ func (s *CLITestSuite) TestApiKey() {
 				ctx := cfg.Context()
 				require.NotNil(t, ctx)
 				kcc := ctx.KafkaClusterContext.GetKafkaClusterConfig("lkc-cool1")
+				err = kcc.DecryptAPIKeys()
+				require.NoError(t, err)
 				pair := kcc.APIKeys["UIAPIKEY100"]
 				require.NotNil(t, pair)
 				require.Equal(t, "NEWSECRET", pair.Secret)

@@ -3,7 +3,7 @@ package errors
 const (
 	// api-key command
 	StoredAPIKeyMsg = "Stored API secret for API key \"%s\".\n"
-	UseAPIKeyMsg    = "Set API Key \"%s\" as the active API key for \"%s\".\n"
+	UseAPIKeyMsg    = "Using API Key \"%s\".\n"
 
 	// auth commands
 	LoggedInAsMsg                 = "Logged in as \"%s\".\n"
@@ -17,6 +17,8 @@ const (
 	FoundEnvCredMsg               = "Found credentials for user \"%s\" from environment variables \"%s\" and \"%s\" " +
 		StopNonInteractiveMsg + ".\n"
 	FoundNetrcCredMsg = "Found credentials for user \"%s\" from netrc file \"%s\" " +
+		StopNonInteractiveMsg + ".\n"
+	FoundKeychainCredMsg = "Found credentials for user \"%s\" from keychain " +
 		StopNonInteractiveMsg + ".\n"
 	RemainingFreeCreditMsg = "Free credits: $%.2f USD remaining\n" +
 		"You are currently using a free trial version of Confluent Cloud. Add a payment method with `confluent admin payment update` to avoid an interruption in service once your trial ends.\n"
@@ -56,15 +58,6 @@ const (
 	// ksql commands
 	EndPointNotPopulatedMsg   = "Endpoint not yet populated. To obtain the endpoint, use `confluent ksql cluster describe`."
 	KsqlDBNotBackedByKafkaMsg = "The ksqlDB cluster \"%s\" is backed by \"%s\" which is not the current Kafka cluster \"%s\".\nTo switch to the correct cluster, use `confluent kafka cluster use %s`.\n"
-
-	// local commands
-	AvailableServicesMsg       = "Available Services:\n%s\n"
-	UsingConfluentCurrentMsg   = "Using CONFLUENT_CURRENT: %s\n"
-	AvailableConnectPluginsMsg = "Available Connect Plugins:\n%s\n"
-	StartingServiceMsg         = "Starting %s\n"
-	StoppingServiceMsg         = "Stopping %s\n"
-	ServiceStatusMsg           = "%s is [%s]\n"
-	DestroyDeletingMsg         = "Deleting: %s\n"
 
 	// schema-registry commands
 	UpdatedToLevelCompatibilityMsg      = "Successfully updated Top Level compatibility to \"%s\"\n"
@@ -114,7 +107,8 @@ const (
 	PromptToDownloadDescriptionMsg = "New version of %s is available\n" +
 		"Current Version: %s\n" +
 		"Latest Version:  %s\n" +
-		"%s\n\n\n"
+		"\n" +
+		"%s"
 	InvalidChoiceMsg = "%s is not a valid choice"
 
 	// General
@@ -126,6 +120,7 @@ const (
 	DeleteACLsConfirmMsg          = "Are you sure you want to delete the ACLs corresponding to these parameters?"
 	RequestedDeleteResourceMsg    = "Requested to delete %s \"%s\".\n"
 	UpdatedResourceMsg            = "Updated %s \"%s\".\n"
+	UsingResourceMsg              = "Using %s \"%s\".\n"
 
 	UpdateSuccessMsg = "Updated the %s of %s \"%s\" to \"%s\".\n"
 

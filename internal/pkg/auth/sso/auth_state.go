@@ -30,18 +30,26 @@ var (
 			ssoProviderIdentifier: "https://confluent-dev.auth0.com/api/v2/",
 			ssoProviderScope:      "email%20openid%20offline_access",
 		},
-		"fedramp-internal": {
+		"devel-us-gov": {
+			ssoProviderDomain: "confluent-devel-us-gov.oktapreview.com/oauth2/v1",
+			ssoProviderScope:  "openid+profile+email+offline_access",
+		},
+		"infra-us-gov": {
 			ssoProviderDomain: "confluent-infra-us-gov.oktapreview.com/oauth2/v1",
+			ssoProviderScope:  "openid+profile+email+offline_access",
+		},
+		"prod": {
+			ssoProviderDomain:     "login.confluent.io/oauth",
+			ssoProviderIdentifier: "https://confluent.auth0.com/api/v2/",
+			ssoProviderScope:      "email%20openid%20offline_access",
+		},
+		"prod-us-gov": {
+			ssoProviderDomain: "confluent-prod-us-gov.okta.com/oauth2/v1",
 			ssoProviderScope:  "openid+profile+email+offline_access",
 		},
 		"stag": {
 			ssoProviderDomain:     "login-stag.confluent-dev.io/oauth",
 			ssoProviderIdentifier: "https://confluent-stag.auth0.com/api/v2/",
-			ssoProviderScope:      "email%20openid%20offline_access",
-		},
-		"prod": {
-			ssoProviderDomain:     "login.confluent.io/oauth",
-			ssoProviderIdentifier: "https://confluent.auth0.com/api/v2/",
 			ssoProviderScope:      "email%20openid%20offline_access",
 		},
 		"test": {
@@ -95,8 +103,12 @@ func newState(authURL string, noBrowser bool) (*authState, error) {
 		env = "devel"
 	} else if authURL == "https://stag.cpdev.cloud" {
 		env = "stag"
+	} else if authURL == "https://confluentgov.com" {
+		env = "prod-us-gov"
 	} else if authURL == "https://infra.confluentgov-internal.com" {
-		env = "fedramp-internal"
+		env = "infra-us-gov"
+	} else if authURL == "https://devel.confluentgov-internal.com" {
+		env = "devel-us-gov"
 	} else if authURL == testserver.TestCloudUrl.String() {
 		env = "test"
 	} else {
@@ -115,8 +127,7 @@ func newState(authURL string, noBrowser bool) (*authState, error) {
 		state.SSOProviderCallbackUrl = ssoProviderCallbackLocalURL
 	}
 
-	err := state.generateCodes()
-	if err != nil {
+	if err := state.generateCodes(); err != nil {
 		return nil, err
 	}
 
@@ -127,23 +138,20 @@ func newState(authURL string, noBrowser bool) (*authState, error) {
 func (s *authState) generateCodes() error {
 	randomBytes := make([]byte, 32)
 
-	_, err := rand.Read(randomBytes)
-	if err != nil {
+	if _, err := rand.Read(randomBytes); err != nil {
 		return errors.Wrap(err, errors.GenerateRandomSSOProviderErrorMsg)
 	}
 
 	s.SSOProviderState = base64.RawURLEncoding.EncodeToString(randomBytes)
 
-	_, err = rand.Read(randomBytes)
-	if err != nil {
+	if _, err := rand.Read(randomBytes); err != nil {
 		return errors.Wrap(err, errors.GenerateRandomCodeVerifierErrorMsg)
 	}
 
 	s.CodeVerifier = base64.RawURLEncoding.EncodeToString(randomBytes)
 
 	hasher := sha256.New()
-	_, err = hasher.Write([]byte(s.CodeVerifier))
-	if err != nil {
+	if _, err := hasher.Write([]byte(s.CodeVerifier)); err != nil {
 		return errors.Wrap(err, errors.ComputeHashErrorMsg)
 	}
 	s.CodeChallenge = base64.RawURLEncoding.EncodeToString(hasher.Sum(nil))
@@ -214,8 +222,7 @@ func (s *authState) getOAuthTokenResponse(payload *strings.Reader) (map[string]a
 	defer res.Body.Close()
 	errorResponseBody, _ := io.ReadAll(res.Body)
 	var data map[string]any
-	err = json.Unmarshal(errorResponseBody, &data)
-	if err != nil {
+	if err := json.Unmarshal(errorResponseBody, &data); err != nil {
 		log.CliLogger.Debugf("Failed oauth token response body: %s", errorResponseBody)
 		return nil, errors.Wrap(err, errors.UnmarshalOAuthTokenErrorMsg)
 	}

@@ -19,9 +19,7 @@ type CCloudClientFactoryImpl struct {
 }
 
 func NewCCloudClientFactory(userAgent string) CCloudClientFactory {
-	return &CCloudClientFactoryImpl{
-		UserAgent: userAgent,
-	}
+	return &CCloudClientFactoryImpl{UserAgent: userAgent}
 }
 
 func (c *CCloudClientFactoryImpl) AnonHTTPClientFactory(baseURL string) *ccloudv1.Client {

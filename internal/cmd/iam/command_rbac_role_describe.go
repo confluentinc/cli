@@ -59,13 +59,16 @@ func (c *roleCommand) ccloudDescribe(cmd *cobra.Command, role string) error {
 		namespacesList = append(namespacesList, identityNamespace.Value())
 	}
 
+	if featureflags.Manager.BoolVariation("flink.rbac.namespace.cli.enable", c.Context, ldClient, true, false) {
+		namespacesList = append(namespacesList, flinkNamespace.Value())
+	}
+
 	namespaces := optional.NewString(strings.Join(namespacesList, ","))
 
 	opts := &mdsv2alpha1.RoleDetailOpts{Namespace: namespaces}
 
-	details, r, err := c.MDSv2Client.RBACRoleDefinitionsApi.RoleDetail(c.createContext(), role, opts)
-
-	if err != nil || r.StatusCode == http.StatusNotFound {
+	details, httpResp, err := c.MDSv2Client.RBACRoleDefinitionsApi.RoleDetail(c.createContext(), role, opts)
+	if err != nil || httpResp.StatusCode == http.StatusNotFound {
 		opts := &mdsv2alpha1.RolenamesOpts{Namespace: namespaces}
 		roleNames, _, err := c.MDSv2Client.RBACRoleDefinitionsApi.Rolenames(c.createContext(), opts)
 		if err != nil {
@@ -91,9 +94,9 @@ func (c *roleCommand) ccloudDescribe(cmd *cobra.Command, role string) error {
 }
 
 func (c *roleCommand) confluentDescribe(cmd *cobra.Command, role string) error {
-	details, r, err := c.MDSClient.RBACRoleDefinitionsApi.RoleDetail(c.createContext(), role)
+	details, httpResp, err := c.MDSClient.RBACRoleDefinitionsApi.RoleDetail(c.createContext(), role)
 	if err != nil {
-		if r.StatusCode == http.StatusNoContent {
+		if httpResp.StatusCode == http.StatusNoContent {
 			availableRoleNames, _, err := c.MDSClient.RBACRoleDefinitionsApi.Rolenames(c.createContext())
 			if err != nil {
 				return err

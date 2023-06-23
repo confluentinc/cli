@@ -28,7 +28,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/update"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/confluentinc/cli/internal/pkg/version"
-	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
 // PreRun is a helper class for automatically setting up Cobra PersistentPreRun commands
@@ -55,108 +54,7 @@ type PreRun struct {
 	JWTValidator            JWTValidator
 }
 
-type CLICommand struct {
-	*cobra.Command
-	Config    *dynamicconfig.DynamicConfig
-	Version   *version.Version
-	prerunner PreRunner
-}
-
 type KafkaRESTProvider func() (*KafkaREST, error)
-
-type AuthenticatedCLICommand struct {
-	*CLICommand
-	Client            *ccloudv1.Client
-	V2Client          *ccloudv2.Client
-	MDSClient         *mds.APIClient
-	MDSv2Client       *mdsv2alpha1.APIClient
-	KafkaRESTProvider *KafkaRESTProvider
-	metricsClient     *ccloudv2.MetricsClient
-	Context           *dynamicconfig.DynamicContext
-	State             *v1.ContextState
-}
-
-type HasAPIKeyCLICommand struct {
-	*CLICommand
-}
-
-func NewAuthenticatedCLICommand(cmd *cobra.Command, prerunner PreRunner) *AuthenticatedCLICommand {
-	c := &AuthenticatedCLICommand{CLICommand: NewCLICommand(cmd, prerunner)}
-	cmd.PersistentPreRunE = Chain(prerunner.Authenticated(c), prerunner.ParseFlagsIntoContext(c))
-	c.Command = cmd
-	return c
-}
-
-func NewAuthenticatedWithMDSCLICommand(cmd *cobra.Command, prerunner PreRunner) *AuthenticatedCLICommand {
-	c := &AuthenticatedCLICommand{CLICommand: NewCLICommand(cmd, prerunner)}
-	cmd.PersistentPreRunE = Chain(prerunner.AuthenticatedWithMDS(c), prerunner.ParseFlagsIntoContext(c))
-	c.Command = cmd
-	return c
-}
-
-func NewHasAPIKeyCLICommand(cmd *cobra.Command, prerunner PreRunner) *HasAPIKeyCLICommand {
-	c := &HasAPIKeyCLICommand{CLICommand: NewCLICommand(cmd, prerunner)}
-	cmd.PersistentPreRunE = prerunner.HasAPIKey(c)
-	c.Command = cmd
-	return c
-}
-
-func NewAnonymousCLICommand(cmd *cobra.Command, prerunner PreRunner) *CLICommand {
-	c := NewCLICommand(cmd, prerunner)
-	cmd.PersistentPreRunE = Chain(prerunner.Anonymous(c, false), prerunner.AnonymousParseFlagsIntoContext(c))
-	c.Command = cmd
-	return c
-}
-
-func NewCLICommand(cmd *cobra.Command, prerunner PreRunner) *CLICommand {
-	return &CLICommand{
-		Config:    &dynamicconfig.DynamicConfig{},
-		Command:   cmd,
-		prerunner: prerunner,
-	}
-}
-
-func (c *AuthenticatedCLICommand) GetKafkaREST() (*KafkaREST, error) {
-	return (*c.KafkaRESTProvider)()
-}
-
-func (c *AuthenticatedCLICommand) GetMetricsClient() (*ccloudv2.MetricsClient, error) {
-	ctx := c.Config.Context()
-
-	if c.metricsClient == nil {
-		url := "https://api.telemetry.confluent.cloud"
-		if c.Config.IsTest {
-			url = testserver.TestV2CloudUrl.String()
-		} else if strings.Contains(ctx.GetPlatformServer(), "devel") {
-			url = "https://devel-sandbox-api.telemetry.aws.confluent.cloud"
-		} else if strings.Contains(ctx.GetPlatformServer(), "stag") {
-			url = "https://stag-sandbox-api.telemetry.aws.confluent.cloud"
-		}
-
-		unsafeTrace, err := c.Command.Flags().GetBool("unsafe-trace")
-		if err != nil {
-			return nil, err
-		}
-
-		authToken, err := pauth.GetJwtTokenForV2Client(ctx.GetState(), ctx.GetPlatformServer())
-		if err != nil {
-			return nil, err
-		}
-
-		c.metricsClient = ccloudv2.NewMetricsClient(url, c.Version.UserAgent, unsafeTrace, authToken)
-	}
-
-	return c.metricsClient, nil
-}
-
-func (c *AuthenticatedCLICommand) AuthToken() string {
-	return c.Context.GetAuthToken()
-}
-
-func (h *HasAPIKeyCLICommand) AddCommand(cmd *cobra.Command) {
-	cmd.PersistentPreRunE = h.PersistentPreRunE
-	h.Command.AddCommand(cmd)
-}
 
 // Anonymous provides PreRun operations for commands that may be run without a logged-in user
 func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(*cobra.Command, []string) error {
@@ -166,6 +64,10 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(*cob
 			if err := ErrIfMissingRunRequirement(cmd, r.Config); err != nil {
 				return err
 			}
+		}
+
+		if err := r.Config.DecryptCredentials(); err != nil {
+			return err
 		}
 
 		if err := command.Config.InitDynamicConfig(cmd, r.Config); err != nil {
@@ -200,7 +102,7 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(*cob
 
 		command.Version = r.Version
 		r.notifyIfUpdateAvailable(cmd, command.Version.Version)
-		r.warnIfConfluentLocal(cmd)
+		warnIfConfluentLocal(cmd)
 
 		LabelRequiredFlags(cmd)
 
@@ -455,15 +357,14 @@ func (r *PreRun) setCCloudClient(c *AuthenticatedCLICommand) error {
 				return nil, err
 			}
 
-			bearerToken, err := pauth.GetBearerToken(state, ctx.Platform.Server, lkc)
+			dataplaneToken, err := pauth.GetDataplaneToken(state, ctx.Platform.Server)
 			if err != nil {
 				return nil, err
 			}
-
 			kafkaRest := &KafkaREST{
-				Context:     context.WithValue(context.Background(), kafkarestv3.ContextAccessToken, bearerToken),
-				CloudClient: ccloudv2.NewKafkaRestClient(restEndpoint, r.Version.UserAgent, unsafeTrace, bearerToken),
-				Client:      createKafkaRESTClient(restEndpoint, unsafeTrace),
+				Context:     context.WithValue(context.Background(), kafkarestv3.ContextAccessToken, dataplaneToken),
+				CloudClient: ccloudv2.NewKafkaRestClient(restEndpoint, r.Version.UserAgent, unsafeTrace, dataplaneToken),
+				Client:      CreateKafkaRESTClient(restEndpoint, unsafeTrace),
 			}
 
 			return kafkaRest, nil
@@ -599,8 +500,7 @@ func (r *PreRun) confluentAutoLogin(cmd *cobra.Command, netrcMachineName string)
 		log.CliLogger.Debug("Non-interactive login failed: no credentials")
 		return nil
 	}
-	err = pauth.PersistConfluentLoginToConfig(r.Config, credentials, credentials.PrerunLoginURL, token, credentials.PrerunLoginCaCertPath, false, false)
-	if err != nil {
+	if err := pauth.PersistConfluentLoginToConfig(r.Config, credentials, credentials.PrerunLoginURL, token, credentials.PrerunLoginCaCertPath, false, false); err != nil {
 		return err
 	}
 	log.CliLogger.Debug(errors.AutoLoginMsg)
@@ -984,10 +884,9 @@ func (r *PreRun) shouldCheckForUpdates(cmd *cobra.Command) bool {
 	return true
 }
 
-func (r *PreRun) warnIfConfluentLocal(cmd *cobra.Command) {
-	if strings.HasPrefix(cmd.CommandPath(), "confluent local") {
+func warnIfConfluentLocal(cmd *cobra.Command) {
+	if strings.HasPrefix(cmd.CommandPath(), "confluent local kafka start") {
 		output.ErrPrintln("The local commands are intended for a single-node development environment only, NOT for production usage. See more: https://docs.confluent.io/current/cli/index.html")
-		output.ErrPrintln("As of Confluent Platform 8.0, Java 8 is no longer supported.")
 		output.ErrPrintln()
 	}
 }
@@ -1016,7 +915,7 @@ func (r *PreRun) createMDSv2Client(ctx *dynamicconfig.DynamicContext, ver *versi
 	return mdsv2alpha1.NewAPIClient(mdsv2Config)
 }
 
-func createKafkaRESTClient(kafkaRestURL string, unsafeTrace bool) *kafkarestv3.APIClient {
+func CreateKafkaRESTClient(kafkaRestURL string, unsafeTrace bool) *kafkarestv3.APIClient {
 	cfg := kafkarestv3.NewConfiguration()
 	cfg.HTTPClient = utils.DefaultClient()
 	cfg.Debug = unsafeTrace
