@@ -31,9 +31,10 @@ func CollectPanic(cmd *cobra.Command, args []string, cfg *v1.Config) *usage.Usag
 
 // ParseFlags collects the flags of a command after being found with Find()
 func ParseFlags(cmd *cobra.Command, flags []string) *[]string {
-	var flagsTrimmed, formattedFlags []string
+	var formattedFlags []string
+	flagsTrimmed := make([]string, len(flags))
 	for i := range flags {
-		flagsTrimmed = append(flagsTrimmed, strings.TrimLeft(flags[i], "-"))
+		flagsTrimmed[i] = strings.TrimLeft(flags[i], "-")
 	}
 	cmd.Flags().VisitAll(func(flag *pflag.Flag) {
 		if slices.Contains(flagsTrimmed, flag.Name) || slices.Contains(flagsTrimmed, flag.Shorthand) {
