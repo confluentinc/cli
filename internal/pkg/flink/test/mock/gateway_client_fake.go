@@ -11,7 +11,11 @@ import (
 )
 
 const (
-	staticQuery  = "static;"
+	// Use `static;` to receive an example of results for a COMPLETED statement.
+	// It will return a randomized set of data types and a different number of rows and columns every time you use it.
+	staticQuery = "static;"
+	// Use `dynamic;` to receive an example of results for a RUNNING statement.
+	// It will return an integer counter that is incremented every second.
 	dynamicQuery = "dynamic;"
 )
 
@@ -72,24 +76,6 @@ func (c *FakeFlinkGatewayClient) CreateStatement(statement, computePoolId, ident
 	return c.statement, nil
 }
 
-func (c *FakeFlinkGatewayClient) GetStatementResults(environmentId, statementId, orgId, pageToken string) (flinkgatewayv1alpha1.SqlV1alpha1StatementResult, error) {
-	resultData, nextUrl := c.getFakeResults()
-	return flinkgatewayv1alpha1.SqlV1alpha1StatementResult{
-		ApiVersion: "",
-		Kind:       "",
-		Metadata: flinkgatewayv1alpha1.ResultListMeta{
-			Self:      nil,
-			Next:      &nextUrl,
-			CreatedAt: nil,
-		},
-		Results: &flinkgatewayv1alpha1.SqlV1alpha1StatementResultResults{Data: &resultData},
-	}, nil
-}
-
-func (c *FakeFlinkGatewayClient) GetExceptions(environmentId, statementId, orgId string) (flinkgatewayv1alpha1.SqlV1alpha1StatementExceptionList, error) {
-	return flinkgatewayv1alpha1.SqlV1alpha1StatementExceptionList{}, nil
-}
-
 func (c *FakeFlinkGatewayClient) getFakeResultSchema(statement string) []flinkgatewayv1alpha1.ColumnDetails {
 	switch statement {
 	case staticQuery:
@@ -116,21 +102,35 @@ func (c *FakeFlinkGatewayClient) getDynamicFakeResultSchema() []flinkgatewayv1al
 	}
 }
 
+func (c *FakeFlinkGatewayClient) GetStatementResults(environmentId, statementId, orgId, pageToken string) (flinkgatewayv1alpha1.SqlV1alpha1StatementResult, error) {
+	resultData, nextUrl := c.getFakeResults()
+	return flinkgatewayv1alpha1.SqlV1alpha1StatementResult{
+		ApiVersion: "",
+		Kind:       "",
+		Metadata: flinkgatewayv1alpha1.ResultListMeta{
+			Self:      nil,
+			Next:      &nextUrl,
+			CreatedAt: nil,
+		},
+		Results: &flinkgatewayv1alpha1.SqlV1alpha1StatementResultResults{Data: &resultData},
+	}, nil
+}
+
 func (c *FakeFlinkGatewayClient) getFakeResults() ([]any, string) {
 	switch c.statement.Spec.GetStatement() {
 	case staticQuery:
-		return c.getStaticTableFakeResults()
+		return c.getFakeResultsCompletedTable()
 	case dynamicQuery:
-		return c.getDynamicTableFakeResults()
+		return c.getFakeResultsRunningCounter()
 	}
 	return nil, ""
 }
 
-func (c *FakeFlinkGatewayClient) getStaticTableFakeResults() ([]any, string) {
+func (c *FakeFlinkGatewayClient) getFakeResultsCompletedTable() ([]any, string) {
 	return rapid.SliceOfN(generators.MockResultRow(c.statement.Status.ResultSchema.GetColumns()), 20, 50).Example(), ""
 }
 
-func (c *FakeFlinkGatewayClient) getDynamicTableFakeResults() ([]any, string) {
+func (c *FakeFlinkGatewayClient) getFakeResultsRunningCounter() ([]any, string) {
 	elapsedSeconds := int(time.Since(c.statement.Metadata.GetCreatedAt()).Seconds())
 	if c.fakeCount >= elapsedSeconds {
 		// we are live and there should be no more results
@@ -155,4 +155,8 @@ func (c *FakeFlinkGatewayClient) getDynamicTableFakeResults() ([]any, string) {
 	c.fakeCount++
 
 	return results, fmt.Sprintf("https://devel.cpdev.cloud/some/results?page_token=%s", "not-empty")
+}
+
+func (c *FakeFlinkGatewayClient) GetExceptions(environmentId, statementId, orgId string) (flinkgatewayv1alpha1.SqlV1alpha1StatementExceptionList, error) {
+	return flinkgatewayv1alpha1.SqlV1alpha1StatementExceptionList{}, nil
 }
