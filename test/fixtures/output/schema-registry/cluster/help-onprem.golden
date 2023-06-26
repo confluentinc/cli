@@ -1,9 +1,14 @@
 Manage Schema Registry clusters.
 
 Usage:
-  confluent schema-registry cluster [flags]
+  confluent schema-registry cluster [command]
+
+Available Commands:
+  list        List registered Schema Registry clusters.
 
 Global Flags:
   -h, --help            Show help for this command.
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent schema-registry cluster [command] --help" for more information about a command.

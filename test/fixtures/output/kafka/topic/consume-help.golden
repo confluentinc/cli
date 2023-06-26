@@ -11,7 +11,7 @@ Consume items from the "my_topic" topic and press "Ctrl-C" to exit.
   $ confluent kafka topic consume -b my_topic
 
 Flags:
-      --group string                        Consumer group ID. (default "confluent_cli_consumer_f51c6cb0-034d-4620-9d8a-0d428ae192c6")
+      --group string                        Consumer group ID. (default "confluent_cli_consumer_88bf5c72-fc9a-41d7-ac96-bdac9980070d")
   -b, --from-beginning                      Consume from beginning of the topic.
       --offset int                          The offset from the beginning to consume from.
       --partition int32                     The partition to consume from. (default -1)

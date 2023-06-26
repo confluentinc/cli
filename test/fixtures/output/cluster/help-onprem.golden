@@ -1,9 +1,17 @@
 Retrieve metadata about Confluent Platform clusters.
 
 Usage:
-  confluent cluster [flags]
+  confluent cluster [command]
+
+Available Commands:
+  describe    Describe a Kafka cluster.
+  list        List registered clusters.
+  register    Register cluster.
+  unregister  Unregister cluster.
 
 Global Flags:
   -h, --help            Show help for this command.
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent cluster [command] --help" for more information about a command.

@@ -1,4 +1,4 @@
-Log out of Confluent Cloud or Confluent Platform.
+Log out of Confluent Platform.
 
 Usage:
   confluent logout [flags]

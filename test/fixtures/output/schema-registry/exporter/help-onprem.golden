@@ -1,9 +1,23 @@
 Manage Schema Registry exporters.
 
 Usage:
-  confluent schema-registry exporter [flags]
+  confluent schema-registry exporter [command]
+
+Available Commands:
+  create      Create a new schema exporter.
+  delete      Delete schema exporter.
+  describe    Describe the schema exporter.
+  get-config  Get the configurations of the schema exporter.
+  get-status  Get the status of the schema exporter.
+  list        List all schema exporters.
+  pause       Pause schema exporter.
+  reset       Reset schema exporter.
+  resume      Resume schema exporter.
+  update      Update configs or information of schema exporter.
 
 Global Flags:
   -h, --help            Show help for this command.
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent schema-registry exporter [command] --help" for more information about a command.

@@ -5,6 +5,11 @@ Usage:
 
 Available Commands:
   acl            Manage Kafka ACLs.
+  broker         Manage Kafka brokers.
+  cluster        Manage Kafka clusters.
+  link           Manage inter-cluster links.
+  partition      Manage Kafka partitions.
+  replica        Manage Kafka replicas.
   topic          Manage Kafka topics.
 
 Global Flags:

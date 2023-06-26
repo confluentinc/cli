@@ -1,9 +1,18 @@
 Manage Kafka brokers.
 
 Usage:
-  confluent kafka broker [flags]
+  confluent kafka broker [command]
+
+Available Commands:
+  delete      Delete a Kafka broker.
+  describe    Describe a Kafka broker.
+  get-tasks   List broker tasks.
+  list        List Kafka brokers.
+  update      Update Kafka broker configurations.
 
 Global Flags:
   -h, --help            Show help for this command.
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent kafka broker [command] --help" for more information about a command.

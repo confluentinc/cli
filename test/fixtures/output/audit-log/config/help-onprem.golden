@@ -1,9 +1,17 @@
 Manage the audit log defaults and routing rules that determine which auditable events are logged, and where.
 
 Usage:
-  confluent audit-log config [flags]
+  confluent audit-log config [command]
+
+Available Commands:
+  describe    Prints the audit log configuration spec object.
+  edit        Edit the audit-log config spec interactively.
+  migrate     Migrate legacy audit log configurations.
+  update      Submits audit-log config spec object to the API.
 
 Global Flags:
   -h, --help            Show help for this command.
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent audit-log config [command] --help" for more information about a command.
