@@ -23,20 +23,20 @@ func CollectPanic(cmd *cobra.Command, args []string, cfg *v1.Config) *usage.Usag
 		Arch:        cliv1.PtrString(runtime.GOARCH),
 		Version:     cliv1.PtrString(cfg.Version.Version),
 		Command:     cliv1.PtrString(fullCommand.CommandPath()),
-		Flags:       parseFlags(fullCommand, flags),
+		Flags:       ParseFlags(fullCommand, flags),
 		Error:       cliv1.PtrBool(true),
 		StackFrames: parseStack(string(debug.Stack())),
 	}
 }
 
-// parseFlags collects the flags alongside the panicking command
-func parseFlags(cmd *cobra.Command, flags []string) *[]string {
-	var formattedFlags []string
+// ParseFlags collects the flags of a command after being found with Find()
+func ParseFlags(cmd *cobra.Command, flags []string) *[]string {
+	var flagsTrimmed, formattedFlags []string
 	for i := range flags {
-		flags[i] = strings.TrimLeft(flags[i], "-")
+		flagsTrimmed = append(flagsTrimmed, strings.TrimLeft(flags[i], "-"))
 	}
 	cmd.Flags().VisitAll(func(flag *pflag.Flag) {
-		if slices.Contains(flags, flag.Name) || slices.Contains(flags, flag.Shorthand) {
+		if slices.Contains(flagsTrimmed, flag.Name) || slices.Contains(flagsTrimmed, flag.Shorthand) {
 			formattedFlags = append(formattedFlags, flag.Name)
 		}
 	})
