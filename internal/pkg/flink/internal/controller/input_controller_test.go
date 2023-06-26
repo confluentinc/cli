@@ -69,11 +69,11 @@ func (s *InputControllerTestSuite) runAndCaptureSTDOUT(test func()) string {
 	return <-output
 }
 
-func (s *InputControllerTestSuite) runMainLoop(inputController types.InputControllerInterface, stopAfterLoopFinishes bool) string {
+func (s *InputControllerTestSuite) runMainLoop(inputController *InputController, stopAfterLoopFinishes bool) string {
 	if stopAfterLoopFinishes {
 		// this makes the loop stop after one iteration
 		s.mockPrompt.EXPECT().Input().Return("")
-		s.mockAppController.EXPECT().ExitApplication()
+		s.mockAppController.EXPECT().ExitApplication().Do(func() { inputController.shouldExit = true })
 	}
 
 	output := s.runAndCaptureSTDOUT(inputController.RunInteractiveInput)
@@ -97,15 +97,15 @@ func (s *InputControllerTestSuite) getStdoutTable(statementResults types.Stateme
 }
 
 func (s *InputControllerTestSuite) TestRenderError() {
-	inputController := &InputController{appController: s.mockAppController}
-	err := &types.StatementError{HttpResponseCode: http.StatusUnauthorized}
+	inputController := InputController{appController: s.mockAppController}
+	err := types.StatementError{HttpResponseCode: http.StatusUnauthorized}
 
 	// Test unauthorized error
 	result := inputController.isSessionValid(err)
 	require.False(s.T(), result)
 
 	// Test other error
-	err = &types.StatementError{Message: "something went wrong."}
+	err = types.StatementError{Message: "something went wrong."}
 	result = inputController.isSessionValid(err)
 	require.True(s.T(), result)
 }
@@ -193,22 +193,17 @@ func (s *InputControllerTestSuite) TestShouldUseTView() {
 func (s *InputControllerTestSuite) TestRenderMsgAndStatusLocalStatements() {
 	tests := []struct {
 		name      string
-		statement *types.ProcessedStatement
+		statement types.ProcessedStatement
 		want      string
 	}{
 		{
-			name:      "nil",
-			statement: nil,
-			want:      "",
-		},
-		{
 			name:      "local failed statement",
-			statement: &types.ProcessedStatement{IsLocalStatement: true, Status: types.FAILED},
+			statement: types.ProcessedStatement{IsLocalStatement: true, Status: types.FAILED},
 			want:      "Error: couldn't process statement, please check your statement and try again\n",
 		},
 		{
 			name:      "local non-failed statement",
-			statement: &types.ProcessedStatement{IsLocalStatement: true, Status: types.RUNNING},
+			statement: types.ProcessedStatement{IsLocalStatement: true, Status: types.RUNNING},
 			want:      "Statement successfully submitted.\n",
 		},
 	}
@@ -225,32 +220,27 @@ func (s *InputControllerTestSuite) TestRenderMsgAndStatusLocalStatements() {
 func (s *InputControllerTestSuite) TestRenderMsgAndStatusNonLocalFailedStatements() {
 	tests := []struct {
 		name      string
-		statement *types.ProcessedStatement
+		statement types.ProcessedStatement
 		want      string
 	}{
 		{
-			name:      "nil",
-			statement: nil,
-			want:      "",
-		},
-		{
 			name:      "statement with name",
-			statement: &types.ProcessedStatement{StatementName: "test-statement", Status: types.FAILED},
+			statement: types.ProcessedStatement{StatementName: "test-statement", Status: types.FAILED},
 			want:      "Statement name: test-statement\nError: statement submission failed\n",
 		},
 		{
 			name:      "statement with name and status detail",
-			statement: &types.ProcessedStatement{StatementName: "test-statement", Status: types.FAILED, StatusDetail: "status-detail"},
+			statement: types.ProcessedStatement{StatementName: "test-statement", Status: types.FAILED, StatusDetail: "status-detail"},
 			want:      "Statement name: test-statement\nError: statement submission failed\nstatus-detail.\n",
 		},
 		{
 			name:      "statement without name",
-			statement: &types.ProcessedStatement{Status: types.FAILED},
+			statement: types.ProcessedStatement{Status: types.FAILED},
 			want:      "Error: statement submission failed\n",
 		},
 		{
 			name:      "statement without name but with status detail",
-			statement: &types.ProcessedStatement{Status: types.FAILED, StatusDetail: "status-detail"},
+			statement: types.ProcessedStatement{Status: types.FAILED, StatusDetail: "status-detail"},
 			want:      "Error: statement submission failed\nstatus-detail.\n",
 		},
 	}
@@ -267,32 +257,27 @@ func (s *InputControllerTestSuite) TestRenderMsgAndStatusNonLocalFailedStatement
 func (s *InputControllerTestSuite) TestRenderMsgAndStatusNonLocalNonFailedStatements() {
 	tests := []struct {
 		name      string
-		statement *types.ProcessedStatement
+		statement types.ProcessedStatement
 		want      string
 	}{
 		{
-			name:      "nil",
-			statement: nil,
-			want:      "",
-		},
-		{
 			name:      "statement with name",
-			statement: &types.ProcessedStatement{StatementName: "test-statement", Status: types.RUNNING},
+			statement: types.ProcessedStatement{StatementName: "test-statement", Status: types.RUNNING},
 			want:      "Statement name: test-statement\nStatement successfully submitted.\nFetching results...\n",
 		},
 		{
 			name:      "statement with name and status detail",
-			statement: &types.ProcessedStatement{StatementName: "test-statement", Status: types.RUNNING, StatusDetail: "status-detail"},
+			statement: types.ProcessedStatement{StatementName: "test-statement", Status: types.RUNNING, StatusDetail: "status-detail"},
 			want:      "Statement name: test-statement\nStatement successfully submitted.\nFetching results...\nstatus-detail.\n",
 		},
 		{
 			name:      "statement without name",
-			statement: &types.ProcessedStatement{Status: types.RUNNING},
+			statement: types.ProcessedStatement{Status: types.RUNNING},
 			want:      "Statement successfully submitted.\nFetching results...\n",
 		},
 		{
 			name:      "statement without name but with status detail",
-			statement: &types.ProcessedStatement{Status: types.RUNNING, StatusDetail: "status-detail"},
+			statement: types.ProcessedStatement{Status: types.RUNNING, StatusDetail: "status-detail"},
 			want:      "Statement successfully submitted.\nFetching results...\nstatus-detail.\n",
 		},
 	}
@@ -312,10 +297,13 @@ func (s *InputControllerTestSuite) TestRunInteractiveInputExitsWhenEmptyPromptRe
 		appController: s.mockAppController,
 		prompt:        s.mockPrompt,
 		shouldExit:    false,
+		authenticated: func() error {
+			return nil
+		},
 	}
 
 	s.mockPrompt.EXPECT().Input().Return("")
-	s.mockAppController.EXPECT().ExitApplication()
+	s.mockAppController.EXPECT().ExitApplication().Do(func() { inputController.shouldExit = true })
 
 	// When
 	actual := s.runMainLoop(inputController, false)
@@ -329,11 +317,11 @@ func (s *InputControllerTestSuite) TestRunInteractiveInputExitsWhenShouldExitTru
 	inputController := &InputController{
 		appController: s.mockAppController,
 		prompt:        s.mockPrompt,
-		shouldExit:    true,
+		authenticated: func() error {
+			return nil
+		},
+		shouldExit: true,
 	}
-
-	s.mockPrompt.EXPECT().Input().Return("select 1;")
-	s.mockAppController.EXPECT().ExitApplication()
 
 	// When
 	actual := s.runMainLoop(inputController, false)
@@ -352,7 +340,6 @@ func (s *InputControllerTestSuite) TestRunInteractiveInputExitsWhenNotAuthentica
 		},
 	}
 
-	s.mockPrompt.EXPECT().Input().Return("select 1;")
 	s.mockAppController.EXPECT().ExitApplication()
 
 	// When
@@ -433,7 +420,7 @@ func (s *InputControllerTestSuite) TestRunInteractiveInputExitsOn401FromProcessS
 	statementError := &types.StatementError{Message: "error", HttpResponseCode: 401}
 	s.mockPrompt.EXPECT().Input().Return(input)
 	s.mockStore.EXPECT().ProcessStatement(input).Return(nil, statementError)
-	s.mockAppController.EXPECT().ExitApplication()
+	s.mockAppController.EXPECT().ExitApplication().Do(func() { inputController.shouldExit = true })
 
 	// When
 	actual := s.runMainLoop(inputController, false)
@@ -559,7 +546,7 @@ func (s *InputControllerTestSuite) TestRunInteractiveInputExitsOn401FromWaitPend
 	s.mockStore.EXPECT().ProcessStatement(input).Return(&statement, nil)
 	s.mockConsoleParser.EXPECT().Read().Return(nil, nil).AnyTimes()
 	s.mockStore.EXPECT().WaitPendingStatement(gomock.Any(), statement).Return(nil, statementError)
-	s.mockAppController.EXPECT().ExitApplication()
+	s.mockAppController.EXPECT().ExitApplication().Do(func() { inputController.shouldExit = true })
 
 	// When
 	actual := s.runMainLoop(inputController, false)

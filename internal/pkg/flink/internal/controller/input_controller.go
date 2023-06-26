@@ -54,111 +54,125 @@ func shouldUseTView(statement types.ProcessedStatement) bool {
 	return len(statement.StatementResults.GetHeaders()) > 1 && len(statement.StatementResults.GetRows()) > 1
 }
 
-type ResultsFetchState string
-
-const (
-	PENDING   ResultsFetchState = "PENDING"
-	STARTED   ResultsFetchState = "STARTED"
-	CANCELLED ResultsFetchState = "CANCELLED"
-	COMPLETED ResultsFetchState = "COMPLETED"
-)
-
-// Actions
 // This is the main function/loop for the app
 func (c *InputController) RunInteractiveInput() {
-	// We check for statement result and rows so we don't leave GoPrompt in case of errors
-	for {
-		// if the initial buffer is not empty, we insert the text an reset the InitialBuffer
-		if c.InitialBuffer != "" {
-			c.prompt.Buffer().InsertText(c.InitialBuffer, false, true)
-			c.InitialBuffer = ""
-		}
-
-		// Run interactive input and take over terminal
-		input := c.prompt.Input()
-
-		// If the user presses CtrlD then go prompt returns an empty input
-		// The custom CtrlD keybind we have is only triggered if there's something in the buffer
-		// due go-prompt always exiting on CtrlD. By modifying go-prompt we could also fix this
-		// When reverse search is enabled go-prompt also returns empty input though, which is why we need
-		// to check that it is disabled before we decide to exit.
-		if c.shouldExit || (input == "" && !c.reverseISearchEnabled) {
-			c.appController.ExitApplication()
-			return
-		}
-
-		// Upon receiving user input, we check if user is authenticated and possibly a refresh the CCloud SSO token
-		if authErr := c.authenticated(); authErr != nil {
-			outputErrf("Error: %v\n", authErr)
-			c.appController.ExitApplication()
-			return
-		}
-
-		if c.reverseISearchEnabled {
-			searchResult := c.reverseISearch.ReverseISearch(c.History.Data)
-			c.reverseISearchEnabled = false
-			c.InitialBuffer = searchResult
+	for c.shouldRunMainLoop() {
+		userInput := c.getUserInput()
+		if c.isSpecialInput(userInput) {
 			continue
 		}
+		c.History.Append([]string{userInput})
 
-		processedStatement, err := c.store.ProcessStatement(input)
-		c.History.Append([]string{input})
-
-		renderMsgAndStatus(processedStatement)
+		executedStatement, err := c.executeStatement(userInput)
 		if err != nil {
-			outputErr(err.Error())
-			if !c.isSessionValid(err) {
-				c.appController.ExitApplication()
-				return
-			}
 			continue
 		}
 
-		// Wait for results to be there or for the user to cancel the query
-		ctx, cancelWaitPendingStatement := context.WithCancel(context.Background())
-
-		statementName := processedStatement.StatementName
-		cancelListenToUserInput := c.listenToUserInput(c.consoleParser, func() {
-			go c.store.DeleteStatement(statementName)
-			cancelWaitPendingStatement()
-		})
-
-		processedStatement, err = c.store.WaitPendingStatement(ctx, *processedStatement)
-		if err != nil {
-			cancelListenToUserInput()
-			outputErr(err.Error())
-			if !c.isSessionValid(err) {
-				c.appController.ExitApplication()
-				return
-			}
-			continue
-		}
-		processedStatement.PrintStatusDetail()
-
-		processedStatement, err = c.store.FetchStatementResults(*processedStatement)
-		cancelListenToUserInput()
-		if err != nil {
-			outputErr(err.Error())
-			continue
-		}
-
-		// decide if we want to display results using TView or just a plain table
-		if shouldUseTView(*processedStatement) {
-			c.table.Init(*processedStatement)
+		if c.handleStatementResults(executedStatement) {
 			return
-		}
-
-		c.printResultToSTDOUT(processedStatement.StatementResults)
-		// This was used to delete statements after their execution to save system resources, which should not be
-		// an issue anymore. We don't want to remove it completely just yet, but will disable it by default for now.
-		// TODO: remove this completely once we are sure we won't need it in the future
-		if config.ShouldCleanupStatements && !processedStatement.IsLocalStatement && processedStatement.Status != types.RUNNING {
-			go c.store.DeleteStatement(processedStatement.StatementName)
 		}
 	}
 }
 
-func (c *InputController) listenToUserInput(in prompt.ConsoleParser, cancelFunc context.CancelFunc) context.CancelFunc {
+func (c *InputController) shouldRunMainLoop() bool {
+	if authErr := c.authenticated(); authErr != nil {
+		outputErrf("Error: %v\n", authErr)
+		c.appController.ExitApplication()
+		return false
+	}
+	return !c.shouldExit
+}
+
+func (c *InputController) getUserInput() string {
+	// if the initial buffer is not empty, we insert the text and reset the InitialBuffer
+	if c.InitialBuffer != "" {
+		c.prompt.Buffer().InsertText(c.InitialBuffer, false, true)
+		c.InitialBuffer = ""
+	}
+	return c.prompt.Input()
+}
+
+func (c *InputController) isSpecialInput(userInput string) bool {
+	if c.reverseISearchEnabled {
+		searchResult := c.reverseISearch.ReverseISearch(c.History.Data)
+		c.reverseISearchEnabled = false
+		c.InitialBuffer = searchResult
+		return true
+	}
+
+	if c.shouldExit || userInput == "" {
+		c.appController.ExitApplication()
+		return true
+	}
+
+	return false
+}
+
+func (c *InputController) executeStatement(statementToExecute string) (*types.ProcessedStatement, *types.StatementError) {
+	processedStatement, err := c.store.ProcessStatement(statementToExecute)
+	if err != nil {
+		c.handleStatementError(*err)
+		return nil, err
+	}
+	renderMsgAndStatus(*processedStatement)
+
+	processedStatement, err = c.waitForStatementToBeReadyOrError(*processedStatement)
+	if err != nil {
+		c.handleStatementError(*err)
+		return nil, err
+	}
+	processedStatement.PrintStatusDetail()
+
+	processedStatement, err = c.store.FetchStatementResults(*processedStatement)
+	if err != nil {
+		c.handleStatementError(*err)
+		return nil, err
+	}
+
+	return processedStatement, nil
+}
+
+func (c *InputController) handleStatementError(err types.StatementError) {
+	outputErr(err.Error())
+	if !c.isSessionValid(err) {
+		c.appController.ExitApplication()
+	}
+}
+
+func (c *InputController) waitForStatementToBeReadyOrError(processedStatement types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError) {
+	ctx, cancelWaitPendingStatement := context.WithCancel(context.Background())
+	statementName := processedStatement.StatementName
+	cancelListenForUserCancelEvent := c.listenForUserCancelEvent(c.consoleParser, func() {
+		go c.store.DeleteStatement(statementName)
+		cancelWaitPendingStatement()
+	})
+	defer cancelListenForUserCancelEvent()
+
+	readyStatement, err := c.store.WaitPendingStatement(ctx, processedStatement)
+	if err != nil {
+		return nil, err
+	}
+	return readyStatement, nil
+}
+
+func (c *InputController) handleStatementResults(processedStatement *types.ProcessedStatement) bool {
+	// decide if we want to display results using TView or just a plain table
+	if shouldUseTView(*processedStatement) {
+		c.table.Init(*processedStatement)
+		return true
+	}
+
+	c.printResultToSTDOUT(processedStatement.StatementResults)
+	// This was used to delete statements after their execution to save system resources, which should not be
+	// an issue anymore. We don't want to remove it completely just yet, but will disable it by default for now.
+	// TODO: remove this completely once we are sure we won't need it in the future
+	if config.ShouldCleanupStatements && !processedStatement.IsLocalStatement && processedStatement.Status != types.RUNNING {
+		go c.store.DeleteStatement(processedStatement.StatementName)
+	}
+	return false
+}
+
+func (c *InputController) listenForUserCancelEvent(in prompt.ConsoleParser, cancelFunc context.CancelFunc) context.CancelFunc {
 	ctx, cancelListenToUserInput := context.WithCancel(context.Background())
 	go func() {
 		for {
@@ -189,19 +203,15 @@ func (c *InputController) listenToUserInput(in prompt.ConsoleParser, cancelFunc 
 	return cancelListenToUserInput
 }
 
-func (c *InputController) isSessionValid(err *types.StatementError) bool {
+func (c *InputController) isSessionValid(err types.StatementError) bool {
 	// exit application if user needs to authenticate again
-	if err != nil && err.HttpResponseCode == http.StatusUnauthorized {
+	if err.HttpResponseCode == http.StatusUnauthorized {
 		return false
 	}
 	return true
 }
 
-func renderMsgAndStatus(processedStatement *types.ProcessedStatement) {
-	if processedStatement == nil {
-		return
-	}
-
+func renderMsgAndStatus(processedStatement types.ProcessedStatement) {
 	if processedStatement.IsLocalStatement {
 		if processedStatement.Status == "FAILED" {
 			err := types.StatementError{Message: "couldn't process statement, please check your statement and try again"}
