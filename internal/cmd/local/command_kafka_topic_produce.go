@@ -72,6 +72,7 @@ func (c *command) kafkaTopicProduce(cmd *cobra.Command, args []string) error {
 	}
 
 	output.ErrPrintln(errors.StartingProducerMsg)
+	output.ErrPrintln("Type a message and press ENTER to produce to the topic.")
 
 	var scanErr error
 	input, scan := kafka.PrepareInputChannel(&scanErr)
