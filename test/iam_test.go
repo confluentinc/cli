@@ -52,6 +52,7 @@ func (s *CLITestSuite) TestIAMRBACRoleBindingCRUDCloud() {
 	tests := []CLITest{
 		{args: "iam rbac role-binding create --help", fixture: "iam/rbac/role-binding/create-help-cloud.golden"},
 		{args: "iam rbac role-binding create --principal User:sa-12345 --role DeveloperRead --resource Topic:payroll --kafka-cluster lkc-1111aaa --current-environment --cloud-cluster lkc-1111aaa", fixture: "iam/rbac/role-binding/create-service-account-developer-read.golden"},
+		{args: "iam rbac role-binding create --principal User:pool-12345 --role DeveloperRead --resource Topic:payroll --kafka-cluster lkc-1111aaa --current-environment --cloud-cluster lkc-1111aaa", fixture: "iam/rbac/role-binding/create-identity-pool-developer-read.golden"},
 		{args: "iam rbac role-binding create --principal User:u-11aaa --role CloudClusterAdmin --current-environment --cloud-cluster lkc-1111aaa"},
 		{args: "iam rbac role-binding create --principal User:u-11aaa --role CloudClusterAdmin --environment a-595 --cloud-cluster lkc-1111aaa"},
 		{args: "iam rbac role-binding create --principal User:u-11aaa --role CloudClusterAdmin", fixture: "iam/rbac/role-binding/missing-cloud-cluster-cloud.golden", exitCode: 1},
