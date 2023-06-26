@@ -58,11 +58,11 @@ type featureFlagManager interface {
 type launchDarklyManager struct {
 	cliClient                *sling.Sling
 	ccloudClient             func(v1.LaunchDarklyClient) *sling.Sling
+	command                  *cobra.Command
+	flags                    []string
 	isDisabled               bool
 	timeoutSuggestionPrinted bool
 	version                  *version.Version
-	command                  *cobra.Command
-	flags                    []string
 }
 
 func Init(version *version.Version, isTest, isDisabledConfig bool) {
@@ -101,8 +101,8 @@ func Init(version *version.Version, isTest, isDisabledConfig bool) {
 }
 
 func (ld *launchDarklyManager) SetCommandAndFlags(cmd *cobra.Command, args []string) {
-	fullCmd, a, _ := cmd.Find(args)
-	flags := ppanic.ParseFlags(fullCmd, a)
+	fullCmd, flagsAndArgs, _ := cmd.Find(args)
+	flags := ppanic.ParseFlags(fullCmd, flagsAndArgs)
 	ld.command = fullCmd
 	ld.flags = *flags
 }
