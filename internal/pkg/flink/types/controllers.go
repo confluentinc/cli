@@ -3,8 +3,6 @@ package types
 import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-
-	"github.com/confluentinc/go-prompt"
 )
 
 type OutputMode string
@@ -26,9 +24,9 @@ type ApplicationControllerInterface interface {
 }
 
 type InputControllerInterface interface {
-	RunInteractiveInput()
-	Prompt() prompt.IPrompt
-	GetMaxCol() (int, error)
+	GetUserInput() string
+	IsSpecialInput(string) bool
+	GetWindowWidth() int
 }
 
 type TableControllerInterface interface {
@@ -52,4 +50,12 @@ type FetchControllerInterface interface {
 	Init(statement ProcessedStatement)
 	Close()
 	SetAutoRefreshCallback(func())
+}
+
+type StatementControllerInterface interface {
+	ExecuteStatement(statementToExecute string) (*ProcessedStatement, *StatementError)
+}
+
+type OutputControllerInterface interface {
+	HandleStatementResults(processedStatement ProcessedStatement, windowSize int) bool
 }

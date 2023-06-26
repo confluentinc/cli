@@ -13,11 +13,6 @@ import (
 
 type TableMode string
 
-var (
-	PlaintextTable   TableMode = "plaintext"
-	InteractiveTable TableMode = "interactive"
-)
-
 type ApplicationController struct {
 	app              *tview.Application
 	outputMode       types.OutputMode
