@@ -18,17 +18,15 @@ import (
 
 type DynamicContext struct {
 	*v1.Context
-	Client   *ccloudv1.Client
 	V2Client *ccloudv2.Client
 }
 
-func NewDynamicContext(context *v1.Context, client *ccloudv1.Client, v2Client *ccloudv2.Client) *DynamicContext {
+func NewDynamicContext(context *v1.Context, v2Client *ccloudv2.Client) *DynamicContext {
 	if context == nil {
 		return nil
 	}
 	return &DynamicContext{
 		Context:  context,
-		Client:   client,
 		V2Client: v2Client,
 	}
 }

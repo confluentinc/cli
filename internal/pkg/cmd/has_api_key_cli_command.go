@@ -7,9 +7,8 @@ type HasAPIKeyCLICommand struct {
 }
 
 func NewHasAPIKeyCLICommand(cmd *cobra.Command, prerunner PreRunner) *HasAPIKeyCLICommand {
-	c := &HasAPIKeyCLICommand{CLICommand: NewCLICommand(cmd, prerunner)}
+	c := &HasAPIKeyCLICommand{CLICommand: NewCLICommand(cmd)}
 	cmd.PersistentPreRunE = prerunner.HasAPIKey(c)
-	c.Command = cmd
 	return c
 }
 
