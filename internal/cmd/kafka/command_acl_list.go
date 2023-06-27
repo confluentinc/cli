@@ -46,8 +46,6 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 		return acl[0].errors
 	}
 
-	resourceIdMap := c.mapUserIdToResourceId(users)
-
 	kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
@@ -67,5 +65,5 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
-	return aclutil.PrintACLsFromKafkaRestResponseWithResourceIdMap(cmd, aclDataList.Data, resourceIdMap)
+	return aclutil.PrintACLsFromKafkaRestResponseWithResourceIdMap(cmd, aclDataList.Data, mapNumericIdToResourceId(users))
 }

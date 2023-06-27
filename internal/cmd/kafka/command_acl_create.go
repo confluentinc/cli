@@ -60,8 +60,6 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	resourceIdMap := c.mapUserIdToResourceId(users)
-
 	bindings := make([]*ccstructs.ACLBinding, len(acls))
 	for i, acl := range acls {
 		validateAddAndDelete(acl)
@@ -85,15 +83,17 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	numericIdToResourceId := mapNumericIdToResourceId(users)
+
 	for i, binding := range bindings {
 		data := pacl.GetCreateAclRequestData(binding)
 		if httpResp, err := kafkaREST.CloudClient.CreateKafkaAcls(kafkaClusterConfig.ID, data); err != nil {
 			if i > 0 {
-				_ = pacl.PrintACLsWithResourceIdMap(cmd, bindings[:i], resourceIdMap)
+				_ = pacl.PrintACLsWithResourceIdMap(cmd, bindings[:i], numericIdToResourceId)
 			}
 			return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 		}
 	}
 
-	return pacl.PrintACLsWithResourceIdMap(cmd, bindings, resourceIdMap)
+	return pacl.PrintACLsWithResourceIdMap(cmd, bindings, numericIdToResourceId)
 }
