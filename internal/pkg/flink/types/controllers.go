@@ -36,3 +36,20 @@ type TableControllerInterface interface {
 	Init(statement ProcessedStatement)
 	SetRunInteractiveInputCallback(func())
 }
+
+type FetchControllerInterface interface {
+	GetFetchState() FetchState
+	IsTableMode() bool
+	ToggleTableMode()
+	ToggleAutoRefresh()
+	IsAutoRefreshRunning() bool
+	FetchNextPage()
+	JumpToLastPage()
+	GetHeaders() []string
+	GetMaxWidthPerColumn() []int
+	GetResultsIterator(bool) MaterializedStatementResultsIterator
+	ForEach(func(rowIdx int, row *StatementResultRow))
+	Init(statement ProcessedStatement)
+	Close()
+	SetAutoRefreshCallback(func())
+}
