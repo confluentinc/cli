@@ -1,0 +1,21 @@
+Manage Apache Kafka.
+
+Usage:
+  confluent kafka [command]
+
+Available Commands:
+  acl            Manage Kafka ACLs.
+  client-config  Manage Kafka Clients configuration files.
+  cluster        Manage Kafka clusters.
+  link           Manage inter-cluster links.
+  mirror         Manage cluster linking mirror topics.
+  quota          Manage Kafka client quotas.
+  region         Manage Confluent Cloud regions.
+  topic          Manage Kafka topics.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent kafka [command] --help" for more information about a command.

@@ -1,0 +1,17 @@
+Describe a consumer share.
+
+Usage:
+  confluent stream-share consumer share describe <id> [flags]
+
+Examples:
+Describe consumer share "ss-12345":
+
+  $ confluent stream-share consumer share describe ss-12345
+
+Flags:
+  -o, --output string   Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

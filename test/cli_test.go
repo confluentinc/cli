@@ -36,7 +36,7 @@ type CLITest struct {
 	args string
 	// The set of environment variables to be set when the CLI is run
 	env []string
-	// The login context; either "cloud" or "platform"
+	// The login context; either "cloud" or "onprem"
 	login string
 	// Optional Cloud URL if test does not use default server
 	loginURL string
@@ -83,8 +83,8 @@ func (s *CLITestSuite) SetupSuite() {
 	err := os.Chdir("..")
 	req.NoError(err)
 
-	err = exec.Command("make", "build-for-integration-test").Run()
-	req.NoError(err)
+	output, err := exec.Command("make", "build-for-integration-test").CombinedOutput()
+	req.NoError(err, string(output))
 
 	if runtime.GOOS == "windows" {
 		testBin += ".exe"
@@ -140,7 +140,7 @@ func (s *CLITestSuite) runIntegrationTest(tt CLITest) {
 			if *debug {
 				fmt.Println(output)
 			}
-		case "platform":
+		case "onprem":
 			loginURL := s.getLoginURL(false, tt)
 			env := []string{pauth.ConfluentPlatformUsername + "=fake@user.com", pauth.ConfluentPlatformPassword + "=pass1"}
 			output := runCommand(t, testBin, env, "login --url "+loginURL, 0, "")
@@ -240,8 +240,17 @@ func resetConfiguration(t *testing.T, arePluginsEnabled bool) {
 	require.NoError(t, err)
 }
 
-func writeFixture(t *testing.T, fixture string, content string) {
-	if err := os.WriteFile(FixturePath(t, fixture), []byte(content), 0644); err != nil {
+func writeFixture(t *testing.T, fixture, content string) {
+	path := fixturePath(t, fixture)
+
+	dir := filepath.Dir(path)
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
 		t.Fatal(err)
 	}
 }
