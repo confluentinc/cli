@@ -12,31 +12,6 @@ func (s *CLITestSuite) TestAuditLogDescribe() {
 	s.runIntegrationTest(CLITest{args: "audit-log describe", login: "cloud", fixture: "audit-log/describe.golden"})
 }
 
-func (s *CLITestSuite) TestAuditLogConfig() {
-	tests := []CLITest{
-		{
-			name:    "confluent audit-log config describe --help",
-			args:    "audit-log config describe --help",
-			fixture: "audit-log/config/describe-help.golden",
-		},
-		{
-			name:    "confluent audit-log config edit --help",
-			args:    "audit-log config edit --help",
-			fixture: "audit-log/config/edit-help.golden",
-		},
-		{
-			name:    "confluent audit-log config update --help",
-			args:    "audit-log config update --help",
-			fixture: "audit-log/config/update-help.golden",
-		},
-	}
-
-	for _, tt := range tests {
-		tt.login = "cloud"
-		s.runIntegrationTest(tt)
-	}
-}
-
 func (s *CLITestSuite) TestAuditLogConfigSpecSerialization() {
 	original := LoadFixture(s.T(), "audit-log/config/roundtrip-fixedpoint.golden")
 	originalBytes := []byte(original)
@@ -57,32 +32,12 @@ func (s *CLITestSuite) TestAuditLogConfigSpecSerialization() {
 	}
 }
 
-func (s *CLITestSuite) TestAuditLogRoute() {
-	tests := []CLITest{
-		{
-			name:    "confluent audit-log route list --help",
-			args:    "audit-log route list --help",
-			fixture: "audit-log/route/list-help.golden",
-		},
-		{
-			name:    "confluent audit-log route lookup --help",
-			args:    "audit-log route lookup --help",
-			fixture: "audit-log/route/lookup-help.golden",
-		},
-	}
-
-	for _, tt := range tests {
-		tt.login = "cloud"
-		s.runIntegrationTest(tt)
-	}
-}
-
 func (s *CLITestSuite) TestAuditConfigMigrate() {
-	migration1 := GetInputFixturePath(s.T(), "audit-log", "config-migration-server1.golden")
-	migration2 := GetInputFixturePath(s.T(), "audit-log", "config-migration-server2.golden")
+	migration1 := getInputFixturePath(s.T(), "audit-log", "config-migration-server1.golden")
+	migration2 := getInputFixturePath(s.T(), "audit-log", "config-migration-server2.golden")
 
-	malformed := GetInputFixturePath(s.T(), "audit-log", "malformed-migration.golden")
-	nullFields := GetInputFixturePath(s.T(), "audit-log", "null-fields-migration.golden")
+	malformed := getInputFixturePath(s.T(), "audit-log", "malformed-migration.golden")
+	nullFields := getInputFixturePath(s.T(), "audit-log", "null-fields-migration.golden")
 
 	tests := []CLITest{
 		{
@@ -102,7 +57,7 @@ func (s *CLITestSuite) TestAuditConfigMigrate() {
 	}
 
 	for _, tt := range tests {
-		tt.login = "platform"
+		tt.login = "onprem"
 		s.runIntegrationTest(tt)
 	}
 }
