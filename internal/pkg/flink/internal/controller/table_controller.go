@@ -98,19 +98,6 @@ func (t *TableController) closeRowView() {
 }
 
 func (t *TableController) inputHandlerTableView(event *tcell.EventKey) *tcell.EventKey {
-	switch event.Modifiers() {
-	case tcell.ModAlt:
-		switch event.Key() {
-		case tcell.KeyUp:
-			rowToSelect := lo.Max([]int{1, t.selectedRowIdx - t.numRowsToScroll})
-			t.table.Select(rowToSelect, 0)
-		case tcell.KeyDown:
-			rowToSelect := lo.Min([]int{t.table.GetRowCount() - 1, t.selectedRowIdx + t.numRowsToScroll})
-			t.table.Select(rowToSelect, 0)
-		}
-		return nil
-	}
-
 	switch event.Key() {
 	case tcell.KeyRune:
 		char := unicode.ToUpper(event.Rune())
@@ -138,12 +125,16 @@ func (t *TableController) getActionForShortcut(shortcut string) func() {
 		return t.exitTViewMode
 	case "M":
 		return t.toggleTableModeAndRender
-	case "R":
+	case "P":
 		return t.toggleAutoRefreshAndRender
 	case "N":
 		return t.fetchNextPageAndRender
-	case "L":
+	case "R":
 		return t.goToLastPageAndRender
+	case "H":
+		return t.fastScrollUp
+	case "L":
+		return t.fastScrollDown
 	}
 	return nil
 }
@@ -174,6 +165,16 @@ func (t *TableController) fetchNextPageAndRender() {
 func (t *TableController) goToLastPageAndRender() {
 	t.fetchController.JumpToLastPage()
 	t.renderTable()
+}
+
+func (t *TableController) fastScrollUp() {
+	rowToSelect := lo.Max([]int{1, t.selectedRowIdx - t.numRowsToScroll})
+	t.table.Select(rowToSelect, 0)
+}
+
+func (t *TableController) fastScrollDown() {
+	rowToSelect := lo.Min([]int{t.table.GetRowCount() - 1, t.selectedRowIdx + t.numRowsToScroll})
+	t.table.Select(rowToSelect, 0)
 }
 
 func (t *TableController) openRowView() {

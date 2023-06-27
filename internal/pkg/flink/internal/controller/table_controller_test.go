@@ -87,7 +87,7 @@ func (s *TableControllerTestSuite) renderTableMockCalls() {
 }
 
 func (s *TableControllerTestSuite) TestToggleRefreshResultsOnUserInput() {
-	input := tcell.NewEventKey(tcell.KeyRune, 'R', tcell.ModNone)
+	input := tcell.NewEventKey(tcell.KeyRune, 'P', tcell.ModNone)
 	s.fetchController.EXPECT().ToggleAutoRefresh()
 	s.renderTableMockCalls()
 
@@ -107,7 +107,7 @@ func (s *TableControllerTestSuite) TestFetchNextPageOnUserInput() {
 }
 
 func (s *TableControllerTestSuite) TestJumpToLastPageOnUserInput() {
-	input := tcell.NewEventKey(tcell.KeyRune, 'L', tcell.ModNone)
+	input := tcell.NewEventKey(tcell.KeyRune, 'R', tcell.ModNone)
 	s.fetchController.EXPECT().JumpToLastPage()
 	s.renderTableMockCalls()
 
@@ -304,7 +304,7 @@ func (s *TableControllerTestSuite) TestFastScrollUp() {
 	s.tableController.numRowsToScroll = 9
 	s.fetchController.EXPECT().IsAutoRefreshRunning().Return(false)
 
-	result := s.tableController.AppInputCapture(tcell.NewEventKey(tcell.KeyUp, rune(0), tcell.ModAlt))
+	result := s.tableController.AppInputCapture(tcell.NewEventKey(tcell.KeyRune, 'H', tcell.ModNone))
 
 	require.Nil(s.T(), result)
 	require.Equal(s.T(), 1, s.tableController.selectedRowIdx)
@@ -319,7 +319,7 @@ func (s *TableControllerTestSuite) TestFastScrollUpShouldNotMoveOutFurtherThanMa
 	s.tableController.numRowsToScroll = 20
 	s.fetchController.EXPECT().IsAutoRefreshRunning().Return(false)
 
-	result := s.tableController.AppInputCapture(tcell.NewEventKey(tcell.KeyUp, rune(0), tcell.ModAlt))
+	result := s.tableController.AppInputCapture(tcell.NewEventKey(tcell.KeyRune, 'H', tcell.ModNone))
 
 	require.Nil(s.T(), result)
 	require.Equal(s.T(), 1, s.tableController.selectedRowIdx)
@@ -335,7 +335,7 @@ func (s *TableControllerTestSuite) TestFastScrollDown() {
 	s.fetchController.EXPECT().IsAutoRefreshRunning().Return(false).Times(2)
 	s.tableController.table.Select(1, 0)
 
-	result := s.tableController.AppInputCapture(tcell.NewEventKey(tcell.KeyDown, rune(0), tcell.ModAlt))
+	result := s.tableController.AppInputCapture(tcell.NewEventKey(tcell.KeyRune, 'L', tcell.ModNone))
 
 	require.Nil(s.T(), result)
 	require.Equal(s.T(), materializedStatementResults.Size(), s.tableController.selectedRowIdx)
@@ -351,7 +351,7 @@ func (s *TableControllerTestSuite) TestFastScrollDownShouldNotMoveOutFurtherThan
 	s.fetchController.EXPECT().IsAutoRefreshRunning().Return(false).Times(2)
 	s.tableController.table.Select(1, 0)
 
-	result := s.tableController.AppInputCapture(tcell.NewEventKey(tcell.KeyDown, rune(0), tcell.ModAlt))
+	result := s.tableController.AppInputCapture(tcell.NewEventKey(tcell.KeyRune, 'L', tcell.ModNone))
 
 	require.Nil(s.T(), result)
 	require.Equal(s.T(), materializedStatementResults.Size(), s.tableController.selectedRowIdx)
