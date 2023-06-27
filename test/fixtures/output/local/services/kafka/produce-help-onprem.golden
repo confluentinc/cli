@@ -14,7 +14,7 @@ Produce non-Avro data to a topic called `mytopic2` on a development Kafka cluste
 
 Flags:
       --cloud                            Consume from Confluent Cloud.
-      --config string                    Change the Confluent Cloud configuration file. (default "/var/folders/7r/qnxhl04j5t9_kp7s2zdlnxlw0000gq/T//.confluent/config")
+      --config string                    Change the Confluent Cloud configuration file. (default "/tmp/.confluent/config")
       --value-format string              Format output data: avro, json, or protobuf.
                                          
       --batch-size int                   Number of messages to send in a single batch if they are not being sent synchronously. (default 200)

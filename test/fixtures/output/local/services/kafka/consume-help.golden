@@ -14,7 +14,7 @@ Consume newly arriving non-Avro data from a topic called `mytopic2` on a develop
 
 Flags:
       --cloud                       Consume from Confluent Cloud.
-      --config string               Change the Confluent Cloud configuration file. (default "/var/folders/7r/qnxhl04j5t9_kp7s2zdlnxlw0000gq/T//.confluent/config")
+      --config string               Change the Confluent Cloud configuration file. (default "/tmp/.confluent/config")
       --value-format string         Format output data: avro, json, or protobuf.
                                     
       --bootstrap-server string     The server(s) to connect to. The broker list string has the form HOST1:PORT1,HOST2:PORT2.
