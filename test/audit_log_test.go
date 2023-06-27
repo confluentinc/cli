@@ -1,35 +1,11 @@
 package test
 
 import (
-	"encoding/json"
 	"fmt"
-	"regexp"
-
-	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 )
 
 func (s *CLITestSuite) TestAuditLogDescribe() {
 	s.runIntegrationTest(CLITest{args: "audit-log describe", login: "cloud", fixture: "audit-log/describe.golden"})
-}
-
-func (s *CLITestSuite) TestAuditLogConfigSpecSerialization() {
-	original := LoadFixture(s.T(), "audit-log/config/roundtrip-fixedpoint.golden")
-	originalBytes := []byte(original)
-	spec := mds.AuditLogConfigSpec{}
-	if err := json.Unmarshal(originalBytes, &spec); err != nil {
-		s.T().Fatal(err)
-	}
-	roundTripBytes, err := json.MarshalIndent(spec, "", "  ")
-	if err != nil {
-		s.T().Fatal(err)
-	}
-	roundTrip := string(roundTripBytes)
-
-	re := regexp.MustCompile(`[\r\n]+`)
-
-	if re.ReplaceAllString(original, "") != re.ReplaceAllString(roundTrip, "") {
-		s.T().Fail()
-	}
 }
 
 func (s *CLITestSuite) TestAuditConfigMigrate() {

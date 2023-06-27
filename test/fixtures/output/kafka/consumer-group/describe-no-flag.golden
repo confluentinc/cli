@@ -1,4 +1,0 @@
-Error: no Kafka cluster selected
-
-Suggestions:
-    You must pass `--cluster` flag with the command or set an active Kafka cluster in your context with `confluent kafka cluster use`.

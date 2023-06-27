@@ -23,13 +23,6 @@ func New(config *v1.Config, client *ccloudv1.Client, v2Client *ccloudv2.Client) 
 	}
 }
 
-// Set DynamicConfig values for command with config and resolver from prerunner
-// Calls ParseFlagsIntoConfig so that state flags are parsed ino config struct
-func (d *DynamicConfig) InitDynamicConfig(cmd *cobra.Command, cfg *v1.Config) error {
-	d.Config = cfg
-	return d.ParseFlagsIntoConfig(cmd)
-}
-
 // Parse "--context" flag value into config struct
 // Call ParseFlagsIntoContext which handles environment and cluster flags
 func (d *DynamicConfig) ParseFlagsIntoConfig(cmd *cobra.Command) error {
