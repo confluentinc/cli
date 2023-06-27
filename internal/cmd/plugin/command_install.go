@@ -36,7 +36,7 @@ func (c *command) install(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	dir, err := os.MkdirTemp("", "plugin-install")
+	dir, err := os.MkdirTemp("~/.confluent", "confluent-plugin-install")
 	if err != nil {
 		return err
 	}
@@ -111,8 +111,10 @@ func getDefaultPluginInstallDir() (string, error) {
 func inPath(dir string) bool {
 	pathDirectories := filepath.SplitList(os.Getenv("PATH"))
 	for i := range pathDirectories {
-		absPath, _ := filepath.Abs(pathDirectories[i])
-		pathDirectories[i] = absPath
+		absPath, err := filepath.Abs(pathDirectories[i])
+		if err == nil {
+			pathDirectories[i] = absPath
+		}
 	}
 	return types.Contains(pathDirectories, dir)
 }
@@ -163,7 +165,7 @@ func installPlugin(manifest *Manifest, repositoryDir, installDir string) error {
 	switch language {
 	case "python":
 		checkPythonVersion(ver)
-		return installPythonPlugin(manifest.Name, repoDir, installDir)
+		return installPythonPlugin(manifest.Name, repositoryDir, installDir)
 	case "go":
 		checkGoVersion(ver)
 		return installGoPlugin(manifest.Name)

@@ -93,8 +93,8 @@ func checkGoVersion(ver *version.Version) {
 	}
 }
 
-func installPythonPlugin(name, repoDir, installDir string) error {
-	pluginDir := fmt.Sprintf("%s/%s", repoDir, name)
+func installPythonPlugin(name, repositoryDir, installDir string) error {
+	pluginDir := fmt.Sprintf("%s/%s", repositoryDir, name)
 	files, err := os.ReadDir(pluginDir)
 	if err != nil {
 		return err

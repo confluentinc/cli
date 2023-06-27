@@ -19,8 +19,6 @@ type Manifest struct {
 	Dependencies string `yaml:"dependencies" human:"Dependencies" serialized:"dependencies"`
 }
 
-const cliPluginsUrl = "https://github.com/confluentinc/cli-plugins.git"
-
 func (c *command) newSearchCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "search",
@@ -62,9 +60,8 @@ func (c *command) search(cmd *cobra.Command, _ []string) error {
 
 func clonePluginRepo(dir, url string) (*git.Repository, error) {
 	cloneOptions := &git.CloneOptions{
-		URL:          url,
-		SingleBranch: true, // this should be redundant w/ Depth=1, but specify it just in case
-		Depth:        1,
+		URL:   url,
+		Depth: 1,
 	}
 
 	return git.PlainClone(dir, false, cloneOptions)
