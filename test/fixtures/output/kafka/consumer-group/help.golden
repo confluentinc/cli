@@ -1,7 +1,0 @@
-Manage Kafka consumer groups.
-
-Usage:
-
-Global Flags:
-  -h, --help            Show help for this command.
-  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
