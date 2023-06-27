@@ -1,0 +1,12 @@
+List the available RBAC roles and associated information, such as the resource types and operations that the role has permission to perform.
+
+Usage:
+  confluent iam rbac role list [flags]
+
+Flags:
+  -o, --output string   Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/antihax/optional v1.0.0
-	github.com/aws/aws-sdk-go v1.44.285
+	github.com/aws/aws-sdk-go v1.44.289
 	github.com/billgraziano/dpapi v0.4.0
 	github.com/bradleyjkemp/cupaloy v2.3.0+incompatible
 	github.com/brianstrauch/cobra-shell v0.4.0
@@ -14,7 +14,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/billing v0.3.0
 	github.com/confluentinc/ccloud-sdk-go-v2/byok v0.0.1
 	github.com/confluentinc/ccloud-sdk-go-v2/cdx v0.0.5
-	github.com/confluentinc/ccloud-sdk-go-v2/cli v0.1.0
+	github.com/confluentinc/ccloud-sdk-go-v2/cli v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.8.0
 	github.com/confluentinc/ccloud-sdk-go-v2/connect v0.3.0
 	github.com/confluentinc/ccloud-sdk-go-v2/flink v0.1.0

@@ -27,6 +27,7 @@ type NullableString interface {
 var Hostnames = []string{
 	"confluent.cloud",
 	"confluentgov-internal.com",
+	"confluentgov.com",
 	"cpdev.cloud",
 }
 

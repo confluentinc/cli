@@ -1,0 +1,15 @@
+Manage cluster link configurations.
+
+Usage:
+  confluent kafka link configuration [command]
+
+Available Commands:
+  list        List cluster link configurations.
+  update      Update cluster link configurations.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent kafka link configuration [command] --help" for more information about a command.
