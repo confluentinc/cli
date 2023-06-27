@@ -11,7 +11,7 @@ func (s *CLITestSuite) TestLocalKafka() {
 	}
 
 	tests := []CLITest{
-		{args: "local kafka stop", fixture: "local/kafka/stop_empty.golden"},
+		{args: "local kafka stop", fixture: "local/kafka/stop-empty.golden"},
 		{args: "local kafka start", fixture: "local/kafka/start.golden", regex: true},
 	}
 
