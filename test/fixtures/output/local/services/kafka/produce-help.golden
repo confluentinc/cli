@@ -1,0 +1,45 @@
+Produce data to topics. By default this command produces non-Avro data to the Apache Kafka® cluster on localhost.
+
+Usage:
+  confluent local services kafka produce <topic> [flags]
+
+Examples:
+Produce Avro data to a topic called `mytopic1` on a development Kafka cluster on localhost. Assumes Confluent Schema Registry is listening at `http://localhost:8081`.
+
+  $ confluent local services kafka produce mytopic1 --value-format avro --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
+
+Produce non-Avro data to a topic called `mytopic2` on a development Kafka cluster on localhost:
+
+  $ confluent local produce mytopic2
+
+Flags:
+      --cloud                            Consume from Confluent Cloud.
+      --config string                    Change the Confluent Cloud configuration file. (default "/var/folders/7r/qnxhl04j5t9_kp7s2zdlnxlw0000gq/T//.confluent/config")
+      --value-format string              Format output data: avro, json, or protobuf.
+                                         
+      --batch-size int                   Number of messages to send in a single batch if they are not being sent synchronously. (default 200)
+      --bootstrap-server string          The server(s) to connect to. The broker list string has the form HOST1:PORT1,HOST2:PORT2.
+      --compression-codec string         The compression codec: either "none", "gzip", "snappy", "lz4", or "zstd". If specified without value, then it defaults to "gzip".
+      --line-reader string               The class name of the class to use for reading lines from stdin. By default each line is read as a separate message. (default "kafka.tools.ConsoleProducer$LineMessageReader")
+      --max-block-ms int                 The max time that the producer will block for during a send request. (default 60000)
+      --max-memory-bytes int             The total memory used by the producer to buffer records waiting to be sent to the server. (default 33554432)
+      --max-partition-memory-bytes int   The buffer size allocated for a partition. When records are received which are small than this size, the producer will attempt to optimistically group them together until this size is reached. (default 16384)
+      --message-send-max-retries int     This property specifies the number of retries before the producer gives up and drops this message. Brokers can fail receiving a message for multiple reasons, and being unavailable transiently is just one of them. (default 3)
+      --metadata-expiry-ms int           The amount of time in milliseconds before a forced metadata refresh. This will occur independent of any leadership changes. (default 300000)
+      --producer-property string         A mechanism to pass user-defined properties in the form key=value to the producer.
+      --producer.config string           Producer config properties file. Note that [producer-property] takes precedence over this config.
+      --property strings                 A mechanism to pass user-defined properties in the form key=value to the message reader. This allows custom configuration for a user-defined message reader. Default properties include:
+                                         	parse.key=true|false
+                                         	key.separator=<key.separator>
+                                         	ignore.error=true|false
+      --request-required-acks string     The required ACKs of the producer requests. (default 1)
+      --request-timeout-ms int           The ACK timeout of the producer requests. Value must be positive. (default 1500)
+      --retry-backoff-ms int             Before each retry, the producer refreshes the metadata of relevant topics. Since leader election takes a bit of time, this property specifies the amount of time that the producer waits before refreshing the metadata. (default 100)
+      --socket-buffer-size int           The size of the TCP RECV size. (default 102400)
+      --sync                             If set, message send requests to brokers arrive synchronously.
+      --timeout int                      If set and the producer is running in asynchronous mode, this gives the maximum amount of time a message will queue awaiting sufficient batch size. The value is given in ms. (default 1000)
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
