@@ -13,60 +13,24 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
-func (s *CLITestSuite) TestHelp_AllFormats() {
-	tests := []CLITest{
-		{args: ""},
-		{args: "--help"},
-		{args: "-h"},
-		{args: "help"},
+func (s *CLITestSuite) TestHelp() {
+	configurations := []*v1.Config{
+		{
+			CurrentContext: "cloud",
+			Contexts:       map[string]*v1.Context{"cloud": {PlatformName: "https://confluent.cloud"}},
+		},
+		{
+			CurrentContext: "onprem",
+			Contexts:       map[string]*v1.Context{"onprem": {PlatformName: "https://example.com"}},
+		},
 	}
 
-	for _, test := range tests {
-		test.fixture = "help/no-context.golden"
-		test.login = ""
-		s.runIntegrationTest(test)
+	for _, cfg := range configurations {
+		cfg.Version = new(version.Version)
+		cfg.IsTest = true
+		cfg.DisableFeatureFlags = true
 
-		test.fixture = "help/cloud.golden"
-		test.login = "cloud"
-		s.runIntegrationTest(test)
-
-		test.fixture = "help/onprem.golden"
-		test.login = "onprem"
-		s.runIntegrationTest(test)
-	}
-}
-
-func (s *CLITestSuite) TestHelp_Cloud() {
-	cfg := &v1.Config{
-		CurrentContext:      "Cloud",
-		Contexts:            map[string]*v1.Context{"Cloud": {PlatformName: "https://confluent.cloud"}},
-		IsTest:              true,
-		Version:             new(version.Version),
-		DisableFeatureFlags: true,
-	}
-
-	cmd := pcmd.NewConfluentCommand(cfg)
-	for _, subcommand := range cmd.Commands() {
-		// if subcommand.IsAvailableCommand() {
-		s.testHelp(subcommand, "cloud")
-		// }
-	}
-}
-
-func (s *CLITestSuite) TestHelp_OnPrem() {
-	cfg := &v1.Config{
-		CurrentContext:      "On-Prem",
-		Contexts:            map[string]*v1.Context{"On-Prem": {PlatformName: "https://example.com"}},
-		IsTest:              true,
-		Version:             new(version.Version),
-		DisableFeatureFlags: true,
-	}
-
-	cmd := pcmd.NewConfluentCommand(cfg)
-	for _, subcommand := range cmd.Commands() {
-		// if subcommand.IsAvailableCommand() {
-		s.testHelp(subcommand, "onprem")
-		// }
+		s.testHelp(pcmd.NewConfluentCommand(cfg), cfg.CurrentContext)
 	}
 }
 
@@ -98,8 +62,24 @@ func (s *CLITestSuite) testHelp(cmd *cobra.Command, login string) {
 	}
 
 	for _, subcommand := range cmd.Commands() {
-		// if subcommand.IsAvailableCommand() {
 		s.testHelp(subcommand, login)
-		// }
+	}
+}
+
+func (s *CLITestSuite) TestHelp_AllFormats() {
+	tests := []CLITest{
+		{args: ""},
+		{args: "-h"},
+		{args: "help"},
+	}
+
+	for _, test := range tests {
+		test.fixture = "help.golden"
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+
+		test.fixture = "help-onprem.golden"
+		test.login = "onprem"
+		s.runIntegrationTest(test)
 	}
 }
