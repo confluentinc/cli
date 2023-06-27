@@ -126,7 +126,7 @@ func (s *CLITestSuite) TestConnectPluginInstall() {
 	}
 
 	for _, tt := range tests {
-		tt.login = "platform"
+		tt.login = "onprem"
 		s.runIntegrationTest(tt)
 	}
 }
