@@ -1,4 +1,0 @@
-   Cluster  |  Consumer Group  | Lag | Log End Offset | Current Offset |  Consumer  |  Instance  |  Client  |  Topic  | Partition  
-------------+------------------+-----+----------------+----------------+------------+------------+----------+---------+------------
-  cluster-1 | consumer-group-1 | 100 |            101 |              1 | consumer-1 | instance-1 | client-1 | topic-1 |         1  
-  cluster-1 | consumer-group-1 |  10 |             11 |              1 | consumer-2 | instance-2 | client-2 | topic-1 |         2  

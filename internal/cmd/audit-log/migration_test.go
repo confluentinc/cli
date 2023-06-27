@@ -126,7 +126,7 @@ func TestAuditLogConfigTranslation(t *testing.T) {
 			},
 			[]string{"new_bootstrap_2", "new_bootstrap_1"},
 			"NEW.CRN.AUTHORITY.COM",
-			test.LoadFixture(t, "audit-log/migration-result.golden"),
+			test.LoadFixture(t, "../input/audit-log/migration-result.golden"),
 			[]string{
 				fmt.Sprintf(warn.MismatchedKafkaClusterWarning, "cluster123", "crn://some-authority/kafka=clusterX"),
 				fmt.Sprintf(warn.MismatchedKafkaClusterWarning, "clusterABC", "crn://diff-authority/kafka=different-cluster-id/topic=payroll-*"),
@@ -199,7 +199,7 @@ func TestAuditLogConfigTranslation(t *testing.T) {
 			},
 			[]string{"new_bootstrap_2", "new_bootstrap_1"},
 			"NEW.CRN.AUTHORITY.COM",
-			test.LoadFixture(t, "audit-log/migration-result-merge-topics.golden"),
+			test.LoadFixture(t, "../input/audit-log/migration-result-merge-topics.golden"),
 			[]string{
 				fmt.Sprintf(warn.MismatchedKafkaClusterWarning, "cluster123", "crn://some-authority/kafka=clusterX"),
 				fmt.Sprintf(warn.MismatchedKafkaClusterWarning, "cluster123", "crn://some-authority/kafka=clusterY"),
