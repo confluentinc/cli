@@ -2,37 +2,11 @@ package dynamicconfig
 
 import (
 	"fmt"
-	"strings"
-	"time"
 
 	srcmv2 "github.com/confluentinc/ccloud-sdk-go-v2/srcm/v2"
 
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
-
-func (d *DynamicContext) FetchCluster(clusterId string) (*v1.KafkaClusterConfig, error) {
-	environmentId, err := d.EnvironmentId()
-	if err != nil {
-		return nil, err
-	}
-
-	cluster, httpResp, err := d.V2Client.DescribeKafkaCluster(clusterId, environmentId)
-	if err != nil {
-		return nil, errors.CatchKafkaNotFoundError(err, clusterId, httpResp)
-	}
-
-	config := &v1.KafkaClusterConfig{
-		ID:           *cluster.Id,
-		Name:         *cluster.Spec.DisplayName,
-		Bootstrap:    strings.TrimPrefix(*cluster.Spec.KafkaBootstrapEndpoint, "SASL_SSL://"),
-		RestEndpoint: *cluster.Spec.HttpEndpoint,
-		APIKeys:      make(map[string]*v1.APIKeyPair),
-		LastUpdate:   time.Now(),
-	}
-
-	return config, nil
-}
 
 func (d *DynamicContext) FetchAPIKeyError(apiKey string, clusterID string) error {
 	// check if this is API key exists server-side
