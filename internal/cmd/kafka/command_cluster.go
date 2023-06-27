@@ -1,6 +1,8 @@
 package kafka
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -25,7 +27,7 @@ var availabilitiesToModel = map[string]string{
 }
 
 type clusterCommand struct {
-	*pcmd.AuthenticatedStateFlagCommand
+	*pcmd.AuthenticatedCLICommand
 }
 
 func newClusterCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
@@ -38,9 +40,9 @@ func newClusterCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command 
 	c := &clusterCommand{}
 
 	if cfg.IsCloudLogin() {
-		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)
+		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedCLICommand(cmd, prerunner)
 	} else {
-		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner)
+		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)
 	}
 
 	cmd.AddCommand(c.newCreateCommand(cfg))
@@ -67,5 +69,19 @@ func (c *clusterCommand) validArgs(cmd *cobra.Command, args []string) []string {
 		return nil
 	}
 
-	return pcmd.AutocompleteCmkClusters(c.EnvironmentId(), c.V2Client)
+	environmentId, err := c.Context.EnvironmentId()
+	if err != nil {
+		return nil
+	}
+
+	clusters, err := c.V2Client.ListKafkaClusters(environmentId)
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(clusters))
+	for i, cluster := range clusters {
+		suggestions[i] = fmt.Sprintf("%s\t%s", cluster.GetId(), cluster.Spec.GetDisplayName())
+	}
+	return suggestions
 }

@@ -28,3 +28,15 @@ func (s *CLITestSuite) TestStreamShare() {
 		s.runIntegrationTest(tt)
 	}
 }
+
+func (s *CLITestSuite) TestStreamShareAutocomplete() {
+	tests := []CLITest{
+		{args: `__complete stream-share consumer share describe ""`, fixture: "stream-share/describe-consumer-share-autocomplete.golden"},
+		{args: `__complete stream-share provider share describe ""`, fixture: "stream-share/describe-provider-share-autocomplete.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}

@@ -6,18 +6,18 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"strings"
 
 	"github.com/google/uuid"
 	"github.com/hashicorp/go-version"
-
-	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/secret"
+	"github.com/confluentinc/cli/internal/pkg/types"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
@@ -29,12 +29,12 @@ const (
 
 var ver, _ = version.NewVersion("1.0.0")
 
-const signupSuggestion = `If you need a Confluent Cloud account, sign up with "confluent cloud-signup".`
+const signupSuggestion = "If you need a Confluent Cloud account, sign up with `confluent cloud-signup`."
 
 var (
 	RequireCloudLoginErr = errors.NewErrorWithSuggestions(
 		"you must log in to Confluent Cloud to use this command",
-		"Log in with \"confluent login\".\n"+signupSuggestion,
+		"Log in with `confluent login`.\n"+signupSuggestion,
 	)
 	RequireCloudLoginOrgUnsuspendedErr = errors.NewErrorWithSuggestions(
 		"you must unsuspend your organization to use this command",
@@ -46,27 +46,23 @@ var (
 	)
 	RequireCloudLoginOrOnPremErr = errors.NewErrorWithSuggestions(
 		"you must log in to use this command",
-		"Log in with \"confluent login\".\n"+signupSuggestion,
+		"Log in with `confluent login`.\n"+signupSuggestion,
 	)
 	RequireNonAPIKeyCloudLoginErr = errors.NewErrorWithSuggestions(
 		"you must log in to Confluent Cloud with a username and password to use this command",
-		"Log in with \"confluent login\".\n"+signupSuggestion,
+		"Log in with `confluent login`.\n"+signupSuggestion,
 	)
 	RequireNonAPIKeyCloudLoginOrOnPremLoginErr = errors.NewErrorWithSuggestions(
 		"you must log in to Confluent Cloud with a username and password or log in to Confluent Platform to use this command",
-		"Log in with \"confluent login\" or \"confluent login --url <mds-url>\".\n"+signupSuggestion,
+		"Log in with `confluent login` or `confluent login --url <mds-url>`.\n"+signupSuggestion,
 	)
 	RequireNonCloudLogin = errors.NewErrorWithSuggestions(
 		"you must log out of Confluent Cloud to use this command",
-		"Log out with \"confluent logout\".\n",
+		"Log out with `confluent logout`.\n",
 	)
 	RequireOnPremLoginErr = errors.NewErrorWithSuggestions(
 		"you must log in to Confluent Platform to use this command",
-		`Log in with "confluent login --url <mds-url>".`,
-	)
-	RequireUpdatesEnabledErr = errors.NewErrorWithSuggestions(
-		"you must enable updates to use this command",
-		"WARNING: To guarantee compatibility, enabling updates is not recommended for Confluent Platform users.\n"+`In ~/.confluent/config.json, set "disable_updates": false`,
+		"Log in with `confluent login --url <mds-url>`.",
 	)
 )
 
@@ -75,50 +71,58 @@ type Config struct {
 	*config.BaseConfig
 
 	DisableUpdateCheck  bool                        `json:"disable_update_check"`
-	DisableUpdates      bool                        `json:"disable_updates"`
+	DisableUpdates      bool                        `json:"disable_updates,omitempty"`
 	DisablePlugins      bool                        `json:"disable_plugins"`
 	DisablePluginsOnce  bool                        `json:"disable_plugins_once,omitempty"`
 	DisableFeatureFlags bool                        `json:"disable_feature_flags"`
 	NoBrowser           bool                        `json:"no_browser"`
 	Platforms           map[string]*Platform        `json:"platforms,omitempty"`
 	Credentials         map[string]*Credential      `json:"credentials,omitempty"`
+	CurrentContext      string                      `json:"current_context"`
 	Contexts            map[string]*Context         `json:"contexts,omitempty"`
 	ContextStates       map[string]*ContextState    `json:"context_states,omitempty"`
-	CurrentContext      string                      `json:"current_context"`
 	AnonymousId         string                      `json:"anonymous_id,omitempty"`
 	SavedCredentials    map[string]*LoginCredential `json:"saved_credentials,omitempty"`
+	LocalPorts          *LocalPorts                 `json:"local_ports,omitempty"`
 
 	// The following configurations are not persisted between runs
 
 	IsTest  bool              `json:"-"`
 	Version *pversion.Version `json:"-"`
 
-	overwrittenAccount     *ccloudv1.Account
-	overwrittenCurrContext string
-	overwrittenActiveKafka string
+	overwrittenCurrentContext          string
+	overwrittenCurrentEnvironment      string
+	overwrittenCurrentFlinkComputePool string
+	overwrittenCurrentKafkaCluster     string
 }
 
-func (c *Config) SetOverwrittenAccount(acct *ccloudv1.Account) {
-	if c.overwrittenAccount == nil {
-		c.overwrittenAccount = acct
+func (c *Config) SetOverwrittenCurrentContext(context string) {
+	if context == "" {
+		context = emptyFieldIndicator
+	}
+	if c.overwrittenCurrentContext == "" {
+		c.overwrittenCurrentContext = context
 	}
 }
 
-func (c *Config) SetOverwrittenCurrContext(contextName string) {
-	if contextName == "" {
-		contextName = emptyFieldIndicator
-	}
-	if c.overwrittenCurrContext == "" {
-		c.overwrittenCurrContext = contextName
+func (c *Config) SetOverwrittenCurrentEnvironment(environmentId string) {
+	if c.overwrittenCurrentEnvironment == "" {
+		c.overwrittenCurrentEnvironment = environmentId
 	}
 }
 
-func (c *Config) SetOverwrittenActiveKafka(clusterId string) {
+func (c *Config) SetOverwrittenFlinkComputePool(computePoolId string) {
+	if c.overwrittenCurrentFlinkComputePool == "" {
+		c.overwrittenCurrentFlinkComputePool = computePoolId
+	}
+}
+
+func (c *Config) SetOverwrittenCurrentKafkaCluster(clusterId string) {
 	if clusterId == "" {
 		clusterId = emptyFieldIndicator
 	}
-	if c.overwrittenActiveKafka == "" {
-		c.overwrittenActiveKafka = clusterId
+	if c.overwrittenCurrentKafkaCluster == "" {
+		c.overwrittenCurrentKafkaCluster = clusterId
 	}
 }
 
@@ -133,6 +137,35 @@ func New() *Config {
 		AnonymousId:      uuid.New().String(),
 		Version:          new(pversion.Version),
 	}
+}
+
+func (c *Config) DecryptContextStates() error {
+	if context := c.Context(); context != nil {
+		state := c.ContextStates[context.Name]
+		if state != nil {
+			if err := state.DecryptContextStateAuthToken(context.Name); err != nil {
+				return err
+			}
+			if err := state.DecryptContextStateAuthRefreshToken(context.Name); err != nil {
+				return err
+			}
+		}
+		context.State = state
+	}
+	return c.Validate()
+}
+
+func (c *Config) DecryptCredentials() error {
+	if credentials := c.Credentials; c.Credentials != nil {
+		for _, credential := range credentials {
+			if credential.APIKeyPair != nil {
+				if err := credential.APIKeyPair.DecryptSecret(); err != nil {
+					return err
+				}
+			}
+		}
+	}
+	return c.Validate()
 }
 
 // Load reads the CLI config from disk.
@@ -186,19 +219,7 @@ func (c *Config) Load() error {
 			return errors.NewCorruptedConfigError(errors.MissingKafkaClusterContextErrorMsg, context.Name, c.Filename)
 		}
 		context.KafkaClusterContext.Context = context
-
-		state := c.ContextStates[context.Name]
-		if state != nil {
-			err = state.DecryptContextStateAuthToken(context.Name)
-			if err != nil {
-				return err
-			}
-			err = state.DecryptContextStateAuthRefreshToken(context.Name)
-			if err != nil {
-				return err
-			}
-		}
-		context.State = state
+		context.State = c.ContextStates[context.Name]
 	}
 	return c.Validate()
 }
@@ -206,16 +227,27 @@ func (c *Config) Load() error {
 // Save writes the CLI config to disk.
 func (c *Config) Save() error {
 	tempKafka := c.resolveOverwrittenKafka()
-	tempAccount := c.resolveOverwrittenAccount()
+	tempEnvironment := c.resolveOverwrittenCurrentEnvironment()
 	tempContext := c.resolveOverwrittenContext()
 	var tempAuthToken string
 	var tempAuthRefreshToken string
+	tempApiSecrets := map[string]string{}
 
 	if c.Context() != nil {
 		tempAuthToken = c.Context().GetState().AuthToken
 		tempAuthRefreshToken = c.Context().GetState().AuthRefreshToken
-		err := c.encryptContextStateTokens(tempAuthToken, tempAuthRefreshToken)
-		if err != nil {
+		if err := c.encryptContextStateTokens(tempAuthToken, tempAuthRefreshToken); err != nil {
+			return err
+		}
+	}
+
+	if c.Credentials != nil {
+		for name, credential := range c.Credentials {
+			if credential.APIKeyPair != nil {
+				tempApiSecrets[name] = credential.APIKeyPair.Secret
+			}
+		}
+		if err := c.encryptCredentialsAPISecret(); err != nil {
 			return err
 		}
 	}
@@ -240,41 +272,62 @@ func (c *Config) Save() error {
 	}
 
 	c.restoreOverwrittenContext(tempContext)
-	c.restoreOverwrittenAccount(tempAccount)
+	c.restoreOverwrittenEnvironment(tempEnvironment)
 	c.restoreOverwrittenKafka(tempKafka)
 	c.restoreOverwrittenAuthToken(tempAuthToken)
 	c.restoreOverwrittenAuthRefreshToken(tempAuthRefreshToken)
+	c.restoreOverwrittenCredentials(tempApiSecrets)
 
+	return nil
+}
+
+func (c *Config) encryptCredentialsAPISecret() error {
+	for _, credential := range c.Credentials {
+		if credential.APIKeyPair != nil {
+			err := credential.APIKeyPair.EncryptSecret()
+			if err != nil {
+				return err
+			}
+		}
+	}
 	return nil
 }
 
 func (c *Config) encryptContextStateTokens(tempAuthToken, tempAuthRefreshToken string) error {
 	if c.Context().GetState().Salt == nil || c.Context().GetState().Nonce == nil {
-		salt, err := secret.GenerateRandomBytes(secret.SaltLength)
-		if err != nil {
-			return err
-		}
-		nonce, err := secret.GenerateRandomBytes(secret.NonceLength)
+		salt, nonce, err := secret.GenerateSaltAndNonce()
 		if err != nil {
 			return err
 		}
 		c.Context().GetState().Salt = salt
 		c.Context().GetState().Nonce = nonce
 	}
-	if tempAuthToken != "" {
+
+	if regexp.MustCompile(authTokenRegex).MatchString(tempAuthToken) {
 		encryptedAuthToken, err := secret.Encrypt(c.Context().Name, tempAuthToken, c.Context().GetState().Salt, c.Context().GetState().Nonce)
 		if err != nil {
 			return err
 		}
 		c.Context().GetState().AuthToken = encryptedAuthToken
 	}
-	if tempAuthRefreshToken != "" {
+
+	// The Confluent Gov environment returns a refresh token that does not match `authRefreshTokenRegex` and cannot be distinguished from an already encrypted refresh token.
+	// We prefix encrypted tokens with "AES/GCM/NoPadding" to ensure that they are only encrypted once.
+	environments := []string{
+		"confluentgov.com",
+		"devel.confluentgov-internal.com",
+		"infra.confluentgov-internal.com",
+	}
+	isUnencryptedConfluentGov := !strings.HasPrefix(tempAuthRefreshToken, secret.AesGcm) && types.Contains(environments, c.Context().PlatformName)
+
+	if regexp.MustCompile(authRefreshTokenRegex).MatchString(tempAuthRefreshToken) || isUnencryptedConfluentGov {
 		encryptedAuthRefreshToken, err := secret.Encrypt(c.Context().Name, tempAuthRefreshToken, c.Context().GetState().Salt, c.Context().GetState().Nonce)
 		if err != nil {
 			return err
 		}
 		c.Context().State.AuthRefreshToken = encryptedAuthRefreshToken
 	}
+
 	return nil
 }
 
@@ -284,35 +337,40 @@ func (c *Config) encryptContextStateTokens(tempAuthToken, tempAuthRefreshToken s
 func (c *Config) resolveOverwrittenKafka() string {
 	ctx := c.Context()
 	var tempKafka string
-	if c.overwrittenActiveKafka != "" && ctx != nil && ctx.KafkaClusterContext != nil {
-		if c.overwrittenActiveKafka == emptyFieldIndicator {
-			c.overwrittenActiveKafka = ""
+	if c.overwrittenCurrentKafkaCluster != "" && ctx != nil && ctx.KafkaClusterContext != nil {
+		if c.overwrittenCurrentKafkaCluster == emptyFieldIndicator {
+			c.overwrittenCurrentKafkaCluster = ""
 		}
 		tempKafka = ctx.KafkaClusterContext.GetActiveKafkaClusterId()
-		ctx.KafkaClusterContext.SetActiveKafkaCluster(c.overwrittenActiveKafka)
+		ctx.KafkaClusterContext.SetActiveKafkaCluster(c.overwrittenCurrentKafkaCluster)
 	}
 	return tempKafka
 }
 
 // Restore the flag cluster back into the struct so that it is used for any execution after Save()
 func (c *Config) restoreOverwrittenKafka(tempKafka string) {
-	ctx := c.Context()
 	if tempKafka != "" {
-		ctx.KafkaClusterContext.SetActiveKafkaCluster(tempKafka)
+		c.Context().KafkaClusterContext.SetActiveKafkaCluster(tempKafka)
 	}
 }
 
 func (c *Config) restoreOverwrittenAuthToken(tempAuthToken string) {
-	ctx := c.Context()
 	if tempAuthToken != "" {
-		ctx.GetState().AuthToken = tempAuthToken
+		c.Context().GetState().AuthToken = tempAuthToken
 	}
 }
 
 func (c *Config) restoreOverwrittenAuthRefreshToken(tempAuthRefreshToken string) {
-	ctx := c.Context()
 	if tempAuthRefreshToken != "" {
-		ctx.GetState().AuthRefreshToken = tempAuthRefreshToken
+		c.Context().GetState().AuthRefreshToken = tempAuthRefreshToken
+	}
+}
+
+func (c *Config) restoreOverwrittenCredentials(tempApiSecrets map[string]string) {
+	for name, secret := range tempApiSecrets {
+		if secret != "" {
+			c.Credentials[name].APIKeyPair.Secret = secret
+		}
 	}
 }
 
@@ -320,12 +378,12 @@ func (c *Config) restoreOverwrittenAuthRefreshToken(tempAuthRefreshToken string)
 // Return the overwriting flag context value so that it can be restored after writing the file
 func (c *Config) resolveOverwrittenContext() string {
 	var tempContext string
-	if c.overwrittenCurrContext != "" && c != nil {
-		if c.overwrittenCurrContext == emptyFieldIndicator {
-			c.overwrittenCurrContext = ""
+	if c.overwrittenCurrentContext != "" && c != nil {
+		if c.overwrittenCurrentContext == emptyFieldIndicator {
+			c.overwrittenCurrentContext = ""
 		}
 		tempContext = c.CurrentContext
-		c.CurrentContext = c.overwrittenCurrContext
+		c.CurrentContext = c.overwrittenCurrentContext
 	}
 	return tempContext
 }
@@ -339,21 +397,19 @@ func (c *Config) restoreOverwrittenContext(tempContext string) {
 
 // Switch the initial config account back into the struct so that it is saved and not the flag value
 // Return the overwriting flag account value so that it can be restored after writing the file
-func (c *Config) resolveOverwrittenAccount() *ccloudv1.Account {
-	ctx := c.Context()
-	var tempAccount *ccloudv1.Account
-	if c.overwrittenAccount != nil && ctx != nil && ctx.State != nil && ctx.State.Auth != nil {
-		tempAccount = ctx.GetEnvironment()
-		ctx.State.Auth.Account = c.overwrittenAccount
+func (c *Config) resolveOverwrittenCurrentEnvironment() string {
+	var tempEnvironment string
+	if c.overwrittenCurrentEnvironment != "" {
+		tempEnvironment = c.Context().GetCurrentEnvironment()
+		c.Context().SetCurrentEnvironment(c.overwrittenCurrentEnvironment)
 	}
-	return tempAccount
+	return tempEnvironment
 }
 
 // Restore the flag account back into the struct so that it is used for any execution after Save()
-func (c *Config) restoreOverwrittenAccount(tempAccount *ccloudv1.Account) {
-	ctx := c.Context()
-	if tempAccount != nil {
-		ctx.State.Auth.Account = tempAccount
+func (c *Config) restoreOverwrittenEnvironment(id string) {
+	if id != "" {
+		c.Context().SetCurrentEnvironment(id)
 	}
 }
 
@@ -369,8 +425,7 @@ func (c *Config) Validate() error {
 	// 1. Has no hanging references between the context and the config.
 	// 2. Is mapped by name correctly in the config.
 	for _, context := range c.Contexts {
-		err := context.validate()
-		if err != nil {
+		if err := context.validate(); err != nil {
 			log.CliLogger.Trace("context validation error")
 			return err
 		}
@@ -425,7 +480,7 @@ func (c *Config) FindContext(name string) (*Context, error) {
 	return context, nil
 }
 
-func (c *Config) AddContext(name, platformName, credentialName string, kafkaClusters map[string]*KafkaClusterConfig, kafka string, schemaRegistryClusters map[string]*SchemaRegistryCluster, state *ContextState, orgResourceId string) error {
+func (c *Config) AddContext(name, platformName, credentialName string, kafkaClusters map[string]*KafkaClusterConfig, kafka string, schemaRegistryClusters map[string]*SchemaRegistryCluster, state *ContextState, orgResourceId, envId string) error {
 	if _, ok := c.Contexts[name]; ok {
 		return fmt.Errorf(errors.ContextAlreadyExistsErrorMsg, name)
 	}
@@ -440,7 +495,7 @@ func (c *Config) AddContext(name, platformName, credentialName string, kafkaClus
 		return fmt.Errorf(errors.PlatformNotFoundErrorMsg, platformName)
 	}
 
-	ctx, err := newContext(name, platform, credential, kafkaClusters, kafka, schemaRegistryClusters, state, c, orgResourceId)
+	ctx, err := newContext(name, platform, credential, kafkaClusters, kafka, schemaRegistryClusters, state, c, orgResourceId, envId)
 	if err != nil {
 		return err
 	}
@@ -461,28 +516,9 @@ func (c *Config) CreateContext(name, bootstrapURL, apiKey, apiSecret string) err
 		Key:    apiKey,
 		Secret: apiSecret,
 	}
-	apiKeys := map[string]*APIKeyPair{
-		apiKey: apiKeyPair,
-	}
-	kafkaClusterCfg := &KafkaClusterConfig{
-		ID:        "anonymous-id",
-		Name:      "anonymous-cluster",
-		Bootstrap: bootstrapURL,
-		APIKeys:   apiKeys,
-		APIKey:    apiKey,
-	}
-	kafkaClusters := map[string]*KafkaClusterConfig{
-		kafkaClusterCfg.ID: kafkaClusterCfg,
-	}
-	platform := &Platform{Server: bootstrapURL}
-
-	// Inject credential and platforms name for now, until users can provide custom names.
-	platform.Name = strings.TrimPrefix(platform.Server, "https://")
 
 	// Hardcoded for now, since username/password isn't implemented yet.
 	credential := &Credential{
-		Username:       "",
-		Password:       "",
 		APIKeyPair:     apiKeyPair,
 		CredentialType: APIKey,
 	}
@@ -500,11 +536,26 @@ func (c *Config) CreateContext(name, bootstrapURL, apiKey, apiSecret string) err
 		return err
 	}
 
+	// Inject credential and platforms name for now, until users can provide custom names.
+	platform := &Platform{
+		Server: bootstrapURL,
+		Name:   strings.TrimPrefix(bootstrapURL, "https://"),
+	}
+
 	if err := c.SavePlatform(platform); err != nil {
 		return err
 	}
 
-	return c.AddContext(name, platform.Name, credential.Name, kafkaClusters, kafkaClusterCfg.ID, nil, nil, "")
+	kafkaClusterCfg := &KafkaClusterConfig{
+		ID:        "anonymous-id",
+		Name:      "anonymous-cluster",
+		Bootstrap: bootstrapURL,
+		APIKeys:   map[string]*APIKeyPair{apiKey: apiKeyPair},
+		APIKey:    apiKey,
+	}
+	kafkaClusters := map[string]*KafkaClusterConfig{kafkaClusterCfg.ID: kafkaClusterCfg}
+
+	return c.AddContext(name, platform.Name, credential.Name, kafkaClusters, kafkaClusterCfg.ID, nil, nil, "", "")
 }
 
 // UseContext sets the current context, if it exists.
@@ -681,13 +732,6 @@ func (c *Config) CheckIsNonCloudLogin() error {
 	return nil
 }
 
-func (c *Config) CheckAreUpdatesEnabled() error {
-	if c.DisableUpdates {
-		return RequireUpdatesEnabledErr
-	}
-	return nil
-}
-
 func (c *Config) IsCloudLogin() bool {
 	return c.CheckIsCloudLogin() == nil
 }
@@ -725,13 +769,6 @@ func (c *Config) isOrgSuspended() bool {
 
 func (c *Config) isLoginBlockedByOrgSuspension() bool {
 	return utils.IsLoginBlockedByOrgSuspension(c.Context().GetSuspensionStatus())
-}
-
-func (c *Config) GetLastUsedOrgId() string {
-	if ctx := c.Context(); ctx != nil && ctx.LastOrgId != "" {
-		return ctx.LastOrgId
-	}
-	return os.Getenv("CONFLUENT_CLOUD_ORGANIZATION_ID")
 }
 
 func (c *Config) GetCloudClientV2(unsafeTrace bool) *ccloudv2.Client {

@@ -63,12 +63,6 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCl
 		),
 	}
 
-	cmd.Flags().String("url", "", "Metadata Service (MDS) URL, for on-prem deployments.")
-	cmd.Flags().String("ca-cert-path", "", "Self-signed certificate chain in PEM format, for on-prem deployments.")
-	cmd.Flags().Bool("no-browser", false, "Do not open a browser window when authenticating via Single Sign-On (SSO).")
-	cmd.Flags().String("organization-id", "", "The Confluent Cloud organization to log in to. If empty, log in to the default organization.")
-	cmd.Flags().Bool("prompt", false, "Bypass non-interactive login and prompt for login credentials.")
-	cmd.Flags().Bool("save", false, "Save username and encrypted password (non-SSO credentials) to the configuration file in your $HOME directory, and to macOS keychain if applicable. You will be automatically logged back in when your token expires, after one hour for Confluent Cloud or after six hours for Confluent Platform.")
 	c := &command{
 		CLICommand:               pcmd.NewAnonymousCLICommand(cmd, prerunner),
 		cfg:                      cfg,
@@ -80,6 +74,16 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCl
 		authTokenHandler:         authTokenHandler,
 	}
 	cmd.RunE = c.login
+
+	cmd.Flags().String("url", "", "Metadata Service (MDS) URL, for on-prem deployments.")
+	cmd.Flags().Bool("us-gov", false, "Log in to the Confluent Cloud US Gov environment.")
+	cmd.Flags().String("ca-cert-path", "", "Self-signed certificate chain in PEM format, for on-prem deployments.")
+	cmd.Flags().Bool("no-browser", false, "Do not open a browser window when authenticating via Single Sign-On (SSO).")
+	cmd.Flags().String("organization-id", "", "The Confluent Cloud organization to log in to. If empty, log in to the default organization.")
+	cmd.Flags().Bool("prompt", false, "Bypass non-interactive login and prompt for login credentials.")
+	cmd.Flags().Bool("save", false, "Save username and encrypted password (non-SSO credentials) to the configuration file in your $HOME directory, and to macOS keychain if applicable. You will be automatically logged back in when your token expires, after one hour for Confluent Cloud or after six hours for Confluent Platform.")
+
+	cmd.MarkFlagsMutuallyExclusive("url", "us-gov")
 
 	return cmd
 }
@@ -108,10 +112,7 @@ func (c *command) login(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *command) loginCCloud(cmd *cobra.Command, url string) error {
-	orgResourceId, err := c.getOrgResourceId(cmd)
-	if err != nil {
-		return err
-	}
+	orgResourceId := c.getOrgResourceId(cmd)
 
 	noBrowser, err := cmd.Flags().GetBool("no-browser")
 	if err != nil {
@@ -146,14 +147,14 @@ func (c *command) loginCCloud(cmd *cobra.Command, url string) error {
 		return err
 	}
 
-	currentEnv, currentOrg, err := pauth.PersistCCloudCredentialsToConfig(c.Config.Config, client, url, credentials, save)
+	currentEnvironment, currentOrg, err := pauth.PersistCCloudCredentialsToConfig(c.Config.Config, client, url, credentials, save)
 	if err != nil {
 		return err
 	}
 
 	output.Printf(errors.LoggedInAsMsgWithOrg, credentials.Username, currentOrg.GetResourceId(), currentOrg.GetName())
-	if currentEnv != nil {
-		log.CliLogger.Debugf(errors.LoggedInUsingEnvMsg, currentEnv.GetId(), currentEnv.GetName())
+	if currentEnvironment != "" {
+		log.CliLogger.Debugf(errors.LoggedInUsingEnvMsg, currentEnvironment)
 	}
 
 	// if org is at the end of free trial, print instruction about how to add payment method to unsuspend the org.
@@ -173,7 +174,7 @@ func (c *command) loginCCloud(cmd *cobra.Command, url string) error {
 }
 
 func (c *command) printRemainingFreeCredit(client *ccloudv1.Client, currentOrg *ccloudv1.Organization) {
-	promoCodeClaims, err := client.Growth.GetFreeTrialInfo(context.Background(), currentOrg.Id)
+	promoCodeClaims, err := client.Growth.GetFreeTrialInfo(currentOrg.Id)
 	if err != nil {
 		log.CliLogger.Warnf("Failed to get free trial info: %v", err)
 		return
@@ -210,6 +211,7 @@ func (c *command) getCCloudCredentials(cmd *cobra.Command, url, orgResourceId st
 	if prompt {
 		return pauth.GetLoginCredentials(c.loginCredentialsManager.GetCloudCredentialsFromPrompt(orgResourceId))
 	}
+
 	filterParams := netrc.NetrcMachineParams{
 		IsCloud: true,
 		URL:     url,
@@ -221,7 +223,7 @@ func (c *command) getCCloudCredentials(cmd *cobra.Command, url, orgResourceId st
 
 	return pauth.GetLoginCredentials(
 		c.loginCredentialsManager.GetCloudCredentialsFromEnvVar(orgResourceId),
-		c.loginCredentialsManager.GetSsoCredentialsFromConfig(c.cfg),
+		c.loginCredentialsManager.GetSsoCredentialsFromConfig(c.cfg, url),
 		c.loginCredentialsManager.GetCredentialsFromKeychain(c.cfg, true, filterParams.Name, url),
 		c.loginCredentialsManager.GetCredentialsFromConfig(c.cfg, filterParams),
 		c.loginCredentialsManager.GetCredentialsFromNetrc(filterParams),
@@ -346,8 +348,20 @@ func (c *command) checkLegacyContextCACertPath(cmd *cobra.Command, contextName s
 }
 
 func (c *command) getURL(cmd *cobra.Command) (string, error) {
-	if url, err := cmd.Flags().GetString("url"); url != "" || err != nil {
-		return url, err
+	url, err := cmd.Flags().GetString("url")
+	if err != nil {
+		return "", err
+	}
+	if url != "" {
+		return url, nil
+	}
+
+	usGov, err := cmd.Flags().GetBool("us-gov")
+	if err != nil {
+		return "", err
+	}
+	if usGov {
+		return "https://confluentgov.com", nil
 	}
 
 	if url := pauth.GetEnvWithFallback(pauth.ConfluentPlatformMDSURL, pauth.DeprecatedConfluentPlatformMDSURL); url != "" {
@@ -405,10 +419,9 @@ func validateURL(url string, isCCloud bool) (string, string, error) {
 	return url, strings.Join(msg, " and "), nil
 }
 
-func (c *command) getOrgResourceId(cmd *cobra.Command) (string, error) {
+func (c *command) getOrgResourceId(cmd *cobra.Command) string {
 	return pauth.GetLoginOrganization(
-		c.loginOrganizationManager.GetLoginOrganizationFromArgs(cmd),
-		c.loginOrganizationManager.GetLoginOrganizationFromEnvVar(cmd),
-		c.loginOrganizationManager.GetDefaultLoginOrganization(),
+		c.loginOrganizationManager.GetLoginOrganizationFromFlag(cmd),
+		c.loginOrganizationManager.GetLoginOrganizationFromEnvironmentVariable(),
 	)
 }

@@ -12,6 +12,7 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
+	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 )
@@ -36,7 +37,7 @@ type describeStruct struct {
 	ByokKeyId          string `human:"BYOK Key ID" serialized:"byok_key_id"`
 	EncryptionKeyId    string `human:"Encryption Key ID" serialized:"encryption_key_id"`
 	RestEndpoint       string `human:"REST Endpoint" serialized:"rest_endpoint"`
-	TopicCount         int    `human:"Topic Count" serialized:"topic_count"`
+	TopicCount         int    `human:"Topic Count,omitempty" serialized:"topic_count"`
 }
 
 func (c *clusterCommand) newDescribeCommand() *cobra.Command {
@@ -64,10 +65,15 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 	}
 
 	ctx := c.Context.Config.Context()
-	c.Context.Config.SetOverwrittenActiveKafka(ctx.KafkaClusterContext.GetActiveKafkaClusterId())
+	c.Context.Config.SetOverwrittenCurrentKafkaCluster(ctx.KafkaClusterContext.GetActiveKafkaClusterId())
 	ctx.KafkaClusterContext.SetActiveKafkaCluster(lkc)
 
-	cluster, httpResp, err := c.V2Client.DescribeKafkaCluster(lkc, c.EnvironmentId())
+	environmentId, err := c.Context.EnvironmentId()
+	if err != nil {
+		return err
+	}
+
+	cluster, httpResp, err := c.V2Client.DescribeKafkaCluster(lkc, environmentId)
 	if err != nil {
 		return errors.CatchKafkaNotFoundError(err, lkc, httpResp)
 	}
@@ -96,8 +102,9 @@ func (c *clusterCommand) outputKafkaClusterDescription(cmd *cobra.Command, clust
 
 	if getTopicCount {
 		topicCount, err := c.getTopicCountForKafkaCluster(cluster)
+		// topicCount is 0 when err != nil, and will be omitted by `omitempty`
 		if err != nil {
-			return err
+			log.CliLogger.Infof(errors.OmitTopicCountMsg, err)
 		}
 		out.TopicCount = topicCount
 	}

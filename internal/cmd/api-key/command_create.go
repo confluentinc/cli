@@ -1,7 +1,6 @@
 package apikey
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 
@@ -137,11 +136,10 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		if resourceType != resource.KafkaCluster {
 			return errors.Wrap(errors.New(errors.NonKafkaNotImplementedErrorMsg), "`--use` set but ineffective")
 		}
-		err = c.Context.UseAPIKey(userKey.Key, clusterId)
-		if err != nil {
+		if err := c.Context.UseAPIKey(userKey.Key, clusterId); err != nil {
 			return errors.NewWrapErrorWithSuggestions(err, errors.APIKeyUseFailedErrorMsg, fmt.Sprintf(errors.APIKeyUseFailedSuggestions, userKey.Key))
 		}
-		output.Printf(errors.UseAPIKeyMsg, userKey.Key, clusterId)
+		output.Printf(errors.UseAPIKeyMsg, userKey.Key)
 	}
 
 	return nil
@@ -162,28 +160,33 @@ func (c *command) getCurrentUserId() (string, error) {
 
 // CLI-1544: Warn users if they try to create an API key with the predefined audit log Kafka cluster, but without the
 // predefined audit log service account
-func (c *command) catchServiceAccountNotValidError(err error, r *http.Response, clusterId, serviceAccountId string) error {
+func (c *command) catchServiceAccountNotValidError(err error, httpResp *http.Response, clusterId, serviceAccountId string) error {
 	if err == nil {
 		return nil
 	}
 
-	auditLog := c.Context.GetOrganization().GetAuditLog()
-
-	isInvalid := err.Error() == "error creating api key: service account is not valid" || err.Error() == "403 Forbidden"
-	if isInvalid && clusterId == auditLog.GetClusterId() {
-		auditLogServiceAccount, err2 := c.Client.User.GetServiceAccount(context.Background(), auditLog.GetServiceAccountId())
-		if err2 != nil {
+	if err.Error() == "error creating api key: service account is not valid" || err.Error() == "403 Forbidden" {
+		user, err := c.Client.Auth.User()
+		if err != nil {
 			return err
 		}
 
-		if serviceAccountId != auditLogServiceAccount.GetResourceId() {
-			return fmt.Errorf(`API keys for audit logs (limit of 2) must be created using the predefined service account, "%s"`, auditLogServiceAccount.GetResourceId())
+		auditLog := user.GetOrganization().GetAuditLog()
+		if clusterId == auditLog.GetClusterId() {
+			auditLogServiceAccount, err2 := c.Client.User.GetServiceAccount(auditLog.GetServiceAccountId())
+			if err2 != nil {
+				return err
+			}
+
+			if serviceAccountId != auditLogServiceAccount.GetResourceId() {
+				return fmt.Errorf(`API keys for audit logs (limit of 2) must be created using the predefined service account, "%s"`, auditLogServiceAccount.GetResourceId())
+			}
 		}
 	}
 
-	if r == nil {
+	if httpResp == nil {
 		return err
 	}
 
-	return errors.CatchCCloudV2Error(err, r)
+	return errors.CatchCCloudV2Error(err, httpResp)
 }

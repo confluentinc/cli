@@ -41,7 +41,7 @@ func newConsumeCommand(prerunner pcmd.PreRunner, clientId string) *cobra.Command
 	}
 	cmd.RunE = c.consume
 
-	cmd.Flags().String("group", fmt.Sprintf("confluent_cli_consumer_%s", uuid.New()), "Consumer group ID.")
+	cmd.Flags().String("group", "confluent_cli_consumer_<randomly-generated-id>", "Consumer group ID.")
 	cmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of the topic.")
 	cmd.Flags().Int64("offset", 0, "The offset from the beginning to consume from.")
 	cmd.Flags().Int32("partition", -1, "The partition to consume from.")
@@ -51,7 +51,7 @@ func newConsumeCommand(prerunner pcmd.PreRunner, clientId string) *cobra.Command
 	cmd.Flags().String("delimiter", "\t", "The delimiter separating each key and value.")
 	cmd.Flags().Bool("timestamp", false, "Print message timestamp in milliseconds.")
 	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the consumer client.`)
-	cmd.Flags().String("config-file", "", "The path to the configuration file (in json or avro format) for the consumer client.")
+	pcmd.AddConsumerConfigFileFlag(cmd)
 	cmd.Flags().String("schema-registry-context", "", "The Schema Registry context under which to look up schema ID.")
 	cmd.Flags().String("schema-registry-endpoint", "", "Endpoint for Schema Registry cluster.")
 	cmd.Flags().String("schema-registry-api-key", "", "Schema registry API key.")
@@ -62,7 +62,7 @@ func newConsumeCommand(prerunner pcmd.PreRunner, clientId string) *cobra.Command
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	cmd.Flags().String("environment", "", "Environment ID.")
 
-	cobra.CheckErr(cmd.MarkFlagFilename("config-file", "avro", "json"))
+	cobra.CheckErr(cmd.MarkFlagFilename("config-file", "avsc", "json"))
 
 	return cmd
 }
@@ -83,6 +83,9 @@ func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	group, err := cmd.Flags().GetString("group")
 	if err != nil {
 		return err
+	}
+	if !cmd.Flags().Changed("group") {
+		group = fmt.Sprintf("confluent_cli_consumer_%s", uuid.New())
 	}
 
 	printKey, err := cmd.Flags().GetBool("print-key")
@@ -130,8 +133,7 @@ func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	}
 	defer adminClient.Close()
 
-	err = c.validateTopic(adminClient, topic, cluster)
-	if err != nil {
+	if err := c.validateTopic(adminClient, topic, cluster); err != nil {
 		return err
 	}
 
@@ -139,7 +141,7 @@ func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		return errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "from-beginning", "offset")
 	}
 
-	offset, err := getOffsetWithFallback(cmd)
+	offset, err := GetOffsetWithFallback(cmd)
 	if err != nil {
 		return err
 	}
@@ -148,12 +150,12 @@ func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	if err != nil {
 		return err
 	}
-	partitionFilter := partitionFilter{
-		changed: cmd.Flags().Changed("partition"),
-		index:   partition,
+	partitionFilter := PartitionFilter{
+		Changed: cmd.Flags().Changed("partition"),
+		Index:   partition,
 	}
 
-	rebalanceCallback := getRebalanceCallback(offset, partitionFilter)
+	rebalanceCallback := GetRebalanceCallback(offset, partitionFilter)
 	if err := consumer.Subscribe(topic, rebalanceCallback); err != nil {
 		return err
 	}
@@ -213,5 +215,5 @@ func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 			SchemaPath: dir,
 		},
 	}
-	return runConsumer(consumer, groupHandler)
+	return RunConsumer(consumer, groupHandler)
 }

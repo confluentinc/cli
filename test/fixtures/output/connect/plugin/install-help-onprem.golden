@@ -1,0 +1,25 @@
+Install a Connect plugin.
+
+Usage:
+  confluent connect plugin install <plugin> [flags]
+
+Examples:
+Install the latest version of the Datagen connector into your local Confluent Platform environment.
+
+  $ confluent connect plugin install confluentinc/kafka-connect-datagen:latest
+
+Install the latest version of the Datagen connector in a user-specified directory and update a worker-config file.
+
+  $ confluent connect plugin install confluentinc/kafka-connect-datagen:latest --plugin-directory $CONFLUENT_HOME/plugins --worker-configurations $CONFLUENT_HOME/etc/kafka/connect-distributed.properties
+
+Flags:
+      --plugin-directory string         The plugin installation directory. If not specified, a default will be selected based on your Confluent Platform installation.
+      --worker-configurations strings   A comma-separated list of paths to one or more Kafka Connect worker configuration files. Each worker file will be updated to load plugins from the plugin directory in addition to any prior directories.
+      --confluent-platform string       The path to a Confluent Platform archive installation. By default, this command will search for Confluent Platform installations in common locations.
+      --dry-run                         Run the command without committing changes.
+      --force                           Proceed without user input.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

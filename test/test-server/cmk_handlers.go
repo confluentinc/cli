@@ -107,6 +107,8 @@ func handleCmkCluster(t *testing.T) http.HandlerFunc {
 			handleCmkKafkaClusterDescribeDedicated(t)(w, r)
 		case "lkc-describe-dedicated-pending":
 			handleCmkKafkaClusterDescribeDedicatedPending(t)(w, r)
+		case "lkc-describe-dedicated-provisioning":
+			handleCmkKafkaClusterDescribeDedicatedProvisioning(t)(w, r)
 		case "lkc-describe-dedicated-with-encryption":
 			handleCmkKafkaClusterDescribeDedicatedWithEncryption(t)(w, r)
 		case "lkc-describe-infinite":
@@ -121,6 +123,8 @@ func handleCmkCluster(t *testing.T) http.HandlerFunc {
 			handleCmkKafkaDedicatedClusterShrinkMulti(t)(w, r)
 		case "lkc-unknown":
 			handleCmkKafkaUnknown(t)(w, r)
+		case "lkc-unknown-type":
+			handleCmkKafkaUnknownType(t)(w, r)
 		default:
 			handleCmkKafkaClusterGetListDeleteDescribe(t)(w, r)
 		}
@@ -155,6 +159,20 @@ func handleCmkKafkaClusterDescribeDedicatedPending(t *testing.T) http.HandlerFun
 		id := vars["id"]
 		cluster := getCmkDedicatedDescribeCluster(id, "kafka-cluster", 2)
 		cluster.Status.Cku = cmkv2.PtrInt32(1)
+		err := json.NewEncoder(w).Encode(cluster)
+		require.NoError(t, err)
+	}
+}
+
+// Handler for GET "/cmk/v2/clusters/lkc-describe-dedicated-provisioning"
+func handleCmkKafkaClusterDescribeDedicatedProvisioning(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		id := vars["id"]
+		cluster := getCmkDedicatedDescribeCluster(id, "kafka-cluster", 1)
+		cluster.Status.Phase = "PROVISIONING"
+		cluster.Spec.KafkaBootstrapEndpoint = cmkv2.PtrString("")
+		cluster.Spec.HttpEndpoint = cmkv2.PtrString("")
 		err := json.NewEncoder(w).Encode(cluster)
 		require.NoError(t, err)
 	}
@@ -290,6 +308,17 @@ func handleCmkKafkaDedicatedClusterShrinkMulti(t *testing.T) http.HandlerFunc {
 func handleCmkKafkaUnknown(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, _ *http.Request) {
 		err := writeResourceNotFoundError(w)
+		require.NoError(t, err)
+	}
+}
+
+// Handler for GET "/cmk/v2/clusters/lkc-unknown-type"
+func handleCmkKafkaUnknownType(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		id := vars["id"]
+		cluster := getCmkUnknownDescribeCluster(id, "kafka-cluster")
+		err := json.NewEncoder(w).Encode(cluster)
 		require.NoError(t, err)
 	}
 }

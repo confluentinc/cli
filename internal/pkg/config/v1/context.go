@@ -18,9 +18,11 @@ type Context struct {
 	NetrcMachineName       string                            `json:"netrc_machine_name"`
 	PlatformName           string                            `json:"platform"`
 	CredentialName         string                            `json:"credential"`
+	CurrentEnvironment     string                            `json:"current_environment,omitempty"`
+	Environments           map[string]*EnvironmentContext    `json:"environments,omitempty"`
 	KafkaClusterContext    *KafkaClusterContext              `json:"kafka_cluster_context"`
 	SchemaRegistryClusters map[string]*SchemaRegistryCluster `json:"schema_registry_clusters"`
-	LastOrgId              string                            `json:"last_org_id"`
+	LastOrgId              string                            `json:"last_org_id,omitempty"`
 	FeatureFlags           *FeatureFlags                     `json:"feature_flags,omitempty"`
 
 	Platform   *Platform     `json:"-"`
@@ -29,7 +31,7 @@ type Context struct {
 	Config     *Config       `json:"-"`
 }
 
-func newContext(name string, platform *Platform, credential *Credential, kafkaClusters map[string]*KafkaClusterConfig, kafka string, schemaRegistryClusters map[string]*SchemaRegistryCluster, state *ContextState, config *Config, orgResourceId string) (*Context, error) {
+func newContext(name string, platform *Platform, credential *Credential, kafkaClusters map[string]*KafkaClusterConfig, kafka string, schemaRegistryClusters map[string]*SchemaRegistryCluster, state *ContextState, config *Config, orgResourceId, envId string) (*Context, error) {
 	ctx := &Context{
 		Name:                   name,
 		NetrcMachineName:       name,
@@ -37,14 +39,15 @@ func newContext(name string, platform *Platform, credential *Credential, kafkaCl
 		PlatformName:           platform.Name,
 		Credential:             credential,
 		CredentialName:         credential.Name,
+		CurrentEnvironment:     envId,
+		Environments:           map[string]*EnvironmentContext{},
 		SchemaRegistryClusters: schemaRegistryClusters,
 		State:                  state,
 		Config:                 config,
 		LastOrgId:              orgResourceId,
 	}
 	ctx.KafkaClusterContext = NewKafkaClusterContext(ctx, kafka, kafkaClusters)
-	err := ctx.validate()
-	if err != nil {
+	if err := ctx.validate(); err != nil {
 		return nil, err
 	}
 	return ctx, nil
@@ -59,6 +62,9 @@ func (c *Context) validate() error {
 	}
 	if c.PlatformName == "" || c.Platform == nil {
 		return errors.NewCorruptedConfigError(errors.UnspecifiedPlatformErrorMsg, c.Name, c.Config.Filename)
+	}
+	if c.Environments == nil {
+		c.Environments = map[string]*EnvironmentContext{}
 	}
 	if c.SchemaRegistryClusters == nil {
 		c.SchemaRegistryClusters = map[string]*SchemaRegistryCluster{}
@@ -98,7 +104,7 @@ func (c *Context) hasBasicCloudLogin() bool {
 	credType := c.Credential.CredentialType
 	switch credType {
 	case Username:
-		return c.GetAuthToken() != "" && c.GetEnvironment().GetId() != ""
+		return c.GetAuthToken() != "" && c.GetCurrentEnvironment() != ""
 	case APIKey:
 		return false
 	default:
@@ -180,6 +186,13 @@ func (c *Context) GetUser() *ccloudv1.User {
 	return nil
 }
 
+func (c *Context) GetCurrentOrganization() string {
+	if c != nil {
+		return c.LastOrgId
+	}
+	return ""
+}
+
 func (c *Context) GetOrganization() *ccloudv1.Organization {
 	if auth := c.GetAuth(); auth != nil {
 		return auth.Organization
@@ -191,32 +204,80 @@ func (c *Context) GetSuspensionStatus() *ccloudv1.SuspensionStatus {
 	return c.GetOrganization().GetSuspensionStatus()
 }
 
-func (c *Context) GetEnvironment() *ccloudv1.Account {
+func (c *Context) GetCurrentEnvironment() string {
+	if c != nil && c.CurrentEnvironment != "" {
+		return c.CurrentEnvironment
+	}
+
 	if auth := c.GetAuth(); auth != nil {
-		return auth.Account
+		return auth.Account.GetId()
+	}
+
+	return ""
+}
+
+func (c *Context) GetCurrentEnvironmentContext() *EnvironmentContext {
+	if id := c.GetCurrentEnvironment(); id != "" {
+		return c.Environments[id]
 	}
 	return nil
 }
 
-func (c *Context) SetEnvironment(environment *ccloudv1.Account) {
-	if c.GetAuth() == nil {
-		c.SetAuth(new(AuthConfig))
+func (c *Context) SetCurrentEnvironment(id string) {
+	c.CurrentEnvironment = id
+
+	if id != "" {
+		c.AddEnvironment(id)
 	}
-	c.GetAuth().Account = environment
+
+	if auth := c.GetAuth(); auth != nil {
+		auth.Account = nil
+		auth.Accounts = nil
+	}
 }
 
-func (c *Context) GetEnvironments() []*ccloudv1.Account {
-	if auth := c.GetAuth(); auth != nil {
-		return auth.Accounts
+func (c *Context) AddEnvironment(id string) {
+	if _, ok := c.Environments[id]; !ok {
+		c.Environments[id] = &EnvironmentContext{}
 	}
+}
+
+func (c *Context) DeleteEnvironment(id string) {
+	delete(c.Environments, id)
+}
+
+func (c *Context) GetCurrentFlinkComputePool() string {
+	if ctx := c.GetCurrentEnvironmentContext(); ctx != nil {
+		return ctx.CurrentFlinkComputePool
+	}
+	return ""
+}
+
+func (c *Context) SetCurrentFlinkComputePool(id string) error {
+	ctx := c.GetCurrentEnvironmentContext()
+	if ctx == nil {
+		return fmt.Errorf("no environment found")
+	}
+
+	ctx.CurrentFlinkComputePool = id
 	return nil
 }
 
-func (c *Context) SetEnvironments(environments []*ccloudv1.Account) {
-	if c.GetAuth() == nil {
-		c.SetAuth(new(AuthConfig))
+func (c *Context) GetCurrentIdentityPool() string {
+	if ctx := c.GetCurrentEnvironmentContext(); ctx != nil {
+		return ctx.CurrentIdentityPool
 	}
-	c.GetAuth().Accounts = environments
+	return ""
+}
+
+func (c *Context) SetCurrentIdentityPool(id string) error {
+	ctx := c.GetCurrentEnvironmentContext()
+	if ctx == nil {
+		return fmt.Errorf("no environment found")
+	}
+
+	ctx.CurrentIdentityPool = id
+	return nil
 }
 
 func (c *Context) GetAuthToken() string {
@@ -227,8 +288,8 @@ func (c *Context) GetAuthToken() string {
 }
 
 func (c *Context) GetAuthRefreshToken() string {
-	if c.State != nil {
-		return c.State.AuthRefreshToken
+	if state := c.GetState(); state != nil {
+		return state.AuthRefreshToken
 	}
 	return ""
 }

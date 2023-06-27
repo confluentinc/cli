@@ -6,12 +6,16 @@ import (
 	"github.com/billgraziano/dpapi"
 )
 
-func GenerateRandomBytes(n int) ([]byte, error) {
-	return []byte{}, nil
+func generateRandomBytes(_ int) ([]byte, error) {
+	return nil, nil
 }
 
-func DeriveEncryptionKey(salt string) ([]byte, error) {
-	return []byte{}, nil
+func GenerateSaltAndNonce() ([]byte, []byte, error) {
+	return nil, nil, nil
+}
+
+func DeriveEncryptionKey(_ string) ([]byte, error) {
+	return nil, nil
 }
 
 func Encrypt(_, password string, _, _ []byte) (string, error) {

@@ -60,7 +60,7 @@ func NewPreRunnerMdsV2Mock(v2Client *ccloudv2.Client, mdsClient *mdsv2alpha1.API
 	}
 }
 
-func (c *Commander) Anonymous(command *pcmd.CLICommand, _ bool) func(cmd *cobra.Command, args []string) error {
+func (c *Commander) Anonymous(command *pcmd.CLICommand, _ bool) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		if command != nil {
 			command.Version = c.Version
@@ -70,7 +70,7 @@ func (c *Commander) Anonymous(command *pcmd.CLICommand, _ bool) func(cmd *cobra.
 	}
 }
 
-func (c *Commander) Authenticated(command *pcmd.AuthenticatedCLICommand) func(cmd *cobra.Command, args []string) error {
+func (c *Commander) Authenticated(command *pcmd.AuthenticatedCLICommand) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		if err := c.Anonymous(command.CLICommand, true)(cmd, args); err != nil {
 			return err
@@ -91,7 +91,7 @@ func (c *Commander) Authenticated(command *pcmd.AuthenticatedCLICommand) func(cm
 	}
 }
 
-func (c *Commander) AuthenticatedWithMDS(command *pcmd.AuthenticatedCLICommand) func(cmd *cobra.Command, args []string) error {
+func (c *Commander) AuthenticatedWithMDS(command *pcmd.AuthenticatedCLICommand) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		if err := c.Anonymous(command.CLICommand, true)(cmd, args); err != nil {
 			return err
@@ -110,7 +110,7 @@ func (c *Commander) AuthenticatedWithMDS(command *pcmd.AuthenticatedCLICommand) 
 	}
 }
 
-func (c *Commander) HasAPIKey(command *pcmd.HasAPIKeyCLICommand) func(cmd *cobra.Command, args []string) error {
+func (c *Commander) HasAPIKey(command *pcmd.HasAPIKeyCLICommand) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		if err := c.Anonymous(command.CLICommand, true)(cmd, args); err != nil {
 			return err
@@ -123,10 +123,9 @@ func (c *Commander) HasAPIKey(command *pcmd.HasAPIKeyCLICommand) func(cmd *cobra
 }
 
 // UseKafkaRest - The PreRun function registered by the mock prerunner for UseKafkaRestCLICommand
-func (c *Commander) InitializeOnPremKafkaRest(command *pcmd.AuthenticatedCLICommand) func(cmd *cobra.Command, args []string) error {
+func (c *Commander) InitializeOnPremKafkaRest(command *pcmd.AuthenticatedCLICommand) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		err := c.AuthenticatedWithMDS(command)(cmd, args)
-		if err != nil {
+		if err := c.AuthenticatedWithMDS(command)(cmd, args); err != nil {
 			return err
 		}
 		command.KafkaRESTProvider = c.KafkaRESTProvider
@@ -134,14 +133,14 @@ func (c *Commander) InitializeOnPremKafkaRest(command *pcmd.AuthenticatedCLIComm
 	}
 }
 
-func (c *Commander) ParseFlagsIntoContext(command *pcmd.AuthenticatedCLICommand) func(cmd *cobra.Command, args []string) error {
+func (c *Commander) ParseFlagsIntoContext(command *pcmd.AuthenticatedCLICommand) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		ctx := command.Context
 		return ctx.ParseFlagsIntoContext(cmd, command.Client)
 	}
 }
 
-func (c *Commander) AnonymousParseFlagsIntoContext(command *pcmd.CLICommand) func(cmd *cobra.Command, args []string) error {
+func (c *Commander) AnonymousParseFlagsIntoContext(command *pcmd.CLICommand) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		ctx := command.Config.Context()
 		return ctx.ParseFlagsIntoContext(cmd, nil)

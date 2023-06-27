@@ -2,7 +2,6 @@ package schemaregistry
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -13,7 +12,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
 func (c *command) newSubjectUpdateCommand() *cobra.Command {
@@ -25,16 +23,25 @@ func (c *command) newSubjectUpdateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Update subject-level compatibility of subject "payments".`,
-				Code: fmt.Sprintf("%s schema-registry subject update payments --compatibility backward", version.CLIName),
+				Code: "confluent schema-registry subject update payments --compatibility backward",
+			},
+			examples.Example{
+				Text: `Update subject-level compatibility of subject "payments" and set compatibility group to "application.version".`,
+				Code: "confluent schema-registry subject update payments --compatibility backward --compatibility-group application.version",
 			},
 			examples.Example{
 				Text: `Update subject-level mode of subject "payments".`,
-				Code: fmt.Sprintf("%s schema-registry subject update payments --mode readwrite", version.CLIName),
+				Code: "confluent schema-registry subject update payments --mode readwrite",
 			},
 		),
 	}
 
 	addCompatibilityFlag(cmd)
+	addCompatibilityGroupFlag(cmd)
+	addMetadataDefaultsFlag(cmd)
+	addMetadataOverridesFlag(cmd)
+	addRulesetDefaultsFlag(cmd)
+	addRulesetOverridesFlag(cmd)
 	addModeFlag(cmd)
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddApiSecretFlag(cmd)
@@ -66,7 +73,7 @@ func (c *command) subjectUpdate(cmd *cobra.Command, args []string) error {
 	}
 
 	if compatibility != "" {
-		return c.updateCompatibility(subject, compatibility, srClient, ctx)
+		return c.updateCompatibility(cmd, subject, compatibility, srClient, ctx)
 	}
 
 	if mode != "" {
@@ -76,8 +83,12 @@ func (c *command) subjectUpdate(cmd *cobra.Command, args []string) error {
 	return errors.New(errors.CompatibilityOrModeErrorMsg)
 }
 
-func (c *command) updateCompatibility(subject, compatibility string, srClient *srsdk.APIClient, ctx context.Context) error {
-	updateReq := srsdk.ConfigUpdateRequest{Compatibility: compatibility}
+func (c *command) updateCompatibility(cmd *cobra.Command, subject, compatibility string, srClient *srsdk.APIClient, ctx context.Context) error {
+	updateReq, err := c.getConfigUpdateRequest(cmd)
+	if err != nil {
+		return err
+	}
+
 	if _, httpResp, err := srClient.DefaultApi.UpdateSubjectLevelConfig(ctx, subject, updateReq); err != nil {
 		return errors.CatchSchemaNotFoundError(err, httpResp)
 	}

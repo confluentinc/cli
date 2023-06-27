@@ -1,7 +1,6 @@
 package ksql
 
 import (
-	"context"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -55,7 +54,12 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	cluster, err := c.V2Client.CreateKsqlCluster(name, c.EnvironmentId(), kafkaCluster.ID, credentialIdentity, csu, !logExcludeRows)
+	environmentId, err := c.Context.EnvironmentId()
+	if err != nil {
+		return err
+	}
+
+	cluster, err := c.V2Client.CreateKsqlCluster(name, environmentId, kafkaCluster.ID, credentialIdentity, csu, !logExcludeRows)
 	if err != nil {
 		return err
 	}
@@ -70,7 +74,7 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string) error {
 		if count != 0 {
 			<-ticker.C
 		}
-		res, err := c.V2Client.DescribeKsqlCluster(cluster.GetId(), c.EnvironmentId())
+		res, err := c.V2Client.DescribeKsqlCluster(cluster.GetId(), environmentId)
 		if err != nil {
 			return err
 		}
@@ -81,8 +85,8 @@ func (c *ksqlCommand) create(cmd *cobra.Command, args []string) error {
 		output.ErrPrintln(errors.EndPointNotPopulatedMsg)
 	}
 
-	srCluster, _ := c.Context.FetchSchemaRegistryByEnvironmentId(context.Background(), c.EnvironmentId())
-	if srCluster != nil {
+	srCluster, _ := c.Context.FetchSchemaRegistryByEnvironmentId(environmentId)
+	if _, ok := srCluster.GetIdOk(); ok {
 		output.ErrPrintln(errors.SchemaRegistryRoleBindingRequiredForKsqlWarning)
 	}
 

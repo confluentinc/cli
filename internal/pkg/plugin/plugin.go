@@ -29,21 +29,12 @@ type pluginInfo struct {
 func SearchPath(cfg *v1.Config) map[string][]string {
 	log.CliLogger.Debugf("Searching `$PATH` for plugins. Plugins can be disabled in %s.\n", cfg.GetFilename())
 
-	home, err := os.UserHomeDir()
-	if err != nil {
-		home = ""
-	}
-
 	plugins := make(map[string][]string)
 	for _, dir := range filepath.SplitList(os.Getenv("PATH")) {
 		entries, err := os.ReadDir(dir)
 		if err != nil {
 			log.CliLogger.Warnf("unable to read directory from `$PATH`: %s", dir)
 			continue
-		}
-
-		if home != "" && strings.HasPrefix(dir, home) {
-			dir = filepath.Join("~", strings.TrimPrefix(dir, home))
 		}
 
 		for _, entry := range entries {

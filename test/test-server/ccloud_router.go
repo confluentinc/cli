@@ -10,8 +10,6 @@ import (
 )
 
 var ccloudHandlers = []route{
-	{"/api/accounts", handleEnvironments},
-	{"/api/accounts/{id}", handleEnvironment},
 	{"/api/env_metadata", handleEnvMetadata},
 	{"/api/external_identities", handleExternalIdentities},
 	{"/api/growth/v1/free-trial-info", handleFreeTrialInfo},
@@ -20,7 +18,6 @@ var ccloudHandlers = []route{
 	{"/api/organizations/{id}/payment_info", handlePaymentInfo},
 	{"/api/organizations/{id}/price_table", handlePriceTable},
 	{"/api/organizations/{id}/promo_code_claims", handlePromoCodeClaims},
-	{"/api/schema_registries/{id}", handleSchemaRegistry},
 	{"/api/service_accounts", handleServiceAccounts},
 	{"/api/service_accounts/{id}", handleServiceAccount},
 	{"/api/sessions", handleLogin},

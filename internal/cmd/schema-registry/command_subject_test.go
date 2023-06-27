@@ -35,7 +35,7 @@ type SubjectTestSuite struct {
 func (suite *SubjectTestSuite) SetupSuite() {
 	suite.conf = v1.AuthenticatedCloudConfigMock()
 	ctx := suite.conf.Context()
-	srCluster := ctx.SchemaRegistryClusters[ctx.GetEnvironment().GetId()]
+	srCluster := ctx.SchemaRegistryClusters[ctx.GetCurrentEnvironment()]
 	srCluster.SrCredentials = &v1.APIKeyPair{Key: "key", Secret: "secret"}
 	cluster := ctx.KafkaClusterContext.GetActiveKafkaClusterConfig()
 	suite.kafkaCluster = &ccstructs.KafkaCluster{
@@ -43,17 +43,15 @@ func (suite *SubjectTestSuite) SetupSuite() {
 		Name:       cluster.Name,
 		Enterprise: true,
 	}
-	suite.srCluster = &ccloudv1.SchemaRegistryCluster{
-		Id: srClusterID,
-	}
+	suite.srCluster = &ccloudv1.SchemaRegistryCluster{Id: "sr"}
 }
 
 func (suite *SubjectTestSuite) SetupTest() {
 	suite.srMothershipMock = &ccloudv1mock.SchemaRegistry{
-		CreateSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *ccloudv1.SchemaRegistryClusterConfig) (*ccloudv1.SchemaRegistryCluster, error) {
+		CreateSchemaRegistryClusterFunc: func(_ *ccloudv1.SchemaRegistryClusterConfig) (*ccloudv1.SchemaRegistryCluster, error) {
 			return suite.srCluster, nil
 		},
-		GetSchemaRegistryClusterFunc: func(ctx context.Context, clusterConfig *ccloudv1.SchemaRegistryCluster) (*ccloudv1.SchemaRegistryCluster, error) {
+		GetSchemaRegistryClusterFunc: func(_ *ccloudv1.SchemaRegistryCluster) (*ccloudv1.SchemaRegistryCluster, error) {
 			return nil, nil
 		},
 	}
@@ -80,8 +78,7 @@ func (suite *SubjectTestSuite) newCMD() *cobra.Command {
 	client := &ccloudv1.Client{
 		SchemaRegistry: suite.srMothershipMock,
 	}
-	cmd := New(suite.conf, climock.NewPreRunnerMock(client, nil, nil, nil, suite.conf), suite.srClientMock)
-	return cmd
+	return New(suite.conf, climock.NewPreRunnerMock(client, nil, nil, nil, suite.conf), suite.srClientMock)
 }
 
 func (suite *SubjectTestSuite) TestSubjectList() {

@@ -21,24 +21,41 @@ var (
 
 	ssoConfigs = map[string]ssoConfig{
 		"cpd": {
-			ssoProviderDomain:     "login-cpd.confluent-dev.io",
+			ssoProviderDomain:     "login-cpd.confluent-dev.io/oauth",
 			ssoProviderIdentifier: "https://confluent-cpd.auth0.com/api/v2/",
+			ssoProviderScope:      "email%20openid%20offline_access",
 		},
 		"devel": {
-			ssoProviderDomain:     "login.confluent-dev.io",
+			ssoProviderDomain:     "login.confluent-dev.io/oauth",
 			ssoProviderIdentifier: "https://confluent-dev.auth0.com/api/v2/",
+			ssoProviderScope:      "email%20openid%20offline_access",
 		},
-		"stag": {
-			ssoProviderDomain:     "login-stag.confluent-dev.io",
-			ssoProviderIdentifier: "https://confluent-stag.auth0.com/api/v2/",
+		"devel-us-gov": {
+			ssoProviderDomain: "confluent-devel-us-gov.oktapreview.com/oauth2/v1",
+			ssoProviderScope:  "openid+profile+email+offline_access",
+		},
+		"infra-us-gov": {
+			ssoProviderDomain: "confluent-infra-us-gov.oktapreview.com/oauth2/v1",
+			ssoProviderScope:  "openid+profile+email+offline_access",
 		},
 		"prod": {
-			ssoProviderDomain:     "login.confluent.io",
+			ssoProviderDomain:     "login.confluent.io/oauth",
 			ssoProviderIdentifier: "https://confluent.auth0.com/api/v2/",
+			ssoProviderScope:      "email%20openid%20offline_access",
+		},
+		"prod-us-gov": {
+			ssoProviderDomain: "confluent-prod-us-gov.okta.com/oauth2/v1",
+			ssoProviderScope:  "openid+profile+email+offline_access",
+		},
+		"stag": {
+			ssoProviderDomain:     "login-stag.confluent-dev.io/oauth",
+			ssoProviderIdentifier: "https://confluent-stag.auth0.com/api/v2/",
+			ssoProviderScope:      "email%20openid%20offline_access",
 		},
 		"test": {
-			ssoProviderDomain:     "test.com",
+			ssoProviderDomain:     "test.com/oauth",
 			ssoProviderIdentifier: "https://test.auth0.com/api/v2/",
+			ssoProviderScope:      "email%20openid%20offline_access",
 		},
 	}
 )
@@ -46,6 +63,7 @@ var (
 type ssoConfig struct {
 	ssoProviderDomain     string
 	ssoProviderIdentifier string
+	ssoProviderScope      string
 }
 
 /*
@@ -63,12 +81,15 @@ type authState struct {
 	SSOProviderClientID           string
 	SSOProviderCallbackUrl        string
 	SSOProviderIdentifier         string
+	SSOProviderScope              string
 }
 
 // InitState generates various auth0 related codes and hashes
 // and tweaks certain variables for internal development and testing of the CLIs
 // auth0 server / SSO integration.
 func newState(authURL string, noBrowser bool) (*authState, error) {
+	authURL = strings.TrimSuffix(authURL, "/")
+
 	if authURL == "" {
 		authURL = "https://confluent.cloud"
 	}
@@ -82,6 +103,12 @@ func newState(authURL string, noBrowser bool) (*authState, error) {
 		env = "devel"
 	} else if authURL == "https://stag.cpdev.cloud" {
 		env = "stag"
+	} else if authURL == "https://confluentgov.com" {
+		env = "prod-us-gov"
+	} else if authURL == "https://infra.confluentgov-internal.com" {
+		env = "infra-us-gov"
+	} else if authURL == "https://devel.confluentgov-internal.com" {
+		env = "devel-us-gov"
 	} else if authURL == testserver.TestCloudUrl.String() {
 		env = "test"
 	} else {
@@ -93,14 +120,14 @@ func newState(authURL string, noBrowser bool) (*authState, error) {
 	state.SSOProviderHost = "https://" + ssoConfigs[env].ssoProviderDomain
 	state.SSOProviderClientID = GetAuth0CCloudClientIdFromBaseUrl(authURL)
 	state.SSOProviderIdentifier = ssoConfigs[env].ssoProviderIdentifier
+	state.SSOProviderScope = ssoConfigs[env].ssoProviderScope
 
 	if !noBrowser {
 		// if we're not using the no browser flow, the callback will always be localhost regardless of environment
 		state.SSOProviderCallbackUrl = ssoProviderCallbackLocalURL
 	}
 
-	err := state.generateCodes()
-	if err != nil {
+	if err := state.generateCodes(); err != nil {
 		return nil, err
 	}
 
@@ -111,23 +138,20 @@ func newState(authURL string, noBrowser bool) (*authState, error) {
 func (s *authState) generateCodes() error {
 	randomBytes := make([]byte, 32)
 
-	_, err := rand.Read(randomBytes)
-	if err != nil {
+	if _, err := rand.Read(randomBytes); err != nil {
 		return errors.Wrap(err, errors.GenerateRandomSSOProviderErrorMsg)
 	}
 
 	s.SSOProviderState = base64.RawURLEncoding.EncodeToString(randomBytes)
 
-	_, err = rand.Read(randomBytes)
-	if err != nil {
+	if _, err := rand.Read(randomBytes); err != nil {
 		return errors.Wrap(err, errors.GenerateRandomCodeVerifierErrorMsg)
 	}
 
 	s.CodeVerifier = base64.RawURLEncoding.EncodeToString(randomBytes)
 
 	hasher := sha256.New()
-	_, err = hasher.Write([]byte(s.CodeVerifier))
-	if err != nil {
+	if _, err := hasher.Write([]byte(s.CodeVerifier)); err != nil {
 		return errors.Wrap(err, errors.ComputeHashErrorMsg)
 	}
 	s.CodeChallenge = base64.RawURLEncoding.EncodeToString(hasher.Sum(nil))
@@ -183,9 +207,9 @@ func (s *authState) saveOAuthTokenResponse(data map[string]any) error {
 }
 
 func (s *authState) getOAuthTokenResponse(payload *strings.Reader) (map[string]any, error) {
-	url := s.SSOProviderHost + "/oauth/token"
-	log.CliLogger.Debugf("Oauth token request URL: %s", url)
-	log.CliLogger.Debug("Oauth token request payload: ", payload)
+	url := s.SSOProviderHost + "/token"
+	log.CliLogger.Debugf("OAuth token request URL: %s", url)
+	log.CliLogger.Debug("OAuth token request payload: ", payload)
 	req, err := http.NewRequest(http.MethodPost, url, payload)
 	if err != nil {
 		return nil, errors.Wrap(err, errors.ConstructOAuthRequestErrorMsg)
@@ -198,26 +222,32 @@ func (s *authState) getOAuthTokenResponse(payload *strings.Reader) (map[string]a
 	defer res.Body.Close()
 	errorResponseBody, _ := io.ReadAll(res.Body)
 	var data map[string]any
-	err = json.Unmarshal(errorResponseBody, &data)
-	if err != nil {
+	if err := json.Unmarshal(errorResponseBody, &data); err != nil {
 		log.CliLogger.Debugf("Failed oauth token response body: %s", errorResponseBody)
 		return nil, errors.Wrap(err, errors.UnmarshalOAuthTokenErrorMsg)
 	}
 	return data, nil
 }
 
-func (s *authState) getAuthorizationCodeUrl(ssoProviderConnectionName string) string {
+func (s *authState) getAuthorizationCodeUrl(ssoProviderConnectionName string, isOkta bool) string {
 	url := s.SSOProviderHost + "/authorize?" +
 		"response_type=code" +
 		"&code_challenge=" + s.CodeChallenge +
 		"&code_challenge_method=S256" +
 		"&client_id=" + s.SSOProviderClientID +
 		"&redirect_uri=" + s.SSOProviderCallbackUrl +
-		"&scope=email%20openid%20offline_access" +
-		"&audience=" + s.SSOProviderIdentifier +
+		"&scope=" + s.SSOProviderScope +
 		"&state=" + s.SSOProviderState
-	if ssoProviderConnectionName != "" {
+
+	if s.SSOProviderIdentifier != "" {
+		url += "&audience=" + s.SSOProviderIdentifier
+	}
+
+	if isOkta {
+		url += "&idp=" + ssoProviderConnectionName
+	} else {
 		url += "&connection=" + ssoProviderConnectionName
 	}
+
 	return url
 }

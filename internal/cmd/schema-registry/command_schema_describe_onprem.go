@@ -6,8 +6,8 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 func (c *command) newSchemaDescribeCommandOnPrem() *cobra.Command {
@@ -15,17 +15,16 @@ func (c *command) newSchemaDescribeCommandOnPrem() *cobra.Command {
 		Use:         "describe [id]",
 		Short:       "Get schema either by schema ID, or by subject/version.",
 		Args:        cobra.MaximumNArgs(1),
-		PreRunE:     c.preDescribe,
 		RunE:        c.schemaDescribeOnPrem,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireOnPremLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Describe the schema string by schema ID.",
-				Code: fmt.Sprintf("%s schema-registry schema describe 1337 %s", pversion.CLIName, OnPremAuthenticationMsg),
+				Code: fmt.Sprintf("confluent schema-registry schema describe 1337 %s", OnPremAuthenticationMsg),
 			},
 			examples.Example{
 				Text: "Describe the schema string by both subject and version.",
-				Code: fmt.Sprintf("%s schema-registry schema describe --subject payments --version latest %s", pversion.CLIName, OnPremAuthenticationMsg),
+				Code: fmt.Sprintf("confluent schema-registry schema describe --subject payments --version latest %s", OnPremAuthenticationMsg),
 			},
 		),
 	}
@@ -40,6 +39,22 @@ func (c *command) newSchemaDescribeCommandOnPrem() *cobra.Command {
 }
 
 func (c *command) schemaDescribeOnPrem(cmd *cobra.Command, args []string) error {
+	subject, err := cmd.Flags().GetString("subject")
+	if err != nil {
+		return err
+	}
+
+	version, err := cmd.Flags().GetString("version")
+	if err != nil {
+		return err
+	}
+
+	if len(args) > 0 && (subject != "" || version != "") {
+		return errors.New(errors.BothSchemaAndSubjectErrorMsg)
+	} else if len(args) == 0 && (subject == "" || version == "") {
+		return errors.New(errors.SchemaOrSubjectErrorMsg)
+	}
+
 	srClient, ctx, err := GetSrApiClientWithToken(cmd, c.Version, c.AuthToken())
 	if err != nil {
 		return err

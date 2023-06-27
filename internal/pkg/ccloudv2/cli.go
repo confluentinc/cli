@@ -28,7 +28,6 @@ func (c *Client) cliApiContext() context.Context {
 }
 
 func (c *Client) CreateCliUsage(usage cliv1.CliV1Usage) error {
-	req := c.CliClient.UsagesCliV1Api.CreateCliV1Usage(c.cliApiContext()).CliV1Usage(usage)
-	r, err := c.CliClient.UsagesCliV1Api.CreateCliV1UsageExecute(req)
-	return errors.CatchCCloudV2Error(err, r)
+	httpResp, err := c.CliClient.UsagesCliV1Api.CreateCliV1Usage(c.cliApiContext()).CliV1Usage(usage).Execute()
+	return errors.CatchCCloudV2Error(err, httpResp)
 }

@@ -1,7 +1,10 @@
 package kafka
 
 import (
+	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
@@ -29,7 +32,7 @@ type mirrorOut struct {
 }
 
 type mirrorCommand struct {
-	*pcmd.AuthenticatedStateFlagCommand
+	*pcmd.AuthenticatedCLICommand
 }
 
 func newMirrorCommand(prerunner pcmd.PreRunner) *cobra.Command {
@@ -39,7 +42,7 @@ func newMirrorCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
-	c := &mirrorCommand{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
+	c := &mirrorCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 
 	cmd.AddCommand(c.newCreateCommand())
 	cmd.AddCommand(c.newDescribeCommand())
@@ -50,4 +53,49 @@ func newMirrorCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(c.newResumeCommand())
 
 	return cmd
+}
+
+func (c *mirrorCommand) validArgs(cmd *cobra.Command, args []string) []string {
+	if len(args) > 0 {
+		return nil
+	}
+
+	return c.validArgsMultiple(cmd, args)
+}
+
+func (c *mirrorCommand) validArgsMultiple(cmd *cobra.Command, args []string) []string {
+	if err := c.PersistentPreRunE(cmd, args); err != nil {
+		return nil
+	}
+
+	return c.autocompleteMirrorTopics(cmd)
+}
+
+func (c *mirrorCommand) autocompleteMirrorTopics(cmd *cobra.Command) []string {
+	linkName, err := cmd.Flags().GetString(linkFlagName)
+	if err != nil || linkName == "" {
+		return nil
+	}
+
+	kafkaREST, err := c.GetKafkaREST()
+	if err != nil || kafkaREST == nil {
+		return nil
+	}
+
+	lkc, err := getKafkaClusterLkcId(c.AuthenticatedCLICommand)
+	if err != nil {
+		return nil
+	}
+
+	opts := &kafkarestv3.ListKafkaMirrorTopicsUnderLinkOpts{MirrorStatus: optional.EmptyInterface()}
+	listMirrorTopicsResponseDataList, _, err := kafkaREST.Client.ClusterLinkingV3Api.ListKafkaMirrorTopicsUnderLink(kafkaREST.Context, lkc, linkName, opts)
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(listMirrorTopicsResponseDataList.Data))
+	for i, mirrorTopic := range listMirrorTopicsResponseDataList.Data {
+		suggestions[i] = mirrorTopic.MirrorTopicName
+	}
+	return suggestions
 }

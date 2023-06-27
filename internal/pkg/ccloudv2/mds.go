@@ -24,14 +24,12 @@ func (c *Client) mdsApiContext() context.Context {
 }
 
 func (c *Client) CreateIamRoleBinding(iamV2RoleBinding *mdsv2.IamV2RoleBinding) (mdsv2.IamV2RoleBinding, error) {
-	req := c.MdsClient.RoleBindingsIamV2Api.CreateIamV2RoleBinding(c.mdsApiContext()).IamV2RoleBinding(*iamV2RoleBinding)
-	resp, httpResp, err := c.MdsClient.RoleBindingsIamV2Api.CreateIamV2RoleBindingExecute(req)
+	resp, httpResp, err := c.MdsClient.RoleBindingsIamV2Api.CreateIamV2RoleBinding(c.mdsApiContext()).IamV2RoleBinding(*iamV2RoleBinding).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) DeleteIamRoleBinding(id string) (mdsv2.IamV2RoleBinding, error) {
-	req := c.MdsClient.RoleBindingsIamV2Api.DeleteIamV2RoleBinding(c.mdsApiContext(), id)
-	resp, httpResp, err := c.MdsClient.RoleBindingsIamV2Api.DeleteIamV2RoleBindingExecute(req)
+	resp, httpResp, err := c.MdsClient.RoleBindingsIamV2Api.DeleteIamV2RoleBinding(c.mdsApiContext(), id).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
@@ -47,7 +45,7 @@ func (c *Client) ListIamRoleBindings(crnPattern, principal, roleName string) ([]
 		}
 		list = append(list, page.GetData()...)
 
-		pageToken, done, err = extractMdsNextPageToken(page.GetMetadata().Next)
+		pageToken, done, err = extractNextPageToken(page.GetMetadata().Next)
 		if err != nil {
 			return nil, err
 		}
@@ -67,14 +65,5 @@ func (c *Client) executeListIamV2RoleBindings(crnPattern, principal, roleName, p
 	if pageToken != "" {
 		req = req.PageToken(pageToken)
 	}
-	return c.MdsClient.RoleBindingsIamV2Api.ListIamV2RoleBindingsExecute(req)
-}
-
-func extractMdsNextPageToken(nextPageUrlStringNullable mdsv2.NullableString) (string, bool, error) {
-	if !nextPageUrlStringNullable.IsSet() || nextPageUrlStringNullable.Get() == nil {
-		return "", true, nil
-	}
-	nextPageUrlString := *nextPageUrlStringNullable.Get()
-	pageToken, err := extractPageToken(nextPageUrlString)
-	return pageToken, false, err
+	return req.Execute()
 }

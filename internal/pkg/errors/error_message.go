@@ -44,7 +44,7 @@ const (
 	SSOCredentialsDoNotMatchLoginCredentialsErrorMsg = "expected SSO credentials for %s but got credentials for %s"
 	SSOCredentialsDoNotMatchSuggestions              = "Please re-login and use the same email at the prompt and in the SSO portal."
 	EndOfFreeTrialErrorMsg                           = `organization "%s" has been suspended because your free trial has ended`
-	EndOfFreeTrialSuggestions                        = `To continue using Confluent Cloud, please enter a credit card with "confluent admin payment update" or claim a promo code with "confluent admin promo add". To enter payment via the UI, please go to confluent.cloud/login .`
+	EndOfFreeTrialSuggestions                        = "To continue using Confluent Cloud, please enter a credit card with `confluent admin payment update` or claim a promo code with `confluent admin promo add`. To enter payment via the UI, please go to https://confluent.cloud/login"
 
 	// confluent cluster commands
 	FetchClusterMetadataErrorMsg     = "unable to fetch cluster metadata: %s - %s"
@@ -125,10 +125,10 @@ const (
 	FetchConfigFileErrorMsg               = "failed to get config file: error code %d"
 	KafkaCredsValidationFailedErrorMsg    = "failed to validate Kafka API credential"
 	KafkaCredsValidationFailedSuggestions = "Verify that the correct Kafka API credential is used.\n" +
-		"If you are using the stored Kafka API credential, verify that the secret is correct. If incorrect, override with `confluent api-key store -f`.\n" +
+		"If you are using the stored Kafka API credential, verify that the secret is correct. If incorrect, override with `confluent api-key store --force`.\n" +
 		"If you are using the flags, verify that the correct Kafka API credential is passed to `--api-key` and `--api-secret`."
 	SRCredsValidationFailedErrorMsg    = "failed to validate Schema Registry API credential"
-	SRCredsValidationFailedSuggestions = "Verify that the correct Schema Registry API credential is passed to `--schema-registry-api-key` and --schema-registry-api-secret`."
+	SRCredsValidationFailedSuggestions = "Verify that the correct Schema Registry API credential is passed to `--schema-registry-api-key` and `--schema-registry-api-secret`."
 
 	// kafka cluster commands
 	ListTopicSuggestions                          = "To list topics for the cluster \"%s\", use `confluent kafka topic list --cluster %s`."
@@ -214,18 +214,12 @@ const (
 	KsqlDBTerminateClusterErrorMsg = `failed to terminate ksqlDB cluster "%s" due to "%s"`
 
 	// local commands
-	NoServicesRunningErrorMsg = "no services running"
-	TopNotAvailableErrorMsg   = "top command not available on platform: %s"
-	InvalidConnectorErrorMsg  = "invalid connector: %s"
-	FailedToStartErrorMsg     = "%s failed to start"
-	FailedToStopErrorMsg      = "%s failed to stop"
-	JavaRequirementErrorMsg   = "the Confluent CLI requires Java version 1.8 or 1.11.\n" +
-		"See https://docs.confluent.io/current/installation/versions-interoperability.html .\n" +
-		"If you have multiple versions of Java installed, you may need to set JAVA_HOME to the version you want Confluent to use."
-	NoLogFoundErrorMsg       = `no log found: to run %s, use "confluent local services %s start"`
-	MacVersionErrorMsg       = "macOS version >= %s is required (detected: %s)"
-	JavaExecNotFondErrorMsg  = "could not find java executable, please install java or set JAVA_HOME"
-	NothingToDestroyErrorMsg = "nothing to destroy"
+	ConfluentLocalStartedErrorMsg    = "Confluent Local container has already been created"
+	ConfluentLocalStartedSuggestions = "Continue your experience with Confluent Local running `confluent local kafka produce` and `confluent local kafka consume`.\n" +
+		"To stop Confluent Local container, run `confluent local kafka stop` or `docker container rm confluent-local -f`."
+	FailedToReadPortsErrorMsg       = "failed to read local ports from config"
+	FailedToReadPortsSuggestions    = "Restart Confluent Local with `confluent local kafka stop` and `confluent local kafka start`"
+	InstallAndStartDockerSuggestion = "Make sure Docker is installed following the guide: `https://docs.docker.com/engine/install/` and Docker daemon is running."
 
 	// schema-registry commands
 	InvalidSchemaRegistryLocationErrorMsg    = "invalid input for flag `--geo`"
@@ -253,7 +247,7 @@ const (
 	UpdateClientFailurePrefix      = "update client failure"
 	UpdateClientFailureSuggestions = "Please submit a support ticket.\n" +
 		"In the meantime, see link for other ways to download the latest CLI version:\n" +
-		"https://docs.confluent.io/current/cli/installing.html ."
+		"https://docs.confluent.io/current/cli/installing.html"
 	ReadingYesFlagErrorMsg              = "error reading `--yes` flag as bool"
 	CheckingForUpdateErrorMsg           = "error checking for updates"
 	UpdateBinaryErrorMsg                = "error updating CLI binary"
@@ -434,18 +428,18 @@ const (
 	KafkaRestErrorMsg                 = "Kafka REST request failed: %s %s: %s"
 	KafkaRestConnectionErrorMsg       = "unable to establish Kafka REST connection: %s: %s"
 	KafkaRestUnexpectedStatusErrorMsg = "Kafka REST request failed: %s: unexpected HTTP Status: %d"
-	KafkaRestCertErrorSuggestions     = `To specify a CA certificate, please use the "ca-cert-path" flag or set "CONFLUENT_PLATFORM_CA_CERT_PATH".`
+	KafkaRestCertErrorSuggestions     = "To specify a CA certificate, please use the `--ca-cert-path` flag or set `CONFLUENT_PLATFORM_CA_CERT_PATH`."
 	KafkaRestUrlNotFoundErrorMsg      = "Kafka REST URL not found"
-	KafkaRestUrlNotFoundSuggestions   = "Use the `--url` flag or set CONFLUENT_REST_URL."
+	KafkaRestUrlNotFoundSuggestions   = "Use the `--url` flag or set `CONFLUENT_REST_URL`."
 	KafkaRestProvisioningErrorMsg     = `Kafka REST unavailable: Kafka cluster "%s" is still provisioning`
 	NoClustersFoundErrorMsg           = "no clusters found"
 	NoClustersFoundSuggestions        = "Please check the status of your cluster and the Kafka REST bootstrap.servers configuration."
-	NeedClientCertAndKeyPathsErrorMsg = `must set "client-cert-path" and "client-key-path" flags together`
+	NeedClientCertAndKeyPathsErrorMsg = "must set `--client-cert-path` and `--client-key-path` flags together"
 	InvalidMDSTokenErrorMsg           = "Invalid MDS token"
-	InvalidMDSTokenSuggestions        = `Re-login with "confluent login".`
+	InvalidMDSTokenSuggestions        = "Re-login with `confluent login`."
 
 	// Special error handling
-	QuotaExceededSuggestions = `Look up Confluent Cloud service quota limits with "confluent service-quota list".`
+	QuotaExceededSuggestions = "Look up Confluent Cloud service quota limits with `confluent service-quota list`."
 	AvoidTimeoutSuggestions  = "To avoid session timeouts, non-SSO users can save their credentials to the netrc file with `confluent login --save`."
 	NotLoggedInErrorMsg      = "not logged in"
 	AuthTokenSuggestions     = "You must be logged in to retrieve an oauthbearer token.\n" +
@@ -476,10 +470,6 @@ const (
 		"To create an API key, use `confluent api-key create --resource %s`.\n" +
 		"To store an existing API key, use `confluent api-key store --resource %s`."
 	FailedToReadInputErrorMsg = "failed to read input"
-
-	// Flag parsing errors
-	EnvironmentFlagWithApiLoginErrorMsg = `"environment" flag should not be passed for API key context`
-	ClusterFlagWithApiLoginErrorMsg     = `"cluster" flag should not be passed for API key context, cluster is inferred`
 
 	// Partition command errors
 	SpecifyPartitionIdWithTopicErrorMsg = "must specify topic along with partition ID"

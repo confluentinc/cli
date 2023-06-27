@@ -9,10 +9,11 @@ import (
 
 func (c *command) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "describe <pipeline-id>",
-		Short: "Describe a Stream Designer pipeline.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  c.describe,
+		Use:               "describe <pipeline-id>",
+		Short:             "Describe a Stream Designer pipeline.",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		RunE:              c.describe,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Describe Stream Designer pipeline "pipe-12345".`,
@@ -34,7 +35,12 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	pipeline, err := c.V2Client.GetSdPipeline(c.EnvironmentId(), cluster.ID, args[0])
+	environmentId, err := c.Context.EnvironmentId()
+	if err != nil {
+		return err
+	}
+
+	pipeline, err := c.V2Client.GetSdPipeline(environmentId, cluster.ID, args[0])
 	if err != nil {
 		return err
 	}

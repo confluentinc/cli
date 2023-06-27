@@ -26,20 +26,20 @@ func (c *identityProviderCommand) newUpdateCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("description", "", "Description of the identity provider.")
 	cmd.Flags().String("name", "", "Name of the identity provider.")
+	cmd.Flags().String("description", "", "Description of the identity provider.")
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
 
 func (c *identityProviderCommand) update(cmd *cobra.Command, args []string) error {
-	description, err := cmd.Flags().GetString("description")
+	name, err := cmd.Flags().GetString("name")
 	if err != nil {
 		return err
 	}
 
-	name, err := cmd.Flags().GetString("name")
+	description, err := cmd.Flags().GetString("description")
 	if err != nil {
 		return err
 	}
@@ -48,13 +48,12 @@ func (c *identityProviderCommand) update(cmd *cobra.Command, args []string) erro
 		return errors.New(errors.IdentityProviderNoOpUpdateErrorMsg)
 	}
 
-	identityProviderId := args[0]
-	update := identityproviderv2.IamV2IdentityProviderUpdate{Id: &identityProviderId}
+	update := identityproviderv2.IamV2IdentityProviderUpdate{Id: identityproviderv2.PtrString(args[0])}
 	if name != "" {
-		update.DisplayName = &name
+		update.DisplayName = identityproviderv2.PtrString(name)
 	}
 	if description != "" {
-		update.Description = &description
+		update.Description = identityproviderv2.PtrString(description)
 	}
 
 	identityProvider, err := c.V2Client.UpdateIdentityProvider(update)

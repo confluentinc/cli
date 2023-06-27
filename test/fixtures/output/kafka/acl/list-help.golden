@@ -1,0 +1,22 @@
+List Kafka ACLs for a resource.
+
+Usage:
+  confluent kafka acl list [flags]
+
+Flags:
+      --cluster-scope             Modify ACLs for the cluster.
+      --topic string              Modify ACLs for the specified topic resource.
+      --consumer-group string     Modify ACLs for the specified consumer group resource.
+      --transactional-id string   Modify ACLs for the specified TransactionalID resource.
+      --prefix                    When this flag is set, the specified resource name is interpreted as a prefix.
+      --cluster string            Kafka cluster ID.
+      --context string            CLI context name.
+      --environment string        Environment ID.
+      --service-account string    Service account ID.
+      --principal string          Principal for this operation, prefixed with "User:".
+  -o, --output string             Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

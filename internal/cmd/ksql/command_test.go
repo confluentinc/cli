@@ -64,9 +64,7 @@ func (suite *KSQLTestSuite) SetupTest() {
 			KafkaCluster: &ksqlv2.ObjectReference{
 				Id: suite.conf.Context().KafkaClusterContext.GetActiveKafkaClusterId(),
 			},
-			CredentialIdentity: &ksqlv2.ObjectReference{
-				Id: serviceAcctResourceID,
-			},
+			CredentialIdentity:       &ksqlv2.ObjectReference{Id: serviceAcctResourceID},
 			UseDetailedProcessingLog: &useDetailedProcessingLog,
 		},
 		Status: &ksqlv2.KsqldbcmV2ClusterStatus{
@@ -111,7 +109,7 @@ func (suite *KSQLTestSuite) SetupTest() {
 		},
 	}
 	suite.userc = &ccloudv1mock.UserInterface{
-		GetServiceAccountsFunc: func(_ context.Context) ([]*ccloudv1.User, error) {
+		GetServiceAccountsFunc: func() ([]*ccloudv1.User, error) {
 			return []*ccloudv1.User{suite.serviceAcct}, nil
 		},
 	}

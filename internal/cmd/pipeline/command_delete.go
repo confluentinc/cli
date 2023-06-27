@@ -15,10 +15,11 @@ import (
 
 func (c *command) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "delete <pipeline-id>",
-		Short: "Delete a pipeline.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  c.delete,
+		Use:               "delete <pipeline-id>",
+		Short:             "Delete a pipeline.",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		RunE:              c.delete,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Request to delete Stream Designer pipeline "pipe-12345".`,
@@ -40,7 +41,12 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	pipeline, err := c.V2Client.GetSdPipeline(c.EnvironmentId(), cluster.ID, args[0])
+	environmentId, err := c.Context.EnvironmentId()
+	if err != nil {
+		return err
+	}
+
+	pipeline, err := c.V2Client.GetSdPipeline(environmentId, cluster.ID, args[0])
 	if err != nil {
 		return err
 	}
@@ -50,7 +56,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if err := c.V2Client.DeleteSdPipeline(c.EnvironmentId(), cluster.ID, args[0]); err != nil {
+	if err := c.V2Client.DeleteSdPipeline(environmentId, cluster.ID, args[0]); err != nil {
 		return err
 	}
 

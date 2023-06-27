@@ -14,7 +14,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 func (c *command) newSchemaDeleteCommand() *cobra.Command {
@@ -28,7 +27,7 @@ func (c *command) newSchemaDeleteCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Soft delete the latest version of subject "payments".`,
-				Code: fmt.Sprintf("%s schema-registry schema delete --subject payments --version latest", pversion.CLIName),
+				Code: "confluent schema-registry schema delete --subject payments --version latest",
 			},
 		),
 	}
@@ -79,11 +78,13 @@ func deleteSchema(cmd *cobra.Command, srClient *srsdk.APIClient, ctx context.Con
 		checkVersion = "latest"
 	}
 	if permanent {
-		opts := &srsdk.GetSchemaByVersionOpts{Deleted: optional.NewBool(true)}
-		if _, httpResp, err := srClient.DefaultApi.GetSchemaByVersion(ctx, subject, checkVersion, opts); err != nil {
-			return errors.CatchSchemaNotFoundError(err, httpResp)
-		} else if _, _, err := srClient.DefaultApi.GetSchemaByVersion(ctx, subject, checkVersion, nil); err == nil {
-			return errors.New("you must first soft delete a schema version before you can permanently delete it")
+		if checkVersion != "latest" {
+			opts := &srsdk.GetSchemaByVersionOpts{Deleted: optional.NewBool(true)}
+			if _, httpResp, err := srClient.DefaultApi.GetSchemaByVersion(ctx, subject, checkVersion, opts); err != nil {
+				return errors.CatchSchemaNotFoundError(err, httpResp)
+			} else if _, _, err := srClient.DefaultApi.GetSchemaByVersion(ctx, subject, checkVersion, nil); err == nil {
+				return errors.New("you must first soft delete a schema version before you can permanently delete it")
+			}
 		}
 	} else if _, httpResp, err := srClient.DefaultApi.GetSchemaByVersion(ctx, subject, checkVersion, nil); err != nil {
 		return errors.CatchSchemaNotFoundError(err, httpResp)

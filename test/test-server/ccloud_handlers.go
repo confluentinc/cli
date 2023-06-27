@@ -27,6 +27,7 @@ var (
 		{Id: "not-595", Name: "other"},
 		{Id: "env-123", Name: "env123"},
 		{Id: SRApiEnvId, Name: "srUpdate"},
+		{Id: "env-987zy", Name: "confluent-audit-log"},
 	}
 	keyIndex      = int32(3)
 	resourceIdMap = map[int32]string{auditLogServiceAccountID: auditLogServiceAccountResourceID, serviceAccountID: serviceAccountResourceID}
@@ -48,15 +49,6 @@ var (
 )
 
 const (
-	exampleAvailability = "low"
-	exampleCloud        = "aws"
-	exampleClusterType  = "basic"
-	exampleMetric       = "ConnectNumRecords"
-	exampleNetworkType  = "internet"
-	examplePrice        = 1
-	exampleRegion       = "us-east-1"
-	exampleUnit         = "GB"
-
 	serviceAccountID           = int32(12345)
 	serviceAccountResourceID   = "sa-12345"
 	identityProviderResourceID = "op-12345"
@@ -68,11 +60,6 @@ const (
 	auditLogServiceAccountResourceID = "sa-1337"
 
 	PromoTestCode = "PromoTestCode"
-
-	exampleSRPriceKey   = "aws:us-west-2:free:1:max"
-	exampleSRPriceTable = "SchemaRegistry"
-	exampleSRPriceUnit  = "Schema-Hour"
-	exampleSchemaLimit  = 1000
 )
 
 // Handler for: "/api/me"
@@ -83,8 +70,12 @@ func handleMe(t *testing.T, isAuditLogEnabled bool) http.HandlerFunc {
 			orgResourceId = "abc-123"
 		}
 
-		org := &ccloudv1.Organization{Id: 42, ResourceId: orgResourceId, Name: "Confluent"}
-		if !isAuditLogEnabled {
+		org := &ccloudv1.Organization{
+			Id:         42,
+			ResourceId: orgResourceId,
+			Name:       "Confluent",
+		}
+		if isAuditLogEnabled {
 			org.AuditLog = &ccloudv1.AuditLog{
 				ClusterId:        "lkc-ab123",
 				AccountId:        "env-987zy",
@@ -93,8 +84,7 @@ func handleMe(t *testing.T, isAuditLogEnabled bool) http.HandlerFunc {
 			}
 		}
 
-		isOrgOnMarketplace := os.Getenv("IS_ORG_ON_MARKETPLACE") == "true"
-		if isOrgOnMarketplace {
+		if os.Getenv("IS_ORG_ON_MARKETPLACE") == "true" {
 			org.Marketplace = &ccloudv1.Marketplace{Partner: ccloudv1.MarketplacePartner_AWS}
 		}
 
@@ -139,9 +129,9 @@ func handleLogin(t *testing.T) http.HandlerFunc {
 		case "expired@user.com":
 			res.Token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1MzAxMjQ4NTcsImV4cCI6MTUzMDAzODQ1NywiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoianJvY2tldEBleGFtcGxlLmNvbSJ9.Y2ui08GPxxuV9edXUBq-JKr1VPpMSnhjSFySczCby7Y"
 		case "malformed@user.com":
-			res.Token = "malformed"
+			res.Token = "eyJ.eyJ.malformed"
 		case "invalid@user.com":
-			res.Token = "invalid"
+			res.Token = "eyJ.eyJ.invalid"
 		default:
 			res.Token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1NjE2NjA4NTcsImV4cCI6MjUzMzg2MDM4NDU3LCJhdWQiOiJ3d3cuZXhhbXBsZS5jb20iLCJzdWIiOiJqcm9ja2V0QGV4YW1wbGUuY29tIn0.G6IgrFm5i0mN7Lz9tkZQ2tZvuZ2U7HKnvxMuZAooPmE"
 			res.Organization = RegularOrg
@@ -163,57 +153,6 @@ func handleLoginRealm(t *testing.T) http.HandlerFunc {
 		}
 		err := json.NewEncoder(w).Encode(res)
 		require.NoError(t, err)
-	}
-}
-
-// Handler for: "/api/accounts/{id}"
-func handleEnvironment(t *testing.T) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		envId := vars["id"]
-		if env := isValidEnvironmentId(environments, envId); env != nil {
-			switch r.Method {
-			case http.MethodGet: // called by `environment use`
-				b, err := ccstructs.MarshalJSONToBytes(&ccloudv1.GetAccountReply{Account: env})
-				require.NoError(t, err)
-				_, err = io.WriteString(w, string(b))
-				require.NoError(t, err)
-			case http.MethodPut: // called by `environment create`
-				req := &ccloudv1.CreateAccountRequest{}
-				err := ccstructs.UnmarshalJSON(r.Body, req)
-				require.NoError(t, err)
-				env.Name = req.Account.Name
-				b, err := ccstructs.MarshalJSONToBytes(&ccloudv1.CreateAccountReply{Account: env})
-				require.NoError(t, err)
-				_, err = io.WriteString(w, string(b))
-				require.NoError(t, err)
-			}
-		} else {
-			// env not found
-			w.WriteHeader(http.StatusNotFound)
-		}
-	}
-}
-
-// Handler for: "/api/accounts" Post
-func handleEnvironments(t *testing.T) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodPost {
-			req := &ccloudv1.CreateAccountRequest{}
-			err := ccstructs.UnmarshalJSON(r.Body, req)
-			require.NoError(t, err)
-
-			createAccountReply := &ccloudv1.CreateAccountReply{
-				Account: &ccloudv1.Account{
-					Id:   "a-5555",
-					Name: req.Account.Name,
-				},
-			}
-			b, err := ccstructs.MarshalJSONToBytes(createAccountReply)
-			require.NoError(t, err)
-			_, err = io.WriteString(w, string(b))
-			require.NoError(t, err)
-		}
 	}
 }
 
@@ -432,6 +371,7 @@ func handleLaunchDarkly(t *testing.T) http.HandlerFunc {
 			"testBool":                               true,
 			"testString":                             "string",
 			"testInt":                                1,
+			"testAnotherInt":                         99,
 			"testJson":                               map[string]any{"key": "val"},
 			"cli.deprecation_notices":                []map[string]any{},
 			"cli.client_quotas.enable":               true,

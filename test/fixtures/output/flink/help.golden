@@ -1,0 +1,17 @@
+Manage Apache Flink.
+
+Usage:
+  confluent flink [command]
+
+Available Commands:
+  compute-pool Manage Flink compute pools.
+  region       List Flink regions.
+  shell        Start Flink interactive SQL client.
+  statement    Manage Flink SQL statements.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent flink [command] --help" for more information about a command.

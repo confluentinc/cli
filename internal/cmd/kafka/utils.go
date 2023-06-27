@@ -69,7 +69,7 @@ func toAlterConfigBatchRequestDataOnPrem(configsMap map[string]string) cpkafkare
 	return cpkafkarestv3.AlterConfigBatchRequestData{Data: kafkaRestConfigs}
 }
 
-func getKafkaClusterLkcId(c *pcmd.AuthenticatedStateFlagCommand) (string, error) {
+func getKafkaClusterLkcId(c *pcmd.AuthenticatedCLICommand) (string, error) {
 	kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return "", err
@@ -89,7 +89,7 @@ func handleOpenApiError(httpResp *_nethttp.Response, err error, client *cpkafkar
 	return err
 }
 
-func getKafkaRestProxyAndLkcId(c *pcmd.AuthenticatedStateFlagCommand) (*pcmd.KafkaREST, string, error) {
+func getKafkaRestProxyAndLkcId(c *pcmd.AuthenticatedCLICommand) (*pcmd.KafkaREST, string, error) {
 	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {
 		return nil, "", err
@@ -119,7 +119,10 @@ func getCmkClusterType(cluster *cmkv2.CmkV2Cluster) string {
 	if isStandard(cluster) {
 		return ccstructs.Sku_name[3]
 	}
-	return ccstructs.Sku_name[4]
+	if isDedicated(cluster) {
+		return ccstructs.Sku_name[4]
+	}
+	return ccstructs.Sku_name[0] // UNKNOWN
 }
 
 func getCmkClusterSize(cluster *cmkv2.CmkV2Cluster) int32 {

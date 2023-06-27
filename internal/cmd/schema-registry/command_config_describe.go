@@ -2,10 +2,12 @@ package schemaregistry
 
 import (
 	"context"
-	"fmt"
+	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/tidwall/pretty"
 
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
@@ -13,11 +15,15 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 type configOut struct {
-	CompatibilityLevel string `human:"Compatibility Level" serialized:"compatibility_level"`
+	CompatibilityLevel string `human:"Compatibility Level,omitempty" serialized:"compatibility_level,omitempty"`
+	CompatibilityGroup string `human:"Compatibility Group,omitempty" serialized:"compatibility_group,omitempty"`
+	MetadataDefaults   string `human:"Metadata Defaults,omitempty" serialized:"metadata_defaults,omitempty"`
+	MetadataOverrides  string `human:"Metadata Overrides,omitempty" serialized:"metadata_overrides,omitempty"`
+	RulesetDefaults    string `human:"Ruleset Defaults,omitempty" serialized:"ruleset_defaults,omitempty"`
+	RulesetOverrides   string `human:"Ruleset Overrides,omitempty" serialized:"ruleset_overrides,omitempty"`
 }
 
 func (c *command) newConfigDescribeCommand() *cobra.Command {
@@ -29,11 +35,11 @@ func (c *command) newConfigDescribeCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Describe the configuration of subject "payments".`,
-				Code: fmt.Sprintf("%s schema-registry config describe --subject payments", pversion.CLIName),
+				Code: "confluent schema-registry config describe --subject payments",
 			},
 			examples.Example{
 				Text: "Describe the top-level configuration.",
-				Code: fmt.Sprintf("%s schema-registry config describe", pversion.CLIName),
+				Code: "confluent schema-registry config describe",
 			},
 		),
 	}
@@ -77,7 +83,48 @@ func describeSchemaConfig(cmd *cobra.Command, srClient *srsdk.APIClient, ctx con
 		}
 	}
 
+	out := &configOut{
+		CompatibilityLevel: config.CompatibilityLevel,
+		CompatibilityGroup: config.CompatibilityGroup,
+	}
+
+	if config.DefaultMetadata != nil {
+		defaultMetadata, err := json.Marshal(config.DefaultMetadata)
+		if err != nil {
+			return err
+		}
+		out.MetadataDefaults = prettyJson(defaultMetadata)
+	}
+
+	if config.OverrideMetadata != nil {
+		overrideMetadata, err := json.Marshal(config.OverrideMetadata)
+		if err != nil {
+			return err
+		}
+		out.MetadataOverrides = prettyJson(overrideMetadata)
+	}
+
+	if config.DefaultRuleSet != nil {
+		defaultRuleset, err := json.Marshal(config.DefaultRuleSet)
+		if err != nil {
+			return err
+		}
+		out.RulesetDefaults = prettyJson(defaultRuleset)
+	}
+
+	if config.OverrideRuleSet != nil {
+		overrideRuleset, err := json.Marshal(config.OverrideRuleSet)
+		if err != nil {
+			return err
+		}
+		out.RulesetOverrides = prettyJson(overrideRuleset)
+	}
+
 	table := output.NewTable(cmd)
-	table.Add(&configOut{CompatibilityLevel: config.CompatibilityLevel})
-	return table.Print()
+	table.Add(out)
+	return table.PrintWithAutoWrap(false)
+}
+
+func prettyJson(str []byte) string {
+	return strings.TrimSuffix(string(pretty.Pretty(str)), "\n")
 }

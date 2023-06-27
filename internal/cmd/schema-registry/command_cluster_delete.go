@@ -1,7 +1,6 @@
 package schemaregistry
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -12,7 +11,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
 func (c *command) newClusterDeleteCommand() *cobra.Command {
@@ -24,8 +22,8 @@ func (c *command) newClusterDeleteCommand() *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Delete the Schema Registry cluster for environment "env-12345"`,
-				Code: fmt.Sprintf("%s schema-registry cluster delete --environment env-12345", version.CLIName),
+				Text: `Delete the Schema Registry cluster for environment "env-12345".`,
+				Code: "confluent schema-registry cluster delete --environment env-12345",
 			},
 		),
 	}
@@ -41,23 +39,33 @@ func (c *command) newClusterDeleteCommand() *cobra.Command {
 }
 
 func (c *command) clusterDelete(cmd *cobra.Command, _ []string) error {
-	ctx := context.Background()
-
-	cluster, err := c.Context.FetchSchemaRegistryByEnvironmentId(ctx, c.EnvironmentId())
+	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}
 
-	promptMsg := fmt.Sprintf(`Are you sure you want to delete %s "%s" for %s "%s"?`, resource.SchemaRegistryCluster, cluster.Id, resource.Environment, c.EnvironmentId())
+	clusters, err := c.V2Client.GetSchemaRegistryClustersByEnvironment(environmentId)
+	if err != nil {
+		return err
+	}
+
+	if len(clusters) == 0 {
+		return errors.NewSRNotEnabledError()
+	}
+
+	promptMsg := fmt.Sprintf(`Are you sure you want to delete %s "%s" for %s "%s"?`, resource.SchemaRegistryCluster, clusters[0].GetId(), resource.Environment, environmentId)
 	if ok, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil || !ok {
 		return err
 	}
 
-	err = c.Client.SchemaRegistry.DeleteSchemaRegistryCluster(ctx, cluster)
-	if err != nil {
+	if err = c.V2Client.DeleteSchemaRegistryCluster(clusters[0].GetId(), environmentId); err != nil {
 		return err
 	}
 
-	output.Printf(errors.SchemaRegistryClusterDeletedMsg, c.EnvironmentId())
+	ctx := c.Config.Context()
+	ctx.SchemaRegistryClusters[environmentId] = nil
+	_ = ctx.Save()
+
+	output.Printf(errors.SchemaRegistryClusterDeletedMsg, environmentId)
 	return nil
 }

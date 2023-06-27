@@ -1,1 +1,5 @@
-Updated the name of environment "not-595" to "new-other-name".
++---------+----------------+
+| Current | true           |
+| ID      | not-595        |
+| Name    | new-other-name |
++---------+----------------+

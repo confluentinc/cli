@@ -1,7 +1,6 @@
 package price
 
 import (
-	"context"
 	"fmt"
 	"strings"
 
@@ -9,6 +8,7 @@ import (
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
+	"github.com/confluentinc/cli/internal/pkg/billing"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/types"
@@ -160,14 +160,17 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *command) listRows(filters []string, metric string, legacy bool) ([]row, error) {
-	org := &ccloudv1.Organization{Id: c.Context.GetOrganization().GetId()}
-
-	kafkaPricesReply, err := c.Client.Billing.GetPriceTable(context.Background(), org, "kafka")
+	user, err := c.Client.Auth.User()
 	if err != nil {
 		return nil, err
 	}
 
-	clusterLinkPricesReply, err := c.Client.Billing.GetPriceTable(context.Background(), org, "cluster-link")
+	kafkaPricesReply, err := c.Client.Billing.GetPriceTable(user.GetOrganization(), "kafka")
+	if err != nil {
+		return nil, err
+	}
+
+	clusterLinkPricesReply, err := c.Client.Billing.GetPriceTable(user.GetOrganization(), "cluster-link")
 	if err != nil {
 		return nil, err
 	}
@@ -257,7 +260,7 @@ func printTable(cmd *cobra.Command, rows []row) error {
 				ClusterType:  formatClusterTypeHuman[row.clusterType],
 				Availability: formatAvailability[row.availability],
 				NetworkType:  formatNetworkType[row.networkType],
-				Price:        formatPrice(row.price, row.unit),
+				Price:        billing.FormatPrice(row.price, row.unit),
 			})
 		} else {
 			list.Add(&serializedOut{
@@ -270,22 +273,4 @@ func printTable(cmd *cobra.Command, rows []row) error {
 		}
 	}
 	return list.Print()
-}
-
-func formatPrice(price float64, unit string) string {
-	priceStr := fmt.Sprint(price)
-
-	// Require >= 2 digits after the decimal
-	if strings.Contains(priceStr, ".") {
-		// Extend the remainder if needed
-		r := strings.Split(priceStr, ".")
-		for len(r[1]) < 2 {
-			r[1] += "0"
-		}
-		priceStr = strings.Join(r, ".")
-	} else {
-		priceStr += ".00"
-	}
-
-	return fmt.Sprintf("$%s USD/%s", priceStr, unit)
 }

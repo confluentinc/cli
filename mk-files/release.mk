@@ -3,37 +3,37 @@ ARCHIVE_TYPES=darwin_amd64.tar.gz darwin_arm64.tar.gz linux_amd64.tar.gz linux_a
 # If you set up your laptop following https://github.com/confluentinc/cc-documentation/blob/master/Operations/Laptop%20Setup.md
 # then assuming caas.sh lives here should be fine
 define aws-authenticate
-	source ~/git/go/src/github.com/confluentinc/cc-dotfiles/caas.sh && AWS_PROFILE=cc-production-1/prod-administrator aws sts get-caller-identity
+	$(call dry-run,export AWS_PROFILE=cc-production-1/prod-administrator)
 endef
 
 
 .PHONY: release
-release: check-branch commit-release tag-release
+release: check-branch
 	$(call print-boxed-message,"RELEASING TO STAGING FOLDER $(S3_STAG_PATH)")
-	make release-to-stag
+	$(MAKE) release-to-stag
 	$(call print-boxed-message,"PUBLISHING RELEASE NOTES TO S3 $(S3_BUCKET_PATH)")
-	make publish-release-notes-to-s3
+	$(MAKE) publish-release-notes-to-s3
+	$(call print-boxed-message,"PUBLISHING INSTALLER TO S3 $(S3_BUCKET_PATH)")
+	$(MAKE) publish-installer
 	$(call print-boxed-message,"RELEASING TO PROD FOLDER $(S3_BUCKET_PATH)")
-	make release-to-prod
+	$(MAKE) release-to-prod
 	$(call print-boxed-message,"PUBLISHING DOCS")
-	VERSION=$(VERSION) make publish-docs
-	$(call print-boxed-message,"PUBLISHING NEW DOCKER HUB IMAGES")
-	make publish-dockerhub
+	$(MAKE) publish-docs
 
 .PHONY: check-branch
 check-branch:
 	if [ $(shell git rev-parse --abbrev-ref HEAD) != main ] ; then \
-		echo -n "WARNING: Current branch \"$(shell git rev-parse --abbrev-ref HEAD)\" is not the default release branch \"main\"!  Do you want to proceed? (y/n): " ; \
-		read line; if [ $$line != "y" ] && [ $$line != "Y" ]; then echo "Release cancelled."; exit 0; fi ; \
+		echo -n "WARNING: Current branch \"$(shell git rev-parse --abbrev-ref HEAD)\" is not the default release branch \"main\"!  Do you want to proceed? (y/n): "; \
+		read line; if [ $$line != "y" ] && [ $$line != "Y" ]; then echo "Release cancelled."; exit 0; fi; \
 	fi
 
 .PHONY: release-to-stag
 release-to-stag:
-	make gorelease
-	make goreleaser-patches
-	make copy-stag-archives-to-latest
+	$(MAKE) gorelease
+	$(MAKE) goreleaser-patches
+	$(MAKE) copy-stag-archives-to-latest
 	$(call print-boxed-message,"VERIFYING STAGING RELEASE CONTENT")
-	make verify-stag
+	$(MAKE) verify-stag
 	$(call print-boxed-message,"STAGING RELEASE COMPLETED AND VERIFIED!")
 
 .PHONY: release-to-prod
@@ -43,7 +43,7 @@ release-to-prod:
 	$(call copy-stag-content-to-prod,binaries,$(CLEAN_VERSION)); \
 	$(call copy-stag-content-to-prod,archives,latest)
 	$(call print-boxed-message,"VERIFYING PROD RELEASE CONTENT")
-	make verify-prod
+	$(MAKE) verify-prod
 	$(call print-boxed-message,"PROD RELEASE COMPLETED AND VERIFIED!")
 
 define copy-stag-content-to-prod
@@ -52,52 +52,41 @@ define copy-stag-content-to-prod
 	$(call dry-run,aws s3 cp $(S3_STAG_PATH)/$${folder_path} $(S3_BUCKET_PATH)/$${folder_path} --recursive --acl public-read) || exit 1
 endef
 
-# The glibc container doesn't need to publish to S3 so it doesn't need to $(caasenv-authenticate)
-.PHONY: gorelease-linux-glibc
-gorelease-linux-glibc:
+.PHONY: gorelease-linux-amd64
+gorelease-linux-amd64:
 	go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
-	VERSION=$(VERSION) GOEXPERIMENT=boringcrypto goreleaser release --clean -f .goreleaser-linux-glibc.yml
+	GOEXPERIMENT=boringcrypto goreleaser release --clean --config .goreleaser-linux-amd64.yml
 
-.PHONY: gorelease-linux-glibc-arm64
-gorelease-linux-glibc-arm64:
+.PHONY: gorelease-linux-arm64
+gorelease-linux-arm64:
 ifneq (,$(findstring x86_64,$(shell uname -m)))
 	go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
-	VERSION=$(VERSION) CGO_ENABLED=1 CC=aarch64-linux-gnu-gcc CXX=aarch64-linux-gnu-g++ GOEXPERIMENT=boringcrypto goreleaser release --clean -f .goreleaser-linux-glibc-arm64.yml
+	CGO_ENABLED=1 CC=aarch64-linux-gnu-gcc CXX=aarch64-linux-gnu-g++ GOEXPERIMENT=boringcrypto goreleaser release --clean --config .goreleaser-linux-arm64.yml
 else
 	go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
-	VERSION=$(VERSION) GOEXPERIMENT=boringcrypto goreleaser release --clean -f .goreleaser-linux-glibc-arm64.yml
+	GOEXPERIMENT=boringcrypto goreleaser release --clean --config .goreleaser-linux-arm64.yml
 endif
 
 # This builds the Darwin, Windows and Linux binaries using goreleaser on the host computer. Goreleaser takes care of uploading the resulting binaries/archives/checksums to S3.
-# Uploading linux glibc files because its goreleaser file has set release disabled
 .PHONY: gorelease
 gorelease:
+	$(eval DIR=$(shell mktemp -d))
+	$(eval CLI_RELEASE=$(DIR)/cli-release)
+
 	$(eval token := $(shell (grep github.com ~/.netrc -A 2 | grep password || grep github.com ~/.netrc -A 2 | grep login) | head -1 | awk -F' ' '{ print $$2 }'))
 	$(aws-authenticate) && \
-	echo "BUILDING FOR DARWIN, WINDOWS, AND ALPINE LINUX" && \
-	go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
-	VERSION=$(VERSION) GITHUB_TOKEN=$(token) S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli GOEXPERIMENT=boringcrypto DRY_RUN=$(DRY_RUN) goreleaser release --clean -f .goreleaser.yml --release-notes release-notes/latest-release.rst --timeout 60m; \
-	rm -f CLIEVCodeSigningCertificate2.pfx && \
-	echo "BUILDING FOR GLIBC LINUX" && \
-	scripts/build_linux_glibc.sh && \
-	$(call dry-run,aws s3 cp dist/confluent_$(VERSION_NO_V)_linux_amd64.tar.gz $(S3_STAG_PATH)/confluent-cli/archives/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_linux_amd64.tar.gz) && \
-	$(call dry-run,aws s3 cp dist/confluent_$(VERSION_NO_V)_linux_arm64.tar.gz $(S3_STAG_PATH)/confluent-cli/archives/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_linux_arm64.tar.gz) && \
-	$(aws-authenticate) && \
-	$(call dry-run,aws s3 cp dist/confluent_linux_amd64_v1/confluent $(S3_STAG_PATH)/confluent-cli/binaries/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_linux_amd64) && \
-	$(call dry-run,aws s3 cp dist/confluent_linux_arm64/confluent $(S3_STAG_PATH)/confluent-cli/binaries/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_linux_arm64) && \
-	cat dist/confluent_$(VERSION_NO_V)_checksums_linux.txt >> dist/confluent_$(VERSION_NO_V)_checksums.txt && \
-	cat dist/confluent_$(VERSION_NO_V)_checksums_linux_arm64.txt >> dist/confluent_$(VERSION_NO_V)_checksums.txt && \
-	$(call dry-run,aws s3 cp dist/confluent_$(VERSION_NO_V)_checksums.txt $(S3_STAG_PATH)/confluent-cli/archives/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_checksums.txt) && \
-	$(call dry-run,aws s3 cp dist/confluent_$(VERSION_NO_V)_checksums.txt $(S3_STAG_PATH)/confluent-cli/binaries/$(VERSION_NO_V)/confluent_$(VERSION_NO_V)_checksums.txt) && \
-	echo "UPLOADING LINUX BUILDS TO GITHUB" && \
-	make upload-linux-build-to-github
-	
+	rm -rf prebuilt/ && \
+	mkdir prebuilt/ && \
+	scripts/build_linux.sh && \
+	git clone git@github.com:confluentinc/cli-release.git $(CLI_RELEASE) && \
+	go run $(CLI_RELEASE)/cmd/releasenotes/formatter/main.go $(CLI_RELEASE)/release-notes/$(VERSION_NO_V).json github > $(DIR)/release-notes.txt && \
+	GORELEASER_KEY=$(GORELEASER_KEY) GOEXPERIMENT=boringcrypto S3FOLDER=$(S3_STAG_FOLDER_NAME)/confluent-cli GITHUB_TOKEN=$(token) DRY_RUN=$(DRY_RUN) goreleaser release --clean --release-notes $(DIR)/release-notes.txt --timeout 60m
 
 # Current goreleaser still has some shortcomings for the our use, and the target patches those issues
 # As new goreleaser versions allow more customization, we may be able to reduce the work for this make target
 .PHONY: goreleaser-patches
 goreleaser-patches:
-	make set-acls
+	$(MAKE) set-acls
 
 # goreleaser does not yet support setting ACLs for cloud storage
 # We have to set `public-read` manually by copying the file in place
@@ -105,7 +94,7 @@ goreleaser-patches:
 .PHONY: set-acls
 set-acls:
 	$(aws-authenticate) && \
-	for file_type in binaries archives; do \
+	for file_type in archives binaries; do \
 		folder_path=confluent-cli/$${file_type}/$(VERSION_NO_V); \
 		echo "SETTING ACLS: $${folder_path}"; \
 		$(call dry-run,aws s3 cp $(S3_STAG_PATH)/$${folder_path} $(S3_STAG_PATH)/$${folder_path} --acl public-read --metadata dummy=dummy --recursive) || exit 1; \
@@ -159,14 +148,3 @@ download-licenses:
 publish-installer:
 	$(aws-authenticate) && \
 	$(call dry-run,aws s3 cp install.sh $(S3_BUCKET_PATH)/confluent-cli/install.sh --acl public-read)
-
-.PHONY: upload-linux-build-to-github
-## upload local copy of glibc linux build to github
-upload-linux-build-to-github:
-	$(call dry-run,gh release upload $(VERSION) dist/confluent_$(VERSION_NO_V)_linux_amd64.tar.gz) && \
-	$(call dry-run,gh release upload $(VERSION) dist/confluent_$(VERSION_NO_V)_linux_arm64.tar.gz) && \
-	mv dist/confluent_linux_amd64_v1/confluent dist/confluent_linux_amd64_v1/confluent_$(VERSION_NO_V)_linux_amd64 && \
-	mv dist/confluent_linux_arm64/confluent dist/confluent_linux_arm64/confluent_$(VERSION_NO_V)_linux_arm64 && \
-	$(call dry-run,gh release upload $(VERSION) dist/confluent_linux_amd64_v1/confluent_$(VERSION_NO_V)_linux_amd64) && \
-	$(call dry-run,gh release upload $(VERSION) dist/confluent_linux_arm64/confluent_$(VERSION_NO_V)_linux_arm64) && \
-	$(call dry-run,gh release upload $(VERSION) --clobber dist/confluent_$(VERSION_NO_V)_checksums.txt)

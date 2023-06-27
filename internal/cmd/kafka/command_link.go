@@ -13,7 +13,7 @@ const (
 )
 
 type linkCommand struct {
-	*pcmd.AuthenticatedStateFlagCommand
+	*pcmd.AuthenticatedCLICommand
 }
 
 func newLinkCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
@@ -26,21 +26,35 @@ func newLinkCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	c := &linkCommand{}
 
 	if cfg.IsCloudLogin() {
-		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)
+		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedCLICommand(cmd, prerunner)
 
 		cmd.AddCommand(c.newConfigurationCommand(cfg))
 		cmd.AddCommand(c.newCreateCommand())
 		cmd.AddCommand(c.newDeleteCommand())
+		cmd.AddCommand(c.newDescribeCommand())
 		cmd.AddCommand(c.newListCommand())
 	} else {
-		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner)
+		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)
 		c.PersistentPreRunE = prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand)
 
 		cmd.AddCommand(c.newConfigurationCommand(cfg))
 		cmd.AddCommand(c.newCreateCommandOnPrem())
 		cmd.AddCommand(c.newDeleteCommandOnPrem())
+		cmd.AddCommand(c.newDescribeCommandOnPrem())
 		cmd.AddCommand(c.newListCommandOnPrem())
 	}
 
 	return cmd
+}
+
+func (c *linkCommand) validArgs(cmd *cobra.Command, args []string) []string {
+	if len(args) > 0 {
+		return nil
+	}
+
+	if err := c.PersistentPreRunE(cmd, args); err != nil {
+		return nil
+	}
+
+	return pcmd.AutocompleteLinks(c.AuthenticatedCLICommand)
 }

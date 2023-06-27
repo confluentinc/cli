@@ -12,7 +12,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
@@ -25,7 +24,7 @@ type hasAPIKeyTopicCommand struct {
 }
 
 type authenticatedTopicCommand struct {
-	*pcmd.AuthenticatedStateFlagCommand
+	*pcmd.AuthenticatedCLICommand
 	prerunner pcmd.PreRunner
 	clientID  string
 }
@@ -42,7 +41,7 @@ func newTopicCommand(cfg *v1.Config, prerunner pcmd.PreRunner, clientID string) 
 	}
 
 	if cfg.IsCloudLogin() {
-		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)
+		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedCLICommand(cmd, prerunner)
 
 		cmd.AddCommand(newConsumeCommand(prerunner, clientID))
 		cmd.AddCommand(c.newCreateCommand())
@@ -52,7 +51,7 @@ func newTopicCommand(cfg *v1.Config, prerunner pcmd.PreRunner, clientID string) 
 		cmd.AddCommand(newProduceCommand(prerunner, clientID))
 		cmd.AddCommand(c.newUpdateCommand())
 	} else {
-		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner)
+		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)
 		c.PersistentPreRunE = prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand)
 
 		cmd.AddCommand(c.newConsumeCommandOnPrem())
@@ -123,30 +122,12 @@ func (c *hasAPIKeyTopicCommand) validateTopic(client *ckafka.AdminClient, topic 
 	return nil
 }
 
-func (c *authenticatedTopicCommand) getNumPartitions(topicName string) (int, error) {
-	kafkaREST, err := c.GetKafkaREST()
-	if err != nil {
-		return 0, err
-	}
-
-	kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand()
-	if err != nil {
-		return 0, err
-	}
-
-	partitionsResp, httpResp, err := kafkaREST.CloudClient.ListKafkaPartitions(kafkaClusterConfig.ID, topicName)
-	if err != nil {
-		if restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err); parseErr == nil && restErr.Code == ccloudv2.UnknownTopicOrPartitionErrorCode {
-			return 0, fmt.Errorf(errors.UnknownTopicErrorMsg, topicName)
-		}
-		return 0, kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
-	}
-
-	return len(partitionsResp.Data), nil
-}
-
 func (c *authenticatedTopicCommand) provisioningClusterCheck(lkc string) error {
-	cluster, httpResp, err := c.V2Client.DescribeKafkaCluster(lkc, c.EnvironmentId())
+	environmentId, err := c.Context.EnvironmentId()
+	if err != nil {
+		return err
+	}
+	cluster, httpResp, err := c.V2Client.DescribeKafkaCluster(lkc, environmentId)
 	if err != nil {
 		return errors.CatchKafkaNotFoundError(err, lkc, httpResp)
 	}

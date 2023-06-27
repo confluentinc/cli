@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/go-version" // This "version" alias is require for go:generate go run github.com/travisjeffery/mocker/cmd/mocker to work
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/update"
 )
 
 // ObjectKey represents an S3 Key for a versioned package
@@ -46,7 +47,7 @@ func NewPrefixedKey(prefix, sep string, prefixVersion bool) (*PrefixedKey, error
 		Prefix:        prefix,
 		PrefixVersion: prefixVersion,
 		Separator:     sep,
-		goos:          runtime.GOOS,
+		goos:          update.GetOs(),
 		goarch:        runtime.GOARCH,
 	}, nil
 }

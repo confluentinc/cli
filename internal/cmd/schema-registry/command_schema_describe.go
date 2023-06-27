@@ -18,7 +18,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 type schemaOut struct {
@@ -30,17 +29,16 @@ func (c *command) newSchemaDescribeCommand() *cobra.Command {
 		Use:         "describe [id]",
 		Short:       "Get schema either by schema ID, or by subject/version.",
 		Args:        cobra.MaximumNArgs(1),
-		PreRunE:     c.preDescribe,
 		RunE:        c.schemaDescribe,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Describe the schema string by schema ID.",
-				Code: fmt.Sprintf("%s schema-registry schema describe 1337", pversion.CLIName),
+				Code: "confluent schema-registry schema describe 1337",
 			},
 			examples.Example{
 				Text: "Describe the schema by both subject and version.",
-				Code: fmt.Sprintf("%s schema-registry schema describe --subject payments --version latest", pversion.CLIName),
+				Code: "confluent schema-registry schema describe --subject payments --version latest",
 			},
 		),
 	}
@@ -56,7 +54,7 @@ func (c *command) newSchemaDescribeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) preDescribe(cmd *cobra.Command, args []string) error {
+func (c *command) schemaDescribe(cmd *cobra.Command, args []string) error {
 	subject, err := cmd.Flags().GetString("subject")
 	if err != nil {
 		return err
@@ -73,10 +71,6 @@ func (c *command) preDescribe(cmd *cobra.Command, args []string) error {
 		return errors.New(errors.SchemaOrSubjectErrorMsg)
 	}
 
-	return nil
-}
-
-func (c *command) schemaDescribe(cmd *cobra.Command, args []string) error {
 	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
 	if err != nil {
 		return err
@@ -113,7 +107,7 @@ func describeById(id string, srClient *srsdk.APIClient, ctx context.Context) err
 		return err
 	}
 
-	return printSchema(schemaID, schemaString.Schema, schemaString.SchemaType, schemaString.References)
+	return printSchema(schemaID, schemaString.Schema, schemaString.SchemaType, schemaString.References, schemaString.Metadata, schemaString.RuleSet)
 }
 
 func describeBySubject(cmd *cobra.Command, srClient *srsdk.APIClient, ctx context.Context) error {
@@ -132,7 +126,7 @@ func describeBySubject(cmd *cobra.Command, srClient *srsdk.APIClient, ctx contex
 		return errors.CatchSchemaNotFoundError(err, httpResp)
 	}
 
-	return printSchema(int64(schema.Id), schema.Schema, schema.SchemaType, schema.References)
+	return printSchema(int64(schema.Id), schema.Schema, schema.SchemaType, schema.References, schema.Metadata, schema.Ruleset)
 }
 
 func describeGraph(cmd *cobra.Command, id string, srClient *srsdk.APIClient, ctx context.Context) error {
@@ -220,7 +214,7 @@ func traverseDAG(srClient *srsdk.APIClient, ctx context.Context, visited map[str
 	return root, schemaGraph, nil
 }
 
-func printSchema(schemaID int64, schema, schemaType string, refs []srsdk.SchemaReference) error {
+func printSchema(schemaID int64, schema, schemaType string, refs []srsdk.SchemaReference, metadata *srsdk.Metadata, ruleset *srsdk.RuleSet) error {
 	output.Printf("Schema ID: %d\n", schemaID)
 
 	if schemaType != "" {
@@ -245,6 +239,24 @@ func printSchema(schemaID int64, schema, schemaType string, refs []srsdk.SchemaR
 		for i := 0; i < len(refs); i++ {
 			output.Printf("\t%s -> %s %d\n", refs[i].Name, refs[i].Subject, refs[i].Version)
 		}
+	}
+
+	if metadata != nil {
+		output.Println("Metadata:")
+		metadataJson, err := json.Marshal(*metadata)
+		if err != nil {
+			return err
+		}
+		output.Println(prettyJson(metadataJson))
+	}
+
+	if ruleset != nil {
+		output.Println("Ruleset:")
+		rulesetJson, err := json.Marshal(*ruleset)
+		if err != nil {
+			return err
+		}
+		output.Println(prettyJson(rulesetJson))
 	}
 	return nil
 }

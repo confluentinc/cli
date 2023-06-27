@@ -22,7 +22,7 @@ type lagDataStruct struct {
 }
 
 type lagCommand struct {
-	*pcmd.AuthenticatedStateFlagCommand
+	*pcmd.AuthenticatedCLICommand
 }
 
 func newLagCommand(prerunner pcmd.PreRunner) *cobra.Command {
@@ -32,7 +32,7 @@ func newLagCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		Hidden: true,
 	}
 
-	c := &lagCommand{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
+	c := &lagCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 
 	cmd.AddCommand(c.newGetCommand())
 	cmd.AddCommand(c.newListCommand())
@@ -69,7 +69,7 @@ func (c *lagCommand) validArgs(cmd *cobra.Command, args []string) []string {
 }
 
 func (c *lagCommand) autocompleteConsumerGroups() []string {
-	consumerGroupDataList, err := listConsumerGroups(c.AuthenticatedStateFlagCommand)
+	consumerGroupDataList, err := listConsumerGroups(c.AuthenticatedCLICommand)
 	if err != nil {
 		return nil
 	}

@@ -1,49 +1,71 @@
---- cli/Makefile	2023-03-23 13:29:19.342316125 -0700
-+++ debian/Makefile	2023-03-21 10:41:40.431704825 -0700
-@@ -1,121 +1,130 @@
--SHELL              := /bin/bash
--ALL_SRC            := $(shell find . -name "*.go" | grep -v -e vendor)
--GORELEASER_VERSION := v1.16.3-0.20230323115904-f82a32cd3a59
--
--.PHONY: build # compile natively based on the system
+--- cli/Makefile	2023-06-12 10:41:30.495232513 -0700
++++ debian/Makefile	2023-05-12 09:01:07.702951301 -0700
+@@ -1,120 +1,130 @@
+-SHELL := /bin/bash
+-GORELEASER_VERSION := v1.17.2
++SHELL=/bin/bash
+ 
+-# Compile natively based on the current system
+-.PHONY: build 
 -build:
--ifneq "" "$(findstring NT,$(shell uname))" # build for Windows
--	CC=gcc CXX=g++ make cli-builder
+-ifneq "" "$(findstring NT,$(shell uname))" # windows
+-	CC=gcc CXX=g++ $(MAKE) cli-builder
 -else ifneq (,$(findstring Linux,$(shell uname)))
--    ifneq (,$(findstring musl,$(shell ldd --version))) # build for musl Linux
--		CC=gcc CXX=g++ TAGS=musl make cli-builder
--    else # build for glibc Linux
--		CC=gcc CXX=g++ make cli-builder
+-    ifneq (,$(findstring musl,$(shell ldd --version))) # linux (musl)
+-		CC=gcc CXX=g++ TAGS=musl $(MAKE) cli-builder
+-    else # linux (glibc)
+-		CC=gcc CXX=g++ $(MAKE) cli-builder
 -    endif
--else # build for Darwin
--	make cli-builder
+-else # darwin
+-	$(MAKE) cli-builder
 -endif
 -
--.PHONY: cross-build # cross-compile from Darwin/amd64 machine to Win64, Linux64 and Darwin/arm64
+-# Cross-compile from darwin to any of the OS/Arch pairs below
+-.PHONY: cross-build
 -cross-build:
 -ifeq ($(GOARCH),arm64)
--    ifeq ($(GOOS),linux)
--		CGO_ENABLED=1 CC=aarch64-linux-musl-gcc CXX=aarch64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl make cli-builder
--    else # build for darwin/arm64
--		CGO_ENABLED=1 make cli-builder
+-    ifeq ($(GOOS),linux) # linux/arm64
+-		CGO_ENABLED=1 CC=aarch64-linux-musl-gcc CXX=aarch64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl $(MAKE) cli-builder
+-    else # darwin/arm64
+-		CGO_ENABLED=1 $(MAKE) cli-builder
 -    endif
--else # build for amd64 arch
--    ifeq ($(GOOS),windows)
--		CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ CGO_LDFLAGS="-static" make cli-builder
--    else ifeq ($(GOOS),linux) 
--		CGO_ENABLED=1 CC=x86_64-linux-musl-gcc CXX=x86_64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl make cli-builder
--    else # build for Darwin/amd64
--		CGO_ENABLED=1 make cli-builder
++ifndef VERSION
++	VERSION=$(CLI_VERSION)
++endif
++
++export PACKAGE_TITLE=cli
++export FULL_PACKAGE_TITLE=confluent-$(PACKAGE_TITLE)
++export PACKAGE_NAME=$(FULL_PACKAGE_TITLE)-$(VERSION)
++
++# Defaults that are likely to vary by platform. These are cleanly separated so
++# it should be easy to maintain altered values on platform-specific branches
++# when the values aren't overridden by the script invoking the Makefile
++
++APPLY_PATCHES?=yes
++
++# DESTDIR may be overridden by e.g. debian packaging
++ifeq ($(DESTDIR),)
++DESTDIR=$(CURDIR)/BUILD/
++endif
++
++ifeq ($(PACKAGE_TYPE),archive)
++PREFIX=$(PACKAGE_NAME)
++SYSCONFDIR=$(PREFIX)/etc/$(PACKAGE_TITLE)
+ else
+-    ifeq ($(GOOS),windows) # windows/amd64
+-		CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ CGO_LDFLAGS="-static" $(MAKE) cli-builder
+-    else ifeq ($(GOOS),linux) # linux/amd64
+-		CGO_ENABLED=1 CC=x86_64-linux-musl-gcc CXX=x86_64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl $(MAKE) cli-builder
+-    else # darwin/amd64
+-		CGO_ENABLED=1 $(MAKE) cli-builder
 -    endif
 -endif
 -
 -.PHONY: cli-builder
 -cli-builder:
 -	go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
--	TAGS=$(TAGS) CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) VERSION=$(VERSION) GOEXPERIMENT=boringcrypto goreleaser build -f .goreleaser-build.yml --clean --single-target --snapshot
+-	TAGS=$(TAGS) CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) GOEXPERIMENT=boringcrypto goreleaser build --config .goreleaser-build.yml --clean --single-target --snapshot
 -
--include ./mk-files/cc-cli-service.mk
--include ./mk-files/dockerhub.mk
 -include ./mk-files/semver.mk
 -include ./mk-files/docs.mk
 -include ./mk-files/dry-run.mk
@@ -59,71 +81,14 @@
 -S3_BUCKET_PATH=s3://confluent.cloud
 -S3_STAG_FOLDER_NAME=cli-release-stag
 -S3_STAG_PATH=s3://confluent.cloud/$(S3_STAG_FOLDER_NAME)
-+SHELL=/bin/bash
++PREFIX=/usr
++SYSCONFDIR=/etc/$(PACKAGE_TITLE)
++endif
  
 -.PHONY: clean
 -clean:
--	@for dir in bin dist docs legal release-notes; do \
--		[ -d $$dir ] && rm -r $$dir || true ; \
--	done
-+ifndef VERSION
-+	VERSION=$(CLI_VERSION)
-+endif
- 
--.PHONY: lint
--lint: lint-go lint-cli
-+export PACKAGE_TITLE=cli
-+export FULL_PACKAGE_TITLE=confluent-$(PACKAGE_TITLE)
-+export PACKAGE_NAME=$(FULL_PACKAGE_TITLE)-$(VERSION)
-+
-+# Defaults that are likely to vary by platform. These are cleanly separated so
-+# it should be easy to maintain altered values on platform-specific branches
-+# when the values aren't overridden by the script invoking the Makefile
-+
-+APPLY_PATCHES?=yes
-+
-+# DESTDIR may be overridden by e.g. debian packaging
-+ifeq ($(DESTDIR),)
-+DESTDIR=$(CURDIR)/BUILD/
-+endif
- 
--.PHONY: lint-go
--lint-go:
--	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.51.1 && \
--	golangci-lint run --enable dupword,exportloopref,gci,gocritic,gofmt,goimports,gomoddirectives,govet,ineffassign,misspell,nakedret,nolintlint,nonamedreturns,prealloc,predeclared,tenv,unconvert,unparam,unused,usestdlibvars,whitespace --timeout=10m
--	@echo "✅  golangci-lint"
--
--.PHONY: lint-cli
--lint-cli: cmd/lint/en_US.aff cmd/lint/en_US.dic
--	go run cmd/lint/main.go -aff-file $(word 1,$^) -dic-file $(word 2,$^) $(ARGS)
--	@echo "✅  cmd/lint/main.go"
--
--cmd/lint/en_US.aff:
--	curl -s "https://chromium.googlesource.com/chromium/deps/hunspell_dictionaries/+/master/en_US.aff?format=TEXT" | base64 -D > $@
--
--cmd/lint/en_US.dic:
--	curl -s "https://chromium.googlesource.com/chromium/deps/hunspell_dictionaries/+/master/en_US.dic?format=TEXT" | base64 -D > $@
--
--.PHONY: unit-test
--unit-test:
--ifdef CI
--	go install gotest.tools/gotestsum@v1.8.2 && \
--	gotestsum --junitfile unit-test-report.xml -- -v -race -coverprofile coverage.out $$(go list ./... | grep -v test)
-+ifeq ($(PACKAGE_TYPE),archive)
-+PREFIX=$(PACKAGE_NAME)
-+SYSCONFDIR=$(PREFIX)/etc/$(PACKAGE_TITLE)
- else
--	go test -v $$(go list ./... | grep -v test) $(UNIT_TEST_ARGS)
-+PREFIX=/usr
-+SYSCONFDIR=/etc/$(PACKAGE_TITLE)
- endif
- 
--.PHONY: build-for-integration-test
--build-for-integration-test:
--ifdef CI
--	go build -cover -ldflags="-s -w -X main.commit=$(REF) -X main.date=$(DATE) -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
--else
--	go build -ldflags="-s -w -X main.commit=$(REF) -X main.date=$(DATE) -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
+-	for dir in bin dist docs legal prebuilt release-notes; do \
+-		[ -d $$dir ] && rm -r $$dir || true; \
 +all: install
 +
 +archive: install
@@ -152,20 +117,53 @@
 +	cp packaging/confluent.sh $(DESTDIR)$(BINPATH)/confluent
 +	chmod 755 $(DESTDIR)$(BINPATH)/confluent
 +
-+	cd $(DESTDIR)$(LIBPATH) ; \
++	cd $(DESTDIR)$(LIBPATH); \
 +	for dir in darwin_amd64 darwin_arm64 linux_amd64 windows_amd64; do \
-+		mkdir -p $${dir} ; \
-+		ext=""; if [[ $${dir} =~ windows_.+ ]]; then ext=".exe"; fi ; \
-+		filepath=$${dir}/confluent$${ext} ; \
-+		curl -f -s https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/binaries/$(CLI_VERSION)/confluent_$(CLI_VERSION)_$${dir}$${ext} -o $${filepath} ; \
-+		chmod 755 $${filepath} ; \
-+	done
-+
++		mkdir -p $${dir}; \
++		ext=""; if [[ $${dir} =~ windows_.+ ]]; then ext=".exe"; fi; \
++		filepath=$${dir}/confluent$${ext}; \
++		curl -f -s https://s3-us-west-2.amazonaws.com/confluent.cloud/confluent-cli/binaries/$(CLI_VERSION)/confluent_$(CLI_VERSION)_$${dir}$${ext} -o $${filepath}; \
++		chmod 755 $${filepath}; \
+ 	done
+ 
+-.PHONY: lint
+-lint: lint-go lint-cli
 +	cp LICENSE $(DESTDIR)$(DOCPATH)/COPYRIGHT
 +	$(DESTDIR)$(BINPATH)/confluent --version | awk -F' ' '{ print $3 }' > $(DESTDIR)$(DOCPATH)/version.txt
-+
+ 
+-.PHONY: lint-go
+-lint-go:
+-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.51.1 && \
+-	golangci-lint run --timeout=10m
+-	@echo "✅  golangci-lint"
+-
+-.PHONY: lint-cli
+-lint-cli: cmd/lint/en_US.aff cmd/lint/en_US.dic
+-	go run cmd/lint/main.go -aff-file $(word 1,$^) -dic-file $(word 2,$^) $(ARGS)
+-	@echo "✅  cmd/lint/main.go"
+-
+-cmd/lint/en_US.aff:
+-	curl -s "https://chromium.googlesource.com/chromium/deps/hunspell_dictionaries/+/master/en_US.aff?format=TEXT" | base64 -D > $@
+-
+-cmd/lint/en_US.dic:
+-	curl -s "https://chromium.googlesource.com/chromium/deps/hunspell_dictionaries/+/master/en_US.dic?format=TEXT" | base64 -D > $@
+-
+-.PHONY: unit-test
+-unit-test:
+-ifdef CI
+-	go install gotest.tools/gotestsum@v1.8.2 && \
+-	gotestsum --junitfile unit-test-report.xml -- -v -race -coverprofile coverage.out $$(go list ./... | grep -v github.com/confluentinc/cli/test)
+-else
+-	go test -v $$(go list ./... | grep -v github.com/confluentinc/cli/test) $(UNIT_TEST_ARGS)
+-endif
 +	chown -R root:root $(DESTDIR)$(PREFIX)
-+
+ 
+-.PHONY: build-for-integration-test
+-build-for-integration-test:
+-ifdef CI
+-	go build -cover -ldflags="-s -w -X main.commit=$(REF) -X main.date=$(DATE) -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
+-else
+-	go build -ldflags="-s -w -X main.commit=$(REF) -X main.date=$(DATE) -X main.version=$(VERSION) -X main.isTest=true" -o test/bin/confluent ./cmd/confluent
 +clean:
 +	rm -rf $(CURDIR)/$(PACKAGE_NAME)*
 +	rm -rf $(FULL_PACKAGE_TITLE)-$(RPM_VERSION)*rpm
@@ -184,7 +182,7 @@
 -	export GOCOVERDIR=test/coverage && \
 -	if [ -d $${GOCOVERDIR} ]; then rm -r $${GOCOVERDIR}; fi && \
 -	mkdir $${GOCOVERDIR} && \
--	gotestsum --junitfile integration-test-report.xml -- -v -race $$(go list ./... | grep test) && \
+-	gotestsum --junitfile integration-test-report.xml -- -v -race $$(go list ./... | grep github.com/confluentinc/cli/test) && \
 -	go tool covdata textfmt -i $${GOCOVERDIR} -o test/coverage.out
 +RPM_VERSION=$(shell echo $(VERSION) | sed -e 's/-alpha[0-9]*//' -e 's/-beta[0-9]*//' -e 's/-rc[0-9]*//' -e 's/-SNAPSHOT//' -e 's/-cp[0-9]*//' -e 's/-hotfix[0-9]*//' -e 's/-[0-9]*//')
 +
@@ -200,7 +198,7 @@
 +	RPM_RELEASE_POSTFIX_UNDERSCORE=_$(RPM_RELEASE_POSTFIX)
 +	RPM_RELEASE_ID=0.$(REVISION).$(RPM_RELEASE_POSTFIX)
  else
--	go test -v $$(go list ./... | grep test) $(INTEGRATION_TEST_ARGS)
+-	go test -v $$(go list ./... | grep github.com/confluentinc/cli/test) $(INTEGRATION_TEST_ARGS)
 +	RPM_RELEASE_ID=$(REVISION)
  endif
  

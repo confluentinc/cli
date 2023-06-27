@@ -3,12 +3,12 @@ package errors
 const (
 	// api-key command
 	StoredAPIKeyMsg = "Stored API secret for API key \"%s\".\n"
-	UseAPIKeyMsg    = "Set API Key \"%s\" as the active API key for \"%s\".\n"
+	UseAPIKeyMsg    = "Using API Key \"%s\".\n"
 
 	// auth commands
 	LoggedInAsMsg                 = "Logged in as \"%s\".\n"
 	LoggedInAsMsgWithOrg          = "Logged in as \"%s\" for organization \"%s\" (\"%s\").\n"
-	LoggedInUsingEnvMsg           = "Using environment \"%s\" (\"%s\").\n"
+	LoggedInUsingEnvMsg           = "Using environment \"%s\".\n"
 	LoggedOutMsg                  = "You are now logged out."
 	WroteCredentialsToKeychainMsg = "Wrote login credentials to keychain\n"
 	RemoveNetrcCredentialsMsg     = "Removed credentials for user \"%s\" from netrc file \"%s\"\n"
@@ -18,9 +18,10 @@ const (
 		StopNonInteractiveMsg + ".\n"
 	FoundNetrcCredMsg = "Found credentials for user \"%s\" from netrc file \"%s\" " +
 		StopNonInteractiveMsg + ".\n"
-	FoundOrganizationIdMsg = "Found default organization id for user \"%s\" from environment variable \"%s\".\n"
+	FoundKeychainCredMsg = "Found credentials for user \"%s\" from keychain " +
+		StopNonInteractiveMsg + ".\n"
 	RemainingFreeCreditMsg = "Free credits: $%.2f USD remaining\n" +
-		"You are currently using a free trial version of Confluent Cloud. Add a payment method with \"confluent admin payment update\" to avoid an interruption in service once your trial ends.\n"
+		"You are currently using a free trial version of Confluent Cloud. Add a payment method with `confluent admin payment update` to avoid an interruption in service once your trial ends.\n"
 	CloudSignUpMsg     = "Success! Welcome to Confluent Cloud.\n"
 	FreeTrialSignUpMsg = "Congratulations! You now have $%.2f USD to spend during the first 60 days. No credit card is required.\n"
 
@@ -31,9 +32,6 @@ const (
 	PausedConnectorMsg  = "Paused connector \"%s\".\n"
 	ResumedConnectorMsg = "Resumed connector \"%s\".\n"
 
-	// environment commands
-	UsingEnvMsg = "Now using \"%s\" as the default (active) environment.\n"
-
 	// kafka cluster commands
 	UseKafkaClusterMsg               = "Set Kafka cluster \"%s\" as the active cluster for environment \"%s\".\n"
 	CopyByokAwsPermissionsHeaderMsg  = `Copy and append these permissions into the key policy "Statements" field of the ARN in your AWS key management system to authorize access for your Confluent Cloud cluster.`
@@ -43,30 +41,23 @@ const (
 	RestProxyNotAvailable = "Operation not supported: REST proxy is not available.\n"
 
 	// kafka topic commands
-	StartingProducerMsg      = "Starting Kafka Producer. Use Ctrl-C or Ctrl-D to exit."
-	StoppingConsumerMsg      = "Stopping Consumer."
-	StartingConsumerMsg      = "Starting Kafka Consumer. Use Ctrl-C to exit."
-	UpdateTopicConfigMsg     = "Updated the following configuration values for topic \"%s\":\n"
-	UpdateTopicConfigRestMsg = "Updated the following configuration values for topic \"%s\" (read-only configs were not updated):\n"
+	StartingProducerMsg         = "Starting Kafka Producer. Use Ctrl-C or Ctrl-D to exit."
+	StoppingConsumerMsg         = "Stopping Consumer."
+	StartingConsumerMsg         = "Starting Kafka Consumer. Use Ctrl-C to exit."
+	UpdateTopicConfigMsg        = "Updated the following configuration values for topic \"%s\":\n"
+	UpdateTopicConfigRestMsg    = "Updated the following configuration values for topic \"%s\"%s:\n"
+	ReadOnlyConfigNotUpdatedMsg = "(read-only configs were not updated)"
+	OmitTopicCountMsg           = "The topic count will be omitted as Kafka topics for this cluster could not be retrieved: %v"
 
 	// kafka mirror commands
 	RestProxyNotAvailableMsg = "Kafka REST is not enabled: the operation is only supported with Kafka REST proxy."
 
 	// kafka REST proxy
-	MDSTokenNotFoundMsg = "No session token found, please enter user credentials. To avoid being prompted, run \"confluent login\"."
+	MDSTokenNotFoundMsg = "No session token found, please enter user credentials. To avoid being prompted, run `confluent login`."
 
 	// ksql commands
 	EndPointNotPopulatedMsg   = "Endpoint not yet populated. To obtain the endpoint, use `confluent ksql cluster describe`."
 	KsqlDBNotBackedByKafkaMsg = "The ksqlDB cluster \"%s\" is backed by \"%s\" which is not the current Kafka cluster \"%s\".\nTo switch to the correct cluster, use `confluent kafka cluster use %s`.\n"
-
-	// local commands
-	AvailableServicesMsg       = "Available Services:\n%s\n"
-	UsingConfluentCurrentMsg   = "Using CONFLUENT_CURRENT: %s\n"
-	AvailableConnectPluginsMsg = "Available Connect Plugins:\n%s\n"
-	StartingServiceMsg         = "Starting %s\n"
-	StoppingServiceMsg         = "Stopping %s\n"
-	ServiceStatusMsg           = "%s is [%s]\n"
-	DestroyDeletingMsg         = "Deleting: %s\n"
 
 	// schema-registry commands
 	UpdatedToLevelCompatibilityMsg      = "Successfully updated Top Level compatibility to \"%s\"\n"
@@ -90,7 +81,6 @@ const (
 	NoMajorVersionUpdateMsg = "No major version updates are available.\n"
 
 	// cmd package
-	TokenExpiredMsg      = "Your token has expired. You are now logged out."
 	NotifyMajorUpdateMsg = "A major version update is available for %s from (current: %s, latest: %s).\nTo view release notes and install the update, please run `%s update --major`.\n\n"
 	NotifyMinorUpdateMsg = "A minor version update is available for %s from (current: %s, latest: %s).\nTo view release notes and install the update, please run `%s update`.\n\n"
 	AutoLoginMsg         = "Successful auto log in with non-interactive credentials.\n"
@@ -117,7 +107,8 @@ const (
 	PromptToDownloadDescriptionMsg = "New version of %s is available\n" +
 		"Current Version: %s\n" +
 		"Latest Version:  %s\n" +
-		"%s\n\n\n"
+		"\n" +
+		"%s"
 	InvalidChoiceMsg = "%s is not a valid choice"
 
 	// General
@@ -129,6 +120,7 @@ const (
 	DeleteACLsConfirmMsg          = "Are you sure you want to delete the ACLs corresponding to these parameters?"
 	RequestedDeleteResourceMsg    = "Requested to delete %s \"%s\".\n"
 	UpdatedResourceMsg            = "Updated %s \"%s\".\n"
+	UsingResourceMsg              = "Using %s \"%s\".\n"
 
 	UpdateSuccessMsg = "Updated the %s of %s \"%s\" to \"%s\".\n"
 

@@ -1,8 +1,6 @@
 package admin
 
 import (
-	"context"
-
 	"github.com/spf13/cobra"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
@@ -22,15 +20,18 @@ func (c *command) newDescribeCommand() *cobra.Command {
 }
 
 func (c *command) describe(cmd *cobra.Command, _ []string) error {
-	org := &ccloudv1.Organization{Id: c.Context.GetOrganization().GetId()}
-	marketplace := c.Context.GetOrganization().GetMarketplace()
-
-	card, err := c.Client.Billing.GetPaymentInfo(context.Background(), org)
+	user, err := c.Client.Auth.User()
 	if err != nil {
 		return err
 	}
 
-	if marketplace != nil && marketplace.GetPartner() != ccloudv1.MarketplacePartner_UNKNOWN {
+	card, err := c.Client.Billing.GetPaymentInfo(user.GetOrganization())
+	if err != nil {
+		return err
+	}
+
+	marketplace := user.GetOrganization().GetMarketplace()
+	if marketplace.GetPartner() != ccloudv1.MarketplacePartner_UNKNOWN {
 		output.Printf("Organization is currently linked to %s Marketplace account.\n", marketplace.GetPartner())
 	}
 

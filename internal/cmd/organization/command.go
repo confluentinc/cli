@@ -7,7 +7,7 @@ import (
 )
 
 type command struct {
-	*pcmd.AuthenticatedStateFlagCommand
+	*pcmd.AuthenticatedCLICommand
 }
 
 func New(prerunner pcmd.PreRunner) *cobra.Command {
@@ -18,7 +18,8 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
-	c := &command{pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
+	c := &command{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
+
 	cmd.AddCommand(c.newDescribeCommand())
 	cmd.AddCommand(c.newListCommand())
 	cmd.AddCommand(c.newUpdateCommand())

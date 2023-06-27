@@ -1,7 +1,6 @@
 {
   "version": "1.0.0",
   "disable_update_check": false,
-  "disable_updates": false,
   "disable_plugins": false,
   "disable_feature_flags": false,
   "no_browser": false,
@@ -18,7 +17,9 @@
       "password": "",
       "api_key_pair": {
         "api_key": "abc-key-123",
-        "api_secret": "def-secret-456"
+        "api_secret": "API_SECRET_PLACEHOLDER",
+        "salt": "c2FsdHBsYWNlaG9sZGVy",
+        "nonce": "bm9uY2VwbGFjZWhvbGRlcg=="
       },
       "credential_type": 1
     },
@@ -30,12 +31,17 @@
       "credential_type": 0
     }
   },
+  "current_context": "my-context",
   "contexts": {
     "my-context": {
       "name": "my-context",
       "netrc_machine_name": "",
       "platform": "http://test",
       "credential": "username-test-user",
+      "current_environment": "acc-123",
+      "environments": {
+        "acc-123": {}
+      },
       "kafka_cluster_context": {
         "environment_context": false,
         "active_kafka": "anonymous-id",
@@ -47,7 +53,9 @@
             "api_keys": {
               "abc-key-123": {
                 "api_key": "abc-key-123",
-                "api_secret": "def-secret-456"
+                "api_secret": "API_SECRET_PLACEHOLDER",
+                "salt": "c2FsdHBsYWNlaG9sZGVy",
+                "nonce": "bm9uY2VwbGFjZWhvbGRlcg=="
               }
             },
             "api_key": "abc-key-123",
@@ -61,8 +69,7 @@
           "schema_registry_endpoint": "http://some-lsrc-endpoint",
           "schema_registry_credentials": null
         }
-      },
-      "last_org_id": ""
+      }
     }
   },
   "context_states": {
@@ -72,16 +79,6 @@
           "id": 123,
           "email": "test-user@email"
         },
-        "account": {
-          "id": "acc-123",
-          "name": "test-env"
-        },
-        "accounts": [
-          {
-            "id": "acc-123",
-            "name": "test-env"
-          }
-        ],
         "organization": {
           "id": 321,
           "name": "test-org"
@@ -89,11 +86,10 @@
       },
       "auth_token": "AUTH_TOKEN_PLACEHOLDER",
       "auth_refresh_token": "AUTH_REFRESH_TOKEN_PLACEHOLDER",
-      "salt": "SALT_PLACEHOLDER",
-      "nonce": "NONCE_PLACEHOLDER"
+      "salt": "SALT_TOKEN_PLACEHOLDER",
+      "nonce": "NONCE_TOKEN_PLACEHOLDER"
     }
   },
-  "current_context": "my-context",
   "saved_credentials": {
     "my-context": {
       "is_cloud": false,

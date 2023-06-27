@@ -55,7 +55,7 @@ type roleBindingOptions struct {
 }
 
 type roleBindingCommand struct {
-	*pcmd.AuthenticatedStateFlagCommand
+	*pcmd.AuthenticatedCLICommand
 	cfg *v1.Config
 }
 
@@ -83,9 +83,9 @@ func newRoleBindingCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Comm
 	c := &roleBindingCommand{cfg: cfg}
 
 	if cfg.IsOnPremLogin() {
-		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedWithMDSStateFlagCommand(cmd, prerunner)
+		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)
 	} else {
-		c.AuthenticatedStateFlagCommand = pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)
+		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedCLICommand(cmd, prerunner)
 	}
 
 	cmd.AddCommand(c.newCreateCommand())
@@ -115,8 +115,7 @@ func (c *roleBindingCommand) parseCommon(cmd *cobra.Command) (*roleBindingOption
 	}
 
 	if cmd.Flags().Changed("principal") {
-		err = c.validatePrincipalFormat(principal)
-		if err != nil {
+		if err := c.validatePrincipalFormat(principal); err != nil {
 			return nil, err
 		}
 	}
@@ -385,7 +384,8 @@ func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Comma
 	}
 
 	var fields []string
-	if presource.LookupType(userResourceId) == presource.ServiceAccount {
+	principalType := presource.LookupType(userResourceId)
+	if principalType == presource.ServiceAccount || principalType == presource.IdentityPool {
 		if resource != "" {
 			fields = resourcePatternListFields
 		} else {
@@ -456,8 +456,7 @@ func (c *roleBindingCommand) parseV2RoleBinding(cmd *cobra.Command) (*mdsv2.IamV
 		return nil, err
 	}
 	if cmd.Flags().Changed("principal") {
-		err = c.validatePrincipalFormat(principal)
-		if err != nil {
+		if err = c.validatePrincipalFormat(principal); err != nil {
 			return nil, err
 		}
 	}
@@ -517,11 +516,15 @@ func (c *roleBindingCommand) parseV2RoleBinding(cmd *cobra.Command) (*mdsv2.IamV
 }
 
 func (c *roleBindingCommand) parseV2BaseCrnPattern(cmd *cobra.Command) (string, error) {
-	orgResourceId := c.State.Auth.Account.GetOrgResourceId()
+	orgResourceId := c.Context.GetCurrentOrganization()
 	crnPattern := "crn://confluent.cloud/organization=" + orgResourceId
 
 	if cmd.Flags().Changed("current-environment") {
-		crnPattern += "/environment=" + c.EnvironmentId()
+		environmentId, err := c.Context.EnvironmentId()
+		if err != nil {
+			return "", err
+		}
+		crnPattern += "/environment=" + environmentId
 	} else if cmd.Flags().Changed("environment") {
 		environment, err := cmd.Flags().GetString("environment")
 		if err != nil {

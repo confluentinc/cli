@@ -6,7 +6,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 type out struct {
@@ -17,29 +16,38 @@ type out struct {
 
 func (c *command) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "describe <id>",
+		Use:               "describe [id]",
 		Short:             "Describe a Confluent Cloud environment.",
-		Args:              cobra.ExactArgs(1),
+		Args:              cobra.MaximumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.describe,
 	}
 
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
 
 func (c *command) describe(cmd *cobra.Command, args []string) error {
-	environment, httpResp, err := c.V2Client.GetOrgEnvironment(args[0])
+	id := c.Context.GetCurrentEnvironment()
+	if len(args) > 0 {
+		id = args[0]
+	}
+	if id == "" {
+		return errors.NewErrorWithSuggestions("no environment selected", "Select an environment with `confluent environment use` or as an argument.")
+	}
+
+	environment, err := c.V2Client.GetOrgEnvironment(id)
 	if err != nil {
-		return errors.CatchOrgV2ResourceNotFoundError(err, resource.Environment, httpResp)
+		return errors.NewErrorWithSuggestions(err.Error(), "List available environments with `confluent environment list`.")
 	}
 
 	table := output.NewTable(cmd)
 	table.Add(&out{
-		IsCurrent: *environment.Id == c.EnvironmentId(),
-		Id:        *environment.Id,
-		Name:      *environment.DisplayName,
+		IsCurrent: environment.GetId() == c.Context.GetCurrentEnvironment(),
+		Id:        environment.GetId(),
+		Name:      environment.GetDisplayName(),
 	})
 	return table.Print()
 }

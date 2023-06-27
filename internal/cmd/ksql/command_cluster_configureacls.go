@@ -1,7 +1,6 @@
 package ksql
 
 import (
-	"context"
 	"fmt"
 	"strconv"
 
@@ -29,7 +28,7 @@ func (c *ksqlCommand) newConfigureAclsCommand() *cobra.Command {
 		RunE:              c.configureACLs,
 	}
 
-	cmd.Flags().Bool("dry-run", false, "If specified, print the ACLs that will be set and exit.")
+	pcmd.AddDryRunFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -46,8 +45,13 @@ func (c *ksqlCommand) configureACLs(cmd *cobra.Command, args []string) error {
 
 	ksqlCluster := args[0]
 
+	environmentId, err := c.Context.EnvironmentId()
+	if err != nil {
+		return err
+	}
+
 	// Ensure the KSQL cluster talks to the current Kafka Cluster
-	cluster, err := c.V2Client.DescribeKsqlCluster(ksqlCluster, c.EnvironmentId())
+	cluster, err := c.V2Client.DescribeKsqlCluster(ksqlCluster, environmentId)
 	if err != nil {
 		return err
 	}
@@ -95,7 +99,7 @@ func (c *ksqlCommand) configureACLs(cmd *cobra.Command, args []string) error {
 }
 
 func (c *ksqlCommand) getServiceAccount(cluster *ksqlv2.KsqldbcmV2Cluster) (string, error) {
-	users, err := c.Client.User.GetServiceAccounts(context.Background())
+	users, err := c.Client.User.GetServiceAccounts()
 	if err != nil {
 		return "", err
 	}

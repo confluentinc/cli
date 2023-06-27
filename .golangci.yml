@@ -1,6 +1,29 @@
 run:
   skip-dirs:
     - mock
+linters:
+  enable:
+    - dupword
+    - exportloopref
+    - gci
+    - gocritic
+    - gofmt
+    - goimports
+    - gomoddirectives
+    - govet
+    - ineffassign
+    - misspell
+    - nakedret
+    - nolintlint
+    - nonamedreturns
+    - prealloc
+    - predeclared
+    - tenv
+    - unconvert
+    - unparam
+    - unused
+    - usestdlibvars
+    - whitespace 
 linters-settings:
   gci:
     sections:
@@ -11,6 +34,7 @@ linters-settings:
     custom-order: true
   gocritic:
     disabled-checks:
+      - appendAssign
       - ifElseChain
       - singleCaseSwitch
   nakedret:

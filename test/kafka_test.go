@@ -11,7 +11,6 @@ func (s *CLITestSuite) TestKafka() {
 	createLinkConfigFile := getCreateLinkConfigFile()
 	defer os.Remove(createLinkConfigFile)
 	tests := []CLITest{
-		{args: "kafka cluster --help", fixture: "kafka/cluster/help.golden"},
 		{args: "environment use a-595", fixture: "kafka/0.golden"},
 		{args: "kafka cluster list", fixture: "kafka/6.golden"},
 		{args: "kafka cluster list -o json", fixture: "kafka/7.golden"},
@@ -80,13 +79,15 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka cluster describe lkc-describe-infinite -o json", fixture: "kafka/42.golden"},
 		{args: "kafka cluster describe lkc-describe-infinite -o yaml", fixture: "kafka/43.golden"},
 
+		{args: "kafka cluster describe lkc-describe-dedicated-provisioning", fixture: "kafka/cluster-describe-dedicated-provisioning.golden"},
+
 		{args: "kafka cluster describe lkc-unknown", fixture: "kafka/48.golden", exitCode: 1},
+		{args: "kafka cluster describe lkc-unknown-type", fixture: "kafka/describe-unknown-cluster-type.golden"},
 
 		{args: "kafka acl list --cluster lkc-acls", fixture: "kafka/acl/list-cloud.golden"},
 		{args: "kafka acl list --cluster lkc-acls -o json", fixture: "kafka/acl/list-json-cloud.golden"},
 		{args: "kafka acl list --cluster lkc-acls -o yaml", fixture: "kafka/acl/list-yaml-cloud.golden"},
 		{args: "kafka acl list --principal User:12345", fixture: "kafka/acl/err-numeric-id.golden", exitCode: 1},
-		{args: "kafka acl create -h", fixture: "kafka/acl/create-help.golden"},
 		{args: "kafka acl create --cluster lkc-acls --allow --service-account 7272 --operations read,described --topic test-topic", fixture: "kafka/acl/invalid-operation.golden", exitCode: 1},
 		{args: "kafka acl create --cluster lkc-acls --allow --service-account sa-12345 --operations read,describe --topic test-topic", fixture: "kafka/acl/create-service-account.golden"},
 		{args: "kafka acl create --cluster lkc-acls --allow --principal User:sa-12345 --operations write,alter --topic test-topic", fixture: "kafka/acl/create-principal.golden"},
@@ -120,15 +121,18 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka topic update topic-exist-rest --config retention.ms=1,compression.type=gzip --dry-run", useKafka: "lkc-describe-topic", fixture: "kafka/topic/update-success-dry-run.golden"},
 		{args: "kafka topic update topic-exist-rest --config retention.ms=1,compression.type=gzip -o json", useKafka: "lkc-describe-topic", fixture: "kafka/topic/update-success-rest-json.golden"},
 		{args: "kafka topic update topic-exist-rest --config retention.ms=1,compression.type=gzip -o yaml", useKafka: "lkc-describe-topic", fixture: "kafka/topic/update-success-rest-yaml.golden"},
+		{args: "kafka topic update topic-exist-rest --config num.partitions=6", useKafka: "lkc-describe-topic", fixture: "kafka/topic/update-success-rest-partitions-count.golden"},
 
 		// Cluster linking
 		{args: "kafka link create my_link --source-cluster lkc-describe-topic --source-bootstrap-server myhost:1234 --config-file " + getCreateLinkConfigFile(), fixture: "kafka/link/create-link.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka link list --cluster lkc-describe-topic", fixture: "kafka/link/list-link-plain.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka link list --cluster lkc-describe-topic -o json", fixture: "kafka/link/list-link-json.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka link list --cluster lkc-describe-topic -o yaml", fixture: "kafka/link/list-link-yaml.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka link configuration list --cluster lkc-describe-topic link-1", fixture: "kafka/link/describe-link-plain.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka link configuration list --cluster lkc-describe-topic link-1 -o json", fixture: "kafka/link/describe-link-json.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka link configuration list --cluster lkc-describe-topic link-1 -o yaml", fixture: "kafka/link/describe-link-yaml.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link describe link-1 --cluster lkc-describe-topic", fixture: "kafka/link/describe.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link describe link-3 --cluster lkc-describe-topic", fixture: "kafka/link/describe-error.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link configuration list --cluster lkc-describe-topic link-1", fixture: "kafka/link/configuration-list-plain.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link configuration list --cluster lkc-describe-topic link-1 -o json", fixture: "kafka/link/configuration-list-json.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link configuration list --cluster lkc-describe-topic link-1 -o yaml", fixture: "kafka/link/configuration-list-yaml.golden", useKafka: "lkc-describe-topic"},
 
 		{args: "kafka mirror list --cluster lkc-describe-topic --link link-1", fixture: "kafka/mirror/list-mirror.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka mirror list --cluster lkc-describe-topic --link link-1 -o json", fixture: "kafka/mirror/list-mirror-json.golden", useKafka: "lkc-describe-topic"},
@@ -158,14 +162,11 @@ func (s *CLITestSuite) TestKafka() {
 	}
 
 	tests = []CLITest{
-		{args: "kafka acl create -h", fixture: "kafka/acl/onprem-create-help.golden"},
-		{args: "kafka acl list -h", fixture: "kafka/acl/onprem-list-help.golden"},
+		{args: fmt.Sprintf("kafka link describe link-1 --url %s", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/link/describe-onprem.golden"},
 	}
 
-	resetConfiguration(s.T(), false)
-
 	for _, tt := range tests {
-		tt.login = "platform"
+		tt.login = "onprem"
 		s.runIntegrationTest(tt)
 	}
 }
@@ -194,15 +195,6 @@ func (s *CLITestSuite) TestKafkaClusterCreate_GcpByok() {
 func (s *CLITestSuite) TestKafkaClientConfig() {
 	// TODO: add --config flag to all commands or ENVVAR instead of using standard config file location
 	tests := []CLITest{
-		// pass - check flags
-		{args: "kafka client-config", fixture: "kafka/client-config/cloud-help.golden"},
-		{args: "kafka client-config create", fixture: "kafka/client-config/create-help.golden"},
-
-		// pass - check a client that has sr flags
-		{args: "kafka client-config create java --help", fixture: "kafka/client-config/java-help.golden"},
-		// pass - check a client that does not have sr flags
-		{args: "kafka client-config create csharp --help", fixture: "kafka/client-config/csharp-help.golden"},
-
 		// error - missing context cluster
 		{args: "kafka client-config create java", fixture: "kafka/client-config/no-cluster.golden", exitCode: 1},
 		// error - missing context kafka key-secret pair
@@ -226,19 +218,6 @@ func (s *CLITestSuite) TestKafkaClientConfig() {
 		tt.workflow = true
 		s.runIntegrationTest(tt)
 	}
-
-	tests = []CLITest{
-		// pass - check flags
-		{args: "kafka client-config", fixture: "kafka/client-config/onprem-help.golden", exitCode: 1},
-		{args: "kafka client-config create", fixture: "kafka/client-config/onprem-help.golden", exitCode: 1},
-	}
-
-	resetConfiguration(s.T(), false)
-
-	for _, tt := range tests {
-		tt.login = "platform"
-		s.runIntegrationTest(tt)
-	}
 }
 
 func getCreateLinkConfigFile() string {
@@ -250,12 +229,10 @@ func getCreateLinkConfigFile() string {
 func (s *CLITestSuite) TestKafkaBroker() {
 	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
 	tests := []CLITest{
-		{args: "kafka broker list -h", fixture: "kafka/broker/list-help.golden"},
 		{args: "kafka broker list", fixture: "kafka/broker/list.golden"},
 		{args: "kafka broker list -o json", fixture: "kafka/broker/list-json.golden"},
 		{args: "kafka broker list -o yaml", fixture: "kafka/broker/list-yaml.golden"},
 
-		{args: "kafka broker describe -h", fixture: "kafka/broker/describe-help.golden"},
 		{args: "kafka broker describe 1", fixture: "kafka/broker/describe-1.golden"},
 		{args: "kafka broker describe 1 -o json", fixture: "kafka/broker/describe-1-json.golden"},
 		{args: "kafka broker describe 1 -o yaml", fixture: "kafka/broker/describe-1-yaml.golden"},
@@ -267,16 +244,13 @@ func (s *CLITestSuite) TestKafkaBroker() {
 		{args: "kafka broker describe --all --config-name compression.type -o json", fixture: "kafka/broker/describe-all-config-json.golden"},
 		{args: "kafka broker describe 1 --all", exitCode: 1, fixture: "kafka/broker/err-all-and-arg.golden"},
 
-		{args: "kafka broker update -h", fixture: "kafka/broker/update-help.golden"},
 		{args: "kafka broker update --config compression.type=zip,sasl_mechanism=SASL/PLAIN --all", fixture: "kafka/broker/update-all.golden"},
 		{args: "kafka broker update 1 --config compression.type=zip,sasl_mechanism=SASL/PLAIN", fixture: "kafka/broker/update-1.golden"},
 		{args: "kafka broker update --config compression.type=zip,sasl_mechanism=SASL/PLAIN", exitCode: 1, fixture: "kafka/broker/err-need-all-or-arg.golden"},
 
-		{args: "kafka broker delete -h", fixture: "kafka/broker/delete-help.golden"},
 		{args: "kafka broker delete 1 --force", fixture: "kafka/broker/delete.golden"},
 		{args: "kafka broker delete 1", input: "y\n", fixture: "kafka/broker/delete-prompt.golden"},
 
-		{args: "kafka broker get-tasks -h", fixture: "kafka/broker/get-tasks-help.golden"},
 		{args: "kafka broker get-tasks 1", fixture: "kafka/broker/get-tasks-1.golden"},
 		{args: "kafka broker get-tasks 1 --task-type remove-broker", fixture: "kafka/broker/get-tasks-1-remove-broker.golden"},
 		{args: "kafka broker get-tasks --all", fixture: "kafka/broker/get-tasks-all.golden"},
@@ -284,7 +258,7 @@ func (s *CLITestSuite) TestKafkaBroker() {
 	}
 
 	for _, tt := range tests {
-		tt.login = "platform"
+		tt.login = "onprem"
 		tt.env = []string{"CONFLUENT_REST_URL=" + kafkaRestURL}
 		s.runIntegrationTest(tt)
 	}
@@ -293,16 +267,12 @@ func (s *CLITestSuite) TestKafkaBroker() {
 func (s *CLITestSuite) TestKafkaPartitions() {
 	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
 	tests := []CLITest{
-		{args: "kafka partition --help", fixture: "kafka/partition/help.golden"},
-		{args: "kafka partition list -h", fixture: "kafka/partition/list-help.golden"},
 		{args: "kafka partition list --topic topic1", fixture: "kafka/partition/list.golden"},
 		{args: "kafka partition list --topic topic1 -o json", fixture: "kafka/partition/list-json.golden"},
 		{args: "kafka partition list --topic topic1 -o yaml", fixture: "kafka/partition/list-yaml.golden"},
-		{args: "kafka partition describe -h", fixture: "kafka/partition/describe-help.golden"},
 		{args: "kafka partition describe 0 --topic topic1", fixture: "kafka/partition/describe.golden"},
 		{args: "kafka partition describe 0 --topic topic1 -o json", fixture: "kafka/partition/describe-json.golden"},
 		{args: "kafka partition describe 0 --topic topic1 -o yaml", fixture: "kafka/partition/describe-yaml.golden"},
-		{args: "kafka partition reassignment list -h", fixture: "kafka/partition/reassignment/list-help.golden"},
 		{args: "kafka partition reassignment list", fixture: "kafka/partition/reassignment/list.golden"},
 		{args: "kafka partition reassignment list -o json", fixture: "kafka/partition/reassignment/list-json.golden"},
 		{args: "kafka partition reassignment list --topic topic1", fixture: "kafka/partition/reassignment/list-by-topic.golden"},
@@ -310,7 +280,7 @@ func (s *CLITestSuite) TestKafkaPartitions() {
 		{args: "kafka partition reassignment list 0 --topic topic1 -o yaml", fixture: "kafka/partition/reassignment/list-by-partition-yaml.golden"},
 	}
 	for _, tt := range tests {
-		tt.login = "platform"
+		tt.login = "onprem"
 		tt.env = []string{"CONFLUENT_REST_URL=" + kafkaRestURL}
 		s.runIntegrationTest(tt)
 	}
@@ -319,8 +289,6 @@ func (s *CLITestSuite) TestKafkaPartitions() {
 func (s *CLITestSuite) TestKafkaReplica() {
 	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
 	tests := []CLITest{
-		{args: "kafka replica --help", fixture: "kafka/replica/help.golden"},
-		{args: "kafka replica list -h", fixture: "kafka/replica/list-help.golden"},
 		{args: "kafka replica list --topic topic-exist", fixture: "kafka/replica/list-topic-replicas.golden"},
 		{args: "kafka replica list --topic topic-exist -o json", fixture: "kafka/replica/list-topic-replicas-json.golden"},
 		{args: "kafka replica list --topic topic-exist --partition 2", fixture: "kafka/replica/list-partition-replicas.golden"},
@@ -328,7 +296,7 @@ func (s *CLITestSuite) TestKafkaReplica() {
 		{args: "kafka replica list", fixture: "kafka/replica/no-flags-error.golden", exitCode: 1},
 	}
 	for _, tt := range tests {
-		tt.login = "platform"
+		tt.login = "onprem"
 		tt.env = []string{"CONFLUENT_REST_URL=" + kafkaRestURL}
 		s.runIntegrationTest(tt)
 	}
@@ -341,8 +309,8 @@ func (s *CLITestSuite) TestKafkaTopicList() {
 		{args: fmt.Sprintf("kafka topic list --url %s --no-authentication", kafkaRestURL), fixture: "kafka/topic/list.golden"},
 		// Test with basic auth input
 		{args: fmt.Sprintf("kafka topic list --url %s", kafkaRestURL), input: "Miles\nTod\n", fixture: "kafka/topic/list-with-auth.golden"},
-		{args: fmt.Sprintf("kafka topic list --url %s", kafkaRestURL), login: "platform", fixture: "kafka/topic/list-with-auth-from-login.golden"},
-		{args: fmt.Sprintf("kafka topic list --url %s --prompt", kafkaRestURL), login: "platform", input: "Miles\nTod\n", fixture: "kafka/topic/list-with-auth-prompt.golden"},
+		{args: fmt.Sprintf("kafka topic list --url %s", kafkaRestURL), login: "onprem", fixture: "kafka/topic/list-with-auth-from-login.golden"},
+		{args: fmt.Sprintf("kafka topic list --url %s --prompt", kafkaRestURL), login: "onprem", input: "Miles\nTod\n", fixture: "kafka/topic/list-with-auth-prompt.golden"},
 		// Test with CONFLUENT_REST_URL env var
 		{args: "kafka topic list --no-authentication", fixture: "kafka/topic/list.golden", env: []string{"CONFLUENT_REST_URL=" + kafkaRestURL}},
 		// Test failure when only one of client-cert-path or client-key-path are provided
@@ -478,11 +446,26 @@ func (s *CLITestSuite) TestKafkaClientQuotas() {
 		{args: "kafka quota list --cluster lkc-1234", fixture: "kafka/quota/list.golden"},
 		{args: "kafka quota list --cluster lkc-1234 --principal sa-5678 -o json", fixture: "kafka/quota/list-json.golden"},
 		{args: "kafka quota list --cluster lkc-1234 -o yaml", fixture: "kafka/quota/list-yaml.golden"},
-		{args: "kafka quota describe cq-123 --cluster lkc-1234", fixture: "kafka/quota/describe.golden"},
-		{args: "kafka quota describe cq-123 --cluster lkc-1234 -o json", fixture: "kafka/quota/describe-json.golden"},
-		{args: "kafka quota delete cq-123 --force", fixture: "kafka/quota/delete.golden"},
-		{args: "kafka quota delete cq-123", input: "cq-123\n", fixture: "kafka/quota/delete-prompt.golden"},
-		{args: "kafka quota update cq-123 --ingress 100 --egress 100 --add-principals sa-4321 --remove-principals sa-1234 --name newName", fixture: "kafka/quota/update.golden"},
+		{args: "kafka quota describe cq-1234 --cluster lkc-1234", fixture: "kafka/quota/describe.golden"},
+		{args: "kafka quota describe cq-1234 --cluster lkc-1234 -o json", fixture: "kafka/quota/describe-json.golden"},
+		{args: "kafka quota delete cq-1234 --force", fixture: "kafka/quota/delete.golden"},
+		{args: "kafka quota delete cq-1234", input: "cq-1234\n", fixture: "kafka/quota/delete-prompt.golden"},
+		{args: "kafka quota update cq-1234 --ingress 100 --egress 100 --add-principals sa-4321 --remove-principals sa-1234 --name newName", fixture: "kafka/quota/update.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestKafkaAutocomplete() {
+	tests := []CLITest{
+		{args: `__complete kafka cluster describe ""`, fixture: "kafka/describe-autocomplete.golden"},
+		{args: `__complete kafka link delete ""`, fixture: "kafka/link/list-link-delete-autocomplete.golden", useKafka: "lkc-describe-topic"}, // use delete since link has no describe subcommand
+		{args: `__complete kafka mirror describe --link link-1 ""`, fixture: "kafka/mirror/describe-autocomplete.golden", useKafka: "lkc-describe-topic"},
+		{args: `__complete kafka quota describe ""`, useKafka: "lkc-1234", fixture: "kafka/quota/describe-autocomplete.golden"},
+		{args: `__complete kafka topic describe ""`, useKafka: "lkc-describe-topic", fixture: "kafka/topic/describe-autocomplete.golden"},
 	}
 
 	for _, test := range tests {

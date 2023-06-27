@@ -8,8 +8,9 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
+	"fmt"
 	"os"
-	"strconv"
+	"strings"
 
 	"github.com/panta/machineid"
 	"golang.org/x/crypto/pbkdf2"
@@ -22,13 +23,21 @@ const (
 	keyLength       = 32
 )
 
-func GenerateRandomBytes(n int) ([]byte, error) {
+func generateRandomBytes(n int) ([]byte, error) {
 	b := make([]byte, n)
-	_, err := rand.Read(b)
-	if err != nil {
+	if _, err := rand.Read(b); err != nil {
 		return []byte{}, err
 	}
-	return b, err
+	return b, nil
+}
+
+func GenerateSaltAndNonce() ([]byte, []byte, error) {
+	salt, err := generateRandomBytes(SaltLength)
+	if err != nil {
+		return nil, nil, err
+	}
+	nonce, err := generateRandomBytes(NonceLength)
+	return salt, nonce, err
 }
 
 func DeriveEncryptionKey(salt []byte) ([]byte, error) {
@@ -36,9 +45,8 @@ func DeriveEncryptionKey(salt []byte) ([]byte, error) {
 	if err != nil {
 		return []byte{}, err
 	}
-	userId := strconv.Itoa(os.Getuid())
-	encryptionKey := pbkdf2.Key([]byte(machineId+userId), salt, iterationNumber, keyLength, sha256.New)
-	return encryptionKey, nil
+	pwd := []byte(fmt.Sprintf("%s%d", machineId, os.Getuid()))
+	return pbkdf2.Key(pwd, salt, iterationNumber, keyLength, sha256.New), nil
 }
 
 func Encrypt(username, password string, salt, nonce []byte) (string, error) {
@@ -62,7 +70,7 @@ func Encrypt(username, password string, salt, nonce []byte) (string, error) {
 	}
 	encryptedPassword := aesgcm.Seal(nil, nonce, []byte(password), []byte(username))
 
-	return base64.RawStdEncoding.EncodeToString(encryptedPassword), nil
+	return AesGcm + ":" + base64.RawStdEncoding.EncodeToString(encryptedPassword), nil
 }
 
 func Decrypt(username, encrypted string, salt, nonce []byte) (string, error) {
@@ -81,9 +89,11 @@ func Decrypt(username, encrypted string, salt, nonce []byte) (string, error) {
 		return "", err
 	}
 
+	encrypted = strings.TrimPrefix(encrypted, AesGcm+":")
+
 	cipherText, err := base64.RawStdEncoding.DecodeString(encrypted)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to decode base64: %v", err)
 	}
 
 	if len(nonce) != NonceLength {
@@ -91,7 +101,7 @@ func Decrypt(username, encrypted string, salt, nonce []byte) (string, error) {
 	}
 	decryptedPassword, err := aesgcm.Open(nil, nonce, cipherText, []byte(username))
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("CLI does not have write permission for `/etc/machine-id`, or `~/.confluent/config.json` is corrupted: %w", err)
 	}
 
 	return string(decryptedPassword), nil

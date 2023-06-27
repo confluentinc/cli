@@ -1,7 +1,6 @@
 package schemaregistry
 
 import (
-	"context"
 	"fmt"
 	"strings"
 
@@ -14,7 +13,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
-	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
 type enableOut struct {
@@ -34,13 +32,13 @@ func (c *command) newClusterEnableCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Enable Schema Registry, using Google Cloud Platform in the US with the "advanced" package.`,
-				Code: fmt.Sprintf("%s schema-registry cluster enable --cloud gcp --geo us --package advanced", version.CLIName),
+				Code: "confluent schema-registry cluster enable --cloud gcp --geo us --package advanced",
 			},
 		),
 	}
 
 	pcmd.AddCloudFlag(cmd)
-	cmd.Flags().String("geo", "", fmt.Sprintf("Specify the geo as %s.", utils.ArrayToCommaDelimitedString(availableGeos)))
+	cmd.Flags().String("geo", "", fmt.Sprintf("Specify the geo as %s.", utils.ArrayToCommaDelimitedString(availableGeos, "or")))
 	addPackageFlag(cmd, essentialsPackage)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -55,7 +53,6 @@ func (c *command) newClusterEnableCommand() *cobra.Command {
 }
 
 func (c *command) clusterEnable(cmd *cobra.Command, _ []string) error {
-	ctx := context.Background()
 	// Collect the parameters
 	cloud, err := cmd.Flags().GetString("cloud")
 	if err != nil {
@@ -83,9 +80,14 @@ func (c *command) clusterEnable(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	environmentId, err := c.Context.EnvironmentId()
+	if err != nil {
+		return err
+	}
+
 	// Build the SR instance
 	clusterConfig := &ccloudv1.SchemaRegistryClusterConfig{
-		AccountId:       c.EnvironmentId(),
+		AccountId:       environmentId,
 		Location:        location,
 		ServiceProvider: cloud,
 		Package:         packageInternalName,
@@ -96,18 +98,18 @@ func (c *command) clusterEnable(cmd *cobra.Command, _ []string) error {
 	}
 
 	var out *enableOut
-	newCluster, err := c.Client.SchemaRegistry.CreateSchemaRegistryCluster(ctx, clusterConfig)
+	newCluster, err := c.Client.SchemaRegistry.CreateSchemaRegistryCluster(clusterConfig)
 	if err != nil {
 		// If it already exists, return the existing one
-		existingCluster, getExistingErr := c.Context.FetchSchemaRegistryByEnvironmentId(ctx, c.EnvironmentId())
+		existingCluster, getExistingErr := c.Context.FetchSchemaRegistryByEnvironmentId(environmentId)
 		if getExistingErr != nil {
 			// Propagate CreateSchemaRegistryCluster error.
 			return err
 		}
 
 		out = &enableOut{
-			Id:          existingCluster.Id,
-			EndpointUrl: existingCluster.Endpoint,
+			Id:          existingCluster.GetId(),
+			EndpointUrl: existingCluster.Spec.GetHttpEndpoint(),
 		}
 	} else {
 		out = &enableOut{

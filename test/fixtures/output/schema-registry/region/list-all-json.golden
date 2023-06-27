@@ -1,0 +1,16 @@
+[
+  {
+    "id": "sgreg-23",
+    "name": "Oregon (us-west-2)",
+    "cloud": "aws",
+    "region_name": "us-west-2",
+    "packages": ["advanced"]
+  },
+  {
+    "id": "sgreg-2",
+    "name": "Iowa (us-central1)",
+    "cloud": "gcp",
+    "region_name": "us-central1",
+    "packages": ["essentials"]
+  }
+]

@@ -15,23 +15,9 @@ import (
 var (
 	noContextCfg = new(v1.Config)
 
-	regularOrgContextState = &v1.ContextState{
-		Auth: &v1.AuthConfig{
-			Organization: testserver.RegularOrg,
-		},
-	}
-
-	endOfFreeTrialSuspendedOrgContextState = &v1.ContextState{
-		Auth: &v1.AuthConfig{
-			Organization: testserver.SuspendedOrg(ccloudv1.SuspensionEventType_SUSPENSION_EVENT_END_OF_FREE_TRIAL),
-		},
-	}
-
-	normalSuspendedOrgContextState = &v1.ContextState{
-		Auth: &v1.AuthConfig{
-			Organization: testserver.SuspendedOrg(ccloudv1.SuspensionEventType_SUSPENSION_EVENT_CUSTOMER_INITIATED_ORG_DEACTIVATION),
-		},
-	}
+	regularOrgContextState                 = &v1.ContextState{Auth: &v1.AuthConfig{Organization: testserver.RegularOrg}}
+	endOfFreeTrialSuspendedOrgContextState = &v1.ContextState{Auth: &v1.AuthConfig{Organization: testserver.SuspendedOrg(ccloudv1.SuspensionEventType_SUSPENSION_EVENT_END_OF_FREE_TRIAL)}}
+	normalSuspendedOrgContextState         = &v1.ContextState{Auth: &v1.AuthConfig{Organization: testserver.SuspendedOrg(ccloudv1.SuspensionEventType_SUSPENSION_EVENT_CUSTOMER_INITIATED_ORG_DEACTIVATION)}}
 
 	cloudCfg = func(contextState *v1.ContextState) *v1.Config {
 		return &v1.Config{
@@ -72,10 +58,6 @@ var (
 		}},
 		CurrentContext: "on-prem",
 	}
-
-	updatesDisabledCfg = &v1.Config{DisableUpdates: true}
-
-	updatesEnabledCfg = &v1.Config{DisableUpdates: false}
 )
 
 func TestErrIfMissingRunRequirement_NoError(t *testing.T) {
@@ -92,7 +74,6 @@ func TestErrIfMissingRunRequirement_NoError(t *testing.T) {
 		{RequireNonAPIKeyCloudLoginOrOnPremLogin, nonAPIKeyCloudCfg},
 		{RequireNonAPIKeyCloudLoginOrOnPremLogin, onPremCfg},
 		{RequireOnPremLogin, onPremCfg},
-		{RequireUpdatesEnabled, updatesEnabledCfg},
 	} {
 		cmd := &cobra.Command{Annotations: map[string]string{RunRequirement: test.req}}
 		err := ErrIfMissingRunRequirement(cmd, test.cfg)
@@ -117,7 +98,6 @@ func TestErrIfMissingRunRequirement_Error(t *testing.T) {
 		{RequireNonAPIKeyCloudLoginOrOnPremLogin, apiKeyCloudCfg, v1.RequireNonAPIKeyCloudLoginOrOnPremLoginErr},
 		{RequireNonAPIKeyCloudLoginOrOnPremLogin, apiKeyCloudCfg, v1.RequireNonAPIKeyCloudLoginOrOnPremLoginErr},
 		{RequireOnPremLogin, cloudCfg(regularOrgContextState), v1.RequireOnPremLoginErr},
-		{RequireUpdatesEnabled, updatesDisabledCfg, v1.RequireUpdatesEnabledErr},
 	} {
 		cmd := &cobra.Command{Annotations: map[string]string{RunRequirement: test.req}}
 		err := ErrIfMissingRunRequirement(cmd, test.cfg)

@@ -1,6 +1,7 @@
 package pipeline
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
@@ -9,9 +10,6 @@ import (
 	streamdesignerv1 "github.com/confluentinc/ccloud-sdk-go-v2/stream-designer/v1"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
-	launchdarkly "github.com/confluentinc/cli/internal/pkg/featureflags"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -45,34 +43,26 @@ var (
 )
 
 type command struct {
-	*pcmd.AuthenticatedStateFlagCommand
-	prerunner pcmd.PreRunner
+	*pcmd.AuthenticatedCLICommand
 }
 
-func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
+func New(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "pipeline",
 		Short:       "Manage Stream Designer pipelines.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
-	c := &command{
-		AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner),
-		prerunner:                     prerunner,
-	}
-
-	dc := dynamicconfig.New(cfg, nil, nil)
-	_ = dc.ParseFlagsIntoConfig(cmd)
-	enableSourceCode := launchdarkly.Manager.BoolVariation("cli.stream_designer.source_code.enable", dc.Context(), v1.CliLaunchDarklyClient, true, false)
+	c := &command{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 
 	cmd.AddCommand(c.newActivateCommand())
-	cmd.AddCommand(c.newCreateCommand(enableSourceCode))
+	cmd.AddCommand(c.newCreateCommand())
 	cmd.AddCommand(c.newDeactivateCommand())
 	cmd.AddCommand(c.newDeleteCommand())
 	cmd.AddCommand(c.newDescribeCommand())
 	cmd.AddCommand(c.newListCommand())
-	cmd.AddCommand(c.newSaveCommand(enableSourceCode))
-	cmd.AddCommand(c.newUpdateCommand(enableSourceCode))
+	cmd.AddCommand(c.newSaveCommand())
+	cmd.AddCommand(c.newUpdateCommand())
 
 	return cmd
 }
@@ -108,4 +98,43 @@ func printTable(cmd *cobra.Command, pipeline streamdesignerv1.SdV1Pipeline) erro
 	}
 
 	return table.Print()
+}
+
+func (c *command) validArgs(cmd *cobra.Command, args []string) []string {
+	if len(args) > 0 {
+		return nil
+	}
+
+	if err := c.PersistentPreRunE(cmd, args); err != nil {
+		return nil
+	}
+
+	return c.autocompletePipelines()
+}
+
+func (c *command) autocompletePipelines() []string {
+	pipelines, err := c.getPipelines()
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(pipelines))
+	for i, pipeline := range pipelines {
+		suggestions[i] = fmt.Sprintf("%s\t%s", pipeline.GetId(), pipeline.Spec.GetDisplayName())
+	}
+	return suggestions
+}
+
+func (c *command) getPipelines() ([]streamdesignerv1.SdV1Pipeline, error) {
+	cluster, err := c.Context.GetKafkaClusterForCommand()
+	if err != nil {
+		return nil, err
+	}
+
+	environmentId, err := c.Context.EnvironmentId()
+	if err != nil {
+		return nil, err
+	}
+
+	return c.V2Client.ListPipelines(environmentId, cluster.ID)
 }

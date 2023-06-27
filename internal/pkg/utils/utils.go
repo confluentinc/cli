@@ -93,8 +93,7 @@ func NormalizeByteArrayNewLines(raw []byte) []byte {
 
 func ValidateEmail(email string) bool {
 	rgxEmail := regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
-	matched := rgxEmail.MatchString(email)
-	return matched
+	return rgxEmail.MatchString(email)
 }
 
 func Abbreviate(s string, maxLength int) string {
@@ -120,7 +119,7 @@ func FormatUnixTime(timeMs int64) string {
 	return time.UTC().Format("2006-01-02 15:04:05 MST")
 }
 
-func ArrayToCommaDelimitedString(arr []string) string {
+func ArrayToCommaDelimitedString(arr []string, conjunction string) string {
 	size := len(arr)
 	switch size {
 	case 0:
@@ -128,18 +127,22 @@ func ArrayToCommaDelimitedString(arr []string) string {
 	case 1:
 		return fmt.Sprintf(`"%s"`, arr[0])
 	case 2:
-		return fmt.Sprintf(`"%s" or "%s"`, arr[0], arr[1])
+		return fmt.Sprintf(`"%s" %s "%s"`, arr[0], conjunction, arr[1])
 	}
 
 	var delimitedStr strings.Builder
 	for _, v := range arr[:size-1] {
 		delimitedStr.WriteString(fmt.Sprintf(`"%s", `, v))
 	}
-	delimitedStr.WriteString(fmt.Sprintf(`or "%s"`, arr[size-1]))
+	delimitedStr.WriteString(fmt.Sprintf(`%s "%s"`, conjunction, arr[size-1]))
 
 	return delimitedStr.String()
 }
 
 func Int32Ptr(x int32) *int32 {
 	return &x
+}
+
+func AddDryRunPrefix(msg string) string {
+	return fmt.Sprintf("[DRY RUN] %s", msg)
 }

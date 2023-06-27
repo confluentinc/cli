@@ -100,13 +100,11 @@ func APICredentialConfigMock() *Config {
 	platform := createPlatform(bootstrapServer, bootstrapServer)
 
 	kafkaCluster := createKafkaCluster(anonymousKafkaId, anonymousKafkaName, kafkaAPIKeyPair)
-	kafkaClusters := map[string]*KafkaClusterConfig{
-		kafkaCluster.ID: kafkaCluster,
-	}
+	kafkaClusters := map[string]*KafkaClusterConfig{kafkaCluster.ID: kafkaCluster}
 
 	cfg := New()
 
-	ctx, err := newContext(mockContextName, platform, credential, kafkaClusters, kafkaCluster.ID, nil, contextState, cfg, "")
+	ctx, err := newContext(mockContextName, platform, credential, kafkaClusters, kafkaCluster.ID, nil, contextState, cfg, "", "")
 	if err != nil {
 		panic(err)
 	}
@@ -116,7 +114,7 @@ func APICredentialConfigMock() *Config {
 
 func UnauthenticatedCloudConfigMock() *Config {
 	c := AuthenticatedCloudConfigMock()
-	c.Contexts = nil
+	c.CurrentContext = ""
 	return c
 }
 
@@ -133,7 +131,7 @@ type mockConfigParams struct {
 }
 
 func AuthenticatedConfigMock(params mockConfigParams) *Config {
-	authConfig := createAuthConfig(params.userId, params.username, params.userResourceId, params.envId, params.orgId, params.orgResourceId)
+	authConfig := createAuthConfig(params.userId, params.username, params.userResourceId, params.orgId, params.orgResourceId)
 	credential := createUsernameCredential(params.credentialName, authConfig)
 	contextState := createContextState(authConfig, mockAuthToken)
 
@@ -141,20 +139,16 @@ func AuthenticatedConfigMock(params mockConfigParams) *Config {
 
 	kafkaAPIKeyPair := createAPIKeyPair(kafkaAPIKey, kafkaAPISecret)
 	kafkaCluster := createKafkaCluster(kafkaClusterId, kafkaClusterName, kafkaAPIKeyPair)
-	kafkaClusters := map[string]*KafkaClusterConfig{
-		kafkaCluster.ID: kafkaCluster,
-	}
+	kafkaClusters := map[string]*KafkaClusterConfig{kafkaCluster.ID: kafkaCluster}
 
 	srAPIKeyPair := createAPIKeyPair(srAPIKey, srAPISecret)
 	srCluster := createSRCluster(srAPIKeyPair)
-	srClusters := map[string]*SchemaRegistryCluster{
-		MockEnvironmentId: srCluster,
-	}
+	srClusters := map[string]*SchemaRegistryCluster{MockEnvironmentId: srCluster}
 
 	cfg := New()
 	cfg.IsTest = true
 
-	ctx, err := newContext(params.contextName, platform, credential, kafkaClusters, kafkaCluster.ID, srClusters, contextState, cfg, params.orgResourceId)
+	ctx, err := newContext(params.contextName, platform, credential, kafkaClusters, kafkaCluster.ID, srClusters, contextState, cfg, params.orgResourceId, params.envId)
 	if err != nil {
 		panic(err)
 	}
@@ -185,19 +179,17 @@ func createPlatform(name, server string) *Platform {
 	}
 }
 
-func createAuthConfig(userId int32, email, userResourceId, envId string, organizationId int32, orgResourceId string) *AuthConfig {
+func createAuthConfig(userId int32, email, userResourceId string, organizationId int32, orgResourceId string) *AuthConfig {
 	return &AuthConfig{
 		User: &ccloudv1.User{
 			Id:         userId,
 			Email:      email,
 			ResourceId: userResourceId,
 		},
-		Account: &ccloudv1.Account{Id: envId},
 		Organization: &ccloudv1.Organization{
 			Id:         organizationId,
 			ResourceId: orgResourceId,
 		},
-		Accounts: []*ccloudv1.Account{{Id: envId}},
 	}
 }
 
@@ -247,10 +239,7 @@ func setUpConfig(conf *Config, ctx *Context, platform *Platform, credential *Cre
 	}
 }
 
-func AddEnvironmentToConfigMock(cfg *Config, id, name string) {
+func AddEnvironmentToConfigMock(cfg *Config, id string) {
 	ctx := cfg.Context()
-	ctx.State.Auth.Accounts = append(ctx.GetEnvironments(), &ccloudv1.Account{
-		Id:   id,
-		Name: name,
-	})
+	ctx.Environments[id] = &EnvironmentContext{}
 }

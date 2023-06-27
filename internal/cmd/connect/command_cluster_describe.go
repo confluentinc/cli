@@ -77,7 +77,12 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	connector, err := c.V2Client.GetConnectorExpansionById(args[0], c.EnvironmentId(), kafkaCluster.ID)
+	environmentId, err := c.Context.EnvironmentId()
+	if err != nil {
+		return err
+	}
+
+	connector, err := c.V2Client.GetConnectorExpansionById(args[0], environmentId, kafkaCluster.ID)
 	if err != nil {
 		return err
 	}

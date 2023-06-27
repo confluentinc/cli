@@ -18,7 +18,7 @@ import (
 )
 
 type ksqlCommand struct {
-	*pcmd.AuthenticatedStateFlagCommand
+	*pcmd.AuthenticatedCLICommand
 }
 
 type ksqlCluster struct {
@@ -67,7 +67,7 @@ func (c *ksqlCommand) getClusterStatus(cluster *ksqlv2.KsqldbcmV2Cluster) string
 	if cluster.Status.GetIsPaused() {
 		status = "PAUSED"
 	} else if status == "PROVISIONED" {
-		provisioningFailed, err := c.checkProvisioningFailed(cluster.GetId(), cluster.Status.GetHttpEndpoint())
+		provisioningFailed, err := c.checkProvisioningFailed(cluster.Status.GetHttpEndpoint())
 		if err != nil {
 			status = "UNKNOWN"
 		} else if provisioningFailed {
@@ -77,17 +77,18 @@ func (c *ksqlCommand) getClusterStatus(cluster *ksqlv2.KsqldbcmV2Cluster) string
 	return status
 }
 
-func (c *ksqlCommand) checkProvisioningFailed(clusterId, endpoint string) (bool, error) {
+func (c *ksqlCommand) checkProvisioningFailed(endpoint string) (bool, error) {
 	ctx := c.Config.Context()
 	state, err := ctx.AuthenticatedState()
 	if err != nil {
 		return false, err
 	}
-	bearerToken, err := pauth.GetBearerToken(state, ctx.Platform.Server, clusterId)
+
+	dataplaneToken, err := pauth.GetDataplaneToken(state, ctx.Platform.Server)
 	if err != nil {
 		return false, err
 	}
-	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: bearerToken})
+	ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: dataplaneToken})
 
 	slingClient := sling.New().Client(oauth2.NewClient(context.Background(), ts)).Base(endpoint)
 	var failure map[string]any
@@ -118,7 +119,12 @@ func (c *ksqlCommand) validArgs(cmd *cobra.Command, args []string) []string {
 		return nil
 	}
 
-	return autocompleteClusters(c.EnvironmentId(), c.V2Client)
+	environmentId, err := c.Context.EnvironmentId()
+	if err != nil {
+		return nil
+	}
+
+	return autocompleteClusters(environmentId, c.V2Client)
 }
 
 func autocompleteClusters(environment string, client *ccloudv2.Client) []string {
@@ -127,8 +133,8 @@ func autocompleteClusters(environment string, client *ccloudv2.Client) []string 
 		return nil
 	}
 
-	suggestions := make([]string, len(clusters.Data))
-	for i, cluster := range clusters.Data {
+	suggestions := make([]string, len(clusters))
+	for i, cluster := range clusters {
 		suggestions[i] = fmt.Sprintf("%s\t%s", cluster.GetId(), cluster.Spec.GetDisplayName())
 	}
 	return suggestions

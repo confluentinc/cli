@@ -26,10 +26,6 @@ var packageDisplayNameMapping = map[string]string{
 
 var packageDisplayNames = []string{essentialsPackage, advancedPackage}
 
-func getPackageDisplayName(packageName string) string {
-	return packageDisplayNameMapping[packageName]
-}
-
 func getPackageInternalName(inputPackageDisplayName string) (string, error) {
 	inputPackageDisplayName = strings.ToLower(inputPackageDisplayName)
 	for internalName, displayName := range packageDisplayNameMapping {
@@ -43,7 +39,7 @@ func getPackageInternalName(inputPackageDisplayName string) (string, error) {
 }
 
 func getCommaDelimitedPackagesString() string {
-	return utils.ArrayToCommaDelimitedString(packageDisplayNames)
+	return utils.ArrayToCommaDelimitedString(packageDisplayNames, "or")
 }
 
 func addPackageFlag(cmd *cobra.Command, defaultPackage string) {

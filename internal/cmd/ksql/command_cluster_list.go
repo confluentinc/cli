@@ -23,13 +23,18 @@ func (c *ksqlCommand) newListCommand() *cobra.Command {
 }
 
 func (c *ksqlCommand) list(cmd *cobra.Command, _ []string) error {
-	clusters, err := c.V2Client.ListKsqlClusters(c.EnvironmentId())
+	environmentId, err := c.Context.EnvironmentId()
+	if err != nil {
+		return err
+	}
+
+	clusters, err := c.V2Client.ListKsqlClusters(environmentId)
 	if err != nil {
 		return err
 	}
 
 	list := output.NewList(cmd)
-	for _, cluster := range clusters.Data {
+	for _, cluster := range clusters {
 		list.Add(c.formatClusterForDisplayAndList(&cluster))
 	}
 	return list.Print()

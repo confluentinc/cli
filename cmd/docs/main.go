@@ -1,11 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
-
-	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
 	"github.com/confluentinc/cli/internal/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -27,7 +26,7 @@ func main() {
 
 	// Generate documentation for both subsets of commands: cloud and on-prem
 	configs := []*v1.Config{
-		{CurrentContext: "Cloud", Contexts: map[string]*v1.Context{"Cloud": {PlatformName: "https://confluent.cloud", State: &v1.ContextState{Auth: &v1.AuthConfig{Organization: &ccloudv1.Organization{}}}}}},
+		{CurrentContext: "Cloud", Contexts: map[string]*v1.Context{"Cloud": {PlatformName: "https://confluent.cloud"}}},
 		{CurrentContext: "On-Prem", Contexts: map[string]*v1.Context{"On-Prem": {PlatformName: "https://example.com"}}},
 	}
 
@@ -59,15 +58,19 @@ func main() {
 
 // removeUnreleasedDocs hides documentation for unreleased features
 func removeUnreleasedDocs() {
-	if err := removeLineFromFile(`\s{3}stream-share/index\n`, filepath.Join("docs", "index.rst")); err != nil {
+	removeUnreleasedCommands("flink")
+}
+
+func removeUnreleasedCommands(command string) {
+	if err := removeLineFromFile(fmt.Sprintf(`\s{3}%s/index\n`, command), filepath.Join("docs", "index.rst")); err != nil {
 		panic(err)
 	}
 
-	if err := removeLineFromFile("\\s{7}:ref:`confluent_stream-share`\\s+.+\\s+\n", filepath.Join("docs", "overview.rst")); err != nil {
+	if err := removeLineFromFile(fmt.Sprintf("\\s{7}:ref:`confluent_%s`\\s+.+\\s+\n", command), filepath.Join("docs", "overview.rst")); err != nil {
 		panic(err)
 	}
 
-	if err := os.RemoveAll(filepath.Join("docs", "stream-share")); err != nil {
+	if err := os.RemoveAll(filepath.Join("docs", command)); err != nil {
 		panic(err)
 	}
 }

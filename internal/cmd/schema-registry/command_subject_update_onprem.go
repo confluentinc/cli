@@ -8,7 +8,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
 func (c *command) newSubjectUpdateCommandOnPrem() *cobra.Command {
@@ -21,16 +20,25 @@ func (c *command) newSubjectUpdateCommandOnPrem() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Update subject-level compatibility of subject "payments".`,
-				Code: fmt.Sprintf("%s schema-registry subject update payments --compatibility backward %s", version.CLIName, OnPremAuthenticationMsg),
+				Code: fmt.Sprintf("confluent schema-registry subject update payments --compatibility backward %s", OnPremAuthenticationMsg),
+			},
+			examples.Example{
+				Text: `Update subject-level compatibility of subject "payments" and set compatibility group to "application.version".`,
+				Code: "confluent schema-registry subject update payments --compatibility backward --compatibility-group application.version",
 			},
 			examples.Example{
 				Text: `Update subject-level mode of subject "payments".`,
-				Code: fmt.Sprintf("%s schema-registry subject update payments --mode readwrite %s", version.CLIName, OnPremAuthenticationMsg),
+				Code: fmt.Sprintf("confluent schema-registry subject update payments --mode readwrite %s", OnPremAuthenticationMsg),
 			},
 		),
 	}
 
 	addCompatibilityFlag(cmd)
+	addCompatibilityGroupFlag(cmd)
+	addMetadataDefaultsFlag(cmd)
+	addMetadataOverridesFlag(cmd)
+	addRulesetDefaultsFlag(cmd)
+	addRulesetOverridesFlag(cmd)
 	addModeFlag(cmd)
 	cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -60,7 +68,7 @@ func (c *command) subjectUpdateOnPrem(cmd *cobra.Command, args []string) error {
 	}
 
 	if compatibility != "" {
-		return c.updateCompatibility(subject, compatibility, srClient, ctx)
+		return c.updateCompatibility(cmd, subject, compatibility, srClient, ctx)
 	}
 
 	if mode != "" {

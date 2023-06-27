@@ -151,7 +151,7 @@ func handleKafkaRPTopics(t *testing.T) http.HandlerFunc {
 				"kind": "KafkaTopicList",
 				"metadata": {"self": "http://localhost:9391/v3/clusters/cluster-1/topics","next": null},
 				"data": [
-				  {
+					{
 					"kind": "KafkaTopic",
 					"metadata": {"self": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1","resource_name": "crn:///kafka=cluster-1/topic=topic-1"},
 					"cluster_id": "cluster-1",
@@ -161,8 +161,8 @@ func handleKafkaRPTopics(t *testing.T) http.HandlerFunc {
 					"partitions": {"related": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1/partitions"},
 					"configs": {"related": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1/configs"},
 					"partition_reassignments": {"related": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-1/partitions/-/reassignments"}
-				  },
-				  {
+					},
+					{
 					"kind": "KafkaTopic",
 					"metadata": {"self": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-2","resource_name": "crn:///kafka=cluster-1/topic=topic-2"},
 					"cluster_id": "cluster-1",
@@ -172,7 +172,7 @@ func handleKafkaRPTopics(t *testing.T) http.HandlerFunc {
 					"partitions": {"related": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-2/partitions"},
 					"configs": {"related": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-2/configs"},
 					"partition_reassignments": {"related": "http://localhost:9391/v3/clusters/cluster-1/topics/topic-2/partitions/-/reassignments"}
-				  }
+					}
 				]
 			}`
 			_, err := io.WriteString(w, response)
@@ -245,21 +245,21 @@ func handleKafkaRPTopicConfigs(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			// if topic exists
-			if topicName == "topic-exist" {
+			if topicName == "topic-exist" || topicName == "topic-exist-2" {
 				topicConfigList := cpkafkarestv3.TopicConfigDataList{
 					Data: []cpkafkarestv3.TopicConfigData{
 						{
 							Name:  "cleanup.policy",
-							Value: stringPtr("delete"),
+							Value: cpkafkarestv3.PtrString("delete"),
 						},
 						{
 							Name:       "compression.type",
-							Value:      stringPtr("producer"),
+							Value:      cpkafkarestv3.PtrString("producer"),
 							IsReadOnly: true,
 						},
 						{
 							Name:  "retention.ms",
-							Value: stringPtr("604800000"),
+							Value: cpkafkarestv3.PtrString("604800000"),
 						},
 					},
 				}
@@ -271,12 +271,13 @@ func handleKafkaRPTopicConfigs(t *testing.T) http.HandlerFunc {
 				topicConfigList := cpkafkarestv3.TopicConfigDataList{
 					Data: []cpkafkarestv3.TopicConfigData{
 						{
-							Name:  "compression.type",
-							Value: stringPtr("gzip"),
+							Name:       "compression.type",
+							Value:      cpkafkarestv3.PtrString("producer"),
+							IsReadOnly: true,
 						},
 						{
 							Name:  "retention.ms",
-							Value: stringPtr("1"),
+							Value: cpkafkarestv3.PtrString("1"),
 						},
 					},
 				}
@@ -505,6 +506,8 @@ func handleKafkaRPConfigsAlter(t *testing.T) http.HandlerFunc {
 				}
 				// No error
 				w.WriteHeader(http.StatusNoContent)
+			} else if topicName == "topic1" {
+				w.WriteHeader(http.StatusOK)
 			} else { // topic-not-exist
 				// not found
 				require.NoError(t, writeErrorResponse(w, http.StatusNotFound, 40403, "This server does not host this topic-partition."))
@@ -516,16 +519,22 @@ func handleKafkaRPConfigsAlter(t *testing.T) http.HandlerFunc {
 // Handler for: "/kafka/v3/clusters/{cluster}/topics/{topic}"
 func handleKafkaRPTopic(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
+		topic := mux.Vars(r)["topic"]
+		if topic != "topic-exist" && topic != "topic-exist-2" && topic != "topic-exist-rest" {
+			require.NoError(t, writeErrorResponse(w, http.StatusNotFound, 40403, "This server does not host this topic-partition."))
+			return
+		}
 		switch r.Method {
 		case http.MethodDelete:
-			if vars["topic"] == "topic-exist" {
-				// Successfully deleted
-				w.WriteHeader(http.StatusNoContent)
-			} else {
-				// topic not found
-				require.NoError(t, writeErrorResponse(w, http.StatusNotFound, 40403, "This server does not host this topic-partition."))
-			}
+			w.WriteHeader(http.StatusNoContent)
+		case http.MethodGet:
+			data := cckafkarestv3.TopicData{PartitionsCount: 3}
+			err := json.NewEncoder(w).Encode(data)
+			require.NoError(t, err)
+		case http.MethodPatch:
+			data := cckafkarestv3.TopicData{PartitionsCount: 6}
+			err := json.NewEncoder(w).Encode(data)
+			require.NoError(t, err)
 		}
 	}
 }
@@ -623,20 +632,55 @@ func handleKafkaRPConsumerGroups(t *testing.T) http.HandlerFunc {
 	}
 }
 
-// Handler for: "/kafka/v3/clusters/{cluster_id}/links/{link_name}"
+// Handler for: "/kafka/v3/clusters/{cluster}/links/{link}"
 func handleKafkaRPLink(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		cluster := mux.Vars(r)["cluster"]
+		link := mux.Vars(r)["link"]
 		switch r.Method {
 		case http.MethodGet:
-			err := json.NewEncoder(w).Encode(cpkafkarestv3.ListLinksResponseData{
-				Kind:            "",
-				Metadata:        cpkafkarestv3.ResourceMetadata{},
-				SourceClusterId: stringPtr("cluster-1"),
-				LinkName:        "link-1",
-				LinkId:          "LINKID1",
-				TopicsNames:     []string{"link-1-topic-1", "link-1-topic-2"},
-			})
-			require.NoError(t, err)
+			if link == "link-1" {
+				switch cluster {
+				case "cluster-1":
+					err := json.NewEncoder(w).Encode(cpkafkarestv3.ListLinksResponseData{
+						Kind:                 "",
+						Metadata:             cpkafkarestv3.ResourceMetadata{},
+						DestinationClusterId: cpkafkarestv3.PtrString("cluster-2"),
+						LinkName:             link,
+						LinkId:               "LINKID1",
+						TopicsNames:          []string{"link-1-topic-1", "link-1-topic-2"},
+					})
+					require.NoError(t, err)
+				case "lkc-describe-topic":
+					err := json.NewEncoder(w).Encode(cckafkarestv3.ListLinksResponseData{
+						Kind:            "",
+						Metadata:        cckafkarestv3.ResourceMetadata{},
+						SourceClusterId: *cckafkarestv3.NewNullableString(cckafkarestv3.PtrString(cluster)),
+						LinkName:        link,
+						LinkId:          "LINKID1",
+						TopicsNames:     &[]string{"link-1-topic-1", "link-1-topic-2"},
+						LinkState:       cckafkarestv3.PtrString("AVAILABLE"),
+					})
+					require.NoError(t, err)
+				default:
+					err := writeResourceNotFoundError(w)
+					require.NoError(t, err)
+				}
+			} else if link == "link-3" {
+				err := json.NewEncoder(w).Encode(cckafkarestv3.ListLinksResponseData{
+					Kind:                 "",
+					Metadata:             cckafkarestv3.ResourceMetadata{},
+					SourceClusterId:      *cckafkarestv3.NewNullableString(cckafkarestv3.PtrString(cluster)),
+					DestinationClusterId: *cckafkarestv3.NewNullableString(cckafkarestv3.PtrString("cluster-2")),
+					LinkName:             link,
+					LinkId:               "LINKID3",
+					TopicsNames:          &[]string{"link-1-topic-1", "link-1-topic-2"},
+					LinkState:            cckafkarestv3.PtrString("UNAVAILABLE"),
+					LinkError:            cckafkarestv3.PtrString("AUTHENTICATION_ERROR"),
+					LinkErrorMessage:     *cckafkarestv3.NewNullableString(cckafkarestv3.PtrString("Please check your API key and secret.")),
+				})
+				require.NoError(t, err)
+			}
 		case http.MethodDelete:
 			w.WriteHeader(http.StatusNoContent)
 		}
@@ -990,6 +1034,12 @@ func handleKafkaRPLags(t *testing.T) http.HandlerFunc {
 // Handler for: "/kafka/v3/clusters/{cluster_id}/links/{link_name}/configs"
 func handleKafkaRPLinkConfigs(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		link := mux.Vars(r)["link"]
+		if link == "link-dne" {
+			err := writeResourceNotFoundError(w)
+			require.NoError(t, err)
+			return
+		}
 		switch r.Method {
 		case http.MethodGet:
 			err := json.NewEncoder(w).Encode(cpkafkarestv3.ListLinkConfigsResponseDataList{Data: []cpkafkarestv3.ListLinkConfigsResponseData{
@@ -1003,7 +1053,7 @@ func handleKafkaRPLinkConfigs(t *testing.T) http.HandlerFunc {
 					Sensitive: false,
 					Source:    "source-1",
 					Synonyms:  []string{"rfmb", "bmfr"},
-					LinkName:  "link-1",
+					LinkName:  link,
 				},
 				{
 					Kind:      "",
@@ -1015,7 +1065,7 @@ func handleKafkaRPLinkConfigs(t *testing.T) http.HandlerFunc {
 					Sensitive: false,
 					Source:    "source-2",
 					Synonyms:  nil,
-					LinkName:  "link-1",
+					LinkName:  link,
 				},
 			}})
 			require.NoError(t, err)
@@ -1069,7 +1119,7 @@ type partitionOffsets struct {
 func handleKafkaRPLag(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		fmt.Println(vars)
+
 		switch r.Method {
 		case http.MethodGet:
 			if vars["consumer_group_id"] == "consumer-group-1" {
@@ -1258,6 +1308,12 @@ func handleKafkaBrokerIdConfigsName(t *testing.T) http.HandlerFunc {
 func handleKafkaBrokerIdConfigs(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
+		brokerId := vars["broker_id"]
+		if brokerId != "1" && brokerId != "2" {
+			err := writeResourceNotFoundError(w)
+			require.NoError(t, err)
+			return
+		}
 		configValue1 := "gzip"
 		configValue2 := "SASL/PLAIN"
 		err := json.NewEncoder(w).Encode(cpkafkarestv3.BrokerConfigDataList{
@@ -1616,8 +1672,4 @@ func writeErrorResponse(responseWriter http.ResponseWriter, statusCode int, erro
 	}`, errorCode, message)
 	_, err := io.WriteString(responseWriter, errorResponseBody)
 	return err
-}
-
-func stringPtr(s string) *string {
-	return &s
 }

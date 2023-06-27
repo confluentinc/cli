@@ -1,16 +1,16 @@
 package schemaregistry
 
 import (
-	"context"
-	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
+
+	srcmv2 "github.com/confluentinc/ccloud-sdk-go-v2/srcm/v2"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
 func (c *command) newClusterUpgradeCommand() *cobra.Command {
@@ -23,7 +23,7 @@ func (c *command) newClusterUpgradeCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Upgrade Schema Registry to the "advanced" package for environment "env-12345".`,
-				Code: fmt.Sprintf("%s schema-registry cluster upgrade --package advanced --environment env-12345", version.CLIName),
+				Code: "confluent schema-registry cluster upgrade --package advanced --environment env-12345",
 			},
 		),
 	}
@@ -39,32 +39,48 @@ func (c *command) newClusterUpgradeCommand() *cobra.Command {
 }
 
 func (c *command) clusterUpgrade(cmd *cobra.Command, _ []string) error {
+	environmentId, err := c.Context.EnvironmentId()
+	if err != nil {
+		return err
+	}
+
+	clusters, err := c.V2Client.GetSchemaRegistryClustersByEnvironment(environmentId)
+	if err != nil {
+		return err
+	}
+
+	if len(clusters) == 0 {
+		return errors.NewSRNotEnabledError()
+	}
+
+	cluster := clusters[0]
+	clusterSpec := cluster.GetSpec()
+
 	packageDisplayName, err := cmd.Flags().GetString("package")
 	if err != nil {
 		return err
 	}
 
-	packageInternalName, err := getPackageInternalName(packageDisplayName)
-	if err != nil {
+	if _, err := getPackageInternalName(packageDisplayName); err != nil {
 		return err
 	}
 
-	ctx := context.Background()
-	cluster, err := c.Context.FetchSchemaRegistryByEnvironmentId(ctx, c.EnvironmentId())
-	if err != nil {
-		return err
-	}
-
-	if packageInternalName == cluster.Package {
-		output.ErrPrintf(errors.SRInvalidPackageUpgrade, c.EnvironmentId(), packageDisplayName)
+	if strings.ToLower(clusterSpec.GetPackage()) == packageDisplayName {
+		output.ErrPrintf(errors.SRInvalidPackageUpgrade, environmentId, packageDisplayName)
 		return nil
 	}
-	cluster.Package = packageInternalName
 
-	if _, err := c.Client.SchemaRegistry.UpdateSchemaRegistryCluster(ctx, cluster); err != nil {
+	clusterUpdateRequest := &srcmv2.SrcmV2ClusterUpdate{
+		Spec: &srcmv2.SrcmV2ClusterSpecUpdate{
+			Package:     srcmv2.PtrString(packageDisplayName),
+			Environment: &srcmv2.GlobalObjectReference{Id: environmentId},
+		},
+	}
+
+	if _, err := c.V2Client.UpgradeSchemaRegistryCluster(*clusterUpdateRequest, cluster.GetId()); err != nil {
 		return err
 	}
 
-	output.Printf(errors.SchemaRegistryClusterUpgradedMsg, c.EnvironmentId(), packageDisplayName)
+	output.Printf(errors.SchemaRegistryClusterUpgradedMsg, environmentId, packageDisplayName)
 	return nil
 }

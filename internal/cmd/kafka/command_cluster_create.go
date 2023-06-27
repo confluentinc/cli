@@ -2,7 +2,6 @@ package kafka
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -93,7 +92,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 		return err
 	}
 
-	clouds, err := c.Client.EnvironmentMetadata.Get(context.Background())
+	clouds, err := c.Client.EnvironmentMetadata.Get()
 	if err != nil {
 		return err
 	}
@@ -122,6 +121,11 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 		return err
 	}
 
+	environmentId, err := c.Context.EnvironmentId()
+	if err != nil {
+		return err
+	}
+
 	var encryptionKey string
 	if cmd.Flags().Changed("encryption-key") {
 		if cloud != "gcp" {
@@ -133,7 +137,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 			return err
 		}
 
-		if err := c.validateGcpEncryptionKey(prompt, cloud, c.EnvironmentId()); err != nil {
+		if err := c.validateGcpEncryptionKey(prompt, cloud, environmentId); err != nil {
 			return err
 		}
 	}
@@ -154,7 +158,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 
 	createCluster := cmkv2.CmkV2Cluster{
 		Spec: &cmkv2.CmkV2ClusterSpec{
-			Environment:  &cmkv2.EnvScopedObjectReference{Id: c.EnvironmentId()},
+			Environment:  &cmkv2.EnvScopedObjectReference{Id: environmentId},
 			DisplayName:  cmkv2.PtrString(args[0]),
 			Cloud:        cmkv2.PtrString(cloud),
 			Region:       cmkv2.PtrString(region),
@@ -211,9 +215,8 @@ func checkCloudAndRegion(cloudId string, regionId string, clouds []*ccloudv1.Clo
 }
 
 func (c *clusterCommand) validateGcpEncryptionKey(prompt form.Prompt, cloud string, accountId string) error {
-	ctx := context.Background()
 	// The call is idempotent so repeated create commands return the same ID for the same account.
-	externalID, err := c.Client.ExternalIdentity.CreateExternalIdentity(ctx, cloud, accountId)
+	externalID, err := c.Client.ExternalIdentity.CreateExternalIdentity(cloud, accountId)
 	if err != nil {
 		return err
 	}

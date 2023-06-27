@@ -54,8 +54,13 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string, prompt form.P
 		return errors.New("must specify one of `--name`, `--availability`, `--type`, or `--cku`")
 	}
 
+	environmentId, err := c.Context.EnvironmentId()
+	if err != nil {
+		return err
+	}
+
 	clusterId := args[0]
-	currentCluster, _, err := c.V2Client.DescribeKafkaCluster(clusterId, c.EnvironmentId())
+	currentCluster, _, err := c.V2Client.DescribeKafkaCluster(clusterId, environmentId)
 	if err != nil {
 		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.KafkaClusterNotFoundErrorMsg, clusterId), errors.ChooseRightEnvironmentSuggestions)
 	}
@@ -66,7 +71,7 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string, prompt form.P
 
 	update := cmkv2.CmkV2ClusterUpdate{
 		Id:   cmkv2.PtrString(clusterId),
-		Spec: &cmkv2.CmkV2ClusterSpecUpdate{Environment: &cmkv2.EnvScopedObjectReference{Id: c.EnvironmentId()}},
+		Spec: &cmkv2.CmkV2ClusterSpecUpdate{Environment: &cmkv2.EnvScopedObjectReference{Id: environmentId}},
 	}
 
 	if cmd.Flags().Changed("name") {
@@ -147,7 +152,7 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string, prompt form.P
 	}
 
 	ctx := c.Context.Config.Context()
-	c.Context.Config.SetOverwrittenActiveKafka(ctx.KafkaClusterContext.GetActiveKafkaClusterId())
+	c.Context.Config.SetOverwrittenCurrentKafkaCluster(ctx.KafkaClusterContext.GetActiveKafkaClusterId())
 	ctx.KafkaClusterContext.SetActiveKafkaCluster(clusterId)
 
 	return c.outputKafkaClusterDescription(cmd, &updatedCluster, true)

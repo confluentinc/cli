@@ -7,7 +7,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 func (c *command) newConfigDescribeCommandOnPrem() *cobra.Command {
@@ -20,11 +19,11 @@ func (c *command) newConfigDescribeCommandOnPrem() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Describe the configuration of a subject "payments".`,
-				Code: fmt.Sprintf("%s schema-registry config describe --subject payments %s", pversion.CLIName, OnPremAuthenticationMsg),
+				Code: fmt.Sprintf("confluent schema-registry config describe --subject payments %s", OnPremAuthenticationMsg),
 			},
 			examples.Example{
 				Text: "Describe the top-level configuration.",
-				Code: fmt.Sprintf("%s schema-registry config describe %s", pversion.CLIName, OnPremAuthenticationMsg),
+				Code: fmt.Sprintf("confluent schema-registry config describe %s", OnPremAuthenticationMsg),
 			},
 		),
 	}

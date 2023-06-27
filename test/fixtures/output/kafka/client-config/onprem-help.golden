@@ -1,5 +1,0 @@
-Error: you must log in to Confluent Cloud with a username and password to use this command
-
-Suggestions:
-    Log in with "confluent login".
-    If you need a Confluent Cloud account, sign up with "confluent cloud-signup".

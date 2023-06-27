@@ -1,13 +1,10 @@
 package s3
 
 import (
-	"bytes"
 	"encoding/xml"
 	"fmt"
 	"io"
 	"net/http"
-	"os/exec"
-	"path/filepath"
 	"runtime"
 	"sort"
 	"strings"
@@ -17,6 +14,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	pio "github.com/confluentinc/cli/internal/pkg/io"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	"github.com/confluentinc/cli/internal/pkg/update"
 )
 
 var S3ReleaseNotesFile = "release-notes.rst"
@@ -61,7 +59,7 @@ func NewPublicRepo(params *PublicRepoParams) *PublicRepo {
 		PublicRepoParams: params,
 		endpoint:         fmt.Sprintf("https://s3-%s.amazonaws.com/%s", params.S3BinRegion, params.S3BinBucket),
 		fs:               &pio.RealFileSystem{},
-		goos:             runtime.GOOS,
+		goos:             update.GetOs(),
 		goarch:           runtime.GOARCH,
 	}
 }
@@ -128,8 +126,7 @@ func (r *PublicRepo) getListBucketResultFromDir(s3DirPrefix string) (*ListBucket
 			return nil, err
 		}
 		var result ListBucketResult
-		err = xml.Unmarshal(body, &result)
-		if err != nil {
+		if err := xml.Unmarshal(body, &result); err != nil {
 			return nil, err
 		}
 		results = append(results, result)
@@ -227,7 +224,7 @@ func (r *PublicRepo) parseMatchedReleaseNotesVersion(name, key string) (bool, *v
 	return true, ver
 }
 
-func (r *PublicRepo) DownloadVersion(name, version, downloadDir string) (string, int64, error) {
+func (r *PublicRepo) DownloadVersion(name, version, downloadDir string) ([]byte, error) {
 	objectKey, _ := NewPrefixedKey(fmt.Sprintf(r.S3BinPrefixFmt, name), "_", true)
 	objectKey.goos = r.goos
 	objectKey.goarch = r.goarch
@@ -237,25 +234,11 @@ func (r *PublicRepo) DownloadVersion(name, version, downloadDir string) (string,
 
 	resp, err := r.getHttpResponse(downloadVersion)
 	if err != nil {
-		return "", 0, err
+		return nil, err
 	}
 	defer resp.Body.Close()
 
-	binName := fmt.Sprintf("%s-v%s-%s-%s", name, version, r.goos, r.goarch)
-	downloadBinPath := filepath.Join(downloadDir, binName)
-
-	downloadBin, err := r.fs.Create(downloadBinPath)
-	if err != nil {
-		return "", 0, err
-	}
-	defer downloadBin.Close()
-
-	bytes, err := r.fs.Copy(downloadBin, resp.Body)
-	if err != nil {
-		return "", 0, err
-	}
-
-	return downloadBinPath, bytes, nil
+	return io.ReadAll(resp.Body)
 }
 
 func (r *PublicRepo) DownloadReleaseNotes(name, version string) (string, error) {
@@ -310,13 +293,5 @@ func (r *PublicRepo) getHttpResponse(url string) (*http.Response, error) {
 }
 
 func (r *PublicRepo) getDownloadVersion(s3URL string) string {
-	downloadVersion := fmt.Sprintf("%s/%s", r.endpoint, s3URL)
-	cmd := exec.Command("ldd", "--version")
-	var stderr bytes.Buffer
-	cmd.Stderr = &stderr
-	_ = cmd.Run()
-	if strings.Contains(stderr.String(), "musl") {
-		return strings.Replace(downloadVersion, "linux", "alpine", 1)
-	}
-	return downloadVersion
+	return fmt.Sprintf("%s/%s", r.endpoint, s3URL)
 }

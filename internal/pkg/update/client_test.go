@@ -14,6 +14,7 @@ import (
 
 	"github.com/hashicorp/go-version"
 	"github.com/jonboulle/clockwork"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -611,12 +612,6 @@ func TestUpdateBinary(t *testing.T) {
 	installedBin := filepath.FromSlash(fmt.Sprintf("%s/%s", installDir, binName))
 	_ = os.WriteFile(installedBin, []byte("old version"), os.ModePerm)
 
-	downloadDir, err := os.MkdirTemp("", "cli-test5-")
-	require.NoError(t, err)
-	defer os.Remove(downloadDir)
-	downloadedBin := filepath.FromSlash(fmt.Sprintf("%s/%s", downloadDir, binName))
-	_ = os.WriteFile(downloadedBin, []byte("new version"), os.ModePerm)
-
 	clock := clockwork.NewFakeClockAt(time.Now())
 
 	type args struct {
@@ -635,12 +630,12 @@ func TestUpdateBinary(t *testing.T) {
 			client: &client{
 				ClientParams: &ClientParams{
 					Repository: &updateMock.Repository{
-						DownloadVersionFunc: func(name, version, downloadDir string) (string, int64, error) {
+						DownloadVersionFunc: func(name, version, downloadDir string) ([]byte, error) {
 							req.Equal(binName, name)
 							req.Equal("v123.456.789", version)
 							req.Contains(downloadDir, binName)
 							clock.Advance(23 * time.Second)
-							return downloadedBin, 16 * 1000 * 1000, nil
+							return []byte("new version"), nil
 						},
 					},
 				},
@@ -658,8 +653,8 @@ func TestUpdateBinary(t *testing.T) {
 			client: &client{
 				ClientParams: &ClientParams{
 					Repository: &updateMock.Repository{
-						DownloadVersionFunc: func(name, version, downloadDir string) (string, int64, error) {
-							return "", 0, errors.New("out of disk!")
+						DownloadVersionFunc: func(name, version, downloadDir string) ([]byte, error) {
+							return nil, errors.New("out of disk!")
 						},
 					},
 				},
@@ -674,47 +669,16 @@ func TestUpdateBinary(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "err if unable to copy binary",
-			client: &client{
-				ClientParams: &ClientParams{
-					Repository: &updateMock.Repository{
-						DownloadVersionFunc: func(name, version, downloadDir string) (string, int64, error) {
-							req.Equal(binName, name)
-							req.Equal("v1", version)
-							req.Contains(downloadDir, binName)
-							clock.Advance(23 * time.Second)
-							return downloadedBin, 16 * 1000 * 1000, nil
-						},
-					},
-				},
-				clock: clock,
-				fs: &mock.PassThroughFileSystem{
-					Mock: &mock.FileSystem{
-						CopyFunc: func(_ io.Writer, _ io.Reader) (int64, error) {
-							return 0, errors.New("my dog ate my disks")
-						},
-					},
-					FS: &pio.RealFileSystem{},
-				},
-			},
-			args: args{
-				name:    binName,
-				version: "v1",
-				path:    installedBin,
-			},
-			wantErr: true,
-		},
-		{
 			name: "no attempt to mv binary (darwin)",
 			client: &client{
 				ClientParams: &ClientParams{
 					Repository: &updateMock.Repository{
-						DownloadVersionFunc: func(name, version, downloadDir string) (string, int64, error) {
+						DownloadVersionFunc: func(name, version, downloadDir string) ([]byte, error) {
 							req.Equal(binName, name)
 							req.Equal("v1", version)
 							req.Contains(downloadDir, binName)
 							clock.Advance(23 * time.Second)
-							return downloadedBin, 16 * 1000 * 1000, nil
+							return []byte("new version"), nil
 						},
 					},
 					OS: "darwin",
@@ -736,112 +700,13 @@ func TestUpdateBinary(t *testing.T) {
 			},
 			wantErr: false,
 		},
-		{
-			name: "err if unable to mv binary (windows)",
-			client: &client{
-				ClientParams: &ClientParams{
-					Repository: &updateMock.Repository{
-						DownloadVersionFunc: func(name, version, downloadDir string) (string, int64, error) {
-							req.Equal(binName, name)
-							req.Equal("v1", version)
-							req.Contains(downloadDir, binName)
-							clock.Advance(23 * time.Second)
-							return downloadedBin, 16 * 1000 * 1000, nil
-						},
-					},
-					OS: "windows",
-				},
-				clock: clock,
-				fs: &mock.PassThroughFileSystem{
-					Mock: &mock.FileSystem{
-						MoveFunc: func(src string, dst string) error {
-							return errors.New("move func intentionally failed")
-						},
-					},
-					FS: &pio.RealFileSystem{},
-				},
-			},
-			args: args{
-				name:    binName,
-				version: "v1",
-				path:    installedBin,
-			},
-			wantErr: true,
-		},
-		{
-			name: "err if first mv succeeds, then copy fails, then second mv fails",
-			client: &client{
-				ClientParams: &ClientParams{
-					Repository: &updateMock.Repository{
-						DownloadVersionFunc: func(name, version, downloadDir string) (string, int64, error) {
-							req.Equal(binName, name)
-							req.Equal("v1", version)
-							req.Contains(downloadDir, binName)
-							clock.Advance(23 * time.Second)
-							return downloadedBin, 16 * 1000 * 1000, nil
-						},
-					},
-				},
-				clock: clock,
-				fs: &mock.PassThroughFileSystem{
-					Mock: &mock.FileSystem{
-						MoveFunc: func(_ string, dst string) error {
-							if dst == installedBin { // this will be the case in the second mv call
-								return errors.New("move func intentionally failed")
-							}
-							return nil
-						},
-						CopyFunc: func(_ io.Writer, _ io.Reader) (int64, error) {
-							return 0, errors.New("my dog ate my disks")
-						},
-					},
-					FS: &pio.RealFileSystem{},
-				},
-			},
-			args: args{
-				name:    binName,
-				version: "v1",
-				path:    installedBin,
-			},
-			wantErr: true,
-		},
-		{
-			name: "err if unable to chmod binary",
-			client: &client{
-				ClientParams: &ClientParams{
-					Repository: &updateMock.Repository{
-						DownloadVersionFunc: func(name, version, downloadDir string) (string, int64, error) {
-							req.Equal(binName, name)
-							req.Equal("v1", version)
-							req.Contains(downloadDir, binName)
-							clock.Advance(23 * time.Second)
-							return downloadedBin, 16 * 1000 * 1000, nil
-						},
-					},
-				},
-				clock: clock,
-				fs: &mock.PassThroughFileSystem{
-					Mock: &mock.FileSystem{
-						ChmodFunc: func(name string, mode os.FileMode) error {
-							return errors.New("my dog ate my disks")
-						},
-					},
-					FS: &pio.RealFileSystem{},
-				},
-			},
-			args: args{
-				name:    binName,
-				version: "v1",
-				path:    installedBin,
-			},
-			wantErr: true,
-		},
 	}
 	for _, tt := range tests {
+		if tt.client.OS != "" && tt.client.OS != runtime.GOOS {
+			continue
+		}
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.client.Out == nil {
-				tt.client.Out = os.Stdout
-			}
+			tt.client.Out = os.Stdout
 			if err := tt.client.UpdateBinary(tt.args.name, tt.args.version, tt.args.path, true); (err != nil) != tt.wantErr {
 				t.Errorf("client.UpdateBinary() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -1033,4 +898,22 @@ func TestPromptToDownload(t *testing.T) {
 	req.Equal(5, countRepeated)
 	req.Equal(0, countNoConfirm)
 	req.Equal(0, countNoPrompt)
+}
+
+func TestGetBinaryName(t *testing.T) {
+	assert.Equal(t, "confluent_3.13.0_darwin_amd64", getBinaryName("3.13.0", "darwin", "amd64"))
+	assert.Equal(t, "confluent_3.13.0_windows_amd64.exe", getBinaryName("3.13.0", "windows", "amd64"))
+}
+
+func TestFindChecksum(t *testing.T) {
+	content := strings.Join([]string{
+		"0e3b559127d31a3f4bd9833e31ddd60d74efbd52d088e7a8b81ea402c4b80c37  confluent_3.13.0_linux_amd64",
+		"495bfcb16f1b33a37a6c0d3941ea4b82756ee5d3329f9cc223269daeadd08e7c  confluent_3.13.0_darwin_amd64",
+		"cf1f7f14c5bc31e502f8b75f98fa6caff02617261318810ed93fed358e28f994  confluent_3.13.0_linux_amd64.tar.gz",
+		"e0e3377b2297060bfe6cf918cd926ff0e240d4115bd314bd9ac53c0f5c47ebcd  confluent_3.13.0_darwin_amd64.tar.gz",
+	}, "\n")
+
+	checksum, err := findChecksum(content, "confluent_3.13.0_darwin_amd64")
+	require.NoError(t, err)
+	require.Equal(t, "495bfcb16f1b33a37a6c0d3941ea4b82756ee5d3329f9cc223269daeadd08e7c", checksum)
 }

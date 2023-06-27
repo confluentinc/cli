@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 
@@ -13,17 +12,15 @@ import (
 	"github.com/swaggest/go-asyncapi/reflector/asyncapi-2.4.0"
 	"github.com/swaggest/go-asyncapi/spec-2.4.0"
 
-	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	ckgo "github.com/confluentinc/confluent-kafka-go/kafka"
 	schemaregistry "github.com/confluentinc/schema-registry-sdk-go"
 
 	"github.com/confluentinc/cli/internal/cmd/kafka"
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
-	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -31,17 +28,12 @@ import (
 )
 
 type command struct {
-	*pcmd.AuthenticatedStateFlagCommand
-}
-
-type Configs struct {
-	CleanupPolicy                  string `json:"cleanup.policy"`
-	DeleteRetentionMs              int    `json:"delete.retention.ms"`
-	ConfluentValueSchemaValidation string `json:"confluent.value.schema.validation"`
+	*pcmd.AuthenticatedCLICommand
 }
 
 type confluentBinding struct {
-	Configs Configs `json:"x-configs"`
+	XPartitions int32             `json:"x-partitions,omitempty"`
+	XConfigs    map[string]string `json:"x-configs,omitempty"`
 }
 
 type bindings struct {
@@ -60,6 +52,7 @@ type flags struct {
 	schemaRegistryApiSecret string
 	valueFormat             string
 	schemaContext           string
+	topics                  []string
 }
 
 // messageOffset is 5, as the schema ID is stored at the [1:5] bytes of a message as meta info (when valid)
@@ -69,10 +62,18 @@ const protobufErrorMessage string = "protobuf is not supported"
 func newExportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "export",
-		Short: "Create an AsyncAPI specification for a Kafka cluster.",
+		Short: "Export an AsyncAPI specification.",
+		Long:  "Export an AsyncAPI specification for a Kafka cluster and Schema Registry.",
+		Args:  cobra.NoArgs,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: `Export an AsyncAPI specification with topic "my-topic" and all topics starting with "prefix-".`,
+				Code: `confluent asyncapi export --topics "my-topic,prefix-*"`,
+			},
+		),
 	}
 
-	c := &command{AuthenticatedStateFlagCommand: pcmd.NewAuthenticatedStateFlagCommand(cmd, prerunner)}
+	c := &command{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 	cmd.RunE = c.export
 
 	cmd.Flags().String("file", "asyncapi-spec.yaml", "Output file name.")
@@ -83,6 +84,7 @@ func newExportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.Flags().String("schema-registry-api-key", "", "API key for Schema Registry.")
 	cmd.Flags().String("schema-registry-api-secret", "", "API secret for Schema Registry.")
 	cmd.Flags().String("schema-context", "default", "Use a specific schema context.")
+	cmd.Flags().StringSlice("topics", nil, "A comma-separated list of topics to export. Supports prefixes ending with a wildcard (*).")
 	pcmd.AddValueFormatFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -111,34 +113,37 @@ func (c *command) export(cmd *cobra.Command, _ []string) error {
 		schemaContextPrefix = fmt.Sprintf(":.%s:", flags.schemaContext)
 	}
 	channelCount := 0
+
 	for _, topic := range accountDetails.topics {
+		if !topicMatch(topic.GetTopicName(), flags.topics) {
+			continue
+		}
+
 		for _, subject := range accountDetails.subjects {
-			if subject != schemaContextPrefix+topic.GetTopicName()+"-value" || strings.HasPrefix(topic.GetTopicName(), "_") {
+			if subject != fmt.Sprintf("%s%s-value", schemaContextPrefix, topic.GetTopicName()) || strings.HasPrefix(topic.GetTopicName(), "_") {
 				// Avoid internal topics or if subject does not follow topic naming strategy
 				continue
-			} else {
-				// Subject and Topic matches
-				// Reset channel details
-				accountDetails.channelDetails = channelDetails{
-					currentTopic:   topic,
-					currentSubject: subject,
+			}
+			// Subject and Topic matches
+			// Reset channel details
+			accountDetails.channelDetails = channelDetails{
+				currentTopic:   topic,
+				currentSubject: subject,
+			}
+			if err := c.getChannelDetails(accountDetails, flags); err != nil {
+				if err.Error() == protobufErrorMessage {
+					log.CliLogger.Info(err.Error())
+					continue
 				}
-				err := c.getChannelDetails(accountDetails, flags)
-				if err != nil {
-					if err.Error() == protobufErrorMessage {
-						log.CliLogger.Info(err.Error())
-						continue
-					}
-					return err
-				}
-				channelCount++
-				messages[msgName(topic.GetTopicName())] = spec.Message{
-					OneOf1: &spec.MessageOneOf1{MessageEntity: accountDetails.buildMessageEntity()},
-				}
-				reflector, err = addChannel(reflector, accountDetails.channelDetails)
-				if err != nil {
-					return err
-				}
+				return err
+			}
+			channelCount++
+			messages[msgName(topic.GetTopicName())] = spec.Message{
+				OneOf1: &spec.MessageOneOf1{MessageEntity: accountDetails.buildMessageEntity()},
+			}
+			reflector, err = addChannel(reflector, accountDetails.channelDetails)
+			if err != nil {
+				return err
 			}
 		}
 	}
@@ -154,60 +159,61 @@ func (c *command) export(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	if err := c.countAsyncApiUsage(accountDetails); err != nil {
-		return err
+		log.CliLogger.Debug(err)
 	}
 	output.Printf("AsyncAPI specification written to \"%s\".\n", flags.file)
 	return os.WriteFile(flags.file, yaml, 0644)
 }
 
 func (c *command) getChannelDetails(details *accountDetails, flags *flags) error {
-	output.Printf("Adding operation: %s\n", details.channelDetails.currentTopic.GetTopicName())
-	err := details.getSchemaDetails()
-	if err != nil {
+	if err := details.getSchemaDetails(); err != nil {
 		if err.Error() == protobufErrorMessage {
 			return err
 		}
 		return fmt.Errorf("failed to get schema details: %v", err)
 	}
 	if err := details.getTags(); err != nil {
-		log.CliLogger.Warnf("failed to get tags: %v", err)
+		log.CliLogger.Warnf("Failed to get tags: %v", err)
 	}
 	details.channelDetails.example = nil
 	if flags.consumeExamples {
-		details.channelDetails.example, err = c.getMessageExamples(details.consumer, details.channelDetails.currentTopic.GetTopicName(), details.channelDetails.contentType, details.srClient, flags.valueFormat)
+		example, err := c.getMessageExamples(details.consumer, details.channelDetails.currentTopic.GetTopicName(), details.channelDetails.contentType, details.srClient, flags.valueFormat)
 		if err != nil {
 			log.CliLogger.Warn(err)
 		}
+		details.channelDetails.example = example
 	}
-	details.channelDetails.bindings, err = c.getBindings(details.cluster, details.channelDetails.currentTopic)
+	bindings, err := c.getBindings(details.clusterId, details.channelDetails.currentTopic.GetTopicName())
 	if err != nil {
-		log.CliLogger.Warnf("bindings not found: %v", err)
+		log.CliLogger.Warnf("Bindings not found: %v", err)
 	}
+	details.channelDetails.bindings = bindings
 	if err := details.getTopicDescription(); err != nil {
-		log.CliLogger.Warnf("failed to get topic description: %v", err)
+		log.CliLogger.Warnf("Failed to get topic description: %v", err)
 	}
 	// x-messageCompatibility
-	details.channelDetails.mapOfMessageCompat, err = getMessageCompatibility(details.srClient, details.srContext, details.channelDetails.currentSubject)
+	mapOfMessageCompat, err := getMessageCompatibility(details.srClient, details.srContext, details.channelDetails.currentSubject)
 	if err != nil {
-		log.CliLogger.Warnf("failed to get subject's compatibility type")
+		log.CliLogger.Warnf("Failed to get subject's compatibility type: %v", err)
 	}
+	details.channelDetails.mapOfMessageCompat = mapOfMessageCompat
+	output.Printf("Added topic \"%s\".\n", details.channelDetails.currentTopic.GetTopicName())
 	return nil
 }
 
 func (c *command) getAccountDetails(flags *flags) (*accountDetails, error) {
 	details := new(accountDetails)
-	err := c.getClusterDetails(details, flags)
+	if err := c.getClusterDetails(details, flags); err != nil {
+		return nil, err
+	}
+	if err := c.getSchemaRegistry(details, flags); err != nil {
+		return nil, err
+	}
+	subjects, _, err := details.srClient.DefaultApi.List(details.srContext, nil)
 	if err != nil {
 		return nil, err
 	}
-	err = c.getSchemaRegistry(details, flags)
-	if err != nil {
-		return nil, err
-	}
-	details.subjects, _, err = details.srClient.DefaultApi.List(details.srContext, nil)
-	if err != nil {
-		return nil, err
-	}
+	details.subjects = subjects
 	// Create Consumer
 	if flags.consumeExamples {
 		details.consumer, err = createConsumer(details.broker, details.clusterCreds, flags.groupId)
@@ -234,14 +240,13 @@ func getValueFormat(contentType string) string {
 
 func handlePanic() {
 	if err := recover(); err != nil {
-		log.CliLogger.Warn("failed to get message example: ", err)
+		log.CliLogger.Warnf("Failed to get message example: %v", err)
 	}
 }
 
 func (c command) getMessageExamples(consumer *ckgo.Consumer, topicName, contentType string, srClient *schemaregistry.APIClient, valueFormatFlag string) (any, error) {
 	defer handlePanic()
-	err := consumer.Subscribe(topicName, nil)
-	if err != nil {
+	if err := consumer.Subscribe(topicName, nil); err != nil {
 		return nil, fmt.Errorf(`failed to subscribe to topic "%s": %v`, topicName, err)
 	}
 	message, err := consumer.ReadMessage(10 * time.Second)
@@ -273,8 +278,7 @@ func (c command) getMessageExamples(consumer *ckgo.Consumer, topicName, contentT
 		}
 		// Message body is encoded after 5 bytes of meta information.
 		value = value[messageOffset:]
-		err = deserializationProvider.LoadSchema(schemaPath, referencePathMap)
-		if err != nil {
+		if err := deserializationProvider.LoadSchema(schemaPath, referencePathMap); err != nil {
 			return nil, err
 		}
 	}
@@ -285,34 +289,30 @@ func (c command) getMessageExamples(consumer *ckgo.Consumer, topicName, contentT
 	return jsonMessage, nil
 }
 
-func (c *command) getBindings(cluster *ccstructs.KafkaCluster, topicDescription kafkarestv3.TopicData) (*bindings, error) {
+func (c *command) getBindings(clusterId, topicName string) (*bindings, error) {
 	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {
 		return nil, err
 	}
-	configs, err := kafkaREST.CloudClient.ListKafkaTopicConfigs(cluster.GetId(), topicDescription.GetTopicName())
+	configs, err := kafkaREST.CloudClient.ListKafkaTopicConfigs(clusterId, topicName)
 	if err != nil {
 		return nil, err
 	}
-	var cleanupPolicy string
-	deleteRetentionMsValue := -1
+	var numPartitions int32
+	partitionsResp, _, err := kafkaREST.CloudClient.ListKafkaPartitions(clusterId, topicName)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get topic partitions: %v", err)
+	}
+	if partitionsResp.Data != nil {
+		numPartitions = int32(len(partitionsResp.Data))
+	}
+	configsMap := make(map[string]string)
 	for _, config := range configs.Data {
-		if config.Name == "cleanup.policy" {
-			cleanupPolicy = config.GetValue()
-		}
-		if config.Name == "delete.retention.ms" {
-			deleteRetentionMsValue, err = strconv.Atoi(config.GetValue())
-			if err != nil {
-				return nil, err
-			}
-		}
+		configsMap[config.GetName()] = config.GetValue()
 	}
 	var channelBindings any = confluentBinding{
-		Configs: Configs{
-			CleanupPolicy:                  cleanupPolicy,
-			DeleteRetentionMs:              deleteRetentionMsValue,
-			ConfluentValueSchemaValidation: "true",
-		},
+		XPartitions: numPartitions,
+		XConfigs:    configsMap,
 	}
 	messageBindings := spec.MessageBindingsObject{Kafka: &spec.KafkaMessage{Key: &spec.KafkaMessageKey{Schema: map[string]any{"type": "string"}}}}
 	operationBindings := spec.OperationBindingsObject{Kafka: &spec.KafkaOperation{
@@ -323,21 +323,21 @@ func (c *command) getBindings(cluster *ccstructs.KafkaCluster, topicDescription 
 		messageBinding:   messageBindings,
 		operationBinding: operationBindings,
 	}
-	if deleteRetentionMsValue != -1 && cleanupPolicy != "" {
-		bindings.channelBindings = spec.ChannelBindingsObject{Kafka: &channelBindings}
-	}
+	bindings.channelBindings = spec.ChannelBindingsObject{Kafka: &channelBindings}
+
 	return bindings, nil
 }
 
 func (c *command) getClusterDetails(details *accountDetails, flags *flags) error {
-	cluster, err := dynamicconfig.KafkaCluster(c.Context)
-	if err != nil {
-		return fmt.Errorf(`failed to find Kafka cluster: %v`, err)
-	}
 	clusterConfig, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return fmt.Errorf(`failed to find Kafka cluster: %v`, err)
 	}
+
+	if err := clusterConfig.DecryptAPIKeys(); err != nil {
+		return err
+	}
+
 	var clusterCreds *v1.APIKeyPair
 	if flags.kafkaApiKey != "" {
 		if _, ok := clusterConfig.APIKeys[flags.kafkaApiKey]; !ok {
@@ -356,12 +356,12 @@ func (c *command) getClusterDetails(details *accountDetails, flags *flags) error
 	if err != nil {
 		return err
 	}
-	topics, httpResp, err := kafkaREST.CloudClient.ListKafkaTopics(cluster.GetId())
+	topics, httpResp, err := kafkaREST.CloudClient.ListKafkaTopics(clusterConfig.ID)
 	if err != nil {
 		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
-	details.cluster = cluster
+	details.clusterId = clusterConfig.ID
 	details.topics = topics.Data
 	details.clusterCreds = clusterCreds
 	details.broker = kafkaREST.CloudClient.GetUrl()
@@ -405,6 +405,10 @@ func getFlags(cmd *cobra.Command) (*flags, error) {
 	if err != nil {
 		return nil, err
 	}
+	topics, err := cmd.Flags().GetStringSlice("topics")
+	if err != nil {
+		return nil, err
+	}
 	return &flags{
 		file:                    file,
 		groupId:                 groupId,
@@ -415,6 +419,7 @@ func getFlags(cmd *cobra.Command) (*flags, error) {
 		schemaRegistryApiSecret: schemaRegistryApiSecret,
 		valueFormat:             valueFormat,
 		schemaContext:           schemaContext,
+		topics:                  topics,
 	}, nil
 }
 
@@ -486,7 +491,7 @@ func getMessageCompatibility(srClient *schemaregistry.APIClient, ctx context.Con
 	mapOfMessageCompat := make(map[string]any)
 	config, _, err := srClient.DefaultApi.GetSubjectLevelConfig(ctx, subject, nil)
 	if err != nil {
-		log.CliLogger.Warnf("failed to get subject level configuration: %v", err)
+		log.CliLogger.Warnf("Failed to get subject level configuration: %v", err)
 		config, _, err = srClient.DefaultApi.GetTopLevelConfig(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get top level configuration: %v", err)
@@ -576,4 +581,18 @@ func createConsumer(broker string, clusterCreds *v1.APIKeyPair, groupId string) 
 		return nil, fmt.Errorf("failed to create Kafka consumer: %v", err)
 	}
 	return consumer, nil
+}
+
+// Check if topic matches user-specified topics/prefixes. True if user didn't specify
+func topicMatch(topic string, userTopics []string) bool {
+	if len(userTopics) == 0 {
+		return true
+	}
+
+	for _, userTopic := range userTopics {
+		if strings.HasSuffix(userTopic, "*") && strings.HasPrefix(topic, strings.TrimSuffix(userTopic, "*")) || userTopic == topic {
+			return true
+		}
+	}
+	return false
 }

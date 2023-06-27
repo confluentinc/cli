@@ -1,0 +1,6 @@
+([]prompt.Suggest) (len=1) {
+  (prompt.Suggest) {
+    Text: (string) (len=37) "INSERT INTO Orders VALUES ('pen', 2);",
+    Description: (string) (len=19) "Add rows to a table"
+  }
+}
