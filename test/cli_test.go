@@ -226,7 +226,7 @@ func runCommand(t *testing.T, binaryName string, env []string, argString string,
 	if exitCode == 0 {
 		require.NoError(t, err, string(out))
 	}
-	require.Equal(t, exitCode, cmd.ProcessState.ExitCode())
+	require.Equal(t, exitCode, cmd.ProcessState.ExitCode(), string(out))
 
 	return string(out)
 }

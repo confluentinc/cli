@@ -55,11 +55,6 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	users, err := c.getAllUsers()
-	if err != nil {
-		return err
-	}
-
 	bindings := make([]*ccstructs.ACLBinding, len(acls))
 	for i, acl := range acls {
 		validateAddAndDelete(acl)
@@ -79,6 +74,11 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 	}
 
 	kafkaREST, err := c.GetKafkaREST()
+	if err != nil {
+		return err
+	}
+
+	users, err := c.getAllUsers()
 	if err != nil {
 		return err
 	}
