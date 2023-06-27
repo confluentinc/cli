@@ -130,9 +130,10 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka link list --cluster lkc-describe-topic", fixture: "kafka/link/list-link-plain.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka link list --cluster lkc-describe-topic -o json", fixture: "kafka/link/list-link-json.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka link list --cluster lkc-describe-topic -o yaml", fixture: "kafka/link/list-link-yaml.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka link configuration list --cluster lkc-describe-topic link-1", fixture: "kafka/link/describe-link-plain.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka link configuration list --cluster lkc-describe-topic link-1 -o json", fixture: "kafka/link/describe-link-json.golden", useKafka: "lkc-describe-topic"},
-		{args: "kafka link configuration list --cluster lkc-describe-topic link-1 -o yaml", fixture: "kafka/link/describe-link-yaml.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link describe link-1 --cluster lkc-describe-topic", fixture: "kafka/link/describe.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link configuration list --cluster lkc-describe-topic link-1", fixture: "kafka/link/configuration-list-plain.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link configuration list --cluster lkc-describe-topic link-1 -o json", fixture: "kafka/link/configuration-list-json.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link configuration list --cluster lkc-describe-topic link-1 -o yaml", fixture: "kafka/link/configuration-list-yaml.golden", useKafka: "lkc-describe-topic"},
 
 		{args: "kafka mirror list --cluster lkc-describe-topic --link link-1", fixture: "kafka/mirror/list-mirror.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka mirror list --cluster lkc-describe-topic --link link-1 -o json", fixture: "kafka/mirror/list-mirror-json.golden", useKafka: "lkc-describe-topic"},
@@ -164,6 +165,7 @@ func (s *CLITestSuite) TestKafka() {
 	tests = []CLITest{
 		{args: "kafka acl create -h", fixture: "kafka/acl/onprem-create-help.golden"},
 		{args: "kafka acl list -h", fixture: "kafka/acl/onprem-list-help.golden"},
+		{args: fmt.Sprintf("kafka link describe link-1 --url %s", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/link/describe-onprem.golden"},
 	}
 
 	resetConfiguration(s.T(), false)
