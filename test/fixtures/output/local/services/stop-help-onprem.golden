@@ -1,0 +1,18 @@
+Stop all Confluent Platform services.
+
+Usage:
+  confluent local services stop [flags]
+
+Examples:
+Stop all running services:
+
+  $ confluent local services stop
+
+Stop Apache Kafka® and its dependent services.
+
+  $ confluent local services kafka stop
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

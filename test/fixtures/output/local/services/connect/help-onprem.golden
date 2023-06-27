@@ -1,0 +1,21 @@
+Manage Connect.
+
+Usage:
+  confluent local services connect [command]
+
+Available Commands:
+  connector   Manage connectors.
+  log         Print logs showing Connect output.
+  plugin      Manage Connect plugins.
+  start       Start Connect.
+  status      Check if Connect is running.
+  stop        Stop Connect.
+  top         View resource usage for Connect.
+  version     Print the current version of Connect.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent local services connect [command] --help" for more information about a command.
