@@ -9,7 +9,7 @@ type iamBindingOut struct {
 	Region       string `human:"Region" serialized:"region"`
 	Cloud        string `human:"Cloud" serialized:"cloud"`
 	Environment  string `human:"Environment" serialized:"environment"`
-	IdentityPool string `human:"IdentityPool" serialized:"identity_pool"`
+	IdentityPool string `human:"Identity Pool" serialized:"identity_pool"`
 }
 
 func (c *command) newIamBindingCommand() *cobra.Command {

@@ -103,16 +103,16 @@ func (c *Client) DeleteFlinkIAMBinding(id, environmentId string) error {
 	return errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) ListFlinkIAMBindings(environmentId string, params *ListFlinkIAMBindingsQueryParams) ([]flinkv2.FcpmV2IamBinding, error) {
+func (c *Client) ListFlinkIAMBindings(environmentId string, region, cloud, identityPoolId string) ([]flinkv2.FcpmV2IamBinding, error) {
 	req := c.FlinkClient.IamBindingsFcpmV2Api.ListFcpmV2IamBindings(c.flinkApiContext()).Environment(environmentId).PageSize(ccloudV2ListPageSize)
-	if params.GetRegion() != "" {
-		req = req.Region(params.Region)
+	if region != "" {
+		req = req.Region(region)
 	}
-	if params.GetCloud() != "" {
-		req = req.Cloud(params.Cloud)
+	if cloud != "" {
+		req = req.Cloud(cloud)
 	}
-	if params.GetIdentityPoolId() != "" {
-		req = req.IdentityPool(params.IdentityPoolId)
+	if identityPoolId != "" {
+		req = req.IdentityPool(identityPoolId)
 	}
 	res, httpResp, err := req.Execute()
 	return res.GetData(), errors.CatchCCloudV2Error(err, httpResp)

@@ -17,7 +17,7 @@ func (c *command) newIamBindingCreateCommand() *cobra.Command {
 		RunE:  c.iamBindingCreate,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Create Flink IAM binding for AWS us-west-2 and env-123.`,
+				Text: `Create a Flink IAM binding for AWS region "us-west-2" and environment "env-123".`,
 				Code: "confluent flink iam-binding create --cloud aws --region us-west-2 --environment env-123 --identity-pool pool-123",
 			},
 		),
@@ -72,7 +72,7 @@ func (c *command) iamBindingCreate(cmd *cobra.Command, _ []string) error {
 		Id:           iamBinding.GetId(),
 		Region:       iamBinding.GetRegion(),
 		Cloud:        iamBinding.GetCloud(),
-		Environment:  iamBinding.GetEnvironment().Id,
+		Environment:  iamBinding.Environment.GetId(),
 		IdentityPool: iamBinding.GetIdentityPool().Id,
 	})
 	return table.Print()
