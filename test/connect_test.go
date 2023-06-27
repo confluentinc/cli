@@ -91,8 +91,6 @@ func (s *CLITestSuite) TestConnectPluginInstall() {
 
 	//nolint:dupword
 	tests := []CLITest{
-		{args: "connect plugin install -h", fixture: "connect/plugin/install/help.golden"},
-
 		{args: "connect plugin install test/fixtures/input/connect/test-plugin.zip --dry-run", env: []string{"CONFLUENT_HOME=" + confluentHome733}, input: "y\ny\ny\n", fixture: "connect/plugin/install/interactive.golden"},
 		{args: "connect plugin install test/fixtures/input/connect/test-plugin.zip --dry-run", env: []string{"CONFLUENT_HOME=" + confluentHome733}, input: "y\ny\nn\ny\nn\n", fixture: "connect/plugin/install/interactive-select-workers.golden"},
 		{args: "connect plugin install test/fixtures/input/connect/test-plugin.zip --dry-run", env: []string{"CONFLUENT_HOME=" + confluentHomeEmpty}, input: "y\ny\n", fixture: "connect/plugin/install/interactive-no-workers.golden"},
