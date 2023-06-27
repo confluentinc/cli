@@ -1,0 +1,9 @@
++---------------------+--------------------------------+
+| Name                | link-3                         |
+| Source Cluster      | lkc-describe-topic             |
+| Destination Cluster | cluster-2                      |
+| State               | UNAVAILABLE                    |
+| Error               | AUTHENTICATION_ERROR           |
+| Error Message       | Please check your API key and  |
+|                     | secret.                        |
++---------------------+--------------------------------+
