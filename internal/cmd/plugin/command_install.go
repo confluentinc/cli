@@ -42,8 +42,7 @@ func (c *command) install(cmd *cobra.Command, args []string) error {
 	}
 	defer os.RemoveAll(dir)
 
-	_, err = clonePluginRepo(dir, cliPluginsUrl)
-	if err != nil {
+	if _, err = clonePluginRepo(dir, cliPluginsUrl); err != nil {
 		return err
 	}
 
