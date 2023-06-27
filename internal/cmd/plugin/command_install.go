@@ -165,10 +165,7 @@ func getPluginManifest(pluginName, dir string) (*Manifest, error) {
 }
 
 func installPlugin(manifest *Manifest, repositoryDir, installDir string) error {
-	language, ver, err := getLanguage(manifest)
-	if err != nil {
-		return err
-	}
+	language, ver := getLanguage(manifest)
 
 	if !types.Contains(supportedLanguages, language) {
 		return errors.Errorf("installation of plugins using %s is not yet supported", language)
@@ -186,26 +183,26 @@ func installPlugin(manifest *Manifest, repositoryDir, installDir string) error {
 	return nil
 }
 
-func getLanguage(manifest *Manifest) (string, *version.Version, error) {
+func getLanguage(manifest *Manifest) (string, *version.Version) {
 	if manifest == nil {
-		return "", nil, nil
+		return "", nil
 	}
 
 	if manifest.Dependencies == "" {
-		return "", nil, nil
+		return "", nil
 	}
 
 	dependencySlice := strings.Split(strings.ToLower(manifest.Dependencies), " ")
 	if len(dependencySlice) == 1 {
-		return dependencySlice[0], nil, nil
+		return dependencySlice[0], nil
 	}
 
 	ver, err := version.NewVersion(dependencySlice[1])
 	if err != nil {
-		return dependencySlice[0], nil, nil
+		return dependencySlice[0], nil
 	}
 
-	return dependencySlice[0], ver, nil
+	return dependencySlice[0], ver
 }
 
 func checkPythonVersion(ver *version.Version) {

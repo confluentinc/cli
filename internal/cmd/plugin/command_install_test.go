@@ -21,20 +21,23 @@ func TestGetPluginInstallDir(t *testing.T) {
 	cmd.Flags().String("plugin-directory", "", "")
 
 	if runtime.GOOS != "windows" {
-		cmd.Execute()
+		err := cmd.Execute()
+		assert.NoError(t, err)
 		dir, err := getPluginInstallDir(cmd)
 		assert.NoError(t, err)
 		assert.Equal(t, "/usr/local/bin", dir)
 	}
 
 	cmd.SetArgs([]string{"--plugin-directory", "."})
-	cmd.Execute()
+	err := cmd.Execute()
+	assert.NoError(t, err)
 	dir, err := getPluginInstallDir(cmd)
 	assert.NoError(t, err)
 	assert.True(t, strings.HasSuffix(dir, "cli/internal/cmd/plugin"))
 
 	cmd.SetArgs([]string{"--plugin-directory", "dne-directory"})
-	cmd.Execute()
+	err = cmd.Execute()
+	assert.NoError(t, err)
 	_, err = getPluginInstallDir(cmd)
 	assert.Error(t, err)
 }
@@ -67,8 +70,7 @@ func TestGetLanguage(t *testing.T) {
 	manifest, err := getPluginManifest("confluent-test_plugin", dir)
 	assert.NoError(t, err)
 
-	language, ver, err := getLanguage(manifest)
-	assert.NoError(t, err)
+	language, ver := getLanguage(manifest)
 	assert.Equal(t, "python", language)
 	referenceVer, err := version.NewVersion("3.0.0")
 	fmt.Println(ver, referenceVer)
