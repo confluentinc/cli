@@ -3,7 +3,6 @@ package flink
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -49,12 +48,7 @@ func (c *command) iamBindingList(cmd *cobra.Command, _ []string) error {
 		identityPoolId = c.Context.GetCurrentIdentityPool()
 	}
 
-	params := &ccloudv2.ListFlinkIAMBindingsQueryParams{
-		Region:         region,
-		Cloud:          cloud,
-		IdentityPoolId: identityPoolId,
-	}
-	iamBindings, err := c.V2Client.ListFlinkIAMBindings(environmentId, params)
+	iamBindings, err := c.V2Client.ListFlinkIAMBindings(environmentId, region, cloud, identityPoolId)
 	if err != nil {
 		return err
 	}
