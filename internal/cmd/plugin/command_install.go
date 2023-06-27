@@ -55,13 +55,12 @@ func (c *command) install(cmd *cobra.Command, args []string) error {
 }
 
 func getPluginInstallDir(cmd *cobra.Command) (string, error) {
-	if !cmd.Flags().Changed("plugin-directory") {
-		return getDefaultPluginInstallDir()
-	}
-
 	pluginDir, err := cmd.Flags().GetString("plugin-directory")
 	if err != nil {
 		return "", err
+	}
+	if pluginDir == "" {
+		return getDefaultPluginInstallDir()
 	}
 
 	if pluginDir, err = filepath.Abs(pluginDir); err != nil {
