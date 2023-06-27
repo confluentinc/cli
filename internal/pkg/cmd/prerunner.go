@@ -66,6 +66,10 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(*cob
 			}
 		}
 
+		if err := r.Config.DecryptCredentials(); err != nil {
+			return err
+		}
+
 		command.Config.Config = r.Config
 		if err := command.Config.ParseFlagsIntoConfig(cmd); err != nil {
 			return err

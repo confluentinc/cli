@@ -7,8 +7,6 @@ import (
 const (
 	netrcFilePath          = "test_files/netrc"
 	netrcInput             = "test_files/netrc-input"
-	outputFileMds          = "test_files/output-mds"
-	outputFileCcloudLogin  = "test_files/output-ccloud-login"
 	inputFileMds           = "test_files/input-mds"
 	inputFileCcloudLogin   = "test_files/input-ccloud-login"
 	mdsContext             = "login-mds-user-http://test"
