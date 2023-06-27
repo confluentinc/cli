@@ -1,0 +1,17 @@
+Manage provider actions.
+
+Usage:
+  confluent stream-share provider [command]
+
+Available Commands:
+  invite      Manage invites.
+  opt-in      Opt in to stream sharing.
+  opt-out     Opt out of stream sharing.
+  share       Manage provider shares.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent stream-share provider [command] --help" for more information about a command.
