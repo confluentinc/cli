@@ -1,0 +1,15 @@
+Return the routing rules that determine which auditable events are logged, and where.
+
+Usage:
+  confluent audit-log route [command]
+
+Available Commands:
+  list        List routes matching a resource & sub-resources.
+  lookup      Return the matching audit-log route rule.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent audit-log route [command] --help" for more information about a command.

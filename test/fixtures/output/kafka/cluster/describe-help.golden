@@ -1,0 +1,14 @@
+Describe the Kafka cluster specified with the ID argument, or describe the active cluster for the current context.
+
+Usage:
+  confluent kafka cluster describe [id] [flags]
+
+Flags:
+      --context string       CLI context name.
+      --environment string   Environment ID.
+  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
