@@ -1,11 +1,7 @@
-Describe a Confluent Cloud environment.
+List Confluent Cloud billing costs.
 
 Usage:
-  confluent environment describe [id] [flags]
-
-Flags:
-      --context string   CLI context name.
-  -o, --output string    Specify the output format as "human", "json", or "yaml". (default "human")
+  confluent billing cost [flags]
 
 Global Flags:
   -h, --help            Show help for this command.

@@ -1,13 +1,14 @@
-Describe a Confluent Cloud environment.
+List Confluent Cloud billing costs.
 
 Usage:
-  confluent environment describe [id] [flags]
+  confluent billing cost [command]
 
-Flags:
-      --context string   CLI context name.
-  -o, --output string    Specify the output format as "human", "json", or "yaml". (default "human")
+Available Commands:
+  list        List Confluent Cloud billing costs.
 
 Global Flags:
   -h, --help            Show help for this command.
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent billing cost [command] --help" for more information about a command.

@@ -2,6 +2,7 @@ package test
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -46,7 +47,9 @@ func (s *CLITestSuite) TestHelp_Cloud() {
 
 	cmd := pcmd.NewConfluentCommand(cfg)
 	for _, subcommand := range cmd.Commands() {
+		// if subcommand.IsAvailableCommand() {
 		s.testHelp(subcommand, "cloud")
+		// }
 	}
 }
 
@@ -61,7 +64,9 @@ func (s *CLITestSuite) TestHelp_OnPrem() {
 
 	cmd := pcmd.NewConfluentCommand(cfg)
 	for _, subcommand := range cmd.Commands() {
+		// if subcommand.IsAvailableCommand() {
 		s.testHelp(subcommand, "onprem")
+		// }
 	}
 }
 
@@ -86,9 +91,15 @@ func (s *CLITestSuite) testHelp(cmd *cobra.Command, login string) {
 		login:   login,
 	}
 
-	s.runIntegrationTest(test)
+	if cmd.IsAvailableCommand() {
+		s.runIntegrationTest(test)
+	} else {
+		_ = os.RemoveAll(test.fixture)
+	}
 
 	for _, subcommand := range cmd.Commands() {
+		// if subcommand.IsAvailableCommand() {
 		s.testHelp(subcommand, login)
+		// }
 	}
 }

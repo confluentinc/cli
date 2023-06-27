@@ -1,7 +1,7 @@
 Describe a Confluent Cloud environment.
 
 Usage:
-  confluent environment describe <id> [flags]
+  confluent environment describe [id] [flags]
 
 Flags:
       --context string   CLI context name.

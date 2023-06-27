@@ -10,7 +10,7 @@ Available Commands:
   delete      Delete a pipeline.
   describe    Describe a Stream Designer pipeline.
   list        Display pipelines in the current environment and cluster.
-  save        Save a Stream Designer pipeline's source code to a local file.
+  save        Save the source code of a Stream Designer pipeline locally.
   update      Update an existing pipeline.
 
 Global Flags:

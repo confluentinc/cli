@@ -1,4 +1,4 @@
-List Confluent Cloud service quota values by a scope (organization, environment, network, kafka_cluster, service_account, or user_account).
+List Confluent Cloud service quota values by a scope ("organization", "environment", "network", "kafka-cluster", "service-account", or "user-account").
 
 Usage:
   confluent service-quota list <quota-scope> [flags]

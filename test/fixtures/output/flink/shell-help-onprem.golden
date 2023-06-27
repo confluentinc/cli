@@ -10,6 +10,7 @@ Flags:
       --environment string     Environment ID.
       --context string         CLI context name.
   -o, --output string          Specify the output format as "human", "json", or "yaml". (default "human")
+      --fake-gateway           Test the SQL client with fake gateway data.
 
 Global Flags:
   -h, --help            Show help for this command.

@@ -9,8 +9,8 @@ Update the description of identity provider "op-123456".
   $ confluent iam provider update op-123456 --description "Update demo identity provider information."
 
 Flags:
-      --description string   Description of the identity provider.
       --name string          Name of the identity provider.
+      --description string   Description of the identity provider.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
