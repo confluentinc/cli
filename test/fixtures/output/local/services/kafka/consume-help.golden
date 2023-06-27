@@ -14,12 +14,12 @@ Consume newly arriving non-Avro data from a topic called `mytopic2` on a develop
 
 Flags:
       --cloud                       Consume from Confluent Cloud.
-      --config string               Change the Confluent Cloud configuration file. (default "/tmp/.confluent/config")
+      --config string               Change the Confluent Cloud configuration file. ((default \"^\/.*\/\.confluent\/config$\"))
       --value-format string         Format output data: avro, json, or protobuf.
                                     
       --bootstrap-server string     The server(s) to connect to. The broker list string has the form HOST1:PORT1,HOST2:PORT2.
-      --consumer-property string    A mechanism to pass user-defined properties in the form key=value to the consumer.
-      --consumer.config string      Consumer config properties file. Note that [consumer-property] takes precedence over this config.
+      --consumer\-property string    A mechanism to pass user-defined properties in the form key=value to the consumer.
+      --consumer.config string      Consumer config properties file. Note that [consumer\-property] takes precedence over this config.
       --enable-systest-events       Log lifecycle events of the consumer in addition to logging consumed messages. (This is specific for system tests.)
       --formatter string            The name of a class to use for formatting kafka messages for display. (default "kafka.tools.DefaultMessageFormatter")
       --from-beginning              If the consumer does not already have an established offset to consume from, start with the earliest message present in the log rather than the latest message.

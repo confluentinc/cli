@@ -14,7 +14,7 @@ Produce non-Avro data to a topic called `mytopic2` on a development Kafka cluste
 
 Flags:
       --cloud                            Consume from Confluent Cloud.
-      --config string                    Change the Confluent Cloud configuration file. (default "/tmp/.confluent/config")
+      --config string                    Change the Confluent Cloud configuration file. ((default \"^\/.*\/\.confluent\/config$\"))
       --value-format string              Format output data: avro, json, or protobuf.
                                          
       --batch-size int                   Number of messages to send in a single batch if they are not being sent synchronously. (default 200)
@@ -26,8 +26,8 @@ Flags:
       --max-partition-memory-bytes int   The buffer size allocated for a partition. When records are received which are small than this size, the producer will attempt to optimistically group them together until this size is reached. (default 16384)
       --message-send-max-retries int     This property specifies the number of retries before the producer gives up and drops this message. Brokers can fail receiving a message for multiple reasons, and being unavailable transiently is just one of them. (default 3)
       --metadata-expiry-ms int           The amount of time in milliseconds before a forced metadata refresh. This will occur independent of any leadership changes. (default 300000)
-      --producer-property string         A mechanism to pass user-defined properties in the form key=value to the producer.
-      --producer.config string           Producer config properties file. Note that [producer-property] takes precedence over this config.
+      --producer\-property string         A mechanism to pass user-defined properties in the form key=value to the producer.
+      --producer.config string           Producer config properties file. Note that [producer\-property] takes precedence over this config.
       --property strings                 A mechanism to pass user-defined properties in the form key=value to the message reader. This allows custom configuration for a user-defined message reader. Default properties include:
                                          	parse.key=true|false
                                          	key.separator=<key.separator>
