@@ -1,4 +1,4 @@
-Delete a self-managed key from Conluent Cloud.
+Delete a self-managed key from Confluent Cloud.
 
 Usage:
   confluent byok delete <id> [flags]
