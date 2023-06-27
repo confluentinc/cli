@@ -1,0 +1,11 @@
+The local commands are intended for a single-node development environment only, NOT for production usage. See more: https://docs.confluent.io/current/cli/index.html
+As of Confluent Platform 8.0, Java 8 is no longer supported.
+
+Using CONFLUENT_CURRENT: .+confluent.\d{6}
+Control Center is \[DOWN\]
+ksqlDB Server is \[DOWN\]
+Connect is \[DOWN\]
+Kafka REST is \[DOWN\]
+Schema Registry is \[DOWN\]
+Kafka is \[DOWN\]
+ZooKeeper is \[DOWN\]
