@@ -8,14 +8,12 @@ import (
 
 func (s *CLITestSuite) TestSchemaRegistry() {
 	// TODO: add --config flag to all commands or ENVVAR instead of using standard config file location
-	schemaPath := GetInputFixturePath(s.T(), "schema-registry", "schema-example.json")
-	exporterConfigPath := GetInputFixturePath(s.T(), "schema-registry", "schema-exporter-config.txt")
-	metadataPath := GetInputFixturePath(s.T(), "schema-registry", "schema-metadata.json")
-	rulesetPath := GetInputFixturePath(s.T(), "schema-registry", "schema-ruleset.json")
+	schemaPath := getInputFixturePath(s.T(), "schema-registry", "schema-example.json")
+	exporterConfigPath := getInputFixturePath(s.T(), "schema-registry", "schema-exporter-config.txt")
+	metadataPath := getInputFixturePath(s.T(), "schema-registry", "schema-metadata.json")
+	rulesetPath := getInputFixturePath(s.T(), "schema-registry", "schema-ruleset.json")
 
 	tests := []CLITest{
-		{args: "schema-registry --help", fixture: "schema-registry/help.golden"},
-		{args: "schema-registry cluster --help", fixture: "schema-registry/cluster/help.golden"},
 		{args: "schema-registry cluster enable --cloud gcp --geo us --package advanced -o json", fixture: "schema-registry/cluster/enable-json.golden"},
 		{args: "schema-registry cluster enable --cloud gcp --geo us --package essentials -o yaml", fixture: "schema-registry/cluster/enable-yaml.golden"},
 		{args: "schema-registry cluster enable --cloud gcp --geo us --package advanced", fixture: "schema-registry/cluster/enable.golden"},
@@ -68,22 +66,6 @@ func (s *CLITestSuite) TestSchemaRegistry() {
 			args:    fmt.Sprintf(`schema-registry cluster upgrade --package advanced --environment %s`, testserver.SRApiEnvId),
 			fixture: "schema-registry/cluster/upgrade.golden",
 		},
-		{args: "schema-registry schema --help", fixture: "schema-registry/schema/help.golden"},
-		{args: "schema-registry subject --help", fixture: "schema-registry/subject/help.golden"},
-		{args: "schema-registry exporter --help", fixture: "schema-registry/exporter/help.golden"},
-		{args: "schema-registry exporter create --help", fixture: "schema-registry/exporter/create-help.golden"},
-		{args: "schema-registry exporter delete --help", fixture: "schema-registry/exporter/delete-help.golden"},
-		{args: "schema-registry exporter describe --help", fixture: "schema-registry/exporter/describe-help.golden"},
-		{args: "schema-registry exporter get-config --help", fixture: "schema-registry/exporter/get-config-help.golden"},
-		{args: "schema-registry exporter get-status --help", fixture: "schema-registry/exporter/get-status-help.golden"},
-		{args: "schema-registry exporter list --help", fixture: "schema-registry/exporter/list-help.golden"},
-		{args: "schema-registry exporter pause --help", fixture: "schema-registry/exporter/pause-help.golden"},
-		{args: "schema-registry exporter reset --help", fixture: "schema-registry/exporter/reset-help.golden"},
-		{args: "schema-registry exporter resume --help", fixture: "schema-registry/exporter/resume-help.golden"},
-		{args: "schema-registry exporter update --help", fixture: "schema-registry/exporter/update-help.golden"},
-		{args: "schema-registry cluster update --help", fixture: "schema-registry/cluster/update-help.golden"},
-		{args: "schema-registry subject update --help", fixture: "schema-registry/subject/update-help.golden"},
-
 		{args: "schema-registry cluster describe", fixture: "schema-registry/cluster/describe.golden"},
 		{
 			args:     fmt.Sprintf(`schema-registry cluster update --environment %s`, testserver.SRApiEnvId),
@@ -271,10 +253,6 @@ func (s *CLITestSuite) TestSchemaRegistry() {
 		{
 			args:    fmt.Sprintf(`schema-registry exporter reset myexporter --api-key key --api-secret secret --environment %s`, testserver.SRApiEnvId),
 			fixture: "schema-registry/exporter/reset.golden",
-		},
-		{
-			args:    "schema-registry region --help",
-			fixture: "schema-registry/region/help.golden",
 		},
 		{
 			args:    "schema-registry region list",

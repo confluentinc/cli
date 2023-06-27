@@ -1,0 +1,18 @@
+Update a Kafka topic.
+
+Usage:
+  confluent local kafka topic update <topic> [flags]
+
+Examples:
+Describe the "test" topic.
+
+  $ confluent kafka topic describe test
+
+Flags:
+      --config strings   A comma-separated list of topics configuration ("key=value") overrides for the topic being created.
+  -o, --output string    Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
