@@ -5,17 +5,8 @@ import (
 	"github.com/rivo/tview"
 )
 
-type OutputMode string
-
-var (
-	GoPromptOutput OutputMode = "goprompt"
-	TViewOutput    OutputMode = "tview"
-)
-
 type ApplicationControllerInterface interface {
 	SuspendOutputMode()
-	ToggleOutputMode()
-	GetOutputMode() OutputMode
 	ExitApplication()
 	TView() *tview.Application
 	ShowTableView()

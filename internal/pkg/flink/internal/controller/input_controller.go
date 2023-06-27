@@ -39,8 +39,6 @@ func NewInputController(a types.ApplicationControllerInterface, history *history
 		reverseISearch:  reverseisearch.NewReverseISearch(),
 	}
 	inputController.prompt = inputController.Prompt()
-	components.PrintWelcomeHeader()
-
 	return inputController
 }
 
@@ -146,12 +144,6 @@ func (c *InputController) Prompt() prompt.IPrompt {
 			},
 		}),
 		prompt.OptionAddKeyBind(prompt.KeyBind{
-			Key: prompt.ControlO,
-			Fn: func(b *prompt.Buffer) {
-				c.toggleOutputMode()
-			},
-		}),
-		prompt.OptionAddKeyBind(prompt.KeyBind{
 			Key: prompt.ControlR,
 			Fn: func(b *prompt.Buffer) {
 				c.reverseISearchEnabled = true
@@ -187,18 +179,6 @@ func (c *InputController) Prompt() prompt.IPrompt {
 
 func (c *InputController) getSmartCompletion() bool {
 	return c.smartCompletion
-}
-
-func (c *InputController) toggleOutputMode() {
-	c.appController.ToggleOutputMode()
-
-	maxCol, err := c.getMaxCol()
-	if err != nil {
-		log.CliLogger.Error(err)
-		return
-	}
-
-	components.PrintOutputModeState(c.appController.GetOutputMode() == types.TViewOutput, maxCol)
 }
 
 func (c *InputController) toggleSmartCompletion() {

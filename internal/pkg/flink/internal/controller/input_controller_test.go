@@ -16,7 +16,7 @@ import (
 
 type InputControllerTestSuite struct {
 	suite.Suite
-	inputController InputController
+	inputController *InputController
 	appController   *mock.MockApplicationControllerInterface
 	history         *history.History
 	prompt          *mock.MockIPrompt
@@ -33,12 +33,9 @@ func (s *InputControllerTestSuite) SetupTest() {
 	s.history = &history.History{Data: []string{}}
 	s.prompt = mock.NewMockIPrompt(ctrl)
 	s.reverseISearch = mock.NewMockReverseISearch(ctrl)
-	s.inputController = InputController{
-		appController:  s.appController,
-		History:        s.history,
-		prompt:         s.prompt,
-		reverseISearch: s.reverseISearch,
-	}
+	s.inputController = NewInputController(s.appController, s.history).(*InputController)
+	s.inputController.reverseISearch = s.reverseISearch
+	s.inputController.prompt = s.prompt
 }
 
 func (s *InputControllerTestSuite) TestGetUserInput() {
@@ -96,4 +93,20 @@ func (s *InputControllerTestSuite) TestIsSpecialInputReturnsFalse() {
 	isSpecialInput := s.inputController.IsSpecialInput("select 1;")
 
 	require.False(s.T(), isSpecialInput)
+}
+
+func (s *InputControllerTestSuite) TestTurnOnSmartCompletion() {
+	s.inputController.smartCompletion = false
+
+	s.inputController.toggleSmartCompletion()
+
+	require.True(s.T(), s.inputController.smartCompletion)
+}
+
+func (s *InputControllerTestSuite) TestTurnOffSmartCompletion() {
+	s.inputController.smartCompletion = true
+
+	s.inputController.toggleSmartCompletion()
+
+	require.False(s.T(), s.inputController.smartCompletion)
 }

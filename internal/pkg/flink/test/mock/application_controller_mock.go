@@ -61,20 +61,6 @@ func (mr *MockApplicationControllerInterfaceMockRecorder) ExitApplication() *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExitApplication", reflect.TypeOf((*MockApplicationControllerInterface)(nil).ExitApplication))
 }
 
-// GetOutputMode mocks base method.
-func (m *MockApplicationControllerInterface) GetOutputMode() types.OutputMode {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetOutputMode")
-	ret0, _ := ret[0].(types.OutputMode)
-	return ret0
-}
-
-// GetOutputMode indicates an expected call of GetOutputMode.
-func (mr *MockApplicationControllerInterfaceMockRecorder) GetOutputMode() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOutputMode", reflect.TypeOf((*MockApplicationControllerInterface)(nil).GetOutputMode))
-}
-
 // SetLayout mocks base method.
 func (m *MockApplicationControllerInterface) SetLayout(arg0 tview.Primitive) {
 	m.ctrl.T.Helper()
@@ -135,16 +121,4 @@ func (m *MockApplicationControllerInterface) TView() *tview.Application {
 func (mr *MockApplicationControllerInterfaceMockRecorder) TView() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TView", reflect.TypeOf((*MockApplicationControllerInterface)(nil).TView))
-}
-
-// ToggleOutputMode mocks base method.
-func (m *MockApplicationControllerInterface) ToggleOutputMode() {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "ToggleOutputMode")
-}
-
-// ToggleOutputMode indicates an expected call of ToggleOutputMode.
-func (mr *MockApplicationControllerInterfaceMockRecorder) ToggleOutputMode() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ToggleOutputMode", reflect.TypeOf((*MockApplicationControllerInterface)(nil).ToggleOutputMode))
 }

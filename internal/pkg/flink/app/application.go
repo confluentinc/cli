@@ -72,6 +72,7 @@ func StartApp(client ccloudv2.GatewayClientInterface, authenticated func() error
 		resultsController:   resultsController,
 		authenticated:       authenticated,
 	}
+	components.PrintWelcomeHeader()
 	app.readEvalPrintLoop()
 }
 
