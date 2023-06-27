@@ -42,18 +42,9 @@ const (
 )
 
 // Manager is a global feature flag manager
-var Manager featureFlagManager
+var Manager launchDarklyManager
 
 var attributes = []string{"user.resource_id", "org.resource_id", "environment.id", "cli.version", "cluster.id", "cluster.physicalClusterId", "cli.command", "cli.flags"}
-
-type featureFlagManager interface {
-	BoolVariation(key string, ctx *dynamicconfig.DynamicContext, client v1.LaunchDarklyClient, shouldCache bool, defaultVal bool) bool
-	StringVariation(key string, ctx *dynamicconfig.DynamicContext, client v1.LaunchDarklyClient, shouldCache bool, defaultVal string) string
-	IntVariation(key string, ctx *dynamicconfig.DynamicContext, client v1.LaunchDarklyClient, shouldCache bool, defaultVal int) int
-	JsonVariation(key string, ctx *dynamicconfig.DynamicContext, client v1.LaunchDarklyClient, shouldCache bool, defaultVal any) any
-
-	SetCommandAndFlags(cmd *cobra.Command, args []string)
-}
 
 type launchDarklyManager struct {
 	cliClient                *sling.Sling
@@ -91,7 +82,7 @@ func Init(version *version.Version, isTest, isDisabledConfig bool) {
 		return sling.New().Base(ccloudBasePath)
 	}
 
-	Manager = &launchDarklyManager{
+	Manager = launchDarklyManager{
 		cliClient:                sling.New().Base(cliBasePath),
 		ccloudClient:             ccloudClientProvider,
 		version:                  version,
