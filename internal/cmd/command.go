@@ -143,6 +143,7 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 
 	changeDefaults(cmd, cfg)
 	deprecateCommandsAndFlags(cmd, cfg)
+	featureflags.Manager.SetCommandAndFlags(cmd, os.Args[1:])
 	return cmd
 }
 

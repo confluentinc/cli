@@ -48,7 +48,9 @@ var flagRules = []linter.FlagRule{
 	linter.FlagFilter(linter.RequireStringSlicePrefix, linter.ExcludeFlag("property")),
 
 	linter.FlagFilter(linter.RequireFlagUsageMessage, linter.ExcludeFlag("key-deserializer", "value-deserializer")),
-	linter.RequireFlagUsageRealWords(properNouns),
+	linter.FlagFilter(linter.RequireFlagUsageRealWords(properNouns),
+		linter.ExcludeFlag("unsafe-trace"),
+		linter.ExcludeFlag("verbose")),
 	linter.RequireFlagUsageCapitalized(properNouns),
 	linter.FlagFilter(
 		linter.RequireFlagUsageEndWithPunctuation,
