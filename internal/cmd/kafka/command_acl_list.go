@@ -42,12 +42,6 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	userIdMap := c.mapResourceIdToUserId(users)
-
-	if err := c.aclResourceIdToNumericId(acl, userIdMap); err != nil {
-		return err
-	}
-
 	if acl[0].errors != nil {
 		return acl[0].errors
 	}

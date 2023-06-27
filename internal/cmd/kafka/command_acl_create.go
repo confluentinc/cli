@@ -60,12 +60,6 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	userIdMap := c.mapResourceIdToUserId(users)
-
-	if err := c.aclResourceIdToNumericId(acls, userIdMap); err != nil {
-		return err
-	}
-
 	resourceIdMap := c.mapUserIdToResourceId(users)
 
 	bindings := make([]*ccstructs.ACLBinding, len(acls))
