@@ -3,6 +3,4 @@
 | Source Cluster      | lkc-describe-topic |
 | Destination Cluster |                    |
 | State               | AVAILABLE          |
-| Error               |                    |
-| Error Message       |                    |
 +---------------------+--------------------+
