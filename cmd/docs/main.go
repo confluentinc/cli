@@ -59,7 +59,6 @@ func main() {
 // removeUnreleasedDocs hides documentation for unreleased features
 func removeUnreleasedDocs() {
 	removeUnreleasedCommands("flink")
-	removeUnreleasedCommands("stream-share")
 }
 
 func removeUnreleasedCommands(command string) {
