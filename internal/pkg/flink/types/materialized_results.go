@@ -1,16 +1,14 @@
-package results
+package types
 
 import (
 	"sync"
 
 	"github.com/samber/lo"
-
-	"github.com/confluentinc/cli/internal/pkg/flink/types"
 )
 
 type MaterializedStatementResultsIterator struct {
 	isTableMode bool
-	iterator    *types.ListElement[types.StatementResultRow]
+	iterator    *ListElement[StatementResultRow]
 	lock        sync.RWMutex
 }
 
@@ -21,7 +19,7 @@ func (i *MaterializedStatementResultsIterator) HasReachedEnd() bool {
 	return i.iterator == nil
 }
 
-func (i *MaterializedStatementResultsIterator) GetNext() *types.StatementResultRow {
+func (i *MaterializedStatementResultsIterator) GetNext() *StatementResultRow {
 	row := i.Value()
 
 	i.lock.Lock()
@@ -31,7 +29,7 @@ func (i *MaterializedStatementResultsIterator) GetNext() *types.StatementResultR
 	return row
 }
 
-func (i *MaterializedStatementResultsIterator) GetPrev() *types.StatementResultRow {
+func (i *MaterializedStatementResultsIterator) GetPrev() *StatementResultRow {
 	row := i.Value()
 
 	i.lock.Lock()
@@ -41,7 +39,7 @@ func (i *MaterializedStatementResultsIterator) GetPrev() *types.StatementResultR
 	return row
 }
 
-func (i *MaterializedStatementResultsIterator) Value() *types.StatementResultRow {
+func (i *MaterializedStatementResultsIterator) Value() *StatementResultRow {
 	i.lock.Lock()
 	defer i.lock.Unlock()
 
@@ -51,16 +49,16 @@ func (i *MaterializedStatementResultsIterator) Value() *types.StatementResultRow
 
 	row := i.iterator.Value()
 	if !i.isTableMode {
-		operationField := types.AtomicStatementResultField{
+		operationField := AtomicStatementResultField{
 			Type:  "VARCHAR",
 			Value: row.Operation.String(),
 		}
-		row.Fields = append([]types.StatementResultField{operationField}, row.Fields...)
+		row.Fields = append([]StatementResultField{operationField}, row.Fields...)
 	}
 	return row
 }
 
-func (i *MaterializedStatementResultsIterator) Move(stepsToMove int) *types.StatementResultRow {
+func (i *MaterializedStatementResultsIterator) Move(stepsToMove int) *StatementResultRow {
 	for !i.HasReachedEnd() && stepsToMove != 0 {
 		if stepsToMove < 0 {
 			i.GetPrev()
@@ -77,9 +75,9 @@ type MaterializedStatementResults struct {
 	isTableMode bool
 	maxCapacity int
 	headers     []string
-	changelog   types.LinkedList[types.StatementResultRow]
-	table       types.LinkedList[types.StatementResultRow]
-	cache       map[string]*types.ListElement[types.StatementResultRow]
+	changelog   LinkedList[StatementResultRow]
+	table       LinkedList[StatementResultRow]
+	cache       map[string]*ListElement[StatementResultRow]
 	lock        sync.RWMutex
 }
 
@@ -88,9 +86,9 @@ func NewMaterializedStatementResults(headers []string, maxCapacity int) Material
 		isTableMode: true,
 		maxCapacity: maxCapacity,
 		headers:     headers,
-		changelog:   types.NewLinkedList[types.StatementResultRow](),
-		table:       types.NewLinkedList[types.StatementResultRow](),
-		cache:       map[string]*types.ListElement[types.StatementResultRow]{},
+		changelog:   NewLinkedList[StatementResultRow](),
+		table:       NewLinkedList[StatementResultRow](),
+		cache:       map[string]*ListElement[StatementResultRow]{},
 	}
 }
 
@@ -127,7 +125,7 @@ func (s *MaterializedStatementResults) cleanup() {
 	}
 }
 
-func (s *MaterializedStatementResults) Append(rows ...types.StatementResultRow) bool {
+func (s *MaterializedStatementResults) Append(rows ...StatementResultRow) bool {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
@@ -190,7 +188,7 @@ func (s *MaterializedStatementResults) GetHeaders() []string {
 	return append([]string{"Operation"}, s.headers...)
 }
 
-func (s *MaterializedStatementResults) ForEach(f func(rowIdx int, row *types.StatementResultRow)) {
+func (s *MaterializedStatementResults) ForEach(f func(rowIdx int, row *StatementResultRow)) {
 	s.lock.RLock()
 	defer s.lock.RUnlock()
 
@@ -211,7 +209,7 @@ func (s *MaterializedStatementResults) GetMaxWidthPerColum() []int {
 		columnWidths[colIdx] = lo.Max([]int{len(column), columnWidths[colIdx]})
 	}
 
-	s.ForEach(func(rowIdx int, row *types.StatementResultRow) {
+	s.ForEach(func(rowIdx int, row *StatementResultRow) {
 		for colIdx, field := range row.Fields {
 			columnWidths[colIdx] = lo.Max([]int{len(field.ToString()), columnWidths[colIdx]})
 		}
