@@ -150,7 +150,7 @@ func getPluginManifest(pluginName, dir string) (*Manifest, error) {
 	return nil, errors.Errorf("plugin %s not found", pluginName)
 }
 
-func installPlugin(manifest *Manifest, repoDir, installDir string) error {
+func installPlugin(manifest *Manifest, repositoryDir, installDir string) error {
 	language, ver, err := getLanguage(manifest)
 	if err != nil {
 		return err
