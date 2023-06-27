@@ -384,7 +384,8 @@ func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Comma
 	}
 
 	var fields []string
-	if presource.LookupType(userResourceId) == presource.ServiceAccount {
+	principalType := presource.LookupType(userResourceId)
+	if principalType == presource.ServiceAccount || principalType == presource.IdentityPool {
 		if resource != "" {
 			fields = resourcePatternListFields
 		} else {
