@@ -50,7 +50,7 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka cluster delete lkc-def973 --force", fixture: "kafka/5.golden"},
 		{args: "kafka cluster delete lkc-def973", input: "kafka-cluster\n", fixture: "kafka/5-prompt.golden"},
 
-		{args: "kafka cluster use a-595", fixture: "kafka/40.golden"},
+		{args: "kafka cluster use lkc-12345", fixture: "kafka/40.golden"},
 
 		{args: "kafka region list", fixture: "kafka/14.golden"},
 		{args: "kafka region list -o json", fixture: "kafka/15.golden"},
@@ -87,16 +87,12 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka acl list --cluster lkc-acls", fixture: "kafka/acl/list-cloud.golden"},
 		{args: "kafka acl list --cluster lkc-acls -o json", fixture: "kafka/acl/list-json-cloud.golden"},
 		{args: "kafka acl list --cluster lkc-acls -o yaml", fixture: "kafka/acl/list-yaml-cloud.golden"},
-		{args: "kafka acl list --principal User:12345", fixture: "kafka/acl/err-numeric-id.golden", exitCode: 1},
 		{args: "kafka acl create --cluster lkc-acls --allow --service-account 7272 --operations read,described --topic test-topic", fixture: "kafka/acl/invalid-operation.golden", exitCode: 1},
 		{args: "kafka acl create --cluster lkc-acls --allow --service-account sa-12345 --operations read,describe --topic test-topic", fixture: "kafka/acl/create-service-account.golden"},
 		{args: "kafka acl create --cluster lkc-acls --allow --principal User:sa-12345 --operations write,alter --topic test-topic", fixture: "kafka/acl/create-principal.golden"},
-		{args: "kafka acl create --cluster lkc-acls --allow --service-account sa-54321 --operations read,describe --topic test-topic", fixture: "kafka/acl/invalid-service-account.golden", exitCode: 1},
-		{args: "kafka acl create --principal User:12345 --operations write", fixture: "kafka/acl/err-numeric-id.golden", exitCode: 1},
 		{args: "kafka acl delete --cluster lkc-acls --allow --service-account sa-12345 --operations read,describe --topic test-topic --force", fixture: "kafka/acl/delete-cloud.golden"},
 		{args: "kafka acl delete --cluster lkc-acls --allow --service-account sa-12345 --operations read,describe --topic test-topic", input: "y\n", fixture: "kafka/acl/delete-cloud-prompt.golden"},
 		{args: "kafka acl delete --cluster lkc-acls --allow --principal User:sa-12345 --operations write,alter --topic test-topic --force", fixture: "kafka/acl/delete-cloud.golden"},
-		{args: "kafka acl delete --principal User:12345 --operations write", fixture: "kafka/acl/err-numeric-id.golden", exitCode: 1},
 
 		{args: "kafka topic list --cluster lkc-kafka-api-topics", login: "cloud", fixture: "kafka/topic/list-cloud.golden"},
 		{args: "kafka topic list --cluster lkc-topics", fixture: "kafka/topic/list-cloud.golden"},
