@@ -46,7 +46,7 @@ func (c *authenticatedTopicCommand) newProduceCommandOnPrem() *cobra.Command {
 	cmd.Flags().Bool("parse-key", false, "Parse key from the message.")
 	cmd.Flags().String("delimiter", ":", "The delimiter separating each key and value.")
 	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the producer client.`)
-	cmd.Flags().String("config-file", "", "The path to the configuration file for the producer client, in JSON or avro format.")
+	pcmd.AddProducerConfigFileFlag(cmd)
 	cmd.Flags().String("schema-registry-endpoint", "", "The URL of the Schema Registry cluster.")
 	pcmd.AddOutputFlag(cmd)
 
@@ -81,8 +81,7 @@ func (c *authenticatedTopicCommand) produceOnPrem(cmd *cobra.Command, args []str
 	defer producer.Close()
 	log.CliLogger.Tracef("Create producer succeeded")
 
-	err = c.refreshOAuthBearerToken(cmd, producer)
-	if err != nil {
+	if err := c.refreshOAuthBearerToken(cmd, producer); err != nil {
 		return err
 	}
 
@@ -93,8 +92,7 @@ func (c *authenticatedTopicCommand) produceOnPrem(cmd *cobra.Command, args []str
 	defer adminClient.Close()
 
 	topicName := args[0]
-	err = ValidateTopic(adminClient, topicName)
-	if err != nil {
+	if err := ValidateTopic(adminClient, topicName); err != nil {
 		return err
 	}
 
@@ -160,8 +158,7 @@ func (c *authenticatedTopicCommand) produceOnPrem(cmd *cobra.Command, args []str
 		if err != nil {
 			return err
 		}
-		err = producer.Produce(msg, deliveryChan)
-		if err != nil {
+		if err := producer.Produce(msg, deliveryChan); err != nil {
 			output.ErrPrintf(errors.FailedToProduceErrorMsg, msg.TopicPartition.Offset, err)
 		}
 

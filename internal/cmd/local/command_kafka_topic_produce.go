@@ -10,6 +10,7 @@ import (
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 
 	"github.com/confluentinc/cli/internal/cmd/kafka"
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -35,7 +36,7 @@ func (c *command) newKafkaTopicProduceCommand() *cobra.Command {
 	cmd.Flags().Bool("parse-key", false, "Parse key from the message.")
 	cmd.Flags().String("delimiter", ":", "The delimiter separating each key and value.")
 	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the producer client.`)
-	cmd.Flags().String("config-file", "", "The path to the configuration file for the producer client, in JSON or avro format.")
+	pcmd.AddProducerConfigFileFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagFilename("config-file", "avsc", "json"))
 
@@ -71,6 +72,7 @@ func (c *command) kafkaTopicProduce(cmd *cobra.Command, args []string) error {
 	}
 
 	output.ErrPrintln(errors.StartingProducerMsg)
+	output.ErrPrintln("Type a message and press ENTER to produce to the topic.")
 
 	var scanErr error
 	input, scan := kafka.PrepareInputChannel(&scanErr)

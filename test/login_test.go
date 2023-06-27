@@ -68,6 +68,8 @@ func (s *CLITestSuite) TestLogin_VariousOrgSuspensionStatus() {
 }
 
 func (s *CLITestSuite) TestCcloudErrors() {
+	resetConfiguration(s.T(), false)
+
 	args := fmt.Sprintf("login --url %s -vvv", s.TestBackend.GetCloudUrl())
 
 	s.T().Run("invalid user or pass", func(t *testing.T) {

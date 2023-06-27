@@ -61,8 +61,7 @@ func (c *command) clusterUpgrade(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	_, err = getPackageInternalName(packageDisplayName)
-	if err != nil {
+	if _, err := getPackageInternalName(packageDisplayName); err != nil {
 		return err
 	}
 
@@ -78,8 +77,7 @@ func (c *command) clusterUpgrade(cmd *cobra.Command, _ []string) error {
 		},
 	}
 
-	_, err = c.V2Client.UpgradeSchemaRegistryCluster(*clusterUpdateRequest, cluster.GetId())
-	if err != nil {
+	if _, err := c.V2Client.UpgradeSchemaRegistryCluster(*clusterUpdateRequest, cluster.GetId()); err != nil {
 		return err
 	}
 

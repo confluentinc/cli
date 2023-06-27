@@ -83,8 +83,8 @@ func (s *CLITestSuite) SetupSuite() {
 	err := os.Chdir("..")
 	req.NoError(err)
 
-	err = exec.Command("make", "build-for-integration-test").Run()
-	req.NoError(err)
+	output, err := exec.Command("make", "build-for-integration-test").CombinedOutput()
+	req.NoError(err, string(output))
 
 	if runtime.GOOS == "windows" {
 		testBin += ".exe"

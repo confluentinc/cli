@@ -17,6 +17,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/secret"
+	"github.com/confluentinc/cli/internal/pkg/types"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
@@ -142,16 +143,27 @@ func (c *Config) DecryptContextStates() error {
 	if context := c.Context(); context != nil {
 		state := c.ContextStates[context.Name]
 		if state != nil {
-			err := state.DecryptContextStateAuthToken(context.Name)
-			if err != nil {
+			if err := state.DecryptContextStateAuthToken(context.Name); err != nil {
 				return err
 			}
-			err = state.DecryptContextStateAuthRefreshToken(context.Name)
-			if err != nil {
+			if err := state.DecryptContextStateAuthRefreshToken(context.Name); err != nil {
 				return err
 			}
 		}
 		context.State = state
+	}
+	return c.Validate()
+}
+
+func (c *Config) DecryptCredentials() error {
+	if credentials := c.Credentials; c.Credentials != nil {
+		for _, credential := range credentials {
+			if credential.APIKeyPair != nil {
+				if err := credential.APIKeyPair.DecryptSecret(); err != nil {
+					return err
+				}
+			}
+		}
 	}
 	return c.Validate()
 }
@@ -219,12 +231,23 @@ func (c *Config) Save() error {
 	tempContext := c.resolveOverwrittenContext()
 	var tempAuthToken string
 	var tempAuthRefreshToken string
+	tempApiSecrets := map[string]string{}
 
 	if c.Context() != nil {
 		tempAuthToken = c.Context().GetState().AuthToken
 		tempAuthRefreshToken = c.Context().GetState().AuthRefreshToken
-		err := c.encryptContextStateTokens(tempAuthToken, tempAuthRefreshToken)
-		if err != nil {
+		if err := c.encryptContextStateTokens(tempAuthToken, tempAuthRefreshToken); err != nil {
+			return err
+		}
+	}
+
+	if c.Credentials != nil {
+		for name, credential := range c.Credentials {
+			if credential.APIKeyPair != nil {
+				tempApiSecrets[name] = credential.APIKeyPair.Secret
+			}
+		}
+		if err := c.encryptCredentialsAPISecret(); err != nil {
 			return err
 		}
 	}
@@ -253,17 +276,26 @@ func (c *Config) Save() error {
 	c.restoreOverwrittenKafka(tempKafka)
 	c.restoreOverwrittenAuthToken(tempAuthToken)
 	c.restoreOverwrittenAuthRefreshToken(tempAuthRefreshToken)
+	c.restoreOverwrittenCredentials(tempApiSecrets)
 
+	return nil
+}
+
+func (c *Config) encryptCredentialsAPISecret() error {
+	for _, credential := range c.Credentials {
+		if credential.APIKeyPair != nil {
+			err := credential.APIKeyPair.EncryptSecret()
+			if err != nil {
+				return err
+			}
+		}
+	}
 	return nil
 }
 
 func (c *Config) encryptContextStateTokens(tempAuthToken, tempAuthRefreshToken string) error {
 	if c.Context().GetState().Salt == nil || c.Context().GetState().Nonce == nil {
-		salt, err := secret.GenerateRandomBytes(secret.SaltLength)
-		if err != nil {
-			return err
-		}
-		nonce, err := secret.GenerateRandomBytes(secret.NonceLength)
+		salt, nonce, err := secret.GenerateSaltAndNonce()
 		if err != nil {
 			return err
 		}
@@ -279,13 +311,23 @@ func (c *Config) encryptContextStateTokens(tempAuthToken, tempAuthRefreshToken s
 		c.Context().GetState().AuthToken = encryptedAuthToken
 	}
 
-	if regexp.MustCompile(authRefreshTokenRegex).MatchString(tempAuthRefreshToken) {
+	// The Confluent Gov environment returns a refresh token that does not match `authRefreshTokenRegex` and cannot be distinguished from an already encrypted refresh token.
+	// We prefix encrypted tokens with "AES/GCM/NoPadding" to ensure that they are only encrypted once.
+	environments := []string{
+		"confluentgov.com",
+		"devel.confluentgov-internal.com",
+		"infra.confluentgov-internal.com",
+	}
+	isUnencryptedConfluentGov := !strings.HasPrefix(tempAuthRefreshToken, secret.AesGcm) && types.Contains(environments, c.Context().PlatformName)
+
+	if regexp.MustCompile(authRefreshTokenRegex).MatchString(tempAuthRefreshToken) || isUnencryptedConfluentGov {
 		encryptedAuthRefreshToken, err := secret.Encrypt(c.Context().Name, tempAuthRefreshToken, c.Context().GetState().Salt, c.Context().GetState().Nonce)
 		if err != nil {
 			return err
 		}
 		c.Context().State.AuthRefreshToken = encryptedAuthRefreshToken
 	}
+
 	return nil
 }
 
@@ -321,6 +363,14 @@ func (c *Config) restoreOverwrittenAuthToken(tempAuthToken string) {
 func (c *Config) restoreOverwrittenAuthRefreshToken(tempAuthRefreshToken string) {
 	if tempAuthRefreshToken != "" {
 		c.Context().GetState().AuthRefreshToken = tempAuthRefreshToken
+	}
+}
+
+func (c *Config) restoreOverwrittenCredentials(tempApiSecrets map[string]string) {
+	for name, secret := range tempApiSecrets {
+		if secret != "" {
+			c.Credentials[name].APIKeyPair.Secret = secret
+		}
 	}
 }
 
@@ -375,8 +425,7 @@ func (c *Config) Validate() error {
 	// 1. Has no hanging references between the context and the config.
 	// 2. Is mapped by name correctly in the config.
 	for _, context := range c.Contexts {
-		err := context.validate()
-		if err != nil {
+		if err := context.validate(); err != nil {
 			log.CliLogger.Trace("context validation error")
 			return err
 		}

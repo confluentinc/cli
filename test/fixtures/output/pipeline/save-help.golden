@@ -1,4 +1,4 @@
-Save a Stream Designer pipeline's source code to a local file.
+Save the source code of a Stream Designer pipeline locally.
 
 Usage:
   confluent pipeline save <id> [flags]

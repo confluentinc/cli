@@ -1,13 +1,16 @@
 package servicequota
 
 import (
+	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 type quotaValue struct {
@@ -25,13 +28,23 @@ type quotaValue struct {
 	User         string `human:"User" serialized:"user"`
 }
 
+var quotaScopes = []string{
+	"organization",
+	"environment",
+	"network",
+	"kafka-cluster",
+	"service-account",
+	"user-account",
+}
+
 func (c *command) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "list <quota-scope>",
-		Short: "List Confluent Cloud service quota values by a scope.",
-		Long:  "List Confluent Cloud service quota values by a scope (organization, environment, network, kafka_cluster, service_account, or user_account).",
-		Args:  cobra.ExactArgs(1),
-		RunE:  c.list,
+		Use:       "list <quota-scope>",
+		Short:     "List Confluent Cloud service quota values by a scope.",
+		Long:      fmt.Sprintf("List Confluent Cloud service quota values by a scope (%s).", utils.ArrayToCommaDelimitedString(quotaScopes, "or")),
+		Args:      cobra.ExactArgs(1),
+		ValidArgs: quotaScopes,
+		RunE:      c.list,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `List Confluent Cloud service quota values for scope "organization".`,
@@ -50,7 +63,7 @@ func (c *command) newListCommand() *cobra.Command {
 }
 
 func (c *command) list(cmd *cobra.Command, args []string) error {
-	quotaScope := args[0]
+	quotaScope := strings.ReplaceAll(args[0], "-", "_")
 
 	cluster, err := cmd.Flags().GetString("cluster")
 	if err != nil {

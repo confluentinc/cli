@@ -10,10 +10,12 @@ import (
 	"time"
 
 	"github.com/olekukonko/tablewriter"
+	"golang.org/x/term"
 
 	"github.com/confluentinc/go-prompt"
 
 	"github.com/confluentinc/cli/internal/pkg/flink/components"
+	"github.com/confluentinc/cli/internal/pkg/flink/config"
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/autocomplete"
 	lexer "github.com/confluentinc/cli/internal/pkg/flink/internal/highlighting"
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/history"
@@ -22,27 +24,23 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/store"
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
 	"github.com/confluentinc/cli/internal/pkg/log"
-	"github.com/confluentinc/cli/internal/pkg/output"
 )
-
-type InputControllerInterface interface {
-	RunInteractiveInput()
-	Prompt() *prompt.Prompt
-	GetMaxCol() (int, error)
-}
 
 type InputController struct {
 	History               *history.History
 	InitialBuffer         string
-	appController         ApplicationControllerInterface
+	appController         types.ApplicationControllerInterface
 	smartCompletion       bool
 	reverseISearchEnabled bool
-	table                 TableControllerInterface
-	prompt                *prompt.Prompt
+	table                 types.TableControllerInterface
+	prompt                prompt.IPrompt
 	store                 store.StoreInterface
 	authenticated         func() error
 	appOptions            *types.ApplicationOptions
 	shouldExit            bool
+	stdin                 *term.State
+	consoleParser         prompt.ConsoleParser
+	reverseISearch        reverseisearch.ReverseISearch
 }
 
 func shouldUseTView(statement types.ProcessedStatement) bool {
@@ -53,7 +51,7 @@ func shouldUseTView(statement types.ProcessedStatement) bool {
 	if statement.PageToken != "" {
 		return true
 	}
-	return len(statement.StatementResults.Headers) > 1 && len(statement.StatementResults.Rows) > 1
+	return len(statement.StatementResults.GetHeaders()) > 1 && len(statement.StatementResults.GetRows()) > 1
 }
 
 type ResultsFetchState string
@@ -70,33 +68,36 @@ const (
 func (c *InputController) RunInteractiveInput() {
 	// We check for statement result and rows so we don't leave GoPrompt in case of errors
 	for {
-		// We save and restore the stdinState to avoid any terminal settings/shortcut bindings/Signals that can be caught and handled
-		// to be unconfigured by GoPrompt. This change is smart for multiple purposes but
-		// it was first introduced due to a bug where CtrlC stopped working after executing GoPrompt.
-		stdinState := getStdin()
+		// if the initial buffer is not empty, we insert the text an reset the InitialBuffer
+		if c.InitialBuffer != "" {
+			c.prompt.Buffer().InsertText(c.InitialBuffer, false, true)
+			c.InitialBuffer = ""
+		}
+
 		// Run interactive input and take over terminal
 		input := c.prompt.Input()
-		restoreStdin(stdinState)
 
-		// If the user presses CtrlD then go prompt returns and empty input
-		// This is the only way go-prompt returns an empty input since we have a multiline prompt
-		// The custom CtrlD keybind we have is only trigered if there's something in the buffer
+		// If the user presses CtrlD then go prompt returns an empty input
+		// The custom CtrlD keybind we have is only triggered if there's something in the buffer
 		// due go-prompt always exiting on CtrlD. By modifying go-prompt we could also fix this
-		if c.shouldExit || input == "" {
+		// When reverse search is enabled go-prompt also returns empty input though, which is why we need
+		// to check that it is disabled before we decide to exit.
+		if c.shouldExit || (input == "" && !c.reverseISearchEnabled) {
 			c.appController.ExitApplication()
+			return
 		}
 
 		// Upon receiving user input, we check if user is authenticated and possibly a refresh the CCloud SSO token
 		if authErr := c.authenticated(); authErr != nil {
-			output.Println(authErr.Error())
+			outputErrf("Error: %v\n", authErr)
 			c.appController.ExitApplication()
-			continue
+			return
 		}
 
 		if c.reverseISearchEnabled {
-			searchResult := c.reverseISearch()
+			searchResult := c.reverseISearch.ReverseISearch(c.History.Data)
 			c.reverseISearchEnabled = false
-			c.setInitialBuffer(searchResult)
+			c.InitialBuffer = searchResult
 			continue
 		}
 
@@ -105,35 +106,39 @@ func (c *InputController) RunInteractiveInput() {
 
 		renderMsgAndStatus(processedStatement)
 		if err != nil {
-			output.Println(err.Error())
-			c.isSessionValid(err)
+			outputErr(err.Error())
+			if !c.isSessionValid(err) {
+				c.appController.ExitApplication()
+				return
+			}
 			continue
 		}
 
 		// Wait for results to be there or for the user to cancel the query
 		ctx, cancelWaitPendingStatement := context.WithCancel(context.Background())
 
-		in := prompt.NewStandardInputParser()
-		_ = in.Setup()
-		cancelListenToUserInput := c.listenToUserInput(in, func() {
-			go c.store.DeleteStatement(processedStatement.StatementName)
+		statementName := processedStatement.StatementName
+		cancelListenToUserInput := c.listenToUserInput(c.consoleParser, func() {
+			go c.store.DeleteStatement(statementName)
 			cancelWaitPendingStatement()
 		})
 
 		processedStatement, err = c.store.WaitPendingStatement(ctx, *processedStatement)
 		if err != nil {
-			_ = in.TearDown()
 			cancelListenToUserInput()
-			output.Println(err.Error())
-			c.isSessionValid(err)
+			outputErr(err.Error())
+			if !c.isSessionValid(err) {
+				c.appController.ExitApplication()
+				return
+			}
 			continue
 		}
+		processedStatement.PrintStatusDetail()
 
 		processedStatement, err = c.store.FetchStatementResults(*processedStatement)
-		_ = in.TearDown()
 		cancelListenToUserInput()
 		if err != nil {
-			output.Println(err.Error())
+			outputErr(err.Error())
 			continue
 		}
 
@@ -144,10 +149,10 @@ func (c *InputController) RunInteractiveInput() {
 		}
 
 		c.printResultToSTDOUT(processedStatement.StatementResults)
-		// We already printed the results using plain text and will delete the statement. When using TView this will happen upon leaving the interactive view.
-		// TODO - this is currently used only to save system resources, To be removed once the API Server becomes scalable.
-		// We want to maintain a "completed" statement in the backend
-		if !processedStatement.IsLocalStatement && processedStatement.Status != types.RUNNING {
+		// This was used to delete statements after their execution to save system resources, which should not be
+		// an issue anymore. We don't want to remove it completely just yet, but will disable it by default for now.
+		// TODO: remove this completely once we are sure we won't need it in the future
+		if config.ShouldCleanupStatements && !processedStatement.IsLocalStatement && processedStatement.Status != types.RUNNING {
 			go c.store.DeleteStatement(processedStatement.StatementName)
 		}
 	}
@@ -187,38 +192,35 @@ func (c *InputController) listenToUserInput(in prompt.ConsoleParser, cancelFunc 
 func (c *InputController) isSessionValid(err *types.StatementError) bool {
 	// exit application if user needs to authenticate again
 	if err != nil && err.HttpResponseCode == http.StatusUnauthorized {
-		c.appController.ExitApplication()
 		return false
 	}
 	return true
 }
 
-func (c *InputController) setInitialBuffer(s string) {
-	c.InitialBuffer = s
-	c.prompt = c.Prompt()
-}
-
-func renderMsgAndStatus(statementResult *types.ProcessedStatement) {
-	if statementResult == nil {
+func renderMsgAndStatus(processedStatement *types.ProcessedStatement) {
+	if processedStatement == nil {
 		return
 	}
 
-	if statementResult.IsLocalStatement {
-		if statementResult.Status != "FAILED" {
-			output.Println("Statement successfully submitted.\n ")
+	if processedStatement.IsLocalStatement {
+		if processedStatement.Status == "FAILED" {
+			err := types.StatementError{Message: "couldn't process statement, please check your statement and try again"}
+			outputErr(err.Error())
 		} else {
-			output.Println("Error: Couldn't process statement. Please check your statement and try again.")
+			outputInfo("Statement successfully submitted.")
 		}
 	} else {
-		if statementResult.StatementName != "" {
-			output.Println("Statement ID: " + statementResult.StatementName)
+		if processedStatement.StatementName != "" {
+			outputInfof("Statement name: %s\n", processedStatement.StatementName)
 		}
-		if statementResult.Status != "FAILED" {
-			output.Println("Statement successfully submitted. ")
-			output.Println("Fetching results...\n ")
+		if processedStatement.Status == "FAILED" {
+			err := types.StatementError{Message: "statement submission failed"}
+			outputErr(err.Error())
 		} else {
-			output.Println("Error: Statement submission failed. There could a problem with the server right now. Check your statement and try again.")
+			outputInfo("Statement successfully submitted.")
+			outputInfo("Fetching results...")
 		}
+		processedStatement.PrintStatusDetail()
 	}
 }
 
@@ -248,7 +250,7 @@ func (c *InputController) toggleOutputMode() {
 
 func (c *InputController) printResultToSTDOUT(statementResults *types.StatementResults) {
 	if statementResults == nil || len(statementResults.Headers) == 0 || len(statementResults.Rows) == 0 {
-		output.Println("\nThe server returned empty rows for this statement.")
+		outputWarn("\nThe server returned empty rows for this statement.")
 		return
 	}
 
@@ -280,7 +282,7 @@ func (c *InputController) printResultToSTDOUT(statementResults *types.StatementR
 	rawTable.Render() // Send output
 }
 
-func (c *InputController) Prompt() *prompt.Prompt {
+func (c *InputController) Prompt() prompt.IPrompt {
 	completer := autocomplete.NewCompleterBuilder(c.getSmartCompletion).
 		AddCompleter(autocomplete.ExamplesCompleter).
 		AddCompleter(autocomplete.SetCompleter).
@@ -296,11 +298,6 @@ func (c *InputController) Prompt() *prompt.Prompt {
 		prompt.OptionHistory(c.History.Data),
 		prompt.OptionSwitchKeyBindMode(prompt.EmacsKeyBind),
 		prompt.OptionSetExitCheckerOnInput(func(input string, breakline bool) bool {
-			// We add exit\n here because we also want to exit without the need of adding semicolon, which is the default flow for all statements
-			if input == "exit\n" {
-				c.shouldExit = true
-			}
-
 			if c.reverseISearchEnabled || c.shouldExit {
 				return true
 			}
@@ -345,7 +342,6 @@ func (c *InputController) Prompt() *prompt.Prompt {
 			ASCIICode: []byte{0x1b, 0x66},
 			Fn:        prompt.GoRightWord,
 		}),
-		prompt.OptionInitialBufferText(c.InitialBuffer),
 		prompt.OptionPrefixTextColor(prompt.Yellow),
 		prompt.OptionPreviewSuggestionTextColor(prompt.Blue),
 		prompt.OptionSelectedSuggestionBGColor(prompt.LightGray),
@@ -354,6 +350,10 @@ func (c *InputController) Prompt() *prompt.Prompt {
 		prompt.OptionSetStatementTerminator(func(lastKeyStroke prompt.Key, buffer *prompt.Buffer) bool {
 			text := buffer.Text()
 			text = strings.TrimSpace(text)
+			// We add exit here because we also want to exit without the need of adding semicolon, which is the default flow for all statements
+			if text == "exit" {
+				return true
+			}
 			if len(text) == 0 || text[len(text)-1] != ';' {
 				return false
 			}
@@ -365,69 +365,6 @@ func (c *InputController) Prompt() *prompt.Prompt {
 // Getters
 func (c *InputController) getSmartCompletion() bool {
 	return c.smartCompletion
-}
-
-func reverseISearchLivePrefix(livePrefixState *reverseisearch.LivePrefixState) func() (string, bool) {
-	return func() (string, bool) {
-		return livePrefixState.LivePrefix, livePrefixState.IsEnable
-	}
-}
-
-func (c *InputController) reverseISearch() string {
-	writer := prompt.NewStdoutWriter()
-
-	livePrefixState := &reverseisearch.LivePrefixState{
-		LivePrefix: reverseisearch.BckISearch,
-		IsEnable:   true,
-	}
-
-	searchState := &reverseisearch.SearchState{
-		CurrentIndex: len(c.History.Data) - 1,
-		CurrentMatch: "",
-	}
-
-	in := prompt.New(
-		func(s string) {},
-		reverseisearch.SearchCompleter(c.History.Data, writer, searchState, livePrefixState),
-		prompt.OptionSetExitCheckerOnInput(func(input string, lineBreak bool) bool {
-			return !c.reverseISearchEnabled
-		}),
-		prompt.OptionAddKeyBind(prompt.KeyBind{
-			Key: prompt.ControlC,
-			Fn:  c.exitFromSearch,
-		}),
-		prompt.OptionAddKeyBind(prompt.KeyBind{
-			Key: prompt.ControlM,
-			Fn:  c.exitFromSearch,
-		}),
-		prompt.OptionAddKeyBind(prompt.KeyBind{
-			Key: prompt.ControlQ,
-			Fn:  c.exitFromSearch,
-		}),
-		prompt.OptionAddKeyBind(prompt.KeyBind{
-			Key: prompt.ControlR,
-			Fn:  reverseisearch.NextResult(writer, c.History.Data, searchState, livePrefixState),
-		}),
-		prompt.OptionWriter(writer),
-		prompt.OptionTitle("bck-i-search"),
-		prompt.OptionLivePrefix(reverseISearchLivePrefix(livePrefixState)),
-		prompt.OptionHistory(c.History.Data),
-		prompt.OptionPrefixTextColor(prompt.White),
-		prompt.OptionSetStatementTerminator(func(lastKeyStroke prompt.Key, buffer *prompt.Buffer) bool {
-			if lastKeyStroke == prompt.ControlM {
-				livePrefixState.LivePrefix = ""
-				return true
-			}
-			return false
-		}),
-	)
-	in.Run()
-	return searchState.CurrentMatch
-}
-
-func (c *InputController) exitFromSearch(buffer *prompt.Buffer) {
-	buffer.DeleteBeforeCursor(9999)
-	c.reverseISearchEnabled = false
 }
 
 // This function fetches the current max column width for the terminal
@@ -458,7 +395,12 @@ func (c *InputController) GetMaxCol() (int, error) {
 	return int(maxCol), nil
 }
 
-func NewInputController(t TableControllerInterface, a ApplicationControllerInterface, store store.StoreInterface, authenticated func() error, history *history.History, appOptions *types.ApplicationOptions) InputControllerInterface {
+func (c *InputController) tearDown() {
+	tearDownConsoleParser(c.consoleParser)
+	restoreStdin(c.stdin)
+}
+
+func NewInputController(t types.TableControllerInterface, a types.ApplicationControllerInterface, store store.StoreInterface, authenticated func() error, history *history.History, appOptions *types.ApplicationOptions) types.InputControllerInterface {
 	inputController := &InputController{
 		History:         history,
 		InitialBuffer:   "",
@@ -469,7 +411,11 @@ func NewInputController(t TableControllerInterface, a ApplicationControllerInter
 		authenticated:   authenticated,
 		appOptions:      appOptions,
 		shouldExit:      false,
+		stdin:           getStdin(),
+		consoleParser:   getConsoleParser(),
+		reverseISearch:  reverseisearch.NewReverseISearch(),
 	}
+	a.AddCleanupFunction(inputController.tearDown)
 	inputController.prompt = inputController.Prompt()
 	components.PrintWelcomeHeader()
 

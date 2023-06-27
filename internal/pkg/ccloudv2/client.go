@@ -2,6 +2,7 @@ package ccloudv2
 
 import (
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
+	billingv1 "github.com/confluentinc/ccloud-sdk-go-v2/billing/v1"
 	byokv1 "github.com/confluentinc/ccloud-sdk-go-v2/byok/v1"
 	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
 	cliv1 "github.com/confluentinc/ccloud-sdk-go-v2/cli/v1"
@@ -41,6 +42,7 @@ type Client struct {
 	SchemaRegistryClient   *srcm.APIClient
 	StreamDesignerClient   *streamdesignerv1.APIClient
 	ServiceQuotaClient     *servicequotav1.APIClient
+	BillingClient          *billingv1.APIClient
 }
 
 func NewClient(baseUrl string, isTest bool, authToken, userAgent string, unsafeTrace bool) *Client {
@@ -68,5 +70,6 @@ func NewClient(baseUrl string, isTest bool, authToken, userAgent string, unsafeT
 		SchemaRegistryClient:   newSchemaRegistryClient(url, userAgent, unsafeTrace),
 		StreamDesignerClient:   newStreamDesignerClient(url, userAgent, unsafeTrace),
 		ServiceQuotaClient:     newServiceQuotaClient(url, userAgent, unsafeTrace),
+		BillingClient:          newBillingClient(url, userAgent, unsafeTrace),
 	}
 }

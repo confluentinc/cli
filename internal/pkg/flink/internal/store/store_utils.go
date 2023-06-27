@@ -65,7 +65,7 @@ func (s *Store) processSetStatement(statement string) (*types.ProcessedStatement
 	statementResults := createStatementResults([]string{"Key", "Value"}, [][]string{{configKey, configVal}})
 	return &types.ProcessedStatement{
 		Kind:             config.ConfigOpSet,
-		StatusDetail:     "Config updated successfully.",
+		StatusDetail:     "configuration updated successfully",
 		Status:           types.COMPLETED,
 		StatementResults: &statementResults,
 		IsLocalStatement: true,
@@ -75,27 +75,27 @@ func (s *Store) processSetStatement(statement string) (*types.ProcessedStatement
 func (s *Store) processResetStatement(statement string) (*types.ProcessedStatement, *types.StatementError) {
 	configKey, err := parseResetStatement(statement)
 	if err != nil {
-		return nil, &types.StatementError{Msg: err.Error()}
+		return nil, &types.StatementError{Message: err.Error()}
 	}
 	if configKey == "" {
 		s.Properties = make(map[string]string)
 		return &types.ProcessedStatement{
 			Kind:             config.ConfigOpReset,
-			StatusDetail:     "Configuration has been reset successfully.",
+			StatusDetail:     "configuration has been reset successfully",
 			Status:           types.COMPLETED,
 			IsLocalStatement: true,
 		}, nil
 	} else {
 		_, keyExists := s.Properties[configKey]
 		if !keyExists {
-			return nil, &types.StatementError{Msg: fmt.Sprintf("Error: Config key \"%s\" is currently not set.", configKey)}
+			return nil, &types.StatementError{Message: fmt.Sprintf(`configuration key "%s" is not set`, configKey)}
 		}
 
 		delete(s.Properties, configKey)
 		statementResults := createStatementResults([]string{"Key", "Value"}, lo.MapToSlice(s.Properties, func(key, val string) []string { return []string{key, val} }))
 		return &types.ProcessedStatement{
 			Kind:             config.ConfigOpReset,
-			StatusDetail:     fmt.Sprintf("Config key \"%s\" has been reset successfully.", configKey),
+			StatusDetail:     fmt.Sprintf(`configuration key "%s" has been reset successfully`, configKey),
 			Status:           types.COMPLETED,
 			StatementResults: &statementResults,
 			IsLocalStatement: true,
@@ -106,14 +106,14 @@ func (s *Store) processResetStatement(statement string) (*types.ProcessedStateme
 func (s *Store) processUseStatement(statement string) (*types.ProcessedStatement, *types.StatementError) {
 	configKey, configVal, err := parseUseStatement(statement)
 	if err != nil {
-		return nil, &types.StatementError{Msg: err.Error()}
+		return nil, &types.StatementError{Message: err.Error()}
 	}
 
 	s.Properties[configKey] = configVal
 	statementResults := createStatementResults([]string{"Key", "Value"}, [][]string{{configKey, configVal}})
 	return &types.ProcessedStatement{
 		Kind:             config.ConfigOpUse,
-		StatusDetail:     "Config updated successfully.",
+		StatusDetail:     "configuration updated successfully",
 		Status:           types.COMPLETED,
 		StatementResults: &statementResults,
 		IsLocalStatement: true,
@@ -136,16 +136,17 @@ func parseSetStatement(statement string) (string, string, error) {
 
 	indexOfSet := strings.Index(strings.ToUpper(statement), config.ConfigOpSet)
 	if indexOfSet == -1 {
-		return "", "", &types.StatementError{Msg: "Error: Invalid syntax for SET. Usage example: SET 'key'='value'."}
+		return "", "", &types.StatementError{
+			Message: "invalid syntax for SET",
+			Usage:   []string{"SET 'key'='value'"},
+		}
 	}
 	startOfStrAfterSet := indexOfSet + len(config.ConfigOpSet)
 	// This is the case when the statement is simply "SET", which is used to display current config.
 	if startOfStrAfterSet >= len(statement) {
 		return "", "", nil
 	}
-	strAfterSet := statement[startOfStrAfterSet:]
-
-	strAfterSet = removeTabNewLineAndWhitesSpaces(strAfterSet)
+	strAfterSet := strings.TrimSpace(statement[startOfStrAfterSet:])
 
 	// This is the case when the statement is simply "SET  " (with empty spaces), which is used to display current config.
 	if strAfterSet == "" {
@@ -153,33 +154,77 @@ func parseSetStatement(statement string) (string, string, error) {
 	}
 
 	if !strings.Contains(strAfterSet, "=") {
-		return "", "", &types.StatementError{Msg: "Error: missing \"=\". Usage example: SET 'key'='value'."}
+		return "", "", &types.StatementError{
+			Message: `missing "="`,
+			Usage:   []string{"SET 'key'='value'"},
+		}
 	}
 
 	keyValuePair := strings.Split(strAfterSet, "=")
 
 	if len(keyValuePair) != 2 {
-		return "", "", &types.StatementError{Msg: "Error: \"=\" should only appear once. Usage example: SET 'key'='value'."}
+		return "", "", &types.StatementError{
+			Message: `"=" should only appear once`,
+			Usage:   []string{"SET 'key'='value'"},
+		}
 	}
 
-	if keyValuePair[0] != "" && keyValuePair[1] == "" {
-		return "", "", &types.StatementError{Msg: "Error: Value for key not present. If you want to reset a key, use \"RESET 'key'\"."}
+	keyWithQuotes := strings.TrimSpace(keyValuePair[0])
+	valueWithQuotes := strings.TrimSpace(keyValuePair[1])
+
+	if keyWithQuotes != "" && valueWithQuotes == "" {
+		return "", "", &types.StatementError{
+			Message:    "value for key not present",
+			Suggestion: `if you want to reset a key, use "RESET 'key'"`,
+		}
 	}
 
-	if keyValuePair[0] == "" && keyValuePair[1] != "" {
-		return "", "", &types.StatementError{Msg: "Error: Key not present. Usage example: SET 'key'='value'."}
+	if keyWithQuotes == "" && valueWithQuotes != "" {
+		return "", "", &types.StatementError{
+			Message: "key not present",
+			Usage:   []string{"SET 'key'='value'"},
+		}
 	}
 
-	if keyValuePair[0] == "" && keyValuePair[1] == "" {
-		return "", "", &types.StatementError{Msg: "Error: Key and value not present. Usage example: SET 'key'='value'."}
+	if keyWithQuotes == "" && valueWithQuotes == "" {
+		return "", "", &types.StatementError{
+			Message: "key and value not present",
+			Usage:   []string{"SET 'key'='value'"},
+		}
 	}
 
-	if !strings.HasPrefix(keyValuePair[0], "'") || !strings.HasSuffix(keyValuePair[0], "'") ||
-		!strings.HasPrefix(keyValuePair[1], "'") || !strings.HasSuffix(keyValuePair[1], "'") {
-		return "", "", &types.StatementError{Msg: "Error: Key and value must be enclosed by single quotes ''. Usage example: SET 'key'='value'."}
+	if !strings.HasPrefix(keyWithQuotes, "'") || !strings.HasSuffix(keyWithQuotes, "'") ||
+		!strings.HasPrefix(valueWithQuotes, "'") || !strings.HasSuffix(valueWithQuotes, "'") {
+		return "", "", &types.StatementError{
+			Message: "key and value must be enclosed by single quotes (')",
+			Usage:   []string{"SET 'key'='value'"},
+		}
 	}
 
-	return strings.ReplaceAll(keyValuePair[0], "'", ""), strings.ReplaceAll(keyValuePair[1], "'", ""), nil
+	// remove enclosing quotes
+	keyWithQuotes = keyWithQuotes[1 : len(keyWithQuotes)-1]
+	valueWithQuotes = valueWithQuotes[1 : len(valueWithQuotes)-1]
+
+	if containsUnescapedSingleQuote(keyWithQuotes) {
+		return "", "", &types.StatementError{
+			Message:    "key contains unescaped single quotes (')",
+			Usage:      []string{"SET 'key'='value'"},
+			Suggestion: `please escape all single quotes with another single quote "''key''"`,
+		}
+	}
+
+	if containsUnescapedSingleQuote(valueWithQuotes) {
+		return "", "", &types.StatementError{
+			Message:    "value contains unescaped single quotes (')",
+			Usage:      []string{"SET 'key'='value'"},
+			Suggestion: `please escape all single quotes with another single quote "''key''"`,
+		}
+	}
+
+	// replace escaped quotes
+	key := strings.ReplaceAll(keyWithQuotes, "''", "'")
+	value := strings.ReplaceAll(valueWithQuotes, "''", "'")
+	return key, value, nil
 }
 
 /*
@@ -196,7 +241,10 @@ func parseUseStatement(statement string) (string, string, error) {
 	statement = removeStatementTerminator(statement)
 	words := strings.Fields(statement)
 	if len(words) < 2 {
-		return "", "", &types.StatementError{Msg: "Error: Missing database/catalog name: Usage examples: USE DB1 OR USE CATALOG METADATA."}
+		return "", "", &types.StatementError{
+			Message: "missing database/catalog name",
+			Usage:   []string{"USE CATALOG my_catalog", "USE my_database"},
+		}
 	}
 
 	isFirstWordUse := strings.ToUpper(words[0]) == config.ConfigOpUse
@@ -205,7 +253,10 @@ func parseUseStatement(statement string) (string, string, error) {
 	if len(words) == 2 && isFirstWordUse {
 		if isSecondWordCatalog {
 			// handle empty catalog name -> "USE CATALOG "
-			return "", "", &types.StatementError{Msg: "Error: Missing catalog name: Usage example: USE CATALOG METADATA."}
+			return "", "", &types.StatementError{
+				Message: "missing catalog name",
+				Usage:   []string{"USE CATALOG my_catalog"},
+			}
 		} else {
 			return config.ConfigKeyDatabase, words[1], nil
 		}
@@ -216,63 +267,86 @@ func parseUseStatement(statement string) (string, string, error) {
 		return config.ConfigKeyCatalog, words[2], nil
 	}
 
-	return "", "", &types.StatementError{Msg: "Invalid syntax for USE. Usage examples: USE CATALOG my_catalog or USE my_database"}
+	return "", "", &types.StatementError{
+		Message: "invalid syntax for USE",
+		Usage:   []string{"USE CATALOG my_catalog", "USE my_database"},
+	}
 }
 
-/* Expected statement: "RESET pipeline.name" */
+/* Expected statement: "RESET 'pipeline.name'" */
 func parseResetStatement(statement string) (string, error) {
 	statement = removeStatementTerminator(statement)
-	words := strings.Fields(statement)
-	if len(words) == 0 {
-		return "", &types.StatementError{Msg: "Error: Invalid syntax for RESET. Usage example: RESET 'key'."}
-	}
 
-	// This is the case where we reset the entire config (e.g. "RESET")
-	if len(words) == 1 {
+	indexOfReset := strings.Index(strings.ToUpper(statement), config.ConfigOpReset)
+	if indexOfReset == -1 {
+		return "", &types.StatementError{
+			Message: "invalid syntax for RESET",
+			Usage:   []string{"RESET 'key'"},
+		}
+	}
+	startOfStrAfterReset := indexOfReset + len(config.ConfigOpReset)
+	// This is the case where we reset the entire config (e.g. "RESET")
+	if startOfStrAfterReset >= len(statement) {
+		return "", nil
+	}
+	strAfterReset := strings.TrimSpace(statement[startOfStrAfterReset:])
+
+	// This is the case when the statement is simply "RESET  " (with empty spaces), where we reset the entire config
+	if strAfterReset == "" {
 		return "", nil
 	}
 
-	if len(words) > 2 {
-		return "", &types.StatementError{Msg: "Error: too many keys for RESET provided. Usage example: RESET 'key'."}
+	if !strings.HasPrefix(strAfterReset, "'") || !strings.HasSuffix(strAfterReset, "'") {
+		return "", &types.StatementError{
+			Message: "invalid syntax for RESET, key must be enclosed by single quotes ''",
+			Usage:   []string{"RESET 'key'"},
+		}
 	}
 
-	isFirstWordReset := strings.ToUpper(words[0]) == config.ConfigOpReset
-	key := strings.ToLower(words[1])
-	if !isFirstWordReset {
-		return "", &types.StatementError{Msg: "Error: Invalid syntax for RESET. Usage example: RESET 'key'."}
+	// remove enclosing quotes
+	strAfterReset = strAfterReset[1 : len(strAfterReset)-1]
+
+	if containsUnescapedSingleQuote(strAfterReset) {
+		return "", &types.StatementError{
+			Message:    "key contains unescaped single quotes (')",
+			Usage:      []string{"RESET 'key'"},
+			Suggestion: `please escape all single quotes with another single quote "''key''"`,
+		}
 	}
 
-	if !strings.HasPrefix(key, "'") || !strings.HasSuffix(key, "'") {
-		return "", &types.StatementError{Msg: "Error: Invalid syntax for RESET, key must be enclosed by single quotes ''. Usage example: RESET 'key'."}
-	}
-
-	return strings.ReplaceAll(key, "'", ""), nil
+	// replace escaped quotes
+	key := strings.ReplaceAll(strAfterReset, "''", "'")
+	return key, nil
 }
 
 func processHttpErrors(resp *http.Response, err error) error {
 	if err != nil {
-		return &types.StatementError{Msg: "Error: " + err.Error()}
+		return &types.StatementError{Message: err.Error()}
 	}
 
 	if resp != nil && resp.StatusCode >= 400 {
 		if resp.StatusCode == http.StatusUnauthorized {
-			return &types.StatementError{Msg: "Error: Unauthorized. Please consider running confluent login again.", HttpResponseCode: resp.StatusCode}
+			return &types.StatementError{
+				Message:          "unauthorized",
+				Suggestion:       `Please run "confluent login"`,
+				HttpResponseCode: resp.StatusCode,
+			}
 		}
 
 		statementErr := flinkgatewayv1alpha1.NewError()
 		body, err := io.ReadAll(resp.Body)
 
 		if err != nil {
-			return &types.StatementError{Msg: fmt.Sprintf("Error: received error with code \"%d\" from server but could not parse it. This is not expected. Please contact support.", resp.StatusCode)}
+			return &types.StatementError{Message: fmt.Sprintf(`received error with code "%d" from server but could not parse it. This is not expected. Please contact support`, resp.StatusCode)}
 		}
 
 		err = json.Unmarshal(body, &statementErr)
 
 		if err != nil || statementErr == nil || statementErr.Title == nil || statementErr.Detail == nil {
-			return &types.StatementError{Msg: fmt.Sprintf("Error: received error with code \"%d\" from server but could not parse it. This is not expected. Please contact support.", resp.StatusCode)}
+			return &types.StatementError{Message: fmt.Sprintf(`received error with code "%d" from server but could not parse it. This is not expected. Please contact support`, resp.StatusCode)}
 		}
 
-		return &types.StatementError{Msg: statementErr.GetTitle() + ": " + statementErr.GetDetail()}
+		return &types.StatementError{Message: fmt.Sprintf("%s: %s", statementErr.GetTitle(), statementErr.GetDetail())}
 	}
 
 	return nil
@@ -287,9 +361,7 @@ func startsWithValidSQL(statement string) bool {
 
 	words := strings.Fields(statement)
 	firstWord := strings.ToUpper(words[0])
-	exists := config.SQLKeywords.Contains(firstWord)
-
-	return exists
+	return config.SQLKeywords.Contains(firstWord)
 }
 
 // Removes leading, trailling spaces, and semicolon from end, if present
@@ -342,9 +414,7 @@ func formatUTCOffsetToTimezone(offsetSeconds int) string {
 		timeOffset *= -1
 	}
 	offsetStr := fmt.Sprintf("%02d:%02d", int(timeOffset.Hours()), int(timeOffset.Minutes())%60)
-	formattedTimezone := fmt.Sprintf("UTC%s%s", sign, offsetStr)
-
-	return formattedTimezone
+	return fmt.Sprintf("UTC%s%s", sign, offsetStr)
 }
 
 // This increases function calculates a wait time that starts at 300 ms and increases 300 ms every 10 retries.
@@ -352,9 +422,7 @@ func formatUTCOffsetToTimezone(offsetSeconds int) string {
 // Exponential: https://docs.google.com/spreadsheets/d/14lHRcC_NGoF4KBtA_lrEivv05XYc3nNo5jaIvsHpgi0/edit?usp=sharing
 // Discrete: https://docs.google.com/spreadsheets/d/1fMIOBIDbhZ6zH6bLq9iJXRs8jBLdA7beHef4vOW__tw/edit?usp=sharing
 func calcWaitTime(retries int) time.Duration {
-	waitTime := config.InitialWaitTime + time.Duration(config.WaitTimeIncrease*(retries/10))*time.Millisecond
-
-	return waitTime
+	return config.InitialWaitTime + time.Duration(config.WaitTimeIncrease*(retries/10))*time.Millisecond
 }
 
 // Function to extract timeout for waiting for results.
@@ -373,4 +441,10 @@ func timeout(properties map[string]string) time.Duration {
 	} else {
 		return config.DefaultTimeoutDuration
 	}
+}
+
+func containsUnescapedSingleQuote(str string) bool {
+	// remove escaped quotes and check if there are still single quotes
+	str = strings.ReplaceAll(str, "''", "")
+	return strings.Contains(str, "'")
 }

@@ -302,7 +302,7 @@ func (h *LoginCredentialsManagerImpl) isSSOUser(email, orgId string) bool {
 		return false
 	}
 
-	if email != "" && types.Contains([]string{"fedramp", "fedramp-internal"}, sso.GetCCloudEnvFromBaseUrl(h.client.BaseURL)) {
+	if email != "" && types.Contains([]string{"prod-us-gov", "devel-us-gov", "infra-us-gov"}, sso.GetCCloudEnvFromBaseUrl(h.client.BaseURL)) {
 		return true
 	}
 
@@ -372,6 +372,7 @@ func (h *LoginCredentialsManagerImpl) GetCredentialsFromKeychain(cfg *v1.Config,
 		if runtime.GOOS == "darwin" {
 			username, password, err := keychain.Read(isCloud, ctxName, url)
 			if err == nil && password != "" {
+				log.CliLogger.Debugf(errors.FoundKeychainCredMsg, username)
 				return &Credentials{Username: username, Password: password}, nil
 			}
 			return nil, errors.New(errors.NoValidKeychainCredentialErrorMsg)

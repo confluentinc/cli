@@ -115,8 +115,7 @@ func (c *roleBindingCommand) parseCommon(cmd *cobra.Command) (*roleBindingOption
 	}
 
 	if cmd.Flags().Changed("principal") {
-		err = c.validatePrincipalFormat(principal)
-		if err != nil {
+		if err := c.validatePrincipalFormat(principal); err != nil {
 			return nil, err
 		}
 	}
@@ -385,7 +384,8 @@ func (c *roleBindingCommand) displayCCloudCreateAndDeleteOutput(cmd *cobra.Comma
 	}
 
 	var fields []string
-	if presource.LookupType(userResourceId) == presource.ServiceAccount {
+	principalType := presource.LookupType(userResourceId)
+	if principalType == presource.ServiceAccount || principalType == presource.IdentityPool {
 		if resource != "" {
 			fields = resourcePatternListFields
 		} else {
@@ -456,8 +456,7 @@ func (c *roleBindingCommand) parseV2RoleBinding(cmd *cobra.Command) (*mdsv2.IamV
 		return nil, err
 	}
 	if cmd.Flags().Changed("principal") {
-		err = c.validatePrincipalFormat(principal)
-		if err != nil {
+		if err = c.validatePrincipalFormat(principal); err != nil {
 			return nil, err
 		}
 	}

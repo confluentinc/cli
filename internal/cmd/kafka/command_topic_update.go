@@ -47,7 +47,7 @@ func (c *authenticatedTopicCommand) newUpdateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides with form "key=value".`)
-	cmd.Flags().Bool("dry-run", false, "Run the command without committing changes to Kafka.")
+	pcmd.AddDryRunFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -113,7 +113,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		return nil
 	}
 
-	readOnlyConfigs := types.NewSet()
+	readOnlyConfigs := types.NewSet[string]()
 	configsValues := make(map[string]string)
 
 	if hasNumPartitionsChanged {
@@ -121,9 +121,9 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		if err != nil {
 			return err
 		}
-		updateResp, r, err := kafkaREST.CloudClient.UpdateKafkaTopicPartitionCount(kafkaClusterConfig.ID, topicName, kafkarestv3.UpdatePartitionCountRequestData{PartitionsCount: int32(updateNumPartitionsInt)})
+		updateResp, httpResp, err := kafkaREST.CloudClient.UpdateKafkaTopicPartitionCount(kafkaClusterConfig.ID, topicName, kafkarestv3.UpdatePartitionCountRequestData{PartitionsCount: int32(updateNumPartitionsInt)})
 		if err != nil {
-			return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, r)
+			return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 		}
 		configsValues[numPartitionsKey] = fmt.Sprint(updateResp.PartitionsCount)
 		partitionsKafkaRestConfig := kafkarestv3.AlterConfigBatchRequestDataData{Name: numPartitionsKey}

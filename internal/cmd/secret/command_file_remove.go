@@ -14,7 +14,7 @@ func (c *command) newRemoveCommand() *cobra.Command {
 		RunE:  c.remove,
 	}
 
-	cmd.Flags().String("config-file", "", "Path to the configuration properties file.")
+	c.addConfigFileFlag(cmd)
 	cmd.Flags().String("local-secrets-file", "", "Path to the local encrypted configuration properties file.")
 	cmd.Flags().String("config", "", "List of configuration keys.")
 
