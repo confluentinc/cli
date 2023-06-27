@@ -1,0 +1,17 @@
+Delete a Kafka topic.
+
+Usage:
+  confluent local kafka topic delete <topic> [flags]
+
+Examples:
+Delete the topic "test". Use this command carefully as data loss can occur.
+
+  $ confluent local kafka topic delete test
+
+Flags:
+      --force   Skip the deletion confirmation prompt.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

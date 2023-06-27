@@ -12,7 +12,6 @@ import (
 func (s *CLITestSuite) TestConnect() {
 	// TODO: add --config flag to all commands or ENVVAR instead of using standard config file location
 	tests := []CLITest{
-		{args: "connect --help", fixture: "connect/help.golden"},
 		{args: "connect cluster create --cluster lkc-123 --config-file test/fixtures/input/connect/config.yaml -o json", fixture: "connect/cluster/create-json.golden"},
 		{args: "connect cluster create --cluster lkc-123 --config-file test/fixtures/input/connect/config.yaml -o yaml", fixture: "connect/cluster/create-yaml.golden"},
 		{args: "connect cluster create --cluster lkc-123 --config-file test/fixtures/input/connect/config.yaml", fixture: "connect/cluster/create.golden"},
@@ -45,7 +44,6 @@ func (s *CLITestSuite) TestConnect() {
 
 func (s *CLITestSuite) TestConnectClusterPause() {
 	tests := []CLITest{
-		{args: "connect cluster pause --help", fixture: "connect/cluster/pause-help.golden"},
 		{args: "connect cluster pause lcc-000000 --cluster lkc-123456", fixture: "connect/cluster/pause-unknown.golden", exitCode: 1},
 		{args: "connect cluster pause lcc-123 --cluster lkc-123456", fixture: "connect/cluster/pause.golden"},
 	}
@@ -58,7 +56,6 @@ func (s *CLITestSuite) TestConnectClusterPause() {
 
 func (s *CLITestSuite) TestConnectClusterResume() {
 	tests := []CLITest{
-		{args: "connect cluster resume --help", fixture: "connect/cluster/resume-help.golden"},
 		{args: "connect cluster resume lcc-000000 --cluster lkc-123456", fixture: "connect/cluster/resume-unknown.golden", exitCode: 1},
 		{args: "connect cluster resume lcc-123 --cluster lkc-123456", fixture: "connect/cluster/resume.golden"},
 	}
@@ -72,7 +69,6 @@ func (s *CLITestSuite) TestConnectClusterResume() {
 func (s *CLITestSuite) TestConnectPlugin() {
 	// TODO: add --config flag to all commands or ENVVAR instead of using standard config file location
 	tests := []CLITest{
-		{args: "connect plugin --help", fixture: "connect/plugin/help.golden"},
 		{args: "connect plugin describe GcsSink --cluster lkc-123 -o json", fixture: "connect/plugin/describe-json.golden"},
 		{args: "connect plugin describe GcsSink --cluster lkc-123 -o yaml", fixture: "connect/plugin/describe-yaml.golden"},
 		{args: "connect plugin describe GcsSink --cluster lkc-123", fixture: "connect/plugin/describe.golden"},
@@ -97,8 +93,6 @@ func (s *CLITestSuite) TestConnectPluginInstall() {
 
 	//nolint:dupword
 	tests := []CLITest{
-		{args: "connect plugin install -h", fixture: "connect/plugin/install/help.golden"},
-
 		{args: "connect plugin install test/fixtures/input/connect/test-plugin.zip --dry-run", env: []string{"CONFLUENT_HOME=" + confluentHome733}, input: "y\ny\ny\n", fixture: "connect/plugin/install/interactive.golden"},
 		{args: "connect plugin install test/fixtures/input/connect/test-plugin.zip --dry-run", env: []string{"CONFLUENT_HOME=" + confluentHome733}, input: "y\ny\nn\ny\nn\n", fixture: "connect/plugin/install/interactive-select-workers.golden"},
 		{args: "connect plugin install test/fixtures/input/connect/test-plugin.zip --dry-run", env: []string{"CONFLUENT_HOME=" + confluentHomeEmpty}, input: "y\ny\n", fixture: "connect/plugin/install/interactive-no-workers.golden"},
@@ -134,7 +128,7 @@ func (s *CLITestSuite) TestConnectPluginInstall() {
 	}
 
 	for _, tt := range tests {
-		tt.login = "platform"
+		tt.login = "onprem"
 		s.runIntegrationTest(tt)
 	}
 }

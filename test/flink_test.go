@@ -1,28 +1,5 @@
 package test
 
-func (s *CLITestSuite) TestFlinkHelp() {
-	tests := []CLITest{
-		{args: "flink -h", fixture: "flink/help.golden"},
-		{args: "flink compute-pool -h", fixture: "flink/compute-pool/help.golden"},
-		{args: "flink compute-pool create -h", fixture: "flink/compute-pool/create-help.golden"},
-		{args: "flink compute-pool delete -h", fixture: "flink/compute-pool/delete-help.golden"},
-		{args: "flink compute-pool describe -h", fixture: "flink/compute-pool/describe-help.golden"},
-		{args: "flink compute-pool list -h", fixture: "flink/compute-pool/list-help.golden"},
-		{args: "flink compute-pool update -h", fixture: "flink/compute-pool/update-help.golden"},
-		{args: "flink compute-pool use -h", fixture: "flink/compute-pool/use-help.golden"},
-		{args: "flink region -h", fixture: "flink/region/help.golden"},
-		{args: "flink region list -h", fixture: "flink/region/list-help.golden"},
-		{args: "flink statement -h", fixture: "flink/statement/help.golden"},
-		{args: "flink statement delete -h", fixture: "flink/statement/delete-help.golden"},
-		{args: "flink statement list -h", fixture: "flink/statement/list-help.golden"},
-	}
-
-	for _, test := range tests {
-		test.login = "cloud"
-		s.runIntegrationTest(test)
-	}
-}
-
 func (s *CLITestSuite) TestFlinkComputePool() {
 	tests := []CLITest{
 		{args: "flink compute-pool create my-compute-pool --cloud aws --region us-west-2", fixture: "flink/compute-pool/create.golden"},

@@ -1,0 +1,22 @@
+Update a Kafka topic.
+
+Usage:
+  confluent kafka topic update <topic> [flags]
+
+Examples:
+Modify the "my_topic" topic to have a retention period of 3 days (259200000 milliseconds).
+
+  $ confluent kafka topic update my_topic --config "retention.ms=259200000"
+
+Flags:
+      --config strings       A comma-separated list of configuration overrides with form "key=value".
+      --dry-run              Run the command without committing changes.
+      --cluster string       Kafka cluster ID.
+      --context string       CLI context name.
+      --environment string   Environment ID.
+  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
