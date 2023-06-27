@@ -128,7 +128,7 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 	cmd.AddCommand(schemaregistry.New(cfg, prerunner, nil))
 	cmd.AddCommand(secret.New(prerunner, flagResolver, secrets.NewPasswordProtectionPlugin()))
 	cmd.AddCommand(shell.New(cmd, func() *cobra.Command { return NewConfluentCommand(cfg) }))
-	cmd.AddCommand(streamshare.New(cfg, prerunner))
+	cmd.AddCommand(streamshare.New(prerunner))
 	cmd.AddCommand(version.New(prerunner, cfg.Version))
 
 	dc := dynamicconfig.New(cfg, nil, nil)
