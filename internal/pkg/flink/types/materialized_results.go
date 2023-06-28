@@ -200,7 +200,7 @@ func (s *MaterializedStatementResults) ForEach(f func(rowIdx int, row *Statement
 	}
 }
 
-func (s *MaterializedStatementResults) GetMaxWidthPerColum() []int {
+func (s *MaterializedStatementResults) GetMaxWidthPerColumn() []int {
 	s.lock.RLock()
 	defer s.lock.RUnlock()
 

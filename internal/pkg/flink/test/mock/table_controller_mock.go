@@ -60,15 +60,3 @@ func (mr *MockTableControllerInterfaceMockRecorder) Init(arg0 interface{}) *gomo
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Init", reflect.TypeOf((*MockTableControllerInterface)(nil).Init), arg0)
 }
-
-// SetRunInteractiveInputCallback mocks base method.
-func (m *MockTableControllerInterface) SetRunInteractiveInputCallback(arg0 func()) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetRunInteractiveInputCallback", arg0)
-}
-
-// SetRunInteractiveInputCallback indicates an expected call of SetRunInteractiveInputCallback.
-func (mr *MockTableControllerInterfaceMockRecorder) SetRunInteractiveInputCallback(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetRunInteractiveInputCallback", reflect.TypeOf((*MockTableControllerInterface)(nil).SetRunInteractiveInputCallback), arg0)
-}

@@ -20,7 +20,6 @@ type TableController struct {
 	table                                *tview.Table
 	appController                        types.ApplicationControllerInterface
 	fetchController                      types.FetchControllerInterface
-	runInteractiveInput                  func()
 	selectedRowIdx                       int
 	tableLock                            sync.Mutex
 	isRowViewOpen                        bool
@@ -36,10 +35,6 @@ func NewTableController(table *tview.Table, appController types.ApplicationContr
 		fetchController: fetchController,
 		selectedRowIdx:  -1,
 	}
-}
-
-func (t *TableController) SetRunInteractiveInputCallback(runInteractiveInput func()) {
-	t.runInteractiveInput = runInteractiveInput
 }
 
 func (t *TableController) Init(statement types.ProcessedStatement) {
@@ -127,13 +122,13 @@ func (t *TableController) getActionForShortcut(shortcut string) func() {
 	case "Q":
 		return t.exitTViewMode
 	case "M":
-		return t.toggleTableModeAndRender
+		return t.renderAfterAction(t.fetchController.ToggleTableMode)
 	case "A":
-		return t.toggleAutoRefreshAndRender
+		return t.renderAfterAction(t.fetchController.ToggleAutoRefresh)
 	case "N":
-		return t.fetchNextPageAndRender
+		return t.renderAfterAction(t.fetchController.FetchNextPage)
 	case "R":
-		return t.goToLastPageAndRender
+		return t.renderAfterAction(t.fetchController.JumpToLastPage)
 	case "H":
 		return t.fastScrollUp
 	case "L":
@@ -144,30 +139,15 @@ func (t *TableController) getActionForShortcut(shortcut string) func() {
 
 func (t *TableController) exitTViewMode() {
 	t.fetchController.Close()
-	t.appController.SuspendOutputMode(func() {
-		output.Println("Result retrieval aborted.")
-		t.runInteractiveInput()
-	})
+	t.appController.SuspendOutputMode()
+	output.Println("Result retrieval aborted.")
 }
 
-func (t *TableController) toggleTableModeAndRender() {
-	t.fetchController.ToggleTableMode()
-	t.renderTable()
-}
-
-func (t *TableController) toggleAutoRefreshAndRender() {
-	t.fetchController.ToggleAutoRefresh()
-	t.renderTable()
-}
-
-func (t *TableController) fetchNextPageAndRender() {
-	t.fetchController.FetchNextPage()
-	t.renderTable()
-}
-
-func (t *TableController) goToLastPageAndRender() {
-	t.fetchController.JumpToLastPage()
-	t.renderTable()
+func (t *TableController) renderAfterAction(action func()) func() {
+	return func() {
+		action()
+		t.renderTable()
+	}
 }
 
 func (t *TableController) fastScrollUp() {

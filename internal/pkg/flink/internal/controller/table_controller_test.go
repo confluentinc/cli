@@ -51,7 +51,7 @@ func (s *TableControllerTestSuite) TestCloseTableViewOnUserInput() {
 		s.T().Run(testCase.name, func(t *testing.T) {
 			// Expected mock calls
 			s.fetchController.EXPECT().Close()
-			s.appController.EXPECT().SuspendOutputMode(gomock.Any())
+			s.appController.EXPECT().SuspendOutputMode()
 
 			// When
 			result := s.tableController.AppInputCapture(testCase.input)
@@ -169,7 +169,7 @@ func (s *TableControllerTestSuite) initMockCalls(materializedStatementResults *t
 	s.fetchController.EXPECT().SetAutoRefreshCallback(gomock.Any())
 	s.fetchController.EXPECT().IsTableMode().Return(materializedStatementResults.IsTableMode())
 	s.fetchController.EXPECT().GetFetchState().Return(fetchState)
-	s.fetchController.EXPECT().GetMaxWidthPerColumn().Return(materializedStatementResults.GetMaxWidthPerColum())
+	s.fetchController.EXPECT().GetMaxWidthPerColumn().Return(materializedStatementResults.GetMaxWidthPerColumn())
 	s.fetchController.EXPECT().GetHeaders().Return(materializedStatementResults.GetHeaders())
 	s.fetchController.EXPECT().ForEach(gomock.Any()).Do(func(f func(rowIdx int, row *types.StatementResultRow)) { materializedStatementResults.ForEach(f) })
 	s.fetchController.EXPECT().IsAutoRefreshRunning().Return(false).Times(3)

@@ -18,6 +18,7 @@ type OutputControllerTestSuite struct {
 	suite.Suite
 	outputController types.OutputControllerInterface
 	tableController  *mock.MockTableControllerInterface
+	appController    *mock.MockApplicationControllerInterface
 }
 
 func TestOutputControllerTestSuite(t *testing.T) {
@@ -27,7 +28,8 @@ func TestOutputControllerTestSuite(t *testing.T) {
 func (s *OutputControllerTestSuite) SetupTest() {
 	ctrl := gomock.NewController(s.T())
 	s.tableController = mock.NewMockTableControllerInterface(ctrl)
-	s.outputController = NewOutputController(s.tableController)
+	s.appController = mock.NewMockApplicationControllerInterface(ctrl)
+	s.outputController = NewOutputController(s.tableController, s.appController)
 }
 
 func (s *OutputControllerTestSuite) TestHandleStatementResultsShouldOpenTView() {
@@ -35,33 +37,28 @@ func (s *OutputControllerTestSuite) TestHandleStatementResultsShouldOpenTView() 
 		PageToken: "not-empty",
 	}
 	s.tableController.EXPECT().Init(processedStatement)
+	s.appController.EXPECT().StartTView()
 
-	isTViewUsed := s.outputController.HandleStatementResults(processedStatement, 10)
-
-	require.True(s.T(), isTViewUsed)
+	s.outputController.HandleStatementResults(processedStatement, 10)
 }
 
 func (s *OutputControllerTestSuite) TestHandleStatementResultsShouldPrintNoRows() {
 	processedStatement := types.ProcessedStatement{}
 
-	var isTViewUsed bool
 	stdout := test.RunAndCaptureSTDOUT(s.T(), func() {
-		isTViewUsed = s.outputController.HandleStatementResults(processedStatement, 10)
+		s.outputController.HandleStatementResults(processedStatement, 10)
 	})
 
-	require.False(s.T(), isTViewUsed)
 	require.Equal(s.T(), "The server returned empty rows for this statement.\n", stdout)
 }
 
 func (s *OutputControllerTestSuite) TestHandleStatementResultsShouldPrintTable() {
 	processedStatement := getExampleStatementWithResults()
 
-	var isTViewUsed bool
 	stdout := test.RunAndCaptureSTDOUT(s.T(), func() {
-		isTViewUsed = s.outputController.HandleStatementResults(processedStatement, 10)
+		s.outputController.HandleStatementResults(processedStatement, 10)
 	})
 
-	require.False(s.T(), isTViewUsed)
 	table := s.getStdoutTable(*processedStatement.StatementResults)
 	require.Equal(s.T(), table, stdout)
 }

@@ -389,7 +389,7 @@ func (s *MaterializedStatementResultsTestSuite) TestGetColumnWidths() {
 		},
 	})
 
-	require.Equal(s.T(), []int{5, 2}, materializedStatementResults.GetMaxWidthPerColum())
+	require.Equal(s.T(), []int{5, 2}, materializedStatementResults.GetMaxWidthPerColumn())
 }
 
 func (s *MaterializedStatementResultsTestSuite) TestGetColumnWidthsChangelogMode() {
@@ -410,5 +410,5 @@ func (s *MaterializedStatementResultsTestSuite) TestGetColumnWidthsChangelogMode
 		},
 	})
 
-	require.Equal(s.T(), []int{len("Operation"), 5, 2}, materializedStatementResults.GetMaxWidthPerColum())
+	require.Equal(s.T(), []int{len("Operation"), 5, 2}, materializedStatementResults.GetMaxWidthPerColumn())
 }

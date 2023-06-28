@@ -2,9 +2,7 @@ package app
 
 import (
 	"os"
-	"sync"
 
-	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 	"golang.org/x/term"
 
@@ -30,8 +28,6 @@ type Application struct {
 }
 
 func StartApp(client ccloudv2.GatewayClientInterface, authenticated func() error, appOptions types.ApplicationOptions) {
-	var once sync.Once
-
 	// Load history of previous commands from cache file
 	history := history.LoadHistory()
 
@@ -59,7 +55,14 @@ func StartApp(client ccloudv2.GatewayClientInterface, authenticated func() error
 	tableController := controller.NewTableController(table, appController, fetchController)
 	inputController := controller.NewInputController(appController, history)
 	statementController := controller.NewStatementController(appController, store, consoleParser)
-	resultsController := controller.NewOutputController(tableController)
+	resultsController := controller.NewOutputController(tableController, appController)
+
+	// Event handlers
+	tviewApp.SetInputCapture(tableController.AppInputCapture)
+
+	interactiveOutput := components.InteractiveOutput(table, shortcuts)
+	rootLayout := components.RootLayout(interactiveOutput)
+	appController.SetLayout(rootLayout)
 
 	app := Application{
 		history:             history,
@@ -69,29 +72,7 @@ func StartApp(client ccloudv2.GatewayClientInterface, authenticated func() error
 		resultsController:   resultsController,
 		authenticated:       authenticated,
 	}
-
-	// Pass RunInteractiveInputFunc to table controller so the user can come back from the output view
-	tableController.SetRunInteractiveInputCallback(app.readEvalPrintLoop)
-
-	// Event handlers
-	tviewApp.SetInputCapture(tableController.AppInputCapture)
-
-	interactiveOutput := components.InteractiveOutput(table, shortcuts)
-	rootLayout := components.RootLayout(interactiveOutput)
-
-	// We start tview and then suspend it immediately so we initialize all components
-	tviewApp.SetAfterDrawFunc(func(screen tcell.Screen) {
-		if !screen.HasPendingEvent() {
-			once.Do(func() {
-				go appController.SuspendOutputMode(app.readEvalPrintLoop)
-			})
-		}
-	})
-
-	// Start the application.
-	if err := appController.StartTView(rootLayout); err != nil {
-		panic(err)
-	}
+	app.readEvalPrintLoop()
 }
 
 func getStdin() *term.State {
@@ -138,10 +119,7 @@ func (a *Application) readEvalPrintLoop() {
 			continue
 		}
 
-		windowSize := a.inputController.GetWindowWidth()
-		if a.resultsController.HandleStatementResults(*executedStatement, windowSize) {
-			return
-		}
+		a.resultsController.HandleStatementResults(*executedStatement, a.inputController.GetWindowWidth())
 	}
 }
 

@@ -12,23 +12,25 @@ import (
 
 type OutputController struct {
 	tableController types.TableControllerInterface
+	appController   types.ApplicationControllerInterface
 }
 
-func NewOutputController(tableController types.TableControllerInterface) types.OutputControllerInterface {
+func NewOutputController(tableController types.TableControllerInterface, appController types.ApplicationControllerInterface) types.OutputControllerInterface {
 	return &OutputController{
 		tableController: tableController,
+		appController:   appController,
 	}
 }
 
-func (c *OutputController) HandleStatementResults(processedStatement types.ProcessedStatement, windowSize int) bool {
+func (c *OutputController) HandleStatementResults(processedStatement types.ProcessedStatement, windowSize int) {
 	// decide if we want to display results using TView or just a plain table
 	if shouldUseTView(processedStatement) {
 		c.tableController.Init(processedStatement)
-		return true
+		c.appController.StartTView()
+		return
 	}
 
 	c.printResultToSTDOUT(processedStatement.StatementResults, windowSize)
-	return false
 }
 
 func shouldUseTView(statement types.ProcessedStatement) bool {
@@ -64,7 +66,7 @@ func (c *OutputController) calcTotalAvailableChars(numColumns int, windowSize in
 func (c *OutputController) getRows(statementResults *types.StatementResults, totalAvailableChars int) [][]string {
 	materializedStatementResults := types.NewMaterializedStatementResults(statementResults.GetHeaders(), maxResultsCapacity)
 	materializedStatementResults.Append(statementResults.GetRows()...)
-	columnWidths := materializedStatementResults.GetMaxWidthPerColum()
+	columnWidths := materializedStatementResults.GetMaxWidthPerColumn()
 	columnWidths = results.GetTruncatedColumnWidths(columnWidths, totalAvailableChars)
 
 	// add actual row data

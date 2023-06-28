@@ -13,13 +13,14 @@ var (
 )
 
 type ApplicationControllerInterface interface {
-	SuspendOutputMode(callback func())
+	SuspendOutputMode()
 	ToggleOutputMode()
 	GetOutputMode() OutputMode
 	ExitApplication()
 	TView() *tview.Application
 	ShowTableView()
-	StartTView(layout tview.Primitive) error
+	StartTView()
+	SetLayout(layout tview.Primitive)
 	AddCleanupFunction(func()) ApplicationControllerInterface
 }
 
@@ -32,7 +33,14 @@ type InputControllerInterface interface {
 type TableControllerInterface interface {
 	AppInputCapture(event *tcell.EventKey) *tcell.EventKey
 	Init(statement ProcessedStatement)
-	SetRunInteractiveInputCallback(func())
+}
+
+type StatementControllerInterface interface {
+	ExecuteStatement(statementToExecute string) (*ProcessedStatement, *StatementError)
+}
+
+type OutputControllerInterface interface {
+	HandleStatementResults(processedStatement ProcessedStatement, windowSize int)
 }
 
 type FetchControllerInterface interface {
@@ -50,12 +58,4 @@ type FetchControllerInterface interface {
 	Init(statement ProcessedStatement)
 	Close()
 	SetAutoRefreshCallback(func())
-}
-
-type StatementControllerInterface interface {
-	ExecuteStatement(statementToExecute string) (*ProcessedStatement, *StatementError)
-}
-
-type OutputControllerInterface interface {
-	HandleStatementResults(processedStatement ProcessedStatement, windowSize int) bool
 }

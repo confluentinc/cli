@@ -35,11 +35,9 @@ func (m *MockOutputControllerInterface) EXPECT() *MockOutputControllerInterfaceM
 }
 
 // HandleStatementResults mocks base method.
-func (m *MockOutputControllerInterface) HandleStatementResults(arg0 types.ProcessedStatement, arg1 int) bool {
+func (m *MockOutputControllerInterface) HandleStatementResults(arg0 types.ProcessedStatement, arg1 int) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "HandleStatementResults", arg0, arg1)
-	ret0, _ := ret[0].(bool)
-	return ret0
+	m.ctrl.Call(m, "HandleStatementResults", arg0, arg1)
 }
 
 // HandleStatementResults indicates an expected call of HandleStatementResults.

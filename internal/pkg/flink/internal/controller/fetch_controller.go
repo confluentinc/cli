@@ -142,7 +142,7 @@ func (t *FetchController) GetHeaders() []string {
 }
 
 func (t *FetchController) GetMaxWidthPerColumn() []int {
-	return t.materializedStatementResults.GetMaxWidthPerColum()
+	return t.materializedStatementResults.GetMaxWidthPerColumn()
 }
 
 func (t *FetchController) GetResultsIterator(startFromBack bool) types.MaterializedStatementResultsIterator {

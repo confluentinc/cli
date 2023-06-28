@@ -22,12 +22,9 @@ type ApplicationController struct {
 }
 
 // preFunc will, if defined, before the main function is executed. Both are executed after tview is suspended.
-func (a *ApplicationController) SuspendOutputMode(callback func()) {
+func (a *ApplicationController) SuspendOutputMode() {
 	a.ToggleOutputMode()
-	a.app.Suspend(callback)
-	// InteractiveInput has already set the data to be displayed in the table
-	// Now we just need to render it
-	a.app.ForceDraw()
+	a.app.Stop()
 }
 
 func (a *ApplicationController) ToggleOutputMode() {
@@ -56,9 +53,16 @@ func (a *ApplicationController) TView() *tview.Application {
 	return a.app
 }
 
-func (a *ApplicationController) StartTView(layout tview.Primitive) error {
+func (a *ApplicationController) SetLayout(layout tview.Primitive) {
 	a.tableView = layout
-	return a.app.SetRoot(layout, true).EnableMouse(false).Run()
+	a.app.SetRoot(a.tableView, true).EnableMouse(false)
+}
+
+func (a *ApplicationController) StartTView() {
+	err := a.app.Run()
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (a *ApplicationController) ShowTableView() {

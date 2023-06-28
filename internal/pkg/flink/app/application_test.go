@@ -17,12 +17,12 @@ import (
 
 type ApplicationTestSuite struct {
 	suite.Suite
-	app                     Application
-	mockAppController       *mock.MockApplicationControllerInterface
-	mockInputController     *mock.MockInputControllerInterface
-	mockStatementController *mock.MockStatementControllerInterface
-	mockResultsController   *mock.MockOutputControllerInterface
-	history                 *history.History
+	app                 Application
+	appController       *mock.MockApplicationControllerInterface
+	inputController     *mock.MockInputControllerInterface
+	statementController *mock.MockStatementControllerInterface
+	outputController    *mock.MockOutputControllerInterface
+	history             *history.History
 }
 
 func TestApplicationTestSuite(t *testing.T) {
@@ -31,18 +31,18 @@ func TestApplicationTestSuite(t *testing.T) {
 
 func (s *ApplicationTestSuite) SetupTest() {
 	ctrl := gomock.NewController(s.T())
-	s.mockAppController = mock.NewMockApplicationControllerInterface(ctrl)
-	s.mockInputController = mock.NewMockInputControllerInterface(ctrl)
+	s.appController = mock.NewMockApplicationControllerInterface(ctrl)
+	s.inputController = mock.NewMockInputControllerInterface(ctrl)
 	s.history = &history.History{Data: []string{}}
-	s.mockStatementController = mock.NewMockStatementControllerInterface(ctrl)
-	s.mockResultsController = mock.NewMockOutputControllerInterface(ctrl)
+	s.statementController = mock.NewMockStatementControllerInterface(ctrl)
+	s.outputController = mock.NewMockOutputControllerInterface(ctrl)
 
 	s.app = Application{
 		history:             s.history,
-		appController:       s.mockAppController,
-		inputController:     s.mockInputController,
-		statementController: s.mockStatementController,
-		resultsController:   s.mockResultsController,
+		appController:       s.appController,
+		inputController:     s.inputController,
+		statementController: s.statementController,
+		resultsController:   s.outputController,
 		authenticated:       authenticated,
 	}
 }
@@ -66,12 +66,12 @@ func (s *ApplicationTestSuite) requireManuallyStopped(actual string) {
 func (s *ApplicationTestSuite) runMainLoop(stopAfterLoopFinishes bool) string {
 	if stopAfterLoopFinishes {
 		// this makes the loop stop after one iteration
-		s.mockInputController.EXPECT().GetUserInput().Return("")
-		s.mockInputController.EXPECT().IsSpecialInput("").DoAndReturn(func(string) bool {
+		s.inputController.EXPECT().GetUserInput().Return("")
+		s.inputController.EXPECT().IsSpecialInput("").DoAndReturn(func(string) bool {
 			s.app.authenticated = manualStop
 			return true
 		})
-		s.mockAppController.EXPECT().ExitApplication()
+		s.appController.EXPECT().ExitApplication()
 	}
 
 	output := test.RunAndCaptureSTDOUT(s.T(), s.app.readEvalPrintLoop)
@@ -80,7 +80,7 @@ func (s *ApplicationTestSuite) runMainLoop(stopAfterLoopFinishes bool) string {
 
 func (s *ApplicationTestSuite) TestReplDoesNotRunWhenUnauthenticated() {
 	s.app.authenticated = unauthenticated
-	s.mockAppController.EXPECT().ExitApplication()
+	s.appController.EXPECT().ExitApplication()
 
 	actual := s.runMainLoop(false)
 
@@ -89,8 +89,8 @@ func (s *ApplicationTestSuite) TestReplDoesNotRunWhenUnauthenticated() {
 
 func (s *ApplicationTestSuite) TestReplContinuesOnSpecialInput() {
 	userInput := "test-input"
-	s.mockInputController.EXPECT().GetUserInput().Return(userInput)
-	s.mockInputController.EXPECT().IsSpecialInput(userInput).Return(true)
+	s.inputController.EXPECT().GetUserInput().Return(userInput)
+	s.inputController.EXPECT().IsSpecialInput(userInput).Return(true)
 
 	actual := s.runMainLoop(true)
 
@@ -99,9 +99,9 @@ func (s *ApplicationTestSuite) TestReplContinuesOnSpecialInput() {
 
 func (s *ApplicationTestSuite) TestReplAppendsStatementToHistoryAndStopsOnExecuteStatementError() {
 	userInput := "test-input"
-	s.mockInputController.EXPECT().GetUserInput().Return(userInput)
-	s.mockInputController.EXPECT().IsSpecialInput(userInput).Return(false)
-	s.mockStatementController.EXPECT().ExecuteStatement(userInput).Return(nil, &types.StatementError{})
+	s.inputController.EXPECT().GetUserInput().Return(userInput)
+	s.inputController.EXPECT().IsSpecialInput(userInput).Return(false)
+	s.statementController.EXPECT().ExecuteStatement(userInput).Return(nil, &types.StatementError{})
 
 	actual := s.runMainLoop(true)
 
@@ -111,9 +111,9 @@ func (s *ApplicationTestSuite) TestReplAppendsStatementToHistoryAndStopsOnExecut
 
 func (s *ApplicationTestSuite) TestReplStopsOnExecuteStatementError() {
 	userInput := "test-input"
-	s.mockInputController.EXPECT().GetUserInput().Return(userInput)
-	s.mockInputController.EXPECT().IsSpecialInput(userInput).Return(false)
-	s.mockStatementController.EXPECT().ExecuteStatement(userInput).Return(nil, &types.StatementError{})
+	s.inputController.EXPECT().GetUserInput().Return(userInput)
+	s.inputController.EXPECT().IsSpecialInput(userInput).Return(false)
+	s.statementController.EXPECT().ExecuteStatement(userInput).Return(nil, &types.StatementError{})
 
 	actual := s.runMainLoop(true)
 
@@ -124,26 +124,26 @@ func (s *ApplicationTestSuite) TestReplReturnsWhenHandleStatementResultsReturnsT
 	userInput := "test-input"
 	statement := types.ProcessedStatement{}
 	windowSize := 10
-	s.mockInputController.EXPECT().GetUserInput().Return(userInput)
-	s.mockInputController.EXPECT().IsSpecialInput(userInput).Return(false)
-	s.mockStatementController.EXPECT().ExecuteStatement(userInput).Return(&statement, nil)
-	s.mockInputController.EXPECT().GetWindowWidth().Return(windowSize)
-	s.mockResultsController.EXPECT().HandleStatementResults(statement, windowSize).Return(true)
+	s.inputController.EXPECT().GetUserInput().Return(userInput)
+	s.inputController.EXPECT().IsSpecialInput(userInput).Return(false)
+	s.statementController.EXPECT().ExecuteStatement(userInput).Return(&statement, nil)
+	s.inputController.EXPECT().GetWindowWidth().Return(windowSize)
+	s.outputController.EXPECT().HandleStatementResults(statement, windowSize)
 
-	actual := s.runMainLoop(false)
+	actual := s.runMainLoop(true)
 
-	require.Equal(s.T(), "", actual)
+	s.requireManuallyStopped(actual)
 }
 
 func (s *ApplicationTestSuite) TestReplDoesNotReturnWhenHandleStatementResultsReturnsFalse() {
 	userInput := "test-input"
 	statement := types.ProcessedStatement{}
 	windowSize := 10
-	s.mockInputController.EXPECT().GetUserInput().Return(userInput)
-	s.mockInputController.EXPECT().IsSpecialInput(userInput).Return(false)
-	s.mockStatementController.EXPECT().ExecuteStatement(userInput).Return(&statement, nil)
-	s.mockInputController.EXPECT().GetWindowWidth().Return(windowSize)
-	s.mockResultsController.EXPECT().HandleStatementResults(statement, windowSize).Return(false)
+	s.inputController.EXPECT().GetUserInput().Return(userInput)
+	s.inputController.EXPECT().IsSpecialInput(userInput).Return(false)
+	s.statementController.EXPECT().ExecuteStatement(userInput).Return(&statement, nil)
+	s.inputController.EXPECT().GetWindowWidth().Return(windowSize)
+	s.outputController.EXPECT().HandleStatementResults(statement, windowSize)
 
 	actual := s.runMainLoop(true)
 
