@@ -1,4 +1,0 @@
-        Config Name       |   Config Value   | Read Only | Sensitive |  Source  |  Synonyms    
---------------------------+------------------+-----------+-----------+----------+--------------
-  replica.fetch.max.bytes |          1048576 | false     | false     | source-1 | [rfmb bmfr]  
-  bootstrap.servers       | bitcoin.com:8888 | false     | false     | source-2 | []           

@@ -1,8 +1,0 @@
-- cluster: cluster-1
-  consumer_group: consumer-group-1
-  simple: "true"
-  state: STABLE
-- cluster: cluster-1
-  consumer_group: consumer-group-2
-  simple: "true"
-  state: DEAD

@@ -1,0 +1,43 @@
+Delete Kafka ACLs matching the search criteria.
+
+Usage:
+  confluent kafka acl delete [flags]
+
+Examples:
+Delete all "read" access ACLs for the specified user (providing embedded Kafka REST Proxy endpoint).
+
+  $ confluent kafka acl delete --url http://localhost:8090/kafka --operation read --allow --topic Test --principal User:Jane --host "*"
+
+Delete all "read" access ACLs for the specified user (providing Kafka REST Proxy endpoint).
+
+  $ confluent kafka acl delete --url http://localhost:8082 --operation read --allow --topic Test --principal User:Jane --host "*"
+
+Delete all "read" access ACLs for the specified user.
+
+  $ confluent kafka acl delete --operation read --allow --topic Test --principal User:Jane --host "*"
+
+Flags:
+      --principal string          REQUIRED: Principal for this operation with User: or Group: prefix.
+      --operation string          REQUIRED: Set ACL Operation to: (all, alter, alter-configs, cluster-action, create, delete, describe, describe-configs, idempotent-write, read, write).
+      --host string               REQUIRED: Set host for access. Only IP addresses are supported. (default "*")
+      --allow                     ACL permission to allow access.
+      --deny                      ACL permission to restrict access to resource.
+      --cluster-scope             Set the cluster resource. With this option the ACL grants access to the provided operations on the Kafka cluster itself.
+      --consumer-group string     Set the Consumer Group resource.
+      --transactional-id string   Set the TransactionalID resource.
+      --topic string              Set the topic resource. With this option the ACL grants the provided operations on the topics that start with that prefix, depending on whether the --prefix option was also passed.
+      --prefix                    Set to match all resource names prefixed with this value.
+      --force                     Skip the deletion confirmation prompt.
+      --url string                Base URL of REST Proxy Endpoint of Kafka Cluster (include /kafka for embedded Rest Proxy). Must set flag or CONFLUENT_REST_URL.
+      --ca-cert-path string       Path to a PEM-encoded CA to verify the Confluent REST Proxy.
+      --client-cert-path string   Path to client cert to be verified by Confluent REST Proxy, include for mTLS authentication.
+      --client-key-path string    Path to client private key, include for mTLS authentication.
+      --no-authentication         Include if requests should be made without authentication headers, and user will not be prompted for credentials.
+      --prompt                    Bypass use of available login credentials and prompt for Kafka Rest credentials.
+      --context string            CLI context name.
+  -o, --output string             Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

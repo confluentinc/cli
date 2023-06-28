@@ -632,20 +632,55 @@ func handleKafkaRPConsumerGroups(t *testing.T) http.HandlerFunc {
 	}
 }
 
-// Handler for: "/kafka/v3/clusters/{cluster_id}/links/{link_name}"
+// Handler for: "/kafka/v3/clusters/{cluster}/links/{link}"
 func handleKafkaRPLink(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		cluster := mux.Vars(r)["cluster"]
+		link := mux.Vars(r)["link"]
 		switch r.Method {
 		case http.MethodGet:
-			err := json.NewEncoder(w).Encode(cpkafkarestv3.ListLinksResponseData{
-				Kind:            "",
-				Metadata:        cpkafkarestv3.ResourceMetadata{},
-				SourceClusterId: cpkafkarestv3.PtrString("cluster-1"),
-				LinkName:        "link-1",
-				LinkId:          "LINKID1",
-				TopicsNames:     []string{"link-1-topic-1", "link-1-topic-2"},
-			})
-			require.NoError(t, err)
+			if link == "link-1" {
+				switch cluster {
+				case "cluster-1":
+					err := json.NewEncoder(w).Encode(cpkafkarestv3.ListLinksResponseData{
+						Kind:                 "",
+						Metadata:             cpkafkarestv3.ResourceMetadata{},
+						DestinationClusterId: cpkafkarestv3.PtrString("cluster-2"),
+						LinkName:             link,
+						LinkId:               "LINKID1",
+						TopicsNames:          []string{"link-1-topic-1", "link-1-topic-2"},
+					})
+					require.NoError(t, err)
+				case "lkc-describe-topic":
+					err := json.NewEncoder(w).Encode(cckafkarestv3.ListLinksResponseData{
+						Kind:            "",
+						Metadata:        cckafkarestv3.ResourceMetadata{},
+						SourceClusterId: *cckafkarestv3.NewNullableString(cckafkarestv3.PtrString(cluster)),
+						LinkName:        link,
+						LinkId:          "LINKID1",
+						TopicsNames:     &[]string{"link-1-topic-1", "link-1-topic-2"},
+						LinkState:       cckafkarestv3.PtrString("AVAILABLE"),
+					})
+					require.NoError(t, err)
+				default:
+					err := writeResourceNotFoundError(w)
+					require.NoError(t, err)
+				}
+			} else if link == "link-3" {
+				err := json.NewEncoder(w).Encode(cckafkarestv3.ListLinksResponseData{
+					Kind:                 "",
+					Metadata:             cckafkarestv3.ResourceMetadata{},
+					SourceClusterId:      *cckafkarestv3.NewNullableString(cckafkarestv3.PtrString(cluster)),
+					DestinationClusterId: *cckafkarestv3.NewNullableString(cckafkarestv3.PtrString("cluster-2")),
+					LinkName:             link,
+					LinkId:               "LINKID3",
+					TopicsNames:          &[]string{"link-1-topic-1", "link-1-topic-2"},
+					LinkState:            cckafkarestv3.PtrString("UNAVAILABLE"),
+					LinkError:            cckafkarestv3.PtrString("AUTHENTICATION_ERROR"),
+					LinkErrorMessage:     *cckafkarestv3.NewNullableString(cckafkarestv3.PtrString("Please check your API key and secret.")),
+				})
+				require.NoError(t, err)
+			}
 		case http.MethodDelete:
 			w.WriteHeader(http.StatusNoContent)
 		}

@@ -1,0 +1,22 @@
+Describe subject versions.
+
+Usage:
+  confluent schema-registry subject describe <subject> [flags]
+
+Examples:
+Retrieve all versions registered under subject "payments" and its compatibility level.
+
+  $ confluent schema-registry subject describe payments
+
+Flags:
+      --deleted              View the deleted schema.
+      --api-key string       API key.
+      --api-secret string    API key secret.
+      --context string       CLI context name.
+      --environment string   Environment ID.
+  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
