@@ -9,7 +9,7 @@ builds:
     flags:
       - -mod=vendor
     ldflags:
-      - -s -w -X main.version={{.Version}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}}
+      - -s -w -X main.version={{.Version}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X github.com/confluentinc/cli/internal/cmd/local.localArch=amd64
     gcflags:
       - all=-trimpath={{.Env.HOME}}/git
     asmflags:
@@ -24,7 +24,7 @@ builds:
     flags:
       - -mod=vendor
     ldflags:
-      - -s -w -X main.version={{.Version}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.disableUpdates=true
+      - -s -w -X main.version={{.Version}} -X main.commit={{.ShortCommit}} -X main.date={{.Date}} -X main.disableUpdates=true -X github.com/confluentinc/cli/internal/cmd/local.localArch=amd64
     gcflags:
       - all=-trimpath={{.Env.HOME}}/git
     asmflags:

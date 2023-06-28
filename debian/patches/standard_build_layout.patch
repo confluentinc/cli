@@ -1,13 +1,17 @@
---- cli/Makefile	2023-06-12 10:41:30.495232513 -0700
-+++ debian/Makefile	2023-05-12 09:01:07.702951301 -0700
-@@ -1,120 +1,130 @@
+--- cli/Makefile	2023-06-28 12:33:17.000000000 -0700
++++ debian/Makefile	2023-05-18 13:22:09.000000000 -0700
+@@ -1,126 +1,130 @@
 -SHELL := /bin/bash
 -GORELEASER_VERSION := v1.17.2
 +SHELL=/bin/bash
  
+-.PHONY: set-local-arch
+-set-local-arch:
+-export LOCAL_ARCH=$(shell go env GOARCH)
+-
 -# Compile natively based on the current system
 -.PHONY: build 
--build:
+-build: set-local-arch
 -ifneq "" "$(findstring NT,$(shell uname))" # windows
 -	CC=gcc CXX=g++ $(MAKE) cli-builder
 -else ifneq (,$(findstring Linux,$(shell uname)))
@@ -24,6 +28,7 @@
 -.PHONY: cross-build
 -cross-build:
 -ifeq ($(GOARCH),arm64)
+-	export LOCAL_ARCH=arm64
 -    ifeq ($(GOOS),linux) # linux/arm64
 -		CGO_ENABLED=1 CC=aarch64-linux-musl-gcc CXX=aarch64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl $(MAKE) cli-builder
 -    else # darwin/arm64
@@ -52,6 +57,7 @@
 +PREFIX=$(PACKAGE_NAME)
 +SYSCONFDIR=$(PREFIX)/etc/$(PACKAGE_TITLE)
  else
+-	export LOCAL_ARCH=amd64
 -    ifeq ($(GOOS),windows) # windows/amd64
 -		CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ CGO_LDFLAGS="-static" $(MAKE) cli-builder
 -    else ifeq ($(GOOS),linux) # linux/amd64

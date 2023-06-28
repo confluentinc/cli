@@ -5,3 +5,5 @@ builds:
     main: cmd/confluent/main.go
     flags:
       - -tags={{.Env.TAGS}}
+    ldflags:
+      - "-X github.com/confluentinc/cli/internal/cmd/local.localArch={{.Env.LOCAL_ARCH}}"
