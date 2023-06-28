@@ -75,7 +75,7 @@ func TestGetPluginManifests(t *testing.T) {
 	manifests, err := getPluginManifests(dir)
 	assert.NoError(t, err)
 
-	referenceManifests := []*Manifest{
+	referenceManifests := []*ManifestOut{
 		{
 			Name:         "confluent-test_plugin",
 			Description:  "Does nothing",

@@ -60,7 +60,12 @@ func TestGetPluginManifest(t *testing.T) {
 	referenceManifest := &Manifest{
 		Name:         "confluent-test_plugin",
 		Description:  "Does nothing",
-		Dependencies: "Python 3",
+		Dependencies: []Dependency{
+			{
+				Dependency: "Python",
+				Version:    "3",
+			},
+		},
 	}
 	assert.True(t, reflect.DeepEqual(referenceManifest, manifest))
 }
