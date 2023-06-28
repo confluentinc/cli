@@ -8,6 +8,33 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
+type ListFlinkIAMBindingsQueryParams struct {
+	Region         string
+	Cloud          string
+	IdentityPoolId string
+}
+
+func (p *ListFlinkIAMBindingsQueryParams) GetRegion() string {
+	if p == nil {
+		return ""
+	}
+	return p.Region
+}
+
+func (p *ListFlinkIAMBindingsQueryParams) GetCloud() string {
+	if p == nil {
+		return ""
+	}
+	return p.Cloud
+}
+
+func (p *ListFlinkIAMBindingsQueryParams) GetIdentityPoolId() string {
+	if p == nil {
+		return ""
+	}
+	return p.IdentityPoolId
+}
+
 func newFlinkClient(url, userAgent string, unsafeTrace bool) *flinkv2.APIClient {
 	cfg := flinkv2.NewConfiguration()
 	cfg.Debug = unsafeTrace
@@ -58,4 +85,35 @@ func (c *Client) ListFlinkRegions(cloud string) ([]flinkv2.FcpmV2Region, error) 
 func (c *Client) UpdateFlinkComputePool(id string, update flinkv2.FcpmV2ComputePoolUpdate) (flinkv2.FcpmV2ComputePool, error) {
 	res, httpResp, err := c.FlinkClient.ComputePoolsFcpmV2Api.UpdateFcpmV2ComputePool(c.flinkApiContext(), id).FcpmV2ComputePoolUpdate(update).Execute()
 	return res, errors.CatchCCloudV2Error(err, httpResp)
+}
+
+func (c *Client) CreateFlinkIAMBinding(region, cloud, environmentId, identityPoolId string) (flinkv2.FcpmV2IamBinding, error) {
+	iamBinding := flinkv2.FcpmV2IamBinding{
+		Region:       flinkv2.PtrString(region),
+		Cloud:        flinkv2.PtrString(cloud),
+		Environment:  flinkv2.NewGlobalObjectReference(environmentId, "", ""),
+		IdentityPool: flinkv2.NewGlobalObjectReference(identityPoolId, "", ""),
+	}
+	res, httpResp, err := c.FlinkClient.IamBindingsFcpmV2Api.CreateFcpmV2IamBinding(c.flinkApiContext()).FcpmV2IamBinding(iamBinding).Execute()
+	return res, errors.CatchCCloudV2Error(err, httpResp)
+}
+
+func (c *Client) DeleteFlinkIAMBinding(id, environmentId string) error {
+	httpResp, err := c.FlinkClient.IamBindingsFcpmV2Api.DeleteFcpmV2IamBinding(c.flinkApiContext(), id).Environment(environmentId).Execute()
+	return errors.CatchCCloudV2Error(err, httpResp)
+}
+
+func (c *Client) ListFlinkIAMBindings(environmentId, region, cloud, identityPoolId string) ([]flinkv2.FcpmV2IamBinding, error) {
+	req := c.FlinkClient.IamBindingsFcpmV2Api.ListFcpmV2IamBindings(c.flinkApiContext()).Environment(environmentId).PageSize(ccloudV2ListPageSize)
+	if region != "" {
+		req = req.Region(region)
+	}
+	if cloud != "" {
+		req = req.Cloud(cloud)
+	}
+	if identityPoolId != "" {
+		req = req.IdentityPool(identityPoolId)
+	}
+	res, httpResp, err := req.Execute()
+	return res.GetData(), errors.CatchCCloudV2Error(err, httpResp)
 }
