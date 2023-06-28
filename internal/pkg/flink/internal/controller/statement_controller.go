@@ -32,7 +32,7 @@ func (c *StatementController) ExecuteStatement(statementToExecute string) (*type
 		c.handleStatementError(*err)
 		return nil, err
 	}
-	renderMsgAndStatus(*processedStatement)
+	processedStatement.PrintStatusMessage()
 
 	processedStatement, err = c.waitForStatementToBeReadyOrError(*processedStatement)
 	if err != nil {
@@ -52,42 +52,8 @@ func (c *StatementController) ExecuteStatement(statementToExecute string) (*type
 
 func (c *StatementController) handleStatementError(err types.StatementError) {
 	utils.OutputErr(err.Error())
-	if !isSessionValid(err) {
+	if err.HttpResponseCode == http.StatusUnauthorized {
 		c.applicationController.ExitApplication()
-	}
-}
-
-func isSessionValid(err types.StatementError) bool {
-	return err.HttpResponseCode != http.StatusUnauthorized
-}
-
-func renderMsgAndStatus(processedStatement types.ProcessedStatement) {
-	if processedStatement.IsLocalStatement {
-		renderMsgAndStatusOfLocalStatement(processedStatement)
-	} else {
-		renderMsgAndStatusOfNonLocalStatement(processedStatement)
-	}
-}
-
-func renderMsgAndStatusOfLocalStatement(processedStatement types.ProcessedStatement) {
-	if processedStatement.Status == "FAILED" {
-		err := types.StatementError{Message: "couldn't process statement, please check your statement and try again"}
-		utils.OutputErr(err.Error())
-	} else {
-		utils.OutputInfo("Statement successfully submitted.")
-	}
-}
-
-func renderMsgAndStatusOfNonLocalStatement(processedStatement types.ProcessedStatement) {
-	if processedStatement.StatementName != "" {
-		utils.OutputInfof("Statement name: %s\n", processedStatement.StatementName)
-	}
-	if processedStatement.Status == "FAILED" {
-		err := types.StatementError{Message: "statement submission failed"}
-		utils.OutputErr(err.Error())
-	} else {
-		utils.OutputInfo("Statement successfully submitted.")
-		utils.OutputInfo("Fetching results...")
 	}
 }
 

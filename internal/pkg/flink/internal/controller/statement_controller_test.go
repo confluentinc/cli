@@ -158,7 +158,7 @@ func (s *StatementControllerTestSuite) TestRenderMsgAndStatusLocalStatements() {
 	for _, tt := range tests {
 		s.T().Run(tt.name, func(t *testing.T) {
 			actual := test.RunAndCaptureSTDOUT(s.T(), func() {
-				renderMsgAndStatus(tt.statement)
+				tt.statement.PrintStatusMessage()
 			})
 			require.Equal(t, tt.want, actual)
 		})
@@ -185,7 +185,7 @@ func (s *StatementControllerTestSuite) TestRenderMsgAndStatusNonLocalFailedState
 	for _, tt := range tests {
 		s.T().Run(tt.name, func(t *testing.T) {
 			actual := test.RunAndCaptureSTDOUT(s.T(), func() {
-				renderMsgAndStatus(tt.statement)
+				tt.statement.PrintStatusMessage()
 			})
 			require.Equal(t, tt.want, actual)
 		})
@@ -212,7 +212,7 @@ func (s *StatementControllerTestSuite) TestRenderMsgAndStatusNonLocalNonFailedSt
 	for _, tt := range tests {
 		s.T().Run(tt.name, func(t *testing.T) {
 			actual := test.RunAndCaptureSTDOUT(s.T(), func() {
-				renderMsgAndStatus(tt.statement)
+				tt.statement.PrintStatusMessage()
 			})
 			require.Equal(t, tt.want, actual)
 		})
