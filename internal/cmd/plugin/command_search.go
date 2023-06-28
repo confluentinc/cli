@@ -101,8 +101,8 @@ func getPluginManifests(dir string) ([]*ManifestOut, error) {
 				return nil, err
 			}
 			manifestOutList = append(manifestOutList, &ManifestOut{
-				Name: file.Name(),
-				Description: manifest.Description,
+				Name:         file.Name(),
+				Description:  manifest.Description,
 				Dependencies: dependenciesToString(manifest.Dependencies),
 			})
 		}
