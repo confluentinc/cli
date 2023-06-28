@@ -58,8 +58,8 @@ func TestGetPluginManifest(t *testing.T) {
 	assert.NoError(t, err)
 
 	referenceManifest := &Manifest{
-		Name:         "confluent-test_plugin",
-		Description:  "Does nothing",
+		Name:        "confluent-test_plugin",
+		Description: "Does nothing",
 		Dependencies: []Dependency{
 			{
 				Dependency: "Python",
