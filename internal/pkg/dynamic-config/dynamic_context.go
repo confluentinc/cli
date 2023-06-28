@@ -2,6 +2,7 @@ package dynamicconfig
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -96,9 +97,23 @@ func (d *DynamicContext) FindKafkaCluster(clusterId string) (*v1.KafkaClusterCon
 	}
 
 	// Resolve cluster details if not found locally.
-	config, err := d.FetchCluster(clusterId)
+	environmentId, err := d.EnvironmentId()
 	if err != nil {
 		return nil, err
+	}
+
+	cluster, httpResp, err := d.V2Client.DescribeKafkaCluster(clusterId, environmentId)
+	if err != nil {
+		return nil, errors.CatchKafkaNotFoundError(err, clusterId, httpResp)
+	}
+
+	config := &v1.KafkaClusterConfig{
+		ID:           cluster.GetId(),
+		Name:         cluster.Spec.GetDisplayName(),
+		Bootstrap:    strings.TrimPrefix(cluster.Spec.GetKafkaBootstrapEndpoint(), "SASL_SSL://"),
+		RestEndpoint: cluster.Spec.GetHttpEndpoint(),
+		APIKeys:      make(map[string]*v1.APIKeyPair),
+		LastUpdate:   time.Now(),
 	}
 
 	d.KafkaClusterContext.AddKafkaClusterConfig(config)

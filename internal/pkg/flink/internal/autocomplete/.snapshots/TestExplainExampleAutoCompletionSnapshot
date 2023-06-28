@@ -1,6 +1,2 @@
-([]prompt.Suggest) (len=1) {
-  (prompt.Suggest) {
-    Text: (string) (len=46) "EXPLAIN CHANGELOG_MODE, PLAN_ADVICE SELECT...;",
-    Description: (string) (len=87) "Used to explain the logical and optimized query plans of a query or an INSERT statement"
-  }
+([]prompt.Suggest) {
 }

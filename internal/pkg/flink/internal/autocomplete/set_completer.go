@@ -8,6 +8,7 @@ func SetCompleter(in prompt.Document) []prompt.Suggest {
 	s := []prompt.Suggest{
 		{Text: "SET 'table.results-timeout' = '600';", Description: "Total amount of time in seconds to wait before timing out the request waiting for results to be ready."},
 		{Text: "SET 'table.local-time-zone;' = 'Europe/Berlin';", Description: "Used to modify the configuration or list the configuration"},
+		{Text: "SET 'execution.runtime-mode;' = 'streaming", Description: "Used to modify the runtime-mode sent to the server"},
 	}
 
 	return SuggestFromPrefix(s, in.TextBeforeCursor())
