@@ -8,7 +8,6 @@ import (
 	reflect "reflect"
 
 	types "github.com/confluentinc/cli/internal/pkg/flink/types"
-	tcell "github.com/gdamore/tcell/v2"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -35,20 +34,6 @@ func (m *MockTableControllerInterface) EXPECT() *MockTableControllerInterfaceMoc
 	return m.recorder
 }
 
-// AppInputCapture mocks base method.
-func (m *MockTableControllerInterface) AppInputCapture(arg0 *tcell.EventKey) *tcell.EventKey {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AppInputCapture", arg0)
-	ret0, _ := ret[0].(*tcell.EventKey)
-	return ret0
-}
-
-// AppInputCapture indicates an expected call of AppInputCapture.
-func (mr *MockTableControllerInterfaceMockRecorder) AppInputCapture(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AppInputCapture", reflect.TypeOf((*MockTableControllerInterface)(nil).AppInputCapture), arg0)
-}
-
 // Init mocks base method.
 func (m *MockTableControllerInterface) Init(arg0 types.ProcessedStatement) {
 	m.ctrl.T.Helper()
@@ -59,4 +44,16 @@ func (m *MockTableControllerInterface) Init(arg0 types.ProcessedStatement) {
 func (mr *MockTableControllerInterfaceMockRecorder) Init(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Init", reflect.TypeOf((*MockTableControllerInterface)(nil).Init), arg0)
+}
+
+// Start mocks base method.
+func (m *MockTableControllerInterface) Start() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "Start")
+}
+
+// Start indicates an expected call of Start.
+func (mr *MockTableControllerInterfaceMockRecorder) Start() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Start", reflect.TypeOf((*MockTableControllerInterface)(nil).Start))
 }

@@ -3,68 +3,70 @@ package controller
 import (
 	"fmt"
 	"strings"
-	"sync"
 	"unicode"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-	"github.com/samber/lo"
 
 	"github.com/confluentinc/cli/internal/pkg/flink/components"
-	"github.com/confluentinc/cli/internal/pkg/flink/internal/results"
+	"github.com/confluentinc/cli/internal/pkg/flink/internal/utils"
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
+	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 type TableController struct {
-	table                                *tview.Table
-	appController                        types.ApplicationControllerInterface
-	fetchController                      types.FetchControllerInterface
-	selectedRowIdx                       int
-	tableLock                            sync.Mutex
-	isRowViewOpen                        bool
-	tableWidth                           int
-	numRowsToScroll                      int
-	materializedStatementResultsIterator types.MaterializedStatementResultsIterator
+	app             *tview.Application
+	tableView       *components.TableView
+	fetchController types.FetchControllerInterface
+	isRowViewOpen   bool
 }
 
-func NewTableController(table *tview.Table, appController types.ApplicationControllerInterface, fetchController types.FetchControllerInterface) types.TableControllerInterface {
+func NewTableController(fetchController types.FetchControllerInterface) types.TableControllerInterface {
 	return &TableController{
-		table:           table,
-		appController:   appController,
+		app:             tview.NewApplication(),
 		fetchController: fetchController,
-		selectedRowIdx:  -1,
+	}
+}
+
+func (t *TableController) Start() {
+	err := t.app.Run()
+	if err != nil {
+		log.CliLogger.Errorf("Failed to start tview., %v", err)
+		utils.OutputErr("Error: failed to open table view")
 	}
 }
 
 func (t *TableController) Init(statement types.ProcessedStatement) {
-	t.selectedRowIdx = -1
 	t.isRowViewOpen = false
 	t.fetchController.Init(statement)
 	t.fetchController.SetAutoRefreshCallback(t.renderTableAsync)
-	t.table.SetSelectionChangedFunc(t.rowSelectionHandler)
-	t.renderTable()
+	t.app.SetInputCapture(t.inputCapture)
+	t.initTableView()
+}
+
+func (t *TableController) initTableView() {
+	t.tableView = components.NewTableView()
+	t.updateTable()
+	t.openTableView()
+}
+
+func (t *TableController) updateTable() {
+	t.tableView.RenderTable(t.getTableTitle(), t.fetchController.GetResults(), !t.fetchController.IsAutoRefreshRunning())
+	t.app.SetFocus(t.tableView.GetTable())
+}
+
+func (t *TableController) openTableView() {
+	t.app.SetRoot(t.tableView.RootLayout, true).EnableMouse(false)
+	t.app.SetFocus(t.tableView.GetTable())
 }
 
 func (t *TableController) renderTableAsync() {
-	t.appController.TView().QueueUpdateDraw(t.renderTable)
-}
-
-func (t *TableController) rowSelectionHandler(row, col int) {
-	outOfBounds := row <= 0 || row >= t.table.GetRowCount()
-	if outOfBounds || t.fetchController.IsAutoRefreshRunning() {
-		return
-	}
-
-	if t.selectedRowIdx != -1 {
-		stepsToMove := row - t.selectedRowIdx
-		t.materializedStatementResultsIterator.Move(stepsToMove)
-	}
-	t.selectedRowIdx = row
+	t.app.QueueUpdateDraw(t.updateTable)
 }
 
 // Function to handle shortcuts and keybindings for TView
-func (t *TableController) AppInputCapture(event *tcell.EventKey) *tcell.EventKey {
+func (t *TableController) inputCapture(event *tcell.EventKey) *tcell.EventKey {
 	if t.isRowViewOpen {
 		return t.inputHandlerRowView(event)
 	}
@@ -90,8 +92,7 @@ func (t *TableController) inputHandlerRowView(event *tcell.EventKey) *tcell.Even
 }
 
 func (t *TableController) closeRowView() {
-	t.appController.ShowTableView()
-	t.appController.TView().SetFocus(t.table)
+	t.openTableView()
 	t.isRowViewOpen = false
 }
 
@@ -130,64 +131,44 @@ func (t *TableController) getActionForShortcut(shortcut string) func() {
 	case "R":
 		return t.renderAfterAction(t.fetchController.JumpToLastPage)
 	case "H":
-		return t.fastScrollUp
+		return t.tableView.FastScrollUp
 	case "L":
-		return t.fastScrollDown
+		return t.tableView.FastScrollDown
 	}
 	return nil
 }
 
 func (t *TableController) exitTViewMode() {
 	t.fetchController.Close()
-	t.appController.SuspendOutputMode()
+	t.app.Stop()
 	output.Println("Result retrieval aborted.")
 }
 
 func (t *TableController) renderAfterAction(action func()) func() {
 	return func() {
 		action()
-		t.renderTable()
+		t.updateTable()
 	}
-}
-
-func (t *TableController) fastScrollUp() {
-	rowToSelect := lo.Max([]int{1, t.selectedRowIdx - t.numRowsToScroll})
-	t.table.Select(rowToSelect, 0)
-}
-
-func (t *TableController) fastScrollDown() {
-	rowToSelect := lo.Min([]int{t.table.GetRowCount() - 1, t.selectedRowIdx + t.numRowsToScroll})
-	t.table.Select(rowToSelect, 0)
 }
 
 func (t *TableController) openRowView() {
 	if !t.fetchController.IsAutoRefreshRunning() {
-		row := t.materializedStatementResultsIterator.Value()
+		row := t.tableView.GetSelectedRow()
 		t.isRowViewOpen = true
 
-		headers := t.fetchController.GetHeaders()
+		headers := t.fetchController.GetResults().GetHeaders()
 		sb := strings.Builder{}
 		for rowIdx, field := range row.Fields {
 			sb.WriteString(fmt.Sprintf("[yellow]%s:\n[white]%s\n\n", tview.Escape(headers[rowIdx]), tview.Escape(field.ToString())))
 		}
 		textView := tview.NewTextView().SetText(sb.String())
 		// mouse needs to be disabled, otherwise selecting text with the cursor won't work
-		t.appController.TView().SetRoot(components.CreateRowView(textView), true).EnableMouse(false)
-		t.appController.TView().SetFocus(textView)
+		t.app.SetRoot(components.CreateRowView(textView), true).EnableMouse(false)
+		t.app.SetFocus(textView)
 	}
 }
 
-func (t *TableController) renderTable() {
-	t.tableLock.Lock()
-	defer t.tableLock.Unlock()
-
-	t.renderTitle()
-	t.renderData()
-	t.selectLastRow()
-	t.appController.TView().SetFocus(t.table)
-}
-
-func (t *TableController) renderTitle() {
+func (t *TableController) getTableTitle() string {
 	mode := "Changelog mode"
 	if t.fetchController.IsTableMode() {
 		mode = "Table mode"
@@ -207,74 +188,5 @@ func (t *TableController) renderTitle() {
 		state = "unknown error"
 	}
 
-	t.table.SetTitle(fmt.Sprintf(" %s (%s) ", mode, state))
-}
-
-func (t *TableController) renderData() {
-	t.table.Clear()
-
-	_, _, tableWidth, _ := t.table.GetInnerRect()
-	t.tableWidth = tableWidth
-	columnWidths := t.fetchController.GetMaxWidthPerColumn()
-	truncatedColumnWidths := results.GetTruncatedColumnWidths(columnWidths, tableWidth)
-
-	// Print header
-	for colIdx, column := range t.fetchController.GetHeaders() {
-		tableCell := tview.NewTableCell(column).
-			SetTextColor(tcell.ColorYellow).
-			SetAlign(tview.AlignLeft).
-			SetSelectable(false).
-			SetMaxWidth(truncatedColumnWidths[colIdx])
-		t.table.SetCell(0, colIdx, tableCell)
-	}
-
-	// Print content
-	t.fetchController.ForEach(t.fillTable(truncatedColumnWidths))
-
-	// add callback function for after draw (gets triggered on any render event, such as screen size update)
-	t.table.SetDrawFunc(t.resizeTable(columnWidths))
-}
-
-func (t *TableController) fillTable(truncatedColumnWidths []int) func(rowIdx int, row *types.StatementResultRow) {
-	return func(rowIdx int, row *types.StatementResultRow) {
-		for colIdx, field := range row.Fields {
-			tableCell := tview.NewTableCell(tview.Escape(field.ToString())).
-				SetTextColor(tcell.ColorWhite).
-				SetAlign(tview.AlignLeft).
-				SetMaxWidth(truncatedColumnWidths[colIdx])
-			t.table.SetCell(rowIdx+1, colIdx, tableCell)
-		}
-	}
-}
-
-func (t *TableController) resizeTable(columnWidths []int) func(screen tcell.Screen, x int, y int, width int, height int) (int, int, int, int) {
-	return func(screen tcell.Screen, x, y, width, height int) (int, int, int, int) {
-		// check if the table width has changed
-		newX, newY, newWidth, newHeight := t.table.GetInnerRect()
-		hasTableWidthChanged := t.tableWidth != newWidth
-		t.tableWidth = newWidth
-		// minus 2 because of the header row and because we want to go to the first row we can still see
-		t.numRowsToScroll = newHeight - 2
-		if !hasTableWidthChanged {
-			return newX, newY, newWidth, newHeight
-		}
-
-		// check if space needed fits screen, if it doesn't truncate the column
-		truncatedColumnWidths := results.GetTruncatedColumnWidths(columnWidths, newWidth)
-		for rowIdx := 0; rowIdx < t.table.GetRowCount(); rowIdx++ {
-			for colIdx := 0; colIdx < t.table.GetColumnCount(); colIdx++ {
-				t.table.GetCell(rowIdx, colIdx).SetMaxWidth(lo.Max([]int{truncatedColumnWidths[colIdx], minColumnWidth}))
-			}
-		}
-		return newX, newY, newWidth, newHeight
-	}
-}
-
-func (t *TableController) selectLastRow() {
-	if !t.fetchController.IsAutoRefreshRunning() {
-		t.materializedStatementResultsIterator = t.fetchController.GetResultsIterator(true)
-	}
-
-	t.table.SetSelectable(!t.fetchController.IsAutoRefreshRunning(), false).Select(t.table.GetRowCount()-1, 0)
-	t.table.ScrollToEnd()
+	return fmt.Sprintf(" %s (%s) ", mode, state)
 }

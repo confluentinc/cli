@@ -32,8 +32,6 @@ func StartApp(client ccloudv2.GatewayClientInterface, authenticated func() error
 	history := history.LoadHistory()
 
 	// Create Components
-	table := components.CreateTable()
-	shortcuts := components.Shortcuts()
 	tviewApp := tview.NewApplication()
 
 	// Instantiate Application Controller - this is the top level controller that will be passed down to all other controllers
@@ -52,17 +50,10 @@ func StartApp(client ccloudv2.GatewayClientInterface, authenticated func() error
 
 	// Instantiate Component Controllers
 	fetchController := controller.NewFetchController(store)
-	tableController := controller.NewTableController(table, appController, fetchController)
+	tableController := controller.NewTableController(fetchController)
 	inputController := controller.NewInputController(appController, history)
 	statementController := controller.NewStatementController(appController, store, consoleParser)
-	resultsController := controller.NewOutputController(tableController, appController)
-
-	// Event handlers
-	tviewApp.SetInputCapture(tableController.AppInputCapture)
-
-	interactiveOutput := components.InteractiveOutput(table, shortcuts)
-	rootLayout := components.RootLayout(interactiveOutput)
-	appController.SetLayout(rootLayout)
+	resultsController := controller.NewOutputController(tableController)
 
 	app := Application{
 		history:             history,

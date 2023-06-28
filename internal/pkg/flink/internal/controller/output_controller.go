@@ -12,13 +12,11 @@ import (
 
 type OutputController struct {
 	tableController types.TableControllerInterface
-	appController   types.ApplicationControllerInterface
 }
 
-func NewOutputController(tableController types.TableControllerInterface, appController types.ApplicationControllerInterface) types.OutputControllerInterface {
+func NewOutputController(tableController types.TableControllerInterface) types.OutputControllerInterface {
 	return &OutputController{
 		tableController: tableController,
-		appController:   appController,
 	}
 }
 
@@ -26,7 +24,7 @@ func (c *OutputController) HandleStatementResults(processedStatement types.Proce
 	// decide if we want to display results using TView or just a plain table
 	if shouldUseTView(processedStatement) {
 		c.tableController.Init(processedStatement)
-		c.appController.StartTView()
+		c.tableController.Start()
 		return
 	}
 

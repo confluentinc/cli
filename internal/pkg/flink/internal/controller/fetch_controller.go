@@ -22,7 +22,6 @@ type FetchController struct {
 const (
 	maxResultsCapacity     int  = 1000
 	defaultRefreshInterval uint = 1000 // in milliseconds
-	minColumnWidth         int  = 4    // min characters displayed in a column
 )
 
 func NewFetchController(store store.StoreInterface) types.FetchControllerInterface {
@@ -137,22 +136,6 @@ func (t *FetchController) hasMoreResults() bool {
 	return len(t.getStatement().StatementResults.GetRows()) > 0 && t.GetFetchState() != types.Failed && t.GetFetchState() != types.Completed
 }
 
-func (t *FetchController) GetHeaders() []string {
-	return t.materializedStatementResults.GetHeaders()
-}
-
-func (t *FetchController) GetMaxWidthPerColumn() []int {
-	return t.materializedStatementResults.GetMaxWidthPerColumn()
-}
-
-func (t *FetchController) GetResultsIterator(startFromBack bool) types.MaterializedStatementResultsIterator {
-	return t.materializedStatementResults.Iterator(startFromBack)
-}
-
-func (t *FetchController) ForEach(f func(rowIdx int, row *types.StatementResultRow)) {
-	t.materializedStatementResults.ForEach(f)
-}
-
 func (t *FetchController) Init(statement types.ProcessedStatement) {
 	t.setFetchState(types.Paused)
 	t.setStatement(statement)
@@ -180,4 +163,8 @@ func (t *FetchController) Close() {
 
 func (t *FetchController) SetAutoRefreshCallback(autoRefreshCallback func()) {
 	t.autoRefreshCallback = autoRefreshCallback
+}
+
+func (t *FetchController) GetResults() *types.MaterializedStatementResults {
+	return &t.materializedStatementResults
 }

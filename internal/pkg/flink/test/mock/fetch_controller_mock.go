@@ -58,18 +58,6 @@ func (mr *MockFetchControllerInterfaceMockRecorder) FetchNextPage() *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchNextPage", reflect.TypeOf((*MockFetchControllerInterface)(nil).FetchNextPage))
 }
 
-// ForEach mocks base method.
-func (m *MockFetchControllerInterface) ForEach(arg0 func(int, *types.StatementResultRow)) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "ForEach", arg0)
-}
-
-// ForEach indicates an expected call of ForEach.
-func (mr *MockFetchControllerInterfaceMockRecorder) ForEach(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ForEach", reflect.TypeOf((*MockFetchControllerInterface)(nil).ForEach), arg0)
-}
-
 // GetFetchState mocks base method.
 func (m *MockFetchControllerInterface) GetFetchState() types.FetchState {
 	m.ctrl.T.Helper()
@@ -84,46 +72,18 @@ func (mr *MockFetchControllerInterfaceMockRecorder) GetFetchState() *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFetchState", reflect.TypeOf((*MockFetchControllerInterface)(nil).GetFetchState))
 }
 
-// GetHeaders mocks base method.
-func (m *MockFetchControllerInterface) GetHeaders() []string {
+// GetResults mocks base method.
+func (m *MockFetchControllerInterface) GetResults() *types.MaterializedStatementResults {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetHeaders")
-	ret0, _ := ret[0].([]string)
+	ret := m.ctrl.Call(m, "GetResults")
+	ret0, _ := ret[0].(*types.MaterializedStatementResults)
 	return ret0
 }
 
-// GetHeaders indicates an expected call of GetHeaders.
-func (mr *MockFetchControllerInterfaceMockRecorder) GetHeaders() *gomock.Call {
+// GetResults indicates an expected call of GetResults.
+func (mr *MockFetchControllerInterfaceMockRecorder) GetResults() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHeaders", reflect.TypeOf((*MockFetchControllerInterface)(nil).GetHeaders))
-}
-
-// GetMaxWidthPerColumn mocks base method.
-func (m *MockFetchControllerInterface) GetMaxWidthPerColumn() []int {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetMaxWidthPerColumn")
-	ret0, _ := ret[0].([]int)
-	return ret0
-}
-
-// GetMaxWidthPerColumn indicates an expected call of GetMaxWidthPerColumn.
-func (mr *MockFetchControllerInterfaceMockRecorder) GetMaxWidthPerColumn() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMaxWidthPerColumn", reflect.TypeOf((*MockFetchControllerInterface)(nil).GetMaxWidthPerColumn))
-}
-
-// GetResultsIterator mocks base method.
-func (m *MockFetchControllerInterface) GetResultsIterator(arg0 bool) types.MaterializedStatementResultsIterator {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetResultsIterator", arg0)
-	ret0, _ := ret[0].(types.MaterializedStatementResultsIterator)
-	return ret0
-}
-
-// GetResultsIterator indicates an expected call of GetResultsIterator.
-func (mr *MockFetchControllerInterfaceMockRecorder) GetResultsIterator(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetResultsIterator", reflect.TypeOf((*MockFetchControllerInterface)(nil).GetResultsIterator), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetResults", reflect.TypeOf((*MockFetchControllerInterface)(nil).GetResults))
 }
 
 // Init mocks base method.

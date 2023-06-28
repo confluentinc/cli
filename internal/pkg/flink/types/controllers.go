@@ -1,17 +1,7 @@
 package types
 
-import (
-	"github.com/gdamore/tcell/v2"
-	"github.com/rivo/tview"
-)
-
 type ApplicationControllerInterface interface {
-	SuspendOutputMode()
 	ExitApplication()
-	TView() *tview.Application
-	ShowTableView()
-	StartTView()
-	SetLayout(layout tview.Primitive)
 	AddCleanupFunction(func()) ApplicationControllerInterface
 }
 
@@ -22,7 +12,7 @@ type InputControllerInterface interface {
 }
 
 type TableControllerInterface interface {
-	AppInputCapture(event *tcell.EventKey) *tcell.EventKey
+	Start()
 	Init(statement ProcessedStatement)
 }
 
@@ -42,11 +32,8 @@ type FetchControllerInterface interface {
 	IsAutoRefreshRunning() bool
 	FetchNextPage()
 	JumpToLastPage()
-	GetHeaders() []string
-	GetMaxWidthPerColumn() []int
-	GetResultsIterator(bool) MaterializedStatementResultsIterator
-	ForEach(func(rowIdx int, row *StatementResultRow))
 	Init(statement ProcessedStatement)
 	Close()
 	SetAutoRefreshCallback(func())
+	GetResults() *MaterializedStatementResults
 }

@@ -18,7 +18,6 @@ type OutputControllerTestSuite struct {
 	suite.Suite
 	outputController types.OutputControllerInterface
 	tableController  *mock.MockTableControllerInterface
-	appController    *mock.MockApplicationControllerInterface
 }
 
 func TestOutputControllerTestSuite(t *testing.T) {
@@ -28,8 +27,7 @@ func TestOutputControllerTestSuite(t *testing.T) {
 func (s *OutputControllerTestSuite) SetupTest() {
 	ctrl := gomock.NewController(s.T())
 	s.tableController = mock.NewMockTableControllerInterface(ctrl)
-	s.appController = mock.NewMockApplicationControllerInterface(ctrl)
-	s.outputController = NewOutputController(s.tableController, s.appController)
+	s.outputController = NewOutputController(s.tableController)
 }
 
 func (s *OutputControllerTestSuite) TestHandleStatementResultsShouldOpenTView() {
@@ -37,7 +35,7 @@ func (s *OutputControllerTestSuite) TestHandleStatementResultsShouldOpenTView() 
 		PageToken: "not-empty",
 	}
 	s.tableController.EXPECT().Init(processedStatement)
-	s.appController.EXPECT().StartTView()
+	s.tableController.EXPECT().Start()
 
 	s.outputController.HandleStatementResults(processedStatement, 10)
 }
