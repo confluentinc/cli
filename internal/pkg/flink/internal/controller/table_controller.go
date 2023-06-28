@@ -43,6 +43,8 @@ func (t *TableController) SetRunInteractiveInputCallback(runInteractiveInput fun
 }
 
 func (t *TableController) Init(statement types.ProcessedStatement) {
+	t.selectedRowIdx = -1
+	t.isRowViewOpen = false
 	t.fetchController.Init(statement)
 	t.fetchController.SetAutoRefreshCallback(t.renderTableAsync)
 	t.table.SetSelectionChangedFunc(t.rowSelectionHandler)
