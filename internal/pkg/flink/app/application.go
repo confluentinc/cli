@@ -33,7 +33,8 @@ func StartApp(client ccloudv2.GatewayClientInterface, authenticated func() error
 	store := store.NewStore(client, appController.ExitApplication, &appOptions)
 
 	// Instantiate Component Controllers
-	tableController := controller.NewTableController(table, store, appController)
+	fetchController := controller.NewFetchController(store)
+	tableController := controller.NewTableController(table, appController, fetchController)
 	inputController := controller.NewInputController(tableController, appController, store, authenticated, history, &appOptions)
 
 	// Pass RunInteractiveInputFunc to table controller so the user can come back from the output view
