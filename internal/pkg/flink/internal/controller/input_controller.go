@@ -263,7 +263,7 @@ func (c *InputController) printResultToSTDOUT(statementResults *types.StatementR
 	variablePadding := (len(statementResults.Headers) - 1) * 3 // column separator
 	totalAvailableChars := windowSize - fixedPadding - variablePadding
 
-	materializedStatementResults := results.NewMaterializedStatementResults(statementResults.GetHeaders(), maxResultsCapacity)
+	materializedStatementResults := types.NewMaterializedStatementResults(statementResults.GetHeaders(), maxResultsCapacity)
 	materializedStatementResults.Append(statementResults.GetRows()...)
 	columnWidths := materializedStatementResults.GetMaxWidthPerColum()
 	columnWidths = results.GetTruncatedColumnWidths(columnWidths, totalAvailableChars)
