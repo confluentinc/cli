@@ -25,7 +25,7 @@ import (
 
 var (
 	statusBlacklist = []string{"Pulling fs layer", "Waiting", "Downloading", "Download complete", "Verifying Checksum", "Extracting", "Pull complete"}
-	localArch       = "unknown"
+	localArch       = "amd64"
 )
 
 type imagePullOut struct {
@@ -82,7 +82,7 @@ func (c *command) kafkaStart(cmd *cobra.Command, args []string) error {
 
 	log.CliLogger.Tracef("Pull confluent-local image success")
 
-	platform := &specsv1.Platform{OS: "linux", Architecture: getLocalArch()}
+	platform := &specsv1.Platform{OS: "linux", Architecture: localArch}
 
 	if err := c.prepareAndSaveLocalPorts(c.Config.IsTest); err != nil {
 		return err
@@ -188,8 +188,4 @@ func getContainerEnvironmentWithPorts(ports *v1.LocalPorts) []string {
 		fmt.Sprintf("KAFKA_REST_BOOTSTRAP_SERVERS=broker:%s", ports.BrokerPort),
 		fmt.Sprintf("KAFKA_REST_LISTENERS=http://0.0.0.0:%s", ports.KafkaRestPort),
 	}
-}
-
-func getLocalArch() string {
-	return localArch
 }

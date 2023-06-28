@@ -6,4 +6,4 @@ builds:
     flags:
       - -tags={{.Env.TAGS}}
     ldflags:
-      - "-X local.GetLocalArch={{.Env.LOCAL_ARCH}}"
+      - "-X github.com/confluentinc/cli/internal/cmd/local.localArch={{.Env.LOCAL_ARCH}}"

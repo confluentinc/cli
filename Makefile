@@ -1,9 +1,13 @@
 SHELL := /bin/bash
 GORELEASER_VERSION := v1.17.2
 
+.PHONY: set-local-arch
+set-local-arch:
+export LOCAL_ARCH=$(shell go env GOARCH)
+
 # Compile natively based on the current system
 .PHONY: build 
-build:
+build: set-local-arch
 ifneq "" "$(findstring NT,$(shell uname))" # windows
 	CC=gcc CXX=g++ $(MAKE) cli-builder
 else ifneq (,$(findstring Linux,$(shell uname)))
@@ -20,14 +24,14 @@ endif
 .PHONY: cross-build
 cross-build:
 ifeq ($(GOARCH),arm64)
+	export LOCAL_ARCH=arm64
     ifeq ($(GOOS),linux) # linux/arm64
-		export LOCAL_ARCH=arm64 && \
 		CGO_ENABLED=1 CC=aarch64-linux-musl-gcc CXX=aarch64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl $(MAKE) cli-builder
     else # darwin/arm64
-		export LOCAL_ARCH=arm64 && \
 		CGO_ENABLED=1 $(MAKE) cli-builder
     endif
 else
+	export LOCAL_ARCH=amd64
     ifeq ($(GOOS),windows) # windows/amd64
 		CGO_ENABLED=1 CC=x86_64-w64-mingw32-gcc CXX=x86_64-w64-mingw32-g++ CGO_LDFLAGS="-static" $(MAKE) cli-builder
     else ifeq ($(GOOS),linux) # linux/amd64
