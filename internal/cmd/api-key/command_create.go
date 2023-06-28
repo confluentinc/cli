@@ -41,13 +41,25 @@ func (c *command) newCreateCommand() *cobra.Command {
 				Code: "confluent api-key create --resource lkc-123456",
 			},
 			examples.Example{
-				Text: `Create an API key for cluster "lkc-123456" and service account "sa-123456":`,
+				Text: `Create an API key for Kafka cluster "lkc-123456" and service account "sa-123456":`,
 				Code: "confluent api-key create --resource lkc-123456 --service-account sa-123456",
+			},
+			examples.Example{
+				Text: `Create an API key for Schema Registry cluster "lsrc-123456":`,
+				Code: "confluent api-key create --resource lsrc-123456",
+			},
+			examples.Example{
+				Text: `Create an API key for KSQL cluster "lksqlc-123456":`,
+				Code: "confluent api-key create --resource lksqlc-123456",
+			},
+			examples.Example{
+				Text: "Create a Cloud API key:",
+				Code: "confluent api-key create --resource cloud",
 			},
 		),
 	}
 
-	cmd.Flags().String(resourceFlagName, "", `The resource ID. Use "cloud" to create a Cloud API key.`)
+	c.addResourceFlag(cmd)
 	cmd.Flags().String("description", "", "Description of API key.")
 	cmd.Flags().Bool("use", false, "Use the created API key for the provided resource.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -55,14 +67,15 @@ func (c *command) newCreateCommand() *cobra.Command {
 	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	cobra.CheckErr(cmd.MarkFlagRequired(resourceFlagName))
+	cobra.CheckErr(cmd.MarkFlagRequired("resource"))
 
 	return cmd
 }
 
 func (c *command) create(cmd *cobra.Command, _ []string) error {
 	c.setKeyStoreIfNil()
-	resourceType, clusterId, _, err := c.resolveResourceId(cmd, c.V2Client)
+
+	description, err := cmd.Flags().GetString("description")
 	if err != nil {
 		return err
 	}
@@ -72,28 +85,28 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	description, err := cmd.Flags().GetString("description")
+	owner := serviceAccount
+	if owner == "" {
+		userId, err := c.getCurrentUserId()
+		if err != nil {
+			return err
+		}
+		owner = userId
+	}
+
+	resourceType, clusterId, _, err := c.resolveResourceId(cmd, c.V2Client)
 	if err != nil {
 		return err
 	}
 
-	if serviceAccount == "" {
-		serviceAccount, err = c.getCurrentUserId()
-		if err != nil {
-			return err
-		}
-	}
-
-	key := apikeysv2.IamV2ApiKey{
-		Spec: &apikeysv2.IamV2ApiKeySpec{
-			Description: apikeysv2.PtrString(description),
-			Owner:       &apikeysv2.ObjectReference{Id: serviceAccount},
-			Resource: &apikeysv2.ObjectReference{
-				Id:   clusterId,
-				Kind: apikeysv2.PtrString(resourceTypeToKind[resourceType]),
-			},
+	key := apikeysv2.IamV2ApiKey{Spec: &apikeysv2.IamV2ApiKeySpec{
+		Description: apikeysv2.PtrString(description),
+		Owner:       &apikeysv2.ObjectReference{Id: owner},
+		Resource: &apikeysv2.ObjectReference{
+			Id:   clusterId,
+			Kind: apikeysv2.PtrString(resourceTypeToKind[resourceType]),
 		},
-	}
+	}}
 	if resourceType == resource.Cloud {
 		key.Spec.Resource.Id = "cloud"
 	}
