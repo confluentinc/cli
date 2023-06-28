@@ -103,7 +103,7 @@ func (c *Client) DeleteFlinkIAMBinding(id, environmentId string) error {
 	return errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) ListFlinkIAMBindings(environmentId string, region, cloud, identityPoolId string) ([]flinkv2.FcpmV2IamBinding, error) {
+func (c *Client) ListFlinkIAMBindings(environmentId, region, cloud, identityPoolId string) ([]flinkv2.FcpmV2IamBinding, error) {
 	req := c.FlinkClient.IamBindingsFcpmV2Api.ListFcpmV2IamBindings(c.flinkApiContext()).Environment(environmentId).PageSize(ccloudV2ListPageSize)
 	if region != "" {
 		req = req.Region(region)

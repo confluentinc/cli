@@ -73,7 +73,7 @@ func (c *command) iamBindingCreate(cmd *cobra.Command, _ []string) error {
 		Region:       iamBinding.GetRegion(),
 		Cloud:        iamBinding.GetCloud(),
 		Environment:  iamBinding.Environment.GetId(),
-		IdentityPool: iamBinding.GetIdentityPool().Id,
+		IdentityPool: iamBinding.IdentityPool.GetId(),
 	})
 	return table.Print()
 }

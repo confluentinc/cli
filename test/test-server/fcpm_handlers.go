@@ -173,5 +173,7 @@ func handleFcpmIamBindings(t *testing.T) http.HandlerFunc {
 }
 
 func handleFcpmIamBindingsId(t *testing.T) http.HandlerFunc {
+	// The handler is empty here, because we only have the DELETE method under the ID route at the moment, and even
+	// though we don't want to manipulate its response while testing, we still need the handler for proper test setup.
 	return func(w http.ResponseWriter, r *http.Request) {}
 }

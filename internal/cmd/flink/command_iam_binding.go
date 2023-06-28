@@ -6,8 +6,8 @@ import (
 
 type iamBindingOut struct {
 	Id           string `human:"ID" serialized:"id"`
-	Region       string `human:"Region" serialized:"region"`
 	Cloud        string `human:"Cloud" serialized:"cloud"`
+	Region       string `human:"Region" serialized:"region"`
 	Environment  string `human:"Environment" serialized:"environment"`
 	IdentityPool string `human:"Identity Pool" serialized:"identity_pool"`
 }
