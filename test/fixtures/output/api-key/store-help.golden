@@ -26,7 +26,7 @@ Get prompted for both the API key and secret
   $ confluent api-key store
 
 Flags:
-      --resource string      The resource ID of the resource the API key is for.
+      --resource string      The ID of the resource the API key is for. Use "cloud" for a Cloud API key.
   -f, --force                Force overwrite existing secret for this key.
       --context string       CLI context name.
       --environment string   Environment ID.
