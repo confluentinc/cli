@@ -87,7 +87,7 @@ func (s *TableControllerTestSuite) renderTableMockCalls() {
 }
 
 func (s *TableControllerTestSuite) TestToggleRefreshResultsOnUserInput() {
-	input := tcell.NewEventKey(tcell.KeyRune, 'P', tcell.ModNone)
+	input := tcell.NewEventKey(tcell.KeyRune, 'A', tcell.ModNone)
 	s.fetchController.EXPECT().ToggleAutoRefresh()
 	s.renderTableMockCalls()
 

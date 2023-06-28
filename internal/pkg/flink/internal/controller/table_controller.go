@@ -125,7 +125,7 @@ func (t *TableController) getActionForShortcut(shortcut string) func() {
 		return t.exitTViewMode
 	case "M":
 		return t.toggleTableModeAndRender
-	case "P":
+	case "A":
 		return t.toggleAutoRefreshAndRender
 	case "N":
 		return t.fetchNextPageAndRender

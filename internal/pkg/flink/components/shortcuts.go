@@ -13,7 +13,7 @@ import (
 var appShortcuts = []types.Shortcut{
 	{KeyText: "Q", Text: "Quit"},
 	{KeyText: "M", Text: "Toggle Result Mode"},
-	{KeyText: "P", Text: "Toggle Auto Refresh"},
+	{KeyText: "A", Text: "Toggle Auto Refresh"},
 	{KeyText: "R", Text: "Live results"},
 	{KeyText: "H/L", Text: "Fast scroll ▲/▼"},
 }
