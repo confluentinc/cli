@@ -10,7 +10,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
-func (c *command) newKafkaTopicListCommand() *cobra.Command {
+func (c *Command) newKafkaTopicListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List local Kafka topics.",
@@ -23,7 +23,7 @@ func (c *command) newKafkaTopicListCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) kafkaTopicList(cmd *cobra.Command, args []string) error {
+func (c *Command) kafkaTopicList(cmd *cobra.Command, args []string) error {
 	restClient, clusterId, err := initKafkaRest(c.CLICommand, cmd)
 	if err != nil {
 		return errors.NewErrorWithSuggestions(err.Error(), kafkaRestNotReadySuggestion)
