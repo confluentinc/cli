@@ -179,10 +179,10 @@ func (s *CLITestSuite) TestApiKey_EnvironmentNotValid() {
 	s.runIntegrationTest(tt)
 }
 
-func (s *CLITestSuite) TestApiKeyAutocomplete() {
+func (s *CLITestSuite) TestApiKey_Autocomplete() {
 	tests := []CLITest{
-		{args: `__complete api-key describe ""`, fixture: "api-key/describe-autocomplete.golden"},
 		{args: `__complete api-key create --resource ""`, fixture: "api-key/create-resource-autocomplete.golden"},
+		{args: `__complete api-key describe ""`, fixture: "api-key/describe-autocomplete.golden"},
 	}
 
 	for _, test := range tests {

@@ -2,8 +2,21 @@ DEACTIVATEDUSERKEY
 MULTICLUSTERKEY1	works for two clusters
 MULTICLUSTERKEY2	works for two clusters but on a different sr cluster
 MULTICLUSTERKEY3	works for two clusters and owned by service account
-MYKEY1	Example description
+MYKEY1	first-key
+MYKEY10
+MYKEY11	auditlog-key
+MYKEY12	auditlog-key
+MYKEY13	human-output
+MYKEY14	json-output
+MYKEY15	yaml-output
+MYKEY16	my-cool-app
 MYKEY2
+MYKEY3
+MYKEY4	my-cool-app
+MYKEY6	my-ksql-app
+MYKEY7
+MYKEY8
+MYKEY9
 SERVICEACCOUNTKEY1
 UIAPIKEY100
 UIAPIKEY101
