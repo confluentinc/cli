@@ -180,6 +180,13 @@ func (s *CLITestSuite) TestApiKey_EnvironmentNotValid() {
 }
 
 func (s *CLITestSuite) TestApiKeyAutocomplete() {
-	test := CLITest{args: `__complete api-key describe ""`, login: "cloud", fixture: "api-key/describe-autocomplete.golden"}
-	s.runIntegrationTest(test)
+	tests := []CLITest{
+		{args: `__complete api-key describe ""`, fixture: "api-key/describe-autocomplete.golden"},
+		{args: `__complete api-key create --resource ""`, fixture: "api-key/create-resource-autocomplete.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
 }
