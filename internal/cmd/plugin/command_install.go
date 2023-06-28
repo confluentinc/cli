@@ -49,7 +49,7 @@ func (c *command) install(cmd *cobra.Command, args []string) error {
 	}
 
 	confluentDir := filepath.Join(os.Getenv("HOME"), ".confluent")
-	dir, err := os.MkdirTemp(confluentDir, "confluent-plugin-install")
+	dir, err := os.MkdirTemp(confluentDir, "plugin-install")
 	if err != nil {
 		return err
 	}
