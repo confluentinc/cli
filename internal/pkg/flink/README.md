@@ -23,3 +23,4 @@ We'll add a couple of local properties to configure the client which aren't flin
 
 | Property | Description | Default |
 | table.results-timeout | the total amount of time in seconds to wait before timing out the request waiting for results to be ready | 600 (10 min) |
+
