@@ -48,7 +48,8 @@ func (c *command) install(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	dir, err := os.MkdirTemp("~/.confluent", "confluent-plugin-install")
+	confluentDir := filepath.Join(os.Getenv("HOME"), ".confluent")
+	dir, err := os.MkdirTemp(confluentDir, "confluent-plugin-install")
 	if err != nil {
 		return err
 	}
@@ -184,25 +185,22 @@ func installPlugin(manifest *Manifest, repositoryDir, installDir string) error {
 }
 
 func getLanguage(manifest *Manifest) (string, *version.Version) {
-	if manifest == nil {
+	if manifest == nil || len(manifest.Dependencies) == 0 {
 		return "", nil
 	}
 
-	if manifest.Dependencies == "" {
-		return "", nil
+	primaryDependency := manifest.Dependencies[0]
+	primaryDependency.Dependency = strings.ToLower(primaryDependency.Dependency)
+	if primaryDependency.Version == "" {
+		return primaryDependency.Dependency, nil
 	}
 
-	dependencySlice := strings.Split(strings.ToLower(manifest.Dependencies), " ")
-	if len(dependencySlice) == 1 {
-		return dependencySlice[0], nil
-	}
-
-	ver, err := version.NewVersion(dependencySlice[1])
+	ver, err := version.NewVersion(primaryDependency.Version)
 	if err != nil {
-		return dependencySlice[0], nil
+		return primaryDependency.Dependency, nil
 	}
 
-	return dependencySlice[0], ver
+	return primaryDependency.Dependency, ver
 }
 
 func checkPythonVersion(ver *version.Version) {

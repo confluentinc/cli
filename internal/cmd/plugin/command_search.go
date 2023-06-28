@@ -3,6 +3,8 @@ package plugin
 import (
 	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-yaml/yaml"
@@ -13,10 +15,21 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-type Manifest struct {
+type ManifestOut struct {
 	Name         string `human:"Name" serialized:"name"`
-	Description  string `yaml:"description" human:"Description" serialized:"description"`
-	Dependencies string `yaml:"dependencies" human:"Dependencies" serialized:"dependencies"`
+	Description  string `human:"Description" serialized:"description"`
+	Dependencies string `human:"Dependencies" serialized:"dependencies"`
+}
+
+type Manifest struct {
+	Name         string
+	Description  string       `yaml:"description"`
+	Dependencies []Dependency `yaml:"dependencies"`
+}
+
+type Dependency struct {
+	Dependency string `yaml:"dependency"`
+	Version    string `yaml:"version"`
 }
 
 func (c *command) newSearchCommand() *cobra.Command {
@@ -34,7 +47,8 @@ func (c *command) newSearchCommand() *cobra.Command {
 }
 
 func (c *command) search(cmd *cobra.Command, _ []string) error {
-	dir, err := os.MkdirTemp("", "plugin-search")
+	confluentDir := filepath.Join(os.Getenv("HOME"), ".confluent")
+	dir, err := os.MkdirTemp(confluentDir, "confluent-plugin-search")
 	if err != nil {
 		return err
 	}
@@ -67,13 +81,13 @@ func clonePluginRepo(dir, url string) (*git.Repository, error) {
 	return git.PlainClone(dir, false, cloneOptions)
 }
 
-func getPluginManifests(dir string) ([]*Manifest, error) {
+func getPluginManifests(dir string) ([]*ManifestOut, error) {
 	files, err := os.ReadDir(dir)
 	if err != nil {
 		return nil, err
 	}
 
-	manifests := []*Manifest{}
+	manifestOutList := []*ManifestOut{}
 	for _, file := range files {
 		manifestPath := fmt.Sprintf("%s/%s/manifest.yml", dir, file.Name())
 		if file.IsDir() && utils.DoesPathExist(manifestPath) {
@@ -83,13 +97,31 @@ func getPluginManifests(dir string) ([]*Manifest, error) {
 			}
 
 			manifest := new(Manifest)
-			manifests = append(manifests, manifest)
 			if err := yaml.Unmarshal(manifestFile, manifest); err != nil {
 				return nil, err
 			}
-			manifest.Name = file.Name()
+			manifestOutList = append(manifestOutList, &ManifestOut{
+				Name: file.Name(),
+				Description: manifest.Description,
+				Dependencies: dependenciesToString(manifest.Dependencies),
+			})
 		}
 	}
 
-	return manifests, nil
+	return manifestOutList, nil
+}
+
+func dependenciesToString(dependencies []Dependency) string {
+	var dependencyString string
+	for _, dependency := range dependencies {
+		if dependency.Dependency != "" {
+			dependencyString = fmt.Sprintf("%s %s", dependencyString, dependency.Dependency)
+			if dependency.Version != "" {
+				dependencyString = fmt.Sprintf("%s %s", dependencyString, dependency.Version)
+			}
+			dependencyString = fmt.Sprintf("%s,", dependencyString)
+		}
+	}
+
+	return strings.Trim(dependencyString, ", ")
 }
