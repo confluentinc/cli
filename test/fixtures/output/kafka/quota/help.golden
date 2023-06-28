@@ -5,7 +5,7 @@ Usage:
 
 Available Commands:
   create      Create a Kafka client quota.
-  delete      Delete a Kafka client quota.
+  delete      Delete Kafka client quotas.
   describe    Describe a Kafka client quota.
   list        List client quotas for given cluster.
   update      Update a Kafka client quota.

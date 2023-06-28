@@ -4,7 +4,7 @@ Usage:
   confluent iam user [command]
 
 Available Commands:
-  delete      Delete a user from your organization.
+  delete      Delete users from your organization.
   describe    Describe a user.
   invitation  Manage invitations.
   list        List an organization's users.

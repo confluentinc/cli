@@ -5,7 +5,7 @@ Usage:
 
 Available Commands:
   create      Create a connector.
-  delete      Delete a connector.
+  delete      Delete connectors.
   describe    Describe a connector.
   list        List connectors.
   pause       Pause connectors.

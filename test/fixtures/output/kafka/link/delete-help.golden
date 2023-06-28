@@ -1,7 +1,7 @@
-Delete a cluster link.
+Delete cluster links.
 
 Usage:
-  confluent kafka link delete <link> [flags]
+  confluent kafka link delete <link-1> [link-2] ... [link-n] [flags]
 
 Flags:
       --force                Skip the deletion confirmation prompt.

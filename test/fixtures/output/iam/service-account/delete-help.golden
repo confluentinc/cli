@@ -1,7 +1,7 @@
-Delete a service account.
+Delete service accounts.
 
 Usage:
-  confluent iam service-account delete <id> [flags]
+  confluent iam service-account delete <id-1> [id-2] ... [id-n] [flags]
 
 Examples:
 Delete service account "sa-123456".

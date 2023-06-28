@@ -8,7 +8,7 @@ Aliases:
 
 Available Commands:
   create      Create a new Confluent Cloud environment.
-  delete      Delete a Confluent Cloud environment and all its resources.
+  delete      Delete Confluent Cloud environments and all their resources.
   describe    Describe a Confluent Cloud environment.
   list        List Confluent Cloud environments.
   update      Update an existing Confluent Cloud environment.

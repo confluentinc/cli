@@ -6,7 +6,7 @@ Usage:
 Available Commands:
   configuration Manage cluster link configurations.
   create        Create a new cluster link.
-  delete        Delete a cluster link.
+  delete        Delete cluster links.
   list          List cluster links.
 
 Global Flags:

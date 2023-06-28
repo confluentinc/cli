@@ -1,7 +1,7 @@
-Delete an identity pool.
+Delete identity pools.
 
 Usage:
-  confluent iam pool delete <id> [flags]
+  confluent iam pool delete <id-1> [id-2] ... [id-n] [flags]
 
 Examples:
 Delete identity pool "pool-12345":

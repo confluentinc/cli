@@ -1,7 +1,7 @@
-Delete schema exporter.
+Delete schema exporters.
 
 Usage:
-  confluent schema-registry exporter delete <name> [flags]
+  confluent schema-registry exporter delete <name-1> <name-2> ... <name-n> [flags]
 
 Flags:
       --ca-location string                File or directory path to CA certificate(s) to authenticate the Schema Registry client.

@@ -4,7 +4,7 @@ Usage:
   confluent kafka broker [command]
 
 Available Commands:
-  delete      Delete a Kafka broker.
+  delete      Delete Kafka brokers.
   describe    Describe a Kafka broker.
   get-tasks   List broker tasks.
   list        List Kafka brokers.

@@ -5,7 +5,7 @@ Usage:
 
 Available Commands:
   create      Register a self-managed encryption key.
-  delete      Delete a self-managed key.
+  delete      Delete self-managed keys.
   describe    Describe a self-managed key.
   list        List self-managed keys.
 

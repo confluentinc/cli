@@ -1,7 +1,7 @@
-Delete a Confluent Cloud environment and all its resources.
+Delete Confluent Cloud environments and all their resources.
 
 Usage:
-  confluent environment delete <id> [flags]
+  confluent environment delete <id-1> [id-2] ... [id-n] [flags]
 
 Flags:
       --context string   CLI context name.

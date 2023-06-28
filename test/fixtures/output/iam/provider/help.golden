@@ -5,7 +5,7 @@ Usage:
 
 Available Commands:
   create      Create an identity provider.
-  delete      Delete an identity provider.
+  delete      Delete identity providers.
   describe    Describe an identity provider.
   list        List identity providers.
   update      Update an identity provider.
