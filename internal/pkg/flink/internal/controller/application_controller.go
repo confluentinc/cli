@@ -6,7 +6,9 @@ import (
 	"github.com/rivo/tview"
 
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/history"
+	"github.com/confluentinc/cli/internal/pkg/flink/internal/utils"
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
+	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
 // Tview application.
@@ -20,12 +22,10 @@ type ApplicationController struct {
 	cleanupFunctions []func()
 }
 
-// preFunc will, if defined, before the main function is executed. Both are executed after tview is suspended.
 func (a *ApplicationController) SuspendOutputMode() {
 	a.app.Stop()
 }
 
-// This function should be used to proparly stop the application, cache saving, cleanup and so on
 func (a *ApplicationController) ExitApplication() {
 	for _, cleanupFunction := range a.cleanupFunctions {
 		cleanupFunction()
@@ -47,7 +47,8 @@ func (a *ApplicationController) SetLayout(layout tview.Primitive) {
 func (a *ApplicationController) StartTView() {
 	err := a.app.Run()
 	if err != nil {
-		panic(err)
+		log.CliLogger.Errorf("Failed to open table tview., %v", err)
+		utils.OutputErr("Error: failed to open table tview")
 	}
 }
 
