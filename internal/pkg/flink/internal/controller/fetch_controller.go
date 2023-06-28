@@ -31,24 +31,6 @@ func NewFetchController(store store.StoreInterface) types.FetchControllerInterfa
 	}
 }
 
-func (t *FetchController) getStatement() types.ProcessedStatement {
-	t.statementLock.RLock()
-	defer t.statementLock.RUnlock()
-
-	return t.statement
-}
-
-func (t *FetchController) setStatement(statement types.ProcessedStatement) {
-	t.statementLock.Lock()
-	defer t.statementLock.Unlock()
-
-	t.statement = statement
-}
-
-func (t *FetchController) GetFetchState() types.FetchState {
-	return types.FetchState(atomic.LoadInt32(&t.fetchState))
-}
-
 func (t *FetchController) IsTableMode() bool {
 	return t.materializedStatementResults.IsTableMode()
 }
@@ -70,6 +52,14 @@ func (t *FetchController) IsAutoRefreshRunning() bool {
 	return t.GetFetchState() == types.Running
 }
 
+func (t *FetchController) GetFetchState() types.FetchState {
+	return types.FetchState(atomic.LoadInt32(&t.fetchState))
+}
+
+func (t *FetchController) setFetchState(state types.FetchState) {
+	atomic.StoreInt32(&t.fetchState, int32(state))
+}
+
 func (t *FetchController) startAutoRefresh(refreshInterval uint) {
 	if t.isAutoRefreshStartAllowed() {
 		t.setFetchState(types.Running)
@@ -85,10 +75,6 @@ func (t *FetchController) startAutoRefresh(refreshInterval uint) {
 
 func (t *FetchController) isAutoRefreshStartAllowed() bool {
 	return t.GetFetchState() == types.Paused || t.GetFetchState() == types.Failed
-}
-
-func (t *FetchController) setFetchState(state types.FetchState) {
-	atomic.StoreInt32(&t.fetchState, int32(state))
 }
 
 func (t *FetchController) FetchNextPage() {
@@ -119,6 +105,20 @@ func (t *FetchController) FetchNextPage() {
 	}
 
 	t.setFetchState(types.Running)
+}
+
+func (t *FetchController) getStatement() types.ProcessedStatement {
+	t.statementLock.RLock()
+	defer t.statementLock.RUnlock()
+
+	return t.statement
+}
+
+func (t *FetchController) setStatement(statement types.ProcessedStatement) {
+	t.statementLock.Lock()
+	defer t.statementLock.Unlock()
+
+	t.statement = statement
 }
 
 func (t *FetchController) JumpToLastPage() {
