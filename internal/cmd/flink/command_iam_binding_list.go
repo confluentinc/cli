@@ -59,8 +59,8 @@ func (c *command) iamBindingList(cmd *cobra.Command, _ []string) error {
 			Id:           iamBinding.GetId(),
 			Cloud:        iamBinding.GetCloud(),
 			Region:       iamBinding.GetRegion(),
-			Environment:  iamBinding.GetEnvironment().Id,
-			IdentityPool: iamBinding.GetIdentityPool().Id,
+			Environment:  iamBinding.Environment.GetId(),
+			IdentityPool: iamBinding.IdentityPool.GetId(),
 		})
 	}
 	return list.Print()

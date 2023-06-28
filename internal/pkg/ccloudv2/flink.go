@@ -8,33 +8,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
-type ListFlinkIAMBindingsQueryParams struct {
-	Region         string
-	Cloud          string
-	IdentityPoolId string
-}
-
-func (p *ListFlinkIAMBindingsQueryParams) GetRegion() string {
-	if p == nil {
-		return ""
-	}
-	return p.Region
-}
-
-func (p *ListFlinkIAMBindingsQueryParams) GetCloud() string {
-	if p == nil {
-		return ""
-	}
-	return p.Cloud
-}
-
-func (p *ListFlinkIAMBindingsQueryParams) GetIdentityPoolId() string {
-	if p == nil {
-		return ""
-	}
-	return p.IdentityPoolId
-}
-
 func newFlinkClient(url, userAgent string, unsafeTrace bool) *flinkv2.APIClient {
 	cfg := flinkv2.NewConfiguration()
 	cfg.Debug = unsafeTrace

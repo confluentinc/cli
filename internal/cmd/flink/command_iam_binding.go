@@ -16,6 +16,7 @@ func (c *command) newIamBindingCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "iam-binding",
 		Short: "Manage Flink IAM bindings.",
+		Long:  "Manage Flink Identity and Access Management (IAM) bindings.",
 	}
 
 	cmd.AddCommand(c.newIamBindingCreateCommand())

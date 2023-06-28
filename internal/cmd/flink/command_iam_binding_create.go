@@ -17,7 +17,7 @@ func (c *command) newIamBindingCreateCommand() *cobra.Command {
 		RunE:  c.iamBindingCreate,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Create a Flink IAM binding for AWS region "us-west-2" and environment "env-123".`,
+				Text: `Create a Flink IAM binding between AWS region "us-west-2", environment "env-123" and identity-pool "pool-123".`,
 				Code: "confluent flink iam-binding create --cloud aws --region us-west-2 --environment env-123 --identity-pool pool-123",
 			},
 		),
@@ -56,10 +56,10 @@ func (c *command) iamBindingCreate(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	if identityPoolId == "" {
-		if c.Context.GetCurrentIdentityPool() == "" {
-			return errors.NewErrorWithSuggestions("no identity pool set", "Set a persistent identity pool with `confluent iam pool use` or pass the `--identity-pool` flag.")
-		}
 		identityPoolId = c.Context.GetCurrentIdentityPool()
+	}
+	if identityPoolId == "" {
+		return errors.NewErrorWithSuggestions("no identity pool set", "Set a persistent identity pool with `confluent iam pool use` or pass the `--identity-pool` flag.")
 	}
 
 	iamBinding, err := c.V2Client.CreateFlinkIAMBinding(region, cloud, environmentId, identityPoolId)
