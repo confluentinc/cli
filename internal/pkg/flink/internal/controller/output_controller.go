@@ -62,7 +62,7 @@ func (c *OutputController) calcTotalAvailableChars(numColumns int, windowSize in
 }
 
 func (c *OutputController) getRows(statementResults *types.StatementResults, totalAvailableChars int) [][]string {
-	materializedStatementResults := types.NewMaterializedStatementResults(statementResults.GetHeaders(), maxResultsCapacity)
+	materializedStatementResults := types.NewMaterializedStatementResults(statementResults.GetHeaders(), results.MaxResultsCapacity)
 	materializedStatementResults.Append(statementResults.GetRows()...)
 	columnWidths := materializedStatementResults.GetMaxWidthPerColumn()
 	columnWidths = results.GetTruncatedColumnWidths(columnWidths, totalAvailableChars)

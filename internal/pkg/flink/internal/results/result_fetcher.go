@@ -1,4 +1,4 @@
-package controller
+package results
 
 import (
 	"sync"
@@ -6,12 +6,11 @@ import (
 	"time"
 
 	"github.com/confluentinc/cli/internal/pkg/flink/config"
-	"github.com/confluentinc/cli/internal/pkg/flink/internal/store"
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
 )
 
-type FetchController struct {
-	store                        store.StoreInterface
+type ResultFetcher struct {
+	store                        types.StoreInterface
 	statement                    types.ProcessedStatement
 	statementLock                sync.RWMutex
 	materializedStatementResults types.MaterializedStatementResults
@@ -20,47 +19,47 @@ type FetchController struct {
 }
 
 const (
-	maxResultsCapacity     int  = 1000
-	defaultRefreshInterval uint = 1000 // in milliseconds
+	MaxResultsCapacity     int  = 1000
+	DefaultRefreshInterval uint = 1000 // in milliseconds
 )
 
-func NewFetchController(store store.StoreInterface) types.FetchControllerInterface {
-	return &FetchController{
+func NewResultFetcher(store types.StoreInterface) types.ResultFetcherInterface {
+	return &ResultFetcher{
 		store:               store,
 		autoRefreshCallback: func() {},
 	}
 }
 
-func (t *FetchController) IsTableMode() bool {
+func (t *ResultFetcher) IsTableMode() bool {
 	return t.materializedStatementResults.IsTableMode()
 }
 
-func (t *FetchController) ToggleTableMode() {
+func (t *ResultFetcher) ToggleTableMode() {
 	t.materializedStatementResults.SetTableMode(!t.materializedStatementResults.IsTableMode())
 }
 
-func (t *FetchController) ToggleAutoRefresh() {
+func (t *ResultFetcher) ToggleAutoRefresh() {
 	if t.IsAutoRefreshRunning() {
 		t.setFetchState(types.Paused)
 		return
 	}
 
-	t.startAutoRefresh(defaultRefreshInterval)
+	t.startAutoRefresh(DefaultRefreshInterval)
 }
 
-func (t *FetchController) IsAutoRefreshRunning() bool {
+func (t *ResultFetcher) IsAutoRefreshRunning() bool {
 	return t.GetFetchState() == types.Running
 }
 
-func (t *FetchController) GetFetchState() types.FetchState {
+func (t *ResultFetcher) GetFetchState() types.FetchState {
 	return types.FetchState(atomic.LoadInt32(&t.fetchState))
 }
 
-func (t *FetchController) setFetchState(state types.FetchState) {
+func (t *ResultFetcher) setFetchState(state types.FetchState) {
 	atomic.StoreInt32(&t.fetchState, int32(state))
 }
 
-func (t *FetchController) startAutoRefresh(refreshInterval uint) {
+func (t *ResultFetcher) startAutoRefresh(refreshInterval uint) {
 	if t.isAutoRefreshStartAllowed() {
 		t.setFetchState(types.Running)
 		go func() {
@@ -73,11 +72,11 @@ func (t *FetchController) startAutoRefresh(refreshInterval uint) {
 	}
 }
 
-func (t *FetchController) isAutoRefreshStartAllowed() bool {
+func (t *ResultFetcher) isAutoRefreshStartAllowed() bool {
 	return t.GetFetchState() == types.Paused || t.GetFetchState() == types.Failed
 }
 
-func (t *FetchController) FetchNextPage() {
+func (t *ResultFetcher) FetchNextPage() {
 	// don't fetch if we're already at the last page, otherwise we would fetch the first page again
 	if t.GetFetchState() == types.Completed {
 		return
@@ -107,21 +106,21 @@ func (t *FetchController) FetchNextPage() {
 	t.setFetchState(types.Running)
 }
 
-func (t *FetchController) getStatement() types.ProcessedStatement {
+func (t *ResultFetcher) getStatement() types.ProcessedStatement {
 	t.statementLock.RLock()
 	defer t.statementLock.RUnlock()
 
 	return t.statement
 }
 
-func (t *FetchController) setStatement(statement types.ProcessedStatement) {
+func (t *ResultFetcher) setStatement(statement types.ProcessedStatement) {
 	t.statementLock.Lock()
 	defer t.statementLock.Unlock()
 
 	t.statement = statement
 }
 
-func (t *FetchController) JumpToLastPage() {
+func (t *ResultFetcher) JumpToLastPage() {
 	for {
 		t.FetchNextPage()
 		if !t.hasMoreResults() {
@@ -132,25 +131,25 @@ func (t *FetchController) JumpToLastPage() {
 	}
 }
 
-func (t *FetchController) hasMoreResults() bool {
+func (t *ResultFetcher) hasMoreResults() bool {
 	return len(t.getStatement().StatementResults.GetRows()) > 0 && t.GetFetchState() != types.Failed && t.GetFetchState() != types.Completed
 }
 
-func (t *FetchController) Init(statement types.ProcessedStatement) {
+func (t *ResultFetcher) Init(statement types.ProcessedStatement) {
 	t.setFetchState(types.Paused)
 	t.setStatement(statement)
-	t.materializedStatementResults = types.NewMaterializedStatementResults(statement.StatementResults.GetHeaders(), maxResultsCapacity)
+	t.materializedStatementResults = types.NewMaterializedStatementResults(statement.StatementResults.GetHeaders(), MaxResultsCapacity)
 	t.materializedStatementResults.SetTableMode(true)
 	t.materializedStatementResults.Append(statement.StatementResults.GetRows()...)
 	// if unbounded result start refreshing results in the background
 	if statement.PageToken != "" {
-		t.startAutoRefresh(defaultRefreshInterval)
+		t.startAutoRefresh(DefaultRefreshInterval)
 	} else {
 		t.setFetchState(types.Completed)
 	}
 }
 
-func (t *FetchController) Close() {
+func (t *ResultFetcher) Close() {
 	t.setFetchState(types.Paused)
 	// This was used to delete statements after their execution to save system resources, which should not be
 	// an issue anymore. We don't want to remove it completely just yet, but will disable it by default for now.
@@ -161,10 +160,10 @@ func (t *FetchController) Close() {
 	}
 }
 
-func (t *FetchController) SetAutoRefreshCallback(autoRefreshCallback func()) {
+func (t *ResultFetcher) SetAutoRefreshCallback(autoRefreshCallback func()) {
 	t.autoRefreshCallback = autoRefreshCallback
 }
 
-func (t *FetchController) GetResults() *types.MaterializedStatementResults {
+func (t *ResultFetcher) GetResults() *types.MaterializedStatementResults {
 	return &t.materializedStatementResults
 }

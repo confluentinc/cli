@@ -18,15 +18,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-const MOCK_STATEMENTS_OUTPUT_DEMO = true
-
-type StoreInterface interface {
-	ProcessStatement(statement string) (*types.ProcessedStatement, *types.StatementError)
-	FetchStatementResults(types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError)
-	DeleteStatement(statementName string) bool
-	WaitPendingStatement(ctx context.Context, statement types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError)
-}
-
 type Store struct {
 	Properties      map[string]string
 	exitApplication func()
@@ -243,7 +234,7 @@ func extractPageToken(nextUrl string) (string, error) {
 	return params.Get("page_token"), nil
 }
 
-func NewStore(client ccloudv2.GatewayClientInterface, exitApplication func(), appOptions *types.ApplicationOptions) StoreInterface {
+func NewStore(client ccloudv2.GatewayClientInterface, exitApplication func(), appOptions *types.ApplicationOptions) types.StoreInterface {
 	return &Store{
 		Properties:      appOptions.GetDefaultProperties(),
 		client:          client,

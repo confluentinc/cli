@@ -7,18 +7,17 @@ import (
 
 	"github.com/confluentinc/go-prompt"
 
-	"github.com/confluentinc/cli/internal/pkg/flink/internal/store"
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/utils"
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
 )
 
 type StatementController struct {
 	applicationController types.ApplicationControllerInterface
-	store                 store.StoreInterface
+	store                 types.StoreInterface
 	consoleParser         prompt.ConsoleParser
 }
 
-func NewStatementController(applicationController types.ApplicationControllerInterface, store store.StoreInterface, consoleParser prompt.ConsoleParser) types.StatementControllerInterface {
+func NewStatementController(applicationController types.ApplicationControllerInterface, store types.StoreInterface, consoleParser prompt.ConsoleParser) types.StatementControllerInterface {
 	return &StatementController{
 		applicationController: applicationController,
 		store:                 store,

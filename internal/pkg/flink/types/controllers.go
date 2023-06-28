@@ -23,17 +23,3 @@ type StatementControllerInterface interface {
 type OutputControllerInterface interface {
 	HandleStatementResults(processedStatement ProcessedStatement, windowSize int)
 }
-
-type FetchControllerInterface interface {
-	GetFetchState() FetchState
-	IsTableMode() bool
-	ToggleTableMode()
-	ToggleAutoRefresh()
-	IsAutoRefreshRunning() bool
-	FetchNextPage()
-	JumpToLastPage()
-	Init(statement ProcessedStatement)
-	Close()
-	SetAutoRefreshCallback(func())
-	GetResults() *MaterializedStatementResults
-}

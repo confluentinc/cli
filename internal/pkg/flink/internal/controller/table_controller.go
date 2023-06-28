@@ -9,6 +9,7 @@ import (
 	"github.com/rivo/tview"
 
 	"github.com/confluentinc/cli/internal/pkg/flink/components"
+	"github.com/confluentinc/cli/internal/pkg/flink/internal/results"
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/utils"
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -16,17 +17,22 @@ import (
 )
 
 type TableController struct {
-	app             *tview.Application
-	tableView       *components.TableView
-	fetchController types.FetchControllerInterface
-	isRowViewOpen   bool
+	app           *tview.Application
+	tableView     *components.TableView
+	resultFetcher types.ResultFetcherInterface
+	isRowViewOpen bool
 }
 
-func NewTableController(fetchController types.FetchControllerInterface) types.TableControllerInterface {
+func NewTableController(resultFetcher types.ResultFetcherInterface) types.OutputControllerInterface {
 	return &TableController{
-		app:             tview.NewApplication(),
-		fetchController: fetchController,
+		app:           tview.NewApplication(),
+		resultFetcher: resultFetcher,
 	}
+}
+
+func (t *TableController) VisualizeResults() {
+	t.Init(t.processedStatement)
+	t.Start()
 }
 
 func (t *TableController) Start() {
@@ -39,8 +45,8 @@ func (t *TableController) Start() {
 
 func (t *TableController) Init(statement types.ProcessedStatement) {
 	t.isRowViewOpen = false
-	t.fetchController.Init(statement)
-	t.fetchController.SetAutoRefreshCallback(t.renderTableAsync)
+	t.resultFetcher.Init(statement)
+	t.resultFetcher.SetAutoRefreshCallback(t.renderTableAsync)
 	t.app.SetInputCapture(t.inputCapture)
 	t.initTableView()
 }
@@ -52,7 +58,7 @@ func (t *TableController) initTableView() {
 }
 
 func (t *TableController) updateTable() {
-	t.tableView.RenderTable(t.getTableTitle(), t.fetchController.GetResults(), !t.fetchController.IsAutoRefreshRunning())
+	t.tableView.RenderTable(t.getTableTitle(), t.resultFetcher.GetResults(), !t.resultFetcher.IsAutoRefreshRunning())
 	t.app.SetFocus(t.tableView.GetTable())
 }
 
@@ -123,13 +129,13 @@ func (t *TableController) getActionForShortcut(shortcut string) func() {
 	case "Q":
 		return t.exitTViewMode
 	case "M":
-		return t.renderAfterAction(t.fetchController.ToggleTableMode)
+		return t.renderAfterAction(t.resultFetcher.ToggleTableMode)
 	case "A":
-		return t.renderAfterAction(t.fetchController.ToggleAutoRefresh)
+		return t.renderAfterAction(t.resultFetcher.ToggleAutoRefresh)
 	case "N":
-		return t.renderAfterAction(t.fetchController.FetchNextPage)
+		return t.renderAfterAction(t.resultFetcher.FetchNextPage)
 	case "R":
-		return t.renderAfterAction(t.fetchController.JumpToLastPage)
+		return t.renderAfterAction(t.resultFetcher.JumpToLastPage)
 	case "H":
 		return t.tableView.FastScrollUp
 	case "L":
@@ -139,7 +145,7 @@ func (t *TableController) getActionForShortcut(shortcut string) func() {
 }
 
 func (t *TableController) exitTViewMode() {
-	t.fetchController.Close()
+	t.resultFetcher.Close()
 	t.app.Stop()
 	output.Println("Result retrieval aborted.")
 }
@@ -152,11 +158,11 @@ func (t *TableController) renderAfterAction(action func()) func() {
 }
 
 func (t *TableController) openRowView() {
-	if !t.fetchController.IsAutoRefreshRunning() {
+	if !t.resultFetcher.IsAutoRefreshRunning() {
 		row := t.tableView.GetSelectedRow()
 		t.isRowViewOpen = true
 
-		headers := t.fetchController.GetResults().GetHeaders()
+		headers := t.resultFetcher.GetResults().GetHeaders()
 		sb := strings.Builder{}
 		for rowIdx, field := range row.Fields {
 			sb.WriteString(fmt.Sprintf("[yellow]%s:\n[white]%s\n\n", tview.Escape(headers[rowIdx]), tview.Escape(field.ToString())))
@@ -170,12 +176,12 @@ func (t *TableController) openRowView() {
 
 func (t *TableController) getTableTitle() string {
 	mode := "Changelog mode"
-	if t.fetchController.IsTableMode() {
+	if t.resultFetcher.IsTableMode() {
 		mode = "Table mode"
 	}
 
 	var state string
-	switch t.fetchController.GetFetchState() {
+	switch t.resultFetcher.GetFetchState() {
 	case types.Completed:
 		state = "completed"
 	case types.Failed:
@@ -183,7 +189,7 @@ func (t *TableController) getTableTitle() string {
 	case types.Paused:
 		state = "auto refresh paused"
 	case types.Running:
-		state = fmt.Sprintf("auto refresh %vs", defaultRefreshInterval/1000)
+		state = fmt.Sprintf("auto refresh %vs", results.DefaultRefreshInterval/1000)
 	default:
 		state = "unknown error"
 	}

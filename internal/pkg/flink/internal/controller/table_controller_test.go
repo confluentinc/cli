@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/confluentinc/cli/internal/pkg/flink/internal/results"
 	"github.com/confluentinc/cli/internal/pkg/flink/test/mock"
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
 )
@@ -259,5 +260,5 @@ func (s *TableControllerTestSuite) TestTableTitleDisplaysRunning() {
 
 	actual := s.tableController.getTableTitle()
 
-	require.Contains(s.T(), actual, fmt.Sprintf("(auto refresh %vs)", defaultRefreshInterval/1000))
+	require.Contains(s.T(), actual, fmt.Sprintf("(auto refresh %vs)", results.DefaultRefreshInterval/1000))
 }

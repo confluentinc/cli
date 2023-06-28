@@ -12,6 +12,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/flink/components"
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/controller"
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/history"
+	"github.com/confluentinc/cli/internal/pkg/flink/internal/results"
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/store"
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/utils"
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
@@ -40,6 +41,7 @@ func StartApp(client ccloudv2.GatewayClientInterface, authenticated func() error
 
 	// Store used to process statements and store local properties
 	store := store.NewStore(client, appController.ExitApplication, &appOptions)
+	resultFetcher := results.NewResultFetcher(store)
 
 	stdinBefore := getStdin()
 	consoleParser := getConsoleParser()
@@ -49,8 +51,7 @@ func StartApp(client ccloudv2.GatewayClientInterface, authenticated func() error
 	})
 
 	// Instantiate Component Controllers
-	fetchController := controller.NewFetchController(store)
-	tableController := controller.NewTableController(fetchController)
+	tableController := controller.NewTableController(resultFetcher)
 	inputController := controller.NewInputController(appController, history)
 	statementController := controller.NewStatementController(appController, store, consoleParser)
 	resultsController := controller.NewOutputController(tableController)
