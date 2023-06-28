@@ -288,7 +288,7 @@ func (c *InputController) Prompt() prompt.IPrompt {
 		AddCompleter(autocomplete.SetCompleter).
 		AddCompleter(autocomplete.ShowCompleter).
 		AddCompleter(autocomplete.GenerateHistoryCompleter(c.History.Data)).
-		AddCompleter(autocomplete.GenerateDocsCompleter()).
+		// AddCompleter(autocomplete.GenerateDocsCompleter()).
 		BuildCompleter()
 
 	return prompt.New(
