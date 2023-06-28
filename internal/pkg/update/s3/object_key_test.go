@@ -55,15 +55,15 @@ func TestNewPrefixedKey(t *testing.T) {
 			},
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := NewPrefixedKey(tt.args.prefix, tt.args.sep, tt.args.prefixVersion)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("NewPrefixedKey() error = %v, wantErr %v", err, tt.wantErr)
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got, err := NewPrefixedKey(test.args.prefix, test.args.sep, test.args.prefixVersion)
+			if (err != nil) != test.wantErr {
+				t.Errorf("NewPrefixedKey() error = %v, wantErr %v", err, test.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NewPrefixedKey() = %v, want %v", got, tt.want)
+			if !reflect.DeepEqual(got, test.want) {
+				t.Errorf("NewPrefixedKey() = %v, want %v", got, test.want)
 			}
 		})
 	}
@@ -212,32 +212,32 @@ func TestPrefixedKey_ParseVersion(t *testing.T) {
 			wantVer:   makeVersion("0.23.0"),
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if tt.fields.Separator == "" {
-				tt.fields.Separator = "_"
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if test.fields.Separator == "" {
+				test.fields.Separator = "_"
 			}
-			if tt.fields.goos == "" {
-				tt.fields.goos = "darwin"
+			if test.fields.goos == "" {
+				test.fields.goos = "darwin"
 			}
-			if tt.fields.goarch == "" {
-				tt.fields.goarch = "amd64"
+			if test.fields.goarch == "" {
+				test.fields.goarch = "amd64"
 			}
-			p, err := NewPrefixedKey(tt.fields.Prefix, tt.fields.Separator, tt.fields.Versioned)
+			p, err := NewPrefixedKey(test.fields.Prefix, test.fields.Separator, test.fields.Versioned)
 			req.NoError(err)
 			// Need to inject these so tests pass in different environments (e.g., CI)
-			p.goos = tt.fields.goos
-			p.goarch = tt.fields.goarch
-			match, ver, err := p.ParseVersion(tt.args.key, tt.args.name)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("PrefixedKey.ParseVersion() error = %v, wantErr %v", err, tt.wantErr)
+			p.goos = test.fields.goos
+			p.goarch = test.fields.goarch
+			match, ver, err := p.ParseVersion(test.args.key, test.args.name)
+			if (err != nil) != test.wantErr {
+				t.Errorf("PrefixedKey.ParseVersion() error = %v, wantErr %v", err, test.wantErr)
 				return
 			}
-			if match != tt.wantMatch {
-				t.Errorf("PrefixedKey.ParseVersion() match = %v, wantMatch %v", match, tt.wantMatch)
+			if match != test.wantMatch {
+				t.Errorf("PrefixedKey.ParseVersion() match = %v, wantMatch %v", match, test.wantMatch)
 			}
-			if !reflect.DeepEqual(ver, tt.wantVer) {
-				t.Errorf("PrefixedKey.ParseVersion() ver = %v, wantVer %v", ver, tt.wantVer)
+			if !reflect.DeepEqual(ver, test.wantVer) {
+				t.Errorf("PrefixedKey.ParseVersion() ver = %v, wantVer %v", ver, test.wantVer)
 			}
 		})
 	}
@@ -330,19 +330,19 @@ func TestPrefixedKey_URLFor(t *testing.T) {
 			want: "fancy-cli_0.1.2_windows_386.exe",
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if tt.fields.OS == "" {
-				tt.fields.OS = "darwin"
-				tt.fields.Arch = "amd64"
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if test.fields.OS == "" {
+				test.fields.OS = "darwin"
+				test.fields.Arch = "amd64"
 			}
-			p, err := NewPrefixedKey(tt.fields.Prefix, "_", tt.fields.VersionPrefixed)
+			p, err := NewPrefixedKey(test.fields.Prefix, "_", test.fields.VersionPrefixed)
 			req.NoError(err)
 			// Need to inject these so tests pass in different environments (e.g., CI)
-			p.goos = tt.fields.OS
-			p.goarch = tt.fields.Arch
-			if got := p.URLFor(tt.args.name, tt.args.version); got != tt.want {
-				t.Errorf("PrefixedKey.URLFor() = %v, want %v", got, tt.want)
+			p.goos = test.fields.OS
+			p.goarch = test.fields.Arch
+			if got := p.URLFor(test.args.name, test.args.version); got != test.want {
+				t.Errorf("PrefixedKey.URLFor() = %v, want %v", got, test.want)
 			}
 		})
 	}

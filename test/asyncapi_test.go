@@ -9,7 +9,7 @@ import (
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
-func (s *CLITestSuite) TestAsyncApiExport() {
+func (s *CLITestSuite) TestAsyncapiExport() {
 	tests := []CLITest{
 		{args: "asyncapi export", exitCode: 1, fixture: "asyncapi/no-kafka.golden"},
 		{args: "asyncapi export", exitCode: 1, useKafka: "lkc-asyncapi", authKafka: "true", fixture: "asyncapi/no-sr-key.golden"},
@@ -46,7 +46,7 @@ func (s *CLITestSuite) TestAsyncApiExport() {
 	}
 }
 
-func (s *CLITestSuite) TestAsyncApiImport() {
+func (s *CLITestSuite) TestAsyncapiImport() {
 	tests := []CLITest{
 		{args: "asyncapi import", fixture: "asyncapi/import-err-no-file.golden", exitCode: 1},
 		{args: "asyncapi import --file=./test/fixtures/input/asyncapi/asyncapi-spec.yaml", exitCode: 1, fixture: "asyncapi/no-kafka.golden"},
@@ -59,7 +59,7 @@ func (s *CLITestSuite) TestAsyncApiImport() {
 	}
 }
 
-func (s *CLITestSuite) TestAsyncApiImportWithWorkflow() {
+func (s *CLITestSuite) TestAsyncapiImport_WithWorkflow() {
 	tests := []CLITest{
 		{args: "environment use " + testserver.SRApiEnvId, workflow: true},
 		{args: "asyncapi import --file=./test/fixtures/input/asyncapi/asyncapi-spec.yaml --schema-registry-api-key ASYNCAPIKEY --schema-registry-api-secret ASYNCAPISECRET", useKafka: "lkc-asyncapi", authKafka: "true", workflow: true, fixture: "asyncapi/import-no-overwrite.golden"},

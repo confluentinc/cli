@@ -239,16 +239,16 @@ func Test_UpdateToken(t *testing.T) {
 			authToken: jwtWithNoExp,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
 			var cfg *v1.Config
-			if tt.isCloud {
+			if test.isCloud {
 				cfg = v1.AuthenticatedCloudConfigMock()
 			} else {
 				cfg = v1.AuthenticatedOnPremConfigMock()
 			}
 
-			cfg.Context().State.AuthToken = tt.authToken
+			cfg.Context().State.AuthToken = test.authToken
 
 			r := getPreRunBase()
 			r.Config = cfg
@@ -293,7 +293,7 @@ func Test_UpdateToken(t *testing.T) {
 
 			root := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
 			var rootCmd *pcmd.AuthenticatedCLICommand
-			if tt.isCloud {
+			if test.isCloud {
 				rootCmd = pcmd.NewAuthenticatedCLICommand(root, r)
 			} else {
 				rootCmd = pcmd.NewAuthenticatedWithMDSCLICommand(root, r)
@@ -421,10 +421,10 @@ func TestPrerun_AutoLogin(t *testing.T) {
 			wantErr:       true,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
 			var cfg *v1.Config
-			if tt.isCloud {
+			if test.isCloud {
 				cfg = v1.AuthenticatedCloudConfigMock()
 			} else {
 				cfg = v1.AuthenticatedOnPremConfigMock()
@@ -469,31 +469,31 @@ func TestPrerun_AutoLogin(t *testing.T) {
 				GetCloudCredentialsFromEnvVarFunc: func(orgResourceId string) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						ccloudEnvVarCalled = true
-						return tt.envVarReturn.creds, tt.envVarReturn.err
+						return test.envVarReturn.creds, test.envVarReturn.err
 					}
 				},
 				GetCredentialsFromNetrcFunc: func(_ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						ccloudNetrcCalled = true
-						return tt.netrcReturn.creds, tt.netrcReturn.err
+						return test.netrcReturn.creds, test.netrcReturn.err
 					}
 				},
 				GetPrerunCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						ccloudConfigCalled = true
-						return tt.configReturn.creds, tt.configReturn.err
+						return test.configReturn.creds, test.configReturn.err
 					}
 				},
 				GetOnPremPrerunCredentialsFromEnvVarFunc: func() func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						confluentEnvVarCalled = true
-						return tt.envVarReturn.creds, tt.envVarReturn.err
+						return test.envVarReturn.creds, test.envVarReturn.err
 					}
 				},
 				GetOnPremPrerunCredentialsFromNetrcFunc: func(_ *cobra.Command, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						confluentNetrcCalled = true
-						return tt.netrcReturn.creds, tt.netrcReturn.err
+						return test.netrcReturn.creds, test.netrcReturn.err
 					}
 				},
 				GetCredentialsFromConfigFunc: func(_ *v1.Config, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
@@ -504,7 +504,7 @@ func TestPrerun_AutoLogin(t *testing.T) {
 				GetCredentialsFromKeychainFunc: func(_ *v1.Config, _ bool, _, _ string) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						ccloudKeychainCalled = true
-						return tt.keychainReturn.creds, tt.keychainReturn.err
+						return test.keychainReturn.creds, test.keychainReturn.err
 					}
 				},
 			}
@@ -513,7 +513,7 @@ func TestPrerun_AutoLogin(t *testing.T) {
 				Run: func(cmd *cobra.Command, args []string) {},
 			}
 			var rootCmd *pcmd.AuthenticatedCLICommand
-			if tt.isCloud {
+			if test.isCloud {
 				rootCmd = pcmd.NewAuthenticatedCLICommand(root, r)
 			} else {
 				rootCmd = pcmd.NewAuthenticatedWithMDSCLICommand(root, r)
@@ -523,20 +523,20 @@ func TestPrerun_AutoLogin(t *testing.T) {
 
 			out, err := pcmd.ExecuteCommand(rootCmd.Command)
 
-			if tt.isCloud {
-				require.Equal(t, tt.envVarChecked, ccloudEnvVarCalled)
-				require.Equal(t, tt.netrcChecked, ccloudNetrcCalled)
-				require.Equal(t, tt.configChecked, ccloudConfigCalled)
-				require.Equal(t, tt.keychainChecked, ccloudKeychainCalled)
+			if test.isCloud {
+				require.Equal(t, test.envVarChecked, ccloudEnvVarCalled)
+				require.Equal(t, test.netrcChecked, ccloudNetrcCalled)
+				require.Equal(t, test.configChecked, ccloudConfigCalled)
+				require.Equal(t, test.keychainChecked, ccloudKeychainCalled)
 				require.False(t, confluentEnvVarCalled)
 			} else {
-				require.Equal(t, tt.envVarChecked, confluentEnvVarCalled)
-				require.Equal(t, tt.netrcChecked, confluentNetrcCalled)
-				require.Equal(t, tt.keychainChecked, ccloudKeychainCalled)
+				require.Equal(t, test.envVarChecked, confluentEnvVarCalled)
+				require.Equal(t, test.netrcChecked, confluentNetrcCalled)
+				require.Equal(t, test.keychainChecked, ccloudKeychainCalled)
 				require.False(t, ccloudEnvVarCalled)
 			}
 
-			if !tt.wantErr {
+			if !test.wantErr {
 				require.NoError(t, err)
 				require.NotContains(t, out, errors.AutoLoginMsg)
 				require.NotContains(t, out, fmt.Sprintf(errors.LoggedInAsMsg, username))
@@ -628,10 +628,10 @@ func TestPrerun_AutoLoginNotTriggeredIfLoggedIn(t *testing.T) {
 			name: "confluent logged in user",
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
 			var cfg *v1.Config
-			if tt.isCloud {
+			if test.isCloud {
 				cfg = v1.AuthenticatedCloudConfigMock()
 			} else {
 				cfg = v1.AuthenticatedOnPremConfigMock()
@@ -669,7 +669,7 @@ func TestPrerun_AutoLoginNotTriggeredIfLoggedIn(t *testing.T) {
 				Run: func(cmd *cobra.Command, args []string) {},
 			}
 			var rootCmd *pcmd.AuthenticatedCLICommand
-			if tt.isCloud {
+			if test.isCloud {
 				rootCmd = pcmd.NewAuthenticatedCLICommand(root, r)
 			} else {
 				rootCmd = pcmd.NewAuthenticatedWithMDSCLICommand(root, r)
@@ -754,10 +754,10 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 			suggestionsMsg: errors.PassedSecretButNotKeySuggestions,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
 			r := getPreRunBase()
-			r.Config = tt.config
+			r.Config = test.config
 
 			root := &cobra.Command{
 				Run: func(cmd *cobra.Command, args []string) {},
@@ -769,12 +769,12 @@ func TestPreRun_HasAPIKeyCommand(t *testing.T) {
 			root.Flags().String("api-secret", "", "API key secret.")
 			root.Flags().String("cluster", "", "Kafka cluster ID.")
 
-			_, err := pcmd.ExecuteCommand(rootCmd.Command, "--api-key", tt.key, "--api-secret", tt.secret)
-			if tt.errMsg != "" {
+			_, err := pcmd.ExecuteCommand(rootCmd.Command, "--api-key", test.key, "--api-secret", test.secret)
+			if test.errMsg != "" {
 				require.Error(t, err)
-				require.Equal(t, tt.errMsg, err.Error())
-				if tt.suggestionsMsg != "" {
-					errors.VerifyErrorAndSuggestions(require.New(t), err, tt.errMsg, tt.suggestionsMsg)
+				require.Equal(t, test.errMsg, err.Error())
+				if test.suggestionsMsg != "" {
+					errors.VerifyErrorAndSuggestions(require.New(t), err, test.errMsg, test.suggestionsMsg)
 				}
 			} else {
 				require.NoError(t, err)

@@ -12,8 +12,8 @@ func (s *CLITestSuite) TestServiceQuotaList() {
 
 	resetConfiguration(s.T(), false)
 
-	for _, tt := range tests {
-		tt.workflow = true
-		s.runIntegrationTest(tt)
+	for _, test := range tests {
+		test.workflow = true
+		s.runIntegrationTest(test)
 	}
 }
