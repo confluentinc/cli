@@ -21,9 +21,9 @@ func (c *command) newUseCommand() *cobra.Command {
 		RunE:              c.use,
 	}
 
-	cmd.Flags().String(resourceFlagName, "", "The resource ID.")
+	c.addResourceFlag(cmd)
 
-	cobra.CheckErr(cmd.MarkFlagRequired(resourceFlagName))
+	cobra.CheckErr(cmd.MarkFlagRequired("resource"))
 
 	return cmd
 }
