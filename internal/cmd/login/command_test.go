@@ -385,8 +385,8 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
 			loginCredentialsManager := &climock.LoginCredentialsManager{
 				GetCloudCredentialsFromEnvVarFunc: func(_ string) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
@@ -436,15 +436,15 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 				},
 				SetCloudClientFunc: func(_ *ccloudv1.Client) {},
 			}
-			if tt.setNetrcUser {
+			if test.setNetrcUser {
 				loginCredentialsManager.GetCredentialsFromNetrcFunc = func(_ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return netrcCreds, nil
 					}
 				}
 			}
-			if tt.isCloud {
-				if tt.setEnvVar {
+			if test.isCloud {
+				if test.setEnvVar {
 					loginCredentialsManager.GetCloudCredentialsFromEnvVarFunc = func(orgResourceId string) func() (*pauth.Credentials, error) {
 						return func() (*pauth.Credentials, error) {
 							return envCreds, nil
@@ -452,7 +452,7 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 					}
 				}
 			} else {
-				if tt.setEnvVar {
+				if test.setEnvVar {
 					loginCredentialsManager.GetOnPremCredentialsFromEnvVarFunc = func() func() (*pauth.Credentials, error) {
 						return func() (*pauth.Credentials, error) {
 							return envCreds, nil
@@ -461,14 +461,14 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 				}
 			}
 
-			loginCmd, _ := newLoginCmd(mockAuth, mockUserInterface, tt.isCloud, req, mockNetrcHandler, AuthTokenHandler, loginCredentialsManager, LoginOrganizationManager)
+			loginCmd, _ := newLoginCmd(mockAuth, mockUserInterface, test.isCloud, req, mockNetrcHandler, AuthTokenHandler, loginCredentialsManager, LoginOrganizationManager)
 			var loginArgs []string
-			if !tt.isCloud {
+			if !test.isCloud {
 				loginArgs = []string{"--url=http://localhost:8090"}
 			}
 			output, err := pcmd.ExecuteCommand(loginCmd, loginArgs...)
 			req.NoError(err)
-			req.NotContains(output, fmt.Sprintf(errors.LoggedInAsMsg, tt.wantUser))
+			req.NotContains(output, fmt.Sprintf(errors.LoggedInAsMsg, test.wantUser))
 		})
 	}
 }
@@ -493,8 +493,8 @@ func TestPromptLoginFlag(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
 			mockLoginCredentialsManager := &climock.LoginCredentialsManager{
 				GetCloudCredentialsFromEnvVarFunc: func(_ string) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
@@ -530,9 +530,9 @@ func TestPromptLoginFlag(t *testing.T) {
 				SetCloudClientFunc: func(arg0 *ccloudv1.Client) {
 				},
 			}
-			loginCmd, _ := newLoginCmd(mockAuth, mockUserInterface, tt.isCloud, req, mockNetrcHandler, AuthTokenHandler, mockLoginCredentialsManager, LoginOrganizationManager)
+			loginCmd, _ := newLoginCmd(mockAuth, mockUserInterface, test.isCloud, req, mockNetrcHandler, AuthTokenHandler, mockLoginCredentialsManager, LoginOrganizationManager)
 			loginArgs := []string{"--prompt"}
-			if !tt.isCloud {
+			if !test.isCloud {
 				loginArgs = append(loginArgs, "--url=http://localhost:8090")
 			}
 			output, err := pcmd.ExecuteCommand(loginCmd, loginArgs...)
@@ -615,37 +615,37 @@ func Test_SelfSignedCerts(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if tt.setEnv {
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if test.setEnv {
 				os.Setenv(pauth.ConfluentPlatformCACertPath, "testcert.pem")
 			}
 			cfg := v1.New()
 			var expectedCaCert string
-			if tt.setEnv {
-				expectedCaCert = tt.envCertPath
+			if test.setEnv {
+				expectedCaCert = test.envCertPath
 			} else {
-				expectedCaCert = tt.caCertPathFlag
+				expectedCaCert = test.caCertPathFlag
 			}
 			loginCmd := getNewLoginCommandForSelfSignedCertTest(req, cfg, expectedCaCert)
-			_, err := pcmd.ExecuteCommand(loginCmd, "--url=http://localhost:8090", fmt.Sprintf("--ca-cert-path=%s", tt.caCertPathFlag))
+			_, err := pcmd.ExecuteCommand(loginCmd, "--url=http://localhost:8090", fmt.Sprintf("--ca-cert-path=%s", test.caCertPathFlag))
 			req.NoError(err)
 
 			ctx := cfg.Context()
 
-			if tt.setEnv {
-				req.Contains(ctx.Platform.CaCertPath, tt.envCertPath)
+			if test.setEnv {
+				req.Contains(ctx.Platform.CaCertPath, test.envCertPath)
 			} else {
 				// ensure the right CaCertPath is stored in Config
-				req.Contains(ctx.Platform.CaCertPath, tt.caCertPathFlag)
+				req.Contains(ctx.Platform.CaCertPath, test.caCertPathFlag)
 			}
 
-			if tt.caCertPathFlag != "" || tt.envCertPath != "" {
-				req.Equal(fmt.Sprintf(tt.expectedContextName, ctx.Platform.CaCertPath), ctx.Name)
+			if test.caCertPathFlag != "" || test.envCertPath != "" {
+				req.Equal(fmt.Sprintf(test.expectedContextName, ctx.Platform.CaCertPath), ctx.Name)
 			} else {
-				req.Equal(tt.expectedContextName, ctx.Name)
+				req.Equal(test.expectedContextName, ctx.Name)
 			}
-			if tt.setEnv {
+			if test.setEnv {
 				os.Unsetenv(pauth.ConfluentPlatformCACertPath)
 			}
 		})
@@ -672,15 +672,15 @@ func Test_SelfSignedCertsLegacyContexts(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
 			legacyContextName := "login-prompt-user@confluent.io-http://localhost:8090"
 			cfg := v1.AuthenticatedConfigMockWithContextName(legacyContextName)
 			cfg.Contexts[legacyContextName].Platform.CaCertPath = originalCaCertPath
 
-			loginCmd := getNewLoginCommandForSelfSignedCertTest(req, cfg, tt.expectedCaCertPath)
+			loginCmd := getNewLoginCommandForSelfSignedCertTest(req, cfg, test.expectedCaCertPath)
 			args := []string{"--url=http://localhost:8090"}
-			if tt.useCaCertPathFlag {
+			if test.useCaCertPathFlag {
 				args = append(args, "--ca-cert-path=")
 			}
 			_, err := pcmd.ExecuteCommand(loginCmd, args...)
@@ -688,7 +688,7 @@ func Test_SelfSignedCertsLegacyContexts(t *testing.T) {
 
 			ctx := cfg.Context()
 			// ensure the right CaCertPath is stored in Config and context name is the right name
-			req.Equal(tt.expectedCaCertPath, ctx.Platform.CaCertPath)
+			req.Equal(test.expectedCaCertPath, ctx.Platform.CaCertPath)
 			req.Equal(legacyContextName, ctx.Name)
 		})
 	}

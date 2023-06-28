@@ -44,26 +44,24 @@ func TestDynamicConfig_ParseFlagsIntoConfig(t *testing.T) {
 			errMsg:        fmt.Sprintf(errors.ContextDoesNotExistErrorMsg, "bad-context"),
 		},
 	}
-	for _, tt := range tests {
-		cmd := &cobra.Command{
-			Run: func(cmd *cobra.Command, args []string) {},
-		}
+	for _, test := range tests {
+		cmd := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
 		cmd.Flags().String("context", "", "Context name.")
-		err := cmd.ParseFlags([]string{"--context", tt.context})
+		err := cmd.ParseFlags([]string{"--context", test.context})
 		require.NoError(t, err)
-		initialCurrentContext := tt.dynamicConfig.CurrentContext
-		err = tt.dynamicConfig.ParseFlagsIntoConfig(cmd)
-		if tt.errMsg != "" {
+		initialCurrentContext := test.dynamicConfig.CurrentContext
+		err = test.dynamicConfig.ParseFlagsIntoConfig(cmd)
+		if test.errMsg != "" {
 			require.Error(t, err)
-			require.Equal(t, tt.errMsg, err.Error())
-			if tt.suggestionsMsg != "" {
-				errors.VerifyErrorAndSuggestions(require.New(t), err, tt.errMsg, tt.suggestionsMsg)
+			require.Equal(t, test.errMsg, err.Error())
+			if test.suggestionsMsg != "" {
+				errors.VerifyErrorAndSuggestions(require.New(t), err, test.errMsg, test.suggestionsMsg)
 			}
 		} else {
 			require.NoError(t, err)
-			ctx := tt.dynamicConfig.Context()
-			if tt.context != "" {
-				require.Equal(t, tt.context, ctx.Name)
+			ctx := test.dynamicConfig.Context()
+			if test.context != "" {
+				require.Equal(t, test.context, ctx.Name)
 			} else {
 				require.Equal(t, initialCurrentContext, ctx.Name)
 			}

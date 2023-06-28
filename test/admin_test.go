@@ -11,7 +11,7 @@ func (s *CLITestSuite) TestAdminPaymentDescribe() {
 	}
 }
 
-func (s *CLITestSuite) TestAdminPaymentDescribeMarketplaceOrg() {
+func (s *CLITestSuite) TestAdminPaymentDescribe_MarketplaceOrg() {
 	tests := []CLITest{
 		{args: "admin payment describe", fixture: "admin/payment/describe-marketplace-org.golden"},
 	}

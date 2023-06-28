@@ -183,9 +183,9 @@ func (s *InputControllerTestSuite) TestShouldUseTView() {
 			want: false,
 		},
 	}
-	for _, tt := range tests {
-		s.T().Run(tt.name, func(t *testing.T) {
-			require.Equal(t, tt.want, shouldUseTView(tt.statement))
+	for _, test := range tests {
+		s.T().Run(test.name, func(t *testing.T) {
+			require.Equal(t, test.want, shouldUseTView(test.statement))
 		})
 	}
 }
@@ -212,12 +212,12 @@ func (s *InputControllerTestSuite) TestRenderMsgAndStatusLocalStatements() {
 			want:      "Statement successfully submitted.\n",
 		},
 	}
-	for _, tt := range tests {
-		s.T().Run(tt.name, func(t *testing.T) {
+	for _, test := range tests {
+		s.T().Run(test.name, func(t *testing.T) {
 			actual := s.runAndCaptureSTDOUT(func() {
-				renderMsgAndStatus(tt.statement)
+				renderMsgAndStatus(test.statement)
 			})
-			require.Equal(t, tt.want, actual)
+			require.Equal(t, test.want, actual)
 		})
 	}
 }
@@ -254,12 +254,12 @@ func (s *InputControllerTestSuite) TestRenderMsgAndStatusNonLocalFailedStatement
 			want:      "Error: statement submission failed\nstatus-detail.\n",
 		},
 	}
-	for _, tt := range tests {
-		s.T().Run(tt.name, func(t *testing.T) {
+	for _, test := range tests {
+		s.T().Run(test.name, func(t *testing.T) {
 			actual := s.runAndCaptureSTDOUT(func() {
-				renderMsgAndStatus(tt.statement)
+				renderMsgAndStatus(test.statement)
 			})
-			require.Equal(t, tt.want, actual)
+			require.Equal(t, test.want, actual)
 		})
 	}
 }
@@ -296,12 +296,12 @@ func (s *InputControllerTestSuite) TestRenderMsgAndStatusNonLocalNonFailedStatem
 			want:      "Statement successfully submitted.\nFetching results...\nstatus-detail.\n",
 		},
 	}
-	for _, tt := range tests {
-		s.T().Run(tt.name, func(t *testing.T) {
+	for _, test := range tests {
+		s.T().Run(test.name, func(t *testing.T) {
 			actual := s.runAndCaptureSTDOUT(func() {
-				renderMsgAndStatus(tt.statement)
+				renderMsgAndStatus(test.statement)
 			})
-			require.Equal(t, tt.want, actual)
+			require.Equal(t, test.want, actual)
 		})
 	}
 }

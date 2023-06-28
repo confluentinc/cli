@@ -38,14 +38,14 @@ func (s *CLITestSuite) TestPipeline() {
 		{args: `pipeline update pipe-12345 --secret name1=value-with,and= --secret name2=value-with\"and\' --secret name3=`, fixture: "pipeline/update-with-secret-names.golden"},
 	}
 
-	for _, tt := range tests {
-		tt.login = "cloud"
-		tt.useKafka = "lkc-12345"
-		s.runIntegrationTest(tt)
+	for _, test := range tests {
+		test.login = "cloud"
+		test.useKafka = "lkc-12345"
+		s.runIntegrationTest(test)
 	}
 }
 
-func (s *CLITestSuite) TestPipelineAutocomplete() {
+func (s *CLITestSuite) TestPipeline_Autocomplete() {
 	test := CLITest{args: `__complete pipeline describe ""`, login: "cloud", useKafka: "lkc-12345", fixture: "pipeline/describe-autocomplete.golden"}
 	s.runIntegrationTest(test)
 }

@@ -49,9 +49,9 @@ func (s *CLITestSuite) TestFlinkStatement() {
 		{args: "flink statement list --compute-pool lfcp-123456", fixture: "flink/statement/list.golden"},
 	}
 
-	for _, tt := range tests {
-		tt.login = "cloud"
-		s.runIntegrationTest(tt)
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
 	}
 }
 
