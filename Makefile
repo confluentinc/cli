@@ -21,8 +21,10 @@ endif
 cross-build:
 ifeq ($(GOARCH),arm64)
     ifeq ($(GOOS),linux) # linux/arm64
+		export LOCAL_ARCH=arm64 && \
 		CGO_ENABLED=1 CC=aarch64-linux-musl-gcc CXX=aarch64-linux-musl-g++ CGO_LDFLAGS="-static" TAGS=musl $(MAKE) cli-builder
     else # darwin/arm64
+		export LOCAL_ARCH=arm64 && \
 		CGO_ENABLED=1 $(MAKE) cli-builder
     endif
 else

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"runtime"
 	"strconv"
 	"strings"
 
@@ -26,6 +25,7 @@ import (
 
 var (
 	statusBlacklist = []string{"Pulling fs layer", "Waiting", "Downloading", "Download complete", "Verifying Checksum", "Extracting", "Pull complete"}
+	localArch       = "unknown"
 )
 
 type imagePullOut struct {
@@ -82,17 +82,18 @@ func (c *command) kafkaStart(cmd *cobra.Command, args []string) error {
 
 	log.CliLogger.Tracef("Pull confluent-local image success")
 
+	platform := &specsv1.Platform{OS: "linux", Architecture: getLocalArch()}
+
 	if err := c.prepareAndSaveLocalPorts(c.Config.IsTest); err != nil {
 		return err
 	}
-
 	if c.Config.LocalPorts == nil {
 		return errors.NewErrorWithSuggestions(errors.FailedToReadPortsErrorMsg, errors.FailedToReadPortsSuggestions)
 	}
 	ports := c.Config.LocalPorts
-	platform := &specsv1.Platform{OS: "linux", Architecture: runtime.GOARCH}
 	natKafkaRestPort := nat.Port(ports.KafkaRestPort + "/tcp")
 	natPlaintextPort := nat.Port(ports.PlaintextPort + "/tcp")
+
 	config := &container.Config{
 		Image:    dockerImageName,
 		Hostname: "broker",
@@ -187,4 +188,8 @@ func getContainerEnvironmentWithPorts(ports *v1.LocalPorts) []string {
 		fmt.Sprintf("KAFKA_REST_BOOTSTRAP_SERVERS=broker:%s", ports.BrokerPort),
 		fmt.Sprintf("KAFKA_REST_LISTENERS=http://0.0.0.0:%s", ports.KafkaRestPort),
 	}
+}
+
+func getLocalArch() string {
+	return localArch
 }

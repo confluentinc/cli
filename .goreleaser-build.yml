@@ -5,3 +5,5 @@ builds:
     main: cmd/confluent/main.go
     flags:
       - -tags={{.Env.TAGS}}
+    ldflags:
+      - "-X local.GetLocalArch={{.Env.LOCAL_ARCH}}"
