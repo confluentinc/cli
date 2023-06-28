@@ -288,7 +288,6 @@ func (c *InputController) Prompt() prompt.IPrompt {
 		AddCompleter(autocomplete.SetCompleter).
 		AddCompleter(autocomplete.ShowCompleter).
 		AddCompleter(autocomplete.GenerateHistoryCompleter(c.History.Data)).
-		// AddCompleter(autocomplete.GenerateDocsCompleter()).
 		BuildCompleter()
 
 	return prompt.New(
@@ -298,10 +297,7 @@ func (c *InputController) Prompt() prompt.IPrompt {
 		prompt.OptionHistory(c.History.Data),
 		prompt.OptionSwitchKeyBindMode(prompt.EmacsKeyBind),
 		prompt.OptionSetExitCheckerOnInput(func(input string, breakline bool) bool {
-			if c.reverseISearchEnabled || c.shouldExit {
-				return true
-			}
-			return false
+			return c.reverseISearchEnabled || c.shouldExit
 		}),
 		prompt.OptionAddASCIICodeBind(),
 		prompt.OptionAddKeyBind(prompt.KeyBind{
