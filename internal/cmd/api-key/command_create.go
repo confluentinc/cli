@@ -49,6 +49,10 @@ func (c *command) newCreateCommand() *cobra.Command {
 				Code: "confluent api-key create --resource lsrc-123456",
 			},
 			examples.Example{
+				Text: `Create an API key for KSQL cluster "lksqlc-123456":`,
+				Code: "confluent api-key create --resource lksqlc-123456",
+			},
+			examples.Example{
 				Text: "Create a Cloud API key:",
 				Code: "confluent api-key create --resource cloud",
 			},

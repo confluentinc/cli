@@ -74,7 +74,12 @@ func (c *command) addResourceFlag(cmd *cobra.Command) {
 			return nil
 		}
 
-		suggestions := make([]string, 1+len(kafkaClusters)+len(schemaRegistryClusters))
+		ksqlClusters, err := c.V2Client.ListKsqlClusters(environmentId)
+		if err != nil {
+			return nil
+		}
+
+		suggestions := make([]string, 1+len(kafkaClusters)+len(schemaRegistryClusters)+len(ksqlClusters))
 		i := 0
 
 		suggestions[i] = "cloud"
@@ -86,6 +91,11 @@ func (c *command) addResourceFlag(cmd *cobra.Command) {
 		}
 
 		for _, cluster := range schemaRegistryClusters {
+			suggestions[i] = fmt.Sprintf("%s\t%s", cluster.GetId(), cluster.Spec.GetDisplayName())
+			i++
+		}
+
+		for _, cluster := range ksqlClusters {
 			suggestions[i] = fmt.Sprintf("%s\t%s", cluster.GetId(), cluster.Spec.GetDisplayName())
 			i++
 		}
