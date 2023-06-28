@@ -54,11 +54,12 @@ func (t *TableController) renderTableAsync() {
 }
 
 func (t *TableController) rowSelectionHandler(row, col int) {
-	if row <= 0 || row >= t.table.GetRowCount() {
+	outOfBounds := row <= 0 || row >= t.table.GetRowCount()
+	if outOfBounds || t.fetchController.IsAutoRefreshRunning() {
 		return
 	}
 
-	if t.selectedRowIdx != -1 && !t.fetchController.IsAutoRefreshRunning() {
+	if t.selectedRowIdx != -1 {
 		stepsToMove := row - t.selectedRowIdx
 		t.materializedStatementResultsIterator.Move(stepsToMove)
 	}

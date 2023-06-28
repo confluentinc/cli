@@ -172,7 +172,7 @@ func (s *TableControllerTestSuite) initMockCalls(materializedStatementResults *t
 	s.fetchController.EXPECT().GetMaxWidthPerColumn().Return(materializedStatementResults.GetMaxWidthPerColum())
 	s.fetchController.EXPECT().GetHeaders().Return(materializedStatementResults.GetHeaders())
 	s.fetchController.EXPECT().ForEach(gomock.Any()).Do(func(f func(rowIdx int, row *types.StatementResultRow)) { materializedStatementResults.ForEach(f) })
-	s.fetchController.EXPECT().IsAutoRefreshRunning().Return(false).Times(2)
+	s.fetchController.EXPECT().IsAutoRefreshRunning().Return(false).Times(3)
 	s.fetchController.EXPECT().GetResultsIterator(true).Return(materializedStatementResults.Iterator(true))
 	s.appController.EXPECT().TView().Return(s.dummyTViewApp)
 }
@@ -208,6 +208,7 @@ func (s *TableControllerTestSuite) TestCloseRowViewOnUserInput() {
 
 func (s *TableControllerTestSuite) TestSelectRowShouldDoNothingWhenRowToSelectSmallerThanOne() {
 	materializedStatementResults := getResultsExample()
+	expectedIterator := materializedStatementResults.Iterator(true)
 	s.initMockCalls(materializedStatementResults, types.Paused)
 	s.tableController.Init(types.ProcessedStatement{})
 
@@ -217,11 +218,13 @@ func (s *TableControllerTestSuite) TestSelectRowShouldDoNothingWhenRowToSelectSm
 
 		// last row should be selected
 		require.Equal(s.T(), materializedStatementResults.Size(), s.tableController.selectedRowIdx)
+		require.Equal(s.T(), expectedIterator.Value(), s.tableController.materializedStatementResultsIterator.Value())
 	})
 }
 
-func (s *TableControllerTestSuite) TestSelectRowShouldDoNothingWhenRowToSelectGreaterThanRows() {
+func (s *TableControllerTestSuite) TestSelectRowShouldDoNothingWhenRowToSelectGreaterThanNumRows() {
 	materializedStatementResults := getResultsExample()
+	expectedIterator := materializedStatementResults.Iterator(true)
 	s.initMockCalls(materializedStatementResults, types.Paused)
 	s.tableController.Init(types.ProcessedStatement{})
 
@@ -231,27 +234,13 @@ func (s *TableControllerTestSuite) TestSelectRowShouldDoNothingWhenRowToSelectGr
 
 		// last row should be selected
 		require.Equal(s.T(), materializedStatementResults.Size(), s.tableController.selectedRowIdx)
+		require.Equal(s.T(), expectedIterator.Value(), s.tableController.materializedStatementResultsIterator.Value())
 	})
 }
 
-func (s *TableControllerTestSuite) TestSelectRowShouldNotMoveIteratorOnFirstCall() {
+func (s *TableControllerTestSuite) TestSelectRowShouldDoNothingWhenAutoRefreshIsRunning() {
 	materializedStatementResults := getResultsExample()
-	s.initMockCalls(materializedStatementResults, types.Paused)
-	s.tableController.Init(types.ProcessedStatement{})
-
-	rapid.Check(s.T(), func(t *rapid.T) {
-		// need to set this manually, because Init selected the last row already
-		s.tableController.selectedRowIdx = -1
-
-		rowToSelect := rapid.IntRange(1, materializedStatementResults.Size()).Draw(t, "row to select")
-		s.tableController.table.Select(rowToSelect, 0)
-
-		require.Equal(s.T(), rowToSelect, s.tableController.selectedRowIdx)
-	})
-}
-
-func (s *TableControllerTestSuite) TestSelectRowShouldNotMoveIteratorWhenAutoRefreshIsRunning() {
-	materializedStatementResults := getResultsExample()
+	expectedIterator := materializedStatementResults.Iterator(true)
 	s.initMockCalls(materializedStatementResults, types.Paused)
 	s.tableController.Init(types.ProcessedStatement{})
 
@@ -260,8 +249,27 @@ func (s *TableControllerTestSuite) TestSelectRowShouldNotMoveIteratorWhenAutoRef
 		s.fetchController.EXPECT().IsAutoRefreshRunning().Return(true)
 		s.tableController.table.Select(rowToSelect, 0)
 
+		// last row should be selected
+		require.Equal(s.T(), materializedStatementResults.Size(), s.tableController.selectedRowIdx)
+		require.Equal(s.T(), expectedIterator.Value(), s.tableController.materializedStatementResultsIterator.Value())
+	})
+}
+
+func (s *TableControllerTestSuite) TestSelectRowShouldNotMoveIteratorOnFirstCall() {
+	materializedStatementResults := getResultsExample()
+	expectedIterator := materializedStatementResults.Iterator(true)
+	s.initMockCalls(materializedStatementResults, types.Paused)
+	s.tableController.Init(types.ProcessedStatement{})
+
+	rapid.Check(s.T(), func(t *rapid.T) {
+		// need to set this manually, because Init selected the last row already
+		s.tableController.selectedRowIdx = -1
+		s.fetchController.EXPECT().IsAutoRefreshRunning().Return(false)
+
+		rowToSelect := rapid.IntRange(1, materializedStatementResults.Size()).Draw(t, "row to select")
+		s.tableController.table.Select(rowToSelect, 0)
+
 		require.Equal(s.T(), rowToSelect, s.tableController.selectedRowIdx)
-		expectedIterator := materializedStatementResults.Iterator(true)
 		require.Equal(s.T(), expectedIterator.Value(), s.tableController.materializedStatementResultsIterator.Value())
 	})
 }
