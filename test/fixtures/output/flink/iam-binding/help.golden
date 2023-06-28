@@ -1,4 +1,4 @@
-Manage Flink IAM bindings.
+Manage Flink Identity and Access Management (IAM) bindings.
 
 Usage:
   confluent flink iam-binding [command]
