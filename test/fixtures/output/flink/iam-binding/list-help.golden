@@ -4,8 +4,8 @@ Usage:
   confluent flink iam-binding list [flags]
 
 Flags:
-      --region string          Cloud region for compute pool (use "confluent flink region list" to see all).
       --cloud string           Specify the cloud provider as "aws", "azure", or "gcp".
+      --region string          Cloud region for compute pool (use "confluent flink region list" to see all).
       --environment string     Environment ID.
       --identity-pool string   Identity pool ID.
   -o, --output string          Specify the output format as "human", "json", or "yaml". (default "human")

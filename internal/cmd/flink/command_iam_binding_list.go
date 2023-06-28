@@ -15,8 +15,8 @@ func (c *command) newIamBindingListCommand() *cobra.Command {
 		RunE:  c.iamBindingList,
 	}
 
-	c.addRegionFlag(cmd)
 	pcmd.AddCloudFlag(cmd)
+	c.addRegionFlag(cmd)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("identity-pool", "", "Identity pool ID.")
 	pcmd.AddOutputFlag(cmd)
@@ -57,8 +57,8 @@ func (c *command) iamBindingList(cmd *cobra.Command, _ []string) error {
 	for _, iamBinding := range iamBindings {
 		list.Add(&iamBindingOut{
 			Id:           iamBinding.GetId(),
-			Region:       iamBinding.GetRegion(),
 			Cloud:        iamBinding.GetCloud(),
+			Region:       iamBinding.GetRegion(),
 			Environment:  iamBinding.GetEnvironment().Id,
 			IdentityPool: iamBinding.GetIdentityPool().Id,
 		})

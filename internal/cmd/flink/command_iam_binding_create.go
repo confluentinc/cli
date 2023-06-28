@@ -23,8 +23,8 @@ func (c *command) newIamBindingCreateCommand() *cobra.Command {
 		),
 	}
 
-	c.addRegionFlag(cmd)
 	pcmd.AddCloudFlag(cmd)
+	c.addRegionFlag(cmd)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("identity-pool", "", "Identity pool ID.")
 	pcmd.AddOutputFlag(cmd)
@@ -70,8 +70,8 @@ func (c *command) iamBindingCreate(cmd *cobra.Command, _ []string) error {
 	table := output.NewTable(cmd)
 	table.Add(&iamBindingOut{
 		Id:           iamBinding.GetId(),
-		Region:       iamBinding.GetRegion(),
 		Cloud:        iamBinding.GetCloud(),
+		Region:       iamBinding.GetRegion(),
 		Environment:  iamBinding.Environment.GetId(),
 		IdentityPool: iamBinding.IdentityPool.GetId(),
 	})
