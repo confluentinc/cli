@@ -22,7 +22,7 @@ func TestParseStack(t *testing.T) {
 		"~/cli/internal/cmd/command.go:172 +0x17c",
 		"~/cli/cmd/confluent/main.go:40 +0x3f4",
 	}
-	assert.Equal(t, formattedTrace, *parseStack(rawTrace))
+	assert.Equal(t, formattedTrace, parseStack(rawTrace))
 
 	rawTrace = `github.com/confluentinc/cli/internal/pkg/dynamic-config.(*DynamicContext).AuthenticatedEnvId(0xc0001254c0)
 				/go/src/github.com/confluentinc/cli/internal/pkg/dynamic-config/dynamic_context.go:241 +0x64
@@ -62,5 +62,5 @@ func TestParseStack(t *testing.T) {
 		"/go/src/github.com/confluentinc/cli/internal/cmd/command.go:150 +0x1e5",
 		"/go/src/github.com/confluentinc/cli/cmd/confluent/main.go:36 +0x26f",
 	}
-	assert.Equal(t, formattedTrace, *parseStack(rawTrace))
+	assert.Equal(t, formattedTrace, parseStack(rawTrace))
 }
