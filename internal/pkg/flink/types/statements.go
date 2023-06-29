@@ -57,7 +57,7 @@ const (
 	DELETE        StatementResultOperation = 3
 )
 
-type StatementResultOperation int8
+type StatementResultOperation float64
 
 func (s StatementResultOperation) IsInsertOperation() bool {
 	return s == INSERT || s == UPDATE_AFTER
