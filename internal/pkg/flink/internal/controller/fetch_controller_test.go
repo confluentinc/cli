@@ -179,3 +179,24 @@ func (s *FetchControllerTestSuite) TestJumpToLiveResultsOnUserInput() {
 	require.Equal(s.T(), types.Paused, s.fetchController.GetFetchState())
 	require.Equal(s.T(), types.ProcessedStatement{PageToken: "LAST"}, s.fetchController.getStatement())
 }
+
+func (s *FetchControllerTestSuite) TestCloseShouldSetFetchStateToPaused() {
+	s.fetchController.setFetchState(types.Running)
+
+	s.fetchController.Close()
+
+	require.Equal(s.T(), types.Paused, s.fetchController.GetFetchState())
+}
+
+func (s *FetchControllerTestSuite) TestCloseShouldDeleteRunningStatements() {
+	statement := types.ProcessedStatement{
+		StatementName: "test-statement",
+		Status:        types.RUNNING,
+	}
+	s.fetchController.setStatement(statement)
+	s.mockStore.EXPECT().DeleteStatement(statement.StatementName)
+
+	s.fetchController.Close()
+
+	require.Equal(s.T(), types.Paused, s.fetchController.GetFetchState())
+}
