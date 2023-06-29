@@ -187,7 +187,7 @@ func (t *TableController) openRowView() {
 
 		headers := t.fetchController.GetHeaders()
 		sb := strings.Builder{}
-		for rowIdx, field := range row.Fields {
+		for rowIdx, field := range row.GetFields() {
 			sb.WriteString(fmt.Sprintf("[yellow]%s:\n[white]%s\n\n", tview.Escape(headers[rowIdx]), tview.Escape(field.ToString())))
 		}
 		textView := tview.NewTextView().SetText(sb.String())
@@ -291,10 +291,8 @@ func (t *TableController) resizeTable(columnWidths []int) func(screen tcell.Scre
 }
 
 func (t *TableController) selectLastRow() {
-	if !t.fetchController.IsAutoRefreshRunning() {
-		t.materializedStatementResultsIterator = t.fetchController.GetResultsIterator(true)
-	}
-
-	t.table.SetSelectable(!t.fetchController.IsAutoRefreshRunning(), false).Select(t.table.GetRowCount()-1, 0)
+	t.selectedRowIdx = t.table.GetRowCount() - 1
+	t.materializedStatementResultsIterator = t.fetchController.GetResultsIterator(true)
+	t.table.SetSelectable(!t.fetchController.IsAutoRefreshRunning(), false).Select(t.selectedRowIdx, 0)
 	t.table.ScrollToEnd()
 }
