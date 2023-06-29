@@ -3,7 +3,6 @@ package acl
 import (
 	"fmt"
 	"sort"
-	"strconv"
 	"strings"
 
 	"github.com/antihax/optional"
@@ -18,8 +17,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/types"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -60,7 +57,7 @@ type AclRequestDataWithError struct {
 	Errors       error
 }
 
-func PrintACLsFromKafkaRestResponse(cmd *cobra.Command, acls []cpkafkarestv3.AclData) error {
+func PrintACLsFromKafkaRestResponseOnPrem(cmd *cobra.Command, acls []cpkafkarestv3.AclData) error {
 	list := output.NewList(cmd)
 	for _, acl := range acls {
 		list.Add(&out{
@@ -317,41 +314,27 @@ func CreateAclRequestDataToAclData(data *AclRequestDataWithError) cpkafkarestv3.
 	}
 }
 
-func PrintACLsFromKafkaRestResponseWithResourceIdMap(cmd *cobra.Command, acls []cckafkarestv3.AclData, numericIdToResourceId map[int32]string) error {
+func PrintACLsFromKafkaRestResponse(cmd *cobra.Command, acls []cckafkarestv3.AclData) error {
 	list := output.NewList(cmd)
 	for _, acl := range acls {
-		prefix, resourceId, err := getPrefixAndResourceIdFromPrincipal(acl.Principal, numericIdToResourceId)
-		if err != nil {
-			if err.Error() == errors.UserIdNotValidErrorMsg {
-				continue // skip the entry if not a valid user id
-			}
-			return err
-		}
 		list.Add(&out{
-			Principal:    prefix + ":" + resourceId,
-			Permission:   acl.Permission,
-			Operation:    acl.Operation,
-			ResourceType: string(acl.ResourceType),
-			ResourceName: acl.ResourceName,
-			PatternType:  acl.PatternType,
+			Principal:    acl.GetPrincipal(),
+			Permission:   acl.GetPermission(),
+			Operation:    acl.GetOperation(),
+			ResourceType: string(acl.GetResourceType()),
+			ResourceName: acl.GetResourceName(),
+			PatternType:  acl.GetPatternType(),
 		})
 	}
 	list.Filter(listFields)
 	return list.Print()
 }
 
-func PrintACLsWithResourceIdMap(cmd *cobra.Command, acls []*ccstructs.ACLBinding, numericIdToResourceId map[int32]string) error {
+func PrintACLsWithResourceIdMap(cmd *cobra.Command, acls []*ccstructs.ACLBinding) error {
 	list := output.NewList(cmd)
 	for _, acl := range acls {
-		prefix, resourceId, err := getPrefixAndResourceIdFromPrincipal(acl.Entry.Principal, numericIdToResourceId)
-		if err != nil {
-			if err.Error() == errors.UserIdNotValidErrorMsg {
-				continue // skip the entry if not a valid user id
-			}
-			return err
-		}
 		list.Add(&out{
-			Principal:    prefix + ":" + resourceId,
+			Principal:    acl.Entry.Principal,
 			Permission:   acl.Entry.PermissionType.String(),
 			Operation:    acl.Entry.Operation.String(),
 			ResourceType: acl.Pattern.ResourceType.String(),
@@ -361,42 +344,6 @@ func PrintACLsWithResourceIdMap(cmd *cobra.Command, acls []*ccstructs.ACLBinding
 	}
 	list.Filter(listFields)
 	return list.Print()
-}
-
-func getPrefixAndResourceIdFromPrincipal(principal string, numericIdToResourceId map[int32]string) (string, string, error) {
-	if principal == "" {
-		return "", "", nil
-	}
-
-	x := strings.Split(principal, ":")
-	if len(x) < 2 {
-		return "", "", errors.Errorf("unrecognized principal format %s", principal)
-	}
-	prefix := x[0]
-	suffix := x[1]
-
-	// The principal has a resource ID
-	resources := []string{
-		resource.IdentityPool,
-		resource.ServiceAccount,
-		resource.User,
-	}
-	if types.Contains(resources, resource.LookupType(suffix)) {
-		return prefix, suffix, nil
-	}
-
-	// The principal has a numeric ID
-	id, err := strconv.ParseInt(suffix, 10, 32)
-	if err != nil {
-		return "", "", errors.New(errors.UserIdNotValidErrorMsg)
-	}
-
-	resourceId, ok := numericIdToResourceId[int32(id)]
-	if !ok {
-		return "", "", errors.New(errors.UserIdNotValidErrorMsg)
-	}
-
-	return prefix, resourceId, nil
 }
 
 func GetCreateAclRequestData(binding *ccstructs.ACLBinding) cckafkarestv3.CreateAclRequestData {

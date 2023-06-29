@@ -1,6 +1,6 @@
 [
   {
-    "principal": "User:12345",
+    "principal": "User:sa-12345",
     "permission": "ALLOW",
     "operation": "READ",
     "host": "*",
