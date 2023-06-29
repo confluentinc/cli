@@ -33,11 +33,15 @@ func TestStoreTestSuite(t *testing.T) {
 	suite.Run(t, new(StoreTestSuite))
 }
 
+func authenticated() error {
+	return nil
+}
+
 func TestStoreProcessLocalStatement(t *testing.T) {
 	// Create a new store
 	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, "authToken")
 	mockAppController := mock.NewMockApplicationControllerInterface(gomock.NewController(t))
-	s := NewStore(client, mockAppController.ExitApplication, nil).(*Store)
+	s := NewStore(client, mockAppController.ExitApplication, nil, authenticated).(*Store)
 
 	result, err := s.ProcessLocalStatement("SET 'foo'='bar';")
 	assert.Nil(t, err)
@@ -73,8 +77,9 @@ func TestWaitForPendingStatement3(t *testing.T) {
 		EnvironmentId: "envId",
 	}
 	s := &Store{
-		client:     client,
-		appOptions: &appOptions,
+		client:        client,
+		appOptions:    &appOptions,
+		authenticated: authenticated,
 	}
 
 	// Test case 1: Statement is not pending
@@ -102,8 +107,9 @@ func TestWaitForPendingTimesout(t *testing.T) {
 		EnvironmentId: "envId",
 	}
 	s := &Store{
-		client:     client,
-		appOptions: &appOptions,
+		client:        client,
+		appOptions:    &appOptions,
+		authenticated: authenticated,
 	}
 
 	statusDetailMessage := "test status detail message"
@@ -133,8 +139,9 @@ func TestWaitForPendingEventuallyCompletes(t *testing.T) {
 		EnvironmentId: "envId",
 	}
 	s := &Store{
-		client:     client,
-		appOptions: &appOptions,
+		client:        client,
+		appOptions:    &appOptions,
+		authenticated: authenticated,
 	}
 
 	transientStatusDetailMessage := "Transient status detail message"
@@ -170,8 +177,9 @@ func TestWaitForPendingStatementErrors(t *testing.T) {
 		EnvironmentId: "envId",
 	}
 	s := &Store{
-		client:     client,
-		appOptions: &appOptions,
+		client:        client,
+		appOptions:    &appOptions,
+		authenticated: authenticated,
 	}
 	statusDetailMessage := "Test status detail message"
 	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
@@ -202,8 +210,9 @@ func TestCancelPendingStatement(t *testing.T) {
 		EnvironmentId: "envId",
 	}
 	s := &Store{
-		client:     client,
-		appOptions: &appOptions,
+		client:        client,
+		appOptions:    &appOptions,
+		authenticated: authenticated,
 	}
 
 	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
@@ -724,7 +733,7 @@ func (s *StoreTestSuite) TestDeleteStatement() {
 		OrgResourceId: "orgId",
 		EnvironmentId: "envId",
 	}
-	store := NewStore(client, mockAppController.ExitApplication, &appOptions)
+	store := NewStore(client, mockAppController.ExitApplication, &appOptions, authenticated)
 
 	statementName := "TEST_STATEMENT"
 	client.EXPECT().DeleteStatement("envId", statementName, "orgId").Return(nil)
@@ -743,7 +752,7 @@ func (s *StoreTestSuite) TestDeleteStatementFailsOnError() {
 		OrgResourceId: "orgId",
 		EnvironmentId: "envId",
 	}
-	store := NewStore(client, mockAppController.ExitApplication, &appOptions)
+	store := NewStore(client, mockAppController.ExitApplication, &appOptions, authenticated)
 
 	statementName := "TEST_STATEMENT"
 	client.EXPECT().DeleteStatement("envId", statementName, "orgId").Return(errors.New("test error"))
@@ -762,7 +771,7 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWithCompletedStatement() {
 		OrgResourceId: "orgId",
 		EnvironmentId: "envId",
 	}
-	store := NewStore(client, mockAppController.ExitApplication, &appOptions)
+	store := NewStore(client, mockAppController.ExitApplication, &appOptions, authenticated)
 
 	statement := types.ProcessedStatement{
 		StatementName: "TEST_STATEMENT",
@@ -789,7 +798,7 @@ func (s *StoreTestSuite) TestFetchResultsWithRunningStatement() {
 		OrgResourceId: "orgId",
 		EnvironmentId: "envId",
 	}
-	store := NewStore(client, mockAppController.ExitApplication, &appOptions)
+	store := NewStore(client, mockAppController.ExitApplication, &appOptions, authenticated)
 
 	statement := types.ProcessedStatement{
 		StatementName: "TEST_STATEMENT",
@@ -816,7 +825,7 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWhenPageTokenExists() {
 		OrgResourceId: "orgId",
 		EnvironmentId: "envId",
 	}
-	store := NewStore(client, mockAppController.ExitApplication, &appOptions)
+	store := NewStore(client, mockAppController.ExitApplication, &appOptions, authenticated)
 
 	statement := types.ProcessedStatement{
 		StatementName: "TEST_STATEMENT",
@@ -844,7 +853,7 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWhenResultsExist() {
 		OrgResourceId: "orgId",
 		EnvironmentId: "envId",
 	}
-	store := NewStore(client, mockAppController.ExitApplication, &appOptions)
+	store := NewStore(client, mockAppController.ExitApplication, &appOptions, authenticated)
 
 	statement := types.ProcessedStatement{
 		StatementName: "TEST_STATEMENT",
@@ -934,8 +943,9 @@ func (s *StoreTestSuite) TestProcessStatement() {
 		Properties: map[string]string{
 			"TestProp": "TestVal",
 		},
-		client:     client,
-		appOptions: appOptions,
+		client:        client,
+		appOptions:    appOptions,
+		authenticated: authenticated,
 	}
 
 	statusDetailMessage := "Test status detail message"
@@ -967,8 +977,9 @@ func (s *StoreTestSuite) TestProcessStatementFailsOnError() {
 		Properties: map[string]string{
 			"TestProp": "TestVal",
 		},
-		client:     client,
-		appOptions: appOptions,
+		client:        client,
+		appOptions:    appOptions,
+		authenticated: authenticated,
 	}
 
 	statusDetailMessage := "test status detail message"
@@ -1002,8 +1013,9 @@ func (s *StoreTestSuite) TestWaitPendingStatement() {
 		Properties: map[string]string{
 			"TestProp": "TestVal",
 		},
-		client:     client,
-		appOptions: appOptions,
+		client:        client,
+		appOptions:    appOptions,
+		authenticated: authenticated,
 	}
 
 	statementName := "Test Statement"
@@ -1069,8 +1081,9 @@ func (s *StoreTestSuite) TestWaitPendingStatementFailsOnWaitError() {
 		Properties: map[string]string{
 			"TestProp": "TestVal",
 		},
-		client:     client,
-		appOptions: appOptions,
+		client:        client,
+		appOptions:    appOptions,
+		authenticated: authenticated,
 	}
 
 	statementName := "Test Statement"
@@ -1108,8 +1121,9 @@ func (s *StoreTestSuite) TestWaitPendingStatementFailsOnNonCompletedOrRunningSta
 		Properties: map[string]string{
 			"TestProp": "TestVal",
 		},
-		client:     client,
-		appOptions: appOptions,
+		client:        client,
+		appOptions:    appOptions,
+		authenticated: authenticated,
 	}
 
 	statementName := "Test Statement"
@@ -1148,8 +1162,9 @@ func (s *StoreTestSuite) TestWaitPendingStatementFetchesExceptionOnFailedStateme
 		Properties: map[string]string{
 			"TestProp": "TestVal",
 		},
-		client:     client,
-		appOptions: appOptions,
+		client:        client,
+		appOptions:    appOptions,
+		authenticated: authenticated,
 	}
 
 	statementName := "Test Statement"
@@ -1195,8 +1210,9 @@ func (s *StoreTestSuite) TestGetStatusDetail() {
 		Properties: map[string]string{
 			"TestProp": "TestVal",
 		},
-		client:     client,
-		appOptions: appOptions,
+		client:        client,
+		appOptions:    appOptions,
+		authenticated: authenticated,
 	}
 
 	statementName := "Test Statement"
@@ -1234,8 +1250,9 @@ func (s *StoreTestSuite) TestGetStatusDetailReturnsWhenStatusNoFailedOrFailing()
 		Properties: map[string]string{
 			"TestProp": "TestVal",
 		},
-		client:     client,
-		appOptions: appOptions,
+		client:        client,
+		appOptions:    appOptions,
+		authenticated: authenticated,
 	}
 
 	testStatusDetailMessage := "Test Status Detail Message"
@@ -1268,8 +1285,9 @@ func (s *StoreTestSuite) TestGetStatusDetailReturnsWhenStatusDetailFilled() {
 		Properties: map[string]string{
 			"TestProp": "TestVal",
 		},
-		client:     client,
-		appOptions: appOptions,
+		client:        client,
+		appOptions:    appOptions,
+		authenticated: authenticated,
 	}
 
 	testStatusDetailMessage := "Test Status Detail Message"
@@ -1296,8 +1314,9 @@ func (s *StoreTestSuite) TestGetStatusDetailReturnsEmptyWhenNoExceptionsAvailabl
 		Properties: map[string]string{
 			"TestProp": "TestVal",
 		},
-		client:     client,
-		appOptions: appOptions,
+		client:        client,
+		appOptions:    appOptions,
+		authenticated: authenticated,
 	}
 
 	statementName := "Test Statement"
