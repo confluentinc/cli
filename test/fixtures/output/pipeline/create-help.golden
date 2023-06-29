@@ -4,7 +4,7 @@ Usage:
   confluent pipeline create [flags]
 
 Examples:
-Create a Stream Designer pipeline named "my-pipeline".
+Create a Stream Designer pipeline with name "my-pipeline".
 
   $ confluent pipeline create --name my-pipeline --description "example pipeline"
 
