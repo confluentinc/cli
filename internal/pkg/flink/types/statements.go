@@ -35,12 +35,20 @@ type StatementResultRow struct {
 	Fields    []StatementResultField
 }
 
-func (r StatementResultRow) GetRowKey() string {
+func (r *StatementResultRow) GetRowKey() string {
 	rowKey := strings.Builder{}
-	for _, field := range r.Fields {
+	for _, field := range r.GetFields() {
 		rowKey.WriteString(field.ToString())
 	}
 	return rowKey.String()
+}
+
+func (r *StatementResultRow) GetFields() []StatementResultField {
+	if r == nil {
+		var fields []StatementResultField
+		return fields
+	}
+	return r.Fields
 }
 
 const (
@@ -50,7 +58,7 @@ const (
 	DELETE        StatementResultOperation = 3
 )
 
-type StatementResultOperation int8
+type StatementResultOperation float64
 
 func (s StatementResultOperation) IsInsertOperation() bool {
 	return s == INSERT || s == UPDATE_AFTER

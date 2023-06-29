@@ -76,11 +76,9 @@ func (t *TableView) RenderTable(tableTitle string, statementResults *types.Mater
 	defer t.tableLock.Unlock()
 
 	t.isRowSelectionEnabled = enableRowSelection
-	if t.isRowSelectionEnabled {
-		// reset the iterator and the selected idx
-		t.selectedRowIdx = -1
-		t.materializedStatementResultsIterator = statementResults.Iterator(true)
-	}
+	// reset the iterator and the selected idx
+	t.selectedRowIdx = -1
+	t.materializedStatementResultsIterator = statementResults.Iterator(true)
 
 	t.table.SetTitle(tableTitle)
 	t.renderData(statementResults)

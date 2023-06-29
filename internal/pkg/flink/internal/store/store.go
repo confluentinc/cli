@@ -19,10 +19,18 @@ import (
 )
 
 type Store struct {
-	Properties      map[string]string
-	exitApplication func()
-	client          ccloudv2.GatewayClientInterface
-	appOptions      *types.ApplicationOptions
+	Properties       map[string]string
+	exitApplication  func()
+	client           ccloudv2.GatewayClientInterface
+	appOptions       *types.ApplicationOptions
+	tokenRefreshFunc func() error
+}
+
+func (s *Store) authenticatedGatewayClient() ccloudv2.GatewayClientInterface {
+	if authErr := s.tokenRefreshFunc(); authErr != nil {
+		log.CliLogger.Warnf("Failed to refresh token: %v", authErr)
+	}
+	return s.client
 }
 
 func (s *Store) ProcessLocalStatement(statement string) (*types.ProcessedStatement, *types.StatementError) {
@@ -52,7 +60,7 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 	}
 
 	// Process remote statements
-	statementObj, err := s.client.CreateStatement(
+	statementObj, err := s.authenticatedGatewayClient().CreateStatement(
 		statement,
 		s.appOptions.GetComputePoolId(),
 		s.appOptions.GetIdentityPoolId(),
@@ -99,7 +107,7 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 	}
 
 	// Process remote statements that are now running or completed
-	statementResultObj, err := s.client.GetStatementResults(s.appOptions.GetEnvironmentId(), statement.StatementName, s.appOptions.GetOrgResourceId(), statement.PageToken)
+	statementResultObj, err := s.authenticatedGatewayClient().GetStatementResults(s.appOptions.GetEnvironmentId(), statement.StatementName, s.appOptions.GetOrgResourceId(), statement.PageToken)
 	if err != nil {
 		return nil, &types.StatementError{Message: err.Error()}
 	}
@@ -121,10 +129,11 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 }
 
 func (s *Store) DeleteStatement(statementName string) bool {
-	if err := s.client.DeleteStatement(s.appOptions.GetEnvironmentId(), statementName, s.appOptions.GetOrgResourceId()); err != nil {
+	if err := s.authenticatedGatewayClient().DeleteStatement(s.appOptions.GetEnvironmentId(), statementName, s.appOptions.GetOrgResourceId()); err != nil {
 		log.CliLogger.Warnf("Failed to delete the statement: %v", err)
 		return false
 	}
+	log.CliLogger.Infof("Successfully deleted statement: %s", statementName)
 	return true
 }
 
@@ -140,7 +149,7 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 		case <-ctx.Done():
 			return nil, &types.StatementError{Message: "result retrieval aborted. Statement will be deleted", HttpResponseCode: 499}
 		default:
-			statementObj, err := s.client.GetStatement(s.appOptions.GetEnvironmentId(), statementName, s.appOptions.GetOrgResourceId())
+			statementObj, err := s.authenticatedGatewayClient().GetStatement(s.appOptions.GetEnvironmentId(), statementName, s.appOptions.GetOrgResourceId())
 			statusDetail := s.getStatusDetail(statementObj)
 			if err != nil {
 				return nil, &types.StatementError{
@@ -205,7 +214,7 @@ func (s *Store) getStatusDetail(statementObj flinkgatewayv1alpha1.SqlV1alpha1Sta
 	}
 
 	// if the statement is in FAILED or FAILING phase and the status detail field is empty we show the latest exception instead
-	exceptionsResponse, err := s.client.GetExceptions(s.appOptions.GetEnvironmentId(), statementObj.Spec.GetStatementName(), s.appOptions.GetOrgResourceId())
+	exceptionsResponse, err := s.authenticatedGatewayClient().GetExceptions(s.appOptions.GetEnvironmentId(), statementObj.Spec.GetStatementName(), s.appOptions.GetOrgResourceId())
 	if err != nil {
 		return ""
 	}
@@ -234,12 +243,13 @@ func extractPageToken(nextUrl string) (string, error) {
 	return params.Get("page_token"), nil
 }
 
-func NewStore(client ccloudv2.GatewayClientInterface, exitApplication func(), appOptions *types.ApplicationOptions) types.StoreInterface {
+func NewStore(client ccloudv2.GatewayClientInterface, exitApplication func(), appOptions *types.ApplicationOptions, tokenRefreshFunc func() error) types.StoreInterface {
 	return &Store{
-		Properties:      appOptions.GetDefaultProperties(),
-		client:          client,
-		exitApplication: exitApplication,
-		appOptions:      appOptions,
+		Properties:       appOptions.GetDefaultProperties(),
+		client:           client,
+		exitApplication:  exitApplication,
+		appOptions:       appOptions,
+		tokenRefreshFunc: tokenRefreshFunc,
 	}
 }
 

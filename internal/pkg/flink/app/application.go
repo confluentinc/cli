@@ -43,7 +43,7 @@ func StartApp(client ccloudv2.GatewayClientInterface, authenticated func() error
 	appController := controller.NewApplicationController(tviewApp, history)
 
 	// Store used to process statements and store local properties
-	store := store.NewStore(client, appController.ExitApplication, &appOptions)
+	store := store.NewStore(client, appController.ExitApplication, &appOptions, authenticated)
 	resultFetcher := results.NewResultFetcher(store)
 
 	stdinBefore := getStdin()

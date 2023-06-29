@@ -47,7 +47,7 @@ func (c *command) newStoreCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String(resourceFlagName, "", "The resource ID of the resource the API key is for.")
+	c.addResourceFlag(cmd)
 	cmd.Flags().BoolP("force", "f", false, "Force overwrite existing secret for this key.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
