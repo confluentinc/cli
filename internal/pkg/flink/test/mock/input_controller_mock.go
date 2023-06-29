@@ -7,7 +7,6 @@ package mock
 import (
 	reflect "reflect"
 
-	prompt "github.com/confluentinc/go-prompt"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -34,43 +33,44 @@ func (m *MockInputControllerInterface) EXPECT() *MockInputControllerInterfaceMoc
 	return m.recorder
 }
 
-// GetMaxCol mocks base method.
-func (m *MockInputControllerInterface) GetMaxCol() (int, error) {
+// GetUserInput mocks base method.
+func (m *MockInputControllerInterface) GetUserInput() string {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetMaxCol")
-	ret0, _ := ret[0].(int)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetMaxCol indicates an expected call of GetMaxCol.
-func (mr *MockInputControllerInterfaceMockRecorder) GetMaxCol() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMaxCol", reflect.TypeOf((*MockInputControllerInterface)(nil).GetMaxCol))
-}
-
-// Prompt mocks base method.
-func (m *MockInputControllerInterface) Prompt() prompt.IPrompt {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Prompt")
-	ret0, _ := ret[0].(prompt.IPrompt)
+	ret := m.ctrl.Call(m, "GetUserInput")
+	ret0, _ := ret[0].(string)
 	return ret0
 }
 
-// Prompt indicates an expected call of Prompt.
-func (mr *MockInputControllerInterfaceMockRecorder) Prompt() *gomock.Call {
+// GetUserInput indicates an expected call of GetUserInput.
+func (mr *MockInputControllerInterfaceMockRecorder) GetUserInput() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Prompt", reflect.TypeOf((*MockInputControllerInterface)(nil).Prompt))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserInput", reflect.TypeOf((*MockInputControllerInterface)(nil).GetUserInput))
 }
 
-// RunInteractiveInput mocks base method.
-func (m *MockInputControllerInterface) RunInteractiveInput() {
+// GetWindowWidth mocks base method.
+func (m *MockInputControllerInterface) GetWindowWidth() int {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RunInteractiveInput")
+	ret := m.ctrl.Call(m, "GetWindowWidth")
+	ret0, _ := ret[0].(int)
+	return ret0
 }
 
-// RunInteractiveInput indicates an expected call of RunInteractiveInput.
-func (mr *MockInputControllerInterfaceMockRecorder) RunInteractiveInput() *gomock.Call {
+// GetWindowWidth indicates an expected call of GetWindowWidth.
+func (mr *MockInputControllerInterfaceMockRecorder) GetWindowWidth() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RunInteractiveInput", reflect.TypeOf((*MockInputControllerInterface)(nil).RunInteractiveInput))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetWindowWidth", reflect.TypeOf((*MockInputControllerInterface)(nil).GetWindowWidth))
+}
+
+// IsSpecialInput mocks base method.
+func (m *MockInputControllerInterface) IsSpecialInput(arg0 string) bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsSpecialInput", arg0)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// IsSpecialInput indicates an expected call of IsSpecialInput.
+func (mr *MockInputControllerInterfaceMockRecorder) IsSpecialInput(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsSpecialInput", reflect.TypeOf((*MockInputControllerInterface)(nil).IsSpecialInput), arg0)
 }

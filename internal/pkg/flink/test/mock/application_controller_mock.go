@@ -61,18 +61,16 @@ func (mr *MockApplicationControllerInterfaceMockRecorder) ExitApplication() *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExitApplication", reflect.TypeOf((*MockApplicationControllerInterface)(nil).ExitApplication))
 }
 
-// GetOutputMode mocks base method.
-func (m *MockApplicationControllerInterface) GetOutputMode() types.OutputMode {
+// SetLayout mocks base method.
+func (m *MockApplicationControllerInterface) SetLayout(arg0 tview.Primitive) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetOutputMode")
-	ret0, _ := ret[0].(types.OutputMode)
-	return ret0
+	m.ctrl.Call(m, "SetLayout", arg0)
 }
 
-// GetOutputMode indicates an expected call of GetOutputMode.
-func (mr *MockApplicationControllerInterfaceMockRecorder) GetOutputMode() *gomock.Call {
+// SetLayout indicates an expected call of SetLayout.
+func (mr *MockApplicationControllerInterfaceMockRecorder) SetLayout(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOutputMode", reflect.TypeOf((*MockApplicationControllerInterface)(nil).GetOutputMode))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLayout", reflect.TypeOf((*MockApplicationControllerInterface)(nil).SetLayout), arg0)
 }
 
 // ShowTableView mocks base method.
@@ -88,29 +86,27 @@ func (mr *MockApplicationControllerInterfaceMockRecorder) ShowTableView() *gomoc
 }
 
 // StartTView mocks base method.
-func (m *MockApplicationControllerInterface) StartTView(arg0 tview.Primitive) error {
+func (m *MockApplicationControllerInterface) StartTView() {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "StartTView", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
+	m.ctrl.Call(m, "StartTView")
 }
 
 // StartTView indicates an expected call of StartTView.
-func (mr *MockApplicationControllerInterfaceMockRecorder) StartTView(arg0 interface{}) *gomock.Call {
+func (mr *MockApplicationControllerInterfaceMockRecorder) StartTView() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StartTView", reflect.TypeOf((*MockApplicationControllerInterface)(nil).StartTView), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StartTView", reflect.TypeOf((*MockApplicationControllerInterface)(nil).StartTView))
 }
 
 // SuspendOutputMode mocks base method.
-func (m *MockApplicationControllerInterface) SuspendOutputMode(arg0 func()) {
+func (m *MockApplicationControllerInterface) SuspendOutputMode() {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SuspendOutputMode", arg0)
+	m.ctrl.Call(m, "SuspendOutputMode")
 }
 
 // SuspendOutputMode indicates an expected call of SuspendOutputMode.
-func (mr *MockApplicationControllerInterfaceMockRecorder) SuspendOutputMode(arg0 interface{}) *gomock.Call {
+func (mr *MockApplicationControllerInterfaceMockRecorder) SuspendOutputMode() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SuspendOutputMode", reflect.TypeOf((*MockApplicationControllerInterface)(nil).SuspendOutputMode), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SuspendOutputMode", reflect.TypeOf((*MockApplicationControllerInterface)(nil).SuspendOutputMode))
 }
 
 // TView mocks base method.
@@ -125,16 +121,4 @@ func (m *MockApplicationControllerInterface) TView() *tview.Application {
 func (mr *MockApplicationControllerInterfaceMockRecorder) TView() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TView", reflect.TypeOf((*MockApplicationControllerInterface)(nil).TView))
-}
-
-// ToggleOutputMode mocks base method.
-func (m *MockApplicationControllerInterface) ToggleOutputMode() {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "ToggleOutputMode")
-}
-
-// ToggleOutputMode indicates an expected call of ToggleOutputMode.
-func (mr *MockApplicationControllerInterfaceMockRecorder) ToggleOutputMode() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ToggleOutputMode", reflect.TypeOf((*MockApplicationControllerInterface)(nil).ToggleOutputMode))
 }

@@ -8,7 +8,6 @@ import (
 	reflect "reflect"
 
 	types "github.com/confluentinc/cli/internal/pkg/flink/types"
-	tcell "github.com/gdamore/tcell/v2"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -35,34 +34,6 @@ func (m *MockTableControllerInterface) EXPECT() *MockTableControllerInterfaceMoc
 	return m.recorder
 }
 
-// AppInputCapture mocks base method.
-func (m *MockTableControllerInterface) AppInputCapture(arg0 *tcell.EventKey) *tcell.EventKey {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AppInputCapture", arg0)
-	ret0, _ := ret[0].(*tcell.EventKey)
-	return ret0
-}
-
-// AppInputCapture indicates an expected call of AppInputCapture.
-func (mr *MockTableControllerInterfaceMockRecorder) AppInputCapture(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AppInputCapture", reflect.TypeOf((*MockTableControllerInterface)(nil).AppInputCapture), arg0)
-}
-
-// GetActionForShortcut mocks base method.
-func (m *MockTableControllerInterface) GetActionForShortcut(arg0 string) func() {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetActionForShortcut", arg0)
-	ret0, _ := ret[0].(func())
-	return ret0
-}
-
-// GetActionForShortcut indicates an expected call of GetActionForShortcut.
-func (mr *MockTableControllerInterfaceMockRecorder) GetActionForShortcut(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetActionForShortcut", reflect.TypeOf((*MockTableControllerInterface)(nil).GetActionForShortcut), arg0)
-}
-
 // Init mocks base method.
 func (m *MockTableControllerInterface) Init(arg0 types.ProcessedStatement) {
 	m.ctrl.T.Helper()
@@ -75,14 +46,14 @@ func (mr *MockTableControllerInterfaceMockRecorder) Init(arg0 interface{}) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Init", reflect.TypeOf((*MockTableControllerInterface)(nil).Init), arg0)
 }
 
-// SetRunInteractiveInputCallback mocks base method.
-func (m *MockTableControllerInterface) SetRunInteractiveInputCallback(arg0 func()) {
+// Start mocks base method.
+func (m *MockTableControllerInterface) Start() {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SetRunInteractiveInputCallback", arg0)
+	m.ctrl.Call(m, "Start")
 }
 
-// SetRunInteractiveInputCallback indicates an expected call of SetRunInteractiveInputCallback.
-func (mr *MockTableControllerInterfaceMockRecorder) SetRunInteractiveInputCallback(arg0 interface{}) *gomock.Call {
+// Start indicates an expected call of Start.
+func (mr *MockTableControllerInterfaceMockRecorder) Start() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetRunInteractiveInputCallback", reflect.TypeOf((*MockTableControllerInterface)(nil).SetRunInteractiveInputCallback), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Start", reflect.TypeOf((*MockTableControllerInterface)(nil).Start))
 }
