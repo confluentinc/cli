@@ -64,7 +64,7 @@ func (t *ResultFetcher) startAutoRefresh(refreshInterval uint) {
 		t.setFetchState(types.Running)
 		go func() {
 			for t.IsAutoRefreshRunning() {
-				t.FetchNextPage()
+				_, _ = t.FetchNextPageAndUpdateState()
 				t.autoRefreshCallback()
 				time.Sleep(time.Millisecond * time.Duration(refreshInterval))
 			}
@@ -76,20 +76,23 @@ func (t *ResultFetcher) isAutoRefreshStartAllowed() bool {
 	return t.GetFetchState() == types.Paused || t.GetFetchState() == types.Failed
 }
 
-func (t *ResultFetcher) FetchNextPage() {
+func (t *ResultFetcher) FetchNextPageAndUpdateState() (*types.ProcessedStatement, *types.StatementError) {
+	newResults, err := t.store.FetchStatementResults(t.getStatement())
+	t.updateState(newResults, err)
+	return newResults, err
+}
+
+func (t *ResultFetcher) updateState(newResults *types.ProcessedStatement, err *types.StatementError) {
 	// don't fetch if we're already at the last page, otherwise we would fetch the first page again
 	if t.GetFetchState() == types.Completed {
 		return
 	}
 
-	// fetch
-	newResults, err := t.store.FetchStatementResults(t.getStatement())
 	if err != nil {
 		t.setFetchState(types.Failed)
 		return
 	}
 
-	// update data
 	t.setStatement(*newResults)
 	t.materializedStatementResults.Append(newResults.StatementResults.GetRows()...)
 	if newResults.PageToken == "" {
@@ -122,7 +125,7 @@ func (t *ResultFetcher) setStatement(statement types.ProcessedStatement) {
 
 func (t *ResultFetcher) JumpToLastPage() {
 	for {
-		t.FetchNextPage()
+		_, _ = t.FetchNextPageAndUpdateState()
 		if !t.hasMoreResults() {
 			break
 		}
@@ -141,12 +144,6 @@ func (t *ResultFetcher) Init(statement types.ProcessedStatement) {
 	t.materializedStatementResults = types.NewMaterializedStatementResults(statement.StatementResults.GetHeaders(), MaxResultsCapacity)
 	t.materializedStatementResults.SetTableMode(true)
 	t.materializedStatementResults.Append(statement.StatementResults.GetRows()...)
-	// if unbounded result start refreshing results in the background
-	if statement.PageToken != "" {
-		t.startAutoRefresh(DefaultRefreshInterval)
-	} else {
-		t.setFetchState(types.Completed)
-	}
 }
 
 func (t *ResultFetcher) Close() {

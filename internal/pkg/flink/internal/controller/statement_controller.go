@@ -40,12 +40,6 @@ func (c *StatementController) ExecuteStatement(statementToExecute string) (*type
 	}
 	processedStatement.PrintStatusDetail()
 
-	processedStatement, err = c.store.FetchStatementResults(*processedStatement)
-	if err != nil {
-		c.handleStatementError(*err)
-		return nil, err
-	}
-
 	return processedStatement, nil
 }
 

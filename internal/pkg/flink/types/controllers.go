@@ -11,15 +11,10 @@ type InputControllerInterface interface {
 	GetWindowWidth() int
 }
 
-type TableControllerInterface interface {
-	Start()
-	Init(statement ProcessedStatement)
-}
-
 type StatementControllerInterface interface {
 	ExecuteStatement(statementToExecute string) (*ProcessedStatement, *StatementError)
 }
 
 type OutputControllerInterface interface {
-	HandleStatementResults(processedStatement ProcessedStatement, windowSize int)
+	VisualizeResults()
 }

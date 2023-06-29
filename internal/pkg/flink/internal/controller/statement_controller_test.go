@@ -59,28 +59,12 @@ func (s *StatementControllerTestSuite) TestExecuteStatementReturnsWaitForStateme
 	require.Equal(s.T(), waitPendingStatementError, err)
 }
 
-func (s *StatementControllerTestSuite) TestExecuteStatementReturnsFetchStatementResultsError() {
-	statementToExecute := "select 1;"
-	processedStatement := types.ProcessedStatement{}
-	fetchStatementResultsError := &types.StatementError{Message: "wait error"}
-	s.store.EXPECT().ProcessStatement(statementToExecute).Return(&processedStatement, nil)
-	s.consoleParser.EXPECT().Read().Return(nil, nil).AnyTimes()
-	s.store.EXPECT().WaitPendingStatement(gomock.Any(), processedStatement).Return(&processedStatement, nil)
-	s.store.EXPECT().FetchStatementResults(processedStatement).Return(nil, fetchStatementResultsError)
-
-	_, err := s.statementController.ExecuteStatement(statementToExecute)
-
-	require.Equal(s.T(), fetchStatementResultsError, err)
-	require.True(s.T(), true)
-}
-
 func (s *StatementControllerTestSuite) TestExecuteStatement() {
 	statementToExecute := "select 1;"
 	processedStatement := types.ProcessedStatement{}
 	s.store.EXPECT().ProcessStatement(statementToExecute).Return(&processedStatement, nil)
 	s.consoleParser.EXPECT().Read().Return(nil, nil).AnyTimes()
 	s.store.EXPECT().WaitPendingStatement(gomock.Any(), processedStatement).Return(&processedStatement, nil)
-	s.store.EXPECT().FetchStatementResults(processedStatement).Return(&processedStatement, nil)
 
 	returnedStatement, err := s.statementController.ExecuteStatement(statementToExecute)
 
@@ -129,7 +113,6 @@ func (s *StatementControllerTestSuite) TestExecuteStatementPrintsUserInfo() {
 	s.store.EXPECT().ProcessStatement(statementToExecute).Return(&processedStatement, nil)
 	s.consoleParser.EXPECT().Read().Return(nil, nil).AnyTimes()
 	s.store.EXPECT().WaitPendingStatement(gomock.Any(), processedStatement).Return(&processedStatement, nil)
-	s.store.EXPECT().FetchStatementResults(processedStatement).Return(&processedStatement, nil)
 
 	stdout := test.RunAndCaptureSTDOUT(s.T(), func() {
 		_, _ = s.statementController.ExecuteStatement(statementToExecute)
@@ -157,9 +140,7 @@ func (s *StatementControllerTestSuite) TestRenderMsgAndStatusLocalStatements() {
 	}
 	for _, tt := range tests {
 		s.T().Run(tt.name, func(t *testing.T) {
-			actual := test.RunAndCaptureSTDOUT(s.T(), func() {
-				tt.statement.PrintStatusMessage()
-			})
+			actual := test.RunAndCaptureSTDOUT(s.T(), tt.statement.PrintStatusMessage)
 			require.Equal(t, tt.want, actual)
 		})
 	}
@@ -184,9 +165,7 @@ func (s *StatementControllerTestSuite) TestRenderMsgAndStatusNonLocalFailedState
 	}
 	for _, tt := range tests {
 		s.T().Run(tt.name, func(t *testing.T) {
-			actual := test.RunAndCaptureSTDOUT(s.T(), func() {
-				tt.statement.PrintStatusMessage()
-			})
+			actual := test.RunAndCaptureSTDOUT(s.T(), tt.statement.PrintStatusMessage)
 			require.Equal(t, tt.want, actual)
 		})
 	}
@@ -211,9 +190,7 @@ func (s *StatementControllerTestSuite) TestRenderMsgAndStatusNonLocalNonFailedSt
 	}
 	for _, tt := range tests {
 		s.T().Run(tt.name, func(t *testing.T) {
-			actual := test.RunAndCaptureSTDOUT(s.T(), func() {
-				tt.statement.PrintStatusMessage()
-			})
+			actual := test.RunAndCaptureSTDOUT(s.T(), tt.statement.PrintStatusMessage)
 			require.Equal(t, tt.want, actual)
 		})
 	}

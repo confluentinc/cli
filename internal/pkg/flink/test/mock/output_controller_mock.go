@@ -7,7 +7,6 @@ package mock
 import (
 	reflect "reflect"
 
-	types "github.com/confluentinc/cli/internal/pkg/flink/types"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -34,14 +33,14 @@ func (m *MockOutputControllerInterface) EXPECT() *MockOutputControllerInterfaceM
 	return m.recorder
 }
 
-// HandleStatementResults mocks base method.
-func (m *MockOutputControllerInterface) HandleStatementResults(arg0 types.ProcessedStatement, arg1 int) {
+// VisualizeResults mocks base method.
+func (m *MockOutputControllerInterface) VisualizeResults() {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "HandleStatementResults", arg0, arg1)
+	m.ctrl.Call(m, "VisualizeResults")
 }
 
-// HandleStatementResults indicates an expected call of HandleStatementResults.
-func (mr *MockOutputControllerInterfaceMockRecorder) HandleStatementResults(arg0, arg1 interface{}) *gomock.Call {
+// VisualizeResults indicates an expected call of VisualizeResults.
+func (mr *MockOutputControllerInterfaceMockRecorder) VisualizeResults() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HandleStatementResults", reflect.TypeOf((*MockOutputControllerInterface)(nil).HandleStatementResults), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VisualizeResults", reflect.TypeOf((*MockOutputControllerInterface)(nil).VisualizeResults))
 }

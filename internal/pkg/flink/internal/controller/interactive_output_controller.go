@@ -16,70 +16,70 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-type TableController struct {
+type InteractiveOutputController struct {
 	app           *tview.Application
 	tableView     *components.TableView
 	resultFetcher types.ResultFetcherInterface
 	isRowViewOpen bool
 }
 
-func NewTableController(resultFetcher types.ResultFetcherInterface) types.OutputControllerInterface {
-	return &TableController{
+func NewInteractiveOutputController(resultFetcher types.ResultFetcherInterface) types.OutputControllerInterface {
+	return &InteractiveOutputController{
 		app:           tview.NewApplication(),
 		resultFetcher: resultFetcher,
 	}
 }
 
-func (t *TableController) VisualizeResults() {
-	t.Init(t.processedStatement)
-	t.Start()
+func (t *InteractiveOutputController) VisualizeResults() {
+	t.init()
+	t.start()
 }
 
-func (t *TableController) Start() {
+func (t *InteractiveOutputController) start() {
 	err := t.app.Run()
 	if err != nil {
-		log.CliLogger.Errorf("Failed to start tview., %v", err)
+		log.CliLogger.Errorf("Error: failed to open table view, %v", err)
 		utils.OutputErr("Error: failed to open table view")
 	}
 }
 
-func (t *TableController) Init(statement types.ProcessedStatement) {
+func (t *InteractiveOutputController) init() {
 	t.isRowViewOpen = false
-	t.resultFetcher.Init(statement)
 	t.resultFetcher.SetAutoRefreshCallback(t.renderTableAsync)
+	t.resultFetcher.ToggleAutoRefresh()
 	t.app.SetInputCapture(t.inputCapture)
 	t.initTableView()
 }
 
-func (t *TableController) initTableView() {
+func (t *InteractiveOutputController) initTableView() {
 	t.tableView = components.NewTableView()
 	t.updateTable()
 	t.openTableView()
 }
 
-func (t *TableController) updateTable() {
+func (t *InteractiveOutputController) updateTable() {
 	t.tableView.RenderTable(t.getTableTitle(), t.resultFetcher.GetResults(), !t.resultFetcher.IsAutoRefreshRunning())
 	t.app.SetFocus(t.tableView.GetTable())
 }
 
-func (t *TableController) openTableView() {
+func (t *InteractiveOutputController) openTableView() {
 	t.app.SetRoot(t.tableView.RootLayout, true).EnableMouse(false)
 	t.app.SetFocus(t.tableView.GetTable())
 }
 
-func (t *TableController) renderTableAsync() {
+func (t *InteractiveOutputController) renderTableAsync() {
 	t.app.QueueUpdateDraw(t.updateTable)
 }
 
 // Function to handle shortcuts and keybindings for TView
-func (t *TableController) inputCapture(event *tcell.EventKey) *tcell.EventKey {
+func (t *InteractiveOutputController) inputCapture(event *tcell.EventKey) *tcell.EventKey {
 	if t.isRowViewOpen {
 		return t.inputHandlerRowView(event)
 	}
 	return t.inputHandlerTableView(event)
 }
 
-func (t *TableController) inputHandlerRowView(event *tcell.EventKey) *tcell.EventKey {
+func (t *InteractiveOutputController) inputHandlerRowView(event *tcell.EventKey) *tcell.EventKey {
 	switch event.Key() {
 	case tcell.KeyRune:
 		char := unicode.ToUpper(event.Rune())
@@ -97,12 +97,12 @@ func (t *TableController) inputHandlerRowView(event *tcell.EventKey) *tcell.Even
 	return event
 }
 
-func (t *TableController) closeRowView() {
+func (t *InteractiveOutputController) closeRowView() {
 	t.openTableView()
 	t.isRowViewOpen = false
 }
 
-func (t *TableController) inputHandlerTableView(event *tcell.EventKey) *tcell.EventKey {
+func (t *InteractiveOutputController) inputHandlerTableView(event *tcell.EventKey) *tcell.EventKey {
 	switch event.Key() {
 	case tcell.KeyRune:
 		char := unicode.ToUpper(event.Rune())
@@ -124,7 +124,7 @@ func (t *TableController) inputHandlerTableView(event *tcell.EventKey) *tcell.Ev
 	return event
 }
 
-func (t *TableController) getActionForShortcut(shortcut string) func() {
+func (t *InteractiveOutputController) getActionForShortcut(shortcut string) func() {
 	switch shortcut {
 	case "Q":
 		return t.exitTViewMode
@@ -133,7 +133,7 @@ func (t *TableController) getActionForShortcut(shortcut string) func() {
 	case "A":
 		return t.renderAfterAction(t.resultFetcher.ToggleAutoRefresh)
 	case "N":
-		return t.renderAfterAction(t.resultFetcher.FetchNextPage)
+		return t.renderAfterAction(t.fetchNextPage)
 	case "R":
 		return t.renderAfterAction(t.resultFetcher.JumpToLastPage)
 	case "H":
@@ -144,20 +144,24 @@ func (t *TableController) getActionForShortcut(shortcut string) func() {
 	return nil
 }
 
-func (t *TableController) exitTViewMode() {
+func (t *InteractiveOutputController) exitTViewMode() {
 	t.resultFetcher.Close()
 	t.app.Stop()
 	output.Println("Result retrieval aborted.")
 }
 
-func (t *TableController) renderAfterAction(action func()) func() {
+func (t *InteractiveOutputController) renderAfterAction(action func()) func() {
 	return func() {
 		action()
 		t.updateTable()
 	}
 }
 
-func (t *TableController) openRowView() {
+func (t *InteractiveOutputController) fetchNextPage() {
+	_, _ = t.resultFetcher.FetchNextPageAndUpdateState()
+}
+
+func (t *InteractiveOutputController) openRowView() {
 	if !t.resultFetcher.IsAutoRefreshRunning() {
 		row := t.tableView.GetSelectedRow()
 		t.isRowViewOpen = true
@@ -174,7 +178,7 @@ func (t *TableController) openRowView() {
 	}
 }
 
-func (t *TableController) getTableTitle() string {
+func (t *InteractiveOutputController) getTableTitle() string {
 	mode := "Changelog mode"
 	if t.resultFetcher.IsTableMode() {
 		mode = "Table mode"

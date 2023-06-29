@@ -17,12 +17,14 @@ import (
 
 type ApplicationTestSuite struct {
 	suite.Suite
-	app                 Application
-	appController       *mock.MockApplicationControllerInterface
-	inputController     *mock.MockInputControllerInterface
-	statementController *mock.MockStatementControllerInterface
-	outputController    *mock.MockOutputControllerInterface
-	history             *history.History
+	app                         Application
+	history                     *history.History
+	resultFetcher               *mock.MockResultFetcherInterface
+	appController               *mock.MockApplicationControllerInterface
+	inputController             *mock.MockInputControllerInterface
+	statementController         *mock.MockStatementControllerInterface
+	basicOutputController       *mock.MockOutputControllerInterface
+	interactiveOutputController *mock.MockOutputControllerInterface
 }
 
 func TestApplicationTestSuite(t *testing.T) {
@@ -35,15 +37,19 @@ func (s *ApplicationTestSuite) SetupTest() {
 	s.inputController = mock.NewMockInputControllerInterface(ctrl)
 	s.history = &history.History{Data: []string{}}
 	s.statementController = mock.NewMockStatementControllerInterface(ctrl)
-	s.outputController = mock.NewMockOutputControllerInterface(ctrl)
+	s.interactiveOutputController = mock.NewMockOutputControllerInterface(ctrl)
+	s.basicOutputController = mock.NewMockOutputControllerInterface(ctrl)
+	s.resultFetcher = mock.NewMockResultFetcherInterface(ctrl)
 
 	s.app = Application{
-		history:             s.history,
-		appController:       s.appController,
-		inputController:     s.inputController,
-		statementController: s.statementController,
-		resultsController:   s.outputController,
-		authenticated:       authenticated,
+		history:                     s.history,
+		resultFetcher:               s.resultFetcher,
+		appController:               s.appController,
+		inputController:             s.inputController,
+		statementController:         s.statementController,
+		interactiveOutputController: s.interactiveOutputController,
+		basicOutputController:       s.basicOutputController,
+		authenticated:               authenticated,
 	}
 }
 
@@ -123,12 +129,12 @@ func (s *ApplicationTestSuite) TestReplStopsOnExecuteStatementError() {
 func (s *ApplicationTestSuite) TestReplReturnsWhenHandleStatementResultsReturnsTrue() {
 	userInput := "test-input"
 	statement := types.ProcessedStatement{}
-	windowSize := 10
 	s.inputController.EXPECT().GetUserInput().Return(userInput)
 	s.inputController.EXPECT().IsSpecialInput(userInput).Return(false)
 	s.statementController.EXPECT().ExecuteStatement(userInput).Return(&statement, nil)
-	s.inputController.EXPECT().GetWindowWidth().Return(windowSize)
-	s.outputController.EXPECT().HandleStatementResults(statement, windowSize)
+	s.resultFetcher.EXPECT().Init(statement)
+	s.resultFetcher.EXPECT().FetchNextPageAndUpdateState().Return(&statement, nil)
+	s.basicOutputController.EXPECT().VisualizeResults()
 
 	actual := s.runMainLoop(true)
 
@@ -138,14 +144,94 @@ func (s *ApplicationTestSuite) TestReplReturnsWhenHandleStatementResultsReturnsT
 func (s *ApplicationTestSuite) TestReplDoesNotReturnWhenHandleStatementResultsReturnsFalse() {
 	userInput := "test-input"
 	statement := types.ProcessedStatement{}
-	windowSize := 10
 	s.inputController.EXPECT().GetUserInput().Return(userInput)
 	s.inputController.EXPECT().IsSpecialInput(userInput).Return(false)
 	s.statementController.EXPECT().ExecuteStatement(userInput).Return(&statement, nil)
-	s.inputController.EXPECT().GetWindowWidth().Return(windowSize)
-	s.outputController.EXPECT().HandleStatementResults(statement, windowSize)
+	s.resultFetcher.EXPECT().Init(statement)
+	s.resultFetcher.EXPECT().FetchNextPageAndUpdateState().Return(&statement, nil)
+	s.basicOutputController.EXPECT().VisualizeResults()
 
 	actual := s.runMainLoop(true)
 
 	s.requireManuallyStopped(actual)
+}
+
+func (s *ApplicationTestSuite) TestShouldUseTView() {
+	tests := []struct {
+		name      string
+		statement types.ProcessedStatement
+		want      types.OutputControllerInterface
+	}{
+		{
+			name:      "local statement should not use TView",
+			statement: types.ProcessedStatement{IsLocalStatement: true},
+			want:      s.basicOutputController,
+		},
+		{
+			name:      "local statement should not use TView even if unbounded",
+			statement: types.ProcessedStatement{PageToken: "NOT_EMPTY", IsLocalStatement: true},
+			want:      s.basicOutputController,
+		},
+		{
+			name:      "non-local unbounded statement should always use TView",
+			statement: types.ProcessedStatement{PageToken: "NOT_EMPTY", IsLocalStatement: false, StatementResults: &types.StatementResults{}},
+			want:      s.interactiveOutputController,
+		},
+		{
+			name:      "statement with no results should not use TView",
+			statement: types.ProcessedStatement{IsLocalStatement: false},
+			want:      s.basicOutputController,
+		},
+		{
+			name:      "statement with empty results should not use TView",
+			statement: types.ProcessedStatement{IsLocalStatement: false, StatementResults: &types.StatementResults{}},
+			want:      s.basicOutputController,
+		},
+		{
+			name: "statement with one column and two rows should not use TView",
+			statement: types.ProcessedStatement{IsLocalStatement: false, StatementResults: &types.StatementResults{
+				Headers: []string{"Column 1"},
+				Rows: []types.StatementResultRow{
+					{Fields: []types.StatementResultField{types.AtomicStatementResultField{}}},
+					{Fields: []types.StatementResultField{types.AtomicStatementResultField{}}},
+				},
+			}},
+			want: s.basicOutputController,
+		},
+		{
+			name: "statement with two columns and one row should not use TView",
+			statement: types.ProcessedStatement{IsLocalStatement: false, StatementResults: &types.StatementResults{
+				Headers: []string{"Column 1", "Column 2"},
+				Rows:    []types.StatementResultRow{{Fields: []types.StatementResultField{types.AtomicStatementResultField{}}}},
+			}},
+			want: s.basicOutputController,
+		},
+		{
+			name: "statement with two columns and two rows should use TView",
+			statement: types.ProcessedStatement{IsLocalStatement: false, StatementResults: &types.StatementResults{
+				Headers: []string{"Column 1", "Column 2"},
+				Rows: []types.StatementResultRow{
+					{Fields: []types.StatementResultField{types.AtomicStatementResultField{}}},
+					{Fields: []types.StatementResultField{types.AtomicStatementResultField{}}},
+				},
+			}},
+			want: s.interactiveOutputController,
+		},
+		{
+			name: "local statement with two columns and two rows should not use TView",
+			statement: types.ProcessedStatement{IsLocalStatement: true, StatementResults: &types.StatementResults{
+				Headers: []string{"Column 1", "Column 2"},
+				Rows: []types.StatementResultRow{
+					{Fields: []types.StatementResultField{types.AtomicStatementResultField{}}},
+					{Fields: []types.StatementResultField{types.AtomicStatementResultField{}}},
+				},
+			}},
+			want: s.basicOutputController,
+		},
+	}
+	for _, tt := range tests {
+		s.T().Run(tt.name, func(t *testing.T) {
+			require.Equal(t, tt.want, s.app.getOutputController(tt.statement))
+		})
+	}
 }

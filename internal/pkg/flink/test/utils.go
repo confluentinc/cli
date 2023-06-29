@@ -9,14 +9,15 @@ import (
 func RunAndCaptureSTDOUT(t require.TestingT, test func()) string {
 	// Redirect STDOUT to a buffer
 	old := os.Stdout
-	r, w, _ := os.Pipe()
+	r, w, err := os.Pipe()
+	require.NoError(t, err)
 	os.Stdout = w
 
 	// Run the test
 	test()
 
 	// Close the writer and restore the original STDOUT
-	err := w.Close()
+	err = w.Close()
 	require.NoError(t, err)
 	os.Stdout = old
 

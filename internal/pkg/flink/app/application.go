@@ -20,12 +20,15 @@ import (
 )
 
 type Application struct {
-	history             *history.History
-	appController       types.ApplicationControllerInterface
-	inputController     types.InputControllerInterface
-	statementController types.StatementControllerInterface
-	resultsController   types.OutputControllerInterface
-	authenticated       func() error
+	history                     *history.History
+	store                       types.StoreInterface
+	resultFetcher               types.ResultFetcherInterface
+	appController               types.ApplicationControllerInterface
+	inputController             types.InputControllerInterface
+	statementController         types.StatementControllerInterface
+	interactiveOutputController types.OutputControllerInterface
+	basicOutputController       types.OutputControllerInterface
+	authenticated               func() error
 }
 
 func StartApp(client ccloudv2.GatewayClientInterface, authenticated func() error, appOptions types.ApplicationOptions) {
@@ -51,18 +54,21 @@ func StartApp(client ccloudv2.GatewayClientInterface, authenticated func() error
 	})
 
 	// Instantiate Component Controllers
-	tableController := controller.NewTableController(resultFetcher)
 	inputController := controller.NewInputController(appController, history)
 	statementController := controller.NewStatementController(appController, store, consoleParser)
-	resultsController := controller.NewOutputController(tableController)
+	interactiveOutputController := controller.NewInteractiveOutputController(resultFetcher)
+	basicOutputController := controller.NewBasicOutputController(resultFetcher, inputController.GetWindowWidth)
 
 	app := Application{
-		history:             history,
-		appController:       appController,
-		inputController:     inputController,
-		statementController: statementController,
-		resultsController:   resultsController,
-		authenticated:       authenticated,
+		history:                     history,
+		store:                       store,
+		resultFetcher:               resultFetcher,
+		appController:               appController,
+		inputController:             inputController,
+		statementController:         statementController,
+		interactiveOutputController: interactiveOutputController,
+		basicOutputController:       basicOutputController,
+		authenticated:               authenticated,
 	}
 	components.PrintWelcomeHeader()
 	app.readEvalPrintLoop()
@@ -112,7 +118,12 @@ func (a *Application) readEvalPrintLoop() {
 			continue
 		}
 
-		a.resultsController.HandleStatementResults(*executedStatement, a.inputController.GetWindowWidth())
+		a.resultFetcher.Init(*executedStatement)
+		executedStatementWithResults, err := a.resultFetcher.FetchNextPageAndUpdateState()
+		if err != nil {
+			continue
+		}
+		a.getOutputController(*executedStatementWithResults).VisualizeResults()
 	}
 }
 
@@ -123,4 +134,19 @@ func (a *Application) isAuthenticated() bool {
 		return false
 	}
 	return true
+}
+
+func (a *Application) getOutputController(processedStatementWithResults types.ProcessedStatement) types.OutputControllerInterface {
+	// only use view for non-local statements, that have more than one row and more than one column
+	if processedStatementWithResults.IsLocalStatement {
+		return a.basicOutputController
+	}
+	if processedStatementWithResults.PageToken != "" {
+		return a.interactiveOutputController
+	}
+	if len(processedStatementWithResults.StatementResults.GetHeaders()) > 1 && len(processedStatementWithResults.StatementResults.GetRows()) > 1 {
+		return a.interactiveOutputController
+	}
+
+	return a.basicOutputController
 }
