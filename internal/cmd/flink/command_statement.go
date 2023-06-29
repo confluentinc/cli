@@ -2,7 +2,6 @@ package flink
 
 import (
 	"fmt"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -59,10 +58,11 @@ func (c *command) validStatementArgs(cmd *cobra.Command, args []string) []string
 		return nil
 	}
 
-	statements, err := client.ListStatements(environmentId, c.Context.LastOrgId)
+	listStatementsResponse, err := client.ListStatements(environmentId, c.Context.LastOrgId, "")
 	if err != nil {
 		return nil
 	}
+	statements := listStatementsResponse.GetData()
 
 	suggestions := make([]string, len(statements))
 	for i, statement := range statements {
