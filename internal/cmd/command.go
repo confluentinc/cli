@@ -266,7 +266,7 @@ func deprecateCommandsAndFlags(cmd *cobra.Command, cfg *v1.Config) {
 }
 
 func disableCommandAndFlagHelpText(cmd *cobra.Command, cfg *v1.Config) {
-	ctx := dynamicconfig.NewDynamicContext(cfg.Context(), nil, nil)
+	ctx := dynamicconfig.NewDynamicContext(cfg.Context(), nil)
 	disableResp := featureflags.GetLDDisableMap(ctx)
 	disabledCmdsAndFlags, ok := disableResp["patterns"].([]any)
 	if ok && len(disabledCmdsAndFlags) > 0 {
