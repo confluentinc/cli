@@ -116,14 +116,6 @@ func (c *aclCommand) getAllUsers() ([]*ccloudv1.User, error) {
 	return append(serviceAccounts, users...), nil
 }
 
-func mapNumericIdToResourceId(users []*ccloudv1.User) map[int32]string {
-	numericIdToResourceId := make(map[int32]string)
-	for _, user := range users {
-		numericIdToResourceId[user.Id] = user.ResourceId
-	}
-	return numericIdToResourceId
-}
-
 func (c *aclCommand) provisioningClusterCheck(lkc string) error {
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
