@@ -46,7 +46,7 @@ func StartApp(client ccloudv2.GatewayClientInterface, authenticated func() error
 	interactiveOutput := components.InteractiveOutput(table, shortcuts)
 	rootLayout := components.RootLayout(interactiveOutput)
 
-	// We start tview and then suspend it immediately so we initialize all components
+	// We start tview and then suspend it immediately so we initialize all components
 	app.SetAfterDrawFunc(func(screen tcell.Screen) {
 		if !screen.HasPendingEvent() {
 			once.Do(func() {
