@@ -5,7 +5,6 @@ import (
 	"os"
 	"regexp"
 	"sort"
-	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -23,8 +22,12 @@ func (c *command) newCreateCommand() *cobra.Command {
 		RunE:  c.create,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Create a new Stream Designer pipeline",
-				Code: `confluent pipeline create --name test-pipeline --ksql-cluster lksqlc-12345 --description "this is a test pipeline"`,
+				Text: `Create a Stream Designer pipeline with name "my-pipeline".`,
+				Code: `confluent pipeline create --name my-pipeline --description "example pipeline"`,
+			},
+			examples.Example{
+				Text: "Create a Stream Designer pipeline with a KSQL cluster and a Schema Registry cluster.",
+				Code: `confluent pipeline create --name my-pipeline --description "example pipeline" --ksql-cluster lksqlc-12345 --use-schema-registry`,
 			},
 		),
 	}
@@ -32,6 +35,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 	cmd.Flags().String("name", "", "Name of the pipeline.")
 	cmd.Flags().String("description", "", "Description of the pipeline.")
 	pcmd.AddKsqlClusterFlag(cmd, c.AuthenticatedCLICommand)
+	cmd.Flags().Bool("use-schema-registry", false, "Add the Schema Registry cluster to the pipeline.")
 	cmd.Flags().String("sql-file", "", "Path to a KSQL file containing the pipeline's source code.")
 	cmd.Flags().StringArray("secret", []string{}, "A named secret that can be referenced in pipeline source code, e.g. \"secret_name=secret_content\".\n"+
 		"This flag can be supplied multiple times. The secret mapping must have the format <secret-name>=<secret-value>,\n"+
@@ -90,15 +94,6 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
-	// validate sr id
-	srCluster, err := c.Context.FetchSchemaRegistryByEnvironmentId(environmentId)
-	if err != nil {
-		// ignore if the SR is not enabled
-		if !strings.Contains(err.Error(), "Schema Registry not enabled") {
-			return err
-		}
-	}
-
 	// read pipeline source code file if provided
 	sourceCode := ""
 	if sqlFile != "" {
@@ -132,8 +127,17 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		createPipeline.Spec.KsqlCluster = &streamdesignerv1.ObjectReference{Id: ksqlCluster}
 	}
 
-	// add Schema Registry Cluster if its provisioned
-	if _, ok := srCluster.GetIdOk(); ok {
+	// check if we need to configure Schema Registry cluster for this pipeline
+	useSchemaRegistry, err := cmd.Flags().GetBool("use-schema-registry")
+	if err != nil {
+		return err
+	}
+
+	if useSchemaRegistry {
+		srCluster, err := c.Context.FetchSchemaRegistryByEnvironmentId(environmentId)
+		if err != nil {
+			return err
+		}
 		createPipeline.Spec.StreamGovernanceCluster = &streamdesignerv1.ObjectReference{Id: srCluster.GetId()}
 	}
 
