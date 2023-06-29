@@ -1,0 +1,34 @@
+Update subject compatibility or mode.
+
+Usage:
+  confluent schema-registry subject update <subject> [flags]
+
+Examples:
+Update subject-level compatibility of subject "payments".
+
+  $ confluent schema-registry subject update payments --compatibility backward --ca-location <ca-file-location> --schema-registry-endpoint <schema-registry-endpoint>
+
+Update subject-level compatibility of subject "payments" and set compatibility group to "application.version".
+
+  $ confluent schema-registry subject update payments --compatibility backward --compatibility-group application.version
+
+Update subject-level mode of subject "payments".
+
+  $ confluent schema-registry subject update payments --mode readwrite --ca-location <ca-file-location> --schema-registry-endpoint <schema-registry-endpoint>
+
+Flags:
+      --compatibility string              Can be "backward", "backward_transitive", "forward", "forward_transitive", "full", "full_transitive", or "none".
+      --compatibility-group string        The name of the compatibility group.
+      --metadata-defaults string          The path to the schema metadata defaults file.
+      --metadata-overrides string         The path to the schema metadata overrides file.
+      --ruleset-defaults string           The path to the schema ruleset defaults file.
+      --ruleset-overrides string          The path to the schema ruleset overrides file.
+      --mode string                       Can be "readwrite", "readonly", or "import".
+      --ca-location string                File or directory path to CA certificate(s) to authenticate the Schema Registry client.
+      --schema-registry-endpoint string   The URL of the Schema Registry cluster.
+      --context string                    CLI context name.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

@@ -458,7 +458,7 @@ func TestCheckForUpdates_NoCheckFileGiven(t *testing.T) {
 }
 
 func TestVerifyChecksum(t *testing.T) {
-	checksums := test.LoadFixture(t, "update/checksums.golden")
+	checksums := test.LoadFixture(t, "../input/update/checksums.golden")
 
 	mockRepository := &updateMock.Repository{
 		DownloadChecksumsFunc: func(name, version string) (string, error) {

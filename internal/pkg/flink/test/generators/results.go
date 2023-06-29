@@ -128,7 +128,7 @@ func MockResultRow(columnDetails []flinkgatewayv1alpha1.ColumnDetails) *rapid.Ge
 			items = append(items, GetResultItemGeneratorForType(column.GetType()).Draw(t, "a field"))
 		}
 		return map[string]any{
-			"op":  rapid.Int32Range(0, 3).Draw(t, "an operation"),
+			"op":  rapid.Float64Range(0, 3).Draw(t, "an operation"),
 			"row": items,
 		}
 	})
@@ -309,59 +309,4 @@ func MockResults(maxNumColumns, maxNestingDepth int) *rapid.Generator[types.Mock
 			},
 		}
 	})
-}
-
-func MockCount(count int) types.MockStatementResult {
-	var columnDetails []flinkgatewayv1alpha1.ColumnDetails
-	dataType := flinkgatewayv1alpha1.DataType{
-		Nullable: false,
-		Type:     "INTEGER",
-	}
-	columnDetails = append(columnDetails, flinkgatewayv1alpha1.ColumnDetails{
-		Name: "Count",
-		Type: dataType,
-	})
-
-	var resultData []any
-	if count == 0 {
-		item := map[string]any{
-			"op":  int32(0),
-			"row": []any{fmt.Sprintf("%v", count)},
-		}
-		resultData = append(resultData, item)
-	} else {
-		// update before
-		resultData = append(resultData, map[string]any{
-			"op":  int32(1),
-			"row": []any{fmt.Sprintf("%v", count-1)},
-		})
-
-		// update after
-		resultData = append(resultData, map[string]any{
-			"op":  int32(2),
-			"row": []any{fmt.Sprintf("%v", count)},
-		})
-	}
-
-	return types.MockStatementResult{
-		ResultSchema: flinkgatewayv1alpha1.SqlV1alpha1ResultSchema{Columns: &columnDetails},
-		StatementResults: flinkgatewayv1alpha1.SqlV1alpha1StatementResult{
-			Results: &flinkgatewayv1alpha1.SqlV1alpha1StatementResultResults{Data: &resultData},
-		},
-	}
-}
-
-// TODO - This was only used for debugging/testing as gateway as broken
-func ShowTablesSchema() flinkgatewayv1alpha1.SqlV1alpha1ResultSchema {
-	var columnDetails []flinkgatewayv1alpha1.ColumnDetails
-	dataType := flinkgatewayv1alpha1.DataType{
-		Nullable: false,
-		Type:     "VARCHAR",
-	}
-	columnDetails = append(columnDetails, flinkgatewayv1alpha1.ColumnDetails{
-		Name: "Table Name",
-		Type: dataType,
-	})
-
-	return flinkgatewayv1alpha1.SqlV1alpha1ResultSchema{Columns: &columnDetails}
 }

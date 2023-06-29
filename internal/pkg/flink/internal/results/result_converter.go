@@ -44,7 +44,7 @@ func ConvertToInternalResults(results []any, resultSchema flinkgatewayv1alpha1.S
 			convertedFields[colIdx] = convertToInternalField(field, columnSchema)
 		}
 
-		op, _ := resultItem["op"].(int32)
+		op, _ := resultItem["op"].(float64)
 		convertedResults[rowIdx] = types.StatementResultRow{
 			Operation: types.StatementResultOperation(op),
 			Fields:    convertedFields,

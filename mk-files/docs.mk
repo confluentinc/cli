@@ -33,7 +33,6 @@ publish-docs: docs
 	cd $(DOCS_CONFLUENT_CLI) && \
 	rm -rf command-reference && \
 	cp -R ~/git/go/src/github.com/confluentinc/cli/docs command-reference && \
-	[ ! -f "command-reference/kafka/topic/confluent_kafka_topic_consume.rst" ] || $(SED) -i 's/default "confluent_cli_consumer_[^"]*"/default "confluent_cli_consumer_<randomly-generated-id>"/' command-reference/kafka/topic/confluent_kafka_topic_consume.rst || exit 1 && \
 	git add . && \
 	git commit --allow-empty -m "[ci skip] chore: update CLI docs for v$(CLEAN_VERSION)" && \
 	$(call dry-run,git push origin publish-docs-v$(CLEAN_VERSION)) && \

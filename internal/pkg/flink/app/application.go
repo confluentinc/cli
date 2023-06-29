@@ -30,10 +30,11 @@ func StartApp(client ccloudv2.GatewayClientInterface, authenticated func() error
 	appController := controller.NewApplicationController(app, history)
 
 	// Store used to process statements and store local properties
-	store := store.NewStore(client, appController.ExitApplication, &appOptions)
+	store := store.NewStore(client, appController.ExitApplication, &appOptions, authenticated)
 
 	// Instantiate Component Controllers
-	tableController := controller.NewTableController(table, store, appController)
+	fetchController := controller.NewFetchController(store)
+	tableController := controller.NewTableController(table, appController, fetchController)
 	inputController := controller.NewInputController(tableController, appController, store, authenticated, history, &appOptions)
 
 	// Pass RunInteractiveInputFunc to table controller so the user can come back from the output view
@@ -45,7 +46,7 @@ func StartApp(client ccloudv2.GatewayClientInterface, authenticated func() error
 	interactiveOutput := components.InteractiveOutput(table, shortcuts)
 	rootLayout := components.RootLayout(interactiveOutput)
 
-	// We start tview and then suspend it immediately so we initialize all components
+	// We start tview and then suspend it immediately so we initialize all components
 	app.SetAfterDrawFunc(func(screen tcell.Screen) {
 		if !screen.HasPendingEvent() {
 			once.Do(func() {

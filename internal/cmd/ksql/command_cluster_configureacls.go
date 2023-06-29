@@ -12,7 +12,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/acl"
 	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -28,7 +27,7 @@ func (c *ksqlCommand) newConfigureAclsCommand() *cobra.Command {
 		RunE:              c.configureACLs,
 	}
 
-	cmd.Flags().Bool("dry-run", false, "If specified, print the ACLs that will be set and exit.")
+	pcmd.AddDryRunFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -37,35 +36,33 @@ func (c *ksqlCommand) newConfigureAclsCommand() *cobra.Command {
 }
 
 func (c *ksqlCommand) configureACLs(cmd *cobra.Command, args []string) error {
-	// Get the Kafka Cluster
-	kafkaCluster, err := dynamicconfig.KafkaCluster(c.Context)
-	if err != nil {
-		return err
-	}
-
-	ksqlCluster := args[0]
-
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}
 
 	// Ensure the KSQL cluster talks to the current Kafka Cluster
-	cluster, err := c.V2Client.DescribeKsqlCluster(ksqlCluster, environmentId)
+	ksqlCluster, err := c.V2Client.DescribeKsqlCluster(args[0], environmentId)
 	if err != nil {
 		return err
 	}
 
-	if cluster.Spec.KafkaCluster.Id != kafkaCluster.Id {
-		output.ErrPrintf(errors.KsqlDBNotBackedByKafkaMsg, ksqlCluster, cluster.Spec.KafkaCluster.Id, kafkaCluster.Id, cluster.Spec.KafkaCluster.Id)
+	// Get the Kafka Cluster
+	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
+	if err != nil {
+		return err
 	}
 
-	credentialIdentity := cluster.Spec.CredentialIdentity.GetId()
+	if ksqlCluster.Spec.KafkaCluster.GetId() != kafkaCluster.ID {
+		output.ErrPrintf(errors.KsqlDBNotBackedByKafkaMsg, args[0], ksqlCluster.Spec.KafkaCluster.GetId(), kafkaCluster.ID, ksqlCluster.Spec.KafkaCluster.GetId())
+	}
+
+	credentialIdentity := ksqlCluster.Spec.CredentialIdentity.GetId()
 	if resource.LookupType(credentialIdentity) != resource.ServiceAccount {
-		return fmt.Errorf(errors.KsqlDBNoServiceAccountErrorMsg, ksqlCluster)
+		return fmt.Errorf(errors.KsqlDBNoServiceAccountErrorMsg, args[0])
 	}
 
-	serviceAccountId, err := c.getServiceAccount(&cluster)
+	serviceAccountId, err := c.getServiceAccount(&ksqlCluster)
 	if err != nil {
 		return err
 	}
@@ -75,7 +72,7 @@ func (c *ksqlCommand) configureACLs(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	bindings := buildACLBindings(serviceAccountId, &cluster, args[1:])
+	bindings := buildACLBindings(serviceAccountId, &ksqlCluster, args[1:])
 	if dryRun {
 		return acl.PrintACLs(cmd, bindings)
 	}

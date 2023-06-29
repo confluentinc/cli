@@ -18,6 +18,8 @@ const (
 		StopNonInteractiveMsg + ".\n"
 	FoundNetrcCredMsg = "Found credentials for user \"%s\" from netrc file \"%s\" " +
 		StopNonInteractiveMsg + ".\n"
+	FoundKeychainCredMsg = "Found credentials for user \"%s\" from keychain " +
+		StopNonInteractiveMsg + ".\n"
 	RemainingFreeCreditMsg = "Free credits: $%.2f USD remaining\n" +
 		"You are currently using a free trial version of Confluent Cloud. Add a payment method with `confluent admin payment update` to avoid an interruption in service once your trial ends.\n"
 	CloudSignUpMsg     = "Success! Welcome to Confluent Cloud.\n"
@@ -105,7 +107,8 @@ const (
 	PromptToDownloadDescriptionMsg = "New version of %s is available\n" +
 		"Current Version: %s\n" +
 		"Latest Version:  %s\n" +
-		"%s\n\n\n"
+		"\n" +
+		"%s"
 	InvalidChoiceMsg = "%s is not a valid choice"
 
 	// General

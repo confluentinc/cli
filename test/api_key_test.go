@@ -120,6 +120,8 @@ func (s *CLITestSuite) TestApiKey() {
 				ctx := cfg.Context()
 				require.NotNil(t, ctx)
 				kcc := ctx.KafkaClusterContext.GetKafkaClusterConfig("lkc-cool1")
+				err = kcc.DecryptAPIKeys()
+				require.NoError(t, err)
 				pair := kcc.APIKeys["UIAPIKEY100"]
 				require.NotNil(t, pair)
 				require.Equal(t, "NEWSECRET", pair.Secret)
@@ -177,7 +179,14 @@ func (s *CLITestSuite) TestApiKey_EnvironmentNotValid() {
 	s.runIntegrationTest(tt)
 }
 
-func (s *CLITestSuite) TestApiKeyAutocomplete() {
-	test := CLITest{args: `__complete api-key describe ""`, login: "cloud", fixture: "api-key/describe-autocomplete.golden"}
-	s.runIntegrationTest(test)
+func (s *CLITestSuite) TestApiKey_Autocomplete() {
+	tests := []CLITest{
+		{args: `__complete api-key create --resource ""`, fixture: "api-key/create-resource-autocomplete.golden"},
+		{args: `__complete api-key describe ""`, fixture: "api-key/describe-autocomplete.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
 }

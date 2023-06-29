@@ -1,0 +1,6 @@
++---------------------+--------------------+
+| Name                | link-1             |
+| Source Cluster      | lkc-describe-topic |
+| Destination Cluster |                    |
+| State               | AVAILABLE          |
++---------------------+--------------------+

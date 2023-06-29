@@ -35,7 +35,7 @@ func (c *identityPoolCommand) use(cmd *cobra.Command, args []string) error {
 
 	id := args[0]
 	if _, err := c.V2Client.GetIdentityPool(id, provider); err != nil {
-		return errors.NewErrorWithSuggestions(err.Error(), "List available identity pools with `confluent flink iam pool list`.")
+		return errors.NewErrorWithSuggestions(err.Error(), "List available identity pools with `confluent iam pool list`.")
 	}
 
 	if err := c.Context.SetCurrentIdentityPool(id); err != nil {

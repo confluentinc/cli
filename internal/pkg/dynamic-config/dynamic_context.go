@@ -2,6 +2,7 @@ package dynamicconfig
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -17,17 +18,15 @@ import (
 
 type DynamicContext struct {
 	*v1.Context
-	Client   *ccloudv1.Client
 	V2Client *ccloudv2.Client
 }
 
-func NewDynamicContext(context *v1.Context, client *ccloudv1.Client, v2Client *ccloudv2.Client) *DynamicContext {
+func NewDynamicContext(context *v1.Context, v2Client *ccloudv2.Client) *DynamicContext {
 	if context == nil {
 		return nil
 	}
 	return &DynamicContext{
 		Context:  context,
-		Client:   client,
 		V2Client: v2Client,
 	}
 }
@@ -96,9 +95,23 @@ func (d *DynamicContext) FindKafkaCluster(clusterId string) (*v1.KafkaClusterCon
 	}
 
 	// Resolve cluster details if not found locally.
-	config, err := d.FetchCluster(clusterId)
+	environmentId, err := d.EnvironmentId()
 	if err != nil {
 		return nil, err
+	}
+
+	cluster, httpResp, err := d.V2Client.DescribeKafkaCluster(clusterId, environmentId)
+	if err != nil {
+		return nil, errors.CatchKafkaNotFoundError(err, clusterId, httpResp)
+	}
+
+	config := &v1.KafkaClusterConfig{
+		ID:           cluster.GetId(),
+		Name:         cluster.Spec.GetDisplayName(),
+		Bootstrap:    strings.TrimPrefix(cluster.Spec.GetKafkaBootstrapEndpoint(), "SASL_SSL://"),
+		RestEndpoint: cluster.Spec.GetHttpEndpoint(),
+		APIKeys:      make(map[string]*v1.APIKeyPair),
+		LastUpdate:   time.Now(),
 	}
 
 	d.KafkaClusterContext.AddKafkaClusterConfig(config)
@@ -148,7 +161,7 @@ func (d *DynamicContext) SchemaRegistryCluster(cmd *cobra.Command) (*v1.SchemaRe
 	var clusterChanged bool
 	if resourceType == presource.SchemaRegistryCluster {
 		for _, srCluster := range d.SchemaRegistryClusters {
-			if srCluster.Id == resource {
+			if srCluster.GetId() == resource {
 				cluster = srCluster
 			}
 		}
