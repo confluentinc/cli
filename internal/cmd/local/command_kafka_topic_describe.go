@@ -11,7 +11,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 )
 
-func (c *command) newKafkaTopicDescribeCommand() *cobra.Command {
+func (c *Command) newKafkaTopicDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe <topic>",
 		Args:  cobra.ExactArgs(1),
@@ -30,7 +30,7 @@ func (c *command) newKafkaTopicDescribeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) kafkaTopicDescribe(cmd *cobra.Command, args []string) error {
+func (c *Command) kafkaTopicDescribe(cmd *cobra.Command, args []string) error {
 	restClient, clusterId, err := initKafkaRest(c.CLICommand, cmd)
 	if err != nil {
 		return errors.NewErrorWithSuggestions(err.Error(), kafkaRestNotReadySuggestion)
