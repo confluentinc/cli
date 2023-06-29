@@ -22,7 +22,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 		RunE:  c.create,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Create a Stream Designer pipeline named "my-pipeline".`,
+				Text: `Create a Stream Designer pipeline with description "my-pipeline".`,
 				Code: `confluent pipeline create --name my-pipeline --description "example pipeline"`,
 			},
 			examples.Example{
