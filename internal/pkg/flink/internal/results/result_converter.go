@@ -6,7 +6,6 @@ import (
 	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
 
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
-	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
 func convertToInternalField(field any, details flinkgatewayv1alpha1.ColumnDetails) types.StatementResultField {
@@ -34,11 +33,7 @@ func ConvertToInternalResults(results []any, resultSchema flinkgatewayv1alpha1.S
 			return nil, errors.New("given result item does not match op/row schema")
 		}
 
-		items, ok := resultItem["row"].([]any)
-		if !ok {
-			log.CliLogger.Error("Could not read 'row' from results as []any")
-		}
-
+		items, _ := resultItem["row"].([]any)
 		if len(items) != len(resultSchema.GetColumns()) {
 			return nil, errors.New("given result row does not match the provided schema")
 		}
@@ -49,10 +44,7 @@ func ConvertToInternalResults(results []any, resultSchema flinkgatewayv1alpha1.S
 			convertedFields[colIdx] = convertToInternalField(field, columnSchema)
 		}
 
-		op, ok := resultItem["op"].(float64)
-		if !ok {
-			log.CliLogger.Error("Could not read 'op' from results as float64")
-		}
+		op, _ := resultItem["op"].(float64)
 		convertedResults[rowIdx] = types.StatementResultRow{
 			Operation: types.StatementResultOperation(op),
 			Fields:    convertedFields,
