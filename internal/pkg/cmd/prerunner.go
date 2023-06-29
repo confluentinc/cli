@@ -111,13 +111,10 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(*cob
 }
 
 func checkCliDisable(cmd *CLICommand, cfg *v1.Config) error {
-	ldDisableJson := featureflags.Manager.JsonVariation("cli.disable", cmd.Config.Context(), v1.CliLaunchDarklyClient, true, nil)
-	ldDisable, ok := ldDisableJson.(map[string]any)
-	if !ok {
-		return nil
-	}
+	ldDisable := featureflags.GetLDDisableMap(cmd.Config.Context())
 	errMsg, errMsgOk := ldDisable["error_msg"].(string)
-	if errMsgOk && errMsg != "" {
+	disabledCmdsAndFlags, ok := ldDisable["patterns"].([]any)
+	if (errMsgOk && errMsg != "" && !ok) || (ok && featureflags.IsDisabled(cmd.Command, disabledCmdsAndFlags)) {
 		allowUpdate, allowUpdateOk := ldDisable["allow_update"].(bool)
 		if !(cmd.CommandPath() == "confluent update" && allowUpdateOk && allowUpdate) {
 			// in case a user is trying to run an on-prem command from a cloud context (should not see LD msg)

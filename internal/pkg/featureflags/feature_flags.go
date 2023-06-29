@@ -95,7 +95,7 @@ func (ld *launchDarklyManager) SetCommandAndFlags(cmd *cobra.Command, args []str
 	fullCmd, flagsAndArgs, _ := cmd.Find(args)
 	flags := ppanic.ParseFlags(fullCmd, flagsAndArgs)
 	ld.command = fullCmd
-	ld.flags = *flags
+	ld.flags = flags
 }
 
 func (ld *launchDarklyManager) BoolVariation(key string, ctx *dynamicconfig.DynamicContext, client v1.LaunchDarklyClient, shouldCache bool, defaultVal bool) bool {

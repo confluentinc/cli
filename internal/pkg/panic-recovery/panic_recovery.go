@@ -18,19 +18,21 @@ import (
 // CollectPanic collects relevant usage data for when panics occur and command execution is not completed.
 func CollectPanic(cmd *cobra.Command, args []string, cfg *v1.Config) *usage.Usage {
 	fullCommand, flags, _ := cmd.Find(args)
+	trimmedFlags := ParseFlags(fullCommand, flags)
+	parsedStack := parseStack(string(debug.Stack()))
 	return &usage.Usage{
 		Os:          cliv1.PtrString(runtime.GOOS),
 		Arch:        cliv1.PtrString(runtime.GOARCH),
 		Version:     cliv1.PtrString(cfg.Version.Version),
 		Command:     cliv1.PtrString(fullCommand.CommandPath()),
-		Flags:       ParseFlags(fullCommand, flags),
+		Flags:       &trimmedFlags,
 		Error:       cliv1.PtrBool(true),
-		StackFrames: parseStack(string(debug.Stack())),
+		StackFrames: &parsedStack,
 	}
 }
 
 // ParseFlags collects the flags of a command after being found with Find()
-func ParseFlags(cmd *cobra.Command, flags []string) *[]string {
+func ParseFlags(cmd *cobra.Command, flags []string) []string {
 	var formattedFlags []string
 	trimmedFlags := make([]string, len(flags))
 	for i := range flags {
@@ -41,11 +43,11 @@ func ParseFlags(cmd *cobra.Command, flags []string) *[]string {
 			formattedFlags = append(formattedFlags, flag.Name)
 		}
 	})
-	return &formattedFlags
+	return formattedFlags
 }
 
 // parseStack formats the stack trace resulting from a panic-recovery to only include line numbers up until panic-recovery
-func parseStack(stack string) *[]string {
+func parseStack(stack string) []string {
 	stack = strings.TrimRight(stack, "\n")
 	trace := strings.Split(stack, "\n")
 	panicIndex := 0
@@ -63,5 +65,5 @@ func parseStack(stack string) *[]string {
 			result = append(result, s)
 		}
 	}
-	return &result
+	return result
 }
