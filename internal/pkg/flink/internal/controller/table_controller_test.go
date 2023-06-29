@@ -81,7 +81,7 @@ func (s *TableControllerTestSuite) renderTableMockCalls() {
 	s.fetchController.EXPECT().GetMaxWidthPerColumn().Return([]int{})
 	s.fetchController.EXPECT().GetHeaders().Return([]string{})
 	s.fetchController.EXPECT().ForEach(gomock.Any())
-	s.fetchController.EXPECT().IsAutoRefreshRunning().Return(false).Times(2)
+	s.fetchController.EXPECT().IsAutoRefreshRunning().Return(false)
 	s.fetchController.EXPECT().GetResultsIterator(true)
 	s.appController.EXPECT().TView().Return(s.dummyTViewApp)
 }
@@ -164,6 +164,28 @@ func getResultsExample() *types.MaterializedStatementResults {
 	return &materializedStatementResults
 }
 
+func (s *TableControllerTestSuite) TestOpenRowViewWhenRowIsNilShouldNotPanic() {
+	// Given
+	materializedStatementResults := getResultsExample()
+	s.initMockCalls(materializedStatementResults, types.Paused)
+	s.tableController.Init(types.ProcessedStatement{})
+	// move iterator to end so it becomes nil
+	s.tableController.materializedStatementResultsIterator.Move(materializedStatementResults.Size() + 1)
+
+	s.fetchController.EXPECT().IsAutoRefreshRunning().Return(false)
+	s.fetchController.EXPECT().GetHeaders().Return(materializedStatementResults.GetHeaders())
+	s.appController.EXPECT().TView().Return(s.dummyTViewApp).Times(2)
+
+	// When
+	result := s.tableController.AppInputCapture(tcell.NewEventKey(tcell.KeyEnter, rune(0), tcell.ModNone))
+
+	// Then
+	require.Nil(s.T(), result)
+	require.True(s.T(), s.tableController.isRowViewOpen)
+	require.Equal(s.T(), 10, s.tableController.selectedRowIdx) // 1-indexed: first row is at 1 and last row at 10
+	require.Nil(s.T(), s.tableController.materializedStatementResultsIterator.Value())
+}
+
 func (s *TableControllerTestSuite) initMockCalls(materializedStatementResults *types.MaterializedStatementResults, fetchState types.FetchState) {
 	s.fetchController.EXPECT().Init(gomock.Any())
 	s.fetchController.EXPECT().SetAutoRefreshCallback(gomock.Any())
@@ -172,7 +194,7 @@ func (s *TableControllerTestSuite) initMockCalls(materializedStatementResults *t
 	s.fetchController.EXPECT().GetMaxWidthPerColumn().Return(materializedStatementResults.GetMaxWidthPerColum())
 	s.fetchController.EXPECT().GetHeaders().Return(materializedStatementResults.GetHeaders())
 	s.fetchController.EXPECT().ForEach(gomock.Any()).Do(func(f func(rowIdx int, row *types.StatementResultRow)) { materializedStatementResults.ForEach(f) })
-	s.fetchController.EXPECT().IsAutoRefreshRunning().Return(false).Times(3)
+	s.fetchController.EXPECT().IsAutoRefreshRunning().Return(false).Times(2)
 	s.fetchController.EXPECT().GetResultsIterator(true).Return(materializedStatementResults.Iterator(true))
 	s.appController.EXPECT().TView().Return(s.dummyTViewApp)
 }
