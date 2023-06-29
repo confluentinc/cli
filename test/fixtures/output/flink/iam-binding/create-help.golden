@@ -1,0 +1,21 @@
+Create a Flink IAM binding.
+
+Usage:
+  confluent flink iam-binding create [flags]
+
+Examples:
+Create a Flink IAM binding between AWS region "us-west-2", environment "env-123" and identity-pool "pool-123".
+
+  $ confluent flink iam-binding create --cloud aws --region us-west-2 --environment env-123 --identity-pool pool-123
+
+Flags:
+      --cloud string           REQUIRED: Specify the cloud provider as "aws", "azure", or "gcp".
+      --region string          REQUIRED: Cloud region for compute pool (use "confluent flink region list" to see all).
+      --environment string     Environment ID.
+      --identity-pool string   Identity pool ID.
+  -o, --output string          Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

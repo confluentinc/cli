@@ -31,7 +31,7 @@ func (s *MaterializedStatementResultsTestSuite) TestChangelogMode() {
 		require.NoError(t, err)
 
 		// test if in changelog mode all the rows are there and in the correct order
-		materializedStatementResults := NewMaterializedStatementResults(convertedResults.GetHeaders(), 100)
+		materializedStatementResults := types.NewMaterializedStatementResults(convertedResults.GetHeaders(), 100)
 		materializedStatementResults.SetTableMode(false)
 		materializedStatementResults.Append(convertedResults.GetRows()...)
 		// in changelog mode we have an additional column "Operation"
@@ -62,7 +62,7 @@ func (s *MaterializedStatementResultsTestSuite) TestTableMode() {
 			},
 		},
 	}
-	materializedStatementResults := NewMaterializedStatementResults(headers, 100)
+	materializedStatementResults := types.NewMaterializedStatementResults(headers, 100)
 	materializedStatementResults.Append(previousRow)
 	materializedStatementResults.SetTableMode(true)
 	require.Equal(s.T(), headers, materializedStatementResults.GetHeaders())
@@ -109,7 +109,7 @@ func (s *MaterializedStatementResultsTestSuite) TestMaxCapacity() {
 			},
 		},
 	}
-	materializedStatementResults := NewMaterializedStatementResults(headers, 1)
+	materializedStatementResults := types.NewMaterializedStatementResults(headers, 1)
 	materializedStatementResults.Append(previousRow)
 	materializedStatementResults.SetTableMode(true)
 	require.Equal(s.T(), headers, materializedStatementResults.GetHeaders())
@@ -158,14 +158,14 @@ func (s *MaterializedStatementResultsTestSuite) TestOnlyAllowAppendWithSameSchem
 			},
 		},
 	}
-	materializedStatementResults := NewMaterializedStatementResults(invalidHeaders, 1)
+	materializedStatementResults := types.NewMaterializedStatementResults(invalidHeaders, 1)
 	materializedStatementResults.SetTableMode(true)
 	valuesInserted := materializedStatementResults.Append(row)
 	require.False(s.T(), valuesInserted)
 	require.Empty(s.T(), materializedStatementResults.Size())
 
 	validHeaders := []string{"Count", "Count2"}
-	materializedStatementResults = NewMaterializedStatementResults(validHeaders, 1)
+	materializedStatementResults = types.NewMaterializedStatementResults(validHeaders, 1)
 	materializedStatementResults.SetTableMode(true)
 	valuesInserted = materializedStatementResults.Append(row)
 	require.True(s.T(), valuesInserted)
@@ -174,7 +174,7 @@ func (s *MaterializedStatementResultsTestSuite) TestOnlyAllowAppendWithSameSchem
 
 func (s *MaterializedStatementResultsTestSuite) TestIteratorForwardResetThenBackward() {
 	headers := []string{"Count"}
-	materializedStatementResults := NewMaterializedStatementResults(headers, 10)
+	materializedStatementResults := types.NewMaterializedStatementResults(headers, 10)
 	materializedStatementResults.SetTableMode(true)
 
 	for i := 0; i < 10; i++ {
@@ -226,7 +226,7 @@ func (s *MaterializedStatementResultsTestSuite) TestIteratorForwardResetThenBack
 
 func (s *MaterializedStatementResultsTestSuite) TestIteratorForwardAndBackward() {
 	headers := []string{"Count"}
-	materializedStatementResults := NewMaterializedStatementResults(headers, 10)
+	materializedStatementResults := types.NewMaterializedStatementResults(headers, 10)
 	materializedStatementResults.SetTableMode(true)
 
 	for i := 0; i < 10; i++ {
@@ -257,7 +257,7 @@ func (s *MaterializedStatementResultsTestSuite) TestIteratorForwardAndBackward()
 
 func (s *MaterializedStatementResultsTestSuite) TestIteratorMoveToEndThenMoveToStart() {
 	headers := []string{"Count"}
-	materializedStatementResults := NewMaterializedStatementResults(headers, 10)
+	materializedStatementResults := types.NewMaterializedStatementResults(headers, 10)
 	materializedStatementResults.SetTableMode(true)
 
 	for i := 0; i < 10; i++ {
@@ -299,7 +299,7 @@ func (s *MaterializedStatementResultsTestSuite) TestIteratorMoveToEndThenMoveToS
 
 func (s *MaterializedStatementResultsTestSuite) TestIteratorMoveDoesNotWorkOnceEndWasReached() {
 	headers := []string{"Count"}
-	materializedStatementResults := NewMaterializedStatementResults(headers, 10)
+	materializedStatementResults := types.NewMaterializedStatementResults(headers, 10)
 	materializedStatementResults.SetTableMode(true)
 
 	for i := 0; i < 10; i++ {
@@ -338,7 +338,7 @@ func (s *MaterializedStatementResultsTestSuite) TestIteratorMoveDoesNotWorkOnceE
 
 func (s *MaterializedStatementResultsTestSuite) TestForEach() {
 	headers := []string{"Count"}
-	materializedStatementResults := NewMaterializedStatementResults(headers, 10)
+	materializedStatementResults := types.NewMaterializedStatementResults(headers, 10)
 	materializedStatementResults.SetTableMode(true)
 
 	for i := 0; i < 10; i++ {
@@ -373,7 +373,7 @@ func (s *MaterializedStatementResultsTestSuite) TestForEach() {
 
 func (s *MaterializedStatementResultsTestSuite) TestGetColumnWidths() {
 	headers := []string{"1234", "12"}
-	materializedStatementResults := NewMaterializedStatementResults(headers, 10)
+	materializedStatementResults := types.NewMaterializedStatementResults(headers, 10)
 	materializedStatementResults.SetTableMode(true)
 	materializedStatementResults.Append(types.StatementResultRow{
 		Operation: types.INSERT,
@@ -394,7 +394,7 @@ func (s *MaterializedStatementResultsTestSuite) TestGetColumnWidths() {
 
 func (s *MaterializedStatementResultsTestSuite) TestGetColumnWidthsChangelogMode() {
 	headers := []string{"1234", "12"}
-	materializedStatementResults := NewMaterializedStatementResults(headers, 10)
+	materializedStatementResults := types.NewMaterializedStatementResults(headers, 10)
 	materializedStatementResults.SetTableMode(false)
 	materializedStatementResults.Append(types.StatementResultRow{
 		Operation: types.INSERT,

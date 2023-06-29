@@ -70,9 +70,11 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(*cob
 			return err
 		}
 
-		if err := command.Config.InitDynamicConfig(cmd, r.Config); err != nil {
+		command.Config.Config = r.Config
+		if err := command.Config.ParseFlagsIntoConfig(cmd); err != nil {
 			return err
 		}
+
 		// check Feature Flag "cli.disable" for commands run from cloud context (except for on-prem login)
 		// check for commands that require cloud auth (since cloud context might not be active until auto-login)
 		// check for cloud login (since it is not executed from cloud context)
@@ -81,7 +83,7 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(*cob
 				return err
 			}
 			// announcement and deprecation check, print out msg
-			ctx := dynamicconfig.NewDynamicContext(r.Config.Context(), nil, nil)
+			ctx := dynamicconfig.NewDynamicContext(r.Config.Context(), nil)
 			featureflags.PrintAnnouncements(featureflags.Announcements, ctx, cmd)
 			featureflags.PrintAnnouncements(featureflags.DeprecationNotices, ctx, cmd)
 		}
@@ -320,8 +322,6 @@ func (r *PreRun) setCCloudClient(c *AuthenticatedCLICommand) error {
 		return err
 	}
 	c.Client = ccloudClient
-	c.Context.Client = ccloudClient
-	c.Config.Client = ccloudClient
 
 	unsafeTrace, err := c.Flags().GetBool("unsafe-trace")
 	if err != nil {
@@ -731,12 +731,10 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(*cobra.Command, []
 			}
 			v2Client := command.Config.GetCloudClientV2(unsafeTrace)
 
-			ctx.Client = client
-			command.Config.Client = client
 			ctx.V2Client = v2Client
 			command.Config.V2Client = v2Client
 
-			if err := ctx.ParseFlagsIntoContext(cmd, command.Config.Client); err != nil {
+			if err := ctx.ParseFlagsIntoContext(cmd, client); err != nil {
 				return err
 			}
 

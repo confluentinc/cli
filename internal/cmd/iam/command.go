@@ -23,7 +23,7 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 		cmd.Long = "Manage Role-Based Access Control (RBAC) and Identity and Access Management (IAM) permissions."
 	}
 
-	dc := dynamicconfig.New(cfg, nil, nil)
+	dc := dynamicconfig.New(cfg, nil)
 	_ = dc.ParseFlagsIntoConfig(cmd)
 	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.identity-provider", dc.Context(), v1.CliLaunchDarklyClient, true, false) {
 		cmd.AddCommand(newPoolCommand(prerunner))

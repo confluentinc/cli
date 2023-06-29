@@ -2,20 +2,17 @@ package kafka
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/ccloud-sdk-go-v1-public"
+	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 type aclCommand struct {
@@ -105,69 +102,26 @@ func convertToFilter(binding *ccstructs.ACLBinding) *ccstructs.ACLFilter {
 	}
 }
 
-func (c *aclCommand) aclResourceIdToNumericId(acl []*ACLConfiguration, idMap map[string]int32) error {
-	for i := 0; i < len(acl); i++ {
-		principal := acl[i].ACLBinding.Entry.Principal
-		if principal != "" {
-			resourceId, err := parsePrincipal(principal)
-			if err != nil {
-				return errors.Wrap(err, "failed to parse principal")
-			}
-			if resource.LookupType(resourceId) == resource.User || resource.LookupType(resourceId) == resource.ServiceAccount {
-				userId, ok := idMap[resourceId]
-				if !ok {
-					return fmt.Errorf(errors.PrincipalNotFoundErrorMsg, resourceId)
-				}
-				resourceId = strconv.Itoa(int(userId))
-			}
-			acl[i].ACLBinding.Entry.Principal = fmt.Sprintf("User:%s", resourceId)
-		}
-	}
-	return nil
-}
-
-func parsePrincipal(principal string) (string, error) {
-	if !strings.HasPrefix(principal, "User:") {
-		return "", fmt.Errorf(`principal must begin with "User:"`)
-	}
-
-	id := strings.TrimPrefix(principal, "User:")
-
-	if _, err := strconv.Atoi(id); err == nil {
-		return "", fmt.Errorf("numeric IDs are not supported")
-	}
-
-	return id, nil
-}
-
-func (c *aclCommand) getAllUsers() ([]*ccloud.User, error) {
+func (c *aclCommand) getAllUsers() ([]*ccloudv1.User, error) {
 	serviceAccounts, err := c.Client.User.GetServiceAccounts()
 	if err != nil {
 		return nil, err
 	}
 
-	adminUsers, err := c.Client.User.List()
+	users, err := c.Client.User.List()
 	if err != nil {
 		return nil, err
 	}
 
-	return append(serviceAccounts, adminUsers...), nil
+	return append(serviceAccounts, users...), nil
 }
 
-func (c *aclCommand) mapUserIdToResourceId(users []*ccloud.User) map[int32]string {
-	idMap := make(map[int32]string)
-	for _, sa := range users {
-		idMap[sa.Id] = sa.ResourceId
+func mapNumericIdToResourceId(users []*ccloudv1.User) map[int32]string {
+	numericIdToResourceId := make(map[int32]string)
+	for _, user := range users {
+		numericIdToResourceId[user.Id] = user.ResourceId
 	}
-	return idMap
-}
-
-func (c *aclCommand) mapResourceIdToUserId(users []*ccloud.User) map[string]int32 {
-	idMap := make(map[string]int32)
-	for _, sa := range users {
-		idMap[sa.ResourceId] = sa.Id
-	}
-	return idMap
+	return numericIdToResourceId
 }
 
 func (c *aclCommand) provisioningClusterCheck(lkc string) error {

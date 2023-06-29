@@ -11,10 +11,11 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	client "github.com/confluentinc/cli/internal/pkg/flink/app"
+	"github.com/confluentinc/cli/internal/pkg/flink/test/mock"
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
 )
 
-func (c *command) newShellCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func (c *command) newShellCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "shell",
 		Short: "Start Flink interactive SQL client.",
@@ -29,6 +30,9 @@ func (c *command) newShellCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
+	if cfg.IsTest {
+		cmd.Flags().Bool("fake-gateway", false, "Test the SQL client with fake gateway data.")
+	}
 
 	return cmd
 }
@@ -69,6 +73,19 @@ func (c *command) authenticated(authenticated func(*cobra.Command, []string) err
 }
 
 func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Command) error {
+	// if the --fake-gateway flag is set, we start the client with a simulated gateway client that returns fake data
+	fakeMode, _ := cmd.Flags().GetBool("fake-gateway")
+	if fakeMode {
+		client.StartApp(
+			mock.NewFakeFlinkGatewayClient(),
+			func() error { return nil },
+			types.ApplicationOptions{
+				DefaultProperties: map[string]string{"execution.runtime-mode": "streaming"},
+				UserAgent:         c.Version.UserAgent,
+			})
+		return nil
+	}
+
 	resourceId := c.Context.GetOrganization().GetResourceId()
 
 	// Compute pool can be set as a flag or as default in the context
@@ -132,7 +149,8 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 
 	jwtValidator := pcmd.NewJWTValidator()
 
-	client.StartApp(flinkGatewayClient,
+	client.StartApp(
+		flinkGatewayClient,
 		c.authenticated(prerunner.Authenticated(c.AuthenticatedCLICommand), cmd, jwtValidator),
 		types.ApplicationOptions{
 			DefaultProperties: map[string]string{"execution.runtime-mode": "streaming"},

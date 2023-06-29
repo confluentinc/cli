@@ -29,10 +29,6 @@ var (
 	loggedInEnvOutput       = fmt.Sprintf(errors.LoggedInUsingEnvMsg, "a-595")
 )
 
-func (s *CLITestSuite) TestLogin_Help() {
-	s.runIntegrationTest(CLITest{args: "login -h", fixture: "login/help.golden"})
-}
-
 func (s *CLITestSuite) TestLogin_VariousOrgSuspensionStatus() {
 	args := fmt.Sprintf("login --url %s -vvv", s.TestBackend.GetCloudUrl())
 

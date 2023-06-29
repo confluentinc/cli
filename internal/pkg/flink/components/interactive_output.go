@@ -8,9 +8,9 @@ func InteractiveOutput(table *tview.Table, shortcuts *tview.TextView) tview.Prim
 	return tview.NewFlex().
 		SetDirection(tview.FlexRow).
 		AddItem(
-			(tview.NewFlex().
+			tview.NewFlex().
 				SetDirection(tview.FlexRow).
-				AddItem(table, 0, 1, true)),
+				AddItem(table, 0, 1, true),
 			0, 1, false).
 		AddItem(shortcuts, 1, 1, false)
 }
