@@ -28,15 +28,15 @@ type StoreInterface interface {
 }
 
 type Store struct {
-	Properties      map[string]string
-	exitApplication func()
-	client          ccloudv2.GatewayClientInterface
-	appOptions      *types.ApplicationOptions
-	authenticated   func() error
+	Properties       map[string]string
+	exitApplication  func()
+	client           ccloudv2.GatewayClientInterface
+	appOptions       *types.ApplicationOptions
+	tokenRefreshFunc func() error
 }
 
 func (s *Store) authenticatedGatewayClient() ccloudv2.GatewayClientInterface {
-	if authErr := s.authenticated(); authErr != nil {
+	if authErr := s.tokenRefreshFunc(); authErr != nil {
 		log.CliLogger.Warnf("Failed to refresh token: %v", authErr)
 	}
 	return s.client
@@ -254,11 +254,11 @@ func extractPageToken(nextUrl string) (string, error) {
 
 func NewStore(client ccloudv2.GatewayClientInterface, exitApplication func(), appOptions *types.ApplicationOptions, authenticated func() error) StoreInterface {
 	return &Store{
-		Properties:      appOptions.GetDefaultProperties(),
-		client:          client,
-		exitApplication: exitApplication,
-		appOptions:      appOptions,
-		authenticated:   authenticated,
+		Properties:       appOptions.GetDefaultProperties(),
+		client:           client,
+		exitApplication:  exitApplication,
+		appOptions:       appOptions,
+		tokenRefreshFunc: authenticated,
 	}
 }
 
