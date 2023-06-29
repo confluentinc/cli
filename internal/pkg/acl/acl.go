@@ -330,22 +330,6 @@ func PrintACLsFromKafkaRestResponse(cmd *cobra.Command, acls []cckafkarestv3.Acl
 	return list.Print()
 }
 
-func PrintACLsWithResourceIdMap(cmd *cobra.Command, acls []*ccstructs.ACLBinding) error {
-	list := output.NewList(cmd)
-	for _, acl := range acls {
-		list.Add(&out{
-			Principal:    acl.Entry.Principal,
-			Permission:   acl.Entry.PermissionType.String(),
-			Operation:    acl.Entry.Operation.String(),
-			ResourceType: acl.Pattern.ResourceType.String(),
-			ResourceName: acl.Pattern.Name,
-			PatternType:  acl.Pattern.PatternType.String(),
-		})
-	}
-	list.Filter(listFields)
-	return list.Print()
-}
-
 func GetCreateAclRequestData(binding *ccstructs.ACLBinding) cckafkarestv3.CreateAclRequestData {
 	data := cckafkarestv3.CreateAclRequestData{
 		Host:         binding.GetEntry().GetHost(),
