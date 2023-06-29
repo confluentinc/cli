@@ -194,9 +194,14 @@ func (s *FetchControllerTestSuite) TestCloseShouldDeleteRunningStatements() {
 		Status:        types.RUNNING,
 	}
 	s.fetchController.setStatement(statement)
-	s.mockStore.EXPECT().DeleteStatement(statement.StatementName)
+	done := make(chan bool)
+	s.mockStore.EXPECT().DeleteStatement(statement.StatementName).Do(
+		func(statementName string) {
+			done <- true
+		})
 
 	s.fetchController.Close()
+	<-done
 
 	require.Equal(s.T(), types.Paused, s.fetchController.GetFetchState())
 }
