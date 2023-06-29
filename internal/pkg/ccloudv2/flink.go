@@ -29,12 +29,12 @@ func (c *Client) CreateFlinkComputePool(computePool flinkv2.FcpmV2ComputePool) (
 
 func (c *Client) DeleteFlinkComputePool(id, environment string) error {
 	httpResp, err := c.FlinkClient.ComputePoolsFcpmV2Api.DeleteFcpmV2ComputePool(c.flinkApiContext(), id).Environment(environment).Execute()
-	return errors.CatchCCloudV2Error(err, httpResp)
+	return errors.CatchOrgV2ResourceNotFoundError(err, environment, httpResp)
 }
 
 func (c *Client) DescribeFlinkComputePool(id, environment string) (flinkv2.FcpmV2ComputePool, error) {
 	res, httpResp, err := c.FlinkClient.ComputePoolsFcpmV2Api.GetFcpmV2ComputePool(c.flinkApiContext(), id).Environment(environment).Execute()
-	return res, errors.CatchCCloudV2Error(err, httpResp)
+	return res, errors.CatchOrgV2ResourceNotFoundError(err, environment, httpResp)
 }
 
 func (c *Client) ListFlinkComputePools(environment, specRegion string) ([]flinkv2.FcpmV2ComputePool, error) {
@@ -43,7 +43,7 @@ func (c *Client) ListFlinkComputePools(environment, specRegion string) ([]flinkv
 		req = req.SpecRegion(specRegion)
 	}
 	res, httpResp, err := req.Execute()
-	return res.GetData(), errors.CatchCCloudV2Error(err, httpResp)
+	return res.GetData(), errors.CatchOrgV2ResourceNotFoundError(err, environment, httpResp)
 }
 
 func (c *Client) ListFlinkRegions(cloud string) ([]flinkv2.FcpmV2Region, error) {
@@ -88,5 +88,5 @@ func (c *Client) ListFlinkIAMBindings(environmentId, region, cloud, identityPool
 		req = req.IdentityPool(identityPoolId)
 	}
 	res, httpResp, err := req.Execute()
-	return res.GetData(), errors.CatchCCloudV2Error(err, httpResp)
+	return res.GetData(), errors.CatchOrgV2ResourceNotFoundError(err, environmentId, httpResp)
 }
