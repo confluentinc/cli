@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/help"
 	"os"
 	"strings"
 
@@ -49,6 +48,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/featureflags"
 	"github.com/confluentinc/cli/internal/pkg/form"
+	"github.com/confluentinc/cli/internal/pkg/help"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	ppanic "github.com/confluentinc/cli/internal/pkg/panic-recovery"
