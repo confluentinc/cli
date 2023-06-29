@@ -134,6 +134,7 @@ func (s *Store) DeleteStatement(statementName string) bool {
 		log.CliLogger.Warnf("Failed to delete the statement: %v", err)
 		return false
 	}
+	log.CliLogger.Infof("Successfully deleted statement: %s", statementName)
 	return true
 }
 
