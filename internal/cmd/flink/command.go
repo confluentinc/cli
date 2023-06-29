@@ -27,7 +27,7 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(c.newShellCommand(cfg, prerunner))
 	cmd.AddCommand(c.newStatementCommand())
 
-	dc := dynamicconfig.New(cfg, nil, nil)
+	dc := dynamicconfig.New(cfg, nil)
 	_ = dc.ParseFlagsIntoConfig(cmd)
 	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.flink.open_preview", dc.Context(), v1.CliLaunchDarklyClient, true, false) {
 		cmd.AddCommand(c.newIamBindingCommand())
