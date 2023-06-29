@@ -17,10 +17,7 @@ func DisableHelpText(command *cobra.Command, flags []string) {
 	} else {
 		formattedFlags := ppanic.ParseFlags(command, flags)
 		for _, flag := range formattedFlags {
-			err := command.Flags().MarkHidden(flag)
-			if err != nil {
-				return
-			}
+			_ = command.Flags().MarkHidden(flag)
 		}
 	}
 }
