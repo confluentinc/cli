@@ -198,5 +198,8 @@ func (s *FetchControllerTestSuite) TestCloseShouldDeleteRunningStatements() {
 
 	s.fetchController.Close()
 
+	// allow some time for Delete Statement to be called, since the call is async
+	time.Sleep(2 * time.Second)
+
 	require.Equal(s.T(), types.Paused, s.fetchController.GetFetchState())
 }
