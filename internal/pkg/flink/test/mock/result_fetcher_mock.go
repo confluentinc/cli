@@ -47,12 +47,9 @@ func (mr *MockResultFetcherInterfaceMockRecorder) Close() *gomock.Call {
 }
 
 // FetchNextPageAndUpdateState mocks base method.
-func (m *MockResultFetcherInterface) FetchNextPageAndUpdateState() (*types.ProcessedStatement, *types.StatementError) {
+func (m *MockResultFetcherInterface) FetchNextPageAndUpdateState() {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FetchNextPageAndUpdateState")
-	ret0, _ := ret[0].(*types.ProcessedStatement)
-	ret1, _ := ret[1].(*types.StatementError)
-	return ret0, ret1
+	m.ctrl.Call(m, "FetchNextPageAndUpdateState")
 }
 
 // FetchNextPageAndUpdateState indicates an expected call of FetchNextPageAndUpdateState.

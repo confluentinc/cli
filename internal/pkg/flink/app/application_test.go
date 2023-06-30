@@ -19,6 +19,7 @@ type ApplicationTestSuite struct {
 	suite.Suite
 	app                         Application
 	history                     *history.History
+	store                       *mock.MockStoreInterface
 	resultFetcher               *mock.MockResultFetcherInterface
 	appController               *mock.MockApplicationControllerInterface
 	inputController             *mock.MockInputControllerInterface
@@ -39,10 +40,12 @@ func (s *ApplicationTestSuite) SetupTest() {
 	s.statementController = mock.NewMockStatementControllerInterface(ctrl)
 	s.interactiveOutputController = mock.NewMockOutputControllerInterface(ctrl)
 	s.basicOutputController = mock.NewMockOutputControllerInterface(ctrl)
+	s.store = mock.NewMockStoreInterface(ctrl)
 	s.resultFetcher = mock.NewMockResultFetcherInterface(ctrl)
 
 	s.app = Application{
 		history:                     s.history,
+		store:                       s.store,
 		resultFetcher:               s.resultFetcher,
 		appController:               s.appController,
 		inputController:             s.inputController,
@@ -133,7 +136,7 @@ func (s *ApplicationTestSuite) TestReplReturnsWhenHandleStatementResultsReturnsT
 	s.inputController.EXPECT().IsSpecialInput(userInput).Return(false)
 	s.statementController.EXPECT().ExecuteStatement(userInput).Return(&statement, nil)
 	s.resultFetcher.EXPECT().Init(statement)
-	s.resultFetcher.EXPECT().FetchNextPageAndUpdateState().Return(&statement, nil)
+	s.store.EXPECT().FetchStatementResults(statement).Return(&statement, nil)
 	s.basicOutputController.EXPECT().VisualizeResults()
 
 	actual := s.runMainLoop(true)
@@ -148,7 +151,7 @@ func (s *ApplicationTestSuite) TestReplDoesNotReturnWhenHandleStatementResultsRe
 	s.inputController.EXPECT().IsSpecialInput(userInput).Return(false)
 	s.statementController.EXPECT().ExecuteStatement(userInput).Return(&statement, nil)
 	s.resultFetcher.EXPECT().Init(statement)
-	s.resultFetcher.EXPECT().FetchNextPageAndUpdateState().Return(&statement, nil)
+	s.store.EXPECT().FetchStatementResults(statement).Return(&statement, nil)
 	s.basicOutputController.EXPECT().VisualizeResults()
 
 	actual := s.runMainLoop(true)

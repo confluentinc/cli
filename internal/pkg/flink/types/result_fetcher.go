@@ -15,7 +15,7 @@ type ResultFetcherInterface interface {
 	ToggleTableMode()
 	ToggleAutoRefresh()
 	IsAutoRefreshRunning() bool
-	FetchNextPageAndUpdateState() (*ProcessedStatement, *StatementError)
+	FetchNextPageAndUpdateState()
 	JumpToLastPage()
 	Init(statement ProcessedStatement)
 	Close()

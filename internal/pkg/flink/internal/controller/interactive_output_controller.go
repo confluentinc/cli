@@ -133,7 +133,7 @@ func (t *InteractiveOutputController) getActionForShortcut(shortcut string) func
 	case "A":
 		return t.renderAfterAction(t.resultFetcher.ToggleAutoRefresh)
 	case "N":
-		return t.renderAfterAction(t.fetchNextPage)
+		return t.renderAfterAction(t.resultFetcher.FetchNextPageAndUpdateState)
 	case "R":
 		return t.renderAfterAction(t.resultFetcher.JumpToLastPage)
 	case "H":
@@ -155,10 +155,6 @@ func (t *InteractiveOutputController) renderAfterAction(action func()) func() {
 		action()
 		t.updateTable()
 	}
-}
-
-func (t *InteractiveOutputController) fetchNextPage() {
-	_, _ = t.resultFetcher.FetchNextPageAndUpdateState()
 }
 
 func (t *InteractiveOutputController) openRowView() {

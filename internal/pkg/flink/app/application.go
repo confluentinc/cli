@@ -118,11 +118,11 @@ func (a *Application) readEvalPrintLoop() {
 			continue
 		}
 
-		a.resultFetcher.Init(*executedStatement)
-		executedStatementWithResults, err := a.resultFetcher.FetchNextPageAndUpdateState()
+		executedStatementWithResults, err := a.fetchInitialResults(*executedStatement)
 		if err != nil {
 			continue
 		}
+		a.resultFetcher.Init(*executedStatementWithResults)
 		a.getOutputController(*executedStatementWithResults).VisualizeResults()
 	}
 }
@@ -134,6 +134,11 @@ func (a *Application) isAuthenticated() bool {
 		return false
 	}
 	return true
+}
+
+func (a *Application) fetchInitialResults(executedStatement types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError) {
+	executedStatementWithResults, err := a.store.FetchStatementResults(executedStatement)
+	return executedStatementWithResults, err
 }
 
 func (a *Application) getOutputController(processedStatementWithResults types.ProcessedStatement) types.OutputControllerInterface {

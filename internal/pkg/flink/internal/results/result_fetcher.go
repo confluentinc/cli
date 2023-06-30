@@ -64,7 +64,7 @@ func (t *ResultFetcher) startAutoRefresh(refreshInterval uint) {
 		t.setFetchState(types.Running)
 		go func() {
 			for t.IsAutoRefreshRunning() {
-				_, _ = t.FetchNextPageAndUpdateState()
+				t.FetchNextPageAndUpdateState()
 				t.autoRefreshCallback()
 				time.Sleep(time.Millisecond * time.Duration(refreshInterval))
 			}
@@ -76,10 +76,13 @@ func (t *ResultFetcher) isAutoRefreshStartAllowed() bool {
 	return t.GetFetchState() == types.Paused || t.GetFetchState() == types.Failed
 }
 
-func (t *ResultFetcher) FetchNextPageAndUpdateState() (*types.ProcessedStatement, *types.StatementError) {
-	newResults, err := t.store.FetchStatementResults(t.getStatement())
+func (t *ResultFetcher) FetchNextPageAndUpdateState() {
+	newResults, err := t.fetchNextPage()
 	t.updateState(newResults, err)
-	return newResults, err
+}
+
+func (t *ResultFetcher) fetchNextPage() (*types.ProcessedStatement, *types.StatementError) {
+	return t.store.FetchStatementResults(t.getStatement())
 }
 
 func (t *ResultFetcher) updateState(newResults *types.ProcessedStatement, err *types.StatementError) {
@@ -125,7 +128,7 @@ func (t *ResultFetcher) setStatement(statement types.ProcessedStatement) {
 
 func (t *ResultFetcher) JumpToLastPage() {
 	for {
-		_, _ = t.FetchNextPageAndUpdateState()
+		t.FetchNextPageAndUpdateState()
 		if !t.hasMoreResults() {
 			break
 		}
@@ -139,12 +142,21 @@ func (t *ResultFetcher) hasMoreResults() bool {
 }
 
 func (t *ResultFetcher) Init(statement types.ProcessedStatement) {
-	t.setFetchState(types.Paused)
 	t.setStatement(statement)
+	t.setInitialFetchState()
 	headers := t.getResultHeadersOrCreateFromResultSchema()
 	t.materializedStatementResults = types.NewMaterializedStatementResults(headers, MaxResultsCapacity)
 	t.materializedStatementResults.SetTableMode(true)
 	t.materializedStatementResults.Append(statement.StatementResults.GetRows()...)
+}
+
+func (t *ResultFetcher) setInitialFetchState() {
+	statement := t.getStatement()
+	if statement.PageToken == "" {
+		t.setFetchState(types.Completed)
+		return
+	}
+	t.setFetchState(types.Paused)
 }
 
 func (t *ResultFetcher) getResultHeadersOrCreateFromResultSchema() []string {

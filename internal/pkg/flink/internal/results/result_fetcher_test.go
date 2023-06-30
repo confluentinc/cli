@@ -31,6 +31,20 @@ func (s *ResultFetcherTestSuite) SetupTest() {
 	s.resultFetcher = NewResultFetcher(s.mockStore).(*ResultFetcher)
 }
 
+func (s *ResultFetcherTestSuite) TestInitSetsPausedState() {
+	mockStatement := types.ProcessedStatement{PageToken: "NOT_EMPTY"}
+	s.resultFetcher.Init(mockStatement)
+
+	require.Equal(s.T(), types.Paused, s.resultFetcher.GetFetchState())
+}
+
+func (s *ResultFetcherTestSuite) TestInitSetsCompletedState() {
+	mockStatement := types.ProcessedStatement{PageToken: ""}
+	s.resultFetcher.Init(mockStatement)
+
+	require.Equal(s.T(), types.Completed, s.resultFetcher.GetFetchState())
+}
+
 func (s *ResultFetcherTestSuite) TestToggleTableMode() {
 	s.resultFetcher.ToggleTableMode()
 
@@ -87,7 +101,7 @@ func (s *ResultFetcherTestSuite) TestFetchNextPageSetsFailedState() {
 	s.resultFetcher.setStatement(mockStatement)
 	s.mockStore.EXPECT().FetchStatementResults(mockStatement).Return(nil, &types.StatementError{})
 
-	_, _ = s.resultFetcher.FetchNextPageAndUpdateState()
+	s.resultFetcher.FetchNextPageAndUpdateState()
 
 	require.Equal(s.T(), types.Failed, s.resultFetcher.GetFetchState())
 }
@@ -97,7 +111,7 @@ func (s *ResultFetcherTestSuite) TestFetchNextPageSetsCompletedState() {
 	s.resultFetcher.setStatement(mockStatement)
 	s.mockStore.EXPECT().FetchStatementResults(mockStatement).Return(&types.ProcessedStatement{}, nil)
 
-	_, _ = s.resultFetcher.FetchNextPageAndUpdateState()
+	s.resultFetcher.FetchNextPageAndUpdateState()
 
 	require.Equal(s.T(), types.Completed, s.resultFetcher.GetFetchState())
 }
@@ -108,7 +122,7 @@ func (s *ResultFetcherTestSuite) TestFetchNextPageDoesNotUpdateStateWhenAlreadyC
 	s.resultFetcher.setFetchState(types.Completed)
 	s.mockStore.EXPECT().FetchStatementResults(mockStatement).Return(&types.ProcessedStatement{PageToken: "NOT_EMPTY"}, nil)
 
-	_, _ = s.resultFetcher.FetchNextPageAndUpdateState()
+	s.resultFetcher.FetchNextPageAndUpdateState()
 
 	require.Equal(s.T(), types.Completed, s.resultFetcher.GetFetchState())
 	require.Equal(s.T(), mockStatement, s.resultFetcher.getStatement())
@@ -120,7 +134,7 @@ func (s *ResultFetcherTestSuite) TestFetchNextPageChangesFailedToPausedState() {
 	s.resultFetcher.setStatement(mockStatement)
 	s.mockStore.EXPECT().FetchStatementResults(mockStatement).Return(&mockStatement, nil)
 
-	_, _ = s.resultFetcher.FetchNextPageAndUpdateState()
+	s.resultFetcher.FetchNextPageAndUpdateState()
 
 	require.Equal(s.T(), types.Paused, s.resultFetcher.GetFetchState())
 }
@@ -131,7 +145,7 @@ func (s *ResultFetcherTestSuite) TestFetchNextPagePreservesRunningState() {
 	s.resultFetcher.setStatement(mockStatement)
 	s.mockStore.EXPECT().FetchStatementResults(mockStatement).Return(&mockStatement, nil)
 
-	_, _ = s.resultFetcher.FetchNextPageAndUpdateState()
+	s.resultFetcher.FetchNextPageAndUpdateState()
 
 	require.Equal(s.T(), types.Running, s.resultFetcher.GetFetchState())
 }
@@ -142,11 +156,11 @@ func (s *ResultFetcherTestSuite) TestFetchNextPageOnUserInput() {
 	s.mockStore.EXPECT().FetchStatementResults(mockStatement).Return(&types.ProcessedStatement{}, nil)
 	s.resultFetcher.Init(mockStatement)
 
-	_, _ = s.resultFetcher.FetchNextPageAndUpdateState()
+	s.resultFetcher.FetchNextPageAndUpdateState()
 	// First nextPage returns statement with page token
 	require.Equal(s.T(), types.Paused, s.resultFetcher.GetFetchState())
 
-	_, _ = s.resultFetcher.FetchNextPageAndUpdateState()
+	s.resultFetcher.FetchNextPageAndUpdateState()
 	// Second nextPage returns statement with empty page token, so state should be completed
 	require.Equal(s.T(), types.Completed, s.resultFetcher.GetFetchState())
 }
