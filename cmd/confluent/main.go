@@ -18,7 +18,7 @@ var (
 	commit         = ""
 	date           = ""
 	disableUpdates = "false"
-	isTest         = "true"
+	isTest         = "false"
 )
 
 func main() {
