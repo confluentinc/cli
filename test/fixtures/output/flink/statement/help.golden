@@ -5,6 +5,7 @@ Usage:
 
 Available Commands:
   delete      Delete a Flink SQL statement.
+  get         Get details of a Flink SQL statement.
   list        List Flink SQL statements.
 
 Global Flags:
