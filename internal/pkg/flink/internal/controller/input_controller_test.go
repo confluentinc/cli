@@ -669,6 +669,43 @@ func (s *InputControllerTestSuite) TestRunInteractiveInputShouldPrintNoRows() {
 	completedStatement := types.ProcessedStatement{
 		StatementName: "test-statement",
 		Status:        types.COMPLETED,
+	}
+	s.mockPrompt.EXPECT().Input().Return(input)
+	s.mockStore.EXPECT().ProcessStatement(input).Return(&statement, nil)
+	s.mockConsoleParser.EXPECT().Read().Return(nil, nil).AnyTimes()
+	s.mockStore.EXPECT().WaitPendingStatement(gomock.Any(), statement).Return(&completedStatement, nil)
+	s.mockStore.EXPECT().FetchStatementResults(completedStatement).Return(&completedStatement, nil)
+
+	// When
+	actual := s.runMainLoop(inputController, true)
+
+	// Then
+	expected := "Statement name: test-statement\nStatement successfully submitted.\nFetching results...\n\nThe server returned empty rows for this statement.\n"
+	require.Equal(s.T(), expected, actual)
+}
+
+func (s *InputControllerTestSuite) TestRunInteractiveInputShouldNotPrintNoRowsWhenStatusDetailAvailable() {
+	// Given
+	inputController := &InputController{
+		appController: s.mockAppController,
+		table:         s.mockTableController,
+		prompt:        s.mockPrompt,
+		store:         s.mockStore,
+		consoleParser: s.mockConsoleParser,
+		History:       &history.History{},
+		authenticated: func() error {
+			return nil
+		},
+	}
+
+	input := "select 1;"
+	statement := types.ProcessedStatement{
+		StatementName: "test-statement",
+		Status:        types.RUNNING,
+	}
+	completedStatement := types.ProcessedStatement{
+		StatementName: "test-statement",
+		Status:        types.COMPLETED,
 		StatusDetail:  "status-detail",
 	}
 	s.mockPrompt.EXPECT().Input().Return(input)
@@ -681,7 +718,7 @@ func (s *InputControllerTestSuite) TestRunInteractiveInputShouldPrintNoRows() {
 	actual := s.runMainLoop(inputController, true)
 
 	// Then
-	expected := fmt.Sprintf("Statement name: test-statement\nStatement successfully submitted.\nFetching results...\n%s.\n\nThe server returned empty rows for this statement.\n", completedStatement.StatusDetail)
+	expected := fmt.Sprintf("Statement name: test-statement\nStatement successfully submitted.\nFetching results...\n%s.\n", completedStatement.StatusDetail)
 	require.Equal(s.T(), expected, actual)
 }
 
