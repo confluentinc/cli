@@ -3,7 +3,6 @@ package app
 import (
 	"os"
 
-	"github.com/rivo/tview"
 	"golang.org/x/term"
 
 	"github.com/confluentinc/go-prompt"
@@ -35,12 +34,9 @@ func StartApp(client ccloudv2.GatewayClientInterface, authenticated func() error
 	// Load history of previous commands from cache file
 	history := history.LoadHistory()
 
-	// Create Components
-	tviewApp := tview.NewApplication()
-
 	// Instantiate Application Controller - this is the top level controller that will be passed down to all other controllers
 	// and should be used for functions that are not specific to a component
-	appController := controller.NewApplicationController(tviewApp, history)
+	appController := controller.NewApplicationController(history)
 
 	// Store used to process statements and store local properties
 	store := store.NewStore(client, appController.ExitApplication, &appOptions, authenticated)

@@ -3,8 +3,6 @@ package controller
 import (
 	"os"
 
-	"github.com/rivo/tview"
-
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/history"
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
 )
@@ -31,7 +29,7 @@ func (a *ApplicationController) AddCleanupFunction(cleanupFunction func()) types
 	return a
 }
 
-func NewApplicationController(app *tview.Application, history *history.History) types.ApplicationControllerInterface {
+func NewApplicationController(history *history.History) types.ApplicationControllerInterface {
 	return &ApplicationController{
 		history: history,
 	}
