@@ -18,13 +18,11 @@ func OutputErrf(s string, args ...any) {
 }
 
 func OutputInfo(s string) {
-	c := fColor.New(color.InfoColor)
-	output.Println(c.Sprint(s))
+	output.Println(s)
 }
 
 func OutputInfof(s string, args ...any) {
-	c := fColor.New(color.InfoColor)
-	output.Printf(c.Sprint(s), args...)
+	output.Printf(s, args...)
 }
 
 func OutputWarn(s string) {

@@ -80,7 +80,7 @@ func (r reverseISearch) ReverseISearch(history []string) string {
 		prompt.OptionTitle("bck-i-search"),
 		prompt.OptionLivePrefix(reverseISearchLivePrefix(livePrefixState)),
 		prompt.OptionHistory(history),
-		prompt.OptionPrefixTextColor(prompt.White),
+		prompt.OptionPrefixTextColor(prompt.DefaultColor),
 		prompt.OptionSetStatementTerminator(func(lastKeyStroke prompt.Key, buffer *prompt.Buffer) bool {
 			if lastKeyStroke == prompt.ControlM {
 				livePrefixState.LivePrefix = ""
