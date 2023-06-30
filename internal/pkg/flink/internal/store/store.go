@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
+	"sync"
 	"time"
 
 	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
@@ -30,12 +31,16 @@ type StoreInterface interface {
 type Store struct {
 	Properties       map[string]string
 	exitApplication  func()
+	clientLock       sync.Mutex
 	client           ccloudv2.GatewayClientInterface
 	appOptions       *types.ApplicationOptions
 	tokenRefreshFunc func() error
 }
 
 func (s *Store) authenticatedGatewayClient() ccloudv2.GatewayClientInterface {
+	s.clientLock.Lock()
+	defer s.clientLock.Unlock()
+
 	if authErr := s.tokenRefreshFunc(); authErr != nil {
 		log.CliLogger.Warnf("Failed to refresh token: %v", authErr)
 	}

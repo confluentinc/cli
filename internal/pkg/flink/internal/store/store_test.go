@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"sync"
 	"testing"
 	"time"
 
@@ -1335,4 +1336,35 @@ func (s *StoreTestSuite) TestGetStatusDetailReturnsEmptyWhenNoExceptionsAvailabl
 	client.EXPECT().GetExceptions("envId", statementName, "orgId").Return(exceptionsResponse, nil)
 
 	require.Equal(s.T(), "", store.getStatusDetail(statementObj))
+}
+
+func (s *StoreTestSuite) TestSyncAccessToTokenRefreshFunction() {
+	dummyVariableToManipulate := 0
+	store := Store{
+		Properties: map[string]string{
+			"TestProp": "TestVal",
+		},
+		tokenRefreshFunc: func() error {
+			dummyVariableToManipulate++
+			return nil
+		},
+	}
+
+	numGoroutinesToSpawn := 1000
+	s.testConcurrentAccess(numGoroutinesToSpawn, func() {
+		store.authenticatedGatewayClient()
+	})
+	require.Equal(s.T(), numGoroutinesToSpawn, dummyVariableToManipulate)
+}
+
+func (s *StoreTestSuite) testConcurrentAccess(numGoroutinesToSpawn int, funcToExecute func()) {
+	var wg sync.WaitGroup
+	wg.Add(numGoroutinesToSpawn)
+	for i := 0; i < numGoroutinesToSpawn; i++ {
+		go func() {
+			funcToExecute()
+			wg.Done()
+		}()
+	}
+	wg.Wait()
 }
