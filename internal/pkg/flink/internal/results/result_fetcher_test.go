@@ -8,6 +8,9 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
+	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
+
+	"github.com/confluentinc/cli/internal/pkg/flink/test/generators"
 	"github.com/confluentinc/cli/internal/pkg/flink/test/mock"
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
 )
@@ -39,9 +42,9 @@ func (s *ResultFetcherTestSuite) TestToggleRefreshResults() {
 	s.mockStore.EXPECT().FetchStatementResults(mockStatement).Return(&mockStatement, nil).AnyTimes()
 	s.resultFetcher.Init(mockStatement)
 	s.resultFetcher.SetAutoRefreshCallback(func() {
-		s.resultFetcher.setFetchState(types.Paused)
+		s.resultFetcher.ToggleAutoRefresh() // stop fetch
 	})
-	s.resultFetcher.ToggleAutoRefresh()
+	s.resultFetcher.ToggleAutoRefresh() // start fetch
 
 	for s.resultFetcher.IsAutoRefreshRunning() {
 		time.Sleep(1 * time.Second)
@@ -149,7 +152,23 @@ func (s *ResultFetcherTestSuite) TestFetchNextPageOnUserInput() {
 }
 
 func (s *ResultFetcherTestSuite) TestJumpToLiveResultsOnUserInput() {
-	mockStatement := types.ProcessedStatement{
+	mockStatement := getStatementWithResultsExample()
+	s.mockStore.EXPECT().FetchStatementResults(mockStatement).Return(&mockStatement, nil)
+	s.mockStore.EXPECT().FetchStatementResults(mockStatement).Return(&mockStatement, nil)
+	s.mockStore.EXPECT().FetchStatementResults(mockStatement).Return(&types.ProcessedStatement{PageToken: "LAST"}, nil)
+
+	// When
+	s.resultFetcher.Init(mockStatement)
+
+	// Then
+	s.resultFetcher.JumpToLastPage()
+
+	require.Equal(s.T(), types.Paused, s.resultFetcher.GetFetchState())
+	require.Equal(s.T(), types.ProcessedStatement{PageToken: "LAST"}, s.resultFetcher.getStatement())
+}
+
+func getStatementWithResultsExample() types.ProcessedStatement {
+	return types.ProcessedStatement{
 		StatementResults: &types.StatementResults{
 			Headers: []string{"Test"},
 			Rows: []types.StatementResultRow{{
@@ -164,18 +183,6 @@ func (s *ResultFetcherTestSuite) TestJumpToLiveResultsOnUserInput() {
 		},
 		PageToken: "NOT_EMPTY",
 	}
-	s.mockStore.EXPECT().FetchStatementResults(mockStatement).Return(&mockStatement, nil)
-	s.mockStore.EXPECT().FetchStatementResults(mockStatement).Return(&mockStatement, nil)
-	s.mockStore.EXPECT().FetchStatementResults(mockStatement).Return(&types.ProcessedStatement{PageToken: "LAST"}, nil)
-
-	// When
-	s.resultFetcher.Init(mockStatement)
-
-	// Then
-	s.resultFetcher.JumpToLastPage()
-
-	require.Equal(s.T(), types.Paused, s.resultFetcher.GetFetchState())
-	require.Equal(s.T(), types.ProcessedStatement{PageToken: "LAST"}, s.resultFetcher.getStatement())
 }
 
 func (s *ResultFetcherTestSuite) TestCloseShouldSetFetchStateToPaused() {
@@ -202,4 +209,35 @@ func (s *ResultFetcherTestSuite) TestCloseShouldDeleteRunningStatements() {
 	<-done
 
 	require.Equal(s.T(), types.Paused, s.resultFetcher.GetFetchState())
+}
+
+func (s *ResultFetcherTestSuite) TestGetResults() {
+	mockStatement := getStatementWithResultsExample()
+
+	s.resultFetcher.Init(mockStatement)
+
+	require.Equal(s.T(), &s.resultFetcher.materializedStatementResults, s.resultFetcher.GetResults())
+}
+
+func (s *ResultFetcherTestSuite) TestReturnHeadersFromStatementResults() {
+	mockStatement := getStatementWithResultsExample()
+
+	s.resultFetcher.Init(mockStatement)
+
+	require.Equal(s.T(), s.resultFetcher.materializedStatementResults.GetHeaders(), mockStatement.StatementResults.GetHeaders())
+}
+
+func (s *ResultFetcherTestSuite) TestReturnHeadersFromResultSchema() {
+	mockStatement := getStatementWithResultsExample()
+	mockStatement.StatementResults.Headers = nil
+	columnDetails := generators.MockResultColumns(2, 1).Example()
+	mockStatement.ResultSchema = flinkgatewayv1alpha1.SqlV1alpha1ResultSchema{Columns: &columnDetails}
+	headers := make([]string, len(mockStatement.ResultSchema.GetColumns()))
+	for idx, column := range mockStatement.ResultSchema.GetColumns() {
+		headers[idx] = column.GetName()
+	}
+
+	s.resultFetcher.Init(mockStatement)
+
+	require.Equal(s.T(), headers, s.resultFetcher.materializedStatementResults.GetHeaders())
 }

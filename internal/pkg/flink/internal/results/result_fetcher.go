@@ -141,13 +141,22 @@ func (t *ResultFetcher) hasMoreResults() bool {
 func (t *ResultFetcher) Init(statement types.ProcessedStatement) {
 	t.setFetchState(types.Paused)
 	t.setStatement(statement)
+	headers := t.getResultHeadersOrCreateFromResultSchema()
+	t.materializedStatementResults = types.NewMaterializedStatementResults(headers, MaxResultsCapacity)
+	t.materializedStatementResults.SetTableMode(true)
+	t.materializedStatementResults.Append(statement.StatementResults.GetRows()...)
+}
+
+func (t *ResultFetcher) getResultHeadersOrCreateFromResultSchema() []string {
+	statement := t.getStatement()
+	if len(statement.StatementResults.GetHeaders()) > 0 {
+		return statement.StatementResults.GetHeaders()
+	}
 	headers := make([]string, len(statement.ResultSchema.GetColumns()))
 	for idx, column := range statement.ResultSchema.GetColumns() {
 		headers[idx] = column.GetName()
 	}
-	t.materializedStatementResults = types.NewMaterializedStatementResults(headers, MaxResultsCapacity)
-	t.materializedStatementResults.SetTableMode(true)
-	t.materializedStatementResults.Append(statement.StatementResults.GetRows()...)
+	return headers
 }
 
 func (t *ResultFetcher) Close() {
