@@ -1,0 +1,12 @@
+Details for statement my-statement
+
+          Creation Date         |     Name     |     Statement      | Compute Pool | Status | Status Detail  
+--------------------------------+--------------+--------------------+--------------+--------+----------------
+  2022-01-01 00:00:00 +0000 UTC | my-statement | CREATE TABLE test; | pool-123456  | TODO   | TODO           
+
+Exceptions for statement my-statement
+
+            Timestamp           |         Name          |     Stacktrace       
+--------------------------------+-----------------------+----------------------
+  2022-01-01 00:00:00 +0000 UTC | Bad exception         | exception in foo.go  
+  2022-01-01 00:00:00 +0000 UTC | another Bad exception | exception in bar.go  

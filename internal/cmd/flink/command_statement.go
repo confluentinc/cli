@@ -18,6 +18,12 @@ type statementOut struct {
 	StatusDetail string    `human:"Status Detail,omitempty" serialized:"status_detail,omitempty"`
 }
 
+type exceptionOut struct {
+	Timestamp  time.Time `human:"Timestamp" serialized:"timestamp"`
+	Name       string    `human:"Name" serialized:"name"`
+	Stacktrace string    `human:"Stacktrace" serialized:"stacktrace"`
+}
+
 func (c *command) newStatementCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "statement",
@@ -26,6 +32,7 @@ func (c *command) newStatementCommand() *cobra.Command {
 
 	cmd.AddCommand(c.newStatementDeleteCommand())
 	cmd.AddCommand(c.newStatementListCommand())
+	cmd.AddCommand(c.newStatementGetCommand())
 
 	return cmd
 }
