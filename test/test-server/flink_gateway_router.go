@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
@@ -29,6 +30,8 @@ func NewFlinkGatewayRouter(t *testing.T) *mux.Router {
 
 func handleSqlEnvironmentsEnvironmentStatements(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		creationDateStatement1 := time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
+		creationDateStatement2 := time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC)
 		statements := flinkgatewayv1alpha1.SqlV1alpha1StatementList{Data: []flinkgatewayv1alpha1.SqlV1alpha1Statement{
 			{
 				Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
@@ -40,6 +43,7 @@ func handleSqlEnvironmentsEnvironmentStatements(t *testing.T) http.HandlerFunc {
 					Phase:  "COMPLETED",
 					Detail: flinkgatewayv1alpha1.PtrString("SQL statement is completed"),
 				},
+				Metadata: &flinkgatewayv1alpha1.ObjectMeta{CreatedAt: &creationDateStatement1},
 			},
 			{
 				Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
@@ -51,6 +55,7 @@ func handleSqlEnvironmentsEnvironmentStatements(t *testing.T) http.HandlerFunc {
 					Phase:  "COMPLETED",
 					Detail: flinkgatewayv1alpha1.PtrString("SQL statement is completed"),
 				},
+				Metadata: &flinkgatewayv1alpha1.ObjectMeta{CreatedAt: &creationDateStatement2},
 			},
 		}}
 
