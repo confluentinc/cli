@@ -15,6 +15,7 @@ import (
 var flinkGatewayRoutes = []route{
 	{"/sql/v1alpha1/environments/{environment}/statements", handleSqlEnvironmentsEnvironmentStatements},
 	{"/sql/v1alpha1/environments/{environment}/statements/{statement}", handleSqlEnvironmentsEnvironmentStatementsStatement},
+	{"/sql/v1alpha1/environments/{environment}/statements/{statement}/exceptions", handleSqlEnvironmentsEnvironmentStatementExceptions},
 }
 
 func NewFlinkGatewayRouter(t *testing.T) *mux.Router {
@@ -64,8 +65,31 @@ func handleSqlEnvironmentsEnvironmentStatements(t *testing.T) http.HandlerFunc {
 	}
 }
 
+func handleSqlEnvironmentsEnvironmentStatementExceptions(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		statementExceptionCreatedAt := time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC)
+		statementExceptionCreatedAt2 := time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC)
+		if r.Method == http.MethodGet {
+			statement := flinkgatewayv1alpha1.SqlV1alpha1StatementExceptionList{
+				Data: []flinkgatewayv1alpha1.SqlV1alpha1StatementException{{
+					Timestamp:  &statementExceptionCreatedAt,
+					Name:       flinkgatewayv1alpha1.PtrString("Bad exception"),
+					Stacktrace: flinkgatewayv1alpha1.PtrString("exception in foo.go"),
+				}, {
+					Timestamp:  &statementExceptionCreatedAt2,
+					Name:       flinkgatewayv1alpha1.PtrString("another Bad exception"),
+					Stacktrace: flinkgatewayv1alpha1.PtrString("exception in bar.go"),
+				}},
+			}
+			err := json.NewEncoder(w).Encode(statement)
+			require.NoError(t, err)
+		}
+	}
+}
+
 func handleSqlEnvironmentsEnvironmentStatementsStatement(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		statementCreatedAt := time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC)
 		if r.Method == http.MethodGet {
 			statement := flinkgatewayv1alpha1.SqlV1alpha1Statement{
 				Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
@@ -77,6 +101,7 @@ func handleSqlEnvironmentsEnvironmentStatementsStatement(t *testing.T) http.Hand
 					Phase:  "TODO",
 					Detail: flinkgatewayv1alpha1.PtrString("TODO"),
 				},
+				Metadata: &flinkgatewayv1alpha1.ObjectMeta{CreatedAt: &statementCreatedAt},
 			}
 			err := json.NewEncoder(w).Encode(statement)
 			require.NoError(t, err)
