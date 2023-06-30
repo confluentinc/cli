@@ -88,5 +88,5 @@ func (c *Client) ListFlinkIAMBindings(environmentId, region, cloud, identityPool
 		req = req.IdentityPool(identityPoolId)
 	}
 	res, httpResp, err := req.Execute()
-	return res.GetData(), errors.CatchOrgV2ResourceNotFoundError(err, environmentId, httpResp)
+	return res.GetData(), errors.CatchCCloudV2ResourceNotFoundError(err, environmentId, httpResp)
 }
