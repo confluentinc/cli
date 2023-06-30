@@ -10,6 +10,5 @@ import (
 const PromptAccentColor = prompt.Cyan
 const AccentColor = color.FgCyan
 
-const InfoColor = color.FgWhite
 const ErrorColor = color.FgHiRed
 const WarnColor = color.FgHiYellow
