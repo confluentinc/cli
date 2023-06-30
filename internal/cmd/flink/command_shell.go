@@ -7,7 +7,6 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config/load"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	client "github.com/confluentinc/cli/internal/pkg/flink/app"
@@ -39,13 +38,8 @@ func (c *command) newShellCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cob
 
 func (c *command) authenticated(authenticated func(*cobra.Command, []string) error, cmd *cobra.Command, jwtValidator pcmd.JWTValidator) func() error {
 	return func() error {
-		cfg, err := load.LoadAndMigrate(v1.New())
-		if err != nil {
-			return err
-		}
-
-		authToken := cfg.Context().State.AuthToken
-		authRefreshToken := cfg.Context().State.AuthRefreshToken
+		authToken := c.Context.GetAuthToken()
+		authRefreshToken := c.Context.GetAuthRefreshToken()
 		if err := c.Context.UpdateAuthTokens(authToken, authRefreshToken); err != nil {
 			return err
 		}
@@ -61,7 +55,7 @@ func (c *command) authenticated(authenticated func(*cobra.Command, []string) err
 
 		jwtCtx := &v1.Context{State: &v1.ContextState{AuthToken: flinkGatewayClient.AuthToken}}
 		if tokenErr := jwtValidator.Validate(jwtCtx); tokenErr != nil {
-			dataplaneToken, err := auth.GetDataplaneToken(cfg.Context().GetState(), cfg.Context().GetPlatformServer())
+			dataplaneToken, err := auth.GetDataplaneToken(c.Context.GetState(), c.Context.GetPlatformServer())
 			if err != nil {
 				return err
 			}
