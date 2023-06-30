@@ -148,7 +148,7 @@ func (c *InputController) RunInteractiveInput() {
 			return
 		}
 
-		c.printResultToSTDOUT(processedStatement.StatementResults)
+		c.printResultToSTDOUT(processedStatement)
 		// This was used to delete statements after their execution to save system resources, which should not be
 		// an issue anymore. We don't want to remove it completely just yet, but will disable it by default for now.
 		// TODO: remove this completely once we are sure we won't need it in the future
@@ -248,9 +248,13 @@ func (c *InputController) toggleOutputMode() {
 	components.PrintOutputModeState(c.appController.GetOutputMode() == types.TViewOutput, maxCol)
 }
 
-func (c *InputController) printResultToSTDOUT(statementResults *types.StatementResults) {
-	if statementResults == nil || len(statementResults.Headers) == 0 || len(statementResults.Rows) == 0 {
-		outputWarn("\nThe server returned empty rows for this statement.")
+func (c *InputController) printResultToSTDOUT(statement *types.ProcessedStatement) {
+	statementResults := statement.StatementResults
+	rowsAreEmpty := statementResults == nil || len(statementResults.Headers) == 0 || len(statementResults.Rows) == 0
+	if rowsAreEmpty {
+		if statement.StatusDetail == "" {
+			outputWarn("\nThe server returned empty rows for this statement.")
+		}
 		return
 	}
 
