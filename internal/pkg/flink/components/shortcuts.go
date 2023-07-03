@@ -2,6 +2,7 @@ package components
 
 import (
 	"fmt"
+	"github.com/gdamore/tcell/v2"
 	"strings"
 
 	"github.com/rivo/tview"
@@ -24,6 +25,7 @@ func Shortcuts() *tview.TextView {
 		SetWrap(false)
 
 	shortcutsRef.SetText(formatShortcuts(appShortcuts))
+	shortcutsRef.SetBackgroundColor(tcell.ColorDefault)
 
 	return shortcutsRef
 }

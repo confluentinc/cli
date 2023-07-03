@@ -8,7 +8,7 @@ import (
 func CreateTable() *tview.Table {
 	table := tview.NewTable().SetFixed(1, 1)
 
-	table.SetBackgroundColor(tcell.ColorBlack)
+	table.SetBackgroundColor(tcell.ColorDefault)
 
 	table.SetCell(0, 0, tview.NewTableCell("Starting SQL Client... "))
 
