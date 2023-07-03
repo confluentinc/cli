@@ -50,4 +50,6 @@ type FetchControllerInterface interface {
 	Init(statement ProcessedStatement)
 	Close()
 	SetAutoRefreshCallback(func())
+	GetStatement() ProcessedStatement
+	GetMaxResults() int
 }
