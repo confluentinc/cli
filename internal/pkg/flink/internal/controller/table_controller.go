@@ -132,8 +132,6 @@ func (t *TableController) getActionForShortcut(shortcut string) func() {
 		return t.toggleAutoRefreshAndRender
 	case "N":
 		return t.fetchNextPageAndRender
-	case "R":
-		return t.goToLastPageAndRender
 	case "H":
 		return t.fastScrollUp
 	case "L":
@@ -162,11 +160,6 @@ func (t *TableController) toggleAutoRefreshAndRender() {
 
 func (t *TableController) fetchNextPageAndRender() {
 	t.fetchController.FetchNextPage()
-	t.renderTable()
-}
-
-func (t *TableController) goToLastPageAndRender() {
-	t.fetchController.JumpToLastPage()
 	t.renderTable()
 }
 

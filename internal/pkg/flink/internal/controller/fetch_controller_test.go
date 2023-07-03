@@ -148,38 +148,6 @@ func (s *FetchControllerTestSuite) TestFetchNextPageOnUserInput() {
 	require.Equal(s.T(), types.Completed, s.fetchController.GetFetchState())
 }
 
-func (s *FetchControllerTestSuite) TestJumpToLiveResultsOnUserInput() {
-	mockStatement := types.ProcessedStatement{
-		StatementResults: &types.StatementResults{
-			Headers: []string{"Test"},
-			Rows: []types.StatementResultRow{{
-				Operation: 0,
-				Fields: []types.StatementResultField{
-					types.AtomicStatementResultField{
-						Type:  "INTEGER",
-						Value: "1",
-					},
-				},
-			}},
-		},
-		PageToken: "NOT_EMPTY",
-	}
-	s.mockStore.EXPECT().FetchStatementResults(mockStatement).Return(&mockStatement, nil)
-	s.mockStore.EXPECT().FetchStatementResults(mockStatement).Return(&mockStatement, nil)
-	s.mockStore.EXPECT().FetchStatementResults(mockStatement).Return(&types.ProcessedStatement{PageToken: "LAST"}, nil)
-
-	// When
-	s.fetchController.setFetchState(types.Completed) // need to manually set this so auto refresh doesn't start
-	s.fetchController.Init(mockStatement)
-	s.fetchController.setFetchState(types.Paused)
-
-	// Then
-	s.fetchController.JumpToLastPage()
-
-	require.Equal(s.T(), types.Paused, s.fetchController.GetFetchState())
-	require.Equal(s.T(), types.ProcessedStatement{PageToken: "LAST"}, s.fetchController.getStatement())
-}
-
 func (s *FetchControllerTestSuite) TestCloseShouldSetFetchStateToPaused() {
 	s.fetchController.setFetchState(types.Running)
 

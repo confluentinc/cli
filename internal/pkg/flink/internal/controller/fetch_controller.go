@@ -122,21 +122,6 @@ func (t *FetchController) FetchNextPage() {
 	t.setFetchState(types.Running)
 }
 
-func (t *FetchController) JumpToLastPage() {
-	for {
-		t.FetchNextPage()
-		if !t.hasMoreResults() {
-			break
-		}
-		// minimal wait to avoid rate limiting
-		time.Sleep(time.Millisecond * 50)
-	}
-}
-
-func (t *FetchController) hasMoreResults() bool {
-	return len(t.getStatement().StatementResults.GetRows()) > 0 && t.GetFetchState() != types.Failed && t.GetFetchState() != types.Completed
-}
-
 func (t *FetchController) GetHeaders() []string {
 	return t.materializedStatementResults.GetHeaders()
 }
