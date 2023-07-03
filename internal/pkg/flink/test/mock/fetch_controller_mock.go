@@ -46,18 +46,6 @@ func (mr *MockFetchControllerInterfaceMockRecorder) Close() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockFetchControllerInterface)(nil).Close))
 }
 
-// FetchNextPage mocks base method.
-func (m *MockFetchControllerInterface) FetchNextPage() {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "FetchNextPage")
-}
-
-// FetchNextPage indicates an expected call of FetchNextPage.
-func (mr *MockFetchControllerInterfaceMockRecorder) FetchNextPage() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchNextPage", reflect.TypeOf((*MockFetchControllerInterface)(nil).FetchNextPage))
-}
-
 // ForEach mocks base method.
 func (m *MockFetchControllerInterface) ForEach(arg0 func(int, *types.StatementResultRow)) {
 	m.ctrl.T.Helper()
@@ -164,18 +152,6 @@ func (m *MockFetchControllerInterface) IsTableMode() bool {
 func (mr *MockFetchControllerInterfaceMockRecorder) IsTableMode() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsTableMode", reflect.TypeOf((*MockFetchControllerInterface)(nil).IsTableMode))
-}
-
-// JumpToLastPage mocks base method.
-func (m *MockFetchControllerInterface) JumpToLastPage() {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "JumpToLastPage")
-}
-
-// JumpToLastPage indicates an expected call of JumpToLastPage.
-func (mr *MockFetchControllerInterfaceMockRecorder) JumpToLastPage() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "JumpToLastPage", reflect.TypeOf((*MockFetchControllerInterface)(nil).JumpToLastPage))
 }
 
 // SetAutoRefreshCallback mocks base method.
