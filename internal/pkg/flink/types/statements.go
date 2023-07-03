@@ -144,6 +144,10 @@ func NewProcessedStatement(statementObj flinkgatewayv1alpha1.SqlV1alpha1Statemen
 	}
 }
 
+func (s ProcessedStatement) GetPageSize() int {
+	return len(s.StatementResults.GetRows())
+}
+
 func (s ProcessedStatement) PrintStatusDetail() {
 	// print status detail message if available
 	if s.StatusDetail != "" {
