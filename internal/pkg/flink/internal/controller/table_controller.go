@@ -216,15 +216,19 @@ func (t *TableController) renderTitle() {
 		state = "unknown error"
 	}
 
-	t.table.SetTitle(fmt.Sprintf(
-		" %s (%s) | last page size: %d | current cache size: %d/%d, table size: %d",
-		mode,
-		state,
-		t.fetchController.GetStatement().GetPageSize(),
-		t.fetchController.GetMaterializedStatementResults().GetChangelogSize(),
-		t.fetchController.GetMaterializedStatementResults().GetMaxResults(),
-		t.fetchController.GetMaterializedStatementResults().GetTableSize(),
-	))
+	if t.unsafeTrace {
+		t.table.SetTitle(fmt.Sprintf(
+			" %s (%s) | last page size: %d | current cache size: %d/%d | table size: %d",
+			mode,
+			state,
+			t.fetchController.GetStatement().GetPageSize(),
+			t.fetchController.GetMaterializedStatementResults().GetChangelogSize(),
+			t.fetchController.GetMaterializedStatementResults().GetMaxResults(),
+			t.fetchController.GetMaterializedStatementResults().GetTableSize(),
+		))
+	} else {
+		t.table.SetTitle(fmt.Sprintf(" %s (%s) ", mode, state))
+	}
 }
 
 func (t *TableController) renderData() {
@@ -238,7 +242,6 @@ func (t *TableController) renderData() {
 	// Print header
 	for colIdx, column := range t.fetchController.GetHeaders() {
 		tableCell := tview.NewTableCell(column).
-			SetBackgroundColor(tcell.ColorDefault).
 			SetTextColor(tcell.ColorYellow).
 			SetAlign(tview.AlignLeft).
 			SetSelectable(false).
@@ -257,8 +260,6 @@ func (t *TableController) fillTable(truncatedColumnWidths []int) func(rowIdx int
 	return func(rowIdx int, row *types.StatementResultRow) {
 		for colIdx, field := range row.Fields {
 			tableCell := tview.NewTableCell(tview.Escape(field.ToString())).
-				SetBackgroundColor(tcell.ColorDefault).
-				SetTextColor(tcell.ColorWhite).
 				SetAlign(tview.AlignLeft).
 				SetMaxWidth(truncatedColumnWidths[colIdx])
 			t.table.SetCell(rowIdx+1, colIdx, tableCell)

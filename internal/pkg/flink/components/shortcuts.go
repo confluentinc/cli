@@ -2,9 +2,9 @@ package components
 
 import (
 	"fmt"
-	"github.com/gdamore/tcell/v2"
 	"strings"
 
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 
 	"github.com/confluentinc/cli/internal/pkg/flink/types"

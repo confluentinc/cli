@@ -472,7 +472,7 @@ func (s *TableControllerTestSuite) TestTableTitleDisplaysPageSizeAndCacheSizeWit
 	s.tableController.unsafeTrace = true
 	statement := getStatementWithResultsExample()
 	s.fetchController.EXPECT().GetStatement().Return(statement)
-	s.fetchController.EXPECT().GetMaxResults().Return(100)
+	s.fetchController.EXPECT().GetMaterializedStatementResults().Return(materializedStatementResults).Times(3)
 	s.tableController.Init(types.ProcessedStatement{})
 
 	actual := s.tableController.table.GetTitle()

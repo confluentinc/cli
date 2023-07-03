@@ -86,18 +86,18 @@ func (mr *MockFetchControllerInterfaceMockRecorder) GetHeaders() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHeaders", reflect.TypeOf((*MockFetchControllerInterface)(nil).GetHeaders))
 }
 
-// GetMaxResults mocks base method.
-func (m *MockFetchControllerInterface) GetMaxResults() int {
+// GetMaterializedStatementResults mocks base method.
+func (m *MockFetchControllerInterface) GetMaterializedStatementResults() *types.MaterializedStatementResults {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetMaxResults")
-	ret0, _ := ret[0].(int)
+	ret := m.ctrl.Call(m, "GetMaterializedStatementResults")
+	ret0, _ := ret[0].(*types.MaterializedStatementResults)
 	return ret0
 }
 
-// GetMaxResults indicates an expected call of GetMaxResults.
-func (mr *MockFetchControllerInterfaceMockRecorder) GetMaxResults() *gomock.Call {
+// GetMaterializedStatementResults indicates an expected call of GetMaterializedStatementResults.
+func (mr *MockFetchControllerInterfaceMockRecorder) GetMaterializedStatementResults() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMaxResults", reflect.TypeOf((*MockFetchControllerInterface)(nil).GetMaxResults))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMaterializedStatementResults", reflect.TypeOf((*MockFetchControllerInterface)(nil).GetMaterializedStatementResults))
 }
 
 // GetMaxWidthPerColumn mocks base method.
