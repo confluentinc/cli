@@ -76,7 +76,7 @@ func (t *FetchController) startAutoRefresh(refreshInterval uint) {
 		t.setFetchState(types.Running)
 		go func() {
 			for t.IsAutoRefreshRunning() {
-				t.FetchNextPage()
+				t.fetchNextPage()
 				t.autoRefreshCallback()
 				time.Sleep(time.Millisecond * time.Duration(refreshInterval))
 			}
@@ -92,7 +92,7 @@ func (t *FetchController) setFetchState(state types.FetchState) {
 	atomic.StoreInt32(&t.fetchState, int32(state))
 }
 
-func (t *FetchController) FetchNextPage() {
+func (t *FetchController) fetchNextPage() {
 	// don't fetch if we're already at the last page, otherwise we would fetch the first page again
 	if t.GetFetchState() == types.Completed {
 		return

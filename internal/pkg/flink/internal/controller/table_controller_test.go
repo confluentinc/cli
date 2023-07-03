@@ -96,16 +96,6 @@ func (s *TableControllerTestSuite) TestToggleRefreshResultsOnUserInput() {
 	require.Nil(s.T(), result)
 }
 
-func (s *TableControllerTestSuite) TestFetchNextPageOnUserInput() {
-	input := tcell.NewEventKey(tcell.KeyRune, 'N', tcell.ModNone)
-	s.fetchController.EXPECT().FetchNextPage()
-	s.renderTableMockCalls()
-
-	result := s.tableController.AppInputCapture(input)
-
-	require.Nil(s.T(), result)
-}
-
 func (s *TableControllerTestSuite) TestNonSupportedUserInput() {
 	// Test a case when the event is neither 'Q', 'N', Ctrl-C, nor Escape
 	// When we return the event, it's forwarded to tview
