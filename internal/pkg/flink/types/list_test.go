@@ -1,13 +1,13 @@
 package types
 
 import (
+	"testing"
+
 	"github.com/stretchr/testify/require"
 	"pgregory.net/rapid"
-	"testing"
 )
 
 func TestDequeModel(t *testing.T) {
-
 	rapid.Check(t, func(t *rapid.T) {
 		entries := rapid.SliceOfN(rapid.StringN(5, 10, 20), 10, 100).Draw(t, "entries")
 
@@ -35,5 +35,4 @@ func TestDequeModel(t *testing.T) {
 		list.Remove(list.ElementAtIndex(5))
 		require.Equal(t, append(entries[:5], entries[6:]...), list.ToSlice())
 	})
-
 }

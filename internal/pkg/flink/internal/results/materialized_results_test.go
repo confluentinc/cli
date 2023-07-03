@@ -1,10 +1,10 @@
 package results
 
 import (
-	"github.com/samber/lo"
 	"strconv"
 	"testing"
 
+	"github.com/samber/lo"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"pgregory.net/rapid"
@@ -178,7 +178,6 @@ func (s *MaterializedStatementResultsTestSuite) TestKeyCountIncreases() {
 		require.Equal(t, 10, len(zerosValues), "expected 10 zeros in table")
 		require.Equal(t, 10, len(onesValues), "expected 10 ones in table")
 	})
-
 }
 
 func (s *MaterializedStatementResultsTestSuite) TestMaxCapacity() {
