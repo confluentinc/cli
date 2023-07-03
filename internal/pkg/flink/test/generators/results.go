@@ -128,7 +128,7 @@ func MockResultRow(columnDetails []flinkgatewayv1alpha1.ColumnDetails) *rapid.Ge
 			items = append(items, GetResultItemGeneratorForType(column.GetType()).Draw(t, "a field"))
 		}
 		return map[string]any{
-			"op":  rapid.Float64Range(0, 3).Draw(t, "an operation"),
+			"op":  float64(rapid.IntRange(0, 3).Draw(t, "an operation")),
 			"row": items,
 		}
 	})
