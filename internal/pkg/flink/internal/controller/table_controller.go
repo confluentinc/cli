@@ -27,14 +27,16 @@ type TableController struct {
 	tableWidth                           int
 	numRowsToScroll                      int
 	materializedStatementResultsIterator types.MaterializedStatementResultsIterator
+	unsafeTrace                          bool
 }
 
-func NewTableController(table *tview.Table, appController types.ApplicationControllerInterface, fetchController types.FetchControllerInterface) types.TableControllerInterface {
+func NewTableController(table *tview.Table, appController types.ApplicationControllerInterface, fetchController types.FetchControllerInterface, unsafeTrace bool) types.TableControllerInterface {
 	return &TableController{
 		table:           table,
 		appController:   appController,
 		fetchController: fetchController,
 		selectedRowIdx:  -1,
+		unsafeTrace:     unsafeTrace,
 	}
 }
 
@@ -177,6 +179,7 @@ func (t *TableController) openRowView() {
 			sb.WriteString(fmt.Sprintf("[yellow]%s:\n[white]%s\n\n", tview.Escape(headers[rowIdx]), tview.Escape(field.ToString())))
 		}
 		textView := tview.NewTextView().SetText(sb.String())
+		textView.SetBackgroundColor(tcell.ColorDefault)
 		// mouse needs to be disabled, otherwise selecting text with the cursor won't work
 		t.appController.TView().SetRoot(components.CreateRowView(textView), true).EnableMouse(false)
 		t.appController.TView().SetFocus(textView)
@@ -208,12 +211,24 @@ func (t *TableController) renderTitle() {
 	case types.Paused:
 		state = "auto refresh paused"
 	case types.Running:
-		state = fmt.Sprintf("auto refresh %vs", defaultRefreshInterval/1000)
+		state = fmt.Sprintf("auto refresh %.1fs", float64(defaultRefreshInterval)/1000)
 	default:
 		state = "unknown error"
 	}
 
-	t.table.SetTitle(fmt.Sprintf(" %s (%s) ", mode, state))
+	if t.unsafeTrace {
+		t.table.SetTitle(fmt.Sprintf(
+			" %s (%s) | last page size: %d | current cache size: %d/%d | table size: %d",
+			mode,
+			state,
+			t.fetchController.GetStatement().GetPageSize(),
+			t.fetchController.GetMaterializedStatementResults().GetChangelogSize(),
+			t.fetchController.GetMaterializedStatementResults().GetMaxResults(),
+			t.fetchController.GetMaterializedStatementResults().GetTableSize(),
+		))
+	} else {
+		t.table.SetTitle(fmt.Sprintf(" %s (%s) ", mode, state))
+	}
 }
 
 func (t *TableController) renderData() {
@@ -245,7 +260,6 @@ func (t *TableController) fillTable(truncatedColumnWidths []int) func(rowIdx int
 	return func(rowIdx int, row *types.StatementResultRow) {
 		for colIdx, field := range row.Fields {
 			tableCell := tview.NewTableCell(tview.Escape(field.ToString())).
-				SetTextColor(tcell.ColorWhite).
 				SetAlign(tview.AlignLeft).
 				SetMaxWidth(truncatedColumnWidths[colIdx])
 			t.table.SetCell(rowIdx+1, colIdx, tableCell)

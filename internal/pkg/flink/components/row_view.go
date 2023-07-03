@@ -1,6 +1,7 @@
 package components
 
 import (
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
@@ -20,9 +21,12 @@ func CreateRowView(textView *tview.TextView) *tview.Flex {
 		SetWrap(false)
 
 	shortcutsView.SetText(formatShortcuts(shortcuts))
+	shortcutsView.SetBackgroundColor(tcell.ColorDefault)
 
-	return tview.NewFlex().
+	flex := tview.NewFlex().
 		SetDirection(tview.FlexRow).
 		AddItem(textView, 0, 1, false).
 		AddItem(shortcutsView, 1, 1, false)
+	flex.SetBackgroundColor(tcell.ColorDefault)
+	return flex
 }

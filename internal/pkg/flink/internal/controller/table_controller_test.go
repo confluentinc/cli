@@ -1,16 +1,18 @@
 package controller
 
 import (
-	"fmt"
 	"strconv"
 	"testing"
 
+	"github.com/bradleyjkemp/cupaloy"
 	"github.com/gdamore/tcell/v2"
 	"github.com/golang/mock/gomock"
 	"github.com/rivo/tview"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"pgregory.net/rapid"
+
+	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
 
 	"github.com/confluentinc/cli/internal/pkg/flink/components"
 	"github.com/confluentinc/cli/internal/pkg/flink/test/mock"
@@ -34,7 +36,7 @@ func (s *TableControllerTestSuite) SetupTest() {
 	s.appController = mock.NewMockApplicationControllerInterface(ctrl)
 	s.fetchController = mock.NewMockFetchControllerInterface(ctrl)
 	s.dummyTViewApp = tview.NewApplication()
-	s.tableController = NewTableController(components.CreateTable(), s.appController, s.fetchController).(*TableController)
+	s.tableController = NewTableController(components.CreateTable(), s.appController, s.fetchController, false).(*TableController)
 }
 
 func (s *TableControllerTestSuite) TestCloseTableViewOnUserInput() {
@@ -108,7 +110,7 @@ func (s *TableControllerTestSuite) TestNonSupportedUserInput() {
 
 func (s *TableControllerTestSuite) TestOpenRowViewOnUserInput() {
 	// Given
-	materializedStatementResults := getResultsExample()
+	materializedStatementResults := getMaterializedResultsExample()
 	s.initMockCalls(materializedStatementResults, types.Paused)
 	s.tableController.Init(types.ProcessedStatement{})
 
@@ -128,7 +130,7 @@ func (s *TableControllerTestSuite) TestOpenRowViewOnUserInput() {
 	require.Equal(s.T(), expectedIterator.Value(), s.tableController.materializedStatementResultsIterator.Value())
 }
 
-func getResultsExample() *types.MaterializedStatementResults {
+func getMaterializedResultsExample() *types.MaterializedStatementResults {
 	materializedStatementResults := types.NewMaterializedStatementResults([]string{"Count"}, 10)
 	for i := 0; i < 10; i++ {
 		materializedStatementResults.Append(types.StatementResultRow{
@@ -144,9 +146,33 @@ func getResultsExample() *types.MaterializedStatementResults {
 	return &materializedStatementResults
 }
 
+func getStatementWithResultsExample() types.ProcessedStatement {
+	statement := types.ProcessedStatement{
+		StatementName: "example-statement",
+		ResultSchema:  flinkgatewayv1alpha1.SqlV1alpha1ResultSchema{},
+		StatementResults: &types.StatementResults{
+			Headers: []string{"Count"},
+			Rows:    []types.StatementResultRow{},
+		},
+	}
+	for i := 0; i < 10; i++ {
+		row := types.StatementResultRow{
+			Operation: types.INSERT,
+			Fields: []types.StatementResultField{
+				types.AtomicStatementResultField{
+					Type:  types.INTEGER,
+					Value: strconv.Itoa(i),
+				},
+			},
+		}
+		statement.StatementResults.Rows = append(statement.StatementResults.Rows, row)
+	}
+	return statement
+}
+
 func (s *TableControllerTestSuite) TestOpenRowViewWhenRowIsNilShouldNotPanic() {
 	// Given
-	materializedStatementResults := getResultsExample()
+	materializedStatementResults := getMaterializedResultsExample()
 	s.initMockCalls(materializedStatementResults, types.Paused)
 	s.tableController.Init(types.ProcessedStatement{})
 	// move iterator to end so it becomes nil
@@ -209,7 +235,7 @@ func (s *TableControllerTestSuite) TestCloseRowViewOnUserInput() {
 }
 
 func (s *TableControllerTestSuite) TestSelectRowShouldDoNothingWhenRowToSelectSmallerThanOne() {
-	materializedStatementResults := getResultsExample()
+	materializedStatementResults := getMaterializedResultsExample()
 	expectedIterator := materializedStatementResults.Iterator(true)
 	s.initMockCalls(materializedStatementResults, types.Paused)
 	s.tableController.Init(types.ProcessedStatement{})
@@ -225,7 +251,7 @@ func (s *TableControllerTestSuite) TestSelectRowShouldDoNothingWhenRowToSelectSm
 }
 
 func (s *TableControllerTestSuite) TestSelectRowShouldDoNothingWhenRowToSelectGreaterThanNumRows() {
-	materializedStatementResults := getResultsExample()
+	materializedStatementResults := getMaterializedResultsExample()
 	expectedIterator := materializedStatementResults.Iterator(true)
 	s.initMockCalls(materializedStatementResults, types.Paused)
 	s.tableController.Init(types.ProcessedStatement{})
@@ -241,7 +267,7 @@ func (s *TableControllerTestSuite) TestSelectRowShouldDoNothingWhenRowToSelectGr
 }
 
 func (s *TableControllerTestSuite) TestSelectRowShouldDoNothingWhenAutoRefreshIsRunning() {
-	materializedStatementResults := getResultsExample()
+	materializedStatementResults := getMaterializedResultsExample()
 	expectedIterator := materializedStatementResults.Iterator(true)
 	s.initMockCalls(materializedStatementResults, types.Paused)
 	s.tableController.Init(types.ProcessedStatement{})
@@ -258,7 +284,7 @@ func (s *TableControllerTestSuite) TestSelectRowShouldDoNothingWhenAutoRefreshIs
 }
 
 func (s *TableControllerTestSuite) TestSelectRowShouldNotMoveIteratorOnFirstCall() {
-	materializedStatementResults := getResultsExample()
+	materializedStatementResults := getMaterializedResultsExample()
 	expectedIterator := materializedStatementResults.Iterator(true)
 	s.initMockCalls(materializedStatementResults, types.Paused)
 	s.tableController.Init(types.ProcessedStatement{})
@@ -277,7 +303,7 @@ func (s *TableControllerTestSuite) TestSelectRowShouldNotMoveIteratorOnFirstCall
 }
 
 func (s *TableControllerTestSuite) TestSelectArbitraryRow() {
-	materializedStatementResults := getResultsExample()
+	materializedStatementResults := getMaterializedResultsExample()
 	s.initMockCalls(materializedStatementResults, types.Paused)
 	s.tableController.Init(types.ProcessedStatement{})
 
@@ -308,7 +334,7 @@ func (s *TableControllerTestSuite) TestNonSupportedUserInputInRowView() {
 }
 
 func (s *TableControllerTestSuite) TestFastScrollUp() {
-	materializedStatementResults := getResultsExample()
+	materializedStatementResults := getMaterializedResultsExample()
 	s.initMockCalls(materializedStatementResults, types.Paused)
 	s.tableController.Init(types.ProcessedStatement{})
 	s.tableController.numRowsToScroll = 9
@@ -323,7 +349,7 @@ func (s *TableControllerTestSuite) TestFastScrollUp() {
 }
 
 func (s *TableControllerTestSuite) TestFastScrollUpShouldNotMoveOutFurtherThanMax() {
-	materializedStatementResults := getResultsExample()
+	materializedStatementResults := getMaterializedResultsExample()
 	s.initMockCalls(materializedStatementResults, types.Paused)
 	s.tableController.Init(types.ProcessedStatement{})
 	s.tableController.numRowsToScroll = 20
@@ -338,7 +364,7 @@ func (s *TableControllerTestSuite) TestFastScrollUpShouldNotMoveOutFurtherThanMa
 }
 
 func (s *TableControllerTestSuite) TestFastScrollDown() {
-	materializedStatementResults := getResultsExample()
+	materializedStatementResults := getMaterializedResultsExample()
 	s.initMockCalls(materializedStatementResults, types.Paused)
 	s.tableController.Init(types.ProcessedStatement{})
 	s.tableController.numRowsToScroll = 9
@@ -354,7 +380,7 @@ func (s *TableControllerTestSuite) TestFastScrollDown() {
 }
 
 func (s *TableControllerTestSuite) TestFastScrollDownShouldNotMoveOutFurtherThanMax() {
-	materializedStatementResults := getResultsExample()
+	materializedStatementResults := getMaterializedResultsExample()
 	s.initMockCalls(materializedStatementResults, types.Paused)
 	s.tableController.Init(types.ProcessedStatement{})
 	s.tableController.numRowsToScroll = 20
@@ -370,72 +396,86 @@ func (s *TableControllerTestSuite) TestFastScrollDownShouldNotMoveOutFurtherThan
 }
 
 func (s *TableControllerTestSuite) TestTableTitleDisplaysTableMode() {
-	materializedStatementResults := getResultsExample()
+	materializedStatementResults := getMaterializedResultsExample()
 	s.initMockCalls(materializedStatementResults, types.Paused)
 	s.tableController.Init(types.ProcessedStatement{})
 
 	actual := s.tableController.table.GetTitle()
 
-	require.Contains(s.T(), actual, "Table mode")
+	cupaloy.SnapshotT(s.T(), actual)
 }
 
 func (s *TableControllerTestSuite) TestTableTitleDisplaysChangelogMode() {
-	materializedStatementResults := getResultsExample()
+	materializedStatementResults := getMaterializedResultsExample()
 	materializedStatementResults.SetTableMode(false)
 	s.initMockCalls(materializedStatementResults, types.Paused)
 	s.tableController.Init(types.ProcessedStatement{})
 
 	actual := s.tableController.table.GetTitle()
 
-	require.Contains(s.T(), actual, "Changelog mode")
+	cupaloy.SnapshotT(s.T(), actual)
 }
 
 func (s *TableControllerTestSuite) TestTableTitleDisplaysComplete() {
-	materializedStatementResults := getResultsExample()
+	materializedStatementResults := getMaterializedResultsExample()
 	s.initMockCalls(materializedStatementResults, types.Completed)
 	s.tableController.Init(types.ProcessedStatement{})
 
 	actual := s.tableController.table.GetTitle()
 
-	require.Contains(s.T(), actual, "(completed)")
+	cupaloy.SnapshotT(s.T(), actual)
 }
 
 func (s *TableControllerTestSuite) TestTableTitleDisplaysFailed() {
-	materializedStatementResults := getResultsExample()
+	materializedStatementResults := getMaterializedResultsExample()
 	s.initMockCalls(materializedStatementResults, types.Failed)
 	s.tableController.Init(types.ProcessedStatement{})
 
 	actual := s.tableController.table.GetTitle()
 
-	require.Contains(s.T(), actual, "(auto refresh failed)")
+	cupaloy.SnapshotT(s.T(), actual)
 }
 
 func (s *TableControllerTestSuite) TestTableTitleDisplaysPaused() {
-	materializedStatementResults := getResultsExample()
+	materializedStatementResults := getMaterializedResultsExample()
 	s.initMockCalls(materializedStatementResults, types.Paused)
 	s.tableController.Init(types.ProcessedStatement{})
 
 	actual := s.tableController.table.GetTitle()
 
-	require.Contains(s.T(), actual, "(auto refresh paused)")
+	cupaloy.SnapshotT(s.T(), actual)
 }
 
 func (s *TableControllerTestSuite) TestTableTitleDisplaysRunning() {
-	materializedStatementResults := getResultsExample()
+	materializedStatementResults := getMaterializedResultsExample()
 	s.initMockCalls(materializedStatementResults, types.Running)
 	s.tableController.Init(types.ProcessedStatement{})
 
 	actual := s.tableController.table.GetTitle()
 
-	require.Contains(s.T(), actual, fmt.Sprintf("(auto refresh %vs)", defaultRefreshInterval/1000))
+	cupaloy.SnapshotT(s.T(), actual)
 }
 
 func (s *TableControllerTestSuite) TestTableTitleDisplaysUnknown() {
-	materializedStatementResults := getResultsExample()
+	materializedStatementResults := getMaterializedResultsExample()
 	s.initMockCalls(materializedStatementResults, 5)
 	s.tableController.Init(types.ProcessedStatement{})
 
 	actual := s.tableController.table.GetTitle()
 
-	require.Contains(s.T(), actual, "(unknown error)")
+	cupaloy.SnapshotT(s.T(), actual)
+}
+
+func (s *TableControllerTestSuite) TestTableTitleDisplaysPageSizeAndCacheSizeWithUnsafeTrace() {
+	materializedStatementResults := getMaterializedResultsExample()
+	s.initMockCalls(materializedStatementResults, 5)
+	s.tableController.unsafeTrace = true
+	statement := getStatementWithResultsExample()
+	s.fetchController.EXPECT().GetStatement().Return(statement)
+	s.fetchController.EXPECT().GetMaterializedStatementResults().Return(materializedStatementResults).Times(3)
+	s.tableController.Init(types.ProcessedStatement{})
+
+	actual := s.tableController.table.GetTitle()
+
+	cupaloy.SnapshotT(s.T(), actual)
 }

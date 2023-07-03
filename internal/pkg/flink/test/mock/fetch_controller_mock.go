@@ -86,6 +86,20 @@ func (mr *MockFetchControllerInterfaceMockRecorder) GetHeaders() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHeaders", reflect.TypeOf((*MockFetchControllerInterface)(nil).GetHeaders))
 }
 
+// GetMaterializedStatementResults mocks base method.
+func (m *MockFetchControllerInterface) GetMaterializedStatementResults() *types.MaterializedStatementResults {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMaterializedStatementResults")
+	ret0, _ := ret[0].(*types.MaterializedStatementResults)
+	return ret0
+}
+
+// GetMaterializedStatementResults indicates an expected call of GetMaterializedStatementResults.
+func (mr *MockFetchControllerInterfaceMockRecorder) GetMaterializedStatementResults() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMaterializedStatementResults", reflect.TypeOf((*MockFetchControllerInterface)(nil).GetMaterializedStatementResults))
+}
+
 // GetMaxWidthPerColumn mocks base method.
 func (m *MockFetchControllerInterface) GetMaxWidthPerColumn() []int {
 	m.ctrl.T.Helper()
@@ -112,6 +126,20 @@ func (m *MockFetchControllerInterface) GetResultsIterator(arg0 bool) types.Mater
 func (mr *MockFetchControllerInterfaceMockRecorder) GetResultsIterator(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetResultsIterator", reflect.TypeOf((*MockFetchControllerInterface)(nil).GetResultsIterator), arg0)
+}
+
+// GetStatement mocks base method.
+func (m *MockFetchControllerInterface) GetStatement() types.ProcessedStatement {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetStatement")
+	ret0, _ := ret[0].(types.ProcessedStatement)
+	return ret0
+}
+
+// GetStatement indicates an expected call of GetStatement.
+func (mr *MockFetchControllerInterfaceMockRecorder) GetStatement() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStatement", reflect.TypeOf((*MockFetchControllerInterface)(nil).GetStatement))
 }
 
 // Init mocks base method.
