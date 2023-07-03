@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
@@ -25,7 +24,6 @@ func Shortcuts() *tview.TextView {
 		SetWrap(false)
 
 	shortcutsRef.SetText(formatShortcuts(appShortcuts))
-	shortcutsRef.SetBackgroundColor(tcell.ColorDefault)
 
 	return shortcutsRef
 }

@@ -179,7 +179,6 @@ func (t *TableController) openRowView() {
 			sb.WriteString(fmt.Sprintf("[yellow]%s:\n[white]%s\n\n", tview.Escape(headers[rowIdx]), tview.Escape(field.ToString())))
 		}
 		textView := tview.NewTextView().SetText(sb.String())
-		textView.SetBackgroundColor(tcell.ColorDefault)
 		// mouse needs to be disabled, otherwise selecting text with the cursor won't work
 		t.appController.TView().SetRoot(components.CreateRowView(textView), true).EnableMouse(false)
 		t.appController.TView().SetFocus(textView)
