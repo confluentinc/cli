@@ -213,7 +213,7 @@ func (t *TableController) renderTitle() {
 		state = "unknown error"
 	}
 
-	t.table.SetTitle(fmt.Sprintf(" %s (%s) pageSize: %d, currentCacheSize: %d", mode, state, t.fetchController.GetStatement().GetPageSize(), t.fetchController.GetMaxResults()))
+	t.table.SetTitle(fmt.Sprintf(" %s (%s) | last page size: %d | current cache size: %d ", mode, state, t.fetchController.GetStatement().GetPageSize(), t.fetchController.GetMaxResults()))
 }
 
 func (t *TableController) renderData() {
