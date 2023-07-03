@@ -51,5 +51,5 @@ type FetchControllerInterface interface {
 	Close()
 	SetAutoRefreshCallback(func())
 	GetStatement() ProcessedStatement
-	GetMaterializeStatementResults() *MaterializedStatementResults
+	GetMaxResults() int
 }
