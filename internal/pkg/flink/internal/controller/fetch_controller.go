@@ -20,7 +20,7 @@ type FetchController struct {
 }
 
 const (
-	maxResultsCapacity     int  = 1000
+	maxResultsCapacity     int  = 1000000
 	defaultRefreshInterval uint = 1000 // in milliseconds
 	minColumnWidth         int  = 4    // min characters displayed in a column
 )
@@ -32,7 +32,7 @@ func NewFetchController(store store.StoreInterface) types.FetchControllerInterfa
 	}
 }
 
-func (t *FetchController) getStatement() types.ProcessedStatement {
+func (t *FetchController) GetStatement() types.ProcessedStatement {
 	t.statementLock.RLock()
 	defer t.statementLock.RUnlock()
 
@@ -99,15 +99,17 @@ func (t *FetchController) fetchNextPage() {
 	}
 
 	// fetch
-	newResults, err := t.store.FetchStatementResults(t.getStatement())
+	newResults, err := t.store.FetchStatementResults(t.GetStatement())
 	if err != nil {
 		t.setFetchState(types.Failed)
 		return
 	}
+	rows := newResults.StatementResults.GetRows()
+	t.materializedStatementResults.SetMaxResults(len(rows) * 5)
 
 	// update data
 	t.setStatement(*newResults)
-	t.materializedStatementResults.Append(newResults.StatementResults.GetRows()...)
+	t.materializedStatementResults.Append(rows...)
 	if newResults.PageToken == "" {
 		t.setFetchState(types.Completed)
 		return
@@ -157,7 +159,7 @@ func (t *FetchController) Close() {
 	// This was used to delete statements after their execution to save system resources, which should not be
 	// an issue anymore. We don't want to remove it completely just yet, but will disable it by default for now.
 	// TODO: remove this completely once we are sure we won't need it in the future
-	statement := t.getStatement()
+	statement := t.GetStatement()
 	if config.ShouldCleanupStatements || statement.Status == types.RUNNING {
 		go t.store.DeleteStatement(statement.StatementName)
 	}
@@ -165,4 +167,8 @@ func (t *FetchController) Close() {
 
 func (t *FetchController) SetAutoRefreshCallback(autoRefreshCallback func()) {
 	t.autoRefreshCallback = autoRefreshCallback
+}
+
+func (t *FetchController) GetMaterializeStatementResults() *types.MaterializedStatementResults {
+	return &t.materializedStatementResults
 }

@@ -92,6 +92,10 @@ func NewMaterializedStatementResults(headers []string, maxCapacity int) Material
 	}
 }
 
+func (s *MaterializedStatementResults) GetTable() LinkedList[StatementResultRow] {
+	return s.table
+}
+
 func (s *MaterializedStatementResults) Iterator(startFromBack bool) MaterializedStatementResultsIterator {
 	s.lock.RLock()
 	defer s.lock.RUnlock()
@@ -215,4 +219,12 @@ func (s *MaterializedStatementResults) GetMaxWidthPerColum() []int {
 		}
 	})
 	return columnWidths
+}
+
+func (s *MaterializedStatementResults) SetMaxResults(size int) {
+	s.maxCapacity = size
+}
+
+func (s *MaterializedStatementResults) GetMaxResults() int {
+	return s.maxCapacity
 }

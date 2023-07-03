@@ -1,6 +1,7 @@
 package results
 
 import (
+	"github.com/samber/lo"
 	"strconv"
 	"testing"
 
@@ -62,7 +63,7 @@ func (s *MaterializedStatementResultsTestSuite) TestTableMode() {
 			},
 		},
 	}
-	materializedStatementResults := types.NewMaterializedStatementResults(headers, 100)
+	materializedStatementResults := types.NewMaterializedStatementResults(headers, 10000)
 	materializedStatementResults.Append(previousRow)
 	materializedStatementResults.SetTableMode(true)
 	require.Equal(s.T(), headers, materializedStatementResults.GetHeaders())
@@ -96,6 +97,88 @@ func (s *MaterializedStatementResultsTestSuite) TestTableMode() {
 	materializedStatementResults.SetTableMode(false)
 	require.Equal(s.T(), append([]string{"Operation"}, headers...), materializedStatementResults.GetHeaders())
 	require.Equal(s.T(), changelogSize, materializedStatementResults.Size())
+}
+
+func (s *MaterializedStatementResultsTestSuite) TestKeyCountIncreases() {
+	rapid.Check(s.T(), func(t *rapid.T) {
+		keys := rapid.SliceOfNDistinct(rapid.IntRange(0, 11), 10, 10, rapid.ID[int]).Draw(t, "keys")
+
+		// object under test
+		headers := []string{"Key", "Count"}
+		materializedStatementResults := types.NewMaterializedStatementResults(headers, 10000)
+
+		for _, key := range keys {
+			row := types.StatementResultRow{
+				Operation: types.INSERT,
+				Fields: []types.StatementResultField{
+					types.AtomicStatementResultField{
+						Type:  types.INTEGER,
+						Value: strconv.Itoa(key),
+					},
+					types.AtomicStatementResultField{
+						Type:  types.INTEGER,
+						Value: strconv.Itoa(1),
+					},
+				},
+			}
+			materializedStatementResults.Append(row)
+			materializedStatementResults.Append(row)
+		}
+		// check if the number of keys is correct
+		require.Equal(t, 2*len(keys), materializedStatementResults.Size())
+
+		for _, key := range keys {
+			// Updates to group by are sent the following way
+			// We get retraction for the previous groupby value
+			// Then we get an update for the new groupby value
+			row := types.StatementResultRow{
+				Operation: types.UPDATE_BEFORE,
+				Fields: []types.StatementResultField{
+					types.AtomicStatementResultField{
+						Type:  types.INTEGER,
+						Value: strconv.Itoa(key),
+					},
+					types.AtomicStatementResultField{
+						Type:  types.INTEGER,
+						Value: strconv.Itoa(1),
+					},
+				},
+			}
+
+			materializedStatementResults.Append(row)
+
+			row = types.StatementResultRow{
+				Operation: types.UPDATE_AFTER,
+				Fields: []types.StatementResultField{
+					types.AtomicStatementResultField{
+						Type:  types.INTEGER,
+						Value: strconv.Itoa(key),
+					},
+					types.AtomicStatementResultField{
+						Type:  types.INTEGER,
+						Value: strconv.Itoa(0),
+					},
+				},
+			}
+
+			materializedStatementResults.Append(row)
+		}
+		// check if the number of keys is correct
+		require.Equal(t, 2*len(keys), materializedStatementResults.Size())
+
+		// zeros
+		table := materializedStatementResults.GetTable().ToSlice()
+		zerosValues := lo.Filter(table, func(item types.StatementResultRow, _ int) bool {
+			return item.Fields[1].ToString() == "0"
+		})
+		onesValues := lo.Filter(table, func(item types.StatementResultRow, _ int) bool {
+			return item.Fields[1].ToString() == "1"
+		})
+
+		require.Equal(t, 10, len(zerosValues), "expected 10 zeros in table")
+		require.Equal(t, 10, len(onesValues), "expected 10 ones in table")
+	})
+
 }
 
 func (s *MaterializedStatementResultsTestSuite) TestMaxCapacity() {

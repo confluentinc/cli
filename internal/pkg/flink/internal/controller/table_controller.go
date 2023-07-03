@@ -208,12 +208,12 @@ func (t *TableController) renderTitle() {
 	case types.Paused:
 		state = "auto refresh paused"
 	case types.Running:
-		state = fmt.Sprintf("auto refresh %vs", defaultRefreshInterval/1000)
+		state = fmt.Sprintf("auto refresh %.1fs", defaultRefreshInterval/1000)
 	default:
 		state = "unknown error"
 	}
 
-	t.table.SetTitle(fmt.Sprintf(" %s (%s) ", mode, state))
+	t.table.SetTitle(fmt.Sprintf(" %s (%s) pageSize: %d, currentCacheSize:%d", mode, state, t.fetchController.GetStatement().GetPageSize(), t.fetchController.GetMaterializeStatementResults().GetMaxResults()))
 }
 
 func (t *TableController) renderData() {
