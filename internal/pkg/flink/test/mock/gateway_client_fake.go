@@ -142,14 +142,14 @@ func (c *FakeFlinkGatewayClient) getFakeResultsRunningCounter() ([]any, string) 
 	for i := 0; i < c.fakeCount; i++ {
 		// update before
 		results = append(results, map[string]any{
-			"op":  int32(1),
+			"op":  float64(1),
 			"row": []any{fmt.Sprintf("%v", i)},
 		})
 	}
 
 	// update after (add latest entry)
 	results = append(results, map[string]any{
-		"op":  int32(2),
+		"op":  float64(2),
 		"row": []any{fmt.Sprintf("%v", c.fakeCount)},
 	})
 	c.fakeCount++

@@ -43,8 +43,6 @@ type FetchControllerInterface interface {
 	ToggleTableMode()
 	ToggleAutoRefresh()
 	IsAutoRefreshRunning() bool
-	FetchNextPage()
-	JumpToLastPage()
 	GetHeaders() []string
 	GetMaxWidthPerColumn() []int
 	GetResultsIterator(bool) MaterializedStatementResultsIterator
