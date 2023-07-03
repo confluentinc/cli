@@ -18,7 +18,7 @@ func StartApp(client ccloudv2.GatewayClientInterface, authenticated func() error
 	var once sync.Once
 
 	// Load history of previous commands from cache file
-	history := history.LoadHistory()
+	historyStore := history.LoadHistory()
 
 	// Create Components
 	table := components.CreateTable()
@@ -27,15 +27,15 @@ func StartApp(client ccloudv2.GatewayClientInterface, authenticated func() error
 
 	// Instantiate Application Controller - this is the top level controller that will be passed down to all other controllers
 	// and should be used for functions that are not specific to a component
-	appController := controller.NewApplicationController(app, history)
+	appController := controller.NewApplicationController(app, historyStore)
 
 	// Store used to process statements and store local properties
-	store := store.NewStore(client, appController.ExitApplication, &appOptions, authenticated)
+	dataStore := store.NewStore(client, appController.ExitApplication, &appOptions, authenticated)
 
 	// Instantiate Component Controllers
-	fetchController := controller.NewFetchController(store)
-	tableController := controller.NewTableController(table, appController, fetchController, appOptions.UnsafeTrace)
-	inputController := controller.NewInputController(tableController, appController, store, authenticated, history, &appOptions)
+	fetchController := controller.NewFetchController(dataStore)
+	tableController := controller.NewTableController(table, appController, fetchController, appOptions.GetVerbose())
+	inputController := controller.NewInputController(tableController, appController, dataStore, authenticated, historyStore, &appOptions)
 
 	// Pass RunInteractiveInputFunc to table controller so the user can come back from the output view
 	tableController.SetRunInteractiveInputCallback(inputController.RunInteractiveInput)

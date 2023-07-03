@@ -27,16 +27,16 @@ type TableController struct {
 	tableWidth                           int
 	numRowsToScroll                      int
 	materializedStatementResultsIterator types.MaterializedStatementResultsIterator
-	unsafeTrace                          bool
+	debug                                bool
 }
 
-func NewTableController(table *tview.Table, appController types.ApplicationControllerInterface, fetchController types.FetchControllerInterface, unsafeTrace bool) types.TableControllerInterface {
+func NewTableController(table *tview.Table, appController types.ApplicationControllerInterface, fetchController types.FetchControllerInterface, debug bool) types.TableControllerInterface {
 	return &TableController{
 		table:           table,
 		appController:   appController,
 		fetchController: fetchController,
 		selectedRowIdx:  -1,
-		unsafeTrace:     unsafeTrace,
+		debug:           debug,
 	}
 }
 
@@ -215,7 +215,7 @@ func (t *TableController) renderTitle() {
 		state = "unknown error"
 	}
 
-	if t.unsafeTrace {
+	if t.debug {
 		t.table.SetTitle(fmt.Sprintf(
 			" %s (%s) | last page size: %d | current cache size: %d/%d | table size: %d",
 			mode,

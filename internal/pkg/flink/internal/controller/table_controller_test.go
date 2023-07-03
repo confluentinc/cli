@@ -469,7 +469,7 @@ func (s *TableControllerTestSuite) TestTableTitleDisplaysUnknown() {
 func (s *TableControllerTestSuite) TestTableTitleDisplaysPageSizeAndCacheSizeWithUnsafeTrace() {
 	materializedStatementResults := getMaterializedResultsExample()
 	s.initMockCalls(materializedStatementResults, 5)
-	s.tableController.unsafeTrace = true
+	s.tableController.debug = true
 	statement := getStatementWithResultsExample()
 	s.fetchController.EXPECT().GetStatement().Return(statement)
 	s.fetchController.EXPECT().GetMaterializedStatementResults().Return(materializedStatementResults).Times(3)
