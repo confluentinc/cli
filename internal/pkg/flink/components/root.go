@@ -5,7 +5,8 @@ import (
 )
 
 func RootLayout(interactiveOutput tview.Primitive) *tview.Flex {
-	return tview.NewFlex().
+	flex := tview.NewFlex().
 		SetDirection(tview.FlexRow).
 		AddItem(interactiveOutput, 0, 1, true)
+	return flex
 }
