@@ -228,3 +228,11 @@ func (s *MaterializedStatementResults) SetMaxResults(size int) {
 func (s *MaterializedStatementResults) GetMaxResults() int {
 	return s.maxCapacity
 }
+
+func (s *MaterializedStatementResults) GetTableSize() int {
+	return s.table.Len()
+}
+
+func (s *MaterializedStatementResults) GetChangelogSize() int {
+	return s.changelog.Len()
+}

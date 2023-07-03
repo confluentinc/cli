@@ -169,6 +169,6 @@ func (t *FetchController) SetAutoRefreshCallback(autoRefreshCallback func()) {
 	t.autoRefreshCallback = autoRefreshCallback
 }
 
-func (t *FetchController) GetMaxResults() int {
-	return t.materializedStatementResults.GetMaxResults()
+func (t *FetchController) GetMaterializedStatementResults() *types.MaterializedStatementResults {
+	return &t.materializedStatementResults
 }

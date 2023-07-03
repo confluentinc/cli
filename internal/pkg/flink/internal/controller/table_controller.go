@@ -179,6 +179,7 @@ func (t *TableController) openRowView() {
 			sb.WriteString(fmt.Sprintf("[yellow]%s:\n[white]%s\n\n", tview.Escape(headers[rowIdx]), tview.Escape(field.ToString())))
 		}
 		textView := tview.NewTextView().SetText(sb.String())
+		textView.SetBackgroundColor(tcell.ColorDefault)
 		// mouse needs to be disabled, otherwise selecting text with the cursor won't work
 		t.appController.TView().SetRoot(components.CreateRowView(textView), true).EnableMouse(false)
 		t.appController.TView().SetFocus(textView)
@@ -215,11 +216,15 @@ func (t *TableController) renderTitle() {
 		state = "unknown error"
 	}
 
-	if t.unsafeTrace {
-		t.table.SetTitle(fmt.Sprintf(" %s (%s) | last page size: %d | current cache size: %d ", mode, state, t.fetchController.GetStatement().GetPageSize(), t.fetchController.GetMaxResults()))
-	} else {
-		t.table.SetTitle(fmt.Sprintf(" %s (%s) ", mode, state))
-	}
+	t.table.SetTitle(fmt.Sprintf(
+		" %s (%s) | last page size: %d | current cache size: %d/%d, table size: %d",
+		mode,
+		state,
+		t.fetchController.GetStatement().GetPageSize(),
+		t.fetchController.GetMaterializedStatementResults().GetChangelogSize(),
+		t.fetchController.GetMaterializedStatementResults().GetMaxResults(),
+		t.fetchController.GetMaterializedStatementResults().GetTableSize(),
+	))
 }
 
 func (t *TableController) renderData() {
@@ -233,6 +238,7 @@ func (t *TableController) renderData() {
 	// Print header
 	for colIdx, column := range t.fetchController.GetHeaders() {
 		tableCell := tview.NewTableCell(column).
+			SetBackgroundColor(tcell.ColorDefault).
 			SetTextColor(tcell.ColorYellow).
 			SetAlign(tview.AlignLeft).
 			SetSelectable(false).
@@ -251,6 +257,7 @@ func (t *TableController) fillTable(truncatedColumnWidths []int) func(rowIdx int
 	return func(rowIdx int, row *types.StatementResultRow) {
 		for colIdx, field := range row.Fields {
 			tableCell := tview.NewTableCell(tview.Escape(field.ToString())).
+				SetBackgroundColor(tcell.ColorDefault).
 				SetTextColor(tcell.ColorWhite).
 				SetAlign(tview.AlignLeft).
 				SetMaxWidth(truncatedColumnWidths[colIdx])
