@@ -225,6 +225,42 @@ func (s *MaterializedStatementResultsTestSuite) TestMaxCapacity() {
 	require.Equal(s.T(), 1, materializedStatementResults.Size())
 }
 
+func (s *MaterializedStatementResultsTestSuite) TestCleanup() {
+	headers := []string{"Count"}
+	row := types.StatementResultRow{
+		Operation: types.INSERT,
+		Fields: []types.StatementResultField{
+			types.AtomicStatementResultField{
+				Type:  types.INTEGER,
+				Value: "0",
+			},
+		},
+	}
+	materializedStatementResults := types.NewMaterializedStatementResults(headers, 1)
+	materializedStatementResults.Append(row)
+	materializedStatementResults.SetTableMode(true)
+	iterator := materializedStatementResults.Iterator(false)
+	require.Equal(s.T(), row, *iterator.GetNext())
+	for count := 1; count <= 10; count++ {
+		// add new row
+		row = types.StatementResultRow{
+			Operation: types.INSERT,
+			Fields: []types.StatementResultField{
+				types.AtomicStatementResultField{
+					Type:  types.INTEGER,
+					Value: strconv.Itoa(count),
+				},
+			},
+		}
+		materializedStatementResults.Append(row)
+		iterator = materializedStatementResults.Iterator(false)
+		require.Equal(s.T(), 1, materializedStatementResults.Size())
+		require.Equal(s.T(), row, *iterator.GetNext())
+	}
+
+	require.Equal(s.T(), 1, materializedStatementResults.Size())
+}
+
 func (s *MaterializedStatementResultsTestSuite) TestOnlyAllowAppendWithSameSchema() {
 	invalidHeaders := []string{"Count"}
 	row := types.StatementResultRow{
@@ -471,7 +507,7 @@ func (s *MaterializedStatementResultsTestSuite) TestGetColumnWidths() {
 		},
 	})
 
-	require.Equal(s.T(), []int{5, 2}, materializedStatementResults.GetMaxWidthPerColum())
+	require.Equal(s.T(), []int{5, 2}, materializedStatementResults.GetMaxWidthPerColumn())
 }
 
 func (s *MaterializedStatementResultsTestSuite) TestGetColumnWidthsChangelogMode() {
@@ -492,5 +528,15 @@ func (s *MaterializedStatementResultsTestSuite) TestGetColumnWidthsChangelogMode
 		},
 	})
 
-	require.Equal(s.T(), []int{len("Operation"), 5, 2}, materializedStatementResults.GetMaxWidthPerColum())
+	require.Equal(s.T(), []int{len("Operation"), 5, 2}, materializedStatementResults.GetMaxWidthPerColumn())
+}
+
+func (s *MaterializedStatementResultsTestSuite) TestToggleTableMode() {
+	materializedStatementResults := types.NewMaterializedStatementResults([]string{"1234", "12"}, 10)
+
+	require.True(s.T(), materializedStatementResults.IsTableMode())
+
+	materializedStatementResults.SetTableMode(false)
+
+	require.False(s.T(), materializedStatementResults.IsTableMode())
 }
