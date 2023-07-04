@@ -220,10 +220,6 @@ func (s *MaterializedStatementResults) GetMaxWidthPerColum() []int {
 	return columnWidths
 }
 
-func (s *MaterializedStatementResults) SetMaxResults(size int) {
-	s.maxCapacity = size
-}
-
 func (s *MaterializedStatementResults) GetMaxResults() int {
 	return s.maxCapacity
 }

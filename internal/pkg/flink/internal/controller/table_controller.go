@@ -43,8 +43,8 @@ func (t *TableController) SetRunInteractiveInputCallback(runInteractiveInput fun
 
 func (t *TableController) Init(statement types.ProcessedStatement) {
 	t.isRowViewOpen = false
-	t.fetchController.Init(statement)
 	t.fetchController.SetAutoRefreshCallback(t.renderTableAsync)
+	t.fetchController.Init(statement)
 	t.renderTable()
 }
 
@@ -200,14 +200,15 @@ func (t *TableController) renderTitle() {
 	}
 
 	if t.debug {
+		materializedResults := t.fetchController.GetMaterializedStatementResults()
 		t.table.SetTitle(fmt.Sprintf(
-			" %s (%s) | last page size: %d | current cache size: %d/%d | table size: %d ",
+			" %s (%s) | Last page size: %d | Current cache size: %d/%d | Table size: %d ",
 			mode,
 			state,
 			t.fetchController.GetStatement().GetPageSize(),
-			t.fetchController.GetMaterializedStatementResults().GetChangelogSize(),
-			t.fetchController.GetMaterializedStatementResults().GetMaxResults(),
-			t.fetchController.GetMaterializedStatementResults().GetTableSize(),
+			materializedResults.GetChangelogSize(),
+			materializedResults.GetMaxResults(),
+			materializedResults.GetTableSize(),
 		))
 	} else {
 		t.table.SetTitle(fmt.Sprintf(" %s (%s) ", mode, state))
