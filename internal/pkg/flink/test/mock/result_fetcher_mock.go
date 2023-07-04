@@ -46,18 +46,6 @@ func (mr *MockResultFetcherInterfaceMockRecorder) Close() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockResultFetcherInterface)(nil).Close))
 }
 
-// FetchNextPageAndUpdateState mocks base method.
-func (m *MockResultFetcherInterface) FetchNextPageAndUpdateState() {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "FetchNextPageAndUpdateState")
-}
-
-// FetchNextPageAndUpdateState indicates an expected call of FetchNextPageAndUpdateState.
-func (mr *MockResultFetcherInterfaceMockRecorder) FetchNextPageAndUpdateState() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FetchNextPageAndUpdateState", reflect.TypeOf((*MockResultFetcherInterface)(nil).FetchNextPageAndUpdateState))
-}
-
 // GetFetchState mocks base method.
 func (m *MockResultFetcherInterface) GetFetchState() types.FetchState {
 	m.ctrl.T.Helper()
@@ -72,18 +60,32 @@ func (mr *MockResultFetcherInterfaceMockRecorder) GetFetchState() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFetchState", reflect.TypeOf((*MockResultFetcherInterface)(nil).GetFetchState))
 }
 
-// GetResults mocks base method.
-func (m *MockResultFetcherInterface) GetResults() *types.MaterializedStatementResults {
+// GetMaterializedStatementResults mocks base method.
+func (m *MockResultFetcherInterface) GetMaterializedStatementResults() *types.MaterializedStatementResults {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetResults")
+	ret := m.ctrl.Call(m, "GetMaterializedStatementResults")
 	ret0, _ := ret[0].(*types.MaterializedStatementResults)
 	return ret0
 }
 
-// GetResults indicates an expected call of GetResults.
-func (mr *MockResultFetcherInterfaceMockRecorder) GetResults() *gomock.Call {
+// GetMaterializedStatementResults indicates an expected call of GetMaterializedStatementResults.
+func (mr *MockResultFetcherInterfaceMockRecorder) GetMaterializedStatementResults() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetResults", reflect.TypeOf((*MockResultFetcherInterface)(nil).GetResults))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMaterializedStatementResults", reflect.TypeOf((*MockResultFetcherInterface)(nil).GetMaterializedStatementResults))
+}
+
+// GetStatement mocks base method.
+func (m *MockResultFetcherInterface) GetStatement() types.ProcessedStatement {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetStatement")
+	ret0, _ := ret[0].(types.ProcessedStatement)
+	return ret0
+}
+
+// GetStatement indicates an expected call of GetStatement.
+func (mr *MockResultFetcherInterfaceMockRecorder) GetStatement() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStatement", reflect.TypeOf((*MockResultFetcherInterface)(nil).GetStatement))
 }
 
 // Init mocks base method.
@@ -124,18 +126,6 @@ func (m *MockResultFetcherInterface) IsTableMode() bool {
 func (mr *MockResultFetcherInterfaceMockRecorder) IsTableMode() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsTableMode", reflect.TypeOf((*MockResultFetcherInterface)(nil).IsTableMode))
-}
-
-// JumpToLastPage mocks base method.
-func (m *MockResultFetcherInterface) JumpToLastPage() {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "JumpToLastPage")
-}
-
-// JumpToLastPage indicates an expected call of JumpToLastPage.
-func (mr *MockResultFetcherInterfaceMockRecorder) JumpToLastPage() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "JumpToLastPage", reflect.TypeOf((*MockResultFetcherInterface)(nil).JumpToLastPage))
 }
 
 // SetAutoRefreshCallback mocks base method.

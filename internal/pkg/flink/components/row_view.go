@@ -21,8 +21,9 @@ func CreateRowView(textView *tview.TextView) *tview.Flex {
 
 	shortcutsView.SetText(formatShortcuts(shortcuts))
 
-	return tview.NewFlex().
+	flex := tview.NewFlex().
 		SetDirection(tview.FlexRow).
 		AddItem(textView, 0, 1, false).
 		AddItem(shortcutsView, 1, 1, false)
+	return flex
 }

@@ -38,7 +38,6 @@ func NewTableView() *TableView {
 
 func createTable() *tview.Table {
 	table := tview.NewTable().SetFixed(1, 1)
-	table.SetBackgroundColor(tcell.ColorBlack)
 	table.SetBorder(true)
 	return table
 }

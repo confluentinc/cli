@@ -1,12 +1,12 @@
 package controller
 
 import (
-	"os"
+	"github.com/bradleyjkemp/cupaloy"
+	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
+	"strconv"
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/olekukonko/tablewriter"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/confluentinc/cli/internal/pkg/flink/test"
@@ -34,55 +34,53 @@ func (s *BasicOutputControllerTestSuite) SetupTest() {
 
 func (s *BasicOutputControllerTestSuite) TestVisualizeResultsShouldPrintNoRows() {
 	mat := types.NewMaterializedStatementResults([]string{}, 10)
-	s.resultFetcher.EXPECT().GetResults().Return(&mat).Times(1)
+	s.resultFetcher.EXPECT().GetMaterializedStatementResults().Return(&mat)
+	s.resultFetcher.EXPECT().GetStatement().Return(types.ProcessedStatement{})
 	stdout := test.RunAndCaptureSTDOUT(s.T(), s.basicOutputController.VisualizeResults)
 
-	require.Equal(s.T(), "The server returned empty rows for this statement.\n", stdout)
+	cupaloy.SnapshotT(s.T(), stdout)
+}
+
+func (s *BasicOutputControllerTestSuite) TestRunInteractiveInputShouldNotPrintNoRowsWhenStatusDetailAvailable() {
+	mat := types.NewMaterializedStatementResults([]string{}, 10)
+	s.resultFetcher.EXPECT().GetMaterializedStatementResults().Return(&mat)
+	s.resultFetcher.EXPECT().GetStatement().Return(types.ProcessedStatement{StatusDetail: "Created table 'test'"})
+	stdout := test.RunAndCaptureSTDOUT(s.T(), s.basicOutputController.VisualizeResults)
+
+	cupaloy.SnapshotT(s.T(), stdout)
 }
 
 func (s *BasicOutputControllerTestSuite) TestVisualizeResultsShouldPrintTable() {
-	executedStatementWithResults := getExampleStatementWithResults()
+	executedStatementWithResults := getStatementWithResultsExample()
 	mat := types.NewMaterializedStatementResults(executedStatementWithResults.StatementResults.GetHeaders(), 10)
 	mat.Append(executedStatementWithResults.StatementResults.GetRows()...)
-	s.resultFetcher.EXPECT().GetResults().Return(&mat).Times(4)
+	s.resultFetcher.EXPECT().GetMaterializedStatementResults().Return(&mat).Times(4)
 
 	stdout := test.RunAndCaptureSTDOUT(s.T(), s.basicOutputController.VisualizeResults)
 
-	table := s.getStdoutTable(*executedStatementWithResults.StatementResults)
-	require.Equal(s.T(), table, stdout)
+	cupaloy.SnapshotT(s.T(), stdout)
 }
 
-func getExampleStatementWithResults() types.ProcessedStatement {
-	return types.ProcessedStatement{
+func getStatementWithResultsExample() types.ProcessedStatement {
+	statement := types.ProcessedStatement{
+		StatementName: "example-statement",
+		ResultSchema:  flinkgatewayv1alpha1.SqlV1alpha1ResultSchema{},
 		StatementResults: &types.StatementResults{
-			Headers: []string{"column"},
-			Rows: []types.StatementResultRow{
-				{
-					Operation: 0,
-					Fields: []types.StatementResultField{
-						types.AtomicStatementResultField{
-							Type:  "INTEGER",
-							Value: "0",
-						},
-					},
-				},
-			},
+			Headers: []string{"Count"},
+			Rows:    []types.StatementResultRow{},
 		},
 	}
-}
-
-func (s *BasicOutputControllerTestSuite) getStdoutTable(statementResults types.StatementResults) string {
-	return test.RunAndCaptureSTDOUT(s.T(), func() {
-		rawTable := tablewriter.NewWriter(os.Stdout)
-		rawTable.SetAutoFormatHeaders(false)
-		rawTable.SetHeader(statementResults.Headers)
-		for _, statementResultRow := range statementResults.GetRows() {
-			row := make([]string, len(statementResultRow.Fields))
-			for idx, field := range statementResultRow.Fields {
-				row[idx] = field.ToString()
-			}
-			rawTable.Append(row)
+	for i := 0; i < 10; i++ {
+		row := types.StatementResultRow{
+			Operation: types.INSERT,
+			Fields: []types.StatementResultField{
+				types.AtomicStatementResultField{
+					Type:  types.INTEGER,
+					Value: strconv.Itoa(i),
+				},
+			},
 		}
-		rawTable.Render()
-	})
+		statement.StatementResults.Rows = append(statement.StatementResults.Rows, row)
+	}
+	return statement
 }

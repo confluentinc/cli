@@ -19,7 +19,7 @@ type ResultFetcher struct {
 }
 
 const (
-	MaxResultsCapacity     int  = 1000
+	MaxResultsCapacity     int  = 10000
 	DefaultRefreshInterval uint = 1000 // in milliseconds
 )
 
@@ -64,7 +64,7 @@ func (t *ResultFetcher) startAutoRefresh(refreshInterval uint) {
 		t.setFetchState(types.Running)
 		go func() {
 			for t.IsAutoRefreshRunning() {
-				t.FetchNextPageAndUpdateState()
+				t.fetchNextPageAndUpdateState()
 				t.autoRefreshCallback()
 				time.Sleep(time.Millisecond * time.Duration(refreshInterval))
 			}
@@ -76,13 +76,9 @@ func (t *ResultFetcher) isAutoRefreshStartAllowed() bool {
 	return t.GetFetchState() == types.Paused || t.GetFetchState() == types.Failed
 }
 
-func (t *ResultFetcher) FetchNextPageAndUpdateState() {
-	newResults, err := t.fetchNextPage()
+func (t *ResultFetcher) fetchNextPageAndUpdateState() {
+	newResults, err := t.store.FetchStatementResults(t.GetStatement())
 	t.updateState(newResults, err)
-}
-
-func (t *ResultFetcher) fetchNextPage() (*types.ProcessedStatement, *types.StatementError) {
-	return t.store.FetchStatementResults(t.getStatement())
 }
 
 func (t *ResultFetcher) updateState(newResults *types.ProcessedStatement, err *types.StatementError) {
@@ -112,7 +108,7 @@ func (t *ResultFetcher) updateState(newResults *types.ProcessedStatement, err *t
 	t.setFetchState(types.Running)
 }
 
-func (t *ResultFetcher) getStatement() types.ProcessedStatement {
+func (t *ResultFetcher) GetStatement() types.ProcessedStatement {
 	t.statementLock.RLock()
 	defer t.statementLock.RUnlock()
 
@@ -126,32 +122,16 @@ func (t *ResultFetcher) setStatement(statement types.ProcessedStatement) {
 	t.statement = statement
 }
 
-func (t *ResultFetcher) JumpToLastPage() {
-	for {
-		t.FetchNextPageAndUpdateState()
-		if !t.hasMoreResults() {
-			break
-		}
-		// minimal wait to avoid rate limiting
-		time.Sleep(time.Millisecond * 50)
-	}
-}
-
-func (t *ResultFetcher) hasMoreResults() bool {
-	return len(t.getStatement().StatementResults.GetRows()) > 0 && t.GetFetchState() != types.Failed && t.GetFetchState() != types.Completed
-}
-
 func (t *ResultFetcher) Init(statement types.ProcessedStatement) {
 	t.setStatement(statement)
-	t.setInitialFetchState()
-	headers := t.getResultHeadersOrCreateFromResultSchema()
+	t.setInitialFetchState(statement)
+	headers := t.getResultHeadersOrCreateFromResultSchema(statement)
 	t.materializedStatementResults = types.NewMaterializedStatementResults(headers, MaxResultsCapacity)
 	t.materializedStatementResults.SetTableMode(true)
 	t.materializedStatementResults.Append(statement.StatementResults.GetRows()...)
 }
 
-func (t *ResultFetcher) setInitialFetchState() {
-	statement := t.getStatement()
+func (t *ResultFetcher) setInitialFetchState(statement types.ProcessedStatement) {
 	if statement.PageToken == "" {
 		t.setFetchState(types.Completed)
 		return
@@ -159,8 +139,7 @@ func (t *ResultFetcher) setInitialFetchState() {
 	t.setFetchState(types.Paused)
 }
 
-func (t *ResultFetcher) getResultHeadersOrCreateFromResultSchema() []string {
-	statement := t.getStatement()
+func (t *ResultFetcher) getResultHeadersOrCreateFromResultSchema(statement types.ProcessedStatement) []string {
 	if len(statement.StatementResults.GetHeaders()) > 0 {
 		return statement.StatementResults.GetHeaders()
 	}
@@ -176,7 +155,7 @@ func (t *ResultFetcher) Close() {
 	// This was used to delete statements after their execution to save system resources, which should not be
 	// an issue anymore. We don't want to remove it completely just yet, but will disable it by default for now.
 	// TODO: remove this completely once we are sure we won't need it in the future
-	statement := t.getStatement()
+	statement := t.GetStatement()
 	if config.ShouldCleanupStatements || statement.Status == types.RUNNING {
 		go t.store.DeleteStatement(statement.StatementName)
 	}
@@ -186,6 +165,6 @@ func (t *ResultFetcher) SetAutoRefreshCallback(autoRefreshCallback func()) {
 	t.autoRefreshCallback = autoRefreshCallback
 }
 
-func (t *ResultFetcher) GetResults() *types.MaterializedStatementResults {
+func (t *ResultFetcher) GetMaterializedStatementResults() *types.MaterializedStatementResults {
 	return &t.materializedStatementResults
 }

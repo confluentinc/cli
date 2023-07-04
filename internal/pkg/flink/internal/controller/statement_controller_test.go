@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"github.com/bradleyjkemp/cupaloy"
 	"testing"
 	"time"
 
@@ -118,7 +119,7 @@ func (s *StatementControllerTestSuite) TestExecuteStatementPrintsUserInfo() {
 		_, _ = s.statementController.ExecuteStatement(statementToExecute)
 	})
 
-	require.Equal(s.T(), "Statement name: test-statement\nStatement successfully submitted.\nFetching results...\nstatus detail message.\n", stdout)
+	cupaloy.SnapshotT(s.T(), stdout)
 }
 
 func (s *StatementControllerTestSuite) TestRenderMsgAndStatusLocalStatements() {
@@ -141,7 +142,7 @@ func (s *StatementControllerTestSuite) TestRenderMsgAndStatusLocalStatements() {
 	for _, tt := range tests {
 		s.T().Run(tt.name, func(t *testing.T) {
 			actual := test.RunAndCaptureSTDOUT(s.T(), tt.statement.PrintStatusMessage)
-			require.Equal(t, tt.want, actual)
+			cupaloy.SnapshotT(t, actual)
 		})
 	}
 }
@@ -166,7 +167,7 @@ func (s *StatementControllerTestSuite) TestRenderMsgAndStatusNonLocalFailedState
 	for _, tt := range tests {
 		s.T().Run(tt.name, func(t *testing.T) {
 			actual := test.RunAndCaptureSTDOUT(s.T(), tt.statement.PrintStatusMessage)
-			require.Equal(t, tt.want, actual)
+			cupaloy.SnapshotT(t, actual)
 		})
 	}
 }
@@ -191,7 +192,7 @@ func (s *StatementControllerTestSuite) TestRenderMsgAndStatusNonLocalNonFailedSt
 	for _, tt := range tests {
 		s.T().Run(tt.name, func(t *testing.T) {
 			actual := test.RunAndCaptureSTDOUT(s.T(), tt.statement.PrintStatusMessage)
-			require.Equal(t, tt.want, actual)
+			cupaloy.SnapshotT(t, actual)
 		})
 	}
 }

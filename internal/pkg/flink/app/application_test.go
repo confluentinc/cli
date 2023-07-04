@@ -1,7 +1,8 @@
 package app
 
 import (
-	"fmt"
+	"github.com/bradleyjkemp/cupaloy"
+	"sync"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -52,7 +53,7 @@ func (s *ApplicationTestSuite) SetupTest() {
 		statementController:         s.statementController,
 		interactiveOutputController: s.interactiveOutputController,
 		basicOutputController:       s.basicOutputController,
-		authenticated:               authenticated,
+		tokenRefreshFunc:            authenticated,
 	}
 }
 
@@ -68,16 +69,12 @@ func manualStop() error {
 	return errors.New("manual stop")
 }
 
-func (s *ApplicationTestSuite) requireManuallyStopped(actual string) {
-	require.Equal(s.T(), fmt.Sprintf("Error: %v\n", manualStop()), actual)
-}
-
 func (s *ApplicationTestSuite) runMainLoop(stopAfterLoopFinishes bool) string {
 	if stopAfterLoopFinishes {
 		// this makes the loop stop after one iteration
 		s.inputController.EXPECT().GetUserInput().Return("")
 		s.inputController.EXPECT().IsSpecialInput("").DoAndReturn(func(string) bool {
-			s.app.authenticated = manualStop
+			s.app.tokenRefreshFunc = manualStop
 			return true
 		})
 		s.appController.EXPECT().ExitApplication()
@@ -88,12 +85,12 @@ func (s *ApplicationTestSuite) runMainLoop(stopAfterLoopFinishes bool) string {
 }
 
 func (s *ApplicationTestSuite) TestReplDoesNotRunWhenUnauthenticated() {
-	s.app.authenticated = unauthenticated
+	s.app.tokenRefreshFunc = unauthenticated
 	s.appController.EXPECT().ExitApplication()
 
 	actual := s.runMainLoop(false)
 
-	require.Equal(s.T(), fmt.Sprintf("Error: %v\n", unauthenticated()), actual)
+	cupaloy.SnapshotT(s.T(), actual)
 }
 
 func (s *ApplicationTestSuite) TestReplContinuesOnSpecialInput() {
@@ -103,7 +100,7 @@ func (s *ApplicationTestSuite) TestReplContinuesOnSpecialInput() {
 
 	actual := s.runMainLoop(true)
 
-	s.requireManuallyStopped(actual)
+	cupaloy.SnapshotT(s.T(), actual)
 }
 
 func (s *ApplicationTestSuite) TestReplAppendsStatementToHistoryAndStopsOnExecuteStatementError() {
@@ -114,7 +111,7 @@ func (s *ApplicationTestSuite) TestReplAppendsStatementToHistoryAndStopsOnExecut
 
 	actual := s.runMainLoop(true)
 
-	s.requireManuallyStopped(actual)
+	cupaloy.SnapshotT(s.T(), actual)
 	require.Equal(s.T(), []string{userInput}, s.history.Data)
 }
 
@@ -126,7 +123,7 @@ func (s *ApplicationTestSuite) TestReplStopsOnExecuteStatementError() {
 
 	actual := s.runMainLoop(true)
 
-	s.requireManuallyStopped(actual)
+	cupaloy.SnapshotT(s.T(), actual)
 }
 
 func (s *ApplicationTestSuite) TestReplReturnsWhenHandleStatementResultsReturnsTrue() {
@@ -141,7 +138,7 @@ func (s *ApplicationTestSuite) TestReplReturnsWhenHandleStatementResultsReturnsT
 
 	actual := s.runMainLoop(true)
 
-	s.requireManuallyStopped(actual)
+	cupaloy.SnapshotT(s.T(), actual)
 }
 
 func (s *ApplicationTestSuite) TestReplDoesNotReturnWhenHandleStatementResultsReturnsFalse() {
@@ -156,7 +153,7 @@ func (s *ApplicationTestSuite) TestReplDoesNotReturnWhenHandleStatementResultsRe
 
 	actual := s.runMainLoop(true)
 
-	s.requireManuallyStopped(actual)
+	cupaloy.SnapshotT(s.T(), actual)
 }
 
 func (s *ApplicationTestSuite) TestShouldUseTView() {
@@ -237,4 +234,29 @@ func (s *ApplicationTestSuite) TestShouldUseTView() {
 			require.Equal(t, tt.want, s.app.getOutputController(tt.statement))
 		})
 	}
+}
+
+func (s *ApplicationTestSuite) TestSyncAccessToTokenRefreshFunction() {
+	dummyVariableToManipulate := 0
+	numGoroutinesToSpawn := 1000
+	s.app.tokenRefreshFunc = synchronizedTokenRefresh(func() error {
+		dummyVariableToManipulate++
+		return nil
+	})
+	s.testConcurrentAccess(numGoroutinesToSpawn, func() {
+		_ = s.app.tokenRefreshFunc()
+	})
+	require.Equal(s.T(), numGoroutinesToSpawn, dummyVariableToManipulate)
+}
+
+func (s *ApplicationTestSuite) testConcurrentAccess(numGoroutinesToSpawn int, funcToExecute func()) {
+	var wg sync.WaitGroup
+	wg.Add(numGoroutinesToSpawn)
+	for i := 0; i < numGoroutinesToSpawn; i++ {
+		go func() {
+			funcToExecute()
+			wg.Done()
+		}()
+	}
+	wg.Wait()
 }

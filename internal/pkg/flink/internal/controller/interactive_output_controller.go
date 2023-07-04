@@ -2,6 +2,7 @@ package controller
 
 import (
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/flink/internal/results"
 	"strings"
 	"unicode"
 
@@ -9,7 +10,6 @@ import (
 	"github.com/rivo/tview"
 
 	"github.com/confluentinc/cli/internal/pkg/flink/components"
-	"github.com/confluentinc/cli/internal/pkg/flink/internal/results"
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/utils"
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -21,12 +21,14 @@ type InteractiveOutputController struct {
 	tableView     *components.TableView
 	resultFetcher types.ResultFetcherInterface
 	isRowViewOpen bool
+	debug         bool
 }
 
-func NewInteractiveOutputController(resultFetcher types.ResultFetcherInterface) types.OutputControllerInterface {
+func NewInteractiveOutputController(resultFetcher types.ResultFetcherInterface, debug bool) types.OutputControllerInterface {
 	return &InteractiveOutputController{
 		app:           tview.NewApplication(),
 		resultFetcher: resultFetcher,
+		debug:         debug,
 	}
 }
 
@@ -58,7 +60,7 @@ func (t *InteractiveOutputController) initTableView() {
 }
 
 func (t *InteractiveOutputController) updateTable() {
-	t.tableView.RenderTable(t.getTableTitle(), t.resultFetcher.GetResults(), !t.resultFetcher.IsAutoRefreshRunning())
+	t.tableView.RenderTable(t.getTableTitle(), t.resultFetcher.GetMaterializedStatementResults(), !t.resultFetcher.IsAutoRefreshRunning())
 	t.app.SetFocus(t.tableView.GetTable())
 }
 
@@ -132,10 +134,6 @@ func (t *InteractiveOutputController) getActionForShortcut(shortcut string) func
 		return t.renderAfterAction(t.resultFetcher.ToggleTableMode)
 	case "A":
 		return t.renderAfterAction(t.resultFetcher.ToggleAutoRefresh)
-	case "N":
-		return t.renderAfterAction(t.resultFetcher.FetchNextPageAndUpdateState)
-	case "R":
-		return t.renderAfterAction(t.resultFetcher.JumpToLastPage)
 	case "H":
 		return t.tableView.FastScrollUp
 	case "L":
@@ -162,9 +160,9 @@ func (t *InteractiveOutputController) openRowView() {
 		row := t.tableView.GetSelectedRow()
 		t.isRowViewOpen = true
 
-		headers := t.resultFetcher.GetResults().GetHeaders()
+		headers := t.resultFetcher.GetMaterializedStatementResults().GetHeaders()
 		sb := strings.Builder{}
-		for rowIdx, field := range row.Fields {
+		for rowIdx, field := range row.GetFields() {
 			sb.WriteString(fmt.Sprintf("[yellow]%s:\n[white]%s\n\n", tview.Escape(headers[rowIdx]), tview.Escape(field.ToString())))
 		}
 		textView := tview.NewTextView().SetText(sb.String())
@@ -189,9 +187,21 @@ func (t *InteractiveOutputController) getTableTitle() string {
 	case types.Paused:
 		state = "auto refresh paused"
 	case types.Running:
-		state = fmt.Sprintf("auto refresh %vs", results.DefaultRefreshInterval/1000)
+		state = fmt.Sprintf("auto refresh %.1fs", float64(results.DefaultRefreshInterval)/1000)
 	default:
 		state = "unknown error"
+	}
+
+	if t.debug {
+		return fmt.Sprintf(
+			" %s (%s) | last page size: %d | current cache size: %d/%d | table size: %d ",
+			mode,
+			state,
+			t.resultFetcher.GetStatement().GetPageSize(),
+			t.resultFetcher.GetMaterializedStatementResults().GetChangelogSize(),
+			t.resultFetcher.GetMaterializedStatementResults().GetMaxResults(),
+			t.resultFetcher.GetMaterializedStatementResults().GetTableSize(),
+		)
 	}
 
 	return fmt.Sprintf(" %s (%s) ", mode, state)
