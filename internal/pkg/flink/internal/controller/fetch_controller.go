@@ -20,7 +20,7 @@ type FetchController struct {
 }
 
 const (
-	maxResultsCapacity     int  = 1000000
+	maxResultsCapacity     int  = 10000
 	defaultRefreshInterval uint = 1000 // in milliseconds
 	minColumnWidth         int  = 4    // min characters displayed in a column
 )
@@ -104,12 +104,10 @@ func (t *FetchController) fetchNextPage() {
 		t.setFetchState(types.Failed)
 		return
 	}
-	rows := newResults.StatementResults.GetRows()
-	t.materializedStatementResults.SetMaxResults(len(rows) * 5)
 
 	// update data
 	t.setStatement(*newResults)
-	t.materializedStatementResults.Append(rows...)
+	t.materializedStatementResults.Append(newResults.StatementResults.GetRows()...)
 	if newResults.PageToken == "" {
 		t.setFetchState(types.Completed)
 		return
@@ -130,10 +128,6 @@ func (t *FetchController) GetHeaders() []string {
 
 func (t *FetchController) GetMaxWidthPerColumn() []int {
 	return t.materializedStatementResults.GetMaxWidthPerColum()
-}
-
-func (t *FetchController) GetResultsIterator(startFromBack bool) types.MaterializedStatementResultsIterator {
-	return t.materializedStatementResults.Iterator(startFromBack)
 }
 
 func (t *FetchController) ForEach(f func(rowIdx int, row *types.StatementResultRow)) {

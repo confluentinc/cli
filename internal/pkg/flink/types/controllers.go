@@ -45,7 +45,6 @@ type FetchControllerInterface interface {
 	IsAutoRefreshRunning() bool
 	GetHeaders() []string
 	GetMaxWidthPerColumn() []int
-	GetResultsIterator(bool) MaterializedStatementResultsIterator
 	ForEach(func(rowIdx int, row *StatementResultRow))
 	Init(statement ProcessedStatement)
 	Close()
