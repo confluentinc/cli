@@ -31,7 +31,7 @@ func (s *TableViewTestSuite) TestFastScrollUp() {
 
 	s.tableView.FastScrollUp()
 
-	require.Equal(s.T(), 1, s.tableView.selectedRowIdx)
+	require.Equal(s.T(), 1, s.tableView.getSelectedRowIdx())
 	expectedIterator := materializedStatementResults.Iterator(false)
 	require.Equal(s.T(), expectedIterator.Value(), s.tableView.GetSelectedRow())
 }
@@ -59,7 +59,7 @@ func (s *TableViewTestSuite) TestFastScrollUpShouldNotMoveOutFurtherThanMax() {
 
 	s.tableView.FastScrollUp()
 
-	require.Equal(s.T(), 1, s.tableView.selectedRowIdx)
+	require.Equal(s.T(), 1, s.tableView.getSelectedRowIdx())
 	expectedIterator := materializedStatementResults.Iterator(false)
 	require.Equal(s.T(), expectedIterator.Value(), s.tableView.GetSelectedRow())
 }
@@ -72,7 +72,7 @@ func (s *TableViewTestSuite) TestFastScrollDown() {
 
 	s.tableView.FastScrollDown()
 
-	require.Equal(s.T(), materializedStatementResults.Size(), s.tableView.selectedRowIdx)
+	require.Equal(s.T(), materializedStatementResults.Size(), s.tableView.getSelectedRowIdx())
 	expectedIterator := materializedStatementResults.Iterator(true)
 	require.Equal(s.T(), expectedIterator.Value(), s.tableView.GetSelectedRow())
 }
@@ -85,86 +85,9 @@ func (s *TableViewTestSuite) TestFastScrollDownShouldNotMoveOutFurtherThanMax() 
 
 	s.tableView.FastScrollDown()
 
-	require.Equal(s.T(), materializedStatementResults.Size(), s.tableView.selectedRowIdx)
+	require.Equal(s.T(), materializedStatementResults.Size(), s.tableView.getSelectedRowIdx())
 	expectedIterator := materializedStatementResults.Iterator(true)
 	require.Equal(s.T(), expectedIterator.Value(), s.tableView.GetSelectedRow())
-}
-
-func (s *TableViewTestSuite) TestSelectRowShouldDoNothingWhenRowToSelectSmallerThanOne() {
-	materializedStatementResults := getResultsExample()
-	expectedIterator := materializedStatementResults.Iterator(true)
-	s.tableView.RenderTable("title", materializedStatementResults, true)
-
-	rapid.Check(s.T(), func(t *rapid.T) {
-		rowToSelect := rapid.IntRange(-10, 0).Draw(t, "row to select")
-		s.tableView.table.Select(rowToSelect, 0)
-
-		// last row should be selected
-		require.Equal(s.T(), materializedStatementResults.Size(), s.tableView.selectedRowIdx)
-		require.Equal(s.T(), expectedIterator.Value(), s.tableView.GetSelectedRow())
-	})
-}
-
-func (s *TableViewTestSuite) TestSelectRowShouldDoNothingWhenRowToSelectGreaterThanNumRows() {
-	materializedStatementResults := getResultsExample()
-	expectedIterator := materializedStatementResults.Iterator(true)
-	s.tableView.RenderTable("title", materializedStatementResults, true)
-
-	rapid.Check(s.T(), func(t *rapid.T) {
-		rowToSelect := rapid.IntRange(materializedStatementResults.Size()+1, materializedStatementResults.Size()+10).Draw(t, "row to select")
-		s.tableView.table.Select(rowToSelect, 0)
-
-		// last row should be selected
-		require.Equal(s.T(), materializedStatementResults.Size(), s.tableView.selectedRowIdx)
-		require.Equal(s.T(), expectedIterator.Value(), s.tableView.GetSelectedRow())
-	})
-}
-
-func (s *TableViewTestSuite) TestSelectRowShouldDoNothingWhenRowSelectionDisabled() {
-	materializedStatementResults := getResultsExample()
-	expectedIterator := materializedStatementResults.Iterator(true)
-	s.tableView.RenderTable("title", materializedStatementResults, true)
-
-	rapid.Check(s.T(), func(t *rapid.T) {
-		rowToSelect := rapid.IntRange(materializedStatementResults.Size()+1, materializedStatementResults.Size()+10).Draw(t, "row to select")
-		s.tableView.isRowSelectionEnabled = false
-		s.tableView.table.Select(rowToSelect, 0)
-
-		// last row should be selected
-		require.Equal(s.T(), materializedStatementResults.Size(), s.tableView.selectedRowIdx)
-		require.Equal(s.T(), expectedIterator.Value(), s.tableView.GetSelectedRow())
-	})
-}
-
-func (s *TableViewTestSuite) TestSelectRowShouldNotMoveIteratorOnFirstCall() {
-	materializedStatementResults := getResultsExample()
-	expectedIterator := materializedStatementResults.Iterator(true)
-	s.tableView.RenderTable("title", materializedStatementResults, true)
-
-	rapid.Check(s.T(), func(t *rapid.T) {
-		rowToSelect := rapid.IntRange(1, materializedStatementResults.Size()).Draw(t, "row to select")
-		s.tableView.selectedRowIdx = -1 // manually reset it to -1 to trigger this case
-		s.tableView.table.Select(rowToSelect, 0)
-
-		// now the selectedIdx should be set correctly, but the iterator will still be at the last row
-		require.Equal(s.T(), rowToSelect, s.tableView.selectedRowIdx)
-		require.Equal(s.T(), expectedIterator.Value(), s.tableView.GetSelectedRow())
-	})
-}
-
-func (s *TableViewTestSuite) TestRenderTableShouldResetIteratorAndSelectedIdx() {
-	materializedStatementResults := getResultsExample()
-	expectedIterator := materializedStatementResults.Iterator(true)
-	s.tableView.RenderTable("title", materializedStatementResults, true)
-	s.tableView.numRowsToScroll = materializedStatementResults.Size()
-
-	rapid.Check(s.T(), func(t *rapid.T) {
-		s.tableView.FastScrollUp()
-		s.tableView.RenderTable("title", materializedStatementResults, true)
-
-		require.Equal(s.T(), materializedStatementResults.Size(), s.tableView.selectedRowIdx)
-		require.Equal(s.T(), expectedIterator.Value(), s.tableView.GetSelectedRow())
-	})
 }
 
 func (s *TableViewTestSuite) TestSelectArbitraryRow() {
@@ -175,7 +98,7 @@ func (s *TableViewTestSuite) TestSelectArbitraryRow() {
 		rowToSelect := rapid.IntRange(1, materializedStatementResults.Size()).Draw(t, "row to select")
 		s.tableView.table.Select(rowToSelect, 0)
 
-		require.Equal(s.T(), rowToSelect, s.tableView.selectedRowIdx)
+		require.Equal(s.T(), rowToSelect, s.tableView.getSelectedRowIdx())
 		expectedIterator := materializedStatementResults.Iterator(false)
 		expectedIterator.Move(rowToSelect - 1)
 		require.Equal(s.T(), expectedIterator.Value(), s.tableView.GetSelectedRow())

@@ -12,14 +12,12 @@ import (
 )
 
 type TableView struct {
-	RootLayout                           tview.Primitive
-	table                                *tview.Table
-	selectedRowIdx                       int
-	tableLock                            sync.Mutex
-	tableWidth                           int
-	numRowsToScroll                      int
-	isRowSelectionEnabled                bool
-	materializedStatementResultsIterator types.MaterializedStatementResultsIterator
+	RootLayout            tview.Primitive
+	table                 *tview.Table
+	tableLock             sync.Mutex
+	tableWidth            int
+	numRowsToScroll       int
+	isRowSelectionEnabled bool
 }
 
 const (
@@ -28,10 +26,8 @@ const (
 
 func NewTableView() *TableView {
 	t := &TableView{
-		table:          createTable(),
-		selectedRowIdx: -1,
+		table: createTable(),
 	}
-	t.table.SetSelectionChangedFunc(t.rowSelectionHandler)
 	t.RootLayout = createTableView(t.table)
 	return t
 }
@@ -40,19 +36,6 @@ func createTable() *tview.Table {
 	table := tview.NewTable().SetFixed(1, 1)
 	table.SetBorder(true)
 	return table
-}
-
-func (t *TableView) rowSelectionHandler(row, col int) {
-	outOfBounds := row <= 0 || row >= t.table.GetRowCount()
-	if outOfBounds || !t.isRowSelectionEnabled {
-		return
-	}
-
-	if t.selectedRowIdx != -1 {
-		stepsToMove := row - t.selectedRowIdx
-		t.materializedStatementResultsIterator.Move(stepsToMove)
-	}
-	t.selectedRowIdx = row
 }
 
 func createTableView(table *tview.Table) *tview.Flex {
@@ -67,7 +50,21 @@ func (t *TableView) GetTable() *tview.Table {
 }
 
 func (t *TableView) GetSelectedRow() *types.StatementResultRow {
-	return t.materializedStatementResultsIterator.Value()
+	cell := t.table.GetCell(t.getSelectedRowIdx(), 0)
+	if cell == nil {
+		return nil
+	}
+
+	row, ok := cell.GetReference().(*types.StatementResultRow)
+	if !ok {
+		return nil
+	}
+	return row
+}
+
+func (t *TableView) getSelectedRowIdx() int {
+	rowIdx, _ := t.table.GetSelection()
+	return rowIdx
 }
 
 func (t *TableView) RenderTable(tableTitle string, statementResults *types.MaterializedStatementResults, enableRowSelection bool) {
@@ -75,10 +72,6 @@ func (t *TableView) RenderTable(tableTitle string, statementResults *types.Mater
 	defer t.tableLock.Unlock()
 
 	t.isRowSelectionEnabled = enableRowSelection
-	// reset the iterator and the selected idx
-	t.selectedRowIdx = -1
-	t.materializedStatementResultsIterator = statementResults.Iterator(true)
-
 	t.table.SetTitle(tableTitle)
 	t.renderData(statementResults)
 	t.selectLastRow()
@@ -115,7 +108,8 @@ func (t *TableView) fillTable(truncatedColumnWidths []int) func(rowIdx int, row 
 			tableCell := tview.NewTableCell(tview.Escape(field.ToString())).
 				SetTextColor(tcell.ColorWhite).
 				SetAlign(tview.AlignLeft).
-				SetMaxWidth(truncatedColumnWidths[colIdx])
+				SetMaxWidth(truncatedColumnWidths[colIdx]).
+				SetReference(row)
 			t.table.SetCell(rowIdx+1, colIdx, tableCell)
 		}
 	}
@@ -150,11 +144,13 @@ func (t *TableView) selectLastRow() {
 }
 
 func (t *TableView) FastScrollUp() {
-	rowToSelect := lo.Max([]int{1, t.selectedRowIdx - t.numRowsToScroll})
+	selectedRow, _ := t.table.GetSelection()
+	rowToSelect := lo.Max([]int{1, selectedRow - t.numRowsToScroll})
 	t.table.Select(rowToSelect, 0)
 }
 
 func (t *TableView) FastScrollDown() {
-	rowToSelect := lo.Min([]int{t.table.GetRowCount() - 1, t.selectedRowIdx + t.numRowsToScroll})
+	selectedRow, _ := t.table.GetSelection()
+	rowToSelect := lo.Min([]int{t.table.GetRowCount() - 1, selectedRow + t.numRowsToScroll})
 	t.table.Select(rowToSelect, 0)
 }
