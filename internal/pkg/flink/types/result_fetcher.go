@@ -15,10 +15,9 @@ type ResultFetcherInterface interface {
 	ToggleTableMode()
 	ToggleAutoRefresh()
 	IsAutoRefreshRunning() bool
-	FetchNextPageAndUpdateState()
-	JumpToLastPage()
 	Init(statement ProcessedStatement)
 	Close()
 	SetAutoRefreshCallback(func())
-	GetResults() *MaterializedStatementResults
+	GetStatement() ProcessedStatement
+	GetMaterializedStatementResults() *MaterializedStatementResults
 }

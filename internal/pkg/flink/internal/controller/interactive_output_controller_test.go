@@ -1,8 +1,7 @@
 package controller
 
 import (
-	"fmt"
-	"strconv"
+	"github.com/bradleyjkemp/cupaloy"
 	"testing"
 
 	"github.com/gdamore/tcell/v2"
@@ -11,7 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/confluentinc/cli/internal/pkg/flink/internal/results"
 	"github.com/confluentinc/cli/internal/pkg/flink/test/mock"
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
 )
@@ -31,7 +29,7 @@ func (s *InteractiveOutputControllerTestSuite) SetupTest() {
 	ctrl := gomock.NewController(s.T())
 	s.resultFetcher = mock.NewMockResultFetcherInterface(ctrl)
 	s.dummyTViewApp = tview.NewApplication()
-	s.interactiveOutputController = NewInteractiveOutputController(s.resultFetcher).(*InteractiveOutputController)
+	s.interactiveOutputController = NewInteractiveOutputController(s.resultFetcher, false).(*InteractiveOutputController)
 }
 
 func (s *InteractiveOutputControllerTestSuite) TestCloseTableViewOnUserInput() {
@@ -73,7 +71,7 @@ func (s *InteractiveOutputControllerTestSuite) TestToggleTableModeOnUserInput() 
 func (s *InteractiveOutputControllerTestSuite) updateTableMockCalls() {
 	s.resultFetcher.EXPECT().IsTableMode().Return(true)
 	s.resultFetcher.EXPECT().GetFetchState().Return(types.Paused)
-	s.resultFetcher.EXPECT().GetResults().Return(&types.MaterializedStatementResults{})
+	s.resultFetcher.EXPECT().GetMaterializedStatementResults().Return(&types.MaterializedStatementResults{})
 	s.resultFetcher.EXPECT().IsAutoRefreshRunning().Return(false)
 }
 
@@ -82,30 +80,6 @@ func (s *InteractiveOutputControllerTestSuite) TestToggleRefreshResultsOnUserInp
 	s.interactiveOutputController.init()
 	input := tcell.NewEventKey(tcell.KeyRune, 'A', tcell.ModNone)
 	s.resultFetcher.EXPECT().ToggleAutoRefresh()
-	s.updateTableMockCalls()
-
-	result := s.interactiveOutputController.inputCapture(input)
-
-	require.Nil(s.T(), result)
-}
-
-func (s *InteractiveOutputControllerTestSuite) TestFetchNextPageOnUserInput() {
-	s.initMockCalls(&types.MaterializedStatementResults{})
-	s.interactiveOutputController.init()
-	input := tcell.NewEventKey(tcell.KeyRune, 'N', tcell.ModNone)
-	s.resultFetcher.EXPECT().FetchNextPageAndUpdateState()
-	s.updateTableMockCalls()
-
-	result := s.interactiveOutputController.inputCapture(input)
-
-	require.Nil(s.T(), result)
-}
-
-func (s *InteractiveOutputControllerTestSuite) TestJumpToLastPageOnUserInput() {
-	s.initMockCalls(&types.MaterializedStatementResults{})
-	s.interactiveOutputController.init()
-	input := tcell.NewEventKey(tcell.KeyRune, 'R', tcell.ModNone)
-	s.resultFetcher.EXPECT().JumpToLastPage()
 	s.updateTableMockCalls()
 
 	result := s.interactiveOutputController.inputCapture(input)
@@ -130,7 +104,7 @@ func (s *InteractiveOutputControllerTestSuite) TestOpenRowViewOnUserInput() {
 	s.interactiveOutputController.init()
 
 	s.resultFetcher.EXPECT().IsAutoRefreshRunning().Return(false)
-	s.resultFetcher.EXPECT().GetResults().Return(materializedStatementResults)
+	s.resultFetcher.EXPECT().GetMaterializedStatementResults().Return(materializedStatementResults)
 
 	// When
 	result := s.interactiveOutputController.inputCapture(tcell.NewEventKey(tcell.KeyEnter, rune(0), tcell.ModNone))
@@ -144,25 +118,16 @@ func (s *InteractiveOutputControllerTestSuite) TestOpenRowViewOnUserInput() {
 }
 
 func getResultsExample() *types.MaterializedStatementResults {
-	materializedStatementResults := types.NewMaterializedStatementResults([]string{"Count"}, 10)
-	for i := 0; i < 10; i++ {
-		materializedStatementResults.Append(types.StatementResultRow{
-			Operation: types.INSERT,
-			Fields: []types.StatementResultField{
-				types.AtomicStatementResultField{
-					Type:  types.INTEGER,
-					Value: strconv.Itoa(i),
-				},
-			},
-		})
-	}
-	return &materializedStatementResults
+	executedStatementWithResults := getStatementWithResultsExample()
+	mat := types.NewMaterializedStatementResults(executedStatementWithResults.StatementResults.GetHeaders(), 10)
+	mat.Append(executedStatementWithResults.StatementResults.GetRows()...)
+	return &mat
 }
 
 func (s *InteractiveOutputControllerTestSuite) initMockCalls(materializedStatementResults *types.MaterializedStatementResults) {
 	s.resultFetcher.EXPECT().SetAutoRefreshCallback(gomock.Any())
 	s.resultFetcher.EXPECT().ToggleAutoRefresh()
-	s.resultFetcher.EXPECT().GetResults().Return(materializedStatementResults)
+	s.resultFetcher.EXPECT().GetMaterializedStatementResults().Return(materializedStatementResults)
 	s.resultFetcher.EXPECT().IsTableMode().Return(materializedStatementResults.IsTableMode())
 	s.resultFetcher.EXPECT().GetFetchState().Return(types.Paused)
 	s.resultFetcher.EXPECT().IsAutoRefreshRunning().Return(false)
@@ -215,7 +180,7 @@ func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysTableMode()
 
 	actual := s.interactiveOutputController.getTableTitle()
 
-	require.Contains(s.T(), actual, "Table mode")
+	cupaloy.SnapshotT(s.T(), actual)
 }
 
 func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysChangelogMode() {
@@ -224,7 +189,7 @@ func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysChangelogMo
 
 	actual := s.interactiveOutputController.getTableTitle()
 
-	require.Contains(s.T(), actual, "Changelog mode")
+	cupaloy.SnapshotT(s.T(), actual)
 }
 
 func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysComplete() {
@@ -233,7 +198,7 @@ func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysComplete() 
 
 	actual := s.interactiveOutputController.getTableTitle()
 
-	require.Contains(s.T(), actual, "(completed)")
+	cupaloy.SnapshotT(s.T(), actual)
 }
 
 func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysFailed() {
@@ -242,7 +207,7 @@ func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysFailed() {
 
 	actual := s.interactiveOutputController.getTableTitle()
 
-	require.Contains(s.T(), actual, "(auto refresh failed)")
+	cupaloy.SnapshotT(s.T(), actual)
 }
 
 func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysPaused() {
@@ -251,7 +216,7 @@ func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysPaused() {
 
 	actual := s.interactiveOutputController.getTableTitle()
 
-	require.Contains(s.T(), actual, "(auto refresh paused)")
+	cupaloy.SnapshotT(s.T(), actual)
 }
 
 func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysRunning() {
@@ -260,5 +225,21 @@ func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysRunning() {
 
 	actual := s.interactiveOutputController.getTableTitle()
 
-	require.Contains(s.T(), actual, fmt.Sprintf("(auto refresh %vs)", results.DefaultRefreshInterval/1000))
+	cupaloy.SnapshotT(s.T(), actual)
+}
+
+func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysPageSizeAndCacheSizeWithUnsafeTrace() {
+	executedStatementWithResults := getStatementWithResultsExample()
+	mat := types.NewMaterializedStatementResults(executedStatementWithResults.StatementResults.GetHeaders(), 10)
+	mat.Append(executedStatementWithResults.StatementResults.GetRows()...)
+
+	s.resultFetcher.EXPECT().IsTableMode().Return(true)
+	s.resultFetcher.EXPECT().GetFetchState().Return(types.Running)
+	s.resultFetcher.EXPECT().GetStatement().Return(executedStatementWithResults)
+	s.resultFetcher.EXPECT().GetMaterializedStatementResults().Return(&mat).Times(3)
+	s.interactiveOutputController.debug = true
+
+	actual := s.interactiveOutputController.getTableTitle()
+
+	cupaloy.SnapshotT(s.T(), actual)
 }

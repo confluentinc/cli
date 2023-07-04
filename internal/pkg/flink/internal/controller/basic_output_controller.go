@@ -27,9 +27,12 @@ func (c *BasicOutputController) VisualizeResults() {
 }
 
 func (c *BasicOutputController) printResultToSTDOUT() {
-	materializedStatementResults := c.resultFetcher.GetResults()
-	if len(materializedStatementResults.GetHeaders()) == 0 || materializedStatementResults.Size() == 0 {
-		utils.OutputWarn("The server returned empty rows for this statement.")
+	materializedStatementResults := c.resultFetcher.GetMaterializedStatementResults()
+	rowsAreEmpty := len(materializedStatementResults.GetHeaders()) == 0 || materializedStatementResults.Size() == 0
+	if rowsAreEmpty {
+		if c.resultFetcher.GetStatement().StatusDetail == "" {
+			utils.OutputWarn("The server returned empty rows for this statement.")
+		}
 		return
 	}
 
@@ -40,7 +43,7 @@ func (c *BasicOutputController) printResultToSTDOUT() {
 }
 
 func (c *BasicOutputController) calcTotalAvailableChars() int {
-	numColumns := len(c.resultFetcher.GetResults().GetHeaders())
+	numColumns := len(c.resultFetcher.GetMaterializedStatementResults().GetHeaders())
 	tableBorderNumChars := 4
 	separatorCharsPerColumn := 3
 	alreadyOccupiedSpace := tableBorderNumChars + (numColumns-1)*separatorCharsPerColumn
@@ -48,7 +51,7 @@ func (c *BasicOutputController) calcTotalAvailableChars() int {
 }
 
 func (c *BasicOutputController) getRows(totalAvailableChars int) [][]string {
-	materializedStatementResults := c.resultFetcher.GetResults()
+	materializedStatementResults := c.resultFetcher.GetMaterializedStatementResults()
 	columnWidths := materializedStatementResults.GetMaxWidthPerColumn()
 	columnWidths = results.GetTruncatedColumnWidths(columnWidths, totalAvailableChars)
 
@@ -65,7 +68,7 @@ func (c *BasicOutputController) getRows(totalAvailableChars int) [][]string {
 }
 
 func (c *BasicOutputController) createTable(rows [][]string) *tablewriter.Table {
-	materializedStatementResults := c.resultFetcher.GetResults()
+	materializedStatementResults := c.resultFetcher.GetMaterializedStatementResults()
 	rawTable := tablewriter.NewWriter(os.Stdout)
 	rawTable.SetAutoFormatHeaders(false)
 	rawTable.SetHeader(materializedStatementResults.GetHeaders())

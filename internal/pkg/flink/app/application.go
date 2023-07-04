@@ -1,9 +1,9 @@
 package app
 
 import (
-	"os"
-
 	"golang.org/x/term"
+	"os"
+	"sync"
 
 	"github.com/confluentinc/go-prompt"
 
@@ -27,20 +27,31 @@ type Application struct {
 	statementController         types.StatementControllerInterface
 	interactiveOutputController types.OutputControllerInterface
 	basicOutputController       types.OutputControllerInterface
-	authenticated               func() error
+	tokenRefreshFunc            func() error
 }
 
-func StartApp(client ccloudv2.GatewayClientInterface, authenticated func() error, appOptions types.ApplicationOptions) {
+var mutex sync.Mutex
+
+func synchronizedTokenRefresh(tokenRefreshFunc func() error) func() error {
+	return func() error {
+		mutex.Lock()
+		defer mutex.Unlock()
+
+		return tokenRefreshFunc()
+	}
+}
+
+func StartApp(client ccloudv2.GatewayClientInterface, tokenRefreshFunc func() error, appOptions types.ApplicationOptions) {
 	// Load history of previous commands from cache file
-	history := history.LoadHistory()
+	historyStore := history.LoadHistory()
 
 	// Instantiate Application Controller - this is the top level controller that will be passed down to all other controllers
 	// and should be used for functions that are not specific to a component
-	appController := controller.NewApplicationController(history)
+	appController := controller.NewApplicationController(historyStore)
 
 	// Store used to process statements and store local properties
-	store := store.NewStore(client, appController.ExitApplication, &appOptions, authenticated)
-	resultFetcher := results.NewResultFetcher(store)
+	dataStore := store.NewStore(client, appController.ExitApplication, &appOptions, synchronizedTokenRefresh(tokenRefreshFunc))
+	resultFetcher := results.NewResultFetcher(dataStore)
 
 	stdinBefore := getStdin()
 	consoleParser := getConsoleParser()
@@ -50,21 +61,21 @@ func StartApp(client ccloudv2.GatewayClientInterface, authenticated func() error
 	})
 
 	// Instantiate Component Controllers
-	inputController := controller.NewInputController(appController, history)
-	statementController := controller.NewStatementController(appController, store, consoleParser)
-	interactiveOutputController := controller.NewInteractiveOutputController(resultFetcher)
+	inputController := controller.NewInputController(appController, historyStore)
+	statementController := controller.NewStatementController(appController, dataStore, consoleParser)
+	interactiveOutputController := controller.NewInteractiveOutputController(resultFetcher, appOptions.GetVerbose())
 	basicOutputController := controller.NewBasicOutputController(resultFetcher, inputController.GetWindowWidth)
 
 	app := Application{
-		history:                     history,
-		store:                       store,
+		history:                     historyStore,
+		store:                       dataStore,
 		resultFetcher:               resultFetcher,
 		appController:               appController,
 		inputController:             inputController,
 		statementController:         statementController,
 		interactiveOutputController: interactiveOutputController,
 		basicOutputController:       basicOutputController,
-		authenticated:               authenticated,
+		tokenRefreshFunc:            synchronizedTokenRefresh(tokenRefreshFunc),
 	}
 	components.PrintWelcomeHeader()
 	app.readEvalPrintLoop()
@@ -124,7 +135,7 @@ func (a *Application) readEvalPrintLoop() {
 }
 
 func (a *Application) isAuthenticated() bool {
-	if authErr := a.authenticated(); authErr != nil {
+	if authErr := a.tokenRefreshFunc(); authErr != nil {
 		utils.OutputErrf("Error: %v\n", authErr)
 		a.appController.ExitApplication()
 		return false

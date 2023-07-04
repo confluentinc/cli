@@ -173,6 +173,10 @@ func (s ProcessedStatement) printStatusMessageOfNonLocalStatement() {
 	}
 }
 
+func (s ProcessedStatement) GetPageSize() int {
+	return len(s.StatementResults.GetRows())
+}
+
 func (s ProcessedStatement) PrintStatusDetail() {
 	// print status detail message if available
 	if s.StatusDetail != "" {

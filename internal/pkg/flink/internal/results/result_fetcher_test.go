@@ -101,7 +101,7 @@ func (s *ResultFetcherTestSuite) TestFetchNextPageSetsFailedState() {
 	s.resultFetcher.setStatement(mockStatement)
 	s.mockStore.EXPECT().FetchStatementResults(mockStatement).Return(nil, &types.StatementError{})
 
-	s.resultFetcher.FetchNextPageAndUpdateState()
+	s.resultFetcher.fetchNextPageAndUpdateState()
 
 	require.Equal(s.T(), types.Failed, s.resultFetcher.GetFetchState())
 }
@@ -111,7 +111,7 @@ func (s *ResultFetcherTestSuite) TestFetchNextPageSetsCompletedState() {
 	s.resultFetcher.setStatement(mockStatement)
 	s.mockStore.EXPECT().FetchStatementResults(mockStatement).Return(&types.ProcessedStatement{}, nil)
 
-	s.resultFetcher.FetchNextPageAndUpdateState()
+	s.resultFetcher.fetchNextPageAndUpdateState()
 
 	require.Equal(s.T(), types.Completed, s.resultFetcher.GetFetchState())
 }
@@ -122,10 +122,10 @@ func (s *ResultFetcherTestSuite) TestFetchNextPageDoesNotUpdateStateWhenAlreadyC
 	s.resultFetcher.setFetchState(types.Completed)
 	s.mockStore.EXPECT().FetchStatementResults(mockStatement).Return(&types.ProcessedStatement{PageToken: "NOT_EMPTY"}, nil)
 
-	s.resultFetcher.FetchNextPageAndUpdateState()
+	s.resultFetcher.fetchNextPageAndUpdateState()
 
 	require.Equal(s.T(), types.Completed, s.resultFetcher.GetFetchState())
-	require.Equal(s.T(), mockStatement, s.resultFetcher.getStatement())
+	require.Equal(s.T(), mockStatement, s.resultFetcher.GetStatement())
 }
 
 func (s *ResultFetcherTestSuite) TestFetchNextPageChangesFailedToPausedState() {
@@ -134,7 +134,7 @@ func (s *ResultFetcherTestSuite) TestFetchNextPageChangesFailedToPausedState() {
 	s.resultFetcher.setStatement(mockStatement)
 	s.mockStore.EXPECT().FetchStatementResults(mockStatement).Return(&mockStatement, nil)
 
-	s.resultFetcher.FetchNextPageAndUpdateState()
+	s.resultFetcher.fetchNextPageAndUpdateState()
 
 	require.Equal(s.T(), types.Paused, s.resultFetcher.GetFetchState())
 }
@@ -145,40 +145,9 @@ func (s *ResultFetcherTestSuite) TestFetchNextPagePreservesRunningState() {
 	s.resultFetcher.setStatement(mockStatement)
 	s.mockStore.EXPECT().FetchStatementResults(mockStatement).Return(&mockStatement, nil)
 
-	s.resultFetcher.FetchNextPageAndUpdateState()
+	s.resultFetcher.fetchNextPageAndUpdateState()
 
 	require.Equal(s.T(), types.Running, s.resultFetcher.GetFetchState())
-}
-
-func (s *ResultFetcherTestSuite) TestFetchNextPageOnUserInput() {
-	mockStatement := types.ProcessedStatement{PageToken: "NOT_EMPTY"}
-	s.mockStore.EXPECT().FetchStatementResults(mockStatement).Return(&mockStatement, nil)
-	s.mockStore.EXPECT().FetchStatementResults(mockStatement).Return(&types.ProcessedStatement{}, nil)
-	s.resultFetcher.Init(mockStatement)
-
-	s.resultFetcher.FetchNextPageAndUpdateState()
-	// First nextPage returns statement with page token
-	require.Equal(s.T(), types.Paused, s.resultFetcher.GetFetchState())
-
-	s.resultFetcher.FetchNextPageAndUpdateState()
-	// Second nextPage returns statement with empty page token, so state should be completed
-	require.Equal(s.T(), types.Completed, s.resultFetcher.GetFetchState())
-}
-
-func (s *ResultFetcherTestSuite) TestJumpToLiveResultsOnUserInput() {
-	mockStatement := getStatementWithResultsExample()
-	s.mockStore.EXPECT().FetchStatementResults(mockStatement).Return(&mockStatement, nil)
-	s.mockStore.EXPECT().FetchStatementResults(mockStatement).Return(&mockStatement, nil)
-	s.mockStore.EXPECT().FetchStatementResults(mockStatement).Return(&types.ProcessedStatement{PageToken: "LAST"}, nil)
-
-	// When
-	s.resultFetcher.Init(mockStatement)
-
-	// Then
-	s.resultFetcher.JumpToLastPage()
-
-	require.Equal(s.T(), types.Paused, s.resultFetcher.GetFetchState())
-	require.Equal(s.T(), types.ProcessedStatement{PageToken: "LAST"}, s.resultFetcher.getStatement())
 }
 
 func getStatementWithResultsExample() types.ProcessedStatement {
@@ -230,7 +199,7 @@ func (s *ResultFetcherTestSuite) TestGetResults() {
 
 	s.resultFetcher.Init(mockStatement)
 
-	require.Equal(s.T(), &s.resultFetcher.materializedStatementResults, s.resultFetcher.GetResults())
+	require.Equal(s.T(), &s.resultFetcher.materializedStatementResults, s.resultFetcher.GetMaterializedStatementResults())
 }
 
 func (s *ResultFetcherTestSuite) TestReturnHeadersFromStatementResults() {
