@@ -2,10 +2,10 @@ package controller
 
 import (
 	"context"
-	"github.com/bradleyjkemp/cupaloy"
 	"testing"
 	"time"
 
+	"github.com/bradleyjkemp/cupaloy"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"

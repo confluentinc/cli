@@ -1,9 +1,9 @@
 package controller
 
 import (
-	"github.com/bradleyjkemp/cupaloy"
 	"testing"
 
+	"github.com/bradleyjkemp/cupaloy"
 	"github.com/gdamore/tcell/v2"
 	"github.com/golang/mock/gomock"
 	"github.com/rivo/tview"

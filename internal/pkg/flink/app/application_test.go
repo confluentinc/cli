@@ -1,10 +1,10 @@
 package app
 
 import (
-	"github.com/bradleyjkemp/cupaloy"
 	"sync"
 	"testing"
 
+	"github.com/bradleyjkemp/cupaloy"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"

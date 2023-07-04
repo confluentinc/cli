@@ -1,13 +1,14 @@
 package controller
 
 import (
-	"github.com/bradleyjkemp/cupaloy"
-	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
 	"strconv"
 	"testing"
 
+	"github.com/bradleyjkemp/cupaloy"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/suite"
+
+	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
 
 	"github.com/confluentinc/cli/internal/pkg/flink/test"
 	"github.com/confluentinc/cli/internal/pkg/flink/test/mock"

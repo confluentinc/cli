@@ -1,9 +1,10 @@
 package app
 
 import (
-	"golang.org/x/term"
 	"os"
 	"sync"
+
+	"golang.org/x/term"
 
 	"github.com/confluentinc/go-prompt"
 

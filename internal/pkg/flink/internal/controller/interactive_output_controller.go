@@ -2,7 +2,6 @@ package controller
 
 import (
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/flink/internal/results"
 	"strings"
 	"unicode"
 
@@ -10,6 +9,7 @@ import (
 	"github.com/rivo/tview"
 
 	"github.com/confluentinc/cli/internal/pkg/flink/components"
+	"github.com/confluentinc/cli/internal/pkg/flink/internal/results"
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/utils"
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
 	"github.com/confluentinc/cli/internal/pkg/log"
