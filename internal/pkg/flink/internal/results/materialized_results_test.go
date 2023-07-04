@@ -180,7 +180,7 @@ func (s *MaterializedStatementResultsTestSuite) TestKeyCountIncreases() {
 	})
 }
 
-func (s *MaterializedStatementResultsTestSuite) TestMaxCapacity() {
+func (s *MaterializedStatementResultsTestSuite) TestChangelogIsCleanedUpWhenOverCapacity() {
 	headers := []string{"Count"}
 	previousRow := types.StatementResultRow{
 		Operation: types.INSERT,
@@ -191,18 +191,17 @@ func (s *MaterializedStatementResultsTestSuite) TestMaxCapacity() {
 			},
 		},
 	}
-	materializedStatementResults := types.NewMaterializedStatementResults(headers, 1)
+	var expectedRows []types.StatementResultRow
+	expectedRows = append(expectedRows, previousRow)
+
+	materializedStatementResults := types.NewMaterializedStatementResults(headers, 3)
 	materializedStatementResults.Append(previousRow)
-	materializedStatementResults.SetTableMode(true)
-	require.Equal(s.T(), headers, materializedStatementResults.GetHeaders())
-	require.Equal(s.T(), 1, materializedStatementResults.Size())
-	iterator := materializedStatementResults.Iterator(false)
-	require.Equal(s.T(), previousRow, *iterator.GetNext())
+	materializedStatementResults.SetTableMode(false)
 	for count := 1; count <= 10; count++ {
 		// remove previous row
 		previousRow.Operation = types.UPDATE_BEFORE
 		materializedStatementResults.Append(previousRow)
-		require.Equal(s.T(), 0, materializedStatementResults.Size())
+		expectedRows = append(expectedRows, previousRow)
 
 		// add new row
 		previousRow = types.StatementResultRow{
@@ -215,14 +214,89 @@ func (s *MaterializedStatementResultsTestSuite) TestMaxCapacity() {
 			},
 		}
 		materializedStatementResults.Append(previousRow)
-		iterator = materializedStatementResults.Iterator(false)
-		require.Equal(s.T(), 1, materializedStatementResults.Size())
-		require.Equal(s.T(), previousRow, *iterator.GetNext())
+		expectedRows = append(expectedRows, previousRow)
 	}
 
-	materializedStatementResults.SetTableMode(false)
-	require.Equal(s.T(), append([]string{"Operation"}, headers...), materializedStatementResults.GetHeaders())
+	require.Equal(s.T(), 3, materializedStatementResults.Size())
+	expectedRows = expectedRows[len(expectedRows)-materializedStatementResults.Size():]
+	materializedStatementResults.ForEach(func(rowIdx int, row *types.StatementResultRow) {
+		expectedRow := &expectedRows[rowIdx]
+		require.Equal(s.T(), expectedRow.Operation, row.Operation)
+		require.Equal(s.T(), expectedRow.Fields, row.Fields[1:])
+	})
+}
+
+func (s *MaterializedStatementResultsTestSuite) TestTableIsCleanedUpWhenOverCapacity() {
+	headers := []string{"Count"}
+	var expectedRows []types.StatementResultRow
+
+	materializedStatementResults := types.NewMaterializedStatementResults(headers, 3)
+	materializedStatementResults.SetTableMode(true)
+	for count := 1; count <= 10; count++ {
+		row := types.StatementResultRow{
+			Operation: types.INSERT,
+			Fields: []types.StatementResultField{
+				types.AtomicStatementResultField{
+					Type:  types.INTEGER,
+					Value: strconv.Itoa(count),
+				},
+			},
+		}
+		materializedStatementResults.Append(row)
+		expectedRows = append(expectedRows, row)
+	}
+
+	require.Equal(s.T(), 3, materializedStatementResults.Size())
+	expectedRows = expectedRows[len(expectedRows)-materializedStatementResults.Size():]
+	materializedStatementResults.ForEach(func(rowIdx int, row *types.StatementResultRow) {
+		expectedRow := &expectedRows[rowIdx]
+		require.Equal(s.T(), expectedRow.Operation, row.Operation)
+		require.Equal(s.T(), expectedRow.Fields, row.Fields)
+	})
+}
+
+func (s *MaterializedStatementResultsTestSuite) TestTableDoesNotCleanupEventsThatWereRemovedFromChangelog() {
+	headers := []string{"Count"}
+	row := types.StatementResultRow{
+		Operation: types.INSERT,
+		Fields: []types.StatementResultField{
+			types.AtomicStatementResultField{
+				Type:  types.INTEGER,
+				Value: "100",
+			},
+		},
+	}
+
+	materializedStatementResults := types.NewMaterializedStatementResults(headers, 2)
+	materializedStatementResults.SetTableMode(true)
+	materializedStatementResults.Append(row)
+	for count := 0; count <= 10; count++ {
+		// add new row
+		operation := types.UPDATE_AFTER
+		if count == 0 {
+			operation = types.INSERT
+		}
+		newRow := types.StatementResultRow{
+			Operation: operation,
+			Fields: []types.StatementResultField{
+				types.AtomicStatementResultField{
+					Type:  types.INTEGER,
+					Value: strconv.Itoa(count),
+				},
+			},
+		}
+		materializedStatementResults.Append(newRow)
+
+		// remove previous row
+		newRow.Operation = types.UPDATE_BEFORE
+		materializedStatementResults.Append(newRow)
+	}
+
 	require.Equal(s.T(), 1, materializedStatementResults.Size())
+	materializedStatementResults.ForEach(func(rowIdx int, row *types.StatementResultRow) {
+		require.Equal(s.T(), row.Operation, row.Operation)
+		require.Equal(s.T(), row.Fields, row.Fields)
+	})
 }
 
 func (s *MaterializedStatementResultsTestSuite) TestOnlyAllowAppendWithSameSchema() {

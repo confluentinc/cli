@@ -118,14 +118,13 @@ func (s *MaterializedStatementResults) Iterator(startFromBack bool) Materialized
 
 func (s *MaterializedStatementResults) cleanup() {
 	if s.changelog.Len() > s.maxCapacity {
-		removedRow := s.changelog.RemoveFront()
-		removedRowKey := removedRow.GetRowKey()
+		s.changelog.RemoveFront()
+	}
 
-		listPtr, ok := s.cache[removedRowKey]
-		if ok {
-			s.table.Remove(listPtr)
-			delete(s.cache, removedRowKey)
-		}
+	if s.table.Len() > s.maxCapacity {
+		removedRow := s.table.RemoveFront()
+		removedRowKey := removedRow.GetRowKey()
+		delete(s.cache, removedRowKey)
 	}
 }
 
@@ -219,10 +218,6 @@ func (s *MaterializedStatementResults) GetMaxWidthPerColum() []int {
 		}
 	})
 	return columnWidths
-}
-
-func (s *MaterializedStatementResults) SetMaxResults(size int) {
-	s.maxCapacity = size
 }
 
 func (s *MaterializedStatementResults) GetMaxResults() int {
