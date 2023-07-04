@@ -17,17 +17,15 @@ import (
 )
 
 type TableController struct {
-	table                                *tview.Table
-	appController                        types.ApplicationControllerInterface
-	fetchController                      types.FetchControllerInterface
-	runInteractiveInput                  func()
-	selectedRowIdx                       int
-	tableLock                            sync.Mutex
-	isRowViewOpen                        bool
-	tableWidth                           int
-	numRowsToScroll                      int
-	materializedStatementResultsIterator types.MaterializedStatementResultsIterator
-	debug                                bool
+	table               *tview.Table
+	appController       types.ApplicationControllerInterface
+	fetchController     types.FetchControllerInterface
+	runInteractiveInput func()
+	tableLock           sync.Mutex
+	isRowViewOpen       bool
+	tableWidth          int
+	numRowsToScroll     int
+	debug               bool
 }
 
 func NewTableController(table *tview.Table, appController types.ApplicationControllerInterface, fetchController types.FetchControllerInterface, debug bool) types.TableControllerInterface {
@@ -35,7 +33,6 @@ func NewTableController(table *tview.Table, appController types.ApplicationContr
 		table:           table,
 		appController:   appController,
 		fetchController: fetchController,
-		selectedRowIdx:  -1,
 		debug:           debug,
 	}
 }
@@ -45,29 +42,14 @@ func (t *TableController) SetRunInteractiveInputCallback(runInteractiveInput fun
 }
 
 func (t *TableController) Init(statement types.ProcessedStatement) {
-	t.selectedRowIdx = -1
 	t.isRowViewOpen = false
 	t.fetchController.Init(statement)
 	t.fetchController.SetAutoRefreshCallback(t.renderTableAsync)
-	t.table.SetSelectionChangedFunc(t.rowSelectionHandler)
 	t.renderTable()
 }
 
 func (t *TableController) renderTableAsync() {
 	t.appController.TView().QueueUpdateDraw(t.renderTable)
-}
-
-func (t *TableController) rowSelectionHandler(row, col int) {
-	outOfBounds := row <= 0 || row >= t.table.GetRowCount()
-	if outOfBounds || t.fetchController.IsAutoRefreshRunning() {
-		return
-	}
-
-	if t.selectedRowIdx != -1 {
-		stepsToMove := row - t.selectedRowIdx
-		t.materializedStatementResultsIterator.Move(stepsToMove)
-	}
-	t.selectedRowIdx = row
 }
 
 // Function to handle shortcuts and keybindings for TView
@@ -159,18 +141,20 @@ func (t *TableController) toggleAutoRefreshAndRender() {
 }
 
 func (t *TableController) fastScrollUp() {
-	rowToSelect := lo.Max([]int{1, t.selectedRowIdx - t.numRowsToScroll})
+	currentSelectedRow, _ := t.table.GetSelection()
+	rowToSelect := lo.Max([]int{1, currentSelectedRow - t.numRowsToScroll})
 	t.table.Select(rowToSelect, 0)
 }
 
 func (t *TableController) fastScrollDown() {
-	rowToSelect := lo.Min([]int{t.table.GetRowCount() - 1, t.selectedRowIdx + t.numRowsToScroll})
+	currentSelectedRow, _ := t.table.GetSelection()
+	rowToSelect := lo.Min([]int{t.table.GetRowCount() - 1, currentSelectedRow + t.numRowsToScroll})
 	t.table.Select(rowToSelect, 0)
 }
 
 func (t *TableController) openRowView() {
 	if !t.fetchController.IsAutoRefreshRunning() {
-		row := t.materializedStatementResultsIterator.Value()
+		row := t.table.GetCell(t.table.GetSelection()).GetReference().(*types.StatementResultRow)
 		t.isRowViewOpen = true
 
 		headers := t.fetchController.GetHeaders()
@@ -217,7 +201,7 @@ func (t *TableController) renderTitle() {
 
 	if t.debug {
 		t.table.SetTitle(fmt.Sprintf(
-			" %s (%s) | last page size: %d | current cache size: %d/%d | table size: %d",
+			" %s (%s) | last page size: %d | current cache size: %d/%d | table size: %d ",
 			mode,
 			state,
 			t.fetchController.GetStatement().GetPageSize(),
@@ -260,7 +244,8 @@ func (t *TableController) fillTable(truncatedColumnWidths []int) func(rowIdx int
 		for colIdx, field := range row.Fields {
 			tableCell := tview.NewTableCell(tview.Escape(field.ToString())).
 				SetAlign(tview.AlignLeft).
-				SetMaxWidth(truncatedColumnWidths[colIdx])
+				SetMaxWidth(truncatedColumnWidths[colIdx]).
+				SetReference(row)
 			t.table.SetCell(rowIdx+1, colIdx, tableCell)
 		}
 	}
@@ -290,8 +275,6 @@ func (t *TableController) resizeTable(columnWidths []int) func(screen tcell.Scre
 }
 
 func (t *TableController) selectLastRow() {
-	t.selectedRowIdx = t.table.GetRowCount() - 1
-	t.materializedStatementResultsIterator = t.fetchController.GetResultsIterator(true)
-	t.table.SetSelectable(!t.fetchController.IsAutoRefreshRunning(), false).Select(t.selectedRowIdx, 0)
+	t.table.SetSelectable(!t.fetchController.IsAutoRefreshRunning(), false).Select(t.table.GetRowCount()-1, 0)
 	t.table.ScrollToEnd()
 }
