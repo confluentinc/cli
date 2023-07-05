@@ -183,7 +183,7 @@ func (d *DynamicContext) SchemaRegistryCluster(cmd *cobra.Command) (*v1.SchemaRe
 			if len(srClusters) != 0 {
 				cluster = makeSRCluster(&srClusters[0])
 			} else {
-				cluster = nil
+				return nil, errors.NewSRNotEnabledError()
 			}
 			clusterChanged = true
 		}
