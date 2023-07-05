@@ -33,7 +33,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 	cmd.Flags().String("description", "", "Description of the pipeline.")
 	pcmd.AddKsqlClusterFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("sql-file", "", "Path to a KSQL file containing the pipeline's source code.")
-	cmd.Flags().StringArray("secret", []string{}, "A named secret that can be referenced in pipeline source code, e.g. \"secret_name=secret_content\".\n"+
+	cmd.Flags().StringArray("secret", []string{}, "A named secret that can be referenced in pipeline source code, for example, \"secret_name=secret_content\".\n"+
 		"This flag can be supplied multiple times. The secret mapping must have the format <secret-name>=<secret-value>,\n"+
 		"where <secret-name> consists of 1-128 lowercase, uppercase, numeric or underscore characters but may not begin with a digit.\n"+
 		"The <secret-value> can be of any format but may not be empty.")
