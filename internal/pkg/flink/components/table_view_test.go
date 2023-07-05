@@ -4,6 +4,7 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/bradleyjkemp/cupaloy"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"pgregory.net/rapid"
@@ -113,4 +114,37 @@ func (s *TableViewTestSuite) TestTableShouldSetTitle() {
 	actual := s.tableView.table.GetTitle()
 
 	require.Equal(s.T(), expected, actual)
+}
+
+func (s *TableViewTestSuite) TestTableShortcutsShouldDisplayPlay() {
+	materializedStatementResults := getResultsExample()
+
+	actual := s.tableView.getTableShortcuts(materializedStatementResults, false)
+
+	cupaloy.SnapshotT(s.T(), actual)
+}
+
+func (s *TableViewTestSuite) TestTableShortcutsShouldDisplayPause() {
+	materializedStatementResults := getResultsExample()
+
+	actual := s.tableView.getTableShortcuts(materializedStatementResults, true)
+
+	cupaloy.SnapshotT(s.T(), actual)
+}
+
+func (s *TableViewTestSuite) TestTableShortcutsShouldDisplayChangelogMode() {
+	materializedStatementResults := getResultsExample()
+
+	actual := s.tableView.getTableShortcuts(materializedStatementResults, false)
+
+	cupaloy.SnapshotT(s.T(), actual)
+}
+
+func (s *TableViewTestSuite) TestTableShortcutsShouldDisplayTableMode() {
+	materializedStatementResults := getResultsExample()
+	materializedStatementResults.SetTableMode(false)
+
+	actual := s.tableView.getTableShortcuts(materializedStatementResults, false)
+
+	cupaloy.SnapshotT(s.T(), actual)
 }
