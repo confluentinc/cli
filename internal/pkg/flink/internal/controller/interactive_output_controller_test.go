@@ -241,3 +241,99 @@ func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysPageSizeAnd
 
 	cupaloy.SnapshotT(s.T(), actual)
 }
+
+func (s *InteractiveOutputControllerTestSuite) TestArrowUpOrDownStopsFetchWhenAutoRefreshIsRunning() {
+	// Given
+	testCases := []struct {
+		name  string
+		input *tcell.EventKey
+	}{
+		{name: "Test Arrow Up", input: tcell.NewEventKey(tcell.KeyUp, rune(0), tcell.ModNone)},
+		{name: "Test Arrow Down", input: tcell.NewEventKey(tcell.KeyDown, rune(0), tcell.ModNone)},
+	}
+
+	for _, testCase := range testCases {
+		s.T().Run(testCase.name, func(t *testing.T) {
+			s.initMockCalls(&types.MaterializedStatementResults{})
+			s.interactiveOutputController.init()
+			s.resultFetcher.EXPECT().IsAutoRefreshRunning().Return(true)
+			s.resultFetcher.EXPECT().ToggleAutoRefresh()
+			s.updateTableMockCalls(&types.MaterializedStatementResults{})
+
+			result := s.interactiveOutputController.inputCapture(testCase.input)
+
+			require.Nil(t, result)
+		})
+	}
+}
+
+func (s *InteractiveOutputControllerTestSuite) TestArrowUpOrDownDoesNothingWhenAutoRefreshNotRunning() {
+	// Given
+	testCases := []struct {
+		name  string
+		input *tcell.EventKey
+	}{
+		{name: "Test Arrow Up", input: tcell.NewEventKey(tcell.KeyUp, rune(0), tcell.ModNone)},
+		{name: "Test Arrow Down", input: tcell.NewEventKey(tcell.KeyDown, rune(0), tcell.ModNone)},
+	}
+
+	for _, testCase := range testCases {
+		s.T().Run(testCase.name, func(t *testing.T) {
+			s.initMockCalls(&types.MaterializedStatementResults{})
+			s.interactiveOutputController.init()
+			s.resultFetcher.EXPECT().IsAutoRefreshRunning().Return(false)
+
+			result := s.interactiveOutputController.inputCapture(testCase.input)
+
+			require.Equal(t, testCase.input, result)
+		})
+	}
+}
+
+func (s *InteractiveOutputControllerTestSuite) TestJumpUpOrDownStopsFetchWhenAutoRefreshIsRunning() {
+	// Given
+	testCases := []struct {
+		name  string
+		input *tcell.EventKey
+	}{
+		{name: "Test Jump Up", input: tcell.NewEventKey(tcell.KeyRune, rune(components.JumpUpShortcut[0]), tcell.ModNone)},
+		{name: "Test Jump Down", input: tcell.NewEventKey(tcell.KeyRune, rune(components.JumpDownShortcut[0]), tcell.ModNone)},
+	}
+
+	for _, testCase := range testCases {
+		s.T().Run(testCase.name, func(t *testing.T) {
+			s.initMockCalls(&types.MaterializedStatementResults{})
+			s.interactiveOutputController.init()
+			s.resultFetcher.EXPECT().IsAutoRefreshRunning().Return(true)
+			s.resultFetcher.EXPECT().ToggleAutoRefresh()
+			s.updateTableMockCalls(&types.MaterializedStatementResults{})
+
+			result := s.interactiveOutputController.inputCapture(testCase.input)
+
+			require.Nil(t, result)
+		})
+	}
+}
+
+func (s *InteractiveOutputControllerTestSuite) TestJumpUpOrDownScrollsWhenAutoRefreshNotRunning() {
+	// Given
+	testCases := []struct {
+		name  string
+		input *tcell.EventKey
+	}{
+		{name: "Test Jump Up", input: tcell.NewEventKey(tcell.KeyRune, rune(components.JumpUpShortcut[0]), tcell.ModNone)},
+		{name: "Test Jump Down", input: tcell.NewEventKey(tcell.KeyRune, rune(components.JumpDownShortcut[0]), tcell.ModNone)},
+	}
+
+	for _, testCase := range testCases {
+		s.T().Run(testCase.name, func(t *testing.T) {
+			s.initMockCalls(&types.MaterializedStatementResults{})
+			s.interactiveOutputController.init()
+			s.resultFetcher.EXPECT().IsAutoRefreshRunning().Return(false)
+
+			result := s.interactiveOutputController.inputCapture(testCase.input)
+
+			require.Nil(t, result)
+		})
+	}
+}
