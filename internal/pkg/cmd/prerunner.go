@@ -116,7 +116,7 @@ func checkCliDisable(cmd *CLICommand, cfg *v1.Config) error {
 	ldDisable := featureflags.GetLDDisableMap(cmd.Config.Context())
 	errMsg, errMsgOk := ldDisable["error_msg"].(string)
 	disabledCmdsAndFlags, ok := ldDisable["patterns"].([]any)
-	if (errMsgOk && errMsg != "" && !ok) || (ok && featureflags.IsDisabled(cmd.Command, disabledCmdsAndFlags)) {
+	if (errMsgOk && errMsg != "" && !ok) || (ok && featureflags.IsDisabled(featureflags.Manager.Command, disabledCmdsAndFlags)) {
 		allowUpdate, allowUpdateOk := ldDisable["allow_update"].(bool)
 		if !(cmd.CommandPath() == "confluent update" && allowUpdateOk && allowUpdate) {
 			// in case a user is trying to run an on-prem command from a cloud context (should not see LD msg)

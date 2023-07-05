@@ -33,14 +33,15 @@ func GetLDDisableMap(ctx *dynamicconfig.DynamicContext) map[string]any {
 
 func IsDisabled(cmd *cobra.Command, disabledPatterns []any) bool {
 	for _, pattern := range disabledPatterns {
-		if disabledCommand, disabledFlags, err := cmd.Root().Find(strings.Split(pattern.(string), " ")); err == nil {
-			if disabledCommand.CommandPath() == cmd.CommandPath() {
-				if len(disabledFlags) == 0 {
+		if disabledCommand, args, err := cmd.Root().Find(strings.Split(pattern.(string), " ")); err == nil {
+			trimmedFlags := ppanic.ParseFlags(disabledCommand, args)
+			if len(trimmedFlags) == 0 {
+				if strings.Contains(cmd.CommandPath(), disabledCommand.CommandPath()) {
 					return true
 				}
-				trimmedFlags := ppanic.ParseFlags(disabledCommand, disabledFlags)
-				for _, flag := range trimmedFlags {
-					if slices.Contains(Manager.flags, flag) {
+			} else {
+				for _, disabledFlag := range trimmedFlags {
+					if slices.Contains(Manager.flags, disabledFlag) {
 						return true
 					}
 				}

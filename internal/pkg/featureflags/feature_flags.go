@@ -49,7 +49,7 @@ var attributes = []string{"user.resource_id", "org.resource_id", "environment.id
 type launchDarklyManager struct {
 	cliClient                *sling.Sling
 	ccloudClient             func(v1.LaunchDarklyClient) *sling.Sling
-	command                  *cobra.Command
+	Command                  *cobra.Command
 	flags                    []string
 	isDisabled               bool
 	timeoutSuggestionPrinted bool
@@ -94,7 +94,7 @@ func Init(version *version.Version, isTest, isDisabledConfig bool) {
 func (ld *launchDarklyManager) SetCommandAndFlags(cmd *cobra.Command, args []string) {
 	fullCmd, flagsAndArgs, _ := cmd.Find(args)
 	flags := ppanic.ParseFlags(fullCmd, flagsAndArgs)
-	ld.command = fullCmd
+	ld.Command = fullCmd
 	ld.flags = flags
 }
 
@@ -241,8 +241,8 @@ func (ld *launchDarklyManager) contextToLDUser(ctx *dynamicconfig.DynamicContext
 		setCustomAttribute(custom, "cli.version", ldvalue.String(ld.version.Version))
 	}
 
-	if ld.command != nil {
-		setCustomAttribute(custom, "cli.command", ldvalue.String(ld.command.CommandPath()))
+	if ld.Command != nil {
+		setCustomAttribute(custom, "cli.command", ldvalue.String(ld.Command.CommandPath()))
 	}
 
 	if ld.flags != nil {
