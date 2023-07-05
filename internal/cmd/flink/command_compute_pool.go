@@ -31,7 +31,7 @@ func (c *command) newComputePoolCommand(cfg *v1.Config) *cobra.Command {
 	cmd.AddCommand(c.newComputePoolUpdateCommand())
 	cmd.AddCommand(c.newComputePoolUseCommand())
 
-	dc := dynamicconfig.New(cfg, nil, nil)
+	dc := dynamicconfig.New(cfg, nil)
 	_ = dc.ParseFlagsIntoConfig(cmd)
 	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.flink.open_preview", dc.Context(), v1.CliLaunchDarklyClient, true, false) {
 		cmd.AddCommand(c.newComputePoolCreateCommand())

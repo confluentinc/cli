@@ -195,7 +195,7 @@ func CatchResourceNotFoundError(err error, resourceId string) error {
 	return err
 }
 
-func CatchOrgV2ResourceNotFoundError(err error, resourceType string, r *http.Response) error {
+func CatchCCloudV2ResourceNotFoundError(err error, resourceType string, r *http.Response) error {
 	if err == nil {
 		return nil
 	}

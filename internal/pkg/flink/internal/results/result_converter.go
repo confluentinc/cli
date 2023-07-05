@@ -21,9 +21,9 @@ func convertToInternalField(field any, details flinkgatewayv1alpha1.ColumnDetail
 }
 
 func ConvertToInternalResults(results []any, resultSchema flinkgatewayv1alpha1.SqlV1alpha1ResultSchema) (*types.StatementResults, error) {
-	header := make([]string, len(resultSchema.GetColumns()))
+	headers := make([]string, len(resultSchema.GetColumns()))
 	for idx, column := range resultSchema.GetColumns() {
-		header[idx] = column.GetName()
+		headers[idx] = column.GetName()
 	}
 
 	convertedResults := make([]types.StatementResultRow, len(results))
@@ -44,14 +44,14 @@ func ConvertToInternalResults(results []any, resultSchema flinkgatewayv1alpha1.S
 			convertedFields[colIdx] = convertToInternalField(field, columnSchema)
 		}
 
-		op, _ := resultItem["op"].(int32)
+		op, _ := resultItem["op"].(float64)
 		convertedResults[rowIdx] = types.StatementResultRow{
 			Operation: types.StatementResultOperation(op),
 			Fields:    convertedFields,
 		}
 	}
 	return &types.StatementResults{
-		Headers: header,
+		Headers: headers,
 		Rows:    convertedResults,
 	}, nil
 }

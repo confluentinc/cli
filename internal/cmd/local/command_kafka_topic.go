@@ -13,7 +13,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
-func (c *command) newKafkaTopicCommand() *cobra.Command {
+func (c *Command) newKafkaTopicCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "topic",
 		Short: "Run Kafka topic related commands.",

@@ -1,0 +1,18 @@
+Manage connectors.
+
+Usage:
+  confluent local services connect connector [command]
+
+Available Commands:
+  config      View or set connector configurations.
+  list        List all bundled connectors.
+  load        Load a connector.
+  status      Check the status of all connectors, or a single connector.
+  unload      Unload a connector.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent local services connect connector [command] --help" for more information about a command.

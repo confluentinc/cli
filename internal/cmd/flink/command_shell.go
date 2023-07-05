@@ -149,6 +149,8 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 
 	jwtValidator := pcmd.NewJWTValidator()
 
+	verbose, _ := cmd.Flags().GetCount("verbose")
+
 	client.StartApp(
 		flinkGatewayClient,
 		c.authenticated(prerunner.Authenticated(c.AuthenticatedCLICommand), cmd, jwtValidator),
@@ -162,6 +164,7 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 			KafkaClusterId:    cluster,
 			ComputePoolId:     computePool,
 			IdentityPoolId:    identityPool,
+			Verbose:           verbose > 0,
 		})
 	return nil
 }

@@ -77,7 +77,6 @@ const (
 	MustSetResourceTypeErrorMsg   = "exactly one resource type (%v) must be set"
 	InvalidOperationValueErrorMsg = "invalid operation value: %s"
 	ExactlyOneSetErrorMsg         = "exactly one of %v must be set"
-	UserIdNotValidErrorMsg        = "can't map user id to a valid service account"
 
 	// iam rbac role commands
 	UnknownRoleErrorMsg    = `unknown role "%s"`
@@ -207,6 +206,18 @@ const (
 	KsqlDBTerminateClusterErrorMsg = `failed to terminate ksqlDB cluster "%s" due to "%s"`
 
 	// local commands
+	NoServicesRunningErrorMsg = "no services running"
+	TopNotAvailableErrorMsg   = "top command not available on platform: %s"
+	InvalidConnectorErrorMsg  = "invalid connector: %s"
+	FailedToStartErrorMsg     = "%s failed to start"
+	FailedToStopErrorMsg      = "%s failed to stop"
+	JavaRequirementErrorMsg   = "the Confluent CLI requires Java version 1.8 or 1.11.\n" +
+		"See https://docs.confluent.io/current/installation/versions-interoperability.html .\n" +
+		"If you have multiple versions of Java installed, you may need to set JAVA_HOME to the version you want Confluent to use."
+	NoLogFoundErrorMsg               = "no log found: to run %s, use `confluent local services %s start`"
+	MacVersionErrorMsg               = "macOS version >= %s is required (detected: %s)"
+	JavaExecNotFondErrorMsg          = "could not find java executable, please install java or set JAVA_HOME"
+	NothingToDestroyErrorMsg         = "nothing to destroy"
 	ConfluentLocalStartedErrorMsg    = "Confluent Local container has already been created"
 	ConfluentLocalStartedSuggestions = "Continue your experience with Confluent Local running `confluent local kafka produce` and `confluent local kafka consume`.\n" +
 		"To stop Confluent Local container, run `confluent local kafka stop` or `docker container rm confluent-local -f`."

@@ -25,21 +25,21 @@ func TestLexer(t *testing.T) {
 	require.Len(t, elements, 9)
 	require.Equal(t, prompt.Cyan, elements[0].Color)
 	require.Equal(t, "SELECT", elements[0].Text)
-	require.Equal(t, prompt.White, elements[1].Color)
+	require.Equal(t, prompt.DefaultColor, elements[1].Color)
 	require.Equal(t, " ", elements[1].Text)
-	require.Equal(t, prompt.White, elements[2].Color)
+	require.Equal(t, prompt.DefaultColor, elements[2].Color)
 	require.Equal(t, "FIELD", elements[2].Text)
-	require.Equal(t, prompt.White, elements[3].Color)
+	require.Equal(t, prompt.DefaultColor, elements[3].Color)
 	require.Equal(t, " ", elements[3].Text)
-	require.Equal(t, prompt.White, elements[4].Color)
+	require.Equal(t, prompt.DefaultColor, elements[4].Color)
 	require.Equal(t, "\n", elements[4].Text)
 	require.Equal(t, prompt.Cyan, elements[5].Color)
 	require.Equal(t, "FROM", elements[5].Text)
-	require.Equal(t, prompt.White, elements[6].Color)
+	require.Equal(t, prompt.DefaultColor, elements[6].Color)
 	require.Equal(t, " ", elements[6].Text)
 	require.Equal(t, prompt.Cyan, elements[7].Color)
 	require.Equal(t, "TABLE", elements[7].Text)
-	require.Equal(t, prompt.White, elements[8].Color)
+	require.Equal(t, prompt.DefaultColor, elements[8].Color)
 	require.Equal(t, ";", elements[8].Text)
 }
 
@@ -94,7 +94,7 @@ func TestExamplesWordLexer(t *testing.T) {
 			} else if wrappedInInvertedCommasOrBackticks(element.Text) {
 				require.Equalf(t, element.Color, prompt.Yellow, "wrong colour for element: %s", element.Text)
 			} else {
-				require.Equalf(t, element.Color, prompt.White, "wrong colour for element: %s", element.Text)
+				require.Equalf(t, element.Color, prompt.DefaultColor, "wrong colour for element: %s", element.Text)
 			}
 		}
 	}
@@ -142,7 +142,7 @@ func TestWordLexerForRandomStatements(t *testing.T) {
 			} else if wrappedInInvertedCommasOrBackticks(element.Text) {
 				require.Equalf(t, element.Color, prompt.Yellow, "wrong colour for element: %s", element.Text)
 			} else {
-				require.Equalf(t, element.Color, prompt.White, "wrong colour for element: %s", element.Text)
+				require.Equalf(t, element.Color, prompt.DefaultColor, "wrong colour for element: %s", element.Text)
 			}
 		}
 	})

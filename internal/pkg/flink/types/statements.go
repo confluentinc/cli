@@ -6,8 +6,9 @@ import (
 
 	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
 
+	"github.com/confluentinc/cli/internal/pkg/flink/internal/utils"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	cliutils "github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 type StatementResults struct {
@@ -34,12 +35,20 @@ type StatementResultRow struct {
 	Fields    []StatementResultField
 }
 
-func (r StatementResultRow) GetRowKey() string {
+func (r *StatementResultRow) GetRowKey() string {
 	rowKey := strings.Builder{}
-	for _, field := range r.Fields {
+	for _, field := range r.GetFields() {
 		rowKey.WriteString(field.ToString())
 	}
 	return rowKey.String()
+}
+
+func (r *StatementResultRow) GetFields() []StatementResultField {
+	if r == nil {
+		var fields []StatementResultField
+		return fields
+	}
+	return r.Fields
 }
 
 const (
@@ -49,7 +58,7 @@ const (
 	DELETE        StatementResultOperation = 3
 )
 
-type StatementResultOperation int8
+type StatementResultOperation float64
 
 func (s StatementResultOperation) IsInsertOperation() bool {
 	return s == INSERT || s == UPDATE_AFTER
@@ -91,7 +100,7 @@ func (e *StatementError) Error() string {
 		errStr = fmt.Sprintf("Error: %s", e.Message)
 	}
 	if len(e.Usage) > 0 {
-		errStr += fmt.Sprintf("\nUsage: %s", utils.ArrayToCommaDelimitedString(e.Usage, "or"))
+		errStr += fmt.Sprintf("\nUsage: %s", cliutils.ArrayToCommaDelimitedString(e.Usage, "or"))
 	}
 	if e.Suggestion != "" {
 		errStr += fmt.Sprintf("\nSuggestion: %s", e.Suggestion)
@@ -134,6 +143,38 @@ func NewProcessedStatement(statementObj flinkgatewayv1alpha1.SqlV1alpha1Statemen
 		Status:        PHASE(statementObj.Status.GetPhase()),
 		ResultSchema:  statementObj.Status.GetResultSchema(),
 	}
+}
+
+func (s ProcessedStatement) PrintStatusMessage() {
+	if s.IsLocalStatement {
+		s.printStatusMessageOfLocalStatement()
+	} else {
+		s.printStatusMessageOfNonLocalStatement()
+	}
+}
+
+func (s ProcessedStatement) printStatusMessageOfLocalStatement() {
+	if s.Status == "FAILED" {
+		utils.OutputErr(fmt.Sprintf("Error: %s", "couldn't process statement, please check your statement and try again"))
+	} else {
+		utils.OutputInfo("Statement successfully submitted.")
+	}
+}
+
+func (s ProcessedStatement) printStatusMessageOfNonLocalStatement() {
+	if s.StatementName != "" {
+		utils.OutputInfof("Statement name: %s\n", s.StatementName)
+	}
+	if s.Status == "FAILED" {
+		utils.OutputErr(fmt.Sprintf("Error: %s", "statement submission failed"))
+	} else {
+		utils.OutputInfo("Statement successfully submitted.")
+		utils.OutputInfo("Fetching results...")
+	}
+}
+
+func (s ProcessedStatement) GetPageSize() int {
+	return len(s.StatementResults.GetRows())
 }
 
 func (s ProcessedStatement) PrintStatusDetail() {

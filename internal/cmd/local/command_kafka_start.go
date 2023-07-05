@@ -32,7 +32,7 @@ type imagePullOut struct {
 	Status string `json:"status"`
 }
 
-func (c *command) newKafkaStartCommand() *cobra.Command {
+func (c *Command) newKafkaStartCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "start",
 		Short: "Start a single-node instance of Apache Kafka.",
@@ -41,7 +41,7 @@ func (c *command) newKafkaStartCommand() *cobra.Command {
 	}
 }
 
-func (c *command) kafkaStart(cmd *cobra.Command, args []string) error {
+func (c *Command) kafkaStart(cmd *cobra.Command, args []string) error {
 	dockerClient, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		return err
@@ -134,7 +134,7 @@ func (c *command) kafkaStart(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *command) prepareAndSaveLocalPorts(isTest bool) error {
+func (c *Command) prepareAndSaveLocalPorts(isTest bool) error {
 	if c.Config.LocalPorts != nil {
 		return nil
 	}

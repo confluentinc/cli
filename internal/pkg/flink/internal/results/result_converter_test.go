@@ -95,7 +95,7 @@ func (s *ResultConverterTestSuite) TestConvertResults() {
 		for rowIdx, row := range convertedResults.Rows {
 			expectedResultItem, ok := statementResults[rowIdx].(map[string]any)
 			require.True(t, ok)
-			op, ok := expectedResultItem["op"].(int32)
+			op, ok := expectedResultItem["op"].(float64)
 			require.True(t, ok)
 			items, ok := expectedResultItem["row"].([]any)
 			require.True(t, ok)
