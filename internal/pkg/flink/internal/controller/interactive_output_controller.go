@@ -113,14 +113,17 @@ func (t *InteractiveOutputController) inputHandlerTableView(event *tcell.EventKe
 		}
 		return nil
 	case tcell.KeyEscape:
-		t.exitTViewMode()
-		return nil
+		fallthrough
 	case tcell.KeyCtrlQ:
 		t.exitTViewMode()
 		return nil
 	case tcell.KeyEnter:
 		t.renderRowView()
 		return nil
+	case tcell.KeyUp:
+		fallthrough
+	case tcell.KeyDown:
+		return t.handleKeyUpOrDownPress(event)
 	}
 	return event
 }
@@ -134,9 +137,9 @@ func (t *InteractiveOutputController) getActionForShortcut(shortcut string) func
 	case components.ToggleAutoRefreshShortcut:
 		return t.renderAfterAction(t.resultFetcher.ToggleAutoRefresh)
 	case components.JumpUpShortcut:
-		return t.tableView.FastScrollUp
+		return t.stopAutoRefreshOrScroll(t.tableView.FastScrollUp)
 	case components.JumpDownShortcut:
-		return t.tableView.FastScrollDown
+		return t.stopAutoRefreshOrScroll(t.tableView.FastScrollDown)
 	}
 	return nil
 }
@@ -154,6 +157,13 @@ func (t *InteractiveOutputController) renderAfterAction(action func()) func() {
 	}
 }
 
+func (t *InteractiveOutputController) stopAutoRefreshOrScroll(scroll func()) func() {
+	if t.resultFetcher.IsAutoRefreshRunning() {
+		return t.renderAfterAction(t.resultFetcher.ToggleAutoRefresh)
+	}
+	return scroll
+}
+
 func (t *InteractiveOutputController) renderRowView() {
 	if !t.resultFetcher.IsAutoRefreshRunning() {
 		row := t.tableView.GetSelectedRow()
@@ -169,6 +179,15 @@ func (t *InteractiveOutputController) renderRowView() {
 		t.app.SetRoot(components.CreateRowView(textView), true).EnableMouse(false)
 		t.app.SetFocus(textView)
 	}
+}
+
+func (t *InteractiveOutputController) handleKeyUpOrDownPress(event *tcell.EventKey) *tcell.EventKey {
+	if t.resultFetcher.IsAutoRefreshRunning() {
+		t.resultFetcher.ToggleAutoRefresh()
+		t.updateTable()
+		return nil
+	}
+	return event
 }
 
 func (t *InteractiveOutputController) getTableTitle() string {
