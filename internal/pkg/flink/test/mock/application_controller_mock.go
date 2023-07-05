@@ -9,7 +9,6 @@ import (
 
 	types "github.com/confluentinc/cli/internal/pkg/flink/types"
 	gomock "github.com/golang/mock/gomock"
-	tview "github.com/rivo/tview"
 )
 
 // MockApplicationControllerInterface is a mock of ApplicationControllerInterface interface.
@@ -59,82 +58,4 @@ func (m *MockApplicationControllerInterface) ExitApplication() {
 func (mr *MockApplicationControllerInterfaceMockRecorder) ExitApplication() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExitApplication", reflect.TypeOf((*MockApplicationControllerInterface)(nil).ExitApplication))
-}
-
-// GetOutputMode mocks base method.
-func (m *MockApplicationControllerInterface) GetOutputMode() types.OutputMode {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetOutputMode")
-	ret0, _ := ret[0].(types.OutputMode)
-	return ret0
-}
-
-// GetOutputMode indicates an expected call of GetOutputMode.
-func (mr *MockApplicationControllerInterfaceMockRecorder) GetOutputMode() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOutputMode", reflect.TypeOf((*MockApplicationControllerInterface)(nil).GetOutputMode))
-}
-
-// ShowTableView mocks base method.
-func (m *MockApplicationControllerInterface) ShowTableView() {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "ShowTableView")
-}
-
-// ShowTableView indicates an expected call of ShowTableView.
-func (mr *MockApplicationControllerInterfaceMockRecorder) ShowTableView() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ShowTableView", reflect.TypeOf((*MockApplicationControllerInterface)(nil).ShowTableView))
-}
-
-// StartTView mocks base method.
-func (m *MockApplicationControllerInterface) StartTView(arg0 tview.Primitive) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "StartTView", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// StartTView indicates an expected call of StartTView.
-func (mr *MockApplicationControllerInterfaceMockRecorder) StartTView(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StartTView", reflect.TypeOf((*MockApplicationControllerInterface)(nil).StartTView), arg0)
-}
-
-// SuspendOutputMode mocks base method.
-func (m *MockApplicationControllerInterface) SuspendOutputMode(arg0 func()) {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "SuspendOutputMode", arg0)
-}
-
-// SuspendOutputMode indicates an expected call of SuspendOutputMode.
-func (mr *MockApplicationControllerInterfaceMockRecorder) SuspendOutputMode(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SuspendOutputMode", reflect.TypeOf((*MockApplicationControllerInterface)(nil).SuspendOutputMode), arg0)
-}
-
-// TView mocks base method.
-func (m *MockApplicationControllerInterface) TView() *tview.Application {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "TView")
-	ret0, _ := ret[0].(*tview.Application)
-	return ret0
-}
-
-// TView indicates an expected call of TView.
-func (mr *MockApplicationControllerInterfaceMockRecorder) TView() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TView", reflect.TypeOf((*MockApplicationControllerInterface)(nil).TView))
-}
-
-// ToggleOutputMode mocks base method.
-func (m *MockApplicationControllerInterface) ToggleOutputMode() {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "ToggleOutputMode")
-}
-
-// ToggleOutputMode indicates an expected call of ToggleOutputMode.
-func (mr *MockApplicationControllerInterfaceMockRecorder) ToggleOutputMode() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ToggleOutputMode", reflect.TypeOf((*MockApplicationControllerInterface)(nil).ToggleOutputMode))
 }

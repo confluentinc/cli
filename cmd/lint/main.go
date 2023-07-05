@@ -19,9 +19,10 @@ var commandRules = []linter.CommandRule{
 	linter.RequireLowerCase("Use"),
 	linter.RequireRealWords("Use", '-'),
 	linter.Filter(linter.RequireSingular("Name"),
+		linter.ExcludeCommandContains("local services"),
 		linter.ExcludeCommand("kafka client-config create nodejs")),
 
-	linter.RequireCapitalizeProperNouns("Short", properNouns),
+	linter.Filter(linter.RequireCapitalizeProperNouns("Short", properNouns), linter.ExcludeCommand("local current")),
 	linter.RequireEndWithPunctuation("Short", false),
 	linter.Filter(linter.RequireNotTitleCase("Short", properNouns)),
 	linter.RequireStartWithCapital("Short"),
@@ -30,7 +31,8 @@ var commandRules = []linter.CommandRule{
 	linter.Filter(linter.RequireCapitalizeProperNouns("Long", properNouns),
 		linter.ExcludeCommand("plugin"),
 		linter.ExcludeCommand("completion"),
-		linter.ExcludeCommandContains("kafka client-config create")),
+		linter.ExcludeCommandContains("kafka client-config create"),
+		linter.ExcludeCommand("local current")),
 	linter.RequireStartWithCapital("Long"),
 
 	linter.RequireListRequiredFlagsFirst(),
