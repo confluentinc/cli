@@ -94,7 +94,7 @@ func (history *History) Save() {
 	}
 }
 
-func (history *History) Append(statements []string) {
+func (history *History) Append(statements ...string) {
 	formattedStatements := formatStatements(statements)
 	history.Data = append(history.Data, formattedStatements...)
 }
