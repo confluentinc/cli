@@ -58,6 +58,7 @@ const (
 	KsqlDBNotBackedByKafkaMsg = "The ksqlDB cluster \"%s\" is backed by \"%s\" which is not the current Kafka cluster \"%s\".\nTo switch to the correct cluster, use `confluent kafka cluster use %s`.\n"
 
 	// schema-registry commands
+	UpdatedToNetworkTypeMsg             = "Successfully updated network type to \"%s\"\n"
 	UpdatedToLevelCompatibilityMsg      = "Successfully updated Top Level compatibility to \"%s\"\n"
 	UpdatedTopLevelModeMsg              = "Successfully updated Top Level mode to \"%s\"\n"
 	RegisteredSchemaMsg                 = "Successfully registered schema with ID %v\n"
