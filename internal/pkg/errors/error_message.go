@@ -231,6 +231,7 @@ const (
 	SRInvalidPackageTypeErrorMsg    = `"%s" is an invalid package type`
 	SRInvalidPackageSuggestions     = "Allowed values for `--package` flag are: %s."
 	SRInvalidPackageUpgrade         = "Environment \"%s\" is already using the Stream Governance \"%s\" package.\n"
+	SRInvalidNetworkTypeUpgrade     = "Environment \"%s\" is already using the network type \"%s\".\n"
 	SRInvalidNetworkTypeErrorMsg    = `"%s" is an invalid network type`
 	SRInvalidNetworkTypeSuggestions = "Allowed values for `--networkType` flag are: %s."
 

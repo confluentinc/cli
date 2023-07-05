@@ -1,11 +1,11 @@
 package schemaregistry
 
 import (
-	srcmv2 "github.com/confluentinc/ccloud-sdk-go-v2/srcm/v2"
 	"strings"
 
 	"github.com/spf13/cobra"
 
+	srcmv2 "github.com/confluentinc/ccloud-sdk-go-v2/srcm/v2"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -101,24 +101,26 @@ func (c *command) updateNetworkType(cmd *cobra.Command) error {
 	}
 
 	cluster := clusters[0]
-	//clusterSpec := cluster.GetSpec()
+	clusterSpec := cluster.GetSpec()
 
 	networkTypeDisplayName, err := cmd.Flags().GetString("networkType")
 	if err != nil {
 		return err
 	}
-	//networkTypeInternal, err := getNetworkTypeInternal(networkTypeDisplayName)
-	//if err != nil {
-	//	return err
-	//}
+
+	if strings.ToLower(clusterSpec.GetNetworkType()) == networkTypeDisplayName {
+		output.ErrPrintf(errors.SRInvalidNetworkTypeUpgrade, environmentId, networkTypeDisplayName)
+		return nil
+	}
 
 	clusterUpdateRequest := &srcmv2.SrcmV2ClusterUpdate{
 		Spec: &srcmv2.SrcmV2ClusterSpecUpdate{
 			Environment: &srcmv2.GlobalObjectReference{Id: environmentId},
+			NetworkType: srcmv2.PtrString(networkTypeDisplayName),
 		},
 	}
 
-	if _, err := c.V2Client.UpgradeSchemaRegistryCluster(*clusterUpdateRequest, cluster.GetId()); err != nil {
+	if _, err := c.V2Client.UpdateSchemaRegistryCluster(*clusterUpdateRequest, cluster.GetId()); err != nil {
 		return err
 	}
 
