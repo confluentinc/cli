@@ -40,6 +40,7 @@ func (c *command) newClusterEnableCommand() *cobra.Command {
 	pcmd.AddCloudFlag(cmd)
 	cmd.Flags().String("geo", "", fmt.Sprintf("Specify the geo as %s.", utils.ArrayToCommaDelimitedString(availableGeos, "or")))
 	addPackageFlag(cmd, essentialsPackage)
+	addNetworkTypeFlag(cmd, publicNetworkType)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
@@ -80,6 +81,15 @@ func (c *command) clusterEnable(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	networkTypeDisplayName, err := cmd.Flags().GetString("networkType")
+	if err != nil {
+		return err
+	}
+	networkTypeInternal, err := getNetworkTypeInternal(networkTypeDisplayName)
+	if err != nil {
+		return err
+	}
+
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
@@ -94,7 +104,8 @@ func (c *command) clusterEnable(cmd *cobra.Command, _ []string) error {
 		// Name is a special string that everyone expects. Originally, this field was added to support
 		// multiple SR instances, but for now there's a contract between our services that it will be
 		// this hardcoded string constant
-		Name: "account schema-registry",
+		Name:        "account schema-registry",
+		NetworkType: networkTypeInternal,
 	}
 
 	var out *enableOut
