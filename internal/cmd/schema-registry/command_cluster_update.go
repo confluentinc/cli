@@ -5,6 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	srcmv2 "github.com/confluentinc/ccloud-sdk-go-v2/srcm/v2"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -16,7 +17,7 @@ import (
 func (c *command) newClusterUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "update",
-		Short:       "Update global mode or compatibility of Schema Registry.",
+		Short:       "Update global mode, network type  or compatibility of Schema Registry.",
 		Args:        cobra.NoArgs,
 		RunE:        c.clusterUpdate,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
@@ -33,6 +34,10 @@ func (c *command) newClusterUpdateCommand() *cobra.Command {
 				Text: "Update top-level mode of Schema Registry.",
 				Code: "confluent schema-registry cluster update --mode readwrite",
 			},
+			examples.Example{
+				Text: "Update network type Schema Registry.",
+				Code: "confluent schema-registry cluster update --networkType private",
+			},
 		),
 	}
 
@@ -43,6 +48,7 @@ func (c *command) newClusterUpdateCommand() *cobra.Command {
 	addRulesetDefaultsFlag(cmd)
 	addRulesetOverridesFlag(cmd)
 	addModeFlag(cmd)
+	addNetworkTypeFlag(cmd, "")
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddApiSecretFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -68,7 +74,58 @@ func (c *command) clusterUpdate(cmd *cobra.Command, _ []string) error {
 		return c.updateTopLevelMode(cmd)
 	}
 
+	networkType, err := cmd.Flags().GetString("networkType")
+	if err != nil {
+		return err
+	}
+	if networkType != "" {
+		return c.updateNetworkType(cmd)
+	}
+
 	return errors.New(errors.CompatibilityOrModeErrorMsg)
+}
+
+func (c *command) updateNetworkType(cmd *cobra.Command) error {
+	environmentId, err := c.Context.EnvironmentId()
+	if err != nil {
+		return err
+	}
+
+	clusters, err := c.V2Client.GetSchemaRegistryClustersByEnvironment(environmentId)
+	if err != nil {
+		return err
+	}
+
+	if len(clusters) == 0 {
+		return errors.NewSRNotEnabledError()
+	}
+
+	cluster := clusters[0]
+	clusterSpec := cluster.GetSpec()
+
+	networkTypeDisplayName, err := cmd.Flags().GetString("networkType")
+	if err != nil {
+		return err
+	}
+
+	if strings.ToLower(clusterSpec.GetNetworkType()) == networkTypeDisplayName {
+		output.ErrPrintf(errors.SRInvalidNetworkTypeUpgrade, environmentId, networkTypeDisplayName)
+		return nil
+	}
+
+	clusterUpdateRequest := &srcmv2.SrcmV2ClusterUpdate{
+		Spec: &srcmv2.SrcmV2ClusterSpecUpdate{
+			Environment: &srcmv2.GlobalObjectReference{Id: environmentId},
+			NetworkType: srcmv2.PtrString(networkTypeDisplayName),
+		},
+	}
+
+	if _, err := c.V2Client.UpdateSchemaRegistryCluster(*clusterUpdateRequest, cluster.GetId()); err != nil {
+		return err
+	}
+
+	output.Printf(errors.UpdatedToNetworkTypeMsg, environmentId, networkTypeDisplayName)
+	return nil
 }
 
 func (c *command) updateTopLevelCompatibility(cmd *cobra.Command) error {

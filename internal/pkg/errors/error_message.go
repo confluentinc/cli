@@ -237,10 +237,13 @@ const (
 	SchemaNotFoundErrorMsg                   = "Schema Registry subject or version not found"
 	SchemaNotFoundSuggestions                = "List available subjects with `confluent schema-registry subject list`.\n" +
 		"List available versions with `confluent schema-registry subject describe`."
-	NoSubjectLevelConfigErrorMsg = `subject "%s" does not have subject-level compatibility configured`
-	SRInvalidPackageTypeErrorMsg = `"%s" is an invalid package type`
-	SRInvalidPackageSuggestions  = "Allowed values for `--package` flag are: %s."
-	SRInvalidPackageUpgrade      = "Environment \"%s\" is already using the Stream Governance \"%s\" package.\n"
+	NoSubjectLevelConfigErrorMsg    = `subject "%s" does not have subject-level compatibility configured`
+	SRInvalidPackageTypeErrorMsg    = `"%s" is an invalid package type`
+	SRInvalidPackageSuggestions     = "Allowed values for `--package` flag are: %s."
+	SRInvalidPackageUpgrade         = "Environment \"%s\" is already using the Stream Governance \"%s\" package.\n"
+	SRInvalidNetworkTypeUpgrade     = "Environment \"%s\" is already using the network type \"%s\".\n"
+	SRInvalidNetworkTypeErrorMsg    = `"%s" is an invalid network type`
+	SRInvalidNetworkTypeSuggestions = "Allowed values for `--networkType` flag are: %s."
 
 	// secret commands
 	EnterInputTypeErrorMsg    = "enter %s"

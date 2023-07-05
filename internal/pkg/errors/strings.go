@@ -69,6 +69,7 @@ const (
 	DestroyDeletingMsg         = "Deleting: %s\n"
 
 	// schema-registry commands
+	UpdatedToNetworkTypeMsg             = "Successfully updated network type to \"%s\"\n"
 	UpdatedToLevelCompatibilityMsg      = "Successfully updated Top Level compatibility to \"%s\"\n"
 	UpdatedTopLevelModeMsg              = "Successfully updated Top Level mode to \"%s\"\n"
 	RegisteredSchemaMsg                 = "Successfully registered schema with ID %v\n"

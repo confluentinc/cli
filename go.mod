@@ -28,7 +28,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/metrics v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/org v0.6.0
 	github.com/confluentinc/ccloud-sdk-go-v2/service-quota v0.2.0
-	github.com/confluentinc/ccloud-sdk-go-v2/srcm v0.4.0
+	github.com/confluentinc/ccloud-sdk-go-v2/srcm v0.5.0
 	github.com/confluentinc/ccloud-sdk-go-v2/stream-designer v0.3.0
 	github.com/confluentinc/confluent-kafka-go v1.9.3-RC3
 	github.com/confluentinc/go-editor v0.11.0
@@ -173,3 +173,5 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
+
+replace github.com/confluentinc/ccloud-sdk-go-v1-public v0.0.0-20230427001341-5f8d2cce5ad9 => /Users/ksrinivasan/git/go/src/github.com/confluentinc/ccloud-sdk-go-v1-public

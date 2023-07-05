@@ -77,7 +77,7 @@ func (c *command) clusterUpgrade(cmd *cobra.Command, _ []string) error {
 		},
 	}
 
-	if _, err := c.V2Client.UpgradeSchemaRegistryCluster(*clusterUpdateRequest, cluster.GetId()); err != nil {
+	if _, err := c.V2Client.UpdateSchemaRegistryCluster(*clusterUpdateRequest, cluster.GetId()); err != nil {
 		return err
 	}
 

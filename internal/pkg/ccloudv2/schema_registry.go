@@ -77,7 +77,7 @@ func (c *Client) DeleteSchemaRegistryCluster(clusterId, environment string) erro
 	return errors.CatchCCloudV2Error(err, httpResp)
 }
 
-func (c *Client) UpgradeSchemaRegistryCluster(srcmV2ClusterUpdate srcmv2.SrcmV2ClusterUpdate, clusterId string) (srcmv2.SrcmV2Cluster, error) {
+func (c *Client) UpdateSchemaRegistryCluster(srcmV2ClusterUpdate srcmv2.SrcmV2ClusterUpdate, clusterId string) (srcmv2.SrcmV2Cluster, error) {
 	cluster, httpResp, err := c.SchemaRegistryClient.ClustersSrcmV2Api.UpdateSrcmV2Cluster(c.SchemaRegistryApiContext(), clusterId).SrcmV2ClusterUpdate(srcmV2ClusterUpdate).Execute()
 	return cluster, errors.CatchCCloudV2Error(err, httpResp)
 }
