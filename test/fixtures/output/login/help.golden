@@ -41,8 +41,8 @@ Log in to Confluent Platform with a MDS URL and CA certificate.
   $ confluent login --url https://localhost:8090 --ca-cert-path certs/my-cert.crt
 
 Flags:
-      --url string               Metadata Service (MDS) URL, for on-prem deployments.
-      --ca-cert-path string      Self-signed certificate chain in PEM format, for on-prem deployments.
+      --url string               Metadata Service (MDS) URL, for on-premises deployments.
+      --ca-cert-path string      Self-signed certificate chain in PEM format, for on-premises deployments.
       --no-browser               Do not open a browser window when authenticating using Single Sign-On (SSO).
       --organization-id string   The Confluent Cloud organization to log in to. If empty, log in to the default organization.
       --prompt                   Bypass non-interactive login and prompt for login credentials.
