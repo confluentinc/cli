@@ -1,4 +1,4 @@
-List partition-replicas statuses filtered by topic and partition via Confluent Kafka REST.
+List partition-replicas statuses filtered by topic and partition using Confluent Kafka REST.
 
 Usage:
   confluent kafka replica list [flags]

@@ -1,4 +1,4 @@
-Describe a Kafka partition via Confluent Kafka REST.
+Describe a Kafka partition using Confluent Kafka REST.
 
 Usage:
   confluent kafka partition describe <id> [flags]

@@ -23,7 +23,7 @@ const (
 	APIKeyNotValidForClusterErrorMsg    = "the provided API key does not belong to the target cluster"
 	APIKeyNotValidForClusterSuggestions = "Specify the cluster this API key belongs to using the `--resource` flag. Alternatively, first execute the `confluent kafka cluster use` command to set the context to the proper cluster for this key and retry the `confluent api-key store` command."
 	APIKeyNotFoundErrorMsg              = "unknown API key %s"
-	APIKeyNotFoundSuggestions           = "Ensure the API key exists and has not been deleted, or create a new API key via `confluent api-key create`."
+	APIKeyNotFoundSuggestions           = "Ensure the API key exists and has not been deleted, or create a new API key with `confluent api-key create`."
 	ServiceAccountNotFoundErrorMsg      = `service account "%s" not found`
 	ServiceAccountNotFoundSuggestions   = "List service accounts with `confluent service-account list`."
 
@@ -35,7 +35,7 @@ const (
 	MalformedConfigErrorMsg           = "bad input file: the audit log configuration for cluster %q uses invalid JSON: %v"
 
 	// byok commands
-	ByokKeyNotFoundSuggestions = "Ensure the self-managed key exists and has not been deleted, or register a new key via `confluent byok register`."
+	ByokKeyNotFoundSuggestions = "Ensure the self-managed key exists and has not been deleted, or register a new key with `confluent byok register`."
 	ByokUnknownKeyTypeErrorMsg = "unknown byok key type"
 
 	// login command
@@ -44,7 +44,7 @@ const (
 	SSOCredentialsDoNotMatchLoginCredentialsErrorMsg = "expected SSO credentials for %s but got credentials for %s"
 	SSOCredentialsDoNotMatchSuggestions              = "Please re-login and use the same email at the prompt and in the SSO portal."
 	EndOfFreeTrialErrorMsg                           = `organization "%s" has been suspended because your free trial has ended`
-	EndOfFreeTrialSuggestions                        = "To continue using Confluent Cloud, please enter a credit card with `confluent admin payment update` or claim a promo code with `confluent admin promo add`. To enter payment via the UI, please go to https://confluent.cloud/login"
+	EndOfFreeTrialSuggestions                        = "To continue using Confluent Cloud, please enter a credit card with `confluent admin payment update` or claim a promo code with `confluent admin promo add`. To enter payment through the UI, please go to https://confluent.cloud/login"
 
 	// confluent cluster commands
 	FetchClusterMetadataErrorMsg     = "unable to fetch cluster metadata: %s - %s"
@@ -136,7 +136,7 @@ const (
 	AuthorizeAccountsErrorMsg                        = "BYOK error: please authorize the key for the accounts (%s)x"
 	AuthorizeIdentityErrorMsg                        = "BYOK error: please authorize the key for the identity (%s)"
 	CKUOnlyForDedicatedErrorMsg                      = "specifying `--cku` flag is valid only for dedicated Kafka cluster creation"
-	EncryptionKeySupportErrorMsg                     = "BYOK via `--encryption-key` is only available for GCP. Use `confluent byok create` to register AWS and Azure keys."
+	EncryptionKeySupportErrorMsg                     = "BYOK with `--encryption-key` is only available for GCP. Use `confluent byok create` to register AWS and Azure keys."
 	CKUMoreThanZeroErrorMsg                          = "`--cku` value must be greater than 0"
 	CKUMoreThanOneErrorMsg                           = "`--cku` value must be greater than 1 for High Durability"
 	ClusterResizeNotSupportedErrorMsg                = "failed to update kafka cluster: cluster resize is only supported on dedicated clusters"
@@ -182,7 +182,7 @@ const (
 	UnknownValueFormatErrorMsg           = "unknown value schema format"
 	TopicExistsErrorMsg                  = `topic "%s" already exists for Kafka cluster "%s"`
 	TopicExistsSuggestions               = ListTopicSuggestions
-	NoAPISecretStoredOrPassedErrorMsg    = `no API secret for API key "%s" of resource "%s" passed via flag or stored in local CLI state`
+	NoAPISecretStoredOrPassedErrorMsg    = `no API secret for API key "%s" of resource "%s" passed with flag or stored in local CLI state`
 	NoAPISecretStoredOrPassedSuggestions = "Pass the API secret with flag \"--api-secret\" or store with `confluent api-key store %s --resource %s`."
 	PassedSecretButNotKeyErrorMsg        = "no API key specified"
 	PassedSecretButNotKeySuggestions     = `Use the "api-key" flag to specify an API key.`

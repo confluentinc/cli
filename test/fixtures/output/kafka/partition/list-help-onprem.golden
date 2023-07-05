@@ -1,4 +1,4 @@
-List the partitions that belong to a specified topic via Confluent Kafka REST.
+List the partitions that belong to a specified topic using Confluent Kafka REST.
 
 Usage:
   confluent kafka partition list [flags]
