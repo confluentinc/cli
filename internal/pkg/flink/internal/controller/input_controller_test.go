@@ -33,7 +33,7 @@ func (s *InputControllerTestSuite) SetupTest() {
 	s.history = &history.History{Data: []string{}}
 	s.prompt = mock.NewMockIPrompt(ctrl)
 	s.reverseISearch = mock.NewMockReverseISearch(ctrl)
-	s.inputController = NewInputController(s.appController, s.history).(*InputController)
+	s.inputController = NewInputController(s.history).(*InputController)
 	s.inputController.reverseISearch = s.reverseISearch
 	s.inputController.prompt = s.prompt
 }
@@ -60,39 +60,52 @@ func (s *InputControllerTestSuite) TestGetUserInputSetsInitialBuffer() {
 	require.Equal(s.T(), input, actual)
 }
 
-func (s *InputControllerTestSuite) TestIsSpecialInputReturnsTrueWhenReverseSearchIsEnabledAndSetsInitialBuffer() {
+func (s *InputControllerTestSuite) TestHasUserEnabledReverseSearchShouldBeTrue() {
 	s.inputController.reverseISearchEnabled = true
+
+	hasUserEnabledReverseSearch := s.inputController.HasUserEnabledReverseSearch()
+
+	require.True(s.T(), hasUserEnabledReverseSearch)
+}
+
+func (s *InputControllerTestSuite) TestHasUserEnabledReverseSearchShouldBeFalse() {
+	s.inputController.reverseISearchEnabled = false
+
+	hasUserEnabledReverseSearch := s.inputController.HasUserEnabledReverseSearch()
+
+	require.False(s.T(), hasUserEnabledReverseSearch)
+}
+
+func (s *InputControllerTestSuite) TestStartReverseSearch() {
 	searchResult := "search result"
 	s.reverseISearch.EXPECT().ReverseISearch(s.history.Data).Return(searchResult)
 
-	isSpecialInput := s.inputController.IsSpecialInput("input")
+	s.inputController.StartReverseSearch()
 
 	require.False(s.T(), s.inputController.reverseISearchEnabled)
 	require.Equal(s.T(), searchResult, s.inputController.InitialBuffer)
-	require.True(s.T(), isSpecialInput)
 }
 
-func (s *InputControllerTestSuite) TestIsSpecialInputReturnsTrueWhenShouldExitIsTrue() {
+func (s *InputControllerTestSuite) TestHasUserInitiatedExitShouldBeTrueWhenShouldExitIsTrue() {
 	s.inputController.shouldExit = true
-	s.appController.EXPECT().ExitApplication()
 
-	isSpecialInput := s.inputController.IsSpecialInput("input")
+	hasUserInitiatedExit := s.inputController.HasUserInitiatedExit("exit;")
 
-	require.True(s.T(), isSpecialInput)
+	require.True(s.T(), hasUserInitiatedExit)
 }
 
-func (s *InputControllerTestSuite) TestIsSpecialInputReturnsTrueWhenUserInputIsEmpty() {
-	s.appController.EXPECT().ExitApplication()
+func (s *InputControllerTestSuite) TestHasUserInitiatedExitShouldBeTrueWhenUserInputEmpty() {
+	hasUserInitiatedExit := s.inputController.HasUserInitiatedExit("")
 
-	isSpecialInput := s.inputController.IsSpecialInput("")
-
-	require.True(s.T(), isSpecialInput)
+	require.True(s.T(), hasUserInitiatedExit)
 }
 
-func (s *InputControllerTestSuite) TestIsSpecialInputReturnsFalse() {
-	isSpecialInput := s.inputController.IsSpecialInput("select 1;")
+func (s *InputControllerTestSuite) TestHasUserInitiatedExitShouldBeFalse() {
+	s.inputController.reverseISearchEnabled = false
 
-	require.False(s.T(), isSpecialInput)
+	hasUserEnabledReverseSearch := s.inputController.HasUserEnabledReverseSearch()
+
+	require.False(s.T(), hasUserEnabledReverseSearch)
 }
 
 func (s *InputControllerTestSuite) TestTurnOnSmartCompletion() {

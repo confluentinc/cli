@@ -65,18 +65,12 @@ func unauthenticated() error {
 	return errors.New("401 unauthorized")
 }
 
-func manualStop() error {
-	return errors.New("manual stop")
-}
-
 func (s *ApplicationTestSuite) runMainLoop(stopAfterLoopFinishes bool) string {
 	if stopAfterLoopFinishes {
-		// this makes the loop stop after one iteration
+		// hack to make the loop stop after one iteration
 		s.inputController.EXPECT().GetUserInput().Return("")
-		s.inputController.EXPECT().IsSpecialInput("").DoAndReturn(func(string) bool {
-			s.app.tokenRefreshFunc = manualStop
-			return true
-		})
+		s.inputController.EXPECT().HasUserEnabledReverseSearch().Return(false)
+		s.inputController.EXPECT().HasUserInitiatedExit("").Return(true)
 		s.appController.EXPECT().ExitApplication()
 	}
 
@@ -93,12 +87,25 @@ func (s *ApplicationTestSuite) TestReplDoesNotRunWhenUnauthenticated() {
 	cupaloy.SnapshotT(s.T(), actual)
 }
 
-func (s *ApplicationTestSuite) TestReplContinuesOnSpecialInput() {
+func (s *ApplicationTestSuite) TestReplContinuesWhenUserEnabledReverseSearch() {
 	userInput := "test-input"
 	s.inputController.EXPECT().GetUserInput().Return(userInput)
-	s.inputController.EXPECT().IsSpecialInput(userInput).Return(true)
+	s.inputController.EXPECT().HasUserEnabledReverseSearch().Return(true)
+	s.inputController.EXPECT().StartReverseSearch()
 
 	actual := s.runMainLoop(true)
+
+	cupaloy.SnapshotT(s.T(), actual)
+}
+
+func (s *ApplicationTestSuite) TestReplExitsAppWhenUserInitiatedExit() {
+	userInput := "test-input"
+	s.inputController.EXPECT().GetUserInput().Return(userInput)
+	s.inputController.EXPECT().HasUserEnabledReverseSearch().Return(false)
+	s.inputController.EXPECT().HasUserInitiatedExit(userInput).Return(true)
+	s.appController.EXPECT().ExitApplication()
+
+	actual := s.runMainLoop(false)
 
 	cupaloy.SnapshotT(s.T(), actual)
 }
@@ -106,7 +113,8 @@ func (s *ApplicationTestSuite) TestReplContinuesOnSpecialInput() {
 func (s *ApplicationTestSuite) TestReplAppendsStatementToHistoryAndStopsOnExecuteStatementError() {
 	userInput := "test-input"
 	s.inputController.EXPECT().GetUserInput().Return(userInput)
-	s.inputController.EXPECT().IsSpecialInput(userInput).Return(false)
+	s.inputController.EXPECT().HasUserEnabledReverseSearch().Return(false)
+	s.inputController.EXPECT().HasUserInitiatedExit(userInput).Return(false)
 	s.statementController.EXPECT().ExecuteStatement(userInput).Return(nil, &types.StatementError{})
 
 	actual := s.runMainLoop(true)
@@ -118,7 +126,8 @@ func (s *ApplicationTestSuite) TestReplAppendsStatementToHistoryAndStopsOnExecut
 func (s *ApplicationTestSuite) TestReplStopsOnExecuteStatementError() {
 	userInput := "test-input"
 	s.inputController.EXPECT().GetUserInput().Return(userInput)
-	s.inputController.EXPECT().IsSpecialInput(userInput).Return(false)
+	s.inputController.EXPECT().HasUserEnabledReverseSearch().Return(false)
+	s.inputController.EXPECT().HasUserInitiatedExit(userInput).Return(false)
 	s.statementController.EXPECT().ExecuteStatement(userInput).Return(nil, &types.StatementError{})
 
 	actual := s.runMainLoop(true)
@@ -130,7 +139,8 @@ func (s *ApplicationTestSuite) TestReplReturnsWhenHandleStatementResultsReturnsT
 	userInput := "test-input"
 	statement := types.ProcessedStatement{}
 	s.inputController.EXPECT().GetUserInput().Return(userInput)
-	s.inputController.EXPECT().IsSpecialInput(userInput).Return(false)
+	s.inputController.EXPECT().HasUserEnabledReverseSearch().Return(false)
+	s.inputController.EXPECT().HasUserInitiatedExit(userInput).Return(false)
 	s.statementController.EXPECT().ExecuteStatement(userInput).Return(&statement, nil)
 	s.resultFetcher.EXPECT().Init(statement)
 	s.store.EXPECT().FetchStatementResults(statement).Return(&statement, nil)
@@ -145,7 +155,8 @@ func (s *ApplicationTestSuite) TestReplDoesNotReturnWhenHandleStatementResultsRe
 	userInput := "test-input"
 	statement := types.ProcessedStatement{}
 	s.inputController.EXPECT().GetUserInput().Return(userInput)
-	s.inputController.EXPECT().IsSpecialInput(userInput).Return(false)
+	s.inputController.EXPECT().HasUserEnabledReverseSearch().Return(false)
+	s.inputController.EXPECT().HasUserInitiatedExit(userInput).Return(false)
 	s.statementController.EXPECT().ExecuteStatement(userInput).Return(&statement, nil)
 	s.resultFetcher.EXPECT().Init(statement)
 	s.store.EXPECT().FetchStatementResults(statement).Return(&statement, nil)

@@ -1,12 +1,7 @@
 package app
 
 import (
-	"os"
 	"sync"
-
-	"golang.org/x/term"
-
-	"github.com/confluentinc/go-prompt"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/flink/components"
@@ -16,7 +11,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/store"
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/utils"
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
-	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
 type Application struct {
@@ -54,15 +48,15 @@ func StartApp(client ccloudv2.GatewayClientInterface, tokenRefreshFunc func() er
 	dataStore := store.NewStore(client, appController.ExitApplication, &appOptions, synchronizedTokenRefresh(tokenRefreshFunc))
 	resultFetcher := results.NewResultFetcher(dataStore)
 
-	stdinBefore := getStdin()
-	consoleParser := getConsoleParser()
+	stdinBefore := utils.GetStdin()
+	consoleParser := utils.GetConsoleParser()
 	appController.AddCleanupFunction(func() {
-		tearDownConsoleParser(consoleParser)
-		restoreStdin(stdinBefore)
+		utils.TearDownConsoleParser(consoleParser)
+		utils.RestoreStdin(stdinBefore)
 	})
 
 	// Instantiate Component Controllers
-	inputController := controller.NewInputController(appController, historyStore)
+	inputController := controller.NewInputController(historyStore)
 	statementController := controller.NewStatementController(appController, dataStore, consoleParser)
 	interactiveOutputController := controller.NewInteractiveOutputController(resultFetcher, appOptions.GetVerbose())
 	basicOutputController := controller.NewBasicOutputController(resultFetcher, inputController.GetWindowWidth)
@@ -82,42 +76,16 @@ func StartApp(client ccloudv2.GatewayClientInterface, tokenRefreshFunc func() er
 	app.readEvalPrintLoop()
 }
 
-func getStdin() *term.State {
-	state, err := term.GetState(int(os.Stdin.Fd()))
-	if err != nil {
-		log.CliLogger.Warnf("Couldn't get stdin state with term.GetState. Error: %v\n", err)
-		return nil
-	}
-	return state
-}
-
-func getConsoleParser() prompt.ConsoleParser {
-	consoleParser := prompt.NewStandardInputParser()
-	err := consoleParser.Setup()
-	if err != nil {
-		log.CliLogger.Warnf("Couldn't setup console parser. Error: %v\n", err)
-	}
-	return consoleParser
-}
-
-func tearDownConsoleParser(consoleParser prompt.ConsoleParser) {
-	err := consoleParser.TearDown()
-	if err != nil {
-		log.CliLogger.Warnf("Couldn't tear down console parser. Error: %v\n", err)
-	}
-}
-
-func restoreStdin(state *term.State) {
-	if state != nil {
-		_ = term.Restore(int(os.Stdin.Fd()), state)
-	}
-}
-
 func (a *Application) readEvalPrintLoop() {
 	for a.isAuthenticated() {
 		userInput := a.inputController.GetUserInput()
-		if a.inputController.IsSpecialInput(userInput) {
+		if a.inputController.HasUserEnabledReverseSearch() {
+			a.inputController.StartReverseSearch()
 			continue
+		}
+		if a.inputController.HasUserInitiatedExit(userInput) {
+			a.appController.ExitApplication()
+			return
 		}
 		a.history.Append(userInput)
 
@@ -126,7 +94,8 @@ func (a *Application) readEvalPrintLoop() {
 			continue
 		}
 
-		executedStatementWithResults, err := a.fetchInitialResults(*executedStatement)
+		// fetch first result page here to init result fetcher and to decide which OutputController to use
+		executedStatementWithResults, err := a.store.FetchStatementResults(*executedStatement)
 		if err != nil {
 			continue
 		}
@@ -142,11 +111,6 @@ func (a *Application) isAuthenticated() bool {
 		return false
 	}
 	return true
-}
-
-func (a *Application) fetchInitialResults(executedStatement types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError) {
-	executedStatementWithResults, err := a.store.FetchStatementResults(executedStatement)
-	return executedStatementWithResults, err
 }
 
 func (a *Application) getOutputController(processedStatementWithResults types.ProcessedStatement) types.OutputControllerInterface {

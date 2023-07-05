@@ -7,7 +7,9 @@ type ApplicationControllerInterface interface {
 
 type InputControllerInterface interface {
 	GetUserInput() string
-	IsSpecialInput(string) bool
+	HasUserInitiatedExit(userInput string) bool
+	HasUserEnabledReverseSearch() bool
+	StartReverseSearch()
 	GetWindowWidth() int
 }
 

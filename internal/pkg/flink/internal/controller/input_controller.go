@@ -19,7 +19,6 @@ import (
 type InputController struct {
 	History               *history.History
 	InitialBuffer         string
-	appController         types.ApplicationControllerInterface
 	smartCompletion       bool
 	reverseISearchEnabled bool
 	prompt                prompt.IPrompt
@@ -29,11 +28,10 @@ type InputController struct {
 
 const defaultWindowSize = 100
 
-func NewInputController(a types.ApplicationControllerInterface, history *history.History) types.InputControllerInterface {
+func NewInputController(history *history.History) types.InputControllerInterface {
 	inputController := &InputController{
 		History:         history,
 		InitialBuffer:   "",
-		appController:   a,
 		smartCompletion: true,
 		shouldExit:      false,
 		reverseISearch:  reverseisearch.NewReverseISearch(),
@@ -51,20 +49,24 @@ func (c *InputController) GetUserInput() string {
 	return c.prompt.Input()
 }
 
-func (c *InputController) IsSpecialInput(userInput string) bool {
-	if c.reverseISearchEnabled {
-		searchResult := c.reverseISearch.ReverseISearch(c.History.Data)
-		c.reverseISearchEnabled = false
-		c.InitialBuffer = searchResult
+func (c *InputController) HasUserInitiatedExit(userInput string) bool {
+	// the user input should actually never be an empty string. The only case in which go-prompt returns an empty string,
+	// is when the user presses CtrlD. This is why we need to specifically handle this case here.
+	userPressedCtrlD := userInput == ""
+	if c.shouldExit || userPressedCtrlD {
 		return true
 	}
-
-	if c.shouldExit || userInput == "" {
-		c.appController.ExitApplication()
-		return true
-	}
-
 	return false
+}
+
+func (c *InputController) HasUserEnabledReverseSearch() bool {
+	return c.reverseISearchEnabled
+}
+
+func (c *InputController) StartReverseSearch() {
+	searchResult := c.reverseISearch.ReverseISearch(c.History.Data)
+	c.reverseISearchEnabled = false
+	c.InitialBuffer = searchResult
 }
 
 func (c *InputController) GetWindowWidth() int {

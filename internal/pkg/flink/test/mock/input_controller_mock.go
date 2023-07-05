@@ -61,16 +61,42 @@ func (mr *MockInputControllerInterfaceMockRecorder) GetWindowWidth() *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetWindowWidth", reflect.TypeOf((*MockInputControllerInterface)(nil).GetWindowWidth))
 }
 
-// IsSpecialInput mocks base method.
-func (m *MockInputControllerInterface) IsSpecialInput(arg0 string) bool {
+// HasUserEnabledReverseSearch mocks base method.
+func (m *MockInputControllerInterface) HasUserEnabledReverseSearch() bool {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "IsSpecialInput", arg0)
+	ret := m.ctrl.Call(m, "HasUserEnabledReverseSearch")
 	ret0, _ := ret[0].(bool)
 	return ret0
 }
 
-// IsSpecialInput indicates an expected call of IsSpecialInput.
-func (mr *MockInputControllerInterfaceMockRecorder) IsSpecialInput(arg0 interface{}) *gomock.Call {
+// HasUserEnabledReverseSearch indicates an expected call of HasUserEnabledReverseSearch.
+func (mr *MockInputControllerInterfaceMockRecorder) HasUserEnabledReverseSearch() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsSpecialInput", reflect.TypeOf((*MockInputControllerInterface)(nil).IsSpecialInput), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasUserEnabledReverseSearch", reflect.TypeOf((*MockInputControllerInterface)(nil).HasUserEnabledReverseSearch))
+}
+
+// HasUserInitiatedExit mocks base method.
+func (m *MockInputControllerInterface) HasUserInitiatedExit(arg0 string) bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "HasUserInitiatedExit", arg0)
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// HasUserInitiatedExit indicates an expected call of HasUserInitiatedExit.
+func (mr *MockInputControllerInterfaceMockRecorder) HasUserInitiatedExit(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasUserInitiatedExit", reflect.TypeOf((*MockInputControllerInterface)(nil).HasUserInitiatedExit), arg0)
+}
+
+// StartReverseSearch mocks base method.
+func (m *MockInputControllerInterface) StartReverseSearch() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "StartReverseSearch")
+}
+
+// StartReverseSearch indicates an expected call of StartReverseSearch.
+func (mr *MockInputControllerInterfaceMockRecorder) StartReverseSearch() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StartReverseSearch", reflect.TypeOf((*MockInputControllerInterface)(nil).StartReverseSearch))
 }
