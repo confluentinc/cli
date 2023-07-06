@@ -154,7 +154,7 @@ func TestWaitForPendingHitsErrorRetryLimit(t *testing.T) {
 		},
 	}
 	expectedError := &types.StatementError{
-		Message:        fmt.Sprintf("the server can't process this statement right now, exiting after 6 retries"),
+		Message:        "the server can't process this statement right now, exiting after 6 retries",
 		FailureMessage: fmt.Sprintf("captured retryable errors: %s", strings.Repeat(statusDetailMessage+"; ", 5)+statusDetailMessage),
 	}
 	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, nil).AnyTimes()
