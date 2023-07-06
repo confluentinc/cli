@@ -29,9 +29,9 @@ func (c *command) newExporterUpdateCommandOnPrem() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("config-file", "", "Exporter config file.")
+	cmd.Flags().String("config-file", "", "Exporter configuration file.")
 	cmd.Flags().StringSlice("subjects", []string{}, "A comma-separated list of exporter subjects.")
-	cmd.Flags().String("subject-format", "${subject}", "Exporter subject rename format. The format string can contain ${subject}, which will be replaced with default subject name.")
+	cmd.Flags().String("subject-format", "${subject}", "Exporter subject rename format. The format string can contain ${subject}, which will be replaced with the default subject name.")
 	addContextTypeFlag(cmd)
 	cmd.Flags().String("context-name", "", "Exporter context name.")
 	cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())

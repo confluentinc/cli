@@ -129,7 +129,7 @@ func (c *createCommand) addCommand(clientConfig *clientConfig) {
 				Code: contextExample,
 			},
 			examples.Example{
-				Text: clientConfigDescription + " with arguments passed via flags.",
+				Text: clientConfigDescription + " with arguments passed with flags.",
 				Code: flagExample,
 			},
 			examples.Example{
