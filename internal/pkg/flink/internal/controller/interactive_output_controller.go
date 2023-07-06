@@ -194,13 +194,14 @@ func (t *InteractiveOutputController) getTableTitle() string {
 
 	if t.debug {
 		return fmt.Sprintf(
-			" %s (%s) | last page size: %d | current cache size: %d/%d | table size: %d ",
+			" %s (%s) | last page size: %d | current cache size: %d/%d | table size: %d | pending retraction: %d ",
 			mode,
 			state,
 			t.resultFetcher.GetStatement().GetPageSize(),
 			t.resultFetcher.GetMaterializedStatementResults().GetChangelogSize(),
 			t.resultFetcher.GetMaterializedStatementResults().GetMaxResults(),
 			t.resultFetcher.GetMaterializedStatementResults().GetTableSize(),
+			t.resultFetcher.GetMaterializedStatementResults().GetPendingRemovalCount(),
 		)
 	}
 

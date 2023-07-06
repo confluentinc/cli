@@ -74,7 +74,8 @@ func (s *MaterializedStatementResultsTestSuite) TestTableMode() {
 		// remove previous row
 		previousRow.Operation = types.UPDATE_BEFORE
 		materializedStatementResults.Append(previousRow)
-		require.Equal(s.T(), 0, materializedStatementResults.GetTableSize())
+		require.Equal(s.T(), 1, materializedStatementResults.GetTableSize())
+		require.Equal(s.T(), 1, materializedStatementResults.GetPendingRemovalCount())
 
 		// add new row
 		previousRow = types.StatementResultRow{
@@ -289,7 +290,23 @@ func (s *MaterializedStatementResultsTestSuite) TestTableDoesNotCleanupEventsTha
 		materializedStatementResults.Append(newRow)
 	}
 
-	require.Equal(s.T(), 1, materializedStatementResults.GetTableSize())
+	require.Equal(s.T(), 1, materializedStatementResults.GetPendingRemovalCount())
+	require.Equal(s.T(), 2, materializedStatementResults.GetTableSize())
+
+	newRow := types.StatementResultRow{
+		Operation: types.UPDATE_AFTER,
+		Fields: []types.StatementResultField{
+			types.AtomicStatementResultField{
+				Type:  types.INTEGER,
+				Value: strconv.Itoa(10),
+			},
+		},
+	}
+	materializedStatementResults.Append(newRow)
+
+	require.Equal(s.T(), 0, materializedStatementResults.GetPendingRemovalCount())
+	require.Equal(s.T(), 2, materializedStatementResults.GetTableSize())
+
 	materializedStatementResults.ForEach(func(rowIdx int, row *types.StatementResultRow) {
 		require.Equal(s.T(), row.Operation, row.Operation)
 		require.Equal(s.T(), row.Fields, row.Fields)
