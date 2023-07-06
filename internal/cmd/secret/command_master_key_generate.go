@@ -11,11 +11,11 @@ import (
 
 func (c *command) newGenerateFunction() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "generate",
-		Short:   "Generate a master key for Confluent Platform.",
-		Long:    "This command generates a master key. This key is used for encryption and decryption of configuration values.",
-		Args:    cobra.NoArgs,
-		RunE:    c.generate,
+		Use:   "generate",
+		Short: "Generate a master key for Confluent Platform.",
+		Long:  "This command generates a master key. This key is used for encryption and decryption of configuration values.",
+		Args:  cobra.NoArgs,
+		RunE:  c.generate,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Pipe the passphrase from stdin:`,
