@@ -4,10 +4,9 @@ Usage:
   confluent flink statement list [flags]
 
 Flags:
-      --compute-pool string   Flink compute pool ID.
-      --environment string    Environment ID.
-      --context string        CLI context name.
-  -o, --output string         Specify the output format as "human", "json", or "yaml". (default "human")
+      --environment string   Environment ID.
+      --context string       CLI context name.
+  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
   -h, --help            Show help for this command.
