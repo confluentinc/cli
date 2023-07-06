@@ -5,20 +5,31 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 func (c *command) newGenerateFunction() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "generate",
-		Short: "Generate a master key for Confluent Platform.",
-		Long:  "This command generates a master key. This key is used for encryption and decryption of configuration values.",
-		Args:  cobra.NoArgs,
-		RunE:  c.generate,
+		Use:     "generate",
+		Short:   "Generate a master key for Confluent Platform.",
+		Long:    "This command generates a master key. This key is used for encryption and decryption of configuration values.",
+		Args:    cobra.NoArgs,
+		RunE:    c.generate,
+		Example: examples.BuildExampleString(
+			examples.Example{
+				Text: `Pipe the passphrase from stdin:`,
+				Code: "confluent secret master-key generate --local-secrets-file /path/to/secrets.txt --passphrase -",
+			},
+			examples.Example{
+				Text: `Read the passphrase from the file "/User/bob/secret.properties":`,
+				Code: "confluent secret master-key generate --local-secrets-file /path/to/secrets.txt --passphrase @/User/bob/secret.properties",
+			},
+		),
 	}
 
 	cmd.Flags().String("local-secrets-file", "", "Path to the local encrypted configuration properties file.")
-	cmd.Flags().String("passphrase", "", `The key passphrase. To pipe from stdin use "-", e.g. "--passphrase -". To read from a file use "@<path-to-file>", e.g. "--passphrase @/User/bob/secret.properties".`)
+	cmd.Flags().String("passphrase", "", "The key passphrase.")
 
 	cobra.CheckErr(cmd.MarkFlagRequired("local-secrets-file"))
 
