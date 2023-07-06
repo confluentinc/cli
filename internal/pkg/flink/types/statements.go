@@ -60,10 +60,6 @@ const (
 
 type StatementResultOperation float64
 
-func (s StatementResultOperation) IsInsertOperation() bool {
-	return s == INSERT || s == UPDATE_AFTER
-}
-
 func (s StatementResultOperation) String() string {
 	switch s {
 	case INSERT:

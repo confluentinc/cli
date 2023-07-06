@@ -236,7 +236,7 @@ func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysPageSizeAnd
 	s.resultFetcher.EXPECT().IsTableMode().Return(true)
 	s.resultFetcher.EXPECT().GetFetchState().Return(types.Running)
 	s.resultFetcher.EXPECT().GetStatement().Return(executedStatementWithResults)
-	s.resultFetcher.EXPECT().GetMaterializedStatementResults().Return(&mat).Times(3)
+	s.resultFetcher.EXPECT().GetMaterializedStatementResults().Return(&mat).Times(4)
 	s.interactiveOutputController.debug = true
 
 	actual := s.interactiveOutputController.getTableTitle()

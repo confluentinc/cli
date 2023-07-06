@@ -72,13 +72,14 @@ func (i *MaterializedStatementResultsIterator) Move(stepsToMove int) *StatementR
 }
 
 type MaterializedStatementResults struct {
-	isTableMode bool
-	maxCapacity int
-	headers     []string
-	changelog   LinkedList[StatementResultRow]
-	table       LinkedList[StatementResultRow]
-	cache       map[string]*ListElement[StatementResultRow]
-	lock        sync.RWMutex
+	isTableMode     bool
+	maxCapacity     int
+	headers         []string
+	changelog       LinkedList[StatementResultRow]
+	table           LinkedList[StatementResultRow]
+	cache           map[string]*ListElement[StatementResultRow]
+	retractionCache []*ListElement[StatementResultRow]
+	lock            sync.RWMutex
 }
 
 func NewMaterializedStatementResults(headers []string, maxCapacity int) MaterializedStatementResults {
@@ -133,6 +134,7 @@ func (s *MaterializedStatementResults) Append(rows ...StatementResultRow) bool {
 	defer s.lock.Unlock()
 
 	allValuesInserted := true
+
 	for _, row := range rows {
 		if len(row.Fields) != len(s.headers) {
 			allValuesInserted = false
@@ -141,20 +143,39 @@ func (s *MaterializedStatementResults) Append(rows ...StatementResultRow) bool {
 		s.changelog.PushBack(row)
 
 		rowKey := row.GetRowKey()
-		if row.Operation.IsInsertOperation() {
+		operation := row.Operation
+		switch operation {
+		case INSERT:
 			listPtr := s.table.PushBack(row)
 			s.cache[rowKey] = listPtr
-		} else {
+		case DELETE:
 			listPtr, ok := s.cache[rowKey]
 			if ok {
 				s.table.Remove(listPtr)
 				delete(s.cache, rowKey)
 			}
-		}
+		case UPDATE_BEFORE:
+			listPtr, ok := s.cache[rowKey]
+			if ok {
+				s.retractionCache = append(s.retractionCache, listPtr)
+				delete(s.cache, rowKey)
+			}
 
-		// if we are now over the capacity we need to remove some records
-		s.cleanup()
+		case UPDATE_AFTER:
+			if len(s.retractionCache) == 0 {
+				listPtr := s.table.PushBack(row)
+				s.cache[rowKey] = listPtr
+			} else {
+				listPtr := s.retractionCache[0]
+				s.retractionCache = s.retractionCache[1:]
+				listPtr.element.Value = row
+				s.cache[rowKey] = listPtr
+			}
+		}
 	}
+
+	// if we are now over the capacity we need to remove some records
+	s.cleanup()
 	return allValuesInserted
 }
 
@@ -230,4 +251,8 @@ func (s *MaterializedStatementResults) GetTableSize() int {
 
 func (s *MaterializedStatementResults) GetChangelogSize() int {
 	return s.changelog.Len()
+}
+
+func (s *MaterializedStatementResults) GetPendingRemovalCount() int {
+	return len(s.retractionCache)
 }
