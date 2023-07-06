@@ -20,7 +20,7 @@ func (c *clusterCommand) newUpdateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the connector being updated.`)
-	cmd.Flags().String("config-file", "", "JSON connector config file.")
+	cmd.Flags().String("config-file", "", "JSON connector configuration file.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
