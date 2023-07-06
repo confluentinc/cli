@@ -39,7 +39,9 @@ var commandRules = []linter.CommandRule{
 	linter.RequireValidExamples(),
 
 	// Soft Requirements
-	linter.RequireLengthBetween("Short", 10, 64),
+	linter.Filter(linter.RequireLengthBetween("Short", 10, 60),
+		linter.ExcludeCommand("audit-log config edit"),
+		linter.ExcludeCommand("audit-log config update")),
 }
 
 var flagRules = []linter.FlagRule{
