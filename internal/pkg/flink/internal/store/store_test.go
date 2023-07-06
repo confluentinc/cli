@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"testing"
 	"time"
 
@@ -122,6 +123,39 @@ func TestWaitForPendingTimesout(t *testing.T) {
 	expectedError := &types.StatementError{
 		Message:        fmt.Sprintf("statement is still pending after %f seconds. If you want to increase the timeout for the client, you can run \"SET table.results-timeout=1200;\" to adjust the maximum timeout in seconds.", timeout.Seconds()),
 		FailureMessage: fmt.Sprintf("captured retryable errors: %s", statusDetailMessage),
+	}
+	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, nil).AnyTimes()
+	processedStatement, err := s.waitForPendingStatement(context.Background(), statementName, timeout)
+
+	assert.Equal(t, expectedError, err)
+	assert.Nil(t, processedStatement)
+}
+
+func TestWaitForPendingHitsErrorRetryLimit(t *testing.T) {
+	statementName := "statementName"
+	timeout := time.Duration(10) * time.Second
+
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
+	appOptions := types.ApplicationOptions{
+		OrgResourceId: "orgId",
+		EnvironmentId: "envId",
+	}
+	s := &Store{
+		client:           client,
+		appOptions:       &appOptions,
+		tokenRefreshFunc: tokenRefreshFunc,
+	}
+
+	statusDetailMessage := "test status detail message"
+	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
+		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+			Phase:  "PENDING",
+			Detail: &statusDetailMessage,
+		},
+	}
+	expectedError := &types.StatementError{
+		Message:        fmt.Sprintf("the server can't process this statement right now, exiting after 6 retries"),
+		FailureMessage: fmt.Sprintf("captured retryable errors: %s", strings.Repeat(statusDetailMessage+"; ", 5)+statusDetailMessage),
 	}
 	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, nil).AnyTimes()
 	processedStatement, err := s.waitForPendingStatement(context.Background(), statementName, timeout)
