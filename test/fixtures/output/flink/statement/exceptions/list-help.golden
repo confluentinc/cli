@@ -4,9 +4,8 @@ Usage:
   confluent flink statement exceptions list <statement name> [flags]
 
 Flags:
-      --compute-pool string   Flink compute pool ID.
-      --environment string    Environment ID.
-      --context string        CLI context name.
+      --environment string   Environment ID.
+      --context string       CLI context name.
 
 Global Flags:
   -h, --help            Show help for this command.
