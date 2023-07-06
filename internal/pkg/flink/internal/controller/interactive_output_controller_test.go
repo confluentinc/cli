@@ -242,7 +242,7 @@ func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysPageSizeAnd
 	cupaloy.SnapshotT(s.T(), actual)
 }
 
-func (s *InteractiveOutputControllerTestSuite) TestArrowUpOrDownStopsFetchWhenAutoRefreshIsRunning() {
+func (s *InteractiveOutputControllerTestSuite) TestArrowUpOrDownTogglesAutoRefreshWhenAutoRefreshIsRunning() {
 	// Given
 	testCases := []struct {
 		name  string
@@ -290,7 +290,7 @@ func (s *InteractiveOutputControllerTestSuite) TestArrowUpOrDownDoesNothingWhenA
 	}
 }
 
-func (s *InteractiveOutputControllerTestSuite) TestJumpUpOrDownStopsFetchWhenAutoRefreshIsRunning() {
+func (s *InteractiveOutputControllerTestSuite) TestJumpUpOrDownTogglesAutoRefreshWhenAutoRefreshIsRunning() {
 	// Given
 	testCases := []struct {
 		name  string
