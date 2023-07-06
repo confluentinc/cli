@@ -151,23 +151,23 @@ func (s *CLITestSuite) TestKafka() {
 
 	resetConfiguration(s.T(), false)
 
-	for _, tt := range tests {
-		tt.login = "cloud"
-		tt.workflow = true
-		s.runIntegrationTest(tt)
+	for _, test := range tests {
+		test.login = "cloud"
+		test.workflow = true
+		s.runIntegrationTest(test)
 	}
 
 	tests = []CLITest{
 		{args: fmt.Sprintf("kafka link describe link-1 --url %s", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/link/describe-onprem.golden"},
 	}
 
-	for _, tt := range tests {
-		tt.login = "onprem"
-		s.runIntegrationTest(tt)
+	for _, test := range tests {
+		test.login = "onprem"
+		s.runIntegrationTest(test)
 	}
 }
 
-func (s *CLITestSuite) TestKafkaClusterCreateByok() {
+func (s *CLITestSuite) TestKafkaClusterCreate_Byok() {
 	test := CLITest{
 		login:   "cloud",
 		args:    "kafka cluster create cck-byok-test --cloud aws --region us-east-1 --type dedicated --cku 1 --byok cck-001",
@@ -209,10 +209,10 @@ func (s *CLITestSuite) TestKafkaClientConfig() {
 
 	resetConfiguration(s.T(), false)
 
-	for _, tt := range tests {
-		tt.login = "cloud"
-		tt.workflow = true
-		s.runIntegrationTest(tt)
+	for _, test := range tests {
+		test.login = "cloud"
+		test.workflow = true
+		s.runIntegrationTest(test)
 	}
 }
 
@@ -253,14 +253,14 @@ func (s *CLITestSuite) TestKafkaBroker() {
 		{args: "kafka broker get-tasks --all --task-type add-broker", fixture: "kafka/broker/get-tasks-all-add-broker.golden"},
 	}
 
-	for _, tt := range tests {
-		tt.login = "onprem"
-		tt.env = []string{"CONFLUENT_REST_URL=" + kafkaRestURL}
-		s.runIntegrationTest(tt)
+	for _, test := range tests {
+		test.login = "onprem"
+		test.env = []string{"CONFLUENT_REST_URL=" + kafkaRestURL}
+		s.runIntegrationTest(test)
 	}
 }
 
-func (s *CLITestSuite) TestKafkaPartitions() {
+func (s *CLITestSuite) TestKafkaPartition() {
 	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
 	tests := []CLITest{
 		{args: "kafka partition list --topic topic1", fixture: "kafka/partition/list.golden"},
@@ -275,10 +275,10 @@ func (s *CLITestSuite) TestKafkaPartitions() {
 		{args: "kafka partition reassignment list 0 --topic topic1", fixture: "kafka/partition/reassignment/list-by-partition.golden"},
 		{args: "kafka partition reassignment list 0 --topic topic1 -o yaml", fixture: "kafka/partition/reassignment/list-by-partition-yaml.golden"},
 	}
-	for _, tt := range tests {
-		tt.login = "onprem"
-		tt.env = []string{"CONFLUENT_REST_URL=" + kafkaRestURL}
-		s.runIntegrationTest(tt)
+	for _, test := range tests {
+		test.login = "onprem"
+		test.env = []string{"CONFLUENT_REST_URL=" + kafkaRestURL}
+		s.runIntegrationTest(test)
 	}
 }
 
@@ -291,10 +291,10 @@ func (s *CLITestSuite) TestKafkaReplica() {
 		{args: "kafka replica list --topic topic-exist --partition 2 -o yaml", fixture: "kafka/replica/list-partition-replicas-yaml.golden"},
 		{args: "kafka replica list", fixture: "kafka/replica/no-flags-error.golden", exitCode: 1},
 	}
-	for _, tt := range tests {
-		tt.login = "onprem"
-		tt.env = []string{"CONFLUENT_REST_URL=" + kafkaRestURL}
-		s.runIntegrationTest(tt)
+	for _, test := range tests {
+		test.login = "onprem"
+		test.env = []string{"CONFLUENT_REST_URL=" + kafkaRestURL}
+		s.runIntegrationTest(test)
 	}
 }
 
@@ -318,8 +318,8 @@ func (s *CLITestSuite) TestKafkaTopicList() {
 		{args: fmt.Sprintf("kafka topic list --url %s -o json --no-authentication", kafkaRestURL), fixture: "kafka/topic/list-json.golden"},
 	}
 
-	for _, clitest := range tests {
-		s.runIntegrationTest(clitest)
+	for _, test := range tests {
+		s.runIntegrationTest(test)
 	}
 }
 
@@ -344,8 +344,8 @@ func (s *CLITestSuite) TestKafkaTopicCreate() {
 		{args: fmt.Sprintf("kafka topic create topic-exist --url %s --if-not-exists --no-authentication", kafkaRestURL), fixture: "kafka/topic/create-duplicate-topic-ifnotexists-success.golden", name: "create topic with existing topic name with if-not-exists flag should succeed"},
 	}
 
-	for _, clitest := range tests {
-		s.runIntegrationTest(clitest)
+	for _, test := range tests {
+		s.runIntegrationTest(test)
 	}
 }
 
@@ -358,8 +358,8 @@ func (s *CLITestSuite) TestKafkaTopicDelete() {
 		{args: fmt.Sprintf("kafka topic delete topic-not-exist --url %s --no-authentication --force", kafkaRestURL), fixture: "kafka/topic/delete-topic-not-exist-failure.golden", exitCode: 1, name: "deleting a non-existent topic should fail"},
 	}
 
-	for _, clitest := range tests {
-		s.runIntegrationTest(clitest)
+	for _, test := range tests {
+		s.runIntegrationTest(test)
 	}
 }
 
@@ -379,8 +379,8 @@ func (s *CLITestSuite) TestKafkaTopicUpdate() {
 		{args: fmt.Sprintf("kafka topic update topic-exist --url %s --config retention.ms=1,compression.type=gzip --no-authentication -o yaml", kafkaRestURL), fixture: "kafka/topic/update-topic-config-success-yaml.golden", name: "config updates with yaml output"},
 	}
 
-	for _, clitest := range tests {
-		s.runIntegrationTest(clitest)
+	for _, test := range tests {
+		s.runIntegrationTest(test)
 	}
 }
 
@@ -397,8 +397,8 @@ func (s *CLITestSuite) TestKafkaTopicDescribe() {
 		{args: fmt.Sprintf("kafka topic describe topic-exist --url %s -o yaml --no-authentication", kafkaRestURL), fixture: "kafka/topic/describe-topic-success-yaml.golden", name: "topic that exist & yaml arg should lead to success"},
 	}
 
-	for _, clitest := range tests {
-		s.runIntegrationTest(clitest)
+	for _, test := range tests {
+		s.runIntegrationTest(test)
 	}
 }
 
@@ -428,12 +428,12 @@ func (s *CLITestSuite) TestKafkaAcl() {
 		{args: fmt.Sprintf("kafka acl delete --cluster-scope --principal User:Alice --host '*' --operation read --principal User:Alice --allow -o yaml --url %s --no-authentication --force", kafkaRestURL), name: "acl delete output yaml", fixture: "kafka/acl/delete-yaml.golden"},
 	}
 
-	for _, clitest := range tests {
-		s.runIntegrationTest(clitest)
+	for _, test := range tests {
+		s.runIntegrationTest(test)
 	}
 }
 
-func (s *CLITestSuite) TestKafkaClientQuotas() {
+func (s *CLITestSuite) TestKafkaQuota() {
 	tests := []CLITest{
 		// Client Quotas
 		{args: "kafka quota create --name clientQuota --description description --ingress 500 --egress 100 --principals sa-1234,sa-5678 --cluster lkc-1234", fixture: "kafka/quota/create.golden"},

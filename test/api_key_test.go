@@ -148,9 +148,9 @@ func (s *CLITestSuite) TestApiKey() {
 
 	resetConfiguration(s.T(), false)
 
-	for _, tt := range tests {
-		tt.workflow = true
-		s.runIntegrationTest(tt)
+	for _, test := range tests {
+		test.workflow = true
+		s.runIntegrationTest(test)
 	}
 }
 
@@ -163,20 +163,20 @@ func (s *CLITestSuite) TestApiKeyDescribe() {
 		{args: "api-key describe MULTICLUSTERKEY1", fixture: "api-key/describe-multicluster.golden", env: []string{fmt.Sprintf("%s=multicluster-key-org", pauth.ConfluentCloudOrganizationId)}},
 	}
 
-	for _, tt := range tests {
-		tt.login = "cloud"
-		s.runIntegrationTest(tt)
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
 	}
 }
 
 func (s *CLITestSuite) TestApiKeyCreate_ServiceAccountNotValid() {
-	tt := CLITest{args: "api-key create --resource lkc-ab123 --service-account sa-123456", login: "cloud", fixture: "api-key/55.golden", exitCode: 1}
-	s.runIntegrationTest(tt)
+	test := CLITest{args: "api-key create --resource lkc-ab123 --service-account sa-123456", login: "cloud", fixture: "api-key/55.golden", exitCode: 1}
+	s.runIntegrationTest(test)
 }
 
 func (s *CLITestSuite) TestApiKey_EnvironmentNotValid() {
-	tt := CLITest{args: "api-key list --resource lkc-dne", login: "cloud", env: []string{fmt.Sprintf("%s=no-environment-user@example.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}, fixture: "api-key/no-env.golden", exitCode: 1}
-	s.runIntegrationTest(tt)
+	test := CLITest{args: "api-key list --resource lkc-dne", login: "cloud", env: []string{fmt.Sprintf("%s=no-environment-user@example.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}, fixture: "api-key/no-env.golden", exitCode: 1}
+	s.runIntegrationTest(test)
 }
 
 func (s *CLITestSuite) TestApiKey_Autocomplete() {
