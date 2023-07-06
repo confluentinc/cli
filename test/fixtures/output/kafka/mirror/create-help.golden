@@ -20,7 +20,7 @@ Flags:
       --link string                REQUIRED: Name of cluster link.
       --replication-factor int32   Replication factor. (default 3)
       --config-file string         Name of a file with additional topic configuration. Each property should be on its own line with the format: key=value.
-      --source-topic string        Name of the topic to be mirrored over the cluster link, i.e. the source topic's name. Only required when there is a prefix configured on the link.
+      --source-topic string        Name of the topic to be mirrored over the cluster link, that is, the source topic's name. Only required when there is a prefix configured on the link.
       --cluster string             Kafka cluster ID.
       --context string             CLI context name.
       --environment string         Environment ID.
