@@ -8,7 +8,7 @@ Create a C/C++ client configuration file.
 
   $ confluent kafka client-config create cpp
 
-Create a C/C++ client configuration file with arguments passed via flags.
+Create a C/C++ client configuration file with arguments passed with flags.
 
   $ confluent kafka client-config create cpp --environment env-123 --cluster lkc-123456 --api-key my-key --api-secret my-secret
 
@@ -29,5 +29,5 @@ Flags:
 
 Global Flags:
   -h, --help            Show help for this command.
-      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
