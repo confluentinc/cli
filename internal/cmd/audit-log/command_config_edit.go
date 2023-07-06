@@ -18,7 +18,7 @@ func (c *configCommand) newEditCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "edit",
 		Short: "Edit the audit-log configuration specification interactively.",
-		Long:  "Edit the audit-log configuration specification object interactively, using the $EDITOR specified in your environment (for example, vim).",
+		Long:  "Edit the audit-log configuration specification object interactively using the $EDITOR specified in your environment (for example, vim).",
 		Args:  cobra.NoArgs,
 		RunE:  c.edit,
 	}
