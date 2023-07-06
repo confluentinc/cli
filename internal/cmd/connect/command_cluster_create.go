@@ -34,7 +34,7 @@ func (c *clusterCommand) newCreateCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("config-file", "", "JSON connector config file.")
+	cmd.Flags().String("config-file", "", "JSON connector configuration file.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
