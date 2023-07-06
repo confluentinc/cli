@@ -37,7 +37,7 @@ const (
 	sourceClusterIdFlagName            = "source-cluster"
 
 	authHelperMsg = "If specified, the cluster will use SASL_SSL with PLAIN SASL as its mechanism for authentication. " +
-		"If you wish to use another authentication mechanism, please do NOT specify this flag, " +
+		"If you wish to use another authentication mechanism, do NOT specify this flag, " +
 		"and add the security configurations in the configuration file."
 )
 
