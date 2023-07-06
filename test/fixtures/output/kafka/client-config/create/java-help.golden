@@ -8,7 +8,7 @@ Create a Java client configuration file.
 
   $ confluent kafka client-config create java --schema-registry-api-key my-sr-key --schema-registry-api-secret my-sr-secret
 
-Create a Java client configuration file with arguments passed with flags.
+Create a Java client configuration file with arguments.
 
   $ confluent kafka client-config create java --environment env-123 --cluster lkc-123456 --api-key my-key --api-secret my-secret --schema-registry-api-key my-sr-key --schema-registry-api-secret my-sr-secret
 

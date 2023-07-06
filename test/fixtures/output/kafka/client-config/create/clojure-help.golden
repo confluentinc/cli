@@ -8,7 +8,7 @@ Create a Clojure client configuration file.
 
   $ confluent kafka client-config create clojure
 
-Create a Clojure client configuration file with arguments passed with flags.
+Create a Clojure client configuration file with arguments.
 
   $ confluent kafka client-config create clojure --environment env-123 --cluster lkc-123456 --api-key my-key --api-secret my-secret
 

@@ -8,7 +8,7 @@ Create a C# client configuration file.
 
   $ confluent kafka client-config create csharp
 
-Create a C# client configuration file with arguments passed with flags.
+Create a C# client configuration file with arguments.
 
   $ confluent kafka client-config create csharp --environment env-123 --cluster lkc-123456 --api-key my-key --api-secret my-secret
 
