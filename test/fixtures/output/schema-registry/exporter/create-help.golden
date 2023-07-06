@@ -11,7 +11,7 @@ Create a new schema exporter.
 Flags:
       --config-file string      REQUIRED: Exporter configuration file.
       --subjects strings        A comma-separated list of exporter subjects. (default [*])
-      --subject-format string   Exporter subject rename format. The format string can contain ${subject}, which will be replaced with default subject name. (default "${subject}")
+      --subject-format string   Exporter subject rename format. The format string can contain ${subject}, which will be replaced with the default subject name. (default "${subject}")
       --context-type string     Exporter context type. One of "AUTO", "CUSTOM" or "NONE". (default "AUTO")
       --context-name string     Exporter context name.
       --api-key string          API key.

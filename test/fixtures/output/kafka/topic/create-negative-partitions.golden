@@ -16,7 +16,7 @@ Create a topic named "my_topic_2" with specified configuration parameters.
   $ confluent kafka topic create my_topic_2 --url http://localhost:8082 --config cleanup.policy=compact,compression.type=gzip
 
 Flags:
-      --url string                  Base URL of REST Proxy Endpoint of Kafka Cluster (include /kafka for embedded Rest Proxy). Must set flag or CONFLUENT_REST_URL.
+      --url string                  Base URL of REST Proxy Endpoint of Kafka Cluster (include "/kafka" for embedded Rest Proxy). Must set flag or CONFLUENT_REST_URL.
       --ca-cert-path string         Path to a PEM-encoded CA to verify the Confluent REST Proxy.
       --client-cert-path string     Path to client cert to be verified by Confluent REST Proxy, include for mTLS authentication.
       --client-key-path string      Path to client private key, include for mTLS authentication.

@@ -33,7 +33,7 @@ Flags:
       --transactional-id string   Set the TransactionalID resource.
       --topic string              Set the topic resource. With this option the ACL grants the provided operations on the topics that start with that prefix, depending on whether the --prefix option was also passed.
       --prefix                    Set to match all resource names prefixed with this value.
-      --url string                Base URL of REST Proxy Endpoint of Kafka Cluster (include /kafka for embedded Rest Proxy). Must set flag or CONFLUENT_REST_URL.
+      --url string                Base URL of REST Proxy Endpoint of Kafka Cluster (include "/kafka" for embedded Rest Proxy). Must set flag or CONFLUENT_REST_URL.
       --ca-cert-path string       Path to a PEM-encoded CA to verify the Confluent REST Proxy.
       --client-cert-path string   Path to client cert to be verified by Confluent REST Proxy, include for mTLS authentication.
       --client-key-path string    Path to client private key, include for mTLS authentication.

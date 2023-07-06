@@ -52,7 +52,7 @@ func (c *replicaCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List Kafka replica statuses.",
-		Long:  "List partition-replicas statuses filtered by topic and partition using Confluent Kafka REST.",
+		Long:  "List partition-replicas statuses filtered by topic and partition.",
 		Args:  cobra.NoArgs,
 		RunE:  c.list,
 		Example: examples.BuildExampleString(

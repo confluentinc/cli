@@ -29,7 +29,7 @@ func (c *brokerCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe [id]",
 		Short: "Describe a Kafka broker.",
-		Long:  "Describe cluster-wide or per-broker configuration values using Confluent Kafka REST.",
+		Long:  "Describe cluster-wide or per-broker configuration values.",
 		Args:  cobra.MaximumNArgs(1),
 		RunE:  c.describe,
 		Example: examples.BuildExampleString(

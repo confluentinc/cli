@@ -20,7 +20,6 @@ func (c *partitionCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe <id>",
 		Short: "Describe a Kafka partition.",
-		Long:  "Describe a Kafka partition using Confluent Kafka REST.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.describe,
 		Example: examples.BuildExampleString(
