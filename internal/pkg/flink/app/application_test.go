@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/flink/internal/controller"
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/history"
 	"github.com/confluentinc/cli/internal/pkg/flink/test"
 	"github.com/confluentinc/cli/internal/pkg/flink/test/mock"
@@ -168,81 +169,82 @@ func (s *ApplicationTestSuite) TestReplDoesNotReturnWhenHandleStatementResultsRe
 }
 
 func (s *ApplicationTestSuite) TestShouldUseTView() {
+	app := Application{
+		interactiveOutputController: &controller.InteractiveOutputController{},
+		basicOutputController:       &controller.BasicOutputController{},
+	}
 	tests := []struct {
-		name      string
-		statement types.ProcessedStatement
-		want      types.OutputControllerInterface
+		name          string
+		statement     types.ProcessedStatement
+		isBasicOutput bool
 	}{
 		{
-			name:      "local statement should not use TView",
-			statement: types.ProcessedStatement{IsLocalStatement: true},
-			want:      s.basicOutputController,
+			name:          "local statement should not use TView",
+			statement:     types.ProcessedStatement{IsLocalStatement: true},
+			isBasicOutput: true,
 		},
 		{
-			name:      "local statement should not use TView even if unbounded",
-			statement: types.ProcessedStatement{PageToken: "NOT_EMPTY", IsLocalStatement: true},
-			want:      s.basicOutputController,
+			name:          "local statement should not use TView even if unbounded",
+			statement:     types.ProcessedStatement{PageToken: "NOT_EMPTY", IsLocalStatement: true},
+			isBasicOutput: true,
 		},
 		{
-			name:      "non-local unbounded statement should always use TView",
-			statement: types.ProcessedStatement{PageToken: "NOT_EMPTY", IsLocalStatement: false, StatementResults: &types.StatementResults{}},
-			want:      s.interactiveOutputController,
-		},
-		{
-			name:      "statement with no results should not use TView",
-			statement: types.ProcessedStatement{IsLocalStatement: false},
-			want:      s.basicOutputController,
-		},
-		{
-			name:      "statement with empty results should not use TView",
-			statement: types.ProcessedStatement{IsLocalStatement: false, StatementResults: &types.StatementResults{}},
-			want:      s.basicOutputController,
-		},
-		{
-			name: "statement with one column and two rows should not use TView",
-			statement: types.ProcessedStatement{IsLocalStatement: false, StatementResults: &types.StatementResults{
-				Headers: []string{"Column 1"},
-				Rows: []types.StatementResultRow{
-					{Fields: []types.StatementResultField{types.AtomicStatementResultField{}}},
-					{Fields: []types.StatementResultField{types.AtomicStatementResultField{}}},
-				},
+			name: "local statement should not use TView even if unbounded and more than 3 columns",
+			statement: types.ProcessedStatement{PageToken: "NOT_EMPTY", IsLocalStatement: true, StatementResults: &types.StatementResults{
+				Headers: []string{"Column 1", "Column 2", "Column 3", "Column 4"},
+				Rows:    []types.StatementResultRow{},
 			}},
-			want: s.basicOutputController,
+			isBasicOutput: true,
 		},
 		{
-			name: "statement with two columns and one row should not use TView",
-			statement: types.ProcessedStatement{IsLocalStatement: false, StatementResults: &types.StatementResults{
-				Headers: []string{"Column 1", "Column 2"},
-				Rows:    []types.StatementResultRow{{Fields: []types.StatementResultField{types.AtomicStatementResultField{}}}},
-			}},
-			want: s.basicOutputController,
+			name:          "non-local unbounded statement should always use TView",
+			statement:     types.ProcessedStatement{PageToken: "NOT_EMPTY", StatementResults: &types.StatementResults{}},
+			isBasicOutput: false,
 		},
 		{
-			name: "statement with two columns and two rows should use TView",
-			statement: types.ProcessedStatement{IsLocalStatement: false, StatementResults: &types.StatementResults{
-				Headers: []string{"Column 1", "Column 2"},
-				Rows: []types.StatementResultRow{
-					{Fields: []types.StatementResultField{types.AtomicStatementResultField{}}},
-					{Fields: []types.StatementResultField{types.AtomicStatementResultField{}}},
-				},
-			}},
-			want: s.interactiveOutputController,
+			name:          "select statement should always use TView",
+			statement:     types.ProcessedStatement{IsSelectStatement: true, StatementResults: &types.StatementResults{}},
+			isBasicOutput: false,
 		},
 		{
-			name: "local statement with two columns and two rows should not use TView",
-			statement: types.ProcessedStatement{IsLocalStatement: true, StatementResults: &types.StatementResults{
-				Headers: []string{"Column 1", "Column 2"},
-				Rows: []types.StatementResultRow{
-					{Fields: []types.StatementResultField{types.AtomicStatementResultField{}}},
-					{Fields: []types.StatementResultField{types.AtomicStatementResultField{}}},
-				},
+			name:          "statement with no results should not use TView",
+			statement:     types.ProcessedStatement{},
+			isBasicOutput: true,
+		},
+		{
+			name:          "statement with empty results should not use TView",
+			statement:     types.ProcessedStatement{StatementResults: &types.StatementResults{}},
+			isBasicOutput: true,
+		},
+		{
+			name: "statement with 3 columns should not use TView",
+			statement: types.ProcessedStatement{StatementResults: &types.StatementResults{
+				Headers: []string{"Column 1", "Column 2", "Column 3"},
+				Rows:    []types.StatementResultRow{},
 			}},
-			want: s.basicOutputController,
+			isBasicOutput: true,
+		},
+		{
+			name: "statement with 4 columns should use TView",
+			statement: types.ProcessedStatement{StatementResults: &types.StatementResults{
+				Headers: []string{"Column 1", "Column 2", "Column 3", "Column 4"},
+				Rows:    []types.StatementResultRow{},
+			}},
+			isBasicOutput: false,
 		},
 	}
 	for _, tt := range tests {
 		s.T().Run(tt.name, func(t *testing.T) {
-			require.Equal(t, tt.want, s.app.getOutputController(tt.statement))
+			if tt.isBasicOutput {
+				actual, ok := app.getOutputController(tt.statement).(*controller.BasicOutputController)
+				require.True(t, ok)
+				require.Equal(t, app.basicOutputController, actual)
+				return
+			}
+
+			actual, ok := app.getOutputController(tt.statement).(*controller.InteractiveOutputController)
+			require.True(t, ok)
+			require.Equal(t, app.interactiveOutputController, actual)
 		})
 	}
 }

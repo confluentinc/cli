@@ -125,23 +125,26 @@ const (
 
 // Custom Internal type that shall be used internally by the client
 type ProcessedStatement struct {
-	StatementName    string `json:"statement_name"`
-	Kind             string `json:"statement"`
-	ComputePool      string `json:"compute_pool"`
-	Status           PHASE  `json:"status"`
-	StatusDetail     string `json:"status_detail,omitempty"` // Shown at the top before the table
-	IsLocalStatement bool
-	PageToken        string
-	ResultSchema     flinkgatewayv1alpha1.SqlV1alpha1ResultSchema
-	StatementResults *StatementResults
+	StatementName     string `json:"statement_name"`
+	Kind              string `json:"statement"`
+	ComputePool       string `json:"compute_pool"`
+	Status            PHASE  `json:"status"`
+	StatusDetail      string `json:"status_detail,omitempty"` // Shown at the top before the table
+	IsLocalStatement  bool
+	IsSelectStatement bool
+	PageToken         string
+	ResultSchema      flinkgatewayv1alpha1.SqlV1alpha1ResultSchema
+	StatementResults  *StatementResults
 }
 
 func NewProcessedStatement(statementObj flinkgatewayv1alpha1.SqlV1alpha1Statement) *ProcessedStatement {
+	statement := strings.ToLower(strings.TrimSpace(statementObj.Spec.GetStatement()))
 	return &ProcessedStatement{
-		StatementName: statementObj.Spec.GetStatementName(),
-		StatusDetail:  statementObj.Status.GetDetail(),
-		Status:        PHASE(statementObj.Status.GetPhase()),
-		ResultSchema:  statementObj.Status.GetResultSchema(),
+		StatementName:     statementObj.Spec.GetStatementName(),
+		StatusDetail:      statementObj.Status.GetDetail(),
+		Status:            PHASE(statementObj.Status.GetPhase()),
+		ResultSchema:      statementObj.Status.GetResultSchema(),
+		IsSelectStatement: strings.HasPrefix(statement, "select"),
 	}
 }
 
