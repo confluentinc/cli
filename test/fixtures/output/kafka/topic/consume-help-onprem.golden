@@ -16,7 +16,7 @@ Consume message from topic "my_topic" with SASL_SSL/OAUTHBEARER protocol enabled
 
 Flags:
       --bootstrap string                  REQUIRED: Comma-separated list of broker hosts, each formatted as "host" or "host:port".
-      --ca-location string                REQUIRED: File or directory path to CA certificate(s) for SSL verifying the broker's key.
+      --ca-location string                REQUIRED: File or directory path to CA certificates for SSL verifying the broker's key.
       --username string                   SASL_SSL username for use with PLAIN mechanism.
       --password string                   SASL_SSL password for use with PLAIN mechanism.
       --cert-location string              Path to client's public key (PEM) used for SSL authentication.
@@ -39,5 +39,5 @@ Flags:
 
 Global Flags:
   -h, --help            Show help for this command.
-      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
