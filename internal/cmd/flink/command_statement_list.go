@@ -33,7 +33,7 @@ func (c *command) statementList(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	statements, err := client.ListStatements(environmentId, c.Context.LastOrgId)
+	statements, err := client.ListAllStatements(environmentId, c.Context.LastOrgId)
 	if err != nil {
 		return err
 	}
@@ -41,6 +41,7 @@ func (c *command) statementList(cmd *cobra.Command, args []string) error {
 	list := output.NewList(cmd)
 	for _, statement := range statements {
 		list.Add(&statementOut{
+			CreationDate: statement.Metadata.GetCreatedAt(),
 			Name:         statement.Spec.GetStatementName(),
 			Statement:    statement.Spec.GetStatement(),
 			ComputePool:  statement.Spec.GetComputePoolId(),

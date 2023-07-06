@@ -30,7 +30,7 @@ func (c *Client) CreateOrgEnvironment(environment orgv2.OrgV2Environment) (orgv2
 
 func (c *Client) GetOrgEnvironment(envId string) (orgv2.OrgV2Environment, error) {
 	res, httpResp, err := c.OrgClient.EnvironmentsOrgV2Api.GetOrgV2Environment(c.orgApiContext(), envId).Execute()
-	return res, errors.CatchCCloudV2Error(err, httpResp)
+	return res, errors.CatchCCloudV2ResourceNotFoundError(err, envId, httpResp)
 }
 
 func (c *Client) UpdateOrgEnvironment(envId string, updateEnvironment orgv2.OrgV2Environment) (orgv2.OrgV2Environment, error) {

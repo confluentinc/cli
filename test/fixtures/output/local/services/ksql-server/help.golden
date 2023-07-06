@@ -1,0 +1,19 @@
+Manage ksqlDB Server.
+
+Usage:
+  confluent local services ksql-server [command]
+
+Available Commands:
+  log         Print logs showing ksqlDB Server output.
+  start       Start ksqlDB Server.
+  status      Check if ksqlDB Server is running.
+  stop        Stop ksqlDB Server.
+  top         View resource usage for ksqlDB Server.
+  version     Print the current version of ksqlDB Server.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent local services ksql-server [command] --help" for more information about a command.

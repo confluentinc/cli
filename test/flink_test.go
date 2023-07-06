@@ -47,6 +47,8 @@ func (s *CLITestSuite) TestFlinkStatement() {
 	tests := []CLITest{
 		{args: "flink statement delete my-statement --compute-pool lfcp-123456 --force", fixture: "flink/statement/delete.golden"},
 		{args: "flink statement list --compute-pool lfcp-123456", fixture: "flink/statement/list.golden"},
+		{args: "flink statement describe my-statement --compute-pool lfcp-123456", fixture: "flink/statement/describe.golden"},
+		{args: "flink statement exceptions list my-statement --compute-pool lfcp-123456", fixture: "flink/statement/exceptions/list.golden"},
 	}
 
 	for _, test := range tests {

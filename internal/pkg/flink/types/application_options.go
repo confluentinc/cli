@@ -10,6 +10,7 @@ type ApplicationOptions struct {
 	KafkaClusterId    string
 	ComputePoolId     string
 	IdentityPoolId    string
+	Verbose           bool
 }
 
 func (a *ApplicationOptions) GetDefaultProperties() map[string]string {
@@ -73,4 +74,10 @@ func (a *ApplicationOptions) GetIdentityPoolId() string {
 		return a.IdentityPoolId
 	}
 	return ""
+}
+func (a *ApplicationOptions) GetVerbose() bool {
+	if a != nil {
+		return a.Verbose
+	}
+	return false
 }
