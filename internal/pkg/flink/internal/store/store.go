@@ -144,12 +144,18 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 	// Variable used to we inform the user every 5 seconds that we're still fetching for results (waiting for them to be ready)
 	lastProgressUpdateTime := time.Second * 0
 	var capturedErrors []string
+	var phase types.PHASE
+	capturedErrorsLimit := 5
+	var getRequestDuration time.Duration
 	for {
 		select {
 		case <-ctx.Done():
 			return nil, &types.StatementError{Message: "result retrieval aborted. Statement will be deleted", HttpResponseCode: 499}
 		default:
+			start := time.Now()
 			statementObj, err := s.authenticatedGatewayClient().GetStatement(s.appOptions.GetEnvironmentId(), statementName, s.appOptions.GetOrgResourceId())
+			getRequestDuration = time.Since(start)
+
 			statusDetail := s.getStatusDetail(statementObj)
 			if err != nil {
 				return nil, &types.StatementError{
@@ -157,7 +163,7 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 					FailureMessage: statusDetail}
 			}
 
-			phase := types.PHASE(statementObj.Status.GetPhase())
+			phase = types.PHASE(statementObj.Status.GetPhase())
 			if phase != types.PENDING {
 				processedStatement := types.NewProcessedStatement(statementObj)
 				processedStatement.StatusDetail = statusDetail
@@ -170,17 +176,27 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 			}
 		}
 
-		if len(capturedErrors) > 5 {
-			break
+		if len(capturedErrors) > capturedErrorsLimit {
+			return nil, &types.StatementError{
+				Message: fmt.Sprintf("the server can't process this statement right now, exiting after %d retries",
+					len(capturedErrors)),
+				FailureMessage: fmt.Sprintf("captured retryable errors: %s", strings.Join(capturedErrors, "; ")),
+			}
 		}
 
-		lastProgressUpdateTime += waitTime
-		elapsedWaitTime += waitTime
-		time.Sleep(waitTime)
+		if getRequestDuration > waitTime {
+			lastProgressUpdateTime += getRequestDuration
+			elapsedWaitTime += getRequestDuration
+		} else {
+			lastProgressUpdateTime += waitTime
+			elapsedWaitTime += waitTime
+			waitTime = waitTime - getRequestDuration
+			time.Sleep(waitTime)
+		}
 
-		if lastProgressUpdateTime.Seconds() > 5 {
+		if int(lastProgressUpdateTime.Seconds()) > capturedErrorsLimit {
 			lastProgressUpdateTime = time.Second * 0
-			output.Printf("Fetching results... (Timeout %d/%d) \n", int(elapsedWaitTime.Seconds()), int(timeout.Seconds()))
+			output.Printf("Waiting for statement to be ready. Statement phase is %s. (Timeout %ds/%ds) \n", phase, int(elapsedWaitTime.Seconds()), int(timeout.Seconds()))
 		}
 		waitTime = calcWaitTime(retries)
 
