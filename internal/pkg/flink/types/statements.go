@@ -165,7 +165,6 @@ func (s ProcessedStatement) printStatusMessageOfLocalStatement() {
 }
 
 func (s ProcessedStatement) printStatusMessageOfNonLocalStatement() {
-
 	if s.StatementName != "" {
 		utils.OutputInfof("Statement name: %s\n", s.StatementName)
 	}

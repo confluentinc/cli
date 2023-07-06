@@ -190,7 +190,7 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 		} else {
 			lastProgressUpdateTime += waitTime
 			elapsedWaitTime += waitTime
-			waitTime = waitTime - getRequestDuration
+			waitTime -= getRequestDuration
 			time.Sleep(waitTime)
 		}
 
