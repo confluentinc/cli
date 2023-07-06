@@ -13,7 +13,7 @@ func (c *partitionCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List Kafka partitions.",
-		Long:  "List the partitions that belong to a specified topic via Confluent Kafka REST.",
+		Long:  "List the partitions that belong to a specified topic using Confluent Kafka REST.",
 		Args:  cobra.NoArgs,
 		RunE:  c.list,
 		Example: examples.BuildExampleString(
