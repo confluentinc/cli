@@ -18,6 +18,7 @@ import (
 type InteractiveOutputControllerTestSuite struct {
 	suite.Suite
 	interactiveOutputController *InteractiveOutputController
+	tableView                   *mock.MockTableViewInterface
 	resultFetcher               *mock.MockResultFetcherInterface
 	dummyTViewApp               *tview.Application
 }
@@ -28,9 +29,10 @@ func TestInteractiveOutputControllerTestSuite(t *testing.T) {
 
 func (s *InteractiveOutputControllerTestSuite) SetupTest() {
 	ctrl := gomock.NewController(s.T())
+	s.tableView = mock.NewMockTableViewInterface(ctrl)
 	s.resultFetcher = mock.NewMockResultFetcherInterface(ctrl)
 	s.dummyTViewApp = tview.NewApplication()
-	s.interactiveOutputController = NewInteractiveOutputController(s.resultFetcher, false).(*InteractiveOutputController)
+	s.interactiveOutputController = NewInteractiveOutputController(s.tableView, s.resultFetcher, false).(*InteractiveOutputController)
 }
 
 func (s *InteractiveOutputControllerTestSuite) TestCloseTableViewOnUserInput() {
@@ -70,10 +72,13 @@ func (s *InteractiveOutputControllerTestSuite) TestToggleTableModeOnUserInput() 
 }
 
 func (s *InteractiveOutputControllerTestSuite) updateTableMockCalls(materializedStatementResults *types.MaterializedStatementResults) {
-	s.resultFetcher.EXPECT().IsTableMode().Return(true)
-	s.resultFetcher.EXPECT().GetFetchState().Return(types.Paused)
+	s.resultFetcher.EXPECT().IsTableMode().Return(true).Times(2)
+	s.resultFetcher.EXPECT().GetFetchState().Return(types.Paused).Times(2)
 	s.resultFetcher.EXPECT().GetMaterializedStatementResults().Return(materializedStatementResults)
 	s.resultFetcher.EXPECT().IsAutoRefreshRunning().Return(false)
+	s.tableView.EXPECT().RenderTable(s.interactiveOutputController.getTableTitle(), materializedStatementResults, false)
+	s.tableView.EXPECT().GetRoot().Return(tview.NewBox())
+	s.tableView.EXPECT().GetFocusableElement().Return(tview.NewTable())
 }
 
 func (s *InteractiveOutputControllerTestSuite) TestToggleRefreshResultsOnUserInput() {
@@ -101,11 +106,13 @@ func (s *InteractiveOutputControllerTestSuite) TestNonSupportedUserInput() {
 func (s *InteractiveOutputControllerTestSuite) TestOpenRowViewOnUserInput() {
 	// Given
 	materializedStatementResults := getResultsExample()
+	iterator := materializedStatementResults.Iterator(true)
 	s.initMockCalls(materializedStatementResults)
 	s.interactiveOutputController.init()
 
 	s.resultFetcher.EXPECT().IsAutoRefreshRunning().Return(false)
 	s.resultFetcher.EXPECT().GetMaterializedStatementResults().Return(materializedStatementResults)
+	s.tableView.EXPECT().GetSelectedRow().Return(iterator.Value())
 
 	// When
 	result := s.interactiveOutputController.inputCapture(tcell.NewEventKey(tcell.KeyEnter, rune(0), tcell.ModNone))
@@ -113,9 +120,6 @@ func (s *InteractiveOutputControllerTestSuite) TestOpenRowViewOnUserInput() {
 	// Then
 	require.Nil(s.T(), result)
 	require.True(s.T(), s.interactiveOutputController.isRowViewOpen)
-	// last row should be selected
-	expectedIterator := materializedStatementResults.Iterator(true)
-	require.Equal(s.T(), expectedIterator.Value(), s.interactiveOutputController.tableView.GetSelectedRow())
 }
 
 func getResultsExample() *types.MaterializedStatementResults {
@@ -147,6 +151,8 @@ func (s *InteractiveOutputControllerTestSuite) TestCloseRowViewOnUserInput() {
 			s.initMockCalls(&types.MaterializedStatementResults{})
 			s.interactiveOutputController.init()
 			s.interactiveOutputController.isRowViewOpen = true
+			s.tableView.EXPECT().GetRoot().Return(tview.NewBox())
+			s.tableView.EXPECT().GetFocusableElement().Return(tview.NewTable())
 
 			// When
 			result := s.interactiveOutputController.inputCapture(testCase.input)
@@ -330,6 +336,11 @@ func (s *InteractiveOutputControllerTestSuite) TestJumpUpOrDownScrollsWhenAutoRe
 			s.initMockCalls(&types.MaterializedStatementResults{})
 			s.interactiveOutputController.init()
 			s.resultFetcher.EXPECT().IsAutoRefreshRunning().Return(false)
+			if testCase.input.Rune() == rune(components.JumpUpShortcut[0]) {
+				s.tableView.EXPECT().FastScrollUp()
+			} else {
+				s.tableView.EXPECT().FastScrollDown()
+			}
 
 			result := s.interactiveOutputController.inputCapture(testCase.input)
 

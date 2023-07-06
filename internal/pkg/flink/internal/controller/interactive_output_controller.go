@@ -18,15 +18,16 @@ import (
 
 type InteractiveOutputController struct {
 	app           *tview.Application
-	tableView     *components.TableView
+	tableView     components.TableViewInterface
 	resultFetcher types.ResultFetcherInterface
 	isRowViewOpen bool
 	debug         bool
 }
 
-func NewInteractiveOutputController(resultFetcher types.ResultFetcherInterface, debug bool) types.OutputControllerInterface {
+func NewInteractiveOutputController(tableView components.TableViewInterface, resultFetcher types.ResultFetcherInterface, debug bool) types.OutputControllerInterface {
 	return &InteractiveOutputController{
 		app:           tview.NewApplication(),
+		tableView:     tableView,
 		resultFetcher: resultFetcher,
 		debug:         debug,
 	}
@@ -50,11 +51,6 @@ func (t *InteractiveOutputController) init() {
 	t.resultFetcher.SetAutoRefreshCallback(t.renderTableAsync)
 	t.resultFetcher.ToggleAutoRefresh()
 	t.app.SetInputCapture(t.inputCapture)
-	t.initTableView()
-}
-
-func (t *InteractiveOutputController) initTableView() {
-	t.tableView = components.NewTableView()
 	t.updateTable()
 }
 

@@ -12,6 +12,15 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
 )
 
+type TableViewInterface interface {
+	GetFocusableElement() *tview.Table
+	GetRoot() tview.Primitive
+	GetSelectedRow() *types.StatementResultRow
+	RenderTable(tableTitle string, statementResults *types.MaterializedStatementResults, isAutoRefreshRunning bool)
+	FastScrollUp()
+	FastScrollDown()
+}
+
 type TableView struct {
 	rootLayout      tview.Primitive
 	table           *tview.Table
@@ -29,7 +38,7 @@ const (
 	JumpDownShortcut              = "D"
 )
 
-func NewTableView() *TableView {
+func NewTableView() TableViewInterface {
 	return &TableView{
 		table: createTable(),
 	}

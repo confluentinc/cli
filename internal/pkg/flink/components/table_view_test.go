@@ -22,7 +22,7 @@ func TestTableViewTestSuite(t *testing.T) {
 }
 
 func (s *TableViewTestSuite) SetupTest() {
-	s.tableView = NewTableView()
+	s.tableView = NewTableView().(*TableView)
 }
 
 func (s *TableViewTestSuite) TestFastScrollUp() {
