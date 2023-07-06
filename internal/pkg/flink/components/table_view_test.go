@@ -14,7 +14,8 @@ import (
 
 type TableViewTestSuite struct {
 	suite.Suite
-	tableView *TableView
+	tableView     *TableView
+	numRowsScroll int
 }
 
 func TestTableViewTestSuite(t *testing.T) {
@@ -23,11 +24,11 @@ func TestTableViewTestSuite(t *testing.T) {
 
 func (s *TableViewTestSuite) SetupTest() {
 	s.tableView = NewTableView().(*TableView)
+	s.numRowsScroll = s.tableView.getNumRowsToScroll()
 }
 
 func (s *TableViewTestSuite) TestFastScrollUp() {
-	materializedStatementResults := getResultsExample()
-	s.tableView.numRowsToScroll = materializedStatementResults.Size()
+	materializedStatementResults := getResultsExample(s.numRowsScroll + 1)
 	s.tableView.RenderTable("title", materializedStatementResults, true)
 
 	s.tableView.FastScrollUp()
@@ -37,9 +38,9 @@ func (s *TableViewTestSuite) TestFastScrollUp() {
 	require.Equal(s.T(), expectedIterator.Value(), s.tableView.GetSelectedRow())
 }
 
-func getResultsExample() *types.MaterializedStatementResults {
+func getResultsExample(numRows int) *types.MaterializedStatementResults {
 	materializedStatementResults := types.NewMaterializedStatementResults([]string{"Count"}, 10)
-	for i := 0; i < 10; i++ {
+	for i := 0; i < numRows; i++ {
 		materializedStatementResults.Append(types.StatementResultRow{
 			Operation: types.INSERT,
 			Fields: []types.StatementResultField{
@@ -54,8 +55,7 @@ func getResultsExample() *types.MaterializedStatementResults {
 }
 
 func (s *TableViewTestSuite) TestFastScrollUpShouldNotMoveOutFurtherThanMax() {
-	materializedStatementResults := getResultsExample()
-	s.tableView.numRowsToScroll = 100
+	materializedStatementResults := getResultsExample(s.numRowsScroll / 2)
 	s.tableView.RenderTable("title", materializedStatementResults, true)
 
 	s.tableView.FastScrollUp()
@@ -66,8 +66,7 @@ func (s *TableViewTestSuite) TestFastScrollUpShouldNotMoveOutFurtherThanMax() {
 }
 
 func (s *TableViewTestSuite) TestFastScrollDown() {
-	materializedStatementResults := getResultsExample()
-	s.tableView.numRowsToScroll = materializedStatementResults.Size()
+	materializedStatementResults := getResultsExample(s.numRowsScroll + 1)
 	s.tableView.RenderTable("title", materializedStatementResults, true)
 	s.tableView.table.Select(1, 0)
 
@@ -79,8 +78,7 @@ func (s *TableViewTestSuite) TestFastScrollDown() {
 }
 
 func (s *TableViewTestSuite) TestFastScrollDownShouldNotMoveOutFurtherThanMax() {
-	materializedStatementResults := getResultsExample()
-	s.tableView.numRowsToScroll = 100
+	materializedStatementResults := getResultsExample(s.numRowsScroll / 2)
 	s.tableView.RenderTable("title", materializedStatementResults, true)
 	s.tableView.table.Select(1, 0)
 
@@ -92,7 +90,7 @@ func (s *TableViewTestSuite) TestFastScrollDownShouldNotMoveOutFurtherThanMax() 
 }
 
 func (s *TableViewTestSuite) TestSelectArbitraryRow() {
-	materializedStatementResults := getResultsExample()
+	materializedStatementResults := getResultsExample(10)
 	s.tableView.RenderTable("title", materializedStatementResults, true)
 
 	rapid.Check(s.T(), func(t *rapid.T) {
@@ -108,7 +106,7 @@ func (s *TableViewTestSuite) TestSelectArbitraryRow() {
 
 func (s *TableViewTestSuite) TestTableShouldSetTitle() {
 	expected := "Test Title"
-	materializedStatementResults := getResultsExample()
+	materializedStatementResults := getResultsExample(10)
 	s.tableView.RenderTable(expected, materializedStatementResults, true)
 
 	actual := s.tableView.table.GetTitle()
@@ -117,7 +115,7 @@ func (s *TableViewTestSuite) TestTableShouldSetTitle() {
 }
 
 func (s *TableViewTestSuite) TestTableShortcutsWithAutoRefreshOff() {
-	materializedStatementResults := getResultsExample()
+	materializedStatementResults := getResultsExample(10)
 
 	actual := s.tableView.getTableShortcuts(materializedStatementResults, false)
 
@@ -125,7 +123,7 @@ func (s *TableViewTestSuite) TestTableShortcutsWithAutoRefreshOff() {
 }
 
 func (s *TableViewTestSuite) TestTableShortcutsWithAutoRefreshOn() {
-	materializedStatementResults := getResultsExample()
+	materializedStatementResults := getResultsExample(10)
 
 	actual := s.tableView.getTableShortcuts(materializedStatementResults, true)
 
