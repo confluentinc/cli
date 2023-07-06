@@ -53,6 +53,6 @@ func (c *ConfigKeyStore) DeleteAPIKey(key string) error {
 	if ctx == nil {
 		return new(errors.NotLoggedInError)
 	}
-	ctx.KafkaClusterContext.DeleteAPIKey(key)
+	ctx.KafkaClusterContext.DeleteApiKey(key)
 	return c.Config.Save()
 }

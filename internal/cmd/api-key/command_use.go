@@ -21,30 +21,38 @@ func (c *command) newUseCommand() *cobra.Command {
 		RunE:              c.use,
 	}
 
+	// Deprecated
 	c.addResourceFlag(cmd)
-
-	cobra.CheckErr(cmd.MarkFlagRequired("resource"))
+	cobra.CheckErr(cmd.Flags().MarkHidden("resource"))
 
 	return cmd
 }
 
 func (c *command) use(cmd *cobra.Command, args []string) error {
 	c.setKeyStoreIfNil()
-	apiKey := args[0]
-	resourceType, clusterId, _, err := c.resolveResourceId(cmd, c.V2Client)
-	if err != nil {
-		return err
+
+	var clusterId string
+
+	if cmd.Flags().Changed("resource") {
+		resourceId, _, err := c.resolveResourceId(cmd, c.V2Client)
+		if err != nil {
+			return err
+		}
+		if resource.LookupType(resourceId) != resource.KafkaCluster {
+			return errors.Errorf(errors.NonKafkaNotImplementedErrorMsg)
+		}
+		clusterId = resourceId
+	} else {
+		clusterId = c.Context.KafkaClusterContext.FindApiKeyClusterId(args[0])
+		if clusterId == "" {
+			return fmt.Errorf(`could not find resource for API key "%s"`, args[0])
+		}
 	}
-	if resourceType != resource.KafkaCluster {
-		return errors.Errorf(errors.NonKafkaNotImplementedErrorMsg)
+
+	if err := c.Context.UseAPIKey(args[0], clusterId); err != nil {
+		return errors.NewWrapErrorWithSuggestions(err, errors.APIKeyUseFailedErrorMsg, fmt.Sprintf(errors.APIKeyUseFailedSuggestions, args[0]))
 	}
-	cluster, err := c.Context.FindKafkaCluster(clusterId)
-	if err != nil {
-		return err
-	}
-	if err := c.Context.UseAPIKey(apiKey, cluster.ID); err != nil {
-		return errors.NewWrapErrorWithSuggestions(err, errors.APIKeyUseFailedErrorMsg, fmt.Sprintf(errors.APIKeyUseFailedSuggestions, apiKey))
-	}
-	output.Printf(errors.UseAPIKeyMsg, apiKey)
+
+	output.Printf(errors.UseAPIKeyMsg, args[0])
 	return nil
 }

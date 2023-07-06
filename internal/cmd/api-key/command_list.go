@@ -52,12 +52,9 @@ func (c *command) newListCommand() *cobra.Command {
 func (c *command) list(cmd *cobra.Command, _ []string) error {
 	c.setKeyStoreIfNil()
 
-	resourceType, clusterId, currentKey, err := c.resolveResourceId(cmd, c.V2Client)
+	clusterId, currentKey, err := c.resolveResourceId(cmd, c.V2Client)
 	if err != nil {
 		return err
-	}
-	if resourceType == resource.Cloud {
-		clusterId = resource.Cloud
 	}
 
 	serviceAccount, err := cmd.Flags().GetString("service-account")

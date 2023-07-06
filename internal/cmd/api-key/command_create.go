@@ -94,10 +94,12 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		owner = userId
 	}
 
-	resourceType, clusterId, _, err := c.resolveResourceId(cmd, c.V2Client)
+	clusterId, _, err := c.resolveResourceId(cmd, c.V2Client)
 	if err != nil {
 		return err
 	}
+
+	resourceType := resource.LookupType(clusterId)
 
 	key := apikeysv2.IamV2ApiKey{Spec: &apikeysv2.IamV2ApiKeySpec{
 		Description: apikeysv2.PtrString(description),
