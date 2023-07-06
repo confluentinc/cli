@@ -80,6 +80,7 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 			mock.NewFakeFlinkGatewayClient(),
 			func() error { return nil },
 			types.ApplicationOptions{
+				Context:           c.Context,
 				DefaultProperties: map[string]string{"execution.runtime-mode": "streaming"},
 				UserAgent:         c.Version.UserAgent,
 			})
@@ -155,6 +156,7 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		flinkGatewayClient,
 		c.authenticated(prerunner.Authenticated(c.AuthenticatedCLICommand), cmd, jwtValidator),
 		types.ApplicationOptions{
+			Context:           c.Context,
 			DefaultProperties: map[string]string{"execution.runtime-mode": "streaming"},
 			FlinkGatewayUrl:   parsedUrl.String(),
 			UnsafeTrace:       unsafeTrace,
