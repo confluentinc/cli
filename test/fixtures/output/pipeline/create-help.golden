@@ -13,7 +13,7 @@ Flags:
       --description string    Description of the pipeline.
       --ksql-cluster string   KSQL cluster for the pipeline.
       --sql-file string       Path to a KSQL file containing the pipeline's source code.
-      --secret stringArray    A named secret that can be referenced in pipeline source code, e.g. "secret_name=secret_content".
+      --secret stringArray    A named secret that can be referenced in pipeline source code, for example, "secret_name=secret_content".
                               This flag can be supplied multiple times. The secret mapping must have the format <secret-name>=<secret-value>,
                               where <secret-name> consists of 1-128 lowercase, uppercase, numeric or underscore characters but may not begin with a digit.
                               The <secret-value> can be of any format but may not be empty.
@@ -23,5 +23,5 @@ Flags:
 
 Global Flags:
   -h, --help            Show help for this command.
-      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
