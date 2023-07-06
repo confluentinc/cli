@@ -9,11 +9,11 @@ func (s *CLITestSuite) TestAuditLogDescribe() {
 }
 
 func (s *CLITestSuite) TestAuditLogConfigMigrate() {
-	migration1 := getInputFixturePath(s.T(), "audit-log", "config-migration-server1.golden")
-	migration2 := getInputFixturePath(s.T(), "audit-log", "config-migration-server2.golden")
+	migration1 := getInputFixturePath("audit-log", "config-migration-server1.golden")
+	migration2 := getInputFixturePath("audit-log", "config-migration-server2.golden")
 
-	malformed := getInputFixturePath(s.T(), "audit-log", "malformed-migration.golden")
-	nullFields := getInputFixturePath(s.T(), "audit-log", "null-fields-migration.golden")
+	malformed := getInputFixturePath("audit-log", "malformed-migration.golden")
+	nullFields := getInputFixturePath("audit-log", "null-fields-migration.golden")
 
 	tests := []CLITest{
 		{
