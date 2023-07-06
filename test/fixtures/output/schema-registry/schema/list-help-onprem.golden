@@ -18,7 +18,7 @@ List all schemas in the default context.
 
 Flags:
       --subject-prefix string             List schemas for subjects with a given prefix.
-      --ca-location string                File or directory path to CA certificate(s) to authenticate the Schema Registry client.
+      --ca-location string                File or directory path to CA certificates to authenticate the Schema Registry client.
       --schema-registry-endpoint string   The URL of the Schema Registry cluster.
       --context string                    CLI context name.
   -o, --output string                     Specify the output format as "human", "json", or "yaml". (default "human")

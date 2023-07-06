@@ -14,7 +14,7 @@ Describe the top-level configuration.
 
 Flags:
       --subject string                    Subject of the schema.
-      --ca-location string                File or directory path to CA certificate(s) to authenticate the Schema Registry client.
+      --ca-location string                File or directory path to CA certificates to authenticate the Schema Registry client.
       --schema-registry-endpoint string   The URL of the Schema Registry cluster.
       --context string                    CLI context name.
   -o, --output string                     Specify the output format as "human", "json", or "yaml". (default "human")

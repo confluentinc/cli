@@ -12,7 +12,7 @@ Flags:
       --subject string                    REQUIRED: Subject of the schema.
       --version string                    REQUIRED: Version of the schema. Can be a specific version, "all", or "latest".
       --permanent                         Permanently delete the schema.
-      --ca-location string                File or directory path to CA certificate(s) to authenticate the Schema Registry client.
+      --ca-location string                File or directory path to CA certificates to authenticate the Schema Registry client.
       --schema-registry-endpoint string   The URL of the Schema Registry cluster.
       --force                             Skip the deletion confirmation prompt.
       --context string                    CLI context name.

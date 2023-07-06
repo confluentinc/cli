@@ -14,7 +14,7 @@ Flags:
       --subject-format string             Exporter subject rename format. The format string can contain ${subject}, which will be replaced with default subject name. (default "${subject}")
       --context-type string               Exporter context type. One of "AUTO", "CUSTOM" or "NONE". (default "AUTO")
       --context-name string               Exporter context name.
-      --ca-location string                File or directory path to CA certificate(s) to authenticate the Schema Registry client.
+      --ca-location string                File or directory path to CA certificates to authenticate the Schema Registry client.
       --schema-registry-endpoint string   The URL of the Schema Registry cluster.
       --context string                    CLI context name.
   -o, --output string                     Specify the output format as "human", "json", or "yaml". (default "human")
