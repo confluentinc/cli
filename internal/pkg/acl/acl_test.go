@@ -113,39 +113,6 @@ func TestValidateCreateDeleteAclRequestData(t *testing.T) {
 	}
 }
 
-func TestGetPrefixAndResourceIdFromPrincipal_Empty(t *testing.T) {
-	prefix, resourceId, err := getPrefixAndResourceIdFromPrincipal("", nil)
-	require.NoError(t, err)
-	require.Equal(t, "", prefix)
-	require.Equal(t, "", resourceId)
-}
-
-func TestGetPrefixAndResourceIdFromPrincipal_UnrecognizedFormat(t *testing.T) {
-	_, _, err := getPrefixAndResourceIdFromPrincipal("string with no colon", nil)
-	require.Error(t, err)
-}
-
-func TestGetPrefixAndResourceIdFromPrincipal_ResourceId(t *testing.T) {
-	prefix, resourceId, err := getPrefixAndResourceIdFromPrincipal("User:sa-123456", nil)
-	require.NoError(t, err)
-	require.Equal(t, "User", prefix)
-	require.Equal(t, "sa-123456", resourceId)
-}
-
-func TestGetPrefixAndResourceIdFromPrincipal_NumericId(t *testing.T) {
-	prefix, resourceId, err := getPrefixAndResourceIdFromPrincipal("User:123456", map[int32]string{123456: "sa-123456"})
-	require.NoError(t, err)
-	require.Equal(t, "User", prefix)
-	require.Equal(t, "sa-123456", resourceId)
-}
-
-func TestGetPrefixAndResourceIdFromPrincipal_UserIdNotValid(t *testing.T) {
-	for _, principal := range []string{"User:123456", "User:abcdef"} {
-		_, _, err := getPrefixAndResourceIdFromPrincipal(principal, nil)
-		require.Error(t, err)
-	}
-}
-
 func TestAclBindingToClustersClusterIdAclsPostOpts(t *testing.T) {
 	req := require.New(t)
 

@@ -3,7 +3,7 @@ Usage:
   confluent api-key use <api-key> [flags]
 
 Flags:
-      --resource string   REQUIRED: The resource ID.
+      --resource string   REQUIRED: The ID of the resource the API key is for. Use "cloud" for a Cloud API key.
 
 Global Flags:
   -h, --help            Show help for this command.

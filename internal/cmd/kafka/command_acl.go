@@ -6,8 +6,6 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
-	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
-
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -100,28 +98,6 @@ func convertToFilter(binding *ccstructs.ACLBinding) *ccstructs.ACLFilter {
 		EntryFilter:   binding.Entry,
 		PatternFilter: binding.Pattern,
 	}
-}
-
-func (c *aclCommand) getAllUsers() ([]*ccloudv1.User, error) {
-	serviceAccounts, err := c.Client.User.GetServiceAccounts()
-	if err != nil {
-		return nil, err
-	}
-
-	users, err := c.Client.User.List()
-	if err != nil {
-		return nil, err
-	}
-
-	return append(serviceAccounts, users...), nil
-}
-
-func mapNumericIdToResourceId(users []*ccloudv1.User) map[int32]string {
-	numericIdToResourceId := make(map[int32]string)
-	for _, user := range users {
-		numericIdToResourceId[user.Id] = user.ResourceId
-	}
-	return numericIdToResourceId
 }
 
 func (c *aclCommand) provisioningClusterCheck(lkc string) error {

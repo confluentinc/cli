@@ -13,7 +13,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (c *command) newKafkaStopCommand() *cobra.Command {
+func (c *Command) newKafkaStopCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "stop",
 		Short: "Stop the local Apache Kafka service.",
@@ -22,7 +22,7 @@ func (c *command) newKafkaStopCommand() *cobra.Command {
 	}
 }
 
-func (c *command) kafkaStop(cmd *cobra.Command, args []string) error {
+func (c *Command) kafkaStop(cmd *cobra.Command, args []string) error {
 	dockerClient, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		return err

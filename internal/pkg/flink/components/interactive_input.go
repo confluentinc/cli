@@ -32,11 +32,11 @@ func PrintOptionState(prefix string, isEnabled bool, maxCol int) {
 }
 
 func PrintWelcomeHeader() {
-	// Print welcome message
+	// Print welcome message
 	output.Printf("Welcome! \n")
 	output.Printf("To exit, press Ctrl-Q or type \"exit\". \n\n")
 
-	// Print shortcuts
+	// Print shortcuts
 	c := fColor.New(color.AccentColor)
 	output.Printf("[Ctrl-Q] %s [Ctrl-S] %s \n", c.Sprint("Quit"), c.Sprint("Toggle Smart Completion"))
 }

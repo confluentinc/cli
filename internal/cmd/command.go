@@ -131,7 +131,7 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 	cmd.AddCommand(streamshare.New(prerunner))
 	cmd.AddCommand(version.New(prerunner, cfg.Version))
 
-	dc := dynamicconfig.New(cfg, nil, nil)
+	dc := dynamicconfig.New(cfg, nil)
 	_ = dc.ParseFlagsIntoConfig(cmd)
 
 	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.flink", dc.Context(), v1.CliLaunchDarklyClient, true, false) {
@@ -143,6 +143,8 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 
 	changeDefaults(cmd, cfg)
 	deprecateCommandsAndFlags(cmd, cfg)
+	featureflags.Manager.SetCommandAndFlags(cmd, os.Args[1:])
+	disableCommandAndFlagHelpText(cmd, cfg)
 	return cmd
 }
 
@@ -249,7 +251,7 @@ func getCloudClient(cfg *v1.Config, ccloudClientFactory pauth.CCloudClientFactor
 }
 
 func deprecateCommandsAndFlags(cmd *cobra.Command, cfg *v1.Config) {
-	ctx := dynamicconfig.NewDynamicContext(cfg.Context(), nil, nil)
+	ctx := dynamicconfig.NewDynamicContext(cfg.Context(), nil)
 	deprecatedCmds := featureflags.Manager.JsonVariation(featureflags.DeprecationNotices, ctx, v1.CliLaunchDarklyClient, true, []any{})
 	cmdToFlagsAndMsg := featureflags.GetAnnouncementsOrDeprecation(deprecatedCmds)
 	for name, flagsAndMsg := range cmdToFlagsAndMsg {
@@ -258,6 +260,19 @@ func deprecateCommandsAndFlags(cmd *cobra.Command, cfg *v1.Config) {
 				featureflags.DeprecateCommandTree(cmd)
 			} else {
 				featureflags.DeprecateFlags(cmd, flagsAndMsg.Flags)
+			}
+		}
+	}
+}
+
+func disableCommandAndFlagHelpText(cmd *cobra.Command, cfg *v1.Config) {
+	ctx := dynamicconfig.NewDynamicContext(cfg.Context(), nil)
+	disableResp := featureflags.GetLDDisableMap(ctx)
+	disabledCmdsAndFlags, ok := disableResp["patterns"].([]any)
+	if ok && len(disabledCmdsAndFlags) > 0 {
+		for _, pattern := range disabledCmdsAndFlags {
+			if command, flags, err := cmd.Find(strings.Split(pattern.(string), " ")); err == nil {
+				featureflags.DisableHelpText(command, flags)
 			}
 		}
 	}

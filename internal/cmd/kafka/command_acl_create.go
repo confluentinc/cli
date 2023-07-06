@@ -78,22 +78,15 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	users, err := c.getAllUsers()
-	if err != nil {
-		return err
-	}
-
-	numericIdToResourceId := mapNumericIdToResourceId(users)
-
 	for i, binding := range bindings {
 		data := pacl.GetCreateAclRequestData(binding)
 		if httpResp, err := kafkaREST.CloudClient.CreateKafkaAcls(kafkaClusterConfig.ID, data); err != nil {
 			if i > 0 {
-				_ = pacl.PrintACLsWithResourceIdMap(cmd, bindings[:i], numericIdToResourceId)
+				_ = pacl.PrintACLs(cmd, bindings[:i])
 			}
 			return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 		}
 	}
 
-	return pacl.PrintACLsWithResourceIdMap(cmd, bindings, numericIdToResourceId)
+	return pacl.PrintACLs(cmd, bindings)
 }

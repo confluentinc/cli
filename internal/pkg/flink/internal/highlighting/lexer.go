@@ -57,8 +57,6 @@ func Lexer(line string) []prompt.LexerElement {
 			element.Color = color.PromptAccentColor
 		} else if wrappedInInvertedCommasOrBackticks(word) {
 			element.Color = prompt.Yellow
-		} else {
-			element.Color = prompt.White
 		}
 
 		// We have to maintain the spaces between words if not the last word
