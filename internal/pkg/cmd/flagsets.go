@@ -17,7 +17,7 @@ func OnPremKafkaRestSet() *pflag.FlagSet {
 func OnPremAuthenticationSet() *pflag.FlagSet {
 	set := pflag.NewFlagSet("onprem-authentication", pflag.ExitOnError)
 	set.String("bootstrap", "", `Comma-separated list of broker hosts, each formatted as "host" or "host:port".`)
-	set.String("ca-location", "", "File or directory path to CA certificates for SSL verifying the broker's key.")
+	set.String("ca-location", "", "File or directory path to one or more CA certificates for verifying the broker's key with SSL.")
 	set.String("username", "", "SASL_SSL username for use with PLAIN mechanism.")
 	set.String("password", "", "SASL_SSL password for use with PLAIN mechanism.")
 	set.String("cert-location", "", "Path to client's public key (PEM) used for SSL authentication.")
