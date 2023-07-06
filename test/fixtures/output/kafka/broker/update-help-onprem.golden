@@ -14,7 +14,7 @@ Update configuration values for all brokers in the cluster.
 
 Flags:
       --config strings            REQUIRED: A comma-separated list of configuration overrides ("key=value") for the broker being updated.
-      --all                       Apply config update to all brokers in the cluster.
+      --all                       Apply configuration update to all brokers in the cluster.
       --url string                Base URL of REST Proxy Endpoint of Kafka Cluster (include /kafka for embedded Rest Proxy). Must set flag or CONFLUENT_REST_URL.
       --ca-cert-path string       Path to a PEM-encoded CA to verify the Confluent REST Proxy.
       --client-cert-path string   Path to client cert to be verified by Confluent REST Proxy, include for mTLS authentication.
@@ -25,5 +25,5 @@ Flags:
 
 Global Flags:
   -h, --help            Show help for this command.
-      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

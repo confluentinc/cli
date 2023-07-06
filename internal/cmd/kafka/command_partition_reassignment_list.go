@@ -26,7 +26,7 @@ func (c *partitionCommand) newReassignmentListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list [id]",
 		Short: "List ongoing partition reassignments.",
-		Long:  "List ongoing partition reassignments for a given cluster, topic, or partition via Confluent Kafka REST.",
+		Long:  "List ongoing partition reassignments for a given cluster, topic, or partition using Confluent Kafka REST.",
 		Args:  cobra.MaximumNArgs(1),
 		RunE:  c.reassignmentList,
 		Example: examples.BuildExampleString(
