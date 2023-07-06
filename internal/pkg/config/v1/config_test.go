@@ -592,36 +592,34 @@ func TestConfig_AddContext(t *testing.T) {
 	noContextConf.CurrentContext = ""
 
 	type testStruct struct {
-		name                   string
-		config                 *Config
-		contextName            string
-		platformName           string
-		credentialName         string
-		currentEnvironment     string
-		kafkaClusters          map[string]*KafkaClusterConfig
-		kafka                  string
-		schemaRegistryClusters map[string]*SchemaRegistryCluster
-		state                  *ContextState
-		Version                *pversion.Version
-		filename               string
-		want                   *Config
-		wantErr                bool
+		name               string
+		config             *Config
+		contextName        string
+		platformName       string
+		credentialName     string
+		currentEnvironment string
+		kafkaClusters      map[string]*KafkaClusterConfig
+		kafka              string
+		state              *ContextState
+		Version            *pversion.Version
+		filename           string
+		want               *Config
+		wantErr            bool
 	}
 
 	test := testStruct{
-		name:                   "",
-		config:                 noContextConf,
-		contextName:            context.Name,
-		platformName:           context.PlatformName,
-		credentialName:         context.CredentialName,
-		currentEnvironment:     context.CurrentEnvironment,
-		kafkaClusters:          context.KafkaClusterContext.KafkaClusterConfigs,
-		kafka:                  context.KafkaClusterContext.ActiveKafkaCluster,
-		schemaRegistryClusters: context.SchemaRegistryClusters,
-		state:                  context.State,
-		filename:               filename,
-		want:                   nil,
-		wantErr:                false,
+		name:               "",
+		config:             noContextConf,
+		contextName:        context.Name,
+		platformName:       context.PlatformName,
+		credentialName:     context.CredentialName,
+		currentEnvironment: context.CurrentEnvironment,
+		kafkaClusters:      context.KafkaClusterContext.KafkaClusterConfigs,
+		kafka:              context.KafkaClusterContext.ActiveKafkaCluster,
+		state:              context.State,
+		filename:           filename,
+		want:               nil,
+		wantErr:            false,
 	}
 
 	addValidContextTest := test
@@ -640,7 +638,7 @@ func TestConfig_AddContext(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := tt.config.AddContext(tt.contextName, tt.platformName, tt.credentialName, tt.kafkaClusters, tt.kafka, tt.schemaRegistryClusters, tt.state, MockOrgResourceId, tt.currentEnvironment)
+			err := tt.config.AddContext(tt.contextName, tt.platformName, tt.credentialName, tt.kafkaClusters, tt.kafka, tt.state, MockOrgResourceId, tt.currentEnvironment)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("AddContext() error = %v, wantErr %v", err, tt.wantErr)
 			}
