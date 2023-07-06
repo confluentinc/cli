@@ -3,6 +3,7 @@ package components
 import (
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -16,7 +17,7 @@ type TableViewInterface interface {
 	GetFocusableElement() *tview.Table
 	GetRoot() tview.Primitive
 	GetSelectedRow() *types.StatementResultRow
-	RenderTable(tableTitle string, statementResults *types.MaterializedStatementResults, isAutoRefreshRunning bool)
+	RenderTable(tableTitle string, statementResults *types.MaterializedStatementResults, isAutoRefreshRunning bool, lastRefreshTimestamp *time.Time, fetchState types.FetchState)
 	FastScrollUp()
 	FastScrollDown()
 }
@@ -27,6 +28,7 @@ type TableView struct {
 	tableLock    sync.Mutex
 	tableWidth   int
 	columnWidths []int
+	infoBar      *TableInfoBar
 }
 
 const (
@@ -41,6 +43,7 @@ const (
 
 func NewTableView() TableViewInterface {
 	tableView := &TableView{}
+	tableView.infoBar = NewTableInfoBar()
 	tableView.initTable()
 	return tableView
 }
@@ -49,21 +52,38 @@ func (t *TableView) initTable() {
 	t.table = tview.NewTable().SetFixed(1, 1)
 	t.table.SetBorder(true)
 	t.table.SetSelectionChangedFunc(func(row, column int) {
-		// make sure we cannot step out of bounds
-		if row <= 0 {
-			t.table.ScrollToBeginning()
-			t.table.Select(1, 0)
-		}
-		if row >= t.table.GetRowCount()-numPaddingRows {
-			t.table.ScrollToEnd()
-			t.table.Select(t.getLastRowIdx(), 0)
+		if t.isValidRowIdx(row) {
+			t.updateInfoBar()
 		}
 	})
 	t.table.SetDrawFunc(t.tableAfterDrawHandler())
 }
 
+func (t *TableView) isValidRowIdx(row int) bool {
+	if row <= 0 {
+		t.table.ScrollToBeginning()
+		t.table.Select(1, 0)
+		return false
+	}
+	if row >= t.table.GetRowCount()-numPaddingRows {
+		t.table.ScrollToEnd()
+		t.table.Select(t.getLastRowIdx(), 0)
+		return false
+	}
+
+	return true
+}
+
 func (t *TableView) getLastRowIdx() int {
 	return t.table.GetRowCount() - 1 - numPaddingRows
+}
+
+func (t *TableView) updateInfoBar() {
+	if rowsSelectable, _ := t.table.GetSelectable(); rowsSelectable {
+		t.infoBar.SetRowInfo(t.getSelectedRowIdx(), t.getLastRowIdx())
+		return
+	}
+	t.infoBar.SetRowInfo(-1, -1)
 }
 
 func (t *TableView) GetFocusableElement() *tview.Table {
@@ -92,10 +112,12 @@ func (t *TableView) getSelectedRowIdx() int {
 	return rowIdx
 }
 
-func (t *TableView) RenderTable(tableTitle string, statementResults *types.MaterializedStatementResults, isAutoRefreshRunning bool) {
+func (t *TableView) RenderTable(tableTitle string, statementResults *types.MaterializedStatementResults, isAutoRefreshRunning bool, lastRefreshTimestamp *time.Time, fetchState types.FetchState) {
 	t.tableLock.Lock()
 	defer t.tableLock.Unlock()
 
+	t.infoBar.SetLastRefreshTimestamp(lastRefreshTimestamp)
+	t.infoBar.SetFetchState(fetchState)
 	t.createTableView(NewShortcuts(t.getTableShortcuts(statementResults, isAutoRefreshRunning)))
 	t.setTableAndColumnWidths(statementResults)
 
@@ -105,7 +127,7 @@ func (t *TableView) RenderTable(tableTitle string, statementResults *types.Mater
 }
 
 func (t *TableView) createTableView(shortcuts *tview.TextView) {
-	interactiveOutput := InteractiveOutput(t.table, shortcuts)
+	interactiveOutput := InteractiveOutput(t.table, t.infoBar.GetView(), shortcuts)
 	t.rootLayout = RootLayout(interactiveOutput)
 }
 

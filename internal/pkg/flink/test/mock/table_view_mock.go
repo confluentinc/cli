@@ -6,6 +6,7 @@ package mock
 
 import (
 	reflect "reflect"
+	time "time"
 
 	types "github.com/confluentinc/cli/internal/pkg/flink/types"
 	gomock "github.com/golang/mock/gomock"
@@ -102,13 +103,13 @@ func (mr *MockTableViewInterfaceMockRecorder) GetSelectedRow() *gomock.Call {
 }
 
 // RenderTable mocks base method.
-func (m *MockTableViewInterface) RenderTable(arg0 string, arg1 *types.MaterializedStatementResults, arg2 bool) {
+func (m *MockTableViewInterface) RenderTable(arg0 string, arg1 *types.MaterializedStatementResults, arg2 bool, arg3 *time.Time, arg4 types.FetchState) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RenderTable", arg0, arg1, arg2)
+	m.ctrl.Call(m, "RenderTable", arg0, arg1, arg2, arg3, arg4)
 }
 
 // RenderTable indicates an expected call of RenderTable.
-func (mr *MockTableViewInterfaceMockRecorder) RenderTable(arg0, arg1, arg2 interface{}) *gomock.Call {
+func (mr *MockTableViewInterfaceMockRecorder) RenderTable(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderTable", reflect.TypeOf((*MockTableViewInterface)(nil).RenderTable), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderTable", reflect.TypeOf((*MockTableViewInterface)(nil).RenderTable), arg0, arg1, arg2, arg3, arg4)
 }

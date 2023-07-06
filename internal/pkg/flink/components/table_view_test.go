@@ -3,6 +3,7 @@ package components
 import (
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/bradleyjkemp/cupaloy"
 	"github.com/stretchr/testify/require"
@@ -29,7 +30,7 @@ func (s *TableViewTestSuite) SetupTest() {
 
 func (s *TableViewTestSuite) TestFastScrollUp() {
 	materializedStatementResults := getResultsExample(s.numRowsScroll + 1)
-	s.tableView.RenderTable("title", materializedStatementResults, true)
+	s.tableView.RenderTable("title", materializedStatementResults, true, nil, 0)
 
 	s.tableView.FastScrollUp()
 
@@ -56,7 +57,7 @@ func getResultsExample(numRows int) *types.MaterializedStatementResults {
 
 func (s *TableViewTestSuite) TestFastScrollUpShouldNotMoveOutFurtherThanMax() {
 	materializedStatementResults := getResultsExample(s.numRowsScroll / 2)
-	s.tableView.RenderTable("title", materializedStatementResults, true)
+	s.tableView.RenderTable("title", materializedStatementResults, true, nil, 0)
 
 	s.tableView.FastScrollUp()
 
@@ -67,7 +68,7 @@ func (s *TableViewTestSuite) TestFastScrollUpShouldNotMoveOutFurtherThanMax() {
 
 func (s *TableViewTestSuite) TestFastScrollDown() {
 	materializedStatementResults := getResultsExample(s.numRowsScroll + 1)
-	s.tableView.RenderTable("title", materializedStatementResults, true)
+	s.tableView.RenderTable("title", materializedStatementResults, true, nil, 0)
 	s.tableView.table.Select(1, 0)
 
 	s.tableView.FastScrollDown()
@@ -79,7 +80,7 @@ func (s *TableViewTestSuite) TestFastScrollDown() {
 
 func (s *TableViewTestSuite) TestFastScrollDownShouldNotMoveOutFurtherThanMax() {
 	materializedStatementResults := getResultsExample(s.numRowsScroll / 2)
-	s.tableView.RenderTable("title", materializedStatementResults, true)
+	s.tableView.RenderTable("title", materializedStatementResults, true, nil, 0)
 	s.tableView.table.Select(1, 0)
 
 	s.tableView.FastScrollDown()
@@ -91,7 +92,7 @@ func (s *TableViewTestSuite) TestFastScrollDownShouldNotMoveOutFurtherThanMax() 
 
 func (s *TableViewTestSuite) TestSelectArbitraryRow() {
 	materializedStatementResults := getResultsExample(10)
-	s.tableView.RenderTable("title", materializedStatementResults, true)
+	s.tableView.RenderTable("title", materializedStatementResults, true, nil, 0)
 
 	rapid.Check(s.T(), func(t *rapid.T) {
 		rowToSelect := rapid.IntRange(1, materializedStatementResults.Size()).Draw(t, "row to select")
@@ -107,7 +108,7 @@ func (s *TableViewTestSuite) TestSelectArbitraryRow() {
 func (s *TableViewTestSuite) TestTableShouldSetTitle() {
 	expected := "Test Title"
 	materializedStatementResults := getResultsExample(10)
-	s.tableView.RenderTable(expected, materializedStatementResults, true)
+	s.tableView.RenderTable(expected, materializedStatementResults, true, nil, 0)
 
 	actual := s.tableView.table.GetTitle()
 
@@ -126,6 +127,44 @@ func (s *TableViewTestSuite) TestTableShortcutsWithAutoRefreshOn() {
 	materializedStatementResults := getResultsExample(10)
 
 	actual := s.tableView.getTableShortcuts(materializedStatementResults, true)
+
+	cupaloy.SnapshotT(s.T(), actual)
+}
+
+func (s *TableViewTestSuite) TestTableInfoBarWithAutoRefreshOnAndNoTimestamp() {
+	materializedStatementResults := getResultsExample(10)
+	s.tableView.RenderTable("title", materializedStatementResults, true, nil, 0)
+
+	actual := s.tableView.infoBar.GetView()
+
+	cupaloy.SnapshotT(s.T(), actual)
+}
+
+func (s *TableViewTestSuite) TestTableInfoBarWithAutoRefreshOffAndNoTimestamp() {
+	materializedStatementResults := getResultsExample(10)
+	s.tableView.RenderTable("title", materializedStatementResults, false, nil, 0)
+
+	actual := s.tableView.infoBar.GetView()
+
+	cupaloy.SnapshotT(s.T(), actual)
+}
+
+func (s *TableViewTestSuite) TestTableInfoBarWithAutoRefreshOnAndValidTimestamp() {
+	materializedStatementResults := getResultsExample(10)
+	timestamp := time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
+	s.tableView.RenderTable("title", materializedStatementResults, true, &timestamp, 0)
+
+	actual := s.tableView.infoBar.GetView()
+
+	cupaloy.SnapshotT(s.T(), actual)
+}
+
+func (s *TableViewTestSuite) TestTableInfoBarWithAutoRefreshOffAndValidTimestamp() {
+	materializedStatementResults := getResultsExample(10)
+	timestamp := time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
+	s.tableView.RenderTable("title", materializedStatementResults, false, &timestamp, 0)
+
+	actual := s.tableView.infoBar.GetView()
 
 	cupaloy.SnapshotT(s.T(), actual)
 }

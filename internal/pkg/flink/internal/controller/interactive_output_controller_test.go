@@ -2,6 +2,7 @@ package controller
 
 import (
 	"testing"
+	"time"
 
 	"github.com/bradleyjkemp/cupaloy"
 	"github.com/gdamore/tcell/v2"
@@ -73,10 +74,12 @@ func (s *InteractiveOutputControllerTestSuite) TestToggleTableModeOnUserInput() 
 
 func (s *InteractiveOutputControllerTestSuite) updateTableMockCalls(materializedStatementResults *types.MaterializedStatementResults) {
 	s.resultFetcher.EXPECT().IsTableMode().Return(true).Times(2)
-	s.resultFetcher.EXPECT().GetFetchState().Return(types.Paused).Times(2)
+	s.resultFetcher.EXPECT().GetFetchState().Return(types.Paused)
+	timestamp := time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
+	s.resultFetcher.EXPECT().GetLastFetchTimestamp().Return(&timestamp)
 	s.resultFetcher.EXPECT().GetMaterializedStatementResults().Return(materializedStatementResults)
 	s.resultFetcher.EXPECT().IsAutoRefreshRunning().Return(false)
-	s.tableView.EXPECT().RenderTable(s.interactiveOutputController.getTableTitle(), materializedStatementResults, false)
+	s.tableView.EXPECT().RenderTable(s.interactiveOutputController.getTableTitle(), materializedStatementResults, false, &timestamp, types.Paused)
 	s.tableView.EXPECT().GetRoot().Return(tview.NewBox())
 	s.tableView.EXPECT().GetFocusableElement().Return(tview.NewTable())
 }
@@ -180,7 +183,6 @@ func (s *InteractiveOutputControllerTestSuite) TestNonSupportedUserInputInRowVie
 
 func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysTableMode() {
 	s.resultFetcher.EXPECT().IsTableMode().Return(true)
-	s.resultFetcher.EXPECT().GetFetchState().Return(types.Failed)
 
 	actual := s.interactiveOutputController.getTableTitle()
 
@@ -189,7 +191,6 @@ func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysTableMode()
 
 func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysChangelogMode() {
 	s.resultFetcher.EXPECT().IsTableMode().Return(false)
-	s.resultFetcher.EXPECT().GetFetchState().Return(types.Failed)
 
 	actual := s.interactiveOutputController.getTableTitle()
 
@@ -198,7 +199,6 @@ func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysChangelogMo
 
 func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysComplete() {
 	s.resultFetcher.EXPECT().IsTableMode().Return(true)
-	s.resultFetcher.EXPECT().GetFetchState().Return(types.Completed)
 
 	actual := s.interactiveOutputController.getTableTitle()
 
@@ -207,7 +207,6 @@ func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysComplete() 
 
 func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysFailed() {
 	s.resultFetcher.EXPECT().IsTableMode().Return(true)
-	s.resultFetcher.EXPECT().GetFetchState().Return(types.Failed)
 
 	actual := s.interactiveOutputController.getTableTitle()
 
@@ -216,7 +215,6 @@ func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysFailed() {
 
 func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysPaused() {
 	s.resultFetcher.EXPECT().IsTableMode().Return(true)
-	s.resultFetcher.EXPECT().GetFetchState().Return(types.Paused)
 
 	actual := s.interactiveOutputController.getTableTitle()
 
@@ -225,7 +223,6 @@ func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysPaused() {
 
 func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysRunning() {
 	s.resultFetcher.EXPECT().IsTableMode().Return(true)
-	s.resultFetcher.EXPECT().GetFetchState().Return(types.Running)
 
 	actual := s.interactiveOutputController.getTableTitle()
 
@@ -238,7 +235,6 @@ func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysPageSizeAnd
 	mat.Append(executedStatementWithResults.StatementResults.GetRows()...)
 
 	s.resultFetcher.EXPECT().IsTableMode().Return(true)
-	s.resultFetcher.EXPECT().GetFetchState().Return(types.Running)
 	s.resultFetcher.EXPECT().GetStatement().Return(executedStatementWithResults)
 	s.resultFetcher.EXPECT().GetMaterializedStatementResults().Return(&mat).Times(3)
 	s.interactiveOutputController.debug = true
