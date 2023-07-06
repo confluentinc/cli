@@ -1336,3 +1336,73 @@ func (s *StoreTestSuite) TestGetStatusDetailReturnsEmptyWhenNoExceptionsAvailabl
 
 	require.Equal(s.T(), "", store.getStatusDetail(statementObj))
 }
+
+func (s *StoreTestSuite) TestNewProcessedStatementSetsIsSelectStatement() {
+	tests := []struct {
+		name              string
+		statement         flinkgatewayv1alpha1.SqlV1alpha1Statement
+		isSelectStatement bool
+	}{
+		{
+			name: "select lowercase",
+			statement: flinkgatewayv1alpha1.SqlV1alpha1Statement{
+				Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
+					Statement: flinkgatewayv1alpha1.PtrString("select * FROM table"),
+				},
+			},
+			isSelectStatement: true,
+		},
+		{
+			name: "select uppercase",
+			statement: flinkgatewayv1alpha1.SqlV1alpha1Statement{
+				Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
+					Statement: flinkgatewayv1alpha1.PtrString("SELECT * FROM table"),
+				},
+			},
+			isSelectStatement: true,
+		},
+		{
+			name: "select random case",
+			statement: flinkgatewayv1alpha1.SqlV1alpha1Statement{
+				Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
+					Statement: flinkgatewayv1alpha1.PtrString("SeLeCt * FROM table"),
+				},
+			},
+			isSelectStatement: true,
+		},
+		{
+			name: "leading white space",
+			statement: flinkgatewayv1alpha1.SqlV1alpha1Statement{
+				Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
+					Statement: flinkgatewayv1alpha1.PtrString("   select * FROM table"),
+				},
+			},
+			isSelectStatement: true,
+		},
+		{
+			name: "missing last char",
+			statement: flinkgatewayv1alpha1.SqlV1alpha1Statement{
+				Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
+					Statement: flinkgatewayv1alpha1.PtrString("selec * FROM table"),
+				},
+			},
+			isSelectStatement: false,
+		},
+		{
+			name: "missing last char",
+			statement: flinkgatewayv1alpha1.SqlV1alpha1Statement{
+				Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
+					Statement: flinkgatewayv1alpha1.PtrString("insert into table values (1, 2)"),
+				},
+			},
+			isSelectStatement: false,
+		},
+	}
+
+	for _, testCase := range tests {
+		s.T().Run(testCase.name, func(t *testing.T) {
+			processedStatement := types.NewProcessedStatement(testCase.statement)
+			require.Equal(t, testCase.isSelectStatement, processedStatement.IsSelectStatement)
+		})
+	}
+}
