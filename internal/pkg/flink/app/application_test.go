@@ -223,12 +223,12 @@ func (s *ApplicationTestSuite) TestShouldUseTView() {
 			isBasicOutput: true,
 		},
 		{
-			name: "statement with 4 columns should use TView",
+			name: "statement with 4 columns should not use TView",
 			statement: types.ProcessedStatement{StatementResults: &types.StatementResults{
 				Headers: []string{"Column 1", "Column 2", "Column 3", "Column 4"},
 				Rows:    []types.StatementResultRow{},
 			}},
-			isBasicOutput: false,
+			isBasicOutput: true,
 		},
 	}
 	for _, tt := range tests {
