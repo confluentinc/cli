@@ -9,12 +9,12 @@ Update configuration values for the cluster link "my-link".
   $ confluent kafka link configuration update my-link --config-file my-config.txt
 
 Flags:
-      --config-file string   REQUIRED: Name of the file containing link config overrides. Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.
+      --config-file string   REQUIRED: Name of the file containing link configuration overrides. Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.
       --cluster string       Kafka cluster ID.
       --environment string   Environment ID.
       --context string       CLI context name.
 
 Global Flags:
   -h, --help            Show help for this command.
-      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
