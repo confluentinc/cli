@@ -4,14 +4,19 @@ Usage:
   confluent pipeline create [flags]
 
 Examples:
-Create a new Stream Designer pipeline
+Create a Stream Designer pipeline with name "my-pipeline".
 
-  $ confluent pipeline create --name test-pipeline --ksql-cluster lksqlc-12345 --description "this is a test pipeline"
+  $ confluent pipeline create --name my-pipeline --description "example pipeline"
+
+Create a Stream Designer pipeline with a KSQL cluster and a Schema Registry cluster.
+
+  $ confluent pipeline create --name my-pipeline --description "example pipeline" --ksql-cluster lksqlc-12345 --use-schema-registry
 
 Flags:
       --name string           REQUIRED: Name of the pipeline.
       --description string    Description of the pipeline.
       --ksql-cluster string   KSQL cluster for the pipeline.
+      --use-schema-registry   Add the Schema Registry cluster to the pipeline.
       --sql-file string       Path to a KSQL file containing the pipeline's source code.
       --secret stringArray    A named secret that can be referenced in pipeline source code, for example, "secret_name=secret_content".
                               This flag can be supplied multiple times. The secret mapping must have the format <secret-name>=<secret-value>,

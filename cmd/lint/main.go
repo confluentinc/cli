@@ -139,6 +139,7 @@ var flagRules = []linter.FlagRule{
 			"source-api-secret",
 			"source-bootstrap-server",
 			"update-schema-registry",
+			"use-schema-registry",
 		),
 	),
 }
@@ -263,6 +264,9 @@ var vocabWords = []string{
 	"url",
 	"us",
 	"v2",
+	"vv",
+	"vvv",
+	"vvvv",
 	"vpc",
 	"whitelist",
 	"yaml",

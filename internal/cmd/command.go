@@ -143,6 +143,8 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 
 	changeDefaults(cmd, cfg)
 	deprecateCommandsAndFlags(cmd, cfg)
+	featureflags.Manager.SetCommandAndFlags(cmd, os.Args[1:])
+	disableCommandAndFlagHelpText(cmd, cfg)
 	return cmd
 }
 
@@ -258,6 +260,19 @@ func deprecateCommandsAndFlags(cmd *cobra.Command, cfg *v1.Config) {
 				featureflags.DeprecateCommandTree(cmd)
 			} else {
 				featureflags.DeprecateFlags(cmd, flagsAndMsg.Flags)
+			}
+		}
+	}
+}
+
+func disableCommandAndFlagHelpText(cmd *cobra.Command, cfg *v1.Config) {
+	ctx := dynamicconfig.NewDynamicContext(cfg.Context(), nil)
+	disableResp := featureflags.GetLDDisableMap(ctx)
+	disabledCmdsAndFlags, ok := disableResp["patterns"].([]any)
+	if ok && len(disabledCmdsAndFlags) > 0 {
+		for _, pattern := range disabledCmdsAndFlags {
+			if command, flags, err := cmd.Find(strings.Split(pattern.(string), " ")); err == nil {
+				featureflags.DisableHelpText(command, flags)
 			}
 		}
 	}

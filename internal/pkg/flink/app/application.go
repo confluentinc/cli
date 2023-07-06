@@ -13,6 +13,8 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
 )
 
+const minNumColumnsToUseInteractiveTable = 4
+
 type Application struct {
 	history                     *history.History
 	store                       types.StoreInterface
@@ -118,10 +120,10 @@ func (a *Application) getOutputController(processedStatementWithResults types.Pr
 	if processedStatementWithResults.IsLocalStatement {
 		return a.basicOutputController
 	}
-	if processedStatementWithResults.PageToken != "" {
+	if processedStatementWithResults.PageToken != "" || processedStatementWithResults.IsSelectStatement {
 		return a.interactiveOutputController
 	}
-	if len(processedStatementWithResults.StatementResults.GetHeaders()) > 1 && len(processedStatementWithResults.StatementResults.GetRows()) > 1 {
+	if len(processedStatementWithResults.StatementResults.GetHeaders()) >= minNumColumnsToUseInteractiveTable {
 		return a.interactiveOutputController
 	}
 

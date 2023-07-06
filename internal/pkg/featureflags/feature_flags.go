@@ -11,6 +11,7 @@ import (
 
 	"github.com/dghubble/sling"
 	"github.com/google/uuid"
+	"github.com/spf13/cobra"
 	"gopkg.in/launchdarkly/go-sdk-common.v2/lduser"
 	"gopkg.in/launchdarkly/go-sdk-common.v2/ldvalue"
 
@@ -20,6 +21,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	ppanic "github.com/confluentinc/cli/internal/pkg/panic-recovery"
 	"github.com/confluentinc/cli/internal/pkg/types"
 	"github.com/confluentinc/cli/internal/pkg/version"
 	testserver "github.com/confluentinc/cli/test/test-server"
@@ -40,20 +42,15 @@ const (
 )
 
 // Manager is a global feature flag manager
-var Manager featureFlagManager
+var Manager launchDarklyManager
 
-var attributes = []string{"user.resource_id", "org.resource_id", "environment.id", "cli.version", "cluster.id", "cluster.physicalClusterId"}
-
-type featureFlagManager interface {
-	BoolVariation(key string, ctx *dynamicconfig.DynamicContext, client v1.LaunchDarklyClient, shouldCache bool, defaultVal bool) bool
-	StringVariation(key string, ctx *dynamicconfig.DynamicContext, client v1.LaunchDarklyClient, shouldCache bool, defaultVal string) string
-	IntVariation(key string, ctx *dynamicconfig.DynamicContext, client v1.LaunchDarklyClient, shouldCache bool, defaultVal int) int
-	JsonVariation(key string, ctx *dynamicconfig.DynamicContext, client v1.LaunchDarklyClient, shouldCache bool, defaultVal any) any
-}
+var attributes = []string{"user.resource_id", "org.resource_id", "environment.id", "cli.version", "cluster.id", "cluster.physicalClusterId", "cli.command", "cli.flags"}
 
 type launchDarklyManager struct {
 	cliClient                *sling.Sling
 	ccloudClient             func(v1.LaunchDarklyClient) *sling.Sling
+	Command                  *cobra.Command
+	flags                    []string
 	isDisabled               bool
 	timeoutSuggestionPrinted bool
 	version                  *version.Version
@@ -85,13 +82,20 @@ func Init(version *version.Version, isTest, isDisabledConfig bool) {
 		return sling.New().Base(ccloudBasePath)
 	}
 
-	Manager = &launchDarklyManager{
+	Manager = launchDarklyManager{
 		cliClient:                sling.New().Base(cliBasePath),
 		ccloudClient:             ccloudClientProvider,
 		version:                  version,
 		timeoutSuggestionPrinted: false,
 		isDisabled:               isDisabledConfig,
 	}
+}
+
+func (ld *launchDarklyManager) SetCommandAndFlags(cmd *cobra.Command, args []string) {
+	fullCmd, flagsAndArgs, _ := cmd.Find(args)
+	flags := ppanic.ParseFlags(fullCmd, flagsAndArgs)
+	ld.Command = fullCmd
+	ld.flags = flags
 }
 
 func (ld *launchDarklyManager) BoolVariation(key string, ctx *dynamicconfig.DynamicContext, client v1.LaunchDarklyClient, shouldCache bool, defaultVal bool) bool {
@@ -235,6 +239,14 @@ func (ld *launchDarklyManager) contextToLDUser(ctx *dynamicconfig.DynamicContext
 
 	if ld.version != nil && ld.version.Version != "" {
 		setCustomAttribute(custom, "cli.version", ldvalue.String(ld.version.Version))
+	}
+
+	if ld.Command != nil {
+		setCustomAttribute(custom, "cli.command", ldvalue.String(ld.Command.CommandPath()))
+	}
+
+	if ld.flags != nil {
+		setCustomAttribute(custom, "cli.flags", ldvalue.CopyArbitraryValue(ld.flags))
 	}
 
 	if ctx == nil || ctx.Context == nil {
