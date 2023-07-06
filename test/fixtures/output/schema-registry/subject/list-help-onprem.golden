@@ -11,12 +11,12 @@ List all available subjects.
 Flags:
       --deleted                           View the deleted subjects.
       --prefix string                     Subject prefix. (default ":*:")
-      --ca-location string                File or directory path to CA certificate(s) to authenticate the Schema Registry client.
+      --ca-location string                File or directory path to CA certificates to authenticate the Schema Registry client.
       --schema-registry-endpoint string   The URL of the Schema Registry cluster.
       --context string                    CLI context name.
   -o, --output string                     Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
   -h, --help            Show help for this command.
-      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
