@@ -1,5 +1,9 @@
 package types
 
+import (
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
+)
+
 type ApplicationOptions struct {
 	DefaultProperties map[string]string
 	FlinkGatewayUrl   string
@@ -11,6 +15,7 @@ type ApplicationOptions struct {
 	ComputePoolId     string
 	IdentityPoolId    string
 	Verbose           bool
+	Context           *dynamicconfig.DynamicContext
 }
 
 func (a *ApplicationOptions) GetDefaultProperties() map[string]string {
@@ -80,4 +85,11 @@ func (a *ApplicationOptions) GetVerbose() bool {
 		return a.Verbose
 	}
 	return false
+}
+
+func (a *ApplicationOptions) GetContext() *dynamicconfig.DynamicContext {
+	if a != nil {
+		return a.Context
+	}
+	return nil
 }
