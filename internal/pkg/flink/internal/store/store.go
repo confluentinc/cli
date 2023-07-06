@@ -256,25 +256,23 @@ func NewStore(client ccloudv2.GatewayClientInterface, exitApplication func(), ap
 // Set properties default values if not set by the user
 // We probably want to refactor the keys names and where they are stored. Maybe also the default values.
 func (s *Store) propsDefault(propsWithoutDefault map[string]string) map[string]string {
-	properties := make(map[string]string)
+	properties := map[string]string{
+		config.ConfigKeyCatalog:          s.appOptions.GetEnvironmentId(),
+		config.ConfigKeyDatabase:         s.appOptions.GetKafkaClusterId(),
+		config.ConfigKeyOrgResourceId:    s.appOptions.GetOrgResourceId(),
+		config.ConfigKeyExecutionRuntime: "streaming",
+		config.ConfigKeyLocalTimeZone:    getLocalTimezone(),
+	}
+
 	for key, value := range propsWithoutDefault {
 		properties[key] = value
 	}
 
-	if _, ok := properties[config.ConfigKeyCatalog]; !ok {
-		properties[config.ConfigKeyCatalog] = s.appOptions.GetEnvironmentId()
+	if catalog, ok := properties[config.ConfigKeyCatalog]; !ok || catalog == "" {
+		properties[config.ConfigKeyCatalog] = s.appOptions.Context.GetCurrentFlinkCatalog()
 	}
-	if _, ok := properties[config.ConfigKeyDatabase]; !ok {
-		properties[config.ConfigKeyDatabase] = s.appOptions.GetKafkaClusterId()
-	}
-	if _, ok := properties[config.ConfigKeyOrgResourceId]; !ok {
-		properties[config.ConfigKeyOrgResourceId] = s.appOptions.GetOrgResourceId()
-	}
-	if _, ok := properties[config.ConfigKeyExecutionRuntime]; !ok {
-		properties[config.ConfigKeyExecutionRuntime] = "streaming"
-	}
-	if _, ok := properties[config.ConfigKeyLocalTimeZone]; !ok {
-		properties[config.ConfigKeyLocalTimeZone] = getLocalTimezone()
+	if db, ok := properties[config.ConfigKeyDatabase]; !ok || db == "" {
+		properties[config.ConfigKeyDatabase] = s.appOptions.Context.GetCurrentFlinkDatabase()
 	}
 
 	// Here we delete locally used properties before sending it to the backend

@@ -110,6 +110,24 @@ func (s *Store) processUseStatement(statement string) (*types.ProcessedStatement
 	}
 
 	s.Properties[configKey] = configVal
+	if s.appOptions.GetContext() != nil {
+		if configKey == config.ConfigKeyCatalog {
+			err := s.appOptions.Context.SetCurrentFlinkCatalog(configVal)
+			if err != nil {
+				return nil, &types.StatementError{Message: err.Error()}
+			}
+		} else if configKey == config.ConfigKeyDatabase {
+			err := s.appOptions.Context.SetCurrentFlinkDatabase(configVal)
+			if err != nil {
+				return nil, &types.StatementError{Message: err.Error()}
+			}
+		}
+		err = s.appOptions.Context.Save()
+		if err != nil {
+			return nil, &types.StatementError{Message: err.Error()}
+		}
+	}
+
 	statementResults := createStatementResults([]string{"Key", "Value"}, [][]string{{configKey, configVal}})
 	return &types.ProcessedStatement{
 		Kind:             config.ConfigOpUse,
