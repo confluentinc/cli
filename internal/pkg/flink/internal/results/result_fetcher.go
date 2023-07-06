@@ -16,6 +16,7 @@ type ResultFetcher struct {
 	materializedStatementResults types.MaterializedStatementResults
 	fetchState                   int32
 	autoRefreshCallback          func()
+	fetchLock                    sync.Mutex
 }
 
 const (
@@ -77,6 +78,10 @@ func (t *ResultFetcher) isAutoRefreshStartAllowed() bool {
 }
 
 func (t *ResultFetcher) fetchNextPageAndUpdateState() {
+	// lock here to make sure we don't fetch the same page twice
+	t.fetchLock.Lock()
+	defer t.fetchLock.Unlock()
+
 	newResults, err := t.store.FetchStatementResults(t.GetStatement())
 	t.updateState(newResults, err)
 }
