@@ -16,7 +16,7 @@ import (
 func (c *configCommand) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update",
-		Short: "Submits audit-log configuration spec object to the API.",
+		Short: "Submits audit-log configuration specification object to the API.",
 		Long:  "Submits an audit-log configuration specification JSON object to the API.",
 		Args:  cobra.NoArgs,
 		RunE:  c.update,

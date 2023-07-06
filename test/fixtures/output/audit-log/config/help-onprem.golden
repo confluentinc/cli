@@ -4,10 +4,10 @@ Usage:
   confluent audit-log config [command]
 
 Available Commands:
-  describe    Prints the audit log configuration spec object.
+  describe    Prints the audit log configuration specification object.
   edit        Edit the audit-log configuration spec interactively.
   migrate     Migrate legacy audit log configurations.
-  update      Submits audit-log configuration spec object to the API.
+  update      Submits audit-log configuration specification object to the API.
 
 Global Flags:
   -h, --help            Show help for this command.
