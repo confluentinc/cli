@@ -1,6 +1,7 @@
 package components
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/gdamore/tcell/v2"
@@ -12,24 +13,26 @@ import (
 )
 
 type TableView struct {
-	RootLayout            tview.Primitive
-	table                 *tview.Table
-	tableLock             sync.Mutex
-	tableWidth            int
-	numRowsToScroll       int
-	isRowSelectionEnabled bool
+	rootLayout      tview.Primitive
+	table           *tview.Table
+	tableLock       sync.Mutex
+	tableWidth      int
+	numRowsToScroll int
 }
 
 const (
-	minColumnWidth int = 4 // min characters displayed in a column
+	minColumnWidth            int = 4 // min characters displayed in a column
+	ExitTableViewShortcut         = "Q"
+	ToggleAutoRefreshShortcut     = "P"
+	ToggleTableModeShortcut       = "M"
+	JumpUpShortcut                = "U"
+	JumpDownShortcut              = "D"
 )
 
 func NewTableView() *TableView {
-	t := &TableView{
+	return &TableView{
 		table: createTable(),
 	}
-	t.RootLayout = createTableView(t.table)
-	return t
 }
 
 func createTable() *tview.Table {
@@ -38,15 +41,18 @@ func createTable() *tview.Table {
 	return table
 }
 
-func createTableView(table *tview.Table) *tview.Flex {
-	shortcuts := Shortcuts()
+func createTableView(table *tview.Table, shortcuts *tview.TextView) *tview.Flex {
 	interactiveOutput := InteractiveOutput(table, shortcuts)
 	rootLayout := RootLayout(interactiveOutput)
 	return rootLayout
 }
 
-func (t *TableView) GetTable() *tview.Table {
+func (t *TableView) GetFocusableElement() *tview.Table {
 	return t.table
+}
+
+func (t *TableView) GetRoot() tview.Primitive {
+	return t.rootLayout
 }
 
 func (t *TableView) GetSelectedRow() *types.StatementResultRow {
@@ -67,14 +73,14 @@ func (t *TableView) getSelectedRowIdx() int {
 	return rowIdx
 }
 
-func (t *TableView) RenderTable(tableTitle string, statementResults *types.MaterializedStatementResults, enableRowSelection bool) {
+func (t *TableView) RenderTable(tableTitle string, statementResults *types.MaterializedStatementResults, isAutoRefreshRunning bool) {
 	t.tableLock.Lock()
 	defer t.tableLock.Unlock()
 
-	t.isRowSelectionEnabled = enableRowSelection
+	t.rootLayout = createTableView(t.table, NewShortcuts(t.getTableShortcuts(statementResults, isAutoRefreshRunning)))
 	t.table.SetTitle(tableTitle)
 	t.renderData(statementResults)
-	t.selectLastRow()
+	t.selectLastRow(!isAutoRefreshRunning)
 }
 
 func (t *TableView) renderData(statementResults *types.MaterializedStatementResults) {
@@ -138,8 +144,8 @@ func (t *TableView) resizeTable(columnWidths []int) func(screen tcell.Screen, x 
 	}
 }
 
-func (t *TableView) selectLastRow() {
-	t.table.SetSelectable(t.isRowSelectionEnabled, false).Select(t.table.GetRowCount()-1, 0)
+func (t *TableView) selectLastRow(enableRowSelection bool) {
+	t.table.SetSelectable(enableRowSelection, false).Select(t.table.GetRowCount()-1, 0)
 	t.table.ScrollToEnd()
 }
 
@@ -153,4 +159,21 @@ func (t *TableView) FastScrollDown() {
 	selectedRow, _ := t.table.GetSelection()
 	rowToSelect := lo.Min([]int{t.table.GetRowCount() - 1, selectedRow + t.numRowsToScroll})
 	t.table.Select(rowToSelect, 0)
+}
+
+func (t *TableView) getTableShortcuts(statementResults *types.MaterializedStatementResults, isAutoRefreshRunning bool) []types.Shortcut {
+	mode := "Show table"
+	if statementResults.IsTableMode() {
+		mode = "Show changelog"
+	}
+	playPause := "Play"
+	if isAutoRefreshRunning {
+		playPause = "Pause"
+	}
+	return []types.Shortcut{
+		{KeyText: ExitTableViewShortcut, Text: "Quit"},
+		{KeyText: ToggleTableModeShortcut, Text: mode},
+		{KeyText: ToggleAutoRefreshShortcut, Text: playPause},
+		{KeyText: fmt.Sprintf("%s/%s", JumpUpShortcut, JumpDownShortcut), Text: "Jump up/down"},
+	}
 }

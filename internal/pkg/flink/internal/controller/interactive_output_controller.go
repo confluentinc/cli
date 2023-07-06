@@ -56,17 +56,16 @@ func (t *InteractiveOutputController) init() {
 func (t *InteractiveOutputController) initTableView() {
 	t.tableView = components.NewTableView()
 	t.updateTable()
-	t.openTableView()
 }
 
 func (t *InteractiveOutputController) updateTable() {
-	t.tableView.RenderTable(t.getTableTitle(), t.resultFetcher.GetMaterializedStatementResults(), !t.resultFetcher.IsAutoRefreshRunning())
-	t.app.SetFocus(t.tableView.GetTable())
+	t.tableView.RenderTable(t.getTableTitle(), t.resultFetcher.GetMaterializedStatementResults(), t.resultFetcher.IsAutoRefreshRunning())
+	t.renderTableView()
 }
 
-func (t *InteractiveOutputController) openTableView() {
-	t.app.SetRoot(t.tableView.RootLayout, true).EnableMouse(false)
-	t.app.SetFocus(t.tableView.GetTable())
+func (t *InteractiveOutputController) renderTableView() {
+	t.app.SetRoot(t.tableView.GetRoot(), true).EnableMouse(false)
+	t.app.SetFocus(t.tableView.GetFocusableElement())
 }
 
 func (t *InteractiveOutputController) renderTableAsync() {
@@ -100,7 +99,7 @@ func (t *InteractiveOutputController) inputHandlerRowView(event *tcell.EventKey)
 }
 
 func (t *InteractiveOutputController) closeRowView() {
-	t.openTableView()
+	t.renderTableView()
 	t.isRowViewOpen = false
 }
 
@@ -120,7 +119,7 @@ func (t *InteractiveOutputController) inputHandlerTableView(event *tcell.EventKe
 		t.exitTViewMode()
 		return nil
 	case tcell.KeyEnter:
-		t.openRowView()
+		t.renderRowView()
 		return nil
 	}
 	return event
@@ -128,15 +127,15 @@ func (t *InteractiveOutputController) inputHandlerTableView(event *tcell.EventKe
 
 func (t *InteractiveOutputController) getActionForShortcut(shortcut string) func() {
 	switch shortcut {
-	case "Q":
+	case components.ExitTableViewShortcut:
 		return t.exitTViewMode
-	case "M":
+	case components.ToggleTableModeShortcut:
 		return t.renderAfterAction(t.resultFetcher.ToggleTableMode)
-	case "A":
+	case components.ToggleAutoRefreshShortcut:
 		return t.renderAfterAction(t.resultFetcher.ToggleAutoRefresh)
-	case "H":
+	case components.JumpUpShortcut:
 		return t.tableView.FastScrollUp
-	case "L":
+	case components.JumpDownShortcut:
 		return t.tableView.FastScrollDown
 	}
 	return nil
@@ -155,7 +154,7 @@ func (t *InteractiveOutputController) renderAfterAction(action func()) func() {
 	}
 }
 
-func (t *InteractiveOutputController) openRowView() {
+func (t *InteractiveOutputController) renderRowView() {
 	if !t.resultFetcher.IsAutoRefreshRunning() {
 		row := t.tableView.GetSelectedRow()
 		t.isRowViewOpen = true

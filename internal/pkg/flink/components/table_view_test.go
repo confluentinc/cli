@@ -4,6 +4,7 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/bradleyjkemp/cupaloy"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"pgregory.net/rapid"
@@ -113,4 +114,20 @@ func (s *TableViewTestSuite) TestTableShouldSetTitle() {
 	actual := s.tableView.table.GetTitle()
 
 	require.Equal(s.T(), expected, actual)
+}
+
+func (s *TableViewTestSuite) TestTableShortcutsWithAutoRefreshOff() {
+	materializedStatementResults := getResultsExample()
+
+	actual := s.tableView.getTableShortcuts(materializedStatementResults, false)
+
+	cupaloy.SnapshotT(s.T(), actual)
+}
+
+func (s *TableViewTestSuite) TestTableShortcutsWithAutoRefreshOn() {
+	materializedStatementResults := getResultsExample()
+
+	actual := s.tableView.getTableShortcuts(materializedStatementResults, true)
+
+	cupaloy.SnapshotT(s.T(), actual)
 }
