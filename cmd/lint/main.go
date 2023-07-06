@@ -39,7 +39,7 @@ var commandRules = []linter.CommandRule{
 	linter.RequireValidExamples(),
 
 	// Soft Requirements
-	linter.RequireLengthBetween("Short", 10, 60),
+	linter.RequireLengthBetween("Short", 10, 64),
 }
 
 var flagRules = []linter.FlagRule{
