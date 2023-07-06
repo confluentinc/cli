@@ -1,9 +1,9 @@
 package test
 
-func (s *CLITestSuite) TestBYOK() {
+func (s *CLITestSuite) TestByok() {
 	tests := []CLITest{
 		// Only log in at the beginning so active env is not reset
-		// tt.workflow=true so login is not reset
+		// test.workflow=true so login is not reset
 		// list tests
 		{args: "byok list", fixture: "byok/list_1.golden", login: "cloud"},
 		{args: "byok list --state IN_USE", fixture: "byok/list_2.golden"},
@@ -21,13 +21,13 @@ func (s *CLITestSuite) TestBYOK() {
 
 	resetConfiguration(s.T(), false)
 
-	for _, tt := range tests {
-		tt.workflow = true
-		s.runIntegrationTest(tt)
+	for _, test := range tests {
+		test.workflow = true
+		s.runIntegrationTest(test)
 	}
 }
 
-func (s *CLITestSuite) TestBYOKDescribe() {
+func (s *CLITestSuite) TestByokDescribe() {
 	tests := []CLITest{
 		{args: "byok describe cck-001", fixture: "byok/describe-aws.golden"},
 		{args: "byok describe cck-001 -o json", fixture: "byok/describe-aws-json.golden"},
@@ -35,9 +35,9 @@ func (s *CLITestSuite) TestBYOKDescribe() {
 		{args: "byok describe cck-003 -o json", fixture: "byok/describe-azure-json.golden"},
 	}
 
-	for _, tt := range tests {
-		tt.login = "cloud"
-		s.runIntegrationTest(tt)
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
 	}
 }
 
