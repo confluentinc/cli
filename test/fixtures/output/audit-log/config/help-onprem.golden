@@ -5,7 +5,7 @@ Usage:
 
 Available Commands:
   describe    Prints the audit log configuration specification object.
-  edit        Edit the audit-log configuration spec interactively.
+  edit        Edit the audit-log configuration specification interactively.
   migrate     Migrate legacy audit log configurations.
   update      Submits audit-log configuration specification object to the API.
 

@@ -1,4 +1,4 @@
-Prints the audit log configuration specification object, where "spec" refers to the JSON blob that describes audit log routing rules.
+Prints the audit log configuration specification object, where "specification" refers to the JSON blob that describes audit log routing rules.
 
 Usage:
   confluent audit-log config describe [flags]
