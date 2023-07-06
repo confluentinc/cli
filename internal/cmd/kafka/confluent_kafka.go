@@ -275,7 +275,7 @@ func RunConsumer(consumer *ckafka.Consumer, groupHandler *GroupHandler) error {
 
 func (h *GroupHandler) RequestSchema(value []byte) (string, map[string]string, error) {
 	if len(value) == 0 || value[0] != 0x0 {
-		return "", nil, errors.New("unknown magic byte")
+		return "", nil, errors.NewErrorWithSuggestions("unknown magic byte", fmt.Sprintf("Check that all messages from this topic are in the %s format.", h.Format))
 	}
 	if len(value) < messageOffset {
 		return "", nil, errors.New("failed to find schema ID in topic data")
