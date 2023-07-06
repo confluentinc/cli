@@ -11,7 +11,7 @@ Create a connector in the current or specified Kafka cluster context.
   $ confluent connect cluster create --config-file config.json --cluster lkc-123456
 
 Flags:
-      --config-file string   REQUIRED: JSON connector config file.
+      --config-file string   REQUIRED: JSON connector configuration file.
       --cluster string       Kafka cluster ID.
       --context string       CLI context name.
       --environment string   Environment ID.
