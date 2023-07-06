@@ -14,7 +14,6 @@ func (c *command) newStatementListCommand() *cobra.Command {
 		RunE:  c.statementList,
 	}
 
-	c.addComputePoolFlag(cmd)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
