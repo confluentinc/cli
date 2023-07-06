@@ -14,13 +14,13 @@ Create a cluster link using command line flags.
 
 Flags:
       --source-cluster string                 Source cluster ID.
-      --source-bootstrap-server string        Bootstrap server address of the source cluster. Can alternatively be set in the config file using key bootstrap.servers.
+      --source-bootstrap-server string        Bootstrap server address of the source cluster. Can alternatively be set in the configuration file using key "bootstrap.servers".
       --destination-cluster string            Destination cluster ID for source initiated cluster links.
-      --destination-bootstrap-server string   Bootstrap server address of the destination cluster for source initiated cluster links. Can alternatively be set in the config file using key "bootstrap.servers".
-      --source-api-key string                 An API key for the source cluster. For links at destination cluster this is used for remote cluster authentication. For links at source cluster this is used for local cluster authentication. If specified, the cluster will use SASL_SSL with PLAIN SASL as its mechanism for authentication. If you wish to use another authentication mechanism, please do NOT specify this flag, and add the security configs in the config file.
-      --source-api-secret string              An API secret for the source cluster. For links at destination cluster this is used for remote cluster authentication. For links at source cluster this is used for local cluster authentication. If specified, the cluster will use SASL_SSL with PLAIN SASL as its mechanism for authentication. If you wish to use another authentication mechanism, please do NOT specify this flag, and add the security configs in the config file.
-      --destination-api-key string            An API key for the destination cluster. This is used for remote cluster authentication links at the source cluster. If specified, the cluster will use SASL_SSL with PLAIN SASL as its mechanism for authentication. If you wish to use another authentication mechanism, please do NOT specify this flag, and add the security configs in the config file.
-      --destination-api-secret string         An API secret for the destination cluster. This is used for remote cluster authentication for links at the source cluster. If specified, the cluster will use SASL_SSL with PLAIN SASL as its mechanism for authentication. If you wish to use another authentication mechanism, please do NOT specify this flag, and add the security configs in the config file.
+      --destination-bootstrap-server string   Bootstrap server address of the destination cluster for source initiated cluster links. Can alternatively be set in the configuration file using key "bootstrap.servers".
+      --source-api-key string                 An API key for the source cluster. For links at destination cluster, this is used for remote cluster authentication. For links at source cluster, this is used for local cluster authentication. If specified, the cluster will use SASL_SSL with PLAIN SASL as its mechanism for authentication. If you wish to use another authentication mechanism, do not specify this flag, and add the security configurations in the configuration file.
+      --source-api-secret string              An API secret for the source cluster. For links at destination cluster, this is used for remote cluster authentication. For links at source cluster, this is used for local cluster authentication. If specified, the cluster will use SASL_SSL with PLAIN SASL as its mechanism for authentication. If you wish to use another authentication mechanism, do not specify this flag, and add the security configurations in the configuration file.
+      --destination-api-key string            An API key for the destination cluster. This is used for remote cluster authentication links at the source cluster. If specified, the cluster will use SASL_SSL with PLAIN SASL as its mechanism for authentication. If you wish to use another authentication mechanism, do not specify this flag, and add the security configurations in the configuration file.
+      --destination-api-secret string         An API secret for the destination cluster. This is used for remote cluster authentication for links at the source cluster. If specified, the cluster will use SASL_SSL with PLAIN SASL as its mechanism for authentication. If you wish to use another authentication mechanism, do not specify this flag, and add the security configurations in the configuration file.
       --config-file string                    Name of the file containing link configuration. Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.
       --dry-run                               Validate a link, but do not create it.
       --no-validate                           Create a link even if the source cluster cannot be reached.
@@ -30,5 +30,5 @@ Flags:
 
 Global Flags:
   -h, --help            Show help for this command.
-      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
