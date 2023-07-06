@@ -166,52 +166,50 @@ func (c *command) getAllUsers() ([]*ccloudv1.User, error) {
 	return users, nil
 }
 
-func (c *command) resolveResourceId(cmd *cobra.Command, v2Client *ccloudv2.Client) (string, string, string, error) {
+func (c *command) resolveResourceId(cmd *cobra.Command, v2Client *ccloudv2.Client) (string, string, error) {
 	resource, err := cmd.Flags().GetString("resource")
 	if err != nil {
-		return "", "", "", err
+		return "", "", err
 	}
 	if resource == "" {
-		return "", "", "", nil
+		return "", "", nil
 	}
-
-	resourceType := presource.LookupType(resource)
 
 	var clusterId string
 	var apiKey string
 
-	switch resourceType {
+	switch presource.LookupType(resource) {
 	case presource.Cloud:
 		break
 	case presource.KafkaCluster:
 		cluster, err := c.Context.FindKafkaCluster(resource)
 		if err != nil {
-			return "", "", "", errors.CatchResourceNotFoundError(err, resource)
+			return "", "", errors.CatchResourceNotFoundError(err, resource)
 		}
 		clusterId = cluster.ID
 		apiKey = cluster.APIKey
 	case presource.KsqlCluster:
 		environmentId, err := c.Context.EnvironmentId()
 		if err != nil {
-			return "", "", "", err
+			return "", "", err
 		}
 		cluster, err := v2Client.DescribeKsqlCluster(resource, environmentId)
 		if err != nil {
-			return "", "", "", errors.CatchResourceNotFoundError(err, resource)
+			return "", "", errors.CatchResourceNotFoundError(err, resource)
 		}
 		clusterId = cluster.GetId()
 	case presource.SchemaRegistryCluster:
 		cluster, err := c.Context.SchemaRegistryCluster(cmd)
 		if err != nil {
-			return "", "", "", errors.CatchResourceNotFoundError(err, resource)
+			return "", "", errors.CatchResourceNotFoundError(err, resource)
 		}
 		clusterId = cluster.Id
 		if cluster.SrCredentials != nil {
 			apiKey = cluster.SrCredentials.Key
 		}
 	default:
-		return "", "", "", fmt.Errorf(`unsupported resource type for resource "%s"`, resource)
+		return "", "", fmt.Errorf(`unsupported resource type for resource "%s"`, resource)
 	}
 
-	return resourceType, clusterId, apiKey, nil
+	return clusterId, apiKey, nil
 }
