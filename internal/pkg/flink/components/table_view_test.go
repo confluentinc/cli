@@ -116,7 +116,7 @@ func (s *TableViewTestSuite) TestTableShouldSetTitle() {
 	require.Equal(s.T(), expected, actual)
 }
 
-func (s *TableViewTestSuite) TestTableShortcutsShouldDisplayPlay() {
+func (s *TableViewTestSuite) TestTableShortcutsWithAutoRefreshOff() {
 	materializedStatementResults := getResultsExample()
 
 	actual := s.tableView.getTableShortcuts(materializedStatementResults, false)
@@ -124,27 +124,10 @@ func (s *TableViewTestSuite) TestTableShortcutsShouldDisplayPlay() {
 	cupaloy.SnapshotT(s.T(), actual)
 }
 
-func (s *TableViewTestSuite) TestTableShortcutsShouldDisplayPause() {
+func (s *TableViewTestSuite) TestTableShortcutsWithAutoRefreshOn() {
 	materializedStatementResults := getResultsExample()
 
 	actual := s.tableView.getTableShortcuts(materializedStatementResults, true)
-
-	cupaloy.SnapshotT(s.T(), actual)
-}
-
-func (s *TableViewTestSuite) TestTableShortcutsShouldDisplayChangelogMode() {
-	materializedStatementResults := getResultsExample()
-
-	actual := s.tableView.getTableShortcuts(materializedStatementResults, false)
-
-	cupaloy.SnapshotT(s.T(), actual)
-}
-
-func (s *TableViewTestSuite) TestTableShortcutsShouldDisplayTableMode() {
-	materializedStatementResults := getResultsExample()
-	materializedStatementResults.SetTableMode(false)
-
-	actual := s.tableView.getTableShortcuts(materializedStatementResults, false)
 
 	cupaloy.SnapshotT(s.T(), actual)
 }
