@@ -37,8 +37,11 @@ type StatementResultRow struct {
 
 func (r *StatementResultRow) GetRowKey() string {
 	rowKey := strings.Builder{}
-	for _, field := range r.GetFields() {
+	for idx, field := range r.GetFields() {
 		rowKey.WriteString(field.ToString())
+		if idx != len(r.GetFields())-1 {
+			rowKey.WriteString("-")
+		}
 	}
 	return rowKey.String()
 }

@@ -620,3 +620,60 @@ func (s *MaterializedStatementResultsTestSuite) TestToggleTableMode() {
 	require.Equal(s.T(), append([]string{"Operation"}, headers...), materializedStatementResults.GetHeaders())
 	require.Equal(s.T(), 1, materializedStatementResults.Size())
 }
+
+func (s *MaterializedStatementResultsTestSuite) TestRowKeysShouldNotCollide() {
+	headers := []string{"column1", "column2"}
+	materializedStatementResults := types.NewMaterializedStatementResults(headers, 10)
+	materializedStatementResults.Append(types.StatementResultRow{
+		Operation: types.INSERT,
+		Fields: []types.StatementResultField{
+			types.AtomicStatementResultField{
+				Type:  types.VARCHAR,
+				Value: "1",
+			},
+			types.AtomicStatementResultField{
+				Type:  types.VARCHAR,
+				Value: "23",
+			},
+		},
+	})
+	materializedStatementResults.Append(types.StatementResultRow{
+		Operation: types.INSERT,
+		Fields: []types.StatementResultField{
+			types.AtomicStatementResultField{
+				Type:  types.VARCHAR,
+				Value: "12",
+			},
+			types.AtomicStatementResultField{
+				Type:  types.VARCHAR,
+				Value: "3",
+			},
+		},
+	})
+	materializedStatementResults.Append(types.StatementResultRow{
+		Operation: types.UPDATE_BEFORE,
+		Fields: []types.StatementResultField{
+			types.AtomicStatementResultField{
+				Type:  types.VARCHAR,
+				Value: "1",
+			},
+			types.AtomicStatementResultField{
+				Type:  types.VARCHAR,
+				Value: "23",
+			},
+		},
+	})
+
+	expected := [][]string{{"12", "3"}}
+
+	var actual [][]string
+	materializedStatementResults.ForEach(func(rowIdx int, row *types.StatementResultRow) {
+		var fields []string
+		for _, field := range row.GetFields() {
+			fields = append(fields, field.ToString())
+		}
+		actual = append(actual, fields)
+	})
+
+	require.Equal(s.T(), expected, actual)
+}
