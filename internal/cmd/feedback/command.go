@@ -10,7 +10,6 @@ import (
 	cliv1 "github.com/confluentinc/ccloud-sdk-go-v2/cli/v1"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
@@ -18,7 +17,6 @@ import (
 
 type command struct {
 	*pcmd.AuthenticatedCLICommand
-	form.Prompt
 }
 
 const (
@@ -28,14 +26,13 @@ const (
 func New(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "feedback",
-		Short:       fmt.Sprintf("Submit feedback about the %s.", pversion.FullCLIName),
+		Short:       fmt.Sprintf("Submit feedback for the %s.", pversion.FullCLIName),
 		Args:        cobra.NoArgs,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}
 
 	c := &command{
 		AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(cmd, prerunner),
-		Prompt:                  form.NewPrompt(os.Stdin),
 	}
 	cmd.RunE = c.feedback
 
@@ -43,12 +40,12 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 }
 
 func (c *command) feedback(_ *cobra.Command, _ []string) error {
-	msg, err := getFeedback(c.Prompt)
+	feedback, err := getFeedback(form.NewPrompt(os.Stdin))
 	if err != nil {
 		return err
 	}
-	if len(msg) > 0 {
-		if err := c.sendFeedback(msg); err != nil {
+	if len(feedback) > 0 {
+		if err := c.sendFeedback(feedback); err != nil {
 			return err
 		}
 		fmt.Println("Thanks for your feedback.")
@@ -58,29 +55,24 @@ func (c *command) feedback(_ *cobra.Command, _ []string) error {
 
 func getFeedback(prompt form.Prompt) (string, error) {
 	f := form.New(form.Field{
-		ID: "proceed",
-		Prompt: "Please confirm that your feedback will not contain any " +
-			"sensitive information such as API-keys, unencrypted tokens, etc.",
+		ID:        "proceed",
+		Prompt:    "Please confirm that your feedback does not contain any sensitive information",
 		IsYesOrNo: true,
 	})
 	if err := f.Prompt(prompt); err != nil || !f.Responses["proceed"].(bool) {
-		output.Println("Not proceeding with feedback")
 		return "", err
 	}
-	output.Println("Enter feedback (maximum length of 2,000 characters): ")
-	msg, err := prompt.ReadLine()
+	output.Print("Enter feedback: ")
+	feedback, err := prompt.ReadLine()
 	if err != nil {
 		return "", err
 	}
-	msg = strings.TrimLeft(msg, " ")
-	msg = strings.TrimRight(msg, " \n")
-	if len(msg) > maxLength {
-		return "", errors.New(errors.ExceedsMaxLengthMsg)
-	}
-	return msg, err
+	feedback = strings.TrimLeft(feedback, " ")
+	feedback = strings.TrimRight(feedback, " \n")
+	return feedback, err
 }
 
-func (c *command) sendFeedback(msg string) error {
-	feedback := cliv1.CliV1Feedback{Content: cliv1.PtrString(msg)}
+func (c *command) sendFeedback(content string) error {
+	feedback := cliv1.CliV1Feedback{Content: cliv1.PtrString(content)}
 	return c.V2Client.CreateCliFeedback(feedback)
 }

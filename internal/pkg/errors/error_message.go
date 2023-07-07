@@ -69,9 +69,6 @@ const (
 	NoEnvironmentFoundErrorMsg     = "no environment found"
 	NoEnvironmentFoundSuggestions  = "This issue may occur if this user has no valid role bindings. Contact an Organization Admin to create a role binding for this user."
 
-	// feedback command
-	ExceedsMaxLengthMsg = "Inputted feedback exceeds the maximum character length of 2,000."
-
 	// iam acl & kafka acl commands
 	UnableToPerformAclErrorMsg    = "unable to %s ACLs: %s"
 	UnableToPerformAclSuggestions = "Ensure that you're running against MDS with CP 5.4+."

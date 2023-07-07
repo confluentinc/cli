@@ -2,7 +2,6 @@ package testserver
 
 import (
 	"encoding/json"
-	"io"
 	"net/http"
 	"testing"
 
@@ -14,10 +13,15 @@ import (
 // Handler for: /cli/v1/feedbacks
 func handleFeedbacks(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		feedback := cliv1.CliV1Feedback{Content: cliv1.PtrString("This CLI is great!")}
-		b, err := json.Marshal(&feedback)
+		var req cliv1.CliV1Feedback
+		err := json.NewDecoder(r.Body).Decode(&req)
 		require.NoError(t, err)
-		_, err = io.WriteString(w, string(b))
-		require.NoError(t, err)
+		if len(*req.Content) > 20 {
+			err := writeFeedbackExceedsMaxLengthError(w)
+			require.NoError(t, err)
+			return
+		} else {
+			w.WriteHeader(http.StatusNoContent)
+		}
 	}
 }
