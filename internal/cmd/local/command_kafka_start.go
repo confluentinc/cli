@@ -42,8 +42,8 @@ func (c *Command) newKafkaStartCommand() *cobra.Command {
 		RunE:  c.kafkaStart,
 	}
 
-	cmd.Flags().String("kafka-rest-port", "", "The port number for kafka REST.")
-	cmd.Flags().String("plaintext-port", "", "The port number for plaintext producer and consumer clients.")
+	cmd.Flags().String("kafka-rest-port", "", "The port number for kafka REST. If not specified, a random free port will be used.")
+	cmd.Flags().String("plaintext-port", "", "The port number for plaintext producer and consumer clients. If not specified, a random free port will be used.")
 
 	return cmd
 }
