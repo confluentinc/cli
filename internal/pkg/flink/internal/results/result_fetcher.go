@@ -2,20 +2,49 @@ package results
 
 import (
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/confluentinc/cli/internal/pkg/flink/config"
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
 )
 
+type fetchState struct {
+	mutex              sync.RWMutex
+	lastFetchTimestamp *time.Time
+	state              types.FetchState
+}
+
+func (s *fetchState) getLastFetchTimestamp() *time.Time {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+
+	return s.lastFetchTimestamp
+}
+
+func (s *fetchState) getState() types.FetchState {
+	s.mutex.RLock()
+	defer s.mutex.RUnlock()
+
+	return s.state
+}
+
+func (s *fetchState) setState(state types.FetchState) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	s.state = state
+	now := time.Now()
+	s.lastFetchTimestamp = &now
+}
+
 type ResultFetcher struct {
 	store                        types.StoreInterface
 	statement                    types.ProcessedStatement
 	statementLock                sync.RWMutex
 	materializedStatementResults types.MaterializedStatementResults
-	fetchState                   int32
+	fetchState                   fetchState
 	autoRefreshCallback          func()
+	fetchLock                    sync.Mutex
 }
 
 const (
@@ -40,7 +69,7 @@ func (t *ResultFetcher) ToggleTableMode() {
 
 func (t *ResultFetcher) ToggleAutoRefresh() {
 	if t.IsAutoRefreshRunning() {
-		t.setFetchState(types.Paused)
+		t.fetchState.setState(types.Paused)
 		return
 	}
 
@@ -52,19 +81,19 @@ func (t *ResultFetcher) IsAutoRefreshRunning() bool {
 }
 
 func (t *ResultFetcher) GetFetchState() types.FetchState {
-	return types.FetchState(atomic.LoadInt32(&t.fetchState))
-}
-
-func (t *ResultFetcher) setFetchState(state types.FetchState) {
-	atomic.StoreInt32(&t.fetchState, int32(state))
+	return t.fetchState.getState()
 }
 
 func (t *ResultFetcher) startAutoRefresh(refreshInterval uint) {
 	if t.isAutoRefreshStartAllowed() {
-		t.setFetchState(types.Running)
+		t.fetchState.setState(types.Running)
 		go func() {
 			for t.IsAutoRefreshRunning() {
 				t.fetchNextPageAndUpdateState()
+				// break here to avoid rendering and messing with the view if pause was initiated
+				if t.GetFetchState() == types.Paused {
+					break
+				}
 				t.autoRefreshCallback()
 				time.Sleep(time.Millisecond * time.Duration(refreshInterval))
 			}
@@ -77,6 +106,10 @@ func (t *ResultFetcher) isAutoRefreshStartAllowed() bool {
 }
 
 func (t *ResultFetcher) fetchNextPageAndUpdateState() {
+	// lock here to make sure we don't fetch the same page twice
+	t.fetchLock.Lock()
+	defer t.fetchLock.Unlock()
+
 	newResults, err := t.store.FetchStatementResults(t.GetStatement())
 	t.updateState(newResults, err)
 }
@@ -88,24 +121,24 @@ func (t *ResultFetcher) updateState(newResults *types.ProcessedStatement, err *t
 	}
 
 	if err != nil {
-		t.setFetchState(types.Failed)
+		t.fetchState.setState(types.Failed)
 		return
 	}
 
 	t.setStatement(*newResults)
 	t.materializedStatementResults.Append(newResults.StatementResults.GetRows()...)
 	if newResults.PageToken == "" {
-		t.setFetchState(types.Completed)
+		t.fetchState.setState(types.Completed)
 		return
 	}
 
 	// if auto refresh is not running we set the state to types.Paused
 	if !t.IsAutoRefreshRunning() {
-		t.setFetchState(types.Paused)
+		t.fetchState.setState(types.Paused)
 		return
 	}
 
-	t.setFetchState(types.Running)
+	t.fetchState.setState(types.Running)
 }
 
 func (t *ResultFetcher) GetStatement() types.ProcessedStatement {
@@ -133,10 +166,10 @@ func (t *ResultFetcher) Init(statement types.ProcessedStatement) {
 
 func (t *ResultFetcher) setInitialFetchState(statement types.ProcessedStatement) {
 	if statement.PageToken == "" {
-		t.setFetchState(types.Completed)
+		t.fetchState.setState(types.Completed)
 		return
 	}
-	t.setFetchState(types.Paused)
+	t.fetchState.setState(types.Paused)
 }
 
 func (t *ResultFetcher) getResultHeadersOrCreateFromResultSchema(statement types.ProcessedStatement) []string {
@@ -151,7 +184,7 @@ func (t *ResultFetcher) getResultHeadersOrCreateFromResultSchema(statement types
 }
 
 func (t *ResultFetcher) Close() {
-	t.setFetchState(types.Paused)
+	t.fetchState.setState(types.Paused)
 	// This was used to delete statements after their execution to save system resources, which should not be
 	// an issue anymore. We don't want to remove it completely just yet, but will disable it by default for now.
 	// TODO: remove this completely once we are sure we won't need it in the future
@@ -167,4 +200,8 @@ func (t *ResultFetcher) SetAutoRefreshCallback(autoRefreshCallback func()) {
 
 func (t *ResultFetcher) GetMaterializedStatementResults() *types.MaterializedStatementResults {
 	return &t.materializedStatementResults
+}
+
+func (t *ResultFetcher) GetLastFetchTimestamp() *time.Time {
+	return t.fetchState.getLastFetchTimestamp()
 }

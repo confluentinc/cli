@@ -38,7 +38,7 @@ func (c *StatementController) ExecuteStatement(statementToExecute string) (*type
 		c.handleStatementError(*err)
 		return nil, err
 	}
-	processedStatement.PrintStatusDetail()
+	processedStatement.PrintStatementDoneStatus()
 
 	return processedStatement, nil
 }
