@@ -1,0 +1,5 @@
+([]string) (len=3) {
+  (string) (len=15) "Refresh: Paused",
+  (string) (len=13) "Row: 10 of 10",
+  (string) (len=26) "Last refresh: 00:00:00.000"
+}

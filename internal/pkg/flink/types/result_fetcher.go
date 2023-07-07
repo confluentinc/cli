@@ -1,5 +1,7 @@
 package types
 
+import "time"
+
 type FetchState int32
 
 const (
@@ -8,6 +10,20 @@ const (
 	Failed                      // fetching next page Failed
 	Running                     // auto fetch is Running
 )
+
+func (f FetchState) ToString() string {
+	switch f {
+	case Completed:
+		return "Completed"
+	case Failed:
+		return "Failed"
+	case Paused:
+		return "Paused"
+	case Running:
+		return "Running"
+	}
+	return "Unknown"
+}
 
 type ResultFetcherInterface interface {
 	GetFetchState() FetchState
@@ -20,4 +36,5 @@ type ResultFetcherInterface interface {
 	SetAutoRefreshCallback(func())
 	GetStatement() ProcessedStatement
 	GetMaterializedStatementResults() *MaterializedStatementResults
+	GetLastFetchTimestamp() *time.Time
 }
