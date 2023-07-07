@@ -175,7 +175,7 @@ func (s ProcessedStatement) printStatusMessageOfNonLocalStatement() {
 		utils.OutputErr(fmt.Sprintf("Error: %s", "statement submission failed"))
 	} else {
 		utils.OutputInfo("Statement successfully submitted.")
-		utils.OutputInfo("Fetching results...")
+		utils.OutputInfo(fmt.Sprintf("Waiting for statement to be ready. Statement phase is %s.", s.Status))
 	}
 }
 
@@ -183,8 +183,10 @@ func (s ProcessedStatement) GetPageSize() int {
 	return len(s.StatementResults.GetRows())
 }
 
-func (s ProcessedStatement) PrintStatusDetail() {
-	// print status detail message if available
+func (s ProcessedStatement) PrintStatementDoneStatus() {
+	if s.Status != "" {
+		output.Printf("Statement phase is %s.\n", s.Status)
+	}
 	if s.StatusDetail != "" {
 		output.Printf("%s.\n", s.StatusDetail)
 	}
