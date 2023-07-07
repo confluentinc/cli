@@ -1,13 +1,12 @@
 package local
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"runtime"
 	"strconv"
-	"strings"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -24,21 +23,25 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-var (
-	statusBlacklist = []string{"Pulling fs layer", "Waiting", "Downloading", "Download complete", "Verifying Checksum", "Extracting", "Pull complete"}
-)
-
-type imagePullOut struct {
-	Status string `json:"status"`
+type ImagePullResponse struct {
+	Status   string `json:"status"`
+	Error    string `json:"error,omitempty"`
+	Progress string `json:"progress,omitempty"`
+	ID       string `json:"id,omitempty"`
 }
 
 func (c *Command) newKafkaStartCommand() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "start",
 		Short: "Start a single-node instance of Apache Kafka.",
 		Args:  cobra.NoArgs,
 		RunE:  c.kafkaStart,
 	}
+
+	cmd.Flags().String("kafka-rest-port", "8082", "The port number for Kafka REST.")
+	cmd.Flags().String("plaintext-port", "", "The port number for plaintext producer and consumer clients. If not specified, a random free port will be used.")
+
+	return cmd
 }
 
 func (c *Command) kafkaStart(cmd *cobra.Command, args []string) error {
@@ -58,31 +61,34 @@ func (c *Command) kafkaStart(cmd *cobra.Command, args []string) error {
 	}
 	defer out.Close()
 
-	buf := new(strings.Builder)
-	_, err = io.Copy(buf, out)
-	if err != nil {
+	scanner := bufio.NewScanner(out)
+	for scanner.Scan() {
+		var response ImagePullResponse
+		text := scanner.Text()
+
+		err := json.Unmarshal([]byte(text), &response)
+		if err != nil {
+			return err
+		}
+
+		if response.Status == "Downloading" {
+			fmt.Printf("\rDownloading: %s", response.Progress)
+		} else if response.Status == "Extracting" {
+			fmt.Printf("\rExtracting: %s", response.Progress)
+		} else {
+			fmt.Printf("\n%s", response.Status)
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
 		return err
 	}
 
-	for _, ss := range strings.Split(buf.String(), "\n") {
-		var output imagePullOut
-		if err := json.Unmarshal([]byte(ss), &output); err != nil {
-			continue
-		}
-		var inBlacklist bool
-		for _, s := range statusBlacklist {
-			if output.Status == s {
-				inBlacklist = true
-			}
-		}
-		if !inBlacklist {
-			fmt.Printf("%v\n", output.Status)
-		}
-	}
+	fmt.Print("\r")
 
 	log.CliLogger.Tracef("Pull confluent-local image success")
 
-	if err := c.prepareAndSaveLocalPorts(c.Config.IsTest); err != nil {
+	if err := c.prepareAndSaveLocalPorts(cmd, c.Config.IsTest); err != nil {
 		return err
 	}
 
@@ -134,7 +140,7 @@ func (c *Command) kafkaStart(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *Command) prepareAndSaveLocalPorts(isTest bool) error {
+func (c *Command) prepareAndSaveLocalPorts(cmd *cobra.Command, isTest bool) error {
 	if c.Config.LocalPorts != nil {
 		return nil
 	}
@@ -147,16 +153,29 @@ func (c *Command) prepareAndSaveLocalPorts(isTest bool) error {
 			ControllerPort: "2999",
 		}
 	} else {
-		freePorts, err := freeport.GetFreePorts(4)
+		freePorts, err := freeport.GetFreePorts(3)
 		if err != nil {
 			return err
 		}
 
 		c.Config.LocalPorts = &v1.LocalPorts{
-			KafkaRestPort:  strconv.Itoa(freePorts[0]),
-			PlaintextPort:  strconv.Itoa(freePorts[1]),
-			BrokerPort:     strconv.Itoa(freePorts[2]),
-			ControllerPort: strconv.Itoa(freePorts[3]),
+			PlaintextPort:  strconv.Itoa(freePorts[0]),
+			BrokerPort:     strconv.Itoa(freePorts[1]),
+			ControllerPort: strconv.Itoa(freePorts[2]),
+		}
+
+		if kafkaRestPort, err := cmd.Flags().GetString("kafka-rest-port"); err == nil && kafkaRestPort != "" {
+			c.Config.LocalPorts.KafkaRestPort = kafkaRestPort
+		} else {
+			freePort, err := freeport.GetFreePort()
+			if err != nil {
+				return err
+			}
+			c.Config.LocalPorts.KafkaRestPort = strconv.Itoa(freePort)
+		}
+
+		if plaintextPort, err := cmd.Flags().GetString("plaintext-port"); err == nil && plaintextPort != "" {
+			c.Config.LocalPorts.PlaintextPort = plaintextPort
 		}
 	}
 
