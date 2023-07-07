@@ -584,6 +584,13 @@ func handleKafkaRPLinks(t *testing.T) http.HandlerFunc {
 					LinkError:            linkAuthErr,
 					LinkErrorMessage:     *cckafkarestv3.NewNullableString(linkAuthErrMsg),
 				},
+				{
+					RemoteClusterId: *cckafkarestv3.NewNullableString(cluster2),
+					LinkName:        "link-4",
+					ClusterLinkId:   "LINKID4",
+					TopicNames:      topics,
+					LinkError:       noErrorErr,
+				},
 			}})
 			require.NoError(t, err)
 		}

@@ -4,3 +4,4 @@
   link-2 | cluster-1      | cluster-2           | AVAILABLE   |                      |                                 
   link-3 | cluster-1      | cluster-2           | UNAVAILABLE | AUTHENTICATION_ERROR | Please check your API key and   
          |                |                     |             |                      | secret.                         
+  link-4 |                |                     |             |                      |                                 

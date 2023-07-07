@@ -109,7 +109,7 @@ func getListFields(includeTopics bool) []string {
 		x = append(x, "TopicName")
 	}
 
-	return append(x, "SourceClusterId", "DestinationClusterId", "State", "Error", "ErrorMessage")
+	return append(x, "SourceClusterId", "DestinationClusterId", "RemoteClusterId", "State", "Error", "ErrorMessage")
 }
 
 func getMirrorTopicNames(kafkaREST *pcmd.KafkaREST, clusterId, linkName string) ([]string, error) {
