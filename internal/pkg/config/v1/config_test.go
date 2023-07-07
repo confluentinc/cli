@@ -917,7 +917,7 @@ func TestKafkaClusterContext_DeleteAPIKey(t *testing.T) {
 		kafkaClusterContext := testInputs.statefulConfig.Context().KafkaClusterContext
 		kafkaClusterContext.AddKafkaClusterConfig(kcc)
 
-		kafkaClusterContext.DeleteAPIKey(apiKey)
+		kafkaClusterContext.DeleteApiKey(apiKey)
 		kcc := kafkaClusterContext.GetKafkaClusterConfig(clusterID)
 		if _, ok := kcc.APIKeys[apiKey]; ok {
 			t.Errorf("DeleteAPIKey did not delete the API key.")
