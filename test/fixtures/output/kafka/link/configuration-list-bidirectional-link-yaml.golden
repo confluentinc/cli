@@ -11,7 +11,7 @@
   source: ""
   synonyms: []
 - config_name: link.mode
-  config_value: DESTINATION
+  config_value: BIDIRECTIONAL
   read_only: false
   sensitive: false
   source: source-2
