@@ -52,17 +52,10 @@ func (t *TableInfoBar) updateInfoBar() {
 }
 
 func (t *TableInfoBar) constructAutoRefreshInfo() tview.Primitive {
-	autoRefreshInfo := tview.NewTextView().SetDynamicColors(true).SetTextAlign(tview.AlignLeft).SetText("Fetch state: [darkcyan]-[white]")
-	switch t.fetchState {
-	case types.Completed:
-		autoRefreshInfo.SetText("Fetch state: [darkcyan]completed[white]")
-	case types.Failed:
-		autoRefreshInfo.SetText("Fetch state: [darkcyan]failed[white]")
-	case types.Paused:
-		autoRefreshInfo.SetText("Fetch state: [darkcyan]paused[white]")
-	case types.Running:
-		autoRefreshInfo.SetText("Fetch state: [darkcyan]running[white]")
-	}
+	autoRefreshInfo := tview.NewTextView().
+		SetDynamicColors(true).
+		SetTextAlign(tview.AlignLeft).
+		SetText(fmt.Sprintf("Refresh: [darkcyan]%s[white]", t.fetchState.ToString()))
 	return autoRefreshInfo
 }
 

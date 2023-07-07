@@ -1,5 +1,5 @@
 ([]string) (len=3) {
-  (string) (len=19) "Fetch state: paused",
+  (string) (len=16) "Refresh: Running",
   (string) "",
   (string) (len=15) "Last refresh: -"
 }

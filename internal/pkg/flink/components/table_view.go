@@ -19,8 +19,8 @@ type TableViewInterface interface {
 	GetRoot() tview.Primitive
 	GetSelectedRow() *types.StatementResultRow
 	RenderTable(tableTitle string, statementResults *types.MaterializedStatementResults, isAutoRefreshRunning bool, lastRefreshTimestamp *time.Time, fetchState types.FetchState)
-	FastScrollUp()
-	FastScrollDown()
+	JumpUp()
+	JumpDown()
 }
 
 type TableView struct {
@@ -218,7 +218,7 @@ func (t *TableView) selectLastRow(enableRowSelection bool) {
 	t.table.ScrollToEnd()
 }
 
-func (t *TableView) FastScrollUp() {
+func (t *TableView) JumpUp() {
 	t.table.Select(t.getSelectedRowIdx()-t.getNumRowsToScroll(), 0)
 }
 
@@ -228,7 +228,7 @@ func (t *TableView) getNumRowsToScroll() int {
 	return numRowsWithoutHeaderRow - 1
 }
 
-func (t *TableView) FastScrollDown() {
+func (t *TableView) JumpDown() {
 	t.table.Select(t.getSelectedRowIdx()+t.getNumRowsToScroll(), 0)
 }
 

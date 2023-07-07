@@ -334,9 +334,9 @@ func (s *InteractiveOutputControllerTestSuite) TestJumpUpOrDownScrollsWhenAutoRe
 			s.interactiveOutputController.init()
 			s.resultFetcher.EXPECT().IsAutoRefreshRunning().Return(false)
 			if testCase.input.Rune() == rune(components.JumpUpShortcut[0]) {
-				s.tableView.EXPECT().FastScrollUp()
+				s.tableView.EXPECT().JumpUp()
 			} else {
-				s.tableView.EXPECT().FastScrollDown()
+				s.tableView.EXPECT().JumpDown()
 			}
 
 			result := s.interactiveOutputController.inputCapture(testCase.input)

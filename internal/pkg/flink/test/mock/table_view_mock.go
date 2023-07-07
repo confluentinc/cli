@@ -36,28 +36,28 @@ func (m *MockTableViewInterface) EXPECT() *MockTableViewInterfaceMockRecorder {
 	return m.recorder
 }
 
-// FastScrollDown mocks base method.
-func (m *MockTableViewInterface) FastScrollDown() {
+// JumpDown mocks base method.
+func (m *MockTableViewInterface) JumpDown() {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "FastScrollDown")
+	m.ctrl.Call(m, "JumpDown")
 }
 
-// FastScrollDown indicates an expected call of FastScrollDown.
-func (mr *MockTableViewInterfaceMockRecorder) FastScrollDown() *gomock.Call {
+// JumpDown indicates an expected call of JumpDown.
+func (mr *MockTableViewInterfaceMockRecorder) JumpDown() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FastScrollDown", reflect.TypeOf((*MockTableViewInterface)(nil).FastScrollDown))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "JumpDown", reflect.TypeOf((*MockTableViewInterface)(nil).JumpDown))
 }
 
-// FastScrollUp mocks base method.
-func (m *MockTableViewInterface) FastScrollUp() {
+// JumpUp mocks base method.
+func (m *MockTableViewInterface) JumpUp() {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "FastScrollUp")
+	m.ctrl.Call(m, "JumpUp")
 }
 
-// FastScrollUp indicates an expected call of FastScrollUp.
-func (mr *MockTableViewInterfaceMockRecorder) FastScrollUp() *gomock.Call {
+// JumpUp indicates an expected call of JumpUp.
+func (mr *MockTableViewInterfaceMockRecorder) JumpUp() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FastScrollUp", reflect.TypeOf((*MockTableViewInterface)(nil).FastScrollUp))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "JumpUp", reflect.TypeOf((*MockTableViewInterface)(nil).JumpUp))
 }
 
 // GetFocusableElement mocks base method.

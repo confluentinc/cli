@@ -11,6 +11,20 @@ const (
 	Running                     // auto fetch is Running
 )
 
+func (f FetchState) ToString() string {
+	switch f {
+	case Completed:
+		return "Completed"
+	case Failed:
+		return "Failed"
+	case Paused:
+		return "Paused"
+	case Running:
+		return "Running"
+	}
+	return "Unknown"
+}
+
 type ResultFetcherInterface interface {
 	GetFetchState() FetchState
 	IsTableMode() bool

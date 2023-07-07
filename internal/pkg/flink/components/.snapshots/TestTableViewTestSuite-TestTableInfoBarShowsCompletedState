@@ -1,5 +1,5 @@
 ([]string) (len=3) {
-  (string) (len=16) "Refresh: Running",
+  (string) (len=18) "Refresh: Completed",
   (string) "",
   (string) (len=26) "Last refresh: 00:00:00.000"
 }

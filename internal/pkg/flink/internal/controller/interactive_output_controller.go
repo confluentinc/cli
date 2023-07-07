@@ -133,9 +133,9 @@ func (t *InteractiveOutputController) getActionForShortcut(shortcut string) func
 	case components.ToggleAutoRefreshShortcut:
 		return t.renderAfterAction(t.resultFetcher.ToggleAutoRefresh)
 	case components.JumpUpShortcut:
-		return t.stopAutoRefreshOrScroll(t.tableView.FastScrollUp)
+		return t.stopAutoRefreshOrScroll(t.tableView.JumpUp)
 	case components.JumpDownShortcut:
-		return t.stopAutoRefreshOrScroll(t.tableView.FastScrollDown)
+		return t.stopAutoRefreshOrScroll(t.tableView.JumpDown)
 	}
 	return nil
 }
