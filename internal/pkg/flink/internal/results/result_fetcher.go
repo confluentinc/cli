@@ -90,6 +90,10 @@ func (t *ResultFetcher) startAutoRefresh(refreshInterval uint) {
 		go func() {
 			for t.IsAutoRefreshRunning() {
 				t.fetchNextPageAndUpdateState()
+				// break here to avoid rendering and messing with the view if pause was initiated
+				if t.GetFetchState() == types.Paused {
+					break
+				}
 				t.autoRefreshCallback()
 				time.Sleep(time.Millisecond * time.Duration(refreshInterval))
 			}
