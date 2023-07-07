@@ -26,6 +26,7 @@ func TestTableViewTestSuite(t *testing.T) {
 
 func (s *TableViewTestSuite) SetupTest() {
 	s.tableView = NewTableView().(*TableView)
+	s.tableView.Init()
 	s.numRowsScroll = s.tableView.getNumRowsToScroll()
 }
 

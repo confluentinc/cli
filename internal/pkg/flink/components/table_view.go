@@ -14,6 +14,7 @@ import (
 )
 
 type TableViewInterface interface {
+	Init()
 	GetFocusableElement() *tview.Table
 	GetRoot() tview.Primitive
 	GetSelectedRow() *types.StatementResultRow
@@ -42,13 +43,12 @@ const (
 )
 
 func NewTableView() TableViewInterface {
-	tableView := &TableView{}
-	tableView.infoBar = NewTableInfoBar()
-	tableView.initTable()
-	return tableView
+	return &TableView{}
 }
 
-func (t *TableView) initTable() {
+func (t *TableView) Init() {
+	t.infoBar = NewTableInfoBar()
+
 	t.table = tview.NewTable().SetFixed(1, 1)
 	t.table.SetBorder(true)
 	t.table.SetSelectionChangedFunc(func(row, column int) {

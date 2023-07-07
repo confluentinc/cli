@@ -102,6 +102,18 @@ func (mr *MockTableViewInterfaceMockRecorder) GetSelectedRow() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSelectedRow", reflect.TypeOf((*MockTableViewInterface)(nil).GetSelectedRow))
 }
 
+// Init mocks base method.
+func (m *MockTableViewInterface) Init() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "Init")
+}
+
+// Init indicates an expected call of Init.
+func (mr *MockTableViewInterfaceMockRecorder) Init() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Init", reflect.TypeOf((*MockTableViewInterface)(nil).Init))
+}
+
 // RenderTable mocks base method.
 func (m *MockTableViewInterface) RenderTable(arg0 string, arg1 *types.MaterializedStatementResults, arg2 bool, arg3 *time.Time, arg4 types.FetchState) {
 	m.ctrl.T.Helper()

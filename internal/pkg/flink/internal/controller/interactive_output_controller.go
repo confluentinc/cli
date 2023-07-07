@@ -50,6 +50,7 @@ func (t *InteractiveOutputController) init() {
 	t.resultFetcher.SetAutoRefreshCallback(t.renderTableAsync)
 	t.resultFetcher.ToggleAutoRefresh()
 	t.app.SetInputCapture(t.inputCapture)
+	t.tableView.Init()
 	t.updateTable()
 }
 
@@ -78,9 +79,9 @@ func (t *InteractiveOutputController) inputCapture(event *tcell.EventKey) *tcell
 func (t *InteractiveOutputController) inputHandlerRowView(event *tcell.EventKey) *tcell.EventKey {
 	switch event.Key() {
 	case tcell.KeyRune:
-		char := unicode.ToUpper(event.Rune())
-		switch char {
-		case 'Q':
+		shortcut := string(unicode.ToUpper(event.Rune()))
+		switch shortcut {
+		case components.ExitRowViewShortcut:
 			t.closeRowView()
 		}
 		return nil
