@@ -110,6 +110,7 @@ func (s *StatementControllerTestSuite) TestExecuteStatementPrintsUserInfo() {
 	processedStatement := types.ProcessedStatement{
 		StatementName: "test-statement",
 		StatusDetail:  "status detail message",
+		Status:        types.PENDING,
 	}
 	s.store.EXPECT().ProcessStatement(statementToExecute).Return(&processedStatement, nil)
 	s.consoleParser.EXPECT().Read().Return(nil, nil).AnyTimes()
