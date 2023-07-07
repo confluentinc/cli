@@ -35,8 +35,8 @@ type Dependency struct {
 func (c *command) newSearchCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "search",
-		Short: "Search for available Confluent CLI plugins.",
-		Long:  "Search for available Confluent CLI plugins in the confluentinc/cli-plugins repository.",
+		Short: "Search for Confluent CLI plugins.",
+		Long:  "Search for Confluent CLI plugins in the confluentinc/cli-plugins repository.",
 		Args:  cobra.NoArgs,
 		RunE:  c.search,
 	}

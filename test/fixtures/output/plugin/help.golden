@@ -41,7 +41,7 @@ Usage:
 Available Commands:
   install     Install official Confluent CLI plugins.
   list        List Confluent CLI plugins in $PATH.
-  search      Search for available Confluent CLI plugins.
+  search      Search for Confluent CLI plugins.
 
 Global Flags:
   -h, --help            Show help for this command.

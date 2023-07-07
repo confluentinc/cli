@@ -20,7 +20,11 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-var supportedLanguages = []string{"python", "go"}
+const (
+	Go     = "go"
+	Python = "python"
+	Shell  = "shell"
+)
 
 const (
 	programNotFoundMsg      = "[WARN] Unable to find %s. Check that it is installed in a directory in your $PATH.\n"
@@ -64,7 +68,13 @@ func (c *command) install(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return installPlugin(manifest, dir, installDir)
+	if err := installPlugin(manifest, dir, installDir); err != nil {
+		return err
+	}
+
+	output.Printf("Installed plugin %s.\n", args[0])
+
+	return nil
 }
 
 func getPluginInstallDir(cmd *cobra.Command) (string, error) {
@@ -168,17 +178,17 @@ func getPluginManifest(pluginName, dir string) (*Manifest, error) {
 func installPlugin(manifest *Manifest, repositoryDir, installDir string) error {
 	language, ver := getLanguage(manifest)
 
-	if !types.Contains(supportedLanguages, language) {
-		return errors.Errorf("installation of plugins using %s is not yet supported", language)
-	}
-
 	switch language {
-	case "python":
-		checkPythonVersion(ver)
-		return installPythonPlugin(manifest.Name, repositoryDir, installDir)
-	case "go":
+	case Go:
 		checkGoVersion(ver)
 		return installGoPlugin(manifest.Name)
+	case Python:
+		checkPythonVersion(ver)
+		return installSimplePlugin(manifest.Name, repositoryDir, installDir, Python)
+	case Shell:
+		return installSimplePlugin(manifest.Name, repositoryDir, installDir, Shell)
+	default:
+		return errors.Errorf("installation of plugins using %s is not yet supported", language)
 	}
 
 	return nil
@@ -204,11 +214,11 @@ func getLanguage(manifest *Manifest) (string, *version.Version) {
 }
 
 func checkPythonVersion(ver *version.Version) {
-	versionCmd := exec.NewCommand("python", "--version")
+	versionCmd := exec.NewCommand(Python, "--version")
 
 	out, err := versionCmd.Output()
 	if err != nil {
-		output.ErrPrintf(programNotFoundMsg, "Python")
+		output.ErrPrintf(programNotFoundMsg, Python)
 		return
 	}
 
@@ -217,11 +227,11 @@ func checkPythonVersion(ver *version.Version) {
 		if re.MatchString(word) {
 			installedVer, err := version.NewVersion(strings.Trim(word, " \n"))
 			if err != nil {
-				output.ErrPrintf(unableToParseVersionMsg, "Python")
+				output.ErrPrintf(unableToParseVersionMsg, Python)
 				return
 			}
 			if installedVer.LessThan(ver) {
-				output.ErrPrintf(insufficientVersionMsg, "Python", installedVer, ver)
+				output.ErrPrintf(insufficientVersionMsg, Python, installedVer, ver)
 				return
 			}
 		}
@@ -229,11 +239,11 @@ func checkPythonVersion(ver *version.Version) {
 }
 
 func checkGoVersion(ver *version.Version) {
-	versionCmd := exec.NewCommand("go", "version")
+	versionCmd := exec.NewCommand(Go, "version")
 
 	out, err := versionCmd.Output()
 	if err != nil {
-		output.ErrPrintf(programNotFoundMsg, "Go")
+		output.ErrPrintf(programNotFoundMsg, Go)
 		return
 	}
 
@@ -242,18 +252,18 @@ func checkGoVersion(ver *version.Version) {
 		if re.MatchString(word) {
 			installedVer, err := version.NewVersion(strings.TrimPrefix(word, "go"))
 			if err != nil {
-				output.ErrPrintf(unableToParseVersionMsg, "Go")
+				output.ErrPrintf(unableToParseVersionMsg, Go)
 				return
 			}
 			if installedVer.LessThan(ver) {
-				output.ErrPrintf(insufficientVersionMsg, "Go", installedVer, ver)
+				output.ErrPrintf(insufficientVersionMsg, Go, installedVer, ver)
 				return
 			}
 		}
 	}
 }
 
-func installPythonPlugin(name, repositoryDir, installDir string) error {
+func installSimplePlugin(name, repositoryDir, installDir, language string) error {
 	pluginDir := fmt.Sprintf("%s/%s", repositoryDir, name)
 	files, err := os.ReadDir(pluginDir)
 	if err != nil {
@@ -262,7 +272,7 @@ func installPythonPlugin(name, repositoryDir, installDir string) error {
 
 	found := false
 	for _, file := range files {
-		if strings.HasPrefix(file.Name(), "confluent-") && strings.HasSuffix(file.Name(), ".py") {
+		if strings.HasPrefix(file.Name(), "confluent-") {
 			found = true
 
 			fileData, err := os.ReadFile(fmt.Sprintf("%s/%s", pluginDir, file.Name()))
@@ -277,7 +287,7 @@ func installPythonPlugin(name, repositoryDir, installDir string) error {
 	}
 
 	if !found {
-		return errors.Errorf("unable to find .py file for plugin %s", name)
+		return errors.Errorf("unable to find %s file for plugin %s", language, name)
 	}
 	return nil
 }
