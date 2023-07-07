@@ -133,7 +133,7 @@ func TestWaitForPendingTimesout(t *testing.T) {
 
 func TestWaitForPendingHitsErrorRetryLimit(t *testing.T) {
 	statementName := "statementName"
-	timeout := time.Duration(10) * time.Second
+	timeout := 10 * time.Second
 
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
 	appOptions := types.ApplicationOptions{
