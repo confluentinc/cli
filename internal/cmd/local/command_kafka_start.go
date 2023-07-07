@@ -76,7 +76,6 @@ func (c *Command) kafkaStart(cmd *cobra.Command, args []string) error {
 		} else if response.Status == "Extracting" {
 			fmt.Printf("\rExtracting: %s", response.Progress)
 		} else {
-
 			fmt.Printf("\n%s", response.Status)
 		}
 	}
