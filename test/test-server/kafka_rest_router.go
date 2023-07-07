@@ -584,6 +584,13 @@ func handleKafkaRPLinks(t *testing.T) http.HandlerFunc {
 					LinkError:            linkAuthErr,
 					LinkErrorMessage:     *cckafkarestv3.NewNullableString(linkAuthErrMsg),
 				},
+				{
+					RemoteClusterId: *cckafkarestv3.NewNullableString(cluster2),
+					LinkName:        "link-4",
+					ClusterLinkId:   "LINKID4",
+					TopicNames:      topics,
+					LinkError:       noErrorErr,
+				},
 			}})
 			require.NoError(t, err)
 		}
@@ -676,6 +683,17 @@ func handleKafkaRPLink(t *testing.T) http.HandlerFunc {
 					LinkState:            cckafkarestv3.PtrString("UNAVAILABLE"),
 					LinkError:            cckafkarestv3.PtrString("AUTHENTICATION_ERROR"),
 					LinkErrorMessage:     *cckafkarestv3.NewNullableString(cckafkarestv3.PtrString("Please check your API key and secret.")),
+				})
+				require.NoError(t, err)
+			} else if link == "link-4" {
+				err := json.NewEncoder(w).Encode(cckafkarestv3.ListLinksResponseData{
+					Kind:            "",
+					Metadata:        cckafkarestv3.ResourceMetadata{},
+					RemoteClusterId: *cckafkarestv3.NewNullableString(cckafkarestv3.PtrString("cluster-2")),
+					LinkName:        link,
+					ClusterLinkId:   "LINKID4",
+					TopicNames:      []string{"link-1-topic-1", "link-1-topic-2"},
+					LinkState:       cckafkarestv3.PtrString("AVAILABLE"),
 				})
 				require.NoError(t, err)
 			}
