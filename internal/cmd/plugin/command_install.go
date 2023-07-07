@@ -222,7 +222,7 @@ func checkPythonVersion(ver *version.Version) {
 		return
 	}
 
-	re := regexp.MustCompile(`[1-9]\.[0-9]+[\.0-9]*`)
+	re := regexp.MustCompile(`^[1-9][0-9]*\.[0-9]+\.(0|[1-9][0-9]*)$`)
 	for _, word := range strings.Split(string(out), " ") {
 		if re.MatchString(word) {
 			installedVer, err := version.NewVersion(strings.Trim(word, " \n"))
@@ -247,7 +247,7 @@ func checkGoVersion(ver *version.Version) {
 		return
 	}
 
-	re := regexp.MustCompile(`go[1-9]\.[0-9]+[\.0-9]*`)
+	re := regexp.MustCompile(`^go[1-9][0-9]*\.[0-9]+(\.[1-9][0-9]*)?$`)
 	for _, word := range strings.Split(string(out), " ") {
 		if re.MatchString(word) {
 			installedVer, err := version.NewVersion(strings.TrimPrefix(word, "go"))
