@@ -2,6 +2,7 @@ package controller
 
 import (
 	"testing"
+	"time"
 
 	"github.com/bradleyjkemp/cupaloy"
 	"github.com/gdamore/tcell/v2"
@@ -18,6 +19,7 @@ import (
 type InteractiveOutputControllerTestSuite struct {
 	suite.Suite
 	interactiveOutputController *InteractiveOutputController
+	tableView                   *mock.MockTableViewInterface
 	resultFetcher               *mock.MockResultFetcherInterface
 	dummyTViewApp               *tview.Application
 }
@@ -28,9 +30,10 @@ func TestInteractiveOutputControllerTestSuite(t *testing.T) {
 
 func (s *InteractiveOutputControllerTestSuite) SetupTest() {
 	ctrl := gomock.NewController(s.T())
+	s.tableView = mock.NewMockTableViewInterface(ctrl)
 	s.resultFetcher = mock.NewMockResultFetcherInterface(ctrl)
 	s.dummyTViewApp = tview.NewApplication()
-	s.interactiveOutputController = NewInteractiveOutputController(s.resultFetcher, false).(*InteractiveOutputController)
+	s.interactiveOutputController = NewInteractiveOutputController(s.tableView, s.resultFetcher, false).(*InteractiveOutputController)
 }
 
 func (s *InteractiveOutputControllerTestSuite) TestCloseTableViewOnUserInput() {
@@ -70,10 +73,15 @@ func (s *InteractiveOutputControllerTestSuite) TestToggleTableModeOnUserInput() 
 }
 
 func (s *InteractiveOutputControllerTestSuite) updateTableMockCalls(materializedStatementResults *types.MaterializedStatementResults) {
-	s.resultFetcher.EXPECT().IsTableMode().Return(true)
+	s.resultFetcher.EXPECT().IsTableMode().Return(true).Times(2)
 	s.resultFetcher.EXPECT().GetFetchState().Return(types.Paused)
+	timestamp := time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
+	s.resultFetcher.EXPECT().GetLastFetchTimestamp().Return(&timestamp)
 	s.resultFetcher.EXPECT().GetMaterializedStatementResults().Return(materializedStatementResults)
 	s.resultFetcher.EXPECT().IsAutoRefreshRunning().Return(false)
+	s.tableView.EXPECT().RenderTable(s.interactiveOutputController.getTableTitle(), materializedStatementResults, false, &timestamp, types.Paused)
+	s.tableView.EXPECT().GetRoot().Return(tview.NewBox())
+	s.tableView.EXPECT().GetFocusableElement().Return(tview.NewTable())
 }
 
 func (s *InteractiveOutputControllerTestSuite) TestToggleRefreshResultsOnUserInput() {
@@ -101,11 +109,13 @@ func (s *InteractiveOutputControllerTestSuite) TestNonSupportedUserInput() {
 func (s *InteractiveOutputControllerTestSuite) TestOpenRowViewOnUserInput() {
 	// Given
 	materializedStatementResults := getResultsExample()
+	iterator := materializedStatementResults.Iterator(true)
 	s.initMockCalls(materializedStatementResults)
 	s.interactiveOutputController.init()
 
 	s.resultFetcher.EXPECT().IsAutoRefreshRunning().Return(false)
 	s.resultFetcher.EXPECT().GetMaterializedStatementResults().Return(materializedStatementResults)
+	s.tableView.EXPECT().GetSelectedRow().Return(iterator.Value())
 
 	// When
 	result := s.interactiveOutputController.inputCapture(tcell.NewEventKey(tcell.KeyEnter, rune(0), tcell.ModNone))
@@ -113,9 +123,6 @@ func (s *InteractiveOutputControllerTestSuite) TestOpenRowViewOnUserInput() {
 	// Then
 	require.Nil(s.T(), result)
 	require.True(s.T(), s.interactiveOutputController.isRowViewOpen)
-	// last row should be selected
-	expectedIterator := materializedStatementResults.Iterator(true)
-	require.Equal(s.T(), expectedIterator.Value(), s.interactiveOutputController.tableView.GetSelectedRow())
 }
 
 func getResultsExample() *types.MaterializedStatementResults {
@@ -128,6 +135,7 @@ func getResultsExample() *types.MaterializedStatementResults {
 func (s *InteractiveOutputControllerTestSuite) initMockCalls(materializedStatementResults *types.MaterializedStatementResults) {
 	s.resultFetcher.EXPECT().SetAutoRefreshCallback(gomock.Any())
 	s.resultFetcher.EXPECT().ToggleAutoRefresh()
+	s.tableView.EXPECT().Init()
 	s.updateTableMockCalls(materializedStatementResults)
 }
 
@@ -147,6 +155,8 @@ func (s *InteractiveOutputControllerTestSuite) TestCloseRowViewOnUserInput() {
 			s.initMockCalls(&types.MaterializedStatementResults{})
 			s.interactiveOutputController.init()
 			s.interactiveOutputController.isRowViewOpen = true
+			s.tableView.EXPECT().GetRoot().Return(tview.NewBox())
+			s.tableView.EXPECT().GetFocusableElement().Return(tview.NewTable())
 
 			// When
 			result := s.interactiveOutputController.inputCapture(testCase.input)
@@ -174,7 +184,6 @@ func (s *InteractiveOutputControllerTestSuite) TestNonSupportedUserInputInRowVie
 
 func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysTableMode() {
 	s.resultFetcher.EXPECT().IsTableMode().Return(true)
-	s.resultFetcher.EXPECT().GetFetchState().Return(types.Failed)
 
 	actual := s.interactiveOutputController.getTableTitle()
 
@@ -183,7 +192,6 @@ func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysTableMode()
 
 func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysChangelogMode() {
 	s.resultFetcher.EXPECT().IsTableMode().Return(false)
-	s.resultFetcher.EXPECT().GetFetchState().Return(types.Failed)
 
 	actual := s.interactiveOutputController.getTableTitle()
 
@@ -192,7 +200,6 @@ func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysChangelogMo
 
 func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysComplete() {
 	s.resultFetcher.EXPECT().IsTableMode().Return(true)
-	s.resultFetcher.EXPECT().GetFetchState().Return(types.Completed)
 
 	actual := s.interactiveOutputController.getTableTitle()
 
@@ -201,7 +208,6 @@ func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysComplete() 
 
 func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysFailed() {
 	s.resultFetcher.EXPECT().IsTableMode().Return(true)
-	s.resultFetcher.EXPECT().GetFetchState().Return(types.Failed)
 
 	actual := s.interactiveOutputController.getTableTitle()
 
@@ -210,7 +216,6 @@ func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysFailed() {
 
 func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysPaused() {
 	s.resultFetcher.EXPECT().IsTableMode().Return(true)
-	s.resultFetcher.EXPECT().GetFetchState().Return(types.Paused)
 
 	actual := s.interactiveOutputController.getTableTitle()
 
@@ -219,7 +224,6 @@ func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysPaused() {
 
 func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysRunning() {
 	s.resultFetcher.EXPECT().IsTableMode().Return(true)
-	s.resultFetcher.EXPECT().GetFetchState().Return(types.Running)
 
 	actual := s.interactiveOutputController.getTableTitle()
 
@@ -232,7 +236,6 @@ func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysPageSizeAnd
 	mat.Append(executedStatementWithResults.StatementResults.GetRows()...)
 
 	s.resultFetcher.EXPECT().IsTableMode().Return(true)
-	s.resultFetcher.EXPECT().GetFetchState().Return(types.Running)
 	s.resultFetcher.EXPECT().GetStatement().Return(executedStatementWithResults)
 	s.resultFetcher.EXPECT().GetMaterializedStatementResults().Return(&mat).Times(3)
 	s.interactiveOutputController.debug = true
@@ -330,6 +333,11 @@ func (s *InteractiveOutputControllerTestSuite) TestJumpUpOrDownScrollsWhenAutoRe
 			s.initMockCalls(&types.MaterializedStatementResults{})
 			s.interactiveOutputController.init()
 			s.resultFetcher.EXPECT().IsAutoRefreshRunning().Return(false)
+			if testCase.input.Rune() == rune(components.JumpUpShortcut[0]) {
+				s.tableView.EXPECT().FastScrollUp()
+			} else {
+				s.tableView.EXPECT().FastScrollDown()
+			}
 
 			result := s.interactiveOutputController.inputCapture(testCase.input)
 

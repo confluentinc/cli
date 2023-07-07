@@ -1,5 +1,7 @@
 package types
 
+import "time"
+
 type FetchState int32
 
 const (
@@ -20,4 +22,5 @@ type ResultFetcherInterface interface {
 	SetAutoRefreshCallback(func())
 	GetStatement() ProcessedStatement
 	GetMaterializedStatementResults() *MaterializedStatementResults
+	GetLastFetchTimestamp() *time.Time
 }
