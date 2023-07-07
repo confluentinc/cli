@@ -9,7 +9,6 @@ import (
 	"github.com/rivo/tview"
 
 	"github.com/confluentinc/cli/internal/pkg/flink/components"
-	"github.com/confluentinc/cli/internal/pkg/flink/internal/results"
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/utils"
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -18,15 +17,16 @@ import (
 
 type InteractiveOutputController struct {
 	app           *tview.Application
-	tableView     *components.TableView
+	tableView     components.TableViewInterface
 	resultFetcher types.ResultFetcherInterface
 	isRowViewOpen bool
 	debug         bool
 }
 
-func NewInteractiveOutputController(resultFetcher types.ResultFetcherInterface, debug bool) types.OutputControllerInterface {
+func NewInteractiveOutputController(tableView components.TableViewInterface, resultFetcher types.ResultFetcherInterface, debug bool) types.OutputControllerInterface {
 	return &InteractiveOutputController{
 		app:           tview.NewApplication(),
+		tableView:     tableView,
 		resultFetcher: resultFetcher,
 		debug:         debug,
 	}
@@ -50,16 +50,11 @@ func (t *InteractiveOutputController) init() {
 	t.resultFetcher.SetAutoRefreshCallback(t.renderTableAsync)
 	t.resultFetcher.ToggleAutoRefresh()
 	t.app.SetInputCapture(t.inputCapture)
-	t.initTableView()
-}
-
-func (t *InteractiveOutputController) initTableView() {
-	t.tableView = components.NewTableView()
 	t.updateTable()
 }
 
 func (t *InteractiveOutputController) updateTable() {
-	t.tableView.RenderTable(t.getTableTitle(), t.resultFetcher.GetMaterializedStatementResults(), t.resultFetcher.IsAutoRefreshRunning())
+	t.tableView.RenderTable(t.getTableTitle(), t.resultFetcher.GetMaterializedStatementResults(), t.resultFetcher.IsAutoRefreshRunning(), t.resultFetcher.GetLastFetchTimestamp(), t.resultFetcher.GetFetchState())
 	t.renderTableView()
 }
 
@@ -196,25 +191,10 @@ func (t *InteractiveOutputController) getTableTitle() string {
 		mode = "Table mode"
 	}
 
-	var state string
-	switch t.resultFetcher.GetFetchState() {
-	case types.Completed:
-		state = "completed"
-	case types.Failed:
-		state = "auto refresh failed"
-	case types.Paused:
-		state = "auto refresh paused"
-	case types.Running:
-		state = fmt.Sprintf("auto refresh %.1fs", float64(results.DefaultRefreshInterval)/1000)
-	default:
-		state = "unknown error"
-	}
-
 	if t.debug {
 		return fmt.Sprintf(
-			" %s (%s) | last page size: %d | current cache size: %d/%d | table size: %d ",
+			" %s | last page size: %d | current cache size: %d/%d | table size: %d ",
 			mode,
-			state,
 			t.resultFetcher.GetStatement().GetPageSize(),
 			t.resultFetcher.GetMaterializedStatementResults().GetChangelogSize(),
 			t.resultFetcher.GetMaterializedStatementResults().GetMaxResults(),
@@ -222,5 +202,5 @@ func (t *InteractiveOutputController) getTableTitle() string {
 		)
 	}
 
-	return fmt.Sprintf(" %s (%s) ", mode, state)
+	return fmt.Sprintf(" %s ", mode)
 }

@@ -6,6 +6,7 @@ package mock
 
 import (
 	reflect "reflect"
+	time "time"
 
 	types "github.com/confluentinc/cli/internal/pkg/flink/types"
 	gomock "github.com/golang/mock/gomock"
@@ -58,6 +59,20 @@ func (m *MockResultFetcherInterface) GetFetchState() types.FetchState {
 func (mr *MockResultFetcherInterfaceMockRecorder) GetFetchState() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFetchState", reflect.TypeOf((*MockResultFetcherInterface)(nil).GetFetchState))
+}
+
+// GetLastFetchTimestamp mocks base method.
+func (m *MockResultFetcherInterface) GetLastFetchTimestamp() *time.Time {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetLastFetchTimestamp")
+	ret0, _ := ret[0].(*time.Time)
+	return ret0
+}
+
+// GetLastFetchTimestamp indicates an expected call of GetLastFetchTimestamp.
+func (mr *MockResultFetcherInterfaceMockRecorder) GetLastFetchTimestamp() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLastFetchTimestamp", reflect.TypeOf((*MockResultFetcherInterface)(nil).GetLastFetchTimestamp))
 }
 
 // GetMaterializedStatementResults mocks base method.
