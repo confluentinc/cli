@@ -19,10 +19,6 @@ type command struct {
 	*pcmd.AuthenticatedCLICommand
 }
 
-const (
-	maxLength = 2000
-)
-
 func New(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "feedback",
