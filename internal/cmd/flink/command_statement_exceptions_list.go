@@ -16,7 +16,6 @@ func (c *command) newStatementExceptionsListCommand() *cobra.Command {
 		RunE:              c.exceptionsList,
 	}
 
-	c.addComputePoolFlag(cmd)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 

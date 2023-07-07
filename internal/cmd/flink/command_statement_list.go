@@ -33,7 +33,12 @@ func (c *command) statementList(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	statements, err := client.ListAllStatements(environmentId, c.Context.LastOrgId)
+	computePoolId, err := cmd.Flags().GetString("compute-pool")
+	if err != nil {
+		return err
+	}
+
+	statements, err := client.ListAllStatements(environmentId, c.Context.LastOrgId, computePoolId)
 	if err != nil {
 		return err
 	}
