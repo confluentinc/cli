@@ -198,7 +198,7 @@ func (s *CLITestSuite) TestKafkaClientConfig() {
 
 		// set kafka key-secret pair
 		{args: "api-key store UIAPIKEY100 UIAPISECRET100 --resource lkc-cool1"},
-		{args: "api-key use UIAPIKEY100 --resource lkc-cool1"},
+		{args: "api-key use UIAPIKEY100"},
 
 		// warning - missing sr key-secret pair
 		{args: "kafka client-config create java", useKafka: "lkc-cool1", fixture: "kafka/client-config/java-no-sr-keypair.golden"},

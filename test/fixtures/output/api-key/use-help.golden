@@ -3,9 +3,6 @@ Choose an API key to be used in subsequent commands which support passing an API
 Usage:
   confluent api-key use <api-key> [flags]
 
-Flags:
-      --resource string   REQUIRED: The ID of the resource the API key is for. Use "cloud" for a Cloud API key.
-
 Global Flags:
   -h, --help            Show help for this command.
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
