@@ -114,7 +114,7 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 	cmd.AddCommand(context.New(prerunner, flagResolver))
 	cmd.AddCommand(connect.New(cfg, prerunner))
 	cmd.AddCommand(environment.New(prerunner))
-	cmd.AddCommand(feedback.NewFeedbackCmd(cfg, prerunner))
+	cmd.AddCommand(feedback.New(prerunner))
 	cmd.AddCommand(iam.New(cfg, prerunner))
 	cmd.AddCommand(kafka.New(cfg, prerunner, cfg.Version.ClientID))
 	cmd.AddCommand(ksql.New(cfg, prerunner))

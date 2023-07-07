@@ -10,7 +10,6 @@ Available Commands:
   completion      Print shell completion code.
   connect         Manage Kafka Connect.
   context         Manage CLI configuration contexts.
-  feedback        Submit feedback about the Confluent CLI.
   help            Help about any command
   iam             Manage RBAC, ACL and IAM permissions.
   kafka           Manage Apache Kafka.
