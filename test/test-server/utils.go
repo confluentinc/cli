@@ -18,11 +18,12 @@ import (
 )
 
 var (
-	serviceAccountInvalidErrMsg = `{"errors":[{"status":"403","detail":"service account is not valid"}]}`
-	roleNameInvalidErrMsg       = `{"status_code":400,"message":"Invalid role name : %s","type":"INVALID REQUEST DATA"}`
-	resourceNotFoundErrMsg      = `{"errors":[{"detail":"resource not found"}], "message":"resource not found"}`
-	badRequestErrMsg            = `{"errors":[{"status":"400","detail":"Bad Request"}]}`
-	userConflictErrMsg          = `{"errors":[{"detail":"This user already exists within the Organization"}]}`
+	serviceAccountInvalidErrMsg    = `{"errors":[{"status":"403","detail":"service account is not valid"}]}`
+	roleNameInvalidErrMsg          = `{"status_code":400,"message":"Invalid role name : %s","type":"INVALID REQUEST DATA"}`
+	resourceNotFoundErrMsg         = `{"errors":[{"detail":"resource not found"}], "message":"resource not found"}`
+	badRequestErrMsg               = `{"errors":[{"status":"400","detail":"Bad Request"}]}`
+	userConflictErrMsg             = `{"errors":[{"detail":"This user already exists within the Organization"}]}`
+	feedbackExceedsMaxLengthErrMsg = `{"errors":[{"status":"403","detail":"feedback exceeds the maximum length"}]}`
 )
 
 type ApiKeyListV2 []apikeysv2.IamV2ApiKey
@@ -248,6 +249,12 @@ func writeServiceAccountInvalidError(w http.ResponseWriter) error {
 func writeResourceNotFoundError(w http.ResponseWriter) error {
 	w.WriteHeader(http.StatusForbidden)
 	_, err := io.WriteString(w, resourceNotFoundErrMsg)
+	return err
+}
+
+func writeFeedbackExceedsMaxLengthError(w http.ResponseWriter) error {
+	w.WriteHeader(http.StatusForbidden)
+	_, err := io.WriteString(w, feedbackExceedsMaxLengthErrMsg)
 	return err
 }
 
