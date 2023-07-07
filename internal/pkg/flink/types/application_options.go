@@ -6,7 +6,6 @@ import (
 
 type ApplicationOptions struct {
 	DefaultProperties map[string]string
-	FlinkGatewayUrl   string
 	UnsafeTrace       bool
 	UserAgent         string
 	EnvironmentId     string
@@ -23,13 +22,6 @@ func (a *ApplicationOptions) GetDefaultProperties() map[string]string {
 		return a.DefaultProperties
 	}
 	return map[string]string{}
-}
-
-func (a *ApplicationOptions) GetFlinkGatewayUrl() string {
-	if a != nil {
-		return a.FlinkGatewayUrl
-	}
-	return ""
 }
 
 func (a *ApplicationOptions) GetUnsafeTrace() bool {
