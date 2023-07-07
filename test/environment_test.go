@@ -19,9 +19,9 @@ func (s *CLITestSuite) TestEnvironment() {
 
 	resetConfiguration(s.T(), false)
 
-	for _, tt := range tests {
-		tt.workflow = true
-		s.runIntegrationTest(tt)
+	for _, test := range tests {
+		test.workflow = true
+		s.runIntegrationTest(test)
 	}
 }
 
@@ -31,9 +31,9 @@ func (s *CLITestSuite) TestEnvironmentDescribe() {
 		{args: "environment describe env-12345 -o json", fixture: "environment/describe-json.golden"},
 	}
 
-	for _, tt := range tests {
-		tt.login = "cloud"
-		s.runIntegrationTest(tt)
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
 	}
 }
 
@@ -43,9 +43,9 @@ func (s *CLITestSuite) TestEnvironmentUse() {
 		{args: "environment describe", fixture: "environment/describe-after-use.golden"},
 	}
 
-	for _, tt := range tests {
-		tt.login = "cloud"
-		s.runIntegrationTest(tt)
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
 	}
 }
 

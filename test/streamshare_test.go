@@ -23,13 +23,13 @@ func (s *CLITestSuite) TestStreamShare() {
 		{args: "stream-share consumer redeem stream-share-token --aws-account-id 111111111111", fixture: "stream-share/redeem-share-private-link.golden"},
 	}
 
-	for _, tt := range tests {
-		tt.login = "cloud"
-		s.runIntegrationTest(tt)
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
 	}
 }
 
-func (s *CLITestSuite) TestStreamShareAutocomplete() {
+func (s *CLITestSuite) TestStreamShare_Autocomplete() {
 	tests := []CLITest{
 		{args: `__complete stream-share consumer share describe ""`, fixture: "stream-share/describe-consumer-share-autocomplete.golden"},
 		{args: `__complete stream-share provider share describe ""`, fixture: "stream-share/describe-provider-share-autocomplete.golden"},

@@ -19,7 +19,6 @@ func (c *brokerCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List Kafka brokers.",
-		Long:  "List Kafka brokers using Confluent Kafka REST.",
 		Args:  cobra.NoArgs,
 		RunE:  c.list,
 	}

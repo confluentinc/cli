@@ -55,6 +55,10 @@ func (s *CLITestSuite) testHelp(cmd *cobra.Command, login string) {
 		login:   login,
 	}
 
+	if strings.Contains(test.args, "services kafka produce") || strings.Contains(test.args, "services kafka consume") {
+		test.regex = true
+	}
+
 	if cmd.IsAvailableCommand() {
 		s.runIntegrationTest(test)
 	} else {

@@ -6,8 +6,9 @@ import (
 
 	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
 
+	"github.com/confluentinc/cli/internal/pkg/flink/internal/utils"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/utils"
+	cliutils "github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 type StatementResults struct {
@@ -34,12 +35,23 @@ type StatementResultRow struct {
 	Fields    []StatementResultField
 }
 
-func (r StatementResultRow) GetRowKey() string {
+func (r *StatementResultRow) GetRowKey() string {
 	rowKey := strings.Builder{}
-	for _, field := range r.Fields {
+	for idx, field := range r.GetFields() {
 		rowKey.WriteString(field.ToString())
+		if idx != len(r.GetFields())-1 {
+			rowKey.WriteString("-")
+		}
 	}
 	return rowKey.String()
+}
+
+func (r *StatementResultRow) GetFields() []StatementResultField {
+	if r == nil {
+		var fields []StatementResultField
+		return fields
+	}
+	return r.Fields
 }
 
 const (
@@ -49,7 +61,7 @@ const (
 	DELETE        StatementResultOperation = 3
 )
 
-type StatementResultOperation int8
+type StatementResultOperation float64
 
 func (s StatementResultOperation) IsInsertOperation() bool {
 	return s == INSERT || s == UPDATE_AFTER
@@ -91,7 +103,7 @@ func (e *StatementError) Error() string {
 		errStr = fmt.Sprintf("Error: %s", e.Message)
 	}
 	if len(e.Usage) > 0 {
-		errStr += fmt.Sprintf("\nUsage: %s", utils.ArrayToCommaDelimitedString(e.Usage, "or"))
+		errStr += fmt.Sprintf("\nUsage: %s", cliutils.ArrayToCommaDelimitedString(e.Usage, "or"))
 	}
 	if e.Suggestion != "" {
 		errStr += fmt.Sprintf("\nSuggestion: %s", e.Suggestion)
@@ -116,28 +128,65 @@ const (
 
 // Custom Internal type that shall be used internally by the client
 type ProcessedStatement struct {
-	StatementName    string `json:"statement_name"`
-	Kind             string `json:"statement"`
-	ComputePool      string `json:"compute_pool"`
-	Status           PHASE  `json:"status"`
-	StatusDetail     string `json:"status_detail,omitempty"` // Shown at the top before the table
-	IsLocalStatement bool
-	PageToken        string
-	ResultSchema     flinkgatewayv1alpha1.SqlV1alpha1ResultSchema
-	StatementResults *StatementResults
+	StatementName     string `json:"statement_name"`
+	Kind              string `json:"statement"`
+	ComputePool       string `json:"compute_pool"`
+	Status            PHASE  `json:"status"`
+	StatusDetail      string `json:"status_detail,omitempty"` // Shown at the top before the table
+	IsLocalStatement  bool
+	IsSelectStatement bool
+	PageToken         string
+	ResultSchema      flinkgatewayv1alpha1.SqlV1alpha1ResultSchema
+	StatementResults  *StatementResults
 }
 
 func NewProcessedStatement(statementObj flinkgatewayv1alpha1.SqlV1alpha1Statement) *ProcessedStatement {
+	statement := strings.ToLower(strings.TrimSpace(statementObj.Spec.GetStatement()))
 	return &ProcessedStatement{
-		StatementName: statementObj.Spec.GetStatementName(),
-		StatusDetail:  statementObj.Status.GetDetail(),
-		Status:        PHASE(statementObj.Status.GetPhase()),
-		ResultSchema:  statementObj.Status.GetResultSchema(),
+		StatementName:     statementObj.Spec.GetStatementName(),
+		StatusDetail:      statementObj.Status.GetDetail(),
+		Status:            PHASE(statementObj.Status.GetPhase()),
+		ResultSchema:      statementObj.Status.GetResultSchema(),
+		IsSelectStatement: strings.HasPrefix(statement, "select"),
 	}
 }
 
-func (s ProcessedStatement) PrintStatusDetail() {
-	// print status detail message if available
+func (s ProcessedStatement) PrintStatusMessage() {
+	if s.IsLocalStatement {
+		s.printStatusMessageOfLocalStatement()
+	} else {
+		s.printStatusMessageOfNonLocalStatement()
+	}
+}
+
+func (s ProcessedStatement) printStatusMessageOfLocalStatement() {
+	if s.Status == "FAILED" {
+		utils.OutputErr(fmt.Sprintf("Error: %s", "couldn't process statement, please check your statement and try again"))
+	} else {
+		utils.OutputInfo("Statement successfully submitted.")
+	}
+}
+
+func (s ProcessedStatement) printStatusMessageOfNonLocalStatement() {
+	if s.StatementName != "" {
+		utils.OutputInfof("Statement name: %s\n", s.StatementName)
+	}
+	if s.Status == "FAILED" {
+		utils.OutputErr(fmt.Sprintf("Error: %s", "statement submission failed"))
+	} else {
+		utils.OutputInfo("Statement successfully submitted.")
+		utils.OutputInfo(fmt.Sprintf("Waiting for statement to be ready. Statement phase is %s.", s.Status))
+	}
+}
+
+func (s ProcessedStatement) GetPageSize() int {
+	return len(s.StatementResults.GetRows())
+}
+
+func (s ProcessedStatement) PrintStatementDoneStatus() {
+	if s.Status != "" {
+		output.Printf("Statement phase is %s.\n", s.Status)
+	}
 	if s.StatusDetail != "" {
 		output.Printf("%s.\n", s.StatusDetail)
 	}

@@ -83,7 +83,7 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(*cob
 				return err
 			}
 			// announcement and deprecation check, print out msg
-			ctx := dynamicconfig.NewDynamicContext(r.Config.Context(), nil, nil)
+			ctx := dynamicconfig.NewDynamicContext(r.Config.Context(), nil)
 			featureflags.PrintAnnouncements(featureflags.Announcements, ctx, cmd)
 			featureflags.PrintAnnouncements(featureflags.DeprecationNotices, ctx, cmd)
 		}
@@ -113,13 +113,10 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(*cob
 }
 
 func checkCliDisable(cmd *CLICommand, cfg *v1.Config) error {
-	ldDisableJson := featureflags.Manager.JsonVariation("cli.disable", cmd.Config.Context(), v1.CliLaunchDarklyClient, true, nil)
-	ldDisable, ok := ldDisableJson.(map[string]any)
-	if !ok {
-		return nil
-	}
+	ldDisable := featureflags.GetLDDisableMap(cmd.Config.Context())
 	errMsg, errMsgOk := ldDisable["error_msg"].(string)
-	if errMsgOk && errMsg != "" {
+	disabledCmdsAndFlags, ok := ldDisable["patterns"].([]any)
+	if (errMsgOk && errMsg != "" && !ok) || (ok && featureflags.IsDisabled(featureflags.Manager.Command, disabledCmdsAndFlags)) {
 		allowUpdate, allowUpdateOk := ldDisable["allow_update"].(bool)
 		if !(cmd.CommandPath() == "confluent update" && allowUpdateOk && allowUpdate) {
 			// in case a user is trying to run an on-prem command from a cloud context (should not see LD msg)
@@ -325,8 +322,6 @@ func (r *PreRun) setCCloudClient(c *AuthenticatedCLICommand) error {
 		return err
 	}
 	c.Client = ccloudClient
-	c.Context.Client = ccloudClient
-	c.Config.Client = ccloudClient
 
 	unsafeTrace, err := c.Flags().GetBool("unsafe-trace")
 	if err != nil {
@@ -736,12 +731,10 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(*cobra.Command, []
 			}
 			v2Client := command.Config.GetCloudClientV2(unsafeTrace)
 
-			ctx.Client = client
-			command.Config.Client = client
 			ctx.V2Client = v2Client
 			command.Config.V2Client = v2Client
 
-			if err := ctx.ParseFlagsIntoContext(cmd, command.Config.Client); err != nil {
+			if err := ctx.ParseFlagsIntoContext(cmd, client); err != nil {
 				return err
 			}
 
@@ -889,6 +882,12 @@ func (r *PreRun) shouldCheckForUpdates(cmd *cobra.Command) bool {
 func warnIfConfluentLocal(cmd *cobra.Command) {
 	if strings.HasPrefix(cmd.CommandPath(), "confluent local kafka start") {
 		output.ErrPrintln("The local commands are intended for a single-node development environment only, NOT for production usage. See more: https://docs.confluent.io/current/cli/index.html")
+		output.ErrPrintln()
+		return
+	}
+	if strings.HasPrefix(cmd.CommandPath(), "confluent local") && !strings.HasPrefix(cmd.CommandPath(), "confluent local kafka") {
+		output.ErrPrintln("The local commands are intended for a single-node development environment only, NOT for production usage. See more: https://docs.confluent.io/current/cli/index.html")
+		output.ErrPrintln("As of Confluent Platform 8.0, Java 8 will no longer be supported.")
 		output.ErrPrintln()
 	}
 }

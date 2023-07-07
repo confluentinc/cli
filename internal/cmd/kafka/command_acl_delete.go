@@ -49,17 +49,6 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	users, err := c.getAllUsers()
-	if err != nil {
-		return err
-	}
-
-	userIdMap := c.mapResourceIdToUserId(users)
-
-	if err := c.aclResourceIdToNumericId(acls, userIdMap); err != nil {
-		return err
-	}
-
 	filters := make([]*ccstructs.ACLFilter, len(acls))
 	for i, acl := range acls {
 		validateAddAndDelete(acl)

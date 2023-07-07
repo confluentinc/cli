@@ -33,6 +33,13 @@ func parse(cmd *cobra.Command) ([]*ACLConfiguration, error) {
 	if cmd.Name() == "list" {
 		aclConfig := NewACLConfig()
 		cmd.Flags().Visit(fromArgs(aclConfig))
+
+		if aclConfig.Entry.Principal == "" {
+			aclConfig.Entry.Principal = "UserV2:*"
+		} else {
+			aclConfig.Entry.Principal = strings.Replace(aclConfig.Entry.Principal, "User", "UserV2", 1)
+		}
+
 		return []*ACLConfiguration{aclConfig}, nil
 	}
 

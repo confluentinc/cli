@@ -110,7 +110,7 @@ func newImportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 
 	c := &command{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 	cmd.RunE = c.asyncapiImport
-	cmd.Flags().String("file", "", "Input file name.")
+	cmd.Flags().String("file", "", "Input filename.")
 	cmd.Flags().Bool("overwrite", false, "Overwrite existing topics with the same name.")
 	cmd.Flags().String("kafka-api-key", "", "Kafka cluster API key.")
 	cmd.Flags().String("schema-registry-api-key", "", "API key for Schema Registry.")

@@ -18,17 +18,15 @@ import (
 
 type DynamicContext struct {
 	*v1.Context
-	Client   *ccloudv1.Client
 	V2Client *ccloudv2.Client
 }
 
-func NewDynamicContext(context *v1.Context, client *ccloudv1.Client, v2Client *ccloudv2.Client) *DynamicContext {
+func NewDynamicContext(context *v1.Context, v2Client *ccloudv2.Client) *DynamicContext {
 	if context == nil {
 		return nil
 	}
 	return &DynamicContext{
 		Context:  context,
-		Client:   client,
 		V2Client: v2Client,
 	}
 }
@@ -148,7 +146,7 @@ func (d *DynamicContext) UseAPIKey(apiKey string, clusterId string) error {
 }
 
 // SchemaRegistryCluster returns the SchemaRegistryCluster of the Context,
-// or an empty SchemaRegistryCluster if there is none set,
+// or a SRNotEnabledError if there is none set,
 // or an ErrNotLoggedIn if the user is not logged in.
 func (d *DynamicContext) SchemaRegistryCluster(cmd *cobra.Command) (*v1.SchemaRegistryCluster, error) {
 	resource, _ := cmd.Flags().GetString("resource")
@@ -161,6 +159,7 @@ func (d *DynamicContext) SchemaRegistryCluster(cmd *cobra.Command) (*v1.SchemaRe
 
 	var cluster *v1.SchemaRegistryCluster
 	var clusterChanged bool
+	var srNotEnabledErr error
 	if resourceType == presource.SchemaRegistryCluster {
 		for _, srCluster := range d.SchemaRegistryClusters {
 			if srCluster.GetId() == resource {
@@ -186,6 +185,7 @@ func (d *DynamicContext) SchemaRegistryCluster(cmd *cobra.Command) (*v1.SchemaRe
 				cluster = makeSRCluster(&srClusters[0])
 			} else {
 				cluster = nil
+				srNotEnabledErr = errors.NewSRNotEnabledError()
 			}
 			clusterChanged = true
 		}
@@ -196,7 +196,7 @@ func (d *DynamicContext) SchemaRegistryCluster(cmd *cobra.Command) (*v1.SchemaRe
 			return nil, err
 		}
 	}
-	return cluster, nil
+	return cluster, srNotEnabledErr
 }
 
 func (d *DynamicContext) HasLogin() bool {

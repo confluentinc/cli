@@ -25,10 +25,10 @@ func TestRemoveStatementTerminator(t *testing.T) {
 		{name: "removeStatementTerminator() removes multiple terminators", args: args{statement: "SELECT * FROM table;;;"}, want: "SELECT * FROM table"},
 		{name: "removeStatementTerminator() doesn't remove terminators in between", args: args{statement: "SELECT * FROM table;;;wasas"}, want: "SELECT * FROM table;;;wasas"},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := removeStatementTerminator(tt.args.statement); got != tt.want {
-				require.Equal(t, tt.want, got)
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if got := removeStatementTerminator(test.args.statement); got != test.want {
+				require.Equal(t, test.want, got)
 			}
 		})
 	}
@@ -68,10 +68,10 @@ func TestRemoveWhiteSpaces(t *testing.T) {
 		{name: "removeTabNewLineAndWhitesSpaces() removes all new lines, tabs and whitespaces", args: args{str: "\r\n \tkey\t=\t\tvalue\n"}, want: "key=value"},
 		{name: "removeTabNewLineAndWhitesSpaces() removes all new lines, tabs and whitespaces", args: args{str: "\n \tkey\n = \n\tvalue\r\n"}, want: "key=value"},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := removeTabNewLineAndWhitesSpaces(tt.args.str); got != tt.want {
-				require.Equal(t, tt.want, got)
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if got := removeTabNewLineAndWhitesSpaces(test.args.str); got != test.want {
+				require.Equal(t, test.want, got)
 			}
 		})
 	}
@@ -80,7 +80,7 @@ func TestRemoveWhiteSpaces(t *testing.T) {
 func TestProcessSetStatement(t *testing.T) {
 	// Create a new store
 	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, "authToken")
-	s := NewStore(client, nil, nil).(*Store)
+	s := NewStore(client, nil, nil, tokenRefreshFunc).(*Store)
 
 	t.Run("should return an error message if statement is invalid", func(t *testing.T) {
 		_, err := s.processSetStatement("se key=value")
@@ -129,7 +129,7 @@ func TestProcessSetStatement(t *testing.T) {
 func TestProcessResetStatement(t *testing.T) {
 	// Create a new store
 	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, "authToken")
-	s := NewStore(client, nil, nil).(*Store)
+	s := NewStore(client, nil, nil, tokenRefreshFunc).(*Store)
 
 	t.Run("should return an error message if statement is invalid", func(t *testing.T) {
 		_, err := s.processResetStatement("res key")
@@ -172,7 +172,7 @@ func TestProcessResetStatement(t *testing.T) {
 func TestProcessUseStatement(t *testing.T) {
 	// Create a new store
 	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, "authToken")
-	s := NewStore(client, nil, nil).(*Store)
+	s := NewStore(client, nil, nil, tokenRefreshFunc).(*Store)
 
 	t.Run("should return an error message if statement is invalid", func(t *testing.T) {
 		_, err := s.processUseStatement("us")

@@ -235,8 +235,8 @@ func (s *CLITestSuite) TestConfigDescribe() {
 		{args: "config describe 3", fixture: "config/1.golden"},
 	}
 
-	for _, tt := range tests {
-		s.runConfluentTest(tt)
+	for _, test := range tests {
+		s.runConfluentTest(test)
 	}
 }
 ```

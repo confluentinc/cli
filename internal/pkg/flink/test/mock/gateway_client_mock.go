@@ -109,16 +109,16 @@ func (mr *MockGatewayClientInterfaceMockRecorder) GetStatementResults(arg0, arg1
 }
 
 // ListStatements mocks base method.
-func (m *MockGatewayClientInterface) ListStatements(arg0, arg1 string) ([]v1alpha1.SqlV1alpha1Statement, error) {
+func (m *MockGatewayClientInterface) ListStatements(arg0, arg1, arg2 string) (v1alpha1.SqlV1alpha1StatementList, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListStatements", arg0, arg1)
-	ret0, _ := ret[0].([]v1alpha1.SqlV1alpha1Statement)
+	ret := m.ctrl.Call(m, "ListStatements", arg0, arg1, arg2)
+	ret0, _ := ret[0].(v1alpha1.SqlV1alpha1StatementList)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // ListStatements indicates an expected call of ListStatements.
-func (mr *MockGatewayClientInterfaceMockRecorder) ListStatements(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockGatewayClientInterfaceMockRecorder) ListStatements(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListStatements", reflect.TypeOf((*MockGatewayClientInterface)(nil).ListStatements), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListStatements", reflect.TypeOf((*MockGatewayClientInterface)(nil).ListStatements), arg0, arg1, arg2)
 }

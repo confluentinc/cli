@@ -40,8 +40,8 @@ func (c *FakeFlinkGatewayClient) GetStatement(environmentId, statementName, orgI
 	return c.statement, nil
 }
 
-func (c *FakeFlinkGatewayClient) ListStatements(environmentId, orgId string) ([]flinkgatewayv1alpha1.SqlV1alpha1Statement, error) {
-	return c.statements, nil
+func (c *FakeFlinkGatewayClient) ListStatements(environmentId, orgId, pageToken string) (flinkgatewayv1alpha1.SqlV1alpha1StatementList, error) {
+	return flinkgatewayv1alpha1.SqlV1alpha1StatementList{Data: c.statements}, nil
 }
 
 func (c *FakeFlinkGatewayClient) CreateStatement(statement, computePoolId, identityPoolId string, properties map[string]string, environmentId, orgId string) (flinkgatewayv1alpha1.SqlV1alpha1Statement, error) {
@@ -142,14 +142,14 @@ func (c *FakeFlinkGatewayClient) getFakeResultsRunningCounter() ([]any, string) 
 	for i := 0; i < c.fakeCount; i++ {
 		// update before
 		results = append(results, map[string]any{
-			"op":  int32(1),
+			"op":  float64(1),
 			"row": []any{fmt.Sprintf("%v", i)},
 		})
 	}
 
 	// update after (add latest entry)
 	results = append(results, map[string]any{
-		"op":  int32(2),
+		"op":  float64(2),
 		"row": []any{fmt.Sprintf("%v", c.fakeCount)},
 	})
 	c.fakeCount++
