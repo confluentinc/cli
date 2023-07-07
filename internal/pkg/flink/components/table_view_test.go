@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/bradleyjkemp/cupaloy"
+	"github.com/rivo/tview"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"pgregory.net/rapid"
@@ -135,16 +136,26 @@ func (s *TableViewTestSuite) TestTableInfoBarWithAutoRefreshOnAndNoTimestamp() {
 	materializedStatementResults := getResultsExample(10)
 	s.tableView.RenderTable("title", materializedStatementResults, true, nil, 0)
 
-	actual := s.tableView.infoBar.GetView()
+	actual := s.getInfoBarText()
 
 	cupaloy.SnapshotT(s.T(), actual)
+}
+
+func (s *TableViewTestSuite) getInfoBarText() []string {
+	view := s.tableView.infoBar.GetView()
+	var items []string
+	for i := 0; i < view.GetItemCount(); i++ {
+		item := view.GetItem(i).(*tview.TextView)
+		items = append(items, item.GetText(true))
+	}
+	return items
 }
 
 func (s *TableViewTestSuite) TestTableInfoBarWithAutoRefreshOffAndNoTimestamp() {
 	materializedStatementResults := getResultsExample(10)
 	s.tableView.RenderTable("title", materializedStatementResults, false, nil, 0)
 
-	actual := s.tableView.infoBar.GetView()
+	actual := s.getInfoBarText()
 
 	cupaloy.SnapshotT(s.T(), actual)
 }
@@ -154,7 +165,7 @@ func (s *TableViewTestSuite) TestTableInfoBarWithAutoRefreshOnAndValidTimestamp(
 	timestamp := time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
 	s.tableView.RenderTable("title", materializedStatementResults, true, &timestamp, 0)
 
-	actual := s.tableView.infoBar.GetView()
+	actual := s.getInfoBarText()
 
 	cupaloy.SnapshotT(s.T(), actual)
 }
@@ -164,7 +175,27 @@ func (s *TableViewTestSuite) TestTableInfoBarWithAutoRefreshOffAndValidTimestamp
 	timestamp := time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
 	s.tableView.RenderTable("title", materializedStatementResults, false, &timestamp, 0)
 
-	actual := s.tableView.infoBar.GetView()
+	actual := s.getInfoBarText()
+
+	cupaloy.SnapshotT(s.T(), actual)
+}
+
+func (s *TableViewTestSuite) TestTableInfoBarWhenTableTableHasNoContentAndAutoRefreshIsOff() {
+	materializedStatementResults := getResultsExample(0)
+	timestamp := time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
+	s.tableView.RenderTable("title", materializedStatementResults, false, &timestamp, 0)
+
+	actual := s.getInfoBarText()
+
+	cupaloy.SnapshotT(s.T(), actual)
+}
+
+func (s *TableViewTestSuite) TestTableInfoBarWhenTableTableHasNoContentAndAutoRefreshIsOn() {
+	materializedStatementResults := getResultsExample(0)
+	timestamp := time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
+	s.tableView.RenderTable("title", materializedStatementResults, true, &timestamp, 0)
+
+	actual := s.getInfoBarText()
 
 	cupaloy.SnapshotT(s.T(), actual)
 }

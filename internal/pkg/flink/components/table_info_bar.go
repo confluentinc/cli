@@ -57,7 +57,7 @@ func (t *TableInfoBar) updateInfoBar() {
 	}
 
 	rowInfo := tview.NewTextView().SetDynamicColors(true).SetTextAlign(tview.AlignCenter).SetText("")
-	if t.selectedRowIdx > -1 && t.totalNumRows > -1 {
+	if t.selectedRowIdx > 0 && t.totalNumRows > 0 {
 		rowInfo.SetText(fmt.Sprintf("Row: [darkcyan]%v[white] of [darkcyan]%v[white]", t.selectedRowIdx, t.totalNumRows))
 	}
 

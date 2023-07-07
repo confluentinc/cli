@@ -60,6 +60,11 @@ func (t *TableView) initTable() {
 }
 
 func (t *TableView) isValidRowIdx(row int) bool {
+	// when table is empty do nothing
+	if t.getLastRowIdx() <= 0 {
+		return false
+	}
+	// when table is not empty but we stepped out of bounds
 	if row <= 0 {
 		t.table.ScrollToBeginning()
 		t.table.Select(1, 0)
@@ -83,7 +88,7 @@ func (t *TableView) updateInfoBar() {
 		t.infoBar.SetRowInfo(t.getSelectedRowIdx(), t.getLastRowIdx())
 		return
 	}
-	t.infoBar.SetRowInfo(-1, -1)
+	t.infoBar.SetRowInfo(0, 0)
 }
 
 func (t *TableView) GetFocusableElement() *tview.Table {
