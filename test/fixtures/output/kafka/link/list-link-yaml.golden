@@ -16,3 +16,9 @@
   state: UNAVAILABLE
   error: AUTHENTICATION_ERROR
   error_message: Please check your API key and secret.
+- link_name: link-4
+  source_cluster_id: ""
+  destination_cluster_id: ""
+  state: ""
+  error: ""
+  error_message: ""

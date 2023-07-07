@@ -1,0 +1,10 @@
+Created cluster link "bidirectional_link" with configs:
+bootstrap.servers="myhost:1234"
+key="val"
+key2="val2"
+key3="val password=pass"
+link.mode="BIDIRECTIONAL"
+sasl.jaas.config="***"
+sasl.mechanism="PLAIN"
+security.protocol="SASL_SSL"
+
