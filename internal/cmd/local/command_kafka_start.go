@@ -23,10 +23,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-var (
-	statusBlacklist = []string{"Pulling fs layer", "Waiting", "Download complete", "Verifying Checksum", "Pull complete"}
-)
-
 type ImagePullResponse struct {
 	Status   string `json:"status"`
 	Error    string `json:"error,omitempty"`
@@ -42,7 +38,7 @@ func (c *Command) newKafkaStartCommand() *cobra.Command {
 		RunE:  c.kafkaStart,
 	}
 
-	cmd.Flags().String("kafka-rest-port", "", "The port number for kafka REST. If not specified, a random free port will be used.")
+	cmd.Flags().String("kafka-rest-port", "8082", "The port number for Kafka REST.")
 	cmd.Flags().String("plaintext-port", "", "The port number for plaintext producer and consumer clients. If not specified, a random free port will be used.")
 
 	return cmd
@@ -75,21 +71,21 @@ func (c *Command) kafkaStart(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		var inBlacklist bool
-		for _, s := range statusBlacklist {
-			if response.Status == s {
-				inBlacklist = true
-			}
-		}
+		if response.Status == "Downloading" {
+			fmt.Printf("\rDownloading: %s", response.Progress)
+		} else if response.Status == "Extracting" {
+			fmt.Printf("\rExtracting: %s", response.Progress)
+		} else {
 
-		if !inBlacklist {
-			fmt.Printf("%v\n", response)
+			fmt.Printf("\n%s", response.Status)
 		}
 	}
 
 	if err := scanner.Err(); err != nil {
 		return err
 	}
+
+	fmt.Print("\r")
 
 	log.CliLogger.Tracef("Pull confluent-local image success")
 
@@ -158,20 +154,25 @@ func (c *Command) prepareAndSaveLocalPorts(cmd *cobra.Command, isTest bool) erro
 			ControllerPort: "2999",
 		}
 	} else {
-		freePorts, err := freeport.GetFreePorts(4)
+		freePorts, err := freeport.GetFreePorts(3)
 		if err != nil {
 			return err
 		}
 
 		c.Config.LocalPorts = &v1.LocalPorts{
-			KafkaRestPort:  strconv.Itoa(freePorts[0]),
-			PlaintextPort:  strconv.Itoa(freePorts[1]),
-			BrokerPort:     strconv.Itoa(freePorts[2]),
-			ControllerPort: strconv.Itoa(freePorts[3]),
+			PlaintextPort:  strconv.Itoa(freePorts[0]),
+			BrokerPort:     strconv.Itoa(freePorts[1]),
+			ControllerPort: strconv.Itoa(freePorts[2]),
 		}
 
 		if kafkaRestPort, err := cmd.Flags().GetString("kafka-rest-port"); err == nil && kafkaRestPort != "" {
 			c.Config.LocalPorts.KafkaRestPort = kafkaRestPort
+		} else {
+			freePort, err := freeport.GetFreePort()
+			if err != nil {
+				return err
+			}
+			c.Config.LocalPorts.KafkaRestPort = strconv.Itoa(freePort)
 		}
 
 		if plaintextPort, err := cmd.Flags().GetString("plaintext-port"); err == nil && plaintextPort != "" {
