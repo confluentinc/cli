@@ -74,7 +74,7 @@ func (s *CLITestSuite) TestApiKey() {
 		// store exists already error
 		{args: "api-key store UIAPIKEY101 --resource lkc-other1", input: "UIAPISECRET101\n", fixture: "api-key/override-error.golden", exitCode: 1},
 
-		{args: "api-key store UIAPIKEY103 UIAPISECRET103 --resource lksqlc-ksql1", fixture: "api-key/29.golden", exitCode: 1},
+		{args: "api-key store UIAPIKEY103 UIAPISECRET103 --resource lksqlc-ksql1", fixture: "api-key/61.golden", exitCode: 1},
 		{args: "api-key use UIAPIKEY103", fixture: "api-key/29.golden", exitCode: 1},
 
 		// list all api-keys
