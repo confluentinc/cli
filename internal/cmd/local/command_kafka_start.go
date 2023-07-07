@@ -35,12 +35,17 @@ type ImagePullResponse struct {
 }
 
 func (c *Command) newKafkaStartCommand() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "start",
 		Short: "Start a single-node instance of Apache Kafka.",
 		Args:  cobra.NoArgs,
 		RunE:  c.kafkaStart,
 	}
+
+	cmd.Flags().String("kafka-rest-port", "", "The port number for kafka REST.")
+	cmd.Flags().String("plaintext-port", "", "The port number for plaintext producer and consumer clients.")
+
+	return cmd
 }
 
 func (c *Command) kafkaStart(cmd *cobra.Command, args []string) error {
@@ -88,7 +93,7 @@ func (c *Command) kafkaStart(cmd *cobra.Command, args []string) error {
 
 	log.CliLogger.Tracef("Pull confluent-local image success")
 
-	if err := c.prepareAndSaveLocalPorts(c.Config.IsTest); err != nil {
+	if err := c.prepareAndSaveLocalPorts(cmd, c.Config.IsTest); err != nil {
 		return err
 	}
 
@@ -140,7 +145,7 @@ func (c *Command) kafkaStart(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *Command) prepareAndSaveLocalPorts(isTest bool) error {
+func (c *Command) prepareAndSaveLocalPorts(cmd *cobra.Command, isTest bool) error {
 	if c.Config.LocalPorts != nil {
 		return nil
 	}
@@ -163,6 +168,14 @@ func (c *Command) prepareAndSaveLocalPorts(isTest bool) error {
 			PlaintextPort:  strconv.Itoa(freePorts[1]),
 			BrokerPort:     strconv.Itoa(freePorts[2]),
 			ControllerPort: strconv.Itoa(freePorts[3]),
+		}
+
+		if kafkaRestPort, err := cmd.Flags().GetString("kafka-rest-port"); err == nil && kafkaRestPort != "" {
+			c.Config.LocalPorts.KafkaRestPort = kafkaRestPort
+		}
+
+		if plaintextPort, err := cmd.Flags().GetString("plaintext-port"); err == nil && plaintextPort != "" {
+			c.Config.LocalPorts.PlaintextPort = plaintextPort
 		}
 	}
 
