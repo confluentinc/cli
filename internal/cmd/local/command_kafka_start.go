@@ -1,13 +1,12 @@
 package local
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"runtime"
 	"strconv"
-	"strings"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -25,11 +24,14 @@ import (
 )
 
 var (
-	statusBlacklist = []string{"Pulling fs layer", "Waiting", "Downloading", "Download complete", "Verifying Checksum", "Extracting", "Pull complete"}
+	statusBlacklist = []string{"Pulling fs layer", "Waiting", "Download complete", "Verifying Checksum", "Pull complete"}
 )
 
-type imagePullOut struct {
-	Status string `json:"status"`
+type ImagePullResponse struct {
+	Status   string `json:"status"`
+	Error    string `json:"error,omitempty"`
+	Progress string `json:"progress,omitempty"`
+	ID       string `json:"id,omitempty"`
 }
 
 func (c *Command) newKafkaStartCommand() *cobra.Command {
@@ -58,26 +60,30 @@ func (c *Command) kafkaStart(cmd *cobra.Command, args []string) error {
 	}
 	defer out.Close()
 
-	buf := new(strings.Builder)
-	_, err = io.Copy(buf, out)
-	if err != nil {
-		return err
-	}
+	scanner := bufio.NewScanner(out)
+	for scanner.Scan() {
+		var response ImagePullResponse
+		text := scanner.Text()
 
-	for _, ss := range strings.Split(buf.String(), "\n") {
-		var output imagePullOut
-		if err := json.Unmarshal([]byte(ss), &output); err != nil {
-			continue
+		err := json.Unmarshal([]byte(text), &response)
+		if err != nil {
+			return err
 		}
+
 		var inBlacklist bool
 		for _, s := range statusBlacklist {
-			if output.Status == s {
+			if response.Status == s {
 				inBlacklist = true
 			}
 		}
+
 		if !inBlacklist {
-			fmt.Printf("%v\n", output.Status)
+			fmt.Printf("%v\n", response)
 		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return err
 	}
 
 	log.CliLogger.Tracef("Pull confluent-local image success")
