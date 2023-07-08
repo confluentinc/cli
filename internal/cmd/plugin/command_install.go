@@ -120,8 +120,6 @@ func installPlugin(manifest *Manifest, repositoryDir, installDir string) error {
 	default:
 		return errors.Errorf("installation of plugins using %s is not yet supported", language)
 	}
-
-	return nil
 }
 
 func getLanguage(manifest *Manifest) (string, *version.Version) {
