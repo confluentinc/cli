@@ -5,52 +5,13 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
-	"runtime"
-	"strings"
 	"testing"
 
 	"github.com/hashicorp/go-version"
 	"github.com/stretchr/testify/assert"
 
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
-
-func TestGetPluginInstallDir(t *testing.T) {
-	cmd := pcmd.BuildRootCommand()
-	cmd.Flags().String("plugin-directory", "", "")
-
-	if runtime.GOOS != "windows" {
-		err := cmd.Execute()
-		assert.NoError(t, err)
-		dir, err := getPluginInstallDir(cmd)
-		assert.NoError(t, err)
-		assert.Equal(t, "/usr/local/bin", dir)
-	}
-
-	cmd.SetArgs([]string{"--plugin-directory", "."})
-	err := cmd.Execute()
-	assert.NoError(t, err)
-	dir, err := getPluginInstallDir(cmd)
-	assert.NoError(t, err)
-	assert.True(t, strings.HasSuffix(dir, "cli/internal/cmd/plugin"))
-
-	cmd.SetArgs([]string{"--plugin-directory", "dne-directory"})
-	err = cmd.Execute()
-	assert.NoError(t, err)
-	_, err = getPluginInstallDir(cmd)
-	assert.Error(t, err)
-}
-
-func TestInPath(t *testing.T) {
-	path := os.Getenv("PATH")
-	assert.NoError(t, os.Setenv("PATH", "/Users/test/dir1:/Users/test/dir2:/usr/dir3"))
-
-	assert.True(t, inPath("/Users/test/dir1"))
-	assert.False(t, inPath("aaa"))
-
-	assert.NoError(t, os.Setenv("PATH", path))
-}
 
 func TestGetPluginManifest(t *testing.T) {
 	dir, _ := filepath.Abs("../../../test/fixtures/input/plugin")

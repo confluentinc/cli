@@ -2,11 +2,9 @@ package plugin
 
 import (
 	"fmt"
-	"io/fs"
 	"os"
 	"path/filepath"
 	"regexp"
-	"runtime"
 	"strings"
 
 	"github.com/go-yaml/yaml"
@@ -16,7 +14,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/exec"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/types"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -41,23 +38,21 @@ func (c *command) newInstallCommand() *cobra.Command {
 		RunE:  c.install,
 	}
 
-	cmd.Flags().String("plugin-directory", "", `The plugin installation directory. This must be a directory in your $PATH. If not specified, the default is the CLI installation directory for Windows, and "usr/local/bin" for MacOS and Linux.`)
-
 	return cmd
 }
 
 func (c *command) install(cmd *cobra.Command, args []string) error {
-	installDir, err := getPluginInstallDir(cmd)
-	if err != nil {
-		return err
-	}
-
 	confluentDir := filepath.Join(os.Getenv("HOME"), ".confluent")
 	dir, err := os.MkdirTemp(confluentDir, "plugin-install")
 	if err != nil {
 		return err
 	}
 	defer os.RemoveAll(dir)
+
+	installDir := filepath.Join(confluentDir, "plugins")
+	if err := os.Mkdir(installDir, os.ModePerm); err != nil {
+		return errors.Wrapf(err, "failed to create plugin install directory %s", installDir)
+	}
 
 	if _, err = clonePluginRepo(dir, cliPluginsUrl); err != nil {
 		return err
@@ -75,71 +70,6 @@ func (c *command) install(cmd *cobra.Command, args []string) error {
 	output.Printf("Installed plugin %s.\n", args[0])
 
 	return nil
-}
-
-func getPluginInstallDir(cmd *cobra.Command) (string, error) {
-	pluginDir, err := cmd.Flags().GetString("plugin-directory")
-	if err != nil {
-		return "", err
-	}
-	if pluginDir == "" {
-		return getDefaultPluginInstallDir()
-	}
-
-	if pluginDir, err = filepath.Abs(pluginDir); err != nil {
-		return "", err
-	}
-
-	if !utils.DoesPathExist(pluginDir) {
-		return "", errors.Errorf(`plugin directory "%s" does not exist`, pluginDir)
-	}
-
-	if !inPath(pluginDir) {
-		output.Printf("WARNING: failed to find installation directory \"%s\" in your $PATH.\n\n", pluginDir)
-	}
-
-	return pluginDir, nil
-}
-
-func getDefaultPluginInstallDir() (string, error) {
-	// Windows: CLI installation directory
-	// Unix:    /usr/local/bin
-	defaultDir := "/usr/local/bin"
-	if runtime.GOOS == "windows" {
-		cliPath, err := os.Executable()
-		if err != nil {
-			return "", err
-		}
-
-		// Check if the path is a symlink, since os.Executable does not always return
-		// the actual path if the process is started from a symlink
-		file, err := os.Lstat(cliPath)
-		if err != nil {
-			return "", err
-		}
-		if file.Mode()&fs.ModeSymlink != 0 {
-			return "", errors.NewErrorWithSuggestions("unable to select a suitable default installation directory", "Pass an installation directory in your $PATH with the `--plugin-directory` flag.")
-		}
-
-		defaultDir = filepath.Dir(cliPath)
-	}
-
-	if !inPath(defaultDir) {
-		output.Printf("WARNING: failed to find default directory \"%s\" in your $PATH.\n\n", defaultDir)
-	}
-
-	return defaultDir, nil
-}
-
-func inPath(dir string) bool {
-	pathDirectories := filepath.SplitList(os.Getenv("PATH"))
-	for i := range pathDirectories {
-		absPath, err := filepath.Abs(pathDirectories[i])
-		if err == nil {
-			pathDirectories[i] = absPath
-		}
-	}
-	return types.Contains(pathDirectories, dir)
 }
 
 func getPluginManifest(pluginName, dir string) (*Manifest, error) {
