@@ -1,0 +1,234 @@
+package plugin
+
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+	"regexp"
+	"strings"
+
+	"github.com/go-yaml/yaml"
+	"github.com/hashicorp/go-version"
+	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/exec"
+	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/utils"
+)
+
+const (
+	Go     = "go"
+	Python = "python"
+	Shell  = "shell"
+)
+
+const (
+	programNotFoundMsg      = "[WARN] Unable to find %s. Check that it is installed in a directory in your $PATH.\n"
+	unableToParseVersionMsg = "[WARN] Unable to parse %s version.\n"
+	insufficientVersionMsg  = "[WARN] Installed %s version %s is less than the required version %s.\n"
+)
+
+func (c *command) newInstallCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "install",
+		Short: "Install official Confluent CLI plugins.",
+		Long:  "Install official Confluent CLI plugins from the confluentinc/cli-plugins repository.",
+		Args:  cobra.ExactArgs(1),
+		RunE:  c.install,
+	}
+
+	return cmd
+}
+
+func (c *command) install(cmd *cobra.Command, args []string) error {
+	confluentDir := filepath.Join(os.Getenv("HOME"), ".confluent")
+	dir, err := os.MkdirTemp(confluentDir, "plugin-install")
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(dir)
+
+	installDir := filepath.Join(confluentDir, "plugins")
+	if err := os.Mkdir(installDir, os.ModePerm); err != nil {
+		return errors.Wrapf(err, "failed to create plugin install directory %s", installDir)
+	}
+
+	if _, err = clonePluginRepo(dir, cliPluginsUrl); err != nil {
+		return err
+	}
+
+	manifest, err := getPluginManifest(args[0], dir)
+	if err != nil {
+		return err
+	}
+
+	if err := installPlugin(manifest, dir, installDir); err != nil {
+		return err
+	}
+
+	output.Printf("Installed plugin %s.\n", args[0])
+
+	return nil
+}
+
+func getPluginManifest(pluginName, dir string) (*Manifest, error) {
+	files, err := os.ReadDir(dir)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, file := range files {
+		if file.Name() != pluginName || !file.IsDir() {
+			continue
+		}
+
+		manifestPath := fmt.Sprintf("%s/%s/manifest.yml", dir, file.Name())
+		if !utils.DoesPathExist(manifestPath) {
+			return nil, errors.Errorf("manifest not found for plugin %s", pluginName)
+		}
+
+		manifestFile, err := os.ReadFile(manifestPath)
+		if err != nil {
+			return nil, err
+		}
+
+		manifest := new(Manifest)
+		if err := yaml.Unmarshal(manifestFile, manifest); err != nil {
+			return nil, err
+		}
+		manifest.Name = file.Name()
+
+		return manifest, nil
+	}
+
+	return nil, errors.Errorf("plugin %s not found", pluginName)
+}
+
+func installPlugin(manifest *Manifest, repositoryDir, installDir string) error {
+	language, ver := getLanguage(manifest)
+
+	switch language {
+	case Go:
+		checkGoVersion(ver)
+		return installGoPlugin(manifest.Name)
+	case Python:
+		checkPythonVersion(ver)
+		return installSimplePlugin(manifest.Name, repositoryDir, installDir, Python)
+	case Shell:
+		return installSimplePlugin(manifest.Name, repositoryDir, installDir, Shell)
+	default:
+		return errors.Errorf("installation of plugins using %s is not yet supported", language)
+	}
+
+	return nil
+}
+
+func getLanguage(manifest *Manifest) (string, *version.Version) {
+	if manifest == nil || len(manifest.Dependencies) == 0 {
+		return "", nil
+	}
+
+	primaryDependency := manifest.Dependencies[0]
+	primaryDependency.Dependency = strings.ToLower(primaryDependency.Dependency)
+	if primaryDependency.Version == "" {
+		return primaryDependency.Dependency, nil
+	}
+
+	ver, err := version.NewVersion(primaryDependency.Version)
+	if err != nil {
+		return primaryDependency.Dependency, nil
+	}
+
+	return primaryDependency.Dependency, ver
+}
+
+func checkPythonVersion(ver *version.Version) {
+	versionCmd := exec.NewCommand(Python, "--version")
+
+	out, err := versionCmd.Output()
+	if err != nil {
+		output.ErrPrintf(programNotFoundMsg, Python)
+		return
+	}
+
+	re := regexp.MustCompile(`^[1-9][0-9]*\.[0-9]+\.(0|[1-9][0-9]*)$`)
+	for _, word := range strings.Split(string(out), " ") {
+		if re.MatchString(word) {
+			installedVer, err := version.NewVersion(strings.Trim(word, " \n"))
+			if err != nil {
+				output.ErrPrintf(unableToParseVersionMsg, Python)
+				return
+			}
+			if installedVer.LessThan(ver) {
+				output.ErrPrintf(insufficientVersionMsg, Python, installedVer, ver)
+				return
+			}
+		}
+	}
+}
+
+func checkGoVersion(ver *version.Version) {
+	versionCmd := exec.NewCommand(Go, "version")
+
+	out, err := versionCmd.Output()
+	if err != nil {
+		output.ErrPrintf(programNotFoundMsg, Go)
+		return
+	}
+
+	re := regexp.MustCompile(`^go[1-9][0-9]*\.[0-9]+(\.[1-9][0-9]*)?$`)
+	for _, word := range strings.Split(string(out), " ") {
+		if re.MatchString(word) {
+			installedVer, err := version.NewVersion(strings.TrimPrefix(word, "go"))
+			if err != nil {
+				output.ErrPrintf(unableToParseVersionMsg, Go)
+				return
+			}
+			if installedVer.LessThan(ver) {
+				output.ErrPrintf(insufficientVersionMsg, Go, installedVer, ver)
+				return
+			}
+		}
+	}
+}
+
+func installSimplePlugin(name, repositoryDir, installDir, language string) error {
+	pluginDir := fmt.Sprintf("%s/%s", repositoryDir, name)
+	files, err := os.ReadDir(pluginDir)
+	if err != nil {
+		return err
+	}
+
+	found := false
+	for _, file := range files {
+		if strings.HasPrefix(file.Name(), "confluent-") {
+			found = true
+
+			fileData, err := os.ReadFile(fmt.Sprintf("%s/%s", pluginDir, file.Name()))
+			if err != nil {
+				return err
+			}
+
+			if err := os.WriteFile(fmt.Sprintf("%s/%s", installDir, file.Name()), fileData, 0755); err != nil {
+				return err
+			}
+		}
+	}
+
+	if !found {
+		return errors.Errorf("unable to find %s file for plugin %s", language, name)
+	}
+	return nil
+}
+
+func installGoPlugin(name string) error {
+	packageName := fmt.Sprintf("github.com/confluentinc/cli-plugins/%s@latest", name)
+	installCmd := exec.NewCommand("go", "install", packageName)
+
+	if _, err := installCmd.Output(); err != nil {
+		return errors.Wrap(err, "failed to run go install command")
+	}
+
+	return nil
+}
