@@ -122,6 +122,7 @@ const (
 
 	// General
 	CreatedResourceMsg            = "Created %s \"%s\".\n"
+	CreatedLinkResourceMsg        = "Created %s \"%s\" with configs:\n%s\n"
 	DeletedResourceMsg            = "Deleted %s \"%s\".\n"
 	DeleteResourceConfirmMsg      = "Are you sure you want to delete %s \"%s\"?\nTo confirm, type \"%s\". To cancel, press Ctrl-C"
 	DeleteResourceConfirmYesNoMsg = `Are you sure you want to delete %s "%s"?`
