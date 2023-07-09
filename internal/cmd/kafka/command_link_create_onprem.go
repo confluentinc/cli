@@ -69,20 +69,20 @@ func (c *linkCommand) createOnPrem(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	configMap, linkMode, err := c.getConfigMapAndLinkMode(configFile)
+	configMap, linkMode, linkModeStr, err := c.getConfigMapAndLinkMode(configFile)
 	if err != nil {
 		return err
 	}
 
-	if linkMode != Source {
+	if linkMode != Source && linkMode != Bidirectional {
 		return errors.New("only source-initiated links can be created for Confluent Platform from the CLI")
 	}
 
-	if err := c.addSecurityConfigToMap(cmd, linkMode, configMap); err != nil {
+	if err := c.addSecurityConfigToMap(cmd, linkMode, linkModeStr, configMap); err != nil {
 		return err
 	}
 
-	remoteClusterId, bootstrapServer, err := c.getRemoteClusterMetadata(cmd, linkMode)
+	remoteClusterId, bootstrapServer, err := c.getRemoteClusterMetadata(cmd, linkMode, linkModeStr)
 	if err != nil {
 		return err
 	}
@@ -122,7 +122,8 @@ func (c *linkCommand) createOnPrem(cmd *cobra.Command, args []string) error {
 		return handleOpenApiError(httpResp, err, client)
 	}
 
-	msg := fmt.Sprintf(errors.CreatedResourceMsg, resource.ClusterLink, linkName)
+	linkConfigToPrint := printableConfigs(configMap)
+	msg := fmt.Sprintf(errors.CreatedLinkResourceMsg, resource.ClusterLink, linkName, linkConfigToPrint)
 	if dryRun {
 		msg = utils.AddDryRunPrefix(msg)
 	}
