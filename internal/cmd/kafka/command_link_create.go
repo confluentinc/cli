@@ -1,9 +1,7 @@
 package kafka
 
 import (
-	"bytes"
 	"fmt"
-	"sort"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -154,15 +152,15 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 	configs := toCreateTopicConfigs(configMap)
 	data := kafkarestv3.CreateLinkRequestData{Configs: &configs}
 
-	linkMode := linkModeMetadata.linkMode
 	if remoteClusterId != "" {
-		if linkMode == Destination {
+		switch linkModeMetadata.linkMode {
+		case Destination:
 			data.SourceClusterId = &remoteClusterId
-		} else if linkMode == Source {
+		case Source:
 			data.DestinationClusterId = &remoteClusterId
-		} else if linkMode == Bidirectional {
+		case Bidirectional:
 			data.RemoteClusterId = &remoteClusterId
-		} else {
+		default:
 			return unrecognizedLinkModeErr(linkModeMetadata.linkModeStr)
 		}
 	}
@@ -207,21 +205,7 @@ func linkConfigsCommandOutput(linkConfig map[string]string) string {
 			filtered[key] = val
 		}
 	}
-	return createKeyValuePairs(filtered)
-}
-
-func createKeyValuePairs(m map[string]string) string {
-	// Sort by keys so the output order is predictable which is helpful for testing.
-	keys := make([]string, 0, len(m))
-	for k := range m {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	b := new(bytes.Buffer)
-	for _, k := range keys {
-		fmt.Fprintf(b, "%s=\"%s\"\n", k, m[k])
-	}
-	return b.String()
+	return properties.CreateKeyValuePairs(filtered)
 }
 
 func getJaasValue(apiKey, apiSecret string) string {
@@ -240,13 +224,13 @@ func (c *linkCommand) getConfigMapAndLinkMode(configFile string) (map[string]str
 			// Default is destination if no config value is provided.
 			linkMode = Destination
 			linkModeStr = DESTINATION
-		} else if strings.EqualFold(linkModeStr, "DESTINATION") {
+		} else if strings.EqualFold(linkModeStr, DESTINATION) {
 			linkMode = Destination
 			linkModeStr = DESTINATION
-		} else if strings.EqualFold(linkModeStr, "SOURCE") {
+		} else if strings.EqualFold(linkModeStr, SOURCE) {
 			linkMode = Source
 			linkModeStr = SOURCE
-		} else if strings.EqualFold(linkModeStr, "BIDIRECTIONAL") {
+		} else if strings.EqualFold(linkModeStr, BIDIRECTIONAL) {
 			linkMode = Bidirectional
 			linkModeStr = BIDIRECTIONAL
 		} else {
@@ -267,14 +251,14 @@ func unrecognizedLinkModeErr(linkModeStr string) error {
 }
 
 func (c *linkCommand) addSecurityConfigToMap(cmd *cobra.Command, linkModeMetadata *linkModeMetadata, configMap map[string]string) error {
-	linkMode := linkModeMetadata.linkMode
-	if linkMode == Source {
-		return c.addSourceInitiatedLinkSecurityConfigToMap(cmd, configMap)
-	} else if linkMode == Destination {
+	switch linkModeMetadata.linkMode {
+	case Destination:
 		return c.addDestInitiatedLinkSecurityConfigToMap(cmd, configMap)
-	} else if linkMode == Bidirectional {
+	case Source:
+		return c.addSourceInitiatedLinkSecurityConfigToMap(cmd, configMap)
+	case Bidirectional:
 		return c.addBidirectionalLinkSecurityConfigToMap(cmd, configMap)
-	} else {
+	default:
 		return unrecognizedLinkModeErr(linkModeMetadata.linkModeStr)
 	}
 }
@@ -366,8 +350,8 @@ func (c *linkCommand) addSourceInitiatedLinkSecurityConfigToMap(cmd *cobra.Comma
 }
 
 func (c *linkCommand) getRemoteClusterMetadata(cmd *cobra.Command, linkModeMetadata *linkModeMetadata) (string, string, error) {
-	linkMode := linkModeMetadata.linkMode
-	if linkMode == Destination {
+	switch linkModeMetadata.linkMode {
+	case Destination:
 		// For links at destination cluster, look for the source bootstrap servers and cluster ID.
 		bootstrapServer, err := cmd.Flags().GetString(sourceBootstrapServerFlagName)
 		if err != nil {
@@ -378,7 +362,7 @@ func (c *linkCommand) getRemoteClusterMetadata(cmd *cobra.Command, linkModeMetad
 			return "", "", err
 		}
 		return remoteClusterId, bootstrapServer, nil
-	} else if linkMode == Source {
+	case Source:
 		// For links at source cluster, look for the destination bootstrap servers and cluster ID.
 		bootstrapServer, err := cmd.Flags().GetString(destinationBootstrapServerFlagName)
 		if err != nil {
@@ -389,7 +373,7 @@ func (c *linkCommand) getRemoteClusterMetadata(cmd *cobra.Command, linkModeMetad
 			return "", "", err
 		}
 		return remoteClusterId, bootstrapServer, nil
-	} else if linkMode == Bidirectional {
+	case Bidirectional:
 		bootstrapServer, err := cmd.Flags().GetString(remoteBootstrapServerFlagName)
 		if err != nil {
 			return "", "", err
@@ -399,7 +383,7 @@ func (c *linkCommand) getRemoteClusterMetadata(cmd *cobra.Command, linkModeMetad
 			return "", "", err
 		}
 		return remoteClusterId, bootstrapServer, nil
-	} else {
+	default:
 		return "", "", unrecognizedLinkModeErr(linkModeMetadata.linkModeStr)
 	}
 }
