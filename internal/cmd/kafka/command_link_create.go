@@ -103,8 +103,8 @@ func (c *linkCommand) newCreateCommand() *cobra.Command {
 	cmd.Flags().String(destinationApiSecretFlagName, "", "An API secret for the destination cluster. This is used for remote cluster authentication for links at the source cluster. "+authHelperMsg)
 	cmd.Flags().String(remoteApiKeyFlagName, "", "An API key for the remote cluster for bidirectional links. This is used for remote cluster authentication. "+authHelperMsg)
 	cmd.Flags().String(remoteApiSecretFlagName, "", "An API secret for the remote cluster for bidirectional links. This is used for remote cluster authentication. "+authHelperMsg)
-	cmd.Flags().String(localApiKeyFlagName, "", "An API key for the local cluster for bidirectional links. This is used for local cluster authentication. "+authHelperMsg)
-	cmd.Flags().String(localApiSecretFlagName, "", "An API secret for the local cluster for bidirectional links. This is used for local cluster authentication. "+authHelperMsg)
+	cmd.Flags().String(localApiKeyFlagName, "", "An API key for the local cluster for bidirectional links. This is used for local cluster authentication if remote link's connection mode is Inbound. "+authHelperMsg)
+	cmd.Flags().String(localApiSecretFlagName, "", "An API secret for the local cluster for bidirectional links. This is used for local cluster authentication if remote link's connection mode is Inbound. "+authHelperMsg)
 	cmd.Flags().String(configFileFlagName, "", "Name of the file containing link configuration. Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.")
 	cmd.Flags().Bool(dryrunFlagName, false, "Validate a link, but do not create it.")
 	cmd.Flags().Bool(noValidateFlagName, false, "Create a link even if the source cluster cannot be reached.")
@@ -273,13 +273,13 @@ func (c *linkCommand) addSecurityConfigToMap(cmd *cobra.Command, linkModeMetadat
 	} else if linkMode == Destination {
 		return c.addDestInitiatedLinkSecurityConfigToMap(cmd, configMap)
 	} else if linkMode == Bidirectional {
-		return c.addBidirectionalInitiatedLinkSecurityConfigToMap(cmd, configMap)
+		return c.addBidirectionalLinkSecurityConfigToMap(cmd, configMap)
 	} else {
 		return unrecognizedLinkModeErr(linkModeMetadata.linkModeStr)
 	}
 }
 
-func (c *linkCommand) addBidirectionalInitiatedLinkSecurityConfigToMap(cmd *cobra.Command, configMap map[string]string) error {
+func (c *linkCommand) addBidirectionalLinkSecurityConfigToMap(cmd *cobra.Command, configMap map[string]string) error {
 	remoteApiKey, err := cmd.Flags().GetString(remoteApiKeyFlagName)
 	if err != nil {
 		return err
@@ -301,7 +301,7 @@ func (c *linkCommand) addBidirectionalInitiatedLinkSecurityConfigToMap(cmd *cobr
 	if err != nil {
 		return err
 	}
-	if localApiKey != "" || localApiSecret != "" {
+	if localApiKey != "" && localApiSecret != "" {
 		configMap[localListenerPropertyName] = saslSsl
 		configMap[localSecurityProtocolPropertyName] = saslSsl
 		configMap[localSaslMechanismPropertyName] = plain

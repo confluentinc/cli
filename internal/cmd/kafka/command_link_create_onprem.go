@@ -76,7 +76,7 @@ func (c *linkCommand) createOnPrem(cmd *cobra.Command, args []string) error {
 
 	linkMode := linkModeMetadata.linkMode
 	if linkMode != Source && linkMode != Bidirectional {
-		return errors.New("only source-initiated links can be created for Confluent Platform from the CLI")
+		return errors.New("only source-initiated or bidirectional links can be created for Confluent Platform from the CLI")
 	}
 
 	if err := c.addSecurityConfigToMap(cmd, linkModeMetadata, configMap); err != nil {
