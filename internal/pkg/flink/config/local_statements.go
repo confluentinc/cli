@@ -15,5 +15,4 @@ const (
 	ConfigKeyOrgResourceId  = "org-resource-id"
 	ConfigKeyLocalTimeZone  = "table.local-time-zone"
 	ConfigKeyResultsTimeout = "table.results-timeout"
-	ConfigKeyStatementOwner = "statement-owner"
 )
