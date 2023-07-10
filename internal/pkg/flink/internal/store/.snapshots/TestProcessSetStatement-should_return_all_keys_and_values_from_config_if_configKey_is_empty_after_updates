@@ -3,7 +3,7 @@
     (string) (len=3) "Key",
     (string) (len=5) "Value"
   },
-  Rows: ([]types.StatementResultRow) (len=6) {
+  Rows: ([]types.StatementResultRow) (len=5) {
     (types.StatementResultRow) {
       Operation: (types.StatementResultOperation) +I,
       Fields: ([]types.StatementResultField) (len=2) {
@@ -40,19 +40,6 @@
         (types.AtomicStatementResultField) {
           Type: (types.StatementResultFieldType) (len=7) "VARCHAR",
           Value: (string) (len=3) "USA"
-        }
-      }
-    },
-    (types.StatementResultRow) {
-      Operation: (types.StatementResultOperation) +I,
-      Fields: ([]types.StatementResultField) (len=2) {
-        (types.AtomicStatementResultField) {
-          Type: (types.StatementResultFieldType) (len=7) "VARCHAR",
-          Value: (string) (len=15) "org-resource-id"
-        },
-        (types.AtomicStatementResultField) {
-          Type: (types.StatementResultFieldType) (len=7) "VARCHAR",
-          Value: (string) ""
         }
       }
     },

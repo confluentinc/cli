@@ -3,7 +3,7 @@
     (string) (len=3) "Key",
     (string) (len=5) "Value"
   },
-  Rows: ([]types.StatementResultRow) (len=4) {
+  Rows: ([]types.StatementResultRow) (len=3) {
     (types.StatementResultRow) {
       Operation: (types.StatementResultOperation) +I,
       Fields: ([]types.StatementResultField) (len=2) {
@@ -23,19 +23,6 @@
         (types.AtomicStatementResultField) {
           Type: (types.StatementResultFieldType) (len=7) "VARCHAR",
           Value: (string) (len=16) "default_database"
-        },
-        (types.AtomicStatementResultField) {
-          Type: (types.StatementResultFieldType) (len=7) "VARCHAR",
-          Value: (string) ""
-        }
-      }
-    },
-    (types.StatementResultRow) {
-      Operation: (types.StatementResultOperation) +I,
-      Fields: ([]types.StatementResultField) (len=2) {
-        (types.AtomicStatementResultField) {
-          Type: (types.StatementResultFieldType) (len=7) "VARCHAR",
-          Value: (string) (len=15) "org-resource-id"
         },
         (types.AtomicStatementResultField) {
           Type: (types.StatementResultFieldType) (len=7) "VARCHAR",

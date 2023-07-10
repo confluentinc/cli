@@ -275,7 +275,6 @@ func (s *Store) propsDefault(propsWithoutDefault map[string]string) map[string]s
 	properties := map[string]string{
 		config.ConfigKeyCatalog:       s.appOptions.GetEnvironmentId(),
 		config.ConfigKeyDatabase:      s.appOptions.GetKafkaClusterId(),
-		config.ConfigKeyOrgResourceId: s.appOptions.GetOrgResourceId(),
 		config.ConfigKeyLocalTimeZone: getLocalTimezone(),
 	}
 

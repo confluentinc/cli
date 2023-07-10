@@ -116,7 +116,8 @@ func TestProcessSetStatement(t *testing.T) {
 
 		// check row and column lengths match
 		assert.Equal(t, 2, len(result.StatementResults.Headers))
-		assert.Equal(t, len(expectedKeyValuePairs)+3, len(result.StatementResults.Rows))
+		// + 2 for the other default properties apart from catalog
+		assert.Equal(t, len(expectedKeyValuePairs)+2, len(result.StatementResults.Rows))
 		// check if all expected key value pairs are in the results
 		cupaloy.SnapshotT(t, result.StatementResults)
 	})
