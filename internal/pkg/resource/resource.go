@@ -58,7 +58,7 @@ var prefixToResource = map[string]string{
 }
 
 func LookupType(resourceId string) string {
-	if resourceId == "cloud" {
+	if resourceId == Cloud {
 		return Cloud
 	}
 
