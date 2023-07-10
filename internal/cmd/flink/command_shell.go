@@ -72,8 +72,8 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 			mock.NewFakeFlinkGatewayClient(),
 			func() error { return nil },
 			types.ApplicationOptions{
-				Context:           c.Context,
-				UserAgent:         c.Version.UserAgent,
+				Context:   c.Context,
+				UserAgent: c.Version.UserAgent,
 			})
 		return nil
 	}
@@ -136,15 +136,15 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		flinkGatewayClient,
 		c.authenticated(prerunner.Authenticated(c.AuthenticatedCLICommand), cmd, jwtValidator),
 		types.ApplicationOptions{
-			Context:           c.Context,
-			UnsafeTrace:       unsafeTrace,
-			UserAgent:         c.Version.UserAgent,
-			EnvironmentId:     environmentId,
-			OrgResourceId:     resourceId,
-			KafkaClusterId:    cluster,
-			ComputePoolId:     computePool,
-			IdentityPoolId:    identityPool,
-			Verbose:           verbose > 0,
+			Context:        c.Context,
+			UnsafeTrace:    unsafeTrace,
+			UserAgent:      c.Version.UserAgent,
+			EnvironmentId:  environmentId,
+			OrgResourceId:  resourceId,
+			KafkaClusterId: cluster,
+			ComputePoolId:  computePool,
+			IdentityPoolId: identityPool,
+			Verbose:        verbose > 0,
 		})
 	return nil
 }

@@ -3,6 +3,7 @@ package store
 import (
 	"testing"
 
+	"github.com/bradleyjkemp/cupaloy"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -80,7 +81,8 @@ func TestRemoveWhiteSpaces(t *testing.T) {
 func TestProcessSetStatement(t *testing.T) {
 	// Create a new store
 	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, "authToken")
-	s := NewStore(client, nil, nil, tokenRefreshFunc).(*Store)
+	s := NewStore(client, nil, &types.ApplicationOptions{Context: newContext()}, tokenRefreshFunc).(*Store)
+	s.Properties[config.ConfigKeyLocalTimeZone] = "UTC+01:00"
 
 	t.Run("should return an error message if statement is invalid", func(t *testing.T) {
 		_, err := s.processSetStatement("se key=value")
@@ -91,11 +93,10 @@ func TestProcessSetStatement(t *testing.T) {
 		result, err := s.processSetStatement("set")
 		assert.Nil(t, err)
 		assert.EqualValues(t, types.COMPLETED, result.Status)
-		expectedResult := createStatementResults([]string{"Key", "Value"}, [][]string{})
-		assert.Equal(t, &expectedResult, result.StatementResults)
+		cupaloy.SnapshotT(t, result.StatementResults)
 
 		// Add some key-value pairs to the config
-		s.Properties["pipeline.name"] = "job1"
+		s.Properties["catalog"] = "job1"
 		s.Properties["timeout"] = "30"
 	})
 
@@ -104,25 +105,20 @@ func TestProcessSetStatement(t *testing.T) {
 		assert.Nil(t, err)
 		assert.EqualValues(t, types.COMPLETED, result.Status)
 		assert.Equal(t, "configuration updated successfully", result.StatusDetail)
-		expectedResult := createStatementResults([]string{"Key", "Value"}, [][]string{{"location", "USA"}})
-		assert.Equal(t, &expectedResult, result.StatementResults)
+		cupaloy.SnapshotT(t, result.StatementResults)
 	})
 
 	t.Run("should return all keys and values from config if configKey is empty after updates", func(t *testing.T) {
 		result, err := s.processSetStatement("set")
 		assert.Nil(t, err)
 		assert.EqualValues(t, types.COMPLETED, result.Status)
-		expectedKeyValuePairs := map[string]string{"pipeline.name": "job1", "timeout": "30", "location": "USA"}
+		expectedKeyValuePairs := map[string]string{"catalog": "job1", "timeout": "30", "location": "USA"}
 
 		// check row and column lengths match
 		assert.Equal(t, 2, len(result.StatementResults.Headers))
-		assert.Equal(t, len(expectedKeyValuePairs), len(result.StatementResults.Rows))
+		assert.Equal(t, len(expectedKeyValuePairs)+3, len(result.StatementResults.Rows))
 		// check if all expected key value pairs are in the results
-		for _, row := range result.StatementResults.Rows {
-			keyField := row.Fields[0].(types.AtomicStatementResultField)
-			valueField := row.Fields[1].(types.AtomicStatementResultField)
-			assert.Equal(t, expectedKeyValuePairs[keyField.Value], valueField.Value)
-		}
+		cupaloy.SnapshotT(t, result.StatementResults)
 	})
 }
 
@@ -137,7 +133,7 @@ func TestProcessResetStatement(t *testing.T) {
 	})
 
 	t.Run("should reset all keys and values from config", func(t *testing.T) {
-		s.Properties["pipeline.name"] = "job1"
+		s.Properties["catalog"] = "job1"
 		s.Properties["timeout"] = "30"
 		result, _ := s.processResetStatement("reset")
 		assert.EqualValues(t, types.COMPLETED, result.Status)
@@ -153,10 +149,10 @@ func TestProcessResetStatement(t *testing.T) {
 	})
 
 	t.Run("should reset config for valid configKey", func(t *testing.T) {
-		s.Properties["pipeline.name"] = "job1"
-		result, _ := s.processResetStatement("reset 'pipeline.name'")
+		s.Properties["catalog"] = "job1"
+		result, _ := s.processResetStatement("reset 'catalog'")
 		assert.EqualValues(t, types.COMPLETED, result.Status)
-		assert.Equal(t, `configuration key "pipeline.name" has been reset successfully`, result.StatusDetail)
+		assert.Equal(t, `configuration key "catalog" has been reset successfully`, result.StatusDetail)
 		expectedResult := createStatementResults([]string{"Key", "Value"}, [][]string{})
 		assert.Equal(t, &expectedResult, result.StatementResults)
 	})
