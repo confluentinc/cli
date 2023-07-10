@@ -18,6 +18,7 @@ type link struct {
 	TopicName            string `human:"Topic Name" serialized:"topic_name"`
 	SourceClusterId      string `human:"Source Cluster" serialized:"source_cluster_id"`
 	DestinationClusterId string `human:"Destination Cluster" serialized:"destination_cluster_id"`
+	RemoteClusterId      string `human:"Remote Cluster" serialized:"remote_cluster_id"`
 	State                string `human:"State" serialized:"state"`
 	Error                string `human:"Error" serialized:"error"`
 	ErrorMessage         string `human:"Error Message" serialized:"error_message"`
@@ -33,6 +34,7 @@ func newLink(data kafkarestv3.ListLinksResponseData, topic string) *link {
 		TopicName:            topic,
 		SourceClusterId:      data.GetSourceClusterId(),
 		DestinationClusterId: data.GetDestinationClusterId(),
+		RemoteClusterId:      data.GetRemoteClusterId(),
 		State:                data.GetLinkState(),
 		Error:                linkError,
 		ErrorMessage:         data.GetLinkErrorMessage(),
@@ -109,7 +111,7 @@ func getListFields(includeTopics bool) []string {
 		x = append(x, "TopicName")
 	}
 
-	return append(x, "SourceClusterId", "DestinationClusterId", "State", "Error", "ErrorMessage")
+	return append(x, "SourceClusterId", "DestinationClusterId", "RemoteClusterId", "State", "Error", "ErrorMessage")
 }
 
 func getMirrorTopicNames(kafkaREST *pcmd.KafkaREST, clusterId, linkName string) ([]string, error) {
