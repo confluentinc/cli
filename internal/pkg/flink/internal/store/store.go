@@ -286,9 +286,6 @@ func (s *Store) propsDefault(propsWithoutDefault map[string]string) map[string]s
 	if _, ok := properties[config.ConfigKeyOrgResourceId]; !ok {
 		properties[config.ConfigKeyOrgResourceId] = s.appOptions.GetOrgResourceId()
 	}
-	if _, ok := properties[config.ConfigKeyExecutionRuntime]; !ok {
-		properties[config.ConfigKeyExecutionRuntime] = "streaming"
-	}
 	if _, ok := properties[config.ConfigKeyLocalTimeZone]; !ok {
 		properties[config.ConfigKeyLocalTimeZone] = getLocalTimezone()
 	}

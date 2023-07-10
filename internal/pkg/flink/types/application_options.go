@@ -14,7 +14,7 @@ type ApplicationOptions struct {
 }
 
 func (a *ApplicationOptions) GetDefaultProperties() map[string]string {
-	if a != nil {
+	if a != nil && a.DefaultProperties != nil {
 		return a.DefaultProperties
 	}
 	return map[string]string{}
