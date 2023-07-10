@@ -2,6 +2,7 @@ package kafka
 
 import (
 	"fmt"
+
 	"github.com/spf13/cobra"
 
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
