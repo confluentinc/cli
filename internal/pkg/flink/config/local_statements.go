@@ -10,11 +10,10 @@ const (
 	ConfigStatementTerminator = ";"
 
 	// keys
-	ConfigKeyCatalog          = "catalog"
-	ConfigKeyDatabase         = "default_database"
-	ConfigKeyOrgResourceId    = "org-resource-id"
-	ConfigKeyExecutionRuntime = "execution.runtime-mode"
-	ConfigKeyLocalTimeZone    = "table.local-time-zone"
-	ConfigKeyResultsTimeout   = "table.results-timeout"
-	ConfigKeyStatementOwner   = "statement-owner"
+	ConfigKeyCatalog        = "catalog"
+	ConfigKeyDatabase       = "default_database"
+	ConfigKeyOrgResourceId  = "org-resource-id"
+	ConfigKeyLocalTimeZone  = "table.local-time-zone"
+	ConfigKeyResultsTimeout = "table.results-timeout"
+	ConfigKeyStatementOwner = "statement-owner"
 )
