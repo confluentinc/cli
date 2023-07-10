@@ -1,8 +1,6 @@
 package flink
 
 import (
-	"net/url"
-
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/auth"
@@ -74,6 +72,7 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 			mock.NewFakeFlinkGatewayClient(),
 			func() error { return nil },
 			types.ApplicationOptions{
+				Context:   c.Context,
 				UserAgent: c.Version.UserAgent,
 			})
 		return nil
@@ -119,17 +118,6 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		return err
 	}
 
-	flinkComputePool, err := c.V2Client.DescribeFlinkComputePool(computePool, environmentId)
-	if err != nil {
-		return err
-	}
-
-	parsedUrl, err := url.Parse(flinkComputePool.Spec.GetHttpEndpoint())
-	if err != nil {
-		return err
-	}
-	parsedUrl.Path = ""
-
 	unsafeTrace, err := c.Command.Flags().GetBool("unsafe-trace")
 	if err != nil {
 		return err
@@ -148,15 +136,15 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		flinkGatewayClient,
 		c.authenticated(prerunner.Authenticated(c.AuthenticatedCLICommand), cmd, jwtValidator),
 		types.ApplicationOptions{
-			FlinkGatewayUrl: parsedUrl.String(),
-			UnsafeTrace:     unsafeTrace,
-			UserAgent:       c.Version.UserAgent,
-			EnvironmentId:   environmentId,
-			OrgResourceId:   resourceId,
-			KafkaClusterId:  cluster,
-			ComputePoolId:   computePool,
-			IdentityPoolId:  identityPool,
-			Verbose:         verbose > 0,
+			Context:        c.Context,
+			UnsafeTrace:    unsafeTrace,
+			UserAgent:      c.Version.UserAgent,
+			EnvironmentId:  environmentId,
+			OrgResourceId:  resourceId,
+			KafkaClusterId: cluster,
+			ComputePoolId:  computePool,
+			IdentityPoolId: identityPool,
+			Verbose:        verbose > 0,
 		})
 	return nil
 }
