@@ -42,7 +42,7 @@ require (
 	github.com/confluentinc/schema-registry-sdk-go v0.0.23
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dghubble/sling v1.4.1
-	github.com/docker/docker v24.0.2+incompatible
+	github.com/docker/docker v24.0.4+incompatible
 	github.com/docker/go-connections v0.4.0
 	github.com/fatih/color v1.15.0
 	github.com/gdamore/tcell/v2 v2.6.0
