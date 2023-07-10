@@ -72,19 +72,18 @@ func (c *Command) kafkaStart(cmd *cobra.Command, args []string) error {
 		}
 
 		if response.Status == "Downloading" {
-			fmt.Printf("\rDownloading: %s", response.Progress)
+			output.Printf("\rDownloading: %s", response.Progress)
 		} else if response.Status == "Extracting" {
-			fmt.Printf("\rExtracting: %s", response.Progress)
+			output.Printf("\rExtracting: %s", response.Progress)
 		} else {
-			fmt.Printf("\n%s", response.Status)
+			output.Printf("\n%s", response.Status)
 		}
 	}
-
 	if err := scanner.Err(); err != nil {
 		return err
 	}
 
-	fmt.Print("\r")
+	output.Print("\r")
 
 	log.CliLogger.Tracef("Pull confluent-local image success")
 
@@ -164,7 +163,11 @@ func (c *Command) prepareAndSaveLocalPorts(cmd *cobra.Command, isTest bool) erro
 			ControllerPort: strconv.Itoa(freePorts[2]),
 		}
 
-		if kafkaRestPort, err := cmd.Flags().GetString("kafka-rest-port"); err == nil && kafkaRestPort != "" {
+		kafkaRestPort, err := cmd.Flags().GetString("kafka-rest-port")
+		if err != nil {
+			return err
+		}
+		if kafkaRestPort != "" {
 			c.Config.LocalPorts.KafkaRestPort = kafkaRestPort
 		} else {
 			freePort, err := freeport.GetFreePort()
@@ -172,9 +175,14 @@ func (c *Command) prepareAndSaveLocalPorts(cmd *cobra.Command, isTest bool) erro
 				return err
 			}
 			c.Config.LocalPorts.KafkaRestPort = strconv.Itoa(freePort)
+			log.CliLogger.Warnf("Overwrote Kafka REST port to %d", freePort)
 		}
 
-		if plaintextPort, err := cmd.Flags().GetString("plaintext-port"); err == nil && plaintextPort != "" {
+		plaintextPort, err := cmd.Flags().GetString("plaintext-port")
+		if err != nil {
+			return err
+		}
+		if plaintextPort != "" {
 			c.Config.LocalPorts.PlaintextPort = plaintextPort
 		}
 	}
