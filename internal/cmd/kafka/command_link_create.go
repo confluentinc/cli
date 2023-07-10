@@ -2,8 +2,6 @@ package kafka
 
 import (
 	"fmt"
-	"strings"
-
 	"github.com/spf13/cobra"
 
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
@@ -224,17 +222,20 @@ func (c *linkCommand) getConfigMapAndLinkMode(configFile string) (map[string]str
 			// Default is destination if no config value is provided.
 			linkMode = Destination
 			linkModeStr = DESTINATION
-		} else if strings.EqualFold(linkModeStr, DESTINATION) {
-			linkMode = Destination
-			linkModeStr = DESTINATION
-		} else if strings.EqualFold(linkModeStr, SOURCE) {
-			linkMode = Source
-			linkModeStr = SOURCE
-		} else if strings.EqualFold(linkModeStr, BIDIRECTIONAL) {
-			linkMode = Bidirectional
-			linkModeStr = BIDIRECTIONAL
 		} else {
-			return nil, &linkModeMetadata{linkMode, linkModeStr}, unrecognizedLinkModeErr(linkModeStr)
+			switch linkModeStr {
+			case DESTINATION:
+				linkMode = Destination
+				linkModeStr = DESTINATION
+			case SOURCE:
+				linkMode = Source
+				linkModeStr = SOURCE
+			case BIDIRECTIONAL:
+				linkMode = Bidirectional
+				linkModeStr = BIDIRECTIONAL
+			default:
+				return nil, &linkModeMetadata{linkMode, linkModeStr}, unrecognizedLinkModeErr(linkModeStr)
+			}
 		}
 		configMap["link.mode"] = linkModeStr
 		return configMap, &linkModeMetadata{linkMode, linkModeStr}, nil
