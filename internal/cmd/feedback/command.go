@@ -49,23 +49,23 @@ func (c *command) feedback(_ *cobra.Command, _ []string) error {
 }
 
 func getFeedback(prompt form.Prompt) (string, error) {
-	output.Print("Enter feedback: ")
-	feedback, err := prompt.ReadLine()
-	if err != nil {
-		return "", err
-	}
-	feedback = strings.TrimSpace(feedback)
-	f := form.New(form.Field{
-		ID:        "proceed",
-		Prompt:    "Please confirm that your feedback does not contain any sensitive information",
-		IsYesOrNo: true,
-	})
+	f := form.New(
+		form.Field{
+			ID:     "feedback",
+			Prompt: "Enter feedback",
+		},
+		form.Field{
+			ID:        "proceed",
+			Prompt:    "Please confirm that your feedback does not contain any sensitive information",
+			IsYesOrNo: true,
+		})
 	if err := f.Prompt(prompt); err != nil {
-		return "", err
+		return "", nil
 	}
+	feedback := strings.TrimSpace(f.Responses["feedback"].(string))
 	if !f.Responses["proceed"].(bool) {
 		output.Println("Your feedback was not submitted.")
-		return "", err
+		return "", nil
 	}
-	return feedback, err
+	return feedback, nil
 }
