@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -40,6 +41,7 @@ func createStatementResults(columnNames []string, rows [][]string) types.Stateme
 		}
 		statementResultRows[idx] = statementResultRow
 	}
+
 	return types.StatementResults{
 		Headers: columnNames,
 		Rows:    statementResultRows,
@@ -52,7 +54,12 @@ func (s *Store) processSetStatement(statement string) (*types.ProcessedStatement
 		return nil, err.(*types.StatementError)
 	}
 	if configKey == "" {
-		statementResults := createStatementResults([]string{"Key", "Value"}, lo.MapToSlice(s.Properties, func(key, val string) []string { return []string{key, val} }))
+		props := lo.MapToSlice(s.propsDefault(s.Properties), func(key, val string) []string { return []string{key, val} })
+
+		sort.Slice(props, func(i, j int) bool {
+			return props[i][0] < props[j][0]
+		})
+		statementResults := createStatementResults([]string{"Key", "Value"}, props)
 		return &types.ProcessedStatement{
 			Kind:             config.ConfigOpSet,
 			Status:           types.COMPLETED,
@@ -110,6 +117,24 @@ func (s *Store) processUseStatement(statement string) (*types.ProcessedStatement
 	}
 
 	s.Properties[configKey] = configVal
+	if s.appOptions.GetContext() != nil {
+		if configKey == config.ConfigKeyCatalog {
+			err := s.appOptions.Context.SetCurrentFlinkCatalog(configVal)
+			if err != nil {
+				return nil, &types.StatementError{Message: err.Error()}
+			}
+		} else if configKey == config.ConfigKeyDatabase {
+			err := s.appOptions.Context.SetCurrentFlinkDatabase(configVal)
+			if err != nil {
+				return nil, &types.StatementError{Message: err.Error()}
+			}
+		}
+		err = s.appOptions.Context.Save()
+		if err != nil {
+			return nil, &types.StatementError{Message: err.Error()}
+		}
+	}
+
 	statementResults := createStatementResults([]string{"Key", "Value"}, [][]string{{configKey, configVal}})
 	return &types.ProcessedStatement{
 		Kind:             config.ConfigOpUse,
