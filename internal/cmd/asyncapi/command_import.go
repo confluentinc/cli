@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -41,8 +42,18 @@ type flagsImport struct {
 }
 
 type kafkaBinding struct {
-	XPartitions int32             `yaml:"x-partitions"`
-	XConfigs    map[string]string `yaml:"x-configs"`
+	BindingVersion string            `yaml:"bindingVersion"`
+	Partitions     int32             `yaml:"partitions"`
+	TopicConfigs   topicConfigPtr    `yaml:"topicConfiguration"`
+	XConfigs       map[string]string `yaml:"x-configs"`
+}
+
+type topicConfigPtr struct {
+	CleanupPolicy       *[]string `yaml:"cleanup.policy"`
+	RetentionTime       *int64    `yaml:"retention.ms"`
+	RetentionSize       *int64    `yaml:"retention.bytes"`
+	DeleteRetentionTime *int64    `yaml:"delete.retention.ms"`
+	MaxMessageSize      *int32    `yaml:"max.message.bytes"`
 }
 
 type Message struct {
@@ -260,7 +271,7 @@ func (c *command) addTopic(details *accountDetails, topicName string, kafkaBindi
 func (c *command) createTopic(details *accountDetails, topicName string, kafkaBinding kafkaBinding) (bool, error) {
 	log.CliLogger.Infof("Topic not found. Adding a new topic: %s", topicName)
 	topicConfigs := []kafkarestv3.CreateTopicRequestDataConfigs{}
-	for configName, configValue := range kafkaBinding.XConfigs {
+	for configName, configValue := range combineTopicConfigs(kafkaBinding) {
 		value := configValue
 		topicConfigs = append(topicConfigs, kafkarestv3.CreateTopicRequestDataConfigs{
 			Name:  configName,
@@ -271,8 +282,8 @@ func (c *command) createTopic(details *accountDetails, topicName string, kafkaBi
 		TopicName: topicName,
 		Configs:   &topicConfigs,
 	}
-	if kafkaBinding.XPartitions != 0 {
-		createTopicRequestData.PartitionsCount = &kafkaBinding.XPartitions
+	if kafkaBinding.Partitions != 0 {
+		createTopicRequestData.PartitionsCount = &kafkaBinding.Partitions
 	}
 	kafkaRest, err := c.GetKafkaREST()
 	if err != nil {
@@ -310,7 +321,7 @@ func (c *command) updateTopic(details *accountDetails, topicName string, kafkaBi
 			modifiableConfigs = append(modifiableConfigs, configDetails.GetName())
 		}
 	}
-	for configName, configValue := range kafkaBinding.XConfigs {
+	for configName, configValue := range combineTopicConfigs(kafkaBinding) {
 		value := configValue
 		if types.Contains(modifiableConfigs, configName) {
 			updateConfigs = append(updateConfigs, kafkarestv3.AlterConfigBatchRequestDataData{
@@ -328,6 +339,41 @@ func (c *command) updateTopic(details *accountDetails, topicName string, kafkaBi
 	}
 	output.Printf(errors.UpdatedResourceMsg, resource.Topic, topicName)
 	return nil
+}
+
+// TopicConfigs and XConfigs are both specifying Kafka configs, XConfigs is for those not specified in async api.
+// This function combines TopicConfigs and XConfigs
+func combineTopicConfigs(kafkaBinding kafkaBinding) map[string]string {
+	var configs map[string]string
+	if kafkaBinding.XConfigs != nil {
+		configs = kafkaBinding.XConfigs
+	} else {
+		configs = make(map[string]string)
+	}
+
+	// Loop through all fields of struct, no matter type
+	t := reflect.TypeOf(kafkaBinding.TopicConfigs)
+	v := reflect.ValueOf(kafkaBinding.TopicConfigs)
+	for i := 0; i < t.NumField(); i++ {
+		fieldType := t.Field(i)
+		fieldValue := v.Field(i)
+
+		var value string
+		if !fieldValue.IsNil() {
+			elem := fieldValue.Elem()
+			if elem.Kind() == reflect.Slice {
+				ss := make([]string, elem.Len())
+				for i := 0; i < elem.Len(); i++ {
+					ss[i] = elem.Index(i).String()
+				}
+				value = strings.Join(ss, ",")
+			} else {
+				value = strconv.FormatInt(elem.Int(), 10)
+			}
+			configs[fieldType.Tag.Get("yaml")] = value
+		}
+	}
+	return configs
 }
 
 func addTopicDescription(srClient *srsdk.APIClient, srContext context.Context, qualifiedName string, description string) error {
