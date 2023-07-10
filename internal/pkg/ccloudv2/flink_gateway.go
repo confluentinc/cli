@@ -80,7 +80,7 @@ func (c *FlinkGatewayClient) ListAllStatements(environmentId, orgId string) ([]f
 }
 
 func (c *FlinkGatewayClient) CreateStatement(statement, computePoolId, identityPoolId string, properties map[string]string, environmentId, orgId string) (flinkgatewayv1alpha1.SqlV1alpha1Statement, error) {
-	statementName := uuid.New().String()[:20]
+	statementName := uuid.New().String()[:18]
 
 	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
 		Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
