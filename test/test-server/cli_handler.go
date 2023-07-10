@@ -2,6 +2,7 @@ package testserver
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
 	"testing"
 
@@ -13,13 +14,13 @@ import (
 // Handler for: /cli/v1/feedbacks
 func handleFeedbacks(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req cliv1.CliV1Feedback
-		err := json.NewDecoder(r.Body).Decode(&req)
+		req := new(cliv1.CliV1Feedback)
+		err := json.NewDecoder(r.Body).Decode(req)
 		require.NoError(t, err)
 		if len(*req.Content) > 20 {
-			err := writeFeedbackExceedsMaxLengthError(w)
+			w.WriteHeader(http.StatusForbidden)
+			_, err := io.WriteString(w, `{"errors":[{"status":"403","detail":"feedback exceeds the maximum length"}]}`)
 			require.NoError(t, err)
-			return
 		} else {
 			w.WriteHeader(http.StatusNoContent)
 		}

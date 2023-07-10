@@ -24,12 +24,10 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 		Use:         "feedback",
 		Short:       fmt.Sprintf("Submit feedback for the %s.", pversion.FullCLIName),
 		Args:        cobra.NoArgs,
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
-	c := &command{
-		AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(cmd, prerunner),
-	}
+	c := &command{AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 	cmd.RunE = c.feedback
 
 	return cmd
@@ -40,35 +38,34 @@ func (c *command) feedback(_ *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	if len(feedback) > 0 {
-		if err := c.sendFeedback(feedback); err != nil {
+	if feedback != "" {
+		feedbackReq := cliv1.CliV1Feedback{Content: cliv1.PtrString(feedback)}
+		if err := c.V2Client.CreateCliFeedback(feedbackReq); err != nil {
 			return err
 		}
-		fmt.Println("Thanks for your feedback.")
+		output.Println("Thanks for your feedback.")
 	}
 	return nil
 }
 
 func getFeedback(prompt form.Prompt) (string, error) {
-	f := form.New(form.Field{
-		ID:        "proceed",
-		Prompt:    "Please confirm that your feedback does not contain any sensitive information",
-		IsYesOrNo: true,
-	})
-	if err := f.Prompt(prompt); err != nil || !f.Responses["proceed"].(bool) {
-		return "", err
-	}
 	output.Print("Enter feedback: ")
 	feedback, err := prompt.ReadLine()
 	if err != nil {
 		return "", err
 	}
-	feedback = strings.TrimLeft(feedback, " ")
-	feedback = strings.TrimRight(feedback, " \n")
+	feedback = strings.TrimSpace(feedback)
+	f := form.New(form.Field{
+		ID:        "proceed",
+		Prompt:    "Please confirm that your feedback does not contain any sensitive information",
+		IsYesOrNo: true,
+	})
+	if err := f.Prompt(prompt); err != nil {
+		return "", err
+	}
+	if !f.Responses["proceed"].(bool) {
+		output.Println("Your feedback was not submitted.")
+		return "", err
+	}
 	return feedback, err
-}
-
-func (c *command) sendFeedback(content string) error {
-	feedback := cliv1.CliV1Feedback{Content: cliv1.PtrString(content)}
-	return c.V2Client.CreateCliFeedback(feedback)
 }
