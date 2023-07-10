@@ -1,6 +1,7 @@
 package store
 
 import (
+	"github.com/bradleyjkemp/cupaloy"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -80,7 +81,7 @@ func TestRemoveWhiteSpaces(t *testing.T) {
 func TestProcessSetStatement(t *testing.T) {
 	// Create a new store
 	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, "authToken")
-	s := NewStore(client, nil, nil, tokenRefreshFunc).(*Store)
+	s := NewStore(client, nil, &types.ApplicationOptions{Context: newContext()}, tokenRefreshFunc).(*Store)
 
 	t.Run("should return an error message if statement is invalid", func(t *testing.T) {
 		_, err := s.processSetStatement("se key=value")
@@ -91,8 +92,7 @@ func TestProcessSetStatement(t *testing.T) {
 		result, err := s.processSetStatement("set")
 		assert.Nil(t, err)
 		assert.EqualValues(t, types.COMPLETED, result.Status)
-		expectedResult := createStatementResults([]string{"Key", "Value"}, [][]string{})
-		assert.Equal(t, &expectedResult, result.StatementResults)
+		cupaloy.SnapshotT(t, result.StatementResults)
 
 		// Add some key-value pairs to the config
 		s.Properties["pipeline.name"] = "job1"
@@ -104,8 +104,7 @@ func TestProcessSetStatement(t *testing.T) {
 		assert.Nil(t, err)
 		assert.EqualValues(t, types.COMPLETED, result.Status)
 		assert.Equal(t, "configuration updated successfully", result.StatusDetail)
-		expectedResult := createStatementResults([]string{"Key", "Value"}, [][]string{{"location", "USA"}})
-		assert.Equal(t, &expectedResult, result.StatementResults)
+		cupaloy.SnapshotT(t, result.StatementResults)
 	})
 
 	t.Run("should return all keys and values from config if configKey is empty after updates", func(t *testing.T) {
@@ -116,13 +115,9 @@ func TestProcessSetStatement(t *testing.T) {
 
 		// check row and column lengths match
 		assert.Equal(t, 2, len(result.StatementResults.Headers))
-		assert.Equal(t, len(expectedKeyValuePairs), len(result.StatementResults.Rows))
+		assert.Equal(t, len(expectedKeyValuePairs)+4, len(result.StatementResults.Rows))
 		// check if all expected key value pairs are in the results
-		for _, row := range result.StatementResults.Rows {
-			keyField := row.Fields[0].(types.AtomicStatementResultField)
-			valueField := row.Fields[1].(types.AtomicStatementResultField)
-			assert.Equal(t, expectedKeyValuePairs[keyField.Value], valueField.Value)
-		}
+		cupaloy.SnapshotT(t, result.StatementResults)
 	})
 }
 
