@@ -81,7 +81,7 @@ func CreateKeyValuePairs(m map[string]string) string {
 	sort.Strings(keys)
 	b := new(bytes.Buffer)
 	for _, k := range keys {
-		fmt.Fprintf(b, "%s=\"%s\"\n", k, m[k])
+		fmt.Fprintf(b, "\"%s\"=\"%s\"\n", k, m[k])
 	}
 	return b.String()
 }
