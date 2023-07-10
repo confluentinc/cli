@@ -1,8 +1,11 @@
 package types
 
+import (
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
+)
+
 type ApplicationOptions struct {
 	DefaultProperties map[string]string
-	FlinkGatewayUrl   string
 	UnsafeTrace       bool
 	UserAgent         string
 	EnvironmentId     string
@@ -11,20 +14,14 @@ type ApplicationOptions struct {
 	ComputePoolId     string
 	IdentityPoolId    string
 	Verbose           bool
+	Context           *dynamicconfig.DynamicContext
 }
 
 func (a *ApplicationOptions) GetDefaultProperties() map[string]string {
-	if a != nil {
+	if a != nil && a.DefaultProperties != nil {
 		return a.DefaultProperties
 	}
 	return map[string]string{}
-}
-
-func (a *ApplicationOptions) GetFlinkGatewayUrl() string {
-	if a != nil {
-		return a.FlinkGatewayUrl
-	}
-	return ""
 }
 
 func (a *ApplicationOptions) GetUnsafeTrace() bool {
@@ -80,4 +77,11 @@ func (a *ApplicationOptions) GetVerbose() bool {
 		return a.Verbose
 	}
 	return false
+}
+
+func (a *ApplicationOptions) GetContext() *dynamicconfig.DynamicContext {
+	if a != nil {
+		return a.Context
+	}
+	return nil
 }
