@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"os/exec"
 	"runtime"
 	"strconv"
 	"strings"
@@ -42,6 +43,11 @@ func (c *Command) newKafkaStartCommand() *cobra.Command {
 }
 
 func (c *Command) kafkaStart(cmd *cobra.Command, args []string) error {
+	err := checkMachineArch()
+	if err != nil {
+		return err
+	}
+
 	dockerClient, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		return err
@@ -187,4 +193,21 @@ func getContainerEnvironmentWithPorts(ports *v1.LocalPorts) []string {
 		fmt.Sprintf("KAFKA_REST_BOOTSTRAP_SERVERS=broker:%s", ports.BrokerPort),
 		fmt.Sprintf("KAFKA_REST_LISTENERS=http://0.0.0.0:%s", ports.KafkaRestPort),
 	}
+}
+
+func checkMachineArch() error {
+	cmd := exec.Command("uname", "-m")
+	output, err := cmd.Output()
+	if err != nil {
+		return err
+	}
+	systemArch := strings.TrimSpace(string(output))
+	if systemArch == "x86_64" {
+		systemArch = "amd64"
+	}
+	fmt.Println(systemArch, runtime.GOARCH)
+	if systemArch != runtime.GOARCH {
+		return errors.New(fmt.Sprintf("Running %s Confluent CLI on a %s machine. Please download the correct version.", runtime.GOARCH, systemArch))
+	}
+	return nil
 }
