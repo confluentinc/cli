@@ -69,20 +69,21 @@ func (c *linkCommand) createOnPrem(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	configMap, linkMode, err := c.getConfigMapAndLinkMode(configFile)
+	configMap, linkModeMetadata, err := c.getConfigMapAndLinkMode(configFile)
 	if err != nil {
 		return err
 	}
 
-	if linkMode != Source {
-		return errors.New("only source-initiated links can be created for Confluent Platform from the CLI")
+	linkMode := linkModeMetadata.linkMode
+	if linkMode != Source && linkMode != Bidirectional {
+		return errors.New("only source-initiated or bidirectional links can be created for Confluent Platform from the CLI")
 	}
 
-	if err := c.addSecurityConfigToMap(cmd, linkMode, configMap); err != nil {
+	if err := c.addSecurityConfigToMap(cmd, linkModeMetadata, configMap); err != nil {
 		return err
 	}
 
-	remoteClusterId, bootstrapServer, err := c.getRemoteClusterMetadata(cmd, linkMode)
+	remoteClusterId, bootstrapServer, err := c.getRemoteClusterMetadata(cmd, linkModeMetadata)
 	if err != nil {
 		return err
 	}
@@ -122,7 +123,7 @@ func (c *linkCommand) createOnPrem(cmd *cobra.Command, args []string) error {
 		return handleOpenApiError(httpResp, err, client)
 	}
 
-	msg := fmt.Sprintf(errors.CreatedResourceMsg, resource.ClusterLink, linkName)
+	msg := fmt.Sprintf(errors.CreatedLinkResourceMsg, resource.ClusterLink, linkName, linkConfigsCommandOutput(configMap))
 	if dryRun {
 		msg = utils.AddDryRunPrefix(msg)
 	}
