@@ -759,7 +759,7 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(*cobra.Command, []
 				}
 			}
 		default:
-			panic("Invalid Credential Type")
+			return errors.New("invalid credential type")
 		}
 
 		hasAPIKey, err := ctx.HasAPIKey(clusterId)
