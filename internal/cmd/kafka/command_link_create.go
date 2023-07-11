@@ -195,6 +195,7 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
+// An allow-list of configs we can print. We don't want to print/log sensitive configs.
 var printableLinkConfigs = types.NewSet(
 	"bootstrap.servers",
 	"connection.mode",
@@ -215,7 +216,8 @@ var printableLinkConfigs = types.NewSet(
 	"security.protocol",
 	"sasl.mechanism",
 	"local.security.protocol",
-	"local.sasl.mechanism")
+	"local.sasl.mechanism",
+)
 
 func linkConfigsCommandOutput(linkConfig map[string]string) string {
 	filtered := make(map[string]string)
