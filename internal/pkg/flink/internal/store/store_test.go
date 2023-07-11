@@ -1519,9 +1519,10 @@ func TestWaitForTerminalStateStopsWhenUserDetaches(t *testing.T) {
 		cancelFunc()
 	}()
 
-	_, err := s.WaitForTerminalStatementState(ctx, *types.NewProcessedStatement(statementObj))
+	returnedStatement, err := s.WaitForTerminalStatementState(ctx, *types.NewProcessedStatement(statementObj))
 
-	assert.NotNil(t, err)
+	assert.Nil(t, err)
+	assert.Equal(t, types.NewProcessedStatement(statementObj), returnedStatement)
 	assert.NotNil(t, ctx.Err())
 }
 
