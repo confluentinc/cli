@@ -69,16 +69,8 @@ const (
 	DestroyDeletingMsg         = "Deleting: %s\n"
 
 	// schema-registry commands
-	UpdatedToLevelCompatibilityMsg      = "Successfully updated Top Level compatibility to \"%s\"\n"
-	UpdatedTopLevelModeMsg              = "Successfully updated Top Level mode to \"%s\"\n"
-	RegisteredSchemaMsg                 = "Successfully registered schema with ID %v\n"
-	DeletedAllSubjectVersionMsg         = "Successfully %s deleted all versions for subject \"%s\"\n"
-	DeletedSubjectVersionMsg            = "Successfully %s deleted version \"%s\" for subject \"%s\".\n"
-	UpdatedSubjectLevelCompatibilityMsg = "Successfully updated Subject Level compatibility to \"%s\" for subject \"%s\"\n"
-	UpdatedSubjectLevelModeMsg          = "Successfully updated Subject level Mode to \"%s\" for subject \"%s\"\n"
-	ExporterActionMsg                   = "%s schema exporter \"%s\".\n"
-	SchemaRegistryClusterDeletedMsg     = "Deleted Schema Registry cluster for environment \"%s\".\n"
-	SchemaRegistryClusterUpgradedMsg    = "The Stream Governance package for environment \"%s\" has been upgraded to \"%s\".\n"
+	RegisteredSchemaMsg = "Successfully registered schema with ID \"%v\".\n"
+	ExporterActionMsg   = "%s schema exporter \"%s\".\n"
 
 	// secret commands
 	UpdateSecretFileMsg = "Updated the encrypted secrets."

@@ -27,6 +27,7 @@ type Client struct {
 	AuthToken string
 
 	ApiKeysClient          *apikeysv2.APIClient
+	BillingClient          *billingv1.APIClient
 	ByokClient             *byokv1.APIClient
 	CdxClient              *cdxv1.APIClient
 	CliClient              *cliv1.APIClient
@@ -42,7 +43,6 @@ type Client struct {
 	SchemaRegistryClient   *srcm.APIClient
 	StreamDesignerClient   *streamdesignerv1.APIClient
 	ServiceQuotaClient     *servicequotav1.APIClient
-	BillingClient          *billingv1.APIClient
 }
 
 func NewClient(baseUrl string, isTest bool, authToken, userAgent string, unsafeTrace bool) *Client {
@@ -55,6 +55,7 @@ func NewClient(baseUrl string, isTest bool, authToken, userAgent string, unsafeT
 		AuthToken: authToken,
 
 		ApiKeysClient:          newApiKeysClient(url, userAgent, unsafeTrace),
+		BillingClient:          newBillingClient(url, userAgent, unsafeTrace),
 		ByokClient:             newByokV1Client(url, userAgent, unsafeTrace),
 		CdxClient:              newCdxClient(url, userAgent, unsafeTrace),
 		CliClient:              newCliClient(url, userAgent, unsafeTrace),
@@ -70,6 +71,5 @@ func NewClient(baseUrl string, isTest bool, authToken, userAgent string, unsafeT
 		SchemaRegistryClient:   newSchemaRegistryClient(url, userAgent, unsafeTrace),
 		StreamDesignerClient:   newStreamDesignerClient(url, userAgent, unsafeTrace),
 		ServiceQuotaClient:     newServiceQuotaClient(url, userAgent, unsafeTrace),
-		BillingClient:          newBillingClient(url, userAgent, unsafeTrace),
 	}
 }

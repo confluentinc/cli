@@ -81,6 +81,6 @@ func (c *command) clusterUpgrade(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	output.Printf(errors.SchemaRegistryClusterUpgradedMsg, environmentId, packageDisplayName)
+	output.Printf("The Stream Governance package for environment \"%s\" has been upgraded to \"%s\".\n", environmentId, packageDisplayName)
 	return nil
 }

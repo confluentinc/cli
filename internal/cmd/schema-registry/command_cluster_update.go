@@ -86,7 +86,7 @@ func (c *command) updateTopLevelCompatibility(cmd *cobra.Command) error {
 		return err
 	}
 
-	output.Printf(errors.UpdatedToLevelCompatibilityMsg, updateReq.Compatibility)
+	output.Printf("Successfully updated top level compatibility to \"%s\".\n", updateReq.Compatibility)
 	return nil
 }
 
@@ -169,6 +169,6 @@ func (c *command) updateTopLevelMode(cmd *cobra.Command) error {
 		return err
 	}
 
-	output.Printf(errors.UpdatedTopLevelModeMsg, modeUpdate.Mode)
+	output.Printf("Successfully updated top level mode to \"%s\".\n", modeUpdate.Mode)
 	return nil
 }
