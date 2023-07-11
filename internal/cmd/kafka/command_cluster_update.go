@@ -2,7 +2,6 @@ package kafka
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/spf13/cobra"
 
@@ -23,7 +22,7 @@ func (c *clusterCommand) newUpdateCommand(cfg *v1.Config) *cobra.Command {
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return c.update(cmd, args, form.NewPrompt(os.Stdin))
+			return c.update(cmd, args, form.NewPrompt())
 		},
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		Example: examples.BuildExampleString(

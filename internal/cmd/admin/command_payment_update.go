@@ -1,8 +1,6 @@
 package admin
 
 import (
-	"os"
-
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/form"
@@ -20,7 +18,7 @@ func (c *command) newUpdateCommand() *cobra.Command {
 }
 
 func (c *command) update(cmd *cobra.Command, _ []string) error {
-	prompt := form.NewPrompt(os.Stdin)
+	prompt := form.NewPrompt()
 
 	output.Println("Edit credit card")
 

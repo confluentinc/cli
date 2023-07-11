@@ -3,7 +3,6 @@ package kafka
 import (
 	"bytes"
 	"fmt"
-	"os"
 	"strings"
 	"text/template"
 
@@ -44,7 +43,7 @@ func (c *clusterCommand) newCreateCommand(cfg *v1.Config) *cobra.Command {
 		Long:  "Create a Kafka cluster.\n\nNote: You cannot use this command to create a cluster that is configured with AWS PrivateLink. You must use the UI to create a cluster of that configuration.",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return c.create(cmd, args, form.NewPrompt(os.Stdin))
+			return c.create(cmd, args, form.NewPrompt())
 		},
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		Example: examples.BuildExampleString(
