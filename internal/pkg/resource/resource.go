@@ -15,7 +15,7 @@ const (
 	ConsumerShare         = "consumer share"
 	Context               = "context"
 	Environment           = "environment"
-	FlinkComputePool      = "Flink compute pool"
+	FlinkComputePool      = "flink compute-pool"
 	FlinkIamBinding       = "Flink IAM binding"
 	FlinkStatement        = "Flink SQL statement"
 	IdentityPool          = "identity pool"
