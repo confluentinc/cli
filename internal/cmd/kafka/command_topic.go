@@ -17,12 +17,7 @@ import (
 
 const numPartitionsKey = "num.partitions"
 
-type hasAPIKeyTopicCommand struct {
-	*pcmd.HasAPIKeyCLICommand
-	clientID string
-}
-
-type authenticatedTopicCommand struct {
+type command struct {
 	*pcmd.AuthenticatedCLICommand
 	clientID string
 }
@@ -33,17 +28,17 @@ func newTopicCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 		Short: "Manage Kafka topics.",
 	}
 
-	c := &authenticatedTopicCommand{clientID: cfg.Version.ClientID}
+	c := &command{clientID: cfg.Version.ClientID}
 
 	if cfg.IsCloudLogin() {
 		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedCLICommand(cmd, prerunner)
 
-		cmd.AddCommand(newConsumeCommand(cfg, prerunner))
+		cmd.AddCommand(c.newConsumeCommand())
 		cmd.AddCommand(c.newCreateCommand())
 		cmd.AddCommand(c.newDeleteCommand())
 		cmd.AddCommand(c.newDescribeCommand())
 		cmd.AddCommand(c.newListCommand())
-		cmd.AddCommand(newProduceCommand(cfg, prerunner))
+		cmd.AddCommand(c.newProduceCommand())
 		cmd.AddCommand(c.newUpdateCommand())
 	} else {
 		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)
@@ -61,7 +56,7 @@ func newTopicCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	return cmd
 }
 
-func (c *authenticatedTopicCommand) validArgs(cmd *cobra.Command, args []string) []string {
+func (c *command) validArgs(cmd *cobra.Command, args []string) []string {
 	if len(args) > 0 {
 		return nil
 	}
@@ -73,7 +68,7 @@ func (c *authenticatedTopicCommand) validArgs(cmd *cobra.Command, args []string)
 	return c.autocompleteTopics()
 }
 
-func (c *authenticatedTopicCommand) autocompleteTopics() []string {
+func (c *command) autocompleteTopics() []string {
 	topics, err := c.getTopics()
 	if err != nil {
 		return nil
@@ -91,7 +86,7 @@ func (c *authenticatedTopicCommand) autocompleteTopics() []string {
 }
 
 // validate that a topic exists before attempting to produce/consume messages
-func (c *hasAPIKeyTopicCommand) validateTopic(client *ckafka.AdminClient, topic string, cluster *v1.KafkaClusterConfig) error {
+func (c *command) validateTopic(client *ckafka.AdminClient, topic string, cluster *v1.KafkaClusterConfig) error {
 	timeout := 10 * time.Second
 	metadata, err := client.GetMetadata(nil, true, int(timeout.Milliseconds()))
 	if err != nil {
@@ -117,7 +112,7 @@ func (c *hasAPIKeyTopicCommand) validateTopic(client *ckafka.AdminClient, topic 
 	return nil
 }
 
-func (c *authenticatedTopicCommand) provisioningClusterCheck(lkc string) error {
+func (c *command) provisioningClusterCheck(lkc string) error {
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
