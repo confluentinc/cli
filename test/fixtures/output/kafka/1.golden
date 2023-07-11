@@ -18,7 +18,7 @@ Flags:
       --region string           Cloud region ID for cluster (use "confluent kafka region list" to see all).
       --availability string     Specify the availability of the cluster as "single-zone" or "multi-zone". (default "single-zone")
       --type string             Specify the type of the Kafka cluster as "basic", "standard", or "dedicated". (default "basic")
-      --cku int                 Number of Confluent Kafka Units (non-negative). Required for Kafka clusters of type "dedicated".
+      --cku uint32              Number of Confluent Kafka Units. Required for Kafka clusters of type "dedicated".
       --encryption-key string   Resource ID of the Cloud Key Management Service key (GCP only).
       --context string          CLI context name.
       --byok string             Confluent Cloud Key ID of a registered encryption key (AWS and Azure only, use "confluent byok create" to register a key).

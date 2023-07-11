@@ -9,11 +9,13 @@ Change a cluster's name and expand its CKU count:
   $ confluent kafka cluster update lkc-abc123 --name "Cool Cluster" --cku 3
 
 Flags:
-      --name string          Name of the Kafka cluster.
-      --cku uint32           Number of Confluent Kafka Units. For Kafka clusters of type "dedicated" only. When shrinking a cluster, you must reduce capacity one CKU at a time.
-      --context string       CLI context name.
-      --environment string   Environment ID.
-  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+      --name string           Name of the Kafka cluster.
+      --availability string   Specify the availability of the cluster as "single-zone" or "multi-zone". (default "single-zone")
+      --type string           Specify the type of the Kafka cluster as "basic", "standard", or "dedicated". (default "basic")
+      --cku uint32            Number of Confluent Kafka Units. For Kafka clusters of type "dedicated" only. When shrinking a cluster, you must reduce capacity one CKU at a time.
+      --context string        CLI context name.
+      --environment string    Environment ID.
+  -o, --output string         Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
   -h, --help            Show help for this command.
