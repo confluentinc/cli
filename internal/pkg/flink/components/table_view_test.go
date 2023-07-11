@@ -120,7 +120,7 @@ func (s *TableViewTestSuite) TestTableShouldSetTitle() {
 func (s *TableViewTestSuite) TestTableShortcutsWithAutoRefreshOff() {
 	materializedStatementResults := getResultsExample(10)
 
-	actual := s.tableView.getTableShortcuts(materializedStatementResults, false)
+	actual := s.tableView.getTableShortcuts(materializedStatementResults, false, types.Paused)
 
 	cupaloy.SnapshotT(s.T(), actual)
 }
@@ -128,7 +128,15 @@ func (s *TableViewTestSuite) TestTableShortcutsWithAutoRefreshOff() {
 func (s *TableViewTestSuite) TestTableShortcutsWithAutoRefreshOn() {
 	materializedStatementResults := getResultsExample(10)
 
-	actual := s.tableView.getTableShortcuts(materializedStatementResults, true)
+	actual := s.tableView.getTableShortcuts(materializedStatementResults, true, types.Running)
+
+	cupaloy.SnapshotT(s.T(), actual)
+}
+
+func (s *TableViewTestSuite) TestTableShortcutsWithFetchStateCompleted() {
+	materializedStatementResults := getResultsExample(10)
+
+	actual := s.tableView.getTableShortcuts(materializedStatementResults, false, types.Completed)
 
 	cupaloy.SnapshotT(s.T(), actual)
 }
