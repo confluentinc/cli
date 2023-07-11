@@ -190,17 +190,33 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-var sensitiveLinkConfigs = map[string]bool{
-	saslJaasConfigPropertyName:      true,
-	localSaslJaasConfigPropertyName: true,
+var printableLinkConfigs = map[string]bool{
+	"bootstrap.servers":                 true,
+	"connection.mode":                   true,
+	"link.mode":                         true,
+	"consumer.offset.sync.enable":       true,
+	"consumer.offset.group.filters":     true,
+	"consumer.offset.sync.ms":           true,
+	"consumer.group.prefix.enable":      true,
+	"acl.sync.enable":                   true,
+	"acl.filters":                       true,
+	"acl.sync.ms":                       true,
+	"auto.create.mirror.topics.enable":  true,
+	"auto.create.mirror.topics.filters": true,
+	"cluster.link.prefix":               true,
+	"topic.config.sync.ms":              true,
+	"topic.config.sync.include":         true,
+	"mirror.start.offset.spec":          true,
+	"security.protocol":                 true,
+	"sasl.mechanism":                    true,
+	"local.security.protocol":           true,
+	"local.sasl.mechanism":              true,
 }
 
 func linkConfigsCommandOutput(linkConfig map[string]string) string {
 	filtered := make(map[string]string)
 	for key, val := range linkConfig {
-		if _, ok := sensitiveLinkConfigs[key]; ok {
-			filtered[key] = "***"
-		} else {
+		if _, ok := printableLinkConfigs[key]; ok {
 			filtered[key] = val
 		}
 	}
