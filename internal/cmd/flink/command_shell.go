@@ -91,6 +91,11 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		environmentId = c.Context.GetCurrentEnvironment()
 	}
 
+	environment, err := c.V2Client.GetOrgEnvironment(environmentId)
+	if err != nil {
+		return errors.NewErrorWithSuggestions(err.Error(), "List available environments with `confluent environment list`.")
+	}
+
 	computePool, err := cmd.Flags().GetString("compute-pool")
 	if err != nil {
 		return err
@@ -137,19 +142,21 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 
 	verbose, _ := cmd.Flags().GetCount("verbose")
 
+	// use name of environment and not id
 	client.StartApp(
 		flinkGatewayClient,
 		c.authenticated(prerunner.Authenticated(c.AuthenticatedCLICommand), cmd, jwtValidator),
 		types.ApplicationOptions{
-			Context:        c.Context,
-			UnsafeTrace:    unsafeTrace,
-			UserAgent:      c.Version.UserAgent,
-			EnvironmentId:  environmentId,
-			OrgResourceId:  resourceId,
-			KafkaClusterId: cluster,
-			ComputePoolId:  computePool,
-			IdentityPoolId: identityPool,
-			Verbose:        verbose > 0,
+			Context:         c.Context,
+			UnsafeTrace:     unsafeTrace,
+			UserAgent:       c.Version.UserAgent,
+			EnvironmentName: environment.GetDisplayName(),
+			EnvironmentId:   environmentId,
+			OrgResourceId:   resourceId,
+			KafkaClusterId:  cluster,
+			ComputePoolId:   computePool,
+			IdentityPoolId:  identityPool,
+			Verbose:         verbose > 0,
 		})
 	return nil
 }

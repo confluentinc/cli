@@ -9,6 +9,7 @@ type ApplicationOptions struct {
 	UnsafeTrace       bool
 	UserAgent         string
 	EnvironmentId     string
+	EnvironmentName   string
 	OrgResourceId     string
 	KafkaClusterId    string
 	ComputePoolId     string
@@ -41,6 +42,13 @@ func (a *ApplicationOptions) GetUserAgent() string {
 func (a *ApplicationOptions) GetEnvironmentId() string {
 	if a != nil {
 		return a.EnvironmentId
+	}
+	return ""
+}
+
+func (a *ApplicationOptions) GetEnvironmentName() string {
+	if a != nil {
+		return a.EnvironmentName
 	}
 	return ""
 }
