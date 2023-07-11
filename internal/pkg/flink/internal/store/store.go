@@ -297,7 +297,8 @@ func (s *Store) WaitForTerminalStatementState(ctx context.Context, statement typ
 	for !statement.IsTerminalState() {
 		select {
 		case <-ctx.Done():
-			return nil, &types.StatementError{Message: "detached from statement", HttpResponseCode: 499}
+			output.Println("Detached from statement.")
+			return &statement, nil
 		default:
 			statementObj, err := s.authenticatedGatewayClient().GetStatement(s.appOptions.GetEnvironmentId(), statement.StatementName, s.appOptions.GetOrgResourceId())
 			statusDetail := s.getStatusDetail(statementObj)
