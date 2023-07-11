@@ -43,8 +43,7 @@ func (c *Command) newKafkaStartCommand() *cobra.Command {
 }
 
 func (c *Command) kafkaStart(cmd *cobra.Command, args []string) error {
-	err := checkMachineArch()
-	if err != nil {
+	if err := checkMachineArch(); err != nil {
 		return err
 	}
 
@@ -210,7 +209,7 @@ func checkMachineArch() error {
 		systemArch = "amd64"
 	}
 	if systemArch != runtime.GOARCH {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(`Binary architecture "%s" does not match system architecture "%s"`, runtime.GOARCH, systemArch), "Download the correct version of CLI to continue.")
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(`binary architecture "%s" does not match system architecture "%s"`, runtime.GOARCH, systemArch), "Download the CLI with the correct architecture to continue.")
 	}
 	return nil
 }
