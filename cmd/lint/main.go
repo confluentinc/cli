@@ -89,8 +89,6 @@ var flagRules = []linter.FlagRule{
 			"destination-cluster",
 			"remote-api-key",
 			"remote-api-secret",
-			"local-api-key",
-			"local-api-secret",
 			"remote-bootstrap-server",
 			"remote-cluster",
 			"enable-systest-events",

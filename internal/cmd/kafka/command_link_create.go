@@ -14,6 +14,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/properties"
 	"github.com/confluentinc/cli/internal/pkg/resource"
+	"github.com/confluentinc/cli/internal/pkg/types"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -105,6 +106,10 @@ func (c *linkCommand) newCreateCommand() *cobra.Command {
 	cmd.Flags().String(configFileFlagName, "", "Name of the file containing link configuration. Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.")
 	cmd.Flags().Bool(dryrunFlagName, false, "Validate a link, but do not create it.")
 	cmd.Flags().Bool(noValidateFlagName, false, "Create a link even if the source cluster cannot be reached.")
+	cmd.MarkFlagsRequiredTogether(sourceApiKeyFlagName, sourceApiSecretFlagName)
+	cmd.MarkFlagsRequiredTogether(destinationApiKeyFlagName, destinationApiSecretFlagName)
+	cmd.MarkFlagsRequiredTogether(localApiKeyFlagName, localApiSecretFlagName)
+	cmd.MarkFlagsRequiredTogether(remoteApiKeyFlagName, remoteApiSecretFlagName)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -152,7 +157,7 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 	data := kafkarestv3.CreateLinkRequestData{Configs: &configs}
 
 	if remoteClusterId != "" {
-		switch linkModeMetadata.linkMode {
+		switch linkModeMetadata.mode {
 		case Destination:
 			data.SourceClusterId = &remoteClusterId
 		case Source:
@@ -160,7 +165,7 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		case Bidirectional:
 			data.RemoteClusterId = &remoteClusterId
 		default:
-			return unrecognizedLinkModeErr(linkModeMetadata.linkModeStr)
+			return unrecognizedLinkModeErr(linkModeMetadata.name)
 		}
 	}
 
@@ -190,33 +195,32 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-var printableLinkConfigs = map[string]bool{
-	"bootstrap.servers":                 true,
-	"connection.mode":                   true,
-	"link.mode":                         true,
-	"consumer.offset.sync.enable":       true,
-	"consumer.offset.group.filters":     true,
-	"consumer.offset.sync.ms":           true,
-	"consumer.group.prefix.enable":      true,
-	"acl.sync.enable":                   true,
-	"acl.filters":                       true,
-	"acl.sync.ms":                       true,
-	"auto.create.mirror.topics.enable":  true,
-	"auto.create.mirror.topics.filters": true,
-	"cluster.link.prefix":               true,
-	"topic.config.sync.ms":              true,
-	"topic.config.sync.include":         true,
-	"mirror.start.offset.spec":          true,
-	"security.protocol":                 true,
-	"sasl.mechanism":                    true,
-	"local.security.protocol":           true,
-	"local.sasl.mechanism":              true,
-}
+var printableLinkConfigs = types.NewSet(
+	"bootstrap.servers",
+	"connection.mode",
+	"link.mode",
+	"consumer.offset.sync.enable",
+	"consumer.offset.group.filters",
+	"consumer.offset.sync.ms",
+	"consumer.group.prefix.enable",
+	"acl.sync.enable",
+	"acl.filters",
+	"acl.sync.ms",
+	"auto.create.mirror.topics.enable",
+	"auto.create.mirror.topics.filters",
+	"cluster.link.prefix",
+	"topic.config.sync.ms",
+	"topic.config.sync.include",
+	"mirror.start.offset.spec",
+	"security.protocol",
+	"sasl.mechanism",
+	"local.security.protocol",
+	"local.sasl.mechanism")
 
 func linkConfigsCommandOutput(linkConfig map[string]string) string {
 	filtered := make(map[string]string)
 	for key, val := range linkConfig {
-		if _, ok := printableLinkConfigs[key]; ok {
+		if printableLinkConfigs.Contains(key) {
 			filtered[key] = val
 		}
 	}
@@ -243,13 +247,10 @@ func (c *linkCommand) getConfigMapAndLinkMode(configFile string) (map[string]str
 			switch linkModeStr {
 			case DESTINATION:
 				linkMode = Destination
-				linkModeStr = DESTINATION
 			case SOURCE:
 				linkMode = Source
-				linkModeStr = SOURCE
 			case BIDIRECTIONAL:
 				linkMode = Bidirectional
-				linkModeStr = BIDIRECTIONAL
 			default:
 				return nil, &linkModeMetadata{linkMode, linkModeStr}, unrecognizedLinkModeErr(linkModeStr)
 			}
@@ -265,11 +266,11 @@ func (c *linkCommand) getConfigMapAndLinkMode(configFile string) (map[string]str
 }
 
 func unrecognizedLinkModeErr(linkModeStr string) error {
-	return errors.Errorf(`unrecognized link.mode "%s". Use %s, %s or %s.`, linkModeStr, DESTINATION, SOURCE, BIDIRECTIONAL)
+	return errors.Errorf(`unrecognized link.mode "%s". Use %s, %s, or %s.`, linkModeStr, DESTINATION, SOURCE, BIDIRECTIONAL)
 }
 
 func (c *linkCommand) addSecurityConfigToMap(cmd *cobra.Command, linkModeMetadata *linkModeMetadata, configMap map[string]string) error {
-	switch linkModeMetadata.linkMode {
+	switch linkModeMetadata.mode {
 	case Destination:
 		return c.addDestInitiatedLinkSecurityConfigToMap(cmd, configMap)
 	case Source:
@@ -277,7 +278,7 @@ func (c *linkCommand) addSecurityConfigToMap(cmd *cobra.Command, linkModeMetadat
 	case Bidirectional:
 		return c.addBidirectionalLinkSecurityConfigToMap(cmd, configMap)
 	default:
-		return unrecognizedLinkModeErr(linkModeMetadata.linkModeStr)
+		return unrecognizedLinkModeErr(linkModeMetadata.name)
 	}
 }
 
@@ -368,7 +369,7 @@ func (c *linkCommand) addSourceInitiatedLinkSecurityConfigToMap(cmd *cobra.Comma
 }
 
 func (c *linkCommand) getRemoteClusterMetadata(cmd *cobra.Command, linkModeMetadata *linkModeMetadata) (string, string, error) {
-	switch linkModeMetadata.linkMode {
+	switch linkModeMetadata.mode {
 	case Destination:
 		// For links at destination cluster, look for the source bootstrap servers and cluster ID.
 		bootstrapServer, err := cmd.Flags().GetString(sourceBootstrapServerFlagName)
@@ -402,11 +403,11 @@ func (c *linkCommand) getRemoteClusterMetadata(cmd *cobra.Command, linkModeMetad
 		}
 		return remoteClusterId, bootstrapServer, nil
 	default:
-		return "", "", unrecognizedLinkModeErr(linkModeMetadata.linkModeStr)
+		return "", "", unrecognizedLinkModeErr(linkModeMetadata.name)
 	}
 }
 
 type linkModeMetadata struct {
-	linkMode    linkMode
-	linkModeStr string
+	mode linkMode
+	name string
 }
