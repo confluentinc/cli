@@ -1,6 +1,5 @@
-Statement name: test-statement
 Statement successfully submitted.
 Waiting for statement to be ready. Statement phase is PENDING.
-Statement phase is COMPLETED.
-status detail message.
+Statement phase is RUNNING. Press return to detach.
+Error: user detached
 
