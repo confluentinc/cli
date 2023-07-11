@@ -15,13 +15,14 @@ import (
 
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/serdes"
 )
 
-func newProduceCommand(prerunner pcmd.PreRunner, clientId string) *cobra.Command {
+func newProduceCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "produce <topic>",
 		Short:       "Produce messages to a Kafka topic.",
@@ -32,8 +33,7 @@ func newProduceCommand(prerunner pcmd.PreRunner, clientId string) *cobra.Command
 
 	c := &hasAPIKeyTopicCommand{
 		HasAPIKeyCLICommand: pcmd.NewHasAPIKeyCLICommand(cmd, prerunner),
-		prerunner:           prerunner,
-		clientID:            clientId,
+		clientID:            cfg.Version.ClientID,
 	}
 	cmd.RunE = c.produce
 

@@ -19,36 +19,31 @@ const numPartitionsKey = "num.partitions"
 
 type hasAPIKeyTopicCommand struct {
 	*pcmd.HasAPIKeyCLICommand
-	prerunner pcmd.PreRunner
-	clientID  string
+	clientID string
 }
 
 type authenticatedTopicCommand struct {
 	*pcmd.AuthenticatedCLICommand
-	prerunner pcmd.PreRunner
-	clientID  string
+	clientID string
 }
 
-func newTopicCommand(cfg *v1.Config, prerunner pcmd.PreRunner, clientID string) *cobra.Command {
+func newTopicCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "topic",
 		Short: "Manage Kafka topics.",
 	}
 
-	c := &authenticatedTopicCommand{
-		prerunner: prerunner,
-		clientID:  clientID,
-	}
+	c := &authenticatedTopicCommand{clientID: cfg.Version.ClientID}
 
 	if cfg.IsCloudLogin() {
 		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedCLICommand(cmd, prerunner)
 
-		cmd.AddCommand(newConsumeCommand(prerunner, clientID))
+		cmd.AddCommand(newConsumeCommand(cfg, prerunner))
 		cmd.AddCommand(c.newCreateCommand())
 		cmd.AddCommand(c.newDeleteCommand())
 		cmd.AddCommand(c.newDescribeCommand())
 		cmd.AddCommand(c.newListCommand())
-		cmd.AddCommand(newProduceCommand(prerunner, clientID))
+		cmd.AddCommand(newProduceCommand(cfg, prerunner))
 		cmd.AddCommand(c.newUpdateCommand())
 	} else {
 		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)

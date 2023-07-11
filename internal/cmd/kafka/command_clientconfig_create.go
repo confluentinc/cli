@@ -86,7 +86,7 @@ var (
 	re = regexp.MustCompile(fmt.Sprintf("%s|%s|%s", srEndpointProperty, srCredentialsSourceProperty, srUserInfoProperty))
 )
 
-func (c *clientConfigCommand) newCreateCommand(prerunner pcmd.PreRunner, clientId string) *cobra.Command {
+func (c *clientConfigCommand) newCreateCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "create",
 		Short:       "Create a Kafka client configuration file.",
@@ -95,7 +95,7 @@ func (c *clientConfigCommand) newCreateCommand(prerunner pcmd.PreRunner, clientI
 
 	cc := &createCommand{
 		HasAPIKeyCLICommand: pcmd.NewHasAPIKeyCLICommand(cmd, prerunner),
-		clientId:            clientId,
+		clientId:            cfg.Version.ClientID,
 	}
 
 	for _, language := range clientConfigurations {

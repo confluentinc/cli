@@ -728,8 +728,8 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(*cobra.Command, []
 			if err != nil {
 				return err
 			}
-			v2Client := command.Config.GetCloudClientV2(unsafeTrace)
 
+			v2Client := command.Config.GetCloudClientV2(unsafeTrace)
 			ctx.V2Client = v2Client
 			command.Config.V2Client = v2Client
 
