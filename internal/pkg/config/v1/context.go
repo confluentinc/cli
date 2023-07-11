@@ -144,6 +144,13 @@ func (c *Context) IsCloud(isTest bool) bool {
 	return false
 }
 
+func (c *Context) GetCredentialType() CredentialType {
+	if c != nil && c.Credential != nil {
+		return c.Credential.CredentialType
+	}
+	return None
+}
+
 func (c *Context) GetPlatform() *Platform {
 	if c != nil {
 		return c.Platform
