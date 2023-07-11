@@ -30,15 +30,13 @@ const (
 )
 
 func (c *command) newInstallCommand() *cobra.Command {
-	cmd := &cobra.Command{
+	return &cobra.Command{
 		Use:   "install",
 		Short: "Install official Confluent CLI plugins.",
 		Long:  "Install official Confluent CLI plugins from the confluentinc/cli-plugins repository.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.install,
 	}
-
-	return cmd
 }
 
 func (c *command) install(cmd *cobra.Command, args []string) error {
