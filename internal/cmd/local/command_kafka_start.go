@@ -196,7 +196,11 @@ func getContainerEnvironmentWithPorts(ports *v1.LocalPorts) []string {
 }
 
 func checkMachineArch() error {
-	cmd := exec.Command("uname", "-m")
+	if runtime.GOOS == "windows" {
+		return nil
+	}
+
+	cmd := exec.Command("uname", "-m") // outputs system architecture info
 	output, err := cmd.Output()
 	if err != nil {
 		return err
@@ -205,9 +209,8 @@ func checkMachineArch() error {
 	if systemArch == "x86_64" {
 		systemArch = "amd64"
 	}
-	fmt.Println(systemArch, runtime.GOARCH)
 	if systemArch != runtime.GOARCH {
-		return errors.New(fmt.Sprintf("Running %s Confluent CLI on a %s machine. Please download the correct version.", runtime.GOARCH, systemArch))
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(`Binary architecture "%s" does not match system architecture "%s"`, runtime.GOARCH, systemArch), "Download the correct version of CLI to continue.")
 	}
 	return nil
 }
