@@ -167,6 +167,7 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 	for {
 		select {
 		case <-ctx.Done():
+			s.DeleteStatement(statementName)
 			return nil, &types.StatementError{Message: "result retrieval aborted. Statement will be deleted", HttpResponseCode: 499}
 		default:
 			start := time.Now()
@@ -237,16 +238,11 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 
 func (s *Store) getStatusDetail(statementObj flinkgatewayv1alpha1.SqlV1alpha1Statement) string {
 	status := statementObj.GetStatus()
-	phase := types.PHASE(status.GetPhase())
-	if phase != types.FAILED && phase != types.FAILING {
-		return status.GetDetail()
-	}
-
 	if status.GetDetail() != "" {
 		return status.GetDetail()
 	}
 
-	// if the statement is in FAILED or FAILING phase and the status detail field is empty we show the latest exception instead
+	// if the status detail field is empty, we check if there's an exception instead
 	exceptionsResponse, err := s.authenticatedGatewayClient().GetExceptions(s.appOptions.GetEnvironmentId(), statementObj.Spec.GetStatementName(), s.appOptions.GetOrgResourceId())
 	if err != nil {
 		return ""
@@ -294,4 +290,44 @@ func getDefaultProperties(appOptions *types.ApplicationOptions) map[string]strin
 	}
 
 	return properties
+}
+
+func (s *Store) WaitForTerminalStatementState(ctx context.Context, statement types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError) {
+	var capturedErrors []string
+	capturedErrorsLimit := 5
+	for !statement.IsTerminalState() {
+		select {
+		case <-ctx.Done():
+			return nil, &types.StatementError{Message: "detached from statement", HttpResponseCode: 499}
+		default:
+			statementObj, err := s.authenticatedGatewayClient().GetStatement(s.appOptions.GetEnvironmentId(), statement.StatementName, s.appOptions.GetOrgResourceId())
+			statusDetail := s.getStatusDetail(statementObj)
+			if err != nil {
+				return nil, &types.StatementError{
+					Message:        err.Error(),
+					FailureMessage: statusDetail,
+				}
+			}
+
+			statement.Status = types.PHASE(statementObj.Status.GetPhase())
+			statement.StatusDetail = statusDetail
+
+			// if status.detail is filled we encountered a retryable server response
+			if statusDetail != "" {
+				capturedErrors = append(capturedErrors, statusDetail)
+			}
+
+			if len(capturedErrors) > capturedErrorsLimit {
+				return nil, &types.StatementError{
+					Message: fmt.Sprintf("the server can't process this statement right now, exiting after %d retries",
+						len(capturedErrors)),
+					FailureMessage: fmt.Sprintf("captured retryable errors: %s", strings.Join(capturedErrors, "; ")),
+				}
+			}
+
+			time.Sleep(1 * time.Second)
+		}
+	}
+
+	return &statement, nil
 }
