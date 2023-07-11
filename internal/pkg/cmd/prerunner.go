@@ -167,6 +167,10 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(*cobra.Com
 			return err
 		}
 
+		if command.Config.Context().GetCredentialType() == v1.APIKey {
+			return ErrIfMissingRunRequirement(cmd, r.Config)
+		}
+
 		if err := r.Config.DecryptContextStates(); err != nil {
 			return err
 		}
