@@ -80,7 +80,22 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 
 	resourceId := c.Context.GetOrganization().GetResourceId()
 
-	// Compute pool can be set as a flag or as default in the context
+	environmentId, err := cmd.Flags().GetString("environment")
+	if err != nil {
+		return err
+	}
+	if environmentId == "" {
+		if c.Context.GetCurrentEnvironment() == "" {
+			return errors.NewErrorWithSuggestions("no environment provided", "Provide an environment with `confluent environment use env-123456` or `--environment`.")
+		}
+		environmentId = c.Context.GetCurrentEnvironment()
+	}
+
+	environment, err := c.V2Client.GetOrgEnvironment(environmentId)
+	if err != nil {
+		return errors.NewErrorWithSuggestions(err.Error(), "List available environments with `confluent environment list`.")
+	}
+
 	computePool, err := cmd.Flags().GetString("compute-pool")
 	if err != nil {
 		return err
@@ -113,11 +128,6 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		}
 	}
 
-	environmentId, err := c.Context.EnvironmentId()
-	if err != nil {
-		return err
-	}
-
 	unsafeTrace, err := c.Command.Flags().GetBool("unsafe-trace")
 	if err != nil {
 		return err
@@ -132,19 +142,21 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 
 	verbose, _ := cmd.Flags().GetCount("verbose")
 
+	// use name of environment and not id
 	client.StartApp(
 		flinkGatewayClient,
 		c.authenticated(prerunner.Authenticated(c.AuthenticatedCLICommand), cmd, jwtValidator),
 		types.ApplicationOptions{
-			Context:        c.Context,
-			UnsafeTrace:    unsafeTrace,
-			UserAgent:      c.Version.UserAgent,
-			EnvironmentId:  environmentId,
-			OrgResourceId:  resourceId,
-			KafkaClusterId: cluster,
-			ComputePoolId:  computePool,
-			IdentityPoolId: identityPool,
-			Verbose:        verbose > 0,
+			Context:         c.Context,
+			UnsafeTrace:     unsafeTrace,
+			UserAgent:       c.Version.UserAgent,
+			EnvironmentName: environment.GetDisplayName(),
+			EnvironmentId:   environmentId,
+			OrgResourceId:   resourceId,
+			KafkaClusterId:  cluster,
+			ComputePoolId:   computePool,
+			IdentityPoolId:  identityPool,
+			Verbose:         verbose > 0,
 		})
 	return nil
 }

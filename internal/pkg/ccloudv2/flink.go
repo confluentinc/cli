@@ -6,6 +6,7 @@ import (
 	flinkv2 "github.com/confluentinc/ccloud-sdk-go-v2/flink/v2"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func newFlinkClient(url, userAgent string, unsafeTrace bool) *flinkv2.APIClient {
@@ -29,12 +30,12 @@ func (c *Client) CreateFlinkComputePool(computePool flinkv2.FcpmV2ComputePool) (
 
 func (c *Client) DeleteFlinkComputePool(id, environment string) error {
 	httpResp, err := c.FlinkClient.ComputePoolsFcpmV2Api.DeleteFcpmV2ComputePool(c.flinkApiContext(), id).Environment(environment).Execute()
-	return errors.CatchCCloudV2ResourceNotFoundError(err, environment, httpResp)
+	return errors.CatchCCloudV2ResourceNotFoundError(err, resource.FlinkComputePool, httpResp)
 }
 
 func (c *Client) DescribeFlinkComputePool(id, environment string) (flinkv2.FcpmV2ComputePool, error) {
 	res, httpResp, err := c.FlinkClient.ComputePoolsFcpmV2Api.GetFcpmV2ComputePool(c.flinkApiContext(), id).Environment(environment).Execute()
-	return res, errors.CatchCCloudV2ResourceNotFoundError(err, environment, httpResp)
+	return res, errors.CatchCCloudV2ResourceNotFoundError(err, resource.FlinkComputePool, httpResp)
 }
 
 func (c *Client) ListFlinkComputePools(environment, specRegion string) ([]flinkv2.FcpmV2ComputePool, error) {
@@ -43,7 +44,7 @@ func (c *Client) ListFlinkComputePools(environment, specRegion string) ([]flinkv
 		req = req.SpecRegion(specRegion)
 	}
 	res, httpResp, err := req.Execute()
-	return res.GetData(), errors.CatchCCloudV2ResourceNotFoundError(err, environment, httpResp)
+	return res.GetData(), errors.CatchCCloudV2ResourceNotFoundError(err, resource.FlinkComputePool, httpResp)
 }
 
 func (c *Client) ListFlinkRegions(cloud string) ([]flinkv2.FcpmV2Region, error) {
