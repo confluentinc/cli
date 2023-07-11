@@ -18,8 +18,6 @@ func (c *command) newUpdateCommand() *cobra.Command {
 }
 
 func (c *command) update(cmd *cobra.Command, _ []string) error {
-	prompt := form.NewPrompt()
-
 	output.Println("Edit credit card")
 
 	f := form.New(
@@ -29,7 +27,7 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 		form.Field{ID: "name", Prompt: "Cardholder name"},
 	)
 
-	if err := f.Prompt(prompt); err != nil {
+	if err := f.Prompt(form.NewPrompt()); err != nil {
 		return err
 	}
 
