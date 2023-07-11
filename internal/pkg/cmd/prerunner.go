@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -610,7 +609,7 @@ func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) fun
 					form.Field{ID: "username", Prompt: "Username"},
 					form.Field{ID: "password", Prompt: "Password", IsHidden: true},
 				)
-				if err := f.Prompt(form.NewPrompt(os.Stdin)); err != nil {
+				if err := f.Prompt(form.NewPrompt()); err != nil {
 					return nil, err
 				}
 				restContext = context.WithValue(context.Background(), kafkarestv3.ContextBasicAuth, kafkarestv3.BasicAuth{UserName: f.Responses["username"].(string), Password: f.Responses["password"].(string)})
@@ -759,7 +758,7 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(*cobra.Command, []
 				}
 			}
 		default:
-			panic("Invalid Credential Type")
+			return errors.New("invalid credential type")
 		}
 
 		hasAPIKey, err := ctx.HasAPIKey(clusterId)

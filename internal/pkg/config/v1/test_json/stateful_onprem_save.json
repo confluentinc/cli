@@ -14,7 +14,6 @@
     "api-key-abc-key-123": {
       "name": "api-key-abc-key-123",
       "username": "",
-      "password": "",
       "api_key_pair": {
         "api_key": "abc-key-123",
         "api_secret": "API_SECRET_PLACEHOLDER",
@@ -26,7 +25,6 @@
     "username-test-user": {
       "name": "username-test-user",
       "username": "test-user",
-      "password": "",
       "api_key_pair": null,
       "credential_type": 0
     }
