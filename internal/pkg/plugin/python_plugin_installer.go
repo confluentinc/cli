@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/go-version"
 
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/exec"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -16,7 +17,7 @@ type PythonPluginInstaller struct {
 	InstallDir    string
 }
 
-func (p *PythonPluginInstaller) CheckVersion(ver *version.Version) {
+func (p *PythonPluginInstaller) CheckVersion(ver *version.Version) error {
 	versionCmd := exec.NewCommand("python", "--version")
 	version3Cmd := exec.NewCommand("python3", "--version")
 
@@ -32,7 +33,7 @@ func (p *PythonPluginInstaller) CheckVersion(ver *version.Version) {
 	}
 	if err != nil {
 		output.ErrPrintf(programNotFoundMsg, "python")
-		return
+		return nil
 	}
 
 	re := regexp.MustCompile(`^[1-9][0-9]*\.[0-9]+\.(0|[1-9][0-9]*)$`)
@@ -41,14 +42,15 @@ func (p *PythonPluginInstaller) CheckVersion(ver *version.Version) {
 			installedVer, err := version.NewVersion(strings.Trim(word, " \n"))
 			if err != nil {
 				output.ErrPrintf(unableToParseVersionMsg, "python")
-				return
+				return nil
 			}
 			if installedVer.LessThan(ver) {
-				output.ErrPrintf(insufficientVersionMsg, "python", installedVer, ver)
-				return
+				return errors.Errorf(insufficientVersionMsg, "python", installedVer, ver)
 			}
 		}
 	}
+
+	return nil
 }
 
 func (p *PythonPluginInstaller) Install() error {

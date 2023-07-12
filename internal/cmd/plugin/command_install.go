@@ -111,7 +111,9 @@ func installPlugin(manifest *Manifest, repositoryDir, installDir string) error {
 		return errors.Errorf("installation of plugins using %s is not yet supported", language)
 	}
 
-	pluginInstaller.CheckVersion(ver)
+	if err := pluginInstaller.CheckVersion(ver); err != nil {
+		return err
+	}
 	return pluginInstaller.Install()
 }
 

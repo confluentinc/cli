@@ -10,7 +10,9 @@ type ShellPluginInstaller struct {
 	InstallDir    string
 }
 
-func (s *ShellPluginInstaller) CheckVersion(_ *version.Version) {}
+func (s *ShellPluginInstaller) CheckVersion(_ *version.Version) error {
+	return nil
+}
 
 func (s *ShellPluginInstaller) Install() error {
 	return installSimplePlugin(s.Name, s.RepositoryDir, s.InstallDir, "shell")

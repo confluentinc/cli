@@ -16,13 +16,13 @@ type GoPluginInstaller struct {
 	Name string
 }
 
-func (g *GoPluginInstaller) CheckVersion(ver *version.Version) {
+func (g *GoPluginInstaller) CheckVersion(ver *version.Version) error {
 	versionCmd := exec.NewCommand("go", "version")
 
 	out, err := versionCmd.Output()
 	if err != nil {
 		output.ErrPrintf(programNotFoundMsg, "go")
-		return
+		return nil
 	}
 
 	re := regexp.MustCompile(`^go[1-9][0-9]*\.[0-9]+(\.[1-9][0-9]*)?$`)
@@ -31,14 +31,15 @@ func (g *GoPluginInstaller) CheckVersion(ver *version.Version) {
 			installedVer, err := version.NewVersion(strings.TrimPrefix(word, "go"))
 			if err != nil {
 				output.ErrPrintf(unableToParseVersionMsg, "go")
-				return
+				return nil
 			}
 			if installedVer.LessThan(ver) {
-				output.ErrPrintf(insufficientVersionMsg, "go", installedVer, ver)
-				return
+				return errors.Errorf(insufficientVersionMsg, "go", installedVer, ver)
 			}
 		}
 	}
+
+	return nil
 }
 
 func (g *GoPluginInstaller) Install() error {
