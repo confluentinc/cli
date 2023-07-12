@@ -267,6 +267,10 @@ func convertRootSchema(root *srsdk.SchemaString, id int32) *srsdk.Schema {
 		return nil
 	}
 
+	if root.SchemaType == "" {
+		root.SchemaType = "AVRO"
+	}
+
 	return &srsdk.Schema{
 		Id:         id,
 		SchemaType: root.SchemaType,
