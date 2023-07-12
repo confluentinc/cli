@@ -43,10 +43,7 @@ func (c *identityPoolCommand) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	deleteFunc := func(id string) error {
-		if err := c.V2Client.DeleteIdentityPool(id, provider); err != nil {
-			return err
-		}
-		return nil
+		return c.V2Client.DeleteIdentityPool(id, provider)
 	}
 
 	deleted, err := resource.Delete(args, deleteFunc, nil)
