@@ -103,7 +103,7 @@ func getPluginManifests(dir string) ([]*ManifestOut, error) {
 			manifestOut := ManifestOut{
 				Name:         file.Name(),
 				Description:  manifest.Description,
-				Dependencies: dependenciesToString(manifest.Dependencies),
+				Dependencies: strings.Join(dependenciesToStrings(manifest.Dependencies), ", "),
 			}
 			manifestOutList = append(manifestOutList, &manifestOut)
 		}
@@ -112,17 +112,18 @@ func getPluginManifests(dir string) ([]*ManifestOut, error) {
 	return manifestOutList, nil
 }
 
-func dependenciesToString(dependencies []Dependency) string {
-	var dependencyString string
+func dependenciesToStrings(dependencies []Dependency) []string {
+	var dependencyStrings []string
 	for _, dependency := range dependencies {
-		if dependency.Dependency != "" {
-			dependencyString = fmt.Sprintf("%s %s", dependencyString, dependency.Dependency)
-			if dependency.Version != "" {
-				dependencyString = fmt.Sprintf("%s %s", dependencyString, dependency.Version)
-			}
-			dependencyString = fmt.Sprintf("%s,", dependencyString)
+		if dependency.Dependency == "" {
+			continue
 		}
+		dependencyString := dependency.Dependency
+		if dependency.Version != "" {
+			dependencyString = fmt.Sprintf("%s %s", dependencyString, dependency.Version)
+		}
+		dependencyStrings = append(dependencyStrings, dependencyString)
 	}
 
-	return strings.Trim(dependencyString, ", ")
+	return dependencyStrings
 }
