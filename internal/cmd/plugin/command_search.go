@@ -28,7 +28,7 @@ type Manifest struct {
 }
 
 type Dependency struct {
-	Name    string `yaml:"dependency"`
+	Name    string `yaml:"name"`
 	Version string `yaml:"version"`
 }
 
