@@ -18,8 +18,18 @@ type PythonPluginInstaller struct {
 
 func (p *PythonPluginInstaller) CheckVersion(ver *version.Version) {
 	versionCmd := exec.NewCommand("python", "--version")
+	version3Cmd := exec.NewCommand("python3", "--version")
 
-	out, err := versionCmd.Output()
+	v3, _ := version.NewVersion("3.0.0")
+
+	var out []byte
+	var err error
+	if ver.GreaterThanOrEqual(v3) {
+		out, err = version3Cmd.Output()
+	}
+	if err != nil || ver.LessThan(v3) {
+		out, err = versionCmd.Output()
+	}
 	if err != nil {
 		output.ErrPrintf(programNotFoundMsg, "python")
 		return
