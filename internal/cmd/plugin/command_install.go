@@ -14,6 +14,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/exec"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/plugin"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -185,22 +186,22 @@ func checkGoVersion(ver *version.Version) {
 
 func installSimplePlugin(name, repositoryDir, installDir, language string) error {
 	pluginDir := fmt.Sprintf("%s/%s", repositoryDir, name)
-	files, err := os.ReadDir(pluginDir)
+	entries, err := os.ReadDir(pluginDir)
 	if err != nil {
 		return err
 	}
 
 	found := false
-	for _, file := range files {
-		if strings.HasPrefix(file.Name(), "confluent-") {
+	for _, entry := range entries {
+		if name := plugin.PluginFromEntry(entry); name != "" {
 			found = true
 
-			fileData, err := os.ReadFile(fmt.Sprintf("%s/%s", pluginDir, file.Name()))
+			fileData, err := os.ReadFile(fmt.Sprintf("%s/%s", pluginDir, entry.Name()))
 			if err != nil {
 				return err
 			}
 
-			if err := os.WriteFile(fmt.Sprintf("%s/%s", installDir, file.Name()), fileData, 0755); err != nil {
+			if err := os.WriteFile(fmt.Sprintf("%s/%s", installDir, entry.Name()), fileData, 0755); err != nil {
 				return err
 			}
 		}
