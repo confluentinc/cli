@@ -233,27 +233,35 @@ func (t *TableView) JumpDown() {
 }
 
 func (t *TableView) getTableShortcuts(statementResults *types.MaterializedStatementResults, isAutoRefreshRunning bool, fetchState types.FetchState) []types.Shortcut {
-	mode := "Show table"
+	toggleTableModeText := "Show table"
 	if statementResults.IsTableMode() {
-		mode = "Show changelog"
+		toggleTableModeText = "Show changelog"
 	}
 
 	if fetchState == types.Completed {
-		return []types.Shortcut{
-			{KeyText: ExitTableViewShortcut, Text: "Quit"},
-			{KeyText: ToggleTableModeShortcut, Text: mode},
-			{KeyText: fmt.Sprintf("%s/%s", JumpUpShortcut, JumpDownShortcut), Text: "Jump up/down"},
-		}
+		return t.getTableShortcutsForCompletedFetchState(toggleTableModeText)
 	}
 
-	playPause := "Play"
+	toggleAutoRefreshText := "Play"
 	if isAutoRefreshRunning {
-		playPause = "Pause"
+		toggleAutoRefreshText = "Pause"
 	}
+	return t.getTableShortcutsForNonCompletedFetchState(toggleTableModeText, toggleAutoRefreshText)
+}
+
+func (t *TableView) getTableShortcutsForCompletedFetchState(toggleTableModeText string) []types.Shortcut {
 	return []types.Shortcut{
 		{KeyText: ExitTableViewShortcut, Text: "Quit"},
-		{KeyText: ToggleTableModeShortcut, Text: mode},
-		{KeyText: ToggleAutoRefreshShortcut, Text: playPause},
+		{KeyText: ToggleTableModeShortcut, Text: toggleTableModeText},
+		{KeyText: fmt.Sprintf("%s/%s", JumpUpShortcut, JumpDownShortcut), Text: "Jump up/down"},
+	}
+}
+
+func (t *TableView) getTableShortcutsForNonCompletedFetchState(toggleTableModeText, toggleAutoRefreshText string) []types.Shortcut {
+	return []types.Shortcut{
+		{KeyText: ExitTableViewShortcut, Text: "Quit"},
+		{KeyText: ToggleTableModeShortcut, Text: toggleTableModeText},
+		{KeyText: ToggleAutoRefreshShortcut, Text: toggleAutoRefreshText},
 		{KeyText: fmt.Sprintf("%s/%s", JumpUpShortcut, JumpDownShortcut), Text: "Jump up/down"},
 	}
 }
