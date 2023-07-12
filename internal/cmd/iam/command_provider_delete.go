@@ -35,10 +35,7 @@ func (c *identityProviderCommand) delete(cmd *cobra.Command, args []string) erro
 	}
 
 	deleteFunc := func(id string) error {
-		if err := c.V2Client.DeleteIdentityProvider(id); err != nil {
-			return err
-		}
-		return nil
+		return c.V2Client.DeleteIdentityProvider(id)
 	}
 
 	deleted, err := resource.Delete(args, deleteFunc, nil)
