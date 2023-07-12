@@ -9,7 +9,6 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/exec"
-	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 type GoPluginInstaller struct {
@@ -21,8 +20,7 @@ func (g *GoPluginInstaller) CheckVersion(ver *version.Version) error {
 
 	out, err := versionCmd.Output()
 	if err != nil {
-		output.ErrPrintf(programNotFoundMsg, "go")
-		return nil
+		return errors.Errorf(programNotFoundErrorMsg, "go")
 	}
 
 	re := regexp.MustCompile(`^go[1-9][0-9]*\.[0-9]+(\.[1-9][0-9]*)?$`)
@@ -30,11 +28,10 @@ func (g *GoPluginInstaller) CheckVersion(ver *version.Version) error {
 		if re.MatchString(word) {
 			installedVer, err := version.NewVersion(strings.TrimPrefix(word, "go"))
 			if err != nil {
-				output.ErrPrintf(unableToParseVersionMsg, "go")
-				return nil
+				return errors.Errorf(unableToParseVersionErrorMsg, "go")
 			}
 			if installedVer.LessThan(ver) {
-				return errors.Errorf(insufficientVersionMsg, "go", installedVer, ver)
+				return errors.Errorf(insufficientVersionErrorMsg, "go", installedVer, ver)
 			}
 		}
 	}

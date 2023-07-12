@@ -8,7 +8,6 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/exec"
-	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 type PythonPluginInstaller struct {
@@ -32,8 +31,7 @@ func (p *PythonPluginInstaller) CheckVersion(ver *version.Version) error {
 		out, err = versionCmd.Output()
 	}
 	if err != nil {
-		output.ErrPrintf(programNotFoundMsg, "python")
-		return nil
+		return errors.Errorf(programNotFoundErrorMsg, "python")
 	}
 
 	re := regexp.MustCompile(`^[1-9][0-9]*\.[0-9]+\.(0|[1-9][0-9]*)$`)
@@ -41,11 +39,10 @@ func (p *PythonPluginInstaller) CheckVersion(ver *version.Version) error {
 		if re.MatchString(word) {
 			installedVer, err := version.NewVersion(strings.Trim(word, " \n"))
 			if err != nil {
-				output.ErrPrintf(unableToParseVersionMsg, "python")
-				return nil
+				return errors.Errorf(unableToParseVersionErrorMsg, "python")
 			}
 			if installedVer.LessThan(ver) {
-				return errors.Errorf(insufficientVersionMsg, "python", installedVer, ver)
+				return errors.Errorf(insufficientVersionErrorMsg, "python", installedVer, ver)
 			}
 		}
 	}

@@ -10,9 +10,9 @@ import (
 )
 
 const (
-	programNotFoundMsg      = "[WARN] Unable to find %s. Check that it is installed in a directory in your $PATH.\n"
-	unableToParseVersionMsg = "[WARN] Unable to parse %s version.\n"
-	insufficientVersionMsg  = "installed %s version %s is less than the required version %s"
+	programNotFoundErrorMsg      = "unable to find %s; check that it is installed in a directory in your $PATH"
+	unableToParseVersionErrorMsg = "unable to parse %s version"
+	insufficientVersionErrorMsg  = "installed %s version %s is less than the required version %s"
 )
 
 type PluginInstaller interface {
