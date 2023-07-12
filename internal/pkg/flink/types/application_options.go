@@ -11,7 +11,7 @@ type ApplicationOptions struct {
 	EnvironmentId     string
 	EnvironmentName   string
 	OrgResourceId     string
-	KafkaClusterId    string
+	Database          string
 	ComputePoolId     string
 	IdentityPoolId    string
 	Verbose           bool
@@ -60,9 +60,9 @@ func (a *ApplicationOptions) GetOrgResourceId() string {
 	return ""
 }
 
-func (a *ApplicationOptions) GetKafkaClusterId() string {
+func (a *ApplicationOptions) GetDatabase() string {
 	if a != nil {
-		return a.KafkaClusterId
+		return a.Database
 	}
 	return ""
 }

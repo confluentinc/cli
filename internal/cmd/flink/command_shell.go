@@ -23,8 +23,8 @@ func (c *command) newShellCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cob
 
 	c.addComputePoolFlag(cmd)
 	cmd.Flags().String("identity-pool", "", "Identity pool ID.")
-	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	cmd.Flags().String("database", "", "The database which will be used as default database. When using Kafka, this is the cluster display name.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 	if cfg.IsTest {
@@ -118,13 +118,13 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		identityPool = c.Context.GetCurrentIdentityPool()
 	}
 
-	cluster, err := cmd.Flags().GetString("cluster")
+	database, err := cmd.Flags().GetString("database")
 	if err != nil {
 		return err
 	}
-	if cluster == "" {
-		if c.Context.KafkaClusterContext.GetActiveKafkaClusterId() != "" {
-			cluster = c.Context.KafkaClusterContext.GetActiveKafkaClusterId()
+	if database == "" {
+		if c.Context.KafkaClusterContext.GetActiveKafkaClusterConfig().GetName() != "" {
+			database = c.Context.KafkaClusterContext.GetActiveKafkaClusterConfig().GetName()
 		}
 	}
 
@@ -152,7 +152,7 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 			EnvironmentName: environment.GetDisplayName(),
 			EnvironmentId:   environmentId,
 			OrgResourceId:   resourceId,
-			KafkaClusterId:  cluster,
+			Database:        database,
 			ComputePoolId:   computePool,
 			IdentityPoolId:  identityPool,
 			Verbose:         verbose > 0,

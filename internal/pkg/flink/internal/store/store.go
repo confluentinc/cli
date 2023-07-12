@@ -274,7 +274,7 @@ func NewStore(client ccloudv2.GatewayClientInterface, exitApplication func(), ap
 func (s *Store) propsDefault(propsWithoutDefault map[string]string) map[string]string {
 	properties := map[string]string{
 		config.ConfigKeyCatalog:       s.appOptions.GetEnvironmentName(),
-		config.ConfigKeyDatabase:      s.appOptions.GetKafkaClusterId(),
+		config.ConfigKeyDatabase:      s.appOptions.GetDatabase(),
 		config.ConfigKeyLocalTimeZone: getLocalTimezone(),
 	}
 
