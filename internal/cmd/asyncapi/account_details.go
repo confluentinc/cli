@@ -75,9 +75,12 @@ func (d *accountDetails) getSchemaDetails() error {
 		return err
 	}
 	d.channelDetails.schema = &schema
+
+	// The backend considers "AVRO" to be the default schema type.
 	if schema.SchemaType == "" {
 		schema.SchemaType = "AVRO"
 	}
+
 	switch schema.SchemaType {
 	case "JSON":
 		d.channelDetails.contentType = "application/json"
