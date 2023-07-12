@@ -32,10 +32,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	deleteFunc := func(id string) error {
-		if err := c.V2Client.DeleteOrgEnvironment(id); err != nil {
-			return err
-		}
-		return nil
+		return c.V2Client.DeleteOrgEnvironment(id)
 	}
 
 	deleted, err := resource.Delete(args, deleteFunc, c.postProcess)
