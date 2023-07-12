@@ -167,6 +167,10 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(*cobra.Com
 			return err
 		}
 
+		if r.Config.Context().GetCredentialType() == v1.APIKey {
+			return ErrIfMissingRunRequirement(cmd, r.Config)
+		}
+
 		if err := r.Config.DecryptContextStates(); err != nil {
 			return err
 		}
@@ -728,8 +732,8 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(*cobra.Command, []
 			if err != nil {
 				return err
 			}
-			v2Client := command.Config.GetCloudClientV2(unsafeTrace)
 
+			v2Client := command.Config.GetCloudClientV2(unsafeTrace)
 			ctx.V2Client = v2Client
 			command.Config.V2Client = v2Client
 
