@@ -35,14 +35,14 @@ func (c *command) newInstallCommand() *cobra.Command {
 
 func (c *command) install(cmd *cobra.Command, args []string) error {
 	confluentDir := filepath.Join(os.Getenv("HOME"), ".confluent")
-	dir, err := os.MkdirTemp(confluentDir, "plugin-install")
+	dir, err := os.MkdirTemp(confluentDir, "cli-plugins")
 	if err != nil {
 		return err
 	}
 	defer os.RemoveAll(dir)
 
 	installDir := filepath.Join(confluentDir, "plugins")
-	if err := os.Mkdir(installDir, os.ModePerm); err != nil {
+	if err := os.MkdirAll(installDir, os.ModePerm); err != nil {
 		return errors.Wrapf(err, "failed to create plugin install directory %s", installDir)
 	}
 
