@@ -129,9 +129,9 @@ func (t *InteractiveOutputController) getActionForShortcut(shortcut string) func
 	case components.ExitTableViewShortcut:
 		return t.exitTViewMode
 	case components.ToggleTableModeShortcut:
-		return t.renderAfterAction(t.resultFetcher.ToggleTableMode)
+		return t.toggleTableMode
 	case components.ToggleAutoRefreshShortcut:
-		return t.renderAfterAction(t.resultFetcher.ToggleAutoRefresh)
+		return t.toggleAutoRefresh
 	case components.JumpUpShortcut:
 		return t.stopAutoRefreshOrScroll(t.tableView.JumpUp)
 	case components.JumpDownShortcut:
@@ -146,16 +146,24 @@ func (t *InteractiveOutputController) exitTViewMode() {
 	output.Println("Result retrieval aborted.")
 }
 
-func (t *InteractiveOutputController) renderAfterAction(action func()) func() {
-	return func() {
-		action()
+func (t *InteractiveOutputController) toggleTableMode() {
+	t.resultFetcher.ToggleTableMode()
+	t.updateTable()
+}
+
+func (t *InteractiveOutputController) toggleAutoRefresh() {
+	if t.resultFetcher.GetFetchState() != types.Completed {
+		t.resultFetcher.ToggleAutoRefresh()
 		t.updateTable()
 	}
 }
 
 func (t *InteractiveOutputController) stopAutoRefreshOrScroll(scroll func()) func() {
 	if t.resultFetcher.IsAutoRefreshRunning() {
-		return t.renderAfterAction(t.resultFetcher.ToggleAutoRefresh)
+		return func() {
+			t.resultFetcher.ToggleAutoRefresh()
+			t.updateTable()
+		}
 	}
 	return scroll
 }

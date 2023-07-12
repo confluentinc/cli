@@ -123,7 +123,7 @@ func (t *TableView) RenderTable(tableTitle string, statementResults *types.Mater
 
 	t.infoBar.SetLastRefreshTimestamp(lastRefreshTimestamp)
 	t.infoBar.SetFetchState(fetchState)
-	t.createTableView(NewShortcuts(t.getTableShortcuts(statementResults, isAutoRefreshRunning)))
+	t.createTableView(NewShortcuts(t.getTableShortcuts(statementResults, isAutoRefreshRunning, fetchState)))
 	t.setTableAndColumnWidths(statementResults)
 
 	t.table.SetTitle(tableTitle)
@@ -232,11 +232,20 @@ func (t *TableView) JumpDown() {
 	t.table.Select(t.getSelectedRowIdx()+t.getNumRowsToScroll(), 0)
 }
 
-func (t *TableView) getTableShortcuts(statementResults *types.MaterializedStatementResults, isAutoRefreshRunning bool) []types.Shortcut {
+func (t *TableView) getTableShortcuts(statementResults *types.MaterializedStatementResults, isAutoRefreshRunning bool, fetchState types.FetchState) []types.Shortcut {
 	mode := "Show table"
 	if statementResults.IsTableMode() {
 		mode = "Show changelog"
 	}
+
+	if fetchState == types.Completed {
+		return []types.Shortcut{
+			{KeyText: ExitTableViewShortcut, Text: "Quit"},
+			{KeyText: ToggleTableModeShortcut, Text: mode},
+			{KeyText: fmt.Sprintf("%s/%s", JumpUpShortcut, JumpDownShortcut), Text: "Jump up/down"},
+		}
+	}
+
 	playPause := "Play"
 	if isAutoRefreshRunning {
 		playPause = "Pause"
