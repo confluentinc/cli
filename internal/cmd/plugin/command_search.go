@@ -113,8 +113,8 @@ func getPluginManifests(dir string) ([]*ManifestOut, error) {
 }
 
 func dependenciesToStrings(dependencies []Dependency) []string {
-	var dependencyStrings []string
-	for _, dependency := range dependencies {
+	dependencyStrings := make([]string, len(dependencies))
+	for i, dependency := range dependencies {
 		if dependency.Name == "" {
 			continue
 		}
@@ -122,7 +122,7 @@ func dependenciesToStrings(dependencies []Dependency) []string {
 		if dependency.Version != "" {
 			dependencyString = fmt.Sprintf("%s %s", dependencyString, dependency.Version)
 		}
-		dependencyStrings = append(dependencyStrings, dependencyString)
+		dependencyStrings[i] = dependencyString
 	}
 
 	return dependencyStrings
