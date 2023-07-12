@@ -51,7 +51,7 @@ func (c *Command) kafkaStop(cmd *cobra.Command, args []string) error {
 			}
 			log.CliLogger.Tracef("Confluent Local container removed")
 
-			output.Printf("Stopped Confluent Local container %v.\n", getShortenedContainerId(container.ID))
+			output.Printf("Confluent Local has been stopped: removed container %v.\n", getShortenedContainerId(container.ID))
 		}
 	}
 
