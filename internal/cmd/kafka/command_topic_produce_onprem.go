@@ -18,7 +18,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/serdes"
 )
 
-func (c *authenticatedTopicCommand) newProduceCommandOnPrem() *cobra.Command {
+func (c *command) newProduceCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "produce <topic>",
 		Args:  cobra.ExactArgs(1),
@@ -60,7 +60,7 @@ func (c *authenticatedTopicCommand) newProduceCommandOnPrem() *cobra.Command {
 	return cmd
 }
 
-func (c *authenticatedTopicCommand) produceOnPrem(cmd *cobra.Command, args []string) error {
+func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
 	if cmd.Flags().Changed("config-file") && cmd.Flags().Changed("config") {
 		return errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "config-file", "config")
 	}
@@ -126,7 +126,7 @@ func (c *authenticatedTopicCommand) produceOnPrem(cmd *cobra.Command, args []str
 		SchemaPath:  &schema,
 		Refs:        refs,
 	}
-	metaInfo, referencePathMap, err := c.registerSchema(cmd, schemaCfg)
+	metaInfo, referencePathMap, err := c.registerSchemaOnPrem(cmd, schemaCfg)
 	if err != nil {
 		return err
 	}
@@ -192,7 +192,7 @@ func prepareSerializer(cmd *cobra.Command, topicName string) (string, string, se
 	return valueFormat, subject, serializationProvider, nil
 }
 
-func (c *authenticatedTopicCommand) registerSchema(cmd *cobra.Command, schemaCfg *sr.RegisterSchemaConfigs) ([]byte, map[string]string, error) {
+func (c *command) registerSchemaOnPrem(cmd *cobra.Command, schemaCfg *sr.RegisterSchemaConfigs) ([]byte, map[string]string, error) {
 	// For plain string encoding, meta info is empty.
 	// Registering schema when specified, and fill metaInfo array.
 	metaInfo := []byte{}
