@@ -60,12 +60,42 @@ func (s *StatementControllerTestSuite) TestExecuteStatementReturnsWaitForStateme
 	require.Equal(s.T(), waitPendingStatementError, err)
 }
 
-func (s *StatementControllerTestSuite) TestExecuteStatement() {
+func (s *StatementControllerTestSuite) TestExecuteStatementReturnsFetchStatementResultsError() {
 	statementToExecute := "select 1;"
 	processedStatement := types.ProcessedStatement{}
+	fetchStatementResultsError := &types.StatementError{Message: "fetch results error"}
 	s.store.EXPECT().ProcessStatement(statementToExecute).Return(&processedStatement, nil)
 	s.consoleParser.EXPECT().Read().Return(nil, nil).AnyTimes()
 	s.store.EXPECT().WaitPendingStatement(gomock.Any(), processedStatement).Return(&processedStatement, nil)
+	s.store.EXPECT().FetchStatementResults(processedStatement).Return(nil, fetchStatementResultsError)
+
+	_, err := s.statementController.ExecuteStatement(statementToExecute)
+
+	require.Equal(s.T(), fetchStatementResultsError, err)
+}
+
+func (s *StatementControllerTestSuite) TestExecuteStatementReturnsWaitForTerminalStateError() {
+	statementToExecute := "select 1;"
+	processedStatement := types.ProcessedStatement{}
+	waitForTerminalStatementStateError := &types.StatementError{Message: "wait for terminal state error"}
+	s.store.EXPECT().ProcessStatement(statementToExecute).Return(&processedStatement, nil)
+	s.consoleParser.EXPECT().Read().Return(nil, nil).AnyTimes()
+	s.store.EXPECT().WaitPendingStatement(gomock.Any(), processedStatement).Return(&processedStatement, nil)
+	s.store.EXPECT().FetchStatementResults(processedStatement).Return(&processedStatement, nil)
+	s.store.EXPECT().WaitForTerminalStatementState(gomock.Any(), processedStatement).Return(nil, waitForTerminalStatementStateError)
+
+	_, err := s.statementController.ExecuteStatement(statementToExecute)
+
+	require.Equal(s.T(), waitForTerminalStatementStateError, err)
+}
+
+func (s *StatementControllerTestSuite) TestExecuteStatement() {
+	statementToExecute := "select 1;"
+	processedStatement := types.ProcessedStatement{Status: types.COMPLETED}
+	s.store.EXPECT().ProcessStatement(statementToExecute).Return(&processedStatement, nil)
+	s.consoleParser.EXPECT().Read().Return(nil, nil).AnyTimes()
+	s.store.EXPECT().WaitPendingStatement(gomock.Any(), processedStatement).Return(&processedStatement, nil)
+	s.store.EXPECT().FetchStatementResults(processedStatement).Return(&processedStatement, nil)
 
 	returnedStatement, err := s.statementController.ExecuteStatement(statementToExecute)
 
@@ -97,7 +127,6 @@ func (s *StatementControllerTestSuite) TestExecuteStatementCancelsAndDeletesStat
 			time.Sleep(1 * time.Second)
 			return nil, waitPendingStatementError
 		})
-	s.store.EXPECT().DeleteStatement(processedStatement.StatementName)
 
 	_, err := s.statementController.ExecuteStatement(statementToExecute)
 
@@ -112,12 +141,101 @@ func (s *StatementControllerTestSuite) TestExecuteStatementPrintsUserInfo() {
 		StatusDetail:  "status detail message",
 		Status:        types.PENDING,
 	}
+	completedStatement := processedStatement
+	completedStatement.Status = types.COMPLETED
 	s.store.EXPECT().ProcessStatement(statementToExecute).Return(&processedStatement, nil)
 	s.consoleParser.EXPECT().Read().Return(nil, nil).AnyTimes()
-	s.store.EXPECT().WaitPendingStatement(gomock.Any(), processedStatement).Return(&processedStatement, nil)
+	s.store.EXPECT().WaitPendingStatement(gomock.Any(), processedStatement).Return(&completedStatement, nil)
+	s.store.EXPECT().FetchStatementResults(completedStatement).Return(&completedStatement, nil)
 
 	stdout := test.RunAndCaptureSTDOUT(s.T(), func() {
 		_, _ = s.statementController.ExecuteStatement(statementToExecute)
+	})
+
+	cupaloy.SnapshotT(s.T(), stdout)
+}
+
+func (s *StatementControllerTestSuite) TestExecuteStatementWaitsForCompletedState() {
+	statementToExecute := "select 1;"
+	processedStatement := types.ProcessedStatement{Status: types.PENDING}
+	runningStatement := types.ProcessedStatement{Status: types.RUNNING}
+	completedStatement := types.ProcessedStatement{Status: types.COMPLETED}
+	s.store.EXPECT().ProcessStatement(statementToExecute).Return(&processedStatement, nil)
+	s.consoleParser.EXPECT().Read().Return(nil, nil).AnyTimes()
+	s.store.EXPECT().WaitPendingStatement(gomock.Any(), processedStatement).Return(&runningStatement, nil)
+	s.store.EXPECT().FetchStatementResults(runningStatement).Return(&runningStatement, nil)
+	s.store.EXPECT().WaitForTerminalStatementState(gomock.Any(), runningStatement).Return(&completedStatement, nil)
+
+	stdout := test.RunAndCaptureSTDOUT(s.T(), func() {
+		returnedStatement, err := s.statementController.ExecuteStatement(statementToExecute)
+		require.Nil(s.T(), err)
+		require.Equal(s.T(), &completedStatement, returnedStatement)
+	})
+
+	cupaloy.SnapshotT(s.T(), stdout)
+}
+
+func (s *StatementControllerTestSuite) TestExecuteStatementWaitsForFailedState() {
+	statementToExecute := "select 1;"
+	processedStatement := types.ProcessedStatement{Status: types.PENDING}
+	runningStatement := types.ProcessedStatement{Status: types.RUNNING}
+	failedStatement := types.ProcessedStatement{Status: types.FAILED}
+	s.store.EXPECT().ProcessStatement(statementToExecute).Return(&processedStatement, nil)
+	s.consoleParser.EXPECT().Read().Return(nil, nil).AnyTimes()
+	s.store.EXPECT().WaitPendingStatement(gomock.Any(), processedStatement).Return(&runningStatement, nil)
+	s.store.EXPECT().FetchStatementResults(runningStatement).Return(&runningStatement, nil)
+	s.store.EXPECT().WaitForTerminalStatementState(gomock.Any(), runningStatement).Return(&failedStatement, nil)
+
+	stdout := test.RunAndCaptureSTDOUT(s.T(), func() {
+		returnedStatement, err := s.statementController.ExecuteStatement(statementToExecute)
+		require.Nil(s.T(), err)
+		require.Equal(s.T(), &failedStatement, returnedStatement)
+	})
+
+	cupaloy.SnapshotT(s.T(), stdout)
+}
+
+func (s *StatementControllerTestSuite) TestExecuteStatementWaitsForNonEmptyPageToken() {
+	statementToExecute := "select 1;"
+	processedStatement := types.ProcessedStatement{Status: types.PENDING}
+	runningStatement := types.ProcessedStatement{Status: types.RUNNING}
+	runningStatementWithNextPage := types.ProcessedStatement{Status: types.RUNNING, PageToken: "not-empty"}
+	s.store.EXPECT().ProcessStatement(statementToExecute).Return(&processedStatement, nil)
+	s.consoleParser.EXPECT().Read().Return(nil, nil).AnyTimes()
+	s.store.EXPECT().WaitPendingStatement(gomock.Any(), processedStatement).Return(&runningStatement, nil)
+	s.store.EXPECT().FetchStatementResults(runningStatement).Return(&runningStatement, nil)
+	s.store.EXPECT().WaitForTerminalStatementState(gomock.Any(), runningStatement).Return(&runningStatementWithNextPage, nil)
+
+	stdout := test.RunAndCaptureSTDOUT(s.T(), func() {
+		returnedStatement, err := s.statementController.ExecuteStatement(statementToExecute)
+		require.Nil(s.T(), err)
+		require.Equal(s.T(), &runningStatementWithNextPage, returnedStatement)
+	})
+
+	cupaloy.SnapshotT(s.T(), stdout)
+}
+
+func (s *StatementControllerTestSuite) TestExecuteStatementReturnsWhenUserDetaches() {
+	statementToExecute := "select 1;"
+	processedStatement := types.ProcessedStatement{Status: types.PENDING}
+	runningStatement := types.ProcessedStatement{Status: types.RUNNING}
+	s.store.EXPECT().ProcessStatement(statementToExecute).Return(&processedStatement, nil)
+	s.consoleParser.EXPECT().Read().Return([]byte{byte(prompt.ControlM)}, nil)
+	s.store.EXPECT().WaitPendingStatement(gomock.Any(), processedStatement).Return(&runningStatement, nil)
+	s.store.EXPECT().FetchStatementResults(runningStatement).Return(&runningStatement, nil)
+	var waitForTerminalStateCtx context.Context
+	s.store.EXPECT().WaitForTerminalStatementState(gomock.Any(), runningStatement).DoAndReturn(
+		func(ctx context.Context, statement types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError) {
+			waitForTerminalStateCtx = ctx
+			time.Sleep(1 * time.Second)
+			return &runningStatement, nil
+		})
+
+	stdout := test.RunAndCaptureSTDOUT(s.T(), func() {
+		returnedStatement, err := s.statementController.ExecuteStatement(statementToExecute)
+		require.Nil(s.T(), err)
+		require.Error(s.T(), waitForTerminalStateCtx.Err())
+		require.Equal(s.T(), &runningStatement, returnedStatement)
 	})
 
 	cupaloy.SnapshotT(s.T(), stdout)
