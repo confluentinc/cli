@@ -42,10 +42,7 @@ func (c *command) statementDelete(cmd *cobra.Command, args []string) error {
 	}
 
 	deleteFunc := func(id string) error {
-		if err := client.DeleteStatement(environmentId, id, c.Context.LastOrgId); err != nil {
-			return err
-		}
-		return nil
+		return client.DeleteStatement(environmentId, id, c.Context.LastOrgId)
 	}
 
 	deleted, err := resource.Delete(args, deleteFunc, nil)
