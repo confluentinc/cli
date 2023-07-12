@@ -53,11 +53,17 @@ func newProduceCommand(prerunner pcmd.PreRunner, clientId string) *cobra.Command
 	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	cmd.Flags().String("environment", "", "Environment ID.")
+
+	// Deprecated
 	pcmd.AddOutputFlag(cmd)
+	cobra.CheckErr(cmd.Flags().MarkHidden("output"))
 
 	cobra.CheckErr(cmd.MarkFlagFilename("schema", "avsc", "json", "proto"))
 	cobra.CheckErr(cmd.MarkFlagFilename("references", "json"))
 	cobra.CheckErr(cmd.MarkFlagFilename("config-file", "avsc", "json"))
+
+	cmd.MarkFlagsMutuallyExclusive("schema", "schema-id")
+	cmd.MarkFlagsMutuallyExclusive("config", "config-file")
 
 	return cmd
 }
@@ -69,17 +75,9 @@ func (c *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	if cmd.Flags().Changed("schema") && cmd.Flags().Changed("schema-id") {
-		return errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "schema", "schema-id")
-	}
-
 	serializationProvider, metaInfo, err := c.initSchemaAndGetInfo(cmd, topic)
 	if err != nil {
 		return err
-	}
-
-	if cmd.Flags().Changed("config-file") && cmd.Flags().Changed("config") {
-		return errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "config-file", "config")
 	}
 
 	configFile, err := cmd.Flags().GetString("config-file")
