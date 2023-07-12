@@ -23,8 +23,8 @@ func TestGetPluginManifest(t *testing.T) {
 		Description: "Does nothing",
 		Dependencies: []Dependency{
 			{
-				Dependency: "Python",
-				Version:    "3",
+				Name:    "Python",
+				Version: "3",
 			},
 		},
 	}

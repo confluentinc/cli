@@ -28,8 +28,8 @@ type Manifest struct {
 }
 
 type Dependency struct {
-	Dependency string `yaml:"dependency"`
-	Version    string `yaml:"version"`
+	Name    string `yaml:"dependency"`
+	Version string `yaml:"version"`
 }
 
 func (c *command) newSearchCommand() *cobra.Command {
@@ -115,10 +115,10 @@ func getPluginManifests(dir string) ([]*ManifestOut, error) {
 func dependenciesToStrings(dependencies []Dependency) []string {
 	var dependencyStrings []string
 	for _, dependency := range dependencies {
-		if dependency.Dependency == "" {
+		if dependency.Name == "" {
 			continue
 		}
-		dependencyString := dependency.Dependency
+		dependencyString := dependency.Name
 		if dependency.Version != "" {
 			dependencyString = fmt.Sprintf("%s %s", dependencyString, dependency.Version)
 		}

@@ -121,17 +121,17 @@ func getLanguage(manifest *Manifest) (string, *version.Version) {
 	}
 
 	language := manifest.Dependencies[0]
-	language.Dependency = strings.ToLower(language.Dependency)
+	language.Name = strings.ToLower(language.Name)
 	if language.Version == "" {
-		return language.Dependency, nil
+		return language.Name, nil
 	}
 
 	ver, err := version.NewVersion(language.Version)
 	if err != nil {
-		return language.Dependency, nil
+		return language.Name, nil
 	}
 
-	return language.Dependency, ver
+	return language.Name, ver
 }
 
 func checkPythonVersion(ver *version.Version) {
