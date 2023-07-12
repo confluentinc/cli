@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 
 	"github.com/go-yaml/yaml"
@@ -12,7 +11,6 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/exec"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/plugin"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -101,18 +99,20 @@ func getPluginManifest(pluginName, dir string) (*Manifest, error) {
 func installPlugin(manifest *Manifest, repositoryDir, installDir string) error {
 	language, ver := getLanguage(manifest)
 
+	var pluginInstaller plugin.PluginInstaller
 	switch language {
 	case "go":
-		checkGoVersion(ver)
-		return installGoPlugin(manifest.Name)
+		pluginInstaller = &plugin.GoPluginInstaller{Name: manifest.Name}
 	case "python":
-		checkPythonVersion(ver)
-		return installSimplePlugin(manifest.Name, repositoryDir, installDir, "python")
+		pluginInstaller = &plugin.PythonPluginInstaller{Name: manifest.Name, RepositoryDir: repositoryDir, InstallDir: installDir}
 	case "shell":
-		return installSimplePlugin(manifest.Name, repositoryDir, installDir, "shell")
+		pluginInstaller = &plugin.ShellPluginInstaller{Name: manifest.Name, RepositoryDir: repositoryDir, InstallDir: installDir}
 	default:
 		return errors.Errorf("installation of plugins using %s is not yet supported", language)
 	}
+
+	pluginInstaller.CheckVersion(ver)
+	return pluginInstaller.Install()
 }
 
 func getLanguage(manifest *Manifest) (string, *version.Version) {
@@ -132,94 +132,4 @@ func getLanguage(manifest *Manifest) (string, *version.Version) {
 	}
 
 	return language.Name, ver
-}
-
-func checkPythonVersion(ver *version.Version) {
-	versionCmd := exec.NewCommand("python", "--version")
-
-	out, err := versionCmd.Output()
-	if err != nil {
-		output.ErrPrintf(programNotFoundMsg, "python")
-		return
-	}
-
-	re := regexp.MustCompile(`^[1-9][0-9]*\.[0-9]+\.(0|[1-9][0-9]*)$`)
-	for _, word := range strings.Split(string(out), " ") {
-		if re.MatchString(word) {
-			installedVer, err := version.NewVersion(strings.Trim(word, " \n"))
-			if err != nil {
-				output.ErrPrintf(unableToParseVersionMsg, "python")
-				return
-			}
-			if installedVer.LessThan(ver) {
-				output.ErrPrintf(insufficientVersionMsg, "python", installedVer, ver)
-				return
-			}
-		}
-	}
-}
-
-func checkGoVersion(ver *version.Version) {
-	versionCmd := exec.NewCommand("go", "version")
-
-	out, err := versionCmd.Output()
-	if err != nil {
-		output.ErrPrintf(programNotFoundMsg, "go")
-		return
-	}
-
-	re := regexp.MustCompile(`^go[1-9][0-9]*\.[0-9]+(\.[1-9][0-9]*)?$`)
-	for _, word := range strings.Split(string(out), " ") {
-		if re.MatchString(word) {
-			installedVer, err := version.NewVersion(strings.TrimPrefix(word, "go"))
-			if err != nil {
-				output.ErrPrintf(unableToParseVersionMsg, "go")
-				return
-			}
-			if installedVer.LessThan(ver) {
-				output.ErrPrintf(insufficientVersionMsg, "go", installedVer, ver)
-				return
-			}
-		}
-	}
-}
-
-func installSimplePlugin(name, repositoryDir, installDir, language string) error {
-	pluginDir := fmt.Sprintf("%s/%s", repositoryDir, name)
-	entries, err := os.ReadDir(pluginDir)
-	if err != nil {
-		return err
-	}
-
-	found := false
-	for _, entry := range entries {
-		if name := plugin.PluginFromEntry(entry); name != "" {
-			found = true
-
-			fileData, err := os.ReadFile(fmt.Sprintf("%s/%s", pluginDir, entry.Name()))
-			if err != nil {
-				return err
-			}
-
-			if err := os.WriteFile(fmt.Sprintf("%s/%s", installDir, entry.Name()), fileData, 0755); err != nil {
-				return err
-			}
-		}
-	}
-
-	if !found {
-		return errors.Errorf("unable to find %s file for plugin %s", language, name)
-	}
-	return nil
-}
-
-func installGoPlugin(name string) error {
-	packageName := fmt.Sprintf("github.com/confluentinc/cli-plugins/%s@latest", name)
-	installCmd := exec.NewCommand("go", "install", packageName)
-
-	if _, err := installCmd.Output(); err != nil {
-		return errors.Wrap(err, "failed to run go install command")
-	}
-
-	return nil
 }
