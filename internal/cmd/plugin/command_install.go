@@ -18,12 +18,6 @@ import (
 )
 
 const (
-	Go     = "go"
-	Python = "python"
-	Shell  = "shell"
-)
-
-const (
 	programNotFoundMsg      = "[WARN] Unable to find %s. Check that it is installed in a directory in your $PATH.\n"
 	unableToParseVersionMsg = "[WARN] Unable to parse %s version.\n"
 	insufficientVersionMsg  = "[WARN] Installed %s version %s is less than the required version %s.\n"
@@ -107,14 +101,14 @@ func installPlugin(manifest *Manifest, repositoryDir, installDir string) error {
 	language, ver := getLanguage(manifest)
 
 	switch language {
-	case Go:
+	case "go":
 		checkGoVersion(ver)
 		return installGoPlugin(manifest.Name)
-	case Python:
+	case "python":
 		checkPythonVersion(ver)
-		return installSimplePlugin(manifest.Name, repositoryDir, installDir, Python)
-	case Shell:
-		return installSimplePlugin(manifest.Name, repositoryDir, installDir, Shell)
+		return installSimplePlugin(manifest.Name, repositoryDir, installDir, "python")
+	case "shell":
+		return installSimplePlugin(manifest.Name, repositoryDir, installDir, "shell")
 	default:
 		return errors.Errorf("installation of plugins using %s is not yet supported", language)
 	}
@@ -125,26 +119,26 @@ func getLanguage(manifest *Manifest) (string, *version.Version) {
 		return "", nil
 	}
 
-	primaryDependency := manifest.Dependencies[0]
-	primaryDependency.Dependency = strings.ToLower(primaryDependency.Dependency)
-	if primaryDependency.Version == "" {
-		return primaryDependency.Dependency, nil
+	language := manifest.Dependencies[0]
+	language.Dependency = strings.ToLower(language.Dependency)
+	if language.Version == "" {
+		return language.Dependency, nil
 	}
 
-	ver, err := version.NewVersion(primaryDependency.Version)
+	ver, err := version.NewVersion(language.Version)
 	if err != nil {
-		return primaryDependency.Dependency, nil
+		return language.Dependency, nil
 	}
 
-	return primaryDependency.Dependency, ver
+	return language.Dependency, ver
 }
 
 func checkPythonVersion(ver *version.Version) {
-	versionCmd := exec.NewCommand(Python, "--version")
+	versionCmd := exec.NewCommand("python", "--version")
 
 	out, err := versionCmd.Output()
 	if err != nil {
-		output.ErrPrintf(programNotFoundMsg, Python)
+		output.ErrPrintf(programNotFoundMsg, "python")
 		return
 	}
 
@@ -153,11 +147,11 @@ func checkPythonVersion(ver *version.Version) {
 		if re.MatchString(word) {
 			installedVer, err := version.NewVersion(strings.Trim(word, " \n"))
 			if err != nil {
-				output.ErrPrintf(unableToParseVersionMsg, Python)
+				output.ErrPrintf(unableToParseVersionMsg, "python")
 				return
 			}
 			if installedVer.LessThan(ver) {
-				output.ErrPrintf(insufficientVersionMsg, Python, installedVer, ver)
+				output.ErrPrintf(insufficientVersionMsg, "python", installedVer, ver)
 				return
 			}
 		}
@@ -165,11 +159,11 @@ func checkPythonVersion(ver *version.Version) {
 }
 
 func checkGoVersion(ver *version.Version) {
-	versionCmd := exec.NewCommand(Go, "version")
+	versionCmd := exec.NewCommand("go", "version")
 
 	out, err := versionCmd.Output()
 	if err != nil {
-		output.ErrPrintf(programNotFoundMsg, Go)
+		output.ErrPrintf(programNotFoundMsg, "go")
 		return
 	}
 
@@ -178,11 +172,11 @@ func checkGoVersion(ver *version.Version) {
 		if re.MatchString(word) {
 			installedVer, err := version.NewVersion(strings.TrimPrefix(word, "go"))
 			if err != nil {
-				output.ErrPrintf(unableToParseVersionMsg, Go)
+				output.ErrPrintf(unableToParseVersionMsg, "go")
 				return
 			}
 			if installedVer.LessThan(ver) {
-				output.ErrPrintf(insufficientVersionMsg, Go, installedVer, ver)
+				output.ErrPrintf(insufficientVersionMsg, "go", installedVer, ver)
 				return
 			}
 		}

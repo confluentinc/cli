@@ -100,11 +100,12 @@ func getPluginManifests(dir string) ([]*ManifestOut, error) {
 			if err := yaml.Unmarshal(manifestFile, manifest); err != nil {
 				return nil, err
 			}
-			manifestOutList = append(manifestOutList, &ManifestOut{
+			manifestOut := ManifestOut{
 				Name:         file.Name(),
 				Description:  manifest.Description,
 				Dependencies: dependenciesToString(manifest.Dependencies),
-			})
+			}
+			manifestOutList = append(manifestOutList, &manifestOut)
 		}
 	}
 
