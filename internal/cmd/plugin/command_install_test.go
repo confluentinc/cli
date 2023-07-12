@@ -49,7 +49,7 @@ func TestInstallPythonPlugin(t *testing.T) {
 	assert.NoError(t, err)
 	defer os.RemoveAll(dir)
 
-	err = installSimplePlugin("confluent-test_plugin", "../../../test/fixtures/input/plugin", dir, Python)
+	err = installSimplePlugin("confluent-test_plugin", "../../../test/fixtures/input/plugin", dir, "python")
 	assert.NoError(t, err)
 	assert.True(t, utils.DoesPathExist(fmt.Sprintf("%s/%s", dir, "confluent-test_plugin.py")))
 }
