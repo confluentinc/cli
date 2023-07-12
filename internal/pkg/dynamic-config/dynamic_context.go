@@ -31,13 +31,24 @@ func NewDynamicContext(context *v1.Context, v2Client *ccloudv2.Client) *DynamicC
 	}
 }
 
-func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, client *ccloudv1.Client) error {
+func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, client *ccloudv1.Client, isTest bool) error {
 	if environment, _ := cmd.Flags().GetString("environment"); environment != "" {
 		if d.Credential.CredentialType == v1.APIKey {
 			return errors.New("`--environment` flag should not be passed for API key context")
 		}
 		ctx := d.Config.Context()
 		d.Config.SetOverwrittenCurrentEnvironment(ctx.CurrentEnvironment)
+		if !isTest {
+			envs, err := d.V2Client.ListOrgEnvironments()
+			if err != nil {
+				return err
+			}
+			envPtrs := presource.ConvertToPtrSlice(envs)
+			environment, err = presource.ConvertV2NameToId(environment, envPtrs)
+			if err != nil {
+				return err
+			}
+		}
 		ctx.SetCurrentEnvironment(environment)
 	}
 
@@ -47,6 +58,7 @@ func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, client *cclou
 		}
 		ctx := d.Config.Context()
 		d.Config.SetOverwrittenCurrentKafkaCluster(ctx.KafkaClusterContext.GetActiveKafkaClusterId())
+		//TODO: lookup cluster name->id map
 		ctx.KafkaClusterContext.SetActiveKafkaCluster(cluster)
 	}
 
@@ -101,6 +113,7 @@ func (d *DynamicContext) FindKafkaCluster(clusterId string) (*v1.KafkaClusterCon
 	}
 
 	cluster, httpResp, err := d.V2Client.DescribeKafkaCluster(clusterId, environmentId)
+	//TODO: search using name here
 	if err != nil {
 		return nil, errors.CatchKafkaNotFoundError(err, clusterId, httpResp)
 	}
