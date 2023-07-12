@@ -38,6 +38,7 @@ func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, client *cclou
 		}
 		ctx := d.Config.Context()
 		d.Config.SetOverwrittenCurrentEnvironment(ctx.CurrentEnvironment)
+		//TODO: lookup environment name->id map
 		ctx.SetCurrentEnvironment(environment)
 	}
 
@@ -47,6 +48,7 @@ func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, client *cclou
 		}
 		ctx := d.Config.Context()
 		d.Config.SetOverwrittenCurrentKafkaCluster(ctx.KafkaClusterContext.GetActiveKafkaClusterId())
+		//TODO: lookup cluster name->id map
 		ctx.KafkaClusterContext.SetActiveKafkaCluster(cluster)
 	}
 
@@ -101,6 +103,7 @@ func (d *DynamicContext) FindKafkaCluster(clusterId string) (*v1.KafkaClusterCon
 	}
 
 	cluster, httpResp, err := d.V2Client.DescribeKafkaCluster(clusterId, environmentId)
+	//TODO: search using name here
 	if err != nil {
 		return nil, errors.CatchKafkaNotFoundError(err, clusterId, httpResp)
 	}

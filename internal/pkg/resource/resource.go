@@ -1,6 +1,11 @@
 package resource
 
 import (
+	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
+	flinkv2 "github.com/confluentinc/ccloud-sdk-go-v2/flink/v2"
+	v2 "github.com/confluentinc/ccloud-sdk-go-v2/identity-provider/v2"
+	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"strings"
 )
 
@@ -55,6 +60,33 @@ var prefixToResource = map[string]string{
 	SchemaRegistryClusterPrefix: SchemaRegistryCluster,
 	ServiceAccountPrefix:        ServiceAccount,
 	UserPrefix:                  User,
+}
+
+type specResource interface {
+	cmkv2.CmkV2Cluster | flinkv2.FcpmV2ComputePool
+}
+
+type v2Resource interface {
+	orgv2.OrgV2Environment | orgv2.OrgV2Organization | v2.IamV2IdentityProvider
+	GetDisplayName() string
+	GetID() string
+}
+
+func ConvertNameToId[V v2Resource](resourceId string, resources []V) (string, error) {
+	return "", nil
+}
+
+// GetNamesToIDs return a mapping from resource names to their respective IDs
+func GetNamesToIDs[V v2Resource](resources []V) (map[string]string, error) {
+	namesToIDs := make(map[string]string, len(resources))
+	for _, resource := range resources {
+		if _, ok := namesToIDs[resource.GetDisplayName()]; !ok {
+			namesToIDs[resource.GetDisplayName()] = resource.GetID()
+		} else {
+			return nil, errors.New("Duplicate name")
+		}
+	}
+	return namesToIDs, nil
 }
 
 func LookupType(resourceId string) string {
