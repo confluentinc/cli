@@ -217,7 +217,8 @@ func traverseDAG(srClient *srsdk.APIClient, ctx context.Context, visited map[str
 func printSchema(schemaID int64, schema, schemaType string, refs []srsdk.SchemaReference, metadata *srsdk.Metadata, ruleset *srsdk.RuleSet) error {
 	output.Printf("Schema ID: %d\n", schemaID)
 
-	if schemaType != "" {
+	// The backend considers "AVRO" to be the default schema type.
+	if schemaType == "" {
 		schemaType = "AVRO"
 	}
 	output.Println("Type: " + schemaType)
@@ -264,6 +265,11 @@ func printSchema(schemaID int64, schema, schemaType string, refs []srsdk.SchemaR
 func convertRootSchema(root *srsdk.SchemaString, id int32) *srsdk.Schema {
 	if len(root.Schema) == 0 {
 		return nil
+	}
+
+	// The backend considers "AVRO" to be the default schema type.
+	if root.SchemaType == "" {
+		root.SchemaType = "AVRO"
 	}
 
 	return &srsdk.Schema{

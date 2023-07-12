@@ -215,7 +215,7 @@ func handleSRById(t *testing.T) http.HandlerFunc {
 		id64, err := strconv.ParseInt(idStr, 10, 32)
 		require.NoError(t, err)
 
-		schema := srsdk.Schema{Subject: "my-subject", Version: 1, SchemaType: "AVRO", Id: int32(id64)}
+		schema := srsdk.Schema{Subject: "my-subject", Version: 1, Id: int32(id64)}
 		switch id64 {
 		case 1001:
 			schema.Schema = "schema0"
