@@ -28,10 +28,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	deleteFunc := func(id string) error {
-		if err := c.Config.DeleteContext(id); err != nil {
-			return err
-		}
-		return nil
+		return c.Config.DeleteContext(id)
 	}
 
 	deleted, err := resource.Delete(args, deleteFunc, nil)
