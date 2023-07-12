@@ -218,6 +218,8 @@ const (
 	MacVersionErrorMsg               = "macOS version >= %s is required (detected: %s)"
 	JavaExecNotFondErrorMsg          = "could not find java executable, please install java or set JAVA_HOME"
 	NothingToDestroyErrorMsg         = "nothing to destroy"
+	ComputePoolNotFoundErrorMsg      = `Flink compute pool with id "%s" not found or access forbiden.`
+	ComputePoolNotFoundSuggestions   = "List available Flink compute pools with `confluent flink compute-pool list`"
 	ConfluentLocalStartedErrorMsg    = "Confluent Local container has already been created"
 	ConfluentLocalStartedSuggestions = "Continue your experience with Confluent Local running `confluent local kafka produce` and `confluent local kafka consume`.\n" +
 		"To stop Confluent Local container, run `confluent local kafka stop` or `docker container rm confluent-local -f`."

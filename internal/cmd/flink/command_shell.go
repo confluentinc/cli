@@ -142,7 +142,6 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 
 	verbose, _ := cmd.Flags().GetCount("verbose")
 
-	// use name of environment and not id
 	client.StartApp(
 		flinkGatewayClient,
 		c.authenticated(prerunner.Authenticated(c.AuthenticatedCLICommand), cmd, jwtValidator),
