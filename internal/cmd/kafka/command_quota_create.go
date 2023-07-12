@@ -1,14 +1,11 @@
 package kafka
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	kafkaquotasv1 "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -41,6 +38,7 @@ func (c *quotaCommand) newCreateCommand() *cobra.Command {
 	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("name"))
+	cmd.MarkFlagsRequiredTogether("ingress", "egress")
 
 	return cmd
 }
@@ -120,11 +118,10 @@ func getQuotaThroughput(cmd *cobra.Command) (*kafkaquotasv1.KafkaQuotasV1Through
 		return nil, err
 	}
 
-	if ingress == "" || egress == "" {
-		return nil, fmt.Errorf(errors.MustSpecifyBothFlagsErrorMsg, "ingress", "egress")
-	}
-	return &kafkaquotasv1.KafkaQuotasV1Throughput{
+	throughput := &kafkaquotasv1.KafkaQuotasV1Throughput{
 		IngressByteRate: ingress,
 		EgressByteRate:  egress,
-	}, nil
+	}
+
+	return throughput, nil
 }
