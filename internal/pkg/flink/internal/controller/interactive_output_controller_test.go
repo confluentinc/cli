@@ -85,11 +85,36 @@ func (s *InteractiveOutputControllerTestSuite) updateTableMockCalls(materialized
 }
 
 func (s *InteractiveOutputControllerTestSuite) TestToggleRefreshResultsOnUserInput() {
+	testCases := []struct {
+		name       string
+		fetchState types.FetchState
+	}{
+		{name: "Test when failed", fetchState: types.Failed},
+		{name: "Test when running", fetchState: types.Running},
+		{name: "Test when paused", fetchState: types.Paused},
+	}
+
+	for _, testCase := range testCases {
+		s.T().Run(testCase.name, func(t *testing.T) {
+			s.initMockCalls(&types.MaterializedStatementResults{})
+			s.interactiveOutputController.init()
+			input := tcell.NewEventKey(tcell.KeyRune, rune(components.ToggleAutoRefreshShortcut[0]), tcell.ModNone)
+			s.resultFetcher.EXPECT().GetFetchState().Return(testCase.fetchState)
+			s.resultFetcher.EXPECT().ToggleAutoRefresh()
+			s.updateTableMockCalls(&types.MaterializedStatementResults{})
+
+			result := s.interactiveOutputController.inputCapture(input)
+
+			require.Nil(t, result)
+		})
+	}
+}
+
+func (s *InteractiveOutputControllerTestSuite) TestToggleRefreshResultsDoesNothingWhenStatementCompleted() {
 	s.initMockCalls(&types.MaterializedStatementResults{})
 	s.interactiveOutputController.init()
 	input := tcell.NewEventKey(tcell.KeyRune, rune(components.ToggleAutoRefreshShortcut[0]), tcell.ModNone)
-	s.resultFetcher.EXPECT().ToggleAutoRefresh()
-	s.updateTableMockCalls(&types.MaterializedStatementResults{})
+	s.resultFetcher.EXPECT().GetFetchState().Return(types.Completed)
 
 	result := s.interactiveOutputController.inputCapture(input)
 

@@ -123,7 +123,7 @@ func (t *TableView) RenderTable(tableTitle string, statementResults *types.Mater
 
 	t.infoBar.SetLastRefreshTimestamp(lastRefreshTimestamp)
 	t.infoBar.SetFetchState(fetchState)
-	t.createTableView(NewShortcuts(t.getTableShortcuts(statementResults, isAutoRefreshRunning)))
+	t.createTableView(NewShortcuts(t.getTableShortcuts(statementResults, isAutoRefreshRunning, fetchState)))
 	t.setTableAndColumnWidths(statementResults)
 
 	t.table.SetTitle(tableTitle)
@@ -232,19 +232,36 @@ func (t *TableView) JumpDown() {
 	t.table.Select(t.getSelectedRowIdx()+t.getNumRowsToScroll(), 0)
 }
 
-func (t *TableView) getTableShortcuts(statementResults *types.MaterializedStatementResults, isAutoRefreshRunning bool) []types.Shortcut {
-	mode := "Show table"
+func (t *TableView) getTableShortcuts(statementResults *types.MaterializedStatementResults, isAutoRefreshRunning bool, fetchState types.FetchState) []types.Shortcut {
+	toggleTableModeText := "Show table"
 	if statementResults.IsTableMode() {
-		mode = "Show changelog"
+		toggleTableModeText = "Show changelog"
 	}
-	playPause := "Play"
+
+	if fetchState == types.Completed {
+		return t.getTableShortcutsForCompletedFetchState(toggleTableModeText)
+	}
+
+	toggleAutoRefreshText := "Play"
 	if isAutoRefreshRunning {
-		playPause = "Pause"
+		toggleAutoRefreshText = "Pause"
 	}
+	return t.getTableShortcutsForNonCompletedFetchState(toggleTableModeText, toggleAutoRefreshText)
+}
+
+func (t *TableView) getTableShortcutsForCompletedFetchState(toggleTableModeText string) []types.Shortcut {
 	return []types.Shortcut{
 		{KeyText: ExitTableViewShortcut, Text: "Quit"},
-		{KeyText: ToggleTableModeShortcut, Text: mode},
-		{KeyText: ToggleAutoRefreshShortcut, Text: playPause},
+		{KeyText: ToggleTableModeShortcut, Text: toggleTableModeText},
+		{KeyText: fmt.Sprintf("%s/%s", JumpUpShortcut, JumpDownShortcut), Text: "Jump up/down"},
+	}
+}
+
+func (t *TableView) getTableShortcutsForNonCompletedFetchState(toggleTableModeText, toggleAutoRefreshText string) []types.Shortcut {
+	return []types.Shortcut{
+		{KeyText: ExitTableViewShortcut, Text: "Quit"},
+		{KeyText: ToggleTableModeShortcut, Text: toggleTableModeText},
+		{KeyText: ToggleAutoRefreshShortcut, Text: toggleAutoRefreshText},
 		{KeyText: fmt.Sprintf("%s/%s", JumpUpShortcut, JumpDownShortcut), Text: "Jump up/down"},
 	}
 }
