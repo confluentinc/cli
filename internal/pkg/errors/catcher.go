@@ -385,7 +385,7 @@ func CatchContainerNameInUseError(err error) error {
 	}
 
 	if strings.Contains(err.Error(), "The container name \"/confluent-local\" is already in use") {
-		return NewErrorWithSuggestions(ConfluentLocalStartedErrorMsg, ConfluentLocalStartedSuggestions)
+		return NewErrorWithSuggestions(ConfluentLocalIsAlreadyRunningErrorMsg, ConfluentLocalStartedSuggestions)
 	}
 
 	return err
