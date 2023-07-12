@@ -267,6 +267,7 @@ func convertRootSchema(root *srsdk.SchemaString, id int32) *srsdk.Schema {
 		return nil
 	}
 
+	// The backend considers "AVRO" to be the default schema type.
 	if root.SchemaType == "" {
 		root.SchemaType = "AVRO"
 	}
