@@ -27,10 +27,16 @@ type pluginInfo struct {
 
 // SearchPath goes through the files in the user's $PATH and checks if they are plugins
 func SearchPath(cfg *v1.Config) map[string][]string {
-	log.CliLogger.Debugf("Searching `$PATH` for plugins. Plugins can be disabled in %s.\n", cfg.GetFilename())
+	log.CliLogger.Debugf("Searching `$PATH` and `~/.confluent/plugins` for plugins. Plugins can be disabled in %s.\n", cfg.GetFilename())
+
+	pathDirList := filepath.SplitList(os.Getenv("PATH"))
+	pluginDir := filepath.Join(os.Getenv("HOME"), ".confluent", "plugins")
+	if !types.Contains(pathDirList, pluginDir) {
+		pathDirList = append(pathDirList, pluginDir)
+	}
 
 	plugins := make(map[string][]string)
-	for _, dir := range filepath.SplitList(os.Getenv("PATH")) {
+	for _, dir := range pathDirList {
 		entries, err := os.ReadDir(dir)
 		if err != nil {
 			log.CliLogger.Warnf("unable to read directory from `$PATH`: %s", dir)
@@ -38,7 +44,7 @@ func SearchPath(cfg *v1.Config) map[string][]string {
 		}
 
 		for _, entry := range entries {
-			if name := pluginFromEntry(entry); name != "" {
+			if name := PluginFromEntry(entry); name != "" {
 				path := filepath.Join(dir, entry.Name())
 				plugins[name] = append(plugins[name], path)
 			}
@@ -48,7 +54,7 @@ func SearchPath(cfg *v1.Config) map[string][]string {
 	return plugins
 }
 
-func pluginFromEntry(entry os.DirEntry) string {
+func PluginFromEntry(entry os.DirEntry) string {
 	if !isExecutable(entry) {
 		return ""
 	}
