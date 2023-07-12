@@ -225,13 +225,13 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(*cobra.Com
 func (r *PreRun) ParseFlagsIntoContext(command *AuthenticatedCLICommand) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		ctx := command.Context
-		return ctx.ParseFlagsIntoContext(cmd, command.Client)
+		return ctx.ParseFlagsIntoContext(cmd, command.Client, false)
 	}
 }
 
 func (r *PreRun) AnonymousParseFlagsIntoContext(command *CLICommand) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		return command.Config.Context().ParseFlagsIntoContext(cmd, nil)
+		return command.Config.Context().ParseFlagsIntoContext(cmd, nil, false)
 	}
 }
 
@@ -734,7 +734,7 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(*cobra.Command, []
 			ctx.V2Client = v2Client
 			command.Config.V2Client = v2Client
 
-			if err := ctx.ParseFlagsIntoContext(cmd, client); err != nil {
+			if err := ctx.ParseFlagsIntoContext(cmd, client, false); err != nil {
 				return err
 			}
 

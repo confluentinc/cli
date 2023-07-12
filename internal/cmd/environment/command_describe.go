@@ -31,8 +31,12 @@ func (c *command) newDescribeCommand() *cobra.Command {
 
 func (c *command) describe(cmd *cobra.Command, args []string) error {
 	id := c.Context.GetCurrentEnvironment()
+	var err error
 	if len(args) > 0 {
-		id = args[0]
+		id, err = convertNameToId(args[0], c.AuthenticatedCLICommand.V2Client)
+		if err != nil {
+			return err
+		}
 	}
 	if id == "" {
 		return errors.NewErrorWithSuggestions("no environment selected", "Select an environment with `confluent environment use` or as an argument.")

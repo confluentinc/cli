@@ -25,7 +25,10 @@ func (c *command) newUseCommand() *cobra.Command {
 }
 
 func (c *command) use(cmd *cobra.Command, args []string) error {
-	id := args[0]
+	id, err := convertNameToId(args[0], c.AuthenticatedCLICommand.V2Client)
+	if err != nil {
+		return err
+	}
 
 	if _, err := c.V2Client.GetOrgEnvironment(id); err != nil {
 		return errors.NewErrorWithSuggestions(err.Error(), "List available environments with `confluent environment list`.")
