@@ -273,7 +273,7 @@ func NewStore(client ccloudv2.GatewayClientInterface, exitApplication func(), ap
 // We probably want to refactor the keys names and where they are stored. Maybe also the default values.
 func (s *Store) propsDefault(propsWithoutDefault map[string]string) map[string]string {
 	properties := map[string]string{
-		config.ConfigKeyCatalog:       s.appOptions.GetEnvironmentId(),
+		config.ConfigKeyCatalog:       s.appOptions.GetEnvironmentName(),
 		config.ConfigKeyDatabase:      s.appOptions.GetKafkaClusterId(),
 		config.ConfigKeyLocalTimeZone: getLocalTimezone(),
 	}
