@@ -2,16 +2,16 @@ package types
 
 import "time"
 
-type FetchState int32
+type RefreshState int32
 
 const (
-	Paused    FetchState = iota // auto fetch was Paused
-	Completed                   // arrived at last page, fetch is Completed
-	Failed                      // fetching next page Failed
-	Running                     // auto fetch is Running
+	Paused    RefreshState = iota // auto fetch was Paused
+	Completed                     // arrived at last page, fetch is Completed
+	Failed                        // fetching next page Failed
+	Running                       // auto fetch is Running
 )
 
-func (f FetchState) ToString() string {
+func (f RefreshState) ToString() string {
 	switch f {
 	case Completed:
 		return "Completed"
@@ -26,15 +26,15 @@ func (f FetchState) ToString() string {
 }
 
 type ResultFetcherInterface interface {
-	GetFetchState() FetchState
+	GetRefreshState() RefreshState
 	IsTableMode() bool
 	ToggleTableMode()
-	ToggleAutoRefresh()
-	IsAutoRefreshRunning() bool
+	ToggleRefresh()
+	IsRefreshRunning() bool
 	Init(statement ProcessedStatement)
 	Close()
-	SetAutoRefreshCallback(func())
+	SetRefreshCallback(func())
 	GetStatement() ProcessedStatement
 	GetMaterializedStatementResults() *MaterializedStatementResults
-	GetLastFetchTimestamp() *time.Time
+	GetLastRefreshTimestamp() *time.Time
 }

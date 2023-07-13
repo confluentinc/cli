@@ -115,7 +115,7 @@ func (mr *MockTableViewInterfaceMockRecorder) JumpUp() *gomock.Call {
 }
 
 // RenderTable mocks base method.
-func (m *MockTableViewInterface) RenderTable(arg0 string, arg1 *types.MaterializedStatementResults, arg2 *time.Time, arg3 types.FetchState) {
+func (m *MockTableViewInterface) RenderTable(arg0 string, arg1 *types.MaterializedStatementResults, arg2 *time.Time, arg3 types.RefreshState) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "RenderTable", arg0, arg1, arg2, arg3)
 }

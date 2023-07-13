@@ -117,7 +117,7 @@ func (s *TableViewTestSuite) TestTableShouldSetTitle() {
 	require.Equal(s.T(), expected, actual)
 }
 
-func (s *TableViewTestSuite) TestTableShortcutsWithAutoRefreshOff() {
+func (s *TableViewTestSuite) TestTableShortcutsWithRefreshOff() {
 	materializedStatementResults := getResultsExample(10)
 
 	actual := s.tableView.getTableShortcuts(materializedStatementResults, types.Paused)
@@ -125,7 +125,7 @@ func (s *TableViewTestSuite) TestTableShortcutsWithAutoRefreshOff() {
 	cupaloy.SnapshotT(s.T(), actual)
 }
 
-func (s *TableViewTestSuite) TestTableShortcutsWithAutoRefreshOn() {
+func (s *TableViewTestSuite) TestTableShortcutsWithRefreshOn() {
 	materializedStatementResults := getResultsExample(10)
 
 	actual := s.tableView.getTableShortcuts(materializedStatementResults, types.Running)
@@ -133,7 +133,7 @@ func (s *TableViewTestSuite) TestTableShortcutsWithAutoRefreshOn() {
 	cupaloy.SnapshotT(s.T(), actual)
 }
 
-func (s *TableViewTestSuite) TestTableShortcutsWithFetchStateCompleted() {
+func (s *TableViewTestSuite) TestTableShortcutsWithRefreshStateCompleted() {
 	materializedStatementResults := getResultsExample(10)
 
 	actual := s.tableView.getTableShortcuts(materializedStatementResults, types.Completed)
@@ -141,7 +141,7 @@ func (s *TableViewTestSuite) TestTableShortcutsWithFetchStateCompleted() {
 	cupaloy.SnapshotT(s.T(), actual)
 }
 
-func (s *TableViewTestSuite) TestTableInfoBarWithAutoRefreshOnAndNoTimestamp() {
+func (s *TableViewTestSuite) TestTableInfoBarWithRefreshOnAndNoTimestamp() {
 	materializedStatementResults := getResultsExample(10)
 	s.tableView.RenderTable("title", materializedStatementResults, nil, types.Running)
 
@@ -160,7 +160,7 @@ func (s *TableViewTestSuite) getInfoBarText() []string {
 	return items
 }
 
-func (s *TableViewTestSuite) TestTableInfoBarWithAutoRefreshOffAndNoTimestamp() {
+func (s *TableViewTestSuite) TestTableInfoBarWithRefreshOffAndNoTimestamp() {
 	materializedStatementResults := getResultsExample(10)
 	s.tableView.RenderTable("title", materializedStatementResults, nil, types.Paused)
 
@@ -169,7 +169,7 @@ func (s *TableViewTestSuite) TestTableInfoBarWithAutoRefreshOffAndNoTimestamp() 
 	cupaloy.SnapshotT(s.T(), actual)
 }
 
-func (s *TableViewTestSuite) TestTableInfoBarWithAutoRefreshOnAndValidTimestamp() {
+func (s *TableViewTestSuite) TestTableInfoBarWithRefreshOnAndValidTimestamp() {
 	materializedStatementResults := getResultsExample(10)
 	timestamp := time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
 	s.tableView.RenderTable("title", materializedStatementResults, &timestamp, types.Running)
@@ -179,7 +179,7 @@ func (s *TableViewTestSuite) TestTableInfoBarWithAutoRefreshOnAndValidTimestamp(
 	cupaloy.SnapshotT(s.T(), actual)
 }
 
-func (s *TableViewTestSuite) TestTableInfoBarWithAutoRefreshOffAndValidTimestamp() {
+func (s *TableViewTestSuite) TestTableInfoBarWithRefreshOffAndValidTimestamp() {
 	materializedStatementResults := getResultsExample(10)
 	timestamp := time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
 	s.tableView.RenderTable("title", materializedStatementResults, &timestamp, types.Paused)
@@ -189,7 +189,7 @@ func (s *TableViewTestSuite) TestTableInfoBarWithAutoRefreshOffAndValidTimestamp
 	cupaloy.SnapshotT(s.T(), actual)
 }
 
-func (s *TableViewTestSuite) TestTableInfoBarWhenTableTableHasNoContentAndAutoRefreshIsOff() {
+func (s *TableViewTestSuite) TestTableInfoBarWhenTableTableHasNoContentAndRefreshIsOff() {
 	materializedStatementResults := getResultsExample(0)
 	timestamp := time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
 	s.tableView.RenderTable("title", materializedStatementResults, &timestamp, types.Paused)
@@ -199,7 +199,7 @@ func (s *TableViewTestSuite) TestTableInfoBarWhenTableTableHasNoContentAndAutoRe
 	cupaloy.SnapshotT(s.T(), actual)
 }
 
-func (s *TableViewTestSuite) TestTableInfoBarWhenTableTableHasNoContentAndAutoRefreshIsOn() {
+func (s *TableViewTestSuite) TestTableInfoBarWhenTableTableHasNoContentAndRefreshIsOn() {
 	materializedStatementResults := getResultsExample(0)
 	timestamp := time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
 	s.tableView.RenderTable("title", materializedStatementResults, &timestamp, types.Running)
