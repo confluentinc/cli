@@ -56,7 +56,7 @@ func (c *command) install(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	output.Printf("Installed plugin %s.\n", args[0])
+	output.Printf("Installed plugin \"%s\".\n", args[0])
 
 	return nil
 }
