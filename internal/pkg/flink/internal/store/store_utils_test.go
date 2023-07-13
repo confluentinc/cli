@@ -1,6 +1,7 @@
 package store
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/bradleyjkemp/cupaloy"
@@ -81,7 +82,7 @@ func TestRemoveWhiteSpaces(t *testing.T) {
 func TestProcessSetStatement(t *testing.T) {
 	// Create a new store
 	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, "authToken")
-	s := NewStore(client, nil, &types.ApplicationOptions{Context: newContext()}, tokenRefreshFunc).(*Store)
+	s := NewStore(client, nil, &types.ApplicationOptions{}, tokenRefreshFunc).(*Store)
 	s.Properties.Set(config.ConfigKeyLocalTimeZone, "UTC+01:00")
 
 	t.Run("should return an error message if statement is invalid", func(t *testing.T) {
@@ -133,9 +134,9 @@ func TestProcessResetStatement(t *testing.T) {
 	}
 	s := NewStore(client, nil, &appOptions, tokenRefreshFunc).(*Store)
 	defaultSetOutput := createStatementResults([]string{"Key", "Value"}, [][]string{
-		{config.ConfigKeyCatalog, appOptions.EnvironmentName},
-		{config.ConfigKeyDatabase, appOptions.Database},
-		{config.ConfigKeyLocalTimeZone, getLocalTimezone()},
+		{config.ConfigKeyCatalog, fmt.Sprintf("%s (default)", appOptions.EnvironmentName)},
+		{config.ConfigKeyDatabase, fmt.Sprintf("%s (default)", appOptions.Database)},
+		{config.ConfigKeyLocalTimeZone, fmt.Sprintf("%s (default)", getLocalTimezone())},
 	})
 
 	t.Run("should return an error message if statement is invalid", func(t *testing.T) {

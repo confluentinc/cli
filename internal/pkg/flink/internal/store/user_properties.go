@@ -1,5 +1,12 @@
 package store
 
+import (
+	"fmt"
+	"sort"
+
+	"github.com/samber/lo"
+)
+
 type UserProperties struct {
 	defaultProperties map[string]string
 	properties        map[string]string
@@ -58,4 +65,18 @@ func (p *UserProperties) Delete(key string) {
 func (p *UserProperties) Clear() {
 	p.properties = map[string]string{}
 	p.addDefaultProperties()
+}
+
+func (p *UserProperties) ToSortedSlice(annotateDefaultValues bool) [][]string {
+	props := lo.MapToSlice(p.properties, func(key, val string) []string {
+		defaultVal, isDefaultKey := p.defaultProperties[key]
+		if isDefaultKey && val == defaultVal && annotateDefaultValues {
+			return []string{key, fmt.Sprintf("%s (default)", val)}
+		}
+		return []string{key, val}
+	})
+	sort.Slice(props, func(i, j int) bool {
+		return props[i][0] < props[j][0]
+	})
+	return props
 }
