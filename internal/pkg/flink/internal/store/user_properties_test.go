@@ -30,7 +30,7 @@ func (s *UserPropertiesTestSuite) SetupTest() {
 }
 
 func (s *UserPropertiesTestSuite) addSomeKeys() map[string]string {
-	newMap := map[string]string{}
+	newMap := map[string]string{s.defaultKey: s.defaultValue}
 	numKeysToAdd := rapid.IntRange(5, 15).Example()
 	for i := 0; i < numKeysToAdd; i++ {
 		keyToAdd := fmt.Sprintf("new-key-%v", i)
@@ -49,7 +49,6 @@ func (s *UserPropertiesTestSuite) getRandomKey(fromMap map[string]string) string
 
 func (s *UserPropertiesTestSuite) TestMapShouldAddKeys() {
 	standardMap := s.addSomeKeys()
-	standardMap[s.defaultKey] = s.defaultValue
 
 	require.Equal(s.T(), standardMap, s.userProperties.GetProperties())
 }
@@ -98,7 +97,6 @@ func (s *UserPropertiesTestSuite) TestMapHasKeyReturnsTrueIfKeyDoesExist() {
 func (s *UserPropertiesTestSuite) TestDeleteRemovesNonDefaultKey() {
 	standardMap := s.addSomeKeys()
 	keyToDelete := s.getRandomKey(standardMap)
-	standardMap[s.defaultKey] = s.defaultValue
 	delete(standardMap, keyToDelete)
 
 	s.userProperties.Delete(keyToDelete)
@@ -145,5 +143,12 @@ func (s *UserPropertiesTestSuite) TestToSortedSlice() {
 	})
 	s.T().Run("without annotated default values", func(t *testing.T) {
 		cupaloy.SnapshotT(t, s.userProperties.ToSortedSlice(false))
+	})
+	s.T().Run("with annotated empty default value", func(t *testing.T) {
+		userPropertiesWithEmptyDefault := NewUserProperties(map[string]string{
+			s.defaultKey:                 s.defaultValue,
+			"default-key-with-empty-val": "",
+		})
+		cupaloy.SnapshotT(t, userPropertiesWithEmptyDefault.ToSortedSlice(true))
 	})
 }
