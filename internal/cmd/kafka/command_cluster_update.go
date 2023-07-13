@@ -2,6 +2,7 @@ package kafka
 
 import (
 	"fmt"
+	presource "github.com/confluentinc/cli/internal/pkg/name-conversions"
 
 	"github.com/spf13/cobra"
 
@@ -13,7 +14,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	presource "github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *clusterCommand) newUpdateCommand(cfg *v1.Config) *cobra.Command {

@@ -1,13 +1,13 @@
 package environment
 
 import (
+	presource "github.com/confluentinc/cli/internal/pkg/name-conversions"
 	"github.com/spf13/cobra"
 
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	presource "github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *command) newUpdateCommand() *cobra.Command {

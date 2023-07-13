@@ -2,6 +2,7 @@ package kafka
 
 import (
 	"fmt"
+	presource "github.com/confluentinc/cli/internal/pkg/name-conversions"
 
 	"github.com/spf13/cobra"
 
@@ -9,7 +10,6 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	presource "github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *clusterCommand) newUseCommand(cfg *v1.Config) *cobra.Command {

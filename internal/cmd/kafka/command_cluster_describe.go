@@ -1,6 +1,7 @@
 package kafka
 
 import (
+	presource "github.com/confluentinc/cli/internal/pkg/name-conversions"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -14,7 +15,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	presource "github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 var basicDescribeFields = []string{"IsCurrent", "Id", "Name", "Type", "IngressLimit", "EgressLimit", "Storage", "ServiceProvider", "Availability", "Region", "Status", "Endpoint", "RestEndpoint"}

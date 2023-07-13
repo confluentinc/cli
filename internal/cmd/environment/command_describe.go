@@ -1,12 +1,12 @@
 package environment
 
 import (
+	presource "github.com/confluentinc/cli/internal/pkg/name-conversions"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	presource "github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 type out struct {
