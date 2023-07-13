@@ -123,7 +123,6 @@ func (c *Command) kafkaStart(cmd *cobra.Command, args []string) error {
 		return errors.NewErrorWithSuggestions(errors.FailedToReadPortsErrorMsg, errors.FailedToReadPortsSuggestions)
 	}
 	ports := c.Config.LocalPorts
-	fmt.Println("ports", ports)
 	platform := &specsv1.Platform{OS: "linux", Architecture: runtime.GOARCH}
 	natKafkaRestPort := nat.Port(ports.KafkaRestPort + "/tcp")
 	natPlaintextPort := nat.Port(ports.PlaintextPort + "/tcp")
