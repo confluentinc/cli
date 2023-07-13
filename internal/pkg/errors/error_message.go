@@ -400,7 +400,7 @@ const (
 	FindAWSCredsErrorMsg            = "failed to find AWS credentials in profiles: %s"
 
 	// plugin package
-	NoVersionFoundErrorMsg = "invalid plugin manifest: no version found"
+	NoVersionFoundErrorMsg = "no version found in plugin manifest"
 
 	// Flag Errors
 	ProhibitedFlagCombinationErrorMsg = "cannot use `--%s` and `--%s` flags at the same time"
