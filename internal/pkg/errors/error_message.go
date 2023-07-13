@@ -399,6 +399,9 @@ const (
 	AWSCredsExpiredErrorMsg         = "AWS credentials in profile %s are expired"
 	FindAWSCredsErrorMsg            = "failed to find AWS credentials in profiles: %s"
 
+	// plugin package
+	NoVersionFoundErrorMsg = "invalid plugin manifest: no version found"
+
 	// Flag Errors
 	ProhibitedFlagCombinationErrorMsg = "cannot use `--%s` and `--%s` flags at the same time"
 

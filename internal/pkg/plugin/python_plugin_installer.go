@@ -21,14 +21,18 @@ func (p *PythonPluginInstaller) CheckVersion(ver *version.Version) error {
 	versionCmd := exec.NewCommand("python", "--version")
 	version3Cmd := exec.NewCommand("python3", "--version")
 
-	v3, _ := version.NewVersion("3.0.0")
+	versionSegments := ver.Segments()
+	if len(versionSegments) == 0 {
+		return errors.New(errors.NoVersionFoundErrorMsg)
+	}
+	majorVer := versionSegments[0]
 
 	var out []byte
 	var err error
-	if ver.GreaterThanOrEqual(v3) {
+	if majorVer == 3 {
 		out, err = version3Cmd.Output()
 	}
-	if err != nil || ver.LessThan(v3) {
+	if err != nil || majorVer != 3 {
 		out, err = versionCmd.Output()
 	}
 	if err != nil {

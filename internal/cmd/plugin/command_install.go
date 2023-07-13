@@ -110,8 +110,8 @@ func installPlugin(manifest *Manifest, repositoryDir, installDir string) error {
 			RepositoryDir: repositoryDir,
 			InstallDir:    installDir,
 		}
-	case "shell":
-		pluginInstaller = &plugin.ShellPluginInstaller{
+	case "bash":
+		pluginInstaller = &plugin.BashPluginInstaller{
 			Name:          manifest.Name,
 			RepositoryDir: repositoryDir,
 			InstallDir:    installDir,
@@ -134,7 +134,7 @@ func getLanguage(manifest *Manifest) (string, *version.Version, error) {
 	language := manifest.Dependencies[0]
 	language.Name = strings.ToLower(language.Name)
 	if language.Version == "" {
-		return language.Name, nil, nil
+		return "", nil, errors.New(errors.NoVersionFoundErrorMsg)
 	}
 
 	ver, err := version.NewVersion(language.Version)
