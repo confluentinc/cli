@@ -64,7 +64,7 @@ var (
 		"you must log in to Confluent Platform to use this command",
 		"Log in to Confluent Platform with `confluent login --url <mds-url>`.",
 	)
-	CloudLoginRequireOnPremLoginErr = errors.NewErrorWithSuggestions(
+	RunningOnPremCommandInCloudErr = errors.NewErrorWithSuggestions(
 		"this is not a Confluent Cloud command. You must log in to Confluent Platform to use this command",
 		"Log in to Confluent Platform with `confluent login --url <mds-url>`.\n"+`Run command with "--help" to see available commands.`,
 	)
@@ -655,7 +655,7 @@ func (c *Config) CheckIsOnPremLogin() error {
 		if !c.isCloud() {
 			return nil
 		} else {
-			return CloudLoginRequireOnPremLoginErr
+			return RunningOnPremCommandInCloudErr
 		}
 	}
 	return RequireOnPremLoginErr
