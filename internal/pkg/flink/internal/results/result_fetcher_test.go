@@ -35,14 +35,14 @@ func (s *ResultFetcherTestSuite) TestInitSetsPausedState() {
 	mockStatement := types.ProcessedStatement{PageToken: "NOT_EMPTY"}
 	s.resultFetcher.Init(mockStatement)
 
-	require.Equal(s.T(), types.Paused, s.resultFetcher.GetFetchState())
+	require.Equal(s.T(), types.Paused, s.resultFetcher.GetRefreshState())
 }
 
 func (s *ResultFetcherTestSuite) TestInitSetsCompletedState() {
 	mockStatement := types.ProcessedStatement{PageToken: ""}
 	s.resultFetcher.Init(mockStatement)
 
-	require.Equal(s.T(), types.Completed, s.resultFetcher.GetFetchState())
+	require.Equal(s.T(), types.Completed, s.resultFetcher.GetRefreshState())
 }
 
 func (s *ResultFetcherTestSuite) TestToggleTableMode() {
@@ -55,15 +55,15 @@ func (s *ResultFetcherTestSuite) TestToggleRefreshResults() {
 	mockStatement := types.ProcessedStatement{PageToken: "NOT_EMPTY"}
 	s.mockStore.EXPECT().FetchStatementResults(mockStatement).Return(&mockStatement, nil).AnyTimes()
 	s.resultFetcher.Init(mockStatement)
-	s.resultFetcher.SetAutoRefreshCallback(func() {
-		s.resultFetcher.ToggleAutoRefresh() // stop fetch
+	s.resultFetcher.SetRefreshCallback(func() {
+		s.resultFetcher.ToggleRefresh() // stop fetch
 	})
-	s.resultFetcher.ToggleAutoRefresh() // start fetch
+	s.resultFetcher.ToggleRefresh() // start fetch
 
-	for s.resultFetcher.IsAutoRefreshRunning() {
+	for s.resultFetcher.IsRefreshRunning() {
 		time.Sleep(1 * time.Second)
 	}
-	require.Equal(s.T(), types.Paused, s.resultFetcher.GetFetchState())
+	require.Equal(s.T(), types.Paused, s.resultFetcher.GetRefreshState())
 }
 
 func (s *ResultFetcherTestSuite) TestResultFetchStopsAfterError() {
@@ -71,14 +71,14 @@ func (s *ResultFetcherTestSuite) TestResultFetchStopsAfterError() {
 	s.mockStore.EXPECT().FetchStatementResults(mockStatement).Return(&mockStatement, &types.StatementError{Message: "error"})
 
 	s.resultFetcher.Init(mockStatement)
-	s.resultFetcher.ToggleAutoRefresh()
+	s.resultFetcher.ToggleRefresh()
 	// wait for auto refresh to complete
-	for s.resultFetcher.IsAutoRefreshRunning() {
+	for s.resultFetcher.IsRefreshRunning() {
 		time.Sleep(1 * time.Second)
 	}
 
-	require.False(s.T(), s.resultFetcher.IsAutoRefreshRunning())
-	require.Equal(s.T(), types.Failed, s.resultFetcher.GetFetchState())
+	require.False(s.T(), s.resultFetcher.IsRefreshRunning())
+	require.Equal(s.T(), types.Failed, s.resultFetcher.GetRefreshState())
 }
 
 func (s *ResultFetcherTestSuite) TestResultFetchStopsAfterNoMorePageToken() {
@@ -86,14 +86,14 @@ func (s *ResultFetcherTestSuite) TestResultFetchStopsAfterNoMorePageToken() {
 	s.mockStore.EXPECT().FetchStatementResults(mockStatement).Return(&types.ProcessedStatement{}, nil)
 
 	s.resultFetcher.Init(mockStatement)
-	s.resultFetcher.ToggleAutoRefresh()
+	s.resultFetcher.ToggleRefresh()
 	// wait for auto refresh to complete
-	for s.resultFetcher.IsAutoRefreshRunning() {
+	for s.resultFetcher.IsRefreshRunning() {
 		time.Sleep(1 * time.Second)
 	}
 
-	require.False(s.T(), s.resultFetcher.IsAutoRefreshRunning())
-	require.Equal(s.T(), types.Completed, s.resultFetcher.GetFetchState())
+	require.False(s.T(), s.resultFetcher.IsRefreshRunning())
+	require.Equal(s.T(), types.Completed, s.resultFetcher.GetRefreshState())
 }
 
 func (s *ResultFetcherTestSuite) TestFetchNextPageSetsFailedState() {
@@ -103,7 +103,7 @@ func (s *ResultFetcherTestSuite) TestFetchNextPageSetsFailedState() {
 
 	s.resultFetcher.fetchNextPageAndUpdateState()
 
-	require.Equal(s.T(), types.Failed, s.resultFetcher.GetFetchState())
+	require.Equal(s.T(), types.Failed, s.resultFetcher.GetRefreshState())
 }
 
 func (s *ResultFetcherTestSuite) TestFetchNextPageSetsCompletedState() {
@@ -113,41 +113,41 @@ func (s *ResultFetcherTestSuite) TestFetchNextPageSetsCompletedState() {
 
 	s.resultFetcher.fetchNextPageAndUpdateState()
 
-	require.Equal(s.T(), types.Completed, s.resultFetcher.GetFetchState())
+	require.Equal(s.T(), types.Completed, s.resultFetcher.GetRefreshState())
 }
 
 func (s *ResultFetcherTestSuite) TestFetchNextPageDoesNotUpdateStateWhenAlreadyCompleted() {
 	mockStatement := types.ProcessedStatement{PageToken: ""}
 	s.resultFetcher.setStatement(mockStatement)
-	s.resultFetcher.fetchState.setState(types.Completed)
+	s.resultFetcher.refreshState.setState(types.Completed)
 	s.mockStore.EXPECT().FetchStatementResults(mockStatement).Return(&types.ProcessedStatement{PageToken: "NOT_EMPTY"}, nil)
 
 	s.resultFetcher.fetchNextPageAndUpdateState()
 
-	require.Equal(s.T(), types.Completed, s.resultFetcher.GetFetchState())
+	require.Equal(s.T(), types.Completed, s.resultFetcher.GetRefreshState())
 	require.Equal(s.T(), mockStatement, s.resultFetcher.GetStatement())
 }
 
 func (s *ResultFetcherTestSuite) TestFetchNextPageChangesFailedToPausedState() {
 	mockStatement := types.ProcessedStatement{PageToken: "NOT_EMPTY"}
-	s.resultFetcher.fetchState.setState(types.Failed)
+	s.resultFetcher.refreshState.setState(types.Failed)
 	s.resultFetcher.setStatement(mockStatement)
 	s.mockStore.EXPECT().FetchStatementResults(mockStatement).Return(&mockStatement, nil)
 
 	s.resultFetcher.fetchNextPageAndUpdateState()
 
-	require.Equal(s.T(), types.Paused, s.resultFetcher.GetFetchState())
+	require.Equal(s.T(), types.Paused, s.resultFetcher.GetRefreshState())
 }
 
 func (s *ResultFetcherTestSuite) TestFetchNextPagePreservesRunningState() {
 	mockStatement := types.ProcessedStatement{PageToken: "NOT_EMPTY"}
-	s.resultFetcher.fetchState.setState(types.Running)
+	s.resultFetcher.refreshState.setState(types.Running)
 	s.resultFetcher.setStatement(mockStatement)
 	s.mockStore.EXPECT().FetchStatementResults(mockStatement).Return(&mockStatement, nil)
 
 	s.resultFetcher.fetchNextPageAndUpdateState()
 
-	require.Equal(s.T(), types.Running, s.resultFetcher.GetFetchState())
+	require.Equal(s.T(), types.Running, s.resultFetcher.GetRefreshState())
 }
 
 func getStatementWithResultsExample() types.ProcessedStatement {
@@ -168,12 +168,12 @@ func getStatementWithResultsExample() types.ProcessedStatement {
 	}
 }
 
-func (s *ResultFetcherTestSuite) TestCloseShouldSetFetchStateToPaused() {
-	s.resultFetcher.fetchState.setState(types.Running)
+func (s *ResultFetcherTestSuite) TestCloseShouldSetRefreshStateToPaused() {
+	s.resultFetcher.refreshState.setState(types.Running)
 
 	s.resultFetcher.Close()
 
-	require.Equal(s.T(), types.Paused, s.resultFetcher.GetFetchState())
+	require.Equal(s.T(), types.Paused, s.resultFetcher.GetRefreshState())
 }
 
 func (s *ResultFetcherTestSuite) TestCloseShouldDeleteRunningStatements() {
@@ -191,7 +191,7 @@ func (s *ResultFetcherTestSuite) TestCloseShouldDeleteRunningStatements() {
 	s.resultFetcher.Close()
 	<-done
 
-	require.Equal(s.T(), types.Paused, s.resultFetcher.GetFetchState())
+	require.Equal(s.T(), types.Paused, s.resultFetcher.GetRefreshState())
 }
 
 func (s *ResultFetcherTestSuite) TestGetResults() {

@@ -97,7 +97,7 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 	}
 
 	var installation *platformInstallation
-	prompt := form.NewPrompt(os.Stdin)
+	prompt := form.NewPrompt()
 	if pluginDir == "" {
 		installation, err = getConfluentPlatformInstallation(cmd, prompt, force)
 		if err != nil {

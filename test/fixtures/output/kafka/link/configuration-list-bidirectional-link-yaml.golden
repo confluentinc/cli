@@ -1,0 +1,26 @@
+- config_name: bootstrap.servers
+  config_value: bitcoin.com:8888
+  read_only: false
+  sensitive: false
+  source: source-2
+  synonyms: []
+- config_name: dest.cluster.id
+  config_value: cluster-1
+  read_only: true
+  sensitive: true
+  source: ""
+  synonyms: []
+- config_name: link.mode
+  config_value: BIDIRECTIONAL
+  read_only: false
+  sensitive: false
+  source: source-2
+  synonyms: []
+- config_name: replica.fetch.max.bytes
+  config_value: "1048576"
+  read_only: false
+  sensitive: false
+  source: source-1
+  synonyms:
+  - rfmb
+  - bmfr

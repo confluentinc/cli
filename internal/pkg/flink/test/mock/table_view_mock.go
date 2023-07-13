@@ -36,30 +36,6 @@ func (m *MockTableViewInterface) EXPECT() *MockTableViewInterfaceMockRecorder {
 	return m.recorder
 }
 
-// JumpDown mocks base method.
-func (m *MockTableViewInterface) JumpDown() {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "JumpDown")
-}
-
-// JumpDown indicates an expected call of JumpDown.
-func (mr *MockTableViewInterfaceMockRecorder) JumpDown() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "JumpDown", reflect.TypeOf((*MockTableViewInterface)(nil).JumpDown))
-}
-
-// JumpUp mocks base method.
-func (m *MockTableViewInterface) JumpUp() {
-	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "JumpUp")
-}
-
-// JumpUp indicates an expected call of JumpUp.
-func (mr *MockTableViewInterfaceMockRecorder) JumpUp() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "JumpUp", reflect.TypeOf((*MockTableViewInterface)(nil).JumpUp))
-}
-
 // GetFocusableElement mocks base method.
 func (m *MockTableViewInterface) GetFocusableElement() *tview.Table {
 	m.ctrl.T.Helper()
@@ -114,14 +90,38 @@ func (mr *MockTableViewInterfaceMockRecorder) Init() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Init", reflect.TypeOf((*MockTableViewInterface)(nil).Init))
 }
 
-// RenderTable mocks base method.
-func (m *MockTableViewInterface) RenderTable(arg0 string, arg1 *types.MaterializedStatementResults, arg2 bool, arg3 *time.Time, arg4 types.FetchState) {
+// JumpDown mocks base method.
+func (m *MockTableViewInterface) JumpDown() {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "RenderTable", arg0, arg1, arg2, arg3, arg4)
+	m.ctrl.Call(m, "JumpDown")
+}
+
+// JumpDown indicates an expected call of JumpDown.
+func (mr *MockTableViewInterfaceMockRecorder) JumpDown() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "JumpDown", reflect.TypeOf((*MockTableViewInterface)(nil).JumpDown))
+}
+
+// JumpUp mocks base method.
+func (m *MockTableViewInterface) JumpUp() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "JumpUp")
+}
+
+// JumpUp indicates an expected call of JumpUp.
+func (mr *MockTableViewInterfaceMockRecorder) JumpUp() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "JumpUp", reflect.TypeOf((*MockTableViewInterface)(nil).JumpUp))
+}
+
+// RenderTable mocks base method.
+func (m *MockTableViewInterface) RenderTable(arg0 string, arg1 *types.MaterializedStatementResults, arg2 *time.Time, arg3 types.RefreshState) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "RenderTable", arg0, arg1, arg2, arg3)
 }
 
 // RenderTable indicates an expected call of RenderTable.
-func (mr *MockTableViewInterfaceMockRecorder) RenderTable(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
+func (mr *MockTableViewInterfaceMockRecorder) RenderTable(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderTable", reflect.TypeOf((*MockTableViewInterface)(nil).RenderTable), arg0, arg1, arg2, arg3, arg4)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RenderTable", reflect.TypeOf((*MockTableViewInterface)(nil).RenderTable), arg0, arg1, arg2, arg3)
 }

@@ -242,7 +242,7 @@ func promptForSASLAuth(cmd *cobra.Command) (string, string, error) {
 		form.Field{ID: "username", Prompt: "Enter your SASL username"},
 		form.Field{ID: "password", Prompt: "Enter your SASL password", IsHidden: true},
 	)
-	if err := f.Prompt(form.NewPrompt(os.Stdin)); err != nil {
+	if err := f.Prompt(form.NewPrompt()); err != nil {
 		return "", "", err
 	}
 	return f.Responses["username"].(string), f.Responses["password"].(string), nil

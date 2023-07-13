@@ -2,7 +2,6 @@ package kafka
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/spf13/cobra"
 
@@ -23,14 +22,12 @@ func (c *clusterCommand) newUpdateCommand(cfg *v1.Config) *cobra.Command {
 		Short:             "Update a Kafka cluster.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return c.update(cmd, args, form.NewPrompt(os.Stdin))
-		},
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
+		RunE:              c.update,
+		Annotations:       map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Change a cluster's name and expand its CKU count:",
-				Code: `confluent kafka cluster update lkc-abc123 --name "Cool Cluster" --cku 3`,
+				Text: "Update the name and CKU count of a Kafka cluster:",
+				Code: `confluent kafka cluster update lkc-123456 --name "New Cluster Name" --cku 3`,
 			},
 		),
 	}
@@ -46,7 +43,7 @@ func (c *clusterCommand) newUpdateCommand(cfg *v1.Config) *cobra.Command {
 	return cmd
 }
 
-func (c *clusterCommand) update(cmd *cobra.Command, args []string, prompt form.Prompt) error {
+func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 	if !cmd.Flags().Changed("name") && !cmd.Flags().Changed("cku") {
 		return errors.New(errors.NameOrCKUFlagErrorMsg)
 	}
@@ -90,7 +87,7 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string, prompt form.P
 		if err != nil {
 			return err
 		}
-		updatedCku, err := c.validateResize(int32(cku), &currentCluster, prompt)
+		updatedCku, err := c.validateResize(int32(cku), &currentCluster)
 		if err != nil {
 			return err
 		}
@@ -109,7 +106,7 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string, prompt form.P
 	return c.outputKafkaClusterDescription(cmd, &updatedCluster, true)
 }
 
-func (c *clusterCommand) validateResize(cku int32, currentCluster *cmkv2.CmkV2Cluster, prompt form.Prompt) (int32, error) {
+func (c *clusterCommand) validateResize(cku int32, currentCluster *cmkv2.CmkV2Cluster) (int32, error) {
 	// Ensure the cluster is a Dedicated Cluster
 	if currentCluster.GetSpec().Config.CmkV2Dedicated == nil {
 		return 0, errors.New(errors.ClusterResizeNotSupportedErrorMsg)
@@ -137,7 +134,7 @@ func (c *clusterCommand) validateResize(cku int32, currentCluster *cmkv2.CmkV2Cl
 			promptMessage += fmt.Sprintf("\n%v\n", err)
 		}
 		if promptMessage != "" {
-			if ok, err := confirmShrink(prompt, promptMessage); !ok || err != nil {
+			if ok, err := confirmShrink(promptMessage); !ok || err != nil {
 				return 0, err
 			}
 		}
@@ -158,9 +155,9 @@ func (c *clusterCommand) validateKafkaClusterMetrics(currentCluster *cmkv2.CmkV2
 	return nil
 }
 
-func confirmShrink(prompt form.Prompt, promptMessage string) (bool, error) {
+func confirmShrink(promptMessage string) (bool, error) {
 	f := form.New(form.Field{ID: "proceed", Prompt: fmt.Sprintf("Validated cluster metrics and found that: %s\nDo you want to proceed with shrinking your kafka cluster?", promptMessage), IsYesOrNo: true})
-	if err := f.Prompt(prompt); err != nil {
+	if err := f.Prompt(form.NewPrompt()); err != nil {
 		return false, errors.New(errors.FailedToReadClusterResizeConfirmationErrorMsg)
 	}
 	if !f.Responses["proceed"].(bool) {
