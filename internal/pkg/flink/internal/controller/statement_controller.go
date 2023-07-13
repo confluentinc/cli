@@ -90,14 +90,7 @@ func (c *StatementController) isCancelEvent() bool {
 		pressedKey := prompt.Key(b[0])
 
 		switch pressedKey {
-		case prompt.ControlC:
-			fallthrough
-		case prompt.ControlD:
-			fallthrough
-		case prompt.ControlQ:
-			fallthrough
-		case prompt.Escape:
-			// esc
+		case prompt.ControlC, prompt.ControlD, prompt.ControlQ, prompt.Escape:
 			return true
 		}
 	}
@@ -132,9 +125,7 @@ func (c *StatementController) isDetachEvent() bool {
 		pressedKey := prompt.Key(b[0])
 
 		switch pressedKey {
-		case prompt.ControlM:
-			fallthrough
-		case prompt.Enter:
+		case prompt.ControlM, prompt.Enter:
 			return true
 		}
 	}

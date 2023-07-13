@@ -326,7 +326,7 @@ func (s *Store) WaitForTerminalStatementState(ctx context.Context, statement typ
 				}
 			}
 
-			time.Sleep(1 * time.Second)
+			time.Sleep(time.Second)
 		}
 	}
 

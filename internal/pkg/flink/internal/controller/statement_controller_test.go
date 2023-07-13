@@ -124,7 +124,7 @@ func (s *StatementControllerTestSuite) TestExecuteStatementCancelsAndDeletesStat
 	s.store.EXPECT().WaitPendingStatement(gomock.Any(), processedStatement).DoAndReturn(
 		func(ctx context.Context, statement types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError) {
 			waitPendingStatementCtx = ctx
-			time.Sleep(1 * time.Second)
+			time.Sleep(time.Second)
 			return nil, waitPendingStatementError
 		})
 
@@ -227,7 +227,7 @@ func (s *StatementControllerTestSuite) TestExecuteStatementReturnsWhenUserDetach
 	s.store.EXPECT().WaitForTerminalStatementState(gomock.Any(), runningStatement).DoAndReturn(
 		func(ctx context.Context, statement types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError) {
 			waitForTerminalStateCtx = ctx
-			time.Sleep(1 * time.Second)
+			time.Sleep(time.Second)
 			return &runningStatement, nil
 		})
 

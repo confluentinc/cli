@@ -61,7 +61,7 @@ func (s *ResultFetcherTestSuite) TestToggleRefreshResults() {
 	s.resultFetcher.ToggleRefresh() // start fetch
 
 	for s.resultFetcher.IsRefreshRunning() {
-		time.Sleep(1 * time.Second)
+		time.Sleep(time.Second)
 	}
 	require.Equal(s.T(), types.Paused, s.resultFetcher.GetRefreshState())
 }
@@ -74,7 +74,7 @@ func (s *ResultFetcherTestSuite) TestResultFetchStopsAfterError() {
 	s.resultFetcher.ToggleRefresh()
 	// wait for auto refresh to complete
 	for s.resultFetcher.IsRefreshRunning() {
-		time.Sleep(1 * time.Second)
+		time.Sleep(time.Second)
 	}
 
 	require.False(s.T(), s.resultFetcher.IsRefreshRunning())
@@ -89,7 +89,7 @@ func (s *ResultFetcherTestSuite) TestResultFetchStopsAfterNoMorePageToken() {
 	s.resultFetcher.ToggleRefresh()
 	// wait for auto refresh to complete
 	for s.resultFetcher.IsRefreshRunning() {
-		time.Sleep(1 * time.Second)
+		time.Sleep(time.Second)
 	}
 
 	require.False(s.T(), s.resultFetcher.IsRefreshRunning())
