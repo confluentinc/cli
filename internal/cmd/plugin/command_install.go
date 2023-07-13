@@ -43,7 +43,7 @@ func (c *command) install(cmd *cobra.Command, args []string) error {
 		return errors.Wrapf(err, "failed to create plugin install directory %s", installDir)
 	}
 
-	if _, err = clonePluginRepo(dir, cliPluginsUrl); err != nil {
+	if _, err := clonePluginRepo(dir, cliPluginsUrl); err != nil {
 		return err
 	}
 
