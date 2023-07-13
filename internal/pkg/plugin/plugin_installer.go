@@ -29,7 +29,7 @@ func installSimplePlugin(name, repositoryDir, installDir, language string) error
 
 	found := false
 	for _, entry := range entries {
-		if name := PluginFromEntry(entry); name != "" {
+		if PluginFromEntry(entry) != "" {
 			found = true
 
 			fileData, err := os.ReadFile(fmt.Sprintf("%s/%s", pluginDir, entry.Name()))
