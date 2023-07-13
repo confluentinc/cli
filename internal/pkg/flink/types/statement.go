@@ -86,3 +86,8 @@ func (s ProcessedStatement) PrintStatementDoneStatus() {
 		output.Printf("%s.\n", s.StatusDetail)
 	}
 }
+
+func (s ProcessedStatement) IsTerminalState() bool {
+	isRunningAndHasResults := s.Status == RUNNING && s.PageToken != ""
+	return s.Status == COMPLETED || s.Status == FAILED || isRunningAndHasResults
+}
