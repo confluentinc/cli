@@ -48,7 +48,7 @@ func (t *InteractiveOutputController) start() {
 func (t *InteractiveOutputController) init() {
 	t.isRowViewOpen = false
 	t.resultFetcher.SetAutoRefreshCallback(t.renderTableAsync)
-	t.resultFetcher.ToggleAutoRefresh()
+	t.resultFetcher.ToggleRefresh()
 	t.app.SetInputCapture(t.inputCapture)
 	t.tableView.Init()
 	t.updateTable()
@@ -130,8 +130,8 @@ func (t *InteractiveOutputController) getActionForShortcut(shortcut string) func
 		return t.exitTViewMode
 	case components.ToggleTableModeShortcut:
 		return t.toggleTableMode
-	case components.ToggleAutoRefreshShortcut:
-		return t.toggleAutoRefresh
+	case components.ToggleRefreshShortcut:
+		return t.toggleRefresh
 	case components.JumpUpShortcut:
 		return t.stopAutoRefreshOrScroll(t.tableView.JumpUp)
 	case components.JumpDownShortcut:
@@ -151,17 +151,17 @@ func (t *InteractiveOutputController) toggleTableMode() {
 	t.updateTable()
 }
 
-func (t *InteractiveOutputController) toggleAutoRefresh() {
+func (t *InteractiveOutputController) toggleRefresh() {
 	if t.resultFetcher.GetFetchState() != types.Completed {
-		t.resultFetcher.ToggleAutoRefresh()
+		t.resultFetcher.ToggleRefresh()
 		t.updateTable()
 	}
 }
 
 func (t *InteractiveOutputController) stopAutoRefreshOrScroll(scroll func()) func() {
-	if t.resultFetcher.IsAutoRefreshRunning() {
+	if t.resultFetcher.IsRefreshRunning() {
 		return func() {
-			t.resultFetcher.ToggleAutoRefresh()
+			t.resultFetcher.ToggleRefresh()
 			t.updateTable()
 		}
 	}
@@ -169,7 +169,7 @@ func (t *InteractiveOutputController) stopAutoRefreshOrScroll(scroll func()) fun
 }
 
 func (t *InteractiveOutputController) renderRowView() {
-	if !t.resultFetcher.IsAutoRefreshRunning() {
+	if !t.resultFetcher.IsRefreshRunning() {
 		row := t.tableView.GetSelectedRow()
 		t.isRowViewOpen = true
 
@@ -186,8 +186,8 @@ func (t *InteractiveOutputController) renderRowView() {
 }
 
 func (t *InteractiveOutputController) handleKeyUpOrDownPress(event *tcell.EventKey) *tcell.EventKey {
-	if t.resultFetcher.IsAutoRefreshRunning() {
-		t.resultFetcher.ToggleAutoRefresh()
+	if t.resultFetcher.IsRefreshRunning() {
+		t.resultFetcher.ToggleRefresh()
 		t.updateTable()
 		return nil
 	}
