@@ -220,9 +220,9 @@ func (s *StatementControllerTestSuite) TestExecuteStatementReturnsWhenUserDetach
 	processedStatement := types.ProcessedStatement{Status: types.PENDING}
 	runningStatement := types.ProcessedStatement{Status: types.RUNNING}
 	s.store.EXPECT().ProcessStatement(statementToExecute).Return(&processedStatement, nil)
-	s.consoleParser.EXPECT().Read().Return([]byte{byte(prompt.ControlM)}, nil)
 	s.store.EXPECT().WaitPendingStatement(gomock.Any(), processedStatement).Return(&runningStatement, nil)
 	s.store.EXPECT().FetchStatementResults(runningStatement).Return(&runningStatement, nil)
+	s.consoleParser.EXPECT().Read().Return([]byte{byte(prompt.ControlM)}, nil).AnyTimes()
 	var waitForTerminalStateCtx context.Context
 	s.store.EXPECT().WaitForTerminalStatementState(gomock.Any(), runningStatement).DoAndReturn(
 		func(ctx context.Context, statement types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError) {
