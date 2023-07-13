@@ -2,6 +2,7 @@ package kafka
 
 import (
 	"fmt"
+	presource "github.com/confluentinc/cli/internal/pkg/name-conversions"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -83,4 +84,16 @@ func (c *clusterCommand) validArgs(cmd *cobra.Command, args []string) []string {
 		suggestions[i] = fmt.Sprintf("%s\t%s", cluster.GetId(), cluster.Spec.GetDisplayName())
 	}
 	return suggestions
+}
+
+func (c *clusterCommand) convertEnvNameToId(envName string) (string, error) {
+	if envId, err := c.V2Client.GetOrgEnvironment(envName); err == nil {
+		return envId.GetId(), err
+	}
+	environmentId, err := presource.ConvertEnvironmentNameToId(envName, c.V2Client)
+	if err != nil {
+		return environmentId, err
+	}
+	c.Context.SetCurrentEnvironment(environmentId)
+	return environmentId, err
 }

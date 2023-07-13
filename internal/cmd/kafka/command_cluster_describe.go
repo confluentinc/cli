@@ -75,6 +75,10 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 
 	cluster, httpResp, err := c.V2Client.DescribeKafkaCluster(lkc, environmentId)
 	if err != nil {
+		environmentId, err = c.convertEnvNameToId(environmentId)
+		if err != nil {
+			return err
+		}
 		lkc, err = presource.ConvertClusterNameToId(lkc, environmentId, c.V2Client)
 		if err != nil {
 			return err

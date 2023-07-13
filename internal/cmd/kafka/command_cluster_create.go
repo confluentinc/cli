@@ -135,7 +135,13 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		}
 
 		if err := c.validateGcpEncryptionKey(cloud, environmentId); err != nil {
-			return err
+			environmentId, err = c.convertEnvNameToId(environmentId)
+			if err != nil {
+				return err
+			}
+			if err = c.validateGcpEncryptionKey(cloud, environmentId); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -181,6 +187,11 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 
 	kafkaCluster, httpResp, err := c.V2Client.CreateKafkaCluster(createCluster)
 	if err != nil {
+		environmentId, err = c.convertEnvNameToId(environmentId)
+		if err != nil {
+			return err
+		}
+		kafkaCluster, httpResp, err = c.V2Client.CreateKafkaCluster(createCluster)
 		return errors.CatchClusterConfigurationNotValidError(err, httpResp)
 	}
 
