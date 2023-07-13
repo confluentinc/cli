@@ -11,7 +11,7 @@ import (
 
 type TableInfoBar struct {
 	infoBar              *tview.Flex
-	fetchState           types.FetchState
+	refreshState         types.RefreshState
 	selectedRowIdx       int
 	totalNumRows         int
 	lastRefreshTimestamp *time.Time
@@ -38,25 +38,24 @@ func (t *TableInfoBar) SetLastRefreshTimestamp(lastRefreshTimestamp *time.Time) 
 	t.updateInfoBar()
 }
 
-func (t *TableInfoBar) SetFetchState(fetchState types.FetchState) {
-	t.fetchState = fetchState
+func (t *TableInfoBar) SetRefreshState(refreshState types.RefreshState) {
+	t.refreshState = refreshState
 	t.updateInfoBar()
 }
 
 func (t *TableInfoBar) updateInfoBar() {
 	t.infoBar.Clear()
 	t.infoBar.
-		AddItem(t.constructAutoRefreshInfo(), 0, 1, false).
+		AddItem(t.constructRefreshInfo(), 0, 1, false).
 		AddItem(t.constructRowInfo(), 0, 1, false).
 		AddItem(t.constructLastRefreshInfo(), 0, 1, false)
 }
 
-func (t *TableInfoBar) constructAutoRefreshInfo() tview.Primitive {
-	autoRefreshInfo := tview.NewTextView().
+func (t *TableInfoBar) constructRefreshInfo() tview.Primitive {
+	return tview.NewTextView().
 		SetDynamicColors(true).
 		SetTextAlign(tview.AlignLeft).
-		SetText(fmt.Sprintf("Refresh: [darkcyan]%s[white]", t.fetchState.ToString()))
-	return autoRefreshInfo
+		SetText(fmt.Sprintf("Refresh: [darkcyan]%s[white]", t.refreshState.ToString()))
 }
 
 func (t *TableInfoBar) constructRowInfo() tview.Primitive {
