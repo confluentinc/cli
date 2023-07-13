@@ -9,16 +9,16 @@ import (
 type exceptionOut struct {
 	Timestamp  time.Time `human:"Timestamp" serialized:"timestamp"`
 	Name       string    `human:"Name" serialized:"name"`
-	Stacktrace string    `human:"Stacktrace" serialized:"stacktrace"`
+	StackTrace string    `human:"Stack Trace" serialized:"stack_trace"`
 }
 
 func (c *command) newExceptionsCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "exceptions",
-		Short: "Manage Flink SQL statements.",
+		Use:   "exception",
+		Short: "Manage Flink SQL statement exceptions.",
 	}
 
-	cmd.AddCommand(c.newStatementExceptionsListCommand())
+	cmd.AddCommand(c.newStatementExceptionListCommand())
 
 	return cmd
 }
