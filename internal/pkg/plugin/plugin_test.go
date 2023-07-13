@@ -46,7 +46,7 @@ func TestPluginFromEntry(t *testing.T) {
 		}
 
 		for _, test := range tests {
-			name := pluginFromEntry(&mock.FileInfo{
+			name := PluginFromEntry(&mock.FileInfo{
 				NameVal: test.path,
 				ModeVal: test.fileMode,
 			})
@@ -63,7 +63,7 @@ func TestPluginFromEntry(t *testing.T) {
 		}
 
 		for _, test := range tests {
-			name := pluginFromEntry(&mock.FileInfo{
+			name := PluginFromEntry(&mock.FileInfo{
 				NameVal: test.path,
 				ModeVal: test.fileMode,
 			})
