@@ -26,7 +26,7 @@
         },
         (types.AtomicStatementResultField) {
           Type: (types.StatementResultFieldType) (len=7) "VARCHAR",
-          Value: (string) ""
+          Value: (string) (len=17) "<unset> (default)"
         }
       }
     },

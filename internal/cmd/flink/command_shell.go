@@ -91,9 +91,13 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		environmentId = c.Context.GetCurrentEnvironment()
 	}
 
-	environment, err := c.V2Client.GetOrgEnvironment(environmentId)
-	if err != nil {
-		return errors.NewErrorWithSuggestions(err.Error(), "List available environments with `confluent environment list`.")
+	catalog := c.Context.GetCurrentFlinkCatalog()
+	if catalog == "" {
+		environment, err := c.V2Client.GetOrgEnvironment(environmentId)
+		if err != nil {
+			return errors.NewErrorWithSuggestions(err.Error(), "List available environments with `confluent environment list`.")
+		}
+		catalog = environment.GetDisplayName()
 	}
 
 	computePool, err := cmd.Flags().GetString("compute-pool")
@@ -123,7 +127,9 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		return err
 	}
 	if database == "" {
-		if c.Context.KafkaClusterContext.GetActiveKafkaClusterConfig().GetName() != "" {
+		if c.Context.GetCurrentFlinkDatabase() != "" {
+			database = c.Context.GetCurrentFlinkDatabase()
+		} else {
 			database = c.Context.KafkaClusterContext.GetActiveKafkaClusterConfig().GetName()
 		}
 	}
@@ -149,7 +155,7 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 			Context:         c.Context,
 			UnsafeTrace:     unsafeTrace,
 			UserAgent:       c.Version.UserAgent,
-			EnvironmentName: environment.GetDisplayName(),
+			EnvironmentName: catalog,
 			EnvironmentId:   environmentId,
 			OrgResourceId:   resourceId,
 			Database:        database,
