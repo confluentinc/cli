@@ -12,7 +12,7 @@ Flags:
       --cloud string         REQUIRED: Specify the cloud provider as "aws", "azure", or "gcp".
       --region string        REQUIRED: Cloud region for compute pool (use "confluent flink region list" to see all).
       --cfu int32            Number of Confluent Flink Units (CFU). (default 1)
-      --environment string   Environment ID.
+      --environment string   Environment ID or name.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:

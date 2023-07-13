@@ -15,9 +15,9 @@ List all active mirror topics under "my-link":
 Flags:
       --link string            Name of cluster link.
       --mirror-status string   Mirror topic status. Can be one of [active, failed, paused, stopped, pending_stopped]. If not specified, list all mirror topics.
-      --cluster string         Kafka cluster ID.
+      --cluster string         Kafka cluster ID or name.
       --context string         CLI context name.
-      --environment string     Environment ID.
+      --environment string     Environment ID or name.
   -o, --output string          Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:

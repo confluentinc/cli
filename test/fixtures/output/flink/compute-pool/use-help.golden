@@ -4,7 +4,7 @@ Usage:
   confluent flink compute-pool use <id> [flags]
 
 Flags:
-      --environment string   Environment ID.
+      --environment string   Environment ID or name.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:

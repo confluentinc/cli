@@ -10,8 +10,8 @@ Update configuration values for the cluster link "my-link".
 
 Flags:
       --config-file string   REQUIRED: Name of the file containing link configuration overrides. Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.
-      --cluster string       Kafka cluster ID.
-      --environment string   Environment ID.
+      --cluster string       Kafka cluster ID or name.
+      --environment string   Environment ID or name.
       --context string       CLI context name.
 
 Global Flags:

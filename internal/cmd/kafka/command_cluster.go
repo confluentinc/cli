@@ -2,7 +2,6 @@ package kafka
 
 import (
 	"fmt"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"

@@ -11,7 +11,7 @@ Upgrade Schema Registry to the "advanced" package for environment "env-12345".
 Flags:
       --package string       REQUIRED: Specify the type of Stream Governance package as "essentials" or "advanced".
       --context string       CLI context name.
-      --environment string   Environment ID.
+      --environment string   Environment ID or name.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:

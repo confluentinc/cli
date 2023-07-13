@@ -9,7 +9,7 @@ Delete the Schema Registry cluster for environment "env-12345".
   $ confluent schema-registry cluster delete --environment env-12345
 
 Flags:
-      --environment string   REQUIRED: Environment ID.
+      --environment string   REQUIRED: Environment ID or name.
       --force                Skip the deletion confirmation prompt.
       --context string       CLI context name.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")

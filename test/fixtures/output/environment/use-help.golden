@@ -1,7 +1,7 @@
 Choose a Confluent Cloud environment to be used in subsequent commands which support passing an environment with the `--environment` flag.
 
 Usage:
-  confluent environment use <id> [flags]
+  confluent environment use <id|name> [flags]
 
 Flags:
       --context string   CLI context name.
