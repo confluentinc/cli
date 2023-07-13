@@ -53,11 +53,11 @@ func (s *Store) ProcessLocalStatement(statement string) (*types.ProcessedStateme
 func (s *Store) persistUserProperties() {
 	if s.appOptions.GetContext() != nil {
 		if err := s.appOptions.Context.SetCurrentFlinkCatalog(s.Properties.Get(config.ConfigKeyCatalog)); err != nil {
-			log.CliLogger.Errorf("error setting current flink catalog: %v", err)
+			log.CliLogger.Errorf("error persisting current flink catalog: %v", err)
 		}
 
 		if err := s.appOptions.Context.SetCurrentFlinkDatabase(s.Properties.Get(config.ConfigKeyDatabase)); err != nil {
-			log.CliLogger.Errorf("error setting current flink database: %v", err)
+			log.CliLogger.Errorf("error persisting current flink database: %v", err)
 		}
 
 		if err := s.appOptions.Context.Save(); err != nil {

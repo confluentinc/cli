@@ -7,6 +7,8 @@ import (
 	"github.com/samber/lo"
 )
 
+const emptyStringTag = "<unset>"
+
 type UserProperties struct {
 	defaultProperties map[string]string
 	properties        map[string]string
@@ -69,14 +71,25 @@ func (p *UserProperties) Clear() {
 
 func (p *UserProperties) ToSortedSlice(annotateDefaultValues bool) [][]string {
 	props := lo.MapToSlice(p.properties, func(key, val string) []string {
-		defaultVal, isDefaultKey := p.defaultProperties[key]
-		if isDefaultKey && val == defaultVal && annotateDefaultValues {
-			return []string{key, fmt.Sprintf("%s (default)", val)}
-		}
-		return []string{key, val}
+		return p.createKeyValuePair(key, val, annotateDefaultValues)
 	})
 	sort.Slice(props, func(i, j int) bool {
 		return props[i][0] < props[j][0]
 	})
 	return props
+}
+
+func (p *UserProperties) createKeyValuePair(key, val string, annotateDefaultValues bool) []string {
+	defaultVal, isDefaultKey := p.defaultProperties[key]
+	if annotateDefaultValues && isDefaultKey && defaultVal == val {
+		return []string{key, annotateDefaultValue(val)}
+	}
+	return []string{key, val}
+}
+
+func annotateDefaultValue(val string) string {
+	if val == "" {
+		val = emptyStringTag
+	}
+	return fmt.Sprintf("%s (default)", val)
 }
