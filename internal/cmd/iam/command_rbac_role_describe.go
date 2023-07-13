@@ -51,14 +51,10 @@ func (c *roleCommand) ccloudDescribe(cmd *cobra.Command, role string) error {
 		ksqlNamespace.Value(),
 		publicNamespace.Value(),
 		streamCatalogNamespace.Value(),
+		identityNamespace.Value(),
 	}
 
-	// check if IdentityAdmin is enabled
 	ldClient := v1.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
-	if featureflags.Manager.BoolVariation("auth.rbac.identity_admin.enable", c.Context, ldClient, true, false) {
-		namespacesList = append(namespacesList, identityNamespace.Value())
-	}
-
 	if featureflags.Manager.BoolVariation("flink.rbac.namespace.cli.enable", c.Context, ldClient, true, false) {
 		namespacesList = append(namespacesList, flinkNamespace.Value())
 	}
