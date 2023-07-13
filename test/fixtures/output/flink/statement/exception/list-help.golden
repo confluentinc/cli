@@ -1,7 +1,7 @@
-Describe a Flink SQL statement.
+List exceptions for a Flink SQL statement.
 
 Usage:
-  confluent flink statement describe <name> [flags]
+  confluent flink statement exception list <statement-name> [flags]
 
 Flags:
       --compute-pool string   Flink compute pool ID.
