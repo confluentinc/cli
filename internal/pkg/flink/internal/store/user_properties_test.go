@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/bradleyjkemp/cupaloy"
 	"github.com/samber/lo"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -130,4 +131,19 @@ func (s *UserPropertiesTestSuite) TestClearShouldRemoveAllNonDefaultKeysAndReset
 
 	require.Len(s.T(), s.userProperties.GetProperties(), 1)
 	require.Equal(s.T(), s.defaultValue, s.userProperties.Get(s.defaultKey))
+}
+
+func (s *UserPropertiesTestSuite) TestToSortedSlice() {
+	for i := 0; i < 5; i++ {
+		keyToAdd := fmt.Sprintf("new-key-%v", i)
+		valToAdd := fmt.Sprintf("new-val-%v", i)
+		s.userProperties.Set(keyToAdd, valToAdd)
+	}
+
+	s.T().Run("with annotated default values", func(t *testing.T) {
+		cupaloy.SnapshotT(t, s.userProperties.ToSortedSlice(true))
+	})
+	s.T().Run("without annotated default values", func(t *testing.T) {
+		cupaloy.SnapshotT(t, s.userProperties.ToSortedSlice(false))
+	})
 }

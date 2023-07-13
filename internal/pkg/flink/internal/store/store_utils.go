@@ -6,12 +6,9 @@ import (
 	"io"
 	"net/http"
 	"regexp"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/samber/lo"
 
 	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
 
@@ -28,14 +25,6 @@ const (
 	ExitStatement  StatementType = config.ConfigOpExit
 	OtherStatement StatementType = "OTHER"
 )
-
-func (s *Store) propertiesToStatementResults() *types.StatementResults {
-	props := lo.MapToSlice(s.Properties.GetProperties(), func(key, val string) []string { return []string{key, val} })
-	sort.Slice(props, func(i, j int) bool {
-		return props[i][0] < props[j][0]
-	})
-	return createStatementResults([]string{"Key", "Value"}, props)
-}
 
 func createStatementResults(columnNames []string, rows [][]string) *types.StatementResults {
 	statementResultRows := make([]types.StatementResultRow, len(rows))
@@ -65,7 +54,7 @@ func (s *Store) processSetStatement(statement string) (*types.ProcessedStatement
 		return &types.ProcessedStatement{
 			Kind:             config.ConfigOpSet,
 			Status:           types.COMPLETED,
-			StatementResults: s.propertiesToStatementResults(),
+			StatementResults: createStatementResults([]string{"Key", "Value"}, s.Properties.ToSortedSlice(true)),
 			IsLocalStatement: true,
 		}, nil
 	}
@@ -91,7 +80,7 @@ func (s *Store) processResetStatement(statement string) (*types.ProcessedStateme
 			Kind:             config.ConfigOpReset,
 			StatusDetail:     "configuration has been reset successfully",
 			Status:           types.COMPLETED,
-			StatementResults: s.propertiesToStatementResults(),
+			StatementResults: createStatementResults([]string{"Key", "Value"}, s.Properties.ToSortedSlice(true)),
 			IsLocalStatement: true,
 		}, nil
 	} else {
@@ -104,7 +93,7 @@ func (s *Store) processResetStatement(statement string) (*types.ProcessedStateme
 			Kind:             config.ConfigOpReset,
 			StatusDetail:     fmt.Sprintf(`configuration key "%s" has been reset successfully`, configKey),
 			Status:           types.COMPLETED,
-			StatementResults: s.propertiesToStatementResults(),
+			StatementResults: createStatementResults([]string{"Key", "Value"}, s.Properties.ToSortedSlice(true)),
 			IsLocalStatement: true,
 		}, nil
 	}
@@ -117,23 +106,6 @@ func (s *Store) processUseStatement(statement string) (*types.ProcessedStatement
 	}
 
 	s.Properties.Set(configKey, configVal)
-	if s.appOptions.GetContext() != nil {
-		if configKey == config.ConfigKeyCatalog {
-			err := s.appOptions.Context.SetCurrentFlinkCatalog(configVal)
-			if err != nil {
-				return nil, &types.StatementError{Message: err.Error()}
-			}
-		} else if configKey == config.ConfigKeyDatabase {
-			err := s.appOptions.Context.SetCurrentFlinkDatabase(configVal)
-			if err != nil {
-				return nil, &types.StatementError{Message: err.Error()}
-			}
-		}
-		err = s.appOptions.Context.Save()
-		if err != nil {
-			return nil, &types.StatementError{Message: err.Error()}
-		}
-	}
 
 	return &types.ProcessedStatement{
 		Kind:             config.ConfigOpUse,

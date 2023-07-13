@@ -34,6 +34,7 @@ func (s *Store) authenticatedGatewayClient() ccloudv2.GatewayClientInterface {
 }
 
 func (s *Store) ProcessLocalStatement(statement string) (*types.ProcessedStatement, *types.StatementError) {
+	defer s.persistUserProperties()
 	switch statementType := parseStatementType(statement); statementType {
 	case SetStatement:
 		return s.processSetStatement(statement)
@@ -46,6 +47,22 @@ func (s *Store) ProcessLocalStatement(statement string) (*types.ProcessedStateme
 		return nil, nil
 	default:
 		return nil, nil
+	}
+}
+
+func (s *Store) persistUserProperties() {
+	if s.appOptions.GetContext() != nil {
+		if err := s.appOptions.Context.SetCurrentFlinkCatalog(s.Properties.Get(config.ConfigKeyCatalog)); err != nil {
+			log.CliLogger.Errorf("error setting current flink catalog: %v", err)
+		}
+
+		if err := s.appOptions.Context.SetCurrentFlinkDatabase(s.Properties.Get(config.ConfigKeyDatabase)); err != nil {
+			log.CliLogger.Errorf("error setting current flink database: %v", err)
+		}
+
+		if err := s.appOptions.Context.Save(); err != nil {
+			log.CliLogger.Errorf("error persisting user properties: %v", err)
+		}
 	}
 }
 
@@ -274,13 +291,6 @@ func getDefaultProperties(appOptions *types.ApplicationOptions) map[string]strin
 		config.ConfigKeyCatalog:       appOptions.GetEnvironmentName(),
 		config.ConfigKeyDatabase:      appOptions.GetDatabase(),
 		config.ConfigKeyLocalTimeZone: getLocalTimezone(),
-	}
-
-	if catalog, ok := properties[config.ConfigKeyCatalog]; !ok || catalog == "" {
-		properties[config.ConfigKeyCatalog] = appOptions.Context.GetCurrentFlinkCatalog()
-	}
-	if db, ok := properties[config.ConfigKeyDatabase]; !ok || db == "" {
-		properties[config.ConfigKeyDatabase] = appOptions.Context.GetCurrentFlinkDatabase()
 	}
 
 	return properties
