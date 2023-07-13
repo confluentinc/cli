@@ -207,6 +207,18 @@ func CatchCCloudV2ResourceNotFoundError(err error, resourceType string, r *http.
 	return CatchCCloudV2Error(err, r)
 }
 
+func CatchComputePoolNotFoundError(err error, computePoolId string, r *http.Response) error {
+	if err == nil {
+		return nil
+	}
+
+	if r != nil && r.StatusCode == http.StatusForbidden {
+		return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), fmt.Sprintf(ComputePoolNotFoundErrorMsg, computePoolId), ComputePoolNotFoundSuggestions)
+	}
+
+	return CatchCCloudV2Error(err, r)
+}
+
 func CatchKafkaNotFoundError(err error, clusterId string, r *http.Response) error {
 	if err == nil {
 		return nil

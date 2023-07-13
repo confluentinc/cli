@@ -23,8 +23,8 @@ func (c *command) newShellCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cob
 
 	c.addComputePoolFlag(cmd)
 	cmd.Flags().String("identity-pool", "", "Identity pool ID.")
-	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	cmd.Flags().String("database", "", "The database which will be used as default database. When using Kafka, this is the cluster display name.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 	if cfg.IsTest {
@@ -80,7 +80,22 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 
 	resourceId := c.Context.GetOrganization().GetResourceId()
 
-	// Compute pool can be set as a flag or as default in the context
+	environmentId, err := cmd.Flags().GetString("environment")
+	if err != nil {
+		return err
+	}
+	if environmentId == "" {
+		if c.Context.GetCurrentEnvironment() == "" {
+			return errors.NewErrorWithSuggestions("no environment provided", "Provide an environment with `confluent environment use env-123456` or `--environment`.")
+		}
+		environmentId = c.Context.GetCurrentEnvironment()
+	}
+
+	environment, err := c.V2Client.GetOrgEnvironment(environmentId)
+	if err != nil {
+		return errors.NewErrorWithSuggestions(err.Error(), "List available environments with `confluent environment list`.")
+	}
+
 	computePool, err := cmd.Flags().GetString("compute-pool")
 	if err != nil {
 		return err
@@ -103,19 +118,14 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		identityPool = c.Context.GetCurrentIdentityPool()
 	}
 
-	cluster, err := cmd.Flags().GetString("cluster")
+	database, err := cmd.Flags().GetString("database")
 	if err != nil {
 		return err
 	}
-	if cluster == "" {
-		if c.Context.KafkaClusterContext.GetActiveKafkaClusterId() != "" {
-			cluster = c.Context.KafkaClusterContext.GetActiveKafkaClusterId()
+	if database == "" {
+		if c.Context.KafkaClusterContext.GetActiveKafkaClusterConfig().GetName() != "" {
+			database = c.Context.KafkaClusterContext.GetActiveKafkaClusterConfig().GetName()
 		}
-	}
-
-	environmentId, err := c.Context.EnvironmentId()
-	if err != nil {
-		return err
 	}
 
 	unsafeTrace, err := c.Command.Flags().GetBool("unsafe-trace")
@@ -136,15 +146,16 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		flinkGatewayClient,
 		c.authenticated(prerunner.Authenticated(c.AuthenticatedCLICommand), cmd, jwtValidator),
 		types.ApplicationOptions{
-			Context:        c.Context,
-			UnsafeTrace:    unsafeTrace,
-			UserAgent:      c.Version.UserAgent,
-			EnvironmentId:  environmentId,
-			OrgResourceId:  resourceId,
-			KafkaClusterId: cluster,
-			ComputePoolId:  computePool,
-			IdentityPoolId: identityPool,
-			Verbose:        verbose > 0,
+			Context:         c.Context,
+			UnsafeTrace:     unsafeTrace,
+			UserAgent:       c.Version.UserAgent,
+			EnvironmentName: environment.GetDisplayName(),
+			EnvironmentId:   environmentId,
+			OrgResourceId:   resourceId,
+			Database:        database,
+			ComputePoolId:   computePool,
+			IdentityPoolId:  identityPool,
+			Verbose:         verbose > 0,
 		})
 	return nil
 }
