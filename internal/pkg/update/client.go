@@ -37,7 +37,8 @@ type client struct {
 }
 
 var _ Client = (*client)(nil)
-var defaultVersion = "v0.0.0"
+
+const defaultVersion = "v0.0.0"
 
 // ClientParams are used to configure the update.Client
 type ClientParams struct {
