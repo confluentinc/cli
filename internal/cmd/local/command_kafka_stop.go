@@ -33,6 +33,10 @@ func (c *Command) kafkaStop(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	return c.stopAndRemoveConfluentLocal(dockerClient)
+}
+
+func (c *Command) stopAndRemoveConfluentLocal(dockerClient *client.Client) error {
 	containers, err := dockerClient.ContainerList(context.Background(), types.ContainerListOptions{All: true})
 	if err != nil {
 		return err

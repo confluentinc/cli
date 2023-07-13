@@ -390,16 +390,3 @@ func CatchNoSubjectLevelConfigError(err error, r *http.Response, subject string)
 
 	return err
 }
-
-func CatchContainerNameInUseError(err error) error {
-	if err == nil {
-		return nil
-	}
-
-	if strings.Contains(err.Error(), "The container name \"/confluent-local\" is already in use") {
-		return NewErrorWithSuggestions("Confluent Local is already running", "Continue your experience with Confluent Local running `confluent local kafka produce` and `confluent local kafka consume`.\n"+
-			"To start a new Confluent Local session, run `confluent local kafka stop`, then run `confluent local kafka start`.")
-	}
-
-	return err
-}
