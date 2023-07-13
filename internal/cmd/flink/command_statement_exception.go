@@ -12,7 +12,7 @@ type exceptionOut struct {
 	StackTrace string    `human:"Stack Trace" serialized:"stack_trace"`
 }
 
-func (c *command) newExceptionsCommand() *cobra.Command {
+func (c *command) newStatementExceptionCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "exception",
 		Short: "Manage Flink SQL statement exceptions.",
