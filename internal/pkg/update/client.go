@@ -68,7 +68,7 @@ func NewClient(params *ClientParams) *client {
 
 // CheckForUpdates checks for new versions in the repo
 func (c *client) CheckForUpdates(cliName, currentVersion string, forceCheck bool) (string, string, error) {
-	if c.DisableCheck {
+	if c.DisableCheck || currentVersion == "v0.0.0" {
 		return "", "", nil
 	}
 
