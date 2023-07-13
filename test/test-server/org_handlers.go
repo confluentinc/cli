@@ -26,7 +26,7 @@ func handleOrgEnvironment(t *testing.T) http.HandlerFunc {
 
 		switch r.Method {
 		case http.MethodGet:
-			if id == "env-dne" {
+			if id == "env-dne" || id == "other" {
 				w.WriteHeader(http.StatusNotFound)
 				return
 			}

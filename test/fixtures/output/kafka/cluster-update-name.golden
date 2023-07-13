@@ -1,0 +1,16 @@
++----------------------+---------------------------+
+| Current              | true                      |
+| ID                   | lkc-456                   |
+| Name                 | new_name                  |
+| Type                 | BASIC                     |
+| Ingress Limit (MB/s) |                       250 |
+| Egress Limit (MB/s)  |                       750 |
+| Storage              | 5 TB                      |
+| Provider             | aws                       |
+| Region               | us-west-2                 |
+| Availability         | single-zone               |
+| Status               | UP                        |
+| Endpoint             | SASL_SSL://kafka-endpoint |
+| REST Endpoint        | http://127.0.0.1:1025     |
+| Topic Count          |                         2 |
++----------------------+---------------------------+
