@@ -1,14 +1,14 @@
-Describe a Flink SQL statement.
+Manage Flink SQL statement exceptions.
 
 Usage:
-  confluent flink statement describe <name> [flags]
+  confluent flink statement exception [command]
 
-Flags:
-      --compute-pool string   Flink compute pool ID.
-      --environment string    Environment ID.
-      --context string        CLI context name.
+Available Commands:
+  list        List exceptions for a Flink SQL statement.
 
 Global Flags:
   -h, --help            Show help for this command.
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent flink statement exception [command] --help" for more information about a command.
