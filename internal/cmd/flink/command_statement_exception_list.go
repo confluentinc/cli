@@ -9,7 +9,7 @@ import (
 
 func (c *command) newStatementExceptionListCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "list <name>",
+		Use:               "list <statement-name>",
 		Short:             "List exceptions for a Flink SQL statement.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validStatementArgs),
