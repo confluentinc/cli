@@ -11,7 +11,7 @@ import (
 
 func (c *command) newUseCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "use <id>",
+		Use:               "use <id/name>",
 		Short:             "Use an environment in subsequent commands.",
 		Long:              "Choose a Confluent Cloud environment to be used in subsequent commands which support passing an environment with the `--environment` flag.",
 		Args:              cobra.ExactArgs(1),
@@ -25,13 +25,16 @@ func (c *command) newUseCommand() *cobra.Command {
 }
 
 func (c *command) use(cmd *cobra.Command, args []string) error {
-	id, err := convertNameToId(args[0], c.AuthenticatedCLICommand.V2Client)
-	if err != nil {
-		return err
-	}
-
+	id := args[0]
 	if _, err := c.V2Client.GetOrgEnvironment(id); err != nil {
-		return errors.NewErrorWithSuggestions(err.Error(), "List available environments with `confluent environment list`.")
+		id, err = convertEnvironmentNameToId(id, c.V2Client)
+		if err != nil {
+			return err
+		}
+		_, err = c.V2Client.GetOrgEnvironment(id)
+		if err != nil {
+			return errors.NewErrorWithSuggestions(err.Error(), "List available environments with `confluent environment list`.")
+		}
 	}
 
 	c.Context.SetCurrentEnvironment(id)

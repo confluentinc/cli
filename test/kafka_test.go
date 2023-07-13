@@ -167,6 +167,22 @@ func (s *CLITestSuite) TestKafka() {
 	}
 }
 
+func (s *CLITestSuite) TestKafkaClusterUsingName() {
+	tests := []CLITest{
+		{args: "kafka cluster describe abc", fixture: "kafka/cluster-describe-name.golden"},
+		{args: "kafka cluster update def --name new_name", fixture: "kafka/cluster-update-name.golden"},
+		{args: "kafka cluster use abc", fixture: "kafka/cluster-use-name.golden"},
+	}
+
+	resetConfiguration(s.T(), false)
+
+	for _, test := range tests {
+		test.login = "cloud"
+		test.workflow = true
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestKafkaClusterCreate_Byok() {
 	test := CLITest{
 		login:   "cloud",

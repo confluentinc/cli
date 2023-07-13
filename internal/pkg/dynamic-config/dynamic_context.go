@@ -38,17 +38,7 @@ func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, client *cclou
 		}
 		ctx := d.Config.Context()
 		d.Config.SetOverwrittenCurrentEnvironment(ctx.CurrentEnvironment)
-		if !isTest {
-			envs, err := d.V2Client.ListOrgEnvironments()
-			if err != nil {
-				return err
-			}
-			envPtrs := presource.ConvertToPtrSlice(envs)
-			environment, err = presource.ConvertV2NameToId(environment, envPtrs)
-			if err != nil {
-				return err
-			}
-		}
+
 		ctx.SetCurrentEnvironment(environment)
 	}
 
@@ -58,7 +48,7 @@ func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, client *cclou
 		}
 		ctx := d.Config.Context()
 		d.Config.SetOverwrittenCurrentKafkaCluster(ctx.KafkaClusterContext.GetActiveKafkaClusterId())
-		//TODO: lookup cluster name->id map
+
 		ctx.KafkaClusterContext.SetActiveKafkaCluster(cluster)
 	}
 

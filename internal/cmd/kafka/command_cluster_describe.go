@@ -14,7 +14,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 var basicDescribeFields = []string{"IsCurrent", "Id", "Name", "Type", "IngressLimit", "EgressLimit", "Storage", "ServiceProvider", "Availability", "Region", "Status", "Endpoint", "RestEndpoint"}
@@ -75,7 +74,14 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 
 	cluster, httpResp, err := c.V2Client.DescribeKafkaCluster(lkc, environmentId)
 	if err != nil {
-		return errors.CatchKafkaNotFoundError(err, lkc, httpResp)
+		lkc, err = convertClusterNameToId(lkc, environmentId, c.V2Client)
+		if err != nil {
+			return err
+		}
+		cluster, httpResp, err = c.V2Client.DescribeKafkaCluster(lkc, environmentId)
+		if err != nil {
+			return errors.CatchKafkaNotFoundError(err, lkc, httpResp)
+		}
 	}
 
 	return c.outputKafkaClusterDescription(cmd, &cluster, true)
@@ -83,9 +89,9 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 
 func (c *clusterCommand) getLkcForDescribe(args []string) (string, error) {
 	if len(args) > 0 {
-		if resource.LookupType(args[0]) != resource.KafkaCluster {
-			return "", errors.Errorf(errors.KafkaClusterMissingPrefixErrorMsg, args[0])
-		}
+		//if resource.LookupType(args[0]) != resource.KafkaCluster {
+		//	return "", errors.Errorf(errors.KafkaClusterMissingPrefixErrorMsg, args[0])
+		//}
 		return args[0], nil
 	}
 

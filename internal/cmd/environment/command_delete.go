@@ -28,10 +28,7 @@ func (c *command) newDeleteCommand() *cobra.Command {
 }
 
 func (c *command) delete(cmd *cobra.Command, args []string) error {
-	id, err := convertNameToId(args[0], c.AuthenticatedCLICommand.V2Client)
-	if err != nil {
-		return err
-	}
+	id := args[0]
 
 	environment, err := c.V2Client.GetOrgEnvironment(id)
 	if err != nil {

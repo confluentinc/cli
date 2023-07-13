@@ -1,7 +1,7 @@
 Update an existing Confluent Cloud environment.
 
 Usage:
-  confluent environment update <id> [flags]
+  confluent environment update <id/name> [flags]
 
 Flags:
       --name string      REQUIRED: New name for Confluent Cloud environment.

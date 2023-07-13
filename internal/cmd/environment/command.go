@@ -1,11 +1,10 @@
 package environment
 
 import (
-	"github.com/spf13/cobra"
-
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/resource"
+	"github.com/spf13/cobra"
 )
 
 type command struct {
@@ -44,15 +43,11 @@ func (c *command) validArgs(cmd *cobra.Command, args []string) []string {
 	return pcmd.AutocompleteEnvironments(c.Client, c.V2Client, c.Context)
 }
 
-func convertNameToId(input string, v2Client *ccloudv2.Client) (string, error) {
+func convertEnvironmentNameToId(input string, v2Client *ccloudv2.Client) (string, error) {
 	envs, err := v2Client.ListOrgEnvironments()
 	if err != nil {
 		return "", err
 	}
 	envPtrs := resource.ConvertToPtrSlice(envs)
-	id, err := resource.ConvertV2NameToId(input, envPtrs)
-	if err != nil {
-		return "", err
-	}
-	return id, nil
+	return resource.ConvertV2NameToId(input, envPtrs)
 }
