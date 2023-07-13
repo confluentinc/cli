@@ -60,6 +60,20 @@ func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command) error {
 		}
 	}
 
+	if region, _ := cmd.Flags().GetString("region"); region != "" {
+		ctx := d.Config.Context()
+		if err := ctx.SetCurrentFlinkRegion(region); err != nil {
+			return err
+		}
+	}
+
+	if cloud, _ := cmd.Flags().GetString("cloud"); cloud != "" {
+		ctx := d.Config.Context()
+		if err := ctx.SetCurrentFlinkCloudProvider(cloud); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
