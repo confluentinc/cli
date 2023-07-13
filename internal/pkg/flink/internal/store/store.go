@@ -293,8 +293,6 @@ func getDefaultProperties(appOptions *types.ApplicationOptions) map[string]strin
 }
 
 func (s *Store) WaitForTerminalStatementState(ctx context.Context, statement types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError) {
-	var capturedErrors []string
-	capturedErrorsLimit := 5
 	for !statement.IsTerminalState() {
 		select {
 		case <-ctx.Done():
@@ -310,21 +308,12 @@ func (s *Store) WaitForTerminalStatementState(ctx context.Context, statement typ
 				}
 			}
 
+			if statusDetail != "" {
+				output.Println(statusDetail)
+			}
+
 			statement.Status = types.PHASE(statementObj.Status.GetPhase())
 			statement.StatusDetail = statusDetail
-
-			// if status.detail is filled we encountered a retryable server response
-			if statusDetail != "" {
-				capturedErrors = append(capturedErrors, statusDetail)
-			}
-
-			if len(capturedErrors) > capturedErrorsLimit {
-				return nil, &types.StatementError{
-					Message: fmt.Sprintf("the server can't process this statement right now, exiting after %d retries",
-						len(capturedErrors)),
-					FailureMessage: fmt.Sprintf("captured retryable errors: %s", strings.Join(capturedErrors, "; ")),
-				}
-			}
 
 			time.Sleep(time.Second)
 		}

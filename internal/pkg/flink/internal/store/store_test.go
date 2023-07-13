@@ -1526,33 +1526,6 @@ func TestWaitForTerminalStateStopsWhenUserDetaches(t *testing.T) {
 	assert.NotNil(t, ctx.Err())
 }
 
-func TestWaitForTerminalStateStopsWhenTooManyRetryableErrors(t *testing.T) {
-	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
-	appOptions := types.ApplicationOptions{
-		OrgResourceId: "orgId",
-		EnvironmentId: "envId",
-	}
-	s := &Store{
-		client:           client,
-		appOptions:       &appOptions,
-		tokenRefreshFunc: tokenRefreshFunc,
-	}
-	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
-		Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
-			StatementName: flinkgatewayv1alpha1.PtrString("statement-name"),
-		},
-		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
-			Phase:  "RUNNING",
-			Detail: flinkgatewayv1alpha1.PtrString("Test status detail message"),
-		},
-	}
-	client.EXPECT().GetStatement("envId", statementObj.Spec.GetStatementName(), "orgId").Return(statementObj, nil).Times(6)
-
-	_, err := s.WaitForTerminalStatementState(context.Background(), *types.NewProcessedStatement(statementObj))
-
-	assert.NotNil(t, err)
-}
-
 func TestWaitForTerminalStateStopsOnError(t *testing.T) {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
 	appOptions := types.ApplicationOptions{

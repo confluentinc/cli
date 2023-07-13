@@ -5,8 +5,11 @@ import (
 	"net/http"
 	"time"
 
+	fColor "github.com/fatih/color"
+
 	"github.com/confluentinc/go-prompt"
 
+	"github.com/confluentinc/cli/internal/pkg/color"
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/utils"
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -112,7 +115,8 @@ func (c *StatementController) waitForStatementToBeInTerminalStateOrError(process
 
 	go c.listenForUserInputEvent(ctx, c.isDetachEvent, cancelWaitForTerminalStatementState)
 
-	output.Printf("Statement phase is %s. Press return to detach.\n", readyStatementWithResults.Status)
+	col := fColor.New(color.AccentColor)
+	output.Printf("Statement phase is %s. %s.\n", readyStatementWithResults.Status, col.Sprint("Press Enter to detach"))
 	terminalStatement, err := c.store.WaitForTerminalStatementState(ctx, *readyStatementWithResults)
 	if err != nil {
 		return nil, err
