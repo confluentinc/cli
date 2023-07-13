@@ -97,7 +97,7 @@ func TestErrIfMissingRunRequirement_Error(t *testing.T) {
 		{RequireNonAPIKeyCloudLogin, apiKeyCloudCfg, v1.RequireNonAPIKeyCloudLoginErr},
 		{RequireNonAPIKeyCloudLoginOrOnPremLogin, apiKeyCloudCfg, v1.RequireNonAPIKeyCloudLoginOrOnPremLoginErr},
 		{RequireNonAPIKeyCloudLoginOrOnPremLogin, apiKeyCloudCfg, v1.RequireNonAPIKeyCloudLoginOrOnPremLoginErr},
-		{RequireOnPremLogin, cloudCfg(regularOrgContextState), v1.RequireOnPremLoginErr},
+		{RequireOnPremLogin, cloudCfg(regularOrgContextState), v1.CloudLoginRequireOnPremLoginErr},
 	} {
 		cmd := &cobra.Command{Annotations: map[string]string{RunRequirement: test.req}}
 		err := ErrIfMissingRunRequirement(cmd, test.cfg)
