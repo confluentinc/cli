@@ -1,14 +1,14 @@
-Manage Flink SQL statements.
+Manage Flink SQL statement exceptions.
 
 Usage:
-  confluent flink statement exceptions [command]
+  confluent flink statement exception [command]
 
 Available Commands:
-  list        Get exceptions for a Flink SQL statement.
+  list        List exceptions for a Flink SQL statement.
 
 Global Flags:
   -h, --help            Show help for this command.
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
 
-Use "confluent flink statement exceptions [command] --help" for more information about a command.
+Use "confluent flink statement exception [command] --help" for more information about a command.
