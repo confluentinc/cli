@@ -25,9 +25,9 @@ func (c *command) newStatementCommand() *cobra.Command {
 	}
 
 	cmd.AddCommand(c.newStatementDeleteCommand())
-	cmd.AddCommand(c.newStatementListCommand())
 	cmd.AddCommand(c.newStatementDescribeCommand())
 	cmd.AddCommand(c.newStatementExceptionCommand())
+	cmd.AddCommand(c.newStatementListCommand())
 
 	return cmd
 }
