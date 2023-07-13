@@ -21,8 +21,6 @@ import (
 	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/flink/config"
 	"github.com/confluentinc/cli/internal/pkg/flink/test/mock"
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
@@ -38,51 +36,6 @@ func TestStoreTestSuite(t *testing.T) {
 
 func tokenRefreshFunc() error {
 	return nil
-}
-
-func newContext() *dynamicconfig.DynamicContext {
-	return dynamicconfig.NewDynamicContext(&v1.Context{Environments: map[string]*v1.EnvironmentContext{"env": v1.NewEnvironmentContext()}, CurrentEnvironment: "env"}, &ccloudv2.Client{})
-}
-
-func TestStoreRecoversPropertiesFromContext(t *testing.T) {
-	// Create a new store
-	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, "authToken")
-	mockAppController := mock.NewMockApplicationControllerInterface(gomock.NewController(t))
-	cliContext := newContext()
-	// load one
-	_ = cliContext.SetCurrentFlinkDatabase("my_database")
-
-	s := NewStore(client, mockAppController.ExitApplication, &types.ApplicationOptions{
-		Context: cliContext,
-	}, tokenRefreshFunc).(*Store)
-
-	require.Equal(t, "my_database", s.Properties.Get(config.ConfigKeyDatabase))
-
-	// load other
-	cliContext = newContext()
-	_ = cliContext.SetCurrentFlinkCatalog("my_catalog")
-	s = NewStore(client, mockAppController.ExitApplication, &types.ApplicationOptions{
-		Context: cliContext,
-	}, tokenRefreshFunc).(*Store)
-	require.Equal(t, "my_catalog", s.Properties.Get(config.ConfigKeyCatalog))
-
-	// load both
-	cliContext = newContext()
-	_ = cliContext.SetCurrentFlinkDatabase("my_database")
-	_ = cliContext.SetCurrentFlinkCatalog("my_catalog")
-	s = NewStore(client, mockAppController.ExitApplication, &types.ApplicationOptions{
-		Context: cliContext,
-	}, tokenRefreshFunc).(*Store)
-	require.Equal(t, "my_database", s.Properties.Get(config.ConfigKeyDatabase))
-	require.Equal(t, "my_catalog", s.Properties.Get(config.ConfigKeyCatalog))
-
-	// load none
-	cliContext = newContext()
-	s = NewStore(client, mockAppController.ExitApplication, &types.ApplicationOptions{
-		Context: cliContext,
-	}, tokenRefreshFunc).(*Store)
-	require.Empty(t, s.Properties.Get(config.ConfigKeyDatabase))
-	require.Empty(t, s.Properties.Get(config.ConfigKeyCatalog))
 }
 
 func TestStoreProcessLocalStatement(t *testing.T) {
@@ -1033,7 +986,6 @@ func TestTimeout(t *testing.T) {
 func (s *StoreTestSuite) TestProcessStatement() {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
 	appOptions := &types.ApplicationOptions{
-		Context:        newContext(),
 		OrgResourceId:  "orgId",
 		EnvironmentId:  "envId",
 		ComputePoolId:  "computePoolId",
@@ -1068,7 +1020,6 @@ func (s *StoreTestSuite) TestProcessStatementFailsOnError() {
 	appOptions := &types.ApplicationOptions{
 		OrgResourceId:  "orgId",
 		EnvironmentId:  "envId",
-		Context:        newContext(),
 		ComputePoolId:  "computePoolId",
 		IdentityPoolId: "identityPoolId",
 	}

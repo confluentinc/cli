@@ -39,6 +39,7 @@ func (c *BasicOutputController) printResultToSTDOUT() {
 	totalAvailableChars := c.calcTotalAvailableChars()
 	rows := c.getRows(totalAvailableChars)
 	rawTable := c.createTable(rows)
+	rawTable.SetAlignment(tablewriter.ALIGN_LEFT)
 	rawTable.Render()
 }
 
