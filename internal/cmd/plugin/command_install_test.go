@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/go-version"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/confluentinc/cli/internal/pkg/plugin"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -39,7 +40,6 @@ func TestGetLanguage(t *testing.T) {
 	language, ver := getLanguage(manifest)
 	assert.Equal(t, "python", language)
 	referenceVer, err := version.NewVersion("3.0.0")
-	fmt.Println(ver, referenceVer)
 	assert.NoError(t, err)
 	assert.True(t, ver.Equal(referenceVer))
 }
@@ -49,7 +49,13 @@ func TestInstallPythonPlugin(t *testing.T) {
 	assert.NoError(t, err)
 	defer os.RemoveAll(dir)
 
-	err = installSimplePlugin("confluent-test_plugin", "../../../test/fixtures/input/plugin", dir, "python")
+	pluginInstaller := &plugin.PythonPluginInstaller{
+		Name:          "confluent-test_plugin",
+		RepositoryDir: "../../../test/fixtures/input/plugin",
+		InstallDir:    dir,
+	}
+
+	err = pluginInstaller.Install()
 	assert.NoError(t, err)
 	assert.True(t, utils.DoesPathExist(fmt.Sprintf("%s/%s", dir, "confluent-test_plugin.py")))
 }

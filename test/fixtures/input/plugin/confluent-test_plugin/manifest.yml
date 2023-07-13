@@ -1,4 +1,4 @@
 description: "Does nothing"
 dependencies:
-- dependency: Python
+- name: Python
   version: "3"
