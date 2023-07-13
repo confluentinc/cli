@@ -65,7 +65,7 @@ func (c *Command) kafkaStart(cmd *cobra.Command, args []string) error {
 
 	for _, container := range containers {
 		if container.Image == dockerImageName {
-			output.Printf("Confluent Local is already running.\n")
+			output.Println("Confluent Local is already running.")
 			prompt := form.NewPrompt()
 			f := form.New(form.Field{
 				ID:        "confirm",
