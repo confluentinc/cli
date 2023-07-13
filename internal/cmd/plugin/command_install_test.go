@@ -37,7 +37,8 @@ func TestGetLanguage(t *testing.T) {
 	manifest, err := getPluginManifest("confluent-test_plugin", dir)
 	assert.NoError(t, err)
 
-	language, ver := getLanguage(manifest)
+	language, ver, err := getLanguage(manifest)
+	assert.NoError(t, err)
 	assert.Equal(t, "python", language)
 	referenceVer, err := version.NewVersion("3.0.0")
 	assert.NoError(t, err)

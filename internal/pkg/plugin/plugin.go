@@ -28,9 +28,9 @@ type pluginInfo struct {
 // SearchPath goes through the files in the user's $PATH and checks if they are plugins
 func SearchPath(cfg *v1.Config) map[string][]string {
 	if runtime.GOOS == "windows" {
-		log.CliLogger.Debugf("Searching `$PATH` and `%%USERPROFILE%%\\.confluent\\plugins` for plugins. Plugins can be disabled in %s.\n", cfg.GetFilename())
+		log.CliLogger.Debugf("Searching $PATH and %%USERPROFILE%%\\.confluent\\plugins for plugins. Plugins can be disabled in %s.\n", cfg.GetFilename())
 	}
-	log.CliLogger.Debugf("Searching `$PATH` and `~/.confluent/plugins` for plugins. Plugins can be disabled in %s.\n", cfg.GetFilename())
+	log.CliLogger.Debugf("Searching $PATH and ~/.confluent/plugins for plugins. Plugins can be disabled in %s.\n", cfg.GetFilename())
 
 	pathDirList := filepath.SplitList(os.Getenv("PATH"))
 	pluginDir := filepath.Join(os.Getenv("HOME"), ".confluent", "plugins")

@@ -10,7 +10,8 @@ import (
 )
 
 const (
-	programNotFoundErrorMsg      = "unable to find %s; check that it is installed in a directory in your $PATH"
+	programNotFoundErrorMsg      = "unable to find %s"
+	programNotFoundSuggestions   = "check that it is installed in a directory in your $PATH"
 	unableToParseVersionErrorMsg = "unable to parse %s version"
 	insufficientVersionErrorMsg  = "installed %s version %s is less than the required version %s"
 )

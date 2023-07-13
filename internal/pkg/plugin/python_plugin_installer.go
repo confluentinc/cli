@@ -1,6 +1,7 @@
 package plugin
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
 
@@ -31,13 +32,13 @@ func (p *PythonPluginInstaller) CheckVersion(ver *version.Version) error {
 		out, err = versionCmd.Output()
 	}
 	if err != nil {
-		return errors.Errorf(programNotFoundErrorMsg, "python")
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(programNotFoundErrorMsg, "python"), programNotFoundSuggestions)
 	}
 
 	re := regexp.MustCompile(`^[1-9][0-9]*\.[0-9]+\.(0|[1-9][0-9]*)$`)
 	for _, word := range strings.Split(string(out), " ") {
 		if re.MatchString(word) {
-			installedVer, err := version.NewVersion(strings.Trim(word, " \n"))
+			installedVer, err := version.NewVersion(strings.TrimSpace(word))
 			if err != nil {
 				return errors.Errorf(unableToParseVersionErrorMsg, "python")
 			}

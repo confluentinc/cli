@@ -20,7 +20,7 @@ func (g *GoPluginInstaller) CheckVersion(ver *version.Version) error {
 
 	out, err := versionCmd.Output()
 	if err != nil {
-		return errors.Errorf(programNotFoundErrorMsg, "go")
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(programNotFoundErrorMsg, "go"), programNotFoundSuggestions)
 	}
 
 	re := regexp.MustCompile(`^go[1-9][0-9]*\.[0-9]+(\.[1-9][0-9]*)?$`)

@@ -95,16 +95,27 @@ func getPluginManifest(pluginName, dir string) (*Manifest, error) {
 }
 
 func installPlugin(manifest *Manifest, repositoryDir, installDir string) error {
-	language, ver := getLanguage(manifest)
+	language, ver, err := getLanguage(manifest)
+	if err != nil {
+		return err
+	}
 
 	var pluginInstaller plugin.PluginInstaller
 	switch language {
 	case "go":
 		pluginInstaller = &plugin.GoPluginInstaller{Name: manifest.Name}
 	case "python":
-		pluginInstaller = &plugin.PythonPluginInstaller{Name: manifest.Name, RepositoryDir: repositoryDir, InstallDir: installDir}
+		pluginInstaller = &plugin.PythonPluginInstaller{
+			Name:          manifest.Name,
+			RepositoryDir: repositoryDir,
+			InstallDir:    installDir,
+		}
 	case "shell":
-		pluginInstaller = &plugin.ShellPluginInstaller{Name: manifest.Name, RepositoryDir: repositoryDir, InstallDir: installDir}
+		pluginInstaller = &plugin.ShellPluginInstaller{
+			Name:          manifest.Name,
+			RepositoryDir: repositoryDir,
+			InstallDir:    installDir,
+		}
 	default:
 		return errors.Errorf("installation of plugins using %s is not yet supported", language)
 	}
@@ -115,21 +126,21 @@ func installPlugin(manifest *Manifest, repositoryDir, installDir string) error {
 	return pluginInstaller.Install()
 }
 
-func getLanguage(manifest *Manifest) (string, *version.Version) {
+func getLanguage(manifest *Manifest) (string, *version.Version, error) {
 	if manifest == nil || len(manifest.Dependencies) == 0 {
-		return "", nil
+		return "", nil, errors.New("invalid plugin manifest: no language found")
 	}
 
 	language := manifest.Dependencies[0]
 	language.Name = strings.ToLower(language.Name)
 	if language.Version == "" {
-		return language.Name, nil
+		return language.Name, nil, nil
 	}
 
 	ver, err := version.NewVersion(language.Version)
 	if err != nil {
-		return language.Name, nil
+		return "", nil, err
 	}
 
-	return language.Name, ver
+	return language.Name, ver, nil
 }
