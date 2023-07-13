@@ -21,6 +21,7 @@ import (
 
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -55,6 +56,33 @@ func (c *Command) kafkaStart(cmd *cobra.Command, args []string) error {
 
 	if err := checkIsDockerRunning(dockerClient); err != nil {
 		return err
+	}
+
+	containers, err := dockerClient.ContainerList(context.Background(), types.ContainerListOptions{All: true})
+	if err != nil {
+		return err
+	}
+
+	for _, container := range containers {
+		if container.Image == dockerImageName {
+			output.Printf("Confluent Local is already running.\n")
+			prompt := form.NewPrompt()
+			f := form.New(form.Field{
+				ID:        "confirm",
+				Prompt:    "Do you wish to start a new Confluent Local session? Current context will be lost.",
+				IsYesOrNo: true,
+			})
+			if err := f.Prompt(prompt); err != nil {
+				return err
+			}
+			if f.Responses["confirm"].(bool) {
+				if err := c.stopAndRemoveConfluentLocal(dockerClient); err != nil {
+					return err
+				}
+			} else {
+				return nil
+			}
+		}
 	}
 
 	out, err := dockerClient.ImagePull(context.Background(), dockerImageName, types.ImagePullOptions{})
@@ -95,6 +123,7 @@ func (c *Command) kafkaStart(cmd *cobra.Command, args []string) error {
 		return errors.NewErrorWithSuggestions(errors.FailedToReadPortsErrorMsg, errors.FailedToReadPortsSuggestions)
 	}
 	ports := c.Config.LocalPorts
+	fmt.Println("ports", ports)
 	platform := &specsv1.Platform{OS: "linux", Architecture: runtime.GOARCH}
 	natKafkaRestPort := nat.Port(ports.KafkaRestPort + "/tcp")
 	natPlaintextPort := nat.Port(ports.PlaintextPort + "/tcp")
@@ -126,7 +155,7 @@ func (c *Command) kafkaStart(cmd *cobra.Command, args []string) error {
 
 	createResp, err := dockerClient.ContainerCreate(context.Background(), config, hostConfig, nil, platform, confluentLocalContainerName)
 	if err != nil {
-		return errors.CatchContainerNameInUseError(err)
+		return err
 	}
 	log.CliLogger.Tracef("Create confluent-local container success")
 
