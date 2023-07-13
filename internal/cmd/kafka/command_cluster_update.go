@@ -2,6 +2,7 @@ package kafka
 
 import (
 	"fmt"
+	presource "github.com/confluentinc/cli/internal/pkg/name-conversions"
 
 	"github.com/spf13/cobra"
 
@@ -17,7 +18,7 @@ import (
 
 func (c *clusterCommand) newUpdateCommand(cfg *v1.Config) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "update <id>",
+		Use:               "update <id|name>",
 		Short:             "Update a Kafka cluster.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
@@ -55,7 +56,14 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 	clusterID := args[0]
 	currentCluster, _, err := c.V2Client.DescribeKafkaCluster(clusterID, environmentId)
 	if err != nil {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.KafkaClusterNotFoundErrorMsg, clusterID), errors.ChooseRightEnvironmentSuggestions)
+		clusterID, err = presource.ConvertClusterNameToId(clusterID, environmentId, c.V2Client)
+		if err != nil {
+			return err
+		}
+		currentCluster, _, err = c.V2Client.DescribeKafkaCluster(clusterID, environmentId)
+		if err != nil {
+			return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.KafkaClusterNotFoundErrorMsg, clusterID), errors.ChooseRightEnvironmentSuggestions)
+		}
 	}
 
 	update := cmkv2.CmkV2ClusterUpdate{

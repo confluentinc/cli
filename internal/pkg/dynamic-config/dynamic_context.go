@@ -2,6 +2,7 @@ package dynamicconfig
 
 import (
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/name-conversions"
 	"strings"
 	"time"
 
@@ -31,13 +32,32 @@ func NewDynamicContext(context *v1.Context, v2Client *ccloudv2.Client) *DynamicC
 	}
 }
 
-func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, client *ccloudv1.Client) error {
+func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, client *ccloudv1.Client, isTest bool) error {
 	if environment, _ := cmd.Flags().GetString("environment"); environment != "" {
 		if d.Credential.CredentialType == v1.APIKey {
 			return errors.New("`--environment` flag should not be passed for API key context")
 		}
 		ctx := d.Config.Context()
 		d.Config.SetOverwrittenCurrentEnvironment(ctx.CurrentEnvironment)
+		if presource.LookupType(environment) != presource.Environment {
+			if len(d.Config.ValidEnvNamesToIds) == 0 {
+				envs, err := d.V2Client.ListOrgEnvironments()
+				if err != nil {
+					return err
+				}
+				envPtrs := presource.ConvertToPtrSlice(envs)
+				d.Config.ValidEnvNamesToIds, err = presource.GetV2NamesToIds(envPtrs)
+				if err != nil {
+					return err
+				}
+				for name, id := range d.Config.ValidEnvNamesToIds {
+					d.Config.ValidEnvIdsToNames[id] = name
+				}
+			}
+			if envId, ok := d.Config.ValidEnvNamesToIds[environment]; ok {
+				environment = envId
+			}
+		}
 		ctx.SetCurrentEnvironment(environment)
 	}
 
@@ -47,6 +67,7 @@ func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, client *cclou
 		}
 		ctx := d.Config.Context()
 		d.Config.SetOverwrittenCurrentKafkaCluster(ctx.KafkaClusterContext.GetActiveKafkaClusterId())
+
 		ctx.KafkaClusterContext.SetActiveKafkaCluster(cluster)
 	}
 
@@ -72,9 +93,6 @@ func (d *DynamicContext) GetKafkaClusterForCommand() (*v1.KafkaClusterConfig, er
 	}
 
 	cluster, err := d.FindKafkaCluster(clusterId)
-	if presource.LookupType(clusterId) != presource.KafkaCluster && clusterId != "anonymous-id" {
-		return nil, errors.Errorf(errors.KafkaClusterMissingPrefixErrorMsg, clusterId)
-	}
 	return cluster, errors.CatchKafkaNotFoundError(err, clusterId, nil)
 }
 
@@ -102,7 +120,14 @@ func (d *DynamicContext) FindKafkaCluster(clusterId string) (*v1.KafkaClusterCon
 
 	cluster, httpResp, err := d.V2Client.DescribeKafkaCluster(clusterId, environmentId)
 	if err != nil {
-		return nil, errors.CatchKafkaNotFoundError(err, clusterId, httpResp)
+		clusterId, err = name_conversions.ConvertClusterNameToId(clusterId, environmentId, d.V2Client)
+		if err != nil {
+			return nil, err
+		}
+		cluster, httpResp, err = d.V2Client.DescribeKafkaCluster(clusterId, environmentId)
+		if err != nil {
+			return nil, errors.CatchKafkaNotFoundError(err, clusterId, httpResp)
+		}
 	}
 
 	config := &v1.KafkaClusterConfig{

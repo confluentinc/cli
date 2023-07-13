@@ -31,6 +31,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	id := args[0]
 
 	environment, err := c.V2Client.GetOrgEnvironment(id)
+	name := environment.GetDisplayName()
 	if err != nil {
 		return errors.NewErrorWithSuggestions(err.Error(), "List available environments with `confluent environment list`.")
 	}
@@ -54,6 +55,8 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	c.Context.DeleteEnvironment(id)
+	delete(c.Config.ValidEnvIdsToNames, id)
+	delete(c.Config.ValidEnvNamesToIds, name)
 	_ = c.Config.Save()
 
 	return nil
