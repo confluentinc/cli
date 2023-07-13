@@ -41,8 +41,6 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	}
 
 	c.Context.AddEnvironment(environment.GetId())
-	c.Config.ValidEnvNamesToIds[environment.GetDisplayName()] = environment.GetId()
-	c.Config.ValidEnvIdsToNames[environment.GetId()] = environment.GetDisplayName()
 	_ = c.Config.Save()
 	return nil
 }

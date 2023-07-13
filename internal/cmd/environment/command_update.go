@@ -51,10 +51,5 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		Name:      environment.GetDisplayName(),
 	})
 
-	oldName := c.Config.ValidEnvIdsToNames[environment.GetId()]
-	c.Config.ValidEnvIdsToNames[environment.GetId()] = name
-	delete(c.Config.ValidEnvNamesToIds, oldName)
-	c.Config.ValidEnvNamesToIds[name] = environment.GetId()
-
 	return table.Print()
 }

@@ -170,13 +170,11 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 			apiCredential.Name:   apiCredential,
 			loginCredential.Name: loginCredential,
 		},
-		CurrentContext:     contextName,
-		Contexts:           map[string]*Context{contextName: statefulContext},
-		ContextStates:      map[string]*ContextState{contextName: regularOrgContextState},
-		IsTest:             true,
-		SavedCredentials:   savedCredentials,
-		ValidEnvIdsToNames: map[string]string{},
-		ValidEnvNamesToIds: map[string]string{},
+		CurrentContext:   contextName,
+		Contexts:         map[string]*Context{contextName: statefulContext},
+		ContextStates:    map[string]*ContextState{contextName: regularOrgContextState},
+		IsTest:           true,
+		SavedCredentials: savedCredentials,
 	}
 	testInputs.statelessConfig = &Config{
 		BaseConfig: &config.BaseConfig{
@@ -188,13 +186,11 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 			apiCredential.Name:   apiCredential,
 			loginCredential.Name: loginCredential,
 		},
-		Contexts:           map[string]*Context{contextName: statelessContext},
-		ContextStates:      map[string]*ContextState{contextName: {}},
-		CurrentContext:     contextName,
-		IsTest:             true,
-		SavedCredentials:   savedCredentials,
-		ValidEnvIdsToNames: map[string]string{},
-		ValidEnvNamesToIds: map[string]string{},
+		Contexts:         map[string]*Context{contextName: statelessContext},
+		ContextStates:    map[string]*ContextState{contextName: {}},
+		CurrentContext:   contextName,
+		IsTest:           true,
+		SavedCredentials: savedCredentials,
 	}
 	testInputs.twoEnvStatefulConfig = &Config{
 		BaseConfig: &config.BaseConfig{
@@ -206,12 +202,10 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 			apiCredential.Name:   apiCredential,
 			loginCredential.Name: loginCredential,
 		},
-		CurrentContext:     contextName,
-		Contexts:           map[string]*Context{contextName: twoEnvStatefulContext},
-		ContextStates:      map[string]*ContextState{contextName: regularOrgContextState},
-		IsTest:             true,
-		ValidEnvIdsToNames: map[string]string{},
-		ValidEnvNamesToIds: map[string]string{},
+		CurrentContext: contextName,
+		Contexts:       map[string]*Context{contextName: twoEnvStatefulContext},
+		ContextStates:  map[string]*ContextState{contextName: regularOrgContextState},
+		IsTest:         true,
 	}
 
 	statefulContext.Config = testInputs.statefulConfig
@@ -269,8 +263,6 @@ func TestConfig_Load(t *testing.T) {
 				Contexts:           map[string]*Context{},
 				ContextStates:      map[string]*ContextState{},
 				SavedCredentials:   map[string]*LoginCredential{},
-				ValidEnvIdsToNames: map[string]string{},
-				ValidEnvNamesToIds: map[string]string{},
 			},
 			file: "test_json/load_disable_update.json",
 		},

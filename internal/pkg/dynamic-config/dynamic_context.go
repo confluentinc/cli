@@ -32,32 +32,13 @@ func NewDynamicContext(context *v1.Context, v2Client *ccloudv2.Client) *DynamicC
 	}
 }
 
-func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, client *ccloudv1.Client, isTest bool) error {
+func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, client *ccloudv1.Client) error {
 	if environment, _ := cmd.Flags().GetString("environment"); environment != "" {
 		if d.Credential.CredentialType == v1.APIKey {
 			return errors.New("`--environment` flag should not be passed for API key context")
 		}
 		ctx := d.Config.Context()
 		d.Config.SetOverwrittenCurrentEnvironment(ctx.CurrentEnvironment)
-		if presource.LookupType(environment) != presource.Environment {
-			if len(d.Config.ValidEnvNamesToIds) == 0 {
-				envs, err := d.V2Client.ListOrgEnvironments()
-				if err != nil {
-					return err
-				}
-				envPtrs := presource.ConvertToPtrSlice(envs)
-				d.Config.ValidEnvNamesToIds, err = presource.GetV2NamesToIds(envPtrs)
-				if err != nil {
-					return err
-				}
-				for name, id := range d.Config.ValidEnvNamesToIds {
-					d.Config.ValidEnvIdsToNames[id] = name
-				}
-			}
-			if envId, ok := d.Config.ValidEnvNamesToIds[environment]; ok {
-				environment = envId
-			}
-		}
 		ctx.SetCurrentEnvironment(environment)
 	}
 
