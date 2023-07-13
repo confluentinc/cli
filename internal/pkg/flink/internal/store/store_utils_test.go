@@ -82,7 +82,7 @@ func TestProcessSetStatement(t *testing.T) {
 	// Create a new store
 	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, "authToken")
 	s := NewStore(client, nil, &types.ApplicationOptions{Context: newContext()}, tokenRefreshFunc).(*Store)
-	s.Properties[config.ConfigKeyLocalTimeZone] = "UTC+01:00"
+	s.Properties.Set(config.ConfigKeyLocalTimeZone, "UTC+01:00")
 
 	t.Run("should return an error message if statement is invalid", func(t *testing.T) {
 		_, err := s.processSetStatement("se key=value")
@@ -96,8 +96,8 @@ func TestProcessSetStatement(t *testing.T) {
 		cupaloy.SnapshotT(t, result.StatementResults)
 
 		// Add some key-value pairs to the config
-		s.Properties["catalog"] = "job1"
-		s.Properties["timeout"] = "30"
+		s.Properties.Set("catalog", "job1")
+		s.Properties.Set("timeout", "30")
 	})
 
 	t.Run("should update config for valid configKey", func(t *testing.T) {
@@ -126,20 +126,31 @@ func TestProcessSetStatement(t *testing.T) {
 func TestProcessResetStatement(t *testing.T) {
 	// Create a new store
 	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, "authToken")
-	s := NewStore(client, nil, nil, tokenRefreshFunc).(*Store)
+	appOptions := types.ApplicationOptions{
+		OrgResourceId:   "orgId",
+		EnvironmentName: "envName",
+		Database:        "database",
+	}
+	s := NewStore(client, nil, &appOptions, tokenRefreshFunc).(*Store)
+	defaultSetOutput := createStatementResults([]string{"Key", "Value"}, [][]string{
+		{config.ConfigKeyCatalog, appOptions.EnvironmentName},
+		{config.ConfigKeyDatabase, appOptions.Database},
+		{config.ConfigKeyLocalTimeZone, getLocalTimezone()},
+	})
 
 	t.Run("should return an error message if statement is invalid", func(t *testing.T) {
 		_, err := s.processResetStatement("res key")
 		assert.NotNil(t, err)
 	})
 
-	t.Run("should reset all keys and values from config", func(t *testing.T) {
-		s.Properties["catalog"] = "job1"
-		s.Properties["timeout"] = "30"
+	t.Run("should reset all keys and values from config to their default or delete them if no default", func(t *testing.T) {
+		s.Properties.Set(config.ConfigKeyCatalog, "job1")
+		s.Properties.Set("timeout", "30")
 		result, _ := s.processResetStatement("reset")
 		assert.EqualValues(t, types.COMPLETED, result.Status)
 		assert.Equal(t, "configuration has been reset successfully", result.StatusDetail)
-		assert.Nil(t, result.StatementResults)
+		assert.ElementsMatch(t, defaultSetOutput.GetHeaders(), result.StatementResults.GetHeaders())
+		assert.ElementsMatch(t, defaultSetOutput.GetRows(), result.StatementResults.GetRows())
 	})
 
 	t.Run("should return an error message if configKey does not exist", func(t *testing.T) {
@@ -150,26 +161,24 @@ func TestProcessResetStatement(t *testing.T) {
 	})
 
 	t.Run("should reset config for valid configKey", func(t *testing.T) {
-		s.Properties["catalog"] = "job1"
+		s.Properties.Set("catalog", "job1")
 		result, _ := s.processResetStatement("reset 'catalog'")
 		assert.EqualValues(t, types.COMPLETED, result.Status)
 		assert.Equal(t, `configuration key "catalog" has been reset successfully`, result.StatusDetail)
-		expectedResult := createStatementResults([]string{"Key", "Value"}, [][]string{})
-		assert.Equal(t, &expectedResult, result.StatementResults)
-	})
-	t.Run("should return all keys and values from config after updates", func(t *testing.T) {
-		result, _ := s.processResetStatement("reset")
-
-		assert.EqualValues(t, types.COMPLETED, result.Status)
-		assert.Equal(t, "configuration has been reset successfully", result.StatusDetail)
-		assert.Nil(t, result.StatementResults)
+		assert.ElementsMatch(t, defaultSetOutput.GetHeaders(), result.StatementResults.GetHeaders())
+		assert.ElementsMatch(t, defaultSetOutput.GetRows(), result.StatementResults.GetRows())
 	})
 }
 
 func TestProcessUseStatement(t *testing.T) {
 	// Create a new store
 	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, "authToken")
-	s := NewStore(client, nil, nil, tokenRefreshFunc).(*Store)
+	appOptions := types.ApplicationOptions{
+		OrgResourceId:   "orgId",
+		EnvironmentName: "envName",
+		Database:        "database",
+	}
+	s := NewStore(client, nil, &appOptions, tokenRefreshFunc).(*Store)
 
 	t.Run("should return an error message if statement is invalid", func(t *testing.T) {
 		_, err := s.processUseStatement("us")
@@ -183,7 +192,7 @@ func TestProcessUseStatement(t *testing.T) {
 		require.EqualValues(t, types.COMPLETED, result.Status)
 		require.Equal(t, "configuration updated successfully", result.StatusDetail)
 		expectedResult := createStatementResults([]string{"Key", "Value"}, [][]string{{config.ConfigKeyDatabase, "db1"}})
-		assert.Equal(t, &expectedResult, result.StatementResults)
+		assert.Equal(t, expectedResult, result.StatementResults)
 	})
 
 	t.Run("should return an error message if catalog name is missing", func(t *testing.T) {
@@ -198,7 +207,7 @@ func TestProcessUseStatement(t *testing.T) {
 		require.EqualValues(t, types.COMPLETED, result.Status)
 		require.Equal(t, "configuration updated successfully", result.StatusDetail)
 		expectedResult := createStatementResults([]string{"Key", "Value"}, [][]string{{config.ConfigKeyCatalog, "metadata"}})
-		assert.Equal(t, &expectedResult, result.StatementResults)
+		assert.Equal(t, expectedResult, result.StatementResults)
 	})
 
 	t.Run("should return an error message for invalid syntax", func(t *testing.T) {

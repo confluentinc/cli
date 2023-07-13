@@ -19,7 +19,7 @@ import (
 )
 
 type Store struct {
-	Properties       map[string]string
+	Properties       UserProperties
 	exitApplication  func()
 	client           ccloudv2.GatewayClientInterface
 	appOptions       *types.ApplicationOptions
@@ -64,7 +64,7 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 		statement,
 		s.appOptions.GetComputePoolId(),
 		s.appOptions.GetIdentityPoolId(),
-		s.propsDefault(s.Properties),
+		s.Properties.GetProperties(),
 		s.appOptions.GetEnvironmentId(),
 		s.appOptions.GetOrgResourceId(),
 	)
@@ -81,7 +81,7 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 func (s *Store) WaitPendingStatement(ctx context.Context, statement types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError) {
 	statementStatus := statement.Status
 	if statementStatus != types.COMPLETED && statementStatus != types.RUNNING {
-		updatedStatement, err := s.waitForPendingStatement(ctx, statement.StatementName, timeout(s.Properties))
+		updatedStatement, err := s.waitForPendingStatement(ctx, statement.StatementName, s.getTimeout())
 		if err != nil {
 			return nil, err
 		}
@@ -261,7 +261,7 @@ func extractPageToken(nextUrl string) (string, error) {
 
 func NewStore(client ccloudv2.GatewayClientInterface, exitApplication func(), appOptions *types.ApplicationOptions, tokenRefreshFunc func() error) types.StoreInterface {
 	return &Store{
-		Properties:       appOptions.GetDefaultProperties(),
+		Properties:       NewUserProperties(getDefaultProperties(appOptions)),
 		client:           client,
 		exitApplication:  exitApplication,
 		appOptions:       appOptions,
@@ -269,28 +269,19 @@ func NewStore(client ccloudv2.GatewayClientInterface, exitApplication func(), ap
 	}
 }
 
-// Set properties default values if not set by the user
-// We probably want to refactor the keys names and where they are stored. Maybe also the default values.
-func (s *Store) propsDefault(propsWithoutDefault map[string]string) map[string]string {
+func getDefaultProperties(appOptions *types.ApplicationOptions) map[string]string {
 	properties := map[string]string{
-		config.ConfigKeyCatalog:       s.appOptions.GetEnvironmentName(),
-		config.ConfigKeyDatabase:      s.appOptions.GetDatabase(),
+		config.ConfigKeyCatalog:       appOptions.GetEnvironmentName(),
+		config.ConfigKeyDatabase:      appOptions.GetDatabase(),
 		config.ConfigKeyLocalTimeZone: getLocalTimezone(),
 	}
 
-	for key, value := range propsWithoutDefault {
-		properties[key] = value
-	}
-
 	if catalog, ok := properties[config.ConfigKeyCatalog]; !ok || catalog == "" {
-		properties[config.ConfigKeyCatalog] = s.appOptions.Context.GetCurrentFlinkCatalog()
+		properties[config.ConfigKeyCatalog] = appOptions.Context.GetCurrentFlinkCatalog()
 	}
 	if db, ok := properties[config.ConfigKeyDatabase]; !ok || db == "" {
-		properties[config.ConfigKeyDatabase] = s.appOptions.Context.GetCurrentFlinkDatabase()
+		properties[config.ConfigKeyDatabase] = appOptions.Context.GetCurrentFlinkDatabase()
 	}
-
-	// Here we delete locally used properties before sending it to the backend
-	delete(properties, config.ConfigKeyResultsTimeout)
 
 	return properties
 }
