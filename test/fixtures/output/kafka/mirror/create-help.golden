@@ -21,9 +21,9 @@ Flags:
       --replication-factor int32   Replication factor. (default 3)
       --config-file string         Name of a file with additional topic configuration. Each property should be on its own line with the format: key=value.
       --source-topic string        Name of the source topic to be mirrored over the cluster link. Only required when there is a prefix configured on the link.
-      --cluster string             Kafka cluster ID.
+      --cluster string             Kafka cluster ID or name.
       --context string             CLI context name.
-      --environment string         Environment ID.
+      --environment string         Environment ID or name.
 
 Global Flags:
   -h, --help            Show help for this command.

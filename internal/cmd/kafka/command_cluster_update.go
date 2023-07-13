@@ -14,11 +14,12 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	presource "github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *clusterCommand) newUpdateCommand(cfg *v1.Config) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "update <id>",
+		Use:               "update <id|name>",
 		Short:             "Update a Kafka cluster.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
@@ -58,7 +59,7 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string, prompt form.P
 	clusterID := args[0]
 	currentCluster, _, err := c.V2Client.DescribeKafkaCluster(clusterID, environmentId)
 	if err != nil {
-		clusterID, err = convertClusterNameToId(clusterID, environmentId, c.V2Client)
+		clusterID, err = presource.ConvertClusterNameToId(clusterID, environmentId, c.V2Client)
 		if err != nil {
 			return err
 		}

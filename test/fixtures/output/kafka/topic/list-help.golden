@@ -4,9 +4,9 @@ Usage:
   confluent kafka topic list [flags]
 
 Flags:
-      --cluster string       Kafka cluster ID.
+      --cluster string       Kafka cluster ID or name.
       --context string       CLI context name.
-      --environment string   Environment ID.
+      --environment string   Environment ID or name.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:

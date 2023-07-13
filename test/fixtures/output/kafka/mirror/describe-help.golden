@@ -10,9 +10,9 @@ Describe mirror topic "my-topic" under the link "my-link":
 
 Flags:
       --link string          REQUIRED: Name of cluster link.
-      --cluster string       Kafka cluster ID.
+      --cluster string       Kafka cluster ID or name.
       --context string       CLI context name.
-      --environment string   Environment ID.
+      --environment string   Environment ID or name.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:

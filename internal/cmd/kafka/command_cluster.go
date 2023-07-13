@@ -2,10 +2,6 @@ package kafka
 
 import (
 	"fmt"
-	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
-	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
-	"github.com/confluentinc/cli/internal/pkg/resource"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -87,17 +83,4 @@ func (c *clusterCommand) validArgs(cmd *cobra.Command, args []string) []string {
 		suggestions[i] = fmt.Sprintf("%s\t%s", cluster.GetId(), cluster.Spec.GetDisplayName())
 	}
 	return suggestions
-}
-
-func convertClusterNameToId(input string, environmentId string, v2Client *ccloudv2.Client) (string, error) {
-	clusters, err := v2Client.ListKafkaClusters(environmentId)
-	if err != nil {
-		return "", err
-	}
-	clusterPtrs := resource.ConvertToPtrSlice(clusters)
-	specPtrs := make([]*cmkv2.CmkV2ClusterSpec, len(clusters))
-	for i := range clusters {
-		specPtrs[i] = clusterPtrs[i].Spec
-	}
-	return resource.ConvertSpecNameToId(input, clusterPtrs, specPtrs)
 }

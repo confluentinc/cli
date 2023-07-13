@@ -24,8 +24,8 @@ Flags:
       --config-file string                    Name of the file containing link configuration. Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.
       --dry-run                               Validate a link, but do not create it.
       --no-validate                           Create a link even if the source cluster cannot be reached.
-      --cluster string                        Kafka cluster ID.
-      --environment string                    Environment ID.
+      --cluster string                        Kafka cluster ID or name.
+      --environment string                    Environment ID or name.
       --context string                        CLI context name.
 
 Global Flags:

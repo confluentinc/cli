@@ -1,7 +1,7 @@
 Update a Kafka cluster.
 
 Usage:
-  confluent kafka cluster update <id> [flags]
+  confluent kafka cluster update <id|name> [flags]
 
 Examples:
 Change a cluster's name and expand its CKU count:
@@ -12,7 +12,7 @@ Flags:
       --name string          Name of the Kafka cluster.
       --cku uint32           Number of Confluent Kafka Units. For Kafka clusters of type "dedicated" only. When shrinking a cluster, you must reduce capacity one CKU at a time.
       --context string       CLI context name.
-      --environment string   Environment ID.
+      --environment string   Environment ID or name.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:

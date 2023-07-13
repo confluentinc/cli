@@ -84,6 +84,8 @@ type Config struct {
 	AnonymousId         string                      `json:"anonymous_id,omitempty"`
 	SavedCredentials    map[string]*LoginCredential `json:"saved_credentials,omitempty"`
 	LocalPorts          *LocalPorts                 `json:"local_ports,omitempty"`
+	ValidEnvNamesToIds  map[string]string           `json:"environment_names_to_ids,omitempty"`
+	ValidEnvIdsToNames  map[string]string           `json:"environment_ids_to_names,omitempty"`
 
 	// The following configurations are not persisted between runs
 
@@ -128,14 +130,16 @@ func (c *Config) SetOverwrittenCurrentKafkaCluster(clusterId string) {
 
 func New() *Config {
 	return &Config{
-		BaseConfig:       config.NewBaseConfig(ver),
-		Platforms:        make(map[string]*Platform),
-		Credentials:      make(map[string]*Credential),
-		Contexts:         make(map[string]*Context),
-		ContextStates:    make(map[string]*ContextState),
-		SavedCredentials: make(map[string]*LoginCredential),
-		AnonymousId:      uuid.New().String(),
-		Version:          new(pversion.Version),
+		BaseConfig:         config.NewBaseConfig(ver),
+		Platforms:          make(map[string]*Platform),
+		Credentials:        make(map[string]*Credential),
+		Contexts:           make(map[string]*Context),
+		ContextStates:      make(map[string]*ContextState),
+		SavedCredentials:   make(map[string]*LoginCredential),
+		AnonymousId:        uuid.New().String(),
+		Version:            new(pversion.Version),
+		ValidEnvIdsToNames: make(map[string]string),
+		ValidEnvNamesToIds: make(map[string]string),
 	}
 }
 

@@ -11,9 +11,9 @@ Modify the "my_topic" topic to have a retention period of 3 days (259200000 mill
 Flags:
       --config strings       A comma-separated list of configuration overrides with form "key=value".
       --dry-run              Run the command without committing changes.
-      --cluster string       Kafka cluster ID.
+      --cluster string       Kafka cluster ID or name.
       --context string       CLI context name.
-      --environment string   Environment ID.
+      --environment string   Environment ID or name.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:

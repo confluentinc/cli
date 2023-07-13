@@ -6,6 +6,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	presource "github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 type out struct {
@@ -16,7 +17,7 @@ type out struct {
 
 func (c *command) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "describe [id/name]",
+		Use:               "describe [id|name]",
 		Short:             "Describe a Confluent Cloud environment.",
 		Args:              cobra.MaximumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
@@ -41,7 +42,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 
 	environment, err := c.V2Client.GetOrgEnvironment(id)
 	if err != nil {
-		id, err = convertEnvironmentNameToId(id, c.V2Client)
+		id, err = presource.ConvertEnvironmentNameToId(id, c.V2Client)
 		if err != nil {
 			return err
 		}

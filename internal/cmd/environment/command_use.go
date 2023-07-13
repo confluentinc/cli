@@ -6,12 +6,12 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/resource"
+	presource "github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *command) newUseCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "use <id/name>",
+		Use:               "use <id|name>",
 		Short:             "Use an environment in subsequent commands.",
 		Long:              "Choose a Confluent Cloud environment to be used in subsequent commands which support passing an environment with the `--environment` flag.",
 		Args:              cobra.ExactArgs(1),
@@ -27,12 +27,11 @@ func (c *command) newUseCommand() *cobra.Command {
 func (c *command) use(cmd *cobra.Command, args []string) error {
 	id := args[0]
 	if _, err := c.V2Client.GetOrgEnvironment(id); err != nil {
-		id, err = convertEnvironmentNameToId(id, c.V2Client)
+		id, err = presource.ConvertEnvironmentNameToId(id, c.V2Client)
 		if err != nil {
 			return err
 		}
-		_, err = c.V2Client.GetOrgEnvironment(id)
-		if err != nil {
+		if _, err = c.V2Client.GetOrgEnvironment(id); err != nil {
 			return errors.NewErrorWithSuggestions(err.Error(), "List available environments with `confluent environment list`.")
 		}
 	}
@@ -42,6 +41,6 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	output.Printf(errors.UsingResourceMsg, resource.Environment, id)
+	output.Printf(errors.UsingResourceMsg, presource.Environment, id)
 	return nil
 }

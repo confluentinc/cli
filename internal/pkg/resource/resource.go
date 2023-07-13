@@ -101,7 +101,7 @@ func ConvertSpecNameToId[V resourcePtr, T specPtr](input string, resources []V, 
 	}
 }
 
-// GetSpecNamesToIds returns a mapping from resource names to their respective IDs
+// GetSpecNamesToIds returns a mapping from spec resource names to their respective IDs
 func GetSpecNamesToIds[V resourcePtr, T specPtr](resources []V, specs []T) (map[string]string, error) {
 	namesToIds := make(map[string]string, len(resources))
 	for i := range resources {

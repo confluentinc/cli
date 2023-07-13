@@ -7,11 +7,12 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	presource "github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *command) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "update <id/name>",
+		Use:               "update <id|name>",
 		Short:             "Update an existing Confluent Cloud environment.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
@@ -34,7 +35,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	}
 
 	environment := orgv2.OrgV2Environment{DisplayName: orgv2.PtrString(name)}
-	oldEnv, err := convertEnvironmentNameToId(args[0], c.V2Client)
+	oldEnv, err := presource.ConvertEnvironmentNameToId(args[0], c.V2Client)
 	if err != nil {
 		return err
 	}
@@ -49,5 +50,11 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		Id:        environment.GetId(),
 		Name:      environment.GetDisplayName(),
 	})
+
+	oldName := c.Config.ValidEnvIdsToNames[environment.GetId()]
+	c.Config.ValidEnvIdsToNames[environment.GetId()] = name
+	delete(c.Config.ValidEnvNamesToIds, oldName)
+	c.Config.ValidEnvNamesToIds[name] = environment.GetId()
+
 	return table.Print()
 }

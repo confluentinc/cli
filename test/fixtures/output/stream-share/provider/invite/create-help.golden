@@ -11,8 +11,8 @@ Invite a user with email "user@example.com":
 Flags:
       --email string                       REQUIRED: Email of the user with whom to share the topic.
       --topic string                       REQUIRED: Topic to be shared.
-      --environment string                 REQUIRED: Environment ID.
-      --cluster string                     REQUIRED: Kafka cluster ID.
+      --environment string                 REQUIRED: Environment ID or name.
+      --cluster string                     REQUIRED: Kafka cluster ID or name.
       --schema-registry-subjects strings   A comma-separated list of Schema Registry subjects.
   -o, --output string                      Specify the output format as "human", "json", or "yaml". (default "human")
 

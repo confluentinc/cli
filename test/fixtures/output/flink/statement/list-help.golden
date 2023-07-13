@@ -5,7 +5,7 @@ Usage:
 
 Flags:
       --compute-pool string   Flink compute pool ID.
-      --environment string    Environment ID.
+      --environment string    Environment ID or name.
       --context string        CLI context name.
   -o, --output string         Specify the output format as "human", "json", or "yaml". (default "human")
 
