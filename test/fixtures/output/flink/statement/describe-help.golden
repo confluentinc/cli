@@ -4,6 +4,8 @@ Usage:
   confluent flink statement describe <name> [flags]
 
 Flags:
+      --cloud string         Specify the cloud provider as "aws", "azure", or "gcp".
+      --region string        Cloud region for compute pool (use "confluent flink region list" to see all).
       --environment string   Environment ID.
       --context string       CLI context name.
 
