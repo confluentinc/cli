@@ -23,8 +23,8 @@ Flags:
                               where <secret-name> consists of 1-128 lowercase, uppercase, numeric or underscore characters but may not begin with a digit.
                               The <secret-value> can be of any format but may not be empty.
   -o, --output string         Specify the output format as "human", "json", or "yaml". (default "human")
-      --cluster string        Kafka cluster ID.
-      --environment string    Environment ID.
+      --cluster string        Kafka cluster ID or name.
+      --environment string    Environment ID or name.
 
 Global Flags:
   -h, --help            Show help for this command.

@@ -9,9 +9,9 @@ Resume connectors "lcc-000001" and "lcc-000002":
   $ confluent connect cluster resume lcc-000001 lcc-000002
 
 Flags:
-      --cluster string       Kafka cluster ID.
+      --cluster string       Kafka cluster ID or name.
       --context string       CLI context name.
-      --environment string   Environment ID.
+      --environment string   Environment ID or name.
 
 Global Flags:
   -h, --help            Show help for this command.

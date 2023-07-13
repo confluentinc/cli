@@ -10,7 +10,7 @@ Update Flink compute pool "my-compute-pool" to 2 CFUs.
 
 Flags:
       --cfu int32            REQUIRED: Number of Confluent Flink Units (CFU).
-      --environment string   Environment ID.
+      --environment string   Environment ID or name.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:

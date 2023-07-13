@@ -13,9 +13,9 @@ Flags:
       --config strings       A comma-separated list of configuration overrides ("key=value") for the topic being created.
       --dry-run              Run the command without committing changes.
       --if-not-exists        Exit gracefully if topic already exists.
-      --cluster string       Kafka cluster ID.
+      --cluster string       Kafka cluster ID or name.
       --context string       CLI context name.
-      --environment string   Environment ID.
+      --environment string   Environment ID or name.
 
 Global Flags:
   -h, --help            Show help for this command.

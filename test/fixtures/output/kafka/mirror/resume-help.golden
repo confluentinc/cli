@@ -11,9 +11,9 @@ Resume mirror topics "my-topic-1" and "my-topic-2":
 Flags:
       --link string          REQUIRED: Name of cluster link.
       --dry-run              If set, does not actually create the link, but simply validates it.
-      --cluster string       Kafka cluster ID.
+      --cluster string       Kafka cluster ID or name.
       --context string       CLI context name.
-      --environment string   Environment ID.
+      --environment string   Environment ID or name.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:

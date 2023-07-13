@@ -11,7 +11,7 @@ Create a Flink IAM binding between AWS region "us-west-2", environment "env-123"
 Flags:
       --cloud string           REQUIRED: Specify the cloud provider as "aws", "azure", or "gcp".
       --region string          REQUIRED: Cloud region for compute pool (use "confluent flink region list" to see all).
-      --environment string     Environment ID.
+      --environment string     Environment ID or name.
       --identity-pool string   Identity pool ID.
   -o, --output string          Specify the output format as "human", "json", or "yaml". (default "human")
 

@@ -2,6 +2,7 @@ package dynamicconfig
 
 import (
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/name-conversions"
 	"strings"
 	"time"
 
@@ -47,6 +48,7 @@ func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, client *cclou
 		}
 		ctx := d.Config.Context()
 		d.Config.SetOverwrittenCurrentKafkaCluster(ctx.KafkaClusterContext.GetActiveKafkaClusterId())
+
 		ctx.KafkaClusterContext.SetActiveKafkaCluster(cluster)
 	}
 
@@ -72,9 +74,6 @@ func (d *DynamicContext) GetKafkaClusterForCommand() (*v1.KafkaClusterConfig, er
 	}
 
 	cluster, err := d.FindKafkaCluster(clusterId)
-	if presource.LookupType(clusterId) != presource.KafkaCluster && clusterId != "anonymous-id" {
-		return nil, errors.Errorf(errors.KafkaClusterMissingPrefixErrorMsg, clusterId)
-	}
 	return cluster, errors.CatchKafkaNotFoundError(err, clusterId, nil)
 }
 
@@ -102,7 +101,14 @@ func (d *DynamicContext) FindKafkaCluster(clusterId string) (*v1.KafkaClusterCon
 
 	cluster, httpResp, err := d.V2Client.DescribeKafkaCluster(clusterId, environmentId)
 	if err != nil {
-		return nil, errors.CatchKafkaNotFoundError(err, clusterId, httpResp)
+		clusterId, err = name_conversions.ConvertClusterNameToId(clusterId, environmentId, d.V2Client)
+		if err != nil {
+			return nil, err
+		}
+		cluster, httpResp, err = d.V2Client.DescribeKafkaCluster(clusterId, environmentId)
+		if err != nil {
+			return nil, errors.CatchKafkaNotFoundError(err, clusterId, httpResp)
+		}
 	}
 
 	config := &v1.KafkaClusterConfig{
