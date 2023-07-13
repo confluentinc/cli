@@ -214,13 +214,10 @@ const (
 	JavaRequirementErrorMsg   = "the Confluent CLI requires Java version 1.8 or 1.11.\n" +
 		"See https://docs.confluent.io/current/installation/versions-interoperability.html .\n" +
 		"If you have multiple versions of Java installed, you may need to set JAVA_HOME to the version you want Confluent to use."
-	NoLogFoundErrorMsg                     = "no log found: to run %s, use `confluent local services %s start`"
-	MacVersionErrorMsg                     = "macOS version >= %s is required (detected: %s)"
-	JavaExecNotFondErrorMsg                = "could not find java executable, please install java or set JAVA_HOME"
-	NothingToDestroyErrorMsg               = "nothing to destroy"
-	ConfluentLocalIsAlreadyRunningErrorMsg = "Confluent Local is already running"
-	ConfluentLocalStartedSuggestions       = "Continue your experience with Confluent Local running `confluent local kafka produce` and `confluent local kafka consume`.\n" +
-		"To start a new Confluent Local session, run `confluent local kafka stop`, then run `confluent local kafka start`."
+	NoLogFoundErrorMsg              = "no log found: to run %s, use `confluent local services %s start`"
+	MacVersionErrorMsg              = "macOS version >= %s is required (detected: %s)"
+	JavaExecNotFondErrorMsg         = "could not find java executable, please install java or set JAVA_HOME"
+	NothingToDestroyErrorMsg        = "nothing to destroy"
 	FailedToReadPortsErrorMsg       = "failed to read local ports from config"
 	FailedToReadPortsSuggestions    = "Restart Confluent Local with `confluent local kafka stop` and `confluent local kafka start`"
 	InstallAndStartDockerSuggestion = "Make sure Docker is installed following the guide: `https://docs.docker.com/engine/install/` and Docker daemon is running."
