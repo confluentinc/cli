@@ -78,8 +78,7 @@ func (s *InteractiveOutputControllerTestSuite) updateTableMockCalls(materialized
 	timestamp := time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
 	s.resultFetcher.EXPECT().GetLastFetchTimestamp().Return(&timestamp)
 	s.resultFetcher.EXPECT().GetMaterializedStatementResults().Return(materializedStatementResults)
-	s.resultFetcher.EXPECT().IsAutoRefreshRunning().Return(false)
-	s.tableView.EXPECT().RenderTable(s.interactiveOutputController.getTableTitle(), materializedStatementResults, false, &timestamp, types.Paused)
+	s.tableView.EXPECT().RenderTable(s.interactiveOutputController.getTableTitle(), materializedStatementResults, &timestamp, types.Paused)
 	s.tableView.EXPECT().GetRoot().Return(tview.NewBox())
 	s.tableView.EXPECT().GetFocusableElement().Return(tview.NewTable())
 }

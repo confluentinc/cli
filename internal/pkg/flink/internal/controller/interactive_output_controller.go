@@ -55,7 +55,7 @@ func (t *InteractiveOutputController) init() {
 }
 
 func (t *InteractiveOutputController) updateTable() {
-	t.tableView.RenderTable(t.getTableTitle(), t.resultFetcher.GetMaterializedStatementResults(), t.resultFetcher.IsAutoRefreshRunning(), t.resultFetcher.GetLastFetchTimestamp(), t.resultFetcher.GetFetchState())
+	t.tableView.RenderTable(t.getTableTitle(), t.resultFetcher.GetMaterializedStatementResults(), t.resultFetcher.GetLastFetchTimestamp(), t.resultFetcher.GetFetchState())
 	t.renderTableView()
 }
 

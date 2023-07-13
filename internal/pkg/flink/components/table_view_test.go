@@ -32,7 +32,7 @@ func (s *TableViewTestSuite) SetupTest() {
 
 func (s *TableViewTestSuite) TestJumpUp() {
 	materializedStatementResults := getResultsExample(s.numRowsScroll + 1)
-	s.tableView.RenderTable("title", materializedStatementResults, true, nil, types.Running)
+	s.tableView.RenderTable("title", materializedStatementResults, nil, types.Running)
 
 	s.tableView.JumpUp()
 
@@ -59,7 +59,7 @@ func getResultsExample(numRows int) *types.MaterializedStatementResults {
 
 func (s *TableViewTestSuite) TestJumpUpShouldNotMoveOutFurtherThanMax() {
 	materializedStatementResults := getResultsExample(s.numRowsScroll / 2)
-	s.tableView.RenderTable("title", materializedStatementResults, true, nil, types.Running)
+	s.tableView.RenderTable("title", materializedStatementResults, nil, types.Running)
 
 	s.tableView.JumpUp()
 
@@ -70,7 +70,7 @@ func (s *TableViewTestSuite) TestJumpUpShouldNotMoveOutFurtherThanMax() {
 
 func (s *TableViewTestSuite) TestJumpDown() {
 	materializedStatementResults := getResultsExample(s.numRowsScroll + 1)
-	s.tableView.RenderTable("title", materializedStatementResults, true, nil, types.Running)
+	s.tableView.RenderTable("title", materializedStatementResults, nil, types.Running)
 	s.tableView.table.Select(1, 0)
 
 	s.tableView.JumpDown()
@@ -82,7 +82,7 @@ func (s *TableViewTestSuite) TestJumpDown() {
 
 func (s *TableViewTestSuite) TestJumpDownShouldNotMoveOutFurtherThanMax() {
 	materializedStatementResults := getResultsExample(s.numRowsScroll / 2)
-	s.tableView.RenderTable("title", materializedStatementResults, true, nil, types.Running)
+	s.tableView.RenderTable("title", materializedStatementResults, nil, types.Running)
 	s.tableView.table.Select(1, 0)
 
 	s.tableView.JumpDown()
@@ -94,7 +94,7 @@ func (s *TableViewTestSuite) TestJumpDownShouldNotMoveOutFurtherThanMax() {
 
 func (s *TableViewTestSuite) TestSelectArbitraryRow() {
 	materializedStatementResults := getResultsExample(10)
-	s.tableView.RenderTable("title", materializedStatementResults, true, nil, types.Running)
+	s.tableView.RenderTable("title", materializedStatementResults, nil, types.Running)
 
 	rapid.Check(s.T(), func(t *rapid.T) {
 		rowToSelect := rapid.IntRange(1, materializedStatementResults.Size()).Draw(t, "row to select")
@@ -110,7 +110,7 @@ func (s *TableViewTestSuite) TestSelectArbitraryRow() {
 func (s *TableViewTestSuite) TestTableShouldSetTitle() {
 	expected := "Test Title"
 	materializedStatementResults := getResultsExample(10)
-	s.tableView.RenderTable(expected, materializedStatementResults, true, nil, types.Running)
+	s.tableView.RenderTable(expected, materializedStatementResults, nil, types.Running)
 
 	actual := s.tableView.table.GetTitle()
 
@@ -120,7 +120,7 @@ func (s *TableViewTestSuite) TestTableShouldSetTitle() {
 func (s *TableViewTestSuite) TestTableShortcutsWithAutoRefreshOff() {
 	materializedStatementResults := getResultsExample(10)
 
-	actual := s.tableView.getTableShortcuts(materializedStatementResults, false, types.Paused)
+	actual := s.tableView.getTableShortcuts(materializedStatementResults, types.Paused)
 
 	cupaloy.SnapshotT(s.T(), actual)
 }
@@ -128,7 +128,7 @@ func (s *TableViewTestSuite) TestTableShortcutsWithAutoRefreshOff() {
 func (s *TableViewTestSuite) TestTableShortcutsWithAutoRefreshOn() {
 	materializedStatementResults := getResultsExample(10)
 
-	actual := s.tableView.getTableShortcuts(materializedStatementResults, true, types.Running)
+	actual := s.tableView.getTableShortcuts(materializedStatementResults, types.Running)
 
 	cupaloy.SnapshotT(s.T(), actual)
 }
@@ -136,14 +136,14 @@ func (s *TableViewTestSuite) TestTableShortcutsWithAutoRefreshOn() {
 func (s *TableViewTestSuite) TestTableShortcutsWithFetchStateCompleted() {
 	materializedStatementResults := getResultsExample(10)
 
-	actual := s.tableView.getTableShortcuts(materializedStatementResults, false, types.Completed)
+	actual := s.tableView.getTableShortcuts(materializedStatementResults, types.Completed)
 
 	cupaloy.SnapshotT(s.T(), actual)
 }
 
 func (s *TableViewTestSuite) TestTableInfoBarWithAutoRefreshOnAndNoTimestamp() {
 	materializedStatementResults := getResultsExample(10)
-	s.tableView.RenderTable("title", materializedStatementResults, true, nil, types.Running)
+	s.tableView.RenderTable("title", materializedStatementResults, nil, types.Running)
 
 	actual := s.getInfoBarText()
 
@@ -162,7 +162,7 @@ func (s *TableViewTestSuite) getInfoBarText() []string {
 
 func (s *TableViewTestSuite) TestTableInfoBarWithAutoRefreshOffAndNoTimestamp() {
 	materializedStatementResults := getResultsExample(10)
-	s.tableView.RenderTable("title", materializedStatementResults, false, nil, types.Paused)
+	s.tableView.RenderTable("title", materializedStatementResults, nil, types.Paused)
 
 	actual := s.getInfoBarText()
 
@@ -172,7 +172,7 @@ func (s *TableViewTestSuite) TestTableInfoBarWithAutoRefreshOffAndNoTimestamp() 
 func (s *TableViewTestSuite) TestTableInfoBarWithAutoRefreshOnAndValidTimestamp() {
 	materializedStatementResults := getResultsExample(10)
 	timestamp := time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
-	s.tableView.RenderTable("title", materializedStatementResults, true, &timestamp, types.Running)
+	s.tableView.RenderTable("title", materializedStatementResults, &timestamp, types.Running)
 
 	actual := s.getInfoBarText()
 
@@ -182,7 +182,7 @@ func (s *TableViewTestSuite) TestTableInfoBarWithAutoRefreshOnAndValidTimestamp(
 func (s *TableViewTestSuite) TestTableInfoBarWithAutoRefreshOffAndValidTimestamp() {
 	materializedStatementResults := getResultsExample(10)
 	timestamp := time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
-	s.tableView.RenderTable("title", materializedStatementResults, false, &timestamp, types.Paused)
+	s.tableView.RenderTable("title", materializedStatementResults, &timestamp, types.Paused)
 
 	actual := s.getInfoBarText()
 
@@ -192,7 +192,7 @@ func (s *TableViewTestSuite) TestTableInfoBarWithAutoRefreshOffAndValidTimestamp
 func (s *TableViewTestSuite) TestTableInfoBarWhenTableTableHasNoContentAndAutoRefreshIsOff() {
 	materializedStatementResults := getResultsExample(0)
 	timestamp := time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
-	s.tableView.RenderTable("title", materializedStatementResults, false, &timestamp, types.Paused)
+	s.tableView.RenderTable("title", materializedStatementResults, &timestamp, types.Paused)
 
 	actual := s.getInfoBarText()
 
@@ -202,7 +202,7 @@ func (s *TableViewTestSuite) TestTableInfoBarWhenTableTableHasNoContentAndAutoRe
 func (s *TableViewTestSuite) TestTableInfoBarWhenTableTableHasNoContentAndAutoRefreshIsOn() {
 	materializedStatementResults := getResultsExample(0)
 	timestamp := time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
-	s.tableView.RenderTable("title", materializedStatementResults, true, &timestamp, types.Running)
+	s.tableView.RenderTable("title", materializedStatementResults, &timestamp, types.Running)
 
 	actual := s.getInfoBarText()
 
@@ -212,7 +212,7 @@ func (s *TableViewTestSuite) TestTableInfoBarWhenTableTableHasNoContentAndAutoRe
 func (s *TableViewTestSuite) TestTableInfoBarShowsCompletedState() {
 	materializedStatementResults := getResultsExample(0)
 	timestamp := time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
-	s.tableView.RenderTable("title", materializedStatementResults, false, &timestamp, types.Completed)
+	s.tableView.RenderTable("title", materializedStatementResults, &timestamp, types.Completed)
 
 	actual := s.getInfoBarText()
 
@@ -222,7 +222,7 @@ func (s *TableViewTestSuite) TestTableInfoBarShowsCompletedState() {
 func (s *TableViewTestSuite) TestTableInfoBarShowsFailedState() {
 	materializedStatementResults := getResultsExample(0)
 	timestamp := time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
-	s.tableView.RenderTable("title", materializedStatementResults, false, &timestamp, types.Failed)
+	s.tableView.RenderTable("title", materializedStatementResults, &timestamp, types.Failed)
 
 	actual := s.getInfoBarText()
 
@@ -232,7 +232,7 @@ func (s *TableViewTestSuite) TestTableInfoBarShowsFailedState() {
 func (s *TableViewTestSuite) TestTableInfoBarShowsUnknownState() {
 	materializedStatementResults := getResultsExample(0)
 	timestamp := time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
-	s.tableView.RenderTable("title", materializedStatementResults, false, &timestamp, 10)
+	s.tableView.RenderTable("title", materializedStatementResults, &timestamp, 10)
 
 	actual := s.getInfoBarText()
 

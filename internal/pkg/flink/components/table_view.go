@@ -18,7 +18,7 @@ type TableViewInterface interface {
 	GetFocusableElement() *tview.Table
 	GetRoot() tview.Primitive
 	GetSelectedRow() *types.StatementResultRow
-	RenderTable(tableTitle string, statementResults *types.MaterializedStatementResults, isAutoRefreshRunning bool, lastRefreshTimestamp *time.Time, fetchState types.FetchState)
+	RenderTable(tableTitle string, statementResults *types.MaterializedStatementResults, lastRefreshTimestamp *time.Time, fetchState types.FetchState)
 	JumpUp()
 	JumpDown()
 }
@@ -117,18 +117,18 @@ func (t *TableView) getSelectedRowIdx() int {
 	return rowIdx
 }
 
-func (t *TableView) RenderTable(tableTitle string, statementResults *types.MaterializedStatementResults, isAutoRefreshRunning bool, lastRefreshTimestamp *time.Time, fetchState types.FetchState) {
+func (t *TableView) RenderTable(tableTitle string, statementResults *types.MaterializedStatementResults, lastRefreshTimestamp *time.Time, fetchState types.FetchState) {
 	t.tableLock.Lock()
 	defer t.tableLock.Unlock()
 
 	t.infoBar.SetLastRefreshTimestamp(lastRefreshTimestamp)
 	t.infoBar.SetFetchState(fetchState)
-	t.createTableView(NewShortcuts(t.getTableShortcuts(statementResults, isAutoRefreshRunning, fetchState)))
+	t.createTableView(NewShortcuts(t.getTableShortcuts(statementResults, fetchState)))
 	t.setTableAndColumnWidths(statementResults)
 
 	t.table.SetTitle(tableTitle)
 	t.renderData(statementResults)
-	t.selectLastRow(!isAutoRefreshRunning)
+	t.selectLastRow(fetchState != types.Running)
 }
 
 func (t *TableView) createTableView(shortcuts *tview.TextView) {
@@ -232,7 +232,7 @@ func (t *TableView) JumpDown() {
 	t.table.Select(t.getSelectedRowIdx()+t.getNumRowsToScroll(), 0)
 }
 
-func (t *TableView) getTableShortcuts(statementResults *types.MaterializedStatementResults, isAutoRefreshRunning bool, fetchState types.FetchState) []types.Shortcut {
+func (t *TableView) getTableShortcuts(statementResults *types.MaterializedStatementResults, fetchState types.FetchState) []types.Shortcut {
 	toggleTableModeText := "Show table"
 	if statementResults.IsTableMode() {
 		toggleTableModeText = "Show changelog"
@@ -243,7 +243,7 @@ func (t *TableView) getTableShortcuts(statementResults *types.MaterializedStatem
 	}
 
 	toggleAutoRefreshText := "Play"
-	if isAutoRefreshRunning {
+	if fetchState == types.Running {
 		toggleAutoRefreshText = "Pause"
 	}
 	return t.getTableShortcutsForNonCompletedFetchState(toggleTableModeText, toggleAutoRefreshText)
