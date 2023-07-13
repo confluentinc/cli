@@ -48,14 +48,14 @@ func (t *InteractiveOutputController) start() {
 func (t *InteractiveOutputController) init() {
 	t.isRowViewOpen = false
 	t.resultFetcher.SetAutoRefreshCallback(t.renderTableAsync)
-	t.resultFetcher.ToggleAutoRefresh()
+	t.resultFetcher.ToggleRefresh()
 	t.app.SetInputCapture(t.inputCapture)
 	t.tableView.Init()
 	t.updateTable()
 }
 
 func (t *InteractiveOutputController) updateTable() {
-	t.tableView.RenderTable(t.getTableTitle(), t.resultFetcher.GetMaterializedStatementResults(), t.resultFetcher.IsAutoRefreshRunning(), t.resultFetcher.GetLastFetchTimestamp(), t.resultFetcher.GetFetchState())
+	t.tableView.RenderTable(t.getTableTitle(), t.resultFetcher.GetMaterializedStatementResults(), t.resultFetcher.GetLastFetchTimestamp(), t.resultFetcher.GetFetchState())
 	t.renderTableView()
 }
 
@@ -129,9 +129,9 @@ func (t *InteractiveOutputController) getActionForShortcut(shortcut string) func
 	case components.ExitTableViewShortcut:
 		return t.exitTViewMode
 	case components.ToggleTableModeShortcut:
-		return t.renderAfterAction(t.resultFetcher.ToggleTableMode)
-	case components.ToggleAutoRefreshShortcut:
-		return t.renderAfterAction(t.resultFetcher.ToggleAutoRefresh)
+		return t.toggleTableMode
+	case components.ToggleRefreshShortcut:
+		return t.toggleRefresh
 	case components.JumpUpShortcut:
 		return t.stopAutoRefreshOrScroll(t.tableView.JumpUp)
 	case components.JumpDownShortcut:
@@ -146,22 +146,30 @@ func (t *InteractiveOutputController) exitTViewMode() {
 	output.Println("Result retrieval aborted.")
 }
 
-func (t *InteractiveOutputController) renderAfterAction(action func()) func() {
-	return func() {
-		action()
+func (t *InteractiveOutputController) toggleTableMode() {
+	t.resultFetcher.ToggleTableMode()
+	t.updateTable()
+}
+
+func (t *InteractiveOutputController) toggleRefresh() {
+	if t.resultFetcher.GetFetchState() != types.Completed {
+		t.resultFetcher.ToggleRefresh()
 		t.updateTable()
 	}
 }
 
 func (t *InteractiveOutputController) stopAutoRefreshOrScroll(scroll func()) func() {
-	if t.resultFetcher.IsAutoRefreshRunning() {
-		return t.renderAfterAction(t.resultFetcher.ToggleAutoRefresh)
+	if t.resultFetcher.IsRefreshRunning() {
+		return func() {
+			t.resultFetcher.ToggleRefresh()
+			t.updateTable()
+		}
 	}
 	return scroll
 }
 
 func (t *InteractiveOutputController) renderRowView() {
-	if !t.resultFetcher.IsAutoRefreshRunning() {
+	if !t.resultFetcher.IsRefreshRunning() {
 		row := t.tableView.GetSelectedRow()
 		t.isRowViewOpen = true
 
@@ -178,8 +186,8 @@ func (t *InteractiveOutputController) renderRowView() {
 }
 
 func (t *InteractiveOutputController) handleKeyUpOrDownPress(event *tcell.EventKey) *tcell.EventKey {
-	if t.resultFetcher.IsAutoRefreshRunning() {
-		t.resultFetcher.ToggleAutoRefresh()
+	if t.resultFetcher.IsRefreshRunning() {
+		t.resultFetcher.ToggleRefresh()
 		t.updateTable()
 		return nil
 	}
