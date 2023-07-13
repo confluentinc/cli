@@ -18,7 +18,7 @@ type TableViewInterface interface {
 	GetFocusableElement() *tview.Table
 	GetRoot() tview.Primitive
 	GetSelectedRow() *types.StatementResultRow
-	RenderTable(tableTitle string, statementResults *types.MaterializedStatementResults, lastRefreshTimestamp *time.Time, fetchState types.FetchState)
+	RenderTable(tableTitle string, statementResults *types.MaterializedStatementResults, lastRefreshTimestamp *time.Time, refreshState types.RefreshState)
 	JumpUp()
 	JumpDown()
 }
@@ -33,13 +33,13 @@ type TableView struct {
 }
 
 const (
-	numPaddingRows                = 1
-	minColumnWidth            int = 4 // min characters displayed in a column
-	ExitTableViewShortcut         = "Q"
-	ToggleAutoRefreshShortcut     = "P"
-	ToggleTableModeShortcut       = "M"
-	JumpUpShortcut                = "U"
-	JumpDownShortcut              = "D"
+	numPaddingRows              = 1
+	minColumnWidth          int = 4 // min characters displayed in a column
+	ExitTableViewShortcut       = "Q"
+	ToggleRefreshShortcut       = "P"
+	ToggleTableModeShortcut     = "M"
+	JumpUpShortcut              = "U"
+	JumpDownShortcut            = "D"
 )
 
 func NewTableView() TableViewInterface {
@@ -117,18 +117,18 @@ func (t *TableView) getSelectedRowIdx() int {
 	return rowIdx
 }
 
-func (t *TableView) RenderTable(tableTitle string, statementResults *types.MaterializedStatementResults, lastRefreshTimestamp *time.Time, fetchState types.FetchState) {
+func (t *TableView) RenderTable(tableTitle string, statementResults *types.MaterializedStatementResults, lastRefreshTimestamp *time.Time, refreshState types.RefreshState) {
 	t.tableLock.Lock()
 	defer t.tableLock.Unlock()
 
 	t.infoBar.SetLastRefreshTimestamp(lastRefreshTimestamp)
-	t.infoBar.SetFetchState(fetchState)
-	t.createTableView(NewShortcuts(t.getTableShortcuts(statementResults, fetchState)))
+	t.infoBar.SetRefreshState(refreshState)
+	t.createTableView(NewShortcuts(t.getTableShortcuts(statementResults, refreshState)))
 	t.setTableAndColumnWidths(statementResults)
 
 	t.table.SetTitle(tableTitle)
 	t.renderData(statementResults)
-	t.selectLastRow(fetchState != types.Running)
+	t.selectLastRow(refreshState != types.Running)
 }
 
 func (t *TableView) createTableView(shortcuts *tview.TextView) {
@@ -232,21 +232,21 @@ func (t *TableView) JumpDown() {
 	t.table.Select(t.getSelectedRowIdx()+t.getNumRowsToScroll(), 0)
 }
 
-func (t *TableView) getTableShortcuts(statementResults *types.MaterializedStatementResults, fetchState types.FetchState) []types.Shortcut {
+func (t *TableView) getTableShortcuts(statementResults *types.MaterializedStatementResults, refreshState types.RefreshState) []types.Shortcut {
 	toggleTableModeText := "Show table"
 	if statementResults.IsTableMode() {
 		toggleTableModeText = "Show changelog"
 	}
 
-	if fetchState == types.Completed {
+	if refreshState == types.Completed {
 		return t.getTableShortcutsForCompletedFetchState(toggleTableModeText)
 	}
 
-	toggleAutoRefreshText := "Play"
-	if fetchState == types.Running {
-		toggleAutoRefreshText = "Pause"
+	toggleRefreshText := "Play"
+	if refreshState == types.Running {
+		toggleRefreshText = "Pause"
 	}
-	return t.getTableShortcutsForNonCompletedFetchState(toggleTableModeText, toggleAutoRefreshText)
+	return t.getTableShortcutsForNonCompletedFetchState(toggleTableModeText, toggleRefreshText)
 }
 
 func (t *TableView) getTableShortcutsForCompletedFetchState(toggleTableModeText string) []types.Shortcut {
@@ -257,11 +257,11 @@ func (t *TableView) getTableShortcutsForCompletedFetchState(toggleTableModeText 
 	}
 }
 
-func (t *TableView) getTableShortcutsForNonCompletedFetchState(toggleTableModeText, toggleAutoRefreshText string) []types.Shortcut {
+func (t *TableView) getTableShortcutsForNonCompletedFetchState(toggleTableModeText, toggleRefreshText string) []types.Shortcut {
 	return []types.Shortcut{
 		{KeyText: ExitTableViewShortcut, Text: "Quit"},
 		{KeyText: ToggleTableModeShortcut, Text: toggleTableModeText},
-		{KeyText: ToggleAutoRefreshShortcut, Text: toggleAutoRefreshText},
+		{KeyText: ToggleRefreshShortcut, Text: toggleRefreshText},
 		{KeyText: fmt.Sprintf("%s/%s", JumpUpShortcut, JumpDownShortcut), Text: "Jump up/down"},
 	}
 }
