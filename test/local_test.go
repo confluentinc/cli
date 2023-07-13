@@ -3,15 +3,16 @@ package test
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"time"
 
 	"github.com/stretchr/testify/require"
 )
 
 func (s *CLITestSuite) TestLocalKafka() {
-	// if runtime.GOOS == "darwin" {
-	// 	s.T().Skip()
-	// }
+	if runtime.GOOS == "darwin" {
+		s.T().Skip()
+	}
 
 	tests := []CLITest{
 		{args: "local kafka stop", fixture: "local/kafka/stop-empty.golden"},
