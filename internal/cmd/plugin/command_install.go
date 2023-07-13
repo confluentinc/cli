@@ -24,7 +24,7 @@ const (
 
 func (c *command) newInstallCommand() *cobra.Command {
 	return &cobra.Command{
-		Use:   "install",
+		Use:   "install <plugin>",
 		Short: "Install official Confluent CLI plugins.",
 		Long:  "Install official Confluent CLI plugins from the confluentinc/cli-plugins repository.",
 		Args:  cobra.ExactArgs(1),
