@@ -47,18 +47,18 @@ func (mr *MockResultFetcherInterfaceMockRecorder) Close() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockResultFetcherInterface)(nil).Close))
 }
 
-// GetFetchState mocks base method.
-func (m *MockResultFetcherInterface) GetFetchState() types.FetchState {
+// GetRefreshState mocks base method.
+func (m *MockResultFetcherInterface) GetRefreshState() types.RefreshState {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetFetchState")
-	ret0, _ := ret[0].(types.FetchState)
+	ret := m.ctrl.Call(m, "GetRefreshState")
+	ret0, _ := ret[0].(types.RefreshState)
 	return ret0
 }
 
-// GetFetchState indicates an expected call of GetFetchState.
-func (mr *MockResultFetcherInterfaceMockRecorder) GetFetchState() *gomock.Call {
+// GetRefreshState indicates an expected call of GetRefreshState.
+func (mr *MockResultFetcherInterfaceMockRecorder) GetRefreshState() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFetchState", reflect.TypeOf((*MockResultFetcherInterface)(nil).GetFetchState))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRefreshState", reflect.TypeOf((*MockResultFetcherInterface)(nil).GetRefreshState))
 }
 
 // GetLastFetchTimestamp mocks base method.
@@ -116,9 +116,9 @@ func (mr *MockResultFetcherInterfaceMockRecorder) Init(arg0 interface{}) *gomock
 }
 
 // IsAutoRefreshRunning mocks base method.
-func (m *MockResultFetcherInterface) IsAutoRefreshRunning() bool {
+func (m *MockResultFetcherInterface) IsRefreshRunning() bool {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "IsAutoRefreshRunning")
+	ret := m.ctrl.Call(m, "IsRefreshRunning")
 	ret0, _ := ret[0].(bool)
 	return ret0
 }
@@ -126,7 +126,7 @@ func (m *MockResultFetcherInterface) IsAutoRefreshRunning() bool {
 // IsAutoRefreshRunning indicates an expected call of IsAutoRefreshRunning.
 func (mr *MockResultFetcherInterfaceMockRecorder) IsAutoRefreshRunning() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsAutoRefreshRunning", reflect.TypeOf((*MockResultFetcherInterface)(nil).IsAutoRefreshRunning))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsRefreshRunning", reflect.TypeOf((*MockResultFetcherInterface)(nil).IsRefreshRunning))
 }
 
 // IsTableMode mocks base method.
@@ -156,15 +156,15 @@ func (mr *MockResultFetcherInterfaceMockRecorder) SetAutoRefreshCallback(arg0 in
 }
 
 // ToggleAutoRefresh mocks base method.
-func (m *MockResultFetcherInterface) ToggleAutoRefresh() {
+func (m *MockResultFetcherInterface) ToggleRefresh() {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "ToggleAutoRefresh")
+	m.ctrl.Call(m, "ToggleRefresh")
 }
 
 // ToggleAutoRefresh indicates an expected call of ToggleAutoRefresh.
 func (mr *MockResultFetcherInterfaceMockRecorder) ToggleAutoRefresh() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ToggleAutoRefresh", reflect.TypeOf((*MockResultFetcherInterface)(nil).ToggleAutoRefresh))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ToggleRefresh", reflect.TypeOf((*MockResultFetcherInterface)(nil).ToggleRefresh))
 }
 
 // ToggleTableMode mocks base method.
