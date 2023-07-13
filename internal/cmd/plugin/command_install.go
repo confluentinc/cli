@@ -33,7 +33,11 @@ func (c *command) newInstallCommand() *cobra.Command {
 }
 
 func (c *command) install(cmd *cobra.Command, args []string) error {
-	confluentDir := filepath.Join(os.Getenv("HOME"), ".confluent")
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return err
+	}
+	confluentDir := filepath.Join(home, ".confluent")
 	dir, err := os.MkdirTemp(confluentDir, "cli-plugins")
 	if err != nil {
 		return err

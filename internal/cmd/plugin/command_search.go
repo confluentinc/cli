@@ -47,8 +47,12 @@ func (c *command) newSearchCommand() *cobra.Command {
 }
 
 func (c *command) search(cmd *cobra.Command, _ []string) error {
-	confluentDir := filepath.Join(os.Getenv("HOME"), ".confluent")
-	dir, err := os.MkdirTemp(confluentDir, "confluent-plugin-search")
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return err
+	}
+	confluentDir := filepath.Join(home, ".confluent")
+	dir, err := os.MkdirTemp(confluentDir, "cli-plugins")
 	if err != nil {
 		return err
 	}
