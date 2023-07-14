@@ -188,7 +188,6 @@ const (
 	ProducingToCompactedTopicErrorMsg    = "producer has detected an INVALID_RECORD error for topic %s"
 	ProducingToCompactedTopicSuggestions = "If the topic has schema validation enabled, ensure you are producing with a schema-enabled producer.\n" +
 		"If your topic is compacted, ensure you are producing a record with a key."
-	FailedToLoadSchemaSuggestions   = "Specify a schema by passing the path to a schema file to the `--schema` flag, or by passing a registered schema ID to the `--schema-id` flag."
 	ExceedPartitionLimitSuggestions = "The total partition limit for a dedicated cluster may be increased by expanding its CKU count using `confluent kafka cluster update <id> --cku <count>`."
 
 	// Cluster Link commands
@@ -218,6 +217,8 @@ const (
 	MacVersionErrorMsg               = "macOS version >= %s is required (detected: %s)"
 	JavaExecNotFondErrorMsg          = "could not find java executable, please install java or set JAVA_HOME"
 	NothingToDestroyErrorMsg         = "nothing to destroy"
+	ComputePoolNotFoundErrorMsg      = `Flink compute pool "%s" not found or access forbidden.`
+	ComputePoolNotFoundSuggestions   = "List available Flink compute pools with `confluent flink compute-pool list`"
 	ConfluentLocalStartedErrorMsg    = "Confluent Local container has already been created"
 	ConfluentLocalStartedSuggestions = "Continue your experience with Confluent Local running `confluent local kafka produce` and `confluent local kafka consume`.\n" +
 		"To stop Confluent Local container, run `confluent local kafka stop` or `docker container rm confluent-local -f`."

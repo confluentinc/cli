@@ -3,7 +3,6 @@ package kafka
 import (
 	"bytes"
 	"fmt"
-	"os"
 	"strings"
 	"text/template"
 
@@ -39,13 +38,11 @@ Identity:
 
 func (c *clusterCommand) newCreateCommand(cfg *v1.Config) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create <name>",
-		Short: "Create a Kafka cluster.",
-		Long:  "Create a Kafka cluster.\n\nNote: You cannot use this command to create a cluster that is configured with AWS PrivateLink. You must use the UI to create a cluster of that configuration.",
-		Args:  cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return c.create(cmd, args, form.NewPrompt(os.Stdin))
-		},
+		Use:         "create <name>",
+		Short:       "Create a Kafka cluster.",
+		Long:        "Create a Kafka cluster.\n\nNote: You cannot use this command to create a cluster that is configured with AWS PrivateLink. You must use the UI to create a cluster of that configuration.",
+		Args:        cobra.ExactArgs(1),
+		RunE:        c.create,
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -81,7 +78,7 @@ func (c *clusterCommand) newCreateCommand(cfg *v1.Config) *cobra.Command {
 	return cmd
 }
 
-func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.Prompt) error {
+func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	cloud, err := cmd.Flags().GetString("cloud")
 	if err != nil {
 		return err
@@ -137,7 +134,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string, prompt form.P
 			return err
 		}
 
-		if err := c.validateGcpEncryptionKey(prompt, cloud, environmentId); err != nil {
+		if err := c.validateGcpEncryptionKey(cloud, environmentId); err != nil {
 			return err
 		}
 	}
@@ -214,7 +211,7 @@ func checkCloudAndRegion(cloudId string, regionId string, clouds []*ccloudv1.Clo
 		errors.CloudProviderNotAvailableSuggestions)
 }
 
-func (c *clusterCommand) validateGcpEncryptionKey(prompt form.Prompt, cloud string, accountId string) error {
+func (c *clusterCommand) validateGcpEncryptionKey(cloud, accountId string) error {
 	// The call is idempotent so repeated create commands return the same ID for the same account.
 	externalID, err := c.Client.ExternalIdentity.CreateExternalIdentity(cloud, accountId)
 	if err != nil {
@@ -240,7 +237,7 @@ func (c *clusterCommand) validateGcpEncryptionKey(prompt form.Prompt, cloud stri
 			IsYesOrNo: true,
 		})
 	for {
-		if err := f.Prompt(prompt); err != nil {
+		if err := f.Prompt(form.NewPrompt()); err != nil {
 			output.ErrPrintln(errors.FailedToReadConfirmationErrorMsg)
 			continue
 		}

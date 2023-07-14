@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -37,8 +38,7 @@ func newProduceCommand(prerunner pcmd.PreRunner, clientId string) *cobra.Command
 	}
 	cmd.RunE = c.produce
 
-	cmd.Flags().String("schema", "", "The path to the schema file.")
-	cmd.Flags().Int32("schema-id", 0, "The ID of the schema.")
+	cmd.Flags().String("schema", "", "The ID or filepath of the message value schema.")
 	pcmd.AddValueFormatFlag(cmd)
 	cmd.Flags().String("references", "", "The path to the references file.")
 	cmd.Flags().Bool("parse-key", false, "Parse key from the message.")
@@ -55,7 +55,10 @@ func newProduceCommand(prerunner pcmd.PreRunner, clientId string) *cobra.Command
 	cmd.Flags().String("environment", "", "Environment ID.")
 	pcmd.AddOutputFlag(cmd)
 
-	cobra.CheckErr(cmd.MarkFlagFilename("schema", "avsc", "json", "proto"))
+	// Deprecated
+	cmd.Flags().Int32("schema-id", 0, "The ID of the schema.")
+	cobra.CheckErr(cmd.Flags().MarkHidden("schema-id"))
+
 	cobra.CheckErr(cmd.MarkFlagFilename("references", "json"))
 	cobra.CheckErr(cmd.MarkFlagFilename("config-file", "avsc", "json"))
 
@@ -274,6 +277,7 @@ func (c *hasAPIKeyTopicCommand) initSchemaAndGetInfo(cmd *cobra.Command, topic s
 
 	subject := topicNameStrategy(topic)
 
+	// Deprecated
 	schemaId, err := cmd.Flags().GetInt32("schema-id")
 	if err != nil {
 		return nil, nil, err
@@ -284,12 +288,17 @@ func (c *hasAPIKeyTopicCommand) initSchemaAndGetInfo(cmd *cobra.Command, topic s
 		return nil, nil, err
 	}
 
+	isSchemaId := cmd.Flags().Changed("schema-id")
+	if id, err := strconv.ParseInt(schemaPath, 10, 32); err == nil {
+		schemaId = int32(id)
+		isSchemaId = true
+	}
+
 	var valueFormat string
 	referencePathMap := map[string]string{}
 	metaInfo := []byte{}
 
-	if cmd.Flags().Changed("schema-id") {
-		// request schema information from schemaID
+	if isSchemaId {
 		srClient, ctx, err := c.getSchemaRegistryClient(cmd)
 		if err != nil {
 			return nil, nil, err
@@ -323,7 +332,7 @@ func (c *hasAPIKeyTopicCommand) initSchemaAndGetInfo(cmd *cobra.Command, topic s
 		return nil, nil, err
 	}
 
-	if schemaPath != "" && !cmd.Flags().Changed("schema-id") {
+	if schemaPath != "" && !isSchemaId {
 		// read schema info from local file and register schema
 		schemaCfg := &sr.RegisterSchemaConfigs{
 			SchemaDir:   dir,
@@ -344,7 +353,7 @@ func (c *hasAPIKeyTopicCommand) initSchemaAndGetInfo(cmd *cobra.Command, topic s
 	}
 
 	if err := serializationProvider.LoadSchema(schemaPath, referencePathMap); err != nil {
-		return nil, nil, errors.NewWrapErrorWithSuggestions(err, "failed to load schema", errors.FailedToLoadSchemaSuggestions)
+		return nil, nil, errors.NewWrapErrorWithSuggestions(err, "failed to load schema", "Specify a schema by passing a schema ID or the path to a schema file to the `--schema` flag.")
 	}
 
 	return serializationProvider, metaInfo, nil
