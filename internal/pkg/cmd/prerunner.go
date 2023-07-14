@@ -448,6 +448,9 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(*co
 
 		// Even if there was an error while setting the context, notify the user about any unmet run requirements first.
 		if err := ErrIfMissingRunRequirement(cmd, r.Config); err != nil {
+			if err == v1.RunningOnPremCommandInCloudErr && strings.Contains(cmd.CommandPath(), "confluent cluster") {
+				return v1.RunningClusterCommandInCloudErr
+			}
 			return err
 		}
 
