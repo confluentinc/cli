@@ -1,3 +1,8 @@
-          Creation Date         |     Name     |     Statement      | Compute Pool | Status | Status Detail  
---------------------------------+--------------+--------------------+--------------+--------+----------------
-  2022-01-01 00:00:00 +0000 UTC | my-statement | CREATE TABLE test; | pool-123456  | TODO   | TODO           
++---------------+-------------------------------+
+| Creation Date | 2022-01-01 00:00:00 +0000 UTC |
+| Name          | my-statement                  |
+| Statement     | CREATE TABLE test;            |
+| Compute Pool  | pool-123456                   |
+| Status        | TODO                          |
+| Status Detail | TODO                          |
++---------------+-------------------------------+
