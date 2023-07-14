@@ -11,6 +11,8 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/exec"
 )
 
+const bashVersionPattern = `^[1-9][0-9]*\.[0-9]+\.[0-9]+\([0-9]+\)-[a-z0-9]*$`
+
 type BashPluginInstaller struct {
 	Name          string
 	RepositoryDir string
@@ -25,7 +27,7 @@ func (b *BashPluginInstaller) CheckVersion(ver *version.Version) error {
 		return errors.NewErrorWithSuggestions(fmt.Sprintf(programNotFoundErrorMsg, "bash"), programNotFoundSuggestions)
 	}
 
-	re := regexp.MustCompile(`^[1-9][0-9]*\.[0-9]+\.[0-9]+\([0-9]+\)-[a-z0-9]*$`)
+	re := regexp.MustCompile(bashVersionPattern)
 	for _, word := range strings.Split(string(out), " ") {
 		if re.MatchString(word) {
 			parenthesisIdx := strings.Index(word, "(")

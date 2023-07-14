@@ -4,6 +4,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strings"
 	"testing"
@@ -100,4 +101,30 @@ func TestSearchPath(t *testing.T) {
 	pluginPaths, ok := pluginMap[pluginName]
 	require.True(t, ok)
 	require.Equal(t, fileName, filepath.Base(pluginPaths[0]))
+}
+
+func TestVersionRegex(t *testing.T) {
+	// Go
+	re := regexp.MustCompile(goVersionPattern)
+	require.True(t, re.MatchString("go1.20"))
+	require.True(t, re.MatchString("go1.19.6"))
+	require.False(t, re.MatchString("1.19.6"))
+	require.False(t, re.MatchString("go1.19.0"))
+	require.False(t, re.MatchString("go"))
+	require.False(t, re.MatchString("version"))
+
+	// Python
+	re = regexp.MustCompile(pythonVersionPattern)
+	require.True(t, re.MatchString("3.11.4"))
+	require.True(t, re.MatchString("3.11.0"))
+	require.True(t, re.MatchString("2.7.0"))
+	require.False(t, re.MatchString("Python"))
+
+	// Bash
+	re = regexp.MustCompile(bashVersionPattern)
+	require.True(t, re.MatchString("3.2.57(1)-release"))
+	require.False(t, re.MatchString("3.2.57(1)"))
+	require.False(t, re.MatchString("3.2.57"))
+	require.False(t, re.MatchString("bash"))
+	require.False(t, re.MatchString("Inc."))
 }
