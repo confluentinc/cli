@@ -36,7 +36,8 @@ type wrongLoginCommandError struct {
 
 var wrongLoginCommandErrorWithSuggestion = wrongLoginCommandError{
 	"`%s` is not a Confluent Cloud command. Did you mean `%s`?",
-	"Log in to Confluent Platform with `confluent login --url <mds-url>` to use `%s`."}
+	"If you are a Confluent Cloud user, run `%s` instead.\n" +
+		"If you are attempting to connect to Confluent Platform, login with `confluent login --url <mds-url>` to use `%s`."}
 
 var wrongLoginCommandsMap = map[string]string{
 	"confluent cluster": "confluent kafka cluster",
@@ -466,7 +467,7 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(*co
 					if strings.HasPrefix(cmd.CommandPath(), topLevelCmd) {
 						suggestCmdPath := strings.Replace(cmd.CommandPath(), topLevelCmd, suggestCmd, 1)
 						return errors.NewErrorWithSuggestions(fmt.Sprintf(wrongLoginCommandErrorWithSuggestion.errorString, cmd.CommandPath(), suggestCmdPath),
-							fmt.Sprintf(wrongLoginCommandErrorWithSuggestion.suggestionString, cmd.CommandPath()))
+							fmt.Sprintf(wrongLoginCommandErrorWithSuggestion.suggestionString, suggestCmdPath, cmd.CommandPath()))
 					}
 				}
 			}
