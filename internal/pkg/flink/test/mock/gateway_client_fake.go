@@ -2,12 +2,13 @@ package mock
 
 import (
 	"fmt"
+	"time"
+
 	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/flink/test/generators"
 	"github.com/google/uuid"
 	"pgregory.net/rapid"
-	"time"
 )
 
 const (
@@ -44,7 +45,7 @@ func (c *FakeFlinkGatewayClient) ListStatements(environmentId, orgId, pageToken 
 	return flinkgatewayv1alpha1.SqlV1alpha1StatementList{Data: c.statements}, nil
 }
 
-func (c *FakeFlinkGatewayClient) CreateStatement(statement, computePoolId, identityPoolId string, properties map[string]string, environmentId, orgId string) (flinkgatewayv1alpha1.SqlV1alpha1Statement, error) {
+func (c *FakeFlinkGatewayClient) CreateStatementForShell(statement, computePoolId, identityPoolId string, properties map[string]string, environmentId, orgId string) (flinkgatewayv1alpha1.SqlV1alpha1Statement, error) {
 	columnDetails := c.getFakeResultSchema(statement)
 	statementName := uuid.New().String()[:20]
 
