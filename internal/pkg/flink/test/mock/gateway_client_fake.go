@@ -40,7 +40,7 @@ func (c *FakeFlinkGatewayClient) GetStatement(environmentId, statementName, orgI
 	return c.statement, nil
 }
 
-func (c *FakeFlinkGatewayClient) ListStatements(environmentId, orgId, pageToken string) (flinkgatewayv1alpha1.SqlV1alpha1StatementList, error) {
+func (c *FakeFlinkGatewayClient) ListStatements(environmentId, orgId, pageToken, computePoolId string) (flinkgatewayv1alpha1.SqlV1alpha1StatementList, error) {
 	return flinkgatewayv1alpha1.SqlV1alpha1StatementList{Data: c.statements}, nil
 }
 

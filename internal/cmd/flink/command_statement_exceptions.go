@@ -1,6 +1,7 @@
 package flink
 
 import (
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -17,7 +18,8 @@ func (c *command) newExceptionsCommand() *cobra.Command {
 		Use:   "exceptions",
 		Short: "Manage Flink SQL statements.",
 	}
-
+	pcmd.AddCloudFlag(cmd)
+	c.addRegionFlag(cmd)
 	cmd.AddCommand(c.newStatementExceptionsListCommand())
 
 	return cmd

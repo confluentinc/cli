@@ -20,9 +20,9 @@ func (c *command) newStatementDeleteCommand() *cobra.Command {
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validStatementArgs),
 		RunE:              c.statementDelete,
 	}
-
+	pcmd.AddCloudFlag(cmd)
+	c.addRegionFlag(cmd)
 	pcmd.AddForceFlag(cmd)
-	c.addComputePoolFlag(cmd)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 

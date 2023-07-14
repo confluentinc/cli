@@ -13,7 +13,8 @@ func (c *command) newStatementListCommand() *cobra.Command {
 		Short: "List Flink SQL statements.",
 		RunE:  c.statementList,
 	}
-
+	pcmd.AddCloudFlag(cmd)
+	c.addRegionFlag(cmd)
 	c.addComputePoolFlag(cmd)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -33,7 +34,12 @@ func (c *command) statementList(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	statements, err := client.ListAllStatements(environmentId, c.Context.LastOrgId)
+	computePoolId, err := cmd.Flags().GetString("compute-pool")
+	if err != nil {
+		return err
+	}
+
+	statements, err := client.ListAllStatements(environmentId, c.Context.LastOrgId, computePoolId)
 	if err != nil {
 		return err
 	}
