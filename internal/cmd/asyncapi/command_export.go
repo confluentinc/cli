@@ -35,13 +35,13 @@ type command struct {
 }
 
 type confluentBinding struct {
-	BindingVersion     string             `json:"bindingVersion,omitempty"`
-	Partitions         int32              `json:"partitions,omitempty"`
-	TopicConfiguration topicConfiguration `json:"topicConfiguration,omitempty"`
-	XConfigs           map[string]string  `json:"x-configs,omitempty"`
+	BindingVersion     string                   `json:"bindingVersion,omitempty"`
+	Partitions         int32                    `json:"partitions,omitempty"`
+	TopicConfiguration topicConfigurationExport `json:"topicConfiguration,omitempty"`
+	XConfigs           map[string]string        `json:"x-configs,omitempty"`
 }
 
-type topicConfiguration struct {
+type topicConfigurationExport struct {
 	CleanupPolicy       []string `json:"cleanup.policy,omitempty"`
 	RetentionTime       int64    `json:"retention.ms,omitempty"`
 	RetentionSize       int64    `json:"retention.bytes,omitempty"`
@@ -352,7 +352,7 @@ func (c *command) getBindings(clusterId, topicName string) (*bindings, error) {
 	}
 
 	// Turn topicConfigMap into correct format
-	topicConfigs := topicConfiguration{}
+	topicConfigs := topicConfigurationExport{}
 	jsonString, err := json.Marshal(topicConfigMap)
 	if err != nil {
 		return nil, err

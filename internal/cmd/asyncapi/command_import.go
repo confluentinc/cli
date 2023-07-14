@@ -41,13 +41,13 @@ type flagsImport struct {
 }
 
 type kafkaBinding struct {
-	BindingVersion     string                `yaml:"bindingVersion"`
-	Partitions         int32                 `yaml:"partitions"`
-	TopicConfiguration topicConfigurationPtr `yaml:"topicConfiguration"`
-	XConfigs           map[string]string     `yaml:"x-configs"`
+	BindingVersion     string                   `yaml:"bindingVersion"`
+	Partitions         int32                    `yaml:"partitions"`
+	TopicConfiguration topicConfigurationImport `yaml:"topicConfiguration"`
+	XConfigs           map[string]string        `yaml:"x-configs"`
 }
 
-type topicConfigurationPtr struct {
+type topicConfigurationImport struct {
 	CleanupPolicy       *[]string `yaml:"cleanup.policy"`
 	RetentionTime       *int64    `yaml:"retention.ms"`
 	RetentionSize       *int64    `yaml:"retention.bytes"`
@@ -353,13 +353,13 @@ func combineTopicConfigs(kafkaBinding kafkaBinding) map[string]string {
 		configs["cleanup.policy"] = strings.Join(*topicConfig.CleanupPolicy, ",")
 	}
 	if topicConfig.RetentionTime != nil {
-		configs["retention.ms"] = strconv.FormatInt(*topicConfig.RetentionTime, 10)
+		configs["retention.ms"] = fmt.Sprint(*topicConfig.RetentionTime)
 	}
 	if topicConfig.RetentionSize != nil {
-		configs["retention.bytes"] = strconv.FormatInt(*topicConfig.RetentionSize, 10)
+		configs["retention.bytes"] = fmt.Sprint(*topicConfig.RetentionSize)
 	}
 	if topicConfig.DeleteRetentionTime != nil {
-		configs["delete.retention.ms"] = strconv.FormatInt(*topicConfig.DeleteRetentionTime, 10)
+		configs["delete.retention.ms"] = fmt.Sprint(*topicConfig.DeleteRetentionTime)
 	}
 	if topicConfig.MaxMessageSize != nil {
 		configs["max.message.bytes"] = strconv.Itoa(int(*topicConfig.MaxMessageSize))
