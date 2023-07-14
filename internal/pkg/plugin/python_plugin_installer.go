@@ -11,12 +11,16 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/exec"
 )
 
-const pythonVersionPattern = `^[1-9][0-9]*\.[0-9]+\.(0|[1-9][0-9]*)$`
-
 type PythonPluginInstaller struct {
 	Name          string
 	RepositoryDir string
 	InstallDir    string
+}
+
+func (p *PythonPluginInstaller) IsVersionNumber(word string) bool {
+	re := regexp.MustCompile(`^[1-9][0-9]*\.[0-9]+\.(0|[1-9][0-9]*)$`)
+
+	return re.MatchString(word)
 }
 
 func (p *PythonPluginInstaller) CheckVersion(ver *version.Version) error {
@@ -41,9 +45,8 @@ func (p *PythonPluginInstaller) CheckVersion(ver *version.Version) error {
 		return errors.NewErrorWithSuggestions(fmt.Sprintf(programNotFoundErrorMsg, "python"), programNotFoundSuggestions)
 	}
 
-	re := regexp.MustCompile(pythonVersionPattern)
 	for _, word := range strings.Split(string(out), " ") {
-		if re.MatchString(word) {
+		if p.IsVersionNumber(word) {
 			installedVer, err := version.NewVersion(strings.TrimSpace(word))
 			if err != nil {
 				return errors.Errorf(unableToParseVersionErrorMsg, "python")

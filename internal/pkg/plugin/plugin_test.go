@@ -4,7 +4,6 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"regexp"
 	"runtime"
 	"strings"
 	"testing"
@@ -105,26 +104,26 @@ func TestSearchPath(t *testing.T) {
 
 func TestVersionRegex(t *testing.T) {
 	// Go
-	re := regexp.MustCompile(goVersionPattern)
-	require.True(t, re.MatchString("go1.20"))
-	require.True(t, re.MatchString("go1.19.6"))
-	require.False(t, re.MatchString("1.19.6"))
-	require.False(t, re.MatchString("go1.19.0"))
-	require.False(t, re.MatchString("go"))
-	require.False(t, re.MatchString("version"))
+	goInstaller := &GoPluginInstaller{}
+	require.True(t, goInstaller.IsVersionNumber("go1.20"))
+	require.True(t, goInstaller.IsVersionNumber("go1.19.6"))
+	require.False(t, goInstaller.IsVersionNumber("1.19.6"))
+	require.False(t, goInstaller.IsVersionNumber("go1.19.0"))
+	require.False(t, goInstaller.IsVersionNumber("go"))
+	require.False(t, goInstaller.IsVersionNumber("version"))
 
 	// Python
-	re = regexp.MustCompile(pythonVersionPattern)
-	require.True(t, re.MatchString("3.11.4"))
-	require.True(t, re.MatchString("3.11.0"))
-	require.True(t, re.MatchString("2.7.0"))
-	require.False(t, re.MatchString("Python"))
+	pythonInstaller := &PythonPluginInstaller{}
+	require.True(t, pythonInstaller.IsVersionNumber("3.11.4"))
+	require.True(t, pythonInstaller.IsVersionNumber("3.11.0"))
+	require.True(t, pythonInstaller.IsVersionNumber("2.7.0"))
+	require.False(t, pythonInstaller.IsVersionNumber("Python"))
 
 	// Bash
-	re = regexp.MustCompile(bashVersionPattern)
-	require.True(t, re.MatchString("3.2.57(1)-release"))
-	require.False(t, re.MatchString("3.2.57(1)"))
-	require.False(t, re.MatchString("3.2.57"))
-	require.False(t, re.MatchString("bash"))
-	require.False(t, re.MatchString("Inc."))
+	bashInstaller := &BashPluginInstaller{}
+	require.True(t, bashInstaller.IsVersionNumber("3.2.57(1)-release"))
+	require.False(t, bashInstaller.IsVersionNumber("3.2.57(1)"))
+	require.False(t, bashInstaller.IsVersionNumber("3.2.57"))
+	require.False(t, bashInstaller.IsVersionNumber("bash"))
+	require.False(t, bashInstaller.IsVersionNumber("Inc."))
 }

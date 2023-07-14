@@ -11,10 +11,14 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/exec"
 )
 
-const goVersionPattern = `^go[1-9][0-9]*\.[0-9]+(\.[1-9][0-9]*)?$`
-
 type GoPluginInstaller struct {
 	Name string
+}
+
+func (g *GoPluginInstaller) IsVersionNumber(word string) bool {
+	re := regexp.MustCompile(`^go[1-9][0-9]*\.[0-9]+(\.[1-9][0-9]*)?$`)
+
+	return re.MatchString(word)
 }
 
 func (g *GoPluginInstaller) CheckVersion(ver *version.Version) error {
@@ -25,9 +29,8 @@ func (g *GoPluginInstaller) CheckVersion(ver *version.Version) error {
 		return errors.NewErrorWithSuggestions(fmt.Sprintf(programNotFoundErrorMsg, "go"), programNotFoundSuggestions)
 	}
 
-	re := regexp.MustCompile(goVersionPattern)
 	for _, word := range strings.Split(string(out), " ") {
-		if re.MatchString(word) {
+		if g.IsVersionNumber(word) {
 			installedVer, err := version.NewVersion(strings.TrimPrefix(word, "go"))
 			if err != nil {
 				return errors.Errorf(unableToParseVersionErrorMsg, "go")
