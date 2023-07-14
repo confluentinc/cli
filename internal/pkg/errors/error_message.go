@@ -403,9 +403,6 @@ const (
 	// plugin package
 	NoVersionFoundErrorMsg = "no version found in plugin manifest"
 
-	// Flag Errors
-	ProhibitedFlagCombinationErrorMsg = "cannot use `--%s` and `--%s` flags at the same time"
-
 	// catcher
 	CCloudBackendErrorPrefix           = "Confluent Cloud backend error"
 	UnexpectedBackendOutputPrefix      = "unexpected CCloud backend output"
@@ -499,5 +496,4 @@ const (
 	DeleteResourceErrorMsg        = `failed to delete %s "%s": %v`
 	DeleteResourceConfirmErrorMsg = `input does not match "%s"`
 	UpdateResourceErrorMsg        = `failed to update %s "%s": %v`
-	MustSpecifyBothFlagsErrorMsg  = "must specify both `--%s` and `--%s`"
 )
