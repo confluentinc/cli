@@ -4,6 +4,7 @@ Usage:
   confluent flink statement [command]
 
 Available Commands:
+  create      Create a Flink SQL statement.
   delete      Delete a Flink SQL statement.
   describe    Get details of a Flink SQL statement.
   exceptions  Manage Flink SQL statements.

@@ -35,3 +35,30 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 
 	return cmd
 }
+
+func (c *command) addDatabaseFlag(cmd *cobra.Command) {
+	cmd.Flags().String("database", "", "The database against which the statement will run. For example, the display name of a Kafka cluster.")
+
+	pcmd.RegisterFlagCompletionFunc(cmd, "database", func(cmd *cobra.Command, args []string) []string {
+		if err := c.PersistentPreRunE(cmd, args); err != nil {
+			return nil
+		}
+
+		environmentId, err := c.Context.EnvironmentId()
+		if err != nil {
+			return nil
+		}
+
+		clusters, err := c.V2Client.ListKafkaClusters(environmentId)
+		if err != nil {
+			return nil
+		}
+
+		suggestions := make([]string, len(clusters))
+		for i, cluster := range clusters {
+			suggestions[i] = cluster.Spec.GetDisplayName()
+		}
+
+		return suggestions
+	})
+}
