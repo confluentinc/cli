@@ -8,9 +8,12 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/flink"
 	"github.com/confluentinc/cli/internal/pkg/flink/config"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
+
+const defaultNamePlaceholder = "<randomly-generated-id>"
 
 func (c *command) newStatementCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -20,7 +23,7 @@ func (c *command) newStatementCreateCommand() *cobra.Command {
 		RunE:  c.statementCreate,
 	}
 
-	cmd.Flags().String("name", "", "Name of the statement.")
+	cmd.Flags().String("name", defaultNamePlaceholder, "Name of the statement.")
 	c.addDatabaseFlag(cmd)
 	c.addComputePoolFlag(cmd)
 	cmd.Flags().String("identity-pool", "", "Identity pool ID.")
@@ -31,6 +34,14 @@ func (c *command) newStatementCreateCommand() *cobra.Command {
 }
 
 func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
+	name, err := cmd.Flags().GetString("name")
+	if err != nil {
+		return err
+	}
+	if name == defaultNamePlaceholder {
+		name = uuid.New().String()[:18]
+	}
+
 	client, err := c.GetFlinkGatewayClient()
 	if err != nil {
 		return err
@@ -41,22 +52,18 @@ func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	name, err := cmd.Flags().GetString("name")
-	if err != nil {
-		return err
-	}
-	if name == "" {
-		name = uuid.New().String()[:18]
-	}
-
-	properties := map[string]string{}
-
 	database, err := cmd.Flags().GetString("database")
 	if err != nil {
 		return err
 	}
-	if database != "" {
-		properties[config.ConfigKeyDatabase] = database
+	if database == defaultDatabasePlaceholder {
+		database = c.Context.KafkaClusterContext.GetActiveKafkaClusterId()
+	}
+
+	properties := map[string]string{
+		config.ConfigKeyCatalog:       environmentId,
+		config.ConfigKeyDatabase:      database,
+		config.ConfigKeyLocalTimeZone: flink.GetLocalTimezone(),
 	}
 
 	computePoolId := c.Context.GetCurrentFlinkComputePool()

@@ -126,7 +126,7 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 	if err != nil {
 		return err
 	}
-	if database == "" {
+	if database == defaultDatabasePlaceholder {
 		if c.Context.GetCurrentFlinkDatabase() != "" {
 			database = c.Context.GetCurrentFlinkDatabase()
 		} else {

@@ -9,6 +9,8 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/featureflags"
 )
 
+const defaultDatabasePlaceholder = "<current-kafka-cluster>"
+
 type command struct {
 	*pcmd.AuthenticatedCLICommand
 }
@@ -37,7 +39,7 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 }
 
 func (c *command) addDatabaseFlag(cmd *cobra.Command) {
-	cmd.Flags().String("database", "", "The database against which the statement will run. For example, the display name of a Kafka cluster.")
+	cmd.Flags().String("database", defaultDatabasePlaceholder, "The database against which the statement will run. For example, the display name of a Kafka cluster.")
 
 	pcmd.RegisterFlagCompletionFunc(cmd, "database", func(cmd *cobra.Command, args []string) []string {
 		if err := c.PersistentPreRunE(cmd, args); err != nil {
