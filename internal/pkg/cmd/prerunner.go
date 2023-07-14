@@ -34,9 +34,12 @@ type wrongLoginCommandError struct {
 	suggestionString string
 }
 
-var wrongLoginCommandErrors = map[string]wrongLoginCommandError{
-	"confluent cluster": {"`%s` is not a Confluent Cloud command. Did you mean `confluent kafka cluster %s`?",
-		"Log in to Confluent Platform with `confluent login --url <mds-url>` to use `%s`."},
+var wrongLoginCommandErrorWithSuggestion = wrongLoginCommandError{
+	"`%s` is not a Confluent Cloud command. Did you mean `%s`?",
+	"Log in to Confluent Platform with `confluent login --url <mds-url>` to use `%s`."}
+
+var wrongLoginCommandsMap = map[string]string{
+	"confluent cluster": "confluent kafka cluster",
 }
 
 // PreRun is a helper class for automatically setting up Cobra PersistentPreRun commands
@@ -459,11 +462,11 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(*co
 		// Even if there was an error while setting the context, notify the user about any unmet run requirements first.
 		if err := ErrIfMissingRunRequirement(cmd, r.Config); err != nil {
 			if err == v1.RunningOnPremCommandInCloudErr {
-				for topLevelCmd, errorStruct := range wrongLoginCommandErrors {
+				for topLevelCmd, suggestCmd := range wrongLoginCommandsMap {
 					if strings.HasPrefix(cmd.CommandPath(), topLevelCmd) {
-						trimmed := strings.TrimPrefix(cmd.CommandPath(), topLevelCmd+" ")
-						return errors.NewErrorWithSuggestions(fmt.Sprintf(errorStruct.errorString, cmd.CommandPath(), trimmed),
-							fmt.Sprintf(errorStruct.suggestionString, cmd.CommandPath()))
+						suggestCmdPath := strings.Replace(cmd.CommandPath(), topLevelCmd, suggestCmd, 1)
+						return errors.NewErrorWithSuggestions(fmt.Sprintf(wrongLoginCommandErrorWithSuggestion.errorString, cmd.CommandPath(), suggestCmdPath),
+							fmt.Sprintf(wrongLoginCommandErrorWithSuggestion.suggestionString, cmd.CommandPath()))
 					}
 				}
 			}
