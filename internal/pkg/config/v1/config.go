@@ -68,10 +68,6 @@ var (
 		"this is not a Confluent Cloud command. You must log in to Confluent Platform to use this command",
 		"Log in to Confluent Platform with `confluent login --url <mds-url>`.\n"+`Use the "--help" flag to see available commands.`,
 	)
-	RunningClusterCommandInCloudErr = errors.NewErrorWithSuggestions(
-		"`confluent cluster` is not a Confluent Cloud command. Did you mean `confluent kafka cluster`?",
-		"Log in to Confluent Platform with `confluent login --url <mds-url>` to use `confluent cluster`.",
-	)
 )
 
 // Config represents the CLI configuration.
