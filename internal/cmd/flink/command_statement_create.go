@@ -20,6 +20,7 @@ func (c *command) newStatementCreateCommand() *cobra.Command {
 		RunE:  c.statementCreate,
 	}
 
+	cmd.Flags().String("name", "", "Name of the statement.")
 	c.addDatabaseFlag(cmd)
 	c.addComputePoolFlag(cmd)
 	cmd.Flags().String("identity-pool", "", "Identity pool ID.")
@@ -38,6 +39,14 @@ func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
+	}
+
+	name, err := cmd.Flags().GetString("name")
+	if err != nil {
+		return err
+	}
+	if name == "" {
+		name = uuid.New().String()[:18]
 	}
 
 	properties := map[string]string{}
@@ -61,7 +70,7 @@ func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
 	}
 
 	statement := flinkgatewayv1alpha1.SqlV1alpha1Statement{Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
-		StatementName:  flinkgatewayv1alpha1.PtrString(uuid.New().String()[:18]),
+		StatementName:  flinkgatewayv1alpha1.PtrString(name),
 		Statement:      flinkgatewayv1alpha1.PtrString(args[0]),
 		Properties:     &properties,
 		ComputePoolId:  flinkgatewayv1alpha1.PtrString(computePoolId),

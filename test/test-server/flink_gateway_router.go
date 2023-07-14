@@ -68,7 +68,7 @@ func handleSqlEnvironmentsEnvironmentStatements(t *testing.T) http.HandlerFunc {
 		case http.MethodPost:
 			statement := flinkgatewayv1alpha1.SqlV1alpha1Statement{
 				Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
-					StatementName: flinkgatewayv1alpha1.PtrString("11111111-1111-1111"),
+					StatementName: flinkgatewayv1alpha1.PtrString("my-statement"),
 					Statement:     flinkgatewayv1alpha1.PtrString("CREATE TABLE test;"),
 					ComputePoolId: flinkgatewayv1alpha1.PtrString("lfcp-123456"),
 				},
