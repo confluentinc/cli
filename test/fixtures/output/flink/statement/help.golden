@@ -5,8 +5,8 @@ Usage:
 
 Available Commands:
   delete      Delete a Flink SQL statement.
-  describe    Get details of a Flink SQL statement.
-  exceptions  Manage Flink SQL statements.
+  describe    Describe a Flink SQL statement.
+  exception   Manage Flink SQL statement exceptions.
   list        List Flink SQL statements.
 
 Global Flags:
