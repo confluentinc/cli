@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -42,13 +41,13 @@ type flagsImport struct {
 }
 
 type kafkaBinding struct {
-	BindingVersion string            `yaml:"bindingVersion"`
-	Partitions     int32             `yaml:"partitions"`
-	TopicConfigs   topicConfigPtr    `yaml:"topicConfiguration"`
-	XConfigs       map[string]string `yaml:"x-configs"`
+	BindingVersion     string                `yaml:"bindingVersion"`
+	Partitions         int32                 `yaml:"partitions"`
+	TopicConfiguration topicConfigurationPtr `yaml:"topicConfiguration"`
+	XConfigs           map[string]string     `yaml:"x-configs"`
 }
 
-type topicConfigPtr struct {
+type topicConfigurationPtr struct {
 	CleanupPolicy       *[]string `yaml:"cleanup.policy"`
 	RetentionTime       *int64    `yaml:"retention.ms"`
 	RetentionSize       *int64    `yaml:"retention.bytes"`
@@ -341,38 +340,31 @@ func (c *command) updateTopic(details *accountDetails, topicName string, kafkaBi
 	return nil
 }
 
-// TopicConfigs and XConfigs are both specifying Kafka configs, XConfigs is for those not specified in async api.
-// This function combines TopicConfigs and XConfigs
+// TopicConfiguration and XConfigs are both specifying Kafka configs, XConfigs is for those not specified in async api.
+// This function combines TopicConfiguration and XConfigs
 func combineTopicConfigs(kafkaBinding kafkaBinding) map[string]string {
-	var configs map[string]string
+	configs := make(map[string]string)
 	if kafkaBinding.XConfigs != nil {
 		configs = kafkaBinding.XConfigs
-	} else {
-		configs = make(map[string]string)
 	}
 
-	// Loop through all fields of struct, no matter type
-	t := reflect.TypeOf(kafkaBinding.TopicConfigs)
-	v := reflect.ValueOf(kafkaBinding.TopicConfigs)
-	for i := 0; i < t.NumField(); i++ {
-		fieldType := t.Field(i)
-		fieldValue := v.Field(i)
-
-		var value string
-		if !fieldValue.IsNil() {
-			elem := fieldValue.Elem()
-			if elem.Kind() == reflect.Slice {
-				ss := make([]string, elem.Len())
-				for i := 0; i < elem.Len(); i++ {
-					ss[i] = elem.Index(i).String()
-				}
-				value = strings.Join(ss, ",")
-			} else {
-				value = strconv.FormatInt(elem.Int(), 10)
-			}
-			configs[fieldType.Tag.Get("yaml")] = value
-		}
+	topicConfig := kafkaBinding.TopicConfiguration
+	if topicConfig.CleanupPolicy != nil {
+		configs["cleanup.policy"] = strings.Join(*topicConfig.CleanupPolicy, ",")
 	}
+	if topicConfig.RetentionTime != nil {
+		configs["retention.ms"] = strconv.FormatInt(*topicConfig.RetentionTime, 10)
+	}
+	if topicConfig.RetentionSize != nil {
+		configs["retention.bytes"] = strconv.FormatInt(*topicConfig.RetentionSize, 10)
+	}
+	if topicConfig.DeleteRetentionTime != nil {
+		configs["delete.retention.ms"] = strconv.FormatInt(*topicConfig.DeleteRetentionTime, 10)
+	}
+	if topicConfig.MaxMessageSize != nil {
+		configs["max.message.bytes"] = strconv.Itoa(int(*topicConfig.MaxMessageSize))
+	}
+
 	return configs
 }
 

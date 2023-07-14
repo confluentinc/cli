@@ -35,13 +35,13 @@ type command struct {
 }
 
 type confluentBinding struct {
-	BindingVersion string            `json:"bindingVersion,omitempty"`
-	Partitions     int32             `json:"partitions,omitempty"`
-	TopicConfigs   topicConfig       `json:"topicConfiguration,omitempty"`
-	XConfigs       map[string]string `json:"x-configs,omitempty"`
+	BindingVersion     string             `json:"bindingVersion,omitempty"`
+	Partitions         int32              `json:"partitions,omitempty"`
+	TopicConfiguration topicConfiguration `json:"topicConfiguration,omitempty"`
+	XConfigs           map[string]string  `json:"x-configs,omitempty"`
 }
 
-type topicConfig struct {
+type topicConfiguration struct {
 	CleanupPolicy       []string `json:"cleanup.policy,omitempty"`
 	RetentionTime       int64    `json:"retention.ms,omitempty"`
 	RetentionSize       int64    `json:"retention.bytes,omitempty"`
@@ -320,7 +320,7 @@ func (c *command) getBindings(clusterId, topicName string) (*bindings, error) {
 		numPartitions = int32(len(partitionsResp.Data))
 	}
 	customConfigMap := make(map[string]string)
-	topicConfigMap := make(map[string]interface{})
+	topicConfigMap := make(map[string]any)
 
 	// Determine whether the given config value can be put into the AsyncAPI Kakfa bindings or put into our custom struct for extra configs
 	topicConfigOptions := types.NewSet(
@@ -332,14 +332,15 @@ func (c *command) getBindings(clusterId, topicName string) (*bindings, error) {
 	)
 	for _, config := range configs.Data {
 		if topicConfigOptions.Contains(config.GetName()) {
-			if config.GetName() == "cleanup.policy" {
+			switch config.GetName() {
+			case "cleanup.policy":
 				topicConfigMap[config.GetName()] = strings.Split(config.GetValue(), ",")
-			} else if config.GetName() == "max.message.bytes" {
+			case "max.message.bytes":
 				topicConfigMap[config.GetName()], err = strconv.ParseInt(config.GetValue(), 10, 32)
 				if err != nil {
 					return nil, err
 				}
-			} else {
+			default:
 				topicConfigMap[config.GetName()], err = strconv.ParseInt(config.GetValue(), 10, 64)
 				if err != nil {
 					return nil, err
@@ -351,21 +352,20 @@ func (c *command) getBindings(clusterId, topicName string) (*bindings, error) {
 	}
 
 	// Turn topicConfigMap into correct format
-	topicConfigs := topicConfig{}
+	topicConfigs := topicConfiguration{}
 	jsonString, err := json.Marshal(topicConfigMap)
 	if err != nil {
 		return nil, err
 	}
-	err = json.Unmarshal(jsonString, &topicConfigs)
-	if err != nil {
+	if err := json.Unmarshal(jsonString, &topicConfigs); err != nil {
 		return nil, err
 	}
 
 	var channelBindings any = confluentBinding{
-		BindingVersion: "0.4.0",
-		Partitions:     numPartitions,
-		TopicConfigs:   topicConfigs,
-		XConfigs:       customConfigMap,
+		BindingVersion:     "0.4.0",
+		Partitions:         numPartitions,
+		TopicConfiguration: topicConfigs,
+		XConfigs:           customConfigMap,
 	}
 	messageBindings := spec.MessageBindingsObject{Kafka: &spec.KafkaMessage{Key: &spec.KafkaMessageKey{Schema: map[string]any{"type": "string"}}}}
 	operationBindings := spec.OperationBindingsObject{Kafka: &spec.KafkaOperation{
