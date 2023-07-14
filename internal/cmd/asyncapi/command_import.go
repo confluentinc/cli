@@ -364,7 +364,6 @@ func combineTopicConfigs(kafkaBinding kafkaBinding) map[string]string {
 	if topicConfig.MaxMessageSize != nil {
 		configs["max.message.bytes"] = strconv.Itoa(int(*topicConfig.MaxMessageSize))
 	}
-
 	return configs
 }
 
