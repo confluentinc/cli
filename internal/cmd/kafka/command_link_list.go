@@ -73,12 +73,12 @@ func (c *linkCommand) list(cmd *cobra.Command, _ []string) error {
 		return errors.New(errors.RestProxyNotAvailableMsg)
 	}
 
-	clusterId, err := getKafkaClusterLkcId(c.AuthenticatedCLICommand)
+	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
 
-	listLinksRespDataList, httpResp, err := kafkaREST.CloudClient.ListKafkaLinks(clusterId)
+	listLinksRespDataList, httpResp, err := kafkaREST.CloudClient.ListKafkaLinks(cluster.ID)
 	if err != nil {
 		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
@@ -88,7 +88,7 @@ func (c *linkCommand) list(cmd *cobra.Command, _ []string) error {
 		if includeTopics {
 			// data.GetTopicsNames() is empty even when the http response contains a non-empty list of topic names,
 			// this function call is a temporary work-around for this issue
-			mirrorTopicNames, err := getMirrorTopicNames(kafkaREST, clusterId, data.GetLinkName())
+			mirrorTopicNames, err := getMirrorTopicNames(kafkaREST, cluster.ID, data.GetLinkName())
 			if err != nil {
 				return err
 			}

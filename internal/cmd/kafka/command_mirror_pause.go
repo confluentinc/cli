@@ -58,7 +58,7 @@ func (c *mirrorCommand) pause(cmd *cobra.Command, args []string) error {
 		return errors.New(errors.RestProxyNotAvailableMsg)
 	}
 
-	lkc, err := getKafkaClusterLkcId(c.AuthenticatedCLICommand)
+	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
@@ -68,7 +68,7 @@ func (c *mirrorCommand) pause(cmd *cobra.Command, args []string) error {
 		ValidateOnly:            optional.NewBool(dryRun),
 	}
 
-	results, httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.UpdateKafkaMirrorTopicsPause(kafkaREST.Context, lkc, linkName, pauseMirrorOpt)
+	results, httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.UpdateKafkaMirrorTopicsPause(kafkaREST.Context, cluster.ID, linkName, pauseMirrorOpt)
 	if err != nil {
 		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
