@@ -2,8 +2,10 @@ package asyncapi
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -25,6 +27,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/serdes"
+	"github.com/confluentinc/cli/internal/pkg/types"
 )
 
 type command struct {
@@ -32,8 +35,18 @@ type command struct {
 }
 
 type confluentBinding struct {
-	XPartitions int32             `json:"x-partitions,omitempty"`
-	XConfigs    map[string]string `json:"x-configs,omitempty"`
+	BindingVersion     string                   `json:"bindingVersion,omitempty"`
+	Partitions         int32                    `json:"partitions,omitempty"`
+	TopicConfiguration topicConfigurationExport `json:"topicConfiguration,omitempty"`
+	XConfigs           map[string]string        `json:"x-configs,omitempty"`
+}
+
+type topicConfigurationExport struct {
+	CleanupPolicy       []string `json:"cleanup.policy,omitempty"`
+	RetentionTime       int64    `json:"retention.ms,omitempty"`
+	RetentionSize       int64    `json:"retention.bytes,omitempty"`
+	DeleteRetentionTime int64    `json:"delete.retention.ms,omitempty"`
+	MaxMessageSize      int32    `json:"max.message.bytes,omitempty"`
 }
 
 type bindings struct {
@@ -306,13 +319,53 @@ func (c *command) getBindings(clusterId, topicName string) (*bindings, error) {
 	if partitionsResp.Data != nil {
 		numPartitions = int32(len(partitionsResp.Data))
 	}
-	configsMap := make(map[string]string)
+	customConfigMap := make(map[string]string)
+	topicConfigMap := make(map[string]any)
+
+	// Determine whether the given config value can be put into the AsyncAPI Kakfa bindings or put into our custom struct for extra configs
+	topicConfigOptions := types.NewSet(
+		"cleanup.policy",
+		"delete.retention.ms",
+		"max.message.bytes",
+		"retention.bytes",
+		"retention.ms",
+	)
 	for _, config := range configs.Data {
-		configsMap[config.GetName()] = config.GetValue()
+		if topicConfigOptions.Contains(config.GetName()) {
+			switch config.GetName() {
+			case "cleanup.policy":
+				topicConfigMap[config.GetName()] = strings.Split(config.GetValue(), ",")
+			case "max.message.bytes":
+				topicConfigMap[config.GetName()], err = strconv.ParseInt(config.GetValue(), 10, 32)
+				if err != nil {
+					return nil, err
+				}
+			default:
+				topicConfigMap[config.GetName()], err = strconv.ParseInt(config.GetValue(), 10, 64)
+				if err != nil {
+					return nil, err
+				}
+			}
+		} else {
+			customConfigMap[config.GetName()] = config.GetValue()
+		}
 	}
+
+	// Turn topicConfigMap into correct format
+	topicConfigs := topicConfigurationExport{}
+	jsonString, err := json.Marshal(topicConfigMap)
+	if err != nil {
+		return nil, err
+	}
+	if err := json.Unmarshal(jsonString, &topicConfigs); err != nil {
+		return nil, err
+	}
+
 	var channelBindings any = confluentBinding{
-		XPartitions: numPartitions,
-		XConfigs:    configsMap,
+		BindingVersion:     "0.4.0",
+		Partitions:         numPartitions,
+		TopicConfiguration: topicConfigs,
+		XConfigs:           customConfigMap,
 	}
 	messageBindings := spec.MessageBindingsObject{Kafka: &spec.KafkaMessage{Key: &spec.KafkaMessageKey{Schema: map[string]any{"type": "string"}}}}
 	operationBindings := spec.OperationBindingsObject{Kafka: &spec.KafkaOperation{
