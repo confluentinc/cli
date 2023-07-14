@@ -8,6 +8,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/flink/config"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -19,6 +20,7 @@ func (c *command) newStatementCreateCommand() *cobra.Command {
 		RunE:  c.statementCreate,
 	}
 
+	c.addDatabaseFlag(cmd)
 	c.addComputePoolFlag(cmd)
 	cmd.Flags().String("identity-pool", "", "Identity pool ID.")
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -38,6 +40,16 @@ func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	properties := map[string]string{}
+
+	database, err := cmd.Flags().GetString("database")
+	if err != nil {
+		return err
+	}
+	if database != "" {
+		properties[config.ConfigKeyDatabase] = database
+	}
+
 	computePoolId := c.Context.GetCurrentFlinkComputePool()
 	if computePoolId == "" {
 		return errors.NewErrorWithSuggestions("no compute pool selected", "Select a compute pool with `confluent flink compute-pool use` or `--compute-pool`.")
@@ -51,6 +63,7 @@ func (c *command) statementCreate(cmd *cobra.Command, args []string) error {
 	statement := flinkgatewayv1alpha1.SqlV1alpha1Statement{Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
 		StatementName:  flinkgatewayv1alpha1.PtrString(uuid.New().String()[:18]),
 		Statement:      flinkgatewayv1alpha1.PtrString(args[0]),
+		Properties:     &properties,
 		ComputePoolId:  flinkgatewayv1alpha1.PtrString(computePoolId),
 		IdentityPoolId: flinkgatewayv1alpha1.PtrString(identityPoolId),
 	}}
