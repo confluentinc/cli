@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"testing"
 	"time"
 
@@ -33,11 +34,20 @@ func TestStoreTestSuite(t *testing.T) {
 	suite.Run(t, new(StoreTestSuite))
 }
 
+func tokenRefreshFunc() error {
+	return nil
+}
+
 func TestStoreProcessLocalStatement(t *testing.T) {
 	// Create a new store
 	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, "authToken")
 	mockAppController := mock.NewMockApplicationControllerInterface(gomock.NewController(t))
-	s := NewStore(client, mockAppController.ExitApplication, nil).(*Store)
+	appOptions := types.ApplicationOptions{
+		OrgResourceId:   "orgId",
+		EnvironmentName: "envName",
+		Database:        "database",
+	}
+	s := NewStore(client, mockAppController.ExitApplication, &appOptions, tokenRefreshFunc).(*Store)
 
 	result, err := s.ProcessLocalStatement("SET 'foo'='bar';")
 	assert.Nil(t, err)
@@ -73,8 +83,9 @@ func TestWaitForPendingStatement3(t *testing.T) {
 		EnvironmentId: "envId",
 	}
 	s := &Store{
-		client:     client,
-		appOptions: &appOptions,
+		client:           client,
+		appOptions:       &appOptions,
+		tokenRefreshFunc: tokenRefreshFunc,
 	}
 
 	// Test case 1: Statement is not pending
@@ -102,8 +113,9 @@ func TestWaitForPendingTimesout(t *testing.T) {
 		EnvironmentId: "envId",
 	}
 	s := &Store{
-		client:     client,
-		appOptions: &appOptions,
+		client:           client,
+		appOptions:       &appOptions,
+		tokenRefreshFunc: tokenRefreshFunc,
 	}
 
 	statusDetailMessage := "test status detail message"
@@ -124,6 +136,39 @@ func TestWaitForPendingTimesout(t *testing.T) {
 	assert.Nil(t, processedStatement)
 }
 
+func TestWaitForPendingHitsErrorRetryLimit(t *testing.T) {
+	statementName := "statementName"
+	timeout := 10 * time.Second
+
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
+	appOptions := types.ApplicationOptions{
+		OrgResourceId: "orgId",
+		EnvironmentId: "envId",
+	}
+	s := &Store{
+		client:           client,
+		appOptions:       &appOptions,
+		tokenRefreshFunc: tokenRefreshFunc,
+	}
+
+	statusDetailMessage := "test status detail message"
+	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
+		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+			Phase:  "PENDING",
+			Detail: &statusDetailMessage,
+		},
+	}
+	expectedError := &types.StatementError{
+		Message:        "the server can't process this statement right now, exiting after 6 retries",
+		FailureMessage: fmt.Sprintf("captured retryable errors: %s", strings.Repeat(statusDetailMessage+"; ", 5)+statusDetailMessage),
+	}
+	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, nil).AnyTimes()
+	processedStatement, err := s.waitForPendingStatement(context.Background(), statementName, timeout)
+
+	assert.Equal(t, expectedError, err)
+	assert.Nil(t, processedStatement)
+}
+
 func TestWaitForPendingEventuallyCompletes(t *testing.T) {
 	statementName := "statementName"
 
@@ -133,8 +178,9 @@ func TestWaitForPendingEventuallyCompletes(t *testing.T) {
 		EnvironmentId: "envId",
 	}
 	s := &Store{
-		client:     client,
-		appOptions: &appOptions,
+		client:           client,
+		appOptions:       &appOptions,
+		tokenRefreshFunc: tokenRefreshFunc,
 	}
 
 	transientStatusDetailMessage := "Transient status detail message"
@@ -170,8 +216,9 @@ func TestWaitForPendingStatementErrors(t *testing.T) {
 		EnvironmentId: "envId",
 	}
 	s := &Store{
-		client:     client,
-		appOptions: &appOptions,
+		client:           client,
+		appOptions:       &appOptions,
+		tokenRefreshFunc: tokenRefreshFunc,
 	}
 	statusDetailMessage := "Test status detail message"
 	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
@@ -202,8 +249,9 @@ func TestCancelPendingStatement(t *testing.T) {
 		EnvironmentId: "envId",
 	}
 	s := &Store{
-		client:     client,
-		appOptions: &appOptions,
+		client:           client,
+		appOptions:       &appOptions,
+		tokenRefreshFunc: tokenRefreshFunc,
 	}
 
 	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
@@ -721,10 +769,12 @@ func (s *StoreTestSuite) TestDeleteStatement() {
 	client := mock.NewMockGatewayClientInterface(ctrl)
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
 	appOptions := types.ApplicationOptions{
-		OrgResourceId: "orgId",
-		EnvironmentId: "envId",
+		OrgResourceId:   "orgId",
+		EnvironmentId:   "envId",
+		EnvironmentName: "envName",
+		Database:        "database",
 	}
-	store := NewStore(client, mockAppController.ExitApplication, &appOptions)
+	store := NewStore(client, mockAppController.ExitApplication, &appOptions, tokenRefreshFunc)
 
 	statementName := "TEST_STATEMENT"
 	client.EXPECT().DeleteStatement("envId", statementName, "orgId").Return(nil)
@@ -740,10 +790,12 @@ func (s *StoreTestSuite) TestDeleteStatementFailsOnError() {
 	client := mock.NewMockGatewayClientInterface(ctrl)
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
 	appOptions := types.ApplicationOptions{
-		OrgResourceId: "orgId",
-		EnvironmentId: "envId",
+		OrgResourceId:   "orgId",
+		EnvironmentId:   "envId",
+		EnvironmentName: "envName",
+		Database:        "database",
 	}
-	store := NewStore(client, mockAppController.ExitApplication, &appOptions)
+	store := NewStore(client, mockAppController.ExitApplication, &appOptions, tokenRefreshFunc)
 
 	statementName := "TEST_STATEMENT"
 	client.EXPECT().DeleteStatement("envId", statementName, "orgId").Return(errors.New("test error"))
@@ -759,10 +811,12 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWithCompletedStatement() {
 	client := mock.NewMockGatewayClientInterface(ctrl)
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
 	appOptions := types.ApplicationOptions{
-		OrgResourceId: "orgId",
-		EnvironmentId: "envId",
+		OrgResourceId:   "orgId",
+		EnvironmentId:   "envId",
+		EnvironmentName: "envName",
+		Database:        "database",
 	}
-	store := NewStore(client, mockAppController.ExitApplication, &appOptions)
+	store := NewStore(client, mockAppController.ExitApplication, &appOptions, tokenRefreshFunc)
 
 	statement := types.ProcessedStatement{
 		StatementName: "TEST_STATEMENT",
@@ -786,10 +840,12 @@ func (s *StoreTestSuite) TestFetchResultsWithRunningStatement() {
 	client := mock.NewMockGatewayClientInterface(ctrl)
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
 	appOptions := types.ApplicationOptions{
-		OrgResourceId: "orgId",
-		EnvironmentId: "envId",
+		OrgResourceId:   "orgId",
+		EnvironmentId:   "envId",
+		EnvironmentName: "envName",
+		Database:        "database",
 	}
-	store := NewStore(client, mockAppController.ExitApplication, &appOptions)
+	store := NewStore(client, mockAppController.ExitApplication, &appOptions, tokenRefreshFunc)
 
 	statement := types.ProcessedStatement{
 		StatementName: "TEST_STATEMENT",
@@ -813,10 +869,12 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWhenPageTokenExists() {
 	client := mock.NewMockGatewayClientInterface(ctrl)
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
 	appOptions := types.ApplicationOptions{
-		OrgResourceId: "orgId",
-		EnvironmentId: "envId",
+		OrgResourceId:   "orgId",
+		EnvironmentId:   "envId",
+		EnvironmentName: "envName",
+		Database:        "database",
 	}
-	store := NewStore(client, mockAppController.ExitApplication, &appOptions)
+	store := NewStore(client, mockAppController.ExitApplication, &appOptions, tokenRefreshFunc)
 
 	statement := types.ProcessedStatement{
 		StatementName: "TEST_STATEMENT",
@@ -841,10 +899,12 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWhenResultsExist() {
 	client := mock.NewMockGatewayClientInterface(ctrl)
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
 	appOptions := types.ApplicationOptions{
-		OrgResourceId: "orgId",
-		EnvironmentId: "envId",
+		OrgResourceId:   "orgId",
+		EnvironmentId:   "envId",
+		EnvironmentName: "envName",
+		Database:        "database",
 	}
-	store := NewStore(client, mockAppController.ExitApplication, &appOptions)
+	store := NewStore(client, mockAppController.ExitApplication, &appOptions, tokenRefreshFunc)
 
 	statement := types.ProcessedStatement{
 		StatementName: "TEST_STATEMENT",
@@ -917,7 +977,8 @@ func TestTimeout(t *testing.T) {
 
 	// Iterate over test cases and run the function for each input, comparing output to expected value
 	for _, tc := range testCases {
-		result := timeout(tc.properties)
+		store := Store{Properties: NewUserProperties(tc.properties)}
+		result := store.getTimeout()
 		require.Equal(t, tc.expected, result, tc.name)
 	}
 }
@@ -931,11 +992,10 @@ func (s *StoreTestSuite) TestProcessStatement() {
 		IdentityPoolId: "identityPoolId",
 	}
 	store := Store{
-		Properties: map[string]string{
-			"TestProp": "TestVal",
-		},
-		client:     client,
-		appOptions: appOptions,
+		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}),
+		client:           client,
+		appOptions:       appOptions,
+		tokenRefreshFunc: tokenRefreshFunc,
 	}
 
 	statusDetailMessage := "Test status detail message"
@@ -947,7 +1007,7 @@ func (s *StoreTestSuite) TestProcessStatement() {
 	}
 
 	statement := "SELECT * FROM table"
-	client.EXPECT().CreateStatement(statement, "computePoolId", "identityPoolId", store.propsDefault(store.Properties), "envId", "orgId").
+	client.EXPECT().CreateStatement(statement, "computePoolId", "identityPoolId", store.Properties.GetProperties(), "envId", "orgId").
 		Return(statementObj, nil)
 
 	processedStatement, err := store.ProcessStatement(statement)
@@ -964,11 +1024,10 @@ func (s *StoreTestSuite) TestProcessStatementFailsOnError() {
 		IdentityPoolId: "identityPoolId",
 	}
 	store := Store{
-		Properties: map[string]string{
-			"TestProp": "TestVal",
-		},
-		client:     client,
-		appOptions: appOptions,
+		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}),
+		client:           client,
+		appOptions:       appOptions,
+		tokenRefreshFunc: tokenRefreshFunc,
 	}
 
 	statusDetailMessage := "test status detail message"
@@ -980,7 +1039,7 @@ func (s *StoreTestSuite) TestProcessStatementFailsOnError() {
 	returnedError := errors.New("test error")
 
 	statement := "SELECT * FROM table"
-	client.EXPECT().CreateStatement(statement, "computePoolId", "identityPoolId", store.propsDefault(store.Properties), "envId", "orgId").
+	client.EXPECT().CreateStatement(statement, "computePoolId", "identityPoolId", store.Properties.GetProperties(), "envId", "orgId").
 		Return(statementObj, returnedError)
 	expectedError := &types.StatementError{
 		Message:        returnedError.Error(),
@@ -999,11 +1058,10 @@ func (s *StoreTestSuite) TestWaitPendingStatement() {
 		EnvironmentId: "envId",
 	}
 	store := Store{
-		Properties: map[string]string{
-			"TestProp": "TestVal",
-		},
-		client:     client,
-		appOptions: appOptions,
+		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}),
+		client:           client,
+		appOptions:       appOptions,
+		tokenRefreshFunc: tokenRefreshFunc,
 	}
 
 	statementName := "Test Statement"
@@ -1030,10 +1088,8 @@ func (s *StoreTestSuite) TestWaitPendingStatement() {
 func (s *StoreTestSuite) TestWaitPendingStatementNoWaitForCompletedStatement() {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
 	store := Store{
-		Properties: map[string]string{
-			"TestProp": "TestVal",
-		},
-		client: client,
+		Properties: NewUserProperties(map[string]string{"TestProp": "TestVal"}),
+		client:     client,
 	}
 
 	statement := types.ProcessedStatement{
@@ -1048,7 +1104,7 @@ func (s *StoreTestSuite) TestWaitPendingStatementNoWaitForCompletedStatement() {
 func (s *StoreTestSuite) TestWaitPendingStatementNoWaitForRunningStatement() {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
 	store := Store{
-		Properties: map[string]string{"TestProp": "TestVal"},
+		Properties: NewUserProperties(map[string]string{"TestProp": "TestVal"}),
 		client:     client,
 	}
 
@@ -1066,11 +1122,10 @@ func (s *StoreTestSuite) TestWaitPendingStatementFailsOnWaitError() {
 		EnvironmentId: "envId",
 	}
 	store := Store{
-		Properties: map[string]string{
-			"TestProp": "TestVal",
-		},
-		client:     client,
-		appOptions: appOptions,
+		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}),
+		client:           client,
+		appOptions:       appOptions,
+		tokenRefreshFunc: tokenRefreshFunc,
 	}
 
 	statementName := "Test Statement"
@@ -1105,11 +1160,10 @@ func (s *StoreTestSuite) TestWaitPendingStatementFailsOnNonCompletedOrRunningSta
 		EnvironmentId: "envId",
 	}
 	store := Store{
-		Properties: map[string]string{
-			"TestProp": "TestVal",
-		},
-		client:     client,
-		appOptions: appOptions,
+		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}),
+		client:           client,
+		appOptions:       appOptions,
+		tokenRefreshFunc: tokenRefreshFunc,
 	}
 
 	statementName := "Test Statement"
@@ -1145,11 +1199,10 @@ func (s *StoreTestSuite) TestWaitPendingStatementFetchesExceptionOnFailedStateme
 		EnvironmentId: "envId",
 	}
 	store := Store{
-		Properties: map[string]string{
-			"TestProp": "TestVal",
-		},
-		client:     client,
-		appOptions: appOptions,
+		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}),
+		client:           client,
+		appOptions:       appOptions,
+		tokenRefreshFunc: tokenRefreshFunc,
 	}
 
 	statementName := "Test Statement"
@@ -1192,11 +1245,10 @@ func (s *StoreTestSuite) TestGetStatusDetail() {
 		EnvironmentId: "envId",
 	}
 	store := Store{
-		Properties: map[string]string{
-			"TestProp": "TestVal",
-		},
-		client:     client,
-		appOptions: appOptions,
+		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}),
+		client:           client,
+		appOptions:       appOptions,
+		tokenRefreshFunc: tokenRefreshFunc,
 	}
 
 	statementName := "Test Statement"
@@ -1231,11 +1283,10 @@ func (s *StoreTestSuite) TestGetStatusDetailReturnsWhenStatusNoFailedOrFailing()
 		EnvironmentId: "envId",
 	}
 	store := Store{
-		Properties: map[string]string{
-			"TestProp": "TestVal",
-		},
-		client:     client,
-		appOptions: appOptions,
+		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}),
+		client:           client,
+		appOptions:       appOptions,
+		tokenRefreshFunc: tokenRefreshFunc,
 	}
 
 	testStatusDetailMessage := "Test Status Detail Message"
@@ -1265,11 +1316,10 @@ func (s *StoreTestSuite) TestGetStatusDetailReturnsWhenStatusDetailFilled() {
 		EnvironmentId: "envId",
 	}
 	store := Store{
-		Properties: map[string]string{
-			"TestProp": "TestVal",
-		},
-		client:     client,
-		appOptions: appOptions,
+		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}),
+		client:           client,
+		appOptions:       appOptions,
+		tokenRefreshFunc: tokenRefreshFunc,
 	}
 
 	testStatusDetailMessage := "Test Status Detail Message"
@@ -1293,11 +1343,10 @@ func (s *StoreTestSuite) TestGetStatusDetailReturnsEmptyWhenNoExceptionsAvailabl
 		EnvironmentId: "envId",
 	}
 	store := Store{
-		Properties: map[string]string{
-			"TestProp": "TestVal",
-		},
-		client:     client,
-		appOptions: appOptions,
+		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}),
+		client:           client,
+		appOptions:       appOptions,
+		tokenRefreshFunc: tokenRefreshFunc,
 	}
 
 	statementName := "Test Statement"
@@ -1316,4 +1365,74 @@ func (s *StoreTestSuite) TestGetStatusDetailReturnsEmptyWhenNoExceptionsAvailabl
 	client.EXPECT().GetExceptions("envId", statementName, "orgId").Return(exceptionsResponse, nil)
 
 	require.Equal(s.T(), "", store.getStatusDetail(statementObj))
+}
+
+func (s *StoreTestSuite) TestNewProcessedStatementSetsIsSelectStatement() {
+	tests := []struct {
+		name              string
+		statement         flinkgatewayv1alpha1.SqlV1alpha1Statement
+		isSelectStatement bool
+	}{
+		{
+			name: "select lowercase",
+			statement: flinkgatewayv1alpha1.SqlV1alpha1Statement{
+				Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
+					Statement: flinkgatewayv1alpha1.PtrString("select * FROM table"),
+				},
+			},
+			isSelectStatement: true,
+		},
+		{
+			name: "select uppercase",
+			statement: flinkgatewayv1alpha1.SqlV1alpha1Statement{
+				Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
+					Statement: flinkgatewayv1alpha1.PtrString("SELECT * FROM table"),
+				},
+			},
+			isSelectStatement: true,
+		},
+		{
+			name: "select random case",
+			statement: flinkgatewayv1alpha1.SqlV1alpha1Statement{
+				Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
+					Statement: flinkgatewayv1alpha1.PtrString("SeLeCt * FROM table"),
+				},
+			},
+			isSelectStatement: true,
+		},
+		{
+			name: "leading white space",
+			statement: flinkgatewayv1alpha1.SqlV1alpha1Statement{
+				Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
+					Statement: flinkgatewayv1alpha1.PtrString("   select * FROM table"),
+				},
+			},
+			isSelectStatement: true,
+		},
+		{
+			name: "missing last char",
+			statement: flinkgatewayv1alpha1.SqlV1alpha1Statement{
+				Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
+					Statement: flinkgatewayv1alpha1.PtrString("selec * FROM table"),
+				},
+			},
+			isSelectStatement: false,
+		},
+		{
+			name: "missing last char",
+			statement: flinkgatewayv1alpha1.SqlV1alpha1Statement{
+				Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
+					Statement: flinkgatewayv1alpha1.PtrString("insert into table values (1, 2)"),
+				},
+			},
+			isSelectStatement: false,
+		},
+	}
+
+	for _, testCase := range tests {
+		s.T().Run(testCase.name, func(t *testing.T) {
+			processedStatement := types.NewProcessedStatement(testCase.statement)
+			require.Equal(t, testCase.isSelectStatement, processedStatement.IsSelectStatement)
+		})
+	}
 }

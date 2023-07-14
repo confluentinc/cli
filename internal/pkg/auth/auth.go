@@ -167,7 +167,7 @@ func addOrUpdateContext(config *v1.Config, isCloud bool, credentials *Credential
 		ctx.CredentialName = credential.Name
 		ctx.LastOrgId = orgResourceId
 	} else {
-		if err := config.AddContext(ctxName, platform.Name, credential.Name, map[string]*v1.KafkaClusterConfig{}, "", nil, state, orgResourceId, ""); err != nil {
+		if err := config.AddContext(ctxName, platform.Name, credential.Name, map[string]*v1.KafkaClusterConfig{}, "", state, orgResourceId, ""); err != nil {
 			return err
 		}
 	}

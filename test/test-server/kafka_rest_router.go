@@ -106,17 +106,15 @@ func handleKafkaRPClusters(t *testing.T) http.HandlerFunc {
 // Handler for: "/kafka/v3/clusters/{cluster}/acls"
 func handleKafkaRPACLs(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		data := []cckafkarestv3.AclData{
-			{
-				ResourceType: cckafkarestv3.TOPIC,
-				ResourceName: "test-topic",
-				Operation:    "READ",
-				Permission:   "ALLOW",
-				Host:         "*",
-				Principal:    "User:12345",
-				PatternType:  "LITERAL",
-			},
-		}
+		data := []cckafkarestv3.AclData{{
+			ResourceType: cckafkarestv3.TOPIC,
+			ResourceName: "test-topic",
+			Operation:    "READ",
+			Permission:   "ALLOW",
+			Host:         "*",
+			Principal:    "User:sa-12345",
+			PatternType:  "LITERAL",
+		}}
 
 		var res any
 
@@ -563,16 +561,16 @@ func handleKafkaRPLinks(t *testing.T) http.HandlerFunc {
 					SourceClusterId:      *cckafkarestv3.NewNullableString(cluster1),
 					DestinationClusterId: *cckafkarestv3.NewNullableString(cluster2),
 					LinkName:             "link-1",
-					LinkId:               "LINKID1",
-					TopicsNames:          &topics,
+					ClusterLinkId:        "LINKID1",
+					TopicNames:           topics,
 					LinkError:            noErrorErr,
 				},
 				{
 					SourceClusterId:      *cckafkarestv3.NewNullableString(cluster1),
 					DestinationClusterId: *cckafkarestv3.NewNullableString(cluster2),
 					LinkName:             "link-2",
-					LinkId:               "LINKID2",
-					TopicsNames:          &topics,
+					ClusterLinkId:        "LINKID2",
+					TopicNames:           topics,
 					LinkState:            linkStateAvailable,
 					LinkError:            noErrorErr,
 				},
@@ -580,11 +578,18 @@ func handleKafkaRPLinks(t *testing.T) http.HandlerFunc {
 					SourceClusterId:      *cckafkarestv3.NewNullableString(cluster1),
 					DestinationClusterId: *cckafkarestv3.NewNullableString(cluster2),
 					LinkName:             "link-3",
-					LinkId:               "LINKID3",
-					TopicsNames:          &topics,
+					ClusterLinkId:        "LINKID3",
+					TopicNames:           topics,
 					LinkState:            linkStateUnavailable,
 					LinkError:            linkAuthErr,
 					LinkErrorMessage:     *cckafkarestv3.NewNullableString(linkAuthErrMsg),
+				},
+				{
+					RemoteClusterId: *cckafkarestv3.NewNullableString(cluster2),
+					LinkName:        "link-4",
+					ClusterLinkId:   "LINKID4",
+					TopicNames:      topics,
+					LinkError:       noErrorErr,
 				},
 			}})
 			require.NoError(t, err)
@@ -632,20 +637,66 @@ func handleKafkaRPConsumerGroups(t *testing.T) http.HandlerFunc {
 	}
 }
 
-// Handler for: "/kafka/v3/clusters/{cluster_id}/links/{link_name}"
+// Handler for: "/kafka/v3/clusters/{cluster}/links/{link}"
 func handleKafkaRPLink(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		cluster := mux.Vars(r)["cluster"]
+		link := mux.Vars(r)["link"]
 		switch r.Method {
 		case http.MethodGet:
-			err := json.NewEncoder(w).Encode(cpkafkarestv3.ListLinksResponseData{
-				Kind:            "",
-				Metadata:        cpkafkarestv3.ResourceMetadata{},
-				SourceClusterId: cpkafkarestv3.PtrString("cluster-1"),
-				LinkName:        "link-1",
-				LinkId:          "LINKID1",
-				TopicsNames:     []string{"link-1-topic-1", "link-1-topic-2"},
-			})
-			require.NoError(t, err)
+			if link == "link-1" {
+				switch cluster {
+				case "cluster-1":
+					err := json.NewEncoder(w).Encode(cpkafkarestv3.ListLinksResponseData{
+						Kind:                 "",
+						Metadata:             cpkafkarestv3.ResourceMetadata{},
+						DestinationClusterId: cpkafkarestv3.PtrString("cluster-2"),
+						LinkName:             link,
+						ClusterLinkId:        "LINKID1",
+						TopicsNames:          []string{"link-1-topic-1", "link-1-topic-2"},
+					})
+					require.NoError(t, err)
+				case "lkc-describe-topic":
+					err := json.NewEncoder(w).Encode(cckafkarestv3.ListLinksResponseData{
+						Kind:            "",
+						Metadata:        cckafkarestv3.ResourceMetadata{},
+						SourceClusterId: *cckafkarestv3.NewNullableString(cckafkarestv3.PtrString(cluster)),
+						LinkName:        link,
+						ClusterLinkId:   "LINKID1",
+						TopicNames:      []string{"link-1-topic-1", "link-1-topic-2"},
+						LinkState:       cckafkarestv3.PtrString("AVAILABLE"),
+					})
+					require.NoError(t, err)
+				default:
+					err := writeResourceNotFoundError(w)
+					require.NoError(t, err)
+				}
+			} else if link == "link-3" {
+				err := json.NewEncoder(w).Encode(cckafkarestv3.ListLinksResponseData{
+					Kind:                 "",
+					Metadata:             cckafkarestv3.ResourceMetadata{},
+					SourceClusterId:      *cckafkarestv3.NewNullableString(cckafkarestv3.PtrString(cluster)),
+					DestinationClusterId: *cckafkarestv3.NewNullableString(cckafkarestv3.PtrString("cluster-2")),
+					LinkName:             link,
+					ClusterLinkId:        "LINKID3",
+					TopicNames:           []string{"link-1-topic-1", "link-1-topic-2"},
+					LinkState:            cckafkarestv3.PtrString("UNAVAILABLE"),
+					LinkError:            cckafkarestv3.PtrString("AUTHENTICATION_ERROR"),
+					LinkErrorMessage:     *cckafkarestv3.NewNullableString(cckafkarestv3.PtrString("Please check your API key and secret.")),
+				})
+				require.NoError(t, err)
+			} else if link == "link-4" {
+				err := json.NewEncoder(w).Encode(cckafkarestv3.ListLinksResponseData{
+					Kind:            "",
+					Metadata:        cckafkarestv3.ResourceMetadata{},
+					RemoteClusterId: *cckafkarestv3.NewNullableString(cckafkarestv3.PtrString("cluster-2")),
+					LinkName:        link,
+					ClusterLinkId:   "LINKID4",
+					TopicNames:      []string{"link-1-topic-1", "link-1-topic-2"},
+					LinkState:       cckafkarestv3.PtrString("AVAILABLE"),
+				})
+				require.NoError(t, err)
+			}
 		case http.MethodDelete:
 			w.WriteHeader(http.StatusNoContent)
 		}
@@ -1007,6 +1058,12 @@ func handleKafkaRPLinkConfigs(t *testing.T) http.HandlerFunc {
 		}
 		switch r.Method {
 		case http.MethodGet:
+			var linkMode string
+			if link == "link-4" {
+				linkMode = "BIDIRECTIONAL"
+			} else {
+				linkMode = "DESTINATION"
+			}
 			err := json.NewEncoder(w).Encode(cpkafkarestv3.ListLinkConfigsResponseDataList{Data: []cpkafkarestv3.ListLinkConfigsResponseData{
 				{
 					Kind:      "",
@@ -1026,6 +1083,18 @@ func handleKafkaRPLinkConfigs(t *testing.T) http.HandlerFunc {
 					ClusterId: "cluster-1",
 					Name:      "bootstrap.servers",
 					Value:     "bitcoin.com:8888",
+					ReadOnly:  false,
+					Sensitive: false,
+					Source:    "source-2",
+					Synonyms:  nil,
+					LinkName:  link,
+				},
+				{
+					Kind:      "",
+					Metadata:  cpkafkarestv3.ResourceMetadata{},
+					ClusterId: "cluster-1",
+					Name:      "link.mode",
+					Value:     linkMode,
 					ReadOnly:  false,
 					Sensitive: false,
 					Source:    "source-2",

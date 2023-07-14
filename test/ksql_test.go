@@ -1,6 +1,6 @@
 package test
 
-func (s *CLITestSuite) TestKSQL() {
+func (s *CLITestSuite) TestKsql() {
 	// TODO: add --config flag to all commands or ENVVAR instead of using standard config file location
 	tests := []CLITest{
 		{args: "ksql cluster create test_ksql --cluster lkc-12345", fixture: "ksql/cluster/create-result-missing-credential-identity.golden", exitCode: 1},
@@ -22,9 +22,9 @@ func (s *CLITestSuite) TestKSQL() {
 		{args: "ksql cluster list", fixture: "ksql/cluster/list-result.golden"},
 	}
 
-	for _, tt := range tests {
-		tt.login = "cloud"
-		s.runIntegrationTest(tt)
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
 	}
 }
 
@@ -34,13 +34,13 @@ func (s *CLITestSuite) TestKsqlClusterConfigureAcls() {
 		{args: "ksql cluster configure-acls lksqlc-12345 --cluster lkc-abcde --dry-run", fixture: "ksql/cluster/configure-acls-dry-run.golden"},
 	}
 
-	for _, tt := range tests {
-		tt.login = "cloud"
-		s.runIntegrationTest(tt)
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
 	}
 }
 
-func (s *CLITestSuite) TestKSQLAutocomplete() {
+func (s *CLITestSuite) TestKsql_Autocomplete() {
 	test := CLITest{args: `__complete ksql cluster describe ""`, login: "cloud", fixture: "ksql/cluster/describe-autocomplete.golden"}
 	s.runIntegrationTest(test)
 }

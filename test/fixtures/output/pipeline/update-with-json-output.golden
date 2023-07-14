@@ -3,6 +3,7 @@
   "name": "newName",
   "description": "newDescription",
   "ksql_cluster": "lksqlc-12345",
+  "schema_registry_cluster": "",
   "secret_names": ["name1", "name2", "name3"],
   "activation_privilege": false,
   "state": "draft",

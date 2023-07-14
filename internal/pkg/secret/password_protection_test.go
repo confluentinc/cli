@@ -92,25 +92,25 @@ func TestPasswordProtectionSuite_CreateMasterKey(t *testing.T) {
 			wantErrMsg: errors.EmptyPassphraseErrorMsg,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
 			req := require.New(t)
 
-			err := os.MkdirAll(tt.args.secureDir, os.ModePerm)
-			defer os.RemoveAll(tt.args.secureDir)
+			err := os.MkdirAll(test.args.secureDir, os.ModePerm)
+			defer os.RemoveAll(test.args.secureDir)
 			req.NoError(err)
 
 			plugin := NewPasswordProtectionPlugin()
 
-			key, err := plugin.CreateMasterKey(tt.args.masterKeyPassphrase, tt.args.localSecureConfigPath)
-			checkError(err, tt.wantErr, tt.wantErrMsg, req)
-			if !tt.wantErr {
+			key, err := plugin.CreateMasterKey(test.args.masterKeyPassphrase, test.args.localSecureConfigPath)
+			checkError(err, test.wantErr, test.wantErrMsg, req)
+			if !test.wantErr {
 				req.Len(key, 44)
 			}
 
-			if tt.args.validateDiffKey {
-				newKey, err := plugin.CreateMasterKey(tt.args.masterKeyPassphrase, tt.args.localSecureConfigPath)
-				checkError(err, tt.wantErr, tt.wantErrMsg, req)
+			if test.args.validateDiffKey {
+				newKey, err := plugin.CreateMasterKey(test.args.masterKeyPassphrase, test.args.localSecureConfigPath)
+				checkError(err, test.wantErr, test.wantErrMsg, req)
 				req.Len(newKey, 44)
 				req.NotEqual(key, newKey)
 			}
@@ -371,42 +371,42 @@ config.providers.securepass.class = io.confluent.kafka.security.config.provider.
 			wantErrMsg: errors.InvalidJSONFileFormatErrorMsg,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
 			req := require.New(t)
 
-			err := os.MkdirAll(tt.args.secureDir, os.ModePerm)
-			defer os.RemoveAll(tt.args.secureDir)
+			err := os.MkdirAll(test.args.secureDir, os.ModePerm)
+			defer os.RemoveAll(test.args.secureDir)
 			req.NoError(err)
 
 			plugin := NewPasswordProtectionPlugin()
 			plugin.Clock = clockwork.NewFakeClock()
-			if tt.args.setMEK {
-				err := createMasterKey(tt.args.masterKeyPassphrase, tt.args.localSecureConfigPath, plugin)
+			if test.args.setMEK {
+				err := createMasterKey(test.args.masterKeyPassphrase, test.args.localSecureConfigPath, plugin)
 				defer os.Unsetenv(ConfluentKeyEnvVar)
 				req.NoError(err)
 			}
-			if tt.args.createConfig {
-				err := createNewConfigFile(tt.args.configFilePath, tt.args.contents)
+			if test.args.createConfig {
+				err := createNewConfigFile(test.args.configFilePath, test.args.contents)
 				req.NoError(err)
 			}
 
-			err = plugin.EncryptConfigFileSecrets(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.remoteSecureConfigPath, tt.args.config)
+			err = plugin.EncryptConfigFileSecrets(test.args.configFilePath, test.args.localSecureConfigPath, test.args.remoteSecureConfigPath, test.args.config)
 
-			checkErrorAndSuggestions(err, tt.wantErr, tt.wantErrMsg, tt.wantSuggestions, req)
+			checkErrorAndSuggestions(err, test.wantErr, test.wantErrMsg, test.wantSuggestions, req)
 
 			// Validate file contents for valid test cases
-			if !tt.wantErr {
-				if tt.args.validateUsingDecrypt {
-					err = validateUsingDecryption(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.outputConfigPath, tt.args.originalConfigs, plugin)
+			if !test.wantErr {
+				if test.args.validateUsingDecrypt {
+					err = validateUsingDecryption(test.args.configFilePath, test.args.localSecureConfigPath, test.args.outputConfigPath, test.args.originalConfigs, plugin)
 					req.NoError(err)
 				} else {
-					if strings.HasSuffix(tt.args.configFilePath, ".json") {
-						validateJSONFileContents(tt.args.configFilePath, tt.wantConfigFile, req)
+					if strings.HasSuffix(test.args.configFilePath, ".json") {
+						validateJSONFileContents(test.args.configFilePath, test.wantConfigFile, req)
 					} else {
-						validateTextFileContents(tt.args.configFilePath, tt.wantConfigFile, req)
+						validateTextFileContents(test.args.configFilePath, test.wantConfigFile, req)
 					}
-					validateTextFileContains(tt.args.localSecureConfigPath, tt.wantSecretsFile, req)
+					validateTextFileContains(test.args.localSecureConfigPath, test.wantSecretsFile, req)
 				}
 			}
 		})
@@ -629,31 +629,31 @@ config.properties/testPassword = ENC[AES/GCM/NoPadding,data:VXowRlNy9wP3Weq03Yry
 			wantOutputFile: "testPassword = password\n",
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
 			req := require.New(t)
 
-			plugin, err := setUpDir(tt.args.masterKeyPassphrase, tt.args.secureDir, tt.args.configFilePath, tt.args.localSecureConfigPath, "")
-			defer os.RemoveAll(tt.args.secureDir)
+			plugin, err := setUpDir(test.args.masterKeyPassphrase, test.args.secureDir, test.args.configFilePath, test.args.localSecureConfigPath, "")
+			defer os.RemoveAll(test.args.secureDir)
 			defer os.Unsetenv(ConfluentKeyEnvVar)
 			req.NoError(err)
 
 			// Create config file
-			err = os.WriteFile(tt.args.configFilePath, []byte(tt.args.configFileContent), 0644)
+			err = os.WriteFile(test.args.configFilePath, []byte(test.args.configFileContent), 0644)
 			req.NoError(err)
 
-			err = os.WriteFile(tt.args.localSecureConfigPath, []byte(tt.args.secretFileContent), 0644)
+			err = os.WriteFile(test.args.localSecureConfigPath, []byte(test.args.secretFileContent), 0644)
 			req.NoError(err)
 
-			if tt.args.setNewMEK {
-				os.Setenv(ConfluentKeyEnvVar, tt.args.newMasterKey)
+			if test.args.setNewMEK {
+				os.Setenv(ConfluentKeyEnvVar, test.args.newMasterKey)
 			}
 
-			err = plugin.DecryptConfigFileSecrets(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.outputConfigPath, "")
-			checkError(err, tt.wantErr, tt.wantErrMsg, req)
+			err = plugin.DecryptConfigFileSecrets(test.args.configFilePath, test.args.localSecureConfigPath, test.args.outputConfigPath, "")
+			checkError(err, test.wantErr, test.wantErrMsg, req)
 
-			if !tt.wantErr {
-				validateTextFileContents(tt.args.outputConfigPath, tt.wantOutputFile, req)
+			if !test.wantErr {
+				validateTextFileContents(test.args.outputConfigPath, test.wantOutputFile, req)
 			}
 		})
 	}
@@ -757,26 +757,26 @@ func TestPasswordProtectionSuite_AddConfigFileSecrets(t *testing.T) {
 			wantSecretsFile: `config.json/credentials.password = ENC[AES/GCM/NoPadding,data:`,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
 			req := require.New(t)
 
-			plugin, err := setUpDir(tt.args.masterKeyPassphrase, tt.args.secureDir, tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.contents)
-			defer os.RemoveAll(tt.args.secureDir)
+			plugin, err := setUpDir(test.args.masterKeyPassphrase, test.args.secureDir, test.args.configFilePath, test.args.localSecureConfigPath, test.args.contents)
+			defer os.RemoveAll(test.args.secureDir)
 			defer os.Unsetenv(ConfluentKeyEnvVar)
 			req.NoError(err)
 
-			err = plugin.AddEncryptedPasswords(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.remoteSecureConfigPath, tt.args.newConfigs)
-			checkError(err, tt.wantErr, tt.wantErrMsg, req)
+			err = plugin.AddEncryptedPasswords(test.args.configFilePath, test.args.localSecureConfigPath, test.args.remoteSecureConfigPath, test.args.newConfigs)
+			checkError(err, test.wantErr, test.wantErrMsg, req)
 
-			if !tt.wantErr && tt.args.validateUsingDecrypt {
-				err = validateUsingDecryption(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.outputConfigPath, tt.args.newConfigs, plugin)
+			if !test.wantErr && test.args.validateUsingDecrypt {
+				err = validateUsingDecryption(test.args.configFilePath, test.args.localSecureConfigPath, test.args.outputConfigPath, test.args.newConfigs, plugin)
 				req.NoError(err)
 			}
 
-			if !tt.wantErr && !tt.args.validateUsingDecrypt {
-				validateJSONFileContents(tt.args.configFilePath, tt.wantConfigFile, req)
-				validateTextFileContains(tt.args.localSecureConfigPath, tt.wantSecretsFile, req)
+			if !test.wantErr && !test.args.validateUsingDecrypt {
+				validateJSONFileContents(test.args.configFilePath, test.wantConfigFile, req)
+				validateTextFileContains(test.args.localSecureConfigPath, test.wantSecretsFile, req)
 			}
 		})
 	}
@@ -853,26 +853,26 @@ func TestPasswordProtectionSuite_UpdateConfigFileSecrets(t *testing.T) {
 			wantErr: false,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
 			req := require.New(t)
 
-			plugin, err := setUpDir(tt.args.masterKeyPassphrase, tt.args.secureDir, tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.contents)
-			defer os.RemoveAll(tt.args.secureDir)
+			plugin, err := setUpDir(test.args.masterKeyPassphrase, test.args.secureDir, test.args.configFilePath, test.args.localSecureConfigPath, test.args.contents)
+			defer os.RemoveAll(test.args.secureDir)
 			defer os.Unsetenv(ConfluentKeyEnvVar)
 			req.NoError(err)
 
-			err = plugin.UpdateEncryptedPasswords(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.remoteSecureConfigPath, tt.args.updateConfigs)
-			checkError(err, tt.wantErr, tt.wantErrMsg, req)
+			err = plugin.UpdateEncryptedPasswords(test.args.configFilePath, test.args.localSecureConfigPath, test.args.remoteSecureConfigPath, test.args.updateConfigs)
+			checkError(err, test.wantErr, test.wantErrMsg, req)
 
-			if !tt.wantErr && tt.args.validateUsingDecrypt {
-				err = validateUsingDecryption(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.outputConfigPath, tt.args.updateConfigs, plugin)
+			if !test.wantErr && test.args.validateUsingDecrypt {
+				err = validateUsingDecryption(test.args.configFilePath, test.args.localSecureConfigPath, test.args.outputConfigPath, test.args.updateConfigs, plugin)
 				req.NoError(err)
 			}
 
-			if !tt.wantErr && !tt.args.validateUsingDecrypt {
-				validateJSONFileContents(tt.args.configFilePath, tt.wantConfigFile, req)
-				validateTextFileContains(tt.args.localSecureConfigPath, tt.wantSecretsFile, req)
+			if !test.wantErr && !test.args.validateUsingDecrypt {
+				validateJSONFileContents(test.args.configFilePath, test.wantConfigFile, req)
+				validateTextFileContains(test.args.localSecureConfigPath, test.wantSecretsFile, req)
 			}
 		})
 	}
@@ -1022,24 +1022,24 @@ func TestPasswordProtectionSuite_RemoveConfigFileSecrets(t *testing.T) {
 			wantErrMsg: fmt.Sprintf(errors.ConfigKeyNotEncryptedErrorMsg, "credentials/location"),
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
 			req := require.New(t)
 
-			plugin, err := setUpDir(tt.args.masterKeyPassphrase, tt.args.secureDir, tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.contents)
-			defer os.RemoveAll(tt.args.secureDir)
+			plugin, err := setUpDir(test.args.masterKeyPassphrase, test.args.secureDir, test.args.configFilePath, test.args.localSecureConfigPath, test.args.contents)
+			defer os.RemoveAll(test.args.secureDir)
 			defer os.Unsetenv(ConfluentKeyEnvVar)
 			req.NoError(err)
 
-			err = plugin.EncryptConfigFileSecrets(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.remoteSecureConfigPath, tt.args.config)
+			err = plugin.EncryptConfigFileSecrets(test.args.configFilePath, test.args.localSecureConfigPath, test.args.remoteSecureConfigPath, test.args.config)
 			req.NoError(err)
 
-			err = plugin.RemoveEncryptedPasswords(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.removeConfigs)
-			checkError(err, tt.wantErr, tt.wantErrMsg, req)
+			err = plugin.RemoveEncryptedPasswords(test.args.configFilePath, test.args.localSecureConfigPath, test.args.removeConfigs)
+			checkError(err, test.wantErr, test.wantErrMsg, req)
 
-			if !tt.wantErr {
+			if !test.wantErr {
 				// Verify passwords are removed
-				err = verifyConfigsRemoved(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.removeConfigs)
+				err = verifyConfigsRemoved(test.args.configFilePath, test.args.localSecureConfigPath, test.args.removeConfigs)
 				req.NoError(err)
 			}
 		})
@@ -1148,35 +1148,35 @@ func TestPasswordProtectionSuite_RotateDataKey(t *testing.T) {
 			wantErrMsg: errors.IncorrectPassphraseErrorMsg,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
 			req := require.New(t)
 
-			plugin, err := setUpDir(tt.args.masterKeyPassphrase, tt.args.secureDir, tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.contents)
-			defer os.RemoveAll(tt.args.secureDir)
+			plugin, err := setUpDir(test.args.masterKeyPassphrase, test.args.secureDir, test.args.configFilePath, test.args.localSecureConfigPath, test.args.contents)
+			defer os.RemoveAll(test.args.secureDir)
 			defer os.Unsetenv(ConfluentKeyEnvVar)
 			req.NoError(err)
 
-			err = plugin.EncryptConfigFileSecrets(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.remoteSecureConfigPath, "")
+			err = plugin.EncryptConfigFileSecrets(test.args.configFilePath, test.args.localSecureConfigPath, test.args.remoteSecureConfigPath, "")
 
 			req.NoError(err)
-			originalProps, err := properties.LoadFile(tt.args.localSecureConfigPath, properties.UTF8)
+			originalProps, err := properties.LoadFile(test.args.localSecureConfigPath, properties.UTF8)
 			req.NoError(err)
-			if tt.args.corruptDEK {
-				err := corruptEncryptedDEK(tt.args.localSecureConfigPath)
+			if test.args.corruptDEK {
+				err := corruptEncryptedDEK(test.args.localSecureConfigPath)
 				req.NoError(err)
 			}
 
-			masterKey := tt.args.masterKeyPassphrase
-			if tt.args.invalidMEK {
-				masterKey = tt.args.invalidPassphrase
+			masterKey := test.args.masterKeyPassphrase
+			if test.args.invalidMEK {
+				masterKey = test.args.invalidPassphrase
 			}
-			err = plugin.RotateDataKey(masterKey, tt.args.localSecureConfigPath)
-			checkError(err, tt.wantErr, tt.wantErrMsg, req)
+			err = plugin.RotateDataKey(masterKey, test.args.localSecureConfigPath)
+			checkError(err, test.wantErr, test.wantErrMsg, req)
 
 			// Verify the encrypted values are different
-			if !tt.wantErr {
-				rotatedProps, err := properties.LoadFile(tt.args.localSecureConfigPath, properties.UTF8)
+			if !test.wantErr {
+				rotatedProps, err := properties.LoadFile(test.args.localSecureConfigPath, properties.UTF8)
 				req.NoError(err)
 				for key, value := range originalProps.Map() {
 					if !strings.HasPrefix(key, MetadataPrefix) {
@@ -1184,7 +1184,7 @@ func TestPasswordProtectionSuite_RotateDataKey(t *testing.T) {
 						req.NotEqual(cipher, value)
 					}
 				}
-				err = validateUsingDecryption(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.outputConfigPath, tt.args.contents, plugin)
+				err = validateUsingDecryption(test.args.configFilePath, test.args.localSecureConfigPath, test.args.outputConfigPath, test.args.contents, plugin)
 				req.NoError(err)
 			}
 		})
@@ -1307,28 +1307,28 @@ func TestPasswordProtectionSuite_RotateMasterKey(t *testing.T) {
 			wantErrMsg: errors.SamePassphraseErrorMsg,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
 			req := require.New(t)
 
-			plugin, err := setUpDir(tt.args.masterKeyPassphrase, tt.args.secureDir, tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.contents)
-			defer os.RemoveAll(tt.args.secureDir)
+			plugin, err := setUpDir(test.args.masterKeyPassphrase, test.args.secureDir, test.args.configFilePath, test.args.localSecureConfigPath, test.args.contents)
+			defer os.RemoveAll(test.args.secureDir)
 			defer os.Unsetenv(ConfluentKeyEnvVar)
 			req.NoError(err)
 
-			err = plugin.EncryptConfigFileSecrets(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.remoteSecureConfigPath, "")
+			err = plugin.EncryptConfigFileSecrets(test.args.configFilePath, test.args.localSecureConfigPath, test.args.remoteSecureConfigPath, "")
 			req.NoError(err)
 
-			masterKey := tt.args.masterKeyPassphrase
-			if tt.args.invalidMEK {
-				masterKey = tt.args.invalidKeyPassphrase
+			masterKey := test.args.masterKeyPassphrase
+			if test.args.invalidMEK {
+				masterKey = test.args.invalidKeyPassphrase
 			}
-			newKey, err := plugin.RotateMasterKey(masterKey, tt.args.newMasterKeyPassphrase, tt.args.localSecureConfigPath)
-			checkError(err, tt.wantErr, tt.wantErrMsg, req)
+			newKey, err := plugin.RotateMasterKey(masterKey, test.args.newMasterKeyPassphrase, test.args.localSecureConfigPath)
+			checkError(err, test.wantErr, test.wantErrMsg, req)
 
-			if !tt.wantErr {
+			if !test.wantErr {
 				os.Setenv(ConfluentKeyEnvVar, newKey)
-				err = validateUsingDecryption(tt.args.configFilePath, tt.args.localSecureConfigPath, tt.args.outputConfigPath, tt.args.contents, plugin)
+				err = validateUsingDecryption(test.args.configFilePath, test.args.localSecureConfigPath, test.args.outputConfigPath, test.args.contents, plugin)
 				req.NoError(err)
 			}
 		})

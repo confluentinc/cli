@@ -24,6 +24,7 @@ const (
 	Context               = "context"
 	Environment           = "environment"
 	FlinkComputePool      = "Flink compute pool"
+	FlinkIamBinding       = "Flink IAM binding"
 	FlinkStatement        = "Flink SQL statement"
 	IdentityPool          = "identity pool"
 	IdentityProvider      = "identity provider"
@@ -80,7 +81,7 @@ var resourceToPrefix = map[string]string{
 var pluralExtraSyllableSuffix = types.NewSet("s", "x", "z", "ch", "sh")
 
 func LookupType(resourceId string) string {
-	if resourceId == "cloud" {
+	if resourceId == Cloud {
 		return Cloud
 	}
 

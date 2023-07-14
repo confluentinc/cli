@@ -1,0 +1,19 @@
+Describe a cluster link.
+
+Usage:
+  confluent kafka link describe <link> [flags]
+
+Flags:
+      --url string                Base URL of REST Proxy Endpoint of Kafka Cluster (include "/kafka" for embedded Rest Proxy). Must set flag or CONFLUENT_REST_URL.
+      --ca-cert-path string       Path to a PEM-encoded CA to verify the Confluent REST Proxy.
+      --client-cert-path string   Path to client cert to be verified by Confluent REST Proxy, include for mTLS authentication.
+      --client-key-path string    Path to client private key, include for mTLS authentication.
+      --no-authentication         Include if requests should be made without authentication headers, and user will not be prompted for credentials.
+      --prompt                    Bypass use of available login credentials and prompt for Kafka Rest credentials.
+      --context string            CLI context name.
+  -o, --output string             Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

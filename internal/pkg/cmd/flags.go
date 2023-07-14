@@ -400,7 +400,7 @@ func AddValueFormatFlag(cmd *cobra.Command) {
 	arr := []string{"string", "avro", "jsonschema", "protobuf"}
 	str := utils.ArrayToCommaDelimitedString(arr, "or")
 
-	cmd.Flags().String("value-format", "string", fmt.Sprintf("Format of message value as %s. Note that schema references are not supported for avro.", str))
+	cmd.Flags().String("value-format", arr[0], fmt.Sprintf("Format message value as %s. Note that schema references are not supported for Avro.", str))
 
 	RegisterFlagCompletionFunc(cmd, "value-format", func(_ *cobra.Command, _ []string) []string {
 		return arr

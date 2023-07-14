@@ -75,13 +75,15 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner, ccloudClientFactory pauth.CCl
 	}
 	cmd.RunE = c.login
 
-	cmd.Flags().String("url", "", "Metadata Service (MDS) URL, for on-prem deployments.")
+	cmd.Flags().String("url", "", "Metadata Service (MDS) URL, for on-premises deployments.")
 	cmd.Flags().Bool("us-gov", false, "Log in to the Confluent Cloud US Gov environment.")
-	cmd.Flags().String("ca-cert-path", "", "Self-signed certificate chain in PEM format, for on-prem deployments.")
-	cmd.Flags().Bool("no-browser", false, "Do not open a browser window when authenticating via Single Sign-On (SSO).")
+	cmd.Flags().String("ca-cert-path", "", "Self-signed certificate chain in PEM format, for on-premises deployments.")
+	cmd.Flags().Bool("no-browser", false, "Do not open a browser window when authenticating using Single Sign-On (SSO).")
 	cmd.Flags().String("organization-id", "", "The Confluent Cloud organization to log in to. If empty, log in to the default organization.")
 	cmd.Flags().Bool("prompt", false, "Bypass non-interactive login and prompt for login credentials.")
-	cmd.Flags().Bool("save", false, "Save username and encrypted password (non-SSO credentials) to the configuration file in your $HOME directory, and to macOS keychain if applicable. You will be automatically logged back in when your token expires, after one hour for Confluent Cloud or after six hours for Confluent Platform.")
+	cmd.Flags().Bool("save", false, "Save username and encrypted password (non-SSO credentials) to the configuration file in your $HOME directory, and to macOS keychain if applicable. You will be logged back in when your token expires, after one hour for Confluent Cloud, or after six hours for Confluent Platform.")
+
+	cobra.CheckErr(cmd.Flags().MarkHidden("us-gov"))
 
 	cmd.MarkFlagsMutuallyExclusive("url", "us-gov")
 

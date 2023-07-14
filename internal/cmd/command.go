@@ -69,17 +69,17 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 	cmd.Flags().Bool("version", false, fmt.Sprintf("Show version of the %s.", pversion.FullCLIName))
 	cmd.PersistentFlags().BoolP("help", "h", false, "Show help for this command.")
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).")
-	cmd.PersistentFlags().Bool("unsafe-trace", false, "Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.")
+	cmd.PersistentFlags().Bool("unsafe-trace", false, "Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.")
 
 	disableUpdateCheck := cfg.DisableUpdates || cfg.DisableUpdateCheck
 	updateClient := update.NewClient(pversion.CLIName, disableUpdateCheck)
 	authTokenHandler := pauth.NewAuthTokenHandler()
 	ccloudClientFactory := pauth.NewCCloudClientFactory(cfg.Version.UserAgent)
-	flagResolver := &pcmd.FlagResolverImpl{Prompt: form.NewPrompt(os.Stdin), Out: os.Stdout}
+	flagResolver := &pcmd.FlagResolverImpl{Prompt: form.NewPrompt(), Out: os.Stdout}
 	jwtValidator := pcmd.NewJWTValidator()
 	netrcHandler := netrc.NewNetrcHandler(netrc.GetNetrcFilePath(cfg.IsTest))
 	ccloudClient := getCloudClient(cfg, ccloudClientFactory)
-	loginCredentialsManager := pauth.NewLoginCredentialsManager(netrcHandler, form.NewPrompt(os.Stdin), ccloudClient)
+	loginCredentialsManager := pauth.NewLoginCredentialsManager(netrcHandler, form.NewPrompt(), ccloudClient)
 	loginOrganizationManager := pauth.NewLoginOrganizationManagerImpl()
 	mdsClientManager := &pauth.MDSClientManagerImpl{}
 	featureflags.Init(cfg.Version, cfg.IsTest, cfg.DisableFeatureFlags)
@@ -131,7 +131,7 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 	cmd.AddCommand(streamshare.New(prerunner))
 	cmd.AddCommand(version.New(prerunner, cfg.Version))
 
-	dc := dynamicconfig.New(cfg, nil, nil)
+	dc := dynamicconfig.New(cfg, nil)
 	_ = dc.ParseFlagsIntoConfig(cmd)
 
 	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.flink", dc.Context(), v1.CliLaunchDarklyClient, true, false) {
@@ -143,6 +143,8 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 
 	changeDefaults(cmd, cfg)
 	deprecateCommandsAndFlags(cmd, cfg)
+	featureflags.Manager.SetCommandAndFlags(cmd, os.Args[1:])
+	disableCommandAndFlagHelpText(cmd, cfg)
 	return cmd
 }
 
@@ -249,7 +251,7 @@ func getCloudClient(cfg *v1.Config, ccloudClientFactory pauth.CCloudClientFactor
 }
 
 func deprecateCommandsAndFlags(cmd *cobra.Command, cfg *v1.Config) {
-	ctx := dynamicconfig.NewDynamicContext(cfg.Context(), nil, nil)
+	ctx := dynamicconfig.NewDynamicContext(cfg.Context(), nil)
 	deprecatedCmds := featureflags.Manager.JsonVariation(featureflags.DeprecationNotices, ctx, v1.CliLaunchDarklyClient, true, []any{})
 	cmdToFlagsAndMsg := featureflags.GetAnnouncementsOrDeprecation(deprecatedCmds)
 	for name, flagsAndMsg := range cmdToFlagsAndMsg {
@@ -258,6 +260,19 @@ func deprecateCommandsAndFlags(cmd *cobra.Command, cfg *v1.Config) {
 				featureflags.DeprecateCommandTree(cmd)
 			} else {
 				featureflags.DeprecateFlags(cmd, flagsAndMsg.Flags)
+			}
+		}
+	}
+}
+
+func disableCommandAndFlagHelpText(cmd *cobra.Command, cfg *v1.Config) {
+	ctx := dynamicconfig.NewDynamicContext(cfg.Context(), nil)
+	disableResp := featureflags.GetLDDisableMap(ctx)
+	disabledCmdsAndFlags, ok := disableResp["patterns"].([]any)
+	if ok && len(disabledCmdsAndFlags) > 0 {
+		for _, pattern := range disabledCmdsAndFlags {
+			if command, flags, err := cmd.Find(strings.Split(pattern.(string), " ")); err == nil {
+				featureflags.DisableHelpText(command, flags)
 			}
 		}
 	}

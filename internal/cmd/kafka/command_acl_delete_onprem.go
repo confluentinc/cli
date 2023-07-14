@@ -85,5 +85,5 @@ func (c *aclCommand) deleteOnPrem(cmd *cobra.Command, _ []string) error {
 		return kafkarest.NewError(restClient.GetConfig().BasePath, err, httpResp)
 	}
 
-	return pacl.PrintACLsFromKafkaRestResponse(cmd, aclDeleteResp.Data)
+	return pacl.PrintACLsFromKafkaRestResponseOnPrem(cmd, aclDeleteResp.Data)
 }

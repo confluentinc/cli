@@ -102,28 +102,28 @@ func (s *CLITestSuite) TearDownSuite() {
 	s.TestBackend.Close()
 }
 
-func (s *CLITestSuite) runIntegrationTest(tt CLITest) {
-	if tt.name == "" {
-		tt.name = tt.args
+func (s *CLITestSuite) runIntegrationTest(test CLITest) {
+	if test.name == "" {
+		test.name = test.args
 	}
 
-	s.T().Run(tt.name, func(t *testing.T) {
+	s.T().Run(test.name, func(t *testing.T) {
 		isAuditLogDisabled := os.Getenv("DISABLE_AUDIT_LOG") == "true"
-		if isAuditLogDisabled != tt.disableAuditLog {
+		if isAuditLogDisabled != test.disableAuditLog {
 			s.TestBackend.Close()
-			os.Setenv("DISABLE_AUDIT_LOG", strconv.FormatBool(tt.disableAuditLog))
-			s.TestBackend = testserver.StartTestBackend(t, !tt.disableAuditLog)
+			os.Setenv("DISABLE_AUDIT_LOG", strconv.FormatBool(test.disableAuditLog))
+			s.TestBackend = testserver.StartTestBackend(t, !test.disableAuditLog)
 		}
 
-		if !tt.workflow {
-			resetConfiguration(t, tt.arePluginsEnabled)
+		if !test.workflow {
+			resetConfiguration(t, test.arePluginsEnabled)
 		}
 
 		// Executes login command if test specifies
-		switch tt.login {
+		switch test.login {
 		case "cloud":
-			loginString := fmt.Sprintf("login --url %s", s.getLoginURL(true, tt))
-			env := append([]string{pauth.ConfluentCloudEmail + "=fake@user.com", pauth.ConfluentCloudPassword + "=pass1"}, tt.env...)
+			loginString := fmt.Sprintf("login --url %s", s.getLoginURL(true, test))
+			env := append([]string{pauth.ConfluentCloudEmail + "=fake@user.com", pauth.ConfluentCloudPassword + "=pass1"}, test.env...)
 			for _, e := range env {
 				keyVal := strings.Split(e, "=")
 				os.Setenv(keyVal[0], keyVal[1])
@@ -141,7 +141,7 @@ func (s *CLITestSuite) runIntegrationTest(tt CLITest) {
 				fmt.Println(output)
 			}
 		case "onprem":
-			loginURL := s.getLoginURL(false, tt)
+			loginURL := s.getLoginURL(false, test)
 			env := []string{pauth.ConfluentPlatformUsername + "=fake@user.com", pauth.ConfluentPlatformPassword + "=pass1"}
 			output := runCommand(t, testBin, env, "login --url "+loginURL, 0, "")
 			if *debug {
@@ -149,37 +149,37 @@ func (s *CLITestSuite) runIntegrationTest(tt CLITest) {
 			}
 		}
 
-		if tt.useKafka != "" {
-			output := runCommand(t, testBin, []string{}, fmt.Sprintf("kafka cluster use %s", tt.useKafka), 0, "")
+		if test.useKafka != "" {
+			output := runCommand(t, testBin, []string{}, fmt.Sprintf("kafka cluster use %s", test.useKafka), 0, "")
 			if *debug {
 				fmt.Println(output)
 			}
 		}
 
-		if tt.authKafka != "" {
-			output := runCommand(t, testBin, []string{}, fmt.Sprintf("api-key create --resource %s --use", tt.useKafka), 0, "")
+		if test.authKafka != "" {
+			output := runCommand(t, testBin, []string{}, fmt.Sprintf("api-key create --resource %s --use", test.useKafka), 0, "")
 			if *debug {
 				fmt.Println(output)
 			}
 		}
 
-		output := runCommand(t, testBin, tt.env, tt.args, tt.exitCode, tt.input)
+		output := runCommand(t, testBin, test.env, test.args, test.exitCode, test.input)
 		if *debug {
 			fmt.Println(output)
 		}
 
-		if strings.HasPrefix(tt.args, "kafka cluster create") {
+		if strings.HasPrefix(test.args, "kafka cluster create") {
 			re := regexp.MustCompile("https?://127.0.0.1:[0-9]+")
 			output = re.ReplaceAllString(output, "http://127.0.0.1:12345")
 		}
 
-		s.validateTestOutput(tt, t, output)
+		s.validateTestOutput(test, t, output)
 	})
 }
 
-func (s *CLITestSuite) getLoginURL(isCloud bool, tt CLITest) string {
-	if tt.loginURL != "" {
-		return tt.loginURL
+func (s *CLITestSuite) getLoginURL(isCloud bool, test CLITest) string {
+	if test.loginURL != "" {
+		return test.loginURL
 	}
 
 	if isCloud {
@@ -189,25 +189,25 @@ func (s *CLITestSuite) getLoginURL(isCloud bool, tt CLITest) string {
 	}
 }
 
-func (s *CLITestSuite) validateTestOutput(tt CLITest, t *testing.T, output string) {
-	if *update && !tt.regex && tt.fixture != "" {
-		writeFixture(t, tt.fixture, output)
+func (s *CLITestSuite) validateTestOutput(test CLITest, t *testing.T, output string) {
+	if *update && !test.regex && test.fixture != "" {
+		writeFixture(t, test.fixture, output)
 	}
 	actual := utils.NormalizeNewLines(output)
-	if tt.contains != "" {
-		require.Contains(t, actual, tt.contains)
-	} else if tt.notContains != "" {
-		require.NotContains(t, actual, tt.notContains)
-	} else if tt.fixture != "" {
-		expected := utils.NormalizeNewLines(LoadFixture(t, tt.fixture))
-		if tt.regex {
+	if test.contains != "" {
+		require.Contains(t, actual, test.contains)
+	} else if test.notContains != "" {
+		require.NotContains(t, actual, test.notContains)
+	} else if test.fixture != "" {
+		expected := utils.NormalizeNewLines(LoadFixture(t, test.fixture))
+		if test.regex {
 			require.Regexp(t, expected, actual)
 		} else {
 			require.Equal(t, expected, actual)
 		}
 	}
-	if tt.wantFunc != nil {
-		tt.wantFunc(t)
+	if test.wantFunc != nil {
+		test.wantFunc(t)
 	}
 }
 
@@ -226,7 +226,7 @@ func runCommand(t *testing.T, binaryName string, env []string, argString string,
 	if exitCode == 0 {
 		require.NoError(t, err, string(out))
 	}
-	require.Equal(t, exitCode, cmd.ProcessState.ExitCode())
+	require.Equal(t, exitCode, cmd.ProcessState.ExitCode(), string(out))
 
 	return string(out)
 }

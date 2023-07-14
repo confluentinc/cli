@@ -1,5 +1,0 @@
-        Config Name       |   Config Value   | Read Only | Sensitive |  Source  |  Synonyms    
---------------------------+------------------+-----------+-----------+----------+--------------
-  bootstrap.servers       | bitcoin.com:8888 | false     | false     | source-2 | []           
-  dest.cluster.id         | cluster-1        | true      | true      |          | []           
-  replica.fetch.max.bytes |          1048576 | false     | false     | source-1 | [rfmb bmfr]  

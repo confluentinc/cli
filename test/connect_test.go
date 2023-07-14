@@ -36,9 +36,9 @@ func (s *CLITestSuite) TestConnect() {
 		{args: "connect cluster update lcc-123 --cluster lkc-123 --config-file test/fixtures/input/connect/config-new-format.json", fixture: "connect/cluster/update.golden"},
 	}
 
-	for _, tt := range tests {
-		tt.login = "cloud"
-		s.runIntegrationTest(tt)
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
 	}
 }
 
@@ -77,9 +77,9 @@ func (s *CLITestSuite) TestConnectPlugin() {
 		{args: "connect plugin list --cluster lkc-123", fixture: "connect/plugin/list.golden"},
 	}
 
-	for _, tt := range tests {
-		tt.login = "cloud"
-		s.runIntegrationTest(tt)
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
 	}
 }
 
@@ -127,9 +127,9 @@ func (s *CLITestSuite) TestConnectPluginInstall() {
 		{args: "connect plugin install confluentinc/bad-sha1:latest", env: []string{"CONFLUENT_HOME=" + confluentHome733}, input: "y\ny\n", fixture: "connect/plugin/install/remote-bad-sha1.golden", exitCode: 1},
 	}
 
-	for _, tt := range tests {
-		tt.login = "onprem"
-		s.runIntegrationTest(tt)
+	for _, test := range tests {
+		test.login = "onprem"
+		s.runIntegrationTest(test)
 	}
 }
 

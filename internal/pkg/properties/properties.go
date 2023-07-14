@@ -1,8 +1,10 @@
 package properties
 
 import (
+	"bytes"
 	"fmt"
 	"os"
+	"sort"
 	"strings"
 )
 
@@ -68,4 +70,18 @@ func ConfigFlagToMap(configs []string) (map[string]string, error) {
 	}
 
 	return m, nil
+}
+
+func CreateKeyValuePairs(m map[string]string) string {
+	// Sort by keys so the output order is predictable which is helpful for testing.
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	b := new(bytes.Buffer)
+	for _, k := range keys {
+		fmt.Fprintf(b, "\"%s\"=\"%s\"\n", k, m[k])
+	}
+	return b.String()
 }

@@ -7,11 +7,12 @@ Available Commands:
   configuration Manage cluster link configurations.
   create        Create a new cluster link.
   delete        Delete cluster links.
+  describe      Describe a cluster link.
   list          List cluster links.
 
 Global Flags:
   -h, --help            Show help for this command.
-      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
 
 Use "confluent kafka link [command] --help" for more information about a command.

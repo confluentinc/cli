@@ -33,6 +33,13 @@ func parse(cmd *cobra.Command) ([]*ACLConfiguration, error) {
 	if cmd.Name() == "list" {
 		aclConfig := NewACLConfig()
 		cmd.Flags().Visit(fromArgs(aclConfig))
+
+		if aclConfig.Entry.Principal == "" {
+			aclConfig.Entry.Principal = "UserV2:*"
+		} else {
+			aclConfig.Entry.Principal = strings.Replace(aclConfig.Entry.Principal, "User", "UserV2", 1)
+		}
+
 		return []*ACLConfiguration{aclConfig}, nil
 	}
 
@@ -88,7 +95,7 @@ func fromArgs(conf *ACLConfiguration) func(*pflag.Flag) {
 
 func setConfigPrincipal(conf *ACLConfiguration, isServiceAccount bool, v string) {
 	if conf.Entry.Principal != "" {
-		conf.errors = multierror.Append(conf.errors, fmt.Errorf(errors.ExactlyOneSetErrorMsg, "service-account, principal"))
+		conf.errors = multierror.Append(conf.errors, fmt.Errorf(errors.ExactlyOneSetErrorMsg, "`--service-account`, `--principal`"))
 		return
 	}
 

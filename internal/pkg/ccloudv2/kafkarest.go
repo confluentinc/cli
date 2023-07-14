@@ -44,7 +44,7 @@ func (c *KafkaRestClient) context() context.Context {
 }
 
 func (c *KafkaRestClient) BatchCreateKafkaAcls(clusterId string, list kafkarestv3.CreateAclRequestDataList) (*http.Response, error) {
-	return c.ACLV3Api.BatchCreateKafkaV3Acls(c.context(), clusterId).CreateAclRequestDataList(list).Execute()
+	return c.ACLV3Api.BatchCreateKafkaAcls(c.context(), clusterId).CreateAclRequestDataList(list).Execute()
 }
 
 func (c *KafkaRestClient) CreateKafkaAcls(clusterId string, data kafkarestv3.CreateAclRequestData) (*http.Response, error) {
@@ -52,44 +52,44 @@ func (c *KafkaRestClient) CreateKafkaAcls(clusterId string, data kafkarestv3.Cre
 }
 
 func (c *KafkaRestClient) GetKafkaAcls(clusterId string, acl *ccstructs.ACLBinding) (kafkarestv3.AclDataList, *http.Response, error) {
-	req := c.ACLV3Api.GetKafkaAcls(c.context(), clusterId).Host(acl.Entry.Host).Principal(acl.Entry.Principal).ResourceName(acl.Pattern.Name)
+	req := c.ACLV3Api.GetKafkaAcls(c.context(), clusterId).Host(acl.GetEntry().GetHost()).Principal(acl.GetEntry().GetPrincipal()).ResourceName(acl.GetPattern().GetName())
 
-	if acl.Entry.Operation != ccstructs.ACLOperations_UNKNOWN {
-		req = req.Operation(acl.Entry.Operation.String())
+	if acl.GetEntry().GetOperation() != ccstructs.ACLOperations_UNKNOWN {
+		req = req.Operation(acl.GetEntry().GetOperation().String())
 	}
 
-	if acl.Pattern.PatternType != ccstructs.PatternTypes_UNKNOWN {
-		req = req.PatternType(acl.Pattern.PatternType.String())
+	if acl.GetPattern().GetPatternType() != ccstructs.PatternTypes_UNKNOWN {
+		req = req.PatternType(acl.GetPattern().GetPatternType().String())
 	}
 
-	if acl.Entry.PermissionType != ccstructs.ACLPermissionTypes_UNKNOWN {
-		req = req.Permission(acl.Entry.PermissionType.String())
+	if acl.GetEntry().GetPermissionType() != ccstructs.ACLPermissionTypes_UNKNOWN {
+		req = req.Permission(acl.GetEntry().GetPermissionType().String())
 	}
 
-	if acl.Pattern.ResourceType != ccstructs.ResourceTypes_UNKNOWN {
-		req = req.ResourceType(kafkarestv3.AclResourceType(acl.Pattern.ResourceType.String()))
+	if acl.GetPattern().GetResourceType() != ccstructs.ResourceTypes_UNKNOWN {
+		req = req.ResourceType(kafkarestv3.AclResourceType(acl.GetPattern().GetResourceType().String()))
 	}
 
 	return req.Execute()
 }
 
 func (c *KafkaRestClient) DeleteKafkaAcls(clusterId string, acl *ccstructs.ACLFilter) (kafkarestv3.InlineResponse200, *http.Response, error) {
-	req := c.ACLV3Api.DeleteKafkaAcls(c.context(), clusterId).Host(acl.EntryFilter.Host).Principal(acl.EntryFilter.Principal).ResourceName(acl.PatternFilter.Name)
+	req := c.ACLV3Api.DeleteKafkaAcls(c.context(), clusterId).Host(acl.EntryFilter.GetHost()).Principal(acl.EntryFilter.GetPrincipal()).ResourceName(acl.PatternFilter.GetName())
 
-	if acl.EntryFilter.Operation != ccstructs.ACLOperations_UNKNOWN {
-		req = req.Operation(acl.EntryFilter.Operation.String())
+	if acl.EntryFilter.GetOperation() != ccstructs.ACLOperations_UNKNOWN {
+		req = req.Operation(acl.EntryFilter.GetOperation().String())
 	}
 
-	if acl.PatternFilter.PatternType != ccstructs.PatternTypes_UNKNOWN {
-		req = req.PatternType(acl.PatternFilter.PatternType.String())
+	if acl.PatternFilter.GetPatternType() != ccstructs.PatternTypes_UNKNOWN {
+		req = req.PatternType(acl.PatternFilter.GetPatternType().String())
 	}
 
-	if acl.EntryFilter.PermissionType != ccstructs.ACLPermissionTypes_UNKNOWN {
-		req = req.Permission(acl.EntryFilter.PermissionType.String())
+	if acl.EntryFilter.GetPermissionType() != ccstructs.ACLPermissionTypes_UNKNOWN {
+		req = req.Permission(acl.EntryFilter.GetPermissionType().String())
 	}
 
-	if acl.PatternFilter.ResourceType != ccstructs.ResourceTypes_UNKNOWN {
-		req = req.ResourceType(kafkarestv3.AclResourceType(acl.PatternFilter.ResourceType.String()))
+	if acl.PatternFilter.GetResourceType() != ccstructs.ResourceTypes_UNKNOWN {
+		req = req.ResourceType(kafkarestv3.AclResourceType(acl.PatternFilter.GetResourceType().String()))
 	}
 
 	return req.Execute()
@@ -105,6 +105,10 @@ func (c *KafkaRestClient) CreateKafkaMirrorTopic(clusterId, linkName string, dat
 
 func (c *KafkaRestClient) DeleteKafkaLink(clusterId, linkName string) (*http.Response, error) {
 	return c.ClusterLinkingV3Api.DeleteKafkaLink(c.context(), clusterId, linkName).Execute()
+}
+
+func (c *KafkaRestClient) GetKafkaLink(clusterId, linkName string) (kafkarestv3.ListLinksResponseData, *http.Response, error) {
+	return c.ClusterLinkingV3Api.GetKafkaLink(c.context(), clusterId, linkName).Execute()
 }
 
 func (c *KafkaRestClient) ListKafkaLinkConfigs(clusterId, linkName string) (kafkarestv3.ListLinkConfigsResponseDataList, *http.Response, error) {
@@ -160,7 +164,7 @@ func (c *KafkaRestClient) ListKafkaConsumers(clusterId, consumerGroupId string) 
 }
 
 func (c *KafkaRestClient) GetKafkaConsumerLag(clusterId, consumerGroupId, topicName string, partitionId int32) (kafkarestv3.ConsumerLagData, *http.Response, error) {
-	return c.PartitionV3Api.GetKafkaConsumerLag(c.context(), clusterId, consumerGroupId, topicName, partitionId).Execute()
+	return c.ConsumerGroupV3Api.GetKafkaConsumerLag(c.context(), clusterId, consumerGroupId, topicName, partitionId).Execute()
 }
 
 func (c *KafkaRestClient) ListKafkaPartitions(clusterId, topicName string) (kafkarestv3.PartitionDataList, *http.Response, error) {

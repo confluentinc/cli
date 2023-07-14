@@ -195,13 +195,25 @@ func CatchResourceNotFoundError(err error, resourceId string) error {
 	return err
 }
 
-func CatchOrgV2ResourceNotFoundError(err error, resourceType string, r *http.Response) error {
+func CatchCCloudV2ResourceNotFoundError(err error, resourceType string, r *http.Response) error {
 	if err == nil {
 		return nil
 	}
 
 	if r != nil && r.StatusCode == http.StatusForbidden {
 		return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), fmt.Sprintf("%s not found or access forbidden", resourceType), fmt.Sprintf(ListResourceSuggestions, resourceType, resourceType))
+	}
+
+	return CatchCCloudV2Error(err, r)
+}
+
+func CatchComputePoolNotFoundError(err error, computePoolId string, r *http.Response) error {
+	if err == nil {
+		return nil
+	}
+
+	if r != nil && r.StatusCode == http.StatusForbidden {
+		return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), fmt.Sprintf(ComputePoolNotFoundErrorMsg, computePoolId), ComputePoolNotFoundSuggestions)
 	}
 
 	return CatchCCloudV2Error(err, r)
@@ -370,18 +382,6 @@ func CatchNoSubjectLevelConfigError(err error, r *http.Response, subject string)
 
 	if strings.Contains(r.Status, "Not Found") {
 		return errors.New(fmt.Sprintf(NoSubjectLevelConfigErrorMsg, subject))
-	}
-
-	return err
-}
-
-func CatchContainerNameInUseError(err error) error {
-	if err == nil {
-		return nil
-	}
-
-	if strings.Contains(err.Error(), "The container name \"/confluent-local\" is already in use") {
-		return NewErrorWithSuggestions(ConfluentLocalStartedErrorMsg, ConfluentLocalStartedSuggestions)
 	}
 
 	return err

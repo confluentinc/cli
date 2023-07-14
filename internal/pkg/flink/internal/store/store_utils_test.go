@@ -1,8 +1,10 @@
 package store
 
 import (
+	"fmt"
 	"testing"
 
+	"github.com/bradleyjkemp/cupaloy"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -25,10 +27,10 @@ func TestRemoveStatementTerminator(t *testing.T) {
 		{name: "removeStatementTerminator() removes multiple terminators", args: args{statement: "SELECT * FROM table;;;"}, want: "SELECT * FROM table"},
 		{name: "removeStatementTerminator() doesn't remove terminators in between", args: args{statement: "SELECT * FROM table;;;wasas"}, want: "SELECT * FROM table;;;wasas"},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := removeStatementTerminator(tt.args.statement); got != tt.want {
-				require.Equal(t, tt.want, got)
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if got := removeStatementTerminator(test.args.statement); got != test.want {
+				require.Equal(t, test.want, got)
 			}
 		})
 	}
@@ -68,10 +70,10 @@ func TestRemoveWhiteSpaces(t *testing.T) {
 		{name: "removeTabNewLineAndWhitesSpaces() removes all new lines, tabs and whitespaces", args: args{str: "\r\n \tkey\t=\t\tvalue\n"}, want: "key=value"},
 		{name: "removeTabNewLineAndWhitesSpaces() removes all new lines, tabs and whitespaces", args: args{str: "\n \tkey\n = \n\tvalue\r\n"}, want: "key=value"},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := removeTabNewLineAndWhitesSpaces(tt.args.str); got != tt.want {
-				require.Equal(t, tt.want, got)
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if got := removeTabNewLineAndWhitesSpaces(test.args.str); got != test.want {
+				require.Equal(t, test.want, got)
 			}
 		})
 	}
@@ -80,7 +82,8 @@ func TestRemoveWhiteSpaces(t *testing.T) {
 func TestProcessSetStatement(t *testing.T) {
 	// Create a new store
 	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, "authToken")
-	s := NewStore(client, nil, nil).(*Store)
+	s := NewStore(client, nil, &types.ApplicationOptions{}, tokenRefreshFunc).(*Store)
+	s.Properties.Set(config.ConfigKeyLocalTimeZone, "UTC+01:00")
 
 	t.Run("should return an error message if statement is invalid", func(t *testing.T) {
 		_, err := s.processSetStatement("se key=value")
@@ -91,12 +94,11 @@ func TestProcessSetStatement(t *testing.T) {
 		result, err := s.processSetStatement("set")
 		assert.Nil(t, err)
 		assert.EqualValues(t, types.COMPLETED, result.Status)
-		expectedResult := createStatementResults([]string{"Key", "Value"}, [][]string{})
-		assert.Equal(t, &expectedResult, result.StatementResults)
+		cupaloy.SnapshotT(t, result.StatementResults)
 
 		// Add some key-value pairs to the config
-		s.Properties["pipeline.name"] = "job1"
-		s.Properties["timeout"] = "30"
+		s.Properties.Set("catalog", "job1")
+		s.Properties.Set("timeout", "30")
 	})
 
 	t.Run("should update config for valid configKey", func(t *testing.T) {
@@ -104,45 +106,52 @@ func TestProcessSetStatement(t *testing.T) {
 		assert.Nil(t, err)
 		assert.EqualValues(t, types.COMPLETED, result.Status)
 		assert.Equal(t, "configuration updated successfully", result.StatusDetail)
-		expectedResult := createStatementResults([]string{"Key", "Value"}, [][]string{{"location", "USA"}})
-		assert.Equal(t, &expectedResult, result.StatementResults)
+		cupaloy.SnapshotT(t, result.StatementResults)
 	})
 
 	t.Run("should return all keys and values from config if configKey is empty after updates", func(t *testing.T) {
 		result, err := s.processSetStatement("set")
 		assert.Nil(t, err)
 		assert.EqualValues(t, types.COMPLETED, result.Status)
-		expectedKeyValuePairs := map[string]string{"pipeline.name": "job1", "timeout": "30", "location": "USA"}
+		expectedKeyValuePairs := map[string]string{"catalog": "job1", "timeout": "30", "location": "USA"}
 
 		// check row and column lengths match
 		assert.Equal(t, 2, len(result.StatementResults.Headers))
-		assert.Equal(t, len(expectedKeyValuePairs), len(result.StatementResults.Rows))
+		// + 2 for the other default properties apart from catalog
+		assert.Equal(t, len(expectedKeyValuePairs)+2, len(result.StatementResults.Rows))
 		// check if all expected key value pairs are in the results
-		for _, row := range result.StatementResults.Rows {
-			keyField := row.Fields[0].(types.AtomicStatementResultField)
-			valueField := row.Fields[1].(types.AtomicStatementResultField)
-			assert.Equal(t, expectedKeyValuePairs[keyField.Value], valueField.Value)
-		}
+		cupaloy.SnapshotT(t, result.StatementResults)
 	})
 }
 
 func TestProcessResetStatement(t *testing.T) {
 	// Create a new store
 	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, "authToken")
-	s := NewStore(client, nil, nil).(*Store)
+	appOptions := types.ApplicationOptions{
+		OrgResourceId:   "orgId",
+		EnvironmentName: "envName",
+		Database:        "database",
+	}
+	s := NewStore(client, nil, &appOptions, tokenRefreshFunc).(*Store)
+	defaultSetOutput := createStatementResults([]string{"Key", "Value"}, [][]string{
+		{config.ConfigKeyCatalog, fmt.Sprintf("%s (default)", appOptions.EnvironmentName)},
+		{config.ConfigKeyDatabase, fmt.Sprintf("%s (default)", appOptions.Database)},
+		{config.ConfigKeyLocalTimeZone, fmt.Sprintf("%s (default)", getLocalTimezone())},
+	})
 
 	t.Run("should return an error message if statement is invalid", func(t *testing.T) {
 		_, err := s.processResetStatement("res key")
 		assert.NotNil(t, err)
 	})
 
-	t.Run("should reset all keys and values from config", func(t *testing.T) {
-		s.Properties["pipeline.name"] = "job1"
-		s.Properties["timeout"] = "30"
+	t.Run("should reset all keys and values from config to their default or delete them if no default", func(t *testing.T) {
+		s.Properties.Set(config.ConfigKeyCatalog, "job1")
+		s.Properties.Set("timeout", "30")
 		result, _ := s.processResetStatement("reset")
 		assert.EqualValues(t, types.COMPLETED, result.Status)
 		assert.Equal(t, "configuration has been reset successfully", result.StatusDetail)
-		assert.Nil(t, result.StatementResults)
+		assert.ElementsMatch(t, defaultSetOutput.GetHeaders(), result.StatementResults.GetHeaders())
+		assert.ElementsMatch(t, defaultSetOutput.GetRows(), result.StatementResults.GetRows())
 	})
 
 	t.Run("should return an error message if configKey does not exist", func(t *testing.T) {
@@ -153,26 +162,24 @@ func TestProcessResetStatement(t *testing.T) {
 	})
 
 	t.Run("should reset config for valid configKey", func(t *testing.T) {
-		s.Properties["pipeline.name"] = "job1"
-		result, _ := s.processResetStatement("reset 'pipeline.name'")
+		s.Properties.Set("catalog", "job1")
+		result, _ := s.processResetStatement("reset 'catalog'")
 		assert.EqualValues(t, types.COMPLETED, result.Status)
-		assert.Equal(t, `configuration key "pipeline.name" has been reset successfully`, result.StatusDetail)
-		expectedResult := createStatementResults([]string{"Key", "Value"}, [][]string{})
-		assert.Equal(t, &expectedResult, result.StatementResults)
-	})
-	t.Run("should return all keys and values from config after updates", func(t *testing.T) {
-		result, _ := s.processResetStatement("reset")
-
-		assert.EqualValues(t, types.COMPLETED, result.Status)
-		assert.Equal(t, "configuration has been reset successfully", result.StatusDetail)
-		assert.Nil(t, result.StatementResults)
+		assert.Equal(t, `configuration key "catalog" has been reset successfully`, result.StatusDetail)
+		assert.ElementsMatch(t, defaultSetOutput.GetHeaders(), result.StatementResults.GetHeaders())
+		assert.ElementsMatch(t, defaultSetOutput.GetRows(), result.StatementResults.GetRows())
 	})
 }
 
 func TestProcessUseStatement(t *testing.T) {
 	// Create a new store
 	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, "authToken")
-	s := NewStore(client, nil, nil).(*Store)
+	appOptions := types.ApplicationOptions{
+		OrgResourceId:   "orgId",
+		EnvironmentName: "envName",
+		Database:        "database",
+	}
+	s := NewStore(client, nil, &appOptions, tokenRefreshFunc).(*Store)
 
 	t.Run("should return an error message if statement is invalid", func(t *testing.T) {
 		_, err := s.processUseStatement("us")
@@ -186,7 +193,7 @@ func TestProcessUseStatement(t *testing.T) {
 		require.EqualValues(t, types.COMPLETED, result.Status)
 		require.Equal(t, "configuration updated successfully", result.StatusDetail)
 		expectedResult := createStatementResults([]string{"Key", "Value"}, [][]string{{config.ConfigKeyDatabase, "db1"}})
-		assert.Equal(t, &expectedResult, result.StatementResults)
+		assert.Equal(t, expectedResult, result.StatementResults)
 	})
 
 	t.Run("should return an error message if catalog name is missing", func(t *testing.T) {
@@ -201,7 +208,7 @@ func TestProcessUseStatement(t *testing.T) {
 		require.EqualValues(t, types.COMPLETED, result.Status)
 		require.Equal(t, "configuration updated successfully", result.StatusDetail)
 		expectedResult := createStatementResults([]string{"Key", "Value"}, [][]string{{config.ConfigKeyCatalog, "metadata"}})
-		assert.Equal(t, &expectedResult, result.StatementResults)
+		assert.Equal(t, expectedResult, result.StatementResults)
 	})
 
 	t.Run("should return an error message for invalid syntax", func(t *testing.T) {

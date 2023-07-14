@@ -18,23 +18,23 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-const MOCK_STATEMENTS_OUTPUT_DEMO = true
-
-type StoreInterface interface {
-	ProcessStatement(statement string) (*types.ProcessedStatement, *types.StatementError)
-	FetchStatementResults(types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError)
-	DeleteStatement(statementName string) bool
-	WaitPendingStatement(ctx context.Context, statement types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError)
+type Store struct {
+	Properties       UserProperties
+	exitApplication  func()
+	client           ccloudv2.GatewayClientInterface
+	appOptions       *types.ApplicationOptions
+	tokenRefreshFunc func() error
 }
 
-type Store struct {
-	Properties      map[string]string
-	exitApplication func()
-	client          ccloudv2.GatewayClientInterface
-	appOptions      *types.ApplicationOptions
+func (s *Store) authenticatedGatewayClient() ccloudv2.GatewayClientInterface {
+	if authErr := s.tokenRefreshFunc(); authErr != nil {
+		log.CliLogger.Warnf("Failed to refresh token: %v", authErr)
+	}
+	return s.client
 }
 
 func (s *Store) ProcessLocalStatement(statement string) (*types.ProcessedStatement, *types.StatementError) {
+	defer s.persistUserProperties()
 	switch statementType := parseStatementType(statement); statementType {
 	case SetStatement:
 		return s.processSetStatement(statement)
@@ -50,6 +50,22 @@ func (s *Store) ProcessLocalStatement(statement string) (*types.ProcessedStateme
 	}
 }
 
+func (s *Store) persistUserProperties() {
+	if s.appOptions.GetContext() != nil {
+		if err := s.appOptions.Context.SetCurrentFlinkCatalog(s.Properties.Get(config.ConfigKeyCatalog)); err != nil {
+			log.CliLogger.Errorf("error persisting current flink catalog: %v", err)
+		}
+
+		if err := s.appOptions.Context.SetCurrentFlinkDatabase(s.Properties.Get(config.ConfigKeyDatabase)); err != nil {
+			log.CliLogger.Errorf("error persisting current flink database: %v", err)
+		}
+
+		if err := s.appOptions.Context.Save(); err != nil {
+			log.CliLogger.Errorf("error persisting user properties: %v", err)
+		}
+	}
+}
+
 func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *types.StatementError) {
 	// We trim the statement here once so we don't have to do it in every function
 	statement = strings.TrimSpace(statement)
@@ -61,11 +77,11 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 	}
 
 	// Process remote statements
-	statementObj, err := s.client.CreateStatement(
+	statementObj, err := s.authenticatedGatewayClient().CreateStatement(
 		statement,
 		s.appOptions.GetComputePoolId(),
 		s.appOptions.GetIdentityPoolId(),
-		s.propsDefault(s.Properties),
+		s.Properties.GetProperties(),
 		s.appOptions.GetEnvironmentId(),
 		s.appOptions.GetOrgResourceId(),
 	)
@@ -82,7 +98,7 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 func (s *Store) WaitPendingStatement(ctx context.Context, statement types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError) {
 	statementStatus := statement.Status
 	if statementStatus != types.COMPLETED && statementStatus != types.RUNNING {
-		updatedStatement, err := s.waitForPendingStatement(ctx, statement.StatementName, timeout(s.Properties))
+		updatedStatement, err := s.waitForPendingStatement(ctx, statement.StatementName, s.getTimeout())
 		if err != nil {
 			return nil, err
 		}
@@ -108,7 +124,7 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 	}
 
 	// Process remote statements that are now running or completed
-	statementResultObj, err := s.client.GetStatementResults(s.appOptions.GetEnvironmentId(), statement.StatementName, s.appOptions.GetOrgResourceId(), statement.PageToken)
+	statementResultObj, err := s.authenticatedGatewayClient().GetStatementResults(s.appOptions.GetEnvironmentId(), statement.StatementName, s.appOptions.GetOrgResourceId(), statement.PageToken)
 	if err != nil {
 		return nil, &types.StatementError{Message: err.Error()}
 	}
@@ -130,10 +146,11 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 }
 
 func (s *Store) DeleteStatement(statementName string) bool {
-	if err := s.client.DeleteStatement(s.appOptions.GetEnvironmentId(), statementName, s.appOptions.GetOrgResourceId()); err != nil {
+	if err := s.authenticatedGatewayClient().DeleteStatement(s.appOptions.GetEnvironmentId(), statementName, s.appOptions.GetOrgResourceId()); err != nil {
 		log.CliLogger.Warnf("Failed to delete the statement: %v", err)
 		return false
 	}
+	log.CliLogger.Infof("Successfully deleted statement: %s", statementName)
 	return true
 }
 
@@ -144,12 +161,18 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 	// Variable used to we inform the user every 5 seconds that we're still fetching for results (waiting for them to be ready)
 	lastProgressUpdateTime := time.Second * 0
 	var capturedErrors []string
+	var phase types.PHASE
+	capturedErrorsLimit := 5
+	var getRequestDuration time.Duration
 	for {
 		select {
 		case <-ctx.Done():
 			return nil, &types.StatementError{Message: "result retrieval aborted. Statement will be deleted", HttpResponseCode: 499}
 		default:
-			statementObj, err := s.client.GetStatement(s.appOptions.GetEnvironmentId(), statementName, s.appOptions.GetOrgResourceId())
+			start := time.Now()
+			statementObj, err := s.authenticatedGatewayClient().GetStatement(s.appOptions.GetEnvironmentId(), statementName, s.appOptions.GetOrgResourceId())
+			getRequestDuration = time.Since(start)
+
 			statusDetail := s.getStatusDetail(statementObj)
 			if err != nil {
 				return nil, &types.StatementError{
@@ -157,7 +180,7 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 					FailureMessage: statusDetail}
 			}
 
-			phase := types.PHASE(statementObj.Status.GetPhase())
+			phase = types.PHASE(statementObj.Status.GetPhase())
 			if phase != types.PENDING {
 				processedStatement := types.NewProcessedStatement(statementObj)
 				processedStatement.StatusDetail = statusDetail
@@ -170,17 +193,27 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 			}
 		}
 
-		if len(capturedErrors) > 5 {
-			break
+		if len(capturedErrors) > capturedErrorsLimit {
+			return nil, &types.StatementError{
+				Message: fmt.Sprintf("the server can't process this statement right now, exiting after %d retries",
+					len(capturedErrors)),
+				FailureMessage: fmt.Sprintf("captured retryable errors: %s", strings.Join(capturedErrors, "; ")),
+			}
 		}
 
-		lastProgressUpdateTime += waitTime
-		elapsedWaitTime += waitTime
-		time.Sleep(waitTime)
+		if getRequestDuration > waitTime {
+			lastProgressUpdateTime += getRequestDuration
+			elapsedWaitTime += getRequestDuration
+		} else {
+			lastProgressUpdateTime += waitTime
+			elapsedWaitTime += waitTime
+			waitTime -= getRequestDuration
+			time.Sleep(waitTime)
+		}
 
-		if lastProgressUpdateTime.Seconds() > 5 {
+		if int(lastProgressUpdateTime.Seconds()) > capturedErrorsLimit {
 			lastProgressUpdateTime = time.Second * 0
-			output.Printf("Fetching results... (Timeout %d/%d) \n", int(elapsedWaitTime.Seconds()), int(timeout.Seconds()))
+			output.Printf("Waiting for statement to be ready. Statement phase is %s. (Timeout %ds/%ds) \n", phase, int(elapsedWaitTime.Seconds()), int(timeout.Seconds()))
 		}
 		waitTime = calcWaitTime(retries)
 
@@ -214,7 +247,7 @@ func (s *Store) getStatusDetail(statementObj flinkgatewayv1alpha1.SqlV1alpha1Sta
 	}
 
 	// if the statement is in FAILED or FAILING phase and the status detail field is empty we show the latest exception instead
-	exceptionsResponse, err := s.client.GetExceptions(s.appOptions.GetEnvironmentId(), statementObj.Spec.GetStatementName(), s.appOptions.GetOrgResourceId())
+	exceptionsResponse, err := s.authenticatedGatewayClient().GetExceptions(s.appOptions.GetEnvironmentId(), statementObj.Spec.GetStatementName(), s.appOptions.GetOrgResourceId())
 	if err != nil {
 		return ""
 	}
@@ -243,41 +276,22 @@ func extractPageToken(nextUrl string) (string, error) {
 	return params.Get("page_token"), nil
 }
 
-func NewStore(client ccloudv2.GatewayClientInterface, exitApplication func(), appOptions *types.ApplicationOptions) StoreInterface {
+func NewStore(client ccloudv2.GatewayClientInterface, exitApplication func(), appOptions *types.ApplicationOptions, tokenRefreshFunc func() error) types.StoreInterface {
 	return &Store{
-		Properties:      appOptions.GetDefaultProperties(),
-		client:          client,
-		exitApplication: exitApplication,
-		appOptions:      appOptions,
+		Properties:       NewUserProperties(getDefaultProperties(appOptions)),
+		client:           client,
+		exitApplication:  exitApplication,
+		appOptions:       appOptions,
+		tokenRefreshFunc: tokenRefreshFunc,
 	}
 }
 
-// Set properties default values if not set by the user
-// We probably want to refactor the keys names and where they are stored. Maybe also the default values.
-func (s *Store) propsDefault(propsWithoutDefault map[string]string) map[string]string {
-	properties := make(map[string]string)
-	for key, value := range propsWithoutDefault {
-		properties[key] = value
+func getDefaultProperties(appOptions *types.ApplicationOptions) map[string]string {
+	properties := map[string]string{
+		config.ConfigKeyCatalog:       appOptions.GetEnvironmentName(),
+		config.ConfigKeyDatabase:      appOptions.GetDatabase(),
+		config.ConfigKeyLocalTimeZone: getLocalTimezone(),
 	}
-
-	if _, ok := properties[config.ConfigKeyCatalog]; !ok {
-		properties[config.ConfigKeyCatalog] = s.appOptions.GetEnvironmentId()
-	}
-	if _, ok := properties[config.ConfigKeyDatabase]; !ok {
-		properties[config.ConfigKeyDatabase] = s.appOptions.GetKafkaClusterId()
-	}
-	if _, ok := properties[config.ConfigKeyOrgResourceId]; !ok {
-		properties[config.ConfigKeyOrgResourceId] = s.appOptions.GetOrgResourceId()
-	}
-	if _, ok := properties[config.ConfigKeyExecutionRuntime]; !ok {
-		properties[config.ConfigKeyExecutionRuntime] = "streaming"
-	}
-	if _, ok := properties[config.ConfigKeyLocalTimeZone]; !ok {
-		properties[config.ConfigKeyLocalTimeZone] = getLocalTimezone()
-	}
-
-	// Here we delete locally used properties before sending it to the backend
-	delete(properties, config.ConfigKeyResultsTimeout)
 
 	return properties
 }

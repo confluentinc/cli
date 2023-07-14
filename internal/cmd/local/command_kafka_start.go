@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"os/exec"
 	"runtime"
 	"strconv"
 	"strings"
@@ -20,6 +21,7 @@ import (
 
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -32,7 +34,7 @@ type imagePullOut struct {
 	Status string `json:"status"`
 }
 
-func (c *command) newKafkaStartCommand() *cobra.Command {
+func (c *Command) newKafkaStartCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "start",
 		Short: "Start a single-node instance of Apache Kafka.",
@@ -41,7 +43,11 @@ func (c *command) newKafkaStartCommand() *cobra.Command {
 	}
 }
 
-func (c *command) kafkaStart(cmd *cobra.Command, args []string) error {
+func (c *Command) kafkaStart(cmd *cobra.Command, args []string) error {
+	if err := checkMachineArch(); err != nil {
+		return err
+	}
+
 	dockerClient, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		return err
@@ -50,6 +56,33 @@ func (c *command) kafkaStart(cmd *cobra.Command, args []string) error {
 
 	if err := checkIsDockerRunning(dockerClient); err != nil {
 		return err
+	}
+
+	containers, err := dockerClient.ContainerList(context.Background(), types.ContainerListOptions{All: true})
+	if err != nil {
+		return err
+	}
+
+	for _, container := range containers {
+		if container.Image == dockerImageName {
+			output.Println("Confluent Local is already running.")
+			prompt := form.NewPrompt()
+			f := form.New(form.Field{
+				ID:        "confirm",
+				Prompt:    "Do you wish to start a new Confluent Local session? Current context will be lost.",
+				IsYesOrNo: true,
+			})
+			if err := f.Prompt(prompt); err != nil {
+				return err
+			}
+			if f.Responses["confirm"].(bool) {
+				if err := c.stopAndRemoveConfluentLocal(dockerClient); err != nil {
+					return err
+				}
+			} else {
+				return nil
+			}
+		}
 	}
 
 	out, err := dockerClient.ImagePull(context.Background(), dockerImageName, types.ImagePullOptions{})
@@ -121,7 +154,7 @@ func (c *command) kafkaStart(cmd *cobra.Command, args []string) error {
 
 	createResp, err := dockerClient.ContainerCreate(context.Background(), config, hostConfig, nil, platform, confluentLocalContainerName)
 	if err != nil {
-		return errors.CatchContainerNameInUseError(err)
+		return err
 	}
 	log.CliLogger.Tracef("Create confluent-local container success")
 
@@ -134,7 +167,7 @@ func (c *command) kafkaStart(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *command) prepareAndSaveLocalPorts(isTest bool) error {
+func (c *Command) prepareAndSaveLocalPorts(isTest bool) error {
 	if c.Config.LocalPorts != nil {
 		return nil
 	}
@@ -187,4 +220,24 @@ func getContainerEnvironmentWithPorts(ports *v1.LocalPorts) []string {
 		fmt.Sprintf("KAFKA_REST_BOOTSTRAP_SERVERS=broker:%s", ports.BrokerPort),
 		fmt.Sprintf("KAFKA_REST_LISTENERS=http://0.0.0.0:%s", ports.KafkaRestPort),
 	}
+}
+
+func checkMachineArch() error {
+	if runtime.GOOS == "windows" {
+		return nil
+	}
+
+	cmd := exec.Command("uname", "-m") // outputs system architecture info
+	output, err := cmd.Output()
+	if err != nil {
+		return err
+	}
+	systemArch := strings.TrimSpace(string(output))
+	if systemArch == "x86_64" {
+		systemArch = "amd64"
+	}
+	if systemArch != runtime.GOARCH {
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(`binary architecture "%s" does not match system architecture "%s"`, runtime.GOARCH, systemArch), "Download the CLI with the correct architecture to continue.")
+	}
+	return nil
 }

@@ -21,8 +21,6 @@ type command struct {
 	flagResolver pcmd.FlagResolver
 }
 
-const resourceFlagName = "resource"
-
 const (
 	deleteOperation = "deleting"
 	getOperation    = "getting"
@@ -51,6 +49,59 @@ func New(prerunner pcmd.PreRunner, keystore keystore.KeyStore, resolver pcmd.Fla
 	cmd.AddCommand(c.newUseCommand())
 
 	return cmd
+}
+
+func (c *command) addResourceFlag(cmd *cobra.Command) {
+	cmd.Flags().String("resource", "", `The ID of the resource the API key is for. Use "cloud" for a Cloud API key.`)
+
+	pcmd.RegisterFlagCompletionFunc(cmd, "resource", func(cmd *cobra.Command, args []string) []string {
+		if err := c.PersistentPreRunE(cmd, args); err != nil {
+			return nil
+		}
+
+		environmentId, err := c.Context.EnvironmentId()
+		if err != nil {
+			return nil
+		}
+
+		kafkaClusters, err := c.V2Client.ListKafkaClusters(environmentId)
+		if err != nil {
+			return nil
+		}
+
+		schemaRegistryClusters, err := c.V2Client.GetSchemaRegistryClustersByEnvironment(environmentId)
+		if err != nil {
+			return nil
+		}
+
+		ksqlClusters, err := c.V2Client.ListKsqlClusters(environmentId)
+		if err != nil {
+			return nil
+		}
+
+		suggestions := make([]string, 1+len(kafkaClusters)+len(schemaRegistryClusters)+len(ksqlClusters))
+		i := 0
+
+		suggestions[i] = "cloud"
+		i++
+
+		for _, cluster := range kafkaClusters {
+			suggestions[i] = fmt.Sprintf("%s\t%s", cluster.GetId(), cluster.Spec.GetDisplayName())
+			i++
+		}
+
+		for _, cluster := range schemaRegistryClusters {
+			suggestions[i] = fmt.Sprintf("%s\t%s", cluster.GetId(), cluster.Spec.GetDisplayName())
+			i++
+		}
+
+		for _, cluster := range ksqlClusters {
+			suggestions[i] = fmt.Sprintf("%s\t%s", cluster.GetId(), cluster.Spec.GetDisplayName())
+			i++
+		}
+
+		return suggestions
+	})
 }
 
 func (c *command) setKeyStoreIfNil() {

@@ -11,7 +11,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 )
 
-func (c *command) newKafkaTopicDeleteCommand() *cobra.Command {
+func (c *Command) newKafkaTopicDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete <topic-1> [topic-2] ... [topic-n]",
 		Short: "Delete Kafka topics.",
@@ -30,7 +30,7 @@ func (c *command) newKafkaTopicDeleteCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) kafkaTopicDelete(cmd *cobra.Command, args []string) error {
+func (c *Command) kafkaTopicDelete(cmd *cobra.Command, args []string) error {
 	restClient, clusterId, err := initKafkaRest(c.CLICommand, cmd)
 	if err != nil {
 		return errors.NewErrorWithSuggestions(err.Error(), kafkaRestNotReadySuggestion)

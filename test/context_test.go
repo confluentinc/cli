@@ -18,8 +18,8 @@ func (s *CLITestSuite) contextCreateArgs(name string) string {
 
 func (s *CLITestSuite) TestContextCreate() {
 	resetConfiguration(s.T(), false)
-	tt := CLITest{fixture: "context/create/0.golden", args: s.contextCreateArgs("0")}
-	s.runIntegrationTest(tt)
+	test := CLITest{fixture: "context/create/0.golden", args: s.contextCreateArgs("0")}
+	s.runIntegrationTest(test)
 }
 
 func (s *CLITestSuite) TestContextDelete() {
@@ -40,13 +40,13 @@ func (s *CLITestSuite) TestContextDelete() {
 		{args: "context delete 5 5 5", input: "y\n", fixture: "context/delete/check-success-operation-fail.golden", exitCode: 1},
 	}
 
-	for _, tt := range tests {
-		tt.workflow = true
-		s.runIntegrationTest(tt)
+	for _, test := range tests {
+		test.workflow = true
+		s.runIntegrationTest(test)
 	}
 }
 
-func (s *CLITestSuite) TestDescribe() {
+func (s *CLITestSuite) TestContextDescribe() {
 	resetConfiguration(s.T(), false)
 
 	tests := []CLITest{
@@ -59,9 +59,9 @@ func (s *CLITestSuite) TestDescribe() {
 		{args: "context describe --username", login: "cloud", fixture: "context/describe/4.golden"},
 	}
 
-	for _, tt := range tests {
-		tt.workflow = true
-		s.runIntegrationTest(tt)
+	for _, test := range tests {
+		test.workflow = true
+		s.runIntegrationTest(test)
 	}
 }
 
@@ -74,9 +74,9 @@ func (s *CLITestSuite) TestContextList() {
 		{fixture: "context/list/0.golden", args: "context list"},
 	}
 
-	for _, tt := range tests {
-		tt.workflow = true
-		s.runIntegrationTest(tt)
+	for _, test := range tests {
+		test.workflow = true
+		s.runIntegrationTest(test)
 	}
 }
 
@@ -96,9 +96,9 @@ func (s *CLITestSuite) TestContextList_CloudAndOnPrem() {
 		fmt.Sprintf("%s=%s", pauth.ConfluentCloudPassword, "password"),
 	}
 
-	for _, tt := range tests {
-		out := runCommand(s.T(), testBin, env, tt.args, 0, "")
-		s.validateTestOutput(tt, s.T(), out)
+	for _, test := range tests {
+		out := runCommand(s.T(), testBin, env, test.args, 0, "")
+		s.validateTestOutput(test, s.T(), out)
 	}
 }
 
@@ -114,9 +114,9 @@ func (s *CLITestSuite) TestContextUpdate() {
 		{fixture: "context/update/2.golden", args: "context update 1 --name 2", exitCode: 1},
 	}
 
-	for _, tt := range tests {
-		tt.workflow = true
-		s.runIntegrationTest(tt)
+	for _, test := range tests {
+		test.workflow = true
+		s.runIntegrationTest(test)
 	}
 }
 
@@ -130,9 +130,9 @@ func (s *CLITestSuite) TestContextUse() {
 		{fixture: "context/use/2.golden", args: "context describe"},
 	}
 
-	for _, tt := range tests {
-		tt.workflow = true
-		s.runIntegrationTest(tt)
+	for _, test := range tests {
+		test.workflow = true
+		s.runIntegrationTest(test)
 	}
 }
 

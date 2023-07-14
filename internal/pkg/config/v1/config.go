@@ -62,7 +62,11 @@ var (
 	)
 	RequireOnPremLoginErr = errors.NewErrorWithSuggestions(
 		"you must log in to Confluent Platform to use this command",
-		"Log in with `confluent login --url <mds-url>`.",
+		"Log in to Confluent Platform with `confluent login --url <mds-url>`.",
+	)
+	RunningOnPremCommandInCloudErr = errors.NewErrorWithSuggestions(
+		"this is not a Confluent Cloud command. You must log in to Confluent Platform to use this command",
+		"Log in to Confluent Platform with `confluent login --url <mds-url>`.\n"+`Use the "--help" flag to see available commands.`,
 	)
 )
 
@@ -480,7 +484,7 @@ func (c *Config) FindContext(name string) (*Context, error) {
 	return context, nil
 }
 
-func (c *Config) AddContext(name, platformName, credentialName string, kafkaClusters map[string]*KafkaClusterConfig, kafka string, schemaRegistryClusters map[string]*SchemaRegistryCluster, state *ContextState, orgResourceId, envId string) error {
+func (c *Config) AddContext(name, platformName, credentialName string, kafkaClusters map[string]*KafkaClusterConfig, kafka string, state *ContextState, orgResourceId, envId string) error {
 	if _, ok := c.Contexts[name]; ok {
 		return fmt.Errorf(errors.ContextAlreadyExistsErrorMsg, name)
 	}
@@ -495,7 +499,7 @@ func (c *Config) AddContext(name, platformName, credentialName string, kafkaClus
 		return fmt.Errorf(errors.PlatformNotFoundErrorMsg, platformName)
 	}
 
-	ctx, err := newContext(name, platform, credential, kafkaClusters, kafka, schemaRegistryClusters, state, c, orgResourceId, envId)
+	ctx, err := newContext(name, platform, credential, kafkaClusters, kafka, state, c, orgResourceId, envId)
 	if err != nil {
 		return err
 	}
@@ -555,7 +559,7 @@ func (c *Config) CreateContext(name, bootstrapURL, apiKey, apiSecret string) err
 	}
 	kafkaClusters := map[string]*KafkaClusterConfig{kafkaClusterCfg.ID: kafkaClusterCfg}
 
-	return c.AddContext(name, platform.Name, credential.Name, kafkaClusters, kafkaClusterCfg.ID, nil, nil, "", "")
+	return c.AddContext(name, platform.Name, credential.Name, kafkaClusters, kafkaClusterCfg.ID, nil, "", "")
 }
 
 // UseContext sets the current context, if it exists.
@@ -647,8 +651,12 @@ func (c *Config) GetFilename() string {
 
 func (c *Config) CheckIsOnPremLogin() error {
 	ctx := c.Context()
-	if ctx != nil && ctx.PlatformName != "" && !c.isCloud() {
-		return nil
+	if ctx != nil && ctx.PlatformName != "" {
+		if !c.isCloud() {
+			return nil
+		} else {
+			return RunningOnPremCommandInCloudErr
+		}
 	}
 	return RequireOnPremLoginErr
 }

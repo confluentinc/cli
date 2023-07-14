@@ -46,6 +46,8 @@ func (c *aclCommand) newCreateCommand() *cobra.Command {
 
 	cobra.CheckErr(cmd.MarkFlagRequired("operations"))
 
+	cmd.MarkFlagsMutuallyExclusive("service-account", "principal")
+
 	return cmd
 }
 
@@ -54,19 +56,6 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-
-	users, err := c.getAllUsers()
-	if err != nil {
-		return err
-	}
-
-	userIdMap := c.mapResourceIdToUserId(users)
-
-	if err := c.aclResourceIdToNumericId(acls, userIdMap); err != nil {
-		return err
-	}
-
-	resourceIdMap := c.mapUserIdToResourceId(users)
 
 	bindings := make([]*ccstructs.ACLBinding, len(acls))
 	for i, acl := range acls {
@@ -95,11 +84,11 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 		data := pacl.GetCreateAclRequestData(binding)
 		if httpResp, err := kafkaREST.CloudClient.CreateKafkaAcls(kafkaClusterConfig.ID, data); err != nil {
 			if i > 0 {
-				_ = pacl.PrintACLsWithResourceIdMap(cmd, bindings[:i], resourceIdMap)
+				_ = pacl.PrintACLs(cmd, bindings[:i])
 			}
 			return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 		}
 	}
 
-	return pacl.PrintACLsWithResourceIdMap(cmd, bindings, resourceIdMap)
+	return pacl.PrintACLs(cmd, bindings)
 }
