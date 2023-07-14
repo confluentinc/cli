@@ -49,6 +49,7 @@ func (s *CLITestSuite) TestFlinkStatement() {
 		{args: "flink statement list --compute-pool lfcp-123456", fixture: "flink/statement/list.golden"},
 		{args: "flink statement describe my-statement --compute-pool lfcp-123456", fixture: "flink/statement/describe.golden"},
 		{args: "flink statement exception list my-statement --compute-pool lfcp-123456", fixture: "flink/statement/exception/list.golden"},
+		{args: `flink statement create "CREATE TABLE test;" --name my-statement --database my-cluster --compute-pool lfcp-123456 --identity-pool pool-1234`, fixture: "flink/statement/create.golden"},
 	}
 
 	for _, test := range tests {
