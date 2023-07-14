@@ -72,7 +72,9 @@ func (r *PublicRepo) GetLatestMajorAndMinorVersion(name string, current *version
 
 	// The index of the largest available version. This may be a major version update.
 	majorIdx := len(versions) - 1
-
+	if majorIdx < 0 {
+		return nil, nil, errors.New(errors.GetBinaryVersionsErrorMsg)
+	}
 	major := versions[majorIdx]
 	if current.Segments()[0] == major.Segments()[0] {
 		major = nil
@@ -87,6 +89,9 @@ func (r *PublicRepo) GetLatestMajorAndMinorVersion(name string, current *version
 		return versions[idx].GreaterThanOrEqual(nextMajorVer)
 	}) - 1
 
+	if minorIdx < 0 {
+		return nil, nil, errors.New(errors.GetBinaryVersionsErrorMsg)
+	}
 	minor := versions[minorIdx]
 
 	return major, minor, nil

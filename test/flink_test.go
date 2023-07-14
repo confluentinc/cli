@@ -48,7 +48,7 @@ func (s *CLITestSuite) TestFlinkStatement() {
 		{args: "flink statement delete my-statement --compute-pool lfcp-123456 --force", fixture: "flink/statement/delete.golden"},
 		{args: "flink statement list --compute-pool lfcp-123456", fixture: "flink/statement/list.golden"},
 		{args: "flink statement describe my-statement --compute-pool lfcp-123456", fixture: "flink/statement/describe.golden"},
-		{args: "flink statement exceptions list my-statement --compute-pool lfcp-123456", fixture: "flink/statement/exceptions/list.golden"},
+		{args: "flink statement exception list my-statement --compute-pool lfcp-123456", fixture: "flink/statement/exception/list.golden"},
 		{args: `flink statement create "CREATE TABLE test;" --compute-pool lfcp-123456 --identity-pool pool-1234`, fixture: "flink/statement/create.golden"},
 	}
 
