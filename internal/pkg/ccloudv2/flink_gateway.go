@@ -14,7 +14,7 @@ type GatewayClientInterface interface {
 	DeleteStatement(environmentId, statementName, orgId string) error
 	GetStatement(environmentId, statementName, orgId string) (flinkgatewayv1alpha1.SqlV1alpha1Statement, error)
 	ListStatements(environmentId, orgId, pageToken string) (flinkgatewayv1alpha1.SqlV1alpha1StatementList, error)
-	CreateStatement(statement, computePoolId, identityPoolId string, properties map[string]string, environmentId, orgId string) (flinkgatewayv1alpha1.SqlV1alpha1Statement, error)
+	CreateStatementForShell(statement, computePoolId, identityPoolId string, properties map[string]string, environmentId, orgId string) (flinkgatewayv1alpha1.SqlV1alpha1Statement, error)
 	GetStatementResults(environmentId, statementId, orgId, pageToken string) (flinkgatewayv1alpha1.SqlV1alpha1StatementResult, error)
 	GetExceptions(environmentId, statementId, orgId string) (flinkgatewayv1alpha1.SqlV1alpha1StatementExceptionList, error)
 }
@@ -39,6 +39,11 @@ func NewFlinkGatewayClient(url, userAgent string, unsafeTrace bool, authToken st
 
 func (c *FlinkGatewayClient) flinkGatewayApiContext() context.Context {
 	return context.WithValue(context.Background(), flinkgatewayv1alpha1.ContextAccessToken, c.AuthToken)
+}
+
+func (c *FlinkGatewayClient) CreateStatement(environmentId string, statement flinkgatewayv1alpha1.SqlV1alpha1Statement, orgId string) (flinkgatewayv1alpha1.SqlV1alpha1Statement, error) {
+	resp, httpResp, err := c.StatementsSqlV1alpha1Api.CreateSqlV1alpha1Statement(c.flinkGatewayApiContext(), environmentId).SqlV1alpha1Statement(statement).OrgId(orgId).Execute()
+	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *FlinkGatewayClient) DeleteStatement(environmentId, statementName, orgId string) error {
@@ -79,7 +84,7 @@ func (c *FlinkGatewayClient) ListAllStatements(environmentId, orgId string) ([]f
 	return allStatements, nil
 }
 
-func (c *FlinkGatewayClient) CreateStatement(statement, computePoolId, identityPoolId string, properties map[string]string, environmentId, orgId string) (flinkgatewayv1alpha1.SqlV1alpha1Statement, error) {
+func (c *FlinkGatewayClient) CreateStatementForShell(statement, computePoolId, identityPoolId string, properties map[string]string, environmentId, orgId string) (flinkgatewayv1alpha1.SqlV1alpha1Statement, error) {
 	statementName := uuid.New().String()[:18]
 
 	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
