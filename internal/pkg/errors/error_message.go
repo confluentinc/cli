@@ -380,9 +380,6 @@ const (
 	GetReleaseNotesVersionsErrorMsg = "unable to get available release notes versions"
 	UnexpectedS3ResponseErrorMsg    = "received unexpected response from S3: %s"
 
-	// Flag Errors
-	ProhibitedFlagCombinationErrorMsg = "cannot use `--%s` and `--%s` flags at the same time"
-
 	// catcher
 	CCloudBackendErrorPrefix           = "Confluent Cloud backend error"
 	UnexpectedBackendOutputPrefix      = "unexpected CCloud backend output"
@@ -470,7 +467,6 @@ const (
 	UnsupportedCustomAttributeErrorMsg = `attribute "%s" is not one of the supported FeatureFlags targeting values`
 
 	// General
-	DeleteResourceErrorMsg       = `failed to delete %s "%s": %v`
-	UpdateResourceErrorMsg       = `failed to update %s "%s": %v`
-	MustSpecifyBothFlagsErrorMsg = "must specify both `--%s` and `--%s`"
+	DeleteResourceErrorMsg = `failed to delete %s "%s": %v`
+	UpdateResourceErrorMsg = `failed to update %s "%s": %v`
 )

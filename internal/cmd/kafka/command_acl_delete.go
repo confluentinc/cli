@@ -40,6 +40,8 @@ func (c *aclCommand) newDeleteCommand() *cobra.Command {
 
 	cobra.CheckErr(cmd.MarkFlagRequired("operations"))
 
+	cmd.MarkFlagsMutuallyExclusive("service-account", "principal")
+
 	return cmd
 }
 
