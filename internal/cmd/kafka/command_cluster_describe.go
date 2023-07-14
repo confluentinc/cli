@@ -1,7 +1,6 @@
 package kafka
 
 import (
-	presource "github.com/confluentinc/cli/internal/pkg/name-conversions"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -14,6 +13,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	pconv "github.com/confluentinc/cli/internal/pkg/name-conversions"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -75,11 +75,11 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 
 	cluster, httpResp, err := c.V2Client.DescribeKafkaCluster(lkc, environmentId)
 	if err != nil {
-		environmentId, err = c.convertEnvNameToId(environmentId)
+		environmentId, err = pconv.ConvertEnvironmentNameToId(environmentId, c.V2Client)
 		if err != nil {
 			return err
 		}
-		lkc, err = presource.ConvertClusterNameToId(lkc, environmentId, c.V2Client)
+		lkc, err = pconv.ConvertClusterNameToId(lkc, environmentId, c.V2Client)
 		if err != nil {
 			return err
 		}

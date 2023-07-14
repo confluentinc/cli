@@ -17,6 +17,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
+	pconv "github.com/confluentinc/cli/internal/pkg/name-conversions"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -187,7 +188,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 
 	kafkaCluster, httpResp, err := c.V2Client.CreateKafkaCluster(createCluster)
 	if err != nil {
-		environmentId, err = c.convertEnvNameToId(environmentId)
+		environmentId, err = pconv.ConvertEnvironmentNameToId(environmentId, c.V2Client)
 		if err != nil {
 			return err
 		}

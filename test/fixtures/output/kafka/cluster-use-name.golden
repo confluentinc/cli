@@ -1,4 +1,1 @@
-Active Kafka cluster 'abc' has no info stored in config for context 'login-fake@user.com-http://127.0.0.1:1024'.
-Removing active Kafka setting for the context.
-You can set active Kafka cluster with 'confluent kafka cluster use'.
-Set Kafka cluster "abc" as the active cluster for environment "a-595".
+Set Kafka cluster "lkc-123" as the active cluster for environment "a-595".

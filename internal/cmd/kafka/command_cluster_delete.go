@@ -9,6 +9,7 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
+	pconv "github.com/confluentinc/cli/internal/pkg/name-conversions"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 )
@@ -51,7 +52,7 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 
 	httpResp, err := c.V2Client.DeleteKafkaCluster(args[0], environmentId)
 	if err != nil {
-		environmentId, err = c.convertEnvNameToId(environmentId)
+		environmentId, err = pconv.ConvertEnvironmentNameToId(environmentId, c.V2Client)
 		if err != nil {
 			return errors.CatchKafkaNotFoundError(err, args[0], httpResp)
 		}

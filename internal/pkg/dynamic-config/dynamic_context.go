@@ -2,7 +2,6 @@ package dynamicconfig
 
 import (
 	"fmt"
-	"github.com/confluentinc/cli/internal/pkg/name-conversions"
 	"strings"
 	"time"
 
@@ -101,14 +100,7 @@ func (d *DynamicContext) FindKafkaCluster(clusterId string) (*v1.KafkaClusterCon
 
 	cluster, httpResp, err := d.V2Client.DescribeKafkaCluster(clusterId, environmentId)
 	if err != nil {
-		clusterId, err = name_conversions.ConvertClusterNameToId(clusterId, environmentId, d.V2Client)
-		if err != nil {
-			return nil, err
-		}
-		cluster, httpResp, err = d.V2Client.DescribeKafkaCluster(clusterId, environmentId)
-		if err != nil {
-			return nil, errors.CatchKafkaNotFoundError(err, clusterId, httpResp)
-		}
+		return nil, errors.CatchKafkaNotFoundError(err, clusterId, httpResp)
 	}
 
 	config := &v1.KafkaClusterConfig{
