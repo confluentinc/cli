@@ -115,8 +115,9 @@ func (c *StatementController) waitForStatementToBeInTerminalStateOrError(process
 
 	go c.listenForUserInputEvent(ctx, c.isDetachEvent, cancelWaitForTerminalStatementState)
 
+	output.Printf("Statement phase is %s.\n", readyStatementWithResults.Status)
 	col := fColor.New(color.AccentColor)
-	output.Printf("Statement phase is %s. %s.\n", readyStatementWithResults.Status, col.Sprint("Press Enter to detach"))
+	output.Printf("Listening for execution errors. %s.\n", col.Sprint("Press Enter to detach"))
 	terminalStatement, err := c.store.WaitForTerminalStatementState(ctx, *readyStatementWithResults)
 	if err != nil {
 		return nil, err
