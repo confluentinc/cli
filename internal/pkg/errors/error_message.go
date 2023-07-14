@@ -400,6 +400,9 @@ const (
 	AWSCredsExpiredErrorMsg         = "AWS credentials in profile %s are expired"
 	FindAWSCredsErrorMsg            = "failed to find AWS credentials in profiles: %s"
 
+	// plugin package
+	NoVersionFoundErrorMsg = "no version found in plugin manifest"
+
 	// catcher
 	CCloudBackendErrorPrefix           = "Confluent Cloud backend error"
 	UnexpectedBackendOutputPrefix      = "unexpected CCloud backend output"
