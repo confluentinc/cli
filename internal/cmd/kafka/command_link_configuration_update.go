@@ -65,14 +65,14 @@ func (c *linkCommand) configurationUpdate(cmd *cobra.Command, args []string) err
 		return errors.New(errors.RestProxyNotAvailableMsg)
 	}
 
-	clusterId, err := getKafkaClusterLkcId(c.AuthenticatedCLICommand)
+	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
 
 	data := toAlterConfigBatchRequestData(configMap)
 
-	if httpResp, err := kafkaREST.CloudClient.UpdateKafkaLinkConfigBatch(clusterId, linkName, data); err != nil {
+	if httpResp, err := kafkaREST.CloudClient.UpdateKafkaLinkConfigBatch(cluster.ID, linkName, data); err != nil {
 		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 

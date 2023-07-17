@@ -50,12 +50,12 @@ func (c *linkCommand) describe(cmd *cobra.Command, args []string) error {
 		return errors.New(errors.RestProxyNotAvailableMsg)
 	}
 
-	clusterId, err := getKafkaClusterLkcId(c.AuthenticatedCLICommand)
+	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
 
-	data, httpResp, err := kafkaREST.CloudClient.GetKafkaLink(clusterId, linkName)
+	data, httpResp, err := kafkaREST.CloudClient.GetKafkaLink(cluster.ID, linkName)
 	if err != nil {
 		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}

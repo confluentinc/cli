@@ -92,7 +92,7 @@ func (c *mirrorCommand) create(cmd *cobra.Command, args []string) error {
 		return errors.New(errors.RestProxyNotAvailableMsg)
 	}
 
-	lkc, err := getKafkaClusterLkcId(c.AuthenticatedCLICommand)
+	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
@@ -109,7 +109,7 @@ func (c *mirrorCommand) create(cmd *cobra.Command, args []string) error {
 		createMirrorTopicRequestData.MirrorTopicName = &mirrorTopicName
 	}
 
-	if httpResp, err := kafkaREST.CloudClient.CreateKafkaMirrorTopic(lkc, linkName, createMirrorTopicRequestData); err != nil {
+	if httpResp, err := kafkaREST.CloudClient.CreateKafkaMirrorTopic(cluster.ID, linkName, createMirrorTopicRequestData); err != nil {
 		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
