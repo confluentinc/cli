@@ -46,7 +46,7 @@ func TestPluginFromEntry(t *testing.T) {
 		}
 
 		for _, test := range tests {
-			name := pluginFromEntry(&mock.FileInfo{
+			name := PluginFromEntry(&mock.FileInfo{
 				NameVal: test.path,
 				ModeVal: test.fileMode,
 			})
@@ -63,7 +63,7 @@ func TestPluginFromEntry(t *testing.T) {
 		}
 
 		for _, test := range tests {
-			name := pluginFromEntry(&mock.FileInfo{
+			name := PluginFromEntry(&mock.FileInfo{
 				NameVal: test.path,
 				ModeVal: test.fileMode,
 			})
@@ -100,4 +100,30 @@ func TestSearchPath(t *testing.T) {
 	pluginPaths, ok := pluginMap[pluginName]
 	require.True(t, ok)
 	require.Equal(t, fileName, filepath.Base(pluginPaths[0]))
+}
+
+func TestVersionRegex(t *testing.T) {
+	// Go
+	goInstaller := &GoPluginInstaller{}
+	require.True(t, goInstaller.IsVersion("go1.20"))
+	require.True(t, goInstaller.IsVersion("go1.19.6"))
+	require.False(t, goInstaller.IsVersion("1.19.6"))
+	require.False(t, goInstaller.IsVersion("go1.19.0"))
+	require.False(t, goInstaller.IsVersion("go"))
+	require.False(t, goInstaller.IsVersion("version"))
+
+	// Python
+	pythonInstaller := &PythonPluginInstaller{}
+	require.True(t, pythonInstaller.IsVersion("3.11.4"))
+	require.True(t, pythonInstaller.IsVersion("3.11.0"))
+	require.True(t, pythonInstaller.IsVersion("2.7.0"))
+	require.False(t, pythonInstaller.IsVersion("Python"))
+
+	// Bash
+	bashInstaller := &BashPluginInstaller{}
+	require.True(t, bashInstaller.IsVersion("3.2.57(1)-release"))
+	require.False(t, bashInstaller.IsVersion("3.2.57(1)"))
+	require.False(t, bashInstaller.IsVersion("3.2.57"))
+	require.False(t, bashInstaller.IsVersion("bash"))
+	require.False(t, bashInstaller.IsVersion("Inc."))
 }
