@@ -31,26 +31,26 @@ func (c *clusterCommand) newUseCommand(cfg *v1.Config) *cobra.Command {
 }
 
 func (c *clusterCommand) use(cmd *cobra.Command, args []string) error {
-	clusterID := args[0]
+	clusterId := args[0]
 
-	if _, err := c.Context.FindKafkaCluster(clusterID); err != nil {
+	if _, err := c.Context.FindKafkaCluster(clusterId); err != nil {
 		environmentId, err := c.Context.EnvironmentId()
 		if err != nil {
 			return err
 		}
-		clusterID, environmentId, err = c.clusterAndEnvNamesToIds(clusterID, environmentId)
-		if err != nil {
+		if clusterId, environmentId, err = c.clusterAndEnvNamesToIds(clusterId, environmentId); err != nil {
 			return err
 		}
-		if _, err := c.Context.FindKafkaCluster(clusterID); err != nil {
-			return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.KafkaClusterNotFoundErrorMsg, clusterID), errors.ChooseRightEnvironmentSuggestions)
+		c.Context.SetCurrentEnvironment(environmentId)
+		if _, err := c.Context.FindKafkaCluster(clusterId); err != nil {
+			return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.KafkaClusterNotFoundErrorMsg, clusterId), errors.ChooseRightEnvironmentSuggestions)
 		}
 	}
 
-	if err := c.Context.SetActiveKafkaCluster(clusterID); err != nil {
+	if err := c.Context.SetActiveKafkaCluster(clusterId); err != nil {
 		return err
 	}
 
-	output.ErrPrintf(errors.UseKafkaClusterMsg, clusterID, c.Context.GetCurrentEnvironment())
+	output.ErrPrintf(errors.UseKafkaClusterMsg, clusterId, c.Context.GetCurrentEnvironment())
 	return nil
 }

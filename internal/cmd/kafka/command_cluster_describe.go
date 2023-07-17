@@ -1,6 +1,7 @@
 package kafka
 
 import (
+	"net/http"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -58,29 +59,28 @@ func (c *clusterCommand) newDescribeCommand() *cobra.Command {
 }
 
 func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
-	lkc, err := c.getLkcForDescribe(args)
+	clusterId, err := c.getLkcForDescribe(args)
 	if err != nil {
 		return err
 	}
 
 	ctx := c.Context.Config.Context()
 	c.Context.Config.SetOverwrittenCurrentKafkaCluster(ctx.KafkaClusterContext.GetActiveKafkaClusterId())
-	ctx.KafkaClusterContext.SetActiveKafkaCluster(lkc)
+	ctx.KafkaClusterContext.SetActiveKafkaCluster(clusterId)
 
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}
 
-	cluster, httpResp, err := c.V2Client.DescribeKafkaCluster(lkc, environmentId)
+	cluster, _, err := c.V2Client.DescribeKafkaCluster(clusterId, environmentId)
 	if err != nil {
-		lkc, environmentId, err = c.clusterAndEnvNamesToIds(lkc, environmentId)
-		if err != nil {
+		if clusterId, environmentId, err = c.clusterAndEnvNamesToIds(clusterId, environmentId); err != nil {
 			return err
 		}
-		cluster, httpResp, err = c.V2Client.DescribeKafkaCluster(lkc, environmentId)
-		if err != nil {
-			return errors.CatchKafkaNotFoundError(err, lkc, httpResp)
+		var httpResp *http.Response
+		if cluster, httpResp, err = c.V2Client.DescribeKafkaCluster(clusterId, environmentId); err != nil {
+			return errors.CatchKafkaNotFoundError(err, clusterId, httpResp)
 		}
 	}
 

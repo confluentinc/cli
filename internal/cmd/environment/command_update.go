@@ -1,12 +1,12 @@
 package environment
 
 import (
-	presource "github.com/confluentinc/cli/internal/pkg/name-conversions"
 	"github.com/spf13/cobra"
 
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	nameconversions "github.com/confluentinc/cli/internal/pkg/name-conversions"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -35,12 +35,11 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	}
 
 	environment := orgv2.OrgV2Environment{DisplayName: orgv2.PtrString(name)}
-	oldEnv, err := presource.ConvertEnvironmentNameToId(args[0], c.V2Client)
+	oldEnv, err := nameconversions.ConvertEnvironmentNameToId(args[0], c.V2Client)
 	if err != nil {
 		return err
 	}
-	environment, err = c.V2Client.UpdateOrgEnvironment(oldEnv, environment)
-	if err != nil {
+	if environment, err = c.V2Client.UpdateOrgEnvironment(oldEnv, environment); err != nil {
 		return err
 	}
 

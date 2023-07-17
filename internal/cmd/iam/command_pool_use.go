@@ -35,8 +35,7 @@ func (c *identityPoolCommand) use(cmd *cobra.Command, args []string) error {
 
 	poolId := args[0]
 	if _, err = c.V2Client.GetIdentityPool(poolId, provider); err != nil {
-		poolId, provider, err = c.poolAndProviderNamesToIds(poolId, provider)
-		if err != nil {
+		if poolId, provider, err = c.poolAndProviderNamesToIds(poolId, provider); err != nil {
 			return err
 		}
 		if _, err = c.V2Client.GetIdentityPool(poolId, provider); err != nil {

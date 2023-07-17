@@ -1,4 +1,4 @@
-package name_conversions
+package nameconversions
 
 import (
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
@@ -6,6 +6,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 )
 
+// ConvertClusterNameToId attempts to convert from a valid cluster name to its ID, if it fails it returns the input string
 func ConvertClusterNameToId(input string, environmentId string, v2Client *ccloudv2.Client) (string, error) {
 	if cluster, _, err := v2Client.DescribeKafkaCluster(input, environmentId); err == nil {
 		return cluster.GetId(), err
@@ -22,6 +23,7 @@ func ConvertClusterNameToId(input string, environmentId string, v2Client *ccloud
 	return ConvertSpecNameToId(input, clusterPtrs, specPtrs)
 }
 
+// ConvertEnvironmentNameToId attempts to convert from a valid environment name to its ID, if it fails it returns the input string
 func ConvertEnvironmentNameToId(input string, v2Client *ccloudv2.Client) (string, error) {
 	if env, err := v2Client.GetOrgEnvironment(input); err == nil {
 		return env.GetId(), err
@@ -33,6 +35,7 @@ func ConvertEnvironmentNameToId(input string, v2Client *ccloudv2.Client) (string
 	return ConvertV2NameToId(input, ConvertToPtrSlice(envs))
 }
 
+// ConvertIamPoolNameToId attempts to convert from a valid iam pool name to its ID, if it fails it returns the input string
 func ConvertIamPoolNameToId(input string, providerId string, v2client *ccloudv2.Client) (string, error) {
 	if pool, err := v2client.GetIdentityPool(input, providerId); err == nil {
 		return pool.GetId(), err
@@ -44,6 +47,7 @@ func ConvertIamPoolNameToId(input string, providerId string, v2client *ccloudv2.
 	return ConvertV2NameToId(input, ConvertToPtrSlice(pools))
 }
 
+// ConvertIamProviderNameToId attempts to convert from a valid iam provider name to its ID, if it fails it returns the input string
 func ConvertIamProviderNameToId(input string, v2client *ccloudv2.Client) (string, error) {
 	if provider, err := v2client.GetIdentityProvider(input); err == nil {
 		return provider.GetId(), err

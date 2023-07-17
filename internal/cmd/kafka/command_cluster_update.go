@@ -52,21 +52,19 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	clusterID := args[0]
-	currentCluster, _, err := c.V2Client.DescribeKafkaCluster(clusterID, environmentId)
+	clusterId := args[0]
+	currentCluster, _, err := c.V2Client.DescribeKafkaCluster(clusterId, environmentId)
 	if err != nil {
-		clusterID, environmentId, err = c.clusterAndEnvNamesToIds(clusterID, environmentId)
-		if err != nil {
+		if clusterId, environmentId, err = c.clusterAndEnvNamesToIds(clusterId, environmentId); err != nil {
 			return err
 		}
-		currentCluster, _, err = c.V2Client.DescribeKafkaCluster(clusterID, environmentId)
-		if err != nil {
-			return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.KafkaClusterNotFoundErrorMsg, clusterID), errors.ChooseRightEnvironmentSuggestions)
+		if currentCluster, _, err = c.V2Client.DescribeKafkaCluster(clusterId, environmentId); err != nil {
+			return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.KafkaClusterNotFoundErrorMsg, clusterId), errors.ChooseRightEnvironmentSuggestions)
 		}
 	}
 
 	update := cmkv2.CmkV2ClusterUpdate{
-		Id:   cmkv2.PtrString(clusterID),
+		Id:   cmkv2.PtrString(clusterId),
 		Spec: &cmkv2.CmkV2ClusterSpecUpdate{Environment: &cmkv2.EnvScopedObjectReference{Id: environmentId}},
 	}
 
@@ -93,14 +91,14 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 		update.Spec.Config = &cmkv2.CmkV2ClusterSpecUpdateConfigOneOf{CmkV2Dedicated: &cmkv2.CmkV2Dedicated{Kind: "Dedicated", Cku: updatedCku}}
 	}
 
-	updatedCluster, err := c.V2Client.UpdateKafkaCluster(clusterID, update)
+	updatedCluster, err := c.V2Client.UpdateKafkaCluster(clusterId, update)
 	if err != nil {
 		return errors.NewWrapErrorWithSuggestions(err, "failed to update Kafka cluster", errors.KafkaClusterUpdateFailedSuggestions)
 	}
 
 	ctx := c.Context.Config.Context()
 	c.Context.Config.SetOverwrittenCurrentKafkaCluster(ctx.KafkaClusterContext.GetActiveKafkaClusterId())
-	ctx.KafkaClusterContext.SetActiveKafkaCluster(clusterID)
+	ctx.KafkaClusterContext.SetActiveKafkaCluster(clusterId)
 
 	return c.outputKafkaClusterDescription(cmd, &updatedCluster, true)
 }

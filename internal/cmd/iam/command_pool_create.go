@@ -7,7 +7,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	pconv "github.com/confluentinc/cli/internal/pkg/name-conversions"
+	nameconversions "github.com/confluentinc/cli/internal/pkg/name-conversions"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -69,7 +69,9 @@ func (c *identityPoolCommand) create(cmd *cobra.Command, args []string) error {
 	}
 	resp, err := c.V2Client.CreateIdentityPool(createIdentityPool, provider)
 	if err != nil {
-		provider, err = pconv.ConvertIamProviderNameToId(provider, c.V2Client)
+		if provider, err = nameconversions.ConvertIamProviderNameToId(provider, c.V2Client); err != nil {
+			return err
+		}
 		if resp, err = c.V2Client.CreateIdentityPool(createIdentityPool, provider); err != nil {
 			return err
 		}

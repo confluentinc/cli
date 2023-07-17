@@ -1,4 +1,4 @@
-package name_conversions
+package nameconversions
 
 import (
 	"fmt"

@@ -8,7 +8,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	pconv "github.com/confluentinc/cli/internal/pkg/name-conversions"
+	nameconversions "github.com/confluentinc/cli/internal/pkg/name-conversions"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -59,11 +59,11 @@ func (c *identityProviderCommand) update(cmd *cobra.Command, args []string) erro
 
 	identityProvider, err := c.V2Client.UpdateIdentityProvider(update)
 	if err != nil {
-		provId, err := pconv.ConvertIamProviderNameToId(args[0], c.V2Client)
+		providerId, err := nameconversions.ConvertIamProviderNameToId(args[0], c.V2Client)
 		if err != nil {
 			return err
 		}
-		update.Id = identityproviderv2.PtrString(provId)
+		update.Id = identityproviderv2.PtrString(providerId)
 		if identityProvider, err = c.V2Client.UpdateIdentityProvider(update); err != nil {
 			return err
 		}

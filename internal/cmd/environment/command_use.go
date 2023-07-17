@@ -1,11 +1,11 @@
 package environment
 
 import (
-	"github.com/confluentinc/cli/internal/pkg/name-conversions"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	nameconversions "github.com/confluentinc/cli/internal/pkg/name-conversions"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	presource "github.com/confluentinc/cli/internal/pkg/resource"
 )
@@ -28,8 +28,7 @@ func (c *command) newUseCommand() *cobra.Command {
 func (c *command) use(cmd *cobra.Command, args []string) error {
 	id := args[0]
 	if _, err := c.V2Client.GetOrgEnvironment(id); err != nil {
-		id, err = name_conversions.ConvertEnvironmentNameToId(id, c.V2Client)
-		if err != nil {
+		if id, err = nameconversions.ConvertEnvironmentNameToId(id, c.V2Client); err != nil {
 			return err
 		}
 		if _, err = c.V2Client.GetOrgEnvironment(id); err != nil {

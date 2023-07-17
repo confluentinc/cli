@@ -1,11 +1,11 @@
 package environment
 
 import (
-	presource "github.com/confluentinc/cli/internal/pkg/name-conversions"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	nameconversions "github.com/confluentinc/cli/internal/pkg/name-conversions"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -42,12 +42,10 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 
 	environment, err := c.V2Client.GetOrgEnvironment(id)
 	if err != nil {
-		id, err = presource.ConvertEnvironmentNameToId(id, c.V2Client)
-		if err != nil {
+		if id, err = nameconversions.ConvertEnvironmentNameToId(id, c.V2Client); err != nil {
 			return err
 		}
-		environment, err = c.V2Client.GetOrgEnvironment(id)
-		if err != nil {
+		if environment, err = c.V2Client.GetOrgEnvironment(id); err != nil {
 			return errors.NewErrorWithSuggestions(err.Error(), "List available environments with `confluent environment list`.")
 		}
 	}

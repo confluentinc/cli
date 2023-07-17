@@ -4,7 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	pconv "github.com/confluentinc/cli/internal/pkg/name-conversions"
+	nameconversions "github.com/confluentinc/cli/internal/pkg/name-conversions"
 )
 
 type identityPoolCommand struct {
@@ -52,13 +52,10 @@ func (c *identityPoolCommand) validArgs(cmd *cobra.Command, args []string) []str
 }
 
 func (c *identityPoolCommand) poolAndProviderNamesToIds(pool string, provider string) (string, string, error) {
-	provider, err := pconv.ConvertIamProviderNameToId(provider, c.V2Client)
+	provider, err := nameconversions.ConvertIamProviderNameToId(provider, c.V2Client)
 	if err != nil {
 		return pool, provider, err
 	}
-	pool, err = pconv.ConvertIamPoolNameToId(pool, provider, c.V2Client)
-	if err != nil {
-		return pool, provider, err
-	}
+	pool, err = nameconversions.ConvertIamPoolNameToId(pool, provider, c.V2Client)
 	return pool, provider, err
 }
