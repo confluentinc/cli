@@ -60,6 +60,9 @@ func (c *command) newConsumeCommand() *cobra.Command {
 
 	cobra.CheckErr(cmd.MarkFlagFilename("config-file", "avsc", "json"))
 
+	cmd.MarkFlagsMutuallyExclusive("config", "config-file")
+	cmd.MarkFlagsMutuallyExclusive("from-beginning", "offset")
+
 	return cmd
 }
 
@@ -120,10 +123,6 @@ func (c *command) consume(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if cmd.Flags().Changed("config-file") && cmd.Flags().Changed("config") {
-		return errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "config-file", "config")
-	}
-
 	configFile, err := cmd.Flags().GetString("config-file")
 	if err != nil {
 		return err
@@ -147,10 +146,6 @@ func (c *command) consume(cmd *cobra.Command, args []string) error {
 
 	if err := c.validateTopic(adminClient, topic, cluster); err != nil {
 		return err
-	}
-
-	if cmd.Flags().Changed("from-beginning") && cmd.Flags().Changed("offset") {
-		return errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "from-beginning", "offset")
 	}
 
 	offset, err := GetOffsetWithFallback(cmd)

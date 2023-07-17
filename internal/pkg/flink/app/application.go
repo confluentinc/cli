@@ -96,13 +96,8 @@ func (a *Application) readEvalPrintLoop() {
 			continue
 		}
 
-		// fetch first result page here to init result fetcher and to decide which OutputController to use
-		executedStatementWithResults, err := a.store.FetchStatementResults(*executedStatement)
-		if err != nil {
-			continue
-		}
-		a.resultFetcher.Init(*executedStatementWithResults)
-		a.getOutputController(*executedStatementWithResults).VisualizeResults()
+		a.resultFetcher.Init(*executedStatement)
+		a.getOutputController(*executedStatement).VisualizeResults()
 	}
 }
 

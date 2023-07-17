@@ -21,8 +21,6 @@ import (
 	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/flink/config"
 	"github.com/confluentinc/cli/internal/pkg/flink/test/mock"
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
@@ -40,56 +38,16 @@ func tokenRefreshFunc() error {
 	return nil
 }
 
-func newContext() *dynamicconfig.DynamicContext {
-	return dynamicconfig.NewDynamicContext(&v1.Context{Environments: map[string]*v1.EnvironmentContext{"env": v1.NewEnvironmentContext()}, CurrentEnvironment: "env"}, &ccloudv2.Client{})
-}
-
-func TestStoreRecoversPropertiesFromContext(t *testing.T) {
-	// Create a new store
-	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, "authToken")
-	mockAppController := mock.NewMockApplicationControllerInterface(gomock.NewController(t))
-	cliContext := newContext()
-	// load one
-	_ = cliContext.SetCurrentFlinkDatabase("my_database")
-
-	s := NewStore(client, mockAppController.ExitApplication, &types.ApplicationOptions{
-		Context: cliContext,
-	}, tokenRefreshFunc).(*Store)
-
-	require.Equal(t, "my_database", s.propsDefault(nil)[config.ConfigKeyDatabase])
-
-	// load other
-	cliContext = newContext()
-	s = NewStore(client, mockAppController.ExitApplication, &types.ApplicationOptions{
-		Context: cliContext,
-	}, tokenRefreshFunc).(*Store)
-	_ = cliContext.SetCurrentFlinkCatalog("my_catalog")
-	require.Equal(t, "my_catalog", s.propsDefault(nil)[config.ConfigKeyCatalog])
-
-	// load both
-	cliContext = newContext()
-	s = NewStore(client, mockAppController.ExitApplication, &types.ApplicationOptions{
-		Context: cliContext,
-	}, tokenRefreshFunc).(*Store)
-	_ = cliContext.SetCurrentFlinkDatabase("my_database")
-	_ = cliContext.SetCurrentFlinkCatalog("my_catalog")
-	require.Equal(t, "my_database", s.propsDefault(nil)[config.ConfigKeyDatabase])
-	require.Equal(t, "my_catalog", s.propsDefault(nil)[config.ConfigKeyCatalog])
-
-	// load none
-	cliContext = newContext()
-	s = NewStore(client, mockAppController.ExitApplication, &types.ApplicationOptions{
-		Context: cliContext,
-	}, tokenRefreshFunc).(*Store)
-	require.Empty(t, s.propsDefault(nil)[config.ConfigKeyDatabase])
-	require.Empty(t, s.propsDefault(nil)[config.ConfigKeyCatalog])
-}
-
 func TestStoreProcessLocalStatement(t *testing.T) {
 	// Create a new store
 	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, "authToken")
 	mockAppController := mock.NewMockApplicationControllerInterface(gomock.NewController(t))
-	s := NewStore(client, mockAppController.ExitApplication, &types.ApplicationOptions{}, tokenRefreshFunc).(*Store)
+	appOptions := types.ApplicationOptions{
+		OrgResourceId:   "orgId",
+		EnvironmentName: "envName",
+		Database:        "database",
+	}
+	s := NewStore(client, mockAppController.ExitApplication, &appOptions, tokenRefreshFunc).(*Store)
 
 	result, err := s.ProcessLocalStatement("SET 'foo'='bar';")
 	assert.Nil(t, err)
@@ -297,6 +255,9 @@ func TestCancelPendingStatement(t *testing.T) {
 	}
 
 	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
+		Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
+			StatementName: &statementName,
+		},
 		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
 			Phase: "PENDING",
 		},
@@ -304,6 +265,8 @@ func TestCancelPendingStatement(t *testing.T) {
 
 	expectedErr := &types.StatementError{Message: "result retrieval aborted. Statement will be deleted"}
 	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, nil).AnyTimes()
+	client.EXPECT().GetExceptions("envId", statementName, "orgId").Return(flinkgatewayv1alpha1.SqlV1alpha1StatementExceptionList{}, errors.New("error")).AnyTimes()
+	client.EXPECT().DeleteStatement("envId", statementName, "orgId").Return(nil).AnyTimes()
 
 	// Schedule routine to cancel context
 	go func() {
@@ -811,8 +774,10 @@ func (s *StoreTestSuite) TestDeleteStatement() {
 	client := mock.NewMockGatewayClientInterface(ctrl)
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
 	appOptions := types.ApplicationOptions{
-		OrgResourceId: "orgId",
-		EnvironmentId: "envId",
+		OrgResourceId:   "orgId",
+		EnvironmentId:   "envId",
+		EnvironmentName: "envName",
+		Database:        "database",
 	}
 	store := NewStore(client, mockAppController.ExitApplication, &appOptions, tokenRefreshFunc)
 
@@ -830,8 +795,10 @@ func (s *StoreTestSuite) TestDeleteStatementFailsOnError() {
 	client := mock.NewMockGatewayClientInterface(ctrl)
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
 	appOptions := types.ApplicationOptions{
-		OrgResourceId: "orgId",
-		EnvironmentId: "envId",
+		OrgResourceId:   "orgId",
+		EnvironmentId:   "envId",
+		EnvironmentName: "envName",
+		Database:        "database",
 	}
 	store := NewStore(client, mockAppController.ExitApplication, &appOptions, tokenRefreshFunc)
 
@@ -849,8 +816,10 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWithCompletedStatement() {
 	client := mock.NewMockGatewayClientInterface(ctrl)
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
 	appOptions := types.ApplicationOptions{
-		OrgResourceId: "orgId",
-		EnvironmentId: "envId",
+		OrgResourceId:   "orgId",
+		EnvironmentId:   "envId",
+		EnvironmentName: "envName",
+		Database:        "database",
 	}
 	store := NewStore(client, mockAppController.ExitApplication, &appOptions, tokenRefreshFunc)
 
@@ -876,8 +845,10 @@ func (s *StoreTestSuite) TestFetchResultsWithRunningStatement() {
 	client := mock.NewMockGatewayClientInterface(ctrl)
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
 	appOptions := types.ApplicationOptions{
-		OrgResourceId: "orgId",
-		EnvironmentId: "envId",
+		OrgResourceId:   "orgId",
+		EnvironmentId:   "envId",
+		EnvironmentName: "envName",
+		Database:        "database",
 	}
 	store := NewStore(client, mockAppController.ExitApplication, &appOptions, tokenRefreshFunc)
 
@@ -903,8 +874,10 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWhenPageTokenExists() {
 	client := mock.NewMockGatewayClientInterface(ctrl)
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
 	appOptions := types.ApplicationOptions{
-		OrgResourceId: "orgId",
-		EnvironmentId: "envId",
+		OrgResourceId:   "orgId",
+		EnvironmentId:   "envId",
+		EnvironmentName: "envName",
+		Database:        "database",
 	}
 	store := NewStore(client, mockAppController.ExitApplication, &appOptions, tokenRefreshFunc)
 
@@ -931,8 +904,10 @@ func (s *StoreTestSuite) TestFetchResultsNoRetryWhenResultsExist() {
 	client := mock.NewMockGatewayClientInterface(ctrl)
 	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
 	appOptions := types.ApplicationOptions{
-		OrgResourceId: "orgId",
-		EnvironmentId: "envId",
+		OrgResourceId:   "orgId",
+		EnvironmentId:   "envId",
+		EnvironmentName: "envName",
+		Database:        "database",
 	}
 	store := NewStore(client, mockAppController.ExitApplication, &appOptions, tokenRefreshFunc)
 
@@ -1007,7 +982,8 @@ func TestTimeout(t *testing.T) {
 
 	// Iterate over test cases and run the function for each input, comparing output to expected value
 	for _, tc := range testCases {
-		result := timeout(tc.properties)
+		store := Store{Properties: NewUserProperties(tc.properties)}
+		result := store.getTimeout()
 		require.Equal(t, tc.expected, result, tc.name)
 	}
 }
@@ -1015,16 +991,13 @@ func TestTimeout(t *testing.T) {
 func (s *StoreTestSuite) TestProcessStatement() {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
 	appOptions := &types.ApplicationOptions{
-		Context:        newContext(),
 		OrgResourceId:  "orgId",
 		EnvironmentId:  "envId",
 		ComputePoolId:  "computePoolId",
 		IdentityPoolId: "identityPoolId",
 	}
 	store := Store{
-		Properties: map[string]string{
-			"TestProp": "TestVal",
-		},
+		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}),
 		client:           client,
 		appOptions:       appOptions,
 		tokenRefreshFunc: tokenRefreshFunc,
@@ -1039,7 +1012,7 @@ func (s *StoreTestSuite) TestProcessStatement() {
 	}
 
 	statement := "SELECT * FROM table"
-	client.EXPECT().CreateStatement(statement, "computePoolId", "identityPoolId", store.propsDefault(store.Properties), "envId", "orgId").
+	client.EXPECT().CreateStatement(statement, "computePoolId", "identityPoolId", store.Properties.GetProperties(), "envId", "orgId").
 		Return(statementObj, nil)
 
 	processedStatement, err := store.ProcessStatement(statement)
@@ -1052,14 +1025,11 @@ func (s *StoreTestSuite) TestProcessStatementFailsOnError() {
 	appOptions := &types.ApplicationOptions{
 		OrgResourceId:  "orgId",
 		EnvironmentId:  "envId",
-		Context:        newContext(),
 		ComputePoolId:  "computePoolId",
 		IdentityPoolId: "identityPoolId",
 	}
 	store := Store{
-		Properties: map[string]string{
-			"TestProp": "TestVal",
-		},
+		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}),
 		client:           client,
 		appOptions:       appOptions,
 		tokenRefreshFunc: tokenRefreshFunc,
@@ -1074,7 +1044,7 @@ func (s *StoreTestSuite) TestProcessStatementFailsOnError() {
 	returnedError := errors.New("test error")
 
 	statement := "SELECT * FROM table"
-	client.EXPECT().CreateStatement(statement, "computePoolId", "identityPoolId", store.propsDefault(store.Properties), "envId", "orgId").
+	client.EXPECT().CreateStatement(statement, "computePoolId", "identityPoolId", store.Properties.GetProperties(), "envId", "orgId").
 		Return(statementObj, returnedError)
 	expectedError := &types.StatementError{
 		Message:        returnedError.Error(),
@@ -1093,9 +1063,7 @@ func (s *StoreTestSuite) TestWaitPendingStatement() {
 		EnvironmentId: "envId",
 	}
 	store := Store{
-		Properties: map[string]string{
-			"TestProp": "TestVal",
-		},
+		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}),
 		client:           client,
 		appOptions:       appOptions,
 		tokenRefreshFunc: tokenRefreshFunc,
@@ -1125,10 +1093,8 @@ func (s *StoreTestSuite) TestWaitPendingStatement() {
 func (s *StoreTestSuite) TestWaitPendingStatementNoWaitForCompletedStatement() {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
 	store := Store{
-		Properties: map[string]string{
-			"TestProp": "TestVal",
-		},
-		client: client,
+		Properties: NewUserProperties(map[string]string{"TestProp": "TestVal"}),
+		client:     client,
 	}
 
 	statement := types.ProcessedStatement{
@@ -1143,7 +1109,7 @@ func (s *StoreTestSuite) TestWaitPendingStatementNoWaitForCompletedStatement() {
 func (s *StoreTestSuite) TestWaitPendingStatementNoWaitForRunningStatement() {
 	client := mock.NewMockGatewayClientInterface(gomock.NewController(s.T()))
 	store := Store{
-		Properties: map[string]string{"TestProp": "TestVal"},
+		Properties: NewUserProperties(map[string]string{"TestProp": "TestVal"}),
 		client:     client,
 	}
 
@@ -1161,9 +1127,7 @@ func (s *StoreTestSuite) TestWaitPendingStatementFailsOnWaitError() {
 		EnvironmentId: "envId",
 	}
 	store := Store{
-		Properties: map[string]string{
-			"TestProp": "TestVal",
-		},
+		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}),
 		client:           client,
 		appOptions:       appOptions,
 		tokenRefreshFunc: tokenRefreshFunc,
@@ -1201,9 +1165,7 @@ func (s *StoreTestSuite) TestWaitPendingStatementFailsOnNonCompletedOrRunningSta
 		EnvironmentId: "envId",
 	}
 	store := Store{
-		Properties: map[string]string{
-			"TestProp": "TestVal",
-		},
+		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}),
 		client:           client,
 		appOptions:       appOptions,
 		tokenRefreshFunc: tokenRefreshFunc,
@@ -1242,9 +1204,7 @@ func (s *StoreTestSuite) TestWaitPendingStatementFetchesExceptionOnFailedStateme
 		EnvironmentId: "envId",
 	}
 	store := Store{
-		Properties: map[string]string{
-			"TestProp": "TestVal",
-		},
+		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}),
 		client:           client,
 		appOptions:       appOptions,
 		tokenRefreshFunc: tokenRefreshFunc,
@@ -1290,9 +1250,7 @@ func (s *StoreTestSuite) TestGetStatusDetail() {
 		EnvironmentId: "envId",
 	}
 	store := Store{
-		Properties: map[string]string{
-			"TestProp": "TestVal",
-		},
+		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}),
 		client:           client,
 		appOptions:       appOptions,
 		tokenRefreshFunc: tokenRefreshFunc,
@@ -1330,9 +1288,7 @@ func (s *StoreTestSuite) TestGetStatusDetailReturnsWhenStatusNoFailedOrFailing()
 		EnvironmentId: "envId",
 	}
 	store := Store{
-		Properties: map[string]string{
-			"TestProp": "TestVal",
-		},
+		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}),
 		client:           client,
 		appOptions:       appOptions,
 		tokenRefreshFunc: tokenRefreshFunc,
@@ -1365,9 +1321,7 @@ func (s *StoreTestSuite) TestGetStatusDetailReturnsWhenStatusDetailFilled() {
 		EnvironmentId: "envId",
 	}
 	store := Store{
-		Properties: map[string]string{
-			"TestProp": "TestVal",
-		},
+		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}),
 		client:           client,
 		appOptions:       appOptions,
 		tokenRefreshFunc: tokenRefreshFunc,
@@ -1394,9 +1348,7 @@ func (s *StoreTestSuite) TestGetStatusDetailReturnsEmptyWhenNoExceptionsAvailabl
 		EnvironmentId: "envId",
 	}
 	store := Store{
-		Properties: map[string]string{
-			"TestProp": "TestVal",
-		},
+		Properties:       NewUserProperties(map[string]string{"TestProp": "TestVal"}),
 		client:           client,
 		appOptions:       appOptions,
 		tokenRefreshFunc: tokenRefreshFunc,
@@ -1488,4 +1440,115 @@ func (s *StoreTestSuite) TestNewProcessedStatementSetsIsSelectStatement() {
 			require.Equal(t, testCase.isSelectStatement, processedStatement.IsSelectStatement)
 		})
 	}
+}
+
+func TestWaitForTerminalStateDoesNotStartWhenAlreadyInTerminalState(t *testing.T) {
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
+	appOptions := types.ApplicationOptions{
+		OrgResourceId: "orgId",
+		EnvironmentId: "envId",
+	}
+	s := &Store{
+		client:           client,
+		appOptions:       &appOptions,
+		tokenRefreshFunc: tokenRefreshFunc,
+	}
+	processedStatement := types.ProcessedStatement{Status: types.COMPLETED}
+
+	returnedStatement, err := s.WaitForTerminalStatementState(context.Background(), processedStatement)
+
+	assert.Nil(t, err)
+	assert.Equal(t, &processedStatement, returnedStatement)
+}
+
+func TestWaitForTerminalStateStopsWhenTerminalState(t *testing.T) {
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
+	appOptions := types.ApplicationOptions{
+		OrgResourceId: "orgId",
+		EnvironmentId: "envId",
+	}
+	s := &Store{
+		client:           client,
+		appOptions:       &appOptions,
+		tokenRefreshFunc: tokenRefreshFunc,
+	}
+
+	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
+		Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
+			StatementName: flinkgatewayv1alpha1.PtrString("statement-name"),
+		},
+		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+			Phase:  "COMPLETED",
+			Detail: flinkgatewayv1alpha1.PtrString("Test status detail message"),
+		},
+	}
+	client.EXPECT().GetStatement("envId", statementObj.Spec.GetStatementName(), "orgId").Return(statementObj, nil)
+	processedStatement := types.NewProcessedStatement(statementObj)
+	processedStatement.Status = types.RUNNING
+
+	returnedStatement, err := s.WaitForTerminalStatementState(context.Background(), *processedStatement)
+
+	assert.Nil(t, err)
+	assert.Equal(t, types.NewProcessedStatement(statementObj), returnedStatement)
+}
+
+func TestWaitForTerminalStateStopsWhenUserDetaches(t *testing.T) {
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
+	appOptions := types.ApplicationOptions{
+		OrgResourceId: "orgId",
+		EnvironmentId: "envId",
+	}
+	s := &Store{
+		client:           client,
+		appOptions:       &appOptions,
+		tokenRefreshFunc: tokenRefreshFunc,
+	}
+	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
+		Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
+			StatementName: flinkgatewayv1alpha1.PtrString("statement-name"),
+		},
+		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+			Phase:  "RUNNING",
+			Detail: flinkgatewayv1alpha1.PtrString("Test status detail message"),
+		},
+	}
+	client.EXPECT().GetStatement("envId", statementObj.Spec.GetStatementName(), "orgId").Return(statementObj, nil).AnyTimes()
+	ctx, cancelFunc := context.WithCancel(context.Background())
+	go func() {
+		time.Sleep(2 * time.Second)
+		cancelFunc()
+	}()
+
+	returnedStatement, err := s.WaitForTerminalStatementState(ctx, *types.NewProcessedStatement(statementObj))
+
+	assert.Nil(t, err)
+	assert.Equal(t, types.NewProcessedStatement(statementObj), returnedStatement)
+	assert.NotNil(t, ctx.Err())
+}
+
+func TestWaitForTerminalStateStopsOnError(t *testing.T) {
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
+	appOptions := types.ApplicationOptions{
+		OrgResourceId: "orgId",
+		EnvironmentId: "envId",
+	}
+	s := &Store{
+		client:           client,
+		appOptions:       &appOptions,
+		tokenRefreshFunc: tokenRefreshFunc,
+	}
+	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
+		Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
+			StatementName: flinkgatewayv1alpha1.PtrString("statement-name"),
+		},
+		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+			Phase:  "RUNNING",
+			Detail: flinkgatewayv1alpha1.PtrString("Test status detail message"),
+		},
+	}
+	client.EXPECT().GetStatement("envId", statementObj.Spec.GetStatementName(), "orgId").Return(statementObj, errors.New("error"))
+
+	_, err := s.WaitForTerminalStatementState(context.Background(), *types.NewProcessedStatement(statementObj))
+
+	assert.NotNil(t, err)
 }

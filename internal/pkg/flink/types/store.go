@@ -7,4 +7,5 @@ type StoreInterface interface {
 	FetchStatementResults(ProcessedStatement) (*ProcessedStatement, *StatementError)
 	DeleteStatement(statementName string) bool
 	WaitPendingStatement(ctx context.Context, statement ProcessedStatement) (*ProcessedStatement, *StatementError)
+	WaitForTerminalStatementState(ctx context.Context, statement ProcessedStatement) (*ProcessedStatement, *StatementError)
 }

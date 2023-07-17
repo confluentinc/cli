@@ -44,6 +44,9 @@ func (c *Command) newKafkaTopicConsumeCommand() *cobra.Command {
 
 	cobra.CheckErr(cmd.MarkFlagFilename("config-file", "avsc", "json"))
 
+	cmd.MarkFlagsMutuallyExclusive("from-beginning", "offset")
+	cmd.MarkFlagsMutuallyExclusive("config", "config-file")
+
 	return cmd
 }
 
@@ -82,10 +85,6 @@ func (c *Command) kafkaTopicConsume(cmd *cobra.Command, args []string) error {
 	err = kafka.ValidateTopic(adminClient, topicName)
 	if err != nil {
 		return err
-	}
-
-	if cmd.Flags().Changed("from-beginning") && cmd.Flags().Changed("offset") {
-		return errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "from-beginning", "offset")
 	}
 
 	offset, err := kafka.GetOffsetWithFallback(cmd)
@@ -139,10 +138,6 @@ func newOnPremConsumer(cmd *cobra.Command, bootstrap string) (*ckafka.Consumer, 
 		"bootstrap.servers":                     bootstrap,
 		"partition.assignment.strategy":         "cooperative-sticky",
 		"security.protocol":                     "PLAINTEXT",
-	}
-
-	if cmd.Flags().Changed("config-file") && cmd.Flags().Changed("config") {
-		return nil, errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "config-file", "config")
 	}
 
 	configFile, err := cmd.Flags().GetString("config-file")

@@ -25,7 +25,7 @@ Flags:
       --protocol string                   Security protocol used to communicate with brokers. (default "SSL")
       --sasl-mechanism string             SASL_SSL mechanism used for authentication. (default "PLAIN")
       --schema string                     The path to the local schema file.
-      --value-format string               Format of message value as "string", "avro", "jsonschema", or "protobuf". Note that schema references are not supported for avro. (default "string")
+      --value-format string               Format message value as "string", "avro", "jsonschema", or "protobuf". Note that schema references are not supported for Avro. (default "string")
       --references string                 The path to the references file.
       --parse-key                         Parse key from the message.
       --delimiter string                  The delimiter separating each key and value. (default ":")
