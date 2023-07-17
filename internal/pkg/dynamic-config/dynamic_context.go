@@ -13,6 +13,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	nameconversions "github.com/confluentinc/cli/internal/pkg/name-conversions"
 	presource "github.com/confluentinc/cli/internal/pkg/resource"
 )
 
@@ -31,10 +32,17 @@ func NewDynamicContext(context *v1.Context, v2Client *ccloudv2.Client) *DynamicC
 	}
 }
 
-func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, client *ccloudv1.Client) error {
+func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, client *ccloudv1.Client, isTest bool) error {
 	if environment, _ := cmd.Flags().GetString("environment"); environment != "" {
 		if d.Credential.CredentialType == v1.APIKey {
 			return errors.New("`--environment` flag should not be passed for API key context")
+		}
+		if !isTest {
+			var err error
+			environment, err = nameconversions.ConvertEnvironmentNameToId(environment, d.V2Client)
+			if err != nil {
+				return err
+			}
 		}
 		ctx := d.Config.Context()
 		d.Config.SetOverwrittenCurrentEnvironment(ctx.CurrentEnvironment)
@@ -44,6 +52,13 @@ func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, client *cclou
 	if cluster, _ := cmd.Flags().GetString("cluster"); cluster != "" {
 		if d.Credential.CredentialType == v1.APIKey {
 			return errors.New("`--cluster` flag should not be passed for API key context, cluster is inferred")
+		}
+		if !isTest {
+			var err error
+			cluster, err = nameconversions.ConvertClusterNameToId(cluster, d.GetCurrentEnvironment(), d.V2Client)
+			if err != nil {
+				return err
+			}
 		}
 		ctx := d.Config.Context()
 		d.Config.SetOverwrittenCurrentKafkaCluster(ctx.KafkaClusterContext.GetActiveKafkaClusterId())

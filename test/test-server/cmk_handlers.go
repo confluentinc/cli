@@ -339,6 +339,9 @@ func handleCmkKafkaClusterDescribeUsingName(t *testing.T) http.HandlerFunc {
 			err := json.NewEncoder(w).Encode(cluster)
 			require.NoError(t, err)
 		}
+		if r.URL.Query().Get("environment") != defaultEnvId {
+			require.Equal(t, r.URL.Query().Get("environment"), otherEnvId)
+		}
 	}
 }
 

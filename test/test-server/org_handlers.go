@@ -12,9 +12,14 @@ import (
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 )
 
+const (
+	defaultEnvId = "a-595"
+	otherEnvId   = "not-595"
+)
+
 var OrgEnvironments = []*orgv2.OrgV2Environment{
-	{Id: orgv2.PtrString("a-595"), DisplayName: orgv2.PtrString("default")},
-	{Id: orgv2.PtrString("not-595"), DisplayName: orgv2.PtrString("other")},
+	{Id: orgv2.PtrString(defaultEnvId), DisplayName: orgv2.PtrString("default")},
+	{Id: orgv2.PtrString(otherEnvId), DisplayName: orgv2.PtrString("other")},
 	{Id: orgv2.PtrString("env-123"), DisplayName: orgv2.PtrString("env123")},
 	{Id: orgv2.PtrString(SRApiEnvId), DisplayName: orgv2.PtrString("srUpdate")},
 }

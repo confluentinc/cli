@@ -8,6 +8,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	nameconversions "github.com/confluentinc/cli/internal/pkg/name-conversions"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -38,7 +39,7 @@ func (c *clusterCommand) use(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		if clusterId, environmentId, err = c.clusterAndEnvNamesToIds(clusterId, environmentId); err != nil {
+		if clusterId, err = nameconversions.ConvertClusterNameToId(clusterId, environmentId, c.V2Client); err != nil {
 			return err
 		}
 		c.Context.SetCurrentEnvironment(environmentId)

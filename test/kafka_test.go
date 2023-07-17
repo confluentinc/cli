@@ -177,6 +177,7 @@ func (s *CLITestSuite) TestKafka() {
 func (s *CLITestSuite) TestKafkaClusterUsingName() {
 	tests := []CLITest{
 		{args: "kafka cluster describe abc", fixture: "kafka/cluster-describe-name.golden"},
+		{args: "kafka cluster describe abc --environment other", fixture: "kafka/cluster-describe-name.golden"},
 		{args: "kafka cluster update def --name new_name", fixture: "kafka/cluster-update-name.golden"},
 		{args: "kafka cluster use abc", fixture: "kafka/cluster-use-name.golden"},
 	}

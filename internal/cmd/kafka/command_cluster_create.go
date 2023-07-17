@@ -3,7 +3,6 @@ package kafka
 import (
 	"bytes"
 	"fmt"
-	"net/http"
 	"strings"
 	"text/template"
 
@@ -18,7 +17,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
-	nameconversions "github.com/confluentinc/cli/internal/pkg/name-conversions"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -137,12 +135,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		}
 
 		if err := c.validateGcpEncryptionKey(cloud, environmentId); err != nil {
-			if environmentId, err = nameconversions.ConvertEnvironmentNameToId(environmentId, c.V2Client); err != nil {
-				return err
-			}
-			if err = c.validateGcpEncryptionKey(cloud, environmentId); err != nil {
-				return err
-			}
+			return err
 		}
 	}
 
@@ -186,16 +179,9 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		setClusterConfigCku(&createCluster, int32(cku))
 	}
 
-	kafkaCluster, _, err := c.V2Client.CreateKafkaCluster(createCluster)
+	kafkaCluster, httpResp, err := c.V2Client.CreateKafkaCluster(createCluster)
 	if err != nil {
-		if environmentId, err = nameconversions.ConvertEnvironmentNameToId(environmentId, c.V2Client); err != nil {
-			return err
-		}
-		createCluster.Spec.Environment = &cmkv2.EnvScopedObjectReference{Id: environmentId}
-		var httpResp *http.Response
-		if kafkaCluster, httpResp, err = c.V2Client.CreateKafkaCluster(createCluster); err != nil {
-			return errors.CatchClusterConfigurationNotValidError(err, httpResp)
-		}
+		return errors.CatchClusterConfigurationNotValidError(err, httpResp)
 	}
 
 	if output.GetFormat(cmd) == output.Human {

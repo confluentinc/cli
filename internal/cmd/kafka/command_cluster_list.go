@@ -6,7 +6,6 @@ import (
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	nameconversions "github.com/confluentinc/cli/internal/pkg/name-conversions"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -54,12 +53,7 @@ func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
 
 		clusters, err = c.V2Client.ListKafkaClusters(environmentId)
 		if err != nil {
-			if environmentId, err = nameconversions.ConvertEnvironmentNameToId(environmentId, c.V2Client); err != nil {
-				return err
-			}
-			if clusters, err = c.V2Client.ListKafkaClusters(environmentId); err != nil {
-				return err
-			}
+			return err
 		}
 	}
 

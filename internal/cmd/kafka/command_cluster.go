@@ -7,7 +7,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	nameconversions "github.com/confluentinc/cli/internal/pkg/name-conversions"
 )
 
 const (
@@ -85,13 +84,4 @@ func (c *clusterCommand) validArgs(cmd *cobra.Command, args []string) []string {
 		suggestions[i] = fmt.Sprintf("%s\t%s", cluster.GetId(), cluster.Spec.GetDisplayName())
 	}
 	return suggestions
-}
-
-func (c *clusterCommand) clusterAndEnvNamesToIds(cluster string, env string) (string, string, error) {
-	env, err := nameconversions.ConvertEnvironmentNameToId(env, c.V2Client)
-	if err != nil {
-		return cluster, env, err
-	}
-	cluster, err = nameconversions.ConvertClusterNameToId(cluster, env, c.V2Client)
-	return cluster, env, err
 }
