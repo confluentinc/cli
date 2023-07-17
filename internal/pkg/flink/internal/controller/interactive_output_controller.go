@@ -50,7 +50,7 @@ func (t *InteractiveOutputController) init() {
 	t.resultFetcher.SetRefreshCallback(t.renderTableAsync)
 	t.resultFetcher.ToggleRefresh()
 	t.app.SetInputCapture(t.inputCapture)
-	t.tableView.Init()
+	t.tableView.Init(t.app.QueueUpdateDraw)
 	t.updateTable()
 }
 
