@@ -22,8 +22,9 @@ func TestSearchString(t *testing.T) {
 	})
 }
 
-func TestSearchCaseInsensitiveString(t *testing.T) {
+func TestSearchCaseInsensitiveInputString(t *testing.T) {
 	rapid.Check(t, func(t *rapid.T) {
+
 		// create a random array string
 		slice := rapid.SliceOfN(rapid.StringN(1, -1, -1), 1, 500).Draw(t, "Slice of strings")
 		// randomly pick one of the string inside the array
@@ -34,6 +35,19 @@ func TestSearchCaseInsensitiveString(t *testing.T) {
 		result := search(upperCaseStr, slice, len(slice)-1)
 		assert.NotEqual(t, -1, result.index)
 		assert.Contains(t, strings.ToUpper(result.match), upperCaseStr)
+	})
+}
+
+func TestSearchCaseInsensitiveHistoryString(t *testing.T) {
+	rapid.Check(t, func(t *rapid.T) {
+		slice := rapid.SliceOfN(rapid.StringMatching("[0-Z]+"), 1, 500).Draw(t, "Slice o uppercase strings")
+		// randomly pick one of the string inside the array
+		index := rapid.IntRange(0, len(slice)-1).Draw(t, "Index")
+		str := slice[index]
+
+		result := search(str, slice, len(slice)-1)
+		assert.NotEqual(t, -1, result.index)
+		assert.Contains(t, strings.ToUpper(result.match), strings.ToUpper(str))
 	})
 }
 
