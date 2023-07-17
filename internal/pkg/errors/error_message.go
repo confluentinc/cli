@@ -380,6 +380,9 @@ const (
 	GetReleaseNotesVersionsErrorMsg = "unable to get available release notes versions"
 	UnexpectedS3ResponseErrorMsg    = "received unexpected response from S3: %s"
 
+	// plugin package
+	NoVersionFoundErrorMsg = "no version found in plugin manifest"
+
 	// catcher
 	CCloudBackendErrorPrefix           = "Confluent Cloud backend error"
 	UnexpectedBackendOutputPrefix      = "unexpected CCloud backend output"
