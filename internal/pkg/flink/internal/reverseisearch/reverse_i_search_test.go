@@ -24,7 +24,6 @@ func TestSearchString(t *testing.T) {
 
 func TestSearchCaseInsensitiveInputString(t *testing.T) {
 	rapid.Check(t, func(t *rapid.T) {
-
 		// create a random array string
 		slice := rapid.SliceOfN(rapid.StringN(1, -1, -1), 1, 500).Draw(t, "Slice of strings")
 		// randomly pick one of the string inside the array
