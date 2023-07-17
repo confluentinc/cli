@@ -86,8 +86,10 @@ func (d *accountDetails) getSchemaDetails() error {
 		return fmt.Errorf("protobuf is not supported")
 	}
 
-	// JSON or Avro Format
-	d.channelDetails.contentType = fmt.Sprintf("application/%s", strings.ToLower(schema.SchemaType))
+	if schema.SchemaType == "AVRO" || schema.SchemaType == "JSON" {
+		d.channelDetails.contentType = fmt.Sprintf("application/%s", strings.ToLower(schema.SchemaType))
+	}
+
 	if err := json.Unmarshal([]byte(schema.Schema), &d.channelDetails.unmarshalledSchema); err != nil {
 		d.channelDetails.unmarshalledSchema, err = handlePrimitiveSchemas(schema.Schema, err)
 		log.CliLogger.Warn(err)
