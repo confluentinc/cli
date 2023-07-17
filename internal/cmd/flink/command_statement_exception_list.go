@@ -15,6 +15,7 @@ func (c *command) newStatementExceptionListCommand() *cobra.Command {
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validStatementArgs),
 		RunE:              c.statementExceptionList,
 	}
+
 	pcmd.AddCloudFlag(cmd)
 	c.addRegionFlag(cmd)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)

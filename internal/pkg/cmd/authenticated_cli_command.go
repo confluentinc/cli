@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"net/url"
 	"strings"
 
@@ -15,6 +14,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/hub"
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
@@ -100,6 +100,10 @@ func (c *AuthenticatedCLICommand) getGatewayUrlForComputePool(computePoolId stri
 
 func (c *AuthenticatedCLICommand) getGatewayUrlForRegion(provider, region string) (string, error) {
 	regions, err := c.V2Client.ListFlinkRegions(provider)
+	if err != nil {
+		return "", err
+	}
+
 	var hostUrl string
 	for _, flinkRegion := range regions {
 		if flinkRegion.GetRegionName() == region {

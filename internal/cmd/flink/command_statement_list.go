@@ -13,6 +13,7 @@ func (c *command) newStatementListCommand() *cobra.Command {
 		Short: "List Flink SQL statements.",
 		RunE:  c.statementList,
 	}
+
 	pcmd.AddCloudFlag(cmd)
 	c.addRegionFlag(cmd)
 	c.addComputePoolFlag(cmd)
