@@ -2,11 +2,12 @@ package kafka
 
 import (
 	"fmt"
-	presource "github.com/confluentinc/cli/internal/pkg/name-conversions"
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	pconv "github.com/confluentinc/cli/internal/pkg/name-conversions"
 )
 
 const (
@@ -86,14 +87,14 @@ func (c *clusterCommand) validArgs(cmd *cobra.Command, args []string) []string {
 	return suggestions
 }
 
-func (c *clusterCommand) convertEnvNameToId(envName string) (string, error) {
-	if envId, err := c.V2Client.GetOrgEnvironment(envName); err == nil {
-		return envId.GetId(), err
-	}
-	environmentId, err := presource.ConvertEnvironmentNameToId(envName, c.V2Client)
+func (c *clusterCommand) clusterAndEnvNamesToIds(cluster string, env string) (string, string, error) {
+	env, err := pconv.ConvertEnvironmentNameToId(env, c.V2Client)
 	if err != nil {
-		return environmentId, err
+		return cluster, env, err
 	}
-	c.Context.SetCurrentEnvironment(environmentId)
-	return environmentId, err
+	cluster, err = pconv.ConvertClusterNameToId(cluster, env, c.V2Client)
+	if err != nil {
+		return cluster, env, err
+	}
+	return cluster, env, err
 }

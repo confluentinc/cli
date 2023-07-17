@@ -136,7 +136,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 		}
 
 		if err := c.validateGcpEncryptionKey(cloud, environmentId); err != nil {
-			environmentId, err = c.convertEnvNameToId(environmentId)
+			environmentId, err = pconv.ConvertEnvironmentNameToId(environmentId, c.V2Client)
 			if err != nil {
 				return err
 			}

@@ -275,6 +275,7 @@ func (s *CLITestSuite) TestIamProviderDelete() {
 func (s *CLITestSuite) TestIamProviderDescribe() {
 	tests := []CLITest{
 		{args: "iam provider describe op-12345", fixture: "iam/identity-provider/describe.golden"},
+		{args: "iam provider describe identity_provider", fixture: "iam/identity-provider/describe.golden"},
 	}
 
 	for _, test := range tests {
@@ -286,6 +287,7 @@ func (s *CLITestSuite) TestIamProviderDescribe() {
 func (s *CLITestSuite) TestIamProviderUpdate() {
 	tests := []CLITest{
 		{args: "iam provider update op-12345 --name new-name --description new-description", fixture: "iam/identity-provider/update.golden"},
+		{args: "iam provider update identity_provider --name new-name --description new-description", fixture: "iam/identity-provider/update.golden"},
 	}
 
 	for _, test := range tests {
@@ -308,6 +310,7 @@ func (s *CLITestSuite) TestIamProviderList() {
 func (s *CLITestSuite) TestIamPoolCreate() {
 	tests := []CLITest{
 		{args: `iam pool create testPool --provider op-12345 --description new-description --identity-claim sub --filter "claims.iss=https://company.provider.com"`, fixture: "iam/identity-pool/create.golden"},
+		{args: `iam pool create testPool --provider identity_provider --description new-description --identity-claim sub --filter "claims.iss=https://company.provider.com"`, fixture: "iam/identity-pool/create.golden"},
 	}
 
 	for _, test := range tests {
@@ -332,6 +335,7 @@ func (s *CLITestSuite) TestIamPoolDelete() {
 func (s *CLITestSuite) TestIamPoolDescribe() {
 	tests := []CLITest{
 		{args: "iam pool describe pool-12345 --provider op-12345", fixture: "iam/identity-pool/describe.golden"},
+		{args: "iam pool describe identity_pool --provider identity_provider", fixture: "iam/identity-pool/describe.golden"},
 	}
 
 	for _, test := range tests {
@@ -343,6 +347,7 @@ func (s *CLITestSuite) TestIamPoolDescribe() {
 func (s *CLITestSuite) TestIamPoolUpdate() {
 	tests := []CLITest{
 		{args: `iam pool update pool-12345 --provider op-12345 --name newer-name --description more-descriptive --identity-claim new-sub --filter "claims.iss=https://new-company.new-provider.com"`, fixture: "iam/identity-pool/update.golden"},
+		{args: `iam pool update identity_pool --provider identity_provider --name newer-name --description more-descriptive --identity-claim new-sub --filter "claims.iss=https://new-company.new-provider.com"`, fixture: "iam/identity-pool/update.golden"},
 	}
 
 	for _, test := range tests {

@@ -294,6 +294,10 @@ func handleIamRoleBindings(t *testing.T) http.HandlerFunc {
 func handleIamIdentityProvider(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := mux.Vars(r)["id"]
+		if id == "identity_provider" {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
 		if id != identityProviderResourceID && id != "op-67890" {
 			err := writeResourceNotFoundError(w)
 			require.NoError(t, err)
@@ -341,7 +345,14 @@ func handleIamIdentityProviders(t *testing.T) http.HandlerFunc {
 				Issuer:      identityproviderv2.PtrString("https://company.provider.com"),
 				JwksUri:     identityproviderv2.PtrString("https://company.provider.com/oauth2/v1/keys"),
 			}
-			err := json.NewEncoder(w).Encode(identityproviderv2.IamV2IdentityProviderList{Data: []identityproviderv2.IamV2IdentityProvider{identityProvider, identityProvider}})
+			identityProvider2 := identityproviderv2.IamV2IdentityProvider{
+				Id:          identityproviderv2.PtrString("op-67890"),
+				DisplayName: identityproviderv2.PtrString("identity_provider2"),
+				Description: identityproviderv2.PtrString("providing identities."),
+				Issuer:      identityproviderv2.PtrString("https://company.provider.com"),
+				JwksUri:     identityproviderv2.PtrString("https://company.provider.com/oauth2/v1/keys"),
+			}
+			err := json.NewEncoder(w).Encode(identityproviderv2.IamV2IdentityProviderList{Data: []identityproviderv2.IamV2IdentityProvider{identityProvider, identityProvider2}})
 			require.NoError(t, err)
 		case http.MethodPost:
 			var req identityproviderv2.IamV2IdentityProvider
@@ -374,6 +385,10 @@ func handleIamRoleBinding(t *testing.T) http.HandlerFunc {
 func handleIamIdentityPool(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := mux.Vars(r)["id"]
+		if id == "identity_pool" {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
 		if id != identityPoolResourceID && id != "pool-55555" {
 			err := writeResourceNotFoundError(w)
 			require.NoError(t, err)
@@ -421,7 +436,14 @@ func handleIamIdentityPools(t *testing.T) http.HandlerFunc {
 				IdentityClaim: identityproviderv2.PtrString("sub"),
 				Filter:        identityproviderv2.PtrString(`claims.iss="https://company.provider.com"`),
 			}
-			err := json.NewEncoder(w).Encode(identityproviderv2.IamV2IdentityPoolList{Data: []identityproviderv2.IamV2IdentityPool{identityPool, identityPool}})
+			identityPool2 := identityproviderv2.IamV2IdentityPool{
+				Id:            identityproviderv2.PtrString(identityPoolResourceID),
+				DisplayName:   identityproviderv2.PtrString("identity_pool2"),
+				Description:   identityproviderv2.PtrString("pooling identities."),
+				IdentityClaim: identityproviderv2.PtrString("sub"),
+				Filter:        identityproviderv2.PtrString(`claims.iss="https://company.provider.com"`),
+			}
+			err := json.NewEncoder(w).Encode(identityproviderv2.IamV2IdentityPoolList{Data: []identityproviderv2.IamV2IdentityPool{identityPool, identityPool2}})
 			require.NoError(t, err)
 		case http.MethodPost:
 			var req identityproviderv2.IamV2IdentityPool

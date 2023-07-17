@@ -277,7 +277,7 @@ func AddProtocolFlag(cmd *cobra.Command) {
 }
 
 func AddProviderFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
-	cmd.Flags().String("provider", "", "ID of this pool's identity provider.")
+	cmd.Flags().String("provider", "", "ID or Name of this pool's identity provider.")
 
 	RegisterFlagCompletionFunc(cmd, "provider", func(cmd *cobra.Command, args []string) []string {
 		if err := command.PersistentPreRunE(cmd, args); err != nil {

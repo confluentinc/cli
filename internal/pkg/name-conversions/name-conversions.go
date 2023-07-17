@@ -12,7 +12,7 @@ func ConvertClusterNameToId(input string, environmentId string, v2Client *ccloud
 	}
 	clusters, err := v2Client.ListKafkaClusters(environmentId)
 	if err != nil {
-		return "", err
+		return input, err
 	}
 	clusterPtrs := ConvertToPtrSlice(clusters)
 	specPtrs := make([]*cmkv2.CmkV2ClusterSpec, len(clusters))
@@ -21,18 +21,36 @@ func ConvertClusterNameToId(input string, environmentId string, v2Client *ccloud
 	}
 	return ConvertSpecNameToId(input, clusterPtrs, specPtrs)
 }
+
 func ConvertEnvironmentNameToId(input string, v2Client *ccloudv2.Client) (string, error) {
 	if env, err := v2Client.GetOrgEnvironment(input); err == nil {
 		return env.GetId(), err
 	}
 	envs, err := v2Client.ListOrgEnvironments()
 	if err != nil {
-		return "", err
+		return input, err
 	}
-	envPtrs := ConvertToPtrSlice(envs)
-	return ConvertV2NameToId(input, envPtrs)
+	return ConvertV2NameToId(input, ConvertToPtrSlice(envs))
 }
 
-//func ConvertIamPoolNameToId(input string, providerId string, v2client *ccloudv2.Client) (string, error) {
-//	pools, err := v2client.ListIdentityPools()
-//}
+func ConvertIamPoolNameToId(input string, providerId string, v2client *ccloudv2.Client) (string, error) {
+	if pool, err := v2client.GetIdentityPool(input, providerId); err == nil {
+		return pool.GetId(), err
+	}
+	pools, err := v2client.ListIdentityPools(providerId)
+	if err != nil {
+		return input, err
+	}
+	return ConvertV2NameToId(input, ConvertToPtrSlice(pools))
+}
+
+func ConvertIamProviderNameToId(input string, v2client *ccloudv2.Client) (string, error) {
+	if provider, err := v2client.GetIdentityProvider(input); err == nil {
+		return provider.GetId(), err
+	}
+	providers, err := v2client.ListIdentityProviders()
+	if err != nil {
+		return input, err
+	}
+	return ConvertV2NameToId(input, ConvertToPtrSlice(providers))
+}

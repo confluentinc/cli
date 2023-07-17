@@ -8,7 +8,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	pconv "github.com/confluentinc/cli/internal/pkg/name-conversions"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -39,11 +38,10 @@ func (c *clusterCommand) use(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		environmentId, err = pconv.ConvertEnvironmentNameToId(environmentId, c.V2Client)
+		clusterID, environmentId, err = c.clusterAndEnvNamesToIds(clusterID, environmentId)
 		if err != nil {
 			return err
 		}
-		clusterID, err = pconv.ConvertClusterNameToId(clusterID, environmentId, c.V2Client)
 		if _, err := c.Context.FindKafkaCluster(clusterID); err != nil {
 			return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.KafkaClusterNotFoundErrorMsg, clusterID), errors.ChooseRightEnvironmentSuggestions)
 		}

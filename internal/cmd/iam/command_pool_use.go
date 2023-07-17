@@ -33,12 +33,18 @@ func (c *identityPoolCommand) use(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	id := args[0]
-	if _, err := c.V2Client.GetIdentityPool(id, provider); err != nil {
-		return errors.NewErrorWithSuggestions(err.Error(), "List available identity pools with `confluent iam pool list`.")
+	poolId := args[0]
+	if _, err = c.V2Client.GetIdentityPool(poolId, provider); err != nil {
+		poolId, provider, err = c.poolAndProviderNamesToIds(poolId, provider)
+		if err != nil {
+			return err
+		}
+		if _, err = c.V2Client.GetIdentityPool(poolId, provider); err != nil {
+			return errors.NewErrorWithSuggestions(err.Error(), "List available identity pools with `confluent iam pool list`.")
+		}
 	}
 
-	if err := c.Context.SetCurrentIdentityPool(id); err != nil {
+	if err := c.Context.SetCurrentIdentityPool(poolId); err != nil {
 		return err
 	}
 	if err := c.Config.Save(); err != nil {
