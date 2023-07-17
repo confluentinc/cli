@@ -17,7 +17,7 @@ type BashPluginInstaller struct {
 	InstallDir    string
 }
 
-func (b *BashPluginInstaller) IsVersionNumber(word string) bool {
+func (b *BashPluginInstaller) IsVersion(word string) bool {
 	re := regexp.MustCompile(`^[1-9][0-9]*\.[0-9]+\.[0-9]+\([0-9]+\)-[a-z0-9]*$`)
 
 	return re.MatchString(word)
@@ -32,7 +32,7 @@ func (b *BashPluginInstaller) CheckVersion(ver *version.Version) error {
 	}
 
 	for _, word := range strings.Split(string(out), " ") {
-		if b.IsVersionNumber(word) {
+		if b.IsVersion(word) {
 			parenthesisIdx := strings.Index(word, "(")
 			installedVer, err := version.NewVersion(word[:parenthesisIdx])
 			if err != nil {

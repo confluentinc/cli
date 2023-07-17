@@ -17,7 +17,7 @@ const (
 )
 
 type PluginInstaller interface {
-	IsVersionNumber(word string) bool
+	IsVersion(word string) bool
 	CheckVersion(ver *version.Version) error
 	Install() error
 }

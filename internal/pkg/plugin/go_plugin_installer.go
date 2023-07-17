@@ -15,7 +15,7 @@ type GoPluginInstaller struct {
 	Name string
 }
 
-func (g *GoPluginInstaller) IsVersionNumber(word string) bool {
+func (g *GoPluginInstaller) IsVersion(word string) bool {
 	re := regexp.MustCompile(`^go[1-9][0-9]*\.[0-9]+(\.[1-9][0-9]*)?$`)
 
 	return re.MatchString(word)
@@ -30,7 +30,7 @@ func (g *GoPluginInstaller) CheckVersion(ver *version.Version) error {
 	}
 
 	for _, word := range strings.Split(string(out), " ") {
-		if g.IsVersionNumber(word) {
+		if g.IsVersion(word) {
 			installedVer, err := version.NewVersion(strings.TrimPrefix(word, "go"))
 			if err != nil {
 				return errors.Errorf(unableToParseVersionErrorMsg, "go")

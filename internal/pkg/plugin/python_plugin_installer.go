@@ -17,7 +17,7 @@ type PythonPluginInstaller struct {
 	InstallDir    string
 }
 
-func (p *PythonPluginInstaller) IsVersionNumber(word string) bool {
+func (p *PythonPluginInstaller) IsVersion(word string) bool {
 	re := regexp.MustCompile(`^[1-9][0-9]*\.[0-9]+\.(0|[1-9][0-9]*)$`)
 
 	return re.MatchString(word)
@@ -46,7 +46,7 @@ func (p *PythonPluginInstaller) CheckVersion(ver *version.Version) error {
 	}
 
 	for _, word := range strings.Split(string(out), " ") {
-		if p.IsVersionNumber(word) {
+		if p.IsVersion(word) {
 			installedVer, err := version.NewVersion(strings.TrimSpace(word))
 			if err != nil {
 				return errors.Errorf(unableToParseVersionErrorMsg, "python")
