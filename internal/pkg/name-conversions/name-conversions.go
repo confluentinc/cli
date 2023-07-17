@@ -2,6 +2,7 @@ package nameconversions
 
 import (
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
+	v1 "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 )
@@ -57,4 +58,21 @@ func ConvertIamProviderNameToId(input string, v2client *ccloudv2.Client) (string
 		return input, err
 	}
 	return ConvertV2NameToId(input, ConvertToPtrSlice(providers))
+}
+
+// ConvertQuotaNameToId attempts to convert from a valid quota name to its ID, if it fails it returns the input string
+func ConvertQuotaNameToId(input string, clusterId string, environmentId string, v2Client *ccloudv2.Client) (string, error) {
+	if quota, err := v2Client.DescribeKafkaQuota(input); err == nil {
+		return quota.GetId(), err
+	}
+	quotas, err := v2Client.ListKafkaQuotas(clusterId, environmentId)
+	if err != nil {
+		return input, err
+	}
+	quotaPtrs := ConvertToPtrSlice(quotas)
+	specPtrs := make([]*v1.KafkaQuotasV1ClientQuotaSpec, len(quotas))
+	for i := range quotas {
+		specPtrs[i] = quotaPtrs[i].Spec
+	}
+	return ConvertSpecNameToId(input, quotaPtrs, specPtrs)
 }
