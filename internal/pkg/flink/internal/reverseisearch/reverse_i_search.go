@@ -202,6 +202,9 @@ type searchResult struct {
 
 // search for substr in the s slice backwards starting from the startIndex if specified.
 func search(substr string, s []string, startIndex int) searchResult {
+	// We want our backward search to be case insensitive, since flink sql is case insensitive for keywords.
+	substr = strings.ToUpper(substr)
+
 	// strings.contains(.., "") always return true
 	if substr == "" {
 		return searchResult{-1, "", -1}
@@ -209,8 +212,9 @@ func search(substr string, s []string, startIndex int) searchResult {
 	// if start > size, just use size
 	upperBound := int(math.Min(float64(startIndex), float64(len(s)-1)))
 	for i := upperBound; i >= 0; i-- {
-		if strings.Contains(s[i], substr) {
-			return searchResult{i, s[i], strings.Index(s[i], substr)}
+		substrI := strings.ToUpper(s[i])
+		if strings.Contains(substrI, substr) {
+			return searchResult{i, s[i], strings.Index(substrI, substr)}
 		}
 	}
 	return searchResult{-1, "", -1}

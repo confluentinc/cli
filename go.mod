@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/antihax/optional v1.0.0
-	github.com/aws/aws-sdk-go v1.44.298
+	github.com/aws/aws-sdk-go v1.44.300
 	github.com/billgraziano/dpapi v0.4.0
 	github.com/bradleyjkemp/cupaloy v2.3.0+incompatible
 	github.com/brianstrauch/cobra-shell v0.4.0
@@ -17,7 +17,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/cli v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.8.0
 	github.com/confluentinc/ccloud-sdk-go-v2/connect v0.3.0
-	github.com/confluentinc/ccloud-sdk-go-v2/flink v0.1.0
+	github.com/confluentinc/ccloud-sdk-go-v2/flink v0.3.0
 	github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway v0.2.0
 	github.com/confluentinc/ccloud-sdk-go-v2/iam v0.10.0
 	github.com/confluentinc/ccloud-sdk-go-v2/identity-provider v0.2.0
@@ -60,7 +60,7 @@ require (
 	github.com/hashicorp/go-retryablehttp v0.7.4
 	github.com/hashicorp/go-version v1.6.0
 	github.com/havoc-io/gopass v0.0.0-20170602182606-9a121bec1ae7
-	github.com/iancoleman/strcase v0.2.0
+	github.com/iancoleman/strcase v0.3.0
 	github.com/imdario/mergo v0.3.16
 	github.com/inconshreveable/go-update v0.0.0-20160112193335-8152e7eb6ccf
 	github.com/jhump/protoreflect v1.15.1

@@ -177,12 +177,12 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		return errors.New(errors.RestProxyNotAvailableMsg)
 	}
 
-	clusterId, err := getKafkaClusterLkcId(c.AuthenticatedCLICommand)
+	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
 
-	if httpResp, err := kafkaREST.CloudClient.CreateKafkaLink(clusterId, linkName, !noValidate, dryRun, data); err != nil {
+	if httpResp, err := kafkaREST.CloudClient.CreateKafkaLink(cluster.ID, linkName, !noValidate, dryRun, data); err != nil {
 		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 

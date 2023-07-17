@@ -63,9 +63,7 @@ const (
 	ConnectLogEventsNotEnabledErrorMsg = "Connect Log Events are not enabled for this organization"
 
 	// environment & organization command
-	EnvNotFoundErrorMsg            = `environment "%s" not found`
 	OrgResourceNotFoundSuggestions = "List available %[1]ss with `confluent %[1]s list`."
-	EnvSwitchErrorMsg              = "failed to switch environment: failed to save config"
 	NoEnvironmentFoundErrorMsg     = "no environment found"
 	NoEnvironmentFoundSuggestions  = "This issue may occur if this user has no valid role bindings. Contact an Organization Admin to create a role binding for this user."
 
@@ -135,7 +133,6 @@ const (
 	FailedToReadClusterResizeConfirmationErrorMsg    = "cluster resize error: failed to read your confirmation"
 	AuthorizeAccountsErrorMsg                        = "BYOK error: please authorize the key for the accounts (%s)x"
 	AuthorizeIdentityErrorMsg                        = "BYOK error: please authorize the key for the identity (%s)"
-	CKUOnlyForDedicatedErrorMsg                      = "specifying `--cku` flag is valid only for dedicated Kafka cluster creation"
 	EncryptionKeySupportErrorMsg                     = "BYOK via `--encryption-key` is only available for GCP. Use `confluent byok create` to register AWS and Azure keys."
 	CKUMoreThanZeroErrorMsg                          = "`--cku` value must be greater than 0"
 	CKUMoreThanOneErrorMsg                           = "`--cku` value must be greater than 1 for High Durability"
@@ -213,15 +210,12 @@ const (
 	JavaRequirementErrorMsg   = "the Confluent CLI requires Java version 1.8 or 1.11.\n" +
 		"See https://docs.confluent.io/current/installation/versions-interoperability.html .\n" +
 		"If you have multiple versions of Java installed, you may need to set JAVA_HOME to the version you want Confluent to use."
-	NoLogFoundErrorMsg               = "no log found: to run %s, use `confluent local services %s start`"
-	MacVersionErrorMsg               = "macOS version >= %s is required (detected: %s)"
-	JavaExecNotFondErrorMsg          = "could not find java executable, please install java or set JAVA_HOME"
-	NothingToDestroyErrorMsg         = "nothing to destroy"
-	ComputePoolNotFoundErrorMsg      = `Flink compute pool "%s" not found or access forbidden.`
-	ComputePoolNotFoundSuggestions   = "List available Flink compute pools with `confluent flink compute-pool list`"
-	ConfluentLocalStartedErrorMsg    = "Confluent Local container has already been created"
-	ConfluentLocalStartedSuggestions = "Continue your experience with Confluent Local running `confluent local kafka produce` and `confluent local kafka consume`.\n" +
-		"To stop Confluent Local container, run `confluent local kafka stop` or `docker container rm confluent-local -f`."
+	NoLogFoundErrorMsg              = "no log found: to run %s, use `confluent local services %s start`"
+	MacVersionErrorMsg              = "macOS version >= %s is required (detected: %s)"
+	JavaExecNotFondErrorMsg         = "could not find java executable, please install java or set JAVA_HOME"
+	NothingToDestroyErrorMsg        = "nothing to destroy"
+	ComputePoolNotFoundErrorMsg     = `Flink compute pool "%s" not found or access forbidden.`
+	ComputePoolNotFoundSuggestions  = "List available Flink compute pools with `confluent flink compute-pool list`"
 	FailedToReadPortsErrorMsg       = "failed to read local ports from config"
 	FailedToReadPortsSuggestions    = "Restart Confluent Local with `confluent local kafka stop` and `confluent local kafka start`"
 	InstallAndStartDockerSuggestion = "Make sure Docker is installed following the guide: `https://docs.docker.com/engine/install/` and Docker daemon is running."
@@ -268,7 +262,6 @@ const (
 	NoCertsAppendedErrorMsg          = "no certs appended, using system certs only"
 	WriteToNetrcFileErrorMsg         = `unable to write to netrc file "%s"`
 	NetrcCredentialsNotFoundErrorMsg = `login credentials not found in netrc file "%s"`
-	CreateNetrcFileErrorMsg          = `unable to create netrc file "%s"`
 	FailedToObtainedUserSSOErrorMsg  = `unable to obtain SSO info for user "%s"`
 	NonSSOUserErrorMsg               = `tried to obtain SSO token for non SSO user "%s"`
 	NoCredentialsFoundErrorMsg       = "no credentials found"
@@ -283,8 +276,7 @@ const (
 	SRNotEnabledErrorMsg    = "Schema Registry not enabled"
 	SRNotEnabledSuggestions = "Schema Registry must be enabled for the environment in order to run the command.\n" +
 		"You can enable Schema Registry for this environment with `confluent schema-registry cluster enable`."
-	EnvironmentNotFoundErrorMsg = `environment "%s" not found in context "%s"`
-	MalformedJWTNoExprErrorMsg  = "malformed JWT claims: no expiration"
+	MalformedJWTNoExprErrorMsg = "malformed JWT claims: no expiration"
 
 	// config package
 	CorruptedConfigErrorPrefix = "corrupted CLI config"
@@ -326,8 +318,6 @@ const (
 	KafkaScriptInvalidFormatErrorMsg      = "invalid format: %s"
 
 	// secret package
-	EncryptPlainTextErrorMsg           = "failed to encrypt the plain text"
-	DecryptCypherErrorMsg              = "failed to decrypt the cipher"
 	DataCorruptedErrorMsg              = "failed to decrypt the cipher: data is corrupted"
 	ConfigNotInJAASErrorMsg            = `the configuration "%s" not present in JAAS configuration`
 	OperationNotSupportedErrorMsg      = `the operation "%s" is not supported`
@@ -384,21 +374,11 @@ const (
 	TouchLastCheckFileErrorMsg      = "unable to touch last check file"
 	GetTempDirErrorMsg              = "unable to get temp dir for %s"
 	DownloadVersionErrorMsg         = "unable to download %s version %s to %s"
-	MoveFileErrorMsg                = "unable to move %s to %s"
-	MoveRestoreErrorMsg             = "unable to move (restore) %s to %s"
-	CopyErrorMsg                    = "unable to copy %s to %s"
-	ChmodErrorMsg                   = "unable to chmod 0755 %s"
 	SepNonEmptyErrorMsg             = "sep must be a non-empty string"
 	NoVersionsErrorMsg              = "no versions found"
 	GetBinaryVersionsErrorMsg       = "unable to get available binary versions"
 	GetReleaseNotesVersionsErrorMsg = "unable to get available release notes versions"
 	UnexpectedS3ResponseErrorMsg    = "received unexpected response from S3: %s"
-	MissingRequiredParamErrorMsg    = "missing required parameter: %s"
-	ListingS3BucketErrorMsg         = "error listing s3 bucket"
-	FindingCredsErrorMsg            = "error while finding credentials"
-	EmptyAccessKeyIDErrorMsg        = "access key id is empty for %s"
-	AWSCredsExpiredErrorMsg         = "AWS credentials in profile %s are expired"
-	FindAWSCredsErrorMsg            = "failed to find AWS credentials in profiles: %s"
 
 	// plugin package
 	NoVersionFoundErrorMsg = "no version found in plugin manifest"
@@ -416,8 +396,6 @@ const (
 	KafkaNotFoundErrorMsg         = `Kafka cluster "%s" not found`
 	KafkaNotFoundSuggestions      = "To list Kafka clusters, use `confluent kafka cluster list`."
 	KSQLNotFoundSuggestions       = "To list KSQL clusters, use `confluent ksql cluster list`."
-	KafkaNotReadyErrorMsg         = `Kafka cluster "%s" not ready`
-	KafkaNotReadySuggestions      = "It may take up to 5 minutes for a recently created Kafka cluster to be ready."
 	NoKafkaSelectedErrorMsg       = "no Kafka cluster selected"
 	NoKafkaSelectedSuggestions    = "You must pass `--cluster` with the command or set an active Kafka cluster in your context with `confluent kafka cluster use`."
 	NoKafkaForDescribeSuggestions = "You must provide the cluster ID argument or set an active Kafka cluster in your context with `ccloud kafka cluster use`."
@@ -432,7 +410,6 @@ const (
 	EmptyResponseErrorMsg             = "empty server response"
 	KafkaRestErrorMsg                 = "Kafka REST request failed: %s %s: %s"
 	KafkaRestConnectionErrorMsg       = "unable to establish Kafka REST connection: %s: %s"
-	KafkaRestUnexpectedStatusErrorMsg = "Kafka REST request failed: %s: unexpected HTTP Status: %d"
 	KafkaRestCertErrorSuggestions     = "To specify a CA certificate, please use the `--ca-cert-path` flag or set `CONFLUENT_PLATFORM_CA_CERT_PATH`."
 	KafkaRestUrlNotFoundErrorMsg      = "Kafka REST URL not found"
 	KafkaRestUrlNotFoundSuggestions   = "Use the `--url` flag or set `CONFLUENT_REST_URL`."
@@ -493,7 +470,6 @@ const (
 	UnsupportedCustomAttributeErrorMsg = `attribute "%s" is not one of the supported FeatureFlags targeting values`
 
 	// General
-	DeleteResourceErrorMsg        = `failed to delete %s "%s": %v`
-	DeleteResourceConfirmErrorMsg = `input does not match "%s"`
-	UpdateResourceErrorMsg        = `failed to update %s "%s": %v`
+	DeleteResourceErrorMsg = `failed to delete %s "%s": %v`
+	UpdateResourceErrorMsg = `failed to update %s "%s": %v`
 )
