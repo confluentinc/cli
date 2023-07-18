@@ -11,10 +11,11 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/results"
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
+	types2 "github.com/confluentinc/cli/internal/pkg/types"
 )
 
 type TableViewInterface interface {
-	Init()
+	Init(redrawAfterAction func(f func()) *tview.Application)
 	GetFocusableElement() *tview.Table
 	GetRoot() tview.Primitive
 	GetSelectedRow() *types.StatementResultRow
@@ -24,15 +25,18 @@ type TableViewInterface interface {
 }
 
 type TableView struct {
-	rootLayout   tview.Primitive
-	table        *tview.Table
-	tableLock    sync.Mutex
-	tableWidth   int
-	columnWidths []int
-	infoBar      *TableInfoBar
+	rootLayout        tview.Primitive
+	table             *tview.Table
+	tableLock         sync.Mutex
+	tableWidth        int
+	columnWidths      []int
+	infoBar           *TableInfoBar
+	previousRows      types2.Set[string]
+	redrawAfterAction func(f func()) *tview.Application
 }
 
 const (
+	animationDurationMs         = 750
 	numPaddingRows              = 1
 	minColumnWidth          int = 4 // min characters displayed in a column
 	ExitTableViewShortcut       = "Q"
@@ -46,7 +50,10 @@ func NewTableView() TableViewInterface {
 	return &TableView{}
 }
 
-func (t *TableView) Init() {
+func (t *TableView) Init(redrawAfterAction func(f func()) *tview.Application) {
+	t.redrawAfterAction = redrawAfterAction
+	t.previousRows = make(types2.Set[string])
+
 	t.infoBar = NewTableInfoBar()
 
 	t.table = tview.NewTable().SetFixed(1, 1)
@@ -187,7 +194,16 @@ func (t *TableView) addHeaderRow(statementResults *types.MaterializedStatementRe
 }
 
 func (t *TableView) addContentRows(statementResults *types.MaterializedStatementResults, truncatedColumnWidths []int) {
+	isNotFirstRender := len(t.previousRows) > 0
+	areRowsSelectable, _ := t.table.GetSelectable()
+	var cellsToHighlight []*tview.TableCell
+
 	statementResults.ForEach(func(rowIdx int, row *types.StatementResultRow) {
+		currentRowKey := row.GetRowKey()
+
+		shouldHighlightRow := isNotFirstRender && !areRowsSelectable && !t.previousRows.Contains(currentRowKey)
+		t.previousRows.Add(currentRowKey)
+
 		for colIdx, field := range row.Fields {
 			tableCell := tview.NewTableCell(tview.Escape(field.ToString())).
 				SetTextColor(tcell.ColorWhite).
@@ -195,6 +211,35 @@ func (t *TableView) addContentRows(statementResults *types.MaterializedStatement
 				SetMaxWidth(truncatedColumnWidths[colIdx]).
 				SetReference(row)
 			t.table.SetCell(rowIdx+1, colIdx, tableCell)
+
+			if shouldHighlightRow {
+				cellsToHighlight = append(cellsToHighlight, tableCell)
+			}
+		}
+	})
+
+	t.highlightNewRows(cellsToHighlight, animationDurationMs*time.Millisecond)
+}
+
+func (t *TableView) highlightNewRows(cellsToHighlight []*tview.TableCell, duration time.Duration) {
+	for _, tableCell := range cellsToHighlight {
+		tableCell.SetTextColor(tcell.ColorWhiteSmoke)
+		tableCell.SetAttributes(tcell.AttrBold)
+	}
+
+	go t.removeHighlight(cellsToHighlight, duration)
+}
+
+func (t *TableView) removeHighlight(cellsToHighlight []*tview.TableCell, duration time.Duration) {
+	if len(cellsToHighlight) == 0 {
+		return
+	}
+
+	t.redrawAfterAction(func() {
+		time.Sleep(duration)
+		for _, tableCell := range cellsToHighlight {
+			tableCell.SetTextColor(tcell.ColorWhite)
+			tableCell.SetAttributes(tcell.AttrNone)
 		}
 	})
 }
