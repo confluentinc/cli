@@ -38,10 +38,10 @@ func (c *roleCommand) list(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *roleCommand) ccloudList(cmd *cobra.Command) error {
-	// add public, dataplane, datagovernance, ksql, and streamcatalog roles
+	// add roles from all publicly released namespaces
 	namespaces := []string{
 		dataplaneNamespace.Value(),
-		dataGovernanceNamespace.Value(),
+		identityNamespace.Value(),
 		ksqlNamespace.Value(),
 		publicNamespace.Value(),
 		streamCatalogNamespace.Value(),
@@ -52,16 +52,7 @@ func (c *roleCommand) ccloudList(cmd *cobra.Command) error {
 		return err
 	}
 
-	// check if IdentityAdmin is enabled
 	ldClient := v1.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
-	if featureflags.Manager.BoolVariation("auth.rbac.identity_admin.enable", c.Context, ldClient, true, false) {
-		identityRoles, err := c.namespaceRoles(identityNamespace)
-		if err != nil {
-			return err
-		}
-		roles = append(roles, identityRoles...)
-	}
-
 	if featureflags.Manager.BoolVariation("flink.rbac.namespace.cli.enable", c.Context, ldClient, true, false) {
 		flinkRoles, err := c.namespaceRoles(flinkNamespace)
 		if err != nil {
