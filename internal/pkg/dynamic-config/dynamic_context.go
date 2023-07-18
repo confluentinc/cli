@@ -12,6 +12,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	presource "github.com/confluentinc/cli/internal/pkg/resource"
 )
 
@@ -33,20 +34,22 @@ func NewDynamicContext(context *v1.Context, v2Client *ccloudv2.Client) *DynamicC
 func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command) error {
 	if environment, _ := cmd.Flags().GetString("environment"); environment != "" {
 		if d.GetCredentialType() == v1.APIKey {
-			return errors.New("`--environment` flag should not be passed for API key context")
+			output.ErrPrintln("WARNING: The `--environment` flag is ignored when using API key credentials.")
+		} else {
+			ctx := d.Config.Context()
+			d.Config.SetOverwrittenCurrentEnvironment(ctx.CurrentEnvironment)
+			ctx.SetCurrentEnvironment(environment)
 		}
-		ctx := d.Config.Context()
-		d.Config.SetOverwrittenCurrentEnvironment(ctx.CurrentEnvironment)
-		ctx.SetCurrentEnvironment(environment)
 	}
 
 	if cluster, _ := cmd.Flags().GetString("cluster"); cluster != "" {
 		if d.GetCredentialType() == v1.APIKey {
-			return errors.New("`--cluster` flag should not be passed for API key context, cluster is inferred")
+			output.ErrPrintln("WARNING: The `--cluster` flag is ignored when using API key credentials.")
+		} else {
+			ctx := d.Config.Context()
+			d.Config.SetOverwrittenCurrentKafkaCluster(ctx.KafkaClusterContext.GetActiveKafkaClusterId())
+			ctx.KafkaClusterContext.SetActiveKafkaCluster(cluster)
 		}
-		ctx := d.Config.Context()
-		d.Config.SetOverwrittenCurrentKafkaCluster(ctx.KafkaClusterContext.GetActiveKafkaClusterId())
-		ctx.KafkaClusterContext.SetActiveKafkaCluster(cluster)
 	}
 
 	if computePool, _ := cmd.Flags().GetString("compute-pool"); computePool != "" {
