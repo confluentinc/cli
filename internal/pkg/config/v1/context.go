@@ -85,7 +85,7 @@ func (c *Context) HasBasicMDSLogin() bool {
 		return false
 	}
 
-	credType := c.Credential.CredentialType
+	credType := c.GetCredentialType()
 	switch credType {
 	case Username:
 		return c.GetAuthToken() != ""
@@ -101,7 +101,7 @@ func (c *Context) hasBasicCloudLogin() bool {
 		return false
 	}
 
-	credType := c.Credential.CredentialType
+	credType := c.GetCredentialType()
 	switch credType {
 	case Username:
 		return c.GetAuthToken() != "" && c.GetCurrentEnvironment() != ""
@@ -142,6 +142,13 @@ func (c *Context) IsCloud(isTest bool) bool {
 		}
 	}
 	return false
+}
+
+func (c *Context) GetCredentialType() CredentialType {
+	if c != nil && c.Credential != nil {
+		return c.Credential.CredentialType
+	}
+	return None
 }
 
 func (c *Context) GetPlatform() *Platform {

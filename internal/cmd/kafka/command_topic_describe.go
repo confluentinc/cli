@@ -13,7 +13,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (c *authenticatedTopicCommand) newDescribeCommand() *cobra.Command {
+func (c *command) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "describe <topic>",
 		Short:             "Describe a Kafka topic.",
@@ -36,7 +36,7 @@ func (c *authenticatedTopicCommand) newDescribeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *authenticatedTopicCommand) describe(cmd *cobra.Command, args []string) error {
+func (c *command) describe(cmd *cobra.Command, args []string) error {
 	topicName := args[0]
 
 	kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand()

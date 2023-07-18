@@ -17,38 +17,28 @@ import (
 
 const numPartitionsKey = "num.partitions"
 
-type hasAPIKeyTopicCommand struct {
-	*pcmd.HasAPIKeyCLICommand
-	prerunner pcmd.PreRunner
-	clientID  string
-}
-
-type authenticatedTopicCommand struct {
+type command struct {
 	*pcmd.AuthenticatedCLICommand
-	prerunner pcmd.PreRunner
-	clientID  string
+	clientID string
 }
 
-func newTopicCommand(cfg *v1.Config, prerunner pcmd.PreRunner, clientID string) *cobra.Command {
+func newTopicCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "topic",
 		Short: "Manage Kafka topics.",
 	}
 
-	c := &authenticatedTopicCommand{
-		prerunner: prerunner,
-		clientID:  clientID,
-	}
+	c := &command{clientID: cfg.Version.ClientID}
 
 	if cfg.IsCloudLogin() {
 		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedCLICommand(cmd, prerunner)
 
-		cmd.AddCommand(newConsumeCommand(prerunner, clientID))
+		cmd.AddCommand(c.newConsumeCommand())
 		cmd.AddCommand(c.newCreateCommand())
 		cmd.AddCommand(c.newDeleteCommand())
 		cmd.AddCommand(c.newDescribeCommand())
 		cmd.AddCommand(c.newListCommand())
-		cmd.AddCommand(newProduceCommand(prerunner, clientID))
+		cmd.AddCommand(c.newProduceCommand())
 		cmd.AddCommand(c.newUpdateCommand())
 	} else {
 		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)
@@ -66,7 +56,7 @@ func newTopicCommand(cfg *v1.Config, prerunner pcmd.PreRunner, clientID string) 
 	return cmd
 }
 
-func (c *authenticatedTopicCommand) validArgs(cmd *cobra.Command, args []string) []string {
+func (c *command) validArgs(cmd *cobra.Command, args []string) []string {
 	if len(args) > 0 {
 		return nil
 	}
@@ -78,7 +68,7 @@ func (c *authenticatedTopicCommand) validArgs(cmd *cobra.Command, args []string)
 	return c.autocompleteTopics()
 }
 
-func (c *authenticatedTopicCommand) autocompleteTopics() []string {
+func (c *command) autocompleteTopics() []string {
 	topics, err := c.getTopics()
 	if err != nil {
 		return nil
@@ -96,7 +86,7 @@ func (c *authenticatedTopicCommand) autocompleteTopics() []string {
 }
 
 // validate that a topic exists before attempting to produce/consume messages
-func (c *hasAPIKeyTopicCommand) validateTopic(client *ckafka.AdminClient, topic string, cluster *v1.KafkaClusterConfig) error {
+func (c *command) validateTopic(client *ckafka.AdminClient, topic string, cluster *v1.KafkaClusterConfig) error {
 	timeout := 10 * time.Second
 	metadata, err := client.GetMetadata(nil, true, int(timeout.Milliseconds()))
 	if err != nil {
@@ -122,7 +112,7 @@ func (c *hasAPIKeyTopicCommand) validateTopic(client *ckafka.AdminClient, topic 
 	return nil
 }
 
-func (c *authenticatedTopicCommand) provisioningClusterCheck(lkc string) error {
+func (c *command) provisioningClusterCheck(lkc string) error {
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
@@ -134,5 +124,29 @@ func (c *authenticatedTopicCommand) provisioningClusterCheck(lkc string) error {
 	if cluster.Status.Phase == ccloudv2.StatusProvisioning {
 		return errors.Errorf(errors.KafkaRestProvisioningErrorMsg, lkc)
 	}
+	return nil
+}
+
+func addApiKeyToCluster(cmd *cobra.Command, cluster *v1.KafkaClusterConfig) error {
+	apiKey, err := cmd.Flags().GetString("api-key")
+	if err != nil {
+		return err
+	}
+
+	apiSecret, err := cmd.Flags().GetString("api-secret")
+	if err != nil {
+		return err
+	}
+
+	if apiKey != "" || apiSecret != "" {
+		cluster.APIKey = apiKey
+		cluster.APIKeys[cluster.APIKey] = &v1.APIKeyPair{
+			Key:    apiKey,
+			Secret: apiSecret,
+		}
+	} else if cluster.APIKey == "" {
+		return &errors.UnspecifiedAPIKeyError{ClusterID: cluster.ID}
+	}
+
 	return nil
 }
