@@ -48,10 +48,10 @@ func (c *roleCommand) ccloudDescribe(cmd *cobra.Command, role string) error {
 	namespacesList := []string{
 		dataplaneNamespace.Value(),
 		dataGovernanceNamespace.Value(),
+		identityNamespace.Value(),
 		ksqlNamespace.Value(),
 		publicNamespace.Value(),
 		streamCatalogNamespace.Value(),
-		identityNamespace.Value(),
 	}
 
 	ldClient := v1.GetCcloudLaunchDarklyClient(c.Context.PlatformName)

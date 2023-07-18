@@ -41,11 +41,10 @@ func (c *roleCommand) ccloudList(cmd *cobra.Command) error {
 	// add roles from all publicly released namespaces
 	namespaces := []string{
 		dataplaneNamespace.Value(),
-		dataGovernanceNamespace.Value(),
+		identityNamespace.Value(),
 		ksqlNamespace.Value(),
 		publicNamespace.Value(),
 		streamCatalogNamespace.Value(),
-		identityNamespace.Value(),
 	}
 	opt := optional.NewString(strings.Join(namespaces, ","))
 	roles, err := c.namespaceRoles(opt)
