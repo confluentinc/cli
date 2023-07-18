@@ -13,19 +13,22 @@ import (
 
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func newConsumeCommand(prerunner pcmd.PreRunner, clientId string) *cobra.Command {
+func (c *command) newConsumeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "consume <topic>",
-		Short:       "Consume messages from a Kafka topic.",
-		Long:        "Consume messages from a Kafka topic.\n\nTruncated message headers will be printed if they exist.",
-		Args:        cobra.ExactArgs(1),
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
+		Use:               "consume <topic>",
+		Short:             "Consume messages from a Kafka topic.",
+		Long:              "Consume messages from a Kafka topic.\n\nTruncated message headers will be printed if they exist.",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		RunE:              c.consume,
+		Annotations:       map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Consume items from the "my_topic" topic and press "Ctrl-C" to exit.`,
@@ -33,13 +36,6 @@ func newConsumeCommand(prerunner pcmd.PreRunner, clientId string) *cobra.Command
 			},
 		),
 	}
-
-	c := &hasAPIKeyTopicCommand{
-		HasAPIKeyCLICommand: pcmd.NewHasAPIKeyCLICommand(cmd, prerunner),
-		prerunner:           prerunner,
-		clientID:            clientId,
-	}
-	cmd.RunE = c.consume
 
 	cmd.Flags().String("group", "confluent_cli_consumer_<randomly-generated-id>", "Consumer group ID.")
 	cmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of the topic.")
@@ -56,11 +52,11 @@ func newConsumeCommand(prerunner pcmd.PreRunner, clientId string) *cobra.Command
 	cmd.Flags().String("schema-registry-endpoint", "", "Endpoint for Schema Registry cluster.")
 	cmd.Flags().String("schema-registry-api-key", "", "Schema registry API key.")
 	cmd.Flags().String("schema-registry-api-secret", "", "Schema registry API key secret.")
-	cmd.Flags().String("api-key", "", "API key.")
-	cmd.Flags().String("api-secret", "", "API key secret.")
-	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddApiSecretFlag(cmd)
+	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
-	cmd.Flags().String("environment", "", "Environment ID.")
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 
 	cobra.CheckErr(cmd.MarkFlagFilename("config-file", "avsc", "json"))
 
@@ -70,17 +66,33 @@ func newConsumeCommand(prerunner pcmd.PreRunner, clientId string) *cobra.Command
 	return cmd
 }
 
-func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error {
+func (c *command) consume(cmd *cobra.Command, args []string) error {
 	topic := args[0]
-
-	valueFormat, err := cmd.Flags().GetString("value-format")
-	if err != nil {
-		return err
-	}
 
 	cluster, err := c.Config.Context().GetKafkaClusterForCommand()
 	if err != nil {
 		return err
+	}
+	if cluster.APIKey == "" {
+		apiKey, err := cmd.Flags().GetString("api-key")
+		if err != nil {
+			return err
+		}
+
+		apiSecret, err := cmd.Flags().GetString("api-secret")
+		if err != nil {
+			return err
+		}
+
+		if apiKey != "" && apiSecret != "" {
+			cluster.APIKey = apiKey
+			cluster.APIKeys[cluster.APIKey] = &v1.APIKeyPair{
+				Key:    apiKey,
+				Secret: apiSecret,
+			}
+		} else {
+			return &errors.UnspecifiedAPIKeyError{ClusterID: cluster.ID}
+		}
 	}
 
 	group, err := cmd.Flags().GetString("group")
@@ -157,6 +169,11 @@ func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 
 	output.ErrPrintln(errors.StartingConsumerMsg)
 
+	valueFormat, err := cmd.Flags().GetString("value-format")
+	if err != nil {
+		return err
+	}
+
 	var srClient *srsdk.APIClient
 	var ctx context.Context
 	if valueFormat != "string" {
@@ -200,7 +217,7 @@ func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		SrClient: srClient,
 		Ctx:      ctx,
 		Format:   valueFormat,
-		Out:      cmd.OutOrStdout(), // TODO
+		Out:      cmd.OutOrStdout(),
 		Subject:  subject,
 		Properties: ConsumerProperties{
 			PrintKey:   printKey,

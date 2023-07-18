@@ -114,8 +114,7 @@ const (
 	IdentityPoolNoOpUpdateErrorMsg = "one of `--description`, `--filter`, `--identity-claim`, or `--name` must be set"
 
 	// init command
-	CannotBeEmptyErrorMsg         = "%s cannot be empty"
-	UnknownCredentialTypeErrorMsg = "credential type %d unknown"
+	CannotBeEmptyErrorMsg = "%s cannot be empty"
 
 	// kafka client-config package
 	FetchConfigFileErrorMsg               = "failed to get config file: error code %d"
