@@ -14,7 +14,7 @@ import (
 
 func (c *quotaCommand) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "update <id>",
+		Use:               "update <id|name>",
 		Short:             "Update a Kafka client quota.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),

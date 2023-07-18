@@ -11,7 +11,7 @@ import (
 
 func (c *identityPoolCommand) newUseCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "use <id>",
+		Use:               "use <id|name>",
 		Short:             "Choose an identity pool to be used in subsequent commands.",
 		Long:              "Choose an identity pool to be used in subsequent commands which support passing an identity pool with the `--identity-pool` flag.",
 		Args:              cobra.ExactArgs(1),

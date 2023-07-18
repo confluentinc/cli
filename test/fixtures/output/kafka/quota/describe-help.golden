@@ -1,7 +1,7 @@
 Describe a Kafka client quota.
 
 Usage:
-  confluent kafka quota describe <id> [flags]
+  confluent kafka quota describe <id|name> [flags]
 
 Flags:
       --cluster string       Kafka cluster ID or name.

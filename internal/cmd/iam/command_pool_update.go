@@ -13,7 +13,7 @@ import (
 
 func (c *identityPoolCommand) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "update <id>",
+		Use:               "update <id|name>",
 		Short:             "Update an identity pool.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),

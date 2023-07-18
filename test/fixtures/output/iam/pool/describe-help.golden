@@ -1,7 +1,7 @@
 Describe an identity pool.
 
 Usage:
-  confluent iam pool describe <id> [flags]
+  confluent iam pool describe <id|name> [flags]
 
 Flags:
       --provider string   REQUIRED: ID or Name of this pool's identity provider.

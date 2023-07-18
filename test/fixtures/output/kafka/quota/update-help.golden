@@ -1,7 +1,7 @@
 Update a Kafka client quota.
 
 Usage:
-  confluent kafka quota update <id> [flags]
+  confluent kafka quota update <id|name> [flags]
 
 Examples:
 Add "sa-12345" to an existing quota and remove "sa-67890".

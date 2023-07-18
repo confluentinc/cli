@@ -1,7 +1,7 @@
 Update an identity pool.
 
 Usage:
-  confluent iam pool update <id> [flags]
+  confluent iam pool update <id|name> [flags]
 
 Examples:
 Update the description of identity pool "pool-123456":
