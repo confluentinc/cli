@@ -181,6 +181,8 @@ func (s *CLITestSuite) TestKafkaUsingName() {
 		{args: "kafka cluster update def --name new_name", fixture: "kafka/cluster-update-name.golden"},
 		{args: "kafka cluster use abc", fixture: "kafka/cluster-use-name.golden"},
 		{args: "kafka topic create topic1 --cluster abc", fixture: "kafka/topic/create-success.golden"},
+		{args: "kafka acl create --cluster lkc-acls --allow --service-account service_account --operations read,describe --topic test-topic", fixture: "kafka/acl/create-service-account.golden"},
+		{args: "kafka acl list --cluster lkc-acls --service-account service_account", fixture: "kafka/acl/list-cloud.golden"},
 	}
 
 	resetConfiguration(s.T(), false)

@@ -35,12 +35,14 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	}
 
 	environment := orgv2.OrgV2Environment{DisplayName: orgv2.PtrString(name)}
-	oldEnv, err := nameconversions.ConvertEnvironmentNameToId(args[0], c.V2Client)
-	if err != nil {
-		return err
-	}
-	if environment, err = c.V2Client.UpdateOrgEnvironment(oldEnv, environment); err != nil {
-		return err
+	if environment, err = c.V2Client.UpdateOrgEnvironment(args[0], environment); err != nil {
+		environmentId, err := nameconversions.ConvertEnvironmentNameToId(args[0], c.V2Client, false)
+		if err != nil {
+			return err
+		}
+		if environment, err = c.V2Client.UpdateOrgEnvironment(environmentId, environment); err != nil {
+			return err
+		}
 	}
 
 	table := output.NewTable(cmd)

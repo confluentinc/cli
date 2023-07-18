@@ -39,7 +39,7 @@ func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, client *cclou
 		}
 		if !isTest {
 			var err error
-			environment, err = nameconversions.ConvertEnvironmentNameToId(environment, d.V2Client)
+			environment, err = nameconversions.ConvertEnvironmentNameToId(environment, d.V2Client, true)
 			if err != nil {
 				return err
 			}
@@ -55,7 +55,7 @@ func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, client *cclou
 		}
 		if !isTest {
 			var err error
-			cluster, err = nameconversions.ConvertClusterNameToId(cluster, d.GetCurrentEnvironment(), d.V2Client)
+			cluster, err = nameconversions.ConvertClusterNameToId(cluster, d.GetCurrentEnvironment(), d.V2Client, true)
 			if err != nil {
 				return err
 			}

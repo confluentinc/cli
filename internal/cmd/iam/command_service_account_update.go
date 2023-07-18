@@ -1,6 +1,8 @@
 package iam
 
 import (
+	"net/http"
+
 	"github.com/spf13/cobra"
 
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
@@ -8,8 +10,8 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	nameconversions "github.com/confluentinc/cli/internal/pkg/name-conversions"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *serviceAccountCommand) newUpdateCommand() *cobra.Command {
@@ -44,14 +46,17 @@ func (c *serviceAccountCommand) update(cmd *cobra.Command, args []string) error 
 		return err
 	}
 
-	if resource.LookupType(args[0]) != resource.ServiceAccount {
-		return errors.New(errors.BadServiceAccountIDErrorMsg)
-	}
 	serviceAccountId := args[0]
 
 	update := iamv2.IamV2ServiceAccountUpdate{Description: &description}
-	if _, httpResp, err := c.V2Client.UpdateIamServiceAccount(serviceAccountId, update); err != nil {
-		return errors.CatchServiceAccountNotFoundError(err, httpResp, serviceAccountId)
+	if _, _, err := c.V2Client.UpdateIamServiceAccount(serviceAccountId, update); err != nil {
+		if serviceAccountId, err = nameconversions.ConvertIamServiceAccountNameToId(serviceAccountId, c.V2Client, false); err != nil {
+			return err
+		}
+		var httpResp *http.Response
+		if _, httpResp, err = c.V2Client.UpdateIamServiceAccount(serviceAccountId, update); err != nil {
+			return errors.CatchServiceAccountNotFoundError(err, httpResp, serviceAccountId)
+		}
 	}
 
 	output.ErrPrintf(errors.UpdateSuccessMsg, "description", "service account", serviceAccountId, description)

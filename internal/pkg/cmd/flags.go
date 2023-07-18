@@ -353,7 +353,7 @@ func AddSchemaTypeFlag(cmd *cobra.Command) {
 }
 
 func AddServiceAccountFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
-	cmd.Flags().String("service-account", "", "Service account ID.")
+	cmd.Flags().String("service-account", "", "Service account ID or name.")
 
 	RegisterFlagCompletionFunc(cmd, "service-account", func(cmd *cobra.Command, args []string) []string {
 		if err := command.PersistentPreRunE(cmd, args); err != nil {

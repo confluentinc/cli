@@ -15,6 +15,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/featureflags"
+	nameconversions "github.com/confluentinc/cli/internal/pkg/name-conversions"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 )
@@ -63,6 +64,9 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	serviceAccount, err := cmd.Flags().GetString("service-account")
 	if err != nil {
 		return err
+	}
+	if serviceAccount, err = nameconversions.ConvertIamServiceAccountNameToId(serviceAccount, c.V2Client, true); err != nil {
+		return nil
 	}
 
 	serviceAccounts, err := c.V2Client.ListIamServiceAccounts()

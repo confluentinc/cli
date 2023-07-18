@@ -49,10 +49,16 @@ var (
 )
 
 const (
+	defaultEnvId = "a-595"
+	otherEnvId   = "not-595"
+
 	serviceAccountID           = int32(12345)
 	serviceAccountResourceID   = "sa-12345"
+	serviceAccountName         = "service_account"
 	identityProviderResourceID = "op-12345"
+	identityProviderName       = "identity_provider"
 	identityPoolResourceID     = "pool-12345"
+	identityPoolName           = "identity_pool"
 	deactivatedUserID          = int32(6666)
 	deactivatedResourceID      = "sa-6666"
 

@@ -25,7 +25,7 @@ func (c identityProviderCommand) newDescribeCommand() *cobra.Command {
 func (c identityProviderCommand) describe(cmd *cobra.Command, args []string) error {
 	identityProvider, err := c.V2Client.GetIdentityProvider(args[0])
 	if err != nil {
-		providerId, err := nameconversions.ConvertIamProviderNameToId(args[0], c.V2Client)
+		providerId, err := nameconversions.ConvertIamProviderNameToId(args[0], c.V2Client, false)
 		if err != nil {
 			return err
 		}

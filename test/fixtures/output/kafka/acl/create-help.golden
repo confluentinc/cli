@@ -13,7 +13,6 @@ You can specify only one of the following flags per command invocation: `--clust
 Flags:
       --operations strings        REQUIRED: A comma-separated list of ACL operations: (alter, alter-configs, cluster-action, create, delete, describe, describe-configs, idempotent-write, read, write).
       --principal string          Principal for this operation, prefixed with "User:".
-      --service-account string    The service account ID.
       --allow                     Access to the resource is allowed.
       --deny                      Access to the resource is denied.
       --cluster-scope             Modify ACLs for the cluster.
@@ -25,6 +24,7 @@ Flags:
       --context string            CLI context name.
       --environment string        Environment ID or name.
   -o, --output string             Specify the output format as "human", "json", or "yaml". (default "human")
+      --service-account string    Service account ID or name.
 
 Global Flags:
   -h, --help            Show help for this command.

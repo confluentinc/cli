@@ -56,7 +56,7 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 	clusterId := args[0]
 	currentCluster, _, err := c.V2Client.DescribeKafkaCluster(clusterId, environmentId)
 	if err != nil {
-		if clusterId, err = nameconversions.ConvertClusterNameToId(clusterId, environmentId, c.V2Client); err != nil {
+		if clusterId, err = nameconversions.ConvertClusterNameToId(clusterId, environmentId, c.V2Client, false); err != nil {
 			return err
 		}
 		if currentCluster, _, err = c.V2Client.DescribeKafkaCluster(clusterId, environmentId); err != nil {

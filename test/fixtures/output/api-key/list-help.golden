@@ -12,7 +12,7 @@ Flags:
       --resource string          The ID of the resource the API key is for. Use "cloud" for a Cloud API key.
       --current-user             Show only API keys belonging to current user.
       --environment string       Environment ID or name.
-      --service-account string   Service account ID.
+      --service-account string   Service account ID or name.
   -o, --output string            Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:

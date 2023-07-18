@@ -169,6 +169,18 @@ func (s *CLITestSuite) TestApiKeyDescribe() {
 	}
 }
 
+func (s *CLITestSuite) TestApiKey_UsingServiceAccountName() {
+	tests := []CLITest{
+		{args: "api-key create --resource lkc-cool1 --service-account service_account", fixture: "api-key/create-service-account-name.golden"},
+		{args: "api-key list --service-account service_account", fixture: "api-key/list-service-account-name.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestApiKeyCreate_ServiceAccountNotValid() {
 	test := CLITest{args: "api-key create --resource lkc-ab123 --service-account sa-123456", login: "cloud", fixture: "api-key/55.golden", exitCode: 1}
 	s.runIntegrationTest(test)

@@ -32,6 +32,10 @@ func (c *aclCommand) newListCommand() *cobra.Command {
 }
 
 func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
+	if err := c.validateServiceAccountFlag(cmd); err != nil {
+		return err
+	}
+
 	acl, err := parse(cmd)
 	if err != nil {
 		return err

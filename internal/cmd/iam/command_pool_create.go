@@ -69,7 +69,7 @@ func (c *identityPoolCommand) create(cmd *cobra.Command, args []string) error {
 	}
 	resp, err := c.V2Client.CreateIdentityPool(createIdentityPool, provider)
 	if err != nil {
-		if provider, err = nameconversions.ConvertIamProviderNameToId(provider, c.V2Client); err != nil {
+		if provider, err = nameconversions.ConvertIamProviderNameToId(provider, c.V2Client, true); err != nil {
 			return err
 		}
 		if resp, err = c.V2Client.CreateIdentityPool(createIdentityPool, provider); err != nil {

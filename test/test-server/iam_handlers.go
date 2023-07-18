@@ -208,6 +208,10 @@ func handleIamUsers(t *testing.T) http.HandlerFunc {
 func handleIamServiceAccount(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := mux.Vars(r)["id"]
+		if id == serviceAccountName {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
 		if id != serviceAccountResourceID && id != "sa-54321" {
 			err := writeResourceNotFoundError(w)
 			require.NoError(t, err)
@@ -217,7 +221,7 @@ func handleIamServiceAccount(t *testing.T) http.HandlerFunc {
 		case http.MethodGet:
 			serviceAccount := iamv2.IamV2ServiceAccount{
 				Id:          iamv2.PtrString(id),
-				DisplayName: iamv2.PtrString("service_account"),
+				DisplayName: iamv2.PtrString(serviceAccountName),
 				Description: iamv2.PtrString("at your service."),
 			}
 			err := json.NewEncoder(w).Encode(serviceAccount)
@@ -242,7 +246,7 @@ func handleIamServiceAccounts(t *testing.T) http.HandlerFunc {
 		case http.MethodGet:
 			serviceAccount := iamv2.IamV2ServiceAccount{
 				Id:          iamv2.PtrString(serviceAccountResourceID),
-				DisplayName: iamv2.PtrString("service_account"),
+				DisplayName: iamv2.PtrString(serviceAccountName),
 				Description: iamv2.PtrString("at your service."),
 			}
 			err := json.NewEncoder(w).Encode(iamv2.IamV2ServiceAccountList{Data: []iamv2.IamV2ServiceAccount{serviceAccount}})
@@ -294,7 +298,7 @@ func handleIamRoleBindings(t *testing.T) http.HandlerFunc {
 func handleIamIdentityProvider(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := mux.Vars(r)["id"]
-		if id == "identity_provider" {
+		if id == identityProviderName {
 			w.WriteHeader(http.StatusNotFound)
 			return
 		}
@@ -322,7 +326,7 @@ func handleIamIdentityProvider(t *testing.T) http.HandlerFunc {
 		case http.MethodGet:
 			identityProvider := identityproviderv2.IamV2IdentityProvider{
 				Id:          identityproviderv2.PtrString(id),
-				DisplayName: identityproviderv2.PtrString("identity_provider"),
+				DisplayName: identityproviderv2.PtrString(identityProviderName),
 				Description: identityproviderv2.PtrString("providing identities."),
 				Issuer:      identityproviderv2.PtrString("https://company.provider.com"),
 				JwksUri:     identityproviderv2.PtrString("https://company.provider.com/oauth2/v1/keys"),
@@ -340,7 +344,7 @@ func handleIamIdentityProviders(t *testing.T) http.HandlerFunc {
 		case http.MethodGet:
 			identityProvider := identityproviderv2.IamV2IdentityProvider{
 				Id:          identityproviderv2.PtrString(identityProviderResourceID),
-				DisplayName: identityproviderv2.PtrString("identity_provider"),
+				DisplayName: identityproviderv2.PtrString(identityProviderName),
 				Description: identityproviderv2.PtrString("providing identities."),
 				Issuer:      identityproviderv2.PtrString("https://company.provider.com"),
 				JwksUri:     identityproviderv2.PtrString("https://company.provider.com/oauth2/v1/keys"),
@@ -385,7 +389,7 @@ func handleIamRoleBinding(t *testing.T) http.HandlerFunc {
 func handleIamIdentityPool(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := mux.Vars(r)["id"]
-		if id == "identity_pool" {
+		if id == identityPoolName {
 			w.WriteHeader(http.StatusNotFound)
 			return
 		}
@@ -413,7 +417,7 @@ func handleIamIdentityPool(t *testing.T) http.HandlerFunc {
 		case http.MethodGet:
 			identityPool := identityproviderv2.IamV2IdentityPool{
 				Id:            identityproviderv2.PtrString(id),
-				DisplayName:   identityproviderv2.PtrString("identity_pool"),
+				DisplayName:   identityproviderv2.PtrString(identityPoolName),
 				Description:   identityproviderv2.PtrString("pooling identities"),
 				IdentityClaim: identityproviderv2.PtrString("sub"),
 				Filter:        identityproviderv2.PtrString(`claims.iss="https://company.provider.com"`),
@@ -431,7 +435,7 @@ func handleIamIdentityPools(t *testing.T) http.HandlerFunc {
 		case http.MethodGet:
 			identityPool := identityproviderv2.IamV2IdentityPool{
 				Id:            identityproviderv2.PtrString(identityPoolResourceID),
-				DisplayName:   identityproviderv2.PtrString("identity_pool"),
+				DisplayName:   identityproviderv2.PtrString(identityPoolName),
 				Description:   identityproviderv2.PtrString("pooling identities."),
 				IdentityClaim: identityproviderv2.PtrString("sub"),
 				Filter:        identityproviderv2.PtrString(`claims.iss="https://company.provider.com"`),
