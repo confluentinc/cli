@@ -7,12 +7,12 @@ import (
 
 	"github.com/spf13/cobra"
 
-	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	srcmv2 "github.com/confluentinc/ccloud-sdk-go-v2/srcm/v2"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	presource "github.com/confluentinc/cli/internal/pkg/resource"
 )
 
@@ -31,23 +31,25 @@ func NewDynamicContext(context *v1.Context, v2Client *ccloudv2.Client) *DynamicC
 	}
 }
 
-func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, client *ccloudv1.Client) error {
+func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command) error {
 	if environment, _ := cmd.Flags().GetString("environment"); environment != "" {
-		if d.Credential.CredentialType == v1.APIKey {
-			return errors.New("`--environment` flag should not be passed for API key context")
+		if d.GetCredentialType() == v1.APIKey {
+			output.ErrPrintln("WARNING: The `--environment` flag is ignored when using API key credentials.")
+		} else {
+			ctx := d.Config.Context()
+			d.Config.SetOverwrittenCurrentEnvironment(ctx.CurrentEnvironment)
+			ctx.SetCurrentEnvironment(environment)
 		}
-		ctx := d.Config.Context()
-		d.Config.SetOverwrittenCurrentEnvironment(ctx.CurrentEnvironment)
-		ctx.SetCurrentEnvironment(environment)
 	}
 
 	if cluster, _ := cmd.Flags().GetString("cluster"); cluster != "" {
-		if d.Credential.CredentialType == v1.APIKey {
-			return errors.New("`--cluster` flag should not be passed for API key context, cluster is inferred")
+		if d.GetCredentialType() == v1.APIKey {
+			output.ErrPrintln("WARNING: The `--cluster` flag is ignored when using API key credentials.")
+		} else {
+			ctx := d.Config.Context()
+			d.Config.SetOverwrittenCurrentKafkaCluster(ctx.KafkaClusterContext.GetActiveKafkaClusterId())
+			ctx.KafkaClusterContext.SetActiveKafkaCluster(cluster)
 		}
-		ctx := d.Config.Context()
-		d.Config.SetOverwrittenCurrentKafkaCluster(ctx.KafkaClusterContext.GetActiveKafkaClusterId())
-		ctx.KafkaClusterContext.SetActiveKafkaCluster(cluster)
 	}
 
 	if computePool, _ := cmd.Flags().GetString("compute-pool"); computePool != "" {
@@ -200,7 +202,7 @@ func (d *DynamicContext) SchemaRegistryCluster(cmd *cobra.Command) (*v1.SchemaRe
 }
 
 func (d *DynamicContext) HasLogin() bool {
-	credType := d.Credential.CredentialType
+	credType := d.GetCredentialType()
 	switch credType {
 	case v1.Username:
 		return d.GetAuthToken() != ""
