@@ -525,15 +525,7 @@ func (c *Config) CreateContext(name, bootstrapURL, apiKey, apiSecret string) err
 	credential := &Credential{
 		APIKeyPair:     apiKeyPair,
 		CredentialType: APIKey,
-	}
-
-	switch credential.CredentialType {
-	case Username:
-		credential.Name = fmt.Sprintf("%s-%s", &credential.CredentialType, credential.Username)
-	case APIKey:
-		credential.Name = fmt.Sprintf("%s-%s", &credential.CredentialType, credential.APIKeyPair.Key)
-	default:
-		return errors.Errorf(errors.UnknownCredentialTypeErrorMsg, credential.CredentialType)
+		Name:           fmt.Sprintf("%s-%s", APIKey, apiKey),
 	}
 
 	if err := c.SaveCredential(credential); err != nil {
@@ -618,8 +610,7 @@ func (c *Config) CredentialType() CredentialType {
 
 // hasAPIKeyLogin returns true if the user has valid API Key credentials.
 func (c *Config) hasAPIKeyLogin() bool {
-	ctx := c.Context()
-	return ctx != nil && ctx.Credential != nil && ctx.Credential.CredentialType == APIKey
+	return c.Context().GetCredentialType() == APIKey
 }
 
 // HasBasicLogin returns true if the user has valid username & password credentials.
