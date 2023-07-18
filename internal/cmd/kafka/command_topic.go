@@ -126,3 +126,27 @@ func (c *command) provisioningClusterCheck(lkc string) error {
 	}
 	return nil
 }
+
+func addApiKeyToCluster(cmd *cobra.Command, cluster *v1.KafkaClusterConfig) error {
+	apiKey, err := cmd.Flags().GetString("api-key")
+	if err != nil {
+		return err
+	}
+
+	apiSecret, err := cmd.Flags().GetString("api-secret")
+	if err != nil {
+		return err
+	}
+
+	if apiKey != "" || apiSecret != "" {
+		cluster.APIKey = apiKey
+		cluster.APIKeys[cluster.APIKey] = &v1.APIKeyPair{
+			Key:    apiKey,
+			Secret: apiSecret,
+		}
+	} else if cluster.APIKey == "" {
+		return &errors.UnspecifiedAPIKeyError{ClusterID: cluster.ID}
+	}
+
+	return nil
+}
