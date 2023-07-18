@@ -25,7 +25,7 @@ type KafkaEnvContext struct {
 }
 
 func NewKafkaClusterContext(ctx *Context, activeKafka string, kafkaClusters map[string]*KafkaClusterConfig) *KafkaClusterContext {
-	if ctx.IsCloud(ctx.Config.IsTest) && ctx.Credential.CredentialType == Username {
+	if ctx.IsCloud(ctx.Config.IsTest) && ctx.GetCredentialType() == Username {
 		return newKafkaClusterEnvironmentContext(activeKafka, kafkaClusters, ctx)
 	} else {
 		return newKafkaClusterNonEnvironmentContext(activeKafka, kafkaClusters, ctx)
