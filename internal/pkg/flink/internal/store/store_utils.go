@@ -395,24 +395,6 @@ func parseStatementType(statement string) StatementType {
 	}
 }
 
-// This returns the local timezone as a custom timezone along with the offset to UTC
-// Example: UTC+02:00 or UTC-08:00
-func getLocalTimezone() string {
-	_, offsetSeconds := time.Now().Zone()
-	return formatUTCOffsetToTimezone(offsetSeconds)
-}
-
-func formatUTCOffsetToTimezone(offsetSeconds int) string {
-	timeOffset := time.Duration(offsetSeconds) * time.Second
-	sign := "+"
-	if offsetSeconds < 0 {
-		sign = "-"
-		timeOffset *= -1
-	}
-	offsetStr := fmt.Sprintf("%02d:%02d", int(timeOffset.Hours()), int(timeOffset.Minutes())%60)
-	return fmt.Sprintf("UTC%s%s", sign, offsetStr)
-}
-
 // This increases function calculates a wait time that starts at 300 ms and increases 300 ms every 10 retries.
 // This should provide a better UX than exponential backoff. He're are two simulations in an excel sheet
 // Exponential: https://docs.google.com/spreadsheets/d/14lHRcC_NGoF4KBtA_lrEivv05XYc3nNo5jaIvsHpgi0/edit?usp=sharing
