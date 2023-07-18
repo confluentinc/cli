@@ -231,7 +231,7 @@ func (t *TableView) highlightNewRows(cellsToHighlight []*tview.TableCell, durati
 }
 
 func (t *TableView) removeHighlight(cellsToHighlight []*tview.TableCell, duration time.Duration) {
-	if len(cellsToHighlight) <= 0 {
+	if len(cellsToHighlight) == 0 {
 		return
 	}
 
