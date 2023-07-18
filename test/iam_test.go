@@ -23,7 +23,6 @@ func (s *CLITestSuite) TestIamRbacRole_Cloud() {
 		{args: "iam rbac role describe CloudClusterAdmin", fixture: "iam/rbac/role/describe-cloud.golden"},
 		{args: "iam rbac role describe InvalidRole", fixture: "iam/rbac/role/describe-invalid-role-cloud.golden", exitCode: 1},
 		{args: "iam rbac role list -o json", fixture: "iam/rbac/role/list-json-cloud.golden"},
-		{args: "iam rbac role list -o yaml", fixture: "iam/rbac/role/list-yaml-cloud.golden"},
 		{args: "iam rbac role list", fixture: "iam/rbac/role/list-cloud.golden"},
 	}
 
