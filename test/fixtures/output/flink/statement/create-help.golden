@@ -4,8 +4,8 @@ Usage:
   confluent flink statement create <name> [flags]
 
 Flags:
-      --name string            Name of the statement.
-      --database string        The database against which the statement will run. For example, the display name of a Kafka cluster.
+      --name string            Name of the statement. (default "<randomly-generated-id>")
+      --database string        The database against which the statement will run. For example, the display name of a Kafka cluster. (default "<current-kafka-cluster>")
       --compute-pool string    Flink compute pool ID.
       --identity-pool string   Identity pool ID.
       --environment string     Environment ID.

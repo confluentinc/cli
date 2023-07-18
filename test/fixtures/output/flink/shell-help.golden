@@ -4,7 +4,7 @@ Usage:
   confluent flink shell [flags]
 
 Flags:
-      --database string        The database against which the statement will run. For example, the display name of a Kafka cluster.
+      --database string        The database against which the statement will run. For example, the display name of a Kafka cluster. (default "<current-kafka-cluster>")
       --compute-pool string    Flink compute pool ID.
       --identity-pool string   Identity pool ID.
       --environment string     Environment ID.
