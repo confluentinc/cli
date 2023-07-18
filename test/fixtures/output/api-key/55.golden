@@ -1,1 +1,1 @@
-Error: API keys for audit logs (limit of 2) must be created using the predefined service account, "sa-1337"
+Error: resource with name or ID "sa-123456" was not found

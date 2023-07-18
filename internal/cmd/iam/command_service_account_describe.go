@@ -1,8 +1,6 @@
 package iam
 
 import (
-	"net/http"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -28,12 +26,11 @@ func (c serviceAccountCommand) newDescribeCommand() *cobra.Command {
 func (c serviceAccountCommand) describe(cmd *cobra.Command, args []string) error {
 	serviceAccountId := args[0]
 
-	serviceAccount, _, err := c.V2Client.GetIamServiceAccount(serviceAccountId)
+	serviceAccount, httpResp, err := c.V2Client.GetIamServiceAccount(serviceAccountId)
 	if err != nil {
 		if serviceAccountId, err = nameconversions.ConvertIamServiceAccountNameToId(serviceAccountId, c.V2Client, false); err != nil {
-			return err
+			return errors.CatchServiceAccountNotFoundError(err, httpResp, serviceAccountId)
 		}
-		var httpResp *http.Response
 		if serviceAccount, httpResp, err = c.V2Client.GetIamServiceAccount(serviceAccountId); err != nil {
 			return errors.CatchServiceAccountNotFoundError(err, httpResp, serviceAccountId)
 		}

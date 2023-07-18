@@ -1,7 +1,6 @@
 package kafka
 
 import (
-	"net/http"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -74,12 +73,11 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	cluster, _, err := c.V2Client.DescribeKafkaCluster(clusterId, environmentId)
+	cluster, httpResp, err := c.V2Client.DescribeKafkaCluster(clusterId, environmentId)
 	if err != nil {
 		if clusterId, err = nameconversions.ConvertClusterNameToId(clusterId, environmentId, c.V2Client, false); err != nil {
-			return err
+			return errors.CatchKafkaNotFoundError(err, clusterId, httpResp)
 		}
-		var httpResp *http.Response
 		if cluster, httpResp, err = c.V2Client.DescribeKafkaCluster(clusterId, environmentId); err != nil {
 			return errors.CatchKafkaNotFoundError(err, clusterId, httpResp)
 		}

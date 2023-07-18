@@ -41,7 +41,7 @@ func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, client *cclou
 			var err error
 			environment, err = nameconversions.ConvertEnvironmentNameToId(environment, d.V2Client, true)
 			if err != nil {
-				return err
+				return errors.NewErrorWithSuggestions(err.Error(), errors.NotValidEnvironmentIdSuggestions)
 			}
 		}
 		ctx := d.Config.Context()

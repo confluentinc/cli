@@ -29,10 +29,10 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 	id := args[0]
 	if _, err := c.V2Client.GetOrgEnvironment(id); err != nil {
 		if id, err = nameconversions.ConvertEnvironmentNameToId(id, c.V2Client, false); err != nil {
-			return err
+			return errors.NewErrorWithSuggestions(err.Error(), errors.NotValidEnvironmentIdSuggestions)
 		}
 		if _, err = c.V2Client.GetOrgEnvironment(id); err != nil {
-			return errors.NewErrorWithSuggestions(err.Error(), "List available environments with `confluent environment list`.")
+			return errors.NewErrorWithSuggestions(err.Error(), errors.NotValidEnvironmentIdSuggestions)
 		}
 	}
 

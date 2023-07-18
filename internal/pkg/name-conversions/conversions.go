@@ -7,6 +7,7 @@ import (
 )
 
 const (
+	ResourceNameNotFoundErrorMsg          = `resource with name or ID "%s" was not found`
 	DuplicateResourceNameErrorMsg         = `the resource name "%s" is shared across multiple resources`
 	DuplicateResourceNameErrorSuggestions = "retry the previous command using a resource id"
 )
@@ -15,6 +16,7 @@ type resource any
 
 type resourcePtr interface {
 	GetId() string
+	GetKind() string
 }
 
 type specPtr interface {
@@ -34,7 +36,7 @@ func ConvertToPtrSlice[V resource](resources []V) []*V {
 	return ptrs
 }
 
-// ConvertSpecNameToId ConvertNamesToID returns a resource spec's name's corresponding ID or returns the input string if not found
+// ConvertSpecNameToId ConvertNamesToID returns a resource spec's name's corresponding ID or returns an error if not found
 func ConvertSpecNameToId[V resourcePtr, T specPtr](input string, resources []V, specs []T) (string, error) {
 	namesToIds, err := GetSpecNamesToIds(resources, specs)
 	if err != nil {
@@ -43,7 +45,7 @@ func ConvertSpecNameToId[V resourcePtr, T specPtr](input string, resources []V, 
 	if resourceId, ok := namesToIds[input]; ok {
 		return resourceId, nil
 	} else {
-		return input, nil
+		return input, errors.Errorf(ResourceNameNotFoundErrorMsg, input)
 	}
 }
 
@@ -61,7 +63,7 @@ func GetSpecNamesToIds[V resourcePtr, T specPtr](resources []V, specs []T) (map[
 	return namesToIds, nil
 }
 
-// ConvertV2NameToId ConvertNamesToID returns a v2 resource name's corresponding ID or returns the input string if not found
+// ConvertV2NameToId ConvertNamesToID returns a v2 resource name's corresponding ID or returns an error if not found
 func ConvertV2NameToId[V v2ResourcePtr](input string, resources []V) (string, error) {
 	namesToIds, err := GetV2NamesToIds(resources)
 	if err != nil {
@@ -70,7 +72,7 @@ func ConvertV2NameToId[V v2ResourcePtr](input string, resources []V) (string, er
 	if resourceId, ok := namesToIds[input]; ok {
 		return resourceId, nil
 	} else {
-		return input, nil
+		return input, errors.Errorf(ResourceNameNotFoundErrorMsg, input)
 	}
 }
 

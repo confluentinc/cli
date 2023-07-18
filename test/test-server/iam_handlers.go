@@ -212,7 +212,7 @@ func handleIamServiceAccount(t *testing.T) http.HandlerFunc {
 			w.WriteHeader(http.StatusNotFound)
 			return
 		}
-		if id != serviceAccountResourceID && id != "sa-54321" {
+		if id != serviceAccountResourceID && id != "sa-54321" && id != auditLogServiceAccountResourceID {
 			err := writeResourceNotFoundError(w)
 			require.NoError(t, err)
 			return
@@ -249,7 +249,12 @@ func handleIamServiceAccounts(t *testing.T) http.HandlerFunc {
 				DisplayName: iamv2.PtrString(serviceAccountName),
 				Description: iamv2.PtrString("at your service."),
 			}
-			err := json.NewEncoder(w).Encode(iamv2.IamV2ServiceAccountList{Data: []iamv2.IamV2ServiceAccount{serviceAccount}})
+			serviceAccount2 := iamv2.IamV2ServiceAccount{
+				Id:          iamv2.PtrString(auditLogServiceAccountResourceID),
+				DisplayName: iamv2.PtrString("audit_log_sa"),
+				Description: iamv2.PtrString("at your service."),
+			}
+			err := json.NewEncoder(w).Encode(iamv2.IamV2ServiceAccountList{Data: []iamv2.IamV2ServiceAccount{serviceAccount, serviceAccount2}})
 			require.NoError(t, err)
 		case http.MethodPost:
 			var req iamv2.IamV2ServiceAccount

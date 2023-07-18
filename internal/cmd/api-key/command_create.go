@@ -85,8 +85,10 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	if serviceAccount, err = nameconversions.ConvertIamServiceAccountNameToId(serviceAccount, c.V2Client, true); err != nil {
-		return nil
+	if serviceAccount != "" {
+		if serviceAccount, err = nameconversions.ConvertIamServiceAccountNameToId(serviceAccount, c.V2Client, true); err != nil {
+			return err
+		}
 	}
 
 	owner := serviceAccount

@@ -6,6 +6,7 @@ import (
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	nameconversions "github.com/confluentinc/cli/internal/pkg/name-conversions"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -38,10 +39,10 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	if environment, err = c.V2Client.UpdateOrgEnvironment(args[0], environment); err != nil {
 		environmentId, err := nameconversions.ConvertEnvironmentNameToId(args[0], c.V2Client, false)
 		if err != nil {
-			return err
+			return errors.NewErrorWithSuggestions(err.Error(), errors.NotValidEnvironmentIdSuggestions)
 		}
 		if environment, err = c.V2Client.UpdateOrgEnvironment(environmentId, environment); err != nil {
-			return err
+			return errors.NewErrorWithSuggestions(err.Error(), errors.NotValidEnvironmentIdSuggestions)
 		}
 	}
 

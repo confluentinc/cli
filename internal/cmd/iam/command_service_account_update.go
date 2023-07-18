@@ -1,8 +1,6 @@
 package iam
 
 import (
-	"net/http"
-
 	"github.com/spf13/cobra"
 
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
@@ -49,11 +47,10 @@ func (c *serviceAccountCommand) update(cmd *cobra.Command, args []string) error 
 	serviceAccountId := args[0]
 
 	update := iamv2.IamV2ServiceAccountUpdate{Description: &description}
-	if _, _, err := c.V2Client.UpdateIamServiceAccount(serviceAccountId, update); err != nil {
+	if _, httpResp, err := c.V2Client.UpdateIamServiceAccount(serviceAccountId, update); err != nil {
 		if serviceAccountId, err = nameconversions.ConvertIamServiceAccountNameToId(serviceAccountId, c.V2Client, false); err != nil {
-			return err
+			return errors.CatchServiceAccountNotFoundError(err, httpResp, serviceAccountId)
 		}
-		var httpResp *http.Response
 		if _, httpResp, err = c.V2Client.UpdateIamServiceAccount(serviceAccountId, update); err != nil {
 			return errors.CatchServiceAccountNotFoundError(err, httpResp, serviceAccountId)
 		}
