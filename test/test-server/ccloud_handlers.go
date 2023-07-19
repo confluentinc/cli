@@ -23,8 +23,8 @@ import (
 
 var (
 	environments = []*ccloudv1.Account{
-		{Id: "a-595", Name: "default", OrgResourceId: "abc-123"},
-		{Id: "not-595", Name: "other"},
+		{Id: defaultEnvId, Name: "default", OrgResourceId: "abc-123"},
+		{Id: otherEnvId, Name: "other"},
 		{Id: "env-123", Name: "env123"},
 		{Id: SRApiEnvId, Name: "srUpdate"},
 		{Id: "env-987zy", Name: "confluent-audit-log"},
@@ -49,10 +49,16 @@ var (
 )
 
 const (
+	defaultEnvId = "a-595"
+	otherEnvId   = "not-595"
+
 	serviceAccountID           = int32(12345)
 	serviceAccountResourceID   = "sa-12345"
+	serviceAccountName         = "service_account"
 	identityProviderResourceID = "op-12345"
+	identityProviderName       = "identity_provider"
 	identityPoolResourceID     = "pool-12345"
+	identityPoolName           = "identity_pool"
 	deactivatedUserID          = int32(6666)
 	deactivatedResourceID      = "sa-6666"
 

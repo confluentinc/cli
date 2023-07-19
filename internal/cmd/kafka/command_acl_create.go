@@ -31,7 +31,6 @@ func (c *aclCommand) newCreateCommand() *cobra.Command {
 
 	cmd.Flags().StringSlice("operations", []string{""}, fmt.Sprintf("A comma-separated list of ACL operations: (%s).", listEnum(ccstructs.ACLOperations_ACLOperation_name, []string{"ANY", "UNKNOWN"})))
 	cmd.Flags().String("principal", "", `Principal for this operation, prefixed with "User:".`)
-	cmd.Flags().String("service-account", "", "The service account ID.")
 	cmd.Flags().Bool("allow", false, "Access to the resource is allowed.")
 	cmd.Flags().Bool("deny", false, "Access to the resource is denied.")
 	cmd.Flags().Bool("cluster-scope", false, "Modify ACLs for the cluster.")
@@ -43,6 +42,7 @@ func (c *aclCommand) newCreateCommand() *cobra.Command {
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
+	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("operations"))
 
@@ -52,6 +52,10 @@ func (c *aclCommand) newCreateCommand() *cobra.Command {
 }
 
 func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
+	if err := c.validateServiceAccountFlag(cmd); err != nil {
+		return err
+	}
+
 	acls, err := parse(cmd)
 	if err != nil {
 		return err

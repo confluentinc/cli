@@ -174,6 +174,26 @@ func (s *CLITestSuite) TestKafka() {
 	}
 }
 
+func (s *CLITestSuite) TestKafkaUsingName() {
+	tests := []CLITest{
+		{args: "kafka cluster describe abc", fixture: "kafka/cluster-describe-name.golden"},
+		{args: "kafka cluster describe abc --environment other", fixture: "kafka/cluster-describe-name.golden"},
+		{args: "kafka cluster update def --name new_name", fixture: "kafka/cluster-update-name.golden"},
+		{args: "kafka cluster use abc", fixture: "kafka/cluster-use-name.golden"},
+		{args: "kafka topic create topic1 --cluster abc", fixture: "kafka/topic/create-success.golden"},
+		{args: "kafka acl create --cluster lkc-acls --allow --service-account service_account --operations read,describe --topic test-topic", fixture: "kafka/acl/create-service-account.golden"},
+		{args: "kafka acl list --cluster lkc-acls --service-account service_account", fixture: "kafka/acl/list-cloud.golden"},
+	}
+
+	resetConfiguration(s.T(), false)
+
+	for _, test := range tests {
+		test.login = "cloud"
+		test.workflow = true
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestKafkaClusterCreate_Byok() {
 	test := CLITest{
 		login:   "cloud",
@@ -453,13 +473,16 @@ func (s *CLITestSuite) TestKafkaQuota() {
 		{args: "kafka quota create --name clientQuota --description description --egress 100 --principals sa-1234,sa-5678 --cluster lkc-1234", exitCode: 1, fixture: "kafka/quota/create-no-ingress.golden"},
 		{args: "kafka quota create --name clientQuota --ingress 500 --egress 100 --principals \"<default>\" --cluster lkc-1234 -o yaml", fixture: "kafka/quota/create-default-yaml.golden"},
 		{args: "kafka quota list --cluster lkc-1234", fixture: "kafka/quota/list.golden"},
+		{args: "kafka quota list --cluster abc", fixture: "kafka/quota/list-using-cluster-name.golden"},
 		{args: "kafka quota list --cluster lkc-1234 --principal sa-5678 -o json", fixture: "kafka/quota/list-json.golden"},
 		{args: "kafka quota list --cluster lkc-1234 -o yaml", fixture: "kafka/quota/list-yaml.golden"},
 		{args: "kafka quota describe cq-1234 --cluster lkc-1234", fixture: "kafka/quota/describe.golden"},
+		{args: "kafka quota describe quotaName --cluster lkc-1234", fixture: "kafka/quota/describe.golden"},
 		{args: "kafka quota describe cq-1234 --cluster lkc-1234 -o json", fixture: "kafka/quota/describe-json.golden"},
 		{args: "kafka quota delete cq-1234 --force", fixture: "kafka/quota/delete.golden"},
 		{args: "kafka quota delete cq-1234", input: "cq-1234\n", fixture: "kafka/quota/delete-prompt.golden"},
 		{args: "kafka quota update cq-1234 --ingress 100 --egress 100 --add-principals sa-4321 --remove-principals sa-1234 --name newName", fixture: "kafka/quota/update.golden"},
+		{args: "kafka quota update quotaName --ingress 100 --egress 100 --add-principals sa-4321 --remove-principals sa-1234 --name newName", fixture: "kafka/quota/update.golden"},
 	}
 
 	for _, test := range tests {

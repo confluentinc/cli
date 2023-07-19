@@ -28,6 +28,7 @@ func (s *CLITestSuite) TestEnvironment() {
 func (s *CLITestSuite) TestEnvironmentDescribe() {
 	tests := []CLITest{
 		{args: "environment describe env-12345", fixture: "environment/describe.golden"},
+		{args: "environment describe other", fixture: "environment/describe-name.golden"},
 		{args: "environment describe env-12345 -o json", fixture: "environment/describe-json.golden"},
 	}
 
@@ -41,6 +42,7 @@ func (s *CLITestSuite) TestEnvironmentUse() {
 	tests := []CLITest{
 		{args: "environment use env-12345", fixture: "environment/use.golden"},
 		{args: "environment describe", fixture: "environment/describe-after-use.golden"},
+		{args: "environment use other", fixture: "environment/use-name.golden"},
 	}
 
 	for _, test := range tests {

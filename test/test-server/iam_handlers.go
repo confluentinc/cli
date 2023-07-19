@@ -208,7 +208,11 @@ func handleIamUsers(t *testing.T) http.HandlerFunc {
 func handleIamServiceAccount(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := mux.Vars(r)["id"]
-		if id != serviceAccountResourceID && id != "sa-54321" {
+		if id == serviceAccountName {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		if id != serviceAccountResourceID && id != "sa-54321" && id != auditLogServiceAccountResourceID {
 			err := writeResourceNotFoundError(w)
 			require.NoError(t, err)
 			return
@@ -217,7 +221,7 @@ func handleIamServiceAccount(t *testing.T) http.HandlerFunc {
 		case http.MethodGet:
 			serviceAccount := iamv2.IamV2ServiceAccount{
 				Id:          iamv2.PtrString(id),
-				DisplayName: iamv2.PtrString("service_account"),
+				DisplayName: iamv2.PtrString(serviceAccountName),
 				Description: iamv2.PtrString("at your service."),
 			}
 			err := json.NewEncoder(w).Encode(serviceAccount)
@@ -242,10 +246,15 @@ func handleIamServiceAccounts(t *testing.T) http.HandlerFunc {
 		case http.MethodGet:
 			serviceAccount := iamv2.IamV2ServiceAccount{
 				Id:          iamv2.PtrString(serviceAccountResourceID),
-				DisplayName: iamv2.PtrString("service_account"),
+				DisplayName: iamv2.PtrString(serviceAccountName),
 				Description: iamv2.PtrString("at your service."),
 			}
-			err := json.NewEncoder(w).Encode(iamv2.IamV2ServiceAccountList{Data: []iamv2.IamV2ServiceAccount{serviceAccount}})
+			serviceAccount2 := iamv2.IamV2ServiceAccount{
+				Id:          iamv2.PtrString(auditLogServiceAccountResourceID),
+				DisplayName: iamv2.PtrString("audit_log_sa"),
+				Description: iamv2.PtrString("at your service."),
+			}
+			err := json.NewEncoder(w).Encode(iamv2.IamV2ServiceAccountList{Data: []iamv2.IamV2ServiceAccount{serviceAccount, serviceAccount2}})
 			require.NoError(t, err)
 		case http.MethodPost:
 			var req iamv2.IamV2ServiceAccount
@@ -294,6 +303,10 @@ func handleIamRoleBindings(t *testing.T) http.HandlerFunc {
 func handleIamIdentityProvider(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := mux.Vars(r)["id"]
+		if id == identityProviderName {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
 		if id != identityProviderResourceID && id != "op-67890" {
 			err := writeResourceNotFoundError(w)
 			require.NoError(t, err)
@@ -318,7 +331,7 @@ func handleIamIdentityProvider(t *testing.T) http.HandlerFunc {
 		case http.MethodGet:
 			identityProvider := identityproviderv2.IamV2IdentityProvider{
 				Id:          identityproviderv2.PtrString(id),
-				DisplayName: identityproviderv2.PtrString("identity_provider"),
+				DisplayName: identityproviderv2.PtrString(identityProviderName),
 				Description: identityproviderv2.PtrString("providing identities."),
 				Issuer:      identityproviderv2.PtrString("https://company.provider.com"),
 				JwksUri:     identityproviderv2.PtrString("https://company.provider.com/oauth2/v1/keys"),
@@ -336,12 +349,19 @@ func handleIamIdentityProviders(t *testing.T) http.HandlerFunc {
 		case http.MethodGet:
 			identityProvider := identityproviderv2.IamV2IdentityProvider{
 				Id:          identityproviderv2.PtrString(identityProviderResourceID),
-				DisplayName: identityproviderv2.PtrString("identity_provider"),
+				DisplayName: identityproviderv2.PtrString(identityProviderName),
 				Description: identityproviderv2.PtrString("providing identities."),
 				Issuer:      identityproviderv2.PtrString("https://company.provider.com"),
 				JwksUri:     identityproviderv2.PtrString("https://company.provider.com/oauth2/v1/keys"),
 			}
-			err := json.NewEncoder(w).Encode(identityproviderv2.IamV2IdentityProviderList{Data: []identityproviderv2.IamV2IdentityProvider{identityProvider, identityProvider}})
+			identityProvider2 := identityproviderv2.IamV2IdentityProvider{
+				Id:          identityproviderv2.PtrString("op-67890"),
+				DisplayName: identityproviderv2.PtrString("identity_provider2"),
+				Description: identityproviderv2.PtrString("providing identities."),
+				Issuer:      identityproviderv2.PtrString("https://company.provider.com"),
+				JwksUri:     identityproviderv2.PtrString("https://company.provider.com/oauth2/v1/keys"),
+			}
+			err := json.NewEncoder(w).Encode(identityproviderv2.IamV2IdentityProviderList{Data: []identityproviderv2.IamV2IdentityProvider{identityProvider, identityProvider2}})
 			require.NoError(t, err)
 		case http.MethodPost:
 			var req identityproviderv2.IamV2IdentityProvider
@@ -374,6 +394,10 @@ func handleIamRoleBinding(t *testing.T) http.HandlerFunc {
 func handleIamIdentityPool(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := mux.Vars(r)["id"]
+		if id == identityPoolName {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
 		if id != identityPoolResourceID && id != "pool-55555" {
 			err := writeResourceNotFoundError(w)
 			require.NoError(t, err)
@@ -398,7 +422,7 @@ func handleIamIdentityPool(t *testing.T) http.HandlerFunc {
 		case http.MethodGet:
 			identityPool := identityproviderv2.IamV2IdentityPool{
 				Id:            identityproviderv2.PtrString(id),
-				DisplayName:   identityproviderv2.PtrString("identity_pool"),
+				DisplayName:   identityproviderv2.PtrString(identityPoolName),
 				Description:   identityproviderv2.PtrString("pooling identities"),
 				IdentityClaim: identityproviderv2.PtrString("sub"),
 				Filter:        identityproviderv2.PtrString(`claims.iss="https://company.provider.com"`),
@@ -416,12 +440,19 @@ func handleIamIdentityPools(t *testing.T) http.HandlerFunc {
 		case http.MethodGet:
 			identityPool := identityproviderv2.IamV2IdentityPool{
 				Id:            identityproviderv2.PtrString(identityPoolResourceID),
-				DisplayName:   identityproviderv2.PtrString("identity_pool"),
+				DisplayName:   identityproviderv2.PtrString(identityPoolName),
 				Description:   identityproviderv2.PtrString("pooling identities."),
 				IdentityClaim: identityproviderv2.PtrString("sub"),
 				Filter:        identityproviderv2.PtrString(`claims.iss="https://company.provider.com"`),
 			}
-			err := json.NewEncoder(w).Encode(identityproviderv2.IamV2IdentityPoolList{Data: []identityproviderv2.IamV2IdentityPool{identityPool, identityPool}})
+			identityPool2 := identityproviderv2.IamV2IdentityPool{
+				Id:            identityproviderv2.PtrString(identityPoolResourceID),
+				DisplayName:   identityproviderv2.PtrString("identity_pool2"),
+				Description:   identityproviderv2.PtrString("pooling identities."),
+				IdentityClaim: identityproviderv2.PtrString("sub"),
+				Filter:        identityproviderv2.PtrString(`claims.iss="https://company.provider.com"`),
+			}
+			err := json.NewEncoder(w).Encode(identityproviderv2.IamV2IdentityPoolList{Data: []identityproviderv2.IamV2IdentityPool{identityPool, identityPool2}})
 			require.NoError(t, err)
 		case http.MethodPost:
 			var req identityproviderv2.IamV2IdentityPool

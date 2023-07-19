@@ -1,7 +1,7 @@
 Update an identity pool.
 
 Usage:
-  confluent iam pool update <id> [flags]
+  confluent iam pool update <id|name> [flags]
 
 Examples:
 Update the description of identity pool "pool-123456":
@@ -9,7 +9,7 @@ Update the description of identity pool "pool-123456":
   $ confluent iam pool update pool-123456 --provider op-12345 --description "New description."
 
 Flags:
-      --provider string         REQUIRED: ID of this pool's identity provider.
+      --provider string         REQUIRED: ID or Name of this pool's identity provider.
       --name string             Name of the identity pool.
       --description string      Description of the identity pool.
       --filter string           Filter which identities can authenticate with the identity pool.

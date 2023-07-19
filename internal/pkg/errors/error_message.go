@@ -63,9 +63,10 @@ const (
 	ConnectLogEventsNotEnabledErrorMsg = "Connect Log Events are not enabled for this organization"
 
 	// environment & organization command
-	OrgResourceNotFoundSuggestions = "List available %[1]ss with `confluent %[1]s list`."
-	NoEnvironmentFoundErrorMsg     = "no environment found"
-	NoEnvironmentFoundSuggestions  = "This issue may occur if this user has no valid role bindings. Contact an Organization Admin to create a role binding for this user."
+	OrgResourceNotFoundSuggestions   = "List available %[1]ss with `confluent %[1]s list`."
+	NoEnvironmentFoundErrorMsg       = "no environment found"
+	NoEnvironmentFoundSuggestions    = "This issue may occur if this user has no valid role bindings. Contact an Organization Admin to create a role binding for this user."
+	NotValidEnvironmentIdSuggestions = "List available environments with `confluent environment list`."
 
 	// iam acl & kafka acl commands
 	UnableToPerformAclErrorMsg    = "unable to %s ACLs: %s"
@@ -397,7 +398,7 @@ const (
 	KSQLNotFoundSuggestions       = "To list KSQL clusters, use `confluent ksql cluster list`."
 	NoKafkaSelectedErrorMsg       = "no Kafka cluster selected"
 	NoKafkaSelectedSuggestions    = "You must pass `--cluster` with the command or set an active Kafka cluster in your context with `confluent kafka cluster use`."
-	NoKafkaForDescribeSuggestions = "You must provide the cluster ID argument or set an active Kafka cluster in your context with `ccloud kafka cluster use`."
+	NoKafkaForDescribeSuggestions = "You must provide the cluster ID argument or set an active Kafka cluster in your context with `confluent kafka cluster use`."
 	NoAPISecretStoredErrorMsg     = `no API secret for API key "%s" of resource "%s" stored in local CLI state`
 	NoAPISecretStoredSuggestions  = "Store the API secret with `confluent api-key store %s --resource %s`."
 	InvalidCkuErrorMsg            = "cku must be greater than 1 for multi-zone dedicated cluster"

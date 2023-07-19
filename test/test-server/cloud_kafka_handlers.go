@@ -15,8 +15,7 @@ func handleKafkaClientQuota(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := mux.Vars(r)["id"]
 		if id != "cq-1234" && id != "cq-4321" {
-			err := writeResourceNotFoundError(w)
-			require.NoError(t, err)
+			w.WriteHeader(http.StatusNotFound)
 			return
 		}
 		switch r.Method {
@@ -66,7 +65,7 @@ func handleKafkaClientQuotas(t *testing.T) http.HandlerFunc {
 								IngressByteRate: "2000",
 								EgressByteRate:  "5000",
 							},
-							Cluster:     &kafkaquotasv1.EnvScopedObjectReference{Id: "lkc-1234"},
+							Cluster:     &kafkaquotasv1.EnvScopedObjectReference{Id: r.URL.Query().Get("spec.cluster")},
 							Principals:  &[]kafkaquotasv1.GlobalObjectReference{{Id: "sa-1234"}, {Id: "sa-5678"}},
 							Environment: &kafkaquotasv1.GlobalObjectReference{Id: "env-1234"},
 						},
@@ -80,7 +79,7 @@ func handleKafkaClientQuotas(t *testing.T) http.HandlerFunc {
 								IngressByteRate: "2000",
 								EgressByteRate:  "5000",
 							},
-							Cluster:     &kafkaquotasv1.EnvScopedObjectReference{Id: "lkc-1234"},
+							Cluster:     &kafkaquotasv1.EnvScopedObjectReference{Id: r.URL.Query().Get("spec.cluster")},
 							Principals:  &[]kafkaquotasv1.GlobalObjectReference{{Id: "sa-4321"}},
 							Environment: &kafkaquotasv1.GlobalObjectReference{Id: "env-1234"},
 						},

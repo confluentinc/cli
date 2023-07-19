@@ -8,8 +8,8 @@
           |                    | owned by service account       |          |                       |                 |              |                       
           | MYKEY1             | first-key                      | u11      | bstrauch@confluent.io | kafka           | lkc-bob      | 1999-02-24T00:00:00Z  
           | MYKEY10            |                                | sa-12345 | <service account>     | kafka           | lkc-cool1    | 1999-02-24T00:00:00Z  
-          | MYKEY11            | auditlog-key                   | sa-1337  | <deactivated user>    | kafka           | lkc-cool1    | 1999-02-24T00:00:00Z  
-          | MYKEY12            | auditlog-key                   | sa-1337  | <deactivated user>    | kafka           | lkc-cool1    | 1999-02-24T00:00:00Z  
+          | MYKEY11            | auditlog-key                   | sa-1337  | <service account>     | kafka           | lkc-cool1    | 1999-02-24T00:00:00Z  
+          | MYKEY12            | auditlog-key                   | sa-1337  | <service account>     | kafka           | lkc-cool1    | 1999-02-24T00:00:00Z  
           | MYKEY2             |                                | u-17     | mtodzo@confluent.io   | kafka           | lkc-abc      | 1999-02-24T00:00:00Z  
           | MYKEY3             |                                | u-44ddd  | mhe@confluent.io      | kafka           | lkc-bob      | 1999-02-24T00:00:00Z  
           | MYKEY4             | my-cool-app                    | u-44ddd  | mhe@confluent.io      | kafka           | lkc-cool1    | 1999-02-24T00:00:00Z  

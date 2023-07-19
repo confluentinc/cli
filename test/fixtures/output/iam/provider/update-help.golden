@@ -1,7 +1,7 @@
 Update an identity provider.
 
 Usage:
-  confluent iam provider update <id> [flags]
+  confluent iam provider update <id|name> [flags]
 
 Examples:
 Update the description of identity provider "op-123456".

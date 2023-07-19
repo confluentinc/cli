@@ -7,13 +7,14 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	nameconversions "github.com/confluentinc/cli/internal/pkg/name-conversions"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/types"
 )
 
 func (c *quotaCommand) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "update <id>",
+		Use:               "update <id|name>",
 		Short:             "Update a Kafka client quota.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
@@ -41,7 +42,13 @@ func (c *quotaCommand) update(cmd *cobra.Command, args []string) error {
 
 	quota, err := c.V2Client.DescribeKafkaQuota(quotaId)
 	if err != nil {
-		return err
+		quotaId, err = nameconversions.ConvertQuotaNameToId(quotaId, c.Context.KafkaClusterContext.GetActiveKafkaClusterId(), c.Context.GetCurrentEnvironment(), c.V2Client)
+		if err != nil {
+			return err
+		}
+		if quota, err = c.V2Client.DescribeKafkaQuota(quotaId); err != nil {
+			return err
+		}
 	}
 
 	updateName, err := getUpdatedName(cmd, quota.Spec.GetDisplayName())

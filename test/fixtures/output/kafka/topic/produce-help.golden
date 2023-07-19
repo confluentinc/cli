@@ -18,9 +18,9 @@ Flags:
       --schema-registry-api-secret string   Schema registry API key secret.
       --api-key string                      API key.
       --api-secret string                   API key secret.
-      --cluster string                      Kafka cluster ID.
+      --cluster string                      Kafka cluster ID or name.
       --context string                      CLI context name.
-      --environment string                  Environment ID.
+      --environment string                  Environment ID or name.
 
 Global Flags:
   -h, --help            Show help for this command.

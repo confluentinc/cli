@@ -11,7 +11,7 @@ import (
 
 func (c *identityPoolCommand) newUseCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "use <id>",
+		Use:               "use <id|name>",
 		Short:             "Choose an identity pool to be used in subsequent commands.",
 		Long:              "Choose an identity pool to be used in subsequent commands which support passing an identity pool with the `--identity-pool` flag.",
 		Args:              cobra.ExactArgs(1),
@@ -33,12 +33,17 @@ func (c *identityPoolCommand) use(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	id := args[0]
-	if _, err := c.V2Client.GetIdentityPool(id, provider); err != nil {
-		return errors.NewErrorWithSuggestions(err.Error(), "List available identity pools with `confluent iam pool list`.")
+	poolId := args[0]
+	if _, err = c.V2Client.GetIdentityPool(poolId, provider); err != nil {
+		if poolId, provider, err = c.poolAndProviderNamesToIds(poolId, provider); err != nil {
+			return err
+		}
+		if _, err = c.V2Client.GetIdentityPool(poolId, provider); err != nil {
+			return errors.NewErrorWithSuggestions(err.Error(), "List available identity pools with `confluent iam pool list`.")
+		}
 	}
 
-	if err := c.Context.SetCurrentIdentityPool(id); err != nil {
+	if err := c.Context.SetCurrentIdentityPool(poolId); err != nil {
 		return err
 	}
 	if err := c.Config.Save(); err != nil {

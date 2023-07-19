@@ -6,7 +6,7 @@ Usage:
 Flags:
       --force                 Skip the deletion confirmation prompt.
       --compute-pool string   Flink compute pool ID.
-      --environment string    Environment ID.
+      --environment string    Environment ID or name.
       --context string        CLI context name.
 
 Global Flags:

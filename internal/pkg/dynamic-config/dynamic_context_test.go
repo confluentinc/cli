@@ -133,7 +133,7 @@ func TestDynamicContext_ParseFlagsIntoContext(t *testing.T) {
 		require.NoError(t, err)
 		initialEnvId := test.ctx.GetCurrentEnvironment()
 		initialActiveKafkaId := test.ctx.KafkaClusterContext.GetActiveKafkaClusterId()
-		err = test.ctx.ParseFlagsIntoContext(cmd)
+		err = test.ctx.ParseFlagsIntoContext(cmd, true)
 		require.NoError(t, err)
 		finalEnv := test.ctx.GetCurrentEnvironment()
 		finalCluster := test.ctx.KafkaClusterContext.GetActiveKafkaClusterId()

@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	nameconversions "github.com/confluentinc/cli/internal/pkg/name-conversions"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -31,7 +32,12 @@ func (c *identityPoolCommand) list(cmd *cobra.Command, _ []string) error {
 
 	identityPools, err := c.V2Client.ListIdentityPools(provider)
 	if err != nil {
-		return err
+		if provider, err = nameconversions.ConvertIamProviderNameToId(provider, c.V2Client, true); err != nil {
+			return err
+		}
+		if identityPools, err = c.V2Client.ListIdentityPools(provider); err != nil {
+			return err
+		}
 	}
 
 	list := output.NewList(cmd)

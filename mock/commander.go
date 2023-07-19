@@ -134,7 +134,7 @@ func (c *Commander) InitializeOnPremKafkaRest(command *pcmd.AuthenticatedCLIComm
 
 func (c *Commander) ParseFlagsIntoContext(command *pcmd.CLICommand) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, _ []string) error {
-		return command.Config.Context().ParseFlagsIntoContext(cmd)
+		return command.Config.Context().ParseFlagsIntoContext(cmd, false)
 	}
 }
 

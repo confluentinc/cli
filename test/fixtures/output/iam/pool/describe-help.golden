@@ -1,10 +1,10 @@
 Describe an identity pool.
 
 Usage:
-  confluent iam pool describe <id> [flags]
+  confluent iam pool describe <id|name> [flags]
 
 Flags:
-      --provider string   REQUIRED: ID of this pool's identity provider.
+      --provider string   REQUIRED: ID or Name of this pool's identity provider.
   -o, --output string     Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:

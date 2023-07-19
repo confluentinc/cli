@@ -12,6 +12,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	nameconversions "github.com/confluentinc/cli/internal/pkg/name-conversions"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	presource "github.com/confluentinc/cli/internal/pkg/resource"
 )
@@ -31,7 +32,7 @@ func NewDynamicContext(context *v1.Context, v2Client *ccloudv2.Client) *DynamicC
 	}
 }
 
-func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command) error {
+func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, isTest bool) error {
 	if environment, _ := cmd.Flags().GetString("environment"); environment != "" {
 		if d.GetCredentialType() == v1.APIKey {
 			output.ErrPrintln("WARNING: The `--environment` flag is ignored when using API key credentials.")
@@ -40,6 +41,16 @@ func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command) error {
 			d.Config.SetOverwrittenCurrentEnvironment(ctx.CurrentEnvironment)
 			ctx.SetCurrentEnvironment(environment)
 		}
+		if !isTest {
+			var err error
+			environment, err = nameconversions.ConvertEnvironmentNameToId(environment, d.V2Client, true)
+			if err != nil {
+				return errors.NewErrorWithSuggestions(err.Error(), errors.NotValidEnvironmentIdSuggestions)
+			}
+		}
+		ctx := d.Config.Context()
+		d.Config.SetOverwrittenCurrentEnvironment(ctx.CurrentEnvironment)
+		ctx.SetCurrentEnvironment(environment)
 	}
 
 	if cluster, _ := cmd.Flags().GetString("cluster"); cluster != "" {
@@ -50,6 +61,17 @@ func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command) error {
 			d.Config.SetOverwrittenCurrentKafkaCluster(ctx.KafkaClusterContext.GetActiveKafkaClusterId())
 			ctx.KafkaClusterContext.SetActiveKafkaCluster(cluster)
 		}
+		if !isTest {
+			var err error
+			cluster, err = nameconversions.ConvertClusterNameToId(cluster, d.GetCurrentEnvironment(), d.V2Client, true)
+			if err != nil {
+				return err
+			}
+		}
+		ctx := d.Config.Context()
+		d.Config.SetOverwrittenCurrentKafkaCluster(ctx.KafkaClusterContext.GetActiveKafkaClusterId())
+
+		ctx.KafkaClusterContext.SetActiveKafkaCluster(cluster)
 	}
 
 	if computePool, _ := cmd.Flags().GetString("compute-pool"); computePool != "" {
@@ -74,9 +96,6 @@ func (d *DynamicContext) GetKafkaClusterForCommand() (*v1.KafkaClusterConfig, er
 	}
 
 	cluster, err := d.FindKafkaCluster(clusterId)
-	if presource.LookupType(clusterId) != presource.KafkaCluster && clusterId != "anonymous-id" {
-		return nil, errors.Errorf(errors.KafkaClusterMissingPrefixErrorMsg, clusterId)
-	}
 	return cluster, errors.CatchKafkaNotFoundError(err, clusterId, nil)
 }
 

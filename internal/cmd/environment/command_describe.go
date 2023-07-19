@@ -5,6 +5,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	nameconversions "github.com/confluentinc/cli/internal/pkg/name-conversions"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -16,7 +17,7 @@ type out struct {
 
 func (c *command) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "describe [id]",
+		Use:               "describe [id|name]",
 		Short:             "Describe a Confluent Cloud environment.",
 		Args:              cobra.MaximumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
@@ -31,6 +32,7 @@ func (c *command) newDescribeCommand() *cobra.Command {
 
 func (c *command) describe(cmd *cobra.Command, args []string) error {
 	id := c.Context.GetCurrentEnvironment()
+	var err error
 	if len(args) > 0 {
 		id = args[0]
 	}
@@ -40,7 +42,12 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 
 	environment, err := c.V2Client.GetOrgEnvironment(id)
 	if err != nil {
-		return errors.NewErrorWithSuggestions(err.Error(), "List available environments with `confluent environment list`.")
+		if id, err = nameconversions.ConvertEnvironmentNameToId(id, c.V2Client, false); err != nil {
+			return errors.NewErrorWithSuggestions(err.Error(), errors.NotValidEnvironmentIdSuggestions)
+		}
+		if environment, err = c.V2Client.GetOrgEnvironment(id); err != nil {
+			return errors.NewErrorWithSuggestions(err.Error(), errors.NotValidEnvironmentIdSuggestions)
+		}
 	}
 
 	table := output.NewTable(cmd)

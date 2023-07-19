@@ -3,5 +3,10 @@
     "id": "sa-12345",
     "name": "service_account",
     "description": "at your service."
+  },
+  {
+    "id": "sa-1337",
+    "name": "audit_log_sa",
+    "description": "at your service."
   }
 ]

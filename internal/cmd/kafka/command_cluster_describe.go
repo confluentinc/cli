@@ -13,8 +13,8 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	nameconversions "github.com/confluentinc/cli/internal/pkg/name-conversions"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 var basicDescribeFields = []string{"IsCurrent", "Id", "Name", "Type", "IngressLimit", "EgressLimit", "Storage", "ServiceProvider", "Availability", "Region", "Status", "Endpoint", "RestEndpoint"}
@@ -42,7 +42,7 @@ type describeStruct struct {
 
 func (c *clusterCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "describe [id]",
+		Use:               "describe [id|name]",
 		Short:             "Describe a Kafka cluster.",
 		Long:              "Describe the Kafka cluster specified with the ID argument, or describe the active cluster for the current context.",
 		Args:              cobra.MaximumNArgs(1),
@@ -59,23 +59,28 @@ func (c *clusterCommand) newDescribeCommand() *cobra.Command {
 }
 
 func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
-	lkc, err := c.getLkcForDescribe(args)
+	clusterId, err := c.getLkcForDescribe(args)
 	if err != nil {
 		return err
 	}
 
 	ctx := c.Context.Config.Context()
 	c.Context.Config.SetOverwrittenCurrentKafkaCluster(ctx.KafkaClusterContext.GetActiveKafkaClusterId())
-	ctx.KafkaClusterContext.SetActiveKafkaCluster(lkc)
+	ctx.KafkaClusterContext.SetActiveKafkaCluster(clusterId)
 
 	environmentId, err := c.Context.EnvironmentId()
 	if err != nil {
 		return err
 	}
 
-	cluster, httpResp, err := c.V2Client.DescribeKafkaCluster(lkc, environmentId)
+	cluster, httpResp, err := c.V2Client.DescribeKafkaCluster(clusterId, environmentId)
 	if err != nil {
-		return errors.CatchKafkaNotFoundError(err, lkc, httpResp)
+		if clusterId, err = nameconversions.ConvertClusterNameToId(clusterId, environmentId, c.V2Client, false); err != nil {
+			return errors.CatchKafkaNotFoundError(err, clusterId, httpResp)
+		}
+		if cluster, httpResp, err = c.V2Client.DescribeKafkaCluster(clusterId, environmentId); err != nil {
+			return errors.CatchKafkaNotFoundError(err, clusterId, httpResp)
+		}
 	}
 
 	return c.outputKafkaClusterDescription(cmd, &cluster, true)
@@ -83,9 +88,6 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 
 func (c *clusterCommand) getLkcForDescribe(args []string) (string, error) {
 	if len(args) > 0 {
-		if resource.LookupType(args[0]) != resource.KafkaCluster {
-			return "", errors.Errorf(errors.KafkaClusterMissingPrefixErrorMsg, args[0])
-		}
 		return args[0], nil
 	}
 

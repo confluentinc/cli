@@ -125,6 +125,10 @@ func handleCmkCluster(t *testing.T) http.HandlerFunc {
 			handleCmkKafkaUnknown(t)(w, r)
 		case "lkc-unknown-type":
 			handleCmkKafkaUnknownType(t)(w, r)
+		case "abc", "lkc-123":
+			handleCmkKafkaClusterDescribeUsingName(t)(w, r)
+		case "def", "lkc-456":
+			handleCmkKafkaClusterUpdateUsingName(t)(w, r)
 		default:
 			handleCmkKafkaClusterGetListDeleteDescribe(t)(w, r)
 		}
@@ -320,5 +324,55 @@ func handleCmkKafkaUnknownType(t *testing.T) http.HandlerFunc {
 		cluster := getCmkUnknownDescribeCluster(id, "kafka-cluster")
 		err := json.NewEncoder(w).Encode(cluster)
 		require.NoError(t, err)
+	}
+}
+
+// Handler for GET "/cmk/v2/clusters/abc" and GET "/cmk/v2/clusters/lkc-123"
+func handleCmkKafkaClusterDescribeUsingName(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		id := vars["id"]
+		if id == "abc" {
+			w.WriteHeader(http.StatusNotFound)
+		} else if id == "lkc-123" {
+			cluster := getCmkBasicDescribeCluster(id, "abc")
+			err := json.NewEncoder(w).Encode(cluster)
+			require.NoError(t, err)
+		}
+		if r.URL.Query().Get("environment") != defaultEnvId {
+			require.Equal(t, r.URL.Query().Get("environment"), otherEnvId)
+		}
+	}
+}
+
+// Handler for GET/PATCH "/cmk/v2/clusters/def" and GET/PATCH "/cmk/v2/clusters/lkc-456"
+func handleCmkKafkaClusterUpdateUsingName(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		id := vars["id"]
+		if id == "def" {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		if r.Method == http.MethodGet {
+			cluster := getCmkBasicDescribeCluster("lkc-456", "def")
+			cluster.Status = &cmkv2.CmkV2ClusterStatus{Phase: "PROVISIONED"}
+			err := json.NewEncoder(w).Encode(cluster)
+			require.NoError(t, err)
+		}
+		// Update client call
+		if r.Method == http.MethodPatch {
+			var req cmkv2.CmkV2Cluster
+			err := json.NewDecoder(r.Body).Decode(&req)
+			require.NoError(t, err)
+			req.Id = cmkv2.PtrString("lkc-456")
+			if req.Spec.Config != nil && req.Spec.Config.CmkV2Dedicated.Cku > 0 {
+			} else { // update name
+				cluster := getCmkBasicDescribeCluster(*req.Id, *req.Spec.DisplayName)
+				err := json.NewEncoder(w).Encode(cluster)
+				require.NoError(t, err)
+			}
+			require.NoError(t, err)
+		}
 	}
 }

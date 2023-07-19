@@ -1,7 +1,7 @@
 Describe an identity provider.
 
 Usage:
-  confluent iam provider describe <id> [flags]
+  confluent iam provider describe <id|name> [flags]
 
 Flags:
   -o, --output string   Specify the output format as "human", "json", or "yaml". (default "human")

@@ -100,7 +100,7 @@ func AddCloudFlag(cmd *cobra.Command) {
 }
 
 func AddClusterFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {
-	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	cmd.Flags().String("cluster", "", "Kafka cluster ID or name.")
 	RegisterFlagCompletionFunc(cmd, "cluster", func(cmd *cobra.Command, args []string) []string {
 		if err := c.PersistentPreRunE(cmd, args); err != nil {
 			return nil
@@ -144,7 +144,7 @@ func AutocompleteContexts(cfg *v1.Config) []string {
 }
 
 func AddEnvironmentFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
-	cmd.Flags().String("environment", "", "Environment ID.")
+	cmd.Flags().String("environment", "", "Environment ID or name.")
 	RegisterFlagCompletionFunc(cmd, "environment", func(cmd *cobra.Command, args []string) []string {
 		if err := command.PersistentPreRunE(cmd, args); err != nil {
 			return nil
@@ -277,7 +277,7 @@ func AddProtocolFlag(cmd *cobra.Command) {
 }
 
 func AddProviderFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
-	cmd.Flags().String("provider", "", "ID of this pool's identity provider.")
+	cmd.Flags().String("provider", "", "ID or Name of this pool's identity provider.")
 
 	RegisterFlagCompletionFunc(cmd, "provider", func(cmd *cobra.Command, args []string) []string {
 		if err := command.PersistentPreRunE(cmd, args); err != nil {
@@ -353,7 +353,7 @@ func AddSchemaTypeFlag(cmd *cobra.Command) {
 }
 
 func AddServiceAccountFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
-	cmd.Flags().String("service-account", "", "Service account ID.")
+	cmd.Flags().String("service-account", "", "Service account ID or name.")
 
 	RegisterFlagCompletionFunc(cmd, "service-account", func(cmd *cobra.Command, args []string) []string {
 		if err := command.PersistentPreRunE(cmd, args); err != nil {

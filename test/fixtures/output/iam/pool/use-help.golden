@@ -1,10 +1,10 @@
 Choose an identity pool to be used in subsequent commands which support passing an identity pool with the `--identity-pool` flag.
 
 Usage:
-  confluent iam pool use <id> [flags]
+  confluent iam pool use <id|name> [flags]
 
 Flags:
-      --provider string   REQUIRED: ID of this pool's identity provider.
+      --provider string   REQUIRED: ID or Name of this pool's identity provider.
   -o, --output string     Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:

@@ -13,7 +13,7 @@ import (
 
 func (c *identityPoolCommand) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "update <id>",
+		Use:               "update <id|name>",
 		Short:             "Update an identity pool.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
@@ -69,7 +69,7 @@ func (c *identityPoolCommand) update(cmd *cobra.Command, args []string) error {
 	}
 
 	identityPoolId := args[0]
-	updateIdentityPool := identityproviderv2.IamV2IdentityPool{Id: &identityPoolId}
+	updateIdentityPool := identityproviderv2.IamV2IdentityPool{Id: identityproviderv2.PtrString(identityPoolId)}
 	if name != "" {
 		updateIdentityPool.DisplayName = &name
 	}
@@ -85,7 +85,13 @@ func (c *identityPoolCommand) update(cmd *cobra.Command, args []string) error {
 
 	pool, err := c.V2Client.UpdateIdentityPool(updateIdentityPool, provider)
 	if err != nil {
-		return err
+		if identityPoolId, provider, err = c.poolAndProviderNamesToIds(identityPoolId, provider); err != nil {
+			return err
+		}
+		updateIdentityPool.Id = identityproviderv2.PtrString(identityPoolId)
+		if pool, err = c.V2Client.UpdateIdentityPool(updateIdentityPool, provider); err != nil {
+			return err
+		}
 	}
 
 	table := output.NewTable(cmd)

@@ -9,7 +9,7 @@ import (
 
 func (c *identityPoolCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "describe <id>",
+		Use:               "describe <id|name>",
 		Short:             "Describe an identity pool.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
@@ -25,14 +25,20 @@ func (c *identityPoolCommand) newDescribeCommand() *cobra.Command {
 }
 
 func (c *identityPoolCommand) describe(cmd *cobra.Command, args []string) error {
+	poolId := args[0]
 	provider, err := cmd.Flags().GetString("provider")
 	if err != nil {
 		return err
 	}
 
-	identityPoolProfile, err := c.V2Client.GetIdentityPool(args[0], provider)
+	identityPoolProfile, err := c.V2Client.GetIdentityPool(poolId, provider)
 	if err != nil {
-		return err
+		if poolId, provider, err = c.poolAndProviderNamesToIds(poolId, provider); err != nil {
+			return err
+		}
+		if identityPoolProfile, err = c.V2Client.GetIdentityPool(poolId, provider); err != nil {
+			return err
+		}
 	}
 
 	table := output.NewTable(cmd)

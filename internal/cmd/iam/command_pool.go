@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	nameconversions "github.com/confluentinc/cli/internal/pkg/name-conversions"
 )
 
 type identityPoolCommand struct {
@@ -48,4 +49,13 @@ func (c *identityPoolCommand) validArgs(cmd *cobra.Command, args []string) []str
 
 	provider, _ := cmd.Flags().GetString("provider")
 	return pcmd.AutocompleteIdentityPools(c.V2Client, provider)
+}
+
+func (c *identityPoolCommand) poolAndProviderNamesToIds(pool string, provider string) (string, string, error) {
+	provider, err := nameconversions.ConvertIamProviderNameToId(provider, c.V2Client, true)
+	if err != nil {
+		return pool, provider, err
+	}
+	pool, err = nameconversions.ConvertIamPoolNameToId(pool, provider, c.V2Client, false)
+	return pool, provider, err
 }

@@ -11,6 +11,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	nameconversions "github.com/confluentinc/cli/internal/pkg/name-conversions"
 )
 
 type aclCommand struct {
@@ -111,6 +112,22 @@ func (c *aclCommand) provisioningClusterCheck(lkc string) error {
 	}
 	if cluster.Status.Phase == ccloudv2.StatusProvisioning {
 		return errors.Errorf(errors.KafkaRestProvisioningErrorMsg, lkc)
+	}
+	return nil
+}
+
+func (c *aclCommand) validateServiceAccountFlag(cmd *cobra.Command) error {
+	if serviceAccount, err := cmd.Flags().GetString("service-account"); serviceAccount != "" {
+		if err != nil {
+			return err
+		}
+		serviceAccountId, err := nameconversions.ConvertIamServiceAccountNameToId(serviceAccount, c.V2Client, true)
+		if err != nil {
+			return nil
+		}
+		if err = cmd.Flags().Set("service-account", serviceAccountId); err != nil {
+			return err
+		}
 	}
 	return nil
 }

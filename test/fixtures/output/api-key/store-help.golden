@@ -29,7 +29,7 @@ Flags:
       --resource string      The ID of the resource the API key is for. Use "cloud" for a Cloud API key.
   -f, --force                Force overwrite existing secret for this key.
       --context string       CLI context name.
-      --environment string   Environment ID.
+      --environment string   Environment ID or name.
 
 Global Flags:
   -h, --help            Show help for this command.

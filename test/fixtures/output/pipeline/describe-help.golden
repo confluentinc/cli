@@ -10,8 +10,8 @@ Describe Stream Designer pipeline "pipe-12345".
 
 Flags:
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
-      --cluster string       Kafka cluster ID.
-      --environment string   Environment ID.
+      --cluster string       Kafka cluster ID or name.
+      --environment string   Environment ID or name.
 
 Global Flags:
   -h, --help            Show help for this command.

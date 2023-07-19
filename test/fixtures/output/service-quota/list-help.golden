@@ -9,8 +9,8 @@ List Confluent Cloud service quota values for scope "organization".
   $ confluent service-quota list organization
 
 Flags:
-      --environment string   Environment ID.
-      --cluster string       Kafka cluster ID.
+      --environment string   Environment ID or name.
+      --cluster string       Kafka cluster ID or name.
       --quota-code string    Filter the result by quota code.
       --network string       Filter the result by network ID.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")

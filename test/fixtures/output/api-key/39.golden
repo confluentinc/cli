@@ -1,4 +1,1 @@
-Error: service account "sa-123456" not found
-
-Suggestions:
-    List service accounts with `confluent service-account list`.
+Error: resource with name or ID "sa-123456" was not found

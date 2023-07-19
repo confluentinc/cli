@@ -1,11 +1,11 @@
 Choose a Kafka cluster to be used in subsequent commands which support passing a cluster with the `--cluster` flag.
 
 Usage:
-  confluent kafka cluster use <id> [flags]
+  confluent kafka cluster use <id|name> [flags]
 
 Flags:
       --context string       CLI context name.
-      --environment string   Environment ID.
+      --environment string   Environment ID or name.
 
 Global Flags:
   -h, --help            Show help for this command.
