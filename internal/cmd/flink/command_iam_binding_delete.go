@@ -30,8 +30,10 @@ func (c *command) iamBindingDelete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if err := c.confirmDeletionIamBinding(cmd, environmentId, args); err != nil {
+	if confirm, err := c.confirmDeletionIamBinding(cmd, environmentId, args); err != nil {
 		return err
+	} else if !confirm {
+		return nil
 	}
 
 	deleteFunc := func(id string) error {
@@ -44,10 +46,10 @@ func (c *command) iamBindingDelete(cmd *cobra.Command, args []string) error {
 	return err
 }
 
-func (c *command) confirmDeletionIamBinding(cmd *cobra.Command, environmentId string, args []string) error {
+func (c *command) confirmDeletionIamBinding(cmd *cobra.Command, environmentId string, args []string) (bool, error) {
 	iamBindings, err := c.V2Client.ListFlinkIAMBindings(environmentId, "", "", "")
 	if err != nil {
-		return err
+		return false, err
 	}
 	iamBindingsSet := types.NewSet[string]()
 	for _, iamBinding := range iamBindings {
@@ -62,18 +64,16 @@ func (c *command) confirmDeletionIamBinding(cmd *cobra.Command, environmentId st
 	}
 
 	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.FlinkIamBinding, describeFunc); err != nil {
-		return err
+		return false, err
 	}
 
-	if len(args) == 1 {
-		if err := form.ConfirmDeletionWithString(cmd, form.DefaultPromptString(resource.FlinkIamBinding, args[0], args[0]), args[0]); err != nil {
-			return err
-		}
-	} else {
-		if ok, err := form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.FlinkIamBinding, args)); err != nil || !ok {
-			return err
-		}
+	if len(args) > 1 {
+		return form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.FlinkIamBinding, args))
 	}
 
-	return nil
+	if err := form.ConfirmDeletionWithString(cmd, form.DefaultPromptString(resource.FlinkIamBinding, args[0], args[0]), args[0]); err != nil {
+		return false, err
+	}
+
+	return true, nil
 }

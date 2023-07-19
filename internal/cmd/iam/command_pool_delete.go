@@ -38,8 +38,10 @@ func (c *identityPoolCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if err := c.confirmDeletion(cmd, provider, args); err != nil {
+	if confirm, err := c.confirmDeletion(cmd, provider, args); err != nil {
 		return err
+	} else if !confirm {
+		return nil
 	}
 
 	deleteFunc := func(id string) error {
@@ -52,7 +54,7 @@ func (c *identityPoolCommand) delete(cmd *cobra.Command, args []string) error {
 	return err
 }
 
-func (c *identityPoolCommand) confirmDeletion(cmd *cobra.Command, provider string, args []string) error {
+func (c *identityPoolCommand) confirmDeletion(cmd *cobra.Command, provider string, args []string) (bool, error) {
 	var displayName string
 	describeFunc := func(id string) error {
 		pool, err := c.V2Client.GetIdentityPool(id, provider)
@@ -63,18 +65,16 @@ func (c *identityPoolCommand) confirmDeletion(cmd *cobra.Command, provider strin
 	}
 
 	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.IdentityPool, describeFunc); err != nil {
-		return err
+		return false, err
 	}
 
-	if len(args) == 1 {
-		if err := form.ConfirmDeletionWithString(cmd, form.DefaultPromptString(resource.IdentityPool, args[0], displayName), displayName); err != nil {
-			return err
-		}
-	} else {
-		if ok, err := form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.IdentityPool, args)); err != nil || !ok {
-			return err
-		}
+	if len(args) > 1 {
+		return form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.IdentityPool, args))
 	}
 
-	return nil
+	if err := form.ConfirmDeletionWithString(cmd, form.DefaultPromptString(resource.IdentityPool, args[0], displayName), displayName); err != nil {
+		return false, err
+	}
+
+	return true, nil
 }

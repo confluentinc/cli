@@ -37,8 +37,10 @@ func (c *command) statementDelete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if err := c.confirmDeletionStatement(cmd, client, environmentId, args); err != nil {
+	if confirm, err := c.confirmDeletionStatement(cmd, client, environmentId, args); err != nil {
 		return err
+	} else if !confirm {
+		return nil
 	}
 
 	deleteFunc := func(id string) error {
@@ -51,19 +53,15 @@ func (c *command) statementDelete(cmd *cobra.Command, args []string) error {
 	return err
 }
 
-func (c *command) confirmDeletionStatement(cmd *cobra.Command, client *ccloudv2.FlinkGatewayClient, environmentId string, args []string) error {
+func (c *command) confirmDeletionStatement(cmd *cobra.Command, client *ccloudv2.FlinkGatewayClient, environmentId string, args []string) (bool, error) {
 	describeFunc := func(id string) error {
 		_, err := client.GetStatement(environmentId, id, c.Context.LastOrgId)
 		return err
 	}
 
 	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.FlinkStatement, describeFunc); err != nil {
-		return err
+		return false, err
 	}
 
-	if ok, err := form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.FlinkStatement, args)); err != nil || !ok {
-		return err
-	}
-
-	return nil
+	return form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.FlinkStatement, args))
 }

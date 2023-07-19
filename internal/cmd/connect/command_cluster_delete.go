@@ -48,8 +48,10 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	connectorIdToName := make(map[string]string)
-	if err := c.confirmDeletion(cmd, environmentId, kafkaCluster.ID, args, connectorIdToName); err != nil {
+	if confirm, err := c.confirmDeletion(cmd, environmentId, kafkaCluster.ID, args, connectorIdToName); err != nil {
 		return err
+	} else if !confirm {
+		return nil
 	}
 
 	deleteFunc := func(id string) error {
@@ -65,7 +67,7 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	return err
 }
 
-func (c *clusterCommand) confirmDeletion(cmd *cobra.Command, environmentId, kafkaClusterId string, args []string, connectorIdToName map[string]string) error {
+func (c *clusterCommand) confirmDeletion(cmd *cobra.Command, environmentId, kafkaClusterId string, args []string, connectorIdToName map[string]string) (bool, error) {
 	describeFunc := func(id string) error {
 		connector, err := c.V2Client.GetConnectorExpansionById(id, environmentId, kafkaClusterId)
 		if err == nil {
@@ -75,19 +77,17 @@ func (c *clusterCommand) confirmDeletion(cmd *cobra.Command, environmentId, kafk
 	}
 
 	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.Connector, describeFunc); err != nil {
-		return err
+		return false, err
 	}
 
-	if len(args) == 1 {
-		displayName := connectorIdToName[args[0]]
-		if err := form.ConfirmDeletionWithString(cmd, form.DefaultPromptString(resource.Connector, args[0], displayName), displayName); err != nil {
-			return err
-		}
-	} else {
-		if ok, err := form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.Connector, args)); err != nil || !ok {
-			return err
-		}
+	if len(args) > 1 {
+		return form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.Connector, args))
 	}
 
-	return nil
+	displayName := connectorIdToName[args[0]]
+	if err := form.ConfirmDeletionWithString(cmd, form.DefaultPromptString(resource.Connector, args[0], displayName), displayName); err != nil {
+		return false, err
+	}
+
+	return true, nil
 }

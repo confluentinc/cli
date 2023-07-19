@@ -24,8 +24,10 @@ func (c *userCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *userCommand) delete(cmd *cobra.Command, args []string) error {
-	if err := c.confirmDeletion(cmd, args); err != nil {
+	if confirm, err := c.confirmDeletion(cmd, args); err != nil {
 		return err
+	} else if !confirm {
+		return nil
 	}
 
 	deleteFunc := func(id string) error {
@@ -41,9 +43,9 @@ func (c *userCommand) delete(cmd *cobra.Command, args []string) error {
 	return err
 }
 
-func (c *userCommand) confirmDeletion(cmd *cobra.Command, args []string) error {
+func (c *userCommand) confirmDeletion(cmd *cobra.Command, args []string) (bool, error) {
 	if err := resource.ValidatePrefixes(resource.User, args); err != nil {
-		return err
+		return false, err
 	}
 
 	var fullName string
@@ -56,18 +58,16 @@ func (c *userCommand) confirmDeletion(cmd *cobra.Command, args []string) error {
 	}
 
 	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.User, describeFunc); err != nil {
-		return err
+		return false, err
 	}
 
-	if len(args) == 1 {
-		if err := form.ConfirmDeletionWithString(cmd, form.DefaultPromptString(resource.User, args[0], fullName), fullName); err != nil {
-			return err
-		}
-	} else {
-		if ok, err := form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.User, args)); err != nil || !ok {
-			return err
-		}
+	if len(args) > 1 {
+		return form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.User, args))
 	}
 
-	return nil
+	if err := form.ConfirmDeletionWithString(cmd, form.DefaultPromptString(resource.User, args[0], fullName), fullName); err != nil {
+		return false, err
+	}
+
+	return true, nil
 }

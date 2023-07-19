@@ -36,8 +36,10 @@ func (c *command) exporterDelete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if err := c.confirmDeletionExporter(cmd, srClient, ctx, args); err != nil {
+	if confirm, err := c.confirmDeletionExporter(cmd, srClient, ctx, args); err != nil {
 		return err
+	} else if !confirm {
+		return nil
 	}
 
 	deleteFunc := func(id string) error {
@@ -53,7 +55,7 @@ func (c *command) exporterDelete(cmd *cobra.Command, args []string) error {
 	return err
 }
 
-func (c *command) confirmDeletionExporter(cmd *cobra.Command, srClient *srsdk.APIClient, ctx context.Context, args []string) error {
+func (c *command) confirmDeletionExporter(cmd *cobra.Command, srClient *srsdk.APIClient, ctx context.Context, args []string) (bool, error) {
 	var name string
 	describeFunc := func(id string) error {
 		info, _, err := srClient.DefaultApi.GetExporterInfo(ctx, args[0])
@@ -64,18 +66,16 @@ func (c *command) confirmDeletionExporter(cmd *cobra.Command, srClient *srsdk.AP
 	}
 
 	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.SchemaExporter, describeFunc); err != nil {
-		return err
+		return false, err
 	}
 
-	if len(args) == 1 {
-		if err := form.ConfirmDeletionWithString(cmd, form.DefaultPromptString(resource.SchemaExporter, args[0], name), name); err != nil {
-			return err
-		}
-	} else {
-		if ok, err := form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.SchemaExporter, args)); err != nil || !ok {
-			return err
-		}
+	if len(args) > 1 {
+		return form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.SchemaExporter, args))
 	}
 
-	return nil
+	if err := form.ConfirmDeletionWithString(cmd, form.DefaultPromptString(resource.SchemaExporter, args[0], name), name); err != nil {
+		return false, err
+	}
+
+	return true, nil
 }

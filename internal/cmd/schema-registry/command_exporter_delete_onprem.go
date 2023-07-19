@@ -30,8 +30,10 @@ func (c *command) exporterDeleteOnPrem(cmd *cobra.Command, args []string) error 
 		return err
 	}
 
-	if err := c.confirmDeletionExporter(cmd, srClient, ctx, args); err != nil {
+	if confirm, err := c.confirmDeletionExporter(cmd, srClient, ctx, args); err != nil {
 		return err
+	} else if !confirm {
+		return nil
 	}
 
 	deleteFunc := func(id string) error {

@@ -30,8 +30,10 @@ func (c *command) newProviderShareDeleteCommand() *cobra.Command {
 }
 
 func (c *command) deleteProviderShare(cmd *cobra.Command, args []string) error {
-	if err := c.confirmDeletionProviderShare(cmd, args); err != nil {
+	if confirm, err := c.confirmDeletionProviderShare(cmd, args); err != nil {
 		return err
+	} else if !confirm {
+		return nil
 	}
 
 	deleteFunc := func(id string) error {
@@ -47,19 +49,15 @@ func (c *command) deleteProviderShare(cmd *cobra.Command, args []string) error {
 	return err
 }
 
-func (c *command) confirmDeletionProviderShare(cmd *cobra.Command, args []string) error {
+func (c *command) confirmDeletionProviderShare(cmd *cobra.Command, args []string) (bool, error) {
 	describeFunc := func(id string) error {
 		_, err := c.V2Client.DescribeProviderShare(id)
 		return err
 	}
 
 	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.ProviderShare, describeFunc); err != nil {
-		return err
+		return false, err
 	}
 
-	if ok, err := form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.ProviderShare, args)); err != nil || !ok {
-		return err
-	}
-
-	return nil
+	return form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.ProviderShare, args))
 }

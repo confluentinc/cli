@@ -53,8 +53,10 @@ func (c *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 		return err
 	}
 
-	if err := c.confirmDeletion(cmd, kafkaREST, kafkaClusterConfig.ID, args); err != nil {
+	if confirm, err := c.confirmDeletion(cmd, kafkaREST, kafkaClusterConfig.ID, args); err != nil {
 		return err
+	} else if !confirm {
+		return nil
 	}
 
 	deleteFunc := func(id string) error {
@@ -75,25 +77,23 @@ func (c *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) er
 	return err
 }
 
-func (c *authenticatedTopicCommand) confirmDeletion(cmd *cobra.Command, kafkaREST *pcmd.KafkaREST, clusterId string, args []string) error {
+func (c *authenticatedTopicCommand) confirmDeletion(cmd *cobra.Command, kafkaREST *pcmd.KafkaREST, clusterId string, args []string) (bool, error) {
 	describeFunc := func(id string) error {
 		_, err := kafkaREST.CloudClient.ListKafkaTopicConfigs(clusterId, id)
 		return err
 	}
 
 	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.Topic, describeFunc); err != nil {
-		return err
+		return false, err
 	}
 
-	if len(args) == 1 {
-		if err := form.ConfirmDeletionWithString(cmd, form.DefaultPromptString(resource.Topic, args[0], args[0]), args[0]); err != nil {
-			return err
-		}
-	} else {
-		if ok, err := form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.Topic, args)); err != nil || !ok {
-			return err
-		}
+	if len(args) > 1 {
+		return form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.Topic, args))
 	}
 
-	return nil
+	if err := form.ConfirmDeletionWithString(cmd, form.DefaultPromptString(resource.Topic, args[0], args[0]), args[0]); err != nil {
+		return false, err
+	}
+
+	return true, nil
 }

@@ -44,8 +44,10 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if err := c.confirmDeletion(cmd, environmentId, cluster.ID, args); err != nil {
+	if confirm, err := c.confirmDeletion(cmd, environmentId, cluster.ID, args); err != nil {
 		return err
+	} else if !confirm {
+		return nil
 	}
 
 	deleteFunc := func(id string) error {
@@ -65,7 +67,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	return err
 }
 
-func (c *command) confirmDeletion(cmd *cobra.Command, environmentId, clusterId string, args []string) error {
+func (c *command) confirmDeletion(cmd *cobra.Command, environmentId, clusterId string, args []string) (bool, error) {
 	var displayName string
 	describeFunc := func(id string) error {
 		pipeline, err := c.V2Client.GetSdPipeline(environmentId, clusterId, id)
@@ -76,18 +78,16 @@ func (c *command) confirmDeletion(cmd *cobra.Command, environmentId, clusterId s
 	}
 
 	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.Pipeline, describeFunc); err != nil {
-		return err
+		return false, err
 	}
 
-	if len(args) == 1 {
-		if err := form.ConfirmDeletionWithString(cmd, form.DefaultPromptString(resource.Pipeline, args[0], displayName), displayName); err != nil {
-			return err
-		}
-	} else {
-		if ok, err := form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.Pipeline, args)); err != nil || !ok {
-			return err
-		}
+	if len(args) > 1 {
+		return form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.Pipeline, args))
 	}
 
-	return nil
+	if err := form.ConfirmDeletionWithString(cmd, form.DefaultPromptString(resource.Pipeline, args[0], displayName), displayName); err != nil {
+		return false, err
+	}
+
+	return true, nil
 }

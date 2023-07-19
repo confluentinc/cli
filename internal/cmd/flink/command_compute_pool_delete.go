@@ -30,8 +30,10 @@ func (c *command) computePoolDelete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if err := c.confirmDeletionComputePool(cmd, environmentId, args); err != nil {
+	if confirm, err := c.confirmDeletionComputePool(cmd, environmentId, args); err != nil {
 		return err
+	} else if !confirm {
+		return nil
 	}
 
 	deleteFunc := func(id string) error {
@@ -47,7 +49,7 @@ func (c *command) computePoolDelete(cmd *cobra.Command, args []string) error {
 	return err
 }
 
-func (c *command) confirmDeletionComputePool(cmd *cobra.Command, environmentId string, args []string) error {
+func (c *command) confirmDeletionComputePool(cmd *cobra.Command, environmentId string, args []string) (bool, error) {
 	var displayName string
 	describeFunc := func(id string) error {
 		computePool, err := c.V2Client.DescribeFlinkComputePool(id, environmentId)
@@ -58,20 +60,18 @@ func (c *command) confirmDeletionComputePool(cmd *cobra.Command, environmentId s
 	}
 
 	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.FlinkComputePool, describeFunc); err != nil {
-		return err
+		return false, err
 	}
 
-	if len(args) == 1 {
-		if err := form.ConfirmDeletionWithString(cmd, form.DefaultPromptString(resource.FlinkComputePool, args[0], displayName), displayName); err != nil {
-			return err
-		}
-	} else {
-		if ok, err := form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.FlinkComputePool, args)); err != nil || !ok {
-			return err
-		}
+	if len(args) > 1 {
+		return form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.FlinkComputePool, args))
 	}
 
-	return nil
+	if err := form.ConfirmDeletionWithString(cmd, form.DefaultPromptString(resource.FlinkComputePool, args[0], displayName), displayName); err != nil {
+		return false, err
+	}
+
+	return true, nil
 }
 
 func (c *command) postProcess(id string) error {

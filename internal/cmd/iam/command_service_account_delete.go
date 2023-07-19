@@ -31,8 +31,10 @@ func (c *serviceAccountCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *serviceAccountCommand) delete(cmd *cobra.Command, args []string) error {
-	if err := c.confirmDeletion(cmd, args); err != nil {
+	if confirm, err := c.confirmDeletion(cmd, args); err != nil {
 		return err
+	} else if !confirm {
+		return nil
 	}
 
 	deleteFunc := func(id string) error {
@@ -48,9 +50,9 @@ func (c *serviceAccountCommand) delete(cmd *cobra.Command, args []string) error 
 	return err
 }
 
-func (c *serviceAccountCommand) confirmDeletion(cmd *cobra.Command, args []string) error {
+func (c *serviceAccountCommand) confirmDeletion(cmd *cobra.Command, args []string) (bool, error) {
 	if err := resource.ValidatePrefixes(resource.ServiceAccount, args); err != nil {
-		return err
+		return false, err
 	}
 
 	var displayName string
@@ -63,18 +65,16 @@ func (c *serviceAccountCommand) confirmDeletion(cmd *cobra.Command, args []strin
 	}
 
 	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.ServiceAccount, describeFunc); err != nil {
-		return err
+		return false, err
 	}
 
-	if len(args) == 1 {
-		if err := form.ConfirmDeletionWithString(cmd, form.DefaultPromptString(resource.ServiceAccount, args[0], displayName), displayName); err != nil {
-			return err
-		}
-	} else {
-		if ok, err := form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.ServiceAccount, args)); err != nil || !ok {
-			return err
-		}
+	if len(args) > 1 {
+		return form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.ServiceAccount, args))
 	}
 
-	return nil
+	if err := form.ConfirmDeletionWithString(cmd, form.DefaultPromptString(resource.ServiceAccount, args[0], displayName), displayName); err != nil {
+		return false, err
+	}
+
+	return true, nil
 }

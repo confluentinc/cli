@@ -45,8 +45,10 @@ func (c *ksqlCommand) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	idToCluster := make(map[string]ksqlv2.KsqldbcmV2Cluster)
-	if err := c.confirmDeletion(cmd, environmentId, args, idToCluster); err != nil {
+	if confirm, err := c.confirmDeletion(cmd, environmentId, args, idToCluster); err != nil {
 		return err
+	} else if !confirm {
+		return nil
 	}
 
 	deleteFunc := func(id string) error {
@@ -103,7 +105,7 @@ func (c *ksqlCommand) deleteTopics(clusterId, endpoint string) error {
 	return nil
 }
 
-func (c *ksqlCommand) confirmDeletion(cmd *cobra.Command, environmentId string, args []string, idToCluster map[string]ksqlv2.KsqldbcmV2Cluster) error {
+func (c *ksqlCommand) confirmDeletion(cmd *cobra.Command, environmentId string, args []string, idToCluster map[string]ksqlv2.KsqldbcmV2Cluster) (bool, error) {
 	describeFunc := func(id string) error {
 		cluster, err := c.V2Client.DescribeKsqlCluster(id, environmentId)
 		if err == nil {
@@ -113,19 +115,17 @@ func (c *ksqlCommand) confirmDeletion(cmd *cobra.Command, environmentId string, 
 	}
 
 	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.KsqlCluster, describeFunc); err != nil {
-		return err
+		return false, err
 	}
 
-	if len(args) == 1 {
-		displayName := idToCluster[args[0]].Spec.GetDisplayName()
-		if err := form.ConfirmDeletionWithString(cmd, form.DefaultPromptString(resource.KsqlCluster, args[0], displayName), displayName); err != nil {
-			return err
-		}
-	} else {
-		if ok, err := form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.KsqlCluster, args)); err != nil || !ok {
-			return err
-		}
+	if len(args) > 1 {
+		return form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.KsqlCluster, args))
 	}
 
-	return nil
+	displayName := idToCluster[args[0]].Spec.GetDisplayName()
+	if err := form.ConfirmDeletionWithString(cmd, form.DefaultPromptString(resource.KsqlCluster, args[0], displayName), displayName); err != nil {
+		return false, err
+	}
+
+	return true, nil
 }

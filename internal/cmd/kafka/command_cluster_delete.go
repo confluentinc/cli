@@ -35,8 +35,10 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if err := c.confirmDeletion(cmd, environmentId, args); err != nil {
+	if confirm, err := c.confirmDeletion(cmd, environmentId, args); err != nil {
 		return err
+	} else if !confirm {
+		return nil
 	}
 
 	deleteFunc := func(id string) error {
@@ -60,9 +62,9 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func (c *clusterCommand) confirmDeletion(cmd *cobra.Command, environmentId string, args []string) error {
+func (c *clusterCommand) confirmDeletion(cmd *cobra.Command, environmentId string, args []string) (bool, error) {
 	if err := resource.ValidatePrefixes(resource.KafkaCluster, args); err != nil {
-		return err
+		return false, err
 	}
 
 	var displayName string
@@ -77,20 +79,18 @@ func (c *clusterCommand) confirmDeletion(cmd *cobra.Command, environmentId strin
 	err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.KafkaCluster, describeFunc)
 	if err != nil {
 		PluralClusterEnvironmentSuggestions := "Ensure the clusters you are specifying belong to the currently selected environment with `confluent kafka cluster list`, `confluent environment list`, and `confluent environment use`."
-		return errors.NewErrorWithSuggestions(err.Error(), PluralClusterEnvironmentSuggestions)
+		return false, errors.NewErrorWithSuggestions(err.Error(), PluralClusterEnvironmentSuggestions)
 	}
 
-	if len(args) == 1 {
-		if err := form.ConfirmDeletionWithString(cmd, form.DefaultPromptString(resource.KafkaCluster, args[0], displayName), displayName); err != nil {
-			return err
-		}
-	} else {
-		if ok, err := form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.KafkaCluster, args)); err != nil || !ok {
-			return err
-		}
+	if len(args) > 1 {
+		return form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.KafkaCluster, args))
 	}
 
-	return nil
+	if err := form.ConfirmDeletionWithString(cmd, form.DefaultPromptString(resource.KafkaCluster, args[0], displayName), displayName); err != nil {
+		return false, err
+	}
+
+	return true, nil
 }
 
 func (c *clusterCommand) postProcess(id string) error {

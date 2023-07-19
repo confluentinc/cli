@@ -43,8 +43,10 @@ func (c *brokerCommand) delete(cmd *cobra.Command, args []string) error {
 	}
 
 	brokerIdToNumId := make(map[string]int32)
-	if err := c.confirmDeletion(cmd, restClient, restContext, clusterId, args, brokerIdToNumId); err != nil {
+	if confirm, err := c.confirmDeletion(cmd, restClient, restContext, clusterId, args, brokerIdToNumId); err != nil {
 		return err
+	} else if !confirm {
+		return nil
 	}
 
 	opts := kafkarestv3.ClustersClusterIdBrokersBrokerIdDeleteOpts{ShouldShutdown: optional.NewBool(true)}
@@ -65,7 +67,7 @@ func (c *brokerCommand) delete(cmd *cobra.Command, args []string) error {
 	return err
 }
 
-func (c *brokerCommand) confirmDeletion(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restContext context.Context, clusterId string, args []string, brokerIdToNumId map[string]int32) error {
+func (c *brokerCommand) confirmDeletion(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restContext context.Context, clusterId string, args []string, brokerIdToNumId map[string]int32) (bool, error) {
 	describeFunc := func(id string) error {
 		i, err := strconv.ParseInt(id, 10, 32)
 		if err != nil {
@@ -81,12 +83,8 @@ func (c *brokerCommand) confirmDeletion(cmd *cobra.Command, restClient *kafkares
 	}
 
 	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, "broker", describeFunc); err != nil {
-		return err
+		return false, err
 	}
 
-	if ok, err := form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString("broker", args)); err != nil || !ok {
-		return err
-	}
-
-	return nil
+	return form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString("broker", args))
 }
