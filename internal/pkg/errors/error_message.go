@@ -178,9 +178,9 @@ const (
 	TopicExistsErrorMsg                  = `topic "%s" already exists for Kafka cluster "%s"`
 	TopicExistsSuggestions               = ListTopicSuggestions
 	NoAPISecretStoredOrPassedErrorMsg    = `no API secret for API key "%s" of resource "%s" passed via flag or stored in local CLI state`
-	NoAPISecretStoredOrPassedSuggestions = "Pass the API secret with flag \"--api-secret\" or store with `confluent api-key store %s --resource %s`."
+	NoAPISecretStoredOrPassedSuggestions = "Pass the API secret with flag `--api-secret` or store with `confluent api-key store %s --resource %s`."
 	PassedSecretButNotKeyErrorMsg        = "no API key specified"
-	PassedSecretButNotKeySuggestions     = `Use the "api-key" flag to specify an API key.`
+	PassedSecretButNotKeySuggestions     = "Use the `--api-key` flag to specify an API key."
 	ProducingToCompactedTopicErrorMsg    = "producer has detected an INVALID_RECORD error for topic %s"
 	ProducingToCompactedTopicSuggestions = "If the topic has schema validation enabled, ensure you are producing with a schema-enabled producer.\n" +
 		"If your topic is compacted, ensure you are producing a record with a key."

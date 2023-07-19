@@ -41,3 +41,12 @@ func (k *KafkaClusterConfig) EncryptAPIKeys() error {
 	}
 	return nil
 }
+
+func (k *KafkaClusterConfig) GetApiSecret() string {
+	if k != nil && k.APIKeys != nil {
+		if apiKey, ok := k.APIKeys[k.APIKey]; ok {
+			return apiKey.Secret
+		}
+	}
+	return ""
+}
