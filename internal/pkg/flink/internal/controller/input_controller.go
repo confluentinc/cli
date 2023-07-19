@@ -107,7 +107,8 @@ func (c *InputController) getMaxCol() (int, error) {
 
 func (c *InputController) Prompt() prompt.IPrompt {
 	completer := autocomplete.NewCompleterBuilder(c.getSmartCompletion).
-		AddCompleter(autocomplete.ExamplesCompleter).
+		AddCompleter(autocomplete.LSPCompleter).
+		/* AddCompleter(autocomplete.ExamplesCompleter).
 		AddCompleter(autocomplete.SetCompleter).
 		AddCompleter(autocomplete.ShowCompleter).
 		AddCompleter(autocomplete.GenerateHistoryCompleter(c.History.Data)).
