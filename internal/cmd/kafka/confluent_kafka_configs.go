@@ -39,7 +39,7 @@ func getCommonConfig(kafka *configv1.KafkaClusterConfig, clientId string) (*ckaf
 		"client.id":                             clientId,
 		"bootstrap.servers":                     kafka.Bootstrap,
 		"sasl.username":                         kafka.APIKey,
-		"sasl.password":                         kafka.APIKeys[kafka.APIKey].Secret,
+		"sasl.password":                         kafka.GetApiSecret(),
 	}
 
 	return configMap, nil
