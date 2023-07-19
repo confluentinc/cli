@@ -79,15 +79,15 @@ func (mr *MockTableViewInterfaceMockRecorder) GetSelectedRow() *gomock.Call {
 }
 
 // Init mocks base method.
-func (m *MockTableViewInterface) Init() {
+func (m *MockTableViewInterface) Init(arg0 func(func()) *tview.Application) {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "Init")
+	m.ctrl.Call(m, "Init", arg0)
 }
 
 // Init indicates an expected call of Init.
-func (mr *MockTableViewInterfaceMockRecorder) Init() *gomock.Call {
+func (mr *MockTableViewInterfaceMockRecorder) Init(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Init", reflect.TypeOf((*MockTableViewInterface)(nil).Init))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Init", reflect.TypeOf((*MockTableViewInterface)(nil).Init), arg0)
 }
 
 // JumpDown mocks base method.

@@ -1,0 +1,428 @@
+([][]*tview.TableCell) (len=17) {
+  ([]*tview.TableCell) (len=1) {
+    (*tview.TableCell)({
+      Reference: (interface {}) <nil>,
+      Text: (string) (len=5) "Count",
+      Align: (int) 0,
+      MaxWidth: (int) 5,
+      Expansion: (int) 0,
+      Color: (tcell.Color) 4294967307,
+      BackgroundColor: (tcell.Color) 4294967296,
+      Transparent: (bool) true,
+      Attributes: (tcell.AttrMask) 0,
+      NotSelectable: (bool) true,
+      Clicked: (func() bool) <nil>,
+      x: (int) 0,
+      y: (int) 0,
+      width: (int) 0
+    })
+  },
+  ([]*tview.TableCell) (len=1) {
+    (*tview.TableCell)({
+      Reference: (*types.StatementResultRow)({
+        Operation: (types.StatementResultOperation) +I,
+        Fields: ([]types.StatementResultField) (len=1) {
+          (types.AtomicStatementResultField) {
+            Type: (types.StatementResultFieldType) (len=7) "INTEGER",
+            Value: (string) (len=1) "0"
+          }
+        }
+      }),
+      Text: (string) (len=1) "0",
+      Align: (int) 0,
+      MaxWidth: (int) 5,
+      Expansion: (int) 0,
+      Color: (tcell.Color) 4294967311,
+      BackgroundColor: (tcell.Color) 4294967296,
+      Transparent: (bool) true,
+      Attributes: (tcell.AttrMask) 0,
+      NotSelectable: (bool) false,
+      Clicked: (func() bool) <nil>,
+      x: (int) 0,
+      y: (int) 0,
+      width: (int) 0
+    })
+  },
+  ([]*tview.TableCell) (len=1) {
+    (*tview.TableCell)({
+      Reference: (*types.StatementResultRow)({
+        Operation: (types.StatementResultOperation) +I,
+        Fields: ([]types.StatementResultField) (len=1) {
+          (types.AtomicStatementResultField) {
+            Type: (types.StatementResultFieldType) (len=7) "INTEGER",
+            Value: (string) (len=1) "1"
+          }
+        }
+      }),
+      Text: (string) (len=1) "1",
+      Align: (int) 0,
+      MaxWidth: (int) 5,
+      Expansion: (int) 0,
+      Color: (tcell.Color) 4294967311,
+      BackgroundColor: (tcell.Color) 4294967296,
+      Transparent: (bool) true,
+      Attributes: (tcell.AttrMask) 0,
+      NotSelectable: (bool) false,
+      Clicked: (func() bool) <nil>,
+      x: (int) 0,
+      y: (int) 0,
+      width: (int) 0
+    })
+  },
+  ([]*tview.TableCell) (len=1) {
+    (*tview.TableCell)({
+      Reference: (*types.StatementResultRow)({
+        Operation: (types.StatementResultOperation) +I,
+        Fields: ([]types.StatementResultField) (len=1) {
+          (types.AtomicStatementResultField) {
+            Type: (types.StatementResultFieldType) (len=7) "INTEGER",
+            Value: (string) (len=1) "2"
+          }
+        }
+      }),
+      Text: (string) (len=1) "2",
+      Align: (int) 0,
+      MaxWidth: (int) 5,
+      Expansion: (int) 0,
+      Color: (tcell.Color) 4294967311,
+      BackgroundColor: (tcell.Color) 4294967296,
+      Transparent: (bool) true,
+      Attributes: (tcell.AttrMask) 0,
+      NotSelectable: (bool) false,
+      Clicked: (func() bool) <nil>,
+      x: (int) 0,
+      y: (int) 0,
+      width: (int) 0
+    })
+  },
+  ([]*tview.TableCell) (len=1) {
+    (*tview.TableCell)({
+      Reference: (*types.StatementResultRow)({
+        Operation: (types.StatementResultOperation) +I,
+        Fields: ([]types.StatementResultField) (len=1) {
+          (types.AtomicStatementResultField) {
+            Type: (types.StatementResultFieldType) (len=7) "INTEGER",
+            Value: (string) (len=1) "3"
+          }
+        }
+      }),
+      Text: (string) (len=1) "3",
+      Align: (int) 0,
+      MaxWidth: (int) 5,
+      Expansion: (int) 0,
+      Color: (tcell.Color) 4294967311,
+      BackgroundColor: (tcell.Color) 4294967296,
+      Transparent: (bool) true,
+      Attributes: (tcell.AttrMask) 0,
+      NotSelectable: (bool) false,
+      Clicked: (func() bool) <nil>,
+      x: (int) 0,
+      y: (int) 0,
+      width: (int) 0
+    })
+  },
+  ([]*tview.TableCell) (len=1) {
+    (*tview.TableCell)({
+      Reference: (*types.StatementResultRow)({
+        Operation: (types.StatementResultOperation) +I,
+        Fields: ([]types.StatementResultField) (len=1) {
+          (types.AtomicStatementResultField) {
+            Type: (types.StatementResultFieldType) (len=7) "INTEGER",
+            Value: (string) (len=1) "4"
+          }
+        }
+      }),
+      Text: (string) (len=1) "4",
+      Align: (int) 0,
+      MaxWidth: (int) 5,
+      Expansion: (int) 0,
+      Color: (tcell.Color) 4294967311,
+      BackgroundColor: (tcell.Color) 4294967296,
+      Transparent: (bool) true,
+      Attributes: (tcell.AttrMask) 0,
+      NotSelectable: (bool) false,
+      Clicked: (func() bool) <nil>,
+      x: (int) 0,
+      y: (int) 0,
+      width: (int) 0
+    })
+  },
+  ([]*tview.TableCell) (len=1) {
+    (*tview.TableCell)({
+      Reference: (*types.StatementResultRow)({
+        Operation: (types.StatementResultOperation) +I,
+        Fields: ([]types.StatementResultField) (len=1) {
+          (types.AtomicStatementResultField) {
+            Type: (types.StatementResultFieldType) (len=7) "INTEGER",
+            Value: (string) (len=1) "5"
+          }
+        }
+      }),
+      Text: (string) (len=1) "5",
+      Align: (int) 0,
+      MaxWidth: (int) 5,
+      Expansion: (int) 0,
+      Color: (tcell.Color) 4294967311,
+      BackgroundColor: (tcell.Color) 4294967296,
+      Transparent: (bool) true,
+      Attributes: (tcell.AttrMask) 0,
+      NotSelectable: (bool) false,
+      Clicked: (func() bool) <nil>,
+      x: (int) 0,
+      y: (int) 0,
+      width: (int) 0
+    })
+  },
+  ([]*tview.TableCell) (len=1) {
+    (*tview.TableCell)({
+      Reference: (*types.StatementResultRow)({
+        Operation: (types.StatementResultOperation) +I,
+        Fields: ([]types.StatementResultField) (len=1) {
+          (types.AtomicStatementResultField) {
+            Type: (types.StatementResultFieldType) (len=7) "INTEGER",
+            Value: (string) (len=1) "6"
+          }
+        }
+      }),
+      Text: (string) (len=1) "6",
+      Align: (int) 0,
+      MaxWidth: (int) 5,
+      Expansion: (int) 0,
+      Color: (tcell.Color) 4294967311,
+      BackgroundColor: (tcell.Color) 4294967296,
+      Transparent: (bool) true,
+      Attributes: (tcell.AttrMask) 0,
+      NotSelectable: (bool) false,
+      Clicked: (func() bool) <nil>,
+      x: (int) 0,
+      y: (int) 0,
+      width: (int) 0
+    })
+  },
+  ([]*tview.TableCell) (len=1) {
+    (*tview.TableCell)({
+      Reference: (*types.StatementResultRow)({
+        Operation: (types.StatementResultOperation) +I,
+        Fields: ([]types.StatementResultField) (len=1) {
+          (types.AtomicStatementResultField) {
+            Type: (types.StatementResultFieldType) (len=7) "INTEGER",
+            Value: (string) (len=1) "7"
+          }
+        }
+      }),
+      Text: (string) (len=1) "7",
+      Align: (int) 0,
+      MaxWidth: (int) 5,
+      Expansion: (int) 0,
+      Color: (tcell.Color) 4294967311,
+      BackgroundColor: (tcell.Color) 4294967296,
+      Transparent: (bool) true,
+      Attributes: (tcell.AttrMask) 0,
+      NotSelectable: (bool) false,
+      Clicked: (func() bool) <nil>,
+      x: (int) 0,
+      y: (int) 0,
+      width: (int) 0
+    })
+  },
+  ([]*tview.TableCell) (len=1) {
+    (*tview.TableCell)({
+      Reference: (*types.StatementResultRow)({
+        Operation: (types.StatementResultOperation) +I,
+        Fields: ([]types.StatementResultField) (len=1) {
+          (types.AtomicStatementResultField) {
+            Type: (types.StatementResultFieldType) (len=7) "INTEGER",
+            Value: (string) (len=1) "8"
+          }
+        }
+      }),
+      Text: (string) (len=1) "8",
+      Align: (int) 0,
+      MaxWidth: (int) 5,
+      Expansion: (int) 0,
+      Color: (tcell.Color) 4294967311,
+      BackgroundColor: (tcell.Color) 4294967296,
+      Transparent: (bool) true,
+      Attributes: (tcell.AttrMask) 0,
+      NotSelectable: (bool) false,
+      Clicked: (func() bool) <nil>,
+      x: (int) 0,
+      y: (int) 0,
+      width: (int) 0
+    })
+  },
+  ([]*tview.TableCell) (len=1) {
+    (*tview.TableCell)({
+      Reference: (*types.StatementResultRow)({
+        Operation: (types.StatementResultOperation) +I,
+        Fields: ([]types.StatementResultField) (len=1) {
+          (types.AtomicStatementResultField) {
+            Type: (types.StatementResultFieldType) (len=7) "INTEGER",
+            Value: (string) (len=1) "9"
+          }
+        }
+      }),
+      Text: (string) (len=1) "9",
+      Align: (int) 0,
+      MaxWidth: (int) 5,
+      Expansion: (int) 0,
+      Color: (tcell.Color) 4294967311,
+      BackgroundColor: (tcell.Color) 4294967296,
+      Transparent: (bool) true,
+      Attributes: (tcell.AttrMask) 0,
+      NotSelectable: (bool) false,
+      Clicked: (func() bool) <nil>,
+      x: (int) 0,
+      y: (int) 0,
+      width: (int) 0
+    })
+  },
+  ([]*tview.TableCell) (len=1) {
+    (*tview.TableCell)({
+      Reference: (*types.StatementResultRow)({
+        Operation: (types.StatementResultOperation) +I,
+        Fields: ([]types.StatementResultField) (len=1) {
+          (types.AtomicStatementResultField) {
+            Type: (types.StatementResultFieldType) (len=7) "INTEGER",
+            Value: (string) (len=2) "10"
+          }
+        }
+      }),
+      Text: (string) (len=2) "10",
+      Align: (int) 0,
+      MaxWidth: (int) 5,
+      Expansion: (int) 0,
+      Color: (tcell.Color) 4294967673,
+      BackgroundColor: (tcell.Color) 4294967296,
+      Transparent: (bool) true,
+      Attributes: (tcell.AttrMask) 1,
+      NotSelectable: (bool) false,
+      Clicked: (func() bool) <nil>,
+      x: (int) 0,
+      y: (int) 0,
+      width: (int) 0
+    })
+  },
+  ([]*tview.TableCell) (len=1) {
+    (*tview.TableCell)({
+      Reference: (*types.StatementResultRow)({
+        Operation: (types.StatementResultOperation) +I,
+        Fields: ([]types.StatementResultField) (len=1) {
+          (types.AtomicStatementResultField) {
+            Type: (types.StatementResultFieldType) (len=7) "INTEGER",
+            Value: (string) (len=2) "11"
+          }
+        }
+      }),
+      Text: (string) (len=2) "11",
+      Align: (int) 0,
+      MaxWidth: (int) 5,
+      Expansion: (int) 0,
+      Color: (tcell.Color) 4294967673,
+      BackgroundColor: (tcell.Color) 4294967296,
+      Transparent: (bool) true,
+      Attributes: (tcell.AttrMask) 1,
+      NotSelectable: (bool) false,
+      Clicked: (func() bool) <nil>,
+      x: (int) 0,
+      y: (int) 0,
+      width: (int) 0
+    })
+  },
+  ([]*tview.TableCell) (len=1) {
+    (*tview.TableCell)({
+      Reference: (*types.StatementResultRow)({
+        Operation: (types.StatementResultOperation) +I,
+        Fields: ([]types.StatementResultField) (len=1) {
+          (types.AtomicStatementResultField) {
+            Type: (types.StatementResultFieldType) (len=7) "INTEGER",
+            Value: (string) (len=2) "12"
+          }
+        }
+      }),
+      Text: (string) (len=2) "12",
+      Align: (int) 0,
+      MaxWidth: (int) 5,
+      Expansion: (int) 0,
+      Color: (tcell.Color) 4294967673,
+      BackgroundColor: (tcell.Color) 4294967296,
+      Transparent: (bool) true,
+      Attributes: (tcell.AttrMask) 1,
+      NotSelectable: (bool) false,
+      Clicked: (func() bool) <nil>,
+      x: (int) 0,
+      y: (int) 0,
+      width: (int) 0
+    })
+  },
+  ([]*tview.TableCell) (len=1) {
+    (*tview.TableCell)({
+      Reference: (*types.StatementResultRow)({
+        Operation: (types.StatementResultOperation) +I,
+        Fields: ([]types.StatementResultField) (len=1) {
+          (types.AtomicStatementResultField) {
+            Type: (types.StatementResultFieldType) (len=7) "INTEGER",
+            Value: (string) (len=2) "13"
+          }
+        }
+      }),
+      Text: (string) (len=2) "13",
+      Align: (int) 0,
+      MaxWidth: (int) 5,
+      Expansion: (int) 0,
+      Color: (tcell.Color) 4294967673,
+      BackgroundColor: (tcell.Color) 4294967296,
+      Transparent: (bool) true,
+      Attributes: (tcell.AttrMask) 1,
+      NotSelectable: (bool) false,
+      Clicked: (func() bool) <nil>,
+      x: (int) 0,
+      y: (int) 0,
+      width: (int) 0
+    })
+  },
+  ([]*tview.TableCell) (len=1) {
+    (*tview.TableCell)({
+      Reference: (*types.StatementResultRow)({
+        Operation: (types.StatementResultOperation) +I,
+        Fields: ([]types.StatementResultField) (len=1) {
+          (types.AtomicStatementResultField) {
+            Type: (types.StatementResultFieldType) (len=7) "INTEGER",
+            Value: (string) (len=2) "14"
+          }
+        }
+      }),
+      Text: (string) (len=2) "14",
+      Align: (int) 0,
+      MaxWidth: (int) 5,
+      Expansion: (int) 0,
+      Color: (tcell.Color) 4294967673,
+      BackgroundColor: (tcell.Color) 4294967296,
+      Transparent: (bool) true,
+      Attributes: (tcell.AttrMask) 1,
+      NotSelectable: (bool) false,
+      Clicked: (func() bool) <nil>,
+      x: (int) 0,
+      y: (int) 0,
+      width: (int) 0
+    })
+  },
+  ([]*tview.TableCell) (len=1) {
+    (*tview.TableCell)({
+      Reference: (interface {}) <nil>,
+      Text: (string) "",
+      Align: (int) 0,
+      MaxWidth: (int) 0,
+      Expansion: (int) 0,
+      Color: (tcell.Color) 4294967311,
+      BackgroundColor: (tcell.Color) 4294967296,
+      Transparent: (bool) true,
+      Attributes: (tcell.AttrMask) 0,
+      NotSelectable: (bool) true,
+      Clicked: (func() bool) <nil>,
+      x: (int) 0,
+      y: (int) 0,
+      width: (int) 0
+    })
+  }
+}

@@ -26,7 +26,9 @@ func TestTableViewTestSuite(t *testing.T) {
 
 func (s *TableViewTestSuite) SetupTest() {
 	s.tableView = NewTableView().(*TableView)
-	s.tableView.Init()
+	s.tableView.Init(func(f func()) *tview.Application {
+		return tview.NewApplication()
+	})
 	s.numRowsScroll = s.tableView.getNumRowsToScroll()
 }
 
@@ -43,8 +45,14 @@ func (s *TableViewTestSuite) TestJumpUp() {
 
 func getResultsExample(numRows int) *types.MaterializedStatementResults {
 	materializedStatementResults := types.NewMaterializedStatementResults([]string{"Count"}, 10)
+	materializedStatementResults.Append(getStatementResultRowsExample(numRows)...)
+	return &materializedStatementResults
+}
+
+func getStatementResultRowsExample(numRows int) []types.StatementResultRow {
+	var rows []types.StatementResultRow
 	for i := 0; i < numRows; i++ {
-		materializedStatementResults.Append(types.StatementResultRow{
+		rows = append(rows, types.StatementResultRow{
 			Operation: types.INSERT,
 			Fields: []types.StatementResultField{
 				types.AtomicStatementResultField{
@@ -54,7 +62,7 @@ func getResultsExample(numRows int) *types.MaterializedStatementResults {
 			},
 		})
 	}
-	return &materializedStatementResults
+	return rows
 }
 
 func (s *TableViewTestSuite) TestJumpUpShouldNotMoveOutFurtherThanMax() {
@@ -237,4 +245,49 @@ func (s *TableViewTestSuite) TestTableInfoBarShowsUnknownState() {
 	actual := s.getInfoBarText()
 
 	cupaloy.SnapshotT(s.T(), actual)
+}
+
+func (s *TableViewTestSuite) TestTableHighlightsNewRows() {
+	materializedStatementResults := types.NewMaterializedStatementResults([]string{"Count"}, 15)
+	materializedStatementResults.Append(getStatementResultRowsExample(10)...)
+	timestamp := time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
+	s.tableView.RenderTable("title", &materializedStatementResults, &timestamp, types.Running)
+	materializedStatementResults.Append(getStatementResultRowsExample(15)...)
+
+	s.tableView.RenderTable("title", &materializedStatementResults, &timestamp, types.Running)
+	tableContent := s.getTableContent()
+
+	cupaloy.SnapshotT(s.T(), tableContent)
+}
+
+func (s *TableViewTestSuite) getTableContent() [][]*tview.TableCell {
+	table := s.tableView.table
+	tableContent := make([][]*tview.TableCell, table.GetRowCount())
+	for i := 0; i < table.GetRowCount(); i++ {
+		tableContent[i] = make([]*tview.TableCell, table.GetColumnCount())
+		for j := 0; j < table.GetColumnCount(); j++ {
+			tableContent[i][j] = table.GetCell(i, j)
+		}
+	}
+	return tableContent
+}
+
+func (s *TableViewTestSuite) TestTableRemovesHighlightAfterDuration() {
+	doneChannel := make(chan bool)
+	s.tableView.Init(func(f func()) *tview.Application {
+		f()
+		doneChannel <- true
+		tableContent := s.getTableContent()
+		cupaloy.SnapshotT(s.T(), tableContent)
+		return tview.NewApplication()
+	})
+	materializedStatementResults := types.NewMaterializedStatementResults([]string{"Count"}, 15)
+	materializedStatementResults.Append(getStatementResultRowsExample(10)...)
+	timestamp := time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
+	s.tableView.RenderTable("title", &materializedStatementResults, &timestamp, types.Running)
+	materializedStatementResults.Append(getStatementResultRowsExample(15)...)
+
+	s.tableView.RenderTable("title", &materializedStatementResults, &timestamp, types.Running)
+
+	<-doneChannel
 }

@@ -159,7 +159,7 @@ func getResultsExample() *types.MaterializedStatementResults {
 func (s *InteractiveOutputControllerTestSuite) initMockCalls(materializedStatementResults *types.MaterializedStatementResults) {
 	s.resultFetcher.EXPECT().SetRefreshCallback(gomock.Any())
 	s.resultFetcher.EXPECT().ToggleRefresh()
-	s.tableView.EXPECT().Init()
+	s.tableView.EXPECT().Init(gomock.Any())
 	s.updateTableMockCalls(materializedStatementResults)
 }
 
