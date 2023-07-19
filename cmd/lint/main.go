@@ -127,6 +127,7 @@ var flagRules = []linter.FlagRule{
 			"gcp-project-id",
 			"if-not-exists",
 			"kafka-api-key",
+			"kafka-rest-port",
 			"local-secrets-file",
 			"log-exclude-rows",
 			"max-block-ms",
