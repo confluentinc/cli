@@ -7,11 +7,11 @@ import (
 )
 
 type StatementError struct {
-	Message          string
-	HttpResponseCode int
-	FailureMessage   string
-	Usage            []string
-	Suggestion       string
+	Message        string
+	StatusCode     int
+	FailureMessage string
+	Usage          []string
+	Suggestion     string
 }
 
 func (e *StatementError) Error() string {
