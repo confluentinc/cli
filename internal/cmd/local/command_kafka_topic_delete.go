@@ -14,7 +14,7 @@ import (
 func (c *Command) newKafkaTopicDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete <topic-1> [topic-2] ... [topic-n]",
-		Short: "Delete Kafka topics.",
+		Short: "Delete one or more Kafka topics.",
 		Args:  cobra.MinimumNArgs(1),
 		RunE:  c.kafkaTopicDelete,
 		Example: examples.BuildExampleString(

@@ -7,7 +7,7 @@ Available Commands:
   activate    Request to activate a pipeline.
   create      Create a new pipeline.
   deactivate  Request to deactivate a pipeline.
-  delete      Delete pipelines.
+  delete      Delete one or more pipelines.
   describe    Describe a Stream Designer pipeline.
   list        Display pipelines in the current environment and cluster.
   save        Save the source code of a Stream Designer pipeline locally.

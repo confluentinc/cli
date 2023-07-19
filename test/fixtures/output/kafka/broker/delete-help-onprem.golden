@@ -1,4 +1,4 @@
-Delete Kafka brokers.
+Delete one or more Kafka brokers.
 
 Usage:
   confluent kafka broker delete <id-1> [id-2] ... [id-n] [flags]

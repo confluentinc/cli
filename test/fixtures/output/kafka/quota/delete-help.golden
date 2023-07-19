@@ -1,4 +1,4 @@
-Delete Kafka client quotas.
+Delete one or more Kafka client quotas.
 
 Usage:
   confluent kafka quota delete <id-1> [id-2] ... [id-n] [flags]

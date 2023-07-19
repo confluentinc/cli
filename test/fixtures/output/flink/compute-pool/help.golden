@@ -5,7 +5,7 @@ Usage:
 
 Available Commands:
   create      Create a Flink compute pool.
-  delete      Delete Flink compute pools.
+  delete      Delete one or more Flink compute pools.
   describe    Describe a Flink compute pool.
   list        List Flink compute pools.
   update      Update a Flink compute pool.

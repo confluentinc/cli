@@ -6,7 +6,7 @@ Usage:
 Available Commands:
   configure-acls Configure ACLs for a ksqlDB cluster.
   create         Create a ksqlDB cluster.
-  delete         Delete ksqlDB clusters.
+  delete         Delete one or more ksqlDB clusters.
   describe       Describe a ksqlDB cluster.
   list           List ksqlDB clusters.
 

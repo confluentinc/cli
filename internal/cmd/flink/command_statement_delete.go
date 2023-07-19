@@ -12,7 +12,7 @@ import (
 func (c *command) newStatementDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "delete <name-1> [name-2] ... [name-n]",
-		Short:             "Delete Flink SQL statements.",
+		Short:             "Delete one or more Flink SQL statements.",
 		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validStatementArgsMultiple),
 		RunE:              c.statementDelete,

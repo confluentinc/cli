@@ -11,7 +11,7 @@ import (
 func (c *command) newComputePoolDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "delete <id-1> [id-2] ... [id-n]",
-		Short:             "Delete Flink compute pools.",
+		Short:             "Delete one or more Flink compute pools.",
 		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validComputePoolArgsMultiple),
 		RunE:              c.computePoolDelete,

@@ -5,7 +5,7 @@ Usage:
 
 Available Commands:
   create      Create a Flink IAM binding.
-  delete      Delete Flink IAM bindings.
+  delete      Delete one or more Flink IAM bindings.
   list        List Flink IAM bindings.
 
 Global Flags:

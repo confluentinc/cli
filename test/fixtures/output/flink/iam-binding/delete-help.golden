@@ -1,4 +1,4 @@
-Delete Flink IAM bindings.
+Delete one or more Flink IAM bindings.
 
 Usage:
   confluent flink iam-binding delete <id-1> [id-2] ... [id-n] [flags]

@@ -1,4 +1,4 @@
-Delete Kafka topics.
+Delete one or more Kafka topics.
 
 Usage:
   confluent local kafka topic delete <topic-1> [topic-2] ... [topic-n] [flags]

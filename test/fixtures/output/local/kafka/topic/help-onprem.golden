@@ -6,7 +6,7 @@ Usage:
 Available Commands:
   consume     Consume messages from a Kafka topic.
   create      Create a Kafka topic.
-  delete      Delete Kafka topics.
+  delete      Delete one or more Kafka topics.
   describe    Describe a Kafka topic.
   list        List local Kafka topics.
   produce     Produce messages to a Kafka topic.

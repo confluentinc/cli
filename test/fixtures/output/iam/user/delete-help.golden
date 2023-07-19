@@ -1,4 +1,4 @@
-Delete users from your organization.
+Delete one or more users from your organization.
 
 Usage:
   confluent iam user delete <id-1> [id-2] ... [id-n] [flags]

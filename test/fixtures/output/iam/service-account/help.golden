@@ -8,7 +8,7 @@ Aliases:
 
 Available Commands:
   create      Create a service account.
-  delete      Delete service accounts.
+  delete      Delete one or more service accounts.
   describe    Describe a service account.
   list        List service accounts.
   update      Update a service account.

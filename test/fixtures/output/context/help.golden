@@ -8,7 +8,7 @@ Aliases:
 
 Available Commands:
   create      Create a new context.
-  delete      Delete contexts.
+  delete      Delete one or more contexts.
   describe    Describe a context.
   list        List all contexts.
   update      Update a context field.

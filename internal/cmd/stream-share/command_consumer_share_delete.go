@@ -12,7 +12,7 @@ import (
 func (c *command) newConsumerShareDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "delete <id-1> [id-2] ... [id-n]",
-		Short:             "Delete consumer shares.",
+		Short:             "Delete one or more consumer shares.",
 		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validConsumerShareArgsMultiple),
 		RunE:              c.deleteConsumerShare,

@@ -22,7 +22,7 @@ import (
 func (c *ksqlCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "delete <id-1> [id-2] ... [id-n]",
-		Short:             "Delete ksqlDB clusters.",
+		Short:             "Delete one or more ksqlDB clusters.",
 		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgsMultiple),
 		RunE:              c.delete,

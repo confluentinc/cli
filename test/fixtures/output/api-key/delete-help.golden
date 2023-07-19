@@ -1,4 +1,4 @@
-Delete API keys.
+Delete one or more API keys.
 
 Usage:
   confluent api-key delete <api-key-1> [api-key-2] ... [api-key-n] [flags]

@@ -1,4 +1,4 @@
-Delete contexts.
+Delete one or more contexts.
 
 Usage:
   confluent context delete <context-1> [context-2] ... [context-n] [flags]

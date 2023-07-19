@@ -1,4 +1,4 @@
-Delete pipelines.
+Delete one or more pipelines.
 
 Usage:
   confluent pipeline delete <pipeline-id-1> [pipeline-id-2] ... [pipeline-id-n] [flags]

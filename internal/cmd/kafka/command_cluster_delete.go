@@ -13,7 +13,7 @@ import (
 func (c *clusterCommand) newDeleteCommand(cfg *v1.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "delete <id-1> [id-2] ... [id-n]",
-		Short:             "Delete Kafka clusters.",
+		Short:             "Delete one or more Kafka clusters.",
 		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgsMultiple),
 		RunE:              c.delete,

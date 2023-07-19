@@ -1,4 +1,4 @@
-Delete Flink SQL statements.
+Delete one or more Flink SQL statements.
 
 Usage:
   confluent flink statement delete <name-1> [name-2] ... [name-n] [flags]

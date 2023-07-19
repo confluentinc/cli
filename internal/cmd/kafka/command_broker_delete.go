@@ -20,7 +20,7 @@ import (
 func (c *brokerCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete <id-1> [id-2] ... [id-n]",
-		Short: "Delete Kafka brokers.",
+		Short: "Delete one or more Kafka brokers.",
 		Args:  cobra.MinimumNArgs(1),
 		RunE:  c.delete,
 	}

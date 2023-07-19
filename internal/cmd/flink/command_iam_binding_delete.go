@@ -13,7 +13,7 @@ import (
 func (c *command) newIamBindingDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete <id-1> [id-2] ... [id-n]",
-		Short: "Delete Flink IAM bindings.",
+		Short: "Delete one or more Flink IAM bindings.",
 		Args:  cobra.MinimumNArgs(1),
 		RunE:  c.iamBindingDelete,
 	}

@@ -12,8 +12,8 @@ import (
 func (c *command) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "delete <id-1> [id-2] ... [id-n]",
-		Short:             "Delete self-managed keys.",
-		Long:              "Delete self-managed keys from Confluent Cloud.",
+		Short:             "Delete one or more self-managed keys.",
+		Long:              "Delete one or more self-managed keys from Confluent Cloud.",
 		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgsMultiple),
 		RunE:              c.delete,

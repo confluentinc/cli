@@ -1,4 +1,4 @@
-Delete provider shares.
+Delete one or more provider shares.
 
 Usage:
   confluent stream-share provider share delete <id-1> [id-2] ... [id-n] [flags]
