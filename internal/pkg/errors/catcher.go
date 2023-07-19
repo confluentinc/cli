@@ -138,10 +138,7 @@ func catchCCloudBackendUnmarshallingError(err error) error {
 	return err
 }
 
-/*
-	CCLOUD-SDK-GO CLIENT ERROR CATCHING
-*/
-
+// CatchCCloudV2Error will extract details/messsage/statusCode from the httpResponse and add it to the error.
 func CatchCCloudV2Error(err error, r *http.Response) error {
 	if err == nil {
 		return nil
@@ -154,31 +151,33 @@ func CatchCCloudV2Error(err error, r *http.Response) error {
 	body, _ := io.ReadAll(r.Body)
 	var resBody errorResponseBody
 	_ = json.Unmarshal(body, &resBody)
+	statusCode := r.StatusCode
+
 	if len(resBody.Errors) > 0 {
 		detail := resBody.Errors[0].Detail
 		if ok, _ := regexp.MatchString(quotaExceededRegex, detail); ok {
-			return NewWrapErrorWithSuggestions(err, detail, QuotaExceededSuggestions)
+			return NewWrapErrorWithSuggestionsAndCode(err, detail, QuotaExceededSuggestions, statusCode)
 		} else if detail != "" {
-			err = errors.Wrap(err, strings.TrimSuffix(detail, "\n"))
+			err = NewWrapErrorWithSuggestionsAndCode(err, strings.TrimSuffix(detail, "\n"), "", statusCode)
 			if resolution := strings.TrimSuffix(resBody.Errors[0].Resolution, "\n"); resolution != "" {
-				err = NewErrorWithSuggestions(err.Error(), resolution)
+				err = NewErrorWithSuggestionsAndCode(err.Error(), resolution, statusCode)
 			}
 			return err
 		}
 	}
 
 	if resBody.Message != "" {
-		return Wrap(err, strings.TrimRight(resBody.Message, "\n"))
+		return NewWrapErrorWithSuggestionsAndCode(err, strings.TrimRight(resBody.Message, "\n"), "", statusCode)
 	}
 
 	if resBody.Error.Message != "" {
 		errorMessage := strings.TrimFunc(resBody.Error.Message, func(c rune) bool {
 			return c == rune('.') || c == rune('\n')
 		})
-		return Wrap(err, errorMessage)
+		return NewWrapErrorWithSuggestionsAndCode(err, errorMessage, "", statusCode)
 	}
 
-	return err
+	return NewErrorWithSuggestionsAndCode(err.Error(), "", statusCode)
 }
 
 func CatchResourceNotFoundError(err error, resourceId string) error {
@@ -213,7 +212,7 @@ func CatchComputePoolNotFoundError(err error, computePoolId string, r *http.Resp
 	}
 
 	if r != nil && r.StatusCode == http.StatusForbidden {
-		return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), fmt.Sprintf(ComputePoolNotFoundErrorMsg, computePoolId), ComputePoolNotFoundSuggestions)
+		return NewWrapErrorWithSuggestionsAndCode(CatchCCloudV2Error(err, r), fmt.Sprintf(ComputePoolNotFoundErrorMsg, computePoolId), ComputePoolNotFoundSuggestions, r.StatusCode)
 	}
 
 	return CatchCCloudV2Error(err, r)
