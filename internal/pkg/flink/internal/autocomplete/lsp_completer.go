@@ -8,7 +8,7 @@ import (
 
 	"github.com/confluentinc/flink-sql-language-service/pkg/server/tcp"
 	prompt "github.com/confluentinc/go-prompt"
-	lspInternal "github.com/lighttiger2505/sqls/pkg/lsp"
+	"github.com/sourcegraph/go-lsp"
 	"github.com/sourcegraph/jsonrpc2"
 )
 
@@ -28,12 +28,12 @@ func (c *LSPClient) LSPCompleter(in prompt.Document) []prompt.Suggest {
 	c.didChange(in.Text)
 	textBeforeCursor := in.TextBeforeCursor()
 
-	position := lspInternal.Position{
+	position := lsp.Position{
 		Line:      0,
 		Character: len(textBeforeCursor),
 	}
 
-	completions := []lspInternal.CompletionItem{}
+	completions := []lsp.CompletionItem{}
 	if textBeforeCursor != "" {
 		completions = c.completion(position)
 	}
@@ -44,12 +44,14 @@ func (c *LSPClient) LSPCompleter(in prompt.Document) []prompt.Suggest {
 func (c *LSPClient) didChange(newText string) {
 	var resp interface{}
 
-	didchangeParams := lspInternal.DidChangeTextDocumentParams{
-		TextDocument: lspInternal.VersionedTextDocumentIdentifier{
+	didchangeParams := lsp.DidChangeTextDocumentParams{
+		TextDocument: lsp.VersionedTextDocumentIdentifier{
 			Version: 2,
-			URI:     "test.sql",
+			TextDocumentIdentifier: lsp.TextDocumentIdentifier{
+				URI: "test.sql",
+			},
 		},
-		ContentChanges: []lspInternal.TextDocumentContentChangeEvent{
+		ContentChanges: []lsp.TextDocumentContentChangeEvent{
 			{Text: newText},
 		},
 	}
@@ -65,18 +67,18 @@ func (c *LSPClient) didChange(newText string) {
 	}
 }
 
-func (c *LSPClient) completion(position lspInternal.Position) []lspInternal.CompletionItem {
-	var resp []lspInternal.CompletionItem
+func (c *LSPClient) completion(position lsp.Position) []lsp.CompletionItem {
+	var resp []lsp.CompletionItem
 
-	completionParams := lspInternal.CompletionParams{TextDocumentPositionParams: lspInternal.TextDocumentPositionParams{
-		TextDocument: lspInternal.TextDocumentIdentifier{
+	completionParams := lsp.CompletionParams{TextDocumentPositionParams: lsp.TextDocumentPositionParams{
+		TextDocument: lsp.TextDocumentIdentifier{
 			URI: "test.sql",
 		},
 		Position: position,
 	}}
 
 	if c.conn == nil {
-		return []lspInternal.CompletionItem{}
+		return []lsp.CompletionItem{}
 	}
 
 	err := c.conn.Call(context.Background(), "textDocument/completion", completionParams, &resp)
@@ -141,7 +143,7 @@ func NewLSPClient() LSPClientInterface {
 	return &lspClient
 }
 
-func lspCompletionsToSuggests(completions []lspInternal.CompletionItem) []prompt.Suggest {
+func lspCompletionsToSuggests(completions []lsp.CompletionItem) []prompt.Suggest {
 	suggestions := []prompt.Suggest{}
 	for _, completion := range completions {
 		suggestions = append(suggestions, lspCompletionToSuggest(completion))
@@ -149,7 +151,7 @@ func lspCompletionsToSuggests(completions []lspInternal.CompletionItem) []prompt
 	return suggestions
 }
 
-func lspCompletionToSuggest(completion lspInternal.CompletionItem) prompt.Suggest {
+func lspCompletionToSuggest(completion lsp.CompletionItem) prompt.Suggest {
 	return prompt.Suggest{
 		Text:        completion.Label,
 		Description: completion.Detail,
