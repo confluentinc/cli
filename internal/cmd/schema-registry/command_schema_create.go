@@ -11,13 +11,12 @@ import (
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-type outputStruct struct {
-	Id int32 `json:"id" yaml:"id"`
+type schemaCreateOut struct {
+	Id int32 `human:"ID" serialized:"id"`
 }
 
 func (c *command) newSchemaCreateCommand() *cobra.Command {
@@ -146,12 +145,9 @@ func (c *command) schemaCreate(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	if output.GetFormat(cmd).IsSerialized() {
-		return output.SerializedOutput(cmd, &outputStruct{response.Id})
-	}
-
-	output.Printf(errors.RegisteredSchemaMsg, response.Id)
-	return nil
+	table := output.NewTable(cmd)
+	table.Add(&schemaCreateOut{Id: response.Id})
+	return table.Print()
 }
 
 func read(path string, v any) error {
