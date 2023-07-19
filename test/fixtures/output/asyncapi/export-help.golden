@@ -18,7 +18,7 @@ Flags:
       --schema-registry-api-secret string   API secret for Schema Registry.
       --schema-context string               Use a specific schema context. (default "default")
       --topics strings                      A comma-separated list of topics to export. Supports prefixes ending with a wildcard (*).
-      --value-format string                 Format of message value as "string", "avro", "jsonschema", or "protobuf". Note that schema references are not supported for avro. (default "string")
+      --value-format string                 Format message value as "string", "avro", "jsonschema", or "protobuf". Note that schema references are not supported for Avro. (default "string")
       --cluster string                      Kafka cluster ID or name.
       --environment string                  Environment ID or name.
 

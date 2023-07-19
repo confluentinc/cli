@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/bradleyjkemp/cupaloy"
-	"github.com/samber/lo"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"pgregory.net/rapid"
@@ -41,10 +40,15 @@ func (s *UserPropertiesTestSuite) addSomeKeys() map[string]string {
 	return newMap
 }
 
-func (s *UserPropertiesTestSuite) getRandomKey(fromMap map[string]string) string {
-	return rapid.SampledFrom(
-		lo.MapToSlice(fromMap, func(key string, value string) string { return key })).
-		Example()
+func (s *UserPropertiesTestSuite) getRandomNonDefaultKey(fromMap map[string]string) string {
+	keysWithoutDefault := make([]string, 0)
+	for key := range fromMap {
+		if key == s.defaultKey {
+			continue
+		}
+		keysWithoutDefault = append(keysWithoutDefault, key)
+	}
+	return rapid.SampledFrom(keysWithoutDefault).Example()
 }
 
 func (s *UserPropertiesTestSuite) TestMapShouldAddKeys() {
@@ -63,7 +67,7 @@ func (s *UserPropertiesTestSuite) TestMapShouldOverwriteKey() {
 
 func (s *UserPropertiesTestSuite) TestMapShouldGetKey() {
 	standardMap := s.addSomeKeys()
-	keyToGet := s.getRandomKey(standardMap)
+	keyToGet := s.getRandomNonDefaultKey(standardMap)
 
 	require.Equal(s.T(), standardMap[keyToGet], s.userProperties.Get(keyToGet))
 }
@@ -89,14 +93,14 @@ func (s *UserPropertiesTestSuite) TestMapHasKeyReturnsFalseIfKeyDoesNotExist() {
 
 func (s *UserPropertiesTestSuite) TestMapHasKeyReturnsTrueIfKeyDoesExist() {
 	standardMap := s.addSomeKeys()
-	keyToGet := s.getRandomKey(standardMap)
+	keyToGet := s.getRandomNonDefaultKey(standardMap)
 
 	require.True(s.T(), s.userProperties.HasKey(keyToGet))
 }
 
 func (s *UserPropertiesTestSuite) TestDeleteRemovesNonDefaultKey() {
 	standardMap := s.addSomeKeys()
-	keyToDelete := s.getRandomKey(standardMap)
+	keyToDelete := s.getRandomNonDefaultKey(standardMap)
 	delete(standardMap, keyToDelete)
 
 	s.userProperties.Delete(keyToDelete)

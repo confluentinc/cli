@@ -224,6 +224,7 @@ var vocabWords = []string{
 	"env",
 	"eu",
 	"failover",
+	"filepath",
 	"flink",
 	"formatter",
 	"gcp",

@@ -40,6 +40,8 @@ func (c *Command) newKafkaTopicProduceCommand() *cobra.Command {
 
 	cobra.CheckErr(cmd.MarkFlagFilename("config-file", "avsc", "json"))
 
+	cmd.MarkFlagsMutuallyExclusive("config", "config-file")
+
 	return cmd
 }
 
@@ -126,10 +128,6 @@ func newOnPremProducer(cmd *cobra.Command, bootstrap string) (*ckafka.Producer, 
 		"retry.backoff.ms":                      "250",
 		"request.timeout.ms":                    "10000",
 		"security.protocol":                     "PLAINTEXT",
-	}
-
-	if cmd.Flags().Changed("config-file") && cmd.Flags().Changed("config") {
-		return nil, errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "config-file", "config")
 	}
 
 	configFile, err := cmd.Flags().GetString("config-file")

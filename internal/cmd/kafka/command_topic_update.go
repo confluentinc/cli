@@ -30,7 +30,7 @@ type topicConfigurationOut struct {
 	ReadOnly bool   `human:"Read-Only" serialized:"read_only"`
 }
 
-func (c *authenticatedTopicCommand) newUpdateCommand() *cobra.Command {
+func (c *command) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "update <topic>",
 		Short:             "Update a Kafka topic.",
@@ -56,7 +56,7 @@ func (c *authenticatedTopicCommand) newUpdateCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) error {
+func (c *command) update(cmd *cobra.Command, args []string) error {
 	topicName := args[0]
 
 	configs, err := cmd.Flags().GetStringSlice("config")

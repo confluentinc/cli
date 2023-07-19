@@ -1,12 +1,7 @@
-Get exceptions for a Flink SQL statement.
+Install official Confluent CLI plugins from the confluentinc/cli-plugins repository.
 
 Usage:
-  confluent flink statement exceptions list <statement name> [flags]
-
-Flags:
-      --compute-pool string   Flink compute pool ID.
-      --environment string    Environment ID or name.
-      --context string        CLI context name.
+  confluent plugin install <plugin> [flags]
 
 Global Flags:
   -h, --help            Show help for this command.

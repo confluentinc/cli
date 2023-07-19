@@ -38,6 +38,8 @@ type client struct {
 
 var _ Client = (*client)(nil)
 
+const defaultVersion = "v0.0.0"
+
 // ClientParams are used to configure the update.Client
 type ClientParams struct {
 	Repository Repository
@@ -68,7 +70,7 @@ func NewClient(params *ClientParams) *client {
 
 // CheckForUpdates checks for new versions in the repo
 func (c *client) CheckForUpdates(cliName, currentVersion string, forceCheck bool) (string, string, error) {
-	if c.DisableCheck {
+	if c.DisableCheck || currentVersion == defaultVersion {
 		return "", "", nil
 	}
 

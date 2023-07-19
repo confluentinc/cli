@@ -19,7 +19,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-func (c *authenticatedTopicCommand) newCreateCommand() *cobra.Command {
+func (c *command) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <topic>",
 		Short: "Create a Kafka topic.",
@@ -45,7 +45,7 @@ func (c *authenticatedTopicCommand) newCreateCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) error {
+func (c *command) create(cmd *cobra.Command, args []string) error {
 	topicName := args[0]
 
 	partitions, err := cmd.Flags().GetUint32("partitions")

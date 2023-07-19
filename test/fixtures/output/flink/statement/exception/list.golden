@@ -1,4 +1,4 @@
-            Timestamp           |         Name          |     Stacktrace       
+            Timestamp           |         Name          |     Stack Trace      
 --------------------------------+-----------------------+----------------------
   2022-01-01 00:00:00 +0000 UTC | Bad exception         | exception in foo.go  
   2022-01-01 00:00:00 +0000 UTC | another Bad exception | exception in bar.go  

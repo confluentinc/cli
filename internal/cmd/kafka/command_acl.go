@@ -43,7 +43,7 @@ func newAclCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 // validateAddAndDelete ensures the minimum requirements for acl add and delete are met
 func validateAddAndDelete(binding *ACLConfiguration) {
 	if binding.Entry.Principal == "" {
-		err := fmt.Errorf(errors.ExactlyOneSetErrorMsg, "service-account, principal")
+		err := fmt.Errorf(errors.ExactlyOneSetErrorMsg, "`--service-account`, `--principal`")
 		binding.errors = multierror.Append(binding.errors, err)
 	}
 

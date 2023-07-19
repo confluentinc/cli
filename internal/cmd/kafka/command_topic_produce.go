@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -21,24 +22,18 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/serdes"
 )
 
-func newProduceCommand(prerunner pcmd.PreRunner, clientId string) *cobra.Command {
+func (c *command) newProduceCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "produce <topic>",
-		Short:       "Produce messages to a Kafka topic.",
-		Long:        "Produce messages to a Kafka topic.\n\nWhen using this command, you cannot modify the message header, and the message header will not be printed out.",
-		Args:        cobra.ExactArgs(1),
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
+		Use:               "produce <topic>",
+		Short:             "Produce messages to a Kafka topic.",
+		Long:              "Produce messages to a Kafka topic.\n\nWhen using this command, you cannot modify the message header, and the message header will not be printed out.",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		RunE:              c.produce,
+		Annotations:       map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}
 
-	c := &hasAPIKeyTopicCommand{
-		HasAPIKeyCLICommand: pcmd.NewHasAPIKeyCLICommand(cmd, prerunner),
-		prerunner:           prerunner,
-		clientID:            clientId,
-	}
-	cmd.RunE = c.produce
-
-	cmd.Flags().String("schema", "", "The path to the schema file.")
-	cmd.Flags().Int32("schema-id", 0, "The ID of the schema.")
+	cmd.Flags().String("schema", "", "The ID or filepath of the message value schema.")
 	pcmd.AddValueFormatFlag(cmd)
 	cmd.Flags().String("references", "", "The path to the references file.")
 	cmd.Flags().Bool("parse-key", false, "Parse key from the message.")
@@ -48,38 +43,44 @@ func newProduceCommand(prerunner pcmd.PreRunner, clientId string) *cobra.Command
 	cmd.Flags().String("schema-registry-endpoint", "", "Endpoint for Schema Registry cluster.")
 	cmd.Flags().String("schema-registry-api-key", "", "Schema registry API key.")
 	cmd.Flags().String("schema-registry-api-secret", "", "Schema registry API key secret.")
-	cmd.Flags().String("api-key", "", "API key.")
-	cmd.Flags().String("api-secret", "", "API key secret.")
-	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddApiSecretFlag(cmd)
+	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
-	cmd.Flags().String("environment", "", "Environment ID.")
-	pcmd.AddOutputFlag(cmd)
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 
-	cobra.CheckErr(cmd.MarkFlagFilename("schema", "avsc", "json", "proto"))
+	// Deprecated
+	pcmd.AddOutputFlag(cmd)
+	cobra.CheckErr(cmd.Flags().MarkHidden("output"))
+
+	// Deprecated
+	cmd.Flags().Int32("schema-id", 0, "The ID of the schema.")
+	cobra.CheckErr(cmd.Flags().MarkHidden("schema-id"))
+
 	cobra.CheckErr(cmd.MarkFlagFilename("references", "json"))
 	cobra.CheckErr(cmd.MarkFlagFilename("config-file", "avsc", "json"))
+
+	cmd.MarkFlagsMutuallyExclusive("schema", "schema-id")
+	cmd.MarkFlagsMutuallyExclusive("config", "config-file")
 
 	return cmd
 }
 
-func (c *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error {
+func (c *command) produce(cmd *cobra.Command, args []string) error {
 	topic := args[0]
+
 	cluster, err := c.Config.Context().GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
 
-	if cmd.Flags().Changed("schema") && cmd.Flags().Changed("schema-id") {
-		return errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "schema", "schema-id")
+	if err := addApiKeyToCluster(cmd, cluster); err != nil {
+		return err
 	}
 
 	serializationProvider, metaInfo, err := c.initSchemaAndGetInfo(cmd, topic)
 	if err != nil {
 		return err
-	}
-
-	if cmd.Flags().Changed("config-file") && cmd.Flags().Changed("config") {
-		return errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "config-file", "config")
 	}
 
 	configFile, err := cmd.Flags().GetString("config-file")
@@ -155,7 +156,7 @@ func (c *hasAPIKeyTopicCommand) produce(cmd *cobra.Command, args []string) error
 	return scanErr
 }
 
-func (c *hasAPIKeyTopicCommand) getSchemaRegistryClient(cmd *cobra.Command) (*srsdk.APIClient, context.Context, error) {
+func (c *command) getSchemaRegistryClient(cmd *cobra.Command) (*srsdk.APIClient, context.Context, error) {
 	schemaRegistryApiKey, err := cmd.Flags().GetString("schema-registry-api-key")
 	if err != nil {
 		return nil, nil, err
@@ -172,7 +173,7 @@ func (c *hasAPIKeyTopicCommand) getSchemaRegistryClient(cmd *cobra.Command) (*sr
 	return srClient, ctx, err
 }
 
-func (c *hasAPIKeyTopicCommand) registerSchema(cmd *cobra.Command, schemaCfg *sr.RegisterSchemaConfigs) ([]byte, map[string]string, error) {
+func (c *command) registerSchema(cmd *cobra.Command, schemaCfg *sr.RegisterSchemaConfigs) ([]byte, map[string]string, error) {
 	// Registering schema and fill metaInfo array.
 	var metaInfo []byte // Meta info contains a magic byte and schema ID (4 bytes).
 	referencePathMap := map[string]string{}
@@ -263,7 +264,7 @@ func getMsgKeyAndValue(metaInfo []byte, data, delimiter string, parseKey bool, s
 	return key, value, nil
 }
 
-func (c *hasAPIKeyTopicCommand) initSchemaAndGetInfo(cmd *cobra.Command, topic string) (serdes.SerializationProvider, []byte, error) {
+func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic string) (serdes.SerializationProvider, []byte, error) {
 	dir, err := sr.CreateTempDir()
 	if err != nil {
 		return nil, nil, err
@@ -274,6 +275,7 @@ func (c *hasAPIKeyTopicCommand) initSchemaAndGetInfo(cmd *cobra.Command, topic s
 
 	subject := topicNameStrategy(topic)
 
+	// Deprecated
 	schemaId, err := cmd.Flags().GetInt32("schema-id")
 	if err != nil {
 		return nil, nil, err
@@ -284,12 +286,17 @@ func (c *hasAPIKeyTopicCommand) initSchemaAndGetInfo(cmd *cobra.Command, topic s
 		return nil, nil, err
 	}
 
+	isSchemaId := cmd.Flags().Changed("schema-id")
+	if id, err := strconv.ParseInt(schemaPath, 10, 32); err == nil {
+		schemaId = int32(id)
+		isSchemaId = true
+	}
+
 	var valueFormat string
 	referencePathMap := map[string]string{}
 	metaInfo := []byte{}
 
-	if cmd.Flags().Changed("schema-id") {
-		// request schema information from schemaID
+	if isSchemaId {
 		srClient, ctx, err := c.getSchemaRegistryClient(cmd)
 		if err != nil {
 			return nil, nil, err
@@ -323,7 +330,7 @@ func (c *hasAPIKeyTopicCommand) initSchemaAndGetInfo(cmd *cobra.Command, topic s
 		return nil, nil, err
 	}
 
-	if schemaPath != "" && !cmd.Flags().Changed("schema-id") {
+	if schemaPath != "" && !isSchemaId {
 		// read schema info from local file and register schema
 		schemaCfg := &sr.RegisterSchemaConfigs{
 			SchemaDir:   dir,
@@ -344,7 +351,7 @@ func (c *hasAPIKeyTopicCommand) initSchemaAndGetInfo(cmd *cobra.Command, topic s
 	}
 
 	if err := serializationProvider.LoadSchema(schemaPath, referencePathMap); err != nil {
-		return nil, nil, errors.NewWrapErrorWithSuggestions(err, "failed to load schema", errors.FailedToLoadSchemaSuggestions)
+		return nil, nil, errors.NewWrapErrorWithSuggestions(err, "failed to load schema", "Specify a schema by passing a schema ID or the path to a schema file to the `--schema` flag.")
 	}
 
 	return serializationProvider, metaInfo, nil

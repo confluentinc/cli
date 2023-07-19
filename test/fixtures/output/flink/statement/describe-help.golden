@@ -1,4 +1,4 @@
-Get details of a Flink SQL statement.
+Describe a Flink SQL statement.
 
 Usage:
   confluent flink statement describe <name> [flags]

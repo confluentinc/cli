@@ -22,6 +22,6 @@ func NewCLICommand(cmd *cobra.Command) *CLICommand {
 
 func NewAnonymousCLICommand(cmd *cobra.Command, prerunner PreRunner) *CLICommand {
 	c := NewCLICommand(cmd)
-	cmd.PersistentPreRunE = Chain(prerunner.Anonymous(c, false), prerunner.AnonymousParseFlagsIntoContext(c))
+	cmd.PersistentPreRunE = Chain(prerunner.Anonymous(c, false), prerunner.ParseFlagsIntoContext(c))
 	return c
 }
