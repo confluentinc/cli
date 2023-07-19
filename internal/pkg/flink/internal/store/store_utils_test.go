@@ -2,11 +2,10 @@ package store
 
 import (
 	"fmt"
-	"testing"
-
 	"github.com/bradleyjkemp/cupaloy"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"testing"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/flink/config"
@@ -83,7 +82,7 @@ func TestProcessSetStatement(t *testing.T) {
 	// Create a new store
 	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, "authToken")
 	s := NewStore(client, nil, &types.ApplicationOptions{}, tokenRefreshFunc).(*Store)
-	s.Properties.Set(config.ConfigKeyLocalTimeZone, "UTC+01:00")
+	s.Properties.Set(config.ConfigKeyLocalTimeZone, "UTC+02:00")
 
 	t.Run("should return an error message if statement is invalid", func(t *testing.T) {
 		_, err := s.processSetStatement("se key=value")

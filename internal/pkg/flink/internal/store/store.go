@@ -11,6 +11,7 @@ import (
 	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/flink/config"
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/results"
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
@@ -85,11 +86,13 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 		s.appOptions.GetEnvironmentId(),
 		s.appOptions.GetOrgResourceId(),
 	)
+
 	if err != nil {
 		statusDetail := s.getStatusDetail(statementObj)
 		return nil, &types.StatementError{
 			Message:        err.Error(),
 			FailureMessage: statusDetail,
+			StatusCode:     errors.StatusCode(err),
 		}
 	}
 	return types.NewProcessedStatement(statementObj), nil
@@ -168,7 +171,7 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 		select {
 		case <-ctx.Done():
 			s.DeleteStatement(statementName)
-			return nil, &types.StatementError{Message: "result retrieval aborted. Statement will be deleted", HttpResponseCode: 499}
+			return nil, &types.StatementError{Message: "result retrieval aborted. Statement will be deleted", StatusCode: 499}
 		default:
 			start := time.Now()
 			statementObj, err := s.authenticatedGatewayClient().GetStatement(s.appOptions.GetEnvironmentId(), statementName, s.appOptions.GetOrgResourceId())
