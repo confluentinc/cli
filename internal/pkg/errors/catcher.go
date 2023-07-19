@@ -138,9 +138,7 @@ func catchCCloudBackendUnmarshallingError(err error) error {
 	return err
 }
 
-/*
-CCLOUD-SDK-GO CLIENT ERROR CATCHING
-*/
+// CatchCCloudV2Error will extract details/messsage/statusCode from the httpResponse and add it to the error.
 func CatchCCloudV2Error(err error, r *http.Response) error {
 	if err == nil {
 		return nil
@@ -153,32 +151,33 @@ func CatchCCloudV2Error(err error, r *http.Response) error {
 	body, _ := io.ReadAll(r.Body)
 	var resBody errorResponseBody
 	_ = json.Unmarshal(body, &resBody)
+	statusCode := r.StatusCode
 
 	if len(resBody.Errors) > 0 {
 		detail := resBody.Errors[0].Detail
 		if ok, _ := regexp.MatchString(quotaExceededRegex, detail); ok {
-			return NewWrapErrorWithSuggestionsAndCode(err, detail, QuotaExceededSuggestions, r.StatusCode)
+			return NewWrapErrorWithSuggestionsAndCode(err, detail, QuotaExceededSuggestions, statusCode)
 		} else if detail != "" {
-			err = NewWrapErrorWithSuggestionsAndCode(err, strings.TrimSuffix(detail, "\n"), "", r.StatusCode)
+			err = NewWrapErrorWithSuggestionsAndCode(err, strings.TrimSuffix(detail, "\n"), "", statusCode)
 			if resolution := strings.TrimSuffix(resBody.Errors[0].Resolution, "\n"); resolution != "" {
-				err = NewErrorWithSuggestionsAndCode(err.Error(), resolution, r.StatusCode)
+				err = NewErrorWithSuggestionsAndCode(err.Error(), resolution, statusCode)
 			}
 			return err
 		}
 	}
 
 	if resBody.Message != "" {
-		return NewWrapErrorWithSuggestionsAndCode(err, strings.TrimRight(resBody.Message, "\n"), "", r.StatusCode)
+		return NewWrapErrorWithSuggestionsAndCode(err, strings.TrimRight(resBody.Message, "\n"), "", statusCode)
 	}
 
 	if resBody.Error.Message != "" {
 		errorMessage := strings.TrimFunc(resBody.Error.Message, func(c rune) bool {
 			return c == rune('.') || c == rune('\n')
 		})
-		return NewWrapErrorWithSuggestionsAndCode(err, errorMessage, "", r.StatusCode)
+		return NewWrapErrorWithSuggestionsAndCode(err, errorMessage, "", statusCode)
 	}
 
-	return NewWrapErrorWithSuggestionsAndCode(err, err.Error(), "", r.StatusCode)
+	return NewWrapErrorWithSuggestionsAndCode(err, err.Error(), "", statusCode)
 }
 
 func CatchResourceNotFoundError(err error, resourceId string) error {

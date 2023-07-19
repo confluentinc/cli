@@ -19,39 +19,35 @@ func TestCatchClustersExceedError(t *testing.T) {
 }
 
 func TestCatchErrorCodeWhenErrors(t *testing.T) {
-	res := &http.Response{Body: io.NopCloser(strings.NewReader(`{"errors":[{"detail":"There is an error"}]}`)), StatusCode: 405}
+	res := &http.Response{Body: io.NopCloser(strings.NewReader(`{"errors":[{"detail":"There is an error"}]}`)), StatusCode: http.StatusMethodNotAllowed}
 
 	err := CatchCCloudV2Error(errors.New("Some Error"), res)
 	require.Error(t, err)
-	require.Equal(t, 405, StatusCode(err))
-
+	require.Equal(t, http.StatusMethodNotAllowed, StatusCode(err))
 }
 
 func TestCatchErrorCodeWhenErrorMessage(t *testing.T) {
-	res := &http.Response{Body: io.NopCloser(strings.NewReader(`{"message":"unauthorized"}`)), StatusCode: 401}
+	res := &http.Response{Body: io.NopCloser(strings.NewReader(`{"message":"unauthorized"}`)), StatusCode: http.StatusUnauthorized}
 
 	err := CatchCCloudV2Error(errors.New("Some Error"), res)
 	require.Error(t, err)
-	require.Equal(t, 401, StatusCode(err))
-
+	require.Equal(t, http.StatusUnauthorized, StatusCode(err))
 }
 
 func TestCatchErrorCodeWhenNestedMessage(t *testing.T) {
-	res := &http.Response{Body: io.NopCloser(strings.NewReader(`{"error":{"message":"gateway error"}}`)), StatusCode: 405}
+	res := &http.Response{Body: io.NopCloser(strings.NewReader(`{"error":{"message":"gateway error"}}`)), StatusCode: http.StatusMethodNotAllowed}
 
 	err := CatchCCloudV2Error(errors.New("Some Error"), res)
 	require.Error(t, err)
-	require.Equal(t, 405, StatusCode(err))
-
+	require.Equal(t, http.StatusMethodNotAllowed, StatusCode(err))
 }
 
 func TestCatchErrorOnlyStatusCode(t *testing.T) {
-	res := &http.Response{Body: io.NopCloser(strings.NewReader("")), StatusCode: 405}
+	res := &http.Response{Body: io.NopCloser(strings.NewReader("")), StatusCode: http.StatusMethodNotAllowed}
 
 	err := CatchCCloudV2Error(errors.New("Some Error"), res)
 	require.Error(t, err)
-	require.Equal(t, 405, StatusCode(err))
-
+	require.Equal(t, http.StatusMethodNotAllowed, StatusCode(err))
 }
 
 func TestCatchServiceAccountExceedError(t *testing.T) {
