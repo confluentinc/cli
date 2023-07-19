@@ -69,7 +69,7 @@ const (
 	DestroyDeletingMsg         = "Deleting: %s\n"
 
 	// schema-registry commands
-	RegisteredSchemaMsg = "Successfully registered schema with ID \"%v\".\n"
+	RegisteredSchemaMsg = "Successfully registered schema with ID \"%d\".\n"
 	ExporterActionMsg   = "%s schema exporter \"%s\".\n"
 
 	// secret commands
