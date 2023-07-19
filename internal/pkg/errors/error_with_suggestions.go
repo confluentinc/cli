@@ -17,6 +17,7 @@ type ErrorWithSuggestions interface {
 
 type ErrorWithSuggestionsImpl struct {
 	errorMsg       string
+	statusCode     int
 	suggestionsMsg string
 }
 
@@ -27,10 +28,26 @@ func NewErrorWithSuggestions(errorMsg string, suggestionsMsg string) ErrorWithSu
 	}
 }
 
+func NewErrorWithSuggestionsAndCode(errorMsg string, suggestionsMsg string, statusCode int) ErrorWithSuggestions {
+	return &ErrorWithSuggestionsImpl{
+		errorMsg:       errorMsg,
+		suggestionsMsg: suggestionsMsg,
+		statusCode:     statusCode,
+	}
+}
+
 func NewWrapErrorWithSuggestions(err error, errorMsg string, suggestionsMsg string) ErrorWithSuggestions {
 	return &ErrorWithSuggestionsImpl{
 		errorMsg:       Wrap(err, errorMsg).Error(),
 		suggestionsMsg: suggestionsMsg,
+	}
+}
+
+func NewWrapErrorWithSuggestionsAndCode(err error, errorMsg string, suggestionsMsg string, statusCode int) ErrorWithSuggestions {
+	return &ErrorWithSuggestionsImpl{
+		errorMsg:       Wrap(err, errorMsg).Error(),
+		suggestionsMsg: suggestionsMsg,
+		statusCode:     statusCode,
 	}
 }
 
@@ -40,6 +57,10 @@ func (b *ErrorWithSuggestionsImpl) Error() string {
 
 func (b *ErrorWithSuggestionsImpl) GetSuggestionsMsg() string {
 	return b.suggestionsMsg
+}
+
+func (b *ErrorWithSuggestionsImpl) GetStatusCode() int {
+	return b.statusCode
 }
 
 func DisplaySuggestionsMessage(err error) string {
@@ -58,4 +79,16 @@ func ComposeSuggestionsMessage(msg string) string {
 		suggestionsMsg += fmt.Sprintf(suggestionsLineFormat, line)
 	}
 	return suggestionsMsg
+}
+
+type Coder interface {
+	GetStatusCode() int
+}
+
+// StatusCode extract the status code if the error implements Coder interface.
+func StatusCode(err error) int {
+	if coder, ok := err.(Coder); ok {
+		return coder.GetStatusCode()
+	}
+	return 0
 }
