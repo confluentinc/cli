@@ -177,6 +177,10 @@ func (c *clientConfigCommand) setKafkaCluster(cmd *cobra.Command, configFile str
 		return "", err
 	}
 
+	if err := addApiKeyToCluster(cmd, kafkaCluster); err != nil {
+		return "", err
+	}
+
 	// Only validate that the key pair matches with the cluster if it's passed via the flag.
 	// This is because currently "api-key store" does not check if the secret is valid. Therefore, if users
 	// choose to use the key pair stored in the context, we should use it without doing a validation.
@@ -185,9 +189,6 @@ func (c *clientConfigCommand) setKafkaCluster(cmd *cobra.Command, configFile str
 		return "", err
 	}
 	if flagKey != "" || flagSecret != "" {
-		if err := addApiKeyToCluster(cmd, kafkaCluster); err != nil {
-			return "", err
-		}
 		if err := c.validateKafkaCredentials(kafkaCluster); err != nil {
 			return "", err
 		}
@@ -201,7 +202,7 @@ func (c *clientConfigCommand) setKafkaCluster(cmd *cobra.Command, configFile str
 	configFile = replaceTemplates(configFile, map[string]string{
 		brokerEndpointTemplate:   kafkaCluster.Bootstrap,
 		clusterApiKeyTemplate:    kafkaCluster.APIKey,
-		clusterApiSecretTemplate: kafkaCluster.APIKeys[kafkaCluster.APIKey].Secret,
+		clusterApiSecretTemplate: kafkaCluster.GetApiSecret(),
 	})
 	return configFile, nil
 }
