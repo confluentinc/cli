@@ -50,10 +50,14 @@ func (c *identityProviderCommand) confirmDeletion(cmd *cobra.Command, args []str
 	var displayName string
 	describeFunc := func(id string) error {
 		provider, err := c.V2Client.GetIdentityProvider(id)
-		if err == nil && id == args[0] {
+		if err != nil {
+			return err
+		}
+		if id == args[0] {
 			displayName = provider.GetDisplayName()
 		}
-		return err
+
+		return nil
 	}
 
 	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.IdentityProvider, describeFunc); err != nil {

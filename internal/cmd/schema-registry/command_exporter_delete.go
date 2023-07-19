@@ -59,10 +59,14 @@ func (c *command) confirmDeletionExporter(cmd *cobra.Command, srClient *srsdk.AP
 	var name string
 	describeFunc := func(id string) error {
 		info, _, err := srClient.DefaultApi.GetExporterInfo(ctx, args[0])
-		if err == nil && id == args[0] {
+		if err != nil {
+			return err
+		}
+		if id == args[0] {
 			name = info.Name
 		}
-		return err
+
+		return nil
 	}
 
 	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.SchemaExporter, describeFunc); err != nil {

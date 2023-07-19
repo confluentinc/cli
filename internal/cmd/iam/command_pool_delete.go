@@ -58,10 +58,14 @@ func (c *identityPoolCommand) confirmDeletion(cmd *cobra.Command, provider strin
 	var displayName string
 	describeFunc := func(id string) error {
 		pool, err := c.V2Client.GetIdentityPool(id, provider)
-		if err == nil && id == args[0] {
+		if err != nil {
+			return err
+		}
+		if id == args[0] {
 			displayName = pool.GetDisplayName()
 		}
-		return err
+
+		return nil
 	}
 
 	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.IdentityPool, describeFunc); err != nil {

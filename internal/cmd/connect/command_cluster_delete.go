@@ -70,10 +70,12 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 func (c *clusterCommand) confirmDeletion(cmd *cobra.Command, environmentId, kafkaClusterId string, args []string, connectorIdToName map[string]string) (bool, error) {
 	describeFunc := func(id string) error {
 		connector, err := c.V2Client.GetConnectorExpansionById(id, environmentId, kafkaClusterId)
-		if err == nil {
-			connectorIdToName[id] = connector.Info.GetName()
+		if err != nil {
+			return err
 		}
-		return err
+		connectorIdToName[id] = connector.Info.GetName()
+
+		return nil
 	}
 
 	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.Connector, describeFunc); err != nil {

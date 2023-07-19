@@ -47,10 +47,14 @@ func (c *quotaCommand) confirmDeletion(cmd *cobra.Command, args []string) (bool,
 	var displayName string
 	describeFunc := func(id string) error {
 		quota, err := c.V2Client.DescribeKafkaQuota(id)
-		if err == nil && id == args[0] {
+		if err != nil {
+			return err
+		}
+		if id == args[0] {
 			displayName = quota.Spec.GetDisplayName()
 		}
-		return err
+
+		return nil
 	}
 
 	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.ClientQuota, describeFunc); err != nil {

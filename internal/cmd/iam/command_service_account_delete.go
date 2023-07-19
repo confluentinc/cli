@@ -58,10 +58,14 @@ func (c *serviceAccountCommand) confirmDeletion(cmd *cobra.Command, args []strin
 	var displayName string
 	describeFunc := func(id string) error {
 		serviceAccount, _, err := c.V2Client.GetIamServiceAccount(id)
-		if err == nil && id == args[0] {
+		if err != nil {
+			return err
+		}
+		if id == args[0] {
 			displayName = serviceAccount.GetDisplayName()
 		}
-		return err
+
+		return nil
 	}
 
 	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.ServiceAccount, describeFunc); err != nil {

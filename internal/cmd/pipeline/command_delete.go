@@ -71,10 +71,14 @@ func (c *command) confirmDeletion(cmd *cobra.Command, environmentId, clusterId s
 	var displayName string
 	describeFunc := func(id string) error {
 		pipeline, err := c.V2Client.GetSdPipeline(environmentId, clusterId, id)
-		if err == nil && id == args[0] {
+		if err != nil {
+			return err
+		}
+		if id == args[0] {
 			displayName = pipeline.Spec.GetDisplayName()
 		}
-		return err
+
+		return nil
 	}
 
 	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.Pipeline, describeFunc); err != nil {

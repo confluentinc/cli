@@ -70,10 +70,14 @@ func (c *clusterCommand) confirmDeletion(cmd *cobra.Command, environmentId strin
 	var displayName string
 	describeFunc := func(id string) error {
 		cluster, _, err := c.V2Client.DescribeKafkaCluster(id, environmentId)
-		if err == nil && id == args[0] {
+		if err != nil {
+			return err
+		}
+		if id == args[0] {
 			displayName = cluster.Spec.GetDisplayName()
 		}
-		return err
+
+		return nil
 	}
 
 	err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.KafkaCluster, describeFunc)

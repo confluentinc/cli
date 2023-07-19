@@ -51,10 +51,14 @@ func (c *userCommand) confirmDeletion(cmd *cobra.Command, args []string) (bool, 
 	var fullName string
 	describeFunc := func(id string) error {
 		user, err := c.V2Client.GetIamUserById(id)
-		if err == nil && id == args[0] {
+		if err != nil {
+			return err
+		}
+		if id == args[0] {
 			fullName = user.GetFullName()
 		}
-		return err
+
+		return nil
 	}
 
 	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.User, describeFunc); err != nil {

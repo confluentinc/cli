@@ -108,10 +108,12 @@ func (c *ksqlCommand) deleteTopics(clusterId, endpoint string) error {
 func (c *ksqlCommand) confirmDeletion(cmd *cobra.Command, environmentId string, args []string, idToCluster map[string]ksqlv2.KsqldbcmV2Cluster) (bool, error) {
 	describeFunc := func(id string) error {
 		cluster, err := c.V2Client.DescribeKsqlCluster(id, environmentId)
-		if err == nil {
-			idToCluster[id] = cluster
+		if err != nil {
+			return err
 		}
-		return err
+		idToCluster[id] = cluster
+
+		return nil
 	}
 
 	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.KsqlCluster, describeFunc); err != nil {

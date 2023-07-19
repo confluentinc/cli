@@ -53,10 +53,14 @@ func (c *command) confirmDeletionComputePool(cmd *cobra.Command, environmentId s
 	var displayName string
 	describeFunc := func(id string) error {
 		computePool, err := c.V2Client.DescribeFlinkComputePool(id, environmentId)
-		if err == nil && id == args[0] {
+		if err != nil {
+			return err
+		}
+		if id == args[0] {
 			displayName = computePool.Spec.GetDisplayName()
 		}
-		return err
+
+		return nil
 	}
 
 	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.FlinkComputePool, describeFunc); err != nil {

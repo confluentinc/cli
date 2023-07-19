@@ -51,10 +51,14 @@ func (c *command) confirmDeletion(cmd *cobra.Command, args []string) (bool, erro
 	var displayName string
 	describeFunc := func(id string) error {
 		environment, err := c.V2Client.GetOrgEnvironment(id)
-		if err == nil && id == args[0] {
+		if err != nil {
+			return err
+		}
+		if id == args[0] {
 			displayName = environment.GetDisplayName()
 		}
-		return err
+
+		return nil
 	}
 
 	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.Environment, describeFunc); err != nil {
