@@ -188,7 +188,7 @@ func (c *clientConfigCommand) setKafkaCluster(cmd *cobra.Command, configFile str
 	if err != nil {
 		return "", err
 	}
-	if flagKey != "" || flagSecret != "" {
+	if flagKey != "" {
 		if err := c.validateKafkaCredentials(kafkaCluster); err != nil {
 			return "", err
 		}
