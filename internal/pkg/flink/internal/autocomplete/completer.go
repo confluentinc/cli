@@ -2,11 +2,7 @@ package autocomplete
 
 import (
 	"github.com/confluentinc/go-prompt"
-	sqls "github.com/lighttiger2505/sqls/pkg/app"
-	"github.com/sourcegraph/jsonrpc2"
 )
-
-var LSP *jsonrpc2.Conn
 
 func combineCompleters(getSmartCompletion func() bool, completers ...prompt.Completer) prompt.Completer {
 	return func(d prompt.Document) []prompt.Suggest {
@@ -29,7 +25,6 @@ type completerBuilder struct {
 }
 
 func NewCompleterBuilder(isSmartCompletionEnabled func() bool) *completerBuilder {
-	LSP = sqls.Serve("log.txt", "config.yml", false)
 	return &completerBuilder{isSmartCompletionEnabled: isSmartCompletionEnabled}
 }
 

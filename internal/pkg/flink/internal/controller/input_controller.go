@@ -106,12 +106,14 @@ func (c *InputController) getMaxCol() (int, error) {
 }
 
 func (c *InputController) Prompt() prompt.IPrompt {
+	lspClient := autocomplete.NewLSPClient()
+
 	completer := autocomplete.NewCompleterBuilder(c.getSmartCompletion).
-		AddCompleter(autocomplete.LSPCompleter).
-		/* AddCompleter(autocomplete.ExamplesCompleter).
-		AddCompleter(autocomplete.SetCompleter).
-		AddCompleter(autocomplete.ShowCompleter).
-		AddCompleter(autocomplete.GenerateHistoryCompleter(c.History.Data)).
+		AddCompleter(lspClient.LSPCompleter).
+		//AddCompleter(autocomplete.ExamplesCompleter).
+		//AddCompleter(autocomplete.SetCompleter).
+		//AddCompleter(autocomplete.ShowCompleter).
+		//AddCompleter(autocomplete.GenerateHistoryCompleter(c.History.Data)).
 		BuildCompleter()
 
 	return prompt.New(
