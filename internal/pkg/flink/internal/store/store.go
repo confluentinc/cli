@@ -4,6 +4,7 @@ import (
 	"context"
 	_ "embed"
 	"fmt"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"net/url"
 	"strings"
 	"time"
@@ -85,11 +86,13 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 		s.appOptions.GetEnvironmentId(),
 		s.appOptions.GetOrgResourceId(),
 	)
+
 	if err != nil {
 		statusDetail := s.getStatusDetail(statementObj)
 		return nil, &types.StatementError{
 			Message:        err.Error(),
 			FailureMessage: statusDetail,
+			StatusCode:     errors.StatusCode(err),
 		}
 	}
 	return types.NewProcessedStatement(statementObj), nil
@@ -168,7 +171,7 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 		select {
 		case <-ctx.Done():
 			s.DeleteStatement(statementName)
-			return nil, &types.StatementError{Message: "result retrieval aborted. Statement will be deleted", HttpResponseCode: 499}
+			return nil, &types.StatementError{Message: "result retrieval aborted. Statement will be deleted", StatusCode: 499}
 		default:
 			start := time.Now()
 			statementObj, err := s.authenticatedGatewayClient().GetStatement(s.appOptions.GetEnvironmentId(), statementName, s.appOptions.GetOrgResourceId())
