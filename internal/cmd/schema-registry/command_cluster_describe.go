@@ -95,7 +95,7 @@ func (c *command) clusterDescribe(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	if srClusterHasAPIKey {
-		srClient, ctx, err = getApiClient(cmd, c.srClient, c.Config, c.Version)
+		srClient, ctx, err = getApiClient(cmd, c.Config, c.Version)
 		if err != nil {
 			return err
 		}

@@ -184,11 +184,12 @@ func (c *command) registerSchema(cmd *cobra.Command, schemaCfg *sr.RegisterSchem
 			return nil, nil, err
 		}
 
-		info, err := sr.RegisterSchemaWithAuth(cmd, schemaCfg, srClient, ctx)
+		id, err := sr.RegisterSchemaWithAuth(cmd, schemaCfg, srClient, ctx)
 		if err != nil {
 			return nil, nil, err
 		}
-		metaInfo = info
+		metaInfo = sr.GetMetaInfoFromSchemaId(id)
+
 		referencePathMap, err = sr.StoreSchemaReferences(schemaCfg.SchemaDir, schemaCfg.Refs, srClient, ctx)
 		if err != nil {
 			return nil, nil, err
