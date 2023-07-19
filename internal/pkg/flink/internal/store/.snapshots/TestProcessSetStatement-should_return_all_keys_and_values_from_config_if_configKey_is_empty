@@ -39,7 +39,7 @@
         },
         (types.AtomicStatementResultField) {
           Type: (types.StatementResultFieldType) (len=7) "VARCHAR",
-          Value: (string) (len=9) "UTC+01:00"
+          Value: (string) (len=19) "UTC+01:00 (default)"
         }
       }
     }
