@@ -177,7 +177,7 @@ func CatchCCloudV2Error(err error, r *http.Response) error {
 		return NewWrapErrorWithSuggestionsAndCode(err, errorMessage, "", statusCode)
 	}
 
-	return NewWrapErrorWithSuggestionsAndCode(err, err.Error(), "", statusCode)
+	return NewErrorWithSuggestionsAndCode(err.Error(), "", statusCode)
 }
 
 func CatchResourceNotFoundError(err error, resourceId string) error {
