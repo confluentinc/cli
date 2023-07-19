@@ -184,7 +184,7 @@ func (c *clientConfigCommand) setKafkaCluster(cmd *cobra.Command, configFile str
 	// Only validate that the key pair matches with the cluster if it's passed via the flag.
 	// This is because currently "api-key store" does not check if the secret is valid. Therefore, if users
 	// choose to use the key pair stored in the context, we should use it without doing a validation.
-	flagKey, flagSecret, err := c.Config.Context().KeyAndSecretFlags(cmd)
+	flagKey, _, err := c.Config.Context().KeyAndSecretFlags(cmd)
 	if err != nil {
 		return "", err
 	}
