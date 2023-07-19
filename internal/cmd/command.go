@@ -125,7 +125,7 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 	cmd.AddCommand(price.New(prerunner))
 	cmd.AddCommand(prompt.New(cfg))
 	cmd.AddCommand(servicequota.New(prerunner))
-	cmd.AddCommand(schemaregistry.New(cfg, prerunner, nil))
+	cmd.AddCommand(schemaregistry.New(cfg, prerunner))
 	cmd.AddCommand(secret.New(prerunner, flagResolver, secrets.NewPasswordProtectionPlugin()))
 	cmd.AddCommand(shell.New(cmd, func() *cobra.Command { return NewConfluentCommand(cfg) }))
 	cmd.AddCommand(streamshare.New(prerunner))

@@ -50,7 +50,7 @@ func (c *command) newExporterUpdateCommand() *cobra.Command {
 }
 
 func (c *command) exporterUpdate(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
+	srClient, ctx, err := getApiClient(cmd, c.Config, c.Version)
 	if err != nil {
 		return err
 	}

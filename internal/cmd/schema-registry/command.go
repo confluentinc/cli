@@ -5,8 +5,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
-
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -14,10 +12,9 @@ import (
 
 type command struct {
 	*pcmd.AuthenticatedCLICommand
-	srClient *srsdk.APIClient
 }
 
-func New(cfg *v1.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *cobra.Command {
+func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "schema-registry",
 		Aliases:     []string{"sr"},
@@ -25,7 +22,7 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner, srClient *srsdk.APIClient) *c
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLoginOrOnPremLogin},
 	}
 
-	c := &command{srClient: srClient}
+	c := &command{}
 	if cfg.IsCloudLogin() {
 		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedCLICommand(cmd, prerunner)
 	} else {
