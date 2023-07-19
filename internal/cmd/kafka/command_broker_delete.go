@@ -75,7 +75,7 @@ func (c *brokerCommand) confirmDeletion(cmd *cobra.Command, restClient *kafkares
 		}
 		numId := int32(i)
 
-		if _, _, err =: restClient.ConfigsV3Api.ClustersClusterIdBrokersBrokerIdConfigsGet(restContext, clusterId, numId); err != nil {
+		if _, _, err := restClient.ConfigsV3Api.ClustersClusterIdBrokersBrokerIdConfigsGet(restContext, clusterId, numId); err != nil {
 			return err
 		}
 		brokerIdToNumId[id] = numId
