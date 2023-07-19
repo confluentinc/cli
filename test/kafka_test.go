@@ -10,6 +10,8 @@ func (s *CLITestSuite) TestKafka() {
 	// TODO: add --config flag to all commands or ENVVAR instead of using standard config file location
 	createLinkConfigFile := getCreateLinkConfigFile()
 	defer os.Remove(createLinkConfigFile)
+	createBidirectionalLinkConfigFile := getCreateBidirectionalLinkConfigFile()
+	defer os.Remove(createBidirectionalLinkConfigFile)
 	tests := []CLITest{
 		{args: "environment use a-595", fixture: "kafka/0.golden"},
 		{args: "kafka cluster list", fixture: "kafka/6.golden"},
@@ -121,14 +123,19 @@ func (s *CLITestSuite) TestKafka() {
 
 		// Cluster linking
 		{args: "kafka link create my_link --source-cluster lkc-describe-topic --source-bootstrap-server myhost:1234 --config-file " + getCreateLinkConfigFile(), fixture: "kafka/link/create-link.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link create bidirectional_link --remote-cluster lkc-describe-topic --local-api-key local-api-key123 --local-api-secret local-api-secret-123 --remote-api-key remote-api-key-123 --remote-api-secret remote-api-secret-123 --remote-bootstrap-server myhost:1234 --config-file " + getCreateBidirectionalLinkConfigFile(), fixture: "kafka/link/create-bidirectional-link.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka link list --cluster lkc-describe-topic", fixture: "kafka/link/list-link-plain.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka link list --cluster lkc-describe-topic -o json", fixture: "kafka/link/list-link-json.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka link list --cluster lkc-describe-topic -o yaml", fixture: "kafka/link/list-link-yaml.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka link describe link-1 --cluster lkc-describe-topic", fixture: "kafka/link/describe.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link describe link-4 --cluster lkc-describe-topic", fixture: "kafka/link/describe-bidirectional-link.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka link describe link-3 --cluster lkc-describe-topic", fixture: "kafka/link/describe-error.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka link configuration list --cluster lkc-describe-topic link-1", fixture: "kafka/link/configuration-list-plain.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka link configuration list --cluster lkc-describe-topic link-1 -o json", fixture: "kafka/link/configuration-list-json.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka link configuration list --cluster lkc-describe-topic link-1 -o yaml", fixture: "kafka/link/configuration-list-yaml.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link configuration list --cluster lkc-describe-topic link-4", fixture: "kafka/link/configuration-list-plain-bidirectional-link.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link configuration list --cluster lkc-describe-topic link-4 -o json", fixture: "kafka/link/configuration-list-bidirectional-link-json.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link configuration list --cluster lkc-describe-topic link-4 -o yaml", fixture: "kafka/link/configuration-list-bidirectional-link-yaml.golden", useKafka: "lkc-describe-topic"},
 
 		{args: "kafka mirror list --cluster lkc-describe-topic --link link-1", fixture: "kafka/mirror/list-mirror.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka mirror list --cluster lkc-describe-topic --link link-1 -o json", fixture: "kafka/mirror/list-mirror-json.golden", useKafka: "lkc-describe-topic"},
@@ -198,7 +205,7 @@ func (s *CLITestSuite) TestKafkaClientConfig() {
 
 		// set kafka key-secret pair
 		{args: "api-key store UIAPIKEY100 UIAPISECRET100 --resource lkc-cool1"},
-		{args: "api-key use UIAPIKEY100 --resource lkc-cool1"},
+		{args: "api-key use UIAPIKEY100"},
 
 		// warning - missing sr key-secret pair
 		{args: "kafka client-config create java", useKafka: "lkc-cool1", fixture: "kafka/client-config/java-no-sr-keypair.golden"},
@@ -219,6 +226,12 @@ func (s *CLITestSuite) TestKafkaClientConfig() {
 func getCreateLinkConfigFile() string {
 	file, _ := os.CreateTemp(os.TempDir(), "test")
 	_, _ = file.Write([]byte("key=val\n key2=val2 \n key3=val password=pass"))
+	return file.Name()
+}
+
+func getCreateBidirectionalLinkConfigFile() string {
+	file, _ := os.CreateTemp(os.TempDir(), "test")
+	_, _ = file.Write([]byte("link.mode=BIDIRECTIONAL \nkey=val\n key2=val2 \n key3=val password=pass"))
 	return file.Name()
 }
 
@@ -455,8 +468,10 @@ func (s *CLITestSuite) TestKafkaQuota() {
 	}
 }
 
-func (s *CLITestSuite) TestKafkaAutocomplete() {
+func (s *CLITestSuite) TestKafka_Autocomplete() {
 	tests := []CLITest{
+		{args: `__complete kafka cluster create my-cluster --availability ""`, fixture: "kafka/create-availability-autocomplete.golden"},
+		{args: `__complete kafka cluster create my-cluster --type ""`, fixture: "kafka/create-type-autocomplete.golden"},
 		{args: `__complete kafka cluster describe ""`, fixture: "kafka/describe-autocomplete.golden"},
 		{args: `__complete kafka link delete ""`, fixture: "kafka/link/list-link-delete-autocomplete.golden", useKafka: "lkc-describe-topic"}, // use delete since link has no describe subcommand
 		{args: `__complete kafka mirror describe --link link-1 ""`, fixture: "kafka/mirror/describe-autocomplete.golden", useKafka: "lkc-describe-topic"},

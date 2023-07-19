@@ -16,6 +16,14 @@
     "synonyms": null
   },
   {
+    "config_name": "link.mode",
+    "config_value": "DESTINATION",
+    "read_only": false,
+    "sensitive": false,
+    "source": "source-2",
+    "synonyms": null
+  },
+  {
     "config_name": "replica.fetch.max.bytes",
     "config_value": "1048576",
     "read_only": false,

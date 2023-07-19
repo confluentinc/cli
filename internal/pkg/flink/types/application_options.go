@@ -1,30 +1,20 @@
 package types
 
+import (
+	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
+)
+
 type ApplicationOptions struct {
-	DefaultProperties map[string]string
-	FlinkGatewayUrl   string
-	UnsafeTrace       bool
-	UserAgent         string
-	EnvironmentId     string
-	OrgResourceId     string
-	KafkaClusterId    string
-	ComputePoolId     string
-	IdentityPoolId    string
-	Verbose           bool
-}
-
-func (a *ApplicationOptions) GetDefaultProperties() map[string]string {
-	if a != nil {
-		return a.DefaultProperties
-	}
-	return map[string]string{}
-}
-
-func (a *ApplicationOptions) GetFlinkGatewayUrl() string {
-	if a != nil {
-		return a.FlinkGatewayUrl
-	}
-	return ""
+	UnsafeTrace     bool
+	UserAgent       string
+	EnvironmentId   string
+	EnvironmentName string
+	OrgResourceId   string
+	Database        string
+	ComputePoolId   string
+	IdentityPoolId  string
+	Verbose         bool
+	Context         *dynamicconfig.DynamicContext
 }
 
 func (a *ApplicationOptions) GetUnsafeTrace() bool {
@@ -48,6 +38,13 @@ func (a *ApplicationOptions) GetEnvironmentId() string {
 	return ""
 }
 
+func (a *ApplicationOptions) GetEnvironmentName() string {
+	if a != nil {
+		return a.EnvironmentName
+	}
+	return ""
+}
+
 func (a *ApplicationOptions) GetOrgResourceId() string {
 	if a != nil {
 		return a.OrgResourceId
@@ -55,9 +52,9 @@ func (a *ApplicationOptions) GetOrgResourceId() string {
 	return ""
 }
 
-func (a *ApplicationOptions) GetKafkaClusterId() string {
+func (a *ApplicationOptions) GetDatabase() string {
 	if a != nil {
-		return a.KafkaClusterId
+		return a.Database
 	}
 	return ""
 }
@@ -80,4 +77,11 @@ func (a *ApplicationOptions) GetVerbose() bool {
 		return a.Verbose
 	}
 	return false
+}
+
+func (a *ApplicationOptions) GetContext() *dynamicconfig.DynamicContext {
+	if a != nil {
+		return a.Context
+	}
+	return nil
 }

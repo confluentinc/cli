@@ -85,7 +85,7 @@ func (c *Context) HasBasicMDSLogin() bool {
 		return false
 	}
 
-	credType := c.Credential.CredentialType
+	credType := c.GetCredentialType()
 	switch credType {
 	case Username:
 		return c.GetAuthToken() != ""
@@ -101,7 +101,7 @@ func (c *Context) hasBasicCloudLogin() bool {
 		return false
 	}
 
-	credType := c.Credential.CredentialType
+	credType := c.GetCredentialType()
 	switch credType {
 	case Username:
 		return c.GetAuthToken() != "" && c.GetCurrentEnvironment() != ""
@@ -142,6 +142,13 @@ func (c *Context) IsCloud(isTest bool) bool {
 		}
 	}
 	return false
+}
+
+func (c *Context) GetCredentialType() CredentialType {
+	if c != nil && c.Credential != nil {
+		return c.Credential.CredentialType
+	}
+	return None
 }
 
 func (c *Context) GetPlatform() *Platform {
@@ -260,6 +267,40 @@ func (c *Context) SetCurrentFlinkComputePool(id string) error {
 	}
 
 	ctx.CurrentFlinkComputePool = id
+	return nil
+}
+
+func (c *Context) GetCurrentFlinkCatalog() string {
+	if ctx := c.GetCurrentEnvironmentContext(); ctx != nil {
+		return ctx.CurrentFlinkCatalog
+	}
+	return ""
+}
+
+func (c *Context) SetCurrentFlinkCatalog(id string) error {
+	ctx := c.GetCurrentEnvironmentContext()
+	if ctx == nil {
+		return fmt.Errorf("no environment found")
+	}
+
+	ctx.CurrentFlinkCatalog = id
+	return nil
+}
+
+func (c *Context) GetCurrentFlinkDatabase() string {
+	if ctx := c.GetCurrentEnvironmentContext(); ctx != nil {
+		return ctx.CurrentFlinkDatabase
+	}
+	return ""
+}
+
+func (c *Context) SetCurrentFlinkDatabase(id string) error {
+	ctx := c.GetCurrentEnvironmentContext()
+	if ctx == nil {
+		return fmt.Errorf("no environment found")
+	}
+
+	ctx.CurrentFlinkDatabase = id
 	return nil
 }
 

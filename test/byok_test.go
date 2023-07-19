@@ -41,7 +41,7 @@ func (s *CLITestSuite) TestByokDescribe() {
 	}
 }
 
-func (s *CLITestSuite) TestByokAutocomplete() {
+func (s *CLITestSuite) TestByok_Autocomplete() {
 	test := CLITest{args: `__complete byok describe ""`, login: "cloud", fixture: "byok/describe-autocomplete.golden"}
 	s.runIntegrationTest(test)
 }

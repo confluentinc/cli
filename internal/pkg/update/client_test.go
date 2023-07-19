@@ -333,7 +333,7 @@ func TestCheckForUpdates(t *testing.T) {
 					},
 				},
 			}),
-			args:      args{currentVersion: "v0.0.0"},
+			args:      args{currentVersion: "v0.0.1"},
 			wantMajor: "v1.0.0",
 			wantMinor: "v0.1.0",
 		},

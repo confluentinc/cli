@@ -1,14 +1,9 @@
-Manage Flink SQL statements.
+Install official Confluent CLI plugins from the confluentinc/cli-plugins repository.
 
 Usage:
-  confluent flink statement exceptions [command]
-
-Available Commands:
-  list        Get exceptions for a Flink SQL statement.
+  confluent plugin install <plugin> [flags]
 
 Global Flags:
   -h, --help            Show help for this command.
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
-
-Use "confluent flink statement exceptions [command] --help" for more information about a command.

@@ -75,11 +75,11 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 	updateClient := update.NewClient(pversion.CLIName, disableUpdateCheck)
 	authTokenHandler := pauth.NewAuthTokenHandler()
 	ccloudClientFactory := pauth.NewCCloudClientFactory(cfg.Version.UserAgent)
-	flagResolver := &pcmd.FlagResolverImpl{Prompt: form.NewPrompt(os.Stdin), Out: os.Stdout}
+	flagResolver := &pcmd.FlagResolverImpl{Prompt: form.NewPrompt(), Out: os.Stdout}
 	jwtValidator := pcmd.NewJWTValidator()
 	netrcHandler := netrc.NewNetrcHandler(netrc.GetNetrcFilePath(cfg.IsTest))
 	ccloudClient := getCloudClient(cfg, ccloudClientFactory)
-	loginCredentialsManager := pauth.NewLoginCredentialsManager(netrcHandler, form.NewPrompt(os.Stdin), ccloudClient)
+	loginCredentialsManager := pauth.NewLoginCredentialsManager(netrcHandler, form.NewPrompt(), ccloudClient)
 	loginOrganizationManager := pauth.NewLoginOrganizationManagerImpl()
 	mdsClientManager := &pauth.MDSClientManagerImpl{}
 	featureflags.Init(cfg.Version, cfg.IsTest, cfg.DisableFeatureFlags)
@@ -114,7 +114,7 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 	cmd.AddCommand(connect.New(cfg, prerunner))
 	cmd.AddCommand(environment.New(prerunner))
 	cmd.AddCommand(iam.New(cfg, prerunner))
-	cmd.AddCommand(kafka.New(cfg, prerunner, cfg.Version.ClientID))
+	cmd.AddCommand(kafka.New(cfg, prerunner))
 	cmd.AddCommand(ksql.New(cfg, prerunner))
 	cmd.AddCommand(local.New(prerunner))
 	cmd.AddCommand(login.New(cfg, prerunner, ccloudClientFactory, mdsClientManager, netrcHandler, loginCredentialsManager, loginOrganizationManager, authTokenHandler))

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -30,6 +29,20 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
+type wrongLoginCommandError struct {
+	errorString      string
+	suggestionString string
+}
+
+var wrongLoginCommandErrorWithSuggestion = wrongLoginCommandError{
+	"`%s` is not a Confluent Cloud command. Did you mean `%s`?",
+	"If you are a Confluent Cloud user, run `%s` instead.\n" +
+		"If you are attempting to connect to Confluent Platform, login with `confluent login --url <mds-url>` to use `%s`."}
+
+var wrongLoginCommandsMap = map[string]string{
+	"confluent cluster": "confluent kafka cluster",
+}
+
 // PreRun is a helper class for automatically setting up Cobra PersistentPreRun commands
 type PreRunner interface {
 	Anonymous(command *CLICommand, willAuthenticate bool) func(*cobra.Command, []string) error
@@ -37,8 +50,7 @@ type PreRunner interface {
 	AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(*cobra.Command, []string) error
 	HasAPIKey(command *HasAPIKeyCLICommand) func(*cobra.Command, []string) error
 	InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) func(*cobra.Command, []string) error
-	ParseFlagsIntoContext(command *AuthenticatedCLICommand) func(*cobra.Command, []string) error
-	AnonymousParseFlagsIntoContext(command *CLICommand) func(*cobra.Command, []string) error
+	ParseFlagsIntoContext(command *CLICommand) func(*cobra.Command, []string) error
 }
 
 // PreRun is the standard PreRunner implementation
@@ -168,6 +180,10 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(*cobra.Com
 			return err
 		}
 
+		if r.Config.Context().GetCredentialType() == v1.APIKey {
+			return ErrIfMissingRunRequirement(cmd, r.Config)
+		}
+
 		if err := r.Config.DecryptContextStates(); err != nil {
 			return err
 		}
@@ -222,16 +238,9 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(*cobra.Com
 	}
 }
 
-func (r *PreRun) ParseFlagsIntoContext(command *AuthenticatedCLICommand) func(*cobra.Command, []string) error {
-	return func(cmd *cobra.Command, args []string) error {
-		ctx := command.Context
-		return ctx.ParseFlagsIntoContext(cmd, command.Client)
-	}
-}
-
-func (r *PreRun) AnonymousParseFlagsIntoContext(command *CLICommand) func(*cobra.Command, []string) error {
-	return func(cmd *cobra.Command, args []string) error {
-		return command.Config.Context().ParseFlagsIntoContext(cmd, nil)
+func (r *PreRun) ParseFlagsIntoContext(command *CLICommand) func(*cobra.Command, []string) error {
+	return func(cmd *cobra.Command, _ []string) error {
+		return command.Config.Context().ParseFlagsIntoContext(cmd)
 	}
 }
 
@@ -449,6 +458,15 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(*co
 
 		// Even if there was an error while setting the context, notify the user about any unmet run requirements first.
 		if err := ErrIfMissingRunRequirement(cmd, r.Config); err != nil {
+			if err == v1.RunningOnPremCommandInCloudErr {
+				for topLevelCmd, suggestCmd := range wrongLoginCommandsMap {
+					if strings.HasPrefix(cmd.CommandPath(), topLevelCmd) {
+						suggestCmdPath := strings.Replace(cmd.CommandPath(), topLevelCmd, suggestCmd, 1)
+						return errors.NewErrorWithSuggestions(fmt.Sprintf(wrongLoginCommandErrorWithSuggestion.errorString, cmd.CommandPath(), suggestCmdPath),
+							fmt.Sprintf(wrongLoginCommandErrorWithSuggestion.suggestionString, suggestCmdPath, cmd.CommandPath()))
+					}
+				}
+			}
 			return err
 		}
 
@@ -610,7 +628,7 @@ func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) fun
 					form.Field{ID: "username", Prompt: "Username"},
 					form.Field{ID: "password", Prompt: "Password", IsHidden: true},
 				)
-				if err := f.Prompt(form.NewPrompt(os.Stdin)); err != nil {
+				if err := f.Prompt(form.NewPrompt()); err != nil {
 					return nil, err
 				}
 				restContext = context.WithValue(context.Background(), kafkarestv3.ContextBasicAuth, kafkarestv3.BasicAuth{UserName: f.Responses["username"].(string), Password: f.Responses["password"].(string)})
@@ -704,14 +722,8 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(*cobra.Command, []
 		}
 
 		var clusterId string
-		switch ctx.Credential.CredentialType {
+		switch ctx.GetCredentialType() {
 		case v1.APIKey:
-			if cmd.Flags().Changed("cluster") {
-				output.ErrPrintln("WARNING: The `--cluster` flag is ignored when using API key credentials.")
-			}
-			if cmd.Flags().Changed("environment") {
-				output.ErrPrintln("WARNING: The `--environment` flag is ignored when using API key credentials.")
-			}
 			clusterId = r.getClusterIdForAPIKeyCredential(ctx)
 		case v1.Username:
 			unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
@@ -725,16 +737,11 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(*cobra.Command, []
 				}
 			}
 
-			client, err := r.createCCloudClient(ctx, command.Version)
-			if err != nil {
-				return err
-			}
 			v2Client := command.Config.GetCloudClientV2(unsafeTrace)
-
 			ctx.V2Client = v2Client
 			command.Config.V2Client = v2Client
 
-			if err := ctx.ParseFlagsIntoContext(cmd, client); err != nil {
+			if err := ctx.ParseFlagsIntoContext(cmd); err != nil {
 				return err
 			}
 
@@ -759,7 +766,7 @@ func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(*cobra.Command, []
 				}
 			}
 		default:
-			panic("Invalid Credential Type")
+			return errors.New("invalid credential type")
 		}
 
 		hasAPIKey, err := ctx.HasAPIKey(clusterId)

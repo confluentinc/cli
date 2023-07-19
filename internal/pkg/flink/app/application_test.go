@@ -136,7 +136,7 @@ func (s *ApplicationTestSuite) TestReplStopsOnExecuteStatementError() {
 	cupaloy.SnapshotT(s.T(), actual)
 }
 
-func (s *ApplicationTestSuite) TestReplReturnsWhenHandleStatementResultsReturnsTrue() {
+func (s *ApplicationTestSuite) TestReplUsesBasicOutput() {
 	userInput := "test-input"
 	statement := types.ProcessedStatement{}
 	s.inputController.EXPECT().GetUserInput().Return(userInput)
@@ -144,7 +144,6 @@ func (s *ApplicationTestSuite) TestReplReturnsWhenHandleStatementResultsReturnsT
 	s.inputController.EXPECT().HasUserInitiatedExit(userInput).Return(false)
 	s.statementController.EXPECT().ExecuteStatement(userInput).Return(&statement, nil)
 	s.resultFetcher.EXPECT().Init(statement)
-	s.store.EXPECT().FetchStatementResults(statement).Return(&statement, nil)
 	s.basicOutputController.EXPECT().VisualizeResults()
 
 	actual := s.runMainLoop(true)
@@ -152,16 +151,15 @@ func (s *ApplicationTestSuite) TestReplReturnsWhenHandleStatementResultsReturnsT
 	cupaloy.SnapshotT(s.T(), actual)
 }
 
-func (s *ApplicationTestSuite) TestReplDoesNotReturnWhenHandleStatementResultsReturnsFalse() {
+func (s *ApplicationTestSuite) TestReplUsesInteractiveOutput() {
 	userInput := "test-input"
-	statement := types.ProcessedStatement{}
+	statement := types.ProcessedStatement{PageToken: "not-empty"}
 	s.inputController.EXPECT().GetUserInput().Return(userInput)
 	s.inputController.EXPECT().HasUserEnabledReverseSearch().Return(false)
 	s.inputController.EXPECT().HasUserInitiatedExit(userInput).Return(false)
 	s.statementController.EXPECT().ExecuteStatement(userInput).Return(&statement, nil)
 	s.resultFetcher.EXPECT().Init(statement)
-	s.store.EXPECT().FetchStatementResults(statement).Return(&statement, nil)
-	s.basicOutputController.EXPECT().VisualizeResults()
+	s.interactiveOutputController.EXPECT().VisualizeResults()
 
 	actual := s.runMainLoop(true)
 
@@ -225,12 +223,12 @@ func (s *ApplicationTestSuite) TestShouldUseTView() {
 			isBasicOutput: true,
 		},
 		{
-			name: "statement with 4 columns should use TView",
+			name: "statement with 4 columns should not use TView",
 			statement: types.ProcessedStatement{StatementResults: &types.StatementResults{
 				Headers: []string{"Column 1", "Column 2", "Column 3", "Column 4"},
 				Rows:    []types.StatementResultRow{},
 			}},
-			isBasicOutput: false,
+			isBasicOutput: true,
 		},
 	}
 	for _, tt := range tests {

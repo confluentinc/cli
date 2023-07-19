@@ -13,8 +13,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
 )
 
-const minNumColumnsToUseInteractiveTable = 4
-
 type Application struct {
 	history                     *history.History
 	store                       types.StoreInterface
@@ -96,13 +94,8 @@ func (a *Application) readEvalPrintLoop() {
 			continue
 		}
 
-		// fetch first result page here to init result fetcher and to decide which OutputController to use
-		executedStatementWithResults, err := a.store.FetchStatementResults(*executedStatement)
-		if err != nil {
-			continue
-		}
-		a.resultFetcher.Init(*executedStatementWithResults)
-		a.getOutputController(*executedStatementWithResults).VisualizeResults()
+		a.resultFetcher.Init(*executedStatement)
+		a.getOutputController(*executedStatement).VisualizeResults()
 	}
 }
 
@@ -116,14 +109,10 @@ func (a *Application) isAuthenticated() bool {
 }
 
 func (a *Application) getOutputController(processedStatementWithResults types.ProcessedStatement) types.OutputControllerInterface {
-	// only use view for non-local statements, that have more than one row and more than one column
 	if processedStatementWithResults.IsLocalStatement {
 		return a.basicOutputController
 	}
 	if processedStatementWithResults.PageToken != "" || processedStatementWithResults.IsSelectStatement {
-		return a.interactiveOutputController
-	}
-	if len(processedStatementWithResults.StatementResults.GetHeaders()) >= minNumColumnsToUseInteractiveTable {
 		return a.interactiveOutputController
 	}
 

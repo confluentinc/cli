@@ -2,7 +2,6 @@ package schemaregistry
 
 import (
 	"context"
-	"os"
 
 	"github.com/spf13/cobra"
 
@@ -24,7 +23,7 @@ func promptSchemaRegistryCredentials() (string, string, error) {
 		form.Field{ID: "api-key", Prompt: "Enter your Schema Registry API key"},
 		form.Field{ID: "secret", Prompt: "Enter your Schema Registry API secret", IsHidden: true},
 	)
-	if err := f.Prompt(form.NewPrompt(os.Stdin)); err != nil {
+	if err := f.Prompt(form.NewPrompt()); err != nil {
 		return "", "", err
 	}
 	return f.Responses["api-key"].(string), f.Responses["secret"].(string), nil

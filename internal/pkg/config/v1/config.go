@@ -62,7 +62,11 @@ var (
 	)
 	RequireOnPremLoginErr = errors.NewErrorWithSuggestions(
 		"you must log in to Confluent Platform to use this command",
-		"Log in with `confluent login --url <mds-url>`.",
+		"Log in to Confluent Platform with `confluent login --url <mds-url>`.",
+	)
+	RunningOnPremCommandInCloudErr = errors.NewErrorWithSuggestions(
+		"this is not a Confluent Cloud command. You must log in to Confluent Platform to use this command",
+		"Log in to Confluent Platform with `confluent login --url <mds-url>`.\n"+`Use the "--help" flag to see available commands.`,
 	)
 )
 
@@ -521,15 +525,7 @@ func (c *Config) CreateContext(name, bootstrapURL, apiKey, apiSecret string) err
 	credential := &Credential{
 		APIKeyPair:     apiKeyPair,
 		CredentialType: APIKey,
-	}
-
-	switch credential.CredentialType {
-	case Username:
-		credential.Name = fmt.Sprintf("%s-%s", &credential.CredentialType, credential.Username)
-	case APIKey:
-		credential.Name = fmt.Sprintf("%s-%s", &credential.CredentialType, credential.APIKeyPair.Key)
-	default:
-		return errors.Errorf(errors.UnknownCredentialTypeErrorMsg, credential.CredentialType)
+		Name:           fmt.Sprintf("%s-%s", APIKey, apiKey),
 	}
 
 	if err := c.SaveCredential(credential); err != nil {
@@ -614,8 +610,7 @@ func (c *Config) CredentialType() CredentialType {
 
 // hasAPIKeyLogin returns true if the user has valid API Key credentials.
 func (c *Config) hasAPIKeyLogin() bool {
-	ctx := c.Context()
-	return ctx != nil && ctx.Credential != nil && ctx.Credential.CredentialType == APIKey
+	return c.Context().GetCredentialType() == APIKey
 }
 
 // HasBasicLogin returns true if the user has valid username & password credentials.
@@ -647,8 +642,12 @@ func (c *Config) GetFilename() string {
 
 func (c *Config) CheckIsOnPremLogin() error {
 	ctx := c.Context()
-	if ctx != nil && ctx.PlatformName != "" && !c.isCloud() {
-		return nil
+	if ctx != nil && ctx.PlatformName != "" {
+		if !c.isCloud() {
+			return nil
+		} else {
+			return RunningOnPremCommandInCloudErr
+		}
 	}
 	return RequireOnPremLoginErr
 }
