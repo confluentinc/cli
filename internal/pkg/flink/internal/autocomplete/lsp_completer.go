@@ -41,21 +41,6 @@ func (c *LSPClient) LSPCompleter(in prompt.Document) []prompt.Suggest {
 	return lspCompletionsToSuggests(completions)
 }
 
-func lspCompletionsToSuggests(completions []lspInternal.CompletionItem) []prompt.Suggest {
-	suggestions := []prompt.Suggest{}
-	for _, completion := range completions {
-		suggestions = append(suggestions, lspCompletionToSuggest(completion))
-	}
-	return suggestions
-}
-
-func lspCompletionToSuggest(completion lspInternal.CompletionItem) prompt.Suggest {
-	return prompt.Suggest{
-		Text:        completion.Label,
-		Description: completion.Detail,
-	}
-}
-
 func (c *LSPClient) didChange(newText string) {
 	var resp interface{}
 
@@ -154,4 +139,19 @@ func NewLSPClient() LSPClientInterface {
 	}()
 
 	return &lspClient
+}
+
+func lspCompletionsToSuggests(completions []lspInternal.CompletionItem) []prompt.Suggest {
+	suggestions := []prompt.Suggest{}
+	for _, completion := range completions {
+		suggestions = append(suggestions, lspCompletionToSuggest(completion))
+	}
+	return suggestions
+}
+
+func lspCompletionToSuggest(completion lspInternal.CompletionItem) prompt.Suggest {
+	return prompt.Suggest{
+		Text:        completion.Label,
+		Description: completion.Detail,
+	}
 }
