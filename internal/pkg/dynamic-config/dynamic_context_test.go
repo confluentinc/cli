@@ -63,11 +63,11 @@ func TestFindKafkaCluster_Expired(t *testing.T) {
 					},
 					GetCmkV2ClusterExecuteFunc: func(_ cmkv2.ApiGetCmkV2ClusterRequest) (cmkv2.CmkV2Cluster, *http.Response, error) {
 						cluster := cmkv2.CmkV2Cluster{
-							Id: stringPtr("lkc-123456"),
+							Id: cmkv2.PtrString("lkc-123456"),
 							Spec: &cmkv2.CmkV2ClusterSpec{
-								DisplayName:            stringPtr(""),
-								KafkaBootstrapEndpoint: stringPtr(""),
-								HttpEndpoint:           stringPtr(""),
+								DisplayName:            cmkv2.PtrString(""),
+								KafkaBootstrapEndpoint: cmkv2.PtrString(""),
+								HttpEndpoint:           cmkv2.PtrString(""),
 							},
 						}
 						return cluster, nil, nil
@@ -80,10 +80,6 @@ func TestFindKafkaCluster_Expired(t *testing.T) {
 	config, err := d.FindKafkaCluster("lkc-123456")
 	require.NoError(t, err)
 	require.True(t, config.LastUpdate.After(update))
-}
-
-func stringPtr(s string) *string {
-	return &s
 }
 
 func TestDynamicContext_ParseFlagsIntoContext(t *testing.T) {
