@@ -36,6 +36,9 @@ func (c *command) computePoolDelete(cmd *cobra.Command, args []string) error {
 
 	computePool, err := c.V2Client.DescribeFlinkComputePool(args[0], environmentId)
 	if err != nil {
+		if coder, ok := err.(errors.Coder); ok {
+			coder.GetStatusCode()
+		}
 		return err
 	}
 
