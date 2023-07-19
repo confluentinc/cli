@@ -178,17 +178,18 @@ func (c *command) registerSchema(cmd *cobra.Command, schemaCfg *sr.RegisterSchem
 	var metaInfo []byte // Meta info contains a magic byte and schema ID (4 bytes).
 	referencePathMap := map[string]string{}
 
-	if len(*schemaCfg.SchemaPath) > 0 {
+	if len(schemaCfg.SchemaPath) > 0 {
 		srClient, ctx, err := c.getSchemaRegistryClient(cmd)
 		if err != nil {
 			return nil, nil, err
 		}
 
-		info, err := sr.RegisterSchemaWithAuth(cmd, schemaCfg, srClient, ctx)
+		id, err := sr.RegisterSchemaWithAuth(cmd, schemaCfg, srClient, ctx)
 		if err != nil {
 			return nil, nil, err
 		}
-		metaInfo = info
+		metaInfo = sr.GetMetaInfoFromSchemaId(id)
+
 		referencePathMap, err = sr.StoreSchemaReferences(schemaCfg.SchemaDir, schemaCfg.Refs, srClient, ctx)
 		if err != nil {
 			return nil, nil, err
@@ -334,7 +335,7 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic string) (serdes
 		// read schema info from local file and register schema
 		schemaCfg := &sr.RegisterSchemaConfigs{
 			SchemaDir:   dir,
-			SchemaPath:  &schemaPath,
+			SchemaPath:  schemaPath,
 			Subject:     subject,
 			ValueFormat: valueFormat,
 			SchemaType:  serializationProvider.GetSchemaName(),

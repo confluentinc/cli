@@ -89,7 +89,7 @@ func (c *command) schemaCreateOnPrem(cmd *cobra.Command, _ []string) error {
 	schemaCfg := &RegisterSchemaConfigs{
 		SchemaDir:  dir,
 		SchemaType: schemaType,
-		SchemaPath: &schemaPath,
+		SchemaPath: schemaPath,
 		Subject:    subject,
 		Refs:       refs,
 		Normalize:  normalize,
@@ -117,22 +117,22 @@ func (c *command) schemaCreateOnPrem(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
-	_, _, err = c.registerSchemaOnPrem(cmd, schemaCfg)
-	return err
+	return c.registerSchemaOnPrem(cmd, schemaCfg)
 }
 
-func (c *command) registerSchemaOnPrem(cmd *cobra.Command, schemaCfg *RegisterSchemaConfigs) ([]byte, map[string]string, error) {
+func (c *command) registerSchemaOnPrem(cmd *cobra.Command, schemaCfg *RegisterSchemaConfigs) error {
 	if c.State == nil { // require log-in to use oauthbearer token
-		return nil, nil, errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestions)
+		return errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestions)
 	}
+
 	srClient, ctx, err := GetSrApiClientWithToken(cmd, c.Version, c.AuthToken())
 	if err != nil {
-		return nil, nil, err
+		return err
 	}
-	metaInfo, err := RegisterSchemaWithAuth(cmd, schemaCfg, srClient, ctx)
-	if err != nil {
-		return metaInfo, nil, err
+
+	if _, err := RegisterSchemaWithAuth(cmd, schemaCfg, srClient, ctx); err != nil {
+		return err
 	}
-	referencePathMap, err := StoreSchemaReferences(schemaCfg.SchemaDir, schemaCfg.Refs, srClient, ctx)
-	return metaInfo, referencePathMap, err
+
+	return nil
 }

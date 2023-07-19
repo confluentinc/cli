@@ -121,7 +121,7 @@ func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
 		SchemaDir:   dir,
 		SchemaType:  serializationProvider.GetSchemaName(),
 		ValueFormat: valueFormat,
-		SchemaPath:  &schema,
+		SchemaPath:  schema,
 		Refs:        refs,
 	}
 	metaInfo, referencePathMap, err := c.registerSchemaOnPrem(cmd, schemaCfg)
@@ -195,7 +195,7 @@ func (c *command) registerSchemaOnPrem(cmd *cobra.Command, schemaCfg *sr.Registe
 	// Registering schema when specified, and fill metaInfo array.
 	metaInfo := []byte{}
 	referencePathMap := map[string]string{}
-	if schemaCfg.ValueFormat != "string" && len(*schemaCfg.SchemaPath) > 0 {
+	if schemaCfg.ValueFormat != "string" && len(schemaCfg.SchemaPath) > 0 {
 		if c.State == nil { // require log-in to use oauthbearer token
 			return nil, nil, errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestions)
 		}
@@ -204,14 +204,17 @@ func (c *command) registerSchemaOnPrem(cmd *cobra.Command, schemaCfg *sr.Registe
 			return nil, nil, err
 		}
 
-		metaInfo, err = sr.RegisterSchemaWithAuth(cmd, schemaCfg, srClient, ctx)
+		id, err := sr.RegisterSchemaWithAuth(cmd, schemaCfg, srClient, ctx)
 		if err != nil {
 			return nil, nil, err
 		}
+		metaInfo = sr.GetMetaInfoFromSchemaId(id)
+
 		referencePathMap, err = sr.StoreSchemaReferences(schemaCfg.SchemaDir, schemaCfg.Refs, srClient, ctx)
 		if err != nil {
-			return metaInfo, nil, err
+			return nil, nil, err
 		}
 	}
+
 	return metaInfo, referencePathMap, nil
 }

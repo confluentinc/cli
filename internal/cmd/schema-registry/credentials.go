@@ -50,11 +50,7 @@ func getSchemaRegistryAuth(srCredentials *v1.APIKeyPair, shouldPrompt bool) (*sr
 	return auth, didPromptUser, nil
 }
 
-func getApiClient(cmd *cobra.Command, srClient *srsdk.APIClient, cfg *dynamicconfig.DynamicConfig, ver *version.Version) (*srsdk.APIClient, context.Context, error) {
-	if srClient != nil {
-		// Tests/mocks
-		return srClient, nil, nil
-	}
+func getApiClient(cmd *cobra.Command, cfg *dynamicconfig.DynamicConfig, ver *version.Version) (*srsdk.APIClient, context.Context, error) {
 	return GetSchemaRegistryClientWithApiKey(cmd, cfg, ver, "", "")
 }
 
