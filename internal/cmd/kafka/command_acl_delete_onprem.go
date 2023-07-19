@@ -11,6 +11,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *aclCommand) newDeleteCommandOnPrem() *cobra.Command {
@@ -74,7 +75,7 @@ func (c *aclCommand) deleteOnPrem(cmd *cobra.Command, _ []string) error {
 		return errors.NewErrorWithSuggestions("ACL matching these parameters not found", ValidACLSuggestion)
 	}
 
-	promptMsg := fmt.Sprintf(pacl.DeleteACLConfirmMsg, "ACL")
+	promptMsg := fmt.Sprintf(pacl.DeleteACLConfirmMsg, resource.ACL)
 	if ok, err := form.ConfirmDeletionYesNo(cmd, promptMsg); err != nil || !ok {
 		return err
 	}

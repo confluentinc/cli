@@ -14,6 +14,7 @@ import (
 
 const (
 	Unknown               = "unknown"
+	ACL                   = "ACL"
 	ApiKey                = "API key"
 	ByokKey               = "self-managed key"
 	ClientQuota           = "client quota"

@@ -57,7 +57,7 @@ type AclRequestDataWithError struct {
 	Errors       error
 }
 
-// use w/ "ACL" or resource.Plural("ACL")
+// use w/ resource.ACL or resource.Plural(resource.ACL)
 var DeleteACLConfirmMsg = "Are you sure you want to delete the %s corresponding to these parameters?"
 
 func PrintACLsFromKafkaRestResponseOnPrem(cmd *cobra.Command, acls []cpkafkarestv3.AclData) error {

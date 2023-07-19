@@ -88,9 +88,9 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		count += len(aclDataList.Data)
 	}
 
-	promptMsg := fmt.Sprintf(pacl.DeleteACLConfirmMsg, "ACL")
+	promptMsg := fmt.Sprintf(pacl.DeleteACLConfirmMsg, resource.ACL)
 	if count > 1 {
-		promptMsg = fmt.Sprintf(pacl.DeleteACLConfirmMsg, resource.Plural("ACL"))
+		promptMsg = fmt.Sprintf(pacl.DeleteACLConfirmMsg, resource.Plural(resource.ACL))
 	}
 	if ok, err := form.ConfirmDeletionYesNo(cmd, promptMsg); err != nil || !ok {
 		return err
