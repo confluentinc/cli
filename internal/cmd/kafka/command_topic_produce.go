@@ -335,7 +335,7 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic string) (serdes
 		// read schema info from local file and register schema
 		schemaCfg := &sr.RegisterSchemaConfigs{
 			SchemaDir:   dir,
-			SchemaPath:  &schemaPath,
+			SchemaPath:  schemaPath,
 			Subject:     subject,
 			ValueFormat: valueFormat,
 			SchemaType:  serializationProvider.GetSchemaName(),

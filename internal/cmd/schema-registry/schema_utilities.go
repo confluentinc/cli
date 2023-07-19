@@ -28,7 +28,7 @@ type RegisterSchemaConfigs struct {
 	Subject     string
 	ValueFormat string
 	SchemaType  string
-	SchemaPath  *string
+	SchemaPath  string
 	Refs        []srsdk.SchemaReference
 	Metadata    *srsdk.Metadata
 	Ruleset     *srsdk.RuleSet
@@ -36,7 +36,7 @@ type RegisterSchemaConfigs struct {
 }
 
 func RegisterSchemaWithAuth(cmd *cobra.Command, schemaCfg *RegisterSchemaConfigs, srClient *srsdk.APIClient, ctx context.Context) (int32, error) {
-	schema, err := os.ReadFile(*schemaCfg.SchemaPath)
+	schema, err := os.ReadFile(schemaCfg.SchemaPath)
 	if err != nil {
 		return 0, err
 	}

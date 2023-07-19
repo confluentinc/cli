@@ -98,7 +98,7 @@ func (c *command) schemaCreate(cmd *cobra.Command, _ []string) error {
 
 	cfg := &RegisterSchemaConfigs{
 		Subject:    subject,
-		SchemaPath: &schema,
+		SchemaPath: schema,
 		SchemaType: schemaType,
 		Refs:       refs,
 		Normalize:  normalize,

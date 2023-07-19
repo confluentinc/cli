@@ -121,7 +121,7 @@ func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
 		SchemaDir:   dir,
 		SchemaType:  serializationProvider.GetSchemaName(),
 		ValueFormat: valueFormat,
-		SchemaPath:  &schema,
+		SchemaPath:  schema,
 		Refs:        refs,
 	}
 	metaInfo, referencePathMap, err := c.registerSchemaOnPrem(cmd, schemaCfg)

@@ -89,7 +89,7 @@ func (c *command) schemaCreateOnPrem(cmd *cobra.Command, _ []string) error {
 	schemaCfg := &RegisterSchemaConfigs{
 		SchemaDir:  dir,
 		SchemaType: schemaType,
-		SchemaPath: &schemaPath,
+		SchemaPath: schemaPath,
 		Subject:    subject,
 		Refs:       refs,
 		Normalize:  normalize,
