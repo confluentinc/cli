@@ -22,11 +22,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-type createCommand struct {
-	*pcmd.HasAPIKeyCLICommand
-	clientId string
-}
-
 type clientConfig struct {
 	language         string // human-friendly language name
 	languageId       string // unique id for language used as CLI command
@@ -63,49 +58,41 @@ const (
 )
 
 var (
-	clojure    = &clientConfig{"Clojure", "clojure", javaConfig, false}
-	cpp        = &clientConfig{"C/C++", "cpp", librdKafkaConfig, false}
-	csharp     = &clientConfig{"C#", "csharp", librdKafkaConfig, false}
-	golang     = &clientConfig{"Go", "go", librdKafkaConfig, false}
-	groovy     = &clientConfig{"Groovy", "groovy", javaConfig, false}
-	java       = &clientConfig{"Java", "java", javaSRConfig, true}
-	kotlin     = &clientConfig{"Kotlin", "kotlin", javaConfig, false}
-	ktor       = &clientConfig{"Ktor", "ktor", hoconSRConfig, true}
-	nodeJS     = &clientConfig{"Node.js", "nodejs", librdKafkaConfig, false}
-	python     = &clientConfig{"Python", "python", librdKafkaSRConfig, true}
-	restAPI    = &clientConfig{"REST API", "restapi", restproxySrConfig, true}
-	ruby       = &clientConfig{"Ruby", "ruby", librdKafkaConfig, false}
-	rust       = &clientConfig{"Rust", "rust", librdKafkaConfig, false}
-	scala      = &clientConfig{"Scala", "scala", javaConfig, false}
-	springBoot = &clientConfig{"Spring Boot", "springboot", springbootSrConfig, true}
-
 	clientConfigurations = []*clientConfig{
-		clojure, cpp, csharp, golang, groovy, java, kotlin, ktor, nodeJS, python, ruby, rust, scala, springBoot, restAPI,
+		{"C#", "csharp", librdKafkaConfig, false},
+		{"C/C++", "cpp", librdKafkaConfig, false},
+		{"Clojure", "clojure", javaConfig, false},
+		{"Go", "go", librdKafkaConfig, false},
+		{"Groovy", "groovy", javaConfig, false},
+		{"Java", "java", javaSRConfig, true},
+		{"Kotlin", "kotlin", javaConfig, false},
+		{"Ktor", "ktor", hoconSRConfig, true},
+		{"Node.js", "nodejs", librdKafkaConfig, false},
+		{"Python", "python", librdKafkaSRConfig, true},
+		{"REST API", "restapi", restproxySrConfig, true},
+		{"Ruby", "ruby", librdKafkaConfig, false},
+		{"Rust", "rust", librdKafkaConfig, false},
+		{"Scala", "scala", javaConfig, false},
+		{"Spring Boot", "springboot", springbootSrConfig, true},
 	}
 
 	re = regexp.MustCompile(fmt.Sprintf("%s|%s|%s", srEndpointProperty, srCredentialsSourceProperty, srUserInfoProperty))
 )
 
-func (c *clientConfigCommand) newCreateCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
+func (c *clientConfigCommand) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "create",
-		Short:       "Create a Kafka client configuration file.",
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
-	}
-
-	cc := &createCommand{
-		HasAPIKeyCLICommand: pcmd.NewHasAPIKeyCLICommand(cmd, prerunner),
-		clientId:            cfg.Version.ClientID,
+		Use:   "create",
+		Short: "Create a Kafka client configuration file.",
 	}
 
 	for _, language := range clientConfigurations {
-		cc.addCommand(language)
+		cmd.AddCommand(c.newCreateClientCommand(language))
 	}
 
-	return cc.Command
+	return cmd
 }
 
-func (c *createCommand) addCommand(clientConfig *clientConfig) {
+func (c *clientConfigCommand) newCreateClientCommand(clientConfig *clientConfig) *cobra.Command {
 	clientConfigDescription := fmt.Sprintf(clientConfigDescriptionFmt, clientConfig.language)
 	contextExample := fmt.Sprintf(contextExampleFmt, clientConfig.languageId)
 	flagExample := fmt.Sprintf(flagExampleFmt, clientConfig.languageId)
@@ -118,11 +105,9 @@ func (c *createCommand) addCommand(clientConfig *clientConfig) {
 	cmd := &cobra.Command{
 		Use:   clientConfig.languageId,
 		Short: clientConfigDescription + ".",
-		Long: clientConfigDescription + ", of which the client configuration file is printed to stdout and " +
-			"the warnings are printed to stderr. Please see our examples on how to redirect the command output.",
-		Args:        cobra.NoArgs,
-		RunE:        c.create(clientConfig.configId, clientConfig.isSrApiAvailable),
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
+		Long:  clientConfigDescription + ", of which the client configuration file is printed to stdout and the warnings are printed to stderr. Please see our examples on how to redirect the command output.",
+		Args:  cobra.NoArgs,
+		RunE:  c.create(clientConfig.configId, clientConfig.isSrApiAvailable),
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: clientConfigDescription + ".",
@@ -144,21 +129,20 @@ func (c *createCommand) addCommand(clientConfig *clientConfig) {
 	}
 
 	pcmd.AddContextFlag(cmd, c.CLICommand)
-	cmd.Flags().String("environment", "", "Environment ID.")
-	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
-	cmd.Flags().String("api-key", "", "API key.")
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddApiSecretFlag(cmd)
 
-	// add sr flags
 	if clientConfig.isSrApiAvailable {
 		cmd.Flags().String("schema-registry-api-key", "", "Schema registry API key.")
 		cmd.Flags().String("schema-registry-api-secret", "", "Schema registry API key secret.")
 	}
 
-	c.AddCommand(cmd)
+	return cmd
 }
 
-func (c *createCommand) create(configId string, srApiAvailable bool) func(cmd *cobra.Command, _ []string) error {
+func (c *clientConfigCommand) create(configId string, srApiAvailable bool) func(cmd *cobra.Command, _ []string) error {
 	return func(cmd *cobra.Command, _ []string) error {
 		// fetch raw configuration file in which templates need to be replaced
 		configFile, err := fetchConfigFile(configId)
@@ -186,10 +170,14 @@ func (c *createCommand) create(configId string, srApiAvailable bool) func(cmd *c
 	}
 }
 
-func (c *createCommand) setKafkaCluster(cmd *cobra.Command, configFile string) (string, error) {
+func (c *clientConfigCommand) setKafkaCluster(cmd *cobra.Command, configFile string) (string, error) {
 	// get kafka cluster from context or flags, including key pair
 	kafkaCluster, err := c.Config.Context().GetKafkaClusterForCommand()
 	if err != nil {
+		return "", err
+	}
+
+	if err := addApiKeyToCluster(cmd, kafkaCluster); err != nil {
 		return "", err
 	}
 
@@ -200,24 +188,26 @@ func (c *createCommand) setKafkaCluster(cmd *cobra.Command, configFile string) (
 	if err != nil {
 		return "", err
 	}
-	if flagKey != "" && flagSecret != "" {
+	if flagKey != "" {
 		if err := c.validateKafkaCredentials(kafkaCluster); err != nil {
 			return "", err
 		}
+	} else {
+		if err := kafkaCluster.DecryptAPIKeys(); err != nil {
+			return "", err
+		}
 	}
-	if err := kafkaCluster.DecryptAPIKeys(); err != nil {
-		return "", err
-	}
+
 	// replace BROKER_ENDPOINT, CLUSTER_API_KEY, and CLUSTER_API_SECRET templates
 	configFile = replaceTemplates(configFile, map[string]string{
 		brokerEndpointTemplate:   kafkaCluster.Bootstrap,
 		clusterApiKeyTemplate:    kafkaCluster.APIKey,
-		clusterApiSecretTemplate: kafkaCluster.APIKeys[kafkaCluster.APIKey].Secret,
+		clusterApiSecretTemplate: kafkaCluster.GetApiSecret(),
 	})
 	return configFile, nil
 }
 
-func (c *createCommand) setSchemaRegistryCluster(cmd *cobra.Command, configFile string) (string, error) {
+func (c *clientConfigCommand) setSchemaRegistryCluster(cmd *cobra.Command, configFile string) (string, error) {
 	// get schema registry cluster from context and flags, including key pair
 	srCluster, err := c.getSchemaRegistryCluster(cmd)
 	if err != nil {
@@ -274,7 +264,7 @@ func (c *createCommand) setSchemaRegistryCluster(cmd *cobra.Command, configFile 
 // TODO: once dynamic_context::SchemaRegistryCluster consolidates the SR API key stored in the context and
 // the key passed via the flags, please remove this function entirely because there is no more need to
 // manually fetch the values of the flags. (see setKafkaCluster as example)
-func (c *createCommand) getSchemaRegistryCluster(cmd *cobra.Command) (*v1.SchemaRegistryCluster, error) {
+func (c *clientConfigCommand) getSchemaRegistryCluster(cmd *cobra.Command) (*v1.SchemaRegistryCluster, error) {
 	// get SR cluster from context
 	srCluster, err := c.Config.Context().SchemaRegistryCluster(cmd)
 	if err != nil {
@@ -299,7 +289,7 @@ func (c *createCommand) getSchemaRegistryCluster(cmd *cobra.Command) (*v1.Schema
 	return srCluster, nil
 }
 
-func (c *createCommand) validateKafkaCredentials(kafkaCluster *v1.KafkaClusterConfig) error {
+func (c *clientConfigCommand) validateKafkaCredentials(kafkaCluster *v1.KafkaClusterConfig) error {
 	configMap, err := getCommonConfig(kafkaCluster, c.clientId)
 	if err != nil {
 		return err
@@ -320,7 +310,7 @@ func (c *createCommand) validateKafkaCredentials(kafkaCluster *v1.KafkaClusterCo
 	return nil
 }
 
-func (c *createCommand) validateSchemaRegistryCredentials(srCluster *v1.SchemaRegistryCluster, unsafeTrace bool) error {
+func (c *clientConfigCommand) validateSchemaRegistryCredentials(srCluster *v1.SchemaRegistryCluster, unsafeTrace bool) error {
 	srConfig := srsdk.NewConfiguration()
 
 	// set BasePath of srConfig
