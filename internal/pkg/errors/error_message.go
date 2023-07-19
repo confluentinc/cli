@@ -445,12 +445,7 @@ const (
 	InvalidLoginErrorSuggestions = "To log into an organization other than the default organization, use the `--organization-id` flag.\n" +
 		AvoidTimeoutSuggestions
 	SuspendedOrganizationSuggestions = "Your organization has been suspended, please contact support if you want to unsuspend it."
-	NoAPIKeySelectedErrorMsg         = `no API key selected for resource "%s"`
-	NoAPIKeySelectedSuggestions      = "Select an API key for resource \"%s\" with `confluent api-key use <API_KEY>`.\n" +
-		"To do so, you must have either already created or stored an API key for the resource.\n" +
-		"To create an API key, use `confluent api-key create --resource %s`.\n" +
-		"To store an existing API key, use `confluent api-key store --resource %s`."
-	FailedToReadInputErrorMsg = "failed to read input"
+	FailedToReadInputErrorMsg        = "failed to read input"
 
 	// Partition command errors
 	SpecifyPartitionIdWithTopicErrorMsg = "must specify topic along with partition ID"
