@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strings"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -146,34 +145,6 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 		require.NoError(t, err)
 
 		require.Equal(t, level, log.CliLogger.Level)
-	}
-}
-
-func TestPreRun_HasAPIKey_SetupLoggingAndCheckForUpdates(t *testing.T) {
-	calledAnonymous := false
-
-	r := getPreRunBase()
-
-	// HACK: Checking for updates is intentionally skipped when testing
-	r.Config.IsTest = false
-
-	r.UpdateClient = &mock.Client{
-		CheckForUpdatesFunc: func(_, _ string, _ bool) (string, string, error) {
-			calledAnonymous = true
-			return "", "", nil
-		},
-	}
-
-	root := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
-	root.Flags().CountP("verbose", "v", "Increase verbosity")
-	root.Flags().Bool("unsafe-trace", false, "")
-	rootCmd := pcmd.NewAnonymousCLICommand(root, r)
-	args := strings.Split("help", " ")
-	_, err := pcmd.ExecuteCommand(rootCmd.Command, args...)
-	require.NoError(t, err)
-
-	if !calledAnonymous {
-		t.Errorf("PreRun.HasAPIKey() didn't call the Anonymous() helper to set logging level and updates")
 	}
 }
 
@@ -682,103 +653,6 @@ func TestPrerun_AutoLoginNotTriggeredIfLoggedIn(t *testing.T) {
 			require.NoError(t, err)
 			require.False(t, netrcCalled)
 			require.False(t, envVarCalled)
-		})
-	}
-}
-
-func TestPreRun_HasAPIKeyCommand(t *testing.T) {
-	userNameConfigLoggedIn := v1.AuthenticatedCloudConfigMock()
-	userNameConfigLoggedIn.Context().State.AuthToken = validAuthToken
-
-	userNameCfgCorruptedAuthToken := v1.AuthenticatedCloudConfigMock()
-	userNameCfgCorruptedAuthToken.Context().State.AuthToken = "corrupted.auth.token"
-
-	userNotLoggedIn := v1.UnauthenticatedCloudConfigMock()
-
-	usernameClusterWithoutKeyOrSecret := v1.AuthenticatedCloudConfigMock()
-	usernameClusterWithoutKeyOrSecret.Context().State.AuthToken = validAuthToken
-	usernameClusterWithoutKeyOrSecret.Context().KafkaClusterContext.GetKafkaClusterConfig(v1.MockKafkaClusterId()).APIKey = ""
-
-	usernameClusterWithStoredSecret := v1.AuthenticatedCloudConfigMock()
-	usernameClusterWithStoredSecret.Context().State.AuthToken = validAuthToken
-	usernameClusterWithStoredSecret.Context().KafkaClusterContext.GetKafkaClusterConfig(v1.MockKafkaClusterId()).APIKeys["miles"] = &v1.APIKeyPair{
-		Key:    "miles",
-		Secret: "secret",
-	}
-	usernameClusterWithoutSecret := v1.AuthenticatedCloudConfigMock()
-	usernameClusterWithoutSecret.Context().State.AuthToken = validAuthToken
-	tests := []struct {
-		name           string
-		config         *v1.Config
-		errMsg         string
-		suggestionsMsg string
-		key            string
-		secret         string
-	}{
-		{
-			name:   "username logged in user",
-			config: userNameConfigLoggedIn,
-		},
-		{
-			name:   "not logged in user",
-			config: userNotLoggedIn,
-			errMsg: errors.NotLoggedInErrorMsg,
-		},
-		{
-			name:   "API credential context",
-			config: v1.APICredentialConfigMock(),
-		},
-		{
-			name:   "API key and secret passed via flags",
-			key:    "miles",
-			secret: "shhhh",
-			config: usernameClusterWithoutKeyOrSecret,
-		},
-		{
-			name:   "API key passed via flag with stored secret",
-			key:    "miles",
-			config: usernameClusterWithStoredSecret,
-		},
-		{
-			name:           "API key passed via flag without stored secret",
-			key:            "miles",
-			errMsg:         fmt.Sprintf(errors.NoAPISecretStoredOrPassedErrorMsg, "miles", v1.MockKafkaClusterId()),
-			suggestionsMsg: fmt.Sprintf(errors.NoAPISecretStoredOrPassedSuggestions, "miles", v1.MockKafkaClusterId()),
-			config:         usernameClusterWithoutSecret,
-		},
-		{
-			name:           "just API secret passed via flag",
-			secret:         "shhhh",
-			config:         usernameClusterWithoutKeyOrSecret,
-			errMsg:         errors.PassedSecretButNotKeyErrorMsg,
-			suggestionsMsg: errors.PassedSecretButNotKeySuggestions,
-		},
-	}
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			r := getPreRunBase()
-			r.Config = test.config
-
-			root := &cobra.Command{
-				Run: func(cmd *cobra.Command, args []string) {},
-			}
-			rootCmd := pcmd.NewHasAPIKeyCLICommand(root, r)
-			root.Flags().CountP("verbose", "v", "Increase verbosity")
-			root.Flags().Bool("unsafe-trace", false, "")
-			root.Flags().String("api-key", "", "Kafka cluster API key.")
-			root.Flags().String("api-secret", "", "API key secret.")
-			root.Flags().String("cluster", "", "Kafka cluster ID.")
-
-			_, err := pcmd.ExecuteCommand(rootCmd.Command, "--api-key", test.key, "--api-secret", test.secret)
-			if test.errMsg != "" {
-				require.Error(t, err)
-				require.Equal(t, test.errMsg, err.Error())
-				if test.suggestionsMsg != "" {
-					errors.VerifyErrorAndSuggestions(require.New(t), err, test.errMsg, test.suggestionsMsg)
-				}
-			} else {
-				require.NoError(t, err)
-			}
 		})
 	}
 }

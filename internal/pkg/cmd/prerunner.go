@@ -48,7 +48,6 @@ type PreRunner interface {
 	Anonymous(command *CLICommand, willAuthenticate bool) func(*cobra.Command, []string) error
 	Authenticated(command *AuthenticatedCLICommand) func(*cobra.Command, []string) error
 	AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(*cobra.Command, []string) error
-	HasAPIKey(command *HasAPIKeyCLICommand) func(*cobra.Command, []string) error
 	InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) func(*cobra.Command, []string) error
 	ParseFlagsIntoContext(command *CLICommand) func(*cobra.Command, []string) error
 }
@@ -705,82 +704,6 @@ func createOnPremKafkaRestClient(ctx *dynamicconfig.DynamicContext, caCertPath s
 	return utils.DefaultClient(), nil
 }
 
-// HasAPIKey provides PreRun operations for commands that require an API key.
-func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(*cobra.Command, []string) error {
-	return func(cmd *cobra.Command, args []string) error {
-		if err := r.Anonymous(command.CLICommand, false)(cmd, args); err != nil {
-			return err
-		}
-
-		if err := r.Config.DecryptContextStates(); err != nil {
-			return err
-		}
-
-		ctx := command.Config.Context()
-		if ctx == nil {
-			return new(errors.NotLoggedInError)
-		}
-
-		var clusterId string
-		switch ctx.GetCredentialType() {
-		case v1.APIKey:
-			clusterId = r.getClusterIdForAPIKeyCredential(ctx)
-		case v1.Username:
-			unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
-			if err != nil {
-				return err
-			}
-
-			if tokenErr := r.ValidateToken(command.Config); tokenErr != nil {
-				if err := r.updateToken(tokenErr, command.Config.Context(), unsafeTrace); err != nil {
-					return err
-				}
-			}
-
-			v2Client := command.Config.GetCloudClientV2(unsafeTrace)
-			ctx.V2Client = v2Client
-			command.Config.V2Client = v2Client
-
-			if err := ctx.ParseFlagsIntoContext(cmd); err != nil {
-				return err
-			}
-
-			cluster, err := ctx.GetKafkaClusterForCommand()
-			if err != nil {
-				return err
-			}
-			clusterId = cluster.ID
-
-			key, secret, err := ctx.KeyAndSecretFlags(cmd)
-			if err != nil {
-				return err
-			}
-			if key != "" {
-				cluster.APIKey = key
-				if secret != "" {
-					cluster.APIKeys[key] = &v1.APIKeyPair{Key: key, Secret: secret}
-				} else if cluster.APIKeys[key] == nil {
-					return errors.NewErrorWithSuggestions(
-						fmt.Sprintf(errors.NoAPISecretStoredOrPassedErrorMsg, key, clusterId),
-						fmt.Sprintf(errors.NoAPISecretStoredOrPassedSuggestions, key, clusterId))
-				}
-			}
-		default:
-			return errors.New("invalid credential type")
-		}
-
-		hasAPIKey, err := ctx.HasAPIKey(clusterId)
-		if err != nil {
-			return err
-		}
-		if !hasAPIKey {
-			return &errors.UnspecifiedAPIKeyError{ClusterID: clusterId}
-		}
-
-		return nil
-	}
-}
-
 func (r *PreRun) ValidateToken(config *dynamicconfig.DynamicConfig) error {
 	if config == nil {
 		return new(errors.NotLoggedInError)
@@ -840,11 +763,6 @@ func (r *PreRun) getUpdatedAuthToken(ctx *dynamicconfig.DynamicContext, unsafeTr
 		token, err := r.AuthTokenHandler.GetConfluentToken(client, credentials)
 		return token, "", err
 	}
-}
-
-// if API key credential then the context is initialized to be used for only one cluster, and cluster id can be obtained directly from the context config
-func (r *PreRun) getClusterIdForAPIKeyCredential(ctx *dynamicconfig.DynamicContext) string {
-	return ctx.KafkaClusterContext.GetActiveKafkaClusterId()
 }
 
 // notifyIfUpdateAvailable prints a message if an update is available
