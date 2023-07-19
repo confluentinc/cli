@@ -5,11 +5,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net"
 	"os/exec"
 	"runtime"
 	"strconv"
+	"strings"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -235,7 +235,7 @@ func (c *Command) validateCustomizedPorts() error {
 		}
 		invalidKafkaRestPort := c.Config.LocalPorts.KafkaRestPort
 		c.Config.LocalPorts.KafkaRestPort = strconv.Itoa(freePort)
-		log.CliLogger.Warnf("Port %s is not available. Overwrote Kafka REST port to %d", invalidKafkaRestPort, freePort)
+		log.CliLogger.Warnf("Kafka REST port %s is not available, using port %d instead.", invalidKafkaRestPort, freePort)
 	} else {
 		if err := kafkaRestLn.Close(); err != nil {
 			return err
@@ -250,7 +250,7 @@ func (c *Command) validateCustomizedPorts() error {
 		}
 		invalidPlaintextPort := c.Config.LocalPorts.PlaintextPort
 		c.Config.LocalPorts.PlaintextPort = strconv.Itoa(freePort)
-		log.CliLogger.Warnf("Port %s is not available. Overwrote plaintext port to %d", invalidPlaintextPort, freePort)
+		log.CliLogger.Warnf("Plaintext port %s is not available, using port %d instead.", invalidPlaintextPort, freePort)
 	} else {
 		if err := plaintextLn.Close(); err != nil {
 			return err
