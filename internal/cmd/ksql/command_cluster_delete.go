@@ -2,7 +2,6 @@ package ksql
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"net/http"
 
@@ -10,21 +9,22 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/oauth2"
 
+	ksqlv2 "github.com/confluentinc/ccloud-sdk-go-v2/ksql/v2"
+
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/log"
-	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *ksqlCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "delete <id>",
-		Short:             "Delete a ksqlDB cluster.",
-		Args:              cobra.ExactArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		Use:               "delete <id-1> [id-2] ... [id-n]",
+		Short:             "Delete one or more ksqlDB clusters.",
+		Args:              cobra.MinimumNArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgsMultiple),
 		RunE:              c.delete,
 	}
 
@@ -44,32 +44,34 @@ func (c *ksqlCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// Check KSQL exists
-	cluster, err := c.V2Client.DescribeKsqlCluster(id, environmentId)
-	if err != nil {
-		return errors.CatchKSQLNotFoundError(err, id)
-	}
-
-	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.KsqlCluster, id, cluster.Spec.GetDisplayName())
-	if _, err := form.ConfirmDeletion(cmd, promptMsg, cluster.Spec.GetDisplayName()); err != nil {
+	idToCluster := make(map[string]ksqlv2.KsqldbcmV2Cluster)
+	if confirm, err := c.confirmDeletion(cmd, environmentId, args, idToCluster); err != nil {
 		return err
+	} else if !confirm {
+		return nil
 	}
 
-	// When deleting a cluster we need to remove all the associated topics. This operation will succeed only if cluster
-	// is UP and provisioning didn't fail. If provisioning failed we can't connect to the ksql server, so we can't delete
-	// the topics.
-	if c.getClusterStatus(&cluster) == "PROVISIONED" {
-		if err := c.deleteTopics(cluster.GetId(), cluster.Status.GetHttpEndpoint()); err != nil {
+	deleteFunc := func(id string) error {
+		// When deleting a cluster we need to remove all the associated topics. This operation will succeed only if cluster
+		// is UP and provisioning didn't fail. If provisioning failed we can't connect to the ksql server, so we can't delete
+		// the topics.
+		cluster := idToCluster[id]
+		if c.getClusterStatus(&cluster) == "PROVISIONED" {
+			if err := c.deleteTopics(cluster.GetId(), cluster.Status.GetHttpEndpoint()); err != nil {
+				return err
+			}
+		}
+
+		if err := c.V2Client.DeleteKsqlCluster(id, environmentId); err != nil {
 			return err
 		}
+		return nil
 	}
 
-	if err := c.V2Client.DeleteKsqlCluster(id, environmentId); err != nil {
-		return err
-	}
+	deleted, err := resource.Delete(args, deleteFunc, nil)
+	resource.PrintDeleteSuccessMsg(deleted, resource.KsqlCluster)
 
-	output.Printf(errors.DeletedResourceMsg, resource.KsqlCluster, id)
-	return nil
+	return err
 }
 
 func (c *ksqlCommand) deleteTopics(clusterId, endpoint string) error {
@@ -101,4 +103,31 @@ func (c *ksqlCommand) deleteTopics(clusterId, endpoint string) error {
 		return errors.Errorf(errors.KsqlDBTerminateClusterErrorMsg, clusterId, string(body))
 	}
 	return nil
+}
+
+func (c *ksqlCommand) confirmDeletion(cmd *cobra.Command, environmentId string, args []string, idToCluster map[string]ksqlv2.KsqldbcmV2Cluster) (bool, error) {
+	describeFunc := func(id string) error {
+		cluster, err := c.V2Client.DescribeKsqlCluster(id, environmentId)
+		if err != nil {
+			return err
+		}
+		idToCluster[id] = cluster
+
+		return nil
+	}
+
+	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.KsqlCluster, describeFunc); err != nil {
+		return false, err
+	}
+
+	if len(args) > 1 {
+		return form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.KsqlCluster, args))
+	}
+
+	displayName := idToCluster[args[0]].Spec.GetDisplayName()
+	if err := form.ConfirmDeletionWithString(cmd, form.DefaultPromptString(resource.KsqlCluster, args[0], displayName), displayName); err != nil {
+		return false, err
+	}
+
+	return true, nil
 }

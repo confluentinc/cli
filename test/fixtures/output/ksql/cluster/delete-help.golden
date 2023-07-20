@@ -1,7 +1,7 @@
-Delete a ksqlDB cluster.
+Delete one or more ksqlDB clusters.
 
 Usage:
-  confluent ksql cluster delete <id> [flags]
+  confluent ksql cluster delete <id-1> [id-2] ... [id-n] [flags]
 
 Flags:
       --force                Skip the deletion confirmation prompt.

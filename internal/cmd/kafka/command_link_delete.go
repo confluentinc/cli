@@ -1,24 +1,21 @@
 package kafka
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
-	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *linkCommand) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "delete <link>",
-		Short:             "Delete a cluster link.",
-		Args:              cobra.ExactArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		Use:               "delete <link-1> [link-2] ... [link-n]",
+		Short:             "Delete one or more cluster links.",
+		Args:              cobra.MinimumNArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgsMultiple),
 		RunE:              c.delete,
 	}
 
@@ -31,8 +28,6 @@ func (c *linkCommand) newDeleteCommand() *cobra.Command {
 }
 
 func (c *linkCommand) delete(cmd *cobra.Command, args []string) error {
-	linkName := args[0]
-
 	kafkaREST, err := c.GetKafkaREST()
 	if kafkaREST == nil {
 		if err != nil {
@@ -46,15 +41,42 @@ func (c *linkCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.ClusterLink, linkName, linkName)
-	if _, err := form.ConfirmDeletion(cmd, promptMsg, linkName); err != nil {
+	if confirm, err := c.confirmDeletion(cmd, kafkaREST, cluster.ID, args); err != nil {
+		return err
+	} else if !confirm {
+		return nil
+	}
+
+	deleteFunc := func(id string) error {
+		if r, err := kafkaREST.CloudClient.DeleteKafkaLink(cluster.ID, id); err != nil {
+			return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, r)
+		}
+		return nil
+	}
+
+	deleted, err := resource.Delete(args, deleteFunc, nil)
+	resource.PrintDeleteSuccessMsg(deleted, resource.ClusterLink)
+
+	return err
+}
+
+func (c *linkCommand) confirmDeletion(cmd *cobra.Command, kafkaREST *pcmd.KafkaREST, clusterId string, args []string) (bool, error) {
+	describeFunc := func(id string) error {
+		_, _, err := kafkaREST.CloudClient.ListKafkaLinkConfigs(clusterId, id)
 		return err
 	}
 
-	if httpResp, err := kafkaREST.CloudClient.DeleteKafkaLink(cluster.ID, linkName); err != nil {
-		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.ClusterLink, describeFunc); err != nil {
+		return false, err
 	}
 
-	output.Printf(errors.DeletedResourceMsg, resource.ClusterLink, linkName)
-	return nil
+	if len(args) > 1 {
+		return form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.ClusterLink, args))
+	}
+
+	if err := form.ConfirmDeletionWithString(cmd, form.DefaultPromptString(resource.ClusterLink, args[0], args[0]), args[0]); err != nil {
+		return false, err
+	}
+
+	return true, nil
 }

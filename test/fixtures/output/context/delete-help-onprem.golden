@@ -1,7 +1,7 @@
-Delete a context.
+Delete one or more contexts.
 
 Usage:
-  confluent context delete <context> [flags]
+  confluent context delete <context-1> [context-2] ... [context-n] [flags]
 
 Flags:
       --force   Skip the deletion confirmation prompt.

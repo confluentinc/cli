@@ -5,7 +5,7 @@ Usage:
 
 Available Commands:
   create      Create an identity pool.
-  delete      Delete an identity pool.
+  delete      Delete one or more identity pools.
   describe    Describe an identity pool.
   list        List identity pools.
   update      Update an identity pool.

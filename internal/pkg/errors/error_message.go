@@ -63,9 +63,8 @@ const (
 	ConnectLogEventsNotEnabledErrorMsg = "Connect Log Events are not enabled for this organization"
 
 	// environment & organization command
-	OrgResourceNotFoundSuggestions = "List available %[1]ss with `confluent %[1]s list`."
-	NoEnvironmentFoundErrorMsg     = "no environment found"
-	NoEnvironmentFoundSuggestions  = "This issue may occur if this user has no valid role bindings. Contact an Organization Admin to create a role binding for this user."
+	NoEnvironmentFoundErrorMsg    = "no environment found"
+	NoEnvironmentFoundSuggestions = "This issue may occur if this user has no valid role bindings. Contact an Organization Admin to create a role binding for this user."
 
 	// iam acl & kafka acl commands
 	UnableToPerformAclErrorMsg    = "unable to %s ACLs: %s"
@@ -156,8 +155,6 @@ const (
 	KafkaClusterInaccessibleErrorMsg                 = `Kafka cluster "%s" not found or access forbidden`
 	KafkaClusterInaccessibleSuggestions              = ChooseRightEnvironmentSuggestions + "\n" +
 		"The active Kafka cluster may have been deleted. Set a new active cluster with `confluent kafka cluster use`."
-	KafkaClusterDeletingSuggestions = KafkaClusterInaccessibleSuggestions + "\n" +
-		"Ensure the cluster is not associated with any active Connect clusters."
 	ChooseRightEnvironmentSuggestions = "Ensure the cluster ID you entered is valid.\n" +
 		"Ensure the cluster you are specifying belongs to the currently selected environment with `confluent kafka cluster list`, `confluent environment list`, and `confluent environment use`."
 	UnknownTopicErrorMsg              = `unknown topic "%s"`
@@ -464,6 +461,7 @@ const (
 	UnsupportedCustomAttributeErrorMsg = `attribute "%s" is not one of the supported FeatureFlags targeting values`
 
 	// General
-	DeleteResourceErrorMsg = `failed to delete %s "%s": %v`
-	UpdateResourceErrorMsg = `failed to update %s "%s": %v`
+	DeleteResourceErrorMsg  = `failed to delete %s "%s": %v`
+	ListResourceSuggestions = "List available %ss with `%s list`."
+	UpdateResourceErrorMsg  = `failed to update %s "%s": %v`
 )

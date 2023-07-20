@@ -9,6 +9,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 /*
@@ -71,34 +72,56 @@ func (f *Form) Prompt(prompt Prompt) error {
 	return nil
 }
 
-func ConfirmDeletion(cmd *cobra.Command, promptMsg, stringToType string) (bool, error) {
-	force, err := cmd.Flags().GetBool("force")
-	if err != nil {
-		return false, err
+func ConfirmDeletionWithString(cmd *cobra.Command, promptMsg, stringToType string) error {
+	if force, err := cmd.Flags().GetBool("force"); err != nil {
+		return err
+	} else if force {
+		return nil
 	}
-	if force {
+
+	prompt := NewPrompt()
+	f := New(Field{ID: "confirm", Prompt: promptMsg})
+	if err := f.Prompt(prompt); err != nil {
+		return err
+	}
+
+	if f.Responses["confirm"].(string) == stringToType || f.Responses["confirm"].(string) == fmt.Sprintf(`"%s"`, stringToType) {
+		return nil
+	}
+
+	DeleteResourceConfirmSuggestions := "Use the `--force` flag to delete without a confirmation prompt."
+	return errors.NewErrorWithSuggestions(fmt.Sprintf(`input does not match "%s"`, stringToType), DeleteResourceConfirmSuggestions)
+}
+
+func DefaultPromptString(resourceType, id, stringToType string) string {
+	return fmt.Sprintf(errors.DeleteResourceConfirmMsg, resourceType, id, stringToType)
+}
+
+func ConfirmDeletionYesNo(cmd *cobra.Command, promptMsg string) (bool, error) {
+	if force, err := cmd.Flags().GetBool("force"); err != nil {
+		return false, err
+	} else if force {
 		return true, nil
 	}
 
 	prompt := NewPrompt()
-	isYesNo := stringToType == ""
-	f := New(Field{ID: "confirm", Prompt: promptMsg, IsYesOrNo: isYesNo})
-	if err := f.Prompt(prompt); err != nil && isYesNo {
+	f := New(Field{ID: "confirm", Prompt: promptMsg, IsYesOrNo: true})
+	if err := f.Prompt(prompt); err != nil {
 		return false, errors.New(errors.FailedToReadInputErrorMsg)
-	} else if err != nil {
-		return false, err
 	}
 
-	if isYesNo {
-		return f.Responses["confirm"].(bool), nil
+	return f.Responses["confirm"].(bool), nil
+}
+
+func DefaultYesNoPromptString(resourceType string, idList []string) string {
+	var promptMsg string
+	if len(idList) == 1 {
+		promptMsg = fmt.Sprintf(`Are you sure you want to delete %s "%s"?`, resourceType, idList[0])
+	} else {
+		promptMsg = fmt.Sprintf("Are you sure you want to delete %ss %s?", resourceType, utils.ArrayToCommaDelimitedString(idList, "and"))
 	}
 
-	if f.Responses["confirm"].(string) == stringToType || f.Responses["confirm"].(string) == fmt.Sprintf(`"%s"`, stringToType) {
-		return true, nil
-	}
-
-	DeleteResourceConfirmSuggestions := "Use the `--force` flag to delete without a confirmation prompt."
-	return false, errors.NewErrorWithSuggestions(fmt.Sprintf(`input does not match "%s"`, stringToType), DeleteResourceConfirmSuggestions)
+	return promptMsg
 }
 
 func ConfirmEnter() error {

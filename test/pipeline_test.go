@@ -27,6 +27,9 @@ func (s *CLITestSuite) TestPipeline() {
 		// secret value with space (e.g. name="some value") also works but cannot be integration tested, due to cli_test.runCommand() is splitting these args by space character
 		{args: "pipeline delete pipe-12345 --force", fixture: "pipeline/delete.golden"},
 		{args: "pipeline delete pipe-12345", input: "testPipeline\n", fixture: "pipeline/delete-prompt.golden"},
+		{args: "pipeline delete pipe-12345 pipe-12346", fixture: "pipeline/delete-multiple-fail.golden", exitCode: 1},
+		{args: "pipeline delete pipe-12345 pipe-54321", input: "n\n", fixture: "pipeline/delete-multiple-refuse.golden"},
+		{args: "pipeline delete pipe-12345 pipe-54321", input: "y\n", fixture: "pipeline/delete-multiple-success.golden"},
 		{args: "pipeline activate pipe-12345", fixture: "pipeline/activate.golden"},
 		{args: "pipeline deactivate pipe-12345", fixture: "pipeline/deactivate.golden"},
 		{args: "pipeline deactivate pipe-12345 --retained-topics topic1", fixture: "pipeline/deactivate.golden"},

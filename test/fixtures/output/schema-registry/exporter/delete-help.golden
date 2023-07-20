@@ -1,7 +1,7 @@
-Delete schema exporter.
+Delete one or more schema exporters.
 
 Usage:
-  confluent schema-registry exporter delete <name> [flags]
+  confluent schema-registry exporter delete <name-1> <name-2> ... <name-n> [flags]
 
 Flags:
       --api-key string       API key.

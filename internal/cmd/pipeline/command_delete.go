@@ -1,24 +1,22 @@
 package pipeline
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *command) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "delete <pipeline-id>",
-		Short:             "Delete a pipeline.",
-		Args:              cobra.ExactArgs(1),
-		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		Use:               "delete <pipeline-id-1> [pipeline-id-2] ... [pipeline-id-n]",
+		Short:             "Delete one or more pipelines.",
+		Args:              cobra.MinimumNArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgsMultiple),
 		RunE:              c.delete,
 		Example: examples.BuildExampleString(
 			examples.Example{
@@ -46,20 +44,54 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	pipeline, err := c.V2Client.GetSdPipeline(environmentId, cluster.ID, args[0])
-	if err != nil {
+	if confirm, err := c.confirmDeletion(cmd, environmentId, cluster.ID, args); err != nil {
 		return err
+	} else if !confirm {
+		return nil
 	}
 
-	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.Pipeline, pipeline.GetId(), pipeline.Spec.GetDisplayName())
-	if _, err := form.ConfirmDeletion(cmd, promptMsg, pipeline.Spec.GetDisplayName()); err != nil {
-		return err
+	deleteFunc := func(id string) error {
+		if err := c.V2Client.DeleteSdPipeline(environmentId, cluster.ID, id); err != nil {
+			return err
+		}
+		return nil
 	}
 
-	if err := c.V2Client.DeleteSdPipeline(environmentId, cluster.ID, args[0]); err != nil {
-		return err
+	deleted, err := resource.Delete(args, deleteFunc, nil)
+	if len(deleted) == 1 {
+		output.Printf("Requested to delete pipeline \"%s\".\n", deleted[0])
+	} else if len(deleted) > 1 {
+		output.Printf("Requested to delete pipelines %s.\n", utils.ArrayToCommaDelimitedString(deleted, "and"))
 	}
 
-	output.Printf(errors.RequestedDeleteResourceMsg, resource.Pipeline, args[0])
-	return nil
+	return err
+}
+
+func (c *command) confirmDeletion(cmd *cobra.Command, environmentId, clusterId string, args []string) (bool, error) {
+	var displayName string
+	describeFunc := func(id string) error {
+		pipeline, err := c.V2Client.GetSdPipeline(environmentId, clusterId, id)
+		if err != nil {
+			return err
+		}
+		if id == args[0] {
+			displayName = pipeline.Spec.GetDisplayName()
+		}
+
+		return nil
+	}
+
+	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.Pipeline, describeFunc); err != nil {
+		return false, err
+	}
+
+	if len(args) > 1 {
+		return form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.Pipeline, args))
+	}
+
+	if err := form.ConfirmDeletionWithString(cmd, form.DefaultPromptString(resource.Pipeline, args[0], displayName), displayName); err != nil {
+		return false, err
+	}
+
+	return true, nil
 }

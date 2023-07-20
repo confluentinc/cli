@@ -1,14 +1,17 @@
 package kafka
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
-	aclutil "github.com/confluentinc/cli/internal/pkg/acl"
+	pacl "github.com/confluentinc/cli/internal/pkg/acl"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *aclCommand) newDeleteCommandOnPrem() *cobra.Command {
@@ -33,7 +36,7 @@ func (c *aclCommand) newDeleteCommandOnPrem() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().AddFlagSet(aclutil.AclFlags())
+	cmd.Flags().AddFlagSet(pacl.AclFlags())
 	pcmd.AddForceFlag(cmd)
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -47,8 +50,8 @@ func (c *aclCommand) newDeleteCommandOnPrem() *cobra.Command {
 }
 
 func (c *aclCommand) deleteOnPrem(cmd *cobra.Command, _ []string) error {
-	acl := aclutil.ParseAclRequest(cmd)
-	acl = aclutil.ValidateCreateDeleteAclRequestData(acl)
+	acl := pacl.ParseAclRequest(cmd)
+	acl = pacl.ValidateCreateDeleteAclRequestData(acl)
 	if acl.Errors != nil {
 		return acl.Errors
 	}
@@ -63,7 +66,7 @@ func (c *aclCommand) deleteOnPrem(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	optsForList := aclutil.AclRequestToListAclRequest(acl)
+	optsForList := pacl.AclRequestToListAclRequest(acl)
 	aclDataList, httpResp, err := restClient.ACLV3Api.GetKafkaAcls(restContext, clusterId, optsForList)
 	if err != nil {
 		return kafkarest.NewError(restClient.GetConfig().BasePath, err, httpResp)
@@ -72,16 +75,16 @@ func (c *aclCommand) deleteOnPrem(cmd *cobra.Command, _ []string) error {
 		return errors.NewErrorWithSuggestions("ACL matching these parameters not found", ValidACLSuggestion)
 	}
 
-	promptMsg := errors.DeleteACLConfirmMsg
-	if ok, err := form.ConfirmDeletion(cmd, promptMsg, ""); err != nil || !ok {
+	promptMsg := fmt.Sprintf(pacl.DeleteACLConfirmMsg, resource.ACL)
+	if ok, err := form.ConfirmDeletionYesNo(cmd, promptMsg); err != nil || !ok {
 		return err
 	}
 
-	opts := aclutil.AclRequestToDeleteAclRequest(acl)
+	opts := pacl.AclRequestToDeleteAclRequest(acl)
 	aclDeleteResp, httpResp, err := restClient.ACLV3Api.DeleteKafkaAcls(restContext, clusterId, opts)
 	if err != nil {
 		return kafkarest.NewError(restClient.GetConfig().BasePath, err, httpResp)
 	}
 
-	return aclutil.PrintACLsFromKafkaRestResponseOnPrem(cmd, aclDeleteResp.Data)
+	return pacl.PrintACLsFromKafkaRestResponseOnPrem(cmd, aclDeleteResp.Data)
 }

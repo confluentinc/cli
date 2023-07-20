@@ -1,7 +1,7 @@
-Delete an API key.
+Delete one or more API keys.
 
 Usage:
-  confluent api-key delete <api-key> [flags]
+  confluent api-key delete <api-key-1> [api-key-2] ... [api-key-n] [flags]
 
 Flags:
       --force   Skip the deletion confirmation prompt.

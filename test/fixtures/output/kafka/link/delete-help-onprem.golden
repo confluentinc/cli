@@ -1,9 +1,10 @@
-Delete a cluster link.
+Delete one or more cluster links.
 
 Usage:
-  confluent kafka link delete <link> [flags]
+  confluent kafka link delete <link-1> [link-2] ... [link-n] [flags]
 
 Flags:
+      --force                     Skip the deletion confirmation prompt.
       --url string                Base URL of REST Proxy Endpoint of Kafka Cluster (include "/kafka" for embedded Rest Proxy). Must set flag or CONFLUENT_REST_URL.
       --ca-cert-path string       Path to a PEM-encoded CA to verify the Confluent REST Proxy.
       --client-cert-path string   Path to client cert to be verified by Confluent REST Proxy, include for mTLS authentication.

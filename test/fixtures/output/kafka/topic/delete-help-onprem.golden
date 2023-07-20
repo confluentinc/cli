@@ -1,7 +1,7 @@
-Delete a Kafka topic.
+Delete one or more Kafka topics.
 
 Usage:
-  confluent kafka topic delete <topic> [flags]
+  confluent kafka topic delete <topic-1> [topic-2] ... [topic-n] [flags]
 
 Examples:
 Delete the topic "my_topic" for the specified cluster (providing embedded Kafka REST Proxy endpoint). Use this command carefully as data loss can occur.

@@ -3,11 +3,24 @@ package test
 func (s *CLITestSuite) TestFlinkComputePool() {
 	tests := []CLITest{
 		{args: "flink compute-pool create my-compute-pool --cloud aws --region us-west-2", fixture: "flink/compute-pool/create.golden"},
-		{args: "flink compute-pool delete lfcp-123456 --force", fixture: "flink/compute-pool/delete.golden"},
 		{args: "flink compute-pool describe lfcp-123456", fixture: "flink/compute-pool/describe.golden"},
 		{args: "flink compute-pool list", fixture: "flink/compute-pool/list.golden"},
 		{args: "flink compute-pool list --region us-west-2", fixture: "flink/compute-pool/list-region.golden"},
 		{args: "flink compute-pool update lfcp-123456 --cfu 2", fixture: "flink/compute-pool/update.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestFlinkComputePoolDelete() {
+	tests := []CLITest{
+		{args: "flink compute-pool delete lfcp-123456 --force", fixture: "flink/compute-pool/delete.golden"},
+		{args: "flink compute-pool delete lfcp-123456 lfcp-222222", input: "n\n", fixture: "flink/compute-pool/delete-multiple-refuse.golden"},
+		{args: "flink compute-pool delete lfcp-123456 lfcp-222222", input: "y\n", fixture: "flink/compute-pool/delete-multiple-success.golden"},
+		{args: "flink compute-pool delete lfcp-123456 lfcp-654321", fixture: "flink/compute-pool/delete-multiple-fail.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {
@@ -62,6 +75,9 @@ func (s *CLITestSuite) TestFlinkIamBinding() {
 		{args: "flink iam-binding create --cloud aws --region us-west-2 --identity-pool pool-1234", fixture: "flink/iam-binding/create.golden"},
 		{args: "flink iam-binding create --cloud aws --region us-west-2 --identity-pool pool-1234 --environment env-123", fixture: "flink/iam-binding/create-environment.golden"},
 		{args: "flink iam-binding delete fiam-123 --force", fixture: "flink/iam-binding/delete.golden"},
+		{args: "flink iam-binding delete fiam-123 fiam-456", input: "n\n", fixture: "flink/iam-binding/delete-multiple-refuse.golden"},
+		{args: "flink iam-binding delete fiam-123 fiam-456", input: "y\n", fixture: "flink/iam-binding/delete-multiple-success.golden"},
+		{args: "flink iam-binding delete fiam-123 fiam-321", fixture: "flink/iam-binding/delete-multiple-fail.golden", exitCode: 1},
 		{args: "flink iam-binding list", fixture: "flink/iam-binding/list.golden"},
 		{args: "flink iam-binding list --cloud aws", fixture: "flink/iam-binding/list-cloud.golden"},
 		{args: "flink iam-binding list --region us-west-1", fixture: "flink/iam-binding/list-region.golden"},

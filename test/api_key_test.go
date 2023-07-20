@@ -58,8 +58,7 @@ func (s *CLITestSuite) TestApiKey() {
 		{args: "api-key list --resource lkc-other1", fixture: "api-key/23.golden"},
 
 		// delete API key that is in use
-		{args: "api-key delete MYKEY5 --force", fixture: "api-key/24.golden"},
-		{args: "api-key delete MYKEY5", input: "y\n", fixture: "api-key/24-prompt.golden"},
+		{args: "api-key delete MYKEY5 --force", fixture: "api-key/delete/success.golden"},
 		{args: "api-key list --resource lkc-other1", fixture: "api-key/25.golden"},
 
 		// store an API key for kafka cluster
@@ -162,6 +161,23 @@ func (s *CLITestSuite) TestApiKeyDescribe() {
 		{args: "api-key describe MYKEY1 -o json", fixture: "api-key/describe-json.golden"},
 		{args: "api-key describe MULTICLUSTERKEY1", fixture: "api-key/describe-multicluster.golden", env: []string{fmt.Sprintf("%s=multicluster-key-org", pauth.ConfluentCloudOrganizationId)}},
 	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestApiKeyDelete() {
+	tests := []CLITest{
+		// delete multiple API keys
+		{args: "api-key delete MYKEY7 MYKEY8 MYKEY19", fixture: "api-key/delete/multiple-fail.golden", exitCode: 1},
+		{args: "api-key delete MYKEY6 MYKEY17 MYKEY18", fixture: "api-key/delete/multiple-fail-plural.golden", exitCode: 1},
+		{args: "api-key delete MYKEY7 MYKEY8", input: "n\n", fixture: "api-key/delete/multiple-refuse.golden"},
+		{args: "api-key delete MYKEY7 MYKEY8", input: "y\n", fixture: "api-key/delete/multiple-success.golden"},
+	}
+
+	resetConfiguration(s.T(), false)
 
 	for _, test := range tests {
 		test.login = "cloud"
