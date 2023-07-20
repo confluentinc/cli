@@ -12,7 +12,6 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	nameconversions "github.com/confluentinc/cli/internal/pkg/name-conversions"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 )
@@ -86,7 +85,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	if serviceAccount != "" {
-		if serviceAccount, err = nameconversions.IamServiceAccountNameToId(serviceAccount, c.V2Client, true); err != nil {
+		if serviceAccount, err = resource.IamServiceAccountNameToId(serviceAccount, c.V2Client, true); err != nil {
 			return err
 		}
 	}

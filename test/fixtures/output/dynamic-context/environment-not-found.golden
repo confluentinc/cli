@@ -1,0 +1,4 @@
+Error: resource with name or ID "dne" was not found
+
+Suggestions:
+    List available environments with `confluent environment list`.

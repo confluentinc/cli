@@ -1,0 +1,4 @@
+Error: resource with name or ID "dne" was not found
+
+Suggestions:
+    To list Kafka clusters, use `confluent kafka cluster list`.

@@ -12,8 +12,8 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
-	nameconversions "github.com/confluentinc/cli/internal/pkg/name-conversions"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	resource "github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *clusterCommand) newUpdateCommand(cfg *v1.Config) *cobra.Command {
@@ -56,7 +56,7 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 	clusterId := args[0]
 	currentCluster, httpResp, err := c.V2Client.DescribeKafkaCluster(clusterId, environmentId)
 	if err != nil {
-		if clusterId, err = nameconversions.KafkaClusterNameToId(clusterId, environmentId, c.V2Client, false); err != nil {
+		if clusterId, err = resource.KafkaClusterNameToId(clusterId, environmentId, c.V2Client, false); err != nil {
 			return errors.CatchKafkaNotFoundError(err, clusterId, httpResp)
 		}
 		if currentCluster, _, err = c.V2Client.DescribeKafkaCluster(clusterId, environmentId); err != nil {

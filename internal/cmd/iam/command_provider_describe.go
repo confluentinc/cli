@@ -4,8 +4,8 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	nameconversions "github.com/confluentinc/cli/internal/pkg/name-conversions"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	resource "github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c identityProviderCommand) newDescribeCommand() *cobra.Command {
@@ -25,7 +25,7 @@ func (c identityProviderCommand) newDescribeCommand() *cobra.Command {
 func (c identityProviderCommand) describe(cmd *cobra.Command, args []string) error {
 	identityProvider, err := c.V2Client.GetIdentityProvider(args[0])
 	if err != nil {
-		providerId, err := nameconversions.IamProviderNameToId(args[0], c.V2Client, false)
+		providerId, err := resource.IamProviderNameToId(args[0], c.V2Client, false)
 		if err != nil {
 			return err
 		}

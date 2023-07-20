@@ -4,8 +4,8 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	nameconversions "github.com/confluentinc/cli/internal/pkg/name-conversions"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	resource "github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *quotaCommand) newDescribeCommand() *cobra.Command {
@@ -29,7 +29,7 @@ func (c *quotaCommand) describe(cmd *cobra.Command, args []string) error {
 
 	quota, err := c.V2Client.DescribeKafkaQuota(quotaId)
 	if err != nil {
-		quotaId, err = nameconversions.QuotaNameToId(quotaId, c.Context.KafkaClusterContext.GetActiveKafkaClusterId(), c.Context.GetCurrentEnvironment(), c.V2Client)
+		quotaId, err = resource.QuotaNameToId(quotaId, c.Context.KafkaClusterContext.GetActiveKafkaClusterId(), c.Context.GetCurrentEnvironment(), c.V2Client)
 		if err != nil {
 			return err
 		}

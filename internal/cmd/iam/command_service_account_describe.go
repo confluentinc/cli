@@ -5,8 +5,8 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	nameconversions "github.com/confluentinc/cli/internal/pkg/name-conversions"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	resource "github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c serviceAccountCommand) newDescribeCommand() *cobra.Command {
@@ -28,7 +28,7 @@ func (c serviceAccountCommand) describe(cmd *cobra.Command, args []string) error
 
 	serviceAccount, httpResp, err := c.V2Client.GetIamServiceAccount(serviceAccountId)
 	if err != nil {
-		if serviceAccountId, err = nameconversions.IamServiceAccountNameToId(serviceAccountId, c.V2Client, false); err != nil {
+		if serviceAccountId, err = resource.IamServiceAccountNameToId(serviceAccountId, c.V2Client, false); err != nil {
 			return errors.CatchServiceAccountNotFoundError(err, httpResp, serviceAccountId)
 		}
 		if serviceAccount, httpResp, err = c.V2Client.GetIamServiceAccount(serviceAccountId); err != nil {

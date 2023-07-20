@@ -8,8 +8,8 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	nameconversions "github.com/confluentinc/cli/internal/pkg/name-conversions"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	resource "github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *identityProviderCommand) newUpdateCommand() *cobra.Command {
@@ -59,7 +59,7 @@ func (c *identityProviderCommand) update(cmd *cobra.Command, args []string) erro
 
 	identityProvider, err := c.V2Client.UpdateIdentityProvider(update)
 	if err != nil {
-		providerId, err := nameconversions.IamProviderNameToId(args[0], c.V2Client, false)
+		providerId, err := resource.IamProviderNameToId(args[0], c.V2Client, false)
 		if err != nil {
 			return err
 		}

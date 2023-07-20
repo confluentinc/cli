@@ -7,8 +7,8 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	nameconversions "github.com/confluentinc/cli/internal/pkg/name-conversions"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	resource "github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *command) newUpdateCommand() *cobra.Command {
@@ -37,7 +37,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 
 	environment := orgv2.OrgV2Environment{DisplayName: orgv2.PtrString(name)}
 	if environment, err = c.V2Client.UpdateOrgEnvironment(args[0], environment); err != nil {
-		environmentId, err := nameconversions.EnvironmentNameToId(args[0], c.V2Client, false)
+		environmentId, err := resource.EnvironmentNameToId(args[0], c.V2Client, false)
 		if err != nil {
 			return errors.NewErrorWithSuggestions(err.Error(), errors.NotValidEnvironmentIdSuggestions)
 		}

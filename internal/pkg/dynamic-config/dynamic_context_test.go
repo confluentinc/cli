@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-version"
-	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
@@ -16,14 +15,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/config"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	pmock "github.com/confluentinc/cli/internal/pkg/mock"
-)
-
-var (
-	flagEnvironment  = "env-test"
-	flagCluster      = "lkc-0001"
-	flagClusterInEnv = "lkc-0002"
-	apiEnvironment   = "env-from-api-call"
 )
 
 func TestFindKafkaCluster_Unexpired(t *testing.T) {
@@ -84,105 +75,4 @@ func TestFindKafkaCluster_Expired(t *testing.T) {
 
 func stringPtr(s string) *string {
 	return &s
-}
-
-func TestDynamicContext_ParseFlagsIntoContext(t *testing.T) {
-	tests := []struct {
-		name           string
-		ctx            *DynamicContext
-		cluster        string
-		environment    string
-		suggestionsMsg string
-	}{
-		{
-			name: "read cluster from config",
-			ctx:  getBaseContext(),
-		},
-		{
-			name:    "read cluster from flag",
-			ctx:     getClusterFlagContext(),
-			cluster: flagCluster,
-		},
-		{
-			name: "read environment from config",
-			ctx:  getEnvFlagContext(),
-		},
-		{
-			name:        "read environment from flag",
-			environment: flagEnvironment,
-			ctx:         getEnvFlagContext(),
-		},
-		{
-			name:        "pass cluster and environment",
-			cluster:     flagClusterInEnv,
-			environment: flagEnvironment,
-			ctx:         getEnvAndClusterFlagContext(),
-		},
-		{
-			name:        "find environment from api call",
-			cluster:     flagClusterInEnv,
-			environment: apiEnvironment,
-			ctx:         getEnvFlagContext(),
-		},
-	}
-	for _, test := range tests {
-		cmd := &cobra.Command{Run: func(cmd *cobra.Command, args []string) {}}
-		cmd.Flags().String("environment", "", "Environment ID.")
-		cmd.Flags().String("cluster", "", "Kafka cluster ID.")
-		err := cmd.ParseFlags([]string{"--cluster", test.cluster, "--environment", test.environment})
-		require.NoError(t, err)
-		initialEnvId := test.ctx.GetCurrentEnvironment()
-		initialActiveKafkaId := test.ctx.KafkaClusterContext.GetActiveKafkaClusterId()
-		err = test.ctx.ParseFlagsIntoContext(cmd, true)
-		require.NoError(t, err)
-		finalEnv := test.ctx.GetCurrentEnvironment()
-		finalCluster := test.ctx.KafkaClusterContext.GetActiveKafkaClusterId()
-		if test.environment != "" {
-			require.Equal(t, test.environment, finalEnv)
-		} else {
-			require.Equal(t, initialEnvId, finalEnv)
-		}
-		if test.cluster != "" {
-			require.Equal(t, test.cluster, finalCluster)
-		} else if test.environment == "" {
-			require.Equal(t, initialActiveKafkaId, finalCluster)
-		}
-	}
-}
-
-func getBaseContext() *DynamicContext {
-	cfg := v1.AuthenticatedCloudConfigMock()
-	return NewDynamicContext(cfg.Context(), pmock.NewV2ClientMock())
-}
-
-func getClusterFlagContext() *DynamicContext {
-	config := v1.AuthenticatedCloudConfigMock()
-	clusterFlagContext := NewDynamicContext(config.Context(), pmock.NewV2ClientMock())
-	// create cluster that will be used in "--cluster" flag value
-	clusterFlagContext.KafkaClusterContext.KafkaEnvContexts["testAccount"].KafkaClusterConfigs[flagCluster] = &v1.KafkaClusterConfig{
-		ID:   flagCluster,
-		Name: "miles",
-	}
-	return clusterFlagContext
-}
-
-func getEnvFlagContext() *DynamicContext {
-	config := v1.AuthenticatedCloudConfigMock()
-	envFlagContext := NewDynamicContext(config.Context(), pmock.NewV2ClientMock())
-	envFlagContext.Environments[flagEnvironment] = &v1.EnvironmentContext{}
-	return envFlagContext
-}
-
-func getEnvAndClusterFlagContext() *DynamicContext {
-	envAndClusterFlagContext := getEnvFlagContext()
-
-	envAndClusterFlagContext.KafkaClusterContext.KafkaEnvContexts[flagEnvironment] = &v1.KafkaEnvContext{
-		ActiveKafkaCluster:  "",
-		KafkaClusterConfigs: map[string]*v1.KafkaClusterConfig{},
-	}
-	envAndClusterFlagContext.KafkaClusterContext.KafkaEnvContexts[flagEnvironment].KafkaClusterConfigs[flagClusterInEnv] = &v1.KafkaClusterConfig{
-		ID:   flagClusterInEnv,
-		Name: "miles2",
-	}
-	return envAndClusterFlagContext
 }

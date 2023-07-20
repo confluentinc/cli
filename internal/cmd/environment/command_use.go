@@ -5,9 +5,8 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	nameconversions "github.com/confluentinc/cli/internal/pkg/name-conversions"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	presource "github.com/confluentinc/cli/internal/pkg/resource"
+	resource "github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *command) newUseCommand() *cobra.Command {
@@ -28,7 +27,7 @@ func (c *command) newUseCommand() *cobra.Command {
 func (c *command) use(cmd *cobra.Command, args []string) error {
 	id := args[0]
 	if _, err := c.V2Client.GetOrgEnvironment(id); err != nil {
-		if id, err = nameconversions.EnvironmentNameToId(id, c.V2Client, false); err != nil {
+		if id, err = resource.EnvironmentNameToId(id, c.V2Client, false); err != nil {
 			return errors.NewErrorWithSuggestions(err.Error(), errors.NotValidEnvironmentIdSuggestions)
 		}
 		if _, err = c.V2Client.GetOrgEnvironment(id); err != nil {
@@ -41,6 +40,6 @@ func (c *command) use(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	output.Printf(errors.UsingResourceMsg, presource.Environment, id)
+	output.Printf(errors.UsingResourceMsg, resource.Environment, id)
 	return nil
 }

@@ -1,4 +1,4 @@
-package nameconversions
+package resource
 
 import (
 	"fmt"

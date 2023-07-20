@@ -15,9 +15,9 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/featureflags"
-	nameconversions "github.com/confluentinc/cli/internal/pkg/name-conversions"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
+	presource "github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 var resourceKindToType = map[string]string{
@@ -68,7 +68,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	if serviceAccount != "" {
-		if serviceAccount, err = nameconversions.IamServiceAccountNameToId(serviceAccount, c.V2Client, true); err != nil {
+		if serviceAccount, err = presource.IamServiceAccountNameToId(serviceAccount, c.V2Client, true); err != nil {
 			return err
 		}
 	}

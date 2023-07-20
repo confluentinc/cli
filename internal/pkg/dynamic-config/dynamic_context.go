@@ -12,7 +12,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	nameconversions "github.com/confluentinc/cli/internal/pkg/name-conversions"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	presource "github.com/confluentinc/cli/internal/pkg/resource"
 )
@@ -37,12 +36,9 @@ func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, isTest bool) 
 		if d.GetCredentialType() == v1.APIKey {
 			output.ErrPrintln("WARNING: The `--environment` flag is ignored when using API key credentials.")
 		} else {
-			if !isTest {
-				var err error
-				environment, err = nameconversions.EnvironmentNameToId(environment, d.V2Client, true)
-				if err != nil {
-					return errors.NewErrorWithSuggestions(err.Error(), errors.NotValidEnvironmentIdSuggestions)
-				}
+			environment, err := presource.EnvironmentNameToId(environment, d.V2Client, true)
+			if err != nil {
+				return errors.NewErrorWithSuggestions(err.Error(), errors.NotValidEnvironmentIdSuggestions)
 			}
 			ctx := d.Config.Context()
 			d.Config.SetOverwrittenCurrentEnvironment(ctx.CurrentEnvironment)
@@ -54,12 +50,9 @@ func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, isTest bool) 
 		if d.GetCredentialType() == v1.APIKey {
 			output.ErrPrintln("WARNING: The `--cluster` flag is ignored when using API key credentials.")
 		} else {
-			if !isTest {
-				var err error
-				cluster, err = nameconversions.KafkaClusterNameToId(cluster, d.GetCurrentEnvironment(), d.V2Client, true)
-				if err != nil {
-					return err
-				}
+			cluster, err := presource.KafkaClusterNameToId(cluster, d.GetCurrentEnvironment(), d.V2Client, true)
+			if err != nil {
+				return errors.NewErrorWithSuggestions(err.Error(), errors.KafkaNotFoundSuggestions)
 			}
 			ctx := d.Config.Context()
 			d.Config.SetOverwrittenCurrentKafkaCluster(ctx.KafkaClusterContext.GetActiveKafkaClusterId())

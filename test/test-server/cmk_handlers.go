@@ -125,7 +125,7 @@ func handleCmkCluster(t *testing.T) http.HandlerFunc {
 			handleCmkKafkaUnknown(t)(w, r)
 		case "lkc-unknown-type":
 			handleCmkKafkaUnknownType(t)(w, r)
-		case "abc", "lkc-123":
+		case "abc", "lkc-123", "dne":
 			handleCmkKafkaClusterDescribeUsingName(t)(w, r)
 		case "def", "lkc-456":
 			handleCmkKafkaClusterUpdateUsingName(t)(w, r)
@@ -332,15 +332,12 @@ func handleCmkKafkaClusterDescribeUsingName(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		id := vars["id"]
-		if id == "abc" {
+		if id == "abc" || id == "dne" {
 			w.WriteHeader(http.StatusNotFound)
 		} else if id == "lkc-123" {
 			cluster := getCmkBasicDescribeCluster(id, "abc")
 			err := json.NewEncoder(w).Encode(cluster)
 			require.NoError(t, err)
-		}
-		if r.URL.Query().Get("environment") != defaultEnvId {
-			require.Equal(t, r.URL.Query().Get("environment"), otherEnvId)
 		}
 	}
 }

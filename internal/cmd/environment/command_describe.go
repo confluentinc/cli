@@ -5,8 +5,8 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	nameconversions "github.com/confluentinc/cli/internal/pkg/name-conversions"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	resource "github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 type out struct {
@@ -42,7 +42,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 
 	environment, err := c.V2Client.GetOrgEnvironment(id)
 	if err != nil {
-		if id, err = nameconversions.EnvironmentNameToId(id, c.V2Client, false); err != nil {
+		if id, err = resource.EnvironmentNameToId(id, c.V2Client, false); err != nil {
 			return errors.NewErrorWithSuggestions(err.Error(), errors.NotValidEnvironmentIdSuggestions)
 		}
 		if environment, err = c.V2Client.GetOrgEnvironment(id); err != nil {

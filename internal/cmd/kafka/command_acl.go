@@ -11,7 +11,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	nameconversions "github.com/confluentinc/cli/internal/pkg/name-conversions"
+	resource "github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 type aclCommand struct {
@@ -121,7 +121,7 @@ func (c *aclCommand) validateServiceAccountFlag(cmd *cobra.Command) error {
 		if err != nil {
 			return err
 		}
-		serviceAccountId, err := nameconversions.IamServiceAccountNameToId(serviceAccount, c.V2Client, true)
+		serviceAccountId, err := resource.IamServiceAccountNameToId(serviceAccount, c.V2Client, true)
 		if err != nil {
 			return nil
 		}

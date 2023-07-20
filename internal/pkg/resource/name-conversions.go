@@ -1,4 +1,4 @@
-package nameconversions
+package resource
 
 import (
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
