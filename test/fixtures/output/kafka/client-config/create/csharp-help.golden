@@ -22,8 +22,8 @@ Create a C# client configuration file, redirecting the configuration to a file a
 
 Flags:
       --context string       CLI context name.
-      --environment string   Environment ID.
-      --cluster string       Kafka cluster ID.
+      --environment string   Environment ID or name.
+      --cluster string       Kafka cluster ID or name.
       --api-key string       API key.
       --api-secret string    API key secret.
 

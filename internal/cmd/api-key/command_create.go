@@ -60,7 +60,7 @@ func (c *command) newCreateCommand() *cobra.Command {
 		),
 	}
 
-	c.addResourceFlag(cmd)
+	c.addResourceFlag(cmd, true)
 	cmd.Flags().String("description", "", "Description of API key.")
 	cmd.Flags().Bool("use", false, "Use the created API key for the provided resource.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)

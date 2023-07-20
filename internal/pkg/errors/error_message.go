@@ -179,9 +179,9 @@ const (
 	TopicExistsErrorMsg                  = `topic "%s" already exists for Kafka cluster "%s"`
 	TopicExistsSuggestions               = ListTopicSuggestions
 	NoAPISecretStoredOrPassedErrorMsg    = `no API secret for API key "%s" of resource "%s" passed via flag or stored in local CLI state`
-	NoAPISecretStoredOrPassedSuggestions = "Pass the API secret with flag \"--api-secret\" or store with `confluent api-key store %s --resource %s`."
+	NoAPISecretStoredOrPassedSuggestions = "Pass the API secret with flag `--api-secret` or store with `confluent api-key store %s --resource %s`."
 	PassedSecretButNotKeyErrorMsg        = "no API key specified"
-	PassedSecretButNotKeySuggestions     = `Use the "api-key" flag to specify an API key.`
+	PassedSecretButNotKeySuggestions     = "Use the `--api-key` flag to specify an API key."
 	ProducingToCompactedTopicErrorMsg    = "producer has detected an INVALID_RECORD error for topic %s"
 	ProducingToCompactedTopicSuggestions = "If the topic has schema validation enabled, ensure you are producing with a schema-enabled producer.\n" +
 		"If your topic is compacted, ensure you are producing a record with a key."
@@ -446,12 +446,7 @@ const (
 	InvalidLoginErrorSuggestions = "To log into an organization other than the default organization, use the `--organization-id` flag.\n" +
 		AvoidTimeoutSuggestions
 	SuspendedOrganizationSuggestions = "Your organization has been suspended, please contact support if you want to unsuspend it."
-	NoAPIKeySelectedErrorMsg         = `no API key selected for resource "%s"`
-	NoAPIKeySelectedSuggestions      = "Select an API key for resource \"%s\" with `confluent api-key use <API_KEY> --resource %s`.\n" +
-		"To do so, you must have either already created or stored an API key for the resource.\n" +
-		"To create an API key, use `confluent api-key create --resource %s`.\n" +
-		"To store an existing API key, use `confluent api-key store --resource %s`."
-	FailedToReadInputErrorMsg = "failed to read input"
+	FailedToReadInputErrorMsg        = "failed to read input"
 
 	// Partition command errors
 	SpecifyPartitionIdWithTopicErrorMsg = "must specify topic along with partition ID"

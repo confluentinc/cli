@@ -8,7 +8,8 @@ import (
 )
 
 type clientConfigCommand struct {
-	*pcmd.HasAPIKeyCLICommand
+	*pcmd.AuthenticatedCLICommand
+	clientId string
 }
 
 func newClientConfigCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
@@ -18,9 +19,12 @@ func newClientConfigCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Com
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
-	c := &clientConfigCommand{pcmd.NewHasAPIKeyCLICommand(cmd, prerunner)}
+	c := &clientConfigCommand{
+		AuthenticatedCLICommand: pcmd.NewAuthenticatedCLICommand(cmd, prerunner),
+		clientId:                cfg.Version.ClientID,
+	}
 
-	cmd.AddCommand(c.newCreateCommand(cfg, prerunner))
+	cmd.AddCommand(c.newCreateCommand())
 
 	return cmd
 }

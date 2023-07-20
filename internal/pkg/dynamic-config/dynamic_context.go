@@ -243,11 +243,6 @@ func (d *DynamicContext) AuthenticatedState() (*v1.ContextState, error) {
 	return d.State, nil
 }
 
-func (d *DynamicContext) HasAPIKey(clusterId string) (bool, error) {
-	cluster, err := d.FindKafkaCluster(clusterId)
-	return cluster.APIKey != "", err
-}
-
 func (d *DynamicContext) CheckSchemaRegistryHasAPIKey(cmd *cobra.Command) (bool, error) {
 	srCluster, err := d.SchemaRegistryCluster(cmd)
 	if err != nil {

@@ -22,8 +22,8 @@ Create a Python client configuration file, redirecting the configuration to a fi
 
 Flags:
       --context string                      CLI context name.
-      --environment string                  Environment ID.
-      --cluster string                      Kafka cluster ID.
+      --environment string                  Environment ID or name.
+      --cluster string                      Kafka cluster ID or name.
       --api-key string                      API key.
       --api-secret string                   API key secret.
       --schema-registry-api-key string      Schema registry API key.
