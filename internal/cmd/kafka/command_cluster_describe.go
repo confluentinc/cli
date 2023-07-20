@@ -75,7 +75,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 
 	cluster, httpResp, err := c.V2Client.DescribeKafkaCluster(clusterId, environmentId)
 	if err != nil {
-		if clusterId, err = nameconversions.ConvertClusterNameToId(clusterId, environmentId, c.V2Client, false); err != nil {
+		if clusterId, err = nameconversions.KafkaClusterNameToId(clusterId, environmentId, c.V2Client, false); err != nil {
 			return errors.CatchKafkaNotFoundError(err, clusterId, httpResp)
 		}
 		if cluster, httpResp, err = c.V2Client.DescribeKafkaCluster(clusterId, environmentId); err != nil {

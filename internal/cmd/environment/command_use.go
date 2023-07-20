@@ -28,7 +28,7 @@ func (c *command) newUseCommand() *cobra.Command {
 func (c *command) use(cmd *cobra.Command, args []string) error {
 	id := args[0]
 	if _, err := c.V2Client.GetOrgEnvironment(id); err != nil {
-		if id, err = nameconversions.ConvertEnvironmentNameToId(id, c.V2Client, false); err != nil {
+		if id, err = nameconversions.EnvironmentNameToId(id, c.V2Client, false); err != nil {
 			return errors.NewErrorWithSuggestions(err.Error(), errors.NotValidEnvironmentIdSuggestions)
 		}
 		if _, err = c.V2Client.GetOrgEnvironment(id); err != nil {

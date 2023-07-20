@@ -28,7 +28,7 @@ func (c serviceAccountCommand) describe(cmd *cobra.Command, args []string) error
 
 	serviceAccount, httpResp, err := c.V2Client.GetIamServiceAccount(serviceAccountId)
 	if err != nil {
-		if serviceAccountId, err = nameconversions.ConvertIamServiceAccountNameToId(serviceAccountId, c.V2Client, false); err != nil {
+		if serviceAccountId, err = nameconversions.IamServiceAccountNameToId(serviceAccountId, c.V2Client, false); err != nil {
 			return errors.CatchServiceAccountNotFoundError(err, httpResp, serviceAccountId)
 		}
 		if serviceAccount, httpResp, err = c.V2Client.GetIamServiceAccount(serviceAccountId); err != nil {

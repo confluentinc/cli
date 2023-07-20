@@ -68,7 +68,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	if serviceAccount != "" {
-		if serviceAccount, err = nameconversions.ConvertIamServiceAccountNameToId(serviceAccount, c.V2Client, true); err != nil {
+		if serviceAccount, err = nameconversions.IamServiceAccountNameToId(serviceAccount, c.V2Client, true); err != nil {
 			return err
 		}
 	}

@@ -52,10 +52,10 @@ func (c *identityPoolCommand) validArgs(cmd *cobra.Command, args []string) []str
 }
 
 func (c *identityPoolCommand) poolAndProviderNamesToIds(pool string, provider string) (string, string, error) {
-	provider, err := nameconversions.ConvertIamProviderNameToId(provider, c.V2Client, true)
+	provider, err := nameconversions.IamProviderNameToId(provider, c.V2Client, true)
 	if err != nil {
 		return pool, provider, err
 	}
-	pool, err = nameconversions.ConvertIamPoolNameToId(pool, provider, c.V2Client, false)
+	pool, err = nameconversions.IamPoolNameToId(pool, provider, c.V2Client, false)
 	return pool, provider, err
 }

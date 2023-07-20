@@ -48,7 +48,7 @@ func (c *serviceAccountCommand) update(cmd *cobra.Command, args []string) error 
 
 	update := iamv2.IamV2ServiceAccountUpdate{Description: &description}
 	if _, httpResp, err := c.V2Client.UpdateIamServiceAccount(serviceAccountId, update); err != nil {
-		if serviceAccountId, err = nameconversions.ConvertIamServiceAccountNameToId(serviceAccountId, c.V2Client, false); err != nil {
+		if serviceAccountId, err = nameconversions.IamServiceAccountNameToId(serviceAccountId, c.V2Client, false); err != nil {
 			return errors.CatchServiceAccountNotFoundError(err, httpResp, serviceAccountId)
 		}
 		if _, httpResp, err = c.V2Client.UpdateIamServiceAccount(serviceAccountId, update); err != nil {

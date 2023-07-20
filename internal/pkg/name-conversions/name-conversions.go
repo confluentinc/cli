@@ -7,8 +7,8 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 )
 
-// ConvertClusterNameToId attempts to convert from a valid cluster name to its ID, if it fails it returns the input string
-func ConvertClusterNameToId(input string, environmentId string, v2Client *ccloudv2.Client, tryGetFirst bool) (string, error) {
+// KafkaClusterNameToId attempts to convert from a valid kafka cluster name to its ID, if it fails it returns the input string
+func KafkaClusterNameToId(input string, environmentId string, v2Client *ccloudv2.Client, tryGetFirst bool) (string, error) {
 	if tryGetFirst {
 		if cluster, _, err := v2Client.DescribeKafkaCluster(input, environmentId); err == nil {
 			return cluster.GetId(), err
@@ -26,8 +26,8 @@ func ConvertClusterNameToId(input string, environmentId string, v2Client *ccloud
 	return ConvertSpecNameToId(input, clusterPtrs, specPtrs)
 }
 
-// ConvertEnvironmentNameToId attempts to convert from a valid environment name to its ID, if it fails it returns the input string
-func ConvertEnvironmentNameToId(input string, v2Client *ccloudv2.Client, tryGetFirst bool) (string, error) {
+// EnvironmentNameToId attempts to convert from a valid environment name to its ID, if it fails it returns an error
+func EnvironmentNameToId(input string, v2Client *ccloudv2.Client, tryGetFirst bool) (string, error) {
 	if tryGetFirst {
 		if env, err := v2Client.GetOrgEnvironment(input); err == nil {
 			return env.GetId(), err
@@ -40,8 +40,8 @@ func ConvertEnvironmentNameToId(input string, v2Client *ccloudv2.Client, tryGetF
 	return ConvertV2NameToId(input, ConvertToPtrSlice(envs))
 }
 
-// ConvertIamPoolNameToId attempts to convert from a valid iam pool name to its ID, if it fails it returns an error
-func ConvertIamPoolNameToId(input string, providerId string, v2client *ccloudv2.Client, tryGetFirst bool) (string, error) {
+// IamPoolNameToId attempts to convert from a valid iam pool name to its ID, if it fails it returns an error
+func IamPoolNameToId(input string, providerId string, v2client *ccloudv2.Client, tryGetFirst bool) (string, error) {
 	if tryGetFirst {
 		if pool, err := v2client.GetIdentityPool(input, providerId); err == nil {
 			return pool.GetId(), err
@@ -54,8 +54,8 @@ func ConvertIamPoolNameToId(input string, providerId string, v2client *ccloudv2.
 	return ConvertV2NameToId(input, ConvertToPtrSlice(pools))
 }
 
-// ConvertIamProviderNameToId attempts to convert from a valid iam provider name to its ID, if it fails it returns an error
-func ConvertIamProviderNameToId(input string, v2client *ccloudv2.Client, tryGetFirst bool) (string, error) {
+// IamProviderNameToId attempts to convert from a valid iam provider name to its ID, if it fails it returns an error
+func IamProviderNameToId(input string, v2client *ccloudv2.Client, tryGetFirst bool) (string, error) {
 	if tryGetFirst {
 		if provider, err := v2client.GetIdentityProvider(input); err == nil {
 			return provider.GetId(), err
@@ -68,8 +68,8 @@ func ConvertIamProviderNameToId(input string, v2client *ccloudv2.Client, tryGetF
 	return ConvertV2NameToId(input, ConvertToPtrSlice(providers))
 }
 
-// ConvertIamServiceAccountNameToId attempts to convert from a valid iam service account name to its ID, if it fails it returns an error
-func ConvertIamServiceAccountNameToId(input string, v2client *ccloudv2.Client, tryGetFirst bool) (string, error) {
+// IamServiceAccountNameToId attempts to convert from a valid iam service account name to its ID, if it fails it returns an error
+func IamServiceAccountNameToId(input string, v2client *ccloudv2.Client, tryGetFirst bool) (string, error) {
 	if tryGetFirst {
 		if serviceAccount, _, err := v2client.GetIamServiceAccount(input); err == nil {
 			return serviceAccount.GetId(), err
@@ -82,8 +82,8 @@ func ConvertIamServiceAccountNameToId(input string, v2client *ccloudv2.Client, t
 	return ConvertV2NameToId(input, ConvertToPtrSlice(serviceAccounts))
 }
 
-// ConvertQuotaNameToId attempts to convert from a valid quota name to its ID, if it fails it returns an error
-func ConvertQuotaNameToId(input string, clusterId string, environmentId string, v2Client *ccloudv2.Client) (string, error) {
+// QuotaNameToId attempts to convert from a valid quota name to its ID, if it fails it returns an error
+func QuotaNameToId(input string, clusterId string, environmentId string, v2Client *ccloudv2.Client) (string, error) {
 	quotas, err := v2Client.ListKafkaQuotas(clusterId, environmentId)
 	if err != nil {
 		return input, err

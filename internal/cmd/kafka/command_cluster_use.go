@@ -39,7 +39,7 @@ func (c *clusterCommand) use(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		if clusterId, err = nameconversions.ConvertClusterNameToId(clusterId, environmentId, c.V2Client, false); err != nil {
+		if clusterId, err = nameconversions.KafkaClusterNameToId(clusterId, environmentId, c.V2Client, false); err != nil {
 			return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.KafkaClusterNotFoundErrorMsg, clusterId), errors.ChooseRightEnvironmentSuggestions)
 		}
 		c.Context.SetCurrentEnvironment(environmentId)

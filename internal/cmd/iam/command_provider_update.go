@@ -59,7 +59,7 @@ func (c *identityProviderCommand) update(cmd *cobra.Command, args []string) erro
 
 	identityProvider, err := c.V2Client.UpdateIdentityProvider(update)
 	if err != nil {
-		providerId, err := nameconversions.ConvertIamProviderNameToId(args[0], c.V2Client, false)
+		providerId, err := nameconversions.IamProviderNameToId(args[0], c.V2Client, false)
 		if err != nil {
 			return err
 		}

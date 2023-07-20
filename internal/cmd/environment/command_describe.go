@@ -42,7 +42,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 
 	environment, err := c.V2Client.GetOrgEnvironment(id)
 	if err != nil {
-		if id, err = nameconversions.ConvertEnvironmentNameToId(id, c.V2Client, false); err != nil {
+		if id, err = nameconversions.EnvironmentNameToId(id, c.V2Client, false); err != nil {
 			return errors.NewErrorWithSuggestions(err.Error(), errors.NotValidEnvironmentIdSuggestions)
 		}
 		if environment, err = c.V2Client.GetOrgEnvironment(id); err != nil {

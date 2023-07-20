@@ -29,7 +29,7 @@ func (c *quotaCommand) describe(cmd *cobra.Command, args []string) error {
 
 	quota, err := c.V2Client.DescribeKafkaQuota(quotaId)
 	if err != nil {
-		quotaId, err = nameconversions.ConvertQuotaNameToId(quotaId, c.Context.KafkaClusterContext.GetActiveKafkaClusterId(), c.Context.GetCurrentEnvironment(), c.V2Client)
+		quotaId, err = nameconversions.QuotaNameToId(quotaId, c.Context.KafkaClusterContext.GetActiveKafkaClusterId(), c.Context.GetCurrentEnvironment(), c.V2Client)
 		if err != nil {
 			return err
 		}

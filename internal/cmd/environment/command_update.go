@@ -37,7 +37,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 
 	environment := orgv2.OrgV2Environment{DisplayName: orgv2.PtrString(name)}
 	if environment, err = c.V2Client.UpdateOrgEnvironment(args[0], environment); err != nil {
-		environmentId, err := nameconversions.ConvertEnvironmentNameToId(args[0], c.V2Client, false)
+		environmentId, err := nameconversions.EnvironmentNameToId(args[0], c.V2Client, false)
 		if err != nil {
 			return errors.NewErrorWithSuggestions(err.Error(), errors.NotValidEnvironmentIdSuggestions)
 		}

@@ -121,7 +121,7 @@ func (c *aclCommand) validateServiceAccountFlag(cmd *cobra.Command) error {
 		if err != nil {
 			return err
 		}
-		serviceAccountId, err := nameconversions.ConvertIamServiceAccountNameToId(serviceAccount, c.V2Client, true)
+		serviceAccountId, err := nameconversions.IamServiceAccountNameToId(serviceAccount, c.V2Client, true)
 		if err != nil {
 			return nil
 		}

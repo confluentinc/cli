@@ -16,7 +16,6 @@ type resource any
 
 type resourcePtr interface {
 	GetId() string
-	GetKind() string
 }
 
 type specPtr interface {

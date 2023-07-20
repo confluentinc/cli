@@ -32,7 +32,7 @@ func (c *identityPoolCommand) list(cmd *cobra.Command, _ []string) error {
 
 	identityPools, err := c.V2Client.ListIdentityPools(provider)
 	if err != nil {
-		if provider, err = nameconversions.ConvertIamProviderNameToId(provider, c.V2Client, true); err != nil {
+		if provider, err = nameconversions.IamProviderNameToId(provider, c.V2Client, true); err != nil {
 			return err
 		}
 		if identityPools, err = c.V2Client.ListIdentityPools(provider); err != nil {
