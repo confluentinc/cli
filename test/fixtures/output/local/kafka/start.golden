@@ -5,3 +5,9 @@ Digest: sha256:[a-zA-Z0-9]*.
 Status: (?:Image is up to date|Downloaded newer image) for confluentinc/confluent-local:latest
 Started Confluent Local container [a-zA-Z0-9]*.
 To continue your Confluent Local experience, run `confluent local kafka topic create test` and `confluent local kafka topic produce test`.
++-----------------+------+
+| Broker Port     | 2996 |
+| Controller Port | 2997 |
+| Kafka Rest Port | 2998 |
+| Plaintext Port  | 2999 |
++-----------------+------+
