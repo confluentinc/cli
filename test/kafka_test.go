@@ -52,6 +52,7 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka cluster delete lkc-def973 --force", fixture: "kafka/5.golden"},
 		{args: "kafka cluster delete lkc-def973", input: "kafka-cluster\n", fixture: "kafka/5-prompt.golden"},
 		{args: "kafka cluster delete lkc-def973 lkc-unknown", fixture: "kafka/cluster/delete-multiple-fail.golden", exitCode: 1},
+		{args: "kafka cluster delete lkc-def973 lkc-update", input: "n\n", fixture: "kafka/cluster/delete-multiple-refuse.golden"},
 		{args: "kafka cluster delete lkc-def973 lkc-update", input: "y\n", fixture: "kafka/cluster/delete-multiple-success.golden"},
 
 		{args: "kafka cluster use lkc-12345", fixture: "kafka/40.golden"},
@@ -116,6 +117,7 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka topic delete topic-exist --force", useKafka: "lkc-delete-topic", fixture: "kafka/topic/delete-success.golden"},
 		{args: "kafka topic delete topic-exist", useKafka: "lkc-delete-topic", input: "topic-exist\n", fixture: "kafka/topic/delete-success-prompt.golden"},
 		{args: "kafka topic delete topic-exist topic2", useKafka: "lkc-delete-topic", fixture: "kafka/topic/delete-multiple-fail.golden", exitCode: 1},
+		{args: "kafka topic delete topic-exist topic-exist-2", input: "n\n", useKafka: "lkc-delete-topic", fixture: "kafka/topic/delete-multiple-refuse.golden"},
 		{args: "kafka topic delete topic-exist topic-exist-2", input: "y\n", useKafka: "lkc-delete-topic", fixture: "kafka/topic/delete-multiple-success.golden"},
 		{args: "kafka topic delete topic2 --force", login: "cloud", useKafka: "lkc-delete-topic", fixture: "kafka/topic/delete-not-found-topic2.golden", exitCode: 1},
 
@@ -132,6 +134,7 @@ func (s *CLITestSuite) TestKafka() {
 		{args: "kafka link list --cluster lkc-describe-topic -o json", fixture: "kafka/link/list-link-json.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka link list --cluster lkc-describe-topic -o yaml", fixture: "kafka/link/list-link-yaml.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka link delete link-1", input: "link-1\n", fixture: "kafka/link/delete-link.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link delete link-1 link-2", input: "n\n", fixture: "kafka/link/delete-link-multiple-refuse.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka link delete link-1 link-2", input: "y\n", fixture: "kafka/link/delete-link-multiple.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka link delete link-1 link-2 link-dne", fixture: "kafka/link/delete-link-multiple-fail.golden", useKafka: "lkc-describe-topic", exitCode: 1},
 		{args: "kafka link describe link-1 --cluster lkc-describe-topic", fixture: "kafka/link/describe.golden", useKafka: "lkc-describe-topic"},
@@ -266,6 +269,7 @@ func (s *CLITestSuite) TestKafkaBroker() {
 
 		{args: "kafka broker delete 1 --force", fixture: "kafka/broker/delete.golden"},
 		{args: "kafka broker delete 1", input: "y\n", fixture: "kafka/broker/delete-prompt.golden"},
+		{args: "kafka broker delete 1 2", input: "n\n", fixture: "kafka/broker/delete-multiple-refuse.golden"},
 		{args: "kafka broker delete 1 2", input: "y\n", fixture: "kafka/broker/delete-multiple-prompt.golden"},
 		{args: "kafka broker delete 1 3", fixture: "kafka/broker/delete-multiple-fail.golden", exitCode: 1},
 
@@ -378,6 +382,7 @@ func (s *CLITestSuite) TestKafkaTopicDelete() {
 		{args: fmt.Sprintf("kafka topic delete topic-exist --url %s --no-authentication --force", kafkaRestURL), fixture: "kafka/topic/delete-topic-success.golden", name: "deleting existing topic with correct url should delete successfully"},
 		{args: fmt.Sprintf("kafka topic delete topic-exist --url %s --no-authentication", kafkaRestURL), input: "topic-exist\n", fixture: "kafka/topic/delete-topic-success-prompt.golden", name: "deleting existing topic with correct url and prompt should delete successfully"},
 		{args: fmt.Sprintf("kafka topic delete topic-exist topic2 --url %s --no-authentication", kafkaRestURL), fixture: "kafka/topic/delete-multiple-fail.golden", exitCode: 1, name: "deleting existing topic and non-existent topic should fail"},
+		{args: fmt.Sprintf("kafka topic delete topic-exist topic-exist-2 --url %s --no-authentication", kafkaRestURL), input: "n\n", fixture: "kafka/topic/delete-multiple-refuse.golden", name: "answering no should prevent topic deletion"},
 		{args: fmt.Sprintf("kafka topic delete topic-exist topic-exist-2 --url %s --no-authentication", kafkaRestURL), input: "y\n", fixture: "kafka/topic/delete-multiple-success.golden", name: "deleting multiple existing topics should succeed"},
 		{args: fmt.Sprintf("kafka topic delete topic-not-exist --url %s --no-authentication --force", kafkaRestURL), fixture: "kafka/topic/delete-topic-not-exist-failure.golden", exitCode: 1, name: "deleting a non-existent topic should fail"},
 	}
@@ -471,6 +476,7 @@ func (s *CLITestSuite) TestKafkaQuota() {
 		{args: "kafka quota delete cq-1234 --force", fixture: "kafka/quota/delete.golden"},
 		{args: "kafka quota delete cq-1234", input: "quotaName\n", fixture: "kafka/quota/delete-prompt.golden"},
 		{args: "kafka quota delete cq-1234 cq-dne", fixture: "kafka/quota/delete-multiple-fail.golden", exitCode: 1},
+		{args: "kafka quota delete cq-1234 cq-4321", input: "n\n", fixture: "kafka/quota/delete-multiple-refuse.golden"},
 		{args: "kafka quota delete cq-1234 cq-4321", input: "y\n", fixture: "kafka/quota/delete-multiple-success.golden"},
 		{args: "kafka quota update cq-1234 --ingress 100 --egress 100 --add-principals sa-4321 --remove-principals sa-1234 --name newName", fixture: "kafka/quota/update.golden"},
 	}

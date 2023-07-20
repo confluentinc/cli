@@ -18,6 +18,7 @@ func (s *CLITestSuite) TestConnect() {
 		{args: "connect cluster delete lcc-123 --cluster lkc-123 --force", fixture: "connect/cluster/delete.golden"},
 		{args: "connect cluster delete lcc-123 --cluster lkc-123", input: "az-connector\n", fixture: "connect/cluster/delete-prompt.golden"},
 		{args: "connect cluster delete lcc-123 lcc-456 lcc-789 lcc-101112 --cluster lkc-123", input: "y\n", fixture: "connect/cluster/delete-multiple-fail.golden", exitCode: 1},
+		{args: "connect cluster delete lcc-123 lcc-111 --cluster lkc-123", input: "n\n", fixture: "connect/cluster/delete-multiple-refuse.golden"},
 		{args: "connect cluster delete lcc-123 lcc-111 --cluster lkc-123", input: "y\n", fixture: "connect/cluster/delete-multiple-success.golden"},
 		{args: "connect cluster describe lcc-123 --cluster lkc-123 -o json", fixture: "connect/cluster/describe-json.golden"},
 		{args: "connect cluster describe lcc-123 --cluster lkc-123 -o yaml", fixture: "connect/cluster/describe-yaml.golden"},

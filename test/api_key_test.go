@@ -173,6 +173,7 @@ func (s *CLITestSuite) TestApiKeyDelete() {
 		// delete multiple API keys
 		{args: "api-key delete MYKEY7 MYKEY8 MYKEY19", fixture: "api-key/delete/multiple-fail.golden", exitCode: 1},
 		{args: "api-key delete MYKEY6 MYKEY17 MYKEY18", fixture: "api-key/delete/multiple-fail-plural.golden", exitCode: 1},
+		{args: "api-key delete MYKEY7 MYKEY8", input: "n\n", fixture: "api-key/delete/multiple-refuse.golden"},
 		{args: "api-key delete MYKEY7 MYKEY8", input: "y\n", fixture: "api-key/delete/multiple-success.golden"},
 	}
 

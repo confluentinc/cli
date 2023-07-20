@@ -40,6 +40,7 @@ func (s *CLITestSuite) TestEnvironmentDelete() {
 		{args: "environment delete not-595", input: "default\n", fixture: "environment/delete/success-prompt.golden"},
 		{args: "environment delete env-dne", fixture: "environment/delete/fail.golden", exitCode: 1},
 		{args: "environment delete env-srUpdate env-dne", fixture: "environment/delete/multiple-fail.golden", exitCode: 1},
+		{args: "environment delete env-srUpdate not-595", input: "n\n", fixture: "environment/delete/multiple-refuse.golden"},
 		{args: "environment delete env-srUpdate not-595", input: "y\n", fixture: "environment/delete/multiple-success.golden"},
 	}
 

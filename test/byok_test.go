@@ -29,6 +29,7 @@ func (s *CLITestSuite) TestByokDelete() {
 		{args: "byok delete cck-001", input: "y\n", fixture: "byok/delete/success.golden"},
 		{args: "byok delete cck-404", fixture: "byok/delete/fail.golden", exitCode: 1},
 		{args: "byok delete cck-002 cck-006 cck-007 cck-100", fixture: "byok/delete/multiple-fail.golden", exitCode: 1},
+		{args: "byok delete cck-002 cck-003", input: "n\n", fixture: "byok/delete/multiple-refuse.golden"},
 		{args: "byok delete cck-002 cck-003", input: "y\n", fixture: "byok/delete/multiple-success.golden"},
 	}
 

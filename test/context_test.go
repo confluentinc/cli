@@ -36,6 +36,7 @@ func (s *CLITestSuite) TestContextDelete() {
 		{args: "context delete 0-prompt", input: "y\n", fixture: "context/delete/success-prompt.golden"},
 		{args: "context delete 1", fixture: "context/delete/fail.golden", exitCode: 1},
 		{args: "context delete 2 3 7 8 9", fixture: "context/delete/multiple-fail.golden", exitCode: 1},
+		{args: "context delete 2 3 4", input: "n\n", fixture: "context/delete/multiple-refuse.golden"},
 		{args: "context delete 2 3 4", input: "y\n", fixture: "context/delete/multiple-success.golden"},
 		{args: "context delete 5 5 5", input: "y\n", fixture: "context/delete/check-success-operation-fail.golden", exitCode: 1},
 	}
