@@ -14,3 +14,4 @@ package mock
 //go:generate mockgen -destination table_view_mock.go -package=mock github.com/confluentinc/cli/internal/pkg/flink/components TableViewInterface
 //go:generate mockgen -destination prompt_mock.go -package=mock github.com/confluentinc/go-prompt IPrompt
 //go:generate mockgen -destination console_parser_mock.go -package=mock github.com/confluentinc/go-prompt ConsoleParser
+//go:generate mockgen -destination json_rpc2_conn.go -package=mock github.com/confluentinc/cli/internal/pkg/flink/types Conn

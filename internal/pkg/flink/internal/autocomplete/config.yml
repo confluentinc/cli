@@ -1,0 +1,15 @@
+# Set to true to use lowercase keywords instead of uppercase.
+lowercaseKeywords: false
+port: 1234
+connections:
+  - alias: individual_mysql
+    driver: mysql
+    proto: tcp
+    user: myuser
+    passwd: mypassword
+    host: 127.0.0.1
+    port: 3306
+    dbName: mydatabase
+    params:
+      autocommit: "true"
+      tls: skip-verify

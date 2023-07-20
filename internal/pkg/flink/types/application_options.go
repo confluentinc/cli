@@ -13,6 +13,7 @@ type ApplicationOptions struct {
 	Database        string
 	ComputePoolId   string
 	IdentityPoolId  string
+	LSPEnabled      bool
 	Verbose         bool
 	Context         *dynamicconfig.DynamicContext
 }
@@ -75,6 +76,13 @@ func (a *ApplicationOptions) GetIdentityPoolId() string {
 func (a *ApplicationOptions) GetVerbose() bool {
 	if a != nil {
 		return a.Verbose
+	}
+	return false
+}
+
+func (a *ApplicationOptions) GetLSPEnabled() bool {
+	if a != nil {
+		return a.LSPEnabled
 	}
 	return false
 }

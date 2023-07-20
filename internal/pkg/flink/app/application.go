@@ -5,6 +5,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/flink/components"
+	"github.com/confluentinc/cli/internal/pkg/flink/internal/autocomplete"
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/controller"
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/history"
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/results"
@@ -39,6 +40,10 @@ func synchronizedTokenRefresh(tokenRefreshFunc func() error) func() error {
 func StartApp(client ccloudv2.GatewayClientInterface, tokenRefreshFunc func() error, appOptions types.ApplicationOptions) {
 	// Load history of previous commands from cache file
 	historyStore := history.LoadHistory()
+	var lspClient autocomplete.LSPClientInterface
+	if appOptions.GetLSPEnabled() {
+		lspClient = autocomplete.NewLSPClient()
+	}
 
 	// Instantiate Application Controller - this is the top level controller that will be passed down to all other controllers
 	// and should be used for functions that are not specific to a component
@@ -53,10 +58,13 @@ func StartApp(client ccloudv2.GatewayClientInterface, tokenRefreshFunc func() er
 	appController.AddCleanupFunction(func() {
 		utils.TearDownConsoleParser(consoleParser)
 		utils.RestoreStdin(stdinBefore)
+		if lspClient != nil {
+			lspClient.ShutdownAndExit()
+		}
 	})
 
 	// Instantiate Component Controllers
-	inputController := controller.NewInputController(historyStore)
+	inputController := controller.NewInputController(historyStore, lspClient)
 	statementController := controller.NewStatementController(appController, dataStore, consoleParser)
 	interactiveOutputController := controller.NewInteractiveOutputController(components.NewTableView(), resultFetcher, appOptions.GetVerbose())
 	basicOutputController := controller.NewBasicOutputController(resultFetcher, inputController.GetWindowWidth)
