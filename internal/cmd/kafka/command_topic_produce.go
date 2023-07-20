@@ -33,10 +33,10 @@ func (c *command) newProduceCommand() *cobra.Command {
 		Annotations:       map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}
 
-	cmd.Flags().String("schema", "", "The ID or filepath of the message value schema.")
 	cmd.Flags().String("key-schema", "", "The ID or filepath of the message key schema.")
-	pcmd.AddValueFormatFlag(cmd)
+	cmd.Flags().String("schema", "", "The ID or filepath of the message value schema.")
 	pcmd.AddKeyFormatFlag(cmd)
+	pcmd.AddValueFormatFlag(cmd)
 	cmd.Flags().String("references", "", "The path to the references file.")
 	cmd.Flags().Bool("parse-key", false, "Parse key from the message.")
 	cmd.Flags().String("delimiter", ":", "The delimiter separating each key and value.")
