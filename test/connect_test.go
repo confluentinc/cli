@@ -64,6 +64,21 @@ func (s *CLITestSuite) TestConnectClusterResume() {
 	}
 }
 
+func (s *CLITestSuite) TestConnectClusterUsingName() {
+	tests := []CLITest{
+		{args: "connect cluster describe az-connector --cluster lkc-123 -o json", fixture: "connect/cluster/describe-json.golden"},
+		{args: "connect cluster update az-connector --cluster lkc-123 --config-file test/fixtures/input/connect/config.yaml", fixture: "connect/cluster/update-using-name.golden"},
+		{args: "connect cluster update az-connector --cluster lkc-123 --config-file test/fixtures/input/connect/config-new-format.json", fixture: "connect/cluster/update-using-name.golden"},
+		{args: "connect cluster pause az-connector --cluster lkc-123456", fixture: "connect/cluster/pause-using-name.golden"},
+		{args: "connect cluster resume az-connector --cluster lkc-123456", fixture: "connect/cluster/resume-using-name.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestConnectPlugin() {
 	// TODO: add --config flag to all commands or ENVVAR instead of using standard config file location
 	tests := []CLITest{

@@ -13,7 +13,7 @@ import (
 
 func (c *clusterCommand) newResumeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "resume <id-1> [id-2] ... [id-N]",
+		Use:               "resume <id|name-1> [id|name-2] ... [id|name-N]",
 		Short:             "Resume connectors.",
 		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgsMultiple),
@@ -55,17 +55,20 @@ func (c *clusterCommand) resume(_ *cobra.Command, args []string) error {
 		connectorsById[connector.Id.GetId()] = connector
 	}
 
-	for _, id := range args {
-		connector, ok := connectorsById[id]
+	for _, nameOrId := range args {
+		connector, ok := connectorsById[nameOrId]
 		if !ok {
-			return errors.Errorf(errors.UnknownConnectorIdErrorMsg, id)
+			connector, ok = connectorsByName[nameOrId]
+			if !ok {
+				return errors.Errorf(errors.UnknownConnectorIdErrorMsg, nameOrId)
+			}
 		}
 
 		if err := c.V2Client.ResumeConnector(connector.Info.GetName(), environmentId, kafkaCluster.ID); err != nil {
 			return err
 		}
 
-		output.Printf(errors.ResumedConnectorMsg, id)
+		output.Printf(errors.ResumedConnectorMsg, nameOrId)
 	}
 
 	return nil

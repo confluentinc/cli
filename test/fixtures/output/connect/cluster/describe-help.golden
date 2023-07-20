@@ -1,7 +1,7 @@
 Describe a connector.
 
 Usage:
-  confluent connect cluster describe <id> [flags]
+  confluent connect cluster describe <id|name> [flags]
 
 Examples:
 Describe connector and task level details of a connector in the current or specified Kafka cluster context.

@@ -35,17 +35,7 @@ func (c *clusterCommand) newListCommand() *cobra.Command {
 }
 
 func (c *clusterCommand) list(cmd *cobra.Command, _ []string) error {
-	kafkaCluster, err := c.Context.GetKafkaClusterForCommand()
-	if err != nil {
-		return err
-	}
-
-	environmentId, err := c.Context.EnvironmentId()
-	if err != nil {
-		return err
-	}
-
-	connectors, err := c.V2Client.ListConnectorsWithExpansions(environmentId, kafkaCluster.ID, "id,status")
+	connectors, err := c.fetchConnectors()
 	if err != nil {
 		return err
 	}

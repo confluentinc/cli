@@ -12,7 +12,7 @@ import (
 
 func (c *clusterCommand) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "update <id>",
+		Use:         "update <id|name>",
 		Short:       "Update a connector configuration.",
 		Args:        cobra.ExactArgs(1),
 		RunE:        c.update,
@@ -54,7 +54,9 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 
 		connector, err := c.V2Client.GetConnectorExpansionById(args[0], environmentId, kafkaCluster.ID)
 		if err != nil {
-			return err
+			if connector, err = c.V2Client.GetConnectorExpansionByName(args[0], environmentId, kafkaCluster.ID); err != nil {
+				return err
+			}
 		}
 		currentConfigs := connector.Info.GetConfig()
 
@@ -73,7 +75,9 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 
 	connector, err := c.V2Client.GetConnectorExpansionById(args[0], environmentId, kafkaCluster.ID)
 	if err != nil {
-		return err
+		if connector, err = c.V2Client.GetConnectorExpansionByName(args[0], environmentId, kafkaCluster.ID); err != nil {
+			return err
+		}
 	}
 
 	if _, err := c.V2Client.CreateOrUpdateConnectorConfig(connector.Info.GetName(), environmentId, kafkaCluster.ID, *userConfigs); err != nil {

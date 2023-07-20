@@ -13,7 +13,7 @@ import (
 
 func (c *clusterCommand) newPauseCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "pause <id-1> [id-2] ... [id-N]",
+		Use:               "pause <id|name-1> [id|name-2] ... [id|name-N]",
 		Short:             "Pause connectors.",
 		Args:              cobra.MinimumNArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgsMultiple),
@@ -55,17 +55,20 @@ func (c *clusterCommand) pause(cmd *cobra.Command, args []string) error {
 		connectorsById[connector.Id.GetId()] = connector
 	}
 
-	for _, id := range args {
-		connector, ok := connectorsById[id]
+	for _, nameOrId := range args {
+		connector, ok := connectorsById[nameOrId]
 		if !ok {
-			return errors.Errorf(errors.UnknownConnectorIdErrorMsg, id)
+			connector, ok = connectorsByName[nameOrId]
+			if !ok {
+				return errors.Errorf(errors.UnknownConnectorIdErrorMsg, nameOrId)
+			}
 		}
 
 		if err := c.V2Client.PauseConnector(connector.Info.GetName(), environmentId, kafkaCluster.ID); err != nil {
 			return err
 		}
 
-		output.Printf(errors.PausedConnectorMsg, id)
+		output.Printf(errors.PausedConnectorMsg, nameOrId)
 	}
 
 	return nil

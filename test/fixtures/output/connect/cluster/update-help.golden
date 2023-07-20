@@ -1,7 +1,7 @@
 Update a connector configuration.
 
 Usage:
-  confluent connect cluster update <id> [flags]
+  confluent connect cluster update <id|name> [flags]
 
 Flags:
       --config strings       A comma-separated list of configuration overrides ("key=value") for the connector being updated.

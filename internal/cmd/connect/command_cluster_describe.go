@@ -46,7 +46,7 @@ type serializedConfigsOut struct {
 
 func (c *clusterCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "describe <id>",
+		Use:               "describe <id|name>",
 		Short:             "Describe a connector.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
@@ -84,7 +84,9 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 
 	connector, err := c.V2Client.GetConnectorExpansionById(args[0], environmentId, kafkaCluster.ID)
 	if err != nil {
-		return err
+		if connector, err = c.V2Client.GetConnectorExpansionByName(args[0], environmentId, kafkaCluster.ID); err != nil {
+			return err
+		}
 	}
 
 	if output.GetFormat(cmd) == output.Human {
