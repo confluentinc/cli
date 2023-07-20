@@ -4,6 +4,8 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
 type exceptionOut struct {
@@ -18,6 +20,8 @@ func (c *command) newStatementExceptionCommand() *cobra.Command {
 		Short: "Manage Flink SQL statement exceptions.",
 	}
 
+	pcmd.AddCloudFlag(cmd)
+	c.addRegionFlag(cmd)
 	cmd.AddCommand(c.newStatementExceptionListCommand())
 
 	return cmd
