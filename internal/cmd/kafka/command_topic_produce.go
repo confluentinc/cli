@@ -34,6 +34,7 @@ func (c *command) newProduceCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("schema", "", "The ID or filepath of the message value schema.")
+	cmd.Flags().String("key-schema", "", "The ID or filepath of the message key schema.")
 	pcmd.AddValueFormatFlag(cmd)
 	cmd.Flags().String("references", "", "The path to the references file.")
 	cmd.Flags().Bool("parse-key", false, "Parse key from the message.")
@@ -50,12 +51,12 @@ func (c *command) newProduceCommand() *cobra.Command {
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 
 	// Deprecated
-	pcmd.AddOutputFlag(cmd)
-	cobra.CheckErr(cmd.Flags().MarkHidden("output"))
-
-	// Deprecated
 	cmd.Flags().Int32("schema-id", 0, "The ID of the schema.")
 	cobra.CheckErr(cmd.Flags().MarkHidden("schema-id"))
+
+	// Deprecated
+	pcmd.AddOutputFlag(cmd)
+	cobra.CheckErr(cmd.Flags().MarkHidden("output"))
 
 	cobra.CheckErr(cmd.MarkFlagFilename("references", "json"))
 	cobra.CheckErr(cmd.MarkFlagFilename("config-file", "avsc", "json"))
