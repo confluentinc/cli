@@ -1,13 +1,11 @@
-Describe a Flink SQL statement.
+Choose a Flink compute pool to be used in subsequent commands which support passing a compute pool with the `--compute-pool` flag.
 
 Usage:
-  confluent flink statement describe <name> [flags]
+  confluent flink region use <id> [flags]
 
 Flags:
-      --cloud string         Specify the cloud provider as "aws", "azure", or "gcp".
-      --region string        Cloud region for compute pool (use "confluent flink region list" to see all).
       --environment string   Environment ID.
-      --context string       CLI context name.
+  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
   -h, --help            Show help for this command.
