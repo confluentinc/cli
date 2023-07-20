@@ -5,11 +5,11 @@ import (
 
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 
+	resource "github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	resource "github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *serviceAccountCommand) newUpdateCommand() *cobra.Command {

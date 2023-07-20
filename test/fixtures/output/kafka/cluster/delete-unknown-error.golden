@@ -1,4 +1,4 @@
-Error: Kafka cluster "lkc-unknown" not found or access forbidden: resource not found: 403 Forbidden
+Error: Kafka cluster "lkc-unknown" not found or access forbidden: resource not found: resource with name or ID "lkc-unknown" was not found
 
 Suggestions:
     Ensure the cluster ID you entered is valid.

@@ -363,12 +363,8 @@ func handleCmkKafkaClusterUpdateUsingName(t *testing.T) http.HandlerFunc {
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
 			req.Id = cmkv2.PtrString("lkc-456")
-			if req.Spec.Config != nil && req.Spec.Config.CmkV2Dedicated.Cku > 0 {
-			} else { // update name
-				cluster := getCmkBasicDescribeCluster(*req.Id, *req.Spec.DisplayName)
-				err := json.NewEncoder(w).Encode(cluster)
-				require.NoError(t, err)
-			}
+			cluster := getCmkBasicDescribeCluster(*req.Id, *req.Spec.DisplayName)
+			err = json.NewEncoder(w).Encode(cluster)
 			require.NoError(t, err)
 		}
 	}

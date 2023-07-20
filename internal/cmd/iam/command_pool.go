@@ -3,8 +3,8 @@ package iam
 import (
 	"github.com/spf13/cobra"
 
+	resource "github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	resource "github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 type identityPoolCommand struct {
@@ -56,6 +56,6 @@ func (c *identityPoolCommand) poolAndProviderNamesToIds(pool string, provider st
 	if err != nil {
 		return pool, provider, err
 	}
-	pool, err = resource.IamPoolNameToId(pool, provider, c.V2Client, false)
+	pool, err = resource.IamPoolNameToId(pool, provider, c.V2Client)
 	return pool, provider, err
 }

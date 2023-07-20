@@ -14,7 +14,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	resource "github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 var basicDescribeFields = []string{"IsCurrent", "Id", "Name", "Type", "IngressLimit", "EgressLimit", "Storage", "ServiceProvider", "Availability", "Region", "Status", "Endpoint", "RestEndpoint"}
@@ -75,12 +74,7 @@ func (c *clusterCommand) describe(cmd *cobra.Command, args []string) error {
 
 	cluster, httpResp, err := c.V2Client.DescribeKafkaCluster(clusterId, environmentId)
 	if err != nil {
-		if clusterId, err = resource.KafkaClusterNameToId(clusterId, environmentId, c.V2Client, false); err != nil {
-			return errors.CatchKafkaNotFoundError(err, clusterId, httpResp)
-		}
-		if cluster, httpResp, err = c.V2Client.DescribeKafkaCluster(clusterId, environmentId); err != nil {
-			return errors.CatchKafkaNotFoundError(err, clusterId, httpResp)
-		}
+		return errors.CatchKafkaNotFoundError(err, clusterId, httpResp)
 	}
 
 	return c.outputKafkaClusterDescription(cmd, &cluster, true)

@@ -3,9 +3,9 @@ package iam
 import (
 	"github.com/spf13/cobra"
 
+	resource "github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	resource "github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *identityPoolCommand) newListCommand() *cobra.Command {

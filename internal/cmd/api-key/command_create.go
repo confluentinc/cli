@@ -8,6 +8,7 @@ import (
 
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -85,7 +86,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	if serviceAccount != "" {
-		if serviceAccount, err = resource.IamServiceAccountNameToId(serviceAccount, c.V2Client, true); err != nil {
+		if serviceAccount, err = ccloudv2.IamServiceAccountNameToId(serviceAccount, c.V2Client, true); err != nil {
 			return err
 		}
 	}

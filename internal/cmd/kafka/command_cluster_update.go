@@ -13,7 +13,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	resource "github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *clusterCommand) newUpdateCommand(cfg *v1.Config) *cobra.Command {
@@ -54,14 +53,9 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 	}
 
 	clusterId := args[0]
-	currentCluster, httpResp, err := c.V2Client.DescribeKafkaCluster(clusterId, environmentId)
+	currentCluster, _, err := c.V2Client.DescribeKafkaCluster(clusterId, environmentId)
 	if err != nil {
-		if clusterId, err = resource.KafkaClusterNameToId(clusterId, environmentId, c.V2Client, false); err != nil {
-			return errors.CatchKafkaNotFoundError(err, clusterId, httpResp)
-		}
-		if currentCluster, _, err = c.V2Client.DescribeKafkaCluster(clusterId, environmentId); err != nil {
-			return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.KafkaClusterNotFoundErrorMsg, clusterId), errors.ChooseRightEnvironmentSuggestions)
-		}
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.KafkaClusterNotFoundErrorMsg, clusterId), errors.ChooseRightEnvironmentSuggestions)
 	}
 
 	update := cmkv2.CmkV2ClusterUpdate{
@@ -92,7 +86,7 @@ func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
 		update.Spec.Config = &cmkv2.CmkV2ClusterSpecUpdateConfigOneOf{CmkV2Dedicated: &cmkv2.CmkV2Dedicated{Kind: "Dedicated", Cku: updatedCku}}
 	}
 
-	updatedCluster, err := c.V2Client.UpdateKafkaCluster(clusterId, update)
+	updatedCluster, err := c.V2Client.UpdateKafkaCluster(clusterId, environmentId, update)
 	if err != nil {
 		return errors.NewWrapErrorWithSuggestions(err, "failed to update Kafka cluster", errors.KafkaClusterUpdateFailedSuggestions)
 	}

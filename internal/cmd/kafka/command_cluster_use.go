@@ -9,7 +9,6 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	resource "github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *clusterCommand) newUseCommand(cfg *v1.Config) *cobra.Command {
@@ -34,24 +33,15 @@ func (c *clusterCommand) newUseCommand(cfg *v1.Config) *cobra.Command {
 func (c *clusterCommand) use(cmd *cobra.Command, args []string) error {
 	clusterId := args[0]
 
-	if _, err := c.Context.FindKafkaCluster(clusterId); err != nil {
-		environmentId, err := c.Context.EnvironmentId()
-		if err != nil {
-			return err
-		}
-		if clusterId, err = resource.KafkaClusterNameToId(clusterId, environmentId, c.V2Client, false); err != nil {
-			return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.KafkaClusterNotFoundErrorMsg, clusterId), errors.ChooseRightEnvironmentSuggestions)
-		}
-		c.Context.SetCurrentEnvironment(environmentId)
-		if _, err := c.Context.FindKafkaCluster(clusterId); err != nil {
-			return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.KafkaClusterNotFoundErrorMsg, clusterId), errors.ChooseRightEnvironmentSuggestions)
-		}
+	clusterConfig, err := c.Context.FindKafkaCluster(clusterId)
+	if err != nil {
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.KafkaClusterNotFoundErrorMsg, clusterId), errors.ChooseRightEnvironmentSuggestions)
 	}
 
-	if err := c.Context.SetActiveKafkaCluster(clusterId); err != nil {
+	if err := c.Context.SetActiveKafkaCluster(clusterConfig.ID); err != nil {
 		return err
 	}
 
-	output.ErrPrintf(errors.UseKafkaClusterMsg, clusterId, c.Context.GetCurrentEnvironment())
+	output.ErrPrintf(errors.UseKafkaClusterMsg, clusterConfig.ID, c.Context.GetCurrentEnvironment())
 	return nil
 }

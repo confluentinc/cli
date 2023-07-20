@@ -174,10 +174,9 @@ func (s *CLITestSuite) TestKafka() {
 	}
 }
 
-func (s *CLITestSuite) TestKafkaUsingName() {
+func (s *CLITestSuite) TestKafka_UsingName() {
 	tests := []CLITest{
 		{args: "kafka cluster describe abc", fixture: "kafka/cluster-describe-name.golden"},
-		{args: "kafka cluster describe abc --environment not-595", fixture: "kafka/cluster-describe-name.golden"},
 		{args: "kafka cluster update def --name new_name", fixture: "kafka/cluster-update-name.golden"},
 		{args: "kafka cluster use abc", fixture: "kafka/cluster-use-name.golden"},
 		{args: "kafka topic create topic1 --cluster abc", fixture: "kafka/topic/create-success.golden"},

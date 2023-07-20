@@ -1,4 +1,4 @@
-Error: failed to update Kafka cluster: Bad Request: 400 Bad Request
+Error: failed to update Kafka cluster: resource with name or ID "lkc-update-dedicated-shrink-multi" was not found
 
 Suggestions:
     A cluster can't be updated while still provisioning. If you just created this cluster, retry in a few minutes.

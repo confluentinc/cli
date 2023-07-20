@@ -36,7 +36,7 @@ func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, isTest bool) 
 		if d.GetCredentialType() == v1.APIKey {
 			output.ErrPrintln("WARNING: The `--environment` flag is ignored when using API key credentials.")
 		} else {
-			environment, err := presource.EnvironmentNameToId(environment, d.V2Client, true)
+			environment, err := ccloudv2.EnvironmentNameToId(environment, d.V2Client, true)
 			if err != nil {
 				return errors.NewErrorWithSuggestions(err.Error(), errors.NotValidEnvironmentIdSuggestions)
 			}
@@ -46,17 +46,17 @@ func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, isTest bool) 
 		}
 	}
 
-	if cluster, _ := cmd.Flags().GetString("cluster"); cluster != "" {
+	if clusterId, _ := cmd.Flags().GetString("cluster"); clusterId != "" {
 		if d.GetCredentialType() == v1.APIKey {
 			output.ErrPrintln("WARNING: The `--cluster` flag is ignored when using API key credentials.")
 		} else {
-			cluster, err := presource.KafkaClusterNameToId(cluster, d.GetCurrentEnvironment(), d.V2Client, true)
-			if err != nil {
-				return errors.NewErrorWithSuggestions(err.Error(), errors.KafkaNotFoundSuggestions)
-			}
 			ctx := d.Config.Context()
+			cluster, httpResp, err := d.V2Client.DescribeKafkaCluster(clusterId, ctx.GetCurrentEnvironment())
+			if err != nil {
+				return errors.CatchKafkaNotFoundError(err, clusterId, httpResp)
+			}
 			d.Config.SetOverwrittenCurrentKafkaCluster(ctx.KafkaClusterContext.GetActiveKafkaClusterId())
-			ctx.KafkaClusterContext.SetActiveKafkaCluster(cluster)
+			ctx.KafkaClusterContext.SetActiveKafkaCluster(cluster.GetId())
 		}
 	}
 
