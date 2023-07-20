@@ -19,6 +19,7 @@ import (
 type InputController struct {
 	History               *history.History
 	InitialBuffer         string
+	lspClient             autocomplete.LSPClientInterface
 	smartCompletion       bool
 	reverseISearchEnabled bool
 	prompt                prompt.IPrompt
@@ -28,9 +29,10 @@ type InputController struct {
 
 const defaultWindowSize = 100
 
-func NewInputController(history *history.History) types.InputControllerInterface {
+func NewInputController(history *history.History, lspClient autocomplete.LSPClientInterface) types.InputControllerInterface {
 	inputController := &InputController{
 		History:         history,
+		lspClient:       lspClient,
 		InitialBuffer:   "",
 		smartCompletion: true,
 		shouldExit:      false,
@@ -106,19 +108,10 @@ func (c *InputController) getMaxCol() (int, error) {
 }
 
 func (c *InputController) Prompt() prompt.IPrompt {
-	lspClient := autocomplete.NewLSPClient()
-
-	completer := autocomplete.NewCompleterBuilder(c.getSmartCompletion).
-		AddCompleter(lspClient.LSPCompleter).
-		//AddCompleter(autocomplete.ExamplesCompleter).
-		//AddCompleter(autocomplete.SetCompleter).
-		//AddCompleter(autocomplete.ShowCompleter).
-		//AddCompleter(autocomplete.GenerateHistoryCompleter(c.History.Data)).
-		BuildCompleter()
 
 	return prompt.New(
 		nil,
-		completer,
+		c.promptCompleter(),
 		prompt.OptionTitle("sql-prompt"),
 		prompt.OptionHistory(c.History.Data),
 		prompt.OptionSwitchKeyBindMode(prompt.EmacsKeyBind),
@@ -176,6 +169,23 @@ func (c *InputController) Prompt() prompt.IPrompt {
 			return true
 		}),
 	)
+}
+
+func (c *InputController) promptCompleter() prompt.Completer {
+	completer := autocomplete.NewCompleterBuilder(c.getSmartCompletion)
+
+	if c.lspClient == nil {
+		completer.
+			AddCompleter(autocomplete.ExamplesCompleter).
+			AddCompleter(autocomplete.SetCompleter).
+			AddCompleter(autocomplete.ShowCompleter)
+	} else {
+		completer.AddCompleter(c.lspClient.LSPCompleter)
+	}
+
+	completer.AddCompleter(autocomplete.GenerateHistoryCompleter(c.History.Data))
+
+	return completer.BuildCompleter()
 }
 
 func (c *InputController) getSmartCompletion() bool {

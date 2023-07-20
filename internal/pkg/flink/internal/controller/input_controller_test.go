@@ -33,7 +33,7 @@ func (s *InputControllerTestSuite) SetupTest() {
 	s.history = &history.History{Data: []string{}}
 	s.prompt = mock.NewMockIPrompt(ctrl)
 	s.reverseISearch = mock.NewMockReverseISearch(ctrl)
-	s.inputController = NewInputController(s.history).(*InputController)
+	s.inputController = NewInputController(s.history, nil).(*InputController)
 	s.inputController.reverseISearch = s.reverseISearch
 	s.inputController.prompt = s.prompt
 }

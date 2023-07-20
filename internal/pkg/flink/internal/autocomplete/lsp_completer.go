@@ -2,12 +2,14 @@ package autocomplete
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"time"
 
 	"github.com/confluentinc/flink-sql-language-service/pkg/server/tcp"
 	prompt "github.com/confluentinc/go-prompt"
+	"github.com/google/uuid"
 	"github.com/sourcegraph/go-lsp"
 	"github.com/sourcegraph/jsonrpc2"
 )
@@ -18,10 +20,12 @@ func (noopHandler) Handle(ctx context.Context, conn *jsonrpc2.Conn, req *jsonrpc
 
 type LSPClientInterface interface {
 	LSPCompleter(in prompt.Document) []prompt.Suggest
+	ShutdownAndExit()
 }
 
 type LSPClient struct {
-	conn *jsonrpc2.Conn
+	conn        *jsonrpc2.Conn
+	documentURI lsp.DocumentURI
 }
 
 func (c *LSPClient) LSPCompleter(in prompt.Document) []prompt.Suggest {
@@ -46,9 +50,8 @@ func (c *LSPClient) didChange(newText string) {
 
 	didchangeParams := lsp.DidChangeTextDocumentParams{
 		TextDocument: lsp.VersionedTextDocumentIdentifier{
-			Version: 2,
 			TextDocumentIdentifier: lsp.TextDocumentIdentifier{
-				URI: "test.sql",
+				URI: c.documentURI,
 			},
 		},
 		ContentChanges: []lsp.TextDocumentContentChangeEvent{
@@ -72,7 +75,7 @@ func (c *LSPClient) completion(position lsp.Position) []lsp.CompletionItem {
 
 	completionParams := lsp.CompletionParams{TextDocumentPositionParams: lsp.TextDocumentPositionParams{
 		TextDocument: lsp.TextDocumentIdentifier{
-			URI: "test.sql",
+			URI: c.documentURI,
 		},
 		Position: position,
 	}}
@@ -87,28 +90,65 @@ func (c *LSPClient) completion(position lsp.Position) []lsp.CompletionItem {
 		fmt.Printf("Error sending request: %v\n", err)
 	}
 
-	// add proper return type
 	return resp
 }
 
-func waitForConditionWithTimeout(condition func() bool, timeout time.Duration) bool {
-	done := make(chan bool)
+func (c *LSPClient) initialize() (*lsp.InitializeResult, error) {
+	var resp lsp.InitializeResult
 
-	go func() {
-		for {
-			if condition() {
-				done <- true
-				return
-			}
-			time.Sleep(100 * time.Millisecond) // adjust the sleep duration as needed
-		}
-	}()
+	initializeParams := lsp.InitializeParams{}
 
-	select {
-	case <-done:
-		return true
-	case <-time.After(timeout):
-		return false
+	if c.conn == nil {
+		return nil, errors.New("connection to LSP server not established/nil")
+	}
+
+	err := c.conn.Call(context.Background(), "textDocument/initialize", initializeParams, &resp)
+
+	if err != nil {
+		fmt.Printf("Error initializing LSP: %v\n", err)
+	}
+
+	return &resp, err
+}
+
+func (c *LSPClient) didOpen() {
+	var resp interface{}
+
+	c.documentURI = lsp.DocumentURI("temp_session_" + uuid.New().String() + ".sql")
+	didOpenParams := lsp.DidOpenTextDocumentParams{
+		TextDocument: lsp.TextDocumentItem{
+			URI:  c.documentURI,
+			Text: "",
+		},
+	}
+
+	if c.conn == nil {
+		return
+	}
+
+	err := c.conn.Call(context.Background(), "textDocument/initialize", didOpenParams, &resp)
+
+	if err != nil {
+		fmt.Printf("Error sending request: %v\n", err)
+	}
+}
+
+func (c *LSPClient) ShutdownAndExit() {
+	if c.conn == nil {
+		return
+	}
+
+	err := c.conn.Call(context.Background(), "textDocument/shutdown", nil, nil)
+
+	if err != nil {
+		fmt.Printf("Error shutting down lsp server: %v\n", err)
+		return
+	}
+
+	err = c.conn.Call(context.Background(), "textDocument/exit", nil, nil)
+
+	if err != nil {
+		fmt.Printf("Error existing lsp server: %v\n", err)
 	}
 }
 
@@ -135,12 +175,39 @@ func NewLSPClient() LSPClientInterface {
 				)
 
 				lspClient.conn = jsonRpcConn
-				break
+
+				_, err := lspClient.initialize()
+				if err == nil {
+					break
+				}
+
+				lspClient.didOpen()
 			}
 		}
 	}()
 
 	return &lspClient
+}
+
+func waitForConditionWithTimeout(condition func() bool, timeout time.Duration) bool {
+	done := make(chan bool)
+
+	go func() {
+		for {
+			if condition() {
+				done <- true
+				return
+			}
+			time.Sleep(100 * time.Millisecond)
+		}
+	}()
+
+	select {
+	case <-done:
+		return true
+	case <-time.After(timeout):
+		return false
+	}
 }
 
 func lspCompletionsToSuggests(completions []lsp.CompletionItem) []prompt.Suggest {
