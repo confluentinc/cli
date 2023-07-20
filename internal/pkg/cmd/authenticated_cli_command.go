@@ -51,21 +51,22 @@ func (c *AuthenticatedCLICommand) GetFlinkGatewayClient() (*ccloudv2.FlinkGatewa
 	ctx := c.Config.Context()
 
 	if c.flinkGatewayClient == nil {
+		var gatewayUrl string
+		var err error
 		computePoolId := ctx.GetCurrentFlinkComputePool()
-		if computePoolId == "" {
-			return nil, errors.NewErrorWithSuggestions("no compute pool selected", "Select a compute pool with `confluent flink compute-pool use` or `--compute-pool`.")
+		if computePoolId != "" {
+			gatewayUrl, err = c.getGatewayUrlForComputePool(computePoolId, ctx)
+			if err != nil {
+				return nil, err
+			}
+		} else if ctx.GetCurrentFlinkRegion() != "" && ctx.GetCurrentFlinkCloudProvider() != "" {
+			gatewayUrl, err = c.getGatewayUrlForRegion(ctx.GetCurrentFlinkCloudProvider(), ctx.GetCurrentFlinkRegion())
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			return nil, errors.NewErrorWithSuggestions("no compute pool or cloud provider and region selected", "Select a compute pool with `confluent flink compute-pool use` or `--compute-pool`. Alternatively you can also select a cloud provider and region with `--cloud` and `--region`")
 		}
-
-		computePool, err := c.V2Client.DescribeFlinkComputePool(computePoolId, ctx.GetCurrentEnvironment())
-		if err != nil {
-			return nil, err
-		}
-
-		u, err := url.Parse(computePool.Spec.GetHttpEndpoint())
-		if err != nil {
-			return nil, err
-		}
-		u.Path = ""
 
 		unsafeTrace, err := c.Command.Flags().GetBool("unsafe-trace")
 		if err != nil {
@@ -77,10 +78,50 @@ func (c *AuthenticatedCLICommand) GetFlinkGatewayClient() (*ccloudv2.FlinkGatewa
 			return nil, err
 		}
 
-		c.flinkGatewayClient = ccloudv2.NewFlinkGatewayClient(u.String(), c.Version.UserAgent, unsafeTrace, dataplaneToken)
+		c.flinkGatewayClient = ccloudv2.NewFlinkGatewayClient(gatewayUrl, c.Version.UserAgent, unsafeTrace, dataplaneToken)
 	}
 
 	return c.flinkGatewayClient, nil
+}
+
+func (c *AuthenticatedCLICommand) getGatewayUrlForComputePool(computePoolId string, ctx *dynamicconfig.DynamicContext) (string, error) {
+	computePool, err := c.V2Client.DescribeFlinkComputePool(computePoolId, ctx.GetCurrentEnvironment())
+	if err != nil {
+		return "", err
+	}
+
+	u, err := url.Parse(computePool.Spec.GetHttpEndpoint())
+	if err != nil {
+		return "", err
+	}
+	u.Path = ""
+	return u.String(), nil
+}
+
+func (c *AuthenticatedCLICommand) getGatewayUrlForRegion(provider, region string) (string, error) {
+	regions, err := c.V2Client.ListFlinkRegions(provider)
+	if err != nil {
+		return "", err
+	}
+
+	var hostUrl string
+	for _, flinkRegion := range regions {
+		if flinkRegion.GetRegionName() == region {
+			hostUrl = flinkRegion.GetHttpEndpoint()
+			break
+		}
+	}
+	if hostUrl == "" {
+		return "", errors.NewErrorWithSuggestions("invalid region", "Please select a valid region - use `confluent flink region list` to see available regions")
+	}
+
+	u, err := url.Parse(hostUrl)
+	if err != nil {
+		return "", err
+	}
+	u.Path = ""
+
+	return u.String(), nil
 }
 
 func (c *AuthenticatedCLICommand) GetHubClient() (*hub.Client, error) {
