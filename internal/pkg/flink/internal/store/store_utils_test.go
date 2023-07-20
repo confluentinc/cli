@@ -83,7 +83,8 @@ func TestProcessSetStatement(t *testing.T) {
 	// Create a new store
 	client := ccloudv2.NewFlinkGatewayClient("url", "userAgent", false, "authToken")
 	s := NewStore(client, nil, &types.ApplicationOptions{}, tokenRefreshFunc).(*Store)
-	s.Properties.Set(config.ConfigKeyLocalTimeZone, "UTC+01:00")
+	// This is just a string, so really doesn't matter
+	s.Properties.Set(config.ConfigKeyLocalTimeZone, "London/GMT")
 
 	t.Run("should return an error message if statement is invalid", func(t *testing.T) {
 		_, err := s.processSetStatement("se key=value")
