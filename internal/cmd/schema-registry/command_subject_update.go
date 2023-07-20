@@ -54,7 +54,7 @@ func (c *command) newSubjectUpdateCommand() *cobra.Command {
 func (c *command) subjectUpdate(cmd *cobra.Command, args []string) error {
 	subject := args[0]
 
-	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
+	srClient, ctx, err := getApiClient(cmd, c.Config, c.Version)
 	if err != nil {
 		return err
 	}

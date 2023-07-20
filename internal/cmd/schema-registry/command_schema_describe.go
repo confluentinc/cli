@@ -71,7 +71,7 @@ func (c *command) schemaDescribe(cmd *cobra.Command, args []string) error {
 		return errors.New(errors.SchemaOrSubjectErrorMsg)
 	}
 
-	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
+	srClient, ctx, err := getApiClient(cmd, c.Config, c.Version)
 	if err != nil {
 		return err
 	}
