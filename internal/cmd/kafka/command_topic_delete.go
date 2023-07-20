@@ -77,7 +77,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 	return err
 }
 
-func (c *authenticatedTopicCommand) confirmDeletion(cmd *cobra.Command, kafkaREST *pcmd.KafkaREST, clusterId string, args []string) (bool, error) {
+func (c *command) confirmDeletion(cmd *cobra.Command, kafkaREST *pcmd.KafkaREST, clusterId string, args []string) (bool, error) {
 	describeFunc := func(id string) error {
 		_, err := kafkaREST.CloudClient.ListKafkaTopicConfigs(clusterId, id)
 		return err

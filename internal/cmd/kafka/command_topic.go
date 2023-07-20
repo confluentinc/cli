@@ -64,7 +64,7 @@ func (c *command) validArgs(cmd *cobra.Command, args []string) []string {
 	return c.validArgsMultiple(cmd, args)
 }
 
-func (c *authenticatedTopicCommand) validArgsMultiple(cmd *cobra.Command, args []string) []string {
+func (c *command) validArgsMultiple(cmd *cobra.Command, args []string) []string {
 	if err := c.PersistentPreRunE(cmd, args); err != nil {
 		return nil
 	}

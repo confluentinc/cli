@@ -77,17 +77,14 @@ func (c *command) confirmDeletion(cmd *cobra.Command, args []string) (bool, erro
 }
 
 func (c *command) postProcess(id string) error {
-	var err error
 	if id == c.Context.GetCurrentEnvironment() {
 		c.Context.SetCurrentEnvironment("")
-
-		err = c.Config.Save()
-		if err != nil {
-			err = errors.Wrap(err, errors.EnvSwitchErrorMsg)
+		if err := c.Config.Save(); err != nil {
+			return err
 		}
 	}
 	c.Context.DeleteEnvironment(id)
 	_ = c.Config.Save()
 
-	return err
+	return nil
 }
