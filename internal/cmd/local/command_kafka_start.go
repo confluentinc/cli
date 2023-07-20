@@ -180,10 +180,10 @@ func (c *Command) prepareAndSaveLocalPorts(cmd *cobra.Command, isTest bool) erro
 
 	if isTest {
 		c.Config.LocalPorts = &v1.LocalPorts{
-			KafkaRestPort:  "2996",
-			PlaintextPort:  "2997",
-			BrokerPort:     "2998",
-			ControllerPort: "2999",
+			BrokerPort:     "2996",
+			ControllerPort: "2997",
+			KafkaRestPort:  "2998",
+			PlaintextPort:  "2999",
 		}
 	} else {
 		freePorts, err := freeport.GetFreePorts(3)
