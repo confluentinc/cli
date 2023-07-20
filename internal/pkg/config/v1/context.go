@@ -270,6 +270,39 @@ func (c *Context) SetCurrentFlinkComputePool(id string) error {
 	return nil
 }
 
+func (c *Context) GetCurrentFlinkCloudProvider() string {
+	if ctx := c.GetCurrentEnvironmentContext(); ctx != nil {
+		return ctx.CurrentFlinkCloudProvider
+	}
+	return ""
+}
+
+func (c *Context) SetCurrentFlinkCloudProvider(id string) error {
+	ctx := c.GetCurrentEnvironmentContext()
+	if ctx == nil {
+		return fmt.Errorf("no environment found")
+	}
+
+	ctx.CurrentFlinkCloudProvider = id
+	return nil
+}
+func (c *Context) GetCurrentFlinkRegion() string {
+	if ctx := c.GetCurrentEnvironmentContext(); ctx != nil {
+		return ctx.CurrentFlinkRegion
+	}
+	return ""
+}
+
+func (c *Context) SetCurrentFlinkRegion(id string) error {
+	ctx := c.GetCurrentEnvironmentContext()
+	if ctx == nil {
+		return fmt.Errorf("no environment found")
+	}
+
+	ctx.CurrentFlinkRegion = id
+	return nil
+}
+
 func (c *Context) GetCurrentFlinkCatalog() string {
 	if ctx := c.GetCurrentEnvironmentContext(); ctx != nil {
 		return ctx.CurrentFlinkCatalog

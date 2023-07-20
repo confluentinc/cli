@@ -6,6 +6,10 @@ Usage:
 Available Commands:
   list        List exceptions for a Flink SQL statement.
 
+Flags:
+      --cloud string    Specify the cloud provider as "aws", "azure", or "gcp".
+      --region string   Cloud region for compute pool (use "confluent flink region list" to see all).
+
 Global Flags:
   -h, --help            Show help for this command.
       --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
