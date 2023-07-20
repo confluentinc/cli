@@ -5,6 +5,7 @@ Usage:
 
 Available Commands:
   list        List Flink regions.
+  use         Use a Flink region in subsequent commands.
 
 Global Flags:
   -h, --help            Show help for this command.
