@@ -27,20 +27,22 @@ type PartitionFilter struct {
 	Index   int32
 }
 
-func getCommonConfig(kafka *configv1.KafkaClusterConfig, clientID string) (*ckafka.ConfigMap, error) {
-	err := kafka.DecryptAPIKeys()
-	if err != nil {
+func getCommonConfig(kafka *configv1.KafkaClusterConfig, clientId string) (*ckafka.ConfigMap, error) {
+	if err := kafka.DecryptAPIKeys(); err != nil {
 		return nil, err
 	}
-	return &ckafka.ConfigMap{
+
+	configMap := &ckafka.ConfigMap{
 		"security.protocol":                     "SASL_SSL",
 		"sasl.mechanism":                        "PLAIN",
 		"ssl.endpoint.identification.algorithm": "https",
-		"client.id":                             clientID,
+		"client.id":                             clientId,
 		"bootstrap.servers":                     kafka.Bootstrap,
 		"sasl.username":                         kafka.APIKey,
-		"sasl.password":                         kafka.APIKeys[kafka.APIKey].Secret,
-	}, nil
+		"sasl.password":                         kafka.GetApiSecret(),
+	}
+
+	return configMap, nil
 }
 
 func getProducerConfigMap(kafka *configv1.KafkaClusterConfig, clientID string) (*ckafka.ConfigMap, error) {

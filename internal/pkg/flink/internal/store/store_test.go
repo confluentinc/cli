@@ -255,6 +255,9 @@ func TestCancelPendingStatement(t *testing.T) {
 	}
 
 	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
+		Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
+			StatementName: &statementName,
+		},
 		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
 			Phase: "PENDING",
 		},
@@ -262,6 +265,8 @@ func TestCancelPendingStatement(t *testing.T) {
 
 	expectedErr := &types.StatementError{Message: "result retrieval aborted. Statement will be deleted"}
 	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, nil).AnyTimes()
+	client.EXPECT().GetExceptions("envId", statementName, "orgId").Return(flinkgatewayv1alpha1.SqlV1alpha1StatementExceptionList{}, errors.New("error")).AnyTimes()
+	client.EXPECT().DeleteStatement("envId", statementName, "orgId").Return(nil).AnyTimes()
 
 	// Schedule routine to cancel context
 	go func() {
@@ -1435,4 +1440,115 @@ func (s *StoreTestSuite) TestNewProcessedStatementSetsIsSelectStatement() {
 			require.Equal(t, testCase.isSelectStatement, processedStatement.IsSelectStatement)
 		})
 	}
+}
+
+func TestWaitForTerminalStateDoesNotStartWhenAlreadyInTerminalState(t *testing.T) {
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
+	appOptions := types.ApplicationOptions{
+		OrgResourceId: "orgId",
+		EnvironmentId: "envId",
+	}
+	s := &Store{
+		client:           client,
+		appOptions:       &appOptions,
+		tokenRefreshFunc: tokenRefreshFunc,
+	}
+	processedStatement := types.ProcessedStatement{Status: types.COMPLETED}
+
+	returnedStatement, err := s.WaitForTerminalStatementState(context.Background(), processedStatement)
+
+	assert.Nil(t, err)
+	assert.Equal(t, &processedStatement, returnedStatement)
+}
+
+func TestWaitForTerminalStateStopsWhenTerminalState(t *testing.T) {
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
+	appOptions := types.ApplicationOptions{
+		OrgResourceId: "orgId",
+		EnvironmentId: "envId",
+	}
+	s := &Store{
+		client:           client,
+		appOptions:       &appOptions,
+		tokenRefreshFunc: tokenRefreshFunc,
+	}
+
+	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
+		Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
+			StatementName: flinkgatewayv1alpha1.PtrString("statement-name"),
+		},
+		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+			Phase:  "COMPLETED",
+			Detail: flinkgatewayv1alpha1.PtrString("Test status detail message"),
+		},
+	}
+	client.EXPECT().GetStatement("envId", statementObj.Spec.GetStatementName(), "orgId").Return(statementObj, nil)
+	processedStatement := types.NewProcessedStatement(statementObj)
+	processedStatement.Status = types.RUNNING
+
+	returnedStatement, err := s.WaitForTerminalStatementState(context.Background(), *processedStatement)
+
+	assert.Nil(t, err)
+	assert.Equal(t, types.NewProcessedStatement(statementObj), returnedStatement)
+}
+
+func TestWaitForTerminalStateStopsWhenUserDetaches(t *testing.T) {
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
+	appOptions := types.ApplicationOptions{
+		OrgResourceId: "orgId",
+		EnvironmentId: "envId",
+	}
+	s := &Store{
+		client:           client,
+		appOptions:       &appOptions,
+		tokenRefreshFunc: tokenRefreshFunc,
+	}
+	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
+		Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
+			StatementName: flinkgatewayv1alpha1.PtrString("statement-name"),
+		},
+		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+			Phase:  "RUNNING",
+			Detail: flinkgatewayv1alpha1.PtrString("Test status detail message"),
+		},
+	}
+	client.EXPECT().GetStatement("envId", statementObj.Spec.GetStatementName(), "orgId").Return(statementObj, nil).AnyTimes()
+	ctx, cancelFunc := context.WithCancel(context.Background())
+	go func() {
+		time.Sleep(2 * time.Second)
+		cancelFunc()
+	}()
+
+	returnedStatement, err := s.WaitForTerminalStatementState(ctx, *types.NewProcessedStatement(statementObj))
+
+	assert.Nil(t, err)
+	assert.Equal(t, types.NewProcessedStatement(statementObj), returnedStatement)
+	assert.NotNil(t, ctx.Err())
+}
+
+func TestWaitForTerminalStateStopsOnError(t *testing.T) {
+	client := mock.NewMockGatewayClientInterface(gomock.NewController(t))
+	appOptions := types.ApplicationOptions{
+		OrgResourceId: "orgId",
+		EnvironmentId: "envId",
+	}
+	s := &Store{
+		client:           client,
+		appOptions:       &appOptions,
+		tokenRefreshFunc: tokenRefreshFunc,
+	}
+	statementObj := flinkgatewayv1alpha1.SqlV1alpha1Statement{
+		Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
+			StatementName: flinkgatewayv1alpha1.PtrString("statement-name"),
+		},
+		Status: &flinkgatewayv1alpha1.SqlV1alpha1StatementStatus{
+			Phase:  "RUNNING",
+			Detail: flinkgatewayv1alpha1.PtrString("Test status detail message"),
+		},
+	}
+	client.EXPECT().GetStatement("envId", statementObj.Spec.GetStatementName(), "orgId").Return(statementObj, errors.New("error"))
+
+	_, err := s.WaitForTerminalStatementState(context.Background(), *types.NewProcessedStatement(statementObj))
+
+	assert.NotNil(t, err)
 }

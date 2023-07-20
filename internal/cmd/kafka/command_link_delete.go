@@ -36,19 +36,19 @@ func (c *linkCommand) delete(cmd *cobra.Command, args []string) error {
 		return errors.New(errors.RestProxyNotAvailableMsg)
 	}
 
-	clusterId, err := getKafkaClusterLkcId(c.AuthenticatedCLICommand)
+	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
 
-	if confirm, err := c.confirmDeletion(cmd, kafkaREST, clusterId, args); err != nil {
+	if confirm, err := c.confirmDeletion(cmd, kafkaREST, cluster.ID, args); err != nil {
 		return err
 	} else if !confirm {
 		return nil
 	}
 
 	deleteFunc := func(id string) error {
-		if r, err := kafkaREST.CloudClient.DeleteKafkaLink(clusterId, id); err != nil {
+		if r, err := kafkaREST.CloudClient.DeleteKafkaLink(cluster.ID, id); err != nil {
 			return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, r)
 		}
 		return nil

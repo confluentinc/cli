@@ -14,7 +14,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
-func (c *authenticatedTopicCommand) newDeleteCommand() *cobra.Command {
+func (c *command) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "delete <topic-1> [topic-2] ... [topic-n]",
 		Short:             "Delete one or more Kafka topics.",
@@ -38,7 +38,7 @@ func (c *authenticatedTopicCommand) newDeleteCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *authenticatedTopicCommand) delete(cmd *cobra.Command, args []string) error {
+func (c *command) delete(cmd *cobra.Command, args []string) error {
 	kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err

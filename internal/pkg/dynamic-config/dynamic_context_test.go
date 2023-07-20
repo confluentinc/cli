@@ -10,8 +10,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
-	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
-	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	cmkmock "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2/mock"
 
@@ -89,7 +87,6 @@ func stringPtr(s string) *string {
 }
 
 func TestDynamicContext_ParseFlagsIntoContext(t *testing.T) {
-	client := buildCcloudMockClient()
 	tests := []struct {
 		name           string
 		ctx            *DynamicContext
@@ -136,7 +133,7 @@ func TestDynamicContext_ParseFlagsIntoContext(t *testing.T) {
 		require.NoError(t, err)
 		initialEnvId := test.ctx.GetCurrentEnvironment()
 		initialActiveKafkaId := test.ctx.KafkaClusterContext.GetActiveKafkaClusterId()
-		err = test.ctx.ParseFlagsIntoContext(cmd, client)
+		err = test.ctx.ParseFlagsIntoContext(cmd)
 		require.NoError(t, err)
 		finalEnv := test.ctx.GetCurrentEnvironment()
 		finalCluster := test.ctx.KafkaClusterContext.GetActiveKafkaClusterId()
@@ -151,14 +148,6 @@ func TestDynamicContext_ParseFlagsIntoContext(t *testing.T) {
 			require.Equal(t, initialActiveKafkaId, finalCluster)
 		}
 	}
-}
-
-func buildCcloudMockClient() *ccloudv1.Client {
-	client := pmock.NewClientMock()
-	client.Account = &ccloudv1mock.AccountInterface{ListFunc: func(_ *ccloudv1.Account) ([]*ccloudv1.Account, error) {
-		return []*ccloudv1.Account{{Id: apiEnvironment}}, nil
-	}}
-	return client
 }
 
 func getBaseContext() *DynamicContext {

@@ -62,7 +62,7 @@ func (s *CLITestSuite) TestEnvironmentUse() {
 	}
 }
 
-func (s *CLITestSuite) TestEnvironmentAutocomplete() {
+func (s *CLITestSuite) TestEnvironment_Autocomplete() {
 	test := CLITest{args: `__complete environment describe ""`, login: "cloud", fixture: "environment/describe-autocomplete.golden"}
 	s.runIntegrationTest(test)
 }
