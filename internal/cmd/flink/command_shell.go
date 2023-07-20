@@ -29,6 +29,7 @@ func (c *command) newShellCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cob
 	pcmd.AddOutputFlag(cmd)
 	if cfg.IsTest {
 		cmd.Flags().Bool("fake-gateway", false, "Test the SQL client with fake gateway data.")
+		cmd.Flags().Bool("enable-lsp", false, "Enable flink SQL autocompletions using the LSP protocol.")
 	}
 
 	return cmd
@@ -67,13 +68,15 @@ func (c *command) authenticated(authenticated func(*cobra.Command, []string) err
 func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Command) error {
 	// if the --fake-gateway flag is set, we start the client with a simulated gateway client that returns fake data
 	fakeMode, _ := cmd.Flags().GetBool("fake-gateway")
+	lspEnabled, _ := cmd.Flags().GetBool("enable-lsp")
 	if fakeMode {
 		client.StartApp(
 			mock.NewFakeFlinkGatewayClient(),
 			func() error { return nil },
 			types.ApplicationOptions{
-				Context:   c.Context,
-				UserAgent: c.Version.UserAgent,
+				Context:    c.Context,
+				UserAgent:  c.Version.UserAgent,
+				LSPEnabled: lspEnabled,
 			})
 		return nil
 	}
@@ -161,6 +164,7 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 			Database:        database,
 			ComputePoolId:   computePool,
 			IdentityPoolId:  identityPool,
+			LSPEnabled:      lspEnabled,
 			Verbose:         verbose > 0,
 		})
 	return nil
