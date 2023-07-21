@@ -1,10 +1,14 @@
 package schemaregistry
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 func (c *command) newSchemaCommand(cfg *v1.Config) *cobra.Command {
@@ -27,4 +31,15 @@ func (c *command) newSchemaCommand(cfg *v1.Config) *cobra.Command {
 	}
 
 	return cmd
+}
+
+func catchSchemaNotFoundError(err error, subject, version string) error {
+	if err != nil && strings.Contains(err.Error(), "Not Found") {
+		return errors.NewErrorWithSuggestions(
+			fmt.Sprintf(`subject "%s" or version "%s" not found`, subject, version),
+			"List available subjects with `confluent schema-registry subject list`.\nList available versions with `confluent schema-registry subject describe`.",
+		)
+	}
+
+	return err
 }
