@@ -49,11 +49,18 @@ func handleSRUpdateTopLevelConfig(t *testing.T) http.HandlerFunc {
 // Handler for: "/mode"
 func handleSRUpdateTopLevelMode(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req srsdk.ModeUpdateRequest
-		err := json.NewDecoder(r.Body).Decode(&req)
-		require.NoError(t, err)
-		err = json.NewEncoder(w).Encode(srsdk.ModeUpdateRequest{Mode: req.Mode})
-		require.NoError(t, err)
+		switch r.Method {
+		case http.MethodPut:
+			req := &srsdk.ModeUpdateRequest{}
+			err := json.NewDecoder(r.Body).Decode(req)
+			require.NoError(t, err)
+			err = json.NewEncoder(w).Encode(srsdk.ModeUpdateRequest{Mode: req.Mode})
+			require.NoError(t, err)
+		case http.MethodGet:
+			req := &srsdk.Mode{Mode: "READWRITE"}
+			err := json.NewEncoder(w).Encode(req)
+			require.NoError(t, err)
+		}
 	}
 }
 

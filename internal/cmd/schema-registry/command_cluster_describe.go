@@ -47,11 +47,17 @@ func (c *command) newClusterDescribeCommand() *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}
 
-	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
-	pcmd.AddApiSecretFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
+
+	// Deprecated
+	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
+	cobra.CheckErr(cmd.Flags().MarkHidden("api-key"))
+
+	// Deprecated
+	pcmd.AddApiSecretFlag(cmd)
+	cobra.CheckErr(cmd.Flags().MarkHidden("api-secret"))
 
 	return cmd
 }
