@@ -22,7 +22,7 @@ Flags:
       --prefix                    When this flag is set, the specified resource name is interpreted as a prefix.
       --cluster string            Kafka cluster ID or name.
       --context string            CLI context name.
-      --environment string        Environment ID or name.
+      --environment string        Confluent Cloud environment ID or name.
   -o, --output string             Specify the output format as "human", "json", or "yaml". (default "human")
       --service-account string    Service account ID or name.
 

@@ -5,7 +5,7 @@ Usage:
 
 Flags:
       --force                Skip the deletion confirmation prompt.
-      --environment string   Environment ID or name.
+      --environment string   Confluent Cloud environment ID or name.
 
 Global Flags:
   -h, --help            Show help for this command.

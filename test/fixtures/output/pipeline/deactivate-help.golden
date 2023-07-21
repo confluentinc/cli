@@ -12,7 +12,7 @@ Flags:
       --retained-topics strings   A comma-separated list of topics to be retained after deactivation.
   -o, --output string             Specify the output format as "human", "json", or "yaml". (default "human")
       --cluster string            Kafka cluster ID or name.
-      --environment string        Environment ID or name.
+      --environment string        Confluent Cloud environment ID or name.
 
 Global Flags:
   -h, --help            Show help for this command.

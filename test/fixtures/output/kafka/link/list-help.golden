@@ -6,7 +6,7 @@ Usage:
 Flags:
       --include-topics       If set, will list mirrored topics for the links returned.
       --cluster string       Kafka cluster ID or name.
-      --environment string   Environment ID or name.
+      --environment string   Confluent Cloud environment ID or name.
       --context string       CLI context name.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 

@@ -6,7 +6,7 @@ Usage:
 Flags:
       --compute-pool string    Flink compute pool ID.
       --identity-pool string   Identity pool ID.
-      --environment string     Environment ID or name.
+      --environment string     Confluent Cloud environment ID or name.
       --database string        The database which will be used as default database. When using Kafka, this is the cluster display name.
       --context string         CLI context name.
   -o, --output string          Specify the output format as "human", "json", or "yaml". (default "human")

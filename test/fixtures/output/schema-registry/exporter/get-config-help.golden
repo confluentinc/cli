@@ -7,7 +7,7 @@ Flags:
       --api-key string       API key.
       --api-secret string    API key secret.
       --context string       CLI context name.
-      --environment string   Environment ID or name.
+      --environment string   Confluent Cloud environment ID or name.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "json")
 
 Global Flags:

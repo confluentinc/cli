@@ -5,7 +5,7 @@ import (
 )
 
 const (
-	ResourceNameNotFoundErrorMsg          = `resource with name or ID "%s" was not found`
+	ResourceNameNotFoundErrorMsg          = `resource "%s" was not found`
 	DuplicateResourceNameErrorMsg         = `the resource name "%s" is shared across multiple resources`
 	DuplicateResourceNameErrorSuggestions = "retry the previous command using a resource id"
 )

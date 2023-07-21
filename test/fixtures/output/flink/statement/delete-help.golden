@@ -7,7 +7,7 @@ Flags:
       --cloud string         Specify the cloud provider as "aws", "azure", or "gcp".
       --region string        Cloud region for compute pool (use "confluent flink region list" to see all).
       --force                Skip the deletion confirmation prompt.
-      --environment string   Environment ID or name.
+      --environment string   Confluent Cloud environment ID or name.
       --context string       CLI context name.
 
 Global Flags:

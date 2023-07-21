@@ -144,7 +144,7 @@ func AutocompleteContexts(cfg *v1.Config) []string {
 }
 
 func AddEnvironmentFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
-	cmd.Flags().String("environment", "", "Environment ID or name.")
+	cmd.Flags().String("environment", "", "Confluent Cloud environment ID or name.")
 	RegisterFlagCompletionFunc(cmd, "environment", func(cmd *cobra.Command, args []string) []string {
 		if err := command.PersistentPreRunE(cmd, args); err != nil {
 			return nil

@@ -13,7 +13,7 @@ Flags:
       --geo string           REQUIRED: Specify the geo as "us", "eu", or "apac".
       --package string       Specify the type of Stream Governance package as "essentials" or "advanced". (default "essentials")
       --context string       CLI context name.
-      --environment string   Environment ID or name.
+      --environment string   Confluent Cloud environment ID or name.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:

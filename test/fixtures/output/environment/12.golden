@@ -1,4 +1,4 @@
-Error: 404 Not Found
+Error: resource "env-dne" was not found
 
 Suggestions:
     List available environments with `confluent environment list`.

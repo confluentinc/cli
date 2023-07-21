@@ -19,7 +19,7 @@ Flags:
       --api-key string       API key.
       --api-secret string    API key secret.
       --context string       CLI context name.
-      --environment string   Environment ID or name.
+      --environment string   Confluent Cloud environment ID or name.
 
 Global Flags:
   -h, --help            Show help for this command.
