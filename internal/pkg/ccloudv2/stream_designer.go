@@ -11,7 +11,7 @@ import (
 func newStreamDesignerClient(url, userAgent string, unsafeTrace bool) *streamdesignerv1.APIClient {
 	cfg := streamdesignerv1.NewConfiguration()
 	cfg.Debug = unsafeTrace
-	cfg.HTTPClient = newRetryableHttpClient(unsafeTrace)
+	cfg.HTTPClient = NewRetryableHttpClient(unsafeTrace)
 	cfg.Servers = streamdesignerv1.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 

@@ -12,7 +12,7 @@ import (
 func newBillingClient(url, userAgent string, unsafeTrace bool) *billing.APIClient {
 	cfg := billing.NewConfiguration()
 	cfg.Debug = unsafeTrace
-	cfg.HTTPClient = newRetryableHttpClient(unsafeTrace)
+	cfg.HTTPClient = NewRetryableHttpClient(unsafeTrace)
 	cfg.Servers = billing.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 

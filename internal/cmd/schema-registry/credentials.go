@@ -72,7 +72,7 @@ func GetSchemaRegistryClientWithApiKey(cmd *cobra.Command, cfg *dynamicconfig.Dy
 
 	srCluster := &v1.SchemaRegistryCluster{}
 	schemaRegistryEndpoint, _ := cmd.Flags().GetString("schema-registry-endpoint")
-	if len(schemaRegistryEndpoint) == 0 {
+	if schemaRegistryEndpoint == "" {
 		cluster, err := ctx.SchemaRegistryCluster(cmd)
 		if err != nil {
 			log.CliLogger.Debug("failed to find active Schema Registry cluster")
@@ -109,7 +109,7 @@ func GetSchemaRegistryClientWithApiKey(cmd *cobra.Command, cfg *dynamicconfig.Dy
 		} else if srAPISecret != "" {
 			output.ErrPrintln("No Schema Registry API key specified.")
 		} else if srAPIKey != "" {
-			output.ErrPrintln("No Schema Registry API key secret specified.")
+			output.ErrPrintln("No Schema Registry API secret specified.")
 		}
 		srAuth, didPromptUser, err := getSchemaRegistryAuth(srCluster.SrCredentials, shouldPrompt)
 		if err != nil {
@@ -117,7 +117,7 @@ func GetSchemaRegistryClientWithApiKey(cmd *cobra.Command, cfg *dynamicconfig.Dy
 		}
 		srCtx := context.WithValue(context.Background(), srsdk.ContextBasicAuth, *srAuth)
 
-		if len(schemaRegistryEndpoint) == 0 {
+		if schemaRegistryEndpoint == "" {
 			environmentId, err := ctx.EnvironmentId()
 			if err != nil {
 				return nil, nil, err
@@ -176,7 +176,7 @@ func getSchemaRegistryClientWithToken(cmd *cobra.Command, ver *version.Version, 
 	if err != nil {
 		return nil, nil, err
 	}
-	if len(schemaRegistryEndpoint) == 0 {
+	if schemaRegistryEndpoint == "" {
 		return nil, nil, errors.New(errors.SREndpointNotSpecifiedErrorMsg)
 	}
 
