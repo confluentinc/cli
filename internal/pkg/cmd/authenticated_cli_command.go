@@ -16,20 +16,23 @@ import (
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/hub"
+	schemaregistry "github.com/confluentinc/cli/internal/pkg/schema-registry"
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
 type AuthenticatedCLICommand struct {
 	*CLICommand
 
-	Client             *ccloudv1.Client
-	HubClient          *hub.Client
-	KafkaRESTProvider  *KafkaRESTProvider
-	MDSClient          *mds.APIClient
-	MDSv2Client        *mdsv2alpha1.APIClient
-	V2Client           *ccloudv2.Client
-	flinkGatewayClient *ccloudv2.FlinkGatewayClient
-	metricsClient      *ccloudv2.MetricsClient
+	Client            *ccloudv1.Client
+	HubClient         *hub.Client
+	KafkaRESTProvider *KafkaRESTProvider
+	MDSClient         *mds.APIClient
+	MDSv2Client       *mdsv2alpha1.APIClient
+	V2Client          *ccloudv2.Client
+
+	flinkGatewayClient   *ccloudv2.FlinkGatewayClient
+	metricsClient        *ccloudv2.MetricsClient
+	schemaRegistryClient *schemaregistry.Client
 
 	Context *dynamicconfig.DynamicContext
 	State   *v1.ContextState
@@ -48,19 +51,20 @@ func NewAuthenticatedWithMDSCLICommand(cmd *cobra.Command, prerunner PreRunner) 
 }
 
 func (c *AuthenticatedCLICommand) GetFlinkGatewayClient() (*ccloudv2.FlinkGatewayClient, error) {
-	ctx := c.Config.Context()
-
 	if c.flinkGatewayClient == nil {
-		var gatewayUrl string
-		var err error
+		ctx := c.Config.Context()
 		computePoolId := ctx.GetCurrentFlinkComputePool()
+
+		var url string
+		var err error
+
 		if computePoolId != "" {
-			gatewayUrl, err = c.getGatewayUrlForComputePool(computePoolId, ctx)
+			url, err = c.getGatewayUrlForComputePool(computePoolId, ctx)
 			if err != nil {
 				return nil, err
 			}
 		} else if ctx.GetCurrentFlinkRegion() != "" && ctx.GetCurrentFlinkCloudProvider() != "" {
-			gatewayUrl, err = c.getGatewayUrlForRegion(ctx.GetCurrentFlinkCloudProvider(), ctx.GetCurrentFlinkRegion())
+			url, err = c.getGatewayUrlForRegion(ctx.GetCurrentFlinkCloudProvider(), ctx.GetCurrentFlinkRegion())
 			if err != nil {
 				return nil, err
 			}
@@ -78,7 +82,7 @@ func (c *AuthenticatedCLICommand) GetFlinkGatewayClient() (*ccloudv2.FlinkGatewa
 			return nil, err
 		}
 
-		c.flinkGatewayClient = ccloudv2.NewFlinkGatewayClient(gatewayUrl, c.Version.UserAgent, unsafeTrace, dataplaneToken)
+		c.flinkGatewayClient = ccloudv2.NewFlinkGatewayClient(url, c.Version.UserAgent, unsafeTrace, dataplaneToken)
 	}
 
 	return c.flinkGatewayClient, nil
@@ -142,9 +146,9 @@ func (c *AuthenticatedCLICommand) GetKafkaREST() (*KafkaREST, error) {
 }
 
 func (c *AuthenticatedCLICommand) GetMetricsClient() (*ccloudv2.MetricsClient, error) {
-	ctx := c.Config.Context()
-
 	if c.metricsClient == nil {
+		ctx := c.Config.Context()
+
 		url := "https://api.telemetry.confluent.cloud"
 		if c.Config.IsTest {
 			url = testserver.TestV2CloudUrl.String()
@@ -168,6 +172,34 @@ func (c *AuthenticatedCLICommand) GetMetricsClient() (*ccloudv2.MetricsClient, e
 	}
 
 	return c.metricsClient, nil
+}
+
+func (c *AuthenticatedCLICommand) GetSchemaRegistryClient() (*schemaregistry.Client, error) {
+	if c.schemaRegistryClient == nil {
+		ctx := c.Config.Context()
+
+		clusters, err := c.V2Client.GetSchemaRegistryClustersByEnvironment(ctx.GetCurrentEnvironment())
+		if err != nil {
+			return nil, err
+		}
+		if len(clusters) == 0 {
+			return nil, errors.NewSRNotEnabledError()
+		}
+
+		dataplaneToken, err := auth.GetDataplaneToken(ctx.GetState(), ctx.GetPlatformServer())
+		if err != nil {
+			return nil, err
+		}
+
+		unsafeTrace, err := c.Flags().GetBool("unsafe-trace")
+		if err != nil {
+			return nil, err
+		}
+
+		c.schemaRegistryClient = schemaregistry.NewClient(clusters[0].Spec.GetHttpEndpoint(), c.Config.Version.UserAgent, unsafeTrace, dataplaneToken, clusters[0].GetId())
+	}
+
+	return c.schemaRegistryClient, nil
 }
 
 func (c *AuthenticatedCLICommand) AuthToken() string {

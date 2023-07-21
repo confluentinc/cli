@@ -18,6 +18,7 @@ var ccloudHandlers = []route{
 	{"/api/organizations/{id}/payment_info", handlePaymentInfo},
 	{"/api/organizations/{id}/price_table", handlePriceTable},
 	{"/api/organizations/{id}/promo_code_claims", handlePromoCodeClaims},
+	{"/api/schema_registries", handleSchemaRegistries},
 	{"/api/service_accounts", handleServiceAccounts},
 	{"/api/service_accounts/{id}", handleServiceAccount},
 	{"/api/sessions", handleLogin},
@@ -27,7 +28,6 @@ var ccloudHandlers = []route{
 
 type CloudRouter struct {
 	*mux.Router
-	srApiUrl string
 }
 
 // New CloudRouter with all cloud handlers
@@ -40,7 +40,6 @@ func NewCloudRouter(t *testing.T, isAuditLogEnabled bool) *CloudRouter {
 	}
 
 	router.HandleFunc("/api/me", handleMe(t, isAuditLogEnabled))
-	router.HandleFunc("/api/schema_registries", router.HandleSchemaRegistries(t))
 	router.addRoutesAndReplies(t, "/api/metadata/security/v2alpha1/roles", v2RoutesAndReplies)
 
 	return router
