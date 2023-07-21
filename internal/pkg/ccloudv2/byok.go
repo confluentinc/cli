@@ -12,7 +12,7 @@ import (
 func newByokV1Client(url, userAgent string, unsafeTrace bool) *byokv1.APIClient {
 	cfg := byokv1.NewConfiguration()
 	cfg.Debug = unsafeTrace
-	cfg.HTTPClient = newRetryableHttpClient(unsafeTrace)
+	cfg.HTTPClient = NewRetryableHttpClient(unsafeTrace)
 	cfg.Servers = byokv1.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 
