@@ -36,7 +36,17 @@ func (c *Client) GetTopLevelConfig() (srsdk.Config, error) {
 	return config, err
 }
 
+func (c *Client) UpdateTopLevelConfig(req srsdk.ConfigUpdateRequest) (srsdk.ConfigUpdateRequest, error) {
+	req, _, err := c.DefaultApi.UpdateTopLevelConfig(c.context(), req)
+	return req, err
+}
+
 func (c *Client) GetTopLevelMode() (srsdk.Mode, error) {
 	mode, _, err := c.DefaultApi.GetTopLevelMode(c.context())
 	return mode, err
+}
+
+func (c *Client) UpdateTopLevelMode(req srsdk.ModeUpdateRequest) (srsdk.ModeUpdateRequest, error) {
+	req, _, err := c.DefaultApi.UpdateTopLevelMode(c.context(), req)
+	return req, err
 }
