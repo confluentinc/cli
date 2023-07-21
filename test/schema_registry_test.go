@@ -41,9 +41,9 @@ func (s *CLITestSuite) TestSchemaRegistryCluster() {
 
 func (s *CLITestSuite) TestSchemaRegistryCompatibilityValidate() {
 	tests := []CLITest{
-		{args: fmt.Sprintf("schema-registry compatibility validate --subject payments --version 1 --schema %s --api-key key --api-secret secret --environment %s", schemaPath, testserver.SRApiEnvId), fixture: "schema-registry/compatibility/validate.golden"},
-		{args: fmt.Sprintf("schema-registry compatibility validate --subject payments --version 1 --schema %s --api-key key --api-secret secret --environment %s -o json", schemaPath, testserver.SRApiEnvId), fixture: "schema-registry/compatibility/validate-json.golden"},
-		{args: fmt.Sprintf("schema-registry compatibility validate --subject payments --version 1 --schema %s --api-key key --api-secret secret --environment %s -o yaml", schemaPath, testserver.SRApiEnvId), fixture: "schema-registry/compatibility/validate-yaml.golden"},
+		{args: fmt.Sprintf("schema-registry compatibility validate --subject payments --version 1 --schema %s --environment %s", schemaPath, testserver.SRApiEnvId), fixture: "schema-registry/compatibility/validate.golden"},
+		{args: fmt.Sprintf("schema-registry compatibility validate --subject payments --version 1 --schema %s --environment %s -o json", schemaPath, testserver.SRApiEnvId), fixture: "schema-registry/compatibility/validate-json.golden"},
+		{args: fmt.Sprintf("schema-registry compatibility validate --subject payments --version 1 --schema %s --environment %s -o yaml", schemaPath, testserver.SRApiEnvId), fixture: "schema-registry/compatibility/validate-yaml.golden"},
 	}
 
 	for _, test := range tests {
