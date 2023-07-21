@@ -315,3 +315,75 @@ func (s *StatementControllerTestSuite) TestRenderMsgAndStatusNonLocalNonFailedSt
 		})
 	}
 }
+
+func TestIsCancelEvent(t *testing.T) {
+	tests := []struct {
+		name string
+		key  prompt.Key
+		want bool
+	}{
+		{
+			name: "ControlC",
+			key:  prompt.ControlC,
+			want: true,
+		},
+		{
+			name: "ControlD",
+			key:  prompt.ControlD,
+			want: true,
+		},
+		{
+			name: "ControlQ",
+			key:  prompt.ControlQ,
+			want: true,
+		},
+		{
+			name: "Escape",
+			key:  prompt.Escape,
+			want: true,
+		},
+		{
+			name: "Other",
+			key:  prompt.ShiftDown, // Just an example of a key that is not in the switch cases
+			want: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := isCancelEvent(tt.key)
+			require.Equal(t, tt.want, got)
+		})
+	}
+}
+
+func TestIsDetachEvent(t *testing.T) {
+	tests := []struct {
+		name string
+		key  prompt.Key
+		want bool
+	}{
+		{
+			name: "ControlM",
+			key:  prompt.ControlM,
+			want: true,
+		},
+		{
+			name: "Enter",
+			key:  prompt.Enter,
+			want: true,
+		},
+		{
+			name: "Other",
+			key:  prompt.ShiftUp, // Just an example of a key that is not in the switch cases
+			want: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := isDetachEvent(tt.key)
+			require.Equal(t, tt.want, got)
+		})
+	}
+}
