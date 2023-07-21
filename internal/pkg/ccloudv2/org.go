@@ -12,7 +12,7 @@ import (
 func newOrgClient(url, userAgent string, unsafeTrace bool) *orgv2.APIClient {
 	cfg := orgv2.NewConfiguration()
 	cfg.Debug = unsafeTrace
-	cfg.HTTPClient = newRetryableHttpClient(unsafeTrace)
+	cfg.HTTPClient = NewRetryableHttpClient(unsafeTrace)
 	cfg.Servers = orgv2.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 

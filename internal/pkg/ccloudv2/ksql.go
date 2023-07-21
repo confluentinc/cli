@@ -12,7 +12,7 @@ import (
 func newKsqlClient(url, userAgent string, unsafeTrace bool) *ksqlv2.APIClient {
 	cfg := ksqlv2.NewConfiguration()
 	cfg.Debug = unsafeTrace
-	cfg.HTTPClient = newRetryableHttpClient(unsafeTrace)
+	cfg.HTTPClient = NewRetryableHttpClient(unsafeTrace)
 	cfg.Servers = ksqlv2.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 

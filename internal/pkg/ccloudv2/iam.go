@@ -13,7 +13,7 @@ import (
 func newIamClient(url, userAgent string, unsafeTrace bool) *iamv2.APIClient {
 	cfg := iamv2.NewConfiguration()
 	cfg.Debug = unsafeTrace
-	cfg.HTTPClient = newRetryableHttpClient(unsafeTrace)
+	cfg.HTTPClient = NewRetryableHttpClient(unsafeTrace)
 	cfg.Servers = iamv2.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 
