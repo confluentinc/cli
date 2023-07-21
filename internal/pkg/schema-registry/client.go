@@ -4,8 +4,6 @@ import (
 	"context"
 
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
-
-	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 )
 
 type Client struct {
@@ -13,16 +11,9 @@ type Client struct {
 	authToken string
 }
 
-func NewClient(url, userAgent string, unsafeTrace bool, authToken, targetSrCluster string) *Client {
-	cfg := srsdk.NewConfiguration()
-	cfg.BasePath = url
-	cfg.Debug = unsafeTrace
-	cfg.UserAgent = userAgent
-	cfg.HTTPClient = ccloudv2.NewRetryableHttpClient(unsafeTrace)
-	cfg.DefaultHeader = map[string]string{"target-sr-cluster": targetSrCluster}
-
+func NewClient(configuration *srsdk.Configuration, authToken string) *Client {
 	return &Client{
-		APIClient: srsdk.NewAPIClient(cfg),
+		APIClient: srsdk.NewAPIClient(configuration),
 		authToken: authToken,
 	}
 }
@@ -49,4 +40,9 @@ func (c *Client) GetTopLevelMode() (srsdk.Mode, error) {
 func (c *Client) UpdateTopLevelMode(req srsdk.ModeUpdateRequest) (srsdk.ModeUpdateRequest, error) {
 	req, _, err := c.DefaultApi.UpdateTopLevelMode(c.context(), req)
 	return req, err
+}
+
+func (c *Client) TestCompatibilityBySubjectName(subject, version string, body srsdk.RegisterSchemaRequest) (srsdk.CompatibilityCheckResponse, error) {
+	res, _, err := c.DefaultApi.TestCompatibilityBySubjectName(c.context(), subject, version, body, nil)
+	return res, err
 }
