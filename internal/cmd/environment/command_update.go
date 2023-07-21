@@ -5,7 +5,6 @@ import (
 
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
 
-	resource "github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -37,13 +36,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 
 	environment := orgv2.OrgV2Environment{DisplayName: orgv2.PtrString(name)}
 	if environment, err = c.V2Client.UpdateOrgEnvironment(args[0], environment); err != nil {
-		environmentId, err := resource.EnvironmentNameToId(args[0], c.V2Client, false)
-		if err != nil {
-			return errors.NewErrorWithSuggestions(err.Error(), errors.NotValidEnvironmentIdSuggestions)
-		}
-		if environment, err = c.V2Client.UpdateOrgEnvironment(environmentId, environment); err != nil {
-			return errors.NewErrorWithSuggestions(err.Error(), errors.NotValidEnvironmentIdSuggestions)
-		}
+		return errors.NewErrorWithSuggestions(err.Error(), errors.NotValidEnvironmentIdSuggestions)
 	}
 
 	table := output.NewTable(cmd)

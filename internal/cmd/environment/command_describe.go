@@ -3,7 +3,6 @@ package environment
 import (
 	"github.com/spf13/cobra"
 
-	resource "github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -42,12 +41,7 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 
 	environment, err := c.V2Client.GetOrgEnvironment(id)
 	if err != nil {
-		if id, err = resource.EnvironmentNameToId(id, c.V2Client, false); err != nil {
-			return errors.NewErrorWithSuggestions(err.Error(), errors.NotValidEnvironmentIdSuggestions)
-		}
-		if environment, err = c.V2Client.GetOrgEnvironment(id); err != nil {
-			return errors.NewErrorWithSuggestions(err.Error(), errors.NotValidEnvironmentIdSuggestions)
-		}
+		return errors.NewErrorWithSuggestions(err.Error(), errors.NotValidEnvironmentIdSuggestions)
 	}
 
 	table := output.NewTable(cmd)

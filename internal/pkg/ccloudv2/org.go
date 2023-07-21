@@ -2,6 +2,7 @@ package ccloudv2
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	orgv2 "github.com/confluentinc/ccloud-sdk-go-v2/org/v2"
@@ -29,13 +30,31 @@ func (c *Client) CreateOrgEnvironment(environment orgv2.OrgV2Environment) (orgv2
 }
 
 func (c *Client) GetOrgEnvironment(envId string) (orgv2.OrgV2Environment, error) {
-	res, httpResp, err := c.OrgClient.EnvironmentsOrgV2Api.GetOrgV2Environment(c.orgApiContext(), envId).Execute()
-	return res, errors.CatchCCloudV2ResourceNotFoundError(err, envId, httpResp)
+	env, httpResp, err := c.OrgClient.EnvironmentsOrgV2Api.GetOrgV2Environment(c.orgApiContext(), envId).Execute()
+	if err != nil {
+		if envId, err = EnvironmentNameToId(envId, c); err != nil {
+			if err.Error() == fmt.Sprintf(ResourceNameNotFoundErrorMsg, envId) {
+				err = errors.NewErrorWithSuggestions(err.Error(), errors.NotValidEnvironmentIdSuggestions)
+			}
+			return env, err
+		}
+		env, httpResp, err = c.OrgClient.EnvironmentsOrgV2Api.GetOrgV2Environment(c.orgApiContext(), envId).Execute()
+	}
+	return env, errors.CatchCCloudV2ResourceNotFoundError(err, envId, httpResp)
 }
 
 func (c *Client) UpdateOrgEnvironment(envId string, updateEnvironment orgv2.OrgV2Environment) (orgv2.OrgV2Environment, error) {
-	res, httpResp, err := c.OrgClient.EnvironmentsOrgV2Api.UpdateOrgV2Environment(c.orgApiContext(), envId).OrgV2Environment(updateEnvironment).Execute()
-	return res, errors.CatchCCloudV2Error(err, httpResp)
+	env, httpResp, err := c.OrgClient.EnvironmentsOrgV2Api.UpdateOrgV2Environment(c.orgApiContext(), envId).OrgV2Environment(updateEnvironment).Execute()
+	if err != nil {
+		if envId, err = EnvironmentNameToId(envId, c); err != nil {
+			if err.Error() == fmt.Sprintf(ResourceNameNotFoundErrorMsg, envId) {
+				err = errors.NewErrorWithSuggestions(err.Error(), errors.NotValidEnvironmentIdSuggestions)
+			}
+			return env, err
+		}
+		env, httpResp, err = c.OrgClient.EnvironmentsOrgV2Api.UpdateOrgV2Environment(c.orgApiContext(), envId).OrgV2Environment(updateEnvironment).Execute()
+	}
+	return env, errors.CatchCCloudV2Error(err, httpResp)
 }
 
 func (c *Client) DeleteOrgEnvironment(envId string) error {

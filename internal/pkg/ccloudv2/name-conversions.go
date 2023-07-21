@@ -5,6 +5,15 @@ import (
 	v1 "github.com/confluentinc/ccloud-sdk-go-v2/kafka-quotas/v1"
 )
 
+// EnvironmentNameToId attempts to convert from a valid environment name to its ID, if it fails it returns an error
+func EnvironmentNameToId(input string, client *Client) (string, error) {
+	envs, err := client.ListOrgEnvironments()
+	if err != nil {
+		return input, err
+	}
+	return ConvertV2NameToId(input, ConvertToPtrSlice(envs))
+}
+
 // KafkaClusterNameToId attempts to convert from a valid kafka cluster name to its ID, if it fails it returns the input string
 func KafkaClusterNameToId(input string, environmentId string, client *Client) (string, error) {
 	clusters, err := client.ListKafkaClusters(environmentId)
@@ -17,20 +26,6 @@ func KafkaClusterNameToId(input string, environmentId string, client *Client) (s
 		specPtrs[i] = clusterPtrs[i].Spec
 	}
 	return ConvertSpecNameToId(input, clusterPtrs, specPtrs)
-}
-
-// EnvironmentNameToId attempts to convert from a valid environment name to its ID, if it fails it returns an error
-func EnvironmentNameToId(input string, client *Client, tryGetFirst bool) (string, error) {
-	if tryGetFirst {
-		if env, err := client.GetOrgEnvironment(input); err == nil {
-			return env.GetId(), err
-		}
-	}
-	envs, err := client.ListOrgEnvironments()
-	if err != nil {
-		return input, err
-	}
-	return ConvertV2NameToId(input, ConvertToPtrSlice(envs))
 }
 
 // IamPoolNameToId attempts to convert from a valid iam pool name to its ID, if it fails it returns an error

@@ -32,17 +32,17 @@ func NewDynamicContext(context *v1.Context, v2Client *ccloudv2.Client) *DynamicC
 }
 
 func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, isTest bool) error {
-	if environment, _ := cmd.Flags().GetString("environment"); environment != "" {
+	if environmentId, _ := cmd.Flags().GetString("environment"); environmentId != "" {
 		if d.GetCredentialType() == v1.APIKey {
 			output.ErrPrintln("WARNING: The `--environment` flag is ignored when using API key credentials.")
 		} else {
-			environment, err := ccloudv2.EnvironmentNameToId(environment, d.V2Client, true)
+			ctx := d.Config.Context()
+			environment, err := d.V2Client.GetOrgEnvironment(environmentId)
 			if err != nil {
 				return errors.NewErrorWithSuggestions(err.Error(), errors.NotValidEnvironmentIdSuggestions)
 			}
-			ctx := d.Config.Context()
 			d.Config.SetOverwrittenCurrentEnvironment(ctx.CurrentEnvironment)
-			ctx.SetCurrentEnvironment(environment)
+			ctx.SetCurrentEnvironment(environment.GetId())
 		}
 	}
 
