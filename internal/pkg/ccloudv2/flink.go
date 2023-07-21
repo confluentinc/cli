@@ -12,7 +12,7 @@ import (
 func newFlinkClient(url, userAgent string, unsafeTrace bool) *flinkv2.APIClient {
 	cfg := flinkv2.NewConfiguration()
 	cfg.Debug = unsafeTrace
-	cfg.HTTPClient = newRetryableHttpClient(unsafeTrace)
+	cfg.HTTPClient = NewRetryableHttpClient(unsafeTrace)
 	cfg.Servers = flinkv2.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 
