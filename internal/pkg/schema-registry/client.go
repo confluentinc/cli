@@ -3,8 +3,9 @@ package schemaregistry
 import (
 	"context"
 
-	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
+
+	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 )
 
 type Client struct {
