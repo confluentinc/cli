@@ -47,13 +47,14 @@ var Manager launchDarklyManager
 var attributes = []string{"user.resource_id", "org.resource_id", "environment.id", "cli.version", "cluster.id", "cluster.physicalClusterId", "cli.command", "cli.flags"}
 
 type launchDarklyManager struct {
-	cliClient                *sling.Sling
-	ccloudClient             func(v1.LaunchDarklyClient) *sling.Sling
-	Command                  *cobra.Command
-	flags                    []string
-	isDisabled               bool
-	timeoutSuggestionPrinted bool
-	version                  *version.Version
+	cliClient             *sling.Sling
+	ccloudClient          func(v1.LaunchDarklyClient) *sling.Sling
+	Command               *cobra.Command
+	flags                 []string
+	hideTimeoutWarning    bool
+	isDisabled            bool
+	timeoutWarningPrinted bool
+	version               *version.Version
 }
 
 func Init(version *version.Version, isTest, isDisabledConfig bool) {
@@ -83,11 +84,12 @@ func Init(version *version.Version, isTest, isDisabledConfig bool) {
 	}
 
 	Manager = launchDarklyManager{
-		cliClient:                sling.New().Base(cliBasePath),
-		ccloudClient:             ccloudClientProvider,
-		version:                  version,
-		timeoutSuggestionPrinted: false,
-		isDisabled:               isDisabledConfig,
+		cliClient:             sling.New().Base(cliBasePath),
+		ccloudClient:          ccloudClientProvider,
+		hideTimeoutWarning:    isTest,
+		isDisabled:            isDisabledConfig,
+		timeoutWarningPrinted: false,
+		version:               version,
 	}
 }
 
@@ -183,10 +185,10 @@ func (ld *launchDarklyManager) fetchFlags(user lduser.User, client v1.LaunchDark
 	}
 	if err != nil {
 		log.CliLogger.Debug(resp)
-		if !ld.timeoutSuggestionPrinted {
+		if !ld.hideTimeoutWarning && !ld.timeoutWarningPrinted {
 			output.ErrPrintln("WARNING: Failed to fetch feature flags.")
 			output.ErrPrintln(errors.ComposeSuggestionsMessage(`Check connectivity to https://confluent.cloud or set "disable_feature_flags": true in ~/.confluent/config.json.`))
-			ld.timeoutSuggestionPrinted = true
+			ld.timeoutWarningPrinted = true
 		}
 
 		return flagVals, fmt.Errorf("error fetching feature flags: %w", err)
