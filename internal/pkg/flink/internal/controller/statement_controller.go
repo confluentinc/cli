@@ -19,6 +19,7 @@ type StatementController struct {
 	applicationController types.ApplicationControllerInterface
 	store                 types.StoreInterface
 	consoleParser         prompt.ConsoleParser
+	createdStatementName  string
 }
 
 func NewStatementController(applicationController types.ApplicationControllerInterface, store types.StoreInterface, consoleParser prompt.ConsoleParser) types.StatementControllerInterface {
@@ -35,6 +36,7 @@ func (c *StatementController) ExecuteStatement(statementToExecute string) (*type
 		c.handleStatementError(*err)
 		return nil, err
 	}
+	c.createdStatementName = processedStatement.StatementName
 	processedStatement.PrintStatusMessage()
 
 	processedStatement, err = c.waitForStatementToBeReadyOrError(*processedStatement)
@@ -135,4 +137,8 @@ func (c *StatementController) isDetachEvent() bool {
 		}
 	}
 	return false
+}
+
+func (c *StatementController) CleanupStatement() {
+	c.store.DeleteStatement(c.createdStatementName)
 }

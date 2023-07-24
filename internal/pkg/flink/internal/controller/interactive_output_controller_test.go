@@ -48,14 +48,16 @@ func (s *InteractiveOutputControllerTestSuite) TestCloseTableViewOnUserInput() {
 
 	for _, testCase := range testCases {
 		s.T().Run(testCase.name, func(t *testing.T) {
-			// Expected mock calls
-			s.resultFetcher.EXPECT().Close()
+			// unblock app.Run() after sleeping for a second
+			go func() {
+				time.Sleep(time.Second)
+				result := s.interactiveOutputController.inputCapture(testCase.input)
+				require.Nil(s.T(), result)
+			}()
 
-			// When
-			result := s.interactiveOutputController.inputCapture(testCase.input)
+			err := s.interactiveOutputController.app.Run()
 
-			// Then
-			require.Nil(s.T(), result)
+			require.NoError(t, err)
 		})
 	}
 }
