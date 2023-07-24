@@ -30,7 +30,7 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	}
 
 	cmd.AddCommand(c.newClusterCommand(cfg))
-	cmd.AddCommand(c.newCompatibilityCommand())
+	cmd.AddCommand(c.newCompatibilityCommand(cfg))
 	cmd.AddCommand(c.newConfigCommand(cfg))
 	cmd.AddCommand(c.newExporterCommand(cfg))
 	cmd.AddCommand(c.newRegionCommand())

@@ -9,6 +9,7 @@ import (
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -17,27 +18,30 @@ type validateOut struct {
 	IsCompatible bool `human:"Compatible" serialized:"is_compatible"`
 }
 
-func (c *command) newCompatibilityValidateCommand() *cobra.Command {
+func (c *command) newCompatibilityValidateCommand(cfg *v1.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "validate",
 		Short: "Validate a schema with a subject version.",
 		Long:  "Validate that a schema is compatible against a given subject version.",
 		Args:  cobra.NoArgs,
 		RunE:  c.compatibilityValidate,
-		Example: examples.BuildExampleString(
-			examples.Example{
-				Text: `Validate the compatibility of schema "payments" against the latest version of subject "records".`,
-				Code: "confluent schema-registry compatibility validate --schema payments.avsc --type avro --subject records --version latest",
-			},
-		),
 	}
+
+	example := examples.Example{
+		Text: `Validate the compatibility of schema "payments" against the latest version of subject "records".`,
+		Code: "confluent schema-registry compatibility validate --schema payments.avsc --type avro --subject records --version latest",
+	}
+	if !cfg.IsCloudLogin() {
+		example.Code += " " + OnPremAuthenticationMsg
+	}
+	cmd.Example = examples.BuildExampleString(example)
 
 	cmd.Flags().String("schema", "", "The path to the schema file.")
 	pcmd.AddSchemaTypeFlag(cmd)
 	cmd.Flags().String("subject", "", SubjectUsage)
 	cmd.Flags().String("version", "", `Version of the schema. Can be a specific version or "latest".`)
 	cmd.Flags().String("references", "", "The path to the references file.")
-	if c.Config.IsCloudLogin() {
+	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	} else {
 		cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
