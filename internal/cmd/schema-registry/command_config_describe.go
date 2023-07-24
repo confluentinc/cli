@@ -1,9 +1,8 @@
 package schemaregistry
 
 import (
-	"context"
 	"encoding/json"
-	"net/http"
+	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -12,6 +11,7 @@ import (
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -26,58 +26,59 @@ type configOut struct {
 	RulesetOverrides   string `human:"Ruleset Overrides,omitempty" serialized:"ruleset_overrides,omitempty"`
 }
 
-func (c *command) newConfigDescribeCommand() *cobra.Command {
+func (c *command) newConfigDescribeCommand(cfg *v1.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe",
-		Short: "Describe top-level or subject-level schema compatibility.",
+		Short: "Describe top-level or subject-level schema configuration.",
 		Args:  cobra.NoArgs,
 		RunE:  c.configDescribe,
-		Example: examples.BuildExampleString(
-			examples.Example{
-				Text: `Describe the configuration of subject "payments".`,
-				Code: "confluent schema-registry config describe --subject payments",
-			},
-			examples.Example{
-				Text: "Describe the top-level configuration.",
-				Code: "confluent schema-registry config describe",
-			},
-		),
 	}
 
+	example1 := examples.Example{
+		Text: `Describe the configuration of subject "payments".`,
+		Code: "confluent schema-registry config describe --subject payments",
+	}
+	example2 := examples.Example{
+		Text: "Describe the top-level configuration.",
+		Code: "confluent schema-registry config describe",
+	}
+	if !cfg.IsCloudLogin() {
+		example1.Code += " " + OnPremAuthenticationMsg
+		example2.Code += " " + OnPremAuthenticationMsg
+	}
+	cmd.Example = examples.BuildExampleString(example1, example2)
+
 	cmd.Flags().String("subject", "", SubjectUsage)
-	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
-	pcmd.AddApiSecretFlag(cmd)
+	if cfg.IsCloudLogin() {
+		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	} else {
+		cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
+	}
 	pcmd.AddContextFlag(cmd, c.CLICommand)
-	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
 
 func (c *command) configDescribe(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := getApiClient(cmd, c.Config, c.Version)
+	client, err := c.GetSchemaRegistryClient()
 	if err != nil {
 		return err
 	}
 
-	return describeSchemaConfig(cmd, srClient, ctx)
-}
-
-func describeSchemaConfig(cmd *cobra.Command, srClient *srsdk.APIClient, ctx context.Context) error {
 	subject, err := cmd.Flags().GetString("subject")
 	if err != nil {
 		return err
 	}
 
 	var config srsdk.Config
-	var httpResp *http.Response
 	if subject != "" {
-		config, httpResp, err = srClient.DefaultApi.GetSubjectLevelConfig(ctx, subject, nil)
+		config, err = client.GetSubjectLevelConfig(subject)
 		if err != nil {
-			return errors.CatchNoSubjectLevelConfigError(err, httpResp, subject)
+			return catchSubjectLevelConfigNotFoundError(err, subject)
 		}
 	} else {
-		config, _, err = srClient.DefaultApi.GetTopLevelConfig(ctx)
+		config, err = client.GetTopLevelConfig()
 		if err != nil {
 			return err
 		}
@@ -125,6 +126,14 @@ func describeSchemaConfig(cmd *cobra.Command, srClient *srsdk.APIClient, ctx con
 	return table.PrintWithAutoWrap(false)
 }
 
+func catchSubjectLevelConfigNotFoundError(err error, subject string) error {
+	if err != nil && strings.Contains(err.Error(), "Not Found") {
+		return errors.New(fmt.Sprintf(`subject "%s" does not have subject-level compatibility configured`, subject))
+	}
+
+	return err
+}
+
 func prettyJson(str []byte) string {
-	return strings.TrimSuffix(string(pretty.Pretty(str)), "\n")
+	return strings.TrimSpace(string(pretty.Pretty(str)))
 }
