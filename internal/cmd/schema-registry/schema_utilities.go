@@ -70,7 +70,7 @@ func RegisterSchemaWithAuth(cmd *cobra.Command, schemaCfg *RegisterSchemaConfigs
 	return response.Id, nil
 }
 
-func ReadSchemaRefs(cmd *cobra.Command) ([]srsdk.SchemaReference, error) {
+func ReadSchemaReferences(cmd *cobra.Command) ([]srsdk.SchemaReference, error) {
 	var refs []srsdk.SchemaReference
 	references, err := cmd.Flags().GetString("references")
 	if err != nil {
