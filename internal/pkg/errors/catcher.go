@@ -384,19 +384,3 @@ func CatchSchemaNotFoundError(err error, r *http.Response) error {
 
 	return err
 }
-
-func CatchNoSubjectLevelConfigError(err error, r *http.Response, subject string) error {
-	if err == nil {
-		return nil
-	}
-
-	if r == nil {
-		return err
-	}
-
-	if strings.Contains(r.Status, "Not Found") {
-		return errors.New(fmt.Sprintf(NoSubjectLevelConfigErrorMsg, subject))
-	}
-
-	return err
-}

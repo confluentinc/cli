@@ -42,6 +42,11 @@ func (c *Client) UpdateTopLevelMode(req srsdk.ModeUpdateRequest) (srsdk.ModeUpda
 	return req, err
 }
 
+func (c *Client) GetSubjectLevelConfig(subject string) (srsdk.Config, error) {
+	config, _, err := c.DefaultApi.GetSubjectLevelConfig(c.context(), subject, nil)
+	return config, err
+}
+
 func (c *Client) TestCompatibilityBySubjectName(subject, version string, body srsdk.RegisterSchemaRequest) (srsdk.CompatibilityCheckResponse, error) {
 	res, _, err := c.DefaultApi.TestCompatibilityBySubjectName(c.context(), subject, version, body, nil)
 	return res, err
