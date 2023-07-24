@@ -173,9 +173,7 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 
 			statusDetail := s.getStatusDetail(statementObj)
 			if err != nil {
-				return nil, &types.StatementError{
-					Message:        err.Error(),
-					FailureMessage: statusDetail}
+				return nil, types.NewStatementErrorFailureMsg(err, statusDetail)
 			}
 
 			phase = types.PHASE(statementObj.Status.GetPhase())

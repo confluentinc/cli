@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )

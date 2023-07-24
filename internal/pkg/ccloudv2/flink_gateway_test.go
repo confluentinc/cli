@@ -1,18 +1,20 @@
 package ccloudv2
 
 import (
-	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/stretchr/testify/require"
 	"io"
 	"net/http"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/require"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 func TestFlinkErrorCodeWhenErrors(t *testing.T) {
 	res := &http.Response{Body: io.NopCloser(strings.NewReader(`{"errors":[{"detail":"There is an error"}]}`)), StatusCode: http.StatusMethodNotAllowed}
 
-	err := newFlinkError(errors.New("Some Error"), res)
+	err := makeFlinkError(errors.New("Some Error"), res)
 	require.Error(t, err)
 
 	flinkError, ok := err.(FlinkError)
@@ -24,7 +26,7 @@ func TestFlinkErrorCodeWhenErrors(t *testing.T) {
 func TestFlinkErrorCodeWhenErrorMessage(t *testing.T) {
 	res := &http.Response{Body: io.NopCloser(strings.NewReader(`{"message":"unauthorized"}`)), StatusCode: http.StatusUnauthorized}
 
-	err := newFlinkError(errors.New("Some Error"), res)
+	err := makeFlinkError(errors.New("Some Error"), res)
 	require.Error(t, err)
 
 	flinkError, ok := err.(FlinkError)
@@ -36,7 +38,7 @@ func TestFlinkErrorCodeWhenErrorMessage(t *testing.T) {
 func TestFlinkErrorCodeWhenNestedMessage(t *testing.T) {
 	res := &http.Response{Body: io.NopCloser(strings.NewReader(`{"error":{"message":"gateway error"}}`)), StatusCode: http.StatusMethodNotAllowed}
 
-	err := newFlinkError(errors.New("Some Error"), res)
+	err := makeFlinkError(errors.New("Some Error"), res)
 	require.Error(t, err)
 
 	flinkError, ok := err.(FlinkError)
@@ -48,7 +50,7 @@ func TestFlinkErrorCodeWhenNestedMessage(t *testing.T) {
 func TestFlinkErrorOnlyStatusCode(t *testing.T) {
 	res := &http.Response{Body: io.NopCloser(strings.NewReader("")), StatusCode: http.StatusMethodNotAllowed}
 
-	err := newFlinkError(errors.New("Some Error"), res)
+	err := makeFlinkError(errors.New("Some Error"), res)
 	require.Error(t, err)
 
 	flinkError, ok := err.(FlinkError)
