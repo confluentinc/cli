@@ -29,7 +29,7 @@ type configOut struct {
 func (c *command) newConfigDescribeCommand(cfg *v1.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe",
-		Short: "Describe top-level or subject-level schema compatibility.",
+		Short: "Describe top-level or subject-level schema configuration.",
 		Args:  cobra.NoArgs,
 		RunE:  c.configDescribe,
 	}
