@@ -6,6 +6,7 @@ import (
 	"time"
 
 	fColor "github.com/fatih/color"
+	"github.com/samber/lo"
 
 	"github.com/confluentinc/go-prompt"
 
@@ -129,17 +130,9 @@ func (c *StatementController) userInputIsOneOf(keyEvents ...func(key prompt.Key)
 }
 
 func isCancelEvent(key prompt.Key) bool {
-	switch key {
-	case prompt.ControlC, prompt.ControlD, prompt.ControlQ, prompt.Escape:
-		return true
-	}
-	return false
+	return lo.Contains([]prompt.Key{prompt.ControlC, prompt.ControlD, prompt.ControlQ, prompt.Escape}, key)
 }
 
 func isDetachEvent(key prompt.Key) bool {
-	switch key {
-	case prompt.ControlM, prompt.Enter:
-		return true
-	}
-	return false
+	return lo.Contains([]prompt.Key{prompt.ControlM, prompt.Enter}, key)
 }
