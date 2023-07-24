@@ -9,10 +9,10 @@ Validate the compatibility of schema "payments" against the latest version of su
   $ confluent schema-registry compatibility validate --schema payments.avsc --type avro --subject records --version latest
 
 Flags:
-      --subject string       Subject of the schema.
-      --version string       Version of the schema. Can be a specific version or "latest".
       --schema string        The path to the schema file.
       --type string          Specify the schema type as "avro", "json", or "protobuf".
+      --subject string       Subject of the schema.
+      --version string       Version of the schema. Can be a specific version or "latest".
       --references string    The path to the references file.
       --environment string   Environment ID.
       --context string       CLI context name.
