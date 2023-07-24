@@ -9,14 +9,17 @@ import (
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	"github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1"
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	"github.com/confluentinc/cli/internal/pkg/auth"
+	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/hub"
 	schemaregistry "github.com/confluentinc/cli/internal/pkg/schema-registry"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
@@ -186,9 +189,37 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient() (*schemaregistry.Cli
 			return nil, errors.NewSRNotEnabledError()
 		}
 
+		unsafeTrace, err := c.Flags().GetBool("unsafe-trace")
+		if err != nil {
+			return nil, err
+		}
+
+		configuration := srsdk.NewConfiguration()
+		configuration.BasePath = clusters[0].Spec.GetHttpEndpoint()
+		configuration.DefaultHeader = map[string]string{"target-sr-cluster": clusters[0].GetId()}
+		configuration.UserAgent = c.Config.Version.UserAgent
+		configuration.Debug = unsafeTrace
+		configuration.HTTPClient = ccloudv2.NewRetryableHttpClient(unsafeTrace)
+
 		dataplaneToken, err := auth.GetDataplaneToken(ctx.GetState(), ctx.GetPlatformServer())
 		if err != nil {
 			return nil, err
+		}
+
+		c.schemaRegistryClient = schemaregistry.NewClient(configuration, dataplaneToken)
+	}
+
+	return c.schemaRegistryClient, nil
+}
+
+func (c *AuthenticatedCLICommand) GetSchemaRegistryClientOnPrem(authToken string) (*schemaregistry.Client, error) {
+	if c.schemaRegistryClient == nil {
+		schemaRegistryEndpoint, err := c.Flags().GetString("schema-registry-endpoint")
+		if err != nil {
+			return nil, err
+		}
+		if schemaRegistryEndpoint == "" {
+			return nil, errors.New(errors.SREndpointNotSpecifiedErrorMsg)
 		}
 
 		unsafeTrace, err := c.Flags().GetBool("unsafe-trace")
@@ -196,7 +227,26 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient() (*schemaregistry.Cli
 			return nil, err
 		}
 
-		c.schemaRegistryClient = schemaregistry.NewClient(clusters[0].Spec.GetHttpEndpoint(), c.Config.Version.UserAgent, unsafeTrace, dataplaneToken, clusters[0].GetId())
+		caLocation, err := c.Flags().GetString("ca-location")
+		if err != nil {
+			return nil, err
+		}
+		if caLocation == "" {
+			caLocation = pauth.GetEnvWithFallback(pauth.ConfluentPlatformCACertPath, pauth.DeprecatedConfluentPlatformCACertPath)
+		}
+
+		client, err := utils.GetCAClient(caLocation)
+		if err != nil {
+			return nil, err
+		}
+
+		cfg := srsdk.NewConfiguration()
+		cfg.BasePath = schemaRegistryEndpoint
+		cfg.UserAgent = c.Config.Version.UserAgent
+		cfg.Debug = unsafeTrace
+		cfg.HTTPClient = client
+
+		c.schemaRegistryClient = schemaregistry.NewClient(cfg, authToken)
 	}
 
 	return c.schemaRegistryClient, nil
