@@ -27,7 +27,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/serdes"
-	"github.com/confluentinc/cli/internal/pkg/types"
 )
 
 type command struct {
@@ -322,31 +321,22 @@ func (c *command) getBindings(clusterId, topicName string) (*bindings, error) {
 	customConfigMap := make(map[string]string)
 	topicConfigMap := make(map[string]any)
 
-	// Determine whether the given config value can be put into the AsyncAPI Kakfa bindings or put into our custom struct for extra configs
-	topicConfigOptions := types.NewSet(
-		"cleanup.policy",
-		"delete.retention.ms",
-		"max.message.bytes",
-		"retention.bytes",
-		"retention.ms",
-	)
+	// Determine whether the given config value can be put into the AsyncAPI Kafka bindings or put into our custom struct for extra configs
 	for _, config := range configs.Data {
-		if topicConfigOptions.Contains(config.GetName()) {
-			switch config.GetName() {
-			case "cleanup.policy":
-				topicConfigMap[config.GetName()] = strings.Split(config.GetValue(), ",")
-			case "max.message.bytes":
-				topicConfigMap[config.GetName()], err = strconv.ParseInt(config.GetValue(), 10, 32)
-				if err != nil {
-					return nil, err
-				}
-			default:
-				topicConfigMap[config.GetName()], err = strconv.ParseInt(config.GetValue(), 10, 64)
-				if err != nil {
-					return nil, err
-				}
+		switch config.GetName() {
+		case "cleanup.policy":
+			topicConfigMap[config.GetName()] = strings.Split(config.GetValue(), ",")
+		case "max.message.bytes":
+			topicConfigMap[config.GetName()], err = strconv.ParseInt(config.GetValue(), 10, 32)
+			if err != nil {
+				return nil, err
 			}
-		} else {
+		case "delete.retention.ms", "retention.bytes", "retention.ms":
+			topicConfigMap[config.GetName()], err = strconv.ParseInt(config.GetValue(), 10, 64)
+			if err != nil {
+				return nil, err
+			}
+		default:
 			customConfigMap[config.GetName()] = config.GetValue()
 		}
 	}
