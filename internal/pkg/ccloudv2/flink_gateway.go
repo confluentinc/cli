@@ -151,13 +151,20 @@ var _ errors.ErrorWithSuggestions = (*FlinkError)(nil)
 
 // Extends error with status code, including suggestion if err type is ErrorWithSuggestion
 func makeFlinkError(err error, r *http.Response) error {
+	if err == nil {
+		return nil
+	}
 	err = errors.CatchCCloudV2Error(err, r)
 	suggestion := ""
 	if suggester, ok := err.(errors.ErrorWithSuggestions); ok {
 		suggestion = suggester.GetSuggestionsMsg()
 	}
+	var statusCode int
+	if r != nil {
+		statusCode = r.StatusCode
+	}
 	return FlinkError{
-		statusCode:     r.StatusCode,
+		statusCode:     statusCode,
 		errorMsg:       err.Error(),
 		suggestionsMsg: suggestion,
 	}

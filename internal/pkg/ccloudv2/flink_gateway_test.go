@@ -23,6 +23,23 @@ func TestFlinkErrorCodeWhenErrors(t *testing.T) {
 	require.Equal(t, err.Error(), flinkError.Error())
 }
 
+func TestFlinkErrorNil(t *testing.T) {
+	res := &http.Response{Body: io.NopCloser(strings.NewReader(`{"errors":[{"detail":"There is an error"}]}`)), StatusCode: http.StatusMethodNotAllowed}
+
+	err := makeFlinkError(nil, res)
+	require.Nil(t, err)
+}
+
+func TestFlinkErrorNilHttpRes(t *testing.T) {
+	err := makeFlinkError(errors.New("Some Error"), nil)
+	require.Error(t, err)
+
+	flinkError, ok := err.(FlinkError)
+	require.True(t, ok)
+	require.Equal(t, 0, flinkError.statusCode)
+	require.Equal(t, err.Error(), flinkError.Error())
+}
+
 func TestFlinkErrorCodeWhenErrorMessage(t *testing.T) {
 	res := &http.Response{Body: io.NopCloser(strings.NewReader(`{"message":"unauthorized"}`)), StatusCode: http.StatusUnauthorized}
 
