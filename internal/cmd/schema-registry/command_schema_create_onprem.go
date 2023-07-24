@@ -68,7 +68,7 @@ func (c *command) schemaCreateOnPrem(cmd *cobra.Command, _ []string) error {
 	}
 	schemaType = strings.ToUpper(schemaType)
 
-	refs, err := ReadSchemaRefs(cmd)
+	refs, err := ReadSchemaReferences(cmd)
 	if err != nil {
 		return err
 	}
