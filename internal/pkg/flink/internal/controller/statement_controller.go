@@ -6,6 +6,7 @@ import (
 	"time"
 
 	fColor "github.com/fatih/color"
+	"github.com/samber/lo"
 
 	"github.com/confluentinc/go-prompt"
 
@@ -64,7 +65,7 @@ func (c *StatementController) waitForStatementToBeReadyOrError(processedStatemen
 	ctx, cancelWaitPendingStatement := context.WithCancel(context.Background())
 	defer cancelWaitPendingStatement()
 
-	go c.listenForUserInputEvent(ctx, c.isCancelEvent, cancelWaitPendingStatement)
+	go c.listenForUserInputEvent(ctx, c.userInputIsOneOf(isCancelEvent), cancelWaitPendingStatement)
 
 	readyStatement, err := c.store.WaitPendingStatement(ctx, processedStatement)
 	if err != nil {
@@ -88,18 +89,6 @@ func (c *StatementController) listenForUserInputEvent(ctx context.Context, userI
 	}
 }
 
-func (c *StatementController) isCancelEvent() bool {
-	if b, err := c.consoleParser.Read(); err == nil && len(b) > 0 {
-		pressedKey := prompt.Key(b[0])
-
-		switch pressedKey {
-		case prompt.ControlC, prompt.ControlD, prompt.ControlQ, prompt.Escape:
-			return true
-		}
-	}
-	return false
-}
-
 func (c *StatementController) waitForStatementToBeInTerminalStateOrError(processedStatement types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError) {
 	readyStatementWithResults, err := c.store.FetchStatementResults(processedStatement)
 	if err != nil {
@@ -113,7 +102,7 @@ func (c *StatementController) waitForStatementToBeInTerminalStateOrError(process
 	ctx, cancelWaitForTerminalStatementState := context.WithCancel(context.Background())
 	defer cancelWaitForTerminalStatementState()
 
-	go c.listenForUserInputEvent(ctx, c.isDetachEvent, cancelWaitForTerminalStatementState)
+	go c.listenForUserInputEvent(ctx, c.userInputIsOneOf(isDetachEvent, isCancelEvent), cancelWaitForTerminalStatementState)
 
 	output.Printf("Statement phase is %s.\n", readyStatementWithResults.Status)
 	col := fColor.New(color.AccentColor)
@@ -125,14 +114,25 @@ func (c *StatementController) waitForStatementToBeInTerminalStateOrError(process
 	return terminalStatement, nil
 }
 
-func (c *StatementController) isDetachEvent() bool {
-	if b, err := c.consoleParser.Read(); err == nil && len(b) > 0 {
-		pressedKey := prompt.Key(b[0])
+func (c *StatementController) userInputIsOneOf(keyEvents ...func(key prompt.Key) bool) func() bool {
+	return func() bool {
+		if b, err := c.consoleParser.Read(); err == nil && len(b) > 0 {
+			pressedKey := prompt.Key(b[0])
 
-		switch pressedKey {
-		case prompt.ControlM, prompt.Enter:
-			return true
+			for _, isKeyEvent := range keyEvents {
+				if isKeyEvent(pressedKey) {
+					return true
+				}
+			}
 		}
+		return false
 	}
-	return false
+}
+
+func isCancelEvent(key prompt.Key) bool {
+	return lo.Contains([]prompt.Key{prompt.ControlC, prompt.ControlD, prompt.ControlQ, prompt.Escape}, key)
+}
+
+func isDetachEvent(key prompt.Key) bool {
+	return lo.Contains([]prompt.Key{prompt.ControlM, prompt.Enter}, key)
 }
