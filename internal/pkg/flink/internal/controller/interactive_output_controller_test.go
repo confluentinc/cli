@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/confluentinc/cli/internal/pkg/flink/components"
+	"github.com/confluentinc/cli/internal/pkg/flink/test"
 	"github.com/confluentinc/cli/internal/pkg/flink/test/mock"
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
 )
@@ -33,7 +34,7 @@ func (s *InteractiveOutputControllerTestSuite) SetupTest() {
 	s.tableView = mock.NewMockTableViewInterface(ctrl)
 	s.resultFetcher = mock.NewMockResultFetcherInterface(ctrl)
 	s.dummyTViewApp = tview.NewApplication()
-	s.interactiveOutputController = NewInteractiveOutputController(s.tableView, s.resultFetcher, false).(*InteractiveOutputController)
+	s.interactiveOutputController = NewInteractiveOutputController(s.tableView, s.resultFetcher, func() {}, false).(*InteractiveOutputController)
 }
 
 func (s *InteractiveOutputControllerTestSuite) TestCloseTableViewOnUserInput() {
@@ -48,14 +49,16 @@ func (s *InteractiveOutputControllerTestSuite) TestCloseTableViewOnUserInput() {
 
 	for _, testCase := range testCases {
 		s.T().Run(testCase.name, func(t *testing.T) {
-			// Expected mock calls
-			s.resultFetcher.EXPECT().Close()
+			// unblock app.Run() after sleeping for a second
+			go func() {
+				time.Sleep(time.Second)
+				result := s.interactiveOutputController.inputCapture(testCase.input)
+				require.Nil(s.T(), result)
+			}()
 
-			// When
-			result := s.interactiveOutputController.inputCapture(testCase.input)
+			err := s.interactiveOutputController.app.Run()
 
-			// Then
-			require.Nil(s.T(), result)
+			require.NoError(t, err)
 		})
 	}
 }
@@ -368,4 +371,21 @@ func (s *InteractiveOutputControllerTestSuite) TestJumpUpOrDownScrollsWhenRefres
 			require.Nil(t, result)
 		})
 	}
+}
+
+func (s *InteractiveOutputControllerTestSuite) TestPanicRecovery() {
+	// Given
+	callCount := 0
+	s.interactiveOutputController.reportUsage = func() {
+		callCount++
+	}
+	s.resultFetcher.EXPECT().Close()
+
+	// Then
+	actual := test.RunAndCaptureSTDOUT(s.T(), func() {
+		defer s.interactiveOutputController.panicRecovery()
+		panic("test")
+	})
+	cupaloy.SnapshotT(s.T(), actual)
+	require.Equal(s.T(), 1, callCount)
 }
