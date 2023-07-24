@@ -179,74 +179,68 @@ func (c *AuthenticatedCLICommand) GetMetricsClient() (*ccloudv2.MetricsClient, e
 
 func (c *AuthenticatedCLICommand) GetSchemaRegistryClient() (*schemaregistry.Client, error) {
 	if c.schemaRegistryClient == nil {
-		ctx := c.Config.Context()
+		if c.Config.IsCloudLogin() {
+			clusters, err := c.V2Client.GetSchemaRegistryClustersByEnvironment(c.Context.GetCurrentEnvironment())
+			if err != nil {
+				return nil, err
+			}
+			if len(clusters) == 0 {
+				return nil, errors.NewSRNotEnabledError()
+			}
 
-		clusters, err := c.V2Client.GetSchemaRegistryClustersByEnvironment(ctx.GetCurrentEnvironment())
-		if err != nil {
-			return nil, err
+			unsafeTrace, err := c.Flags().GetBool("unsafe-trace")
+			if err != nil {
+				return nil, err
+			}
+
+			configuration := srsdk.NewConfiguration()
+			configuration.BasePath = clusters[0].Spec.GetHttpEndpoint()
+			configuration.DefaultHeader = map[string]string{"target-sr-cluster": clusters[0].GetId()}
+			configuration.UserAgent = c.Config.Version.UserAgent
+			configuration.Debug = unsafeTrace
+			configuration.HTTPClient = ccloudv2.NewRetryableHttpClient(unsafeTrace)
+
+			dataplaneToken, err := auth.GetDataplaneToken(c.Context.GetState(), c.Context.GetPlatformServer())
+			if err != nil {
+				return nil, err
+			}
+
+			c.schemaRegistryClient = schemaregistry.NewClient(configuration, dataplaneToken)
+		} else {
+			schemaRegistryEndpoint, err := c.Flags().GetString("schema-registry-endpoint")
+			if err != nil {
+				return nil, err
+			}
+			if schemaRegistryEndpoint == "" {
+				return nil, errors.New(errors.SREndpointNotSpecifiedErrorMsg)
+			}
+
+			unsafeTrace, err := c.Flags().GetBool("unsafe-trace")
+			if err != nil {
+				return nil, err
+			}
+
+			caLocation, err := c.Flags().GetString("ca-location")
+			if err != nil {
+				return nil, err
+			}
+			if caLocation == "" {
+				caLocation = pauth.GetEnvWithFallback(pauth.ConfluentPlatformCACertPath, pauth.DeprecatedConfluentPlatformCACertPath)
+			}
+
+			client, err := utils.GetCAClient(caLocation)
+			if err != nil {
+				return nil, err
+			}
+
+			cfg := srsdk.NewConfiguration()
+			cfg.BasePath = schemaRegistryEndpoint
+			cfg.UserAgent = c.Config.Version.UserAgent
+			cfg.Debug = unsafeTrace
+			cfg.HTTPClient = client
+
+			c.schemaRegistryClient = schemaregistry.NewClient(cfg, c.Context.GetAuthToken())
 		}
-		if len(clusters) == 0 {
-			return nil, errors.NewSRNotEnabledError()
-		}
-
-		unsafeTrace, err := c.Flags().GetBool("unsafe-trace")
-		if err != nil {
-			return nil, err
-		}
-
-		configuration := srsdk.NewConfiguration()
-		configuration.BasePath = clusters[0].Spec.GetHttpEndpoint()
-		configuration.DefaultHeader = map[string]string{"target-sr-cluster": clusters[0].GetId()}
-		configuration.UserAgent = c.Config.Version.UserAgent
-		configuration.Debug = unsafeTrace
-		configuration.HTTPClient = ccloudv2.NewRetryableHttpClient(unsafeTrace)
-
-		dataplaneToken, err := auth.GetDataplaneToken(ctx.GetState(), ctx.GetPlatformServer())
-		if err != nil {
-			return nil, err
-		}
-
-		c.schemaRegistryClient = schemaregistry.NewClient(configuration, dataplaneToken)
-	}
-
-	return c.schemaRegistryClient, nil
-}
-
-func (c *AuthenticatedCLICommand) GetSchemaRegistryClientOnPrem(authToken string) (*schemaregistry.Client, error) {
-	if c.schemaRegistryClient == nil {
-		schemaRegistryEndpoint, err := c.Flags().GetString("schema-registry-endpoint")
-		if err != nil {
-			return nil, err
-		}
-		if schemaRegistryEndpoint == "" {
-			return nil, errors.New(errors.SREndpointNotSpecifiedErrorMsg)
-		}
-
-		unsafeTrace, err := c.Flags().GetBool("unsafe-trace")
-		if err != nil {
-			return nil, err
-		}
-
-		caLocation, err := c.Flags().GetString("ca-location")
-		if err != nil {
-			return nil, err
-		}
-		if caLocation == "" {
-			caLocation = pauth.GetEnvWithFallback(pauth.ConfluentPlatformCACertPath, pauth.DeprecatedConfluentPlatformCACertPath)
-		}
-
-		client, err := utils.GetCAClient(caLocation)
-		if err != nil {
-			return nil, err
-		}
-
-		cfg := srsdk.NewConfiguration()
-		cfg.BasePath = schemaRegistryEndpoint
-		cfg.UserAgent = c.Config.Version.UserAgent
-		cfg.Debug = unsafeTrace
-		cfg.HTTPClient = client
-
-		c.schemaRegistryClient = schemaregistry.NewClient(cfg, authToken)
 	}
 
 	return c.schemaRegistryClient, nil
