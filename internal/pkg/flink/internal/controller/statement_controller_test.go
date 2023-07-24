@@ -12,7 +12,7 @@ import (
 
 	"github.com/confluentinc/go-prompt"
 
-	"github.com/confluentinc/cli/internal/pkg/flink/test"
+	testUtils "github.com/confluentinc/cli/internal/pkg/flink/test"
 	"github.com/confluentinc/cli/internal/pkg/flink/test/mock"
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
 )
@@ -148,7 +148,7 @@ func (s *StatementControllerTestSuite) TestExecuteStatementPrintsUserInfo() {
 	s.store.EXPECT().WaitPendingStatement(gomock.Any(), processedStatement).Return(&completedStatement, nil)
 	s.store.EXPECT().FetchStatementResults(completedStatement).Return(&completedStatement, nil)
 
-	stdout := test.RunAndCaptureSTDOUT(s.T(), func() {
+	stdout := testUtils.RunAndCaptureSTDOUT(s.T(), func() {
 		_, _ = s.statementController.ExecuteStatement(statementToExecute)
 	})
 
@@ -166,7 +166,7 @@ func (s *StatementControllerTestSuite) TestExecuteStatementWaitsForCompletedStat
 	s.store.EXPECT().FetchStatementResults(runningStatement).Return(&runningStatement, nil)
 	s.store.EXPECT().WaitForTerminalStatementState(gomock.Any(), runningStatement).Return(&completedStatement, nil)
 
-	stdout := test.RunAndCaptureSTDOUT(s.T(), func() {
+	stdout := testUtils.RunAndCaptureSTDOUT(s.T(), func() {
 		returnedStatement, err := s.statementController.ExecuteStatement(statementToExecute)
 		require.Nil(s.T(), err)
 		require.Equal(s.T(), &completedStatement, returnedStatement)
@@ -186,7 +186,7 @@ func (s *StatementControllerTestSuite) TestExecuteStatementWaitsForFailedState()
 	s.store.EXPECT().FetchStatementResults(runningStatement).Return(&runningStatement, nil)
 	s.store.EXPECT().WaitForTerminalStatementState(gomock.Any(), runningStatement).Return(&failedStatement, nil)
 
-	stdout := test.RunAndCaptureSTDOUT(s.T(), func() {
+	stdout := testUtils.RunAndCaptureSTDOUT(s.T(), func() {
 		returnedStatement, err := s.statementController.ExecuteStatement(statementToExecute)
 		require.Nil(s.T(), err)
 		require.Equal(s.T(), &failedStatement, returnedStatement)
@@ -206,7 +206,7 @@ func (s *StatementControllerTestSuite) TestExecuteStatementWaitsForNonEmptyPageT
 	s.store.EXPECT().FetchStatementResults(runningStatement).Return(&runningStatement, nil)
 	s.store.EXPECT().WaitForTerminalStatementState(gomock.Any(), runningStatement).Return(&runningStatementWithNextPage, nil)
 
-	stdout := test.RunAndCaptureSTDOUT(s.T(), func() {
+	stdout := testUtils.RunAndCaptureSTDOUT(s.T(), func() {
 		returnedStatement, err := s.statementController.ExecuteStatement(statementToExecute)
 		require.Nil(s.T(), err)
 		require.Equal(s.T(), &runningStatementWithNextPage, returnedStatement)
@@ -231,7 +231,7 @@ func (s *StatementControllerTestSuite) TestExecuteStatementReturnsWhenUserDetach
 			return &runningStatement, nil
 		})
 
-	stdout := test.RunAndCaptureSTDOUT(s.T(), func() {
+	stdout := testUtils.RunAndCaptureSTDOUT(s.T(), func() {
 		returnedStatement, err := s.statementController.ExecuteStatement(statementToExecute)
 		require.Nil(s.T(), err)
 		require.Error(s.T(), waitForTerminalStateCtx.Err())
@@ -258,9 +258,9 @@ func (s *StatementControllerTestSuite) TestRenderMsgAndStatusLocalStatements() {
 			want:      "Statement successfully submitted.\n",
 		},
 	}
-	for _, tt := range tests {
-		s.T().Run(tt.name, func(t *testing.T) {
-			actual := test.RunAndCaptureSTDOUT(s.T(), tt.statement.PrintStatusMessage)
+	for _, test := range tests {
+		s.T().Run(test.name, func(t *testing.T) {
+			actual := testUtils.RunAndCaptureSTDOUT(s.T(), test.statement.PrintStatusMessage)
 			cupaloy.SnapshotT(t, actual)
 		})
 	}
@@ -283,9 +283,9 @@ func (s *StatementControllerTestSuite) TestRenderMsgAndStatusNonLocalFailedState
 			want:      "Error: statement submission failed\n",
 		},
 	}
-	for _, tt := range tests {
-		s.T().Run(tt.name, func(t *testing.T) {
-			actual := test.RunAndCaptureSTDOUT(s.T(), tt.statement.PrintStatusMessage)
+	for _, test := range tests {
+		s.T().Run(test.name, func(t *testing.T) {
+			actual := testUtils.RunAndCaptureSTDOUT(s.T(), test.statement.PrintStatusMessage)
 			cupaloy.SnapshotT(t, actual)
 		})
 	}
@@ -308,9 +308,9 @@ func (s *StatementControllerTestSuite) TestRenderMsgAndStatusNonLocalNonFailedSt
 			want:      "Statement successfully submitted.\nFetching results...\n",
 		},
 	}
-	for _, tt := range tests {
-		s.T().Run(tt.name, func(t *testing.T) {
-			actual := test.RunAndCaptureSTDOUT(s.T(), tt.statement.PrintStatusMessage)
+	for _, test := range tests {
+		s.T().Run(test.name, func(t *testing.T) {
+			actual := testUtils.RunAndCaptureSTDOUT(s.T(), test.statement.PrintStatusMessage)
 			cupaloy.SnapshotT(t, actual)
 		})
 	}
@@ -349,10 +349,10 @@ func TestIsCancelEvent(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := isCancelEvent(tt.key)
-			require.Equal(t, tt.want, got)
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got := isCancelEvent(test.key)
+			require.Equal(t, test.want, got)
 		})
 	}
 }
@@ -380,10 +380,10 @@ func TestIsDetachEvent(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := isDetachEvent(tt.key)
-			require.Equal(t, tt.want, got)
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got := isDetachEvent(test.key)
+			require.Equal(t, test.want, got)
 		})
 	}
 }
