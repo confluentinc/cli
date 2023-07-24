@@ -12,7 +12,6 @@ import (
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	"github.com/confluentinc/cli/internal/pkg/auth"
-	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
@@ -225,7 +224,7 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient() (*schemaregistry.Cli
 				return nil, err
 			}
 			if caLocation == "" {
-				caLocation = pauth.GetEnvWithFallback(pauth.ConfluentPlatformCACertPath, pauth.DeprecatedConfluentPlatformCACertPath)
+				caLocation = auth.GetEnvWithFallback(auth.ConfluentPlatformCACertPath, auth.DeprecatedConfluentPlatformCACertPath)
 			}
 
 			client, err := utils.GetCAClient(caLocation)
