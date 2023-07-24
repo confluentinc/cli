@@ -54,10 +54,10 @@ func (s *CLITestSuite) TestSchemaRegistryCompatibilityValidate() {
 
 func (s *CLITestSuite) TestSchemaRegistryConfigDescribe() {
 	tests := []CLITest{
-		{args: fmt.Sprintf("schema-registry config describe --api-key key --api-secret secret --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/config/describe-global.golden"},
-		{args: fmt.Sprintf("schema-registry config describe --api-key key --api-secret secret --environment %s -o json", testserver.SRApiEnvId), fixture: "schema-registry/config/describe-global-json.golden"},
-		{args: fmt.Sprintf("schema-registry config describe --api-key key --api-secret secret --environment %s -o yaml", testserver.SRApiEnvId), fixture: "schema-registry/config/describe-global-yaml.golden"},
-		{args: fmt.Sprintf("schema-registry config describe --subject payments --api-key key --api-secret secret --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/config/describe-subject.golden"},
+		{args: fmt.Sprintf("schema-registry config describe --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/config/describe-global.golden"},
+		{args: fmt.Sprintf("schema-registry config describe --environment %s -o json", testserver.SRApiEnvId), fixture: "schema-registry/config/describe-global-json.golden"},
+		{args: fmt.Sprintf("schema-registry config describe --environment %s -o yaml", testserver.SRApiEnvId), fixture: "schema-registry/config/describe-global-yaml.golden"},
+		{args: fmt.Sprintf("schema-registry config describe --subject payments --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/config/describe-subject.golden"},
 	}
 
 	for _, test := range tests {

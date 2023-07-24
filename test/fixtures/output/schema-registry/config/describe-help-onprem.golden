@@ -1,10 +1,10 @@
-Describe top-level or subject-level schema compatibility.
+Describe top-level or subject-level schema configuration.
 
 Usage:
   confluent schema-registry config describe [flags]
 
 Examples:
-Describe the configuration of a subject "payments".
+Describe the configuration of subject "payments".
 
   $ confluent schema-registry config describe --subject payments --ca-location <ca-file-location> --schema-registry-endpoint <schema-registry-endpoint>
 
