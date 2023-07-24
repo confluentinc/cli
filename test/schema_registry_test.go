@@ -30,7 +30,7 @@ func (s *CLITestSuite) TestSchemaRegistryCluster() {
 		{args: "schema-registry cluster describe", fixture: "schema-registry/cluster/describe.golden"},
 		{args: fmt.Sprintf("schema-registry cluster update --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/cluster/update-missing-flags.golden", exitCode: 1},
 		{args: fmt.Sprintf("schema-registry cluster update --compatibility backward --environment %s", testserver.SRApiEnvId), input: "key\nsecret\n", fixture: "schema-registry/cluster/update-compatibility.golden"},
-		{args: fmt.Sprintf("schema-registry cluster update --mode readwrite --api-key key --api-secret secret --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/cluster/update-mode.golden"},
+		{args: fmt.Sprintf("schema-registry cluster update --mode readwrite --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/cluster/update-mode.golden"},
 	}
 
 	for _, test := range tests {
@@ -41,9 +41,9 @@ func (s *CLITestSuite) TestSchemaRegistryCluster() {
 
 func (s *CLITestSuite) TestSchemaRegistryCompatibilityValidate() {
 	tests := []CLITest{
-		{args: fmt.Sprintf("schema-registry compatibility validate --subject payments --version 1 --schema %s --api-key key --api-secret secret --environment %s", schemaPath, testserver.SRApiEnvId), fixture: "schema-registry/compatibility/validate.golden"},
-		{args: fmt.Sprintf("schema-registry compatibility validate --subject payments --version 1 --schema %s --api-key key --api-secret secret --environment %s -o json", schemaPath, testserver.SRApiEnvId), fixture: "schema-registry/compatibility/validate-json.golden"},
-		{args: fmt.Sprintf("schema-registry compatibility validate --subject payments --version 1 --schema %s --api-key key --api-secret secret --environment %s -o yaml", schemaPath, testserver.SRApiEnvId), fixture: "schema-registry/compatibility/validate-yaml.golden"},
+		{args: fmt.Sprintf("schema-registry compatibility validate --subject payments --version 1 --schema %s --environment %s", schemaPath, testserver.SRApiEnvId), fixture: "schema-registry/compatibility/validate.golden"},
+		{args: fmt.Sprintf("schema-registry compatibility validate --subject payments --version 1 --schema %s --environment %s -o json", schemaPath, testserver.SRApiEnvId), fixture: "schema-registry/compatibility/validate-json.golden"},
+		{args: fmt.Sprintf("schema-registry compatibility validate --subject payments --version 1 --schema %s --environment %s -o yaml", schemaPath, testserver.SRApiEnvId), fixture: "schema-registry/compatibility/validate-yaml.golden"},
 	}
 
 	for _, test := range tests {
