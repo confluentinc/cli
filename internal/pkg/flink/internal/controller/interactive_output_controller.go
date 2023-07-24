@@ -15,34 +15,54 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
+const errorDuringTableView = "Error: internal error occurred while in table view"
+
 type InteractiveOutputController struct {
 	app           *tview.Application
 	tableView     components.TableViewInterface
 	resultFetcher types.ResultFetcherInterface
+	reportUsage   func()
 	isRowViewOpen bool
 	debug         bool
 }
 
-func NewInteractiveOutputController(tableView components.TableViewInterface, resultFetcher types.ResultFetcherInterface, debug bool) types.OutputControllerInterface {
+func NewInteractiveOutputController(tableView components.TableViewInterface, resultFetcher types.ResultFetcherInterface, reportUsage func(), debug bool) types.OutputControllerInterface {
 	return &InteractiveOutputController{
 		app:           tview.NewApplication(),
 		tableView:     tableView,
 		resultFetcher: resultFetcher,
+		reportUsage:   reportUsage,
 		debug:         debug,
 	}
 }
 
 func (t *InteractiveOutputController) VisualizeResults() {
+	defer t.panicRecovery()
 	t.init()
-	t.start()
+	t.startTView()
+	t.close()
 }
 
-func (t *InteractiveOutputController) start() {
+func (t *InteractiveOutputController) panicRecovery() {
+	if r := recover(); r != nil {
+		t.resultFetcher.Close()
+		t.app = tview.NewApplication() // tview resets the screen on panic, so we need to reinitialize it here
+		t.reportUsage()
+		utils.OutputErr(errorDuringTableView)
+	}
+}
+
+func (t *InteractiveOutputController) startTView() {
 	err := t.app.Run()
 	if err != nil {
-		log.CliLogger.Errorf("Error: failed to open table view, %v", err)
-		utils.OutputErr("Error: failed to open table view")
+		log.CliLogger.Errorf("%s, %v", errorDuringTableView, err)
+		utils.OutputErr(errorDuringTableView)
 	}
+}
+
+func (t *InteractiveOutputController) close() {
+	t.resultFetcher.Close()
+	output.Println("Result retrieval aborted.")
 }
 
 func (t *InteractiveOutputController) init() {
@@ -108,17 +128,13 @@ func (t *InteractiveOutputController) inputHandlerTableView(event *tcell.EventKe
 			action()
 		}
 		return nil
-	case tcell.KeyEscape:
-		fallthrough
-	case tcell.KeyCtrlQ:
-		t.exitTViewMode()
+	case tcell.KeyEscape, tcell.KeyCtrlQ:
+		t.app.Stop()
 		return nil
 	case tcell.KeyEnter:
 		t.renderRowView()
 		return nil
-	case tcell.KeyUp:
-		fallthrough
-	case tcell.KeyDown:
+	case tcell.KeyUp, tcell.KeyDown:
 		return t.handleKeyUpOrDownPress(event)
 	}
 	return event
@@ -127,7 +143,7 @@ func (t *InteractiveOutputController) inputHandlerTableView(event *tcell.EventKe
 func (t *InteractiveOutputController) getActionForShortcut(shortcut string) func() {
 	switch shortcut {
 	case components.ExitTableViewShortcut:
-		return t.exitTViewMode
+		return t.app.Stop
 	case components.ToggleTableModeShortcut:
 		return t.toggleTableMode
 	case components.ToggleRefreshShortcut:
@@ -138,12 +154,6 @@ func (t *InteractiveOutputController) getActionForShortcut(shortcut string) func
 		return t.stopRefreshOrScroll(t.tableView.JumpDown)
 	}
 	return nil
-}
-
-func (t *InteractiveOutputController) exitTViewMode() {
-	t.resultFetcher.Close()
-	t.app.Stop()
-	output.Println("Result retrieval aborted.")
 }
 
 func (t *InteractiveOutputController) toggleTableMode() {

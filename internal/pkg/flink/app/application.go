@@ -36,7 +36,7 @@ func synchronizedTokenRefresh(tokenRefreshFunc func() error) func() error {
 	}
 }
 
-func StartApp(client ccloudv2.GatewayClientInterface, tokenRefreshFunc func() error, appOptions types.ApplicationOptions) {
+func StartApp(client ccloudv2.GatewayClientInterface, tokenRefreshFunc func() error, appOptions types.ApplicationOptions, reportUsageFunc func()) {
 	// Load history of previous commands from cache file
 	historyStore := history.LoadHistory()
 
@@ -58,7 +58,7 @@ func StartApp(client ccloudv2.GatewayClientInterface, tokenRefreshFunc func() er
 	// Instantiate Component Controllers
 	inputController := controller.NewInputController(historyStore)
 	statementController := controller.NewStatementController(appController, dataStore, consoleParser)
-	interactiveOutputController := controller.NewInteractiveOutputController(components.NewTableView(), resultFetcher, appOptions.GetVerbose())
+	interactiveOutputController := controller.NewInteractiveOutputController(components.NewTableView(), resultFetcher, reportUsageFunc, appOptions.GetVerbose())
 	basicOutputController := controller.NewBasicOutputController(resultFetcher, inputController.GetWindowWidth)
 
 	app := Application{
