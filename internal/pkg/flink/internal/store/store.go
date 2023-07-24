@@ -86,11 +86,7 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 		s.appOptions.GetOrgResourceId(),
 	)
 	if err != nil {
-		statusDetail := s.getStatusDetail(statementObj)
-		return nil, &types.StatementError{
-			Message:        err.Error(),
-			FailureMessage: statusDetail,
-		}
+		return nil, types.NewStatementErrorFailureMsg(err, s.getStatusDetail(statementObj))
 	}
 	return types.NewProcessedStatement(statementObj), nil
 }
@@ -109,6 +105,7 @@ func (s *Store) WaitPendingStatement(ctx context.Context, statement types.Proces
 			return nil, &types.StatementError{
 				Message:        fmt.Sprintf("can't fetch results. Statement phase is: %s", statementStatus),
 				FailureMessage: updatedStatement.StatusDetail,
+				StatusCode:     types.StatusCode(err),
 			}
 		}
 		statement = *updatedStatement
@@ -132,14 +129,14 @@ func (s *Store) FetchStatementResults(statement types.ProcessedStatement) (*type
 	statementResults := statementResultObj.GetResults()
 	convertedResults, err := results.ConvertToInternalResults(statementResults.GetData(), statement.ResultSchema)
 	if err != nil {
-		return nil, &types.StatementError{Message: err.Error()}
+		return nil, types.NewStatementError(err)
 	}
 	statement.StatementResults = convertedResults
 
 	statementMetadata := statementResultObj.GetMetadata()
 	extractedToken, err := extractPageToken(statementMetadata.GetNext())
 	if err != nil {
-		return nil, &types.StatementError{Message: err.Error()}
+		return nil, types.NewStatementError(err)
 	}
 	statement.PageToken = extractedToken
 	return &statement, nil
@@ -168,7 +165,7 @@ func (s *Store) waitForPendingStatement(ctx context.Context, statementName strin
 		select {
 		case <-ctx.Done():
 			s.DeleteStatement(statementName)
-			return nil, &types.StatementError{Message: "result retrieval aborted. Statement will be deleted", HttpResponseCode: 499}
+			return nil, &types.StatementError{Message: "result retrieval aborted. Statement will be deleted", StatusCode: 499}
 		default:
 			start := time.Now()
 			statementObj, err := s.authenticatedGatewayClient().GetStatement(s.appOptions.GetEnvironmentId(), statementName, s.appOptions.GetOrgResourceId())
@@ -305,6 +302,7 @@ func (s *Store) WaitForTerminalStatementState(ctx context.Context, statement typ
 				return nil, &types.StatementError{
 					Message:        err.Error(),
 					FailureMessage: statusDetail,
+					StatusCode:     types.StatusCode(err),
 				}
 			}
 
