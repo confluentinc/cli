@@ -42,7 +42,7 @@ func (c *command) newConfigDescribeCommand(cfg *v1.Config) *cobra.Command {
 		Text: "Describe the top-level configuration.",
 		Code: "confluent schema-registry config describe",
 	}
-	if !cfg.IsCloudLogin() {
+	if cfg.IsOnPremLogin() {
 		example1.Code += " " + OnPremAuthenticationMsg
 		example2.Code += " " + OnPremAuthenticationMsg
 	}

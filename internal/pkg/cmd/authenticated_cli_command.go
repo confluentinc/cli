@@ -178,33 +178,60 @@ func (c *AuthenticatedCLICommand) GetMetricsClient() (*ccloudv2.MetricsClient, e
 
 func (c *AuthenticatedCLICommand) GetSchemaRegistryClient() (*schemaregistry.Client, error) {
 	if c.schemaRegistryClient == nil {
+		unsafeTrace, err := c.Flags().GetBool("unsafe-trace")
+		if err != nil {
+			return nil, err
+		}
+
 		if c.Config.IsCloudLogin() {
-			clusters, err := c.V2Client.GetSchemaRegistryClustersByEnvironment(c.Context.GetCurrentEnvironment())
-			if err != nil {
-				return nil, err
-			}
-			if len(clusters) == 0 {
-				return nil, errors.NewSRNotEnabledError()
-			}
-
-			unsafeTrace, err := c.Flags().GetBool("unsafe-trace")
-			if err != nil {
-				return nil, err
-			}
-
 			configuration := srsdk.NewConfiguration()
-			configuration.BasePath = clusters[0].Spec.GetHttpEndpoint()
-			configuration.DefaultHeader = map[string]string{"target-sr-cluster": clusters[0].GetId()}
 			configuration.UserAgent = c.Config.Version.UserAgent
 			configuration.Debug = unsafeTrace
 			configuration.HTTPClient = ccloudv2.NewRetryableHttpClient(unsafeTrace)
 
-			dataplaneToken, err := auth.GetDataplaneToken(c.Context.GetState(), c.Context.GetPlatformServer())
-			if err != nil {
-				return nil, err
-			}
+			if c.Context.GetState() != nil {
+				clusters, err := c.V2Client.GetSchemaRegistryClustersByEnvironment(c.Context.GetCurrentEnvironment())
+				if err != nil {
+					return nil, err
+				}
+				if len(clusters) == 0 {
+					return nil, errors.NewSRNotEnabledError()
+				}
+				configuration.DefaultHeader = map[string]string{"target-sr-cluster": clusters[0].GetId()}
+				configuration.BasePath = clusters[0].Spec.GetHttpEndpoint()
 
-			c.schemaRegistryClient = schemaregistry.NewClient(configuration, dataplaneToken)
+				dataplaneToken, err := auth.GetDataplaneToken(c.Context.GetState(), c.Context.GetPlatformServer())
+				if err != nil {
+					return nil, err
+				}
+
+				c.schemaRegistryClient = schemaregistry.NewClient(configuration, dataplaneToken)
+			} else {
+				// Used by `asyncapi export`, `asyncapi import`, `kafka client-config create`, `kafka topic consume`, and `kafka topic produce`
+				schemaRegistryEndpoint, err := c.Flags().GetString("schema-registry-endpoint")
+				if err != nil {
+					return nil, err
+				}
+				if schemaRegistryEndpoint == "" {
+					return nil, errors.New(errors.SREndpointNotSpecifiedErrorMsg)
+				}
+				configuration.BasePath = schemaRegistryEndpoint
+
+				schemaRegistryApiKey, err := c.Flags().GetString("schema-registry-api-key")
+				if err != nil {
+					return nil, err
+				}
+				schemaRegistryApiSecret, err := c.Flags().GetString("schema-registry-api-secret")
+				if err != nil {
+					return nil, err
+				}
+
+				c.schemaRegistryClient = schemaregistry.NewClientWithApiKey(configuration, schemaRegistryApiKey, schemaRegistryApiSecret)
+
+				if err := c.schemaRegistryClient.Get(); err != nil {
+					return nil, errors.New(errors.SRClientNotValidatedErrorMsg)
+				}
+			}
 		} else {
 			schemaRegistryEndpoint, err := c.Flags().GetString("schema-registry-endpoint")
 			if err != nil {
@@ -212,11 +239,6 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient() (*schemaregistry.Cli
 			}
 			if schemaRegistryEndpoint == "" {
 				return nil, errors.New(errors.SREndpointNotSpecifiedErrorMsg)
-			}
-
-			unsafeTrace, err := c.Flags().GetBool("unsafe-trace")
-			if err != nil {
-				return nil, err
 			}
 
 			caLocation, err := c.Flags().GetString("ca-location")
@@ -239,6 +261,10 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient() (*schemaregistry.Cli
 			cfg.HTTPClient = client
 
 			c.schemaRegistryClient = schemaregistry.NewClient(cfg, c.Context.GetAuthToken())
+
+			if err := c.schemaRegistryClient.Get(); err != nil {
+				return nil, errors.New(errors.SRClientNotValidatedErrorMsg)
+			}
 		}
 	}
 
