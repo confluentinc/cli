@@ -1,6 +1,7 @@
 package apikey
 
 import (
+	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -39,9 +40,12 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	deleted, err := resource.Delete(args, deleteFunc, c.postProcess)
-	resource.PrintDeleteSuccessMsg(deleted, resource.ApiKey)
+	deletedIDs, err := resource.Delete(args, deleteFunc, nil)
+	resource.PrintDeleteSuccessMsg(deletedIDs, resource.ApiKey)
 
+	if err2 := c.deleteFromKeyStore(deletedIDs); err2 != nil {
+		err = multierror.Append(err, err2)
+	}
 	if err != nil {
 		return errors.NewErrorWithSuggestions(err.Error(), errors.APIKeyNotFoundSuggestions)
 	}
@@ -61,6 +65,13 @@ func (c *command) confirmDeletion(cmd *cobra.Command, args []string) (bool, erro
 	return form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.ApiKey, args))
 }
 
-func (c *command) postProcess(id string) error {
-	return c.keystore.DeleteAPIKey(id)
+func (c *command) deleteFromKeyStore(deletedIDs []string) error {
+	errs := &multierror.Error{ErrorFormat: errors.CustomMultierrorList}
+	for _, id := range deletedIDs {
+		if err := c.keystore.DeleteAPIKey(id); err != nil {
+			errs = multierror.Append(errs, err)
+		}
+	}
+
+	return errs.ErrorOrNil()
 }
