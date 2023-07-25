@@ -332,20 +332,16 @@ func (c *command) updateTopic(details *accountDetails, topicName string, kafkaBi
 }
 
 func addTopicDescription(client *schemaregistry.Client, qualifiedName, description string) error {
-	atlasEntity := srsdk.AtlasEntityWithExtInfo{
-		ReferredEntities: nil,
-		Entity: srsdk.AtlasEntity{
-			Attributes: map[string]any{
-				"description":   description,
-				"qualifiedName": qualifiedName,
-			},
-			TypeName: "kafka_topic",
+	atlasEntity := srsdk.AtlasEntityWithExtInfo{Entity: srsdk.AtlasEntity{
+		Attributes: map[string]any{
+			"description":   description,
+			"qualifiedName": qualifiedName,
 		},
-	}
-	err := retry(context.Background(), 5*time.Second, time.Minute, func() error {
+		TypeName: "kafka_topic",
+	}}
+	return retry(context.Background(), 5*time.Second, time.Minute, func() error {
 		return client.PartialUpdateByUniqueAttributes(&srsdk.PartialUpdateByUniqueAttributesOpts{AtlasEntityWithExtInfo: optional.NewInterface(atlasEntity)})
 	})
-	return err
 }
 
 func resolveSchemaType(contentType string) string {
