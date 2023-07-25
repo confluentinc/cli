@@ -18,10 +18,15 @@ func NewClient(configuration *srsdk.Configuration, authToken string) *Client {
 	}
 }
 
-func NewClientWithApiKey(configuration *srsdk.Configuration, apiKey string) *Client {
+func NewClientWithApiKey(configuration *srsdk.Configuration, key, secret string) *Client {
+	basicAuth := srsdk.BasicAuth{
+		UserName: key,
+		Password: secret,
+	}
+
 	return &Client{
 		APIClient: srsdk.NewAPIClient(configuration),
-		context:   context.WithValue(context.Background(), srsdk.ContextAPIKey, apiKey),
+		context:   context.WithValue(context.Background(), srsdk.ContextBasicAuth, basicAuth),
 	}
 }
 

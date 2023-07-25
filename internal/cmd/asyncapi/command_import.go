@@ -114,11 +114,13 @@ func newImportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.Flags().String("file", "", "Input filename.")
 	cmd.Flags().Bool("overwrite", false, "Overwrite existing topics with the same name.")
 	cmd.Flags().String("kafka-api-key", "", "Kafka cluster API key.")
+	cmd.Flags().String("schema-registry-endpoint", "", "Endpoint for Schema Registry cluster.")
 	cmd.Flags().String("schema-registry-api-key", "", "API key for Schema Registry.")
 	cmd.Flags().String("schema-registry-api-secret", "", "API secret for Schema Registry.")
 
 	cobra.CheckErr(cmd.MarkFlagRequired("file"))
 	cobra.CheckErr(cmd.MarkFlagFilename("file", "yaml", "yml"))
+
 	return cmd
 }
 

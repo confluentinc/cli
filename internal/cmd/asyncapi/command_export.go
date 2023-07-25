@@ -79,6 +79,7 @@ func newExportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.Flags().Bool("consume-examples", false, "Consume messages from topics for populating examples.")
 	cmd.Flags().String("spec-version", "1.0.0", "Version number of the output file.")
 	cmd.Flags().String("kafka-api-key", "", "Kafka cluster API key.")
+	cmd.Flags().String("schema-registry-endpoint", "", "Endpoint for Schema Registry cluster.")
 	cmd.Flags().String("schema-registry-api-key", "", "API key for Schema Registry.")
 	cmd.Flags().String("schema-registry-api-secret", "", "API secret for Schema Registry.")
 	cmd.Flags().String("schema-context", "default", "Use a specific schema context.")
@@ -204,14 +205,19 @@ func (c *command) getAccountDetails(flags *flags) (*accountDetails, error) {
 	if err := c.getClusterDetails(details, flags); err != nil {
 		return nil, err
 	}
-	if err := c.getSchemaRegistry(details, flags); err != nil {
+
+	client, err := c.GetSchemaRegistryClient()
+	if err != nil {
 		return nil, err
 	}
+	details.client = client
+
 	subjects, err := details.client.List()
 	if err != nil {
 		return nil, err
 	}
 	details.subjects = subjects
+
 	// Create Consumer
 	if flags.consumeExamples {
 		details.consumer, err = createConsumer(details.broker, details.clusterCreds, flags.groupId)
@@ -220,6 +226,7 @@ func (c *command) getAccountDetails(flags *flags) (*accountDetails, error) {
 		}
 		defer details.consumer.Close()
 	}
+
 	return details, nil
 }
 
@@ -418,29 +425,6 @@ func getFlags(cmd *cobra.Command) (*flags, error) {
 		schemaContext:           schemaContext,
 		topics:                  topics,
 	}, nil
-}
-
-func (c *command) getSchemaRegistry(details *accountDetails, flags *flags) error {
-	schemaCluster, err := c.Config.Context().SchemaRegistryCluster(c.Command)
-	if err != nil {
-		if strings.Contains(err.Error(), "Schema Registry not enabled") {
-			return errors.NewErrorWithSuggestions(err.Error(), "Enable Stream Governance Essential Package to access this feature.")
-		}
-		return fmt.Errorf("unable to get Schema Registry cluster: %v", err)
-	}
-	details.srCluster = schemaCluster
-
-	if flags.schemaRegistryApiKey == "" && flags.schemaRegistryApiSecret == "" && schemaCluster.SrCredentials != nil {
-		flags.schemaRegistryApiKey = schemaCluster.SrCredentials.Key
-		flags.schemaRegistryApiSecret = schemaCluster.SrCredentials.Secret
-	}
-	client, err := c.GetSchemaRegistryClient()
-	if err != nil {
-		return err
-	}
-	details.client = client
-
-	return nil
 }
 
 func msgName(s string) string {

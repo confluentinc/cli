@@ -48,19 +48,13 @@ func (c *command) newConsumeCommand() *cobra.Command {
 	pcmd.AddConsumerConfigFileFlag(cmd)
 	cmd.Flags().String("schema-registry-context", "", "The Schema Registry context under which to look up schema ID.")
 	cmd.Flags().String("schema-registry-endpoint", "", "Endpoint for Schema Registry cluster.")
+	cmd.Flags().String("schema-registry-api-key", "", "Schema registry API key.")
+	cmd.Flags().String("schema-registry-api-secret", "", "Schema registry API key secret.")
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddApiSecretFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
-
-	// Deprecated
-	cmd.Flags().String("schema-registry-api-key", "", "Schema registry API key.")
-	cmd.Flags().MarkHidden("schema-registry-api-key")
-
-	// Deprecated
-	cmd.Flags().String("schema-registry-api-secret", "", "Schema registry API key secret.")
-	cmd.Flags().MarkHidden("schema-registry-api-secret")
 
 	cobra.CheckErr(cmd.MarkFlagFilename("config-file", "avsc", "json"))
 
