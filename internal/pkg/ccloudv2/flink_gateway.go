@@ -44,12 +44,12 @@ func (c *FlinkGatewayClient) flinkGatewayApiContext() context.Context {
 
 func (c *FlinkGatewayClient) DeleteStatement(environmentId, statementName, orgId string) error {
 	httpResp, err := c.StatementsSqlV1alpha1Api.DeleteSqlV1alpha1Statement(c.flinkGatewayApiContext(), environmentId, statementName).OrgId(orgId).Execute()
-	return makeFlinkError(err, httpResp)
+	return catchFlinkError(err, httpResp)
 }
 
 func (c *FlinkGatewayClient) GetStatement(environmentId, statementName, orgId string) (flinkgatewayv1alpha1.SqlV1alpha1Statement, error) {
 	resp, httpResp, err := c.StatementsSqlV1alpha1Api.GetSqlV1alpha1Statement(c.flinkGatewayApiContext(), environmentId, statementName).OrgId(orgId).Execute()
-	return resp, makeFlinkError(err, httpResp)
+	return resp, catchFlinkError(err, httpResp)
 }
 
 func (c *FlinkGatewayClient) ListStatements(environmentId, orgId, pageToken, computePoolId string) (flinkgatewayv1alpha1.SqlV1alpha1StatementList, error) {
@@ -63,7 +63,7 @@ func (c *FlinkGatewayClient) ListStatements(environmentId, orgId, pageToken, com
 		req = req.PageToken(pageToken)
 	}
 	resp, httpResp, err := req.Execute()
-	return resp, makeFlinkError(err, httpResp)
+	return resp, catchFlinkError(err, httpResp)
 }
 
 func (c *FlinkGatewayClient) ListAllStatements(environmentId, orgId, computePoolId string) ([]flinkgatewayv1alpha1.SqlV1alpha1Statement, error) {
@@ -98,7 +98,7 @@ func (c *FlinkGatewayClient) CreateStatement(statement, computePoolId, identityP
 		},
 	}
 	resp, httpResp, err := c.StatementsSqlV1alpha1Api.CreateSqlV1alpha1Statement(c.flinkGatewayApiContext(), environmentId).SqlV1alpha1Statement(statementObj).OrgId(orgId).Execute()
-	return resp, makeFlinkError(err, httpResp)
+	return resp, catchFlinkError(err, httpResp)
 }
 
 func (c *FlinkGatewayClient) GetStatementResults(environmentId, statementId, orgId, pageToken string) (flinkgatewayv1alpha1.SqlV1alpha1StatementResult, error) {
@@ -107,7 +107,7 @@ func (c *FlinkGatewayClient) GetStatementResults(environmentId, statementId, org
 		req = req.PageToken(pageToken)
 	}
 	resp, httpResp, err := req.Execute()
-	return resp, makeFlinkError(err, httpResp)
+	return resp, catchFlinkError(err, httpResp)
 }
 
 func (c *FlinkGatewayClient) GetExceptions(environmentId, statementId, orgId string) (flinkgatewayv1alpha1.SqlV1alpha1StatementExceptionList, error) {
@@ -150,7 +150,7 @@ var _ Coder = (*FlinkError)(nil)
 var _ errors.ErrorWithSuggestions = (*FlinkError)(nil)
 
 // Extends error with status code, including suggestion if err type is ErrorWithSuggestion
-func makeFlinkError(err error, r *http.Response) error {
+func catchFlinkError(err error, r *http.Response) error {
 	if err == nil {
 		return nil
 	}
