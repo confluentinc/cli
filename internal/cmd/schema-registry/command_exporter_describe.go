@@ -1,16 +1,14 @@
 package schemaregistry
 
 import (
-	"context"
 	"fmt"
 	"sort"
 	"strings"
 
 	"github.com/spf13/cobra"
 
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
-
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -23,34 +21,32 @@ type exporterOut struct {
 	Config        string `human:"Config" serialized:"config"`
 }
 
-func (c *command) newExporterDescribeCommand() *cobra.Command {
+func (c *command) newExporterDescribeCommand(cfg *v1.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe <name>",
-		Short: "Describe the schema exporter.",
+		Short: "Describe a schema exporter.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.exporterDescribe,
 	}
 
-	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
-	pcmd.AddApiSecretFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
-	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	if cfg.IsCloudLogin() {
+		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	} else {
+		cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
+	}
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
 
 func (c *command) exporterDescribe(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := getApiClient(cmd, c.Config, c.Version)
+	client, err := c.GetSchemaRegistryClient()
 	if err != nil {
 		return err
 	}
 
-	return describeExporter(cmd, args[0], srClient, ctx)
-}
-
-func describeExporter(cmd *cobra.Command, name string, srClient *srsdk.APIClient, ctx context.Context) error {
-	info, _, err := srClient.DefaultApi.GetExporterInfo(ctx, name)
+	info, err := client.GetExporterInfo(args[0])
 	if err != nil {
 		return err
 	}
@@ -70,7 +66,7 @@ func describeExporter(cmd *cobra.Command, name string, srClient *srsdk.APIClient
 func convertMapToString(m map[string]string) string {
 	pairs := make([]string, 0, len(m))
 	for key, value := range m {
-		pairs = append(pairs, fmt.Sprintf("%s=\"%s\"", key, value))
+		pairs = append(pairs, fmt.Sprintf(`%s="%s"`, key, value))
 	}
 	sort.Strings(pairs)
 	return strings.Join(pairs, "\n")

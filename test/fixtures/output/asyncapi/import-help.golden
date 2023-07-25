@@ -12,6 +12,7 @@ Flags:
       --file string                         REQUIRED: Input filename.
       --overwrite                           Overwrite existing topics with the same name.
       --kafka-api-key string                Kafka cluster API key.
+      --schema-registry-endpoint string     Endpoint for Schema Registry cluster.
       --schema-registry-api-key string      API key for Schema Registry.
       --schema-registry-api-secret string   API secret for Schema Registry.
 

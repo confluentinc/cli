@@ -1,44 +1,39 @@
 package schemaregistry
 
 import (
-	"context"
-
 	"github.com/spf13/cobra"
 
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
-
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (c *command) newExporterGetConfigCommand() *cobra.Command {
+func (c *command) newExporterGetConfigCommand(cfg *v1.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "get-config <name>",
-		Short: "Get the configurations of the schema exporter.",
+		Short: "Get the schema exporter configuration.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.exporterGetConfig,
 	}
 
-	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
-	pcmd.AddApiSecretFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
-	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	if cfg.IsCloudLogin() {
+		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	} else {
+		cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
+	}
 	pcmd.AddOutputFlagWithDefaultValue(cmd, output.JSON.String())
 
 	return cmd
 }
 
 func (c *command) exporterGetConfig(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := getApiClient(cmd, c.Config, c.Version)
+	client, err := c.GetSchemaRegistryClient()
 	if err != nil {
 		return err
 	}
 
-	return getExporterConfig(cmd, args[0], srClient, ctx)
-}
-
-func getExporterConfig(cmd *cobra.Command, name string, srClient *srsdk.APIClient, ctx context.Context) error {
-	configs, _, err := srClient.DefaultApi.GetExporterConfig(ctx, name)
+	configs, err := client.GetExporterConfig(args[0])
 	if err != nil {
 		return err
 	}
