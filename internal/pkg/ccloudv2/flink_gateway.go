@@ -150,7 +150,7 @@ var _ Coder = (*FlinkError)(nil)
 var _ errors.ErrorWithSuggestions = (*FlinkError)(nil)
 
 // Extends error with status code, including suggestion if err type is ErrorWithSuggestion
-func makeFlinkError(err error, r *http.Response) error {
+func catchFlinkError(err error, r *http.Response) error {
 	if err == nil {
 		return nil
 	}
