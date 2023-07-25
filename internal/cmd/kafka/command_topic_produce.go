@@ -2,7 +2,6 @@ package kafka
 
 import (
 	"bufio"
-	"context"
 	"fmt"
 	"os"
 	"os/signal"
@@ -12,7 +11,6 @@ import (
 	"github.com/spf13/cobra"
 
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -156,23 +154,6 @@ func (c *command) produce(cmd *cobra.Command, args []string) error {
 	return scanErr
 }
 
-func (c *command) getSchemaRegistryClient(cmd *cobra.Command) (*srsdk.APIClient, context.Context, error) {
-	schemaRegistryApiKey, err := cmd.Flags().GetString("schema-registry-api-key")
-	if err != nil {
-		return nil, nil, err
-	}
-	schemaRegistryApiSecret, err := cmd.Flags().GetString("schema-registry-api-secret")
-	if err != nil {
-		return nil, nil, err
-	}
-
-	srClient, ctx, err := sr.GetSchemaRegistryClientWithApiKey(cmd, c.Config, c.Version, schemaRegistryApiKey, schemaRegistryApiSecret)
-	if err != nil && err.Error() == errors.NotLoggedInErrorMsg {
-		err = new(errors.SRNotAuthenticatedError)
-	}
-	return srClient, ctx, err
-}
-
 func (c *command) registerSchema(cmd *cobra.Command, schemaCfg *sr.RegisterSchemaConfigs) ([]byte, map[string]string, error) {
 	// Registering schema and fill metaInfo array.
 	var metaInfo []byte // Meta info contains a magic byte and schema ID (4 bytes).
@@ -180,6 +161,9 @@ func (c *command) registerSchema(cmd *cobra.Command, schemaCfg *sr.RegisterSchem
 
 	if len(schemaCfg.SchemaPath) > 0 {
 		client, err := c.GetSchemaRegistryClient()
+		if err != nil {
+			return nil, nil, err
+		}
 
 		id, err := sr.RegisterSchemaWithAuth(cmd, schemaCfg, client)
 		if err != nil {
@@ -296,6 +280,9 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic string) (serdes
 
 	if isSchemaId {
 		client, err := c.GetSchemaRegistryClient()
+		if err != nil {
+			return nil, nil, err
+		}
 
 		schemaString, err := sr.RequestSchemaWithId(schemaId, subject, client)
 		if err != nil {

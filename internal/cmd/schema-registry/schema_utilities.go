@@ -93,7 +93,7 @@ func StoreSchemaReferences(schemaDir string, refs []srsdk.SchemaReference, clien
 	for _, ref := range refs {
 		tempStorePath := filepath.Join(schemaDir, ref.Name)
 		if !utils.FileExists(tempStorePath) {
-			schema, err := client.GetSchemaByVersion(ref.Subject, strconv.Itoa(int(ref.Version)))
+			schema, err := client.GetSchemaByVersion(ref.Subject, strconv.Itoa(int(ref.Version)), nil)
 			if err != nil {
 				return nil, err
 			}

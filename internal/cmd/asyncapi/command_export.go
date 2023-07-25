@@ -212,7 +212,7 @@ func (c *command) getAccountDetails(flags *flags) (*accountDetails, error) {
 	}
 	details.client = client
 
-	subjects, err := details.client.List()
+	subjects, err := details.client.List(nil)
 	if err != nil {
 		return nil, err
 	}

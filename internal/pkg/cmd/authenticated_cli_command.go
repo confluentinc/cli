@@ -227,6 +227,10 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient() (*schemaregistry.Cli
 				}
 
 				c.schemaRegistryClient = schemaregistry.NewClientWithApiKey(configuration, schemaRegistryApiKey, schemaRegistryApiSecret)
+
+				if err := c.schemaRegistryClient.Get(); err != nil {
+					return nil, errors.New(errors.SRClientNotValidatedErrorMsg)
+				}
 			}
 		} else {
 			schemaRegistryEndpoint, err := c.Flags().GetString("schema-registry-endpoint")
@@ -257,6 +261,10 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient() (*schemaregistry.Cli
 			cfg.HTTPClient = client
 
 			c.schemaRegistryClient = schemaregistry.NewClient(cfg, c.Context.GetAuthToken())
+
+			if err := c.schemaRegistryClient.Get(); err != nil {
+				return nil, errors.New(errors.SRClientNotValidatedErrorMsg)
+			}
 		}
 	}
 

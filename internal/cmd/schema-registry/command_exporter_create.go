@@ -27,7 +27,7 @@ func (c *command) newExporterCreateCommand(cfg *v1.Config) *cobra.Command {
 		Text: "Create a new schema exporter.",
 		Code: `confluent schema-registry exporter create my-exporter --config-file config.txt --subjects my-subject1,my-subject2 --subject-format my-\${subject} --context-type CUSTOM --context-name my-context`,
 	}
-	if !cfg.IsCloudLogin() {
+	if cfg.IsOnPremLogin() {
 		example.Code += " " + OnPremAuthenticationMsg
 	}
 	cmd.Example = examples.BuildExampleString(example)

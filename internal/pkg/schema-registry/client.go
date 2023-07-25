@@ -30,34 +30,44 @@ func NewClientWithApiKey(configuration *srsdk.Configuration, key, secret string)
 	}
 }
 
-func (c *Client) GetTopLevelConfig() (srsdk.Config, error) {
-	config, _, err := c.DefaultApi.GetTopLevelConfig(c.context)
-	return config, err
+func (c *Client) Get() error {
+	_, _, err := c.DefaultApi.Get(c.context)
+	return err
 }
 
-func (c *Client) UpdateTopLevelConfig(req srsdk.ConfigUpdateRequest) (srsdk.ConfigUpdateRequest, error) {
-	req, _, err := c.DefaultApi.UpdateTopLevelConfig(c.context, req)
-	return req, err
+func (c *Client) GetTopLevelConfig() (srsdk.Config, error) {
+	res, _, err := c.DefaultApi.GetTopLevelConfig(c.context)
+	return res, err
+}
+
+func (c *Client) UpdateTopLevelConfig(res srsdk.ConfigUpdateRequest) (srsdk.ConfigUpdateRequest, error) {
+	res, _, err := c.DefaultApi.UpdateTopLevelConfig(c.context, res)
+	return res, err
 }
 
 func (c *Client) GetTopLevelMode() (srsdk.Mode, error) {
-	mode, _, err := c.DefaultApi.GetTopLevelMode(c.context)
-	return mode, err
+	res, _, err := c.DefaultApi.GetTopLevelMode(c.context)
+	return res, err
 }
 
-func (c *Client) UpdateTopLevelMode(req srsdk.ModeUpdateRequest) (srsdk.ModeUpdateRequest, error) {
-	req, _, err := c.DefaultApi.UpdateTopLevelMode(c.context, req)
-	return req, err
+func (c *Client) UpdateTopLevelMode(res srsdk.ModeUpdateRequest) (srsdk.ModeUpdateRequest, error) {
+	res, _, err := c.DefaultApi.UpdateTopLevelMode(c.context, res)
+	return res, err
+}
+
+func (c *Client) UpdateMode(subject string, req srsdk.ModeUpdateRequest) (srsdk.ModeUpdateRequest, error) {
+	res, _, err := c.DefaultApi.UpdateMode(c.context, subject, req)
+	return res, err
 }
 
 func (c *Client) GetSubjectLevelConfig(subject string) (srsdk.Config, error) {
-	config, _, err := c.DefaultApi.GetSubjectLevelConfig(c.context, subject, nil)
-	return config, err
+	res, _, err := c.DefaultApi.GetSubjectLevelConfig(c.context, subject, nil)
+	return res, err
 }
 
-func (c *Client) UpdateSubjectLevelConfig(subject string, req srsdk.ConfigUpdateRequest) (srsdk.ConfigUpdateRequest, error) {
-	req, _, err := c.DefaultApi.UpdateSubjectLevelConfig(c.context, subject, req)
-	return req, err
+func (c *Client) UpdateSubjectLevelConfig(subject string, res srsdk.ConfigUpdateRequest) (srsdk.ConfigUpdateRequest, error) {
+	res, _, err := c.DefaultApi.UpdateSubjectLevelConfig(c.context, subject, res)
+	return res, err
 }
 
 func (c *Client) TestCompatibilityBySubjectName(subject, version string, body srsdk.RegisterSchemaRequest) (srsdk.CompatibilityCheckResponse, error) {
@@ -76,13 +86,13 @@ func (c *Client) DeleteExporter(name string) error {
 }
 
 func (c *Client) GetExporterInfo(name string) (srsdk.ExporterInfo, error) {
-	info, _, err := c.DefaultApi.GetExporterInfo(c.context, name)
-	return info, err
+	res, _, err := c.DefaultApi.GetExporterInfo(c.context, name)
+	return res, err
 }
 
 func (c *Client) GetExporterConfig(name string) (map[string]string, error) {
-	config, _, err := c.DefaultApi.GetExporterConfig(c.context, name)
-	return config, err
+	res, _, err := c.DefaultApi.GetExporterConfig(c.context, name)
+	return res, err
 }
 
 func (c *Client) ResumeExporter(name string) (srsdk.UpdateExporterResponse, error) {
@@ -101,13 +111,13 @@ func (c *Client) PauseExporter(name string) (srsdk.UpdateExporterResponse, error
 }
 
 func (c *Client) GetExporters() ([]string, error) {
-	exporters, _, err := c.DefaultApi.GetExporters(c.context)
-	return exporters, err
+	res, _, err := c.DefaultApi.GetExporters(c.context)
+	return res, err
 }
 
 func (c *Client) GetExporterStatus(name string) (srsdk.ExporterStatus, error) {
-	status, _, err := c.DefaultApi.GetExporterStatus(c.context, name)
-	return status, err
+	res, _, err := c.DefaultApi.GetExporterStatus(c.context, name)
+	return res, err
 }
 
 func (c *Client) PutExporter(name string, req srsdk.UpdateExporterRequest) (srsdk.UpdateExporterResponse, error) {
@@ -121,13 +131,33 @@ func (c *Client) Register(subject string, req srsdk.RegisterSchemaRequest, opts 
 }
 
 func (c *Client) GetSchema(id int32, opts *srsdk.GetSchemaOpts) (srsdk.SchemaString, error) {
-	schema, _, err := c.DefaultApi.GetSchema(c.context, id, opts)
-	return schema, err
+	res, _, err := c.DefaultApi.GetSchema(c.context, id, opts)
+	return res, err
 }
 
-func (c *Client) GetSchemaByVersion(subject, version string) (srsdk.Schema, error) {
-	schema, _, err := c.DefaultApi.GetSchemaByVersion(c.context, subject, version, nil)
-	return schema, err
+func (c *Client) GetSchemaByVersion(subject, version string, opts *srsdk.GetSchemaByVersionOpts) (srsdk.Schema, error) {
+	res, _, err := c.DefaultApi.GetSchemaByVersion(c.context, subject, version, opts)
+	return res, err
+}
+
+func (c *Client) ListVersions(subject string, opts *srsdk.ListVersionsOpts) ([]int32, error) {
+	res, _, err := c.DefaultApi.ListVersions(c.context, subject, opts)
+	return res, err
+}
+
+func (c *Client) DeleteSchemaVersion(subject, version string, opts *srsdk.DeleteSchemaVersionOpts) (int32, error) {
+	res, _, err := c.DefaultApi.DeleteSchemaVersion(c.context, subject, version, opts)
+	return res, err
+}
+
+func (c *Client) GetSchemas(opts *srsdk.GetSchemasOpts) ([]srsdk.Schema, error) {
+	res, _, err := c.DefaultApi.GetSchemas(c.context, opts)
+	return res, err
+}
+
+func (c *Client) DeleteSubject(subject string, opts *srsdk.DeleteSubjectOpts) ([]int32, error) {
+	res, _, err := c.DefaultApi.DeleteSubject(c.context, subject, opts)
+	return res, err
 }
 
 func (c *Client) PartialUpdateByUniqueAttributes(opts *srsdk.PartialUpdateByUniqueAttributesOpts) error {
@@ -150,9 +180,9 @@ func (c *Client) GetTags(typeName, qualifiedName string) ([]srsdk.TagResponse, e
 	return res, err
 }
 
-func (c *Client) List() ([]string, error) {
-	subjects, _, err := c.DefaultApi.List(c.context, nil)
-	return subjects, err
+func (c *Client) List(opts *srsdk.ListOpts) ([]string, error) {
+	res, _, err := c.DefaultApi.List(c.context, opts)
+	return res, err
 }
 
 func (c *Client) GetByUniqueAttributes(typeName, qualifiedName string) (srsdk.AtlasEntityWithExtInfo, error) {

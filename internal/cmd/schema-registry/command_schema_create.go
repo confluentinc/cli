@@ -26,7 +26,7 @@ func (c *command) newSchemaCreateCommand(cfg *v1.Config) *cobra.Command {
 		Text: "Register a new Avro schema.",
 		Code: "confluent schema-registry schema create --subject employee --schema employee.avsc --type avro",
 	}
-	if !cfg.IsCloudLogin() {
+	if cfg.IsOnPremLogin() {
 		example.Code += " " + OnPremAuthenticationMsg
 	}
 	cmd.Example = examples.BuildExampleString(
@@ -62,6 +62,16 @@ func (c *command) newSchemaCreateCommand(cfg *v1.Config) *cobra.Command {
 	}
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
+
+	if cfg.IsCloudLogin() {
+		// Deprecated
+		pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
+		cobra.CheckErr(cmd.Flags().MarkHidden("api-key"))
+
+		// Deprecated
+		pcmd.AddApiSecretFlag(cmd)
+		cobra.CheckErr(cmd.Flags().MarkHidden("api-secret"))
+	}
 
 	cobra.CheckErr(cmd.MarkFlagFilename("schema", "avsc", "json", "proto"))
 	cobra.CheckErr(cmd.MarkFlagFilename("references", "json"))
