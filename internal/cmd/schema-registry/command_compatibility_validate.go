@@ -31,7 +31,7 @@ func (c *command) newCompatibilityValidateCommand(cfg *v1.Config) *cobra.Command
 		Text: `Validate the compatibility of schema "payments" against the latest version of subject "records".`,
 		Code: "confluent schema-registry compatibility validate --schema payments.avsc --type avro --subject records --version latest",
 	}
-	if !cfg.IsCloudLogin() {
+	if cfg.IsOnPremLogin() {
 		example.Code += " " + OnPremAuthenticationMsg
 	}
 	cmd.Example = examples.BuildExampleString(example)
@@ -49,13 +49,15 @@ func (c *command) newCompatibilityValidateCommand(cfg *v1.Config) *cobra.Command
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	// Deprecated
-	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
-	cobra.CheckErr(cmd.Flags().MarkHidden("api-key"))
+	if cfg.IsCloudLogin() {
+		// Deprecated
+		pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
+		cobra.CheckErr(cmd.Flags().MarkHidden("api-key"))
 
-	// Deprecated
-	pcmd.AddApiSecretFlag(cmd)
-	cobra.CheckErr(cmd.Flags().MarkHidden("api-secret"))
+		// Deprecated
+		pcmd.AddApiSecretFlag(cmd)
+		cobra.CheckErr(cmd.Flags().MarkHidden("api-secret"))
+	}
 
 	cobra.CheckErr(cmd.MarkFlagFilename("schema", "avsc", "json", "proto"))
 	cobra.CheckErr(cmd.MarkFlagFilename("references", "json"))
