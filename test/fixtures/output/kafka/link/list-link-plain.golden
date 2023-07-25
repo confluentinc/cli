@@ -1,6 +1,7 @@
-   Name  | Source Cluster | Destination Cluster |    State    |        Error         |         Error Message           
----------+----------------+---------------------+-------------+----------------------+---------------------------------
-  link-1 | cluster-1      | cluster-2           |             |                      |                                 
-  link-2 | cluster-1      | cluster-2           | AVAILABLE   |                      |                                 
-  link-3 | cluster-1      | cluster-2           | UNAVAILABLE | AUTHENTICATION_ERROR | Please check your API key and   
-         |                |                     |             |                      | secret.                         
+   Name  | Source Cluster | Destination Cluster | Remote Cluster |    State    |        Error         |         Error Message           
+---------+----------------+---------------------+----------------+-------------+----------------------+---------------------------------
+  link-1 | cluster-1      | cluster-2           |                |             |                      |                                 
+  link-2 | cluster-1      | cluster-2           |                | AVAILABLE   |                      |                                 
+  link-3 | cluster-1      | cluster-2           |                | UNAVAILABLE | AUTHENTICATION_ERROR | Please check your API key and   
+         |                |                     |                |             |                      | secret.                         
+  link-4 |                |                     | cluster-2      |             |                      |                                 

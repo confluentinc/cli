@@ -1,0 +1,28 @@
+Export an AsyncAPI specification for a Kafka cluster and Schema Registry.
+
+Usage:
+  confluent asyncapi export [flags]
+
+Examples:
+Export an AsyncAPI specification with topic "my-topic" and all topics starting with "prefix-".
+
+  $ confluent asyncapi export --topics "my-topic,prefix-*"
+
+Flags:
+      --file string                         Output file name. (default "asyncapi-spec.yaml")
+      --group-id string                     Consumer Group ID for getting messages. (default "consumerApplication")
+      --consume-examples                    Consume messages from topics for populating examples.
+      --spec-version string                 Version number of the output file. (default "1.0.0")
+      --kafka-api-key string                Kafka cluster API key.
+      --schema-registry-api-key string      API key for Schema Registry.
+      --schema-registry-api-secret string   API secret for Schema Registry.
+      --schema-context string               Use a specific schema context. (default "default")
+      --topics strings                      A comma-separated list of topics to export. Supports prefixes ending with a wildcard (*).
+      --value-format string                 Format message value as "string", "avro", "jsonschema", or "protobuf". Note that schema references are not supported for Avro. (default "string")
+      --cluster string                      Kafka cluster ID.
+      --environment string                  Environment ID.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

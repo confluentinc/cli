@@ -1,0 +1,15 @@
+Manage Role-Based Access Control (RBAC) and Identity and Access Management (IAM) roles.
+
+Usage:
+  confluent iam rbac role [command]
+
+Available Commands:
+  describe    Describe the resources and operations allowed for a role.
+  list        List the available RBAC roles.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent iam rbac role [command] --help" for more information about a command.

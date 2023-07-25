@@ -1,0 +1,17 @@
+Load a bundled connector from Confluent Platform or your own custom connector.
+
+Usage:
+  confluent local services connect connector load <connector-name> [flags]
+
+Examples:
+Load a predefined connector called `s3-sink`:
+
+  $ confluent local load s3-sink
+
+Flags:
+  -c, --config string   Configuration file for a connector.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

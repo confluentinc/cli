@@ -31,7 +31,7 @@ type Context struct {
 	Config     *Config       `json:"-"`
 }
 
-func newContext(name string, platform *Platform, credential *Credential, kafkaClusters map[string]*KafkaClusterConfig, kafka string, schemaRegistryClusters map[string]*SchemaRegistryCluster, state *ContextState, config *Config, orgResourceId, envId string) (*Context, error) {
+func newContext(name string, platform *Platform, credential *Credential, kafkaClusters map[string]*KafkaClusterConfig, kafka string, state *ContextState, config *Config, orgResourceId, envId string) (*Context, error) {
 	ctx := &Context{
 		Name:                   name,
 		NetrcMachineName:       name,
@@ -41,7 +41,7 @@ func newContext(name string, platform *Platform, credential *Credential, kafkaCl
 		CredentialName:         credential.Name,
 		CurrentEnvironment:     envId,
 		Environments:           map[string]*EnvironmentContext{},
-		SchemaRegistryClusters: schemaRegistryClusters,
+		SchemaRegistryClusters: map[string]*SchemaRegistryCluster{},
 		State:                  state,
 		Config:                 config,
 		LastOrgId:              orgResourceId,
@@ -85,7 +85,7 @@ func (c *Context) HasBasicMDSLogin() bool {
 		return false
 	}
 
-	credType := c.Credential.CredentialType
+	credType := c.GetCredentialType()
 	switch credType {
 	case Username:
 		return c.GetAuthToken() != ""
@@ -101,7 +101,7 @@ func (c *Context) hasBasicCloudLogin() bool {
 		return false
 	}
 
-	credType := c.Credential.CredentialType
+	credType := c.GetCredentialType()
 	switch credType {
 	case Username:
 		return c.GetAuthToken() != "" && c.GetCurrentEnvironment() != ""
@@ -142,6 +142,13 @@ func (c *Context) IsCloud(isTest bool) bool {
 		}
 	}
 	return false
+}
+
+func (c *Context) GetCredentialType() CredentialType {
+	if c != nil && c.Credential != nil {
+		return c.Credential.CredentialType
+	}
+	return None
 }
 
 func (c *Context) GetPlatform() *Platform {
@@ -260,6 +267,73 @@ func (c *Context) SetCurrentFlinkComputePool(id string) error {
 	}
 
 	ctx.CurrentFlinkComputePool = id
+	return nil
+}
+
+func (c *Context) GetCurrentFlinkCloudProvider() string {
+	if ctx := c.GetCurrentEnvironmentContext(); ctx != nil {
+		return ctx.CurrentFlinkCloudProvider
+	}
+	return ""
+}
+
+func (c *Context) SetCurrentFlinkCloudProvider(id string) error {
+	ctx := c.GetCurrentEnvironmentContext()
+	if ctx == nil {
+		return fmt.Errorf("no environment found")
+	}
+
+	ctx.CurrentFlinkCloudProvider = id
+	return nil
+}
+func (c *Context) GetCurrentFlinkRegion() string {
+	if ctx := c.GetCurrentEnvironmentContext(); ctx != nil {
+		return ctx.CurrentFlinkRegion
+	}
+	return ""
+}
+
+func (c *Context) SetCurrentFlinkRegion(id string) error {
+	ctx := c.GetCurrentEnvironmentContext()
+	if ctx == nil {
+		return fmt.Errorf("no environment found")
+	}
+
+	ctx.CurrentFlinkRegion = id
+	return nil
+}
+
+func (c *Context) GetCurrentFlinkCatalog() string {
+	if ctx := c.GetCurrentEnvironmentContext(); ctx != nil {
+		return ctx.CurrentFlinkCatalog
+	}
+	return ""
+}
+
+func (c *Context) SetCurrentFlinkCatalog(id string) error {
+	ctx := c.GetCurrentEnvironmentContext()
+	if ctx == nil {
+		return fmt.Errorf("no environment found")
+	}
+
+	ctx.CurrentFlinkCatalog = id
+	return nil
+}
+
+func (c *Context) GetCurrentFlinkDatabase() string {
+	if ctx := c.GetCurrentEnvironmentContext(); ctx != nil {
+		return ctx.CurrentFlinkDatabase
+	}
+	return ""
+}
+
+func (c *Context) SetCurrentFlinkDatabase(id string) error {
+	ctx := c.GetCurrentEnvironmentContext()
+	if ctx == nil {
+		return fmt.Errorf("no environment found")
+	}
+
+	ctx.CurrentFlinkDatabase = id
 	return nil
 }
 

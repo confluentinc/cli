@@ -14,17 +14,17 @@
     "api-key-abc-key-123": {
       "name": "api-key-abc-key-123",
       "username": "",
-      "password": "",
       "api_key_pair": {
         "api_key": "abc-key-123",
-        "api_secret": "def-secret-456"
+        "api_secret": "API_SECRET_PLACEHOLDER",
+        "salt": "c2FsdHBsYWNlaG9sZGVy",
+        "nonce": "bm9uY2VwbGFjZWhvbGRlcg=="
       },
       "credential_type": 1
     },
     "username-test-user": {
       "name": "username-test-user",
       "username": "test-user",
-      "password": "",
       "api_key_pair": null,
       "credential_type": 0
     }
@@ -47,7 +47,9 @@
             "api_keys": {
               "abc-key-123": {
                 "api_key": "abc-key-123",
-                "api_secret": "def-secret-456"
+                "api_secret": "API_SECRET_PLACEHOLDER",
+                "salt": "c2FsdHBsYWNlaG9sZGVy",
+                "nonce": "bm9uY2VwbGFjZWhvbGRlcg=="
               }
             },
             "api_key": "abc-key-123",

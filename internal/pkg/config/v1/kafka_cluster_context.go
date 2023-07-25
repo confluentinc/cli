@@ -25,7 +25,7 @@ type KafkaEnvContext struct {
 }
 
 func NewKafkaClusterContext(ctx *Context, activeKafka string, kafkaClusters map[string]*KafkaClusterConfig) *KafkaClusterContext {
-	if ctx.IsCloud(ctx.Config.IsTest) && ctx.Credential.CredentialType == Username {
+	if ctx.IsCloud(ctx.Config.IsTest) && ctx.GetCredentialType() == Username {
 		return newKafkaClusterEnvironmentContext(activeKafka, kafkaClusters, ctx)
 	} else {
 		return newKafkaClusterNonEnvironmentContext(activeKafka, kafkaClusters, ctx)
@@ -106,21 +106,33 @@ func (k *KafkaClusterContext) RemoveKafkaCluster(clusterId string) {
 	}
 }
 
-func (k *KafkaClusterContext) DeleteAPIKey(apiKey string) {
-	var clusterConfigs map[string]*KafkaClusterConfig
-	if !k.EnvContext {
-		clusterConfigs = k.KafkaClusterConfigs
-	} else {
+func (k *KafkaClusterContext) FindApiKeyClusterId(key string) string {
+	clusterConfigs := k.KafkaClusterConfigs
+	if k.EnvContext {
 		clusterConfigs = k.GetCurrentKafkaEnvContext().KafkaClusterConfigs
 	}
-	for _, kcc := range clusterConfigs {
-		for clusterApiKey := range kcc.APIKeys {
-			if apiKey == clusterApiKey {
-				delete(kcc.APIKeys, apiKey)
+
+	for id, config := range clusterConfigs {
+		for apiKey := range config.APIKeys {
+			if key == apiKey {
+				return id
 			}
-			if apiKey == kcc.APIKey {
-				kcc.APIKey = ""
-			}
+		}
+	}
+
+	return ""
+}
+
+func (k *KafkaClusterContext) DeleteApiKey(key string) {
+	clusterConfigs := k.KafkaClusterConfigs
+	if k.EnvContext {
+		clusterConfigs = k.GetCurrentKafkaEnvContext().KafkaClusterConfigs
+	}
+
+	if id := k.FindApiKeyClusterId(key); id != "" {
+		delete(clusterConfigs[id].APIKeys, key)
+		if clusterConfigs[id].APIKey == key {
+			clusterConfigs[id].APIKey = ""
 		}
 	}
 }

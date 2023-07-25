@@ -59,17 +59,18 @@ const (
 	EndPointNotPopulatedMsg   = "Endpoint not yet populated. To obtain the endpoint, use `confluent ksql cluster describe`."
 	KsqlDBNotBackedByKafkaMsg = "The ksqlDB cluster \"%s\" is backed by \"%s\" which is not the current Kafka cluster \"%s\".\nTo switch to the correct cluster, use `confluent kafka cluster use %s`.\n"
 
+	// local commands
+	AvailableServicesMsg       = "Available Services:\n%s\n"
+	UsingConfluentCurrentMsg   = "Using CONFLUENT_CURRENT: %s\n"
+	AvailableConnectPluginsMsg = "Available Connect Plugins:\n%s\n"
+	StartingServiceMsg         = "Starting %s\n"
+	StoppingServiceMsg         = "Stopping %s\n"
+	ServiceStatusMsg           = "%s is [%s]\n"
+	DestroyDeletingMsg         = "Deleting: %s\n"
+
 	// schema-registry commands
-	UpdatedToLevelCompatibilityMsg      = "Successfully updated Top Level compatibility to \"%s\"\n"
-	UpdatedTopLevelModeMsg              = "Successfully updated Top Level mode to \"%s\"\n"
-	RegisteredSchemaMsg                 = "Successfully registered schema with ID %v\n"
-	DeletedAllSubjectVersionMsg         = "Successfully %s deleted all versions for subject \"%s\"\n"
-	DeletedSubjectVersionMsg            = "Successfully %s deleted version \"%s\" for subject \"%s\".\n"
-	UpdatedSubjectLevelCompatibilityMsg = "Successfully updated Subject Level compatibility to \"%s\" for subject \"%s\"\n"
-	UpdatedSubjectLevelModeMsg          = "Successfully updated Subject level Mode to \"%s\" for subject \"%s\"\n"
-	ExporterActionMsg                   = "%s schema exporter \"%s\".\n"
-	SchemaRegistryClusterDeletedMsg     = "Deleted Schema Registry cluster for environment \"%s\".\n"
-	SchemaRegistryClusterUpgradedMsg    = "The Stream Governance package for environment \"%s\" has been upgraded to \"%s\".\n"
+	RegisteredSchemaMsg = "Successfully registered schema with ID \"%d\".\n"
+	ExporterActionMsg   = "%s schema exporter \"%s\".\n"
 
 	// secret commands
 	UpdateSecretFileMsg = "Updated the encrypted secrets."
@@ -107,11 +108,13 @@ const (
 	PromptToDownloadDescriptionMsg = "New version of %s is available\n" +
 		"Current Version: %s\n" +
 		"Latest Version:  %s\n" +
-		"%s\n\n\n"
+		"\n" +
+		"%s"
 	InvalidChoiceMsg = "%s is not a valid choice"
 
 	// General
 	CreatedResourceMsg            = "Created %s \"%s\".\n"
+	CreatedLinkResourceMsg        = "Created %s \"%s\" with configs:\n%s\n"
 	DeletedResourceMsg            = "Deleted %s \"%s\".\n"
 	DeleteResourceConfirmMsg      = "Are you sure you want to delete %s \"%s\"?\nTo confirm, type \"%s\". To cancel, press Ctrl-C"
 	DeleteResourceConfirmYesNoMsg = `Are you sure you want to delete %s "%s"?`

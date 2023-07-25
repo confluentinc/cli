@@ -1,12 +1,12 @@
 +-------------------------+-------------------------+
 | Name                    | account schema-registry |
 | Cluster                 | lsrc-1234               |
-| Endpoint URL            | SASL_SSL://sr-endpoint  |
+| Endpoint URL            | http://127.0.0.1:1027   |
 | Used Schemas            |                       0 |
 | Available Schemas       |                    1000 |
 | Free Schemas Limit      |                    1000 |
-| Global Compatibility    | <Requires API Key>      |
-| Mode                    | <Requires API Key>      |
+| Global Compatibility    | FULL                    |
+| Mode                    | READWRITE               |
 | Service Provider        | aws                     |
 | Service Provider Region | us-west-2               |
 | Package                 | essentials              |

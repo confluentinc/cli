@@ -30,7 +30,7 @@ type TopicData struct {
 	Configs           map[string]string `json:"config" yaml:"config"`
 }
 
-func (c *authenticatedTopicCommand) newDescribeCommandOnPrem() *cobra.Command {
+func (c *command) newDescribeCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe <topic>",
 		Args:  cobra.ExactArgs(1),
@@ -54,7 +54,7 @@ func (c *authenticatedTopicCommand) newDescribeCommandOnPrem() *cobra.Command {
 	return cmd
 }
 
-func (c *authenticatedTopicCommand) describeOnPrem(cmd *cobra.Command, args []string) error {
+func (c *command) describeOnPrem(cmd *cobra.Command, args []string) error {
 	// Parse Args
 	topicName := args[0]
 

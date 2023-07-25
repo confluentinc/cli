@@ -27,8 +27,8 @@ type RealPrompt struct {
 }
 
 // NewPrompt returns a new RealPrompt instance which reads from reader and writes to Stdout.
-func NewPrompt(stdin *os.File) *RealPrompt {
-	return &RealPrompt{In: bufio.NewReader(stdin), Out: os.Stdout, Stdin: stdin}
+func NewPrompt() *RealPrompt {
+	return &RealPrompt{In: bufio.NewReader(os.Stdin), Out: os.Stdout, Stdin: os.Stdin}
 }
 
 // ReadLine reads a line of input, without the newline.

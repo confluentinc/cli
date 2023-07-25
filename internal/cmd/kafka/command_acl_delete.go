@@ -40,23 +40,14 @@ func (c *aclCommand) newDeleteCommand() *cobra.Command {
 
 	cobra.CheckErr(cmd.MarkFlagRequired("operations"))
 
+	cmd.MarkFlagsMutuallyExclusive("service-account", "principal")
+
 	return cmd
 }
 
 func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 	acls, err := parse(cmd)
 	if err != nil {
-		return err
-	}
-
-	users, err := c.getAllUsers()
-	if err != nil {
-		return err
-	}
-
-	userIdMap := c.mapResourceIdToUserId(users)
-
-	if err := c.aclResourceIdToNumericId(acls, userIdMap); err != nil {
 		return err
 	}
 

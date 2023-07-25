@@ -1,0 +1,34 @@
+Create a Kafka cluster.
+
+Note: You cannot use this command to create a cluster that is configured with AWS PrivateLink. You must use the UI to create a cluster of that configuration.
+
+Usage:
+  confluent kafka cluster create <name> [flags]
+
+Examples:
+Create a new dedicated cluster that uses a customer-managed encryption key in GCP:
+
+  $ confluent kafka cluster create sales092020 --cloud gcp --region asia-southeast1 --type dedicated --cku 1 --encryption-key "projects/PROJECT_NAME/locations/LOCATION/keyRings/KEY_RING/cryptoKeys/KEY_NAME"
+
+Create a new dedicated cluster that uses a customer-managed encryption key in AWS:
+
+  $ confluent kafka cluster create my-cluster --cloud aws --region us-west-2 --type dedicated --cku 1 --byok cck-a123z
+
+For more information, see https://docs.confluent.io/current/cloud/clusters/byok-encrypted-clusters.html.
+
+Flags:
+      --cloud string            REQUIRED: Specify the cloud provider as "aws", "azure", or "gcp".
+      --region string           REQUIRED: Cloud region ID for cluster (use "confluent kafka region list" to see all).
+      --availability string     Specify the availability of the cluster as "single-zone" or "multi-zone". (default "single-zone")
+      --type string             Specify the type of the Kafka cluster as "basic", "standard", or "dedicated". (default "basic")
+      --cku int                 Number of Confluent Kafka Units (non-negative). Required for Kafka clusters of type "dedicated".
+      --encryption-key string   Resource ID of the Cloud Key Management Service key (GCP only).
+      --context string          CLI context name.
+      --byok string             Confluent Cloud Key ID of a registered encryption key (AWS and Azure only, use "confluent byok create" to register a key).
+      --environment string      Environment ID.
+  -o, --output string           Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

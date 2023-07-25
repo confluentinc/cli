@@ -20,47 +20,40 @@ func (s *CLITestSuite) TestCluster() {
 	_ = os.Setenv("XX_FLAG_CLUSTER_REGISTRY_ENABLE", "true")
 
 	tests := []CLITest{
-		{args: "cluster list --help", fixture: "cluster/list-help.golden"},
 		{args: "cluster list -o json", fixture: "cluster/list-json.golden"},
 		{args: "cluster list -o yaml", fixture: "cluster/list-yaml.golden"},
 		{args: "cluster list", fixture: "cluster/list.golden"},
-		{args: "connect cluster list --help", fixture: "cluster/connect-list-help.golden"},
 		{args: "connect cluster list", fixture: "cluster/list-type-connect.golden"},
-		{args: "kafka cluster list --help", fixture: "cluster/kafka-list-help.golden"},
 		{args: "kafka cluster list", fixture: "cluster/list-type-kafka.golden"},
-		{args: "ksql cluster list --help", fixture: "cluster/ksql-list-help.golden"},
 		{args: "ksql cluster list", fixture: "cluster/list-type-ksql.golden"},
-		{args: "schema-registry cluster list --help", fixture: "cluster/schema-registry-list-help.golden"},
 		{args: "schema-registry cluster list", fixture: "cluster/list-type-schema-registry.golden"},
 	}
 
-	for _, tt := range tests {
-		tt.login = "platform"
-		s.runIntegrationTest(tt)
+	for _, test := range tests {
+		test.login = "onprem"
+		s.runIntegrationTest(test)
 	}
 
 	_ = os.Setenv("XX_FLAG_CLUSTER_REGISTRY_ENABLE", "false")
 }
 
-func (s *CLITestSuite) TestClusterRegistry() {
+func (s *CLITestSuite) TestCluster_Registry() {
 	tests := []CLITest{
-		{args: "cluster register --help", fixture: "cluster/register-list-help.golden"},
 		{args: "cluster register --cluster-name theMdsKSQLCluster --kafka-cluster kafka-GUID --ksql-cluster ksql-name --hosts 10.4.4.4:9004 --protocol PLAIN", fixture: "cluster/register-invalid-protocol.golden", exitCode: 1},
 		{args: "cluster register --cluster-name theMdsKSQLCluster --kafka-cluster kafka-GUID --ksql-cluster ksql-name --protocol SASL_PLAINTEXT", fixture: "cluster/register-missing-hosts.golden", exitCode: 1},
 		{args: "cluster register --cluster-name theMdsKSQLCluster --kafka-cluster kafka-GUID --ksql-cluster ksql-name --hosts 10.4.4.4:9004 --protocol HTTPS"},
 		{args: "cluster register --cluster-name theMdsKSQLCluster --ksql-cluster ksql-name --hosts 10.4.4.4:9004 --protocol SASL_PLAINTEXT", fixture: "cluster/register-missing-kafka-id.golden", exitCode: 1},
-		{args: "cluster unregister --help", fixture: "cluster/unregister-list-help.golden"},
 		{args: "cluster unregister --cluster-name theMdsKafkaCluster"},
 		{args: "cluster unregister", fixture: "cluster/unregister-missing-name.golden", exitCode: 1},
 	}
 
-	for _, tt := range tests {
-		tt.login = "platform"
-		s.runIntegrationTest(tt)
+	for _, test := range tests {
+		test.login = "onprem"
+		s.runIntegrationTest(test)
 	}
 }
 
-func (s *CLITestSuite) TestClusterScopedId() {
+func (s *CLITestSuite) TestClusterDescribe_ScopedId() {
 	// everything
 	cpIdURL1 := serveClusterScopedId(&cluster.ScopedId{
 		ID: "crn://md01.example.com/kafka=kafkaCluster1/connect=connectClusterA",
@@ -112,9 +105,9 @@ func (s *CLITestSuite) TestClusterScopedId() {
 		{args: fmt.Sprintf("cluster describe --url %s --ca-cert-path %s", cpIdURL3TLS, caCertPath), fixture: "cluster/scoped-id3.golden"},
 		{args: fmt.Sprintf("cluster describe --url %s", cpIdURL4), fixture: "cluster/scoped-id4.golden", exitCode: 1},
 	}
-	for _, tt := range tests {
-		tt.login = "platform"
-		s.runIntegrationTest(tt)
+	for _, test := range tests {
+		test.login = "onprem"
+		s.runIntegrationTest(test)
 	}
 }
 

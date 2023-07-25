@@ -11,7 +11,7 @@ import (
 func newConnectClient(url, userAgent string, unsafeTrace bool) *connectv1.APIClient {
 	cfg := connectv1.NewConfiguration()
 	cfg.Debug = unsafeTrace
-	cfg.HTTPClient = newRetryableHttpClient(unsafeTrace)
+	cfg.HTTPClient = NewRetryableHttpClient(unsafeTrace)
 	cfg.Servers = connectv1.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 

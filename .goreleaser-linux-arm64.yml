@@ -1,5 +1,7 @@
 project_name: confluent
 
+dist: prebuilt
+
 builds:
   - id: confluent-linux-arm64
     binary: confluent

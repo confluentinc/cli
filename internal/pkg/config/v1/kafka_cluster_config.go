@@ -21,3 +21,32 @@ func (k *KafkaClusterConfig) GetName() string {
 	}
 	return k.Name
 }
+
+func (k *KafkaClusterConfig) DecryptAPIKeys() error {
+	for _, key := range k.APIKeys {
+		err := key.DecryptSecret()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (k *KafkaClusterConfig) EncryptAPIKeys() error {
+	for _, key := range k.APIKeys {
+		err := key.EncryptSecret()
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (k *KafkaClusterConfig) GetApiSecret() string {
+	if k != nil && k.APIKeys != nil {
+		if apiKey, ok := k.APIKeys[k.APIKey]; ok {
+			return apiKey.Secret
+		}
+	}
+	return ""
+}

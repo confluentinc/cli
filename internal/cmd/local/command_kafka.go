@@ -17,7 +17,7 @@ const (
 	kafkaRestNotReadySuggestion = "Kafka REST connection is not ready. Re-running the command may solve the issue."
 )
 
-func (c *command) newKafkaCommand() *cobra.Command {
+func (c *Command) newKafkaCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "kafka",
 		Short: "Manage a single-node instance of Apache Kafka.",

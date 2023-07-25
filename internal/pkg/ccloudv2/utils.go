@@ -27,6 +27,7 @@ type NullableString interface {
 var Hostnames = []string{
 	"confluent.cloud",
 	"confluentgov-internal.com",
+	"confluentgov.com",
 	"cpdev.cloud",
 }
 
@@ -42,7 +43,7 @@ func IsCCloudURL(url string, isTest bool) bool {
 	return false
 }
 
-func newRetryableHttpClient(unsafeTrace bool) *http.Client {
+func NewRetryableHttpClient(unsafeTrace bool) *http.Client {
 	client := retryablehttp.NewClient()
 	client.Logger = plog.NewLeveledLogger(unsafeTrace)
 	client.CheckRetry = func(ctx context.Context, resp *http.Response, err error) (bool, error) {

@@ -1,0 +1,28 @@
+Create a Kafka client quota.
+
+Usage:
+  confluent kafka quota create [flags]
+
+Examples:
+Create client quotas for service accounts "sa-1234" and "sa-5678" on cluster "lkc-1234".
+
+  $ confluent kafka quota create --name clientQuota --ingress 500 --egress 100 --principals sa-1234,sa-5678 --cluster lkc-1234
+
+Create a default client quota for all principals without an explicit quota assignment.
+
+  $ confluent kafka quota create --name defaultQuota --ingress 500 --egress 500 --principals "<default>" --cluster lkc-1234
+
+Flags:
+      --name string          REQUIRED: Display name for quota.
+      --description string   Description of quota.
+      --ingress string       Ingress throughput limit for client (bytes/second).
+      --egress string        Egress throughput limit for client (bytes/second).
+      --principals strings   A comma-separated list of service accounts to apply the quota to. Use "<default>" to apply the quota to all service accounts.
+      --cluster string       Kafka cluster ID.
+      --environment string   Environment ID.
+  -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

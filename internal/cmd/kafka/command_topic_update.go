@@ -30,7 +30,7 @@ type topicConfigurationOut struct {
 	ReadOnly bool   `human:"Read-Only" serialized:"read_only"`
 }
 
-func (c *authenticatedTopicCommand) newUpdateCommand() *cobra.Command {
+func (c *command) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "update <topic>",
 		Short:             "Update a Kafka topic.",
@@ -47,7 +47,7 @@ func (c *authenticatedTopicCommand) newUpdateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides with form "key=value".`)
-	cmd.Flags().Bool("dry-run", false, "Run the command without committing changes to Kafka.")
+	pcmd.AddDryRunFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -56,7 +56,7 @@ func (c *authenticatedTopicCommand) newUpdateCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) error {
+func (c *command) update(cmd *cobra.Command, args []string) error {
 	topicName := args[0]
 
 	configs, err := cmd.Flags().GetStringSlice("config")
@@ -113,7 +113,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		return nil
 	}
 
-	readOnlyConfigs := types.NewSet()
+	readOnlyConfigs := types.NewSet[string]()
 	configsValues := make(map[string]string)
 
 	if hasNumPartitionsChanged {

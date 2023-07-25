@@ -19,7 +19,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-func (c *authenticatedTopicCommand) newCreateCommand() *cobra.Command {
+func (c *command) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <topic>",
 		Short: "Create a Kafka topic.",
@@ -36,7 +36,7 @@ func (c *authenticatedTopicCommand) newCreateCommand() *cobra.Command {
 
 	cmd.Flags().Uint32("partitions", 0, "Number of topic partitions.")
 	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the topic being created.`)
-	cmd.Flags().Bool("dry-run", false, "Run the command without committing changes to Kafka.")
+	pcmd.AddDryRunFlag(cmd)
 	cmd.Flags().Bool("if-not-exists", false, "Exit gracefully if topic already exists.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -45,7 +45,7 @@ func (c *authenticatedTopicCommand) newCreateCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) error {
+func (c *command) create(cmd *cobra.Command, args []string) error {
 	topicName := args[0]
 
 	partitions, err := cmd.Flags().GetUint32("partitions")

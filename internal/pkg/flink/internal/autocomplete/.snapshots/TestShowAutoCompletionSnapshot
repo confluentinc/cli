@@ -1,4 +1,4 @@
-([]prompt.Suggest) (len=10) {
+([]prompt.Suggest) (len=5) {
   (prompt.Suggest) {
     Text: (string) (len=14) "SHOW CATALOGS;",
     Description: (string) (len=21) "Used to list catalogs"
@@ -12,31 +12,11 @@
     Description: (string) (len=38) "Lists all tables from current database"
   },
   (prompt.Suggest) {
-    Text: (string) (len=18) "SHOW TABLES FROM ;",
-    Description: (string) (len=32) "Lists all tables from a database"
-  },
-  (prompt.Suggest) {
-    Text: (string) (len=19) "SHOW COLUMNS FROM ;",
-    Description: (string) (len=28) "Lists all columns of a table"
-  },
-  (prompt.Suggest) {
-    Text: (string) (len=11) "SHOW VIEWS;",
-    Description: (string) (len=15) "Lists all views"
-  },
-  (prompt.Suggest) {
     Text: (string) (len=21) "SHOW CURRENT CATALOG;",
     Description: (string) (len=28) "Displays the current catalog"
   },
   (prompt.Suggest) {
     Text: (string) (len=22) "SHOW CURRENT DATABASE;",
     Description: (string) (len=29) "Displays the current database"
-  },
-  (prompt.Suggest) {
-    Text: (string) (len=18) "SHOW CREATE TABLE;",
-    Description: (string) (len=47) "Displays the CREATE TABLE statement for a table"
-  },
-  (prompt.Suggest) {
-    Text: (string) (len=17) "SHOW CREATE VIEW;",
-    Description: (string) (len=45) "Displays the CREATE VIEW statement for a view"
   }
 }

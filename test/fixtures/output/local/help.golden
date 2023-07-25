@@ -1,0 +1,14 @@
+Try out Confluent Platform by running a single-node instance locally on your machine. These commands require Docker to run.
+
+Usage:
+  confluent local [command]
+
+Available Commands:
+  kafka       Manage a single-node instance of Apache Kafka.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent local [command] --help" for more information about a command.

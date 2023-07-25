@@ -3,7 +3,6 @@ package acl
 import (
 	"fmt"
 	"sort"
-	"strconv"
 	"strings"
 
 	"github.com/antihax/optional"
@@ -13,29 +12,28 @@ import (
 
 	cckafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	cpkafkarestv3 "github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
-	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
+	"github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
 	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 var listFields = []string{"Principal", "Permission", "Operation", "ResourceType", "ResourceName", "PatternType"}
 
-var AclOperations = []mds.AclOperation{
-	mds.ACLOPERATION_ALL,
-	mds.ACLOPERATION_ALTER,
-	mds.ACLOPERATION_ALTER_CONFIGS,
-	mds.ACLOPERATION_CLUSTER_ACTION,
-	mds.ACLOPERATION_CREATE,
-	mds.ACLOPERATION_DELETE,
-	mds.ACLOPERATION_DESCRIBE,
-	mds.ACLOPERATION_DESCRIBE_CONFIGS,
-	mds.ACLOPERATION_IDEMPOTENT_WRITE,
-	mds.ACLOPERATION_READ,
-	mds.ACLOPERATION_WRITE,
+var AclOperations = []mdsv1.AclOperation{
+	mdsv1.ACLOPERATION_ALL,
+	mdsv1.ACLOPERATION_ALTER,
+	mdsv1.ACLOPERATION_ALTER_CONFIGS,
+	mdsv1.ACLOPERATION_CLUSTER_ACTION,
+	mdsv1.ACLOPERATION_CREATE,
+	mdsv1.ACLOPERATION_DELETE,
+	mdsv1.ACLOPERATION_DESCRIBE,
+	mdsv1.ACLOPERATION_DESCRIBE_CONFIGS,
+	mdsv1.ACLOPERATION_IDEMPOTENT_WRITE,
+	mdsv1.ACLOPERATION_READ,
+	mdsv1.ACLOPERATION_WRITE,
 }
 
 type out struct {
@@ -59,7 +57,7 @@ type AclRequestDataWithError struct {
 	Errors       error
 }
 
-func PrintACLsFromKafkaRestResponse(cmd *cobra.Command, acls []cpkafkarestv3.AclData) error {
+func PrintACLsFromKafkaRestResponseOnPrem(cmd *cobra.Command, acls []cpkafkarestv3.AclData) error {
 	list := output.NewList(cmd)
 	for _, acl := range acls {
 		list.Add(&out{
@@ -316,80 +314,20 @@ func CreateAclRequestDataToAclData(data *AclRequestDataWithError) cpkafkarestv3.
 	}
 }
 
-func PrintACLsFromKafkaRestResponseWithResourceIdMap(cmd *cobra.Command, acls []cckafkarestv3.AclData, idMap map[int32]string) error {
+func PrintACLsFromKafkaRestResponse(cmd *cobra.Command, acls []cckafkarestv3.AclData) error {
 	list := output.NewList(cmd)
 	for _, acl := range acls {
-		prefix, resourceId, err := getPrefixAndResourceIdFromPrincipal(acl.Principal, idMap)
-		if err != nil {
-			if err.Error() == errors.UserIdNotValidErrorMsg {
-				continue // skip the entry if not a valid user id
-			}
-			return err
-		}
 		list.Add(&out{
-			Principal:    prefix + ":" + resourceId,
-			Permission:   acl.Permission,
-			Operation:    acl.Operation,
-			ResourceType: string(acl.ResourceType),
-			ResourceName: acl.ResourceName,
-			PatternType:  acl.PatternType,
+			Principal:    acl.GetPrincipal(),
+			Permission:   acl.GetPermission(),
+			Operation:    acl.GetOperation(),
+			ResourceType: string(acl.GetResourceType()),
+			ResourceName: acl.GetResourceName(),
+			PatternType:  acl.GetPatternType(),
 		})
 	}
 	list.Filter(listFields)
 	return list.Print()
-}
-
-func PrintACLsWithResourceIdMap(cmd *cobra.Command, acls []*ccstructs.ACLBinding, idMap map[int32]string) error {
-	list := output.NewList(cmd)
-	for _, acl := range acls {
-		prefix, resourceId, err := getPrefixAndResourceIdFromPrincipal(acl.Entry.Principal, idMap)
-		if err != nil {
-			if err.Error() == errors.UserIdNotValidErrorMsg {
-				continue // skip the entry if not a valid user id
-			}
-			return err
-		}
-		list.Add(&out{
-			Principal:    prefix + ":" + resourceId,
-			Permission:   acl.Entry.PermissionType.String(),
-			Operation:    acl.Entry.Operation.String(),
-			ResourceType: acl.Pattern.ResourceType.String(),
-			ResourceName: acl.Pattern.Name,
-			PatternType:  acl.Pattern.PatternType.String(),
-		})
-	}
-	list.Filter(listFields)
-	return list.Print()
-}
-
-func getPrefixAndResourceIdFromPrincipal(principal string, numericIdToResourceId map[int32]string) (string, string, error) {
-	if principal == "" {
-		return "", "", nil
-	}
-
-	x := strings.Split(principal, ":")
-	if len(x) < 2 {
-		return "", "", errors.Errorf("unrecognized principal format %s", principal)
-	}
-	prefix := x[0]
-	suffix := x[1]
-
-	if resource.LookupType(suffix) == resource.ServiceAccount || resource.LookupType(suffix) == resource.IdentityPool {
-		return prefix, suffix, nil
-	}
-
-	// The principal may contain a numeric ID. Try to map it to a resource ID.
-	id, err := strconv.ParseInt(suffix, 10, 32)
-	if err != nil {
-		return "", "", errors.New(errors.UserIdNotValidErrorMsg)
-	}
-
-	resourceId, ok := numericIdToResourceId[int32(id)]
-	if !ok {
-		return "", "", errors.New(errors.UserIdNotValidErrorMsg)
-	}
-
-	return prefix, resourceId, nil
 }
 
 func GetCreateAclRequestData(binding *ccstructs.ACLBinding) cckafkarestv3.CreateAclRequestData {

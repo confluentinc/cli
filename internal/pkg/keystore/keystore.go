@@ -41,6 +41,10 @@ func (c *ConfigKeyStore) StoreAPIKey(key *v1.APIKeyPair, clusterId string) error
 		return err
 	}
 	kcc.APIKeys[key.Key] = key
+	err = kcc.EncryptAPIKeys()
+	if err != nil {
+		return err
+	}
 	return c.Config.Save()
 }
 
@@ -49,6 +53,6 @@ func (c *ConfigKeyStore) DeleteAPIKey(key string) error {
 	if ctx == nil {
 		return new(errors.NotLoggedInError)
 	}
-	ctx.KafkaClusterContext.DeleteAPIKey(key)
+	ctx.KafkaClusterContext.DeleteApiKey(key)
 	return c.Config.Save()
 }

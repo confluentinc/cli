@@ -72,7 +72,7 @@ func (c *command) clusterUpdate(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *command) updateTopLevelCompatibility(cmd *cobra.Command) error {
-	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
+	srClient, ctx, err := getApiClient(cmd, c.Config, c.Version)
 	if err != nil {
 		return err
 	}
@@ -86,7 +86,7 @@ func (c *command) updateTopLevelCompatibility(cmd *cobra.Command) error {
 		return err
 	}
 
-	output.Printf(errors.UpdatedToLevelCompatibilityMsg, updateReq.Compatibility)
+	output.Printf("Successfully updated top level compatibility to \"%s\".\n", updateReq.Compatibility)
 	return nil
 }
 
@@ -154,7 +154,7 @@ func (c *command) getConfigUpdateRequest(cmd *cobra.Command) (srsdk.ConfigUpdate
 }
 
 func (c *command) updateTopLevelMode(cmd *cobra.Command) error {
-	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
+	srClient, ctx, err := getApiClient(cmd, c.Config, c.Version)
 	if err != nil {
 		return err
 	}
@@ -169,6 +169,6 @@ func (c *command) updateTopLevelMode(cmd *cobra.Command) error {
 		return err
 	}
 
-	output.Printf(errors.UpdatedTopLevelModeMsg, modeUpdate.Mode)
+	output.Printf("Successfully updated top level mode to \"%s\".\n", modeUpdate.Mode)
 	return nil
 }

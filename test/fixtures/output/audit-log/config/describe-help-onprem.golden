@@ -1,0 +1,12 @@
+Prints the audit log configuration specification object, where "specification" refers to the JSON blob that describes audit log routing rules.
+
+Usage:
+  confluent audit-log config describe [flags]
+
+Flags:
+      --context string   CLI context name.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

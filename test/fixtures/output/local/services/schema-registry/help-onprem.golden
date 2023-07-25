@@ -1,0 +1,23 @@
+Manage Schema Registry.
+
+Usage:
+  confluent local services schema-registry [command]
+
+Aliases:
+  schema-registry, sr
+
+Available Commands:
+  acl         Specify an ACL for Schema Registry.
+  log         Print logs showing Schema Registry output.
+  start       Start Schema Registry.
+  status      Check if Schema Registry is running.
+  stop        Stop Schema Registry.
+  top         View resource usage for Schema Registry.
+  version     Print the current version of Schema Registry.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent local services schema-registry [command] --help" for more information about a command.

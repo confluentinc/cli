@@ -16,7 +16,7 @@ func (c *command) newDeleteCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "delete <id>",
 		Short:             "Delete a self-managed key.",
-		Long:              "Delete a self-managed key from Conluent Cloud.",
+		Long:              "Delete a self-managed key from Confluent Cloud.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.delete,

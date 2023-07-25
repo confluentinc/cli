@@ -80,16 +80,16 @@ func TestAppendHistory(t *testing.T) {
 	}
 
 	// Append statements to history with correct format
-	history.Append([]string{"statement2", "statement3"})
+	history.Append("statement2", "statement3")
 	expectedData := []string{"statement1", "statement2", "statement3"}
 	require.Equal(t, expectedData, history.Data)
 
 	// Append empty list of statements, should not modify history
-	history.Append([]string{})
+	history.Append()
 	require.Equal(t, expectedData, history.Data)
 
 	// Append statements without trimming white spaces in front and back
-	history.Append([]string{" statement4 ", "\tstatement5\t"})
+	history.Append(" statement4 ", "\tstatement5\t")
 	expectedData = []string{"statement1", "statement2", "statement3", " statement4 ", "\tstatement5\t"}
 	require.Equal(t, expectedData, history.Data)
 }

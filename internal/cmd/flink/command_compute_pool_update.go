@@ -63,7 +63,6 @@ func (c *command) computePoolUpdate(cmd *cobra.Command, args []string) error {
 		Id: flinkv2.PtrString(id),
 		Spec: &flinkv2.FcpmV2ComputePoolSpecUpdate{
 			MaxCfu: flinkv2.PtrInt32(computePool.Spec.GetMaxCfu()),
-			Config: &flinkv2.FcpmV2ComputePoolSpecUpdateConfigOneOf{FcpmV2Standard: &flinkv2.FcpmV2Standard{Kind: "Standard"}},
 			Environment: &flinkv2.GlobalObjectReference{
 				Id:           environmentId,
 				Related:      environment.Metadata.GetSelf(),
