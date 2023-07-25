@@ -51,3 +51,53 @@ func (c *Client) TestCompatibilityBySubjectName(subject, version string, body sr
 	res, _, err := c.DefaultApi.TestCompatibilityBySubjectName(c.context(), subject, version, body, nil)
 	return res, err
 }
+
+func (c *Client) CreateExporter(req srsdk.CreateExporterRequest) (srsdk.CreateExporterResponse, error) {
+	res, _, err := c.DefaultApi.CreateExporter(c.context(), req)
+	return res, err
+}
+
+func (c *Client) DeleteExporter(name string) error {
+	_, err := c.DefaultApi.DeleteExporter(c.context(), name)
+	return err
+}
+
+func (c *Client) GetExporterInfo(name string) (srsdk.ExporterInfo, error) {
+	info, _, err := c.DefaultApi.GetExporterInfo(c.context(), name)
+	return info, err
+}
+
+func (c *Client) GetExporterConfig(name string) (map[string]string, error) {
+	config, _, err := c.DefaultApi.GetExporterConfig(c.context(), name)
+	return config, err
+}
+
+func (c *Client) ResumeExporter(name string) (srsdk.UpdateExporterResponse, error) {
+	res, _, err := c.DefaultApi.ResumeExporter(c.context(), name)
+	return res, err
+}
+
+func (c *Client) ResetExporter(name string) (srsdk.UpdateExporterResponse, error) {
+	res, _, err := c.DefaultApi.ResetExporter(c.context(), name)
+	return res, err
+}
+
+func (c *Client) PauseExporter(name string) (srsdk.UpdateExporterResponse, error) {
+	res, _, err := c.DefaultApi.PauseExporter(c.context(), name)
+	return res, err
+}
+
+func (c *Client) GetExporters() ([]string, error) {
+	exporters, _, err := c.DefaultApi.GetExporters(c.context())
+	return exporters, err
+}
+
+func (c *Client) GetExporterStatus(name string) (srsdk.ExporterStatus, error) {
+	status, _, err := c.DefaultApi.GetExporterStatus(c.context(), name)
+	return status, err
+}
+
+func (c *Client) PutExporter(name string, req srsdk.UpdateExporterRequest) (srsdk.UpdateExporterResponse, error) {
+	res, _, err := c.DefaultApi.PutExporter(c.context(), name, req)
+	return res, err
+}

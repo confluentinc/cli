@@ -1,4 +1,4 @@
-Describe the schema exporter.
+Describe a schema exporter.
 
 Usage:
   confluent schema-registry exporter describe <name> [flags]
