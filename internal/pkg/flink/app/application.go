@@ -22,7 +22,9 @@ type Application struct {
 	statementController         types.StatementControllerInterface
 	interactiveOutputController types.OutputControllerInterface
 	basicOutputController       types.OutputControllerInterface
-	tokenRefreshFunc            func() error
+	refreshToken                func() error
+	reportUsage                 func()
+	appOptions                  types.ApplicationOptions
 }
 
 var mutex sync.Mutex
@@ -36,7 +38,7 @@ func synchronizedTokenRefresh(tokenRefreshFunc func() error) func() error {
 	}
 }
 
-func StartApp(client ccloudv2.GatewayClientInterface, tokenRefreshFunc func() error, appOptions types.ApplicationOptions) {
+func StartApp(client ccloudv2.GatewayClientInterface, tokenRefreshFunc func() error, appOptions types.ApplicationOptions, reportUsageFunc func()) {
 	// Load history of previous commands from cache file
 	historyStore := history.LoadHistory()
 
@@ -70,7 +72,9 @@ func StartApp(client ccloudv2.GatewayClientInterface, tokenRefreshFunc func() er
 		statementController:         statementController,
 		interactiveOutputController: interactiveOutputController,
 		basicOutputController:       basicOutputController,
-		tokenRefreshFunc:            synchronizedTokenRefresh(tokenRefreshFunc),
+		refreshToken:                synchronizedTokenRefresh(tokenRefreshFunc),
+		reportUsage:                 reportUsageFunc,
+		appOptions:                  appOptions,
 	}
 	components.PrintWelcomeHeader()
 	app.readEvalPrintLoop()
@@ -78,29 +82,44 @@ func StartApp(client ccloudv2.GatewayClientInterface, tokenRefreshFunc func() er
 
 func (a *Application) readEvalPrintLoop() {
 	for a.isAuthenticated() {
-		userInput := a.inputController.GetUserInput()
-		if a.inputController.HasUserEnabledReverseSearch() {
-			a.inputController.StartReverseSearch()
-			continue
-		}
-		if a.inputController.HasUserInitiatedExit(userInput) {
-			a.appController.ExitApplication()
-			return
-		}
-		a.history.Append(userInput)
+		a.readEvalPrint()
+	}
+}
 
-		executedStatement, err := a.statementController.ExecuteStatement(userInput)
-		if err != nil {
-			continue
-		}
+func (a *Application) readEvalPrint() {
+	defer a.panicRecovery()
 
-		a.resultFetcher.Init(*executedStatement)
-		a.getOutputController(*executedStatement).VisualizeResults()
+	userInput := a.inputController.GetUserInput()
+	if a.inputController.HasUserEnabledReverseSearch() {
+		a.inputController.StartReverseSearch()
+		return
+	}
+	if a.inputController.HasUserInitiatedExit(userInput) {
+		a.appController.ExitApplication()
+		return
+	}
+	a.history.Append(userInput)
+
+	executedStatement, err := a.statementController.ExecuteStatement(userInput)
+	if err != nil {
+		return
+	}
+
+	a.resultFetcher.Init(*executedStatement)
+	a.getOutputController(*executedStatement).VisualizeResults()
+}
+
+func (a *Application) panicRecovery() {
+	if r := recover(); r != nil {
+		a.statementController.CleanupStatement()
+		a.interactiveOutputController = controller.NewInteractiveOutputController(components.NewTableView(), a.resultFetcher, a.appOptions.GetVerbose())
+		a.reportUsage()
+		utils.OutputErr("Error: internal error occurred")
 	}
 }
 
 func (a *Application) isAuthenticated() bool {
-	if authErr := a.tokenRefreshFunc(); authErr != nil {
+	if authErr := a.refreshToken(); authErr != nil {
 		utils.OutputErrf("Error: %v\n", authErr)
 		a.appController.ExitApplication()
 		return false

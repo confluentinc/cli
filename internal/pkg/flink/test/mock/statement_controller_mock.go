@@ -34,6 +34,18 @@ func (m *MockStatementControllerInterface) EXPECT() *MockStatementControllerInte
 	return m.recorder
 }
 
+// CleanupStatement mocks base method.
+func (m *MockStatementControllerInterface) CleanupStatement() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "CleanupStatement")
+}
+
+// CleanupStatement indicates an expected call of CleanupStatement.
+func (mr *MockStatementControllerInterfaceMockRecorder) CleanupStatement() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CleanupStatement", reflect.TypeOf((*MockStatementControllerInterface)(nil).CleanupStatement))
+}
+
 // ExecuteStatement mocks base method.
 func (m *MockStatementControllerInterface) ExecuteStatement(arg0 string) (*types.ProcessedStatement, *types.StatementError) {
 	m.ctrl.T.Helper()
