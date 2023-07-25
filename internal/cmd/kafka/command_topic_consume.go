@@ -1,7 +1,6 @@
 package kafka
 
 import (
-	"context"
 	"fmt"
 	"os"
 
@@ -9,7 +8,6 @@ import (
 	"github.com/spf13/cobra"
 
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -17,6 +15,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	schemaregistry "github.com/confluentinc/cli/internal/pkg/schema-registry"
 )
 
 func (c *command) newConsumeCommand() *cobra.Command {
@@ -49,13 +48,19 @@ func (c *command) newConsumeCommand() *cobra.Command {
 	pcmd.AddConsumerConfigFileFlag(cmd)
 	cmd.Flags().String("schema-registry-context", "", "The Schema Registry context under which to look up schema ID.")
 	cmd.Flags().String("schema-registry-endpoint", "", "Endpoint for Schema Registry cluster.")
-	cmd.Flags().String("schema-registry-api-key", "", "Schema registry API key.")
-	cmd.Flags().String("schema-registry-api-secret", "", "Schema registry API key secret.")
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddApiSecretFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+
+	// Deprecated
+	cmd.Flags().String("schema-registry-api-key", "", "Schema registry API key.")
+	cmd.Flags().MarkHidden("schema-registry-api-key")
+
+	// Deprecated
+	cmd.Flags().String("schema-registry-api-secret", "", "Schema registry API key secret.")
+	cmd.Flags().MarkHidden("schema-registry-api-secret")
 
 	cobra.CheckErr(cmd.MarkFlagFilename("config-file", "avsc", "json"))
 
@@ -156,19 +161,10 @@ func (c *command) consume(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	var srClient *srsdk.APIClient
-	var ctx context.Context
+	var client *schemaregistry.Client
 	if valueFormat != "string" {
-		schemaRegistryApiKey, err := cmd.Flags().GetString("schema-registry-api-key")
-		if err != nil {
-			return err
-		}
-		schemaRegistryApiSecret, err := cmd.Flags().GetString("schema-registry-api-secret")
-		if err != nil {
-			return err
-		}
 		// Only initialize client and context when schema is specified.
-		srClient, ctx, err = sr.GetSchemaRegistryClientWithApiKey(cmd, c.Config, c.Version, schemaRegistryApiKey, schemaRegistryApiSecret)
+		client, err = c.GetSchemaRegistryClient()
 		if err != nil {
 			if err.Error() == errors.NotLoggedInErrorMsg {
 				return new(errors.SRNotAuthenticatedError)
@@ -196,11 +192,10 @@ func (c *command) consume(cmd *cobra.Command, args []string) error {
 	}
 
 	groupHandler := &GroupHandler{
-		SrClient: srClient,
-		Ctx:      ctx,
-		Format:   valueFormat,
-		Out:      cmd.OutOrStdout(),
-		Subject:  subject,
+		Client:  client,
+		Format:  valueFormat,
+		Out:     cmd.OutOrStdout(),
+		Subject: subject,
 		Properties: ConsumerProperties{
 			PrintKey:   printKey,
 			FullHeader: fullHeader,

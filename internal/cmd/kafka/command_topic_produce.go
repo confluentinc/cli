@@ -179,18 +179,15 @@ func (c *command) registerSchema(cmd *cobra.Command, schemaCfg *sr.RegisterSchem
 	referencePathMap := map[string]string{}
 
 	if len(schemaCfg.SchemaPath) > 0 {
-		srClient, ctx, err := c.getSchemaRegistryClient(cmd)
-		if err != nil {
-			return nil, nil, err
-		}
+		client, err := c.GetSchemaRegistryClient()
 
-		id, err := sr.RegisterSchemaWithAuth(cmd, schemaCfg, srClient, ctx)
+		id, err := sr.RegisterSchemaWithAuth(cmd, schemaCfg, client)
 		if err != nil {
 			return nil, nil, err
 		}
 		metaInfo = sr.GetMetaInfoFromSchemaId(id)
 
-		referencePathMap, err = sr.StoreSchemaReferences(schemaCfg.SchemaDir, schemaCfg.Refs, srClient, ctx)
+		referencePathMap, err = sr.StoreSchemaReferences(schemaCfg.SchemaDir, schemaCfg.Refs, client)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -298,12 +295,9 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic string) (serdes
 	metaInfo := []byte{}
 
 	if isSchemaId {
-		srClient, ctx, err := c.getSchemaRegistryClient(cmd)
-		if err != nil {
-			return nil, nil, err
-		}
+		client, err := c.GetSchemaRegistryClient()
 
-		schemaString, err := sr.RequestSchemaWithId(schemaId, subject, srClient, ctx)
+		schemaString, err := sr.RequestSchemaWithId(schemaId, subject, client)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -313,7 +307,7 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic string) (serdes
 			return nil, nil, err
 		}
 
-		schemaPath, referencePathMap, err = sr.SetSchemaPathRef(schemaString, dir, subject, schemaId, srClient, ctx)
+		schemaPath, referencePathMap, err = sr.SetSchemaPathRef(schemaString, dir, subject, schemaId, client)
 		if err != nil {
 			return nil, nil, err
 		}
