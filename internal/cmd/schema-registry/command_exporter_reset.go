@@ -1,18 +1,15 @@
 package schemaregistry
 
 import (
-	"context"
-
 	"github.com/spf13/cobra"
 
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
-
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (c *command) newExporterResetCommand() *cobra.Command {
+func (c *command) newExporterResetCommand(cfg *v1.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "reset <name>",
 		Short: "Reset schema exporter.",
@@ -20,29 +17,27 @@ func (c *command) newExporterResetCommand() *cobra.Command {
 		RunE:  c.exporterReset,
 	}
 
-	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
-	pcmd.AddApiSecretFlag(cmd)
+	if cfg.IsCloudLogin() {
+		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	} else {
+		cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
+	}
 	pcmd.AddContextFlag(cmd, c.CLICommand)
-	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
 
 func (c *command) exporterReset(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := getApiClient(cmd, c.Config, c.Version)
+	client, err := c.GetSchemaRegistryClient()
 	if err != nil {
 		return err
 	}
 
-	return resetExporter(args[0], srClient, ctx)
-}
-
-func resetExporter(name string, srClient *srsdk.APIClient, ctx context.Context) error {
-	if _, _, err := srClient.DefaultApi.ResetExporter(ctx, name); err != nil {
+	if _, err := client.ResetExporter(args[0]); err != nil {
 		return err
 	}
 
-	output.Printf(errors.ExporterActionMsg, "Reset", name)
+	output.Printf(errors.ExporterActionMsg, "Reset", args[0])
 	return nil
 }

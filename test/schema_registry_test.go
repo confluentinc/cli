@@ -70,18 +70,18 @@ func (s *CLITestSuite) TestSchemaRegistryExporter() {
 	exporterConfigPath := getInputFixturePath("schema-registry", "schema-exporter-config.txt")
 
 	tests := []CLITest{
-		{args: fmt.Sprintf("schema-registry exporter list --api-key key --api-secret secret --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/exporter/list.golden"},
-		{args: fmt.Sprintf(`schema-registry exporter create myexporter --subjects foo,bar --context-type AUTO --subject-format my-\\${subject} --config-file %s --api-key key --api-secret secret --environment %s`, exporterConfigPath, testserver.SRApiEnvId), fixture: "schema-registry/exporter/create.golden"},
-		{args: fmt.Sprintf("schema-registry exporter describe myexporter --api-key key --api-secret secret --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/exporter/describe.golden"},
-		{args: fmt.Sprintf(`schema-registry exporter update myexporter --subjects foo,bar,test --subject-format my-\\${subject} --api-key key --api-secret secret --environment %s`, testserver.SRApiEnvId), fixture: "schema-registry/exporter/update.golden"},
-		{args: fmt.Sprintf("schema-registry exporter delete myexporter --api-key key --api-secret secret --environment %s --force", testserver.SRApiEnvId), fixture: "schema-registry/exporter/delete.golden"},
-		{args: fmt.Sprintf("schema-registry exporter delete myexporter --api-key key --api-secret secret --environment %s", testserver.SRApiEnvId), input: "myexporter\n", fixture: "schema-registry/exporter/delete-prompt.golden"},
-		{args: fmt.Sprintf("schema-registry exporter get-status myexporter --api-key key --api-secret secret --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/exporter/get-status.golden"},
-		{args: fmt.Sprintf("schema-registry exporter get-config myexporter --output json --api-key key --api-secret secret --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/exporter/get-config-json.golden"},
-		{args: fmt.Sprintf("schema-registry exporter get-config myexporter --output yaml --api-key key --api-secret secret --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/exporter/get-config-yaml.golden"},
-		{args: fmt.Sprintf("schema-registry exporter pause myexporter --api-key key --api-secret secret --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/exporter/pause.golden"},
-		{args: fmt.Sprintf("schema-registry exporter resume myexporter --api-key key --api-secret secret --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/exporter/resume.golden"},
-		{args: fmt.Sprintf("schema-registry exporter reset myexporter --api-key key --api-secret secret --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/exporter/reset.golden"},
+		{args: fmt.Sprintf("schema-registry exporter list --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/exporter/list.golden"},
+		{args: fmt.Sprintf(`schema-registry exporter create myexporter --subjects foo,bar --context-type AUTO --subject-format my-\\${subject} --config-file %s --environment %s`, exporterConfigPath, testserver.SRApiEnvId), fixture: "schema-registry/exporter/create.golden"},
+		{args: fmt.Sprintf("schema-registry exporter describe myexporter --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/exporter/describe.golden"},
+		{args: fmt.Sprintf(`schema-registry exporter update myexporter --subjects foo,bar,test --subject-format my-\\${subject} --environment %s`, testserver.SRApiEnvId), fixture: "schema-registry/exporter/update.golden"},
+		{args: fmt.Sprintf("schema-registry exporter delete myexporter --environment %s --force", testserver.SRApiEnvId), fixture: "schema-registry/exporter/delete.golden"},
+		{args: fmt.Sprintf("schema-registry exporter delete myexporter --environment %s", testserver.SRApiEnvId), input: "myexporter\n", fixture: "schema-registry/exporter/delete-prompt.golden"},
+		{args: fmt.Sprintf("schema-registry exporter get-status myexporter --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/exporter/get-status.golden"},
+		{args: fmt.Sprintf("schema-registry exporter get-config myexporter --output json --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/exporter/get-config-json.golden"},
+		{args: fmt.Sprintf("schema-registry exporter get-config myexporter --output yaml --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/exporter/get-config-yaml.golden"},
+		{args: fmt.Sprintf("schema-registry exporter pause myexporter --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/exporter/pause.golden"},
+		{args: fmt.Sprintf("schema-registry exporter resume myexporter --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/exporter/resume.golden"},
+		{args: fmt.Sprintf("schema-registry exporter reset myexporter --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/exporter/reset.golden"},
 	}
 
 	for _, test := range tests {

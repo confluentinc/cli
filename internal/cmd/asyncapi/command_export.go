@@ -1,7 +1,6 @@
 package asyncapi
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -13,10 +12,8 @@ import (
 	"github.com/swaggest/go-asyncapi/spec-2.4.0"
 
 	ckgo "github.com/confluentinc/confluent-kafka-go/kafka"
-	schemaregistry "github.com/confluentinc/schema-registry-sdk-go"
 
 	"github.com/confluentinc/cli/internal/cmd/kafka"
-	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -24,6 +21,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	schemaregistry "github.com/confluentinc/cli/internal/pkg/schema-registry"
 	"github.com/confluentinc/cli/internal/pkg/serdes"
 )
 
@@ -177,7 +175,7 @@ func (c *command) getChannelDetails(details *accountDetails, flags *flags) error
 	}
 	details.channelDetails.example = nil
 	if flags.consumeExamples {
-		example, err := c.getMessageExamples(details.consumer, details.channelDetails.currentTopic.GetTopicName(), details.channelDetails.contentType, details.srClient, flags.valueFormat)
+		example, err := c.getMessageExamples(details.consumer, details.channelDetails.currentTopic.GetTopicName(), details.channelDetails.contentType, details.client, flags.valueFormat)
 		if err != nil {
 			log.CliLogger.Warn(err)
 		}
@@ -192,7 +190,7 @@ func (c *command) getChannelDetails(details *accountDetails, flags *flags) error
 		log.CliLogger.Warnf("Failed to get topic description: %v", err)
 	}
 	// x-messageCompatibility
-	mapOfMessageCompat, err := getMessageCompatibility(details.srClient, details.srContext, details.channelDetails.currentSubject)
+	mapOfMessageCompat, err := getMessageCompatibility(details.client, details.channelDetails.currentSubject)
 	if err != nil {
 		log.CliLogger.Warnf("Failed to get subject's compatibility type: %v", err)
 	}
@@ -209,7 +207,7 @@ func (c *command) getAccountDetails(flags *flags) (*accountDetails, error) {
 	if err := c.getSchemaRegistry(details, flags); err != nil {
 		return nil, err
 	}
-	subjects, _, err := details.srClient.DefaultApi.List(details.srContext, nil)
+	subjects, err := details.client.List()
 	if err != nil {
 		return nil, err
 	}
@@ -244,7 +242,7 @@ func handlePanic() {
 	}
 }
 
-func (c command) getMessageExamples(consumer *ckgo.Consumer, topicName, contentType string, srClient *schemaregistry.APIClient, valueFormatFlag string) (any, error) {
+func (c command) getMessageExamples(consumer *ckgo.Consumer, topicName, contentType string, client *schemaregistry.Client, valueFormatFlag string) (any, error) {
 	defer handlePanic()
 	if err := consumer.Subscribe(topicName, nil); err != nil {
 		return nil, fmt.Errorf(`failed to subscribe to topic "%s": %v`, topicName, err)
@@ -265,8 +263,7 @@ func (c command) getMessageExamples(consumer *ckgo.Consumer, topicName, contentT
 		return nil, fmt.Errorf("failed to get deserializer for %s", valueFormat)
 	}
 	groupHandler := kafka.GroupHandler{
-		SrClient:   srClient,
-		Ctx:        context.Background(),
+		Client:     client,
 		Format:     valueFormat,
 		Subject:    topicName + "-value",
 		Properties: kafka.ConsumerProperties{},
@@ -431,17 +428,18 @@ func (c *command) getSchemaRegistry(details *accountDetails, flags *flags) error
 		}
 		return fmt.Errorf("unable to get Schema Registry cluster: %v", err)
 	}
+	details.srCluster = schemaCluster
+
 	if flags.schemaRegistryApiKey == "" && flags.schemaRegistryApiSecret == "" && schemaCluster.SrCredentials != nil {
 		flags.schemaRegistryApiKey = schemaCluster.SrCredentials.Key
 		flags.schemaRegistryApiSecret = schemaCluster.SrCredentials.Secret
 	}
-	srClient, ctx, err := sr.GetSchemaRegistryClientWithApiKey(c.Command, c.Config, c.Version, flags.schemaRegistryApiKey, flags.schemaRegistryApiSecret)
+	client, err := c.GetSchemaRegistryClient()
 	if err != nil {
 		return err
 	}
-	details.srCluster = schemaCluster
-	details.srClient = srClient
-	details.srContext = ctx
+	details.client = client
+
 	return nil
 }
 
@@ -453,30 +451,18 @@ func addServer(broker string, schemaCluster *v1.SchemaRegistryCluster, specVersi
 	return asyncapi.Reflector{
 		Schema: &spec.AsyncAPI{
 			Servers: map[string]spec.ServersAdditionalProperties{
-				"cluster": {
-					Server: &spec.Server{
-						URL:         broker,
-						Description: "Confluent Kafka instance.",
-						Protocol:    "kafka",
-						Security: []map[string][]string{
-							{
-								"confluentBroker": []string{},
-							},
-						},
-					},
-				},
-				"schema-registry": {
-					Server: &spec.Server{
-						URL:         schemaCluster.SchemaRegistryEndpoint,
-						Description: "Confluent Kafka Schema Registry Server",
-						Protocol:    "kafka",
-						Security: []map[string][]string{
-							{
-								"confluentSchemaRegistry": []string{},
-							},
-						},
-					},
-				},
+				"cluster": {Server: &spec.Server{
+					URL:         broker,
+					Description: "Confluent Kafka instance.",
+					Protocol:    "kafka",
+					Security:    []map[string][]string{{"confluentBroker": []string{}}},
+				}},
+				"schema-registry": {Server: &spec.Server{
+					URL:         schemaCluster.SchemaRegistryEndpoint,
+					Description: "Confluent Kafka Schema Registry Server",
+					Protocol:    "kafka",
+					Security:    []map[string][]string{{"confluentSchemaRegistry": []string{}}},
+				}},
 			},
 			Info: spec.Info{
 				Version: specVersion,
@@ -486,19 +472,16 @@ func addServer(broker string, schemaCluster *v1.SchemaRegistryCluster, specVersi
 	}
 }
 
-func getMessageCompatibility(srClient *schemaregistry.APIClient, ctx context.Context, subject string) (map[string]any, error) {
-	var config schemaregistry.Config
-	mapOfMessageCompat := make(map[string]any)
-	config, _, err := srClient.DefaultApi.GetSubjectLevelConfig(ctx, subject, nil)
+func getMessageCompatibility(client *schemaregistry.Client, subject string) (map[string]any, error) {
+	config, err := client.GetSubjectLevelConfig(subject)
 	if err != nil {
 		log.CliLogger.Warnf("Failed to get subject level configuration: %v", err)
-		config, _, err = srClient.DefaultApi.GetTopLevelConfig(ctx)
+		config, err = client.GetTopLevelConfig()
 		if err != nil {
 			return nil, fmt.Errorf("failed to get top level configuration: %v", err)
 		}
 	}
-	mapOfMessageCompat["x-messageCompatibility"] = any(config.CompatibilityLevel)
-	return mapOfMessageCompat, nil
+	return map[string]any{"x-messageCompatibility": config.CompatibilityLevel}, nil
 }
 
 func addChannel(reflector asyncapi.Reflector, details channelDetails) (asyncapi.Reflector, error) {
