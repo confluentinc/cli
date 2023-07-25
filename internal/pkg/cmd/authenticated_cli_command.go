@@ -232,13 +232,13 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient() (*schemaregistry.Cli
 				return nil, err
 			}
 
-			cfg := srsdk.NewConfiguration()
-			cfg.BasePath = schemaRegistryEndpoint
-			cfg.UserAgent = c.Config.Version.UserAgent
-			cfg.Debug = unsafeTrace
-			cfg.HTTPClient = client
+			configuration := srsdk.NewConfiguration()
+			configuration.BasePath = schemaRegistryEndpoint
+			configuration.UserAgent = c.Config.Version.UserAgent
+			configuration.Debug = unsafeTrace
+			configuration.HTTPClient = client
 
-			c.schemaRegistryClient = schemaregistry.NewClient(cfg, c.Context.GetAuthToken())
+			c.schemaRegistryClient = schemaregistry.NewClient(configuration, c.Context.GetAuthToken())
 		}
 	}
 
