@@ -1,14 +1,12 @@
-Delete schema exporter.
+Delete a schema exporter.
 
 Usage:
   confluent schema-registry exporter delete <name> [flags]
 
 Flags:
-      --api-key string       API key.
-      --api-secret string    API key secret.
       --force                Skip the deletion confirmation prompt.
-      --context string       CLI context name.
       --environment string   Environment ID.
+      --context string       CLI context name.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
