@@ -24,12 +24,12 @@ COPY package*.json ./
 RUN npm install
 
 # Copy the WebSocket server code to the container
-COPY server.js ./
+COPY docker/server.js ./
 
 # Expose the port on which the WebSocket server will run (e.g., 8080)
 EXPOSE 8080
 
 # Start the WebSocket server when the container starts
-CMD ["node", "server.js"]
+CMD ["node", "server.js", "&"]
 
 RUN cd /cli && for file in prebuilt/*.txt; do mv -v "$file" "${file/checksums/checksums_linux}"; done;
