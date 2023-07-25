@@ -1,4 +1,4 @@
-Get the configurations of the schema exporter.
+Get the schema exporter configuration.
 
 Usage:
   confluent schema-registry exporter get-config <name> [flags]

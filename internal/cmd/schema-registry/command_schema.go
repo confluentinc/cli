@@ -18,13 +18,13 @@ func (c *command) newSchemaCommand(cfg *v1.Config) *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLoginOrOnPremLogin},
 	}
 
+	cmd.AddCommand(c.newSchemaCreateCommand(cfg))
+
 	if cfg.IsCloudLogin() {
-		cmd.AddCommand(c.newSchemaCreateCommand())
 		cmd.AddCommand(c.newSchemaDeleteCommand())
 		cmd.AddCommand(c.newSchemaDescribeCommand())
 		cmd.AddCommand(c.newSchemaListCommand())
 	} else {
-		cmd.AddCommand(c.newSchemaCreateCommandOnPrem())
 		cmd.AddCommand(c.newSchemaDeleteCommandOnPrem())
 		cmd.AddCommand(c.newSchemaDescribeCommandOnPrem())
 		cmd.AddCommand(c.newSchemaListCommandOnPrem())

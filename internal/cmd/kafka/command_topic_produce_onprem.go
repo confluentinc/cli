@@ -199,18 +199,19 @@ func (c *command) registerSchemaOnPrem(cmd *cobra.Command, schemaCfg *sr.Registe
 		if c.State == nil { // require log-in to use oauthbearer token
 			return nil, nil, errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestions)
 		}
-		srClient, ctx, err := sr.GetSrApiClientWithToken(cmd, c.Version, c.AuthToken())
+
+		client, err := c.GetSchemaRegistryClient()
 		if err != nil {
 			return nil, nil, err
 		}
 
-		id, err := sr.RegisterSchemaWithAuth(cmd, schemaCfg, srClient, ctx)
+		id, err := sr.RegisterSchemaWithAuth(cmd, schemaCfg, client)
 		if err != nil {
 			return nil, nil, err
 		}
 		metaInfo = sr.GetMetaInfoFromSchemaId(id)
 
-		referencePathMap, err = sr.StoreSchemaReferences(schemaCfg.SchemaDir, schemaCfg.Refs, srClient, ctx)
+		referencePathMap, err = sr.StoreSchemaReferences(schemaCfg.SchemaDir, schemaCfg.Refs, client)
 		if err != nil {
 			return nil, nil, err
 		}
