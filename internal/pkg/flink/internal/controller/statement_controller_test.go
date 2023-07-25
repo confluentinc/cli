@@ -105,7 +105,7 @@ func (s *StatementControllerTestSuite) TestExecuteStatement() {
 
 func (s *StatementControllerTestSuite) TestExecuteStatementExitApplicationOnUnauthorizedResponse() {
 	statementToExecute := "select 1;"
-	processedStatementError := types.StatementError{Message: "unauthorized", HttpResponseCode: 401}
+	processedStatementError := types.StatementError{Message: "unauthorized", StatusCode: 401}
 	s.store.EXPECT().ProcessStatement(statementToExecute).Return(nil, &processedStatementError)
 	s.applicationController.EXPECT().ExitApplication()
 
