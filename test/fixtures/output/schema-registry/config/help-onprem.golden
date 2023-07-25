@@ -4,7 +4,7 @@ Usage:
   confluent schema-registry config [command]
 
 Available Commands:
-  describe    Describe top-level or subject-level schema compatibility.
+  describe    Describe top-level or subject-level schema configuration.
 
 Global Flags:
   -h, --help            Show help for this command.
