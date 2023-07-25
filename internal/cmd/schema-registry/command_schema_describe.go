@@ -31,23 +31,31 @@ func (c *command) newSchemaDescribeCommand(cfg *v1.Config) *cobra.Command {
 		Short: "Get schema either by schema ID, or by subject/version.",
 		Args:  cobra.MaximumNArgs(1),
 		RunE:  c.schemaDescribe,
-		Example: examples.BuildExampleString(
-			examples.Example{
-				Text: "Describe the schema string by schema ID.",
-				Code: "confluent schema-registry schema describe 1337",
-			},
-			examples.Example{
-				Text: "Describe the schema by both subject and version.",
-				Code: "confluent schema-registry schema describe --subject payments --version latest",
-			},
-		),
 	}
 
-	cmd.Flags().String("subject", "", SubjectUsage)
+	example1 := examples.Example{
+		Text: "Describe the schema string by schema ID.",
+		Code: "confluent schema-registry schema describe 1337",
+	}
+	example2 := examples.Example{
+		Text: "Describe the schema by both subject and version.",
+		Code: "confluent schema-registry schema describe --subject payments --version latest",
+	}
+	if cfg.IsOnPremLogin() {
+		example1.Code += " " + onPremAuthenticationMsg
+		example2.Code += " " + onPremAuthenticationMsg
+	}
+	cmd.Example = examples.BuildExampleString(example1, example2)
+
+	cmd.Flags().String("subject", "", subjectUsage)
 	cmd.Flags().String("version", "", `Version of the schema. Can be a specific version or "latest".`)
 	cmd.Flags().Bool("show-references", false, "Display the entire schema graph, including references.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
-	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	if cfg.IsCloudLogin() {
+		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	} else {
+		cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
+	}
 
 	if cfg.IsCloudLogin() {
 		// Deprecated

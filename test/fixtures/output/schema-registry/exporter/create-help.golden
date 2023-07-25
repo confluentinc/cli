@@ -14,8 +14,8 @@ Flags:
       --subject-format string   Exporter subject rename format. The format string can contain ${subject}, which will be replaced with the default subject name. (default "${subject}")
       --context-type string     Exporter context type. One of "AUTO", "CUSTOM" or "NONE". (default "AUTO")
       --context-name string     Exporter context name.
-      --environment string      Environment ID.
       --context string          CLI context name.
+      --environment string      Environment ID.
   -o, --output string           Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:

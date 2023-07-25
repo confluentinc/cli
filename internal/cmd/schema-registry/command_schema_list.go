@@ -39,20 +39,20 @@ func (c *command) newSchemaListCommand(cfg *v1.Config) *cobra.Command {
 		Code: "confluent schema-registry schema list",
 	}
 	if cfg.IsOnPremLogin() {
-		example1.Code += " " + OnPremAuthenticationMsg
-		example2.Code += " " + OnPremAuthenticationMsg
-		example3.Code += " " + OnPremAuthenticationMsg
+		example1.Code += " " + onPremAuthenticationMsg
+		example2.Code += " " + onPremAuthenticationMsg
+		example3.Code += " " + onPremAuthenticationMsg
 	}
 	cmd.Example = examples.BuildExampleString(example1, example2, example3)
 
 	cmd.Flags().String("subject-prefix", "", "List schemas for subjects with a given prefix.")
 	cmd.Flags().Bool("all", false, "Include soft-deleted schemas.")
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	} else {
 		cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
 	}
-	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	if cfg.IsCloudLogin() {

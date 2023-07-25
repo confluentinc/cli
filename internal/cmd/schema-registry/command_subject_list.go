@@ -25,12 +25,12 @@ func (c *command) newSubjectListCommand(cfg *v1.Config) *cobra.Command {
 
 	cmd.Flags().Bool("deleted", false, "View the deleted subjects.")
 	cmd.Flags().String("prefix", ":*:", "Subject prefix.")
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	} else {
 		cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
 	}
-	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	if cfg.IsCloudLogin() {

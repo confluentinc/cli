@@ -37,9 +37,9 @@ func (c *command) newSubjectUpdateCommand(cfg *v1.Config) *cobra.Command {
 		Code: "confluent schema-registry subject update payments --mode readwrite",
 	}
 	if cfg.IsOnPremLogin() {
-		example1.Code += " " + OnPremAuthenticationMsg
-		example2.Code += " " + OnPremAuthenticationMsg
-		example3.Code += " " + OnPremAuthenticationMsg
+		example1.Code += " " + onPremAuthenticationMsg
+		example2.Code += " " + onPremAuthenticationMsg
+		example3.Code += " " + onPremAuthenticationMsg
 	}
 	cmd.Example = examples.BuildExampleString(example1, example2, example3)
 
@@ -50,12 +50,12 @@ func (c *command) newSubjectUpdateCommand(cfg *v1.Config) *cobra.Command {
 	addRulesetDefaultsFlag(cmd)
 	addRulesetOverridesFlag(cmd)
 	addModeFlag(cmd)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	} else {
 		cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
 	}
-	pcmd.AddContextFlag(cmd, c.CLICommand)
 
 	if cfg.IsCloudLogin() {
 		// Deprecated

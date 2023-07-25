@@ -28,7 +28,7 @@ func (c *command) newExporterCreateCommand(cfg *v1.Config) *cobra.Command {
 		Code: `confluent schema-registry exporter create my-exporter --config-file config.txt --subjects my-subject1,my-subject2 --subject-format my-\${subject} --context-type CUSTOM --context-name my-context`,
 	}
 	if cfg.IsOnPremLogin() {
-		example.Code += " " + OnPremAuthenticationMsg
+		example.Code += " " + onPremAuthenticationMsg
 	}
 	cmd.Example = examples.BuildExampleString(example)
 
@@ -37,12 +37,12 @@ func (c *command) newExporterCreateCommand(cfg *v1.Config) *cobra.Command {
 	cmd.Flags().String("subject-format", "${subject}", "Exporter subject rename format. The format string can contain ${subject}, which will be replaced with the default subject name.")
 	addContextTypeFlag(cmd)
 	cmd.Flags().String("context-name", "", "Exporter context name.")
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	} else {
 		cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
 	}
-	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("config-file"))

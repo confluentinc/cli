@@ -30,20 +30,20 @@ func (c *command) newSchemaDeleteCommand(cfg *v1.Config) *cobra.Command {
 		Code: "confluent schema-registry schema delete --subject payments --version latest",
 	}
 	if cfg.IsOnPremLogin() {
-		example.Code += " " + OnPremAuthenticationMsg
+		example.Code += " " + onPremAuthenticationMsg
 	}
 	cmd.Example = examples.BuildExampleString(example)
 
-	cmd.Flags().String("subject", "", SubjectUsage)
+	cmd.Flags().String("subject", "", subjectUsage)
 	cmd.Flags().String("version", "", `Version of the schema. Can be a specific version, "all", or "latest".`)
 	cmd.Flags().Bool("permanent", false, "Permanently delete the schema.")
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	} else {
 		cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
 	}
 	pcmd.AddForceFlag(cmd)
-	pcmd.AddContextFlag(cmd, c.CLICommand)
 
 	if cfg.IsCloudLogin() {
 		// Deprecated

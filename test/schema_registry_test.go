@@ -92,10 +92,10 @@ func (s *CLITestSuite) TestSchemaRegistryExporter() {
 
 func (s *CLITestSuite) TestSchemaRegistrySchema() {
 	tests := []CLITest{
-		{args: fmt.Sprintf("schema-registry schema create --subject payments --schema %s --api-key key --api-secret secret --environment %s", schemaPath, testserver.SRApiEnvId), fixture: "schema-registry/schema/create.golden"},
-		{args: fmt.Sprintf("schema-registry schema create --subject payments --schema %s --metadata %s --ruleset %s --api-key key --api-secret secret --environment %s", schemaPath, metadataPath, rulesetPath, testserver.SRApiEnvId), fixture: "schema-registry/schema/create.golden"},
-		{args: fmt.Sprintf("schema-registry schema delete --subject payments --version latest --api-key key --api-secret secret --environment %s --force", testserver.SRApiEnvId), fixture: "schema-registry/schema/delete.golden"},
-		{args: fmt.Sprintf("schema-registry schema delete --subject payments --version all --api-key key --api-secret secret --environment %s --force", testserver.SRApiEnvId), fixture: "schema-registry/schema/delete-all.golden"},
+		{args: fmt.Sprintf("schema-registry schema create --subject payments --schema %s --environment %s", schemaPath, testserver.SRApiEnvId), fixture: "schema-registry/schema/create.golden"},
+		{args: fmt.Sprintf("schema-registry schema create --subject payments --schema %s --metadata %s --ruleset %s --environment %s", schemaPath, metadataPath, rulesetPath, testserver.SRApiEnvId), fixture: "schema-registry/schema/create.golden"},
+		{args: fmt.Sprintf("schema-registry schema delete --subject payments --version latest --environment %s --force", testserver.SRApiEnvId), fixture: "schema-registry/schema/delete.golden"},
+		{args: fmt.Sprintf("schema-registry schema delete --subject payments --version all --environment %s --force", testserver.SRApiEnvId), fixture: "schema-registry/schema/delete-all.golden"},
 		{args: "schema-registry schema describe --subject payments", exitCode: 1, fixture: "schema-registry/schema/describe-either-id-or-subject.golden"},
 		{args: "schema-registry schema describe --show-references --subject payments", exitCode: 1, fixture: "schema-registry/schema/describe-either-id-or-subject.golden"},
 		{args: "schema-registry schema describe --version 1", exitCode: 1, fixture: "schema-registry/schema/describe-either-id-or-subject.golden"},
@@ -104,13 +104,13 @@ func (s *CLITestSuite) TestSchemaRegistrySchema() {
 		{args: "schema-registry schema describe --show-references", exitCode: 1, fixture: "schema-registry/schema/describe-either-id-or-subject.golden"},
 		{args: "schema-registry schema describe --subject payments --version 1 123", exitCode: 1, fixture: "schema-registry/schema/describe-both-id-and-subject.golden"},
 		{args: "schema-registry schema describe --show-references --subject payments --version 1 123", exitCode: 1, fixture: "schema-registry/schema/describe-both-id-and-subject.golden"},
-		{args: fmt.Sprintf("schema-registry schema describe --subject payments --version 2 --api-key key --api-secret secret --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/schema/describe.golden"},
-		{args: fmt.Sprintf("schema-registry schema describe 10 --api-key key --api-secret secret --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/schema/describe.golden"},
-		{args: fmt.Sprintf("schema-registry schema describe 1001 --show-references --api-key key --api-secret secret --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/schema/describe-refs-id.golden"},
-		{args: fmt.Sprintf("schema-registry schema describe 1005 --api-key key --api-secret secret --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/schema/describe-with-ruleset.golden"},
-		{args: fmt.Sprintf("schema-registry schema describe --subject lvl0 --version 1 --show-references --api-key key --api-secret secret --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/schema/describe-refs-subject.golden"},
-		{args: fmt.Sprintf("schema-registry schema list --subject-prefix mysubject-1 --api-key key --api-secret secret --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/schema/list-schemas-subject.golden"},
-		{args: fmt.Sprintf("schema-registry schema list --api-key key --api-secret secret --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/schema/list-schemas-default.golden"},
+		{args: fmt.Sprintf("schema-registry schema describe --subject payments --version 2 --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/schema/describe.golden"},
+		{args: fmt.Sprintf("schema-registry schema describe 10 --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/schema/describe.golden"},
+		{args: fmt.Sprintf("schema-registry schema describe 1001 --show-references --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/schema/describe-refs-id.golden"},
+		{args: fmt.Sprintf("schema-registry schema describe 1005 --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/schema/describe-with-ruleset.golden"},
+		{args: fmt.Sprintf("schema-registry schema describe --subject lvl0 --version 1 --show-references --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/schema/describe-refs-subject.golden"},
+		{args: fmt.Sprintf("schema-registry schema list --subject-prefix mysubject-1 --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/schema/list-schemas-subject.golden"},
+		{args: fmt.Sprintf("schema-registry schema list --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/schema/list-schemas-default.golden"},
 	}
 
 	for _, test := range tests {
@@ -121,11 +121,11 @@ func (s *CLITestSuite) TestSchemaRegistrySchema() {
 
 func (s *CLITestSuite) TestSchemaRegistrySubject() {
 	tests := []CLITest{
-		{args: fmt.Sprintf("schema-registry subject list --api-key key --api-secret secret --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/subject/list.golden"},
-		{args: fmt.Sprintf("schema-registry subject describe testSubject --api-key key --api-secret secret --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/subject/describe.golden"},
-		{args: fmt.Sprintf("schema-registry subject update testSubject --compatibility BACKWARD --api-key key --api-secret secret --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/subject/update-compatibility.golden"},
-		{args: fmt.Sprintf("schema-registry subject update testSubject --compatibility BACKWARD --compatibility-group application.version --metadata-defaults %s --ruleset-defaults %s --api-key key --api-secret secret --environment %s", metadataPath, rulesetPath, testserver.SRApiEnvId), fixture: "schema-registry/subject/update-compatibility.golden"},
-		{args: fmt.Sprintf("schema-registry subject update testSubject --mode readonly --api-key key --api-secret secret --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/subject/update-mode.golden"},
+		{args: fmt.Sprintf("schema-registry subject list --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/subject/list.golden"},
+		{args: fmt.Sprintf("schema-registry subject describe testSubject --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/subject/describe.golden"},
+		{args: fmt.Sprintf("schema-registry subject update testSubject --compatibility BACKWARD --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/subject/update-compatibility.golden"},
+		{args: fmt.Sprintf("schema-registry subject update testSubject --compatibility BACKWARD --compatibility-group application.version --metadata-defaults %s --ruleset-defaults %s --environment %s", metadataPath, rulesetPath, testserver.SRApiEnvId), fixture: "schema-registry/subject/update-compatibility.golden"},
+		{args: fmt.Sprintf("schema-registry subject update testSubject --mode readonly --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/subject/update-mode.golden"},
 	}
 
 	for _, test := range tests {

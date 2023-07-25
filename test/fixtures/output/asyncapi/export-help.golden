@@ -14,6 +14,7 @@ Flags:
       --consume-examples                    Consume messages from topics for populating examples.
       --spec-version string                 Version number of the output file. (default "1.0.0")
       --kafka-api-key string                Kafka cluster API key.
+      --schema-registry-endpoint string     Endpoint for Schema Registry cluster.
       --schema-registry-api-key string      API key for Schema Registry.
       --schema-registry-api-secret string   API secret for Schema Registry.
       --schema-context string               Use a specific schema context. (default "default")

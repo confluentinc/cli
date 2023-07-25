@@ -27,7 +27,7 @@ func (c *command) newSchemaCreateCommand(cfg *v1.Config) *cobra.Command {
 		Code: "confluent schema-registry schema create --subject employee --schema employee.avsc --type avro",
 	}
 	if cfg.IsOnPremLogin() {
-		example.Code += " " + OnPremAuthenticationMsg
+		example.Code += " " + onPremAuthenticationMsg
 	}
 	cmd.Example = examples.BuildExampleString(
 		example,
@@ -49,18 +49,18 @@ func (c *command) newSchemaCreateCommand(cfg *v1.Config) *cobra.Command {
 	)
 
 	cmd.Flags().String("schema", "", "The path to the schema file.")
-	cmd.Flags().String("subject", "", SubjectUsage)
+	cmd.Flags().String("subject", "", subjectUsage)
 	pcmd.AddSchemaTypeFlag(cmd)
 	cmd.Flags().String("references", "", "The path to the references file.")
 	cmd.Flags().String("metadata", "", "The path to metadata file.")
 	cmd.Flags().String("ruleset", "", "The path to schema ruleset file.")
 	cmd.Flags().Bool("normalize", false, "Alphabetize the list of schema fields.")
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	} else {
 		cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
 	}
-	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	if cfg.IsCloudLogin() {

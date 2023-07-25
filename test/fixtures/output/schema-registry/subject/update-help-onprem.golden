@@ -10,7 +10,7 @@ Update subject-level compatibility of subject "payments".
 
 Update subject-level compatibility of subject "payments" and set compatibility group to "application.version".
 
-  $ confluent schema-registry subject update payments --compatibility backward --compatibility-group application.version
+  $ confluent schema-registry subject update payments --compatibility backward --compatibility-group application.version --ca-location <ca-file-location> --schema-registry-endpoint <schema-registry-endpoint>
 
 Update subject-level mode of subject "payments".
 
@@ -24,9 +24,9 @@ Flags:
       --ruleset-defaults string           The path to the schema ruleset defaults file.
       --ruleset-overrides string          The path to the schema ruleset overrides file.
       --mode string                       Can be "readwrite", "readonly", or "import".
+      --context string                    CLI context name.
       --ca-location string                File or directory path to CA certificates to authenticate the Schema Registry client.
       --schema-registry-endpoint string   The URL of the Schema Registry cluster.
-      --context string                    CLI context name.
 
 Global Flags:
   -h, --help            Show help for this command.

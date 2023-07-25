@@ -31,8 +31,8 @@ func (c *command) newExporterUpdateCommand(cfg *v1.Config) *cobra.Command {
 		Code: "confluent schema-registry exporter update my-exporter --config-file ~/config.txt",
 	}
 	if cfg.IsOnPremLogin() {
-		example1.Code += " " + OnPremAuthenticationMsg
-		example2.Code += " " + OnPremAuthenticationMsg
+		example1.Code += " " + onPremAuthenticationMsg
+		example2.Code += " " + onPremAuthenticationMsg
 	}
 	cmd.Example = examples.BuildExampleString(example1, example2)
 
@@ -41,12 +41,12 @@ func (c *command) newExporterUpdateCommand(cfg *v1.Config) *cobra.Command {
 	cmd.Flags().String("subject-format", "${subject}", "Exporter subject rename format. The format string can contain ${subject}, which will be replaced with the default subject name.")
 	addContextTypeFlag(cmd)
 	cmd.Flags().String("context-name", "", "Exporter context name.")
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	} else {
 		cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
 	}
-	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
