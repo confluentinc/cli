@@ -112,7 +112,7 @@ func (c *FlinkGatewayClient) GetStatementResults(environmentId, statementId, org
 
 func (c *FlinkGatewayClient) GetExceptions(environmentId, statementId, orgId string) (flinkgatewayv1alpha1.SqlV1alpha1StatementExceptionList, error) {
 	resp, httpResp, err := c.StatementExceptionsSqlV1alpha1Api.GetSqlV1alpha1StatementExceptions(c.flinkGatewayApiContext(), environmentId, statementId).OrgId(orgId).Execute()
-	return resp, makeFlinkError(err, httpResp)
+	return resp, catchFlinkError(err, httpResp)
 }
 
 // FlinkError extends the ErrorWithSuggestion with a status code.
