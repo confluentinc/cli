@@ -1,14 +1,12 @@
 package kafka
 
 import (
-	"context"
 	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
 
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -16,6 +14,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	schemaregistry "github.com/confluentinc/cli/internal/pkg/schema-registry"
 )
 
 func (c *command) newConsumeCommandOnPrem() *cobra.Command {
@@ -140,14 +139,13 @@ func (c *command) consumeOnPrem(cmd *cobra.Command, args []string) error {
 
 	output.ErrPrintln(errors.StartingConsumerMsg)
 
-	var srClient *srsdk.APIClient
-	var ctx context.Context
+	var client *schemaregistry.Client
 	if valueFormat != "string" {
 		// Only initialize client and context when schema is specified.
 		if c.State == nil { // require log-in to use oauthbearer token
 			return errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestions)
 		}
-		srClient, ctx, err = sr.GetSrApiClientWithToken(cmd, c.Version, c.AuthToken())
+		client, err = c.GetSchemaRegistryClient()
 		if err != nil {
 			return err
 		}
@@ -162,10 +160,9 @@ func (c *command) consumeOnPrem(cmd *cobra.Command, args []string) error {
 	}()
 
 	groupHandler := &GroupHandler{
-		SrClient: srClient,
-		Ctx:      ctx,
-		Format:   valueFormat,
-		Out:      cmd.OutOrStdout(), // TODO
+		Client: client,
+		Format: valueFormat,
+		Out:    cmd.OutOrStdout(),
 		Properties: ConsumerProperties{
 			PrintKey:   printKey,
 			FullHeader: fullHeader,

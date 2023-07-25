@@ -14,29 +14,16 @@ func (c *command) newExporterCommand(cfg *v1.Config) *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLoginOrOnPremLogin},
 	}
 
-	if cfg.IsCloudLogin() {
-		cmd.AddCommand(c.newExporterCreateCommand())
-		cmd.AddCommand(c.newExporterDeleteCommand())
-		cmd.AddCommand(c.newExporterDescribeCommand())
-		cmd.AddCommand(c.newExporterGetConfigCommand())
-		cmd.AddCommand(c.newExporterGetStatusCommand())
-		cmd.AddCommand(c.newExporterListCommand())
-		cmd.AddCommand(c.newExporterPauseCommand())
-		cmd.AddCommand(c.newExporterResetCommand())
-		cmd.AddCommand(c.newExporterResumeCommand())
-		cmd.AddCommand(c.newExporterUpdateCommand())
-	} else {
-		cmd.AddCommand(c.newExporterCreateCommandOnPrem())
-		cmd.AddCommand(c.newExporterDeleteCommandOnPrem())
-		cmd.AddCommand(c.newExporterDescribeCommandOnPrem())
-		cmd.AddCommand(c.newExporterGetConfigCommandOnPrem())
-		cmd.AddCommand(c.newExporterGetStatusCommandOnPrem())
-		cmd.AddCommand(c.newExporterListCommandOnPrem())
-		cmd.AddCommand(c.newExporterPauseCommandOnPrem())
-		cmd.AddCommand(c.newExporterResetCommandOnPrem())
-		cmd.AddCommand(c.newExporterResumeCommandOnPrem())
-		cmd.AddCommand(c.newExporterUpdateCommandOnPrem())
-	}
+	cmd.AddCommand(c.newExporterCreateCommand(cfg))
+	cmd.AddCommand(c.newExporterDeleteCommand(cfg))
+	cmd.AddCommand(c.newExporterDescribeCommand(cfg))
+	cmd.AddCommand(c.newExporterGetConfigCommand(cfg))
+	cmd.AddCommand(c.newExporterGetStatusCommand(cfg))
+	cmd.AddCommand(c.newExporterListCommand(cfg))
+	cmd.AddCommand(c.newExporterPauseCommand(cfg))
+	cmd.AddCommand(c.newExporterResetCommand(cfg))
+	cmd.AddCommand(c.newExporterResumeCommand(cfg))
+	cmd.AddCommand(c.newExporterUpdateCommand(cfg))
 
 	return cmd
 }
