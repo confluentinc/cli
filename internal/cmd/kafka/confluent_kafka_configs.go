@@ -27,20 +27,29 @@ type PartitionFilter struct {
 	Index   int32
 }
 
-func getCommonConfig(kafka *configv1.KafkaClusterConfig, clientID string) *ckafka.ConfigMap {
-	return &ckafka.ConfigMap{
+func getCommonConfig(kafka *configv1.KafkaClusterConfig, clientId string) (*ckafka.ConfigMap, error) {
+	if err := kafka.DecryptAPIKeys(); err != nil {
+		return nil, err
+	}
+
+	configMap := &ckafka.ConfigMap{
 		"security.protocol":                     "SASL_SSL",
 		"sasl.mechanism":                        "PLAIN",
 		"ssl.endpoint.identification.algorithm": "https",
-		"client.id":                             clientID,
+		"client.id":                             clientId,
 		"bootstrap.servers":                     kafka.Bootstrap,
 		"sasl.username":                         kafka.APIKey,
-		"sasl.password":                         kafka.APIKeys[kafka.APIKey].Secret,
+		"sasl.password":                         kafka.GetApiSecret(),
 	}
+
+	return configMap, nil
 }
 
 func getProducerConfigMap(kafka *configv1.KafkaClusterConfig, clientID string) (*ckafka.ConfigMap, error) {
-	configMap := getCommonConfig(kafka, clientID)
+	configMap, err := getCommonConfig(kafka, clientID)
+	if err != nil {
+		return nil, err
+	}
 	if err := configMap.SetKey("retry.backoff.ms", "250"); err != nil {
 		return nil, err
 	}
@@ -54,7 +63,10 @@ func getProducerConfigMap(kafka *configv1.KafkaClusterConfig, clientID string) (
 }
 
 func getConsumerConfigMap(group string, kafka *configv1.KafkaClusterConfig, clientID string) (*ckafka.ConfigMap, error) {
-	configMap := getCommonConfig(kafka, clientID)
+	configMap, err := getCommonConfig(kafka, clientID)
+	if err != nil {
+		return nil, err
+	}
 	if err := configMap.SetKey("group.id", group); err != nil {
 		return nil, err
 	}
@@ -232,7 +244,7 @@ func promptForSASLAuth(cmd *cobra.Command) (string, string, error) {
 		form.Field{ID: "username", Prompt: "Enter your SASL username"},
 		form.Field{ID: "password", Prompt: "Enter your SASL password", IsHidden: true},
 	)
-	if err := f.Prompt(form.NewPrompt(os.Stdin)); err != nil {
+	if err := f.Prompt(form.NewPrompt()); err != nil {
 		return "", "", err
 	}
 	return f.Responses["username"].(string), f.Responses["password"].(string), nil

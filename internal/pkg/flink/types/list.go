@@ -39,6 +39,13 @@ func (l LinkedList[T]) PushBack(row T) *ListElement[T] {
 	return &ListElement[T]{element: l.list.PushBack(row)}
 }
 
+func (l LinkedList[T]) PushFront(row T) *ListElement[T] {
+	if l.list == nil {
+		return nil
+	}
+	return &ListElement[T]{element: l.list.PushFront(row)}
+}
+
 func (l LinkedList[T]) Remove(listElement *ListElement[T]) *T {
 	if l.list == nil || listElement == nil {
 		return nil
@@ -49,6 +56,18 @@ func (l LinkedList[T]) Remove(listElement *ListElement[T]) *T {
 
 func (l LinkedList[T]) RemoveFront() *T {
 	return l.Remove(l.Front())
+}
+
+func (l LinkedList[T]) RemoveBack() *T {
+	return l.Remove(l.Back())
+}
+
+func (l LinkedList[T]) ElementAtIndex(idx int) *ListElement[T] {
+	head := l.Front()
+	for id := 0; id != idx; id++ {
+		head = head.Next()
+	}
+	return head
 }
 
 func (l LinkedList[T]) Front() *ListElement[T] {
@@ -70,6 +89,25 @@ func (l LinkedList[T]) Len() int {
 		return 0
 	}
 	return l.list.Len()
+}
+
+func (l LinkedList[T]) Clear() {
+	if l.list == nil {
+		return
+	}
+	l.list.Init()
+}
+
+func (l LinkedList[T]) ToSlice() []T {
+	if l.list == nil {
+		return nil
+	}
+
+	slice := make([]T, 0, l.list.Len())
+	for e := l.list.Front(); e != nil; e = e.Next() {
+		slice = append(slice, e.Value.(T))
+	}
+	return slice
 }
 
 func NewLinkedList[T any]() LinkedList[T] {

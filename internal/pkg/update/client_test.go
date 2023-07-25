@@ -57,10 +57,10 @@ func TestNewClient(t *testing.T) {
 			},
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := NewClient(tt.params); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NewClient() = %#v, want %#v", got, tt.want)
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if got := NewClient(test.params); !reflect.DeepEqual(got, test.want) {
+				t.Errorf("NewClient() = %#v, want %#v", got, test.want)
 			}
 		})
 	}
@@ -333,7 +333,7 @@ func TestCheckForUpdates(t *testing.T) {
 					},
 				},
 			}),
-			args:      args{currentVersion: "v0.0.0"},
+			args:      args{currentVersion: "v0.0.1"},
 			wantMajor: "v1.0.0",
 			wantMinor: "v0.1.0",
 		},
@@ -352,18 +352,18 @@ func TestCheckForUpdates(t *testing.T) {
 			wantMinor: "",
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			major, minor, err := tt.client.CheckForUpdates(tt.args.name, tt.args.currentVersion, tt.args.forceCheck)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("client.CheckForUpdates() error = %v, wantErr %v", err, tt.wantErr)
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			major, minor, err := test.client.CheckForUpdates(test.args.name, test.args.currentVersion, test.args.forceCheck)
+			if (err != nil) != test.wantErr {
+				t.Errorf("client.CheckForUpdates() error = %v, wantErr %v", err, test.wantErr)
 				return
 			}
-			if major != tt.wantMajor {
-				t.Errorf("client.CheckForUpdates() major = %v, want %v", major, tt.wantMajor)
+			if major != test.wantMajor {
+				t.Errorf("client.CheckForUpdates() major = %v, want %v", major, test.wantMajor)
 			}
-			if minor != tt.wantMinor {
-				t.Errorf("client.CheckForUpdates() minor = %v, want %v", minor, tt.wantMinor)
+			if minor != test.wantMinor {
+				t.Errorf("client.CheckForUpdates() minor = %v, want %v", minor, test.wantMinor)
 			}
 		})
 	}
@@ -458,7 +458,7 @@ func TestCheckForUpdates_NoCheckFileGiven(t *testing.T) {
 }
 
 func TestVerifyChecksum(t *testing.T) {
-	checksums := test.LoadFixture(t, "update/checksums.golden")
+	checksums := test.LoadFixture(t, "../input/update/checksums.golden")
 
 	mockRepository := &updateMock.Repository{
 		DownloadChecksumsFunc: func(name, version string) (string, error) {
@@ -508,17 +508,17 @@ func TestVerifyChecksum(t *testing.T) {
 			wantVerifyErr:   true,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			_, err := mockRepository.DownloadChecksums("confluent", tt.version)
-			if tt.wantDownloadErr {
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			_, err := mockRepository.DownloadChecksums("confluent", test.version)
+			if test.wantDownloadErr {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
 			}
 
-			err = mockClient.VerifyChecksum(tt.checksum, "confluent", tt.version)
-			if tt.wantVerifyErr {
+			err = mockClient.VerifyChecksum(test.checksum, "confluent", test.version)
+			if test.wantVerifyErr {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
@@ -586,17 +586,17 @@ func TestGetLatestReleaseNotes(t *testing.T) {
 			wantErr: true,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			gotReleaseNotesVersion, gotReleaseNotes, err := tt.client.GetLatestReleaseNotes("confluent", currentVersion)
-			if tt.wantErr {
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			gotReleaseNotesVersion, gotReleaseNotes, err := test.client.GetLatestReleaseNotes("confluent", currentVersion)
+			if test.wantErr {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
 			}
 
-			require.Equal(t, tt.wantVersion, gotReleaseNotesVersion)
-			require.Equal(t, tt.wantReleaseNotes, gotReleaseNotes)
+			require.Equal(t, test.wantVersion, gotReleaseNotesVersion)
+			require.Equal(t, test.wantReleaseNotes, gotReleaseNotes)
 		})
 	}
 }
@@ -701,14 +701,14 @@ func TestUpdateBinary(t *testing.T) {
 			wantErr: false,
 		},
 	}
-	for _, tt := range tests {
-		if tt.client.OS != "" && tt.client.OS != runtime.GOOS {
+	for _, test := range tests {
+		if test.client.OS != "" && test.client.OS != runtime.GOOS {
 			continue
 		}
-		t.Run(tt.name, func(t *testing.T) {
-			tt.client.Out = os.Stdout
-			if err := tt.client.UpdateBinary(tt.args.name, tt.args.version, tt.args.path, true); (err != nil) != tt.wantErr {
-				t.Errorf("client.UpdateBinary() error = %v, wantErr %v", err, tt.wantErr)
+		t.Run(test.name, func(t *testing.T) {
+			test.client.Out = os.Stdout
+			if err := test.client.UpdateBinary(test.args.name, test.args.version, test.args.path, true); (err != nil) != test.wantErr {
+				t.Errorf("client.UpdateBinary() error = %v, wantErr %v", err, test.wantErr)
 			}
 		})
 	}
@@ -885,13 +885,13 @@ func TestPromptToDownload(t *testing.T) {
 			want: true,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if tt.client.Out == nil {
-				tt.client.Out = os.Stdout
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if test.client.Out == nil {
+				test.client.Out = os.Stdout
 			}
-			if got := tt.client.PromptToDownload(tt.args.name, tt.args.currVersion, tt.args.latestVersion, "", tt.args.confirm); got != tt.want {
-				t.Errorf("client.PromptToDownload() = %v, want %v", got, tt.want)
+			if got := test.client.PromptToDownload(test.args.name, test.args.currVersion, test.args.latestVersion, "", test.args.confirm); got != test.want {
+				t.Errorf("client.PromptToDownload() = %v, want %v", got, test.want)
 			}
 		})
 	}

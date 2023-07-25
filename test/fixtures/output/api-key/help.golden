@@ -1,0 +1,20 @@
+Manage API keys.
+
+Usage:
+  confluent api-key [command]
+
+Available Commands:
+  create      Create API keys for a given resource.
+  delete      Delete an API key.
+  describe    Describe an API key.
+  list        List the API keys.
+  store       Store an API key/secret locally to use in the CLI.
+  update      Update an API key.
+  use         Use an API key in subsequent commands.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent api-key [command] --help" for more information about a command.

@@ -18,7 +18,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (c *authenticatedTopicCommand) newConsumeCommandOnPrem() *cobra.Command {
+func (c *command) newConsumeCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "consume <topic>",
 		Args:  cobra.ExactArgs(1),
@@ -54,14 +54,16 @@ func (c *authenticatedTopicCommand) newConsumeCommandOnPrem() *cobra.Command {
 	cmd.Flags().String("schema-registry-endpoint", "", "The URL of the Schema Registry cluster.")
 
 	cobra.CheckErr(cmd.MarkFlagFilename("config-file", "avsc", "json"))
-
 	cobra.CheckErr(cmd.MarkFlagRequired("bootstrap"))
 	cobra.CheckErr(cmd.MarkFlagRequired("ca-location"))
+
+	cmd.MarkFlagsMutuallyExclusive("config", "config-file")
+	cmd.MarkFlagsMutuallyExclusive("from-beginning", "offset")
 
 	return cmd
 }
 
-func (c *authenticatedTopicCommand) consumeOnPrem(cmd *cobra.Command, args []string) error {
+func (c *command) consumeOnPrem(cmd *cobra.Command, args []string) error {
 	printKey, err := cmd.Flags().GetBool("print-key")
 	if err != nil {
 		return err
@@ -85,10 +87,6 @@ func (c *authenticatedTopicCommand) consumeOnPrem(cmd *cobra.Command, args []str
 	valueFormat, err := cmd.Flags().GetString("value-format")
 	if err != nil {
 		return err
-	}
-
-	if cmd.Flags().Changed("config-file") && cmd.Flags().Changed("config") {
-		return errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "config-file", "config")
 	}
 
 	configFile, err := cmd.Flags().GetString("config-file")
@@ -119,10 +117,6 @@ func (c *authenticatedTopicCommand) consumeOnPrem(cmd *cobra.Command, args []str
 	topicName := args[0]
 	if err := ValidateTopic(adminClient, topicName); err != nil {
 		return err
-	}
-
-	if cmd.Flags().Changed("from-beginning") && cmd.Flags().Changed("offset") {
-		return errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "from-beginning", "offset")
 	}
 
 	offset, err := GetOffsetWithFallback(cmd)

@@ -1,0 +1,20 @@
+Manage cluster linking mirror topics.
+
+Usage:
+  confluent kafka mirror [command]
+
+Available Commands:
+  create      Create a mirror topic under the link.
+  describe    Describe a mirror topic.
+  failover    Failover mirror topics.
+  list        List mirror topics in a cluster or under a cluster link.
+  pause       Pause mirror topics.
+  promote     Promote mirror topics.
+  resume      Resume mirror topics.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent kafka mirror [command] --help" for more information about a command.

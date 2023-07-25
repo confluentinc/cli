@@ -49,11 +49,18 @@ func handleSRUpdateTopLevelConfig(t *testing.T) http.HandlerFunc {
 // Handler for: "/mode"
 func handleSRUpdateTopLevelMode(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req srsdk.ModeUpdateRequest
-		err := json.NewDecoder(r.Body).Decode(&req)
-		require.NoError(t, err)
-		err = json.NewEncoder(w).Encode(srsdk.ModeUpdateRequest{Mode: req.Mode})
-		require.NoError(t, err)
+		switch r.Method {
+		case http.MethodPut:
+			req := &srsdk.ModeUpdateRequest{}
+			err := json.NewDecoder(r.Body).Decode(req)
+			require.NoError(t, err)
+			err = json.NewEncoder(w).Encode(srsdk.ModeUpdateRequest{Mode: req.Mode})
+			require.NoError(t, err)
+		case http.MethodGet:
+			req := &srsdk.Mode{Mode: "READWRITE"}
+			err := json.NewEncoder(w).Encode(req)
+			require.NoError(t, err)
+		}
 	}
 }
 
@@ -215,7 +222,7 @@ func handleSRById(t *testing.T) http.HandlerFunc {
 		id64, err := strconv.ParseInt(idStr, 10, 32)
 		require.NoError(t, err)
 
-		schema := srsdk.Schema{Subject: "my-subject", Version: 1, SchemaType: "AVRO", Id: int32(id64)}
+		schema := srsdk.Schema{Subject: "my-subject", Version: 1, Id: int32(id64)}
 		switch id64 {
 		case 1001:
 			schema.Schema = "schema0"

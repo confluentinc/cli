@@ -1,0 +1,16 @@
+Manage a single-node instance of Apache Kafka.
+
+Usage:
+  confluent local kafka [command]
+
+Available Commands:
+  start       Start a single-node instance of Apache Kafka.
+  stop        Stop the local Apache Kafka service.
+  topic       Run Kafka topic related commands.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent local kafka [command] --help" for more information about a command.

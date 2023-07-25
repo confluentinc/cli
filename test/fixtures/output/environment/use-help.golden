@@ -1,0 +1,12 @@
+Choose a Confluent Cloud environment to be used in subsequent commands which support passing an environment with the `--environment` flag.
+
+Usage:
+  confluent environment use <id> [flags]
+
+Flags:
+      --context string   CLI context name.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

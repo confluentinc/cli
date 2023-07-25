@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/swaggest/go-asyncapi/spec-2.4.0"
 
@@ -75,22 +76,25 @@ func (d *accountDetails) getSchemaDetails() error {
 		return err
 	}
 	d.channelDetails.schema = &schema
+
+	// The backend considers "AVRO" to be the default schema type.
 	if schema.SchemaType == "" {
 		schema.SchemaType = "AVRO"
 	}
-	switch schema.SchemaType {
-	case "JSON":
-		d.channelDetails.contentType = "application/json"
-	case "AVRO":
-		d.channelDetails.contentType = "application/avro"
-	case "PROTOBUF":
+
+	if schema.SchemaType == "PROTOBUF" {
 		return fmt.Errorf("protobuf is not supported")
 	}
-	// JSON or Avro Format
+
+	if schema.SchemaType == "AVRO" || schema.SchemaType == "JSON" {
+		d.channelDetails.contentType = fmt.Sprintf("application/%s", strings.ToLower(schema.SchemaType))
+	}
+
 	if err := json.Unmarshal([]byte(schema.Schema), &d.channelDetails.unmarshalledSchema); err != nil {
 		d.channelDetails.unmarshalledSchema, err = handlePrimitiveSchemas(schema.Schema, err)
 		log.CliLogger.Warn(err)
 	}
+
 	return nil
 }
 
@@ -98,7 +102,7 @@ func handlePrimitiveSchemas(schema string, err error) (map[string]any, error) {
 	unmarshalledSchema := make(map[string]any)
 	primitiveTypes := []string{"string", "null", "boolean", "int", "long", "float", "double", "bytes"}
 	for _, primitiveType := range primitiveTypes {
-		if schema == fmt.Sprintf("\"%s\"", primitiveType) {
+		if schema == fmt.Sprintf(`"%s"`, primitiveType) {
 			unmarshalledSchema["type"] = primitiveType
 			return unmarshalledSchema, nil
 		}

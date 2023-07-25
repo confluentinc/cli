@@ -1,0 +1,4 @@
+Error: Flink region eu-west-2 is invalid
+
+Suggestions:
+    run `ccloud flink region list` to see available regions

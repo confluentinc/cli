@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
@@ -14,6 +15,7 @@ import (
 var flinkGatewayRoutes = []route{
 	{"/sql/v1alpha1/environments/{environment}/statements", handleSqlEnvironmentsEnvironmentStatements},
 	{"/sql/v1alpha1/environments/{environment}/statements/{statement}", handleSqlEnvironmentsEnvironmentStatementsStatement},
+	{"/sql/v1alpha1/environments/{environment}/statements/{statement}/exceptions", handleSqlEnvironmentsEnvironmentStatementExceptions},
 }
 
 func NewFlinkGatewayRouter(t *testing.T) *mux.Router {
@@ -29,6 +31,8 @@ func NewFlinkGatewayRouter(t *testing.T) *mux.Router {
 
 func handleSqlEnvironmentsEnvironmentStatements(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		creationDateStatement1 := time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
+		creationDateStatement2 := time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC)
 		statements := flinkgatewayv1alpha1.SqlV1alpha1StatementList{Data: []flinkgatewayv1alpha1.SqlV1alpha1Statement{
 			{
 				Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
@@ -40,6 +44,7 @@ func handleSqlEnvironmentsEnvironmentStatements(t *testing.T) http.HandlerFunc {
 					Phase:  "COMPLETED",
 					Detail: flinkgatewayv1alpha1.PtrString("SQL statement is completed"),
 				},
+				Metadata: &flinkgatewayv1alpha1.ObjectMeta{CreatedAt: &creationDateStatement1},
 			},
 			{
 				Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
@@ -51,6 +56,7 @@ func handleSqlEnvironmentsEnvironmentStatements(t *testing.T) http.HandlerFunc {
 					Phase:  "COMPLETED",
 					Detail: flinkgatewayv1alpha1.PtrString("SQL statement is completed"),
 				},
+				Metadata: &flinkgatewayv1alpha1.ObjectMeta{CreatedAt: &creationDateStatement2},
 			},
 		}}
 
@@ -59,8 +65,31 @@ func handleSqlEnvironmentsEnvironmentStatements(t *testing.T) http.HandlerFunc {
 	}
 }
 
+func handleSqlEnvironmentsEnvironmentStatementExceptions(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		statementExceptionCreatedAt := time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC)
+		statementExceptionCreatedAt2 := time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC)
+		if r.Method == http.MethodGet {
+			statement := flinkgatewayv1alpha1.SqlV1alpha1StatementExceptionList{
+				Data: []flinkgatewayv1alpha1.SqlV1alpha1StatementException{{
+					Timestamp:  &statementExceptionCreatedAt,
+					Name:       flinkgatewayv1alpha1.PtrString("Bad exception"),
+					Stacktrace: flinkgatewayv1alpha1.PtrString("exception in foo.go"),
+				}, {
+					Timestamp:  &statementExceptionCreatedAt2,
+					Name:       flinkgatewayv1alpha1.PtrString("another Bad exception"),
+					Stacktrace: flinkgatewayv1alpha1.PtrString("exception in bar.go"),
+				}},
+			}
+			err := json.NewEncoder(w).Encode(statement)
+			require.NoError(t, err)
+		}
+	}
+}
+
 func handleSqlEnvironmentsEnvironmentStatementsStatement(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		statementCreatedAt := time.Date(2022, 1, 1, 0, 0, 0, 0, time.UTC)
 		if r.Method == http.MethodGet {
 			statement := flinkgatewayv1alpha1.SqlV1alpha1Statement{
 				Spec: &flinkgatewayv1alpha1.SqlV1alpha1StatementSpec{
@@ -72,6 +101,7 @@ func handleSqlEnvironmentsEnvironmentStatementsStatement(t *testing.T) http.Hand
 					Phase:  "TODO",
 					Detail: flinkgatewayv1alpha1.PtrString("TODO"),
 				},
+				Metadata: &flinkgatewayv1alpha1.ObjectMeta{CreatedAt: &statementCreatedAt},
 			}
 			err := json.NewEncoder(w).Encode(statement)
 			require.NoError(t, err)

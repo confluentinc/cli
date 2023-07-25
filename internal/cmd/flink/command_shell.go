@@ -1,19 +1,18 @@
 package flink
 
 import (
-	"net/url"
-
 	"github.com/spf13/cobra"
 
+	"github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config/load"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	client "github.com/confluentinc/cli/internal/pkg/flink/app"
+	"github.com/confluentinc/cli/internal/pkg/flink/test/mock"
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
 )
 
-func (c *command) newShellCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func (c *command) newShellCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "shell",
 		Short: "Start Flink interactive SQL client.",
@@ -24,33 +23,83 @@ func (c *command) newShellCommand(prerunner pcmd.PreRunner) *cobra.Command {
 
 	c.addComputePoolFlag(cmd)
 	cmd.Flags().String("identity-pool", "", "Identity pool ID.")
-	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	cmd.Flags().String("database", "", "The database which will be used as default database. When using Kafka, this is the cluster display name.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
+	if cfg.IsTest {
+		cmd.Flags().Bool("fake-gateway", false, "Test the SQL client with fake gateway data.")
+	}
 
 	return cmd
 }
 
-func (c *command) authenticated(authenticated func(*cobra.Command, []string) error, cmd *cobra.Command) func() error {
+func (c *command) authenticated(authenticated func(*cobra.Command, []string) error, cmd *cobra.Command, jwtValidator pcmd.JWTValidator) func() error {
 	return func() error {
-		cfg, err := load.LoadAndMigrate(v1.New())
+		authToken := c.Context.GetAuthToken()
+		authRefreshToken := c.Context.GetAuthRefreshToken()
+		if err := c.Context.UpdateAuthTokens(authToken, authRefreshToken); err != nil {
+			return err
+		}
+
+		if err := authenticated(cmd, nil); err != nil {
+			return err
+		}
+
+		flinkGatewayClient, err := c.GetFlinkGatewayClient()
 		if err != nil {
 			return err
 		}
-		auth := cfg.Context().State.AuthToken
-		authRefreshToken := cfg.Context().State.AuthRefreshToken
-		if err := c.Context.UpdateAuthTokens(auth, authRefreshToken); err != nil {
-			return err
+
+		jwtCtx := &v1.Context{State: &v1.ContextState{AuthToken: flinkGatewayClient.AuthToken}}
+		if tokenErr := jwtValidator.Validate(jwtCtx); tokenErr != nil {
+			dataplaneToken, err := auth.GetDataplaneToken(c.Context.GetState(), c.Context.GetPlatformServer())
+			if err != nil {
+				return err
+			}
+			flinkGatewayClient.AuthToken = dataplaneToken
 		}
-		return authenticated(cmd, nil)
+
+		return nil
 	}
 }
 
 func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Command) error {
+	// if the --fake-gateway flag is set, we start the client with a simulated gateway client that returns fake data
+	fakeMode, _ := cmd.Flags().GetBool("fake-gateway")
+	if fakeMode {
+		client.StartApp(
+			mock.NewFakeFlinkGatewayClient(),
+			func() error { return nil },
+			types.ApplicationOptions{
+				Context:   c.Context,
+				UserAgent: c.Version.UserAgent,
+			})
+		return nil
+	}
+
 	resourceId := c.Context.GetOrganization().GetResourceId()
 
-	// Compute pool can be set as a flag or as default in the context
+	environmentId, err := cmd.Flags().GetString("environment")
+	if err != nil {
+		return err
+	}
+	if environmentId == "" {
+		if c.Context.GetCurrentEnvironment() == "" {
+			return errors.NewErrorWithSuggestions("no environment provided", "Provide an environment with `confluent environment use env-123456` or `--environment`.")
+		}
+		environmentId = c.Context.GetCurrentEnvironment()
+	}
+
+	catalog := c.Context.GetCurrentFlinkCatalog()
+	if catalog == "" {
+		environment, err := c.V2Client.GetOrgEnvironment(environmentId)
+		if err != nil {
+			return errors.NewErrorWithSuggestions(err.Error(), "List available environments with `confluent environment list`.")
+		}
+		catalog = environment.GetDisplayName()
+	}
+
 	computePool, err := cmd.Flags().GetString("compute-pool")
 	if err != nil {
 		return err
@@ -73,31 +122,17 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		identityPool = c.Context.GetCurrentIdentityPool()
 	}
 
-	cluster, err := cmd.Flags().GetString("cluster")
+	database, err := cmd.Flags().GetString("database")
 	if err != nil {
 		return err
 	}
-	if cluster == "" {
-		if c.Context.KafkaClusterContext.GetActiveKafkaClusterId() != "" {
-			cluster = c.Context.KafkaClusterContext.GetActiveKafkaClusterId()
+	if database == "" {
+		if c.Context.GetCurrentFlinkDatabase() != "" {
+			database = c.Context.GetCurrentFlinkDatabase()
+		} else {
+			database = c.Context.KafkaClusterContext.GetActiveKafkaClusterConfig().GetName()
 		}
 	}
-
-	environmentId, err := c.Context.EnvironmentId()
-	if err != nil {
-		return err
-	}
-
-	flinkComputePool, err := c.V2Client.DescribeFlinkComputePool(computePool, environmentId)
-	if err != nil {
-		return err
-	}
-
-	parsedUrl, err := url.Parse(flinkComputePool.Spec.GetHttpEndpoint())
-	if err != nil {
-		return err
-	}
-	parsedUrl.Path = ""
 
 	unsafeTrace, err := c.Command.Flags().GetBool("unsafe-trace")
 	if err != nil {
@@ -109,18 +144,24 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 		return err
 	}
 
-	client.StartApp(flinkGatewayClient,
-		c.authenticated(prerunner.Authenticated(c.AuthenticatedCLICommand), cmd),
+	jwtValidator := pcmd.NewJWTValidator()
+
+	verbose, _ := cmd.Flags().GetCount("verbose")
+
+	client.StartApp(
+		flinkGatewayClient,
+		c.authenticated(prerunner.Authenticated(c.AuthenticatedCLICommand), cmd, jwtValidator),
 		types.ApplicationOptions{
-			DefaultProperties: map[string]string{"execution.runtime-mode": "streaming"},
-			FlinkGatewayUrl:   parsedUrl.String(),
-			UnsafeTrace:       unsafeTrace,
-			UserAgent:         c.Version.UserAgent,
-			EnvironmentId:     environmentId,
-			OrgResourceId:     resourceId,
-			KafkaClusterId:    cluster,
-			ComputePoolId:     computePool,
-			IdentityPoolId:    identityPool,
+			Context:         c.Context,
+			UnsafeTrace:     unsafeTrace,
+			UserAgent:       c.Version.UserAgent,
+			EnvironmentName: catalog,
+			EnvironmentId:   environmentId,
+			OrgResourceId:   resourceId,
+			Database:        database,
+			ComputePoolId:   computePool,
+			IdentityPoolId:  identityPool,
+			Verbose:         verbose > 0,
 		})
 	return nil
 }

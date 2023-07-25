@@ -1,0 +1,19 @@
+Manage your Confluent Cloud organizations.
+
+Usage:
+  confluent organization [command]
+
+Aliases:
+  organization, org
+
+Available Commands:
+  describe    Describe the current Confluent Cloud organization.
+  list        List Confluent Cloud organizations.
+  update      Update the current Confluent Cloud organization.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent organization [command] --help" for more information about a command.

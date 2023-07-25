@@ -1,0 +1,27 @@
+Create a schema.
+
+Usage:
+  confluent schema-registry schema create [flags]
+
+Examples:
+Register a new schema.
+
+  $ confluent schema-registry schema create --subject payments --schema payments.avro --type avro --ca-location <ca-file-location> --schema-registry-endpoint <schema-registry-endpoint>
+
+Flags:
+      --schema string                     REQUIRED: The path to the schema file.
+      --subject string                    REQUIRED: Subject of the schema.
+      --type string                       Specify the schema type as "avro", "json", or "protobuf".
+      --references string                 The path to the references file.
+      --metadata string                   The path to metadata file.
+      --ruleset string                    The path to schema ruleset file.
+      --normalize                         Alphabetize the list of schema fields.
+      --ca-location string                File or directory path to CA certificates to authenticate the Schema Registry client.
+      --schema-registry-endpoint string   The URL of the Schema Registry cluster.
+      --context string                    CLI context name.
+  -o, --output string                     Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

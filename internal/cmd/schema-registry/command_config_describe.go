@@ -55,7 +55,7 @@ func (c *command) newConfigDescribeCommand() *cobra.Command {
 }
 
 func (c *command) configDescribe(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
+	srClient, ctx, err := getApiClient(cmd, c.Config, c.Version)
 	if err != nil {
 		return err
 	}

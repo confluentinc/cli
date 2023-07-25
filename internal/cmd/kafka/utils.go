@@ -70,14 +70,6 @@ func toAlterConfigBatchRequestDataOnPrem(configsMap map[string]string) cpkafkare
 	return cpkafkarestv3.AlterConfigBatchRequestData{Data: kafkaRestConfigs}
 }
 
-func getKafkaClusterLkcId(c *pcmd.AuthenticatedCLICommand) (string, error) {
-	kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand()
-	if err != nil {
-		return "", err
-	}
-	return kafkaClusterConfig.ID, nil
-}
-
 func handleOpenApiError(httpResp *_nethttp.Response, err error, client *cpkafkarestv3.APIClient) error {
 	if err == nil {
 		return nil

@@ -6,12 +6,13 @@ import (
 	flinkv2 "github.com/confluentinc/ccloud-sdk-go-v2/flink/v2"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func newFlinkClient(url, userAgent string, unsafeTrace bool) *flinkv2.APIClient {
 	cfg := flinkv2.NewConfiguration()
 	cfg.Debug = unsafeTrace
-	cfg.HTTPClient = newRetryableHttpClient(unsafeTrace)
+	cfg.HTTPClient = NewRetryableHttpClient(unsafeTrace)
 	cfg.Servers = flinkv2.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 
@@ -29,12 +30,12 @@ func (c *Client) CreateFlinkComputePool(computePool flinkv2.FcpmV2ComputePool) (
 
 func (c *Client) DeleteFlinkComputePool(id, environment string) error {
 	httpResp, err := c.FlinkClient.ComputePoolsFcpmV2Api.DeleteFcpmV2ComputePool(c.flinkApiContext(), id).Environment(environment).Execute()
-	return errors.CatchCCloudV2Error(err, httpResp)
+	return errors.CatchComputePoolNotFoundError(err, id, httpResp)
 }
 
 func (c *Client) DescribeFlinkComputePool(id, environment string) (flinkv2.FcpmV2ComputePool, error) {
 	res, httpResp, err := c.FlinkClient.ComputePoolsFcpmV2Api.GetFcpmV2ComputePool(c.flinkApiContext(), id).Environment(environment).Execute()
-	return res, errors.CatchCCloudV2Error(err, httpResp)
+	return res, errors.CatchComputePoolNotFoundError(err, id, httpResp)
 }
 
 func (c *Client) ListFlinkComputePools(environment, specRegion string) ([]flinkv2.FcpmV2ComputePool, error) {
@@ -43,7 +44,7 @@ func (c *Client) ListFlinkComputePools(environment, specRegion string) ([]flinkv
 		req = req.SpecRegion(specRegion)
 	}
 	res, httpResp, err := req.Execute()
-	return res.GetData(), errors.CatchCCloudV2Error(err, httpResp)
+	return res.GetData(), errors.CatchCCloudV2ResourceNotFoundError(err, resource.Environment, httpResp)
 }
 
 func (c *Client) ListFlinkRegions(cloud string) ([]flinkv2.FcpmV2Region, error) {
@@ -58,4 +59,35 @@ func (c *Client) ListFlinkRegions(cloud string) ([]flinkv2.FcpmV2Region, error) 
 func (c *Client) UpdateFlinkComputePool(id string, update flinkv2.FcpmV2ComputePoolUpdate) (flinkv2.FcpmV2ComputePool, error) {
 	res, httpResp, err := c.FlinkClient.ComputePoolsFcpmV2Api.UpdateFcpmV2ComputePool(c.flinkApiContext(), id).FcpmV2ComputePoolUpdate(update).Execute()
 	return res, errors.CatchCCloudV2Error(err, httpResp)
+}
+
+func (c *Client) CreateFlinkIAMBinding(region, cloud, environmentId, identityPoolId string) (flinkv2.FcpmV2IamBinding, error) {
+	iamBinding := flinkv2.FcpmV2IamBinding{
+		Region:       flinkv2.PtrString(region),
+		Cloud:        flinkv2.PtrString(cloud),
+		Environment:  flinkv2.NewGlobalObjectReference(environmentId, "", ""),
+		IdentityPool: flinkv2.NewGlobalObjectReference(identityPoolId, "", ""),
+	}
+	res, httpResp, err := c.FlinkClient.IamBindingsFcpmV2Api.CreateFcpmV2IamBinding(c.flinkApiContext()).FcpmV2IamBinding(iamBinding).Execute()
+	return res, errors.CatchCCloudV2ResourceNotFoundError(err, environmentId, httpResp)
+}
+
+func (c *Client) DeleteFlinkIAMBinding(id, environmentId string) error {
+	httpResp, err := c.FlinkClient.IamBindingsFcpmV2Api.DeleteFcpmV2IamBinding(c.flinkApiContext(), id).Environment(environmentId).Execute()
+	return errors.CatchCCloudV2ResourceNotFoundError(err, environmentId, httpResp)
+}
+
+func (c *Client) ListFlinkIAMBindings(environmentId, region, cloud, identityPoolId string) ([]flinkv2.FcpmV2IamBinding, error) {
+	req := c.FlinkClient.IamBindingsFcpmV2Api.ListFcpmV2IamBindings(c.flinkApiContext()).Environment(environmentId).PageSize(ccloudV2ListPageSize)
+	if region != "" {
+		req = req.Region(region)
+	}
+	if cloud != "" {
+		req = req.Cloud(cloud)
+	}
+	if identityPoolId != "" {
+		req = req.IdentityPool(identityPoolId)
+	}
+	res, httpResp, err := req.Execute()
+	return res.GetData(), errors.CatchCCloudV2ResourceNotFoundError(err, environmentId, httpResp)
 }

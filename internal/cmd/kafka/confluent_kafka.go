@@ -15,7 +15,6 @@ import (
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/confluent-kafka-go/kafka"
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
@@ -62,7 +61,7 @@ type GroupHandler struct {
 	Properties ConsumerProperties
 }
 
-func (c *authenticatedTopicCommand) refreshOAuthBearerToken(cmd *cobra.Command, client ckafka.Handle) error {
+func (c *command) refreshOAuthBearerToken(cmd *cobra.Command, client ckafka.Handle) error {
 	protocol, err := cmd.Flags().GetString("protocol")
 	if err != nil {
 		return err
@@ -161,7 +160,7 @@ func newOnPremConsumer(cmd *cobra.Command, clientID string, configPath string, c
 func GetRebalanceCallback(offset ckafka.Offset, partitionFilter PartitionFilter) func(*ckafka.Consumer, ckafka.Event) error {
 	return func(consumer *ckafka.Consumer, event ckafka.Event) error {
 		switch ev := event.(type) { // ev is of type ckafka.Event
-		case kafka.AssignedPartitions:
+		case ckafka.AssignedPartitions:
 			partitions := make([]ckafka.TopicPartition, len(ev.Partitions))
 			for i, partition := range ev.Partitions {
 				partition.Offset = offset
@@ -172,7 +171,7 @@ func GetRebalanceCallback(offset ckafka.Offset, partitionFilter PartitionFilter)
 			if err := consumer.IncrementalAssign(partitions); err != nil {
 				return err
 			}
-		case kafka.RevokedPartitions:
+		case ckafka.RevokedPartitions:
 			if consumer.AssignmentLost() {
 				output.ErrPrintln("%% Current assignment lost.")
 			}
@@ -274,8 +273,11 @@ func RunConsumer(consumer *ckafka.Consumer, groupHandler *GroupHandler) error {
 }
 
 func (h *GroupHandler) RequestSchema(value []byte) (string, map[string]string, error) {
+	if len(value) == 0 || value[0] != 0x0 {
+		return "", nil, errors.NewErrorWithSuggestions("unknown magic byte", fmt.Sprintf("Check that all messages from this topic are in the %s format.", h.Format))
+	}
 	if len(value) < messageOffset {
-		return "", nil, errors.New(errors.FailedToFindSchemaIDErrorMsg)
+		return "", nil, errors.New("failed to find schema ID in topic data")
 	}
 
 	// Retrieve schema from cluster only if schema is specified.

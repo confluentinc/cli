@@ -24,8 +24,7 @@ RUN apk update --no-cache && \
 
 COPY confluent /bin
 
-RUN chmod +x /bin/confluent
-RUN chown $USER:$USER /bin/confluent
+RUN chown $USER:$USER /bin
 RUN chown $USER:$USER /etc
 
 # This symbolic link exists for backwards compatibility reasons

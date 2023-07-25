@@ -27,7 +27,7 @@ func main() {
 	// Generate documentation for both subsets of commands: cloud and on-prem
 	configs := []*v1.Config{
 		{CurrentContext: "Cloud", Contexts: map[string]*v1.Context{"Cloud": {PlatformName: "https://confluent.cloud"}}},
-		{CurrentContext: "On-Prem", Contexts: map[string]*v1.Context{"On-Prem": {PlatformName: "https://example.com"}}},
+		{CurrentContext: "On-Premises", Contexts: map[string]*v1.Context{"On-Premises": {PlatformName: "https://example.com"}}},
 	}
 
 	tabs := make([]docs.Tab, len(configs))
@@ -59,7 +59,6 @@ func main() {
 // removeUnreleasedDocs hides documentation for unreleased features
 func removeUnreleasedDocs() {
 	removeUnreleasedCommands("flink")
-	removeUnreleasedCommands("stream-share")
 }
 
 func removeUnreleasedCommands(command string) {

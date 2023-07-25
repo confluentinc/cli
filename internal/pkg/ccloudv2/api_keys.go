@@ -13,7 +13,7 @@ import (
 func newApiKeysClient(url, userAgent string, unsafeTrace bool) *apikeysv2.APIClient {
 	cfg := apikeysv2.NewConfiguration()
 	cfg.Debug = unsafeTrace
-	cfg.HTTPClient = newRetryableHttpClient(unsafeTrace)
+	cfg.HTTPClient = NewRetryableHttpClient(unsafeTrace)
 	cfg.Servers = apikeysv2.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 

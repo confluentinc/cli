@@ -1,0 +1,18 @@
+Start Flink interactive SQL client.
+
+Usage:
+  confluent flink shell [flags]
+
+Flags:
+      --compute-pool string    Flink compute pool ID.
+      --identity-pool string   Identity pool ID.
+      --environment string     Environment ID.
+      --database string        The database which will be used as default database. When using Kafka, this is the cluster display name.
+      --context string         CLI context name.
+  -o, --output string          Specify the output format as "human", "json", or "yaml". (default "human")
+      --fake-gateway           Test the SQL client with fake gateway data.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

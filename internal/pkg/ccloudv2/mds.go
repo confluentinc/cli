@@ -12,7 +12,7 @@ import (
 func newMdsClient(url, userAgent string, unsafeTrace bool) *mdsv2.APIClient {
 	cfg := mdsv2.NewConfiguration()
 	cfg.Debug = unsafeTrace
-	cfg.HTTPClient = newRetryableHttpClient(unsafeTrace)
+	cfg.HTTPClient = NewRetryableHttpClient(unsafeTrace)
 	cfg.Servers = mdsv2.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 

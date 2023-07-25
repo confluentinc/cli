@@ -1,0 +1,29 @@
+List schemas for a given subject prefix.
+
+Usage:
+  confluent schema-registry schema list [flags]
+
+Examples:
+List all schemas for subjects with prefix "my-subject".
+
+  $ confluent schema-registry schema list --subject-prefix my-subject --ca-location <ca-file-location> --schema-registry-endpoint <schema-registry-endpoint>
+
+List all schemas for all subjects in context ":.mycontext:".
+
+  $ confluent schema-registry schema list --subject-prefix :.mycontext: --ca-location <ca-file-location> --schema-registry-endpoint <schema-registry-endpoint>
+
+List all schemas in the default context.
+
+  $ confluent schema-registry schema list --ca-location <ca-file-location> --schema-registry-endpoint <schema-registry-endpoint>
+
+Flags:
+      --subject-prefix string             List schemas for subjects with a given prefix.
+      --ca-location string                File or directory path to CA certificates to authenticate the Schema Registry client.
+      --schema-registry-endpoint string   The URL of the Schema Registry cluster.
+      --context string                    CLI context name.
+  -o, --output string                     Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

@@ -14,6 +14,8 @@ func (c *command) newStatementListCommand() *cobra.Command {
 		RunE:  c.statementList,
 	}
 
+	pcmd.AddCloudFlag(cmd)
+	c.addRegionFlag(cmd)
 	c.addComputePoolFlag(cmd)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -33,7 +35,12 @@ func (c *command) statementList(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	statements, err := client.ListStatements(environmentId, c.Context.LastOrgId)
+	computePoolId, err := cmd.Flags().GetString("compute-pool")
+	if err != nil {
+		return err
+	}
+
+	statements, err := client.ListAllStatements(environmentId, c.Context.LastOrgId, computePoolId)
 	if err != nil {
 		return err
 	}
@@ -41,6 +48,7 @@ func (c *command) statementList(cmd *cobra.Command, args []string) error {
 	list := output.NewList(cmd)
 	for _, statement := range statements {
 		list.Add(&statementOut{
+			CreationDate: statement.Metadata.GetCreatedAt(),
 			Name:         statement.Spec.GetStatementName(),
 			Statement:    statement.Spec.GetStatement(),
 			ComputePool:  statement.Spec.GetComputePoolId(),

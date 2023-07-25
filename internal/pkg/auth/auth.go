@@ -127,15 +127,10 @@ func addOrUpdateContext(config *v1.Config, isCloud bool, credentials *Credential
 	}
 
 	if save && !credentials.IsSSO {
-		salt, err := secret.GenerateRandomBytes(secret.SaltLength)
+		salt, nonce, err := secret.GenerateSaltAndNonce()
 		if err != nil {
 			return err
 		}
-		nonce, err := secret.GenerateRandomBytes(secret.NonceLength)
-		if err != nil {
-			return err
-		}
-
 		encryptedPassword, err := secret.Encrypt(credentials.Username, credentials.Password, salt, nonce)
 		if err != nil {
 			return err
@@ -154,15 +149,10 @@ func addOrUpdateContext(config *v1.Config, isCloud bool, credentials *Credential
 		}
 	}
 
-	stateSalt, err := secret.GenerateRandomBytes(secret.SaltLength)
+	stateSalt, stateNonce, err := secret.GenerateSaltAndNonce()
 	if err != nil {
 		return err
 	}
-	stateNonce, err := secret.GenerateRandomBytes(secret.NonceLength)
-	if err != nil {
-		return err
-	}
-
 	state.Salt = stateSalt
 	state.Nonce = stateNonce
 
@@ -177,7 +167,7 @@ func addOrUpdateContext(config *v1.Config, isCloud bool, credentials *Credential
 		ctx.CredentialName = credential.Name
 		ctx.LastOrgId = orgResourceId
 	} else {
-		if err := config.AddContext(ctxName, platform.Name, credential.Name, map[string]*v1.KafkaClusterConfig{}, "", nil, state, orgResourceId, ""); err != nil {
+		if err := config.AddContext(ctxName, platform.Name, credential.Name, map[string]*v1.KafkaClusterConfig{}, "", state, orgResourceId, ""); err != nil {
 			return err
 		}
 	}
@@ -213,34 +203,19 @@ func generateCredentialName(username string) string {
 	return fmt.Sprintf("username-%s", username)
 }
 
-type response struct {
-	Error string `json:"error"`
-	Token string `json:"token"`
-}
+func GetDataplaneToken(authenticatedState *v1.ContextState, server string) (string, error) {
+	endpoint := strings.Trim(server, "/") + "/api/access_tokens"
 
-func GetBearerToken(authenticatedState *v1.ContextState, server, clusterId string) (string, error) {
-	bearerSessionToken := "Bearer " + authenticatedState.AuthToken
-	accessTokenEndpoint := strings.Trim(server, "/") + "/api/access_tokens"
-	clusterIds := map[string][]string{"clusterIds": {clusterId}}
+	res := &struct {
+		Token string `json:"token"`
+		Error string `json:"error"`
+	}{}
 
-	// Configure and send post request with session token to Auth Service to get access token
-	responses := new(response)
-	if _, err := sling.New().Add("content", "application/json").Add("Content-Type", "application/json").Add("Authorization", bearerSessionToken).BodyJSON(clusterIds).Post(accessTokenEndpoint).ReceiveSuccess(responses); err != nil {
+	if _, err := sling.New().Add("Content-Type", "application/json").Add("Authorization", "Bearer "+authenticatedState.AuthToken).Post(endpoint).BodyJSON(map[string]any{}).ReceiveSuccess(res); err != nil {
 		return "", err
 	}
-	return responses.Token, nil
-}
-
-func GetJwtTokenForV2Client(authenticatedState *v1.ContextState, server string) (string, error) {
-	bearerSessionToken := "Bearer " + authenticatedState.AuthToken
-	accessTokenEndpoint := strings.Trim(server, "/") + "/api/access_tokens"
-
-	responses := new(response)
-	if _, err := sling.New().Add("content", "application/json").Add("Content-Type", "application/json").Add("Authorization", bearerSessionToken).Body(strings.NewReader("{}")).Post(accessTokenEndpoint).ReceiveSuccess(responses); err != nil {
-		return "", err
+	if res.Error != "" {
+		return "", errors.New(res.Error)
 	}
-	if responses.Error != "" {
-		return "", errors.New(responses.Error)
-	}
-	return responses.Token, nil
+	return res.Token, nil
 }

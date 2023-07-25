@@ -1,4 +1,4 @@
-Error: unable to set active API key: resource not found: unknown API key UNKNOWN
+Error: API key "UNKNOWN" and associated Kafka cluster are not stored in local CLI state
 
 Suggestions:
     If you did not create this API key with the CLI or created it on another computer, you must first store the API key and secret locally with `confluent api-key store UNKNOWN <secret>`.

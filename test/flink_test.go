@@ -1,28 +1,5 @@
 package test
 
-func (s *CLITestSuite) TestFlinkHelp() {
-	tests := []CLITest{
-		{args: "flink -h", fixture: "flink/help.golden"},
-		{args: "flink compute-pool -h", fixture: "flink/compute-pool/help.golden"},
-		{args: "flink compute-pool create -h", fixture: "flink/compute-pool/create-help.golden"},
-		{args: "flink compute-pool delete -h", fixture: "flink/compute-pool/delete-help.golden"},
-		{args: "flink compute-pool describe -h", fixture: "flink/compute-pool/describe-help.golden"},
-		{args: "flink compute-pool list -h", fixture: "flink/compute-pool/list-help.golden"},
-		{args: "flink compute-pool update -h", fixture: "flink/compute-pool/update-help.golden"},
-		{args: "flink compute-pool use -h", fixture: "flink/compute-pool/use-help.golden"},
-		{args: "flink region -h", fixture: "flink/region/help.golden"},
-		{args: "flink region list -h", fixture: "flink/region/list-help.golden"},
-		{args: "flink statement -h", fixture: "flink/statement/help.golden"},
-		{args: "flink statement delete -h", fixture: "flink/statement/delete-help.golden"},
-		{args: "flink statement list -h", fixture: "flink/statement/list-help.golden"},
-	}
-
-	for _, test := range tests {
-		test.login = "cloud"
-		s.runIntegrationTest(test)
-	}
-}
-
 func (s *CLITestSuite) TestFlinkComputePool() {
 	tests := []CLITest{
 		{args: "flink compute-pool create my-compute-pool --cloud aws --region us-west-2", fixture: "flink/compute-pool/create.golden"},
@@ -56,6 +33,9 @@ func (s *CLITestSuite) TestFlinkComputePoolUse() {
 func (s *CLITestSuite) TestFlinkRegion() {
 	tests := []CLITest{
 		{args: "flink region list", fixture: "flink/region/list.golden"},
+		{args: "flink region use aws.eu-west-1", fixture: "flink/region/use.golden"},
+		{args: "flink region use aws", fixture: "flink/region/use-missing-region.golden", exitCode: 1},
+		{args: "flink region use eu-west-2", fixture: "flink/region/use-missing-cloud.golden", exitCode: 1},
 		{args: "flink region list -o json", fixture: "flink/region/list-json.golden"},
 		{args: "flink region list --cloud aws", fixture: "flink/region/list-cloud.golden"},
 	}
@@ -68,12 +48,31 @@ func (s *CLITestSuite) TestFlinkRegion() {
 
 func (s *CLITestSuite) TestFlinkStatement() {
 	tests := []CLITest{
-		{args: "flink statement delete my-statement --compute-pool lfcp-123456 --force", fixture: "flink/statement/delete.golden"},
+		{args: "flink statement delete my-statement --force --region eu-west-1 --cloud aws", fixture: "flink/statement/delete.golden"},
 		{args: "flink statement list --compute-pool lfcp-123456", fixture: "flink/statement/list.golden"},
+		{args: "flink statement describe my-statement --region eu-west-1 --cloud aws", fixture: "flink/statement/describe.golden"},
+		{args: "flink statement exception list my-statement --region eu-west-1 --cloud aws", fixture: "flink/statement/exception/list.golden"},
 	}
 
-	for _, tt := range tests {
-		tt.login = "cloud"
-		s.runIntegrationTest(tt)
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestFlinkIamBinding() {
+	tests := []CLITest{
+		{args: "flink iam-binding create --cloud aws --region us-west-2 --identity-pool pool-1234", fixture: "flink/iam-binding/create.golden"},
+		{args: "flink iam-binding create --cloud aws --region us-west-2 --identity-pool pool-1234 --environment env-123", fixture: "flink/iam-binding/create-environment.golden"},
+		{args: "flink iam-binding delete fiam-123 --force", fixture: "flink/iam-binding/delete.golden"},
+		{args: "flink iam-binding list", fixture: "flink/iam-binding/list.golden"},
+		{args: "flink iam-binding list --cloud aws", fixture: "flink/iam-binding/list-cloud.golden"},
+		{args: "flink iam-binding list --region us-west-1", fixture: "flink/iam-binding/list-region.golden"},
+		{args: "flink iam-binding list --identity-pool pool-123", fixture: "flink/iam-binding/list-identity-pool.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
 	}
 }

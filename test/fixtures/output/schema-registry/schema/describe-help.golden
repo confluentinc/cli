@@ -1,0 +1,27 @@
+Get schema either by schema ID, or by subject/version.
+
+Usage:
+  confluent schema-registry schema describe [id] [flags]
+
+Examples:
+Describe the schema string by schema ID.
+
+  $ confluent schema-registry schema describe 1337
+
+Describe the schema by both subject and version.
+
+  $ confluent schema-registry schema describe --subject payments --version latest
+
+Flags:
+      --subject string       Subject of the schema.
+      --version string       Version of the schema. Can be a specific version or "latest".
+      --show-references      Display the entire schema graph, including references.
+      --api-key string       API key.
+      --api-secret string    API key secret.
+      --context string       CLI context name.
+      --environment string   Environment ID.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

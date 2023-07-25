@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"net/url"
-	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -29,18 +27,29 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/update"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	"github.com/confluentinc/cli/internal/pkg/version"
-	testserver "github.com/confluentinc/cli/test/test-server"
 )
+
+type wrongLoginCommandError struct {
+	errorString      string
+	suggestionString string
+}
+
+var wrongLoginCommandErrorWithSuggestion = wrongLoginCommandError{
+	"`%s` is not a Confluent Cloud command. Did you mean `%s`?",
+	"If you are a Confluent Cloud user, run `%s` instead.\n" +
+		"If you are attempting to connect to Confluent Platform, login with `confluent login --url <mds-url>` to use `%s`."}
+
+var wrongLoginCommandsMap = map[string]string{
+	"confluent cluster": "confluent kafka cluster",
+}
 
 // PreRun is a helper class for automatically setting up Cobra PersistentPreRun commands
 type PreRunner interface {
 	Anonymous(command *CLICommand, willAuthenticate bool) func(*cobra.Command, []string) error
 	Authenticated(command *AuthenticatedCLICommand) func(*cobra.Command, []string) error
 	AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(*cobra.Command, []string) error
-	HasAPIKey(command *HasAPIKeyCLICommand) func(*cobra.Command, []string) error
 	InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) func(*cobra.Command, []string) error
-	ParseFlagsIntoContext(command *AuthenticatedCLICommand) func(*cobra.Command, []string) error
-	AnonymousParseFlagsIntoContext(command *CLICommand) func(*cobra.Command, []string) error
+	ParseFlagsIntoContext(command *CLICommand) func(*cobra.Command, []string) error
 }
 
 // PreRun is the standard PreRunner implementation
@@ -56,145 +65,7 @@ type PreRun struct {
 	JWTValidator            JWTValidator
 }
 
-type CLICommand struct {
-	*cobra.Command
-	Config    *dynamicconfig.DynamicConfig
-	Version   *version.Version
-	prerunner PreRunner
-}
-
 type KafkaRESTProvider func() (*KafkaREST, error)
-
-type AuthenticatedCLICommand struct {
-	*CLICommand
-	Client             *ccloudv1.Client
-	V2Client           *ccloudv2.Client
-	MDSClient          *mds.APIClient
-	MDSv2Client        *mdsv2alpha1.APIClient
-	KafkaRESTProvider  *KafkaRESTProvider
-	flinkGatewayClient *ccloudv2.FlinkGatewayClient
-	metricsClient      *ccloudv2.MetricsClient
-	Context            *dynamicconfig.DynamicContext
-	State              *v1.ContextState
-}
-
-type HasAPIKeyCLICommand struct {
-	*CLICommand
-}
-
-func NewAuthenticatedCLICommand(cmd *cobra.Command, prerunner PreRunner) *AuthenticatedCLICommand {
-	c := &AuthenticatedCLICommand{CLICommand: NewCLICommand(cmd, prerunner)}
-	cmd.PersistentPreRunE = Chain(prerunner.Authenticated(c), prerunner.ParseFlagsIntoContext(c))
-	c.Command = cmd
-	return c
-}
-
-func NewAuthenticatedWithMDSCLICommand(cmd *cobra.Command, prerunner PreRunner) *AuthenticatedCLICommand {
-	c := &AuthenticatedCLICommand{CLICommand: NewCLICommand(cmd, prerunner)}
-	cmd.PersistentPreRunE = Chain(prerunner.AuthenticatedWithMDS(c), prerunner.ParseFlagsIntoContext(c))
-	c.Command = cmd
-	return c
-}
-
-func NewHasAPIKeyCLICommand(cmd *cobra.Command, prerunner PreRunner) *HasAPIKeyCLICommand {
-	c := &HasAPIKeyCLICommand{CLICommand: NewCLICommand(cmd, prerunner)}
-	cmd.PersistentPreRunE = prerunner.HasAPIKey(c)
-	c.Command = cmd
-	return c
-}
-
-func NewAnonymousCLICommand(cmd *cobra.Command, prerunner PreRunner) *CLICommand {
-	c := NewCLICommand(cmd, prerunner)
-	cmd.PersistentPreRunE = Chain(prerunner.Anonymous(c, false), prerunner.AnonymousParseFlagsIntoContext(c))
-	c.Command = cmd
-	return c
-}
-
-func NewCLICommand(cmd *cobra.Command, prerunner PreRunner) *CLICommand {
-	return &CLICommand{
-		Config:    &dynamicconfig.DynamicConfig{},
-		Command:   cmd,
-		prerunner: prerunner,
-	}
-}
-
-func (c *AuthenticatedCLICommand) GetKafkaREST() (*KafkaREST, error) {
-	return (*c.KafkaRESTProvider)()
-}
-
-func (c *AuthenticatedCLICommand) GetFlinkGatewayClient() (*ccloudv2.FlinkGatewayClient, error) {
-	ctx := c.Config.Context()
-
-	if c.flinkGatewayClient == nil {
-		computePoolId := ctx.GetCurrentFlinkComputePool()
-		if computePoolId == "" {
-			return nil, errors.NewErrorWithSuggestions("no compute pool selected", "Select a compute pool with `confluent flink compute-pool use` or `--compute-pool`.")
-		}
-
-		computePool, err := c.V2Client.DescribeFlinkComputePool(computePoolId, ctx.GetCurrentEnvironment())
-		if err != nil {
-			return nil, err
-		}
-
-		u, err := url.Parse(computePool.Spec.GetHttpEndpoint())
-		if err != nil {
-			return nil, err
-		}
-		u.Path = ""
-
-		unsafeTrace, err := c.Command.Flags().GetBool("unsafe-trace")
-		if err != nil {
-			return nil, err
-		}
-
-		authToken, err := pauth.GetJwtTokenForV2Client(ctx.GetState(), ctx.GetPlatformServer())
-		if err != nil {
-			return nil, err
-		}
-
-		c.flinkGatewayClient = ccloudv2.NewFlinkGatewayClient(u.String(), c.Version.UserAgent, unsafeTrace, authToken)
-	}
-
-	return c.flinkGatewayClient, nil
-}
-
-func (c *AuthenticatedCLICommand) GetMetricsClient() (*ccloudv2.MetricsClient, error) {
-	ctx := c.Config.Context()
-
-	if c.metricsClient == nil {
-		url := "https://api.telemetry.confluent.cloud"
-		if c.Config.IsTest {
-			url = testserver.TestV2CloudUrl.String()
-		} else if strings.Contains(ctx.GetPlatformServer(), "devel") {
-			url = "https://devel-sandbox-api.telemetry.aws.confluent.cloud"
-		} else if strings.Contains(ctx.GetPlatformServer(), "stag") {
-			url = "https://stag-sandbox-api.telemetry.aws.confluent.cloud"
-		}
-
-		unsafeTrace, err := c.Command.Flags().GetBool("unsafe-trace")
-		if err != nil {
-			return nil, err
-		}
-
-		authToken, err := pauth.GetJwtTokenForV2Client(ctx.GetState(), ctx.GetPlatformServer())
-		if err != nil {
-			return nil, err
-		}
-
-		c.metricsClient = ccloudv2.NewMetricsClient(url, c.Version.UserAgent, unsafeTrace, authToken)
-	}
-
-	return c.metricsClient, nil
-}
-
-func (c *AuthenticatedCLICommand) AuthToken() string {
-	return c.Context.GetAuthToken()
-}
-
-func (h *HasAPIKeyCLICommand) AddCommand(cmd *cobra.Command) {
-	cmd.PersistentPreRunE = h.PersistentPreRunE
-	h.Command.AddCommand(cmd)
-}
 
 // Anonymous provides PreRun operations for commands that may be run without a logged-in user
 func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(*cobra.Command, []string) error {
@@ -206,9 +77,15 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(*cob
 			}
 		}
 
-		if err := command.Config.InitDynamicConfig(cmd, r.Config); err != nil {
+		if err := r.Config.DecryptCredentials(); err != nil {
 			return err
 		}
+
+		command.Config.Config = r.Config
+		if err := command.Config.ParseFlagsIntoConfig(cmd); err != nil {
+			return err
+		}
+
 		// check Feature Flag "cli.disable" for commands run from cloud context (except for on-prem login)
 		// check for commands that require cloud auth (since cloud context might not be active until auto-login)
 		// check for cloud login (since it is not executed from cloud context)
@@ -217,7 +94,7 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(*cob
 				return err
 			}
 			// announcement and deprecation check, print out msg
-			ctx := dynamicconfig.NewDynamicContext(r.Config.Context(), nil, nil)
+			ctx := dynamicconfig.NewDynamicContext(r.Config.Context(), nil)
 			featureflags.PrintAnnouncements(featureflags.Announcements, ctx, cmd)
 			featureflags.PrintAnnouncements(featureflags.DeprecationNotices, ctx, cmd)
 		}
@@ -247,13 +124,10 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(*cob
 }
 
 func checkCliDisable(cmd *CLICommand, cfg *v1.Config) error {
-	ldDisableJson := featureflags.Manager.JsonVariation("cli.disable", cmd.Config.Context(), v1.CliLaunchDarklyClient, true, nil)
-	ldDisable, ok := ldDisableJson.(map[string]any)
-	if !ok {
-		return nil
-	}
+	ldDisable := featureflags.GetLDDisableMap(cmd.Config.Context())
 	errMsg, errMsgOk := ldDisable["error_msg"].(string)
-	if errMsgOk && errMsg != "" {
+	disabledCmdsAndFlags, ok := ldDisable["patterns"].([]any)
+	if (errMsgOk && errMsg != "" && !ok) || (ok && featureflags.IsDisabled(featureflags.Manager.Command, disabledCmdsAndFlags)) {
 		allowUpdate, allowUpdateOk := ldDisable["allow_update"].(bool)
 		if !(cmd.CommandPath() == "confluent update" && allowUpdateOk && allowUpdate) {
 			// in case a user is trying to run an on-prem command from a cloud context (should not see LD msg)
@@ -303,6 +177,10 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(*cobra.Com
 	return func(cmd *cobra.Command, args []string) error {
 		if err := r.Anonymous(command.CLICommand, true)(cmd, args); err != nil {
 			return err
+		}
+
+		if r.Config.Context().GetCredentialType() == v1.APIKey {
+			return ErrIfMissingRunRequirement(cmd, r.Config)
 		}
 
 		if err := r.Config.DecryptContextStates(); err != nil {
@@ -359,16 +237,9 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(*cobra.Com
 	}
 }
 
-func (r *PreRun) ParseFlagsIntoContext(command *AuthenticatedCLICommand) func(*cobra.Command, []string) error {
-	return func(cmd *cobra.Command, args []string) error {
-		ctx := command.Context
-		return ctx.ParseFlagsIntoContext(cmd, command.Client)
-	}
-}
-
-func (r *PreRun) AnonymousParseFlagsIntoContext(command *CLICommand) func(*cobra.Command, []string) error {
-	return func(cmd *cobra.Command, args []string) error {
-		return command.Config.Context().ParseFlagsIntoContext(cmd, nil)
+func (r *PreRun) ParseFlagsIntoContext(command *CLICommand) func(*cobra.Command, []string) error {
+	return func(cmd *cobra.Command, _ []string) error {
+		return command.Config.Context().ParseFlagsIntoContext(cmd)
 	}
 }
 
@@ -459,8 +330,6 @@ func (r *PreRun) setCCloudClient(c *AuthenticatedCLICommand) error {
 		return err
 	}
 	c.Client = ccloudClient
-	c.Context.Client = ccloudClient
-	c.Config.Client = ccloudClient
 
 	unsafeTrace, err := c.Flags().GetBool("unsafe-trace")
 	if err != nil {
@@ -493,13 +362,13 @@ func (r *PreRun) setCCloudClient(c *AuthenticatedCLICommand) error {
 				return nil, err
 			}
 
-			bearerToken, err := pauth.GetBearerToken(state, ctx.Platform.Server, lkc)
+			dataplaneToken, err := pauth.GetDataplaneToken(state, ctx.Platform.Server)
 			if err != nil {
 				return nil, err
 			}
 			kafkaRest := &KafkaREST{
-				Context:     context.WithValue(context.Background(), kafkarestv3.ContextAccessToken, bearerToken),
-				CloudClient: ccloudv2.NewKafkaRestClient(restEndpoint, r.Version.UserAgent, unsafeTrace, bearerToken),
+				Context:     context.WithValue(context.Background(), kafkarestv3.ContextAccessToken, dataplaneToken),
+				CloudClient: ccloudv2.NewKafkaRestClient(restEndpoint, r.Version.UserAgent, unsafeTrace, dataplaneToken),
 				Client:      CreateKafkaRESTClient(restEndpoint, unsafeTrace),
 			}
 
@@ -588,6 +457,15 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(*co
 
 		// Even if there was an error while setting the context, notify the user about any unmet run requirements first.
 		if err := ErrIfMissingRunRequirement(cmd, r.Config); err != nil {
+			if err == v1.RunningOnPremCommandInCloudErr {
+				for topLevelCmd, suggestCmd := range wrongLoginCommandsMap {
+					if strings.HasPrefix(cmd.CommandPath(), topLevelCmd) {
+						suggestCmdPath := strings.Replace(cmd.CommandPath(), topLevelCmd, suggestCmd, 1)
+						return errors.NewErrorWithSuggestions(fmt.Sprintf(wrongLoginCommandErrorWithSuggestion.errorString, cmd.CommandPath(), suggestCmdPath),
+							fmt.Sprintf(wrongLoginCommandErrorWithSuggestion.suggestionString, suggestCmdPath, cmd.CommandPath()))
+					}
+				}
+			}
 			return err
 		}
 
@@ -749,7 +627,7 @@ func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) fun
 					form.Field{ID: "username", Prompt: "Username"},
 					form.Field{ID: "password", Prompt: "Password", IsHidden: true},
 				)
-				if err := f.Prompt(form.NewPrompt(os.Stdin)); err != nil {
+				if err := f.Prompt(form.NewPrompt()); err != nil {
 					return nil, err
 				}
 				restContext = context.WithValue(context.Background(), kafkarestv3.ContextBasicAuth, kafkarestv3.BasicAuth{UserName: f.Responses["username"].(string), Password: f.Responses["password"].(string)})
@@ -826,95 +704,6 @@ func createOnPremKafkaRestClient(ctx *dynamicconfig.DynamicContext, caCertPath s
 	return utils.DefaultClient(), nil
 }
 
-// HasAPIKey provides PreRun operations for commands that require an API key.
-func (r *PreRun) HasAPIKey(command *HasAPIKeyCLICommand) func(*cobra.Command, []string) error {
-	return func(cmd *cobra.Command, args []string) error {
-		if err := r.Anonymous(command.CLICommand, false)(cmd, args); err != nil {
-			return err
-		}
-
-		if err := r.Config.DecryptContextStates(); err != nil {
-			return err
-		}
-
-		ctx := command.Config.Context()
-		if ctx == nil {
-			return new(errors.NotLoggedInError)
-		}
-
-		var clusterId string
-		switch ctx.Credential.CredentialType {
-		case v1.APIKey:
-			if cmd.Flags().Changed("cluster") {
-				output.ErrPrintln("WARNING: The `--cluster` flag is ignored when using API key credentials.")
-			}
-			if cmd.Flags().Changed("environment") {
-				output.ErrPrintln("WARNING: The `--environment` flag is ignored when using API key credentials.")
-			}
-			clusterId = r.getClusterIdForAPIKeyCredential(ctx)
-		case v1.Username:
-			unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
-			if err != nil {
-				return err
-			}
-
-			if tokenErr := r.ValidateToken(command.Config); tokenErr != nil {
-				if err := r.updateToken(tokenErr, command.Config.Context(), unsafeTrace); err != nil {
-					return err
-				}
-			}
-
-			client, err := r.createCCloudClient(ctx, command.Version)
-			if err != nil {
-				return err
-			}
-			v2Client := command.Config.GetCloudClientV2(unsafeTrace)
-
-			ctx.Client = client
-			command.Config.Client = client
-			ctx.V2Client = v2Client
-			command.Config.V2Client = v2Client
-
-			if err := ctx.ParseFlagsIntoContext(cmd, command.Config.Client); err != nil {
-				return err
-			}
-
-			cluster, err := ctx.GetKafkaClusterForCommand()
-			if err != nil {
-				return err
-			}
-			clusterId = cluster.ID
-
-			key, secret, err := ctx.KeyAndSecretFlags(cmd)
-			if err != nil {
-				return err
-			}
-			if key != "" {
-				cluster.APIKey = key
-				if secret != "" {
-					cluster.APIKeys[key] = &v1.APIKeyPair{Key: key, Secret: secret}
-				} else if cluster.APIKeys[key] == nil {
-					return errors.NewErrorWithSuggestions(
-						fmt.Sprintf(errors.NoAPISecretStoredOrPassedErrorMsg, key, clusterId),
-						fmt.Sprintf(errors.NoAPISecretStoredOrPassedSuggestions, key, clusterId))
-				}
-			}
-		default:
-			panic("Invalid Credential Type")
-		}
-
-		hasAPIKey, err := ctx.HasAPIKey(clusterId)
-		if err != nil {
-			return err
-		}
-		if !hasAPIKey {
-			return &errors.UnspecifiedAPIKeyError{ClusterID: clusterId}
-		}
-
-		return nil
-	}
-}
-
 func (r *PreRun) ValidateToken(config *dynamicconfig.DynamicConfig) error {
 	if config == nil {
 		return new(errors.NotLoggedInError)
@@ -976,11 +765,6 @@ func (r *PreRun) getUpdatedAuthToken(ctx *dynamicconfig.DynamicContext, unsafeTr
 	}
 }
 
-// if API key credential then the context is initialized to be used for only one cluster, and cluster id can be obtained directly from the context config
-func (r *PreRun) getClusterIdForAPIKeyCredential(ctx *dynamicconfig.DynamicContext) string {
-	return ctx.KafkaClusterContext.GetActiveKafkaClusterId()
-}
-
 // notifyIfUpdateAvailable prints a message if an update is available
 func (r *PreRun) notifyIfUpdateAvailable(cmd *cobra.Command, currentVersion string) {
 	if !r.shouldCheckForUpdates(cmd) || r.Config.IsTest {
@@ -1023,6 +807,12 @@ func (r *PreRun) shouldCheckForUpdates(cmd *cobra.Command) bool {
 func warnIfConfluentLocal(cmd *cobra.Command) {
 	if strings.HasPrefix(cmd.CommandPath(), "confluent local kafka start") {
 		output.ErrPrintln("The local commands are intended for a single-node development environment only, NOT for production usage. See more: https://docs.confluent.io/current/cli/index.html")
+		output.ErrPrintln()
+		return
+	}
+	if strings.HasPrefix(cmd.CommandPath(), "confluent local") && !strings.HasPrefix(cmd.CommandPath(), "confluent local kafka") {
+		output.ErrPrintln("The local commands are intended for a single-node development environment only, NOT for production usage. See more: https://docs.confluent.io/current/cli/index.html")
+		output.ErrPrintln("As of Confluent Platform 8.0, Java 8 will no longer be supported.")
 		output.ErrPrintln()
 	}
 }

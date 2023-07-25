@@ -1,6 +1,7 @@
 package reverseisearch
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -17,7 +18,35 @@ func TestSearchString(t *testing.T) {
 
 		result := search(s, slice, len(slice)-1)
 		assert.NotEqual(t, -1, result.index)
-		assert.Contains(t, result.match, s)
+		assert.Contains(t, strings.ToUpper(result.match), strings.ToUpper(s))
+	})
+}
+
+func TestSearchCaseInsensitiveInputString(t *testing.T) {
+	rapid.Check(t, func(t *rapid.T) {
+		// create a random array string
+		slice := rapid.SliceOfN(rapid.StringN(1, -1, -1), 1, 500).Draw(t, "Slice of strings")
+		// randomly pick one of the string inside the array
+		index := rapid.IntRange(0, len(slice)-1).Draw(t, "Index")
+		str := slice[index]
+		upperCaseStr := strings.ToUpper(str)
+
+		result := search(upperCaseStr, slice, len(slice)-1)
+		assert.NotEqual(t, -1, result.index)
+		assert.Contains(t, strings.ToUpper(result.match), upperCaseStr)
+	})
+}
+
+func TestSearchCaseInsensitiveHistoryString(t *testing.T) {
+	rapid.Check(t, func(t *rapid.T) {
+		slice := rapid.SliceOfN(rapid.StringMatching("[0-Z]+"), 1, 500).Draw(t, "Slice o uppercase strings")
+		// randomly pick one of the string inside the array
+		index := rapid.IntRange(0, len(slice)-1).Draw(t, "Index")
+		str := slice[index]
+
+		result := search(str, slice, len(slice)-1)
+		assert.NotEqual(t, -1, result.index)
+		assert.Contains(t, strings.ToUpper(result.match), strings.ToUpper(str))
 	})
 }
 
@@ -96,6 +125,6 @@ func TestNewLineCount(t *testing.T) {
 			s = s[randomIndex:] + "\n" + s[:randomIndex]
 		}
 
-		assert.Equal(t, newLines, NewLineCount(s))
+		assert.Equal(t, newLines, newLineCount(s))
 	})
 }

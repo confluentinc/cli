@@ -5,13 +5,14 @@ Usage:
 
 Available Commands:
   compute-pool Manage Flink compute pools.
+  iam-binding  Manage Flink IAM bindings.
   region       List Flink regions.
   shell        Start Flink interactive SQL client.
   statement    Manage Flink SQL statements.
 
 Global Flags:
   -h, --help            Show help for this command.
-      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
 
 Use "confluent flink [command] --help" for more information about a command.

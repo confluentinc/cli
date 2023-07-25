@@ -12,7 +12,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 )
 
-func (c *command) newUpdateCommand(enableSourceCode bool) *cobra.Command {
+func (c *command) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "update <pipeline-id>",
 		Short:             "Update an existing pipeline.",
@@ -46,22 +46,18 @@ func (c *command) newUpdateCommand(enableSourceCode bool) *cobra.Command {
 	cmd.Flags().String("name", "", "Name of the pipeline.")
 	cmd.Flags().String("description", "", "Description of the pipeline.")
 	pcmd.AddKsqlClusterFlag(cmd, c.AuthenticatedCLICommand)
-	if enableSourceCode {
-		cmd.Flags().String("sql-file", "", "Path to a KSQL file containing the pipeline's source code.")
-		cmd.Flags().StringArray("secret", []string{}, "A named secret that can be referenced in pipeline source code, e.g. \"secret_name=secret_content\".\n"+
-			"This flag can be supplied multiple times. The secret mapping must have the format <secret-name>=<secret-value>,\n"+
-			"where <secret-name> consists of 1-128 lowercase, uppercase, numeric or underscore characters but may not begin with a digit.\n"+
-			"If <secret-value> is empty, the named secret will be removed from Stream Designer.")
-	}
+	cmd.Flags().String("sql-file", "", "Path to a KSQL file containing the pipeline's source code.")
+	cmd.Flags().StringArray("secret", []string{}, "A named secret that can be referenced in pipeline source code, for example, \"secret_name=secret_content\".\n"+
+		"This flag can be supplied multiple times. The secret mapping must have the format <secret-name>=<secret-value>,\n"+
+		"where <secret-name> consists of 1-128 lowercase, uppercase, numeric or underscore characters but may not begin with a digit.\n"+
+		"If <secret-value> is empty, the named secret will be removed from Stream Designer.")
 	cmd.Flags().Bool("activation-privilege", true, "Grant or revoke the privilege to activate this pipeline.")
 	cmd.Flags().Bool("update-schema-registry", false, "Update the pipeline with the latest Schema Registry cluster.")
 	pcmd.AddOutputFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 
-	if enableSourceCode {
-		cobra.CheckErr(cmd.MarkFlagFilename("sql-file", "sql"))
-	}
+	cobra.CheckErr(cmd.MarkFlagFilename("sql-file", "sql"))
 
 	return cmd
 }

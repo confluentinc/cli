@@ -16,6 +16,8 @@ const (
 	Context               = "context"
 	Environment           = "environment"
 	FlinkComputePool      = "Flink compute pool"
+	FlinkRegion           = "Flink region"
+	FlinkIamBinding       = "Flink IAM binding"
 	FlinkStatement        = "Flink SQL statement"
 	IdentityPool          = "identity pool"
 	IdentityProvider      = "identity provider"
@@ -57,7 +59,7 @@ var prefixToResource = map[string]string{
 }
 
 func LookupType(resourceId string) string {
-	if resourceId == "cloud" {
+	if resourceId == Cloud {
 		return Cloud
 	}
 

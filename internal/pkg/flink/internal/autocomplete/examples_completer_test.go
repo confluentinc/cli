@@ -22,20 +22,6 @@ func TestSelectExampleAutoCompletionSnapshot(t *testing.T) {
 	cupaloy.SnapshotT(t, actual)
 }
 
-func TestDropExampleAutoCompletionSnapshot(t *testing.T) {
-	input := "drop"
-	buffer := prompt.NewBuffer()
-	buffer.InsertText(input, false, true)
-
-	completer := NewCompleterBuilder(mockGetSmartCompletion).
-		AddCompleter(ExamplesCompleter).
-		BuildCompleter()
-
-	actual := completer(*buffer.Document())
-
-	cupaloy.SnapshotT(t, actual)
-}
-
 func TestAlterExampleAutoCompletionSnapshot(t *testing.T) {
 	input := "alter"
 	buffer := prompt.NewBuffer()
@@ -78,36 +64,8 @@ func TestDescribeExampleAutoCompletionSnapshot(t *testing.T) {
 	cupaloy.SnapshotT(t, actual)
 }
 
-func TestExplainExampleAutoCompletionSnapshot(t *testing.T) {
-	input := "explain"
-	buffer := prompt.NewBuffer()
-	buffer.InsertText(input, false, true)
-
-	completer := NewCompleterBuilder(mockGetSmartCompletion).
-		AddCompleter(ExamplesCompleter).
-		BuildCompleter()
-
-	actual := completer(*buffer.Document())
-
-	cupaloy.SnapshotT(t, actual)
-}
-
 func TestUseExampleAutoCompletionSnapshot(t *testing.T) {
 	input := "use"
-	buffer := prompt.NewBuffer()
-	buffer.InsertText(input, false, true)
-
-	completer := NewCompleterBuilder(mockGetSmartCompletion).
-		AddCompleter(ExamplesCompleter).
-		BuildCompleter()
-
-	actual := completer(*buffer.Document())
-
-	cupaloy.SnapshotT(t, actual)
-}
-
-func TestShowExampleAutoCompletionSnapshot(t *testing.T) {
-	input := "show"
 	buffer := prompt.NewBuffer()
 	buffer.InsertText(input, false, true)
 

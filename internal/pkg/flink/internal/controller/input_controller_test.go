@@ -1,105 +1,125 @@
 package controller
 
 import (
-	"net/http"
+	"fmt"
 	"testing"
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 
+	"github.com/confluentinc/go-prompt"
+
+	"github.com/confluentinc/cli/internal/pkg/flink/internal/history"
 	"github.com/confluentinc/cli/internal/pkg/flink/test/mock"
-	"github.com/confluentinc/cli/internal/pkg/flink/types"
 )
 
-func TestRenderError(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	mockAppController := mock.NewMockApplicationControllerInterface(ctrl)
-
-	inputController := &InputController{appController: mockAppController}
-	err := &types.StatementError{HttpResponseCode: http.StatusUnauthorized}
-
-	// Test unauthorized error - should exit application
-	mockAppController.EXPECT().ExitApplication()
-	result := inputController.isSessionValid(err)
-	require.False(t, result)
-
-	// Test other error
-	err = &types.StatementError{Message: "something went wrong."}
-	result = inputController.isSessionValid(err)
-	require.True(t, result)
+type InputControllerTestSuite struct {
+	suite.Suite
+	inputController *InputController
+	appController   *mock.MockApplicationControllerInterface
+	history         *history.History
+	prompt          *mock.MockIPrompt
+	reverseISearch  *mock.MockReverseISearch
 }
 
-func TestShouldUseTView(t *testing.T) {
-	tests := []struct {
-		name      string
-		statement types.ProcessedStatement
-		want      bool
-	}{
-		{
-			name:      "local statement should not use TView",
-			statement: types.ProcessedStatement{IsLocalStatement: true},
-			want:      false,
-		},
-		{
-			name:      "local statement should not use TView even if unbounded",
-			statement: types.ProcessedStatement{PageToken: "NOT_EMPTY", IsLocalStatement: true},
-			want:      false,
-		},
-		{
-			name:      "non-local unbounded statement should always use TView",
-			statement: types.ProcessedStatement{PageToken: "NOT_EMPTY", IsLocalStatement: false, StatementResults: &types.StatementResults{}},
-			want:      true,
-		},
-		{
-			name:      "statement with no results should not use TView",
-			statement: types.ProcessedStatement{IsLocalStatement: false, StatementResults: &types.StatementResults{}},
-			want:      false,
-		},
-		{
-			name: "statement with one column and two rows should not use TView",
-			statement: types.ProcessedStatement{IsLocalStatement: false, StatementResults: &types.StatementResults{
-				Headers: []string{"Column 1"},
-				Rows: []types.StatementResultRow{
-					{Fields: []types.StatementResultField{types.AtomicStatementResultField{}}},
-					{Fields: []types.StatementResultField{types.AtomicStatementResultField{}}},
-				},
-			}},
-			want: false,
-		},
-		{
-			name: "statement with two columns and one row should not use TView",
-			statement: types.ProcessedStatement{IsLocalStatement: false, StatementResults: &types.StatementResults{
-				Headers: []string{"Column 1", "Column 2"},
-				Rows:    []types.StatementResultRow{{Fields: []types.StatementResultField{types.AtomicStatementResultField{}}}},
-			}},
-			want: false,
-		},
-		{
-			name: "statement with two columns and two rows should use TView",
-			statement: types.ProcessedStatement{IsLocalStatement: false, StatementResults: &types.StatementResults{
-				Headers: []string{"Column 1", "Column 2"},
-				Rows: []types.StatementResultRow{
-					{Fields: []types.StatementResultField{types.AtomicStatementResultField{}}},
-					{Fields: []types.StatementResultField{types.AtomicStatementResultField{}}},
-				},
-			}},
-			want: true,
-		},
-		{
-			name: "local statement with two columns and two rows should not use TView",
-			statement: types.ProcessedStatement{IsLocalStatement: true, StatementResults: &types.StatementResults{
-				Headers: []string{"Column 1", "Column 2"},
-				Rows: []types.StatementResultRow{
-					{Fields: []types.StatementResultField{types.AtomicStatementResultField{}}},
-					{Fields: []types.StatementResultField{types.AtomicStatementResultField{}}},
-				},
-			}},
-			want: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			require.Equal(t, tt.want, shouldUseTView(tt.statement))
-		})
-	}
+func TestInputControllerTestSuite(t *testing.T) {
+	suite.Run(t, new(InputControllerTestSuite))
+}
+
+func (s *InputControllerTestSuite) SetupTest() {
+	ctrl := gomock.NewController(s.T())
+	s.appController = mock.NewMockApplicationControllerInterface(ctrl)
+	s.history = &history.History{Data: []string{}}
+	s.prompt = mock.NewMockIPrompt(ctrl)
+	s.reverseISearch = mock.NewMockReverseISearch(ctrl)
+	s.inputController = NewInputController(s.history).(*InputController)
+	s.inputController.reverseISearch = s.reverseISearch
+	s.inputController.prompt = s.prompt
+}
+
+func (s *InputControllerTestSuite) TestGetUserInput() {
+	input := "input"
+	s.prompt.EXPECT().Input().Return(input)
+
+	actual := s.inputController.GetUserInput()
+
+	require.Equal(s.T(), input, actual)
+}
+
+func (s *InputControllerTestSuite) TestGetUserInputSetsInitialBuffer() {
+	s.inputController.InitialBuffer = "not-empty"
+	input := fmt.Sprintf("%s %s", s.inputController.InitialBuffer, "input")
+	buffer := prompt.NewBuffer()
+	s.prompt.EXPECT().Buffer().Return(buffer)
+	s.prompt.EXPECT().Input().Return(input)
+
+	actual := s.inputController.GetUserInput()
+
+	require.Equal(s.T(), buffer.Text(), "not-empty")
+	require.Equal(s.T(), input, actual)
+}
+
+func (s *InputControllerTestSuite) TestHasUserEnabledReverseSearchShouldBeTrue() {
+	s.inputController.reverseISearchEnabled = true
+
+	hasUserEnabledReverseSearch := s.inputController.HasUserEnabledReverseSearch()
+
+	require.True(s.T(), hasUserEnabledReverseSearch)
+}
+
+func (s *InputControllerTestSuite) TestHasUserEnabledReverseSearchShouldBeFalse() {
+	s.inputController.reverseISearchEnabled = false
+
+	hasUserEnabledReverseSearch := s.inputController.HasUserEnabledReverseSearch()
+
+	require.False(s.T(), hasUserEnabledReverseSearch)
+}
+
+func (s *InputControllerTestSuite) TestStartReverseSearch() {
+	searchResult := "search result"
+	s.reverseISearch.EXPECT().ReverseISearch(s.history.Data).Return(searchResult)
+
+	s.inputController.StartReverseSearch()
+
+	require.False(s.T(), s.inputController.reverseISearchEnabled)
+	require.Equal(s.T(), searchResult, s.inputController.InitialBuffer)
+}
+
+func (s *InputControllerTestSuite) TestHasUserInitiatedExitShouldBeTrueWhenShouldExitIsTrue() {
+	s.inputController.shouldExit = true
+
+	hasUserInitiatedExit := s.inputController.HasUserInitiatedExit("exit;")
+
+	require.True(s.T(), hasUserInitiatedExit)
+}
+
+func (s *InputControllerTestSuite) TestHasUserInitiatedExitShouldBeTrueWhenUserInputEmpty() {
+	hasUserInitiatedExit := s.inputController.HasUserInitiatedExit("")
+
+	require.True(s.T(), hasUserInitiatedExit)
+}
+
+func (s *InputControllerTestSuite) TestHasUserInitiatedExitShouldBeFalse() {
+	s.inputController.reverseISearchEnabled = false
+
+	hasUserEnabledReverseSearch := s.inputController.HasUserEnabledReverseSearch()
+
+	require.False(s.T(), hasUserEnabledReverseSearch)
+}
+
+func (s *InputControllerTestSuite) TestTurnOnSmartCompletion() {
+	s.inputController.smartCompletion = false
+
+	s.inputController.toggleSmartCompletion()
+
+	require.True(s.T(), s.inputController.smartCompletion)
+}
+
+func (s *InputControllerTestSuite) TestTurnOffSmartCompletion() {
+	s.inputController.smartCompletion = true
+
+	s.inputController.toggleSmartCompletion()
+
+	require.False(s.T(), s.inputController.smartCompletion)
 }

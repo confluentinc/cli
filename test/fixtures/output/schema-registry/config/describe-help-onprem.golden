@@ -1,0 +1,25 @@
+Describe top-level or subject-level schema compatibility.
+
+Usage:
+  confluent schema-registry config describe [flags]
+
+Examples:
+Describe the configuration of a subject "payments".
+
+  $ confluent schema-registry config describe --subject payments --ca-location <ca-file-location> --schema-registry-endpoint <schema-registry-endpoint>
+
+Describe the top-level configuration.
+
+  $ confluent schema-registry config describe --ca-location <ca-file-location> --schema-registry-endpoint <schema-registry-endpoint>
+
+Flags:
+      --subject string                    Subject of the schema.
+      --ca-location string                File or directory path to CA certificates to authenticate the Schema Registry client.
+      --schema-registry-endpoint string   The URL of the Schema Registry cluster.
+      --context string                    CLI context name.
+  -o, --output string                     Specify the output format as "human", "json", or "yaml". (default "human")
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

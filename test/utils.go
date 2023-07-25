@@ -8,14 +8,14 @@ import (
 )
 
 func LoadFixture(t *testing.T, fixture string) string {
-	content, err := os.ReadFile(FixturePath(t, fixture))
+	content, err := os.ReadFile(fixturePath(t, fixture))
 	if err != nil {
 		t.Fatal(err)
 	}
 	return string(content)
 }
 
-func FixturePath(t *testing.T, fixture string) string {
+func fixturePath(t *testing.T, fixture string) string {
 	_, filename, _, ok := runtime.Caller(0)
 	if !ok {
 		t.Fatalf("problems recovering caller information")
@@ -24,10 +24,10 @@ func FixturePath(t *testing.T, fixture string) string {
 	return filepath.Join(filepath.Dir(filename), "fixtures", "output", fixture)
 }
 
-func GetInputFixturePath(t *testing.T, directoryName string, file string) string {
+func getInputFixturePath(directoryName string, file string) string {
 	_, callerFileName, _, ok := runtime.Caller(0)
 	if !ok {
-		t.Fatalf("problems recovering caller information")
+		panic("problems recovering caller information")
 	}
 	return filepath.Join(filepath.Dir(callerFileName), "fixtures", "input", directoryName, file)
 }

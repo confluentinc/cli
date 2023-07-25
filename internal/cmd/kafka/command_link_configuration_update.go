@@ -27,7 +27,7 @@ func (c *linkCommand) newConfigurationUpdateCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String(configFileFlagName, "", "Name of the file containing link config overrides. Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.")
+	cmd.Flags().String(configFileFlagName, "", "Name of the file containing link configuration overrides. Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -65,14 +65,14 @@ func (c *linkCommand) configurationUpdate(cmd *cobra.Command, args []string) err
 		return errors.New(errors.RestProxyNotAvailableMsg)
 	}
 
-	clusterId, err := getKafkaClusterLkcId(c.AuthenticatedCLICommand)
+	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
 
 	data := toAlterConfigBatchRequestData(configMap)
 
-	if httpResp, err := kafkaREST.CloudClient.UpdateKafkaLinkConfigBatch(clusterId, linkName, data); err != nil {
+	if httpResp, err := kafkaREST.CloudClient.UpdateKafkaLinkConfigBatch(cluster.ID, linkName, data); err != nil {
 		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 

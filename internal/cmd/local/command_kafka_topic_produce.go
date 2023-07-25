@@ -18,7 +18,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/serdes"
 )
 
-func (c *command) newKafkaTopicProduceCommand() *cobra.Command {
+func (c *Command) newKafkaTopicProduceCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "produce <topic>",
 		Args:  cobra.ExactArgs(1),
@@ -40,10 +40,12 @@ func (c *command) newKafkaTopicProduceCommand() *cobra.Command {
 
 	cobra.CheckErr(cmd.MarkFlagFilename("config-file", "avsc", "json"))
 
+	cmd.MarkFlagsMutuallyExclusive("config", "config-file")
+
 	return cmd
 }
 
-func (c *command) kafkaTopicProduce(cmd *cobra.Command, args []string) error {
+func (c *Command) kafkaTopicProduce(cmd *cobra.Command, args []string) error {
 	if c.Config.LocalPorts == nil {
 		return errors.NewErrorWithSuggestions(errors.FailedToReadPortsErrorMsg, errors.FailedToReadPortsSuggestions)
 	}
@@ -72,6 +74,7 @@ func (c *command) kafkaTopicProduce(cmd *cobra.Command, args []string) error {
 	}
 
 	output.ErrPrintln(errors.StartingProducerMsg)
+	output.ErrPrintln("Type a message and press ENTER to produce to the topic.")
 
 	var scanErr error
 	input, scan := kafka.PrepareInputChannel(&scanErr)
@@ -125,10 +128,6 @@ func newOnPremProducer(cmd *cobra.Command, bootstrap string) (*ckafka.Producer, 
 		"retry.backoff.ms":                      "250",
 		"request.timeout.ms":                    "10000",
 		"security.protocol":                     "PLAINTEXT",
-	}
-
-	if cmd.Flags().Changed("config-file") && cmd.Flags().Changed("config") {
-		return nil, errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "config-file", "config")
 	}
 
 	configFile, err := cmd.Flags().GetString("config-file")

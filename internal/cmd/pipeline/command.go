@@ -10,34 +10,33 @@ import (
 	streamdesignerv1 "github.com/confluentinc/ccloud-sdk-go-v2/stream-designer/v1"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
-	launchdarkly "github.com/confluentinc/cli/internal/pkg/featureflags"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 type humanOut struct {
-	Id                  string    `human:"ID"`
-	Name                string    `human:"Name"`
-	Description         string    `human:"Description"`
-	KsqlCluster         string    `human:"KSQL Cluster"`
-	SecretNames         string    `human:"Secret Names,omitempty"`
-	ActivationPrivilege bool      `human:"Activation Privilege"`
-	State               string    `human:"State"`
-	CreatedAt           time.Time `human:"Created At"`
-	UpdatedAt           time.Time `human:"Updated At"`
+	Id                    string    `human:"ID"`
+	Name                  string    `human:"Name"`
+	Description           string    `human:"Description"`
+	KsqlCluster           string    `human:"KSQL Cluster,omitempty"`
+	SchemaRegistryCluster string    `human:"Schema Registry Cluster,omitempty"`
+	SecretNames           string    `human:"Secret Names,omitempty"`
+	ActivationPrivilege   bool      `human:"Activation Privilege"`
+	State                 string    `human:"State"`
+	CreatedAt             time.Time `human:"Created At"`
+	UpdatedAt             time.Time `human:"Updated At"`
 }
 
 type serializedOut struct {
-	Id                  string    `serialized:"id"`
-	Name                string    `serialized:"name"`
-	Description         string    `serialized:"description"`
-	KsqlCluster         string    `serialized:"ksql_cluster"`
-	SecretNames         []string  `serialized:"secret_names,omitempty"`
-	ActivationPrivilege bool      `serialized:"activation_privilege"`
-	State               string    `serialized:"state"`
-	CreatedAt           time.Time `serialized:"created_at"`
-	UpdatedAt           time.Time `serialized:"updated_at"`
+	Id                    string    `serialized:"id"`
+	Name                  string    `serialized:"name"`
+	Description           string    `serialized:"description"`
+	KsqlCluster           string    `serialized:"ksql_cluster"`
+	SchemaRegistryCluster string    `serialized:"schema_registry_cluster"`
+	SecretNames           []string  `serialized:"secret_names,omitempty"`
+	ActivationPrivilege   bool      `serialized:"activation_privilege"`
+	State                 string    `serialized:"state"`
+	CreatedAt             time.Time `serialized:"created_at"`
+	UpdatedAt             time.Time `serialized:"updated_at"`
 }
 
 var (
@@ -49,7 +48,7 @@ type command struct {
 	*pcmd.AuthenticatedCLICommand
 }
 
-func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
+func New(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "pipeline",
 		Short:       "Manage Stream Designer pipelines.",
@@ -58,18 +57,14 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 
 	c := &command{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 
-	dc := dynamicconfig.New(cfg, nil, nil)
-	_ = dc.ParseFlagsIntoConfig(cmd)
-	enableSourceCode := launchdarkly.Manager.BoolVariation("cli.stream_designer.source_code.enable", dc.Context(), v1.CliLaunchDarklyClient, true, false)
-
 	cmd.AddCommand(c.newActivateCommand())
-	cmd.AddCommand(c.newCreateCommand(enableSourceCode))
+	cmd.AddCommand(c.newCreateCommand())
 	cmd.AddCommand(c.newDeactivateCommand())
 	cmd.AddCommand(c.newDeleteCommand())
 	cmd.AddCommand(c.newDescribeCommand())
 	cmd.AddCommand(c.newListCommand())
-	cmd.AddCommand(c.newSaveCommand(enableSourceCode))
-	cmd.AddCommand(c.newUpdateCommand(enableSourceCode))
+	cmd.AddCommand(c.newSaveCommand())
+	cmd.AddCommand(c.newUpdateCommand())
 
 	return cmd
 }
@@ -80,27 +75,29 @@ func printTable(cmd *cobra.Command, pipeline streamdesignerv1.SdV1Pipeline) erro
 
 	if output.GetFormat(cmd) == output.Human {
 		table.Add(&humanOut{
-			Id:                  pipeline.GetId(),
-			Name:                pipeline.Spec.GetDisplayName(),
-			Description:         pipeline.Spec.GetDescription(),
-			KsqlCluster:         pipeline.Spec.KsqlCluster.GetId(),
-			SecretNames:         strings.Join(secrets, ", "),
-			ActivationPrivilege: pipeline.Spec.GetActivationPrivilege(),
-			State:               pipeline.Status.GetState(),
-			CreatedAt:           pipeline.Metadata.GetCreatedAt(),
-			UpdatedAt:           pipeline.Metadata.GetUpdatedAt(),
+			Id:                    pipeline.GetId(),
+			Name:                  pipeline.Spec.GetDisplayName(),
+			Description:           pipeline.Spec.GetDescription(),
+			KsqlCluster:           pipeline.Spec.KsqlCluster.GetId(),
+			SchemaRegistryCluster: pipeline.Spec.StreamGovernanceCluster.GetId(),
+			SecretNames:           strings.Join(secrets, ", "),
+			ActivationPrivilege:   pipeline.Spec.GetActivationPrivilege(),
+			State:                 pipeline.Status.GetState(),
+			CreatedAt:             pipeline.Metadata.GetCreatedAt(),
+			UpdatedAt:             pipeline.Metadata.GetUpdatedAt(),
 		})
 	} else {
 		table.Add(&serializedOut{
-			Id:                  pipeline.GetId(),
-			Name:                pipeline.Spec.GetDisplayName(),
-			Description:         pipeline.Spec.GetDescription(),
-			KsqlCluster:         pipeline.Spec.KsqlCluster.GetId(),
-			SecretNames:         secrets,
-			ActivationPrivilege: pipeline.Spec.GetActivationPrivilege(),
-			State:               pipeline.Status.GetState(),
-			CreatedAt:           pipeline.Metadata.GetCreatedAt(),
-			UpdatedAt:           pipeline.Metadata.GetUpdatedAt(),
+			Id:                    pipeline.GetId(),
+			Name:                  pipeline.Spec.GetDisplayName(),
+			Description:           pipeline.Spec.GetDescription(),
+			KsqlCluster:           pipeline.Spec.KsqlCluster.GetId(),
+			SchemaRegistryCluster: pipeline.Spec.StreamGovernanceCluster.GetId(),
+			SecretNames:           secrets,
+			ActivationPrivilege:   pipeline.Spec.GetActivationPrivilege(),
+			State:                 pipeline.Status.GetState(),
+			CreatedAt:             pipeline.Metadata.GetCreatedAt(),
+			UpdatedAt:             pipeline.Metadata.GetUpdatedAt(),
 		})
 	}
 
