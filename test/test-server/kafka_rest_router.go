@@ -600,47 +600,36 @@ func handleKafkaRPLinks(t *testing.T) http.HandlerFunc {
 // Handler for: "/kafka/v3/clusters/{cluster_id}/consumer-groups"
 func handleKafkaRPConsumerGroups(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		clusterId := mux.Vars(r)["cluster_id"]
 		switch r.Method {
 		case http.MethodGet:
 			err := json.NewEncoder(w).Encode(cpkafkarestv3.ConsumerGroupDataList{
-				Kind:     "",
-				Metadata: cpkafkarestv3.ResourceCollectionMetadata{},
+				// aside from the ConsumerGroupData.Consumer, the ccloud-sdk-go-v2 and kafka-rest-sdk-go versions of this struct are identical,
+				// so we do not need to handle cloud and onprem cases separately
 				Data: []cpkafkarestv3.ConsumerGroupData{
 					{
-						Kind:              "",
-						Metadata:          cpkafkarestv3.ResourceMetadata{},
-						ClusterId:         "cluster-1",
+						ClusterId:         clusterId,
 						ConsumerGroupId:   "consumer-group-1",
 						IsSimple:          true,
 						PartitionAssignor: "org.apache.kafka.clients.consumer.RoundRobinAssignor",
 						State:             "STABLE",
-						Coordinator:       cpkafkarestv3.Relationship{Related: "http://localhost:8082/kafka/v3/clusters/cluster-1/brokers/broker-1"},
-						Consumer:          cpkafkarestv3.Relationship{},
-						LagSummary:        cpkafkarestv3.Relationship{},
+						Coordinator:       cpkafkarestv3.Relationship{Related: "/kafka/v3/clusters/cluster-1/brokers/broker-1"},
 					},
 					{
-						Kind:              "",
-						Metadata:          cpkafkarestv3.ResourceMetadata{},
-						ClusterId:         "cluster-1",
+						ClusterId:         clusterId,
 						ConsumerGroupId:   "consumer-group-2",
 						IsSimple:          false,
 						PartitionAssignor: "org.apache.kafka.clients.consumer.StickyAssignor",
 						State:             "PREPARING_REBALANCE",
-						Coordinator:       cpkafkarestv3.Relationship{Related: "http://localhost:8082/kafka/v3/clusters/cluster-1/brokers/broker-2"},
-						Consumer:          cpkafkarestv3.Relationship{},
-						LagSummary:        cpkafkarestv3.Relationship{},
+						Coordinator:       cpkafkarestv3.Relationship{Related: "/kafka/v3/clusters/cluster-1/brokers/broker-2"},
 					},
 					{
-						Kind:              "",
-						Metadata:          cpkafkarestv3.ResourceMetadata{},
-						ClusterId:         "cluster-1",
+						ClusterId:         clusterId,
 						ConsumerGroupId:   "consumer-group-3",
 						IsSimple:          false,
 						PartitionAssignor: "org.apache.kafka.clients.consumer.RangeAssignor",
 						State:             "DEAD",
-						Coordinator:       cpkafkarestv3.Relationship{Related: "http://localhost:8082/kafka/v3/clusters/cluster-1/brokers/broker-3"},
-						Consumer:          cpkafkarestv3.Relationship{},
-						LagSummary:        cpkafkarestv3.Relationship{},
+						Coordinator:       cpkafkarestv3.Relationship{Related: "/kafka/v3/clusters/cluster-1/brokers/broker-3"},
 					},
 				},
 			})
@@ -722,17 +711,15 @@ func handleKafkaRPConsumerGroup(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			if vars["consumer_group_id"] == "consumer-group-1" {
+				// aside from the ConsumerGroupData.Consumer, the ccloud-sdk-go-v2 and kafka-rest-sdk-go versions of this struct are identical,
+				// so we do not need to handle cloud and onprem cases separately
 				err := json.NewEncoder(w).Encode(cpkafkarestv3.ConsumerGroupData{
-					Kind:              "",
-					Metadata:          cpkafkarestv3.ResourceMetadata{},
-					ClusterId:         "cluster-1",
+					ClusterId:         vars["cluster_id"],
 					ConsumerGroupId:   "consumer-group-1",
 					IsSimple:          true,
 					PartitionAssignor: "org.apache.kafka.clients.consumer.RoundRobinAssignor",
 					State:             "STABLE",
-					Coordinator:       cpkafkarestv3.Relationship{Related: "http://localhost:8082/kafka/v3/clusters/cluster-1/brokers/broker-1"},
-					Consumer:          cpkafkarestv3.Relationship{},
-					LagSummary:        cpkafkarestv3.Relationship{},
+					Coordinator:       cpkafkarestv3.Relationship{Related: "/kafka/v3/clusters/cluster-1/brokers/broker-1"},
 				})
 				require.NoError(t, err)
 			} else {
