@@ -8,7 +8,6 @@ import (
 
 type CloudV2Router struct {
 	*mux.Router
-	srApiUrl string
 }
 
 var ccloudV2Routes = []route{
@@ -63,21 +62,20 @@ var ccloudV2Routes = []route{
 	{"/sd/v1/pipelines/{id}", handlePipeline},
 	{"/service-quota/v1/applied-quotas", handleAppliedQuotas},
 	{"/service-quota/v2/applied-quotas", handleAppliedQuotas},
+	{"/srcm/v2/clusters", handleSchemaRegistryClusters},
 	{"/srcm/v2/clusters/{id}", handleSchemaRegistryCluster},
 	{"/srcm/v2/regions", handleSchemaRegistryRegions},
 	{"/srcm/v2/regions/{id}", handleSchemaRegistryRegion},
 	{"/v2/metrics/cloud/query", handleMetricsQuery},
 }
 
-func NewV2Router(t *testing.T) *CloudV2Router {
-	router := &CloudV2Router{Router: mux.NewRouter()}
+func NewV2Router(t *testing.T) *mux.Router {
+	router := mux.NewRouter()
 	router.Use(defaultHeaderMiddleware)
 
 	for _, route := range ccloudV2Routes {
 		router.HandleFunc(route.path, route.handler(t))
 	}
-
-	router.HandleFunc("/srcm/v2/clusters", router.HandleSchemaRegistryClusters(t))
 
 	return router
 }

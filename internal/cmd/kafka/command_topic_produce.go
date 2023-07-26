@@ -365,7 +365,7 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 			Format:     format,
 			SchemaType: serializationProvider.GetSchemaName(),
 		}
-		refs, err := sr.ReadSchemaRefs(cmd)
+		refs, err := sr.ReadSchemaReferences(cmd)
 		if err != nil {
 			return nil, nil, err
 		}

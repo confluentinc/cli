@@ -1,7 +1,6 @@
 package schemaregistry
 
 import (
-	"context"
 	"fmt"
 	"math"
 	"strconv"
@@ -10,7 +9,6 @@ import (
 	"github.com/spf13/cobra"
 
 	metricsv2 "github.com/confluentinc/ccloud-sdk-go-v2/metrics/v2"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -49,22 +47,24 @@ func (c *command) newClusterDescribeCommand() *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}
 
-	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
-	pcmd.AddApiSecretFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
+
+	// Deprecated
+	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
+	cobra.CheckErr(cmd.Flags().MarkHidden("api-key"))
+
+	// Deprecated
+	pcmd.AddApiSecretFlag(cmd)
+	cobra.CheckErr(cmd.Flags().MarkHidden("api-secret"))
 
 	return cmd
 }
 
 func (c *command) clusterDescribe(cmd *cobra.Command, _ []string) error {
-	var compatibility string
-	var mode string
 	var numSchemas string
 	var availableSchemas string
-	var srClient *srsdk.APIClient
-	var ctx context.Context
 
 	// Collect the parameters
 	environmentId, err := c.Context.EnvironmentId()
@@ -75,76 +75,54 @@ func (c *command) clusterDescribe(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-
 	if len(clusters) == 0 {
 		return errors.NewSRNotEnabledError()
 	}
-
 	cluster := clusters[0]
-	clusterSpec := cluster.GetSpec()
-	regionSpec := cluster.Spec.GetRegion()
-	streamGovernanceRegion, err := c.V2Client.GetStreamGovernanceRegionById(regionSpec.GetId())
-	if err != nil {
-		return err
-	}
-	streamGovernanceRegionSpec := streamGovernanceRegion.GetSpec()
 
-	// Retrieve SR compatibility and Mode if API key is set up in user's config.json file
-	srClusterHasAPIKey, err := c.Context.CheckSchemaRegistryHasAPIKey(cmd)
-	if err != nil {
-		return err
-	}
-	if srClusterHasAPIKey {
-		srClient, ctx, err = getApiClient(cmd, c.Config, c.Version)
-		if err != nil {
-			return err
-		}
-		// Get SR compatibility
-		compatibilityResponse, _, err := srClient.DefaultApi.GetTopLevelConfig(ctx)
-		if err != nil {
-			compatibility = ""
-			log.CliLogger.Warn("Could not retrieve Schema Registry Compatibility")
-		} else {
-			compatibility = compatibilityResponse.CompatibilityLevel
-		}
-		// Get SR Mode
-		modeResponse, _, err := srClient.DefaultApi.GetTopLevelMode(ctx)
-		if err != nil {
-			mode = ""
-			log.CliLogger.Warn("Could not retrieve Schema Registry Mode")
-		} else {
-			mode = modeResponse.Mode
-		}
-	} else {
-		srClient = nil
-		compatibility = "<Requires API Key>"
-		mode = "<Requires API Key>"
-	}
-
-	client, err := c.GetMetricsClient()
+	region, err := c.V2Client.GetStreamGovernanceRegionById(cluster.Spec.Region.GetId())
 	if err != nil {
 		return err
 	}
 
-	query := schemaCountQueryFor(cluster.GetId())
-	metricsResponse, httpResp, err := client.MetricsDatasetQuery("cloud", query)
+	client, err := c.GetSchemaRegistryClient()
+	if err != nil {
+		return err
+	}
+
+	config, err := client.GetTopLevelConfig()
+	if err != nil {
+		return err
+	}
+
+	mode, err := client.GetTopLevelMode()
+	if err != nil {
+		return err
+	}
+
+	metricsClient, err := c.GetMetricsClient()
+	if err != nil {
+		return err
+	}
+
+	metricsResponse, httpResp, err := metricsClient.MetricsDatasetQuery("cloud", schemaCountQueryFor(cluster.GetId()))
 	if err := ccloudv2.UnmarshalFlatQueryResponseIfDataSchemaMatchError(err, metricsResponse, httpResp); err != nil {
 		return err
 	}
 
 	freeSchemasLimit := defaultSchemaLimitEssentials
-	if strings.ToLower(clusterSpec.GetPackage()) == essentialsPackage {
+	if strings.ToLower(cluster.Spec.GetPackage()) == essentialsPackage {
 		user, err := c.Client.Auth.User()
 		if err != nil {
 			return err
 		}
 		prices, err := c.Client.Billing.GetPriceTable(user.GetOrganization(), streamGovernancePriceTableProductName)
 		if err == nil {
-			internalPackageName, err := getPackageInternalName(clusterSpec.GetPackage())
+			internalPackageName, err := getPackageInternalName(cluster.Spec.GetPackage())
 			if err != nil {
 				return err
 			}
-			priceKey := getMaxSchemaLimitPriceKey(streamGovernanceRegionSpec.GetCloud(), streamGovernanceRegionSpec.GetRegionName(), internalPackageName)
+			priceKey := getMaxSchemaLimitPriceKey(region.Spec.GetCloud(), region.Spec.GetRegionName(), internalPackageName)
 			freeSchemasLimit = int(prices.GetPriceTable()[schemaRegistryPriceTableName].Prices[priceKey])
 		}
 	} else {
@@ -171,27 +149,23 @@ func (c *command) clusterDescribe(cmd *cobra.Command, _ []string) error {
 
 	table := output.NewTable(cmd)
 	table.Add(&clusterOut{
-		Name:                  clusterSpec.GetDisplayName(),
+		Name:                  cluster.Spec.GetDisplayName(),
 		ClusterId:             cluster.GetId(),
-		EndpointUrl:           clusterSpec.GetHttpEndpoint(),
-		ServiceProvider:       streamGovernanceRegionSpec.GetCloud(),
-		ServiceProviderRegion: streamGovernanceRegionSpec.GetRegionName(),
-		Package:               clusterSpec.GetPackage(),
+		EndpointUrl:           cluster.Spec.GetHttpEndpoint(),
+		ServiceProvider:       region.Spec.GetCloud(),
+		ServiceProviderRegion: region.Spec.GetRegionName(),
+		Package:               cluster.Spec.GetPackage(),
 		UsedSchemas:           numSchemas,
 		AvailableSchemas:      availableSchemas,
 		FreeSchemasLimit:      freeSchemasLimit,
-		GlobalCompatibility:   compatibility,
-		Mode:                  mode,
+		GlobalCompatibility:   config.CompatibilityLevel,
+		Mode:                  mode.Mode,
 	})
 	return table.Print()
 }
 
 func schemaCountQueryFor(schemaRegistryId string) metricsv2.QueryRequest {
-	aggregations := []metricsv2.Aggregation{
-		{
-			Metric: "io.confluent.kafka.schema_registry/schema_count",
-		},
-	}
+	aggregations := []metricsv2.Aggregation{{Metric: "io.confluent.kafka.schema_registry/schema_count"}}
 	filter := metricsv2.Filter{
 		FieldFilter: &metricsv2.FieldFilter{
 			Field: metricsv2.PtrString("resource.schema_registry.id"),

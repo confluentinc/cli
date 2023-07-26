@@ -27,7 +27,7 @@ type FlinkGatewayClient struct {
 func NewFlinkGatewayClient(url, userAgent string, unsafeTrace bool, authToken string) *FlinkGatewayClient {
 	cfg := flinkgatewayv1alpha1.NewConfiguration()
 	cfg.Debug = unsafeTrace
-	cfg.HTTPClient = newRetryableHttpClient(unsafeTrace)
+	cfg.HTTPClient = NewRetryableHttpClient(unsafeTrace)
 	cfg.Servers = flinkgatewayv1alpha1.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 

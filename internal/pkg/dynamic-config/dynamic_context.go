@@ -263,7 +263,7 @@ func (d *DynamicContext) CheckSchemaRegistryHasAPIKey(cmd *cobra.Command) (bool,
 	if secret != "" {
 		srCluster.SrCredentials.Secret = secret
 	}
-	return !(srCluster.SrCredentials == nil || len(srCluster.SrCredentials.Key) == 0 || len(srCluster.SrCredentials.Secret) == 0), nil
+	return srCluster.SrCredentials != nil && srCluster.SrCredentials.Key != "" && srCluster.SrCredentials.Secret != "", nil
 }
 
 func (d *DynamicContext) KeyAndSecretFlags(cmd *cobra.Command) (string, string, error) {
@@ -292,10 +292,8 @@ func missingDetails(cluster *v1.SchemaRegistryCluster) bool {
 }
 
 func makeSRCluster(cluster *srcmv2.SrcmV2Cluster) *v1.SchemaRegistryCluster {
-	clusterSpec := cluster.GetSpec()
 	return &v1.SchemaRegistryCluster{
 		Id:                     cluster.GetId(),
-		SchemaRegistryEndpoint: clusterSpec.GetHttpEndpoint(),
-		SrCredentials:          nil, // For now.
+		SchemaRegistryEndpoint: cluster.Spec.GetHttpEndpoint(),
 	}
 }

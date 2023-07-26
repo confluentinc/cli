@@ -116,7 +116,7 @@ func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	refs, err := sr.ReadSchemaRefs(cmd)
+	refs, err := sr.ReadSchemaReferences(cmd)
 	if err != nil {
 		return err
 	}

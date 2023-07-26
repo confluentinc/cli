@@ -19,10 +19,12 @@ channels:
         $ref: '#/components/messages/Topic1Message'
     bindings:
       kafka:
-        x-partitions: 3
-        x-configs:
-          cleanup.policy: delete
-          delete.retention.ms: "86400000"
+        bindingVersion: 0.4.0
+        partitions: 3
+        topicConfiguration:
+          cleanup.policy:
+          - delete
+          delete.retention.ms: 8.64e+07
     x-messageCompatibility: FORWARD
 components:
   messages:
