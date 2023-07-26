@@ -235,6 +235,8 @@ func handleKafkaRPTopics(t *testing.T) http.HandlerFunc {
 	}
 }
 
+func PtrString(v string) *string { return &v }
+
 // Handler for: "/kafka/v3/clusters/{cluster}/topics/{topic}/configs"
 func handleKafkaRPTopicConfigs(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -248,16 +250,16 @@ func handleKafkaRPTopicConfigs(t *testing.T) http.HandlerFunc {
 					Data: []cpkafkarestv3.TopicConfigData{
 						{
 							Name:  "cleanup.policy",
-							Value: cpkafkarestv3.PtrString("delete"),
+							Value: PtrString("delete"),
 						},
 						{
 							Name:       "compression.type",
-							Value:      cpkafkarestv3.PtrString("producer"),
+							Value:      PtrString("producer"),
 							IsReadOnly: true,
 						},
 						{
 							Name:  "retention.ms",
-							Value: cpkafkarestv3.PtrString("604800000"),
+							Value: PtrString("604800000"),
 						},
 					},
 				}
@@ -270,12 +272,12 @@ func handleKafkaRPTopicConfigs(t *testing.T) http.HandlerFunc {
 					Data: []cpkafkarestv3.TopicConfigData{
 						{
 							Name:       "compression.type",
-							Value:      cpkafkarestv3.PtrString("producer"),
+							Value:      PtrString("producer"),
 							IsReadOnly: true,
 						},
 						{
 							Name:  "retention.ms",
-							Value: cpkafkarestv3.PtrString("1"),
+							Value: PtrString("1"),
 						},
 					},
 				}
@@ -650,10 +652,10 @@ func handleKafkaRPLink(t *testing.T) http.HandlerFunc {
 					err := json.NewEncoder(w).Encode(cpkafkarestv3.ListLinksResponseData{
 						Kind:                 "",
 						Metadata:             cpkafkarestv3.ResourceMetadata{},
-						DestinationClusterId: cpkafkarestv3.PtrString("cluster-2"),
+						DestinationClusterId: PtrString("cluster-2"),
 						LinkName:             link,
 						ClusterLinkId:        "LINKID1",
-						TopicsNames:          []string{"link-1-topic-1", "link-1-topic-2"},
+						TopicNames:           []string{"link-1-topic-1", "link-1-topic-2"},
 					})
 					require.NoError(t, err)
 				case "lkc-describe-topic":
