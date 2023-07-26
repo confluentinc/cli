@@ -1,15 +1,13 @@
 package schemaregistry
 
 import (
-	"context"
-
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -18,48 +16,60 @@ type versionOut struct {
 	Version int32 `human:"Version" serialized:"version"`
 }
 
-func (c *command) newSubjectDescribeCommand() *cobra.Command {
+func (c *command) newSubjectDescribeCommand(cfg *v1.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe <subject>",
 		Short: "Describe subject versions.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.subjectDescribe,
-		Example: examples.BuildExampleString(
-			examples.Example{
-				Text: `Retrieve all versions registered under subject "payments" and its compatibility level.`,
-				Code: "confluent schema-registry subject describe payments",
-			},
-		),
 	}
 
-	cmd.Flags().Bool("deleted", false, "View the deleted schema.")
-	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
-	pcmd.AddApiSecretFlag(cmd)
+	example := examples.Example{
+		Text: `Retrieve all versions registered under subject "payments" and its compatibility level.`,
+		Code: "confluent schema-registry subject describe payments",
+	}
+	if cfg.IsOnPremLogin() {
+		example.Code += " " + onPremAuthenticationMsg
+	}
+	cmd.Example = examples.BuildExampleString(example)
+
+	cmd.Flags().Bool("deleted", false, "View the deleted schemas.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
-	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	if cfg.IsCloudLogin() {
+		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	} else {
+		cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
+	}
 	pcmd.AddOutputFlag(cmd)
+
+	if cfg.IsCloudLogin() {
+		// Deprecated
+		pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
+		cobra.CheckErr(cmd.Flags().MarkHidden("api-key"))
+
+		// Deprecated
+		pcmd.AddApiSecretFlag(cmd)
+		cobra.CheckErr(cmd.Flags().MarkHidden("api-secret"))
+	}
 
 	return cmd
 }
 
 func (c *command) subjectDescribe(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := getApiClient(cmd, c.Config, c.Version)
+	client, err := c.GetSchemaRegistryClient()
 	if err != nil {
 		return err
 	}
-	return listSubjectVersions(cmd, args[0], srClient, ctx)
-}
 
-func listSubjectVersions(cmd *cobra.Command, subject string, srClient *srsdk.APIClient, ctx context.Context) error {
 	deleted, err := cmd.Flags().GetBool("deleted")
 	if err != nil {
 		return err
 	}
 
 	opts := &srsdk.ListVersionsOpts{Deleted: optional.NewBool(deleted)}
-	versions, httpResp, err := srClient.DefaultApi.ListVersions(ctx, subject, opts)
+	versions, err := client.ListVersions(args[0], opts)
 	if err != nil {
-		return errors.CatchSchemaNotFoundError(err, httpResp)
+		return catchSchemaNotFoundError(err, args[0], "")
 	}
 
 	list := output.NewList(cmd)

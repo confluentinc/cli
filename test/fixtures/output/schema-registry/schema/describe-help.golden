@@ -16,8 +16,6 @@ Flags:
       --subject string       Subject of the schema.
       --version string       Version of the schema. Can be a specific version or "latest".
       --show-references      Display the entire schema graph, including references.
-      --api-key string       API key.
-      --api-secret string    API key secret.
       --context string       CLI context name.
       --environment string   Environment ID.
 
