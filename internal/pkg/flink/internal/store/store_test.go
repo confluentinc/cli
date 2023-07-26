@@ -21,6 +21,7 @@ import (
 	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
+	cliErrors "github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/flink/config"
 	"github.com/confluentinc/cli/internal/pkg/flink/test/mock"
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
@@ -228,7 +229,7 @@ func TestWaitForPendingStatementErrors(t *testing.T) {
 		},
 	}
 
-	returnedError := ccloudv2.NewFlinkError("couldn't get statement", "", http.StatusInternalServerError)
+	returnedError := cliErrors.NewFlinkError("couldn't get statement", "", http.StatusInternalServerError)
 	expectedError := &types.StatementError{
 		Message:        returnedError.Error(),
 		FailureMessage: statusDetailMessage,
@@ -264,7 +265,7 @@ func TestCancelPendingStatement(t *testing.T) {
 		},
 	}
 
-	flinkError := ccloudv2.NewFlinkError("error", "", http.StatusInternalServerError)
+	flinkError := cliErrors.NewFlinkError("error", "", http.StatusInternalServerError)
 	expectedErr := &types.StatementError{Message: "result retrieval aborted. Statement will be deleted", StatusCode: http.StatusInternalServerError}
 	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, nil).AnyTimes()
 	client.EXPECT().GetExceptions("envId", statementName, "orgId").Return(flinkgatewayv1alpha1.SqlV1alpha1StatementExceptionList{}, flinkError).AnyTimes()
@@ -806,7 +807,7 @@ func (s *StoreTestSuite) TestDeleteStatementFailsOnError() {
 
 	statementName := "TEST_STATEMENT"
 
-	flinkError := ccloudv2.NewFlinkError("error", "", http.StatusInternalServerError)
+	flinkError := cliErrors.NewFlinkError("error", "", http.StatusInternalServerError)
 	client.EXPECT().DeleteStatement("envId", statementName, "orgId").Return(flinkError)
 	wasStatementDeleted := store.DeleteStatement(statementName)
 	require.False(s.T(), wasStatementDeleted)

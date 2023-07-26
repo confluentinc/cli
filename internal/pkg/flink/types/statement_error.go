@@ -3,7 +3,7 @@ package types
 import (
 	"fmt"
 
-	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -53,7 +53,7 @@ func (e *StatementError) Error() string {
 
 // StatusCode extract the status code if the error implements Coder interface.
 func StatusCode(err error) int {
-	if coder, ok := err.(ccloudv2.Coder); ok {
+	if coder, ok := err.(errors.Coder); ok {
 		return coder.StatusCode()
 	}
 	return 0
