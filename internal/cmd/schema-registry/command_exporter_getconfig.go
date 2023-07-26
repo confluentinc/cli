@@ -24,6 +24,16 @@ func (c *command) newExporterGetConfigCommand(cfg *v1.Config) *cobra.Command {
 	}
 	pcmd.AddOutputFlagWithDefaultValue(cmd, output.JSON.String())
 
+	if cfg.IsCloudLogin() {
+		// Deprecated
+		pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
+		cobra.CheckErr(cmd.Flags().MarkHidden("api-key"))
+
+		// Deprecated
+		pcmd.AddApiSecretFlag(cmd)
+		cobra.CheckErr(cmd.Flags().MarkHidden("api-secret"))
+	}
+
 	return cmd
 }
 
