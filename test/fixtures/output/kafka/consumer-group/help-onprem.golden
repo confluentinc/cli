@@ -8,6 +8,7 @@ Aliases:
 
 Available Commands:
   describe    Describe a Kafka consumer group.
+  list        List Kafka consumer groups.
 
 Global Flags:
   -h, --help            Show help for this command.

@@ -45,6 +45,7 @@ func newConsumerGroupCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Co
 		c.PersistentPreRunE = prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand)
 
 		cmd.AddCommand(c.newDescribeCommandOnPrem())
+		cmd.AddCommand(c.newListCommandOnPrem())
 	}
 
 	return cmd

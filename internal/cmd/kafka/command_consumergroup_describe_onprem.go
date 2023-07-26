@@ -14,10 +14,10 @@ import (
 
 func (c *consumerGroupCommand) newDescribeCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "describe <consumer-group>",
-		Short:             "Describe a Kafka consumer group.",
-		Args:              cobra.ExactArgs(1),
-		RunE:              c.describeOnPrem,
+		Use:   "describe <consumer-group>",
+		Short: "Describe a Kafka consumer group.",
+		Args:  cobra.ExactArgs(1),
+		RunE:  c.describeOnPrem,
 	}
 
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
@@ -65,4 +65,3 @@ func getStringBrokerOnPrem(relationship kafkarestv3.Relationship) string {
 	// returning brokerId
 	return splitString[1]
 }
-
