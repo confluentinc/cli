@@ -19,7 +19,8 @@ RUN adduser \
 RUN apk update --no-cache && \
     apk add --no-cache curl && \
     apk add --no-cache bash && \
-    apk add --no-cache bash-completion
+    apk add --no-cache bash-completion && \
+    apk add nginx 
 
 RUN curl -L --http1.1 https://cnfl.io/cli | sh -s -- -b /bin
 
@@ -40,6 +41,8 @@ COPY package*.json ./
 
 # Install server dependencies
 RUN npm install
+
+RUN npm install ws
 
 # Copy the WebSocket server code to the container
 COPY docker/server.js ./
