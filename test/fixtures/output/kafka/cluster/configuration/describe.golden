@@ -1,0 +1,5 @@
++-----------+------------------+
+| Name      | compression.type |
+| Value     | gzip             |
+| Read-Only | false            |
++-----------+------------------+

@@ -4,12 +4,13 @@ Usage:
   confluent kafka cluster [command]
 
 Available Commands:
-  create      Create a Kafka cluster.
-  delete      Delete a Kafka cluster.
-  describe    Describe a Kafka cluster.
-  list        List Kafka clusters.
-  update      Update a Kafka cluster.
-  use         Use a Kafka cluster in subsequent commands.
+  configuration Manage Kafka cluster configurations.
+  create        Create a Kafka cluster.
+  delete        Delete a Kafka cluster.
+  describe      Describe a Kafka cluster.
+  list          List Kafka clusters.
+  update        Update a Kafka cluster.
+  use           Use a Kafka cluster in subsequent commands.
 
 Global Flags:
   -h, --help            Show help for this command.
