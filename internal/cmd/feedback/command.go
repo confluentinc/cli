@@ -2,7 +2,6 @@ package feedback
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -34,7 +33,7 @@ func New(prerunner pcmd.PreRunner) *cobra.Command {
 }
 
 func (c *command) feedback(_ *cobra.Command, _ []string) error {
-	feedback, err := getFeedback(form.NewPrompt(os.Stdin))
+	feedback, err := getFeedback(form.NewPrompt())
 	if err != nil {
 		return err
 	}
