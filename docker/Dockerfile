@@ -50,6 +50,6 @@ EXPOSE 8080
 # Start the WebSocket server when the container starts
 CMD ["node", "server.js", "&"]
 
-RUN mkdir /etc/bash_completion.d && confluent completion bash > /etc/bash_completion.d/confluent
+RUN confluent completion bash > /etc/bash_completion.d/confluent
 
 USER $USER
