@@ -288,8 +288,8 @@ func (h *GroupHandler) RequestSchema(value []byte) (string, map[string]string, e
 	var references []srsdk.SchemaReference
 	if !utils.FileExists(tempStorePath) || !utils.FileExists(tempRefStorePath) {
 		// TODO: add handler for writing schema failure
-		getSchemaOpts := srsdk.GetSchemaOpts{Subject: optional.NewString(h.Subject)}
-		schemaString, err := h.SrClient.GetSchema(schemaID, &getSchemaOpts)
+		opts := &srsdk.GetSchemaOpts{Subject: optional.NewString(h.Subject)}
+		schemaString, err := h.SrClient.GetSchema(schemaID, opts)
 		if err != nil {
 			return "", nil, err
 		}
