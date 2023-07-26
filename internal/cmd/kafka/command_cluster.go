@@ -45,6 +45,7 @@ func newClusterCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command 
 		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)
 	}
 
+	cmd.AddCommand(c.newConfigurationCommand())
 	cmd.AddCommand(c.newCreateCommand(cfg))
 	cmd.AddCommand(c.newDeleteCommand(cfg))
 	cmd.AddCommand(c.newDescribeCommand())
