@@ -32,10 +32,6 @@ RUN chown $USER:$USER /etc
 # This symbolic link exists for backwards compatibility reasons
 RUN ln -s /bin/confluent /confluent
 
-# Install Node.js
-RUN curl -sL https://rpm.nodesource.com/setup_14.x | bash -
-RUN yum install -y nodejs
-
 # Set the working directory inside the container
 WORKDIR /app
 
