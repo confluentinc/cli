@@ -60,7 +60,7 @@ func getFeedback(prompt form.Prompt) (string, error) {
 			IsYesOrNo: true,
 		})
 	if err := f.Prompt(prompt); err != nil {
-		return "", nil
+		return "", err
 	}
 	feedback := strings.TrimSpace(f.Responses["feedback"].(string))
 	if !f.Responses["proceed"].(bool) {
