@@ -57,7 +57,8 @@ func getFeedback(prompt form.Prompt) (string, error) {
 			ID:        "proceed",
 			Prompt:    "Please confirm that your feedback does not contain any sensitive information",
 			IsYesOrNo: true,
-		})
+		},
+	)
 	if err := f.Prompt(prompt); err != nil {
 		return "", err
 	}
