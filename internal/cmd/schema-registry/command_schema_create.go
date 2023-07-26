@@ -10,23 +10,30 @@ import (
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 )
 
-func (c *command) newSchemaCreateCommand() *cobra.Command {
+func (c *command) newSchemaCreateCommand(cfg *v1.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
 		Short: "Create a schema.",
 		Args:  cobra.NoArgs,
 		RunE:  c.schemaCreate,
-		Example: examples.BuildExampleString(
-			examples.Example{
-				Text: "Register a new schema.",
-				Code: "confluent schema-registry schema create --subject payments --schema payments.avro --type avro",
-			},
-			examples.Example{
-				Text: "Where `schemafilepath` may include these contents:",
-				Code: `{
+	}
+
+	example := examples.Example{
+		Text: "Register a new Avro schema.",
+		Code: "confluent schema-registry schema create --subject employee --schema employee.avsc --type avro",
+	}
+	if cfg.IsOnPremLogin() {
+		example.Code += " " + onPremAuthenticationMsg
+	}
+	cmd.Example = examples.BuildExampleString(
+		example,
+		examples.Example{
+			Text: `Where "employee.avsc" may include these contents:`,
+			Code: `{
 	"type" : "record",
 	"namespace" : "Example",
 	"name" : "Employee",
@@ -35,28 +42,36 @@ func (c *command) newSchemaCreateCommand() *cobra.Command {
 		{ "name" : "Age" , "type" : "int" }
 	]
 }`,
-			},
-			examples.Example{
-				Text: "For more information on schema types, see https://docs.confluent.io/current/schema-registry/serdes-develop/index.html.",
-			},
-			examples.Example{
-				Text: "For more information on schema references, see https://docs.confluent.io/current/schema-registry/serdes-develop/index.html#schema-references.",
-			},
-		),
-	}
+		},
+		examples.Example{
+			Text: "For more information on schema types and references, see https://docs.confluent.io/platform/current/schema-registry/fundamentals/serdes-develop/index.html",
+		},
+	)
 
 	cmd.Flags().String("schema", "", "The path to the schema file.")
-	cmd.Flags().String("subject", "", SubjectUsage)
+	cmd.Flags().String("subject", "", subjectUsage)
 	pcmd.AddSchemaTypeFlag(cmd)
 	cmd.Flags().String("references", "", "The path to the references file.")
 	cmd.Flags().String("metadata", "", "The path to metadata file.")
 	cmd.Flags().String("ruleset", "", "The path to schema ruleset file.")
 	cmd.Flags().Bool("normalize", false, "Alphabetize the list of schema fields.")
-	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
-	pcmd.AddApiSecretFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
-	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	if cfg.IsCloudLogin() {
+		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	} else {
+		cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
+	}
 	pcmd.AddOutputFlag(cmd)
+
+	if cfg.IsCloudLogin() {
+		// Deprecated
+		pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
+		cobra.CheckErr(cmd.Flags().MarkHidden("api-key"))
+
+		// Deprecated
+		pcmd.AddApiSecretFlag(cmd)
+		cobra.CheckErr(cmd.Flags().MarkHidden("api-secret"))
+	}
 
 	cobra.CheckErr(cmd.MarkFlagFilename("schema", "avsc", "json", "proto"))
 	cobra.CheckErr(cmd.MarkFlagFilename("references", "json"))
@@ -98,10 +113,21 @@ func (c *command) schemaCreate(cmd *cobra.Command, _ []string) error {
 
 	cfg := &RegisterSchemaConfigs{
 		Subject:    subject,
-		SchemaPath: schema,
 		SchemaType: schemaType,
+		SchemaPath: schema,
 		Refs:       refs,
 		Normalize:  normalize,
+	}
+
+	if !c.Config.IsCloudLogin() {
+		dir, err := CreateTempDir()
+		if err != nil {
+			return err
+		}
+		defer func() {
+			_ = os.RemoveAll(dir)
+		}()
+		cfg.SchemaDir = dir
 	}
 
 	metadata, err := cmd.Flags().GetString("metadata")
@@ -126,12 +152,12 @@ func (c *command) schemaCreate(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
-	srClient, ctx, err := getApiClient(cmd, c.Config, c.Version)
+	client, err := c.GetSchemaRegistryClient()
 	if err != nil {
 		return err
 	}
 
-	if _, err := RegisterSchemaWithAuth(cmd, cfg, srClient, ctx); err != nil {
+	if _, err := RegisterSchemaWithAuth(cmd, cfg, client); err != nil {
 		return err
 	}
 
