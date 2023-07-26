@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 )
 
 type consumerCommand struct {
@@ -17,16 +18,25 @@ type consumerOut struct {
 	ClientId        string `human:"Client" serialized:"client"`
 }
 
-func newConsumerCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func newConsumerCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "consumer",
 		Short:       "Manage Kafka consumers.",
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLoginOrOnPremLogin},
 	}
 
-	c := &consumerCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
+	c := &consumerCommand{}
 
-	cmd.AddCommand(c.newListCommand())
+	if cfg.IsCloudLogin() {
+		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedCLICommand(cmd, prerunner)
+
+		cmd.AddCommand(c.newListCommand())
+	} else {
+		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)
+		c.PersistentPreRunE = prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand)
+
+		cmd.AddCommand(c.newListCommandOnPrem())
+	}
 
 	return cmd
 }
