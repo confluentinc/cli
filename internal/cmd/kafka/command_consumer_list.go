@@ -49,7 +49,7 @@ func (c *consumerCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	consumerGroup, err := cmd.Flags().GetString("consumerGroup")
+	consumerGroup, err := cmd.Flags().GetString("consumer-group")
 	if err != nil {
 		return err
 	}

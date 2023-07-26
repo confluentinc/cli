@@ -468,6 +468,16 @@ func (s *CLITestSuite) TestKafkaQuota() {
 	}
 }
 
+func (s *CLITestSuite) TestKafkaConsumer() {
+	test := CLITest{
+		login:   "onprem",
+		args:    fmt.Sprintf("kafka consumer list --consumer-group consumer-group-1 --url %s", s.TestBackend.GetKafkaRestUrl()),
+		fixture: "kafka/consumer/list-onprem.golden",
+	}
+
+	s.runIntegrationTest(test)
+}
+
 func (s *CLITestSuite) TestKafkaConsumerGroup() {
 	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
 	tests := []CLITest{

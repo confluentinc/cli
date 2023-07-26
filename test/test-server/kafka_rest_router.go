@@ -811,8 +811,8 @@ func handleKafkaRPAllMirrors(t *testing.T) http.HandlerFunc {
 
 // Handler for: "/kafka/v3/clusters/{cluster_id}/consumer-groups/{consumer_group_id}/consumers"
 func handleKafkaRPConsumers(t *testing.T) http.HandlerFunc {
-	instance1 := "instance-1"
-	instance2 := "instance-2"
+	instance1 := "consumer-instance-1"
+	instance2 := "consumer-instance-2"
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
