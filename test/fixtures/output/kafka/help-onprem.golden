@@ -7,6 +7,7 @@ Available Commands:
   acl            Manage Kafka ACLs.
   broker         Manage Kafka brokers.
   cluster        Manage Kafka clusters.
+  consumer-group Manage Kafka consumer groups.
   link           Manage inter-cluster links.
   partition      Manage Kafka partitions.
   replica        Manage Kafka replicas.

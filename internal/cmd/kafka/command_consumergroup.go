@@ -6,28 +6,13 @@ import (
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 )
 
 type consumerGroupCommand struct {
 	*pcmd.AuthenticatedCLICommand
-}
-
-type consumerData struct {
-	ConsumerGroupId string `human:"Consumer Group" serialized:"consumer_group"`
-	ConsumerId      string `human:"Consumer" serialized:"consumer"`
-	InstanceId      string `human:"Instance" serialized:"instance"`
-	ClientId        string `human:"Client" serialized:"client"`
-}
-
-type groupData struct {
-	ClusterId         string
-	ConsumerGroupId   string
-	Coordinator       string
-	IsSimple          bool
-	PartitionAssignor string
-	State             string
-	Consumers         []consumerData
 }
 
 type consumerGroupOut struct {
@@ -39,20 +24,28 @@ type consumerGroupOut struct {
 	State             string `human:"State" serialized:"state"`
 }
 
-func newConsumerGroupCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func newConsumerGroupCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "consumer-group",
 		Aliases:     []string{"cg"},
 		Short:       "Manage Kafka consumer groups.",
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
-		Hidden:      true,
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLoginOrOnPremLogin},
 	}
 
-	c := &consumerGroupCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
+	c := &consumerGroupCommand{}
 
-	cmd.AddCommand(c.newDescribeCommand())
-	cmd.AddCommand(newLagCommand(prerunner))
-	cmd.AddCommand(c.newListCommand())
+	if cfg.IsCloudLogin() {
+		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedCLICommand(cmd, prerunner)
+
+		cmd.AddCommand(c.newDescribeCommand())
+		cmd.AddCommand(newLagCommand(prerunner))
+		cmd.AddCommand(c.newListCommand())
+	} else {
+		c.AuthenticatedCLICommand = pcmd.NewAuthenticatedWithMDSCLICommand(cmd, prerunner)
+		c.PersistentPreRunE = prerunner.InitializeOnPremKafkaRest(c.AuthenticatedCLICommand)
+
+		cmd.AddCommand(c.newDescribeCommandOnPrem())
+	}
 
 	return cmd
 }
@@ -82,13 +75,21 @@ func (c *consumerGroupCommand) autocompleteConsumerGroups() []string {
 	return suggestions
 }
 
-func listConsumerGroups(flagCmd *pcmd.AuthenticatedCLICommand) (*kafkarestv3.ConsumerGroupDataList, error) {
-	kafkaREST, lkc, err := getKafkaRestProxyAndLkcId(flagCmd)
+func listConsumerGroups(c *pcmd.AuthenticatedCLICommand) (*kafkarestv3.ConsumerGroupDataList, error) {
+	kafkaREST, err := c.GetKafkaREST()
+	if kafkaREST == nil {
+		if err != nil {
+			return nil, err
+		}
+		return nil, errors.New(errors.RestProxyNotAvailableMsg)
+	}
+
+	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return nil, err
 	}
 
-	groupCmdResp, httpResp, err := kafkaREST.CloudClient.ListKafkaConsumerGroups(lkc)
+	groupCmdResp, httpResp, err := kafkaREST.CloudClient.ListKafkaConsumerGroups(cluster.ID)
 	if err != nil {
 		return nil, kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
