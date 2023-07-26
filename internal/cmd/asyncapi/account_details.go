@@ -37,9 +37,8 @@ type accountDetails struct {
 	topics         []kafkarestv3.TopicData
 	clusterCreds   *v1.APIKeyPair
 	consumer       *ckgo.Consumer
-	broker         string
-	srCluster      *v1.SchemaRegistryCluster
-	client         *schemaregistry.Client
+	kafkaUrl       string
+	srClient       *schemaregistry.Client
 	subjects       []string
 	channelDetails channelDetails
 }
@@ -47,7 +46,7 @@ type accountDetails struct {
 func (d *accountDetails) getTags() error {
 	// Get topic level tags
 	d.channelDetails.topicLevelTags = nil
-	topicLevelTags, err := d.client.GetTags("kafka_topic", d.clusterId+":"+d.channelDetails.currentTopic.GetTopicName())
+	topicLevelTags, err := d.srClient.GetTags("kafka_topic", d.clusterId+":"+d.channelDetails.currentTopic.GetTopicName())
 	if err != nil {
 		return catchOpenAPIError(err)
 	}
@@ -57,7 +56,7 @@ func (d *accountDetails) getTags() error {
 
 	// Get schema level tags
 	d.channelDetails.schemaLevelTags = nil
-	schemaLevelTags, err := d.client.GetTags("sr_schema", strconv.Itoa(int(d.channelDetails.schema.Id)))
+	schemaLevelTags, err := d.srClient.GetTags("sr_schema", strconv.Itoa(int(d.channelDetails.schema.Id)))
 	if err != nil {
 		return catchOpenAPIError(err)
 	}
@@ -68,7 +67,7 @@ func (d *accountDetails) getTags() error {
 }
 
 func (d *accountDetails) getSchemaDetails() error {
-	schema, err := d.client.GetSchemaByVersion(d.channelDetails.currentSubject, "latest", nil)
+	schema, err := d.srClient.GetSchemaByVersion(d.channelDetails.currentSubject, "latest", nil)
 	if err != nil {
 		return err
 	}
@@ -109,7 +108,7 @@ func handlePrimitiveSchemas(schema string, err error) (map[string]any, error) {
 
 func (d *accountDetails) getTopicDescription() error {
 	d.channelDetails.currentTopicDescription = ""
-	atlasEntityWithExtInfo, err := d.client.GetByUniqueAttributes("kafka_topic", d.clusterId+":"+d.channelDetails.currentTopic.GetTopicName())
+	atlasEntityWithExtInfo, err := d.srClient.GetByUniqueAttributes("kafka_topic", d.clusterId+":"+d.channelDetails.currentTopic.GetTopicName())
 	if err != nil {
 		return catchOpenAPIError(err)
 	}
@@ -120,7 +119,7 @@ func (d *accountDetails) getTopicDescription() error {
 }
 
 func (c *command) countAsyncApiUsage(details *accountDetails) error {
-	if err := details.client.AsyncapiPut(); err != nil {
+	if err := details.srClient.AsyncapiPut(); err != nil {
 		return fmt.Errorf("failed to access AsyncAPI metric endpoint: %v", err)
 	}
 	return nil

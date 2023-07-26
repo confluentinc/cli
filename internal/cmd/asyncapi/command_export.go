@@ -27,10 +27,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/serdes"
 )
 
-type command struct {
-	*pcmd.AuthenticatedCLICommand
-}
-
 type confluentBinding struct {
 	BindingVersion     string                   `json:"bindingVersion,omitempty"`
 	Partitions         int32                    `json:"partitions,omitempty"`
@@ -53,28 +49,27 @@ type bindings struct {
 }
 
 type flags struct {
-	file                    string
-	groupId                 string
-	consumeExamples         bool
-	specVersion             string
-	kafkaApiKey             string
-	schemaRegistryApiKey    string
-	schemaRegistryApiSecret string
-	valueFormat             string
-	schemaContext           string
-	topics                  []string
+	file            string
+	groupId         string
+	consumeExamples bool
+	specVersion     string
+	kafkaApiKey     string
+	valueFormat     string
+	schemaContext   string
+	topics          []string
 }
 
 // messageOffset is 5, as the schema ID is stored at the [1:5] bytes of a message as meta info (when valid)
 const messageOffset int = 5
 const protobufErrorMessage string = "protobuf is not supported"
 
-func newExportCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func (c *command) newExportCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "export",
 		Short: "Export an AsyncAPI specification.",
 		Long:  "Export an AsyncAPI specification for a Kafka cluster and Schema Registry.",
 		Args:  cobra.NoArgs,
+		RunE:  c.export,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Export an AsyncAPI specification with topic "my-topic" and all topics starting with "prefix-".`,
@@ -83,22 +78,24 @@ func newExportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		),
 	}
 
-	c := &command{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
-	cmd.RunE = c.export
-
 	cmd.Flags().String("file", "asyncapi-spec.yaml", "Output file name.")
 	cmd.Flags().String("group-id", "consumerApplication", "Consumer Group ID for getting messages.")
 	cmd.Flags().Bool("consume-examples", false, "Consume messages from topics for populating examples.")
 	cmd.Flags().String("spec-version", "1.0.0", "Version number of the output file.")
 	cmd.Flags().String("kafka-api-key", "", "Kafka cluster API key.")
-	cmd.Flags().String("schema-registry-endpoint", "", "Endpoint for Schema Registry cluster.")
-	cmd.Flags().String("schema-registry-api-key", "", "API key for Schema Registry.")
-	cmd.Flags().String("schema-registry-api-secret", "", "API secret for Schema Registry.")
 	cmd.Flags().String("schema-context", "default", "Use a specific schema context.")
 	cmd.Flags().StringSlice("topics", nil, "A comma-separated list of topics to export. Supports prefixes ending with a wildcard (*).")
 	pcmd.AddValueFormatFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+
+	// Deprecated
+	cmd.Flags().String("schema-registry-api-key", "", "API key for Schema Registry.")
+	cobra.CheckErr(cmd.Flags().MarkHidden("schema-registry-api-key"))
+
+	// Deprecated
+	cmd.Flags().String("schema-registry-api-secret", "", "API secret for Schema Registry.")
+	cobra.CheckErr(cmd.Flags().MarkHidden("schema-registry-api-secret"))
 
 	cobra.CheckErr(cmd.MarkFlagFilename("file", "yaml", "yml"))
 
@@ -115,7 +112,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	// Servers & Info Section
-	reflector := addServer(accountDetails.broker, accountDetails.srCluster, flags.specVersion)
+	reflector := addServer(accountDetails.kafkaUrl, accountDetails.srClient.GetConfig().BasePath, flags.specVersion)
 	log.CliLogger.Debug("Generating AsyncAPI specification")
 	messages := make(map[string]spec.Message)
 	var schemaContextPrefix string
@@ -188,7 +185,7 @@ func (c *command) getChannelDetails(details *accountDetails, flags *flags) error
 	}
 	details.channelDetails.example = nil
 	if flags.consumeExamples {
-		example, err := c.getMessageExamples(details.consumer, details.channelDetails.currentTopic.GetTopicName(), details.channelDetails.contentType, details.client, flags.valueFormat)
+		example, err := c.getMessageExamples(details.consumer, details.channelDetails.currentTopic.GetTopicName(), details.channelDetails.contentType, details.srClient, flags.valueFormat)
 		if err != nil {
 			log.CliLogger.Warn(err)
 		}
@@ -203,7 +200,7 @@ func (c *command) getChannelDetails(details *accountDetails, flags *flags) error
 		log.CliLogger.Warnf("Failed to get topic description: %v", err)
 	}
 	// x-messageCompatibility
-	mapOfMessageCompat, err := getMessageCompatibility(details.client, details.channelDetails.currentSubject)
+	mapOfMessageCompat, err := getMessageCompatibility(details.srClient, details.channelDetails.currentSubject)
 	if err != nil {
 		log.CliLogger.Warnf("Failed to get subject's compatibility type: %v", err)
 	}
@@ -222,9 +219,9 @@ func (c *command) getAccountDetails(flags *flags) (*accountDetails, error) {
 	if err != nil {
 		return nil, err
 	}
-	details.client = client
+	details.srClient = client
 
-	subjects, err := details.client.List(nil)
+	subjects, err := details.srClient.List(nil)
 	if err != nil {
 		return nil, err
 	}
@@ -232,7 +229,7 @@ func (c *command) getAccountDetails(flags *flags) (*accountDetails, error) {
 
 	// Create Consumer
 	if flags.consumeExamples {
-		details.consumer, err = createConsumer(details.broker, details.clusterCreds, flags.groupId)
+		details.consumer, err = createConsumer(details.kafkaUrl, details.clusterCreds, flags.groupId)
 		if err != nil {
 			return nil, err
 		}
@@ -411,7 +408,7 @@ func (c *command) getClusterDetails(details *accountDetails, flags *flags) error
 	details.clusterId = clusterConfig.ID
 	details.topics = topics.Data
 	details.clusterCreds = clusterCreds
-	details.broker = kafkaREST.CloudClient.GetUrl()
+	details.kafkaUrl = kafkaREST.CloudClient.GetUrl()
 	return nil
 }
 
@@ -436,14 +433,6 @@ func getFlags(cmd *cobra.Command) (*flags, error) {
 	if err != nil {
 		return nil, err
 	}
-	schemaRegistryApiKey, err := cmd.Flags().GetString("schema-registry-api-key")
-	if err != nil {
-		return nil, err
-	}
-	schemaRegistryApiSecret, err := cmd.Flags().GetString("schema-registry-api-secret")
-	if err != nil {
-		return nil, err
-	}
 	valueFormat, err := cmd.Flags().GetString("value-format")
 	if err != nil {
 		return nil, err
@@ -457,16 +446,14 @@ func getFlags(cmd *cobra.Command) (*flags, error) {
 		return nil, err
 	}
 	return &flags{
-		file:                    file,
-		groupId:                 groupId,
-		consumeExamples:         consumeExamples,
-		specVersion:             specVersion,
-		kafkaApiKey:             kafkaApiKey,
-		schemaRegistryApiKey:    schemaRegistryApiKey,
-		schemaRegistryApiSecret: schemaRegistryApiSecret,
-		valueFormat:             valueFormat,
-		schemaContext:           schemaContext,
-		topics:                  topics,
+		file:            file,
+		groupId:         groupId,
+		consumeExamples: consumeExamples,
+		specVersion:     specVersion,
+		kafkaApiKey:     kafkaApiKey,
+		valueFormat:     valueFormat,
+		schemaContext:   schemaContext,
+		topics:          topics,
 	}, nil
 }
 
@@ -474,18 +461,18 @@ func msgName(s string) string {
 	return strcase.ToCamel(s) + "Message"
 }
 
-func addServer(broker string, schemaCluster *v1.SchemaRegistryCluster, specVersion string) asyncapi.Reflector {
+func addServer(kafkaUrl, schemaRegistryUrl, specVersion string) asyncapi.Reflector {
 	return asyncapi.Reflector{
 		Schema: &spec.AsyncAPI{
 			Servers: map[string]spec.ServersAdditionalProperties{
 				"cluster": {Server: &spec.Server{
-					URL:         broker,
+					URL:         kafkaUrl,
 					Description: "Confluent Kafka instance.",
 					Protocol:    "kafka",
 					Security:    []map[string][]string{{"confluentBroker": []string{}}},
 				}},
 				"schema-registry": {Server: &spec.Server{
-					URL:         schemaCluster.SchemaRegistryEndpoint,
+					URL:         schemaRegistryUrl,
 					Description: "Confluent Kafka Schema Registry Server",
 					Protocol:    "kafka",
 					Security:    []map[string][]string{{"confluentSchemaRegistry": []string{}}},
