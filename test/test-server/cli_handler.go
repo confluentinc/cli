@@ -2,7 +2,6 @@ package testserver
 
 import (
 	"encoding/json"
-	"io"
 	"net/http"
 	"testing"
 
@@ -19,19 +18,7 @@ func handleFeedbacks(t *testing.T) http.HandlerFunc {
 		require.NoError(t, err)
 		if len(*req.Content) > 20 {
 			w.WriteHeader(http.StatusForbidden)
-			errorJson, err := json.Marshal(&struct {
-				Errors []any `json:"errors"`
-			}{
-				Errors: []any{&struct {
-					Detail string `json:"detail"`
-					Status string `json:"status"`
-				}{
-					Detail: "feedback exceeds the maximum length",
-					Status: "403",
-				}},
-			})
-			require.NoError(t, err)
-			_, err = io.WriteString(w, string(errorJson))
+			err = writeErrorJson(w, "feedback exceeds the maximum length")
 			require.NoError(t, err)
 		} else {
 			w.WriteHeader(http.StatusNoContent)
