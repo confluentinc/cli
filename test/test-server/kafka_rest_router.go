@@ -1378,9 +1378,6 @@ func handleKafkaBrokerIdConfigs(t *testing.T) http.HandlerFunc {
 func handleKafkaBrokerConfigsAlter(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusCreated)
-		// var req cpkafkarestv3.UpdateKafkaClusterConfigsOpts
-		// err := json.NewDecoder(r.Body).Decode(&req)
-		// require.NoError(t, err)
 	}
 }
 
@@ -1388,9 +1385,6 @@ func handleKafkaBrokerConfigsAlter(t *testing.T) http.HandlerFunc {
 func handleKafkaBrokerIdConfigsAlter(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusCreated)
-		// var req cpkafkarestv3.ClustersClusterIdBrokersBrokerIdConfigsalterPostOpts
-		// err := json.NewDecoder(r.Body).Decode(&req)
-		// require.NoError(t, err)
 	}
 }
 
