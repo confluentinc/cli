@@ -468,6 +468,20 @@ func (s *CLITestSuite) TestKafkaQuota() {
 	}
 }
 
+func (s *CLITestSuite) TestKafkaConsumerGroup() {
+	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
+	tests := []CLITest{
+		{args: fmt.Sprintf("kafka consumer-group list --url %s", kafkaRestURL), fixture: "kafka/consumer-group/list-onprem.golden"},
+		{args: fmt.Sprintf("kafka consumer-group describe consumer-group-1 --url %s", kafkaRestURL), fixture: "kafka/consumer-group/describe-onprem.golden"},
+		{args: fmt.Sprintf("kafka consumer-group describe consumer-group-1234 --url %s", kafkaRestURL), fixture: "kafka/consumer-group/describe-onprem-dne.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "onprem"
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestKafka_Autocomplete() {
 	tests := []CLITest{
 		{args: `__complete kafka cluster create my-cluster --availability ""`, fixture: "kafka/create-availability-autocomplete.golden"},
