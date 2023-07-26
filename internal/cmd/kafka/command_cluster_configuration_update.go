@@ -3,14 +3,16 @@ package kafka
 import (
 	"fmt"
 
+	"github.com/spf13/cobra"
+
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/properties"
 	"github.com/confluentinc/cli/internal/pkg/types"
 	"github.com/confluentinc/cli/internal/pkg/utils"
-	"github.com/spf13/cobra"
 )
 
 func (c *clusterCommand) newConfigurationUpdateCommand() *cobra.Command {
@@ -86,5 +88,5 @@ func formatUpdateOutput(config map[string]string) string {
 		configuration += "s"
 	}
 
-	return fmt.Sprintf("Successfully requested to update %s %s.\n", configuration, utils.ArrayToCommaDelimitedString(names, "and"))
+	return fmt.Sprintf("Successfully requested to update %s %s.", configuration, utils.ArrayToCommaDelimitedString(names, "and"))
 }

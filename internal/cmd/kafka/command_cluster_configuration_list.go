@@ -1,15 +1,16 @@
 package kafka
 
 import (
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/spf13/cobra"
 )
 
 func (c *clusterCommand) newConfigurationListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List edited Kafka cluster configurations.",
+		Short: "List updated Kafka cluster configurations.",
 		Args:  cobra.MaximumNArgs(1),
 		RunE:  c.configurationList,
 	}

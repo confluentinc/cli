@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/spf13/cobra"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/spf13/cobra"
 )
 
 func (c *clusterCommand) newConfigurationDescribeCommand() *cobra.Command {
@@ -18,7 +19,7 @@ func (c *clusterCommand) newConfigurationDescribeCommand() *cobra.Command {
 		RunE:  c.configurationDescribe,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Describe Kafka cluster configuration "auto.create.topics.enable"`,
+				Text: `Describe Kafka cluster configuration "auto.create.topics.enable".`,
 				Code: "confluent kafka cluster configuration describe auto.create.topics.enable",
 			},
 		),

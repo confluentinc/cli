@@ -5,7 +5,7 @@ Usage:
 
 Available Commands:
   describe    Describe a Kafka cluster configuration.
-  list        List edited Kafka cluster configurations.
+  list        List updated Kafka cluster configurations.
   update      Update Kafka cluster configurations.
 
 Global Flags:

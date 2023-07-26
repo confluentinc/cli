@@ -4,7 +4,7 @@ Usage:
   confluent kafka cluster configuration describe <name> [flags]
 
 Examples:
-Describe Kafka cluster configuration "auto.create.topics.enable"
+Describe Kafka cluster configuration "auto.create.topics.enable".
 
   $ confluent kafka cluster configuration describe auto.create.topics.enable
 

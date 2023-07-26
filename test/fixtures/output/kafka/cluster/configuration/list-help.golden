@@ -1,4 +1,4 @@
-List edited Kafka cluster configurations.
+List updated Kafka cluster configurations.
 
 Usage:
   confluent kafka cluster configuration list [flags]

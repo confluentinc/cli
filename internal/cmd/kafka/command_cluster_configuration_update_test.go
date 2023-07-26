@@ -8,10 +8,10 @@ import (
 
 func TestFormatUpdateOutput_Singular(t *testing.T) {
 	output := formatUpdateOutput(map[string]string{"a": ""})
-	require.Equal(t, "Successfully requested to update configuration \"a\".\n", output)
+	require.Equal(t, `Successfully requested to update configuration "a".`, output)
 }
 
 func TestFormatUpdateOutput_Plural(t *testing.T) {
 	output := formatUpdateOutput(map[string]string{"a": "", "b": ""})
-	require.Equal(t, "Successfully requested to update configurations \"a\" and \"b\".\n", output)
+	require.Equal(t, `Successfully requested to update configurations "a" and "b".`, output)
 }
