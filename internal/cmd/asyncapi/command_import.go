@@ -19,13 +19,13 @@ import (
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
+	schemaregistry "github.com/confluentinc/cli/internal/pkg/schema-registry"
 	"github.com/confluentinc/cli/internal/pkg/types"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
@@ -104,12 +104,13 @@ type TopicBindings struct {
 	Kafka kafkaBinding `yaml:"kafka"`
 }
 
-func newImportCommand(prerunner pcmd.PreRunner) *cobra.Command {
+func (c *command) newImportCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "import",
 		Short: "Import an AsyncAPI specification.",
 		Long:  "Update a Kafka cluster and Schema Registry according to an AsyncAPI specification file.",
 		Args:  cobra.NoArgs,
+		RunE:  c.asyncapiImport,
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Import an AsyncAPI specification file to populate an existing Kafka cluster and Schema Registry.",
@@ -118,16 +119,21 @@ func newImportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		),
 	}
 
-	c := &command{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
-	cmd.RunE = c.asyncapiImport
 	cmd.Flags().String("file", "", "Input filename.")
 	cmd.Flags().Bool("overwrite", false, "Overwrite existing topics with the same name.")
 	cmd.Flags().String("kafka-api-key", "", "Kafka cluster API key.")
+
+	// Deprecated
 	cmd.Flags().String("schema-registry-api-key", "", "API key for Schema Registry.")
+	cobra.CheckErr(cmd.Flags().MarkHidden("schema-registry-api-key"))
+
+	// Deprecated
 	cmd.Flags().String("schema-registry-api-secret", "", "API secret for Schema Registry.")
+	cobra.CheckErr(cmd.Flags().MarkHidden("schema-registry-api-secret"))
 
 	cobra.CheckErr(cmd.MarkFlagRequired("file"))
 	cobra.CheckErr(cmd.MarkFlagFilename("file", "yaml", "yml"))
+
 	return cmd
 }
 
@@ -173,13 +179,7 @@ func (c *command) asyncapiImport(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	// Getting Kafka Cluster & SR
-	flagsExport := &flags{
-		kafkaApiKey:             flagsImp.kafkaApiKey,
-		schemaRegistryApiKey:    flagsImp.schemaRegistryApiKey,
-		schemaRegistryApiSecret: flagsImp.schemaRegistryApiSecret,
-	}
-	details, err := c.getAccountDetails(flagsExport)
+	details, err := c.getAccountDetails(&flags{kafkaApiKey: flagsImp.kafkaApiKey})
 	if err != nil {
 		return err
 	}
@@ -238,7 +238,7 @@ func (c *command) addChannelToCluster(details *accountDetails, spec *Spec, topic
 	}
 	// Add topic description to newly created topic
 	if (topicExistedAlready || newTopicCreated) && spec.Channels[topicName].Description != "" {
-		if err := addTopicDescription(details.srClient, details.srContext, fmt.Sprintf("%s:%s", details.clusterId, topicName),
+		if err := addTopicDescription(details.srClient, fmt.Sprintf("%s:%s", details.kafkaClusterId, topicName),
 			spec.Channels[topicName].Description); err != nil {
 			return fmt.Errorf("unable to update topic description: %v", err)
 		}
@@ -288,7 +288,7 @@ func (c *command) createTopic(details *accountDetails, topicName string, kafkaBi
 	if err != nil {
 		return false, err
 	}
-	if _, httpResp, err := kafkaRest.CloudClient.CreateKafkaTopic(details.clusterId,
+	if _, httpResp, err := kafkaRest.CloudClient.CreateKafkaTopic(details.kafkaClusterId,
 		createTopicRequestData); err != nil {
 		restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err)
 		if parseErr == nil && restErr.Code == ccloudv2.BadRequestErrorCode {
@@ -311,7 +311,7 @@ func (c *command) updateTopic(details *accountDetails, topicName string, kafkaBi
 	if err != nil {
 		return err
 	}
-	configs, err := kafkaRest.CloudClient.ListKafkaTopicConfigs(details.clusterId, topicName)
+	configs, err := kafkaRest.CloudClient.ListKafkaTopicConfigs(details.kafkaClusterId, topicName)
 	if err != nil {
 		return err
 	}
@@ -331,7 +331,7 @@ func (c *command) updateTopic(details *accountDetails, topicName string, kafkaBi
 	}
 	log.CliLogger.Info("Overwriting topic configs")
 	if updateConfigs != nil {
-		_, err = kafkaRest.CloudClient.UpdateKafkaTopicConfigBatch(details.clusterId, topicName, kafkarestv3.AlterConfigBatchRequestData{Data: updateConfigs})
+		_, err = kafkaRest.CloudClient.UpdateKafkaTopicConfigBatch(details.kafkaClusterId, topicName, kafkarestv3.AlterConfigBatchRequestData{Data: updateConfigs})
 		if err != nil {
 			return fmt.Errorf("unable to update topic configs: %v", err)
 		}
@@ -367,23 +367,17 @@ func combineTopicConfigs(kafkaBinding kafkaBinding) map[string]string {
 	return configs
 }
 
-func addTopicDescription(srClient *srsdk.APIClient, srContext context.Context, qualifiedName string, description string) error {
-	atlasEntity := srsdk.AtlasEntityWithExtInfo{
-		ReferredEntities: nil,
-		Entity: srsdk.AtlasEntity{
-			Attributes: map[string]any{
-				"description":   description,
-				"qualifiedName": qualifiedName,
-			},
-			TypeName: "kafka_topic",
+func addTopicDescription(client *schemaregistry.Client, qualifiedName, description string) error {
+	atlasEntity := srsdk.AtlasEntityWithExtInfo{Entity: srsdk.AtlasEntity{
+		Attributes: map[string]any{
+			"description":   description,
+			"qualifiedName": qualifiedName,
 		},
-	}
-	err := retry(context.Background(), 5*time.Second, time.Minute, func() error {
-		_, err := srClient.DefaultApi.PartialUpdateByUniqueAttributes(srContext,
-			&srsdk.PartialUpdateByUniqueAttributesOpts{AtlasEntityWithExtInfo: optional.NewInterface(atlasEntity)})
-		return err
+		TypeName: "kafka_topic",
+	}}
+	return retry(context.Background(), 5*time.Second, time.Minute, func() error {
+		return client.PartialUpdateByUniqueAttributes(&srsdk.PartialUpdateByUniqueAttributesOpts{AtlasEntityWithExtInfo: optional.NewInterface(atlasEntity)})
 	})
-	return err
 }
 
 func resolveSchemaType(contentType string) string {
@@ -405,17 +399,18 @@ func registerSchema(details *accountDetails, topicName string, components Compon
 		if err != nil {
 			return 0, err
 		}
+
 		jsonSchema, err := yaml3.ToJSON(schema)
 		if err != nil {
 			return 0, fmt.Errorf("failed to encode schema as JSON: %v", err)
 		}
-		id, _, err := details.srClient.DefaultApi.Register(details.srContext, subject,
-			srsdk.RegisterSchemaRequest{
-				Schema:     string(jsonSchema),
-				SchemaType: resolveSchemaType(components.Messages[strcase.ToCamel(topicName)+"Message"].ContentType),
-			},
-			&srsdk.RegisterOpts{Normalize: optional.NewBool(false)},
-		)
+
+		req := srsdk.RegisterSchemaRequest{
+			Schema:     string(jsonSchema),
+			SchemaType: resolveSchemaType(components.Messages[strcase.ToCamel(topicName)+"Message"].ContentType),
+		}
+		opts := &srsdk.RegisterOpts{Normalize: optional.NewBool(false)}
+		id, err := details.srClient.Register(subject, req, opts)
 		if err != nil {
 			return 0, fmt.Errorf("unable to register schema: %v", err)
 		}
@@ -428,8 +423,8 @@ func registerSchema(details *accountDetails, topicName string, components Compon
 func updateSubjectCompatibility(details *accountDetails, compatibility string, subject string) error {
 	// Updating the subject level compatibility
 	log.CliLogger.Infof("Updating the Subject level compatibility to %s", compatibility)
-	updateReq := srsdk.ConfigUpdateRequest{Compatibility: compatibility}
-	config, _, err := details.srClient.DefaultApi.UpdateSubjectLevelConfig(details.srContext, subject, updateReq)
+	req := srsdk.ConfigUpdateRequest{Compatibility: compatibility}
+	config, err := details.srClient.UpdateSubjectLevelConfig(subject, req)
 	if err != nil {
 		return fmt.Errorf("failed to update subject level compatibility: %v", err)
 	}
@@ -455,7 +450,7 @@ func addSchemaTags(details *accountDetails, components Components, topicName str
 			tagConfigs = append(tagConfigs, srsdk.Tag{
 				TypeName:   tag.Name,
 				EntityType: "sr_schema",
-				EntityName: fmt.Sprintf("%s:.:%s", details.srCluster.GetId(), strconv.Itoa(int(schemaId))),
+				EntityName: fmt.Sprintf("%s:.:%s", details.schemaRegistryClusterId, strconv.Itoa(int(schemaId))),
 			})
 			tagNames = append(tagNames, tag.Name)
 		}
@@ -485,7 +480,7 @@ func addTopicTags(details *accountDetails, subscribe Operation, topicName string
 		tagConfigs = append(tagConfigs, srsdk.Tag{
 			TypeName:   tag.Name,
 			EntityType: "kafka_topic",
-			EntityName: fmt.Sprintf("%s:%s", details.clusterId, topicName),
+			EntityName: fmt.Sprintf("%s:%s", details.kafkaClusterId, topicName),
 		})
 		tagNames = append(tagNames, tag.Name)
 	}
@@ -497,18 +492,18 @@ func addTopicTags(details *accountDetails, subscribe Operation, topicName string
 }
 
 func addTagsUtil(details *accountDetails, tagDefConfigs []srsdk.TagDef, tagConfigs []srsdk.Tag) error {
-	tagDefOpts := srsdk.CreateTagDefsOpts{TagDef: optional.NewInterface(tagDefConfigs)}
+	tagDefOpts := &srsdk.CreateTagDefsOpts{TagDef: optional.NewInterface(tagDefConfigs)}
 	err := retry(context.Background(), 5*time.Second, time.Minute, func() error {
-		_, _, err := details.srClient.DefaultApi.CreateTagDefs(details.srContext, &tagDefOpts)
+		_, err := details.srClient.CreateTagDefs(tagDefOpts)
 		return err
 	})
 	if err != nil {
 		return fmt.Errorf("unable to create tag definition: %v", err)
 	}
 	log.CliLogger.Debugf("Tag Definitions created")
-	tagOpts := srsdk.CreateTagsOpts{Tag: optional.NewInterface(tagConfigs)}
+	tagOpts := &srsdk.CreateTagsOpts{Tag: optional.NewInterface(tagConfigs)}
 	err = retry(context.Background(), 5*time.Second, time.Minute, func() error {
-		_, _, err = details.srClient.DefaultApi.CreateTags(details.srContext, &tagOpts)
+		_, err := details.srClient.CreateTags(tagOpts)
 		return err
 	})
 	if err != nil {

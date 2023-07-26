@@ -42,19 +42,19 @@ func (c *command) newConfigDescribeCommand(cfg *v1.Config) *cobra.Command {
 		Text: "Describe the top-level configuration.",
 		Code: "confluent schema-registry config describe",
 	}
-	if !cfg.IsCloudLogin() {
-		example1.Code += " " + OnPremAuthenticationMsg
-		example2.Code += " " + OnPremAuthenticationMsg
+	if cfg.IsOnPremLogin() {
+		example1.Code += " " + onPremAuthenticationMsg
+		example2.Code += " " + onPremAuthenticationMsg
 	}
 	cmd.Example = examples.BuildExampleString(example1, example2)
 
-	cmd.Flags().String("subject", "", SubjectUsage)
+	cmd.Flags().String("subject", "", subjectUsage)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	} else {
 		cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
 	}
-	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	if cfg.IsCloudLogin() {

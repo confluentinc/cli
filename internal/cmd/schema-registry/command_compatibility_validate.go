@@ -31,31 +31,33 @@ func (c *command) newCompatibilityValidateCommand(cfg *v1.Config) *cobra.Command
 		Text: `Validate the compatibility of schema "payments" against the latest version of subject "records".`,
 		Code: "confluent schema-registry compatibility validate --schema payments.avsc --type avro --subject records --version latest",
 	}
-	if !cfg.IsCloudLogin() {
-		example.Code += " " + OnPremAuthenticationMsg
+	if cfg.IsOnPremLogin() {
+		example.Code += " " + onPremAuthenticationMsg
 	}
 	cmd.Example = examples.BuildExampleString(example)
 
 	cmd.Flags().String("schema", "", "The path to the schema file.")
 	pcmd.AddSchemaTypeFlag(cmd)
-	cmd.Flags().String("subject", "", SubjectUsage)
+	cmd.Flags().String("subject", "", subjectUsage)
 	cmd.Flags().String("version", "", `Version of the schema. Can be a specific version or "latest".`)
 	cmd.Flags().String("references", "", "The path to the references file.")
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	} else {
 		cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
 	}
-	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
-	// Deprecated
-	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
-	cobra.CheckErr(cmd.Flags().MarkHidden("api-key"))
+	if cfg.IsCloudLogin() {
+		// Deprecated
+		pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
+		cobra.CheckErr(cmd.Flags().MarkHidden("api-key"))
 
-	// Deprecated
-	pcmd.AddApiSecretFlag(cmd)
-	cobra.CheckErr(cmd.Flags().MarkHidden("api-secret"))
+		// Deprecated
+		pcmd.AddApiSecretFlag(cmd)
+		cobra.CheckErr(cmd.Flags().MarkHidden("api-secret"))
+	}
 
 	cobra.CheckErr(cmd.MarkFlagFilename("schema", "avsc", "json", "proto"))
 	cobra.CheckErr(cmd.MarkFlagFilename("references", "json"))

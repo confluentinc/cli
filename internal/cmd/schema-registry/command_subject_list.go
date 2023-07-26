@@ -1,14 +1,13 @@
 package schemaregistry
 
 import (
-	"context"
-
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -16,7 +15,7 @@ type subjectListOut struct {
 	Subject string `human:"Subject" serialized:"subject"`
 }
 
-func (c *command) newSubjectListCommand() *cobra.Command {
+func (c *command) newSubjectListCommand(cfg *v1.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List subjects.",
@@ -26,24 +25,33 @@ func (c *command) newSubjectListCommand() *cobra.Command {
 
 	cmd.Flags().Bool("deleted", false, "View the deleted subjects.")
 	cmd.Flags().String("prefix", ":*:", "Subject prefix.")
-	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
-	pcmd.AddApiSecretFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
-	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	if cfg.IsCloudLogin() {
+		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	} else {
+		cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
+	}
 	pcmd.AddOutputFlag(cmd)
+
+	if cfg.IsCloudLogin() {
+		// Deprecated
+		pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
+		cobra.CheckErr(cmd.Flags().MarkHidden("api-key"))
+
+		// Deprecated
+		pcmd.AddApiSecretFlag(cmd)
+		cobra.CheckErr(cmd.Flags().MarkHidden("api-secret"))
+	}
 
 	return cmd
 }
 
 func (c *command) subjectList(cmd *cobra.Command, _ []string) error {
-	srClient, ctx, err := getApiClient(cmd, c.Config, c.Version)
+	client, err := c.GetSchemaRegistryClient()
 	if err != nil {
 		return err
 	}
-	return listSubjects(cmd, srClient, ctx)
-}
 
-func listSubjects(cmd *cobra.Command, srClient *srsdk.APIClient, ctx context.Context) error {
 	deleted, err := cmd.Flags().GetBool("deleted")
 	if err != nil {
 		return err
@@ -54,11 +62,11 @@ func listSubjects(cmd *cobra.Command, srClient *srsdk.APIClient, ctx context.Con
 		return err
 	}
 
-	listOpts := srsdk.ListOpts{
+	opts := &srsdk.ListOpts{
 		Deleted:       optional.NewBool(deleted),
 		SubjectPrefix: optional.NewString(prefix),
 	}
-	subjects, _, err := srClient.DefaultApi.List(ctx, &listOpts)
+	subjects, err := client.List(opts)
 	if err != nil {
 		return err
 	}

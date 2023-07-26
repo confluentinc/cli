@@ -19,8 +19,6 @@ List all schemas in the default context.
 Flags:
       --subject-prefix string   List schemas for subjects with a given prefix.
       --all                     Include soft-deleted schemas.
-      --api-key string          API key.
-      --api-secret string       API key secret.
       --context string          CLI context name.
       --environment string      Environment ID.
   -o, --output string           Specify the output format as "human", "json", or "yaml". (default "human")

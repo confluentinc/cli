@@ -6,15 +6,21 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
+type command struct {
+	*pcmd.AuthenticatedCLICommand
+}
+
 func New(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "asyncapi",
 		Short:       "Manage AsyncAPI document tooling.",
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
+		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
-	cmd.AddCommand(newExportCommand(prerunner))
-	cmd.AddCommand(newImportCommand(prerunner))
+	c := &command{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
+
+	cmd.AddCommand(c.newExportCommand())
+	cmd.AddCommand(c.newImportCommand())
 
 	return cmd
 }

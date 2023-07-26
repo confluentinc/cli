@@ -9,10 +9,10 @@ Retrieve all versions registered under subject "payments" and its compatibility 
   $ confluent schema-registry subject describe payments --ca-location <ca-file-location> --schema-registry-endpoint <schema-registry-endpoint>
 
 Flags:
-      --deleted                           View the deleted schema.
+      --deleted                           View the deleted schemas.
+      --context string                    CLI context name.
       --ca-location string                File or directory path to CA certificates to authenticate the Schema Registry client.
       --schema-registry-endpoint string   The URL of the Schema Registry cluster.
-      --context string                    CLI context name.
   -o, --output string                     Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
