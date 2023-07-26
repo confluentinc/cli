@@ -21,6 +21,7 @@ import (
 	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
+	cliErrors "github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/flink/config"
 	"github.com/confluentinc/cli/internal/pkg/flink/test/mock"
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
@@ -228,10 +229,11 @@ func TestWaitForPendingStatementErrors(t *testing.T) {
 		},
 	}
 
-	returnedError := errors.New("couldn't get statement")
+	returnedError := cliErrors.NewFlinkError("couldn't get statement", "", http.StatusInternalServerError)
 	expectedError := &types.StatementError{
 		Message:        returnedError.Error(),
 		FailureMessage: statusDetailMessage,
+		StatusCode:     http.StatusInternalServerError,
 	}
 	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, returnedError)
 	_, err := s.waitForPendingStatement(context.Background(), statementName, waitTime)
@@ -263,9 +265,10 @@ func TestCancelPendingStatement(t *testing.T) {
 		},
 	}
 
-	expectedErr := &types.StatementError{Message: "result retrieval aborted. Statement will be deleted"}
+	flinkError := cliErrors.NewFlinkError("error", "", http.StatusInternalServerError)
+	expectedErr := &types.StatementError{Message: "result retrieval aborted. Statement will be deleted", StatusCode: http.StatusInternalServerError}
 	client.EXPECT().GetStatement("envId", statementName, "orgId").Return(statementObj, nil).AnyTimes()
-	client.EXPECT().GetExceptions("envId", statementName, "orgId").Return(flinkgatewayv1alpha1.SqlV1alpha1StatementExceptionList{}, errors.New("error")).AnyTimes()
+	client.EXPECT().GetExceptions("envId", statementName, "orgId").Return(flinkgatewayv1alpha1.SqlV1alpha1StatementExceptionList{}, flinkError).AnyTimes()
 	client.EXPECT().DeleteStatement("envId", statementName, "orgId").Return(nil).AnyTimes()
 
 	// Schedule routine to cancel context
@@ -695,7 +698,7 @@ func (s *StoreTestSuite) TestParseResetStatementError() {
 	}, err)
 }
 
-func (s *StoreTestSuite) TestProccessHttpErrors() {
+func (s *StoreTestSuite) TestProcessHttpErrors() {
 	// given
 	res := &http.Response{
 		StatusCode: http.StatusUnauthorized,
@@ -803,8 +806,9 @@ func (s *StoreTestSuite) TestDeleteStatementFailsOnError() {
 	store := NewStore(client, mockAppController.ExitApplication, &appOptions, tokenRefreshFunc)
 
 	statementName := "TEST_STATEMENT"
-	client.EXPECT().DeleteStatement("envId", statementName, "orgId").Return(errors.New("test error"))
 
+	flinkError := cliErrors.NewFlinkError("error", "", http.StatusInternalServerError)
+	client.EXPECT().DeleteStatement("envId", statementName, "orgId").Return(flinkError)
 	wasStatementDeleted := store.DeleteStatement(statementName)
 	require.False(s.T(), wasStatementDeleted)
 }
