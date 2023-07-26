@@ -12,7 +12,7 @@ import (
 type linkConfigurationOut struct {
 	ConfigName  string   `human:"Config Name" serialized:"config_name"`
 	ConfigValue string   `human:"Config Value" serialized:"config_value"`
-	ReadOnly    bool     `human:"Read Only" serialized:"read_only"`
+	ReadOnly    bool     `human:"Read-Only" serialized:"read_only"`
 	Sensitive   bool     `human:"Sensitive" serialized:"sensitive"`
 	Source      string   `human:"Source" serialized:"source"`
 	Synonyms    []string `human:"Synonyms" serialized:"synonyms"`
