@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
@@ -33,7 +34,9 @@ func (c *command) newProduceCommand() *cobra.Command {
 		Annotations:       map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 	}
 
+	cmd.Flags().String("key-schema", "", "The ID or filepath of the message key schema.")
 	cmd.Flags().String("schema", "", "The ID or filepath of the message value schema.")
+	pcmd.AddKeyFormatFlag(cmd)
 	pcmd.AddValueFormatFlag(cmd)
 	cmd.Flags().String("references", "", "The path to the references file.")
 	cmd.Flags().Bool("parse-key", false, "Parse key from the message.")
@@ -78,7 +81,12 @@ func (c *command) produce(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	serializationProvider, metaInfo, err := c.initSchemaAndGetInfo(cmd, topic)
+	keySerializer, keyMetadata, err := c.initSchemaAndGetInfo(cmd, topic, "key")
+	if err != nil {
+		return err
+	}
+
+	valueSerializer, valueMetadata, err := c.initSchemaAndGetInfo(cmd, topic, "value")
 	if err != nil {
 		return err
 	}
@@ -131,18 +139,18 @@ func (c *command) produce(cmd *cobra.Command, args []string) error {
 			continue
 		}
 
-		msg, err := GetProduceMessage(cmd, metaInfo, topic, data, serializationProvider)
+		message, err := GetProduceMessage(cmd, keyMetadata, valueMetadata, topic, data, keySerializer, valueSerializer)
 		if err != nil {
 			return err
 		}
-		if err := producer.Produce(msg, deliveryChan); err != nil {
+		if err := producer.Produce(message, deliveryChan); err != nil {
 			isProduceToCompactedTopicError, err := errors.CatchProduceToCompactedTopicError(err, topic)
 			if isProduceToCompactedTopicError {
 				scanErr = err
 				close(input)
 				break
 			}
-			output.ErrPrintf(errors.FailedToProduceErrorMsg, msg.TopicPartition.Offset, err)
+			output.ErrPrintf(errors.FailedToProduceErrorMsg, message.TopicPartition.Offset, err)
 		}
 
 		e := <-deliveryChan                // read a ckafka event from the channel
@@ -222,50 +230,62 @@ func PrepareInputChannel(scanErr *error) (chan string, func()) {
 	}
 }
 
-func GetProduceMessage(cmd *cobra.Command, metaInfo []byte, topicName, data string, serializationProvider serdes.SerializationProvider) (*ckafka.Message, error) {
+func GetProduceMessage(cmd *cobra.Command, keyMetadata, valueMetadata []byte, topic, data string, keySerializer, valueSerializer serdes.SerializationProvider) (*ckafka.Message, error) {
 	parseKey, err := cmd.Flags().GetBool("parse-key")
 	if err != nil {
 		return nil, err
 	}
+
 	delimiter, err := cmd.Flags().GetString("delimiter")
 	if err != nil {
 		return nil, err
 	}
-	key, value, err := getMsgKeyAndValue(metaInfo, data, delimiter, parseKey, serializationProvider)
+
+	key, value, err := serializeMessage(keyMetadata, valueMetadata, data, delimiter, parseKey, keySerializer, valueSerializer)
 	if err != nil {
 		return nil, err
 	}
 
-	return &ckafka.Message{
-		TopicPartition: ckafka.TopicPartition{Topic: &topicName, Partition: ckafka.PartitionAny},
-		Key:            []byte(key),
-		Value:          []byte(value),
-	}, nil
+	message := &ckafka.Message{
+		TopicPartition: ckafka.TopicPartition{
+			Topic:     &topic,
+			Partition: ckafka.PartitionAny,
+		},
+		Key:   key,
+		Value: value,
+	}
+
+	return message, nil
 }
 
-func getMsgKeyAndValue(metaInfo []byte, data, delimiter string, parseKey bool, serializationProvider serdes.SerializationProvider) (string, string, error) {
-	var key, valueString string
+func serializeMessage(keyMetadata, valueMetadata []byte, data, delimiter string, parseKey bool, keySerializer, valueSerializer serdes.SerializationProvider) ([]byte, []byte, error) {
+	var serializedKey, val string
 	if parseKey {
-		record := strings.SplitN(data, delimiter, 2)
-		valueString = strings.TrimSpace(record[len(record)-1])
-
-		if len(record) == 2 {
-			key = strings.TrimSpace(record[0])
-		} else {
-			return "", "", errors.New(errors.MissingKeyErrorMsg)
+		x := strings.SplitN(data, delimiter, 2)
+		if len(x) != 2 {
+			return nil, nil, errors.New(errors.MissingKeyErrorMsg)
 		}
+
+		out, err := serdes.Serialize(keySerializer, strings.TrimSpace(x[0]))
+		if err != nil {
+			return nil, nil, err
+		}
+		serializedKey = string(out)
+
+		val = strings.TrimSpace(x[1])
 	} else {
-		valueString = strings.TrimSpace(data)
+		val = strings.TrimSpace(data)
 	}
-	encodedMessage, err := serdes.Serialize(serializationProvider, valueString)
+
+	serializedValue, err := serdes.Serialize(valueSerializer, val)
 	if err != nil {
-		return "", "", err
+		return nil, nil, err
 	}
-	value := string(append(metaInfo, encodedMessage...))
-	return key, value, nil
+
+	return append(keyMetadata, serializedKey...), append(valueMetadata, serializedValue...), nil
 }
 
-func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic string) (serdes.SerializationProvider, []byte, error) {
+func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (serdes.SerializationProvider, []byte, error) {
 	dir, err := sr.CreateTempDir()
 	if err != nil {
 		return nil, nil, err
@@ -277,68 +297,73 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic string) (serdes
 	subject := topicNameStrategy(topic)
 
 	// Deprecated
-	schemaId, err := cmd.Flags().GetInt32("schema-id")
+	var schemaId optional.Int32
+	if mode == "value" && cmd.Flags().Changed("schema-id") {
+		id, err := cmd.Flags().GetInt32("schema-id")
+		if err != nil {
+			return nil, nil, err
+		}
+		schemaId = optional.NewInt32(id)
+	}
+
+	schemaFlagName := "schema"
+	if mode == "key" {
+		schemaFlagName = "key-schema"
+	}
+	schema, err := cmd.Flags().GetString(schemaFlagName)
 	if err != nil {
 		return nil, nil, err
 	}
-
-	schemaPath, err := cmd.Flags().GetString("schema")
-	if err != nil {
-		return nil, nil, err
+	if id, err := strconv.ParseInt(schema, 10, 32); err == nil {
+		schemaId = optional.NewInt32(int32(id))
 	}
 
-	isSchemaId := cmd.Flags().Changed("schema-id")
-	if id, err := strconv.ParseInt(schemaPath, 10, 32); err == nil {
-		schemaId = int32(id)
-		isSchemaId = true
-	}
-
-	var valueFormat string
+	var format string
 	referencePathMap := map[string]string{}
 	metaInfo := []byte{}
 
-	if isSchemaId {
+	if schemaId.IsSet() {
 		srClient, ctx, err := c.getSchemaRegistryClient(cmd)
 		if err != nil {
 			return nil, nil, err
 		}
 
-		schemaString, err := sr.RequestSchemaWithId(schemaId, subject, srClient, ctx)
+		schemaString, err := sr.RequestSchemaWithId(schemaId.Value(), subject, srClient, ctx)
 		if err != nil {
 			return nil, nil, err
 		}
 
-		valueFormat, err = serdes.FormatTranslation(schemaString.SchemaType)
+		format, err = serdes.FormatTranslation(schemaString.SchemaType)
 		if err != nil {
 			return nil, nil, err
 		}
 
-		schemaPath, referencePathMap, err = sr.SetSchemaPathRef(schemaString, dir, subject, schemaId, srClient, ctx)
+		schema, referencePathMap, err = sr.SetSchemaPathRef(schemaString, dir, subject, schemaId.Value(), srClient, ctx)
 		if err != nil {
 			return nil, nil, err
 		}
 
-		metaInfo = sr.GetMetaInfoFromSchemaId(schemaId)
+		metaInfo = sr.GetMetaInfoFromSchemaId(schemaId.Value())
 	} else {
-		valueFormat, err = cmd.Flags().GetString("value-format")
+		format, err = cmd.Flags().GetString(fmt.Sprintf("%s-format", mode))
 		if err != nil {
 			return nil, nil, err
 		}
 	}
 
-	serializationProvider, err := serdes.GetSerializationProvider(valueFormat)
+	serializationProvider, err := serdes.GetSerializationProvider(format)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	if schemaPath != "" && !isSchemaId {
+	if schema != "" && !schemaId.IsSet() {
 		// read schema info from local file and register schema
 		schemaCfg := &sr.RegisterSchemaConfigs{
-			SchemaDir:   dir,
-			SchemaPath:  schemaPath,
-			Subject:     subject,
-			ValueFormat: valueFormat,
-			SchemaType:  serializationProvider.GetSchemaName(),
+			SchemaDir:  dir,
+			SchemaPath: schema,
+			Subject:    subject,
+			Format:     format,
+			SchemaType: serializationProvider.GetSchemaName(),
 		}
 		refs, err := sr.ReadSchemaReferences(cmd)
 		if err != nil {
@@ -351,7 +376,7 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic string) (serdes
 		}
 	}
 
-	if err := serializationProvider.LoadSchema(schemaPath, referencePathMap); err != nil {
+	if err := serializationProvider.LoadSchema(schema, referencePathMap); err != nil {
 		return nil, nil, errors.NewWrapErrorWithSuggestions(err, "failed to load schema", "Specify a schema by passing a schema ID or the path to a schema file to the `--schema` flag.")
 	}
 
