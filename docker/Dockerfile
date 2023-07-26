@@ -22,7 +22,10 @@ RUN apk update --no-cache && \
     apk add --no-cache bash && \
     apk add --no-cache bash-completion
 
-COPY confluent /bin
+RUN curl -L --http1.1 https://cnfl.io/cli | sh -s -- -b /bin
+
+RUN chmod +x /bin/confluent
+RUN chown $USER:$USER /bin/confluent
 
 RUN chown $USER:$USER /bin
 RUN chown $USER:$USER /etc
