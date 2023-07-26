@@ -215,11 +215,11 @@ func (c *command) getAccountDetails(flags *flags) (*accountDetails, error) {
 		return nil, err
 	}
 
-	client, err := c.GetSchemaRegistryClient()
+	srClient, err := c.GetSchemaRegistryClient()
 	if err != nil {
 		return nil, err
 	}
-	details.srClient = client
+	details.srClient = srClient
 
 	subjects, err := details.srClient.List(nil)
 	if err != nil {
@@ -258,7 +258,7 @@ func handlePanic() {
 	}
 }
 
-func (c command) getMessageExamples(consumer *ckgo.Consumer, topicName, contentType string, client *schemaregistry.Client, valueFormatFlag string) (any, error) {
+func (c command) getMessageExamples(consumer *ckgo.Consumer, topicName, contentType string, srClient *schemaregistry.Client, valueFormatFlag string) (any, error) {
 	defer handlePanic()
 	if err := consumer.Subscribe(topicName, nil); err != nil {
 		return nil, fmt.Errorf(`failed to subscribe to topic "%s": %v`, topicName, err)
@@ -279,7 +279,7 @@ func (c command) getMessageExamples(consumer *ckgo.Consumer, topicName, contentT
 		return nil, fmt.Errorf("failed to get deserializer for %s", valueFormat)
 	}
 	groupHandler := kafka.GroupHandler{
-		Client:     client,
+		SrClient:   srClient,
 		Format:     valueFormat,
 		Subject:    topicName + "-value",
 		Properties: kafka.ConsumerProperties{},

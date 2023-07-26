@@ -139,13 +139,13 @@ func (c *command) consumeOnPrem(cmd *cobra.Command, args []string) error {
 
 	output.ErrPrintln(errors.StartingConsumerMsg)
 
-	var client *schemaregistry.Client
+	var srClient *schemaregistry.Client
 	if valueFormat != "string" {
 		// Only initialize client and context when schema is specified.
 		if c.State == nil { // require log-in to use oauthbearer token
 			return errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestions)
 		}
-		client, err = c.GetSchemaRegistryClient()
+		srClient, err = c.GetSchemaRegistryClient()
 		if err != nil {
 			return err
 		}
@@ -160,9 +160,9 @@ func (c *command) consumeOnPrem(cmd *cobra.Command, args []string) error {
 	}()
 
 	groupHandler := &GroupHandler{
-		Client: client,
-		Format: valueFormat,
-		Out:    cmd.OutOrStdout(),
+		SrClient: srClient,
+		Format:   valueFormat,
+		Out:      cmd.OutOrStdout(),
 		Properties: ConsumerProperties{
 			PrintKey:   printKey,
 			FullHeader: fullHeader,

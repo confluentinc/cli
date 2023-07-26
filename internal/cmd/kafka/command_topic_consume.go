@@ -155,10 +155,10 @@ func (c *command) consume(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	var client *schemaregistry.Client
+	var srClient *schemaregistry.Client
 	if valueFormat != "string" {
 		// Only initialize client and context when schema is specified.
-		client, err = c.GetSchemaRegistryClient()
+		srClient, err = c.GetSchemaRegistryClient()
 		if err != nil {
 			if err.Error() == errors.NotLoggedInErrorMsg {
 				return new(errors.SRNotAuthenticatedError)
@@ -186,10 +186,10 @@ func (c *command) consume(cmd *cobra.Command, args []string) error {
 	}
 
 	groupHandler := &GroupHandler{
-		Client:  client,
-		Format:  valueFormat,
-		Out:     cmd.OutOrStdout(),
-		Subject: subject,
+		SrClient: srClient,
+		Format:   valueFormat,
+		Out:      cmd.OutOrStdout(),
+		Subject:  subject,
 		Properties: ConsumerProperties{
 			PrintKey:   printKey,
 			FullHeader: fullHeader,

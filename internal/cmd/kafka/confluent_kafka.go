@@ -53,7 +53,7 @@ type ConsumerProperties struct {
 
 // GroupHandler instances are used to handle individual topic-partition claims.
 type GroupHandler struct {
-	Client     *schemaregistry.Client
+	SrClient   *schemaregistry.Client
 	Format     string
 	Out        io.Writer
 	Subject    string
@@ -289,7 +289,7 @@ func (h *GroupHandler) RequestSchema(value []byte) (string, map[string]string, e
 	if !utils.FileExists(tempStorePath) || !utils.FileExists(tempRefStorePath) {
 		// TODO: add handler for writing schema failure
 		getSchemaOpts := srsdk.GetSchemaOpts{Subject: optional.NewString(h.Subject)}
-		schemaString, err := h.Client.GetSchema(schemaID, &getSchemaOpts)
+		schemaString, err := h.SrClient.GetSchema(schemaID, &getSchemaOpts)
 		if err != nil {
 			return "", nil, err
 		}
@@ -316,7 +316,7 @@ func (h *GroupHandler) RequestSchema(value []byte) (string, map[string]string, e
 	}
 
 	// Store the references in temporary files
-	referencePathMap, err := sr.StoreSchemaReferences(h.Properties.SchemaPath, references, h.Client)
+	referencePathMap, err := sr.StoreSchemaReferences(h.Properties.SchemaPath, references, h.SrClient)
 	if err != nil {
 		return "", nil, err
 	}
