@@ -1,4 +1,4 @@
-FROM alpine:latest
+FROM node:14
 
 ENV USER=confluent
 ENV UID=2358
@@ -16,11 +16,10 @@ RUN adduser \
     --uid "$UID" \
     "$USER"
 
-RUN apk update --no-cache && \
-    apk add --no-cache jq && \
-    apk add --no-cache curl && \
-    apk add --no-cache bash && \
-    apk add --no-cache bash-completion
+RUN apt-get update && apt-get install -y curl && \
+    apt-get install -y jq && \
+    apt-get install -y bash && \
+    apt-get install -y bash-completion
 
 RUN curl -L --http1.1 https://cnfl.io/cli | sh -s -- -b /bin
 
