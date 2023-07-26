@@ -2,7 +2,6 @@ package schemaregistry
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"strconv"
@@ -15,41 +14,58 @@ import (
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	schemaregistry "github.com/confluentinc/cli/internal/pkg/schema-registry"
 )
 
 type schemaOut struct {
 	Schemas []srsdk.Schema `json:"schemas"`
 }
 
-func (c *command) newSchemaDescribeCommand() *cobra.Command {
+func (c *command) newSchemaDescribeCommand(cfg *v1.Config) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "describe [id]",
-		Short:       "Get schema either by schema ID, or by subject/version.",
-		Args:        cobra.MaximumNArgs(1),
-		RunE:        c.schemaDescribe,
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
-		Example: examples.BuildExampleString(
-			examples.Example{
-				Text: "Describe the schema string by schema ID.",
-				Code: "confluent schema-registry schema describe 1337",
-			},
-			examples.Example{
-				Text: "Describe the schema by both subject and version.",
-				Code: "confluent schema-registry schema describe --subject payments --version latest",
-			},
-		),
+		Use:   "describe [id]",
+		Short: "Get schema either by schema ID, or by subject/version.",
+		Args:  cobra.MaximumNArgs(1),
+		RunE:  c.schemaDescribe,
 	}
 
-	cmd.Flags().String("subject", "", SubjectUsage)
+	example1 := examples.Example{
+		Text: "Describe the schema string by schema ID.",
+		Code: "confluent schema-registry schema describe 1337",
+	}
+	example2 := examples.Example{
+		Text: "Describe the schema by both subject and version.",
+		Code: "confluent schema-registry schema describe --subject payments --version latest",
+	}
+	if cfg.IsOnPremLogin() {
+		example1.Code += " " + onPremAuthenticationMsg
+		example2.Code += " " + onPremAuthenticationMsg
+	}
+	cmd.Example = examples.BuildExampleString(example1, example2)
+
+	cmd.Flags().String("subject", "", subjectUsage)
 	cmd.Flags().String("version", "", `Version of the schema. Can be a specific version or "latest".`)
 	cmd.Flags().Bool("show-references", false, "Display the entire schema graph, including references.")
-	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
-	pcmd.AddApiSecretFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
-	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	if cfg.IsCloudLogin() {
+		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	} else {
+		cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
+	}
+
+	if cfg.IsCloudLogin() {
+		// Deprecated
+		pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
+		cobra.CheckErr(cmd.Flags().MarkHidden("api-key"))
+
+		// Deprecated
+		pcmd.AddApiSecretFlag(cmd)
+		cobra.CheckErr(cmd.Flags().MarkHidden("api-secret"))
+	}
 
 	return cmd
 }
@@ -71,7 +87,7 @@ func (c *command) schemaDescribe(cmd *cobra.Command, args []string) error {
 		return errors.New(errors.SchemaOrSubjectErrorMsg)
 	}
 
-	srClient, ctx, err := getApiClient(cmd, c.Config, c.Version)
+	client, err := c.GetSchemaRegistryClient()
 	if err != nil {
 		return err
 	}
@@ -87,30 +103,30 @@ func (c *command) schemaDescribe(cmd *cobra.Command, args []string) error {
 	}
 
 	if showReferences {
-		return describeGraph(cmd, id, srClient, ctx)
+		return describeGraph(cmd, id, client)
 	}
 
 	if id != "" {
-		return describeById(id, srClient, ctx)
+		return describeById(id, client)
 	}
-	return describeBySubject(cmd, srClient, ctx)
+	return describeBySubject(cmd, client)
 }
 
-func describeById(id string, srClient *srsdk.APIClient, ctx context.Context) error {
-	schemaID, err := strconv.ParseInt(id, 10, 32)
+func describeById(id string, client *schemaregistry.Client) error {
+	schemaId, err := strconv.ParseInt(id, 10, 32)
 	if err != nil {
 		return errors.NewErrorWithSuggestions(fmt.Sprintf(errors.SchemaIntegerErrorMsg, id), errors.SchemaIntegerSuggestions)
 	}
 
-	schemaString, _, err := srClient.DefaultApi.GetSchema(ctx, int32(schemaID), nil)
+	schemaString, err := client.GetSchema(int32(schemaId), nil)
 	if err != nil {
 		return err
 	}
 
-	return printSchema(schemaID, schemaString.Schema, schemaString.SchemaType, schemaString.References, schemaString.Metadata, schemaString.RuleSet)
+	return printSchema(schemaId, schemaString.Schema, schemaString.SchemaType, schemaString.References, schemaString.Metadata, schemaString.RuleSet)
 }
 
-func describeBySubject(cmd *cobra.Command, srClient *srsdk.APIClient, ctx context.Context) error {
+func describeBySubject(cmd *cobra.Command, client *schemaregistry.Client) error {
 	subject, err := cmd.Flags().GetString("subject")
 	if err != nil {
 		return err
@@ -121,15 +137,15 @@ func describeBySubject(cmd *cobra.Command, srClient *srsdk.APIClient, ctx contex
 		return err
 	}
 
-	schema, httpResp, err := srClient.DefaultApi.GetSchemaByVersion(ctx, subject, version, nil)
+	schema, err := client.GetSchemaByVersion(subject, version, nil)
 	if err != nil {
-		return errors.CatchSchemaNotFoundError(err, httpResp)
+		return catchSchemaNotFoundError(err, subject, version)
 	}
 
 	return printSchema(int64(schema.Id), schema.Schema, schema.SchemaType, schema.References, schema.Metadata, schema.Ruleset)
 }
 
-func describeGraph(cmd *cobra.Command, id string, srClient *srsdk.APIClient, ctx context.Context) error {
+func describeGraph(cmd *cobra.Command, id string, client *schemaregistry.Client) error {
 	subject, err := cmd.Flags().GetString("subject")
 	if err != nil {
 		return err
@@ -151,7 +167,7 @@ func describeGraph(cmd *cobra.Command, id string, srClient *srsdk.APIClient, ctx
 
 	// A schema graph is a DAG, the root is fetched either by schema id or by subject/version
 	// All references are fetched by subject/version
-	rootSchema, schemaGraph, err := traverseDAG(srClient, ctx, visited, int32(schemaID), subject, version)
+	rootSchema, schemaGraph, err := traverseDAG(client, visited, int32(schemaID), subject, version)
 	if err != nil {
 		return err
 	}
@@ -172,7 +188,7 @@ func describeGraph(cmd *cobra.Command, id string, srClient *srsdk.APIClient, ctx
 	return nil
 }
 
-func traverseDAG(srClient *srsdk.APIClient, ctx context.Context, visited map[string]bool, id int32, subject string, version string) (srsdk.SchemaString, []srsdk.Schema, error) {
+func traverseDAG(client *schemaregistry.Client, visited map[string]bool, id int32, subject string, version string) (srsdk.SchemaString, []srsdk.Schema, error) {
 	root := srsdk.SchemaString{}
 	var schemaGraph []srsdk.Schema
 	var refs []srsdk.SchemaReference
@@ -180,7 +196,7 @@ func traverseDAG(srClient *srsdk.APIClient, ctx context.Context, visited map[str
 
 	if id > 0 {
 		// should only come here at most once for the root if it is fetched by id
-		schemaString, _, err := srClient.DefaultApi.GetSchema(ctx, id, nil)
+		schemaString, err := client.GetSchema(id, nil)
 		if err != nil {
 			return srsdk.SchemaString{}, nil, err
 		}
@@ -193,7 +209,7 @@ func traverseDAG(srClient *srsdk.APIClient, ctx context.Context, visited map[str
 	} else {
 		visited[subjectVersionString] = true
 
-		schema, _, err := srClient.DefaultApi.GetSchemaByVersion(ctx, subject, version, &srsdk.GetSchemaByVersionOpts{Deleted: optional.NewBool(true)})
+		schema, err := client.GetSchemaByVersion(subject, version, &srsdk.GetSchemaByVersionOpts{Deleted: optional.NewBool(true)})
 		if err != nil {
 			return srsdk.SchemaString{}, nil, err
 		}
@@ -203,7 +219,7 @@ func traverseDAG(srClient *srsdk.APIClient, ctx context.Context, visited map[str
 	}
 
 	for _, reference := range refs {
-		_, subGraph, err := traverseDAG(srClient, ctx, visited, 0, reference.Subject, strconv.Itoa(int(reference.Version)))
+		_, subGraph, err := traverseDAG(client, visited, 0, reference.Subject, strconv.Itoa(int(reference.Version)))
 		if err != nil {
 			return srsdk.SchemaString{}, nil, err
 		}
