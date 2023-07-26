@@ -20,9 +20,15 @@ func handleFeedbacks(t *testing.T) http.HandlerFunc {
 		if len(*req.Content) > 20 {
 			w.WriteHeader(http.StatusForbidden)
 			errorJson, err := json.Marshal(&struct {
-				Errors []map[string]any `json:"errors"`
+				Errors []any `json:"errors"`
 			}{
-				Errors: []map[string]any{{"status": "403", "detail": "feedback exceeds the maximum length"}},
+				Errors: []any{&struct {
+					Detail string `json:"detail"`
+					Status string `json:"status"`
+				}{
+					Detail: "feedback exceeds the maximum length",
+					Status: "403",
+				}},
 			})
 			require.NoError(t, err)
 			_, err = io.WriteString(w, string(errorJson))
