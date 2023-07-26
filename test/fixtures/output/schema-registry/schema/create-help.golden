@@ -4,11 +4,11 @@ Usage:
   confluent schema-registry schema create [flags]
 
 Examples:
-Register a new schema.
+Register a new Avro schema.
 
-  $ confluent schema-registry schema create --subject payments --schema payments.avro --type avro
+  $ confluent schema-registry schema create --subject employee --schema employee.avsc --type avro
 
-Where `schemafilepath` may include these contents:
+Where "employee.avsc" may include these contents:
 
   {
   	"type" : "record",
@@ -20,9 +20,7 @@ Where `schemafilepath` may include these contents:
   	]
   }
 
-For more information on schema types, see https://docs.confluent.io/current/schema-registry/serdes-develop/index.html.
-
-For more information on schema references, see https://docs.confluent.io/current/schema-registry/serdes-develop/index.html#schema-references.
+For more information on schema types and references, see https://docs.confluent.io/platform/current/schema-registry/fundamentals/serdes-develop/index.html
 
 Flags:
       --schema string        REQUIRED: The path to the schema file.
@@ -32,8 +30,6 @@ Flags:
       --metadata string      The path to metadata file.
       --ruleset string       The path to schema ruleset file.
       --normalize            Alphabetize the list of schema fields.
-      --api-key string       API key.
-      --api-secret string    API key secret.
       --context string       CLI context name.
       --environment string   Environment ID.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")

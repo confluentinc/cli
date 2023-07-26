@@ -1,45 +1,45 @@
 package schemaregistry
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
 
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
-
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
-func (c *command) newExporterDeleteCommand() *cobra.Command {
+func (c *command) newExporterDeleteCommand(cfg *v1.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete <name>",
-		Short: "Delete schema exporter.",
+		Short: "Delete a schema exporter.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.exporterDelete,
 	}
 
-	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
-	pcmd.AddApiSecretFlag(cmd)
 	pcmd.AddForceFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
-	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	if cfg.IsCloudLogin() {
+		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	} else {
+		cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
+	}
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
 
 func (c *command) exporterDelete(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := getApiClient(cmd, c.Config, c.Version)
+	client, err := c.GetSchemaRegistryClient()
 	if err != nil {
 		return err
 	}
 
-	info, _, err := srClient.DefaultApi.GetExporterInfo(ctx, args[0])
+	info, err := client.GetExporterInfo(args[0])
 	if err != nil {
 		return err
 	}
@@ -49,14 +49,10 @@ func (c *command) exporterDelete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return deleteExporter(args[0], srClient, ctx)
-}
-
-func deleteExporter(name string, srClient *srsdk.APIClient, ctx context.Context) error {
-	if _, err := srClient.DefaultApi.DeleteExporter(ctx, name); err != nil {
+	if err := client.DeleteExporter(args[0]); err != nil {
 		return err
 	}
 
-	output.Printf(errors.DeletedResourceMsg, resource.SchemaExporter, name)
+	output.Printf(errors.DeletedResourceMsg, resource.SchemaExporter, args[0])
 	return nil
 }
