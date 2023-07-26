@@ -179,11 +179,7 @@ func (c *command) asyncapiImport(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	// Getting Kafka Cluster & SR
-	flagsExport := &flags{
-		kafkaApiKey: flagsImp.kafkaApiKey,
-	}
-	details, err := c.getAccountDetails(flagsExport)
+	details, err := c.getAccountDetails(&flags{kafkaApiKey: flagsImp.kafkaApiKey})
 	if err != nil {
 		return err
 	}
@@ -242,7 +238,7 @@ func (c *command) addChannelToCluster(details *accountDetails, spec *Spec, topic
 	}
 	// Add topic description to newly created topic
 	if (topicExistedAlready || newTopicCreated) && spec.Channels[topicName].Description != "" {
-		if err := addTopicDescription(details.srClient, fmt.Sprintf("%s:%s", details.clusterId, topicName),
+		if err := addTopicDescription(details.srClient, fmt.Sprintf("%s:%s", details.kafkaClusterId, topicName),
 			spec.Channels[topicName].Description); err != nil {
 			return fmt.Errorf("unable to update topic description: %v", err)
 		}
@@ -292,7 +288,7 @@ func (c *command) createTopic(details *accountDetails, topicName string, kafkaBi
 	if err != nil {
 		return false, err
 	}
-	if _, httpResp, err := kafkaRest.CloudClient.CreateKafkaTopic(details.clusterId,
+	if _, httpResp, err := kafkaRest.CloudClient.CreateKafkaTopic(details.kafkaClusterId,
 		createTopicRequestData); err != nil {
 		restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err)
 		if parseErr == nil && restErr.Code == ccloudv2.BadRequestErrorCode {
@@ -315,7 +311,7 @@ func (c *command) updateTopic(details *accountDetails, topicName string, kafkaBi
 	if err != nil {
 		return err
 	}
-	configs, err := kafkaRest.CloudClient.ListKafkaTopicConfigs(details.clusterId, topicName)
+	configs, err := kafkaRest.CloudClient.ListKafkaTopicConfigs(details.kafkaClusterId, topicName)
 	if err != nil {
 		return err
 	}
@@ -335,7 +331,7 @@ func (c *command) updateTopic(details *accountDetails, topicName string, kafkaBi
 	}
 	log.CliLogger.Info("Overwriting topic configs")
 	if updateConfigs != nil {
-		_, err = kafkaRest.CloudClient.UpdateKafkaTopicConfigBatch(details.clusterId, topicName, kafkarestv3.AlterConfigBatchRequestData{Data: updateConfigs})
+		_, err = kafkaRest.CloudClient.UpdateKafkaTopicConfigBatch(details.kafkaClusterId, topicName, kafkarestv3.AlterConfigBatchRequestData{Data: updateConfigs})
 		if err != nil {
 			return fmt.Errorf("unable to update topic configs: %v", err)
 		}
@@ -454,7 +450,7 @@ func addSchemaTags(details *accountDetails, components Components, topicName str
 			tagConfigs = append(tagConfigs, srsdk.Tag{
 				TypeName:   tag.Name,
 				EntityType: "sr_schema",
-				EntityName: fmt.Sprintf("%s:.:%s", "TODO", strconv.Itoa(int(schemaId))),
+				EntityName: fmt.Sprintf("%s:.:%s", details.schemaRegistryClusterId, strconv.Itoa(int(schemaId))),
 			})
 			tagNames = append(tagNames, tag.Name)
 		}
@@ -484,7 +480,7 @@ func addTopicTags(details *accountDetails, subscribe Operation, topicName string
 		tagConfigs = append(tagConfigs, srsdk.Tag{
 			TypeName:   tag.Name,
 			EntityType: "kafka_topic",
-			EntityName: fmt.Sprintf("%s:%s", details.clusterId, topicName),
+			EntityName: fmt.Sprintf("%s:%s", details.kafkaClusterId, topicName),
 		})
 		tagNames = append(tagNames, tag.Name)
 	}

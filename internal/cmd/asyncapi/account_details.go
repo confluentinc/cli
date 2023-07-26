@@ -33,20 +33,22 @@ type channelDetails struct {
 }
 
 type accountDetails struct {
-	clusterId      string
-	topics         []kafkarestv3.TopicData
-	clusterCreds   *v1.APIKeyPair
-	consumer       *ckgo.Consumer
-	kafkaUrl       string
-	srClient       *schemaregistry.Client
-	subjects       []string
-	channelDetails channelDetails
+	kafkaClusterId          string
+	schemaRegistryClusterId string
+	topics                  []kafkarestv3.TopicData
+	clusterCreds            *v1.APIKeyPair
+	consumer                *ckgo.Consumer
+	kafkaUrl                string
+	schemaRegistryUrl       string
+	srClient                *schemaregistry.Client
+	subjects                []string
+	channelDetails          channelDetails
 }
 
 func (d *accountDetails) getTags() error {
 	// Get topic level tags
 	d.channelDetails.topicLevelTags = nil
-	topicLevelTags, err := d.srClient.GetTags("kafka_topic", d.clusterId+":"+d.channelDetails.currentTopic.GetTopicName())
+	topicLevelTags, err := d.srClient.GetTags("kafka_topic", d.kafkaClusterId+":"+d.channelDetails.currentTopic.GetTopicName())
 	if err != nil {
 		return catchOpenAPIError(err)
 	}
@@ -108,7 +110,7 @@ func handlePrimitiveSchemas(schema string, err error) (map[string]any, error) {
 
 func (d *accountDetails) getTopicDescription() error {
 	d.channelDetails.currentTopicDescription = ""
-	atlasEntityWithExtInfo, err := d.srClient.GetByUniqueAttributes("kafka_topic", d.clusterId+":"+d.channelDetails.currentTopic.GetTopicName())
+	atlasEntityWithExtInfo, err := d.srClient.GetByUniqueAttributes("kafka_topic", d.kafkaClusterId+":"+d.channelDetails.currentTopic.GetTopicName())
 	if err != nil {
 		return catchOpenAPIError(err)
 	}

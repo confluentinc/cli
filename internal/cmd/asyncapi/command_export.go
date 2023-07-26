@@ -112,7 +112,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	// Servers & Info Section
-	reflector := addServer(accountDetails.kafkaUrl, accountDetails.srClient.GetConfig().BasePath, flags.specVersion)
+	reflector := addServer(accountDetails.kafkaUrl, accountDetails.schemaRegistryUrl, flags.specVersion)
 	log.CliLogger.Debug("Generating AsyncAPI specification")
 	messages := make(map[string]spec.Message)
 	var schemaContextPrefix string
@@ -191,7 +191,7 @@ func (c *command) getChannelDetails(details *accountDetails, flags *flags) error
 		}
 		details.channelDetails.example = example
 	}
-	bindings, err := c.getBindings(details.clusterId, details.channelDetails.currentTopic.GetTopicName())
+	bindings, err := c.getBindings(details.kafkaClusterId, details.channelDetails.currentTopic.GetTopicName())
 	if err != nil {
 		log.CliLogger.Warnf("Bindings not found: %v", err)
 	}
@@ -400,15 +400,32 @@ func (c *command) getClusterDetails(details *accountDetails, flags *flags) error
 	if err != nil {
 		return err
 	}
+
 	topics, httpResp, err := kafkaREST.CloudClient.ListKafkaTopics(clusterConfig.ID)
 	if err != nil {
 		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
-	details.clusterId = clusterConfig.ID
-	details.topics = topics.Data
+	environment, err := c.Context.EnvironmentId()
+	if err != nil {
+		return err
+	}
+
+	clusters, err := c.V2Client.GetSchemaRegistryClustersByEnvironment(environment)
+	if err != nil {
+		return err
+	}
+	if len(clusters) == 0 {
+		return errors.NewSRNotEnabledError()
+	}
+
+	details.kafkaClusterId = clusterConfig.ID
+	details.schemaRegistryClusterId = clusters[0].GetId()
 	details.clusterCreds = clusterCreds
 	details.kafkaUrl = kafkaREST.CloudClient.GetUrl()
+	details.schemaRegistryUrl = clusters[0].Spec.GetHttpEndpoint()
+	details.topics = topics.Data
+
 	return nil
 }
 
