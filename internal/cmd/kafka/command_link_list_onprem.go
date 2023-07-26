@@ -67,10 +67,8 @@ func (c *linkCommand) listOnPrem(cmd *cobra.Command, _ []string) error {
 	list := output.NewList(cmd)
 	for _, data := range listLinksRespDataList.Data {
 		if includeTopics {
-			if len(data.TopicNames) > 0 {
-				for _, topic := range data.TopicNames {
-					list.Add(newLinkOnPrem(data, topic))
-				}
+			for _, topic := range data.TopicNames {
+				list.Add(newLinkOnPrem(data, topic))
 			}
 		} else {
 			list.Add(newLinkOnPrem(data, ""))
