@@ -4,9 +4,9 @@ Usage:
   confluent iam service-account create <name> [flags]
 
 Examples:
-Create a service account named `DemoServiceAccount`.
+Create a service account named "my-service-account".
 
-  $ confluent iam service-account create DemoServiceAccount --description "This is a demo service account."
+  $ confluent iam service-account create my-service-account --description "This is a demo service account."
 
 Flags:
       --description string   REQUIRED: Description of the service account.
@@ -14,5 +14,5 @@ Flags:
 
 Global Flags:
   -h, --help            Show help for this command.
-      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

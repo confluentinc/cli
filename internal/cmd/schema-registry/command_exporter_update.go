@@ -35,9 +35,9 @@ func (c *command) newExporterUpdateCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("config-file", "", "Exporter config file.")
+	cmd.Flags().String("config-file", "", "Exporter configuration file.")
 	cmd.Flags().StringSlice("subjects", []string{}, "A comma-separated list of exporter subjects.")
-	cmd.Flags().String("subject-format", "${subject}", "Exporter subject rename format. The format string can contain ${subject}, which will be replaced with default subject name.")
+	cmd.Flags().String("subject-format", "${subject}", "Exporter subject rename format. The format string can contain ${subject}, which will be replaced with the default subject name.")
 	addContextTypeFlag(cmd)
 	cmd.Flags().String("context-name", "", "Exporter context name.")
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
@@ -50,7 +50,7 @@ func (c *command) newExporterUpdateCommand() *cobra.Command {
 }
 
 func (c *command) exporterUpdate(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
+	srClient, ctx, err := getApiClient(cmd, c.Config, c.Version)
 	if err != nil {
 		return err
 	}

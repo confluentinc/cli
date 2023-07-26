@@ -1,1 +1,4 @@
-Created cluster link "my_link".
+Created cluster link "my_link" with configs:
+"bootstrap.servers"="myhost:1234"
+"link.mode"="DESTINATION"
+

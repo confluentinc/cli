@@ -10,8 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/samber/lo"
-
 	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
 
 	"github.com/confluentinc/cli/internal/pkg/flink/config"
@@ -28,7 +26,7 @@ const (
 	OtherStatement StatementType = "OTHER"
 )
 
-func createStatementResults(columnNames []string, rows [][]string) types.StatementResults {
+func createStatementResults(columnNames []string, rows [][]string) *types.StatementResults {
 	statementResultRows := make([]types.StatementResultRow, len(rows))
 	for idx, row := range rows {
 		var statementResultRow types.StatementResultRow
@@ -40,7 +38,8 @@ func createStatementResults(columnNames []string, rows [][]string) types.Stateme
 		}
 		statementResultRows[idx] = statementResultRow
 	}
-	return types.StatementResults{
+
+	return &types.StatementResults{
 		Headers: columnNames,
 		Rows:    statementResultRows,
 	}
@@ -52,22 +51,20 @@ func (s *Store) processSetStatement(statement string) (*types.ProcessedStatement
 		return nil, err.(*types.StatementError)
 	}
 	if configKey == "" {
-		statementResults := createStatementResults([]string{"Key", "Value"}, lo.MapToSlice(s.Properties, func(key, val string) []string { return []string{key, val} }))
 		return &types.ProcessedStatement{
 			Kind:             config.ConfigOpSet,
 			Status:           types.COMPLETED,
-			StatementResults: &statementResults,
+			StatementResults: createStatementResults([]string{"Key", "Value"}, s.Properties.ToSortedSlice(true)),
 			IsLocalStatement: true,
 		}, nil
 	}
-	s.Properties[configKey] = configVal
+	s.Properties.Set(configKey, configVal)
 
-	statementResults := createStatementResults([]string{"Key", "Value"}, [][]string{{configKey, configVal}})
 	return &types.ProcessedStatement{
 		Kind:             config.ConfigOpSet,
 		StatusDetail:     "configuration updated successfully",
 		Status:           types.COMPLETED,
-		StatementResults: &statementResults,
+		StatementResults: createStatementResults([]string{"Key", "Value"}, [][]string{{configKey, configVal}}),
 		IsLocalStatement: true,
 	}, nil
 }
@@ -78,26 +75,25 @@ func (s *Store) processResetStatement(statement string) (*types.ProcessedStateme
 		return nil, &types.StatementError{Message: err.Error()}
 	}
 	if configKey == "" {
-		s.Properties = make(map[string]string)
+		s.Properties.Clear()
 		return &types.ProcessedStatement{
 			Kind:             config.ConfigOpReset,
 			StatusDetail:     "configuration has been reset successfully",
 			Status:           types.COMPLETED,
+			StatementResults: createStatementResults([]string{"Key", "Value"}, s.Properties.ToSortedSlice(true)),
 			IsLocalStatement: true,
 		}, nil
 	} else {
-		_, keyExists := s.Properties[configKey]
-		if !keyExists {
+		if !s.Properties.HasKey(configKey) {
 			return nil, &types.StatementError{Message: fmt.Sprintf(`configuration key "%s" is not set`, configKey)}
 		}
 
-		delete(s.Properties, configKey)
-		statementResults := createStatementResults([]string{"Key", "Value"}, lo.MapToSlice(s.Properties, func(key, val string) []string { return []string{key, val} }))
+		s.Properties.Delete(configKey)
 		return &types.ProcessedStatement{
 			Kind:             config.ConfigOpReset,
 			StatusDetail:     fmt.Sprintf(`configuration key "%s" has been reset successfully`, configKey),
 			Status:           types.COMPLETED,
-			StatementResults: &statementResults,
+			StatementResults: createStatementResults([]string{"Key", "Value"}, s.Properties.ToSortedSlice(true)),
 			IsLocalStatement: true,
 		}, nil
 	}
@@ -109,13 +105,13 @@ func (s *Store) processUseStatement(statement string) (*types.ProcessedStatement
 		return nil, &types.StatementError{Message: err.Error()}
 	}
 
-	s.Properties[configKey] = configVal
-	statementResults := createStatementResults([]string{"Key", "Value"}, [][]string{{configKey, configVal}})
+	s.Properties.Set(configKey, configVal)
+
 	return &types.ProcessedStatement{
 		Kind:             config.ConfigOpUse,
 		StatusDetail:     "configuration updated successfully",
 		Status:           types.COMPLETED,
-		StatementResults: &statementResults,
+		StatementResults: createStatementResults([]string{"Key", "Value"}, [][]string{{configKey, configVal}}),
 		IsLocalStatement: true,
 	}, nil
 }
@@ -427,11 +423,9 @@ func calcWaitTime(retries int) time.Duration {
 
 // Function to extract timeout for waiting for results.
 // We either use the value set by user using set or use a default value of 10 minutes (as of today)
-func timeout(properties map[string]string) time.Duration {
-	timeout, ok := properties[config.ConfigKeyResultsTimeout]
-
-	if ok {
-		timeoutInSeconds, err := strconv.Atoi(timeout)
+func (s *Store) getTimeout() time.Duration {
+	if s.Properties.HasKey(config.ConfigKeyResultsTimeout) {
+		timeoutInSeconds, err := strconv.Atoi(s.Properties.Get(config.ConfigKeyResultsTimeout))
 		if err == nil {
 			// TODO - check for error when setting the property so user knows he hasn't set the results-timeout property properly
 			return time.Duration(timeoutInSeconds) * time.Second

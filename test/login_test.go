@@ -67,7 +67,7 @@ func (s *CLITestSuite) TestLogin_VariousOrgSuspensionStatus() {
 	})
 }
 
-func (s *CLITestSuite) TestCcloudErrors() {
+func (s *CLITestSuite) TestLogin_CcloudErrors() {
 	resetConfiguration(s.T(), false)
 
 	args := fmt.Sprintf("login --url %s -vvv", s.TestBackend.GetCloudUrl())
@@ -116,7 +116,7 @@ func (s *CLITestSuite) TestCcloudErrors() {
 	})
 }
 
-func (s *CLITestSuite) TestCcloudLoginUseKafkaAuthKafkaErrors() {
+func (s *CLITestSuite) TestLogin_UseKafkaAuthKafkaErrors() {
 	tests := []CLITest{
 		{
 			name:     "error if no active kafka",
@@ -156,13 +156,13 @@ func (s *CLITestSuite) TestCcloudLoginUseKafkaAuthKafkaErrors() {
 		},
 	}
 
-	for _, tt := range tests {
-		tt.login = "cloud"
-		s.runIntegrationTest(tt)
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
 	}
 }
 
-func (s *CLITestSuite) TestSaveUsernamePassword() {
+func (s *CLITestSuite) TestLogin_SaveUsernamePassword() {
 	tests := []struct {
 		isCloud  bool
 		want     string
@@ -188,19 +188,19 @@ func (s *CLITestSuite) TestSaveUsernamePassword() {
 		s.T().Fatalf("problems recovering caller information")
 	}
 
-	for _, tt := range tests {
+	for _, test := range tests {
 		configFile := filepath.Join(os.Getenv("HOME"), ".confluent", "config.json")
 		// run the login command with --save flag and check output
 		var env []string
-		if tt.isCloud {
+		if test.isCloud {
 			env = []string{fmt.Sprintf("%s=good@user.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}
 		} else {
 			env = []string{fmt.Sprintf("%s=good@user.com", pauth.ConfluentPlatformUsername), fmt.Sprintf("%s=pass1", pauth.ConfluentPlatformPassword)}
 		}
 
 		// TODO: add save test using stdin input
-		output := runCommand(s.T(), tt.bin, env, "login -vvv --save --url "+tt.loginURL, 0, "")
-		if tt.isCloud {
+		output := runCommand(s.T(), test.bin, env, "login -vvv --save --url "+test.loginURL, 0, "")
+		if test.isCloud {
 			s.Contains(output, loggedInAsWithOrgOutput)
 			s.Contains(output, loggedInEnvOutput)
 		} else {
@@ -210,21 +210,21 @@ func (s *CLITestSuite) TestSaveUsernamePassword() {
 		// check netrc file result
 		got, err := os.ReadFile(configFile)
 		s.NoError(err)
-		wantFile := filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", tt.want)
+		wantFile := filepath.Join(filepath.Dir(callerFileName), "fixtures", "output", test.want)
 		s.NoError(err)
 		wantBytes, err := os.ReadFile(wantFile)
 		s.NoError(err)
-		want := strings.ReplaceAll(string(wantBytes), urlPlaceHolder, tt.loginURL)
+		want := strings.ReplaceAll(string(wantBytes), urlPlaceHolder, test.loginURL)
 		data := v1.Config{}
 		err = json.Unmarshal(got, &data)
 		s.NoError(err)
-		want = strings.ReplaceAll(want, passwordPlaceholder, data.SavedCredentials["login-good@user.com-"+tt.loginURL].EncryptedPassword)
+		want = strings.ReplaceAll(want, passwordPlaceholder, data.SavedCredentials["login-good@user.com-"+test.loginURL].EncryptedPassword)
 		require.Contains(s.T(), utils.NormalizeNewLines(string(got)), utils.NormalizeNewLines(want))
 	}
 	_ = os.Remove(netrc.NetrcIntegrationTestFile)
 }
 
-func (s *CLITestSuite) TestUpdateNetrcPassword() {
+func (s *CLITestSuite) TestLogin_UpdateNetrcPassword() {
 	tests := []struct {
 		isCloud  bool
 		loginURL string
@@ -242,10 +242,10 @@ func (s *CLITestSuite) TestUpdateNetrcPassword() {
 		},
 	}
 
-	for _, tt := range tests {
+	for _, test := range tests {
 		// run the login command with --save flag and check output
 		var env []string
-		if tt.isCloud {
+		if test.isCloud {
 			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", auth.ConfluentCloudPassword)}
 		} else {
 			env = []string{fmt.Sprintf("%s=good@user.com", auth.ConfluentPlatformUsername), fmt.Sprintf("%s=pass1", auth.ConfluentPlatformPassword)}
@@ -258,8 +258,8 @@ func (s *CLITestSuite) TestUpdateNetrcPassword() {
 		err = json.Unmarshal(old, &oldData)
 		s.NoError(err)
 
-		output := runCommand(s.T(), tt.bin, env, "login -vvv --save --url "+tt.loginURL, 0, "")
-		if tt.isCloud {
+		output := runCommand(s.T(), test.bin, env, "login -vvv --save --url "+test.loginURL, 0, "")
+		if test.isCloud {
 			s.Contains(output, loggedInAsWithOrgOutput)
 			s.Contains(output, loggedInEnvOutput)
 		} else {
@@ -277,7 +277,7 @@ func (s *CLITestSuite) TestUpdateNetrcPassword() {
 	_ = os.Remove(netrc.NetrcIntegrationTestFile)
 }
 
-func (s *CLITestSuite) TestMDSLoginURL() {
+func (s *CLITestSuite) TestLogin_MdsUrl() {
 	tests := []CLITest{
 		{
 			name:     "invalid URL provided",
@@ -287,9 +287,9 @@ func (s *CLITestSuite) TestMDSLoginURL() {
 		},
 	}
 
-	for _, tt := range tests {
-		tt.loginURL = s.TestBackend.GetMdsUrl()
-		s.runIntegrationTest(tt)
+	for _, test := range tests {
+		test.loginURL = s.TestBackend.GetMdsUrl()
+		s.runIntegrationTest(test)
 	}
 }
 
@@ -308,16 +308,16 @@ func (s *CLITestSuite) TestLogin_CaCertPath() {
 		},
 	}
 
-	for _, tt := range tests {
-		tt.workflow = true
-		s.runIntegrationTest(tt)
+	for _, test := range tests {
+		test.workflow = true
+		s.runIntegrationTest(test)
 	}
 }
 
 func (s *CLITestSuite) TestLogin_SsoCodeInvalidFormat() {
 	resetConfiguration(s.T(), false)
 
-	tt := CLITest{
+	test := CLITest{
 		env:      []string{"CONFLUENT_CLOUD_EMAIL=sso@test.com"},
 		args:     fmt.Sprintf("login --url %s --no-browser", s.TestBackend.GetCloudUrl()),
 		fixture:  "login/sso.golden",
@@ -327,5 +327,5 @@ func (s *CLITestSuite) TestLogin_SsoCodeInvalidFormat() {
 
 	// TODO: Accept text input in integration tests
 
-	s.runIntegrationTest(tt)
+	s.runIntegrationTest(test)
 }

@@ -54,7 +54,7 @@ func (c *command) newSubjectUpdateCommand() *cobra.Command {
 func (c *command) subjectUpdate(cmd *cobra.Command, args []string) error {
 	subject := args[0]
 
-	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
+	srClient, ctx, err := getApiClient(cmd, c.Config, c.Version)
 	if err != nil {
 		return err
 	}
@@ -93,7 +93,7 @@ func (c *command) updateCompatibility(cmd *cobra.Command, subject, compatibility
 		return errors.CatchSchemaNotFoundError(err, httpResp)
 	}
 
-	output.Printf(errors.UpdatedSubjectLevelCompatibilityMsg, compatibility, subject)
+	output.Printf("Successfully updated subject level compatibility to \"%s\" for subject \"%s\".\n", compatibility, subject)
 	return nil
 }
 
@@ -103,6 +103,6 @@ func (c *command) updateMode(subject, mode string, srClient *srsdk.APIClient, ct
 		return errors.CatchSchemaNotFoundError(err, httpResp)
 	}
 
-	output.Printf(errors.UpdatedSubjectLevelModeMsg, updatedMode, subject)
+	output.Printf("Successfully updated subject level mode to \"%s\" for subject \"%s\".\n", updatedMode, subject)
 	return nil
 }

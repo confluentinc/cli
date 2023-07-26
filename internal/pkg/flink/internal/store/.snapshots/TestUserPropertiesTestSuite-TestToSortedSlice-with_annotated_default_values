@@ -1,0 +1,26 @@
+([][]string) (len=6) {
+  ([]string) (len=2) {
+    (string) (len=11) "default-key",
+    (string) (len=23) "default-value (default)"
+  },
+  ([]string) (len=2) {
+    (string) (len=9) "new-key-0",
+    (string) (len=9) "new-val-0"
+  },
+  ([]string) (len=2) {
+    (string) (len=9) "new-key-1",
+    (string) (len=9) "new-val-1"
+  },
+  ([]string) (len=2) {
+    (string) (len=9) "new-key-2",
+    (string) (len=9) "new-val-2"
+  },
+  ([]string) (len=2) {
+    (string) (len=9) "new-key-3",
+    (string) (len=9) "new-val-3"
+  },
+  ([]string) (len=2) {
+    (string) (len=9) "new-key-4",
+    (string) (len=9) "new-val-4"
+  }
+}

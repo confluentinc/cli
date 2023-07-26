@@ -18,6 +18,7 @@ type link struct {
 	TopicName            string `human:"Topic Name" serialized:"topic_name"`
 	SourceClusterId      string `human:"Source Cluster" serialized:"source_cluster_id"`
 	DestinationClusterId string `human:"Destination Cluster" serialized:"destination_cluster_id"`
+	RemoteClusterId      string `human:"Remote Cluster" serialized:"remote_cluster_id"`
 	State                string `human:"State" serialized:"state"`
 	Error                string `human:"Error" serialized:"error"`
 	ErrorMessage         string `human:"Error Message" serialized:"error_message"`
@@ -33,6 +34,7 @@ func newLink(data kafkarestv3.ListLinksResponseData, topic string) *link {
 		TopicName:            topic,
 		SourceClusterId:      data.GetSourceClusterId(),
 		DestinationClusterId: data.GetDestinationClusterId(),
+		RemoteClusterId:      data.GetRemoteClusterId(),
 		State:                data.GetLinkState(),
 		Error:                linkError,
 		ErrorMessage:         data.GetLinkErrorMessage(),
@@ -71,12 +73,12 @@ func (c *linkCommand) list(cmd *cobra.Command, _ []string) error {
 		return errors.New(errors.RestProxyNotAvailableMsg)
 	}
 
-	clusterId, err := getKafkaClusterLkcId(c.AuthenticatedCLICommand)
+	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
 
-	listLinksRespDataList, httpResp, err := kafkaREST.CloudClient.ListKafkaLinks(clusterId)
+	listLinksRespDataList, httpResp, err := kafkaREST.CloudClient.ListKafkaLinks(cluster.ID)
 	if err != nil {
 		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
@@ -86,7 +88,7 @@ func (c *linkCommand) list(cmd *cobra.Command, _ []string) error {
 		if includeTopics {
 			// data.GetTopicsNames() is empty even when the http response contains a non-empty list of topic names,
 			// this function call is a temporary work-around for this issue
-			mirrorTopicNames, err := getMirrorTopicNames(kafkaREST, clusterId, data.GetLinkName())
+			mirrorTopicNames, err := getMirrorTopicNames(kafkaREST, cluster.ID, data.GetLinkName())
 			if err != nil {
 				return err
 			}
@@ -109,7 +111,7 @@ func getListFields(includeTopics bool) []string {
 		x = append(x, "TopicName")
 	}
 
-	return append(x, "SourceClusterId", "DestinationClusterId", "State", "Error", "ErrorMessage")
+	return append(x, "SourceClusterId", "DestinationClusterId", "RemoteClusterId", "State", "Error", "ErrorMessage")
 }
 
 func getMirrorTopicNames(kafkaREST *pcmd.KafkaREST, clusterId, linkName string) ([]string, error) {

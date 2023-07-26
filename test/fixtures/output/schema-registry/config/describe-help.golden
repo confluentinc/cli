@@ -1,4 +1,4 @@
-Describe top-level or subject-level schema compatibility.
+Describe top-level or subject-level schema configuration.
 
 Usage:
   confluent schema-registry config describe [flags]
@@ -14,13 +14,11 @@ Describe the top-level configuration.
 
 Flags:
       --subject string       Subject of the schema.
-      --api-key string       API key.
-      --api-secret string    API key secret.
-      --context string       CLI context name.
       --environment string   Environment ID.
+      --context string       CLI context name.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
   -h, --help            Show help for this command.
-      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

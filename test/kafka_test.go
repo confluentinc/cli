@@ -10,6 +10,8 @@ func (s *CLITestSuite) TestKafka() {
 	// TODO: add --config flag to all commands or ENVVAR instead of using standard config file location
 	createLinkConfigFile := getCreateLinkConfigFile()
 	defer os.Remove(createLinkConfigFile)
+	createBidirectionalLinkConfigFile := getCreateBidirectionalLinkConfigFile()
+	defer os.Remove(createBidirectionalLinkConfigFile)
 	tests := []CLITest{
 		{args: "environment use a-595", fixture: "kafka/0.golden"},
 		{args: "kafka cluster list", fixture: "kafka/6.golden"},
@@ -121,14 +123,19 @@ func (s *CLITestSuite) TestKafka() {
 
 		// Cluster linking
 		{args: "kafka link create my_link --source-cluster lkc-describe-topic --source-bootstrap-server myhost:1234 --config-file " + getCreateLinkConfigFile(), fixture: "kafka/link/create-link.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link create bidirectional_link --remote-cluster lkc-describe-topic --local-api-key local-api-key123 --local-api-secret local-api-secret-123 --remote-api-key remote-api-key-123 --remote-api-secret remote-api-secret-123 --remote-bootstrap-server myhost:1234 --config-file " + getCreateBidirectionalLinkConfigFile(), fixture: "kafka/link/create-bidirectional-link.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka link list --cluster lkc-describe-topic", fixture: "kafka/link/list-link-plain.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka link list --cluster lkc-describe-topic -o json", fixture: "kafka/link/list-link-json.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka link list --cluster lkc-describe-topic -o yaml", fixture: "kafka/link/list-link-yaml.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka link describe link-1 --cluster lkc-describe-topic", fixture: "kafka/link/describe.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link describe link-4 --cluster lkc-describe-topic", fixture: "kafka/link/describe-bidirectional-link.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka link describe link-3 --cluster lkc-describe-topic", fixture: "kafka/link/describe-error.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka link configuration list --cluster lkc-describe-topic link-1", fixture: "kafka/link/configuration-list-plain.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka link configuration list --cluster lkc-describe-topic link-1 -o json", fixture: "kafka/link/configuration-list-json.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka link configuration list --cluster lkc-describe-topic link-1 -o yaml", fixture: "kafka/link/configuration-list-yaml.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link configuration list --cluster lkc-describe-topic link-4", fixture: "kafka/link/configuration-list-plain-bidirectional-link.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link configuration list --cluster lkc-describe-topic link-4 -o json", fixture: "kafka/link/configuration-list-bidirectional-link-json.golden", useKafka: "lkc-describe-topic"},
+		{args: "kafka link configuration list --cluster lkc-describe-topic link-4 -o yaml", fixture: "kafka/link/configuration-list-bidirectional-link-yaml.golden", useKafka: "lkc-describe-topic"},
 
 		{args: "kafka mirror list --cluster lkc-describe-topic --link link-1", fixture: "kafka/mirror/list-mirror.golden", useKafka: "lkc-describe-topic"},
 		{args: "kafka mirror list --cluster lkc-describe-topic --link link-1 -o json", fixture: "kafka/mirror/list-mirror-json.golden", useKafka: "lkc-describe-topic"},
@@ -151,23 +158,23 @@ func (s *CLITestSuite) TestKafka() {
 
 	resetConfiguration(s.T(), false)
 
-	for _, tt := range tests {
-		tt.login = "cloud"
-		tt.workflow = true
-		s.runIntegrationTest(tt)
+	for _, test := range tests {
+		test.login = "cloud"
+		test.workflow = true
+		s.runIntegrationTest(test)
 	}
 
 	tests = []CLITest{
 		{args: fmt.Sprintf("kafka link describe link-1 --url %s", s.TestBackend.GetKafkaRestUrl()), fixture: "kafka/link/describe-onprem.golden"},
 	}
 
-	for _, tt := range tests {
-		tt.login = "onprem"
-		s.runIntegrationTest(tt)
+	for _, test := range tests {
+		test.login = "onprem"
+		s.runIntegrationTest(test)
 	}
 }
 
-func (s *CLITestSuite) TestKafkaClusterCreateByok() {
+func (s *CLITestSuite) TestKafkaClusterCreate_Byok() {
 	test := CLITest{
 		login:   "cloud",
 		args:    "kafka cluster create cck-byok-test --cloud aws --region us-east-1 --type dedicated --cku 1 --byok cck-001",
@@ -198,7 +205,7 @@ func (s *CLITestSuite) TestKafkaClientConfig() {
 
 		// set kafka key-secret pair
 		{args: "api-key store UIAPIKEY100 UIAPISECRET100 --resource lkc-cool1"},
-		{args: "api-key use UIAPIKEY100 --resource lkc-cool1"},
+		{args: "api-key use UIAPIKEY100"},
 
 		// warning - missing sr key-secret pair
 		{args: "kafka client-config create java", useKafka: "lkc-cool1", fixture: "kafka/client-config/java-no-sr-keypair.golden"},
@@ -209,16 +216,22 @@ func (s *CLITestSuite) TestKafkaClientConfig() {
 
 	resetConfiguration(s.T(), false)
 
-	for _, tt := range tests {
-		tt.login = "cloud"
-		tt.workflow = true
-		s.runIntegrationTest(tt)
+	for _, test := range tests {
+		test.login = "cloud"
+		test.workflow = true
+		s.runIntegrationTest(test)
 	}
 }
 
 func getCreateLinkConfigFile() string {
 	file, _ := os.CreateTemp(os.TempDir(), "test")
 	_, _ = file.Write([]byte("key=val\n key2=val2 \n key3=val password=pass"))
+	return file.Name()
+}
+
+func getCreateBidirectionalLinkConfigFile() string {
+	file, _ := os.CreateTemp(os.TempDir(), "test")
+	_, _ = file.Write([]byte("link.mode=BIDIRECTIONAL \nkey=val\n key2=val2 \n key3=val password=pass"))
 	return file.Name()
 }
 
@@ -253,14 +266,14 @@ func (s *CLITestSuite) TestKafkaBroker() {
 		{args: "kafka broker get-tasks --all --task-type add-broker", fixture: "kafka/broker/get-tasks-all-add-broker.golden"},
 	}
 
-	for _, tt := range tests {
-		tt.login = "onprem"
-		tt.env = []string{"CONFLUENT_REST_URL=" + kafkaRestURL}
-		s.runIntegrationTest(tt)
+	for _, test := range tests {
+		test.login = "onprem"
+		test.env = []string{"CONFLUENT_REST_URL=" + kafkaRestURL}
+		s.runIntegrationTest(test)
 	}
 }
 
-func (s *CLITestSuite) TestKafkaPartitions() {
+func (s *CLITestSuite) TestKafkaPartition() {
 	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
 	tests := []CLITest{
 		{args: "kafka partition list --topic topic1", fixture: "kafka/partition/list.golden"},
@@ -275,10 +288,10 @@ func (s *CLITestSuite) TestKafkaPartitions() {
 		{args: "kafka partition reassignment list 0 --topic topic1", fixture: "kafka/partition/reassignment/list-by-partition.golden"},
 		{args: "kafka partition reassignment list 0 --topic topic1 -o yaml", fixture: "kafka/partition/reassignment/list-by-partition-yaml.golden"},
 	}
-	for _, tt := range tests {
-		tt.login = "onprem"
-		tt.env = []string{"CONFLUENT_REST_URL=" + kafkaRestURL}
-		s.runIntegrationTest(tt)
+	for _, test := range tests {
+		test.login = "onprem"
+		test.env = []string{"CONFLUENT_REST_URL=" + kafkaRestURL}
+		s.runIntegrationTest(test)
 	}
 }
 
@@ -291,10 +304,10 @@ func (s *CLITestSuite) TestKafkaReplica() {
 		{args: "kafka replica list --topic topic-exist --partition 2 -o yaml", fixture: "kafka/replica/list-partition-replicas-yaml.golden"},
 		{args: "kafka replica list", fixture: "kafka/replica/no-flags-error.golden", exitCode: 1},
 	}
-	for _, tt := range tests {
-		tt.login = "onprem"
-		tt.env = []string{"CONFLUENT_REST_URL=" + kafkaRestURL}
-		s.runIntegrationTest(tt)
+	for _, test := range tests {
+		test.login = "onprem"
+		test.env = []string{"CONFLUENT_REST_URL=" + kafkaRestURL}
+		s.runIntegrationTest(test)
 	}
 }
 
@@ -318,8 +331,8 @@ func (s *CLITestSuite) TestKafkaTopicList() {
 		{args: fmt.Sprintf("kafka topic list --url %s -o json --no-authentication", kafkaRestURL), fixture: "kafka/topic/list-json.golden"},
 	}
 
-	for _, clitest := range tests {
-		s.runIntegrationTest(clitest)
+	for _, test := range tests {
+		s.runIntegrationTest(test)
 	}
 }
 
@@ -344,8 +357,8 @@ func (s *CLITestSuite) TestKafkaTopicCreate() {
 		{args: fmt.Sprintf("kafka topic create topic-exist --url %s --if-not-exists --no-authentication", kafkaRestURL), fixture: "kafka/topic/create-duplicate-topic-ifnotexists-success.golden", name: "create topic with existing topic name with if-not-exists flag should succeed"},
 	}
 
-	for _, clitest := range tests {
-		s.runIntegrationTest(clitest)
+	for _, test := range tests {
+		s.runIntegrationTest(test)
 	}
 }
 
@@ -358,8 +371,8 @@ func (s *CLITestSuite) TestKafkaTopicDelete() {
 		{args: fmt.Sprintf("kafka topic delete topic-not-exist --url %s --no-authentication --force", kafkaRestURL), fixture: "kafka/topic/delete-topic-not-exist-failure.golden", exitCode: 1, name: "deleting a non-existent topic should fail"},
 	}
 
-	for _, clitest := range tests {
-		s.runIntegrationTest(clitest)
+	for _, test := range tests {
+		s.runIntegrationTest(test)
 	}
 }
 
@@ -379,8 +392,8 @@ func (s *CLITestSuite) TestKafkaTopicUpdate() {
 		{args: fmt.Sprintf("kafka topic update topic-exist --url %s --config retention.ms=1,compression.type=gzip --no-authentication -o yaml", kafkaRestURL), fixture: "kafka/topic/update-topic-config-success-yaml.golden", name: "config updates with yaml output"},
 	}
 
-	for _, clitest := range tests {
-		s.runIntegrationTest(clitest)
+	for _, test := range tests {
+		s.runIntegrationTest(test)
 	}
 }
 
@@ -397,8 +410,8 @@ func (s *CLITestSuite) TestKafkaTopicDescribe() {
 		{args: fmt.Sprintf("kafka topic describe topic-exist --url %s -o yaml --no-authentication", kafkaRestURL), fixture: "kafka/topic/describe-topic-success-yaml.golden", name: "topic that exist & yaml arg should lead to success"},
 	}
 
-	for _, clitest := range tests {
-		s.runIntegrationTest(clitest)
+	for _, test := range tests {
+		s.runIntegrationTest(test)
 	}
 }
 
@@ -428,12 +441,12 @@ func (s *CLITestSuite) TestKafkaAcl() {
 		{args: fmt.Sprintf("kafka acl delete --cluster-scope --principal User:Alice --host '*' --operation read --principal User:Alice --allow -o yaml --url %s --no-authentication --force", kafkaRestURL), name: "acl delete output yaml", fixture: "kafka/acl/delete-yaml.golden"},
 	}
 
-	for _, clitest := range tests {
-		s.runIntegrationTest(clitest)
+	for _, test := range tests {
+		s.runIntegrationTest(test)
 	}
 }
 
-func (s *CLITestSuite) TestKafkaClientQuotas() {
+func (s *CLITestSuite) TestKafkaQuota() {
 	tests := []CLITest{
 		// Client Quotas
 		{args: "kafka quota create --name clientQuota --description description --ingress 500 --egress 100 --principals sa-1234,sa-5678 --cluster lkc-1234", fixture: "kafka/quota/create.golden"},
@@ -455,8 +468,10 @@ func (s *CLITestSuite) TestKafkaClientQuotas() {
 	}
 }
 
-func (s *CLITestSuite) TestKafkaAutocomplete() {
+func (s *CLITestSuite) TestKafka_Autocomplete() {
 	tests := []CLITest{
+		{args: `__complete kafka cluster create my-cluster --availability ""`, fixture: "kafka/create-availability-autocomplete.golden"},
+		{args: `__complete kafka cluster create my-cluster --type ""`, fixture: "kafka/create-type-autocomplete.golden"},
 		{args: `__complete kafka cluster describe ""`, fixture: "kafka/describe-autocomplete.golden"},
 		{args: `__complete kafka link delete ""`, fixture: "kafka/link/list-link-delete-autocomplete.golden", useKafka: "lkc-describe-topic"}, // use delete since link has no describe subcommand
 		{args: `__complete kafka mirror describe --link link-1 ""`, fixture: "kafka/mirror/describe-autocomplete.golden", useKafka: "lkc-describe-topic"},

@@ -43,10 +43,16 @@ func (c *command) newClusterUpdateCommand() *cobra.Command {
 	addRulesetDefaultsFlag(cmd)
 	addRulesetOverridesFlag(cmd)
 	addModeFlag(cmd)
-	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
-	pcmd.AddApiSecretFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+
+	// Deprecated
+	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
+	cobra.CheckErr(cmd.Flags().MarkHidden("api-key"))
+
+	// Deprecated
+	pcmd.AddApiSecretFlag(cmd)
+	cobra.CheckErr(cmd.Flags().MarkHidden("api-secret"))
 
 	return cmd
 }
@@ -65,28 +71,29 @@ func (c *command) clusterUpdate(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	if mode != "" {
-		return c.updateTopLevelMode(cmd)
+		return c.updateTopLevelMode(mode)
 	}
 
 	return errors.New(errors.CompatibilityOrModeErrorMsg)
 }
 
 func (c *command) updateTopLevelCompatibility(cmd *cobra.Command) error {
-	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
+	client, err := c.GetSchemaRegistryClient()
 	if err != nil {
 		return err
 	}
 
-	updateReq, err := c.getConfigUpdateRequest(cmd)
+	req, err := c.getConfigUpdateRequest(cmd)
 	if err != nil {
 		return err
 	}
 
-	if _, _, err := srClient.DefaultApi.UpdateTopLevelConfig(ctx, updateReq); err != nil {
+	req, err = client.UpdateTopLevelConfig(req)
+	if err != nil {
 		return err
 	}
 
-	output.Printf(errors.UpdatedToLevelCompatibilityMsg, updateReq.Compatibility)
+	output.Printf("Successfully updated top-level compatibility to \"%s\".\n", req.Compatibility)
 	return nil
 }
 
@@ -101,7 +108,7 @@ func (c *command) getConfigUpdateRequest(cmd *cobra.Command) (srsdk.ConfigUpdate
 		return srsdk.ConfigUpdateRequest{}, err
 	}
 
-	updateReq := srsdk.ConfigUpdateRequest{
+	req := srsdk.ConfigUpdateRequest{
 		Compatibility:      strings.ToUpper(compatibility),
 		CompatibilityGroup: compatibilityGroup,
 	}
@@ -111,8 +118,8 @@ func (c *command) getConfigUpdateRequest(cmd *cobra.Command) (srsdk.ConfigUpdate
 		return srsdk.ConfigUpdateRequest{}, err
 	}
 	if metadataDefaults != "" {
-		updateReq.DefaultMetadata = new(srsdk.Metadata)
-		if err := read(metadataDefaults, updateReq.DefaultMetadata); err != nil {
+		req.DefaultMetadata = new(srsdk.Metadata)
+		if err := read(metadataDefaults, req.DefaultMetadata); err != nil {
 			return srsdk.ConfigUpdateRequest{}, err
 		}
 	}
@@ -122,8 +129,8 @@ func (c *command) getConfigUpdateRequest(cmd *cobra.Command) (srsdk.ConfigUpdate
 		return srsdk.ConfigUpdateRequest{}, err
 	}
 	if metadataOverrides != "" {
-		updateReq.OverrideMetadata = new(srsdk.Metadata)
-		if err := read(metadataOverrides, updateReq.OverrideMetadata); err != nil {
+		req.OverrideMetadata = new(srsdk.Metadata)
+		if err := read(metadataOverrides, req.OverrideMetadata); err != nil {
 			return srsdk.ConfigUpdateRequest{}, err
 		}
 	}
@@ -133,8 +140,8 @@ func (c *command) getConfigUpdateRequest(cmd *cobra.Command) (srsdk.ConfigUpdate
 		return srsdk.ConfigUpdateRequest{}, err
 	}
 	if rulesetDefaults != "" {
-		updateReq.DefaultRuleSet = new(srsdk.RuleSet)
-		if err := read(rulesetDefaults, updateReq.DefaultRuleSet); err != nil {
+		req.DefaultRuleSet = new(srsdk.RuleSet)
+		if err := read(rulesetDefaults, req.DefaultRuleSet); err != nil {
 			return srsdk.ConfigUpdateRequest{}, err
 		}
 	}
@@ -144,31 +151,28 @@ func (c *command) getConfigUpdateRequest(cmd *cobra.Command) (srsdk.ConfigUpdate
 		return srsdk.ConfigUpdateRequest{}, err
 	}
 	if rulesetOverrides != "" {
-		updateReq.OverrideRuleSet = new(srsdk.RuleSet)
-		if err := read(rulesetOverrides, updateReq.OverrideRuleSet); err != nil {
+		req.OverrideRuleSet = new(srsdk.RuleSet)
+		if err := read(rulesetOverrides, req.OverrideRuleSet); err != nil {
 			return srsdk.ConfigUpdateRequest{}, err
 		}
 	}
 
-	return updateReq, nil
+	return req, nil
 }
 
-func (c *command) updateTopLevelMode(cmd *cobra.Command) error {
-	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
+func (c *command) updateTopLevelMode(mode string) error {
+	client, err := c.GetSchemaRegistryClient()
 	if err != nil {
 		return err
 	}
 
-	mode, err := cmd.Flags().GetString("mode")
+	req := srsdk.ModeUpdateRequest{Mode: strings.ToUpper(mode)}
+
+	req, err = client.UpdateTopLevelMode(req)
 	if err != nil {
 		return err
 	}
 
-	modeUpdate, _, err := srClient.DefaultApi.UpdateTopLevelMode(ctx, srsdk.ModeUpdateRequest{Mode: strings.ToUpper(mode)})
-	if err != nil {
-		return err
-	}
-
-	output.Printf(errors.UpdatedTopLevelModeMsg, modeUpdate.Mode)
+	output.Printf("Successfully updated top-level mode to \"%s\".\n", req.Mode)
 	return nil
 }

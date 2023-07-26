@@ -5,10 +5,15 @@ import (
 	"net/http"
 	"time"
 
+	fColor "github.com/fatih/color"
+	"github.com/samber/lo"
+
 	"github.com/confluentinc/go-prompt"
 
+	"github.com/confluentinc/cli/internal/pkg/color"
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/utils"
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 type StatementController struct {
@@ -38,7 +43,13 @@ func (c *StatementController) ExecuteStatement(statementToExecute string) (*type
 		c.handleStatementError(*err)
 		return nil, err
 	}
-	processedStatement.PrintStatusDetail()
+
+	processedStatement, err = c.waitForStatementToBeInTerminalStateOrError(*processedStatement)
+	if err != nil {
+		c.handleStatementError(*err)
+		return nil, err
+	}
+	processedStatement.PrintStatementDoneStatus()
 
 	return processedStatement, nil
 }
@@ -54,11 +65,7 @@ func (c *StatementController) waitForStatementToBeReadyOrError(processedStatemen
 	ctx, cancelWaitPendingStatement := context.WithCancel(context.Background())
 	defer cancelWaitPendingStatement()
 
-	statementName := processedStatement.StatementName
-	go c.listenForUserCancelEvent(ctx, func() {
-		cancelWaitPendingStatement()
-		c.store.DeleteStatement(statementName)
-	})
+	go c.listenForUserInputEvent(ctx, c.userInputIsOneOf(isCancelEvent), cancelWaitPendingStatement)
 
 	readyStatement, err := c.store.WaitPendingStatement(ctx, processedStatement)
 	if err != nil {
@@ -67,13 +74,13 @@ func (c *StatementController) waitForStatementToBeReadyOrError(processedStatemen
 	return readyStatement, nil
 }
 
-func (c *StatementController) listenForUserCancelEvent(ctx context.Context, cancelFunc func()) {
+func (c *StatementController) listenForUserInputEvent(ctx context.Context, userInputEvent func() bool, cancelFunc func()) {
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		default:
-			if c.isCancelEvent() {
+			if userInputEvent() {
 				cancelFunc()
 				return
 			}
@@ -82,21 +89,50 @@ func (c *StatementController) listenForUserCancelEvent(ctx context.Context, canc
 	}
 }
 
-func (c *StatementController) isCancelEvent() bool {
-	if b, err := c.consoleParser.Read(); err == nil && len(b) > 0 {
-		pressedKey := prompt.Key(b[0])
-
-		switch pressedKey {
-		case prompt.ControlC:
-			fallthrough
-		case prompt.ControlD:
-			fallthrough
-		case prompt.ControlQ:
-			fallthrough
-		case prompt.Escape:
-			// esc
-			return true
-		}
+func (c *StatementController) waitForStatementToBeInTerminalStateOrError(processedStatement types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError) {
+	readyStatementWithResults, err := c.store.FetchStatementResults(processedStatement)
+	if err != nil {
+		return nil, err
 	}
-	return false
+
+	if readyStatementWithResults.IsTerminalState() {
+		return readyStatementWithResults, nil
+	}
+
+	ctx, cancelWaitForTerminalStatementState := context.WithCancel(context.Background())
+	defer cancelWaitForTerminalStatementState()
+
+	go c.listenForUserInputEvent(ctx, c.userInputIsOneOf(isDetachEvent, isCancelEvent), cancelWaitForTerminalStatementState)
+
+	output.Printf("Statement phase is %s.\n", readyStatementWithResults.Status)
+	col := fColor.New(color.AccentColor)
+	output.Printf("Listening for execution errors. %s.\n", col.Sprint("Press Enter to detach"))
+	terminalStatement, err := c.store.WaitForTerminalStatementState(ctx, *readyStatementWithResults)
+	if err != nil {
+		return nil, err
+	}
+	return terminalStatement, nil
+}
+
+func (c *StatementController) userInputIsOneOf(keyEvents ...func(key prompt.Key) bool) func() bool {
+	return func() bool {
+		if b, err := c.consoleParser.Read(); err == nil && len(b) > 0 {
+			pressedKey := prompt.Key(b[0])
+
+			for _, isKeyEvent := range keyEvents {
+				if isKeyEvent(pressedKey) {
+					return true
+				}
+			}
+		}
+		return false
+	}
+}
+
+func isCancelEvent(key prompt.Key) bool {
+	return lo.Contains([]prompt.Key{prompt.ControlC, prompt.ControlD, prompt.ControlQ, prompt.Escape}, key)
+}
+
+func isDetachEvent(key prompt.Key) bool {
+	return lo.Contains([]prompt.Key{prompt.ControlM, prompt.Enter}, key)
 }

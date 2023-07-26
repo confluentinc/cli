@@ -19,12 +19,12 @@ func (s *CLITestSuite) TestLocalKafka() {
 		{args: "local kafka start", fixture: "local/kafka/start.golden", regex: true},
 	}
 
-	for _, tt := range tests {
-		tt.workflow = true
-		s.runIntegrationTest(tt)
+	for _, test := range tests {
+		test.workflow = true
+		s.runIntegrationTest(test)
 	}
 
-	time.Sleep(25 * time.Second)
+	time.Sleep(40 * time.Second)
 
 	tests2 := []CLITest{
 		{args: "local kafka topic create test", fixture: "local/kafka/topic/create.golden"},
@@ -34,9 +34,9 @@ func (s *CLITestSuite) TestLocalKafka() {
 		{args: "local kafka stop", fixture: "local/kafka/stop.golden", regex: true},
 	}
 
-	for _, tt := range tests2 {
-		tt.workflow = true
-		s.runIntegrationTest(tt)
+	for _, test := range tests2 {
+		test.workflow = true
+		s.runIntegrationTest(test)
 	}
 }
 

@@ -28,23 +28,19 @@ type RegisterSchemaConfigs struct {
 	Subject     string
 	ValueFormat string
 	SchemaType  string
-	SchemaPath  *string
+	SchemaPath  string
 	Refs        []srsdk.SchemaReference
 	Metadata    *srsdk.Metadata
 	Ruleset     *srsdk.RuleSet
 	Normalize   bool
 }
 
-func RegisterSchemaWithAuth(cmd *cobra.Command, schemaCfg *RegisterSchemaConfigs, srClient *srsdk.APIClient, ctx context.Context) ([]byte, error) {
-	schema, err := os.ReadFile(*schemaCfg.SchemaPath)
+func RegisterSchemaWithAuth(cmd *cobra.Command, schemaCfg *RegisterSchemaConfigs, srClient *srsdk.APIClient, ctx context.Context) (int32, error) {
+	schema, err := os.ReadFile(schemaCfg.SchemaPath)
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
 
-	opts := srsdk.RegisterOpts{}
-	if schemaCfg.Normalize {
-		opts.Normalize = optional.NewBool(true)
-	}
 	request := srsdk.RegisterSchemaRequest{
 		Schema:     string(schema),
 		SchemaType: schemaCfg.SchemaType,
@@ -52,23 +48,29 @@ func RegisterSchemaWithAuth(cmd *cobra.Command, schemaCfg *RegisterSchemaConfigs
 		Metadata:   schemaCfg.Metadata,
 		RuleSet:    schemaCfg.Ruleset,
 	}
-	response, _, err := srClient.DefaultApi.Register(ctx, schemaCfg.Subject, request, &opts)
+
+	opts := &srsdk.RegisterOpts{}
+	if schemaCfg.Normalize {
+		opts.Normalize = optional.NewBool(true)
+	}
+
+	response, _, err := srClient.DefaultApi.Register(ctx, schemaCfg.Subject, request, opts)
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
 
 	if output.GetFormat(cmd).IsSerialized() {
 		if err := output.SerializedOutput(cmd, &registerSchemaResponse{Id: response.Id}); err != nil {
-			return nil, err
+			return 0, err
 		}
 	} else {
 		output.Printf(errors.RegisteredSchemaMsg, response.Id)
 	}
 
-	return GetMetaInfoFromSchemaId(response.Id), nil
+	return response.Id, nil
 }
 
-func ReadSchemaRefs(cmd *cobra.Command) ([]srsdk.SchemaReference, error) {
+func ReadSchemaReferences(cmd *cobra.Command) ([]srsdk.SchemaReference, error) {
 	var refs []srsdk.SchemaReference
 	references, err := cmd.Flags().GetString("references")
 	if err != nil {

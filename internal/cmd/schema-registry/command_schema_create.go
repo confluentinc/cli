@@ -5,20 +5,13 @@ import (
 	"os"
 	"strings"
 
-	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/output"
 )
-
-type outputStruct struct {
-	Id int32 `json:"id" yaml:"id"`
-}
 
 func (c *command) newSchemaCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -77,21 +70,12 @@ func (c *command) newSchemaCreateCommand() *cobra.Command {
 }
 
 func (c *command) schemaCreate(cmd *cobra.Command, _ []string) error {
-	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
-	if err != nil {
-		return err
-	}
-
 	subject, err := cmd.Flags().GetString("subject")
 	if err != nil {
 		return err
 	}
 
-	schemaPath, err := cmd.Flags().GetString("schema")
-	if err != nil {
-		return err
-	}
-	schema, err := os.ReadFile(schemaPath)
+	schema, err := cmd.Flags().GetString("schema")
 	if err != nil {
 		return err
 	}
@@ -102,15 +86,22 @@ func (c *command) schemaCreate(cmd *cobra.Command, _ []string) error {
 	}
 	schemaType = strings.ToUpper(schemaType)
 
-	refs, err := ReadSchemaRefs(cmd)
+	refs, err := ReadSchemaReferences(cmd)
 	if err != nil {
 		return err
 	}
 
-	request := srsdk.RegisterSchemaRequest{
-		Schema:     string(schema),
+	normalize, err := cmd.Flags().GetBool("normalize")
+	if err != nil {
+		return err
+	}
+
+	cfg := &RegisterSchemaConfigs{
+		Subject:    subject,
+		SchemaPath: schema,
 		SchemaType: schemaType,
-		References: refs,
+		Refs:       refs,
+		Normalize:  normalize,
 	}
 
 	metadata, err := cmd.Flags().GetString("metadata")
@@ -118,8 +109,8 @@ func (c *command) schemaCreate(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	if metadata != "" {
-		request.Metadata = new(srsdk.Metadata)
-		if err := read(metadata, request.Metadata); err != nil {
+		cfg.Metadata = new(srsdk.Metadata)
+		if err := read(metadata, cfg.Metadata); err != nil {
 			return err
 		}
 	}
@@ -129,28 +120,21 @@ func (c *command) schemaCreate(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	if ruleset != "" {
-		request.RuleSet = new(srsdk.RuleSet)
-		if err := read(ruleset, request.RuleSet); err != nil {
+		cfg.Ruleset = new(srsdk.RuleSet)
+		if err := read(ruleset, cfg.Ruleset); err != nil {
 			return err
 		}
 	}
 
-	normalize, err := cmd.Flags().GetBool("normalize")
-	if err != nil {
-		return err
-	}
-	opts := &srsdk.RegisterOpts{Normalize: optional.NewBool(normalize)}
-
-	response, _, err := srClient.DefaultApi.Register(ctx, subject, request, opts)
+	srClient, ctx, err := getApiClient(cmd, c.Config, c.Version)
 	if err != nil {
 		return err
 	}
 
-	if output.GetFormat(cmd).IsSerialized() {
-		return output.SerializedOutput(cmd, &outputStruct{response.Id})
+	if _, err := RegisterSchemaWithAuth(cmd, cfg, srClient, ctx); err != nil {
+		return err
 	}
 
-	output.Printf(errors.RegisteredSchemaMsg, response.Id)
 	return nil
 }
 

@@ -27,7 +27,7 @@ type MetricsClient struct {
 func NewMetricsClient(url, userAgent string, unsafeTrace bool, authToken string) *MetricsClient {
 	cfg := metricsv2.NewConfiguration()
 	cfg.Debug = unsafeTrace
-	cfg.HTTPClient = newRetryableHttpClient(unsafeTrace)
+	cfg.HTTPClient = NewRetryableHttpClient(unsafeTrace)
 	cfg.Servers = metricsv2.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 

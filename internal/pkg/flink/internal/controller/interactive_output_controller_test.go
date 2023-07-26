@@ -2,6 +2,7 @@ package controller
 
 import (
 	"testing"
+	"time"
 
 	"github.com/bradleyjkemp/cupaloy"
 	"github.com/gdamore/tcell/v2"
@@ -18,6 +19,7 @@ import (
 type InteractiveOutputControllerTestSuite struct {
 	suite.Suite
 	interactiveOutputController *InteractiveOutputController
+	tableView                   *mock.MockTableViewInterface
 	resultFetcher               *mock.MockResultFetcherInterface
 	dummyTViewApp               *tview.Application
 }
@@ -28,9 +30,10 @@ func TestInteractiveOutputControllerTestSuite(t *testing.T) {
 
 func (s *InteractiveOutputControllerTestSuite) SetupTest() {
 	ctrl := gomock.NewController(s.T())
+	s.tableView = mock.NewMockTableViewInterface(ctrl)
 	s.resultFetcher = mock.NewMockResultFetcherInterface(ctrl)
 	s.dummyTViewApp = tview.NewApplication()
-	s.interactiveOutputController = NewInteractiveOutputController(s.resultFetcher, false).(*InteractiveOutputController)
+	s.interactiveOutputController = NewInteractiveOutputController(s.tableView, s.resultFetcher, false).(*InteractiveOutputController)
 }
 
 func (s *InteractiveOutputControllerTestSuite) TestCloseTableViewOnUserInput() {
@@ -70,18 +73,47 @@ func (s *InteractiveOutputControllerTestSuite) TestToggleTableModeOnUserInput() 
 }
 
 func (s *InteractiveOutputControllerTestSuite) updateTableMockCalls(materializedStatementResults *types.MaterializedStatementResults) {
-	s.resultFetcher.EXPECT().IsTableMode().Return(true)
-	s.resultFetcher.EXPECT().GetFetchState().Return(types.Paused)
+	s.resultFetcher.EXPECT().IsTableMode().Return(true).Times(2)
+	s.resultFetcher.EXPECT().GetRefreshState().Return(types.Paused)
+	timestamp := time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
+	s.resultFetcher.EXPECT().GetLastRefreshTimestamp().Return(&timestamp)
 	s.resultFetcher.EXPECT().GetMaterializedStatementResults().Return(materializedStatementResults)
-	s.resultFetcher.EXPECT().IsAutoRefreshRunning().Return(false)
+	s.tableView.EXPECT().RenderTable(s.interactiveOutputController.getTableTitle(), materializedStatementResults, &timestamp, types.Paused)
+	s.tableView.EXPECT().GetRoot().Return(tview.NewBox())
+	s.tableView.EXPECT().GetFocusableElement().Return(tview.NewTable())
 }
 
 func (s *InteractiveOutputControllerTestSuite) TestToggleRefreshResultsOnUserInput() {
+	testCases := []struct {
+		name         string
+		refreshState types.RefreshState
+	}{
+		{name: "Test when failed", refreshState: types.Failed},
+		{name: "Test when running", refreshState: types.Running},
+		{name: "Test when paused", refreshState: types.Paused},
+	}
+
+	for _, testCase := range testCases {
+		s.T().Run(testCase.name, func(t *testing.T) {
+			s.initMockCalls(&types.MaterializedStatementResults{})
+			s.interactiveOutputController.init()
+			input := tcell.NewEventKey(tcell.KeyRune, rune(components.ToggleRefreshShortcut[0]), tcell.ModNone)
+			s.resultFetcher.EXPECT().GetRefreshState().Return(testCase.refreshState)
+			s.resultFetcher.EXPECT().ToggleRefresh()
+			s.updateTableMockCalls(&types.MaterializedStatementResults{})
+
+			result := s.interactiveOutputController.inputCapture(input)
+
+			require.Nil(t, result)
+		})
+	}
+}
+
+func (s *InteractiveOutputControllerTestSuite) TestToggleRefreshResultsDoesNothingWhenStatementCompleted() {
 	s.initMockCalls(&types.MaterializedStatementResults{})
 	s.interactiveOutputController.init()
-	input := tcell.NewEventKey(tcell.KeyRune, rune(components.ToggleAutoRefreshShortcut[0]), tcell.ModNone)
-	s.resultFetcher.EXPECT().ToggleAutoRefresh()
-	s.updateTableMockCalls(&types.MaterializedStatementResults{})
+	input := tcell.NewEventKey(tcell.KeyRune, rune(components.ToggleRefreshShortcut[0]), tcell.ModNone)
+	s.resultFetcher.EXPECT().GetRefreshState().Return(types.Completed)
 
 	result := s.interactiveOutputController.inputCapture(input)
 
@@ -101,11 +133,13 @@ func (s *InteractiveOutputControllerTestSuite) TestNonSupportedUserInput() {
 func (s *InteractiveOutputControllerTestSuite) TestOpenRowViewOnUserInput() {
 	// Given
 	materializedStatementResults := getResultsExample()
+	iterator := materializedStatementResults.Iterator(true)
 	s.initMockCalls(materializedStatementResults)
 	s.interactiveOutputController.init()
 
-	s.resultFetcher.EXPECT().IsAutoRefreshRunning().Return(false)
+	s.resultFetcher.EXPECT().IsRefreshRunning().Return(false)
 	s.resultFetcher.EXPECT().GetMaterializedStatementResults().Return(materializedStatementResults)
+	s.tableView.EXPECT().GetSelectedRow().Return(iterator.Value())
 
 	// When
 	result := s.interactiveOutputController.inputCapture(tcell.NewEventKey(tcell.KeyEnter, rune(0), tcell.ModNone))
@@ -113,9 +147,6 @@ func (s *InteractiveOutputControllerTestSuite) TestOpenRowViewOnUserInput() {
 	// Then
 	require.Nil(s.T(), result)
 	require.True(s.T(), s.interactiveOutputController.isRowViewOpen)
-	// last row should be selected
-	expectedIterator := materializedStatementResults.Iterator(true)
-	require.Equal(s.T(), expectedIterator.Value(), s.interactiveOutputController.tableView.GetSelectedRow())
 }
 
 func getResultsExample() *types.MaterializedStatementResults {
@@ -126,8 +157,9 @@ func getResultsExample() *types.MaterializedStatementResults {
 }
 
 func (s *InteractiveOutputControllerTestSuite) initMockCalls(materializedStatementResults *types.MaterializedStatementResults) {
-	s.resultFetcher.EXPECT().SetAutoRefreshCallback(gomock.Any())
-	s.resultFetcher.EXPECT().ToggleAutoRefresh()
+	s.resultFetcher.EXPECT().SetRefreshCallback(gomock.Any())
+	s.resultFetcher.EXPECT().ToggleRefresh()
+	s.tableView.EXPECT().Init()
 	s.updateTableMockCalls(materializedStatementResults)
 }
 
@@ -147,6 +179,8 @@ func (s *InteractiveOutputControllerTestSuite) TestCloseRowViewOnUserInput() {
 			s.initMockCalls(&types.MaterializedStatementResults{})
 			s.interactiveOutputController.init()
 			s.interactiveOutputController.isRowViewOpen = true
+			s.tableView.EXPECT().GetRoot().Return(tview.NewBox())
+			s.tableView.EXPECT().GetFocusableElement().Return(tview.NewTable())
 
 			// When
 			result := s.interactiveOutputController.inputCapture(testCase.input)
@@ -174,7 +208,6 @@ func (s *InteractiveOutputControllerTestSuite) TestNonSupportedUserInputInRowVie
 
 func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysTableMode() {
 	s.resultFetcher.EXPECT().IsTableMode().Return(true)
-	s.resultFetcher.EXPECT().GetFetchState().Return(types.Failed)
 
 	actual := s.interactiveOutputController.getTableTitle()
 
@@ -183,7 +216,6 @@ func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysTableMode()
 
 func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysChangelogMode() {
 	s.resultFetcher.EXPECT().IsTableMode().Return(false)
-	s.resultFetcher.EXPECT().GetFetchState().Return(types.Failed)
 
 	actual := s.interactiveOutputController.getTableTitle()
 
@@ -192,7 +224,6 @@ func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysChangelogMo
 
 func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysComplete() {
 	s.resultFetcher.EXPECT().IsTableMode().Return(true)
-	s.resultFetcher.EXPECT().GetFetchState().Return(types.Completed)
 
 	actual := s.interactiveOutputController.getTableTitle()
 
@@ -201,7 +232,6 @@ func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysComplete() 
 
 func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysFailed() {
 	s.resultFetcher.EXPECT().IsTableMode().Return(true)
-	s.resultFetcher.EXPECT().GetFetchState().Return(types.Failed)
 
 	actual := s.interactiveOutputController.getTableTitle()
 
@@ -210,7 +240,6 @@ func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysFailed() {
 
 func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysPaused() {
 	s.resultFetcher.EXPECT().IsTableMode().Return(true)
-	s.resultFetcher.EXPECT().GetFetchState().Return(types.Paused)
 
 	actual := s.interactiveOutputController.getTableTitle()
 
@@ -219,7 +248,6 @@ func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysPaused() {
 
 func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysRunning() {
 	s.resultFetcher.EXPECT().IsTableMode().Return(true)
-	s.resultFetcher.EXPECT().GetFetchState().Return(types.Running)
 
 	actual := s.interactiveOutputController.getTableTitle()
 
@@ -232,7 +260,6 @@ func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysPageSizeAnd
 	mat.Append(executedStatementWithResults.StatementResults.GetRows()...)
 
 	s.resultFetcher.EXPECT().IsTableMode().Return(true)
-	s.resultFetcher.EXPECT().GetFetchState().Return(types.Running)
 	s.resultFetcher.EXPECT().GetStatement().Return(executedStatementWithResults)
 	s.resultFetcher.EXPECT().GetMaterializedStatementResults().Return(&mat).Times(3)
 	s.interactiveOutputController.debug = true
@@ -242,7 +269,7 @@ func (s *InteractiveOutputControllerTestSuite) TestTableTitleDisplaysPageSizeAnd
 	cupaloy.SnapshotT(s.T(), actual)
 }
 
-func (s *InteractiveOutputControllerTestSuite) TestArrowUpOrDownTogglesAutoRefreshWhenAutoRefreshIsRunning() {
+func (s *InteractiveOutputControllerTestSuite) TestArrowUpOrDownTogglesRefreshWhenRefreshIsRunning() {
 	// Given
 	testCases := []struct {
 		name  string
@@ -256,8 +283,8 @@ func (s *InteractiveOutputControllerTestSuite) TestArrowUpOrDownTogglesAutoRefre
 		s.T().Run(testCase.name, func(t *testing.T) {
 			s.initMockCalls(&types.MaterializedStatementResults{})
 			s.interactiveOutputController.init()
-			s.resultFetcher.EXPECT().IsAutoRefreshRunning().Return(true)
-			s.resultFetcher.EXPECT().ToggleAutoRefresh()
+			s.resultFetcher.EXPECT().IsRefreshRunning().Return(true)
+			s.resultFetcher.EXPECT().ToggleRefresh()
 			s.updateTableMockCalls(&types.MaterializedStatementResults{})
 
 			result := s.interactiveOutputController.inputCapture(testCase.input)
@@ -267,7 +294,7 @@ func (s *InteractiveOutputControllerTestSuite) TestArrowUpOrDownTogglesAutoRefre
 	}
 }
 
-func (s *InteractiveOutputControllerTestSuite) TestArrowUpOrDownDoesNothingWhenAutoRefreshNotRunning() {
+func (s *InteractiveOutputControllerTestSuite) TestArrowUpOrDownDoesNothingWhenRefreshNotRunning() {
 	// Given
 	testCases := []struct {
 		name  string
@@ -281,7 +308,7 @@ func (s *InteractiveOutputControllerTestSuite) TestArrowUpOrDownDoesNothingWhenA
 		s.T().Run(testCase.name, func(t *testing.T) {
 			s.initMockCalls(&types.MaterializedStatementResults{})
 			s.interactiveOutputController.init()
-			s.resultFetcher.EXPECT().IsAutoRefreshRunning().Return(false)
+			s.resultFetcher.EXPECT().IsRefreshRunning().Return(false)
 
 			result := s.interactiveOutputController.inputCapture(testCase.input)
 
@@ -290,7 +317,7 @@ func (s *InteractiveOutputControllerTestSuite) TestArrowUpOrDownDoesNothingWhenA
 	}
 }
 
-func (s *InteractiveOutputControllerTestSuite) TestJumpUpOrDownTogglesAutoRefreshWhenAutoRefreshIsRunning() {
+func (s *InteractiveOutputControllerTestSuite) TestJumpUpOrDownTogglesRefreshWhenRefreshIsRunning() {
 	// Given
 	testCases := []struct {
 		name  string
@@ -304,8 +331,8 @@ func (s *InteractiveOutputControllerTestSuite) TestJumpUpOrDownTogglesAutoRefres
 		s.T().Run(testCase.name, func(t *testing.T) {
 			s.initMockCalls(&types.MaterializedStatementResults{})
 			s.interactiveOutputController.init()
-			s.resultFetcher.EXPECT().IsAutoRefreshRunning().Return(true)
-			s.resultFetcher.EXPECT().ToggleAutoRefresh()
+			s.resultFetcher.EXPECT().IsRefreshRunning().Return(true)
+			s.resultFetcher.EXPECT().ToggleRefresh()
 			s.updateTableMockCalls(&types.MaterializedStatementResults{})
 
 			result := s.interactiveOutputController.inputCapture(testCase.input)
@@ -315,7 +342,7 @@ func (s *InteractiveOutputControllerTestSuite) TestJumpUpOrDownTogglesAutoRefres
 	}
 }
 
-func (s *InteractiveOutputControllerTestSuite) TestJumpUpOrDownScrollsWhenAutoRefreshNotRunning() {
+func (s *InteractiveOutputControllerTestSuite) TestJumpUpOrDownScrollsWhenRefreshNotRunning() {
 	// Given
 	testCases := []struct {
 		name  string
@@ -329,7 +356,12 @@ func (s *InteractiveOutputControllerTestSuite) TestJumpUpOrDownScrollsWhenAutoRe
 		s.T().Run(testCase.name, func(t *testing.T) {
 			s.initMockCalls(&types.MaterializedStatementResults{})
 			s.interactiveOutputController.init()
-			s.resultFetcher.EXPECT().IsAutoRefreshRunning().Return(false)
+			s.resultFetcher.EXPECT().IsRefreshRunning().Return(false)
+			if testCase.input.Rune() == rune(components.JumpUpShortcut[0]) {
+				s.tableView.EXPECT().JumpUp()
+			} else {
+				s.tableView.EXPECT().JumpDown()
+			}
 
 			result := s.interactiveOutputController.inputCapture(testCase.input)
 

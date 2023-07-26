@@ -81,3 +81,28 @@ func TestConfigFlagToMap_ValueWithEquals(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, map[string]string{"key": "val1=val2"}, m)
 }
+
+func TestCreateKeyValuePairsEmptyMap(t *testing.T) {
+	m := make(map[string]string)
+	require.Equal(t, "", CreateKeyValuePairs(m))
+}
+
+func TestCreateKeyValuePairsSingleKeyValue(t *testing.T) {
+	m := make(map[string]string)
+	m["k1"] = "v1"
+	require.Equal(t, "\"k1\"=\"v1\"\n", CreateKeyValuePairs(m))
+}
+
+func TestCreateKeyValuePairsMultipleKeyValue(t *testing.T) {
+	m := make(map[string]string)
+	m["k1"] = "v1"
+	m["k2"] = "v2"
+	require.Equal(t, "\"k1\"=\"v1\"\n\"k2\"=\"v2\"\n", CreateKeyValuePairs(m))
+}
+
+func TestCreateKeyValuePairsKeysWithDotsAndSorts(t *testing.T) {
+	m := make(map[string]string)
+	m["link.mode"] = "BIDIRECTIONAL"
+	m["connection.mode"] = "OUTBOUND"
+	require.Equal(t, "\"connection.mode\"=\"OUTBOUND\"\n\"link.mode\"=\"BIDIRECTIONAL\"\n", CreateKeyValuePairs(m))
+}

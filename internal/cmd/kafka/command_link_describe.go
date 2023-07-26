@@ -16,6 +16,7 @@ type describeOut struct {
 	TopicName            string `human:"Topic Name" serialized:"topic_name"`
 	SourceClusterId      string `human:"Source Cluster" serialized:"source_cluster_id"`
 	DestinationClusterId string `human:"Destination Cluster" serialized:"destination_cluster_id"`
+	RemoteClusterId      string `human:"Remote Cluster" serialized:"remote_cluster_id"`
 	State                string `human:"State" serialized:"state"`
 	Error                string `human:"Error,omitempty" serialized:"error,omitempty"`
 	ErrorMessage         string `human:"Error Message,omitempty" serialized:"error_message,omitempty"`
@@ -49,12 +50,12 @@ func (c *linkCommand) describe(cmd *cobra.Command, args []string) error {
 		return errors.New(errors.RestProxyNotAvailableMsg)
 	}
 
-	clusterId, err := getKafkaClusterLkcId(c.AuthenticatedCLICommand)
+	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
 
-	data, httpResp, err := kafkaREST.CloudClient.GetKafkaLink(clusterId, linkName)
+	data, httpResp, err := kafkaREST.CloudClient.GetKafkaLink(cluster.ID, linkName)
 	if err != nil {
 		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
@@ -75,6 +76,7 @@ func newDescribeLink(data kafkarestv3.ListLinksResponseData, topic string) *desc
 		TopicName:            topic,
 		SourceClusterId:      data.GetSourceClusterId(),
 		DestinationClusterId: data.GetDestinationClusterId(),
+		RemoteClusterId:      data.GetRemoteClusterId(),
 		State:                data.GetLinkState(),
 		Error:                linkError,
 		ErrorMessage:         data.GetLinkErrorMessage(),

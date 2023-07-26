@@ -19,7 +19,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
-func (c *authenticatedTopicCommand) newCreateCommandOnPrem() *cobra.Command {
+func (c *command) newCreateCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <topic>",
 		Short: "Create a Kafka topic.",
@@ -50,7 +50,7 @@ func (c *authenticatedTopicCommand) newCreateCommandOnPrem() *cobra.Command {
 	return cmd
 }
 
-func (c *authenticatedTopicCommand) createOnPrem(cmd *cobra.Command, args []string) error {
+func (c *command) createOnPrem(cmd *cobra.Command, args []string) error {
 	topicName := args[0]
 
 	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)

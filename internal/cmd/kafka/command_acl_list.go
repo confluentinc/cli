@@ -28,6 +28,8 @@ func (c *aclCommand) newListCommand() *cobra.Command {
 	cmd.Flags().String("principal", "", `Principal for this operation, prefixed with "User:".`)
 	pcmd.AddOutputFlag(cmd)
 
+	cmd.MarkFlagsMutuallyExclusive("service-account", "principal")
+
 	return cmd
 }
 

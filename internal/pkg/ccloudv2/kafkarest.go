@@ -25,7 +25,7 @@ type KafkaRestClient struct {
 func NewKafkaRestClient(url, userAgent string, unsafeTrace bool, authToken string) *KafkaRestClient {
 	cfg := kafkarestv3.NewConfiguration()
 	cfg.Debug = unsafeTrace
-	cfg.HTTPClient = newRetryableHttpClient(unsafeTrace)
+	cfg.HTTPClient = NewRetryableHttpClient(unsafeTrace)
 	cfg.Servers = kafkarestv3.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 
@@ -44,7 +44,7 @@ func (c *KafkaRestClient) context() context.Context {
 }
 
 func (c *KafkaRestClient) BatchCreateKafkaAcls(clusterId string, list kafkarestv3.CreateAclRequestDataList) (*http.Response, error) {
-	return c.ACLV3Api.BatchCreateKafkaV3Acls(c.context(), clusterId).CreateAclRequestDataList(list).Execute()
+	return c.ACLV3Api.BatchCreateKafkaAcls(c.context(), clusterId).CreateAclRequestDataList(list).Execute()
 }
 
 func (c *KafkaRestClient) CreateKafkaAcls(clusterId string, data kafkarestv3.CreateAclRequestData) (*http.Response, error) {
@@ -164,7 +164,7 @@ func (c *KafkaRestClient) ListKafkaConsumers(clusterId, consumerGroupId string) 
 }
 
 func (c *KafkaRestClient) GetKafkaConsumerLag(clusterId, consumerGroupId, topicName string, partitionId int32) (kafkarestv3.ConsumerLagData, *http.Response, error) {
-	return c.PartitionV3Api.GetKafkaConsumerLag(c.context(), clusterId, consumerGroupId, topicName, partitionId).Execute()
+	return c.ConsumerGroupV3Api.GetKafkaConsumerLag(c.context(), clusterId, consumerGroupId, topicName, partitionId).Execute()
 }
 
 func (c *KafkaRestClient) ListKafkaPartitions(clusterId, topicName string) (kafkarestv3.PartitionDataList, *http.Response, error) {

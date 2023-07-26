@@ -18,11 +18,11 @@ Flags:
       --schema-registry-api-secret string   API secret for Schema Registry.
       --schema-context string               Use a specific schema context. (default "default")
       --topics strings                      A comma-separated list of topics to export. Supports prefixes ending with a wildcard (*).
-      --value-format string                 Format of message value as "string", "avro", "jsonschema", or "protobuf". Note that schema references are not supported for avro. (default "string")
+      --value-format string                 Format message value as "string", "avro", "jsonschema", or "protobuf". Note that schema references are not supported for Avro. (default "string")
       --cluster string                      Kafka cluster ID.
       --environment string                  Environment ID.
 
 Global Flags:
   -h, --help            Show help for this command.
-      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

@@ -4,9 +4,9 @@ Usage:
   confluent kafka cluster update <id> [flags]
 
 Examples:
-Change a cluster's name and expand its CKU count:
+Update the name and CKU count of a Kafka cluster:
 
-  $ confluent kafka cluster update lkc-abc123 --name "Cool Cluster" --cku 3
+  $ confluent kafka cluster update lkc-123456 --name "New Cluster Name" --cku 3
 
 Flags:
       --name string          Name of the Kafka cluster.
@@ -17,5 +17,5 @@ Flags:
 
 Global Flags:
   -h, --help            Show help for this command.
-      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

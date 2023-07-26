@@ -47,7 +47,7 @@ func (c *command) newStoreCommand() *cobra.Command {
 		),
 	}
 
-	c.addResourceFlag(cmd)
+	c.addResourceFlag(cmd, false)
 	cmd.Flags().BoolP("force", "f", false, "Force overwrite existing secret for this key.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -112,7 +112,7 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 		return errors.CatchApiKeyForbiddenAccessError(err, getOperation, httpResp)
 	}
 
-	apiKeyIsValidForTargetCluster := (cluster.ID == apiKey.Spec.Resource.Id)
+	apiKeyIsValidForTargetCluster := cluster.ID == apiKey.Spec.Resource.GetId()
 
 	if !apiKeyIsValidForTargetCluster {
 		return errors.NewErrorWithSuggestions(errors.APIKeyNotValidForClusterErrorMsg, errors.APIKeyNotValidForClusterSuggestions)

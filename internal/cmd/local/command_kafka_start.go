@@ -1,10 +1,12 @@
 package local
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
+	"net"
+	"os/exec"
 	"runtime"
 	"strconv"
 	"strings"
@@ -20,28 +22,37 @@ import (
 
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-var (
-	statusBlacklist = []string{"Pulling fs layer", "Waiting", "Downloading", "Download complete", "Verifying Checksum", "Extracting", "Pull complete"}
-)
-
-type imagePullOut struct {
-	Status string `json:"status"`
+type ImagePullResponse struct {
+	Status   string `json:"status"`
+	Error    string `json:"error,omitempty"`
+	Progress string `json:"progress,omitempty"`
+	ID       string `json:"id,omitempty"`
 }
 
 func (c *Command) newKafkaStartCommand() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "start",
 		Short: "Start a single-node instance of Apache Kafka.",
 		Args:  cobra.NoArgs,
 		RunE:  c.kafkaStart,
 	}
+
+	cmd.Flags().String("kafka-rest-port", "8082", "The port number for Kafka REST.")
+	cmd.Flags().String("plaintext-port", "", "The port number for plaintext producer and consumer clients. If not specified, a random free port will be used.")
+
+	return cmd
 }
 
 func (c *Command) kafkaStart(cmd *cobra.Command, args []string) error {
+	if err := checkMachineArch(); err != nil {
+		return err
+	}
+
 	dockerClient, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		return err
@@ -52,37 +63,62 @@ func (c *Command) kafkaStart(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	containers, err := dockerClient.ContainerList(context.Background(), types.ContainerListOptions{All: true})
+	if err != nil {
+		return err
+	}
+
+	for _, container := range containers {
+		if container.Image == dockerImageName {
+			output.Println("Confluent Local is already running.")
+			prompt := form.NewPrompt()
+			f := form.New(form.Field{
+				ID:        "confirm",
+				Prompt:    "Do you wish to start a new Confluent Local session? Current context will be lost.",
+				IsYesOrNo: true,
+			})
+			if err := f.Prompt(prompt); err != nil {
+				return err
+			}
+			if f.Responses["confirm"].(bool) {
+				if err := c.stopAndRemoveConfluentLocal(dockerClient); err != nil {
+					return err
+				}
+			} else {
+				return nil
+			}
+		}
+	}
+
 	out, err := dockerClient.ImagePull(context.Background(), dockerImageName, types.ImagePullOptions{})
 	if err != nil {
 		return err
 	}
 	defer out.Close()
 
-	buf := new(strings.Builder)
-	_, err = io.Copy(buf, out)
-	if err != nil {
+	scanner := bufio.NewScanner(out)
+	for scanner.Scan() {
+		response := new(ImagePullResponse)
+		text := scanner.Text()
+		if err := json.Unmarshal([]byte(text), &response); err != nil {
+			return err
+		}
+		if response.Status == "Downloading" {
+			output.Printf("\rDownloading: %s", response.Progress)
+		} else if response.Status == "Extracting" {
+			output.Printf("\rExtracting: %s", response.Progress)
+		} else {
+			output.Printf("\n%s", response.Status)
+		}
+	}
+	if err := scanner.Err(); err != nil {
 		return err
 	}
-
-	for _, ss := range strings.Split(buf.String(), "\n") {
-		var output imagePullOut
-		if err := json.Unmarshal([]byte(ss), &output); err != nil {
-			continue
-		}
-		var inBlacklist bool
-		for _, s := range statusBlacklist {
-			if output.Status == s {
-				inBlacklist = true
-			}
-		}
-		if !inBlacklist {
-			fmt.Printf("%v\n", output.Status)
-		}
-	}
+	output.Println("\r")
 
 	log.CliLogger.Tracef("Pull confluent-local image success")
 
-	if err := c.prepareAndSaveLocalPorts(c.Config.IsTest); err != nil {
+	if err := c.prepareAndSaveLocalPorts(cmd, c.Config.IsTest); err != nil {
 		return err
 	}
 
@@ -121,7 +157,7 @@ func (c *Command) kafkaStart(cmd *cobra.Command, args []string) error {
 
 	createResp, err := dockerClient.ContainerCreate(context.Background(), config, hostConfig, nil, platform, confluentLocalContainerName)
 	if err != nil {
-		return errors.CatchContainerNameInUseError(err)
+		return err
 	}
 	log.CliLogger.Tracef("Create confluent-local container success")
 
@@ -131,37 +167,94 @@ func (c *Command) kafkaStart(cmd *cobra.Command, args []string) error {
 	}
 
 	output.Printf("Started Confluent Local container %v.\nTo continue your Confluent Local experience, run `confluent local kafka topic create test` and `confluent local kafka topic produce test`.\n", getShortenedContainerId(createResp.ID))
-	return nil
+
+	table := output.NewTable(cmd)
+	table.Add(c.Config.LocalPorts)
+	return table.Print()
 }
 
-func (c *Command) prepareAndSaveLocalPorts(isTest bool) error {
+func (c *Command) prepareAndSaveLocalPorts(cmd *cobra.Command, isTest bool) error {
 	if c.Config.LocalPorts != nil {
 		return nil
 	}
 
 	if isTest {
 		c.Config.LocalPorts = &v1.LocalPorts{
-			KafkaRestPort:  "2996",
-			PlaintextPort:  "2997",
-			BrokerPort:     "2998",
-			ControllerPort: "2999",
+			BrokerPort:     "2996",
+			ControllerPort: "2997",
+			KafkaRestPort:  "2998",
+			PlaintextPort:  "2999",
 		}
 	} else {
-		freePorts, err := freeport.GetFreePorts(4)
+		freePorts, err := freeport.GetFreePorts(3)
 		if err != nil {
 			return err
 		}
 
 		c.Config.LocalPorts = &v1.LocalPorts{
-			KafkaRestPort:  strconv.Itoa(freePorts[0]),
-			PlaintextPort:  strconv.Itoa(freePorts[1]),
-			BrokerPort:     strconv.Itoa(freePorts[2]),
-			ControllerPort: strconv.Itoa(freePorts[3]),
+			KafkaRestPort:  strconv.Itoa(8082),
+			PlaintextPort:  strconv.Itoa(freePorts[0]),
+			BrokerPort:     strconv.Itoa(freePorts[1]),
+			ControllerPort: strconv.Itoa(freePorts[2]),
 		}
+
+		kafkaRestPort, err := cmd.Flags().GetString("kafka-rest-port")
+		if err != nil {
+			return err
+		}
+		if kafkaRestPort != "" {
+			c.Config.LocalPorts.KafkaRestPort = kafkaRestPort
+		}
+
+		plaintextPort, err := cmd.Flags().GetString("plaintext-port")
+		if err != nil {
+			return err
+		}
+		if plaintextPort != "" {
+			c.Config.LocalPorts.PlaintextPort = plaintextPort
+		}
+	}
+
+	if err := c.validateCustomizedPorts(); err != nil {
+		return err
 	}
 
 	if err := c.Config.Save(); err != nil {
 		return errors.Wrap(err, "failed to save local ports to configuration file")
+	}
+
+	return nil
+}
+
+func (c *Command) validateCustomizedPorts() error {
+	kafkaRestLn, err := net.Listen("tcp", ":"+c.Config.LocalPorts.KafkaRestPort)
+	if err != nil {
+		freePort, err := freeport.GetFreePort()
+		if err != nil {
+			return err
+		}
+		invalidKafkaRestPort := c.Config.LocalPorts.KafkaRestPort
+		c.Config.LocalPorts.KafkaRestPort = strconv.Itoa(freePort)
+		log.CliLogger.Warnf("Kafka REST port %s is not available, using port %d instead.", invalidKafkaRestPort, freePort)
+	} else {
+		if err := kafkaRestLn.Close(); err != nil {
+			return err
+		}
+	}
+
+	plaintextLn, err := net.Listen("tcp", ":"+c.Config.LocalPorts.PlaintextPort)
+	if err != nil {
+		freePort, err := freeport.GetFreePort()
+		if err != nil {
+			return err
+		}
+		invalidPlaintextPort := c.Config.LocalPorts.PlaintextPort
+		c.Config.LocalPorts.PlaintextPort = strconv.Itoa(freePort)
+		log.CliLogger.Warnf("Plaintext port %s is not available, using port %d instead.", invalidPlaintextPort, freePort)
+	} else {
+		if err := plaintextLn.Close(); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -187,4 +280,24 @@ func getContainerEnvironmentWithPorts(ports *v1.LocalPorts) []string {
 		fmt.Sprintf("KAFKA_REST_BOOTSTRAP_SERVERS=broker:%s", ports.BrokerPort),
 		fmt.Sprintf("KAFKA_REST_LISTENERS=http://0.0.0.0:%s", ports.KafkaRestPort),
 	}
+}
+
+func checkMachineArch() error {
+	if runtime.GOOS == "windows" {
+		return nil
+	}
+
+	cmd := exec.Command("uname", "-m") // outputs system architecture info
+	output, err := cmd.Output()
+	if err != nil {
+		return err
+	}
+	systemArch := strings.TrimSpace(string(output))
+	if systemArch == "x86_64" {
+		systemArch = "amd64"
+	}
+	if systemArch != runtime.GOARCH {
+		return errors.NewErrorWithSuggestions(fmt.Sprintf(`binary architecture "%s" does not match system architecture "%s"`, runtime.GOARCH, systemArch), "Download the CLI with the correct architecture to continue.")
+	}
+	return nil
 }

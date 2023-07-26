@@ -7,12 +7,12 @@ import (
 
 	"github.com/spf13/cobra"
 
-	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	srcmv2 "github.com/confluentinc/ccloud-sdk-go-v2/srcm/v2"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/output"
 	presource "github.com/confluentinc/cli/internal/pkg/resource"
 )
 
@@ -31,29 +31,45 @@ func NewDynamicContext(context *v1.Context, v2Client *ccloudv2.Client) *DynamicC
 	}
 }
 
-func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command, client *ccloudv1.Client) error {
+func (d *DynamicContext) ParseFlagsIntoContext(cmd *cobra.Command) error {
 	if environment, _ := cmd.Flags().GetString("environment"); environment != "" {
-		if d.Credential.CredentialType == v1.APIKey {
-			return errors.New("`--environment` flag should not be passed for API key context")
+		if d.GetCredentialType() == v1.APIKey {
+			output.ErrPrintln("WARNING: The `--environment` flag is ignored when using API key credentials.")
+		} else {
+			ctx := d.Config.Context()
+			d.Config.SetOverwrittenCurrentEnvironment(ctx.CurrentEnvironment)
+			ctx.SetCurrentEnvironment(environment)
 		}
-		ctx := d.Config.Context()
-		d.Config.SetOverwrittenCurrentEnvironment(ctx.CurrentEnvironment)
-		ctx.SetCurrentEnvironment(environment)
 	}
 
 	if cluster, _ := cmd.Flags().GetString("cluster"); cluster != "" {
-		if d.Credential.CredentialType == v1.APIKey {
-			return errors.New("`--cluster` flag should not be passed for API key context, cluster is inferred")
+		if d.GetCredentialType() == v1.APIKey {
+			output.ErrPrintln("WARNING: The `--cluster` flag is ignored when using API key credentials.")
+		} else {
+			ctx := d.Config.Context()
+			d.Config.SetOverwrittenCurrentKafkaCluster(ctx.KafkaClusterContext.GetActiveKafkaClusterId())
+			ctx.KafkaClusterContext.SetActiveKafkaCluster(cluster)
 		}
-		ctx := d.Config.Context()
-		d.Config.SetOverwrittenCurrentKafkaCluster(ctx.KafkaClusterContext.GetActiveKafkaClusterId())
-		ctx.KafkaClusterContext.SetActiveKafkaCluster(cluster)
 	}
 
 	if computePool, _ := cmd.Flags().GetString("compute-pool"); computePool != "" {
 		ctx := d.Config.Context()
 		d.Config.SetOverwrittenFlinkComputePool(ctx.GetCurrentFlinkComputePool())
 		if err := ctx.SetCurrentFlinkComputePool(computePool); err != nil {
+			return err
+		}
+	}
+
+	if region, _ := cmd.Flags().GetString("region"); region != "" {
+		ctx := d.Config.Context()
+		if err := ctx.SetCurrentFlinkRegion(region); err != nil {
+			return err
+		}
+	}
+
+	if cloud, _ := cmd.Flags().GetString("cloud"); cloud != "" {
+		ctx := d.Config.Context()
+		if err := ctx.SetCurrentFlinkCloudProvider(cloud); err != nil {
 			return err
 		}
 	}
@@ -200,7 +216,7 @@ func (d *DynamicContext) SchemaRegistryCluster(cmd *cobra.Command) (*v1.SchemaRe
 }
 
 func (d *DynamicContext) HasLogin() bool {
-	credType := d.Credential.CredentialType
+	credType := d.GetCredentialType()
 	switch credType {
 	case v1.Username:
 		return d.GetAuthToken() != ""
@@ -229,11 +245,6 @@ func (d *DynamicContext) AuthenticatedState() (*v1.ContextState, error) {
 	return d.State, nil
 }
 
-func (d *DynamicContext) HasAPIKey(clusterId string) (bool, error) {
-	cluster, err := d.FindKafkaCluster(clusterId)
-	return cluster.APIKey != "", err
-}
-
 func (d *DynamicContext) CheckSchemaRegistryHasAPIKey(cmd *cobra.Command) (bool, error) {
 	srCluster, err := d.SchemaRegistryCluster(cmd)
 	if err != nil {
@@ -252,7 +263,7 @@ func (d *DynamicContext) CheckSchemaRegistryHasAPIKey(cmd *cobra.Command) (bool,
 	if secret != "" {
 		srCluster.SrCredentials.Secret = secret
 	}
-	return !(srCluster.SrCredentials == nil || len(srCluster.SrCredentials.Key) == 0 || len(srCluster.SrCredentials.Secret) == 0), nil
+	return srCluster.SrCredentials != nil && srCluster.SrCredentials.Key != "" && srCluster.SrCredentials.Secret != "", nil
 }
 
 func (d *DynamicContext) KeyAndSecretFlags(cmd *cobra.Command) (string, string, error) {
@@ -281,10 +292,8 @@ func missingDetails(cluster *v1.SchemaRegistryCluster) bool {
 }
 
 func makeSRCluster(cluster *srcmv2.SrcmV2Cluster) *v1.SchemaRegistryCluster {
-	clusterSpec := cluster.GetSpec()
 	return &v1.SchemaRegistryCluster{
 		Id:                     cluster.GetId(),
-		SchemaRegistryEndpoint: clusterSpec.GetHttpEndpoint(),
-		SrCredentials:          nil, // For now.
+		SchemaRegistryEndpoint: cluster.Spec.GetHttpEndpoint(),
 	}
 }

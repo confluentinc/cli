@@ -1,12 +1,4 @@
-Error: required flag(s) "resource" not set
-Usage:
-  confluent api-key use <api-key> [flags]
+Error: API key "UIAPIKEY103" and associated Kafka cluster are not stored in local CLI state
 
-Flags:
-      --resource string   REQUIRED: The ID of the resource the API key is for. Use "cloud" for a Cloud API key.
-
-Global Flags:
-  -h, --help            Show help for this command.
-      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
-  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
-
+Suggestions:
+    If you did not create this API key with the CLI or created it on another computer, you must first store the API key and secret locally with `confluent api-key store UIAPIKEY103 <secret>`.

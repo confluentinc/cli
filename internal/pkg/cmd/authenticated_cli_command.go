@@ -9,6 +9,7 @@ import (
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	"github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1"
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	"github.com/confluentinc/cli/internal/pkg/auth"
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
@@ -16,20 +17,24 @@ import (
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/hub"
+	schemaregistry "github.com/confluentinc/cli/internal/pkg/schema-registry"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
 type AuthenticatedCLICommand struct {
 	*CLICommand
 
-	Client             *ccloudv1.Client
-	HubClient          *hub.Client
-	KafkaRESTProvider  *KafkaRESTProvider
-	MDSClient          *mds.APIClient
-	MDSv2Client        *mdsv2alpha1.APIClient
-	V2Client           *ccloudv2.Client
-	flinkGatewayClient *ccloudv2.FlinkGatewayClient
-	metricsClient      *ccloudv2.MetricsClient
+	Client            *ccloudv1.Client
+	HubClient         *hub.Client
+	KafkaRESTProvider *KafkaRESTProvider
+	MDSClient         *mds.APIClient
+	MDSv2Client       *mdsv2alpha1.APIClient
+	V2Client          *ccloudv2.Client
+
+	flinkGatewayClient   *ccloudv2.FlinkGatewayClient
+	metricsClient        *ccloudv2.MetricsClient
+	schemaRegistryClient *schemaregistry.Client
 
 	Context *dynamicconfig.DynamicContext
 	State   *v1.ContextState
@@ -37,35 +42,37 @@ type AuthenticatedCLICommand struct {
 
 func NewAuthenticatedCLICommand(cmd *cobra.Command, prerunner PreRunner) *AuthenticatedCLICommand {
 	c := &AuthenticatedCLICommand{CLICommand: NewCLICommand(cmd)}
-	cmd.PersistentPreRunE = Chain(prerunner.Authenticated(c), prerunner.ParseFlagsIntoContext(c))
+	cmd.PersistentPreRunE = Chain(prerunner.Authenticated(c), prerunner.ParseFlagsIntoContext(c.CLICommand))
 	return c
 }
 
 func NewAuthenticatedWithMDSCLICommand(cmd *cobra.Command, prerunner PreRunner) *AuthenticatedCLICommand {
 	c := &AuthenticatedCLICommand{CLICommand: NewCLICommand(cmd)}
-	cmd.PersistentPreRunE = Chain(prerunner.AuthenticatedWithMDS(c), prerunner.ParseFlagsIntoContext(c))
+	cmd.PersistentPreRunE = Chain(prerunner.AuthenticatedWithMDS(c), prerunner.ParseFlagsIntoContext(c.CLICommand))
 	return c
 }
 
 func (c *AuthenticatedCLICommand) GetFlinkGatewayClient() (*ccloudv2.FlinkGatewayClient, error) {
-	ctx := c.Config.Context()
-
 	if c.flinkGatewayClient == nil {
+		ctx := c.Config.Context()
 		computePoolId := ctx.GetCurrentFlinkComputePool()
-		if computePoolId == "" {
-			return nil, errors.NewErrorWithSuggestions("no compute pool selected", "Select a compute pool with `confluent flink compute-pool use` or `--compute-pool`.")
-		}
 
-		computePool, err := c.V2Client.DescribeFlinkComputePool(computePoolId, ctx.GetCurrentEnvironment())
-		if err != nil {
-			return nil, err
-		}
+		var url string
+		var err error
 
-		u, err := url.Parse(computePool.Spec.GetHttpEndpoint())
-		if err != nil {
-			return nil, err
+		if computePoolId != "" {
+			url, err = c.getGatewayUrlForComputePool(computePoolId, ctx)
+			if err != nil {
+				return nil, err
+			}
+		} else if ctx.GetCurrentFlinkRegion() != "" && ctx.GetCurrentFlinkCloudProvider() != "" {
+			url, err = c.getGatewayUrlForRegion(ctx.GetCurrentFlinkCloudProvider(), ctx.GetCurrentFlinkRegion())
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			return nil, errors.NewErrorWithSuggestions("no compute pool or cloud provider and region selected", "Select a compute pool with `confluent flink compute-pool use` or `--compute-pool`. Alternatively you can also select a cloud provider and region with `--cloud` and `--region`")
 		}
-		u.Path = ""
 
 		unsafeTrace, err := c.Command.Flags().GetBool("unsafe-trace")
 		if err != nil {
@@ -77,10 +84,50 @@ func (c *AuthenticatedCLICommand) GetFlinkGatewayClient() (*ccloudv2.FlinkGatewa
 			return nil, err
 		}
 
-		c.flinkGatewayClient = ccloudv2.NewFlinkGatewayClient(u.String(), c.Version.UserAgent, unsafeTrace, dataplaneToken)
+		c.flinkGatewayClient = ccloudv2.NewFlinkGatewayClient(url, c.Version.UserAgent, unsafeTrace, dataplaneToken)
 	}
 
 	return c.flinkGatewayClient, nil
+}
+
+func (c *AuthenticatedCLICommand) getGatewayUrlForComputePool(computePoolId string, ctx *dynamicconfig.DynamicContext) (string, error) {
+	computePool, err := c.V2Client.DescribeFlinkComputePool(computePoolId, ctx.GetCurrentEnvironment())
+	if err != nil {
+		return "", err
+	}
+
+	u, err := url.Parse(computePool.Spec.GetHttpEndpoint())
+	if err != nil {
+		return "", err
+	}
+	u.Path = ""
+	return u.String(), nil
+}
+
+func (c *AuthenticatedCLICommand) getGatewayUrlForRegion(provider, region string) (string, error) {
+	regions, err := c.V2Client.ListFlinkRegions(provider)
+	if err != nil {
+		return "", err
+	}
+
+	var hostUrl string
+	for _, flinkRegion := range regions {
+		if flinkRegion.GetRegionName() == region {
+			hostUrl = flinkRegion.GetHttpEndpoint()
+			break
+		}
+	}
+	if hostUrl == "" {
+		return "", errors.NewErrorWithSuggestions("invalid region", "Please select a valid region - use `confluent flink region list` to see available regions")
+	}
+
+	u, err := url.Parse(hostUrl)
+	if err != nil {
+		return "", err
+	}
+	u.Path = ""
+
+	return u.String(), nil
 }
 
 func (c *AuthenticatedCLICommand) GetHubClient() (*hub.Client, error) {
@@ -101,9 +148,9 @@ func (c *AuthenticatedCLICommand) GetKafkaREST() (*KafkaREST, error) {
 }
 
 func (c *AuthenticatedCLICommand) GetMetricsClient() (*ccloudv2.MetricsClient, error) {
-	ctx := c.Config.Context()
-
 	if c.metricsClient == nil {
+		ctx := c.Config.Context()
+
 		url := "https://api.telemetry.confluent.cloud"
 		if c.Config.IsTest {
 			url = testserver.TestV2CloudUrl.String()
@@ -127,6 +174,75 @@ func (c *AuthenticatedCLICommand) GetMetricsClient() (*ccloudv2.MetricsClient, e
 	}
 
 	return c.metricsClient, nil
+}
+
+func (c *AuthenticatedCLICommand) GetSchemaRegistryClient() (*schemaregistry.Client, error) {
+	if c.schemaRegistryClient == nil {
+		if c.Config.IsCloudLogin() {
+			clusters, err := c.V2Client.GetSchemaRegistryClustersByEnvironment(c.Context.GetCurrentEnvironment())
+			if err != nil {
+				return nil, err
+			}
+			if len(clusters) == 0 {
+				return nil, errors.NewSRNotEnabledError()
+			}
+
+			unsafeTrace, err := c.Flags().GetBool("unsafe-trace")
+			if err != nil {
+				return nil, err
+			}
+
+			configuration := srsdk.NewConfiguration()
+			configuration.BasePath = clusters[0].Spec.GetHttpEndpoint()
+			configuration.DefaultHeader = map[string]string{"target-sr-cluster": clusters[0].GetId()}
+			configuration.UserAgent = c.Config.Version.UserAgent
+			configuration.Debug = unsafeTrace
+			configuration.HTTPClient = ccloudv2.NewRetryableHttpClient(unsafeTrace)
+
+			dataplaneToken, err := auth.GetDataplaneToken(c.Context.GetState(), c.Context.GetPlatformServer())
+			if err != nil {
+				return nil, err
+			}
+
+			c.schemaRegistryClient = schemaregistry.NewClient(configuration, dataplaneToken)
+		} else {
+			schemaRegistryEndpoint, err := c.Flags().GetString("schema-registry-endpoint")
+			if err != nil {
+				return nil, err
+			}
+			if schemaRegistryEndpoint == "" {
+				return nil, errors.New(errors.SREndpointNotSpecifiedErrorMsg)
+			}
+
+			unsafeTrace, err := c.Flags().GetBool("unsafe-trace")
+			if err != nil {
+				return nil, err
+			}
+
+			caLocation, err := c.Flags().GetString("ca-location")
+			if err != nil {
+				return nil, err
+			}
+			if caLocation == "" {
+				caLocation = auth.GetEnvWithFallback(auth.ConfluentPlatformCACertPath, auth.DeprecatedConfluentPlatformCACertPath)
+			}
+
+			client, err := utils.GetCAClient(caLocation)
+			if err != nil {
+				return nil, err
+			}
+
+			configuration := srsdk.NewConfiguration()
+			configuration.BasePath = schemaRegistryEndpoint
+			configuration.UserAgent = c.Config.Version.UserAgent
+			configuration.Debug = unsafeTrace
+			configuration.HTTPClient = client
+
+			c.schemaRegistryClient = schemaregistry.NewClient(configuration, c.Context.GetAuthToken())
+		}
+	}
+
+	return c.schemaRegistryClient, nil
 }
 
 func (c *AuthenticatedCLICommand) AuthToken() string {

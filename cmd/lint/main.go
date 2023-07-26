@@ -39,7 +39,9 @@ var commandRules = []linter.CommandRule{
 	linter.RequireValidExamples(),
 
 	// Soft Requirements
-	linter.RequireLengthBetween("Short", 10, 60),
+	linter.Filter(linter.RequireLengthBetween("Short", 10, 60),
+		linter.ExcludeCommand("audit-log config edit"),
+		linter.ExcludeCommand("audit-log config update")),
 }
 
 var flagRules = []linter.FlagRule{
@@ -85,6 +87,10 @@ var flagRules = []linter.FlagRule{
 			"destination-api-secret",
 			"destination-bootstrap-server",
 			"destination-cluster",
+			"remote-api-key",
+			"remote-api-secret",
+			"remote-bootstrap-server",
+			"remote-cluster",
 			"enable-systest-events",
 			"max-partition-memory-bytes",
 			"message-send-max-retries",
@@ -112,10 +118,16 @@ var flagRules = []linter.FlagRule{
 			"destination-api-key",
 			"destination-api-secret",
 			"destination-bootstrap-server",
+			"remote-api-key",
+			"remote-api-secret",
+			"local-api-key",
+			"local-api-secret",
+			"remote-bootstrap-server",
 			"enable-systest-events",
 			"gcp-project-id",
 			"if-not-exists",
 			"kafka-api-key",
+			"kafka-rest-port",
 			"local-secrets-file",
 			"log-exclude-rows",
 			"max-block-ms",
@@ -139,6 +151,7 @@ var flagRules = []linter.FlagRule{
 			"source-api-secret",
 			"source-bootstrap-server",
 			"update-schema-registry",
+			"use-schema-registry",
 		),
 	),
 }
@@ -212,6 +225,7 @@ var vocabWords = []string{
 	"env",
 	"eu",
 	"failover",
+	"filepath",
 	"flink",
 	"formatter",
 	"gcp",

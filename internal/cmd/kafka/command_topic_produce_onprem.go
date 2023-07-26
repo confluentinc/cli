@@ -18,7 +18,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/serdes"
 )
 
-func (c *authenticatedTopicCommand) newProduceCommandOnPrem() *cobra.Command {
+func (c *command) newProduceCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "produce <topic>",
 		Args:  cobra.ExactArgs(1),
@@ -57,14 +57,12 @@ func (c *authenticatedTopicCommand) newProduceCommandOnPrem() *cobra.Command {
 	cobra.CheckErr(cmd.MarkFlagRequired("bootstrap"))
 	cobra.CheckErr(cmd.MarkFlagRequired("ca-location"))
 
+	cmd.MarkFlagsMutuallyExclusive("config-file", "config")
+
 	return cmd
 }
 
-func (c *authenticatedTopicCommand) produceOnPrem(cmd *cobra.Command, args []string) error {
-	if cmd.Flags().Changed("config-file") && cmd.Flags().Changed("config") {
-		return errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "config-file", "config")
-	}
-
+func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
 	configFile, err := cmd.Flags().GetString("config-file")
 	if err != nil {
 		return err
@@ -105,7 +103,7 @@ func (c *authenticatedTopicCommand) produceOnPrem(cmd *cobra.Command, args []str
 	if err != nil {
 		return err
 	}
-	refs, err := sr.ReadSchemaRefs(cmd)
+	refs, err := sr.ReadSchemaReferences(cmd)
 	if err != nil {
 		return err
 	}
@@ -123,10 +121,10 @@ func (c *authenticatedTopicCommand) produceOnPrem(cmd *cobra.Command, args []str
 		SchemaDir:   dir,
 		SchemaType:  serializationProvider.GetSchemaName(),
 		ValueFormat: valueFormat,
-		SchemaPath:  &schema,
+		SchemaPath:  schema,
 		Refs:        refs,
 	}
-	metaInfo, referencePathMap, err := c.registerSchema(cmd, schemaCfg)
+	metaInfo, referencePathMap, err := c.registerSchemaOnPrem(cmd, schemaCfg)
 	if err != nil {
 		return err
 	}
@@ -192,12 +190,12 @@ func prepareSerializer(cmd *cobra.Command, topicName string) (string, string, se
 	return valueFormat, subject, serializationProvider, nil
 }
 
-func (c *authenticatedTopicCommand) registerSchema(cmd *cobra.Command, schemaCfg *sr.RegisterSchemaConfigs) ([]byte, map[string]string, error) {
+func (c *command) registerSchemaOnPrem(cmd *cobra.Command, schemaCfg *sr.RegisterSchemaConfigs) ([]byte, map[string]string, error) {
 	// For plain string encoding, meta info is empty.
 	// Registering schema when specified, and fill metaInfo array.
 	metaInfo := []byte{}
 	referencePathMap := map[string]string{}
-	if schemaCfg.ValueFormat != "string" && len(*schemaCfg.SchemaPath) > 0 {
+	if schemaCfg.ValueFormat != "string" && len(schemaCfg.SchemaPath) > 0 {
 		if c.State == nil { // require log-in to use oauthbearer token
 			return nil, nil, errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestions)
 		}
@@ -206,14 +204,17 @@ func (c *authenticatedTopicCommand) registerSchema(cmd *cobra.Command, schemaCfg
 			return nil, nil, err
 		}
 
-		metaInfo, err = sr.RegisterSchemaWithAuth(cmd, schemaCfg, srClient, ctx)
+		id, err := sr.RegisterSchemaWithAuth(cmd, schemaCfg, srClient, ctx)
 		if err != nil {
 			return nil, nil, err
 		}
+		metaInfo = sr.GetMetaInfoFromSchemaId(id)
+
 		referencePathMap, err = sr.StoreSchemaReferences(schemaCfg.SchemaDir, schemaCfg.Refs, srClient, ctx)
 		if err != nil {
-			return metaInfo, nil, err
+			return nil, nil, err
 		}
 	}
+
 	return metaInfo, referencePathMap, nil
 }

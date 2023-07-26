@@ -48,7 +48,6 @@ func (c *command) clusterDelete(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-
 	if len(clusters) == 0 {
 		return errors.NewSRNotEnabledError()
 	}
@@ -58,7 +57,7 @@ func (c *command) clusterDelete(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	if err = c.V2Client.DeleteSchemaRegistryCluster(clusters[0].GetId(), environmentId); err != nil {
+	if err := c.V2Client.DeleteSchemaRegistryCluster(clusters[0].GetId(), environmentId); err != nil {
 		return err
 	}
 
@@ -66,6 +65,6 @@ func (c *command) clusterDelete(cmd *cobra.Command, _ []string) error {
 	ctx.SchemaRegistryClusters[environmentId] = nil
 	_ = ctx.Save()
 
-	output.Printf(errors.SchemaRegistryClusterDeletedMsg, environmentId)
+	output.Printf("Deleted Schema Registry cluster for environment \"%s\".\n", environmentId)
 	return nil
 }

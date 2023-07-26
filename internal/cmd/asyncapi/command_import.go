@@ -41,8 +41,18 @@ type flagsImport struct {
 }
 
 type kafkaBinding struct {
-	XPartitions int32             `yaml:"x-partitions"`
-	XConfigs    map[string]string `yaml:"x-configs"`
+	BindingVersion     string                   `yaml:"bindingVersion"`
+	Partitions         int32                    `yaml:"partitions"`
+	TopicConfiguration topicConfigurationImport `yaml:"topicConfiguration"`
+	XConfigs           map[string]string        `yaml:"x-configs"`
+}
+
+type topicConfigurationImport struct {
+	CleanupPolicy       *[]string `yaml:"cleanup.policy"`
+	RetentionTime       *int64    `yaml:"retention.ms"`
+	RetentionSize       *int64    `yaml:"retention.bytes"`
+	DeleteRetentionTime *int64    `yaml:"delete.retention.ms"`
+	MaxMessageSize      *int32    `yaml:"max.message.bytes"`
 }
 
 type Message struct {
@@ -110,7 +120,7 @@ func newImportCommand(prerunner pcmd.PreRunner) *cobra.Command {
 
 	c := &command{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 	cmd.RunE = c.asyncapiImport
-	cmd.Flags().String("file", "", "Input file name.")
+	cmd.Flags().String("file", "", "Input filename.")
 	cmd.Flags().Bool("overwrite", false, "Overwrite existing topics with the same name.")
 	cmd.Flags().String("kafka-api-key", "", "Kafka cluster API key.")
 	cmd.Flags().String("schema-registry-api-key", "", "API key for Schema Registry.")
@@ -260,7 +270,7 @@ func (c *command) addTopic(details *accountDetails, topicName string, kafkaBindi
 func (c *command) createTopic(details *accountDetails, topicName string, kafkaBinding kafkaBinding) (bool, error) {
 	log.CliLogger.Infof("Topic not found. Adding a new topic: %s", topicName)
 	topicConfigs := []kafkarestv3.CreateTopicRequestDataConfigs{}
-	for configName, configValue := range kafkaBinding.XConfigs {
+	for configName, configValue := range combineTopicConfigs(kafkaBinding) {
 		value := configValue
 		topicConfigs = append(topicConfigs, kafkarestv3.CreateTopicRequestDataConfigs{
 			Name:  configName,
@@ -271,8 +281,8 @@ func (c *command) createTopic(details *accountDetails, topicName string, kafkaBi
 		TopicName: topicName,
 		Configs:   &topicConfigs,
 	}
-	if kafkaBinding.XPartitions != 0 {
-		createTopicRequestData.PartitionsCount = &kafkaBinding.XPartitions
+	if kafkaBinding.Partitions != 0 {
+		createTopicRequestData.PartitionsCount = &kafkaBinding.Partitions
 	}
 	kafkaRest, err := c.GetKafkaREST()
 	if err != nil {
@@ -310,7 +320,7 @@ func (c *command) updateTopic(details *accountDetails, topicName string, kafkaBi
 			modifiableConfigs = append(modifiableConfigs, configDetails.GetName())
 		}
 	}
-	for configName, configValue := range kafkaBinding.XConfigs {
+	for configName, configValue := range combineTopicConfigs(kafkaBinding) {
 		value := configValue
 		if types.Contains(modifiableConfigs, configName) {
 			updateConfigs = append(updateConfigs, kafkarestv3.AlterConfigBatchRequestDataData{
@@ -328,6 +338,33 @@ func (c *command) updateTopic(details *accountDetails, topicName string, kafkaBi
 	}
 	output.Printf(errors.UpdatedResourceMsg, resource.Topic, topicName)
 	return nil
+}
+
+// TopicConfiguration and XConfigs are both specifying Kafka configs, XConfigs is for those not specified in async api.
+// This function combines TopicConfiguration and XConfigs
+func combineTopicConfigs(kafkaBinding kafkaBinding) map[string]string {
+	configs := make(map[string]string)
+	if kafkaBinding.XConfigs != nil {
+		configs = kafkaBinding.XConfigs
+	}
+
+	topicConfig := kafkaBinding.TopicConfiguration
+	if topicConfig.CleanupPolicy != nil {
+		configs["cleanup.policy"] = strings.Join(*topicConfig.CleanupPolicy, ",")
+	}
+	if topicConfig.RetentionTime != nil {
+		configs["retention.ms"] = fmt.Sprint(*topicConfig.RetentionTime)
+	}
+	if topicConfig.RetentionSize != nil {
+		configs["retention.bytes"] = fmt.Sprint(*topicConfig.RetentionSize)
+	}
+	if topicConfig.DeleteRetentionTime != nil {
+		configs["delete.retention.ms"] = fmt.Sprint(*topicConfig.DeleteRetentionTime)
+	}
+	if topicConfig.MaxMessageSize != nil {
+		configs["max.message.bytes"] = strconv.Itoa(int(*topicConfig.MaxMessageSize))
+	}
+	return configs
 }
 
 func addTopicDescription(srClient *srsdk.APIClient, srContext context.Context, qualifiedName string, description string) error {

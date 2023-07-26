@@ -43,7 +43,7 @@ func (c *pluginCommand) newInstallCommand() *cobra.Command {
 				Code: "confluent connect plugin install confluentinc/kafka-connect-datagen:latest",
 			},
 			examples.Example{
-				Text: "Install the latest version of the Datagen connector in a user-specified directory and update a worker-config file.",
+				Text: "Install the latest version of the Datagen connector in a user-specified directory and update a worker configuration file.",
 				Code: "confluent connect plugin install confluentinc/kafka-connect-datagen:latest --plugin-directory $CONFLUENT_HOME/plugins --worker-configurations $CONFLUENT_HOME/etc/kafka/connect-distributed.properties",
 			},
 		),
@@ -97,7 +97,7 @@ func (c *pluginCommand) install(cmd *cobra.Command, args []string) error {
 	}
 
 	var installation *platformInstallation
-	prompt := form.NewPrompt(os.Stdin)
+	prompt := form.NewPrompt()
 	if pluginDir == "" {
 		installation, err = getConfluentPlatformInstallation(cmd, prompt, force)
 		if err != nil {

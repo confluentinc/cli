@@ -49,11 +49,11 @@ func (s *CLITestSuite) TestApiKey() {
 		{args: "api-key list --resource cloud", fixture: "api-key/19.golden"},
 
 		// use an API key for kafka cluster
-		{args: "api-key use MYKEY4 --resource lkc-cool1", fixture: "api-key/20.golden"},
+		{args: "api-key use MYKEY4", fixture: "api-key/20.golden"},
 		{args: "api-key list --resource lkc-cool1", fixture: "api-key/21.golden"},
 
 		// use an API key for other kafka cluster
-		{args: "api-key use MYKEY5 --resource lkc-other1", fixture: "api-key/22.golden"},
+		{args: "api-key use MYKEY5", fixture: "api-key/22.golden"},
 		{args: "api-key list --resource lkc-cool1", fixture: "api-key/21.golden"},
 		{args: "api-key list --resource lkc-other1", fixture: "api-key/23.golden"},
 
@@ -74,8 +74,8 @@ func (s *CLITestSuite) TestApiKey() {
 		// store exists already error
 		{args: "api-key store UIAPIKEY101 --resource lkc-other1", input: "UIAPISECRET101\n", fixture: "api-key/override-error.golden", exitCode: 1},
 
-		{args: "api-key store UIAPIKEY103 UIAPISECRET103 --resource lksqlc-ksql1", fixture: "api-key/29.golden", exitCode: 1},
-		{args: "api-key use UIAPIKEY103 --resource lksqlc-ksql1", fixture: "api-key/29.golden", exitCode: 1},
+		{args: "api-key store UIAPIKEY103 UIAPISECRET103 --resource lksqlc-ksql1", fixture: "api-key/61.golden", exitCode: 1},
+		{args: "api-key use UIAPIKEY103", fixture: "api-key/29.golden", exitCode: 1},
 
 		// list all api-keys
 		{args: "api-key list", fixture: "api-key/30.golden"},
@@ -129,9 +129,9 @@ func (s *CLITestSuite) TestApiKey() {
 		},
 
 		// use: error handling
-		{name: "error if using non-existent api-key", args: "api-key use UNKNOWN --resource lkc-cool1", fixture: "api-key/50.golden", exitCode: 1},
-		{name: "error if using api-key for wrong cluster", args: "api-key use MYKEY2 --resource lkc-cool1", fixture: "api-key/51.golden", exitCode: 1},
-		{name: "error if using api-key without existing secret", args: "api-key use UIAPIKEY103 --resource lkc-cool1", fixture: "api-key/52.golden", exitCode: 1},
+		{name: "error if using non-existent api-key", args: "api-key use UNKNOWN", fixture: "api-key/50.golden", exitCode: 1},
+		{name: "error if using api-key for wrong cluster", args: "api-key use MYKEY2", fixture: "api-key/51.golden", exitCode: 1},
+		{name: "error if using api-key without existing secret", args: "api-key use UIAPIKEY103", fixture: "api-key/52.golden", exitCode: 1},
 
 		// more errors
 		{args: "api-key use UIAPIKEY103", fixture: "api-key/53.golden", exitCode: 1},
@@ -148,9 +148,9 @@ func (s *CLITestSuite) TestApiKey() {
 
 	resetConfiguration(s.T(), false)
 
-	for _, tt := range tests {
-		tt.workflow = true
-		s.runIntegrationTest(tt)
+	for _, test := range tests {
+		test.workflow = true
+		s.runIntegrationTest(test)
 	}
 }
 
@@ -163,20 +163,20 @@ func (s *CLITestSuite) TestApiKeyDescribe() {
 		{args: "api-key describe MULTICLUSTERKEY1", fixture: "api-key/describe-multicluster.golden", env: []string{fmt.Sprintf("%s=multicluster-key-org", pauth.ConfluentCloudOrganizationId)}},
 	}
 
-	for _, tt := range tests {
-		tt.login = "cloud"
-		s.runIntegrationTest(tt)
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
 	}
 }
 
 func (s *CLITestSuite) TestApiKeyCreate_ServiceAccountNotValid() {
-	tt := CLITest{args: "api-key create --resource lkc-ab123 --service-account sa-123456", login: "cloud", fixture: "api-key/55.golden", exitCode: 1}
-	s.runIntegrationTest(tt)
+	test := CLITest{args: "api-key create --resource lkc-ab123 --service-account sa-123456", login: "cloud", fixture: "api-key/55.golden", exitCode: 1}
+	s.runIntegrationTest(test)
 }
 
 func (s *CLITestSuite) TestApiKey_EnvironmentNotValid() {
-	tt := CLITest{args: "api-key list --resource lkc-dne", login: "cloud", env: []string{fmt.Sprintf("%s=no-environment-user@example.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}, fixture: "api-key/no-env.golden", exitCode: 1}
-	s.runIntegrationTest(tt)
+	test := CLITest{args: "api-key list --resource lkc-dne", login: "cloud", env: []string{fmt.Sprintf("%s=no-environment-user@example.com", pauth.ConfluentCloudEmail), fmt.Sprintf("%s=pass1", pauth.ConfluentCloudPassword)}, fixture: "api-key/no-env.golden", exitCode: 1}
+	s.runIntegrationTest(test)
 }
 
 func (s *CLITestSuite) TestApiKey_Autocomplete() {
