@@ -15,7 +15,7 @@ import (
 func TestFlinkErrorCodeWhenErrors(t *testing.T) {
 	res := &http.Response{Body: io.NopCloser(strings.NewReader(`{"errors":[{"detail":"There is an error"}]}`)), StatusCode: http.StatusMethodNotAllowed}
 
-	err := flink.CatchFlinkError(errors.New("Some Error"), res)
+	err := flink.CatchError(errors.New("Some Error"), res)
 	require.Error(t, err)
 
 	flinkError, ok := err.(flink.FlinkError)
@@ -27,12 +27,12 @@ func TestFlinkErrorCodeWhenErrors(t *testing.T) {
 func TestFlinkErrorNil(t *testing.T) {
 	res := &http.Response{Body: io.NopCloser(strings.NewReader(`{"errors":[{"detail":"There is an error"}]}`)), StatusCode: http.StatusMethodNotAllowed}
 
-	err := flink.CatchFlinkError(nil, res)
+	err := flink.CatchError(nil, res)
 	require.Nil(t, err)
 }
 
 func TestFlinkErrorNilHttpRes(t *testing.T) {
-	err := flink.CatchFlinkError(errors.New("Some Error"), nil)
+	err := flink.CatchError(errors.New("Some Error"), nil)
 	require.Error(t, err)
 
 	flinkError, ok := err.(flink.FlinkError)
@@ -44,7 +44,7 @@ func TestFlinkErrorNilHttpRes(t *testing.T) {
 func TestFlinkErrorCodeWhenErrorMessage(t *testing.T) {
 	res := &http.Response{Body: io.NopCloser(strings.NewReader(`{"message":"unauthorized"}`)), StatusCode: http.StatusUnauthorized}
 
-	err := flink.CatchFlinkError(errors.New("Some Error"), res)
+	err := flink.CatchError(errors.New("Some Error"), res)
 	require.Error(t, err)
 
 	flinkError, ok := err.(flink.FlinkError)
@@ -56,7 +56,7 @@ func TestFlinkErrorCodeWhenErrorMessage(t *testing.T) {
 func TestFlinkErrorCodeWhenNestedMessage(t *testing.T) {
 	res := &http.Response{Body: io.NopCloser(strings.NewReader(`{"error":{"message":"gateway error"}}`)), StatusCode: http.StatusMethodNotAllowed}
 
-	err := flink.CatchFlinkError(errors.New("Some Error"), res)
+	err := flink.CatchError(errors.New("Some Error"), res)
 	require.Error(t, err)
 
 	flinkError, ok := err.(flink.FlinkError)
@@ -68,7 +68,7 @@ func TestFlinkErrorCodeWhenNestedMessage(t *testing.T) {
 func TestFlinkErrorOnlyStatusCode(t *testing.T) {
 	res := &http.Response{Body: io.NopCloser(strings.NewReader("")), StatusCode: http.StatusMethodNotAllowed}
 
-	err := flink.CatchFlinkError(errors.New("Some Error"), res)
+	err := flink.CatchError(errors.New("Some Error"), res)
 	require.Error(t, err)
 
 	flinkError, ok := err.(flink.FlinkError)
