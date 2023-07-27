@@ -4,9 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -37,11 +35,8 @@ func (c *consumerCommand) newListCommand() *cobra.Command {
 
 func (c *consumerCommand) list(cmd *cobra.Command, _ []string) error {
 	kafkaREST, err := c.GetKafkaREST()
-	if kafkaREST == nil {
-		if err != nil {
-			return err
-		}
-		return errors.New(errors.RestProxyNotAvailableMsg)
+	if err != nil {
+		return err
 	}
 
 	cluster, err := c.Context.GetKafkaClusterForCommand()
@@ -54,9 +49,9 @@ func (c *consumerCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	consumerDataList, httpResp, err := kafkaREST.CloudClient.ListKafkaConsumers(cluster.ID, consumerGroup)
+	consumerDataList, err := kafkaREST.CloudClient.ListKafkaConsumers(cluster.ID, consumerGroup)
 	if err != nil {
-		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+		return err
 	}
 
 	list := output.NewList(cmd)

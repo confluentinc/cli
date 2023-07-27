@@ -444,7 +444,7 @@ func AutocompleteLinks(command *AuthenticatedCLICommand) []string {
 
 func AutocompleteConsumerGroups(command *AuthenticatedCLICommand) []string {
 	kafkaREST, err := command.GetKafkaREST()
-	if err != nil || kafkaREST == nil {
+	if err != nil {
 		return nil
 	}
 
@@ -453,7 +453,7 @@ func AutocompleteConsumerGroups(command *AuthenticatedCLICommand) []string {
 		return nil
 	}
 
-	consumerGroupDataList, _, err := kafkaREST.CloudClient.ListKafkaConsumerGroups(cluster.ID)
+	consumerGroupDataList, err := kafkaREST.CloudClient.ListKafkaConsumerGroups(cluster.ID)
 	if err != nil {
 		return nil
 	}
