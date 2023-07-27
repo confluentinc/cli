@@ -494,7 +494,8 @@ func (s *CLITestSuite) TestKafkaConsumer() {
 
 	test = CLITest{
 		login:   "onprem",
-		args:    fmt.Sprintf("kafka consumer list --consumer-group consumer-group-1 --url %s", s.TestBackend.GetKafkaRestUrl()),
+		env:     []string{"CONFLUENT_REST_URL=" + s.TestBackend.GetKafkaRestUrl()},
+		args:    "kafka consumer list --consumer-group consumer-group-1",
 		fixture: "kafka/consumer/list-onprem.golden",
 	}
 
@@ -515,13 +516,14 @@ func (s *CLITestSuite) TestKafkaConsumerGroup() {
 
 	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
 	tests = []CLITest{
-		{args: fmt.Sprintf("kafka consumer-group list --url %s", kafkaRestURL), fixture: "kafka/consumer-group/list-onprem.golden"},
-		{args: fmt.Sprintf("kafka consumer-group describe consumer-group-1 --url %s", kafkaRestURL), fixture: "kafka/consumer-group/describe-onprem.golden"},
-		{args: fmt.Sprintf("kafka consumer-group describe consumer-group-1234 --url %s", kafkaRestURL), fixture: "kafka/consumer-group/describe-onprem-dne.golden", exitCode: 1},
+		{args: "kafka consumer-group list", fixture: "kafka/consumer-group/list-onprem.golden"},
+		{args: "kafka consumer-group describe consumer-group-1", fixture: "kafka/consumer-group/describe-onprem.golden"},
+		{args: "kafka consumer-group describe consumer-group-1234", fixture: "kafka/consumer-group/describe-onprem-dne.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {
 		test.login = "onprem"
+		test.env = []string{"CONFLUENT_REST_URL=" + kafkaRestURL}
 		s.runIntegrationTest(test)
 	}
 }
