@@ -23,6 +23,7 @@ var ccloudV2Routes = []route{
 	{"/cdx/v1/provider-shares/{id}", handleStreamSharingProviderShare},
 	{"/cdx/v1/provider-shares/{id}:resend", handleStreamSharingResendInvite},
 	{"/cdx/v1/shared-tokens:redeem", handleStreamSharingRedeemToken},
+	{"/cli/v1/feedbacks", handleFeedbacks},
 	{"/cmk/v2/clusters", handleCmkClusters},
 	{"/cmk/v2/clusters/{id}", handleCmkCluster},
 	{"/connect/v1/environments/{env}/clusters/{clusters}/connector-plugins", handlePlugins},
