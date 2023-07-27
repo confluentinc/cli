@@ -204,6 +204,20 @@ func AddKsqlClusterFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {
 	})
 }
 
+func AutocompleteGroupMappings(client *ccloudv2.Client) []string {
+	groupMappings, err := client.ListGroupMappings()
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(groupMappings))
+	for i, groupMapping := range groupMappings {
+		description := fmt.Sprintf("%s: %s", groupMapping.GetDisplayName(), groupMapping.GetDescription())
+		suggestions[i] = fmt.Sprintf("%s\t%s", groupMapping.GetId(), description)
+	}
+	return suggestions
+}
+
 func autocompleteKSQLClusters(environmentId string, client *ccloudv2.Client) []string {
 	clusters, err := client.ListKsqlClusters(environmentId)
 	if err != nil {
