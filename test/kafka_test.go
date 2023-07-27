@@ -484,15 +484,17 @@ func (s *CLITestSuite) TestKafkaQuota() {
 }
 
 func (s *CLITestSuite) TestKafkaConsumer() {
-	test := CLITest{
-		login:   "cloud",
-		args:    "kafka consumer list --consumer-group consumer-group-1 --cluster lkc-1234",
-		fixture: "kafka/consumer/list.golden",
+	tests := []CLITest{
+		{args: "kafka consumer list --consumer-group consumer-group-1 --cluster lkc-1234", fixture: "kafka/consumer/list.golden"},
+		{args: "kafka consumer list --consumer-group consumer-group-1 --cluster lkc-1234 -o json", fixture: "kafka/consumer/list-json.golden"},
 	}
 
-	s.runIntegrationTest(test)
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
 
-	test = CLITest{
+	test := CLITest{
 		login:   "onprem",
 		env:     []string{"CONFLUENT_REST_URL=" + s.TestBackend.GetKafkaRestUrl()},
 		args:    "kafka consumer list --consumer-group consumer-group-1",
@@ -505,7 +507,9 @@ func (s *CLITestSuite) TestKafkaConsumer() {
 func (s *CLITestSuite) TestKafkaConsumerGroup() {
 	tests := []CLITest{
 		{args: "kafka consumer-group list --cluster lkc-1234", fixture: "kafka/consumer-group/list.golden"},
+		{args: "kafka consumer-group list --cluster lkc-1234 -o json", fixture: "kafka/consumer-group/list-json.golden"},
 		{args: "kafka consumer-group describe consumer-group-1 --cluster lkc-1234", fixture: "kafka/consumer-group/describe.golden"},
+		{args: "kafka consumer-group describe consumer-group-1 --cluster lkc-1234 -o json", fixture: "kafka/consumer-group/describe-json.golden"},
 		{args: "kafka consumer-group describe consumer-group-1234 --cluster lkc-1234", fixture: "kafka/consumer-group/describe-dne.golden", exitCode: 1},
 	}
 

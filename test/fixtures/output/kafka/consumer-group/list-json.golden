@@ -1,0 +1,26 @@
+[
+  {
+    "cluster_id": "lkc-1234",
+    "consumer_group_id": "consumer-group-1",
+    "coordinator": "broker-1",
+    "is_simple": true,
+    "partition_assignor": "org.apache.kafka.clients.consumer.RoundRobinAssignor",
+    "state": "STABLE"
+  },
+  {
+    "cluster_id": "lkc-1234",
+    "consumer_group_id": "consumer-group-2",
+    "coordinator": "broker-2",
+    "is_simple": false,
+    "partition_assignor": "org.apache.kafka.clients.consumer.StickyAssignor",
+    "state": "PREPARING_REBALANCE"
+  },
+  {
+    "cluster_id": "lkc-1234",
+    "consumer_group_id": "consumer-group-3",
+    "coordinator": "broker-3",
+    "is_simple": false,
+    "partition_assignor": "org.apache.kafka.clients.consumer.RangeAssignor",
+    "state": "DEAD"
+  }
+]
