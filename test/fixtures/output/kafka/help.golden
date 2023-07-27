@@ -7,6 +7,8 @@ Available Commands:
   acl            Manage Kafka ACLs.
   client-config  Manage Kafka Clients configuration files.
   cluster        Manage Kafka clusters.
+  consumer       Manage Kafka consumers.
+  consumer-group Manage Kafka consumer groups.
   link           Manage inter-cluster links.
   mirror         Manage cluster linking mirror topics.
   quota          Manage Kafka client quotas.

@@ -5,7 +5,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -21,7 +20,6 @@ func (c *consumerGroupCommand) newListCommand() *cobra.Command {
 				Code: "confluent kafka consumer-group list",
 			},
 		),
-		Hidden: true,
 	}
 
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
@@ -33,18 +31,23 @@ func (c *consumerGroupCommand) newListCommand() *cobra.Command {
 }
 
 func (c *consumerGroupCommand) list(cmd *cobra.Command, _ []string) error {
-	kafkaREST, lkc, err := getKafkaRestProxyAndLkcId(c.AuthenticatedCLICommand)
+	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {
 		return err
 	}
 
-	groupCmdResp, httpResp, err := kafkaREST.CloudClient.ListKafkaConsumerGroups(lkc)
+	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
-		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+		return err
+	}
+
+	consumerGroupDataList, err := kafkaREST.CloudClient.ListKafkaConsumerGroups(cluster.ID)
+	if err != nil {
+		return err
 	}
 
 	list := output.NewList(cmd)
-	for _, group := range groupCmdResp.Data {
+	for _, group := range consumerGroupDataList.Data {
 		list.Add(&consumerGroupOut{
 			ClusterId:         group.GetClusterId(),
 			ConsumerGroupId:   group.GetConsumerGroupId(),
