@@ -10,29 +10,32 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (c *consumerGroupCommand) newListCommand() *cobra.Command {
+func (c *consumerCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List Kafka consumer groups.",
+		Short: "List Kafka consumers.",
 		Args:  cobra.NoArgs,
 		RunE:  c.list,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "List all consumer groups.",
-				Code: "confluent kafka consumer-group list",
+				Text: `List all consumers for consumer-group "my-consumer-group".`,
+				Code: "confluent kafka consumer list --consumer-group my-consumer-group",
 			},
 		),
 	}
 
+	c.addConsumerGroupFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
+	cobra.CheckErr(cmd.MarkFlagRequired("consumer-group"))
+
 	return cmd
 }
 
-func (c *consumerGroupCommand) list(cmd *cobra.Command, _ []string) error {
+func (c *consumerCommand) list(cmd *cobra.Command, _ []string) error {
 	kafkaREST, err := c.GetKafkaREST()
 	if kafkaREST == nil {
 		if err != nil {
@@ -46,20 +49,23 @@ func (c *consumerGroupCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	consumerGroupDataList, httpResp, err := kafkaREST.CloudClient.ListKafkaConsumerGroups(cluster.ID)
+	consumerGroup, err := cmd.Flags().GetString("consumer-group")
+	if err != nil {
+		return err
+	}
+
+	consumerDataList, httpResp, err := kafkaREST.CloudClient.ListKafkaConsumers(cluster.ID, consumerGroup)
 	if err != nil {
 		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
 	list := output.NewList(cmd)
-	for _, group := range consumerGroupDataList.Data {
-		list.Add(&consumerGroupOut{
-			ClusterId:         group.GetClusterId(),
-			ConsumerGroupId:   group.GetConsumerGroupId(),
-			Coordinator:       getStringBroker(group.GetCoordinator()),
-			IsSimple:          group.GetIsSimple(),
-			PartitionAssignor: group.GetPartitionAssignor(),
-			State:             group.GetState(),
+	for _, consumer := range consumerDataList.Data {
+		list.Add(&consumerOut{
+			ConsumerGroupId: consumer.GetConsumerGroupId(),
+			ConsumerId:      consumer.GetConsumerId(),
+			InstanceId:      consumer.GetInstanceId(),
+			ClientId:        consumer.GetClientId(),
 		})
 	}
 	return list.Print()
