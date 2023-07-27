@@ -28,10 +28,10 @@ wss.on('connection', (ws, req) => {
   ws.on('close', () => {
     console.log('WebSocket connection closed.');
   });
+});
 
-  ws.on('error', (error) => {
-    console.error('WebSocket connection error:', error.message);
-  });
+wss.on('error', (error) => {
+  console.error('WebSocket server error:', error.message);
 });
 
 // Set CORS headers for WebSocket handshake response
