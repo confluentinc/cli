@@ -336,25 +336,6 @@ func isResourceNotFoundError(err error) bool {
 }
 
 /*
-error creating topic bob: Topic 'bob' already exists.
-*/
-func CatchTopicExistsError(err error, clusterId string, topicName string, ifNotExistsFlag bool) error {
-	if err == nil {
-		return nil
-	}
-	compiledRegex := regexp.MustCompile(`error creating topic .*: Topic '.*' already exists\.`)
-	if compiledRegex.MatchString(err.Error()) {
-		if ifNotExistsFlag {
-			return nil
-		}
-		errorMsg := fmt.Sprintf(TopicExistsErrorMsg, topicName, clusterId)
-		suggestions := fmt.Sprintf(TopicExistsSuggestions, clusterId, clusterId)
-		return NewErrorWithSuggestions(errorMsg, suggestions)
-	}
-	return err
-}
-
-/*
 failed to produce offset -1: Unknown error, how did this happen? Error code = 87
 */
 func CatchProduceToCompactedTopicError(err error, topicName string) (bool, error) {
@@ -367,20 +348,4 @@ func CatchProduceToCompactedTopicError(err error, topicName string) (bool, error
 		return true, NewErrorWithSuggestions(errorMsg, ProducingToCompactedTopicSuggestions)
 	}
 	return false, err
-}
-
-func CatchSchemaNotFoundError(err error, r *http.Response) error {
-	if err == nil {
-		return nil
-	}
-
-	if r == nil {
-		return err
-	}
-
-	if strings.Contains(r.Status, "Not Found") {
-		return NewErrorWithSuggestions(SchemaNotFoundErrorMsg, SchemaNotFoundSuggestions)
-	}
-
-	return err
 }

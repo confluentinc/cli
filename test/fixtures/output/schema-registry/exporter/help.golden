@@ -5,9 +5,9 @@ Usage:
 
 Available Commands:
   create      Create a new schema exporter.
-  delete      Delete schema exporter.
-  describe    Describe the schema exporter.
-  get-config  Get the configurations of the schema exporter.
+  delete      Delete a schema exporter.
+  describe    Describe a schema exporter.
+  get-config  Get the schema exporter configuration.
   get-status  Get the status of the schema exporter.
   list        List all schema exporters.
   pause       Pause schema exporter.
