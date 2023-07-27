@@ -1,9 +1,11 @@
 package flink
 
 import (
+	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 )
@@ -43,8 +45,12 @@ func (c *command) computePoolDelete(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	deleted, err := resource.Delete(args, deleteFunc, c.postProcess)
-	resource.PrintDeleteSuccessMsg(deleted, resource.FlinkComputePool)
+	deletedIDs, err := resource.Delete(args, deleteFunc)
+	resource.PrintDeleteSuccessMsg(deletedIDs, resource.FlinkComputePool)
+
+	if err2 := c.removePoolFromConfigIfCurrent(deletedIDs); err2 != nil {
+		err = multierror.Append(err, err2)
+	}
 
 	return err
 }
@@ -78,15 +84,18 @@ func (c *command) confirmDeletionComputePool(cmd *cobra.Command, environmentId s
 	return true, nil
 }
 
-func (c *command) postProcess(id string) error {
-	if id == c.Context.GetCurrentFlinkComputePool() {
-		if err := c.Context.SetCurrentFlinkComputePool(""); err != nil {
-			return err
-		}
-		if err := c.Config.Save(); err != nil {
-			return err
+func (c *command) removePoolFromConfigIfCurrent(deletedIDs []string) error {
+	errs := &multierror.Error{ErrorFormat: errors.CustomMultierrorList}
+	for _, id := range deletedIDs {
+		if id == c.Context.GetCurrentFlinkComputePool() {
+			if err := c.Context.SetCurrentFlinkComputePool(""); err != nil {
+				errs = multierror.Append(errs, err)
+			}
+			if err := c.Config.Save(); err != nil {
+				errs = multierror.Append(errs, err)
+			}
 		}
 	}
 
-	return nil
+	return errs.ErrorOrNil()
 }

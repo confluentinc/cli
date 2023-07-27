@@ -64,7 +64,7 @@ func DeleteTopic(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restCont
 		return nil
 	}
 
-	deleted, err := resource.Delete(args, deleteFunc, nil)
+	deleted, err := resource.Delete(args, deleteFunc)
 	resource.PrintDeleteSuccessMsg(deleted, resource.Topic)
 
 	return err

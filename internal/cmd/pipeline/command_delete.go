@@ -57,7 +57,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	deleted, err := resource.Delete(args, deleteFunc, nil)
+	deleted, err := resource.Delete(args, deleteFunc)
 	if len(deleted) == 1 {
 		output.Printf("Requested to delete pipeline \"%s\".\n", deleted[0])
 	} else if len(deleted) > 1 {

@@ -3,6 +3,7 @@ package environment
 import (
 	"fmt"
 
+	"github.com/hashicorp/go-multierror"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -38,9 +39,12 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return c.V2Client.DeleteOrgEnvironment(id)
 	}
 
-	deleted, err := resource.Delete(args, deleteFunc, c.postProcess)
-	resource.PrintDeleteSuccessMsg(deleted, resource.Environment)
+	deletedIDs, err := resource.Delete(args, deleteFunc)
+	resource.PrintDeleteSuccessMsg(deletedIDs, resource.Environment)
 
+	if err2 := c.deleteEnvironmentsFromConfig(deletedIDs); err2 != nil {
+		err = multierror.Append(err, err2)
+	}
 	if err != nil {
 		return errors.NewErrorWithSuggestions(err.Error(), fmt.Sprintf(errors.ListResourceSuggestions, resource.Environment, pcmd.FullParentName(cmd)))
 	}
@@ -76,15 +80,18 @@ func (c *command) confirmDeletion(cmd *cobra.Command, args []string) (bool, erro
 	return true, nil
 }
 
-func (c *command) postProcess(id string) error {
-	if id == c.Context.GetCurrentEnvironment() {
-		c.Context.SetCurrentEnvironment("")
-		if err := c.Config.Save(); err != nil {
-			return err
+func (c *command) deleteEnvironmentsFromConfig(deletedIDs []string) error {
+	errs := &multierror.Error{ErrorFormat: errors.CustomMultierrorList}
+	for _, id := range deletedIDs {
+		if id == c.Context.GetCurrentEnvironment() {
+			c.Context.SetCurrentEnvironment("")
+			if err := c.Config.Save(); err != nil {
+				errs = multierror.Append(errs, err)
+			}
 		}
+		c.Context.DeleteEnvironment(id)
+		_ = c.Config.Save()
 	}
-	c.Context.DeleteEnvironment(id)
-	_ = c.Config.Save()
 
-	return nil
+	return errs.ErrorOrNil()
 }

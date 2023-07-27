@@ -152,7 +152,7 @@ func Plural(resource string) string {
 	return resource + "s"
 }
 
-func Delete(args []string, callDeleteEndpoint func(string) error, postProcess func(string) error) ([]string, error) {
+func Delete(args []string, callDeleteEndpoint func(string) error) ([]string, error) {
 	errs := &multierror.Error{ErrorFormat: errors.CustomMultierrorList}
 	var deleted []string
 	for _, id := range args {
@@ -160,11 +160,6 @@ func Delete(args []string, callDeleteEndpoint func(string) error, postProcess fu
 			errs = multierror.Append(errs, err)
 		} else {
 			deleted = append(deleted, id)
-			if postProcess != nil {
-				if err := postProcess(id); err != nil {
-					errs = multierror.Append(errs, err)
-				}
-			}
 		}
 	}
 

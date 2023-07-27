@@ -57,7 +57,7 @@ func (c *brokerCommand) delete(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	deleted, err := resource.Delete(args, deleteFunc, nil)
+	deleted, err := resource.Delete(args, deleteFunc)
 	if len(deleted) == 1 {
 		output.Printf("Started deletion of broker %[1]s. To monitor the remove-broker task run `confluent kafka broker get-tasks %[1]s --task-type remove-broker`.\n", deleted[0])
 	} else if len(deleted) > 1 {

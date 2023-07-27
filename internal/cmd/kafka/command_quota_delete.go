@@ -37,7 +37,7 @@ func (c *quotaCommand) delete(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	deleted, err := resource.Delete(args, deleteFunc, nil)
+	deleted, err := resource.Delete(args, deleteFunc)
 	resource.PrintDeleteSuccessMsg(deleted, resource.ClientQuota)
 
 	return err

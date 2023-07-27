@@ -40,10 +40,10 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	deletedIDs, err := resource.Delete(args, deleteFunc, nil)
+	deletedIDs, err := resource.Delete(args, deleteFunc)
 	resource.PrintDeleteSuccessMsg(deletedIDs, resource.ApiKey)
 
-	if err2 := c.deleteFromKeyStore(deletedIDs); err2 != nil {
+	if err2 := c.deleteKeysFromKeyStore(deletedIDs); err2 != nil {
 		err = multierror.Append(err, err2)
 	}
 	if err != nil {
@@ -65,7 +65,7 @@ func (c *command) confirmDeletion(cmd *cobra.Command, args []string) (bool, erro
 	return form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.ApiKey, args))
 }
 
-func (c *command) deleteFromKeyStore(deletedIDs []string) error {
+func (c *command) deleteKeysFromKeyStore(deletedIDs []string) error {
 	errs := &multierror.Error{ErrorFormat: errors.CustomMultierrorList}
 	for _, id := range deletedIDs {
 		if err := c.keystore.DeleteAPIKey(id); err != nil {
