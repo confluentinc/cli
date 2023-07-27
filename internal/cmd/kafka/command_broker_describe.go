@@ -21,7 +21,7 @@ type configOut struct {
 	Name        string `human:"Name" serialized:"name"`
 	Value       string `human:"Value,omitempty" serialized:"value,omitempty"`
 	IsDefault   bool   `human:"Default" serialized:"is_default"`
-	IsReadOnly  bool   `human:"Read Only" serialized:"is_read_only"`
+	IsReadOnly  bool   `human:"Read-Only" serialized:"is_read_only"`
 	IsSensitive bool   `human:"Sensitive" serialized:"is_sensitive"`
 }
 

@@ -1,4 +1,4 @@
-        Config Name       |   Config Value   | Read Only | Sensitive |  Source  |  Synonyms    
+        Config Name       |   Config Value   | Read-Only | Sensitive |  Source  |  Synonyms    
 --------------------------+------------------+-----------+-----------+----------+--------------
   bootstrap.servers       | bitcoin.com:8888 | false     | false     | source-2 | []           
   dest.cluster.id         | cluster-1        | true      | true      |          | []           
