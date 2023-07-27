@@ -20,6 +20,7 @@ type StatementController struct {
 	applicationController types.ApplicationControllerInterface
 	store                 types.StoreInterface
 	consoleParser         prompt.ConsoleParser
+	createdStatementName  string
 }
 
 func NewStatementController(applicationController types.ApplicationControllerInterface, store types.StoreInterface, consoleParser prompt.ConsoleParser) types.StatementControllerInterface {
@@ -36,6 +37,7 @@ func (c *StatementController) ExecuteStatement(statementToExecute string) (*type
 		c.handleStatementError(*err)
 		return nil, err
 	}
+	c.createdStatementName = processedStatement.StatementName
 	processedStatement.PrintStatusMessage()
 
 	processedStatement, err = c.waitForStatementToBeReadyOrError(*processedStatement)
@@ -135,4 +137,8 @@ func isCancelEvent(key prompt.Key) bool {
 
 func isDetachEvent(key prompt.Key) bool {
 	return lo.Contains([]prompt.Key{prompt.ControlM, prompt.Enter}, key)
+}
+
+func (c *StatementController) CleanupStatement() {
+	c.store.DeleteStatement(c.createdStatementName)
 }

@@ -10,6 +10,7 @@ import (
 	client "github.com/confluentinc/cli/internal/pkg/flink/app"
 	"github.com/confluentinc/cli/internal/pkg/flink/test/mock"
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
+	ppanic "github.com/confluentinc/cli/internal/pkg/panic-recovery"
 )
 
 func (c *command) newShellCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
@@ -74,7 +75,7 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 			types.ApplicationOptions{
 				Context:   c.Context,
 				UserAgent: c.Version.UserAgent,
-			})
+			}, func() {})
 		return nil
 	}
 
@@ -148,20 +149,24 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 
 	verbose, _ := cmd.Flags().GetCount("verbose")
 
-	client.StartApp(
-		flinkGatewayClient,
-		c.authenticated(prerunner.Authenticated(c.AuthenticatedCLICommand), cmd, jwtValidator),
-		types.ApplicationOptions{
-			Context:         c.Context,
-			UnsafeTrace:     unsafeTrace,
-			UserAgent:       c.Version.UserAgent,
-			EnvironmentName: catalog,
-			EnvironmentId:   environmentId,
-			OrgResourceId:   resourceId,
-			Database:        database,
-			ComputePoolId:   computePool,
-			IdentityPoolId:  identityPool,
-			Verbose:         verbose > 0,
-		})
+	client.StartApp(flinkGatewayClient, c.authenticated(prerunner.Authenticated(c.AuthenticatedCLICommand), cmd, jwtValidator), types.ApplicationOptions{
+		Context:         c.Context,
+		UnsafeTrace:     unsafeTrace,
+		UserAgent:       c.Version.UserAgent,
+		EnvironmentName: catalog,
+		EnvironmentId:   environmentId,
+		OrgResourceId:   resourceId,
+		Database:        database,
+		ComputePoolId:   computePool,
+		IdentityPoolId:  identityPool,
+		Verbose:         verbose > 0,
+	}, reportUsage(cmd, c.Config.Config, unsafeTrace))
 	return nil
+}
+
+func reportUsage(cmd *cobra.Command, cfg *v1.Config, unsafeTrace bool) func() {
+	return func() {
+		u := ppanic.CollectPanic(cmd, nil, cfg)
+		u.Report(cfg.GetCloudClientV2(unsafeTrace))
+	}
 }
