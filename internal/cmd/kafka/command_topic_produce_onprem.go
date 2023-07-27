@@ -196,7 +196,7 @@ func (c *command) registerSchemaOnPrem(cmd *cobra.Command, schemaCfg *sr.Registe
 	metaInfo := []byte{}
 	referencePathMap := map[string]string{}
 	if schemaCfg.ValueFormat != "string" && len(schemaCfg.SchemaPath) > 0 {
-		if c.State == nil { // require log-in to use oauthbearer token
+		if c.Context.State == nil { // require log-in to use oauthbearer token
 			return nil, nil, errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestions)
 		}
 

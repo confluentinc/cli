@@ -13,7 +13,6 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/auth"
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/hub"
@@ -26,29 +25,28 @@ type AuthenticatedCLICommand struct {
 	*CLICommand
 
 	Client            *ccloudv1.Client
-	HubClient         *hub.Client
 	KafkaRESTProvider *KafkaRESTProvider
 	MDSClient         *mds.APIClient
 	MDSv2Client       *mdsv2alpha1.APIClient
 	V2Client          *ccloudv2.Client
 
 	flinkGatewayClient   *ccloudv2.FlinkGatewayClient
+	hubClient            *hub.Client
 	metricsClient        *ccloudv2.MetricsClient
 	schemaRegistryClient *schemaregistry.Client
 
 	Context *dynamicconfig.DynamicContext
-	State   *v1.ContextState
 }
 
 func NewAuthenticatedCLICommand(cmd *cobra.Command, prerunner PreRunner) *AuthenticatedCLICommand {
 	c := &AuthenticatedCLICommand{CLICommand: NewCLICommand(cmd)}
-	cmd.PersistentPreRunE = Chain(prerunner.Authenticated(c), prerunner.ParseFlagsIntoContext(c.CLICommand))
+	cmd.PersistentPreRunE = chain(prerunner.Authenticated(c), prerunner.ParseFlagsIntoContext(c.CLICommand))
 	return c
 }
 
 func NewAuthenticatedWithMDSCLICommand(cmd *cobra.Command, prerunner PreRunner) *AuthenticatedCLICommand {
 	c := &AuthenticatedCLICommand{CLICommand: NewCLICommand(cmd)}
-	cmd.PersistentPreRunE = Chain(prerunner.AuthenticatedWithMDS(c), prerunner.ParseFlagsIntoContext(c.CLICommand))
+	cmd.PersistentPreRunE = chain(prerunner.AuthenticatedWithMDS(c), prerunner.ParseFlagsIntoContext(c.CLICommand))
 	return c
 }
 
@@ -131,16 +129,16 @@ func (c *AuthenticatedCLICommand) getGatewayUrlForRegion(provider, region string
 }
 
 func (c *AuthenticatedCLICommand) GetHubClient() (*hub.Client, error) {
-	if c.HubClient == nil {
+	if c.hubClient == nil {
 		unsafeTrace, err := c.Flags().GetBool("unsafe-trace")
 		if err != nil {
 			return nil, err
 		}
 
-		c.HubClient = hub.NewClient(c.Config.Version.UserAgent, c.Config.IsTest, unsafeTrace)
+		c.hubClient = hub.NewClient(c.Config.Version.UserAgent, c.Config.IsTest, unsafeTrace)
 	}
 
-	return c.HubClient, nil
+	return c.hubClient, nil
 }
 
 func (c *AuthenticatedCLICommand) GetKafkaREST() (*KafkaREST, error) {

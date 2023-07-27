@@ -8,7 +8,7 @@ import (
 
 func CatchErrors(fs ...func(*cobra.Command, []string) error) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
-		f := Chain(fs...)
+		f := chain(fs...)
 		if err := errors.HandleCommon(f(cmd, args)); err != nil {
 			// Only show usage for Cobra-related errors (missing args, incorrect flags, etc.)
 			cmd.SilenceUsage = true
@@ -18,7 +18,7 @@ func CatchErrors(fs ...func(*cobra.Command, []string) error) func(*cobra.Command
 	}
 }
 
-func Chain(fs ...func(*cobra.Command, []string) error) func(*cobra.Command, []string) error {
+func chain(fs ...func(*cobra.Command, []string) error) func(*cobra.Command, []string) error {
 	return func(cmd *cobra.Command, args []string) error {
 		for _, f := range fs {
 			if err := f(cmd, args); err != nil {

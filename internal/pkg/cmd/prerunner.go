@@ -245,16 +245,10 @@ func (r *PreRun) ParseFlagsIntoContext(command *CLICommand) func(*cobra.Command,
 
 func (r *PreRun) setAuthenticatedContext(cliCommand *AuthenticatedCLICommand) error {
 	ctx := cliCommand.Config.Context()
-	if ctx == nil {
+	if ctx == nil || !ctx.HasLogin() {
 		return new(errors.NotLoggedInError)
 	}
 	cliCommand.Context = ctx
-
-	state, err := ctx.AuthenticatedState()
-	if err != nil {
-		return err
-	}
-	cliCommand.State = state
 
 	return nil
 }
@@ -494,7 +488,6 @@ func (r *PreRun) setAuthenticatedWithMDSContext(cliCommand *AuthenticatedCLIComm
 		return new(errors.NotLoggedInError)
 	}
 	cliCommand.Context = ctx
-	cliCommand.State = ctx.State
 
 	unsafeTrace, err := cliCommand.Flags().GetBool("unsafe-trace")
 	if err != nil {
