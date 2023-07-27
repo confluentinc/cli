@@ -1,6 +1,10 @@
-package errors
+package flink
 
-import "net/http"
+import (
+	"net/http"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
+)
 
 // FlinkError extends the ErrorWithSuggestion with a status code.
 type FlinkError struct {
@@ -34,16 +38,16 @@ type Coder interface {
 }
 
 var _ Coder = (*FlinkError)(nil)
-var _ ErrorWithSuggestions = (*FlinkError)(nil)
+var _ errors.ErrorWithSuggestions = (*FlinkError)(nil)
 
 // Extends error with status code, including suggestion if err type is ErrorWithSuggestion
 func CatchFlinkError(err error, r *http.Response) error {
 	if err == nil {
 		return nil
 	}
-	err = CatchCCloudV2Error(err, r)
+	err = errors.CatchCCloudV2Error(err, r)
 	suggestion := ""
-	if suggester, ok := err.(ErrorWithSuggestions); ok {
+	if suggester, ok := err.(errors.ErrorWithSuggestions); ok {
 		suggestion = suggester.GetSuggestionsMsg()
 	}
 	var statusCode int
