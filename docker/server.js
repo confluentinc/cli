@@ -2,8 +2,16 @@ const http = require('http');
 const WebSocket = require('ws');
 const { exec } = require('child_process');
 
-const server = http.createServer();
-const wss = new WebSocket.Server({ server });
+const server = http.createServer((req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+});
+
+const wss = new WebSocket.Server({
+  server,
+  perMessageDeflate: false,
+});
+
 const textDecoder = new TextDecoder();
 
 wss.on('connection', (ws) => {
