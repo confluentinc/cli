@@ -49,13 +49,13 @@ func (c *consumerCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	consumerDataList, err := kafkaREST.CloudClient.ListKafkaConsumers(cluster.ID, consumerGroup)
+	consumers, err := kafkaREST.CloudClient.ListKafkaConsumers(cluster.ID, consumerGroup)
 	if err != nil {
 		return err
 	}
 
 	list := output.NewList(cmd)
-	for _, consumer := range consumerDataList.Data {
+	for _, consumer := range consumers.Data {
 		list.Add(&consumerOut{
 			ConsumerGroupId: consumer.GetConsumerGroupId(),
 			ConsumerId:      consumer.GetConsumerId(),

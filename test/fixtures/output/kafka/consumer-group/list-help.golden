@@ -3,11 +3,6 @@ List Kafka consumer groups.
 Usage:
   confluent kafka consumer-group list [flags]
 
-Examples:
-List all consumer groups.
-
-  $ confluent kafka consumer-group list
-
 Flags:
       --cluster string       Kafka cluster ID.
       --context string       CLI context name.

@@ -38,19 +38,19 @@ func (c *consumerGroupCommand) describeOnPrem(cmd *cobra.Command, args []string)
 		return err
 	}
 
-	data, resp, err := restClient.ConsumerGroupV3Api.GetKafkaConsumerGroup(restContext, clusterId, args[0])
+	consumerGroup, resp, err := restClient.ConsumerGroupV3Api.GetKafkaConsumerGroup(restContext, clusterId, args[0])
 	if err != nil {
 		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 	}
 
 	table := output.NewTable(cmd)
 	table.Add(&consumerGroupOut{
-		ClusterId:         data.ClusterId,
-		ConsumerGroupId:   data.ConsumerGroupId,
-		Coordinator:       getStringBrokerOnPrem(data.Coordinator),
-		IsSimple:          data.IsSimple,
-		PartitionAssignor: data.PartitionAssignor,
-		State:             data.State,
+		ClusterId:         consumerGroup.ClusterId,
+		ConsumerGroupId:   consumerGroup.ConsumerGroupId,
+		Coordinator:       getStringBrokerOnPrem(consumerGroup.Coordinator),
+		IsSimple:          consumerGroup.IsSimple,
+		PartitionAssignor: consumerGroup.PartitionAssignor,
+		State:             consumerGroup.State,
 	})
 	return table.Print()
 }

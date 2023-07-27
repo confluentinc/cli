@@ -12,7 +12,7 @@ type consumerCommand struct {
 }
 
 type consumerOut struct {
-	ConsumerGroupId string `human:"Consumer Group" serialized:"consumer_group"`
+	ConsumerGroupId string `human:"Consumer Group" serialized:"consumer_group_id"`
 	ConsumerId      string `human:"Consumer" serialized:"consumer"`
 	InstanceId      string `human:"Instance" serialized:"instance"`
 	ClientId        string `human:"Client" serialized:"client"`

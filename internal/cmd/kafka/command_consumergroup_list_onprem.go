@@ -34,20 +34,20 @@ func (c *consumerGroupCommand) listOnPrem(cmd *cobra.Command, args []string) err
 		return err
 	}
 
-	dataList, resp, err := restClient.ConsumerGroupV3Api.ListKafkaConsumerGroups(restContext, clusterId)
+	consumerGroup, resp, err := restClient.ConsumerGroupV3Api.ListKafkaConsumerGroups(restContext, clusterId)
 	if err != nil {
 		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 	}
 
 	list := output.NewList(cmd)
-	for _, data := range dataList.Data {
+	for _, group := range consumerGroup.Data {
 		list.Add(&consumerGroupOut{
-			ClusterId:         data.ClusterId,
-			ConsumerGroupId:   data.ConsumerGroupId,
-			Coordinator:       getStringBrokerOnPrem(data.Coordinator),
-			IsSimple:          data.IsSimple,
-			PartitionAssignor: data.PartitionAssignor,
-			State:             data.State,
+			ClusterId:         group.ClusterId,
+			ConsumerGroupId:   group.ConsumerGroupId,
+			Coordinator:       getStringBrokerOnPrem(group.Coordinator),
+			IsSimple:          group.IsSimple,
+			PartitionAssignor: group.PartitionAssignor,
+			State:             group.State,
 		})
 	}
 	return list.Print()

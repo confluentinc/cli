@@ -49,13 +49,13 @@ func (c *consumerCommand) listOnPrem(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	consumerDataList, resp, err := restClient.ConsumerGroupV3Api.ListKafkaConsumers(restContext, clusterId, consumerGroup)
+	consumers, resp, err := restClient.ConsumerGroupV3Api.ListKafkaConsumers(restContext, clusterId, consumerGroup)
 	if err != nil {
 		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 	}
 
 	list := output.NewList(cmd)
-	for _, consumer := range consumerDataList.Data {
+	for _, consumer := range consumers.Data {
 		instanceId := ""
 		if consumer.InstanceId != nil {
 			instanceId = *consumer.InstanceId

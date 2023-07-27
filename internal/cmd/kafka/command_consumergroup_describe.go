@@ -8,7 +8,6 @@ import (
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -19,12 +18,6 @@ func (c *consumerGroupCommand) newDescribeCommand() *cobra.Command {
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.describe,
-		Example: examples.BuildExampleString(
-			examples.Example{
-				Text: `Describe the "my-consumer-group" consumer group.`,
-				Code: "confluent kafka consumer-group describe my-consumer-group",
-			},
-		),
 	}
 
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
@@ -46,19 +39,19 @@ func (c *consumerGroupCommand) describe(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	consumerGroupData, err := kafkaREST.CloudClient.GetKafkaConsumerGroup(cluster.ID, args[0])
+	consumerGroup, err := kafkaREST.CloudClient.GetKafkaConsumerGroup(cluster.ID, args[0])
 	if err != nil {
 		return err
 	}
 
 	table := output.NewTable(cmd)
 	table.Add(&consumerGroupOut{
-		ClusterId:         consumerGroupData.GetClusterId(),
-		ConsumerGroupId:   consumerGroupData.GetConsumerGroupId(),
-		Coordinator:       getStringBroker(consumerGroupData.GetCoordinator()),
-		IsSimple:          consumerGroupData.GetIsSimple(),
-		PartitionAssignor: consumerGroupData.GetPartitionAssignor(),
-		State:             consumerGroupData.GetState(),
+		ClusterId:         consumerGroup.GetClusterId(),
+		ConsumerGroupId:   consumerGroup.GetConsumerGroupId(),
+		Coordinator:       getStringBroker(consumerGroup.GetCoordinator()),
+		IsSimple:          consumerGroup.GetIsSimple(),
+		PartitionAssignor: consumerGroup.GetPartitionAssignor(),
+		State:             consumerGroup.GetState(),
 	})
 	return table.Print()
 }

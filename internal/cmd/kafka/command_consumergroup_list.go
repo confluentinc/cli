@@ -4,7 +4,6 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -14,12 +13,6 @@ func (c *consumerGroupCommand) newListCommand() *cobra.Command {
 		Short: "List Kafka consumer groups.",
 		Args:  cobra.NoArgs,
 		RunE:  c.list,
-		Example: examples.BuildExampleString(
-			examples.Example{
-				Text: "List all consumer groups.",
-				Code: "confluent kafka consumer-group list",
-			},
-		),
 	}
 
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
@@ -41,13 +34,13 @@ func (c *consumerGroupCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	consumerGroupDataList, err := kafkaREST.CloudClient.ListKafkaConsumerGroups(cluster.ID)
+	consumerGroups, err := kafkaREST.CloudClient.ListKafkaConsumerGroups(cluster.ID)
 	if err != nil {
 		return err
 	}
 
 	list := output.NewList(cmd)
-	for _, group := range consumerGroupDataList.Data {
+	for _, group := range consumerGroups.Data {
 		list.Add(&consumerGroupOut{
 			ClusterId:         group.GetClusterId(),
 			ConsumerGroupId:   group.GetConsumerGroupId(),

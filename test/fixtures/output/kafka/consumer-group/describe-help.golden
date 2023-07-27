@@ -3,11 +3,6 @@ Describe a Kafka consumer group.
 Usage:
   confluent kafka consumer-group describe <consumer-group> [flags]
 
-Examples:
-Describe the "my-consumer-group" consumer group.
-
-  $ confluent kafka consumer-group describe my-consumer-group
-
 Flags:
       --cluster string       Kafka cluster ID.
       --context string       CLI context name.
