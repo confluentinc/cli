@@ -58,7 +58,7 @@ func (c *StatementController) ExecuteStatement(statementToExecute string) (*type
 
 func (c *StatementController) handleStatementError(err types.StatementError) {
 	utils.OutputErr(err.Error())
-	if err.HttpResponseCode == http.StatusUnauthorized {
+	if err.StatusCode == http.StatusUnauthorized {
 		c.applicationController.ExitApplication()
 	}
 }
