@@ -1,6 +1,7 @@
 package testserver
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -17,13 +18,9 @@ import (
 	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
 )
 
-var (
-	serviceAccountInvalidErrMsg = `{"errors":[{"status":"403","detail":"service account is not valid"}]}`
-	roleNameInvalidErrMsg       = `{"status_code":400,"message":"Invalid role name : %s","type":"INVALID REQUEST DATA"}`
-	resourceNotFoundErrMsg      = `{"errors":[{"detail":"resource not found"}], "message":"resource not found"}`
-	badRequestErrMsg            = `{"errors":[{"status":"400","detail":"Bad Request"}]}`
-	userConflictErrMsg          = `{"errors":[{"detail":"This user already exists within the Organization"}]}`
-)
+type ErrorJson struct {
+	Message string `json:"message"`
+}
 
 type ApiKeyListV2 []apikeysv2.IamV2ApiKey
 
@@ -239,28 +236,33 @@ func fillByokStoreV1() map[string]*byokv1.ByokV1Key {
 	return byokStoreV1
 }
 
+func writeErrorJson(w http.ResponseWriter, message string) error {
+	errorJson, err := json.Marshal(ErrorJson{Message: message})
+	if err != nil {
+		return err
+	}
+	_, err = io.WriteString(w, string(errorJson))
+	return err
+}
+
 func writeServiceAccountInvalidError(w http.ResponseWriter) error {
 	w.WriteHeader(http.StatusForbidden)
-	_, err := io.WriteString(w, serviceAccountInvalidErrMsg)
-	return err
+	return writeErrorJson(w, "service account is not valid")
 }
 
 func writeResourceNotFoundError(w http.ResponseWriter) error {
 	w.WriteHeader(http.StatusForbidden)
-	_, err := io.WriteString(w, resourceNotFoundErrMsg)
-	return err
+	return writeErrorJson(w, "resource not found")
 }
 
 func writeInvalidRoleNameError(w http.ResponseWriter, roleName string) error {
 	w.WriteHeader(http.StatusBadRequest)
-	_, err := io.WriteString(w, fmt.Sprintf(roleNameInvalidErrMsg, roleName))
-	return err
+	return writeErrorJson(w, fmt.Sprintf("Invalid role name : %s", roleName))
 }
 
 func writeUserConflictError(w http.ResponseWriter) error {
 	w.WriteHeader(http.StatusConflict)
-	_, err := io.WriteString(w, userConflictErrMsg)
-	return err
+	return writeErrorJson(w, "This user already exists within the Organization")
 }
 
 func getCmkBasicDescribeCluster(id string, name string) *cmkv2.CmkV2Cluster {
