@@ -154,24 +154,27 @@ func (c *KafkaRestClient) UpdateKafkaTopicConfigBatch(clusterId, topicName strin
 	return c.ConfigsV3Api.UpdateKafkaTopicConfigBatch(c.context(), clusterId, topicName).AlterConfigBatchRequestData(data).Execute()
 }
 
-func (c *KafkaRestClient) GetKafkaConsumerGroup(clusterId, consumerGroupId string) (kafkarestv3.ConsumerGroupData, *http.Response, error) {
-	return c.ConsumerGroupV3Api.GetKafkaConsumerGroup(c.context(), clusterId, consumerGroupId).Execute()
+func (c *KafkaRestClient) GetKafkaConsumerGroup(clusterId, consumerGroupId string) (kafkarestv3.ConsumerGroupData, error) {
+	res, httpResp, err := c.ConsumerGroupV3Api.GetKafkaConsumerGroup(c.context(), clusterId, consumerGroupId).Execute()
+	return res, kafkarest.NewError(c.GetUrl(), err, httpResp)
 }
 
 func (c *KafkaRestClient) GetKafkaConsumerGroupLagSummary(clusterId, consumerGroupId string) (kafkarestv3.ConsumerGroupLagSummaryData, *http.Response, error) {
 	return c.ConsumerGroupV3Api.GetKafkaConsumerGroupLagSummary(c.context(), clusterId, consumerGroupId).Execute()
 }
 
-func (c *KafkaRestClient) ListKafkaConsumerGroups(clusterId string) (kafkarestv3.ConsumerGroupDataList, *http.Response, error) {
-	return c.ConsumerGroupV3Api.ListKafkaConsumerGroups(c.context(), clusterId).Execute()
+func (c *KafkaRestClient) ListKafkaConsumerGroups(clusterId string) (kafkarestv3.ConsumerGroupDataList, error) {
+	res, httpResp, err := c.ConsumerGroupV3Api.ListKafkaConsumerGroups(c.context(), clusterId).Execute()
+	return res, kafkarest.NewError(c.GetUrl(), err, httpResp)
 }
 
 func (c *KafkaRestClient) ListKafkaConsumerLags(clusterId, consumerGroupId string) (kafkarestv3.ConsumerLagDataList, *http.Response, error) {
 	return c.ConsumerGroupV3Api.ListKafkaConsumerLags(c.context(), clusterId, consumerGroupId).Execute()
 }
 
-func (c *KafkaRestClient) ListKafkaConsumers(clusterId, consumerGroupId string) (kafkarestv3.ConsumerDataList, *http.Response, error) {
-	return c.ConsumerGroupV3Api.ListKafkaConsumers(c.context(), clusterId, consumerGroupId).Execute()
+func (c *KafkaRestClient) ListKafkaConsumers(clusterId, consumerGroupId string) (kafkarestv3.ConsumerDataList, error) {
+	res, httpResp, err := c.ConsumerGroupV3Api.ListKafkaConsumers(c.context(), clusterId, consumerGroupId).Execute()
+	return res, kafkarest.NewError(c.GetUrl(), err, httpResp)
 }
 
 func (c *KafkaRestClient) GetKafkaConsumerLag(clusterId, consumerGroupId, topicName string, partitionId int32) (kafkarestv3.ConsumerLagData, *http.Response, error) {
