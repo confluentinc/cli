@@ -45,13 +45,10 @@ func (c *command) computePoolDelete(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	deletedIDs, err := resource.Delete(args, deleteFunc)
-	resource.PrintDeleteSuccessMsg(deletedIDs, resource.FlinkComputePool)
-
+	deletedIDs, err := resource.Delete(args, deleteFunc, resource.FlinkComputePool)
 	if err2 := c.removePoolFromConfigIfCurrent(deletedIDs); err2 != nil {
 		err = multierror.Append(err, err2)
 	}
-
 	return err
 }
 

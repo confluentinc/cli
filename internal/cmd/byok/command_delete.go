@@ -38,12 +38,10 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	deleted, err := resource.Delete(args, deleteFunc)
-	resource.PrintDeleteSuccessMsg(deleted, resource.ByokKey)
-
-	if err != nil {
+	if _, err := resource.Delete(args, deleteFunc, resource.ByokKey); err != nil {
 		return errors.NewErrorWithSuggestions(err.Error(), errors.ByokKeyNotFoundSuggestions)
 	}
+
 	return nil
 }
 

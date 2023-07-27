@@ -54,9 +54,7 @@ func (c *linkCommand) delete(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	deleted, err := resource.Delete(args, deleteFunc)
-	resource.PrintDeleteSuccessMsg(deleted, resource.ClusterLink)
-
+	_, err = resource.Delete(args, deleteFunc, resource.ClusterLink)
 	return err
 }
 

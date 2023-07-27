@@ -16,6 +16,7 @@ const (
 	Unknown               = "unknown"
 	ACL                   = "ACL"
 	ApiKey                = "API key"
+	Broker                = "broker"
 	ByokKey               = "self-managed key"
 	ClientQuota           = "client quota"
 	Cloud                 = "cloud"
@@ -152,24 +153,41 @@ func Plural(resource string) string {
 	return resource + "s"
 }
 
-func Delete(args []string, callDeleteEndpoint func(string) error) ([]string, error) {
+func delete(args []string, callDeleteEndpoint func(string) error) ([]string, error) {
 	errs := &multierror.Error{ErrorFormat: errors.CustomMultierrorList}
-	var deleted []string
+	var deletedIDs []string
 	for _, id := range args {
 		if err := callDeleteEndpoint(id); err != nil {
 			errs = multierror.Append(errs, err)
 		} else {
-			deleted = append(deleted, id)
+			deletedIDs = append(deletedIDs, id)
 		}
 	}
 
-	return deleted, errs.ErrorOrNil()
+	return deletedIDs, errs.ErrorOrNil()
 }
 
-func PrintDeleteSuccessMsg(successful []string, resourceType string) {
-	if len(successful) == 1 {
-		output.Printf(errors.DeletedResourceMsg, resourceType, successful[0])
-	} else if len(successful) > 1 {
-		output.Printf("Deleted %s %s.\n", Plural(resourceType), utils.ArrayToCommaDelimitedString(successful, "and"))
+func Delete(args []string, callDeleteEndpoint func(string) error, resourceType string) ([]string, error) {
+	deletedIDs, err := delete(args, callDeleteEndpoint)
+
+	DeletedResourceMsg := "Deleted %s %s.\n"
+	if len(deletedIDs) == 1 {
+		output.Printf(DeletedResourceMsg, resourceType, fmt.Sprintf("\"%s\"", deletedIDs[0]))
+	} else if len(deletedIDs) > 1 {
+		output.Printf(DeletedResourceMsg, Plural(resourceType), utils.ArrayToCommaDelimitedString(deletedIDs, "and"))
 	}
+
+	return deletedIDs, err
+}
+
+func DeleteWithCustomMessage(args []string, callDeleteEndpoint func(string) error, singularMsg, pluralMsg string) ([]string, error) {
+	deletedIDs, err := delete(args, callDeleteEndpoint)
+
+	if len(deletedIDs) == 1 {
+		output.Printf(singularMsg, fmt.Sprintf("\"%s\"", deletedIDs[0]))
+	} else if len(deletedIDs) > 1 {
+		output.Printf(pluralMsg, utils.ArrayToCommaDelimitedString(deletedIDs, "and"))
+	}
+
+	return deletedIDs, err
 }

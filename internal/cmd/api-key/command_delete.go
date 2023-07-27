@@ -40,15 +40,14 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	deletedIDs, err := resource.Delete(args, deleteFunc)
-	resource.PrintDeleteSuccessMsg(deletedIDs, resource.ApiKey)
-
+	deletedIDs, err := resource.Delete(args, deleteFunc, resource.ApiKey)
 	if err2 := c.deleteKeysFromKeyStore(deletedIDs); err2 != nil {
 		err = multierror.Append(err, err2)
 	}
 	if err != nil {
 		return errors.NewErrorWithSuggestions(err.Error(), errors.APIKeyNotFoundSuggestions)
 	}
+
 	return nil
 }
 

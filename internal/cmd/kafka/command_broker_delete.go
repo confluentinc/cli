@@ -12,9 +12,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
-	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *brokerCommand) newDeleteCommand() *cobra.Command {
@@ -57,13 +55,9 @@ func (c *brokerCommand) delete(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	deleted, err := resource.Delete(args, deleteFunc)
-	if len(deleted) == 1 {
-		output.Printf("Started deletion of broker %[1]s. To monitor the remove-broker task run `confluent kafka broker get-tasks %[1]s --task-type remove-broker`.\n", deleted[0])
-	} else if len(deleted) > 1 {
-		output.Printf("Started deletion of brokers %s. To monitor a remove-broker task run `confluent kafka broker get-tasks <id> --task-type remove-broker`.\n", utils.ArrayToCommaDelimitedString(deleted, "and"))
-	}
-
+	singleDeleteMsg := "Started deletion of broker %s. To monitor the remove-broker task run `confluent kafka broker get-tasks <id> --task-type remove-broker`.\n"
+	multipleDeleteMsg := "Started deletion of brokers %s. To monitor a remove-broker task run `confluent kafka broker get-tasks <id> --task-type remove-broker`.\n"
+	_, err = resource.DeleteWithCustomMessage(args, deleteFunc, singleDeleteMsg, multipleDeleteMsg)
 	return err
 }
 
@@ -83,9 +77,9 @@ func (c *brokerCommand) confirmDeletion(cmd *cobra.Command, restClient *kafkares
 		return nil
 	}
 
-	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, "broker", describeFunc); err != nil {
+	if err := resource.ValidateArgs(pcmd.FullParentName(cmd), args, resource.Broker, describeFunc); err != nil {
 		return false, err
 	}
 
-	return form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString("broker", args))
+	return form.ConfirmDeletionYesNo(cmd, form.DefaultYesNoPromptString(resource.Broker, args))
 }

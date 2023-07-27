@@ -39,15 +39,14 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return c.V2Client.DeleteOrgEnvironment(id)
 	}
 
-	deletedIDs, err := resource.Delete(args, deleteFunc)
-	resource.PrintDeleteSuccessMsg(deletedIDs, resource.Environment)
-
+	deletedIDs, err := resource.Delete(args, deleteFunc, resource.Environment)
 	if err2 := c.deleteEnvironmentsFromConfig(deletedIDs); err2 != nil {
 		err = multierror.Append(err, err2)
 	}
 	if err != nil {
 		return errors.NewErrorWithSuggestions(err.Error(), fmt.Sprintf(errors.ListResourceSuggestions, resource.Environment, pcmd.FullParentName(cmd)))
 	}
+
 	return nil
 }
 

@@ -40,9 +40,7 @@ func (c *command) iamBindingDelete(cmd *cobra.Command, args []string) error {
 		return c.V2Client.DeleteFlinkIAMBinding(id, environmentId)
 	}
 
-	deleted, err := resource.Delete(args, deleteFunc)
-	resource.PrintDeleteSuccessMsg(deleted, resource.FlinkIamBinding)
-
+	_, err = resource.Delete(args, deleteFunc, resource.FlinkIamBinding)
 	return err
 }
 

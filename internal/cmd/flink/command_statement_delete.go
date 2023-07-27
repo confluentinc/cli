@@ -47,9 +47,7 @@ func (c *command) statementDelete(cmd *cobra.Command, args []string) error {
 		return client.DeleteStatement(environmentId, id, c.Context.LastOrgId)
 	}
 
-	deleted, err := resource.Delete(args, deleteFunc)
-	resource.PrintDeleteSuccessMsg(deleted, resource.FlinkStatement)
-
+	_, err = resource.Delete(args, deleteFunc, resource.FlinkStatement)
 	return err
 }
 

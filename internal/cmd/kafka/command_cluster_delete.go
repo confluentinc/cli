@@ -49,9 +49,7 @@ func (c *clusterCommand) delete(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	deletedIDs, err := resource.Delete(args, deleteFunc)
-	resource.PrintDeleteSuccessMsg(deletedIDs, resource.KafkaCluster)
-
+	deletedIDs, err := resource.Delete(args, deleteFunc, resource.KafkaCluster)
 	if err2 := c.removeKafkaClusterConfigs(deletedIDs); err2 != nil {
 		err = multierror.Append(err, err2)
 	}

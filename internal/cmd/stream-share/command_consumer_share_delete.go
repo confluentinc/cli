@@ -43,9 +43,7 @@ func (c *command) deleteConsumerShare(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	deleted, err := resource.Delete(args, deleteFunc)
-	resource.PrintDeleteSuccessMsg(deleted, resource.ConsumerShare)
-
+	_, err := resource.Delete(args, deleteFunc, resource.ConsumerShare)
 	return err
 }
 

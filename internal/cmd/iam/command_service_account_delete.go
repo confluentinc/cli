@@ -44,9 +44,7 @@ func (c *serviceAccountCommand) delete(cmd *cobra.Command, args []string) error 
 		return nil
 	}
 
-	deleted, err := resource.Delete(args, deleteFunc)
-	resource.PrintDeleteSuccessMsg(deleted, resource.ServiceAccount)
-
+	_, err := resource.Delete(args, deleteFunc, resource.ServiceAccount)
 	return err
 }
 

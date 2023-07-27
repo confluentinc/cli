@@ -48,9 +48,7 @@ func (c *identityPoolCommand) delete(cmd *cobra.Command, args []string) error {
 		return c.V2Client.DeleteIdentityPool(id, provider)
 	}
 
-	deleted, err := resource.Delete(args, deleteFunc)
-	resource.PrintDeleteSuccessMsg(deleted, resource.IdentityPool)
-
+	_, err = resource.Delete(args, deleteFunc, resource.IdentityPool)
 	return err
 }
 

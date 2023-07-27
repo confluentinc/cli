@@ -6,9 +6,7 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
-	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
-	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *command) newDeleteCommand() *cobra.Command {
@@ -57,13 +55,9 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	deleted, err := resource.Delete(args, deleteFunc)
-	if len(deleted) == 1 {
-		output.Printf("Requested to delete pipeline \"%s\".\n", deleted[0])
-	} else if len(deleted) > 1 {
-		output.Printf("Requested to delete pipelines %s.\n", utils.ArrayToCommaDelimitedString(deleted, "and"))
-	}
-
+	singleDeleteMsg := "Requested to delete pipeline %s.\n"
+	multipleDeleteMsg := "Requested to delete pipelines %s.\n"
+	_, err = resource.DeleteWithCustomMessage(args, deleteFunc, singleDeleteMsg, multipleDeleteMsg)
 	return err
 }
 

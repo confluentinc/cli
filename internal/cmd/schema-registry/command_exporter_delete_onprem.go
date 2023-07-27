@@ -43,8 +43,6 @@ func (c *command) exporterDeleteOnPrem(cmd *cobra.Command, args []string) error 
 		return nil
 	}
 
-	deleted, err := resource.Delete(args, deleteFunc)
-	resource.PrintDeleteSuccessMsg(deleted, resource.SchemaExporter)
-
+	_, err = resource.Delete(args, deleteFunc, resource.SchemaExporter)
 	return err
 }

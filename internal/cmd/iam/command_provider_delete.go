@@ -40,9 +40,7 @@ func (c *identityProviderCommand) delete(cmd *cobra.Command, args []string) erro
 		return c.V2Client.DeleteIdentityProvider(id)
 	}
 
-	deleted, err := resource.Delete(args, deleteFunc)
-	resource.PrintDeleteSuccessMsg(deleted, resource.IdentityProvider)
-
+	_, err := resource.Delete(args, deleteFunc, resource.IdentityProvider)
 	return err
 }
 
