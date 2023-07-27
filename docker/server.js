@@ -4,6 +4,7 @@ const { exec } = require('child_process');
 
 const server = http.createServer();
 const wss = new WebSocket.Server({ server });
+const textDecoder = new TextDecoder();
 
 wss.on('connection', (ws) => {
   console.log('WebSocket connection established.');
