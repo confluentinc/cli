@@ -483,8 +483,53 @@ func (s *CLITestSuite) TestKafkaQuota() {
 	}
 }
 
+func (s *CLITestSuite) TestKafkaConsumer() {
+	test := CLITest{
+		login:   "cloud",
+		args:    "kafka consumer list --consumer-group consumer-group-1 --cluster lkc-1234",
+		fixture: "kafka/consumer/list.golden",
+	}
+
+	s.runIntegrationTest(test)
+
+	test = CLITest{
+		login:   "onprem",
+		args:    fmt.Sprintf("kafka consumer list --consumer-group consumer-group-1 --url %s", s.TestBackend.GetKafkaRestUrl()),
+		fixture: "kafka/consumer/list-onprem.golden",
+	}
+
+	s.runIntegrationTest(test)
+}
+
+func (s *CLITestSuite) TestKafkaConsumerGroup() {
+	tests := []CLITest{
+		{args: "kafka consumer-group list --cluster lkc-1234", fixture: "kafka/consumer-group/list.golden"},
+		{args: "kafka consumer-group describe consumer-group-1 --cluster lkc-1234", fixture: "kafka/consumer-group/describe.golden"},
+		{args: "kafka consumer-group describe consumer-group-1234 --cluster lkc-1234", fixture: "kafka/consumer-group/describe-dne.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+
+	kafkaRestURL := s.TestBackend.GetKafkaRestUrl()
+	tests = []CLITest{
+		{args: fmt.Sprintf("kafka consumer-group list --url %s", kafkaRestURL), fixture: "kafka/consumer-group/list-onprem.golden"},
+		{args: fmt.Sprintf("kafka consumer-group describe consumer-group-1 --url %s", kafkaRestURL), fixture: "kafka/consumer-group/describe-onprem.golden"},
+		{args: fmt.Sprintf("kafka consumer-group describe consumer-group-1234 --url %s", kafkaRestURL), fixture: "kafka/consumer-group/describe-onprem-dne.golden", exitCode: 1},
+	}
+
+	for _, test := range tests {
+		test.login = "onprem"
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestKafka_Autocomplete() {
 	tests := []CLITest{
+		{args: `__complete kafka consumer list --cluster lkc-1234 --consumer-group ""`, fixture: "kafka/consumer/list-consumer-group-autocomplete.golden"},
+		{args: `__complete kafka consumer-group describe --cluster lkc-1234 ""`, fixture: "kafka/consumer-group/autocomplete.golden"},
 		{args: `__complete kafka cluster create my-cluster --availability ""`, fixture: "kafka/create-availability-autocomplete.golden"},
 		{args: `__complete kafka cluster create my-cluster --type ""`, fixture: "kafka/create-type-autocomplete.golden"},
 		{args: `__complete kafka cluster describe ""`, fixture: "kafka/describe-autocomplete.golden"},

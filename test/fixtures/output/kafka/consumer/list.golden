@@ -1,0 +1,4 @@
+   Consumer Group  |  Consumer  |      Instance       |  Client   
+-------------------+------------+---------------------+-----------
+  consumer-group-1 | consumer-1 | consumer-instance-1 | client-1  
+  consumer-group-1 | consumer-2 | consumer-instance-2 | client-2  
