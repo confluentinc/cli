@@ -513,6 +513,8 @@ func (s *CLITestSuite) TestKafkaConsumerGroup() {
 
 func (s *CLITestSuite) TestKafka_Autocomplete() {
 	tests := []CLITest{
+		{args: `__complete kafka consumer list --cluster lkc-1234 --consumer-group ""`, fixture: "kafka/consumer/list-consumer-group-autocomplete.golden"},
+		{args: `__complete kafka consumer-group describe --cluster lkc-1234 ""`, fixture: "kafka/consumer-group/autocomplete.golden"},
 		{args: `__complete kafka cluster create my-cluster --availability ""`, fixture: "kafka/create-availability-autocomplete.golden"},
 		{args: `__complete kafka cluster create my-cluster --type ""`, fixture: "kafka/create-type-autocomplete.golden"},
 		{args: `__complete kafka cluster describe ""`, fixture: "kafka/describe-autocomplete.golden"},

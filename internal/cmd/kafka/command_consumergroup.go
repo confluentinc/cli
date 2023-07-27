@@ -3,12 +3,8 @@ package kafka
 import (
 	"github.com/spf13/cobra"
 
-	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
-
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 )
 
 type consumerGroupCommand struct {
@@ -60,40 +56,5 @@ func (c *consumerGroupCommand) validArgs(cmd *cobra.Command, args []string) []st
 		return nil
 	}
 
-	return c.autocompleteConsumerGroups()
-}
-
-func (c *consumerGroupCommand) autocompleteConsumerGroups() []string {
-	consumerGroupDataList, err := listConsumerGroups(c.AuthenticatedCLICommand)
-	if err != nil {
-		return nil
-	}
-
-	suggestions := make([]string, len(consumerGroupDataList.Data))
-	for i, consumerGroup := range consumerGroupDataList.Data {
-		suggestions[i] = consumerGroup.ConsumerGroupId
-	}
-	return suggestions
-}
-
-func listConsumerGroups(c *pcmd.AuthenticatedCLICommand) (*kafkarestv3.ConsumerGroupDataList, error) {
-	kafkaREST, err := c.GetKafkaREST()
-	if kafkaREST == nil {
-		if err != nil {
-			return nil, err
-		}
-		return nil, errors.New(errors.RestProxyNotAvailableMsg)
-	}
-
-	cluster, err := c.Context.GetKafkaClusterForCommand()
-	if err != nil {
-		return nil, err
-	}
-
-	groupCmdResp, httpResp, err := kafkaREST.CloudClient.ListKafkaConsumerGroups(cluster.ID)
-	if err != nil {
-		return nil, kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
-	}
-
-	return &groupCmdResp, nil
+	return pcmd.AutocompleteConsumerGroups(c.AuthenticatedCLICommand)
 }

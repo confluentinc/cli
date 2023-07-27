@@ -40,3 +40,15 @@ func newConsumerCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command
 
 	return cmd
 }
+
+func (c *consumerCommand) addConsumerGroupFlag(cmd *cobra.Command) {
+	cmd.Flags().String("consumer-group", "", "Consumer group ID.")
+
+	pcmd.RegisterFlagCompletionFunc(cmd, "consumer-group", func(cmd *cobra.Command, args []string) []string {
+		if err := c.PersistentPreRunE(cmd, args); err != nil {
+			return nil
+		}
+
+		return pcmd.AutocompleteConsumerGroups(c.AuthenticatedCLICommand)
+	})
+}

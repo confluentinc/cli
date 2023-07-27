@@ -24,7 +24,7 @@ func (c *consumerCommand) newListCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String("consumer-group", "", "Consumer group ID.")
+	c.addConsumerGroupFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
