@@ -279,7 +279,6 @@ func TestConfig_Load(t *testing.T) {
 			}
 
 			// Get around automatically assigned anonymous id and IsTest check
-			test.want.AnonymousId = cfg.AnonymousId
 			test.want.IsTest = cfg.IsTest
 			test.want.Version = cfg.Version
 			test.want.Credentials = cfg.Credentials
@@ -608,7 +607,6 @@ func TestConfig_AddContext(t *testing.T) {
 	}
 
 	test := testStruct{
-		name:               "",
 		config:             noContextConf,
 		contextName:        context.Name,
 		platformName:       context.PlatformName,
@@ -618,8 +616,6 @@ func TestConfig_AddContext(t *testing.T) {
 		kafka:              context.KafkaClusterContext.ActiveKafkaCluster,
 		state:              context.State,
 		filename:           filename,
-		want:               nil,
-		wantErr:            false,
 	}
 
 	addValidContextTest := test
@@ -641,9 +637,6 @@ func TestConfig_AddContext(t *testing.T) {
 			err := test.config.AddContext(test.contextName, test.platformName, test.credentialName, test.kafkaClusters, test.kafka, test.state, MockOrgResourceId, test.currentEnvironment)
 			if (err != nil) != test.wantErr {
 				t.Errorf("AddContext() error = %v, wantErr %v", err, test.wantErr)
-			}
-			if test.want != nil {
-				test.want.AnonymousId = test.config.AnonymousId
 			}
 			if !test.wantErr && !reflect.DeepEqual(test.want, test.config) {
 				t.Errorf("AddContext() got = %v, want %v", test.config, test.want)
