@@ -2,20 +2,12 @@ const http = require('http');
 const WebSocket = require('ws');
 const { exec } = require('child_process');
 
-const server = http.createServer((req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-});
-
-const wss = new WebSocket.Server({
-  server,
-  perMessageDeflate: false,
-});
+const server = http.createServer();
+const wss = new WebSocket.Server({ server });
 
 const textDecoder = new TextDecoder();
 
-wss.on('connection', (ws) => {
+wss.on('connection', (ws, req) => {
   console.log('WebSocket connection established.');
 
   ws.on('message', (message) => {
@@ -36,6 +28,13 @@ wss.on('connection', (ws) => {
   ws.on('close', () => {
     console.log('WebSocket connection closed.');
   });
+});
+
+// Set CORS headers for WebSocket handshake response
+wss.on('headers', (headers, req) => {
+  headers.push('Access-Control-Allow-Origin: *');
+  headers.push('Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept');
+  headers.push('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 });
 
 server.listen(8080, () => {
