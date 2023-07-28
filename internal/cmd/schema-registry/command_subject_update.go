@@ -54,7 +54,8 @@ func (c *command) newSubjectUpdateCommand(cfg *v1.Config) *cobra.Command {
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	} else {
-		cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
+		addCaLocationFlag(cmd)
+		addSchemaRegistryEndpointFlag(cmd)
 	}
 
 	if cfg.IsCloudLogin() {
@@ -92,7 +93,7 @@ func (c *command) subjectUpdate(cmd *cobra.Command, args []string) error {
 	}
 
 	if compatibility != "" {
-		return c.updateCompatibility(cmd, subject, compatibility, client)
+		return c.updateCompatibility(cmd, subject, client)
 	}
 
 	if mode != "" {
@@ -102,7 +103,7 @@ func (c *command) subjectUpdate(cmd *cobra.Command, args []string) error {
 	return errors.New(errors.CompatibilityOrModeErrorMsg)
 }
 
-func (c *command) updateCompatibility(cmd *cobra.Command, subject, compatibility string, client *schemaregistry.Client) error {
+func (c *command) updateCompatibility(cmd *cobra.Command, subject string, client *schemaregistry.Client) error {
 	req, err := c.getConfigUpdateRequest(cmd)
 	if err != nil {
 		return err
@@ -112,7 +113,7 @@ func (c *command) updateCompatibility(cmd *cobra.Command, subject, compatibility
 		return catchSchemaNotFoundError(err, subject, "")
 	}
 
-	output.Printf("Successfully updated subject level compatibility to \"%s\" for subject \"%s\".\n", compatibility, subject)
+	output.Printf("Successfully updated subject-level compatibility to \"%s\" for subject \"%s\".\n", req.Compatibility, subject)
 	return nil
 }
 
@@ -122,6 +123,6 @@ func (c *command) updateMode(subject, mode string, client *schemaregistry.Client
 		return catchSchemaNotFoundError(err, "subject", "")
 	}
 
-	output.Printf("Successfully updated subject level mode to \"%s\" for subject \"%s\".\n", updatedMode, subject)
+	output.Printf("Successfully updated subject-level mode to \"%s\" for subject \"%s\".\n", updatedMode, subject)
 	return nil
 }

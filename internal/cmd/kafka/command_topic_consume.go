@@ -29,8 +29,8 @@ func (c *command) newConsumeCommand() *cobra.Command {
 		Annotations:       map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Consume items from the "my_topic" topic and press "Ctrl-C" to exit.`,
-				Code: "confluent kafka topic consume -b my_topic",
+				Text: `Consume items from topic "my-topic" and press "Ctrl-C" to exit.`,
+				Code: "confluent kafka topic consume my-topic --from-beginning",
 			},
 		),
 	}
@@ -49,7 +49,7 @@ func (c *command) newConsumeCommand() *cobra.Command {
 	cmd.Flags().String("schema-registry-context", "", "The Schema Registry context under which to look up schema ID.")
 	cmd.Flags().String("schema-registry-endpoint", "", "Endpoint for Schema Registry cluster.")
 	cmd.Flags().String("schema-registry-api-key", "", "Schema registry API key.")
-	cmd.Flags().String("schema-registry-api-secret", "", "Schema registry API key secret.")
+	cmd.Flags().String("schema-registry-api-secret", "", "Schema registry API secret.")
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddApiSecretFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)

@@ -142,7 +142,7 @@ func (c *command) consumeOnPrem(cmd *cobra.Command, args []string) error {
 	var srClient *schemaregistry.Client
 	if valueFormat != "string" {
 		// Only initialize client and context when schema is specified.
-		if c.State == nil { // require log-in to use oauthbearer token
+		if c.Context.State == nil { // require log-in to use oauthbearer token
 			return errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestions)
 		}
 		srClient, err = c.GetSchemaRegistryClient()
