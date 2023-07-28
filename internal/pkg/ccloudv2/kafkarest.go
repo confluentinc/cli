@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 
@@ -152,17 +153,21 @@ func (c *KafkaRestClient) UpdateKafkaLinkConfigBatch(clusterId, linkName string,
 func (c *KafkaRestClient) ListKafkaTopicConfigs(clusterId, topicName string) (kafkarestv3.TopicConfigDataList, error) {
 	res, httpResp, err := c.ConfigsV3Api.ListKafkaTopicConfigs(c.context(), clusterId, topicName).Execute()
 	if err != nil {
-		if restErr, err := kafkarest.ParseOpenAPIErrorCloud(err); err == nil {
-			if restErr.Code == UnknownTopicOrPartitionErrorCode {
-				return kafkarestv3.TopicConfigDataList{}, fmt.Errorf(errors.UnknownTopicErrorMsg, topicName)
-			}
+		if restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err); parseErr == nil && restErr.Code == UnknownTopicOrPartitionErrorCode {
+			return kafkarestv3.TopicConfigDataList{}, fmt.Errorf(errors.UnknownTopicErrorMsg, topicName)
 		}
 	}
 	return res, kafkarest.NewError(c.GetUrl(), err, httpResp)
 }
 
-func (c *KafkaRestClient) UpdateKafkaTopicConfigBatch(clusterId, topicName string, data kafkarestv3.AlterConfigBatchRequestData) (*http.Response, error) {
-	return c.ConfigsV3Api.UpdateKafkaTopicConfigBatch(c.context(), clusterId, topicName).AlterConfigBatchRequestData(data).Execute()
+func (c *KafkaRestClient) UpdateKafkaTopicConfigBatch(clusterId, topicName string, data kafkarestv3.AlterConfigBatchRequestData) error {
+	httpResp, err := c.ConfigsV3Api.UpdateKafkaTopicConfigBatch(c.context(), clusterId, topicName).AlterConfigBatchRequestData(data).Execute()
+	if err != nil {
+		if restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err); parseErr == nil && restErr.Code == UnknownTopicOrPartitionErrorCode {
+			return fmt.Errorf(errors.UnknownTopicErrorMsg, topicName)
+		}
+	}
+	return kafkarest.NewError(c.GetUrl(), err, httpResp)
 }
 
 func (c *KafkaRestClient) GetKafkaConsumerGroup(clusterId, consumerGroupId string) (kafkarestv3.ConsumerGroupData, error) {
@@ -195,16 +200,36 @@ func (c *KafkaRestClient) GetKafkaConsumerLag(clusterId, consumerGroupId, topicN
 	return res, kafkarest.NewError(c.GetUrl(), err, httpResp)
 }
 
-func (c *KafkaRestClient) ListKafkaPartitions(clusterId, topicName string) (kafkarestv3.PartitionDataList, *http.Response, error) {
-	return c.PartitionV3Api.ListKafkaPartitions(c.context(), clusterId, topicName).Execute()
+func (c *KafkaRestClient) ListKafkaPartitions(clusterId, topicName string) (kafkarestv3.PartitionDataList, error) {
+	res, httpResp, err := c.PartitionV3Api.ListKafkaPartitions(c.context(), clusterId, topicName).Execute()
+	return res, kafkarest.NewError(c.GetUrl(), err, httpResp)
 }
 
-func (c *KafkaRestClient) CreateKafkaTopic(clusterId string, data kafkarestv3.CreateTopicRequestData) (kafkarestv3.TopicData, *http.Response, error) {
-	return c.TopicV3Api.CreateKafkaTopic(c.context(), clusterId).CreateTopicRequestData(data).Execute()
+func (c *KafkaRestClient) CreateKafkaTopic(clusterId string, data kafkarestv3.CreateTopicRequestData) (kafkarestv3.TopicData, error) {
+	res, httpResp, err := c.TopicV3Api.CreateKafkaTopic(c.context(), clusterId).CreateTopicRequestData(data).Execute()
+	if err != nil {
+		if restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err); parseErr == nil && restErr.Code == BadRequestErrorCode {
+			// Pretty print topic exists error
+			if strings.Contains(restErr.Message, "already exists") {
+				return kafkarestv3.TopicData{}, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.TopicExistsErrorMsg, data.TopicName, clusterId), fmt.Sprintf(errors.TopicExistsSuggestions, clusterId, clusterId))
+			}
+			// Print partition limit error w/ suggestion
+			if strings.Contains(restErr.Message, "partitions will exceed") {
+				return kafkarestv3.TopicData{}, errors.NewErrorWithSuggestions(restErr.Message, errors.ExceedPartitionLimitSuggestions)
+			}
+		}
+	}
+	return res, kafkarest.NewError(c.GetUrl(), err, httpResp)
 }
 
-func (c *KafkaRestClient) DeleteKafkaTopic(clusterId, topicName string) (*http.Response, error) {
-	return c.TopicV3Api.DeleteKafkaTopic(c.context(), clusterId, topicName).Execute()
+func (c *KafkaRestClient) DeleteKafkaTopic(clusterId, topicName string) error {
+	httpResp, err := c.TopicV3Api.DeleteKafkaTopic(c.context(), clusterId, topicName).Execute()
+	if err != nil {
+		if restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err); parseErr == nil && restErr.Code == UnknownTopicOrPartitionErrorCode {
+			return fmt.Errorf(errors.UnknownTopicErrorMsg, topicName)
+		}
+	}
+	return kafkarest.NewError(c.GetUrl(), err, httpResp)
 }
 
 func (c *KafkaRestClient) ListKafkaTopics(clusterId string) (kafkarestv3.TopicDataList, error) {
