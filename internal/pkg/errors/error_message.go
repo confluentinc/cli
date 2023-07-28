@@ -389,7 +389,7 @@ const (
 	ResourceNotFoundErrorMsg           = `resource "%s" not found`
 	ResourceNotFoundSuggestions        = "Check that the resource \"%s\" exists.\n" +
 		"To list Kafka clusters, use `confluent kafka cluster list`.\n" +
-		"To check schema-registry cluster info, use `confluent schema-registry cluster describe`.\n" +
+		"To check Schema Registry cluster information, use `confluent schema-registry cluster describe`.\n" +
 		"To list KSQL clusters, use `confluent ksql cluster list`."
 	KafkaNotFoundErrorMsg         = `Kafka cluster "%s" not found`
 	KafkaNotFoundSuggestions      = "To list Kafka clusters, use `confluent kafka cluster list`."
