@@ -184,13 +184,34 @@ func GetRebalanceCallback(offset ckafka.Offset, partitionFilter PartitionFilter)
 	}
 }
 
-func consumeMessage(e *ckafka.Message, h *GroupHandler) error {
+func consumeMessage(message *ckafka.Message, h *GroupHandler) error {
 	// TODO: Deserialize key
 	if h.Properties.PrintKey {
-		if len(e.Key) == 0 {
-			e.Key = []byte("null")
+		keyDeserializer, err := serdes.GetDeserializationProvider(h.KeyFormat)
+		if err != nil {
+			return err
 		}
-		if _, err := fmt.Fprint(h.Out, string(e.Key)+h.Properties.Delimiter); err != nil {
+
+		if h.KeyFormat != "string" {
+			schemaPath, referencePathMap, err := h.RequestSchema(message.Key)
+			if err != nil {
+				return err
+			}
+			message.Key = message.Key[messageOffset:]
+			if err := keyDeserializer.LoadSchema(schemaPath, referencePathMap); err != nil {
+				return err
+			}
+		}
+
+		jsonMessage, err := serdes.Deserialize(keyDeserializer, message.Key)
+		if err != nil {
+			return err
+		}
+		if len(jsonMessage) == 0 {
+			jsonMessage = "null"
+		}
+
+		if _, err := fmt.Fprint(h.Out, jsonMessage+h.Properties.Delimiter); err != nil {
 			return err
 		}
 	}
@@ -200,36 +221,35 @@ func consumeMessage(e *ckafka.Message, h *GroupHandler) error {
 		return err
 	}
 
-	value := e.Value
 	if h.ValueFormat != "string" {
-		schemaPath, referencePathMap, err := h.RequestSchema(value)
+		schemaPath, referencePathMap, err := h.RequestSchema(message.Value)
 		if err != nil {
 			return err
 		}
 		// Message body is encoded after 5 bytes of meta information.
-		value = value[messageOffset:]
+		message.Value = message.Value[messageOffset:]
 		if err := valueDeserializer.LoadSchema(schemaPath, referencePathMap); err != nil {
 			return err
 		}
 	}
 
-	jsonMessage, err := serdes.Deserialize(valueDeserializer, value)
+	jsonMessage, err := serdes.Deserialize(valueDeserializer, message.Value)
 	if err != nil {
 		return err
 	}
 
 	if h.Properties.Timestamp {
-		jsonMessage = fmt.Sprintf("Timestamp: %d\t%s", e.Timestamp.UnixMilli(), jsonMessage)
+		jsonMessage = fmt.Sprintf("Timestamp: %d\t%s", message.Timestamp.UnixMilli(), jsonMessage)
 	}
 
 	if _, err := fmt.Fprintln(h.Out, jsonMessage); err != nil {
 		return err
 	}
 
-	if e.Headers != nil {
-		var headers any = e.Headers
+	if message.Headers != nil {
+		var headers any = message.Headers
 		if h.Properties.FullHeader {
-			headers = getFullHeaders(e.Headers)
+			headers = getFullHeaders(message.Headers)
 		}
 		if _, err := fmt.Fprintf(h.Out, "%% Headers: %v\n", headers); err != nil {
 			return err

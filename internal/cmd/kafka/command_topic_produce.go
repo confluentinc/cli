@@ -267,12 +267,12 @@ func serializeMessage(keyMetaInfo, valueMetaInfo []byte, data, delimiter string,
 }
 
 func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (serdes.SerializationProvider, []byte, error) {
-	dir, err := sr.CreateTempDir()
+	schemaDir, err := sr.CreateTempDir()
 	if err != nil {
 		return nil, nil, err
 	}
 	defer func() {
-		_ = os.RemoveAll(dir)
+		_ = os.RemoveAll(schemaDir)
 	}()
 
 	subject := topicNameStrategy(topic)
@@ -319,7 +319,7 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 			return nil, nil, err
 		}
 
-		schema, referencePathMap, err = sr.SetSchemaPathRef(schemaString, dir, subject, schemaId.Value(), srClient)
+		schema, referencePathMap, err = sr.SetSchemaPathRef(schemaString, schemaDir, subject, schemaId.Value(), srClient)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -340,7 +340,7 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 	if schema != "" && !schemaId.IsSet() {
 		// read schema info from local file and register schema
 		schemaCfg := &sr.RegisterSchemaConfigs{
-			SchemaDir:  dir,
+			SchemaDir:  schemaDir,
 			SchemaPath: schema,
 			Subject:    subject,
 			Format:     format,

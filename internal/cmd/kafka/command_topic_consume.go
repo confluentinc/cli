@@ -174,12 +174,12 @@ func (c *command) consume(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	dir, err := sr.CreateTempDir()
+	schemaPath, err := sr.CreateTempDir()
 	if err != nil {
 		return err
 	}
 	defer func() {
-		_ = os.RemoveAll(dir)
+		_ = os.RemoveAll(schemaPath)
 	}()
 
 	subject := topicNameStrategy(topic)
@@ -202,7 +202,7 @@ func (c *command) consume(cmd *cobra.Command, args []string) error {
 			FullHeader: fullHeader,
 			Timestamp:  timestamp,
 			Delimiter:  delimiter,
-			SchemaPath: dir,
+			SchemaPath: schemaPath,
 		},
 	}
 	return RunConsumer(consumer, groupHandler)
