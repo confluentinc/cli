@@ -136,11 +136,11 @@ func (h *LoginCredentialsManagerImpl) getCredentialsFromEnvVarFunc(envVars envir
 
 func (h *LoginCredentialsManagerImpl) getEnvVarCredentials(userEnvVar string, passwordEnvVar string) (string, string) {
 	username := os.Getenv(userEnvVar)
-	if len(username) == 0 {
+	if username == "" {
 		return "", ""
 	}
 	password := os.Getenv(passwordEnvVar)
-	if len(password) == 0 {
+	if password == "" {
 		return username, ""
 	}
 	log.CliLogger.Warnf(errors.FoundEnvCredMsg, username, userEnvVar, passwordEnvVar)

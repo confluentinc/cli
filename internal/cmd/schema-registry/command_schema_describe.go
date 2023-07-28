@@ -158,7 +158,7 @@ func describeGraph(cmd *cobra.Command, id string, client *schemaregistry.Client)
 
 	visited := make(map[string]bool)
 	schemaID := int64(0)
-	if len(id) > 0 {
+	if id != "" {
 		schemaID, err = strconv.ParseInt(id, 10, 32)
 		if err != nil {
 			return err
@@ -203,7 +203,7 @@ func traverseDAG(client *schemaregistry.Client, visited map[string]bool, id int3
 
 		root = schemaString
 		refs = schemaString.References
-	} else if len(subject) == 0 || len(version) == 0 || visited[subjectVersionString] {
+	} else if subject == "" || version == "" || visited[subjectVersionString] {
 		// dedupe the call if already visited
 		return root, schemaGraph, nil
 	} else {
@@ -279,7 +279,7 @@ func printSchema(schemaID int64, schema, schemaType string, refs []srsdk.SchemaR
 }
 
 func convertRootSchema(root *srsdk.SchemaString, id int32) *srsdk.Schema {
-	if len(root.Schema) == 0 {
+	if root.Schema == "" {
 		return nil
 	}
 

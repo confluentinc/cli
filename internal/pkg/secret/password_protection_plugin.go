@@ -46,7 +46,7 @@ func NewPasswordProtectionPlugin() *PasswordProtectionSuite {
 // along with other metadata.
 func (c *PasswordProtectionSuite) CreateMasterKey(passphrase string, localSecureConfigPath string) (string, error) {
 	passphrase = strings.TrimSuffix(passphrase, "\n")
-	if len(strings.TrimSpace(passphrase)) == 0 {
+	if strings.TrimSpace(passphrase) == "" {
 		return "", errors.New(errors.EmptyPassphraseErrorMsg)
 	}
 
@@ -213,7 +213,7 @@ func (c *PasswordProtectionSuite) DecryptConfigFileSecrets(configFilePath string
 // This function generates a new data key and re-encrypts the values in the secureConfigPath properties file with the new data key.
 func (c *PasswordProtectionSuite) RotateDataKey(masterPassphrase string, localSecureConfigPath string) error {
 	masterPassphrase = strings.TrimSuffix(masterPassphrase, "\n")
-	if len(strings.TrimSpace(masterPassphrase)) == 0 {
+	if strings.TrimSpace(masterPassphrase) == "" {
 		return errors.New(errors.EmptyPassphraseErrorMsg)
 	}
 	cipherSuite, err := c.loadCipherSuiteFromLocalFile(localSecureConfigPath)
@@ -305,11 +305,11 @@ func (c *PasswordProtectionSuite) RotateDataKey(masterPassphrase string, localSe
 func (c *PasswordProtectionSuite) RotateMasterKey(oldPassphrase string, newPassphrase string, localSecureConfigPath string) (string, error) {
 	oldPassphrase = strings.TrimSuffix(oldPassphrase, "\n")
 	newPassphrase = strings.TrimSuffix(newPassphrase, "\n")
-	if len(strings.TrimSpace(oldPassphrase)) == 0 || len(strings.TrimSpace(newPassphrase)) == 0 {
+	if strings.TrimSpace(oldPassphrase) == "" || strings.TrimSpace(newPassphrase) == "" {
 		return "", errors.New(errors.EmptyPassphraseErrorMsg)
 	}
 
-	if strings.Compare(oldPassphrase, newPassphrase) == 0 {
+	if oldPassphrase == newPassphrase {
 		return "", errors.New(errors.SamePassphraseErrorMsg)
 	}
 

@@ -124,7 +124,7 @@ func (c *command) produce(cmd *cobra.Command, args []string) error {
 
 	deliveryChan := make(chan ckafka.Event)
 	for data := range input {
-		if len(data) == 0 {
+		if data == "" {
 			go scan()
 			continue
 		}

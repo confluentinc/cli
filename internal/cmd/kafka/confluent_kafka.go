@@ -186,14 +186,11 @@ func GetRebalanceCallback(offset ckafka.Offset, partitionFilter PartitionFilter)
 func consumeMessage(e *ckafka.Message, h *GroupHandler) error {
 	value := e.Value
 	if h.Properties.PrintKey {
-		key := e.Key
-		var keyString string
-		if len(key) == 0 {
-			keyString = "null"
-		} else {
-			keyString = string(key)
+		key := string(e.Key)
+		if key == "" {
+			key = "null"
 		}
-		if _, err := fmt.Fprint(h.Out, keyString+h.Properties.Delimiter); err != nil {
+		if _, err := fmt.Fprint(h.Out, key+h.Properties.Delimiter); err != nil {
 			return err
 		}
 	}

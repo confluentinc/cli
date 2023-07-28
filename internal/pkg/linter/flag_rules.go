@@ -59,14 +59,14 @@ func RequireFlagCharacters(delim rune) FlagRule {
 
 // RequireFlagUsageEndWithPunctuation checks that a flag description ends with a period
 func RequireFlagUsageEndWithPunctuation(flag *pflag.Flag, cmd *cobra.Command) error {
-	if len(flag.Usage) > 0 && flag.Usage[len(flag.Usage)-1] != '.' {
+	if strings.HasSuffix(flag.Usage, ".") {
 		return fmt.Errorf("flag usage doesn't end with punctuation for --%s on `%s`", flag.Name, FullCommand(cmd))
 	}
 	return nil
 }
 
 func RequireFlagUsageMessage(flag *pflag.Flag, cmd *cobra.Command) error {
-	if len(flag.Usage) == 0 {
+	if flag.Usage == "" {
 		return fmt.Errorf("flag must provide help message for --%s on `%s`", flag.Name, FullCommand(cmd))
 	}
 	return nil
@@ -81,7 +81,7 @@ func RequireFlagUsageCapitalized(properNouns []string) FlagRule {
 			}
 		}
 
-		if len(flag.Usage) > 0 && (flag.Usage[0] < 'A' || flag.Usage[0] > 'Z') {
+		if flag.Usage != "" && (flag.Usage[0] < 'A' || flag.Usage[0] > 'Z') {
 			return fmt.Errorf("flag usage should start with a capital for --%s on `%s`", flag.Name, FullCommand(cmd))
 		}
 		return nil

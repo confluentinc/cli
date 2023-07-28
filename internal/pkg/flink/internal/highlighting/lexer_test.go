@@ -83,13 +83,11 @@ func TestExamplesWordLexer(t *testing.T) {
 		elements := Lexer(statement)
 
 		for _, element := range elements {
-			element.Text = strings.ToUpper(element.Text)
-			isKeyWord := config.SQLKeywords.Contains(element.Text)
-			if len(element.Text) == 0 {
-				t.Errorf("Empty element in statement: %s", element.Text)
+			if element.Text == "" {
+				t.Error("empty element in statement")
 			}
 
-			if isKeyWord {
+			if config.SQLKeywords.Contains(strings.ToUpper(element.Text)) {
 				require.Equalf(t, element.Color, color.PromptAccentColor, "wrong colour for element: %s", element.Text)
 			} else if wrappedInInvertedCommasOrBackticks(element.Text) {
 				require.Equalf(t, element.Color, prompt.Yellow, "wrong colour for element: %s", element.Text)
@@ -131,13 +129,11 @@ func TestWordLexerForRandomStatements(t *testing.T) {
 		elements := Lexer(randomStatement.Text)
 
 		for _, element := range elements {
-			element.Text = strings.ToUpper(element.Text)
-			isKeyWord := config.SQLKeywords.Contains(element.Text)
-			if len(element.Text) == 0 {
-				t.Errorf("Empty element in statement: %s", element.Text)
+			if element.Text == "" {
+				t.Error("empty element in statement")
 			}
 
-			if isKeyWord {
+			if config.SQLKeywords.Contains(strings.ToUpper(element.Text)) {
 				require.Equalf(t, element.Color, color.PromptAccentColor, "wrong colour for element: %s", element.Text)
 			} else if wrappedInInvertedCommasOrBackticks(element.Text) {
 				require.Equalf(t, element.Color, prompt.Yellow, "wrong colour for element: %s", element.Text)

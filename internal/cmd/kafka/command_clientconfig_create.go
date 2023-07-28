@@ -227,12 +227,12 @@ func (c *clientConfigCommand) setSchemaRegistryCluster(cmd *cobra.Command, confi
 	})
 
 	// if empty API key or secret, comment out SR in the configuration file (but still replace SR_ENDPOINT) and warn users
-	if len(srCluster.SrCredentials.Key) == 0 || len(srCluster.SrCredentials.Secret) == 0 {
+	if srCluster.SrCredentials.Key == "" || srCluster.SrCredentials.Secret == "" {
 		// comment out SR and warn users
-		if len(srCluster.SrCredentials.Key) == 0 && len(srCluster.SrCredentials.Secret) == 0 {
+		if srCluster.SrCredentials.Key == "" && srCluster.SrCredentials.Secret == "" {
 			// both key and secret empty
 			configFile = commentAndWarnAboutSchemaRegistry(errors.SRCredsNotSetReason, errors.SRCredsNotSetSuggestions, configFile)
-		} else if len(srCluster.SrCredentials.Key) == 0 {
+		} else if srCluster.SrCredentials.Key == "" {
 			// only key empty
 			configFile = commentAndWarnAboutSchemaRegistry(errors.SRKeyNotSetReason, errors.SRKeyNotSetSuggestions, configFile)
 		} else {
