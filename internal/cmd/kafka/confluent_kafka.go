@@ -53,11 +53,12 @@ type ConsumerProperties struct {
 
 // GroupHandler instances are used to handle individual topic-partition claims.
 type GroupHandler struct {
-	SrClient   *schemaregistry.Client
-	Format     string
-	Out        io.Writer
-	Subject    string
-	Properties ConsumerProperties
+	SrClient    *schemaregistry.Client
+	KeyFormat   string
+	ValueFormat string
+	Out         io.Writer
+	Subject     string
+	Properties  ConsumerProperties
 }
 
 func (c *command) refreshOAuthBearerToken(cmd *cobra.Command, client ckafka.Handle) error {
@@ -184,37 +185,35 @@ func GetRebalanceCallback(offset ckafka.Offset, partitionFilter PartitionFilter)
 }
 
 func consumeMessage(e *ckafka.Message, h *GroupHandler) error {
-	value := e.Value
+	// TODO: Deserialize key
 	if h.Properties.PrintKey {
-		key := e.Key
-		var keyString string
-		if len(key) == 0 {
-			keyString = "null"
-		} else {
-			keyString = string(key)
+		if len(e.Key) == 0 {
+			e.Key = []byte("null")
 		}
-		if _, err := fmt.Fprint(h.Out, keyString+h.Properties.Delimiter); err != nil {
+		if _, err := fmt.Fprint(h.Out, string(e.Key)+h.Properties.Delimiter); err != nil {
 			return err
 		}
 	}
 
-	deserializationProvider, err := serdes.GetDeserializationProvider(h.Format)
+	valueDeserializer, err := serdes.GetDeserializationProvider(h.ValueFormat)
 	if err != nil {
 		return err
 	}
 
-	if h.Format != "string" {
+	value := e.Value
+	if h.ValueFormat != "string" {
 		schemaPath, referencePathMap, err := h.RequestSchema(value)
 		if err != nil {
 			return err
 		}
 		// Message body is encoded after 5 bytes of meta information.
 		value = value[messageOffset:]
-		if err := deserializationProvider.LoadSchema(schemaPath, referencePathMap); err != nil {
+		if err := valueDeserializer.LoadSchema(schemaPath, referencePathMap); err != nil {
 			return err
 		}
 	}
-	jsonMessage, err := serdes.Deserialize(deserializationProvider, value)
+
+	jsonMessage, err := serdes.Deserialize(valueDeserializer, value)
 	if err != nil {
 		return err
 	}
@@ -273,7 +272,7 @@ func RunConsumer(consumer *ckafka.Consumer, groupHandler *GroupHandler) error {
 
 func (h *GroupHandler) RequestSchema(value []byte) (string, map[string]string, error) {
 	if len(value) == 0 || value[0] != 0x0 {
-		return "", nil, errors.NewErrorWithSuggestions("unknown magic byte", fmt.Sprintf("Check that all messages from this topic are in the %s format.", h.Format))
+		return "", nil, errors.NewErrorWithSuggestions("unknown magic byte", fmt.Sprintf("Check that all messages from this topic are in the %s format.", h.ValueFormat))
 	}
 	if len(value) < messageOffset {
 		return "", nil, errors.New("failed to find schema ID in topic data")
