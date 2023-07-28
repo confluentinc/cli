@@ -296,7 +296,7 @@ func (c *Command) runConnectConnectorUnloadCommand(_ *cobra.Command, args []stri
 		return err
 	}
 
-	if len(out) > 0 {
+	if out != "" {
 		output.Println(out)
 	} else {
 		output.Println("Success.")

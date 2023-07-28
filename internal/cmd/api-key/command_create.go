@@ -185,15 +185,8 @@ func (c *command) catchServiceAccountNotValidError(err error, httpResp *http.Res
 		}
 
 		auditLog := user.GetOrganization().GetAuditLog()
-		if clusterId == auditLog.GetClusterId() {
-			auditLogServiceAccount, err2 := c.Client.User.GetServiceAccount(auditLog.GetServiceAccountId())
-			if err2 != nil {
-				return err
-			}
-
-			if serviceAccountId != auditLogServiceAccount.GetResourceId() {
-				return fmt.Errorf(`API keys for audit logs (limit of 2) must be created using the predefined service account, "%s"`, auditLogServiceAccount.GetResourceId())
-			}
+		if clusterId == auditLog.GetClusterId() && serviceAccountId != auditLog.GetServiceAccountResourceId() {
+			return fmt.Errorf(`API keys for audit logs (limit of 2) must be created using the predefined service account, "%s"`, auditLog.GetServiceAccountResourceId())
 		}
 	}
 

@@ -6,9 +6,9 @@ Usage:
   confluent kafka topic consume <topic> [flags]
 
 Examples:
-Consume items from the "my_topic" topic and press "Ctrl-C" to exit.
+Consume items from topic "my-topic" and press "Ctrl-C" to exit.
 
-  $ confluent kafka topic consume -b my_topic
+  $ confluent kafka topic consume my-topic --from-beginning
 
 Flags:
       --group string                        Consumer group ID. (default "confluent_cli_consumer_<randomly-generated-id>")
@@ -25,9 +25,9 @@ Flags:
       --schema-registry-context string      The Schema Registry context under which to look up schema ID.
       --schema-registry-endpoint string     Endpoint for Schema Registry cluster.
       --schema-registry-api-key string      Schema registry API key.
-      --schema-registry-api-secret string   Schema registry API key secret.
+      --schema-registry-api-secret string   Schema registry API secret.
       --api-key string                      API key.
-      --api-secret string                   API key secret.
+      --api-secret string                   API secret.
       --cluster string                      Kafka cluster ID.
       --context string                      CLI context name.
       --environment string                  Environment ID.
