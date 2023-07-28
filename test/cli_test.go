@@ -6,7 +6,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
@@ -166,11 +165,6 @@ func (s *CLITestSuite) runIntegrationTest(test CLITest) {
 		output := runCommand(t, testBin, test.env, test.args, test.exitCode, test.input)
 		if *debug {
 			fmt.Println(output)
-		}
-
-		if strings.HasPrefix(test.args, "kafka cluster create") {
-			re := regexp.MustCompile("https?://127.0.0.1:[0-9]+")
-			output = re.ReplaceAllString(output, "http://127.0.0.1:12345")
 		}
 
 		s.validateTestOutput(test, t, output)
