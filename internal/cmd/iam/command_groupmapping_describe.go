@@ -6,10 +6,10 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
 
-func (c *identityProviderCommand) newDescribeCommand() *cobra.Command {
+func (c *groupMappingCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "describe <id>",
-		Short:             "Describe an identity provider.",
+		Short:             "Describe a group mapping.",
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.describe,
@@ -20,11 +20,10 @@ func (c *identityProviderCommand) newDescribeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *identityProviderCommand) describe(cmd *cobra.Command, args []string) error {
-	provider, err := c.V2Client.GetIdentityProvider(args[0])
+func (c *groupMappingCommand) describe(cmd *cobra.Command, args []string) error {
+	groupMapping, err := c.V2Client.GetGroupMapping(args[0])
 	if err != nil {
 		return err
 	}
-
-	return printIdentityProvider(cmd, provider)
+	return printGroupMapping(cmd, groupMapping)
 }

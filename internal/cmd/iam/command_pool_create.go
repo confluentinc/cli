@@ -7,7 +7,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 func (c *identityPoolCommand) newCreateCommand() *cobra.Command {
@@ -66,18 +65,10 @@ func (c *identityPoolCommand) create(cmd *cobra.Command, args []string) error {
 		IdentityClaim: identityproviderv2.PtrString(identityClaim),
 		Filter:        identityproviderv2.PtrString(filter),
 	}
-	resp, err := c.V2Client.CreateIdentityPool(createIdentityPool, provider)
+	pool, err := c.V2Client.CreateIdentityPool(createIdentityPool, provider)
 	if err != nil {
 		return err
 	}
 
-	table := output.NewTable(cmd)
-	table.Add(&identityPoolOut{
-		Id:            resp.GetId(),
-		DisplayName:   resp.GetDisplayName(),
-		Description:   resp.GetDescription(),
-		IdentityClaim: resp.GetIdentityClaim(),
-		Filter:        resp.GetFilter(),
-	})
-	return table.Print()
+	return printIdentityPool(cmd, pool)
 }

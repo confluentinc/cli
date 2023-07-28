@@ -1,9 +1,11 @@
 package iam
 
 import (
+	identityproviderv2 "github.com/confluentinc/ccloud-sdk-go-v2/identity-provider/v2"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 type identityPoolCommand struct {
@@ -35,6 +37,18 @@ func newPoolCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(c.newUseCommand())
 
 	return cmd
+}
+
+func printIdentityPool(cmd *cobra.Command, pool identityproviderv2.IamV2IdentityPool) error {
+	table := output.NewTable(cmd)
+	table.Add(&identityPoolOut{
+		Id:            pool.GetId(),
+		DisplayName:   pool.GetDisplayName(),
+		Description:   pool.GetDescription(),
+		IdentityClaim: pool.GetIdentityClaim(),
+		Filter:        pool.GetFilter(),
+	})
+	return table.Print()
 }
 
 func (c *identityPoolCommand) validArgs(cmd *cobra.Command, args []string) []string {
