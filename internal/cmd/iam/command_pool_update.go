@@ -8,7 +8,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 func (c *identityPoolCommand) newUpdateCommand() *cobra.Command {
@@ -88,13 +87,5 @@ func (c *identityPoolCommand) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	table := output.NewTable(cmd)
-	table.Add(&identityPoolOut{
-		Id:            pool.GetId(),
-		DisplayName:   pool.GetDisplayName(),
-		Description:   pool.GetDescription(),
-		IdentityClaim: pool.GetIdentityClaim(),
-		Filter:        pool.GetFilter(),
-	})
-	return table.Print()
+	return printIdentityPool(cmd, pool)
 }

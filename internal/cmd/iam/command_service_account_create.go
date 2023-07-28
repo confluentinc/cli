@@ -8,7 +8,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 const (
@@ -63,11 +62,5 @@ func (c *serviceAccountCommand) create(cmd *cobra.Command, args []string) error 
 		return errors.CatchServiceNameInUseError(err, httpResp, name)
 	}
 
-	table := output.NewTable(cmd)
-	table.Add(&serviceAccountOut{
-		ResourceId:  serviceAccount.GetId(),
-		Name:        serviceAccount.GetDisplayName(),
-		Description: serviceAccount.GetDescription(),
-	})
-	return table.Print()
+	return printServiceAccount(cmd, serviceAccount)
 }

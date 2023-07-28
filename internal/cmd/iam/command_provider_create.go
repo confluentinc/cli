@@ -7,7 +7,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 func (c *identityProviderCommand) newCreateCommand() *cobra.Command {
@@ -36,8 +35,6 @@ func (c *identityProviderCommand) newCreateCommand() *cobra.Command {
 }
 
 func (c *identityProviderCommand) create(cmd *cobra.Command, args []string) error {
-	name := args[0]
-
 	description, err := cmd.Flags().GetString("description")
 	if err != nil {
 		return err
@@ -54,7 +51,7 @@ func (c *identityProviderCommand) create(cmd *cobra.Command, args []string) erro
 	}
 
 	newIdentityProvider := identityproviderv2.IamV2IdentityProvider{
-		DisplayName: identityproviderv2.PtrString(name),
+		DisplayName: identityproviderv2.PtrString(args[0]),
 		Description: identityproviderv2.PtrString(description),
 		Issuer:      identityproviderv2.PtrString(issuerUri),
 		JwksUri:     identityproviderv2.PtrString(jwksUri),
@@ -64,13 +61,5 @@ func (c *identityProviderCommand) create(cmd *cobra.Command, args []string) erro
 		return err
 	}
 
-	table := output.NewTable(cmd)
-	table.Add(&identityProviderOut{
-		Id:          provider.GetId(),
-		Name:        provider.GetDisplayName(),
-		Description: provider.GetDescription(),
-		IssuerUri:   provider.GetIssuer(),
-		JwksUri:     provider.GetJwksUri(),
-	})
-	return table.Print()
+	return printIdentityProvider(cmd, provider)
 }

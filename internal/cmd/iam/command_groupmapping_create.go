@@ -24,15 +24,13 @@ func (c *groupMappingCommand) newCreateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("description", "", "Description of the group mapping.")
-	cmd.Flags().String("filter", "true", "CEL-compliant filter for this group mapping")
+	cmd.Flags().String("filter", "true", "CEL-compliant filter for this group mapping.")
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
 
 func (c *groupMappingCommand) create(cmd *cobra.Command, args []string) error {
-	name := args[0]
-
 	description, err := cmd.Flags().GetString("description")
 	if err != nil {
 		return err
@@ -44,7 +42,7 @@ func (c *groupMappingCommand) create(cmd *cobra.Command, args []string) error {
 	}
 
 	newGroupMapping := ssov2.IamV2SsoGroupMapping{
-		DisplayName: ssov2.PtrString(name),
+		DisplayName: ssov2.PtrString(args[0]),
 		Description: ssov2.PtrString(description),
 		Filter:      ssov2.PtrString(filter),
 	}
