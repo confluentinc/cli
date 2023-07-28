@@ -14,8 +14,8 @@ Flags:
       --subject string       Subject of the schema.
       --version string       Version of the schema. Can be a specific version or "latest".
       --references string    The path to the references file.
-      --environment string   Environment ID.
       --context string       CLI context name.
+      --environment string   Environment ID.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:

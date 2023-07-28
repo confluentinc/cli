@@ -2,7 +2,6 @@ package kafka
 
 import (
 	"bufio"
-	"context"
 	"fmt"
 	"os"
 	"os/signal"
@@ -13,7 +12,6 @@ import (
 	"github.com/spf13/cobra"
 
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -164,41 +162,24 @@ func (c *command) produce(cmd *cobra.Command, args []string) error {
 	return scanErr
 }
 
-func (c *command) getSchemaRegistryClient(cmd *cobra.Command) (*srsdk.APIClient, context.Context, error) {
-	schemaRegistryApiKey, err := cmd.Flags().GetString("schema-registry-api-key")
-	if err != nil {
-		return nil, nil, err
-	}
-	schemaRegistryApiSecret, err := cmd.Flags().GetString("schema-registry-api-secret")
-	if err != nil {
-		return nil, nil, err
-	}
-
-	srClient, ctx, err := sr.GetSchemaRegistryClientWithApiKey(cmd, c.Config, c.Version, schemaRegistryApiKey, schemaRegistryApiSecret)
-	if err != nil && err.Error() == errors.NotLoggedInErrorMsg {
-		err = new(errors.SRNotAuthenticatedError)
-	}
-	return srClient, ctx, err
-}
-
 func (c *command) registerSchema(cmd *cobra.Command, schemaCfg *sr.RegisterSchemaConfigs) ([]byte, map[string]string, error) {
 	// Registering schema and fill metaInfo array.
 	var metaInfo []byte // Meta info contains a magic byte and schema ID (4 bytes).
 	referencePathMap := map[string]string{}
 
 	if len(schemaCfg.SchemaPath) > 0 {
-		srClient, ctx, err := c.getSchemaRegistryClient(cmd)
+		srClient, err := c.GetSchemaRegistryClient()
 		if err != nil {
 			return nil, nil, err
 		}
 
-		id, err := sr.RegisterSchemaWithAuth(cmd, schemaCfg, srClient, ctx)
+		id, err := sr.RegisterSchemaWithAuth(cmd, schemaCfg, srClient)
 		if err != nil {
 			return nil, nil, err
 		}
 		metaInfo = sr.GetMetaInfoFromSchemaId(id)
 
-		referencePathMap, err = sr.StoreSchemaReferences(schemaCfg.SchemaDir, schemaCfg.Refs, srClient, ctx)
+		referencePathMap, err = sr.StoreSchemaReferences(schemaCfg.SchemaDir, schemaCfg.Refs, srClient)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -323,12 +304,12 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 	metaInfo := []byte{}
 
 	if schemaId.IsSet() {
-		srClient, ctx, err := c.getSchemaRegistryClient(cmd)
+		srClient, err := c.GetSchemaRegistryClient()
 		if err != nil {
 			return nil, nil, err
 		}
 
-		schemaString, err := sr.RequestSchemaWithId(schemaId.Value(), subject, srClient, ctx)
+		schemaString, err := sr.RequestSchemaWithId(schemaId.Value(), subject, srClient)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -338,7 +319,7 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 			return nil, nil, err
 		}
 
-		schema, referencePathMap, err = sr.SetSchemaPathRef(schemaString, dir, subject, schemaId.Value(), srClient, ctx)
+		schema, referencePathMap, err = sr.SetSchemaPathRef(schemaString, dir, subject, schemaId.Value(), srClient)
 		if err != nil {
 			return nil, nil, err
 		}

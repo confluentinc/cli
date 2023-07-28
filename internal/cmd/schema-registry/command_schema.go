@@ -18,25 +18,24 @@ func (c *command) newSchemaCommand(cfg *v1.Config) *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLoginOrOnPremLogin},
 	}
 
-	if cfg.IsCloudLogin() {
-		cmd.AddCommand(c.newSchemaCreateCommand())
-		cmd.AddCommand(c.newSchemaDeleteCommand())
-		cmd.AddCommand(c.newSchemaDescribeCommand())
-		cmd.AddCommand(c.newSchemaListCommand())
-	} else {
-		cmd.AddCommand(c.newSchemaCreateCommandOnPrem())
-		cmd.AddCommand(c.newSchemaDeleteCommandOnPrem())
-		cmd.AddCommand(c.newSchemaDescribeCommandOnPrem())
-		cmd.AddCommand(c.newSchemaListCommandOnPrem())
-	}
+	cmd.AddCommand(c.newSchemaCreateCommand(cfg))
+	cmd.AddCommand(c.newSchemaDeleteCommand(cfg))
+	cmd.AddCommand(c.newSchemaDescribeCommand(cfg))
+	cmd.AddCommand(c.newSchemaListCommand(cfg))
 
 	return cmd
 }
 
 func catchSchemaNotFoundError(err error, subject, version string) error {
 	if err != nil && strings.Contains(err.Error(), "Not Found") {
+		message := fmt.Sprintf(`subject "%s" `, subject)
+		if version != "" {
+			message += fmt.Sprintf(`or version "%s" `, version)
+		}
+		message += "not found"
+
 		return errors.NewErrorWithSuggestions(
-			fmt.Sprintf(`subject "%s" or version "%s" not found`, subject, version),
+			message,
 			"List available subjects with `confluent schema-registry subject list`.\nList available versions with `confluent schema-registry subject describe`.",
 		)
 	}

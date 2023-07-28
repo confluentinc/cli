@@ -2,7 +2,6 @@ package testserver
 
 import (
 	"encoding/json"
-	"io"
 	"net/http"
 	"testing"
 
@@ -299,7 +298,7 @@ func handleCmkKafkaDedicatedClusterShrinkMulti(t *testing.T) http.HandlerFunc {
 			require.NoError(t, err)
 		case http.MethodPatch:
 			w.WriteHeader(http.StatusBadRequest)
-			_, err := io.WriteString(w, badRequestErrMsg)
+			err := writeErrorJson(w, "Bad Request")
 			require.NoError(t, err)
 		}
 	}

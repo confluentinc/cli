@@ -54,7 +54,7 @@ func (s *ApplicationTestSuite) SetupTest() {
 		statementController:         s.statementController,
 		interactiveOutputController: s.interactiveOutputController,
 		basicOutputController:       s.basicOutputController,
-		tokenRefreshFunc:            authenticated,
+		refreshToken:                authenticated,
 	}
 }
 
@@ -66,24 +66,11 @@ func unauthenticated() error {
 	return errors.New("401 unauthorized")
 }
 
-func (s *ApplicationTestSuite) runMainLoop(stopAfterLoopFinishes bool) string {
-	if stopAfterLoopFinishes {
-		// hack to make the loop stop after one iteration
-		s.inputController.EXPECT().GetUserInput().Return("")
-		s.inputController.EXPECT().HasUserEnabledReverseSearch().Return(false)
-		s.inputController.EXPECT().HasUserInitiatedExit("").Return(true)
-		s.appController.EXPECT().ExitApplication()
-	}
-
-	output := test.RunAndCaptureSTDOUT(s.T(), s.app.readEvalPrintLoop)
-	return output
-}
-
 func (s *ApplicationTestSuite) TestReplDoesNotRunWhenUnauthenticated() {
-	s.app.tokenRefreshFunc = unauthenticated
+	s.app.refreshToken = unauthenticated
 	s.appController.EXPECT().ExitApplication()
 
-	actual := s.runMainLoop(false)
+	actual := test.RunAndCaptureSTDOUT(s.T(), s.app.readEvalPrintLoop)
 
 	cupaloy.SnapshotT(s.T(), actual)
 }
@@ -94,7 +81,7 @@ func (s *ApplicationTestSuite) TestReplContinuesWhenUserEnabledReverseSearch() {
 	s.inputController.EXPECT().HasUserEnabledReverseSearch().Return(true)
 	s.inputController.EXPECT().StartReverseSearch()
 
-	actual := s.runMainLoop(true)
+	actual := test.RunAndCaptureSTDOUT(s.T(), s.app.readEvalPrint)
 
 	cupaloy.SnapshotT(s.T(), actual)
 }
@@ -106,7 +93,7 @@ func (s *ApplicationTestSuite) TestReplExitsAppWhenUserInitiatedExit() {
 	s.inputController.EXPECT().HasUserInitiatedExit(userInput).Return(true)
 	s.appController.EXPECT().ExitApplication()
 
-	actual := s.runMainLoop(false)
+	actual := test.RunAndCaptureSTDOUT(s.T(), s.app.readEvalPrint)
 
 	cupaloy.SnapshotT(s.T(), actual)
 }
@@ -118,7 +105,7 @@ func (s *ApplicationTestSuite) TestReplAppendsStatementToHistoryAndStopsOnExecut
 	s.inputController.EXPECT().HasUserInitiatedExit(userInput).Return(false)
 	s.statementController.EXPECT().ExecuteStatement(userInput).Return(nil, &types.StatementError{})
 
-	actual := s.runMainLoop(true)
+	actual := test.RunAndCaptureSTDOUT(s.T(), s.app.readEvalPrint)
 
 	cupaloy.SnapshotT(s.T(), actual)
 	require.Equal(s.T(), []string{userInput}, s.history.Data)
@@ -131,7 +118,7 @@ func (s *ApplicationTestSuite) TestReplStopsOnExecuteStatementError() {
 	s.inputController.EXPECT().HasUserInitiatedExit(userInput).Return(false)
 	s.statementController.EXPECT().ExecuteStatement(userInput).Return(nil, &types.StatementError{})
 
-	actual := s.runMainLoop(true)
+	actual := test.RunAndCaptureSTDOUT(s.T(), s.app.readEvalPrint)
 
 	cupaloy.SnapshotT(s.T(), actual)
 }
@@ -146,7 +133,7 @@ func (s *ApplicationTestSuite) TestReplUsesBasicOutput() {
 	s.resultFetcher.EXPECT().Init(statement)
 	s.basicOutputController.EXPECT().VisualizeResults()
 
-	actual := s.runMainLoop(true)
+	actual := test.RunAndCaptureSTDOUT(s.T(), s.app.readEvalPrint)
 
 	cupaloy.SnapshotT(s.T(), actual)
 }
@@ -161,7 +148,7 @@ func (s *ApplicationTestSuite) TestReplUsesInteractiveOutput() {
 	s.resultFetcher.EXPECT().Init(statement)
 	s.interactiveOutputController.EXPECT().VisualizeResults()
 
-	actual := s.runMainLoop(true)
+	actual := test.RunAndCaptureSTDOUT(s.T(), s.app.readEvalPrint)
 
 	cupaloy.SnapshotT(s.T(), actual)
 }
@@ -250,12 +237,12 @@ func (s *ApplicationTestSuite) TestShouldUseTView() {
 func (s *ApplicationTestSuite) TestSyncAccessToTokenRefreshFunction() {
 	dummyVariableToManipulate := 0
 	numGoroutinesToSpawn := 1000
-	s.app.tokenRefreshFunc = synchronizedTokenRefresh(func() error {
+	s.app.refreshToken = synchronizedTokenRefresh(func() error {
 		dummyVariableToManipulate++
 		return nil
 	})
 	s.testConcurrentAccess(numGoroutinesToSpawn, func() {
-		_ = s.app.tokenRefreshFunc()
+		_ = s.app.refreshToken()
 	})
 	require.Equal(s.T(), numGoroutinesToSpawn, dummyVariableToManipulate)
 }
@@ -270,4 +257,23 @@ func (s *ApplicationTestSuite) testConcurrentAccess(numGoroutinesToSpawn int, fu
 		}()
 	}
 	wg.Wait()
+}
+
+func (s *ApplicationTestSuite) TestPanicRecovery() {
+	// Given
+	callCount := 0
+	s.app.reportUsage = func() {
+		callCount++
+	}
+	s.inputController.EXPECT().GetUserInput().Do(func() {
+		panic("err in repl")
+	})
+	s.statementController.EXPECT().CleanupStatement()
+
+	// When
+	actual := test.RunAndCaptureSTDOUT(s.T(), s.app.readEvalPrint)
+
+	// Then
+	cupaloy.SnapshotT(s.T(), actual)
+	require.Equal(s.T(), 1, callCount)
 }

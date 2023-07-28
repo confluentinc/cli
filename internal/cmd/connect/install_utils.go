@@ -424,7 +424,7 @@ func chooseWorkerConfigs(cmd *cobra.Command, installation *platformInstallation,
 	return result, nil
 }
 
-func updateWorkerConfig(pluginDir string, workerConfigPath string, dryRun bool) error {
+func updateWorkerConfig(pluginDir, workerConfigPath string, dryRun bool) error {
 	pluginPathProperty := "plugin.path"
 
 	workerConfig, err := properties.LoadFile(workerConfigPath, properties.UTF8)

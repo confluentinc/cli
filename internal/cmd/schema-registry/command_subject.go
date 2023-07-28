@@ -14,15 +14,9 @@ func (c *command) newSubjectCommand(cfg *v1.Config) *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLoginOrOnPremLogin},
 	}
 
-	if cfg.IsCloudLogin() {
-		cmd.AddCommand(c.newSubjectDescribeCommand())
-		cmd.AddCommand(c.newSubjectListCommand())
-		cmd.AddCommand(c.newSubjectUpdateCommand())
-	} else {
-		cmd.AddCommand(c.newSubjectDescribeCommandOnPrem())
-		cmd.AddCommand(c.newSubjectListCommandOnPrem())
-		cmd.AddCommand(c.newSubjectUpdateCommandOnPrem())
-	}
+	cmd.AddCommand(c.newSubjectDescribeCommand(cfg))
+	cmd.AddCommand(c.newSubjectListCommand(cfg))
+	cmd.AddCommand(c.newSubjectUpdateCommand(cfg))
 
 	return cmd
 }

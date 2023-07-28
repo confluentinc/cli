@@ -195,6 +195,21 @@ func (s *CLITestSuite) TestKafkaClusterCreate_GcpByok() {
 	s.runIntegrationTest(test)
 }
 
+func (s *CLITestSuite) TestKafkaClusterConfiguration() {
+	tests := []CLITest{
+		{args: "kafka cluster use lkc-12345"},
+		{args: "kafka cluster configuration describe compression.type", fixture: "kafka/cluster/configuration/describe.golden"},
+		{args: "kafka cluster configuration update --config auto.create.topics.enable=true", fixture: "kafka/cluster/configuration/update.golden"},
+		{args: "kafka cluster configuration list", fixture: "kafka/cluster/configuration/list.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		test.workflow = true
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestKafkaClientConfig() {
 	// TODO: add --config flag to all commands or ENVVAR instead of using standard config file location
 	tests := []CLITest{

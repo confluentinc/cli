@@ -1,7 +1,6 @@
 package schemaregistry
 
 import (
-	"context"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -9,32 +8,40 @@ import (
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	schemaregistry "github.com/confluentinc/cli/internal/pkg/schema-registry"
 )
 
-func (c *command) newSubjectUpdateCommand() *cobra.Command {
+func (c *command) newSubjectUpdateCommand(cfg *v1.Config) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update <subject>",
-		Short: "Update subject compatibility or mode.",
-		Args:  cobra.ExactArgs(1),
-		RunE:  c.subjectUpdate,
-		Example: examples.BuildExampleString(
-			examples.Example{
-				Text: `Update subject-level compatibility of subject "payments".`,
-				Code: "confluent schema-registry subject update payments --compatibility backward",
-			},
-			examples.Example{
-				Text: `Update subject-level compatibility of subject "payments" and set compatibility group to "application.version".`,
-				Code: "confluent schema-registry subject update payments --compatibility backward --compatibility-group application.version",
-			},
-			examples.Example{
-				Text: `Update subject-level mode of subject "payments".`,
-				Code: "confluent schema-registry subject update payments --mode readwrite",
-			},
-		),
+		Use:     "update <subject>",
+		Short:   "Update subject compatibility or mode.",
+		Args:    cobra.ExactArgs(1),
+		RunE:    c.subjectUpdate,
+		Example: examples.BuildExampleString(),
 	}
+
+	example1 := examples.Example{
+		Text: `Update subject-level compatibility of subject "payments".`,
+		Code: "confluent schema-registry subject update payments --compatibility backward",
+	}
+	example2 := examples.Example{
+		Text: `Update subject-level compatibility of subject "payments" and set compatibility group to "application.version".`,
+		Code: "confluent schema-registry subject update payments --compatibility backward --compatibility-group application.version",
+	}
+	example3 := examples.Example{
+		Text: `Update subject-level mode of subject "payments".`,
+		Code: "confluent schema-registry subject update payments --mode readwrite",
+	}
+	if cfg.IsOnPremLogin() {
+		example1.Code += " " + onPremAuthenticationMsg
+		example2.Code += " " + onPremAuthenticationMsg
+		example3.Code += " " + onPremAuthenticationMsg
+	}
+	cmd.Example = examples.BuildExampleString(example1, example2, example3)
 
 	addCompatibilityFlag(cmd)
 	addCompatibilityGroupFlag(cmd)
@@ -43,10 +50,22 @@ func (c *command) newSubjectUpdateCommand() *cobra.Command {
 	addRulesetDefaultsFlag(cmd)
 	addRulesetOverridesFlag(cmd)
 	addModeFlag(cmd)
-	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
-	pcmd.AddApiSecretFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
-	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	if cfg.IsCloudLogin() {
+		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	} else {
+		cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
+	}
+
+	if cfg.IsCloudLogin() {
+		// Deprecated
+		pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
+		cobra.CheckErr(cmd.Flags().MarkHidden("api-key"))
+
+		// Deprecated
+		pcmd.AddApiSecretFlag(cmd)
+		cobra.CheckErr(cmd.Flags().MarkHidden("api-secret"))
+	}
 
 	return cmd
 }
@@ -54,7 +73,7 @@ func (c *command) newSubjectUpdateCommand() *cobra.Command {
 func (c *command) subjectUpdate(cmd *cobra.Command, args []string) error {
 	subject := args[0]
 
-	srClient, ctx, err := getApiClient(cmd, c.Config, c.Version)
+	client, err := c.GetSchemaRegistryClient()
 	if err != nil {
 		return err
 	}
@@ -73,34 +92,34 @@ func (c *command) subjectUpdate(cmd *cobra.Command, args []string) error {
 	}
 
 	if compatibility != "" {
-		return c.updateCompatibility(cmd, subject, compatibility, srClient, ctx)
+		return c.updateCompatibility(cmd, subject, compatibility, client)
 	}
 
 	if mode != "" {
-		return c.updateMode(subject, mode, srClient, ctx)
+		return c.updateMode(subject, mode, client)
 	}
 
 	return errors.New(errors.CompatibilityOrModeErrorMsg)
 }
 
-func (c *command) updateCompatibility(cmd *cobra.Command, subject, compatibility string, srClient *srsdk.APIClient, ctx context.Context) error {
-	updateReq, err := c.getConfigUpdateRequest(cmd)
+func (c *command) updateCompatibility(cmd *cobra.Command, subject, compatibility string, client *schemaregistry.Client) error {
+	req, err := c.getConfigUpdateRequest(cmd)
 	if err != nil {
 		return err
 	}
 
-	if _, httpResp, err := srClient.DefaultApi.UpdateSubjectLevelConfig(ctx, subject, updateReq); err != nil {
-		return errors.CatchSchemaNotFoundError(err, httpResp)
+	if _, err := client.UpdateSubjectLevelConfig(subject, req); err != nil {
+		return catchSchemaNotFoundError(err, subject, "")
 	}
 
 	output.Printf("Successfully updated subject level compatibility to \"%s\" for subject \"%s\".\n", compatibility, subject)
 	return nil
 }
 
-func (c *command) updateMode(subject, mode string, srClient *srsdk.APIClient, ctx context.Context) error {
-	updatedMode, httpResp, err := srClient.DefaultApi.UpdateMode(ctx, subject, srsdk.ModeUpdateRequest{Mode: strings.ToUpper(mode)})
+func (c *command) updateMode(subject, mode string, client *schemaregistry.Client) error {
+	updatedMode, err := client.UpdateMode(subject, srsdk.ModeUpdateRequest{Mode: strings.ToUpper(mode)})
 	if err != nil {
-		return errors.CatchSchemaNotFoundError(err, httpResp)
+		return catchSchemaNotFoundError(err, "subject", "")
 	}
 
 	output.Printf("Successfully updated subject level mode to \"%s\" for subject \"%s\".\n", updatedMode, subject)

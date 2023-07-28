@@ -4,7 +4,7 @@ Usage:
   confluent kafka cluster [command]
 
 Available Commands:
-  list        List registered Kafka clusters.
+  list          List registered Kafka clusters.
 
 Global Flags:
   -h, --help            Show help for this command.

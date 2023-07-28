@@ -1,11 +1,9 @@
-Get the configurations of the schema exporter.
+Get the schema exporter configuration.
 
 Usage:
   confluent schema-registry exporter get-config <name> [flags]
 
 Flags:
-      --api-key string       API key.
-      --api-secret string    API key secret.
       --context string       CLI context name.
       --environment string   Environment ID.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "json")
