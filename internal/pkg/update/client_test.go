@@ -686,7 +686,7 @@ func TestUpdateBinary(t *testing.T) {
 				clock: clock,
 				fs: &mock.PassThroughFileSystem{
 					Mock: &mock.FileSystem{
-						MoveFunc: func(src string, dst string) error {
+						MoveFunc: func(src, dst string) error {
 							return errors.New("move func intentionally failed")
 						},
 					},

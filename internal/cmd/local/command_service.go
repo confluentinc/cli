@@ -246,7 +246,7 @@ func (c *Command) runServiceVersionCommand(cmd *cobra.Command, _ []string) error
 	return nil
 }
 
-func (c *Command) startService(service string, configFile string) error {
+func (c *Command) startService(service, configFile string) error {
 	isUp, err := c.isRunning(service)
 	if err != nil {
 		return err
@@ -288,7 +288,7 @@ func (c *Command) checkService(service string) error {
 	return nil
 }
 
-func (c *Command) configService(service string, configFile string) error {
+func (c *Command) configService(service, configFile string) error {
 	port, err := c.ch.ReadServicePort(service)
 	if err != nil {
 		if err.Error() != "no port specified" {

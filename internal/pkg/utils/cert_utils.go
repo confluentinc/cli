@@ -30,7 +30,7 @@ func SelfSignedCertClientFromPath(caCertPath string) (*http.Client, error) {
 	return CustomCAAndClientCertClient(caCertPath, "", "")
 }
 
-func CustomCAAndClientCertClient(caCertPath string, clientCertPath string, clientKeyPath string) (*http.Client, error) {
+func CustomCAAndClientCertClient(caCertPath, clientCertPath, clientKeyPath string) (*http.Client, error) {
 	var caCertReader *os.File
 	if caCertPath != "" {
 		caCertPath, err := filepath.Abs(caCertPath)
