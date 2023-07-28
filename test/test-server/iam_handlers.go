@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	ssov2 "github.com/confluentinc/ccloud-sdk-go-v2/sso/v2"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
 
@@ -463,6 +464,59 @@ func handleIamInvitations(t *testing.T) http.HandlerFunc {
 				err = json.NewEncoder(w).Encode(invitation)
 				require.NoError(t, err)
 			}
+		}
+	}
+}
+
+// Handler for "iam/v2/sso/group-mappings"
+func handleIamGroupMappings(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		groupMapping := buildIamGroupMapping("pool-12345", "group_mapping", "new-group-description", `"engineering" in claims.group || "marketing" in claims.group`)
+		switch r.Method {
+		case http.MethodGet:
+			anotherMapping := buildIamGroupMapping(groupMappingResourceId, "another_group_mapping", "another-description", "true")
+			err := json.NewEncoder(w).Encode(ssov2.IamV2SsoGroupMappingList{Data: []ssov2.IamV2SsoGroupMapping{groupMapping, anotherMapping}})
+			require.NoError(t, err)
+		case http.MethodPost:
+			var req ssov2.IamV2SsoGroupMapping
+			err := json.NewDecoder(r.Body).Decode(&req)
+			require.NoError(t, err)
+			err = json.NewEncoder(w).Encode(&groupMapping)
+			require.NoError(t, err)
+		}
+	}
+}
+
+// Handler for "iam/v2/sso/group-mappings/{id}"
+func handleIamGroupMapping(t *testing.T) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id := mux.Vars(r)["id"]
+		if id != groupMappingResourceId {
+			err := writeResourceNotFoundError(w)
+			require.NoError(t, err)
+			return
+		}
+		switch r.Method {
+		case http.MethodPatch:
+			var req ssov2.IamV2SsoGroupMapping
+			err := json.NewDecoder(r.Body).Decode(&req)
+			require.NoError(t, err)
+			res := buildIamGroupMapping(req.GetId(), req.GetDisplayName(), req.GetDescription(), "true")
+			err = json.NewEncoder(w).Encode(&res)
+			require.NoError(t, err)
+		case http.MethodDelete:
+			w.WriteHeader(http.StatusNoContent)
+		case http.MethodGet:
+			groupMapping := &ssov2.IamV2SsoGroupMapping{
+				Id:          ssov2.PtrString(id),
+				DisplayName: ssov2.PtrString("another_group_mapping"),
+				Description: ssov2.PtrString("another-description"),
+				Filter:      ssov2.PtrString("true"),
+				Principal:   ssov2.PtrString(id),
+				State:       ssov2.PtrString("ENABLED"),
+			}
+			err := json.NewEncoder(w).Encode(groupMapping)
+			require.NoError(t, err)
 		}
 	}
 }
