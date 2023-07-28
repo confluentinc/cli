@@ -420,7 +420,7 @@ func registerSchema(details *accountDetails, topicName string, components Compon
 	return 0, fmt.Errorf("schema payload not found in YAML input file")
 }
 
-func updateSubjectCompatibility(details *accountDetails, compatibility string, subject string) error {
+func updateSubjectCompatibility(details *accountDetails, compatibility, subject string) error {
 	// Updating the subject level compatibility
 	log.CliLogger.Infof("Updating the Subject level compatibility to %s", compatibility)
 	req := srsdk.ConfigUpdateRequest{Compatibility: compatibility}
@@ -512,7 +512,7 @@ func addTagsUtil(details *accountDetails, tagDefConfigs []srsdk.TagDef, tagConfi
 	return nil
 }
 
-func retry(ctx context.Context, tick time.Duration, timeout time.Duration, f func() error) error {
+func retry(ctx context.Context, tick, timeout time.Duration, f func() error) error {
 	if err := f(); err != nil {
 		log.CliLogger.Debugf("Fail #1: %v", err)
 	} else {

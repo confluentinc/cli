@@ -191,7 +191,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	return c.outputKafkaClusterDescription(cmd, &kafkaCluster, false)
 }
 
-func checkCloudAndRegion(cloudId string, regionId string, clouds []*ccloudv1.CloudMetadata) error {
+func checkCloudAndRegion(cloudId, regionId string, clouds []*ccloudv1.CloudMetadata) error {
 	for _, cloud := range clouds {
 		if cloudId == cloud.GetId() {
 			for _, region := range cloud.GetRegions() {

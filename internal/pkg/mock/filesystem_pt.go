@@ -38,7 +38,7 @@ func (c *PassThroughFileSystem) Create(name string) (pio.File, error) {
 	return c.FS.Create(name)
 }
 
-func (c *PassThroughFileSystem) Chtimes(n string, a time.Time, m time.Time) error {
+func (c *PassThroughFileSystem) Chtimes(n string, a, m time.Time) error {
 	if c.Mock.ChtimesFunc != nil {
 		return c.Mock.Chtimes(n, a, m)
 	}
@@ -87,7 +87,7 @@ func (c *PassThroughFileSystem) Copy(dst io.Writer, src io.Reader) (int64, error
 	return c.FS.Copy(dst, src)
 }
 
-func (c *PassThroughFileSystem) Move(src string, dst string) error {
+func (c *PassThroughFileSystem) Move(src, dst string) error {
 	if c.Mock.MoveFunc != nil {
 		return c.Mock.Move(src, dst)
 	}

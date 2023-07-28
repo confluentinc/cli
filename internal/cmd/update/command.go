@@ -164,7 +164,7 @@ func (c *command) getReleaseNotes(cliName, latestBinaryVersion string) string {
 	return strings.Join(allReleaseNotes, "\n")
 }
 
-func sameVersionCheck(v1 string, v2 string) (bool, error) {
+func sameVersionCheck(v1, v2 string) (bool, error) {
 	version1, err := version.NewVersion(v1)
 	if err != nil {
 		return false, err

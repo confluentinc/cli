@@ -21,11 +21,11 @@ const (
 // Encryption Engine performs Encryption, Decryption and Hash operations.
 type EncryptionEngine interface {
 	Encrypt(plainText string, key []byte) (string, string, error)
-	Decrypt(cipher string, iv string, algo string, key []byte) (string, error)
+	Decrypt(cipher, iv, algo string, key []byte) (string, error)
 	GenerateRandomDataKey(keyLength int) ([]byte, string, error)
-	GenerateMasterKey(masterKeyPassphrase string, salt string) (string, string, error)
+	GenerateMasterKey(masterKeyPassphrase, salt string) (string, string, error)
 	WrapDataKey(dataKey []byte, masterKey string) (string, string, error)
-	UnwrapDataKey(dataKey string, iv string, algo string, masterKey string) ([]byte, error)
+	UnwrapDataKey(dataKey, iv, algo, masterKey string) ([]byte, error)
 }
 
 // EncryptEngineImpl is the EncryptionEngine implementation
@@ -64,7 +64,7 @@ func (c *EncryptEngineImpl) GenerateRandomDataKey(keyLength int) ([]byte, string
 	return key, salt, nil
 }
 
-func (c *EncryptEngineImpl) GenerateMasterKey(masterKeyPassphrase string, salt string) (string, string, error) {
+func (c *EncryptEngineImpl) GenerateMasterKey(masterKeyPassphrase, salt string) (string, string, error) {
 	// Generate random salt
 	var err error
 	if salt == "" {
@@ -89,7 +89,7 @@ func (c *EncryptEngineImpl) WrapDataKey(dataKey []byte, masterKey string) (strin
 	return c.Encrypt(dataKeyStr, masterKeyByte)
 }
 
-func (c *EncryptEngineImpl) UnwrapDataKey(dataKey string, iv string, algo string, masterKey string) ([]byte, error) {
+func (c *EncryptEngineImpl) UnwrapDataKey(dataKey, iv, algo, masterKey string) ([]byte, error) {
 	masterKeyByte, err := base64.StdEncoding.DecodeString(masterKey)
 	if err != nil {
 		return []byte{}, err
@@ -111,7 +111,7 @@ func (c *EncryptEngineImpl) Encrypt(plainText string, key []byte) (string, strin
 	return c.encrypt(plainText, key)
 }
 
-func (c *EncryptEngineImpl) Decrypt(cipher string, iv string, algo string, key []byte) (string, error) {
+func (c *EncryptEngineImpl) Decrypt(cipher, iv, algo string, key []byte) (string, error) {
 	cipherBytes, err := base64.StdEncoding.DecodeString(cipher)
 	if err != nil {
 		return "", err
@@ -128,7 +128,7 @@ func (c *EncryptEngineImpl) Decrypt(cipher string, iv string, algo string, key [
 	return string(plainText), nil
 }
 
-func (c *EncryptEngineImpl) generateEncryptionKey(keyPhrase string, salt string) []byte {
+func (c *EncryptEngineImpl) generateEncryptionKey(keyPhrase, salt string) []byte {
 	return pbkdf2.Key([]byte(keyPhrase), []byte(salt), c.Cipher.Iterations, c.Cipher.KeyLength, sha512.New)
 }
 
@@ -160,7 +160,7 @@ func (c *EncryptEngineImpl) encrypt(plainText string, key []byte) (string, strin
 	return result, ivStr, nil
 }
 
-func (c *EncryptEngineImpl) decrypt(crypt []byte, key []byte, iv []byte, algo string) ([]byte, error) {
+func (c *EncryptEngineImpl) decrypt(crypt, key, iv []byte, algo string) ([]byte, error) {
 	defer func() {
 		_ = recover()
 	}()

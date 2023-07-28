@@ -149,7 +149,7 @@ func isCapitalized(word string) bool {
 	return word[0] >= 'A' && word[0] <= 'Z'
 }
 
-func requireNotTitleCaseHelper(fieldValue string, properNouns []string, field string, fullCommand string) *multierror.Error {
+func requireNotTitleCaseHelper(fieldValue string, properNouns []string, field, fullCommand string) *multierror.Error {
 	var issues *multierror.Error
 
 	fieldValue = strings.TrimSuffix(fieldValue, ".")

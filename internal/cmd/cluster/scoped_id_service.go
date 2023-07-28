@@ -33,7 +33,7 @@ func newScopedIdService(userAgent string) *ScopedIdService {
 	return &ScopedIdService{userAgent: userAgent}
 }
 
-func (s *ScopedIdService) DescribeCluster(url string, caCertPath string) (*ScopedId, error) {
+func (s *ScopedIdService) DescribeCluster(url, caCertPath string) (*ScopedId, error) {
 	var httpClient *http.Client
 	if caCertPath != "" {
 		var err error
