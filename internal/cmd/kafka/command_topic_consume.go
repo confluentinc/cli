@@ -39,6 +39,7 @@ func (c *command) newConsumeCommand() *cobra.Command {
 	cmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of the topic.")
 	cmd.Flags().Int64("offset", 0, "The offset from the beginning to consume from.")
 	cmd.Flags().Int32("partition", -1, "The partition to consume from.")
+	pcmd.AddKeyFormatFlag(cmd)
 	pcmd.AddValueFormatFlag(cmd)
 	cmd.Flags().Bool("print-key", false, "Print key of the message.")
 	cmd.Flags().Bool("full-header", false, "Print complete content of message headers.")
@@ -150,6 +151,11 @@ func (c *command) consume(cmd *cobra.Command, args []string) error {
 
 	output.ErrPrintln(errors.StartingConsumerMsg)
 
+	keyFormat, err := cmd.Flags().GetString("key-format")
+	if err != nil {
+		return err
+	}
+
 	valueFormat, err := cmd.Flags().GetString("value-format")
 	if err != nil {
 		return err
@@ -186,10 +192,11 @@ func (c *command) consume(cmd *cobra.Command, args []string) error {
 	}
 
 	groupHandler := &GroupHandler{
-		SrClient: srClient,
-		Format:   valueFormat,
-		Out:      cmd.OutOrStdout(),
-		Subject:  subject,
+		SrClient:    srClient,
+		KeyFormat:   keyFormat,
+		ValueFormat: valueFormat,
+		Out:         cmd.OutOrStdout(),
+		Subject:     subject,
 		Properties: ConsumerProperties{
 			PrintKey:   printKey,
 			FullHeader: fullHeader,

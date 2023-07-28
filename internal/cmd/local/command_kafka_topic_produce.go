@@ -94,7 +94,7 @@ func (c *Command) kafkaTopicProduce(cmd *cobra.Command, args []string) error {
 			continue
 		}
 
-		msg, err := kafka.GetProduceMessage(cmd, make([]byte, 4), topicName, data, serializationProvider)
+		msg, err := kafka.GetProduceMessage(cmd, make([]byte, 4), make([]byte, 4), topicName, data, nil, serializationProvider)
 		if err != nil {
 			return err
 		}
