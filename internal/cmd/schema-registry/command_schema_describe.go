@@ -54,7 +54,8 @@ func (c *command) newSchemaDescribeCommand(cfg *v1.Config) *cobra.Command {
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	} else {
-		cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
+		addCaLocationFlag(cmd)
+		addSchemaRegistryEndpointFlag(cmd)
 	}
 
 	if cfg.IsCloudLogin() {
@@ -165,7 +166,7 @@ func describeGraph(cmd *cobra.Command, id string, client *schemaregistry.Client)
 		}
 	}
 
-	// A schema graph is a DAG, the root is fetched by schema ID or by subject and version
+	// A schema graph is a DAG, the root is fetched by ID or by subject and version
 	// All references are fetched by subject/version
 	rootSchema, schemaGraph, err := traverseDAG(client, visited, int32(schemaID), subject, version)
 	if err != nil {
