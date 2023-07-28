@@ -41,8 +41,8 @@ type CLITest struct {
 	loginURL string
 	// The kafka cluster ID to "use"
 	useKafka string
-	// The API Key to set as Kafka credentials
-	authKafka string
+	// Create and use an API Key to set as Kafka credentials
+	authKafka bool
 	// Name of a golden output fixture containing expected output
 	fixture string
 	// True if audit-log is disabled
@@ -155,7 +155,7 @@ func (s *CLITestSuite) runIntegrationTest(test CLITest) {
 			}
 		}
 
-		if test.authKafka != "" {
+		if test.authKafka {
 			output := runCommand(t, testBin, []string{}, fmt.Sprintf("api-key create --resource %s --use", test.useKafka), 0, "")
 			if *debug {
 				fmt.Println(output)
