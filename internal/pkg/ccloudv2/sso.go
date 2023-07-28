@@ -39,7 +39,7 @@ func (c *Client) GetGroupMapping(id string) (ssov2.IamV2SsoGroupMapping, error) 
 }
 
 func (c *Client) UpdateGroupMapping(update ssov2.IamV2SsoGroupMapping) (ssov2.IamV2SsoGroupMapping, error) {
-	resp, httpResp, err := c.SsoClient.GroupMappingsIamV2SsoApi.UpdateIamV2SsoGroupMapping(c.groupMappingApiContext(), *update.Id).Execute()
+	resp, httpResp, err := c.SsoClient.GroupMappingsIamV2SsoApi.UpdateIamV2SsoGroupMapping(c.groupMappingApiContext(), *update.Id).IamV2SsoGroupMapping(update).Execute()
 	return resp, errors.CatchCCloudV2Error(err, httpResp)
 }
 
