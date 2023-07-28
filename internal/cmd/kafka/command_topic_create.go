@@ -1,6 +1,7 @@
 package kafka
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -106,8 +107,13 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 	}
 
 	if _, err := kafkaREST.CloudClient.CreateKafkaTopic(kafkaClusterConfig.ID, data); err != nil {
-		if ifNotExists && strings.Contains(err.Error(), "already exists") {
-			return nil
+		if strings.Contains(err.Error(), "already exists") {
+			if ifNotExists {
+				return nil
+			}
+			return errors.NewErrorWithSuggestions(err.Error(), fmt.Sprintf(errors.TopicExistsSuggestions, kafkaClusterConfig.ID, kafkaClusterConfig.ID))
+		} else if strings.Contains(err.Error(), "partitions will exceed") {
+			return errors.NewErrorWithSuggestions(err.Error(), errors.ExceedPartitionLimitSuggestions)
 		}
 		return err
 	}

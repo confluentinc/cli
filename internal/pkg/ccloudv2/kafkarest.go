@@ -208,15 +208,9 @@ func (c *KafkaRestClient) ListKafkaPartitions(clusterId, topicName string) (kafk
 func (c *KafkaRestClient) CreateKafkaTopic(clusterId string, data kafkarestv3.CreateTopicRequestData) (kafkarestv3.TopicData, error) {
 	res, httpResp, err := c.TopicV3Api.CreateKafkaTopic(c.context(), clusterId).CreateTopicRequestData(data).Execute()
 	if err != nil {
-		if restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err); parseErr == nil && restErr.Code == BadRequestErrorCode {
-			// Pretty print topic exists error
-			if strings.Contains(restErr.Message, "already exists") {
-				return kafkarestv3.TopicData{}, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.TopicExistsErrorMsg, data.TopicName, clusterId), fmt.Sprintf(errors.TopicExistsSuggestions, clusterId, clusterId))
-			}
-			// Print partition limit error w/ suggestion
-			if strings.Contains(restErr.Message, "partitions will exceed") {
-				return kafkarestv3.TopicData{}, errors.NewErrorWithSuggestions(restErr.Message, errors.ExceedPartitionLimitSuggestions)
-			}
+		// Pretty print topic exists error
+		if restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err); parseErr == nil && restErr.Code == BadRequestErrorCode && strings.Contains(restErr.Message, "already exists") {
+			return kafkarestv3.TopicData{}, errors.Errorf(errors.TopicExistsErrorMsg, data.TopicName, clusterId)
 		}
 	}
 	return res, kafkarest.NewError(c.GetUrl(), err, httpResp)

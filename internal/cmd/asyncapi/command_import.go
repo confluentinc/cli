@@ -287,6 +287,9 @@ func (c *command) createTopic(details *accountDetails, topicName string, kafkaBi
 		return false, err
 	}
 	if _, err := kafkaRest.CloudClient.CreateKafkaTopic(details.kafkaClusterId, createTopicRequestData); err != nil {
+		if strings.Contains(err.Error(), "partitions will exceed") {
+			return false, errors.NewErrorWithSuggestions(err.Error(), errors.ExceedPartitionLimitSuggestions)
+		}
 		return false, err
 	}
 	output.Printf(errors.CreatedResourceMsg, resource.Topic, topicName)
