@@ -95,7 +95,7 @@ func handlePipeline(t *testing.T) http.HandlerFunc {
 
 			state := "draft"
 			if body.Spec.Activated != nil {
-				if *body.Spec.Activated {
+				if body.Spec.GetActivated() {
 					state = "activating"
 				} else {
 					state = "deactivating"
@@ -103,17 +103,15 @@ func handlePipeline(t *testing.T) http.HandlerFunc {
 			}
 			pipeline.Status.State = &state
 
-			if body.Spec.Secrets != nil {
-				for name := range *body.Spec.Secrets {
-					value := (*body.Spec.Secrets)[name]
-					if len(value) > 0 {
-						(*pipeline.Spec.Secrets)[name] = "*****************"
-					} else {
-						// for PATCH operation, empty secret value will be removed
-						delete(*pipeline.Spec.Secrets, name)
-					}
+			for name, value := range body.Spec.GetSecrets() {
+				if value != "" {
+					(*pipeline.Spec.Secrets)[name] = "*****************"
+				} else {
+					// for PATCH operation, empty secret value will be removed
+					delete(*pipeline.Spec.Secrets, name)
 				}
 			}
+
 			err = json.NewEncoder(w).Encode(pipeline)
 			require.NoError(t, err)
 		}

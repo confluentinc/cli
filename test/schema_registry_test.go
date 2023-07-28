@@ -123,8 +123,8 @@ func (s *CLITestSuite) TestSchemaRegistrySubject() {
 	tests := []CLITest{
 		{args: fmt.Sprintf("schema-registry subject list --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/subject/list.golden"},
 		{args: fmt.Sprintf("schema-registry subject describe testSubject --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/subject/describe.golden"},
-		{args: fmt.Sprintf("schema-registry subject update testSubject --compatibility BACKWARD --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/subject/update-compatibility.golden"},
-		{args: fmt.Sprintf("schema-registry subject update testSubject --compatibility BACKWARD --compatibility-group application.version --metadata-defaults %s --ruleset-defaults %s --environment %s", metadataPath, rulesetPath, testserver.SRApiEnvId), fixture: "schema-registry/subject/update-compatibility.golden"},
+		{args: fmt.Sprintf("schema-registry subject update testSubject --compatibility backward --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/subject/update-compatibility.golden"},
+		{args: fmt.Sprintf("schema-registry subject update testSubject --compatibility backward --compatibility-group application.version --metadata-defaults %s --ruleset-defaults %s --environment %s", metadataPath, rulesetPath, testserver.SRApiEnvId), fixture: "schema-registry/subject/update-compatibility.golden"},
 		{args: fmt.Sprintf("schema-registry subject update testSubject --mode readonly --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/subject/update-mode.golden"},
 	}
 

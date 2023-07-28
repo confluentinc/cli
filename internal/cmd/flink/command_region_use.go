@@ -34,7 +34,7 @@ func (c *command) newRegionUseCommand() *cobra.Command {
 func (c *command) regionUse(cmd *cobra.Command, args []string) error {
 	split := strings.Split(args[0], ".")
 	if len(split) != 2 || split[0] == "" || split[1] == "" {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf("Flink region %s is invalid", args[0]), "run `ccloud flink region list` to see available regions")
+		return errors.NewErrorWithSuggestions(fmt.Sprintf("Flink region %s is invalid", args[0]), "run `confluent flink region list` to see available regions")
 	}
 
 	regions, err := c.V2Client.ListFlinkRegions(split[0])
@@ -46,7 +46,7 @@ func (c *command) regionUse(cmd *cobra.Command, args []string) error {
 		return strings.EqualFold(r.GetId(), args[0])
 	})
 	if !found {
-		return errors.NewErrorWithSuggestions(fmt.Sprintf("Flink region %s is not available", args[0]), "run `ccloud flink region list` to see available regions")
+		return errors.NewErrorWithSuggestions(fmt.Sprintf("Flink region %s is not available", args[0]), "run `confluent flink region list` to see available regions")
 	}
 
 	if err := c.Context.SetCurrentFlinkRegion(reg.GetRegionName()); err != nil {

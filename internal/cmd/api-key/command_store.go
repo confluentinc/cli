@@ -13,8 +13,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
-const longDescription = `Use this command to register an API secret created by another
-process and store it locally.
+const longDescription = `Use this command to register an API secret created by another process and store it locally.
 
 When you create an API key with the CLI, it is automatically stored locally.
 However, when you create an API key using the UI, API, or with the CLI on another
