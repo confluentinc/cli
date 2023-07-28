@@ -74,7 +74,7 @@ func (c *command) refreshOAuthBearerToken(cmd *cobra.Command, client ckafka.Hand
 		if c.Context.State == nil { // require log-in to use oauthbearer token
 			return errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestions)
 		}
-		oauthBearerToken, retrieveErr := retrieveUnsecuredToken(oart, c.AuthToken())
+		oauthBearerToken, retrieveErr := retrieveUnsecuredToken(oart, c.Context.GetAuthToken())
 		if retrieveErr != nil {
 			_ = client.SetOAuthBearerTokenFailure(retrieveErr.Error())
 			return fmt.Errorf("token retrieval error: %w", retrieveErr)

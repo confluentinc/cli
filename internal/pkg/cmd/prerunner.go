@@ -611,7 +611,7 @@ func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) fun
 			var restContext context.Context
 			if useMdsToken && !restFlags.prompt {
 				log.CliLogger.Debug("found mds token to use as bearer")
-				restContext = context.WithValue(context.Background(), kafkarestv3.ContextAccessToken, command.AuthToken())
+				restContext = context.WithValue(context.Background(), kafkarestv3.ContextAccessToken, command.Context.GetAuthToken())
 			} else { // no mds token, then prompt for basic auth creds
 				if !restFlags.prompt {
 					output.Println(errors.MDSTokenNotFoundMsg)

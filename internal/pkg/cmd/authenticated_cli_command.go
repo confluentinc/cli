@@ -268,7 +268,3 @@ func (c *AuthenticatedCLICommand) GetSchemaRegistryClient() (*schemaregistry.Cli
 
 	return c.schemaRegistryClient, nil
 }
-
-func (c *AuthenticatedCLICommand) AuthToken() string {
-	return c.Context.GetAuthToken()
-}
