@@ -7,7 +7,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (c identityProviderCommand) newDescribeCommand() *cobra.Command {
+func (c *identityProviderCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "describe <id>",
 		Short:             "Describe an identity provider.",
@@ -21,7 +21,7 @@ func (c identityProviderCommand) newDescribeCommand() *cobra.Command {
 	return cmd
 }
 
-func (c identityProviderCommand) describe(cmd *cobra.Command, args []string) error {
+func (c *identityProviderCommand) describe(cmd *cobra.Command, args []string) error {
 	identityProvider, err := c.V2Client.GetIdentityProvider(args[0])
 	if err != nil {
 		return err

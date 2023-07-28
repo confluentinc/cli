@@ -1,13 +1,24 @@
 package iam
 
 import (
+	"github.com/confluentinc/ccloud-sdk-go-v2/sso/v2"
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 type groupMappingCommand struct {
 	*pcmd.AuthenticatedCLICommand
+}
+
+type groupMappingOut struct {
+	Id          string `human:"ID" serialized:"id"`
+	Name        string `human:"Name" serialized:"name"`
+	Description string `human:"Description" serialized:"description"`
+	Filter      string `human:"Filter" serialized:"filter"`
+	Principal   string `human:"Principal" serialized:"principal"`
+	State       string `human:"State" serialized:"state"`
 }
 
 func newGroupMappingCommand(prerunner pcmd.PreRunner) *cobra.Command {
@@ -24,9 +35,21 @@ func newGroupMappingCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(c.newDescribeCommand())
 	cmd.AddCommand(c.newListCommand())
 	cmd.AddCommand(c.newUpdateCommand())
-	cmd.AddCommand(c.newUseCommand())
 
 	return cmd
+}
+
+func printGroupMapping(cmd *cobra.Command, groupMapping sso.IamV2SsoGroupMapping) error {
+	table := output.NewTable(cmd)
+	table.Add(&groupMappingOut{
+		Id:          groupMapping.GetId(),
+		Name:        groupMapping.GetDisplayName(),
+		Description: groupMapping.GetDescription(),
+		Filter:      groupMapping.GetFilter(),
+		Principal:   groupMapping.GetPrincipal(),
+		State:       groupMapping.GetState(),
+	})
+	return table.Print()
 }
 
 func (c *groupMappingCommand) validArgs(cmd *cobra.Command, args []string) []string {
