@@ -9,7 +9,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 )
 
 func (c *aclCommand) newCreateCommand() *cobra.Command {
@@ -82,11 +81,11 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 
 	for i, binding := range bindings {
 		data := pacl.GetCreateAclRequestData(binding)
-		if httpResp, err := kafkaREST.CloudClient.CreateKafkaAcls(kafkaClusterConfig.ID, data); err != nil {
+		if err := kafkaREST.CloudClient.CreateKafkaAcls(kafkaClusterConfig.ID, data); err != nil {
 			if i > 0 {
 				_ = pacl.PrintACLs(cmd, bindings[:i])
 			}
-			return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+			return err
 		}
 	}
 

@@ -78,7 +78,7 @@ func (c *mirrorCommand) autocompleteMirrorTopics(cmd *cobra.Command) []string {
 	}
 
 	kafkaREST, err := c.GetKafkaREST()
-	if err != nil || kafkaREST == nil {
+	if err != nil {
 		return nil
 	}
 

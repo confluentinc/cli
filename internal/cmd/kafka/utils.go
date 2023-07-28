@@ -87,9 +87,6 @@ func getKafkaRestProxyAndLkcId(c *pcmd.AuthenticatedCLICommand) (*pcmd.KafkaREST
 	if err != nil {
 		return nil, "", err
 	}
-	if kafkaREST == nil {
-		return nil, "", errors.New(errors.RestProxyNotAvailable)
-	}
 	// Kafka REST is available
 	kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {

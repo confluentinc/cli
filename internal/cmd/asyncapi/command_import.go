@@ -18,10 +18,8 @@ import (
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
-	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
@@ -288,16 +286,8 @@ func (c *command) createTopic(details *accountDetails, topicName string, kafkaBi
 	if err != nil {
 		return false, err
 	}
-	if _, httpResp, err := kafkaRest.CloudClient.CreateKafkaTopic(details.kafkaClusterId,
-		createTopicRequestData); err != nil {
-		restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err)
-		if parseErr == nil && restErr.Code == ccloudv2.BadRequestErrorCode {
-			// Print partition limit error w/ suggestion
-			if strings.Contains(restErr.Message, "partitions will exceed") {
-				return false, errors.NewErrorWithSuggestions(restErr.Message, errors.ExceedPartitionLimitSuggestions)
-			}
-		}
-		return false, kafkarest.NewError(kafkaRest.CloudClient.GetUrl(), err, httpResp)
+	if _, err := kafkaRest.CloudClient.CreateKafkaTopic(details.kafkaClusterId, createTopicRequestData); err != nil {
+		return false, err
 	}
 	output.Printf(errors.CreatedResourceMsg, resource.Topic, topicName)
 	return true, nil
@@ -331,8 +321,7 @@ func (c *command) updateTopic(details *accountDetails, topicName string, kafkaBi
 	}
 	log.CliLogger.Info("Overwriting topic configs")
 	if updateConfigs != nil {
-		_, err = kafkaRest.CloudClient.UpdateKafkaTopicConfigBatch(details.kafkaClusterId, topicName, kafkarestv3.AlterConfigBatchRequestData{Data: updateConfigs})
-		if err != nil {
+		if err := kafkaRest.CloudClient.UpdateKafkaTopicConfigBatch(details.kafkaClusterId, topicName, kafkarestv3.AlterConfigBatchRequestData{Data: updateConfigs}); err != nil {
 			return fmt.Errorf("unable to update topic configs: %v", err)
 		}
 	}
