@@ -16,7 +16,7 @@ Flags:
       --config-file string                Exporter configuration file.
       --subjects strings                  A comma-separated list of exporter subjects.
       --subject-format string             Exporter subject rename format. The format string can contain ${subject}, which will be replaced with the default subject name. (default "${subject}")
-      --context-type string               Exporter context type. One of "auto", "custom" or "none". (default "auto")
+      --context-type string               Exporter context type. One of "auto", "custom", or "none". (default "auto")
       --context-name string               Exporter context name.
       --context string                    CLI context name.
       --ca-location string                File or directory path to CA certificates to authenticate the Schema Registry client.

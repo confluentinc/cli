@@ -32,7 +32,7 @@ func (c *command) newSchemaCreateCommand(cfg *v1.Config) *cobra.Command {
 	cmd.Example = examples.BuildExampleString(
 		example,
 		examples.Example{
-			Text: `Where "employee.avsc" may include these contents:`,
+			Text: `Where "employee.avsc" may include the following content:`,
 			Code: `{
 	"type" : "record",
 	"namespace" : "Example",
@@ -44,7 +44,7 @@ func (c *command) newSchemaCreateCommand(cfg *v1.Config) *cobra.Command {
 }`,
 		},
 		examples.Example{
-			Text: "For more information on schema types and references, see https://docs.confluent.io/platform/current/schema-registry/fundamentals/serdes-develop/index.html",
+			Text: "For more information on schema types and references, see https://docs.confluent.io/platform/current/schema-registry/fundamentals/serdes-develop/index.html.",
 		},
 	)
 

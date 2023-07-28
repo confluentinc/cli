@@ -28,17 +28,17 @@ type schemaOut struct {
 func (c *command) newSchemaDescribeCommand(cfg *v1.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe [id]",
-		Short: "Get schema either by schema ID, or by subject/version.",
+		Short: "Get schema by ID, or by subject and version.",
 		Args:  cobra.MaximumNArgs(1),
 		RunE:  c.schemaDescribe,
 	}
 
 	example1 := examples.Example{
-		Text: "Describe the schema string by schema ID.",
+		Text: `Describe the schema with ID "1337".`,
 		Code: "confluent schema-registry schema describe 1337",
 	}
 	example2 := examples.Example{
-		Text: "Describe the schema by both subject and version.",
+		Text: `Describe the schema with subject "payments" and version "latest".`,
 		Code: "confluent schema-registry schema describe --subject payments --version latest",
 	}
 	if cfg.IsOnPremLogin() {
@@ -165,14 +165,14 @@ func describeGraph(cmd *cobra.Command, id string, client *schemaregistry.Client)
 		}
 	}
 
-	// A schema graph is a DAG, the root is fetched either by schema id or by subject/version
+	// A schema graph is a DAG, the root is fetched by schema ID or by subject and version
 	// All references are fetched by subject/version
 	rootSchema, schemaGraph, err := traverseDAG(client, visited, int32(schemaID), subject, version)
 	if err != nil {
 		return err
 	}
 
-	// Since getting schema by id and by subject/version return different types, i.e., `SchemaString` vs `Schema`,
+	// Since getting schema by ID and by subject and version return different types, i.e., `SchemaString` vs `Schema`,
 	// convert root from `SchemaString` to `Schema` so that we only have to deal with a single type, only if the root is fetched by id
 	root := convertRootSchema(&rootSchema, int32(schemaID))
 	if root != nil {
