@@ -137,7 +137,7 @@ func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
 		SchemaPath: keySchema,
 		Refs:       refs,
 	}
-	keyMetadata, keyReferencePathMap, err := c.registerSchemaOnPrem(cmd, keySchemaConfigs)
+	keyMetaInfo, keyReferencePathMap, err := c.registerSchemaOnPrem(cmd, keySchemaConfigs)
 	if err != nil {
 		return err
 	}
@@ -153,7 +153,7 @@ func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
 		SchemaPath: schema,
 		Refs:       refs,
 	}
-	valueMetadata, referencePathMap, err := c.registerSchemaOnPrem(cmd, valueSchemaConfigs)
+	valueMetaInfo, referencePathMap, err := c.registerSchemaOnPrem(cmd, valueSchemaConfigs)
 	if err != nil {
 		return err
 	}
@@ -181,7 +181,7 @@ func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
 			continue
 		}
 
-		msg, err := GetProduceMessage(cmd, keyMetadata, valueMetadata, topic, data, keySerializer, valueSerializer)
+		msg, err := GetProduceMessage(cmd, keyMetaInfo, valueMetaInfo, topic, data, keySerializer, valueSerializer)
 		if err != nil {
 			return err
 		}

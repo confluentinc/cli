@@ -79,12 +79,12 @@ func (c *command) produce(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	keySerializer, keyMetadata, err := c.initSchemaAndGetInfo(cmd, topic, "key")
+	keySerializer, keyMetaInfo, err := c.initSchemaAndGetInfo(cmd, topic, "key")
 	if err != nil {
 		return err
 	}
 
-	valueSerializer, valueMetadata, err := c.initSchemaAndGetInfo(cmd, topic, "value")
+	valueSerializer, valueMetaInfo, err := c.initSchemaAndGetInfo(cmd, topic, "value")
 	if err != nil {
 		return err
 	}
@@ -137,7 +137,7 @@ func (c *command) produce(cmd *cobra.Command, args []string) error {
 			continue
 		}
 
-		message, err := GetProduceMessage(cmd, keyMetadata, valueMetadata, topic, data, keySerializer, valueSerializer)
+		message, err := GetProduceMessage(cmd, keyMetaInfo, valueMetaInfo, topic, data, keySerializer, valueSerializer)
 		if err != nil {
 			return err
 		}
@@ -211,7 +211,7 @@ func PrepareInputChannel(scanErr *error) (chan string, func()) {
 	}
 }
 
-func GetProduceMessage(cmd *cobra.Command, keyMetadata, valueMetadata []byte, topic, data string, keySerializer, valueSerializer serdes.SerializationProvider) (*ckafka.Message, error) {
+func GetProduceMessage(cmd *cobra.Command, keyMetaInfo, valueMetaInfo []byte, topic, data string, keySerializer, valueSerializer serdes.SerializationProvider) (*ckafka.Message, error) {
 	parseKey, err := cmd.Flags().GetBool("parse-key")
 	if err != nil {
 		return nil, err
@@ -222,7 +222,7 @@ func GetProduceMessage(cmd *cobra.Command, keyMetadata, valueMetadata []byte, to
 		return nil, err
 	}
 
-	key, value, err := serializeMessage(keyMetadata, valueMetadata, data, delimiter, parseKey, keySerializer, valueSerializer)
+	key, value, err := serializeMessage(keyMetaInfo, valueMetaInfo, data, delimiter, parseKey, keySerializer, valueSerializer)
 	if err != nil {
 		return nil, err
 	}
@@ -239,7 +239,7 @@ func GetProduceMessage(cmd *cobra.Command, keyMetadata, valueMetadata []byte, to
 	return message, nil
 }
 
-func serializeMessage(keyMetadata, valueMetadata []byte, data, delimiter string, parseKey bool, keySerializer, valueSerializer serdes.SerializationProvider) ([]byte, []byte, error) {
+func serializeMessage(keyMetaInfo, valueMetaInfo []byte, data, delimiter string, parseKey bool, keySerializer, valueSerializer serdes.SerializationProvider) ([]byte, []byte, error) {
 	var serializedKey, val string
 	if parseKey {
 		x := strings.SplitN(data, delimiter, 2)
@@ -263,7 +263,7 @@ func serializeMessage(keyMetadata, valueMetadata []byte, data, delimiter string,
 		return nil, nil, err
 	}
 
-	return append(keyMetadata, serializedKey...), append(valueMetadata, serializedValue...), nil
+	return append(keyMetaInfo, serializedKey...), append(valueMetaInfo, serializedValue...), nil
 }
 
 func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (serdes.SerializationProvider, []byte, error) {
