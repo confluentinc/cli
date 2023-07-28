@@ -1,6 +1,8 @@
 package schemaregistry
 
 import (
+	"strings"
+
 	"github.com/spf13/cobra"
 
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
@@ -25,7 +27,7 @@ func (c *command) newExporterCreateCommand(cfg *v1.Config) *cobra.Command {
 
 	example := examples.Example{
 		Text: "Create a new schema exporter.",
-		Code: `confluent schema-registry exporter create my-exporter --config-file config.txt --subjects my-subject1,my-subject2 --subject-format my-\${subject} --context-type CUSTOM --context-name my-context`,
+		Code: `confluent schema-registry exporter create my-exporter --config-file config.txt --subjects my-subject1,my-subject2 --subject-format my-\${subject} --context-type custom --context-name my-context`,
 	}
 	if cfg.IsOnPremLogin() {
 		example.Code += " " + onPremAuthenticationMsg
@@ -75,6 +77,7 @@ func (c *command) exporterCreate(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	contextType = strings.ToUpper(contextType)
 
 	contextName := "."
 	if contextType == "CUSTOM" {
@@ -83,7 +86,7 @@ func (c *command) exporterCreate(cmd *cobra.Command, args []string) error {
 			return err
 		}
 	} else if cmd.Flags().Changed("context-name") {
-		return errors.New("can only set context-name if context-type is CUSTOM")
+		return errors.New(`can only set context name if context type is "custom"`)
 	}
 
 	subjectFormat, err := cmd.Flags().GetString("subject-format")

@@ -1,6 +1,8 @@
 package schemaregistry
 
 import (
+	"strings"
+
 	"github.com/spf13/cobra"
 
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
@@ -17,18 +19,18 @@ import (
 func (c *command) newExporterUpdateCommand(cfg *v1.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update <name>",
-		Short: "Update configs or information of schema exporter.",
+		Short: "Update schema exporter.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.exporterUpdate,
 	}
 
 	example1 := examples.Example{
-		Text: "Update information of new schema exporter.",
-		Code: `confluent schema-registry exporter update my-exporter --subjects my-subject1,my-subject2 --subject-format my-\${subject} --context-type CUSTOM --context-name my-context`,
+		Text: "Update schema exporter information.",
+		Code: `confluent schema-registry exporter update my-exporter --subjects my-subject1,my-subject2 --subject-format my-\${subject} --context-type custom --context-name my-context`,
 	}
 	example2 := examples.Example{
-		Text: "Update configs of new schema exporter.",
-		Code: "confluent schema-registry exporter update my-exporter --config-file ~/config.txt",
+		Text: "Update schema exporter configuration.",
+		Code: "confluent schema-registry exporter update my-exporter --config-file config.txt",
 	}
 	if cfg.IsOnPremLogin() {
 		example1.Code += " " + onPremAuthenticationMsg
@@ -84,7 +86,7 @@ func (c *command) exporterUpdate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if contextType != "" {
-		updateRequest.ContextType = contextType
+		updateRequest.ContextType = strings.ToUpper(contextType)
 	}
 
 	contextName, err := cmd.Flags().GetString("context-name")
