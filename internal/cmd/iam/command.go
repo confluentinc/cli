@@ -29,6 +29,9 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 		cmd.AddCommand(newPoolCommand(prerunner))
 		cmd.AddCommand(newProviderCommand(prerunner))
 	}
+	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.group-mapping", dc.Context(), v1.CliLaunchDarklyClient, true, false) {
+		cmd.AddCommand(newGroupMappingCommand(prerunner))
+	}
 	cmd.AddCommand(newACLCommand(prerunner))
 	cmd.AddCommand(newRBACCommand(cfg, prerunner))
 	cmd.AddCommand(newServiceAccountCommand(prerunner))
