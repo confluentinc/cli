@@ -1694,7 +1694,7 @@ func handleClustersClusterIdTopicsTopicsNamePartitionsReplicaStatus(t *testing.T
 	}
 }
 
-func writeErrorResponse(responseWriter http.ResponseWriter, statusCode int, errorCode int, message string) error {
+func writeErrorResponse(responseWriter http.ResponseWriter, statusCode, errorCode int, message string) error {
 	responseWriter.WriteHeader(statusCode)
 	errorResponseBody := fmt.Sprintf(`{
 		"error_code": %d,

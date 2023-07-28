@@ -188,7 +188,7 @@ func describeGraph(cmd *cobra.Command, id string, client *schemaregistry.Client)
 	return nil
 }
 
-func traverseDAG(client *schemaregistry.Client, visited map[string]bool, id int32, subject string, version string) (srsdk.SchemaString, []srsdk.Schema, error) {
+func traverseDAG(client *schemaregistry.Client, visited map[string]bool, id int32, subject, version string) (srsdk.SchemaString, []srsdk.Schema, error) {
 	root := srsdk.SchemaString{}
 	var schemaGraph []srsdk.Schema
 	var refs []srsdk.SchemaReference

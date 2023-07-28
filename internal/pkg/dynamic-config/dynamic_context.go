@@ -149,7 +149,7 @@ func (d *DynamicContext) RemoveKafkaClusterConfig(clusterId string) error {
 	return d.Save()
 }
 
-func (d *DynamicContext) UseAPIKey(apiKey string, clusterId string) error {
+func (d *DynamicContext) UseAPIKey(apiKey, clusterId string) error {
 	kcc, err := d.FindKafkaCluster(clusterId)
 	if err != nil {
 		return err

@@ -374,7 +374,7 @@ func removeTabNewLineAndWhitesSpaces(str string) string {
 	return replacer.Replace(str)
 }
 
-func statementStartsWithOp(statement string, op string) bool {
+func statementStartsWithOp(statement, op string) bool {
 	cleanedStatement := strings.ToUpper(statement)
 	pattern := fmt.Sprintf("^%s\\b", op)
 	startsWithOp, _ := regexp.MatchString(pattern, cleanedStatement)
