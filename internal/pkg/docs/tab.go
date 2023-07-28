@@ -71,7 +71,7 @@ func printSection(title string, section []string) []string {
 	return append(head, section...)
 }
 
-func areEqual(a []string, b []string) bool {
+func areEqual(a, b []string) bool {
 	if len(a) != len(b) {
 		return false
 	}

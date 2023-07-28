@@ -24,7 +24,7 @@ import (
 type Client interface {
 	CheckForUpdates(cliName, currentVersion string, forceCheck bool) (string, string, error)
 	GetLatestReleaseNotes(cliName, currentVersion string) (string, []string, error)
-	PromptToDownload(cliName, currVersion, latestVersion string, releaseNotes string, confirm bool) bool
+	PromptToDownload(cliName, currVersion, latestVersion, releaseNotes string, confirm bool) bool
 	UpdateBinary(cliName, version, path string, noVerify bool) error
 }
 

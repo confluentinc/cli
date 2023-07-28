@@ -20,14 +20,14 @@ type ErrorWithSuggestionsImpl struct {
 	suggestionsMsg string
 }
 
-func NewErrorWithSuggestions(errorMsg string, suggestionsMsg string) ErrorWithSuggestions {
+func NewErrorWithSuggestions(errorMsg, suggestionsMsg string) ErrorWithSuggestions {
 	return &ErrorWithSuggestionsImpl{
 		errorMsg:       errorMsg,
 		suggestionsMsg: suggestionsMsg,
 	}
 }
 
-func NewWrapErrorWithSuggestions(err error, errorMsg string, suggestionsMsg string) ErrorWithSuggestions {
+func NewWrapErrorWithSuggestions(err error, errorMsg, suggestionsMsg string) ErrorWithSuggestions {
 	return &ErrorWithSuggestionsImpl{
 		errorMsg:       Wrap(err, errorMsg).Error(),
 		suggestionsMsg: suggestionsMsg,

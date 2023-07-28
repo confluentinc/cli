@@ -135,7 +135,7 @@ func updateSearchState(searchState *SearchState, currentMatch string, currentInd
 
 // In case there are no matches and the search string is not empty we've "failed". This mimics the behaviour of
 // reverse search on unix shell.
-func updateLivePrefix(match string, substr string, livePrefix *LivePrefixState) {
+func updateLivePrefix(match, substr string, livePrefix *LivePrefixState) {
 	if match == "" && substr != "" {
 		livePrefix.LivePrefix = "failing " + BckISearch
 	} else {
@@ -175,7 +175,7 @@ func clearCurrentSuggestion(writer prompt.ConsoleWriter, searchState *SearchStat
 }
 
 // writeSuggestion writes the match string, adding a line break. If there was a match it will be highlighted.
-func writeSuggestion(writer prompt.ConsoleWriter, match string, matchIndex int, matchLength int) {
+func writeSuggestion(writer prompt.ConsoleWriter, match string, matchIndex, matchLength int) {
 	suggestion := match + "\n"
 	writer.WriteStr(" ")
 	if matchIndex != -1 && matchLength != 0 {

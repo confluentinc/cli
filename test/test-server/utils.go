@@ -265,7 +265,7 @@ func writeUserConflictError(w http.ResponseWriter) error {
 	return writeErrorJson(w, "This user already exists within the Organization")
 }
 
-func getCmkBasicDescribeCluster(id string, name string) *cmkv2.CmkV2Cluster {
+func getCmkBasicDescribeCluster(id, name string) *cmkv2.CmkV2Cluster {
 	return &cmkv2.CmkV2Cluster{
 		Spec: &cmkv2.CmkV2ClusterSpec{
 			DisplayName: cmkv2.PtrString(name),
@@ -285,7 +285,7 @@ func getCmkBasicDescribeCluster(id string, name string) *cmkv2.CmkV2Cluster {
 	}
 }
 
-func getCmkDedicatedDescribeCluster(id string, name string, cku int32) *cmkv2.CmkV2Cluster {
+func getCmkDedicatedDescribeCluster(id, name string, cku int32) *cmkv2.CmkV2Cluster {
 	return &cmkv2.CmkV2Cluster{
 		Spec: &cmkv2.CmkV2ClusterSpec{
 			DisplayName: cmkv2.PtrString(name),

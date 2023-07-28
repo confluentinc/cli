@@ -142,7 +142,7 @@ func (t *TableView) setTableAndColumnWidths(statementResults *types.Materialized
 	t.columnWidths = statementResults.GetMaxWidthPerColumn()
 }
 
-func (t *TableView) tableAfterDrawHandler() func(screen tcell.Screen, x int, y int, width int, height int) (int, int, int, int) {
+func (t *TableView) tableAfterDrawHandler() func(screen tcell.Screen, x, y, width, height int) (int, int, int, int) {
 	return func(screen tcell.Screen, x, y, width, height int) (int, int, int, int) {
 		// check if the table width has changed
 		newX, newY, newWidth, newHeight := t.table.GetInnerRect()
