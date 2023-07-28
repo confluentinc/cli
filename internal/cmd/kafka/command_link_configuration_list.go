@@ -39,11 +39,8 @@ func (c *linkCommand) configurationList(cmd *cobra.Command, args []string) error
 	linkName := args[0]
 
 	kafkaREST, err := c.GetKafkaREST()
-	if kafkaREST == nil {
-		if err != nil {
-			return err
-		}
-		return errors.New(errors.RestProxyNotAvailableMsg)
+	if err != nil {
+		return err
 	}
 
 	cluster, err := c.Context.GetKafkaClusterForCommand()

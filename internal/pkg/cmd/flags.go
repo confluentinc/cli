@@ -421,7 +421,7 @@ func AddLinkFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 
 func AutocompleteLinks(command *AuthenticatedCLICommand) []string {
 	kafkaREST, err := command.GetKafkaREST()
-	if err != nil || kafkaREST == nil {
+	if err != nil {
 		return nil
 	}
 

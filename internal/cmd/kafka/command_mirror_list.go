@@ -55,11 +55,8 @@ func (c *mirrorCommand) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	kafkaREST, err := c.GetKafkaREST()
-	if kafkaREST == nil {
-		if err != nil {
-			return err
-		}
-		return errors.New(errors.RestProxyNotAvailableMsg)
+	if err != nil {
+		return err
 	}
 
 	cluster, err := c.Context.GetKafkaClusterForCommand()
