@@ -374,7 +374,7 @@ func (r *PreRun) setCCloudClient(c *AuthenticatedCLICommand) error {
 
 			return kafkaRest, nil
 		}
-		return nil, errors.New(errors.RestProxyNotAvailableMsg)
+		return nil, errors.New("Kafka REST is not enabled: the operation is only supported with Kafka REST proxy.")
 	})
 	c.KafkaRESTProvider = &provider
 	return nil

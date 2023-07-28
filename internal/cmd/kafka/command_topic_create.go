@@ -8,11 +8,9 @@ import (
 
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 
-	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/properties"
 	"github.com/confluentinc/cli/internal/pkg/resource"
@@ -108,27 +106,16 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		data.PartitionsCount = utils.Int32Ptr(int32(partitions))
 	}
 
-	_, httpResp, err := kafkaREST.CloudClient.CreateKafkaTopic(kafkaClusterConfig.ID, data)
-	if err != nil {
-		restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err)
-		if parseErr == nil && restErr.Code == ccloudv2.BadRequestErrorCode {
-			// Ignore or pretty print topic exists error
-			if strings.Contains(restErr.Message, "already exists") {
-				if ifNotExists {
-					return nil
-				}
-				return errors.NewErrorWithSuggestions(
-					fmt.Sprintf(errors.TopicExistsErrorMsg, topicName, kafkaClusterConfig.ID),
-					fmt.Sprintf(errors.TopicExistsSuggestions, kafkaClusterConfig.ID, kafkaClusterConfig.ID))
+	if _, err := kafkaREST.CloudClient.CreateKafkaTopic(kafkaClusterConfig.ID, data); err != nil {
+		if strings.Contains(err.Error(), "already exists") {
+			if ifNotExists {
+				return nil
 			}
-
-			// Print partition limit error w/ suggestion
-			if strings.Contains(restErr.Message, "partitions will exceed") {
-				return errors.NewErrorWithSuggestions(restErr.Message, errors.ExceedPartitionLimitSuggestions)
-			}
+			return errors.NewErrorWithSuggestions(err.Error(), fmt.Sprintf(errors.TopicExistsSuggestions, kafkaClusterConfig.ID, kafkaClusterConfig.ID))
+		} else if strings.Contains(err.Error(), "partitions will exceed") {
+			return errors.NewErrorWithSuggestions(err.Error(), errors.ExceedPartitionLimitSuggestions)
 		}
-
-		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+		return err
 	}
 
 	output.Printf(errors.CreatedResourceMsg, resource.Topic, topicName)

@@ -5,12 +5,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
-	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 )
@@ -66,15 +64,8 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	httpResp, err := kafkaREST.CloudClient.DeleteKafkaTopic(kafkaClusterConfig.ID, topicName)
-	if err != nil {
-		restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err)
-		if parseErr == nil {
-			if restErr.Code == ccloudv2.UnknownTopicOrPartitionErrorCode {
-				return fmt.Errorf(errors.UnknownTopicErrorMsg, topicName)
-			}
-		}
-		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+	if err := kafkaREST.CloudClient.DeleteKafkaTopic(kafkaClusterConfig.ID, topicName); err != nil {
+		return err
 	}
 
 	output.Printf(errors.DeletedResourceMsg, resource.Topic, topicName)
