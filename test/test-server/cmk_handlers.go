@@ -2,6 +2,7 @@ package testserver
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
 	"testing"
 
