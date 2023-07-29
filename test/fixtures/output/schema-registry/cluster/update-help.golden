@@ -24,8 +24,6 @@ Flags:
       --ruleset-defaults string      The path to the schema ruleset defaults file.
       --ruleset-overrides string     The path to the schema ruleset overrides file.
       --mode string                  Can be "readwrite", "readonly", or "import".
-      --api-key string               API key.
-      --api-secret string            API key secret.
       --context string               CLI context name.
       --environment string           Environment ID.
 

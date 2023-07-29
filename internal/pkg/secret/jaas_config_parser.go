@@ -34,7 +34,7 @@ func NewJAASParser() *JAASParser {
 	}
 }
 
-func (j *JAASParser) updateJAASConfig(op string, key string, value string, config string) (string, error) {
+func (j *JAASParser) updateJAASConfig(op, key, value, config string) (string, error) {
 	switch op {
 	case Delete:
 		keyValuePattern := key + JAASValuePattern
@@ -130,7 +130,7 @@ func (j *JAASParser) parseControlFlag() error {
 	}
 }
 
-func (j *JAASParser) ParseJAASConfigurationEntry(jaasConfig string, key string) (*properties.Properties, error) {
+func (j *JAASParser) ParseJAASConfigurationEntry(jaasConfig, key string) (*properties.Properties, error) {
 	j.tokenizer.Init(strings.NewReader(jaasConfig))
 	_, _, parsedToken, parentKey, err := j.parseConfigurationEntry(key)
 	if err != nil {

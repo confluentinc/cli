@@ -1,7 +1,6 @@
 package asyncapi
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"strconv"
@@ -11,11 +10,12 @@ import (
 
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 	ckgo "github.com/confluentinc/confluent-kafka-go/kafka"
-	schemaregistry "github.com/confluentinc/schema-registry-sdk-go"
+	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
+	schemaregistry "github.com/confluentinc/cli/internal/pkg/schema-registry"
 )
 
 type channelDetails struct {
@@ -23,7 +23,7 @@ type channelDetails struct {
 	currentTopicDescription string
 	currentSubject          string
 	contentType             string
-	schema                  *schemaregistry.Schema
+	schema                  *srsdk.Schema
 	unmarshalledSchema      map[string]any
 	mapOfMessageCompat      map[string]any
 	topicLevelTags          []spec.Tag
@@ -33,24 +33,22 @@ type channelDetails struct {
 }
 
 type accountDetails struct {
-	clusterId      string
-	topics         []kafkarestv3.TopicData
-	clusterCreds   *v1.APIKeyPair
-	consumer       *ckgo.Consumer
-	broker         string
-	srCluster      *v1.SchemaRegistryCluster
-	srClient       *schemaregistry.APIClient
-	srContext      context.Context
-	subjects       []string
-	channelDetails channelDetails
+	kafkaClusterId          string
+	schemaRegistryClusterId string
+	topics                  []kafkarestv3.TopicData
+	clusterCreds            *v1.APIKeyPair
+	consumer                *ckgo.Consumer
+	kafkaUrl                string
+	schemaRegistryUrl       string
+	srClient                *schemaregistry.Client
+	subjects                []string
+	channelDetails          channelDetails
 }
-
-const UserAgent = "User-Agent"
 
 func (d *accountDetails) getTags() error {
 	// Get topic level tags
 	d.channelDetails.topicLevelTags = nil
-	topicLevelTags, _, err := d.srClient.DefaultApi.GetTags(d.srContext, "kafka_topic", d.clusterId+":"+d.channelDetails.currentTopic.GetTopicName())
+	topicLevelTags, err := d.srClient.GetTags("kafka_topic", d.kafkaClusterId+":"+d.channelDetails.currentTopic.GetTopicName())
 	if err != nil {
 		return catchOpenAPIError(err)
 	}
@@ -60,7 +58,7 @@ func (d *accountDetails) getTags() error {
 
 	// Get schema level tags
 	d.channelDetails.schemaLevelTags = nil
-	schemaLevelTags, _, err := d.srClient.DefaultApi.GetTags(d.srContext, "sr_schema", strconv.Itoa(int(d.channelDetails.schema.Id)))
+	schemaLevelTags, err := d.srClient.GetTags("sr_schema", strconv.Itoa(int(d.channelDetails.schema.Id)))
 	if err != nil {
 		return catchOpenAPIError(err)
 	}
@@ -71,7 +69,7 @@ func (d *accountDetails) getTags() error {
 }
 
 func (d *accountDetails) getSchemaDetails() error {
-	schema, _, err := d.srClient.DefaultApi.GetSchemaByVersion(d.srContext, d.channelDetails.currentSubject, "latest", nil)
+	schema, err := d.srClient.GetSchemaByVersion(d.channelDetails.currentSubject, "latest", nil)
 	if err != nil {
 		return err
 	}
@@ -112,7 +110,7 @@ func handlePrimitiveSchemas(schema string, err error) (map[string]any, error) {
 
 func (d *accountDetails) getTopicDescription() error {
 	d.channelDetails.currentTopicDescription = ""
-	atlasEntityWithExtInfo, _, err := d.srClient.DefaultApi.GetByUniqueAttributes(d.srContext, "kafka_topic", d.clusterId+":"+d.channelDetails.currentTopic.GetTopicName(), nil)
+	atlasEntityWithExtInfo, err := d.srClient.GetByUniqueAttributes("kafka_topic", d.kafkaClusterId+":"+d.channelDetails.currentTopic.GetTopicName())
 	if err != nil {
 		return catchOpenAPIError(err)
 	}
@@ -123,7 +121,7 @@ func (d *accountDetails) getTopicDescription() error {
 }
 
 func (c *command) countAsyncApiUsage(details *accountDetails) error {
-	if _, err := details.srClient.DefaultApi.AsyncapiPut(details.srContext); err != nil {
+	if err := details.srClient.AsyncapiPut(); err != nil {
 		return fmt.Errorf("failed to access AsyncAPI metric endpoint: %v", err)
 	}
 	return nil
@@ -154,7 +152,7 @@ func (d *accountDetails) buildMessageEntity() *spec.MessageEntity {
 }
 
 func catchOpenAPIError(err error) error {
-	if openAPIError, ok := err.(schemaregistry.GenericOpenAPIError); ok {
+	if openAPIError, ok := err.(srsdk.GenericOpenAPIError); ok {
 		return errors.New(string(openAPIError.Body()))
 	}
 	return err

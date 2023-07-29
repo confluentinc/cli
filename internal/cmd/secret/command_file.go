@@ -48,7 +48,7 @@ func (c *command) getConfigFilePath(cmd *cobra.Command) (string, string, string,
 	return configFile, localSecretsFile, remoteSecretsFile, nil
 }
 
-func (c *command) getConfigs(configSource string, inputType string, prompt string, secure bool) (string, error) {
+func (c *command) getConfigs(configSource, inputType, prompt string, secure bool) (string, error) {
 	newConfigs, err := c.flagResolver.ValueFrom(configSource, prompt, secure)
 	if err != nil {
 		switch err {

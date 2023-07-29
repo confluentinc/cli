@@ -230,7 +230,6 @@ const (
 	SchemaNotFoundErrorMsg                   = "Schema Registry subject or version not found"
 	SchemaNotFoundSuggestions                = "List available subjects with `confluent schema-registry subject list`.\n" +
 		"List available versions with `confluent schema-registry subject describe`."
-	NoSubjectLevelConfigErrorMsg = `subject "%s" does not have subject-level compatibility configured`
 	SRInvalidPackageTypeErrorMsg = `"%s" is an invalid package type`
 	SRInvalidPackageSuggestions  = "Allowed values for `--package` flag are: %s."
 	SRInvalidPackageUpgrade      = "Environment \"%s\" is already using the Stream Governance \"%s\" package.\n"

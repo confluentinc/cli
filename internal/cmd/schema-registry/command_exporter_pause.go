@@ -1,18 +1,15 @@
 package schemaregistry
 
 import (
-	"context"
-
 	"github.com/spf13/cobra"
 
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
-
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (c *command) newExporterPauseCommand() *cobra.Command {
+func (c *command) newExporterPauseCommand(cfg *v1.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "pause <name>",
 		Short: "Pause schema exporter.",
@@ -20,29 +17,37 @@ func (c *command) newExporterPauseCommand() *cobra.Command {
 		RunE:  c.exporterPause,
 	}
 
-	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
-	pcmd.AddApiSecretFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
-	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	if cfg.IsCloudLogin() {
+		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	} else {
+		cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
+	}
 	pcmd.AddOutputFlag(cmd)
+
+	if cfg.IsCloudLogin() {
+		// Deprecated
+		pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
+		cobra.CheckErr(cmd.Flags().MarkHidden("api-key"))
+
+		// Deprecated
+		pcmd.AddApiSecretFlag(cmd)
+		cobra.CheckErr(cmd.Flags().MarkHidden("api-secret"))
+	}
 
 	return cmd
 }
 
 func (c *command) exporterPause(cmd *cobra.Command, args []string) error {
-	srClient, ctx, err := getApiClient(cmd, c.Config, c.Version)
+	client, err := c.GetSchemaRegistryClient()
 	if err != nil {
 		return err
 	}
 
-	return pauseExporter(args[0], srClient, ctx)
-}
-
-func pauseExporter(name string, srClient *srsdk.APIClient, ctx context.Context) error {
-	if _, _, err := srClient.DefaultApi.PauseExporter(ctx, name); err != nil {
+	if _, err := client.PauseExporter(args[0]); err != nil {
 		return err
 	}
 
-	output.Printf(errors.ExporterActionMsg, "Paused", name)
+	output.Printf(errors.ExporterActionMsg, "Paused", args[0])
 	return nil
 }

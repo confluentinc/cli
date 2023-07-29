@@ -186,13 +186,13 @@ func getCCloudContextState(token, refreshToken string, user *ccloudv1.GetMeReply
 	}
 }
 
-func GenerateCloudContextName(username string, url string) string {
+func GenerateCloudContextName(username, url string) string {
 	return GenerateContextName(username, url, "")
 }
 
 // if CP users use cacertpath then include that in the context name
 // (legacy CP users may still have context without cacertpath in the name but have cacertpath stored)
-func GenerateContextName(username string, url string, caCertPath string) string {
+func GenerateContextName(username, url, caCertPath string) string {
 	if caCertPath == "" {
 		return fmt.Sprintf("login-%s-%s", username, url)
 	}

@@ -1,0 +1,4 @@
+        Name       |   Value    | Read-Only  
+-------------------+------------+------------
+  compression.type | gzip       | true       
+  sasl_mechanism   | SASL/PLAIN | false      

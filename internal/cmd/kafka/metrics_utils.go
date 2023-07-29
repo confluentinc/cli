@@ -29,7 +29,7 @@ func getMetricsOptions(isLatestMetric bool) (metricsv2.Granularity, string, int3
 	}
 }
 
-func getMetricsApiRequest(metricName string, agg string, clusterId string, isLatestMetric bool) metricsv2.QueryRequest {
+func getMetricsApiRequest(metricName, agg, clusterId string, isLatestMetric bool) metricsv2.QueryRequest {
 	granularity, lookback, limit := getMetricsOptions(isLatestMetric)
 	aggFunc := metricsv2.AggregationFunction(agg)
 	nullableAggFunc := metricsv2.NewNullableAggregationFunction(&aggFunc)

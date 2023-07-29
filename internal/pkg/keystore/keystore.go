@@ -8,7 +8,7 @@ import (
 )
 
 type KeyStore interface {
-	HasAPIKey(key string, clusterId string) (bool, error)
+	HasAPIKey(key, clusterId string) (bool, error)
 	StoreAPIKey(key *v1.APIKeyPair, clusterId string) error
 	DeleteAPIKey(key string) error
 }
@@ -17,7 +17,7 @@ type ConfigKeyStore struct {
 	Config *dynamicconfig.DynamicConfig
 }
 
-func (c *ConfigKeyStore) HasAPIKey(key string, clusterId string) (bool, error) {
+func (c *ConfigKeyStore) HasAPIKey(key, clusterId string) (bool, error) {
 	ctx := c.Config.Context()
 	if ctx == nil {
 		return false, new(errors.NotLoggedInError)
