@@ -1,7 +1,6 @@
 package kafka
 
 import (
-	"context"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
@@ -22,6 +21,7 @@ import (
 	configv1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	schemaregistry "github.com/confluentinc/cli/internal/pkg/schema-registry"
 	"github.com/confluentinc/cli/internal/pkg/serdes"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
@@ -53,8 +53,7 @@ type ConsumerProperties struct {
 
 // GroupHandler instances are used to handle individual topic-partition claims.
 type GroupHandler struct {
-	SrClient   *srsdk.APIClient
-	Ctx        context.Context
+	SrClient   *schemaregistry.Client
 	Format     string
 	Out        io.Writer
 	Subject    string
@@ -129,7 +128,7 @@ func newProducer(kafka *configv1.KafkaClusterConfig, clientID, configPath string
 	return newProducerWithOverwrittenConfigs(configMap, configPath, configStrings)
 }
 
-func newConsumer(group string, kafka *configv1.KafkaClusterConfig, clientID string, configPath string, configStrings []string) (*ckafka.Consumer, error) {
+func newConsumer(group string, kafka *configv1.KafkaClusterConfig, clientID, configPath string, configStrings []string) (*ckafka.Consumer, error) {
 	configMap, err := getConsumerConfigMap(group, kafka, clientID)
 	if err != nil {
 		return nil, err
@@ -138,7 +137,7 @@ func newConsumer(group string, kafka *configv1.KafkaClusterConfig, clientID stri
 	return newConsumerWithOverwrittenConfigs(configMap, configPath, configStrings)
 }
 
-func newOnPremProducer(cmd *cobra.Command, clientID string, configPath string, configStrings []string) (*ckafka.Producer, error) {
+func newOnPremProducer(cmd *cobra.Command, clientID, configPath string, configStrings []string) (*ckafka.Producer, error) {
 	configMap, err := getOnPremProducerConfigMap(cmd, clientID)
 	if err != nil {
 		return nil, err
@@ -147,7 +146,7 @@ func newOnPremProducer(cmd *cobra.Command, clientID string, configPath string, c
 	return newProducerWithOverwrittenConfigs(configMap, configPath, configStrings)
 }
 
-func newOnPremConsumer(cmd *cobra.Command, clientID string, configPath string, configStrings []string) (*ckafka.Consumer, error) {
+func newOnPremConsumer(cmd *cobra.Command, clientID, configPath string, configStrings []string) (*ckafka.Consumer, error) {
 	configMap, err := getOnPremConsumerConfigMap(cmd, clientID)
 	if err != nil {
 		return nil, err
@@ -289,10 +288,8 @@ func (h *GroupHandler) RequestSchema(value []byte) (string, map[string]string, e
 	var references []srsdk.SchemaReference
 	if !utils.FileExists(tempStorePath) || !utils.FileExists(tempRefStorePath) {
 		// TODO: add handler for writing schema failure
-		getSchemaOpts := srsdk.GetSchemaOpts{
-			Subject: optional.NewString(h.Subject),
-		}
-		schemaString, _, err := h.SrClient.DefaultApi.GetSchema(h.Ctx, schemaID, &getSchemaOpts)
+		opts := &srsdk.GetSchemaOpts{Subject: optional.NewString(h.Subject)}
+		schemaString, err := h.SrClient.GetSchema(schemaID, opts)
 		if err != nil {
 			return "", nil, err
 		}
@@ -319,7 +316,7 @@ func (h *GroupHandler) RequestSchema(value []byte) (string, map[string]string, e
 	}
 
 	// Store the references in temporary files
-	referencePathMap, err := sr.StoreSchemaReferences(h.Properties.SchemaPath, references, h.SrClient, h.Ctx)
+	referencePathMap, err := sr.StoreSchemaReferences(h.Properties.SchemaPath, references, h.SrClient)
 	if err != nil {
 		return "", nil, err
 	}

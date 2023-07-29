@@ -1,7 +1,6 @@
 package schemaregistry
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/antihax/optional"
@@ -10,36 +9,51 @@ import (
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (c *command) newSchemaDeleteCommand() *cobra.Command {
+func (c *command) newSchemaDeleteCommand(cfg *v1.Config) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "delete",
-		Short:       "Delete one or more schema versions.",
-		Long:        "Delete one or more schema versions. This command should only be used if absolutely necessary.",
-		Args:        cobra.NoArgs,
-		RunE:        c.schemaDelete,
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
-		Example: examples.BuildExampleString(
-			examples.Example{
-				Text: `Soft delete the latest version of subject "payments".`,
-				Code: "confluent schema-registry schema delete --subject payments --version latest",
-			},
-		),
+		Use:   "delete",
+		Short: "Delete one or more schema versions.",
+		Long:  "Delete one or more schema versions. This command should only be used if absolutely necessary.",
+		Args:  cobra.NoArgs,
+		RunE:  c.schemaDelete,
 	}
 
-	cmd.Flags().String("subject", "", SubjectUsage)
+	example := examples.Example{
+		Text: `Soft delete the latest version of subject "payments".`,
+		Code: "confluent schema-registry schema delete --subject payments --version latest",
+	}
+	if cfg.IsOnPremLogin() {
+		example.Code += " " + onPremAuthenticationMsg
+	}
+	cmd.Example = examples.BuildExampleString(example)
+
+	cmd.Flags().String("subject", "", subjectUsage)
 	cmd.Flags().String("version", "", `Version of the schema. Can be a specific version, "all", or "latest".`)
 	cmd.Flags().Bool("permanent", false, "Permanently delete the schema.")
-	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
-	pcmd.AddApiSecretFlag(cmd)
-	pcmd.AddForceFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
-	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	if cfg.IsCloudLogin() {
+		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	} else {
+		cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
+	}
+	pcmd.AddForceFlag(cmd)
+
+	if cfg.IsCloudLogin() {
+		// Deprecated
+		pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
+		cobra.CheckErr(cmd.Flags().MarkHidden("api-key"))
+
+		// Deprecated
+		pcmd.AddApiSecretFlag(cmd)
+		cobra.CheckErr(cmd.Flags().MarkHidden("api-secret"))
+	}
 
 	cobra.CheckErr(cmd.MarkFlagRequired("subject"))
 	cobra.CheckErr(cmd.MarkFlagRequired("version"))
@@ -48,15 +62,11 @@ func (c *command) newSchemaDeleteCommand() *cobra.Command {
 }
 
 func (c *command) schemaDelete(cmd *cobra.Command, _ []string) error {
-	srClient, ctx, err := getApiClient(cmd, c.Config, c.Version)
+	client, err := c.GetSchemaRegistryClient()
 	if err != nil {
 		return err
 	}
 
-	return deleteSchema(cmd, srClient, ctx)
-}
-
-func deleteSchema(cmd *cobra.Command, srClient *srsdk.APIClient, ctx context.Context) error {
 	subject, err := cmd.Flags().GetString("subject")
 	if err != nil {
 		return err
@@ -80,14 +90,14 @@ func deleteSchema(cmd *cobra.Command, srClient *srsdk.APIClient, ctx context.Con
 	if permanent {
 		if checkVersion != "latest" {
 			opts := &srsdk.GetSchemaByVersionOpts{Deleted: optional.NewBool(true)}
-			if _, httpResp, err := srClient.DefaultApi.GetSchemaByVersion(ctx, subject, checkVersion, opts); err != nil {
-				return errors.CatchSchemaNotFoundError(err, httpResp)
-			} else if _, _, err := srClient.DefaultApi.GetSchemaByVersion(ctx, subject, checkVersion, nil); err == nil {
+			if _, err := client.GetSchemaByVersion(subject, checkVersion, opts); err != nil {
+				return catchSchemaNotFoundError(err, subject, checkVersion)
+			} else if _, err := client.GetSchemaByVersion(subject, checkVersion, nil); err == nil {
 				return errors.New("you must first soft delete a schema version before you can permanently delete it")
 			}
 		}
-	} else if _, httpResp, err := srClient.DefaultApi.GetSchemaByVersion(ctx, subject, checkVersion, nil); err != nil {
-		return errors.CatchSchemaNotFoundError(err, httpResp)
+	} else if _, err := client.GetSchemaByVersion(subject, checkVersion, nil); err != nil {
+		return catchSchemaNotFoundError(err, subject, checkVersion)
 	}
 
 	subjectWithVersion := fmt.Sprintf("%s (version %s)", subject, version)
@@ -107,17 +117,17 @@ func deleteSchema(cmd *cobra.Command, srClient *srsdk.APIClient, ctx context.Con
 	var versions []int32
 	if version == "all" {
 		opts := &srsdk.DeleteSubjectOpts{Permanent: optional.NewBool(permanent)}
-		v, httpResp, err := srClient.DefaultApi.DeleteSubject(ctx, subject, opts)
+		v, err := client.DeleteSubject(subject, opts)
 		if err != nil {
-			return errors.CatchSchemaNotFoundError(err, httpResp)
+			return catchSchemaNotFoundError(err, subject, version)
 		}
 		output.Printf("Successfully %s deleted all versions for subject \"%s\".\n", deleteType, subject)
 		versions = v
 	} else {
 		opts := &srsdk.DeleteSchemaVersionOpts{Permanent: optional.NewBool(permanent)}
-		v, httpResp, err := srClient.DefaultApi.DeleteSchemaVersion(ctx, subject, version, opts)
+		v, err := client.DeleteSchemaVersion(subject, version, opts)
 		if err != nil {
-			return errors.CatchSchemaNotFoundError(err, httpResp)
+			return catchSchemaNotFoundError(err, subject, version)
 		}
 		output.Printf("Successfully %s deleted version \"%s\" for subject \"%s\".\n", deleteType, version, subject)
 		versions = []int32{v}

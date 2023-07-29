@@ -414,7 +414,7 @@ func TestConfig_SaveWithEnvironmentOverwrite(t *testing.T) {
 	}
 }
 
-func replacePlaceholdersInWant(t *testing.T, got []byte, want []byte) string {
+func replacePlaceholdersInWant(t *testing.T, got, want []byte) string {
 	data := &Config{}
 	err := json.Unmarshal(got, data)
 	require.NoError(t, err)

@@ -1,7 +1,6 @@
 package local
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -109,7 +108,6 @@ func (c *Command) kafkaTopicConsume(cmd *cobra.Command, args []string) error {
 	output.ErrPrintln(errors.StartingConsumerMsg)
 
 	groupHandler := &kafka.GroupHandler{
-		Ctx:    context.Background(),
 		Out:    cmd.OutOrStdout(),
 		Format: "string",
 		Properties: kafka.ConsumerProperties{
@@ -144,13 +142,13 @@ func newOnPremConsumer(cmd *cobra.Command, bootstrap string) (*ckafka.Consumer, 
 	if err != nil {
 		return nil, err
 	}
+
 	config, err := cmd.Flags().GetStringSlice("config")
 	if err != nil {
 		return nil, err
 	}
 
-	err = kafka.OverwriteKafkaClientConfigs(configMap, configFile, config)
-	if err != nil {
+	if err := kafka.OverwriteKafkaClientConfigs(configMap, configFile, config); err != nil {
 		return nil, err
 	}
 

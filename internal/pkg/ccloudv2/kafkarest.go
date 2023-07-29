@@ -43,6 +43,21 @@ func (c *KafkaRestClient) context() context.Context {
 	return context.WithValue(context.Background(), kafkarestv3.ContextAccessToken, c.AuthToken)
 }
 
+func (c *KafkaRestClient) GetKafkaClusterConfig(clusterId, name string) (kafkarestv3.ClusterConfigData, error) {
+	res, httpResp, err := c.ConfigsV3Api.GetKafkaClusterConfig(c.context(), clusterId, name).Execute()
+	return res, kafkarest.NewError(c.GetUrl(), err, httpResp)
+}
+
+func (c *KafkaRestClient) ListKafkaClusterConfigs(clusterId string) (kafkarestv3.ClusterConfigDataList, error) {
+	res, httpResp, err := c.ConfigsV3Api.ListKafkaClusterConfigs(c.context(), clusterId).Execute()
+	return res, kafkarest.NewError(c.GetUrl(), err, httpResp)
+}
+
+func (c *KafkaRestClient) UpdateKafkaClusterConfigs(clusterId string, req kafkarestv3.AlterConfigBatchRequestData) error {
+	httpResp, err := c.ConfigsV3Api.UpdateKafkaClusterConfigs(c.context(), clusterId).AlterConfigBatchRequestData(req).Execute()
+	return kafkarest.NewError(c.GetUrl(), err, httpResp)
+}
+
 func (c *KafkaRestClient) BatchCreateKafkaAcls(clusterId string, list kafkarestv3.CreateAclRequestDataList) (*http.Response, error) {
 	return c.ACLV3Api.BatchCreateKafkaAcls(c.context(), clusterId).CreateAclRequestDataList(list).Execute()
 }
@@ -117,10 +132,6 @@ func (c *KafkaRestClient) ListKafkaLinkConfigs(clusterId, linkName string) (kafk
 
 func (c *KafkaRestClient) ListKafkaLinks(clusterId string) (kafkarestv3.ListLinksResponseDataList, *http.Response, error) {
 	return c.ClusterLinkingV3Api.ListKafkaLinks(c.context(), clusterId).Execute()
-}
-
-func (c *KafkaRestClient) ListKafkaMirrorTopicsUnderLink(clusterId, linkName string) (kafkarestv3.ListMirrorTopicsResponseDataList, *http.Response, error) {
-	return c.ClusterLinkingV3Api.ListKafkaMirrorTopicsUnderLink(c.context(), clusterId, linkName).Execute()
 }
 
 func (c *KafkaRestClient) UpdateKafkaLinkConfigBatch(clusterId, linkName string, data kafkarestv3.AlterConfigBatchRequestData) (*http.Response, error) {

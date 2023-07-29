@@ -14,11 +14,7 @@ func (c *command) newConfigCommand(cfg *v1.Config) *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLoginOrOnPremLogin},
 	}
 
-	if cfg.IsCloudLogin() {
-		cmd.AddCommand(c.newConfigDescribeCommand())
-	} else {
-		cmd.AddCommand(c.newConfigDescribeCommandOnPrem())
-	}
+	cmd.AddCommand(c.newConfigDescribeCommand(cfg))
 
 	return cmd
 }

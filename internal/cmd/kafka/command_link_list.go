@@ -86,15 +86,8 @@ func (c *linkCommand) list(cmd *cobra.Command, _ []string) error {
 	list := output.NewList(cmd)
 	for _, data := range listLinksRespDataList.Data {
 		if includeTopics {
-			// data.GetTopicsNames() is empty even when the http response contains a non-empty list of topic names,
-			// this function call is a temporary work-around for this issue
-			mirrorTopicNames, err := getMirrorTopicNames(kafkaREST, cluster.ID, data.GetLinkName())
-			if err != nil {
-				return err
-			}
-
-			for _, topicName := range mirrorTopicNames {
-				list.Add(newLink(data, topicName))
+			for _, topic := range data.GetTopicNames() {
+				list.Add(newLink(data, topic))
 			}
 		} else {
 			list.Add(newLink(data, ""))
@@ -112,18 +105,4 @@ func getListFields(includeTopics bool) []string {
 	}
 
 	return append(x, "SourceClusterId", "DestinationClusterId", "RemoteClusterId", "State", "Error", "ErrorMessage")
-}
-
-func getMirrorTopicNames(kafkaREST *pcmd.KafkaREST, clusterId, linkName string) ([]string, error) {
-	listMirrorTopicsResponseDataList, httpResp, err := kafkaREST.CloudClient.ListKafkaMirrorTopicsUnderLink(clusterId, linkName)
-	if err != nil {
-		return nil, kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
-	}
-
-	mirrorTopicNames := make([]string, len(listMirrorTopicsResponseDataList.GetData()))
-	for i, data := range listMirrorTopicsResponseDataList.GetData() {
-		mirrorTopicNames[i] = data.GetMirrorTopicName()
-	}
-
-	return mirrorTopicNames, nil
 }

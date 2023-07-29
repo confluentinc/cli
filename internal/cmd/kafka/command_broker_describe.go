@@ -21,7 +21,7 @@ type configOut struct {
 	Name        string `human:"Name" serialized:"name"`
 	Value       string `human:"Value,omitempty" serialized:"value,omitempty"`
 	IsDefault   bool   `human:"Default" serialized:"is_default"`
-	IsReadOnly  bool   `human:"Read Only" serialized:"is_read_only"`
+	IsReadOnly  bool   `human:"Read-Only" serialized:"is_read_only"`
 	IsSensitive bool   `human:"Sensitive" serialized:"is_sensitive"`
 }
 
@@ -151,7 +151,7 @@ func getIndividualBrokerConfigs(restClient *kafkarestv3.APIClient, restContext c
 }
 
 // getClusterWideConfigs fetches cluster-wide configs or just configName config if specified
-func getClusterWideConfigs(restClient *kafkarestv3.APIClient, restContext context.Context, clusterId string, configName string) (kafkarestv3.ClusterConfigDataList, error) {
+func getClusterWideConfigs(restClient *kafkarestv3.APIClient, restContext context.Context, clusterId, configName string) (kafkarestv3.ClusterConfigDataList, error) {
 	var clusterConfig kafkarestv3.ClusterConfigDataList
 	var resp *http.Response
 	var err error
