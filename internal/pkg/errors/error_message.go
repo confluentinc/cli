@@ -145,7 +145,7 @@ const (
 	InvalidAvailableFlagErrorMsg                     = "invalid value \"%s\" for `--availability` flag"
 	InvalidAvailableFlagSuggestions                  = "Allowed values for `--availability` flag are: %s, %s."
 	InvalidTypeFlagErrorMsg                          = "invalid value \"%s\" for `--type` flag"
-	InvalidTypeFlagSuggestions                       = "Allowed values for `--type` flag are: %s, %s, %s."
+	InvalidTypeFlagSuggestions                       = "Allowed values for `--type` flag are: %s, %s, %s, %s."
 	NameOrCKUFlagErrorMsg                            = "must either specify --name with non-empty value or --cku (for dedicated clusters) with positive integer"
 	NonEmptyNameErrorMsg                             = "`--name` flag value must not be empty"
 	KafkaClusterNotFoundErrorMsg                     = `Kafka cluster "%s" not found`
@@ -399,7 +399,6 @@ const (
 	NoKafkaForDescribeSuggestions = "You must provide the cluster ID argument or set an active Kafka cluster in your context with `confluent kafka cluster use`."
 	NoAPISecretStoredErrorMsg     = `no API secret for API key "%s" of resource "%s" stored in local CLI state`
 	NoAPISecretStoredSuggestions  = "Store the API secret with `confluent api-key store %s --resource %s`."
-	InvalidCkuErrorMsg            = "cku must be greater than 1 for multi-zone dedicated cluster"
 
 	// Kafka REST Proxy errors
 	InternalServerErrorMsg            = "internal server error"
