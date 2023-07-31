@@ -3,7 +3,7 @@ const fs = require('fs');
 const WebSocket = require('ws');
 const { exec } = require('child_process');
 
-const privateKeyPath = '/certs/privkey.pem';
+const privateKeyPath = '/certs/privatekey.pem';
 const certificatePath = '/certs/cert.pem';
 const sslCertDir = process.env.SSL_CERT_DIR || '/certs';
 
