@@ -118,11 +118,11 @@ func (c *command) updateCompatibility(cmd *cobra.Command, subject string, client
 }
 
 func (c *command) updateMode(subject, mode string, client *schemaregistry.Client) error {
-	updatedMode, err := client.UpdateMode(subject, srsdk.ModeUpdateRequest{Mode: strings.ToUpper(mode)})
+	res, err := client.UpdateMode(subject, srsdk.ModeUpdateRequest{Mode: strings.ToUpper(mode)})
 	if err != nil {
 		return catchSchemaNotFoundError(err, "subject", "")
 	}
 
-	output.Printf("Successfully updated subject-level mode to \"%s\" for subject \"%s\".\n", updatedMode, subject)
+	output.Printf("Successfully updated subject-level mode to \"%s\" for subject \"%s\".\n", res.Mode, subject)
 	return nil
 }
