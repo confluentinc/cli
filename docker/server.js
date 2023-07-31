@@ -3,9 +3,9 @@ const fs = require('fs');
 const WebSocket = require('ws');
 const { exec } = require('child_process');
 
-const privateKeyPath = '/certs/privkey.pem';
-const certificatePath = '/certs/cert.pem';
-const sslCertDir = process.env.SSL_CERT_DIR || '/certs';
+const privateKeyPath = 'app/certs/privkey.pem';
+const certificatePath = 'app/certs/cert.pem';
+const sslCertDir = process.env.SSL_CERT_DIR || 'app/certs';
 
 const privateKey = fs.readFileSync(privateKeyPath, 'utf8');
 const certificate = fs.readFileSync(certificatePath, 'utf8');
