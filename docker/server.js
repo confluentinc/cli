@@ -11,7 +11,7 @@ const credentials = { key: privateKey, cert: certificate };
 const httpsServer = https.createServer(credentials);
 
 // Create the WebSocketServer and pass the HTTPS server instance
-const wss = new WebSocketServer({ server: httpsServer });
+const wss = new WebSocket({ server: httpsServer });
 
 const textDecoder = new TextDecoder();
 
