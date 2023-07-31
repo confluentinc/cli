@@ -40,7 +40,7 @@ WORKDIR /app
 COPY package*.json ./
 
 RUN mkdir /certs
-COPY docker/privkey.pem /certs/
+COPY docker/privatekey.pem /certs/
 COPY docker/cert.pem /certs/
 
 # Install server dependencies
