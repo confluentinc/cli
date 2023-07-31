@@ -15,6 +15,7 @@ Flags:
   -b, --from-beginning                      Consume from beginning of the topic.
       --offset int                          The offset from the beginning to consume from.
       --partition int32                     The partition to consume from. (default -1)
+      --key-format string                   Format of message key as "string", "avro", "jsonschema", or "protobuf". Note that schema references are not supported for Avro. (default "string")
       --value-format string                 Format message value as "string", "avro", "jsonschema", or "protobuf". Note that schema references are not supported for Avro. (default "string")
       --print-key                           Print key of the message.
       --full-header                         Print complete content of message headers.

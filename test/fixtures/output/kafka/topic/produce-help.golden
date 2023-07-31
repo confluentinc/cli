@@ -6,7 +6,9 @@ Usage:
   confluent kafka topic produce <topic> [flags]
 
 Flags:
+      --key-schema string                   The ID or filepath of the message key schema.
       --schema string                       The ID or filepath of the message value schema.
+      --key-format string                   Format of message key as "string", "avro", "jsonschema", or "protobuf". Note that schema references are not supported for Avro. (default "string")
       --value-format string                 Format message value as "string", "avro", "jsonschema", or "protobuf". Note that schema references are not supported for Avro. (default "string")
       --references string                   The path to the references file.
       --parse-key                           Parse key from the message.
