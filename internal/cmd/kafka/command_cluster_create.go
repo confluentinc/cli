@@ -266,7 +266,7 @@ func stringToSku(skuType string) (ccstructs.Sku, error) {
 		break
 	default:
 		return ccstructs.Sku_UNKNOWN, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.InvalidTypeFlagErrorMsg, skuType),
-			fmt.Sprintf("Allowed values for `--type` flag are: %s.", utils.ArrayToCommaDelimitedString(kafka.Types, "or")))
+			fmt.Sprintf("Allowed values for `--type` flag are: %s.", utils.ArrayToCommaDelimitedString(kafka.Types, "and")))
 	}
 	return sku, nil
 }
