@@ -108,8 +108,9 @@ func (c *Command) kafkaTopicConsume(cmd *cobra.Command, args []string) error {
 	output.ErrPrintln(errors.StartingConsumerMsg)
 
 	groupHandler := &kafka.GroupHandler{
-		Out:    cmd.OutOrStdout(),
-		Format: "string",
+		Out:         cmd.OutOrStdout(),
+		KeyFormat:   "string",
+		ValueFormat: "string",
 		Properties: kafka.ConsumerProperties{
 			PrintKey:  printKey,
 			Timestamp: timestamp,
