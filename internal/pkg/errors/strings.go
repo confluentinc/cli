@@ -90,10 +90,10 @@ const (
 	APIKeyMissingMsg     = "API key missing"
 	KeyPairMismatchMsg   = "key of the dictionary does not match API key of the pair"
 	APISecretMissingMsg  = "API secret missing"
-	APIKeysMapAutofixMsg = "There are malformed API key secret pair entries in the dictionary for cluster \"%s\" under context \"%s\".\n" +
+	APIKeysMapAutofixMsg = "There are malformed API key pair entries in the dictionary for cluster \"%s\" under context \"%s\".\n" +
 		"The issues are the following: %s.\n" +
 		"Deleting the malformed entries.\n" +
-		"You can re-add the API key secret pair with `confluent api-key store --resource %s`\n"
+		"You can re-add the API key pair with `confluent api-key store --resource %s`\n"
 	CurrentAPIKeyAutofixMsg = "Current API key \"%s\" of resource \"%s\" under context \"%s\" is not found.\n" +
 		"Removing current API key setting for the resource.\n" +
 		"You can re-add the API key with `confluent api-key store --resource %s'` and then set current API key with `confluent api-key use`.\n"

@@ -9,7 +9,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/google/uuid"
 	"github.com/hashicorp/go-version"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
@@ -85,9 +84,11 @@ type Config struct {
 	CurrentContext      string                      `json:"current_context"`
 	Contexts            map[string]*Context         `json:"contexts,omitempty"`
 	ContextStates       map[string]*ContextState    `json:"context_states,omitempty"`
-	AnonymousId         string                      `json:"anonymous_id,omitempty"`
 	SavedCredentials    map[string]*LoginCredential `json:"saved_credentials,omitempty"`
 	LocalPorts          *LocalPorts                 `json:"local_ports,omitempty"`
+
+	// Deprecated
+	AnonymousId string `json:"anonymous_id,omitempty"`
 
 	// The following configurations are not persisted between runs
 
@@ -138,7 +139,6 @@ func New() *Config {
 		Contexts:         make(map[string]*Context),
 		ContextStates:    make(map[string]*ContextState),
 		SavedCredentials: make(map[string]*LoginCredential),
-		AnonymousId:      uuid.New().String(),
 		Version:          new(pversion.Version),
 	}
 }
@@ -625,11 +625,6 @@ func (c *Config) HasBasicLogin() bool {
 	} else {
 		return ctx.HasBasicMDSLogin()
 	}
-}
-
-func (c *Config) ResetAnonymousId() error {
-	c.AnonymousId = uuid.New().String()
-	return c.Save()
 }
 
 func (c *Config) GetFilename() string {
