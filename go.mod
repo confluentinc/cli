@@ -15,7 +15,7 @@ require (
 	github.com/confluentinc/ccloud-sdk-go-v2/byok v0.0.1
 	github.com/confluentinc/ccloud-sdk-go-v2/cdx v0.0.5
 	github.com/confluentinc/ccloud-sdk-go-v2/cli v0.3.0
-	github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.8.0
+	github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.10.0
 	github.com/confluentinc/ccloud-sdk-go-v2/connect v0.3.0
 	github.com/confluentinc/ccloud-sdk-go-v2/flink v0.3.0
 	github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway v0.4.0
@@ -188,8 +188,4 @@ require (
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
-)
-
-replace (
-	github.com/confluentinc/ccloud-sdk-go-v2/cmk v0.8.0 => github.com/confluentinc/ccloud-sdk-go-v2-internal/cmk v0.0.16
 )
