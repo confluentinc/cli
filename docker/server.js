@@ -3,21 +3,15 @@ const fs = require('fs');
 const WebSocket = require('ws');
 const { exec } = require('child_process');
 
-const privateKeyPath = '/certs/privatekey.pem';
-const certificatePath = '/certs/cert.pem';
-const sslCertDir = process.env.SSL_CERT_DIR || '/certs';
-
-const privateKey = fs.readFileSync(privateKeyPath, 'utf8');
-const certificate = fs.readFileSync(certificatePath, 'utf8');
-
+const privateKey = fs.readFileSync('/certs/privatekey.pem', 'utf8');
+const certificate = fs.readFileSync('/certs/cert.pem', 'utf8');
 const credentials = { key: privateKey, cert: certificate };
 
-const httpsServer = https.createServer(credentials, (req, res) => {
-  res.writeHead(200, { 'Content-Type': 'text/plain' });
-  res.end('Hello, this is an HTTPS server.');
-});
+// Create the HTTPS server using the credentials
+const httpsServer = https.createServer(credentials);
 
-const wss = new WebSocket.Server({ httpsServer });
+// Create the WebSocketServer and pass the HTTPS server instance
+const wss = new WebSocketServer({ server: httpsServer });
 
 const textDecoder = new TextDecoder();
 
