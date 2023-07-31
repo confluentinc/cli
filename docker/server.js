@@ -1,9 +1,23 @@
-const http = require('http');
+const https = require('https');
+const fs = require('fs');
 const WebSocket = require('ws');
 const { exec } = require('child_process');
 
-const server = http.createServer();
-const wss = new WebSocket.Server({ server });
+const privateKeyPath = '/certs/privkey.pem';
+const certificatePath = '/certs/cert.pem';
+const sslCertDir = process.env.SSL_CERT_DIR || '/certs';
+
+const privateKey = fs.readFileSync(privateKeyPath, 'utf8');
+const certificate = fs.readFileSync(certificatePath, 'utf8');
+
+const credentials = { key: privateKey, cert: certificate };
+
+const httpsServer = https.createServer(credentials, (req, res) => {
+  res.writeHead(200, { 'Content-Type': 'text/plain' });
+  res.end('Hello, this is an HTTPS server.');
+});
+
+const wss = new WebSocket.Server({ httpsServer });
 
 const textDecoder = new TextDecoder();
 
@@ -41,6 +55,6 @@ wss.on('headers', (headers, req) => {
   headers.push('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 });
 
-server.listen(8080, () => {
-  console.log('WebSocket server listening on port 8080.');
+httpsServer.listen(443, () => {
+  console.log('HTTPS server listening on port 443.');
 });
