@@ -389,14 +389,14 @@ const (
 	ResourceNotFoundErrorMsg           = `resource "%s" not found`
 	ResourceNotFoundSuggestions        = "Check that the resource \"%s\" exists.\n" +
 		"To list Kafka clusters, use `confluent kafka cluster list`.\n" +
-		"To check schema-registry cluster info, use `confluent schema-registry cluster describe`.\n" +
+		"To check Schema Registry cluster information, use `confluent schema-registry cluster describe`.\n" +
 		"To list KSQL clusters, use `confluent ksql cluster list`."
 	KafkaNotFoundErrorMsg         = `Kafka cluster "%s" not found`
 	KafkaNotFoundSuggestions      = "To list Kafka clusters, use `confluent kafka cluster list`."
 	KSQLNotFoundSuggestions       = "To list KSQL clusters, use `confluent ksql cluster list`."
 	NoKafkaSelectedErrorMsg       = "no Kafka cluster selected"
 	NoKafkaSelectedSuggestions    = "You must pass `--cluster` with the command or set an active Kafka cluster in your context with `confluent kafka cluster use`."
-	NoKafkaForDescribeSuggestions = "You must provide the cluster ID argument or set an active Kafka cluster in your context with `ccloud kafka cluster use`."
+	NoKafkaForDescribeSuggestions = "You must provide the cluster ID argument or set an active Kafka cluster in your context with `confluent kafka cluster use`."
 	NoAPISecretStoredErrorMsg     = `no API secret for API key "%s" of resource "%s" stored in local CLI state`
 	NoAPISecretStoredSuggestions  = "Store the API secret with `confluent api-key store %s --resource %s`."
 	InvalidCkuErrorMsg            = "cku must be greater than 1 for multi-zone dedicated cluster"

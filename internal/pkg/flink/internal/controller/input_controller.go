@@ -167,7 +167,7 @@ func (c *InputController) Prompt() prompt.IPrompt {
 			if text == "exit" {
 				return true
 			}
-			if len(text) == 0 || text[len(text)-1] != ';' {
+			if text == "" || !strings.HasSuffix(text, ";") {
 				return false
 			}
 			return true

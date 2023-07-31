@@ -35,16 +35,11 @@ func (c *eventCommand) describe(cmd *cobra.Command, _ []string) error {
 		return errors.New(errors.ConnectLogEventsNotEnabledErrorMsg)
 	}
 
-	serviceAccount, err := c.Client.User.GetServiceAccount(auditLog.GetServiceAccountId())
-	if err != nil {
-		return err
-	}
-
 	table := output.NewTable(cmd)
 	table.Add(&eventDescribeOut{
 		ClusterId:        auditLog.GetClusterId(),
 		EnvironmentId:    auditLog.GetAccountId(),
-		ServiceAccountId: serviceAccount.GetResourceId(),
+		ServiceAccountId: auditLog.GetServiceAccountResourceId(),
 		TopicName:        "confluent-connect-log-events",
 	})
 	return table.Print()

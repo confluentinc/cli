@@ -43,7 +43,7 @@ func (c *command) newProduceCommand() *cobra.Command {
 	pcmd.AddProducerConfigFileFlag(cmd)
 	cmd.Flags().String("schema-registry-endpoint", "", "Endpoint for Schema Registry cluster.")
 	cmd.Flags().String("schema-registry-api-key", "", "Schema registry API key.")
-	cmd.Flags().String("schema-registry-api-secret", "", "Schema registry API key secret.")
+	cmd.Flags().String("schema-registry-api-secret", "", "Schema registry API secret.")
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddApiSecretFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
@@ -132,7 +132,7 @@ func (c *command) produce(cmd *cobra.Command, args []string) error {
 
 	deliveryChan := make(chan ckafka.Event)
 	for data := range input {
-		if len(data) == 0 {
+		if data == "" {
 			go scan()
 			continue
 		}
