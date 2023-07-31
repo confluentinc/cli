@@ -147,7 +147,7 @@ func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
 
 	deliveryChan := make(chan ckafka.Event)
 	for data := range input {
-		if len(data) == 0 {
+		if data == "" {
 			go scan()
 			continue
 		}
@@ -195,8 +195,8 @@ func (c *command) registerSchemaOnPrem(cmd *cobra.Command, schemaCfg *sr.Registe
 	// Registering schema when specified, and fill metaInfo array.
 	metaInfo := []byte{}
 	referencePathMap := map[string]string{}
-	if schemaCfg.ValueFormat != "string" && len(schemaCfg.SchemaPath) > 0 {
-		if c.State == nil { // require log-in to use oauthbearer token
+	if schemaCfg.ValueFormat != "string" && schemaCfg.SchemaPath != "" {
+		if c.Context.State == nil { // require log-in to use oauthbearer token
 			return nil, nil, errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestions)
 		}
 

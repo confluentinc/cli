@@ -6,7 +6,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
@@ -42,8 +41,8 @@ type CLITest struct {
 	loginURL string
 	// The kafka cluster ID to "use"
 	useKafka string
-	// The API Key to set as Kafka credentials
-	authKafka string
+	// Create and use an API Key to set as Kafka credentials
+	authKafka bool
 	// Name of a golden output fixture containing expected output
 	fixture string
 	// True if audit-log is disabled
@@ -156,7 +155,7 @@ func (s *CLITestSuite) runIntegrationTest(test CLITest) {
 			}
 		}
 
-		if test.authKafka != "" {
+		if test.authKafka {
 			output := runCommand(t, testBin, []string{}, fmt.Sprintf("api-key create --resource %s --use", test.useKafka), 0, "")
 			if *debug {
 				fmt.Println(output)
@@ -166,11 +165,6 @@ func (s *CLITestSuite) runIntegrationTest(test CLITest) {
 		output := runCommand(t, testBin, test.env, test.args, test.exitCode, test.input)
 		if *debug {
 			fmt.Println(output)
-		}
-
-		if strings.HasPrefix(test.args, "kafka cluster create") {
-			re := regexp.MustCompile("https?://127.0.0.1:[0-9]+")
-			output = re.ReplaceAllString(output, "http://127.0.0.1:12345")
 		}
 
 		s.validateTestOutput(test, t, output)

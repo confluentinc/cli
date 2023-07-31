@@ -74,14 +74,10 @@ func (c *command) newCreateCommand() *cobra.Command {
 }
 
 func (c *command) createAwsKeyRequest(keyArn string) *byokv1.ByokV1Key {
-	return &byokv1.ByokV1Key{
-		Key: &byokv1.ByokV1KeyKeyOneOf{
-			ByokV1AwsKey: &byokv1.ByokV1AwsKey{
-				KeyArn: keyArn,
-				Kind:   "AwsKey",
-			},
-		},
-	}
+	return &byokv1.ByokV1Key{Key: &byokv1.ByokV1KeyKeyOneOf{ByokV1AwsKey: &byokv1.ByokV1AwsKey{
+		KeyArn: keyArn,
+		Kind:   "AwsKey",
+	}}}
 }
 
 func (c *command) createAzureKeyRequest(cmd *cobra.Command, keyString string) (*byokv1.ByokV1Key, error) {

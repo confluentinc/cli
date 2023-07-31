@@ -126,7 +126,7 @@ func parseBrokerTaskData(entry kafkarestv3.BrokerTaskData) *brokerTaskData {
 func mapToKeyValueString(values map[string]string) string {
 	kvString := ""
 	for k, v := range values {
-		if len(kvString) == 0 {
+		if kvString == "" {
 			kvString = k + "=" + v
 		} else {
 			kvString = kvString + "\n" + k + "=" + v

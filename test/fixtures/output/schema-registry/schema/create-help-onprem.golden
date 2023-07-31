@@ -8,7 +8,7 @@ Register a new Avro schema.
 
   $ confluent schema-registry schema create --subject employee --schema employee.avsc --type avro --ca-location <ca-file-location> --schema-registry-endpoint <schema-registry-endpoint>
 
-Where "employee.avsc" may include these contents:
+Where "employee.avsc" may include the following content:
 
   {
   	"type" : "record",
@@ -20,7 +20,7 @@ Where "employee.avsc" may include these contents:
   	]
   }
 
-For more information on schema types and references, see https://docs.confluent.io/platform/current/schema-registry/fundamentals/serdes-develop/index.html
+For more information on schema types and references, see https://docs.confluent.io/platform/current/schema-registry/fundamentals/serdes-develop/index.html.
 
 Flags:
       --schema string                     REQUIRED: The path to the schema file.

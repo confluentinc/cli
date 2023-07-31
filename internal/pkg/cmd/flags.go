@@ -29,7 +29,7 @@ func AddApiKeyFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {
 }
 
 func AddApiSecretFlag(cmd *cobra.Command) {
-	cmd.Flags().String("api-secret", "", "API key secret.")
+	cmd.Flags().String("api-secret", "", "API secret.")
 }
 
 func AutocompleteApiKeys(client *ccloudv2.Client) []string {

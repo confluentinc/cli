@@ -34,7 +34,7 @@ func getNextWord(phrase string) string {
 }
 
 func isLastCharSpace(str string) bool {
-	if len(str) == 0 {
+	if str == "" {
 		return false
 	}
 	runes := []rune(str)
