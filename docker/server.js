@@ -49,6 +49,6 @@ wss.on('headers', (headers, req) => {
   headers.push('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 });
 
-httpsServer.listen(443, () => {
-  console.log('HTTPS server listening on port 443.');
+httpsServer.listen(8443, () => {
+  console.log('HTTPS server listening on port 8443.');
 });
