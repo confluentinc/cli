@@ -40,8 +40,8 @@ WORKDIR /app
 COPY package*.json ./
 
 RUN mkdir /certs
-COPY privkey.pem /certs/
-COPY cert.pem /certs/
+COPY docker/privkey.pem /certs/
+COPY docker/cert.pem /certs/
 
 # Install server dependencies
 RUN npm install
