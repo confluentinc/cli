@@ -7,11 +7,11 @@ const privateKey = fs.readFileSync('/certs/privatekey.pem', 'utf8');
 const certificate = fs.readFileSync('/certs/cert.pem', 'utf8');
 const credentials = { key: privateKey, cert: certificate };
 
-// Create the HTTPS server using the credentials
+// Create HTTPS server
 const httpsServer = https.createServer(credentials);
 
-// Create the WebSocketServer and pass the HTTPS server instance
-const wss = new WebSocket({ server: httpsServer });
+// Create WebSocket server using the HTTPS server instance
+const wss = new WebSocket.Server({ server: httpsServer });
 
 const textDecoder = new TextDecoder();
 
