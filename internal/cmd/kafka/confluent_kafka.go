@@ -185,7 +185,6 @@ func GetRebalanceCallback(offset ckafka.Offset, partitionFilter PartitionFilter)
 }
 
 func consumeMessage(message *ckafka.Message, h *GroupHandler) error {
-	// TODO: Deserialize key
 	if h.Properties.PrintKey {
 		keyDeserializer, err := serdes.GetDeserializationProvider(h.KeyFormat)
 		if err != nil {
