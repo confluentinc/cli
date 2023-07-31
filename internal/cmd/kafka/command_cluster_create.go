@@ -17,7 +17,9 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
+	"github.com/confluentinc/cli/internal/pkg/kafka"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 const (
@@ -264,7 +266,7 @@ func stringToSku(skuType string) (ccstructs.Sku, error) {
 		break
 	default:
 		return ccstructs.Sku_UNKNOWN, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.InvalidTypeFlagErrorMsg, skuType),
-			fmt.Sprintf(errors.InvalidTypeFlagSuggestions, skuBasic, skuStandard, skuEnterprise, skuDedicated))
+			fmt.Sprintf("Allowed values for `--type` flag are: %s.", utils.ArrayToCommaDelimitedString(kafka.Types, "or")))
 	}
 	return sku, nil
 }
