@@ -180,7 +180,6 @@ archives:
       - confluent-linux
       - confluent-windows-amd64
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
-    rlcp: true
     format_overrides:
       - goos: windows
         format: zip
@@ -194,7 +193,6 @@ archives:
       - confluent-alpine-amd64
       - confluent-alpine-arm64
     name_template: "{{ .ProjectName }}_{{ .Version }}_alpine_{{ .Arch }}"
-    rlcp: true
     wrap_in_directory: "{{ .ProjectName }}"
     files:
       - LICENSE
@@ -206,7 +204,6 @@ archives:
       - confluent-darwin-arm64-homebrew
       - confluent-linux-homebrew
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}_homebrew"
-    rlcp: true
     wrap_in_directory: "{{ .ProjectName }}"
     files:
       - LICENSE
@@ -219,14 +216,12 @@ archives:
       - confluent-linux
       - confluent-windows-amd64
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
-    rlcp: true
   - id: binary-alpine
     format: binary
     builds:
       - confluent-alpine-amd64
       - confluent-alpine-arm64
     name_template: "{{ .ProjectName }}_{{ .Version }}_alpine_{{ .Arch }}"
-    rlcp: true
     
 dockers:
   - ids:
@@ -291,7 +286,7 @@ brews:
   - name: cli
     ids:
       - archive-homebrew
-    tap:
+    repository:
       owner: confluentinc
       name: homebrew-tap
       branch: "cli-{{ .Version }}"

@@ -323,9 +323,9 @@ func processHttpErrors(resp *http.Response, err error) error {
 	if resp != nil && resp.StatusCode >= 400 {
 		if resp.StatusCode == http.StatusUnauthorized {
 			return &types.StatementError{
-				Message:          "unauthorized",
-				Suggestion:       `Please run "confluent login"`,
-				HttpResponseCode: resp.StatusCode,
+				Message:    "unauthorized",
+				Suggestion: `Please run "confluent login"`,
+				StatusCode: resp.StatusCode,
 			}
 		}
 

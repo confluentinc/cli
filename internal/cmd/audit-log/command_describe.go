@@ -46,16 +46,11 @@ func (c *describeCommand) describe(cmd *cobra.Command, _ []string) error {
 		return errors.New(errors.AuditLogsNotEnabledErrorMsg)
 	}
 
-	serviceAccount, err := c.Client.User.GetServiceAccount(auditLog.GetServiceAccountId())
-	if err != nil {
-		return err
-	}
-
 	table := output.NewTable(cmd)
 	table.Add(&out{
 		ClusterId:        auditLog.GetClusterId(),
 		EnvironmentId:    auditLog.GetAccountId(),
-		ServiceAccountId: serviceAccount.GetResourceId(),
+		ServiceAccountId: auditLog.GetServiceAccountResourceId(),
 		TopicName:        auditLog.GetTopicName(),
 	})
 	return table.Print()
