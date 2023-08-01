@@ -49,9 +49,6 @@ const (
 	ReadOnlyConfigNotUpdatedMsg = "(read-only configs were not updated)"
 	OmitTopicCountMsg           = "The topic count will be omitted as Kafka topics for this cluster could not be retrieved: %v"
 
-	// kafka mirror commands
-	RestProxyNotAvailableMsg = "Kafka REST is not enabled: the operation is only supported with Kafka REST proxy."
-
 	// kafka REST proxy
 	MDSTokenNotFoundMsg = "No session token found, please enter user credentials. To avoid being prompted, run `confluent login`."
 
