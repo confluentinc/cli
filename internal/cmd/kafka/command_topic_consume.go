@@ -80,8 +80,11 @@ func (c *command) consume(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	var commitGroupOffset bool
 	if !cmd.Flags().Changed("group") {
 		group = fmt.Sprintf("confluent_cli_consumer_%s", uuid.New())
+	} else {
+		commitGroupOffset = true
 	}
 
 	printKey, err := cmd.Flags().GetBool("print-key")
@@ -113,7 +116,7 @@ func (c *command) consume(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	consumer, err := newConsumer(group, cluster, c.clientID, configFile, config)
+	consumer, err := newConsumer(group, commitGroupOffset, cluster, c.clientID, configFile, config)
 	if err != nil {
 		return fmt.Errorf(errors.FailedToCreateConsumerErrorMsg, err)
 	}
@@ -144,6 +147,9 @@ func (c *command) consume(cmd *cobra.Command, args []string) error {
 	}
 
 	rebalanceCallback := GetRebalanceCallback(offset, partitionFilter)
+	if commitGroupOffset && !cmd.Flags().Changed("from-beginning") && !cmd.Flags().Changed("offset") {
+		rebalanceCallback = nil
+	}
 	if err := consumer.Subscribe(topic, rebalanceCallback); err != nil {
 		return err
 	}
