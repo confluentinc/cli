@@ -3,6 +3,7 @@ package update
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -12,8 +13,10 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/exec"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/types"
 	"github.com/confluentinc/cli/internal/pkg/update"
 	"github.com/confluentinc/cli/internal/pkg/update/s3"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
@@ -28,6 +31,8 @@ const (
 	CheckInterval           = 24 * time.Hour
 )
 
+const homebrewFormula = "confluentinc/tap/cli"
+
 type command struct {
 	*pcmd.CLICommand
 	version *pversion.Version
@@ -36,9 +41,10 @@ type command struct {
 
 func New(cfg *v1.Config, prerunner pcmd.PreRunner, client update.Client) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "update",
-		Short: fmt.Sprintf("Update the %s.", pversion.FullCLIName),
-		Args:  cobra.NoArgs,
+		Use:    "update",
+		Short:  fmt.Sprintf("Update the %s.", pversion.FullCLIName),
+		Args:   cobra.NoArgs,
+		Hidden: cfg.DisableUpdates,
 	}
 
 	cmd.Flags().BoolP("yes", "y", false, "Update without prompting.")
@@ -74,6 +80,21 @@ func NewClient(cliName string, disableUpdateCheck bool) update.Client {
 }
 
 func (c *command) update(cmd *cobra.Command, _ []string) error {
+	if c.Config.DisableUpdates {
+		message := "updates are disabled for this binary"
+		if isHomebrew() {
+			return errors.NewErrorWithSuggestions(
+				message,
+				fmt.Sprintf("If installed with Homebrew, run `brew upgrade %s`.", homebrewFormula),
+			)
+		}
+
+		return errors.NewErrorWithSuggestions(
+			message,
+			"Use a package manager to update the binary, if applicable. Otherwise, consider deleting this binary and re-installing a newer version.",
+		)
+	}
+
 	yes, err := cmd.Flags().GetBool("yes")
 	if err != nil {
 		return errors.Wrap(err, errors.ReadingYesFlagErrorMsg)
@@ -138,6 +159,30 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 	}
 
 	return nil
+}
+
+func isHomebrew() bool {
+	out, err := exec.NewCommand("brew", "ls", homebrewFormula).Output()
+	if err != nil {
+		return false
+	}
+
+	homebrewPaths := strings.Split(strings.TrimSpace(string(out)), "\n")
+	log.CliLogger.Tracef("Detected Homebrew installation: %v", homebrewPaths)
+
+	path, err := os.Executable()
+	if err != nil {
+		return false
+	}
+
+	path, err = filepath.EvalSymlinks(path)
+	if err != nil {
+		return false
+	}
+
+	log.CliLogger.Tracef("Executable path: %s", path)
+
+	return types.Contains(homebrewPaths, path)
 }
 
 func (c *command) getReleaseNotes(cliName, latestBinaryVersion string) string {
