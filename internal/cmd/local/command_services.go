@@ -146,7 +146,6 @@ func NewServicesCommand(prerunner cmd.PreRunner) *cobra.Command {
 	c.AddCommand(NewServicesStatusCommand(prerunner))
 	c.AddCommand(NewServicesStopCommand(prerunner))
 	c.AddCommand(NewServicesTopCommand(prerunner))
-	c.Hidden = true
 
 	return c.Command
 }
