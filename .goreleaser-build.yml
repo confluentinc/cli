@@ -5,5 +5,3 @@ builds:
     main: cmd/confluent/main.go
     flags:
       - -tags={{.Env.TAGS}}
-    ldflags:
-      - -X main.disableUpdates=true
