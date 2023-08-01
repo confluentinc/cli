@@ -91,7 +91,7 @@ func (c *command) update(cmd *cobra.Command, _ []string) error {
 
 		return errors.NewErrorWithSuggestions(
 			message,
-			"If installed with Confluent Platform, you may install an independent, updated version of the CLI, as long as it maintains compatibility: https://docs.confluent.io/platform/current/installation/versions-interoperability.html#confluent-cli",
+			"Use a package manager to update the binary, if applicable. Otherwise, consider deleting this binary and re-installing a newer version.",
 		)
 	}
 
