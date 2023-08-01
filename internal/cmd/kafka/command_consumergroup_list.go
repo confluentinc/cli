@@ -5,7 +5,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -38,9 +37,9 @@ func (c *consumerGroupCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	groupCmdResp, httpResp, err := kafkaREST.CloudClient.ListKafkaConsumerGroups(lkc)
+	groupCmdResp, err := kafkaREST.CloudClient.ListKafkaConsumerGroups(lkc)
 	if err != nil {
-		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+		return err
 	}
 
 	list := output.NewList(cmd)
