@@ -31,9 +31,10 @@ const (
 	userPath = "users/%s"
 )
 
+const cliProdEnv = "confluent.cloud"
+
 const (
 	cliProdEnvClientId     = "61af57740127630ce47de5be"
-	cliProdEnv             = "confluent.cloud"
 	cliTestEnvClientId     = "61af57740127630ce47de5bd"
 	ccloudProdEnvClientId  = "5c636508aa445d32c86f26b1"
 	ccloudStagEnvClientId  = "5c63651f1df21432a45fc773"
@@ -58,15 +59,7 @@ type launchDarklyManager struct {
 }
 
 func Init(cfg *v1.Config) {
-	var platformName string
-	if !cfg.IsTest {
-		currentContext, err := cfg.FindContext(cfg.CurrentContext)
-		if err != nil {
-			log.CliLogger.Warnf("Current context %s not found", cfg.CurrentContext)
-		} else {
-			platformName = currentContext.PlatformName
-		}
-	}
+	platformName := cfg.Context().GetPlatform().GetName()
 	cliBasePath := fmt.Sprintf(baseURL, auth.CCloudURL, cliProdEnvClientId)
 	if cfg.IsTest {
 		cliBasePath = fmt.Sprintf(baseURL, testserver.TestCloudUrl.String(), "1234")

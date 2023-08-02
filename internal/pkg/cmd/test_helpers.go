@@ -24,7 +24,7 @@ func ExecuteCommandC(root *cobra.Command, args ...string) (*cobra.Command, strin
 	root.SetOut(buf)
 	root.SetArgs(args)
 
-	cfg := &v1.Config{Version: nil, IsTest: true, DisableFeatureFlags: false}
+	cfg := &v1.Config{IsTest: true, Contexts: map[string]*v1.Context{}}
 	featureflags.Init(cfg)
 
 	c, err := root.ExecuteC()

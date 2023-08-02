@@ -123,7 +123,7 @@ func getPreRunBase() *pcmd.PreRun {
 }
 
 func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
-	cfg := &v1.Config{Version: nil, IsTest: true, DisableFeatureFlags: false}
+	cfg := &v1.Config{IsTest: true, Contexts: map[string]*v1.Context{}}
 	featureflags.Init(cfg)
 
 	tests := map[string]log.Level{
