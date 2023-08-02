@@ -83,7 +83,7 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 	loginCredentialsManager := pauth.NewLoginCredentialsManager(netrcHandler, form.NewPrompt(), ccloudClient)
 	loginOrganizationManager := pauth.NewLoginOrganizationManagerImpl()
 	mdsClientManager := &pauth.MDSClientManagerImpl{}
-	featureflags.Init(cfg.Version, cfg.IsTest, cfg.DisableFeatureFlags)
+	featureflags.Init(cfg)
 
 	cmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
 		pcmd.LabelRequiredFlags(cmd)
