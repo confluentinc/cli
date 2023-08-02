@@ -76,16 +76,13 @@ func (c *Commander) Authenticated(command *pcmd.AuthenticatedCLICommand) func(*c
 			return err
 		}
 		c.setClient(command)
+
 		ctx := command.Config.Context()
-		if ctx == nil {
+		if ctx == nil || !ctx.HasLogin() {
 			return new(errors.NotLoggedInError)
 		}
 		command.Context = ctx
-		state, err := ctx.AuthenticatedState()
-		if err != nil {
-			return err
-		}
-		command.State = state
+
 		return nil
 	}
 }
@@ -96,15 +93,13 @@ func (c *Commander) AuthenticatedWithMDS(command *pcmd.AuthenticatedCLICommand) 
 			return err
 		}
 		c.setClient(command)
+
 		ctx := command.Config.Context()
-		if ctx == nil {
+		if ctx == nil || !ctx.HasBasicMDSLogin() {
 			return new(errors.NotLoggedInError)
 		}
 		command.Context = ctx
-		if !ctx.HasBasicMDSLogin() {
-			return new(errors.NotLoggedInError)
-		}
-		command.State = ctx.State
+
 		return nil
 	}
 }

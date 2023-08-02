@@ -8,7 +8,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
-func (d *DynamicContext) FetchAPIKeyError(apiKey string, clusterID string) error {
+func (d *DynamicContext) FetchAPIKeyError(apiKey, clusterID string) error {
 	// check if this is API key exists server-side
 	key, httpResp, err := d.V2Client.GetApiKey(apiKey)
 	if err != nil {

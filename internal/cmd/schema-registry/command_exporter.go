@@ -1,10 +1,13 @@
 package schemaregistry
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 func (c *command) newExporterCommand(cfg *v1.Config) *cobra.Command {
@@ -29,6 +32,7 @@ func (c *command) newExporterCommand(cfg *v1.Config) *cobra.Command {
 }
 
 func addContextTypeFlag(cmd *cobra.Command) {
-	cmd.Flags().String("context-type", "AUTO", `Exporter context type. One of "AUTO", "CUSTOM" or "NONE".`)
-	pcmd.RegisterFlagCompletionFunc(cmd, "context-type", func(_ *cobra.Command, _ []string) []string { return []string{"AUTO", "CUSTOM", "NONE"} })
+	arr := []string{"auto", "custom", "none"}
+	cmd.Flags().String("context-type", arr[0], fmt.Sprintf(`Exporter context type. One of %s.`, utils.ArrayToCommaDelimitedString(arr, "or")))
+	pcmd.RegisterFlagCompletionFunc(cmd, "context-type", func(_ *cobra.Command, _ []string) []string { return arr })
 }

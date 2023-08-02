@@ -130,7 +130,7 @@ func (s *CLITestSuite) TestLogin_UseKafkaAuthKafkaErrors() {
 			fixture:   "login/topic-exists.golden",
 			exitCode:  1,
 			useKafka:  "lkc-create-topic",
-			authKafka: "true",
+			authKafka: true,
 		},
 		{
 			name:     "error if no API key used",
@@ -146,7 +146,7 @@ func (s *CLITestSuite) TestLogin_UseKafkaAuthKafkaErrors() {
 			fixture:   "login/delete-unknown-key.golden",
 			exitCode:  1,
 			useKafka:  "lkc-abc123",
-			authKafka: "true",
+			authKafka: true,
 		},
 		{
 			name:     "error if using unknown kafka",

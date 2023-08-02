@@ -77,3 +77,11 @@ func addModeFlag(cmd *cobra.Command) {
 	cmd.Flags().String("mode", "", fmt.Sprintf("Can be %s.", utils.ArrayToCommaDelimitedString(modes, "or")))
 	pcmd.RegisterFlagCompletionFunc(cmd, "mode", func(_ *cobra.Command, _ []string) []string { return modes })
 }
+
+func addCaLocationFlag(cmd *cobra.Command) {
+	cmd.Flags().String("ca-location", "", "File or directory path to CA certificates to authenticate the Schema Registry client.")
+}
+
+func addSchemaRegistryEndpointFlag(cmd *cobra.Command) {
+	cmd.Flags().String("schema-registry-endpoint", "", "The URL of the Schema Registry cluster.")
+}

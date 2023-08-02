@@ -16,7 +16,7 @@ var (
 
 // FlagResolver reads indirect flag values such as "-" for stdin pipe or "@file.txt" @ prefix
 type FlagResolver interface {
-	ValueFrom(source string, prompt string, secure bool) (string, error)
+	ValueFrom(source, prompt string, secure bool) (string, error)
 }
 
 type FlagResolverImpl struct {
@@ -25,7 +25,7 @@ type FlagResolverImpl struct {
 }
 
 // ValueFrom reads indirect flag values such as "-" for stdin pipe or "@file.txt" @ prefix
-func (r *FlagResolverImpl) ValueFrom(source string, prompt string, secure bool) (string, error) {
+func (r *FlagResolverImpl) ValueFrom(source, prompt string, secure bool) (string, error) {
 	// Interactively prompt
 	if source == "" {
 		if prompt == "" {

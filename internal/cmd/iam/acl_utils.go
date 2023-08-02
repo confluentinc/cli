@@ -117,7 +117,7 @@ func fromArgs(conf *ACLConfiguration) func(*pflag.Flag) {
 	}
 }
 
-func setResourcePattern(conf *ACLConfiguration, n string, v string) {
+func setResourcePattern(conf *ACLConfiguration, n, v string) {
 	if conf.AclBinding.Pattern.ResourceType != "" {
 		// A resourceType has already been set with a previous flag
 		conf.errors = multierror.Append(conf.errors, fmt.Errorf("exactly one of %v must be set",

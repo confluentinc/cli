@@ -28,17 +28,17 @@ type schemaOut struct {
 func (c *command) newSchemaDescribeCommand(cfg *v1.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe [id]",
-		Short: "Get schema either by schema ID, or by subject/version.",
+		Short: "Get schema by ID, or by subject and version.",
 		Args:  cobra.MaximumNArgs(1),
 		RunE:  c.schemaDescribe,
 	}
 
 	example1 := examples.Example{
-		Text: "Describe the schema string by schema ID.",
+		Text: `Describe the schema with ID "1337".`,
 		Code: "confluent schema-registry schema describe 1337",
 	}
 	example2 := examples.Example{
-		Text: "Describe the schema by both subject and version.",
+		Text: `Describe the schema with subject "payments" and version "latest".`,
 		Code: "confluent schema-registry schema describe --subject payments --version latest",
 	}
 	if cfg.IsOnPremLogin() {
@@ -54,7 +54,8 @@ func (c *command) newSchemaDescribeCommand(cfg *v1.Config) *cobra.Command {
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	} else {
-		cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
+		addCaLocationFlag(cmd)
+		addSchemaRegistryEndpointFlag(cmd)
 	}
 
 	if cfg.IsCloudLogin() {
@@ -158,21 +159,21 @@ func describeGraph(cmd *cobra.Command, id string, client *schemaregistry.Client)
 
 	visited := make(map[string]bool)
 	schemaID := int64(0)
-	if len(id) > 0 {
+	if id != "" {
 		schemaID, err = strconv.ParseInt(id, 10, 32)
 		if err != nil {
 			return err
 		}
 	}
 
-	// A schema graph is a DAG, the root is fetched either by schema id or by subject/version
+	// A schema graph is a DAG, the root is fetched by ID or by subject and version
 	// All references are fetched by subject/version
 	rootSchema, schemaGraph, err := traverseDAG(client, visited, int32(schemaID), subject, version)
 	if err != nil {
 		return err
 	}
 
-	// Since getting schema by id and by subject/version return different types, i.e., `SchemaString` vs `Schema`,
+	// Since getting schema by ID and by subject and version return different types, i.e., `SchemaString` vs `Schema`,
 	// convert root from `SchemaString` to `Schema` so that we only have to deal with a single type, only if the root is fetched by id
 	root := convertRootSchema(&rootSchema, int32(schemaID))
 	if root != nil {
@@ -188,7 +189,7 @@ func describeGraph(cmd *cobra.Command, id string, client *schemaregistry.Client)
 	return nil
 }
 
-func traverseDAG(client *schemaregistry.Client, visited map[string]bool, id int32, subject string, version string) (srsdk.SchemaString, []srsdk.Schema, error) {
+func traverseDAG(client *schemaregistry.Client, visited map[string]bool, id int32, subject, version string) (srsdk.SchemaString, []srsdk.Schema, error) {
 	root := srsdk.SchemaString{}
 	var schemaGraph []srsdk.Schema
 	var refs []srsdk.SchemaReference
@@ -203,7 +204,7 @@ func traverseDAG(client *schemaregistry.Client, visited map[string]bool, id int3
 
 		root = schemaString
 		refs = schemaString.References
-	} else if len(subject) == 0 || len(version) == 0 || visited[subjectVersionString] {
+	} else if subject == "" || version == "" || visited[subjectVersionString] {
 		// dedupe the call if already visited
 		return root, schemaGraph, nil
 	} else {
@@ -279,7 +280,7 @@ func printSchema(schemaID int64, schema, schemaType string, refs []srsdk.SchemaR
 }
 
 func convertRootSchema(root *srsdk.SchemaString, id int32) *srsdk.Schema {
-	if len(root.Schema) == 0 {
+	if root.Schema == "" {
 		return nil
 	}
 

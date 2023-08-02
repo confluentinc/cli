@@ -78,10 +78,11 @@ func handleMe(t *testing.T, isAuditLogEnabled bool) http.HandlerFunc {
 		}
 		if isAuditLogEnabled {
 			org.AuditLog = &ccloudv1.AuditLog{
-				ClusterId:        "lkc-ab123",
-				AccountId:        "env-987zy",
-				ServiceAccountId: auditLogServiceAccountID,
-				TopicName:        "confluent-audit-log-events",
+				ClusterId:                "lkc-ab123",
+				AccountId:                "env-987zy",
+				ServiceAccountId:         auditLogServiceAccountID,
+				ServiceAccountResourceId: "sa-1337",
+				TopicName:                "confluent-audit-log-events",
 			}
 		}
 

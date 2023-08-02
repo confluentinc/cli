@@ -1,14 +1,14 @@
-Get schema either by schema ID, or by subject/version.
+Get schema by ID, or by subject and version.
 
 Usage:
   confluent schema-registry schema describe [id] [flags]
 
 Examples:
-Describe the schema string by schema ID.
+Describe the schema with ID "1337".
 
   $ confluent schema-registry schema describe 1337 --ca-location <ca-file-location> --schema-registry-endpoint <schema-registry-endpoint>
 
-Describe the schema by both subject and version.
+Describe the schema with subject "payments" and version "latest".
 
   $ confluent schema-registry schema describe --subject payments --version latest --ca-location <ca-file-location> --schema-registry-endpoint <schema-registry-endpoint>
 

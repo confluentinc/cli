@@ -71,10 +71,10 @@ func (c *command) refreshOAuthBearerToken(cmd *cobra.Command, client ckafka.Hand
 	}
 	if protocol == "SASL_SSL" && saslMechanism == "OAUTHBEARER" {
 		oart := ckafka.OAuthBearerTokenRefresh{Config: oauthConfig}
-		if c.State == nil { // require log-in to use oauthbearer token
+		if c.Context.State == nil { // require log-in to use oauthbearer token
 			return errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestions)
 		}
-		oauthBearerToken, retrieveErr := retrieveUnsecuredToken(oart, c.AuthToken())
+		oauthBearerToken, retrieveErr := retrieveUnsecuredToken(oart, c.Context.GetAuthToken())
 		if retrieveErr != nil {
 			_ = client.SetOAuthBearerTokenFailure(retrieveErr.Error())
 			return fmt.Errorf("token retrieval error: %w", retrieveErr)
@@ -128,7 +128,7 @@ func newProducer(kafka *configv1.KafkaClusterConfig, clientID, configPath string
 	return newProducerWithOverwrittenConfigs(configMap, configPath, configStrings)
 }
 
-func newConsumer(group string, kafka *configv1.KafkaClusterConfig, clientID string, configPath string, configStrings []string) (*ckafka.Consumer, error) {
+func newConsumer(group string, kafka *configv1.KafkaClusterConfig, clientID, configPath string, configStrings []string) (*ckafka.Consumer, error) {
 	configMap, err := getConsumerConfigMap(group, kafka, clientID)
 	if err != nil {
 		return nil, err
@@ -137,7 +137,7 @@ func newConsumer(group string, kafka *configv1.KafkaClusterConfig, clientID stri
 	return newConsumerWithOverwrittenConfigs(configMap, configPath, configStrings)
 }
 
-func newOnPremProducer(cmd *cobra.Command, clientID string, configPath string, configStrings []string) (*ckafka.Producer, error) {
+func newOnPremProducer(cmd *cobra.Command, clientID, configPath string, configStrings []string) (*ckafka.Producer, error) {
 	configMap, err := getOnPremProducerConfigMap(cmd, clientID)
 	if err != nil {
 		return nil, err
@@ -146,7 +146,7 @@ func newOnPremProducer(cmd *cobra.Command, clientID string, configPath string, c
 	return newProducerWithOverwrittenConfigs(configMap, configPath, configStrings)
 }
 
-func newOnPremConsumer(cmd *cobra.Command, clientID string, configPath string, configStrings []string) (*ckafka.Consumer, error) {
+func newOnPremConsumer(cmd *cobra.Command, clientID, configPath string, configStrings []string) (*ckafka.Consumer, error) {
 	configMap, err := getOnPremConsumerConfigMap(cmd, clientID)
 	if err != nil {
 		return nil, err
@@ -186,14 +186,11 @@ func GetRebalanceCallback(offset ckafka.Offset, partitionFilter PartitionFilter)
 func consumeMessage(e *ckafka.Message, h *GroupHandler) error {
 	value := e.Value
 	if h.Properties.PrintKey {
-		key := e.Key
-		var keyString string
-		if len(key) == 0 {
-			keyString = "null"
-		} else {
-			keyString = string(key)
+		key := string(e.Key)
+		if key == "" {
+			key = "null"
 		}
-		if _, err := fmt.Fprint(h.Out, keyString+h.Properties.Delimiter); err != nil {
+		if _, err := fmt.Fprint(h.Out, key+h.Properties.Delimiter); err != nil {
 			return err
 		}
 	}

@@ -70,7 +70,7 @@ type LoginCredentialsManager interface {
 	GetOnPremCredentialsFromEnvVar() func() (*Credentials, error)
 	GetSsoCredentialsFromConfig(cfg *v1.Config, url string) func() (*Credentials, error)
 	GetCredentialsFromConfig(cfg *v1.Config, filterParams netrc.NetrcMachineParams) func() (*Credentials, error)
-	GetCredentialsFromKeychain(cfg *v1.Config, isCloud bool, ctxName string, url string) func() (*Credentials, error)
+	GetCredentialsFromKeychain(cfg *v1.Config, isCloud bool, ctxName, url string) func() (*Credentials, error)
 	GetCredentialsFromNetrc(filterParams netrc.NetrcMachineParams) func() (*Credentials, error)
 	GetCloudCredentialsFromPrompt(orgResourceId string) func() (*Credentials, error)
 	GetOnPremCredentialsFromPrompt() func() (*Credentials, error)
@@ -134,13 +134,13 @@ func (h *LoginCredentialsManagerImpl) getCredentialsFromEnvVarFunc(envVars envir
 	}
 }
 
-func (h *LoginCredentialsManagerImpl) getEnvVarCredentials(userEnvVar string, passwordEnvVar string) (string, string) {
+func (h *LoginCredentialsManagerImpl) getEnvVarCredentials(userEnvVar, passwordEnvVar string) (string, string) {
 	username := os.Getenv(userEnvVar)
-	if len(username) == 0 {
+	if username == "" {
 		return "", ""
 	}
 	password := os.Getenv(passwordEnvVar)
-	if len(password) == 0 {
+	if password == "" {
 		return username, ""
 	}
 	log.CliLogger.Warnf(errors.FoundEnvCredMsg, username, userEnvVar, passwordEnvVar)

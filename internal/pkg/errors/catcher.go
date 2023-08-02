@@ -259,7 +259,10 @@ func CatchClusterConfigurationNotValidError(err error, r *http.Response) error {
 
 	err = CatchCCloudV2Error(err, r)
 	if strings.Contains(err.Error(), "CKU must be greater") {
-		return New(InvalidCkuErrorMsg)
+		return New("CKU must be greater than 1 for multi-zone dedicated clusters")
+	}
+	if strings.Contains(err.Error(), "Durability must be HIGH for an Enterprise cluster") {
+		return New(`availability must be "multi-zone" for enterprise clusters`)
 	}
 
 	return err

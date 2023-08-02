@@ -1335,7 +1335,7 @@ func TestPasswordProtectionSuite_RotateMasterKey(t *testing.T) {
 	}
 }
 
-func createMasterKey(passphrase string, localSecretsFile string, plugin *PasswordProtectionSuite) error {
+func createMasterKey(passphrase, localSecretsFile string, plugin *PasswordProtectionSuite) error {
 	key, err := plugin.CreateMasterKey(passphrase, localSecretsFile)
 	if err != nil {
 		return err
@@ -1344,23 +1344,23 @@ func createMasterKey(passphrase string, localSecretsFile string, plugin *Passwor
 	return nil
 }
 
-func createNewConfigFile(path string, contents string) error {
+func createNewConfigFile(path, contents string) error {
 	return os.WriteFile(path, []byte(contents), 0644)
 }
 
-func validateTextFileContents(path string, expectedFileContent string, req *require.Assertions) {
+func validateTextFileContents(path, expectedFileContent string, req *require.Assertions) {
 	readContent, err := os.ReadFile(path)
 	req.NoError(err)
 	req.Equal(expectedFileContent, string(readContent))
 }
 
-func validateTextFileContains(path string, expectedFileContent string, req *require.Assertions) {
+func validateTextFileContains(path, expectedFileContent string, req *require.Assertions) {
 	readContent, err := os.ReadFile(path)
 	req.NoError(err)
 	req.Contains(string(readContent), expectedFileContent)
 }
 
-func validateJSONFileContents(path string, expectedFileContent string, req *require.Assertions) {
+func validateJSONFileContents(path, expectedFileContent string, req *require.Assertions) {
 	readContent, err := os.ReadFile(path)
 	req.NoError(err)
 	req.JSONEq(expectedFileContent, string(readContent))
@@ -1393,7 +1393,7 @@ func corruptEncryptedDEK(localSecureConfigPath string) error {
 	return WritePropertiesFile(localSecureConfigPath, secretsProps, true)
 }
 
-func verifyConfigsRemoved(configFilePath string, localSecureConfigPath string, removedConfigs string) error {
+func verifyConfigsRemoved(configFilePath, localSecureConfigPath, removedConfigs string) error {
 	secretsProps, err := utils.LoadPropertiesFile(localSecureConfigPath)
 	if err != nil {
 		return err
@@ -1416,7 +1416,7 @@ func verifyConfigsRemoved(configFilePath string, localSecureConfigPath string, r
 	return nil
 }
 
-func validateUsingDecryption(configFilePath string, localSecureConfigPath string, outputConfigPath string, origConfigs string, plugin *PasswordProtectionSuite) error {
+func validateUsingDecryption(configFilePath, localSecureConfigPath, outputConfigPath, origConfigs string, plugin *PasswordProtectionSuite) error {
 	if err := plugin.DecryptConfigFileSecrets(configFilePath, localSecureConfigPath, outputConfigPath, ""); err != nil {
 		return fmt.Errorf("failed to decrypt config file")
 	}
@@ -1445,7 +1445,7 @@ func validateUsingDecryption(configFilePath string, localSecureConfigPath string
 	return nil
 }
 
-func setUpDir(masterKeyPassphrase string, secureDir string, configFile string, localSecureConfigPath string, contents string) (*PasswordProtectionSuite, error) {
+func setUpDir(masterKeyPassphrase, secureDir, configFile, localSecureConfigPath, contents string) (*PasswordProtectionSuite, error) {
 	if err := os.MkdirAll(secureDir, os.ModePerm); err != nil {
 		return nil, fmt.Errorf("failed to create password protection directory")
 	}
@@ -1473,7 +1473,7 @@ func checkError(err error, wantErr bool, wantErrMsg string, req *require.Asserti
 	}
 }
 
-func checkErrorAndSuggestions(err error, wantErr bool, wantErrMsg string, wantSuggestions string, req *require.Assertions) {
+func checkErrorAndSuggestions(err error, wantErr bool, wantErrMsg, wantSuggestions string, req *require.Assertions) {
 	if wantErr {
 		req.Error(err)
 		req.Contains(err.Error(), wantErrMsg)
