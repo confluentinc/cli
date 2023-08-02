@@ -7,12 +7,10 @@ import (
 	"path/filepath"
 	"reflect"
 	"regexp"
+	"runtime"
 	"strings"
 
-	"github.com/hashicorp/go-version"
-
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
-	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/secret"
@@ -25,8 +23,6 @@ const (
 	defaultConfigFileFmt = "%s/.confluent/config.json"
 	emptyFieldIndicator  = "EMPTY"
 )
-
-var ver, _ = version.NewVersion("1.0.0")
 
 const signupSuggestion = "If you need a Confluent Cloud account, sign up with `confluent cloud-signup`."
 
@@ -71,8 +67,6 @@ var (
 
 // Config represents the CLI configuration.
 type Config struct {
-	*config.BaseConfig
-
 	DisableUpdateCheck  bool                        `json:"disable_update_check"`
 	DisableUpdates      bool                        `json:"disable_updates,omitempty"`
 	DisablePlugins      bool                        `json:"disable_plugins"`
@@ -89,11 +83,13 @@ type Config struct {
 
 	// Deprecated
 	AnonymousId string `json:"anonymous_id,omitempty"`
+	Ver         string `json:"version,omitempty"`
 
 	// The following configurations are not persisted between runs
 
-	IsTest  bool              `json:"-"`
-	Version *pversion.Version `json:"-"`
+	IsTest   bool              `json:"-"`
+	Version  *pversion.Version `json:"-"`
+	Filename string            `json:"-"`
 
 	overwrittenCurrentContext          string
 	overwrittenCurrentEnvironment      string
@@ -133,7 +129,6 @@ func (c *Config) SetOverwrittenCurrentKafkaCluster(clusterId string) {
 
 func New() *Config {
 	return &Config{
-		BaseConfig:       config.NewBaseConfig(ver),
 		Platforms:        make(map[string]*Platform),
 		Credentials:      make(map[string]*Credential),
 		Contexts:         make(map[string]*Context),
@@ -176,35 +171,23 @@ func (c *Config) DecryptCredentials() error {
 // Save a default version if none exists yet.
 func (c *Config) Load() error {
 	filename := c.GetFilename()
+
 	input, err := os.ReadFile(filename)
 	if err != nil {
 		if os.IsNotExist(err) {
 			// Save a default version if none exists yet.
 			if err := c.Save(); err != nil {
-				return errors.Wrapf(err, errors.UnableToCreateConfigErrorMsg)
+				return errors.Wrapf(err, "unable to save configuration file")
 			}
 			return nil
 		}
-		return errors.Wrapf(err, errors.UnableToReadConfigErrorMsg, filename)
+		return errors.Wrapf(err, errors.UnableToReadConfigurationFileErrorMsg, filename)
 	}
-	err = json.Unmarshal(input, c)
-	if c.Ver.Compare(ver) < 0 {
-		return errors.Errorf(errors.ConfigNotUpToDateErrorMsg, c.Ver, ver)
-	} else if c.Ver.Compare(ver) > 0 {
-		if c.Ver.Equal(version.Must(version.NewVersion("3.0.0"))) {
-			// The user is a CP user who downloaded the v2 CLI instead of running `confluent update --major`,
-			// so their config files weren't merged and migrated. Migrate this config to avoid an error.
-			c.Ver = config.Version{Version: version.Must(version.NewVersion("1.0.0"))}
-			for name := range c.Contexts {
-				c.Contexts[name].NetrcMachineName = name
-			}
-		} else {
-			return errors.Errorf(errors.InvalidConfigVersionErrorMsg, c.Ver)
-		}
+
+	if err := json.Unmarshal(input, c); err != nil {
+		return errors.Wrapf(err, errors.UnableToReadConfigurationFileErrorMsg, filename)
 	}
-	if err != nil {
-		return errors.Wrapf(err, errors.ParseConfigErrorMsg, filename)
-	}
+
 	for _, context := range c.Contexts {
 		// Some "pre-validation"
 		if context.Name == "" {
@@ -225,6 +208,13 @@ func (c *Config) Load() error {
 		context.KafkaClusterContext.Context = context
 		context.State = c.ContextStates[context.Name]
 	}
+
+	if runtime.GOOS == "windows" && !c.DisablePluginsOnce {
+		c.DisablePlugins = true
+		c.DisablePluginsOnce = true
+		_ = c.Save()
+	}
+
 	return c.Validate()
 }
 
@@ -425,6 +415,7 @@ func (c *Config) Validate() error {
 			return errors.NewCorruptedConfigError(errors.CurrentContextNotExistErrorMsg, c.CurrentContext, c.Filename)
 		}
 	}
+
 	// Validate that every context:
 	// 1. Has no hanging references between the context and the config.
 	// 2. Is mapped by name correctly in the config.
@@ -449,6 +440,7 @@ func (c *Config) Validate() error {
 			return errors.NewCorruptedConfigError(errors.ContextStateMismatchErrorMsg, context.Name, c.Filename)
 		}
 	}
+
 	// Validate that all context states are mapped to an existing context.
 	for contextName := range c.ContextStates {
 		if _, ok := c.Contexts[contextName]; !ok {

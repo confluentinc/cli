@@ -278,10 +278,10 @@ func (c command) getMessageExamples(consumer *ckgo.Consumer, topicName, contentT
 		return nil, fmt.Errorf("failed to get deserializer for %s", valueFormat)
 	}
 	groupHandler := kafka.GroupHandler{
-		SrClient:   srClient,
-		Format:     valueFormat,
-		Subject:    topicName + "-value",
-		Properties: kafka.ConsumerProperties{},
+		SrClient:    srClient,
+		ValueFormat: valueFormat,
+		Subject:     topicName + "-value",
+		Properties:  kafka.ConsumerProperties{},
 	}
 	if valueFormat != "string" {
 		schemaPath, referencePathMap, err := groupHandler.RequestSchema(value)

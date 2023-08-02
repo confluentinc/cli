@@ -83,7 +83,7 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 	loginCredentialsManager := pauth.NewLoginCredentialsManager(netrcHandler, form.NewPrompt(), ccloudClient)
 	loginOrganizationManager := pauth.NewLoginOrganizationManagerImpl()
 	mdsClientManager := &pauth.MDSClientManagerImpl{}
-	featureflags.Init(cfg.Version, cfg.IsTest, cfg.DisableFeatureFlags)
+	featureflags.Init(cfg)
 
 	cmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
 		pcmd.LabelRequiredFlags(cmd)
@@ -131,6 +131,7 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 	cmd.AddCommand(secret.New(prerunner, flagResolver, secrets.NewPasswordProtectionPlugin()))
 	cmd.AddCommand(shell.New(cmd, func() *cobra.Command { return NewConfluentCommand(cfg) }))
 	cmd.AddCommand(streamshare.New(prerunner))
+	cmd.AddCommand(update.New(cfg, prerunner, updateClient))
 	cmd.AddCommand(version.New(prerunner, cfg.Version))
 
 	dc := dynamicconfig.New(cfg, nil)
@@ -138,9 +139,6 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 
 	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.flink", dc.Context(), v1.CliLaunchDarklyClient, true, false) {
 		cmd.AddCommand(flink.New(cfg, prerunner))
-	}
-	if !cfg.DisableUpdates {
-		cmd.AddCommand(update.New(cfg, prerunner, updateClient))
 	}
 
 	changeDefaults(cmd, cfg)
