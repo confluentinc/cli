@@ -34,7 +34,7 @@ func (protoProvider *ProtoSerializationProvider) encode(str string) ([]byte, err
 	// In our case, index array is always [0].
 	indexBytes := []byte{0x0}
 
-	// Convert from Json string to proto message type.
+	// Convert from JSON string to proto message type.
 	if err := jsonpb.UnmarshalString(str, protoProvider.message); err != nil {
 		return nil, errors.New(errors.ProtoDocumentInvalidErrorMsg)
 	}
@@ -75,7 +75,7 @@ func (protoProvider *ProtoDeserializationProvider) decode(data []byte) (string, 
 		return "", errors.New(errors.ProtoDocumentInvalidErrorMsg)
 	}
 
-	// Convert from proto message type to Json string.
+	// Convert from proto message type to JSON string.
 	marshaler := &jsonpb.Marshaler{}
 	str, err := marshaler.MarshalToString(protoProvider.message)
 	if err != nil {
