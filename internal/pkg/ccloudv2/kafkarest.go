@@ -124,6 +124,11 @@ func (c *KafkaRestClient) CreateKafkaMirrorTopic(clusterId, linkName string, dat
 	return kafkarest.NewError(c.GetUrl(), err, httpResp)
 }
 
+func (c *KafkaRestClient) ReadKafkaMirrorTopic(clusterId, linkName, mirrorTopicName string) (kafkarestv3.ListMirrorTopicsResponseData, error) {
+	res, httpResp, err := c.ClusterLinkingV3Api.ReadKafkaMirrorTopic(c.context(), clusterId, linkName, mirrorTopicName).Execute()
+	return res, kafkarest.NewError(c.GetUrl(), err, httpResp)
+}
+
 func (c *KafkaRestClient) DeleteKafkaLink(clusterId, linkName string) error {
 	httpResp, err := c.ClusterLinkingV3Api.DeleteKafkaLink(c.context(), clusterId, linkName).Execute()
 	return kafkarest.NewError(c.GetUrl(), err, httpResp)
