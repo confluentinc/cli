@@ -6,7 +6,6 @@ import (
 	b64 "encoding/base64"
 	"fmt"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/dghubble/sling"
@@ -34,6 +33,7 @@ const (
 
 const (
 	cliProdEnvClientId     = "61af57740127630ce47de5be"
+	cliProdEnv             = "confluent.cloud"
 	cliTestEnvClientId     = "61af57740127630ce47de5bd"
 	ccloudProdEnvClientId  = "5c636508aa445d32c86f26b1"
 	ccloudStagEnvClientId  = "5c63651f1df21432a45fc773"
@@ -57,16 +57,25 @@ type launchDarklyManager struct {
 	version               *version.Version
 }
 
-func Init(version *version.Version, isTest, isDisabledConfig bool) {
+func Init(cfg *v1.Config) {
+	var platformName string
+	if !cfg.IsTest {
+		currentContext, err := cfg.FindContext(cfg.CurrentContext)
+		if err != nil {
+			log.CliLogger.Warnf("Current context %s not found", cfg.CurrentContext)
+		} else {
+			platformName = currentContext.PlatformName
+		}
+	}
 	cliBasePath := fmt.Sprintf(baseURL, auth.CCloudURL, cliProdEnvClientId)
-	if isTest {
+	if cfg.IsTest {
 		cliBasePath = fmt.Sprintf(baseURL, testserver.TestCloudUrl.String(), "1234")
-	} else if os.Getenv("XX_LAUNCH_DARKLY_TEST_ENV") != "" {
+	} else if platformName != cliProdEnv {
 		cliBasePath = fmt.Sprintf(baseURL, auth.CCloudURL, cliTestEnvClientId)
 	}
 
 	ccloudClientProvider := func(client v1.LaunchDarklyClient) *sling.Sling {
-		if isTest || os.Getenv("XX_LAUNCH_DARKLY_TEST_ENV") != "" {
+		if cfg.IsTest || platformName != cliProdEnv {
 			return sling.New().Base(fmt.Sprintf(baseURL, auth.CCloudURL, ccloudCpdEnvClientId))
 		}
 
@@ -86,10 +95,10 @@ func Init(version *version.Version, isTest, isDisabledConfig bool) {
 	Manager = launchDarklyManager{
 		cliClient:             sling.New().Base(cliBasePath),
 		ccloudClient:          ccloudClientProvider,
-		hideTimeoutWarning:    isTest,
-		isDisabled:            isDisabledConfig,
+		hideTimeoutWarning:    cfg.IsTest,
+		isDisabled:            cfg.DisableFeatureFlags,
 		timeoutWarningPrinted: false,
-		version:               version,
+		version:               cfg.Version,
 	}
 }
 
