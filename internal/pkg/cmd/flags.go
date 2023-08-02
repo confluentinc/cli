@@ -396,6 +396,17 @@ func AddTypeFlag(cmd *cobra.Command) {
 	RegisterFlagCompletionFunc(cmd, "type", func(_ *cobra.Command, _ []string) []string { return kafka.Types })
 }
 
+func AddKeyFormatFlag(cmd *cobra.Command) {
+	arr := []string{"string", "avro", "jsonschema", "protobuf"}
+	str := utils.ArrayToCommaDelimitedString(arr, "or")
+
+	cmd.Flags().String("key-format", "string", fmt.Sprintf("Format of message key as %s. Note that schema references are not supported for Avro.", str))
+
+	RegisterFlagCompletionFunc(cmd, "key-format", func(_ *cobra.Command, _ []string) []string {
+		return arr
+	})
+}
+
 func AddValueFormatFlag(cmd *cobra.Command) {
 	arr := []string{"string", "avro", "jsonschema", "protobuf"}
 	str := utils.ArrayToCommaDelimitedString(arr, "or")
