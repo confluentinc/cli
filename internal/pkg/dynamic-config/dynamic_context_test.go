@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hashicorp/go-version"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
@@ -14,7 +13,6 @@ import (
 	cmkmock "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2/mock"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
-	"github.com/confluentinc/cli/internal/pkg/config"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	pmock "github.com/confluentinc/cli/internal/pkg/mock"
 )
@@ -53,7 +51,7 @@ func TestFindKafkaCluster_Expired(t *testing.T) {
 			KafkaClusterContext: &v1.KafkaClusterContext{KafkaClusterConfigs: map[string]*v1.KafkaClusterConfig{"lkc-123456": {LastUpdate: update}}},
 			Credential:          &v1.Credential{CredentialType: v1.Username},
 			State:               &v1.ContextState{AuthToken: "token"},
-			Config:              &v1.Config{BaseConfig: &config.BaseConfig{Ver: config.Version{Version: &version.Version{}}}},
+			Config:              &v1.Config{},
 		},
 		V2Client: &ccloudv2.Client{
 			CmkClient: &cmkv2.APIClient{

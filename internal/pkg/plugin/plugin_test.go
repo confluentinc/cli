@@ -11,7 +11,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/confluentinc/cli/internal/pkg/config"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/mock"
 )
@@ -96,7 +95,7 @@ func TestSearchPath(t *testing.T) {
 
 	t.Setenv("PATH", root)
 
-	pluginMap := SearchPath(&v1.Config{BaseConfig: new(config.BaseConfig)})
+	pluginMap := SearchPath(&v1.Config{})
 	pluginPaths, ok := pluginMap[pluginName]
 	require.True(t, ok)
 	require.Equal(t, fileName, filepath.Base(pluginPaths[0]))
