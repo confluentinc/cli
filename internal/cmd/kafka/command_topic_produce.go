@@ -36,7 +36,8 @@ func (c *command) newProduceCommand() *cobra.Command {
 	cmd.Flags().String("schema", "", "The ID or filepath of the message value schema.")
 	pcmd.AddKeyFormatFlag(cmd)
 	pcmd.AddValueFormatFlag(cmd)
-	cmd.Flags().String("references", "", "The path to the references file.")
+	cmd.Flags().String("key-references", "", "The path to the message key schema references file.")
+	cmd.Flags().String("references", "", "The path to the message value schema references file.")
 	cmd.Flags().Bool("parse-key", false, "Parse key from the message.")
 	cmd.Flags().String("delimiter", ":", "The delimiter separating each key and value.")
 	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the producer client.`)
@@ -58,6 +59,7 @@ func (c *command) newProduceCommand() *cobra.Command {
 	cmd.Flags().Int32("schema-id", 0, "The ID of the schema.")
 	cobra.CheckErr(cmd.Flags().MarkHidden("schema-id"))
 
+	cobra.CheckErr(cmd.MarkFlagFilename("key-references", "json"))
 	cobra.CheckErr(cmd.MarkFlagFilename("references", "json"))
 	cobra.CheckErr(cmd.MarkFlagFilename("config-file", "avsc", "json"))
 
@@ -346,7 +348,7 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 			Format:     format,
 			SchemaType: serializationProvider.GetSchemaName(),
 		}
-		refs, err := sr.ReadSchemaReferences(cmd)
+		refs, err := sr.ReadSchemaReferences(cmd, mode == "key")
 		if err != nil {
 			return nil, nil, err
 		}

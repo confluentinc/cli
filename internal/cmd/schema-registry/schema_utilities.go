@@ -70,12 +70,18 @@ func RegisterSchemaWithAuth(cmd *cobra.Command, schemaCfg *RegisterSchemaConfigs
 	return response.Id, nil
 }
 
-func ReadSchemaReferences(cmd *cobra.Command) ([]srsdk.SchemaReference, error) {
-	var refs []srsdk.SchemaReference
-	references, err := cmd.Flags().GetString("references")
+func ReadSchemaReferences(cmd *cobra.Command, isKey bool) ([]srsdk.SchemaReference, error) {
+	name := "references"
+	if isKey {
+		name = "key-references"
+	}
+
+	references, err := cmd.Flags().GetString(name)
 	if err != nil {
 		return nil, err
 	}
+
+	var refs []srsdk.SchemaReference
 	if references != "" {
 		refBlob, err := os.ReadFile(references)
 		if err != nil {
@@ -85,6 +91,7 @@ func ReadSchemaReferences(cmd *cobra.Command) ([]srsdk.SchemaReference, error) {
 			return nil, err
 		}
 	}
+
 	return refs, nil
 }
 
