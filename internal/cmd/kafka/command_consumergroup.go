@@ -82,12 +82,12 @@ func (c *consumerGroupCommand) autocompleteConsumerGroups() []string {
 }
 
 func listConsumerGroups(flagCmd *pcmd.AuthenticatedCLICommand) (*kafkarestv3.ConsumerGroupDataList, error) {
-	kafkaREST, err := c.GetKafkaREST()
+	kafkaREST, err := flagCmd.GetKafkaREST()
 	if err != nil {
 		return nil, err
 	}
 
-	cluster, err := c.Context.GetKafkaClusterForCommand()
+	cluster, err := flagCmd.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return nil, err
 	}
