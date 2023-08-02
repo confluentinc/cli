@@ -9,7 +9,6 @@ import (
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/types"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
@@ -17,17 +16,9 @@ import (
 )
 
 var (
-	regularOrgContextState = &v1.ContextState{
-		Auth: &v1.AuthConfig{
-			Organization: testserver.RegularOrg,
-		},
-	}
+	regularOrgContextState   = &v1.ContextState{Auth: &v1.AuthConfig{Organization: testserver.RegularOrg}}
 	suspendedOrgContextState = func(eventType ccloudv1.SuspensionEventType) *v1.ContextState {
-		return &v1.ContextState{
-			Auth: &v1.AuthConfig{
-				Organization: testserver.SuspendedOrg(eventType),
-			},
-		}
+		return &v1.ContextState{Auth: &v1.AuthConfig{Organization: testserver.SuspendedOrg(eventType)}}
 	}
 )
 
@@ -189,7 +180,6 @@ func TestHelp_OnPrem(t *testing.T) {
 }
 
 func runWithConfig(cfg *v1.Config) (string, error) {
-	cfg.BaseConfig = new(config.BaseConfig)
 	cfg.IsTest = true
 	cfg.Version = new(pversion.Version)
 
