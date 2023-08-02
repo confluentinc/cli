@@ -746,54 +746,54 @@ func handleKafkaRPAllMirrors(t *testing.T) http.HandlerFunc {
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
 		case http.MethodGet:
-			err := json.NewEncoder(w).Encode(cpkafkarestv3.ListMirrorTopicsResponseDataList{Data: []cpkafkarestv3.ListMirrorTopicsResponseData{
+			err := json.NewEncoder(w).Encode(cckafkarestv3.ListMirrorTopicsResponseDataList{Data: []cckafkarestv3.ListMirrorTopicsResponseData{
 				{
-					Kind:            "",
-					Metadata:        cpkafkarestv3.ResourceMetadata{},
 					LinkName:        "link-1",
 					MirrorTopicName: "dest-topic-1",
 					SourceTopicName: "src-topic-1",
 					NumPartitions:   3,
-					MirrorLags: []cpkafkarestv3.MirrorLag{
-						{
-							Partition:             0,
-							Lag:                   142857,
-							LastSourceFetchOffset: 1293009,
-						},
-						{
-							Partition:             1,
-							Lag:                   285714,
-							LastSourceFetchOffset: 28340404,
-						},
-						{
-							Partition:             2,
-							Lag:                   571428,
-							LastSourceFetchOffset: 5739304,
+					MirrorLags: cckafkarestv3.MirrorLags{
+						Items: []cckafkarestv3.MirrorLag{
+							{
+								Partition:             0,
+								Lag:                   142857,
+								LastSourceFetchOffset: 1293009,
+							},
+							{
+								Partition:             1,
+								Lag:                   285714,
+								LastSourceFetchOffset: 28340404,
+							},
+							{
+								Partition:             2,
+								Lag:                   571428,
+								LastSourceFetchOffset: 5739304,
+							},
 						},
 					},
-					MirrorStatus: "active",
+					MirrorStatus: cckafkarestv3.ACTIVE,
 					StateTimeMs:  111111111,
 				},
 				{
-					Kind:            "",
-					Metadata:        cpkafkarestv3.ResourceMetadata{},
 					LinkName:        "link-2",
 					MirrorTopicName: "dest-topic-2",
 					SourceTopicName: "src-topic-2",
 					NumPartitions:   2,
-					MirrorLags: []cpkafkarestv3.MirrorLag{
-						{
-							Partition:             0,
-							Lag:                   0,
-							LastSourceFetchOffset: 0,
-						},
-						{
-							Partition:             1,
-							Lag:                   0,
-							LastSourceFetchOffset: 0,
+					MirrorLags: cckafkarestv3.MirrorLags{
+						Items: []cckafkarestv3.MirrorLag{
+							{
+								Partition:             0,
+								Lag:                   0,
+								LastSourceFetchOffset: 0,
+							},
+							{
+								Partition:             1,
+								Lag:                   0,
+								LastSourceFetchOffset: 0,
+							},
 						},
 					},
-					MirrorStatus: "stopped",
+					MirrorStatus: cckafkarestv3.STOPPED,
 					StateTimeMs:  222222222,
 				},
 			}})
@@ -850,54 +850,54 @@ func handleKafkaRPMirrors(t *testing.T) http.HandlerFunc {
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
 		case http.MethodGet:
-			err := json.NewEncoder(w).Encode(cpkafkarestv3.ListMirrorTopicsResponseDataList{Data: []cpkafkarestv3.ListMirrorTopicsResponseData{
+			err := json.NewEncoder(w).Encode(cckafkarestv3.ListMirrorTopicsResponseDataList{Data: []cckafkarestv3.ListMirrorTopicsResponseData{
 				{
-					Kind:            "",
-					Metadata:        cpkafkarestv3.ResourceMetadata{},
 					LinkName:        "link-1",
 					MirrorTopicName: "dest-topic-1",
 					SourceTopicName: "src-topic-1",
 					NumPartitions:   3,
-					MirrorLags: []cpkafkarestv3.MirrorLag{
-						{
-							Partition:             0,
-							Lag:                   142857,
-							LastSourceFetchOffset: 1293009,
-						},
-						{
-							Partition:             1,
-							Lag:                   285714,
-							LastSourceFetchOffset: 28340404,
-						},
-						{
-							Partition:             2,
-							Lag:                   571428,
-							LastSourceFetchOffset: 5739304,
+					MirrorLags: cckafkarestv3.MirrorLags{
+						Items: []cckafkarestv3.MirrorLag{
+							{
+								Partition:             0,
+								Lag:                   142857,
+								LastSourceFetchOffset: 1293009,
+							},
+							{
+								Partition:             1,
+								Lag:                   285714,
+								LastSourceFetchOffset: 28340404,
+							},
+							{
+								Partition:             2,
+								Lag:                   571428,
+								LastSourceFetchOffset: 5739304,
+							},
 						},
 					},
-					MirrorStatus: "active",
+					MirrorStatus: cckafkarestv3.ACTIVE,
 					StateTimeMs:  111111111,
 				},
 				{
-					Kind:            "",
-					Metadata:        cpkafkarestv3.ResourceMetadata{},
 					LinkName:        "link-2",
 					MirrorTopicName: "dest-topic-2",
 					SourceTopicName: "src-topic-2",
 					NumPartitions:   2,
-					MirrorLags: []cpkafkarestv3.MirrorLag{
-						{
-							Partition:             0,
-							Lag:                   0,
-							LastSourceFetchOffset: 0,
-						},
-						{
-							Partition:             1,
-							Lag:                   0,
-							LastSourceFetchOffset: 0,
+					MirrorLags: cckafkarestv3.MirrorLags{
+						Items: []cckafkarestv3.MirrorLag{
+							{
+								Partition:             0,
+								Lag:                   0,
+								LastSourceFetchOffset: 0,
+							},
+							{
+								Partition:             1,
+								Lag:                   0,
+								LastSourceFetchOffset: 0,
+							},
 						},
 					},
-					MirrorStatus: "stopped",
+					MirrorStatus: cckafkarestv3.STOPPED,
 					StateTimeMs:  222222222,
 				},
 			}})
@@ -1303,7 +1303,7 @@ func handleKafkaRPMirror(t *testing.T) http.HandlerFunc {
 						},
 					},
 				},
-				MirrorStatus: "ACTIVE",
+				MirrorStatus: cckafkarestv3.ACTIVE,
 				StateTimeMs:  111111111,
 			})
 			require.NoError(t, err)

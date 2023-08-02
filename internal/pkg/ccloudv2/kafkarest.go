@@ -124,6 +124,28 @@ func (c *KafkaRestClient) CreateKafkaMirrorTopic(clusterId, linkName string, dat
 	return kafkarest.NewError(c.GetUrl(), err, httpResp)
 }
 
+func (c *KafkaRestClient) ListKafkaMirrorTopics(clusterId string, status *kafkarestv3.MirrorTopicStatus) (kafkarestv3.ListMirrorTopicsResponseDataList, error) {
+	req := c.ClusterLinkingV3Api.ListKafkaMirrorTopics(c.context(), clusterId)
+
+	if status != nil {
+		req = req.MirrorStatus(*status)
+	}
+
+	res, httpResp, err := req.Execute()
+	return res, kafkarest.NewError(c.GetUrl(), err, httpResp)
+}
+
+func (c *KafkaRestClient) ListKafkaMirrorTopicsUnderLink(clusterId, linkName string, status *kafkarestv3.MirrorTopicStatus) (kafkarestv3.ListMirrorTopicsResponseDataList, error) {
+	req := c.ClusterLinkingV3Api.ListKafkaMirrorTopicsUnderLink(c.context(), clusterId, linkName)
+
+	if status != nil {
+		req = req.MirrorStatus(*status)
+	}
+
+	res, httpResp, err := req.Execute()
+	return res, kafkarest.NewError(c.GetUrl(), err, httpResp)
+}
+
 func (c *KafkaRestClient) ReadKafkaMirrorTopic(clusterId, linkName, mirrorTopicName string) (kafkarestv3.ListMirrorTopicsResponseData, error) {
 	res, httpResp, err := c.ClusterLinkingV3Api.ReadKafkaMirrorTopic(c.context(), clusterId, linkName, mirrorTopicName).Execute()
 	return res, kafkarest.NewError(c.GetUrl(), err, httpResp)
