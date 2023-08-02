@@ -51,6 +51,7 @@ var (
 const (
 	serviceAccountID           = int32(12345)
 	serviceAccountResourceID   = "sa-12345"
+	groupMappingResourceId     = "pool-abc"
 	identityProviderResourceID = "op-12345"
 	identityPoolResourceID     = "pool-12345"
 	deactivatedUserID          = int32(6666)
