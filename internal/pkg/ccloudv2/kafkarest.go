@@ -129,6 +129,26 @@ func (c *KafkaRestClient) ReadKafkaMirrorTopic(clusterId, linkName, mirrorTopicN
 	return res, kafkarest.NewError(c.GetUrl(), err, httpResp)
 }
 
+func (c *KafkaRestClient) UpdateKafkaMirrorTopicsFailover(clusterId, linkName string, validateOnly bool, data kafkarestv3.AlterMirrorsRequestData) (kafkarestv3.AlterMirrorStatusResponseDataList, error) {
+	res, httpResp, err := c.ClusterLinkingV3Api.UpdateKafkaMirrorTopicsFailover(c.context(), clusterId, linkName).ValidateOnly(validateOnly).AlterMirrorsRequestData(data).Execute()
+	return res, kafkarest.NewError(c.GetUrl(), err, httpResp)
+}
+
+func (c *KafkaRestClient) UpdateKafkaMirrorTopicsPause(clusterId, linkName string, validateOnly bool, data kafkarestv3.AlterMirrorsRequestData) (kafkarestv3.AlterMirrorStatusResponseDataList, error) {
+	res, httpResp, err := c.ClusterLinkingV3Api.UpdateKafkaMirrorTopicsPause(c.context(), clusterId, linkName).ValidateOnly(validateOnly).AlterMirrorsRequestData(data).Execute()
+	return res, kafkarest.NewError(c.GetUrl(), err, httpResp)
+}
+
+func (c *KafkaRestClient) UpdateKafkaMirrorTopicsPromote(clusterId, linkName string, validateOnly bool, data kafkarestv3.AlterMirrorsRequestData) (kafkarestv3.AlterMirrorStatusResponseDataList, error) {
+	res, httpResp, err := c.ClusterLinkingV3Api.UpdateKafkaMirrorTopicsPromote(c.context(), clusterId, linkName).ValidateOnly(validateOnly).AlterMirrorsRequestData(data).Execute()
+	return res, kafkarest.NewError(c.GetUrl(), err, httpResp)
+}
+
+func (c *KafkaRestClient) UpdateKafkaMirrorTopicsResume(clusterId, linkName string, validateOnly bool, data kafkarestv3.AlterMirrorsRequestData) (kafkarestv3.AlterMirrorStatusResponseDataList, error) {
+	res, httpResp, err := c.ClusterLinkingV3Api.UpdateKafkaMirrorTopicsResume(c.context(), clusterId, linkName).ValidateOnly(validateOnly).AlterMirrorsRequestData(data).Execute()
+	return res, kafkarest.NewError(c.GetUrl(), err, httpResp)
+}
+
 func (c *KafkaRestClient) DeleteKafkaLink(clusterId, linkName string) error {
 	httpResp, err := c.ClusterLinkingV3Api.DeleteKafkaLink(c.context(), clusterId, linkName).Execute()
 	return kafkarest.NewError(c.GetUrl(), err, httpResp)
