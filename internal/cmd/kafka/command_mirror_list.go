@@ -73,21 +73,21 @@ func (c *mirrorCommand) list(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
-	var listMirrorTopicsResponseDataList kafkarestv3.ListMirrorTopicsResponseDataList
+	var mirrors kafkarestv3.ListMirrorTopicsResponseDataList
 	if linkName == "" {
-		listMirrorTopicsResponseDataList, err = kafkaREST.CloudClient.ListKafkaMirrorTopics(cluster.ID, mirrorTopicStatus)
+		mirrors, err = kafkaREST.CloudClient.ListKafkaMirrorTopics(cluster.ID, mirrorTopicStatus)
 		if err != nil {
 			return err
 		}
 	} else {
-		listMirrorTopicsResponseDataList, err = kafkaREST.CloudClient.ListKafkaMirrorTopicsUnderLink(cluster.ID, linkName, mirrorTopicStatus)
+		mirrors, err = kafkaREST.CloudClient.ListKafkaMirrorTopicsUnderLink(cluster.ID, linkName, mirrorTopicStatus)
 		if err != nil {
 			return err
 		}
 	}
 
 	list := output.NewList(cmd)
-	for _, mirror := range listMirrorTopicsResponseDataList.GetData() {
+	for _, mirror := range mirrors.GetData() {
 		var maxLag int64 = 0
 		for _, mirrorLag := range mirror.GetMirrorLags().Items {
 			if lag := mirrorLag.GetLag(); lag > maxLag {
