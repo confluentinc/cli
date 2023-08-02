@@ -5,6 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/featureflags"
 )
 
@@ -23,7 +24,8 @@ func ExecuteCommandC(root *cobra.Command, args ...string) (*cobra.Command, strin
 	root.SetOut(buf)
 	root.SetArgs(args)
 
-	featureflags.Init(nil, true, false)
+	cfg := &v1.Config{IsTest: true, Contexts: map[string]*v1.Context{}}
+	featureflags.Init(cfg)
 
 	c, err := root.ExecuteC()
 	return c, buf.String(), err
