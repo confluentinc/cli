@@ -82,22 +82,6 @@ func handleOpenApiError(httpResp *_nethttp.Response, err error, client *cpkafkar
 	return err
 }
 
-func getKafkaRestProxyAndLkcId(c *pcmd.AuthenticatedCLICommand) (*pcmd.KafkaREST, string, error) {
-	kafkaREST, err := c.GetKafkaREST()
-	if err != nil {
-		return nil, "", err
-	}
-	if kafkaREST == nil {
-		return nil, "", errors.New(errors.RestProxyNotAvailable)
-	}
-	// Kafka REST is available
-	kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand()
-	if err != nil {
-		return nil, "", err
-	}
-	return kafkaREST, kafkaClusterConfig.ID, nil
-}
-
 func isClusterResizeInProgress(currentCluster *cmkv2.CmkV2Cluster) error {
 	if currentCluster.Status.Phase == ccloudv2.StatusProvisioning {
 		return errors.New(errors.KafkaClusterStillProvisioningErrorMsg)

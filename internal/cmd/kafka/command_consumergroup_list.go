@@ -32,12 +32,17 @@ func (c *consumerGroupCommand) newListCommand() *cobra.Command {
 }
 
 func (c *consumerGroupCommand) list(cmd *cobra.Command, _ []string) error {
-	kafkaREST, lkc, err := getKafkaRestProxyAndLkcId(c.AuthenticatedCLICommand)
+	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {
 		return err
 	}
 
-	groupCmdResp, err := kafkaREST.CloudClient.ListKafkaConsumerGroups(lkc)
+	cluster, err := c.Context.GetKafkaClusterForCommand()
+	if err != nil {
+		return err
+	}
+
+	groupCmdResp, err := kafkaREST.CloudClient.ListKafkaConsumerGroups(cluster.ID)
 	if err != nil {
 		return err
 	}
