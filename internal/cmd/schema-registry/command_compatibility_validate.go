@@ -93,7 +93,7 @@ func (c *command) compatibilityValidate(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	references, err := ReadSchemaReferences(cmd)
+	references, err := ReadSchemaReferences(cmd, false)
 	if err != nil {
 		return err
 	}

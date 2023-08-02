@@ -24,15 +24,15 @@ type registerSchemaResponse struct {
 }
 
 type RegisterSchemaConfigs struct {
-	SchemaDir   string
-	Subject     string
-	ValueFormat string
-	SchemaType  string
-	SchemaPath  string
-	Refs        []srsdk.SchemaReference
-	Metadata    *srsdk.Metadata
-	Ruleset     *srsdk.RuleSet
-	Normalize   bool
+	SchemaDir  string
+	Subject    string
+	Format     string
+	SchemaType string
+	SchemaPath string
+	Refs       []srsdk.SchemaReference
+	Metadata   *srsdk.Metadata
+	Ruleset    *srsdk.RuleSet
+	Normalize  bool
 }
 
 func RegisterSchemaWithAuth(cmd *cobra.Command, schemaCfg *RegisterSchemaConfigs, client *schemaregistry.Client) (int32, error) {
@@ -70,12 +70,18 @@ func RegisterSchemaWithAuth(cmd *cobra.Command, schemaCfg *RegisterSchemaConfigs
 	return response.Id, nil
 }
 
-func ReadSchemaReferences(cmd *cobra.Command) ([]srsdk.SchemaReference, error) {
-	var refs []srsdk.SchemaReference
-	references, err := cmd.Flags().GetString("references")
+func ReadSchemaReferences(cmd *cobra.Command, isKey bool) ([]srsdk.SchemaReference, error) {
+	name := "references"
+	if isKey {
+		name = "key-references"
+	}
+
+	references, err := cmd.Flags().GetString(name)
 	if err != nil {
 		return nil, err
 	}
+
+	var refs []srsdk.SchemaReference
 	if references != "" {
 		refBlob, err := os.ReadFile(references)
 		if err != nil {
@@ -85,6 +91,7 @@ func ReadSchemaReferences(cmd *cobra.Command) ([]srsdk.SchemaReference, error) {
 			return nil, err
 		}
 	}
+
 	return refs, nil
 }
 
