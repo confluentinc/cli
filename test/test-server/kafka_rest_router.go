@@ -1233,7 +1233,7 @@ func handleKafkaRestLinkConfigs(t *testing.T) http.HandlerFunc {
 				{
 					Kind:      "",
 					Metadata:  cpkafkarestv3.ResourceMetadata{},
-					ClusterId: "cluster-1",
+					ClusterId: "lkc-describe-topic",
 					Name:      "replica.fetch.max.bytes",
 					Value:     "1048576",
 					ReadOnly:  false,
@@ -1245,7 +1245,7 @@ func handleKafkaRestLinkConfigs(t *testing.T) http.HandlerFunc {
 				{
 					Kind:      "",
 					Metadata:  cpkafkarestv3.ResourceMetadata{},
-					ClusterId: "cluster-1",
+					ClusterId: "lkc-describe-topic",
 					Name:      "bootstrap.servers",
 					Value:     "bitcoin.com:8888",
 					ReadOnly:  false,
@@ -1257,7 +1257,7 @@ func handleKafkaRestLinkConfigs(t *testing.T) http.HandlerFunc {
 				{
 					Kind:      "",
 					Metadata:  cpkafkarestv3.ResourceMetadata{},
-					ClusterId: "cluster-1",
+					ClusterId: "lkc-describe-topic",
 					Name:      "link.mode",
 					Value:     linkMode,
 					ReadOnly:  false,
