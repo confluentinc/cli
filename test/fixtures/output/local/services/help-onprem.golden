@@ -1,0 +1,25 @@
+Manage Confluent Platform services.
+
+Usage:
+  confluent local services [command]
+
+Available Commands:
+  connect         Manage Connect.
+  control-center  Manage Control Center.
+  kafka           Manage Apache Kafka®.
+  kafka-rest      Manage Kafka REST.
+  ksql-server     Manage ksqlDB Server.
+  list            List all Confluent Platform services.
+  schema-registry Manage Schema Registry.
+  start           Start all Confluent Platform services.
+  status          Check the status of all Confluent Platform services.
+  stop            Stop all Confluent Platform services.
+  top             View resource usage for all Confluent Platform services.
+  zookeeper       Manage Apache ZooKeeper™.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
+
+Use "confluent local services [command] --help" for more information about a command.

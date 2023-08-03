@@ -16,7 +16,6 @@ func NewVersionCommand(prerunner pcmd.PreRunner) *cobra.Command {
 		}, prerunner)
 
 	c.Command.RunE = c.runVersionCommand
-	c.Hidden = true
 	return c.Command
 }
 
