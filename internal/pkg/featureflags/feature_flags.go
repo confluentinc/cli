@@ -32,7 +32,6 @@ const (
 )
 
 const (
-	prod  = "confluent.cloud"
 	devel = "devel.cpdev.cloud"
 	stag  = "stag.cpdev.cloud"
 )
@@ -71,11 +70,10 @@ func Init(cfg *v1.Config) {
 		switch cfg.Context().GetPlatform().GetName() {
 		case devel:
 			ccloudBasePath = fmt.Sprintf(baseURL, auth.CCloudURL, ccloudDevelEnvClientId)
-		case prod:
-			cliBasePath = fmt.Sprintf(baseURL, auth.CCloudURL, cliProdEnvClientId)
 		case stag:
 			ccloudBasePath = fmt.Sprintf(baseURL, auth.CCloudURL, ccloudStagEnvClientId)
-
+		default:
+			cliBasePath = fmt.Sprintf(baseURL, auth.CCloudURL, cliProdEnvClientId)
 		}
 	}
 
