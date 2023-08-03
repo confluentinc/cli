@@ -9,21 +9,21 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func newLinkOnPrem(data kafkarestv3.ListLinksResponseData, topic string) *link {
-	l := &link{
+func newLinkOnPrem(data kafkarestv3.ListLinksResponseData, topic string) *listOut {
+	listEntry := &listOut{
 		Name:      data.LinkName,
 		TopicName: topic,
 	}
 
 	if data.SourceClusterId != nil {
-		l.SourceClusterId = *data.SourceClusterId
+		listEntry.SourceClusterId = *data.SourceClusterId
 	}
 
 	if data.DestinationClusterId != nil {
-		l.DestinationClusterId = *data.DestinationClusterId
+		listEntry.DestinationClusterId = *data.DestinationClusterId
 	}
 
-	return l
+	return listEntry
 }
 
 func (c *linkCommand) newListCommandOnPrem() *cobra.Command {

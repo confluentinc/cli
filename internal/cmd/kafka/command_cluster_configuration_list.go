@@ -29,12 +29,7 @@ func (c *clusterCommand) configurationList(cmd *cobra.Command, args []string) er
 		return err
 	}
 
-	cluster, err := c.Context.GetKafkaClusterForCommand()
-	if err != nil {
-		return err
-	}
-
-	configs, err := kafkaREST.CloudClient.ListKafkaClusterConfigs(cluster.ID)
+	configs, err := kafkaREST.CloudClient.ListKafkaClusterConfigs()
 	if err != nil {
 		return err
 	}
