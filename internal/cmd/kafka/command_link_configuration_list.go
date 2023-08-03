@@ -52,13 +52,9 @@ func (c *linkCommand) configurationList(cmd *cobra.Command, args []string) error
 	}
 
 	list := output.NewList(cmd)
-	if len(configs.GetData()) == 0 {
-		return list.Print()
-	}
-
 	list.Add(&linkConfigurationOut{
 		ConfigName:  "dest.cluster.id",
-		ConfigValue: configs.GetData()[0].GetClusterId(),
+		ConfigValue: cluster.ID,
 		ReadOnly:    true,
 		Sensitive:   true,
 	})
