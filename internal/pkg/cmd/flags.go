@@ -432,16 +432,11 @@ func AddLinkFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 
 func AutocompleteLinks(command *AuthenticatedCLICommand) []string {
 	kafkaREST, err := command.GetKafkaREST()
-	if err != nil || kafkaREST == nil {
-		return nil
-	}
-
-	kafkaClusterConfig, err := command.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return nil
 	}
 
-	links, _, err := kafkaREST.CloudClient.ListKafkaLinks(kafkaClusterConfig.ID)
+	links, err := kafkaREST.CloudClient.ListKafkaLinks()
 	if err != nil {
 		return nil
 	}
