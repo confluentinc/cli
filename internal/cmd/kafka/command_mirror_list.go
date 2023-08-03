@@ -14,7 +14,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-var allowedMirrorTopicStatusValues = []string{"ACTIVE", "FAILED", "PAUSED", "STOPPED", "PENDING_STOPPED"}
+var allowedMirrorTopicStatusValues = []string{"active", "failed", "paused", "stopped", "pending_stopped"}
 
 func (c *mirrorCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
