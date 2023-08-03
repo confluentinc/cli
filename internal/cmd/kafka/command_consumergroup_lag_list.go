@@ -5,7 +5,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -34,14 +33,19 @@ func (c *lagCommand) newListCommand() *cobra.Command {
 }
 
 func (c *lagCommand) list(cmd *cobra.Command, args []string) error {
-	kafkaREST, lkc, err := getKafkaRestProxyAndLkcId(c.AuthenticatedCLICommand)
+	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {
 		return err
 	}
 
-	lagSummaryResp, httpResp, err := kafkaREST.CloudClient.ListKafkaConsumerLags(lkc, args[0])
+	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
-		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+		return err
+	}
+
+	lagSummaryResp, err := kafkaREST.CloudClient.ListKafkaConsumerLags(cluster.ID, args[0])
+	if err != nil {
+		return err
 	}
 
 	list := output.NewList(cmd)
