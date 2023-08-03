@@ -31,7 +31,11 @@ const (
 	userPath = "users/%s"
 )
 
-const cliProdEnv = "confluent.cloud"
+const (
+	prod  = "confluent.cloud"
+	devel = "devel.cpdev.cloud"
+	stag  = "stag.cpdev.cloud"
+)
 
 const (
 	cliProdEnvClientId     = "61af57740127630ce47de5be"
@@ -39,7 +43,6 @@ const (
 	ccloudProdEnvClientId  = "5c636508aa445d32c86f26b1"
 	ccloudStagEnvClientId  = "5c63651f1df21432a45fc773"
 	ccloudDevelEnvClientId = "5c63653912b6db32db950445"
-	ccloudCpdEnvClientId   = "5c6365ffaa445d32c86f26c0"
 )
 
 // Manager is a global feature flag manager
@@ -49,7 +52,7 @@ var attributes = []string{"user.resource_id", "org.resource_id", "environment.id
 
 type launchDarklyManager struct {
 	cliClient             *sling.Sling
-	ccloudClient          func(v1.LaunchDarklyClient) *sling.Sling
+	ccloudClient          *sling.Sling
 	Command               *cobra.Command
 	flags                 []string
 	hideTimeoutWarning    bool
@@ -59,39 +62,42 @@ type launchDarklyManager struct {
 }
 
 func Init(cfg *v1.Config) {
-	platformName := cfg.Context().GetPlatform().GetName()
-	cliBasePath := fmt.Sprintf(baseURL, auth.CCloudURL, cliProdEnvClientId)
+	cliBasePath := fmt.Sprintf(baseURL, auth.CCloudURL, cliTestEnvClientId)
+	ccloudBasePath := fmt.Sprintf(baseURL, auth.CCloudURL, ccloudProdEnvClientId)
 	if cfg.IsTest {
 		cliBasePath = fmt.Sprintf(baseURL, testserver.TestCloudUrl.String(), "1234")
-	} else if platformName != cliProdEnv {
-		cliBasePath = fmt.Sprintf(baseURL, auth.CCloudURL, cliTestEnvClientId)
-	}
-
-	ccloudClientProvider := func(client v1.LaunchDarklyClient) *sling.Sling {
-		if cfg.IsTest || platformName != cliProdEnv {
-			return sling.New().Base(fmt.Sprintf(baseURL, auth.CCloudURL, ccloudCpdEnvClientId))
-		}
-
-		var ccloudBasePath string
-		switch client {
-		case v1.CcloudDevelLaunchDarklyClient:
+		ccloudBasePath = cliBasePath
+	} else {
+		switch cfg.Context().GetPlatform().GetName() {
+		case devel:
 			ccloudBasePath = fmt.Sprintf(baseURL, auth.CCloudURL, ccloudDevelEnvClientId)
-		case v1.CcloudStagLaunchDarklyClient:
+		case prod:
+			cliBasePath = fmt.Sprintf(baseURL, auth.CCloudURL, cliProdEnvClientId)
+		case stag:
 			ccloudBasePath = fmt.Sprintf(baseURL, auth.CCloudURL, ccloudStagEnvClientId)
-		default:
-			ccloudBasePath = fmt.Sprintf(baseURL, auth.CCloudURL, ccloudProdEnvClientId)
-		}
 
-		return sling.New().Base(ccloudBasePath)
+		}
 	}
 
 	Manager = launchDarklyManager{
 		cliClient:             sling.New().Base(cliBasePath),
-		ccloudClient:          ccloudClientProvider,
+		ccloudClient:          sling.New().Base(ccloudBasePath),
 		hideTimeoutWarning:    cfg.IsTest,
 		isDisabled:            cfg.DisableFeatureFlags,
 		timeoutWarningPrinted: false,
 		version:               cfg.Version,
+	}
+}
+
+// GetCcloudLaunchDarklyClient resolves to a LaunchDarkly client based on the string platform name that is passed in.
+func GetCcloudLaunchDarklyClient(platformName string) v1.LaunchDarklyClient {
+	switch platformName {
+	case "stag.cpdev.cloud":
+		return v1.CcloudStagLaunchDarklyClient
+	case "devel.cpdev.cloud":
+		return v1.CcloudDevelLaunchDarklyClient
+	default:
+		return v1.CcloudProdLaunchDarklyClient
 	}
 }
 
@@ -180,7 +186,7 @@ func (ld *launchDarklyManager) fetchFlags(user lduser.User, client v1.LaunchDark
 	var flagVals map[string]any
 	switch client {
 	case v1.CcloudProdLaunchDarklyClient, v1.CcloudStagLaunchDarklyClient, v1.CcloudDevelLaunchDarklyClient:
-		resp, err = ld.ccloudClient(client).New().Get(fmt.Sprintf(userPath, userEnc)).Receive(&flagVals, err)
+		resp, err = ld.ccloudClient.New().Get(fmt.Sprintf(userPath, userEnc)).Receive(&flagVals, err)
 	// default is "cli" client
 	default:
 		resp, err = ld.cliClient.New().Get(fmt.Sprintf(userPath, userEnc)).Receive(&flagVals, err)
@@ -217,7 +223,7 @@ func areCachedFlagsAvailable(ctx *dynamicconfig.DynamicContext, user lduser.User
 			return false
 		}
 	default:
-		if _, ok := flags.Values[key]; !ok {
+		if _, ok := flags.CliValues[key]; !ok {
 			return false
 		}
 	}
@@ -312,7 +318,7 @@ func writeFlagsToConfig(ctx *dynamicconfig.DynamicContext, key string, vals map[
 			ctx.FeatureFlags.CcloudValues[key] = v
 		}
 	default:
-		ctx.FeatureFlags.Values = vals
+		ctx.FeatureFlags.CliValues = vals
 	}
 
 	ctx.FeatureFlags.LastUpdateTime = time.Now().Unix()
