@@ -350,25 +350,24 @@ func (r *PreRun) setCCloudClient(c *AuthenticatedCLICommand) error {
 		if cluster.Status.Phase == ccloudv2.StatusProvisioning {
 			return nil, errors.Errorf(errors.KafkaRestProvisioningErrorMsg, lkc)
 		}
-		if restEndpoint != "" {
-			state, err := ctx.AuthenticatedState()
-			if err != nil {
-				return nil, err
-			}
-
-			dataplaneToken, err := pauth.GetDataplaneToken(state, ctx.Platform.Server)
-			if err != nil {
-				return nil, err
-			}
-			kafkaRest := &KafkaREST{
-				Context:     context.WithValue(context.Background(), kafkarestv3.ContextAccessToken, dataplaneToken),
-				CloudClient: ccloudv2.NewKafkaRestClient(restEndpoint, r.Version.UserAgent, unsafeTrace, dataplaneToken),
-				Client:      CreateKafkaRESTClient(restEndpoint, unsafeTrace),
-			}
-
-			return kafkaRest, nil
+		if restEndpoint == "" {
+			return nil, errors.New("Kafka REST is not enabled: the operation is only supported with Kafka REST proxy.")
 		}
-		return nil, nil
+
+		state, err := ctx.AuthenticatedState()
+		if err != nil {
+			return nil, err
+		}
+		dataplaneToken, err := pauth.GetDataplaneToken(state, ctx.Platform.Server)
+		if err != nil {
+			return nil, err
+		}
+		kafkaRest := &KafkaREST{
+			Context:     context.WithValue(context.Background(), kafkarestv3.ContextAccessToken, dataplaneToken),
+			CloudClient: ccloudv2.NewKafkaRestClient(restEndpoint, r.Version.UserAgent, unsafeTrace, dataplaneToken),
+			Client:      CreateKafkaRESTClient(restEndpoint, unsafeTrace),
+		}
+		return kafkaRest, nil
 	})
 	c.KafkaRESTProvider = &provider
 	return nil

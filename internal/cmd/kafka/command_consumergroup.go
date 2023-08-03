@@ -6,7 +6,6 @@ import (
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 )
 
 type consumerGroupCommand struct {
@@ -83,14 +82,19 @@ func (c *consumerGroupCommand) autocompleteConsumerGroups() []string {
 }
 
 func listConsumerGroups(flagCmd *pcmd.AuthenticatedCLICommand) (*kafkarestv3.ConsumerGroupDataList, error) {
-	kafkaREST, lkc, err := getKafkaRestProxyAndLkcId(flagCmd)
+	kafkaREST, err := flagCmd.GetKafkaREST()
 	if err != nil {
 		return nil, err
 	}
 
-	groupCmdResp, httpResp, err := kafkaREST.CloudClient.ListKafkaConsumerGroups(lkc)
+	cluster, err := flagCmd.Context.GetKafkaClusterForCommand()
 	if err != nil {
-		return nil, kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+		return nil, err
+	}
+
+	groupCmdResp, err := kafkaREST.CloudClient.ListKafkaConsumerGroups(cluster.ID)
+	if err != nil {
+		return nil, err
 	}
 
 	return &groupCmdResp, nil
