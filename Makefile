@@ -37,7 +37,7 @@ endif
 
 .PHONY: cli-builder
 cli-builder:
-	go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
+	GOOS="" GOARCH="" go install github.com/goreleaser/goreleaser@$(GORELEASER_VERSION) && \
 	TAGS=$(TAGS) CGO_ENABLED=$(CGO_ENABLED) CC=$(CC) CXX=$(CXX) CGO_LDFLAGS=$(CGO_LDFLAGS) GOEXPERIMENT=boringcrypto goreleaser build --config .goreleaser-build.yml --clean --single-target --snapshot
 
 include ./mk-files/semver.mk
