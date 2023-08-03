@@ -65,23 +65,18 @@ func (c *aclCommand) create(cmd *cobra.Command, _ []string) error {
 		bindings[i] = acl.ACLBinding
 	}
 
-	kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand()
-	if err != nil {
-		return err
-	}
-
-	if err := c.provisioningClusterCheck(kafkaClusterConfig.ID); err != nil {
-		return err
-	}
-
 	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {
 		return err
 	}
 
+	if err := c.provisioningClusterCheck(kafkaREST.GetClusterId()); err != nil {
+		return err
+	}
+
 	for i, binding := range bindings {
 		data := pacl.GetCreateAclRequestData(binding)
-		if err := kafkaREST.CloudClient.CreateKafkaAcls(kafkaClusterConfig.ID, data); err != nil {
+		if err := kafkaREST.CloudClient.CreateKafkaAcls(data); err != nil {
 			if i > 0 {
 				_ = pacl.PrintACLs(cmd, bindings[:i])
 			}

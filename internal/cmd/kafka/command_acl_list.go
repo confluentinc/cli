@@ -42,21 +42,16 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 		return acl[0].errors
 	}
 
-	kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand()
-	if err != nil {
-		return err
-	}
-
-	if err := c.provisioningClusterCheck(kafkaClusterConfig.ID); err != nil {
-		return err
-	}
-
 	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {
 		return err
 	}
 
-	aclDataList, err := kafkaREST.CloudClient.GetKafkaAcls(kafkaClusterConfig.ID, acl[0].ACLBinding)
+	if err := c.provisioningClusterCheck(kafkaREST.GetClusterId()); err != nil {
+		return err
+	}
+
+	aclDataList, err := kafkaREST.CloudClient.GetKafkaAcls(acl[0].ACLBinding)
 	if err != nil {
 		return err
 	}

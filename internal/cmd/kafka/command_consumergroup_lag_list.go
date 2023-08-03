@@ -38,12 +38,7 @@ func (c *lagCommand) list(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	cluster, err := c.Context.GetKafkaClusterForCommand()
-	if err != nil {
-		return err
-	}
-
-	lagSummaryResp, err := kafkaREST.CloudClient.ListKafkaConsumerLags(cluster.ID, args[0])
+	lagSummaryResp, err := kafkaREST.CloudClient.ListKafkaConsumerLags(args[0])
 	if err != nil {
 		return err
 	}

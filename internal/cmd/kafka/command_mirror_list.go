@@ -60,11 +60,6 @@ func (c *mirrorCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	cluster, err := c.Context.GetKafkaClusterForCommand()
-	if err != nil {
-		return err
-	}
-
 	var mirrorTopicStatus *kafkarestv3.MirrorTopicStatus
 	if mirrorStatus != "" {
 		mirrorTopicStatus, err = kafkarestv3.NewMirrorTopicStatusFromValue(strings.ToUpper(mirrorStatus))
@@ -75,12 +70,12 @@ func (c *mirrorCommand) list(cmd *cobra.Command, _ []string) error {
 
 	var mirrors kafkarestv3.ListMirrorTopicsResponseDataList
 	if linkName == "" {
-		mirrors, err = kafkaREST.CloudClient.ListKafkaMirrorTopics(cluster.ID, mirrorTopicStatus)
+		mirrors, err = kafkaREST.CloudClient.ListKafkaMirrorTopics(mirrorTopicStatus)
 		if err != nil {
 			return err
 		}
 	} else {
-		mirrors, err = kafkaREST.CloudClient.ListKafkaMirrorTopicsUnderLink(cluster.ID, linkName, mirrorTopicStatus)
+		mirrors, err = kafkaREST.CloudClient.ListKafkaMirrorTopicsUnderLink(linkName, mirrorTopicStatus)
 		if err != nil {
 			return err
 		}

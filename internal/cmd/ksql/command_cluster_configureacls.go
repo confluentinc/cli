@@ -81,12 +81,7 @@ func (c *ksqlCommand) configureACLs(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand()
-	if err != nil {
-		return err
-	}
-
-	if err := kafkaREST.CloudClient.BatchCreateKafkaAcls(kafkaClusterConfig.ID, getCreateAclRequestDataList(bindings)); err != nil {
+	if err := kafkaREST.CloudClient.BatchCreateKafkaAcls(getCreateAclRequestDataList(bindings)); err != nil {
 		return err
 	}
 

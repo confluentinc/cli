@@ -47,12 +47,7 @@ func (c *mirrorCommand) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	cluster, err := c.Context.GetKafkaClusterForCommand()
-	if err != nil {
-		return err
-	}
-
-	mirror, err := kafkaREST.CloudClient.ReadKafkaMirrorTopic(cluster.ID, linkName, mirrorTopicName)
+	mirror, err := kafkaREST.CloudClient.ReadKafkaMirrorTopic(linkName, mirrorTopicName)
 	if err != nil {
 		return err
 	}

@@ -41,12 +41,7 @@ func (c *linkCommand) configurationList(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	cluster, err := c.Context.GetKafkaClusterForCommand()
-	if err != nil {
-		return err
-	}
-
-	configs, err := kafkaREST.CloudClient.ListKafkaLinkConfigs(cluster.ID, linkName)
+	configs, err := kafkaREST.CloudClient.ListKafkaLinkConfigs(linkName)
 	if err != nil {
 		return err
 	}
@@ -54,7 +49,7 @@ func (c *linkCommand) configurationList(cmd *cobra.Command, args []string) error
 	list := output.NewList(cmd)
 	list.Add(&linkConfigurationOut{
 		ConfigName:  "dest.cluster.id",
-		ConfigValue: cluster.ID,
+		ConfigValue: kafkaREST.GetClusterId(),
 		ReadOnly:    true,
 		Sensitive:   true,
 	})

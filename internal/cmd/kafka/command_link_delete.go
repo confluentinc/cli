@@ -37,17 +37,12 @@ func (c *linkCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	cluster, err := c.Context.GetKafkaClusterForCommand()
-	if err != nil {
-		return err
-	}
-
 	promptMsg := fmt.Sprintf(errors.DeleteResourceConfirmMsg, resource.ClusterLink, linkName, linkName)
 	if _, err := form.ConfirmDeletion(cmd, promptMsg, linkName); err != nil {
 		return err
 	}
 
-	if err := kafkaREST.CloudClient.DeleteKafkaLink(cluster.ID, linkName); err != nil {
+	if err := kafkaREST.CloudClient.DeleteKafkaLink(linkName); err != nil {
 		return err
 	}
 

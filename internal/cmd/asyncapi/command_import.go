@@ -288,8 +288,7 @@ func (c *command) createTopic(details *accountDetails, topicName string, kafkaBi
 	if err != nil {
 		return false, err
 	}
-	if _, httpResp, err := kafkaRest.CloudClient.CreateKafkaTopic(details.kafkaClusterId,
-		createTopicRequestData); err != nil {
+	if _, httpResp, err := kafkaRest.CloudClient.CreateKafkaTopic(createTopicRequestData); err != nil {
 		restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err)
 		if parseErr == nil && restErr.Code == ccloudv2.BadRequestErrorCode {
 			// Print partition limit error w/ suggestion
@@ -311,7 +310,7 @@ func (c *command) updateTopic(details *accountDetails, topicName string, kafkaBi
 	if err != nil {
 		return err
 	}
-	configs, err := kafkaRest.CloudClient.ListKafkaTopicConfigs(details.kafkaClusterId, topicName)
+	configs, err := kafkaRest.CloudClient.ListKafkaTopicConfigs(topicName)
 	if err != nil {
 		return err
 	}
@@ -331,7 +330,7 @@ func (c *command) updateTopic(details *accountDetails, topicName string, kafkaBi
 	}
 	log.CliLogger.Info("Overwriting topic configs")
 	if updateConfigs != nil {
-		_, err = kafkaRest.CloudClient.UpdateKafkaTopicConfigBatch(details.kafkaClusterId, topicName, kafkarestv3.AlterConfigBatchRequestData{Data: updateConfigs})
+		_, err = kafkaRest.CloudClient.UpdateKafkaTopicConfigBatch(topicName, kafkarestv3.AlterConfigBatchRequestData{Data: updateConfigs})
 		if err != nil {
 			return fmt.Errorf("unable to update topic configs: %v", err)
 		}

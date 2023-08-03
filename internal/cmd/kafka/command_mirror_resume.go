@@ -55,14 +55,9 @@ func (c *mirrorCommand) resume(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	cluster, err := c.Context.GetKafkaClusterForCommand()
-	if err != nil {
-		return err
-	}
-
 	alterMirrorsRequestData := kafkarestv3.AlterMirrorsRequestData{MirrorTopicNames: &args}
 
-	results, err := kafkaREST.CloudClient.UpdateKafkaMirrorTopicsResume(cluster.ID, linkName, dryRun, alterMirrorsRequestData)
+	results, err := kafkaREST.CloudClient.UpdateKafkaMirrorTopicsResume(linkName, dryRun, alterMirrorsRequestData)
 	if err != nil {
 		return err
 	}

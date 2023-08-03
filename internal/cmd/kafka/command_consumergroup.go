@@ -87,12 +87,7 @@ func listConsumerGroups(flagCmd *pcmd.AuthenticatedCLICommand) (*kafkarestv3.Con
 		return nil, err
 	}
 
-	cluster, err := flagCmd.Context.GetKafkaClusterForCommand()
-	if err != nil {
-		return nil, err
-	}
-
-	groupCmdResp, err := kafkaREST.CloudClient.ListKafkaConsumerGroups(cluster.ID)
+	groupCmdResp, err := kafkaREST.CloudClient.ListKafkaConsumerGroups()
 	if err != nil {
 		return nil, err
 	}

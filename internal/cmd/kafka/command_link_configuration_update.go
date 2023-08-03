@@ -61,14 +61,9 @@ func (c *linkCommand) configurationUpdate(cmd *cobra.Command, args []string) err
 		return err
 	}
 
-	cluster, err := c.Context.GetKafkaClusterForCommand()
-	if err != nil {
-		return err
-	}
-
 	data := toAlterConfigBatchRequestData(configMap)
 
-	if err := kafkaREST.CloudClient.UpdateKafkaLinkConfigBatch(cluster.ID, linkName, data); err != nil {
+	if err := kafkaREST.CloudClient.UpdateKafkaLinkConfigBatch(linkName, data); err != nil {
 		return err
 	}
 

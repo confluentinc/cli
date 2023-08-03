@@ -436,12 +436,7 @@ func AutocompleteLinks(command *AuthenticatedCLICommand) []string {
 		return nil
 	}
 
-	kafkaClusterConfig, err := command.Context.GetKafkaClusterForCommand()
-	if err != nil {
-		return nil
-	}
-
-	links, err := kafkaREST.CloudClient.ListKafkaLinks(kafkaClusterConfig.ID)
+	links, err := kafkaREST.CloudClient.ListKafkaLinks()
 	if err != nil {
 		return nil
 	}

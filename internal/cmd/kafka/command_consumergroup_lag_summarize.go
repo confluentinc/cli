@@ -52,12 +52,7 @@ func (c *lagCommand) summarize(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	cluster, err := c.Context.GetKafkaClusterForCommand()
-	if err != nil {
-		return err
-	}
-
-	summary, err := kafkaREST.CloudClient.GetKafkaConsumerGroupLagSummary(cluster.ID, consumerGroupId)
+	summary, err := kafkaREST.CloudClient.GetKafkaConsumerGroupLagSummary(consumerGroupId)
 	if err != nil {
 		return err
 	}

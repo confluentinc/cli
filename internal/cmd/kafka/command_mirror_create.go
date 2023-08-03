@@ -88,11 +88,6 @@ func (c *mirrorCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	cluster, err := c.Context.GetKafkaClusterForCommand()
-	if err != nil {
-		return err
-	}
-
 	configs := toCreateTopicConfigs(configMap)
 	createMirrorTopicRequestData := kafkarestv3.CreateMirrorTopicRequestData{
 		SourceTopicName:   sourceTopicName,
@@ -105,7 +100,7 @@ func (c *mirrorCommand) create(cmd *cobra.Command, args []string) error {
 		createMirrorTopicRequestData.MirrorTopicName = &mirrorTopicName
 	}
 
-	if err := kafkaREST.CloudClient.CreateKafkaMirrorTopic(cluster.ID, linkName, createMirrorTopicRequestData); err != nil {
+	if err := kafkaREST.CloudClient.CreateKafkaMirrorTopic(linkName, createMirrorTopicRequestData); err != nil {
 		return err
 	}
 

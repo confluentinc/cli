@@ -68,12 +68,7 @@ func (c *linkCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	cluster, err := c.Context.GetKafkaClusterForCommand()
-	if err != nil {
-		return err
-	}
-
-	links, err := kafkaREST.CloudClient.ListKafkaLinks(cluster.ID)
+	links, err := kafkaREST.CloudClient.ListKafkaLinks()
 	if err != nil {
 		return err
 	}

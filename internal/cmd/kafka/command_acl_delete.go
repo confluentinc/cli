@@ -59,23 +59,18 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 		filters[i] = convertToFilter(acl.ACLBinding)
 	}
 
-	kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand()
-	if err != nil {
-		return err
-	}
-
-	if err := c.provisioningClusterCheck(kafkaClusterConfig.ID); err != nil {
-		return err
-	}
-
 	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {
 		return err
 	}
 
+	if err := c.provisioningClusterCheck(kafkaREST.GetClusterId()); err != nil {
+		return err
+	}
+
 	count := 0
 	for _, acl := range acls {
-		aclDataList, err := kafkaREST.CloudClient.GetKafkaAcls(kafkaClusterConfig.ID, acl.ACLBinding)
+		aclDataList, err := kafkaREST.CloudClient.GetKafkaAcls(acl.ACLBinding)
 		if err != nil {
 			return err
 		}
@@ -95,7 +90,7 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 
 	count = 0
 	for i, filter := range filters {
-		deleteResp, err := kafkaREST.CloudClient.DeleteKafkaAcls(kafkaClusterConfig.ID, filter)
+		deleteResp, err := kafkaREST.CloudClient.DeleteKafkaAcls(filter)
 		if err != nil {
 			if i > 0 {
 				output.ErrPrintln(printAclsDeleted(count))

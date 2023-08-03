@@ -190,7 +190,7 @@ func (c *command) getChannelDetails(details *accountDetails, flags *flags) error
 		}
 		details.channelDetails.example = example
 	}
-	bindings, err := c.getBindings(details.kafkaClusterId, details.channelDetails.currentTopic.GetTopicName())
+	bindings, err := c.getBindings(details.channelDetails.currentTopic.GetTopicName())
 	if err != nil {
 		log.CliLogger.Warnf("Bindings not found: %v", err)
 	}
@@ -301,17 +301,17 @@ func (c command) getMessageExamples(consumer *ckgo.Consumer, topicName, contentT
 	return jsonMessage, nil
 }
 
-func (c *command) getBindings(clusterId, topicName string) (*bindings, error) {
+func (c *command) getBindings(topicName string) (*bindings, error) {
 	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {
 		return nil, err
 	}
-	configs, err := kafkaREST.CloudClient.ListKafkaTopicConfigs(clusterId, topicName)
+	configs, err := kafkaREST.CloudClient.ListKafkaTopicConfigs(topicName)
 	if err != nil {
 		return nil, err
 	}
 	var numPartitions int32
-	partitionsResp, _, err := kafkaREST.CloudClient.ListKafkaPartitions(clusterId, topicName)
+	partitionsResp, _, err := kafkaREST.CloudClient.ListKafkaPartitions(topicName)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get topic partitions: %v", err)
 	}
@@ -400,7 +400,7 @@ func (c *command) getClusterDetails(details *accountDetails, flags *flags) error
 		return err
 	}
 
-	topics, err := kafkaREST.CloudClient.ListKafkaTopics(clusterConfig.ID)
+	topics, err := kafkaREST.CloudClient.ListKafkaTopics()
 	if err != nil {
 		return err
 	}

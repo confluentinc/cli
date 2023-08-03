@@ -45,12 +45,7 @@ func (c *linkCommand) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	cluster, err := c.Context.GetKafkaClusterForCommand()
-	if err != nil {
-		return err
-	}
-
-	link, err := kafkaREST.CloudClient.GetKafkaLink(cluster.ID, linkName)
+	link, err := kafkaREST.CloudClient.GetKafkaLink(linkName)
 	if err != nil {
 		return err
 	}

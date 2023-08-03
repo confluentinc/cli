@@ -44,21 +44,16 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 }
 
 func (c *command) getTopics() ([]kafkarestv3.TopicData, error) {
-	kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand()
-	if err != nil {
-		return nil, err
-	}
-
-	if err := c.provisioningClusterCheck(kafkaClusterConfig.ID); err != nil {
-		return nil, err
-	}
-
 	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {
 		return nil, err
 	}
 
-	topics, err := kafkaREST.CloudClient.ListKafkaTopics(kafkaClusterConfig.ID)
+	if err := c.provisioningClusterCheck(kafkaREST.GetClusterId()); err != nil {
+		return nil, err
+	}
+
+	topics, err := kafkaREST.CloudClient.ListKafkaTopics()
 	if err != nil {
 		return nil, err
 	}

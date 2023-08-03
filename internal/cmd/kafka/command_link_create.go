@@ -173,12 +173,7 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	cluster, err := c.Context.GetKafkaClusterForCommand()
-	if err != nil {
-		return err
-	}
-
-	if err := kafkaREST.CloudClient.CreateKafkaLink(cluster.ID, linkName, !noValidate, dryRun, data); err != nil {
+	if err := kafkaREST.CloudClient.CreateKafkaLink(linkName, !noValidate, dryRun, data); err != nil {
 		return err
 	}
 
