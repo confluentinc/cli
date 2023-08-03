@@ -258,16 +258,16 @@ func (c *command) addTopic(details *accountDetails, topicName string, kafkaBindi
 				return true, false, nil
 			}
 			// Overwrite existing topic
-			err := c.updateTopic(details, topicName, kafkaBinding)
+			err := c.updateTopic(topicName, kafkaBinding)
 			return true, false, err
 		}
 	}
 	// Create a new topic
-	newTopicCreated, err := c.createTopic(details, topicName, kafkaBinding)
+	newTopicCreated, err := c.createTopic(topicName, kafkaBinding)
 	return false, newTopicCreated, err
 }
 
-func (c *command) createTopic(details *accountDetails, topicName string, kafkaBinding kafkaBinding) (bool, error) {
+func (c *command) createTopic(topicName string, kafkaBinding kafkaBinding) (bool, error) {
 	log.CliLogger.Infof("Topic not found. Adding a new topic: %s", topicName)
 	topicConfigs := []kafkarestv3.CreateTopicRequestDataConfigs{}
 	for configName, configValue := range combineTopicConfigs(kafkaBinding) {
@@ -302,7 +302,7 @@ func (c *command) createTopic(details *accountDetails, topicName string, kafkaBi
 	return true, nil
 }
 
-func (c *command) updateTopic(details *accountDetails, topicName string, kafkaBinding kafkaBinding) error {
+func (c *command) updateTopic(topicName string, kafkaBinding kafkaBinding) error {
 	// Overwrite topic configs
 	updateConfigs := []kafkarestv3.AlterConfigBatchRequestDataData{}
 	modifiableConfigs := []string{}
