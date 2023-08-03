@@ -9,7 +9,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
-	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -76,9 +75,9 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 
 	count := 0
 	for _, acl := range acls {
-		aclDataList, httpResp, err := kafkaREST.CloudClient.GetKafkaAcls(kafkaClusterConfig.ID, acl.ACLBinding)
+		aclDataList, err := kafkaREST.CloudClient.GetKafkaAcls(kafkaClusterConfig.ID, acl.ACLBinding)
 		if err != nil {
-			return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+			return err
 		}
 		if len(aclDataList.Data) == 0 {
 			return errors.NewErrorWithSuggestions("one or more ACLs matching these parameters not found", ValidACLSuggestion)
@@ -96,12 +95,12 @@ func (c *aclCommand) delete(cmd *cobra.Command, _ []string) error {
 
 	count = 0
 	for i, filter := range filters {
-		deleteResp, httpResp, err := kafkaREST.CloudClient.DeleteKafkaAcls(kafkaClusterConfig.ID, filter)
+		deleteResp, err := kafkaREST.CloudClient.DeleteKafkaAcls(kafkaClusterConfig.ID, filter)
 		if err != nil {
 			if i > 0 {
 				output.ErrPrintln(printAclsDeleted(count))
 			}
-			return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+			return err
 		}
 
 		count += len(deleteResp.Data)

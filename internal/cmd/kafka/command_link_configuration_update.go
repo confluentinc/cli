@@ -6,7 +6,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/properties"
 	"github.com/confluentinc/cli/internal/pkg/resource"
@@ -58,11 +57,8 @@ func (c *linkCommand) configurationUpdate(cmd *cobra.Command, args []string) err
 	}
 
 	kafkaREST, err := c.GetKafkaREST()
-	if kafkaREST == nil {
-		if err != nil {
-			return err
-		}
-		return errors.New(errors.RestProxyNotAvailableMsg)
+	if err != nil {
+		return err
 	}
 
 	cluster, err := c.Context.GetKafkaClusterForCommand()
@@ -72,8 +68,8 @@ func (c *linkCommand) configurationUpdate(cmd *cobra.Command, args []string) err
 
 	data := toAlterConfigBatchRequestData(configMap)
 
-	if httpResp, err := kafkaREST.CloudClient.UpdateKafkaLinkConfigBatch(cluster.ID, linkName, data); err != nil {
-		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+	if err := kafkaREST.CloudClient.UpdateKafkaLinkConfigBatch(cluster.ID, linkName, data); err != nil {
+		return err
 	}
 
 	output.Printf(errors.UpdatedResourceMsg, resource.ClusterLink, linkName)
