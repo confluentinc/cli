@@ -1,19 +1,20 @@
 package kafka
 
 import (
-	"net/http"
+	"fmt"
+	"strings"
 
-	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
+
+var allowedMirrorTopicStatusValues = []string{"active", "failed", "paused", "stopped", "pending_stopped"}
 
 func (c *mirrorCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -34,7 +35,7 @@ func (c *mirrorCommand) newListCommand() *cobra.Command {
 	}
 
 	pcmd.AddLinkFlag(cmd, c.AuthenticatedCLICommand)
-	cmd.Flags().String(mirrorStatusFlagName, "", "Mirror topic status. Can be one of [active, failed, paused, stopped, pending_stopped]. If not specified, list all mirror topics.")
+	cmd.Flags().String(mirrorStatusFlagName, "", fmt.Sprintf("Mirror topic status. Can be one of %s. If not specified, list all mirror topics.", utils.ArrayToCommaDelimitedString(allowedMirrorTopicStatusValues, "or")))
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -55,53 +56,47 @@ func (c *mirrorCommand) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	kafkaREST, err := c.GetKafkaREST()
-	if kafkaREST == nil {
-		if err != nil {
-			return err
-		}
-		return errors.New(errors.RestProxyNotAvailableMsg)
-	}
-
-	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
 
-	mirrorStatusOpt := optional.EmptyInterface()
+	var mirrorTopicStatus *kafkarestv3.MirrorTopicStatus
 	if mirrorStatus != "" {
-		mirrorStatusOpt = optional.NewInterface(kafkarestv3.MirrorTopicStatus(mirrorStatus))
+		mirrorTopicStatus, err = kafkarestv3.NewMirrorTopicStatusFromValue(strings.ToUpper(mirrorStatus))
+		if err != nil {
+			return err
+		}
 	}
 
-	var listMirrorTopicsResponseDataList kafkarestv3.ListMirrorTopicsResponseDataList
-	var httpResp *http.Response
-
+	var mirrors kafkarestv3.ListMirrorTopicsResponseDataList
 	if linkName == "" {
-		opts := &kafkarestv3.ListKafkaMirrorTopicsOpts{MirrorStatus: mirrorStatusOpt}
-		listMirrorTopicsResponseDataList, httpResp, err = kafkaREST.Client.ClusterLinkingV3Api.ListKafkaMirrorTopics(kafkaREST.Context, cluster.ID, opts)
+		mirrors, err = kafkaREST.CloudClient.ListKafkaMirrorTopics(mirrorTopicStatus)
+		if err != nil {
+			return err
+		}
 	} else {
-		opts := &kafkarestv3.ListKafkaMirrorTopicsUnderLinkOpts{MirrorStatus: mirrorStatusOpt}
-		listMirrorTopicsResponseDataList, httpResp, err = kafkaREST.Client.ClusterLinkingV3Api.ListKafkaMirrorTopicsUnderLink(kafkaREST.Context, cluster.ID, linkName, opts)
-	}
-	if err != nil {
-		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+		mirrors, err = kafkaREST.CloudClient.ListKafkaMirrorTopicsUnderLink(linkName, mirrorTopicStatus)
+		if err != nil {
+			return err
+		}
 	}
 
 	list := output.NewList(cmd)
-	for _, mirror := range listMirrorTopicsResponseDataList.Data {
+	for _, mirror := range mirrors.GetData() {
 		var maxLag int64 = 0
-		for _, mirrorLag := range mirror.MirrorLags {
-			if mirrorLag.Lag > maxLag {
-				maxLag = mirrorLag.Lag
+		for _, mirrorLag := range mirror.GetMirrorLags().Items {
+			if lag := mirrorLag.GetLag(); lag > maxLag {
+				maxLag = lag
 			}
 		}
 
 		list.Add(&mirrorOut{
-			LinkName:                 mirror.LinkName,
-			MirrorTopicName:          mirror.MirrorTopicName,
-			SourceTopicName:          mirror.SourceTopicName,
-			MirrorStatus:             string(mirror.MirrorStatus),
-			StatusTimeMs:             mirror.StateTimeMs,
-			NumPartition:             mirror.NumPartitions,
+			LinkName:                 mirror.GetLinkName(),
+			MirrorTopicName:          mirror.GetMirrorTopicName(),
+			SourceTopicName:          mirror.GetSourceTopicName(),
+			MirrorStatus:             string(mirror.GetMirrorStatus()),
+			StatusTimeMs:             mirror.GetStateTimeMs(),
+			NumPartition:             mirror.GetNumPartitions(),
 			MaxPerPartitionMirrorLag: maxLag,
 		})
 	}

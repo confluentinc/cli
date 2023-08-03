@@ -5,7 +5,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -52,14 +51,14 @@ func (c *lagCommand) getLag(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	kafkaREST, lkc, err := getKafkaRestProxyAndLkcId(c.AuthenticatedCLICommand)
+	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {
 		return err
 	}
 
-	lagGetResp, httpResp, err := kafkaREST.CloudClient.GetKafkaConsumerLag(lkc, consumerGroupId, topic, partition)
+	lagGetResp, err := kafkaREST.CloudClient.GetKafkaConsumerLag(consumerGroupId, topic, partition)
 	if err != nil {
-		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+		return err
 	}
 
 	table := output.NewTable(cmd)

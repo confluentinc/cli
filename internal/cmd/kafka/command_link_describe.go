@@ -6,8 +6,6 @@ import (
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -43,42 +41,34 @@ func (c *linkCommand) describe(cmd *cobra.Command, args []string) error {
 	linkName := args[0]
 
 	kafkaREST, err := c.GetKafkaREST()
-	if kafkaREST == nil {
-		if err != nil {
-			return err
-		}
-		return errors.New(errors.RestProxyNotAvailableMsg)
-	}
-
-	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
 
-	data, httpResp, err := kafkaREST.CloudClient.GetKafkaLink(cluster.ID, linkName)
+	link, err := kafkaREST.CloudClient.GetKafkaLink(linkName)
 	if err != nil {
-		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+		return err
 	}
 
 	table := output.NewTable(cmd)
-	table.Add(newDescribeLink(data, ""))
+	table.Add(newDescribeLink(link, ""))
 	table.Filter(getListFields(false))
 	return table.Print()
 }
 
-func newDescribeLink(data kafkarestv3.ListLinksResponseData, topic string) *describeOut {
+func newDescribeLink(link kafkarestv3.ListLinksResponseData, topic string) *describeOut {
 	var linkError string
-	if data.GetLinkError() != "NO_ERROR" {
-		linkError = data.GetLinkError()
+	if link.GetLinkError() != "NO_ERROR" {
+		linkError = link.GetLinkError()
 	}
 	return &describeOut{
-		Name:                 data.LinkName,
+		Name:                 link.GetLinkName(),
 		TopicName:            topic,
-		SourceClusterId:      data.GetSourceClusterId(),
-		DestinationClusterId: data.GetDestinationClusterId(),
-		RemoteClusterId:      data.GetRemoteClusterId(),
-		State:                data.GetLinkState(),
+		SourceClusterId:      link.GetSourceClusterId(),
+		DestinationClusterId: link.GetDestinationClusterId(),
+		RemoteClusterId:      link.GetRemoteClusterId(),
+		State:                link.GetLinkState(),
 		Error:                linkError,
-		ErrorMessage:         data.GetLinkErrorMessage(),
+		ErrorMessage:         link.GetLinkErrorMessage(),
 	}
 }
