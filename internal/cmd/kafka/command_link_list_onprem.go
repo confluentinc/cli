@@ -9,8 +9,8 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func newLinkOnPrem(data kafkarestv3.ListLinksResponseData, topic string) *link {
-	l := &link{
+func newLinkOnPrem(data kafkarestv3.ListLinksResponseData, topic string) *listOut {
+	l := &listOut{
 		Name:      data.LinkName,
 		TopicName: topic,
 	}

@@ -11,7 +11,7 @@ import (
 
 const includeTopicsFlagName = "include-topics"
 
-type link struct {
+type listOut struct {
 	Name                 string `human:"Name" serialized:"link_name"`
 	TopicName            string `human:"Topic Name" serialized:"topic_name"`
 	SourceClusterId      string `human:"Source Cluster" serialized:"source_cluster_id"`
@@ -22,20 +22,20 @@ type link struct {
 	ErrorMessage         string `human:"Error Message" serialized:"error_message"`
 }
 
-func newLink(data kafkarestv3.ListLinksResponseData, topic string) *link {
+func newLink(link kafkarestv3.ListLinksResponseData, topic string) *listOut {
 	var linkError string
-	if data.GetLinkError() != "NO_ERROR" {
-		linkError = data.GetLinkError()
+	if link.GetLinkError() != "NO_ERROR" {
+		linkError = link.GetLinkError()
 	}
-	return &link{
-		Name:                 data.LinkName,
+	return &listOut{
+		Name:                 link.GetLinkName(),
 		TopicName:            topic,
-		SourceClusterId:      data.GetSourceClusterId(),
-		DestinationClusterId: data.GetDestinationClusterId(),
-		RemoteClusterId:      data.GetRemoteClusterId(),
-		State:                data.GetLinkState(),
+		SourceClusterId:      link.GetSourceClusterId(),
+		DestinationClusterId: link.GetDestinationClusterId(),
+		RemoteClusterId:      link.GetRemoteClusterId(),
+		State:                link.GetLinkState(),
 		Error:                linkError,
-		ErrorMessage:         data.GetLinkErrorMessage(),
+		ErrorMessage:         link.GetLinkErrorMessage(),
 	}
 }
 
@@ -73,19 +73,19 @@ func (c *linkCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	listLinksRespDataList, err := kafkaREST.CloudClient.ListKafkaLinks(cluster.ID)
+	links, err := kafkaREST.CloudClient.ListKafkaLinks(cluster.ID)
 	if err != nil {
 		return err
 	}
 
 	list := output.NewList(cmd)
-	for _, data := range listLinksRespDataList.Data {
+	for _, link := range links.GetData() {
 		if includeTopics {
-			for _, topic := range data.GetTopicNames() {
-				list.Add(newLink(data, topic))
+			for _, topic := range link.GetTopicNames() {
+				list.Add(newLink(link, topic))
 			}
 		} else {
-			list.Add(newLink(data, ""))
+			list.Add(newLink(link, ""))
 		}
 	}
 	list.Filter(getListFields(includeTopics))

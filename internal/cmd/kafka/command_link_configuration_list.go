@@ -46,31 +46,31 @@ func (c *linkCommand) configurationList(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	listLinkConfigsRespData, err := kafkaREST.CloudClient.ListKafkaLinkConfigs(cluster.ID, linkName)
+	configs, err := kafkaREST.CloudClient.ListKafkaLinkConfigs(cluster.ID, linkName)
 	if err != nil {
 		return err
 	}
 
 	list := output.NewList(cmd)
-	if len(listLinkConfigsRespData.Data) == 0 {
+	if len(configs.GetData()) == 0 {
 		return list.Print()
 	}
 
 	list.Add(&linkConfigurationOut{
 		ConfigName:  "dest.cluster.id",
-		ConfigValue: listLinkConfigsRespData.Data[0].ClusterId,
+		ConfigValue: configs.GetData()[0].GetClusterId(),
 		ReadOnly:    true,
 		Sensitive:   true,
 	})
 
-	for _, config := range listLinkConfigsRespData.Data {
+	for _, config := range configs.GetData() {
 		list.Add(&linkConfigurationOut{
-			ConfigName:  config.Name,
-			ConfigValue: config.Value,
-			ReadOnly:    config.ReadOnly,
-			Sensitive:   config.Sensitive,
-			Source:      config.Source,
-			Synonyms:    config.Synonyms,
+			ConfigName:  config.GetName(),
+			ConfigValue: config.GetValue(),
+			ReadOnly:    config.GetReadOnly(),
+			Sensitive:   config.GetSensitive(),
+			Source:      config.GetSource(),
+			Synonyms:    config.GetSynonyms(),
 		})
 	}
 	return list.Print()

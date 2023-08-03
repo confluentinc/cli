@@ -50,30 +50,30 @@ func (c *linkCommand) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	data, err := kafkaREST.CloudClient.GetKafkaLink(cluster.ID, linkName)
+	link, err := kafkaREST.CloudClient.GetKafkaLink(cluster.ID, linkName)
 	if err != nil {
 		return err
 	}
 
 	table := output.NewTable(cmd)
-	table.Add(newDescribeLink(data, ""))
+	table.Add(newDescribeLink(link, ""))
 	table.Filter(getListFields(false))
 	return table.Print()
 }
 
-func newDescribeLink(data kafkarestv3.ListLinksResponseData, topic string) *describeOut {
+func newDescribeLink(link kafkarestv3.ListLinksResponseData, topic string) *describeOut {
 	var linkError string
-	if data.GetLinkError() != "NO_ERROR" {
-		linkError = data.GetLinkError()
+	if link.GetLinkError() != "NO_ERROR" {
+		linkError = link.GetLinkError()
 	}
 	return &describeOut{
-		Name:                 data.LinkName,
+		Name:                 link.GetLinkName(),
 		TopicName:            topic,
-		SourceClusterId:      data.GetSourceClusterId(),
-		DestinationClusterId: data.GetDestinationClusterId(),
-		RemoteClusterId:      data.GetRemoteClusterId(),
-		State:                data.GetLinkState(),
+		SourceClusterId:      link.GetSourceClusterId(),
+		DestinationClusterId: link.GetDestinationClusterId(),
+		RemoteClusterId:      link.GetRemoteClusterId(),
+		State:                link.GetLinkState(),
 		Error:                linkError,
-		ErrorMessage:         data.GetLinkErrorMessage(),
+		ErrorMessage:         link.GetLinkErrorMessage(),
 	}
 }
