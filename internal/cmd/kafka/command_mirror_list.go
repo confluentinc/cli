@@ -29,7 +29,7 @@ func (c *mirrorCommand) newListCommand() *cobra.Command {
 			},
 			examples.Example{
 				Text: `List all active mirror topics under "my-link":`,
-				Code: "confluent kafka mirror list --link my-link --mirror-status ACTIVE",
+				Code: "confluent kafka mirror list --link my-link --mirror-status active",
 			},
 		),
 	}

@@ -10,20 +10,20 @@ import (
 )
 
 func newLinkOnPrem(data kafkarestv3.ListLinksResponseData, topic string) *listOut {
-	l := &listOut{
+	listEntry := &listOut{
 		Name:      data.LinkName,
 		TopicName: topic,
 	}
 
 	if data.SourceClusterId != nil {
-		l.SourceClusterId = *data.SourceClusterId
+		listEntry.SourceClusterId = *data.SourceClusterId
 	}
 
 	if data.DestinationClusterId != nil {
-		l.DestinationClusterId = *data.DestinationClusterId
+		listEntry.DestinationClusterId = *data.DestinationClusterId
 	}
 
-	return l
+	return listEntry
 }
 
 func (c *linkCommand) newListCommandOnPrem() *cobra.Command {
