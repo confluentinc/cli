@@ -14,6 +14,7 @@ import (
 	"gopkg.in/launchdarkly/go-sdk-common.v2/lduser"
 	"gopkg.in/launchdarkly/go-sdk-common.v2/ldvalue"
 
+	"github.com/confluentinc/cli/internal/pkg/auth"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
@@ -31,9 +32,9 @@ const (
 )
 
 const (
-	ccloudUrl = "https://confluent.cloud"
-	devel     = "devel.cpdev.cloud"
-	stag      = "stag.cpdev.cloud"
+	prod  = "confluent.cloud"
+	devel = "devel.cpdev.cloud"
+	stag  = "stag.cpdev.cloud"
 )
 
 const (
@@ -61,19 +62,20 @@ type launchDarklyManager struct {
 }
 
 func Init(cfg *v1.Config) {
-	cliBasePath := fmt.Sprintf(baseURL, ccloudUrl, cliProdEnvClientId)
-	ccloudBasePath := fmt.Sprintf(baseURL, ccloudUrl, ccloudProdEnvClientId)
+	cliBasePath := fmt.Sprintf(baseURL, auth.CCloudURL, cliTestEnvClientId)
+	ccloudBasePath := fmt.Sprintf(baseURL, auth.CCloudURL, ccloudProdEnvClientId)
 	if cfg.IsTest {
 		cliBasePath = fmt.Sprintf(baseURL, testserver.TestCloudUrl.String(), "1234")
 		ccloudBasePath = cliBasePath
 	} else {
 		switch cfg.Context().GetPlatform().GetName() {
 		case devel:
-			ccloudBasePath = fmt.Sprintf(baseURL, ccloudUrl, ccloudDevelEnvClientId)
-			cliBasePath = fmt.Sprintf(baseURL, ccloudUrl, cliTestEnvClientId)
+			ccloudBasePath = fmt.Sprintf(baseURL, auth.CCloudURL, ccloudDevelEnvClientId)
+		case prod:
+			cliBasePath = fmt.Sprintf(baseURL, auth.CCloudURL, cliProdEnvClientId)
 		case stag:
-			ccloudBasePath = fmt.Sprintf(baseURL, ccloudUrl, ccloudStagEnvClientId)
-			cliBasePath = fmt.Sprintf(baseURL, ccloudUrl, cliTestEnvClientId)
+			ccloudBasePath = fmt.Sprintf(baseURL, auth.CCloudURL, ccloudStagEnvClientId)
+
 		}
 	}
 
