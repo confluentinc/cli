@@ -3,65 +3,18 @@ package serdes
 import "github.com/confluentinc/cli/internal/pkg/errors"
 
 const (
-	AVROSCHEMANAME        string = "avro"
-	AVROSCHEMABACKEND     string = "AVRO"
-	JSONSCHEMANAME        string = "jsonschema"
-	JSONSCHEMABACKEND     string = "JSON"
-	PROTOBUFSCHEMANAME    string = "protobuf"
-	PROTOBUFSCHEMABACKEND string = "PROTOBUF"
-	RAWSCHEMANAME         string = "string"
+	AvroSchemaName     string = "avro"
+	IntegerSchemaName  string = "integer"
+	JsonSchemaName     string = "jsonschema"
+	ProtobufSchemaName string = "protobuf"
+	StringSchemaName   string = "string"
 )
 
-func FormatTranslation(backendValueFormat string) (string, error) {
-	var cliValueFormat string
-	switch backendValueFormat {
-	case "", AVROSCHEMABACKEND:
-		cliValueFormat = AVROSCHEMANAME
-	case PROTOBUFSCHEMABACKEND:
-		cliValueFormat = PROTOBUFSCHEMANAME
-	case JSONSCHEMABACKEND:
-		cliValueFormat = JSONSCHEMANAME
-	default:
-		return "", errors.New(errors.UnknownValueFormatErrorMsg)
-	}
-	return cliValueFormat, nil
-}
-
-func GetSerializationProvider(valueFormat string) (SerializationProvider, error) {
-	var provider SerializationProvider
-	// Will add other providers in later commits.
-	switch valueFormat {
-	case AVROSCHEMANAME:
-		provider = new(AvroSerializationProvider)
-	case PROTOBUFSCHEMANAME:
-		provider = new(ProtoSerializationProvider)
-	case JSONSCHEMANAME:
-		provider = new(JsonSerializationProvider)
-	case RAWSCHEMANAME:
-		provider = new(RawSerializationProvider)
-	default:
-		return nil, errors.New(errors.UnknownValueFormatErrorMsg)
-	}
-	return provider, nil
-}
-
-func GetDeserializationProvider(valueFormat string) (DeserializationProvider, error) {
-	var provider DeserializationProvider
-	// Will add other providers in later commits.
-	switch valueFormat {
-	case AVROSCHEMANAME:
-		provider = new(AvroDeserializationProvider)
-	case PROTOBUFSCHEMANAME:
-		provider = new(ProtoDeserializationProvider)
-	case JSONSCHEMANAME:
-		provider = new(JsonDeserializationProvider)
-	case RAWSCHEMANAME:
-		provider = new(RawDeserializationProvider)
-	default:
-		return nil, errors.New(errors.UnknownValueFormatErrorMsg)
-	}
-	return provider, nil
-}
+const (
+	AvroSchemaBackendName     string = "AVRO"
+	JsonSchemaBackendName     string = "JSON"
+	ProtobufSchemaBackendName string = "PROTOBUF"
+)
 
 type SerializationProvider interface {
 	LoadSchema(string, map[string]string) error
@@ -69,14 +22,62 @@ type SerializationProvider interface {
 	GetSchemaName() string
 }
 
-func Serialize(provider SerializationProvider, str string) ([]byte, error) {
-	return provider.encode(str)
-}
-
 type DeserializationProvider interface {
 	LoadSchema(string, map[string]string) error
 	decode([]byte) (string, error)
-	GetSchemaName() string
+}
+
+func FormatTranslation(backendValueFormat string) (string, error) {
+	var cliValueFormat string
+	switch backendValueFormat {
+	case "", AvroSchemaBackendName:
+		cliValueFormat = AvroSchemaName
+	case ProtobufSchemaBackendName:
+		cliValueFormat = ProtobufSchemaName
+	case JsonSchemaBackendName:
+		cliValueFormat = JsonSchemaName
+	default:
+		return "", errors.New(errors.UnknownValueFormatErrorMsg)
+	}
+	return cliValueFormat, nil
+}
+
+func GetSerializationProvider(valueFormat string) (SerializationProvider, error) {
+	switch valueFormat {
+	case AvroSchemaName:
+		return new(AvroSerializationProvider), nil
+	case IntegerSchemaName:
+		return new(IntegerSerializationProvider), nil
+	case JsonSchemaName:
+		return new(JsonSerializationProvider), nil
+	case ProtobufSchemaName:
+		return new(ProtobufSerializationProvider), nil
+	case StringSchemaName:
+		return new(StringSerializationProvider), nil
+	default:
+		return nil, errors.New(errors.UnknownValueFormatErrorMsg)
+	}
+}
+
+func GetDeserializationProvider(valueFormat string) (DeserializationProvider, error) {
+	switch valueFormat {
+	case AvroSchemaName:
+		return new(AvroDeserializationProvider), nil
+	case IntegerSchemaName:
+		return new(IntegerDeserializationProvider), nil
+	case JsonSchemaName:
+		return new(JsonSchemaDeserializationProvider), nil
+	case ProtobufSchemaName:
+		return new(ProtobufDeserializationProvider), nil
+	case StringSchemaName:
+		return new(StringDeserializationProvider), nil
+	default:
+		return nil, errors.New(errors.UnknownValueFormatErrorMsg)
+	}
+}
+
+func Serialize(provider SerializationProvider, str string) ([]byte, error) {
+	return provider.encode(str)
 }
 
 func Deserialize(provider DeserializationProvider, data []byte) (string, error) {

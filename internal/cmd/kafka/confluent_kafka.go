@@ -23,6 +23,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 	schemaregistry "github.com/confluentinc/cli/internal/pkg/schema-registry"
 	"github.com/confluentinc/cli/internal/pkg/serdes"
+	"github.com/confluentinc/cli/internal/pkg/types"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -34,6 +35,8 @@ const (
 	principalKey          = "principal"
 	oauthConfig           = "principalClaimName=confluent principal=admin"
 )
+
+var schemaBasedFormats = []string{"avro", "jsonschema", "protobuf"}
 
 var (
 	// Regex for sasl.oauthbearer.config, which constrains it to be
@@ -191,7 +194,7 @@ func consumeMessage(message *ckafka.Message, h *GroupHandler) error {
 			return err
 		}
 
-		if h.KeyFormat != "string" {
+		if types.Contains(schemaBasedFormats, h.KeyFormat) {
 			schemaPath, referencePathMap, err := h.RequestSchema(message.Key)
 			if err != nil {
 				return err
@@ -220,7 +223,7 @@ func consumeMessage(message *ckafka.Message, h *GroupHandler) error {
 		return err
 	}
 
-	if h.ValueFormat != "string" {
+	if types.Contains(schemaBasedFormats, h.ValueFormat) {
 		schemaPath, referencePathMap, err := h.RequestSchema(message.Value)
 		if err != nil {
 			return err
