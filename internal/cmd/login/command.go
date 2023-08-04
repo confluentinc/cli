@@ -108,7 +108,7 @@ func (c *command) login(cmd *cobra.Command, _ []string) error {
 	}
 
 	if isCCloud {
-		if err := featureflags.TryInvalidateCache(c.cfg, url); err != nil {
+		if err := featureflags.ClearTestContextCache(c.cfg); err != nil {
 			return err
 		}
 		return c.loginCCloud(cmd, url)

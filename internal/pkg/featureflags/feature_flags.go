@@ -6,7 +6,6 @@ import (
 	b64 "encoding/base64"
 	"fmt"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/dghubble/sling"
@@ -14,6 +13,8 @@ import (
 	"github.com/spf13/cobra"
 	"gopkg.in/launchdarkly/go-sdk-common.v2/lduser"
 	"gopkg.in/launchdarkly/go-sdk-common.v2/ldvalue"
+
+	testserver "github.com/confluentinc/cli/test/test-server"
 
 	"github.com/confluentinc/cli/internal/pkg/auth"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
@@ -24,7 +25,6 @@ import (
 	ppanic "github.com/confluentinc/cli/internal/pkg/panic-recovery"
 	"github.com/confluentinc/cli/internal/pkg/types"
 	"github.com/confluentinc/cli/internal/pkg/version"
-	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
 const (
@@ -322,13 +322,11 @@ func writeFlagsToConfig(ctx *dynamicconfig.DynamicContext, key string, vals map[
 	_ = ctx.Save()
 }
 
-func TryInvalidateCache(cfg *v1.Config, url string) error {
-	if cfg.CurrentContext == "" || strings.Contains(cfg.CurrentContext, url) {
-		return nil
-	}
-	if oldContext, _ := cfg.FindContext(cfg.CurrentContext); oldContext != nil {
-		oldContext.FeatureFlags = nil
-		if err := oldContext.Save(); err != nil {
+func ClearTestContextCache(cfg *v1.Config) error {
+	platformName := cfg.Context().GetPlatform().GetName()
+	if platformName == testserver.TestCloudUrl.String() {
+		cfg.Context().FeatureFlags = nil
+		if err := cfg.Context().Save(); err != nil {
 			return err
 		}
 	}
