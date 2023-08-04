@@ -16,6 +16,8 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
+var serializationFormats = []string{"string", "avro", "integer", "jsonschema", "protobuf"}
+
 func AddApiKeyFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {
 	cmd.Flags().String("api-key", "", "API key.")
 
@@ -396,24 +398,18 @@ func AddTypeFlag(cmd *cobra.Command) {
 }
 
 func AddKeyFormatFlag(cmd *cobra.Command) {
-	arr := []string{"string", "avro", "jsonschema", "protobuf"}
-	str := utils.ArrayToCommaDelimitedString(arr, "or")
-
-	cmd.Flags().String("key-format", "string", fmt.Sprintf("Format of message key as %s. Note that schema references are not supported for Avro.", str))
+	cmd.Flags().String("key-format", serializationFormats[0], fmt.Sprintf("Format of message key as %s. Note that schema references are not supported for Avro.", utils.ArrayToCommaDelimitedString(serializationFormats, "or")))
 
 	RegisterFlagCompletionFunc(cmd, "key-format", func(_ *cobra.Command, _ []string) []string {
-		return arr
+		return serializationFormats
 	})
 }
 
 func AddValueFormatFlag(cmd *cobra.Command) {
-	arr := []string{"string", "avro", "jsonschema", "protobuf"}
-	str := utils.ArrayToCommaDelimitedString(arr, "or")
-
-	cmd.Flags().String("value-format", arr[0], fmt.Sprintf("Format message value as %s. Note that schema references are not supported for Avro.", str))
+	cmd.Flags().String("value-format", serializationFormats[0], fmt.Sprintf("Format message value as %s. Note that schema references are not supported for Avro.", utils.ArrayToCommaDelimitedString(serializationFormats, "or")))
 
 	RegisterFlagCompletionFunc(cmd, "value-format", func(_ *cobra.Command, _ []string) []string {
-		return arr
+		return serializationFormats
 	})
 }
 

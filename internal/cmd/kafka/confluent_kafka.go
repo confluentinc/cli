@@ -23,6 +23,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 	schemaregistry "github.com/confluentinc/cli/internal/pkg/schema-registry"
 	"github.com/confluentinc/cli/internal/pkg/serdes"
+	"github.com/confluentinc/cli/internal/pkg/types"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -191,7 +192,7 @@ func consumeMessage(message *ckafka.Message, h *GroupHandler) error {
 			return err
 		}
 
-		if h.KeyFormat != "string" {
+		if types.Contains(serdes.SchemaBasedFormats, h.KeyFormat) {
 			schemaPath, referencePathMap, err := h.RequestSchema(message.Key)
 			if err != nil {
 				return err
@@ -202,7 +203,7 @@ func consumeMessage(message *ckafka.Message, h *GroupHandler) error {
 			}
 		}
 
-		jsonMessage, err := serdes.Deserialize(keyDeserializer, message.Key)
+		jsonMessage, err := keyDeserializer.Deserialize(message.Key)
 		if err != nil {
 			return err
 		}
@@ -220,7 +221,7 @@ func consumeMessage(message *ckafka.Message, h *GroupHandler) error {
 		return err
 	}
 
-	if h.ValueFormat != "string" {
+	if types.Contains(serdes.SchemaBasedFormats, h.ValueFormat) {
 		schemaPath, referencePathMap, err := h.RequestSchema(message.Value)
 		if err != nil {
 			return err
@@ -232,7 +233,7 @@ func consumeMessage(message *ckafka.Message, h *GroupHandler) error {
 		}
 	}
 
-	jsonMessage, err := serdes.Deserialize(valueDeserializer, message.Value)
+	jsonMessage, err := valueDeserializer.Deserialize(message.Value)
 	if err != nil {
 		return err
 	}
