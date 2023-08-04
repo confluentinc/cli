@@ -85,7 +85,7 @@ func (c *command) clusterDescribe(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	client, err := c.GetSchemaRegistryClient()
+	client, err := c.GetSchemaRegistryClient(cmd)
 	if err != nil {
 		return err
 	}

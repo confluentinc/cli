@@ -230,7 +230,7 @@ func (c *command) registerSchemaOnPrem(cmd *cobra.Command, schemaCfg *sr.Registe
 			return nil, nil, errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestions)
 		}
 
-		srClient, err := c.GetSchemaRegistryClient()
+		srClient, err := c.GetSchemaRegistryClient(cmd)
 		if err != nil {
 			return nil, nil, err
 		}

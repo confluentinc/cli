@@ -43,7 +43,7 @@ func (c *command) newExporterListCommand(cfg *v1.Config) *cobra.Command {
 }
 
 func (c *command) exporterList(cmd *cobra.Command, _ []string) error {
-	client, err := c.GetSchemaRegistryClient()
+	client, err := c.GetSchemaRegistryClient(cmd)
 	if err != nil {
 		return err
 	}

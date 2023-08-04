@@ -170,7 +170,7 @@ func (c *command) registerSchema(cmd *cobra.Command, schemaCfg *sr.RegisterSchem
 	referencePathMap := map[string]string{}
 
 	if len(schemaCfg.SchemaPath) > 0 {
-		srClient, err := c.GetSchemaRegistryClient()
+		srClient, err := c.GetSchemaRegistryClient(cmd)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -306,7 +306,7 @@ func (c *command) initSchemaAndGetInfo(cmd *cobra.Command, topic, mode string) (
 	metaInfo := []byte{}
 
 	if schemaId.IsSet() {
-		srClient, err := c.GetSchemaRegistryClient()
+		srClient, err := c.GetSchemaRegistryClient(cmd)
 		if err != nil {
 			return nil, nil, err
 		}
