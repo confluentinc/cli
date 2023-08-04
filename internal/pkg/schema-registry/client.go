@@ -11,7 +11,14 @@ type Client struct {
 	context context.Context
 }
 
-func NewClient(configuration *srsdk.Configuration, authToken string) *Client {
+func NewClient(configuration *srsdk.Configuration) *Client {
+	return &Client{
+		APIClient: srsdk.NewAPIClient(configuration),
+		context:   context.Background(),
+	}
+}
+
+func NewClientWithToken(configuration *srsdk.Configuration, authToken string) *Client {
 	return &Client{
 		APIClient: srsdk.NewAPIClient(configuration),
 		context:   context.WithValue(context.Background(), srsdk.ContextAccessToken, authToken),

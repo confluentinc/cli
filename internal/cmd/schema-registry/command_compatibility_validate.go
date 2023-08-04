@@ -98,7 +98,7 @@ func (c *command) compatibilityValidate(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	client, err := c.GetSchemaRegistryClient()
+	client, err := c.GetSchemaRegistryClient(cmd)
 	if err != nil {
 		return err
 	}
