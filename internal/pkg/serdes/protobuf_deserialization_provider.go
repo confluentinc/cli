@@ -1,9 +1,10 @@
 package serdes
 
 import (
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/golang/protobuf/jsonpb" //nolint:staticcheck // deprecated module cannot be removed due to https://github.com/jhump/protoreflect/issues/301
 	"github.com/golang/protobuf/proto"  //nolint:staticcheck // deprecated module cannot be removed due to https://github.com/jhump/protoreflect/issues/301
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 type ProtobufDeserializationProvider struct {

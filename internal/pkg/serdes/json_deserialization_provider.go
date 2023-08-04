@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/xeipuuv/gojsonschema"
+
+	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 type JsonSchemaDeserializationProvider struct {
