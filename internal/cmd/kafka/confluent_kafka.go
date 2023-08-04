@@ -20,6 +20,7 @@ import (
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	configv1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	schemaregistry "github.com/confluentinc/cli/internal/pkg/schema-registry"
 	"github.com/confluentinc/cli/internal/pkg/serdes"
@@ -238,6 +239,12 @@ func consumeMessage(e *ckafka.Message, h *GroupHandler) error {
 }
 
 func RunConsumer(consumer *ckafka.Consumer, groupHandler *GroupHandler) error {
+	defer func() {
+		_, err := consumer.Commit()
+		if err != nil {
+			log.CliLogger.Warn("Failed to commit current offset of the consumer.")
+		}
+	}()
 	run := true
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, os.Interrupt)
