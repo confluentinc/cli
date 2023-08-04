@@ -106,7 +106,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	accountDetails, err := c.getAccountDetails(flags)
+	accountDetails, err := c.getAccountDetails(cmd, flags)
 	if err != nil {
 		return err
 	}
@@ -208,13 +208,13 @@ func (c *command) getChannelDetails(details *accountDetails, flags *flags) error
 	return nil
 }
 
-func (c *command) getAccountDetails(flags *flags) (*accountDetails, error) {
+func (c *command) getAccountDetails(cmd *cobra.Command, flags *flags) (*accountDetails, error) {
 	details := new(accountDetails)
 	if err := c.getClusterDetails(details, flags); err != nil {
 		return nil, err
 	}
 
-	srClient, err := c.GetSchemaRegistryClient()
+	srClient, err := c.GetSchemaRegistryClient(cmd)
 	if err != nil {
 		return nil, err
 	}

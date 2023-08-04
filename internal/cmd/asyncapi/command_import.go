@@ -179,7 +179,7 @@ func (c *command) asyncapiImport(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	details, err := c.getAccountDetails(&flags{kafkaApiKey: flagsImp.kafkaApiKey})
+	details, err := c.getAccountDetails(cmd, &flags{kafkaApiKey: flagsImp.kafkaApiKey})
 	if err != nil {
 		return err
 	}

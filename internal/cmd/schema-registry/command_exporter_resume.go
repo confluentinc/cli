@@ -40,7 +40,7 @@ func (c *command) newExporterResumeCommand(cfg *v1.Config) *cobra.Command {
 }
 
 func (c *command) exporterResume(cmd *cobra.Command, args []string) error {
-	client, err := c.GetSchemaRegistryClient()
+	client, err := c.GetSchemaRegistryClient(cmd)
 	if err != nil {
 		return err
 	}
