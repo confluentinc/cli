@@ -14,6 +14,8 @@ import (
 	"gopkg.in/launchdarkly/go-sdk-common.v2/lduser"
 	"gopkg.in/launchdarkly/go-sdk-common.v2/ldvalue"
 
+	testserver "github.com/confluentinc/cli/test/test-server"
+
 	"github.com/confluentinc/cli/internal/pkg/auth"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
@@ -23,7 +25,6 @@ import (
 	ppanic "github.com/confluentinc/cli/internal/pkg/panic-recovery"
 	"github.com/confluentinc/cli/internal/pkg/types"
 	"github.com/confluentinc/cli/internal/pkg/version"
-	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
 const (
@@ -319,4 +320,15 @@ func writeFlagsToConfig(ctx *dynamicconfig.DynamicContext, key string, vals map[
 	ctx.FeatureFlags.User = user
 
 	_ = ctx.Save()
+}
+
+func ClearTestContextCache(cfg *v1.Config) error {
+	platformName := cfg.Context().GetPlatform().GetName()
+	if platformName == testserver.TestCloudUrl.String() {
+		cfg.Context().FeatureFlags = nil
+		if err := cfg.Context().Save(); err != nil {
+			return err
+		}
+	}
+	return nil
 }
