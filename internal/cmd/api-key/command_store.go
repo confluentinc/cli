@@ -111,7 +111,7 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 		return errors.CatchApiKeyForbiddenAccessError(err, getOperation, httpResp)
 	}
 
-	apiKeyIsValidForTargetCluster := cluster.ID == apiKey.Spec.Resource.GetId()
+	apiKeyIsValidForTargetCluster := cluster.ID == apiKey.GetSpec().Resource.GetId()
 
 	if !apiKeyIsValidForTargetCluster {
 		return errors.NewErrorWithSuggestions(errors.APIKeyNotValidForClusterErrorMsg, errors.APIKeyNotValidForClusterSuggestions)
