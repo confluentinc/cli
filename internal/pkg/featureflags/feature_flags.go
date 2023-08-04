@@ -6,6 +6,7 @@ import (
 	b64 "encoding/base64"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/dghubble/sling"
@@ -319,4 +320,17 @@ func writeFlagsToConfig(ctx *dynamicconfig.DynamicContext, key string, vals map[
 	ctx.FeatureFlags.User = user
 
 	_ = ctx.Save()
+}
+
+func TryInvalidateCache(cfg *v1.Config, url string) error {
+	if cfg.CurrentContext == "" || strings.Contains(cfg.CurrentContext, url) {
+		return nil
+	}
+	if oldContext, _ := cfg.FindContext(cfg.CurrentContext); oldContext != nil {
+		oldContext.FeatureFlags = nil
+		if err := oldContext.Save(); err != nil {
+			return err
+		}
+	}
+	return nil
 }

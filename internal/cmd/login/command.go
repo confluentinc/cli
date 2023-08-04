@@ -19,6 +19,7 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/featureflags"
 	"github.com/confluentinc/cli/internal/pkg/keychain"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
@@ -107,6 +108,9 @@ func (c *command) login(cmd *cobra.Command, _ []string) error {
 	}
 
 	if isCCloud {
+		if err := featureflags.TryInvalidateCache(c.cfg, url); err != nil {
+			return err
+		}
 		return c.loginCCloud(cmd, url)
 	} else {
 		return c.loginMDS(cmd, url)
