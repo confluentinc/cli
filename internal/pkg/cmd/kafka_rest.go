@@ -14,10 +14,9 @@ type KafkaREST struct {
 	Client      *kafkarestv3.APIClient
 }
 
-func NewKafkaREST(ctx context.Context, cloudClient *ccloudv2.KafkaRestClient, client *kafkarestv3.APIClient) *KafkaREST {
-	return &KafkaREST{
-		Context:     ctx,
-		CloudClient: cloudClient,
-		Client:      client,
+func (k *KafkaREST) GetClusterId() string {
+	if k == nil || k.CloudClient == nil {
+		return ""
 	}
+	return k.CloudClient.ClusterId
 }

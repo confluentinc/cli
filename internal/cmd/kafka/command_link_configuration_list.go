@@ -4,8 +4,6 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -39,43 +37,31 @@ func (c *linkCommand) configurationList(cmd *cobra.Command, args []string) error
 	linkName := args[0]
 
 	kafkaREST, err := c.GetKafkaREST()
-	if kafkaREST == nil {
-		if err != nil {
-			return err
-		}
-		return errors.New(errors.RestProxyNotAvailableMsg)
-	}
-
-	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
 
-	listLinkConfigsRespData, httpResp, err := kafkaREST.CloudClient.ListKafkaLinkConfigs(cluster.ID, linkName)
+	configs, err := kafkaREST.CloudClient.ListKafkaLinkConfigs(linkName)
 	if err != nil {
-		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+		return err
 	}
 
 	list := output.NewList(cmd)
-	if len(listLinkConfigsRespData.Data) == 0 {
-		return list.Print()
-	}
-
 	list.Add(&linkConfigurationOut{
 		ConfigName:  "dest.cluster.id",
-		ConfigValue: listLinkConfigsRespData.Data[0].ClusterId,
+		ConfigValue: kafkaREST.GetClusterId(),
 		ReadOnly:    true,
 		Sensitive:   true,
 	})
 
-	for _, config := range listLinkConfigsRespData.Data {
+	for _, config := range configs.GetData() {
 		list.Add(&linkConfigurationOut{
-			ConfigName:  config.Name,
-			ConfigValue: config.Value,
-			ReadOnly:    config.ReadOnly,
-			Sensitive:   config.Sensitive,
-			Source:      config.Source,
-			Synonyms:    config.Synonyms,
+			ConfigName:  config.GetName(),
+			ConfigValue: config.GetValue(),
+			ReadOnly:    config.GetReadOnly(),
+			Sensitive:   config.GetSensitive(),
+			Source:      config.GetSource(),
+			Synonyms:    config.GetSynonyms(),
 		})
 	}
 	return list.Print()
