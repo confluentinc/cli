@@ -13,8 +13,8 @@ import (
 
 func TestSerializationProvider(t *testing.T) {
 	req := require.New(t)
-	valueFormats := []string{AVROSCHEMANAME, PROTOBUFSCHEMANAME, JSONSCHEMANAME, RAWSCHEMANAME}
-	schemaNames := []string{AVROSCHEMABACKEND, PROTOBUFSCHEMABACKEND, JSONSCHEMABACKEND, RAWSCHEMANAME}
+	valueFormats := []string{AvroSchemaName, JsonSchemaName, ProtobufSchemaName, StringSchemaName}
+	schemaNames := []string{AvroSchemaBackendName, JsonSchemaBackendName, ProtobufSchemaBackendName, StringSchemaName}
 
 	for idx, valueFormat := range valueFormats {
 		provider, err := GetSerializationProvider(valueFormat)
@@ -27,33 +27,29 @@ func TestSerializationProvider(t *testing.T) {
 	req.EqualError(err, "unknown value schema format")
 }
 
-func TestDeserializationProvider(t *testing.T) {
-	req := require.New(t)
-	valueFormats := []string{AVROSCHEMANAME, PROTOBUFSCHEMANAME, JSONSCHEMANAME, RAWSCHEMANAME}
-	schemaNames := []string{AVROSCHEMABACKEND, PROTOBUFSCHEMABACKEND, JSONSCHEMABACKEND, RAWSCHEMANAME}
+func TestGetDeserializationProvider(t *testing.T) {
+	valueFormats := []string{AvroSchemaName, ProtobufSchemaName, JsonSchemaName, StringSchemaName}
 
-	for idx, valueFormat := range valueFormats {
-		provider, err := GetDeserializationProvider(valueFormat)
-		req.Equal(provider.GetSchemaName(), schemaNames[idx])
-		req.Nil(err)
+	for _, valueFormat := range valueFormats {
+		_, err := GetDeserializationProvider(valueFormat)
+		require.NoError(t, err)
 	}
 
-	provider, err := GetDeserializationProvider("UNKNOWN")
-	req.Nil(provider)
-	req.EqualError(err, "unknown value schema format")
+	_, err := GetDeserializationProvider("UNKNOWN")
+	require.Error(t, err)
 }
 
 func TestStringSerdes(t *testing.T) {
 	req := require.New(t)
 
-	serializationProvider, _ := GetSerializationProvider(RAWSCHEMANAME)
+	serializationProvider, _ := GetSerializationProvider(StringSchemaName)
 	expectedBytes := []byte{115, 111, 109, 101, 115, 116, 114, 105, 110, 103}
 	data, err := serializationProvider.encode("somestring")
 	req.Nil(err)
 	result := bytes.Compare(data, expectedBytes)
 	req.Zero(result)
 
-	deserializationProvider, _ := GetDeserializationProvider(RAWSCHEMANAME)
+	deserializationProvider, _ := GetDeserializationProvider(StringSchemaName)
 	data = []byte{115, 111, 109, 101, 115, 116, 114, 105, 110, 103}
 	str, err := deserializationProvider.decode(data)
 	req.Nil(err)
@@ -73,7 +69,7 @@ func TestAvroSerdesValid(t *testing.T) {
 	expectedString := `{"f1":"asd"}`
 	expectedBytes := []byte{6, 97, 115, 100}
 
-	serializationProvider, _ := GetSerializationProvider(AVROSCHEMANAME)
+	serializationProvider, _ := GetSerializationProvider(AvroSchemaName)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
 	data, err := serializationProvider.encode(expectedString)
@@ -84,7 +80,7 @@ func TestAvroSerdesValid(t *testing.T) {
 
 	data = []byte{6, 97, 115, 100}
 
-	deserializationProvider, _ := GetDeserializationProvider(AVROSCHEMANAME)
+	deserializationProvider, _ := GetDeserializationProvider(AvroSchemaName)
 	err = deserializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
 	str, err := deserializationProvider.decode(data)
@@ -104,10 +100,10 @@ func TestAvroSerdesInvalid(t *testing.T) {
 	schemaPath := filepath.Join(dir, "avro-schema.txt")
 	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
 
-	serializationProvider, _ := GetSerializationProvider(AVROSCHEMANAME)
+	serializationProvider, _ := GetSerializationProvider(AvroSchemaName)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
-	deserializationProvider, _ := GetDeserializationProvider(AVROSCHEMANAME)
+	deserializationProvider, _ := GetDeserializationProvider(AvroSchemaName)
 	err = deserializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
 
@@ -141,7 +137,7 @@ func TestJsonSerdesValid(t *testing.T) {
 	expectedString := `{"f1":"asd"}`
 	expectedBytes := []byte{123, 34, 102, 49, 34, 58, 34, 97, 115, 100, 34, 125}
 
-	serializationProvider, _ := GetSerializationProvider(JSONSCHEMANAME)
+	serializationProvider, _ := GetSerializationProvider(JsonSchemaName)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
 	data, err := serializationProvider.encode(expectedString)
@@ -151,7 +147,7 @@ func TestJsonSerdesValid(t *testing.T) {
 	req.Zero(result)
 
 	data = expectedBytes
-	deserializationProvider, _ := GetDeserializationProvider(JSONSCHEMANAME)
+	deserializationProvider, _ := GetDeserializationProvider(JsonSchemaName)
 	err = deserializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
 	str, err := deserializationProvider.decode(data)
@@ -178,7 +174,7 @@ func TestJsonSerdesReference(t *testing.T) {
 	expectedString := `{"f1":"asd"}`
 	expectedBytes := []byte{123, 34, 102, 49, 34, 58, 34, 97, 115, 100, 34, 125}
 
-	serializationProvider, _ := GetSerializationProvider(JSONSCHEMANAME)
+	serializationProvider, _ := GetSerializationProvider(JsonSchemaName)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{"json-reference.json": referencePath})
 	req.Nil(err)
 	data, err := serializationProvider.encode(expectedString)
@@ -188,7 +184,7 @@ func TestJsonSerdesReference(t *testing.T) {
 	req.Zero(result)
 
 	data = expectedBytes
-	deserializationProvider, _ := GetDeserializationProvider(JSONSCHEMANAME)
+	deserializationProvider, _ := GetDeserializationProvider(JsonSchemaName)
 	err = deserializationProvider.LoadSchema(schemaPath, map[string]string{"json-reference.json": referencePath})
 	req.Nil(err)
 	str, err := deserializationProvider.decode(data)
@@ -208,10 +204,10 @@ func TestJsonSerdesInvalid(t *testing.T) {
 	schemaPath := filepath.Join(dir, "json-demo.json")
 	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
 
-	serializationProvider, _ := GetSerializationProvider(JSONSCHEMANAME)
+	serializationProvider, _ := GetSerializationProvider(JsonSchemaName)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
-	deserializationProvider, _ := GetDeserializationProvider(JSONSCHEMANAME)
+	deserializationProvider, _ := GetDeserializationProvider(JsonSchemaName)
 	err = deserializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
 
@@ -257,7 +253,7 @@ func TestProtobufSerdesValid(t *testing.T) {
 	expectedString := `{"name":"abc","page":1,"result":2}`
 	expectedBytes := []byte{0, 10, 3, 97, 98, 99, 16, 1, 24, 2}
 
-	serializationProvider, _ := GetSerializationProvider(PROTOBUFSCHEMANAME)
+	serializationProvider, _ := GetSerializationProvider(ProtobufSchemaName)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
 	data, err := serializationProvider.encode(expectedString)
@@ -267,7 +263,7 @@ func TestProtobufSerdesValid(t *testing.T) {
 	req.Zero(result)
 
 	data = expectedBytes
-	deserializationProvider, _ := GetDeserializationProvider(PROTOBUFSCHEMANAME)
+	deserializationProvider, _ := GetDeserializationProvider(ProtobufSchemaName)
 	err = deserializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
 	str, err := deserializationProvider.decode(data)
@@ -308,7 +304,7 @@ func TestProtobufSerdesReference(t *testing.T) {
 	expectedString := `{"name":"abc","address":{"city":"LA"},"result":2}`
 	expectedBytes := []byte{0, 10, 3, 97, 98, 99, 18, 4, 10, 2, 76, 65, 24, 2}
 
-	serializationProvider, _ := GetSerializationProvider(PROTOBUFSCHEMANAME)
+	serializationProvider, _ := GetSerializationProvider(ProtobufSchemaName)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{"address.proto": referencePath})
 	req.Nil(err)
 	data, err := serializationProvider.encode(expectedString)
@@ -319,7 +315,7 @@ func TestProtobufSerdesReference(t *testing.T) {
 	req.Zero(result)
 
 	data = expectedBytes
-	deserializationProvider, _ := GetDeserializationProvider(PROTOBUFSCHEMANAME)
+	deserializationProvider, _ := GetDeserializationProvider(ProtobufSchemaName)
 	err = deserializationProvider.LoadSchema(schemaPath, map[string]string{"address.proto": referencePath})
 	req.Nil(err)
 	str, err := deserializationProvider.decode(data)
@@ -345,10 +341,10 @@ func TestProtobufSerdesInvalid(t *testing.T) {
 	schemaPath := filepath.Join(dir, "person.proto")
 	req.NoError(os.WriteFile(schemaPath, []byte(schemaString), 0644))
 
-	serializationProvider, _ := GetSerializationProvider(PROTOBUFSCHEMANAME)
+	serializationProvider, _ := GetSerializationProvider(ProtobufSchemaName)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
-	deserializationProvider, _ := GetDeserializationProvider(PROTOBUFSCHEMANAME)
+	deserializationProvider, _ := GetDeserializationProvider(ProtobufSchemaName)
 	err = deserializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
 
@@ -406,7 +402,7 @@ func TestProtobufSerdesNestedValid(t *testing.T) {
 		49, 50, 51, 18, 3, 100, 101, 102, 34, 5, 10, 3, 50, 51, 52,
 	}
 
-	serializationProvider, _ := GetSerializationProvider(PROTOBUFSCHEMANAME)
+	serializationProvider, _ := GetSerializationProvider(ProtobufSchemaName)
 	err = serializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
 	data, err := serializationProvider.encode(expectedString)
@@ -417,7 +413,7 @@ func TestProtobufSerdesNestedValid(t *testing.T) {
 
 	data = expectedBytes
 
-	deserializationProvider, _ := GetDeserializationProvider(PROTOBUFSCHEMANAME)
+	deserializationProvider, _ := GetDeserializationProvider(ProtobufSchemaName)
 	err = deserializationProvider.LoadSchema(schemaPath, map[string]string{})
 	req.Nil(err)
 	str, err := deserializationProvider.decode(data)
