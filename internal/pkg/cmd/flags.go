@@ -231,12 +231,10 @@ func AddMechanismFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 
 func autocompleteMechanisms(protocol string) []string {
 	switch protocol {
-	default:
-		return nil
-	case "SSL":
-		return nil
 	case "SASL_SSL":
 		return []string{"PLAIN", "OAUTHBEARER"}
+	default:
+		return nil
 	}
 }
 
@@ -272,8 +270,9 @@ func AddPrincipalFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 }
 
 func AddProtocolFlag(cmd *cobra.Command) {
-	cmd.Flags().String("protocol", "SSL", "Security protocol used to communicate with brokers.")
-	RegisterFlagCompletionFunc(cmd, "protocol", func(_ *cobra.Command, _ []string) []string { return kafka.Protocols })
+	protocols := []string{"PLAINTEXT", "SASL_SSL", "SSL"}
+	cmd.Flags().String("protocol", "SSL", fmt.Sprintf("Specify the broker communication protocol as %s.", utils.ArrayToCommaDelimitedString(protocols, "or")))
+	RegisterFlagCompletionFunc(cmd, "protocol", func(_ *cobra.Command, _ []string) []string { return protocols })
 }
 
 func AddProviderFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {

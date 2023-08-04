@@ -22,7 +22,7 @@ Flags:
       --cert-location string              Path to client's public key (PEM) used for SSL authentication.
       --key-location string               Path to client's private key (PEM) used for SSL authentication.
       --key-password string               Private key passphrase for SSL authentication.
-      --protocol string                   Security protocol used to communicate with brokers. (default "SSL")
+      --protocol string                   Specify the broker communication protocol as "SSL" or "SASL_SSL". (default "SSL")
       --sasl-mechanism string             SASL_SSL mechanism used for authentication. (default "PLAIN")
       --key-schema string                 The filepath of the message key schema.
       --schema string                     The filepath of the message value schema.
