@@ -15,6 +15,13 @@ type KafkaClusterConfig struct {
 	LastUpdate   time.Time              `json:"last_update,omitempty"`
 }
 
+func (k *KafkaClusterConfig) GetId() string {
+	if k == nil {
+		return ""
+	}
+	return k.ID
+}
+
 func (k *KafkaClusterConfig) GetName() string {
 	if k == nil {
 		return ""
