@@ -72,6 +72,7 @@ type CLITestSuite struct {
 
 // TestCLI runs the CLI integration test suite.
 func TestCLI(t *testing.T) {
+	require.NoError(t, v1.New().Load())
 	suite.Run(t, new(CLITestSuite))
 }
 
