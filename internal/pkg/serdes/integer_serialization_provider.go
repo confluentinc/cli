@@ -11,7 +11,7 @@ func (s *IntegerSerializationProvider) LoadSchema(_ string, _ map[string]string)
 	return nil
 }
 
-func (s *IntegerSerializationProvider) encode(str string) ([]byte, error) {
+func (s *IntegerSerializationProvider) Serialize(str string) ([]byte, error) {
 	i, err := strconv.ParseUint(str, 10, 32)
 	if err != nil {
 		return nil, err

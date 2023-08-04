@@ -22,7 +22,7 @@ func (j *JsonSchemaDeserializationProvider) LoadSchema(schemaPath string, refere
 	return nil
 }
 
-func (j *JsonSchemaDeserializationProvider) decode(data []byte) (string, error) {
+func (j *JsonSchemaDeserializationProvider) Deserialize(data []byte) (string, error) {
 	str := string(data)
 
 	documentLoader := gojsonschema.NewStringLoader(str)

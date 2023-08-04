@@ -11,6 +11,6 @@ func (s *IntegerDeserializationProvider) LoadSchema(_ string, _ map[string]strin
 	return nil
 }
 
-func (s *IntegerDeserializationProvider) decode(data []byte) (string, error) {
+func (s *IntegerDeserializationProvider) Deserialize(data []byte) (string, error) {
 	return fmt.Sprintf("%d", binary.BigEndian.Uint32(data)), nil
 }

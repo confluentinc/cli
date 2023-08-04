@@ -34,7 +34,7 @@ func (a *AvroSerializationProvider) GetSchemaName() string {
 	return AvroSchemaBackendName
 }
 
-func (a *AvroSerializationProvider) encode(str string) ([]byte, error) {
+func (a *AvroSerializationProvider) Serialize(str string) ([]byte, error) {
 	textual := []byte(str)
 
 	// Convert to native Go object.

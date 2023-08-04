@@ -6,7 +6,7 @@ func (s *StringSerializationProvider) LoadSchema(_ string, _ map[string]string) 
 	return nil
 }
 
-func (s *StringSerializationProvider) encode(str string) ([]byte, error) {
+func (s *StringSerializationProvider) Serialize(str string) ([]byte, error) {
 	return []byte(str), nil
 }
 

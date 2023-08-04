@@ -20,7 +20,7 @@ func (p *ProtobufDeserializationProvider) LoadSchema(schemaPath string, referenc
 	return nil
 }
 
-func (p *ProtobufDeserializationProvider) decode(data []byte) (string, error) {
+func (p *ProtobufDeserializationProvider) Deserialize(data []byte) (string, error) {
 	// Index array indicates which message in the file we're referring to.
 	// In our case, we simply ignore the index array [0].
 	data = data[1:]

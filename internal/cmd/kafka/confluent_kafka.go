@@ -36,8 +36,6 @@ const (
 	oauthConfig           = "principalClaimName=confluent principal=admin"
 )
 
-var schemaBasedFormats = []string{"avro", "jsonschema", "protobuf"}
-
 var (
 	// Regex for sasl.oauthbearer.config, which constrains it to be
 	// 1 or more name=value pairs with optional ignored whitespace
@@ -194,7 +192,7 @@ func consumeMessage(message *ckafka.Message, h *GroupHandler) error {
 			return err
 		}
 
-		if types.Contains(schemaBasedFormats, h.KeyFormat) {
+		if types.Contains(serdes.SchemaBasedFormats, h.KeyFormat) {
 			schemaPath, referencePathMap, err := h.RequestSchema(message.Key)
 			if err != nil {
 				return err
@@ -205,7 +203,7 @@ func consumeMessage(message *ckafka.Message, h *GroupHandler) error {
 			}
 		}
 
-		jsonMessage, err := serdes.Deserialize(keyDeserializer, message.Key)
+		jsonMessage, err := keyDeserializer.Deserialize(message.Key)
 		if err != nil {
 			return err
 		}
@@ -223,7 +221,7 @@ func consumeMessage(message *ckafka.Message, h *GroupHandler) error {
 		return err
 	}
 
-	if types.Contains(schemaBasedFormats, h.ValueFormat) {
+	if types.Contains(serdes.SchemaBasedFormats, h.ValueFormat) {
 		schemaPath, referencePathMap, err := h.RequestSchema(message.Value)
 		if err != nil {
 			return err
@@ -235,7 +233,7 @@ func consumeMessage(message *ckafka.Message, h *GroupHandler) error {
 		}
 	}
 
-	jsonMessage, err := serdes.Deserialize(valueDeserializer, message.Value)
+	jsonMessage, err := valueDeserializer.Deserialize(message.Value)
 	if err != nil {
 		return err
 	}

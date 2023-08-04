@@ -16,15 +16,17 @@ const (
 	ProtobufSchemaBackendName string = "PROTOBUF"
 )
 
+var SchemaBasedFormats = []string{"avro", "jsonschema", "protobuf"}
+
 type SerializationProvider interface {
 	LoadSchema(string, map[string]string) error
-	encode(string) ([]byte, error)
+	Serialize(string) ([]byte, error)
 	GetSchemaName() string
 }
 
 type DeserializationProvider interface {
 	LoadSchema(string, map[string]string) error
-	decode([]byte) (string, error)
+	Deserialize([]byte) (string, error)
 }
 
 func FormatTranslation(backendValueFormat string) (string, error) {
@@ -74,12 +76,4 @@ func GetDeserializationProvider(valueFormat string) (DeserializationProvider, er
 	default:
 		return nil, errors.New(errors.UnknownValueFormatErrorMsg)
 	}
-}
-
-func Serialize(provider SerializationProvider, str string) ([]byte, error) {
-	return provider.encode(str)
-}
-
-func Deserialize(provider DeserializationProvider, data []byte) (string, error) {
-	return provider.decode(data)
 }

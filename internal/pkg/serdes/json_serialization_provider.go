@@ -27,7 +27,7 @@ func (j *JsonSerializationProvider) GetSchemaName() string {
 	return JsonSchemaBackendName
 }
 
-func (j *JsonSerializationProvider) encode(str string) ([]byte, error) {
+func (j *JsonSerializationProvider) Serialize(str string) ([]byte, error) {
 	documentLoader := gojsonschema.NewStringLoader(str)
 
 	// JSON schema conducts validation on JSON string before serialization.

@@ -29,7 +29,7 @@ func (p *ProtobufSerializationProvider) GetSchemaName() string {
 	return ProtobufSchemaBackendName
 }
 
-func (p *ProtobufSerializationProvider) encode(str string) ([]byte, error) {
+func (p *ProtobufSerializationProvider) Serialize(str string) ([]byte, error) {
 	// Index array indicates which message in the file we're referring to.
 	// In our case, index array is always [0].
 	indexBytes := []byte{0x0}

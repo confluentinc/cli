@@ -30,7 +30,7 @@ func (a *AvroDeserializationProvider) LoadSchema(schemaPath string, referencePat
 	return nil
 }
 
-func (a *AvroDeserializationProvider) decode(data []byte) (string, error) {
+func (a *AvroDeserializationProvider) Deserialize(data []byte) (string, error) {
 	// Convert to native Go object.
 	native, _, err := a.codec.NativeFromBinary(data)
 	if err != nil {

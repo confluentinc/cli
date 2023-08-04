@@ -6,6 +6,6 @@ func (s *StringDeserializationProvider) LoadSchema(_ string, _ map[string]string
 	return nil
 }
 
-func (s *StringDeserializationProvider) decode(data []byte) (string, error) {
+func (s *StringDeserializationProvider) Deserialize(data []byte) (string, error) {
 	return string(data), nil
 }
