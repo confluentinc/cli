@@ -126,11 +126,7 @@ type mockConfigParams struct {
 }
 
 func AuthenticatedConfigMock(params mockConfigParams) *Config {
-	// Temporarily change $HOME, so the current config file isn't altered.
-	err := os.Setenv("HOME", os.TempDir())
-	if err != nil {
-		panic(err)
-	}
+	SetTempHomeDir()
 	authConfig := createAuthConfig(params.userId, params.username, params.userResourceId, params.orgId, params.orgResourceId)
 	credential := createUsernameCredential(params.credentialName, authConfig)
 	contextState := createContextState(authConfig, mockAuthToken)
