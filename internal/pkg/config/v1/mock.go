@@ -2,6 +2,7 @@ package v1
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
@@ -125,6 +126,11 @@ type mockConfigParams struct {
 }
 
 func AuthenticatedConfigMock(params mockConfigParams) *Config {
+	// Temporarily change $HOME, so the current config file isn't altered.
+	err := os.Setenv("HOME", os.TempDir())
+	if err != nil {
+		panic(err)
+	}
 	authConfig := createAuthConfig(params.userId, params.username, params.userResourceId, params.orgId, params.orgResourceId)
 	credential := createUsernameCredential(params.credentialName, authConfig)
 	contextState := createContextState(authConfig, mockAuthToken)
@@ -217,6 +223,14 @@ func setUpConfig(conf *Config, ctx *Context, platform *Platform, credential *Cre
 	conf.CurrentContext = ctx.Name
 	conf.IsTest = true
 	if err := conf.Validate(); err != nil {
+		panic(err)
+	}
+}
+
+func SetTempHomeDir() {
+	// Temporarily change $HOME, so the current config file isn't altered.
+	err := os.Setenv("HOME", os.TempDir())
+	if err != nil {
 		panic(err)
 	}
 }
