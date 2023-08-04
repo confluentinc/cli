@@ -324,14 +324,3 @@ func writeFlagsToConfig(ctx *dynamicconfig.DynamicContext, key string, vals map[
 
 	_ = ctx.Save()
 }
-
-func ClearTestContextCache(cfg *v1.Config) error {
-	platformName := cfg.Context().GetPlatform().GetName()
-	if platformName == testserver.TestCloudUrl.String() {
-		cfg.Context().FeatureFlags = nil
-		if err := cfg.Context().Save(); err != nil {
-			return err
-		}
-	}
-	return nil
-}
