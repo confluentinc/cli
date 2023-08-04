@@ -88,7 +88,7 @@ func (c *command) schemaDescribe(cmd *cobra.Command, args []string) error {
 		return errors.New(errors.SchemaOrSubjectErrorMsg)
 	}
 
-	client, err := c.GetSchemaRegistryClient()
+	client, err := c.GetSchemaRegistryClient(cmd)
 	if err != nil {
 		return err
 	}

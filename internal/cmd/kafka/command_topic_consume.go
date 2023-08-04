@@ -164,7 +164,7 @@ func (c *command) consume(cmd *cobra.Command, args []string) error {
 	var srClient *schemaregistry.Client
 	if valueFormat != "string" {
 		// Only initialize client and context when schema is specified.
-		srClient, err = c.GetSchemaRegistryClient()
+		srClient, err = c.GetSchemaRegistryClient(cmd)
 		if err != nil {
 			if err.Error() == errors.NotLoggedInErrorMsg {
 				return new(errors.SRNotAuthenticatedError)

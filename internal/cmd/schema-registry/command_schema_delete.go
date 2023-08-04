@@ -63,7 +63,7 @@ func (c *command) newSchemaDeleteCommand(cfg *v1.Config) *cobra.Command {
 }
 
 func (c *command) schemaDelete(cmd *cobra.Command, _ []string) error {
-	client, err := c.GetSchemaRegistryClient()
+	client, err := c.GetSchemaRegistryClient(cmd)
 	if err != nil {
 		return err
 	}

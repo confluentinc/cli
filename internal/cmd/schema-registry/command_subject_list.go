@@ -48,7 +48,7 @@ func (c *command) newSubjectListCommand(cfg *v1.Config) *cobra.Command {
 }
 
 func (c *command) subjectList(cmd *cobra.Command, _ []string) error {
-	client, err := c.GetSchemaRegistryClient()
+	client, err := c.GetSchemaRegistryClient(cmd)
 	if err != nil {
 		return err
 	}

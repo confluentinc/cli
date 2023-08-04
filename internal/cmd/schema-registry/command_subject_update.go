@@ -74,7 +74,7 @@ func (c *command) newSubjectUpdateCommand(cfg *v1.Config) *cobra.Command {
 func (c *command) subjectUpdate(cmd *cobra.Command, args []string) error {
 	subject := args[0]
 
-	client, err := c.GetSchemaRegistryClient()
+	client, err := c.GetSchemaRegistryClient(cmd)
 	if err != nil {
 		return err
 	}

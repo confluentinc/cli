@@ -55,7 +55,6 @@ func (c *command) newConsumeCommandOnPrem() *cobra.Command {
 
 	cobra.CheckErr(cmd.MarkFlagFilename("config-file", "avsc", "json"))
 	cobra.CheckErr(cmd.MarkFlagRequired("bootstrap"))
-	cobra.CheckErr(cmd.MarkFlagRequired("ca-location"))
 
 	cmd.MarkFlagsMutuallyExclusive("config", "config-file")
 	cmd.MarkFlagsMutuallyExclusive("from-beginning", "offset")
@@ -147,11 +146,7 @@ func (c *command) consumeOnPrem(cmd *cobra.Command, args []string) error {
 
 	var srClient *schemaregistry.Client
 	if valueFormat != "string" {
-		// Only initialize client and context when schema is specified.
-		if c.Context.State == nil { // require log-in to use oauthbearer token
-			return errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestions)
-		}
-		srClient, err = c.GetSchemaRegistryClient()
+		srClient, err = c.GetSchemaRegistryClient(cmd)
 		if err != nil {
 			return err
 		}
