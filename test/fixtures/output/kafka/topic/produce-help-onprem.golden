@@ -26,8 +26,8 @@ Flags:
       --sasl-mechanism string             SASL_SSL mechanism used for authentication. (default "PLAIN")
       --key-schema string                 The filepath of the message key schema.
       --schema string                     The filepath of the message value schema.
-      --key-format string                 Format of message key as "string", "avro", "jsonschema", or "protobuf". Note that schema references are not supported for Avro. (default "string")
-      --value-format string               Format message value as "string", "avro", "jsonschema", or "protobuf". Note that schema references are not supported for Avro. (default "string")
+      --key-format string                 Format of message key as "string", "avro", "integer", "jsonschema", or "protobuf". Note that schema references are not supported for Avro. (default "string")
+      --value-format string               Format message value as "string", "avro", "integer", "jsonschema", or "protobuf". Note that schema references are not supported for Avro. (default "string")
       --references string                 The path to the references file.
       --parse-key                         Parse key from the message.
       --delimiter string                  The delimiter separating each key and value. (default ":")
