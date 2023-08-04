@@ -40,6 +40,7 @@ func getCommonConfig(kafka *configv1.KafkaClusterConfig, clientId string) (*ckaf
 		"bootstrap.servers":                     kafka.Bootstrap,
 		"sasl.username":                         kafka.APIKey,
 		"sasl.password":                         kafka.GetApiSecret(),
+		"auto.commit.interval.ms":               100,
 	}
 
 	return configMap, nil
@@ -62,7 +63,7 @@ func getProducerConfigMap(kafka *configv1.KafkaClusterConfig, clientID string) (
 	return configMap, nil
 }
 
-func getConsumerConfigMap(group string, commitGroupOffset bool, kafka *configv1.KafkaClusterConfig, clientID string) (*ckafka.ConfigMap, error) {
+func getConsumerConfigMap(group string, kafka *configv1.KafkaClusterConfig, clientID string) (*ckafka.ConfigMap, error) {
 	configMap, err := getCommonConfig(kafka, clientID)
 	if err != nil {
 		return nil, err
@@ -71,14 +72,6 @@ func getConsumerConfigMap(group string, commitGroupOffset bool, kafka *configv1.
 		return nil, err
 	}
 	log.CliLogger.Debugf("Created consumer group: %s", group)
-	if commitGroupOffset {
-		if err := configMap.SetKey("enable.auto.commit", true); err != nil {
-			return nil, err
-		}
-		if err := configMap.SetKey("auto.commit.interval.ms", 100); err != nil {
-			return nil, err
-		}
-	}
 
 	// see explanation: https://www.confluent.io/blog/incremental-cooperative-rebalancing-in-kafka/
 	if err := configMap.SetKey("partition.assignment.strategy", "cooperative-sticky"); err != nil {
