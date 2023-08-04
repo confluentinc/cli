@@ -1,0 +1,14 @@
+Delete an existing Confluent Platform run. All running services are stopped and the data and the log files of all services are deleted.
+
+Usage:
+  confluent local destroy [flags]
+
+Examples:
+If you run the `confluent local destroy` command, your output will confirm that every service is stopped and the deleted filesystem path is printed:
+
+  $ confluent local destroy
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

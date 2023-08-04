@@ -25,7 +25,6 @@ func NewDestroyCommand(prerunner cmd.PreRunner) *cobra.Command {
 		}, prerunner)
 
 	c.Command.RunE = c.runDestroyCommand
-	c.Hidden = true
 	return c.Command
 }
 
