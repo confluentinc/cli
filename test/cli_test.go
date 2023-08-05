@@ -92,9 +92,7 @@ func (s *CLITestSuite) SetupSuite() {
 	s.TestBackend = testserver.StartTestBackend(s.T(), true) // by default do not disable audit-log
 	os.Setenv("DISABLE_AUDIT_LOG", "false")
 
-	// Temporarily change $HOME, so the current config file isn't altered.
-	err = os.Setenv("HOME", os.TempDir())
-	req.NoError(err)
+	v1.SetTempHomeDir()
 }
 
 func (s *CLITestSuite) TearDownSuite() {

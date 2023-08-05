@@ -224,7 +224,7 @@ func setUpConfig(conf *Config, ctx *Context, platform *Platform, credential *Cre
 }
 
 func SetTempHomeDir() {
-	// Temporarily change $HOME, so the current config file isn't altered.
+	// Temporarily change $HOME, so the current configuration file isn't altered.
 	err := os.Setenv("HOME", os.TempDir())
 	if err != nil {
 		panic(err)
