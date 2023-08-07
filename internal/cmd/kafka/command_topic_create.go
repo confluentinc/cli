@@ -73,17 +73,12 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand()
-	if err != nil {
-		return err
-	}
-
-	if err := c.provisioningClusterCheck(kafkaClusterConfig.ID); err != nil {
-		return err
-	}
-
 	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {
+		return err
+	}
+
+	if err := c.provisioningClusterCheck(kafkaREST.GetClusterId()); err != nil {
 		return err
 	}
 
@@ -108,7 +103,7 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 		data.PartitionsCount = utils.Int32Ptr(int32(partitions))
 	}
 
-	_, httpResp, err := kafkaREST.CloudClient.CreateKafkaTopic(kafkaClusterConfig.ID, data)
+	_, httpResp, err := kafkaREST.CloudClient.CreateKafkaTopic(data)
 	if err != nil {
 		restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err)
 		if parseErr == nil && restErr.Code == ccloudv2.BadRequestErrorCode {
@@ -117,9 +112,10 @@ func (c *command) create(cmd *cobra.Command, args []string) error {
 				if ifNotExists {
 					return nil
 				}
+				clusterId := kafkaREST.GetClusterId()
 				return errors.NewErrorWithSuggestions(
-					fmt.Sprintf(errors.TopicExistsErrorMsg, topicName, kafkaClusterConfig.ID),
-					fmt.Sprintf(errors.TopicExistsSuggestions, kafkaClusterConfig.ID, kafkaClusterConfig.ID))
+					fmt.Sprintf(errors.TopicExistsErrorMsg, topicName, clusterId),
+					fmt.Sprintf(errors.TopicExistsSuggestions, clusterId, clusterId))
 			}
 
 			// Print partition limit error w/ suggestion

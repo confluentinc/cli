@@ -28,7 +28,6 @@ func NewCurrentCommand(prerunner cmd.PreRunner) *cobra.Command {
 		}, prerunner)
 
 	c.Command.RunE = c.runCurrentCommand
-	c.Hidden = true
 	return c.Command
 }
 

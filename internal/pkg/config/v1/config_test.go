@@ -11,13 +11,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/go-version"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
-	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 	testserver "github.com/confluentinc/cli/test/test-server"
@@ -161,10 +159,7 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 		context = "cloud"
 	}
 	testInputs.statefulConfig = &Config{
-		BaseConfig: &config.BaseConfig{
-			Filename: fmt.Sprintf("test_json/stateful_%s.json", context),
-			Ver:      config.Version{Version: ver},
-		},
+		Filename:  fmt.Sprintf("test_json/stateful_%s.json", context),
 		Platforms: map[string]*Platform{platform.Name: platform},
 		Credentials: map[string]*Credential{
 			apiCredential.Name:   apiCredential,
@@ -177,10 +172,7 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 		SavedCredentials: savedCredentials,
 	}
 	testInputs.statelessConfig = &Config{
-		BaseConfig: &config.BaseConfig{
-			Filename: fmt.Sprintf("test_json/stateless_%s.json", context),
-			Ver:      config.Version{Version: ver},
-		},
+		Filename:  fmt.Sprintf("test_json/stateless_%s.json", context),
 		Platforms: map[string]*Platform{platform.Name: platform},
 		Credentials: map[string]*Credential{
 			apiCredential.Name:   apiCredential,
@@ -193,10 +185,7 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 		SavedCredentials: savedCredentials,
 	}
 	testInputs.twoEnvStatefulConfig = &Config{
-		BaseConfig: &config.BaseConfig{
-			Filename: fmt.Sprintf("test_json/stateful_%s.json", context),
-			Ver:      config.Version{Version: ver},
-		},
+		Filename:  fmt.Sprintf("test_json/stateful_%s.json", context),
 		Platforms: map[string]*Platform{platform.Name: platform},
 		Credentials: map[string]*Credential{
 			apiCredential.Name:   apiCredential,
@@ -252,10 +241,7 @@ func TestConfig_Load(t *testing.T) {
 		{
 			name: "should load disable update checks and disable updates",
 			want: &Config{
-				BaseConfig: &config.BaseConfig{
-					Filename: "test_json/load_disable_update.json",
-					Ver:      config.Version{Version: ver},
-				},
+				Filename:           "test_json/load_disable_update.json",
 				DisableUpdates:     true,
 				DisableUpdateCheck: true,
 				Platforms:          map[string]*Platform{},
@@ -648,7 +634,6 @@ func TestConfig_AddContext(t *testing.T) {
 
 func TestConfig_CreateContext(t *testing.T) {
 	cfg := &Config{
-		BaseConfig:    &config.BaseConfig{Ver: config.Version{Version: version.Must(version.NewVersion("1.0.0"))}},
 		ContextStates: make(map[string]*ContextState),
 		Contexts:      make(map[string]*Context),
 		Credentials:   make(map[string]*Credential),

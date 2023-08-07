@@ -245,12 +245,10 @@ func AddMechanismFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 
 func autocompleteMechanisms(protocol string) []string {
 	switch protocol {
-	default:
-		return nil
-	case "SSL":
-		return nil
 	case "SASL_SSL":
 		return []string{"PLAIN", "OAUTHBEARER"}
+	default:
+		return nil
 	}
 }
 
@@ -286,8 +284,9 @@ func AddPrincipalFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 }
 
 func AddProtocolFlag(cmd *cobra.Command) {
-	cmd.Flags().String("protocol", "SSL", "Security protocol used to communicate with brokers.")
-	RegisterFlagCompletionFunc(cmd, "protocol", func(_ *cobra.Command, _ []string) []string { return kafka.Protocols })
+	protocols := []string{"PLAINTEXT", "SASL_SSL", "SSL"}
+	cmd.Flags().String("protocol", "SSL", fmt.Sprintf("Specify the broker communication protocol as %s.", utils.ArrayToCommaDelimitedString(protocols, "or")))
+	RegisterFlagCompletionFunc(cmd, "protocol", func(_ *cobra.Command, _ []string) []string { return protocols })
 }
 
 func AddProviderFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
@@ -410,6 +409,17 @@ func AddTypeFlag(cmd *cobra.Command) {
 	RegisterFlagCompletionFunc(cmd, "type", func(_ *cobra.Command, _ []string) []string { return kafka.Types })
 }
 
+func AddKeyFormatFlag(cmd *cobra.Command) {
+	arr := []string{"string", "avro", "jsonschema", "protobuf"}
+	str := utils.ArrayToCommaDelimitedString(arr, "or")
+
+	cmd.Flags().String("key-format", "string", fmt.Sprintf("Format of message key as %s. Note that schema references are not supported for Avro.", str))
+
+	RegisterFlagCompletionFunc(cmd, "key-format", func(_ *cobra.Command, _ []string) []string {
+		return arr
+	})
+}
+
 func AddValueFormatFlag(cmd *cobra.Command) {
 	arr := []string{"string", "avro", "jsonschema", "protobuf"}
 	str := utils.ArrayToCommaDelimitedString(arr, "or")
@@ -435,16 +445,11 @@ func AddLinkFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
 
 func AutocompleteLinks(command *AuthenticatedCLICommand) []string {
 	kafkaREST, err := command.GetKafkaREST()
-	if err != nil || kafkaREST == nil {
-		return nil
-	}
-
-	kafkaClusterConfig, err := command.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return nil
 	}
 
-	links, _, err := kafkaREST.CloudClient.ListKafkaLinks(kafkaClusterConfig.ID)
+	links, err := kafkaREST.CloudClient.ListKafkaLinks()
 	if err != nil {
 		return nil
 	}

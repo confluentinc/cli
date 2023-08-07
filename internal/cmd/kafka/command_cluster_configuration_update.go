@@ -45,11 +45,6 @@ func (c *clusterCommand) configurationUpdate(cmd *cobra.Command, _ []string) err
 		return err
 	}
 
-	cluster, err := c.Context.GetKafkaClusterForCommand()
-	if err != nil {
-		return err
-	}
-
 	config, err := cmd.Flags().GetStringSlice("config")
 	if err != nil {
 		return err
@@ -71,7 +66,7 @@ func (c *clusterCommand) configurationUpdate(cmd *cobra.Command, _ []string) err
 	}
 
 	req := kafkarestv3.AlterConfigBatchRequestData{Data: data}
-	if err := kafkaREST.CloudClient.UpdateKafkaClusterConfigs(cluster.ID, req); err != nil {
+	if err := kafkaREST.CloudClient.UpdateKafkaClusterConfigs(req); err != nil {
 		return err
 	}
 

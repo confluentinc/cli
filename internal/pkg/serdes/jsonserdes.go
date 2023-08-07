@@ -30,7 +30,7 @@ func (jsonProvider *JsonSerializationProvider) GetSchemaName() string {
 func (jsonProvider *JsonSerializationProvider) encode(str string) ([]byte, error) {
 	documentLoader := gojsonschema.NewStringLoader(str)
 
-	// Json schema conducts validation on Json string before serialization.
+	// JSON schema conducts validation on JSON string before serialization.
 	result, err := jsonProvider.schemaLoader.Validate(documentLoader)
 	if err != nil {
 		return nil, err
@@ -42,7 +42,7 @@ func (jsonProvider *JsonSerializationProvider) encode(str string) ([]byte, error
 
 	data := []byte(str)
 
-	// Compact Json string, i.e. remove redundant space, etc.
+	// Compact JSON string, i.e. remove redundant space, etc.
 	compactedBuffer := new(bytes.Buffer)
 	if err := json.Compact(compactedBuffer, data); err != nil {
 		return nil, err
@@ -72,7 +72,7 @@ func (jsonProvider *JsonDeserializationProvider) decode(data []byte) (string, er
 
 	documentLoader := gojsonschema.NewStringLoader(str)
 
-	// Json schema conducts validation on Json string before serialization.
+	// JSON schema conducts validation on JSON string before serialization.
 	result, err := jsonProvider.schemaLoader.Validate(documentLoader)
 	if err != nil {
 		return "", err
@@ -84,7 +84,7 @@ func (jsonProvider *JsonDeserializationProvider) decode(data []byte) (string, er
 
 	data = []byte(str)
 
-	// Compact Json string, i.e. remove redundant space, etc.
+	// Compact JSON string, i.e. remove redundant space, etc.
 	compactedBuffer := new(bytes.Buffer)
 	if err := json.Compact(compactedBuffer, data); err != nil {
 		return "", err

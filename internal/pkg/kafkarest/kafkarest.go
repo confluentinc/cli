@@ -64,6 +64,10 @@ func ParseOpenAPIErrorCloud(err error) (*V3Error, error) {
 		if err := json.Unmarshal(openAPIError.Body(), &decodedError); err != nil {
 			return nil, err
 		}
+		if decodedError.Message == "" && decodedError.Code == 0 {
+			// Sometimes the SDK puts the error message in `error` instead of `body`
+			decodedError.Message = openAPIError.Error()
+		}
 		return &decodedError, nil
 	}
 	return nil, fmt.Errorf("unexpected type")

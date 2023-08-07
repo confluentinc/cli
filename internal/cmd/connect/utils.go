@@ -23,7 +23,7 @@ func getConfig(cmd *cobra.Command) (*map[string]string, error) {
 
 	options, err := parseConfigFile(configFile)
 	if err != nil {
-		return nil, errors.Wrapf(err, "unable to parse config %s", configFile)
+		return nil, errors.Wrapf(err, errors.UnableToReadConfigurationFileErrorMsg, configFile)
 	}
 
 	_, nameExists := options[name]
@@ -35,20 +35,20 @@ func getConfig(cmd *cobra.Command) (*map[string]string, error) {
 	return &options, nil
 }
 
-func parseConfigFile(fileName string) (map[string]string, error) {
-	jsonFile, err := os.ReadFile(fileName)
+func parseConfigFile(filename string) (map[string]string, error) {
+	jsonFile, err := os.ReadFile(filename)
 	if err != nil {
-		return nil, errors.Wrapf(err, "unable to read config file %s", fileName)
+		return nil, errors.Wrapf(err, errors.UnableToReadConfigurationFileErrorMsg, filename)
 	}
 	if len(jsonFile) == 0 {
-		return nil, errors.Errorf(errors.EmptyConfigFileErrorMsg, fileName)
+		return nil, errors.Errorf(errors.EmptyConfigFileErrorMsg, filename)
 	}
 
 	kvPairs := make(map[string]string)
 	var options map[string]any
 
 	if err := json.Unmarshal(jsonFile, &options); err != nil {
-		return nil, errors.Wrapf(err, errors.ParseConfigErrorMsg, fileName)
+		return nil, errors.Wrapf(err, errors.UnableToReadConfigurationFileErrorMsg, filename)
 	}
 
 	for key, val := range options {

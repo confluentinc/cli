@@ -20,7 +20,6 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	schemaregistry "github.com/confluentinc/cli/internal/pkg/schema-registry"
@@ -107,7 +106,7 @@ func (c *command) export(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return err
 	}
-	accountDetails, err := c.getAccountDetails(flags)
+	accountDetails, err := c.getAccountDetails(cmd, flags)
 	if err != nil {
 		return err
 	}
@@ -191,7 +190,7 @@ func (c *command) getChannelDetails(details *accountDetails, flags *flags) error
 		}
 		details.channelDetails.example = example
 	}
-	bindings, err := c.getBindings(details.kafkaClusterId, details.channelDetails.currentTopic.GetTopicName())
+	bindings, err := c.getBindings(details.channelDetails.currentTopic.GetTopicName())
 	if err != nil {
 		log.CliLogger.Warnf("Bindings not found: %v", err)
 	}
@@ -209,13 +208,13 @@ func (c *command) getChannelDetails(details *accountDetails, flags *flags) error
 	return nil
 }
 
-func (c *command) getAccountDetails(flags *flags) (*accountDetails, error) {
+func (c *command) getAccountDetails(cmd *cobra.Command, flags *flags) (*accountDetails, error) {
 	details := new(accountDetails)
 	if err := c.getClusterDetails(details, flags); err != nil {
 		return nil, err
 	}
 
-	srClient, err := c.GetSchemaRegistryClient()
+	srClient, err := c.GetSchemaRegistryClient(cmd)
 	if err != nil {
 		return nil, err
 	}
@@ -279,10 +278,10 @@ func (c command) getMessageExamples(consumer *ckgo.Consumer, topicName, contentT
 		return nil, fmt.Errorf("failed to get deserializer for %s", valueFormat)
 	}
 	groupHandler := kafka.GroupHandler{
-		SrClient:   srClient,
-		Format:     valueFormat,
-		Subject:    topicName + "-value",
-		Properties: kafka.ConsumerProperties{},
+		SrClient:    srClient,
+		ValueFormat: valueFormat,
+		Subject:     topicName + "-value",
+		Properties:  kafka.ConsumerProperties{},
 	}
 	if valueFormat != "string" {
 		schemaPath, referencePathMap, err := groupHandler.RequestSchema(value)
@@ -302,17 +301,17 @@ func (c command) getMessageExamples(consumer *ckgo.Consumer, topicName, contentT
 	return jsonMessage, nil
 }
 
-func (c *command) getBindings(clusterId, topicName string) (*bindings, error) {
+func (c *command) getBindings(topicName string) (*bindings, error) {
 	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {
 		return nil, err
 	}
-	configs, err := kafkaREST.CloudClient.ListKafkaTopicConfigs(clusterId, topicName)
+	configs, err := kafkaREST.CloudClient.ListKafkaTopicConfigs(topicName)
 	if err != nil {
 		return nil, err
 	}
 	var numPartitions int32
-	partitionsResp, _, err := kafkaREST.CloudClient.ListKafkaPartitions(clusterId, topicName)
+	partitionsResp, _, err := kafkaREST.CloudClient.ListKafkaPartitions(topicName)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get topic partitions: %v", err)
 	}
@@ -401,9 +400,9 @@ func (c *command) getClusterDetails(details *accountDetails, flags *flags) error
 		return err
 	}
 
-	topics, httpResp, err := kafkaREST.CloudClient.ListKafkaTopics(clusterConfig.ID)
+	topics, err := kafkaREST.CloudClient.ListKafkaTopics()
 	if err != nil {
-		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+		return err
 	}
 
 	environment, err := c.Context.EnvironmentId()

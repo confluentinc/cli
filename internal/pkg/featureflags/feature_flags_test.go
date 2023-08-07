@@ -29,7 +29,7 @@ func (suite *LaunchDarklyTestSuite) SetupTest() {
 
 	ld := launchDarklyManager{}
 	suite.ctx.FeatureFlags = &v1.FeatureFlags{
-		Values:         map[string]any{"testJson": kv{key: "key", val: "val"}, "testBool": true, "testInt": 3, "testString": "value", "testAnotherInt": 99},
+		CliValues:      map[string]any{"testJson": kv{key: "key", val: "val"}, "testBool": true, "testInt": 3, "testString": "value", "testAnotherInt": 99},
 		LastUpdateTime: time.Now().Unix(),
 		User:           ld.contextToLDUser(suite.ctx),
 	}
@@ -62,10 +62,8 @@ func (suite *LaunchDarklyTestSuite) TestCcloudFlags() {
 	server := testserver.StartTestCloudServer(suite.T(), false)
 	defer server.Close()
 	ld := launchDarklyManager{
-		ccloudClient: func(v1.LaunchDarklyClient) *sling.Sling {
-			return sling.New().Base(server.GetCloudUrl() + "/ldapi/sdk/eval/1234/")
-		},
-		version: version.NewVersion("v1.2", "", ""),
+		ccloudClient: sling.New().Base(server.GetCloudUrl() + "/ldapi/sdk/eval/1234/"),
+		version:      version.NewVersion("v1.2", "", ""),
 	}
 	ctx := dynamicconfig.NewDynamicContext(v1.AuthenticatedCloudConfigMock().Context(), nil)
 	req := require.New(suite.T())
@@ -78,10 +76,8 @@ func (suite *LaunchDarklyTestSuite) TestCcloudFlagsCached() {
 	server := testserver.StartTestCloudServer(suite.T(), false)
 	defer server.Close()
 	ld := launchDarklyManager{
-		ccloudClient: func(v1.LaunchDarklyClient) *sling.Sling {
-			return sling.New().Base(server.GetCloudUrl() + "/ldapi/sdk/eval/1234/")
-		},
-		version: version.NewVersion("v1.2", "", ""),
+		ccloudClient: sling.New().Base(server.GetCloudUrl() + "/ldapi/sdk/eval/1234/"),
+		version:      version.NewVersion("v1.2", "", ""),
 	}
 	ctx := dynamicconfig.NewDynamicContext(v1.AuthenticatedCloudConfigMock().Context(), nil)
 	req := require.New(suite.T())
@@ -98,10 +94,8 @@ func (suite *LaunchDarklyTestSuite) TestCcloudFlagsCachedExpired() {
 	server := testserver.StartTestCloudServer(suite.T(), false)
 	defer server.Close()
 	ld := launchDarklyManager{
-		ccloudClient: func(v1.LaunchDarklyClient) *sling.Sling {
-			return sling.New().Base(server.GetCloudUrl() + "/ldapi/sdk/eval/1234/")
-		},
-		version: version.NewVersion("v1.2", "", ""),
+		ccloudClient: sling.New().Base(server.GetCloudUrl() + "/ldapi/sdk/eval/1234/"),
+		version:      version.NewVersion("v1.2", "", ""),
 	}
 	ctx := dynamicconfig.NewDynamicContext(v1.AuthenticatedCloudConfigMock().Context(), nil)
 	req := require.New(suite.T())
@@ -133,7 +127,7 @@ func (suite *LaunchDarklyTestSuite) TestCliFlagsCachedExpired() {
 	req.Equal(true, boolFlag)
 
 	// updating the cached value
-	ctx.FeatureFlags.Values["testBool"] = false
+	ctx.FeatureFlags.CliValues["testBool"] = false
 	boolFlag = ld.BoolVariation("testBool", ctx, v1.CliLaunchDarklyClient, true, false)
 	req.Equal(false, boolFlag)
 
@@ -147,10 +141,8 @@ func (suite *LaunchDarklyTestSuite) TestMultipleCcloudFlags() {
 	server := testserver.StartTestCloudServer(suite.T(), false)
 	defer server.Close()
 	ld := launchDarklyManager{
-		ccloudClient: func(v1.LaunchDarklyClient) *sling.Sling {
-			return sling.New().Base(server.GetCloudUrl() + "/ldapi/sdk/eval/1234/")
-		},
-		version: version.NewVersion("v1.2", "", ""),
+		ccloudClient: sling.New().Base(server.GetCloudUrl() + "/ldapi/sdk/eval/1234/"),
+		version:      version.NewVersion("v1.2", "", ""),
 	}
 	ctx := dynamicconfig.NewDynamicContext(v1.AuthenticatedCloudConfigMock().Context(), nil)
 	req := require.New(suite.T())
@@ -189,7 +181,7 @@ func (suite *LaunchDarklyTestSuite) TestJsonVariation() {
 	ld := launchDarklyManager{}
 
 	evaluatedFlag := ld.JsonVariation("testJson", suite.ctx, v1.CliLaunchDarklyClient, true, nil)
-	req.Equal(suite.ctx.FeatureFlags.Values["testJson"], evaluatedFlag)
+	req.Equal(suite.ctx.FeatureFlags.CliValues["testJson"], evaluatedFlag)
 }
 
 func (suite *LaunchDarklyTestSuite) TestContextToLDUser() {

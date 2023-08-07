@@ -285,31 +285,27 @@ const (
 		"Unfortunately, your active CLI state will be lost as a result.\n" +
 		"Please file a support ticket with details about your config file to help us address this issue.\n" +
 		"Please rerun the command with the verbosity flag `-vvvv` and attach the output with the support ticket."
-	UnableToCreateConfigErrorMsg       = "unable to create config"
-	UnableToReadConfigErrorMsg         = `unable to read config file "%s"`
-	ConfigNotUpToDateErrorMsg          = "config version v%s not up to date with the latest version v%s"
-	InvalidConfigVersionErrorMsg       = "invalid config version v%s"
-	ParseConfigErrorMsg                = `unable to parse config file "%s"`
-	NoNameContextErrorMsg              = "one of the existing contexts has no name"
-	MissingKafkaClusterContextErrorMsg = `context "%s" missing KafkaClusterContext`
-	MarshalConfigErrorMsg              = "unable to marshal config"
-	CreateConfigDirectoryErrorMsg      = "unable to create config directory: %s"
-	CreateConfigFileErrorMsg           = "unable to write config to file: %s"
-	CurrentContextNotExistErrorMsg     = `the current context "%s" does not exist`
-	ContextDoesNotExistErrorMsg        = `context "%s" does not exist`
-	ContextAlreadyExistsErrorMsg       = `context "%s" already exists`
-	CredentialNotFoundErrorMsg         = `credential "%s" not found`
-	PlatformNotFoundErrorMsg           = `platform "%s" not found`
-	NoNameCredentialErrorMsg           = "credential must have a name"
-	SavedCredentialNoContextErrorMsg   = "saved credential must match a context"
-	KeychainNotAvailableErrorMsg       = "keychain not available on platforms other than darwin"
-	NoValidKeychainCredentialErrorMsg  = "no matching credentials found in keychain"
-	NoNamePlatformErrorMsg             = "platform must have a name"
-	UnspecifiedPlatformErrorMsg        = `context "%s" has corrupted platform`
-	UnspecifiedCredentialErrorMsg      = `context "%s" has corrupted credentials`
-	ContextStateMismatchErrorMsg       = `context state mismatch for context "%s"`
-	ContextStateNotMappedErrorMsg      = `context state mapping error for context "%s"`
-	DeleteUserAuthErrorMsg             = "unable to delete user auth"
+	UnableToReadConfigurationFileErrorMsg = `unable to read configuration file "%s"`
+	NoNameContextErrorMsg                 = "one of the existing contexts has no name"
+	MissingKafkaClusterContextErrorMsg    = `context "%s" missing KafkaClusterContext`
+	MarshalConfigErrorMsg                 = "unable to marshal config"
+	CreateConfigDirectoryErrorMsg         = "unable to create config directory: %s"
+	CreateConfigFileErrorMsg              = "unable to write config to file: %s"
+	CurrentContextNotExistErrorMsg        = `the current context "%s" does not exist`
+	ContextDoesNotExistErrorMsg           = `context "%s" does not exist`
+	ContextAlreadyExistsErrorMsg          = `context "%s" already exists`
+	CredentialNotFoundErrorMsg            = `credential "%s" not found`
+	PlatformNotFoundErrorMsg              = `platform "%s" not found`
+	NoNameCredentialErrorMsg              = "credential must have a name"
+	SavedCredentialNoContextErrorMsg      = "saved credential must match a context"
+	KeychainNotAvailableErrorMsg          = "keychain not available on platforms other than darwin"
+	NoValidKeychainCredentialErrorMsg     = "no matching credentials found in keychain"
+	NoNamePlatformErrorMsg                = "platform must have a name"
+	UnspecifiedPlatformErrorMsg           = `context "%s" has corrupted platform`
+	UnspecifiedCredentialErrorMsg         = `context "%s" has corrupted credentials`
+	ContextStateMismatchErrorMsg          = `context state mismatch for context "%s"`
+	ContextStateNotMappedErrorMsg         = `context state mapping error for context "%s"`
+	DeleteUserAuthErrorMsg                = "unable to delete user auth"
 
 	// local package
 	ConfluentHomeNotFoundErrorMsg         = "could not find %s in CONFLUENT_HOME"
