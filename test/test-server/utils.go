@@ -16,6 +16,7 @@ import (
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
+	ssov2 "github.com/confluentinc/ccloud-sdk-go-v2/sso/v2"
 )
 
 type ErrorJson struct {
@@ -346,6 +347,17 @@ func buildIamInvitation(id, email, userId, status string) iamv2.IamV2Invitation 
 		Email:  iamv2.PtrString(email),
 		User:   &iamv2.GlobalObjectReference{Id: userId},
 		Status: iamv2.PtrString(status),
+	}
+}
+
+func buildIamGroupMapping(id, name, description, filter string) ssov2.IamV2SsoGroupMapping {
+	return ssov2.IamV2SsoGroupMapping{
+		Description: ssov2.PtrString(description),
+		DisplayName: ssov2.PtrString(name),
+		Id:          ssov2.PtrString(id),
+		Filter:      ssov2.PtrString(filter),
+		Principal:   ssov2.PtrString(id),
+		State:       ssov2.PtrString("ENABLED"),
 	}
 }
 

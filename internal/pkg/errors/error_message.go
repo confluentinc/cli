@@ -76,6 +76,9 @@ const (
 	InvalidOperationValueErrorMsg = "invalid operation value: %s"
 	ExactlyOneSetErrorMsg         = "exactly one of %v must be set"
 
+	// iam group-mapping commands
+	GroupMappingNoOpUpdateErrorMsg = "one of `--description`, `--name`, or `--filter` must be set"
+
 	// iam rbac role commands
 	UnknownRoleErrorMsg    = `unknown role "%s"`
 	UnknownRoleSuggestions = "The available roles are: %s."
