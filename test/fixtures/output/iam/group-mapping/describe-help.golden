@@ -1,15 +1,10 @@
-Update a service account.
+Describe a group mapping.
 
 Usage:
-  confluent iam service-account update <id> [flags]
-
-Examples:
-Update the description of service account "sa-123456".
-
-  $ confluent iam service-account update sa-123456 --description "updated description"
+  confluent iam group-mapping describe <id> [flags]
 
 Flags:
-      --description string   REQUIRED: Description of the service account.
+  -o, --output string   Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
   -h, --help            Show help for this command.

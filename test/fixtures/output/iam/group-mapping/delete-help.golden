@@ -1,15 +1,15 @@
-Update a service account.
+Delete a group mapping.
 
 Usage:
-  confluent iam service-account update <id> [flags]
+  confluent iam group-mapping delete <id> [flags]
 
 Examples:
-Update the description of service account "sa-123456".
+Delete group mapping "pool-12345":
 
-  $ confluent iam service-account update sa-123456 --description "updated description"
+  $ confluent iam group-mapping delete pool-12345
 
 Flags:
-      --description string   REQUIRED: Description of the service account.
+      --force   Skip the deletion confirmation prompt.
 
 Global Flags:
   -h, --help            Show help for this command.

@@ -8,8 +8,9 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/output"
 )
+
+const identityProviderNoOpUpdateErrorMsg = "one of `--description` or `--name` must be set"
 
 func (c *identityProviderCommand) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -21,7 +22,7 @@ func (c *identityProviderCommand) newUpdateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Update the description of identity provider "op-123456".`,
-				Code: `confluent iam provider update op-123456 --description "Update demo identity provider information."`,
+				Code: `confluent iam provider update op-123456 --description "updated description"`,
 			},
 		),
 	}
@@ -45,7 +46,7 @@ func (c *identityProviderCommand) update(cmd *cobra.Command, args []string) erro
 	}
 
 	if description == "" && name == "" {
-		return errors.New(errors.IdentityProviderNoOpUpdateErrorMsg)
+		return errors.New(identityProviderNoOpUpdateErrorMsg)
 	}
 
 	update := identityproviderv2.IamV2IdentityProviderUpdate{Id: identityproviderv2.PtrString(args[0])}
@@ -56,18 +57,10 @@ func (c *identityProviderCommand) update(cmd *cobra.Command, args []string) erro
 		update.Description = identityproviderv2.PtrString(description)
 	}
 
-	identityProvider, err := c.V2Client.UpdateIdentityProvider(update)
+	provider, err := c.V2Client.UpdateIdentityProvider(update)
 	if err != nil {
 		return err
 	}
 
-	table := output.NewTable(cmd)
-	table.Add(&identityProviderOut{
-		Id:          identityProvider.GetId(),
-		Name:        identityProvider.GetDisplayName(),
-		Description: identityProvider.GetDescription(),
-		IssuerUri:   identityProvider.GetIssuer(),
-		JwksUri:     identityProvider.GetJwksUri(),
-	})
-	return table.Print()
+	return printIdentityProvider(cmd, provider)
 }
