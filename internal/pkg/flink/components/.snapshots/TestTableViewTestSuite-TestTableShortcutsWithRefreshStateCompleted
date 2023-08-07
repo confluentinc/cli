@@ -1,0 +1,14 @@
+([]types.Shortcut) (len=3) {
+  (types.Shortcut) {
+    KeyText: (string) (len=1) "Q",
+    Text: (string) (len=4) "Quit"
+  },
+  (types.Shortcut) {
+    KeyText: (string) (len=1) "M",
+    Text: (string) (len=14) "Show changelog"
+  },
+  (types.Shortcut) {
+    KeyText: (string) (len=3) "U/D",
+    Text: (string) (len=12) "Jump up/down"
+  }
+}

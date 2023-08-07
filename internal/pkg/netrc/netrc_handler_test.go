@@ -102,16 +102,16 @@ func TestGetMatchingNetrcMachineNameWithContextName(t *testing.T) {
 			file: netrcFilePath,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			netrcHandler := NewNetrcHandler(tt.file)
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			netrcHandler := NewNetrcHandler(test.file)
 			var machine *Machine
 			var err error
-			if machine, err = netrcHandler.GetMatchingNetrcMachine(tt.params); (err != nil) != tt.wantErr {
-				t.Errorf("GetMatchingNetrcMachineName error = %+v, wantErr %+v", err, tt.wantErr)
+			if machine, err = netrcHandler.GetMatchingNetrcMachine(test.params); (err != nil) != test.wantErr {
+				t.Errorf("GetMatchingNetrcMachineName error = %+v, wantErr %+v", err, test.wantErr)
 			}
 			if !t.Failed() {
-				if tt.want == nil {
+				if test.want == nil {
 					if machine != nil {
 						t.Error("GetMatchingNetrcMachineName expect nil machine but got non nil machine")
 					}
@@ -119,8 +119,8 @@ func TestGetMatchingNetrcMachineNameWithContextName(t *testing.T) {
 					if machine == nil {
 						t.Errorf("Expected to find want : %+v but found no machines", machine)
 					}
-					if !isIdenticalMachine(tt.want, machine) {
-						t.Errorf("GetMatchingNetrcMachineName mismatch\ngot: %+v \nwant: %+v", machine, tt.want)
+					if !isIdenticalMachine(test.want, machine) {
+						t.Errorf("GetMatchingNetrcMachineName mismatch\ngot: %+v \nwant: %+v", machine, test.want)
 					}
 				}
 			}
@@ -182,16 +182,16 @@ func TestGetMatchingNetrcMachineNameFromURL(t *testing.T) {
 			file: netrcFilePath,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			netrcHandler := NewNetrcHandler(tt.file)
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			netrcHandler := NewNetrcHandler(test.file)
 			var machine *Machine
 			var err error
-			if machine, err = netrcHandler.GetMatchingNetrcMachine(tt.params); (err != nil) != tt.wantErr {
-				t.Errorf("GetMatchingNetrcMachineName error = %+v, wantErr %+v", err, tt.wantErr)
+			if machine, err = netrcHandler.GetMatchingNetrcMachine(test.params); (err != nil) != test.wantErr {
+				t.Errorf("GetMatchingNetrcMachineName error = %+v, wantErr %+v", err, test.wantErr)
 			}
 			if !t.Failed() {
-				if tt.want == nil {
+				if test.want == nil {
 					if machine != nil {
 						t.Error("GetMatchingNetrcMachineName expect nil machine but got non nil machine")
 					}
@@ -199,8 +199,8 @@ func TestGetMatchingNetrcMachineNameFromURL(t *testing.T) {
 					if machine == nil {
 						t.Errorf("Expected to find want : %+v but found no machines", machine)
 					}
-					if !isIdenticalMachine(tt.want, machine) {
-						t.Errorf("GetMatchingNetrcMachineName mismatch \ngot: %+v \nwant: %+v", machine, tt.want)
+					if !isIdenticalMachine(test.want, machine) {
+						t.Errorf("GetMatchingNetrcMachineName mismatch \ngot: %+v \nwant: %+v", machine, test.want)
 					}
 				}
 			}
@@ -302,23 +302,23 @@ func TestGetMachineNameRegex(t *testing.T) {
 			},
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			regex := getMachineNameRegex(tt.params)
-			for _, machineName := range tt.matchNames {
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			regex := getMachineNameRegex(test.params)
+			for _, machineName := range test.matchNames {
 				if !regex.Match([]byte(machineName)) {
 					t.Errorf("Got: regex.Match=false Expect: true\n"+
 						"Machine name: %s \n"+
 						"Regex String: %s \n"+
-						"Params: IsCloud=%t URL=%s", machineName, regex.String(), tt.params.IsCloud, tt.params.URL)
+						"Params: IsCloud=%t URL=%s", machineName, regex.String(), test.params.IsCloud, test.params.URL)
 				}
 			}
-			for _, machineName := range tt.nonMatchNames {
+			for _, machineName := range test.nonMatchNames {
 				if regex.Match([]byte(machineName)) {
 					t.Errorf("Got: regex.Match=true Expect: false\n"+
 						"Machine name: %s \n"+
 						"Regex String: %s\n"+
-						"Params: IsCloud=%t URL=%s", machineName, regex.String(), tt.params.IsCloud, tt.params.URL)
+						"Params: IsCloud=%t URL=%s", machineName, regex.String(), test.params.IsCloud, test.params.URL)
 				}
 			}
 		})

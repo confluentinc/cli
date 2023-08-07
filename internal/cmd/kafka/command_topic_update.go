@@ -30,7 +30,7 @@ type topicConfigurationOut struct {
 	ReadOnly bool   `human:"Read-Only" serialized:"read_only"`
 }
 
-func (c *authenticatedTopicCommand) newUpdateCommand() *cobra.Command {
+func (c *command) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "update <topic>",
 		Short:             "Update a Kafka topic.",
@@ -56,7 +56,7 @@ func (c *authenticatedTopicCommand) newUpdateCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) error {
+func (c *command) update(cmd *cobra.Command, args []string) error {
 	topicName := args[0]
 
 	configs, err := cmd.Flags().GetStringSlice("config")
@@ -74,17 +74,12 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		return err
 	}
 
-	kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand()
-	if err != nil {
-		return err
-	}
-
-	if err := c.provisioningClusterCheck(kafkaClusterConfig.ID); err != nil {
-		return err
-	}
-
 	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {
+		return err
+	}
+
+	if err := c.provisioningClusterCheck(kafkaREST.GetClusterId()); err != nil {
 		return err
 	}
 
@@ -97,7 +92,7 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 	data := toAlterConfigBatchRequestData(configMap)
 	data.ValidateOnly = &dryRun
 
-	httpResp, err := kafkaREST.CloudClient.UpdateKafkaTopicConfigBatch(kafkaClusterConfig.ID, topicName, data)
+	httpResp, err := kafkaREST.CloudClient.UpdateKafkaTopicConfigBatch(topicName, data)
 	if err != nil {
 		restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err)
 		if parseErr == nil {
@@ -121,16 +116,16 @@ func (c *authenticatedTopicCommand) update(cmd *cobra.Command, args []string) er
 		if err != nil {
 			return err
 		}
-		updateResp, httpResp, err := kafkaREST.CloudClient.UpdateKafkaTopicPartitionCount(kafkaClusterConfig.ID, topicName, kafkarestv3.UpdatePartitionCountRequestData{PartitionsCount: int32(updateNumPartitionsInt)})
+		updateResp, err := kafkaREST.CloudClient.UpdateKafkaTopicPartitionCount(topicName, kafkarestv3.UpdatePartitionCountRequestData{PartitionsCount: int32(updateNumPartitionsInt)})
 		if err != nil {
-			return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+			return err
 		}
 		configsValues[numPartitionsKey] = fmt.Sprint(updateResp.PartitionsCount)
 		partitionsKafkaRestConfig := kafkarestv3.AlterConfigBatchRequestDataData{Name: numPartitionsKey}
 		kafkaRestConfigs.Data = append(kafkaRestConfigs.Data, partitionsKafkaRestConfig)
 	}
 
-	configsResp, err := kafkaREST.CloudClient.ListKafkaTopicConfigs(kafkaClusterConfig.ID, topicName)
+	configsResp, err := kafkaREST.CloudClient.ListKafkaTopicConfigs(topicName)
 	if err != nil {
 		return err
 	}

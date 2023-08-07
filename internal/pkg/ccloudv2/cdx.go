@@ -12,7 +12,7 @@ import (
 func newCdxClient(url, userAgent string, unsafeTrace bool) *cdxv1.APIClient {
 	cfg := cdxv1.NewConfiguration()
 	cfg.Debug = unsafeTrace
-	cfg.HTTPClient = newRetryableHttpClient(unsafeTrace)
+	cfg.HTTPClient = NewRetryableHttpClient(unsafeTrace)
 	cfg.Servers = cdxv1.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 

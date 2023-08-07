@@ -11,7 +11,6 @@ import (
 	"github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/featureflags"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -54,7 +53,7 @@ func (c *roleCommand) ccloudDescribe(cmd *cobra.Command, role string) error {
 		streamCatalogNamespace.Value(),
 	}
 
-	ldClient := v1.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
+	ldClient := featureflags.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
 	if featureflags.Manager.BoolVariation("flink.rbac.namespace.cli.enable", c.Context, ldClient, true, false) {
 		namespacesList = append(namespacesList, flinkNamespace.Value())
 	}

@@ -77,10 +77,11 @@ func handleMe(t *testing.T, isAuditLogEnabled bool) http.HandlerFunc {
 		}
 		if isAuditLogEnabled {
 			org.AuditLog = &ccloudv1.AuditLog{
-				ClusterId:        "lkc-ab123",
-				AccountId:        "env-987zy",
-				ServiceAccountId: auditLogServiceAccountID,
-				TopicName:        "confluent-audit-log-events",
+				ClusterId:                "lkc-ab123",
+				AccountId:                "env-987zy",
+				ServiceAccountId:         auditLogServiceAccountID,
+				ServiceAccountResourceId: "sa-1337",
+				TopicName:                "confluent-audit-log-events",
 			}
 		}
 
@@ -376,6 +377,9 @@ func handleLaunchDarkly(t *testing.T) http.HandlerFunc {
 			"cli.deprecation_notices":                []map[string]any{},
 			"cli.client_quotas.enable":               true,
 			"cli.stream_designer.source_code.enable": true,
+			"flink.rbac.namespace.cli.enable":        true,
+			"auth.rbac.identity_admin.enable":        true,
+			"cloud_growth.marketplace_linking_advertisement_experiment.enable": true,
 		}
 
 		val, ok := ldUser.GetCustom("org.resource_id")

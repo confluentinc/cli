@@ -5,35 +5,35 @@ import (
 	"os"
 	"strings"
 
-	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
+	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-type outputStruct struct {
-	Id int32 `json:"id" yaml:"id"`
-}
-
-func (c *command) newSchemaCreateCommand() *cobra.Command {
+func (c *command) newSchemaCreateCommand(cfg *v1.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
 		Short: "Create a schema.",
 		Args:  cobra.NoArgs,
 		RunE:  c.schemaCreate,
-		Example: examples.BuildExampleString(
-			examples.Example{
-				Text: "Register a new schema.",
-				Code: "confluent schema-registry schema create --subject payments --schema payments.avro --type avro",
-			},
-			examples.Example{
-				Text: "Where `schemafilepath` may include these contents:",
-				Code: `{
+	}
+
+	example := examples.Example{
+		Text: "Register a new Avro schema.",
+		Code: "confluent schema-registry schema create --subject employee --schema employee.avsc --type avro",
+	}
+	if cfg.IsOnPremLogin() {
+		example.Code += " " + onPremAuthenticationMsg
+	}
+	cmd.Example = examples.BuildExampleString(
+		example,
+		examples.Example{
+			Text: `Where "employee.avsc" may include the following content:`,
+			Code: `{
 	"type" : "record",
 	"namespace" : "Example",
 	"name" : "Employee",
@@ -42,28 +42,37 @@ func (c *command) newSchemaCreateCommand() *cobra.Command {
 		{ "name" : "Age" , "type" : "int" }
 	]
 }`,
-			},
-			examples.Example{
-				Text: "For more information on schema types, see https://docs.confluent.io/current/schema-registry/serdes-develop/index.html.",
-			},
-			examples.Example{
-				Text: "For more information on schema references, see https://docs.confluent.io/current/schema-registry/serdes-develop/index.html#schema-references.",
-			},
-		),
-	}
+		},
+		examples.Example{
+			Text: "For more information on schema types and references, see https://docs.confluent.io/platform/current/schema-registry/fundamentals/serdes-develop/index.html.",
+		},
+	)
 
 	cmd.Flags().String("schema", "", "The path to the schema file.")
-	cmd.Flags().String("subject", "", SubjectUsage)
+	cmd.Flags().String("subject", "", subjectUsage)
 	pcmd.AddSchemaTypeFlag(cmd)
 	cmd.Flags().String("references", "", "The path to the references file.")
 	cmd.Flags().String("metadata", "", "The path to metadata file.")
 	cmd.Flags().String("ruleset", "", "The path to schema ruleset file.")
 	cmd.Flags().Bool("normalize", false, "Alphabetize the list of schema fields.")
-	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
-	pcmd.AddApiSecretFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
-	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	if cfg.IsCloudLogin() {
+		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+	} else {
+		addCaLocationFlag(cmd)
+		addSchemaRegistryEndpointFlag(cmd)
+	}
 	pcmd.AddOutputFlag(cmd)
+
+	if cfg.IsCloudLogin() {
+		// Deprecated
+		pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
+		cobra.CheckErr(cmd.Flags().MarkHidden("api-key"))
+
+		// Deprecated
+		pcmd.AddApiSecretFlag(cmd)
+		cobra.CheckErr(cmd.Flags().MarkHidden("api-secret"))
+	}
 
 	cobra.CheckErr(cmd.MarkFlagFilename("schema", "avsc", "json", "proto"))
 	cobra.CheckErr(cmd.MarkFlagFilename("references", "json"))
@@ -77,21 +86,12 @@ func (c *command) newSchemaCreateCommand() *cobra.Command {
 }
 
 func (c *command) schemaCreate(cmd *cobra.Command, _ []string) error {
-	srClient, ctx, err := getApiClient(cmd, c.srClient, c.Config, c.Version)
-	if err != nil {
-		return err
-	}
-
 	subject, err := cmd.Flags().GetString("subject")
 	if err != nil {
 		return err
 	}
 
-	schemaPath, err := cmd.Flags().GetString("schema")
-	if err != nil {
-		return err
-	}
-	schema, err := os.ReadFile(schemaPath)
+	schema, err := cmd.Flags().GetString("schema")
 	if err != nil {
 		return err
 	}
@@ -102,15 +102,33 @@ func (c *command) schemaCreate(cmd *cobra.Command, _ []string) error {
 	}
 	schemaType = strings.ToUpper(schemaType)
 
-	refs, err := ReadSchemaRefs(cmd)
+	refs, err := ReadSchemaReferences(cmd, false)
 	if err != nil {
 		return err
 	}
 
-	request := srsdk.RegisterSchemaRequest{
-		Schema:     string(schema),
+	normalize, err := cmd.Flags().GetBool("normalize")
+	if err != nil {
+		return err
+	}
+
+	cfg := &RegisterSchemaConfigs{
+		Subject:    subject,
 		SchemaType: schemaType,
-		References: refs,
+		SchemaPath: schema,
+		Refs:       refs,
+		Normalize:  normalize,
+	}
+
+	if !c.Config.IsCloudLogin() {
+		dir, err := CreateTempDir()
+		if err != nil {
+			return err
+		}
+		defer func() {
+			_ = os.RemoveAll(dir)
+		}()
+		cfg.SchemaDir = dir
 	}
 
 	metadata, err := cmd.Flags().GetString("metadata")
@@ -118,8 +136,8 @@ func (c *command) schemaCreate(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	if metadata != "" {
-		request.Metadata = new(srsdk.Metadata)
-		if err := read(metadata, request.Metadata); err != nil {
+		cfg.Metadata = new(srsdk.Metadata)
+		if err := read(metadata, cfg.Metadata); err != nil {
 			return err
 		}
 	}
@@ -129,28 +147,21 @@ func (c *command) schemaCreate(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	if ruleset != "" {
-		request.RuleSet = new(srsdk.RuleSet)
-		if err := read(ruleset, request.RuleSet); err != nil {
+		cfg.Ruleset = new(srsdk.RuleSet)
+		if err := read(ruleset, cfg.Ruleset); err != nil {
 			return err
 		}
 	}
 
-	normalize, err := cmd.Flags().GetBool("normalize")
-	if err != nil {
-		return err
-	}
-	opts := &srsdk.RegisterOpts{Normalize: optional.NewBool(normalize)}
-
-	response, _, err := srClient.DefaultApi.Register(ctx, subject, request, opts)
+	client, err := c.GetSchemaRegistryClient(cmd)
 	if err != nil {
 		return err
 	}
 
-	if output.GetFormat(cmd).IsSerialized() {
-		return output.SerializedOutput(cmd, &outputStruct{response.Id})
+	if _, err := RegisterSchemaWithAuth(cmd, cfg, client); err != nil {
+		return err
 	}
 
-	output.Printf(errors.RegisteredSchemaMsg, response.Id)
 	return nil
 }
 

@@ -35,9 +35,9 @@ func (c *linkCommand) newCreateCommandOnPrem() *cobra.Command {
 	}
 
 	cmd.Flags().String(destinationClusterIdFlagName, "", "Destination cluster ID.")
-	cmd.Flags().String(destinationBootstrapServerFlagName, "", "Bootstrap server address of the destination cluster. Can alternatively be set in the config file using key bootstrap.servers.")
-	cmd.Flags().String(sourceApiKeyFlagName, "", "An API key for the source cluster. For links at destination cluster this is used for remote cluster authentication. For links at source cluster this is used for local cluster authentication. "+authHelperMsg)
-	cmd.Flags().String(sourceApiSecretFlagName, "", "An API secret for the source cluster. For links at destination cluster this is used for remote cluster authentication. For links at source cluster this is used for local cluster authentication. "+authHelperMsg)
+	cmd.Flags().String(destinationBootstrapServerFlagName, "", `Bootstrap server address of the destination cluster. Can alternatively be set in the configuration file using key "bootstrap.servers".`)
+	cmd.Flags().String(sourceApiKeyFlagName, "", "An API key for the source cluster. For links at destination cluster, this is used for remote cluster authentication. For links at source cluster, this is used for local cluster authentication. "+authHelperMsg)
+	cmd.Flags().String(sourceApiSecretFlagName, "", "An API secret for the source cluster. For links at destination cluster, this is used for remote cluster authentication. For links at source cluster, this is used for local cluster authentication. "+authHelperMsg)
 	cmd.Flags().String(destinationApiKeyFlagName, "", "An API key for the destination cluster. This is used for remote cluster authentication links at the source cluster. "+authHelperMsg)
 	cmd.Flags().String(destinationApiSecretFlagName, "", "An API secret for the destination cluster. This is used for remote cluster authentication for links at the source cluster. "+authHelperMsg)
 	cmd.Flags().String(configFileFlagName, "", "Name of the file containing link configuration. Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.")
@@ -69,20 +69,21 @@ func (c *linkCommand) createOnPrem(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	configMap, linkMode, err := c.getConfigMapAndLinkMode(configFile)
+	configMap, linkModeMetadata, err := c.getConfigMapAndLinkMode(configFile)
 	if err != nil {
 		return err
 	}
 
-	if linkMode != Source {
-		return errors.New("only source-initiated links can be created for Confluent Platform from the CLI")
+	linkMode := linkModeMetadata.mode
+	if linkMode != Source && linkMode != Bidirectional {
+		return errors.New("only source-initiated or bidirectional links can be created for Confluent Platform from the CLI")
 	}
 
-	if err := c.addSecurityConfigToMap(cmd, linkMode, configMap); err != nil {
+	if err := c.addSecurityConfigToMap(cmd, linkModeMetadata, configMap); err != nil {
 		return err
 	}
 
-	remoteClusterId, bootstrapServer, err := c.getRemoteClusterMetadata(cmd, linkMode)
+	remoteClusterId, bootstrapServer, err := c.getRemoteClusterMetadata(cmd, linkModeMetadata)
 	if err != nil {
 		return err
 	}
@@ -122,7 +123,7 @@ func (c *linkCommand) createOnPrem(cmd *cobra.Command, args []string) error {
 		return handleOpenApiError(httpResp, err, client)
 	}
 
-	msg := fmt.Sprintf(errors.CreatedResourceMsg, resource.ClusterLink, linkName)
+	msg := fmt.Sprintf(errors.CreatedLinkResourceMsg, resource.ClusterLink, linkName, linkConfigsCommandOutput(configMap))
 	if dryRun {
 		msg = utils.AddDryRunPrefix(msg)
 	}

@@ -26,7 +26,7 @@ var (
 	cipherRegex   = regexp.MustCompile(CipherPattern)
 )
 
-func GenerateConfigValue(key string, path string) string {
+func GenerateConfigValue(key, path string) string {
 	return "${securepass:" + path + ":" + key + "}"
 }
 
@@ -37,7 +37,7 @@ func ParseCipherValue(cipher string) (string, string, string) {
 	return data, iv, algo
 }
 
-func findMatchTrim(original string, re *regexp.Regexp, prefix string, suffix string) string {
+func findMatchTrim(original string, re *regexp.Regexp, prefix, suffix string) string {
 	match := re.FindStringSubmatch(original)
 	substring := ""
 	if len(match) != 0 {
@@ -166,7 +166,7 @@ func parseJAASProperties(props *properties.Properties) *properties.Properties {
 	return props
 }
 
-func convertPropertiesJAAS(props *properties.Properties, originalConfigs *properties.Properties, op string) (*properties.Properties, error) {
+func convertPropertiesJAAS(props, originalConfigs *properties.Properties, op string) (*properties.Properties, error) {
 	parser := NewJAASParser()
 	matchProps, err := props.Filter("(?i).jaas")
 	if err != nil {
@@ -368,7 +368,7 @@ func WriteFile(path string, data []byte) error {
 	return os.WriteFile(path, data, 0644)
 }
 
-func GenerateConfigKey(path string, key string) string {
+func GenerateConfigKey(path, key string) string {
 	fileName := filepath.Base(path)
 	// Intentionally not using the filepath.Join(fileName, key), because even if this CLI is run on Windows we know that
 	// the server-side version will be running on a *nix variant and will thus have forward slashes to look up the correct path

@@ -24,19 +24,19 @@ func TestLogger_Flush(t *testing.T) {
 			wantEmit: false,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
 			buf := new(bytes.Buffer)
-			l := New(tt.level, buf)
+			l := New(test.level, buf)
 			l.Debug("hi there")
-			if tt.wantEmit {
+			if test.wantEmit {
 				require.Len(t, l.buffer, 0)
 			} else {
 				require.Len(t, l.buffer, 1)
 			}
 			l.Flush()
 			require.Len(t, l.buffer, 0)
-			if tt.wantEmit {
+			if test.wantEmit {
 				require.Contains(t, buf.String(), "hi there")
 			} else {
 				require.Empty(t, buf.String())

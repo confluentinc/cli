@@ -4,24 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
-
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 )
-
-const (
-	env123 = "env-123"
-)
-
-type RoleBindingTestSuite struct {
-	suite.Suite
-	conf *v1.Config
-}
-
-func (suite *RoleBindingTestSuite) SetupSuite() {
-	suite.conf = v1.AuthenticatedCloudConfigMock()
-	v1.AddEnvironmentToConfigMock(suite.conf, env123)
-}
 
 func TestParseAndValidateResourcePattern_Prefixed(t *testing.T) {
 	pattern, err := parseAndValidateResourcePattern("Topic:test", true)
@@ -51,8 +34,4 @@ func TestParseAndValidateResourcePattern_TopicWithColon(t *testing.T) {
 func TestParseAndValidateResourcePattern_ErrIncorrectResourceFormat(t *testing.T) {
 	_, err := parseAndValidateResourcePattern("string with no colon", true)
 	require.Error(t, err)
-}
-
-func TestRoleBindingTestSuite(t *testing.T) {
-	suite.Run(t, new(RoleBindingTestSuite))
 }

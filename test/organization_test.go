@@ -10,8 +10,8 @@ func (s *CLITestSuite) TestOrganization() {
 		{args: "organization update --name default-updated -o json", fixture: "organization/update-json.golden"},
 	}
 
-	for _, tt := range tests {
-		tt.login = "cloud"
-		s.runIntegrationTest(tt)
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
 	}
 }

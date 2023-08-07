@@ -12,7 +12,7 @@ import (
 func newSchemaRegistryClient(url, userAgent string, unsafeTrace bool) *srcmv2.APIClient {
 	cfg := srcmv2.NewConfiguration()
 	cfg.Debug = unsafeTrace
-	cfg.HTTPClient = newRetryableHttpClient(unsafeTrace)
+	cfg.HTTPClient = NewRetryableHttpClient(unsafeTrace)
 	cfg.Servers = srcmv2.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 

@@ -1,7 +1,6 @@
 package kafka
 
 import (
-	"context"
 	"fmt"
 	"os"
 
@@ -9,7 +8,6 @@ import (
 	"github.com/spf13/cobra"
 
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -17,34 +15,31 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	schemaregistry "github.com/confluentinc/cli/internal/pkg/schema-registry"
 )
 
-func newConsumeCommand(prerunner pcmd.PreRunner, clientId string) *cobra.Command {
+func (c *command) newConsumeCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:         "consume <topic>",
-		Short:       "Consume messages from a Kafka topic.",
-		Long:        "Consume messages from a Kafka topic.\n\nTruncated message headers will be printed if they exist.",
-		Args:        cobra.ExactArgs(1),
-		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
+		Use:               "consume <topic>",
+		Short:             "Consume messages from a Kafka topic.",
+		Long:              "Consume messages from a Kafka topic.\n\nTruncated message headers will be printed if they exist.",
+		Args:              cobra.ExactArgs(1),
+		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
+		RunE:              c.consume,
+		Annotations:       map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Consume items from the "my_topic" topic and press "Ctrl-C" to exit.`,
-				Code: "confluent kafka topic consume -b my_topic",
+				Text: `Consume items from topic "my-topic" and press "Ctrl-C" to exit.`,
+				Code: "confluent kafka topic consume my-topic --from-beginning",
 			},
 		),
 	}
-
-	c := &hasAPIKeyTopicCommand{
-		HasAPIKeyCLICommand: pcmd.NewHasAPIKeyCLICommand(cmd, prerunner),
-		prerunner:           prerunner,
-		clientID:            clientId,
-	}
-	cmd.RunE = c.consume
 
 	cmd.Flags().String("group", "confluent_cli_consumer_<randomly-generated-id>", "Consumer group ID.")
 	cmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of the topic.")
 	cmd.Flags().Int64("offset", 0, "The offset from the beginning to consume from.")
 	cmd.Flags().Int32("partition", -1, "The partition to consume from.")
+	pcmd.AddKeyFormatFlag(cmd)
 	pcmd.AddValueFormatFlag(cmd)
 	cmd.Flags().Bool("print-key", false, "Print key of the message.")
 	cmd.Flags().Bool("full-header", false, "Print complete content of message headers.")
@@ -55,28 +50,30 @@ func newConsumeCommand(prerunner pcmd.PreRunner, clientId string) *cobra.Command
 	cmd.Flags().String("schema-registry-context", "", "The Schema Registry context under which to look up schema ID.")
 	cmd.Flags().String("schema-registry-endpoint", "", "Endpoint for Schema Registry cluster.")
 	cmd.Flags().String("schema-registry-api-key", "", "Schema registry API key.")
-	cmd.Flags().String("schema-registry-api-secret", "", "Schema registry API key secret.")
-	cmd.Flags().String("api-key", "", "API key.")
-	cmd.Flags().String("api-secret", "", "API key secret.")
-	cmd.Flags().String("cluster", "", "Kafka cluster ID.")
+	cmd.Flags().String("schema-registry-api-secret", "", "Schema registry API secret.")
+	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddApiSecretFlag(cmd)
+	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
-	cmd.Flags().String("environment", "", "Environment ID.")
+	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 
 	cobra.CheckErr(cmd.MarkFlagFilename("config-file", "avsc", "json"))
+
+	cmd.MarkFlagsMutuallyExclusive("config", "config-file")
+	cmd.MarkFlagsMutuallyExclusive("from-beginning", "offset")
 
 	return cmd
 }
 
-func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error {
+func (c *command) consume(cmd *cobra.Command, args []string) error {
 	topic := args[0]
 
-	valueFormat, err := cmd.Flags().GetString("value-format")
+	cluster, err := c.Config.Context().GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
 
-	cluster, err := c.Config.Context().GetKafkaClusterForCommand()
-	if err != nil {
+	if err := addApiKeyToCluster(cmd, cluster); err != nil {
 		return err
 	}
 
@@ -108,10 +105,6 @@ func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	if cmd.Flags().Changed("config-file") && cmd.Flags().Changed("config") {
-		return errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "config-file", "config")
-	}
-
 	configFile, err := cmd.Flags().GetString("config-file")
 	if err != nil {
 		return err
@@ -137,10 +130,6 @@ func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	if cmd.Flags().Changed("from-beginning") && cmd.Flags().Changed("offset") {
-		return errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "from-beginning", "offset")
-	}
-
 	offset, err := GetOffsetWithFallback(cmd)
 	if err != nil {
 		return err
@@ -162,19 +151,20 @@ func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 
 	output.ErrPrintln(errors.StartingConsumerMsg)
 
-	var srClient *srsdk.APIClient
-	var ctx context.Context
+	keyFormat, err := cmd.Flags().GetString("key-format")
+	if err != nil {
+		return err
+	}
+
+	valueFormat, err := cmd.Flags().GetString("value-format")
+	if err != nil {
+		return err
+	}
+
+	var srClient *schemaregistry.Client
 	if valueFormat != "string" {
-		schemaRegistryApiKey, err := cmd.Flags().GetString("schema-registry-api-key")
-		if err != nil {
-			return err
-		}
-		schemaRegistryApiSecret, err := cmd.Flags().GetString("schema-registry-api-secret")
-		if err != nil {
-			return err
-		}
 		// Only initialize client and context when schema is specified.
-		srClient, ctx, err = sr.GetSchemaRegistryClientWithApiKey(cmd, c.Config, c.Version, schemaRegistryApiKey, schemaRegistryApiSecret)
+		srClient, err = c.GetSchemaRegistryClient(cmd)
 		if err != nil {
 			if err.Error() == errors.NotLoggedInErrorMsg {
 				return new(errors.SRNotAuthenticatedError)
@@ -184,12 +174,12 @@ func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 		}
 	}
 
-	dir, err := sr.CreateTempDir()
+	schemaPath, err := sr.CreateTempDir()
 	if err != nil {
 		return err
 	}
 	defer func() {
-		_ = os.RemoveAll(dir)
+		_ = os.RemoveAll(schemaPath)
 	}()
 
 	subject := topicNameStrategy(topic)
@@ -202,17 +192,17 @@ func (c *hasAPIKeyTopicCommand) consume(cmd *cobra.Command, args []string) error
 	}
 
 	groupHandler := &GroupHandler{
-		SrClient: srClient,
-		Ctx:      ctx,
-		Format:   valueFormat,
-		Out:      cmd.OutOrStdout(), // TODO
-		Subject:  subject,
+		SrClient:    srClient,
+		KeyFormat:   keyFormat,
+		ValueFormat: valueFormat,
+		Out:         cmd.OutOrStdout(),
+		Subject:     subject,
 		Properties: ConsumerProperties{
 			PrintKey:   printKey,
 			FullHeader: fullHeader,
 			Timestamp:  timestamp,
 			Delimiter:  delimiter,
-			SchemaPath: dir,
+			SchemaPath: schemaPath,
 		},
 	}
 	return RunConsumer(consumer, groupHandler)

@@ -121,8 +121,22 @@ func catchCCloudTokenErrors(err error) error {
 
 func catchOpenAPIError(err error) error {
 	if openAPIError, ok := err.(srsdk.GenericOpenAPIError); ok {
-		return New(string(openAPIError.Body()))
+		body := string(openAPIError.Body())
+
+		r := strings.NewReader(body)
+
+		formattedErr := &struct {
+			ErrorCode int    `json:"error_code"`
+			Message   string `json:"message"`
+		}{}
+
+		if err := json.NewDecoder(r).Decode(formattedErr); err == nil {
+			return New(formattedErr.Message)
+		}
+
+		return New(body)
 	}
+
 	return err
 }
 
@@ -143,11 +157,7 @@ func catchCCloudBackendUnmarshallingError(err error) error {
 */
 
 func CatchCCloudV2Error(err error, r *http.Response) error {
-	if err == nil {
-		return nil
-	}
-
-	if r == nil {
+	if err == nil || r == nil {
 		return err
 	}
 
@@ -207,6 +217,18 @@ func CatchCCloudV2ResourceNotFoundError(err error, resourceType string, r *http.
 	return CatchCCloudV2Error(err, r)
 }
 
+func CatchComputePoolNotFoundError(err error, computePoolId string, r *http.Response) error {
+	if err == nil {
+		return nil
+	}
+
+	if r != nil && r.StatusCode == http.StatusForbidden {
+		return NewWrapErrorWithSuggestions(CatchCCloudV2Error(err, r), fmt.Sprintf(ComputePoolNotFoundErrorMsg, computePoolId), ComputePoolNotFoundSuggestions)
+	}
+
+	return CatchCCloudV2Error(err, r)
+}
+
 func CatchKafkaNotFoundError(err error, clusterId string, r *http.Response) error {
 	if err == nil {
 		return nil
@@ -237,7 +259,10 @@ func CatchClusterConfigurationNotValidError(err error, r *http.Response) error {
 
 	err = CatchCCloudV2Error(err, r)
 	if strings.Contains(err.Error(), "CKU must be greater") {
-		return New(InvalidCkuErrorMsg)
+		return New("CKU must be greater than 1 for multi-zone dedicated clusters")
+	}
+	if strings.Contains(err.Error(), "Durability must be HIGH for an Enterprise cluster") {
+		return New(`availability must be "multi-zone" for enterprise clusters`)
 	}
 
 	return err
@@ -314,25 +339,6 @@ func isResourceNotFoundError(err error) bool {
 }
 
 /*
-error creating topic bob: Topic 'bob' already exists.
-*/
-func CatchTopicExistsError(err error, clusterId string, topicName string, ifNotExistsFlag bool) error {
-	if err == nil {
-		return nil
-	}
-	compiledRegex := regexp.MustCompile(`error creating topic .*: Topic '.*' already exists\.`)
-	if compiledRegex.MatchString(err.Error()) {
-		if ifNotExistsFlag {
-			return nil
-		}
-		errorMsg := fmt.Sprintf(TopicExistsErrorMsg, topicName, clusterId)
-		suggestions := fmt.Sprintf(TopicExistsSuggestions, clusterId, clusterId)
-		return NewErrorWithSuggestions(errorMsg, suggestions)
-	}
-	return err
-}
-
-/*
 failed to produce offset -1: Unknown error, how did this happen? Error code = 87
 */
 func CatchProduceToCompactedTopicError(err error, topicName string) (bool, error) {
@@ -345,48 +351,4 @@ func CatchProduceToCompactedTopicError(err error, topicName string) (bool, error
 		return true, NewErrorWithSuggestions(errorMsg, ProducingToCompactedTopicSuggestions)
 	}
 	return false, err
-}
-
-func CatchSchemaNotFoundError(err error, r *http.Response) error {
-	if err == nil {
-		return nil
-	}
-
-	if r == nil {
-		return err
-	}
-
-	if strings.Contains(r.Status, "Not Found") {
-		return NewErrorWithSuggestions(SchemaNotFoundErrorMsg, SchemaNotFoundSuggestions)
-	}
-
-	return err
-}
-
-func CatchNoSubjectLevelConfigError(err error, r *http.Response, subject string) error {
-	if err == nil {
-		return nil
-	}
-
-	if r == nil {
-		return err
-	}
-
-	if strings.Contains(r.Status, "Not Found") {
-		return errors.New(fmt.Sprintf(NoSubjectLevelConfigErrorMsg, subject))
-	}
-
-	return err
-}
-
-func CatchContainerNameInUseError(err error) error {
-	if err == nil {
-		return nil
-	}
-
-	if strings.Contains(err.Error(), "The container name \"/confluent-local\" is already in use") {
-		return NewErrorWithSuggestions(ConfluentLocalStartedErrorMsg, ConfluentLocalStartedSuggestions)
-	}
-
-	return err
 }

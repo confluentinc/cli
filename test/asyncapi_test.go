@@ -9,22 +9,22 @@ import (
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
-func (s *CLITestSuite) TestAsyncApiExport() {
+func (s *CLITestSuite) TestAsyncapiExport() {
 	tests := []CLITest{
 		{args: "asyncapi export", exitCode: 1, fixture: "asyncapi/no-kafka.golden"},
-		{args: "asyncapi export", exitCode: 1, useKafka: "lkc-asyncapi", authKafka: "true", fixture: "asyncapi/no-sr-key.golden"},
-		{args: "environment use " + testserver.SRApiEnvId, workflow: true},
+		{args: "environment use " + testserver.SRApiEnvId},
 		// Spec Generated
-		{args: "asyncapi export --schema-registry-api-key ASYNCAPIKEY --schema-registry-api-secret ASYNCAPISECRET", fixture: "asyncapi/export-success.golden", useKafka: "lkc-asyncapi", authKafka: "true", workflow: true},
-		{args: "asyncapi export --schema-registry-api-key ASYNCAPIKEY --schema-registry-api-secret ASYNCAPISECRET --schema-context dev --file asyncapi-with-context.yaml", useKafka: "lkc-asyncapi", authKafka: "true", workflow: true},
-		{args: "asyncapi export --schema-registry-api-key ASYNCAPIKEY --schema-registry-api-secret ASYNCAPISECRET --topics topic1 --file asyncapi-topic-specified.yaml", fixture: "asyncapi/export-topic-specified.golden", useKafka: "lkc-asyncapi", authKafka: "true", workflow: true},
-		{args: "asyncapi export --schema-registry-api-key ASYNCAPIKEY --schema-registry-api-secret ASYNCAPISECRET --topics topic2 --file asyncapi-no-topics.yaml", fixture: "asyncapi/export-no-topics.golden", useKafka: "lkc-asyncapi", authKafka: "true", workflow: true},
-		{args: `asyncapi export --schema-registry-api-key ASYNCAPIKEY --schema-registry-api-secret ASYNCAPISECRET --topics "topic*" --file asyncapi-topic-specified.yaml`, fixture: "asyncapi/export-topic-specified.golden", useKafka: "lkc-asyncapi", authKafka: "true", workflow: true},
-		{args: `asyncapi export --schema-registry-api-key ASYNCAPIKEY --schema-registry-api-secret ASYNCAPISECRET --topics "no*" --file asyncapi-no-topics.yaml`, fixture: "asyncapi/export-no-topics.golden", useKafka: "lkc-asyncapi", authKafka: "true", workflow: true},
+		{args: "asyncapi export", fixture: "asyncapi/export-success.golden", useKafka: "lkc-asyncapi", authKafka: true},
+		{args: "asyncapi export --schema-context dev --file asyncapi-with-context.yaml", useKafka: "lkc-asyncapi", authKafka: true},
+		{args: "asyncapi export --topics topic1 --file asyncapi-topic-specified.yaml", fixture: "asyncapi/export-topic-specified.golden", useKafka: "lkc-asyncapi", authKafka: true},
+		{args: "asyncapi export --topics topic2 --file asyncapi-no-topics.yaml", fixture: "asyncapi/export-no-topics.golden", useKafka: "lkc-asyncapi", authKafka: true},
+		{args: `asyncapi export --topics "topic*" --file asyncapi-topic-specified.yaml`, fixture: "asyncapi/export-topic-specified.golden", useKafka: "lkc-asyncapi", authKafka: true},
+		{args: `asyncapi export --topics "no*" --file asyncapi-no-topics.yaml`, fixture: "asyncapi/export-no-topics.golden", useKafka: "lkc-asyncapi", authKafka: true},
 	}
 	resetConfiguration(s.T(), false)
 	for _, test := range tests {
 		test.login = "cloud"
+		test.workflow = true
 		s.runIntegrationTest(test)
 	}
 
@@ -46,11 +46,10 @@ func (s *CLITestSuite) TestAsyncApiExport() {
 	}
 }
 
-func (s *CLITestSuite) TestAsyncApiImport() {
+func (s *CLITestSuite) TestAsyncapiImport() {
 	tests := []CLITest{
 		{args: "asyncapi import", fixture: "asyncapi/import-err-no-file.golden", exitCode: 1},
 		{args: "asyncapi import --file=./test/fixtures/input/asyncapi/asyncapi-spec.yaml", exitCode: 1, fixture: "asyncapi/no-kafka.golden"},
-		{args: "asyncapi import --file=./test/fixtures/input/asyncapi/asyncapi-spec.yaml", exitCode: 1, useKafka: "lkc-asyncapi", authKafka: "true", fixture: "asyncapi/no-sr-key.golden"},
 	}
 	resetConfiguration(s.T(), false)
 	for _, test := range tests {
@@ -59,17 +58,18 @@ func (s *CLITestSuite) TestAsyncApiImport() {
 	}
 }
 
-func (s *CLITestSuite) TestAsyncApiImportWithWorkflow() {
+func (s *CLITestSuite) TestAsyncapiImport_WithWorkflow() {
 	tests := []CLITest{
-		{args: "environment use " + testserver.SRApiEnvId, workflow: true},
-		{args: "asyncapi import --file=./test/fixtures/input/asyncapi/asyncapi-spec.yaml --schema-registry-api-key ASYNCAPIKEY --schema-registry-api-secret ASYNCAPISECRET", useKafka: "lkc-asyncapi", authKafka: "true", workflow: true, fixture: "asyncapi/import-no-overwrite.golden"},
-		{args: "asyncapi import --file=./test/fixtures/input/asyncapi/asyncapi-spec.yaml --schema-registry-api-key ASYNCAPIKEY --schema-registry-api-secret ASYNCAPISECRET --overwrite", useKafka: "lkc-asyncapi", authKafka: "true", workflow: true, fixture: "asyncapi/import-with-overwrite.golden"},
-		{args: "asyncapi import --file=./test/fixtures/input/asyncapi/asyncapi-with-context.yaml --schema-registry-api-key ASYNCAPIKEY --schema-registry-api-secret ASYNCAPISECRET --overwrite", useKafka: "lkc-asyncapi", authKafka: "true", workflow: true, fixture: "asyncapi/import-no-channels.golden"},
-		{args: "asyncapi import --file=./test/fixtures/input/asyncapi/asyncapi-create-topic.yaml --schema-registry-api-key ASYNCAPIKEY --schema-registry-api-secret ASYNCAPISECRET --overwrite", useKafka: "lkc-asyncapi", authKafka: "true", workflow: true, fixture: "asyncapi/import-create-topic.golden"},
+		{args: "environment use " + testserver.SRApiEnvId},
+		{args: "asyncapi import --file=./test/fixtures/input/asyncapi/asyncapi-spec.yaml", useKafka: "lkc-asyncapi", authKafka: true, fixture: "asyncapi/import-no-overwrite.golden"},
+		{args: "asyncapi import --file=./test/fixtures/input/asyncapi/asyncapi-spec.yaml --overwrite", useKafka: "lkc-asyncapi", authKafka: true, fixture: "asyncapi/import-with-overwrite.golden"},
+		{args: "asyncapi import --file=./test/fixtures/input/asyncapi/asyncapi-with-context.yaml --overwrite", useKafka: "lkc-asyncapi", authKafka: true, fixture: "asyncapi/import-no-channels.golden"},
+		{args: "asyncapi import --file=./test/fixtures/input/asyncapi/asyncapi-create-topic.yaml --overwrite", useKafka: "lkc-asyncapi", authKafka: true, fixture: "asyncapi/import-create-topic.golden"},
 	}
 	resetConfiguration(s.T(), false)
 	for _, test := range tests {
 		test.login = "cloud"
+		test.workflow = true
 		s.runIntegrationTest(test)
 	}
 }

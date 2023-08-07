@@ -7,7 +7,6 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/featureflags"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -53,7 +52,7 @@ func (c *roleCommand) ccloudList(cmd *cobra.Command) error {
 		return err
 	}
 
-	ldClient := v1.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
+	ldClient := featureflags.GetCcloudLaunchDarklyClient(c.Context.PlatformName)
 	if featureflags.Manager.BoolVariation("flink.rbac.namespace.cli.enable", c.Context, ldClient, true, false) {
 		flinkRoles, err := c.namespaceRoles(flinkNamespace)
 		if err != nil {

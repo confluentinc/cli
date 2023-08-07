@@ -1,6 +1,6 @@
 package test
 
-func (s *CLITestSuite) TestCostList() {
+func (s *CLITestSuite) TestBillingCostList() {
 	tests := []CLITest{
 		{args: "billing cost list --start-date 2023-01-01 --end-date 2023-01-02", fixture: "billing/cost/list.golden"},
 		{args: "billing cost list --start-date 2023-01-01 --end-date 2023-01-02 -o json", fixture: "billing/cost/list-json.golden"},

@@ -24,7 +24,7 @@ import (
 type Client interface {
 	CheckForUpdates(cliName, currentVersion string, forceCheck bool) (string, string, error)
 	GetLatestReleaseNotes(cliName, currentVersion string) (string, []string, error)
-	PromptToDownload(cliName, currVersion, latestVersion string, releaseNotes string, confirm bool) bool
+	PromptToDownload(cliName, currVersion, latestVersion, releaseNotes string, confirm bool) bool
 	UpdateBinary(cliName, version, path string, noVerify bool) error
 }
 
@@ -37,6 +37,8 @@ type client struct {
 }
 
 var _ Client = (*client)(nil)
+
+const defaultVersion = "v0.0.0"
 
 // ClientParams are used to configure the update.Client
 type ClientParams struct {
@@ -68,7 +70,7 @@ func NewClient(params *ClientParams) *client {
 
 // CheckForUpdates checks for new versions in the repo
 func (c *client) CheckForUpdates(cliName, currentVersion string, forceCheck bool) (string, string, error) {
-	if c.DisableCheck {
+	if c.DisableCheck || currentVersion == defaultVersion {
 		return "", "", nil
 	}
 

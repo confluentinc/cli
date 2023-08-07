@@ -19,7 +19,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-func (c *authenticatedTopicCommand) newCreateCommand() *cobra.Command {
+func (c *command) newCreateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create <topic>",
 		Short: "Create a Kafka topic.",
@@ -45,7 +45,7 @@ func (c *authenticatedTopicCommand) newCreateCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) error {
+func (c *command) create(cmd *cobra.Command, args []string) error {
 	topicName := args[0]
 
 	partitions, err := cmd.Flags().GetUint32("partitions")
@@ -73,17 +73,12 @@ func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 		return err
 	}
 
-	kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand()
-	if err != nil {
-		return err
-	}
-
-	if err := c.provisioningClusterCheck(kafkaClusterConfig.ID); err != nil {
-		return err
-	}
-
 	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {
+		return err
+	}
+
+	if err := c.provisioningClusterCheck(kafkaREST.GetClusterId()); err != nil {
 		return err
 	}
 
@@ -108,7 +103,7 @@ func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 		data.PartitionsCount = utils.Int32Ptr(int32(partitions))
 	}
 
-	_, httpResp, err := kafkaREST.CloudClient.CreateKafkaTopic(kafkaClusterConfig.ID, data)
+	_, httpResp, err := kafkaREST.CloudClient.CreateKafkaTopic(data)
 	if err != nil {
 		restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err)
 		if parseErr == nil && restErr.Code == ccloudv2.BadRequestErrorCode {
@@ -117,9 +112,10 @@ func (c *authenticatedTopicCommand) create(cmd *cobra.Command, args []string) er
 				if ifNotExists {
 					return nil
 				}
+				clusterId := kafkaREST.GetClusterId()
 				return errors.NewErrorWithSuggestions(
-					fmt.Sprintf(errors.TopicExistsErrorMsg, topicName, kafkaClusterConfig.ID),
-					fmt.Sprintf(errors.TopicExistsSuggestions, kafkaClusterConfig.ID, kafkaClusterConfig.ID))
+					fmt.Sprintf(errors.TopicExistsErrorMsg, topicName, clusterId),
+					fmt.Sprintf(errors.TopicExistsSuggestions, clusterId, clusterId))
 			}
 
 			// Print partition limit error w/ suggestion

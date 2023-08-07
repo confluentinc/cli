@@ -6,7 +6,6 @@ import (
 	b64 "encoding/base64"
 	"fmt"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/dghubble/sling"
@@ -33,12 +32,16 @@ const (
 )
 
 const (
+	devel = "devel.cpdev.cloud"
+	stag  = "stag.cpdev.cloud"
+)
+
+const (
 	cliProdEnvClientId     = "61af57740127630ce47de5be"
 	cliTestEnvClientId     = "61af57740127630ce47de5bd"
 	ccloudProdEnvClientId  = "5c636508aa445d32c86f26b1"
 	ccloudStagEnvClientId  = "5c63651f1df21432a45fc773"
 	ccloudDevelEnvClientId = "5c63653912b6db32db950445"
-	ccloudCpdEnvClientId   = "5c6365ffaa445d32c86f26c0"
 )
 
 // Manager is a global feature flag manager
@@ -47,47 +50,52 @@ var Manager launchDarklyManager
 var attributes = []string{"user.resource_id", "org.resource_id", "environment.id", "cli.version", "cluster.id", "cluster.physicalClusterId", "cli.command", "cli.flags"}
 
 type launchDarklyManager struct {
-	cliClient                *sling.Sling
-	ccloudClient             func(v1.LaunchDarklyClient) *sling.Sling
-	Command                  *cobra.Command
-	flags                    []string
-	isDisabled               bool
-	timeoutSuggestionPrinted bool
-	version                  *version.Version
+	cliClient             *sling.Sling
+	ccloudClient          *sling.Sling
+	Command               *cobra.Command
+	flags                 []string
+	hideTimeoutWarning    bool
+	isDisabled            bool
+	timeoutWarningPrinted bool
+	version               *version.Version
 }
 
-func Init(version *version.Version, isTest, isDisabledConfig bool) {
-	cliBasePath := fmt.Sprintf(baseURL, auth.CCloudURL, cliProdEnvClientId)
-	if isTest {
+func Init(cfg *v1.Config) {
+	cliBasePath := fmt.Sprintf(baseURL, auth.CCloudURL, cliTestEnvClientId)
+	ccloudBasePath := fmt.Sprintf(baseURL, auth.CCloudURL, ccloudProdEnvClientId)
+	if cfg.IsTest {
 		cliBasePath = fmt.Sprintf(baseURL, testserver.TestCloudUrl.String(), "1234")
-	} else if os.Getenv("XX_LAUNCH_DARKLY_TEST_ENV") != "" {
-		cliBasePath = fmt.Sprintf(baseURL, auth.CCloudURL, cliTestEnvClientId)
-	}
-
-	ccloudClientProvider := func(client v1.LaunchDarklyClient) *sling.Sling {
-		if isTest || os.Getenv("XX_LAUNCH_DARKLY_TEST_ENV") != "" {
-			return sling.New().Base(fmt.Sprintf(baseURL, auth.CCloudURL, ccloudCpdEnvClientId))
-		}
-
-		var ccloudBasePath string
-		switch client {
-		case v1.CcloudDevelLaunchDarklyClient:
+		ccloudBasePath = cliBasePath
+	} else {
+		switch cfg.Context().GetPlatform().GetName() {
+		case devel:
 			ccloudBasePath = fmt.Sprintf(baseURL, auth.CCloudURL, ccloudDevelEnvClientId)
-		case v1.CcloudStagLaunchDarklyClient:
+		case stag:
 			ccloudBasePath = fmt.Sprintf(baseURL, auth.CCloudURL, ccloudStagEnvClientId)
 		default:
-			ccloudBasePath = fmt.Sprintf(baseURL, auth.CCloudURL, ccloudProdEnvClientId)
+			cliBasePath = fmt.Sprintf(baseURL, auth.CCloudURL, cliProdEnvClientId)
 		}
-
-		return sling.New().Base(ccloudBasePath)
 	}
 
 	Manager = launchDarklyManager{
-		cliClient:                sling.New().Base(cliBasePath),
-		ccloudClient:             ccloudClientProvider,
-		version:                  version,
-		timeoutSuggestionPrinted: false,
-		isDisabled:               isDisabledConfig,
+		cliClient:             sling.New().Base(cliBasePath),
+		ccloudClient:          sling.New().Base(ccloudBasePath),
+		hideTimeoutWarning:    cfg.IsTest,
+		isDisabled:            cfg.DisableFeatureFlags,
+		timeoutWarningPrinted: false,
+		version:               cfg.Version,
+	}
+}
+
+// GetCcloudLaunchDarklyClient resolves to a LaunchDarkly client based on the string platform name that is passed in.
+func GetCcloudLaunchDarklyClient(platformName string) v1.LaunchDarklyClient {
+	switch platformName {
+	case "stag.cpdev.cloud":
+		return v1.CcloudStagLaunchDarklyClient
+	case "devel.cpdev.cloud":
+		return v1.CcloudDevelLaunchDarklyClient
+	default:
+		return v1.CcloudProdLaunchDarklyClient
 	}
 }
 
@@ -98,7 +106,7 @@ func (ld *launchDarklyManager) SetCommandAndFlags(cmd *cobra.Command, args []str
 	ld.flags = flags
 }
 
-func (ld *launchDarklyManager) BoolVariation(key string, ctx *dynamicconfig.DynamicContext, client v1.LaunchDarklyClient, shouldCache bool, defaultVal bool) bool {
+func (ld *launchDarklyManager) BoolVariation(key string, ctx *dynamicconfig.DynamicContext, client v1.LaunchDarklyClient, shouldCache, defaultVal bool) bool {
 	flagValInterface := ld.generalVariation(key, ctx, client, shouldCache, defaultVal)
 	flagVal, ok := flagValInterface.(bool)
 	if !ok {
@@ -176,17 +184,17 @@ func (ld *launchDarklyManager) fetchFlags(user lduser.User, client v1.LaunchDark
 	var flagVals map[string]any
 	switch client {
 	case v1.CcloudProdLaunchDarklyClient, v1.CcloudStagLaunchDarklyClient, v1.CcloudDevelLaunchDarklyClient:
-		resp, err = ld.ccloudClient(client).New().Get(fmt.Sprintf(userPath, userEnc)).Receive(&flagVals, err)
+		resp, err = ld.ccloudClient.New().Get(fmt.Sprintf(userPath, userEnc)).Receive(&flagVals, err)
 	// default is "cli" client
 	default:
 		resp, err = ld.cliClient.New().Get(fmt.Sprintf(userPath, userEnc)).Receive(&flagVals, err)
 	}
 	if err != nil {
 		log.CliLogger.Debug(resp)
-		if !ld.timeoutSuggestionPrinted {
+		if !ld.hideTimeoutWarning && !ld.timeoutWarningPrinted {
 			output.ErrPrintln("WARNING: Failed to fetch feature flags.")
 			output.ErrPrintln(errors.ComposeSuggestionsMessage(`Check connectivity to https://confluent.cloud or set "disable_feature_flags": true in ~/.confluent/config.json.`))
-			ld.timeoutSuggestionPrinted = true
+			ld.timeoutWarningPrinted = true
 		}
 
 		return flagVals, fmt.Errorf("error fetching feature flags: %w", err)
@@ -213,7 +221,7 @@ func areCachedFlagsAvailable(ctx *dynamicconfig.DynamicContext, user lduser.User
 			return false
 		}
 	default:
-		if _, ok := flags.Values[key]; !ok {
+		if _, ok := flags.CliValues[key]; !ok {
 			return false
 		}
 	}
@@ -308,7 +316,7 @@ func writeFlagsToConfig(ctx *dynamicconfig.DynamicContext, key string, vals map[
 			ctx.FeatureFlags.CcloudValues[key] = v
 		}
 	default:
-		ctx.FeatureFlags.Values = vals
+		ctx.FeatureFlags.CliValues = vals
 	}
 
 	ctx.FeatureFlags.LastUpdateTime = time.Now().Unix()

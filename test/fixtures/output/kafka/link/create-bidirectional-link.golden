@@ -1,0 +1,8 @@
+Created cluster link "bidirectional_link" with configs:
+"bootstrap.servers"="myhost:1234"
+"link.mode"="BIDIRECTIONAL"
+"local.sasl.mechanism"="PLAIN"
+"local.security.protocol"="SASL_SSL"
+"sasl.mechanism"="PLAIN"
+"security.protocol"="SASL_SSL"
+

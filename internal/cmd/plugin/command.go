@@ -7,6 +7,8 @@ import (
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 )
 
+const cliPluginsUrl = "https://github.com/confluentinc/cli-plugins.git"
+
 type command struct {
 	*pcmd.CLICommand
 	cfg *v1.Config
@@ -59,7 +61,9 @@ Naming collisions with existing CLI commands and other plugins:
 		cfg:        cfg,
 	}
 
+	cmd.AddCommand(c.newInstallCommand())
 	cmd.AddCommand(c.newListCommand())
+	cmd.AddCommand(c.newSearchCommand())
 
 	return cmd
 }

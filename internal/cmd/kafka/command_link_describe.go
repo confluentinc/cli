@@ -6,8 +6,6 @@ import (
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -16,6 +14,7 @@ type describeOut struct {
 	TopicName            string `human:"Topic Name" serialized:"topic_name"`
 	SourceClusterId      string `human:"Source Cluster" serialized:"source_cluster_id"`
 	DestinationClusterId string `human:"Destination Cluster" serialized:"destination_cluster_id"`
+	RemoteClusterId      string `human:"Remote Cluster" serialized:"remote_cluster_id"`
 	State                string `human:"State" serialized:"state"`
 	Error                string `human:"Error,omitempty" serialized:"error,omitempty"`
 	ErrorMessage         string `human:"Error Message,omitempty" serialized:"error_message,omitempty"`
@@ -42,41 +41,34 @@ func (c *linkCommand) describe(cmd *cobra.Command, args []string) error {
 	linkName := args[0]
 
 	kafkaREST, err := c.GetKafkaREST()
-	if kafkaREST == nil {
-		if err != nil {
-			return err
-		}
-		return errors.New(errors.RestProxyNotAvailableMsg)
-	}
-
-	clusterId, err := getKafkaClusterLkcId(c.AuthenticatedCLICommand)
 	if err != nil {
 		return err
 	}
 
-	data, httpResp, err := kafkaREST.CloudClient.GetKafkaLink(clusterId, linkName)
+	link, err := kafkaREST.CloudClient.GetKafkaLink(linkName)
 	if err != nil {
-		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+		return err
 	}
 
 	table := output.NewTable(cmd)
-	table.Add(newDescribeLink(data, ""))
+	table.Add(newDescribeLink(link, ""))
 	table.Filter(getListFields(false))
 	return table.Print()
 }
 
-func newDescribeLink(data kafkarestv3.ListLinksResponseData, topic string) *describeOut {
+func newDescribeLink(link kafkarestv3.ListLinksResponseData, topic string) *describeOut {
 	var linkError string
-	if data.GetLinkError() != "NO_ERROR" {
-		linkError = data.GetLinkError()
+	if link.GetLinkError() != "NO_ERROR" {
+		linkError = link.GetLinkError()
 	}
 	return &describeOut{
-		Name:                 data.LinkName,
+		Name:                 link.GetLinkName(),
 		TopicName:            topic,
-		SourceClusterId:      data.GetSourceClusterId(),
-		DestinationClusterId: data.GetDestinationClusterId(),
-		State:                data.GetLinkState(),
+		SourceClusterId:      link.GetSourceClusterId(),
+		DestinationClusterId: link.GetDestinationClusterId(),
+		RemoteClusterId:      link.GetRemoteClusterId(),
+		State:                link.GetLinkState(),
 		Error:                linkError,
-		ErrorMessage:         data.GetLinkErrorMessage(),
+		ErrorMessage:         link.GetLinkErrorMessage(),
 	}
 }

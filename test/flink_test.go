@@ -33,6 +33,9 @@ func (s *CLITestSuite) TestFlinkComputePoolUse() {
 func (s *CLITestSuite) TestFlinkRegion() {
 	tests := []CLITest{
 		{args: "flink region list", fixture: "flink/region/list.golden"},
+		{args: "flink region use aws.eu-west-1", fixture: "flink/region/use.golden"},
+		{args: "flink region use aws", fixture: "flink/region/use-missing-region.golden", exitCode: 1},
+		{args: "flink region use eu-west-2", fixture: "flink/region/use-missing-cloud.golden", exitCode: 1},
 		{args: "flink region list -o json", fixture: "flink/region/list-json.golden"},
 		{args: "flink region list --cloud aws", fixture: "flink/region/list-cloud.golden"},
 	}
@@ -45,15 +48,15 @@ func (s *CLITestSuite) TestFlinkRegion() {
 
 func (s *CLITestSuite) TestFlinkStatement() {
 	tests := []CLITest{
-		{args: "flink statement delete my-statement --compute-pool lfcp-123456 --force", fixture: "flink/statement/delete.golden"},
+		{args: "flink statement delete my-statement --force --region eu-west-1 --cloud aws", fixture: "flink/statement/delete.golden"},
 		{args: "flink statement list --compute-pool lfcp-123456", fixture: "flink/statement/list.golden"},
-		{args: "flink statement describe my-statement --compute-pool lfcp-123456", fixture: "flink/statement/describe.golden"},
-		{args: "flink statement exceptions list my-statement --compute-pool lfcp-123456", fixture: "flink/statement/exceptions/list.golden"},
+		{args: "flink statement describe my-statement --region eu-west-1 --cloud aws", fixture: "flink/statement/describe.golden"},
+		{args: "flink statement exception list my-statement --region eu-west-1 --cloud aws", fixture: "flink/statement/exception/list.golden"},
 	}
 
-	for _, tt := range tests {
-		tt.login = "cloud"
-		s.runIntegrationTest(tt)
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
 	}
 }
 

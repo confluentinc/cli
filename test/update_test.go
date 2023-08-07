@@ -40,9 +40,9 @@ func (s *CLITestSuite) TestUpdate() {
 		{args: "--help", notContains: "Update the confluent CLI."},
 	}
 
-	for _, tt := range tests {
-		tt.workflow = true
-		switch tt.name {
+	for _, test := range tests {
+		test.workflow = true
+		switch test.name {
 		case "HACK: disable update checks":
 			err = os.WriteFile(configFile, []byte(`{"disable_update_checks": true}`), os.ModePerm)
 			require.NoError(s.T(), err)
@@ -50,8 +50,8 @@ func (s *CLITestSuite) TestUpdate() {
 			err = os.WriteFile(configFile, []byte(`{"disable_updates": true}`), os.ModePerm)
 			require.NoError(s.T(), err)
 		default:
-			s.runIntegrationTest(tt)
-			if tt.fixture == "update/1.golden" {
+			s.runIntegrationTest(test)
+			if test.fixture == "update/1.golden" {
 				// Remove the cache file so it _would_ prompt again (if not disabled)
 				err = os.RemoveAll(path) // RemoveAll so we don't return an error if file doesn't exist
 				require.NoError(s.T(), err)

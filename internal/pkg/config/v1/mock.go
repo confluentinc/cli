@@ -30,12 +30,6 @@ var (
 	bootstrapServer    = "SASL_SSL://pkc-abc123.us-west2.gcp.confluent.cloud:9092"
 	kafkaAPIKey        = "costa"
 	kafkaAPISecret     = "rica"
-
-	// sr cluster
-	srClusterId = "lsrc-test"
-	srEndpoint  = "https://sr-test"
-	srAPIKey    = "michael"
-	srAPISecret = "scott"
 )
 
 func MockKafkaClusterId() string {
@@ -104,7 +98,7 @@ func APICredentialConfigMock() *Config {
 
 	cfg := New()
 
-	ctx, err := newContext(mockContextName, platform, credential, kafkaClusters, kafkaCluster.ID, nil, contextState, cfg, "", "")
+	ctx, err := newContext(mockContextName, platform, credential, kafkaClusters, kafkaCluster.ID, contextState, cfg, "", "")
 	if err != nil {
 		panic(err)
 	}
@@ -141,14 +135,10 @@ func AuthenticatedConfigMock(params mockConfigParams) *Config {
 	kafkaCluster := createKafkaCluster(kafkaClusterId, kafkaClusterName, kafkaAPIKeyPair)
 	kafkaClusters := map[string]*KafkaClusterConfig{kafkaCluster.ID: kafkaCluster}
 
-	srAPIKeyPair := createAPIKeyPair(srAPIKey, srAPISecret)
-	srCluster := createSRCluster(srAPIKeyPair)
-	srClusters := map[string]*SchemaRegistryCluster{MockEnvironmentId: srCluster}
-
 	cfg := New()
 	cfg.IsTest = true
 
-	ctx, err := newContext(params.contextName, platform, credential, kafkaClusters, kafkaCluster.ID, srClusters, contextState, cfg, params.orgResourceId, params.envId)
+	ctx, err := newContext(params.contextName, platform, credential, kafkaClusters, kafkaCluster.ID, contextState, cfg, params.orgResourceId, params.envId)
 	if err != nil {
 		panic(err)
 	}
@@ -218,14 +208,6 @@ func createKafkaCluster(clusterID, clusterName string, apiKeyPair *APIKeyPair) *
 	}
 }
 
-func createSRCluster(apiKeyPair *APIKeyPair) *SchemaRegistryCluster {
-	return &SchemaRegistryCluster{
-		Id:                     srClusterId,
-		SchemaRegistryEndpoint: srEndpoint,
-		SrCredentials:          apiKeyPair,
-	}
-}
-
 func setUpConfig(conf *Config, ctx *Context, platform *Platform, credential *Credential, contextState *ContextState) {
 	conf.Platforms[platform.Name] = platform
 	conf.Credentials[credential.Name] = credential
@@ -237,9 +219,4 @@ func setUpConfig(conf *Config, ctx *Context, platform *Platform, credential *Cre
 	if err := conf.Validate(); err != nil {
 		panic(err)
 	}
-}
-
-func AddEnvironmentToConfigMock(cfg *Config, id string) {
-	ctx := cfg.Context()
-	ctx.Environments[id] = &EnvironmentContext{}
 }

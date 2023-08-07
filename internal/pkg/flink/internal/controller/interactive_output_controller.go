@@ -9,24 +9,26 @@ import (
 	"github.com/rivo/tview"
 
 	"github.com/confluentinc/cli/internal/pkg/flink/components"
-	"github.com/confluentinc/cli/internal/pkg/flink/internal/results"
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/utils"
 	"github.com/confluentinc/cli/internal/pkg/flink/types"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
+const errorDuringTableView = "Error: internal error occurred while in table view"
+
 type InteractiveOutputController struct {
 	app           *tview.Application
-	tableView     *components.TableView
+	tableView     components.TableViewInterface
 	resultFetcher types.ResultFetcherInterface
 	isRowViewOpen bool
 	debug         bool
 }
 
-func NewInteractiveOutputController(resultFetcher types.ResultFetcherInterface, debug bool) types.OutputControllerInterface {
+func NewInteractiveOutputController(tableView components.TableViewInterface, resultFetcher types.ResultFetcherInterface, debug bool) types.OutputControllerInterface {
 	return &InteractiveOutputController{
 		app:           tview.NewApplication(),
+		tableView:     tableView,
 		resultFetcher: resultFetcher,
 		debug:         debug,
 	}
@@ -34,39 +36,40 @@ func NewInteractiveOutputController(resultFetcher types.ResultFetcherInterface, 
 
 func (t *InteractiveOutputController) VisualizeResults() {
 	t.init()
-	t.start()
+	t.startTView() // this is blocking
+	t.close()
 }
 
-func (t *InteractiveOutputController) start() {
+func (t *InteractiveOutputController) startTView() {
 	err := t.app.Run()
 	if err != nil {
-		log.CliLogger.Errorf("Error: failed to open table view, %v", err)
-		utils.OutputErr("Error: failed to open table view")
+		log.CliLogger.Errorf("%s, %v", errorDuringTableView, err)
+		utils.OutputErr(errorDuringTableView)
 	}
+}
+
+func (t *InteractiveOutputController) close() {
+	t.resultFetcher.Close()
+	output.Println("Result retrieval aborted.")
 }
 
 func (t *InteractiveOutputController) init() {
 	t.isRowViewOpen = false
-	t.resultFetcher.SetAutoRefreshCallback(t.renderTableAsync)
-	t.resultFetcher.ToggleAutoRefresh()
+	t.resultFetcher.SetRefreshCallback(t.renderTableAsync)
+	t.resultFetcher.ToggleRefresh()
 	t.app.SetInputCapture(t.inputCapture)
-	t.initTableView()
-}
-
-func (t *InteractiveOutputController) initTableView() {
-	t.tableView = components.NewTableView()
+	t.tableView.Init()
 	t.updateTable()
-	t.openTableView()
 }
 
 func (t *InteractiveOutputController) updateTable() {
-	t.tableView.RenderTable(t.getTableTitle(), t.resultFetcher.GetMaterializedStatementResults(), !t.resultFetcher.IsAutoRefreshRunning())
-	t.app.SetFocus(t.tableView.GetTable())
+	t.tableView.RenderTable(t.getTableTitle(), t.resultFetcher.GetMaterializedStatementResults(), t.resultFetcher.GetLastRefreshTimestamp(), t.resultFetcher.GetRefreshState())
+	t.renderTableView()
 }
 
-func (t *InteractiveOutputController) openTableView() {
-	t.app.SetRoot(t.tableView.RootLayout, true).EnableMouse(false)
-	t.app.SetFocus(t.tableView.GetTable())
+func (t *InteractiveOutputController) renderTableView() {
+	t.app.SetRoot(t.tableView.GetRoot(), true).EnableMouse(false)
+	t.app.SetFocus(t.tableView.GetFocusableElement())
 }
 
 func (t *InteractiveOutputController) renderTableAsync() {
@@ -84,9 +87,9 @@ func (t *InteractiveOutputController) inputCapture(event *tcell.EventKey) *tcell
 func (t *InteractiveOutputController) inputHandlerRowView(event *tcell.EventKey) *tcell.EventKey {
 	switch event.Key() {
 	case tcell.KeyRune:
-		char := unicode.ToUpper(event.Rune())
-		switch char {
-		case 'Q':
+		shortcut := string(unicode.ToUpper(event.Rune()))
+		switch shortcut {
+		case components.ExitRowViewShortcut:
 			t.closeRowView()
 		}
 		return nil
@@ -100,7 +103,7 @@ func (t *InteractiveOutputController) inputHandlerRowView(event *tcell.EventKey)
 }
 
 func (t *InteractiveOutputController) closeRowView() {
-	t.openTableView()
+	t.renderTableView()
 	t.isRowViewOpen = false
 }
 
@@ -113,50 +116,58 @@ func (t *InteractiveOutputController) inputHandlerTableView(event *tcell.EventKe
 			action()
 		}
 		return nil
-	case tcell.KeyEscape:
-		t.exitTViewMode()
-		return nil
-	case tcell.KeyCtrlQ:
-		t.exitTViewMode()
+	case tcell.KeyEscape, tcell.KeyCtrlQ:
+		t.app.Stop()
 		return nil
 	case tcell.KeyEnter:
-		t.openRowView()
+		t.renderRowView()
 		return nil
+	case tcell.KeyUp, tcell.KeyDown:
+		return t.handleKeyUpOrDownPress(event)
 	}
 	return event
 }
 
 func (t *InteractiveOutputController) getActionForShortcut(shortcut string) func() {
 	switch shortcut {
-	case "Q":
-		return t.exitTViewMode
-	case "M":
-		return t.renderAfterAction(t.resultFetcher.ToggleTableMode)
-	case "A":
-		return t.renderAfterAction(t.resultFetcher.ToggleAutoRefresh)
-	case "H":
-		return t.tableView.FastScrollUp
-	case "L":
-		return t.tableView.FastScrollDown
+	case components.ExitTableViewShortcut:
+		return t.app.Stop
+	case components.ToggleTableModeShortcut:
+		return t.toggleTableMode
+	case components.ToggleRefreshShortcut:
+		return t.toggleRefresh
+	case components.JumpUpShortcut:
+		return t.stopRefreshOrScroll(t.tableView.JumpUp)
+	case components.JumpDownShortcut:
+		return t.stopRefreshOrScroll(t.tableView.JumpDown)
 	}
 	return nil
 }
 
-func (t *InteractiveOutputController) exitTViewMode() {
-	t.resultFetcher.Close()
-	t.app.Stop()
-	output.Println("Result retrieval aborted.")
+func (t *InteractiveOutputController) toggleTableMode() {
+	t.resultFetcher.ToggleTableMode()
+	t.updateTable()
 }
 
-func (t *InteractiveOutputController) renderAfterAction(action func()) func() {
-	return func() {
-		action()
+func (t *InteractiveOutputController) toggleRefresh() {
+	if t.resultFetcher.GetRefreshState() != types.Completed {
+		t.resultFetcher.ToggleRefresh()
 		t.updateTable()
 	}
 }
 
-func (t *InteractiveOutputController) openRowView() {
-	if !t.resultFetcher.IsAutoRefreshRunning() {
+func (t *InteractiveOutputController) stopRefreshOrScroll(scroll func()) func() {
+	if t.resultFetcher.IsRefreshRunning() {
+		return func() {
+			t.resultFetcher.ToggleRefresh()
+			t.updateTable()
+		}
+	}
+	return scroll
+}
+
+func (t *InteractiveOutputController) renderRowView() {
+	if !t.resultFetcher.IsRefreshRunning() {
 		row := t.tableView.GetSelectedRow()
 		t.isRowViewOpen = true
 
@@ -172,31 +183,25 @@ func (t *InteractiveOutputController) openRowView() {
 	}
 }
 
+func (t *InteractiveOutputController) handleKeyUpOrDownPress(event *tcell.EventKey) *tcell.EventKey {
+	if t.resultFetcher.IsRefreshRunning() {
+		t.resultFetcher.ToggleRefresh()
+		t.updateTable()
+		return nil
+	}
+	return event
+}
+
 func (t *InteractiveOutputController) getTableTitle() string {
 	mode := "Changelog mode"
 	if t.resultFetcher.IsTableMode() {
 		mode = "Table mode"
 	}
 
-	var state string
-	switch t.resultFetcher.GetFetchState() {
-	case types.Completed:
-		state = "completed"
-	case types.Failed:
-		state = "auto refresh failed"
-	case types.Paused:
-		state = "auto refresh paused"
-	case types.Running:
-		state = fmt.Sprintf("auto refresh %.1fs", float64(results.DefaultRefreshInterval)/1000)
-	default:
-		state = "unknown error"
-	}
-
 	if t.debug {
 		return fmt.Sprintf(
-			" %s (%s) | last page size: %d | current cache size: %d/%d | table size: %d ",
+			" %s | last page size: %d | current cache size: %d/%d | table size: %d ",
 			mode,
-			state,
 			t.resultFetcher.GetStatement().GetPageSize(),
 			t.resultFetcher.GetMaterializedStatementResults().GetChangelogSize(),
 			t.resultFetcher.GetMaterializedStatementResults().GetMaxResults(),
@@ -204,5 +209,5 @@ func (t *InteractiveOutputController) getTableTitle() string {
 		)
 	}
 
-	return fmt.Sprintf(" %s (%s) ", mode, state)
+	return fmt.Sprintf(" %s ", mode)
 }

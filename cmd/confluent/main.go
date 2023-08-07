@@ -7,7 +7,6 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config/load"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
@@ -22,7 +21,9 @@ var (
 )
 
 func main() {
-	cfg, err := load.LoadAndMigrate(v1.New())
+	cfg := v1.New()
+
+	err := cfg.Load()
 	cobra.CheckErr(err)
 
 	disableUpdates, err := strconv.ParseBool(disableUpdates)

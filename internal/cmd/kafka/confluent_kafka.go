@@ -1,7 +1,6 @@
 package kafka
 
 import (
-	"context"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
@@ -15,7 +14,6 @@ import (
 	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/confluent-kafka-go/kafka"
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
@@ -23,6 +21,7 @@ import (
 	configv1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	schemaregistry "github.com/confluentinc/cli/internal/pkg/schema-registry"
 	"github.com/confluentinc/cli/internal/pkg/serdes"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
@@ -54,15 +53,15 @@ type ConsumerProperties struct {
 
 // GroupHandler instances are used to handle individual topic-partition claims.
 type GroupHandler struct {
-	SrClient   *srsdk.APIClient
-	Ctx        context.Context
-	Format     string
-	Out        io.Writer
-	Subject    string
-	Properties ConsumerProperties
+	SrClient    *schemaregistry.Client
+	KeyFormat   string
+	ValueFormat string
+	Out         io.Writer
+	Subject     string
+	Properties  ConsumerProperties
 }
 
-func (c *authenticatedTopicCommand) refreshOAuthBearerToken(cmd *cobra.Command, client ckafka.Handle) error {
+func (c *command) refreshOAuthBearerToken(cmd *cobra.Command, client ckafka.Handle) error {
 	protocol, err := cmd.Flags().GetString("protocol")
 	if err != nil {
 		return err
@@ -73,10 +72,10 @@ func (c *authenticatedTopicCommand) refreshOAuthBearerToken(cmd *cobra.Command, 
 	}
 	if protocol == "SASL_SSL" && saslMechanism == "OAUTHBEARER" {
 		oart := ckafka.OAuthBearerTokenRefresh{Config: oauthConfig}
-		if c.State == nil { // require log-in to use oauthbearer token
+		if c.Context.State == nil { // require log-in to use oauthbearer token
 			return errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestions)
 		}
-		oauthBearerToken, retrieveErr := retrieveUnsecuredToken(oart, c.AuthToken())
+		oauthBearerToken, retrieveErr := retrieveUnsecuredToken(oart, c.Context.GetAuthToken())
 		if retrieveErr != nil {
 			_ = client.SetOAuthBearerTokenFailure(retrieveErr.Error())
 			return fmt.Errorf("token retrieval error: %w", retrieveErr)
@@ -130,7 +129,7 @@ func newProducer(kafka *configv1.KafkaClusterConfig, clientID, configPath string
 	return newProducerWithOverwrittenConfigs(configMap, configPath, configStrings)
 }
 
-func newConsumer(group string, kafka *configv1.KafkaClusterConfig, clientID string, configPath string, configStrings []string) (*ckafka.Consumer, error) {
+func newConsumer(group string, kafka *configv1.KafkaClusterConfig, clientID, configPath string, configStrings []string) (*ckafka.Consumer, error) {
 	configMap, err := getConsumerConfigMap(group, kafka, clientID)
 	if err != nil {
 		return nil, err
@@ -139,7 +138,7 @@ func newConsumer(group string, kafka *configv1.KafkaClusterConfig, clientID stri
 	return newConsumerWithOverwrittenConfigs(configMap, configPath, configStrings)
 }
 
-func newOnPremProducer(cmd *cobra.Command, clientID string, configPath string, configStrings []string) (*ckafka.Producer, error) {
+func newOnPremProducer(cmd *cobra.Command, clientID, configPath string, configStrings []string) (*ckafka.Producer, error) {
 	configMap, err := getOnPremProducerConfigMap(cmd, clientID)
 	if err != nil {
 		return nil, err
@@ -148,7 +147,7 @@ func newOnPremProducer(cmd *cobra.Command, clientID string, configPath string, c
 	return newProducerWithOverwrittenConfigs(configMap, configPath, configStrings)
 }
 
-func newOnPremConsumer(cmd *cobra.Command, clientID string, configPath string, configStrings []string) (*ckafka.Consumer, error) {
+func newOnPremConsumer(cmd *cobra.Command, clientID, configPath string, configStrings []string) (*ckafka.Consumer, error) {
 	configMap, err := getOnPremConsumerConfigMap(cmd, clientID)
 	if err != nil {
 		return nil, err
@@ -161,7 +160,7 @@ func newOnPremConsumer(cmd *cobra.Command, clientID string, configPath string, c
 func GetRebalanceCallback(offset ckafka.Offset, partitionFilter PartitionFilter) func(*ckafka.Consumer, ckafka.Event) error {
 	return func(consumer *ckafka.Consumer, event ckafka.Event) error {
 		switch ev := event.(type) { // ev is of type ckafka.Event
-		case kafka.AssignedPartitions:
+		case ckafka.AssignedPartitions:
 			partitions := make([]ckafka.TopicPartition, len(ev.Partitions))
 			for i, partition := range ev.Partitions {
 				partition.Offset = offset
@@ -172,7 +171,7 @@ func GetRebalanceCallback(offset ckafka.Offset, partitionFilter PartitionFilter)
 			if err := consumer.IncrementalAssign(partitions); err != nil {
 				return err
 			}
-		case kafka.RevokedPartitions:
+		case ckafka.RevokedPartitions:
 			if consumer.AssignmentLost() {
 				output.ErrPrintln("%% Current assignment lost.")
 			}
@@ -185,54 +184,71 @@ func GetRebalanceCallback(offset ckafka.Offset, partitionFilter PartitionFilter)
 	}
 }
 
-func consumeMessage(e *ckafka.Message, h *GroupHandler) error {
-	value := e.Value
+func consumeMessage(message *ckafka.Message, h *GroupHandler) error {
 	if h.Properties.PrintKey {
-		key := e.Key
-		var keyString string
-		if len(key) == 0 {
-			keyString = "null"
-		} else {
-			keyString = string(key)
+		keyDeserializer, err := serdes.GetDeserializationProvider(h.KeyFormat)
+		if err != nil {
+			return err
 		}
-		if _, err := fmt.Fprint(h.Out, keyString+h.Properties.Delimiter); err != nil {
+
+		if h.KeyFormat != "string" {
+			schemaPath, referencePathMap, err := h.RequestSchema(message.Key)
+			if err != nil {
+				return err
+			}
+			message.Key = message.Key[messageOffset:]
+			if err := keyDeserializer.LoadSchema(schemaPath, referencePathMap); err != nil {
+				return err
+			}
+		}
+
+		jsonMessage, err := serdes.Deserialize(keyDeserializer, message.Key)
+		if err != nil {
+			return err
+		}
+		if jsonMessage == "" {
+			jsonMessage = "null"
+		}
+
+		if _, err := fmt.Fprint(h.Out, jsonMessage+h.Properties.Delimiter); err != nil {
 			return err
 		}
 	}
 
-	deserializationProvider, err := serdes.GetDeserializationProvider(h.Format)
+	valueDeserializer, err := serdes.GetDeserializationProvider(h.ValueFormat)
 	if err != nil {
 		return err
 	}
 
-	if h.Format != "string" {
-		schemaPath, referencePathMap, err := h.RequestSchema(value)
+	if h.ValueFormat != "string" {
+		schemaPath, referencePathMap, err := h.RequestSchema(message.Value)
 		if err != nil {
 			return err
 		}
 		// Message body is encoded after 5 bytes of meta information.
-		value = value[messageOffset:]
-		if err := deserializationProvider.LoadSchema(schemaPath, referencePathMap); err != nil {
+		message.Value = message.Value[messageOffset:]
+		if err := valueDeserializer.LoadSchema(schemaPath, referencePathMap); err != nil {
 			return err
 		}
 	}
-	jsonMessage, err := serdes.Deserialize(deserializationProvider, value)
+
+	jsonMessage, err := serdes.Deserialize(valueDeserializer, message.Value)
 	if err != nil {
 		return err
 	}
 
 	if h.Properties.Timestamp {
-		jsonMessage = fmt.Sprintf("Timestamp: %d\t%s", e.Timestamp.UnixMilli(), jsonMessage)
+		jsonMessage = fmt.Sprintf("Timestamp: %d\t%s", message.Timestamp.UnixMilli(), jsonMessage)
 	}
 
 	if _, err := fmt.Fprintln(h.Out, jsonMessage); err != nil {
 		return err
 	}
 
-	if e.Headers != nil {
-		var headers any = e.Headers
+	if message.Headers != nil {
+		var headers any = message.Headers
 		if h.Properties.FullHeader {
-			headers = getFullHeaders(e.Headers)
+			headers = getFullHeaders(message.Headers)
 		}
 		if _, err := fmt.Fprintf(h.Out, "%% Headers: %v\n", headers); err != nil {
 			return err
@@ -274,8 +290,11 @@ func RunConsumer(consumer *ckafka.Consumer, groupHandler *GroupHandler) error {
 }
 
 func (h *GroupHandler) RequestSchema(value []byte) (string, map[string]string, error) {
+	if len(value) == 0 || value[0] != 0x0 {
+		return "", nil, errors.NewErrorWithSuggestions("unknown magic byte", fmt.Sprintf("Check that all messages from this topic are in the %s format.", h.ValueFormat))
+	}
 	if len(value) < messageOffset {
-		return "", nil, errors.New(errors.FailedToFindSchemaIDErrorMsg)
+		return "", nil, errors.New("failed to find schema ID in topic data")
 	}
 
 	// Retrieve schema from cluster only if schema is specified.
@@ -287,10 +306,8 @@ func (h *GroupHandler) RequestSchema(value []byte) (string, map[string]string, e
 	var references []srsdk.SchemaReference
 	if !utils.FileExists(tempStorePath) || !utils.FileExists(tempRefStorePath) {
 		// TODO: add handler for writing schema failure
-		getSchemaOpts := srsdk.GetSchemaOpts{
-			Subject: optional.NewString(h.Subject),
-		}
-		schemaString, _, err := h.SrClient.DefaultApi.GetSchema(h.Ctx, schemaID, &getSchemaOpts)
+		opts := &srsdk.GetSchemaOpts{Subject: optional.NewString(h.Subject)}
+		schemaString, err := h.SrClient.GetSchema(schemaID, opts)
 		if err != nil {
 			return "", nil, err
 		}
@@ -317,7 +334,7 @@ func (h *GroupHandler) RequestSchema(value []byte) (string, map[string]string, e
 	}
 
 	// Store the references in temporary files
-	referencePathMap, err := sr.StoreSchemaReferences(h.Properties.SchemaPath, references, h.SrClient, h.Ctx)
+	referencePathMap, err := sr.StoreSchemaReferences(h.Properties.SchemaPath, references, h.SrClient)
 	if err != nil {
 		return "", nil, err
 	}

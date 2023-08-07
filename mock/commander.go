@@ -76,16 +76,13 @@ func (c *Commander) Authenticated(command *pcmd.AuthenticatedCLICommand) func(*c
 			return err
 		}
 		c.setClient(command)
+
 		ctx := command.Config.Context()
-		if ctx == nil {
+		if ctx == nil || !ctx.HasLogin() {
 			return new(errors.NotLoggedInError)
 		}
 		command.Context = ctx
-		state, err := ctx.AuthenticatedState()
-		if err != nil {
-			return err
-		}
-		command.State = state
+
 		return nil
 	}
 }
@@ -96,27 +93,13 @@ func (c *Commander) AuthenticatedWithMDS(command *pcmd.AuthenticatedCLICommand) 
 			return err
 		}
 		c.setClient(command)
+
 		ctx := command.Config.Context()
-		if ctx == nil {
+		if ctx == nil || !ctx.HasBasicMDSLogin() {
 			return new(errors.NotLoggedInError)
 		}
 		command.Context = ctx
-		if !ctx.HasBasicMDSLogin() {
-			return new(errors.NotLoggedInError)
-		}
-		command.State = ctx.State
-		return nil
-	}
-}
 
-func (c *Commander) HasAPIKey(command *pcmd.HasAPIKeyCLICommand) func(*cobra.Command, []string) error {
-	return func(cmd *cobra.Command, args []string) error {
-		if err := c.Anonymous(command.CLICommand, true)(cmd, args); err != nil {
-			return err
-		}
-		if command.Config.Context() == nil {
-			return new(errors.NotLoggedInError)
-		}
 		return nil
 	}
 }
@@ -132,17 +115,9 @@ func (c *Commander) InitializeOnPremKafkaRest(command *pcmd.AuthenticatedCLIComm
 	}
 }
 
-func (c *Commander) ParseFlagsIntoContext(command *pcmd.AuthenticatedCLICommand) func(*cobra.Command, []string) error {
-	return func(cmd *cobra.Command, args []string) error {
-		ctx := command.Context
-		return ctx.ParseFlagsIntoContext(cmd, command.Client)
-	}
-}
-
-func (c *Commander) AnonymousParseFlagsIntoContext(command *pcmd.CLICommand) func(*cobra.Command, []string) error {
-	return func(cmd *cobra.Command, args []string) error {
-		ctx := command.Config.Context()
-		return ctx.ParseFlagsIntoContext(cmd, nil)
+func (c *Commander) ParseFlagsIntoContext(command *pcmd.CLICommand) func(*cobra.Command, []string) error {
+	return func(cmd *cobra.Command, _ []string) error {
+		return command.Config.Context().ParseFlagsIntoContext(cmd)
 	}
 }
 

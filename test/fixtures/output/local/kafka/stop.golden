@@ -1,1 +1,1 @@
-Stopped Confluent Local container [a-zA-Z0-9]*.
+Confluent Local has been stopped: removed container "[a-zA-Z0-9]*".

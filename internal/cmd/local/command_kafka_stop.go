@@ -33,6 +33,10 @@ func (c *Command) kafkaStop(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	return c.stopAndRemoveConfluentLocal(dockerClient)
+}
+
+func (c *Command) stopAndRemoveConfluentLocal(dockerClient *client.Client) error {
 	containers, err := dockerClient.ContainerList(context.Background(), types.ContainerListOptions{All: true})
 	if err != nil {
 		return err
@@ -51,7 +55,7 @@ func (c *Command) kafkaStop(cmd *cobra.Command, args []string) error {
 			}
 			log.CliLogger.Tracef("Confluent Local container removed")
 
-			output.Printf("Stopped Confluent Local container %v.\n", getShortenedContainerId(container.ID))
+			output.Printf("Confluent Local has been stopped: removed container \"%s\".\n", getShortenedContainerId(container.ID))
 		}
 	}
 

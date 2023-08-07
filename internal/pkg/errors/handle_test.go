@@ -50,14 +50,14 @@ func TestHandleError(t *testing.T) {
 			wantErr: true,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
 			var err error
-			if err = HandleCommon(tt.err); (err != nil) != tt.wantErr {
-				t.Errorf("HandleCommon()\nerror: %v\nwantErr: %v", err, tt.wantErr)
+			if err = HandleCommon(test.err); (err != nil) != test.wantErr {
+				t.Errorf("HandleCommon()\nerror: %v\nwantErr: %v", err, test.wantErr)
 			}
-			if err.Error() != tt.want {
-				t.Errorf("HandleCommon()\ngot: %s\nwant: %s", err, tt.want)
+			if err.Error() != test.want {
+				t.Errorf("HandleCommon()\ngot: %s\nwant: %s", err, test.want)
 			}
 		})
 	}

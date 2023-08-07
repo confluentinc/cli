@@ -51,8 +51,13 @@ func New(prerunner pcmd.PreRunner, keystore keystore.KeyStore, resolver pcmd.Fla
 	return cmd
 }
 
-func (c *command) addResourceFlag(cmd *cobra.Command) {
-	cmd.Flags().String("resource", "", `The ID of the resource the API key is for. Use "cloud" for a Cloud API key.`)
+func (c *command) addResourceFlag(cmd *cobra.Command, addCloud bool) {
+	description := "The ID of the resource the API key is for."
+	if addCloud {
+		description += ` Use "cloud" for a Cloud API key.`
+	}
+
+	cmd.Flags().String("resource", "", description)
 
 	pcmd.RegisterFlagCompletionFunc(cmd, "resource", func(cmd *cobra.Command, args []string) []string {
 		if err := c.PersistentPreRunE(cmd, args); err != nil {
@@ -79,11 +84,8 @@ func (c *command) addResourceFlag(cmd *cobra.Command) {
 			return nil
 		}
 
-		suggestions := make([]string, 1+len(kafkaClusters)+len(schemaRegistryClusters)+len(ksqlClusters))
+		suggestions := make([]string, len(kafkaClusters)+len(schemaRegistryClusters)+len(ksqlClusters))
 		i := 0
-
-		suggestions[i] = "cloud"
-		i++
 
 		for _, cluster := range kafkaClusters {
 			suggestions[i] = fmt.Sprintf("%s\t%s", cluster.GetId(), cluster.Spec.GetDisplayName())
@@ -98,6 +100,10 @@ func (c *command) addResourceFlag(cmd *cobra.Command) {
 		for _, cluster := range ksqlClusters {
 			suggestions[i] = fmt.Sprintf("%s\t%s", cluster.GetId(), cluster.Spec.GetDisplayName())
 			i++
+		}
+
+		if addCloud {
+			suggestions = append(suggestions, "cloud")
 		}
 
 		return suggestions

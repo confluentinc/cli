@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/flink/internal/controller"
 	"github.com/confluentinc/cli/internal/pkg/flink/internal/history"
 	"github.com/confluentinc/cli/internal/pkg/flink/test"
 	"github.com/confluentinc/cli/internal/pkg/flink/test/mock"
@@ -53,7 +54,7 @@ func (s *ApplicationTestSuite) SetupTest() {
 		statementController:         s.statementController,
 		interactiveOutputController: s.interactiveOutputController,
 		basicOutputController:       s.basicOutputController,
-		tokenRefreshFunc:            authenticated,
+		refreshToken:                authenticated,
 	}
 }
 
@@ -65,24 +66,11 @@ func unauthenticated() error {
 	return errors.New("401 unauthorized")
 }
 
-func (s *ApplicationTestSuite) runMainLoop(stopAfterLoopFinishes bool) string {
-	if stopAfterLoopFinishes {
-		// hack to make the loop stop after one iteration
-		s.inputController.EXPECT().GetUserInput().Return("")
-		s.inputController.EXPECT().HasUserEnabledReverseSearch().Return(false)
-		s.inputController.EXPECT().HasUserInitiatedExit("").Return(true)
-		s.appController.EXPECT().ExitApplication()
-	}
-
-	output := test.RunAndCaptureSTDOUT(s.T(), s.app.readEvalPrintLoop)
-	return output
-}
-
 func (s *ApplicationTestSuite) TestReplDoesNotRunWhenUnauthenticated() {
-	s.app.tokenRefreshFunc = unauthenticated
+	s.app.refreshToken = unauthenticated
 	s.appController.EXPECT().ExitApplication()
 
-	actual := s.runMainLoop(false)
+	actual := test.RunAndCaptureSTDOUT(s.T(), s.app.readEvalPrintLoop)
 
 	cupaloy.SnapshotT(s.T(), actual)
 }
@@ -93,7 +81,7 @@ func (s *ApplicationTestSuite) TestReplContinuesWhenUserEnabledReverseSearch() {
 	s.inputController.EXPECT().HasUserEnabledReverseSearch().Return(true)
 	s.inputController.EXPECT().StartReverseSearch()
 
-	actual := s.runMainLoop(true)
+	actual := test.RunAndCaptureSTDOUT(s.T(), s.app.readEvalPrint)
 
 	cupaloy.SnapshotT(s.T(), actual)
 }
@@ -105,7 +93,7 @@ func (s *ApplicationTestSuite) TestReplExitsAppWhenUserInitiatedExit() {
 	s.inputController.EXPECT().HasUserInitiatedExit(userInput).Return(true)
 	s.appController.EXPECT().ExitApplication()
 
-	actual := s.runMainLoop(false)
+	actual := test.RunAndCaptureSTDOUT(s.T(), s.app.readEvalPrint)
 
 	cupaloy.SnapshotT(s.T(), actual)
 }
@@ -117,7 +105,7 @@ func (s *ApplicationTestSuite) TestReplAppendsStatementToHistoryAndStopsOnExecut
 	s.inputController.EXPECT().HasUserInitiatedExit(userInput).Return(false)
 	s.statementController.EXPECT().ExecuteStatement(userInput).Return(nil, &types.StatementError{})
 
-	actual := s.runMainLoop(true)
+	actual := test.RunAndCaptureSTDOUT(s.T(), s.app.readEvalPrint)
 
 	cupaloy.SnapshotT(s.T(), actual)
 	require.Equal(s.T(), []string{userInput}, s.history.Data)
@@ -130,12 +118,12 @@ func (s *ApplicationTestSuite) TestReplStopsOnExecuteStatementError() {
 	s.inputController.EXPECT().HasUserInitiatedExit(userInput).Return(false)
 	s.statementController.EXPECT().ExecuteStatement(userInput).Return(nil, &types.StatementError{})
 
-	actual := s.runMainLoop(true)
+	actual := test.RunAndCaptureSTDOUT(s.T(), s.app.readEvalPrint)
 
 	cupaloy.SnapshotT(s.T(), actual)
 }
 
-func (s *ApplicationTestSuite) TestReplReturnsWhenHandleStatementResultsReturnsTrue() {
+func (s *ApplicationTestSuite) TestReplUsesBasicOutput() {
 	userInput := "test-input"
 	statement := types.ProcessedStatement{}
 	s.inputController.EXPECT().GetUserInput().Return(userInput)
@@ -143,106 +131,105 @@ func (s *ApplicationTestSuite) TestReplReturnsWhenHandleStatementResultsReturnsT
 	s.inputController.EXPECT().HasUserInitiatedExit(userInput).Return(false)
 	s.statementController.EXPECT().ExecuteStatement(userInput).Return(&statement, nil)
 	s.resultFetcher.EXPECT().Init(statement)
-	s.store.EXPECT().FetchStatementResults(statement).Return(&statement, nil)
 	s.basicOutputController.EXPECT().VisualizeResults()
 
-	actual := s.runMainLoop(true)
+	actual := test.RunAndCaptureSTDOUT(s.T(), s.app.readEvalPrint)
 
 	cupaloy.SnapshotT(s.T(), actual)
 }
 
-func (s *ApplicationTestSuite) TestReplDoesNotReturnWhenHandleStatementResultsReturnsFalse() {
+func (s *ApplicationTestSuite) TestReplUsesInteractiveOutput() {
 	userInput := "test-input"
-	statement := types.ProcessedStatement{}
+	statement := types.ProcessedStatement{PageToken: "not-empty"}
 	s.inputController.EXPECT().GetUserInput().Return(userInput)
 	s.inputController.EXPECT().HasUserEnabledReverseSearch().Return(false)
 	s.inputController.EXPECT().HasUserInitiatedExit(userInput).Return(false)
 	s.statementController.EXPECT().ExecuteStatement(userInput).Return(&statement, nil)
 	s.resultFetcher.EXPECT().Init(statement)
-	s.store.EXPECT().FetchStatementResults(statement).Return(&statement, nil)
-	s.basicOutputController.EXPECT().VisualizeResults()
+	s.interactiveOutputController.EXPECT().VisualizeResults()
 
-	actual := s.runMainLoop(true)
+	actual := test.RunAndCaptureSTDOUT(s.T(), s.app.readEvalPrint)
 
 	cupaloy.SnapshotT(s.T(), actual)
 }
 
 func (s *ApplicationTestSuite) TestShouldUseTView() {
+	app := Application{
+		interactiveOutputController: &controller.InteractiveOutputController{},
+		basicOutputController:       &controller.BasicOutputController{},
+	}
 	tests := []struct {
-		name      string
-		statement types.ProcessedStatement
-		want      types.OutputControllerInterface
+		name          string
+		statement     types.ProcessedStatement
+		isBasicOutput bool
 	}{
 		{
-			name:      "local statement should not use TView",
-			statement: types.ProcessedStatement{IsLocalStatement: true},
-			want:      s.basicOutputController,
+			name:          "local statement should not use TView",
+			statement:     types.ProcessedStatement{IsLocalStatement: true},
+			isBasicOutput: true,
 		},
 		{
-			name:      "local statement should not use TView even if unbounded",
-			statement: types.ProcessedStatement{PageToken: "NOT_EMPTY", IsLocalStatement: true},
-			want:      s.basicOutputController,
+			name:          "local statement should not use TView even if unbounded",
+			statement:     types.ProcessedStatement{PageToken: "NOT_EMPTY", IsLocalStatement: true},
+			isBasicOutput: true,
 		},
 		{
-			name:      "non-local unbounded statement should always use TView",
-			statement: types.ProcessedStatement{PageToken: "NOT_EMPTY", IsLocalStatement: false, StatementResults: &types.StatementResults{}},
-			want:      s.interactiveOutputController,
-		},
-		{
-			name:      "statement with no results should not use TView",
-			statement: types.ProcessedStatement{IsLocalStatement: false},
-			want:      s.basicOutputController,
-		},
-		{
-			name:      "statement with empty results should not use TView",
-			statement: types.ProcessedStatement{IsLocalStatement: false, StatementResults: &types.StatementResults{}},
-			want:      s.basicOutputController,
-		},
-		{
-			name: "statement with one column and two rows should not use TView",
-			statement: types.ProcessedStatement{IsLocalStatement: false, StatementResults: &types.StatementResults{
-				Headers: []string{"Column 1"},
-				Rows: []types.StatementResultRow{
-					{Fields: []types.StatementResultField{types.AtomicStatementResultField{}}},
-					{Fields: []types.StatementResultField{types.AtomicStatementResultField{}}},
-				},
+			name: "local statement should not use TView even if unbounded and more than 3 columns",
+			statement: types.ProcessedStatement{PageToken: "NOT_EMPTY", IsLocalStatement: true, StatementResults: &types.StatementResults{
+				Headers: []string{"Column 1", "Column 2", "Column 3", "Column 4"},
+				Rows:    []types.StatementResultRow{},
 			}},
-			want: s.basicOutputController,
+			isBasicOutput: true,
 		},
 		{
-			name: "statement with two columns and one row should not use TView",
-			statement: types.ProcessedStatement{IsLocalStatement: false, StatementResults: &types.StatementResults{
-				Headers: []string{"Column 1", "Column 2"},
-				Rows:    []types.StatementResultRow{{Fields: []types.StatementResultField{types.AtomicStatementResultField{}}}},
-			}},
-			want: s.basicOutputController,
+			name:          "non-local unbounded statement should always use TView",
+			statement:     types.ProcessedStatement{PageToken: "NOT_EMPTY", StatementResults: &types.StatementResults{}},
+			isBasicOutput: false,
 		},
 		{
-			name: "statement with two columns and two rows should use TView",
-			statement: types.ProcessedStatement{IsLocalStatement: false, StatementResults: &types.StatementResults{
-				Headers: []string{"Column 1", "Column 2"},
-				Rows: []types.StatementResultRow{
-					{Fields: []types.StatementResultField{types.AtomicStatementResultField{}}},
-					{Fields: []types.StatementResultField{types.AtomicStatementResultField{}}},
-				},
-			}},
-			want: s.interactiveOutputController,
+			name:          "select statement should always use TView",
+			statement:     types.ProcessedStatement{IsSelectStatement: true, StatementResults: &types.StatementResults{}},
+			isBasicOutput: false,
 		},
 		{
-			name: "local statement with two columns and two rows should not use TView",
-			statement: types.ProcessedStatement{IsLocalStatement: true, StatementResults: &types.StatementResults{
-				Headers: []string{"Column 1", "Column 2"},
-				Rows: []types.StatementResultRow{
-					{Fields: []types.StatementResultField{types.AtomicStatementResultField{}}},
-					{Fields: []types.StatementResultField{types.AtomicStatementResultField{}}},
-				},
+			name:          "statement with no results should not use TView",
+			statement:     types.ProcessedStatement{},
+			isBasicOutput: true,
+		},
+		{
+			name:          "statement with empty results should not use TView",
+			statement:     types.ProcessedStatement{StatementResults: &types.StatementResults{}},
+			isBasicOutput: true,
+		},
+		{
+			name: "statement with 3 columns should not use TView",
+			statement: types.ProcessedStatement{StatementResults: &types.StatementResults{
+				Headers: []string{"Column 1", "Column 2", "Column 3"},
+				Rows:    []types.StatementResultRow{},
 			}},
-			want: s.basicOutputController,
+			isBasicOutput: true,
+		},
+		{
+			name: "statement with 4 columns should not use TView",
+			statement: types.ProcessedStatement{StatementResults: &types.StatementResults{
+				Headers: []string{"Column 1", "Column 2", "Column 3", "Column 4"},
+				Rows:    []types.StatementResultRow{},
+			}},
+			isBasicOutput: true,
 		},
 	}
 	for _, tt := range tests {
 		s.T().Run(tt.name, func(t *testing.T) {
-			require.Equal(t, tt.want, s.app.getOutputController(tt.statement))
+			if tt.isBasicOutput {
+				actual, ok := app.getOutputController(tt.statement).(*controller.BasicOutputController)
+				require.True(t, ok)
+				require.Equal(t, app.basicOutputController, actual)
+				return
+			}
+
+			actual, ok := app.getOutputController(tt.statement).(*controller.InteractiveOutputController)
+			require.True(t, ok)
+			require.Equal(t, app.interactiveOutputController, actual)
 		})
 	}
 }
@@ -250,12 +237,12 @@ func (s *ApplicationTestSuite) TestShouldUseTView() {
 func (s *ApplicationTestSuite) TestSyncAccessToTokenRefreshFunction() {
 	dummyVariableToManipulate := 0
 	numGoroutinesToSpawn := 1000
-	s.app.tokenRefreshFunc = synchronizedTokenRefresh(func() error {
+	s.app.refreshToken = synchronizedTokenRefresh(func() error {
 		dummyVariableToManipulate++
 		return nil
 	})
 	s.testConcurrentAccess(numGoroutinesToSpawn, func() {
-		_ = s.app.tokenRefreshFunc()
+		_ = s.app.refreshToken()
 	})
 	require.Equal(s.T(), numGoroutinesToSpawn, dummyVariableToManipulate)
 }
@@ -270,4 +257,23 @@ func (s *ApplicationTestSuite) testConcurrentAccess(numGoroutinesToSpawn int, fu
 		}()
 	}
 	wg.Wait()
+}
+
+func (s *ApplicationTestSuite) TestPanicRecovery() {
+	// Given
+	callCount := 0
+	s.app.reportUsage = func() {
+		callCount++
+	}
+	s.inputController.EXPECT().GetUserInput().Do(func() {
+		panic("err in repl")
+	})
+	s.statementController.EXPECT().CleanupStatement()
+
+	// When
+	actual := test.RunAndCaptureSTDOUT(s.T(), s.app.readEvalPrint)
+
+	// Then
+	cupaloy.SnapshotT(s.T(), actual)
+	require.Equal(s.T(), 1, callCount)
 }

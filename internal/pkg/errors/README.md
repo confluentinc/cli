@@ -38,7 +38,7 @@ Suggestions:
 Error: no API key selected for resource "lkc-dvnr7"
 
 Suggestions:
-    Select an API key for resource "lkc-dvnr7" with `confluent api-key use <API_KEY> --resource lkc-dvnr7`.
+    Select an API key for resource "lkc-dvnr7" with `confluent api-key use <API_KEY>`.
     To do so, you must have either already created or stored an API key for the resource.
     To create an API key use `confluent api-key create --resource lkc-dvnr7`.
     To store an existing API key use `confluent api-key store --resource lkc-dvnr7`.

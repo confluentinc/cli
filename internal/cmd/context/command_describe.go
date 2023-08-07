@@ -38,13 +38,12 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	credential := ctx.Credential
 
 	apiKey, err := cmd.Flags().GetBool("api-key")
 	if err != nil {
 		return err
 	}
-	if apiKey && credential.CredentialType != v1.APIKey {
+	if apiKey && ctx.GetCredentialType() != v1.APIKey {
 		return fmt.Errorf(`context "%s" does not have an associated API key`, ctx.Name)
 	}
 
@@ -52,17 +51,17 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	if username && credential.CredentialType != v1.Username {
+	if username && ctx.GetCredentialType() != v1.Username {
 		return fmt.Errorf(`context "%s" does not have an associated username`, ctx.Name)
 	}
 
 	if apiKey {
-		output.Println(credential.APIKeyPair.Key)
+		output.Println(ctx.Credential.APIKeyPair.Key)
 		return nil
 	}
 
 	if username {
-		output.Println(credential.Username)
+		output.Println(ctx.Credential.Username)
 		return nil
 	}
 

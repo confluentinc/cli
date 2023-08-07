@@ -8,12 +8,12 @@ func (s *CLITestSuite) TestAuditLogDescribe() {
 	s.runIntegrationTest(CLITest{args: "audit-log describe", login: "cloud", fixture: "audit-log/describe.golden"})
 }
 
-func (s *CLITestSuite) TestAuditConfigMigrate() {
-	migration1 := getInputFixturePath(s.T(), "audit-log", "config-migration-server1.golden")
-	migration2 := getInputFixturePath(s.T(), "audit-log", "config-migration-server2.golden")
+func (s *CLITestSuite) TestAuditLogConfigMigrate() {
+	migration1 := getInputFixturePath("audit-log", "config-migration-server1.golden")
+	migration2 := getInputFixturePath("audit-log", "config-migration-server2.golden")
 
-	malformed := getInputFixturePath(s.T(), "audit-log", "malformed-migration.golden")
-	nullFields := getInputFixturePath(s.T(), "audit-log", "null-fields-migration.golden")
+	malformed := getInputFixturePath("audit-log", "malformed-migration.golden")
+	nullFields := getInputFixturePath("audit-log", "null-fields-migration.golden")
 
 	tests := []CLITest{
 		{
@@ -32,12 +32,12 @@ func (s *CLITestSuite) TestAuditConfigMigrate() {
 		},
 	}
 
-	for _, tt := range tests {
-		tt.login = "onprem"
-		s.runIntegrationTest(tt)
+	for _, test := range tests {
+		test.login = "onprem"
+		s.runIntegrationTest(test)
 	}
 }
 
-func (s *CLITestSuite) TestAuditLogDisabledDescribe() {
+func (s *CLITestSuite) TestAuditLogDescribe_Disabled() {
 	s.runIntegrationTest(CLITest{args: "audit-log describe", login: "cloud", fixture: "audit-log/describe-fail.golden", disableAuditLog: true, exitCode: 1})
 }

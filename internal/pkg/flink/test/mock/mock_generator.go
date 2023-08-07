@@ -11,5 +11,6 @@ package mock
 //go:generate mockgen -destination store_mock.go -package=mock github.com/confluentinc/cli/internal/pkg/flink/types StoreInterface
 //go:generate mockgen -destination reverse_i_search_mock.go -package=mock github.com/confluentinc/cli/internal/pkg/flink/internal/reverseisearch ReverseISearch
 //go:generate mockgen -destination gateway_client_mock.go -package=mock github.com/confluentinc/cli/internal/pkg/ccloudv2 GatewayClientInterface
+//go:generate mockgen -destination table_view_mock.go -package=mock github.com/confluentinc/cli/internal/pkg/flink/components TableViewInterface
 //go:generate mockgen -destination prompt_mock.go -package=mock github.com/confluentinc/go-prompt IPrompt
 //go:generate mockgen -destination console_parser_mock.go -package=mock github.com/confluentinc/go-prompt ConsoleParser

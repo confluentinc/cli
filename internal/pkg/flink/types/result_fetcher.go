@@ -1,23 +1,40 @@
 package types
 
-type FetchState int32
+import "time"
+
+type RefreshState int32
 
 const (
-	Paused    FetchState = iota // auto fetch was Paused
-	Completed                   // arrived at last page, fetch is Completed
-	Failed                      // fetching next page Failed
-	Running                     // auto fetch is Running
+	Paused    RefreshState = iota // auto fetch was Paused
+	Completed                     // arrived at last page, fetch is Completed
+	Failed                        // fetching next page Failed
+	Running                       // auto fetch is Running
 )
 
+func (f RefreshState) ToString() string {
+	switch f {
+	case Completed:
+		return "Completed"
+	case Failed:
+		return "Failed"
+	case Paused:
+		return "Paused"
+	case Running:
+		return "Running"
+	}
+	return "Unknown"
+}
+
 type ResultFetcherInterface interface {
-	GetFetchState() FetchState
+	GetRefreshState() RefreshState
 	IsTableMode() bool
 	ToggleTableMode()
-	ToggleAutoRefresh()
-	IsAutoRefreshRunning() bool
+	ToggleRefresh()
+	IsRefreshRunning() bool
 	Init(statement ProcessedStatement)
 	Close()
-	SetAutoRefreshCallback(func())
+	SetRefreshCallback(func())
 	GetStatement() ProcessedStatement
 	GetMaterializedStatementResults() *MaterializedStatementResults
+	GetLastRefreshTimestamp() *time.Time
 }

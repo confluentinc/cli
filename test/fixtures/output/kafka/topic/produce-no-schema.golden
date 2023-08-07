@@ -1,4 +1,4 @@
 Error: failed to load schema: open : no such file or directory
 
 Suggestions:
-    Specify a schema by passing the path to a schema file to the `--schema` flag, or by passing a registered schema ID to the `--schema-id` flag.
+    Specify a schema by passing a schema ID or the path to a schema file to the `--schema` flag.

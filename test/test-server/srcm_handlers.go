@@ -32,27 +32,17 @@ const (
 	srClusterStatus = "PROVISIONED"
 )
 
-func (c *CloudV2Router) HandleSchemaRegistryClusters(t *testing.T) http.HandlerFunc {
+func handleSchemaRegistryClusters(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		q := r.URL.Query()
-		accountId := q.Get("environment")
-		var endpoint string
-		// for sr commands that use the sr api (use accountId to differentiate) we want to use the SR server URL so that we can make subsequent requests there
-		// for describe commands we want to use a standard endpoint so that it will always match the test fixture
-		if accountId == SRApiEnvId {
-			endpoint = c.srApiUrl
-		} else {
-			endpoint = "SASL_SSL://sr-endpoint"
-		}
 		if r.Method == http.MethodPost {
 			req := new(srcmv2.SrcmV2Cluster)
 			err := json.NewDecoder(r.Body).Decode(req)
 			require.NoError(t, err)
-			sgCluster := getSchemaRegistryCluster(req.Spec.GetPackage(), endpoint)
+			sgCluster := getSchemaRegistryCluster(req.Spec.GetPackage(), TestSchemaRegistryUrl.String())
 			err = json.NewEncoder(w).Encode(sgCluster)
 			require.NoError(t, err)
 		} else if r.Method == http.MethodGet {
-			sgClusterList := getSchemaRegistryClusterList(endpoint)
+			sgClusterList := getSchemaRegistryClusterList(TestSchemaRegistryUrl.String())
 			err := json.NewEncoder(w).Encode(sgClusterList)
 			require.NoError(t, err)
 		}
@@ -67,13 +57,13 @@ func handleSchemaRegistryCluster(t *testing.T) http.HandlerFunc {
 			err := json.NewDecoder(r.Body).Decode(req)
 			require.NoError(t, err)
 			packageType := req.Spec.GetPackage()
-			sgCluster := getSchemaRegistryCluster(packageType, "https://sr-endpoint")
+			sgCluster := getSchemaRegistryCluster(packageType, TestSchemaRegistryUrl.String())
 			err = json.NewEncoder(w).Encode(sgCluster)
 			require.NoError(t, err)
 		case http.MethodDelete:
 			w.WriteHeader(http.StatusNoContent)
 		case http.MethodGet:
-			sgCluster := getSchemaRegistryCluster(packageTypeRegion2, "https://sr-endpoint")
+			sgCluster := getSchemaRegistryCluster(packageTypeRegion2, TestSchemaRegistryUrl.String())
 			err := json.NewEncoder(w).Encode(sgCluster)
 			require.NoError(t, err)
 		}

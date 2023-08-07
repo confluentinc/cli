@@ -83,8 +83,11 @@ func (e *UnspecifiedAPIKeyError) Error() string {
 }
 
 func (e *UnspecifiedAPIKeyError) UserFacingError() error {
-	errorMsg := fmt.Sprintf(NoAPIKeySelectedErrorMsg, e.ClusterID)
-	suggestionsMsg := fmt.Sprintf(NoAPIKeySelectedSuggestions, e.ClusterID, e.ClusterID, e.ClusterID, e.ClusterID)
+	errorMsg := fmt.Sprintf(`no API key selected for resource "%s"`, e.ClusterID)
+	suggestionsMsg := fmt.Sprintf("Select an API key for resource \"%s\" with `confluent api-key use <API_KEY>`.\n"+
+		"To do so, you must have either already created or stored an API key for the resource.\n"+
+		"To create an API key, use `confluent api-key create --resource %s`.\n"+
+		"To store an existing API key, use `confluent api-key store --resource %s`.", e.ClusterID, e.ClusterID, e.ClusterID)
 	return NewErrorWithSuggestions(errorMsg, suggestionsMsg)
 }
 

@@ -13,7 +13,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (c *authenticatedTopicCommand) newListCommandOnPrem() *cobra.Command {
+func (c *command) newListCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Args:  cobra.NoArgs,
@@ -39,7 +39,7 @@ func (c *authenticatedTopicCommand) newListCommandOnPrem() *cobra.Command {
 	return cmd
 }
 
-func (c *authenticatedTopicCommand) listOnPrem(cmd *cobra.Command, _ []string) error {
+func (c *command) listOnPrem(cmd *cobra.Command, _ []string) error {
 	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {
 		return err

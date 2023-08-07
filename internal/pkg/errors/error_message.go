@@ -63,9 +63,7 @@ const (
 	ConnectLogEventsNotEnabledErrorMsg = "Connect Log Events are not enabled for this organization"
 
 	// environment & organization command
-	EnvNotFoundErrorMsg            = `environment "%s" not found`
 	OrgResourceNotFoundSuggestions = "List available %[1]ss with `confluent %[1]s list`."
-	EnvSwitchErrorMsg              = "failed to switch environment: failed to save config"
 	NoEnvironmentFoundErrorMsg     = "no environment found"
 	NoEnvironmentFoundSuggestions  = "This issue may occur if this user has no valid role bindings. Contact an Organization Admin to create a role binding for this user."
 
@@ -116,8 +114,7 @@ const (
 	IdentityPoolNoOpUpdateErrorMsg = "one of `--description`, `--filter`, `--identity-claim`, or `--name` must be set"
 
 	// init command
-	CannotBeEmptyErrorMsg         = "%s cannot be empty"
-	UnknownCredentialTypeErrorMsg = "credential type %d unknown"
+	CannotBeEmptyErrorMsg = "%s cannot be empty"
 
 	// kafka client-config package
 	FetchConfigFileErrorMsg               = "failed to get config file: error code %d"
@@ -135,7 +132,6 @@ const (
 	FailedToReadClusterResizeConfirmationErrorMsg    = "cluster resize error: failed to read your confirmation"
 	AuthorizeAccountsErrorMsg                        = "BYOK error: please authorize the key for the accounts (%s)x"
 	AuthorizeIdentityErrorMsg                        = "BYOK error: please authorize the key for the identity (%s)"
-	CKUOnlyForDedicatedErrorMsg                      = "specifying `--cku` flag is valid only for dedicated Kafka cluster creation"
 	EncryptionKeySupportErrorMsg                     = "BYOK via `--encryption-key` is only available for GCP. Use `confluent byok create` to register AWS and Azure keys."
 	CKUMoreThanZeroErrorMsg                          = "`--cku` value must be greater than 0"
 	CKUMoreThanOneErrorMsg                           = "`--cku` value must be greater than 1 for High Durability"
@@ -149,7 +145,6 @@ const (
 	InvalidAvailableFlagErrorMsg                     = "invalid value \"%s\" for `--availability` flag"
 	InvalidAvailableFlagSuggestions                  = "Allowed values for `--availability` flag are: %s, %s."
 	InvalidTypeFlagErrorMsg                          = "invalid value \"%s\" for `--type` flag"
-	InvalidTypeFlagSuggestions                       = "Allowed values for `--type` flag are: %s, %s, %s."
 	NameOrCKUFlagErrorMsg                            = "must either specify --name with non-empty value or --cku (for dedicated clusters) with positive integer"
 	NonEmptyNameErrorMsg                             = "`--name` flag value must not be empty"
 	KafkaClusterNotFoundErrorMsg                     = `Kafka cluster "%s" not found`
@@ -177,19 +172,17 @@ const (
 	TopicExistsOnPremErrorMsg            = `topic "%s" already exists for the Kafka cluster`
 	TopicExistsOnPremSuggestions         = "To list topics for the cluster, use `confluent kafka topic list --url <url>`."
 	FailedToProduceErrorMsg              = "failed to produce offset %d: %s\n"
-	FailedToFindSchemaIDErrorMsg         = "failed to find schema ID in topic data"
 	MissingKeyErrorMsg                   = "missing key in message"
 	UnknownValueFormatErrorMsg           = "unknown value schema format"
 	TopicExistsErrorMsg                  = `topic "%s" already exists for Kafka cluster "%s"`
 	TopicExistsSuggestions               = ListTopicSuggestions
 	NoAPISecretStoredOrPassedErrorMsg    = `no API secret for API key "%s" of resource "%s" passed via flag or stored in local CLI state`
-	NoAPISecretStoredOrPassedSuggestions = "Pass the API secret with flag \"--api-secret\" or store with `confluent api-key store %s --resource %s`."
+	NoAPISecretStoredOrPassedSuggestions = "Pass the API secret with flag `--api-secret` or store with `confluent api-key store %s --resource %s`."
 	PassedSecretButNotKeyErrorMsg        = "no API key specified"
-	PassedSecretButNotKeySuggestions     = `Use the "api-key" flag to specify an API key.`
+	PassedSecretButNotKeySuggestions     = "Use the `--api-key` flag to specify an API key."
 	ProducingToCompactedTopicErrorMsg    = "producer has detected an INVALID_RECORD error for topic %s"
 	ProducingToCompactedTopicSuggestions = "If the topic has schema validation enabled, ensure you are producing with a schema-enabled producer.\n" +
 		"If your topic is compacted, ensure you are producing a record with a key."
-	FailedToLoadSchemaSuggestions   = "Specify a schema by passing the path to a schema file to the `--schema` flag, or by passing a registered schema ID to the `--schema-id` flag."
 	ExceedPartitionLimitSuggestions = "The total partition limit for a dedicated cluster may be increased by expanding its CKU count using `confluent kafka cluster update <id> --cku <count>`."
 
 	// Cluster Link commands
@@ -215,13 +208,12 @@ const (
 	JavaRequirementErrorMsg   = "the Confluent CLI requires Java version 1.8 or 1.11.\n" +
 		"See https://docs.confluent.io/current/installation/versions-interoperability.html .\n" +
 		"If you have multiple versions of Java installed, you may need to set JAVA_HOME to the version you want Confluent to use."
-	NoLogFoundErrorMsg               = "no log found: to run %s, use `confluent local services %s start`"
-	MacVersionErrorMsg               = "macOS version >= %s is required (detected: %s)"
-	JavaExecNotFondErrorMsg          = "could not find java executable, please install java or set JAVA_HOME"
-	NothingToDestroyErrorMsg         = "nothing to destroy"
-	ConfluentLocalStartedErrorMsg    = "Confluent Local container has already been created"
-	ConfluentLocalStartedSuggestions = "Continue your experience with Confluent Local running `confluent local kafka produce` and `confluent local kafka consume`.\n" +
-		"To stop Confluent Local container, run `confluent local kafka stop` or `docker container rm confluent-local -f`."
+	NoLogFoundErrorMsg              = "no log found: to run %s, use `confluent local services %s start`"
+	MacVersionErrorMsg              = "macOS version >= %s is required (detected: %s)"
+	JavaExecNotFondErrorMsg         = "could not find java executable, please install java or set JAVA_HOME"
+	NothingToDestroyErrorMsg        = "nothing to destroy"
+	ComputePoolNotFoundErrorMsg     = `Flink compute pool "%s" not found or access forbidden.`
+	ComputePoolNotFoundSuggestions  = "List available Flink compute pools with `confluent flink compute-pool list`"
 	FailedToReadPortsErrorMsg       = "failed to read local ports from config"
 	FailedToReadPortsSuggestions    = "Restart Confluent Local with `confluent local kafka stop` and `confluent local kafka start`"
 	InstallAndStartDockerSuggestion = "Make sure Docker is installed following the guide: `https://docs.docker.com/engine/install/` and Docker daemon is running."
@@ -237,7 +229,6 @@ const (
 	SchemaNotFoundErrorMsg                   = "Schema Registry subject or version not found"
 	SchemaNotFoundSuggestions                = "List available subjects with `confluent schema-registry subject list`.\n" +
 		"List available versions with `confluent schema-registry subject describe`."
-	NoSubjectLevelConfigErrorMsg = `subject "%s" does not have subject-level compatibility configured`
 	SRInvalidPackageTypeErrorMsg = `"%s" is an invalid package type`
 	SRInvalidPackageSuggestions  = "Allowed values for `--package` flag are: %s."
 	SRInvalidPackageUpgrade      = "Environment \"%s\" is already using the Stream Governance \"%s\" package.\n"
@@ -268,7 +259,6 @@ const (
 	NoCertsAppendedErrorMsg          = "no certs appended, using system certs only"
 	WriteToNetrcFileErrorMsg         = `unable to write to netrc file "%s"`
 	NetrcCredentialsNotFoundErrorMsg = `login credentials not found in netrc file "%s"`
-	CreateNetrcFileErrorMsg          = `unable to create netrc file "%s"`
 	FailedToObtainedUserSSOErrorMsg  = `unable to obtain SSO info for user "%s"`
 	NonSSOUserErrorMsg               = `tried to obtain SSO token for non SSO user "%s"`
 	NoCredentialsFoundErrorMsg       = "no credentials found"
@@ -283,8 +273,7 @@ const (
 	SRNotEnabledErrorMsg    = "Schema Registry not enabled"
 	SRNotEnabledSuggestions = "Schema Registry must be enabled for the environment in order to run the command.\n" +
 		"You can enable Schema Registry for this environment with `confluent schema-registry cluster enable`."
-	EnvironmentNotFoundErrorMsg = `environment "%s" not found in context "%s"`
-	MalformedJWTNoExprErrorMsg  = "malformed JWT claims: no expiration"
+	MalformedJWTNoExprErrorMsg = "malformed JWT claims: no expiration"
 
 	// config package
 	CorruptedConfigErrorPrefix = "corrupted CLI config"
@@ -293,31 +282,27 @@ const (
 		"Unfortunately, your active CLI state will be lost as a result.\n" +
 		"Please file a support ticket with details about your config file to help us address this issue.\n" +
 		"Please rerun the command with the verbosity flag `-vvvv` and attach the output with the support ticket."
-	UnableToCreateConfigErrorMsg       = "unable to create config"
-	UnableToReadConfigErrorMsg         = `unable to read config file "%s"`
-	ConfigNotUpToDateErrorMsg          = "config version v%s not up to date with the latest version v%s"
-	InvalidConfigVersionErrorMsg       = "invalid config version v%s"
-	ParseConfigErrorMsg                = `unable to parse config file "%s"`
-	NoNameContextErrorMsg              = "one of the existing contexts has no name"
-	MissingKafkaClusterContextErrorMsg = `context "%s" missing KafkaClusterContext`
-	MarshalConfigErrorMsg              = "unable to marshal config"
-	CreateConfigDirectoryErrorMsg      = "unable to create config directory: %s"
-	CreateConfigFileErrorMsg           = "unable to write config to file: %s"
-	CurrentContextNotExistErrorMsg     = `the current context "%s" does not exist`
-	ContextDoesNotExistErrorMsg        = `context "%s" does not exist`
-	ContextAlreadyExistsErrorMsg       = `context "%s" already exists`
-	CredentialNotFoundErrorMsg         = `credential "%s" not found`
-	PlatformNotFoundErrorMsg           = `platform "%s" not found`
-	NoNameCredentialErrorMsg           = "credential must have a name"
-	SavedCredentialNoContextErrorMsg   = "saved credential must match a context"
-	KeychainNotAvailableErrorMsg       = "keychain not available on platforms other than darwin"
-	NoValidKeychainCredentialErrorMsg  = "no matching credentials found in keychain"
-	NoNamePlatformErrorMsg             = "platform must have a name"
-	UnspecifiedPlatformErrorMsg        = `context "%s" has corrupted platform`
-	UnspecifiedCredentialErrorMsg      = `context "%s" has corrupted credentials`
-	ContextStateMismatchErrorMsg       = `context state mismatch for context "%s"`
-	ContextStateNotMappedErrorMsg      = `context state mapping error for context "%s"`
-	DeleteUserAuthErrorMsg             = "unable to delete user auth"
+	UnableToReadConfigurationFileErrorMsg = `unable to read configuration file "%s"`
+	NoNameContextErrorMsg                 = "one of the existing contexts has no name"
+	MissingKafkaClusterContextErrorMsg    = `context "%s" missing KafkaClusterContext`
+	MarshalConfigErrorMsg                 = "unable to marshal config"
+	CreateConfigDirectoryErrorMsg         = "unable to create config directory: %s"
+	CreateConfigFileErrorMsg              = "unable to write config to file: %s"
+	CurrentContextNotExistErrorMsg        = `the current context "%s" does not exist`
+	ContextDoesNotExistErrorMsg           = `context "%s" does not exist`
+	ContextAlreadyExistsErrorMsg          = `context "%s" already exists`
+	CredentialNotFoundErrorMsg            = `credential "%s" not found`
+	PlatformNotFoundErrorMsg              = `platform "%s" not found`
+	NoNameCredentialErrorMsg              = "credential must have a name"
+	SavedCredentialNoContextErrorMsg      = "saved credential must match a context"
+	KeychainNotAvailableErrorMsg          = "keychain not available on platforms other than darwin"
+	NoValidKeychainCredentialErrorMsg     = "no matching credentials found in keychain"
+	NoNamePlatformErrorMsg                = "platform must have a name"
+	UnspecifiedPlatformErrorMsg           = `context "%s" has corrupted platform`
+	UnspecifiedCredentialErrorMsg         = `context "%s" has corrupted credentials`
+	ContextStateMismatchErrorMsg          = `context state mismatch for context "%s"`
+	ContextStateNotMappedErrorMsg         = `context state mapping error for context "%s"`
+	DeleteUserAuthErrorMsg                = "unable to delete user auth"
 
 	// local package
 	ConfluentHomeNotFoundErrorMsg         = "could not find %s in CONFLUENT_HOME"
@@ -326,8 +311,6 @@ const (
 	KafkaScriptInvalidFormatErrorMsg      = "invalid format: %s"
 
 	// secret package
-	EncryptPlainTextErrorMsg           = "failed to encrypt the plain text"
-	DecryptCypherErrorMsg              = "failed to decrypt the cipher"
 	DataCorruptedErrorMsg              = "failed to decrypt the cipher: data is corrupted"
 	ConfigNotInJAASErrorMsg            = `the configuration "%s" not present in JAAS configuration`
 	OperationNotSupportedErrorMsg      = `the operation "%s" is not supported`
@@ -384,24 +367,14 @@ const (
 	TouchLastCheckFileErrorMsg      = "unable to touch last check file"
 	GetTempDirErrorMsg              = "unable to get temp dir for %s"
 	DownloadVersionErrorMsg         = "unable to download %s version %s to %s"
-	MoveFileErrorMsg                = "unable to move %s to %s"
-	MoveRestoreErrorMsg             = "unable to move (restore) %s to %s"
-	CopyErrorMsg                    = "unable to copy %s to %s"
-	ChmodErrorMsg                   = "unable to chmod 0755 %s"
 	SepNonEmptyErrorMsg             = "sep must be a non-empty string"
 	NoVersionsErrorMsg              = "no versions found"
 	GetBinaryVersionsErrorMsg       = "unable to get available binary versions"
 	GetReleaseNotesVersionsErrorMsg = "unable to get available release notes versions"
 	UnexpectedS3ResponseErrorMsg    = "received unexpected response from S3: %s"
-	MissingRequiredParamErrorMsg    = "missing required parameter: %s"
-	ListingS3BucketErrorMsg         = "error listing s3 bucket"
-	FindingCredsErrorMsg            = "error while finding credentials"
-	EmptyAccessKeyIDErrorMsg        = "access key id is empty for %s"
-	AWSCredsExpiredErrorMsg         = "AWS credentials in profile %s are expired"
-	FindAWSCredsErrorMsg            = "failed to find AWS credentials in profiles: %s"
 
-	// Flag Errors
-	ProhibitedFlagCombinationErrorMsg = "cannot use `--%s` and `--%s` flags at the same time"
+	// plugin package
+	NoVersionFoundErrorMsg = "no version found in plugin manifest"
 
 	// catcher
 	CCloudBackendErrorPrefix           = "Confluent Cloud backend error"
@@ -411,19 +384,16 @@ const (
 	ResourceNotFoundErrorMsg           = `resource "%s" not found`
 	ResourceNotFoundSuggestions        = "Check that the resource \"%s\" exists.\n" +
 		"To list Kafka clusters, use `confluent kafka cluster list`.\n" +
-		"To check schema-registry cluster info, use `confluent schema-registry cluster describe`.\n" +
+		"To check Schema Registry cluster information, use `confluent schema-registry cluster describe`.\n" +
 		"To list KSQL clusters, use `confluent ksql cluster list`."
 	KafkaNotFoundErrorMsg         = `Kafka cluster "%s" not found`
 	KafkaNotFoundSuggestions      = "To list Kafka clusters, use `confluent kafka cluster list`."
 	KSQLNotFoundSuggestions       = "To list KSQL clusters, use `confluent ksql cluster list`."
-	KafkaNotReadyErrorMsg         = `Kafka cluster "%s" not ready`
-	KafkaNotReadySuggestions      = "It may take up to 5 minutes for a recently created Kafka cluster to be ready."
 	NoKafkaSelectedErrorMsg       = "no Kafka cluster selected"
 	NoKafkaSelectedSuggestions    = "You must pass `--cluster` with the command or set an active Kafka cluster in your context with `confluent kafka cluster use`."
-	NoKafkaForDescribeSuggestions = "You must provide the cluster ID argument or set an active Kafka cluster in your context with `ccloud kafka cluster use`."
+	NoKafkaForDescribeSuggestions = "You must provide the cluster ID argument or set an active Kafka cluster in your context with `confluent kafka cluster use`."
 	NoAPISecretStoredErrorMsg     = `no API secret for API key "%s" of resource "%s" stored in local CLI state`
 	NoAPISecretStoredSuggestions  = "Store the API secret with `confluent api-key store %s --resource %s`."
-	InvalidCkuErrorMsg            = "cku must be greater than 1 for multi-zone dedicated cluster"
 
 	// Kafka REST Proxy errors
 	InternalServerErrorMsg            = "internal server error"
@@ -432,7 +402,6 @@ const (
 	EmptyResponseErrorMsg             = "empty server response"
 	KafkaRestErrorMsg                 = "Kafka REST request failed: %s %s: %s"
 	KafkaRestConnectionErrorMsg       = "unable to establish Kafka REST connection: %s: %s"
-	KafkaRestUnexpectedStatusErrorMsg = "Kafka REST request failed: %s: unexpected HTTP Status: %d"
 	KafkaRestCertErrorSuggestions     = "To specify a CA certificate, please use the `--ca-cert-path` flag or set `CONFLUENT_PLATFORM_CA_CERT_PATH`."
 	KafkaRestUrlNotFoundErrorMsg      = "Kafka REST URL not found"
 	KafkaRestUrlNotFoundSuggestions   = "Use the `--url` flag or set `CONFLUENT_REST_URL`."
@@ -469,12 +438,7 @@ const (
 	InvalidLoginErrorSuggestions = "To log into an organization other than the default organization, use the `--organization-id` flag.\n" +
 		AvoidTimeoutSuggestions
 	SuspendedOrganizationSuggestions = "Your organization has been suspended, please contact support if you want to unsuspend it."
-	NoAPIKeySelectedErrorMsg         = `no API key selected for resource "%s"`
-	NoAPIKeySelectedSuggestions      = "Select an API key for resource \"%s\" with `confluent api-key use <API_KEY> --resource %s`.\n" +
-		"To do so, you must have either already created or stored an API key for the resource.\n" +
-		"To create an API key, use `confluent api-key create --resource %s`.\n" +
-		"To store an existing API key, use `confluent api-key store --resource %s`."
-	FailedToReadInputErrorMsg = "failed to read input"
+	FailedToReadInputErrorMsg        = "failed to read input"
 
 	// Partition command errors
 	SpecifyPartitionIdWithTopicErrorMsg = "must specify topic along with partition ID"
@@ -493,8 +457,6 @@ const (
 	UnsupportedCustomAttributeErrorMsg = `attribute "%s" is not one of the supported FeatureFlags targeting values`
 
 	// General
-	DeleteResourceErrorMsg        = `failed to delete %s "%s": %v`
-	DeleteResourceConfirmErrorMsg = `input does not match "%s"`
-	UpdateResourceErrorMsg        = `failed to update %s "%s": %v`
-	MustSpecifyBothFlagsErrorMsg  = "must specify both `--%s` and `--%s`"
+	DeleteResourceErrorMsg = `failed to delete %s "%s": %v`
+	UpdateResourceErrorMsg = `failed to update %s "%s": %v`
 )

@@ -15,6 +15,7 @@ type InputControllerInterface interface {
 
 type StatementControllerInterface interface {
 	ExecuteStatement(statementToExecute string) (*ProcessedStatement, *StatementError)
+	CleanupStatement()
 }
 
 type OutputControllerInterface interface {

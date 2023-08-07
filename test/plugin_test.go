@@ -29,15 +29,15 @@ func (s *CLITestSuite) TestPlugin() {
 	}
 
 	if runtime.GOOS != "windows" {
-		for _, tt := range tests {
-			tt.workflow = true
-			tt.env = []string{fmt.Sprintf("PATH=%s", path)}
-			s.runIntegrationTest(tt)
+		for _, test := range tests {
+			test.workflow = true
+			test.env = []string{fmt.Sprintf("PATH=%s", path)}
+			s.runIntegrationTest(test)
 		}
 	}
 }
 
-func (s *CLITestSuite) TestPluginDisabled() {
+func (s *CLITestSuite) TestPlugin_Disabled() {
 	tests := []CLITest{
 		{args: "plugin1 arg1", fixture: "plugin/plugin1-disabled.golden", exitCode: 1},
 		{args: "print args arg1 arg2 --meaningless-flag=true arg3", fixture: "plugin/print-args-disabled.golden", exitCode: 1},
@@ -52,10 +52,10 @@ func (s *CLITestSuite) TestPluginDisabled() {
 	}
 
 	if runtime.GOOS != "windows" {
-		for _, tt := range tests {
-			tt.workflow = true
-			tt.env = []string{fmt.Sprintf("PATH=%s", path)}
-			s.runIntegrationTest(tt)
+		for _, test := range tests {
+			test.workflow = true
+			test.env = []string{fmt.Sprintf("PATH=%s", path)}
+			s.runIntegrationTest(test)
 		}
 	}
 }

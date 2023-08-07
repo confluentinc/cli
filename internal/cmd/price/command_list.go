@@ -39,6 +39,7 @@ var (
 		"basic":       "basic",
 		"custom":      "custom-legacy",
 		"dedicated":   "dedicated",
+		"enterprise":  "enterprise",
 		"standard":    "basic-legacy",
 		"standard_v2": "standard",
 	}
@@ -47,6 +48,7 @@ var (
 		"basic":       "Basic",
 		"custom":      "Legacy - Custom",
 		"dedicated":   "Dedicated",
+		"enterprise":  "Enterprise",
 		"standard":    "Legacy - Standard",
 		"standard_v2": "Standard",
 	}

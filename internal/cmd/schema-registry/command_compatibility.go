@@ -14,11 +14,7 @@ func (c *command) newCompatibilityCommand(cfg *v1.Config) *cobra.Command {
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLoginOrOnPremLogin},
 	}
 
-	if cfg.IsCloudLogin() {
-		cmd.AddCommand(c.newCompatibilityValidateCommand())
-	} else {
-		cmd.AddCommand(c.newCompatibilityValidateCommandOnPrem())
-	}
+	cmd.AddCommand(c.newCompatibilityValidateCommand(cfg))
 
 	return cmd
 }

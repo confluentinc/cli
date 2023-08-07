@@ -6,7 +6,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/properties"
 	"github.com/confluentinc/cli/internal/pkg/resource"
@@ -27,7 +26,7 @@ func (c *linkCommand) newConfigurationUpdateCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().String(configFileFlagName, "", "Name of the file containing link config overrides. Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.")
+	cmd.Flags().String(configFileFlagName, "", "Name of the file containing link configuration overrides. Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -58,22 +57,14 @@ func (c *linkCommand) configurationUpdate(cmd *cobra.Command, args []string) err
 	}
 
 	kafkaREST, err := c.GetKafkaREST()
-	if kafkaREST == nil {
-		if err != nil {
-			return err
-		}
-		return errors.New(errors.RestProxyNotAvailableMsg)
-	}
-
-	clusterId, err := getKafkaClusterLkcId(c.AuthenticatedCLICommand)
 	if err != nil {
 		return err
 	}
 
 	data := toAlterConfigBatchRequestData(configMap)
 
-	if httpResp, err := kafkaREST.CloudClient.UpdateKafkaLinkConfigBatch(clusterId, linkName, data); err != nil {
-		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+	if err := kafkaREST.CloudClient.UpdateKafkaLinkConfigBatch(linkName, data); err != nil {
+		return err
 	}
 
 	output.Printf(errors.UpdatedResourceMsg, resource.ClusterLink, linkName)

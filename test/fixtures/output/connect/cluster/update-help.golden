@@ -5,12 +5,12 @@ Usage:
 
 Flags:
       --config strings       A comma-separated list of configuration overrides ("key=value") for the connector being updated.
-      --config-file string   JSON connector config file.
+      --config-file string   JSON connector configuration file.
       --cluster string       Kafka cluster ID.
       --context string       CLI context name.
       --environment string   Environment ID.
 
 Global Flags:
   -h, --help            Show help for this command.
-      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

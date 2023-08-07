@@ -6,7 +6,6 @@ import (
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -14,7 +13,7 @@ type topicOut struct {
 	Name string `human:"Name" serialized:"name"`
 }
 
-func (c *authenticatedTopicCommand) newListCommand() *cobra.Command {
+func (c *command) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "list",
 		Short:       "List Kafka topics.",
@@ -31,7 +30,7 @@ func (c *authenticatedTopicCommand) newListCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *authenticatedTopicCommand) list(cmd *cobra.Command, _ []string) error {
+func (c *command) list(cmd *cobra.Command, _ []string) error {
 	topics, err := c.getTopics()
 	if err != nil {
 		return err
@@ -44,24 +43,19 @@ func (c *authenticatedTopicCommand) list(cmd *cobra.Command, _ []string) error {
 	return list.Print()
 }
 
-func (c *authenticatedTopicCommand) getTopics() ([]kafkarestv3.TopicData, error) {
-	kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand()
-	if err != nil {
-		return nil, err
-	}
-
-	if err := c.provisioningClusterCheck(kafkaClusterConfig.ID); err != nil {
-		return nil, err
-	}
-
+func (c *command) getTopics() ([]kafkarestv3.TopicData, error) {
 	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {
 		return nil, err
 	}
 
-	topics, httpResp, err := kafkaREST.CloudClient.ListKafkaTopics(kafkaClusterConfig.ID)
+	if err := c.provisioningClusterCheck(kafkaREST.GetClusterId()); err != nil {
+		return nil, err
+	}
+
+	topics, err := kafkaREST.CloudClient.ListKafkaTopics()
 	if err != nil {
-		return nil, kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+		return nil, err
 	}
 
 	return topics.Data, nil

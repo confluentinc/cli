@@ -8,7 +8,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/properties"
 	"github.com/confluentinc/cli/internal/pkg/resource"
@@ -40,7 +39,7 @@ func (c *mirrorCommand) newCreateCommand() *cobra.Command {
 	pcmd.AddLinkFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().Int32(replicationFactorFlagName, 3, "Replication factor.")
 	cmd.Flags().String(configFileFlagName, "", "Name of a file with additional topic configuration. Each property should be on its own line with the format: key=value.")
-	cmd.Flags().String(sourceTopicFlagName, "", "Name of the topic to be mirrored over the cluster link, i.e. the source topic's name. Only required when there is a prefix configured on the link.")
+	cmd.Flags().String(sourceTopicFlagName, "", "Name of the source topic to be mirrored over the cluster link. Only required when there is a prefix configured on the link.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -85,14 +84,6 @@ func (c *mirrorCommand) create(cmd *cobra.Command, args []string) error {
 	}
 
 	kafkaREST, err := c.GetKafkaREST()
-	if kafkaREST == nil {
-		if err != nil {
-			return err
-		}
-		return errors.New(errors.RestProxyNotAvailableMsg)
-	}
-
-	lkc, err := getKafkaClusterLkcId(c.AuthenticatedCLICommand)
 	if err != nil {
 		return err
 	}
@@ -109,8 +100,8 @@ func (c *mirrorCommand) create(cmd *cobra.Command, args []string) error {
 		createMirrorTopicRequestData.MirrorTopicName = &mirrorTopicName
 	}
 
-	if httpResp, err := kafkaREST.CloudClient.CreateKafkaMirrorTopic(lkc, linkName, createMirrorTopicRequestData); err != nil {
-		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+	if err := kafkaREST.CloudClient.CreateKafkaMirrorTopic(linkName, createMirrorTopicRequestData); err != nil {
+		return err
 	}
 
 	output.Printf(errors.CreatedResourceMsg, resource.MirrorTopic, mirrorTopicName)

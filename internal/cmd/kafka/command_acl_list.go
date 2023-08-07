@@ -5,7 +5,6 @@ import (
 
 	aclutil "github.com/confluentinc/cli/internal/pkg/acl"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 )
 
 func (c *aclCommand) newListCommand() *cobra.Command {
@@ -28,6 +27,8 @@ func (c *aclCommand) newListCommand() *cobra.Command {
 	cmd.Flags().String("principal", "", `Principal for this operation, prefixed with "User:".`)
 	pcmd.AddOutputFlag(cmd)
 
+	cmd.MarkFlagsMutuallyExclusive("service-account", "principal")
+
 	return cmd
 }
 
@@ -41,23 +42,18 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 		return acl[0].errors
 	}
 
-	kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand()
-	if err != nil {
-		return err
-	}
-
-	if err := c.provisioningClusterCheck(kafkaClusterConfig.ID); err != nil {
-		return err
-	}
-
 	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {
 		return err
 	}
 
-	aclDataList, httpResp, err := kafkaREST.CloudClient.GetKafkaAcls(kafkaClusterConfig.ID, acl[0].ACLBinding)
+	if err := c.provisioningClusterCheck(kafkaREST.GetClusterId()); err != nil {
+		return err
+	}
+
+	aclDataList, err := kafkaREST.CloudClient.GetKafkaAcls(acl[0].ACLBinding)
 	if err != nil {
-		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+		return err
 	}
 
 	return aclutil.PrintACLsFromKafkaRestResponse(cmd, aclDataList.Data)

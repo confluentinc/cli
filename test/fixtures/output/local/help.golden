@@ -4,11 +4,15 @@ Usage:
   confluent local [command]
 
 Available Commands:
+  current     Get the path of the current Confluent run.
+  destroy     Delete the data and logs for the current Confluent run.
   kafka       Manage a single-node instance of Apache Kafka.
+  services    Manage Confluent Platform services.
+  version     Print the Confluent Platform version.
 
 Global Flags:
   -h, --help            Show help for this command.
-      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
   -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
 
 Use "confluent local [command] --help" for more information about a command.

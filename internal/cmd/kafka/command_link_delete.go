@@ -8,7 +8,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
-	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 )
@@ -34,14 +33,6 @@ func (c *linkCommand) delete(cmd *cobra.Command, args []string) error {
 	linkName := args[0]
 
 	kafkaREST, err := c.GetKafkaREST()
-	if kafkaREST == nil {
-		if err != nil {
-			return err
-		}
-		return errors.New(errors.RestProxyNotAvailableMsg)
-	}
-
-	clusterId, err := getKafkaClusterLkcId(c.AuthenticatedCLICommand)
 	if err != nil {
 		return err
 	}
@@ -51,8 +42,8 @@ func (c *linkCommand) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if httpResp, err := kafkaREST.CloudClient.DeleteKafkaLink(clusterId, linkName); err != nil {
-		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+	if err := kafkaREST.CloudClient.DeleteKafkaLink(linkName); err != nil {
+		return err
 	}
 
 	output.Printf(errors.DeletedResourceMsg, resource.ClusterLink, linkName)

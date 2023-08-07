@@ -6,7 +6,7 @@ func (s *CLITestSuite) TestCompletion() {
 		{args: "completion zsh", fixture: "completion/zsh.golden"},
 	}
 
-	for _, tt := range tests {
-		s.runIntegrationTest(tt)
+	for _, test := range tests {
+		s.runIntegrationTest(test)
 	}
 }

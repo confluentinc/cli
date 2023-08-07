@@ -80,7 +80,7 @@ func ConfirmDeletion(cmd *cobra.Command, promptMsg, stringToType string) (bool, 
 		return true, nil
 	}
 
-	prompt := NewPrompt(os.Stdin)
+	prompt := NewPrompt()
 	isYesNo := stringToType == ""
 	f := New(Field{ID: "confirm", Prompt: promptMsg, IsYesOrNo: isYesNo})
 	if err := f.Prompt(prompt); err != nil && isYesNo {

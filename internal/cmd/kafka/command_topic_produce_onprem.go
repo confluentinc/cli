@@ -18,7 +18,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/serdes"
 )
 
-func (c *authenticatedTopicCommand) newProduceCommandOnPrem() *cobra.Command {
+func (c *command) newProduceCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "produce <topic>",
 		Args:  cobra.ExactArgs(1),
@@ -40,7 +40,9 @@ func (c *authenticatedTopicCommand) newProduceCommandOnPrem() *cobra.Command {
 	cmd.Flags().AddFlagSet(pcmd.OnPremAuthenticationSet())
 	pcmd.AddProtocolFlag(cmd)
 	pcmd.AddMechanismFlag(cmd, c.AuthenticatedCLICommand)
-	cmd.Flags().String("schema", "", "The path to the local schema file.")
+	cmd.Flags().String("key-schema", "", "The filepath of the message key schema.")
+	cmd.Flags().String("schema", "", "The filepath of the message value schema.")
+	pcmd.AddKeyFormatFlag(cmd)
 	pcmd.AddValueFormatFlag(cmd)
 	cmd.Flags().String("references", "", "The path to the references file.")
 	cmd.Flags().Bool("parse-key", false, "Parse key from the message.")
@@ -57,14 +59,12 @@ func (c *authenticatedTopicCommand) newProduceCommandOnPrem() *cobra.Command {
 	cobra.CheckErr(cmd.MarkFlagRequired("bootstrap"))
 	cobra.CheckErr(cmd.MarkFlagRequired("ca-location"))
 
+	cmd.MarkFlagsMutuallyExclusive("config-file", "config")
+
 	return cmd
 }
 
-func (c *authenticatedTopicCommand) produceOnPrem(cmd *cobra.Command, args []string) error {
-	if cmd.Flags().Changed("config-file") && cmd.Flags().Changed("config") {
-		return errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "config-file", "config")
-	}
-
+func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
 	configFile, err := cmd.Flags().GetString("config-file")
 	if err != nil {
 		return err
@@ -91,12 +91,22 @@ func (c *authenticatedTopicCommand) produceOnPrem(cmd *cobra.Command, args []str
 	}
 	defer adminClient.Close()
 
-	topicName := args[0]
-	if err := ValidateTopic(adminClient, topicName); err != nil {
+	topic := args[0]
+	if err := ValidateTopic(adminClient, topic); err != nil {
 		return err
 	}
 
-	valueFormat, subject, serializationProvider, err := prepareSerializer(cmd, topicName)
+	keyFormat, keySubject, keySerializer, err := prepareSerializer(cmd, topic, "key")
+	if err != nil {
+		return err
+	}
+
+	valueFormat, valueSubject, valueSerializer, err := prepareSerializer(cmd, topic, "value")
+	if err != nil {
+		return err
+	}
+
+	keySchema, err := cmd.Flags().GetString("key-schema")
 	if err != nil {
 		return err
 	}
@@ -105,10 +115,12 @@ func (c *authenticatedTopicCommand) produceOnPrem(cmd *cobra.Command, args []str
 	if err != nil {
 		return err
 	}
-	refs, err := sr.ReadSchemaRefs(cmd)
+
+	refs, err := sr.ReadSchemaReferences(cmd, false)
 	if err != nil {
 		return err
 	}
+
 	dir, err := sr.CreateTempDir()
 	if err != nil {
 		return err
@@ -117,20 +129,35 @@ func (c *authenticatedTopicCommand) produceOnPrem(cmd *cobra.Command, args []str
 		_ = os.RemoveAll(dir)
 	}()
 
-	// Meta info contains magic byte and schema ID (4 bytes).
-	schemaCfg := &sr.RegisterSchemaConfigs{
-		Subject:     subject,
-		SchemaDir:   dir,
-		SchemaType:  serializationProvider.GetSchemaName(),
-		ValueFormat: valueFormat,
-		SchemaPath:  &schema,
-		Refs:        refs,
+	keySchemaConfigs := &sr.RegisterSchemaConfigs{
+		Subject:    keySubject,
+		SchemaDir:  dir,
+		SchemaType: keySerializer.GetSchemaName(),
+		Format:     keyFormat,
+		SchemaPath: keySchema,
+		Refs:       refs,
 	}
-	metaInfo, referencePathMap, err := c.registerSchema(cmd, schemaCfg)
+	keyMetaInfo, keyReferencePathMap, err := c.registerSchemaOnPrem(cmd, keySchemaConfigs)
 	if err != nil {
 		return err
 	}
-	if err := serializationProvider.LoadSchema(schema, referencePathMap); err != nil {
+	if err := keySerializer.LoadSchema(keySchema, keyReferencePathMap); err != nil {
+		return err
+	}
+
+	valueSchemaConfigs := &sr.RegisterSchemaConfigs{
+		Subject:    valueSubject,
+		SchemaDir:  dir,
+		SchemaType: valueSerializer.GetSchemaName(),
+		Format:     valueFormat,
+		SchemaPath: schema,
+		Refs:       refs,
+	}
+	valueMetaInfo, referencePathMap, err := c.registerSchemaOnPrem(cmd, valueSchemaConfigs)
+	if err != nil {
+		return err
+	}
+	if err := valueSerializer.LoadSchema(schema, referencePathMap); err != nil {
 		return err
 	}
 
@@ -149,12 +176,12 @@ func (c *authenticatedTopicCommand) produceOnPrem(cmd *cobra.Command, args []str
 
 	deliveryChan := make(chan ckafka.Event)
 	for data := range input {
-		if len(data) == 0 {
+		if data == "" {
 			go scan()
 			continue
 		}
 
-		msg, err := GetProduceMessage(cmd, metaInfo, topicName, data, serializationProvider)
+		msg, err := GetProduceMessage(cmd, keyMetaInfo, valueMetaInfo, topic, data, keySerializer, valueSerializer)
 		if err != nil {
 			return err
 		}
@@ -165,7 +192,7 @@ func (c *authenticatedTopicCommand) produceOnPrem(cmd *cobra.Command, args []str
 		e := <-deliveryChan                // read a ckafka event from the channel
 		m := e.(*ckafka.Message)           // extract the message from the event
 		if m.TopicPartition.Error != nil { // catch all other errors
-			isProduceToCompactedTopicError, err := errors.CatchProduceToCompactedTopicError(err, topicName)
+			isProduceToCompactedTopicError, err := errors.CatchProduceToCompactedTopicError(err, topic)
 			if isProduceToCompactedTopicError {
 				scanErr = err
 				close(input)
@@ -179,41 +206,46 @@ func (c *authenticatedTopicCommand) produceOnPrem(cmd *cobra.Command, args []str
 	return scanErr
 }
 
-func prepareSerializer(cmd *cobra.Command, topicName string) (string, string, serdes.SerializationProvider, error) {
-	valueFormat, err := cmd.Flags().GetString("value-format")
+func prepareSerializer(cmd *cobra.Command, topic, mode string) (string, string, serdes.SerializationProvider, error) {
+	valueFormat, err := cmd.Flags().GetString(fmt.Sprintf("%s-format", mode))
 	if err != nil {
 		return "", "", nil, err
 	}
-	subject := topicNameStrategy(topicName)
-	serializationProvider, err := serdes.GetSerializationProvider(valueFormat)
+
+	serializer, err := serdes.GetSerializationProvider(valueFormat)
 	if err != nil {
 		return "", "", nil, err
 	}
-	return valueFormat, subject, serializationProvider, nil
+
+	return valueFormat, topicNameStrategy(topic), serializer, nil
 }
 
-func (c *authenticatedTopicCommand) registerSchema(cmd *cobra.Command, schemaCfg *sr.RegisterSchemaConfigs) ([]byte, map[string]string, error) {
+func (c *command) registerSchemaOnPrem(cmd *cobra.Command, schemaCfg *sr.RegisterSchemaConfigs) ([]byte, map[string]string, error) {
 	// For plain string encoding, meta info is empty.
 	// Registering schema when specified, and fill metaInfo array.
 	metaInfo := []byte{}
 	referencePathMap := map[string]string{}
-	if schemaCfg.ValueFormat != "string" && len(*schemaCfg.SchemaPath) > 0 {
-		if c.State == nil { // require log-in to use oauthbearer token
+	if schemaCfg.Format != "string" && schemaCfg.SchemaPath != "" {
+		if c.Context.State == nil { // require log-in to use oauthbearer token
 			return nil, nil, errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestions)
 		}
-		srClient, ctx, err := sr.GetSrApiClientWithToken(cmd, c.Version, c.AuthToken())
+
+		srClient, err := c.GetSchemaRegistryClient(cmd)
 		if err != nil {
 			return nil, nil, err
 		}
 
-		metaInfo, err = sr.RegisterSchemaWithAuth(cmd, schemaCfg, srClient, ctx)
+		id, err := sr.RegisterSchemaWithAuth(cmd, schemaCfg, srClient)
 		if err != nil {
 			return nil, nil, err
 		}
-		referencePathMap, err = sr.StoreSchemaReferences(schemaCfg.SchemaDir, schemaCfg.Refs, srClient, ctx)
+		metaInfo = sr.GetMetaInfoFromSchemaId(id)
+
+		referencePathMap, err = sr.StoreSchemaReferences(schemaCfg.SchemaDir, schemaCfg.Refs, srClient)
 		if err != nil {
-			return metaInfo, nil, err
+			return nil, nil, err
 		}
 	}
+
 	return metaInfo, referencePathMap, nil
 }

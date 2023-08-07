@@ -240,7 +240,7 @@ func (c *roleBindingCommand) listPrincipalResources(cmd *cobra.Command, options 
 	return list.Print()
 }
 
-func (c *roleBindingCommand) listPrincipalResourcesV1(cmd *cobra.Command, mdsScope *mds.MdsScope, principal string, role string) error {
+func (c *roleBindingCommand) listPrincipalResourcesV1(cmd *cobra.Command, mdsScope *mds.MdsScope, principal, role string) error {
 	var err error
 	roleNames := []string{role}
 	if role == "*" {
@@ -333,7 +333,7 @@ func (c *roleBindingCommand) listMyRoleBindings(cmd *cobra.Command, listRoleBind
 	}
 
 	if currentUser {
-		listRoleBinding.Principal = mdsv2.PtrString("User:" + c.State.Auth.User.GetResourceId())
+		listRoleBinding.Principal = mdsv2.PtrString("User:" + c.Context.State.Auth.User.GetResourceId())
 	}
 
 	inclusive, err := cmd.Flags().GetBool("inclusive")

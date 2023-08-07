@@ -12,7 +12,7 @@ import (
 func newServiceQuotaClient(url, userAgent string, unsafeTrace bool) *servicequotav1.APIClient {
 	cfg := servicequotav1.NewConfiguration()
 	cfg.Debug = unsafeTrace
-	cfg.HTTPClient = newRetryableHttpClient(unsafeTrace)
+	cfg.HTTPClient = NewRetryableHttpClient(unsafeTrace)
 	cfg.Servers = servicequotav1.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 

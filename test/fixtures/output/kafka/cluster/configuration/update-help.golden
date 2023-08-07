@@ -1,0 +1,20 @@
+Update Kafka cluster configurations.
+
+Usage:
+  confluent kafka cluster configuration update [flags]
+
+Examples:
+Update Kafka cluster configuration "auto.create.topics.enable" to "true".
+
+  $ confluent kafka cluster configuration update --config auto.create.topics.enable=true
+
+Flags:
+      --config strings       REQUIRED: A comma-separated list of configuration overrides with form "key=value".
+      --context string       CLI context name.
+      --environment string   Environment ID.
+      --cluster string       Kafka cluster ID.
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

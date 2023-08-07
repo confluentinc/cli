@@ -12,7 +12,7 @@ import (
 func newIdentityProviderClient(url, userAgent string, unsafeTrace bool) *identityproviderv2.APIClient {
 	cfg := identityproviderv2.NewConfiguration()
 	cfg.Debug = unsafeTrace
-	cfg.HTTPClient = newRetryableHttpClient(unsafeTrace)
+	cfg.HTTPClient = NewRetryableHttpClient(unsafeTrace)
 	cfg.Servers = identityproviderv2.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 

@@ -242,9 +242,9 @@ func TestAbbreviate(t *testing.T) {
 			expected: "hi",
 		},
 	}
-	for _, tt := range tests {
-		out := Abbreviate(tt.input, tt.maxLen)
-		require.Equal(t, tt.expected, out)
+	for _, test := range tests {
+		out := Abbreviate(test.input, test.maxLen)
+		require.Equal(t, test.expected, out)
 	}
 }
 
@@ -266,7 +266,7 @@ func getFlagMap() map[string]*pflag.Flag {
 }
 
 func TestCropString(t *testing.T) {
-	for _, tt := range []struct {
+	for _, test := range []struct {
 		s       string
 		n       int
 		cropped string
@@ -275,7 +275,7 @@ func TestCropString(t *testing.T) {
 		{"ABCDE", 5, "ABCDE"},
 		{"ABCDE", 8, "ABCDE"},
 	} {
-		require.Equal(t, tt.cropped, CropString(tt.s, tt.n))
+		require.Equal(t, test.cropped, CropString(test.s, test.n))
 	}
 }
 
@@ -301,8 +301,8 @@ func TestArrayToCommaDelimitedString(t *testing.T) {
 			expected: `"val1", "val2", or "val3"`,
 		},
 	}
-	for _, tt := range tests {
-		out := ArrayToCommaDelimitedString(tt.input, "or")
-		require.Equal(t, tt.expected, out)
+	for _, test := range tests {
+		out := ArrayToCommaDelimitedString(test.input, "or")
+		require.Equal(t, test.expected, out)
 	}
 }

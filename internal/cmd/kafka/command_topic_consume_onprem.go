@@ -1,14 +1,12 @@
 package kafka
 
 import (
-	"context"
 	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
 
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
-	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
@@ -16,9 +14,10 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	schemaregistry "github.com/confluentinc/cli/internal/pkg/schema-registry"
 )
 
-func (c *authenticatedTopicCommand) newConsumeCommandOnPrem() *cobra.Command {
+func (c *command) newConsumeCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "consume <topic>",
 		Args:  cobra.ExactArgs(1),
@@ -44,6 +43,7 @@ func (c *authenticatedTopicCommand) newConsumeCommandOnPrem() *cobra.Command {
 	cmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of the topic.")
 	cmd.Flags().Int64("offset", 0, "The offset from the beginning to consume from.")
 	cmd.Flags().Int32("partition", -1, "The partition to consume from.")
+	pcmd.AddKeyFormatFlag(cmd)
 	pcmd.AddValueFormatFlag(cmd)
 	cmd.Flags().Bool("print-key", false, "Print key of the message.")
 	cmd.Flags().Bool("full-header", false, "Print complete content of message headers.")
@@ -54,14 +54,15 @@ func (c *authenticatedTopicCommand) newConsumeCommandOnPrem() *cobra.Command {
 	cmd.Flags().String("schema-registry-endpoint", "", "The URL of the Schema Registry cluster.")
 
 	cobra.CheckErr(cmd.MarkFlagFilename("config-file", "avsc", "json"))
-
 	cobra.CheckErr(cmd.MarkFlagRequired("bootstrap"))
-	cobra.CheckErr(cmd.MarkFlagRequired("ca-location"))
+
+	cmd.MarkFlagsMutuallyExclusive("config", "config-file")
+	cmd.MarkFlagsMutuallyExclusive("from-beginning", "offset")
 
 	return cmd
 }
 
-func (c *authenticatedTopicCommand) consumeOnPrem(cmd *cobra.Command, args []string) error {
+func (c *command) consumeOnPrem(cmd *cobra.Command, args []string) error {
 	printKey, err := cmd.Flags().GetBool("print-key")
 	if err != nil {
 		return err
@@ -82,13 +83,14 @@ func (c *authenticatedTopicCommand) consumeOnPrem(cmd *cobra.Command, args []str
 		return err
 	}
 
-	valueFormat, err := cmd.Flags().GetString("value-format")
+	keyFormat, err := cmd.Flags().GetString("key-format")
 	if err != nil {
 		return err
 	}
 
-	if cmd.Flags().Changed("config-file") && cmd.Flags().Changed("config") {
-		return errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "config-file", "config")
+	valueFormat, err := cmd.Flags().GetString("value-format")
+	if err != nil {
+		return err
 	}
 
 	configFile, err := cmd.Flags().GetString("config-file")
@@ -121,10 +123,6 @@ func (c *authenticatedTopicCommand) consumeOnPrem(cmd *cobra.Command, args []str
 		return err
 	}
 
-	if cmd.Flags().Changed("from-beginning") && cmd.Flags().Changed("offset") {
-		return errors.Errorf(errors.ProhibitedFlagCombinationErrorMsg, "from-beginning", "offset")
-	}
-
 	offset, err := GetOffsetWithFallback(cmd)
 	if err != nil {
 		return err
@@ -146,14 +144,9 @@ func (c *authenticatedTopicCommand) consumeOnPrem(cmd *cobra.Command, args []str
 
 	output.ErrPrintln(errors.StartingConsumerMsg)
 
-	var srClient *srsdk.APIClient
-	var ctx context.Context
+	var srClient *schemaregistry.Client
 	if valueFormat != "string" {
-		// Only initialize client and context when schema is specified.
-		if c.State == nil { // require log-in to use oauthbearer token
-			return errors.NewErrorWithSuggestions(errors.NotLoggedInErrorMsg, errors.AuthTokenSuggestions)
-		}
-		srClient, ctx, err = sr.GetSrApiClientWithToken(cmd, c.Version, c.AuthToken())
+		srClient, err = c.GetSchemaRegistryClient(cmd)
 		if err != nil {
 			return err
 		}
@@ -168,10 +161,10 @@ func (c *authenticatedTopicCommand) consumeOnPrem(cmd *cobra.Command, args []str
 	}()
 
 	groupHandler := &GroupHandler{
-		SrClient: srClient,
-		Ctx:      ctx,
-		Format:   valueFormat,
-		Out:      cmd.OutOrStdout(), // TODO
+		SrClient:    srClient,
+		KeyFormat:   keyFormat,
+		ValueFormat: valueFormat,
+		Out:         cmd.OutOrStdout(),
 		Properties: ConsumerProperties{
 			PrintKey:   printKey,
 			FullHeader: fullHeader,

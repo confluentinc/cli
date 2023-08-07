@@ -11,13 +11,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/go-version"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
-	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 	testserver "github.com/confluentinc/cli/test/test-server"
@@ -161,10 +159,7 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 		context = "cloud"
 	}
 	testInputs.statefulConfig = &Config{
-		BaseConfig: &config.BaseConfig{
-			Filename: fmt.Sprintf("test_json/stateful_%s.json", context),
-			Ver:      config.Version{Version: ver},
-		},
+		Filename:  fmt.Sprintf("test_json/stateful_%s.json", context),
 		Platforms: map[string]*Platform{platform.Name: platform},
 		Credentials: map[string]*Credential{
 			apiCredential.Name:   apiCredential,
@@ -177,10 +172,7 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 		SavedCredentials: savedCredentials,
 	}
 	testInputs.statelessConfig = &Config{
-		BaseConfig: &config.BaseConfig{
-			Filename: fmt.Sprintf("test_json/stateless_%s.json", context),
-			Ver:      config.Version{Version: ver},
-		},
+		Filename:  fmt.Sprintf("test_json/stateless_%s.json", context),
 		Platforms: map[string]*Platform{platform.Name: platform},
 		Credentials: map[string]*Credential{
 			apiCredential.Name:   apiCredential,
@@ -193,10 +185,7 @@ func SetupTestInputs(isCloud bool) *TestInputs {
 		SavedCredentials: savedCredentials,
 	}
 	testInputs.twoEnvStatefulConfig = &Config{
-		BaseConfig: &config.BaseConfig{
-			Filename: fmt.Sprintf("test_json/stateful_%s.json", context),
-			Ver:      config.Version{Version: ver},
-		},
+		Filename:  fmt.Sprintf("test_json/stateful_%s.json", context),
 		Platforms: map[string]*Platform{platform.Name: platform},
 		Credentials: map[string]*Credential{
 			apiCredential.Name:   apiCredential,
@@ -252,10 +241,7 @@ func TestConfig_Load(t *testing.T) {
 		{
 			name: "should load disable update checks and disable updates",
 			want: &Config{
-				BaseConfig: &config.BaseConfig{
-					Filename: "test_json/load_disable_update.json",
-					Ver:      config.Version{Version: ver},
-				},
+				Filename:           "test_json/load_disable_update.json",
 				DisableUpdates:     true,
 				DisableUpdateCheck: true,
 				Platforms:          map[string]*Platform{},
@@ -267,29 +253,28 @@ func TestConfig_Load(t *testing.T) {
 			file: "test_json/load_disable_update.json",
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
 			cfg := New()
-			cfg.Filename = tt.file
-			for _, context := range tt.want.Contexts {
-				context.Config = tt.want
+			cfg.Filename = test.file
+			for _, context := range test.want.Contexts {
+				context.Config = test.want
 			}
-			if err := cfg.Load(); (err != nil) != tt.wantErr {
-				t.Errorf("Config.Load() error = %+v, wantErr %+v", err, tt.wantErr)
+			if err := cfg.Load(); (err != nil) != test.wantErr {
+				t.Errorf("Config.Load() error = %+v, wantErr %+v", err, test.wantErr)
 			}
 
 			// Get around automatically assigned anonymous id and IsTest check
-			tt.want.AnonymousId = cfg.AnonymousId
-			tt.want.IsTest = cfg.IsTest
-			tt.want.Version = cfg.Version
-			tt.want.Credentials = cfg.Credentials
-			if ctx := tt.want.Contexts[contextName]; ctx != nil {
+			test.want.IsTest = cfg.IsTest
+			test.want.Version = cfg.Version
+			test.want.Credentials = cfg.Credentials
+			if ctx := test.want.Contexts[contextName]; ctx != nil {
 				ctx.Credential = cfg.Contexts[contextName].Credential
 				ctx.KafkaClusterContext.KafkaClusterConfigs = cfg.Contexts[contextName].KafkaClusterContext.KafkaClusterConfigs
 			}
 
-			if !t.Failed() && !reflect.DeepEqual(cfg, tt.want) {
-				t.Errorf("Config.Load() =\n%+v, want \n%+v", cfg, tt.want)
+			if !t.Failed() && !reflect.DeepEqual(cfg, test.want) {
+				t.Errorf("Config.Load() =\n%+v, want \n%+v", cfg, test.want)
 			}
 		})
 	}
@@ -346,32 +331,32 @@ func TestConfig_Save(t *testing.T) {
 			kafkaOverwrite: "lkc-clusterFlag",
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
 			configFile, _ := os.CreateTemp("", "TestConfig_Save.json")
-			tt.config.Filename = configFile.Name()
-			ctx := tt.config.Context()
-			tt.config.SavedCredentials = map[string]*LoginCredential{
+			test.config.Filename = configFile.Name()
+			ctx := test.config.Context()
+			test.config.SavedCredentials = map[string]*LoginCredential{
 				contextName: {
-					IsCloud:           tt.isCloud,
+					IsCloud:           test.isCloud,
 					Username:          "test-user",
 					EncryptedPassword: "encrypted-password",
 				},
 			}
-			if tt.kafkaOverwrite != "" {
-				tt.config.SetOverwrittenCurrentKafkaCluster(ctx.KafkaClusterContext.GetActiveKafkaClusterId())
-				ctx.KafkaClusterContext.SetActiveKafkaCluster(tt.kafkaOverwrite)
+			if test.kafkaOverwrite != "" {
+				test.config.SetOverwrittenCurrentKafkaCluster(ctx.KafkaClusterContext.GetActiveKafkaClusterId())
+				ctx.KafkaClusterContext.SetActiveKafkaCluster(test.kafkaOverwrite)
 			}
-			if tt.contextOverwrite != "" {
-				tt.config.SetOverwrittenCurrentContext(tt.config.CurrentContext)
-				tt.config.CurrentContext = tt.contextOverwrite
+			if test.contextOverwrite != "" {
+				test.config.SetOverwrittenCurrentContext(test.config.CurrentContext)
+				test.config.CurrentContext = test.contextOverwrite
 			}
-			if err := tt.config.Save(); (err != nil) != tt.wantErr {
-				t.Errorf("Config.Save() error = %v, wantErr %v", err, tt.wantErr)
+			if err := test.config.Save(); (err != nil) != test.wantErr {
+				t.Errorf("Config.Save() error = %v, wantErr %v", err, test.wantErr)
 			}
 
 			got, _ := os.ReadFile(configFile.Name())
-			want, _ := os.ReadFile(tt.wantFile)
+			want, _ := os.ReadFile(test.wantFile)
 			wantString := replacePlaceholdersInWant(t, got, want)
 			require.Equal(t, utils.NormalizeNewLines(wantString), utils.NormalizeNewLines(string(got)))
 			fd, err := os.Stat(configFile.Name())
@@ -414,7 +399,7 @@ func TestConfig_SaveWithEnvironmentOverwrite(t *testing.T) {
 	}
 }
 
-func replacePlaceholdersInWant(t *testing.T, got []byte, want []byte) string {
+func replacePlaceholdersInWant(t *testing.T, got, want []byte) string {
 	data := &Config{}
 	err := json.Unmarshal(got, data)
 	require.NoError(t, err)
@@ -465,25 +450,25 @@ func TestConfig_OverwrittenKafka(t *testing.T) {
 			activeKafka: testConfigsCloud.activeKafka,
 		},
 	}
-	for _, tt := range tests {
-		ctx := tt.config.Context()
-		tt.config.SetOverwrittenCurrentKafkaCluster(tt.overwrittenVal)
+	for _, test := range tests {
+		ctx := test.config.Context()
+		test.config.SetOverwrittenCurrentKafkaCluster(test.overwrittenVal)
 		// resolve should reset the active kafka to be the overwritten value and return the flag value to be used in restore
-		tempKafka := tt.config.resolveOverwrittenKafka()
-		require.Equal(t, tt.activeKafka, tempKafka)
+		tempKafka := test.config.resolveOverwrittenKafka()
+		require.Equal(t, test.activeKafka, tempKafka)
 		if ctx.KafkaClusterContext.EnvContext && ctx.KafkaClusterContext.GetCurrentKafkaEnvContext() != nil {
-			require.Equal(t, tt.overwrittenVal, ctx.KafkaClusterContext.GetCurrentKafkaEnvContext().ActiveKafkaCluster)
+			require.Equal(t, test.overwrittenVal, ctx.KafkaClusterContext.GetCurrentKafkaEnvContext().ActiveKafkaCluster)
 		} else {
-			require.Equal(t, tt.overwrittenVal, ctx.KafkaClusterContext.ActiveKafkaCluster)
+			require.Equal(t, test.overwrittenVal, ctx.KafkaClusterContext.ActiveKafkaCluster)
 		}
 		// restore should reset the active kafka to be the flag value
-		tt.config.restoreOverwrittenKafka(tempKafka)
+		test.config.restoreOverwrittenKafka(tempKafka)
 		if ctx.KafkaClusterContext.EnvContext && ctx.KafkaClusterContext.GetCurrentKafkaEnvContext() != nil {
 			require.Equal(t, tempKafka, ctx.KafkaClusterContext.GetCurrentKafkaEnvContext().ActiveKafkaCluster)
 		} else {
 			require.Equal(t, tempKafka, ctx.KafkaClusterContext.ActiveKafkaCluster)
 		}
-		tt.config.overwrittenCurrentKafkaCluster = ""
+		test.config.overwrittenCurrentKafkaCluster = ""
 	}
 }
 
@@ -513,16 +498,16 @@ func TestConfig_OverwrittenContext(t *testing.T) {
 			currContext: testConfigsCloud.statelessConfig.CurrentContext,
 		},
 	}
-	for _, tt := range tests {
-		tt.config.SetOverwrittenCurrentContext(tt.overwrittenVal)
+	for _, test := range tests {
+		test.config.SetOverwrittenCurrentContext(test.overwrittenVal)
 		// resolve should reset the current context to be the overwritten value and return the flag value to be used in restore
-		tempContext := tt.config.resolveOverwrittenContext()
-		require.Equal(t, tt.overwrittenVal, tt.config.CurrentContext)
-		require.Equal(t, tt.currContext, tempContext)
+		tempContext := test.config.resolveOverwrittenContext()
+		require.Equal(t, test.overwrittenVal, test.config.CurrentContext)
+		require.Equal(t, test.currContext, tempContext)
 		// restore should reset the current context to be the flag value
-		tt.config.restoreOverwrittenContext(tempContext)
-		require.Equal(t, tt.currContext, tt.config.CurrentContext)
-		tt.config.overwrittenCurrentContext = ""
+		test.config.restoreOverwrittenContext(tempContext)
+		require.Equal(t, test.currContext, test.config.CurrentContext)
+		test.config.overwrittenCurrentContext = ""
 	}
 }
 
@@ -551,25 +536,25 @@ func TestConfig_OverwrittenEnvironment(t *testing.T) {
 			config: testConfigsCloud.statelessConfig,
 		},
 	}
-	for _, tt := range tests {
-		tt.config.SetOverwrittenCurrentEnvironment(tt.overwrittenCurrentEnvironment)
-		if tt.config.Context().CurrentEnvironment == "" {
-			tempAccount := tt.config.resolveOverwrittenCurrentEnvironment()
+	for _, test := range tests {
+		test.config.SetOverwrittenCurrentEnvironment(test.overwrittenCurrentEnvironment)
+		if test.config.Context().CurrentEnvironment == "" {
+			tempAccount := test.config.resolveOverwrittenCurrentEnvironment()
 			require.Empty(t, tempAccount)
-			tt.config.restoreOverwrittenEnvironment(tempAccount)
-			require.Empty(t, tt.config.Context().CurrentEnvironment)
+			test.config.restoreOverwrittenEnvironment(tempAccount)
+			require.Empty(t, test.config.Context().CurrentEnvironment)
 		} else {
 			// resolve should reset the current context to be the overwritten value and return the flag value to be used in restore
-			tempAccount := tt.config.resolveOverwrittenCurrentEnvironment()
-			if tt.overwrittenCurrentEnvironment != "" {
-				require.Equal(t, tt.overwrittenCurrentEnvironment, tt.config.Context().GetCurrentEnvironment())
-				require.Equal(t, tt.currentEnvironment, tempAccount)
+			tempAccount := test.config.resolveOverwrittenCurrentEnvironment()
+			if test.overwrittenCurrentEnvironment != "" {
+				require.Equal(t, test.overwrittenCurrentEnvironment, test.config.Context().GetCurrentEnvironment())
+				require.Equal(t, test.currentEnvironment, tempAccount)
 			}
 			// restore should reset the current context to be the flag value
-			tt.config.restoreOverwrittenEnvironment(tempAccount)
-			require.Equal(t, tt.currentEnvironment, tt.config.Context().GetCurrentEnvironment())
+			test.config.restoreOverwrittenEnvironment(tempAccount)
+			require.Equal(t, test.currentEnvironment, test.config.Context().GetCurrentEnvironment())
 		}
-		tt.config.overwrittenCurrentEnvironment = ""
+		test.config.overwrittenCurrentEnvironment = ""
 	}
 }
 
@@ -592,36 +577,31 @@ func TestConfig_AddContext(t *testing.T) {
 	noContextConf.CurrentContext = ""
 
 	type testStruct struct {
-		name                   string
-		config                 *Config
-		contextName            string
-		platformName           string
-		credentialName         string
-		currentEnvironment     string
-		kafkaClusters          map[string]*KafkaClusterConfig
-		kafka                  string
-		schemaRegistryClusters map[string]*SchemaRegistryCluster
-		state                  *ContextState
-		Version                *pversion.Version
-		filename               string
-		want                   *Config
-		wantErr                bool
+		name               string
+		config             *Config
+		contextName        string
+		platformName       string
+		credentialName     string
+		currentEnvironment string
+		kafkaClusters      map[string]*KafkaClusterConfig
+		kafka              string
+		state              *ContextState
+		Version            *pversion.Version
+		filename           string
+		want               *Config
+		wantErr            bool
 	}
 
 	test := testStruct{
-		name:                   "",
-		config:                 noContextConf,
-		contextName:            context.Name,
-		platformName:           context.PlatformName,
-		credentialName:         context.CredentialName,
-		currentEnvironment:     context.CurrentEnvironment,
-		kafkaClusters:          context.KafkaClusterContext.KafkaClusterConfigs,
-		kafka:                  context.KafkaClusterContext.ActiveKafkaCluster,
-		schemaRegistryClusters: context.SchemaRegistryClusters,
-		state:                  context.State,
-		filename:               filename,
-		want:                   nil,
-		wantErr:                false,
+		config:             noContextConf,
+		contextName:        context.Name,
+		platformName:       context.PlatformName,
+		credentialName:     context.CredentialName,
+		currentEnvironment: context.CurrentEnvironment,
+		kafkaClusters:      context.KafkaClusterContext.KafkaClusterConfigs,
+		kafka:              context.KafkaClusterContext.ActiveKafkaCluster,
+		state:              context.State,
+		filename:           filename,
 	}
 
 	addValidContextTest := test
@@ -638,17 +618,14 @@ func TestConfig_AddContext(t *testing.T) {
 		addValidContextTest,
 		failAddingExistingContextTest,
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			err := tt.config.AddContext(tt.contextName, tt.platformName, tt.credentialName, tt.kafkaClusters, tt.kafka, tt.schemaRegistryClusters, tt.state, MockOrgResourceId, tt.currentEnvironment)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("AddContext() error = %v, wantErr %v", err, tt.wantErr)
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			err := test.config.AddContext(test.contextName, test.platformName, test.credentialName, test.kafkaClusters, test.kafka, test.state, MockOrgResourceId, test.currentEnvironment)
+			if (err != nil) != test.wantErr {
+				t.Errorf("AddContext() error = %v, wantErr %v", err, test.wantErr)
 			}
-			if tt.want != nil {
-				tt.want.AnonymousId = tt.config.AnonymousId
-			}
-			if !tt.wantErr && !reflect.DeepEqual(tt.want, tt.config) {
-				t.Errorf("AddContext() got = %v, want %v", tt.config, tt.want)
+			if !test.wantErr && !reflect.DeepEqual(test.want, test.config) {
+				t.Errorf("AddContext() got = %v, want %v", test.config, test.want)
 			}
 		})
 	}
@@ -657,7 +634,6 @@ func TestConfig_AddContext(t *testing.T) {
 
 func TestConfig_CreateContext(t *testing.T) {
 	cfg := &Config{
-		BaseConfig:    &config.BaseConfig{Ver: config.Version{Version: version.Must(version.NewVersion("1.0.0"))}},
 		ContextStates: make(map[string]*ContextState),
 		Contexts:      make(map[string]*Context),
 		Credentials:   make(map[string]*Credential),
@@ -702,14 +678,14 @@ func TestConfig_UseContext(t *testing.T) {
 			wantErr: true,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			cfg := tt.fields.Config
-			if err := cfg.UseContext(tt.args.name); (err != nil) != tt.wantErr {
-				t.Errorf("UseContext() error = %v, wantErr %v", err, tt.wantErr)
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			cfg := test.fields.Config
+			if err := cfg.UseContext(test.args.name); (err != nil) != test.wantErr {
+				t.Errorf("UseContext() error = %v, wantErr %v", err, test.wantErr)
 			}
-			if !tt.wantErr {
-				assert.Equal(t, tt.args.name, cfg.CurrentContext)
+			if !test.wantErr {
+				assert.Equal(t, test.args.name, cfg.CurrentContext)
 			}
 		})
 	}
@@ -743,16 +719,16 @@ func TestConfig_FindContext(t *testing.T) {
 			wantErr: true,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			cfg := &Config{Contexts: tt.fields.Contexts}
-			got, err := cfg.FindContext(tt.args.name)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("FindContext() error = %v, wantErr %v", err, tt.wantErr)
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			cfg := &Config{Contexts: test.fields.Contexts}
+			got, err := cfg.FindContext(test.args.name)
+			if (err != nil) != test.wantErr {
+				t.Errorf("FindContext() error = %v, wantErr %v", err, test.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("FindContext() got = %v, want %v", got, tt.want)
+			if !reflect.DeepEqual(got, test.want) {
+				t.Errorf("FindContext() got = %v, want %v", got, test.want)
 			}
 		})
 	}
@@ -782,15 +758,15 @@ func TestConfig_Context(t *testing.T) {
 			want:   nil,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
 			cfg := &Config{
-				Contexts:       tt.fields.Contexts,
-				CurrentContext: tt.fields.CurrentContext,
+				Contexts:       test.fields.Contexts,
+				CurrentContext: test.fields.CurrentContext,
 			}
 			got := cfg.Context()
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Context() got = %v, want %v", got, tt.want)
+			if !reflect.DeepEqual(got, test.want) {
+				t.Errorf("Context() got = %v, want %v", got, test.want)
 			}
 		})
 	}
@@ -919,7 +895,7 @@ func TestKafkaClusterContext_DeleteAPIKey(t *testing.T) {
 		kafkaClusterContext := testInputs.statefulConfig.Context().KafkaClusterContext
 		kafkaClusterContext.AddKafkaClusterConfig(kcc)
 
-		kafkaClusterContext.DeleteAPIKey(apiKey)
+		kafkaClusterContext.DeleteApiKey(apiKey)
 		kcc := kafkaClusterContext.GetKafkaClusterConfig(clusterID)
 		if _, ok := kcc.APIKeys[apiKey]; ok {
 			t.Errorf("DeleteAPIKey did not delete the API key.")

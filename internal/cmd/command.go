@@ -23,6 +23,7 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/connect"
 	"github.com/confluentinc/cli/internal/cmd/context"
 	"github.com/confluentinc/cli/internal/cmd/environment"
+	"github.com/confluentinc/cli/internal/cmd/feedback"
 	"github.com/confluentinc/cli/internal/cmd/flink"
 	"github.com/confluentinc/cli/internal/cmd/iam"
 	"github.com/confluentinc/cli/internal/cmd/kafka"
@@ -69,20 +70,20 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 	cmd.Flags().Bool("version", false, fmt.Sprintf("Show version of the %s.", pversion.FullCLIName))
 	cmd.PersistentFlags().BoolP("help", "h", false, "Show help for this command.")
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).")
-	cmd.PersistentFlags().Bool("unsafe-trace", false, "Equivalent to -vvvv, but also log HTTP requests and responses which may contain plaintext secrets.")
+	cmd.PersistentFlags().Bool("unsafe-trace", false, "Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.")
 
 	disableUpdateCheck := cfg.DisableUpdates || cfg.DisableUpdateCheck
 	updateClient := update.NewClient(pversion.CLIName, disableUpdateCheck)
 	authTokenHandler := pauth.NewAuthTokenHandler()
 	ccloudClientFactory := pauth.NewCCloudClientFactory(cfg.Version.UserAgent)
-	flagResolver := &pcmd.FlagResolverImpl{Prompt: form.NewPrompt(os.Stdin), Out: os.Stdout}
+	flagResolver := &pcmd.FlagResolverImpl{Prompt: form.NewPrompt(), Out: os.Stdout}
 	jwtValidator := pcmd.NewJWTValidator()
 	netrcHandler := netrc.NewNetrcHandler(netrc.GetNetrcFilePath(cfg.IsTest))
 	ccloudClient := getCloudClient(cfg, ccloudClientFactory)
-	loginCredentialsManager := pauth.NewLoginCredentialsManager(netrcHandler, form.NewPrompt(os.Stdin), ccloudClient)
+	loginCredentialsManager := pauth.NewLoginCredentialsManager(netrcHandler, form.NewPrompt(), ccloudClient)
 	loginOrganizationManager := pauth.NewLoginOrganizationManagerImpl()
 	mdsClientManager := &pauth.MDSClientManagerImpl{}
-	featureflags.Init(cfg.Version, cfg.IsTest, cfg.DisableFeatureFlags)
+	featureflags.Init(cfg)
 
 	cmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
 		pcmd.LabelRequiredFlags(cmd)
@@ -113,8 +114,9 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 	cmd.AddCommand(context.New(prerunner, flagResolver))
 	cmd.AddCommand(connect.New(cfg, prerunner))
 	cmd.AddCommand(environment.New(prerunner))
+	cmd.AddCommand(feedback.New(prerunner))
 	cmd.AddCommand(iam.New(cfg, prerunner))
-	cmd.AddCommand(kafka.New(cfg, prerunner, cfg.Version.ClientID))
+	cmd.AddCommand(kafka.New(cfg, prerunner))
 	cmd.AddCommand(ksql.New(cfg, prerunner))
 	cmd.AddCommand(local.New(prerunner))
 	cmd.AddCommand(login.New(cfg, prerunner, ccloudClientFactory, mdsClientManager, netrcHandler, loginCredentialsManager, loginOrganizationManager, authTokenHandler))
@@ -125,10 +127,11 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 	cmd.AddCommand(price.New(prerunner))
 	cmd.AddCommand(prompt.New(cfg))
 	cmd.AddCommand(servicequota.New(prerunner))
-	cmd.AddCommand(schemaregistry.New(cfg, prerunner, nil))
+	cmd.AddCommand(schemaregistry.New(cfg, prerunner))
 	cmd.AddCommand(secret.New(prerunner, flagResolver, secrets.NewPasswordProtectionPlugin()))
 	cmd.AddCommand(shell.New(cmd, func() *cobra.Command { return NewConfluentCommand(cfg) }))
 	cmd.AddCommand(streamshare.New(prerunner))
+	cmd.AddCommand(update.New(cfg, prerunner, updateClient))
 	cmd.AddCommand(version.New(prerunner, cfg.Version))
 
 	dc := dynamicconfig.New(cfg, nil)
@@ -136,9 +139,6 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 
 	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.flink", dc.Context(), v1.CliLaunchDarklyClient, true, false) {
 		cmd.AddCommand(flink.New(cfg, prerunner))
-	}
-	if !cfg.DisableUpdates {
-		cmd.AddCommand(update.New(cfg, prerunner, updateClient))
 	}
 
 	changeDefaults(cmd, cfg)

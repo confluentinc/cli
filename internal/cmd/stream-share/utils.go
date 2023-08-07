@@ -2,7 +2,6 @@ package streamshare
 
 import (
 	"fmt"
-	"os"
 
 	cdxv1 "github.com/confluentinc/ccloud-sdk-go-v2/cdx/v1"
 
@@ -54,7 +53,7 @@ func confirmOptOut() (bool, error) {
 			IsYesOrNo: true,
 		},
 	)
-	if err := f.Prompt(form.NewPrompt(os.Stdin)); err != nil {
+	if err := f.Prompt(form.NewPrompt()); err != nil {
 		return false, errors.New(errors.FailedToReadInputErrorMsg)
 	}
 	return f.Responses["confirmation"].(bool), nil

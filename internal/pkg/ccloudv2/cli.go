@@ -27,6 +27,11 @@ func (c *Client) cliApiContext() context.Context {
 	return context.WithValue(context.Background(), cliv1.ContextAccessToken, c.AuthToken)
 }
 
+func (c *Client) CreateCliFeedback(feedback cliv1.CliV1Feedback) error {
+	httpResp, err := c.CliClient.FeedbacksCliV1Api.CreateCliV1Feedback(c.cliApiContext()).CliV1Feedback(feedback).Execute()
+	return errors.CatchCCloudV2Error(err, httpResp)
+}
+
 func (c *Client) CreateCliUsage(usage cliv1.CliV1Usage) error {
 	httpResp, err := c.CliClient.UsagesCliV1Api.CreateCliV1Usage(c.cliApiContext()).CliV1Usage(usage).Execute()
 	return errors.CatchCCloudV2Error(err, httpResp)

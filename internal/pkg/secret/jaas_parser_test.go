@@ -79,18 +79,18 @@ listener.name.sasl_ssl.scram-sha-256.sasl.jaas.config/com.sun.security.auth.modu
 			wantErrMsg: fmt.Sprintf(errors.InvalidJAASConfigErrorMsg, fmt.Sprintf(errors.ExpectedConfigNameErrorMsg, "")),
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
 			req := require.New(t)
 			parser := NewJAASParser()
-			props, err := parser.ParseJAASConfigurationEntry(tt.args.contents, tt.args.key)
-			if tt.wantErr {
+			props, err := parser.ParseJAASConfigurationEntry(test.args.contents, test.args.key)
+			if test.wantErr {
 				req.Error(err)
-				req.Contains(err.Error(), tt.wantErrMsg)
+				req.Contains(err.Error(), test.wantErrMsg)
 			} else {
 				req.NoError(err)
 				parsedString := props.String()
-				req.Equal(tt.args.expectedContent, parsedString)
+				req.Equal(test.args.expectedContent, parsedString)
 			}
 		})
 	}
@@ -133,20 +133,20 @@ listener.name.sasl_ssl.scram-sha-256.sasl.jaas.config/com.sun.security.auth.modu
 			wantErr: false,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
 			req := require.New(t)
 			parser := NewJAASParser()
-			_, err := parser.ParseJAASConfigurationEntry(tt.args.originalContent, tt.args.key)
+			_, err := parser.ParseJAASConfigurationEntry(test.args.originalContent, test.args.key)
 			req.NoError(err)
-			updatedProps := properties.MustLoadString(tt.args.contents)
-			jaasConfig, err := parser.ConvertPropertiesToJAAS(updatedProps, tt.args.operation)
-			if tt.wantErr {
+			updatedProps := properties.MustLoadString(test.args.contents)
+			jaasConfig, err := parser.ConvertPropertiesToJAAS(updatedProps, test.args.operation)
+			if test.wantErr {
 				req.Error(err)
-				req.Contains(err.Error(), tt.wantErrMsg)
+				req.Contains(err.Error(), test.wantErrMsg)
 			} else {
 				req.NoError(err)
-				req.Equal(tt.args.expectedContent, jaasConfig.String())
+				req.Equal(test.args.expectedContent, jaasConfig.String())
 			}
 		})
 	}

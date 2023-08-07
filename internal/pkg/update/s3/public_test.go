@@ -103,25 +103,25 @@ func TestPublicRepo_GetAvailableBinaryVersions(t *testing.T) {
 			wantErr: true,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
 			// Need to inject these so tests pass in different environments (e.g., CI)
 			goos := "darwin"
 			goarch := "amd64"
 			r := NewPublicRepo(&PublicRepoParams{
 				S3BinPrefixFmt: "%s-cli",
 			})
-			r.endpoint = tt.fields.Endpoint
+			r.endpoint = test.fields.Endpoint
 			r.goos = goos
 			r.goarch = goarch
 
-			got, err := r.GetAvailableBinaryVersions(tt.args.name)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("PublicRepo.GetAvailableBinaryVersions() error = %v, wantErr %v", err, tt.wantErr)
+			got, err := r.GetAvailableBinaryVersions(test.args.name)
+			if (err != nil) != test.wantErr {
+				t.Errorf("PublicRepo.GetAvailableBinaryVersions() error = %v, wantErr %v", err, test.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("PublicRepo.GetAvailableBinaryVersions() = %v, want %v", got, tt.want)
+			if !reflect.DeepEqual(got, test.want) {
+				t.Errorf("PublicRepo.GetAvailableBinaryVersions() = %v, want %v", got, test.want)
 			}
 		})
 	}
@@ -176,29 +176,29 @@ func TestPublicRepo_GetLatestMajorAndMinorVersion(t *testing.T) {
 			wantMinor: makeVersion("0.1.0"),
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
 			// Need to inject these so tests pass in different environments (e.g., CI)
 			goos := "darwin"
 			goarch := "amd64"
 			r := NewPublicRepo(&PublicRepoParams{
 				S3BinPrefixFmt: "%s-cli",
 			})
-			r.endpoint = tt.fields.Endpoint
+			r.endpoint = test.fields.Endpoint
 			r.goos = goos
 			r.goarch = goarch
 
 			v, _ := version.NewVersion("v0.0.0")
-			latestMajorVersion, latestMinorVersion, err := r.GetLatestMajorAndMinorVersion(tt.args.name, v)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("PublicRepo.GetLatestMajorAndMinorVersion() error = %v, wantErr %v", err, tt.wantErr)
+			latestMajorVersion, latestMinorVersion, err := r.GetLatestMajorAndMinorVersion(test.args.name, v)
+			if (err != nil) != test.wantErr {
+				t.Errorf("PublicRepo.GetLatestMajorAndMinorVersion() error = %v, wantErr %v", err, test.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(latestMajorVersion, tt.wantMajor) {
-				t.Errorf("PublicRepo.GetLatestMajorAndMinorVersion() majorVersion = %v, want %v", latestMajorVersion, tt.wantMajor)
+			if !reflect.DeepEqual(latestMajorVersion, test.wantMajor) {
+				t.Errorf("PublicRepo.GetLatestMajorAndMinorVersion() majorVersion = %v, want %v", latestMajorVersion, test.wantMajor)
 			}
-			if !reflect.DeepEqual(latestMinorVersion, tt.wantMinor) {
-				t.Errorf("PublicRepo.GetLatestMajorAndMinorVersion() minorVersion = %v, want %v", latestMinorVersion, tt.wantMinor)
+			if !reflect.DeepEqual(latestMinorVersion, test.wantMinor) {
+				t.Errorf("PublicRepo.GetLatestMajorAndMinorVersion() minorVersion = %v, want %v", latestMinorVersion, test.wantMinor)
 			}
 		})
 	}
@@ -271,22 +271,22 @@ func TestPublicRepo_GetAvailableReleaseNotesVersions(t *testing.T) {
 			wantErr: true,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
 			r := NewPublicRepo(&PublicRepoParams{
-				S3BinBucket:             tt.fields.S3BinBucket,
-				S3BinRegion:             tt.fields.S3BinRegion,
+				S3BinBucket:             test.fields.S3BinBucket,
+				S3BinRegion:             test.fields.S3BinRegion,
 				S3ReleaseNotesPrefixFmt: "%s-cli/release-notes",
 			})
-			r.endpoint = tt.fields.Endpoint
+			r.endpoint = test.fields.Endpoint
 
 			got, err := r.GetAvailableReleaseNotesVersions(pversion.CLIName)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("PublicRepo.GetAvailableReleaseNotesVersions() error = %v, wantErr %v", err, tt.wantErr)
+			if (err != nil) != test.wantErr {
+				t.Errorf("PublicRepo.GetAvailableReleaseNotesVersions() error = %v, wantErr %v", err, test.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("PublicRepo.GetAvailableReleaseNotesVersions() = %v, want %v", got, tt.want)
+			if !reflect.DeepEqual(got, test.want) {
+				t.Errorf("PublicRepo.GetAvailableReleaseNotesVersions() = %v, want %v", got, test.want)
 			}
 		})
 	}
@@ -359,21 +359,21 @@ func TestPublicRepo_GetLatestReleaseNotesVersion(t *testing.T) {
 			wantErr: true,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
 			r := NewPublicRepo(&PublicRepoParams{
 				S3ReleaseNotesPrefixFmt: "%s-cli/release-notes",
 			})
-			r.endpoint = tt.fields.Endpoint
+			r.endpoint = test.fields.Endpoint
 
 			got, err := r.GetLatestReleaseNotesVersions(pversion.CLIName, currentVersion)
-			if tt.wantErr {
+			if test.wantErr {
 				req.Error(err)
 			} else {
 				req.NoError(err)
 			}
 
-			req.Equal(tt.want, got)
+			req.Equal(test.want, got)
 		})
 	}
 }
@@ -419,26 +419,26 @@ func TestPublicRepo_DownloadVersion(t *testing.T) {
 			wantBytes: 3921,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
 			// Need to inject these so tests pass in different environments (e.g., CI)
 			goos := "darwin"
 			goarch := "amd64"
 			r := NewPublicRepo(&PublicRepoParams{S3BinPrefixFmt: "%s-cli"})
-			r.endpoint = tt.fields.Endpoint
+			r.endpoint = test.fields.Endpoint
 			r.goos = goos
 			r.goarch = goarch
-			if tt.fields.FileSystem != nil {
-				r.fs = tt.fields.FileSystem
+			if test.fields.FileSystem != nil {
+				r.fs = test.fields.FileSystem
 			}
 
-			payload, err := r.DownloadVersion(tt.args.name, tt.args.version, tt.args.downloadDir)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("PublicRepo.DownloadVersion() error = %v, wantErr %v", err, tt.wantErr)
+			payload, err := r.DownloadVersion(test.args.name, test.args.version, test.args.downloadDir)
+			if (err != nil) != test.wantErr {
+				t.Errorf("PublicRepo.DownloadVersion() error = %v, wantErr %v", err, test.wantErr)
 				return
 			}
-			if len(payload) != tt.wantBytes {
-				t.Errorf("PublicRepo.DownloadVersion() downloadedBytes = %v, wantBytes %v", len(payload), tt.wantBytes)
+			if len(payload) != test.wantBytes {
+				t.Errorf("PublicRepo.DownloadVersion() downloadedBytes = %v, wantBytes %v", len(payload), test.wantBytes)
 			}
 		})
 	}
@@ -486,22 +486,22 @@ func TestPublicRepo_DownloadReleaseNotes(t *testing.T) {
 			want: ReleaseNotesFileV0470,
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
 			r := NewPublicRepo(&PublicRepoParams{
-				S3BinBucket:             tt.fields.S3BinBucket,
-				S3BinRegion:             tt.fields.S3BinRegion,
+				S3BinBucket:             test.fields.S3BinBucket,
+				S3BinRegion:             test.fields.S3BinRegion,
 				S3ReleaseNotesPrefixFmt: "/%s-cli/release-notes",
 			})
-			r.endpoint = tt.fields.Endpoint
+			r.endpoint = test.fields.Endpoint
 
-			releaseNotes, err := r.DownloadReleaseNotes(tt.args.name, tt.args.version)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("PublicRepo.DownloadVersion() error = %v, wantErr %v", err, tt.wantErr)
+			releaseNotes, err := r.DownloadReleaseNotes(test.args.name, test.args.version)
+			if (err != nil) != test.wantErr {
+				t.Errorf("PublicRepo.DownloadVersion() error = %v, wantErr %v", err, test.wantErr)
 				return
 			}
-			if !strings.HasSuffix(releaseNotes, tt.want) {
-				t.Errorf("PublicRepo.DownloadVersion() download = %v, want %v", releaseNotes, tt.want)
+			if !strings.HasSuffix(releaseNotes, test.want) {
+				t.Errorf("PublicRepo.DownloadVersion() download = %v, want %v", releaseNotes, test.want)
 			}
 		})
 	}

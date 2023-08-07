@@ -21,7 +21,7 @@ type configOut struct {
 	Name        string `human:"Name" serialized:"name"`
 	Value       string `human:"Value,omitempty" serialized:"value,omitempty"`
 	IsDefault   bool   `human:"Default" serialized:"is_default"`
-	IsReadOnly  bool   `human:"Read Only" serialized:"is_read_only"`
+	IsReadOnly  bool   `human:"Read-Only" serialized:"is_read_only"`
 	IsSensitive bool   `human:"Sensitive" serialized:"is_sensitive"`
 }
 
@@ -29,7 +29,7 @@ func (c *brokerCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe [id]",
 		Short: "Describe a Kafka broker.",
-		Long:  "Describe cluster-wide or per-broker configuration values using Confluent Kafka REST.",
+		Long:  "Describe cluster-wide or per-broker configuration values.",
 		Args:  cobra.MaximumNArgs(1),
 		RunE:  c.describe,
 		Example: examples.BuildExampleString(
@@ -45,7 +45,7 @@ func (c *brokerCommand) newDescribeCommand() *cobra.Command {
 	}
 
 	cmd.Flags().Bool("all", false, "Get cluster-wide broker configurations (non-default values only).")
-	cmd.Flags().String("config-name", "", "Get a specific configuration value (pair with --all to see a cluster-wide config.")
+	cmd.Flags().String("config-name", "", "Get a specific configuration value (pair with --all to see a cluster-wide configuration.")
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	pcmd.AddOutputFlag(cmd)
 
@@ -151,7 +151,7 @@ func getIndividualBrokerConfigs(restClient *kafkarestv3.APIClient, restContext c
 }
 
 // getClusterWideConfigs fetches cluster-wide configs or just configName config if specified
-func getClusterWideConfigs(restClient *kafkarestv3.APIClient, restContext context.Context, clusterId string, configName string) (kafkarestv3.ClusterConfigDataList, error) {
+func getClusterWideConfigs(restClient *kafkarestv3.APIClient, restContext context.Context, clusterId, configName string) (kafkarestv3.ClusterConfigDataList, error) {
 	var clusterConfig kafkarestv3.ClusterConfigDataList
 	var resp *http.Response
 	var err error

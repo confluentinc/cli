@@ -6,3 +6,10 @@ type Platform struct {
 	Server     string `json:"server"`
 	CaCertPath string `json:"ca_cert_path,omitempty"`
 }
+
+func (p *Platform) GetName() string {
+	if p != nil {
+		return p.Name
+	}
+	return ""
+}

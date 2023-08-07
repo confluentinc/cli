@@ -1,7 +1,6 @@
 package schemaregistry
 
 import (
-	"context"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
@@ -16,6 +15,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	schemaregistry "github.com/confluentinc/cli/internal/pkg/schema-registry"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -24,27 +24,23 @@ type registerSchemaResponse struct {
 }
 
 type RegisterSchemaConfigs struct {
-	SchemaDir   string
-	Subject     string
-	ValueFormat string
-	SchemaType  string
-	SchemaPath  *string
-	Refs        []srsdk.SchemaReference
-	Metadata    *srsdk.Metadata
-	Ruleset     *srsdk.RuleSet
-	Normalize   bool
+	SchemaDir  string
+	Subject    string
+	Format     string
+	SchemaType string
+	SchemaPath string
+	Refs       []srsdk.SchemaReference
+	Metadata   *srsdk.Metadata
+	Ruleset    *srsdk.RuleSet
+	Normalize  bool
 }
 
-func RegisterSchemaWithAuth(cmd *cobra.Command, schemaCfg *RegisterSchemaConfigs, srClient *srsdk.APIClient, ctx context.Context) ([]byte, error) {
-	schema, err := os.ReadFile(*schemaCfg.SchemaPath)
+func RegisterSchemaWithAuth(cmd *cobra.Command, schemaCfg *RegisterSchemaConfigs, client *schemaregistry.Client) (int32, error) {
+	schema, err := os.ReadFile(schemaCfg.SchemaPath)
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
 
-	opts := srsdk.RegisterOpts{}
-	if schemaCfg.Normalize {
-		opts.Normalize = optional.NewBool(true)
-	}
 	request := srsdk.RegisterSchemaRequest{
 		Schema:     string(schema),
 		SchemaType: schemaCfg.SchemaType,
@@ -52,28 +48,40 @@ func RegisterSchemaWithAuth(cmd *cobra.Command, schemaCfg *RegisterSchemaConfigs
 		Metadata:   schemaCfg.Metadata,
 		RuleSet:    schemaCfg.Ruleset,
 	}
-	response, _, err := srClient.DefaultApi.Register(ctx, schemaCfg.Subject, request, &opts)
+
+	opts := &srsdk.RegisterOpts{}
+	if schemaCfg.Normalize {
+		opts.Normalize = optional.NewBool(true)
+	}
+
+	response, err := client.Register(schemaCfg.Subject, request, opts)
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
 
 	if output.GetFormat(cmd).IsSerialized() {
 		if err := output.SerializedOutput(cmd, &registerSchemaResponse{Id: response.Id}); err != nil {
-			return nil, err
+			return 0, err
 		}
 	} else {
 		output.Printf(errors.RegisteredSchemaMsg, response.Id)
 	}
 
-	return GetMetaInfoFromSchemaId(response.Id), nil
+	return response.Id, nil
 }
 
-func ReadSchemaRefs(cmd *cobra.Command) ([]srsdk.SchemaReference, error) {
-	var refs []srsdk.SchemaReference
-	references, err := cmd.Flags().GetString("references")
+func ReadSchemaReferences(cmd *cobra.Command, isKey bool) ([]srsdk.SchemaReference, error) {
+	name := "references"
+	if isKey {
+		name = "key-references"
+	}
+
+	references, err := cmd.Flags().GetString(name)
 	if err != nil {
 		return nil, err
 	}
+
+	var refs []srsdk.SchemaReference
 	if references != "" {
 		refBlob, err := os.ReadFile(references)
 		if err != nil {
@@ -83,15 +91,16 @@ func ReadSchemaRefs(cmd *cobra.Command) ([]srsdk.SchemaReference, error) {
 			return nil, err
 		}
 	}
+
 	return refs, nil
 }
 
-func StoreSchemaReferences(schemaDir string, refs []srsdk.SchemaReference, srClient *srsdk.APIClient, ctx context.Context) (map[string]string, error) {
+func StoreSchemaReferences(schemaDir string, refs []srsdk.SchemaReference, client *schemaregistry.Client) (map[string]string, error) {
 	referencePathMap := map[string]string{}
 	for _, ref := range refs {
 		tempStorePath := filepath.Join(schemaDir, ref.Name)
 		if !utils.FileExists(tempStorePath) {
-			schema, _, err := srClient.DefaultApi.GetSchemaByVersion(ctx, ref.Subject, strconv.Itoa(int(ref.Version)), &srsdk.GetSchemaByVersionOpts{})
+			schema, err := client.GetSchemaByVersion(ref.Subject, strconv.Itoa(int(ref.Version)), nil)
 			if err != nil {
 				return nil, err
 			}
@@ -120,13 +129,12 @@ func CreateTempDir() (string, error) {
 	return dir, err
 }
 
-func RequestSchemaWithId(schemaId int32, subject string, srClient *srsdk.APIClient, ctx context.Context) (srsdk.SchemaString, error) {
+func RequestSchemaWithId(id int32, subject string, client *schemaregistry.Client) (srsdk.SchemaString, error) {
 	opts := &srsdk.GetSchemaOpts{Subject: optional.NewString(subject)}
-	schemaString, _, err := srClient.DefaultApi.GetSchema(ctx, schemaId, opts)
-	return schemaString, err
+	return client.GetSchema(id, opts)
 }
 
-func SetSchemaPathRef(schemaString srsdk.SchemaString, dir string, subject string, schemaId int32, srClient *srsdk.APIClient, ctx context.Context) (string, map[string]string, error) {
+func SetSchemaPathRef(schemaString srsdk.SchemaString, dir, subject string, schemaId int32, client *schemaregistry.Client) (string, map[string]string, error) {
 	// Create temporary file to store schema retrieved (also for cache). Retry if get error retrieving schema or writing temp schema file
 	tempStorePath := filepath.Join(dir, fmt.Sprintf("%s-%d.txt", subject, schemaId))
 	tempRefStorePath := filepath.Join(dir, fmt.Sprintf("%s-%d.ref", subject, schemaId))
@@ -155,7 +163,7 @@ func SetSchemaPathRef(schemaString srsdk.SchemaString, dir string, subject strin
 			return "", nil, err
 		}
 	}
-	referencePathMap, err := StoreSchemaReferences(dir, references, srClient, ctx)
+	referencePathMap, err := StoreSchemaReferences(dir, references, client)
 	if err != nil {
 		return "", nil, err
 	}

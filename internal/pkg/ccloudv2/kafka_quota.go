@@ -12,7 +12,7 @@ import (
 func newKafkaQuotasClient(url, userAgent string, unsafeTrace bool) *kafkaquotasv1.APIClient {
 	cfg := kafkaquotasv1.NewConfiguration()
 	cfg.Debug = unsafeTrace
-	cfg.HTTPClient = newRetryableHttpClient(unsafeTrace)
+	cfg.HTTPClient = NewRetryableHttpClient(unsafeTrace)
 	cfg.Servers = kafkaquotasv1.ServerConfigurations{{URL: url}}
 	cfg.UserAgent = userAgent
 

@@ -1,17 +1,14 @@
 package kafka
 
 import (
-	"fmt"
+	"strconv"
 
-	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -54,26 +51,15 @@ func (c *mirrorCommand) resume(cmd *cobra.Command, args []string) error {
 	}
 
 	kafkaREST, err := c.GetKafkaREST()
-	if kafkaREST == nil {
-		if err != nil {
-			return err
-		}
-		return errors.New(errors.RestProxyNotAvailableMsg)
-	}
-
-	lkc, err := getKafkaClusterLkcId(c.AuthenticatedCLICommand)
 	if err != nil {
 		return err
 	}
 
-	resumeMirrorOpt := &kafkarestv3.UpdateKafkaMirrorTopicsResumeOpts{
-		AlterMirrorsRequestData: optional.NewInterface(kafkarestv3.AlterMirrorsRequestData{MirrorTopicNames: args}),
-		ValidateOnly:            optional.NewBool(dryRun),
-	}
+	alterMirrorsRequestData := kafkarestv3.AlterMirrorsRequestData{MirrorTopicNames: &args}
 
-	results, httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.UpdateKafkaMirrorTopicsResume(kafkaREST.Context, lkc, linkName, resumeMirrorOpt)
+	results, err := kafkaREST.CloudClient.UpdateKafkaMirrorTopicsResume(linkName, dryRun, alterMirrorsRequestData)
 	if err != nil {
-		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+		return err
 	}
 
 	return printAlterMirrorResult(cmd, results)
@@ -81,21 +67,18 @@ func (c *mirrorCommand) resume(cmd *cobra.Command, args []string) error {
 
 func printAlterMirrorResult(cmd *cobra.Command, results kafkarestv3.AlterMirrorStatusResponseDataList) error {
 	list := output.NewList(cmd)
-	for _, result := range results.Data {
-		var errorMessage string
-		if result.ErrorMessage != nil {
-			errorMessage = *result.ErrorMessage
-		}
+	for _, result := range results.GetData() {
+		errorMessage := result.GetErrorMessage()
 
 		var errorCode string
-		if result.ErrorCode != nil {
-			errorCode = fmt.Sprint(*result.ErrorCode)
+		if code := result.GetErrorCode(); code != 0 {
+			errorCode = strconv.Itoa(int(code))
 		}
 
 		// fatal error
 		if errorMessage != "" {
 			list.Add(&mirrorOut{
-				MirrorTopicName:       result.MirrorTopicName,
+				MirrorTopicName:       result.GetMirrorTopicName(),
 				Partition:             -1,
 				ErrorMessage:          errorMessage,
 				ErrorCode:             errorCode,
@@ -105,14 +88,14 @@ func printAlterMirrorResult(cmd *cobra.Command, results kafkarestv3.AlterMirrorS
 			continue
 		}
 
-		for _, partitionLag := range result.MirrorLags {
+		for _, partitionLag := range result.GetMirrorLags().Items {
 			list.Add(&mirrorOut{
-				MirrorTopicName:       result.MirrorTopicName,
-				Partition:             partitionLag.Partition,
+				MirrorTopicName:       result.GetMirrorTopicName(),
+				Partition:             partitionLag.GetPartition(),
 				ErrorMessage:          errorMessage,
 				ErrorCode:             errorCode,
-				PartitionMirrorLag:    partitionLag.Lag,
-				LastSourceFetchOffset: partitionLag.LastSourceFetchOffset,
+				PartitionMirrorLag:    partitionLag.GetLag(),
+				LastSourceFetchOffset: partitionLag.GetLastSourceFetchOffset(),
 			})
 		}
 	}

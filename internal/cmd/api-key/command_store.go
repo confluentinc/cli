@@ -13,8 +13,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
-const longDescription = `Use this command to register an API secret created by another
-process and store it locally.
+const longDescription = `Use this command to register an API secret created by another process and store it locally.
 
 When you create an API key with the CLI, it is automatically stored locally.
 However, when you create an API key using the UI, API, or with the CLI on another
@@ -47,7 +46,7 @@ func (c *command) newStoreCommand() *cobra.Command {
 		),
 	}
 
-	c.addResourceFlag(cmd)
+	c.addResourceFlag(cmd, false)
 	cmd.Flags().BoolP("force", "f", false, "Force overwrite existing secret for this key.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -112,7 +111,7 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 		return errors.CatchApiKeyForbiddenAccessError(err, getOperation, httpResp)
 	}
 
-	apiKeyIsValidForTargetCluster := (cluster.ID == apiKey.Spec.Resource.Id)
+	apiKeyIsValidForTargetCluster := cluster.GetId() != "" && cluster.GetId() == apiKey.GetSpec().Resource.GetId()
 
 	if !apiKeyIsValidForTargetCluster {
 		return errors.NewErrorWithSuggestions(errors.APIKeyNotValidForClusterErrorMsg, errors.APIKeyNotValidForClusterSuggestions)

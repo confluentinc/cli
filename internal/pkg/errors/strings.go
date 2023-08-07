@@ -37,9 +37,6 @@ const (
 	CopyByokAwsPermissionsHeaderMsg  = `Copy and append these permissions into the key policy "Statements" field of the ARN in your AWS key management system to authorize access for your Confluent Cloud cluster.`
 	RunByokAzurePermissionsHeaderMsg = "To ensure the key vault has the correct role assignments, please run the following azure-cli command (certified for azure-cli v2.45):"
 
-	// kafka consumer-group commands
-	RestProxyNotAvailable = "Operation not supported: REST proxy is not available.\n"
-
 	// kafka topic commands
 	StartingProducerMsg         = "Starting Kafka Producer. Use Ctrl-C or Ctrl-D to exit."
 	StoppingConsumerMsg         = "Stopping Consumer."
@@ -48,9 +45,6 @@ const (
 	UpdateTopicConfigRestMsg    = "Updated the following configuration values for topic \"%s\"%s:\n"
 	ReadOnlyConfigNotUpdatedMsg = "(read-only configs were not updated)"
 	OmitTopicCountMsg           = "The topic count will be omitted as Kafka topics for this cluster could not be retrieved: %v"
-
-	// kafka mirror commands
-	RestProxyNotAvailableMsg = "Kafka REST is not enabled: the operation is only supported with Kafka REST proxy."
 
 	// kafka REST proxy
 	MDSTokenNotFoundMsg = "No session token found, please enter user credentials. To avoid being prompted, run `confluent login`."
@@ -69,16 +63,8 @@ const (
 	DestroyDeletingMsg         = "Deleting: %s\n"
 
 	// schema-registry commands
-	UpdatedToLevelCompatibilityMsg      = "Successfully updated Top Level compatibility to \"%s\"\n"
-	UpdatedTopLevelModeMsg              = "Successfully updated Top Level mode to \"%s\"\n"
-	RegisteredSchemaMsg                 = "Successfully registered schema with ID %v\n"
-	DeletedAllSubjectVersionMsg         = "Successfully %s deleted all versions for subject \"%s\"\n"
-	DeletedSubjectVersionMsg            = "Successfully %s deleted version \"%s\" for subject \"%s\".\n"
-	UpdatedSubjectLevelCompatibilityMsg = "Successfully updated Subject Level compatibility to \"%s\" for subject \"%s\"\n"
-	UpdatedSubjectLevelModeMsg          = "Successfully updated Subject level Mode to \"%s\" for subject \"%s\"\n"
-	ExporterActionMsg                   = "%s schema exporter \"%s\".\n"
-	SchemaRegistryClusterDeletedMsg     = "Deleted Schema Registry cluster for environment \"%s\".\n"
-	SchemaRegistryClusterUpgradedMsg    = "The Stream Governance package for environment \"%s\" has been upgraded to \"%s\".\n"
+	RegisteredSchemaMsg = "Successfully registered schema with ID \"%d\".\n"
+	ExporterActionMsg   = "%s schema exporter \"%s\".\n"
 
 	// secret commands
 	UpdateSecretFileMsg = "Updated the encrypted secrets."
@@ -98,10 +84,10 @@ const (
 	APIKeyMissingMsg     = "API key missing"
 	KeyPairMismatchMsg   = "key of the dictionary does not match API key of the pair"
 	APISecretMissingMsg  = "API secret missing"
-	APIKeysMapAutofixMsg = "There are malformed API key secret pair entries in the dictionary for cluster \"%s\" under context \"%s\".\n" +
+	APIKeysMapAutofixMsg = "There are malformed API key pair entries in the dictionary for cluster \"%s\" under context \"%s\".\n" +
 		"The issues are the following: %s.\n" +
 		"Deleting the malformed entries.\n" +
-		"You can re-add the API key secret pair with `confluent api-key store --resource %s`\n"
+		"You can re-add the API key pair with `confluent api-key store --resource %s`\n"
 	CurrentAPIKeyAutofixMsg = "Current API key \"%s\" of resource \"%s\" under context \"%s\" is not found.\n" +
 		"Removing current API key setting for the resource.\n" +
 		"You can re-add the API key with `confluent api-key store --resource %s'` and then set current API key with `confluent api-key use`.\n"
@@ -122,6 +108,7 @@ const (
 
 	// General
 	CreatedResourceMsg            = "Created %s \"%s\".\n"
+	CreatedLinkResourceMsg        = "Created %s \"%s\" with configs:\n%s\n"
 	DeletedResourceMsg            = "Deleted %s \"%s\".\n"
 	DeleteResourceConfirmMsg      = "Are you sure you want to delete %s \"%s\"?\nTo confirm, type \"%s\". To cancel, press Ctrl-C"
 	DeleteResourceConfirmYesNoMsg = `Are you sure you want to delete %s "%s"?`

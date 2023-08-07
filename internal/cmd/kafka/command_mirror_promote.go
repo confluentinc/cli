@@ -1,15 +1,12 @@
 package kafka
 
 import (
-	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
-	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
+	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 )
 
 func (c *mirrorCommand) newPromoteCommand() *cobra.Command {
@@ -51,26 +48,15 @@ func (c *mirrorCommand) promote(cmd *cobra.Command, args []string) error {
 	}
 
 	kafkaREST, err := c.GetKafkaREST()
-	if kafkaREST == nil {
-		if err != nil {
-			return err
-		}
-		return errors.New(errors.RestProxyNotAvailableMsg)
-	}
-
-	lkc, err := getKafkaClusterLkcId(c.AuthenticatedCLICommand)
 	if err != nil {
 		return err
 	}
 
-	promoteMirrorOpt := &kafkarestv3.UpdateKafkaMirrorTopicsPromoteOpts{
-		AlterMirrorsRequestData: optional.NewInterface(kafkarestv3.AlterMirrorsRequestData{MirrorTopicNames: args}),
-		ValidateOnly:            optional.NewBool(dryRun),
-	}
+	alterMirrorsRequestData := kafkarestv3.AlterMirrorsRequestData{MirrorTopicNames: &args}
 
-	results, httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.UpdateKafkaMirrorTopicsPromote(kafkaREST.Context, lkc, linkName, promoteMirrorOpt)
+	results, err := kafkaREST.CloudClient.UpdateKafkaMirrorTopicsPromote(linkName, dryRun, alterMirrorsRequestData)
 	if err != nil {
-		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+		return err
 	}
 
 	return printAlterMirrorResult(cmd, results)

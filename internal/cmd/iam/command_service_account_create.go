@@ -24,8 +24,8 @@ func (c *serviceAccountCommand) newCreateCommand() *cobra.Command {
 		RunE:  c.create,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: "Create a service account named `DemoServiceAccount`.",
-				Code: `confluent iam service-account create DemoServiceAccount --description "This is a demo service account."`,
+				Text: `Create a service account named "my-service-account".`,
+				Code: `confluent iam service-account create my-service-account --description "This is a demo service account."`,
 			},
 		),
 	}

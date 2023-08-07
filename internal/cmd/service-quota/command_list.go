@@ -56,7 +56,7 @@ func (c *command) newListCommand() *cobra.Command {
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("quota-code", "", "Filter the result by quota code.")
-	cmd.Flags().String("network", "", "Filter the result by network id.")
+	cmd.Flags().String("network", "", "Filter the result by network ID.")
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd

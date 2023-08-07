@@ -47,6 +47,12 @@ func handlePipeline(t *testing.T) http.HandlerFunc {
 					UpdatedAt: &UpdatedAt,
 				},
 			}
+
+			// if request to use SR cluster
+			if id == "pipe-11001" {
+				pipeline.Spec.StreamGovernanceCluster = &streamdesignerv1.ObjectReference{Id: "lsrc-12345"}
+			}
+
 			err := json.NewEncoder(w).Encode(pipeline)
 			require.NoError(t, err)
 		case http.MethodPatch:
@@ -89,7 +95,7 @@ func handlePipeline(t *testing.T) http.HandlerFunc {
 
 			state := "draft"
 			if body.Spec.Activated != nil {
-				if *body.Spec.Activated {
+				if body.Spec.GetActivated() {
 					state = "activating"
 				} else {
 					state = "deactivating"
@@ -97,17 +103,15 @@ func handlePipeline(t *testing.T) http.HandlerFunc {
 			}
 			pipeline.Status.State = &state
 
-			if body.Spec.Secrets != nil {
-				for name := range *body.Spec.Secrets {
-					value := (*body.Spec.Secrets)[name]
-					if len(value) > 0 {
-						(*pipeline.Spec.Secrets)[name] = "*****************"
-					} else {
-						// for PATCH operation, empty secret value will be removed
-						delete(*pipeline.Spec.Secrets, name)
-					}
+			for name, value := range body.Spec.GetSecrets() {
+				if value != "" {
+					(*pipeline.Spec.Secrets)[name] = "*****************"
+				} else {
+					// for PATCH operation, empty secret value will be removed
+					delete(*pipeline.Spec.Secrets, name)
 				}
 			}
+
 			err = json.NewEncoder(w).Encode(pipeline)
 			require.NoError(t, err)
 		}
@@ -184,6 +188,12 @@ func handlePipelines(t *testing.T) http.HandlerFunc {
 					CreatedAt: &CreatedAt,
 					UpdatedAt: &UpdatedAt,
 				},
+			}
+
+			// if request to use SR cluster
+			if body.Spec.StreamGovernanceCluster != nil {
+				pipeline.Spec.StreamGovernanceCluster = &streamdesignerv1.ObjectReference{Id: "lsrc-12345"}
+				pipeline.Id = streamdesignerv1.PtrString("pipe-11001")
 			}
 
 			err = json.NewEncoder(w).Encode(pipeline)

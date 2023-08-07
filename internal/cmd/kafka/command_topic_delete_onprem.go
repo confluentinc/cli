@@ -17,7 +17,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
-func (c *authenticatedTopicCommand) newDeleteCommandOnPrem() *cobra.Command {
+func (c *command) newDeleteCommandOnPrem() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete <topic>",
 		Short: "Delete a Kafka topic.",
@@ -40,7 +40,7 @@ func (c *authenticatedTopicCommand) newDeleteCommandOnPrem() *cobra.Command {
 	return cmd
 }
 
-func (c *authenticatedTopicCommand) deleteOnPrem(cmd *cobra.Command, args []string) error {
+func (c *command) deleteOnPrem(cmd *cobra.Command, args []string) error {
 	topicName := args[0]
 	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
 	if err != nil {

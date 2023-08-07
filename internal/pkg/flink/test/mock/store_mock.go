@@ -79,6 +79,21 @@ func (mr *MockStoreInterfaceMockRecorder) ProcessStatement(arg0 interface{}) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ProcessStatement", reflect.TypeOf((*MockStoreInterface)(nil).ProcessStatement), arg0)
 }
 
+// WaitForTerminalStatementState mocks base method.
+func (m *MockStoreInterface) WaitForTerminalStatementState(arg0 context.Context, arg1 types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "WaitForTerminalStatementState", arg0, arg1)
+	ret0, _ := ret[0].(*types.ProcessedStatement)
+	ret1, _ := ret[1].(*types.StatementError)
+	return ret0, ret1
+}
+
+// WaitForTerminalStatementState indicates an expected call of WaitForTerminalStatementState.
+func (mr *MockStoreInterfaceMockRecorder) WaitForTerminalStatementState(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WaitForTerminalStatementState", reflect.TypeOf((*MockStoreInterface)(nil).WaitForTerminalStatementState), arg0, arg1)
+}
+
 // WaitPendingStatement mocks base method.
 func (m *MockStoreInterface) WaitPendingStatement(arg0 context.Context, arg1 types.ProcessedStatement) (*types.ProcessedStatement, *types.StatementError) {
 	m.ctrl.T.Helper()
