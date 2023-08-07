@@ -107,12 +107,6 @@ const (
 	ServiceNameInUseErrorMsg    = `service name "%s" is already in use`
 	ServiceNameInUseSuggestions = "To list all service account, use `confluent iam service-account list`."
 
-	// iam provider commands
-	IdentityProviderNoOpUpdateErrorMsg = "one of `--description` or `--name` must be set"
-
-	// iam pool commands
-	IdentityPoolNoOpUpdateErrorMsg = "one of `--description`, `--filter`, `--identity-claim`, or `--name` must be set"
-
 	// init command
 	CannotBeEmptyErrorMsg = "%s cannot be empty"
 
