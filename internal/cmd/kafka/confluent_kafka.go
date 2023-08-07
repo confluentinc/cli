@@ -240,9 +240,8 @@ func consumeMessage(e *ckafka.Message, h *GroupHandler) error {
 
 func RunConsumer(consumer *ckafka.Consumer, groupHandler *GroupHandler) error {
 	defer func() {
-		_, err := consumer.Commit()
-		if err != nil {
-			log.CliLogger.Warn("Failed to commit current offset of the consumer.")
+		if _, err := consumer.Commit(); err != nil {
+			log.CliLogger.Warnf("Failed to commit current offset of the consumer: %v", err)
 		}
 	}()
 	run := true
@@ -252,6 +251,9 @@ func RunConsumer(consumer *ckafka.Consumer, groupHandler *GroupHandler) error {
 		select {
 		case <-signals: // Trap SIGINT to trigger a shutdown.
 			output.ErrPrintln(errors.StoppingConsumerMsg)
+			if _, err := consumer.Commit(); err != nil {
+				log.CliLogger.Warnf("Failed to commit current offset of the consumer: %v", err)
+			}
 			consumer.Close()
 			run = false
 		default:

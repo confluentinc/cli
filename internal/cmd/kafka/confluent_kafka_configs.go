@@ -40,7 +40,7 @@ func getCommonConfig(kafka *configv1.KafkaClusterConfig, clientId string) (*ckaf
 		"bootstrap.servers":                     kafka.Bootstrap,
 		"sasl.username":                         kafka.APIKey,
 		"sasl.password":                         kafka.GetApiSecret(),
-		"auto.commit.interval.ms":               100,
+		"auto.commit.interval.ms":               1000,
 	}
 
 	return configMap, nil
