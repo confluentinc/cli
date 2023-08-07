@@ -60,6 +60,9 @@ func (c *groupMappingCommand) update(cmd *cobra.Command, args []string) error {
 	if description != "" {
 		update.Description = ssov2.PtrString(description)
 	}
+	if filter != "" {
+		update.Filter = ssov2.PtrString(filter)
+	}
 
 	groupMapping, err := c.V2Client.UpdateGroupMapping(update)
 	if err != nil {

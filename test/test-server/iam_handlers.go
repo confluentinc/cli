@@ -501,7 +501,7 @@ func handleIamGroupMapping(t *testing.T) http.HandlerFunc {
 			var req ssov2.IamV2SsoGroupMapping
 			err := json.NewDecoder(r.Body).Decode(&req)
 			require.NoError(t, err)
-			res := buildIamGroupMapping(req.GetId(), req.GetDisplayName(), req.GetDescription(), "true")
+			res := buildIamGroupMapping(req.GetId(), req.GetDisplayName(), req.GetDescription(), req.GetFilter())
 			err = json.NewEncoder(w).Encode(&res)
 			require.NoError(t, err)
 		case http.MethodDelete:

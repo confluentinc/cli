@@ -289,7 +289,7 @@ func (s *CLITestSuite) TestIamGroupMapping() {
 		{args: "iam group-mapping delete pool-abc", input: "another_group_mapping\n", fixture: "iam/group-mapping/delete-prompt.golden"},
 		{args: "iam group-mapping delete pool-dne --force", fixture: "iam/group-mapping/delete-dne.golden", exitCode: 1},
 		{args: "iam group-mapping describe pool-abc", fixture: "iam/group-mapping/describe.golden"},
-		{args: "iam group-mapping update pool-abc --name new_group_mapping --description new-description", fixture: "iam/group-mapping/update.golden"},
+		{args: "iam group-mapping update pool-abc --name new_group_mapping --description new-description --filter claims.principal.startsWith(\"user\")", fixture: "iam/group-mapping/update.golden"},
 		{args: "iam group-mapping list", fixture: "iam/group-mapping/list.golden"},
 	}
 
