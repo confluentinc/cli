@@ -1,8 +1,9 @@
 package iam
 
 import (
-	"github.com/confluentinc/ccloud-sdk-go-v2/sso/v2"
 	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/ccloud-sdk-go-v2/sso/v2"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/output"

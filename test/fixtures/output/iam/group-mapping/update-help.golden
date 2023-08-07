@@ -11,7 +11,7 @@ Update the description of group mapping "pool-123456".
 Flags:
       --name string          Name of the group mapping.
       --description string   Description of the group mapping.
-      --filter string        CEL-compliant filter of the group mapping.
+      --filter string        A supported Common Expression Language filter expression for group mappings.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:

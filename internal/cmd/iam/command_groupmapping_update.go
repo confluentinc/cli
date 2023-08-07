@@ -27,7 +27,7 @@ func (c *groupMappingCommand) newUpdateCommand() *cobra.Command {
 
 	cmd.Flags().String("name", "", "Name of the group mapping.")
 	cmd.Flags().String("description", "", "Description of the group mapping.")
-	cmd.Flags().String("filter", "", "CEL-compliant filter of the group mapping.")
+	cmd.Flags().String("filter", "", "A supported Common Expression Language filter expression for group mappings.")
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd

@@ -8,7 +8,6 @@ import (
 	"testing"
 	"time"
 
-	ssov2 "github.com/confluentinc/ccloud-sdk-go-v2/sso/v2"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
 
@@ -16,6 +15,7 @@ import (
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
 	identityproviderv2 "github.com/confluentinc/ccloud-sdk-go-v2/identity-provider/v2"
 	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
+	ssov2 "github.com/confluentinc/ccloud-sdk-go-v2/sso/v2"
 )
 
 var (
