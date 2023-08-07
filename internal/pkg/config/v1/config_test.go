@@ -640,6 +640,7 @@ func TestConfig_CreateContext(t *testing.T) {
 		Platforms:     make(map[string]*Platform),
 	}
 
+	SetTempHomeDir()
 	err := cfg.CreateContext("context", "https://example.com", "api-key", "api-secret")
 	require.NoError(t, err)
 
