@@ -17,14 +17,14 @@ func (c *groupMappingCommand) newCreateCommand() *cobra.Command {
 		RunE:  c.create,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Create a group mapping named "DemoGroupMapping".`,
-				Code: `confluent iam group-mapping create DemoGroupMapping --description "description of group mapping" --filter "\"demo\" in claims.group"`,
+				Text: `Create a group mapping named "demo-group-mapping".`,
+				Code: `confluent iam group-mapping create demo-group-mapping --description "new description" --filter "\"demo\" in claims.group"`,
 			},
 		),
 	}
 
 	cmd.Flags().String("description", "", "Description of the group mapping.")
-	cmd.Flags().String("filter", "true", "A supported Common Expression Language filter expression for group mappings.")
+	pcmd.AddFilterFlag(cmd)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
@@ -41,12 +41,12 @@ func (c *groupMappingCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	newGroupMapping := ssov2.IamV2SsoGroupMapping{
+	createGroupMapping := ssov2.IamV2SsoGroupMapping{
 		DisplayName: ssov2.PtrString(args[0]),
 		Description: ssov2.PtrString(description),
 		Filter:      ssov2.PtrString(filter),
 	}
-	groupMapping, err := c.V2Client.CreateGroupMapping(newGroupMapping)
+	groupMapping, err := c.V2Client.CreateGroupMapping(createGroupMapping)
 	if err != nil {
 		return err
 	}

@@ -17,19 +17,18 @@ func (c *identityPoolCommand) newCreateCommand() *cobra.Command {
 		RunE:  c.create,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Create an identity pool named "DemoIdentityPool" with provider "op-12345":`,
-				Code: `confluent iam pool create DemoIdentityPool --provider op-12345 --description new-description --identity-claim claims.sub --filter 'claims.iss=="https://my.issuer.com"'`,
+				Text: `Create an identity pool named "demo-identity-pool" with provider "op-12345":`,
+				Code: `confluent iam pool create demo-identity-pool --provider op-12345 --description new-description --identity-claim claims.sub --filter 'claims.iss=="https://my.issuer.com"'`,
 			},
 		),
 	}
 
-	cmd.Flags().String("filter", "", "Filter which identities can authenticate with the identity pool.")
-	cmd.Flags().String("identity-claim", "", "Claim specifying the external identity using this identity pool.")
 	pcmd.AddProviderFlag(cmd, c.AuthenticatedCLICommand)
+	cmd.Flags().String("identity-claim", "", "Claim specifying the external identity using this identity pool.")
 	cmd.Flags().String("description", "", "Description of the identity pool.")
+	pcmd.AddFilterFlag(cmd)
 	pcmd.AddOutputFlag(cmd)
 
-	cobra.CheckErr(cmd.MarkFlagRequired("filter"))
 	cobra.CheckErr(cmd.MarkFlagRequired("identity-claim"))
 	cobra.CheckErr(cmd.MarkFlagRequired("provider"))
 

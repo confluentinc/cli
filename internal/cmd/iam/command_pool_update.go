@@ -10,6 +10,8 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 )
 
+const identityPoolNoOpUpdateErrorMsg = "one of `--description`, `--filter`, `--identity-claim`, or `--name` must be set"
+
 func (c *identityPoolCommand) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "update <id>",
@@ -20,7 +22,7 @@ func (c *identityPoolCommand) newUpdateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Update the description of identity pool "pool-123456":`,
-				Code: `confluent iam pool update pool-123456 --provider op-12345 --description "New description."`,
+				Code: `confluent iam pool update pool-123456 --provider op-12345 --description "updated description"`,
 			},
 		),
 	}
@@ -28,8 +30,8 @@ func (c *identityPoolCommand) newUpdateCommand() *cobra.Command {
 	pcmd.AddProviderFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("name", "", "Name of the identity pool.")
 	cmd.Flags().String("description", "", "Description of the identity pool.")
-	cmd.Flags().String("filter", "", "Filter which identities can authenticate with the identity pool.")
 	cmd.Flags().String("identity-claim", "", "Claim specifying the external identity using this identity pool.")
+	pcmd.AddFilterFlag(cmd)
 	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("provider"))
@@ -64,7 +66,7 @@ func (c *identityPoolCommand) update(cmd *cobra.Command, args []string) error {
 	}
 
 	if description == "" && filter == "" && identityClaim == "" && name == "" {
-		return errors.New(errors.IdentityPoolNoOpUpdateErrorMsg)
+		return errors.New(identityPoolNoOpUpdateErrorMsg)
 	}
 
 	identityPoolId := args[0]

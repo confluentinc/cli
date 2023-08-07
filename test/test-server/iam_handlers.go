@@ -22,8 +22,8 @@ var (
 	keyStoreV2       = map[string]*apikeysv2.IamV2ApiKey{}
 	keyTime          = apikeysv2.PtrTime(time.Date(1999, time.February, 24, 0, 0, 0, 0, time.UTC))
 	roleBindingStore = []mdsv2.IamV2RoleBinding{
-		buildRoleBinding(identityPoolResourceID, "OrganizationAdmin",
-			"crn://confluent.cloud/organization=abc-123/identity-provider="+identityProviderResourceID),
+		buildRoleBinding(identityPoolResourceId, "OrganizationAdmin",
+			"crn://confluent.cloud/organization=abc-123/identity-provider="+identityProviderResourceId),
 		buildRoleBinding("u-11aaa", "OrganizationAdmin",
 			"crn://confluent.cloud/organization=abc-123"),
 		buildRoleBinding("sa-12345", "OrganizationAdmin",
@@ -183,7 +183,7 @@ func handleIamUsers(t *testing.T) http.HandlerFunc {
 			}
 			userId := r.URL.Query().Get("id")
 			if userId != "" {
-				if userId == deactivatedResourceID {
+				if userId == deactivatedResourceId {
 					users = []iamv2.IamV2User{}
 				}
 			}
@@ -209,7 +209,7 @@ func handleIamUsers(t *testing.T) http.HandlerFunc {
 func handleIamServiceAccount(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := mux.Vars(r)["id"]
-		if id != serviceAccountResourceID && id != "sa-54321" {
+		if id != serviceAccountResourceId && id != "sa-54321" {
 			err := writeResourceNotFoundError(w)
 			require.NoError(t, err)
 			return
@@ -242,7 +242,7 @@ func handleIamServiceAccounts(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			serviceAccount := iamv2.IamV2ServiceAccount{
-				Id:          iamv2.PtrString(serviceAccountResourceID),
+				Id:          iamv2.PtrString(serviceAccountResourceId),
 				DisplayName: iamv2.PtrString("service_account"),
 				Description: iamv2.PtrString("at your service."),
 			}
@@ -295,7 +295,7 @@ func handleIamRoleBindings(t *testing.T) http.HandlerFunc {
 func handleIamIdentityProvider(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := mux.Vars(r)["id"]
-		if id != identityProviderResourceID && id != "op-67890" {
+		if id != identityProviderResourceId && id != "op-67890" {
 			err := writeResourceNotFoundError(w)
 			require.NoError(t, err)
 			return
@@ -336,7 +336,7 @@ func handleIamIdentityProviders(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			identityProvider := identityproviderv2.IamV2IdentityProvider{
-				Id:          identityproviderv2.PtrString(identityProviderResourceID),
+				Id:          identityproviderv2.PtrString(identityProviderResourceId),
 				DisplayName: identityproviderv2.PtrString("identity_provider"),
 				Description: identityproviderv2.PtrString("providing identities."),
 				Issuer:      identityproviderv2.PtrString("https://company.provider.com"),
@@ -375,7 +375,7 @@ func handleIamRoleBinding(t *testing.T) http.HandlerFunc {
 func handleIamIdentityPool(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := mux.Vars(r)["id"]
-		if id != identityPoolResourceID && id != "pool-55555" {
+		if id != identityPoolResourceId && id != "pool-55555" {
 			err := writeResourceNotFoundError(w)
 			require.NoError(t, err)
 			return
@@ -416,7 +416,7 @@ func handleIamIdentityPools(t *testing.T) http.HandlerFunc {
 		switch r.Method {
 		case http.MethodGet:
 			identityPool := identityproviderv2.IamV2IdentityPool{
-				Id:            identityproviderv2.PtrString(identityPoolResourceID),
+				Id:            identityproviderv2.PtrString(identityPoolResourceId),
 				DisplayName:   identityproviderv2.PtrString("identity_pool"),
 				Description:   identityproviderv2.PtrString("pooling identities."),
 				IdentityClaim: identityproviderv2.PtrString("sub"),

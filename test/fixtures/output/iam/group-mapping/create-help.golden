@@ -4,13 +4,13 @@ Usage:
   confluent iam group-mapping create <name> [flags]
 
 Examples:
-Create a group mapping named "DemoGroupMapping".
+Create a group mapping named "demo-group-mapping".
 
-  $ confluent iam group-mapping create DemoGroupMapping --description "description of group mapping" --filter "\"demo\" in claims.group"
+  $ confluent iam group-mapping create demo-group-mapping --description "new description" --filter "\"demo\" in claims.group"
 
 Flags:
       --description string   Description of the group mapping.
-      --filter string        A supported Common Expression Language filter expression for group mappings. (default "true")
+      --filter string        A supported Common Expression Language (CEL) filter expression for group mappings. (default "true")
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:

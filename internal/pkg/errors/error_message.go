@@ -76,9 +76,6 @@ const (
 	InvalidOperationValueErrorMsg = "invalid operation value: %s"
 	ExactlyOneSetErrorMsg         = "exactly one of %v must be set"
 
-	// iam group-mapping commands
-	GroupMappingNoOpUpdateErrorMsg = "one of `--description`, `--name`, or `--filter` must be set"
-
 	// iam rbac role commands
 	UnknownRoleErrorMsg    = `unknown role "%s"`
 	UnknownRoleSuggestions = "The available roles are: %s."
@@ -109,12 +106,6 @@ const (
 	// iam service-account commands
 	ServiceNameInUseErrorMsg    = `service name "%s" is already in use`
 	ServiceNameInUseSuggestions = "To list all service account, use `confluent iam service-account list`."
-
-	// iam provider commands
-	IdentityProviderNoOpUpdateErrorMsg = "one of `--description` or `--name` must be set"
-
-	// iam pool commands
-	IdentityPoolNoOpUpdateErrorMsg = "one of `--description`, `--filter`, `--identity-claim`, or `--name` must be set"
 
 	// init command
 	CannotBeEmptyErrorMsg = "%s cannot be empty"

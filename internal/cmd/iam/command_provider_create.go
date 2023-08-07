@@ -17,8 +17,8 @@ func (c *identityProviderCommand) newCreateCommand() *cobra.Command {
 		RunE:  c.create,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Create an identity provider named "DemoIdentityProvider".`,
-				Code: `confluent iam provider create DemoIdentityProvider --description "description of provider" --jwks-uri https://company.provider.com/oauth2/v1/keys --issuer-uri https://company.provider.com`,
+				Text: `Create an identity provider named "demo-identity-provider".`,
+				Code: `confluent iam provider create demo-identity-provider --description "description of provider" --jwks-uri https://company.provider.com/oauth2/v1/keys --issuer-uri https://company.provider.com`,
 			},
 		),
 	}
@@ -50,13 +50,13 @@ func (c *identityProviderCommand) create(cmd *cobra.Command, args []string) erro
 		return err
 	}
 
-	newIdentityProvider := identityproviderv2.IamV2IdentityProvider{
+	createIdentityProvider := identityproviderv2.IamV2IdentityProvider{
 		DisplayName: identityproviderv2.PtrString(args[0]),
 		Description: identityproviderv2.PtrString(description),
 		Issuer:      identityproviderv2.PtrString(issuerUri),
 		JwksUri:     identityproviderv2.PtrString(jwksUri),
 	}
-	provider, err := c.V2Client.CreateIdentityProvider(newIdentityProvider)
+	provider, err := c.V2Client.CreateIdentityProvider(createIdentityProvider)
 	if err != nil {
 		return err
 	}

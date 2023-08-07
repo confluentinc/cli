@@ -134,7 +134,7 @@ func fillKeyStoreV2() {
 		Id: apikeysv2.PtrString("SERVICEACCOUNTKEY1"),
 		Spec: &apikeysv2.IamV2ApiKeySpec{
 			Resource:    &apikeysv2.ObjectReference{Id: "lkc-bob", Kind: apikeysv2.PtrString("Cluster")},
-			Owner:       &apikeysv2.ObjectReference{Id: serviceAccountResourceID},
+			Owner:       &apikeysv2.ObjectReference{Id: serviceAccountResourceId},
 			Description: apikeysv2.PtrString(""),
 		},
 	}
@@ -142,7 +142,7 @@ func fillKeyStoreV2() {
 		Id: apikeysv2.PtrString("DEACTIVATEDUSERKEY"),
 		Spec: &apikeysv2.IamV2ApiKeySpec{
 			Resource:    &apikeysv2.ObjectReference{Id: "lkc-bob", Kind: apikeysv2.PtrString("Cluster")},
-			Owner:       &apikeysv2.ObjectReference{Id: deactivatedResourceID},
+			Owner:       &apikeysv2.ObjectReference{Id: deactivatedResourceId},
 			Description: apikeysv2.PtrString(""),
 		},
 	}
