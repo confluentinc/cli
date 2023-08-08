@@ -15,7 +15,9 @@ import (
 	byokv1 "github.com/confluentinc/ccloud-sdk-go-v2/byok/v1"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
+	identityproviderv2 "github.com/confluentinc/ccloud-sdk-go-v2/identity-provider/v2"
 	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
+	ssov2 "github.com/confluentinc/ccloud-sdk-go-v2/sso/v2"
 )
 
 type ErrorJson struct {
@@ -133,7 +135,7 @@ func fillKeyStoreV2() {
 		Id: apikeysv2.PtrString("SERVICEACCOUNTKEY1"),
 		Spec: &apikeysv2.IamV2ApiKeySpec{
 			Resource:    &apikeysv2.ObjectReference{Id: "lkc-bob", Kind: apikeysv2.PtrString("Cluster")},
-			Owner:       &apikeysv2.ObjectReference{Id: serviceAccountResourceID},
+			Owner:       &apikeysv2.ObjectReference{Id: serviceAccountResourceId},
 			Description: apikeysv2.PtrString(""),
 		},
 	}
@@ -141,7 +143,7 @@ func fillKeyStoreV2() {
 		Id: apikeysv2.PtrString("DEACTIVATEDUSERKEY"),
 		Spec: &apikeysv2.IamV2ApiKeySpec{
 			Resource:    &apikeysv2.ObjectReference{Id: "lkc-bob", Kind: apikeysv2.PtrString("Cluster")},
-			Owner:       &apikeysv2.ObjectReference{Id: deactivatedResourceID},
+			Owner:       &apikeysv2.ObjectReference{Id: deactivatedResourceId},
 			Description: apikeysv2.PtrString(""),
 		},
 	}
@@ -346,6 +348,37 @@ func buildIamInvitation(id, email, userId, status string) iamv2.IamV2Invitation 
 		Email:  iamv2.PtrString(email),
 		User:   &iamv2.GlobalObjectReference{Id: userId},
 		Status: iamv2.PtrString(status),
+	}
+}
+
+func buildIamGroupMapping(id, name, description, filter string) ssov2.IamV2SsoGroupMapping {
+	return ssov2.IamV2SsoGroupMapping{
+		Description: ssov2.PtrString(description),
+		DisplayName: ssov2.PtrString(name),
+		Id:          ssov2.PtrString(id),
+		Filter:      ssov2.PtrString(filter),
+		Principal:   ssov2.PtrString(id),
+		State:       ssov2.PtrString("ENABLED"),
+	}
+}
+
+func buildIamPool(id, name, description, identityClaim, filter string) identityproviderv2.IamV2IdentityPool {
+	return identityproviderv2.IamV2IdentityPool{
+		Id:            iamv2.PtrString(id),
+		DisplayName:   iamv2.PtrString(name),
+		Description:   iamv2.PtrString(description),
+		IdentityClaim: iamv2.PtrString(identityClaim),
+		Filter:        ssov2.PtrString(filter),
+	}
+}
+
+func buildIamProvider(id, name, description, issuer, jwksUri string) identityproviderv2.IamV2IdentityProvider {
+	return identityproviderv2.IamV2IdentityProvider{
+		Id:          iamv2.PtrString(id),
+		DisplayName: iamv2.PtrString(name),
+		Description: iamv2.PtrString(description),
+		Issuer:      iamv2.PtrString(issuer),
+		JwksUri:     iamv2.PtrString(jwksUri),
 	}
 }
 

@@ -29,6 +29,7 @@ func (c *identityPoolCommand) newDeleteCommand() *cobra.Command {
 	}
 
 	pcmd.AddProviderFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddForceFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("provider"))
