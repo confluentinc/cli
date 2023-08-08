@@ -4,7 +4,6 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 func (c *identityPoolCommand) newDescribeCommand() *cobra.Command {
@@ -17,6 +16,7 @@ func (c *identityPoolCommand) newDescribeCommand() *cobra.Command {
 	}
 
 	pcmd.AddProviderFlag(cmd, c.AuthenticatedCLICommand)
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("provider"))
@@ -30,18 +30,10 @@ func (c *identityPoolCommand) describe(cmd *cobra.Command, args []string) error 
 		return err
 	}
 
-	identityPoolProfile, err := c.V2Client.GetIdentityPool(args[0], provider)
+	pool, err := c.V2Client.GetIdentityPool(args[0], provider)
 	if err != nil {
 		return err
 	}
 
-	table := output.NewTable(cmd)
-	table.Add(&identityPoolOut{
-		Id:            identityPoolProfile.GetId(),
-		DisplayName:   identityPoolProfile.GetDisplayName(),
-		Description:   identityPoolProfile.GetDescription(),
-		IdentityClaim: identityPoolProfile.GetIdentityClaim(),
-		Filter:        identityPoolProfile.GetFilter(),
-	})
-	return table.Print()
+	return printIdentityPool(cmd, pool)
 }
