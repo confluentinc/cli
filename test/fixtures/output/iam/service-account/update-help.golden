@@ -6,7 +6,7 @@ Usage:
 Examples:
 Update the description of service account "sa-123456".
 
-  $ confluent iam service-account update sa-123456 --description "updated description"
+  $ confluent iam service-account update sa-123456 --description updated-description
 
 Flags:
       --description string   REQUIRED: Description of the service account.

@@ -6,7 +6,7 @@ Usage:
 Examples:
 Update the description of identity provider "op-123456".
 
-  $ confluent iam provider update op-123456 --description "updated description"
+  $ confluent iam provider update op-123456 --description updated-description
 
 Flags:
       --name string          Name of the identity provider.
