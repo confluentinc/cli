@@ -49,6 +49,8 @@ var ccloudV2Routes = []route{
 	{"/iam/v2/role-bindings/{id}", handleIamRoleBinding},
 	{"/iam/v2/service-accounts", handleIamServiceAccounts},
 	{"/iam/v2/service-accounts/{id}", handleIamServiceAccount},
+	{"/iam/v2/sso/group-mappings", handleIamGroupMappings},
+	{"/iam/v2/sso/group-mappings/{id}", handleIamGroupMapping},
 	{"/iam/v2/users", handleIamUsers},
 	{"/iam/v2/users/{id}", handleIamUser},
 	{"/kafka-quotas/v1/client-quotas", handleKafkaClientQuotas},
