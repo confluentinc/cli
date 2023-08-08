@@ -18,7 +18,7 @@ func (c *identityProviderCommand) newCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Create an identity provider named "demo-identity-provider".`,
-				Code: `confluent iam provider create demo-identity-provider --description new-description --jwks-uri https://company.provider.com/oauth2/v1/keys --issuer-uri https://company.provider.com`,
+				Code: `confluent iam provider create demo-identity-provider --description "new description" --jwks-uri https://company.provider.com/oauth2/v1/keys --issuer-uri https://company.provider.com`,
 			},
 		),
 	}

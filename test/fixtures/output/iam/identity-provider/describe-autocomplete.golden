@@ -1,4 +1,4 @@
-op-12345	identity-provider: provider-description
-op-abc	another-provider: another-description
+op-12345	identity-provider: providing identities.
+op-abc	another-provider: providing identities.
 :4
 Completion ended with directive: ShellCompDirectiveNoFileComp

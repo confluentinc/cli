@@ -6,7 +6,7 @@ Usage:
 Examples:
 Create a group mapping named "demo-group-mapping".
 
-  $ confluent iam group-mapping create demo-group-mapping --description new-description --filter "\"demo\" in claims.group"
+  $ confluent iam group-mapping create demo-group-mapping --description "new description" --filter "\"demo\" in claims.group"
 
 Flags:
       --description string   Description of the group mapping.

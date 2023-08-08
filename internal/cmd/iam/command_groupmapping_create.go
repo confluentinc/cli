@@ -18,7 +18,7 @@ func (c *groupMappingCommand) newCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Create a group mapping named "demo-group-mapping".`,
-				Code: `confluent iam group-mapping create demo-group-mapping --description new-description --filter "\"demo\" in claims.group"`,
+				Code: `confluent iam group-mapping create demo-group-mapping --description "new description" --filter "\"demo\" in claims.group"`,
 			},
 		),
 	}

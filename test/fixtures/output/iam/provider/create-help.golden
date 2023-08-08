@@ -6,7 +6,7 @@ Usage:
 Examples:
 Create an identity provider named "demo-identity-provider".
 
-  $ confluent iam provider create demo-identity-provider --description new-description --jwks-uri https://company.provider.com/oauth2/v1/keys --issuer-uri https://company.provider.com
+  $ confluent iam provider create demo-identity-provider --description "description of provider" --jwks-uri https://company.provider.com/oauth2/v1/keys --issuer-uri https://company.provider.com
 
 Flags:
       --issuer-uri string    REQUIRED: URI of the identity provider issuer.

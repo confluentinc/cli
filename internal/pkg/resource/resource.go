@@ -19,6 +19,7 @@ const (
 	FlinkRegion           = "Flink region"
 	FlinkIamBinding       = "Flink IAM binding"
 	FlinkStatement        = "Flink SQL statement"
+	SsoGroupMapping       = "SSO group mapping"
 	IdentityPool          = "identity pool"
 	IdentityProvider      = "identity provider"
 	KafkaCluster          = "Kafka cluster"
@@ -30,7 +31,6 @@ const (
 	SchemaExporter        = "schema exporter"
 	SchemaRegistryCluster = "Schema Registry cluster"
 	ServiceAccount        = "service account"
-	SsoGroupMapping       = "SSO group mapping"
 	Topic                 = "topic"
 	User                  = "user"
 )

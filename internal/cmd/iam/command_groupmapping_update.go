@@ -10,6 +10,8 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 )
 
+const groupMappingNoOpUpdateErrorMsg = "one of `--description`, `--name`, or `--filter` must be set"
+
 func (c *groupMappingCommand) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "update <id>",
@@ -20,7 +22,7 @@ func (c *groupMappingCommand) newUpdateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Update the description of group mapping "pool-123456".`,
-				Code: "confluent iam group-mapping update pool-123456 --description updated-description",
+				Code: `confluent iam group-mapping update pool-123456 --description "updated description"`,
 			},
 		),
 	}
@@ -51,7 +53,7 @@ func (c *groupMappingCommand) update(cmd *cobra.Command, args []string) error {
 	}
 
 	if description == "" && name == "" && filter == "" {
-		return errors.New("one of `--description`, `--name`, or `--filter` must be set")
+		return errors.New(groupMappingNoOpUpdateErrorMsg)
 	}
 
 	update := ssov2.IamV2SsoGroupMapping{Id: ssov2.PtrString(args[0])}

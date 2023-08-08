@@ -10,6 +10,8 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 )
 
+const identityProviderNoOpUpdateErrorMsg = "one of `--description` or `--name` must be set"
+
 func (c *identityProviderCommand) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "update <id>",
@@ -20,7 +22,7 @@ func (c *identityProviderCommand) newUpdateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Update the description of identity provider "op-123456".`,
-				Code: "confluent iam provider update op-123456 --description updated-description",
+				Code: `confluent iam provider update op-123456 --description "updated description"`,
 			},
 		),
 	}
@@ -45,7 +47,7 @@ func (c *identityProviderCommand) update(cmd *cobra.Command, args []string) erro
 	}
 
 	if description == "" && name == "" {
-		return errors.New("one of `--description` or `--name` must be set")
+		return errors.New(identityProviderNoOpUpdateErrorMsg)
 	}
 
 	update := identityproviderv2.IamV2IdentityProviderUpdate{Id: identityproviderv2.PtrString(args[0])}

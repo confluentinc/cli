@@ -1,4 +1,4 @@
-pool-12345	identity-pool: pool-description
-pool-abc	another-pool: another-description
+pool-12345	identity-pool: pooling identities
+pool-abc	another-pool: another description
 :4
 Completion ended with directive: ShellCompDirectiveNoFileComp

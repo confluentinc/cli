@@ -7,12 +7,17 @@ import (
 	"net/http"
 	"net/url"
 	"sort"
+	"strings"
 	"time"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 	byokv1 "github.com/confluentinc/ccloud-sdk-go-v2/byok/v1"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
+	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
+	identityproviderv2 "github.com/confluentinc/ccloud-sdk-go-v2/identity-provider/v2"
+	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
+	ssov2 "github.com/confluentinc/ccloud-sdk-go-v2/sso/v2"
 )
 
 type ErrorJson struct {
@@ -326,4 +331,75 @@ func buildUser(id int32, email, firstName, lastName, resourceId string) *ccloudv
 		LastName:   lastName,
 		ResourceId: resourceId,
 	}
+}
+
+func buildIamUser(email, name, resourceId, authType string) iamv2.IamV2User {
+	return iamv2.IamV2User{
+		Email:    iamv2.PtrString(email),
+		FullName: iamv2.PtrString(name),
+		Id:       iamv2.PtrString(resourceId),
+		AuthType: iamv2.PtrString(authType),
+	}
+}
+
+func buildIamInvitation(id, email, userId, status string) iamv2.IamV2Invitation {
+	return iamv2.IamV2Invitation{
+		Id:     iamv2.PtrString(id),
+		Email:  iamv2.PtrString(email),
+		User:   &iamv2.GlobalObjectReference{Id: userId},
+		Status: iamv2.PtrString(status),
+	}
+}
+
+func buildIamGroupMapping(id, name, description, filter string) ssov2.IamV2SsoGroupMapping {
+	return ssov2.IamV2SsoGroupMapping{
+		Description: ssov2.PtrString(description),
+		DisplayName: ssov2.PtrString(name),
+		Id:          ssov2.PtrString(id),
+		Filter:      ssov2.PtrString(filter),
+		Principal:   ssov2.PtrString(id),
+		State:       ssov2.PtrString("ENABLED"),
+	}
+}
+
+func buildIamPool(id, name, description, identityClaim, filter string) identityproviderv2.IamV2IdentityPool {
+	return identityproviderv2.IamV2IdentityPool{
+		Id:            iamv2.PtrString(id),
+		DisplayName:   iamv2.PtrString(name),
+		Description:   iamv2.PtrString(description),
+		IdentityClaim: iamv2.PtrString(identityClaim),
+		Filter:        ssov2.PtrString(filter),
+	}
+}
+
+func buildIamProvider(id, name, description, issuer, jwksUri string) identityproviderv2.IamV2IdentityProvider {
+	return identityproviderv2.IamV2IdentityProvider{
+		Id:          iamv2.PtrString(id),
+		DisplayName: iamv2.PtrString(name),
+		Description: iamv2.PtrString(description),
+		Issuer:      iamv2.PtrString(issuer),
+		JwksUri:     iamv2.PtrString(jwksUri),
+	}
+}
+
+func buildRoleBinding(user, roleName, crn string) mdsv2.IamV2RoleBinding {
+	return mdsv2.IamV2RoleBinding{
+		Id:         mdsv2.PtrString("0"),
+		Principal:  mdsv2.PtrString("User:" + user),
+		RoleName:   mdsv2.PtrString(roleName),
+		CrnPattern: mdsv2.PtrString(crn),
+	}
+}
+
+func isRoleBindingMatch(rolebinding mdsv2.IamV2RoleBinding, principal, roleName, crnPattern string) bool {
+	if !strings.Contains(*rolebinding.CrnPattern, strings.TrimSuffix(crnPattern, "/*")) {
+		return false
+	}
+	if principal != "" && principal != *rolebinding.Principal {
+		return false
+	}
+	if roleName != "" && roleName != *rolebinding.RoleName {
+		return false
+	}
+	return true
 }
