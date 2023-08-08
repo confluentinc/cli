@@ -6,7 +6,7 @@ Usage:
 Examples:
 Create an identity pool named "demo-identity-pool" with identity provider "op-12345":
 
-  $ confluent iam pool create demo-identity-pool --provider op-12345 --description new-description --identity-claim claims.sub --filter 'claims.iss=="https://my.issuer.com"'
+  $ confluent iam pool create demo-identity-pool --provider op-12345 --description "new description" --identity-claim claims.sub --filter 'claims.iss=="https://my.issuer.com"'
 
 Flags:
       --provider string         REQUIRED: ID of this pool's identity provider.
