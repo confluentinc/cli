@@ -5,7 +5,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 func (c serviceAccountCommand) newDescribeCommand() *cobra.Command {
@@ -17,6 +16,7 @@ func (c serviceAccountCommand) newDescribeCommand() *cobra.Command {
 		RunE:              c.describe,
 	}
 
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
@@ -30,11 +30,5 @@ func (c serviceAccountCommand) describe(cmd *cobra.Command, args []string) error
 		return errors.CatchServiceAccountNotFoundError(err, httpResp, serviceAccountId)
 	}
 
-	table := output.NewTable(cmd)
-	table.Add(&serviceAccountOut{
-		ResourceId:  serviceAccount.GetId(),
-		Name:        serviceAccount.GetDisplayName(),
-		Description: serviceAccount.GetDescription(),
-	})
-	return table.Print()
+	return printServiceAccount(cmd, serviceAccount)
 }

@@ -209,6 +209,7 @@ var vocabWords = []string{
 	"aws",
 	"backoff",
 	"byok",
+	"cel",
 	"cfu",
 	"cku",
 	"cli",
