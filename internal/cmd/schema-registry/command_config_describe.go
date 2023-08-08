@@ -2,17 +2,13 @@ package schemaregistry
 
 import (
 	"encoding/json"
-	"fmt"
-	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/tidwall/pretty"
 
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -135,16 +131,4 @@ func (c *command) configDescribe(cmd *cobra.Command, args []string) error {
 	table := output.NewTable(cmd)
 	table.Add(out)
 	return table.PrintWithAutoWrap(false)
-}
-
-func catchSubjectLevelConfigNotFoundError(err error, subject string) error {
-	if err != nil && strings.Contains(err.Error(), "Not Found") {
-		return errors.New(fmt.Sprintf(`subject "%s" does not have subject-level compatibility configured`, subject))
-	}
-
-	return err
-}
-
-func prettyJson(str []byte) string {
-	return strings.TrimSpace(string(pretty.Pretty(str)))
 }
