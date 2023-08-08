@@ -6,10 +6,11 @@ Usage:
 Examples:
 Update the description of service account "sa-123456".
 
-  $ confluent iam service-account update sa-123456 --description "Update demo service account information."
+  $ confluent iam service-account update sa-123456 --description updated-description
 
 Flags:
       --description string   REQUIRED: Description of the service account.
+      --context string       CLI context name.
 
 Global Flags:
   -h, --help            Show help for this command.

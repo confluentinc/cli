@@ -8,7 +8,6 @@ import (
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 const (
@@ -25,12 +24,13 @@ func (c *serviceAccountCommand) newCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Create a service account named "my-service-account".`,
-				Code: `confluent iam service-account create my-service-account --description "This is a demo service account."`,
+				Code: `confluent iam service-account create my-service-account --description new-description`,
 			},
 		),
 	}
 
 	cmd.Flags().String("description", "", "Description of the service account.")
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("description"))
@@ -63,11 +63,5 @@ func (c *serviceAccountCommand) create(cmd *cobra.Command, args []string) error 
 		return errors.CatchServiceNameInUseError(err, httpResp, name)
 	}
 
-	table := output.NewTable(cmd)
-	table.Add(&serviceAccountOut{
-		ResourceId:  serviceAccount.GetId(),
-		Name:        serviceAccount.GetDisplayName(),
-		Description: serviceAccount.GetDescription(),
-	})
-	return table.Print()
+	return printServiceAccount(cmd, serviceAccount)
 }

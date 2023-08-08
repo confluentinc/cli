@@ -1,0 +1,9 @@
++-------------+--------------------------------+
+| ID          | pool-12345                     |
+| Name        | my-group-mapping               |
+| Description | mapping-description            |
+| Filter      | "engineering" in claims.group  |
+|             | || "marketing" in claims.group |
+| Principal   | pool-12345                     |
+| State       | ENABLED                        |
++-------------+--------------------------------+

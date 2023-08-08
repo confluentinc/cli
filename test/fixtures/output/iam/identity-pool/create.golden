@@ -1,6 +1,6 @@
 +----------------+-----------------------------------------+
 | ID             | pool-55555                              |
-| Name           | testPool                                |
+| Name           | test-pool                               |
 | Description    | new-description                         |
 | Identity Claim | sub                                     |
 | Filter         | claims.iss=https://company.provider.com |
