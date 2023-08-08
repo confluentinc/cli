@@ -81,8 +81,11 @@ func (c *command) consume(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	var consumeFromGroupOffset bool
 	if !cmd.Flags().Changed("group") {
 		group = fmt.Sprintf("confluent_cli_consumer_%s", uuid.New())
+	} else {
+		consumeFromGroupOffset = true
 	}
 
 	printKey, err := cmd.Flags().GetBool("print-key")
@@ -145,6 +148,9 @@ func (c *command) consume(cmd *cobra.Command, args []string) error {
 	}
 
 	rebalanceCallback := GetRebalanceCallback(offset, partitionFilter)
+	if consumeFromGroupOffset && !cmd.Flags().Changed("from-beginning") && !cmd.Flags().Changed("offset") {
+		rebalanceCallback = nil
+	}
 	if err := consumer.Subscribe(topic, rebalanceCallback); err != nil {
 		return err
 	}
