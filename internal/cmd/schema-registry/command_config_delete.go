@@ -22,7 +22,7 @@ func (c *command) newConfigDeleteCommand(cfg *v1.Config) *cobra.Command {
 	}
 
 	example1 := examples.Example{
-		Text: `Delete the configuration of subject "payments".`,
+		Text: `Delete the subject-level configuration of subject "payments".`,
 		Code: "confluent schema-registry config delete --subject payments",
 	}
 	example2 := examples.Example{
@@ -46,21 +46,11 @@ func (c *command) newConfigDeleteCommand(cfg *v1.Config) *cobra.Command {
 	pcmd.AddOutputFlag(cmd)
 	pcmd.AddForceFlag(cmd)
 
-	if cfg.IsCloudLogin() {
-		// Deprecated
-		pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
-		cobra.CheckErr(cmd.Flags().MarkHidden("api-key"))
-
-		// Deprecated
-		pcmd.AddApiSecretFlag(cmd)
-		cobra.CheckErr(cmd.Flags().MarkHidden("api-secret"))
-	}
-
 	return cmd
 }
 
 func (c *command) configDelete(cmd *cobra.Command, args []string) error {
-	client, err := c.GetSchemaRegistryClient()
+	client, err := c.GetSchemaRegistryClient(cmd)
 	if err != nil {
 		return err
 	}
