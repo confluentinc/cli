@@ -10,8 +10,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 )
 
-const groupMappingNoOpUpdateErrorMsg = "one of `--description`, `--name`, or `--filter` must be set"
-
 func (c *groupMappingCommand) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "update <id>",
@@ -53,7 +51,7 @@ func (c *groupMappingCommand) update(cmd *cobra.Command, args []string) error {
 	}
 
 	if description == "" && name == "" && filter == "" {
-		return errors.New(groupMappingNoOpUpdateErrorMsg)
+		return errors.New("one of `--description`, `--name`, or `--filter` must be set")
 	}
 
 	update := ssov2.IamV2SsoGroupMapping{Id: ssov2.PtrString(args[0])}

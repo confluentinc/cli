@@ -10,8 +10,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 )
 
-const identityPoolNoOpUpdateErrorMsg = "one of `--description`, `--filter`, `--identity-claim`, or `--name` must be set"
-
 func (c *identityPoolCommand) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "update <id>",
@@ -67,7 +65,7 @@ func (c *identityPoolCommand) update(cmd *cobra.Command, args []string) error {
 	}
 
 	if description == "" && filter == "" && identityClaim == "" && name == "" {
-		return errors.New(identityPoolNoOpUpdateErrorMsg)
+		return errors.New("one of `--description`, `--filter`, `--identity-claim`, or `--name` must be set")
 	}
 
 	identityPoolId := args[0]
