@@ -3,7 +3,10 @@ package iam
 import (
 	"github.com/spf13/cobra"
 
+	identityproviderv2 "github.com/confluentinc/ccloud-sdk-go-v2/identity-provider/v2"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 type identityProviderCommand struct {
@@ -34,6 +37,18 @@ func newProviderCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(c.newUpdateCommand())
 
 	return cmd
+}
+
+func printIdentityProvider(cmd *cobra.Command, provider identityproviderv2.IamV2IdentityProvider) error {
+	table := output.NewTable(cmd)
+	table.Add(&identityProviderOut{
+		Id:          provider.GetId(),
+		Name:        provider.GetDisplayName(),
+		Description: provider.GetDescription(),
+		IssuerUri:   provider.GetIssuer(),
+		JwksUri:     provider.GetJwksUri(),
+	})
+	return table.Print()
 }
 
 func (c *identityProviderCommand) validArgs(cmd *cobra.Command, args []string) []string {

@@ -1,7 +1,7 @@
 +-------------+---------------------------------------------+
 | ID          | op-55555                                    |
-| Name        | Okta                                        |
-| Description | new-description                             |
+| Name        | okta                                        |
+| Description | new description                             |
 | Issuer URI  | https://company.provider.com                |
 | JWKS URI    | https://company.provider.com/oauth2/v1/keys |
 +-------------+---------------------------------------------+

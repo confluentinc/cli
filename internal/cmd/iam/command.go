@@ -25,11 +25,12 @@ func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
 
 	dc := dynamicconfig.New(cfg, nil)
 	_ = dc.ParseFlagsIntoConfig(cmd)
-	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.identity-provider", dc.Context(), v1.CliLaunchDarklyClient, true, false) {
-		cmd.AddCommand(newPoolCommand(prerunner))
-		cmd.AddCommand(newProviderCommand(prerunner))
+	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.iam.group_mapping.enable", dc.Context(), v1.CliLaunchDarklyClient, true, false) {
+		cmd.AddCommand(newGroupMappingCommand(prerunner))
 	}
 	cmd.AddCommand(newACLCommand(prerunner))
+	cmd.AddCommand(newPoolCommand(prerunner))
+	cmd.AddCommand(newProviderCommand(prerunner))
 	cmd.AddCommand(newRBACCommand(cfg, prerunner))
 	cmd.AddCommand(newServiceAccountCommand(prerunner))
 	cmd.AddCommand(newUserCommand(prerunner))
