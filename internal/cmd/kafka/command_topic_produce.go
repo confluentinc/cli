@@ -249,7 +249,7 @@ func serializeMessage(keyMetaInfo, valueMetaInfo []byte, data, delimiter string,
 			return nil, nil, errors.New(errors.MissingKeyErrorMsg)
 		}
 
-		out, err := serdes.Serialize(keySerializer, strings.TrimSpace(x[0]))
+		out, err := keySerializer.Serialize(strings.TrimSpace(x[0]))
 		if err != nil {
 			return nil, nil, err
 		}
@@ -260,7 +260,7 @@ func serializeMessage(keyMetaInfo, valueMetaInfo []byte, data, delimiter string,
 		val = strings.TrimSpace(data)
 	}
 
-	serializedValue, err := serdes.Serialize(valueSerializer, val)
+	serializedValue, err := valueSerializer.Serialize(val)
 	if err != nil {
 		return nil, nil, err
 	}
