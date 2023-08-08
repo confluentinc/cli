@@ -58,6 +58,20 @@ func (s *CLITestSuite) TestSchemaRegistryConfigDescribe() {
 		{args: fmt.Sprintf("schema-registry config describe --environment %s -o json", testserver.SRApiEnvId), fixture: "schema-registry/config/describe-global-json.golden"},
 		{args: fmt.Sprintf("schema-registry config describe --environment %s -o yaml", testserver.SRApiEnvId), fixture: "schema-registry/config/describe-global-yaml.golden"},
 		{args: fmt.Sprintf("schema-registry config describe --subject payments --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/config/describe-subject.golden"},
+		{args: fmt.Sprintf("schema-registry config delete --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/config/describe-global.golden"},
+		{args: fmt.Sprintf("schema-registry config delete --subject payments --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/config/describe-global.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
+func (s *CLITestSuite) TestSchemaRegistryConfigDelete() {
+	tests := []CLITest{
+		{args: fmt.Sprintf("schema-registry config delete --environment %s --force", testserver.SRApiEnvId), fixture: "schema-registry/config/delete-config.golden"},
+		{args: fmt.Sprintf("schema-registry config delete --subject payments --environment %s --force", testserver.SRApiEnvId), fixture: "schema-registry/config/delete-config.golden"},
 	}
 
 	for _, test := range tests {
