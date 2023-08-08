@@ -17,8 +17,8 @@ func (c *identityPoolCommand) newCreateCommand() *cobra.Command {
 		RunE:  c.create,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Create an identity pool named "demo-identity-pool" with provider "op-12345":`,
-				Code: `confluent iam pool create demo-identity-pool --provider op-12345 --description new-description --identity-claim claims.sub --filter 'claims.iss=="https://my.issuer.com"'`,
+				Text: `Create an identity pool named "demo-identity-pool" with identity provider "op-12345":`,
+				Code: `confluent iam pool create demo-identity-pool --provider op-12345 --description "new description" --identity-claim claims.sub --filter 'claims.iss=="https://my.issuer.com"'`,
 			},
 		),
 	}
@@ -26,6 +26,7 @@ func (c *identityPoolCommand) newCreateCommand() *cobra.Command {
 	pcmd.AddProviderFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("identity-claim", "", "Claim specifying the external identity using this identity pool.")
 	cmd.Flags().String("description", "", "Description of the identity pool.")
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddFilterFlag(cmd)
 	pcmd.AddOutputFlag(cmd)
 

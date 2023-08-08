@@ -22,13 +22,14 @@ func (c *groupMappingCommand) newUpdateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Update the description of group mapping "pool-123456".`,
-				Code: `confluent iam group-mapping update pool-123456 --description "Updated description"`,
+				Code: `confluent iam group-mapping update pool-123456 --description "updated description"`,
 			},
 		),
 	}
 
 	cmd.Flags().String("name", "", "Name of the group mapping.")
 	cmd.Flags().String("description", "", "Description of the group mapping.")
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddFilterFlag(cmd)
 	pcmd.AddOutputFlag(cmd)
 

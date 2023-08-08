@@ -11,6 +11,7 @@ Update the description of identity provider "op-123456".
 Flags:
       --name string          Name of the identity provider.
       --description string   Description of the identity provider.
+      --context string       CLI context name.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:

@@ -218,7 +218,7 @@ func handleIamServiceAccount(t *testing.T) http.HandlerFunc {
 		case http.MethodGet:
 			serviceAccount := iamv2.IamV2ServiceAccount{
 				Id:          iamv2.PtrString(id),
-				DisplayName: iamv2.PtrString("service_account"),
+				DisplayName: iamv2.PtrString("service-account"),
 				Description: iamv2.PtrString("at your service."),
 			}
 			err := json.NewEncoder(w).Encode(serviceAccount)
@@ -243,7 +243,7 @@ func handleIamServiceAccounts(t *testing.T) http.HandlerFunc {
 		case http.MethodGet:
 			serviceAccount := iamv2.IamV2ServiceAccount{
 				Id:          iamv2.PtrString(serviceAccountResourceId),
-				DisplayName: iamv2.PtrString("service_account"),
+				DisplayName: iamv2.PtrString("service-account"),
 				Description: iamv2.PtrString("at your service."),
 			}
 			err := json.NewEncoder(w).Encode(iamv2.IamV2ServiceAccountList{Data: []iamv2.IamV2ServiceAccount{serviceAccount}})
@@ -317,13 +317,7 @@ func handleIamIdentityProvider(t *testing.T) http.HandlerFunc {
 		case http.MethodDelete:
 			w.WriteHeader(http.StatusNoContent)
 		case http.MethodGet:
-			identityProvider := identityproviderv2.IamV2IdentityProvider{
-				Id:          identityproviderv2.PtrString(id),
-				DisplayName: identityproviderv2.PtrString("identity_provider"),
-				Description: identityproviderv2.PtrString("providing identities."),
-				Issuer:      identityproviderv2.PtrString("https://company.provider.com"),
-				JwksUri:     identityproviderv2.PtrString("https://company.provider.com/oauth2/v1/keys"),
-			}
+			identityProvider := buildIamProvider(id, "identity-provider", "providing identities.", "https://company.provider.com", "https://company.provider.com/oauth2/v1/keys")
 			err := json.NewEncoder(w).Encode(identityProvider)
 			require.NoError(t, err)
 		}
@@ -335,14 +329,9 @@ func handleIamIdentityProviders(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			identityProvider := identityproviderv2.IamV2IdentityProvider{
-				Id:          identityproviderv2.PtrString(identityProviderResourceId),
-				DisplayName: identityproviderv2.PtrString("identity_provider"),
-				Description: identityproviderv2.PtrString("providing identities."),
-				Issuer:      identityproviderv2.PtrString("https://company.provider.com"),
-				JwksUri:     identityproviderv2.PtrString("https://company.provider.com/oauth2/v1/keys"),
-			}
-			err := json.NewEncoder(w).Encode(identityproviderv2.IamV2IdentityProviderList{Data: []identityproviderv2.IamV2IdentityProvider{identityProvider, identityProvider}})
+			identityProvider := buildIamProvider(identityProviderResourceId, "identity-provider", "providing identities.", "https://company.provider.com", "https://company.provider.com/oauth2/v1/keys")
+			anotherIdentityProvider := buildIamProvider("op-abc", "another-provider", "providing identities.", "https://company.provider.com", "https://company.provider.com/oauth2/v1/keys")
+			err := json.NewEncoder(w).Encode(identityproviderv2.IamV2IdentityProviderList{Data: []identityproviderv2.IamV2IdentityProvider{identityProvider, anotherIdentityProvider}})
 			require.NoError(t, err)
 		case http.MethodPost:
 			var req identityproviderv2.IamV2IdentityProvider
@@ -397,13 +386,7 @@ func handleIamIdentityPool(t *testing.T) http.HandlerFunc {
 		case http.MethodDelete:
 			w.WriteHeader(http.StatusNoContent)
 		case http.MethodGet:
-			identityPool := identityproviderv2.IamV2IdentityPool{
-				Id:            identityproviderv2.PtrString(id),
-				DisplayName:   identityproviderv2.PtrString("identity_pool"),
-				Description:   identityproviderv2.PtrString("pooling identities"),
-				IdentityClaim: identityproviderv2.PtrString("sub"),
-				Filter:        identityproviderv2.PtrString(`claims.iss="https://company.provider.com"`),
-			}
+			identityPool := buildIamPool(id, "identity-pool", "pooling identities", "sub", `claims.iss="https://company.provider.com"`)
 			err := json.NewEncoder(w).Encode(identityPool)
 			require.NoError(t, err)
 		}
@@ -415,14 +398,9 @@ func handleIamIdentityPools(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			identityPool := identityproviderv2.IamV2IdentityPool{
-				Id:            identityproviderv2.PtrString(identityPoolResourceId),
-				DisplayName:   identityproviderv2.PtrString("identity_pool"),
-				Description:   identityproviderv2.PtrString("pooling identities."),
-				IdentityClaim: identityproviderv2.PtrString("sub"),
-				Filter:        identityproviderv2.PtrString(`claims.iss="https://company.provider.com"`),
-			}
-			err := json.NewEncoder(w).Encode(identityproviderv2.IamV2IdentityPoolList{Data: []identityproviderv2.IamV2IdentityPool{identityPool, identityPool}})
+			identityPool := buildIamPool(identityPoolResourceId, "identity-pool", "pooling identities", "sub", `claims.iss="https://company.provider.com"`)
+			anotherIdentityPool := buildIamPool("pool-abc", "another-pool", "another description", "sub", "true")
+			err := json.NewEncoder(w).Encode(identityproviderv2.IamV2IdentityPoolList{Data: []identityproviderv2.IamV2IdentityPool{identityPool, anotherIdentityPool}})
 			require.NoError(t, err)
 		case http.MethodPost:
 			var req identityproviderv2.IamV2IdentityPool
@@ -471,10 +449,10 @@ func handleIamInvitations(t *testing.T) http.HandlerFunc {
 // Handler for "iam/v2/sso/group-mappings"
 func handleIamGroupMappings(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		groupMapping := buildIamGroupMapping("pool-12345", "group_mapping", "new-group-description", `"engineering" in claims.group || "marketing" in claims.group`)
+		groupMapping := buildIamGroupMapping("pool-12345", "my-group-mapping", "new description", `"engineering" in claims.group || "marketing" in claims.group`)
 		switch r.Method {
 		case http.MethodGet:
-			anotherMapping := buildIamGroupMapping(groupMappingResourceId, "another_group_mapping", "another-description", "true")
+			anotherMapping := buildIamGroupMapping(groupMappingResourceId, "another-group-mapping", "another description", "true")
 			err := json.NewEncoder(w).Encode(ssov2.IamV2SsoGroupMappingList{Data: []ssov2.IamV2SsoGroupMapping{groupMapping, anotherMapping}})
 			require.NoError(t, err)
 		case http.MethodPost:
@@ -507,14 +485,7 @@ func handleIamGroupMapping(t *testing.T) http.HandlerFunc {
 		case http.MethodDelete:
 			w.WriteHeader(http.StatusNoContent)
 		case http.MethodGet:
-			groupMapping := &ssov2.IamV2SsoGroupMapping{
-				Id:          ssov2.PtrString(id),
-				DisplayName: ssov2.PtrString("another_group_mapping"),
-				Description: ssov2.PtrString("another-description"),
-				Filter:      ssov2.PtrString("true"),
-				Principal:   ssov2.PtrString(id),
-				State:       ssov2.PtrString("ENABLED"),
-			}
+			groupMapping := buildIamGroupMapping(id, "another-group-mapping", "another description", "true")
 			err := json.NewEncoder(w).Encode(groupMapping)
 			require.NoError(t, err)
 		}

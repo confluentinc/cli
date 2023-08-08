@@ -13,6 +13,7 @@ Flags:
       --name string             Name of the identity pool.
       --description string      Description of the identity pool.
       --identity-claim string   Claim specifying the external identity using this identity pool.
+      --context string          CLI context name.
       --filter string           A supported Common Expression Language (CEL) filter expression for group mappings. (default "true")
   -o, --output string           Specify the output format as "human", "json", or "yaml". (default "human")
 

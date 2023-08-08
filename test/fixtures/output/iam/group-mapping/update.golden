@@ -1,7 +1,7 @@
 +-------------+-----------------------------------+
 | ID          | pool-abc                          |
-| Name        | new_group_mapping                 |
-| Description | new-description                   |
+| Name        | updated-group-mapping             |
+| Description | updated description               |
 | Filter      | claims.principal.startsWith(user) |
 | Principal   | pool-abc                          |
 | State       | ENABLED                           |

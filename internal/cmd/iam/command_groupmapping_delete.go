@@ -28,6 +28,7 @@ func (c *groupMappingCommand) newDeleteCommand() *cobra.Command {
 		),
 	}
 
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddForceFlag(cmd)
 
 	return cmd

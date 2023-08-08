@@ -1,7 +1,7 @@
 +-------------+-----------------------+
 | ID          | pool-abc              |
-| Name        | another_group_mapping |
-| Description | another-description   |
+| Name        | another-group-mapping |
+| Description | another description   |
 | Filter      | true                  |
 | Principal   | pool-abc              |
 | State       | ENABLED               |

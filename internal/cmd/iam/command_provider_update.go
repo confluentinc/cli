@@ -29,6 +29,7 @@ func (c *identityProviderCommand) newUpdateCommand() *cobra.Command {
 
 	cmd.Flags().String("name", "", "Name of the identity provider.")
 	cmd.Flags().String("description", "", "Description of the identity provider.")
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd

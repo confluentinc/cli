@@ -1,7 +1,7 @@
 +-------------+--------------------------------+
 | ID          | pool-12345                     |
-| Name        | group_mapping                  |
-| Description | new-group-description          |
+| Name        | my-group-mapping               |
+| Description | new description                |
 | Filter      | "engineering" in claims.group  |
 |             | || "marketing" in claims.group |
 | Principal   | pool-12345                     |

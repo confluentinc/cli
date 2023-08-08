@@ -15,6 +15,7 @@ func (c *identityProviderCommand) newDescribeCommand() *cobra.Command {
 		RunE:              c.describe,
 	}
 
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd

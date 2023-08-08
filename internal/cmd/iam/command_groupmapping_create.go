@@ -24,6 +24,7 @@ func (c *groupMappingCommand) newCreateCommand() *cobra.Command {
 	}
 
 	cmd.Flags().String("description", "", "Description of the group mapping.")
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddFilterFlag(cmd)
 	pcmd.AddOutputFlag(cmd)
 

@@ -15,6 +15,7 @@ import (
 	byokv1 "github.com/confluentinc/ccloud-sdk-go-v2/byok/v1"
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
+	identityproviderv2 "github.com/confluentinc/ccloud-sdk-go-v2/identity-provider/v2"
 	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
 	ssov2 "github.com/confluentinc/ccloud-sdk-go-v2/sso/v2"
 )
@@ -358,6 +359,26 @@ func buildIamGroupMapping(id, name, description, filter string) ssov2.IamV2SsoGr
 		Filter:      ssov2.PtrString(filter),
 		Principal:   ssov2.PtrString(id),
 		State:       ssov2.PtrString("ENABLED"),
+	}
+}
+
+func buildIamPool(id, name, description, identityClaim, filter string) identityproviderv2.IamV2IdentityPool {
+	return identityproviderv2.IamV2IdentityPool{
+		Id:            iamv2.PtrString(id),
+		DisplayName:   iamv2.PtrString(name),
+		Description:   iamv2.PtrString(description),
+		IdentityClaim: iamv2.PtrString(identityClaim),
+		Filter:        ssov2.PtrString(filter),
+	}
+}
+
+func buildIamProvider(id, name, description, issuer, jwksUri string) identityproviderv2.IamV2IdentityProvider {
+	return identityproviderv2.IamV2IdentityProvider{
+		Id:          iamv2.PtrString(id),
+		DisplayName: iamv2.PtrString(name),
+		Description: iamv2.PtrString(description),
+		Issuer:      iamv2.PtrString(issuer),
+		JwksUri:     iamv2.PtrString(jwksUri),
 	}
 }
 

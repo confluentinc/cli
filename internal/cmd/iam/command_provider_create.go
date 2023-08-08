@@ -18,7 +18,7 @@ func (c *identityProviderCommand) newCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Create an identity provider named "demo-identity-provider".`,
-				Code: `confluent iam provider create demo-identity-provider --description "description of provider" --jwks-uri https://company.provider.com/oauth2/v1/keys --issuer-uri https://company.provider.com`,
+				Code: `confluent iam provider create demo-identity-provider --description "new description" --jwks-uri https://company.provider.com/oauth2/v1/keys --issuer-uri https://company.provider.com`,
 			},
 		),
 	}
@@ -26,6 +26,7 @@ func (c *identityProviderCommand) newCreateCommand() *cobra.Command {
 	cmd.Flags().String("issuer-uri", "", "URI of the identity provider issuer.")
 	cmd.Flags().String("jwks-uri", "", "JWKS (JSON Web Key Set) URI of the identity provider.")
 	cmd.Flags().String("description", "", "Description of the identity provider.")
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("issuer-uri"))

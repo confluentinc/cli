@@ -12,6 +12,7 @@ Flags:
       --issuer-uri string    REQUIRED: URI of the identity provider issuer.
       --jwks-uri string      REQUIRED: JWKS (JSON Web Key Set) URI of the identity provider.
       --description string   Description of the identity provider.
+      --context string       CLI context name.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:

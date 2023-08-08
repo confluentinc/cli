@@ -31,6 +31,7 @@ func (c *identityPoolCommand) newUpdateCommand() *cobra.Command {
 	cmd.Flags().String("name", "", "Name of the identity pool.")
 	cmd.Flags().String("description", "", "Description of the identity pool.")
 	cmd.Flags().String("identity-claim", "", "Claim specifying the external identity using this identity pool.")
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddFilterFlag(cmd)
 	pcmd.AddOutputFlag(cmd)
 
