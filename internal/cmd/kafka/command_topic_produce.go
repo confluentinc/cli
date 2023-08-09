@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"runtime"
 	"strconv"
 	"strings"
 
@@ -117,7 +118,11 @@ func (c *command) produce(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	output.ErrPrintln(errors.StartingProducerMsg)
+	if runtime.GOOS == "windows" {
+		output.ErrPrintln("Starting Kafka Producer. Use Ctrl-C to exit.")
+	} else {
+		output.ErrPrintln(errors.StartingProducerMsg)
+	}
 
 	var scanErr error
 	input, scan := PrepareInputChannel(&scanErr)
@@ -127,7 +132,11 @@ func (c *command) produce(cmd *cobra.Command, args []string) error {
 	signal.Notify(signals, os.Interrupt)
 	go func() {
 		<-signals
-		close(input)
+		select {
+		case <-input:
+		default:
+			close(input)
+		}
 	}()
 	// Prime reader
 	go scan()
