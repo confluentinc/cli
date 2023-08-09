@@ -20,6 +20,7 @@ import (
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	configv1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	schemaregistry "github.com/confluentinc/cli/internal/pkg/schema-registry"
 	"github.com/confluentinc/cli/internal/pkg/serdes"
@@ -267,6 +268,9 @@ func RunConsumer(consumer *ckafka.Consumer, groupHandler *GroupHandler) error {
 		select {
 		case <-signals: // Trap SIGINT to trigger a shutdown.
 			output.ErrPrintln(errors.StoppingConsumerMsg)
+			if _, err := consumer.Commit(); err != nil {
+				log.CliLogger.Warnf("Failed to commit current consumer offset: %v", err)
+			}
 			consumer.Close()
 			run = false
 		default:
@@ -277,11 +281,17 @@ func RunConsumer(consumer *ckafka.Consumer, groupHandler *GroupHandler) error {
 			switch e := event.(type) {
 			case *ckafka.Message:
 				if err := consumeMessage(e, groupHandler); err != nil {
+					if _, err := consumer.Commit(); err != nil {
+						log.CliLogger.Warnf("Failed to commit current consumer offset: %v", err)
+					}
 					return err
 				}
 			case ckafka.Error:
 				fmt.Fprintf(groupHandler.Out, "%% Error: %v: %v\n", e.Code(), e)
 				if e.Code() == ckafka.ErrAllBrokersDown {
+					if _, err := consumer.Commit(); err != nil {
+						log.CliLogger.Warnf("Failed to commit current consumer offset: %v", err)
+					}
 					run = false
 				}
 			}
