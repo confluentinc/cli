@@ -9,7 +9,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
@@ -17,7 +17,7 @@ type aclCommand struct {
 	*pcmd.AuthenticatedCLICommand
 }
 
-func newAclCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
+func newAclCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "acl",
 		Short: "Manage Kafka ACLs.",

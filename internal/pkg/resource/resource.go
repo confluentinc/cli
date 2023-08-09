@@ -31,6 +31,7 @@ const (
 	SchemaRegistryCluster       = "Schema Registry cluster"
 	SchemaRegistryConfiguration = "Schema Registry configuration"
 	ServiceAccount              = "service account"
+	SsoGroupMapping             = "SSO group mapping"
 	Topic                       = "topic"
 	User                        = "user"
 )

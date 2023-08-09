@@ -16,7 +16,7 @@ import (
 
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/featureflags"
@@ -54,7 +54,7 @@ type PreRunner interface {
 
 // PreRun is the standard PreRunner implementation
 type PreRun struct {
-	Config                  *v1.Config
+	Config                  *config.Config
 	UpdateClient            update.Client
 	FlagResolver            FlagResolver
 	Version                 *version.Version
@@ -123,7 +123,7 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(*cob
 	}
 }
 
-func checkCliDisable(cmd *CLICommand, cfg *v1.Config) error {
+func checkCliDisable(cmd *CLICommand, cfg *config.Config) error {
 	ldDisable := featureflags.GetLDDisableMap(cmd.Config.Context())
 	errMsg, errMsgOk := ldDisable["error_msg"].(string)
 	disabledCmdsAndFlags, ok := ldDisable["patterns"].([]any)
@@ -131,7 +131,7 @@ func checkCliDisable(cmd *CLICommand, cfg *v1.Config) error {
 		allowUpdate, allowUpdateOk := ldDisable["allow_update"].(bool)
 		if !(cmd.CommandPath() == "confluent update" && allowUpdateOk && allowUpdate) {
 			// in case a user is trying to run an on-prem command from a cloud context (should not see LD msg)
-			if err := ErrIfMissingRunRequirement(cmd.Command, cfg); err != nil && err == v1.RequireOnPremLoginErr {
+			if err := ErrIfMissingRunRequirement(cmd.Command, cfg); err != nil && err == config.RequireOnPremLoginErr {
 				return err
 			}
 			suggestionsMsg, _ := ldDisable["suggestions_msg"].(string)
@@ -179,7 +179,7 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(*cobra.Com
 			return err
 		}
 
-		if r.Config.Context().GetCredentialType() == v1.APIKey {
+		if r.Config.Context().GetCredentialType() == config.APIKey {
 			return ErrIfMissingRunRequirement(cmd, r.Config)
 		}
 
@@ -450,7 +450,7 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(*co
 
 		// Even if there was an error while setting the context, notify the user about any unmet run requirements first.
 		if err := ErrIfMissingRunRequirement(cmd, r.Config); err != nil {
-			if err == v1.RunningOnPremCommandInCloudErr {
+			if err == config.RunningOnPremCommandInCloudErr {
 				for topLevelCmd, suggestCmd := range wrongLoginCommandsMap {
 					if strings.HasPrefix(cmd.CommandPath(), topLevelCmd) {
 						suggestCmdPath := strings.Replace(cmd.CommandPath(), topLevelCmd, suggestCmd, 1)

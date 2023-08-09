@@ -30,7 +30,7 @@ var (
 		{Id: "env-987zy", Name: "confluent-audit-log"},
 	}
 	keyIndex      = int32(3)
-	resourceIdMap = map[int32]string{auditLogServiceAccountID: auditLogServiceAccountResourceID, serviceAccountID: serviceAccountResourceID}
+	resourceIdMap = map[int32]string{auditLogServiceAccountId: auditLogServiceAccountResourceId, serviceAccountId: serviceAccountResourceId}
 
 	RegularOrg = &ccloudv1.Organization{
 		Id:   321,
@@ -49,17 +49,16 @@ var (
 )
 
 const (
-	serviceAccountID           = int32(12345)
-	serviceAccountResourceID   = "sa-12345"
-	identityProviderResourceID = "op-12345"
-	identityPoolResourceID     = "pool-12345"
-	deactivatedUserID          = int32(6666)
-	deactivatedResourceID      = "sa-6666"
-
-	auditLogServiceAccountID         = int32(1337)
-	auditLogServiceAccountResourceID = "sa-1337"
-
-	PromoTestCode = "PromoTestCode"
+	serviceAccountId                 = int32(12345)
+	serviceAccountResourceId         = "sa-12345"
+	groupMappingResourceId           = "pool-abc"
+	identityProviderResourceId       = "op-12345"
+	identityPoolResourceId           = "pool-12345"
+	deactivatedUserId                = int32(6666)
+	deactivatedResourceId            = "sa-6666"
+	auditLogServiceAccountId         = int32(1337)
+	auditLogServiceAccountResourceId = "sa-1337"
+	PromoTestCode                    = "PromoTestCode"
 )
 
 // Handler for: "/api/me"
@@ -79,7 +78,7 @@ func handleMe(t *testing.T, isAuditLogEnabled bool) http.HandlerFunc {
 			org.AuditLog = &ccloudv1.AuditLog{
 				ClusterId:                "lkc-ab123",
 				AccountId:                "env-987zy",
-				ServiceAccountId:         auditLogServiceAccountID,
+				ServiceAccountId:         auditLogServiceAccountId,
 				ServiceAccountResourceId: "sa-1337",
 				TopicName:                "confluent-audit-log-events",
 			}
@@ -197,8 +196,8 @@ func handleServiceAccounts(t *testing.T) http.HandlerFunc {
 			res := &ccloudv1.GetServiceAccountsReply{
 				Users: []*ccloudv1.User{
 					{
-						Id:                 serviceAccountID,
-						ResourceId:         serviceAccountResourceID,
+						Id:                 serviceAccountId,
+						ResourceId:         serviceAccountResourceId,
 						ServiceName:        "service_account",
 						ServiceDescription: "at your service.",
 					},
@@ -315,7 +314,7 @@ func handleUsers(t *testing.T) http.HandlerFunc {
 			if userId != "" {
 				intId, err := strconv.Atoi(userId)
 				require.NoError(t, err)
-				if int32(intId) == deactivatedUserID {
+				if int32(intId) == deactivatedUserId {
 					users = []*ccloudv1.User{}
 				}
 			}

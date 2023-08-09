@@ -7,7 +7,7 @@ import (
 	"github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 )
 
 var (
@@ -20,7 +20,7 @@ var (
 	flinkNamespace          = optional.NewString("flink")
 )
 
-func newRBACCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
+func newRBACCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "rbac",
 		Short: "Manage RBAC permissions.",

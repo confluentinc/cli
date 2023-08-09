@@ -10,7 +10,7 @@ import (
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/keychain"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -50,7 +50,7 @@ func GetEnvWithFallback(current, deprecated string) string {
 	return ""
 }
 
-func PersistLogout(config *v1.Config) error {
+func PersistLogout(config *config.Config) error {
 	ctx := config.Context()
 	if ctx == nil {
 		return nil
@@ -70,19 +70,19 @@ func PersistLogout(config *v1.Config) error {
 	return config.Save()
 }
 
-func PersistConfluentLoginToConfig(config *v1.Config, credentials *Credentials, url, token, caCertPath string, isLegacyContext, save bool) error {
+func PersistConfluentLoginToConfig(cfg *config.Config, credentials *Credentials, url, token, caCertPath string, isLegacyContext, save bool) error {
 	username := credentials.Username
-	state := &v1.ContextState{AuthToken: token}
+	state := &config.ContextState{AuthToken: token}
 	var ctxName string
 	if isLegacyContext {
 		ctxName = GenerateContextName(username, url, "")
 	} else {
 		ctxName = GenerateContextName(username, url, caCertPath)
 	}
-	return addOrUpdateContext(config, false, credentials, ctxName, url, state, caCertPath, "", save)
+	return addOrUpdateContext(cfg, false, credentials, ctxName, url, state, caCertPath, "", save)
 }
 
-func PersistCCloudCredentialsToConfig(config *v1.Config, client *ccloudv1.Client, url string, credentials *Credentials, save bool) (string, *ccloudv1.Organization, error) {
+func PersistCCloudCredentialsToConfig(config *config.Config, client *ccloudv1.Client, url string, credentials *Credentials, save bool) (string, *ccloudv1.Organization, error) {
 	ctxName := GenerateCloudContextName(credentials.Username, url)
 
 	user, err := client.Auth.User()
@@ -107,22 +107,22 @@ func PersistCCloudCredentialsToConfig(config *v1.Config, client *ccloudv1.Client
 	return ctx.CurrentEnvironment, user.GetOrganization(), nil
 }
 
-func addOrUpdateContext(config *v1.Config, isCloud bool, credentials *Credentials, ctxName, url string, state *v1.ContextState, caCertPath, orgResourceId string, save bool) error {
-	platform := &v1.Platform{
+func addOrUpdateContext(cfg *config.Config, isCloud bool, credentials *Credentials, ctxName, url string, state *config.ContextState, caCertPath, orgResourceId string, save bool) error {
+	platform := &config.Platform{
 		Name:       strings.TrimPrefix(url, "https://"),
 		Server:     url,
 		CaCertPath: caCertPath,
 	}
-	if err := config.SavePlatform(platform); err != nil {
+	if err := cfg.SavePlatform(platform); err != nil {
 		return err
 	}
 
-	credential := &v1.Credential{
+	credential := &config.Credential{
 		Name:     generateCredentialName(credentials.Username),
 		Username: credentials.Username,
 		// don't save password if they entered it interactively.
 	}
-	if err := config.SaveCredential(credential); err != nil {
+	if err := cfg.SaveCredential(credential); err != nil {
 		return err
 	}
 
@@ -136,7 +136,7 @@ func addOrUpdateContext(config *v1.Config, isCloud bool, credentials *Credential
 			return err
 		}
 
-		loginCredential := &v1.LoginCredential{
+		loginCredential := &config.LoginCredential{
 			IsCloud:           isCloud,
 			Url:               url,
 			Username:          credentials.Username,
@@ -144,7 +144,7 @@ func addOrUpdateContext(config *v1.Config, isCloud bool, credentials *Credential
 			Salt:              salt,
 			Nonce:             nonce,
 		}
-		if err := config.SaveLoginCredential(ctxName, loginCredential); err != nil {
+		if err := cfg.SaveLoginCredential(ctxName, loginCredential); err != nil {
 			return err
 		}
 	}
@@ -156,8 +156,8 @@ func addOrUpdateContext(config *v1.Config, isCloud bool, credentials *Credential
 	state.Salt = stateSalt
 	state.Nonce = stateNonce
 
-	if ctx, ok := config.Contexts[ctxName]; ok {
-		config.ContextStates[ctxName] = state
+	if ctx, ok := cfg.Contexts[ctxName]; ok {
+		cfg.ContextStates[ctxName] = state
 		ctx.State = state
 
 		ctx.Platform = platform
@@ -167,17 +167,17 @@ func addOrUpdateContext(config *v1.Config, isCloud bool, credentials *Credential
 		ctx.CredentialName = credential.Name
 		ctx.LastOrgId = orgResourceId
 	} else {
-		if err := config.AddContext(ctxName, platform.Name, credential.Name, map[string]*v1.KafkaClusterConfig{}, "", state, orgResourceId, ""); err != nil {
+		if err := cfg.AddContext(ctxName, platform.Name, credential.Name, map[string]*config.KafkaClusterConfig{}, "", state, orgResourceId, ""); err != nil {
 			return err
 		}
 	}
 
-	return config.UseContext(ctxName)
+	return cfg.UseContext(ctxName)
 }
 
-func getCCloudContextState(token, refreshToken string, user *ccloudv1.GetMeReply) *v1.ContextState {
-	return &v1.ContextState{
-		Auth: &v1.AuthConfig{
+func getCCloudContextState(token, refreshToken string, user *ccloudv1.GetMeReply) *config.ContextState {
+	return &config.ContextState{
+		Auth: &config.AuthConfig{
 			User:         user.GetUser(),
 			Organization: user.GetOrganization(),
 		},
@@ -203,7 +203,7 @@ func generateCredentialName(username string) string {
 	return fmt.Sprintf("username-%s", username)
 }
 
-func GetDataplaneToken(authenticatedState *v1.ContextState, server string) (string, error) {
+func GetDataplaneToken(authenticatedState *config.ContextState, server string) (string, error) {
 	endpoint := strings.Trim(server, "/") + "/api/access_tokens"
 
 	res := &struct {

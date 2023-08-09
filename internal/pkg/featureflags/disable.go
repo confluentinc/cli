@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 	"golang.org/x/exp/slices"
 
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	ppanic "github.com/confluentinc/cli/internal/pkg/panic-recovery"
 )
@@ -23,7 +23,7 @@ func DisableHelpText(command *cobra.Command, flags []string) {
 }
 
 func GetLDDisableMap(ctx *dynamicconfig.DynamicContext) map[string]any {
-	ldDisableJson := Manager.JsonVariation("cli.disable", ctx, v1.CliLaunchDarklyClient, true, nil)
+	ldDisableJson := Manager.JsonVariation("cli.disable", ctx, config.CliLaunchDarklyClient, true, nil)
 	ldDisable, ok := ldDisableJson.(map[string]any)
 	if !ok {
 		return nil

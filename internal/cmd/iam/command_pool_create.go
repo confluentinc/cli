@@ -7,7 +7,6 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
-	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 func (c *identityPoolCommand) newCreateCommand() *cobra.Command {
@@ -18,19 +17,19 @@ func (c *identityPoolCommand) newCreateCommand() *cobra.Command {
 		RunE:  c.create,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Create an identity pool named "DemoIdentityPool" with provider "op-12345":`,
-				Code: `confluent iam pool create DemoIdentityPool --provider op-12345 --description new-description --identity-claim claims.sub --filter 'claims.iss=="https://my.issuer.com"'`,
+				Text: `Create an identity pool named "demo-identity-pool" with identity provider "op-12345":`,
+				Code: `confluent iam pool create demo-identity-pool --provider op-12345 --description "new description" --identity-claim claims.sub --filter 'claims.iss=="https://my.issuer.com"'`,
 			},
 		),
 	}
 
-	cmd.Flags().String("filter", "", "Filter which identities can authenticate with the identity pool.")
-	cmd.Flags().String("identity-claim", "", "Claim specifying the external identity using this identity pool.")
 	pcmd.AddProviderFlag(cmd, c.AuthenticatedCLICommand)
+	cmd.Flags().String("identity-claim", "", "Claim specifying the external identity using this identity pool.")
 	cmd.Flags().String("description", "", "Description of the identity pool.")
+	pcmd.AddContextFlag(cmd, c.CLICommand)
+	pcmd.AddFilterFlag(cmd)
 	pcmd.AddOutputFlag(cmd)
 
-	cobra.CheckErr(cmd.MarkFlagRequired("filter"))
 	cobra.CheckErr(cmd.MarkFlagRequired("identity-claim"))
 	cobra.CheckErr(cmd.MarkFlagRequired("provider"))
 
@@ -66,18 +65,10 @@ func (c *identityPoolCommand) create(cmd *cobra.Command, args []string) error {
 		IdentityClaim: identityproviderv2.PtrString(identityClaim),
 		Filter:        identityproviderv2.PtrString(filter),
 	}
-	resp, err := c.V2Client.CreateIdentityPool(createIdentityPool, provider)
+	pool, err := c.V2Client.CreateIdentityPool(createIdentityPool, provider)
 	if err != nil {
 		return err
 	}
 
-	table := output.NewTable(cmd)
-	table.Add(&identityPoolOut{
-		Id:            resp.GetId(),
-		DisplayName:   resp.GetDisplayName(),
-		Description:   resp.GetDescription(),
-		IdentityClaim: resp.GetIdentityClaim(),
-		Filter:        resp.GetFilter(),
-	})
-	return table.Print()
+	return printIdentityPool(cmd, pool)
 }

@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 )
 
 type KafkaRestTestSuite struct {
@@ -15,7 +15,7 @@ type KafkaRestTestSuite struct {
 
 func (suite *KafkaRestTestSuite) TestInvalidGetBearerToken() {
 	req := suite.Require()
-	emptyState := v1.ContextState{}
+	emptyState := config.ContextState{}
 	_, err := pauth.GetDataplaneToken(&emptyState, "invalidhost")
 	req.NotNil(err)
 }

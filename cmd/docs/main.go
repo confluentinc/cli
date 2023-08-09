@@ -7,7 +7,7 @@ import (
 	"regexp"
 
 	"github.com/confluentinc/cli/internal/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/docs"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
@@ -25,9 +25,9 @@ func main() {
 	}
 
 	// Generate documentation for both subsets of commands: cloud and on-prem
-	configs := []*v1.Config{
-		{CurrentContext: "Cloud", Contexts: map[string]*v1.Context{"Cloud": {PlatformName: "https://confluent.cloud"}}},
-		{CurrentContext: "On-Premises", Contexts: map[string]*v1.Context{"On-Premises": {PlatformName: "https://example.com"}}},
+	configs := []*config.Config{
+		{CurrentContext: "Cloud", Contexts: map[string]*config.Context{"Cloud": {PlatformName: "https://confluent.cloud"}}},
+		{CurrentContext: "On-Premises", Contexts: map[string]*config.Context{"On-Premises": {PlatformName: "https://example.com"}}},
 	}
 
 	tabs := make([]docs.Tab, len(configs))

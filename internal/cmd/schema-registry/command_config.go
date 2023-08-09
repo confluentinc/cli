@@ -8,7 +8,7 @@ import (
 	"github.com/tidwall/pretty"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
@@ -21,7 +21,7 @@ type configOut struct {
 	RulesetOverrides   string `human:"Ruleset Overrides,omitempty" json:"rulesetOverrides" serialized:"ruleset_overrides,omitempty"`
 }
 
-func (c *command) newConfigCommand(cfg *v1.Config) *cobra.Command {
+func (c *command) newConfigCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "config",
 		Short:       "Manage Schema Registry configuration.",

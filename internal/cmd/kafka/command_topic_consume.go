@@ -16,6 +16,8 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	schemaregistry "github.com/confluentinc/cli/internal/pkg/schema-registry"
+	"github.com/confluentinc/cli/internal/pkg/serdes"
+	"github.com/confluentinc/cli/internal/pkg/types"
 )
 
 func (c *command) newConsumeCommand() *cobra.Command {
@@ -81,7 +83,10 @@ func (c *command) consume(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	if !cmd.Flags().Changed("group") {
+	var consumeFromGroupOffset bool
+	if cmd.Flags().Changed("group") {
+		consumeFromGroupOffset = true
+	} else {
 		group = fmt.Sprintf("confluent_cli_consumer_%s", uuid.New())
 	}
 
@@ -145,6 +150,9 @@ func (c *command) consume(cmd *cobra.Command, args []string) error {
 	}
 
 	rebalanceCallback := GetRebalanceCallback(offset, partitionFilter)
+	if consumeFromGroupOffset && !cmd.Flags().Changed("from-beginning") && !cmd.Flags().Changed("offset") {
+		rebalanceCallback = nil
+	}
 	if err := consumer.Subscribe(topic, rebalanceCallback); err != nil {
 		return err
 	}
@@ -162,7 +170,7 @@ func (c *command) consume(cmd *cobra.Command, args []string) error {
 	}
 
 	var srClient *schemaregistry.Client
-	if valueFormat != "string" {
+	if types.Contains(serdes.SchemaBasedFormats, valueFormat) {
 		// Only initialize client and context when schema is specified.
 		srClient, err = c.GetSchemaRegistryClient(cmd)
 		if err != nil {

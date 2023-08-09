@@ -15,6 +15,8 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	schemaregistry "github.com/confluentinc/cli/internal/pkg/schema-registry"
+	"github.com/confluentinc/cli/internal/pkg/serdes"
+	"github.com/confluentinc/cli/internal/pkg/types"
 )
 
 func (c *command) newConsumeCommandOnPrem() *cobra.Command {
@@ -145,7 +147,7 @@ func (c *command) consumeOnPrem(cmd *cobra.Command, args []string) error {
 	output.ErrPrintln(errors.StartingConsumerMsg)
 
 	var srClient *schemaregistry.Client
-	if valueFormat != "string" {
+	if types.Contains(serdes.SchemaBasedFormats, valueFormat) {
 		srClient, err = c.GetSchemaRegistryClient(cmd)
 		if err != nil {
 			return err

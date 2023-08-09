@@ -9,7 +9,7 @@ import (
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -18,7 +18,7 @@ type validateOut struct {
 	IsCompatible bool `human:"Compatible" serialized:"is_compatible"`
 }
 
-func (c *command) newCompatibilityValidateCommand(cfg *v1.Config) *cobra.Command {
+func (c *command) newCompatibilityValidateCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "validate",
 		Short: "Validate a schema with a subject version.",

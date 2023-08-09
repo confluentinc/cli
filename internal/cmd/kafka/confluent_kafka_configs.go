@@ -11,7 +11,7 @@ import (
 
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 
-	configv1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -27,7 +27,7 @@ type PartitionFilter struct {
 	Index   int32
 }
 
-func getCommonConfig(kafka *configv1.KafkaClusterConfig, clientId string) (*ckafka.ConfigMap, error) {
+func getCommonConfig(kafka *config.KafkaClusterConfig, clientId string) (*ckafka.ConfigMap, error) {
 	if err := kafka.DecryptAPIKeys(); err != nil {
 		return nil, err
 	}
@@ -45,7 +45,7 @@ func getCommonConfig(kafka *configv1.KafkaClusterConfig, clientId string) (*ckaf
 	return configMap, nil
 }
 
-func getProducerConfigMap(kafka *configv1.KafkaClusterConfig, clientID string) (*ckafka.ConfigMap, error) {
+func getProducerConfigMap(kafka *config.KafkaClusterConfig, clientID string) (*ckafka.ConfigMap, error) {
 	configMap, err := getCommonConfig(kafka, clientID)
 	if err != nil {
 		return nil, err
@@ -62,7 +62,7 @@ func getProducerConfigMap(kafka *configv1.KafkaClusterConfig, clientID string) (
 	return configMap, nil
 }
 
-func getConsumerConfigMap(group string, kafka *configv1.KafkaClusterConfig, clientID string) (*ckafka.ConfigMap, error) {
+func getConsumerConfigMap(group string, kafka *config.KafkaClusterConfig, clientID string) (*ckafka.ConfigMap, error) {
 	configMap, err := getCommonConfig(kafka, clientID)
 	if err != nil {
 		return nil, err
@@ -71,6 +71,10 @@ func getConsumerConfigMap(group string, kafka *configv1.KafkaClusterConfig, clie
 		return nil, err
 	}
 	log.CliLogger.Debugf("Created consumer group: %s", group)
+
+	if err := configMap.SetKey("enable.auto.commit", false); err != nil {
+		return nil, err
+	}
 
 	// see explanation: https://www.confluent.io/blog/incremental-cooperative-rebalancing-in-kafka/
 	if err := configMap.SetKey("partition.assignment.strategy", "cooperative-sticky"); err != nil {

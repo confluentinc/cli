@@ -5,7 +5,10 @@ import (
 
 	"github.com/spf13/cobra"
 
+	iamv2 "github.com/confluentinc/ccloud-sdk-go-v2/iam/v2"
+
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
 type serviceAccountCommand struct {
@@ -35,6 +38,16 @@ func newServiceAccountCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(c.newUpdateCommand())
 
 	return cmd
+}
+
+func printServiceAccount(cmd *cobra.Command, serviceAccount iamv2.IamV2ServiceAccount) error {
+	table := output.NewTable(cmd)
+	table.Add(&serviceAccountOut{
+		ResourceId:  serviceAccount.GetId(),
+		Name:        serviceAccount.GetDisplayName(),
+		Description: serviceAccount.GetDescription(),
+	})
+	return table.Print()
 }
 
 func (c *serviceAccountCommand) validArgs(cmd *cobra.Command, args []string) []string {

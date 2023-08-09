@@ -8,13 +8,15 @@ import (
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/kafka"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/types"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
+
+var serializationFormats = []string{"string", "avro", "integer", "jsonschema", "protobuf"}
 
 func AddApiKeyFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {
 	cmd.Flags().String("api-key", "", "API key.")
@@ -49,7 +51,7 @@ func AutocompleteApiKeys(client *ccloudv2.Client) []string {
 }
 
 func AddAvailabilityFlag(cmd *cobra.Command) {
-	cmd.Flags().String("availability", kafka.Availabilities[0], fmt.Sprintf("Specify the availability of the cluster as %s.", utils.ArrayToCommaDelimitedString(kafka.Availabilities, "or")))
+	cmd.Flags().String("availability", "single-zone", fmt.Sprintf("Specify the availability of the cluster as %s.", utils.ArrayToCommaDelimitedString(kafka.Availabilities, "or")))
 	RegisterFlagCompletionFunc(cmd, "availability", func(_ *cobra.Command, _ []string) []string { return kafka.Availabilities })
 }
 
@@ -80,18 +82,12 @@ func AutocompleteByokKeyIds(client *ccloudv2.Client) []string {
 
 func AddByokProviderFlag(cmd *cobra.Command) {
 	cmd.Flags().String("provider", "", fmt.Sprintf("Specify the provider as %s.", utils.ArrayToCommaDelimitedString([]string{"aws", "azure"}, "or")))
-
-	RegisterFlagCompletionFunc(cmd, "provider", func(_ *cobra.Command, _ []string) []string {
-		return []string{"aws", "azure"}
-	})
+	RegisterFlagCompletionFunc(cmd, "provider", func(_ *cobra.Command, _ []string) []string { return []string{"aws", "azure"} })
 }
 
 func AddByokStateFlag(cmd *cobra.Command) {
 	cmd.Flags().String("state", "", fmt.Sprintf("Specify the state as %s.", utils.ArrayToCommaDelimitedString([]string{"in-use", "available"}, "or")))
-
-	RegisterFlagCompletionFunc(cmd, "state", func(_ *cobra.Command, _ []string) []string {
-		return []string{"in-use", "available"}
-	})
+	RegisterFlagCompletionFunc(cmd, "state", func(_ *cobra.Command, _ []string) []string { return []string{"in-use", "available"} })
 }
 
 func AddCloudFlag(cmd *cobra.Command) {
@@ -139,7 +135,7 @@ func AddContextFlag(cmd *cobra.Command, command *CLICommand) {
 	})
 }
 
-func AutocompleteContexts(cfg *v1.Config) []string {
+func AutocompleteContexts(cfg *config.Config) []string {
 	return types.GetSortedKeys(cfg.Contexts)
 }
 
@@ -204,6 +200,24 @@ func AddKsqlClusterFlag(cmd *cobra.Command, c *AuthenticatedCLICommand) {
 	})
 }
 
+func AddFilterFlag(cmd *cobra.Command) {
+	cmd.Flags().String("filter", "true", "A supported Common Expression Language (CEL) filter expression for group mappings.")
+}
+
+func AutocompleteGroupMappings(client *ccloudv2.Client) []string {
+	groupMappings, err := client.ListGroupMappings()
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(groupMappings))
+	for i, groupMapping := range groupMappings {
+		description := fmt.Sprintf("%s: %s", groupMapping.GetDisplayName(), groupMapping.GetDescription())
+		suggestions[i] = fmt.Sprintf("%s\t%s", groupMapping.GetId(), description)
+	}
+	return suggestions
+}
+
 func autocompleteKSQLClusters(environmentId string, client *ccloudv2.Client) []string {
 	clusters, err := client.ListKsqlClusters(environmentId)
 	if err != nil {
@@ -252,10 +266,7 @@ func AddOutputFlag(cmd *cobra.Command) {
 
 func AddOutputFlagWithDefaultValue(cmd *cobra.Command, defaultValue string) {
 	cmd.Flags().StringP(output.FlagName, "o", defaultValue, fmt.Sprintf("Specify the output format as %s.", utils.ArrayToCommaDelimitedString(output.ValidFlagValues, "or")))
-
-	RegisterFlagCompletionFunc(cmd, output.FlagName, func(_ *cobra.Command, _ []string) []string {
-		return output.ValidFlagValues
-	})
+	RegisterFlagCompletionFunc(cmd, output.FlagName, func(_ *cobra.Command, _ []string) []string { return output.ValidFlagValues })
 }
 
 func AddPrincipalFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {
@@ -391,30 +402,18 @@ func AutocompleteUsers(client *ccloudv2.Client) []string {
 }
 
 func AddTypeFlag(cmd *cobra.Command) {
-	cmd.Flags().String("type", kafka.Types[0], fmt.Sprintf("Specify the type of the Kafka cluster as %s.", utils.ArrayToCommaDelimitedString(kafka.Types, "or")))
+	cmd.Flags().String("type", "basic", fmt.Sprintf("Specify the type of the Kafka cluster as %s.", utils.ArrayToCommaDelimitedString(kafka.Types, "or")))
 	RegisterFlagCompletionFunc(cmd, "type", func(_ *cobra.Command, _ []string) []string { return kafka.Types })
 }
 
 func AddKeyFormatFlag(cmd *cobra.Command) {
-	arr := []string{"string", "avro", "jsonschema", "protobuf"}
-	str := utils.ArrayToCommaDelimitedString(arr, "or")
-
-	cmd.Flags().String("key-format", "string", fmt.Sprintf("Format of message key as %s. Note that schema references are not supported for Avro.", str))
-
-	RegisterFlagCompletionFunc(cmd, "key-format", func(_ *cobra.Command, _ []string) []string {
-		return arr
-	})
+	cmd.Flags().String("key-format", "string", fmt.Sprintf("Format of message key as %s. Note that schema references are not supported for Avro.", utils.ArrayToCommaDelimitedString(serializationFormats, "or")))
+	RegisterFlagCompletionFunc(cmd, "key-format", func(_ *cobra.Command, _ []string) []string { return serializationFormats })
 }
 
 func AddValueFormatFlag(cmd *cobra.Command) {
-	arr := []string{"string", "avro", "jsonschema", "protobuf"}
-	str := utils.ArrayToCommaDelimitedString(arr, "or")
-
-	cmd.Flags().String("value-format", arr[0], fmt.Sprintf("Format message value as %s. Note that schema references are not supported for Avro.", str))
-
-	RegisterFlagCompletionFunc(cmd, "value-format", func(_ *cobra.Command, _ []string) []string {
-		return arr
-	})
+	cmd.Flags().String("value-format", "string", fmt.Sprintf("Format message value as %s. Note that schema references are not supported for Avro.", utils.ArrayToCommaDelimitedString(serializationFormats, "or")))
+	RegisterFlagCompletionFunc(cmd, "value-format", func(_ *cobra.Command, _ []string) []string { return serializationFormats })
 }
 
 func AddLinkFlag(cmd *cobra.Command, command *AuthenticatedCLICommand) {

@@ -14,7 +14,7 @@ import (
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -25,7 +25,7 @@ type schemaOut struct {
 	Schemas []srsdk.Schema `json:"schemas"`
 }
 
-func (c *command) newSchemaDescribeCommand(cfg *v1.Config) *cobra.Command {
+func (c *command) newSchemaDescribeCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe [id]",
 		Short: "Get schema by ID, or by subject and version.",

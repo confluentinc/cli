@@ -4,17 +4,17 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 )
 
 const cliPluginsUrl = "https://github.com/confluentinc/cli-plugins.git"
 
 type command struct {
 	*pcmd.CLICommand
-	cfg *v1.Config
+	cfg *config.Config
 }
 
-func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
+func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "plugin",
 		Short: "Manage Confluent plugins.",

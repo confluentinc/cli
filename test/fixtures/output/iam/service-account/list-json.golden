@@ -1,7 +1,7 @@
 [
   {
     "id": "sa-12345",
-    "name": "service_account",
+    "name": "service-account",
     "description": "at your service."
   }
 ]

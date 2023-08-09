@@ -18,11 +18,13 @@ import (
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
-	configv1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	schemaregistry "github.com/confluentinc/cli/internal/pkg/schema-registry"
 	"github.com/confluentinc/cli/internal/pkg/serdes"
+	"github.com/confluentinc/cli/internal/pkg/types"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -120,7 +122,7 @@ func retrieveUnsecuredToken(e ckafka.OAuthBearerTokenRefresh, tokenValue string)
 	return oauthBearerToken, nil
 }
 
-func newProducer(kafka *configv1.KafkaClusterConfig, clientID, configPath string, configStrings []string) (*ckafka.Producer, error) {
+func newProducer(kafka *config.KafkaClusterConfig, clientID, configPath string, configStrings []string) (*ckafka.Producer, error) {
 	configMap, err := getProducerConfigMap(kafka, clientID)
 	if err != nil {
 		return nil, err
@@ -129,7 +131,7 @@ func newProducer(kafka *configv1.KafkaClusterConfig, clientID, configPath string
 	return newProducerWithOverwrittenConfigs(configMap, configPath, configStrings)
 }
 
-func newConsumer(group string, kafka *configv1.KafkaClusterConfig, clientID, configPath string, configStrings []string) (*ckafka.Consumer, error) {
+func newConsumer(group string, kafka *config.KafkaClusterConfig, clientID, configPath string, configStrings []string) (*ckafka.Consumer, error) {
 	configMap, err := getConsumerConfigMap(group, kafka, clientID)
 	if err != nil {
 		return nil, err
@@ -191,7 +193,7 @@ func consumeMessage(message *ckafka.Message, h *GroupHandler) error {
 			return err
 		}
 
-		if h.KeyFormat != "string" {
+		if types.Contains(serdes.SchemaBasedFormats, h.KeyFormat) {
 			schemaPath, referencePathMap, err := h.RequestSchema(message.Key)
 			if err != nil {
 				return err
@@ -202,7 +204,7 @@ func consumeMessage(message *ckafka.Message, h *GroupHandler) error {
 			}
 		}
 
-		jsonMessage, err := serdes.Deserialize(keyDeserializer, message.Key)
+		jsonMessage, err := keyDeserializer.Deserialize(message.Key)
 		if err != nil {
 			return err
 		}
@@ -220,7 +222,7 @@ func consumeMessage(message *ckafka.Message, h *GroupHandler) error {
 		return err
 	}
 
-	if h.ValueFormat != "string" {
+	if types.Contains(serdes.SchemaBasedFormats, h.ValueFormat) {
 		schemaPath, referencePathMap, err := h.RequestSchema(message.Value)
 		if err != nil {
 			return err
@@ -232,7 +234,7 @@ func consumeMessage(message *ckafka.Message, h *GroupHandler) error {
 		}
 	}
 
-	jsonMessage, err := serdes.Deserialize(valueDeserializer, message.Value)
+	jsonMessage, err := valueDeserializer.Deserialize(message.Value)
 	if err != nil {
 		return err
 	}
@@ -266,6 +268,9 @@ func RunConsumer(consumer *ckafka.Consumer, groupHandler *GroupHandler) error {
 		select {
 		case <-signals: // Trap SIGINT to trigger a shutdown.
 			output.ErrPrintln(errors.StoppingConsumerMsg)
+			if _, err := consumer.Commit(); err != nil {
+				log.CliLogger.Warnf("Failed to commit current consumer offset: %v", err)
+			}
 			consumer.Close()
 			run = false
 		default:
@@ -276,6 +281,21 @@ func RunConsumer(consumer *ckafka.Consumer, groupHandler *GroupHandler) error {
 			switch e := event.(type) {
 			case *ckafka.Message:
 				if err := consumeMessage(e, groupHandler); err != nil {
+					commitErrCh := make(chan error, 1)
+					go func() {
+						_, err := consumer.Commit()
+						commitErrCh <- err
+					}()
+					select {
+					case commitErr := <-commitErrCh:
+						if commitErr != nil {
+							log.CliLogger.Warnf("Failed to commit current consumer offset: %v", commitErr)
+						}
+					// Time out in case consumer has lost connection to Kafka and commit would hang
+					case <-time.After(5 * time.Second):
+						log.CliLogger.Warnf("Commit operation timed out")
+					}
+
 					return err
 				}
 			case ckafka.Error:

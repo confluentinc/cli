@@ -16,7 +16,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
@@ -92,7 +92,7 @@ func (s *CLITestSuite) SetupSuite() {
 	s.TestBackend = testserver.StartTestBackend(s.T(), true) // by default do not disable audit-log
 	os.Setenv("DISABLE_AUDIT_LOG", "false")
 
-	v1.SetTempHomeDir()
+	config.SetTempHomeDir()
 }
 
 func (s *CLITestSuite) TearDownSuite() {
@@ -226,7 +226,7 @@ func runCommand(t *testing.T, binaryName string, env []string, argString string,
 func resetConfiguration(t *testing.T, arePluginsEnabled bool) {
 	// HACK: delete your current config to isolate tests cases for non-workflow tests...
 	// probably don't really want to do this or devs will get mad
-	cfg := v1.New()
+	cfg := config.New()
 	cfg.DisablePlugins = !arePluginsEnabled
 	err := cfg.Save()
 	require.NoError(t, err)

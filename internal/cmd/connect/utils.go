@@ -9,12 +9,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
-const (
-	config         = "config"
-	name           = "name"
-	connectorClass = "connector.class"
-)
-
 func getConfig(cmd *cobra.Command) (*map[string]string, error) {
 	configFile, err := cmd.Flags().GetString("config-file")
 	if err != nil {
@@ -26,8 +20,8 @@ func getConfig(cmd *cobra.Command) (*map[string]string, error) {
 		return nil, errors.Wrapf(err, errors.UnableToReadConfigurationFileErrorMsg, configFile)
 	}
 
-	_, nameExists := options[name]
-	_, classExists := options[connectorClass]
+	_, nameExists := options["name"]
+	_, classExists := options["connector.class"]
 	if !nameExists || !classExists {
 		return nil, errors.Errorf(errors.MissingRequiredConfigsErrorMsg, configFile)
 	}
@@ -56,13 +50,13 @@ func parseConfigFile(filename string) (map[string]string, error) {
 			kvPairs[key] = val2
 		} else {
 			// We support object-as-a-value only for "config" key.
-			if key != config {
+			if key != "config" {
 				return nil, errors.Errorf(`only string values are permitted for the configuration "%s"`, key)
 			}
 
 			configMap, ok := val.(map[string]any)
 			if !ok {
-				return nil, errors.Errorf(`value for the configuration "%s" is malformed`, config)
+				return nil, errors.Errorf(`value for the configuration "config" is malformed`)
 			}
 
 			for configKey, configVal := range configMap {

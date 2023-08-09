@@ -13,7 +13,7 @@ import (
 	"github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	presource "github.com/confluentinc/cli/internal/pkg/resource"
@@ -56,7 +56,7 @@ type roleBindingOptions struct {
 
 type roleBindingCommand struct {
 	*pcmd.AuthenticatedCLICommand
-	cfg *v1.Config
+	cfg *config.Config
 }
 
 type roleBindingOut struct {
@@ -72,7 +72,7 @@ type roleBindingOut struct {
 	PatternType    string `human:"Pattern Type" serialized:"pattern_type"`
 }
 
-func newRoleBindingCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
+func newRoleBindingCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "role-binding",
 		Aliases: []string{"rb"},
