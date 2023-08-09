@@ -1,4 +1,4 @@
-package v1
+package config
 
 type SchemaRegistryCluster struct {
 	Id                     string      `json:"id"`

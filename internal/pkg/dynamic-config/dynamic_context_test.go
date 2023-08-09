@@ -13,7 +13,7 @@ import (
 	cmkmock "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2/mock"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	pmock "github.com/confluentinc/cli/internal/pkg/mock"
 )
 
@@ -28,9 +28,9 @@ func TestFindKafkaCluster_Unexpired(t *testing.T) {
 	update := time.Now()
 
 	d := &DynamicContext{
-		Context: &v1.Context{
-			KafkaClusterContext: &v1.KafkaClusterContext{
-				KafkaClusterConfigs: map[string]*v1.KafkaClusterConfig{
+		Context: &config.Context{
+			KafkaClusterContext: &config.KafkaClusterContext{
+				KafkaClusterConfigs: map[string]*config.KafkaClusterConfig{
 					"lkc-123456": {LastUpdate: update, Bootstrap: "pkc-abc12.us-west-2.aws.confluent.cloud:1234"},
 				},
 			},
@@ -46,12 +46,12 @@ func TestFindKafkaCluster_Expired(t *testing.T) {
 	update := time.Now().Add(-7 * 24 * time.Hour)
 
 	d := &DynamicContext{
-		Context: &v1.Context{
+		Context: &config.Context{
 			CurrentEnvironment:  "env-123456",
-			KafkaClusterContext: &v1.KafkaClusterContext{KafkaClusterConfigs: map[string]*v1.KafkaClusterConfig{"lkc-123456": {LastUpdate: update}}},
-			Credential:          &v1.Credential{CredentialType: v1.Username},
-			State:               &v1.ContextState{AuthToken: "token"},
-			Config:              &v1.Config{},
+			KafkaClusterContext: &config.KafkaClusterContext{KafkaClusterConfigs: map[string]*config.KafkaClusterConfig{"lkc-123456": {LastUpdate: update}}},
+			Credential:          &config.Credential{CredentialType: config.Username},
+			State:               &config.ContextState{AuthToken: "token"},
+			Config:              &config.Config{},
 		},
 		V2Client: &ccloudv2.Client{
 			CmkClient: &cmkv2.APIClient{
@@ -145,15 +145,15 @@ func TestDynamicContext_ParseFlagsIntoContext(t *testing.T) {
 }
 
 func getBaseContext() *DynamicContext {
-	cfg := v1.AuthenticatedCloudConfigMock()
+	cfg := config.AuthenticatedCloudConfigMock()
 	return NewDynamicContext(cfg.Context(), pmock.NewV2ClientMock())
 }
 
 func getClusterFlagContext() *DynamicContext {
-	config := v1.AuthenticatedCloudConfigMock()
-	clusterFlagContext := NewDynamicContext(config.Context(), pmock.NewV2ClientMock())
+	cfg := config.AuthenticatedCloudConfigMock()
+	clusterFlagContext := NewDynamicContext(cfg.Context(), pmock.NewV2ClientMock())
 	// create cluster that will be used in "--cluster" flag value
-	clusterFlagContext.KafkaClusterContext.KafkaEnvContexts["testAccount"].KafkaClusterConfigs[flagCluster] = &v1.KafkaClusterConfig{
+	clusterFlagContext.KafkaClusterContext.KafkaEnvContexts["testAccount"].KafkaClusterConfigs[flagCluster] = &config.KafkaClusterConfig{
 		ID:   flagCluster,
 		Name: "miles",
 	}
@@ -161,20 +161,20 @@ func getClusterFlagContext() *DynamicContext {
 }
 
 func getEnvFlagContext() *DynamicContext {
-	config := v1.AuthenticatedCloudConfigMock()
-	envFlagContext := NewDynamicContext(config.Context(), pmock.NewV2ClientMock())
-	envFlagContext.Environments[flagEnvironment] = &v1.EnvironmentContext{}
+	cfg := config.AuthenticatedCloudConfigMock()
+	envFlagContext := NewDynamicContext(cfg.Context(), pmock.NewV2ClientMock())
+	envFlagContext.Environments[flagEnvironment] = &config.EnvironmentContext{}
 	return envFlagContext
 }
 
 func getEnvAndClusterFlagContext() *DynamicContext {
 	envAndClusterFlagContext := getEnvFlagContext()
 
-	envAndClusterFlagContext.KafkaClusterContext.KafkaEnvContexts[flagEnvironment] = &v1.KafkaEnvContext{
+	envAndClusterFlagContext.KafkaClusterContext.KafkaEnvContexts[flagEnvironment] = &config.KafkaEnvContext{
 		ActiveKafkaCluster:  "",
-		KafkaClusterConfigs: map[string]*v1.KafkaClusterConfig{},
+		KafkaClusterConfigs: map[string]*config.KafkaClusterConfig{},
 	}
-	envAndClusterFlagContext.KafkaClusterContext.KafkaEnvContexts[flagEnvironment].KafkaClusterConfigs[flagClusterInEnv] = &v1.KafkaClusterConfig{
+	envAndClusterFlagContext.KafkaClusterContext.KafkaEnvContexts[flagEnvironment].KafkaClusterConfigs[flagClusterInEnv] = &config.KafkaClusterConfig{
 		ID:   flagClusterInEnv,
 		Name: "miles2",
 	}

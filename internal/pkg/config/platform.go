@@ -1,4 +1,4 @@
-package v1
+package config
 
 // Platform represents a Confluent Platform deployment
 type Platform struct {

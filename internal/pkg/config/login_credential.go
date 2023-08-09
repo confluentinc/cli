@@ -1,4 +1,4 @@
-package v1
+package config
 
 type LoginCredential struct {
 	IsCloud           bool   `json:"is_cloud"`

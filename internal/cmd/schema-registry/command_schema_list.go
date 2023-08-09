@@ -7,7 +7,7 @@ import (
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -18,7 +18,7 @@ type row struct {
 	Version  int32  `human:"Version" serialized:"version"`
 }
 
-func (c *command) newSchemaListCommand(cfg *v1.Config) *cobra.Command {
+func (c *command) newSchemaListCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List schemas for a given subject prefix.",

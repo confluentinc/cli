@@ -9,7 +9,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -114,7 +114,7 @@ func (c *clusterCommand) outputKafkaClusterDescription(cmd *cobra.Command, clust
 	return table.Print()
 }
 
-func convertClusterToDescribeStruct(cluster *cmkv2.CmkV2Cluster, ctx *v1.Context) *describeStruct {
+func convertClusterToDescribeStruct(cluster *cmkv2.CmkV2Cluster, ctx *config.Context) *describeStruct {
 	clusterStorage := getKafkaClusterStorage(cluster)
 	ingress, egress := getCmkClusterIngressAndEgressMbps(cluster)
 

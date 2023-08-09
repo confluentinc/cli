@@ -12,7 +12,7 @@ import (
 	ckgo "github.com/confluentinc/confluent-kafka-go/kafka"
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	schemaregistry "github.com/confluentinc/cli/internal/pkg/schema-registry"
@@ -36,7 +36,7 @@ type accountDetails struct {
 	kafkaClusterId          string
 	schemaRegistryClusterId string
 	topics                  []kafkarestv3.TopicData
-	clusterCreds            *v1.APIKeyPair
+	clusterCreds            *config.APIKeyPair
 	consumer                *ckgo.Consumer
 	kafkaUrl                string
 	schemaRegistryUrl       string

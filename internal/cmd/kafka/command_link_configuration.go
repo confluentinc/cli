@@ -3,10 +3,10 @@ package kafka
 import (
 	"github.com/spf13/cobra"
 
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 )
 
-func (c *linkCommand) newConfigurationCommand(cfg *v1.Config) *cobra.Command {
+func (c *linkCommand) newConfigurationCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "configuration",
 		Short: "Manage cluster link configurations.",

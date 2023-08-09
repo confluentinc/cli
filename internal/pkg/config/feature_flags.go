@@ -1,4 +1,4 @@
-package v1
+package config
 
 import "gopkg.in/launchdarkly/go-sdk-common.v2/lduser"
 

@@ -18,7 +18,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	climock "github.com/confluentinc/cli/mock"
 )
@@ -31,7 +31,7 @@ const (
 
 type KSQLTestSuite struct {
 	suite.Suite
-	conf         *v1.Config
+	conf         *config.Config
 	kafkaCluster *ccstructs.KafkaCluster
 	ksqlCluster  *ksqlv2.KsqldbcmV2Cluster
 	serviceAcct  *ccloudv1.User
@@ -41,7 +41,7 @@ type KSQLTestSuite struct {
 }
 
 func (suite *KSQLTestSuite) SetupSuite() {
-	suite.conf = v1.AuthenticatedCloudConfigMock()
+	suite.conf = config.AuthenticatedCloudConfigMock()
 	suite.kafkaCluster = &ccstructs.KafkaCluster{
 		Id:   "lkc-123",
 		Name: "kafka",
@@ -120,7 +120,7 @@ func (suite *KSQLTestSuite) newCMD() *cobra.Command {
 	kafkaRestProvider := pcmd.KafkaRESTProvider(func() (*pcmd.KafkaREST, error) {
 		return nil, nil
 	})
-	cmd := New(v1.AuthenticatedCloudConfigMock(), climock.NewPreRunnerMock(nil, suite.v2Client, nil, &kafkaRestProvider, suite.conf))
+	cmd := New(config.AuthenticatedCloudConfigMock(), climock.NewPreRunnerMock(nil, suite.v2Client, nil, &kafkaRestProvider, suite.conf))
 	cmd.PersistentFlags().CountP("verbose", "v", "Increase output verbosity")
 	return cmd
 }

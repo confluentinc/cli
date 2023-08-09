@@ -7,14 +7,14 @@ import (
 
 	"github.com/confluentinc/go-ps1"
 
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
 const none = "(none)"
 
-func New(cfg *v1.Config) *cobra.Command {
+func New(cfg *config.Config) *cobra.Command {
 	prompt := ps1.New(pversion.CLIName, []ps1.Token{
 		{
 			Name: 'a',

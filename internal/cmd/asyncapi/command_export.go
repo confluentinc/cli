@@ -17,7 +17,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/cmd/kafka"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -382,7 +382,7 @@ func (c *command) getClusterDetails(details *accountDetails, flags *flags) error
 		return err
 	}
 
-	var clusterCreds *v1.APIKeyPair
+	var clusterCreds *config.APIKeyPair
 	if flags.kafkaApiKey != "" {
 		if _, ok := clusterConfig.APIKeys[flags.kafkaApiKey]; !ok {
 			return c.Context.FetchAPIKeyError(flags.kafkaApiKey, clusterConfig.ID)
@@ -580,7 +580,7 @@ func addComponents(reflector asyncapi.Reflector, messages map[string]spec.Messag
 	return reflector
 }
 
-func createConsumer(broker string, clusterCreds *v1.APIKeyPair, groupId string) (*ckgo.Consumer, error) {
+func createConsumer(broker string, clusterCreds *config.APIKeyPair, groupId string) (*ckgo.Consumer, error) {
 	consumer, err := ckgo.NewConsumer(&ckgo.ConfigMap{
 		"bootstrap.servers":  broker,
 		"sasl.mechanisms":    "PLAIN",

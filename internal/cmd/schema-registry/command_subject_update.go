@@ -8,14 +8,14 @@ import (
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	schemaregistry "github.com/confluentinc/cli/internal/pkg/schema-registry"
 )
 
-func (c *command) newSubjectUpdateCommand(cfg *v1.Config) *cobra.Command {
+func (c *command) newSubjectUpdateCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "update <subject>",
 		Short:   "Update subject compatibility or mode.",

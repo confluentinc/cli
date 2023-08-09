@@ -8,7 +8,7 @@ import (
 
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
@@ -17,11 +17,11 @@ import (
 
 type Command struct {
 	*pcmd.CLICommand
-	cfg          *v1.Config
+	cfg          *config.Config
 	netrcHandler netrc.NetrcHandler
 }
 
-func New(cfg *v1.Config, prerunner pcmd.PreRunner, netrcHandler netrc.NetrcHandler) *cobra.Command {
+func New(cfg *config.Config, prerunner pcmd.PreRunner, netrcHandler netrc.NetrcHandler) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:  "logout",
 		Args: cobra.NoArgs,

@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -18,7 +18,7 @@ type getStatusOut struct {
 	ErrorTrace string `human:"Error Trace" serialized:"error_trace"`
 }
 
-func (c *command) newExporterGetStatusCommand(cfg *v1.Config) *cobra.Command {
+func (c *command) newExporterGetStatusCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "get-status <name>",
 		Short: "Get the status of the schema exporter.",

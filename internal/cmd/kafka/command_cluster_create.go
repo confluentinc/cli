@@ -13,7 +13,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
@@ -39,7 +39,7 @@ Permissions:
 Identity:
   {{.ExternalIdentity}}`))
 
-func (c *clusterCommand) newCreateCommand(cfg *v1.Config) *cobra.Command {
+func (c *clusterCommand) newCreateCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "create <name>",
 		Short:       "Create a Kafka cluster.",
