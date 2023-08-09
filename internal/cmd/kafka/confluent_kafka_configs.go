@@ -72,6 +72,10 @@ func getConsumerConfigMap(group string, kafka *configv1.KafkaClusterConfig, clie
 	}
 	log.CliLogger.Debugf("Created consumer group: %s", group)
 
+	if err := configMap.SetKey("enable.auto.commit", false); err != nil {
+		return nil, err
+	}
+
 	// see explanation: https://www.confluent.io/blog/incremental-cooperative-rebalancing-in-kafka/
 	if err := configMap.SetKey("partition.assignment.strategy", "cooperative-sticky"); err != nil {
 		return nil, err
