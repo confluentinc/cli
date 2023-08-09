@@ -11,7 +11,7 @@ import (
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
 	"github.com/confluentinc/cli/internal/pkg/auth/sso"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/keychain"
@@ -68,14 +68,14 @@ func GetLoginCredentials(credentialsFuncs ...func() (*Credentials, error)) (*Cre
 type LoginCredentialsManager interface {
 	GetCloudCredentialsFromEnvVar(orgResourceId string) func() (*Credentials, error)
 	GetOnPremCredentialsFromEnvVar() func() (*Credentials, error)
-	GetSsoCredentialsFromConfig(cfg *v1.Config, url string) func() (*Credentials, error)
-	GetCredentialsFromConfig(cfg *v1.Config, filterParams netrc.NetrcMachineParams) func() (*Credentials, error)
-	GetCredentialsFromKeychain(cfg *v1.Config, isCloud bool, ctxName, url string) func() (*Credentials, error)
+	GetSsoCredentialsFromConfig(cfg *config.Config, url string) func() (*Credentials, error)
+	GetCredentialsFromConfig(cfg *config.Config, filterParams netrc.NetrcMachineParams) func() (*Credentials, error)
+	GetCredentialsFromKeychain(cfg *config.Config, isCloud bool, ctxName, url string) func() (*Credentials, error)
 	GetCredentialsFromNetrc(filterParams netrc.NetrcMachineParams) func() (*Credentials, error)
 	GetCloudCredentialsFromPrompt(orgResourceId string) func() (*Credentials, error)
 	GetOnPremCredentialsFromPrompt() func() (*Credentials, error)
 
-	GetPrerunCredentialsFromConfig(cfg *v1.Config) func() (*Credentials, error)
+	GetPrerunCredentialsFromConfig(cfg *config.Config) func() (*Credentials, error)
 	GetOnPremPrerunCredentialsFromEnvVar() func() (*Credentials, error)
 	GetOnPremPrerunCredentialsFromNetrc(*cobra.Command, netrc.NetrcMachineParams) func() (*Credentials, error)
 
@@ -157,9 +157,9 @@ func (h *LoginCredentialsManagerImpl) GetOnPremCredentialsFromEnvVar() func() (*
 	return h.getCredentialsFromEnvVarFunc(envVars, "")
 }
 
-func (h *LoginCredentialsManagerImpl) GetCredentialsFromConfig(cfg *v1.Config, filterParams netrc.NetrcMachineParams) func() (*Credentials, error) {
+func (h *LoginCredentialsManagerImpl) GetCredentialsFromConfig(cfg *config.Config, filterParams netrc.NetrcMachineParams) func() (*Credentials, error) {
 	return func() (*Credentials, error) {
-		var loginCredential *v1.LoginCredential
+		var loginCredential *config.LoginCredential
 		ctx := cfg.Context()
 		if ctx == nil {
 			for _, item := range cfg.SavedCredentials {
@@ -190,7 +190,7 @@ func (h *LoginCredentialsManagerImpl) GetCredentialsFromConfig(cfg *v1.Config, f
 	}
 }
 
-func (h *LoginCredentialsManagerImpl) GetSsoCredentialsFromConfig(cfg *v1.Config, url string) func() (*Credentials, error) {
+func (h *LoginCredentialsManagerImpl) GetSsoCredentialsFromConfig(cfg *config.Config, url string) func() (*Credentials, error) {
 	return func() (*Credentials, error) {
 		ctx := cfg.Context()
 
@@ -213,7 +213,7 @@ func (h *LoginCredentialsManagerImpl) GetSsoCredentialsFromConfig(cfg *v1.Config
 	}
 }
 
-func (h *LoginCredentialsManagerImpl) GetPrerunCredentialsFromConfig(cfg *v1.Config) func() (*Credentials, error) {
+func (h *LoginCredentialsManagerImpl) GetPrerunCredentialsFromConfig(cfg *config.Config) func() (*Credentials, error) {
 	return func() (*Credentials, error) {
 		ctx := cfg.Context()
 		if ctx == nil {
@@ -367,7 +367,7 @@ func (h *LoginCredentialsManagerImpl) GetOnPremPrerunCredentialsFromNetrc(cmd *c
 	}
 }
 
-func (h *LoginCredentialsManagerImpl) GetCredentialsFromKeychain(cfg *v1.Config, isCloud bool, ctxName, url string) func() (*Credentials, error) {
+func (h *LoginCredentialsManagerImpl) GetCredentialsFromKeychain(cfg *config.Config, isCloud bool, ctxName, url string) func() (*Credentials, error) {
 	return func() (*Credentials, error) {
 		if runtime.GOOS == "darwin" {
 			username, password, err := keychain.Read(isCloud, ctxName, url)
@@ -385,7 +385,7 @@ func (h *LoginCredentialsManagerImpl) SetCloudClient(client *ccloudv1.Client) {
 	h.client = client
 }
 
-func matchLoginCredentialWithFilter(loginCredential *v1.LoginCredential, filterParams netrc.NetrcMachineParams) bool {
+func matchLoginCredentialWithFilter(loginCredential *config.LoginCredential, filterParams netrc.NetrcMachineParams) bool {
 	if loginCredential == nil {
 		return false
 	}

@@ -1,4 +1,4 @@
-package v1
+package config
 
 // Credential represents an authentication mechanism for a Platform
 type Credential struct {

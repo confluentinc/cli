@@ -1,4 +1,4 @@
-package v1
+package config
 
 type EnvironmentContext struct {
 	CurrentFlinkCatalog       string `json:"current_flink_catalog,omitempty"`

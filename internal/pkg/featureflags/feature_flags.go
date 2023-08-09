@@ -15,7 +15,7 @@ import (
 	"gopkg.in/launchdarkly/go-sdk-common.v2/ldvalue"
 
 	"github.com/confluentinc/cli/internal/pkg/auth"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -60,7 +60,7 @@ type launchDarklyManager struct {
 	version               *version.Version
 }
 
-func Init(cfg *v1.Config) {
+func Init(cfg *config.Config) {
 	cliBasePath := fmt.Sprintf(baseURL, auth.CCloudURL, cliTestEnvClientId)
 	ccloudBasePath := fmt.Sprintf(baseURL, auth.CCloudURL, ccloudProdEnvClientId)
 	if cfg.IsTest {
@@ -88,14 +88,14 @@ func Init(cfg *v1.Config) {
 }
 
 // GetCcloudLaunchDarklyClient resolves to a LaunchDarkly client based on the string platform name that is passed in.
-func GetCcloudLaunchDarklyClient(platformName string) v1.LaunchDarklyClient {
+func GetCcloudLaunchDarklyClient(platformName string) config.LaunchDarklyClient {
 	switch platformName {
 	case "stag.cpdev.cloud":
-		return v1.CcloudStagLaunchDarklyClient
+		return config.CcloudStagLaunchDarklyClient
 	case "devel.cpdev.cloud":
-		return v1.CcloudDevelLaunchDarklyClient
+		return config.CcloudDevelLaunchDarklyClient
 	default:
-		return v1.CcloudProdLaunchDarklyClient
+		return config.CcloudProdLaunchDarklyClient
 	}
 }
 
@@ -106,7 +106,7 @@ func (ld *launchDarklyManager) SetCommandAndFlags(cmd *cobra.Command, args []str
 	ld.flags = flags
 }
 
-func (ld *launchDarklyManager) BoolVariation(key string, ctx *dynamicconfig.DynamicContext, client v1.LaunchDarklyClient, shouldCache, defaultVal bool) bool {
+func (ld *launchDarklyManager) BoolVariation(key string, ctx *dynamicconfig.DynamicContext, client config.LaunchDarklyClient, shouldCache, defaultVal bool) bool {
 	flagValInterface := ld.generalVariation(key, ctx, client, shouldCache, defaultVal)
 	flagVal, ok := flagValInterface.(bool)
 	if !ok {
@@ -116,7 +116,7 @@ func (ld *launchDarklyManager) BoolVariation(key string, ctx *dynamicconfig.Dyna
 	return flagVal
 }
 
-func (ld *launchDarklyManager) StringVariation(key string, ctx *dynamicconfig.DynamicContext, client v1.LaunchDarklyClient, shouldCache bool, defaultVal string) string {
+func (ld *launchDarklyManager) StringVariation(key string, ctx *dynamicconfig.DynamicContext, client config.LaunchDarklyClient, shouldCache bool, defaultVal string) string {
 	flagValInterface := ld.generalVariation(key, ctx, client, shouldCache, defaultVal)
 	if flagVal, ok := flagValInterface.(string); ok {
 		return flagVal
@@ -125,7 +125,7 @@ func (ld *launchDarklyManager) StringVariation(key string, ctx *dynamicconfig.Dy
 	return defaultVal
 }
 
-func (ld *launchDarklyManager) IntVariation(key string, ctx *dynamicconfig.DynamicContext, client v1.LaunchDarklyClient, shouldCache bool, defaultVal int) int {
+func (ld *launchDarklyManager) IntVariation(key string, ctx *dynamicconfig.DynamicContext, client config.LaunchDarklyClient, shouldCache bool, defaultVal int) int {
 	flagValInterface := ld.generalVariation(key, ctx, client, shouldCache, defaultVal)
 	if val, ok := flagValInterface.(int); ok {
 		return val
@@ -137,11 +137,11 @@ func (ld *launchDarklyManager) IntVariation(key string, ctx *dynamicconfig.Dynam
 	return defaultVal
 }
 
-func (ld *launchDarklyManager) JsonVariation(key string, ctx *dynamicconfig.DynamicContext, client v1.LaunchDarklyClient, shouldCache bool, defaultVal any) any {
+func (ld *launchDarklyManager) JsonVariation(key string, ctx *dynamicconfig.DynamicContext, client config.LaunchDarklyClient, shouldCache bool, defaultVal any) any {
 	return ld.generalVariation(key, ctx, client, shouldCache, defaultVal)
 }
 
-func (ld *launchDarklyManager) generalVariation(key string, ctx *dynamicconfig.DynamicContext, client v1.LaunchDarklyClient, shouldCache bool, defaultVal any) any {
+func (ld *launchDarklyManager) generalVariation(key string, ctx *dynamicconfig.DynamicContext, client config.LaunchDarklyClient, shouldCache bool, defaultVal any) any {
 	if ld.isDisabled {
 		return defaultVal
 	}
@@ -175,7 +175,7 @@ func logUnexpectedValueTypeMsg(key string, value any, expectedType string) {
 	log.CliLogger.Debugf(`value for flag \"%s\" was expected to be type %s but was type %T`, key, expectedType, value)
 }
 
-func (ld *launchDarklyManager) fetchFlags(user lduser.User, client v1.LaunchDarklyClient) (map[string]any, error) {
+func (ld *launchDarklyManager) fetchFlags(user lduser.User, client config.LaunchDarklyClient) (map[string]any, error) {
 	userEnc, err := getBase64EncodedUser(user)
 	if err != nil {
 		return nil, fmt.Errorf("error encoding user: %w", err)
@@ -183,7 +183,7 @@ func (ld *launchDarklyManager) fetchFlags(user lduser.User, client v1.LaunchDark
 	var resp *http.Response
 	var flagVals map[string]any
 	switch client {
-	case v1.CcloudProdLaunchDarklyClient, v1.CcloudStagLaunchDarklyClient, v1.CcloudDevelLaunchDarklyClient:
+	case config.CcloudProdLaunchDarklyClient, config.CcloudStagLaunchDarklyClient, config.CcloudDevelLaunchDarklyClient:
 		resp, err = ld.ccloudClient.New().Get(fmt.Sprintf(userPath, userEnc)).Receive(&flagVals, err)
 	// default is "cli" client
 	default:
@@ -202,7 +202,7 @@ func (ld *launchDarklyManager) fetchFlags(user lduser.User, client v1.LaunchDark
 	return flagVals, nil
 }
 
-func areCachedFlagsAvailable(ctx *dynamicconfig.DynamicContext, user lduser.User, client v1.LaunchDarklyClient, key string) bool {
+func areCachedFlagsAvailable(ctx *dynamicconfig.DynamicContext, user lduser.User, client config.LaunchDarklyClient, key string) bool {
 	if ctx == nil || ctx.Context == nil || ctx.FeatureFlags == nil {
 		return false
 	}
@@ -215,7 +215,7 @@ func areCachedFlagsAvailable(ctx *dynamicconfig.DynamicContext, user lduser.User
 	}
 
 	switch client {
-	case v1.CcloudDevelLaunchDarklyClient, v1.CcloudStagLaunchDarklyClient, v1.CcloudProdLaunchDarklyClient:
+	case config.CcloudDevelLaunchDarklyClient, config.CcloudStagLaunchDarklyClient, config.CcloudProdLaunchDarklyClient:
 		// for ccloud only single keys are stored, so we need to check if the specific flag is present
 		if _, ok := flags.CcloudValues[key]; !ok {
 			return false
@@ -229,7 +229,7 @@ func areCachedFlagsAvailable(ctx *dynamicconfig.DynamicContext, user lduser.User
 	return cacheExpired(flags)
 }
 
-func cacheExpired(flags *v1.FeatureFlags) bool {
+func cacheExpired(flags *config.FeatureFlags) bool {
 	return flags.LastUpdateTime+int64(time.Hour.Seconds()) > time.Now().Unix()
 }
 
@@ -297,17 +297,17 @@ func setCustomAttribute(custom ldvalue.ValueMapBuilder, key string, value ldvalu
 	custom.Set(key, value)
 }
 
-func writeFlagsToConfig(ctx *dynamicconfig.DynamicContext, key string, vals map[string]any, user lduser.User, client v1.LaunchDarklyClient) {
+func writeFlagsToConfig(ctx *dynamicconfig.DynamicContext, key string, vals map[string]any, user lduser.User, client config.LaunchDarklyClient) {
 	if ctx == nil {
 		return
 	}
 
 	if ctx.FeatureFlags == nil {
-		ctx.FeatureFlags = new(v1.FeatureFlags)
+		ctx.FeatureFlags = new(config.FeatureFlags)
 	}
 
 	switch client {
-	case v1.CcloudDevelLaunchDarklyClient, v1.CcloudStagLaunchDarklyClient, v1.CcloudProdLaunchDarklyClient:
+	case config.CcloudDevelLaunchDarklyClient, config.CcloudStagLaunchDarklyClient, config.CcloudProdLaunchDarklyClient:
 		// only store the target feature flag for ccloud clients
 		if ctx.FeatureFlags.CcloudValues == nil {
 			ctx.FeatureFlags.CcloudValues = make(map[string]any)

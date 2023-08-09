@@ -8,7 +8,7 @@ import (
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/kafka"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -135,7 +135,7 @@ func AddContextFlag(cmd *cobra.Command, command *CLICommand) {
 	})
 }
 
-func AutocompleteContexts(cfg *v1.Config) []string {
+func AutocompleteContexts(cfg *config.Config) []string {
 	return types.GetSortedKeys(cfg.Contexts)
 }
 

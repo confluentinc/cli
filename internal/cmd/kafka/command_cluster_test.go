@@ -19,7 +19,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
@@ -57,14 +57,14 @@ var cmkByokCluster = cmkv2.CmkV2Cluster{
 
 type KafkaClusterTestSuite struct {
 	suite.Suite
-	conf            *v1.Config
+	conf            *config.Config
 	envMetadataMock *ccloudv1mock.EnvironmentMetadata
 	metricsApi      *metricsmock.Version2Api
 	cmkClusterApi   *cmkmock.ClustersCmkV2Api
 }
 
 func (suite *KafkaClusterTestSuite) SetupTest() {
-	suite.conf = v1.AuthenticatedCloudConfigMock()
+	suite.conf = config.AuthenticatedCloudConfigMock()
 	suite.cmkClusterApi = &cmkmock.ClustersCmkV2Api{
 		CreateCmkV2ClusterFunc: func(_ context.Context) cmkv2.ApiCreateCmkV2ClusterRequest {
 			return cmkv2.ApiCreateCmkV2ClusterRequest{}
@@ -124,7 +124,7 @@ func (suite *KafkaClusterTestSuite) SetupTest() {
 func (suite *KafkaClusterTestSuite) TestGetLkcForDescribe() {
 	req := require.New(suite.T())
 	cmd := new(cobra.Command)
-	cfg := v1.AuthenticatedCloudConfigMock()
+	cfg := config.AuthenticatedCloudConfigMock()
 	prerunner := &pcmd.PreRun{Config: cfg}
 	c := &clusterCommand{pcmd.NewAuthenticatedCLICommand(cmd, prerunner)}
 	c.Config = dynamicconfig.New(cfg, nil)

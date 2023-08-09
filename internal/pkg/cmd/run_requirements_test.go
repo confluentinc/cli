@@ -8,20 +8,20 @@ import (
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
 var (
-	noContextCfg = new(v1.Config)
+	noContextCfg = new(config.Config)
 
-	regularOrgContextState                 = &v1.ContextState{Auth: &v1.AuthConfig{Organization: testserver.RegularOrg}}
-	endOfFreeTrialSuspendedOrgContextState = &v1.ContextState{Auth: &v1.AuthConfig{Organization: testserver.SuspendedOrg(ccloudv1.SuspensionEventType_SUSPENSION_EVENT_END_OF_FREE_TRIAL)}}
-	normalSuspendedOrgContextState         = &v1.ContextState{Auth: &v1.AuthConfig{Organization: testserver.SuspendedOrg(ccloudv1.SuspensionEventType_SUSPENSION_EVENT_CUSTOMER_INITIATED_ORG_DEACTIVATION)}}
+	regularOrgContextState                 = &config.ContextState{Auth: &config.AuthConfig{Organization: testserver.RegularOrg}}
+	endOfFreeTrialSuspendedOrgContextState = &config.ContextState{Auth: &config.AuthConfig{Organization: testserver.SuspendedOrg(ccloudv1.SuspensionEventType_SUSPENSION_EVENT_END_OF_FREE_TRIAL)}}
+	normalSuspendedOrgContextState         = &config.ContextState{Auth: &config.AuthConfig{Organization: testserver.SuspendedOrg(ccloudv1.SuspensionEventType_SUSPENSION_EVENT_CUSTOMER_INITIATED_ORG_DEACTIVATION)}}
 
-	cloudCfg = func(contextState *v1.ContextState) *v1.Config {
-		return &v1.Config{
-			Contexts: map[string]*v1.Context{"cloud": {
+	cloudCfg = func(contextState *config.ContextState) *config.Config {
+		return &config.Config{
+			Contexts: map[string]*config.Context{"cloud": {
 				PlatformName: testserver.TestCloudUrl.String(),
 				State:        contextState,
 			}},
@@ -30,31 +30,31 @@ var (
 		}
 	}
 
-	apiKeyCloudCfg = &v1.Config{
-		Contexts: map[string]*v1.Context{"cloud": {
+	apiKeyCloudCfg = &config.Config{
+		Contexts: map[string]*config.Context{"cloud": {
 			PlatformName: testserver.TestCloudUrl.String(),
-			Credential:   &v1.Credential{CredentialType: v1.APIKey},
+			Credential:   &config.Credential{CredentialType: config.APIKey},
 			State:        regularOrgContextState,
 		}},
 		CurrentContext: "cloud",
 		IsTest:         true,
 	}
 
-	nonAPIKeyCloudCfg = &v1.Config{
-		Contexts: map[string]*v1.Context{"cloud": {
+	nonAPIKeyCloudCfg = &config.Config{
+		Contexts: map[string]*config.Context{"cloud": {
 			PlatformName: testserver.TestCloudUrl.String(),
-			Credential:   &v1.Credential{CredentialType: v1.Username},
+			Credential:   &config.Credential{CredentialType: config.Username},
 			State:        regularOrgContextState,
 		}},
 		CurrentContext: "cloud",
 		IsTest:         true,
 	}
 
-	onPremCfg = &v1.Config{
-		Contexts: map[string]*v1.Context{"on-prem": {
-			Credential:   new(v1.Credential),
+	onPremCfg = &config.Config{
+		Contexts: map[string]*config.Context{"on-prem": {
+			Credential:   new(config.Credential),
 			PlatformName: "https://example.com",
-			State:        &v1.ContextState{AuthToken: "token"},
+			State:        &config.ContextState{AuthToken: "token"},
 		}},
 		CurrentContext: "on-prem",
 	}
@@ -63,7 +63,7 @@ var (
 func TestErrIfMissingRunRequirement_NoError(t *testing.T) {
 	for _, test := range []struct {
 		req string
-		cfg *v1.Config
+		cfg *config.Config
 	}{
 		{RequireCloudLogin, cloudCfg(regularOrgContextState)},
 		{RequireCloudLoginAllowFreeTrialEnded, cloudCfg(regularOrgContextState)},
@@ -84,20 +84,20 @@ func TestErrIfMissingRunRequirement_NoError(t *testing.T) {
 func TestErrIfMissingRunRequirement_Error(t *testing.T) {
 	for _, test := range []struct {
 		req string
-		cfg *v1.Config
+		cfg *config.Config
 		err error
 	}{
-		{RequireCloudLogin, onPremCfg, v1.RequireCloudLoginErr},
-		{RequireCloudLogin, cloudCfg(endOfFreeTrialSuspendedOrgContextState), v1.RequireCloudLoginFreeTrialEndedOrgUnsuspendedErr},
-		{RequireCloudLogin, cloudCfg(normalSuspendedOrgContextState), v1.RequireCloudLoginOrgUnsuspendedErr},
-		{RequireCloudLoginAllowFreeTrialEnded, onPremCfg, v1.RequireCloudLoginErr},
-		{RequireCloudLoginAllowFreeTrialEnded, cloudCfg(normalSuspendedOrgContextState), v1.RequireCloudLoginOrgUnsuspendedErr},
-		{RequireCloudLoginOrOnPremLogin, noContextCfg, v1.RequireCloudLoginOrOnPremErr},
-		{RequireCloudLoginOrOnPremLogin, noContextCfg, v1.RequireCloudLoginOrOnPremErr},
-		{RequireNonAPIKeyCloudLogin, apiKeyCloudCfg, v1.RequireNonAPIKeyCloudLoginErr},
-		{RequireNonAPIKeyCloudLoginOrOnPremLogin, apiKeyCloudCfg, v1.RequireNonAPIKeyCloudLoginOrOnPremLoginErr},
-		{RequireNonAPIKeyCloudLoginOrOnPremLogin, apiKeyCloudCfg, v1.RequireNonAPIKeyCloudLoginOrOnPremLoginErr},
-		{RequireOnPremLogin, cloudCfg(regularOrgContextState), v1.RunningOnPremCommandInCloudErr},
+		{RequireCloudLogin, onPremCfg, config.RequireCloudLoginErr},
+		{RequireCloudLogin, cloudCfg(endOfFreeTrialSuspendedOrgContextState), config.RequireCloudLoginFreeTrialEndedOrgUnsuspendedErr},
+		{RequireCloudLogin, cloudCfg(normalSuspendedOrgContextState), config.RequireCloudLoginOrgUnsuspendedErr},
+		{RequireCloudLoginAllowFreeTrialEnded, onPremCfg, config.RequireCloudLoginErr},
+		{RequireCloudLoginAllowFreeTrialEnded, cloudCfg(normalSuspendedOrgContextState), config.RequireCloudLoginOrgUnsuspendedErr},
+		{RequireCloudLoginOrOnPremLogin, noContextCfg, config.RequireCloudLoginOrOnPremErr},
+		{RequireCloudLoginOrOnPremLogin, noContextCfg, config.RequireCloudLoginOrOnPremErr},
+		{RequireNonAPIKeyCloudLogin, apiKeyCloudCfg, config.RequireNonAPIKeyCloudLoginErr},
+		{RequireNonAPIKeyCloudLoginOrOnPremLogin, apiKeyCloudCfg, config.RequireNonAPIKeyCloudLoginOrOnPremLoginErr},
+		{RequireNonAPIKeyCloudLoginOrOnPremLogin, apiKeyCloudCfg, config.RequireNonAPIKeyCloudLoginOrOnPremLoginErr},
+		{RequireOnPremLogin, cloudCfg(regularOrgContextState), config.RunningOnPremCommandInCloudErr},
 	} {
 		cmd := &cobra.Command{Annotations: map[string]string{RunRequirement: test.req}}
 		err := ErrIfMissingRunRequirement(cmd, test.cfg)
@@ -118,5 +118,5 @@ func TestErrIfMissingRunRequirement_Subcommand(t *testing.T) {
 
 	err := ErrIfMissingRunRequirement(b, onPremCfg)
 	require.Error(t, err)
-	require.Equal(t, err, v1.RequireCloudLoginErr)
+	require.Equal(t, err, config.RequireCloudLoginErr)
 }

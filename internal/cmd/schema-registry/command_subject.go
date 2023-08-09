@@ -4,10 +4,10 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 )
 
-func (c *command) newSubjectCommand(cfg *v1.Config) *cobra.Command {
+func (c *command) newSubjectCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "subject",
 		Short:       "Manage Schema Registry subjects.",

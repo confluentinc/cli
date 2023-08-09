@@ -4,11 +4,11 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (c *command) newExporterGetConfigCommand(cfg *v1.Config) *cobra.Command {
+func (c *command) newExporterGetConfigCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "get-config <name>",
 		Short: "Get the schema exporter configuration.",

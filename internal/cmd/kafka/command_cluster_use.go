@@ -6,12 +6,12 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (c *clusterCommand) newUseCommand(cfg *v1.Config) *cobra.Command {
+func (c *clusterCommand) newUseCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "use <id>",
 		Short:             "Use a Kafka cluster in subsequent commands.",

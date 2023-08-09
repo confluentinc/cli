@@ -44,7 +44,7 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/version"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/featureflags"
@@ -59,7 +59,7 @@ import (
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 )
 
-func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
+func NewConfluentCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     pversion.CLIName,
 		Short:   fmt.Sprintf("%s.", pversion.FullCLIName),
@@ -137,7 +137,7 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 	dc := dynamicconfig.New(cfg, nil)
 	_ = dc.ParseFlagsIntoConfig(cmd)
 
-	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.flink", dc.Context(), v1.CliLaunchDarklyClient, true, false) {
+	if cfg.IsTest || featureflags.Manager.BoolVariation("cli.flink", dc.Context(), config.CliLaunchDarklyClient, true, false) {
 		cmd.AddCommand(flink.New(cfg, prerunner))
 	}
 
@@ -148,7 +148,7 @@ func NewConfluentCommand(cfg *v1.Config) *cobra.Command {
 	return cmd
 }
 
-func Execute(cmd *cobra.Command, args []string, cfg *v1.Config) error {
+func Execute(cmd *cobra.Command, args []string, cfg *config.Config) error {
 	defer func() {
 		if r := recover(); r != nil {
 			if !cfg.Version.IsReleased() {
@@ -184,7 +184,7 @@ func Execute(cmd *cobra.Command, args []string, cfg *v1.Config) error {
 	return err
 }
 
-func reportUsage(cmd *cobra.Command, cfg *v1.Config, u *usage.Usage) error {
+func reportUsage(cmd *cobra.Command, cfg *config.Config, u *usage.Usage) error {
 	if cfg.IsCloudLogin() && u.Command != nil && *(u.Command) != "" {
 		unsafeTrace, err := cmd.Flags().GetBool("unsafe-trace")
 		if err != nil {
@@ -195,7 +195,7 @@ func reportUsage(cmd *cobra.Command, cfg *v1.Config, u *usage.Usage) error {
 	return nil
 }
 
-func getLongDescription(cfg *v1.Config) string {
+func getLongDescription(cfg *config.Config) string {
 	switch {
 	case cfg.IsCloudLogin():
 		return "Manage your Confluent Cloud."
@@ -206,7 +206,7 @@ func getLongDescription(cfg *v1.Config) string {
 	}
 }
 
-func changeDefaults(cmd *cobra.Command, cfg *v1.Config) {
+func changeDefaults(cmd *cobra.Command, cfg *config.Config) {
 	hideAndErrIfMissingRunRequirement(cmd, cfg)
 	catchErrors(cmd)
 
@@ -219,7 +219,7 @@ func changeDefaults(cmd *cobra.Command, cfg *v1.Config) {
 
 // hideAndErrIfMissingRunRequirement hides commands that don't meet a requirement and errs if a user attempts to use it;
 // for example, an on-prem command shouldn't be used by a cloud user.
-func hideAndErrIfMissingRunRequirement(cmd *cobra.Command, cfg *v1.Config) {
+func hideAndErrIfMissingRunRequirement(cmd *cobra.Command, cfg *config.Config) {
 	if err := pcmd.ErrIfMissingRunRequirement(cmd, cfg); err != nil {
 		cmd.Hidden = true
 
@@ -243,16 +243,16 @@ func catchErrors(cmd *cobra.Command) {
 	}
 }
 
-func getCloudClient(cfg *v1.Config, ccloudClientFactory pauth.CCloudClientFactory) *ccloudv1.Client {
+func getCloudClient(cfg *config.Config, ccloudClientFactory pauth.CCloudClientFactory) *ccloudv1.Client {
 	if cfg.IsCloudLogin() {
 		return ccloudClientFactory.AnonHTTPClientFactory(pauth.CCloudURL)
 	}
 	return nil
 }
 
-func deprecateCommandsAndFlags(cmd *cobra.Command, cfg *v1.Config) {
+func deprecateCommandsAndFlags(cmd *cobra.Command, cfg *config.Config) {
 	ctx := dynamicconfig.NewDynamicContext(cfg.Context(), nil)
-	deprecatedCmds := featureflags.Manager.JsonVariation(featureflags.DeprecationNotices, ctx, v1.CliLaunchDarklyClient, true, []any{})
+	deprecatedCmds := featureflags.Manager.JsonVariation(featureflags.DeprecationNotices, ctx, config.CliLaunchDarklyClient, true, []any{})
 	cmdToFlagsAndMsg := featureflags.GetAnnouncementsOrDeprecation(deprecatedCmds)
 	for name, flagsAndMsg := range cmdToFlagsAndMsg {
 		if cmd, _, err := cmd.Find(strings.Split(name, " ")); err == nil {
@@ -265,7 +265,7 @@ func deprecateCommandsAndFlags(cmd *cobra.Command, cfg *v1.Config) {
 	}
 }
 
-func disableCommandAndFlagHelpText(cmd *cobra.Command, cfg *v1.Config) {
+func disableCommandAndFlagHelpText(cmd *cobra.Command, cfg *config.Config) {
 	ctx := dynamicconfig.NewDynamicContext(cfg.Context(), nil)
 	disableResp := featureflags.GetLDDisableMap(ctx)
 	disabledCmdsAndFlags, ok := disableResp["patterns"].([]any)

@@ -17,7 +17,7 @@ import (
 	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	"github.com/confluentinc/mds-sdk-go-public/mdsv1/mock"
 
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	climock "github.com/confluentinc/cli/mock"
 )
 
@@ -84,7 +84,7 @@ var (
 
 type AuditConfigTestSuite struct {
 	suite.Suite
-	conf    *v1.Config
+	conf    *config.Config
 	mockApi mds.AuditLogConfigurationApi
 }
 
@@ -104,7 +104,7 @@ type MockCall struct {
 }
 
 func (suite *AuditConfigTestSuite) SetupSuite() {
-	suite.conf = v1.AuthenticatedOnPremConfigMock()
+	suite.conf = config.AuthenticatedOnPremConfigMock()
 }
 
 func (suite *AuditConfigTestSuite) TearDownSuite() {

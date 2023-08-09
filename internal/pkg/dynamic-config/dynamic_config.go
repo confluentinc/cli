@@ -4,15 +4,15 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 )
 
 type DynamicConfig struct {
-	*v1.Config
+	*config.Config
 	V2Client *ccloudv2.Client
 }
 
-func New(config *v1.Config, v2Client *ccloudv2.Client) *DynamicConfig {
+func New(config *config.Config, v2Client *ccloudv2.Client) *DynamicConfig {
 	return &DynamicConfig{
 		Config:   config,
 		V2Client: v2Client,

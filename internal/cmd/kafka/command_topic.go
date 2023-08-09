@@ -10,7 +10,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
@@ -22,7 +22,7 @@ type command struct {
 	clientID string
 }
 
-func newTopicCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
+func newTopicCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "topic",
 		Short: "Manage Kafka topics.",
@@ -86,7 +86,7 @@ func (c *command) autocompleteTopics() []string {
 }
 
 // validate that a topic exists before attempting to produce/consume messages
-func (c *command) validateTopic(client *ckafka.AdminClient, topic string, cluster *v1.KafkaClusterConfig) error {
+func (c *command) validateTopic(client *ckafka.AdminClient, topic string, cluster *config.KafkaClusterConfig) error {
 	timeout := 10 * time.Second
 	metadata, err := client.GetMetadata(nil, true, int(timeout.Milliseconds()))
 	if err != nil {
@@ -127,7 +127,7 @@ func (c *command) provisioningClusterCheck(lkc string) error {
 	return nil
 }
 
-func addApiKeyToCluster(cmd *cobra.Command, cluster *v1.KafkaClusterConfig) error {
+func addApiKeyToCluster(cmd *cobra.Command, cluster *config.KafkaClusterConfig) error {
 	apiKey, err := cmd.Flags().GetString("api-key")
 	if err != nil {
 		return err
@@ -140,7 +140,7 @@ func addApiKeyToCluster(cmd *cobra.Command, cluster *v1.KafkaClusterConfig) erro
 		}
 
 		cluster.APIKey = apiKey
-		cluster.APIKeys[cluster.APIKey] = &v1.APIKeyPair{
+		cluster.APIKeys[cluster.APIKey] = &config.APIKeyPair{
 			Key:    apiKey,
 			Secret: apiSecret,
 		}
