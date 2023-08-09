@@ -49,16 +49,6 @@ func (c *clusterCommand) configurationUpdate(cmd *cobra.Command, _ []string) err
 	if err != nil {
 		return err
 	}
-
-	// Deprecated
-	configFile, err := cmd.Flags().GetString(configFileFlagName)
-	if err != nil {
-		return err
-	}
-	if configFile != "" {
-		config = []string{configFile}
-	}
-
 	configMap, err := properties.GetMap(config)
 	if err != nil {
 		return err
