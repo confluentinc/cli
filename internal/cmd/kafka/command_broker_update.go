@@ -32,7 +32,7 @@ func (c *brokerCommand) newUpdateCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides ("key=value") for the broker being updated.`)
+	pcmd.AddConfigFlag(cmd)
 	cmd.Flags().Bool("all", false, "Apply configuration update to all brokers in the cluster.")
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	pcmd.AddOutputFlag(cmd)
@@ -58,11 +58,11 @@ func (c *brokerCommand) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	configs, err := cmd.Flags().GetStringSlice("config")
+	config, err := cmd.Flags().GetStringSlice("config")
 	if err != nil {
 		return err
 	}
-	configMap, err := properties.ConfigFlagToMap(configs)
+	configMap, err := properties.GetMap(config)
 	if err != nil {
 		return err
 	}

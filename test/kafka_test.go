@@ -273,8 +273,8 @@ func (s *CLITestSuite) TestKafkaBroker() {
 		{args: "kafka broker describe --all --config-name compression.type -o json", fixture: "kafka/broker/describe-all-config-json.golden"},
 		{args: "kafka broker describe 1 --all", exitCode: 1, fixture: "kafka/broker/err-all-and-arg.golden"},
 
-		{args: "kafka broker update --config compression.type=zip,sasl_mechanism=SASL/PLAIN --all", fixture: "kafka/broker/update-all.golden"},
-		{args: "kafka broker update 1 --config compression.type=zip,sasl_mechanism=SASL/PLAIN", fixture: "kafka/broker/update-1.golden"},
+		{args: "kafka broker update --all --config compression.type=zip,sasl_mechanism=SASL/PLAIN", fixture: "kafka/broker/update-all.golden"},
+		{args: "kafka broker update 1 --config test/fixtures/input/kafka/broker/update.properties", fixture: "kafka/broker/update-1.golden"},
 		{args: "kafka broker update --config compression.type=zip,sasl_mechanism=SASL/PLAIN", exitCode: 1, fixture: "kafka/broker/err-need-all-or-arg.golden"},
 
 		{args: "kafka broker delete 1 --force", fixture: "kafka/broker/delete.golden"},
