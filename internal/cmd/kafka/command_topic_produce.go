@@ -119,9 +119,9 @@ func (c *command) produce(cmd *cobra.Command, args []string) error {
 	}
 
 	if runtime.GOOS == "windows" {
-		output.ErrPrintln("Starting Kafka Producer. Use Ctrl-C to exit.")
+		output.ErrPrintf(errors.StartingProducerMsg, "Ctrl-C")
 	} else {
-		output.ErrPrintln(errors.StartingProducerMsg)
+		output.ErrPrintln(errors.StartingProducerMsg, "Ctrl-C or Ctrl-D")
 	}
 
 	var scanErr error
