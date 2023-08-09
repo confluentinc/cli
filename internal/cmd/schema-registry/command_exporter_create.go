@@ -27,14 +27,14 @@ func (c *command) newExporterCreateCommand(cfg *v1.Config) *cobra.Command {
 
 	example := examples.Example{
 		Text: "Create a new schema exporter.",
-		Code: `confluent schema-registry exporter create my-exporter --config-file config.txt --subjects my-subject1,my-subject2 --subject-format my-\${subject} --context-type custom --context-name my-context`,
+		Code: `confluent schema-registry exporter create my-exporter --config config.txt --subjects my-subject1,my-subject2 --subject-format my-\${subject} --context-type custom --context-name my-context`,
 	}
 	if cfg.IsOnPremLogin() {
 		example.Code += " " + onPremAuthenticationMsg
 	}
 	cmd.Example = examples.BuildExampleString(example)
 
-	cmd.Flags().String("config-file", "", "Exporter configuration file.")
+	pcmd.AddConfigFlag(cmd)
 	cmd.Flags().StringSlice("subjects", []string{"*"}, "A comma-separated list of exporter subjects.")
 	cmd.Flags().String("subject-format", "${subject}", "Exporter subject rename format. The format string can contain ${subject}, which will be replaced with the default subject name.")
 	addContextTypeFlag(cmd)
@@ -48,6 +48,11 @@ func (c *command) newExporterCreateCommand(cfg *v1.Config) *cobra.Command {
 	}
 	pcmd.AddOutputFlag(cmd)
 
+	// Deprecated
+	cmd.Flags().String("config-file", "", "Exporter configuration file.")
+	cobra.CheckErr(cmd.Flags().MarkHidden("config-file"))
+	cmd.MarkFlagsMutuallyExclusive("config", "config-file")
+
 	if cfg.IsCloudLogin() {
 		// Deprecated
 		pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
@@ -57,8 +62,6 @@ func (c *command) newExporterCreateCommand(cfg *v1.Config) *cobra.Command {
 		pcmd.AddApiSecretFlag(cmd)
 		cobra.CheckErr(cmd.Flags().MarkHidden("api-secret"))
 	}
-
-	cobra.CheckErr(cmd.MarkFlagRequired("config-file"))
 
 	return cmd
 }

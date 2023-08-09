@@ -12,6 +12,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/properties"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
@@ -25,7 +26,7 @@ func (c *linkCommand) newCreateCommandOnPrem() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a cluster link, using a configuration file.",
-				Code: "confluent kafka link create my-link --destination-cluster 123456789 --config-file config.txt",
+				Code: "confluent kafka link create my-link --destination-cluster 123456789 --config config.txt",
 			},
 			examples.Example{
 				Text: "Create a cluster link using command line flags.",
@@ -40,11 +41,16 @@ func (c *linkCommand) newCreateCommandOnPrem() *cobra.Command {
 	cmd.Flags().String(sourceApiSecretFlagName, "", "An API secret for the source cluster. For links at destination cluster, this is used for remote cluster authentication. For links at source cluster, this is used for local cluster authentication. "+authHelperMsg)
 	cmd.Flags().String(destinationApiKeyFlagName, "", "An API key for the destination cluster. This is used for remote cluster authentication links at the source cluster. "+authHelperMsg)
 	cmd.Flags().String(destinationApiSecretFlagName, "", "An API secret for the destination cluster. This is used for remote cluster authentication for links at the source cluster. "+authHelperMsg)
-	cmd.Flags().String(configFileFlagName, "", "Name of the file containing link configuration. Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.")
+	pcmd.AddConfigFlag(cmd)
 	cmd.Flags().Bool(dryrunFlagName, false, "Validate a link, but do not create it.")
 	cmd.Flags().Bool(noValidateFlagName, false, "Create a link even if the source cluster cannot be reached.")
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	pcmd.AddContextFlag(cmd, c.CLICommand)
+
+	// Deprecated
+	cmd.Flags().String(configFileFlagName, "", "Name of the file containing link configuration. Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.")
+	cobra.CheckErr(cmd.Flags().MarkHidden(configFileFlagName))
+	cmd.MarkFlagsMutuallyExclusive("config", configFileFlagName)
 
 	cobra.CheckErr(cmd.MarkFlagRequired(destinationClusterIdFlagName))
 
@@ -54,7 +60,20 @@ func (c *linkCommand) newCreateCommandOnPrem() *cobra.Command {
 func (c *linkCommand) createOnPrem(cmd *cobra.Command, args []string) error {
 	linkName := args[0]
 
+	config, err := cmd.Flags().GetStringSlice("config")
+	if err != nil {
+		return err
+	}
+
 	configFile, err := cmd.Flags().GetString(configFileFlagName)
+	if err != nil {
+		return err
+	}
+	if configFile != "" {
+		config = []string{configFile}
+	}
+
+	configMap, err := properties.GetMap(config)
 	if err != nil {
 		return err
 	}
@@ -69,7 +88,7 @@ func (c *linkCommand) createOnPrem(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	configMap, linkModeMetadata, err := c.getConfigMapAndLinkMode(configFile)
+	configMap, linkModeMetadata, err := c.getConfigMapAndLinkMode(configMap)
 	if err != nil {
 		return err
 	}

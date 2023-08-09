@@ -29,7 +29,7 @@ func (c *clusterCommand) newConfigurationUpdateCommand() *cobra.Command {
 		),
 	}
 
-	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides with form "key=value".`)
+	pcmd.AddConfigFlag(cmd)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
@@ -50,7 +50,15 @@ func (c *clusterCommand) configurationUpdate(cmd *cobra.Command, _ []string) err
 		return err
 	}
 
-	configMap, err := properties.ConfigFlagToMap(config)
+	configFile, err := cmd.Flags().GetString(configFileFlagName)
+	if err != nil {
+		return err
+	}
+	if configFile != "" {
+		config = []string{configFile}
+	}
+
+	configMap, err := properties.GetMap(config)
 	if err != nil {
 		return err
 	}

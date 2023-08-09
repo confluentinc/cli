@@ -30,7 +30,7 @@ func (c *command) newExporterUpdateCommand(cfg *v1.Config) *cobra.Command {
 	}
 	example2 := examples.Example{
 		Text: "Update schema exporter configuration.",
-		Code: "confluent schema-registry exporter update my-exporter --config-file config.txt",
+		Code: "confluent schema-registry exporter update my-exporter --config config.txt",
 	}
 	if cfg.IsOnPremLogin() {
 		example1.Code += " " + onPremAuthenticationMsg

@@ -27,7 +27,7 @@ func (c *mirrorCommand) newCreateCommand() *cobra.Command {
 			},
 			examples.Example{
 				Text: "Create a mirror topic with a custom replication factor and configuration file:",
-				Code: "confluent kafka mirror create my-topic --link my-link --replication-factor 5 --config-file my-config.txt",
+				Code: "confluent kafka mirror create my-topic --link my-link --replication-factor 5 --config my-config.txt",
 			},
 			examples.Example{
 				Text: `Create a mirror topic "src_my-topic" where "src_" is the prefix configured on the link:`,
@@ -38,11 +38,16 @@ func (c *mirrorCommand) newCreateCommand() *cobra.Command {
 
 	pcmd.AddLinkFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().Int32(replicationFactorFlagName, 3, "Replication factor.")
-	cmd.Flags().String(configFileFlagName, "", "Name of a file with additional topic configuration. Each property should be on its own line with the format: key=value.")
+	pcmd.AddConfigFlag(cmd)
 	cmd.Flags().String(sourceTopicFlagName, "", "Name of the source topic to be mirrored over the cluster link. Only required when there is a prefix configured on the link.")
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
+
+	// Deprecated
+	cmd.Flags().String(configFileFlagName, "", "Name of a file with additional topic configuration. Each property should be on its own line with the format: key=value.")
+	cobra.CheckErr(cmd.Flags().MarkHidden(configFileFlagName))
+	cmd.MarkFlagsMutuallyExclusive("config", configFileFlagName)
 
 	cobra.CheckErr(cmd.MarkFlagRequired(linkFlagName))
 
@@ -70,17 +75,22 @@ func (c *mirrorCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	configFile, err := cmd.Flags().GetString(configFileFlagName)
+	config, err := cmd.Flags().GetStringSlice("config")
 	if err != nil {
 		return err
 	}
 
-	configMap := make(map[string]string)
+	configFile, err := cmd.Flags().GetString(configFileFlagName)
+	if err != nil {
+		return err
+	}
 	if configFile != "" {
-		configMap, err = properties.FileToMap(configFile)
-		if err != nil {
-			return err
-		}
+		config = []string{configFile}
+	}
+
+	configMap, err := properties.GetMap(config)
+	if err != nil {
+		return err
 	}
 
 	kafkaREST, err := c.GetKafkaREST()

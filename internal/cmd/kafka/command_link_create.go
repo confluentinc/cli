@@ -79,7 +79,7 @@ func (c *linkCommand) newCreateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: "Create a cluster link, using a configuration file.",
-				Code: "confluent kafka link create my-link --source-cluster lkc-123456 --config-file config.txt",
+				Code: "confluent kafka link create my-link --source-cluster lkc-123456 --config config.txt",
 			},
 			examples.Example{
 				Text: "Create a cluster link using command line flags.",
@@ -102,7 +102,7 @@ func (c *linkCommand) newCreateCommand() *cobra.Command {
 	cmd.Flags().String(remoteApiSecretFlagName, "", "An API secret for the remote cluster for bidirectional links. This is used for remote cluster authentication. "+authHelperMsg)
 	cmd.Flags().String(localApiKeyFlagName, "", "An API key for the local cluster for bidirectional links. This is used for local cluster authentication if remote link's connection mode is Inbound. "+authHelperMsg)
 	cmd.Flags().String(localApiSecretFlagName, "", "An API secret for the local cluster for bidirectional links. This is used for local cluster authentication if remote link's connection mode is Inbound. "+authHelperMsg)
-	cmd.Flags().String(configFileFlagName, "", "Name of the file containing link configuration. Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.")
+	pcmd.AddConfigFlag(cmd)
 	cmd.Flags().Bool(dryrunFlagName, false, "Validate a link, but do not create it.")
 	cmd.Flags().Bool(noValidateFlagName, false, "Create a link even if the source cluster cannot be reached.")
 	cmd.MarkFlagsRequiredTogether(sourceApiKeyFlagName, sourceApiSecretFlagName)
@@ -113,13 +113,31 @@ func (c *linkCommand) newCreateCommand() *cobra.Command {
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
+	// Deprecated
+	cmd.Flags().String(configFileFlagName, "", "Name of the file containing link configuration. Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.")
+	cobra.CheckErr(cmd.Flags().MarkHidden(configFileFlagName))
+	cmd.MarkFlagsMutuallyExclusive("config", configFileFlagName)
+
 	return cmd
 }
 
 func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 	linkName := args[0]
 
+	config, err := cmd.Flags().GetStringSlice("config")
+	if err != nil {
+		return err
+	}
+
 	configFile, err := cmd.Flags().GetString(configFileFlagName)
+	if err != nil {
+		return err
+	}
+	if configFile != "" {
+		config = []string{configFile}
+	}
+
+	configMap, err := properties.GetMap(config)
 	if err != nil {
 		return err
 	}
@@ -134,7 +152,7 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	configMap, linkModeMetadata, err := c.getConfigMapAndLinkMode(configFile)
+	configMap, linkModeMetadata, err := c.getConfigMapAndLinkMode(configMap)
 	if err != nil {
 		return err
 	}
@@ -224,13 +242,9 @@ func getJaasValue(apiKey, apiSecret string) string {
 	return fmt.Sprintf(`%s username="%s" password="%s";`, jaasConfigPrefix, apiKey, apiSecret)
 }
 
-func (c *linkCommand) getConfigMapAndLinkMode(configFile string) (map[string]string, *linkModeMetadata, error) {
-	if configFile != "" {
+func (c *linkCommand) getConfigMapAndLinkMode(configMap map[string]string) (map[string]string, *linkModeMetadata, error) {
+	if len(configMap) > 0 {
 		var linkMode linkMode
-		configMap, err := properties.FileToMap(configFile)
-		if err != nil {
-			return nil, nil, err
-		}
 		linkModeStr, ok := configMap["link.mode"]
 		if !ok {
 			// Default is destination if no config value is provided.
