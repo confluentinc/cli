@@ -239,11 +239,6 @@ func consumeMessage(e *ckafka.Message, h *GroupHandler) error {
 }
 
 func RunConsumer(consumer *ckafka.Consumer, groupHandler *GroupHandler) error {
-	defer func() {
-		if _, err := consumer.Commit(); err != nil {
-			log.CliLogger.Warnf("Failed to commit current consumer offset: %v", err)
-		}
-	}()
 	run := true
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, os.Interrupt)
@@ -264,11 +259,17 @@ func RunConsumer(consumer *ckafka.Consumer, groupHandler *GroupHandler) error {
 			switch e := event.(type) {
 			case *ckafka.Message:
 				if err := consumeMessage(e, groupHandler); err != nil {
+					if _, err := consumer.Commit(); err != nil {
+						log.CliLogger.Warnf("Failed to commit current consumer offset: %v", err)
+					}
 					return err
 				}
 			case ckafka.Error:
 				fmt.Fprintf(groupHandler.Out, "%% Error: %v: %v\n", e.Code(), e)
 				if e.Code() == ckafka.ErrAllBrokersDown {
+					if _, err := consumer.Commit(); err != nil {
+						log.CliLogger.Warnf("Failed to commit current consumer offset: %v", err)
+					}
 					run = false
 				}
 			}
