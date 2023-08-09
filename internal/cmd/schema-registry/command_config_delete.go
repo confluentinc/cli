@@ -82,7 +82,7 @@ func (c *command) configDelete(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	output.Printf("Deleted %s.\n", resource.SchemaRegistryConfig)
+	output.Printf("Deleted %s.\n", resource.SchemaRegistryConfiguration)
 	out := &configOut{}
 	if err := json.Unmarshal([]byte(outStr), out); err != nil {
 		return err
