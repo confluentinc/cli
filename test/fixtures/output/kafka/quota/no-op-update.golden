@@ -1,1 +1,1 @@
-Error: one of the following flags must be set: `--ingress`, `--egress`, `--add-principals`, `--remove-principals`, `--description`, `--name`
+Error: at least one of the following flags must be set: `--add-principals`, `--description`, `--egress`, `--ingress`, `--name`, `--remove-principals`

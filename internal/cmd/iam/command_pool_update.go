@@ -39,6 +39,16 @@ func (c *identityPoolCommand) newUpdateCommand() *cobra.Command {
 }
 
 func (c *identityPoolCommand) update(cmd *cobra.Command, args []string) error {
+	flagsToCheck := []string{
+		"description",
+		"filter",
+		"identity-claim",
+		"name",
+	}
+	if err := errors.CheckNoUpdate(cmd.Flags(), flagsToCheck...); err != nil {
+		return err
+	}
+
 	description, err := cmd.Flags().GetString("description")
 	if err != nil {
 		return err
@@ -61,10 +71,6 @@ func (c *identityPoolCommand) update(cmd *cobra.Command, args []string) error {
 
 	identityClaim, err := cmd.Flags().GetString("identity-claim")
 	if err != nil {
-		return err
-	}
-
-	if err := errors.CheckNoOpUpdate(cmd.Flags(), "description", "name", "filter", "identity-claim"); err != nil {
 		return err
 	}
 

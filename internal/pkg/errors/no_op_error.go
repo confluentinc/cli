@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/pflag"
 )
 
-func CheckNoOpUpdate(flags *pflag.FlagSet, flagsToCheck ...string) error {
+func CheckNoUpdate(flags *pflag.FlagSet, flagsToCheck ...string) error {
 	var unsetFlags []string
 	for _, flag := range flagsToCheck {
 		if !flags.Changed(flag) {
@@ -15,7 +15,7 @@ func CheckNoOpUpdate(flags *pflag.FlagSet, flagsToCheck ...string) error {
 		}
 	}
 	if len(unsetFlags) == len(flagsToCheck) {
-		return fmt.Errorf("one of the following flags must be set: %s", strings.Join(unsetFlags, ", "))
+		return fmt.Errorf("at least one of the following flags must be set: %s", strings.Join(unsetFlags, ", "))
 	}
 	return nil
 }

@@ -38,7 +38,15 @@ func (c *quotaCommand) newUpdateCommand() *cobra.Command {
 }
 
 func (c *quotaCommand) update(cmd *cobra.Command, args []string) error {
-	if err := errors.CheckNoOpUpdate(cmd.Flags(), "ingress", "egress", "add-principals", "remove-principals", "description", "name"); err != nil {
+	flags := []string{
+		"add-principals",
+		"description",
+		"egress",
+		"ingress",
+		"name",
+		"remove-principals",
+	}
+	if err := errors.CheckNoUpdate(cmd.Flags(), flags...); err != nil {
 		return err
 	}
 	quotaId := args[0]

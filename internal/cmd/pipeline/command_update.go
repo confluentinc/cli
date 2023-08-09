@@ -63,6 +63,19 @@ func (c *command) newUpdateCommand() *cobra.Command {
 }
 
 func (c *command) update(cmd *cobra.Command, args []string) error {
+	flags := []string{
+		"activation-privilege",
+		"description",
+		"name",
+		"ksql-cluster",
+		"secret",
+		"sql-file",
+		"update-schema-registry",
+	}
+	if err := errors.CheckNoUpdate(cmd.Flags(), flags...); err != nil {
+		return err
+	}
+
 	name, err := cmd.Flags().GetString("name")
 	if err != nil {
 		return err
@@ -90,11 +103,6 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 
 	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
-		return err
-	}
-
-	if err := errors.CheckNoOpUpdate(cmd.Flags(), "name", "description",
-		"ksql-cluster", "sql-file", "secret", "activation-privilege", "update-schema-registry"); err != nil {
 		return err
 	}
 

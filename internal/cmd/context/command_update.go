@@ -25,6 +25,10 @@ func (c *command) newUpdateCommand() *cobra.Command {
 }
 
 func (c *command) update(cmd *cobra.Command, args []string) error {
+	if err := errors.CheckNoUpdate(cmd.Flags(), "kafka-cluster", "name"); err != nil {
+		return err
+	}
+
 	ctx, err := c.context(args)
 	if err != nil {
 		return err
@@ -37,10 +41,6 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 
 	kafkaCluster, err := cmd.Flags().GetString("kafka-cluster")
 	if err != nil {
-		return err
-	}
-
-	if err := errors.CheckNoOpUpdate(cmd.Flags(), "name", "kafka-cluster"); err != nil {
 		return err
 	}
 

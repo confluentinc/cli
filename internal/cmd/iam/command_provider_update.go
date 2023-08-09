@@ -34,6 +34,10 @@ func (c *identityProviderCommand) newUpdateCommand() *cobra.Command {
 }
 
 func (c *identityProviderCommand) update(cmd *cobra.Command, args []string) error {
+	if err := errors.CheckNoUpdate(cmd.Flags(), "description", "name"); err != nil {
+		return err
+	}
+
 	name, err := cmd.Flags().GetString("name")
 	if err != nil {
 		return err
@@ -41,10 +45,6 @@ func (c *identityProviderCommand) update(cmd *cobra.Command, args []string) erro
 
 	description, err := cmd.Flags().GetString("description")
 	if err != nil {
-		return err
-	}
-
-	if err := errors.CheckNoOpUpdate(cmd.Flags(), "name", "description"); err != nil {
 		return err
 	}
 

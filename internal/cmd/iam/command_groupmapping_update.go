@@ -35,6 +35,10 @@ func (c *groupMappingCommand) newUpdateCommand() *cobra.Command {
 }
 
 func (c *groupMappingCommand) update(cmd *cobra.Command, args []string) error {
+	if err := errors.CheckNoUpdate(cmd.Flags(), "description", "name", "filter"); err != nil {
+		return err
+	}
+
 	name, err := cmd.Flags().GetString("name")
 	if err != nil {
 		return err
@@ -47,10 +51,6 @@ func (c *groupMappingCommand) update(cmd *cobra.Command, args []string) error {
 
 	filter, err := cmd.Flags().GetString("filter")
 	if err != nil {
-		return err
-	}
-
-	if err := errors.CheckNoOpUpdate(cmd.Flags(), "description", "name", "filter"); err != nil {
 		return err
 	}
 
