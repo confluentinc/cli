@@ -269,7 +269,8 @@ func RunConsumer(consumer *ckafka.Consumer, groupHandler *GroupHandler) error {
 						if commitErr != nil {
 							log.CliLogger.Warnf("Failed to commit current consumer offset: %v", commitErr)
 						}
-					case <-time.After(5 * time.Second): // Timeout in case consumer has lost connection to kafka and commit would hang
+					// Time out in case consumer has lost connection to Kafka and commit would hang
+					case <-time.After(5 * time.Second):
 						log.CliLogger.Warnf("Commit operation timed out")
 					}
 
