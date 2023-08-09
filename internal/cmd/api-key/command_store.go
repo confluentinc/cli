@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -57,7 +57,7 @@ func (c *command) newStoreCommand() *cobra.Command {
 func (c *command) store(cmd *cobra.Command, args []string) error {
 	c.setKeyStoreIfNil()
 
-	var cluster *v1.KafkaClusterConfig
+	var cluster *config.KafkaClusterConfig
 
 	// Attempt to get cluster from --resource flag if set; if that doesn't work,
 	// attempt to fall back to the currently active Kafka cluster
@@ -125,7 +125,7 @@ func (c *command) store(cmd *cobra.Command, args []string) error {
 			fmt.Sprintf(errors.RefuseToOverrideSecretSuggestions, key))
 	}
 
-	if err := c.keystore.StoreAPIKey(&v1.APIKeyPair{Key: key, Secret: secret}, cluster.ID); err != nil {
+	if err := c.keystore.StoreAPIKey(&config.APIKeyPair{Key: key, Secret: secret}, cluster.ID); err != nil {
 		return errors.Wrap(err, errors.UnableToStoreAPIKeyErrorMsg)
 	}
 	output.ErrPrintf(errors.StoredAPIKeyMsg, key)

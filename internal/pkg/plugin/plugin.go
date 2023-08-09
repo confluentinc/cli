@@ -11,7 +11,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/types"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
@@ -26,7 +26,7 @@ type pluginInfo struct {
 }
 
 // SearchPath goes through the files in the user's $PATH and checks if they are plugins
-func SearchPath(cfg *v1.Config) map[string][]string {
+func SearchPath(cfg *config.Config) map[string][]string {
 	if runtime.GOOS == "windows" {
 		log.CliLogger.Debugf("Searching $PATH and %%USERPROFILE%%\\.confluent\\plugins for plugins. Plugins can be disabled in %s.\n", cfg.GetFilename())
 	}
@@ -87,7 +87,7 @@ func isExecutable(entry fs.DirEntry) bool {
 }
 
 // FindPlugin determines if the arguments passed in are meant for a plugin
-func FindPlugin(cmd *cobra.Command, args []string, cfg *v1.Config) *pluginInfo {
+func FindPlugin(cmd *cobra.Command, args []string, cfg *config.Config) *pluginInfo {
 	pluginMap := SearchPath(cfg)
 
 	plugin := newPluginInfo(args)

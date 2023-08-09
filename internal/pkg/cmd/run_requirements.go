@@ -3,7 +3,7 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 )
 
 const RunRequirement = "run-requirement"
@@ -20,7 +20,7 @@ const (
 
 // ErrIfMissingRunRequirement returns an error when a command or its parent doesn't meet a requirement;
 // for example, an on-prem command shouldn't be used by a cloud user.
-func ErrIfMissingRunRequirement(cmd *cobra.Command, cfg *v1.Config) error {
+func ErrIfMissingRunRequirement(cmd *cobra.Command, cfg *config.Config) error {
 	if cmd == nil {
 		return nil
 	}
@@ -53,7 +53,7 @@ func ErrIfMissingRunRequirement(cmd *cobra.Command, cfg *v1.Config) error {
 	return ErrIfMissingRunRequirement(cmd.Parent(), cfg)
 }
 
-func CommandRequiresCloudAuth(cmd *cobra.Command, cfg *v1.Config) bool {
+func CommandRequiresCloudAuth(cmd *cobra.Command, cfg *config.Config) bool {
 	if requirement, ok := cmd.Annotations[RunRequirement]; ok {
 		switch requirement {
 		case RequireCloudLogin, RequireCloudLoginAllowFreeTrialEnded, RequireNonAPIKeyCloudLogin:

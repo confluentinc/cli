@@ -5,7 +5,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	client "github.com/confluentinc/cli/internal/pkg/flink/app"
 	"github.com/confluentinc/cli/internal/pkg/flink/test/mock"
@@ -13,7 +13,7 @@ import (
 	ppanic "github.com/confluentinc/cli/internal/pkg/panic-recovery"
 )
 
-func (c *command) newShellCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
+func (c *command) newShellCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "shell",
 		Short: "Start Flink interactive SQL client.",
@@ -52,7 +52,7 @@ func (c *command) authenticated(authenticated func(*cobra.Command, []string) err
 			return err
 		}
 
-		jwtCtx := &v1.Context{State: &v1.ContextState{AuthToken: flinkGatewayClient.AuthToken}}
+		jwtCtx := &config.Context{State: &config.ContextState{AuthToken: flinkGatewayClient.AuthToken}}
 		if tokenErr := jwtValidator.Validate(jwtCtx); tokenErr != nil {
 			dataplaneToken, err := auth.GetDataplaneToken(c.Context.GetState(), c.Context.GetPlatformServer())
 			if err != nil {
@@ -164,7 +164,7 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 	return nil
 }
 
-func reportUsage(cmd *cobra.Command, cfg *v1.Config, unsafeTrace bool) func() {
+func reportUsage(cmd *cobra.Command, cfg *config.Config, unsafeTrace bool) func() {
 	return func() {
 		u := ppanic.CollectPanic(cmd, nil, cfg)
 		u.Report(cfg.GetCloudClientV2(unsafeTrace))

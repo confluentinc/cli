@@ -14,7 +14,7 @@ import (
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 )
 
 type ksqlCommand struct {
@@ -32,7 +32,7 @@ type ksqlCluster struct {
 	DetailedProcessingLog bool   `human:"Detailed Processing Log" serialized:"detailed_processing_log"`
 }
 
-func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
+func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "ksql",
 		Short:       "Manage ksqlDB.",

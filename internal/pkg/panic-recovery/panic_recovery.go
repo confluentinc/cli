@@ -11,12 +11,12 @@ import (
 
 	cliv1 "github.com/confluentinc/ccloud-sdk-go-v2/cli/v1"
 
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/usage"
 )
 
 // CollectPanic collects relevant usage data for when panics occur and command execution is not completed.
-func CollectPanic(cmd *cobra.Command, args []string, cfg *v1.Config) *usage.Usage {
+func CollectPanic(cmd *cobra.Command, args []string, cfg *config.Config) *usage.Usage {
 	fullCommand, flags, _ := cmd.Find(args)
 	trimmedFlags := ParseFlags(fullCommand, flags)
 	parsedStack := parseStack(string(debug.Stack()))

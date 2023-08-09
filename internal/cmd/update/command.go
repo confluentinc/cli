@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/exec"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -39,7 +39,7 @@ type command struct {
 	client  update.Client
 }
 
-func New(cfg *v1.Config, prerunner pcmd.PreRunner, client update.Client) *cobra.Command {
+func New(cfg *config.Config, prerunner pcmd.PreRunner, client update.Client) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:    "update",
 		Short:  fmt.Sprintf("Update the %s.", pversion.FullCLIName),

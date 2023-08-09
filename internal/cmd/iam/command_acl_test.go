@@ -13,7 +13,7 @@ import (
 	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	"github.com/confluentinc/mds-sdk-go-public/mdsv1/mock"
 
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	climock "github.com/confluentinc/cli/mock"
 )
@@ -222,12 +222,12 @@ var mdsACLEntries = []struct {
 
 type ACLTestSuite struct {
 	suite.Suite
-	conf     *v1.Config
+	conf     *config.Config
 	kafkaApi mds.KafkaACLManagementApi
 }
 
 func (suite *ACLTestSuite) SetupSuite() {
-	suite.conf = v1.AuthenticatedOnPremConfigMock()
+	suite.conf = config.AuthenticatedOnPremConfigMock()
 }
 
 func (suite *ACLTestSuite) newMockIamCmd(expect chan any, message string) *cobra.Command {

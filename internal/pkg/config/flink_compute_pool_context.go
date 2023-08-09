@@ -1,3 +1,3 @@
-package v1
+package config
 
 type FlinkComputePoolContext struct{}

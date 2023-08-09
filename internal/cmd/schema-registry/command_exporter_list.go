@@ -4,7 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -12,7 +12,7 @@ type listOut struct {
 	Exporter string `human:"Exporter" serialized:"exporter"`
 }
 
-func (c *command) newExporterListCommand(cfg *v1.Config) *cobra.Command {
+func (c *command) newExporterListCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List all schema exporters.",

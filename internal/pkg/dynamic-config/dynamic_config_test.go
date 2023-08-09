@@ -7,18 +7,18 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
 
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	pmock "github.com/confluentinc/cli/internal/pkg/mock"
 )
 
 func TestDynamicConfig_ParseFlagsIntoConfig(t *testing.T) {
-	config := v1.AuthenticatedCloudConfigMock()
-	dynamicConfigBase := New(config, pmock.NewV2ClientMock())
+	cfg := config.AuthenticatedCloudConfigMock()
+	dynamicConfigBase := New(cfg, pmock.NewV2ClientMock())
 
-	config = v1.AuthenticatedCloudConfigMock()
-	dynamicConfigFlag := New(config, pmock.NewV2ClientMock())
-	dynamicConfigFlag.Contexts["test-context"] = &v1.Context{
+	cfg = config.AuthenticatedCloudConfigMock()
+	dynamicConfigFlag := New(cfg, pmock.NewV2ClientMock())
+	dynamicConfigFlag.Contexts["test-context"] = &config.Context{
 		Name: "test-context",
 	}
 	tests := []struct {

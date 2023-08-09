@@ -9,19 +9,19 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
 func (s *CLITestSuite) TestHelp() {
-	configurations := []*v1.Config{
+	configurations := []*config.Config{
 		{
 			CurrentContext: "cloud",
-			Contexts:       map[string]*v1.Context{"cloud": {PlatformName: "https://confluent.cloud"}},
+			Contexts:       map[string]*config.Context{"cloud": {PlatformName: "https://confluent.cloud"}},
 		},
 		{
 			CurrentContext: "onprem",
-			Contexts:       map[string]*v1.Context{"onprem": {PlatformName: "https://example.com"}},
+			Contexts:       map[string]*config.Context{"onprem": {PlatformName: "https://example.com"}},
 		},
 	}
 

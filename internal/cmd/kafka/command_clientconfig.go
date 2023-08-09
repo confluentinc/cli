@@ -4,7 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 )
 
 type clientConfigCommand struct {
@@ -12,7 +12,7 @@ type clientConfigCommand struct {
 	clientId string
 }
 
-func newClientConfigCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
+func newClientConfigCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "client-config",
 		Short:       "Manage Kafka Clients configuration files.",

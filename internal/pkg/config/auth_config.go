@@ -1,4 +1,4 @@
-package v1
+package config
 
 import ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
