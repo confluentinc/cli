@@ -11,6 +11,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
 func (c *command) newConfigDeleteCommand(cfg *v1.Config) *cobra.Command {
@@ -22,12 +23,12 @@ func (c *command) newConfigDeleteCommand(cfg *v1.Config) *cobra.Command {
 	}
 
 	example1 := examples.Example{
-		Text: `Delete the subject-level configuration of subject "payments".`,
-		Code: "confluent schema-registry config delete --subject payments",
-	}
-	example2 := examples.Example{
 		Text: "Delete the top-level configuration.",
 		Code: "confluent schema-registry config delete",
+	}
+	example2 := examples.Example{
+		Text: `Delete the subject-level configuration of subject "payments".`,
+		Code: "confluent schema-registry config delete --subject payments",
 	}
 	if cfg.IsOnPremLogin() {
 		example1.Code += " " + onPremAuthenticationMsg
@@ -81,6 +82,7 @@ func (c *command) configDelete(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	output.Printf("Deleted %s.\n", resource.SchemaRegistryConfig)
 	out := &configOut{}
 	if err := json.Unmarshal([]byte(outStr), out); err != nil {
 		return err
