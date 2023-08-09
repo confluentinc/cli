@@ -29,6 +29,7 @@ const (
 	Pipeline              = "pipeline"
 	SchemaExporter        = "schema exporter"
 	SchemaRegistryCluster = "Schema Registry cluster"
+	SchemaRegistryConfig  = "Schema Registyr config"
 	ServiceAccount        = "service account"
 	SsoGroupMapping       = "SSO group mapping"
 	Topic                 = "topic"
