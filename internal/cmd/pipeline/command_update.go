@@ -66,8 +66,8 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	flags := []string{
 		"activation-privilege",
 		"description",
-		"name",
 		"ksql-cluster",
+		"name",
 		"secret",
 		"sql-file",
 		"update-schema-registry",
