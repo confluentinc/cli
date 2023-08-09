@@ -259,6 +259,20 @@ func RunConsumer(consumer *ckafka.Consumer, groupHandler *GroupHandler) error {
 			switch e := event.(type) {
 			case *ckafka.Message:
 				if err := consumeMessage(e, groupHandler); err != nil {
+					commitErrCh := make(chan error, 1)
+					go func() {
+						_, err := consumer.Commit()
+						commitErrCh <- err
+					}()
+					select {
+					case commitErr := <-commitErrCh:
+						if commitErr != nil {
+							log.CliLogger.Warnf("Failed to commit current consumer offset: %v", commitErr)
+						}
+					case <-time.After(5 * time.Second): // Timeout in case consumer has lost connection to kafka and commit would hang
+						log.CliLogger.Warnf("Commit operation timed out")
+					}
+
 					return err
 				}
 			case ckafka.Error:
