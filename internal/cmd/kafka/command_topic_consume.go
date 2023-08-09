@@ -81,10 +81,10 @@ func (c *command) consume(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	var consumeFromGroupOffset bool
-	if !cmd.Flags().Changed("group") {
-		group = fmt.Sprintf("confluent_cli_consumer_%s", uuid.New())
-	} else {
+	if cmd.Flags().Changed("group") {
 		consumeFromGroupOffset = true
+	} else {
+		group = fmt.Sprintf("confluent_cli_consumer_%s", uuid.New())
 	}
 
 	printKey, err := cmd.Flags().GetBool("print-key")

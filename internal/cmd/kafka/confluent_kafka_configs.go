@@ -40,7 +40,6 @@ func getCommonConfig(kafka *configv1.KafkaClusterConfig, clientId string) (*ckaf
 		"bootstrap.servers":                     kafka.Bootstrap,
 		"sasl.username":                         kafka.APIKey,
 		"sasl.password":                         kafka.GetApiSecret(),
-		"auto.commit.interval.ms":               1000,
 	}
 
 	return configMap, nil
@@ -73,7 +72,7 @@ func getConsumerConfigMap(group string, kafka *configv1.KafkaClusterConfig, clie
 	}
 	log.CliLogger.Debugf("Created consumer group: %s", group)
 
-	if err := configMap.SetKey("enable.auto.commit", false): err!=nil {
+	if err := configMap.SetKey("enable.auto.commit", false); err != nil {
 		return nil, err
 	}
 
