@@ -9,7 +9,7 @@ Update Kafka cluster configuration "auto.create.topics.enable" to "true".
   $ confluent kafka cluster configuration update --config auto.create.topics.enable=true
 
 Flags:
-      --config strings       REQUIRED: A comma-separated list of configuration overrides with form "key=value".
+      --config strings       REQUIRED: A comma-separated list of "key=value" pairs, or path to a configuration file containing a newline-separated list of "key=value" pairs.
       --context string       CLI context name.
       --environment string   Environment ID.
       --cluster string       Kafka cluster ID.
