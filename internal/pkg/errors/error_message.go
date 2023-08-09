@@ -179,9 +179,6 @@ const (
 		"If your topic is compacted, ensure you are producing a record with a key."
 	ExceedPartitionLimitSuggestions = "The total partition limit for a dedicated cluster may be increased by expanding its CKU count using `confluent kafka cluster update <id> --cku <count>`."
 
-	// Cluster Link commands
-	EmptyConfigErrorMsg = "config file name is empty or config file is empty"
-
 	// serialization/deserialization commands
 	JsonSchemaInvalidErrorMsg         = "the JSON schema is invalid"
 	JsonDocumentInvalidErrorMsg       = "the JSON document is invalid"

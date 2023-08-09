@@ -10,10 +10,10 @@ Update schema exporter information.
 
 Update schema exporter configuration.
 
-  $ confluent schema-registry exporter update my-exporter --config-file config.txt --ca-location <ca-file-location> --schema-registry-endpoint <schema-registry-endpoint>
+  $ confluent schema-registry exporter update my-exporter --config config.txt --ca-location <ca-file-location> --schema-registry-endpoint <schema-registry-endpoint>
 
 Flags:
-      --config-file string                Exporter configuration file.
+      --config strings                    A comma-separated list of "key=value" pairs, or path to a configuration file containing a newline-separated list of "key=value" pairs.
       --subjects strings                  A comma-separated list of exporter subjects.
       --subject-format string             Exporter subject rename format. The format string can contain ${subject}, which will be replaced with the default subject name. (default "${subject}")
       --context-type string               Exporter context type. One of "auto", "custom", or "none". (default "auto")
