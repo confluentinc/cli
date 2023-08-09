@@ -129,6 +129,7 @@ func (c *linkCommand) create(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	// Deprecated
 	configFile, err := cmd.Flags().GetString(configFileFlagName)
 	if err != nil {
 		return err

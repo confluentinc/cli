@@ -98,17 +98,23 @@ func (c *command) exporterCreate(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	configFile, err := cmd.Flags().GetString("config-file")
+	config, err := cmd.Flags().GetStringSlice("config")
 	if err != nil {
 		return err
 	}
 
-	configMap := make(map[string]string)
+	// Deprecated
+	configFile, err := cmd.Flags().GetString("config-file")
+	if err != nil {
+		return err
+	}
 	if configFile != "" {
-		configMap, err = properties.FileToMap(configFile)
-		if err != nil {
-			return err
-		}
+		config = []string{configFile}
+	}
+
+	configMap, err := properties.GetMap(config)
+	if err != nil {
+		return err
 	}
 
 	req := srsdk.CreateExporterRequest{

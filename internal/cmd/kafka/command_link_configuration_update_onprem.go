@@ -48,6 +48,7 @@ func (c *linkCommand) configurationUpdateOnPrem(cmd *cobra.Command, args []strin
 		return err
 	}
 
+	// Deprecated
 	configFile, err := cmd.Flags().GetString(configFileFlagName)
 	if err != nil {
 		return err
