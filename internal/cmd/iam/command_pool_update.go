@@ -64,8 +64,8 @@ func (c *identityPoolCommand) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if description == "" && filter == "" && identityClaim == "" && name == "" {
-		return errors.New("one of `--description`, `--filter`, `--identity-claim`, or `--name` must be set")
+	if err := errors.CheckNoOpUpdate(cmd.Flags(), "description", "name", "filter", "identity-claim"); err != nil {
+		return err
 	}
 
 	identityPoolId := args[0]

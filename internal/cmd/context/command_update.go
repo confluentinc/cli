@@ -40,8 +40,8 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if name == "" && kafkaCluster == "" {
-		return fmt.Errorf("must use at least one of the following flags: `--name`, `--kafka-cluster`")
+	if err := errors.CheckNoOpUpdate(cmd.Flags(), "name", "kafka-cluster"); err != nil {
+		return err
 	}
 
 	if name != "" && name != ctx.Name {

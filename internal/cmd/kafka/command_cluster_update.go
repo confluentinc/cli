@@ -43,7 +43,7 @@ func (c *clusterCommand) newUpdateCommand(cfg *config.Config) *cobra.Command {
 }
 
 func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
-	if !cmd.Flags().Changed("name") && !cmd.Flags().Changed("cku") {
+	if err := errors.CheckNoOpUpdate(cmd.Flags(), "cku", "name"); err != nil {
 		return errors.New(errors.NameOrCKUFlagErrorMsg)
 	}
 

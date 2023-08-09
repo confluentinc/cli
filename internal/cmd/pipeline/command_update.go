@@ -1,7 +1,6 @@
 package pipeline
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -9,6 +8,7 @@ import (
 	streamdesignerv1 "github.com/confluentinc/ccloud-sdk-go-v2/stream-designer/v1"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 )
 
@@ -93,16 +93,9 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if name == "" && description == "" && sqlFile == "" && len(secrets) == 0 && ksqlCluster == "" &&
-		!cmd.Flags().Changed("activation-privilege") && !cmd.Flags().Changed("update-schema-registry") {
-		return fmt.Errorf("one of the update options must be provided:" +
-			" `--name`," +
-			" `--description`," +
-			" `--ksql-cluster`," +
-			" `--sql-file`," +
-			" `--secret`," +
-			" `--activation-privilege`," +
-			" `--update-schema-registry`")
+	if err := errors.CheckNoOpUpdate(cmd.Flags(), "name", "description",
+		"ksql-cluster", "sql-file", "secret", "activation-privilege", "update-schema-registry"); err != nil {
+		return err
 	}
 
 	updatePipeline := streamdesignerv1.SdV1Pipeline{Spec: &streamdesignerv1.SdV1PipelineSpec{}}
