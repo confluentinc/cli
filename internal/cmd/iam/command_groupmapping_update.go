@@ -50,8 +50,8 @@ func (c *groupMappingCommand) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if description == "" && name == "" && filter == "" {
-		return errors.New("one of `--description`, `--name`, or `--filter` must be set")
+	if err := errors.CheckNoOpUpdate(cmd.Flags(), "description", "name", "filter"); err != nil {
+		return err
 	}
 
 	update := ssov2.IamV2SsoGroupMapping{Id: ssov2.PtrString(args[0])}

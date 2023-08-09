@@ -44,8 +44,8 @@ func (c *identityProviderCommand) update(cmd *cobra.Command, args []string) erro
 		return err
 	}
 
-	if description == "" && name == "" {
-		return errors.New("one of `--description` or `--name` must be set")
+	if err := errors.CheckNoOpUpdate(cmd.Flags(), "name", "description"); err != nil {
+		return err
 	}
 
 	update := identityproviderv2.IamV2IdentityProviderUpdate{Id: identityproviderv2.PtrString(args[0])}
