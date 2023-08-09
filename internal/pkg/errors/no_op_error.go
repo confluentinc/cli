@@ -1,7 +1,6 @@
 package errors
 
 import (
-	"errors"
 	"fmt"
 	"strings"
 
@@ -16,7 +15,7 @@ func CheckNoOpUpdate(flags *pflag.FlagSet, flagsToCheck ...string) error {
 		}
 	}
 	if len(unsetFlags) == len(flagsToCheck) {
-		return errors.New(fmt.Sprintf("one of the following flags must be set: %s", strings.Join(unsetFlags, ", ")))
+		return fmt.Errorf("one of the following flags must be set: %s", strings.Join(unsetFlags, ", "))
 	}
 	return nil
 }
