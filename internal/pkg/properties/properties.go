@@ -6,10 +6,21 @@ import (
 	"os"
 	"sort"
 	"strings"
+
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
-// FileToMap reads key=value pairs from a properties file, ignoring comments and empty lines.
-func FileToMap(filename string) (map[string]string, error) {
+// GetMap reads newline-separated configuration files or comma-separated lists of key=value pairs, and supports configuration values containing commas.
+func GetMap(config []string) (map[string]string, error) {
+	if len(config) == 1 && utils.FileExists(config[0]) {
+		return fileToMap(config[0])
+	}
+
+	return ConfigFlagToMap(config)
+}
+
+// fileToMap reads key=value pairs from a properties file, ignoring comments and empty lines.
+func fileToMap(filename string) (map[string]string, error) {
 	buf, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, err
