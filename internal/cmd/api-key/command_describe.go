@@ -65,7 +65,8 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		serviceAccountsMap := getServiceAccountsMap(serviceAccounts)
 
 		ownerId = apiKey.Spec.Owner.GetId()
-		email = c.getEmail(ownerId, resourceIdToUserIdMap, usersMap, serviceAccountsMap)
+		auditLog := c.getAuditLog()
+		email = c.getEmail(ownerId, auditLog, resourceIdToUserIdMap, usersMap, serviceAccountsMap)
 	}
 
 	resources := []apikeysv2.ObjectReference{apiKey.Spec.GetResource()}
