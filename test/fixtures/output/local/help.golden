@@ -4,7 +4,11 @@ Usage:
   confluent local [command]
 
 Available Commands:
+  current     Get the path of the current Confluent run.
+  destroy     Delete the data and logs for the current Confluent run.
   kafka       Manage a single-node instance of Apache Kafka.
+  services    Manage Confluent Platform services.
+  version     Print the Confluent Platform version.
 
 Global Flags:
   -h, --help            Show help for this command.

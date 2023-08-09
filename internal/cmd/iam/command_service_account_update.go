@@ -22,12 +22,13 @@ func (c *serviceAccountCommand) newUpdateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Update the description of service account "sa-123456".`,
-				Code: `confluent iam service-account update sa-123456 --description "Update demo service account information."`,
+				Code: `confluent iam service-account update sa-123456 --description "updated description"`,
 			},
 		),
 	}
 
 	cmd.Flags().String("description", "", "Description of the service account.")
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 
 	cobra.CheckErr(cmd.MarkFlagRequired("description"))
 

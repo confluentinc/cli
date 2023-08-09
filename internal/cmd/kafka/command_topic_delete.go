@@ -42,22 +42,17 @@ func (c *command) newDeleteCommand() *cobra.Command {
 func (c *command) delete(cmd *cobra.Command, args []string) error {
 	topicName := args[0]
 
-	kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand()
-	if err != nil {
-		return err
-	}
-
-	if err := c.provisioningClusterCheck(kafkaClusterConfig.ID); err != nil {
-		return err
-	}
-
 	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {
 		return err
 	}
 
+	if err := c.provisioningClusterCheck(kafkaREST.GetClusterId()); err != nil {
+		return err
+	}
+
 	// Check if topic exists
-	if _, err := kafkaREST.CloudClient.ListKafkaTopicConfigs(kafkaClusterConfig.ID, topicName); err != nil {
+	if _, err := kafkaREST.CloudClient.ListKafkaTopicConfigs(topicName); err != nil {
 		return err
 	}
 
@@ -66,7 +61,7 @@ func (c *command) delete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	httpResp, err := kafkaREST.CloudClient.DeleteKafkaTopic(kafkaClusterConfig.ID, topicName)
+	httpResp, err := kafkaREST.CloudClient.DeleteKafkaTopic(topicName)
 	if err != nil {
 		restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err)
 		if parseErr == nil {

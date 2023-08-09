@@ -24,6 +24,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 	schemaregistry "github.com/confluentinc/cli/internal/pkg/schema-registry"
 	"github.com/confluentinc/cli/internal/pkg/serdes"
+	"github.com/confluentinc/cli/internal/pkg/types"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -54,11 +55,12 @@ type ConsumerProperties struct {
 
 // GroupHandler instances are used to handle individual topic-partition claims.
 type GroupHandler struct {
-	SrClient   *schemaregistry.Client
-	Format     string
-	Out        io.Writer
-	Subject    string
-	Properties ConsumerProperties
+	SrClient    *schemaregistry.Client
+	KeyFormat   string
+	ValueFormat string
+	Out         io.Writer
+	Subject     string
+	Properties  ConsumerProperties
 }
 
 func (c *command) refreshOAuthBearerToken(cmd *cobra.Command, client ckafka.Handle) error {
@@ -184,51 +186,71 @@ func GetRebalanceCallback(offset ckafka.Offset, partitionFilter PartitionFilter)
 	}
 }
 
-func consumeMessage(e *ckafka.Message, h *GroupHandler) error {
-	value := e.Value
+func consumeMessage(message *ckafka.Message, h *GroupHandler) error {
 	if h.Properties.PrintKey {
-		key := string(e.Key)
-		if key == "" {
-			key = "null"
+		keyDeserializer, err := serdes.GetDeserializationProvider(h.KeyFormat)
+		if err != nil {
+			return err
 		}
-		if _, err := fmt.Fprint(h.Out, key+h.Properties.Delimiter); err != nil {
+
+		if types.Contains(serdes.SchemaBasedFormats, h.KeyFormat) {
+			schemaPath, referencePathMap, err := h.RequestSchema(message.Key)
+			if err != nil {
+				return err
+			}
+			message.Key = message.Key[messageOffset:]
+			if err := keyDeserializer.LoadSchema(schemaPath, referencePathMap); err != nil {
+				return err
+			}
+		}
+
+		jsonMessage, err := keyDeserializer.Deserialize(message.Key)
+		if err != nil {
+			return err
+		}
+		if jsonMessage == "" {
+			jsonMessage = "null"
+		}
+
+		if _, err := fmt.Fprint(h.Out, jsonMessage+h.Properties.Delimiter); err != nil {
 			return err
 		}
 	}
 
-	deserializationProvider, err := serdes.GetDeserializationProvider(h.Format)
+	valueDeserializer, err := serdes.GetDeserializationProvider(h.ValueFormat)
 	if err != nil {
 		return err
 	}
 
-	if h.Format != "string" {
-		schemaPath, referencePathMap, err := h.RequestSchema(value)
+	if types.Contains(serdes.SchemaBasedFormats, h.ValueFormat) {
+		schemaPath, referencePathMap, err := h.RequestSchema(message.Value)
 		if err != nil {
 			return err
 		}
 		// Message body is encoded after 5 bytes of meta information.
-		value = value[messageOffset:]
-		if err := deserializationProvider.LoadSchema(schemaPath, referencePathMap); err != nil {
+		message.Value = message.Value[messageOffset:]
+		if err := valueDeserializer.LoadSchema(schemaPath, referencePathMap); err != nil {
 			return err
 		}
 	}
-	jsonMessage, err := serdes.Deserialize(deserializationProvider, value)
+
+	jsonMessage, err := valueDeserializer.Deserialize(message.Value)
 	if err != nil {
 		return err
 	}
 
 	if h.Properties.Timestamp {
-		jsonMessage = fmt.Sprintf("Timestamp: %d\t%s", e.Timestamp.UnixMilli(), jsonMessage)
+		jsonMessage = fmt.Sprintf("Timestamp: %d\t%s", message.Timestamp.UnixMilli(), jsonMessage)
 	}
 
 	if _, err := fmt.Fprintln(h.Out, jsonMessage); err != nil {
 		return err
 	}
 
-	if e.Headers != nil {
-		var headers any = e.Headers
+	if message.Headers != nil {
+		var headers any = message.Headers
 		if h.Properties.FullHeader {
-			headers = getFullHeaders(e.Headers)
+			headers = getFullHeaders(message.Headers)
 		}
 		if _, err := fmt.Fprintf(h.Out, "%% Headers: %v\n", headers); err != nil {
 			return err
@@ -289,7 +311,7 @@ func RunConsumer(consumer *ckafka.Consumer, groupHandler *GroupHandler) error {
 
 func (h *GroupHandler) RequestSchema(value []byte) (string, map[string]string, error) {
 	if len(value) == 0 || value[0] != 0x0 {
-		return "", nil, errors.NewErrorWithSuggestions("unknown magic byte", fmt.Sprintf("Check that all messages from this topic are in the %s format.", h.Format))
+		return "", nil, errors.NewErrorWithSuggestions("unknown magic byte", fmt.Sprintf("Check that all messages from this topic are in the %s format.", h.ValueFormat))
 	}
 	if len(value) < messageOffset {
 		return "", nil, errors.New("failed to find schema ID in topic data")
