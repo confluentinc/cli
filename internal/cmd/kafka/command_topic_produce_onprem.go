@@ -162,7 +162,7 @@ func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	output.ErrPrintln(errors.StartingProducerMsg)
+	output.ErrPrintf(errors.StartingProducerMsg, "Ctrl-C or Ctrl-D")
 
 	var scanErr error
 	input, scan := PrepareInputChannel(&scanErr)

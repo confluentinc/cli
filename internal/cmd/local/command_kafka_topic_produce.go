@@ -73,7 +73,7 @@ func (c *Command) kafkaTopicProduce(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	output.ErrPrintln(errors.StartingProducerMsg)
+	output.ErrPrintf(errors.StartingProducerMsg, "Ctrl-C or Ctrl-D")
 	output.ErrPrintln("Type a message and press ENTER to produce to the topic.")
 
 	var scanErr error
