@@ -105,7 +105,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 	serviceAccountsMap := getServiceAccountsMap(serviceAccounts)
 	usersMap := getUsersMap(allUsers)
 
-	auditLog := c.getAuditLog()
+	auditLogServiceAccountId := c.getAuditLogServiceAccountId()
 
 	list := output.NewList(cmd)
 	for _, apiKey := range apiKeys {
@@ -115,7 +115,7 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 		}
 
 		ownerId := apiKey.Spec.Owner.GetId()
-		email := c.getEmail(ownerId, auditLog, resourceIdToUserIdMap, usersMap, serviceAccountsMap)
+		email := c.getEmail(ownerId, auditLogServiceAccountId, resourceIdToUserIdMap, usersMap, serviceAccountsMap)
 		resources := []apikeysv2.ObjectReference{apiKey.Spec.GetResource()}
 
 		// Check if multicluster keys are enabled, and if so check the resources field
@@ -165,14 +165,14 @@ func mapResourceIdToUserId(users []*ccloudv1.User) map[string]int32 {
 	return idMap
 }
 
-func (c *command) getEmail(resourceId string, auditLog *ccloudv1.AuditLog, resourceIdToUserIdMap map[string]int32, usersMap map[int32]*ccloudv1.User, serviceAccountsMap map[string]bool) string {
+func (c *command) getEmail(resourceId string, auditLogServiceAccountId int32, resourceIdToUserIdMap map[string]int32, usersMap map[int32]*ccloudv1.User, serviceAccountsMap map[string]bool) string {
 	if _, ok := serviceAccountsMap[resourceId]; ok {
 		return "<service account>"
 	}
 
 	userId := resourceIdToUserIdMap[resourceId]
 
-	if auditLog != nil && auditLog.GetServiceAccountId() == userId {
+	if auditLogServiceAccountId == userId {
 		return "<auditlog service account>"
 	}
 
@@ -190,10 +190,11 @@ func getApiKeyResourceId(id string) string {
 	return id
 }
 
-func (c *command) getAuditLog() *ccloudv1.AuditLog {
-	var auditLog *ccloudv1.AuditLog
+func (c *command) getAuditLogServiceAccountId() int32 {
 	if user, err := c.Client.Auth.User(); err == nil {
-		auditLog = user.GetOrganization().GetAuditLog()
+		if auditLog := user.GetOrganization().GetAuditLog(); auditLog != nil {
+			return auditLog.GetServiceAccountId()
+		}
 	}
-	return auditLog
+	return -1
 }
