@@ -21,17 +21,20 @@ func (c *linkCommand) newConfigurationUpdateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Update configuration values for the cluster link "my-link".`,
-				Code: "confluent kafka link configuration update my-link --config-file my-config.txt",
+				Code: "confluent kafka link configuration update my-link --config my-config.txt",
 			},
 		),
 	}
 
-	cmd.Flags().String(configFileFlagName, "", "Name of the file containing link configuration overrides. Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.")
+	pcmd.AddConfigFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 
-	cobra.CheckErr(cmd.MarkFlagRequired(configFileFlagName))
+	// Deprecated
+	cmd.Flags().String(configFileFlagName, "", "Name of the file containing link configuration overrides. Each property key-value pair should have the format of key=value. Properties are separated by new-line characters.")
+	cobra.CheckErr(cmd.Flags().MarkHidden(configFileFlagName))
+	cmd.MarkFlagsMutuallyExclusive("config", configFileFlagName)
 
 	return cmd
 }
@@ -39,21 +42,23 @@ func (c *linkCommand) newConfigurationUpdateCommand() *cobra.Command {
 func (c *linkCommand) configurationUpdate(cmd *cobra.Command, args []string) error {
 	linkName := args[0]
 
-	configFile, err := cmd.Flags().GetString(configFileFlagName)
+	config, err := cmd.Flags().GetStringSlice("config")
 	if err != nil {
 		return err
 	}
 
-	configMap := make(map[string]string)
+	// Deprecated
+	configFile, err := cmd.Flags().GetString(configFileFlagName)
+	if err != nil {
+		return err
+	}
 	if configFile != "" {
-		configMap, err = properties.FileToMap(configFile)
-		if err != nil {
-			return err
-		}
+		config = []string{configFile}
 	}
 
-	if len(configMap) == 0 {
-		return errors.New(errors.EmptyConfigErrorMsg)
+	configMap, err := properties.GetMap(config)
+	if err != nil {
+		return err
 	}
 
 	kafkaREST, err := c.GetKafkaREST()

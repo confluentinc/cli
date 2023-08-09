@@ -44,7 +44,7 @@ func (c *command) newCreateCommandOnPrem() *cobra.Command {
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	cmd.Flags().Uint32("partitions", 0, "Number of topic partitions.")
 	cmd.Flags().Uint32("replication-factor", 0, "Number of replicas.")
-	cmd.Flags().StringSlice("config", nil, `A comma-separated list of topic configuration ("key=value") overrides for the topic being created.`)
+	pcmd.AddConfigFlag(cmd)
 	cmd.Flags().Bool("if-not-exists", false, "Exit gracefully if topic already exists.")
 
 	return cmd
@@ -86,7 +86,7 @@ func CreateTopic(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restCont
 	if err != nil {
 		return err
 	}
-	configMap, err := properties.ConfigFlagToMap(configs)
+	configMap, err := properties.GetMap(configs)
 	if err != nil {
 		return err
 	}

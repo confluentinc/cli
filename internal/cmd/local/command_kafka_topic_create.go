@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/cmd/kafka"
+	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 )
@@ -26,7 +27,7 @@ func (c *Command) newKafkaTopicCreateCommand() *cobra.Command {
 
 	cmd.Flags().Uint32("partitions", 0, "Number of topic partitions.")
 	cmd.Flags().Uint32("replication-factor", 0, "Number of replicas.")
-	cmd.Flags().StringSlice("config", nil, `A comma-separated list of topic configuration ("key=value") overrides for the topic being created.`)
+	pcmd.AddConfigFlag(cmd)
 	cmd.Flags().Bool("if-not-exists", false, "Exit gracefully if topic already exists.")
 
 	return cmd
