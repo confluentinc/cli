@@ -20,6 +20,7 @@ import (
 	sr "github.com/confluentinc/cli/internal/cmd/schema-registry"
 	configv1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/errors"
+	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	schemaregistry "github.com/confluentinc/cli/internal/pkg/schema-registry"
 	"github.com/confluentinc/cli/internal/pkg/serdes"
@@ -267,6 +268,9 @@ func RunConsumer(consumer *ckafka.Consumer, groupHandler *GroupHandler) error {
 		select {
 		case <-signals: // Trap SIGINT to trigger a shutdown.
 			output.ErrPrintln(errors.StoppingConsumerMsg)
+			if _, err := consumer.Commit(); err != nil {
+				log.CliLogger.Warnf("Failed to commit current consumer offset: %v", err)
+			}
 			consumer.Close()
 			run = false
 		default:
