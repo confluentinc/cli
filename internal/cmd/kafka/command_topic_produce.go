@@ -121,7 +121,7 @@ func (c *command) produce(cmd *cobra.Command, args []string) error {
 	if runtime.GOOS == "windows" {
 		output.ErrPrintf(errors.StartingProducerMsg, "Ctrl-C")
 	} else {
-		output.ErrPrintln(errors.StartingProducerMsg, "Ctrl-C or Ctrl-D")
+		output.ErrPrintf(errors.StartingProducerMsg, "Ctrl-C or Ctrl-D")
 	}
 
 	var scanErr error
