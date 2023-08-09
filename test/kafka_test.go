@@ -480,6 +480,7 @@ func (s *CLITestSuite) TestKafkaQuota() {
 		{args: "kafka quota delete cq-1234 --force", fixture: "kafka/quota/delete.golden"},
 		{args: "kafka quota delete cq-1234", input: "cq-1234\n", fixture: "kafka/quota/delete-prompt.golden"},
 		{args: "kafka quota update cq-1234 --ingress 100 --egress 100 --add-principals sa-4321 --remove-principals sa-1234 --name newName", fixture: "kafka/quota/update.golden"},
+		{args: "kafka quota update cq-1234", fixture: "kafka/quota/no-op-update.golden", exitCode: 1},
 	}
 
 	for _, test := range tests {

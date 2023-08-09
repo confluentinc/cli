@@ -1,7 +1,6 @@
 package pipeline
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -9,6 +8,7 @@ import (
 	streamdesignerv1 "github.com/confluentinc/ccloud-sdk-go-v2/stream-designer/v1"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 )
 
@@ -63,6 +63,19 @@ func (c *command) newUpdateCommand() *cobra.Command {
 }
 
 func (c *command) update(cmd *cobra.Command, args []string) error {
+	flags := []string{
+		"activation-privilege",
+		"description",
+		"name",
+		"ksql-cluster",
+		"secret",
+		"sql-file",
+		"update-schema-registry",
+	}
+	if err := errors.CheckNoUpdate(cmd.Flags(), flags...); err != nil {
+		return err
+	}
+
 	name, err := cmd.Flags().GetString("name")
 	if err != nil {
 		return err
@@ -91,18 +104,6 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
-	}
-
-	if name == "" && description == "" && sqlFile == "" && len(secrets) == 0 && ksqlCluster == "" &&
-		!cmd.Flags().Changed("activation-privilege") && !cmd.Flags().Changed("update-schema-registry") {
-		return fmt.Errorf("one of the update options must be provided:" +
-			" `--name`," +
-			" `--description`," +
-			" `--ksql-cluster`," +
-			" `--sql-file`," +
-			" `--secret`," +
-			" `--activation-privilege`," +
-			" `--update-schema-registry`")
 	}
 
 	updatePipeline := streamdesignerv1.SdV1Pipeline{Spec: &streamdesignerv1.SdV1PipelineSpec{}}
