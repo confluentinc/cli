@@ -50,9 +50,11 @@ func (c *unregisterCommand) unregister(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return pcluster.HandleClusterError(err, httpResp)
 	}
-	if !slices.ContainsFunc(clusterInfos, func(cluster mds.ClusterInfo) bool {
+
+	found := slices.ContainsFunc(clusterInfos, func(cluster mds.ClusterInfo) bool {
 		return cluster.ClusterName == clusterName
-	}) {
+	})
+	if !found {
 		return errors.Errorf(errors.UnknownClusterErrorMsg, clusterName)
 	}
 
