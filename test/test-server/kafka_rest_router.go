@@ -109,17 +109,15 @@ func handleKafkaRestClusters(t *testing.T) http.HandlerFunc {
 // Handler for: "/kafka/v3/clusters/{cluster}/acls"
 func handleKafkaRestACLs(t *testing.T) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		data := []cckafkarestv3.AclData{
-			{
-				ResourceType: cckafkarestv3.TOPIC,
-				ResourceName: "test-topic",
-				Operation:    "READ",
-				Permission:   "ALLOW",
-				Host:         "*",
-				Principal:    "User:12345",
-				PatternType:  "LITERAL",
-			},
-		}
+		data := []cckafkarestv3.AclData{{
+			ResourceType: cckafkarestv3.TOPIC,
+			ResourceName: "test-topic",
+			Operation:    "READ",
+			Permission:   "ALLOW",
+			Host:         "*",
+			Principal:    "User:sa-12345",
+			PatternType:  "LITERAL",
+		}}
 
 		var res any
 
