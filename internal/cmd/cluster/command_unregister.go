@@ -2,9 +2,9 @@ package cluster
 
 import (
 	"context"
+	"slices"
 
 	"github.com/spf13/cobra"
-	"golang.org/x/exp/slices"
 
 	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 

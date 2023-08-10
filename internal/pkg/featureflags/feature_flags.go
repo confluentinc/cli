@@ -3,15 +3,15 @@
 package featureflags
 
 import (
-	b64 "encoding/base64"
+	"encoding/base64"
 	"fmt"
 	"net/http"
+	"slices"
 	"time"
 
 	"github.com/dghubble/sling"
 	"github.com/google/uuid"
 	"github.com/spf13/cobra"
-	"golang.org/x/exp/slices"
 	"gopkg.in/launchdarkly/go-sdk-common.v2/lduser"
 	"gopkg.in/launchdarkly/go-sdk-common.v2/ldvalue"
 
@@ -238,7 +238,7 @@ func getBase64EncodedUser(user lduser.User) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return b64.URLEncoding.EncodeToString(userBytes), nil
+	return base64.URLEncoding.EncodeToString(userBytes), nil
 }
 
 func (ld *launchDarklyManager) contextToLDUser(ctx *dynamicconfig.DynamicContext) lduser.User {

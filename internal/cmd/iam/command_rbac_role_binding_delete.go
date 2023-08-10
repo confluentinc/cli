@@ -3,9 +3,9 @@ package iam
 import (
 	"fmt"
 	"net/http"
+	"slices"
 
 	"github.com/spf13/cobra"
-	"golang.org/x/exp/slices"
 
 	mdsv2 "github.com/confluentinc/ccloud-sdk-go-v2/mds/v2"
 
