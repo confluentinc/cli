@@ -15,6 +15,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"slices"
 	"testing"
 
 	"github.com/spf13/cobra"
@@ -721,13 +722,9 @@ func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *confi
 			transport, ok := mdsClient.GetConfig().HTTPClient.Transport.(*http.Transport)
 			req.True(ok)
 			req.NotEqual(http.DefaultTransport, transport)
-			found := false
-			for _, actualSubject := range transport.TLSClientConfig.RootCAs.Subjects() { //nolint:staticcheck
-				if bytes.Equal(cert.RawSubject, actualSubject) {
-					found = true
-					break
-				}
-			}
+			found := slices.ContainsFunc(transport.TLSClientConfig.RootCAs.Subjects(), func (subject []byte) bool { //nolint:staticcheck
+				return bytes.Equal(cert.RawSubject, subject)
+			})
 			req.True(found, "Certificate not found in client.")
 			return mds.AuthenticationResponse{
 				AuthToken: testToken1,

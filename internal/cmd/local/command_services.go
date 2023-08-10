@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -16,7 +17,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/local"
 	"github.com/confluentinc/cli/internal/pkg/output"
-	"github.com/confluentinc/cli/internal/pkg/types"
 )
 
 type Service struct {
@@ -415,7 +415,7 @@ func (c *Command) getConfig(service string) (map[string]string, error) {
 		config["dataDir"] = data
 	}
 
-	if isCP && types.Contains([]string{"connect", "kafka-rest", "ksql-server", "schema-registry"}, service) {
+	if isCP && slices.Contains([]string{"connect", "kafka-rest", "ksql-server", "schema-registry"}, service) {
 		config["consumer.interceptor.classes"] = "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
 		config["producer.interceptor.classes"] = "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
 	}

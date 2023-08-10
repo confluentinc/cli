@@ -4,6 +4,7 @@ package auth
 import (
 	"os"
 	"runtime"
+	"slices"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -19,7 +20,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/netrc"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/secret"
-	"github.com/confluentinc/cli/internal/pkg/types"
 )
 
 type Credentials struct {
@@ -302,7 +302,7 @@ func (h *LoginCredentialsManagerImpl) isSSOUser(email, orgId string) bool {
 		return false
 	}
 
-	if email != "" && types.Contains([]string{"prod-us-gov", "devel-us-gov", "infra-us-gov"}, sso.GetCCloudEnvFromBaseUrl(h.client.BaseURL)) {
+	if email != "" && slices.Contains([]string{"prod-us-gov", "devel-us-gov", "infra-us-gov"}, sso.GetCCloudEnvFromBaseUrl(h.client.BaseURL)) {
 		return true
 	}
 

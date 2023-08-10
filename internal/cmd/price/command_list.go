@@ -2,6 +2,7 @@ package price
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -231,7 +232,7 @@ func filterTable(table map[string]*ccloudv1.UnitPrices, filters []string, metric
 			}
 
 			// Hide legacy cluster types unless --legacy flag is enabled
-			if types.Contains([]string{"standard", "custom"}, fields[3]) && !legacy {
+			if slices.Contains([]string{"standard", "custom"}, fields[3]) && !legacy {
 				continue
 			}
 
