@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/spf13/cobra"
+	"golang.org/x/exp/slices"
 
 	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 
@@ -49,13 +50,9 @@ func (c *unregisterCommand) unregister(cmd *cobra.Command, _ []string) error {
 	if err != nil {
 		return pcluster.HandleClusterError(err, httpResp)
 	}
-	clusterFound := false
-	for _, cluster := range clusterInfos {
-		if clusterName == cluster.ClusterName {
-			clusterFound = true
-		}
-	}
-	if !clusterFound {
+	if !slices.ContainsFunc(clusterInfos, func(cluster mds.ClusterInfo) bool {
+		return cluster.ClusterName == clusterName
+	}) {
 		return errors.Errorf(errors.UnknownClusterErrorMsg, clusterName)
 	}
 

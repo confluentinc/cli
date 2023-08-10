@@ -19,6 +19,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/exp/slices"
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 	ccloudv1mock "github.com/confluentinc/ccloud-sdk-go-v1-public/mock"
@@ -721,13 +722,9 @@ func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *confi
 			transport, ok := mdsClient.GetConfig().HTTPClient.Transport.(*http.Transport)
 			req.True(ok)
 			req.NotEqual(http.DefaultTransport, transport)
-			found := false
-			for _, actualSubject := range transport.TLSClientConfig.RootCAs.Subjects() { //nolint:staticcheck
-				if bytes.Equal(cert.RawSubject, actualSubject) {
-					found = true
-					break
-				}
-			}
+			found := slices.ContainsFunc(transport.TLSClientConfig.RootCAs.Subjects(), func (subject []byte) bool { //nolint:staticcheck
+				return bytes.Equal(cert.RawSubject, subject)
+			})
 			req.True(found, "Certificate not found in client.")
 			return mds.AuthenticationResponse{
 				AuthToken: testToken1,
