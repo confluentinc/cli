@@ -61,5 +61,5 @@ func (c *aclCommand) listOnPrem(cmd *cobra.Command, _ []string) error {
 		return kafkarest.NewError(restClient.GetConfig().BasePath, err, httpResp)
 	}
 
-	return aclutil.PrintACLsFromKafkaRestResponseOnPrem(cmd, aclGetResp.Data)
+	return aclutil.PrintACLsFromKafkaRestResponse(cmd, aclGetResp.Data)
 }
