@@ -83,7 +83,7 @@ func (c *Command) kafkaTopicProduce(cmd *cobra.Command, args []string) error {
 	signal.Notify(signals, os.Interrupt)
 	go func() {
 		<-signals
-		kafka.CloseChannel(input)
+		close(input)
 	}()
 	go scan() // Prime reader
 
@@ -109,7 +109,7 @@ func (c *Command) kafkaTopicProduce(cmd *cobra.Command, args []string) error {
 			isProduceToCompactedTopicError, err := errors.CatchProduceToCompactedTopicError(err, topicName)
 			if isProduceToCompactedTopicError {
 				scanErr = err
-				kafka.CloseChannel(input)
+				close(input)
 				break
 			}
 			output.ErrPrintf(errors.FailedToProduceErrorMsg, m.TopicPartition.Offset, m.TopicPartition.Error)

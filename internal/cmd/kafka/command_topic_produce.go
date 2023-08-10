@@ -132,7 +132,11 @@ func (c *command) produce(cmd *cobra.Command, args []string) error {
 	signal.Notify(signals, os.Interrupt)
 	go func() {
 		<-signals
-		CloseChannel(input)
+		select {
+		case <-input:
+		default:
+			close(input)
+		}
 	}()
 	// Prime reader
 	go scan()
@@ -152,7 +156,7 @@ func (c *command) produce(cmd *cobra.Command, args []string) error {
 			isProduceToCompactedTopicError, err := errors.CatchProduceToCompactedTopicError(err, topic)
 			if isProduceToCompactedTopicError {
 				scanErr = err
-				CloseChannel(input)
+				close(input)
 				break
 			}
 			output.ErrPrintf(errors.FailedToProduceErrorMsg, message.TopicPartition.Offset, err)
@@ -211,18 +215,10 @@ func PrepareInputChannel(scanErr *error) (chan string, func()) {
 				*scanErr = scanner.Err()
 			}
 			// Otherwise just EOF.
-			CloseChannel(input)
+			close(input)
 		} else {
 			input <- scanner.Text()
 		}
-	}
-}
-
-func CloseChannel(input chan string) {
-	select {
-	case <-input:
-	default:
-		close(input)
 	}
 }
 
