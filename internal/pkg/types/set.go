@@ -24,6 +24,5 @@ func (s Set[V]) Slice() []V {
 }
 
 func RemoveDuplicates(slice []string) []string {
-	s := NewSet(slice...)
-	return s.Slice()
+	return NewSet(slice...).Slice()
 }
