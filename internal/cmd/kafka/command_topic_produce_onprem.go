@@ -170,7 +170,7 @@ func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
 	signal.Notify(signals, os.Interrupt)
 	go func() {
 		<-signals
-		close(input)
+		CloseChannel(input)
 	}()
 	go scan() // Prime reader
 
@@ -195,7 +195,7 @@ func (c *command) produceOnPrem(cmd *cobra.Command, args []string) error {
 			isProduceToCompactedTopicError, err := errors.CatchProduceToCompactedTopicError(err, topic)
 			if isProduceToCompactedTopicError {
 				scanErr = err
-				close(input)
+				CloseChannel(input)
 				break
 			}
 			output.ErrPrintf(errors.FailedToProduceErrorMsg, m.TopicPartition.Offset, m.TopicPartition.Error)
