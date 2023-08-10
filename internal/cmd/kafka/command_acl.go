@@ -119,7 +119,7 @@ func (c *aclCommand) getAllUsers() ([]*ccloudv1.User, error) {
 func mapNumericIdToResourceId(users []*ccloudv1.User) map[int32]string {
 	numericIdToResourceId := make(map[int32]string)
 	for _, user := range users {
-		numericIdToResourceId[user.Id] = user.ResourceId
+		numericIdToResourceId[user.GetId()] = user.GetResourceId()
 	}
 	return numericIdToResourceId
 }
