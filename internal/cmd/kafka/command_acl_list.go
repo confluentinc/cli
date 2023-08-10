@@ -38,6 +38,11 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
+	users, err := c.getAllUsers()
+	if err != nil {
+		return err
+	}
+
 	if acl[0].errors != nil {
 		return acl[0].errors
 	}
@@ -56,5 +61,5 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	return aclutil.PrintACLsFromKafkaRestResponse(cmd, aclDataList.Data)
+	return aclutil.PrintACLsFromKafkaRestResponseWithResourceIdMap(cmd, aclDataList.Data, mapNumericIdToResourceId(users))
 }
