@@ -21,13 +21,13 @@ func (c *command) newComputePoolUpdateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Update name and CFU count of a Flink compute pool.`,
-				Code: "confluent flink compute-pool update my-compute-pool --name new_name --cfu 2",
+				Code: `confluent flink compute-pool update my-compute-pool --name "new name" --cfu 2`,
 			},
 		),
 	}
 
-	cmd.Flags().Int32("cfu", 0, "Number of Confluent Flink Units (CFU).")
 	cmd.Flags().String("name", "", "Name of the compute pool.")
+	cmd.Flags().Int32("cfu", 0, "Number of Confluent Flink Units (CFU).")
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
 
@@ -35,6 +35,10 @@ func (c *command) newComputePoolUpdateCommand() *cobra.Command {
 }
 
 func (c *command) computePoolUpdate(cmd *cobra.Command, args []string) error {
+	if err := errors.CheckNoUpdate(cmd.Flags(), "name", "cfu"); err != nil {
+		return err
+	}
+
 	id := c.Context.GetCurrentFlinkComputePool()
 	if len(args) > 0 {
 		id = args[0]
