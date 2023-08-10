@@ -108,7 +108,7 @@ func (c *Command) runServiceLogCommand(cmd *cobra.Command, _ []string) error {
 func NewServiceStartCommand(service string, prerunner cmd.PreRunner) *cobra.Command {
 	longDescription := ""
 	if service == "kafka" {
-		longDescription = fmt.Sprintf("Start %s. Consider using `confluent local kafka` instead for a faster experience. In the next major confluent CLI version, this command will be removed and replaced by ongoing support for `confluent local kafka`.", writeOfficialServiceName(service))
+		longDescription = fmt.Sprintf("Start %s. For a faster and more lightweight experience, consider using `confluent local kafka`. In the next major confluent CLI version, this command will be removed and replaced by ongoing support for `confluent local kafka`.", writeOfficialServiceName(service))
 	}
 	c := NewLocalCommand(
 		&cobra.Command{
