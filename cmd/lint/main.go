@@ -32,6 +32,7 @@ var commandRules = []linter.CommandRule{
 		linter.ExcludeCommand("plugin"),
 		linter.ExcludeCommand("completion"),
 		linter.ExcludeCommandContains("kafka client-config create"),
+		linter.ExcludeCommandContains("local services kafka start"),
 		linter.ExcludeCommand("local current")),
 	linter.RequireStartWithCapital("Long"),
 
