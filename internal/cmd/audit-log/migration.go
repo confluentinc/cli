@@ -208,7 +208,7 @@ func combineDestinationTopics(specs map[string]*mds.AuditLogConfigSpec, newSpec 
 		topics := spec.Destinations.Topics
 		for topicName, destination := range topics {
 			if _, ok := newTopics[topicName]; ok {
-				retentionTime := utils.Max(destination.RetentionMs, newTopics[topicName].RetentionMs)
+				retentionTime := max(destination.RetentionMs, newTopics[topicName].RetentionMs)
 				if destination.RetentionMs != newTopics[topicName].RetentionMs {
 					topicRetentionDiscrepancies[topicName] = retentionTime
 				}
