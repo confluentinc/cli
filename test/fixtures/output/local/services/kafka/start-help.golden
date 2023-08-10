@@ -1,4 +1,4 @@
-Start Apache Kafka®. For a faster and more lightweight experience, consider using `confluent local kafka`. In the next major confluent CLI version, this command will be removed and replaced by ongoing support for `confluent local kafka`.
+Start Apache Kafka®. For a faster and more lightweight experience, consider using `confluent local kafka start`. In the next major confluent CLI version, this command will be removed and replaced by ongoing support for `confluent local kafka`.
 
 Usage:
   confluent local services kafka start [flags]
