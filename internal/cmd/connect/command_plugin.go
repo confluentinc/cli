@@ -16,7 +16,7 @@ type pluginCommand struct {
 func newPluginCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "plugin",
-		Short: "Manage Connect plugins.",
+		Short: "Manage Connect plugins. Only supported for managed connect plugins.",
 	}
 
 	c := &pluginCommand{}
