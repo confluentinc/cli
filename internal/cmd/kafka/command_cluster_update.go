@@ -43,8 +43,8 @@ func (c *clusterCommand) newUpdateCommand(cfg *config.Config) *cobra.Command {
 }
 
 func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
-	if !cmd.Flags().Changed("name") && !cmd.Flags().Changed("cku") {
-		return errors.New(errors.NameOrCKUFlagErrorMsg)
+	if err := errors.CheckNoUpdate(cmd.Flags(), "cku", "name"); err != nil {
+		return err
 	}
 
 	environmentId, err := c.Context.EnvironmentId()
