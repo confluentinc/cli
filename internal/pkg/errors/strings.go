@@ -38,7 +38,7 @@ const (
 	RunByokAzurePermissionsHeaderMsg = "To ensure the key vault has the correct role assignments, please run the following azure-cli command (certified for azure-cli v2.45):"
 
 	// kafka topic commands
-	StartingProducerMsg         = "Starting Kafka Producer. Use Ctrl-C or Ctrl-D to exit."
+	StartingProducerMsg         = "Starting Kafka Producer. Use %s to exit.\n"
 	StoppingConsumerMsg         = "Stopping Consumer."
 	StartingConsumerMsg         = "Starting Kafka Consumer. Use Ctrl-C to exit."
 	UpdateTopicConfigMsg        = "Updated the following configuration values for topic \"%s\":\n"
