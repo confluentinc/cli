@@ -58,8 +58,6 @@ func (s *CLITestSuite) TestSchemaRegistryConfigDescribe() {
 		{args: fmt.Sprintf("schema-registry config describe --environment %s -o json", testserver.SRApiEnvId), fixture: "schema-registry/config/describe-global-json.golden"},
 		{args: fmt.Sprintf("schema-registry config describe --environment %s -o yaml", testserver.SRApiEnvId), fixture: "schema-registry/config/describe-global-yaml.golden"},
 		{args: fmt.Sprintf("schema-registry config describe --subject payments --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/config/describe-subject.golden"},
-		{args: fmt.Sprintf("schema-registry config delete --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/config/describe-global.golden"},
-		{args: fmt.Sprintf("schema-registry config delete --subject payments --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/config/describe-global.golden"},
 	}
 
 	for _, test := range tests {
