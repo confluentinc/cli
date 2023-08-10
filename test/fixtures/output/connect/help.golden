@@ -5,8 +5,8 @@ Usage:
 
 Available Commands:
   cluster     Manage Connect clusters.
-  event       Manage Connect log events configuration.
-  plugin      Manage Connect plugins.
+  event       Manage log events for managed connectors.
+  plugin      Manage plugins for managed connectors.
 
 Global Flags:
   -h, --help            Show help for this command.
