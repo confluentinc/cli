@@ -6,10 +6,10 @@ Usage:
 Examples:
 Modify the "my_topic" topic to have a retention period of 3 days (259200000 milliseconds).
 
-  $ confluent kafka topic update my_topic --config "retention.ms=259200000"
+  $ confluent kafka topic update my_topic --config retention.ms=259200000
 
 Flags:
-      --config strings       A comma-separated list of configuration overrides with form "key=value".
+      --config strings       A comma-separated list of "key=value" pairs, or path to a configuration file containing a newline-separated list of "key=value" pairs.
       --dry-run              Run the command without committing changes.
       --cluster string       Kafka cluster ID.
       --context string       CLI context name.
