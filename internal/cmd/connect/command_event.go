@@ -13,7 +13,7 @@ type eventCommand struct {
 func newEventCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "event",
-		Short:       "Manage Connect log events configuration. Only supported for managed connectors.",
+		Short:       "Manage log events for managed connectors.",
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
