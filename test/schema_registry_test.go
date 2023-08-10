@@ -66,6 +66,18 @@ func (s *CLITestSuite) TestSchemaRegistryConfigDescribe() {
 	}
 }
 
+func (s *CLITestSuite) TestSchemaRegistryConfigDelete() {
+	tests := []CLITest{
+		{args: fmt.Sprintf("schema-registry config delete --environment %s --force", testserver.SRApiEnvId), fixture: "schema-registry/config/delete-config.golden"},
+		{args: fmt.Sprintf("schema-registry config delete --subject payments --environment %s --force", testserver.SRApiEnvId), fixture: "schema-registry/config/delete-config.golden"},
+	}
+
+	for _, test := range tests {
+		test.login = "cloud"
+		s.runIntegrationTest(test)
+	}
+}
+
 func (s *CLITestSuite) TestSchemaRegistryExporter() {
 	exporterConfigPath := getInputFixturePath("schema-registry", "schema-exporter-config.txt")
 
