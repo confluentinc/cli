@@ -25,6 +25,7 @@ func (c *aclCommand) newListCommand() *cobra.Command {
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("principal", "", `Principal for this operation, prefixed with "User:".`)
+	cmd.Flags().Bool("all", false, "Include ACLs for principals with integer IDs. These ACLs are associated with deleted principals.")
 	pcmd.AddOutputFlag(cmd)
 
 	cmd.MarkFlagsMutuallyExclusive("service-account", "principal")

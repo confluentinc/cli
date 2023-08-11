@@ -14,6 +14,7 @@ Flags:
       --environment string        Environment ID.
       --service-account string    Service account ID.
       --principal string          Principal for this operation, prefixed with "User:".
+      --all                       Include ACLs for principals with integer IDs. These ACLs are associated with deleted principals.
   -o, --output string             Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:
