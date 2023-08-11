@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -37,6 +38,7 @@ func (c *command) set(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	var updates []string
 	for jsonField, val := range configMap {
 		oldValue := reflect.ValueOf(c.config).Elem().FieldByName(jsonFieldToName[jsonField])
 		switch v := val.(type) {
@@ -45,7 +47,7 @@ func (c *command) set(cmd *cobra.Command, args []string) error {
 		case string:
 			oldValue.SetString(v)
 		}
-		output.Printf(``)
+		updates = append(updates, fmt.Sprintf(errors.UpdateSuccessMsg, "value", "config field", jsonField, val))
 	}
 
 	if err := c.config.Validate(); err != nil {
@@ -53,6 +55,9 @@ func (c *command) set(cmd *cobra.Command, args []string) error {
 	}
 	if err := c.config.Save(); err != nil {
 		return err
+	}
+	for _, update := range updates {
+		output.Print(update)
 	}
 	return nil
 }
