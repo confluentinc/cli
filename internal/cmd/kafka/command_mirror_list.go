@@ -2,14 +2,16 @@ package kafka
 
 import (
 	"fmt"
-	"strings"
+	"net/http"
 
+	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
 
-	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
+	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
@@ -60,43 +62,41 @@ func (c *mirrorCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	var mirrorTopicStatus *kafkarestv3.MirrorTopicStatus
+	mirrorStatusOpt := optional.EmptyInterface()
 	if mirrorStatus != "" {
-		mirrorTopicStatus, err = kafkarestv3.NewMirrorTopicStatusFromValue(strings.ToUpper(mirrorStatus))
-		if err != nil {
-			return err
-		}
+		mirrorStatusOpt = optional.NewInterface(kafkarestv3.MirrorTopicStatus(mirrorStatus))
 	}
 
-	var mirrors kafkarestv3.ListMirrorTopicsResponseDataList
+	var listMirrorTopicsResponseDataList kafkarestv3.ListMirrorTopicsResponseDataList
+	var httpResp *http.Response
+
 	if linkName == "" {
-		mirrors, err = kafkaREST.CloudClient.ListKafkaMirrorTopics(mirrorTopicStatus)
-		if err != nil {
-			return err
-		}
+		opts := &kafkarestv3.ListKafkaMirrorTopicsOpts{MirrorStatus: mirrorStatusOpt}
+		listMirrorTopicsResponseDataList, httpResp, err = kafkaREST.Client.ClusterLinkingV3Api.ListKafkaMirrorTopics(kafkaREST.Context, kafkaREST.GetClusterId(), opts)
 	} else {
-		mirrors, err = kafkaREST.CloudClient.ListKafkaMirrorTopicsUnderLink(linkName, mirrorTopicStatus)
-		if err != nil {
-			return err
-		}
+		opts := &kafkarestv3.ListKafkaMirrorTopicsUnderLinkOpts{MirrorStatus: mirrorStatusOpt}
+		listMirrorTopicsResponseDataList, httpResp, err = kafkaREST.Client.ClusterLinkingV3Api.ListKafkaMirrorTopicsUnderLink(kafkaREST.Context, kafkaREST.GetClusterId(), linkName, opts)
+	}
+	if err != nil {
+		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
 	list := output.NewList(cmd)
-	for _, mirror := range mirrors.GetData() {
+	for _, mirror := range listMirrorTopicsResponseDataList.Data {
 		var maxLag int64 = 0
-		for _, mirrorLag := range mirror.GetMirrorLags().Items {
-			if lag := mirrorLag.GetLag(); lag > maxLag {
-				maxLag = lag
+		for _, mirrorLag := range mirror.MirrorLags {
+			if mirrorLag.Lag > maxLag {
+				maxLag = mirrorLag.Lag
 			}
 		}
 
 		list.Add(&mirrorOut{
-			LinkName:                 mirror.GetLinkName(),
-			MirrorTopicName:          mirror.GetMirrorTopicName(),
-			SourceTopicName:          mirror.GetSourceTopicName(),
-			MirrorStatus:             string(mirror.GetMirrorStatus()),
-			StatusTimeMs:             mirror.GetStateTimeMs(),
-			NumPartition:             mirror.GetNumPartitions(),
+			LinkName:                 mirror.LinkName,
+			MirrorTopicName:          mirror.MirrorTopicName,
+			SourceTopicName:          mirror.SourceTopicName,
+			MirrorStatus:             string(mirror.MirrorStatus),
+			StatusTimeMs:             mirror.StateTimeMs,
+			NumPartition:             mirror.NumPartitions,
 			MaxPerPartitionMirrorLag: maxLag,
 		})
 	}
