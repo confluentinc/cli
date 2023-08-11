@@ -1,7 +1,10 @@
 package kafka
 
 import (
+	"github.com/antihax/optional"
 	"github.com/spf13/cobra"
+
+	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 )
@@ -79,14 +82,15 @@ func (c *mirrorCommand) autocompleteMirrorTopics(cmd *cobra.Command) []string {
 		return nil
 	}
 
-	mirrors, err := kafkaREST.CloudClient.ListKafkaMirrorTopicsUnderLink(linkName, nil)
+	opts := &kafkarestv3.ListKafkaMirrorTopicsUnderLinkOpts{MirrorStatus: optional.EmptyInterface()}
+	listMirrorTopicsResponseDataList, _, err := kafkaREST.Client.ClusterLinkingV3Api.ListKafkaMirrorTopicsUnderLink(kafkaREST.Context, kafkaREST.GetClusterId(), linkName, opts)
 	if err != nil {
 		return nil
 	}
 
-	suggestions := make([]string, len(mirrors.GetData()))
-	for i, mirror := range mirrors.GetData() {
-		suggestions[i] = mirror.GetMirrorTopicName()
+	suggestions := make([]string, len(listMirrorTopicsResponseDataList.Data))
+	for i, mirrorTopic := range listMirrorTopicsResponseDataList.Data {
+		suggestions[i] = mirrorTopic.MirrorTopicName
 	}
 	return suggestions
 }
