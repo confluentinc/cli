@@ -25,6 +25,7 @@ func (c *aclCommand) newListCommand() *cobra.Command {
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddServiceAccountFlag(cmd, c.AuthenticatedCLICommand)
 	cmd.Flags().String("principal", "", `Principal for this operation, prefixed with "User:".`)
+	cmd.Flags().Bool("all", false, "Include ACLs for principals with integer IDs. These ACLs are associated with deleted principals.")
 	pcmd.AddOutputFlag(cmd)
 
 	cmd.MarkFlagsMutuallyExclusive("service-account", "principal")
@@ -34,11 +35,6 @@ func (c *aclCommand) newListCommand() *cobra.Command {
 
 func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 	acl, err := parse(cmd)
-	if err != nil {
-		return err
-	}
-
-	users, err := c.getAllUsers()
 	if err != nil {
 		return err
 	}
@@ -61,5 +57,5 @@ func (c *aclCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	return aclutil.PrintACLsFromKafkaRestResponseWithResourceIdMap(cmd, aclDataList.Data, mapNumericIdToResourceId(users))
+	return aclutil.PrintACLsFromKafkaRestResponse(cmd, aclDataList.Data)
 }
