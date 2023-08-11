@@ -20,6 +20,11 @@ func GetStdin() *term.State {
 }
 
 func GetConsoleParser() prompt.ConsoleParser {
+	defer func() {
+		if r := recover(); r != nil {
+			log.CliLogger.Warnf("Couldn't open \"/dev/ttv\" file. Error: %v\n", r)
+		}
+	}()
 	consoleParser := prompt.NewStandardInputParser()
 	err := consoleParser.Setup()
 	if err != nil {
