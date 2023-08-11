@@ -20,6 +20,10 @@ func GetStdin() *term.State {
 }
 
 func GetConsoleParser() prompt.ConsoleParser {
+	if fileInfo, err := os.Stat("/dev/tty"); err != nil || fileInfo.Mode().Perm()&0444 == 0 {
+		log.CliLogger.Warnf("Couldn't open \"/dev/tty\" file because it either doesn't exist or doesn't have read permissions.\n")
+		return nil
+	}
 	consoleParser := prompt.NewStandardInputParser()
 	err := consoleParser.Setup()
 	if err != nil {
