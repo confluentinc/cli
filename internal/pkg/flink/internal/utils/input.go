@@ -33,6 +33,9 @@ func GetConsoleParser() prompt.ConsoleParser {
 }
 
 func TearDownConsoleParser(consoleParser prompt.ConsoleParser) {
+	if consoleParser == nil {
+		return
+	}
 	err := consoleParser.TearDown()
 	if err != nil {
 		log.CliLogger.Warnf("Couldn't tear down console parser. Error: %v\n", err)
