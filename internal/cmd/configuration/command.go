@@ -19,7 +19,7 @@ type command struct {
 type configurationOut struct {
 	Name     string `human:"Name" serialized:"name"`
 	Value    string `human:"Value" serialized:"value"`
-	Settable bool   `human:"Modifiable With Set" serialized:"modifiable_with_set"`
+	ReadOnly bool   `human:"Read-Only" serialized:"read_only"`
 }
 
 func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {

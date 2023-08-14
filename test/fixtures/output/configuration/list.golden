@@ -1,15 +1,19 @@
-          Name          |                       Value                       | Modifiable With Set  
-------------------------+---------------------------------------------------+----------------------
-  context_states        | [context1 context2]                               | false                
-  contexts              | [context1 context2]                               | false                
-  credentials           | [api-key-costa                                    | false                
-                        | username-cli-mock-email@confluent.io-http://test] |                      
-  current_context       | context2                                          | true                 
-  disable_feature_flags | false                                             | true                 
-  disable_plugins       | true                                              | true                 
-  disable_update_check  | false                                             | true                 
-  disable_updates       | false                                             | true                 
-  local_ports           | <nil>                                             | false                
-  no_browser            | false                                             | true                 
-  platforms             | [http://test u-123]                               | false                
-  saved_credentials     | []                                                | false                
+          Name          |                       Value                        | Read-Only  
+------------------------+----------------------------------------------------+------------
+  context_states        | map[string]*config.ContextState                    | true       
+                        | with keys: [context1]                              |            
+  contexts              | map[string]*config.Context                         | true       
+                        | with keys: [context1]                              |            
+  credentials           | map[string]*config.Credential with keys:           | true       
+                        | [username-cli-mock-email@confluent.io-http://test] |            
+  current_context       | context1                                           | false      
+  disable_feature_flags | false                                              | false      
+  disable_plugins       | false                                              | false      
+  disable_update_check  | false                                              | false      
+  disable_updates       | false                                              | false      
+  local_ports           |                                                    | true       
+  no_browser            | false                                              | false      
+  platforms             | map[string]*config.Platform                        | true       
+                        | with keys: [u-123]                                 |            
+  saved_credentials     | map[string]*config.LoginCredential                 | true       
+                        | with keys: []                                      |            

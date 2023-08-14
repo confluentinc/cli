@@ -37,11 +37,11 @@ func (c *command) list(cmd *cobra.Command, _ []string) error {
 			configOut := &configurationOut{
 				Name:     jsonTag,
 				Value:    fmt.Sprintf("%v", value),
-				Settable: ok,
+				ReadOnly: !ok,
 			}
 			if value.Kind() == reflect.Map {
 				values = value.MapKeys()
-				configOut.Value = fmt.Sprintf("%v", values)
+				configOut.Value = fmt.Sprintf("%s with keys: %v", field.Type.String(), values)
 			}
 			list.Add(configOut)
 		}
