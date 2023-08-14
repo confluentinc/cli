@@ -1,10 +1,10 @@
 package featureflags
 
 import (
+	"slices"
 	"strings"
 
 	"github.com/spf13/cobra"
-	"golang.org/x/exp/slices"
 
 	"github.com/confluentinc/cli/internal/pkg/config"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"

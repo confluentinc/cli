@@ -140,7 +140,7 @@ func (c *command) clusterDescribe(cmd *cobra.Command, _ []string) error {
 		numSchemasInt := int(math.Round(float64(metricsResponse.FlatQueryResponse.GetData()[0].Value))) // the return value is a float32
 		numSchemas = strconv.Itoa(numSchemasInt)
 		// Available number of schemas should not be negative
-		availableSchemas = strconv.Itoa(int(math.Max(float64(freeSchemasLimit-numSchemasInt), 0)))
+		availableSchemas = strconv.Itoa(max(freeSchemasLimit-numSchemasInt, 0))
 	} else {
 		log.CliLogger.Warn("Unexpected results from Metrics API")
 		numSchemas = ""

@@ -436,16 +436,12 @@ func (c *PasswordProtectionSuite) RemoveEncryptedPasswords(configFilePath, local
 	configProps.DisableExpansion = true
 
 	fileType := filepath.Ext(configFilePath)
-	isJson := false
-	if fileType == ".json" {
-		isJson = true
-	}
 
 	// Delete the config from Security File.
 	for _, key := range configs {
 		pathKey := GenerateConfigKey(configFilePath, key)
 
-		if isJson {
+		if fileType == ".json" {
 			pathKey = strings.ReplaceAll(pathKey, "\\.", ".")
 		}
 		// Check if config is removed from secrets files
