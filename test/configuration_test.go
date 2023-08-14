@@ -32,6 +32,7 @@ func (s *CLITestSuite) TestConfigurationSet() {
 		{args: "configuration set disable_update_check=true", fixture: "configuration/set-one.golden"},
 		{args: "configuration set disable_update_check=false disable_plugins=true current_context=context2", fixture: "configuration/set-multiple.golden"},
 		{args: "configuration set disable_update_check=yes", fixture: "configuration/set-invalid-1.golden", exitCode: 1},
+		{args: "configuration set disable_feature_flags=true", fixture: "configuration/set-prompt-cancel.golden", input: "n\n"},
 	}
 
 	for _, test := range tests {

@@ -10,6 +10,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -43,6 +44,13 @@ func (c *command) set(cmd *cobra.Command, args []string) error {
 		oldValue := reflect.ValueOf(c.config).Elem().FieldByName(jsonFieldToName[keys[i]])
 		switch v := values[i].(type) {
 		case bool:
+			if keys[i] == "disable_feature_flags" {
+				if ok, err := confirmSet(keys[i], form.NewPrompt()); err != nil {
+					return err
+				} else if !ok {
+					continue
+				}
+			}
 			oldValue.SetBool(v)
 		case string:
 			oldValue.SetString(v)
@@ -90,4 +98,22 @@ func buildUpdates(args []string, settableFields map[string]reflect.Kind) ([]stri
 		}
 	}
 	return keys, values, nil
+}
+
+func confirmSet(field string, prompt form.Prompt) (bool, error) {
+	f := form.New(
+		form.Field{
+			ID:        "proceed",
+			Prompt:    fmt.Sprintf(`We don't recommend modifying the value of "%s", would you like to proceed?`, field),
+			IsYesOrNo: true,
+		},
+	)
+	if err := f.Prompt(prompt); err != nil {
+		return false, err
+	}
+	if !f.Responses["proceed"].(bool) {
+		output.Println(fmt.Sprintf(`Configuration field "%s" was not updated.`, field))
+		return false, nil
+	}
+	return true, nil
 }
