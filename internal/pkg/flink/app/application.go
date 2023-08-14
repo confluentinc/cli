@@ -52,6 +52,10 @@ func StartApp(client ccloudv2.GatewayClientInterface, tokenRefreshFunc func() er
 
 	stdinBefore := utils.GetStdin()
 	consoleParser := utils.GetConsoleParser()
+	if consoleParser == nil {
+		utils.OutputErr("Error: failed to set initialize console parser")
+		return
+	}
 	appController.AddCleanupFunction(func() {
 		utils.TearDownConsoleParser(consoleParser)
 		utils.RestoreStdin(stdinBefore)
