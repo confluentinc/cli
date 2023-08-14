@@ -4,7 +4,6 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -45,19 +44,11 @@ func (c *mirrorCommand) describe(cmd *cobra.Command, args []string) error {
 	}
 
 	kafkaREST, err := c.GetKafkaREST()
-	if kafkaREST == nil {
-		if err != nil {
-			return err
-		}
-		return errors.New(errors.RestProxyNotAvailableMsg)
-	}
-
-	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
 
-	mirror, httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.ReadKafkaMirrorTopic(kafkaREST.Context, cluster.ID, linkName, mirrorTopicName)
+	mirror, httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.ReadKafkaMirrorTopic(kafkaREST.Context, kafkaREST.GetClusterId(), linkName, mirrorTopicName)
 	if err != nil {
 		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}

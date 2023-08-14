@@ -8,7 +8,7 @@ import (
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/featureflags"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -65,13 +65,14 @@ func (c *command) describe(cmd *cobra.Command, args []string) error {
 		serviceAccountsMap := getServiceAccountsMap(serviceAccounts)
 
 		ownerId = apiKey.Spec.Owner.GetId()
-		email = c.getEmail(ownerId, resourceIdToUserIdMap, usersMap, serviceAccountsMap)
+		auditLogServiceAccountId := c.getAuditLogServiceAccountId()
+		email = c.getEmail(ownerId, auditLogServiceAccountId, resourceIdToUserIdMap, usersMap, serviceAccountsMap)
 	}
 
 	resources := []apikeysv2.ObjectReference{apiKey.Spec.GetResource()}
 
 	// Check if multicluster keys are enabled, and if so check the resources field
-	if featureflags.Manager.BoolVariation("cli.multicluster-api-keys.enable", c.Context, v1.CliLaunchDarklyClient, true, false) {
+	if featureflags.Manager.BoolVariation("cli.multicluster-api-keys.enable", c.Context, config.CliLaunchDarklyClient, true, false) {
 		resources = apiKey.Spec.GetResources()
 	}
 

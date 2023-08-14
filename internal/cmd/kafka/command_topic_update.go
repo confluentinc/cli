@@ -40,13 +40,13 @@ func (c *command) newUpdateCommand() *cobra.Command {
 		Example: examples.BuildExampleString(
 			examples.Example{
 				Text: `Modify the "my_topic" topic to have a retention period of 3 days (259200000 milliseconds).`,
-				Code: `confluent kafka topic update my_topic --config "retention.ms=259200000"`,
+				Code: "confluent kafka topic update my_topic --config retention.ms=259200000",
 			},
 		),
 		Annotations: map[string]string{pcmd.RunRequirement: pcmd.RequireNonAPIKeyCloudLogin},
 	}
 
-	cmd.Flags().StringSlice("config", nil, `A comma-separated list of configuration overrides with form "key=value".`)
+	pcmd.AddConfigFlag(cmd)
 	pcmd.AddDryRunFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
@@ -63,8 +63,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-
-	configMap, err := properties.ConfigFlagToMap(configs)
+	configMap, err := properties.GetMap(configs)
 	if err != nil {
 		return err
 	}
@@ -74,17 +73,12 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand()
-	if err != nil {
-		return err
-	}
-
-	if err := c.provisioningClusterCheck(kafkaClusterConfig.ID); err != nil {
-		return err
-	}
-
 	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {
+		return err
+	}
+
+	if err := c.provisioningClusterCheck(kafkaREST.GetClusterId()); err != nil {
 		return err
 	}
 
@@ -97,7 +91,7 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 	data := toAlterConfigBatchRequestData(configMap)
 	data.ValidateOnly = &dryRun
 
-	httpResp, err := kafkaREST.CloudClient.UpdateKafkaTopicConfigBatch(kafkaClusterConfig.ID, topicName, data)
+	httpResp, err := kafkaREST.CloudClient.UpdateKafkaTopicConfigBatch(topicName, data)
 	if err != nil {
 		restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err)
 		if parseErr == nil {
@@ -121,16 +115,16 @@ func (c *command) update(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		updateResp, httpResp, err := kafkaREST.CloudClient.UpdateKafkaTopicPartitionCount(kafkaClusterConfig.ID, topicName, kafkarestv3.UpdatePartitionCountRequestData{PartitionsCount: int32(updateNumPartitionsInt)})
+		updateResp, err := kafkaREST.CloudClient.UpdateKafkaTopicPartitionCount(topicName, kafkarestv3.UpdatePartitionCountRequestData{PartitionsCount: int32(updateNumPartitionsInt)})
 		if err != nil {
-			return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+			return err
 		}
 		configsValues[numPartitionsKey] = fmt.Sprint(updateResp.PartitionsCount)
 		partitionsKafkaRestConfig := kafkarestv3.AlterConfigBatchRequestDataData{Name: numPartitionsKey}
 		kafkaRestConfigs.Data = append(kafkaRestConfigs.Data, partitionsKafkaRestConfig)
 	}
 
-	configsResp, err := kafkaREST.CloudClient.ListKafkaTopicConfigs(kafkaClusterConfig.ID, topicName)
+	configsResp, err := kafkaREST.CloudClient.ListKafkaTopicConfigs(topicName)
 	if err != nil {
 		return err
 	}

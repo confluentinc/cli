@@ -71,7 +71,7 @@ func (s *CLITestSuite) TestSchemaRegistryExporter() {
 
 	tests := []CLITest{
 		{args: fmt.Sprintf("schema-registry exporter list --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/exporter/list.golden"},
-		{args: fmt.Sprintf(`schema-registry exporter create myexporter --subjects foo,bar --context-type AUTO --subject-format my-\\${subject} --config-file %s --environment %s`, exporterConfigPath, testserver.SRApiEnvId), fixture: "schema-registry/exporter/create.golden"},
+		{args: fmt.Sprintf(`schema-registry exporter create myexporter --subjects foo,bar --context-type AUTO --subject-format my-\\${subject} --config %s --environment %s`, exporterConfigPath, testserver.SRApiEnvId), fixture: "schema-registry/exporter/create.golden"},
 		{args: fmt.Sprintf("schema-registry exporter describe myexporter --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/exporter/describe.golden"},
 		{args: fmt.Sprintf(`schema-registry exporter update myexporter --subjects foo,bar,test --subject-format my-\\${subject} --environment %s`, testserver.SRApiEnvId), fixture: "schema-registry/exporter/update.golden"},
 		{args: fmt.Sprintf("schema-registry exporter delete myexporter --environment %s --force", testserver.SRApiEnvId), fixture: "schema-registry/exporter/delete.golden"},
@@ -123,8 +123,8 @@ func (s *CLITestSuite) TestSchemaRegistrySubject() {
 	tests := []CLITest{
 		{args: fmt.Sprintf("schema-registry subject list --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/subject/list.golden"},
 		{args: fmt.Sprintf("schema-registry subject describe testSubject --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/subject/describe.golden"},
-		{args: fmt.Sprintf("schema-registry subject update testSubject --compatibility BACKWARD --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/subject/update-compatibility.golden"},
-		{args: fmt.Sprintf("schema-registry subject update testSubject --compatibility BACKWARD --compatibility-group application.version --metadata-defaults %s --ruleset-defaults %s --environment %s", metadataPath, rulesetPath, testserver.SRApiEnvId), fixture: "schema-registry/subject/update-compatibility.golden"},
+		{args: fmt.Sprintf("schema-registry subject update testSubject --compatibility backward --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/subject/update-compatibility.golden"},
+		{args: fmt.Sprintf("schema-registry subject update testSubject --compatibility backward --compatibility-group application.version --metadata-defaults %s --ruleset-defaults %s --environment %s", metadataPath, rulesetPath, testserver.SRApiEnvId), fixture: "schema-registry/subject/update-compatibility.golden"},
 		{args: fmt.Sprintf("schema-registry subject update testSubject --mode readonly --environment %s", testserver.SRApiEnvId), fixture: "schema-registry/subject/update-mode.golden"},
 	}
 

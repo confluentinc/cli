@@ -1,6 +1,7 @@
 package kafka
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/antihax/optional"
@@ -9,11 +10,13 @@ import (
 	"github.com/confluentinc/kafka-rest-sdk-go/kafkarestv3"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
+
+var allowedMirrorTopicStatusValues = []string{"active", "failed", "paused", "stopped", "pending_stopped"}
 
 func (c *mirrorCommand) newListCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -34,7 +37,7 @@ func (c *mirrorCommand) newListCommand() *cobra.Command {
 	}
 
 	pcmd.AddLinkFlag(cmd, c.AuthenticatedCLICommand)
-	cmd.Flags().String(mirrorStatusFlagName, "", "Mirror topic status. Can be one of [active, failed, paused, stopped, pending_stopped]. If not specified, list all mirror topics.")
+	cmd.Flags().String(mirrorStatusFlagName, "", fmt.Sprintf("Mirror topic status. Can be one of %s. If not specified, list all mirror topics.", utils.ArrayToCommaDelimitedString(allowedMirrorTopicStatusValues, "or")))
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
@@ -55,14 +58,6 @@ func (c *mirrorCommand) list(cmd *cobra.Command, _ []string) error {
 	}
 
 	kafkaREST, err := c.GetKafkaREST()
-	if kafkaREST == nil {
-		if err != nil {
-			return err
-		}
-		return errors.New(errors.RestProxyNotAvailableMsg)
-	}
-
-	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return err
 	}
@@ -77,10 +72,10 @@ func (c *mirrorCommand) list(cmd *cobra.Command, _ []string) error {
 
 	if linkName == "" {
 		opts := &kafkarestv3.ListKafkaMirrorTopicsOpts{MirrorStatus: mirrorStatusOpt}
-		listMirrorTopicsResponseDataList, httpResp, err = kafkaREST.Client.ClusterLinkingV3Api.ListKafkaMirrorTopics(kafkaREST.Context, cluster.ID, opts)
+		listMirrorTopicsResponseDataList, httpResp, err = kafkaREST.Client.ClusterLinkingV3Api.ListKafkaMirrorTopics(kafkaREST.Context, kafkaREST.GetClusterId(), opts)
 	} else {
 		opts := &kafkarestv3.ListKafkaMirrorTopicsUnderLinkOpts{MirrorStatus: mirrorStatusOpt}
-		listMirrorTopicsResponseDataList, httpResp, err = kafkaREST.Client.ClusterLinkingV3Api.ListKafkaMirrorTopicsUnderLink(kafkaREST.Context, cluster.ID, linkName, opts)
+		listMirrorTopicsResponseDataList, httpResp, err = kafkaREST.Client.ClusterLinkingV3Api.ListKafkaMirrorTopicsUnderLink(kafkaREST.Context, kafkaREST.GetClusterId(), linkName, opts)
 	}
 	if err != nil {
 		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)

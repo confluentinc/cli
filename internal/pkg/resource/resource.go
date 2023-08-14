@@ -30,6 +30,7 @@ const (
 	SchemaExporter        = "schema exporter"
 	SchemaRegistryCluster = "Schema Registry cluster"
 	ServiceAccount        = "service account"
+	SsoGroupMapping       = "SSO group mapping"
 	Topic                 = "topic"
 	User                  = "user"
 )

@@ -16,7 +16,7 @@ import (
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -136,7 +136,7 @@ func (c *clientConfigCommand) newCreateClientCommand(clientConfig *clientConfig)
 
 	if clientConfig.isSrApiAvailable {
 		cmd.Flags().String("schema-registry-api-key", "", "Schema registry API key.")
-		cmd.Flags().String("schema-registry-api-secret", "", "Schema registry API key secret.")
+		cmd.Flags().String("schema-registry-api-secret", "", "Schema registry API secret.")
 	}
 
 	return cmd
@@ -227,12 +227,12 @@ func (c *clientConfigCommand) setSchemaRegistryCluster(cmd *cobra.Command, confi
 	})
 
 	// if empty API key or secret, comment out SR in the configuration file (but still replace SR_ENDPOINT) and warn users
-	if len(srCluster.SrCredentials.Key) == 0 || len(srCluster.SrCredentials.Secret) == 0 {
+	if srCluster.SrCredentials.Key == "" || srCluster.SrCredentials.Secret == "" {
 		// comment out SR and warn users
-		if len(srCluster.SrCredentials.Key) == 0 && len(srCluster.SrCredentials.Secret) == 0 {
+		if srCluster.SrCredentials.Key == "" && srCluster.SrCredentials.Secret == "" {
 			// both key and secret empty
 			configFile = commentAndWarnAboutSchemaRegistry(errors.SRCredsNotSetReason, errors.SRCredsNotSetSuggestions, configFile)
-		} else if len(srCluster.SrCredentials.Key) == 0 {
+		} else if srCluster.SrCredentials.Key == "" {
 			// only key empty
 			configFile = commentAndWarnAboutSchemaRegistry(errors.SRKeyNotSetReason, errors.SRKeyNotSetSuggestions, configFile)
 		} else {
@@ -264,7 +264,7 @@ func (c *clientConfigCommand) setSchemaRegistryCluster(cmd *cobra.Command, confi
 // TODO: once dynamic_context::SchemaRegistryCluster consolidates the SR API key stored in the context and
 // the key passed via the flags, please remove this function entirely because there is no more need to
 // manually fetch the values of the flags. (see setKafkaCluster as example)
-func (c *clientConfigCommand) getSchemaRegistryCluster(cmd *cobra.Command) (*v1.SchemaRegistryCluster, error) {
+func (c *clientConfigCommand) getSchemaRegistryCluster(cmd *cobra.Command) (*config.SchemaRegistryCluster, error) {
 	// get SR cluster from context
 	srCluster, err := c.Config.Context().SchemaRegistryCluster(cmd)
 	if err != nil {
@@ -282,14 +282,14 @@ func (c *clientConfigCommand) getSchemaRegistryCluster(cmd *cobra.Command) (*v1.
 	}
 
 	// set SR key pair
-	srCluster.SrCredentials = &v1.APIKeyPair{
+	srCluster.SrCredentials = &config.APIKeyPair{
 		Key:    schemaRegistryApiKey,
 		Secret: schemaRegistryApiSecret,
 	}
 	return srCluster, nil
 }
 
-func (c *clientConfigCommand) validateKafkaCredentials(kafkaCluster *v1.KafkaClusterConfig) error {
+func (c *clientConfigCommand) validateKafkaCredentials(kafkaCluster *config.KafkaClusterConfig) error {
 	configMap, err := getCommonConfig(kafkaCluster, c.clientId)
 	if err != nil {
 		return err
@@ -310,7 +310,7 @@ func (c *clientConfigCommand) validateKafkaCredentials(kafkaCluster *v1.KafkaClu
 	return nil
 }
 
-func (c *clientConfigCommand) validateSchemaRegistryCredentials(srCluster *v1.SchemaRegistryCluster, unsafeTrace bool) error {
+func (c *clientConfigCommand) validateSchemaRegistryCredentials(srCluster *config.SchemaRegistryCluster, unsafeTrace bool) error {
 	srConfig := srsdk.NewConfiguration()
 
 	// set BasePath of srConfig

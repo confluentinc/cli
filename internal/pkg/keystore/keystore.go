@@ -1,15 +1,15 @@
-//go:generate go run github.com/travisjeffery/mocker/cmd/mocker --prefix "" --dst ../mock/keystore.go --pkg mock keystore.go KeyStore
+//go:generate mocker --prefix "" --dst ../mock/keystore.go --pkg mock keystore.go KeyStore
 package keystore
 
 import (
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 type KeyStore interface {
-	HasAPIKey(key string, clusterId string) (bool, error)
-	StoreAPIKey(key *v1.APIKeyPair, clusterId string) error
+	HasAPIKey(key, clusterId string) (bool, error)
+	StoreAPIKey(key *config.APIKeyPair, clusterId string) error
 	DeleteAPIKey(key string) error
 }
 
@@ -17,7 +17,7 @@ type ConfigKeyStore struct {
 	Config *dynamicconfig.DynamicConfig
 }
 
-func (c *ConfigKeyStore) HasAPIKey(key string, clusterId string) (bool, error) {
+func (c *ConfigKeyStore) HasAPIKey(key, clusterId string) (bool, error) {
 	ctx := c.Config.Context()
 	if ctx == nil {
 		return false, new(errors.NotLoggedInError)
@@ -31,7 +31,7 @@ func (c *ConfigKeyStore) HasAPIKey(key string, clusterId string) (bool, error) {
 }
 
 // StoreAPIKey creates a new API key pair in the local key store for later usage
-func (c *ConfigKeyStore) StoreAPIKey(key *v1.APIKeyPair, clusterId string) error {
+func (c *ConfigKeyStore) StoreAPIKey(key *config.APIKeyPair, clusterId string) error {
 	ctx := c.Config.Context()
 	if ctx == nil {
 		return new(errors.NotLoggedInError)

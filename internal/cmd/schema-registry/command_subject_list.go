@@ -7,7 +7,7 @@ import (
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -15,7 +15,7 @@ type subjectListOut struct {
 	Subject string `human:"Subject" serialized:"subject"`
 }
 
-func (c *command) newSubjectListCommand(cfg *v1.Config) *cobra.Command {
+func (c *command) newSubjectListCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List subjects.",
@@ -29,7 +29,8 @@ func (c *command) newSubjectListCommand(cfg *v1.Config) *cobra.Command {
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	} else {
-		cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
+		addCaLocationFlag(cmd)
+		addSchemaRegistryEndpointFlag(cmd)
 	}
 	pcmd.AddOutputFlag(cmd)
 
@@ -47,7 +48,7 @@ func (c *command) newSubjectListCommand(cfg *v1.Config) *cobra.Command {
 }
 
 func (c *command) subjectList(cmd *cobra.Command, _ []string) error {
-	client, err := c.GetSchemaRegistryClient()
+	client, err := c.GetSchemaRegistryClient(cmd)
 	if err != nil {
 		return err
 	}

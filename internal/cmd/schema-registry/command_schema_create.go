@@ -10,11 +10,11 @@ import (
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 )
 
-func (c *command) newSchemaCreateCommand(cfg *v1.Config) *cobra.Command {
+func (c *command) newSchemaCreateCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
 		Short: "Create a schema.",
@@ -32,7 +32,7 @@ func (c *command) newSchemaCreateCommand(cfg *v1.Config) *cobra.Command {
 	cmd.Example = examples.BuildExampleString(
 		example,
 		examples.Example{
-			Text: `Where "employee.avsc" may include these contents:`,
+			Text: `Where "employee.avsc" may include the following content:`,
 			Code: `{
 	"type" : "record",
 	"namespace" : "Example",
@@ -44,7 +44,7 @@ func (c *command) newSchemaCreateCommand(cfg *v1.Config) *cobra.Command {
 }`,
 		},
 		examples.Example{
-			Text: "For more information on schema types and references, see https://docs.confluent.io/platform/current/schema-registry/fundamentals/serdes-develop/index.html",
+			Text: "For more information on schema types and references, see https://docs.confluent.io/platform/current/schema-registry/fundamentals/serdes-develop/index.html.",
 		},
 	)
 
@@ -59,7 +59,8 @@ func (c *command) newSchemaCreateCommand(cfg *v1.Config) *cobra.Command {
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	} else {
-		cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
+		addCaLocationFlag(cmd)
+		addSchemaRegistryEndpointFlag(cmd)
 	}
 	pcmd.AddOutputFlag(cmd)
 
@@ -101,7 +102,7 @@ func (c *command) schemaCreate(cmd *cobra.Command, _ []string) error {
 	}
 	schemaType = strings.ToUpper(schemaType)
 
-	refs, err := ReadSchemaReferences(cmd)
+	refs, err := ReadSchemaReferences(cmd, false)
 	if err != nil {
 		return err
 	}
@@ -152,7 +153,7 @@ func (c *command) schemaCreate(cmd *cobra.Command, _ []string) error {
 		}
 	}
 
-	client, err := c.GetSchemaRegistryClient()
+	client, err := c.GetSchemaRegistryClient(cmd)
 	if err != nil {
 		return err
 	}

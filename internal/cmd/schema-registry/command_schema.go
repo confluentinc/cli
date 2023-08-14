@@ -7,11 +7,11 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
-func (c *command) newSchemaCommand(cfg *v1.Config) *cobra.Command {
+func (c *command) newSchemaCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "schema",
 		Short:       "Manage Schema Registry schemas.",

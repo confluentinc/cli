@@ -9,14 +9,14 @@ import (
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (c *command) newSchemaDeleteCommand(cfg *v1.Config) *cobra.Command {
+func (c *command) newSchemaDeleteCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete",
 		Short: "Delete one or more schema versions.",
@@ -41,7 +41,8 @@ func (c *command) newSchemaDeleteCommand(cfg *v1.Config) *cobra.Command {
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	} else {
-		cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
+		addCaLocationFlag(cmd)
+		addSchemaRegistryEndpointFlag(cmd)
 	}
 	pcmd.AddForceFlag(cmd)
 
@@ -62,7 +63,7 @@ func (c *command) newSchemaDeleteCommand(cfg *v1.Config) *cobra.Command {
 }
 
 func (c *command) schemaDelete(cmd *cobra.Command, _ []string) error {
-	client, err := c.GetSchemaRegistryClient()
+	client, err := c.GetSchemaRegistryClient(cmd)
 	if err != nil {
 		return err
 	}

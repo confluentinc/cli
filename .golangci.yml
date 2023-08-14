@@ -1,6 +1,7 @@
 run:
   skip-dirs:
     - mock
+    - internal/pkg/flink/test/mock
 linters:
   enable:
     - dupword
@@ -23,7 +24,7 @@ linters:
     - unparam
     - unused
     - usestdlibvars
-    - whitespace 
+    - whitespace
 linters-settings:
   gci:
     sections:

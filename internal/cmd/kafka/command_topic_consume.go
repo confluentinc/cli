@@ -16,6 +16,8 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	schemaregistry "github.com/confluentinc/cli/internal/pkg/schema-registry"
+	"github.com/confluentinc/cli/internal/pkg/serdes"
+	"github.com/confluentinc/cli/internal/pkg/types"
 )
 
 func (c *command) newConsumeCommand() *cobra.Command {
@@ -29,8 +31,8 @@ func (c *command) newConsumeCommand() *cobra.Command {
 		Annotations:       map[string]string{pcmd.RunRequirement: pcmd.RequireCloudLogin},
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Consume items from the "my_topic" topic and press "Ctrl-C" to exit.`,
-				Code: "confluent kafka topic consume -b my_topic",
+				Text: `Consume items from topic "my-topic" and press "Ctrl-C" to exit.`,
+				Code: "confluent kafka topic consume my-topic --from-beginning",
 			},
 		),
 	}
@@ -39,6 +41,7 @@ func (c *command) newConsumeCommand() *cobra.Command {
 	cmd.Flags().BoolP("from-beginning", "b", false, "Consume from beginning of the topic.")
 	cmd.Flags().Int64("offset", 0, "The offset from the beginning to consume from.")
 	cmd.Flags().Int32("partition", -1, "The partition to consume from.")
+	pcmd.AddKeyFormatFlag(cmd)
 	pcmd.AddValueFormatFlag(cmd)
 	cmd.Flags().Bool("print-key", false, "Print key of the message.")
 	cmd.Flags().Bool("full-header", false, "Print complete content of message headers.")
@@ -49,7 +52,7 @@ func (c *command) newConsumeCommand() *cobra.Command {
 	cmd.Flags().String("schema-registry-context", "", "The Schema Registry context under which to look up schema ID.")
 	cmd.Flags().String("schema-registry-endpoint", "", "Endpoint for Schema Registry cluster.")
 	cmd.Flags().String("schema-registry-api-key", "", "Schema registry API key.")
-	cmd.Flags().String("schema-registry-api-secret", "", "Schema registry API key secret.")
+	cmd.Flags().String("schema-registry-api-secret", "", "Schema registry API secret.")
 	pcmd.AddApiKeyFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddApiSecretFlag(cmd)
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
@@ -80,7 +83,10 @@ func (c *command) consume(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	if !cmd.Flags().Changed("group") {
+	var consumeFromGroupOffset bool
+	if cmd.Flags().Changed("group") {
+		consumeFromGroupOffset = true
+	} else {
 		group = fmt.Sprintf("confluent_cli_consumer_%s", uuid.New())
 	}
 
@@ -144,11 +150,19 @@ func (c *command) consume(cmd *cobra.Command, args []string) error {
 	}
 
 	rebalanceCallback := GetRebalanceCallback(offset, partitionFilter)
+	if consumeFromGroupOffset && !cmd.Flags().Changed("from-beginning") && !cmd.Flags().Changed("offset") {
+		rebalanceCallback = nil
+	}
 	if err := consumer.Subscribe(topic, rebalanceCallback); err != nil {
 		return err
 	}
 
 	output.ErrPrintln(errors.StartingConsumerMsg)
+
+	keyFormat, err := cmd.Flags().GetString("key-format")
+	if err != nil {
+		return err
+	}
 
 	valueFormat, err := cmd.Flags().GetString("value-format")
 	if err != nil {
@@ -156,9 +170,9 @@ func (c *command) consume(cmd *cobra.Command, args []string) error {
 	}
 
 	var srClient *schemaregistry.Client
-	if valueFormat != "string" {
+	if types.Contains(serdes.SchemaBasedFormats, valueFormat) {
 		// Only initialize client and context when schema is specified.
-		srClient, err = c.GetSchemaRegistryClient()
+		srClient, err = c.GetSchemaRegistryClient(cmd)
 		if err != nil {
 			if err.Error() == errors.NotLoggedInErrorMsg {
 				return new(errors.SRNotAuthenticatedError)
@@ -168,12 +182,12 @@ func (c *command) consume(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	dir, err := sr.CreateTempDir()
+	schemaPath, err := sr.CreateTempDir()
 	if err != nil {
 		return err
 	}
 	defer func() {
-		_ = os.RemoveAll(dir)
+		_ = os.RemoveAll(schemaPath)
 	}()
 
 	subject := topicNameStrategy(topic)
@@ -186,16 +200,17 @@ func (c *command) consume(cmd *cobra.Command, args []string) error {
 	}
 
 	groupHandler := &GroupHandler{
-		SrClient: srClient,
-		Format:   valueFormat,
-		Out:      cmd.OutOrStdout(),
-		Subject:  subject,
+		SrClient:    srClient,
+		KeyFormat:   keyFormat,
+		ValueFormat: valueFormat,
+		Out:         cmd.OutOrStdout(),
+		Subject:     subject,
 		Properties: ConsumerProperties{
 			PrintKey:   printKey,
 			FullHeader: fullHeader,
 			Timestamp:  timestamp,
 			Delimiter:  delimiter,
-			SchemaPath: dir,
+			SchemaPath: schemaPath,
 		},
 	}
 	return RunConsumer(consumer, groupHandler)

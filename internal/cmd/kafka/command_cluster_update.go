@@ -8,14 +8,14 @@ import (
 	cmkv2 "github.com/confluentinc/ccloud-sdk-go-v2/cmk/v2"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (c *clusterCommand) newUpdateCommand(cfg *v1.Config) *cobra.Command {
+func (c *clusterCommand) newUpdateCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "update <id>",
 		Short:             "Update a Kafka cluster.",
@@ -43,8 +43,8 @@ func (c *clusterCommand) newUpdateCommand(cfg *v1.Config) *cobra.Command {
 }
 
 func (c *clusterCommand) update(cmd *cobra.Command, args []string) error {
-	if !cmd.Flags().Changed("name") && !cmd.Flags().Changed("cku") {
-		return errors.New(errors.NameOrCKUFlagErrorMsg)
+	if err := errors.CheckNoUpdate(cmd.Flags(), "cku", "name"); err != nil {
+		return err
 	}
 
 	environmentId, err := c.Context.EnvironmentId()

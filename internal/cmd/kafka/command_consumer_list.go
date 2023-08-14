@@ -39,17 +39,12 @@ func (c *consumerCommand) list(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 
-	cluster, err := c.Context.GetKafkaClusterForCommand()
-	if err != nil {
-		return err
-	}
-
 	consumerGroup, err := cmd.Flags().GetString("consumer-group")
 	if err != nil {
 		return err
 	}
 
-	consumers, err := kafkaREST.CloudClient.ListKafkaConsumers(cluster.ID, consumerGroup)
+	consumers, err := kafkaREST.CloudClient.ListKafkaConsumers(consumerGroup)
 	if err != nil {
 		return err
 	}

@@ -71,14 +71,14 @@ func (c *command) clusterUpdate(cmd *cobra.Command, _ []string) error {
 		return err
 	}
 	if mode != "" {
-		return c.updateTopLevelMode(mode)
+		return c.updateTopLevelMode(cmd, mode)
 	}
 
 	return errors.New(errors.CompatibilityOrModeErrorMsg)
 }
 
 func (c *command) updateTopLevelCompatibility(cmd *cobra.Command) error {
-	client, err := c.GetSchemaRegistryClient()
+	client, err := c.GetSchemaRegistryClient(cmd)
 	if err != nil {
 		return err
 	}
@@ -160,8 +160,8 @@ func (c *command) getConfigUpdateRequest(cmd *cobra.Command) (srsdk.ConfigUpdate
 	return req, nil
 }
 
-func (c *command) updateTopLevelMode(mode string) error {
-	client, err := c.GetSchemaRegistryClient()
+func (c *command) updateTopLevelMode(cmd *cobra.Command, mode string) error {
+	client, err := c.GetSchemaRegistryClient(cmd)
 	if err != nil {
 		return err
 	}

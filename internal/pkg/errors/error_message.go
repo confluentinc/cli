@@ -107,12 +107,6 @@ const (
 	ServiceNameInUseErrorMsg    = `service name "%s" is already in use`
 	ServiceNameInUseSuggestions = "To list all service account, use `confluent iam service-account list`."
 
-	// iam provider commands
-	IdentityProviderNoOpUpdateErrorMsg = "one of `--description` or `--name` must be set"
-
-	// iam pool commands
-	IdentityPoolNoOpUpdateErrorMsg = "one of `--description`, `--filter`, `--identity-claim`, or `--name` must be set"
-
 	// init command
 	CannotBeEmptyErrorMsg = "%s cannot be empty"
 
@@ -145,8 +139,6 @@ const (
 	InvalidAvailableFlagErrorMsg                     = "invalid value \"%s\" for `--availability` flag"
 	InvalidAvailableFlagSuggestions                  = "Allowed values for `--availability` flag are: %s, %s."
 	InvalidTypeFlagErrorMsg                          = "invalid value \"%s\" for `--type` flag"
-	InvalidTypeFlagSuggestions                       = "Allowed values for `--type` flag are: %s, %s, %s."
-	NameOrCKUFlagErrorMsg                            = "must either specify --name with non-empty value or --cku (for dedicated clusters) with positive integer"
 	NonEmptyNameErrorMsg                             = "`--name` flag value must not be empty"
 	KafkaClusterNotFoundErrorMsg                     = `Kafka cluster "%s" not found`
 	KafkaClusterStillProvisioningErrorMsg            = "your cluster is still provisioning, so it can't be updated yet; please retry in a few minutes"
@@ -185,9 +177,6 @@ const (
 	ProducingToCompactedTopicSuggestions = "If the topic has schema validation enabled, ensure you are producing with a schema-enabled producer.\n" +
 		"If your topic is compacted, ensure you are producing a record with a key."
 	ExceedPartitionLimitSuggestions = "The total partition limit for a dedicated cluster may be increased by expanding its CKU count using `confluent kafka cluster update <id> --cku <count>`."
-
-	// Cluster Link commands
-	EmptyConfigErrorMsg = "config file name is empty or config file is empty"
 
 	// serialization/deserialization commands
 	JsonSchemaInvalidErrorMsg         = "the JSON schema is invalid"
@@ -283,31 +272,27 @@ const (
 		"Unfortunately, your active CLI state will be lost as a result.\n" +
 		"Please file a support ticket with details about your config file to help us address this issue.\n" +
 		"Please rerun the command with the verbosity flag `-vvvv` and attach the output with the support ticket."
-	UnableToCreateConfigErrorMsg       = "unable to create config"
-	UnableToReadConfigErrorMsg         = `unable to read config file "%s"`
-	ConfigNotUpToDateErrorMsg          = "config version v%s not up to date with the latest version v%s"
-	InvalidConfigVersionErrorMsg       = "invalid config version v%s"
-	ParseConfigErrorMsg                = `unable to parse config file "%s"`
-	NoNameContextErrorMsg              = "one of the existing contexts has no name"
-	MissingKafkaClusterContextErrorMsg = `context "%s" missing KafkaClusterContext`
-	MarshalConfigErrorMsg              = "unable to marshal config"
-	CreateConfigDirectoryErrorMsg      = "unable to create config directory: %s"
-	CreateConfigFileErrorMsg           = "unable to write config to file: %s"
-	CurrentContextNotExistErrorMsg     = `the current context "%s" does not exist`
-	ContextDoesNotExistErrorMsg        = `context "%s" does not exist`
-	ContextAlreadyExistsErrorMsg       = `context "%s" already exists`
-	CredentialNotFoundErrorMsg         = `credential "%s" not found`
-	PlatformNotFoundErrorMsg           = `platform "%s" not found`
-	NoNameCredentialErrorMsg           = "credential must have a name"
-	SavedCredentialNoContextErrorMsg   = "saved credential must match a context"
-	KeychainNotAvailableErrorMsg       = "keychain not available on platforms other than darwin"
-	NoValidKeychainCredentialErrorMsg  = "no matching credentials found in keychain"
-	NoNamePlatformErrorMsg             = "platform must have a name"
-	UnspecifiedPlatformErrorMsg        = `context "%s" has corrupted platform`
-	UnspecifiedCredentialErrorMsg      = `context "%s" has corrupted credentials`
-	ContextStateMismatchErrorMsg       = `context state mismatch for context "%s"`
-	ContextStateNotMappedErrorMsg      = `context state mapping error for context "%s"`
-	DeleteUserAuthErrorMsg             = "unable to delete user auth"
+	UnableToReadConfigurationFileErrorMsg = `unable to read configuration file "%s"`
+	NoNameContextErrorMsg                 = "one of the existing contexts has no name"
+	MissingKafkaClusterContextErrorMsg    = `context "%s" missing KafkaClusterContext`
+	MarshalConfigErrorMsg                 = "unable to marshal config"
+	CreateConfigDirectoryErrorMsg         = "unable to create config directory: %s"
+	CreateConfigFileErrorMsg              = "unable to write config to file: %s"
+	CurrentContextNotExistErrorMsg        = `the current context "%s" does not exist`
+	ContextDoesNotExistErrorMsg           = `context "%s" does not exist`
+	ContextAlreadyExistsErrorMsg          = `context "%s" already exists`
+	CredentialNotFoundErrorMsg            = `credential "%s" not found`
+	PlatformNotFoundErrorMsg              = `platform "%s" not found`
+	NoNameCredentialErrorMsg              = "credential must have a name"
+	SavedCredentialNoContextErrorMsg      = "saved credential must match a context"
+	KeychainNotAvailableErrorMsg          = "keychain not available on platforms other than darwin"
+	NoValidKeychainCredentialErrorMsg     = "no matching credentials found in keychain"
+	NoNamePlatformErrorMsg                = "platform must have a name"
+	UnspecifiedPlatformErrorMsg           = `context "%s" has corrupted platform`
+	UnspecifiedCredentialErrorMsg         = `context "%s" has corrupted credentials`
+	ContextStateMismatchErrorMsg          = `context state mismatch for context "%s"`
+	ContextStateNotMappedErrorMsg         = `context state mapping error for context "%s"`
+	DeleteUserAuthErrorMsg                = "unable to delete user auth"
 
 	// local package
 	ConfluentHomeNotFoundErrorMsg         = "could not find %s in CONFLUENT_HOME"
@@ -389,17 +374,16 @@ const (
 	ResourceNotFoundErrorMsg           = `resource "%s" not found`
 	ResourceNotFoundSuggestions        = "Check that the resource \"%s\" exists.\n" +
 		"To list Kafka clusters, use `confluent kafka cluster list`.\n" +
-		"To check schema-registry cluster info, use `confluent schema-registry cluster describe`.\n" +
+		"To check Schema Registry cluster information, use `confluent schema-registry cluster describe`.\n" +
 		"To list KSQL clusters, use `confluent ksql cluster list`."
 	KafkaNotFoundErrorMsg         = `Kafka cluster "%s" not found`
 	KafkaNotFoundSuggestions      = "To list Kafka clusters, use `confluent kafka cluster list`."
 	KSQLNotFoundSuggestions       = "To list KSQL clusters, use `confluent ksql cluster list`."
 	NoKafkaSelectedErrorMsg       = "no Kafka cluster selected"
 	NoKafkaSelectedSuggestions    = "You must pass `--cluster` with the command or set an active Kafka cluster in your context with `confluent kafka cluster use`."
-	NoKafkaForDescribeSuggestions = "You must provide the cluster ID argument or set an active Kafka cluster in your context with `ccloud kafka cluster use`."
+	NoKafkaForDescribeSuggestions = "You must provide the cluster ID argument or set an active Kafka cluster in your context with `confluent kafka cluster use`."
 	NoAPISecretStoredErrorMsg     = `no API secret for API key "%s" of resource "%s" stored in local CLI state`
 	NoAPISecretStoredSuggestions  = "Store the API secret with `confluent api-key store %s --resource %s`."
-	InvalidCkuErrorMsg            = "cku must be greater than 1 for multi-zone dedicated cluster"
 
 	// Kafka REST Proxy errors
 	InternalServerErrorMsg            = "internal server error"

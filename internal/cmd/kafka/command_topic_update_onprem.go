@@ -36,7 +36,7 @@ func (c *command) newUpdateCommandOnPrem() *cobra.Command {
 	}
 
 	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
-	cmd.Flags().StringSlice("config", nil, `A comma-separated list of topics configuration ("key=value") overrides for the topic being created.`)
+	pcmd.AddConfigFlag(cmd)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
@@ -58,12 +58,11 @@ func (c *command) updateOnPrem(cmd *cobra.Command, args []string) error {
 }
 
 func UpdateTopic(cmd *cobra.Command, restClient *kafkarestv3.APIClient, restContext context.Context, topicName, clusterId string) error {
-	// Update Config
-	configs, err := cmd.Flags().GetStringSlice("config") // handle config parsing errors
+	configs, err := cmd.Flags().GetStringSlice("config")
 	if err != nil {
 		return err
 	}
-	configMap, err := properties.ConfigFlagToMap(configs)
+	configMap, err := properties.GetMap(configs)
 	if err != nil {
 		return err
 	}

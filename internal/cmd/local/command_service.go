@@ -106,10 +106,15 @@ func (c *Command) runServiceLogCommand(cmd *cobra.Command, _ []string) error {
 }
 
 func NewServiceStartCommand(service string, prerunner cmd.PreRunner) *cobra.Command {
+	longDescription := ""
+	if service == "kafka" {
+		longDescription = fmt.Sprintf("Start %s. For a faster and more lightweight experience, consider using `confluent local kafka start`. In the next major confluent CLI version, this command will be removed and replaced by ongoing support for `confluent local kafka`.", writeOfficialServiceName(service))
+	}
 	c := NewLocalCommand(
 		&cobra.Command{
 			Use:   "start",
 			Short: fmt.Sprintf("Start %s.", writeOfficialServiceName(service)),
+			Long:  longDescription,
 			Args:  cobra.NoArgs,
 		}, prerunner)
 
@@ -246,7 +251,7 @@ func (c *Command) runServiceVersionCommand(cmd *cobra.Command, _ []string) error
 	return nil
 }
 
-func (c *Command) startService(service string, configFile string) error {
+func (c *Command) startService(service, configFile string) error {
 	isUp, err := c.isRunning(service)
 	if err != nil {
 		return err
@@ -288,7 +293,7 @@ func (c *Command) checkService(service string) error {
 	return nil
 }
 
-func (c *Command) configService(service string, configFile string) error {
+func (c *Command) configService(service, configFile string) error {
 	port, err := c.ch.ReadServicePort(service)
 	if err != nil {
 		if err.Error() != "no port specified" {

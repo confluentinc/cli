@@ -17,7 +17,7 @@ import (
 
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/featureflags"
 	"github.com/confluentinc/cli/internal/pkg/form"
@@ -54,7 +54,7 @@ var (
 				return nil, nil
 			}
 		},
-		GetPrerunCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
+		GetPrerunCredentialsFromConfigFunc: func(_ *config.Config) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
@@ -69,12 +69,12 @@ var (
 				return nil, nil
 			}
 		},
-		GetCredentialsFromKeychainFunc: func(_ *v1.Config, _ bool, _, _ string) func() (*pauth.Credentials, error) {
+		GetCredentialsFromKeychainFunc: func(_ *config.Config, _ bool, _, _ string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
 		},
-		GetCredentialsFromConfigFunc: func(_ *v1.Config, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
+		GetCredentialsFromConfigFunc: func(_ *config.Config, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
@@ -92,7 +92,7 @@ var (
 
 func getPreRunBase() *pcmd.PreRun {
 	return &pcmd.PreRun{
-		Config:  v1.AuthenticatedCloudConfigMock(),
+		Config:  config.AuthenticatedCloudConfigMock(),
 		Version: pmock.NewVersionMock(),
 		UpdateClient: &mock.Client{
 			CheckForUpdatesFunc: func(_, _ string, _ bool) (string, string, error) {
@@ -123,7 +123,8 @@ func getPreRunBase() *pcmd.PreRun {
 }
 
 func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
-	featureflags.Init(nil, true, false)
+	cfg := &config.Config{IsTest: true, Contexts: map[string]*config.Context{}}
+	featureflags.Init(cfg)
 
 	tests := map[string]log.Level{
 		"":      log.ERROR,
@@ -149,7 +150,7 @@ func TestPreRun_Anonymous_SetLoggingLevel(t *testing.T) {
 }
 
 func TestPreRun_TokenExpires(t *testing.T) {
-	cfg := v1.AuthenticatedCloudConfigMock()
+	cfg := config.AuthenticatedCloudConfigMock()
 	cfg.Context().State.AuthToken = expiredAuthTokenForDevCloud
 
 	r := getPreRunBase()
@@ -212,11 +213,11 @@ func Test_UpdateToken(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			var cfg *v1.Config
+			var cfg *config.Config
 			if test.isCloud {
-				cfg = v1.AuthenticatedCloudConfigMock()
+				cfg = config.AuthenticatedCloudConfigMock()
 			} else {
-				cfg = v1.AuthenticatedOnPremConfigMock()
+				cfg = config.AuthenticatedOnPremConfigMock()
 			}
 
 			cfg.Context().State.AuthToken = test.authToken
@@ -225,7 +226,7 @@ func Test_UpdateToken(t *testing.T) {
 			r.Config = cfg
 
 			r.LoginCredentialsManager = &climock.LoginCredentialsManager{
-				GetPrerunCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
+				GetPrerunCredentialsFromConfigFunc: func(_ *config.Config) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return nil, nil
 					}
@@ -235,12 +236,12 @@ func Test_UpdateToken(t *testing.T) {
 						return &pauth.Credentials{Username: "username", Password: "password"}, nil
 					}
 				},
-				GetCredentialsFromKeychainFunc: func(_ *v1.Config, _ bool, _, _ string) func() (*pauth.Credentials, error) {
+				GetCredentialsFromKeychainFunc: func(_ *config.Config, _ bool, _, _ string) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return nil, nil
 					}
 				},
-				GetCredentialsFromConfigFunc: func(_ *v1.Config, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
+				GetCredentialsFromConfigFunc: func(_ *config.Config, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return &pauth.Credentials{Username: "username", Password: "password"}, nil
 					}
@@ -394,11 +395,11 @@ func TestPrerun_AutoLogin(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			var cfg *v1.Config
+			var cfg *config.Config
 			if test.isCloud {
-				cfg = v1.AuthenticatedCloudConfigMock()
+				cfg = config.AuthenticatedCloudConfigMock()
 			} else {
-				cfg = v1.AuthenticatedOnPremConfigMock()
+				cfg = config.AuthenticatedOnPremConfigMock()
 			}
 			err := pauth.PersistLogout(cfg)
 			require.NoError(t, err)
@@ -449,7 +450,7 @@ func TestPrerun_AutoLogin(t *testing.T) {
 						return test.netrcReturn.creds, test.netrcReturn.err
 					}
 				},
-				GetPrerunCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
+				GetPrerunCredentialsFromConfigFunc: func(_ *config.Config) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						ccloudConfigCalled = true
 						return test.configReturn.creds, test.configReturn.err
@@ -467,12 +468,12 @@ func TestPrerun_AutoLogin(t *testing.T) {
 						return test.netrcReturn.creds, test.netrcReturn.err
 					}
 				},
-				GetCredentialsFromConfigFunc: func(_ *v1.Config, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
+				GetCredentialsFromConfigFunc: func(_ *config.Config, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return nil, nil
 					}
 				},
-				GetCredentialsFromKeychainFunc: func(_ *v1.Config, _ bool, _, _ string) func() (*pauth.Credentials, error) {
+				GetCredentialsFromKeychainFunc: func(_ *config.Config, _ bool, _, _ string) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						ccloudKeychainCalled = true
 						return test.keychainReturn.creds, test.keychainReturn.err
@@ -554,25 +555,25 @@ func TestPrerun_ReLoginToLastOrgUsed(t *testing.T) {
 				return ccloudCreds, nil
 			}
 		},
-		GetPrerunCredentialsFromConfigFunc: func(_ *v1.Config) func() (*pauth.Credentials, error) {
+		GetPrerunCredentialsFromConfigFunc: func(_ *config.Config) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
 		},
-		GetCredentialsFromConfigFunc: func(_ *v1.Config, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
+		GetCredentialsFromConfigFunc: func(_ *config.Config, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
 		},
-		GetCredentialsFromKeychainFunc: func(_ *v1.Config, _ bool, _, _ string) func() (*pauth.Credentials, error) {
+		GetCredentialsFromKeychainFunc: func(_ *config.Config, _ bool, _, _ string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
 		},
 	}
 
-	cfg := v1.AuthenticatedToOrgCloudConfigMock(555, "o-555")
-	cfg.Context().Platform = &v1.Platform{Name: "confluent.cloud", Server: "https://confluent.cloud"}
+	cfg := config.AuthenticatedToOrgCloudConfigMock(555, "o-555")
+	cfg.Context().Platform = &config.Platform{Name: "confluent.cloud", Server: "https://confluent.cloud"}
 	err := cfg.Context().DeleteUserAuth()
 	require.NoError(t, err)
 	r.Config = cfg
@@ -601,11 +602,11 @@ func TestPrerun_AutoLoginNotTriggeredIfLoggedIn(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			var cfg *v1.Config
+			var cfg *config.Config
 			if test.isCloud {
-				cfg = v1.AuthenticatedCloudConfigMock()
+				cfg = config.AuthenticatedCloudConfigMock()
 			} else {
-				cfg = v1.AuthenticatedOnPremConfigMock()
+				cfg = config.AuthenticatedOnPremConfigMock()
 			}
 			cfg.Context().State.AuthToken = validAuthToken
 			cfg.Context().Platform.Server = "https://confluent.cloud"
@@ -625,7 +626,7 @@ func TestPrerun_AutoLoginNotTriggeredIfLoggedIn(t *testing.T) {
 						return nil, nil
 					}
 				},
-				GetCredentialsFromKeychainFunc: func(_ *v1.Config, _ bool, _, _ string) func() (*pauth.Credentials, error) {
+				GetCredentialsFromKeychainFunc: func(_ *config.Config, _ bool, _, _ string) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return nil, nil
 					}
@@ -658,7 +659,7 @@ func TestPrerun_AutoLoginNotTriggeredIfLoggedIn(t *testing.T) {
 }
 
 func TestInitializeOnPremKafkaRest(t *testing.T) {
-	cfg := v1.AuthenticatedOnPremConfigMock()
+	cfg := config.AuthenticatedOnPremConfigMock()
 	cfg.Context().State.AuthToken = validAuthToken
 	r := getPreRunBase()
 	r.Config = cfg

@@ -10,29 +10,20 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
 	"github.com/confluentinc/cli/internal/pkg/types"
 	pversion "github.com/confluentinc/cli/internal/pkg/version"
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
 
 var (
-	regularOrgContextState = &v1.ContextState{
-		Auth: &v1.AuthConfig{
-			Organization: testserver.RegularOrg,
-		},
-	}
-	suspendedOrgContextState = func(eventType ccloudv1.SuspensionEventType) *v1.ContextState {
-		return &v1.ContextState{
-			Auth: &v1.AuthConfig{
-				Organization: testserver.SuspendedOrg(eventType),
-			},
-		}
+	regularOrgContextState   = &config.ContextState{Auth: &config.AuthConfig{Organization: testserver.RegularOrg}}
+	suspendedOrgContextState = func(eventType ccloudv1.SuspensionEventType) *config.ContextState {
+		return &config.ContextState{Auth: &config.AuthConfig{Organization: testserver.SuspendedOrg(eventType)}}
 	}
 )
 
 func TestHelp_NoContext(t *testing.T) {
-	cfg := new(v1.Config)
+	cfg := new(config.Config)
 
 	out, err := runWithConfig(cfg)
 	require.NoError(t, err)
@@ -51,8 +42,8 @@ func TestHelp_NoContext(t *testing.T) {
 }
 
 func TestHelp_CloudSuspendedOrg(t *testing.T) {
-	cfg := &v1.Config{
-		Contexts: map[string]*v1.Context{"cloud": {
+	cfg := &config.Config{
+		Contexts: map[string]*config.Context{"cloud": {
 			PlatformName: "confluent.cloud",
 			State:        suspendedOrgContextState(ccloudv1.SuspensionEventType_SUSPENSION_EVENT_CUSTOMER_INITIATED_ORG_DEACTIVATION),
 		}},
@@ -75,8 +66,8 @@ func TestHelp_CloudSuspendedOrg(t *testing.T) {
 }
 
 func TestHelp_CloudEndOfFreeTrialSuspendedOrg(t *testing.T) {
-	cfg := &v1.Config{
-		Contexts: map[string]*v1.Context{"cloud": {
+	cfg := &config.Config{
+		Contexts: map[string]*config.Context{"cloud": {
 			PlatformName: "confluent.cloud",
 			State:        suspendedOrgContextState(ccloudv1.SuspensionEventType_SUSPENSION_EVENT_END_OF_FREE_TRIAL),
 		}},
@@ -120,8 +111,8 @@ func TestHelp_CloudEndOfFreeTrialSuspendedOrg(t *testing.T) {
 }
 
 func TestHelp_Cloud(t *testing.T) {
-	cfg := &v1.Config{
-		Contexts: map[string]*v1.Context{"cloud": {
+	cfg := &config.Config{
+		Contexts: map[string]*config.Context{"cloud": {
 			PlatformName: "confluent.cloud",
 			State:        regularOrgContextState,
 		}},
@@ -142,11 +133,11 @@ func TestHelp_Cloud(t *testing.T) {
 }
 
 func TestHelp_CloudWithAPIKey(t *testing.T) {
-	cfg := &v1.Config{
-		Contexts: map[string]*v1.Context{
+	cfg := &config.Config{
+		Contexts: map[string]*config.Context{
 			"cloud-with-api-key": {
 				PlatformName: "confluent.cloud",
-				Credential:   &v1.Credential{CredentialType: v1.APIKey},
+				Credential:   &config.Credential{CredentialType: config.APIKey},
 				State:        regularOrgContextState,
 			},
 		},
@@ -167,8 +158,8 @@ func TestHelp_CloudWithAPIKey(t *testing.T) {
 }
 
 func TestHelp_OnPrem(t *testing.T) {
-	cfg := &v1.Config{
-		Contexts:       map[string]*v1.Context{"on-prem": {PlatformName: "https://example.com"}},
+	cfg := &config.Config{
+		Contexts:       map[string]*config.Context{"on-prem": {PlatformName: "https://example.com"}},
 		CurrentContext: "on-prem",
 	}
 
@@ -188,8 +179,7 @@ func TestHelp_OnPrem(t *testing.T) {
 	}
 }
 
-func runWithConfig(cfg *v1.Config) (string, error) {
-	cfg.BaseConfig = new(config.BaseConfig)
+func runWithConfig(cfg *config.Config) (string, error) {
 	cfg.IsTest = true
 	cfg.Version = new(pversion.Version)
 

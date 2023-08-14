@@ -20,7 +20,7 @@ import (
 	"github.com/phayes/freeport"
 	"github.com/spf13/cobra"
 
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -179,7 +179,7 @@ func (c *Command) prepareAndSaveLocalPorts(cmd *cobra.Command, isTest bool) erro
 	}
 
 	if isTest {
-		c.Config.LocalPorts = &v1.LocalPorts{
+		c.Config.LocalPorts = &config.LocalPorts{
 			BrokerPort:     "2996",
 			ControllerPort: "2997",
 			KafkaRestPort:  "2998",
@@ -191,7 +191,7 @@ func (c *Command) prepareAndSaveLocalPorts(cmd *cobra.Command, isTest bool) erro
 			return err
 		}
 
-		c.Config.LocalPorts = &v1.LocalPorts{
+		c.Config.LocalPorts = &config.LocalPorts{
 			KafkaRestPort:  strconv.Itoa(8082),
 			PlaintextPort:  strconv.Itoa(freePorts[0]),
 			BrokerPort:     strconv.Itoa(freePorts[1]),
@@ -260,7 +260,7 @@ func (c *Command) validateCustomizedPorts() error {
 	return nil
 }
 
-func getContainerEnvironmentWithPorts(ports *v1.LocalPorts) []string {
+func getContainerEnvironmentWithPorts(ports *config.LocalPorts) []string {
 	return []string{
 		"KAFKA_BROKER_ID=1",
 		"KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT",

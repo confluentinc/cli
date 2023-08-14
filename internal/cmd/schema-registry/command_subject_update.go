@@ -8,14 +8,14 @@ import (
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	schemaregistry "github.com/confluentinc/cli/internal/pkg/schema-registry"
 )
 
-func (c *command) newSubjectUpdateCommand(cfg *v1.Config) *cobra.Command {
+func (c *command) newSubjectUpdateCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "update <subject>",
 		Short:   "Update subject compatibility or mode.",
@@ -54,7 +54,8 @@ func (c *command) newSubjectUpdateCommand(cfg *v1.Config) *cobra.Command {
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	} else {
-		cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
+		addCaLocationFlag(cmd)
+		addSchemaRegistryEndpointFlag(cmd)
 	}
 
 	if cfg.IsCloudLogin() {
@@ -73,7 +74,7 @@ func (c *command) newSubjectUpdateCommand(cfg *v1.Config) *cobra.Command {
 func (c *command) subjectUpdate(cmd *cobra.Command, args []string) error {
 	subject := args[0]
 
-	client, err := c.GetSchemaRegistryClient()
+	client, err := c.GetSchemaRegistryClient(cmd)
 	if err != nil {
 		return err
 	}
@@ -92,7 +93,7 @@ func (c *command) subjectUpdate(cmd *cobra.Command, args []string) error {
 	}
 
 	if compatibility != "" {
-		return c.updateCompatibility(cmd, subject, compatibility, client)
+		return c.updateCompatibility(cmd, subject, client)
 	}
 
 	if mode != "" {
@@ -102,7 +103,7 @@ func (c *command) subjectUpdate(cmd *cobra.Command, args []string) error {
 	return errors.New(errors.CompatibilityOrModeErrorMsg)
 }
 
-func (c *command) updateCompatibility(cmd *cobra.Command, subject, compatibility string, client *schemaregistry.Client) error {
+func (c *command) updateCompatibility(cmd *cobra.Command, subject string, client *schemaregistry.Client) error {
 	req, err := c.getConfigUpdateRequest(cmd)
 	if err != nil {
 		return err
@@ -112,16 +113,16 @@ func (c *command) updateCompatibility(cmd *cobra.Command, subject, compatibility
 		return catchSchemaNotFoundError(err, subject, "")
 	}
 
-	output.Printf("Successfully updated subject level compatibility to \"%s\" for subject \"%s\".\n", compatibility, subject)
+	output.Printf("Successfully updated subject-level compatibility to \"%s\" for subject \"%s\".\n", req.Compatibility, subject)
 	return nil
 }
 
 func (c *command) updateMode(subject, mode string, client *schemaregistry.Client) error {
-	updatedMode, err := client.UpdateMode(subject, srsdk.ModeUpdateRequest{Mode: strings.ToUpper(mode)})
+	res, err := client.UpdateMode(subject, srsdk.ModeUpdateRequest{Mode: strings.ToUpper(mode)})
 	if err != nil {
 		return catchSchemaNotFoundError(err, "subject", "")
 	}
 
-	output.Printf("Successfully updated subject level mode to \"%s\" for subject \"%s\".\n", updatedMode, subject)
+	output.Printf("Successfully updated subject-level mode to \"%s\" for subject \"%s\".\n", res.Mode, subject)
 	return nil
 }

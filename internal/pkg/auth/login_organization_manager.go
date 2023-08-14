@@ -6,14 +6,14 @@ import (
 
 	"github.com/spf13/cobra"
 
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/log"
 )
 
 type LoginOrganizationManager interface {
 	GetLoginOrganizationFromFlag(*cobra.Command) func() string
 	GetLoginOrganizationFromEnvironmentVariable() func() string
-	GetLoginOrganizationFromConfigurationFile(cfg *v1.Config) func() string
+	GetLoginOrganizationFromConfigurationFile(cfg *config.Config) func() string
 }
 
 type LoginOrganizationManagerImpl struct{}
@@ -50,7 +50,7 @@ func (h *LoginOrganizationManagerImpl) GetLoginOrganizationFromEnvironmentVariab
 	}
 }
 
-func (h *LoginOrganizationManagerImpl) GetLoginOrganizationFromConfigurationFile(cfg *v1.Config) func() string {
+func (h *LoginOrganizationManagerImpl) GetLoginOrganizationFromConfigurationFile(cfg *config.Config) func() string {
 	return func() string {
 		return cfg.Context().GetCurrentOrganization()
 	}

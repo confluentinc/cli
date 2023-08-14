@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
@@ -14,7 +14,7 @@ type command struct {
 	*pcmd.AuthenticatedCLICommand
 }
 
-func New(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
+func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "schema-registry",
 		Aliases:     []string{"sr"},
@@ -76,4 +76,12 @@ func addModeFlag(cmd *cobra.Command) {
 	modes := []string{"readwrite", "readonly", "import"}
 	cmd.Flags().String("mode", "", fmt.Sprintf("Can be %s.", utils.ArrayToCommaDelimitedString(modes, "or")))
 	pcmd.RegisterFlagCompletionFunc(cmd, "mode", func(_ *cobra.Command, _ []string) []string { return modes })
+}
+
+func addCaLocationFlag(cmd *cobra.Command) {
+	cmd.Flags().String("ca-location", "", "File or directory path to CA certificates to authenticate the Schema Registry client.")
+}
+
+func addSchemaRegistryEndpointFlag(cmd *cobra.Command) {
+	cmd.Flags().String("schema-registry-endpoint", "", "The URL of the Schema Registry cluster.")
 }

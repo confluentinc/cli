@@ -6,14 +6,14 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
 )
 
-func (c *clusterCommand) newDeleteCommand(cfg *v1.Config) *cobra.Command {
+func (c *clusterCommand) newDeleteCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "delete <id>",
 		Short:             "Delete a Kafka cluster.",

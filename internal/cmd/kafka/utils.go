@@ -9,7 +9,6 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	"github.com/confluentinc/cli/internal/pkg/ccstructs"
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 )
@@ -82,22 +81,6 @@ func handleOpenApiError(httpResp *_nethttp.Response, err error, client *cpkafkar
 	return err
 }
 
-func getKafkaRestProxyAndLkcId(c *pcmd.AuthenticatedCLICommand) (*pcmd.KafkaREST, string, error) {
-	kafkaREST, err := c.GetKafkaREST()
-	if err != nil {
-		return nil, "", err
-	}
-	if kafkaREST == nil {
-		return nil, "", errors.New(errors.RestProxyNotAvailable)
-	}
-	// Kafka REST is available
-	kafkaClusterConfig, err := c.Context.GetKafkaClusterForCommand()
-	if err != nil {
-		return nil, "", err
-	}
-	return kafkaREST, kafkaClusterConfig.ID, nil
-}
-
 func isClusterResizeInProgress(currentCluster *cmkv2.CmkV2Cluster) error {
 	if currentCluster.Status.Phase == ccloudv2.StatusProvisioning {
 		return errors.New(errors.KafkaClusterStillProvisioningErrorMsg)
@@ -127,6 +110,9 @@ func getCmkClusterType(cluster *cmkv2.CmkV2Cluster) string {
 	}
 	if isDedicated(cluster) {
 		return ccstructs.Sku_name[4]
+	}
+	if isEnterprise(cluster) {
+		return ccstructs.Sku_name[6]
 	}
 	return ccstructs.Sku_name[0] // UNKNOWN
 }
@@ -165,6 +151,10 @@ func isBasic(cluster *cmkv2.CmkV2Cluster) bool {
 
 func isStandard(cluster *cmkv2.CmkV2Cluster) bool {
 	return cluster.Spec.Config != nil && cluster.Spec.Config.CmkV2Standard != nil
+}
+
+func isEnterprise(cluster *cmkv2.CmkV2Cluster) bool {
+	return cluster.Spec.Config != nil && cluster.Spec.Config.CmkV2Enterprise != nil
 }
 
 func isDedicated(cluster *cmkv2.CmkV2Cluster) bool {

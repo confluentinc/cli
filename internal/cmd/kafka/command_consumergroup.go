@@ -4,7 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 )
 
 type consumerGroupCommand struct {
@@ -20,7 +20,7 @@ type consumerGroupOut struct {
 	State             string `human:"State" serialized:"state"`
 }
 
-func newConsumerGroupCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
+func newConsumerGroupCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "consumer-group",
 		Aliases:     []string{"cg"},

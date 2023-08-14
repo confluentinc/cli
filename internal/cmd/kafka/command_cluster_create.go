@@ -13,17 +13,20 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/ccstructs"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/form"
+	"github.com/confluentinc/cli/internal/pkg/kafka"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/utils"
 )
 
 const (
-	skuBasic     = "basic"
-	skuStandard  = "standard"
-	skuDedicated = "dedicated"
+	skuBasic      = "basic"
+	skuStandard   = "standard"
+	skuEnterprise = "enterprise"
+	skuDedicated  = "dedicated"
 )
 
 var permitBYOKGCP = template.Must(template.New("byok_gcp_permissions").Parse(`Create a role with these permissions, add the identity as a member of your key, and grant your role to the member:
@@ -36,7 +39,7 @@ Permissions:
 Identity:
   {{.ExternalIdentity}}`))
 
-func (c *clusterCommand) newCreateCommand(cfg *v1.Config) *cobra.Command {
+func (c *clusterCommand) newCreateCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "create <name>",
 		Short:       "Create a Kafka cluster.",
@@ -191,7 +194,7 @@ func (c *clusterCommand) create(cmd *cobra.Command, args []string) error {
 	return c.outputKafkaClusterDescription(cmd, &kafkaCluster, false)
 }
 
-func checkCloudAndRegion(cloudId string, regionId string, clouds []*ccloudv1.CloudMetadata) error {
+func checkCloudAndRegion(cloudId, regionId string, clouds []*ccloudv1.CloudMetadata) error {
 	for _, cloud := range clouds {
 		if cloudId == cloud.GetId() {
 			for _, region := range cloud.GetRegions() {
@@ -259,11 +262,11 @@ func stringToAvailability(s string) (string, error) {
 func stringToSku(skuType string) (ccstructs.Sku, error) {
 	sku := ccstructs.Sku(ccstructs.Sku_value[strings.ToUpper(skuType)])
 	switch sku {
-	case ccstructs.Sku_BASIC, ccstructs.Sku_STANDARD, ccstructs.Sku_DEDICATED:
+	case ccstructs.Sku_BASIC, ccstructs.Sku_STANDARD, ccstructs.Sku_ENTERPRISE, ccstructs.Sku_DEDICATED:
 		break
 	default:
 		return ccstructs.Sku_UNKNOWN, errors.NewErrorWithSuggestions(fmt.Sprintf(errors.InvalidTypeFlagErrorMsg, skuType),
-			fmt.Sprintf(errors.InvalidTypeFlagSuggestions, skuBasic, skuStandard, skuDedicated))
+			fmt.Sprintf("Allowed values for `--type` flag are: %s.", utils.ArrayToCommaDelimitedString(kafka.Types, "and")))
 	}
 	return sku, nil
 }
@@ -278,6 +281,8 @@ func setCmkClusterConfig(typeString string, cku int32, encryptionKeyID string) *
 		return &cmkv2.CmkV2ClusterSpecConfigOneOf{
 			CmkV2Standard: &cmkv2.CmkV2Standard{Kind: "Standard"},
 		}
+	case skuEnterprise:
+		return &cmkv2.CmkV2ClusterSpecConfigOneOf{CmkV2Enterprise: &cmkv2.CmkV2Enterprise{Kind: "Enterprise"}}
 	case skuDedicated:
 		var encryptionPtr *string
 		if encryptionKeyID != "" {

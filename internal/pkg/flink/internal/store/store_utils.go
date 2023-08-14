@@ -323,9 +323,9 @@ func processHttpErrors(resp *http.Response, err error) error {
 	if resp != nil && resp.StatusCode >= 400 {
 		if resp.StatusCode == http.StatusUnauthorized {
 			return &types.StatementError{
-				Message:          "unauthorized",
-				Suggestion:       `Please run "confluent login"`,
-				HttpResponseCode: resp.StatusCode,
+				Message:    "unauthorized",
+				Suggestion: `Please run "confluent login"`,
+				StatusCode: resp.StatusCode,
 			}
 		}
 
@@ -374,7 +374,7 @@ func removeTabNewLineAndWhitesSpaces(str string) string {
 	return replacer.Replace(str)
 }
 
-func statementStartsWithOp(statement string, op string) bool {
+func statementStartsWithOp(statement, op string) bool {
 	cleanedStatement := strings.ToUpper(statement)
 	pattern := fmt.Sprintf("^%s\\b", op)
 	startsWithOp, _ := regexp.MatchString(pattern, cleanedStatement)

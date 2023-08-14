@@ -11,7 +11,7 @@ import (
 
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 
-	configv1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/form"
 	"github.com/confluentinc/cli/internal/pkg/log"
@@ -27,7 +27,7 @@ type PartitionFilter struct {
 	Index   int32
 }
 
-func getCommonConfig(kafka *configv1.KafkaClusterConfig, clientId string) (*ckafka.ConfigMap, error) {
+func getCommonConfig(kafka *config.KafkaClusterConfig, clientId string) (*ckafka.ConfigMap, error) {
 	if err := kafka.DecryptAPIKeys(); err != nil {
 		return nil, err
 	}
@@ -45,7 +45,7 @@ func getCommonConfig(kafka *configv1.KafkaClusterConfig, clientId string) (*ckaf
 	return configMap, nil
 }
 
-func getProducerConfigMap(kafka *configv1.KafkaClusterConfig, clientID string) (*ckafka.ConfigMap, error) {
+func getProducerConfigMap(kafka *config.KafkaClusterConfig, clientID string) (*ckafka.ConfigMap, error) {
 	configMap, err := getCommonConfig(kafka, clientID)
 	if err != nil {
 		return nil, err
@@ -62,7 +62,7 @@ func getProducerConfigMap(kafka *configv1.KafkaClusterConfig, clientID string) (
 	return configMap, nil
 }
 
-func getConsumerConfigMap(group string, kafka *configv1.KafkaClusterConfig, clientID string) (*ckafka.ConfigMap, error) {
+func getConsumerConfigMap(group string, kafka *config.KafkaClusterConfig, clientID string) (*ckafka.ConfigMap, error) {
 	configMap, err := getCommonConfig(kafka, clientID)
 	if err != nil {
 		return nil, err
@@ -71,6 +71,10 @@ func getConsumerConfigMap(group string, kafka *configv1.KafkaClusterConfig, clie
 		return nil, err
 	}
 	log.CliLogger.Debugf("Created consumer group: %s", group)
+
+	if err := configMap.SetKey("enable.auto.commit", false); err != nil {
+		return nil, err
+	}
 
 	// see explanation: https://www.confluent.io/blog/incremental-cooperative-rebalancing-in-kafka/
 	if err := configMap.SetKey("partition.assignment.strategy", "cooperative-sticky"); err != nil {
@@ -82,13 +86,11 @@ func getConsumerConfigMap(group string, kafka *configv1.KafkaClusterConfig, clie
 	return configMap, nil
 }
 
-func getOnPremCommonConfig(clientID, bootstrap, caLocation string) *ckafka.ConfigMap {
+func getOnPremCommonConfig(clientID, bootstrap string) *ckafka.ConfigMap {
 	return &ckafka.ConfigMap{
 		"ssl.endpoint.identification.algorithm": "https",
 		"client.id":                             clientID,
 		"bootstrap.servers":                     bootstrap,
-		"enable.ssl.certificate.verification":   true,
-		"ssl.ca.location":                       caLocation,
 	}
 }
 
@@ -97,16 +99,31 @@ func getOnPremProducerConfigMap(cmd *cobra.Command, clientID string) (*ckafka.Co
 	if err != nil {
 		return nil, err
 	}
-	caLocation, err := cmd.Flags().GetString("ca-location")
+
+	configMap := getOnPremCommonConfig(clientID, bootstrap)
+
+	protocol, err := cmd.Flags().GetString("protocol")
 	if err != nil {
 		return nil, err
 	}
-	configMap := getOnPremCommonConfig(clientID, bootstrap, caLocation)
+	if protocol == "SSL" || protocol == "SASL_SSL" {
+		caLocation, err := cmd.Flags().GetString("ca-location")
+		if err != nil {
+			return nil, err
+		}
 
-	if err := configMap.SetKey("retry.backoff.ms", "250"); err != nil {
+		if err := configMap.SetKey("enable.ssl.certificate.verification", true); err != nil {
+			return nil, err
+		}
+		if err := configMap.SetKey("ssl.ca.location", caLocation); err != nil {
+			return nil, err
+		}
+	}
+
+	if err := configMap.SetKey("retry.backoff.ms", 250); err != nil {
 		return nil, err
 	}
-	if err := configMap.SetKey("request.timeout.ms", "10000"); err != nil {
+	if err := configMap.SetKey("request.timeout.ms", 10000); err != nil {
 		return nil, err
 	}
 
@@ -122,11 +139,26 @@ func getOnPremConsumerConfigMap(cmd *cobra.Command, clientID string) (*ckafka.Co
 	if err != nil {
 		return nil, err
 	}
-	caLocation, err := cmd.Flags().GetString("ca-location")
+
+	configMap := getOnPremCommonConfig(clientID, bootstrap)
+
+	protocol, err := cmd.Flags().GetString("protocol")
 	if err != nil {
 		return nil, err
 	}
-	configMap := getOnPremCommonConfig(clientID, bootstrap, caLocation)
+	if protocol == "SSL" || protocol == "SASL_SSL" {
+		caLocation, err := cmd.Flags().GetString("ca-location")
+		if err != nil {
+			return nil, err
+		}
+
+		if err := configMap.SetKey("enable.ssl.certificate.verification", true); err != nil {
+			return nil, err
+		}
+		if err := configMap.SetKey("ssl.ca.location", caLocation); err != nil {
+			return nil, err
+		}
+	}
 
 	group, err := cmd.Flags().GetString("group")
 	if err != nil {
@@ -158,6 +190,11 @@ func setProtocolConfig(cmd *cobra.Command, configMap *ckafka.ConfigMap) (*ckafka
 		return nil, err
 	}
 	switch protocol {
+	case "PLAINTEXT":
+		configMap, err = setPlaintextConfig(configMap)
+		if err != nil {
+			return nil, err
+		}
 	case "SSL":
 		configMap, err = setSSLConfig(cmd, configMap)
 		if err != nil {
@@ -170,6 +207,13 @@ func setProtocolConfig(cmd *cobra.Command, configMap *ckafka.ConfigMap) (*ckafka
 		}
 	default:
 		return nil, errors.NewErrorWithSuggestions(fmt.Errorf(errors.InvalidSecurityProtocolErrorMsg, protocol).Error(), errors.OnPremConfigGuideSuggestions)
+	}
+	return configMap, nil
+}
+
+func setPlaintextConfig(configMap *ckafka.ConfigMap) (*ckafka.ConfigMap, error) {
+	if err := configMap.SetKey("security.protocol", "PLAINTEXT"); err != nil {
+		return nil, err
 	}
 	return configMap, nil
 }

@@ -9,7 +9,7 @@ import (
 	apikeysv2 "github.com/confluentinc/ccloud-sdk-go-v2/apikeys/v2"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -116,7 +116,7 @@ func (c *command) create(cmd *cobra.Command, _ []string) error {
 		return c.catchServiceAccountNotValidError(err, httpResp, clusterId, serviceAccount)
 	}
 
-	userKey := &v1.APIKeyPair{
+	userKey := &config.APIKeyPair{
 		Key:    v2Key.GetId(),
 		Secret: v2Key.Spec.GetSecret(),
 	}
@@ -185,15 +185,8 @@ func (c *command) catchServiceAccountNotValidError(err error, httpResp *http.Res
 		}
 
 		auditLog := user.GetOrganization().GetAuditLog()
-		if clusterId == auditLog.GetClusterId() {
-			auditLogServiceAccount, err2 := c.Client.User.GetServiceAccount(auditLog.GetServiceAccountId())
-			if err2 != nil {
-				return err
-			}
-
-			if serviceAccountId != auditLogServiceAccount.GetResourceId() {
-				return fmt.Errorf(`API keys for audit logs (limit of 2) must be created using the predefined service account, "%s"`, auditLogServiceAccount.GetResourceId())
-			}
+		if clusterId == auditLog.GetClusterId() && serviceAccountId != auditLog.GetServiceAccountResourceId() {
+			return fmt.Errorf(`API keys for audit logs (limit of 2) must be created using the predefined service account, "%s"`, auditLog.GetServiceAccountResourceId())
 		}
 	}
 

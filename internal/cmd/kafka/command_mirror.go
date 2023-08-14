@@ -78,17 +78,12 @@ func (c *mirrorCommand) autocompleteMirrorTopics(cmd *cobra.Command) []string {
 	}
 
 	kafkaREST, err := c.GetKafkaREST()
-	if err != nil || kafkaREST == nil {
-		return nil
-	}
-
-	cluster, err := c.Context.GetKafkaClusterForCommand()
 	if err != nil {
 		return nil
 	}
 
 	opts := &kafkarestv3.ListKafkaMirrorTopicsUnderLinkOpts{MirrorStatus: optional.EmptyInterface()}
-	listMirrorTopicsResponseDataList, _, err := kafkaREST.Client.ClusterLinkingV3Api.ListKafkaMirrorTopicsUnderLink(kafkaREST.Context, cluster.ID, linkName, opts)
+	listMirrorTopicsResponseDataList, _, err := kafkaREST.Client.ClusterLinkingV3Api.ListKafkaMirrorTopicsUnderLink(kafkaREST.Context, kafkaREST.GetClusterId(), linkName, opts)
 	if err != nil {
 		return nil
 	}

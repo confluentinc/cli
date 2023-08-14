@@ -16,7 +16,7 @@ import (
 
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/featureflags"
@@ -54,7 +54,7 @@ type PreRunner interface {
 
 // PreRun is the standard PreRunner implementation
 type PreRun struct {
-	Config                  *v1.Config
+	Config                  *config.Config
 	UpdateClient            update.Client
 	FlagResolver            FlagResolver
 	Version                 *version.Version
@@ -123,7 +123,7 @@ func (r *PreRun) Anonymous(command *CLICommand, willAuthenticate bool) func(*cob
 	}
 }
 
-func checkCliDisable(cmd *CLICommand, cfg *v1.Config) error {
+func checkCliDisable(cmd *CLICommand, cfg *config.Config) error {
 	ldDisable := featureflags.GetLDDisableMap(cmd.Config.Context())
 	errMsg, errMsgOk := ldDisable["error_msg"].(string)
 	disabledCmdsAndFlags, ok := ldDisable["patterns"].([]any)
@@ -131,7 +131,7 @@ func checkCliDisable(cmd *CLICommand, cfg *v1.Config) error {
 		allowUpdate, allowUpdateOk := ldDisable["allow_update"].(bool)
 		if !(cmd.CommandPath() == "confluent update" && allowUpdateOk && allowUpdate) {
 			// in case a user is trying to run an on-prem command from a cloud context (should not see LD msg)
-			if err := ErrIfMissingRunRequirement(cmd.Command, cfg); err != nil && err == v1.RequireOnPremLoginErr {
+			if err := ErrIfMissingRunRequirement(cmd.Command, cfg); err != nil && err == config.RequireOnPremLoginErr {
 				return err
 			}
 			suggestionsMsg, _ := ldDisable["suggestions_msg"].(string)
@@ -179,7 +179,7 @@ func (r *PreRun) Authenticated(command *AuthenticatedCLICommand) func(*cobra.Com
 			return err
 		}
 
-		if r.Config.Context().GetCredentialType() == v1.APIKey {
+		if r.Config.Context().GetCredentialType() == config.APIKey {
 			return ErrIfMissingRunRequirement(cmd, r.Config)
 		}
 
@@ -245,16 +245,10 @@ func (r *PreRun) ParseFlagsIntoContext(command *CLICommand) func(*cobra.Command,
 
 func (r *PreRun) setAuthenticatedContext(cliCommand *AuthenticatedCLICommand) error {
 	ctx := cliCommand.Config.Context()
-	if ctx == nil {
+	if ctx == nil || !ctx.HasLogin() {
 		return new(errors.NotLoggedInError)
 	}
 	cliCommand.Context = ctx
-
-	state, err := ctx.AuthenticatedState()
-	if err != nil {
-		return err
-	}
-	cliCommand.State = state
 
 	return nil
 }
@@ -356,25 +350,24 @@ func (r *PreRun) setCCloudClient(c *AuthenticatedCLICommand) error {
 		if cluster.Status.Phase == ccloudv2.StatusProvisioning {
 			return nil, errors.Errorf(errors.KafkaRestProvisioningErrorMsg, lkc)
 		}
-		if restEndpoint != "" {
-			state, err := ctx.AuthenticatedState()
-			if err != nil {
-				return nil, err
-			}
-
-			dataplaneToken, err := pauth.GetDataplaneToken(state, ctx.Platform.Server)
-			if err != nil {
-				return nil, err
-			}
-			kafkaRest := &KafkaREST{
-				Context:     context.WithValue(context.Background(), kafkarestv3.ContextAccessToken, dataplaneToken),
-				CloudClient: ccloudv2.NewKafkaRestClient(restEndpoint, r.Version.UserAgent, unsafeTrace, dataplaneToken),
-				Client:      CreateKafkaRESTClient(restEndpoint, unsafeTrace),
-			}
-
-			return kafkaRest, nil
+		if restEndpoint == "" {
+			return nil, errors.New("Kafka REST is not enabled: the operation is only supported with Kafka REST proxy.")
 		}
-		return nil, errors.New(errors.RestProxyNotAvailableMsg)
+
+		state, err := ctx.AuthenticatedState()
+		if err != nil {
+			return nil, err
+		}
+		dataplaneToken, err := pauth.GetDataplaneToken(state, ctx.Platform.Server)
+		if err != nil {
+			return nil, err
+		}
+		kafkaRest := &KafkaREST{
+			Context:     context.WithValue(context.Background(), kafkarestv3.ContextAccessToken, dataplaneToken),
+			CloudClient: ccloudv2.NewKafkaRestClient(restEndpoint, lkc, r.Version.UserAgent, dataplaneToken, unsafeTrace),
+			Client:      CreateKafkaRESTClient(restEndpoint, unsafeTrace),
+		}
+		return kafkaRest, nil
 	})
 	c.KafkaRESTProvider = &provider
 	return nil
@@ -457,7 +450,7 @@ func (r *PreRun) AuthenticatedWithMDS(command *AuthenticatedCLICommand) func(*co
 
 		// Even if there was an error while setting the context, notify the user about any unmet run requirements first.
 		if err := ErrIfMissingRunRequirement(cmd, r.Config); err != nil {
-			if err == v1.RunningOnPremCommandInCloudErr {
+			if err == config.RunningOnPremCommandInCloudErr {
 				for topLevelCmd, suggestCmd := range wrongLoginCommandsMap {
 					if strings.HasPrefix(cmd.CommandPath(), topLevelCmd) {
 						suggestCmdPath := strings.Replace(cmd.CommandPath(), topLevelCmd, suggestCmd, 1)
@@ -494,7 +487,6 @@ func (r *PreRun) setAuthenticatedWithMDSContext(cliCommand *AuthenticatedCLIComm
 		return new(errors.NotLoggedInError)
 	}
 	cliCommand.Context = ctx
-	cliCommand.State = ctx.State
 
 	unsafeTrace, err := cliCommand.Flags().GetBool("unsafe-trace")
 	if err != nil {
@@ -618,7 +610,7 @@ func (r *PreRun) InitializeOnPremKafkaRest(command *AuthenticatedCLICommand) fun
 			var restContext context.Context
 			if useMdsToken && !restFlags.prompt {
 				log.CliLogger.Debug("found mds token to use as bearer")
-				restContext = context.WithValue(context.Background(), kafkarestv3.ContextAccessToken, command.AuthToken())
+				restContext = context.WithValue(context.Background(), kafkarestv3.ContextAccessToken, command.Context.GetAuthToken())
 			} else { // no mds token, then prompt for basic auth creds
 				if !restFlags.prompt {
 					output.Println(errors.MDSTokenNotFoundMsg)
@@ -675,7 +667,7 @@ func resolveOnPremKafkaRestFlags(cmd *cobra.Command) (*onPremKafkaRestFlagValues
 	return values, nil
 }
 
-func createOnPremKafkaRestClient(ctx *dynamicconfig.DynamicContext, caCertPath string, clientCertPath string, clientKeyPath string, logger *log.Logger) (*http.Client, error) {
+func createOnPremKafkaRestClient(ctx *dynamicconfig.DynamicContext, caCertPath, clientCertPath, clientKeyPath string, logger *log.Logger) (*http.Client, error) {
 	if caCertPath == "" {
 		caCertPath = pauth.GetEnvWithFallback(pauth.ConfluentPlatformCACertPath, pauth.DeprecatedConfluentPlatformCACertPath)
 		logger.Debugf("Found CA cert path: %s", caCertPath)

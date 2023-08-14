@@ -179,7 +179,7 @@ func (c *command) asyncapiImport(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	details, err := c.getAccountDetails(&flags{kafkaApiKey: flagsImp.kafkaApiKey})
+	details, err := c.getAccountDetails(cmd, &flags{kafkaApiKey: flagsImp.kafkaApiKey})
 	if err != nil {
 		return err
 	}
@@ -258,16 +258,16 @@ func (c *command) addTopic(details *accountDetails, topicName string, kafkaBindi
 				return true, false, nil
 			}
 			// Overwrite existing topic
-			err := c.updateTopic(details, topicName, kafkaBinding)
+			err := c.updateTopic(topicName, kafkaBinding)
 			return true, false, err
 		}
 	}
 	// Create a new topic
-	newTopicCreated, err := c.createTopic(details, topicName, kafkaBinding)
+	newTopicCreated, err := c.createTopic(topicName, kafkaBinding)
 	return false, newTopicCreated, err
 }
 
-func (c *command) createTopic(details *accountDetails, topicName string, kafkaBinding kafkaBinding) (bool, error) {
+func (c *command) createTopic(topicName string, kafkaBinding kafkaBinding) (bool, error) {
 	log.CliLogger.Infof("Topic not found. Adding a new topic: %s", topicName)
 	topicConfigs := []kafkarestv3.CreateTopicRequestDataConfigs{}
 	for configName, configValue := range combineTopicConfigs(kafkaBinding) {
@@ -288,8 +288,7 @@ func (c *command) createTopic(details *accountDetails, topicName string, kafkaBi
 	if err != nil {
 		return false, err
 	}
-	if _, httpResp, err := kafkaRest.CloudClient.CreateKafkaTopic(details.kafkaClusterId,
-		createTopicRequestData); err != nil {
+	if _, httpResp, err := kafkaRest.CloudClient.CreateKafkaTopic(createTopicRequestData); err != nil {
 		restErr, parseErr := kafkarest.ParseOpenAPIErrorCloud(err)
 		if parseErr == nil && restErr.Code == ccloudv2.BadRequestErrorCode {
 			// Print partition limit error w/ suggestion
@@ -303,7 +302,7 @@ func (c *command) createTopic(details *accountDetails, topicName string, kafkaBi
 	return true, nil
 }
 
-func (c *command) updateTopic(details *accountDetails, topicName string, kafkaBinding kafkaBinding) error {
+func (c *command) updateTopic(topicName string, kafkaBinding kafkaBinding) error {
 	// Overwrite topic configs
 	updateConfigs := []kafkarestv3.AlterConfigBatchRequestDataData{}
 	modifiableConfigs := []string{}
@@ -311,7 +310,7 @@ func (c *command) updateTopic(details *accountDetails, topicName string, kafkaBi
 	if err != nil {
 		return err
 	}
-	configs, err := kafkaRest.CloudClient.ListKafkaTopicConfigs(details.kafkaClusterId, topicName)
+	configs, err := kafkaRest.CloudClient.ListKafkaTopicConfigs(topicName)
 	if err != nil {
 		return err
 	}
@@ -331,7 +330,7 @@ func (c *command) updateTopic(details *accountDetails, topicName string, kafkaBi
 	}
 	log.CliLogger.Info("Overwriting topic configs")
 	if updateConfigs != nil {
-		_, err = kafkaRest.CloudClient.UpdateKafkaTopicConfigBatch(details.kafkaClusterId, topicName, kafkarestv3.AlterConfigBatchRequestData{Data: updateConfigs})
+		_, err = kafkaRest.CloudClient.UpdateKafkaTopicConfigBatch(topicName, kafkarestv3.AlterConfigBatchRequestData{Data: updateConfigs})
 		if err != nil {
 			return fmt.Errorf("unable to update topic configs: %v", err)
 		}
@@ -420,7 +419,7 @@ func registerSchema(details *accountDetails, topicName string, components Compon
 	return 0, fmt.Errorf("schema payload not found in YAML input file")
 }
 
-func updateSubjectCompatibility(details *accountDetails, compatibility string, subject string) error {
+func updateSubjectCompatibility(details *accountDetails, compatibility, subject string) error {
 	// Updating the subject level compatibility
 	log.CliLogger.Infof("Updating the Subject level compatibility to %s", compatibility)
 	req := srsdk.ConfigUpdateRequest{Compatibility: compatibility}
@@ -512,7 +511,7 @@ func addTagsUtil(details *accountDetails, tagDefConfigs []srsdk.TagDef, tagConfi
 	return nil
 }
 
-func retry(ctx context.Context, tick time.Duration, timeout time.Duration, f func() error) error {
+func retry(ctx context.Context, tick, timeout time.Duration, f func() error) error {
 	if err := f(); err != nil {
 		log.CliLogger.Debugf("Fail #1: %v", err)
 	} else {

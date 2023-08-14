@@ -9,12 +9,6 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
-const (
-	config         = "config"
-	name           = "name"
-	connectorClass = "connector.class"
-)
-
 func getConfig(cmd *cobra.Command) (*map[string]string, error) {
 	configFile, err := cmd.Flags().GetString("config-file")
 	if err != nil {
@@ -23,11 +17,11 @@ func getConfig(cmd *cobra.Command) (*map[string]string, error) {
 
 	options, err := parseConfigFile(configFile)
 	if err != nil {
-		return nil, errors.Wrapf(err, "unable to parse config %s", configFile)
+		return nil, errors.Wrapf(err, errors.UnableToReadConfigurationFileErrorMsg, configFile)
 	}
 
-	_, nameExists := options[name]
-	_, classExists := options[connectorClass]
+	_, nameExists := options["name"]
+	_, classExists := options["connector.class"]
 	if !nameExists || !classExists {
 		return nil, errors.Errorf(errors.MissingRequiredConfigsErrorMsg, configFile)
 	}
@@ -35,20 +29,20 @@ func getConfig(cmd *cobra.Command) (*map[string]string, error) {
 	return &options, nil
 }
 
-func parseConfigFile(fileName string) (map[string]string, error) {
-	jsonFile, err := os.ReadFile(fileName)
+func parseConfigFile(filename string) (map[string]string, error) {
+	jsonFile, err := os.ReadFile(filename)
 	if err != nil {
-		return nil, errors.Wrapf(err, "unable to read config file %s", fileName)
+		return nil, errors.Wrapf(err, errors.UnableToReadConfigurationFileErrorMsg, filename)
 	}
 	if len(jsonFile) == 0 {
-		return nil, errors.Errorf(errors.EmptyConfigFileErrorMsg, fileName)
+		return nil, errors.Errorf(errors.EmptyConfigFileErrorMsg, filename)
 	}
 
 	kvPairs := make(map[string]string)
 	var options map[string]any
 
 	if err := json.Unmarshal(jsonFile, &options); err != nil {
-		return nil, errors.Wrapf(err, errors.ParseConfigErrorMsg, fileName)
+		return nil, errors.Wrapf(err, errors.UnableToReadConfigurationFileErrorMsg, filename)
 	}
 
 	for key, val := range options {
@@ -56,13 +50,13 @@ func parseConfigFile(fileName string) (map[string]string, error) {
 			kvPairs[key] = val2
 		} else {
 			// We support object-as-a-value only for "config" key.
-			if key != config {
+			if key != "config" {
 				return nil, errors.Errorf(`only string values are permitted for the configuration "%s"`, key)
 			}
 
 			configMap, ok := val.(map[string]any)
 			if !ok {
-				return nil, errors.Errorf(`value for the configuration "%s" is malformed`, config)
+				return nil, errors.Errorf(`value for the configuration "config" is malformed`)
 			}
 
 			for configKey, configVal := range configMap {

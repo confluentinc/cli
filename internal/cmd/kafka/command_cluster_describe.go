@@ -9,9 +9,8 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
-	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
@@ -115,7 +114,7 @@ func (c *clusterCommand) outputKafkaClusterDescription(cmd *cobra.Command, clust
 	return table.Print()
 }
 
-func convertClusterToDescribeStruct(cluster *cmkv2.CmkV2Cluster, ctx *v1.Context) *describeStruct {
+func convertClusterToDescribeStruct(cluster *cmkv2.CmkV2Cluster, ctx *config.Context) *describeStruct {
 	clusterStorage := getKafkaClusterStorage(cluster)
 	ingress, egress := getCmkClusterIngressAndEgressMbps(cluster)
 
@@ -180,9 +179,9 @@ func (c *clusterCommand) getTopicCountForKafkaCluster(cluster *cmkv2.CmkV2Cluste
 		return 0, err
 	}
 
-	topics, httpResp, err := kafkaREST.CloudClient.ListKafkaTopics(cluster.GetId())
+	topics, err := kafkaREST.CloudClient.ListKafkaTopics()
 	if err != nil {
-		return 0, kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
+		return 0, err
 	}
 
 	return len(topics.Data), nil

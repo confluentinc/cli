@@ -11,12 +11,12 @@ import (
 	"github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 )
 
 type roleCommand struct {
 	*pcmd.AuthenticatedCLICommand
-	cfg *v1.Config
+	cfg *config.Config
 }
 
 type prettyRole struct {
@@ -24,7 +24,7 @@ type prettyRole struct {
 	AccessPolicy string `human:"Access Policy"`
 }
 
-func newRoleCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
+func newRoleCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "role",
 		Short: "Manage RBAC and IAM roles.",

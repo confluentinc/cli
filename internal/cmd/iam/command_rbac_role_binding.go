@@ -13,7 +13,7 @@ import (
 	"github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	presource "github.com/confluentinc/cli/internal/pkg/resource"
@@ -56,7 +56,7 @@ type roleBindingOptions struct {
 
 type roleBindingCommand struct {
 	*pcmd.AuthenticatedCLICommand
-	cfg *v1.Config
+	cfg *config.Config
 }
 
 type roleBindingOut struct {
@@ -72,7 +72,7 @@ type roleBindingOut struct {
 	PatternType    string `human:"Pattern Type" serialized:"pattern_type"`
 }
 
-func newRoleBindingCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
+func newRoleBindingCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "role-binding",
 		Aliases: []string{"rb"},
@@ -289,7 +289,7 @@ func parseAndValidateResourcePattern(resource string, prefix bool) (mds.Resource
 	return result, nil
 }
 
-func (c *roleBindingCommand) validateRoleAndResourceTypeV1(roleName string, resourceType string) error {
+func (c *roleBindingCommand) validateRoleAndResourceTypeV1(roleName, resourceType string) error {
 	ctx := c.createContext()
 	role, resp, err := c.MDSClient.RBACRoleDefinitionsApi.RoleDetail(ctx, roleName)
 	if err != nil || resp.StatusCode == 204 {
@@ -439,9 +439,9 @@ func displayCreateAndDeleteOutput(cmd *cobra.Command, options *roleBindingOption
 
 func (c *roleBindingCommand) createContext() context.Context {
 	if c.cfg.IsCloudLogin() {
-		return context.WithValue(context.Background(), mdsv2alpha1.ContextAccessToken, c.AuthToken())
+		return context.WithValue(context.Background(), mdsv2alpha1.ContextAccessToken, c.Context.GetAuthToken())
 	} else {
-		return context.WithValue(context.Background(), mds.ContextAccessToken, c.AuthToken())
+		return context.WithValue(context.Background(), mds.ContextAccessToken, c.Context.GetAuthToken())
 	}
 }
 

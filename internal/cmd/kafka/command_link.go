@@ -4,7 +4,7 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 )
 
 const (
@@ -16,7 +16,7 @@ type linkCommand struct {
 	*pcmd.AuthenticatedCLICommand
 }
 
-func newLinkCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
+func newLinkCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:         "link",
 		Short:       "Manage inter-cluster links.",

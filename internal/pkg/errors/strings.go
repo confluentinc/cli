@@ -37,20 +37,14 @@ const (
 	CopyByokAwsPermissionsHeaderMsg  = `Copy and append these permissions into the key policy "Statements" field of the ARN in your AWS key management system to authorize access for your Confluent Cloud cluster.`
 	RunByokAzurePermissionsHeaderMsg = "To ensure the key vault has the correct role assignments, please run the following azure-cli command (certified for azure-cli v2.45):"
 
-	// kafka consumer-group commands
-	RestProxyNotAvailable = "Operation not supported: REST proxy is not available.\n"
-
 	// kafka topic commands
-	StartingProducerMsg         = "Starting Kafka Producer. Use Ctrl-C or Ctrl-D to exit."
+	StartingProducerMsg         = "Starting Kafka Producer. Use %s to exit.\n"
 	StoppingConsumerMsg         = "Stopping Consumer."
 	StartingConsumerMsg         = "Starting Kafka Consumer. Use Ctrl-C to exit."
 	UpdateTopicConfigMsg        = "Updated the following configuration values for topic \"%s\":\n"
 	UpdateTopicConfigRestMsg    = "Updated the following configuration values for topic \"%s\"%s:\n"
 	ReadOnlyConfigNotUpdatedMsg = "(read-only configs were not updated)"
 	OmitTopicCountMsg           = "The topic count will be omitted as Kafka topics for this cluster could not be retrieved: %v"
-
-	// kafka mirror commands
-	RestProxyNotAvailableMsg = "Kafka REST is not enabled: the operation is only supported with Kafka REST proxy."
 
 	// kafka REST proxy
 	MDSTokenNotFoundMsg = "No session token found, please enter user credentials. To avoid being prompted, run `confluent login`."
@@ -90,10 +84,10 @@ const (
 	APIKeyMissingMsg     = "API key missing"
 	KeyPairMismatchMsg   = "key of the dictionary does not match API key of the pair"
 	APISecretMissingMsg  = "API secret missing"
-	APIKeysMapAutofixMsg = "There are malformed API key secret pair entries in the dictionary for cluster \"%s\" under context \"%s\".\n" +
+	APIKeysMapAutofixMsg = "There are malformed API key pair entries in the dictionary for cluster \"%s\" under context \"%s\".\n" +
 		"The issues are the following: %s.\n" +
 		"Deleting the malformed entries.\n" +
-		"You can re-add the API key secret pair with `confluent api-key store --resource %s`\n"
+		"You can re-add the API key pair with `confluent api-key store --resource %s`\n"
 	CurrentAPIKeyAutofixMsg = "Current API key \"%s\" of resource \"%s\" under context \"%s\" is not found.\n" +
 		"Removing current API key setting for the resource.\n" +
 		"You can re-add the API key with `confluent api-key store --resource %s'` and then set current API key with `confluent api-key use`.\n"

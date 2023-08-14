@@ -151,7 +151,7 @@ func getIndividualBrokerConfigs(restClient *kafkarestv3.APIClient, restContext c
 }
 
 // getClusterWideConfigs fetches cluster-wide configs or just configName config if specified
-func getClusterWideConfigs(restClient *kafkarestv3.APIClient, restContext context.Context, clusterId string, configName string) (kafkarestv3.ClusterConfigDataList, error) {
+func getClusterWideConfigs(restClient *kafkarestv3.APIClient, restContext context.Context, clusterId, configName string) (kafkarestv3.ClusterConfigDataList, error) {
 	var clusterConfig kafkarestv3.ClusterConfigDataList
 	var resp *http.Response
 	var err error

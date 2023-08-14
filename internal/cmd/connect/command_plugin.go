@@ -6,17 +6,17 @@ import (
 	connectv1 "github.com/confluentinc/ccloud-sdk-go-v2/connect/v1"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 )
 
 type pluginCommand struct {
 	*pcmd.AuthenticatedCLICommand
 }
 
-func newPluginCommand(cfg *v1.Config, prerunner pcmd.PreRunner) *cobra.Command {
+func newPluginCommand(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "plugin",
-		Short: "Manage Connect plugins.",
+		Short: "Manage plugins for managed connectors.",
 	}
 
 	c := &pluginCommand{}

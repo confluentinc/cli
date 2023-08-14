@@ -9,7 +9,7 @@ import (
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -18,7 +18,7 @@ type validateOut struct {
 	IsCompatible bool `human:"Compatible" serialized:"is_compatible"`
 }
 
-func (c *command) newCompatibilityValidateCommand(cfg *v1.Config) *cobra.Command {
+func (c *command) newCompatibilityValidateCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "validate",
 		Short: "Validate a schema with a subject version.",
@@ -45,7 +45,8 @@ func (c *command) newCompatibilityValidateCommand(cfg *v1.Config) *cobra.Command
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	} else {
-		cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
+		addCaLocationFlag(cmd)
+		addSchemaRegistryEndpointFlag(cmd)
 	}
 	pcmd.AddOutputFlag(cmd)
 
@@ -92,12 +93,12 @@ func (c *command) compatibilityValidate(cmd *cobra.Command, args []string) error
 		return err
 	}
 
-	references, err := ReadSchemaReferences(cmd)
+	references, err := ReadSchemaReferences(cmd, false)
 	if err != nil {
 		return err
 	}
 
-	client, err := c.GetSchemaRegistryClient()
+	client, err := c.GetSchemaRegistryClient(cmd)
 	if err != nil {
 		return err
 	}

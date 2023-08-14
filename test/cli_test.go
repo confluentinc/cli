@@ -6,7 +6,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
@@ -17,7 +16,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/utils"
 	testserver "github.com/confluentinc/cli/test/test-server"
 )
@@ -42,8 +41,8 @@ type CLITest struct {
 	loginURL string
 	// The kafka cluster ID to "use"
 	useKafka string
-	// The API Key to set as Kafka credentials
-	authKafka string
+	// Create and use an API Key to set as Kafka credentials
+	authKafka bool
 	// Name of a golden output fixture containing expected output
 	fixture string
 	// True if audit-log is disabled
@@ -93,9 +92,7 @@ func (s *CLITestSuite) SetupSuite() {
 	s.TestBackend = testserver.StartTestBackend(s.T(), true) // by default do not disable audit-log
 	os.Setenv("DISABLE_AUDIT_LOG", "false")
 
-	// Temporarily change $HOME, so the current config file isn't altered.
-	err = os.Setenv("HOME", os.TempDir())
-	req.NoError(err)
+	config.SetTempHomeDir()
 }
 
 func (s *CLITestSuite) TearDownSuite() {
@@ -156,7 +153,7 @@ func (s *CLITestSuite) runIntegrationTest(test CLITest) {
 			}
 		}
 
-		if test.authKafka != "" {
+		if test.authKafka {
 			output := runCommand(t, testBin, []string{}, fmt.Sprintf("api-key create --resource %s --use", test.useKafka), 0, "")
 			if *debug {
 				fmt.Println(output)
@@ -166,11 +163,6 @@ func (s *CLITestSuite) runIntegrationTest(test CLITest) {
 		output := runCommand(t, testBin, test.env, test.args, test.exitCode, test.input)
 		if *debug {
 			fmt.Println(output)
-		}
-
-		if strings.HasPrefix(test.args, "kafka cluster create") {
-			re := regexp.MustCompile("https?://127.0.0.1:[0-9]+")
-			output = re.ReplaceAllString(output, "http://127.0.0.1:12345")
 		}
 
 		s.validateTestOutput(test, t, output)
@@ -234,7 +226,7 @@ func runCommand(t *testing.T, binaryName string, env []string, argString string,
 func resetConfiguration(t *testing.T, arePluginsEnabled bool) {
 	// HACK: delete your current config to isolate tests cases for non-workflow tests...
 	// probably don't really want to do this or devs will get mad
-	cfg := v1.New()
+	cfg := config.New()
 	cfg.DisablePlugins = !arePluginsEnabled
 	err := cfg.Save()
 	require.NoError(t, err)

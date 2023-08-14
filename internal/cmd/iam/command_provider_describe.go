@@ -4,10 +4,9 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (c identityProviderCommand) newDescribeCommand() *cobra.Command {
+func (c *identityProviderCommand) newDescribeCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:               "describe <id>",
 		Short:             "Describe an identity provider.",
@@ -16,24 +15,17 @@ func (c identityProviderCommand) newDescribeCommand() *cobra.Command {
 		RunE:              c.describe,
 	}
 
+	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
 
-func (c identityProviderCommand) describe(cmd *cobra.Command, args []string) error {
-	identityProvider, err := c.V2Client.GetIdentityProvider(args[0])
+func (c *identityProviderCommand) describe(cmd *cobra.Command, args []string) error {
+	provider, err := c.V2Client.GetIdentityProvider(args[0])
 	if err != nil {
 		return err
 	}
 
-	table := output.NewTable(cmd)
-	table.Add(&identityProviderOut{
-		Id:          identityProvider.GetId(),
-		Name:        identityProvider.GetDisplayName(),
-		Description: identityProvider.GetDescription(),
-		IssuerUri:   identityProvider.GetIssuer(),
-		JwksUri:     identityProvider.GetJwksUri(),
-	})
-	return table.Print()
+	return printIdentityProvider(cmd, provider)
 }

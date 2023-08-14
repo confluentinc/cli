@@ -6,14 +6,14 @@ import (
 
 	ccloudv1 "github.com/confluentinc/ccloud-sdk-go-v1-public"
 
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/version"
 )
 
 type JWTValidator interface {
-	Validate(context *v1.Context) error
+	Validate(context *config.Context) error
 }
 
 type JWTValidatorImpl struct {
@@ -29,7 +29,7 @@ func NewJWTValidator() *JWTValidatorImpl {
 
 // Validate returns an error if the JWT in the specified context is invalid.
 // The JWT is invalid if it's not parsable or expired.
-func (v *JWTValidatorImpl) Validate(context *v1.Context) error {
+func (v *JWTValidatorImpl) Validate(context *config.Context) error {
 	var authToken string
 	if context != nil {
 		authToken = context.State.AuthToken

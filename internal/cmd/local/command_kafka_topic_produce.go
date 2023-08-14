@@ -73,7 +73,7 @@ func (c *Command) kafkaTopicProduce(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	output.ErrPrintln(errors.StartingProducerMsg)
+	output.ErrPrintf(errors.StartingProducerMsg, "Ctrl-C or Ctrl-D")
 	output.ErrPrintln("Type a message and press ENTER to produce to the topic.")
 
 	var scanErr error
@@ -89,12 +89,12 @@ func (c *Command) kafkaTopicProduce(cmd *cobra.Command, args []string) error {
 
 	deliveryChan := make(chan ckafka.Event)
 	for data := range input {
-		if len(data) == 0 {
+		if data == "" {
 			go scan()
 			continue
 		}
 
-		msg, err := kafka.GetProduceMessage(cmd, make([]byte, 4), topicName, data, serializationProvider)
+		msg, err := kafka.GetProduceMessage(cmd, make([]byte, 4), make([]byte, 4), topicName, data, nil, serializationProvider)
 		if err != nil {
 			return err
 		}

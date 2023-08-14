@@ -4,11 +4,11 @@ import (
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (c *command) newExporterGetConfigCommand(cfg *v1.Config) *cobra.Command {
+func (c *command) newExporterGetConfigCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "get-config <name>",
 		Short: "Get the schema exporter configuration.",
@@ -20,7 +20,8 @@ func (c *command) newExporterGetConfigCommand(cfg *v1.Config) *cobra.Command {
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	} else {
-		cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
+		addCaLocationFlag(cmd)
+		addSchemaRegistryEndpointFlag(cmd)
 	}
 	pcmd.AddOutputFlagWithDefaultValue(cmd, output.JSON.String())
 
@@ -38,7 +39,7 @@ func (c *command) newExporterGetConfigCommand(cfg *v1.Config) *cobra.Command {
 }
 
 func (c *command) exporterGetConfig(cmd *cobra.Command, args []string) error {
-	client, err := c.GetSchemaRegistryClient()
+	client, err := c.GetSchemaRegistryClient(cmd)
 	if err != nil {
 		return err
 	}

@@ -12,7 +12,7 @@ import (
 
 	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	pmock "github.com/confluentinc/cli/internal/pkg/mock"
 	"github.com/confluentinc/cli/internal/pkg/version"
@@ -27,12 +27,12 @@ type Commander struct {
 	KafkaRESTProvider *pcmd.KafkaRESTProvider
 	QuotasClient      *servicequotav1.APIClient
 	Version           *version.Version
-	Config            *v1.Config
+	Config            *config.Config
 }
 
 var _ pcmd.PreRunner = (*Commander)(nil)
 
-func NewPreRunnerMock(client *ccloudv1.Client, v2Client *ccloudv2.Client, mdsClient *mds.APIClient, kafkaRESTProvider *pcmd.KafkaRESTProvider, cfg *v1.Config) pcmd.PreRunner {
+func NewPreRunnerMock(client *ccloudv1.Client, v2Client *ccloudv2.Client, mdsClient *mds.APIClient, kafkaRESTProvider *pcmd.KafkaRESTProvider, cfg *config.Config) pcmd.PreRunner {
 	flagResolverMock := &pcmd.FlagResolverImpl{
 		Prompt: &pmock.Prompt{},
 		Out:    os.Stdout,
@@ -47,7 +47,7 @@ func NewPreRunnerMock(client *ccloudv1.Client, v2Client *ccloudv2.Client, mdsCli
 	}
 }
 
-func NewPreRunnerMdsV2Mock(v2Client *ccloudv2.Client, mdsClient *mdsv2alpha1.APIClient, cfg *v1.Config) *Commander {
+func NewPreRunnerMdsV2Mock(v2Client *ccloudv2.Client, mdsClient *mdsv2alpha1.APIClient, cfg *config.Config) *Commander {
 	flagResolverMock := &pcmd.FlagResolverImpl{
 		Prompt: &pmock.Prompt{},
 		Out:    os.Stdout,
@@ -76,16 +76,13 @@ func (c *Commander) Authenticated(command *pcmd.AuthenticatedCLICommand) func(*c
 			return err
 		}
 		c.setClient(command)
+
 		ctx := command.Config.Context()
-		if ctx == nil {
+		if ctx == nil || !ctx.HasLogin() {
 			return new(errors.NotLoggedInError)
 		}
 		command.Context = ctx
-		state, err := ctx.AuthenticatedState()
-		if err != nil {
-			return err
-		}
-		command.State = state
+
 		return nil
 	}
 }
@@ -96,15 +93,13 @@ func (c *Commander) AuthenticatedWithMDS(command *pcmd.AuthenticatedCLICommand) 
 			return err
 		}
 		c.setClient(command)
+
 		ctx := command.Config.Context()
-		if ctx == nil {
+		if ctx == nil || !ctx.HasBasicMDSLogin() {
 			return new(errors.NotLoggedInError)
 		}
 		command.Context = ctx
-		if !ctx.HasBasicMDSLogin() {
-			return new(errors.NotLoggedInError)
-		}
-		command.State = ctx.State
+
 		return nil
 	}
 }

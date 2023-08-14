@@ -7,7 +7,7 @@ import (
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
@@ -16,7 +16,7 @@ type versionOut struct {
 	Version int32 `human:"Version" serialized:"version"`
 }
 
-func (c *command) newSubjectDescribeCommand(cfg *v1.Config) *cobra.Command {
+func (c *command) newSubjectDescribeCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe <subject>",
 		Short: "Describe subject versions.",
@@ -38,7 +38,8 @@ func (c *command) newSubjectDescribeCommand(cfg *v1.Config) *cobra.Command {
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	} else {
-		cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
+		addCaLocationFlag(cmd)
+		addSchemaRegistryEndpointFlag(cmd)
 	}
 	pcmd.AddOutputFlag(cmd)
 
@@ -56,7 +57,7 @@ func (c *command) newSubjectDescribeCommand(cfg *v1.Config) *cobra.Command {
 }
 
 func (c *command) subjectDescribe(cmd *cobra.Command, args []string) error {
-	client, err := c.GetSchemaRegistryClient()
+	client, err := c.GetSchemaRegistryClient(cmd)
 	if err != nil {
 		return err
 	}

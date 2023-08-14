@@ -28,7 +28,7 @@ import (
 	"github.com/confluentinc/cli/internal/cmd/logout"
 	pauth "github.com/confluentinc/cli/internal/pkg/auth"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	pmock "github.com/confluentinc/cli/internal/pkg/mock"
 	"github.com/confluentinc/cli/internal/pkg/netrc"
@@ -92,12 +92,12 @@ var (
 				}, nil
 			}
 		},
-		GetSsoCredentialsFromConfigFunc: func(_ *v1.Config, _ string) func() (*pauth.Credentials, error) {
+		GetSsoCredentialsFromConfigFunc: func(_ *config.Config, _ string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
 		},
-		GetCredentialsFromConfigFunc: func(_ *v1.Config, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
+		GetCredentialsFromConfigFunc: func(_ *config.Config, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
@@ -107,7 +107,7 @@ var (
 				return nil, nil
 			}
 		},
-		GetCredentialsFromKeychainFunc: func(_ *v1.Config, _ bool, _, _ string) func() (*pauth.Credentials, error) {
+		GetCredentialsFromKeychainFunc: func(_ *config.Config, _ bool, _, _ string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
@@ -175,12 +175,12 @@ func TestCredentialsOverride(t *testing.T) {
 				return envCreds, nil
 			}
 		},
-		GetSsoCredentialsFromConfigFunc: func(_ *v1.Config, _ string) func() (*pauth.Credentials, error) {
+		GetSsoCredentialsFromConfigFunc: func(_ *config.Config, _ string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
 		},
-		GetCredentialsFromConfigFunc: func(_ *v1.Config, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
+		GetCredentialsFromConfigFunc: func(_ *config.Config, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
@@ -195,7 +195,7 @@ func TestCredentialsOverride(t *testing.T) {
 				return nil, nil
 			}
 		},
-		GetCredentialsFromKeychainFunc: func(_ *v1.Config, _ bool, _, _ string) func() (*pauth.Credentials, error) {
+		GetCredentialsFromKeychainFunc: func(_ *config.Config, _ bool, _, _ string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
@@ -414,12 +414,12 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 						}, nil
 					}
 				},
-				GetSsoCredentialsFromConfigFunc: func(_ *v1.Config, _ string) func() (*pauth.Credentials, error) {
+				GetSsoCredentialsFromConfigFunc: func(_ *config.Config, _ string) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return nil, nil
 					}
 				},
-				GetCredentialsFromConfigFunc: func(_ *v1.Config, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
+				GetCredentialsFromConfigFunc: func(_ *config.Config, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return nil, nil
 					}
@@ -429,7 +429,7 @@ func TestLoginOrderOfPrecedence(t *testing.T) {
 						return nil, nil
 					}
 				},
-				GetCredentialsFromKeychainFunc: func(_ *v1.Config, _ bool, _, _ string) func() (*pauth.Credentials, error) {
+				GetCredentialsFromKeychainFunc: func(_ *config.Config, _ bool, _, _ string) func() (*pauth.Credentials, error) {
 					return func() (*pauth.Credentials, error) {
 						return nil, nil
 					}
@@ -555,12 +555,12 @@ func TestLoginFail(t *testing.T) {
 				return nil, errors.New("DO NOT RETURN THIS ERR")
 			}
 		},
-		GetSsoCredentialsFromConfigFunc: func(_ *v1.Config, _ string) func() (*pauth.Credentials, error) {
+		GetSsoCredentialsFromConfigFunc: func(_ *config.Config, _ string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, errors.New("DO NOT RETURN THIS ERR")
 			}
 		},
-		GetCredentialsFromConfigFunc: func(_ *v1.Config, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
+		GetCredentialsFromConfigFunc: func(_ *config.Config, _ netrc.NetrcMachineParams) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
@@ -575,7 +575,7 @@ func TestLoginFail(t *testing.T) {
 				return nil, &ccloudv1.InvalidLoginError{}
 			}
 		},
-		GetCredentialsFromKeychainFunc: func(_ *v1.Config, _ bool, _, _ string) func() (*pauth.Credentials, error) {
+		GetCredentialsFromKeychainFunc: func(_ *config.Config, _ bool, _, _ string) func() (*pauth.Credentials, error) {
 			return func() (*pauth.Credentials, error) {
 				return nil, nil
 			}
@@ -620,7 +620,8 @@ func Test_SelfSignedCerts(t *testing.T) {
 			if test.setEnv {
 				os.Setenv(pauth.ConfluentPlatformCACertPath, "testcert.pem")
 			}
-			cfg := v1.New()
+			config.SetTempHomeDir()
+			cfg := config.New()
 			var expectedCaCert string
 			if test.setEnv {
 				expectedCaCert = test.envCertPath
@@ -675,7 +676,7 @@ func Test_SelfSignedCertsLegacyContexts(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			legacyContextName := "login-prompt-user@confluent.io-http://localhost:8090"
-			cfg := v1.AuthenticatedConfigMockWithContextName(legacyContextName)
+			cfg := config.AuthenticatedConfigMockWithContextName(legacyContextName)
 			cfg.Contexts[legacyContextName].Platform.CaCertPath = originalCaCertPath
 
 			loginCmd := getNewLoginCommandForSelfSignedCertTest(req, cfg, test.expectedCaCertPath)
@@ -694,7 +695,7 @@ func Test_SelfSignedCertsLegacyContexts(t *testing.T) {
 	}
 }
 
-func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *v1.Config, expectedCaCertPath string) *cobra.Command {
+func getNewLoginCommandForSelfSignedCertTest(req *require.Assertions, cfg *config.Config, expectedCaCertPath string) *cobra.Command {
 	mdsConfig := mds.NewConfiguration()
 	mdsClient := mds.NewAPIClient(mdsConfig)
 
@@ -787,11 +788,11 @@ func TestLoginWithExistingContext(t *testing.T) {
 	}
 
 	activeApiKey := "bo"
-	kafkaCluster := &v1.KafkaClusterConfig{
+	kafkaCluster := &config.KafkaClusterConfig{
 		ID:        "lkc-0000",
 		Name:      "bob",
 		Bootstrap: "http://bobby",
-		APIKeys: map[string]*v1.APIKeyPair{
+		APIKeys: map[string]*config.APIKeyPair{
 			activeApiKey: {
 				Key:    activeApiKey,
 				Secret: "bo",
@@ -899,8 +900,9 @@ func TestValidateUrl(t *testing.T) {
 	}
 }
 
-func newLoginCmd(auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInterface, isCloud bool, req *require.Assertions, netrcHandler netrc.NetrcHandler, authTokenHandler pauth.AuthTokenHandler, loginCredentialsManager pauth.LoginCredentialsManager, loginOrganizationManager pauth.LoginOrganizationManager) (*cobra.Command, *v1.Config) {
-	cfg := v1.New()
+func newLoginCmd(auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInterface, isCloud bool, req *require.Assertions, netrcHandler netrc.NetrcHandler, authTokenHandler pauth.AuthTokenHandler, loginCredentialsManager pauth.LoginCredentialsManager, loginOrganizationManager pauth.LoginOrganizationManager) (*cobra.Command, *config.Config) {
+	config.SetTempHomeDir()
+	cfg := config.New()
 	var mdsClient *mds.APIClient
 	if !isCloud {
 		mdsConfig := mds.NewConfiguration()
@@ -939,12 +941,12 @@ func newLoginCmd(auth *ccloudv1mock.Auth, userInterface *ccloudv1mock.UserInterf
 	return loginCmd, cfg
 }
 
-func newLogoutCmd(cfg *v1.Config, netrcHandler netrc.NetrcHandler) (*cobra.Command, *v1.Config) {
+func newLogoutCmd(cfg *config.Config, netrcHandler netrc.NetrcHandler) (*cobra.Command, *config.Config) {
 	logoutCmd := logout.New(cfg, climock.NewPreRunnerMock(nil, nil, nil, nil, cfg), netrcHandler)
 	return logoutCmd, cfg
 }
 
-func verifyLoggedInState(t *testing.T, cfg *v1.Config, isCloud bool, orgResourceId string) {
+func verifyLoggedInState(t *testing.T, cfg *config.Config, isCloud bool, orgResourceId string) {
 	req := require.New(t)
 	ctx := cfg.Context()
 	req.NotNil(ctx)
@@ -971,7 +973,7 @@ func verifyLoggedInState(t *testing.T, cfg *v1.Config, isCloud bool, orgResource
 	}
 }
 
-func verifyLoggedOutState(t *testing.T, cfg *v1.Config, loggedOutContext string) {
+func verifyLoggedOutState(t *testing.T, cfg *config.Config, loggedOutContext string) {
 	req := require.New(t)
 	state := cfg.Contexts[loggedOutContext].State
 	req.Empty(state.AuthToken)

@@ -4,6 +4,7 @@ Usage:
   confluent iam [command]
 
 Available Commands:
+  group-mapping   Manage SSO group mappings.
   pool            Manage identity pools.
   provider        Manage identity providers.
   rbac            Manage RBAC permissions.

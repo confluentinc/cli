@@ -11,7 +11,7 @@ import (
 	srsdk "github.com/confluentinc/schema-registry-sdk-go"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	"github.com/confluentinc/cli/internal/pkg/config"
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
@@ -26,7 +26,7 @@ type configOut struct {
 	RulesetOverrides   string `human:"Ruleset Overrides,omitempty" serialized:"ruleset_overrides,omitempty"`
 }
 
-func (c *command) newConfigDescribeCommand(cfg *v1.Config) *cobra.Command {
+func (c *command) newConfigDescribeCommand(cfg *config.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe",
 		Short: "Describe top-level or subject-level schema configuration.",
@@ -53,7 +53,8 @@ func (c *command) newConfigDescribeCommand(cfg *v1.Config) *cobra.Command {
 	if cfg.IsCloudLogin() {
 		pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	} else {
-		cmd.Flags().AddFlagSet(pcmd.OnPremSchemaRegistrySet())
+		addCaLocationFlag(cmd)
+		addSchemaRegistryEndpointFlag(cmd)
 	}
 	pcmd.AddOutputFlag(cmd)
 
@@ -71,7 +72,7 @@ func (c *command) newConfigDescribeCommand(cfg *v1.Config) *cobra.Command {
 }
 
 func (c *command) configDescribe(cmd *cobra.Command, args []string) error {
-	client, err := c.GetSchemaRegistryClient()
+	client, err := c.GetSchemaRegistryClient(cmd)
 	if err != nil {
 		return err
 	}
