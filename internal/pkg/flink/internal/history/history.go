@@ -34,11 +34,11 @@ func loadFromPath(history *History) *History {
 	}
 
 	if err != nil {
-		log.CliLogger.Warnf("Couldn't load past statements history: unable to read file Error: " + err.Error())
+		log.CliLogger.Warnf("Couldn't load past statements history: unable to read file Error: %v", err)
 	}
 
 	if err := json.Unmarshal(jsonFile, history); err != nil {
-		log.CliLogger.Warnf("Couldn't load past statements history. Error: " + err.Error())
+		log.CliLogger.Warnf("Couldn't load past statements history. Error: %v", err)
 	}
 	return history
 }
@@ -46,7 +46,7 @@ func loadFromPath(history *History) *History {
 func initPath() *History {
 	home, osHomedirErr := os.UserHomeDir()
 	if osHomedirErr != nil {
-		log.CliLogger.Warnf("Couldn't get homedir with os.UserHomeDir(). Error: " + osHomedirErr.Error())
+		log.CliLogger.Warnf("Couldn't get homedir with os.UserHomeDir(). Error: %v", osHomedirErr)
 		return nil
 	}
 
@@ -73,24 +73,24 @@ func (history *History) Save() {
 	// Convert struct to JSON
 	b, err := json.Marshal(history)
 	if err != nil {
-		log.CliLogger.Warnf("Couldn't save past statements history: couldn't marhsal history. Error: " + err.Error())
+		log.CliLogger.Warnf("Couldn't save past statements history: couldn't marhsal history. Error: %v", err)
 	}
 
 	if err := os.Mkdir(history.confluentPath, os.ModePerm); err != nil {
 		if !errors.Is(err, os.ErrExist) {
-			log.CliLogger.Warnf("Couldn't save past statements history: couldn't create directory. Error: " + err.Error())
+			log.CliLogger.Warnf("Couldn't save past statements history: couldn't create directory. Error: %v", err)
 		}
 	}
 
 	// Write JSON to file
 	f, err := os.Create(history.historyPath)
 	if err != nil {
-		log.CliLogger.Warnf("Couldn't save past statements history: couldn't create file. Error: " + err.Error())
+		log.CliLogger.Warnf("Couldn't save past statements history: couldn't create file. Error: %v", err)
 	}
 	defer f.Close()
 
 	if _, err := f.Write(b); err != nil {
-		log.CliLogger.Warnf("Couldn't save past statements history: couldn't write to file. Error: " + err.Error())
+		log.CliLogger.Warnf("Couldn't save past statements history: couldn't write to file. Error: %v", err)
 	}
 }
 
