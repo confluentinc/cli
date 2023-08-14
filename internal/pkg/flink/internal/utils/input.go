@@ -13,32 +13,32 @@ import (
 func GetStdin() *term.State {
 	state, err := term.GetState(int(os.Stdin.Fd()))
 	if err != nil {
-		log.CliLogger.Warnf("Couldn't get stdin state with term.GetState. Error: %v\n", err)
+		log.CliLogger.Warnf("Couldn't get stdin state with term.GetState. Error: ", err.Error())
 		return nil
 	}
 	return state
 }
 
 func GetConsoleParser() prompt.ConsoleParser {
-	if fileInfo, err := os.Stat("/dev/tty"); err != nil || fileInfo.Mode().Perm()&0444 == 0 {
-		log.CliLogger.Warnf(`Couldn't open "/dev/tty" file because it either doesn't exist or doesn't have read permissions.`)
+	if fileInfo, err := os.Stat("/dev/tty"); err != nil {
+		log.CliLogger.Warnf(`Couldn't open "/dev/tty" file. Error: `, err.Error())
+		return nil
+	} else if fileInfo.Mode().Perm()&0444 == 0 {
+		log.CliLogger.Warn(`Couldn't read "/dev/tty" file because read permissions are not set.`)
 		return nil
 	}
 	consoleParser := prompt.NewStandardInputParser()
 	err := consoleParser.Setup()
 	if err != nil {
-		log.CliLogger.Warnf("Couldn't setup console parser. Error: %v\n", err)
+		log.CliLogger.Warnf("Couldn't setup console parser. Error: ", err.Error())
 	}
 	return consoleParser
 }
 
 func TearDownConsoleParser(consoleParser prompt.ConsoleParser) {
-	if consoleParser == nil {
-		return
-	}
 	err := consoleParser.TearDown()
 	if err != nil {
-		log.CliLogger.Warnf("Couldn't tear down console parser. Error: %v\n", err)
+		log.CliLogger.Warnf("Couldn't tear down console parser. Error: ", err.Error())
 	}
 }
 
