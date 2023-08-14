@@ -124,7 +124,7 @@ func (a *Application) panicRecovery() {
 
 func (a *Application) isAuthenticated() bool {
 	if authErr := a.refreshToken(); authErr != nil {
-		utils.OutputErrf("Error: %v\n", authErr)
+		utils.OutputErrf("Error: %v", authErr)
 		a.appController.ExitApplication()
 		return false
 	}
