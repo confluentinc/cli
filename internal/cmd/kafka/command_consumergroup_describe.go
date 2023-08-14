@@ -8,7 +8,6 @@ import (
 	kafkarestv3 "github.com/confluentinc/ccloud-sdk-go-v2/kafkarest/v3"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -19,13 +18,6 @@ func (c *consumerGroupCommand) newDescribeCommand() *cobra.Command {
 		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
 		RunE:              c.describe,
-		Example: examples.BuildExampleString(
-			examples.Example{
-				Text: `Describe the "my-consumer-group" consumer group:`,
-				Code: "confluent kafka consumer-group describe my-consumer-group",
-			},
-		),
-		Hidden: true,
 	}
 
 	pcmd.AddClusterFlag(cmd, c.AuthenticatedCLICommand)
@@ -37,68 +29,26 @@ func (c *consumerGroupCommand) newDescribeCommand() *cobra.Command {
 }
 
 func (c *consumerGroupCommand) describe(cmd *cobra.Command, args []string) error {
-	consumerGroupId := args[0]
-
 	kafkaREST, err := c.GetKafkaREST()
 	if err != nil {
 		return err
 	}
 
-	groupCmdResp, err := kafkaREST.CloudClient.GetKafkaConsumerGroup(consumerGroupId)
+	consumerGroup, err := kafkaREST.CloudClient.GetKafkaConsumerGroup(args[0])
 	if err != nil {
 		return err
 	}
-
-	groupCmdConsumersResp, err := kafkaREST.CloudClient.ListKafkaConsumers(consumerGroupId)
-	if err != nil {
-		return err
-	}
-
-	groupData := getGroupData(groupCmdResp, groupCmdConsumersResp)
 
 	table := output.NewTable(cmd)
-	table.Add(convertGroupToDescribeStruct(groupData))
-	if err := table.Print(); err != nil {
-		return err
-	}
-
-	if output.GetFormat(cmd) == output.Human {
-		output.Println()
-		output.Println("Consumers")
-		output.Println()
-
-		list := output.NewList(cmd)
-		for _, consumer := range groupData.Consumers {
-			list.Add(&consumer)
-		}
-		return list.Print()
-	}
-
-	return nil
-}
-
-func getGroupData(groupCmdResp kafkarestv3.ConsumerGroupData, groupCmdConsumersResp kafkarestv3.ConsumerDataList) *groupData {
-	groupData := &groupData{
-		ClusterId:         groupCmdResp.ClusterId,
-		ConsumerGroupId:   groupCmdResp.ConsumerGroupId,
-		Coordinator:       getStringBroker(groupCmdResp.Coordinator),
-		IsSimple:          groupCmdResp.IsSimple,
-		PartitionAssignor: groupCmdResp.PartitionAssignor,
-		State:             groupCmdResp.State,
-		Consumers:         make([]consumerData, len(groupCmdConsumersResp.Data)),
-	}
-
-	// Populate consumers list
-	for i, consumerResp := range groupCmdConsumersResp.Data {
-		groupData.Consumers[i] = consumerData{
-			ConsumerGroupId: groupCmdResp.ConsumerGroupId,
-			ConsumerId:      consumerResp.ConsumerId,
-			InstanceId:      consumerResp.GetInstanceId(),
-			ClientId:        consumerResp.ClientId,
-		}
-	}
-
-	return groupData
+	table.Add(&consumerGroupOut{
+		ClusterId:         consumerGroup.GetClusterId(),
+		ConsumerGroupId:   consumerGroup.GetConsumerGroupId(),
+		Coordinator:       getStringBroker(consumerGroup.GetCoordinator()),
+		IsSimple:          consumerGroup.GetIsSimple(),
+		PartitionAssignor: consumerGroup.GetPartitionAssignor(),
+		State:             consumerGroup.GetState(),
+	})
+	return table.Print()
 }
 
 func getStringBroker(relationship kafkarestv3.Relationship) string {
@@ -110,15 +60,4 @@ func getStringBroker(relationship kafkarestv3.Relationship) string {
 	}
 	// returning brokerId
 	return splitString[1]
-}
-
-func convertGroupToDescribeStruct(groupData *groupData) *consumerGroupOut {
-	return &consumerGroupOut{
-		ClusterId:         groupData.ClusterId,
-		ConsumerGroupId:   groupData.ConsumerGroupId,
-		Coordinator:       groupData.Coordinator,
-		IsSimple:          groupData.IsSimple,
-		PartitionAssignor: groupData.PartitionAssignor,
-		State:             groupData.State,
-	}
 }
