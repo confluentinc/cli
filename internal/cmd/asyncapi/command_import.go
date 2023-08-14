@@ -1,7 +1,6 @@
 package asyncapi
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"strconv"
@@ -25,6 +24,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/log"
 	"github.com/confluentinc/cli/internal/pkg/output"
 	"github.com/confluentinc/cli/internal/pkg/resource"
+	"github.com/confluentinc/cli/internal/pkg/retry"
 	schemaregistry "github.com/confluentinc/cli/internal/pkg/schema-registry"
 	"github.com/confluentinc/cli/internal/pkg/types"
 	"github.com/confluentinc/cli/internal/pkg/utils"
@@ -374,8 +374,9 @@ func addTopicDescription(client *schemaregistry.Client, qualifiedName, descripti
 		},
 		TypeName: "kafka_topic",
 	}}
-	return retry(context.Background(), 5*time.Second, time.Minute, func() error {
-		return client.PartialUpdateByUniqueAttributes(&srsdk.PartialUpdateByUniqueAttributesOpts{AtlasEntityWithExtInfo: optional.NewInterface(atlasEntity)})
+	return retry.Retry(5*time.Second, time.Minute, func() error {
+		opts := &srsdk.PartialUpdateByUniqueAttributesOpts{AtlasEntityWithExtInfo: optional.NewInterface(atlasEntity)}
+		return client.PartialUpdateByUniqueAttributes(opts)
 	})
 }
 
@@ -492,7 +493,7 @@ func addTopicTags(details *accountDetails, subscribe Operation, topicName string
 
 func addTagsUtil(details *accountDetails, tagDefConfigs []srsdk.TagDef, tagConfigs []srsdk.Tag) error {
 	tagDefOpts := &srsdk.CreateTagDefsOpts{TagDef: optional.NewInterface(tagDefConfigs)}
-	err := retry(context.Background(), 5*time.Second, time.Minute, func() error {
+	err := retry.Retry(5*time.Second, time.Minute, func() error {
 		_, err := details.srClient.CreateTagDefs(tagDefOpts)
 		return err
 	})
@@ -501,38 +502,12 @@ func addTagsUtil(details *accountDetails, tagDefConfigs []srsdk.TagDef, tagConfi
 	}
 	log.CliLogger.Debugf("Tag Definitions created")
 	tagOpts := &srsdk.CreateTagsOpts{Tag: optional.NewInterface(tagConfigs)}
-	err = retry(context.Background(), 5*time.Second, time.Minute, func() error {
+	err = retry.Retry(5*time.Second, time.Minute, func() error {
 		_, err := details.srClient.CreateTags(tagOpts)
 		return err
 	})
 	if err != nil {
 		return fmt.Errorf("unable to add tag to resource: %v", err)
-	}
-	return nil
-}
-
-func retry(ctx context.Context, tick, timeout time.Duration, f func() error) error {
-	if err := f(); err != nil {
-		log.CliLogger.Debugf("Fail #1: %v", err)
-	} else {
-		return nil
-	}
-	ticker := time.NewTicker(tick)
-	after := time.After(timeout)
-
-	for i := 2; true; i++ {
-		select {
-		case <-ticker.C:
-			if err := f(); err != nil {
-				log.CliLogger.Debugf("Fail #%d: %v", i, err)
-			} else {
-				return nil
-			}
-		case <-after:
-			return fmt.Errorf("retry failed due to timeout of %v", timeout)
-		case <-ctx.Done():
-			return fmt.Errorf("retry failed due to context cancel")
-		}
 	}
 	return nil
 }

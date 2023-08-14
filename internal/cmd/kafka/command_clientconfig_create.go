@@ -19,6 +19,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	"github.com/confluentinc/cli/internal/pkg/retry"
 	schemaregistry "github.com/confluentinc/cli/internal/pkg/schema-registry"
 )
 
@@ -319,11 +320,12 @@ func (c *clientConfigCommand) validateSchemaRegistryCredentials(srCluster *confi
 	client := schemaregistry.NewClientWithApiKey(srConfig, srCluster.SrCredentials.Key, srCluster.SrCredentials.Secret)
 
 	// Test credentials
-	if err := client.Get(); err != nil {
-		return errors.NewErrorWithSuggestions(errors.SRCredsValidationFailedErrorMsg, errors.SRCredsValidationFailedSuggestions)
-	}
-
-	return nil
+	return retry.Retry(time.Second, 5 * time.Second, func() error {
+		if err := client.Get(); err != nil {
+			return errors.NewErrorWithSuggestions(errors.SRCredsValidationFailedErrorMsg, errors.SRCredsValidationFailedSuggestions)
+		}
+		return nil
+	})
 }
 
 func fetchConfigFile(configId string) (string, error) {
