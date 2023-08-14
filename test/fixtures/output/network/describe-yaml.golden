@@ -1,0 +1,27 @@
+id: n-abcde1
+environment_id: env-00000
+display_name: prod-aws-us-east1
+cloud: AWS
+region: us-east-1
+connection_types:
+  items:
+  - PRIVATELINK
+cidr: 10.200.0.0/16
+zone:
+- use1-az1
+- use1-az2
+- use1-az3
+dns_resolution: CHASED_PRIVATE
+phase: READY
+supported_connection_types:
+  items:
+  - PRIVATELINK
+active_connection_types:
+  items:
+  - PRIVATELINK
+reserved_cidr: 172.20.255.0/24
+resource_url: https://api.confluent.cloud/networking/v1/networks/n-abcde1
+resource_name: crn://confluent.cloud/organization=9bb441c4-edef-46ac-8a41-c49e44a3fd9a/environment=env-00000/network=n-abcde1
+created_at: "2023-02-24T00:00:00Z"
+updated_at: "2023-02-24T00:00:00Z"
+deleted_at: "2023-02-24T00:00:00Z"
