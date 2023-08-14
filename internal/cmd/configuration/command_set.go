@@ -17,7 +17,7 @@ import (
 func (c *command) newSetCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "set <config-field-1=value-1> ... [config-field-n=value-n]",
-		Short: "Set a configuration field's value in ~/.confluent/config.json.",
+		Short: "Set a field's value in ~/.confluent/config.json.",
 		Args:  cobra.MinimumNArgs(1),
 		RunE:  c.set,
 		Example: examples.BuildExampleString(
@@ -38,7 +38,7 @@ func (c *command) set(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	var updates []string
+	updates := make([]string, len(args))
 
 	for i := range keys {
 		oldValue := reflect.ValueOf(c.config).Elem().FieldByName(jsonFieldToName[keys[i]])

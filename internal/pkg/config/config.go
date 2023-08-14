@@ -408,7 +408,7 @@ func (c *Config) Validate() error {
 	if c.CurrentContext != "" {
 		if _, ok := c.Contexts[c.CurrentContext]; !ok {
 			log.CliLogger.Trace("current context does not exist")
-			return errors.Errorf(errors.CurrentContextNotExistErrorMsg, c.CurrentContext)
+			return errors.NewCorruptedConfigError(errors.CurrentContextNotExistErrorMsg, c.CurrentContext, c.Filename)
 		}
 	}
 
