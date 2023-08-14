@@ -81,10 +81,6 @@ type Config struct {
 	SavedCredentials    map[string]*LoginCredential `json:"saved_credentials,omitempty"`
 	LocalPorts          *LocalPorts                 `json:"local_ports,omitempty"`
 
-	// Deprecated
-	AnonymousId string `json:"anonymous_id,omitempty"`
-	Ver         string `json:"version,omitempty"`
-
 	// The following configurations are not persisted between runs
 
 	IsTest   bool              `json:"-"`
@@ -412,7 +408,7 @@ func (c *Config) Validate() error {
 	if c.CurrentContext != "" {
 		if _, ok := c.Contexts[c.CurrentContext]; !ok {
 			log.CliLogger.Trace("current context does not exist")
-			return errors.NewCorruptedConfigError(errors.CurrentContextNotExistErrorMsg, c.CurrentContext, c.Filename)
+			return errors.Errorf(errors.CurrentContextNotExistErrorMsg, c.CurrentContext)
 		}
 	}
 
