@@ -96,7 +96,7 @@ require (
 	gopkg.in/launchdarkly/go-sdk-common.v2 v2.5.1
 	gopkg.in/square/go-jose.v2 v2.6.0
 	k8s.io/apimachinery v0.27.4
-	pgregory.net/rapid v1.0.1
+	pgregory.net/rapid v1.1.0
 )
 
 require (
