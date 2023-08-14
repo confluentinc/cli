@@ -1,0 +1,3 @@
+Updated the value of config field "disable_update_check" to "false".
+Updated the value of config field "disable_plugins" to "true".
+Updated the value of config field "current_context" to "context2".
