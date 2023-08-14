@@ -449,3 +449,21 @@ func AutocompleteLinks(command *AuthenticatedCLICommand) []string {
 	}
 	return suggestions
 }
+
+func AutocompleteConsumerGroups(command *AuthenticatedCLICommand) []string {
+	kafkaREST, err := command.GetKafkaREST()
+	if err != nil {
+		return nil
+	}
+
+	consumerGroups, err := kafkaREST.CloudClient.ListKafkaConsumerGroups()
+	if err != nil {
+		return nil
+	}
+
+	suggestions := make([]string, len(consumerGroups.GetData()))
+	for i, consumerGroup := range consumerGroups.GetData() {
+		suggestions[i] = consumerGroup.GetConsumerGroupId()
+	}
+	return suggestions
+}
