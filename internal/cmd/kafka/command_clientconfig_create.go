@@ -1,7 +1,6 @@
 package kafka
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -20,6 +19,7 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/examples"
 	"github.com/confluentinc/cli/internal/pkg/output"
+	schemaregistry "github.com/confluentinc/cli/internal/pkg/schema-registry"
 )
 
 type clientConfig struct {
@@ -312,24 +312,14 @@ func (c *clientConfigCommand) validateKafkaCredentials(kafkaCluster *config.Kafk
 
 func (c *clientConfigCommand) validateSchemaRegistryCredentials(srCluster *config.SchemaRegistryCluster, unsafeTrace bool) error {
 	srConfig := srsdk.NewConfiguration()
-
-	// set BasePath of srConfig
 	srConfig.BasePath = srCluster.SchemaRegistryEndpoint
-
-	// get credentials as SR basic auth
-	srAuth := &srsdk.BasicAuth{}
-	if srCluster.SrCredentials != nil {
-		srAuth.UserName = srCluster.SrCredentials.Key
-		srAuth.Password = srCluster.SrCredentials.Secret
-	}
-	srCtx := context.WithValue(context.Background(), srsdk.ContextBasicAuth, *srAuth)
-
 	srConfig.UserAgent = c.Version.UserAgent
 	srConfig.Debug = unsafeTrace
-	srClient := srsdk.NewAPIClient(srConfig)
+
+	client := schemaregistry.NewClientWithApiKey(srConfig, srCluster.SrCredentials.Key, srCluster.SrCredentials.Secret)
 
 	// Test credentials
-	if _, _, err := srClient.DefaultApi.Get(srCtx); err != nil {
+	if err := client.Get(); err != nil {
 		return errors.NewErrorWithSuggestions(errors.SRCredsValidationFailedErrorMsg, errors.SRCredsValidationFailedSuggestions)
 	}
 
