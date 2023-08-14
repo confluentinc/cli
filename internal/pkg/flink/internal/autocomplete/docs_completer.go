@@ -17,7 +17,7 @@ func loadSnippetSuggestions() []prompt.Suggest {
 	var snippetSuggestions []prompt.Suggest
 	var payload map[string]any
 	if err := json.Unmarshal(codeSnippets, &payload); err != nil {
-		log.CliLogger.Warnf("Couldn't unmarshal code snippets. Error: %v\n", err)
+		log.CliLogger.Warnf("Couldn't unmarshal code snippets: %v", err)
 	}
 
 	for _, value := range payload {
