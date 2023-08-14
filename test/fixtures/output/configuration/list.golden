@@ -1,0 +1,18 @@
+          Name          |                             Value                              | Modifiable With Set  
+------------------------+----------------------------------------------------------------+----------------------
+  context_states        | map[context1:0xc000112120                                      | false                
+                        | context2:0xc000112180]                                         |                      
+  contexts              | map[context1:0xc0004b20a0                                      | false                
+                        | context2:0xc0004b2140]                                         |                      
+  credentials           | map[api-key-costa:0xc000440040                                 | false                
+                        | username-cli-mock-email@confluent.io-http://test:0xc000440100] |                      
+  current_context       | context2                                                       | true                 
+  disable_feature_flags | false                                                          | true                 
+  disable_plugins       | true                                                           | true                 
+  disable_update_check  | false                                                          | true                 
+  disable_updates       | false                                                          | true                 
+  local_ports           | <nil>                                                          | false                
+  no_browser            | false                                                          | true                 
+  platforms             | map[http://test:0xc000041ec0                                   | false                
+                        | u-123:0xc000041ef0]                                            |                      
+  saved_credentials     | map[]                                                          | false                
