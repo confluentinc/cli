@@ -5,6 +5,7 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/examples"
+	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
@@ -47,22 +48,22 @@ func (c *mirrorCommand) describe(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	mirror, err := kafkaREST.CloudClient.ReadKafkaMirrorTopic(linkName, mirrorTopicName)
+	mirror, httpResp, err := kafkaREST.Client.ClusterLinkingV3Api.ReadKafkaMirrorTopic(kafkaREST.Context, kafkaREST.GetClusterId(), linkName, mirrorTopicName)
 	if err != nil {
-		return err
+		return kafkarest.NewError(kafkaREST.CloudClient.GetUrl(), err, httpResp)
 	}
 
 	list := output.NewList(cmd)
-	for _, partitionLag := range mirror.GetMirrorLags().Items {
+	for _, partitionLag := range mirror.MirrorLags {
 		list.Add(&mirrorOut{
-			LinkName:              mirror.GetLinkName(),
-			MirrorTopicName:       mirror.GetMirrorTopicName(),
-			SourceTopicName:       mirror.GetSourceTopicName(),
-			MirrorStatus:          string(mirror.GetMirrorStatus()),
-			StatusTimeMs:          mirror.GetStateTimeMs(),
-			Partition:             partitionLag.GetPartition(),
-			PartitionMirrorLag:    partitionLag.GetLag(),
-			LastSourceFetchOffset: partitionLag.GetLastSourceFetchOffset(),
+			LinkName:              mirror.LinkName,
+			MirrorTopicName:       mirror.MirrorTopicName,
+			SourceTopicName:       mirror.SourceTopicName,
+			MirrorStatus:          string(mirror.MirrorStatus),
+			StatusTimeMs:          mirror.StateTimeMs,
+			Partition:             partitionLag.Partition,
+			PartitionMirrorLag:    partitionLag.Lag,
+			LastSourceFetchOffset: partitionLag.LastSourceFetchOffset,
 		})
 	}
 	list.Filter([]string{"LinkName", "MirrorTopicName", "Partition", "PartitionMirrorLag", "SourceTopicName", "MirrorStatus", "StatusTimeMs", "LastSourceFetchOffset"})

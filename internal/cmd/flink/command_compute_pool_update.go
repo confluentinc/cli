@@ -20,22 +20,25 @@ func (c *command) newComputePoolUpdateCommand() *cobra.Command {
 		RunE:              c.computePoolUpdate,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Update Flink compute pool "my-compute-pool" to 2 CFUs.`,
-				Code: "confluent flink compute-pool update my-compute-pool --cfu 2",
+				Text: `Update name and CFU count of a Flink compute pool.`,
+				Code: `confluent flink compute-pool update my-compute-pool --name "new name" --cfu 2`,
 			},
 		),
 	}
 
+	cmd.Flags().String("name", "", "Name of the compute pool.")
 	cmd.Flags().Int32("cfu", 0, "Number of Confluent Flink Units (CFU).")
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
 	pcmd.AddOutputFlag(cmd)
-
-	cobra.CheckErr(cmd.MarkFlagRequired("cfu"))
 
 	return cmd
 }
 
 func (c *command) computePoolUpdate(cmd *cobra.Command, args []string) error {
+	if err := errors.CheckNoUpdate(cmd.Flags(), "name", "cfu"); err != nil {
+		return err
+	}
+
 	id := c.Context.GetCurrentFlinkComputePool()
 	if len(args) > 0 {
 		id = args[0]
@@ -79,6 +82,14 @@ func (c *command) computePoolUpdate(cmd *cobra.Command, args []string) error {
 		update.Spec.MaxCfu = flinkv2.PtrInt32(cfu)
 	}
 
+	name, err := cmd.Flags().GetString("name")
+	if err != nil {
+		return err
+	}
+	if name != "" {
+		update.Spec.DisplayName = flinkv2.PtrString(name)
+	}
+
 	updatedComputePool, err := c.V2Client.UpdateFlinkComputePool(id, update)
 	if err != nil {
 		return err
@@ -88,7 +99,7 @@ func (c *command) computePoolUpdate(cmd *cobra.Command, args []string) error {
 	table.Add(&computePoolOut{
 		IsCurrent: computePool.GetId() == c.Context.GetCurrentFlinkComputePool(),
 		Id:        computePool.GetId(),
-		Name:      computePool.Spec.GetDisplayName(),
+		Name:      updatedComputePool.Spec.GetDisplayName(),
 		Cfu:       updatedComputePool.Spec.GetMaxCfu(),
 		Region:    computePool.Spec.GetRegion(),
 		Status:    computePool.Status.GetPhase(),
