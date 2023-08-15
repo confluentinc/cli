@@ -94,6 +94,7 @@ type Config struct {
 	overwrittenCurrentContext          string
 	overwrittenCurrentEnvironment      string
 	overwrittenCurrentFlinkComputePool string
+	overwrittenCurrentIdentityPool     string
 	overwrittenCurrentKafkaCluster     string
 }
 
@@ -115,6 +116,12 @@ func (c *Config) SetOverwrittenCurrentEnvironment(environmentId string) {
 func (c *Config) SetOverwrittenFlinkComputePool(computePoolId string) {
 	if c.overwrittenCurrentFlinkComputePool == "" {
 		c.overwrittenCurrentFlinkComputePool = computePoolId
+	}
+}
+
+func (c *Config) SetOverwrittenIdentityPool(identityPoolId string) {
+	if c.overwrittenCurrentIdentityPool == "" {
+		c.overwrittenCurrentIdentityPool = identityPoolId
 	}
 }
 

@@ -22,10 +22,10 @@ func (c *command) newShellCommand(cfg *config.Config, prerunner pcmd.PreRunner) 
 		},
 	}
 
+	c.addDatabaseFlag(cmd)
 	c.addComputePoolFlag(cmd)
 	cmd.Flags().String("identity-pool", "", "Identity pool ID.")
 	pcmd.AddEnvironmentFlag(cmd, c.AuthenticatedCLICommand)
-	cmd.Flags().String("database", "", "The database which will be used as default database. When using Kafka, this is the cluster display name.")
 	pcmd.AddContextFlag(cmd, c.CLICommand)
 	pcmd.AddOutputFlag(cmd)
 	if cfg.IsTest {
@@ -127,7 +127,7 @@ func (c *command) startFlinkSqlClient(prerunner pcmd.PreRunner, cmd *cobra.Comma
 	if err != nil {
 		return err
 	}
-	if database == "" {
+	if database == defaultDatabasePlaceholder {
 		if c.Context.GetCurrentFlinkDatabase() != "" {
 			database = c.Context.GetCurrentFlinkDatabase()
 		} else {

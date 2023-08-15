@@ -45,7 +45,7 @@ func (c *FakeFlinkGatewayClient) ListStatements(environmentId, orgId, pageToken,
 	return flinkgatewayv1alpha1.SqlV1alpha1StatementList{Data: c.statements}, nil
 }
 
-func (c *FakeFlinkGatewayClient) CreateStatement(statement, computePoolId, identityPoolId string, properties map[string]string, environmentId, orgId string) (flinkgatewayv1alpha1.SqlV1alpha1Statement, error) {
+func (c *FakeFlinkGatewayClient) CreateStatementForShell(statement, computePoolId, identityPoolId string, properties map[string]string, environmentId, orgId string) (flinkgatewayv1alpha1.SqlV1alpha1Statement, error) {
 	columnDetails := c.getFakeResultSchema(statement)
 	statementName := uuid.New().String()[:20]
 

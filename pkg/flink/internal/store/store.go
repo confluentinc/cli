@@ -11,6 +11,7 @@ import (
 	flinkgatewayv1alpha1 "github.com/confluentinc/ccloud-sdk-go-v2/flink-gateway/v1alpha1"
 
 	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
+	"github.com/confluentinc/cli/v3/pkg/flink"
 	"github.com/confluentinc/cli/v3/pkg/flink/config"
 	"github.com/confluentinc/cli/v3/pkg/flink/internal/results"
 	"github.com/confluentinc/cli/v3/pkg/flink/types"
@@ -77,7 +78,7 @@ func (s *Store) ProcessStatement(statement string) (*types.ProcessedStatement, *
 	}
 
 	// Process remote statements
-	statementObj, err := s.authenticatedGatewayClient().CreateStatement(
+	statementObj, err := s.authenticatedGatewayClient().CreateStatementForShell(
 		statement,
 		s.appOptions.GetComputePoolId(),
 		s.appOptions.GetIdentityPoolId(),
@@ -281,7 +282,7 @@ func getDefaultProperties(appOptions *types.ApplicationOptions) map[string]strin
 	properties := map[string]string{
 		config.ConfigKeyCatalog:       appOptions.GetEnvironmentName(),
 		config.ConfigKeyDatabase:      appOptions.GetDatabase(),
-		config.ConfigKeyLocalTimeZone: getLocalTimezone(),
+		config.ConfigKeyLocalTimeZone: flink.GetLocalTimezone(),
 	}
 
 	return properties
