@@ -7,8 +7,9 @@ Aliases:
   configuration, config
 
 Available Commands:
-  set         Set a user-configurable field's value.
-  view        View user-configurable fields in ~/.confluent/config.json.
+  describe    Describe a user-configurable field.
+  list        List user-configurable fields in ~/.confluent/config.json.
+  update      Update a user-configurable field's value.
 
 Global Flags:
   -h, --help            Show help for this command.

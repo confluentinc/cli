@@ -14,17 +14,17 @@ import (
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-func (c *command) newSetCommand() *cobra.Command {
+func (c *command) newUpdateCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:               "set [config-field] [value]",
-		Short:             "Set a user-configurable field's value.",
+		Use:               "update [config-field] [value]",
+		Short:             "Update a user-configurable field's value.",
 		Args:              cobra.ExactArgs(2),
 		ValidArgsFunction: pcmd.NewValidArgsFunction(c.validArgs),
-		RunE:              c.set,
+		RunE:              c.update,
 		Example: examples.BuildExampleString(
 			examples.Example{
-				Text: `Disable plugins by setting "disable_plugins" to true`,
-				Code: `confluent configuration set disable_plugins true`,
+				Text: `Disable plugins by setting "disable_plugins" to true.`,
+				Code: `confluent configuration update disable_plugins true`,
 			},
 		),
 	}
@@ -32,7 +32,7 @@ func (c *command) newSetCommand() *cobra.Command {
 	return cmd
 }
 
-func (c *command) set(_ *cobra.Command, args []string) error {
+func (c *command) update(_ *cobra.Command, args []string) error {
 	field := args[0]
 	value, err := convertValue(field, args[1], c.jsonFieldToType)
 	if err != nil {
@@ -64,7 +64,7 @@ func (c *command) set(_ *cobra.Command, args []string) error {
 func convertValue(field, value string, settableFields map[string]reflect.Kind) (any, error) {
 	kind, ok := settableFields[field]
 	if !ok {
-		return nil, fmt.Errorf(`config field "%s" either doesn't exist or is not modifiable using this command'`, field)
+		return nil, fmt.Errorf(fieldNotConfigurableError, field)
 	}
 	switch kind {
 	case reflect.Bool:

@@ -1,0 +1,14 @@
+Describe a user-configurable field.
+
+Usage:
+  confluent configuration describe [config-field] [flags]
+
+Examples:
+See if update checks are enabled by describing "disable_update_check".
+
+  $ confluent configuration describe disable_update_check
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
