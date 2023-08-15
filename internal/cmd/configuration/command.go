@@ -9,33 +9,38 @@ import (
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
 	"github.com/confluentinc/cli/internal/pkg/config"
+	"github.com/confluentinc/cli/internal/pkg/types"
 )
 
 type command struct {
 	*pcmd.CLICommand
-	config *config.Config
+	cfg             *config.Config
+	jsonFieldToName map[string]string
+	jsonFieldToType map[string]reflect.Kind
 }
 
 type configurationOut struct {
-	Name     string `human:"Name" serialized:"name"`
-	Value    string `human:"Value" serialized:"value"`
-	ReadOnly bool   `human:"Read-Only" serialized:"read_only"`
+	Name  string `human:"Name" serialized:"name"`
+	Value string `human:"Value" serialized:"value"`
 }
 
 func New(cfg *config.Config, prerunner pcmd.PreRunner) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "configuration",
 		Aliases: []string{"config"},
-		Short:   "Manage CLI configuration fields.",
+		Short:   "Configure the Confluent CLI.",
 	}
 
+	jsonFieldToType, jsonFieldToName := getSettableConfigFields(cfg)
 	c := &command{
-		CLICommand: pcmd.NewAnonymousCLICommand(cmd, prerunner),
-		config:     cfg,
+		CLICommand:      pcmd.NewAnonymousCLICommand(cmd, prerunner),
+		cfg:             cfg,
+		jsonFieldToName: jsonFieldToName,
+		jsonFieldToType: jsonFieldToType,
 	}
 
 	cmd.AddCommand(c.newSetCommand())
-	cmd.AddCommand(c.newListCommand())
+	cmd.AddCommand(c.newViewCommand())
 
 	return cmd
 }
@@ -46,11 +51,8 @@ func getSettableConfigFields(cfg *config.Config) (map[string]reflect.Kind, map[s
 	t := reflect.TypeOf(*cfg)
 	for i := 0; i < t.NumField(); i++ {
 		field := t.Field(i)
-		kind := field.Type.Kind()
-		switch kind {
-		case reflect.Bool, reflect.String:
-			jsonFieldName := getJsonFieldName(field)
-			if jsonFieldName != "" {
+		if kind := field.Type.Kind(); kind == reflect.Bool {
+			if jsonFieldName := getJsonFieldName(field); jsonFieldName != "" {
 				jsonFieldToType[jsonFieldName] = kind
 				jsonFieldToName[jsonFieldName] = field.Name
 			}
@@ -71,4 +73,16 @@ func getJsonFieldName(field reflect.StructField) string {
 		return ""
 	}
 	return jsonTag
+}
+
+func (c *command) validArgs(cmd *cobra.Command, args []string) []string {
+	if len(args) > 0 {
+		return nil
+	}
+
+	if err := c.PersistentPreRunE(cmd, args); err != nil {
+		return nil
+	}
+
+	return types.GetSortedKeys(c.jsonFieldToName)
 }

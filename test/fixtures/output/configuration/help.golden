@@ -1,4 +1,4 @@
-Manage CLI configuration fields.
+Configure the Confluent CLI.
 
 Usage:
   confluent configuration [command]
@@ -7,8 +7,8 @@ Aliases:
   configuration, config
 
 Available Commands:
-  list        List configuration fields in ~/.confluent/config.json.
-  set         Set a field's value in ~/.confluent/config.json.
+  set         Set a user-configurable field's value.
+  view        View user-configurable fields in ~/.confluent/config.json.
 
 Global Flags:
   -h, --help            Show help for this command.

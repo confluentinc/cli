@@ -1,12 +1,12 @@
-Set a field's value in ~/.confluent/config.json.
+Set a user-configurable field's value.
 
 Usage:
-  confluent configuration set <config-field-1=value-1> ... [config-field-n=value-n] [flags]
+  confluent configuration set [config-field] [value] [flags]
 
 Examples:
 Disable plugins by setting "disable_plugins" to true
 
-  $ confluent configuration set disable_plugins=true
+  $ confluent configuration set disable_plugins true
 
 Global Flags:
   -h, --help            Show help for this command.

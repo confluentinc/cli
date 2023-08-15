@@ -1,7 +1,7 @@
-List configuration fields in ~/.confluent/config.json.
+View user-configurable fields in ~/.confluent/config.json.
 
 Usage:
-  confluent configuration list [flags]
+  confluent configuration view [flags]
 
 Flags:
   -o, --output string   Specify the output format as "human", "json", or "yaml". (default "human")

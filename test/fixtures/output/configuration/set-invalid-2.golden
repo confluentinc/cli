@@ -1,0 +1,4 @@
+Error: config field "current_context" either doesn't exist or is not modifiable using this command'
+
+Suggestions:
+    Please use `confluent context use` to set the current context.
