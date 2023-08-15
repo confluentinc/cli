@@ -1,5 +1,4 @@
-Use this command to register an API secret created by another
-process and store it locally.
+Use this command to register an API secret created by another process and store it locally.
 
 When you create an API key with the CLI, it is automatically stored locally.
 However, when you create an API key using the UI, API, or with the CLI on another
@@ -26,7 +25,7 @@ Get prompted for both the API key and secret
   $ confluent api-key store
 
 Flags:
-      --resource string      The ID of the resource the API key is for. Use "cloud" for a Cloud API key.
+      --resource string      The ID of the resource the API key is for.
   -f, --force                Force overwrite existing secret for this key.
       --context string       CLI context name.
       --environment string   Environment ID.

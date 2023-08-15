@@ -8,20 +8,20 @@ import (
 
 	"github.com/spf13/cobra"
 
-	pcmd "github.com/confluentinc/cli/internal/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	"github.com/confluentinc/cli/internal/pkg/version"
+	"github.com/confluentinc/cli/v3/internal"
+	"github.com/confluentinc/cli/v3/pkg/config"
+	"github.com/confluentinc/cli/v3/pkg/version"
 )
 
 func (s *CLITestSuite) TestHelp() {
-	configurations := []*v1.Config{
+	configurations := []*config.Config{
 		{
 			CurrentContext: "cloud",
-			Contexts:       map[string]*v1.Context{"cloud": {PlatformName: "https://confluent.cloud"}},
+			Contexts:       map[string]*config.Context{"cloud": {PlatformName: "https://confluent.cloud"}},
 		},
 		{
 			CurrentContext: "onprem",
-			Contexts:       map[string]*v1.Context{"onprem": {PlatformName: "https://example.com"}},
+			Contexts:       map[string]*config.Context{"onprem": {PlatformName: "https://example.com"}},
 		},
 	}
 
@@ -30,7 +30,7 @@ func (s *CLITestSuite) TestHelp() {
 		cfg.IsTest = true
 		cfg.DisableFeatureFlags = true
 
-		s.testHelp(pcmd.NewConfluentCommand(cfg), cfg.CurrentContext)
+		s.testHelp(internal.NewConfluentCommand(cfg), cfg.CurrentContext)
 	}
 }
 

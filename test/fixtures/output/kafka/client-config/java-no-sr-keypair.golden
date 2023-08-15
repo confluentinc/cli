@@ -21,7 +21,7 @@ session.timeout.ms=45000
 acks=all
 
 # Required connection configs for Confluent Cloud Schema Registry
-#schema.registry.url=SASL_SSL://sr-endpoint
+#schema.registry.url=http://127.0.0.1:1027
 #basic.auth.credentials.source=USER_INFO
 #basic.auth.user.info={{ SR_API_KEY }}:{{ SR_API_SECRET }}
 

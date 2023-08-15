@@ -4,12 +4,13 @@ Usage:
   confluent iam service-account create <name> [flags]
 
 Examples:
-Create a service account named `DemoServiceAccount`.
+Create a service account named "my-service-account".
 
-  $ confluent iam service-account create DemoServiceAccount --description "This is a demo service account."
+  $ confluent iam service-account create my-service-account --description "new description"
 
 Flags:
       --description string   REQUIRED: Description of the service account.
+      --context string       CLI context name.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 
 Global Flags:

@@ -4,10 +4,11 @@ Usage:
   confluent flink statement delete <name> [flags]
 
 Flags:
-      --force                 Skip the deletion confirmation prompt.
-      --compute-pool string   Flink compute pool ID.
-      --environment string    Environment ID.
-      --context string        CLI context name.
+      --cloud string         Specify the cloud provider as "aws", "azure", or "gcp".
+      --region string        Cloud region for compute pool (use "confluent flink region list" to see all).
+      --force                Skip the deletion confirmation prompt.
+      --environment string   Environment ID.
+      --context string       CLI context name.
 
 Global Flags:
   -h, --help            Show help for this command.

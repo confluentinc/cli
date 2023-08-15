@@ -6,10 +6,10 @@ import (
 	"path/filepath"
 	"regexp"
 
-	"github.com/confluentinc/cli/internal/cmd"
-	v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
-	"github.com/confluentinc/cli/internal/pkg/docs"
-	pversion "github.com/confluentinc/cli/internal/pkg/version"
+	"github.com/confluentinc/cli/v3/internal"
+	"github.com/confluentinc/cli/v3/pkg/config"
+	"github.com/confluentinc/cli/v3/pkg/docs"
+	pversion "github.com/confluentinc/cli/v3/pkg/version"
 )
 
 // Auto-generate documentation files for all CLI commands. Documentation uses reStructured Text (ReST) format, and is
@@ -25,9 +25,9 @@ func main() {
 	}
 
 	// Generate documentation for both subsets of commands: cloud and on-prem
-	configs := []*v1.Config{
-		{CurrentContext: "Cloud", Contexts: map[string]*v1.Context{"Cloud": {PlatformName: "https://confluent.cloud"}}},
-		{CurrentContext: "On-Premises", Contexts: map[string]*v1.Context{"On-Premises": {PlatformName: "https://example.com"}}},
+	configs := []*config.Config{
+		{CurrentContext: "Cloud", Contexts: map[string]*config.Context{"Cloud": {PlatformName: "https://confluent.cloud"}}},
+		{CurrentContext: "On-Premises", Contexts: map[string]*config.Context{"On-Premises": {PlatformName: "https://example.com"}}},
 	}
 
 	tabs := make([]docs.Tab, len(configs))
@@ -37,7 +37,7 @@ func main() {
 
 		tabs[i] = docs.Tab{
 			Name:    cfg.CurrentContext,
-			Command: cmd.NewConfluentCommand(cfg),
+			Command: internal.NewConfluentCommand(cfg),
 		}
 	}
 

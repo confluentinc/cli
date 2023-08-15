@@ -5,7 +5,7 @@ Usage:
 
 Available Commands:
   cluster     Manage Connect clusters.
-  plugin      Manage Connect plugins.
+  plugin      Manage plugins for managed connectors.
 
 Global Flags:
   -h, --help            Show help for this command.
