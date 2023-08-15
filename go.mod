@@ -1,4 +1,4 @@
-module github.com/confluentinc/cli
+module github.com/confluentinc/cli/v3
 
 go 1.20
 

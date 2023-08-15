@@ -7,7 +7,7 @@ package mock
 import (
 	sync "sync"
 
-	github_com_confluentinc_cli_internal_pkg_config "github.com/confluentinc/cli/internal/pkg/config"
+	github_com_confluentinc_cli_internal_pkg_config "github.com/confluentinc/cli/v3/pkg/config"
 	github_com_spf13_cobra "github.com/spf13/cobra"
 )
 
