@@ -19,8 +19,8 @@ import (
 func (c *command) newInstallCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "install <plugin>",
-		Short: "Install official Confluent CLI plugins.",
-		Long:  "Install official Confluent CLI plugins from the confluentinc/cli-plugins repository.",
+		Short: "Install or update official Confluent CLI plugins.",
+		Long:  "Install official Confluent CLI plugins from the confluentinc/cli-plugins repository or update existing plugins.",
 		Args:  cobra.ExactArgs(1),
 		RunE:  c.install,
 	}
