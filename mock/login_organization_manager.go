@@ -7,7 +7,7 @@ package mock
 import (
 	sync "sync"
 
-	github_com_confluentinc_cli_internal_pkg_config_v1 "github.com/confluentinc/cli/internal/pkg/config/v1"
+	github_com_confluentinc_cli_internal_pkg_config "github.com/confluentinc/cli/v3/pkg/config"
 	github_com_spf13_cobra "github.com/spf13/cobra"
 )
 
@@ -20,7 +20,7 @@ type LoginOrganizationManager struct {
 	GetLoginOrganizationFromEnvironmentVariableFunc func() func() string
 
 	lockGetLoginOrganizationFromConfigurationFile sync.Mutex
-	GetLoginOrganizationFromConfigurationFileFunc func(cfg *github_com_confluentinc_cli_internal_pkg_config_v1.Config) func() string
+	GetLoginOrganizationFromConfigurationFileFunc func(cfg *github_com_confluentinc_cli_internal_pkg_config.Config) func() string
 
 	calls struct {
 		GetLoginOrganizationFromFlag []struct {
@@ -29,7 +29,7 @@ type LoginOrganizationManager struct {
 		GetLoginOrganizationFromEnvironmentVariable []struct {
 		}
 		GetLoginOrganizationFromConfigurationFile []struct {
-			Cfg *github_com_confluentinc_cli_internal_pkg_config_v1.Config
+			Cfg *github_com_confluentinc_cli_internal_pkg_config.Config
 		}
 	}
 }
@@ -107,7 +107,7 @@ func (m *LoginOrganizationManager) GetLoginOrganizationFromEnvironmentVariableCa
 }
 
 // GetLoginOrganizationFromConfigurationFile mocks base method by wrapping the associated func.
-func (m *LoginOrganizationManager) GetLoginOrganizationFromConfigurationFile(cfg *github_com_confluentinc_cli_internal_pkg_config_v1.Config) func() string {
+func (m *LoginOrganizationManager) GetLoginOrganizationFromConfigurationFile(cfg *github_com_confluentinc_cli_internal_pkg_config.Config) func() string {
 	m.lockGetLoginOrganizationFromConfigurationFile.Lock()
 	defer m.lockGetLoginOrganizationFromConfigurationFile.Unlock()
 
@@ -116,7 +116,7 @@ func (m *LoginOrganizationManager) GetLoginOrganizationFromConfigurationFile(cfg
 	}
 
 	call := struct {
-		Cfg *github_com_confluentinc_cli_internal_pkg_config_v1.Config
+		Cfg *github_com_confluentinc_cli_internal_pkg_config.Config
 	}{
 		Cfg: cfg,
 	}
@@ -136,7 +136,7 @@ func (m *LoginOrganizationManager) GetLoginOrganizationFromConfigurationFileCall
 
 // GetLoginOrganizationFromConfigurationFileCalls returns the calls made to GetLoginOrganizationFromConfigurationFile.
 func (m *LoginOrganizationManager) GetLoginOrganizationFromConfigurationFileCalls() []struct {
-	Cfg *github_com_confluentinc_cli_internal_pkg_config_v1.Config
+	Cfg *github_com_confluentinc_cli_internal_pkg_config.Config
 } {
 	m.lockGetLoginOrganizationFromConfigurationFile.Lock()
 	defer m.lockGetLoginOrganizationFromConfigurationFile.Unlock()
