@@ -6,10 +6,10 @@ import (
 	"path/filepath"
 	"regexp"
 
-	"github.com/confluentinc/cli/internal/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config"
-	"github.com/confluentinc/cli/internal/pkg/docs"
-	pversion "github.com/confluentinc/cli/internal/pkg/version"
+	"github.com/confluentinc/cli/v3/internal"
+	"github.com/confluentinc/cli/v3/pkg/config"
+	"github.com/confluentinc/cli/v3/pkg/docs"
+	pversion "github.com/confluentinc/cli/v3/pkg/version"
 )
 
 // Auto-generate documentation files for all CLI commands. Documentation uses reStructured Text (ReST) format, and is
@@ -37,7 +37,7 @@ func main() {
 
 		tabs[i] = docs.Tab{
 			Name:    cfg.CurrentContext,
-			Command: cmd.NewConfluentCommand(cfg),
+			Command: internal.NewConfluentCommand(cfg),
 		}
 	}
 

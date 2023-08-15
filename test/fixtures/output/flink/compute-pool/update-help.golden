@@ -4,12 +4,13 @@ Usage:
   confluent flink compute-pool update [id] [flags]
 
 Examples:
-Update Flink compute pool "my-compute-pool" to 2 CFUs.
+Update name and CFU count of a Flink compute pool.
 
-  $ confluent flink compute-pool update my-compute-pool --cfu 2
+  $ confluent flink compute-pool update my-compute-pool --name "new name" --cfu 2
 
 Flags:
-      --cfu int32            REQUIRED: Number of Confluent Flink Units (CFU).
+      --name string          Name of the compute pool.
+      --cfu int32            Number of Confluent Flink Units (CFU).
       --environment string   Environment ID.
   -o, --output string        Specify the output format as "human", "json", or "yaml". (default "human")
 
