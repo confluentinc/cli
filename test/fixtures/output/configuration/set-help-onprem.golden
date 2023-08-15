@@ -1,0 +1,14 @@
+Set a user-configurable field's value.
+
+Usage:
+  confluent configuration set [config-field] [value] [flags]
+
+Examples:
+Disable plugins by setting "disable_plugins" to true
+
+  $ confluent configuration set disable_plugins true
+
+Global Flags:
+  -h, --help            Show help for this command.
+      --unsafe-trace    Equivalent to -vvvv, but also log HTTP requests and responses which might contain plaintext secrets.
+  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).

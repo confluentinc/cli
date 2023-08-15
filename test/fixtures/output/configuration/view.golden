@@ -1,0 +1,7 @@
+          Name          | Value  
+------------------------+--------
+  disable_feature_flags | false  
+  disable_plugins       | true   
+  disable_update_check  | false  
+  disable_updates       | false  
+  no_browser            | false  
