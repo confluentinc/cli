@@ -316,7 +316,7 @@ func CreateAclRequestDataToAclData(data *AclRequestDataWithError) cpkafkarestv3.
 }
 
 func PrintACLsFromKafkaRestResponse(cmd *cobra.Command, acls []cckafkarestv3.AclData) error {
-	showAll, err := cmd.Flags().GetBool("all")
+	all, err := cmd.Flags().GetBool("all")
 	if err != nil {
 		return err
 	}
@@ -344,7 +344,7 @@ func PrintACLsFromKafkaRestResponse(cmd *cobra.Command, acls []cckafkarestv3.Acl
 	return list.Print()
 }
 
-func principalHasIntegerID(principal string) (bool, error) {
+func principalHasIntegerId(principal string) (bool, error) {
 	if principal == "" {
 		return false, nil
 	}
