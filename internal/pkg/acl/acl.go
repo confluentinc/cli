@@ -324,8 +324,8 @@ func PrintACLsFromKafkaRestResponse(cmd *cobra.Command, acls []cckafkarestv3.Acl
 	list := output.NewList(cmd)
 	for _, acl := range acls {
 		principal := acl.GetPrincipal()
-		if !showAll {
-			if integerId, err := principalHasIntegerID(principal); err != nil {
+		if !all {
+			if integerId, err := principalHasIntegerId(principal); err != nil {
 				return err
 			} else if integerId {
 				continue
