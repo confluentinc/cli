@@ -1,48 +1,38 @@
-package kafka
+package local
 
 import (
+	"context"
+
 	"github.com/spf13/cobra"
 
 	"github.com/confluentinc/cli/internal/pkg/broker"
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+	"github.com/confluentinc/cli/internal/pkg/errors"
 	"github.com/confluentinc/cli/internal/pkg/kafkarest"
 	"github.com/confluentinc/cli/internal/pkg/output"
 )
 
-type brokerOut struct {
-	ClusterId string `human:"Cluster" serialized:"cluster_id"`
-	BrokerId  int32  `human:"Broker ID" serialized:"broker_id"`
-	Host      string `human:"Host" serialized:"host"`
-	Port      int32  `human:"Port" serialized:"port"`
-}
-
-func (c *brokerCommand) newListCommand() *cobra.Command {
+func (c *Command) newBrokerListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List Kafka brokers.",
+		Short: "List local cluster brokers.",
 		Args:  cobra.NoArgs,
 		RunE:  c.list,
 	}
 
-	cmd.Flags().AddFlagSet(pcmd.OnPremKafkaRestSet())
 	pcmd.AddOutputFlag(cmd)
 
 	return cmd
 }
 
-func (c *brokerCommand) list(cmd *cobra.Command, _ []string) error {
-	restClient, restContext, err := initKafkaRest(c.AuthenticatedCLICommand, cmd)
+func (c *Command) list(cmd *cobra.Command, args []string) error {
+	restClient, clusterId, err := initKafkaRest(c.CLICommand, cmd)
 	if err != nil {
-		return err
-	}
-
-	clusterId, err := getClusterIdForRestRequests(restClient, restContext)
-	if err != nil {
-		return err
+		return errors.NewErrorWithSuggestions(err.Error(), kafkaRestNotReadySuggestion)
 	}
 
 	// Get Brokers
-	brokersGetResp, resp, err := restClient.BrokerV3Api.ClustersClusterIdBrokersGet(restContext, clusterId)
+	brokersGetResp, resp, err := restClient.BrokerV3Api.ClustersClusterIdBrokersGet(context.Background(), clusterId)
 	if err != nil {
 		return kafkarest.NewError(restClient.GetConfig().BasePath, err, resp)
 	}

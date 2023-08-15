@@ -1,12 +1,9 @@
 package kafka
 
 import (
-	"strconv"
-
 	"github.com/spf13/cobra"
 
 	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/errors"
 )
 
 type brokerCommand struct {
@@ -30,23 +27,4 @@ func newBrokerCommand(prerunner pcmd.PreRunner) *cobra.Command {
 	cmd.AddCommand(c.newUpdateCommand())
 
 	return cmd
-}
-
-func checkAllOrBrokerIdSpecified(cmd *cobra.Command, args []string) (int32, bool, error) {
-	if cmd.Flags().Changed("all") && len(args) > 0 {
-		return -1, false, errors.New(errors.OnlySpecifyAllOrBrokerIDErrorMsg)
-	}
-	if !cmd.Flags().Changed("all") && len(args) == 0 {
-		return -1, false, errors.New(errors.MustSpecifyAllOrBrokerIDErrorMsg)
-	}
-	all, err := cmd.Flags().GetBool("all")
-	if err != nil {
-		return -1, false, err
-	}
-	if len(args) > 0 {
-		brokerIdStr := args[0]
-		brokerId, err := strconv.ParseInt(brokerIdStr, 10, 32)
-		return int32(brokerId), false, err
-	}
-	return -1, all, nil
 }
