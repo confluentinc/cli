@@ -71,7 +71,7 @@ func TestClonePluginRepo(t *testing.T) {
 }
 
 func TestGetPluginManifests(t *testing.T) {
-	dir, _ := filepath.Abs("../../../test/fixtures/input/plugin")
+	dir, _ := filepath.Abs("../../test/fixtures/input/plugin")
 	manifests, err := getPluginManifests(dir)
 	assert.NoError(t, err)
 
