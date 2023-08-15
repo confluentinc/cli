@@ -140,7 +140,7 @@ func (c *Command) kafkaStart(cmd *cobra.Command, args []string) error {
 			Driver:         "bridge",
 		},
 	)
-	if err != nil {
+	if err != nil && !strings.Contains(err.Error(), "already exists") {
 		return err
 	}
 
@@ -224,9 +224,12 @@ func (c *Command) kafkaStart(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-	}
 
-	output.Printf("Started Confluent Local containers %v, %v.\nTo continue your Confluent Local experience, run `confluent local kafka topic create test` and `confluent local kafka topic produce test`.\n", getShortenedContainerId(createResp1.ID), getShortenedContainerId(createResp2.ID))
+		output.Printf("Started Confluent Local containers %v, %v.\nTo continue your Confluent Local experience, run `confluent local kafka topic create test` and `confluent local kafka topic produce test`.\n", getShortenedContainerId(createResp1.ID), getShortenedContainerId(createResp2.ID))
+	} else {
+		output.Printf("Started Confluent Local containers %v.\nTo continue your Confluent Local experience, run `confluent local kafka topic create test` and `confluent local kafka topic produce test`.\n", getShortenedContainerId(createResp1.ID))
+
+	}
 
 	table := output.NewTable(cmd)
 	table.Add(c.Config.LocalPorts)
