@@ -3,7 +3,7 @@ package test
 import (
 	"fmt"
 
-	testserver "github.com/confluentinc/cli/test/test-server"
+	testserver "github.com/confluentinc/cli/v3/test/test-server"
 )
 
 var (
