@@ -1,9 +1,9 @@
 package mock
 
 import (
-	"github.com/confluentinc/cli/internal/pkg/config"
-	dynamicconfig "github.com/confluentinc/cli/internal/pkg/dynamic-config"
-	"github.com/confluentinc/cli/internal/pkg/mock"
+	"github.com/confluentinc/cli/v3/pkg/config"
+	dynamicconfig "github.com/confluentinc/cli/v3/pkg/dynamic-config"
+	"github.com/confluentinc/cli/v3/pkg/mock"
 )
 
 func AuthenticatedDynamicConfigMock() *dynamicconfig.DynamicConfig {

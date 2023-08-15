@@ -148,7 +148,7 @@ package config
 import (
     "github.com/spf13/cobra"
 
-    pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
+    pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
 )
 
 type command struct {
@@ -176,8 +176,8 @@ import (
 
     "github.com/spf13/cobra"
 
-    "github.com/confluentinc/cli/internal/pkg/errors"
-    "github.com/confluentinc/cli/internal/pkg/utils"
+    "github.com/confluentinc/cli/v3/pkg/errors"
+    "github.com/confluentinc/cli/v3/pkg/utils"
 )
 
 func (c *command) newDescribeCommand() *cobra.Command {
