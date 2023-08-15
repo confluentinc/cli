@@ -10,7 +10,7 @@ import (
 
 	srcmv2 "github.com/confluentinc/ccloud-sdk-go-v2/srcm/v2"
 
-	"github.com/confluentinc/cli/internal/pkg/types"
+	"github.com/confluentinc/cli/v3/pkg/types"
 )
 
 const (

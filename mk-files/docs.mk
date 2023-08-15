@@ -32,7 +32,7 @@ publish-docs: docs
 	$(SED) -i "10r $(DIR)/release-notes.rst" $(DOCS_CONFLUENT_CLI)/release-notes.rst && \
 	cd $(DOCS_CONFLUENT_CLI) && \
 	rm -rf command-reference && \
-	cp -R ~/git/go/src/github.com/confluentinc/cli/docs command-reference && \
+	cp -R ~/git/go/src/github.com/confluentinc/cli/v3/docs command-reference && \
 	git add . && \
 	git commit --allow-empty -m "[ci skip] chore: update CLI docs for v$(CLEAN_VERSION)" && \
 	$(call dry-run,git push origin publish-docs-v$(CLEAN_VERSION)) && \

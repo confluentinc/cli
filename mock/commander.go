@@ -10,12 +10,12 @@ import (
 	mds "github.com/confluentinc/mds-sdk-go-public/mdsv1"
 	"github.com/confluentinc/mds-sdk-go-public/mdsv2alpha1"
 
-	"github.com/confluentinc/cli/internal/pkg/ccloudv2"
-	pcmd "github.com/confluentinc/cli/internal/pkg/cmd"
-	"github.com/confluentinc/cli/internal/pkg/config"
-	"github.com/confluentinc/cli/internal/pkg/errors"
-	pmock "github.com/confluentinc/cli/internal/pkg/mock"
-	"github.com/confluentinc/cli/internal/pkg/version"
+	"github.com/confluentinc/cli/v3/pkg/ccloudv2"
+	pcmd "github.com/confluentinc/cli/v3/pkg/cmd"
+	"github.com/confluentinc/cli/v3/pkg/config"
+	"github.com/confluentinc/cli/v3/pkg/errors"
+	pmock "github.com/confluentinc/cli/v3/pkg/mock"
+	"github.com/confluentinc/cli/v3/pkg/version"
 )
 
 type Commander struct {
